@@ -32,6 +32,24 @@ class CareerChatRequest:
 
 
 @dataclass
+class KnowledgeSearchRequest:
+    """A single retrieval-ONLY knowledge search (Agentic RAG boundary).
+
+    Used by the agent's ``SearchCareerKnowledge`` tool: it runs the deterministic
+    evidence-retrieval layer (hybrid + structured retrieval, precedence, security,
+    citations) with NO Career tool execution and NO final answer synthesis.
+    ``job_description``/``candidate_background`` are accepted for API symmetry and
+    sanitisation; they do not influence which lanes/sources are retrieved (routing
+    is derived from the query alone).
+    """
+
+    query: str
+    job_description: str | None = None
+    candidate_background: str | None = None
+    retrieval_mode: str | None = None
+
+
+@dataclass
 class ToolCallResult:
     """Safe result of one Career tool invocation.
 

@@ -14,8 +14,14 @@ Tool → implementation → nature:
 The Pydantic arg-model CLASS NAME is the tool name the model calls (and the
 registry key), keeping bind_tools and the allowlist in sync.
 
-NOTE: career retrieval is intentionally NOT an agent tool — that is Phase 6
-(Agentic RAG).
+Phase 6 (Agentic RAG) adds a fifth tool, ``SearchCareerKnowledge``, a thin adapter
+over the RETRIEVAL-ONLY operation (``CareerApplicationService.search_knowledge`` →
+``CareerIntelligenceService.retrieve_evidence``). The AGENT decides *whether* to
+retrieve; the existing DETERMINISTIC router still decides *which* lanes/sources are
+queried — the model never sees low-level stores. The tool runs retrieval ONLY: it
+does not execute the other Career tools and does not perform final answer synthesis
+(the LangGraph agent owns those decisions), so it returns evidence + citations, not
+a synthesized answer.
 """
 
 from __future__ import annotations
@@ -161,11 +167,128 @@ def _generate_interview_questions(career_service) -> Handler:
     return handler
 
 
+# --- 5. Career knowledge retrieval (Agentic RAG, Phase 6) -------------------
+
+
+class SearchCareerKnowledge(BaseModel):
+    """Search trusted career and labour-market knowledge when the request needs
+    factual external evidence about occupations, competencies, compensation, labour
+    markets, credentials or established role expectations. Do NOT use it when the
+    answer comes from information the user already provided or from an existing
+    Career tool result (e.g. rewriting text, or building a plan from known gaps)."""
+
+    query: str = Field(max_length=4000, description="What to look up in career knowledge.")
+
+
+_MAX_EVIDENCE = 6
+
+
+def _search_career_knowledge(career_service) -> Handler:
+    def handler(args: SearchCareerKnowledge, ctx: ToolContext) -> ToolOutcome:
+        query = (args.query or "").strip()
+        _require(query, "A search query is required.")
+
+        # Duplicate-retrieval protection: same query within a run reuses evidence.
+        # Cache identity is the normalized QUERY alone, and that is correct AND
+        # complete: retrieval depends only on the query — the deterministic pipeline
+        # derives geography (detect_country), occupation and lane (route_question)
+        # from the query text, and job_description/candidate_background do NOT
+        # influence which lanes/sources are retrieved. A different question produces
+        # a different query and is retrieved afresh (see the retrieval tests).
+        if ctx.last_retrieval_query and query.lower() == ctx.last_retrieval_query.lower() and ctx.evidence is not None:
+            return ToolOutcome(
+                result={"has_evidence": bool(ctx.evidence), "sources": ctx.evidence,
+                        "citations": ctx.citations or [], "reused": True,
+                        "insufficient_evidence": not ctx.evidence},
+                state_patch={},
+                summary=f"reused prior retrieval ({len(ctx.evidence)} sources)",
+                source_count=len(ctx.evidence),
+            )
+
+        # Delegate to the RETRIEVAL-ONLY operation (deterministic router, hybrid +
+        # structured retrieval, geographic precedence, evidence, citations,
+        # security). It executes NO other Career tools and NO answer synthesis — the
+        # agent, not this tool, decides what to do with the retrieved evidence.
+        from src.application.errors import ApplicationError
+        from src.application.models import KnowledgeSearchRequest
+
+        try:
+            result = career_service.search_knowledge(KnowledgeSearchRequest(
+                query=query,
+                job_description=ctx.job_description,
+                candidate_background=ctx.candidate_background,
+            ))
+        except ApplicationError as exc:
+            raise AgentToolError("Career knowledge is temporarily unavailable.") from exc
+        except Exception as exc:  # noqa: BLE001 - never leak a raw retrieval/provider error
+            raise AgentToolError("Career knowledge could not be searched.") from exc
+
+        # A blocked retrieval (the query itself tripped the injection guard) is safe
+        # DATA for the agent, not a tool crash.
+        if getattr(result, "blocked", False):
+            observation = {
+                "has_evidence": False, "insufficient_evidence": True,
+                "sources": [], "citations": [],
+                "note": "The request could not be searched safely.",
+            }
+            return ToolOutcome(
+                result=observation,
+                state_patch={"retrieval_used": True, "last_retrieval_query": query,
+                             "evidence": [], "citations": []},
+                summary="blocked=true, sources=0",
+                source_count=0,
+            )
+
+        sources = [
+            {
+                "title": e.source_title,
+                "source_url": e.source_url,
+                "evidence_type": e.evidence_type,
+                "geography": e.geography,
+                "occupation_title": e.occupation_title,
+                "reference_year": e.reference_year,
+            }
+            for e in (result.evidence or [])[:_MAX_EVIDENCE]
+        ]
+        citations = [
+            {"marker": c.marker, "title": c.title, "source": c.source, "page": c.page}
+            for c in (result.citations or [])
+        ]
+        has_evidence = bool(sources or citations)
+        # NOTE: no synthesized answer here — retrieval returns evidence only; the
+        # LangGraph agent decides how to use/explain it.
+        observation = {
+            "has_evidence": has_evidence,
+            "insufficient_evidence": bool(getattr(result, "insufficient_evidence", not has_evidence)),
+            "sources": sources,
+            "citations": citations,
+        }
+        if getattr(result, "clarify", None):
+            observation["clarify"] = result.clarify
+        patch = {
+            "evidence": sources,
+            "citations": citations,
+            "retrieval_used": True,
+            "last_retrieval_query": query,
+            "resolved_occupation": getattr(result, "resolved_occupation", None) or None,
+            "resolved_geography": getattr(result, "resolved_geography", None),
+        }
+        return ToolOutcome(
+            result=observation,
+            state_patch=patch,
+            summary=f"lane={getattr(result, 'retrieval_lane', None)}, strategy={getattr(result, 'retrieval_strategy', None)}, sources={len(sources)}",
+            source_count=len(sources),
+        )
+
+    return handler
+
+
 def build_career_tools(career_service) -> list[tuple[type[BaseModel], Handler]]:
-    """The four real Career tools, bound to a CareerApplicationService."""
+    """The five real Career tools, bound to a CareerApplicationService."""
     return [
         (AnalyzeJobDescription, _analyze_job_description(career_service)),
         (AnalyzeCandidateGaps, _analyze_candidate_gaps(career_service)),
         (BuildPreparationPlan, _build_preparation_plan(career_service)),
         (GenerateInterviewQuestions, _generate_interview_questions(career_service)),
+        (SearchCareerKnowledge, _search_career_knowledge(career_service)),
     ]

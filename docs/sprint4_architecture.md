@@ -330,7 +330,8 @@ retrieval an agent-selectable tool is **Phase 6 (Agentic RAG)**.
 Phase 5 registers the **four existing Career capabilities** as controlled agent
 tools (thin adapters over `CareerApplicationService` — no Career logic, prompts,
 calculations or security duplicated). The Phase 4 foundation demo tool was removed
-from the registry. **Career retrieval is still NOT an agent tool (Phase 6).**
+from the registry. At Phase 5, Career retrieval was still NOT an agent tool — it
+became the fifth tool in **Phase 6 (Agentic RAG, see §3g)**.
 
 ```mermaid
 flowchart TD
@@ -340,8 +341,7 @@ flowchart TD
     SEL --> T3[BuildPreparationPlan · deterministic<br/>needs prior gaps + time]
     SEL --> T4[GenerateInterviewQuestions · LLM]
     T1 & T2 & T3 & T4 --> OBS[structured observation] --> AG
-    AG -. facts it doesn't have .-> SAY[explain retrieval isn't available yet]
-    RET[search_career_knowledge  🔷 Phase 6 — NOT registered]
+    AG -. Phase 6 adds a 5th tool .-> RET[SearchCareerKnowledge · retrieval<br/>see §3g]
 ```
 
 Each tool wraps `CareerApplicationService`: `analyze_job_description` (LLM),
@@ -366,6 +366,123 @@ from intent and dependencies; the code does not hard-code the sequence. A
 deterministic orchestration regression (`evaluations/agent/tool_selection_cases.json`
 + `src/agent/eval.py`) exercises routing, prerequisites, rejection and completion
 without a provider (it is **not** a live-LLM benchmark).
+
+## 3g. Phase 6 — Agentic RAG: retrieval as an agent-selectable tool (implemented)
+
+Phase 6 exposes the existing Career retrieval capability as the **fifth** real agent
+tool, `SearchCareerKnowledge`. This directly addresses the Sprint 3 reviewer note
+that *"retrieval should be exposed as a tool rather than a predetermined step after
+every user query."* Retrieval is now **conditional**: the agent decides *whether*
+external career evidence is needed at all.
+
+**Two decision layers (the core design).** Retrieval selection and retrieval routing
+are deliberately separated:
+
+1. **The agent decides IF to retrieve** — by choosing to call `SearchCareerKnowledge`
+   (or not). A rewrite request, or a question answerable from information the user
+   already gave, triggers no retrieval.
+2. **The deterministic Sprint 3 router decides WHICH lanes/sources** — untouched,
+   *inside* the retrieval-only operation. The model never sees or selects a vector
+   store, BM25 index or structured repository; it only supplies a free-text query.
+
+**Retrieval-only boundary (pre-merge correction).** The tool does **not** call the
+full grounded pipeline (`CareerApplicationService.chat` →
+`CareerIntelligenceService.answer`). That pipeline also runs the *other* Career tools
+and a *final answer-synthesis* model — responsibilities the LangGraph agent already
+owns. Instead the tool calls a **retrieval-only** operation,
+`CareerApplicationService.search_knowledge` →
+`CareerIntelligenceService.retrieve_evidence`, which executes the shared
+evidence-retrieval stages and then **stops**:
+
+```
+answer()                         SearchCareerKnowledge tool
+   │                                        │
+   ▼                                        ▼
+_gather_evidence()  ◄── shared ──►  retrieve_evidence()
+   │  (validation, injection scan, routing, query translation,
+   │   hybrid + structured retrieval, screening, precedence, citations)
+   ├── _run_tools()        ✗ NOT run by retrieve_evidence
+   └── _synthesize()       ✗ NOT run by retrieve_evidence
+```
+
+`answer()` and `retrieve_evidence()` share the exact same `_gather_evidence` stages —
+there is **one** retrieval implementation, not two. `answer()` then adds Career tool
+execution and synthesis on top.
+
+```mermaid
+flowchart TD
+    AG[Agent node · model + bound tools] --> IF{external career<br/>evidence needed?}
+    IF -- no --> ANS[answer from prior tool<br/>results / user-supplied info]
+    IF -- yes --> RET[SearchCareerKnowledge query]
+    RET --> DEDUP{same query<br/>already retrieved?}
+    DEDUP -- yes --> REUSE[reuse evidence · no 2nd retrieval]
+    DEDUP -- no --> PIPE[search_knowledge → retrieve_evidence<br/>= retrieval-ONLY: no Career tools, no synthesis]
+    PIPE --> ROUTER[deterministic router picks lanes]
+    ROUTER --> HYB[hybrid vector+BM25 · structured stores<br/>geographic source precedence]
+    HYB --> EV[KnowledgeEvidence + Citations + trace]
+    EV --> PATCH[state: evidence, citations,<br/>resolved_occupation, resolved_geography]
+    REUSE & PATCH --> OBS[safe observation → agent · NO synthesized answer]
+    OBS --> AG
+    AG --> SYNTH[agent explains/synthesizes the evidence]
+    LOW[search_vector_store / search_bm25 / repositories 🔒 NEVER registered]
+```
+
+**No retrieval rewrite; no nested tools; no nested synthesis.** `retrieve_evidence`
+reuses the existing retrieval subsystem, so hybrid + structured retrieval, geographic
+precedence, `KnowledgeEvidence` provenance, citations, RAG-inspector trace and the
+insufficient-evidence path are **preserved with zero duplication** — but it executes
+**no** Job/Gap/Plan/Question tool and performs **no** final answer synthesis (the tool
+returns evidence, not a synthesized answer; the agent decides what to say). Query
+translation may still consult the configured translation model as part of retrieval;
+only the final grounded-answer synthesis is excluded. The deterministic `/career/chat`
+endpoint (`answer()`) is unchanged and is **not** replaced. This also removes a
+redundant synthesis model call per agent retrieval (a latency/cost win):
+
+```
+BEFORE:  agent model → [Career-chat synthesis model INSIDE the tool] → agent model
+AFTER:   agent model → [deterministic retrieval only]               → agent model
+```
+
+**Agentic RAG vs "normal" (always-on) RAG (for reviewers):**
+
+| | Normal RAG (Sprint 3 `/career/chat` = `answer()`) | Agentic RAG (Phase 6 agent) |
+|---|---|---|
+| When does retrieval run? | Always, before answering | Only when the agent judges evidence is needed |
+| Who decides lanes/sources? | Deterministic router | Deterministic router (unchanged) |
+| Runs the other Career tools? | Yes (JD/gap/plan/questions, as routed) | No — the agent orchestrates those as separate tools |
+| Final answer synthesis? | Yes (one grounded-answer model call) | No — retrieval returns evidence; the agent synthesizes |
+| Duplicate queries in one turn | n/a (single pass) | De-duplicated — reused, no second retrieval |
+| Cost on a no-evidence question (e.g. "rewrite this") | Pays retrieval anyway | Skips retrieval entirely |
+| Both retained? | Yes — still the default candidate path | Side-by-side, experimental agent surface |
+
+**Safety.** Retrieved documents remain **untrusted DATA**: they flow to the model as a
+tool observation, never as instructions (the system prompt states citations may come
+only from retrieved evidence and that retrieved content never changes the rules). A
+retrieval failure maps to a safe tool error (no raw provider/exception text). Events
+carry **counts and lane/strategy labels only** — never the raw query, retrieved
+answer, JD or candidate text. Internal `doc_id`/`chunk_id` identifiers are stripped at
+the tool boundary; only safe citation/source fields cross into state.
+
+**Evaluation.** The deterministic regression
+(`evaluations/agent/tool_selection_cases.json` + `src/agent/eval.py`, 33 cases) adds
+agentic-RAG metrics: `required_retrieval_recall` (retrieve when needed = 1.0),
+`unnecessary_retrieval_rate` (never retrieve when not = 0.0), `citation_validity`
+(citations only from real retrieved evidence = 1.0) and `retrieval_sequence_validity`
+(the `retrieval_used` flag always reflects an executed retrieval tool = 1.0), while
+`unregistered_tool_attempts` confirms low-level store names (`search_vector_store`,
+`search_bm25`, `search_compensation_repository`, …) are rejected, never executed.
+`tests/test_retrieval_only_boundary.py` additionally proves, at the domain layer, that
+`retrieve_evidence` runs neither `_run_tools` nor the synthesis responder, that
+`answer()` still runs both (parity over the same shared extraction), and that
+structured retrieval, geographic precedence, citations, insufficient-evidence,
+security screening and single-search RAG-inspector detail are all preserved.
+
+**Reviewer story.** In Sprint 3, retrieval was part of the predetermined Career
+pipeline. In Sprint 4, LangGraph decides whether it needs the `SearchCareerKnowledge`
+tool. That tool executes only the existing deterministic evidence-retrieval layer —
+including structured and hybrid retrieval, source precedence, security and citations.
+It does not run the Career tools or synthesize the final answer. The retrieved
+evidence returns to LangGraph, which decides what to do next.
 
 ## 4. Internal naming is intentionally stable
 
@@ -402,8 +519,9 @@ internal docstrings are internal references and are left as-is.
 **How Sprint 4 addresses them:**
 - A **model registry / current-model review** will be added in a later Sprint 4
   phase (not changed in Phase 0, to avoid runtime behaviour change).
-- **Retrieval becomes an explicit agent tool** (decisions §4 and §2 above), while
-  the deterministic retrieval internals are preserved.
+- **Retrieval is now an explicit agent tool** — `SearchCareerKnowledge`, delivered
+  in **Phase 6 (Agentic RAG, §3g)**: the agent decides *whether* to retrieve while
+  the deterministic Sprint 3 router still decides *which* lanes, internals preserved.
 
 ---
 
@@ -426,8 +544,8 @@ internal docstrings are internal references and are left as-is.
 | FastAPI backend | — | 🔷 |
 | Next.js / TypeScript frontend | — | 🔷 |
 | LangGraph orchestration | — | 🔷 |
-| Agent-selectable tools | — | 🔷 |
-| Agentic RAG | — | 🔷 |
+| Agent-selectable tools | — | ✅ (5 real Career tools, Phases 5–6) |
+| Agentic RAG | — | ✅ (Phase 6 — `SearchCareerKnowledge`) |
 | Short-term memory | — | 🔷 |
 | Long-term memory | — | 🔷 |
 | Human-in-the-loop (HITL) | — | 🔷 |

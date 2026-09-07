@@ -76,11 +76,25 @@ assumptions in core logic, prompts, scoring or examples.
   gap analysis + preparation plan are deterministic). Tools enforce preconditions
   from prior state (gap needs the job-analysis requirements; the planner needs the
   gaps) and never fabricate inputs; where sufficient, the run builds the existing
-  `PreparationContext`. Career **retrieval is still not an agent tool** (Phase 6).
-  A deterministic orchestration regression lives in
-  `evaluations/agent/tool_selection_cases.json` + `src/agent/eval.py` (not a
+  `PreparationContext`. **Phase 6 (Agentic RAG)** adds the fifth real tool,
+  `SearchCareerKnowledge`, a thin adapter over a **retrieval-only** operation
+  (`CareerApplicationService.search_knowledge` →
+  `CareerIntelligenceService.retrieve_evidence`): the **agent decides *whether*** to
+  retrieve; the **deterministic Sprint 3 router still decides *which*** lanes/sources
+  (the model never sees low-level stores — `search_vector_store`/`search_bm25`/
+  repositories are never registered). The tool runs retrieval ONLY — it does **not**
+  execute the other Career tools and does **not** synthesize a final answer (the
+  agent owns those; the tool returns evidence, not an answer). `answer()` and
+  `retrieve_evidence()` share one `_gather_evidence` extraction (no duplicate
+  retrieval engine). Retrieval is de-duplicated within a run (cache identity = the
+  query, which alone determines geography/occupation/lane), retrieved content stays
+  **untrusted DATA**, citations come only from retrieved evidence, and the
+  deterministic `/career/chat` endpoint (`answer()`) is unchanged. A
+  deterministic orchestration regression lives in
+  `evaluations/agent/tool_selection_cases.json` + `src/agent/eval.py` (33 cases,
+  incl. retrieval recall / unnecessary-retrieval / citation-validity metrics; not a
   live-LLM benchmark). `src/agent` imports no Streamlit/UI and makes no provider
-  call on import; agentic RAG Phase 6, memory Phase 7, HITL Phase 8.
+  call on import; memory Phase 7, HITL Phase 8.
 - **Providers.** Career Intelligence uses LangChain over OpenRouter; the
   Interview module uses a direct OpenRouter HTTPX client. Optional speech
   (`[speech]`) and Live (`[live]`) backends are lazily imported. **Live is
@@ -128,7 +142,7 @@ assumptions in core logic, prompts, scoring or examples.
   (mock the boundaries). Do not weaken tests to pass or silently swallow errors.
 - Tests must not mutate committed artifacts (write to `tmp_path`).
 - `ruff check .` (conservative `F`/`E9` rules) must pass.
-- Current measured suite on this branch: **1333 passed, 2 skipped** (the skips are
+- Current measured suite on this branch: **1384 passed, 2 skipped** (the skips are
   the RAGAS installed/absent guards). Re-measure with `pytest -q` rather than
   hard-coding a number in multiple places.
 

@@ -22,6 +22,11 @@ class AgentRunResponse(BaseModel):
     status: str
     response: str
     tools_used: list[str] = Field(default_factory=list)
+    retrieval_used: bool = False
+    sources: list[dict] = Field(default_factory=list)
+    citations: list[dict] = Field(default_factory=list)
+    resolved_occupation: str | None = None
+    resolved_geography: str | None = None
     events: list[dict] = Field(default_factory=list)
     tool_calls: list[dict] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

@@ -18,7 +18,11 @@ from typing import Any
 
 from src.application.errors import UnavailableServiceError
 from src.application.factories import build_career_service, build_tool_invoker
-from src.application.models import CareerChatRequest, ToolCallResult
+from src.application.models import (
+    CareerChatRequest,
+    KnowledgeSearchRequest,
+    ToolCallResult,
+)
 from src.copilot import constants
 from src.copilot.config import CopilotConfig
 from src.core.errors import SafeError
@@ -67,6 +71,36 @@ class CareerApplicationService:
                 hours_per_week=request.hours_per_week,
                 company_context=request.company_context,
                 model=request.model,
+                progress=progress,
+            )
+        except SafeError:
+            raise
+        except Exception as exc:  # noqa: BLE001 - never leak a raw stack trace
+            raise UnavailableServiceError(
+                "The career assistant is temporarily unavailable. Please try again."
+            ) from exc
+
+    def search_knowledge(self, request: KnowledgeSearchRequest, *, progress=None):
+        """Run the retrieval-ONLY operation. Returns ``KnowledgeRetrievalResult``.
+
+        This is the Agentic RAG boundary: the deterministic evidence-retrieval
+        layer (hybrid + structured retrieval, geographic precedence, security
+        screening, citations, insufficient-evidence determination) with NO Career
+        tool execution and NO final answer synthesis. The domain's own safe results
+        (e.g. an injection refusal) are returned normally; unexpected downstream
+        failures become a safe :class:`UnavailableServiceError`.
+        """
+        service = self._service or build_career_service(
+            self._config,
+            store=self._store,
+            translation_cache=self._translation_cache,
+            retrieval_mode=request.retrieval_mode,
+        )
+        try:
+            return service.retrieve_evidence(
+                request.query,
+                job_description=request.job_description,
+                candidate_background=request.candidate_background,
                 progress=progress,
             )
         except SafeError:

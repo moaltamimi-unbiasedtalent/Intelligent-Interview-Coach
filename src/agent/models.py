@@ -28,6 +28,10 @@ class AgentRunResult:
     tool_calls: list[dict[str, Any]] = field(default_factory=list)
     tools_used: list[str] = field(default_factory=list)
     sources: list[dict[str, Any]] = field(default_factory=list)
+    citations: list[dict[str, Any]] = field(default_factory=list)
+    retrieval_used: bool = False
+    resolved_occupation: str | None = None
+    resolved_geography: str | None = None
     warnings: list[str] = field(default_factory=list)
     step_count: int = 0
     request_id: str | None = None
