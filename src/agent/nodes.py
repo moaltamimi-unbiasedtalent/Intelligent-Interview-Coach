@@ -83,6 +83,9 @@ def _tool_context(state: AgentState) -> ToolContext:
         candidate_background=state.get("candidate_background"),
         requirements=state.get("requirements"),
         gaps=state.get("gaps"),
+        last_retrieval_query=state.get("last_retrieval_query"),
+        evidence=state.get("evidence"),
+        citations=state.get("citations"),
     )
 
 
@@ -143,6 +146,9 @@ def _merge_ctx(ctx: ToolContext, updates: dict[str, Any]) -> ToolContext:
         candidate_background=updates.get("candidate_background", ctx.candidate_background),
         requirements=updates.get("requirements", ctx.requirements),
         gaps=updates.get("gaps", ctx.gaps),
+        last_retrieval_query=updates.get("last_retrieval_query", ctx.last_retrieval_query),
+        evidence=updates.get("evidence", ctx.evidence),
+        citations=updates.get("citations", ctx.citations),
     )
 
 

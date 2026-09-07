@@ -40,6 +40,14 @@ class AgentState(TypedDict, total=False):
     preparation_plan: dict[str, Any] | None  # from the preparation planner
     questions: dict[str, Any] | None  # from the question generator
 
+    # Retrieval outputs (Agentic RAG; safe evidence/citations — no raw store rows).
+    evidence: list[dict[str, Any]] | None
+    citations: list[dict[str, Any]] | None
+    retrieval_used: bool
+    last_retrieval_query: str | None
+    resolved_occupation: str | None
+    resolved_geography: str | None
+
     # Orchestration bookkeeping.
     tool_history: list[dict[str, Any]]
     events: list[dict[str, Any]]
