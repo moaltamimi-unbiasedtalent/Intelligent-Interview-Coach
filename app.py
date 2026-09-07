@@ -1,4 +1,4 @@
-"""Interview OS Coach — the single Streamlit entry point.
+"""Intelligent Interview Coach — the single Streamlit entry point.
 
     streamlit run app.py
 

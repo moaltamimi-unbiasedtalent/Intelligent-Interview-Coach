@@ -1,6 +1,6 @@
 # Career → Interview Handoff ("Practise this role")
 
-The handoff is what makes Interview OS Coach one product rather than two apps
+The handoff is what makes Intelligent Interview Coach one product rather than two apps
 behind a menu: Career Intelligence turns its analysis into a structured
 `PreparationContext` and hands it to Interview Practice to pre-fill a setup the
 candidate reviews and edits.

@@ -1,6 +1,6 @@
 # Sprint Requirements — Preservation After Integration
 
-Proves that folding Career Intelligence into Interview OS Coach does **not**
+Proves that folding Career Intelligence into Intelligent Interview Coach does **not**
 remove or obscure the Turing sprint work. Each requirement maps from its current
 location to its future unified location. Nothing is deleted; paths change only
 when files physically move (tests move with them).

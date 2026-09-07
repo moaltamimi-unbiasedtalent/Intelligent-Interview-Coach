@@ -1,4 +1,4 @@
-"""Top-level navigation for Interview OS Coach.
+"""Top-level navigation for Intelligent Interview Coach.
 
 One Streamlit app, one URL. The routes split into two groups:
 
@@ -16,7 +16,7 @@ click always survives the Streamlit rerun and there is exactly one active route.
 
 from __future__ import annotations
 
-APP_TITLE = "Interview OS Coach"
+APP_TITLE = "Intelligent Interview Coach"
 APP_TAGLINE = "Understand the opportunity. Prepare intelligently. Practise realistically."
 
 HOME = "Home"

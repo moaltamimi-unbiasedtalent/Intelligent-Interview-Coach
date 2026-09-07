@@ -1,4 +1,4 @@
-# CLAUDE.md — Interview OS Coach
+# CLAUDE.md — Intelligent Interview Coach
 
 Guidance for AI-assisted development in this repository. These describe the
 **current** architecture and constraints (the project has grown well beyond its
@@ -7,7 +7,7 @@ original Sprint 1 scope). Historical Sprint 1 notes live in git history and the
 
 ## Product
 
-**Interview OS Coach** — one Streamlit application (`streamlit run app.py`, one
+**Intelligent Interview Coach** — one Streamlit application (`streamlit run app.py`, one
 URL) combining two modules:
 
 - **Career Intelligence** — evidence-grounded career guidance and interview

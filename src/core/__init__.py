@@ -1,4 +1,4 @@
-"""Shared platform infrastructure for Interview OS Coach.
+"""Shared platform infrastructure for Intelligent Interview Coach.
 
 `src/core` holds **infrastructure only** — secret reading, configuration
 composition, safe logging, usage records, generic errors and reusable security

@@ -1,4 +1,4 @@
-# Interview OS Coach — E2E Quality Report (Phase 12R)
+# Intelligent Interview Coach — E2E Quality Report (Phase 12R)
 
 End-to-end verification after the OS-4A knowledge expansion and 11R-A evaluation.
 No new features were added; this phase hardens and confirms the platform.

@@ -1,4 +1,4 @@
-# Interview OS Coach — Target Architecture (OS-1 design)
+# Intelligent Interview Coach — Target Architecture (OS-1 design)
 
 Design target, **not** an instruction to move files now. Modular monolith, one
 Streamlit app, one URL. Module boundaries are enforced: cross-module talk goes
@@ -7,7 +7,7 @@ through `src/integration/`, never arbitrary imports.
 ## Target tree
 
 ```
-Interview OS Coach
+Intelligent Interview Coach
 │
 ├── app.py                      # thin: nav + page dispatch only (no business logic)
 │

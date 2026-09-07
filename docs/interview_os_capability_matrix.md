@@ -1,4 +1,4 @@
-# Interview OS Coach — Capability Matrix (OS-1 audit)
+# Intelligent Interview Coach — Capability Matrix (OS-1 audit)
 
 **Audit only — no code moved.** Integration branch `feature/interview-os-integration`
 from commit `0157684` (Phase 8 tip = `main`).

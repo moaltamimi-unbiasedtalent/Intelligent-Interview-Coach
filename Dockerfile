@@ -1,4 +1,4 @@
-# Production image for Interview Practice Studio.
+# Production image for Intelligent Interview Coach.
 # Secrets are NEVER baked in — provide them at runtime via environment variables
 # or a mounted secrets file (see docs/operations_deployment.md).
 

@@ -1,9 +1,9 @@
-# Demo Script — Interview OS Coach (10 minutes)
+# Demo Script — Intelligent Interview Coach (10 minutes)
 
 Run `streamlit run app.py`. Times are guides. Keep the RAG Inspector open in a
 second glance to show transparency.
 
-**0–1 · What it is.** Home page. "Interview OS Coach combines Career Intelligence
+**0–1 · What it is.** Home page. "Intelligent Interview Coach combines Career Intelligence
 (understand & prepare) and Interview Practice (practise, review, improve) in one
 app, one URL." Point at the workflow strip and the two cards.
 

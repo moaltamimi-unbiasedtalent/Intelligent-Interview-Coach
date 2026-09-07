@@ -1,4 +1,4 @@
-"""Minimal, accessibility-preserving styling for Interview OS Coach.
+"""Minimal, accessibility-preserving styling for Intelligent Interview Coach.
 
 Deliberately tiny: one small CSS block for badges/workflow chips. Everything else
 uses native Streamlit components so keyboard operation, focus and screen-reader
