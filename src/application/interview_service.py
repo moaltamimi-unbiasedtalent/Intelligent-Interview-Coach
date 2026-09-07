@@ -110,6 +110,18 @@ class InterviewApplicationService:
         finally:
             self._close(client)
 
+    def advance(self, session: SessionManager) -> bool:
+        """After an evaluated answer, move to the next question or complete.
+
+        Generates the next question when more remain (state → AWAITING_ANSWER) and
+        returns ``True``; otherwise transitions to INTERVIEW_COMPLETE and returns
+        ``False``. No provider call is made once the interview is complete.
+        """
+        more = session.advance_interview()
+        if more:
+            self.generate_next_question(session)
+        return more
+
     def submit_answer(self, session: SessionManager, answer: str) -> None:
         answer = self._validate_answer(answer)
         _, evaluation_service, _, client = self._build()

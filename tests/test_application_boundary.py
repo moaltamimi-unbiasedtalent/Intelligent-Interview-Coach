@@ -283,8 +283,9 @@ class _FakeRepo:
     def list_interviews(self, user_id):
         return [{"id": 123, "user": user_id}]
 
-    def get_interview(self, interview_id):
-        return {"id": interview_id}
+    def get_interview(self, user_id, interview_id):
+        # User-scoped: only returns the report if it belongs to this user.
+        return {"id": interview_id, "user": user_id} if user_id == 7 else None
 
 
 def test_report_persistence_and_read(monkeypatch):
@@ -294,7 +295,9 @@ def test_report_persistence_and_read(monkeypatch):
     history_service.save_completed_interview(session, config=None, repo=repo)
     assert session.data.saved_report_id == 123
     assert history_service.list_interview_reports(repo, 7) == [{"id": 123, "user": 7}]
-    assert history_service.get_interview_report(repo, 123) == {"id": 123}
+    assert history_service.get_interview_report(repo, 7, 123) == {"id": 123, "user": 7}
+    # Another user cannot read it.
+    assert history_service.get_interview_report(repo, 99, 123) is None
 
 
 def test_save_failure_becomes_safe_flag(monkeypatch):
