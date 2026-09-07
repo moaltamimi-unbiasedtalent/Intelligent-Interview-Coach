@@ -215,6 +215,56 @@ production OIDC/gateway is future work. A dev-only `X-User-Subject` may be set v
 `NEXT_PUBLIC_DEV_USER_SUBJECT` for local data scoping — never typed by the browser
 user.
 
+## 3d. Phase 3C — live Career preparation experience (implemented)
+
+Phase 3C makes `/prepare` real: the Next.js frontend now drives the existing
+deterministic Sprint 3 Career Intelligence through the FastAPI contracts, and hands
+a `PreparationContext` into a real interview session. No Career logic is duplicated
+in TypeScript; retrieval is still deterministic (agentic RAG is Phase 6).
+
+```mermaid
+flowchart TD
+    U[Candidate] --> NX[Next.js · Precision Coach<br/>/prepare · /practice · /sources]
+    NX --> API[FastAPI /api/v1]
+    API --> CA[CareerApplicationService]
+    CA --> QR[Query understanding / router]
+    QR --> RET[Retrieval  deterministic]
+    RET --> TOOLS[Domain tools]
+    TOOLS --> GR[Grounded response + citations]
+    GR --> NX
+    NX -->|Start practice| PC[PreparationContext]
+    PC --> IA[InterviewApplicationService]
+    IA --> NX
+    LG[LangGraph agent  🔷 planned] -.will choose retrieval/tools.-> CA
+```
+
+**What's live now:**
+- **Prepare** — a coach composer + progressive "Add context" (job description, about
+  you) posting to `POST /career/chat`; grounded answers render with candidate-facing
+  **Career evidence** (citations/sources), an insufficient-evidence state, safe
+  observable activity ("Checking career evidence…", never "thinking"), and safe
+  errors with a request id.
+- **Preparation tools** — all four connected: `job-analysis`, `gap-analysis`,
+  `preparation-plan`, `questions`, rendering the real deterministic results.
+- **Handoff** — builds a typed `PreparationContext` from gathered data and calls
+  `POST /interviews`, then navigates to `/practice?session=<id>` (no extra LLM call;
+  target-role precedence preserved).
+- **Practice** — reads the real session (`GET /interviews/{id}`), showing the
+  session's role + first question; a calm state when the model isn't configured.
+- **Sources** and **History** — connected to `/knowledge/*` and `/history/*`
+  (user-scoped) with real loading/empty/error states.
+
+**One additive backend change** (§36): `InterviewStateResponse.target_role`
+(optional) so the Practice page can show the session's role. Backward-compatible;
+OpenAPI, Streamlit and user isolation preserved; guarded by
+`tests/test_openapi_contract.py`.
+
+**Still deliberately out:** LangGraph / agent tool-selection / memory / HITL; no
+model changes; Streamlit not removed; no browser secrets (only `NEXT_PUBLIC_*`); no
+private preparation data in `localStorage`. All Career requests still pass through
+the backend security guards (validation, injection, retrieval/output guards, tool
+allowlist) — the frontend never bypasses them.
+
 ## 4. Internal naming is intentionally stable
 
 To evolve functionality first and avoid churn/regression risk, Sprint 4 **does
