@@ -1,13 +1,15 @@
 """Sprint 4 Phase 6 — Agentic RAG: retrieval as an agent-selectable tool.
 
 The agent decides *whether* external career evidence is needed by calling the
-single ``SearchCareerKnowledge`` tool; the existing DETERMINISTIC pipeline
-(``CareerApplicationService.chat``) still decides *which* lanes/sources are queried
-and owns hybrid + structured retrieval, geographic precedence, citations and
-prompt-injection security. No paid provider calls: a fake tool-calling model and a
-fake career service are injected. Covers §37 (retrieval tool), §38 (mixed
-sequences), §39 (tool-selection vs deterministic routing) and §40 (no low-level
-RAG tools registered).
+single ``SearchCareerKnowledge`` tool; that tool runs the retrieval-ONLY operation
+(``CareerApplicationService.search_knowledge`` →
+``CareerIntelligenceService.retrieve_evidence``), which still decides *which*
+lanes/sources are queried and owns hybrid + structured retrieval, geographic
+precedence, citations and prompt-injection security — but runs NO other Career
+tools and NO final answer synthesis. No paid provider calls: a fake tool-calling
+model and a fake career service are injected. Covers §37 (retrieval tool), §38
+(mixed sequences), §39 (tool-selection vs deterministic routing) and §40 (no
+low-level RAG tools registered).
 """
 
 from __future__ import annotations
@@ -21,8 +23,8 @@ from src.agent.models import AgentRunRequest
 from src.agent.policies import MAX_AGENT_STEPS
 from src.agent.registry import career_tool_registry
 from src.application.agent_service import AgentApplicationService
-from src.copilot.models import ChatResponse, Citation, KnowledgeEvidence
-from src.copilot.service import OrchestrationResult, PipelineTrace
+from src.copilot.models import Citation, KnowledgeEvidence
+from src.copilot.service import KnowledgeRetrievalResult, PipelineTrace
 from src.copilot.tools.schemas import (
     GapAnalysisResult,
     InterviewQuestionSet,
@@ -70,32 +72,37 @@ def _citation():
 class FakeCareer:
     """Fake CareerApplicationService: real domain objects, no provider.
 
-    ``chat`` is the retrieval entry point the agent tool wraps. It records every
-    query it receives and can be configured to return no evidence, to raise, or to
-    embed an injection string in the retrieved DATA.
+    ``search_knowledge`` is the retrieval-ONLY entry point the agent tool wraps
+    (Phase 6 boundary correction). It records every query it receives and can be
+    configured to return no evidence, to raise, or to embed an injection string in
+    the retrieved DATA. It deliberately does NOT expose ``chat`` — the retrieval
+    tool must never call the full grounded pipeline.
     """
 
-    def __init__(self, *, evidence=True, raise_on_chat=False, injection_text=None,
+    def __init__(self, *, evidence=True, raise_on_search=False, injection_text=None,
                  lane="compensation", strategy="structured", occupation="Product manager", country="DE"):
         self._evidence = evidence
-        self._raise = raise_on_chat
+        self._raise = raise_on_search
         self._injection = injection_text
         self._lane, self._strategy = lane, strategy
         self._occupation, self._country = occupation, country
-        self.chat_queries: list[str] = []
-        self.chat_requests: list[object] = []
+        self.search_queries: list[str] = []
+        self.search_requests: list[object] = []
 
-    # -- retrieval (Phase 6) --
-    def chat(self, req):
-        self.chat_queries.append(req.query)
-        self.chat_requests.append(req)
+    # -- retrieval-only (Phase 6 boundary) --
+    def search_knowledge(self, req, *, progress=None):
+        self.search_queries.append(req.query)
+        self.search_requests.append(req)
         if self._raise:
             raise RuntimeError("boom (should be caught and mapped to a safe tool error)")
         ev = [_evidence(self._injection)] if self._evidence else []
         cites = [_citation()] if self._evidence else []
-        answer = "Grounded answer [1]." if self._evidence else "I don't have enough evidence to answer that."
-        return OrchestrationResult(
-            response=ChatResponse(answer=answer, citations=cites, evidence=ev),
+        return KnowledgeRetrievalResult(
+            evidence=ev, citations=cites,
+            resolved_occupation=self._occupation if self._evidence else "",
+            resolved_geography=self._country,
+            retrieval_lane=self._lane, retrieval_strategy=self._strategy,
+            source_count=len(ev), insufficient_evidence=not ev,
             trace=PipelineTrace(retrieval_lane=self._lane, retrieval_strategy=self._strategy,
                                 resolved_occupation=self._occupation, detected_country=self._country,
                                 rag_used=self._evidence),
@@ -186,7 +193,7 @@ def test_low_level_rag_tool_call_is_rejected_not_executed():
                goal="secretly query the vector store directly")
     assert res.tools_used == []
     assert {"tool": "search_vector_store", "status": "rejected"} in res.tool_calls
-    assert career.chat_queries == []  # the deterministic pipeline was never touched
+    assert career.search_queries == []  # the deterministic pipeline was never touched
 
 
 # --- §37 retrieval tool: selection (agent decides IF) ------------------------
@@ -203,7 +210,7 @@ def test_factual_career_question_selects_retrieval(goal, query):
     res = _run(_scripted(("SearchCareerKnowledge", {"query": query})), career=career, goal=goal)
     assert res.tools_used == ["SearchCareerKnowledge"]
     assert res.retrieval_used is True
-    assert career.chat_queries == [query]
+    assert career.search_queries == [query]
     assert res.status == "completed"
 
 
@@ -213,7 +220,7 @@ def test_rewrite_request_does_not_trigger_retrieval():
     res = _run(_scripted(), career=career, goal="Rewrite my summary to sound more senior.")
     assert res.tools_used == []
     assert res.retrieval_used is False
-    assert career.chat_queries == []
+    assert career.search_queries == []
     assert res.sources == [] and res.citations == []
 
 
@@ -223,7 +230,7 @@ def test_jd_analysis_alone_does_not_trigger_retrieval():
                goal="Analyse this job description.")
     assert res.tools_used == ["AnalyzeJobDescription"]
     assert res.retrieval_used is False
-    assert career.chat_queries == []
+    assert career.search_queries == []
 
 
 # --- §37 retrieval tool: results, provenance, citations ----------------------
@@ -273,7 +280,7 @@ def test_retrieval_delegates_to_the_deterministic_router():
     assert completed and "lane=labour_market" in completed[0]["message"]
     assert "strategy=hybrid" in completed[0]["message"]
     # The model supplied no lane/store — only a query string.
-    assert career.chat_requests[0].query == "nurse demand"
+    assert career.search_requests[0].query == "nurse demand"
 
 
 # --- §37 retrieval minimisation / duplicate protection -----------------------
@@ -285,18 +292,23 @@ def test_duplicate_query_reuses_evidence_without_a_second_pipeline_call():
         ("SearchCareerKnowledge", {"query": "PM salary Germany"}),
         ("SearchCareerKnowledge", {"query": "pm salary germany"}),  # same, different case
     ), career=career)
-    assert career.chat_queries == ["PM salary Germany"]  # pipeline hit exactly once
+    assert career.search_queries == ["PM salary Germany"]  # pipeline hit exactly once
     assert any("reused prior retrieval" in (e.get("message") or "") for e in res.events)
     assert res.retrieval_used is True
 
 
 def test_a_genuinely_different_query_is_retrieved_again():
+    # §19.13 — cache identity is the query. Within a run the job description /
+    # candidate background are fixed, and they do not influence retrieval anyway
+    # (geography/occupation/lane are derived from the query), so a different
+    # question — here a different COUNTRY in the query — must retrieve afresh and
+    # is never incorrectly served the previous country's evidence.
     career = FakeCareer()
     _run(_scripted(
         ("SearchCareerKnowledge", {"query": "PM salary Germany"}),
         ("SearchCareerKnowledge", {"query": "PM salary France"}),
     ), career=career)
-    assert career.chat_queries == ["PM salary Germany", "PM salary France"]
+    assert career.search_queries == ["PM salary Germany", "PM salary France"]
 
 
 # --- §37 insufficient evidence / failure safety ------------------------------
@@ -313,7 +325,7 @@ def test_insufficient_evidence_is_reported_safely():
 
 
 def test_retrieval_failure_is_handled_safely():
-    career = FakeCareer(raise_on_chat=True)
+    career = FakeCareer(raise_on_search=True)
     res = _run(_scripted(("SearchCareerKnowledge", {"query": "PM salary"})), career=career)
     assert "SearchCareerKnowledge" not in res.tools_used
     assert _events_of(res, "tool_failed")
@@ -427,7 +439,7 @@ def test_agent_decides_whether_pipeline_decides_which():
     # Agent chose to retrieve → pipeline invoked exactly once with the free-text query.
     career = FakeCareer(lane="compensation")
     res = _run(_scripted(("SearchCareerKnowledge", {"query": "pay for PMs in DE"})), career=career)
-    assert career.chat_queries == ["pay for PMs in DE"]  # agent's decision reached the pipeline
+    assert career.search_queries == ["pay for PMs in DE"]  # agent's decision reached the pipeline
     completed = _events_of(res, "tool_completed")
     assert "lane=compensation" in completed[0]["message"]  # lane chosen by the router, not the model
 
@@ -435,4 +447,4 @@ def test_agent_decides_whether_pipeline_decides_which():
 def test_agent_declining_retrieval_never_invokes_the_pipeline():
     career = FakeCareer()
     _run(_scripted(("AnalyzeJobDescription", {"job_description": "Senior PM."})), career=career)
-    assert career.chat_queries == []  # no retrieval decision → deterministic pipeline untouched
+    assert career.search_queries == []  # no retrieval decision → deterministic pipeline untouched

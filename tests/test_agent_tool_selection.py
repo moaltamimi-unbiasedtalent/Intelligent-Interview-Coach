@@ -10,8 +10,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from src.agent.eval import evaluate, load_cases
-from src.copilot.models import ChatResponse, Citation, KnowledgeEvidence
-from src.copilot.service import OrchestrationResult, PipelineTrace
+from src.copilot.models import Citation, KnowledgeEvidence
+from src.copilot.service import KnowledgeRetrievalResult
 from src.copilot.tools.schemas import (
     GapAllocation,
     GapAnalysisResult,
@@ -45,15 +45,15 @@ class FakeCareer:
     def generate_questions(self, role, reqs, focus):
         return _call(InterviewQuestionSet(role=role, categories=[QuestionCategory(name="Behavioural", questions=["Q1?"])]))
 
-    def chat(self, req):
-        # The deterministic grounded pipeline the SearchCareerKnowledge tool wraps.
-        return OrchestrationResult(
-            response=ChatResponse(
-                answer="Grounded answer [1].",
-                citations=[Citation(marker="[1]", doc_id="d1", chunk_id="c1", title="ESCO", source="ESCO", source_url="https://esco", page=None)],
-                evidence=[KnowledgeEvidence(evidence_id="e1", text="band", source_id="esco", source_title="ESCO", source_url="https://esco", evidence_type="compensation", geography="DE", occupation_title="Product manager", reference_year=2024)],
-            ),
-            trace=PipelineTrace(retrieval_lane="compensation", retrieval_strategy="structured", resolved_occupation="Product manager", detected_country="DE"),
+    def search_knowledge(self, req, *, progress=None):
+        # The retrieval-ONLY operation the SearchCareerKnowledge tool wraps (no
+        # Career tools, no final synthesis).
+        return KnowledgeRetrievalResult(
+            evidence=[KnowledgeEvidence(evidence_id="e1", text="band", source_id="esco", source_title="ESCO", source_url="https://esco", evidence_type="compensation", geography="DE", occupation_title="Product manager", reference_year=2024)],
+            citations=[Citation(marker="[1]", doc_id="d1", chunk_id="c1", title="ESCO", source="ESCO", source_url="https://esco", page=None)],
+            resolved_occupation="Product manager", resolved_geography="DE",
+            retrieval_lane="compensation", retrieval_strategy="structured",
+            source_count=1, insufficient_evidence=False,
         )
 
 
