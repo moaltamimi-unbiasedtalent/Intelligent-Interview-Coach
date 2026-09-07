@@ -36,8 +36,12 @@ STARTER_PROMPTS = [
 
 @st.cache_resource(show_spinner=False)
 def _get_store(_config: CopilotConfig):
-    """Build the vector store once per session (secrets not part of cache key)."""
-    from src.copilot.vectorstore import build_vector_store
+    """Build the vector store once per session (secrets not part of cache key).
+
+    Construction is the Streamlit-free application factory; this wrapper only adds
+    UI-level caching so the expensive vector store is built once per session.
+    """
+    from src.application.factories import build_vector_store
 
     return build_vector_store(_config)
 
@@ -369,14 +373,14 @@ def _render_dry_run(config, job_description, candidate_background, days, hpw) ->
         q = st.text_input("Question to preview", key="dry_run_query")
         if not st.button("Preview plan", key="dry_run_btn") or not q.strip():
             return
-        from src.copilot.service import CareerIntelligenceService
+        from src.application import CareerApplicationService, CareerChatRequest
 
-        plan = CareerIntelligenceService(config=config).plan(
-            q, job_description=job_description.strip() or None,
+        plan = CareerApplicationService(config).plan(CareerChatRequest(
+            query=q, job_description=job_description.strip() or None,
             candidate_background=candidate_background.strip() or None,
             days_until_interview=int(days) or None,
             hours_per_week=float(hpw) or None,
-        )
+        ))
         pcols = st.columns(3)
         pcols[0].metric("Intent", plan.intent)
         pcols[1].metric("Lane", plan.retrieval_lane)
@@ -469,35 +473,37 @@ def _page_chat() -> None:
     with st.chat_message("user"):
         st.markdown(prompt)
 
+    from src.application import CareerApplicationService, CareerChatRequest
     from src.copilot.cache import TTLCache
-    from src.copilot.knowledge.retrieval import build_default_coordinator
-    from src.copilot.service import CareerIntelligenceService
 
     mode = st.session_state.get("retrieval_mode", config.retrieval_mode)
-    retriever = build_retriever(config, mode=mode, store=store)
-    # Production: wire the real structured stores into the chat answer.
-    coordinator = build_default_coordinator(config)
     # Persist the translation cache across per-query service instances (OPT-4).
     if "translation_cache" not in st.session_state:
         st.session_state["translation_cache"] = TTLCache(
             ttl_seconds=config.query_cache_ttl_seconds,
             max_entries=config.query_cache_max_entries,
         )
-    service = CareerIntelligenceService(
-        config=config, retriever=retriever, knowledge_coordinator=coordinator,
+    # The UI is a consumer of the application layer: it passes the cached vector
+    # store + translation cache; the app service wires retriever/coordinator/service.
+    career_app = CareerApplicationService(
+        config, store=store,
         translation_cache=st.session_state["translation_cache"],
+    )
+    request = CareerChatRequest(
+        query=prompt,
+        job_description=job_description.strip() or None,
+        candidate_background=candidate_background.strip() or None,
+        days_until_interview=int(days) or None,
+        hours_per_week=float(hpw) or None,
+        company_context=company_context,
+        retrieval_mode=mode,
     )
 
     with st.chat_message("assistant"):
         with st.status("Understanding request…", expanded=False) as status:
             try:
-                result = service.answer(
-                    prompt,
-                    job_description=job_description.strip() or None,
-                    candidate_background=candidate_background.strip() or None,
-                    days_until_interview=int(days) or None,
-                    hours_per_week=float(hpw) or None,
-                    company_context=company_context,
+                result = career_app.chat(
+                    request,
                     progress=lambda label: status.update(label=f"{label}…"),
                 )
             except Exception:  # noqa: BLE001 - never show a raw stack trace
@@ -1023,14 +1029,14 @@ def _render_tools_used() -> None:
                 st.caption(f"error: {ex.error}")
 
 
-def _run_tool(invoker, name: str, args: dict):
-    """Invoke a tool, record its safe execution, and surface errors in the UI."""
-    result = invoker.invoke(name, args)
+def _record_tool(result):
+    """Record a ToolCallResult's safe execution and surface errors in the UI."""
     st.session_state.setdefault("tool_executions", []).append(result.execution)
     if not result.ok:
-        st.error(f"{name}: {result.execution.status} — {result.execution.error}")
+        ex = result.execution
+        st.error(f"{ex.tool_name}: {ex.status} — {ex.error}")
         return None
-    return result.result
+    return result.value
 
 
 def _invalidate_downstream_role_state(session_state) -> None:
@@ -1057,9 +1063,9 @@ def _page_tools() -> None:
     )
     config = _config()
 
-    from src.copilot.tools import ToolInvoker, build_tool_registry
+    from src.application import CareerApplicationService
 
-    invoker = ToolInvoker(build_tool_registry(config=config))
+    career_app = CareerApplicationService(config)
     ss = st.session_state
 
     # 1) Job Description Analyzer -------------------------------------------
@@ -1068,8 +1074,8 @@ def _page_tools() -> None:
     if st.button("Analyze job description", disabled=not config.is_configured):
         if jd.strip():
             with st.spinner("Analyzing…"):
-                ss["role_requirements"] = _run_tool(
-                    invoker, constants.TOOL_JOB_ANALYZER, {"job_description": jd}
+                ss["role_requirements"] = _record_tool(
+                    career_app.analyze_job_description(jd)
                 )
             # A new role invalidates data derived from the previous one.
             _invalidate_downstream_role_state(ss)
@@ -1087,10 +1093,8 @@ def _page_tools() -> None:
     background = st.text_area("Candidate background / CV summary", height=140, key="tool_bg")
     if st.button("Analyze gaps", disabled=role_req is None):
         if background.strip():
-            ss["gap_result"] = _run_tool(
-                invoker,
-                constants.TOOL_GAP_ANALYZER,
-                {"candidate_background": background, "role_requirements": role_req.model_dump()},
+            ss["gap_result"] = _record_tool(
+                career_app.analyze_candidate_gaps(background, role_req)
             )
     gap = ss.get("gap_result")
     if gap is not None:
@@ -1110,14 +1114,8 @@ def _page_tools() -> None:
     days = cols[0].number_input("Days until interview", min_value=1, max_value=365, value=14)
     hpw = cols[1].number_input("Hours per week", min_value=1.0, max_value=80.0, value=6.0)
     if st.button("Build preparation plan", disabled=gap is None or not gap.priority_gaps):
-        ss["prep_plan"] = _run_tool(
-            invoker,
-            constants.TOOL_PREP_PLANNER,
-            {
-                "priority_gaps": [g.model_dump() for g in gap.priority_gaps],
-                "days_until_interview": int(days),
-                "hours_per_week": float(hpw),
-            },
+        ss["prep_plan"] = _record_tool(
+            career_app.build_preparation_plan(gap.priority_gaps, int(days), float(hpw))
         )
     plan = ss.get("prep_plan")
     if plan is not None:
@@ -1141,10 +1139,8 @@ def _page_tools() -> None:
     if st.button("Generate questions", disabled=not config.is_configured or not role_name.strip()):
         reqs = (role_req.required_skills + role_req.technologies) if role_req else []
         with st.spinner("Generating…"):
-            ss["question_set"] = _run_tool(
-                invoker,
-                constants.TOOL_QUESTION_GENERATOR,
-                {"role": role_name, "requirements": reqs, "focus": focus},
+            ss["question_set"] = _record_tool(
+                career_app.generate_questions(role_name, reqs, focus)
             )
     qset = ss.get("question_set")
     if qset is not None:
