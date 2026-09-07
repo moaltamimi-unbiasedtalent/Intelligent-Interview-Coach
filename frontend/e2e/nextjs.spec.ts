@@ -15,7 +15,8 @@ test("home primary CTA navigates to Prepare", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Start" }).click();
   await expect(page).toHaveURL(/\/prepare$/);
-  await expect(page.getByRole("heading", { name: "Senior Product Manager" })).toBeVisible();
+  // The live Prepare workspace shows the coach composer.
+  await expect(page.getByLabel("Ask the coach")).toBeVisible();
 });
 
 test("primary navigation reaches the four candidate routes", async ({ page }) => {
@@ -40,22 +41,24 @@ test("prepare workspace is responsive (mobile shows a context tab)", async ({ pa
 
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/prepare");
-  // Desktop: the context rail content is shown directly.
-  await expect(page.getByText("Priorities to prepare")).toBeVisible();
+  // Desktop: the context rail is shown directly (no tabs).
+  await expect(
+    page.getByRole("button", { name: /Start interview practice/i }),
+  ).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Coach" })).toHaveCount(0);
 });
 
 test("practice page is distraction-free and offers Type/Record", async ({ page }) => {
+  // No session and no backend reachable: standalone practice entry with Type/Record.
   await page.goto("/practice");
-  await expect(
-    page.getByRole("heading", { name: /aligned executives behind a roadmap/i }),
-  ).toBeVisible();
   await expect(page.getByRole("button", { name: /^type$/i })).toBeVisible();
   await expect(page.getByRole("button", { name: /^record$/i })).toBeVisible();
+  await expect(page.getByText(/No camera/i)).toBeVisible();
 });
 
 test("Live is not offered when the backend capability is unavailable", async ({ page }) => {
   await page.goto("/practice");
-  await expect(page.getByText(/aligned executives/i)).toBeVisible();
+  await expect(page.getByRole("button", { name: /^type$/i })).toBeVisible();
   await expect(page.getByText(/Live conversation practice/i)).toHaveCount(0);
 });
 

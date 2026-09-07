@@ -319,7 +319,11 @@ def test_interview_handoff_from_preparation_context():
     with _make_client() as c:
         r = c.post("/api/v1/interviews", json=body)
         assert r.status_code == 200, r.text
-        assert r.json()["current_question"] is not None
+        payload = r.json()
+        assert payload["current_question"] is not None
+        # The resolved target role is returned so the frontend Practice page can
+        # show the session's role (Phase 3C additive field).
+        assert payload["target_role"] == "Data Analyst"
 
 
 def test_interview_report_generation_and_fetch():
