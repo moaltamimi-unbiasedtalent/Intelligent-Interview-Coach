@@ -50,17 +50,31 @@ def run_case(case: dict, career_service: Any) -> dict:
         "status": res.status,
         "rejected": rejected,
         "expected_tools": case.get("expected_tools", []),
+        "expects_retrieval": bool(case.get("expects_retrieval", False)),
+        "retrieval_used": res.retrieval_used,
+        "source_count": len(res.sources),
+        "citation_count": len(res.citations),
     }
 
 
+def _ratio(hits: int, total: int) -> float:
+    return round(hits / total, 3) if total else 0.0
+
+
 def evaluate(cases: list[dict], career_service: Any) -> dict:
+    """Deterministic orchestration + agentic-RAG metrics (no provider calls).
+
+    Retrieval metrics (Phase 6): the agent should retrieve when — and only when —
+    external evidence is needed, citations must come only from retrieved evidence,
+    and the ``retrieval_used`` flag must reflect an actually-executed retrieval tool.
+    """
     results = [run_case(c, career_service) for c in cases]
     n = len(results)
-    recall_hits = 0
-    unnecessary = 0
-    total_used = 0
-    unregistered = 0
-    completed = 0
+    recall_hits = unnecessary = total_used = unregistered = completed = 0
+    retr_expected = retr_recall = 0            # required-retrieval recall
+    retr_not_expected = retr_unnecessary = 0   # unnecessary-retrieval rate
+    cited_cases = citation_valid = 0           # citation validity
+    seq_valid = 0                              # retrieval flag ↔ executed tool
     for r in results:
         expected = set(r["expected_tools"])
         used = list(r["tools_used"])
@@ -73,11 +87,34 @@ def evaluate(cases: list[dict], career_service: Any) -> dict:
         unregistered += r["rejected"]
         if r["status"] in ("completed", "step_limit_reached"):
             completed += 1
+
+        # --- agentic-RAG metrics ---
+        if r["expects_retrieval"]:
+            retr_expected += 1
+            if r["retrieval_used"]:
+                retr_recall += 1
+        else:
+            retr_not_expected += 1
+            if r["retrieval_used"]:
+                retr_unnecessary += 1
+        if r["citation_count"] > 0:
+            cited_cases += 1
+            # Citations are valid only if retrieval actually ran and produced sources.
+            if r["retrieval_used"] and r["source_count"] > 0:
+                citation_valid += 1
+        # The retrieval_used flag must never be set without the tool executing.
+        if r["retrieval_used"] == ("SearchCareerKnowledge" in used):
+            seq_valid += 1
+
     return {
         "cases": n,
-        "required_tool_recall": round(recall_hits / n, 3) if n else 0.0,
-        "unnecessary_tool_rate": round(unnecessary / total_used, 3) if total_used else 0.0,
+        "required_tool_recall": _ratio(recall_hits, n),
+        "unnecessary_tool_rate": _ratio(unnecessary, total_used),
         "unregistered_tool_attempts": unregistered,
-        "completion_rate": round(completed / n, 3) if n else 0.0,
+        "completion_rate": _ratio(completed, n),
+        "required_retrieval_recall": _ratio(retr_recall, retr_expected),
+        "unnecessary_retrieval_rate": _ratio(retr_unnecessary, retr_not_expected),
+        "citation_validity": _ratio(citation_valid, cited_cases) if cited_cases else 1.0,
+        "retrieval_sequence_validity": _ratio(seq_valid, n),
         "results": results,
     }
