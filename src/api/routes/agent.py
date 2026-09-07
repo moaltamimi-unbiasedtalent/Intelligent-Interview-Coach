@@ -38,8 +38,10 @@ def run_agent(
         run_id=result.run_id,
         status=result.status,
         response=result.response,
+        tools_used=result.tools_used,
         events=result.events,
         tool_calls=result.tool_calls,
         warnings=result.warnings,
         step_count=result.step_count,
+        preparation_context=result.preparation_context,
     )

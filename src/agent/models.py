@@ -26,7 +26,10 @@ class AgentRunResult:
     response: str
     events: list[dict[str, Any]] = field(default_factory=list)
     tool_calls: list[dict[str, Any]] = field(default_factory=list)
+    tools_used: list[str] = field(default_factory=list)
     sources: list[dict[str, Any]] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     step_count: int = 0
     request_id: str | None = None
+    # A typed PreparationContext (as a dict) when enough tool data exists — else None.
+    preparation_context: dict[str, Any] | None = None

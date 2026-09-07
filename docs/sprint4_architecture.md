@@ -325,6 +325,48 @@ page keeps using the deterministic Career endpoint.
 Today's Career retrieval remains **deterministic** (predetermined lanes); making
 retrieval an agent-selectable tool is **Phase 6 (Agentic RAG)**.
 
+## 3f. Phase 5 — real Career tools for the agent (implemented)
+
+Phase 5 registers the **four existing Career capabilities** as controlled agent
+tools (thin adapters over `CareerApplicationService` — no Career logic, prompts,
+calculations or security duplicated). The Phase 4 foundation demo tool was removed
+from the registry. **Career retrieval is still NOT an agent tool (Phase 6).**
+
+```mermaid
+flowchart TD
+    AG[Agent node · model + bound tools] --> SEL{which registered tool?}
+    SEL --> T1[AnalyzeJobDescription · LLM]
+    SEL --> T2[AnalyzeCandidateGaps · deterministic<br/>needs prior job analysis + background]
+    SEL --> T3[BuildPreparationPlan · deterministic<br/>needs prior gaps + time]
+    SEL --> T4[GenerateInterviewQuestions · LLM]
+    T1 & T2 & T3 & T4 --> OBS[structured observation] --> AG
+    AG -. facts it doesn't have .-> SAY[explain retrieval isn't available yet]
+    RET[search_career_knowledge  🔷 Phase 6 — NOT registered]
+```
+
+Each tool wraps `CareerApplicationService`: `analyze_job_description` (LLM),
+`analyze_candidate_gaps` (deterministic), `build_preparation_plan` (deterministic),
+`generate_questions` (LLM). Tool arguments are Pydantic-validated; **preconditions**
+come from prior state (gap analysis requires the job-analysis requirements; the
+planner requires the gaps) and fail safely if unmet — the agent never fabricates
+missing inputs. Tool outputs update typed `AgentState`
+(`requirements`/`gaps`/`preparation_plan`/`questions`) and, where sufficient, the
+service builds the **existing** `PreparationContext` (reused from `src/integration`).
+
+**Function-calling story (for reviewers):** the agent receives a *fixed* registry of
+Career tools; the model may request only those functions; each requested name is
+checked against the **allowlist** and its arguments validated with Pydantic before
+the existing Career implementation runs; the structured result returns to the graph
+as an observation; the model then calls another tool or finishes.
+
+**Agent vs workflow (why this is agentic):** a fixed workflow would always run
+JD→Gap→Plan→Questions. Here, "analyse this JD" runs **only** the JD analyzer, while
+"full preparation" runs JD→Gap→Plan(→Questions) — the model chooses tools and order
+from intent and dependencies; the code does not hard-code the sequence. A
+deterministic orchestration regression (`evaluations/agent/tool_selection_cases.json`
++ `src/agent/eval.py`) exercises routing, prerequisites, rejection and completion
+without a provider (it is **not** a live-LLM benchmark).
+
 ## 4. Internal naming is intentionally stable
 
 To evolve functionality first and avoid churn/regression risk, Sprint 4 **does

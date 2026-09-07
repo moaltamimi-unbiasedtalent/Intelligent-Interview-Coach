@@ -415,11 +415,14 @@ the Career→Interview handoff all run against the FastAPI contracts. Retrieval 
 deterministic (agentic RAG is a later phase). See
 [frontend/README.md](frontend/README.md).
 
-A **LangGraph agent foundation** (Phase 4) runs side-by-side with the deterministic
-Career flow: a single, stateful, bounded, tool-using agent (`src/agent`) behind an
-experimental `POST /api/v1/agent/run` — it does **not** replace `/career/chat`.
-Real Career-tool migration, agentic RAG, memory and human-in-the-loop are later
-phases. See [docs/sprint4_architecture.md](docs/sprint4_architecture.md).
+A **LangGraph agent** (Phases 4–5) runs side-by-side with the deterministic Career
+flow: a single, stateful, bounded, tool-using agent (`src/agent`) behind an
+experimental `POST /api/v1/agent/run` — it does **not** replace `/career/chat`. It
+now wields the **four real Career tools** (job-description analysis, gap analysis,
+preparation plan, question generation) as allowlisted functions, selecting and
+sequencing them by intent. Career **retrieval** as an agent tool (agentic RAG),
+memory and human-in-the-loop are later phases. See
+[docs/sprint4_architecture.md](docs/sprint4_architecture.md).
 
 ## Testing
 
@@ -431,7 +434,7 @@ python scripts/eval_expanded.py          # 11R-A expanded evaluation
 (cd components/live_interviewer/frontend && npm test)   # frontend (vitest)
 ```
 
-Latest: **1327 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
+Latest: **1333 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
 guards); **22 passed** (frontend). Browser E2E: **5 passed** (Playwright/chromium).
 
 ## Known limitations

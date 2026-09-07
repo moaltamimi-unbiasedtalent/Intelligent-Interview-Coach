@@ -71,9 +71,16 @@ assumptions in core logic, prompts, scoring or examples.
   output); model/tool failures terminate safely. Boundary:
   `src/application/agent_service.py` (`AgentApplicationService.run → AgentRunResult`);
   experimental `POST /api/v1/agent/run` (does **not** replace `/career/chat`).
-  Phase 4 registers only a deterministic foundation tool — real Career tools are
-  Phase 5, agentic RAG Phase 6, memory Phase 7, HITL Phase 8. `src/agent` imports no
-  Streamlit/UI and makes no provider call on import.
+  **Phase 5** registers the four real Career tools as thin adapters over
+  `CareerApplicationService` (job analysis + question generation are LLM-backed;
+  gap analysis + preparation plan are deterministic). Tools enforce preconditions
+  from prior state (gap needs the job-analysis requirements; the planner needs the
+  gaps) and never fabricate inputs; where sufficient, the run builds the existing
+  `PreparationContext`. Career **retrieval is still not an agent tool** (Phase 6).
+  A deterministic orchestration regression lives in
+  `evaluations/agent/tool_selection_cases.json` + `src/agent/eval.py` (not a
+  live-LLM benchmark). `src/agent` imports no Streamlit/UI and makes no provider
+  call on import; agentic RAG Phase 6, memory Phase 7, HITL Phase 8.
 - **Providers.** Career Intelligence uses LangChain over OpenRouter; the
   Interview module uses a direct OpenRouter HTTPX client. Optional speech
   (`[speech]`) and Live (`[live]`) backends are lazily imported. **Live is
@@ -121,7 +128,7 @@ assumptions in core logic, prompts, scoring or examples.
   (mock the boundaries). Do not weaken tests to pass or silently swallow errors.
 - Tests must not mutate committed artifacts (write to `tmp_path`).
 - `ruff check .` (conservative `F`/`E9` rules) must pass.
-- Current measured suite on this branch: **1327 passed, 2 skipped** (the skips are
+- Current measured suite on this branch: **1333 passed, 2 skipped** (the skips are
   the RAGAS installed/absent guards). Re-measure with `pytest -q` rather than
   hard-coding a number in multiple places.
 
