@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coach Workspace — Intelligent Interview Coach (Concept B)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --background:#FBF9F6; --foreground:#201C18; --surface:#FFFFFF; --surface-2:#F4EFE9;
+  --muted:#6E655C; --border:#EAE2D8; --accent:#1E6F63; --accent-foreground:#FFFFFF;
+  --success:#2E7D4F; --warning:#B4690E; --danger:#B23A48;
+  --radius:12px; --radius-lg:16px; --radius-bubble:18px;
+  --shadow:0 1px 2px rgba(32,28,24,.04),0 10px 30px rgba(32,28,24,.05);
+  --shadow-soft:0 1px 2px rgba(32,28,24,.03),0 4px 14px rgba(32,28,24,.04);
+  --font:'Manrope',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --maxw:1200px;
+}
+:root[data-theme="dark"]{
+  --background:#15130F; --foreground:#F2ECE4; --surface:#201C17; --surface-2:#2A251F;
+  --muted:#B0A79C; --border:#352E27; --accent:#5FC3B3; --accent-foreground:#06201C;
+  --success:#74C795; --warning:#E0A758; --danger:#E58794;
+  --shadow:0 1px 2px rgba(0,0,0,.35),0 10px 30px rgba(0,0,0,.4);
+  --shadow-soft:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--background);color:var(--foreground);font-family:var(--font);
+  line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{line-height:1.18;margin:0;letter-spacing:-.02em;font-weight:700}
+p{margin:0}
+a{color:inherit}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+
+/* prototype chrome (design-artifact frame, not product) */
+.proto-bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;
+  flex-wrap:wrap;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+.proto-bar .brandmark{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em}
+.dot{width:18px;height:18px;border-radius:8px;background:var(--accent);
+  box-shadow:inset 0 0 0 3px color-mix(in srgb,var(--accent) 45%, #fff)}
+.proto-label{font-size:12px;color:var(--muted);border:1px solid var(--border);
+  padding:3px 10px;border-radius:999px;background:var(--surface-2)}
+.proto-tabs{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+.proto-tabs button{background:transparent;border:1px solid transparent;color:var(--muted);
+  padding:8px 14px;border-radius:999px;font-size:14px;font-weight:600;min-height:40px}
+.proto-tabs button[aria-selected="true"]{background:var(--surface-2);color:var(--foreground);
+  border-color:var(--border)}
+.proto-toggles{display:flex;gap:6px}
+.proto-toggles button{background:var(--surface);border:1px solid var(--border);color:var(--muted);
+  padding:8px 12px;border-radius:10px;font-size:13px;font-weight:600;min-height:40px}
+.proto-home{font-size:13px;color:var(--muted);text-decoration:none;align-self:center;font-weight:600}
+
+.stage{max-width:var(--maxw);margin:0 auto;padding:26px 20px 80px}
+.stage[data-viewport="mobile"]{max-width:390px}
+.screen{display:none;animation:fade .22s ease-out}
+.screen.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* product app shell */
+.app-nav{display:flex;align-items:center;gap:22px;padding:2px 0 24px}
+.app-nav .brand{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:-.02em}
+.app-nav .brand .dot{width:16px;height:16px;border-radius:7px}
+.app-nav nav{display:flex;gap:4px;flex-wrap:wrap}
+.app-nav nav a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:600;
+  padding:8px 12px;border-radius:10px;cursor:pointer;min-height:40px;display:inline-flex;align-items:center}
+.app-nav nav a.on{color:var(--foreground);background:var(--surface-2)}
+.app-nav nav a:hover{color:var(--foreground)}
+.app-nav .spacer{margin-left:auto}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--surface-2);
+  border:1px solid var(--border);display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--foreground)}
+
+/* coach identity */
+.coach-face{width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;
+  font-size:16px;font-weight:800;color:var(--accent-foreground);
+  background:radial-gradient(circle at 32% 30%, color-mix(in srgb,var(--accent) 78%,#fff), var(--accent));
+  box-shadow:var(--shadow-soft)}
+.coach-face.sm{width:32px;height:32px;font-size:13px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);
+  color:var(--accent-foreground);border:none;padding:13px 20px;border-radius:var(--radius);
+  font-weight:700;font-size:15px;min-height:44px;transition:transform .12s ease,filter .12s ease}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--foreground);border:1.5px solid var(--border)}
+.btn.small{padding:9px 14px;font-size:13px;min-height:40px}
+.btn.block{width:100%}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-soft)}
+.pad{padding:20px}
+.eyebrow{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.02em}
+.muted{color:var(--muted)}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;
+  padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2)}
+.sev{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;
+  padding:3px 9px;border-radius:999px;border:1px solid var(--border)}
+.sev-high{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%,var(--border));
+  background:color-mix(in srgb,var(--danger) 8%,var(--surface))}
+.sev-med{color:var(--warning);border-color:color-mix(in srgb,var(--warning) 40%,var(--border));
+  background:color-mix(in srgb,var(--warning) 8%,var(--surface))}
+.sev-low{color:var(--success);border-color:color-mix(in srgb,var(--success) 40%,var(--border));
+  background:color-mix(in srgb,var(--success) 8%,var(--surface))}
+
+/* readiness ring */
+.ring-wrap{position:relative;display:grid;place-items:center}
+.ring{--v:72;width:46px;height:46px;border-radius:50%;
+  background:conic-gradient(var(--accent) calc(var(--v)*1%),var(--surface-2) 0);
+  display:grid;place-items:center}
+.ring::after{content:"";width:34px;height:34px;border-radius:50%;background:var(--surface)}
+.ring-wrap b{position:absolute;font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
+
+/* ============ HOME ============ */
+.home-wrap{max-width:760px;margin:0 auto}
+.welcome{display:flex;gap:16px;align-items:flex-start;margin-top:22px}
+.welcome .coach-face{width:52px;height:52px;font-size:19px}
+.welcome h1{font-size:clamp(28px,4vw,42px);margin-bottom:4px}
+.welcome .lede{font-size:18px;color:var(--muted);max-width:56ch}
+.welcome .hi{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.02em;display:block;margin-bottom:8px}
+.entry{margin-top:28px}
+.entry .field{display:flex;gap:10px;background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--radius-lg);padding:10px 10px 10px 16px;box-shadow:var(--shadow)}
+.entry .field:focus-within{border-color:var(--accent)}
+.entry input{flex:1;border:none;background:transparent;color:inherit;font:inherit;padding:8px 0;min-height:28px}
+.entry input:focus{outline:none}
+.entry .aux{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.aux-btn{display:inline-flex;gap:8px;align-items:center;background:var(--surface);border:1.5px solid var(--border);
+  color:var(--foreground);font-size:14px;font-weight:600;padding:10px 14px;border-radius:999px;min-height:44px}
+.aux-btn:hover{background:var(--surface-2)}
+.aux-btn .mk{color:var(--accent);font-weight:800}
+.reassure{display:flex;gap:12px;align-items:flex-start;margin-top:26px;padding:14px 16px;
+  background:var(--surface-2);border-radius:var(--radius);color:var(--muted);font-size:14px}
+.reassure .mk{color:var(--accent);flex:none;margin-top:1px}
+.home-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:30px}
+.home-cards .card{padding:16px}
+.home-cards h4{font-size:15px;margin-bottom:4px}
+.home-cards p{font-size:13px;color:var(--muted)}
+.home-cards .mk{font-size:20px;color:var(--accent);display:block;margin-bottom:8px}
+
+/* ============ PREPARE workspace ============ */
+.role-strip{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.role-strip h2{font-size:22px;margin-right:4px}
+.role-strip .readiness{margin-left:auto;display:flex;align-items:center;gap:10px;
+  font-size:13px;font-weight:600;color:var(--muted)}
+
+.workspace{display:grid;grid-template-columns:1fr 350px;gap:22px;align-items:start}
+
+/* conversation column */
+.conv{display:flex;flex-direction:column;gap:14px}
+.msg{display:flex;gap:12px;align-items:flex-start}
+.msg.me{flex-direction:row-reverse}
+.msg .body{display:grid;gap:5px;max-width:82%}
+.msg.me .body{justify-items:end}
+.who{font-size:12px;font-weight:700;color:var(--muted);padding:0 4px}
+.bubble{border-radius:var(--radius-bubble);padding:14px 17px;box-shadow:var(--shadow-soft)}
+.bubble.coach{background:var(--surface);border:1px solid var(--border);border-top-left-radius:6px}
+.bubble.me{background:var(--accent);color:var(--accent-foreground);border-top-right-radius:6px}
+.priorities-inline{margin-top:12px;display:grid;gap:8px}
+.priorities-inline .p{display:flex;gap:10px;align-items:center;padding:10px 12px;
+  border:1px solid var(--border);border-radius:12px;background:var(--surface-2)}
+.priorities-inline .p .n{width:22px;height:22px;border-radius:7px;background:var(--accent);
+  color:var(--accent-foreground);display:grid;place-items:center;font-size:12px;font-weight:800;flex:none}
+.priorities-inline .p .t{flex:1;font-size:14px;font-weight:600}
+.strengths-line{margin-top:12px;font-size:14px;color:var(--muted)}
+.strengths-line b{color:var(--foreground)}
+.src-line{margin-top:12px;font-size:13px;color:var(--muted)}
+.src-line summary{cursor:pointer;color:var(--foreground);font-weight:600;display:inline}
+.activity{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px;
+  padding:4px 4px 4px 52px;font-weight:600}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--accent);
+  animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+
+.composer{margin-top:6px;display:flex;gap:10px;background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--radius-lg);padding:8px 8px 8px 16px;box-shadow:var(--shadow-soft)}
+.composer:focus-within{border-color:var(--accent)}
+.composer input{flex:1;border:none;background:transparent;color:inherit;font:inherit;min-height:28px}
+.composer input:focus{outline:none}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{font-size:13px;font-weight:600;color:var(--foreground);border:1.5px solid var(--border);
+  background:var(--surface);padding:9px 14px;border-radius:999px;min-height:40px}
+.chip:hover{background:var(--surface-2);border-color:var(--accent)}
+
+/* inline coaching moments */
+.moment{margin-top:18px;border:1.5px solid color-mix(in srgb,var(--accent) 45%,var(--border));
+  border-radius:var(--radius-lg);padding:16px;background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
+.moment .head{display:flex;gap:10px;align-items:flex-start}
+.moment b{font-size:15px}
+.moment .row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.consent{display:flex;gap:10px;align-items:center;margin:8px 0;font-size:14px;font-weight:600}
+.consent input{width:18px;height:18px;accent-color:var(--accent);flex:none}
+.handoff{margin-top:18px;background:var(--accent);color:var(--accent-foreground);
+  border-radius:var(--radius-lg);padding:18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.handoff .txt{flex:1;min-width:180px}
+.handoff h3{font-size:17px;color:var(--accent-foreground)}
+.handoff p{font-size:14px;opacity:.9}
+.handoff .btn{background:var(--accent-foreground);color:var(--accent)}
+
+/* context rail */
+.rail{display:grid;gap:14px;position:sticky;top:76px}
+.rail .card{padding:16px}
+.rail h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px;font-weight:700}
+.rail .live{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.05em;color:var(--accent);float:right}
+.rail .live .pulse{width:6px;height:6px}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:14px}
+.kv+.kv{border-top:1px solid var(--border)}
+.kv span:first-child{color:var(--muted)}
+.kv span:last-child{font-weight:600;text-align:right}
+.item{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--border);font-size:14px}
+.item:first-of-type{border-top:none;padding-top:0}
+.item .mk{margin-top:2px;color:var(--accent);flex:none}
+.item small{color:var(--muted);display:block;font-weight:500}
+.item .name{font-weight:600}
+.item .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sources{font-size:14px;color:var(--muted)}
+.sources summary{cursor:pointer;color:var(--foreground);font-weight:600}
+.sources .list{margin-top:8px;font-size:13px;line-height:1.7}
+
+/* ============ PRACTICE ============ */
+.practice{max-width:720px;margin:0 auto}
+.practice .ctx{display:flex;gap:8px;align-items:center;justify-content:center;color:var(--muted);
+  font-size:14px;font-weight:600;flex-wrap:wrap}
+.progress{display:flex;gap:6px;justify-content:center;margin:18px 0 6px}
+.progress i{width:38px;height:6px;border-radius:3px;background:var(--surface-2)}
+.progress i.done{background:var(--accent)}
+.progress i.now{background:color-mix(in srgb,var(--accent) 45%,var(--surface-2));
+  box-shadow:inset 0 0 0 1.5px var(--accent)}
+.q{font-size:clamp(21px,3vw,28px);text-align:center;margin:24px auto 6px;max-width:24ch}
+.coach-nudge{display:flex;gap:12px;align-items:center;justify-content:center;margin:16px auto;
+  max-width:520px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:12px 16px;box-shadow:var(--shadow-soft)}
+.coach-nudge p{font-size:14px;color:var(--muted)}
+.coach-nudge b{color:var(--foreground);font-weight:700}
+.seg{display:flex;gap:4px;justify-self:center;background:var(--surface-2);padding:4px;
+  border-radius:999px;width:max-content;margin:18px auto}
+.seg button{border:none;background:transparent;color:var(--muted);padding:9px 20px;
+  border-radius:999px;font-weight:700;font-size:14px;min-height:40px}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--foreground);box-shadow:var(--shadow-soft)}
+.answer textarea{width:100%;min-height:170px;border:1.5px solid var(--border);border-radius:var(--radius-lg);
+  background:var(--surface);color:inherit;font:inherit;padding:16px;resize:vertical;box-shadow:var(--shadow-soft)}
+.answer textarea:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.practice .foot{display:flex;justify-content:space-between;align-items:center;margin-top:16px;gap:12px}
+
+/* ============ REVIEW ============ */
+.review-head{display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-bottom:22px}
+.score-big{--v:72;width:100px;height:100px;border-radius:50%;flex:none;
+  background:conic-gradient(var(--accent) calc(var(--v)*1%),var(--surface-2) 0);
+  position:relative;display:grid;place-items:center}
+.score-big::after{content:"";position:absolute;width:76px;height:76px;border-radius:50%;background:var(--surface)}
+.score-big b{position:relative;font-size:28px;font-weight:800;font-variant-numeric:tabular-nums}
+.review-summary{display:flex;gap:14px;align-items:flex-start;background:var(--surface-2);
+  border-radius:var(--radius-lg);padding:16px;margin-bottom:18px}
+.review-summary p{font-size:15px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.feedback{list-style:none;padding:0;margin:10px 0 0}
+.feedback li{display:flex;gap:10px;margin:10px 0;font-size:14px}
+.feedback .mk{flex:none;margin-top:2px}
+.mk-good{color:var(--success)} .mk-improve{color:var(--warning)}
+.next{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  background:var(--accent);color:var(--accent-foreground);border:none}
+.next h3{color:var(--accent-foreground);font-size:17px}
+.next p{font-size:14px;opacity:.9}
+.next .btn{background:var(--accent-foreground);color:var(--accent)}
+
+.footnote{margin-top:36px;color:var(--muted);font-size:12px;text-align:center}
+
+/* responsive: real media query + forced-mobile toggle */
+.stage[data-viewport="mobile"] .workspace,
+.stage[data-viewport="mobile"] .grid2,
+.stage[data-viewport="mobile"] .home-cards{grid-template-columns:1fr}
+.stage[data-viewport="mobile"] .rail{position:static;order:2}
+.stage[data-viewport="mobile"] .msg .body{max-width:88%}
+.stage[data-viewport="mobile"] .welcome h1{font-size:26px}
+.stage[data-viewport="mobile"] .app-nav nav{display:none}
+@media (max-width:820px){
+  .workspace,.grid2,.home-cards{grid-template-columns:1fr}
+  .rail{position:static;order:2}
+  .msg .body{max-width:88%}
+  .app-nav nav{display:none}
+}
+</style>
+</head>
+<body>
+<header class="proto-bar">
+  <span class="brandmark"><span class="dot" aria-hidden="true"></span> Intelligent Interview Coach</span>
+  <span class="proto-label">Concept B · Coach Workspace · DEMO</span>
+  <nav class="proto-tabs" aria-label="Prototype screens">
+    <button data-screen="home" aria-selected="true">Home</button>
+    <button data-screen="prepare" aria-selected="false">Prepare</button>
+    <button data-screen="practice" aria-selected="false">Practice</button>
+    <button data-screen="review" aria-selected="false">Review</button>
+  </nav>
+  <div class="proto-toggles">
+    <button id="vpToggle" title="Toggle viewport">Desktop</button>
+    <button id="themeToggle" title="Toggle theme">Dark</button>
+    <a class="proto-home" href="../../index.html">↩ Gallery</a>
+  </div>
+</header>
+
+<main class="stage" data-viewport="desktop" id="stage">
+
+  <!-- HOME -->
+  <section class="screen active" data-screen="home" aria-label="Home">
+    <div class="app-nav">
+      <span class="brand"><span class="dot" aria-hidden="true"></span> Intelligent Interview Coach</span>
+      <nav><a class="on">Home</a><a>Prepare</a><a>Practice</a><a>Progress</a><a>History</a></nav>
+      <span class="spacer"></span><span class="avatar" title="Signed in as MA">MA</span>
+    </div>
+    <div class="home-wrap">
+      <div class="welcome">
+        <span class="coach-face" aria-hidden="true">◕</span>
+        <div>
+          <span class="hi">Your coach · here to help you prepare</span>
+          <h1>Hi MA — what are we preparing for?</h1>
+          <p class="lede">Tell me about the interview and I'll map what the role needs, where
+            you're already strong, and what's worth practising. Then we'll rehearse together.</p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="field">
+          <input placeholder="What interview are you preparing for?  e.g. Senior Product Manager at a fintech" aria-label="What interview are you preparing for?">
+          <button class="btn">Start</button>
+        </div>
+        <div class="aux">
+          <button class="aux-btn"><span class="mk">＋</span> Paste a job description</button>
+          <button class="aux-btn"><span class="mk">＋</span> Add your CV <span class="muted">(optional)</span></button>
+        </div>
+      </div>
+      <div class="reassure">
+        <span class="mk" aria-hidden="true">◇</span>
+        <span>Your CV and answers are used only to prepare you — never shared, and you decide what I remember.</span>
+      </div>
+      <div class="home-cards">
+        <div class="card">
+          <span class="mk" aria-hidden="true">◈</span>
+          <h4>Map the role</h4>
+          <p>Evidence-grounded view of what this level really expects.</p>
+        </div>
+        <div class="card">
+          <span class="mk" aria-hidden="true">◑</span>
+          <h4>Rehearse warmly</h4>
+          <p>Practise by typing or speaking — at your own pace, no camera.</p>
+        </div>
+        <div class="card">
+          <span class="mk" aria-hidden="true">✦</span>
+          <h4>Grow with feedback</h4>
+          <p>Clear, kind notes on what worked and what to sharpen.</p>
+        </div>
+      </div>
+      <p class="footnote">DEMO content — no real company, person or statistic is shown.</p>
+    </div>
+  </section>
+
+  <!-- PREPARE (hero screen) -->
+  <section class="screen" data-screen="prepare" aria-label="Prepare">
+    <div class="app-nav">
+      <span class="brand"><span class="dot" aria-hidden="true"></span> Intelligent Interview Coach</span>
+      <nav><a>Home</a><a class="on">Prepare</a><a>Practice</a><a>Progress</a><a>History</a></nav>
+      <span class="spacer"></span><span class="avatar" title="Signed in as MA">MA</span>
+    </div>
+    <div class="role-strip">
+      <h2>Preparing: Senior Product Manager</h2>
+      <span class="tag">Senior</span><span class="tag">United Kingdom</span>
+      <span class="tag">Northwind · demo</span>
+      <span class="readiness">Readiness
+        <span class="ring-wrap"><span class="ring" style="--v:72"></span><b>72</b></span></span>
+    </div>
+    <div class="workspace">
+      <!-- LEFT: coach conversation -->
+      <div>
+        <div class="conv">
+          <div class="msg me">
+            <span class="coach-face sm" aria-hidden="true" style="background:var(--surface-2);color:var(--foreground)">MA</span>
+            <div class="body">
+              <span class="who">You</span>
+              <div class="bubble me">What should I focus on with two weeks to prepare?</div>
+            </div>
+          </div>
+          <div class="msg">
+            <span class="coach-face sm" aria-hidden="true">◕</span>
+            <div class="body">
+              <span class="who">Coach</span>
+              <div class="bubble coach">
+                <p>Good question — two weeks is enough if we're deliberate. You're already
+                strong where it counts, so let's put the time into the gaps. Three priorities:</p>
+                <div class="priorities-inline">
+                  <div class="p"><span class="n">1</span><span class="t">Executive communication</span><span class="sev sev-high">▲ High</span></div>
+                  <div class="p"><span class="n">2</span><span class="t">Commercial ownership</span><span class="sev sev-med">◆ Medium</span></div>
+                  <div class="p"><span class="n">3</span><span class="t">Experimentation rigor</span><span class="sev sev-low">● Low</span></div>
+                </div>
+                <p class="strengths-line">Lean on your strengths while you're there:
+                  <b>stakeholder leadership</b> and <b>product discovery</b> both read clearly in your background.</p>
+                <p class="src-line">
+                  <details style="display:inline">
+                    <summary>Sources: O*NET · ESCO · 4 more</summary>
+                    <span class="muted"> — O*NET 11-3051 · ESCO Product manager · UK labour-market profile · 2 role postings (demo)</span>
+                  </details>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="activity"><span class="pulse" aria-hidden="true"></span> Comparing your preparation areas…</div>
+        </div>
+
+        <div class="composer">
+          <input placeholder="Ask the coach…  e.g. Why is commercial ownership a gap?" aria-label="Ask the coach">
+          <button class="btn small">Ask</button>
+        </div>
+        <div class="chips">
+          <button class="chip">What should I focus on?</button>
+          <button class="chip">Give me an example</button>
+          <button class="chip">Help me prepare this answer</button>
+        </div>
+
+        <!-- HITL: role confirm as a coaching moment -->
+        <div class="moment" role="group" aria-label="Confirm role">
+          <div class="head">
+            <span class="coach-face sm" aria-hidden="true">◕</span>
+            <div>
+              <b>Quick check — is this the right role?</b>
+              <div class="muted" style="font-size:14px;margin-top:2px">I've matched you to <b>Senior Product Manager</b>.
+                Confirming keeps everything on target.</div>
+            </div>
+          </div>
+          <div class="row"><button class="btn small">Yes, that's right</button><button class="btn ghost small">Choose another</button></div>
+        </div>
+
+        <!-- handoff to practice -->
+        <div class="handoff">
+          <div class="txt">
+            <h3>Feeling ready to rehearse?</h3>
+            <p>We'll start with the areas we just mapped — one question at a time.</p>
+          </div>
+          <button class="btn">Start interview practice →</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: persistent context rail -->
+      <aside class="rail" aria-label="Context">
+        <div class="card">
+          <h3>Role context <span class="live"><span class="pulse" aria-hidden="true"></span>Live</span></h3>
+          <div class="kv"><span>Role</span><span>Senior Product Manager</span></div>
+          <div class="kv"><span>Level</span><span>Senior</span></div>
+          <div class="kv"><span>Region</span><span>United Kingdom</span></div>
+          <div class="kv"><span>Company</span><span>Northwind · demo</span></div>
+          <div class="kv"><span>Readiness</span><span>72 / 100</span></div>
+        </div>
+        <div class="card">
+          <h3>Your strengths</h3>
+          <div class="item"><span class="mk" aria-hidden="true">◆</span><div><span class="name">Stakeholder leadership</span><small>Seen across your last two roles</small></div></div>
+          <div class="item"><span class="mk" aria-hidden="true">◆</span><div><span class="name">Product discovery</span><small>Strong signal in your CV</small></div></div>
+        </div>
+        <div class="card">
+          <h3>Priorities to prepare</h3>
+          <div class="item"><span class="mk" aria-hidden="true">▲</span><div><div class="top"><span class="name">Executive communication</span><span class="sev sev-high">High</span></div><small>Most-cited requirement for this level</small></div></div>
+          <div class="item"><span class="mk" aria-hidden="true">◆</span><div><div class="top"><span class="name">Commercial ownership</span><span class="sev sev-med">Medium</span></div><small>Appears in the job description</small></div></div>
+          <div class="item"><span class="mk" aria-hidden="true">●</span><div><div class="top"><span class="name">Experimentation rigor</span><span class="sev sev-low">Low</span></div><small>One example is enough</small></div></div>
+        </div>
+        <!-- memory consent as a card -->
+        <div class="card">
+          <h3>Remember for next time?</h3>
+          <p class="muted" style="font-size:13px;margin-bottom:8px">I can keep these so we pick up where we left off. Your choice.</p>
+          <label class="consent"><input type="checkbox" checked> Save the priorities above</label>
+          <label class="consent"><input type="checkbox"> Save my role &amp; region</label>
+          <div class="row" style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn small">Save</button><button class="btn ghost small">Not now</button>
+          </div>
+        </div>
+        <div class="card sources">
+          <h3>Sources</h3>
+          <details>
+            <summary>O*NET · ESCO · 4 more</summary>
+            <div class="list muted">
+              O*NET 11-3051<br>
+              ESCO — Product manager<br>
+              UK labour-market profile<br>
+              Competency framework (demo)<br>
+              2 role postings (demo)
+            </div>
+          </details>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- PRACTICE -->
+  <section class="screen" data-screen="practice" aria-label="Interview practice">
+    <div class="practice">
+      <div class="ctx">
+        <span class="coach-face sm" aria-hidden="true" style="width:26px;height:26px;font-size:11px">◕</span>
+        Senior Product Manager · Behavioural · Northwind (demo)
+      </div>
+      <div class="progress" aria-label="Question 2 of 5">
+        <i class="done"></i><i class="now"></i><i></i><i></i><i></i>
+      </div>
+      <p class="muted" style="text-align:center;font-size:14px;font-weight:600">Question 2 of 5</p>
+      <h2 class="q">Tell me about a time you aligned executives behind a roadmap.</h2>
+      <div class="coach-nudge">
+        <span class="coach-face sm" aria-hidden="true">◕</span>
+        <p>Take your time — structure it <b>situation → action → result</b>. I'm right here.</p>
+      </div>
+      <div class="seg" role="group" aria-label="Answer method">
+        <button aria-pressed="true">Type</button>
+        <button aria-pressed="false">Record</button>
+      </div>
+      <div class="answer">
+        <textarea placeholder="Start with the situation, then what you did, then the result…" aria-label="Your answer"></textarea>
+      </div>
+      <div class="foot">
+        <button class="btn ghost small">Pause</button>
+        <button class="btn">Submit answer</button>
+      </div>
+      <p class="footnote">Distraction-free by design. No camera, and timing is guidance only — never pressure. DEMO content.</p>
+    </div>
+  </section>
+
+  <!-- REVIEW -->
+  <section class="screen" data-screen="review" aria-label="Performance review">
+    <div class="app-nav">
+      <span class="brand"><span class="dot" aria-hidden="true"></span> Intelligent Interview Coach</span>
+      <nav><a>Home</a><a>Prepare</a><a>Practice</a><a>Progress</a><a class="on">History</a></nav>
+      <span class="spacer"></span><span class="avatar" title="Signed in as MA">MA</span>
+    </div>
+    <div class="review-head">
+      <div class="score-big" style="--v:72"><b>72</b></div>
+      <div>
+        <span class="eyebrow">Practice review · DEMO</span>
+        <h2 style="font-size:26px">Nicely done — two clear things to sharpen</h2>
+        <p class="muted">This readiness reflects today's session only. It's practice feedback, not a decision.</p>
+      </div>
+    </div>
+    <div class="review-summary">
+      <span class="coach-face sm" aria-hidden="true">◕</span>
+      <p>You told a real story with a clear shape, and you grounded it in specifics. Let's tighten how
+        you open and close, and you'll come across as more senior straight away.</p>
+    </div>
+    <div class="grid2">
+      <div class="card pad">
+        <h3 style="color:var(--success)">What worked</h3>
+        <ul class="feedback">
+          <li><span class="mk mk-good" aria-hidden="true">✓</span> Clear situation → action → result structure on the roadmap question.</li>
+          <li><span class="mk mk-good" aria-hidden="true">✓</span> Grounded your answer in specifics your CV supports.</li>
+        </ul>
+      </div>
+      <div class="card pad">
+        <h3 style="color:var(--warning)">What to improve</h3>
+        <ul class="feedback">
+          <li><span class="mk mk-improve" aria-hidden="true">▲</span> Lead with the executive takeaway before the detail.</li>
+          <li><span class="mk mk-improve" aria-hidden="true">▲</span> Quantify the outcome — tie it to revenue or margin.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card pad" style="margin-top:16px">
+      <h3>How to improve — a stronger shape</h3>
+      <p class="muted" style="margin-top:6px">Open with the decision and its business impact, then the
+        trade-off you managed, then the measurable result. One sentence each — say it out loud once before you type.</p>
+    </div>
+    <div class="card pad next" style="margin-top:16px">
+      <div>
+        <h3>Next recommended practice</h3>
+        <p>Executive communication · one focused question</p>
+      </div>
+      <button class="btn">Practise this next →</button>
+    </div>
+    <p class="footnote">DEMO content — scores are illustrative practice feedback, not a hiring decision.</p>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  var stage=document.getElementById('stage');
+  document.querySelectorAll('.proto-tabs button').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.proto-tabs button').forEach(function(x){x.setAttribute('aria-selected','false')});
+      b.setAttribute('aria-selected','true');
+      var s=b.dataset.screen;
+      document.querySelectorAll('.screen').forEach(function(sec){sec.classList.toggle('active',sec.dataset.screen===s)});
+      window.scrollTo({top:0,behavior:'instant'in window?'instant':'auto'});
+    });
+  });
+  var vp=document.getElementById('vpToggle');
+  vp.addEventListener('click',function(){
+    var m=stage.getAttribute('data-viewport')==='mobile';
+    stage.setAttribute('data-viewport',m?'desktop':'mobile');vp.textContent=m?'Desktop':'Mobile';
+  });
+  var th=document.getElementById('themeToggle');
+  th.addEventListener('click',function(){
+    var d=document.documentElement.getAttribute('data-theme')==='dark';
+    document.documentElement.setAttribute('data-theme',d?'light':'dark');th.textContent=d?'Dark':'Light';
+  });
+})();
+</script>
+</body>
+</html>

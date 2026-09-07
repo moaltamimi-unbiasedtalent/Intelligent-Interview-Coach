@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design Gallery — Intelligent Interview Coach (Phase 3A)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F7F7F5;--fg:#16171A;--surface:#FFFFFF;--surface-2:#EFEFEC;--muted:#5F626A;
+  --border:#E4E4E0;--accent:#1A5E63;--accent-fg:#FFFFFF;
+  --radius:14px;--shadow:0 1px 2px rgba(16,17,20,.05),0 10px 30px rgba(16,17,20,.07);
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+:root[data-theme="dark"]{
+  --bg:#131414;--fg:#F0F0EE;--surface:#1B1C1D;--surface-2:#232424;--muted:#A5A7AC;
+  --border:#2E2F2E;--accent:#63C0C2;--accent-fg:#05201F;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 30px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);line-height:1.6}
+a{color:inherit}h1,h2,h3{margin:0;letter-spacing:-.02em}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.bar{display:flex;align-items:center;gap:12px;padding:14px 22px;border-bottom:1px solid var(--border);background:var(--surface)}
+.brandmark{display:flex;align-items:center;gap:9px;font-weight:700}
+.dot{width:16px;height:16px;border-radius:5px;background:var(--accent);box-shadow:inset 0 0 0 3px color-mix(in srgb,var(--accent) 55%,#fff)}
+.bar .sp{margin-left:auto}
+.bar button,.bar a.b{background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:7px 11px;border-radius:8px;font:inherit;font-size:13px;text-decoration:none;cursor:pointer}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 22px 90px}
+.eyebrow{color:var(--accent);font-weight:600;font-size:14px}
+h1.title{font-size:clamp(30px,4vw,44px);margin:10px 0 8px}
+.lede{color:var(--muted);font-size:18px;max-width:64ch}
+.rec{margin-top:18px;display:inline-flex;gap:8px;align-items:center;background:var(--surface-2);
+  border:1px solid var(--border);border-radius:999px;padding:7px 14px;font-size:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:34px}
+@media (max-width:760px){.grid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+.swatch{height:96px;display:flex}
+.swatch i{flex:1}
+.card .body{padding:18px 20px;display:flex;flex-direction:column;gap:6px;flex:1}
+.card .k{font-size:12px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.card h3{font-size:20px}
+.card p{margin:0;color:var(--muted);font-size:14px}
+.card .foot{display:flex;align-items:center;gap:10px;margin-top:auto;padding-top:14px}
+.open{background:var(--accent);color:var(--accent-fg);border:none;border-radius:10px;padding:10px 16px;
+  font:inherit;font-weight:600;text-decoration:none;font-size:14px}
+.pill{font-size:12px;border:1px solid var(--border);border-radius:999px;padding:3px 9px;color:var(--muted)}
+.reco{border-color:var(--accent)}
+.links{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}
+.links a{font-size:14px;color:var(--muted);text-decoration:none;border:1px solid var(--border);
+  background:var(--surface);border-radius:8px;padding:8px 12px}
+.note{margin-top:34px;color:var(--muted);font-size:13px}
+h2.grp{font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:38px 0 4px}
+</style>
+</head>
+<body>
+<header class="bar">
+  <span class="brandmark"><span class="dot"></span> Intelligent Interview Coach</span>
+  <span class="pill">Phase 3A · Design spike · DEMO</span>
+  <span class="sp"></span>
+  <button id="themeToggle">Dark</button>
+</header>
+<div class="wrap">
+  <span class="eyebrow">Sprint 4 · Phase 3A</span>
+  <h1 class="title">Choose a design direction</h1>
+  <p class="lede">Four genuinely different directions for the future frontend. Open each to
+    explore Home · Prepare · Practice · Review, with viewport and dark-mode toggles. These are
+    static design artifacts — not the product, and not a final selection.</p>
+  <span class="rec">◆ Design-team recommendation: <b>Concept D — Precision Coach</b> · your call</span>
+
+  <div class="grid">
+    <div class="card">
+      <div class="swatch"><i style="background:#FAFAF8"></i><i style="background:#1F3A5F"></i><i style="background:#17181A"></i></div>
+      <div class="body">
+        <span class="k">Concept A · Apple influence</span>
+        <h3>Quiet Intelligence</h3>
+        <p>Editorial and premium. Lots of whitespace, serif headlines, one dominant action per screen. Confidence through simplicity.</p>
+        <div class="foot"><a class="open" href="concepts/quiet-intelligence/index.html">Open concept →</a><span class="pill">Serif + Inter</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="swatch"><i style="background:#FBF9F6"></i><i style="background:#1E6F63"></i><i style="background:#201C18"></i></div>
+      <div class="body">
+        <span class="k">Concept B · heyCoach + Lovable</span>
+        <h3>Coach Workspace</h3>
+        <p>A present, warm coach. Conversation is central with a live context rail that updates as you prepare.</p>
+        <div class="foot"><a class="open" href="concepts/coach-workspace/index.html">Open concept →</a><span class="pill">Manrope</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="swatch"><i style="background:#FCFCFD"></i><i style="background:#2563C9"></i><i style="background:#0E7C86"></i></div>
+      <div class="body">
+        <span class="k">Concept C · Canva influence</span>
+        <h3>Guided Journey</h3>
+        <p>Approachable and stage-based. A visible Understand → Prepare → Practise → Review journey; always clear what's next.</p>
+        <div class="foot"><a class="open" href="concepts/guided-journey/index.html">Open concept →</a><span class="pill">DM Sans</span></div>
+      </div>
+    </div>
+    <div class="card reco">
+      <div class="swatch"><i style="background:#F7F7F5"></i><i style="background:#1A5E63"></i><i style="background:#C9BBA0"></i></div>
+      <div class="body">
+        <span class="k">Concept D · Hybrid · Recommended</span>
+        <h3>Precision Coach</h3>
+        <p>Premium neutral shell + conversational preparation + progressive disclosure. Strong next actions; diagnostics kept separate.</p>
+        <div class="foot"><a class="open" href="concepts/precision-coach/index.html">Open concept →</a><span class="pill">Inter</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="grp">Diagnostics</h2>
+  <div class="grid" style="margin-top:12px">
+    <div class="card">
+      <div class="body">
+        <span class="k">Review &amp; Diagnostics</span>
+        <h3>Agent Inspector</h3>
+        <p>A developer/reviewer surface: a safe action trace (tools, retrieval, sources, memory, approvals, latency, cost) — never chain-of-thought or secrets.</p>
+        <div class="foot"><a class="open" href="agent-inspector.html">Open inspector →</a></div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="grp">Design documents</h2>
+  <div class="links">
+    <a href="README.md">README</a>
+    <a href="ux-principles.md">UX principles</a>
+    <a href="information-architecture.md">Information architecture</a>
+    <a href="user-flows.md">User flows</a>
+    <a href="design-tokens.md">Design tokens</a>
+    <a href="component-inventory.md">Component inventory</a>
+    <a href="concept-comparison.md">Concept comparison + recommendation</a>
+  </div>
+
+  <p class="note">All content is clearly-marked DEMO — no real company, person, statistic or
+    user data. No production code, API or runtime behaviour changes in this phase.</p>
+</div>
+<script>
+document.getElementById('themeToggle').addEventListener('click',function(){
+  var d=document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme',d?'light':'dark');this.textContent=d?'Dark':'Light';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Inspector — Review & Diagnostics (Concept)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --background:#F7F7F5;--foreground:#16171A;--surface:#FFFFFF;--surface-2:#EFEFEC;
+  --muted:#5F626A;--border:#E4E4E0;--accent:#1A5E63;--accent-foreground:#FFFFFF;
+  --success:#2E7D4F;--warning:#A66412;--danger:#A83246;
+  --radius:10px;--radius-lg:14px;--shadow:0 1px 2px rgba(16,17,20,.04),0 8px 24px rgba(16,17,20,.06);
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+:root[data-theme="dark"]{
+  --background:#131414;--foreground:#F0F0EE;--surface:#1B1C1D;--surface-2:#232424;
+  --muted:#A5A7AC;--border:#2E2F2E;--accent:#63C0C2;--accent-foreground:#05201F;
+  --success:#6FBF8E;--warning:#E0A758;--danger:#E58794;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--background);color:var(--foreground);font-family:var(--font);line-height:1.55}
+h1,h2,h3{margin:0;letter-spacing:-.01em}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.proto-bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+.brandmark{display:flex;align-items:center;gap:9px;font-weight:700;letter-spacing:-.02em}
+.dot{width:16px;height:16px;border-radius:5px;background:var(--accent);box-shadow:inset 0 0 0 3px color-mix(in srgb,var(--accent) 55%,#fff)}
+.proto-label{font-size:12px;color:var(--muted);border:1px solid var(--border);padding:2px 8px;border-radius:999px}
+.proto-toggles{margin-left:auto;display:flex;gap:6px}
+.proto-toggles button,.proto-home{background:var(--surface);border:1px solid var(--border);color:var(--muted);
+  padding:7px 11px;border-radius:8px;font-size:13px;text-decoration:none}
+.wrap{max-width:1100px;margin:0 auto;padding:26px 20px 80px}
+.head{display:flex;gap:16px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}
+.head h1{font-size:24px}
+.badge{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;border:1px solid var(--border);
+  display:inline-flex;gap:6px;align-items:center}
+.b-ok{color:var(--success)} .b-warn{color:var(--warning)} .b-err{color:var(--danger)}
+.sub{color:var(--muted);font-size:14px;margin-bottom:20px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:22px}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
+.metric .k{font-size:12px;color:var(--muted)}
+.metric .v{font-size:18px;font-weight:600;font-family:var(--mono);margin-top:2px}
+.notice{border:1px solid var(--border);background:var(--surface-2);border-radius:var(--radius);
+  padding:10px 14px;font-size:13px;color:var(--muted);margin-bottom:22px}
+h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:24px 0 10px}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
+.step .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.step .n{font-family:var(--mono);color:var(--muted);font-size:13px}
+.step h3{font-size:15px}
+.step .lat{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:6px 14px;margin-top:10px;font-size:13px}
+.kv div:nth-child(odd){color:var(--muted)}
+.kv code{font-family:var(--mono);font-size:12px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:12px;border:1px solid var(--border);border-radius:6px;padding:2px 7px}
+.chip.sel{border-color:var(--accent);color:var(--accent)}
+.approve{border-left:3px solid var(--accent)}
+.footnote{margin-top:30px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<header class="proto-bar">
+  <span class="brandmark"><span class="dot"></span> Intelligent Interview Coach</span>
+  <span class="proto-label">Agent Inspector · Review &amp; Diagnostics · DEMO</span>
+  <div class="proto-toggles">
+    <button id="themeToggle">Dark</button>
+    <a class="proto-home" href="index.html">↩ Gallery</a>
+  </div>
+</header>
+<div class="wrap">
+  <div class="head">
+    <h1>Preparation run</h1>
+    <span class="badge b-ok">● Completed</span>
+  </div>
+  <div class="sub">A safe action trace for reviewers and developers. It shows what the agent
+    did — never how it "reasoned". No chain-of-thought, system prompts, raw provider
+    payloads or secrets are ever shown here.</div>
+
+  <div class="meta">
+    <div class="metric"><div class="k">Run ID</div><div class="v">run_9f2c14a7</div></div>
+    <div class="metric"><div class="k">Goal</div><div class="v" style="font-size:14px">Prepare · Senior PM</div></div>
+    <div class="metric"><div class="k">Steps</div><div class="v">5</div></div>
+    <div class="metric"><div class="k">Latency</div><div class="v">4.8s</div></div>
+    <div class="metric"><div class="k">Tokens</div><div class="v">7,420</div></div>
+    <div class="metric"><div class="k">Est. cost</div><div class="v">$0.021</div></div>
+  </div>
+
+  <div class="notice">Tools available: <code>job_description_analyzer</code> ·
+    <code>candidate_gap_analyzer</code> · <code>preparation_plan_calculator</code> ·
+    <code>interview_question_generator</code> · <code>career_retrieval</code>.
+    The agent selects only what a step needs — retrieval is an explicit tool, not an
+    automatic step.</div>
+
+  <h2 class="section">Action trace</h2>
+
+  <div class="step">
+    <div class="top"><span class="n">01</span><h3>Understand the role</h3><span class="lat">0.6s</span></div>
+    <div class="kv">
+      <div>Tool selected</div><div><span class="chips"><span class="chip sel">job_description_analyzer</span></span></div>
+      <div>Retrieval used</div><div>No</div>
+      <div>Result</div><div>Resolved role: Senior Product Manager · seniority Senior · geography UK</div>
+      <div>Status</div><div><span class="badge b-ok">ok</span></div>
+    </div>
+  </div>
+
+  <div class="step approve">
+    <div class="top"><span class="n">02</span><h3>Confirm role with the candidate</h3><span class="lat">—</span></div>
+    <div class="kv">
+      <div>Human approval</div><div><span class="badge b-ok">● Confirmed</span> "Senior Product Manager"</div>
+      <div>Tool selected</div><div><span class="chips"><span class="chip">none</span></span></div>
+      <div>Note</div><div>Gate: the agent paused for confirmation before continuing.</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="top"><span class="n">03</span><h3>Check career evidence</h3><span class="lat">1.9s</span></div>
+    <div class="kv">
+      <div>Tool selected</div><div><span class="chips"><span class="chip sel">career_retrieval</span></span></div>
+      <div>Retrieval used</div><div>Yes · hybrid (vector + keyword) · 8 chunks → 5 kept</div>
+      <div>Sources</div><div>O*NET 11-3051 · ESCO Product manager · UK labour-market profile · +2</div>
+      <div>Status</div><div><span class="badge b-ok">ok</span></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="top"><span class="n">04</span><h3>Compare preparation areas</h3><span class="lat">1.1s</span></div>
+    <div class="kv">
+      <div>Tool selected</div><div><span class="chips"><span class="chip sel">candidate_gap_analyzer</span><span class="chip sel">preparation_plan_calculator</span></span></div>
+      <div>Retrieval used</div><div>No (reused step 03 evidence)</div>
+      <div>Result</div><div>3 priorities · deterministic scoring in Python</div>
+      <div>Status</div><div><span class="badge b-warn">partial</span> 1 optional signal missing</div>
+    </div>
+  </div>
+
+  <div class="step approve">
+    <div class="top"><span class="n">05</span><h3>Offer to remember priorities</h3><span class="lat">—</span></div>
+    <div class="kv">
+      <div>Memory write</div><div><span class="badge b-ok">● Approved</span> keys: <code>priorities</code> (2 items)</div>
+      <div>Human approval</div><div>Required before any memory write</div>
+      <div>Status</div><div><span class="badge b-ok">ok</span></div>
+    </div>
+  </div>
+
+  <p class="footnote">DEMO trace. Reviewer/diagnostic surface only — visually a little more
+  technical than the candidate experience, but inside the same design system. Not linked to
+  the product runtime.</p>
+</div>
+<script>
+document.getElementById('themeToggle').addEventListener('click',function(){
+  var d=document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme',d?'light':'dark');this.textContent=d?'Dark':'Light';
+});
+</script>
+</body>
+</html>

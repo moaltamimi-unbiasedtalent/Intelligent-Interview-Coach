@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Precision Coach — Intelligent Interview Coach (Concept D)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --background:#F7F7F5; --foreground:#16171A; --surface:#FFFFFF; --surface-2:#EFEFEC;
+  --muted:#5F626A; --border:#E4E4E0; --accent:#1A5E63; --accent-foreground:#FFFFFF;
+  --secondary:#C9BBA0; --success:#2E7D4F; --warning:#A66412; --danger:#A83246;
+  --radius:10px; --radius-lg:14px; --shadow:0 1px 2px rgba(16,17,20,.04),0 8px 24px rgba(16,17,20,.06);
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --maxw:1180px;
+}
+:root[data-theme="dark"]{
+  --background:#131414; --foreground:#F0F0EE; --surface:#1B1C1D; --surface-2:#232424;
+  --muted:#A5A7AC; --border:#2E2F2E; --accent:#63C0C2; --accent-foreground:#05201F;
+  --secondary:#5A5342; --success:#6FBF8E; --warning:#E0A758; --danger:#E58794;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--background);color:var(--foreground);font-family:var(--font);
+  line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{line-height:1.15;margin:0;letter-spacing:-.01em;font-weight:600}
+p{margin:0}
+a{color:inherit}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+/* prototype chrome (design-artifact frame, not product) */
+.proto-bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;
+  flex-wrap:wrap;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+.proto-bar .brandmark{display:flex;align-items:center;gap:9px;font-weight:700;letter-spacing:-.02em}
+.dot{width:16px;height:16px;border-radius:5px;background:var(--accent);
+  box-shadow:inset 0 0 0 3px color-mix(in srgb,var(--accent) 55%, #fff)}
+.proto-label{font-size:12px;color:var(--muted);border:1px solid var(--border);
+  padding:2px 8px;border-radius:999px}
+.proto-tabs{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+.proto-tabs button{background:transparent;border:1px solid transparent;color:var(--muted);
+  padding:7px 13px;border-radius:999px;font-size:14px;font-weight:500}
+.proto-tabs button[aria-selected="true"]{background:var(--surface-2);color:var(--foreground);
+  border-color:var(--border)}
+.proto-toggles{display:flex;gap:6px}
+.proto-toggles button{background:var(--surface);border:1px solid var(--border);color:var(--muted);
+  padding:7px 11px;border-radius:8px;font-size:13px}
+.proto-home{font-size:13px;color:var(--muted);text-decoration:none}
+
+.stage{max-width:var(--maxw);margin:0 auto;padding:28px 20px 80px}
+.stage[data-viewport="mobile"]{max-width:390px}
+.screen{display:none;animation:fade .2s ease-out}
+.screen.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* product app shell */
+.app-nav{display:flex;align-items:center;gap:24px;padding:6px 0 22px}
+.app-nav .brand{font-weight:700;letter-spacing:-.02em}
+.app-nav nav{display:flex;gap:6px;flex-wrap:wrap}
+.app-nav nav a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;
+  padding:6px 10px;border-radius:8px}
+.app-nav nav a.on{color:var(--foreground);background:var(--surface-2)}
+.app-nav .spacer{margin-left:auto}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--secondary);
+  display:grid;place-items:center;font-size:12px;font-weight:700;color:#3a3324}
+
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);
+  color:var(--accent-foreground);border:none;padding:12px 18px;border-radius:var(--radius);
+  font-weight:600;font-size:15px;transition:transform .12s ease,filter .12s ease}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--foreground);border:1px solid var(--border)}
+.btn.small{padding:8px 12px;font-size:13px}
+.demo-flag{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow)}
+.pad{padding:20px}
+.eyebrow{font-size:13px;font-weight:600;color:var(--accent);letter-spacing:.02em}
+.muted{color:var(--muted)}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;
+  padding:3px 9px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2)}
+.sev-high{color:var(--danger)} .sev-med{color:var(--warning)} .sev-low{color:var(--success)}
+.divider{height:1px;background:var(--border);margin:20px 0}
+
+/* HOME */
+.hero{display:grid;gap:22px;padding:40px 0 12px;max-width:720px}
+.hero h1{font-size:clamp(34px,4.6vw,56px)}
+.hero p.lede{font-size:19px;color:var(--muted);max-width:60ch}
+.entry{margin-top:8px}
+.entry .field{display:flex;gap:10px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:10px;box-shadow:var(--shadow)}
+.entry input{flex:1;border:none;background:transparent;color:inherit;font:inherit;padding:8px 8px}
+.entry input:focus{outline:none}
+.entry .aux{display:flex;gap:14px;margin-top:12px;font-size:14px}
+.entry .aux a{color:var(--muted);text-decoration:none;display:inline-flex;gap:6px;align-items:center}
+.entry .aux a:hover{color:var(--foreground)}
+.reassure{display:flex;gap:18px;margin-top:28px;flex-wrap:wrap;color:var(--muted);font-size:14px}
+.reassure span{display:inline-flex;gap:7px;align-items:center}
+
+/* PREPARE workspace */
+.workspace{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+.role-strip{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.role-strip h2{font-size:22px}
+.readiness{margin-left:auto;display:flex;align-items:center;gap:10px}
+.ring{--v:72;width:44px;height:44px;border-radius:50%;
+  background:conic-gradient(var(--accent) calc(var(--v)*1%),var(--surface-2) 0);
+  display:grid;place-items:center}
+.ring::after{content:"";width:32px;height:32px;border-radius:50%;background:var(--surface)}
+.ring b{position:absolute;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.ring-wrap{position:relative;display:grid;place-items:center}
+
+.thread{display:grid;gap:14px}
+.msg{display:grid;gap:6px}
+.msg .who{font-size:12px;font-weight:600;color:var(--muted)}
+.bubble{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:14px 16px;box-shadow:var(--shadow)}
+.bubble.coach{border-left:3px solid var(--accent)}
+.bubble.me{background:var(--surface-2);box-shadow:none;justify-self:end;max-width:80%}
+.activity{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px;padding:2px 2px}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+.composer{margin-top:16px;display:flex;gap:10px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:8px 8px 8px 14px;box-shadow:var(--shadow)}
+.composer input{flex:1;border:none;background:transparent;color:inherit;font:inherit}
+.composer input:focus{outline:none}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{font-size:13px;color:var(--muted);border:1px solid var(--border);background:var(--surface);
+  padding:7px 12px;border-radius:999px}
+
+.rail{display:grid;gap:16px}
+.rail h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px}
+.item{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--border)}
+.item:first-of-type{border-top:none}
+.item .mk{margin-top:3px;color:var(--accent)}
+.item small{color:var(--muted)}
+.hitl{border:1px dashed var(--accent);border-radius:var(--radius-lg);padding:14px;background:color-mix(in srgb,var(--accent) 6%,var(--surface))}
+.hitl .row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.consent{display:flex;gap:8px;align-items:center;margin:6px 0;font-size:14px}
+.sources{font-size:14px;color:var(--muted)}
+.sources details summary{cursor:pointer;color:var(--foreground)}
+
+/* PRACTICE */
+.practice{max-width:760px;margin:0 auto}
+.practice .ctx{display:flex;gap:10px;align-items:center;color:var(--muted);font-size:14px;justify-content:center}
+.progress{display:flex;gap:6px;justify-content:center;margin:20px 0}
+.progress i{width:34px;height:5px;border-radius:3px;background:var(--surface-2)}
+.progress i.done{background:var(--accent)} .progress i.now{background:var(--secondary)}
+.q{font-size:clamp(22px,3vw,30px);text-align:center;margin:26px auto 10px;max-width:22ch}
+.seg{display:flex;gap:4px;justify-self:center;background:var(--surface-2);padding:4px;border-radius:999px;width:max-content;margin:20px auto}
+.seg button{border:none;background:transparent;color:var(--muted);padding:8px 18px;border-radius:999px;font-weight:600;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--foreground);box-shadow:var(--shadow)}
+.answer{margin-top:8px}
+.answer textarea{width:100%;min-height:150px;border:1px solid var(--border);border-radius:var(--radius-lg);
+  background:var(--surface);color:inherit;font:inherit;padding:14px;resize:vertical}
+.answer textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.practice .foot{display:flex;justify-content:space-between;align-items:center;margin-top:16px}
+
+/* REVIEW */
+.review-head{display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-bottom:22px}
+.score-big{--v:72;width:96px;height:96px;border-radius:50%;
+  background:conic-gradient(var(--accent) calc(var(--v)*1%),var(--surface-2) 0);position:relative;display:grid;place-items:center}
+.score-big::after{content:"";position:absolute;width:74px;height:74px;border-radius:50%;background:var(--surface)}
+.score-big b{position:relative;font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.feedback li{margin:8px 0}
+.next{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+
+/* responsive: real media query + forced-mobile toggle */
+.stage[data-viewport="mobile"] .workspace,.stage[data-viewport="mobile"] .grid2{grid-template-columns:1fr}
+.stage[data-viewport="mobile"] .rail{order:-1}
+.stage[data-viewport="mobile"] .hero h1{font-size:32px}
+@media (max-width:820px){
+  .workspace,.grid2{grid-template-columns:1fr}
+  .rail{order:-1}
+}
+.footnote{margin-top:40px;color:var(--muted);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<header class="proto-bar">
+  <span class="brandmark"><span class="dot" aria-hidden="true"></span> Intelligent Interview Coach</span>
+  <span class="proto-label">Concept D · Precision Coach · DEMO</span>
+  <nav class="proto-tabs" aria-label="Prototype screens">
+    <button data-screen="home" aria-selected="true">Home</button>
+    <button data-screen="prepare" aria-selected="false">Prepare</button>
+    <button data-screen="practice" aria-selected="false">Practice</button>
+    <button data-screen="review" aria-selected="false">Review</button>
+  </nav>
+  <div class="proto-toggles">
+    <button id="vpToggle" title="Toggle viewport">Desktop</button>
+    <button id="themeToggle" title="Toggle theme">Dark</button>
+    <a class="proto-home" href="../../index.html">↩ Gallery</a>
+  </div>
+</header>
+
+<main class="stage" data-viewport="desktop" id="stage">
+
+  <!-- HOME -->
+  <section class="screen active" data-screen="home" aria-label="Home">
+    <div class="app-nav">
+      <span class="brand">Intelligent Interview Coach</span>
+      <nav><a class="on">Home</a><a>Prepare</a><a>Practice</a><a>Progress</a><a>History</a></nav>
+      <span class="spacer"></span><span class="avatar">MA</span>
+    </div>
+    <div class="hero">
+      <span class="eyebrow">Interview preparation, guided</span>
+      <h1>From the job description to interview-ready.</h1>
+      <p class="lede">Tell the coach what you're preparing for. It maps what the role
+        needs, where you're strong, and what to practise — then helps you rehearse.</p>
+      <div class="entry">
+        <div class="field">
+          <input placeholder="What interview are you preparing for?  e.g. Senior Product Manager at a fintech" aria-label="What are you preparing for?">
+          <button class="btn">Start</button>
+        </div>
+        <div class="aux">
+          <a href="#">＋ Paste a job description</a>
+          <a href="#">＋ Add your CV <span class="muted">(optional)</span></a>
+        </div>
+      </div>
+      <div class="reassure">
+        <span>◦ Evidence-grounded guidance</span>
+        <span>◦ Your data is used only to prepare you</span>
+        <span>◦ Practise by typing or speaking</span>
+      </div>
+    </div>
+    <p class="footnote">DEMO content — no real company, person or statistic is shown.</p>
+  </section>
+
+  <!-- PREPARE -->
+  <section class="screen" data-screen="prepare" aria-label="Prepare">
+    <div class="app-nav">
+      <span class="brand">Intelligent Interview Coach</span>
+      <nav><a>Home</a><a class="on">Prepare</a><a>Practice</a><a>Progress</a><a>History</a></nav>
+      <span class="spacer"></span><span class="avatar">MA</span>
+    </div>
+    <div class="role-strip">
+      <h2>Senior Product Manager</h2>
+      <span class="tag">Senior</span><span class="tag">United Kingdom</span>
+      <span class="tag">Northwind · demo</span>
+      <span class="readiness"><span class="muted" style="font-size:13px">Readiness</span>
+        <span class="ring-wrap"><span class="ring" style="--v:72"></span><b>72</b></span></span>
+    </div>
+    <div class="workspace">
+      <div>
+        <div class="thread">
+          <div class="msg"><span class="who">You</span>
+            <div class="bubble me">What should I focus on with two weeks to prepare?</div></div>
+          <div class="msg"><span class="who">Coach</span>
+            <div class="bubble coach">
+              <p>Three areas will move the needle most. You're strong on stakeholder
+              leadership and discovery — so let's spend the time where the gaps are:</p>
+              <p style="margin-top:10px">1 · <b>Executive communication</b> — framing trade-offs for a leadership audience.<br>
+              2 · <b>Commercial ownership</b> — tying roadmap choices to revenue and margin.<br>
+              3 · <b>Experimentation rigor</b> — a lighter gap, worth one example.</p>
+              <p class="sources" style="margin-top:12px">Sources:
+                <details style="display:inline"><summary>O*NET · ESCO · 4 more</summary>
+                <span class="muted">O*NET 11-3051 · ESCO Product manager · UK labour-market profile · 2 role postings (demo)</span></details></p>
+            </div></div>
+          <div class="activity"><span class="pulse"></span> Comparing your preparation areas…</div>
+        </div>
+        <div class="composer">
+          <input placeholder="Ask the coach…  e.g. Why is commercial ownership a gap?" aria-label="Ask the coach">
+          <button class="btn small">Ask</button>
+        </div>
+        <div class="chips">
+          <button class="chip">What should I focus on?</button>
+          <button class="chip">Give me an example</button>
+          <button class="chip">Help me prepare this answer</button>
+        </div>
+
+        <div class="hitl" style="margin-top:20px" role="group" aria-label="Confirm role">
+          <b>I think this role is closest to Senior Product Manager.</b>
+          <div class="muted" style="font-size:14px;margin-top:4px">Confirm so the preparation stays on target.</div>
+          <div class="row"><button class="btn small">Confirm</button><button class="btn ghost small">Choose another</button></div>
+        </div>
+      </div>
+
+      <aside class="rail">
+        <div class="card pad">
+          <h3>Your strengths</h3>
+          <div class="item"><span class="mk">◆</span><div>Stakeholder leadership<br><small>Seen across your last two roles</small></div></div>
+          <div class="item"><span class="mk">◆</span><div>Product discovery<br><small>Strong signal in your CV</small></div></div>
+        </div>
+        <div class="card pad">
+          <h3>Priorities to prepare</h3>
+          <div class="item"><span class="mk sev-high">▲</span><div>Executive communication <span class="tag sev-high">High</span><br><small>Most-cited requirement for this level</small></div></div>
+          <div class="item"><span class="mk sev-med">▲</span><div>Commercial ownership <span class="tag sev-med">Medium</span><br><small>Appears in the job description</small></div></div>
+          <div class="item"><span class="mk sev-low">▲</span><div>Experimentation rigor <span class="tag sev-low">Low</span><br><small>One example is enough</small></div></div>
+        </div>
+        <div class="card pad hitl-mem">
+          <h3>Remember for next time?</h3>
+          <label class="consent"><input type="checkbox" checked> Executive communication</label>
+          <label class="consent"><input type="checkbox" checked> Commercial ownership</label>
+          <div class="row" style="display:flex;gap:8px;margin-top:6px">
+            <button class="btn small">Save</button><button class="btn ghost small">Not now</button>
+          </div>
+        </div>
+        <div class="card pad" style="display:flex;flex-direction:column;gap:10px">
+          <h3>Ready when you are</h3>
+          <p class="muted" style="font-size:14px">Practise the areas we've identified.</p>
+          <button class="btn">Start interview practice →</button>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- PRACTICE -->
+  <section class="screen" data-screen="practice" aria-label="Interview practice">
+    <div class="practice">
+      <div class="ctx">Senior Product Manager · Behavioural · Northwind (demo)</div>
+      <div class="progress" aria-label="Question 2 of 5">
+        <i class="done"></i><i class="now"></i><i></i><i></i><i></i>
+      </div>
+      <p class="muted" style="text-align:center;font-size:14px">Question 2 of 5</p>
+      <h2 class="q">Tell me about a time you aligned executives behind a roadmap.</h2>
+      <div class="seg" role="group" aria-label="Answer method">
+        <button aria-pressed="true">Type</button>
+        <button aria-pressed="false">Record</button>
+      </div>
+      <div class="answer">
+        <textarea placeholder="Take a breath. Structure it as situation → action → result…" aria-label="Your answer"></textarea>
+      </div>
+      <div class="foot">
+        <button class="btn ghost small">Pause</button>
+        <button class="btn">Submit answer</button>
+      </div>
+      <p class="footnote">Distraction-free by design. No camera, no timer pressure — timing is guidance only.</p>
+    </div>
+  </section>
+
+  <!-- REVIEW -->
+  <section class="screen" data-screen="review" aria-label="Performance review">
+    <div class="app-nav">
+      <span class="brand">Intelligent Interview Coach</span>
+      <nav><a>Home</a><a>Prepare</a><a>Practice</a><a>Progress</a><a class="on">History</a></nav>
+      <span class="spacer"></span><span class="avatar">MA</span>
+    </div>
+    <div class="review-head">
+      <div class="score-big" style="--v:72"><b>72</b></div>
+      <div>
+        <span class="eyebrow">Practice review · DEMO</span>
+        <h2 style="font-size:26px">Solid, with two clear areas to sharpen</h2>
+        <p class="muted">Readiness reflects this session only — it's practice feedback, not a decision.</p>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card pad">
+        <h3 style="color:var(--success)">What worked</h3>
+        <ul class="feedback">
+          <li>Clear situation-action-result structure on the roadmap question.</li>
+          <li>Grounded answers in specifics your CV supports.</li>
+        </ul>
+      </div>
+      <div class="card pad">
+        <h3 style="color:var(--warning)">What to improve</h3>
+        <ul class="feedback">
+          <li>Lead with the executive takeaway before the detail.</li>
+          <li>Quantify the outcome — tie it to revenue or margin.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card pad" style="margin-top:16px">
+      <h3>How to improve — a stronger structure</h3>
+      <p class="muted" style="margin-top:6px">Open with the decision and its business impact, then the trade-off you
+      managed, then the measurable result. One sentence each.</p>
+    </div>
+    <div class="card pad next" style="margin-top:16px">
+      <div><b>Next recommended practice</b><br><span class="muted">Executive communication · one focused question</span></div>
+      <button class="btn">Practise this next →</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  var stage=document.getElementById('stage');
+  document.querySelectorAll('.proto-tabs button').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.proto-tabs button').forEach(function(x){x.setAttribute('aria-selected','false')});
+      b.setAttribute('aria-selected','true');
+      var s=b.dataset.screen;
+      document.querySelectorAll('.screen').forEach(function(sec){sec.classList.toggle('active',sec.dataset.screen===s)});
+      window.scrollTo({top:0,behavior:'instant'in window?'instant':'auto'});
+    });
+  });
+  var vp=document.getElementById('vpToggle');
+  vp.addEventListener('click',function(){
+    var m=stage.getAttribute('data-viewport')==='mobile';
+    stage.setAttribute('data-viewport',m?'desktop':'mobile');vp.textContent=m?'Desktop':'Mobile';
+  });
+  var th=document.getElementById('themeToggle');
+  th.addEventListener('click',function(){
+    var d=document.documentElement.getAttribute('data-theme')==='dark';
+    document.documentElement.setAttribute('data-theme',d?'light':'dark');th.textContent=d?'Dark':'Light';
+  });
+})();
+</script>
+</body>
+</html>
