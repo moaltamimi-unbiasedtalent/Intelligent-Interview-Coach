@@ -43,6 +43,14 @@ assumptions in core logic, prompts, scoring or examples.
   It imports no Streamlit and no UI module (enforced by
   `tests/test_application_boundary.py`); the UI may import it, never the reverse.
   See `docs/sprint4_architecture.md`.
+- **FastAPI backend (Sprint 4 Phase 2).** `src/api/*` is a thin, typed HTTP layer
+  over `src/application` (base path `/api/v1`); run with
+  `uvicorn src.api.main:app --reload`. Streamlit and FastAPI coexist over the same
+  application layer. Routes hold no business logic; errors return a safe envelope;
+  every request carries an `X-Request-Id`; CORS comes from `FRONTEND_ORIGINS`.
+  In-progress interview state uses a transitional, bounded, user-scoped in-memory
+  store; identity is a transitional header-based boundary (production needs a real
+  gateway/OIDC). No Next.js/LangGraph yet. See `docs/sprint4_architecture.md`.
 - **Providers.** Career Intelligence uses LangChain over OpenRouter; the
   Interview module uses a direct OpenRouter HTTPX client. Optional speech
   (`[speech]`) and Live (`[live]`) backends are lazily imported. **Live is
@@ -90,7 +98,7 @@ assumptions in core logic, prompts, scoring or examples.
   (mock the boundaries). Do not weaken tests to pass or silently swallow errors.
 - Tests must not mutate committed artifacts (write to `tmp_path`).
 - `ruff check .` (conservative `F`/`E9` rules) must pass.
-- Current measured suite on this branch: **1280 passed, 2 skipped** (the skips are
+- Current measured suite on this branch: **1305 passed, 2 skipped** (the skips are
   the RAGAS installed/absent guards). Re-measure with `pytest -q` rather than
   hard-coding a number in multiple places.
 

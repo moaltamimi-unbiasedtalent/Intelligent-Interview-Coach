@@ -123,6 +123,62 @@ LangGraph was added.
 (`tests/test_application_boundary.py`); the UI may import the application layer,
 never the reverse.
 
+## 3b. Phase 2 — FastAPI backend (implemented)
+
+Phase 2 adds a thin, typed **FastAPI** backend (`src/api`) over the same
+application layer. Streamlit keeps working unchanged; both call `src/application`.
+FastAPI orchestrates HTTP concerns only — no Career/Interview/RAG/persistence/
+RAGAS/security logic is duplicated in routes.
+
+```mermaid
+flowchart TD
+    ST[Streamlit UI] --> APP[Application layer — src/application]
+    API[FastAPI — src/api  ✅<br/>/api/v1] --> APP
+    APP --> DOM[Existing domain / RAG / tools / persistence]
+    NX[Next.js frontend  🔷 later] -.HTTP.-> API
+```
+
+**Surface (`/api/v1`, plus `/api/health` liveness alias):**
+- `GET /health`, `/ready`, `/capabilities`
+- `POST /career/chat`, `/career/job-analysis`, `/career/gap-analysis`,
+  `/career/preparation-plan`, `/career/questions`
+- `POST /interviews`, `GET /interviews/{id}`, `POST /interviews/{id}/answers`,
+  `/interviews/{id}/next-question`, `/interviews/{id}/complete`,
+  `POST|GET /interviews/{id}/report`
+- `GET /history/interviews`, `/history/interviews/{id}` (user-scoped)
+- `GET /knowledge/sources`, `/knowledge/snapshot`
+- `GET /evaluation/latest`, `/evaluation/runs`, `/evaluation/runs/{id}`,
+  `/evaluation/ragas/configuration`
+
+**Run locally:** `uvicorn src.api.main:app --reload` (interactive docs at `/docs`).
+
+**Cross-cutting:** a server-generated `X-Request-Id` per request; a stable error
+envelope `{"error": {code, message, request_id}}` (app errors → 422/503, unknown
+→ safe 500, never a traceback/SQL/secret); CORS from `FRONTEND_ORIGINS` (never
+wildcard-with-credentials).
+
+**Resource lifecycle:** expensive resources (vector store, repository, pricing,
+translation cache, configs) are built once and cached on `app.state` under a lock
+(application-lifetime); `CareerApplicationService`/`InterviewApplicationService`
+are cheap request-scoped wrappers. Nothing runs a provider/DB call at import.
+
+**Interview session state (transitional):** in-progress interviews live in a
+bounded, thread-safe, **user-scoped in-memory** store (`src/api/session_store.py`)
+— the current schema persists only *completed* interviews. This is in-process
+only (documented); durable in-progress session state is a later phase. Completed
+reports still persist through `history_service`.
+
+**Auth (transitional):** identity comes from the anonymous dev user unless an
+`X-User-Subject` header is supplied (set only by a trusted upstream gateway or in
+tests). History is strictly user-scoped (`repo.get_interview(user_id, id)`), so no
+user can read another's reports. **Production must front the API with a real
+authenticating gateway / OIDC** — see Phase 3/7.
+
+**Deferred (documented):** Deep Dive HTTP endpoints (the application service
+supports them; the surface is not yet exposed) and company-document uploads (the
+existing limits are preserved in the domain; a secure multipart endpoint is a
+later phase). No paid RAGAS run endpoint. **No Next.js and no LangGraph yet.**
+
 ## 4. Internal naming is intentionally stable
 
 To evolve functionality first and avoid churn/regression risk, Sprint 4 **does
