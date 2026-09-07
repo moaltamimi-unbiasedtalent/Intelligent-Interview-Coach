@@ -415,13 +415,17 @@ the Career→Interview handoff all run against the FastAPI contracts. Retrieval 
 deterministic (agentic RAG is a later phase). See
 [frontend/README.md](frontend/README.md).
 
-A **LangGraph agent** (Phases 4–5) runs side-by-side with the deterministic Career
+A **LangGraph agent** (Phases 4–6) runs side-by-side with the deterministic Career
 flow: a single, stateful, bounded, tool-using agent (`src/agent`) behind an
 experimental `POST /api/v1/agent/run` — it does **not** replace `/career/chat`. It
-now wields the **four real Career tools** (job-description analysis, gap analysis,
-preparation plan, question generation) as allowlisted functions, selecting and
-sequencing them by intent. Career **retrieval** as an agent tool (agentic RAG),
-memory and human-in-the-loop are later phases. See
+wields **five real Career tools** as allowlisted functions, selecting and sequencing
+them by intent: job-description analysis, gap analysis, preparation plan, question
+generation, and — new in **Phase 6 (Agentic RAG)** — `SearchCareerKnowledge`.
+Retrieval is now **conditional and tool-selected**: the agent decides *whether*
+external career evidence is needed, while the deterministic Sprint 3 router still
+decides *which* lanes/sources (the model never touches low-level vector/BM25/
+repository stores). Retrieved content stays untrusted data and citations come only
+from retrieved evidence. Memory and human-in-the-loop are later phases. See
 [docs/sprint4_architecture.md](docs/sprint4_architecture.md).
 
 ## Testing
@@ -434,8 +438,8 @@ python scripts/eval_expanded.py          # 11R-A expanded evaluation
 (cd components/live_interviewer/frontend && npm test)   # frontend (vitest)
 ```
 
-Latest: **1333 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
-guards); **22 passed** (frontend). Browser E2E: **5 passed** (Playwright/chromium).
+Latest: **1371 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
+guards); **35 passed** (frontend). Browser E2E: **5 passed** (Playwright/chromium).
 
 ## Known limitations
 

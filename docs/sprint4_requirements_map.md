@@ -1,14 +1,14 @@
 # Sprint 4 Requirements Map — Intelligent Interview Coach
 
 Maps the Sprint 4 course requirements to implementation. Status is accurate as of
-Phase 4 — items still in progress say so; nothing future is overstated.
+Phase 6 — items still in progress say so; nothing future is overstated.
 
 ## Core requirements
 
-| Requirement | Status (Phase 4) | Notes |
+| Requirement | Status (Phase 6) | Notes |
 |---|---|---|
 | Clear agent purpose | ✅ implemented/documented | Career & Interview Preparation Agent — one primary agent from target role to practised interview. |
-| 3+ tools (agent) | ✅ complete | The agent registers **4 real Career tools** (job analysis, gap analysis, preparation plan, question generation) as thin adapters over the existing capabilities. Career retrieval becomes an agent tool in **Phase 6** (Agentic RAG). |
+| 3+ tools (agent) | ✅ complete | The agent registers **5 real Career tools** (job analysis, gap analysis, preparation plan, question generation, and career-knowledge retrieval) as thin adapters over the existing capabilities. |
 | LangGraph / LangChain | ✅ implemented | Single stateful bounded LangGraph agent; LangChain/OpenRouter model integration reused. |
 | User interface | ✅ implemented | Next.js/TypeScript frontend (Streamlit retained temporarily). |
 | Error handling | ✅ implemented | Safe errors + graph/tool failure handling (bounded loop, tool-failure recovery, safe messages). |
@@ -21,9 +21,9 @@ Phase 4 — items still in progress say so; nothing future is overstated.
 |---|---|---|
 | Medium | Memory (long-term) | 🔷 planned (Phase 7) |
 | Medium | Authentication / personalisation | ⚙️ transitional seam (production OIDC later) |
-| Medium | 5 tools (agent-registered) | ⚙️ 4 today; a 5th (retrieval) lands in Phase 6 |
-| Medium | Security guard | ✅ existing / preserved (agent adds allowlist + injection-safe prompt) |
-| Hard | Agentic RAG | 🔷 planned (Phase 6) |
+| Medium | 5 tools (agent-registered) | ✅ complete — 5 real tools incl. `SearchCareerKnowledge` (Phase 6) |
+| Medium | Security guard | ✅ existing / preserved (agent adds allowlist + injection-safe prompt; retrieved content stays untrusted DATA) |
+| Hard | Agentic RAG | ✅ complete — the agent decides *whether* to retrieve; the deterministic Sprint 3 router still decides *which* lanes (Phase 6) |
 | Hard | RAGAS | ✅ existing / extend to agent runs later |
 | Hard | External source | 🔷 possible company research tool |
 
