@@ -1,0 +1,43 @@
+"""Typed agent state (short-term / execution state only).
+
+This is LangGraph in-run state — NOT long-term cross-session memory (that is a
+later phase). It holds only what the bounded loop needs. Secrets, DB URLs, system
+prompts and chain-of-thought are never stored here; candidate/JD text may live in
+short-term state while a run executes but is never written to events or logs.
+"""
+
+from __future__ import annotations
+
+from typing import Annotated, Any, TypedDict
+
+from langgraph.graph.message import add_messages
+
+# Terminal + transient run statuses.
+STATUS_RUNNING = "running"
+STATUS_COMPLETED = "completed"
+STATUS_FAILED = "failed"
+STATUS_STEP_LIMIT = "step_limit_reached"
+STATUS_NEEDS_HUMAN = "needs_human"
+
+
+class AgentState(TypedDict, total=False):
+    # Conversation (LangGraph appends via add_messages).
+    messages: Annotated[list, add_messages]
+
+    # Identity / run bookkeeping.
+    run_id: str
+    user_id: str | None
+
+    # Request context (short-term).
+    goal: str
+    target_role: str | None
+    job_description: str | None
+    candidate_background: str | None
+
+    # Orchestration bookkeeping.
+    tool_history: list[dict[str, Any]]
+    events: list[dict[str, Any]]
+    step_count: int
+    status: str
+    last_error: str | None
+    completed: bool

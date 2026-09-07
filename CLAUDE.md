@@ -63,6 +63,17 @@ assumptions in core logic, prompts, scoring or examples.
   Playwright runs serially and never reuses a server in CI). Hand-written TS
   contracts are guarded by `tests/test_openapi_contract.py`. No server secrets reach
   the browser (only `NEXT_PUBLIC_*`); no private preparation data in `localStorage`.
+- **LangGraph agent foundation (Sprint 4 Phase 4).** `src/agent/*` is a single,
+  stateful, bounded (`MAX_AGENT_STEPS`), tool-using LangGraph agent running
+  side-by-side with the deterministic Career flow (unchanged). Tools go through a
+  strict **allowlist** registry (unknown names never execute; no dynamic import);
+  events are safe/observable (never chain-of-thought, prompts or raw provider
+  output); model/tool failures terminate safely. Boundary:
+  `src/application/agent_service.py` (`AgentApplicationService.run → AgentRunResult`);
+  experimental `POST /api/v1/agent/run` (does **not** replace `/career/chat`).
+  Phase 4 registers only a deterministic foundation tool — real Career tools are
+  Phase 5, agentic RAG Phase 6, memory Phase 7, HITL Phase 8. `src/agent` imports no
+  Streamlit/UI and makes no provider call on import.
 - **Providers.** Career Intelligence uses LangChain over OpenRouter; the
   Interview module uses a direct OpenRouter HTTPX client. Optional speech
   (`[speech]`) and Live (`[live]`) backends are lazily imported. **Live is
@@ -110,7 +121,7 @@ assumptions in core logic, prompts, scoring or examples.
   (mock the boundaries). Do not weaken tests to pass or silently swallow errors.
 - Tests must not mutate committed artifacts (write to `tmp_path`).
 - `ruff check .` (conservative `F`/`E9` rules) must pass.
-- Current measured suite on this branch: **1305 passed, 2 skipped** (the skips are
+- Current measured suite on this branch: **1327 passed, 2 skipped** (the skips are
   the RAGAS installed/absent guards). Re-measure with `pytest -q` rather than
   hard-coding a number in multiple places.
 

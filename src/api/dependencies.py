@@ -94,6 +94,18 @@ def get_session_store(request: Request):
     return request.app.state.session_store
 
 
+def get_agent_service(request: Request):
+    """App-lifetime LangGraph agent application service (experimental, Phase 4).
+
+    The graph is compiled once (no provider call at construction); the model is
+    built per run from Career config. Tests override this dependency with a
+    fake-model service so no provider is required.
+    """
+    from src.application.agent_service import AgentApplicationService
+
+    return _shared(request, "agent_service", AgentApplicationService)
+
+
 # --- request-scoped application services -------------------------------------
 
 
