@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiet Intelligence — Intelligent Interview Coach (Concept A)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --background:#FAFAF8; --foreground:#17181A; --surface:#FFFFFF; --surface-2:#F3F2EE;
+  --muted:#5E5F59; --border:#E6E4DF; --accent:#1F3A5F; --accent-foreground:#FFFFFF;
+  --success:#2E7D4F; --warning:#B4690E; --danger:#B23A48;
+  --radius:6px; --radius-lg:10px;
+  --serif:'Fraunces',Georgia,'Times New Roman',serif;
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --maxw:1080px;
+}
+:root[data-theme="dark"]{
+  --background:#141414; --foreground:#F2F1ED; --surface:#1C1C1D; --surface-2:#242424;
+  --muted:#A6A6A0; --border:#302F2C; --accent:#9DB8E0; --accent-foreground:#0E1726;
+  --success:#6FBF8E; --warning:#E0A758; --danger:#E58794;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--background);color:var(--foreground);font-family:var(--sans);
+  line-height:1.65;-webkit-font-smoothing:antialiased;font-size:16px}
+h1,h2,h3,h4{margin:0;font-family:var(--serif);font-weight:500;line-height:1.12;
+  letter-spacing:-.015em}
+p{margin:0}
+a{color:inherit}
+button{font:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+
+/* prototype chrome (design-artifact frame, not product) */
+.proto-bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;
+  flex-wrap:wrap;padding:10px 22px;background:color-mix(in srgb,var(--surface) 88%,transparent);
+  backdrop-filter:saturate(1.2) blur(6px);border-bottom:1px solid var(--border)}
+.proto-bar .brandmark{display:flex;align-items:center;gap:10px;font-weight:600;
+  letter-spacing:-.01em;font-size:15px}
+.dot{width:11px;height:11px;border-radius:50%;background:var(--accent)}
+.proto-label{font-size:12px;color:var(--muted);border:1px solid var(--border);
+  padding:3px 10px;border-radius:999px;letter-spacing:.01em}
+.proto-tabs{display:flex;gap:2px;margin-left:auto;flex-wrap:wrap}
+.proto-tabs button{background:transparent;border:none;color:var(--muted);
+  padding:7px 13px;border-radius:999px;font-size:14px;font-weight:500}
+.proto-tabs button[aria-selected="true"]{color:var(--foreground);
+  background:var(--surface-2)}
+.proto-toggles{display:flex;gap:6px;align-items:center}
+.proto-toggles button{background:transparent;border:1px solid var(--border);
+  color:var(--muted);padding:7px 12px;border-radius:var(--radius);font-size:13px}
+.proto-home{font-size:13px;color:var(--muted);text-decoration:none;padding-left:4px}
+
+.stage{max-width:var(--maxw);margin:0 auto;padding:56px 24px 96px}
+.stage[data-viewport="mobile"]{max-width:390px;padding:36px 20px 80px}
+.screen{display:none;animation:fade .28s ease-out}
+.screen.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* product app shell — quiet top rule, no boxes */
+.app-nav{display:flex;align-items:center;gap:28px;padding:0 0 40px;
+  border-bottom:1px solid var(--border);margin-bottom:44px}
+.app-nav .brand{font-family:var(--serif);font-weight:500;font-size:17px;letter-spacing:-.01em}
+.app-nav nav{display:flex;gap:22px;flex-wrap:wrap}
+.app-nav nav a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;
+  padding:2px 0;position:relative}
+.app-nav nav a.on{color:var(--foreground)}
+.app-nav nav a.on::after{content:"";position:absolute;left:0;right:0;bottom:-6px;
+  height:1.5px;background:var(--accent)}
+.app-nav .spacer{margin-left:auto}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--surface-2);
+  border:1px solid var(--border);display:grid;place-items:center;font-size:12px;
+  font-weight:600;color:var(--muted)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--accent);color:var(--accent-foreground);border:none;
+  min-height:44px;padding:12px 22px;border-radius:var(--radius);
+  font-weight:500;font-size:15px;transition:opacity .15s ease}
+.btn:hover{opacity:.9}
+.btn.ghost{background:transparent;color:var(--foreground);border:1px solid var(--border)}
+.btn.link{background:none;border:none;color:var(--accent);min-height:auto;padding:0;
+  font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.btn.small{min-height:38px;padding:8px 16px;font-size:14px}
+.eyebrow{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.14em;
+  text-transform:uppercase}
+.muted{color:var(--muted)}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.tag + .tag::before{content:"·";margin-right:8px;color:var(--border)}
+.rule{height:1px;background:var(--border);border:none;margin:0}
+
+/* HOME — editorial hero */
+.hero{max-width:20ch;margin:24px 0 0}
+.hero .eyebrow{margin-bottom:26px;display:block}
+.hero h1{font-size:clamp(40px,6vw,72px);font-weight:400;letter-spacing:-.03em;
+  line-height:1.02;max-width:16ch}
+.hero p.lede{font-size:19px;color:var(--muted);max-width:52ch;margin-top:26px;line-height:1.5}
+.entry{margin-top:44px;max-width:620px}
+.entry .field{display:flex;align-items:center;gap:14px;border-bottom:1.5px solid var(--foreground);
+  padding:10px 2px}
+.entry input{flex:1;border:none;background:transparent;color:inherit;
+  font-family:var(--serif);font-size:22px;font-weight:400;padding:6px 0}
+.entry input::placeholder{color:var(--muted);opacity:.8}
+.entry input:focus{outline:none}
+.entry .aux{display:flex;gap:28px;margin-top:22px;font-size:15px;flex-wrap:wrap}
+.entry .aux a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--border);
+  padding-bottom:2px}
+.entry .aux a:hover{color:var(--foreground);border-color:var(--foreground)}
+.reassure{display:flex;gap:34px;margin-top:64px;flex-wrap:wrap;color:var(--muted);font-size:14px}
+.reassure span{display:inline-flex;gap:9px;align-items:baseline}
+.reassure b{color:var(--foreground);font-weight:500}
+
+/* PREPARE — hairline list layout, minimal boxing */
+.role-strip{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;
+  padding-bottom:24px;border-bottom:1px solid var(--border);margin-bottom:38px}
+.role-strip .role-h{font-size:12px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.role-strip h2{font-size:34px;font-weight:400;letter-spacing:-.02em}
+.role-strip .tags{margin-top:10px;display:flex;flex-wrap:wrap}
+.readiness{margin-left:auto;text-align:right}
+.readiness .num{font-family:var(--serif);font-size:48px;font-weight:400;line-height:1;
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.readiness .lbl{font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:6px}
+
+.workspace{display:grid;grid-template-columns:1fr 300px;gap:56px;align-items:start}
+
+.thread{display:grid;gap:26px}
+.msg .who{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px}
+.msg.me .bubble{font-family:var(--serif);font-size:21px;font-weight:400;line-height:1.35;
+  color:var(--foreground);padding-left:18px;border-left:2px solid var(--border)}
+.msg.coach .bubble{color:var(--foreground)}
+.msg.coach .bubble p + p{margin-top:14px}
+.priorities{list-style:none;padding:0;margin:16px 0 0;counter-reset:p}
+.priorities li{display:flex;gap:16px;align-items:baseline;padding:16px 0;
+  border-top:1px solid var(--border)}
+.priorities li .idx{font-family:var(--serif);font-size:20px;color:var(--muted);
+  min-width:20px;font-variant-numeric:tabular-nums}
+.priorities li .body b{font-weight:600}
+.priorities li .body small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+.sev{font-size:12px;font-weight:600;letter-spacing:.04em;display:inline-flex;
+  align-items:center;gap:5px}
+.sev::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.sev-high{color:var(--danger)} .sev-med{color:var(--warning)} .sev-low{color:var(--success)}
+.sources{font-size:14px;color:var(--muted);margin-top:20px}
+.sources summary{cursor:pointer;color:var(--foreground);display:inline;list-style:none}
+.sources summary::-webkit-details-marker{display:none}
+.sources summary::before{content:"⌄ ";color:var(--muted)}
+.sources[open] summary::before{content:"⌃ "}
+.sources .detail{display:block;margin-top:8px}
+
+.hitl{margin-top:40px;padding-top:26px;border-top:1px solid var(--border)}
+.hitl b{font-family:var(--serif);font-size:19px;font-weight:400;display:block}
+.hitl .sub{color:var(--muted);font-size:14px;margin-top:4px}
+.hitl .row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;align-items:center}
+
+.rail{display:grid;gap:34px;position:sticky;top:80px}
+.rail section h3{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:14px}
+.rail .item{padding:11px 0;border-top:1px solid var(--border);font-size:15px}
+.rail .item:first-of-type{border-top:none;padding-top:0}
+.rail .item small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.rail .item .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.consent{display:flex;gap:10px;align-items:center;margin:10px 0;font-size:15px;cursor:pointer}
+.consent input{width:16px;height:16px;accent-color:var(--accent)}
+.mem-actions{display:flex;gap:10px;margin-top:14px}
+.handoff{padding-top:20px;border-top:1px solid var(--border)}
+.handoff p{color:var(--muted);font-size:14px;margin-bottom:14px}
+
+/* PRACTICE — extremely minimal, centered */
+.practice{max-width:640px;margin:20px auto 0;text-align:center}
+.practice .ctx{color:var(--muted);font-size:14px}
+.practice .step{color:var(--muted);font-size:13px;letter-spacing:.14em;
+  text-transform:uppercase;margin:34px 0 4px}
+.progress{display:flex;gap:8px;justify-content:center;margin:14px 0 4px}
+.progress i{width:40px;height:2px;background:var(--border)}
+.progress i.done{background:var(--accent)} .progress i.now{background:var(--foreground)}
+.q{font-size:clamp(26px,4vw,38px);font-weight:400;letter-spacing:-.02em;
+  margin:34px auto 0;max-width:20ch;line-height:1.15}
+.seg{display:inline-flex;gap:2px;border:1px solid var(--border);padding:3px;
+  border-radius:999px;margin:34px auto 0}
+.seg button{border:none;background:transparent;color:var(--muted);
+  padding:8px 22px;border-radius:999px;font-weight:500;font-size:14px;min-height:38px}
+.seg button[aria-pressed="true"]{background:var(--surface-2);color:var(--foreground)}
+.answer{margin-top:26px;text-align:left}
+.answer textarea{width:100%;min-height:180px;border:1px solid var(--border);
+  border-radius:var(--radius-lg);background:var(--surface);color:inherit;
+  font-family:var(--serif);font-size:18px;line-height:1.5;padding:20px;resize:vertical}
+.answer textarea::placeholder{color:var(--muted);opacity:.75}
+.answer textarea:focus{outline:none;border-color:var(--foreground)}
+.practice .foot{display:flex;justify-content:center;margin-top:26px}
+.practice .note{color:var(--muted);font-size:13px;margin-top:34px}
+
+/* REVIEW — editorial verdict, hairline sections */
+.review-head{display:flex;gap:40px;align-items:baseline;flex-wrap:wrap;
+  padding-bottom:34px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.score-big{text-align:center}
+.score-big .num{font-family:var(--serif);font-size:88px;font-weight:400;line-height:.9;
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.score-big .lbl{font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);margin-top:8px}
+.review-head .verdict{flex:1;min-width:260px}
+.review-head .verdict h2{font-size:30px;font-weight:400;letter-spacing:-.02em}
+.review-head .verdict p{color:var(--muted);margin-top:10px;max-width:44ch}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.fb-col{padding:34px 0}
+.fb-col:first-child{border-right:1px solid var(--border);padding-right:44px}
+.fb-col:last-child{padding-left:44px}
+.fb-col h3{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.fb-col h3 .mk{width:8px;height:8px;border-radius:50%}
+.fb-col.good h3{color:var(--success)} .fb-col.good h3 .mk{background:var(--success)}
+.fb-col.improve h3{color:var(--warning)} .fb-col.improve h3 .mk{background:var(--warning)}
+.feedback{list-style:none;padding:0;margin:0}
+.feedback li{padding:12px 0;border-top:1px solid var(--border);font-size:15px}
+.feedback li:first-child{border-top:none}
+.howto{padding:30px 0;border-top:1px solid var(--border)}
+.howto h3{font-family:var(--serif);font-size:22px;font-weight:400;margin-bottom:10px}
+.howto p{color:var(--muted);max-width:60ch}
+.next{padding-top:30px;border-top:1px solid var(--border);display:flex;
+  justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.next .lbl{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.next b{font-family:var(--serif);font-size:22px;font-weight:400;display:block;margin-top:6px}
+
+.footnote{margin-top:64px;color:var(--muted);font-size:12px;letter-spacing:.02em}
+
+/* responsive: real media query + forced-mobile toggle */
+.stage[data-viewport="mobile"] .workspace,
+.stage[data-viewport="mobile"] .grid2{grid-template-columns:1fr;gap:0}
+.stage[data-viewport="mobile"] .rail{order:-1;position:static;
+  padding-bottom:34px;border-bottom:1px solid var(--border);margin-bottom:34px}
+.stage[data-viewport="mobile"] .fb-col:first-child{border-right:none;padding-right:0;
+  border-bottom:1px solid var(--border)}
+.stage[data-viewport="mobile"] .fb-col:last-child{padding-left:0}
+.stage[data-viewport="mobile"] .app-nav nav{display:none}
+.stage[data-viewport="mobile"] .hero h1{font-size:38px}
+.stage[data-viewport="mobile"] .readiness{margin-left:0}
+@media (max-width:820px){
+  .stage{padding:40px 20px 80px}
+  .workspace,.grid2{grid-template-columns:1fr;gap:0}
+  .rail{order:-1;position:static;padding-bottom:34px;
+    border-bottom:1px solid var(--border);margin-bottom:34px}
+  .fb-col:first-child{border-right:none;padding-right:0;border-bottom:1px solid var(--border)}
+  .fb-col:last-child{padding-left:0}
+  .app-nav{gap:18px}
+  .app-nav nav{display:none}
+  .readiness{margin-left:0}
+}
+</style>
+</head>
+<body>
+<header class="proto-bar">
+  <span class="brandmark"><span class="dot" aria-hidden="true"></span> Intelligent Interview Coach</span>
+  <span class="proto-label">Concept A · Quiet Intelligence · DEMO</span>
+  <nav class="proto-tabs" aria-label="Prototype screens">
+    <button data-screen="home" aria-selected="true">Home</button>
+    <button data-screen="prepare" aria-selected="false">Prepare</button>
+    <button data-screen="practice" aria-selected="false">Practice</button>
+    <button data-screen="review" aria-selected="false">Review</button>
+  </nav>
+  <div class="proto-toggles">
+    <button id="vpToggle" title="Toggle viewport">Desktop</button>
+    <button id="themeToggle" title="Toggle theme">Dark</button>
+    <a class="proto-home" href="../../index.html">↩ Gallery</a>
+  </div>
+</header>
+
+<main class="stage" data-viewport="desktop" id="stage">
+
+  <!-- HOME -->
+  <section class="screen active" data-screen="home" aria-label="Home">
+    <div class="app-nav">
+      <span class="brand">Intelligent Interview Coach</span>
+      <nav><a class="on">Home</a><a>Prepare</a><a>Practice</a><a>Progress</a><a>History</a></nav>
+      <span class="spacer"></span><span class="avatar" aria-label="Your account">MA</span>
+    </div>
+    <div class="hero">
+      <span class="eyebrow">Interview preparation, considered</span>
+      <h1>Prepare for the interview that matters.</h1>
+      <p class="lede">The coach maps what the role really needs, where your strengths
+        already sit, and the few things worth practising — then rehearses them with you.</p>
+      <div class="entry">
+        <label class="field">
+          <input placeholder="What interview are you preparing for?" aria-label="What interview are you preparing for?">
+          <button class="btn small">Begin</button>
+        </label>
+        <div class="aux">
+          <a href="#">Paste a job description</a>
+          <a href="#">Add your CV <span class="muted">(optional)</span></a>
+        </div>
+      </div>
+      <div class="reassure">
+        <span><b>Evidence-grounded.</b> Guidance you can trace to sources.</span>
+        <span><b>Yours only.</b> Used solely to prepare you.</span>
+        <span><b>Type or speak.</b> No camera, ever.</span>
+      </div>
+    </div>
+    <p class="footnote">DEMO content — no real company, person or statistic is shown.</p>
+  </section>
+
+  <!-- PREPARE -->
+  <section class="screen" data-screen="prepare" aria-label="Prepare">
+    <div class="app-nav">
+      <span class="brand">Intelligent Interview Coach</span>
+      <nav><a>Home</a><a class="on">Prepare</a><a>Practice</a><a>Progress</a><a>History</a></nav>
+      <span class="spacer"></span><span class="avatar" aria-label="Your account">MA</span>
+    </div>
+    <div class="role-strip">
+      <div>
+        <div class="role-h">Preparing for</div>
+        <h2>Senior Product Manager</h2>
+        <div class="tags">
+          <span class="tag">Senior</span>
+          <span class="tag">United Kingdom</span>
+          <span class="tag">Northwind · demo</span>
+        </div>
+      </div>
+      <div class="readiness">
+        <div class="lbl">Readiness</div>
+        <div class="num">72</div>
+      </div>
+    </div>
+
+    <div class="workspace">
+      <div>
+        <div class="thread">
+          <div class="msg me">
+            <div class="who">You</div>
+            <div class="bubble">What should I focus on with two weeks to prepare?</div>
+          </div>
+          <div class="msg coach">
+            <div class="who">Coach</div>
+            <div class="bubble">
+              <p>Three areas will move the needle most. You're already strong on
+              stakeholder leadership and discovery, so let's spend the time where the
+              gaps are:</p>
+              <ol class="priorities">
+                <li><span class="idx">1</span><span class="body"><b>Executive communication</b>
+                  <span class="sev sev-high">High</span>
+                  <small>Framing trade-offs for a leadership audience.</small></span></li>
+                <li><span class="idx">2</span><span class="body"><b>Commercial ownership</b>
+                  <span class="sev sev-med">Medium</span>
+                  <small>Tying roadmap choices to revenue and margin.</small></span></li>
+                <li><span class="idx">3</span><span class="body"><b>Experimentation rigor</b>
+                  <span class="sev sev-low">Low</span>
+                  <small>A lighter gap — one strong example is enough.</small></span></li>
+              </ol>
+              <details class="sources">
+                <summary>Sources: O*NET · ESCO · 4 more</summary>
+                <span class="detail">O*NET 11-3051 · ESCO Product manager · UK labour-market
+                  profile · 2 role postings (demo).</span>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="hitl" role="group" aria-label="Confirm role">
+          <b>I think this role is closest to Senior Product Manager.</b>
+          <div class="sub">Confirm so the preparation stays on target.</div>
+          <div class="row">
+            <button class="btn small">Confirm</button>
+            <button class="btn link">Choose another</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="rail">
+        <section>
+          <h3>Your strengths</h3>
+          <div class="item">Stakeholder leadership<small>Seen across your last two roles</small></div>
+          <div class="item">Product discovery<small>Strong signal in your CV</small></div>
+        </section>
+        <section>
+          <h3>Remember for next time?</h3>
+          <label class="consent"><input type="checkbox" checked> Executive communication</label>
+          <label class="consent"><input type="checkbox" checked> Commercial ownership</label>
+          <div class="mem-actions">
+            <button class="btn small">Save</button>
+            <button class="btn link">Not now</button>
+          </div>
+        </section>
+        <section class="handoff">
+          <h3>Ready when you are</h3>
+          <p>Practise the areas we've identified.</p>
+          <button class="btn">Start interview practice →</button>
+        </section>
+      </aside>
+    </div>
+    <p class="footnote">DEMO content — no real company, person or statistic is shown.</p>
+  </section>
+
+  <!-- PRACTICE -->
+  <section class="screen" data-screen="practice" aria-label="Interview practice">
+    <div class="practice">
+      <div class="ctx">Senior Product Manager · Behavioural · Northwind (demo)</div>
+      <div class="step">Question 2 of 5</div>
+      <div class="progress" aria-label="Question 2 of 5">
+        <i class="done"></i><i class="now"></i><i></i><i></i><i></i>
+      </div>
+      <h2 class="q">Tell me about a time you aligned executives behind a roadmap.</h2>
+      <div class="seg" role="group" aria-label="Answer method">
+        <button aria-pressed="true">Type</button>
+        <button aria-pressed="false">Record</button>
+      </div>
+      <div class="answer">
+        <textarea placeholder="Take your time. Structure it as situation → action → result…" aria-label="Your answer"></textarea>
+      </div>
+      <div class="foot">
+        <button class="btn">Submit answer</button>
+      </div>
+      <p class="note">Distraction-free by design. No camera — timing is guidance only.</p>
+    </div>
+  </section>
+
+  <!-- REVIEW -->
+  <section class="screen" data-screen="review" aria-label="Performance review">
+    <div class="app-nav">
+      <span class="brand">Intelligent Interview Coach</span>
+      <nav><a>Home</a><a>Prepare</a><a>Practice</a><a>Progress</a><a class="on">History</a></nav>
+      <span class="spacer"></span><span class="avatar" aria-label="Your account">MA</span>
+    </div>
+    <div class="review-head">
+      <div class="score-big">
+        <div class="num">72</div>
+        <div class="lbl">Readiness</div>
+      </div>
+      <div class="verdict">
+        <span class="eyebrow">Practice review · DEMO</span>
+        <h2 style="margin-top:12px">Solid, with two clear areas to sharpen.</h2>
+        <p>This reflects the current practice session only — it's feedback to help you
+          improve, not a hiring decision.</p>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="fb-col good">
+        <h3><span class="mk" aria-hidden="true"></span>What worked</h3>
+        <ul class="feedback">
+          <li>Clear situation-action-result structure on the roadmap question.</li>
+          <li>Grounded the answer in specifics your CV supports.</li>
+        </ul>
+      </div>
+      <div class="fb-col improve">
+        <h3><span class="mk" aria-hidden="true"></span>What to improve</h3>
+        <ul class="feedback">
+          <li>Lead with the executive takeaway before the detail.</li>
+          <li>Quantify the outcome — tie it to revenue or margin.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="howto">
+      <h3>How to improve — a stronger structure</h3>
+      <p>Open with the decision and its business impact, then the trade-off you managed,
+        then the measurable result. One sentence each keeps a leadership audience with you.</p>
+    </div>
+    <div class="next">
+      <div>
+        <div class="lbl">Next recommended practice</div>
+        <b>Executive communication</b>
+        <span class="muted">One focused question, building on this session.</span>
+      </div>
+      <button class="btn">Practise this next →</button>
+    </div>
+    <p class="footnote">DEMO content — no real company, person or statistic is shown.</p>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  var stage=document.getElementById('stage');
+  document.querySelectorAll('.proto-tabs button').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.proto-tabs button').forEach(function(x){x.setAttribute('aria-selected','false')});
+      b.setAttribute('aria-selected','true');
+      var s=b.dataset.screen;
+      document.querySelectorAll('.screen').forEach(function(sec){sec.classList.toggle('active',sec.dataset.screen===s)});
+      window.scrollTo({top:0,behavior:'instant'in window?'instant':'auto'});
+    });
+  });
+  var vp=document.getElementById('vpToggle');
+  vp.addEventListener('click',function(){
+    var m=stage.getAttribute('data-viewport')==='mobile';
+    stage.setAttribute('data-viewport',m?'desktop':'mobile');vp.textContent=m?'Desktop':'Mobile';
+  });
+  var th=document.getElementById('themeToggle');
+  th.addEventListener('click',function(){
+    var d=document.documentElement.getAttribute('data-theme')==='dark';
+    document.documentElement.setAttribute('data-theme',d?'light':'dark');th.textContent=d?'Dark':'Light';
+  });
+})();
+</script>
+</body>
+</html>
