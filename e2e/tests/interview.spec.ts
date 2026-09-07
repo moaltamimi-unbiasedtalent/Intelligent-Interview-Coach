@@ -8,7 +8,7 @@ import { expect, test } from "@playwright/test";
 
 test("home shows the unified product and can start practising", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByText("Interview OS Coach").first()).toBeVisible();
+  await expect(page.getByText("Intelligent Interview Coach").first()).toBeVisible();
   // The two product entry points are present.
   await expect(page.getByText("Career Intelligence", { exact: false }).first()).toBeVisible();
   await expect(page.getByText("Interview Practice", { exact: false }).first()).toBeVisible();

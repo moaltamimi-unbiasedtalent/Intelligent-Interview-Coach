@@ -1,1 +1,1 @@
-"""Interview Practice module (Interview OS Coach)."""
+"""Interview Practice module (Intelligent Interview Coach)."""

@@ -1,4 +1,4 @@
-# Interview OS Coach — runtime dependencies.
+# Intelligent Interview Coach — runtime dependencies.
 #
 # pyproject.toml is the source of truth ([project.dependencies]); this file
 # mirrors those RUNTIME pins for `pip install -r requirements.txt` convenience.

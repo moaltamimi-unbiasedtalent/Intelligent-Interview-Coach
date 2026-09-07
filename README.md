@@ -1,8 +1,8 @@
-# Interview OS Coach
+# Intelligent Interview Coach
 
 **Understand the opportunity. Prepare intelligently. Practise realistically.**
 
-Interview OS Coach is one Streamlit application (`streamlit run app.py`, one URL)
+Intelligent Interview Coach is one Streamlit application (`streamlit run app.py`, one URL)
 that combines two product modules:
 
 - **Career Intelligence** — evidence-grounded career guidance and interview
@@ -91,7 +91,7 @@ and the RAG/LangChain design in [docs/rag.md](docs/rag.md),
 ## Why it exists
 
 Interview preparation is usually fragmented: you research a role in one place,
-guess your gaps, and practise blind. Interview OS Coach joins the two halves —
+guess your gaps, and practise blind. Intelligent Interview Coach joins the two halves —
 **understand the role with evidence, then practise for it** — in one flow:
 
 ```
@@ -410,7 +410,7 @@ Reviewer-facing: [docs/reviewer_guide.md](docs/reviewer_guide.md),
 ## Historical Sprint 1 documentation
 
 This project began as a Turing College Sprint 1 interview app and has since
-grown into the unified **Interview OS Coach** described above. The original
+grown into the unified **Intelligent Interview Coach** described above. The original
 standalone Sprint 1 manual has been removed to avoid two contradictory sets of
 docs; it remains available in the project's git history. Current, authoritative
 documentation lives under [`docs/`](docs/) — see `docs/architecture.md`,

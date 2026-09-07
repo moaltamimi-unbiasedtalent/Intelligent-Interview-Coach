@@ -1,4 +1,4 @@
-"""Interview OS Coach — home / landing page."""
+"""Intelligent Interview Coach — home / landing page."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-# Interview OS Coach — Submission Readiness
+# Intelligent Interview Coach — Submission Readiness
 
 Final pre-submission audit (Phase 14R). Evidence-based; verdict at the end.
 

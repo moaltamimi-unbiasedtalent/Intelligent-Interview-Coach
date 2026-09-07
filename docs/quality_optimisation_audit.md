@@ -33,7 +33,7 @@ functionality is not reimplemented. Statuses: **DONE** (already implemented),
 | 5F | Demo knowledge pack loader | fixtures exist; no `load_sample_knowledge.py`, no demo store | TODO | `scripts/` | add offline demo loader (separate store, --force) | med | run offline |
 | 6A | Distribution name `interview-os-coach` | `interview-practice-studio` | TODO | `pyproject.toml:2` | rename dist (keep import pkgs) | low | editable install |
 | 6B | copilot(domain)/career(UI) canonical, no "temporary" language | some docs implied `src/career` would replace `src/copilot` | PARTIAL | `docs/sprint_requirements_after_integration.md` | document canonical split | low | — |
-| 6C | Product labels (Interview OS Coach / Career Intelligence) | present in UI | DONE | `ui/*`, `constants` | keep | low | — |
+| 6C | Product labels (Intelligent Interview Coach / Career Intelligence) | present in UI | DONE | `ui/*`, `constants` | keep | low | — |
 | 6D | Reviewer mode (Career-only) | none | TODO | — | `COPILOT_REVIEWER_MODE` nav filter | low | UI smoke |
 | 7 | Held-out relevance + faithfulness eval (v2) | lexical probes + product_coverage | PARTIAL | `evaluations/` | add `evaluations/quality_v2/` (labelled set, checks, human template, LLM-judge optional) | low | new run |
 | 8A | Answer freshness (year/version/refreshed) | evidence carries year; not surfaced as a freshness line | PARTIAL | `models`, `career/ui.py` | surface freshness on comp/labour answers | low | UI smoke |

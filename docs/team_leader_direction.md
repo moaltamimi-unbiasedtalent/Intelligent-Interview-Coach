@@ -9,7 +9,7 @@ A short explanation of how the sprint work relates to the wider product.
 - **Interview Practice existed previously.** It is a separate, earlier interview
   simulator (setup, strategy, dynamic questions, evaluation, Deep Dive, report,
   voice/live). It was **not** built in this sprint.
-- **They were unified as Interview OS Coach.** One Streamlit app, one URL, clear
+- **They were unified as Intelligent Interview Coach.** One Streamlit app, one URL, clear
   module boundaries, a shared core for infrastructure, and an integration layer
   (`PreparationContext`) connecting them.
 - **Career Intelligence remains the evaluated sprint module.** It stays a

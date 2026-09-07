@@ -1,4 +1,4 @@
-"""Shared design-system helpers for a consistent Interview OS Coach experience.
+"""Shared design-system helpers for a consistent Intelligent Interview Coach experience.
 
 Thin wrappers over native Streamlit components (plus one tiny badge style) so the
 two modules look like one product. Native components keep keyboard operation,

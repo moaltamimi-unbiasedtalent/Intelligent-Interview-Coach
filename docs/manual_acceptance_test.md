@@ -1,4 +1,4 @@
-# Interview OS Coach — Manual Acceptance Test
+# Intelligent Interview Coach — Manual Acceptance Test
 
 Status legend: **PASS** (verified — automated test and/or in-app check),
 **NOT TESTED** (requires live credentials or a manual browser session not run

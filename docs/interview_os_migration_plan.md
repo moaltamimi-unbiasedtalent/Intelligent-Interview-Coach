@@ -1,4 +1,4 @@
-# Interview OS Coach — Migration Plan (OS-1)
+# Intelligent Interview Coach — Migration Plan (OS-1)
 
 Evidence-based plan produced during the OS-1 audit. **No code moved in OS-1.**
 

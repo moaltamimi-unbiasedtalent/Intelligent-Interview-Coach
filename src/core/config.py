@@ -1,4 +1,4 @@
-"""One composed application configuration for Interview OS Coach.
+"""One composed application configuration for Intelligent Interview Coach.
 
 `AppConfig` groups the platform's configuration into three sections:
 
