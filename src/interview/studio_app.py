@@ -16,16 +16,14 @@ import streamlit as st
 import streamlit.components.v1 as components
 from pydantic import ValidationError
 
-import dataclasses
 import os
 
 from src import auth, constants, security, timing, ui_helpers
 from src.avatar import LocalAvatarRenderer
-from src.persistence import init_db, make_engine, make_session_factory
 from src.repository import InterviewRepository
 from src.config import AppConfig, load_config
 from src.evaluation_service import EvaluationService
-from src.interview_service import InterviewService, QuestionHistory, ServiceError
+from src.interview_service import InterviewService
 from src.models import InterviewConfiguration, ModelSettings
 from src.openrouter_client import OpenRouterClient, OpenRouterError
 from src.pricing_service import PricingService
@@ -45,6 +43,9 @@ from components.live_interviewer import is_available as live_component_available
 from components.live_interviewer import live_interviewer
 from src.integration import handoff  # career → interview preparation handoff
 from src.interview import prompt_lab  # developer Prompt Lab (Advanced view)
+from src.application import factories as app_factories
+from src.application import history_service
+from src.application.interview_service import InterviewApplicationService
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +76,7 @@ def get_pricing_service() -> PricingService:
     """
     cached = st.session_state.get("_pricing_service")
     if not isinstance(cached, PricingService):
-        cached = PricingService()
+        cached = app_factories.build_pricing_service()
         st.session_state["_pricing_service"] = cached
     return cached
 
@@ -83,14 +84,17 @@ def get_pricing_service() -> PricingService:
 def build_services(
     config: AppConfig, pricing: PricingService
 ) -> tuple[InterviewService, EvaluationService, ReportService, OpenRouterClient]:
-    """Create fresh services wrapping a client built from the current config."""
-    client = OpenRouterClient(config)
-    return (
-        InterviewService(client, pricing),
-        EvaluationService(client, pricing),
-        ReportService(client, pricing),
-        client,
-    )
+    """Create fresh services wrapping a client built from the current config.
+
+    Thin UI wrapper over the Streamlit-free application factory so a future API
+    can construct the same services identically.
+    """
+    return app_factories.build_interview_services(config, pricing=pricing)
+
+
+def _interview_app(config: AppConfig) -> InterviewApplicationService:
+    """Application service for interview orchestration, reusing the cached pricing."""
+    return InterviewApplicationService(config, pricing=get_pricing_service())
 
 
 def require_configured(config: AppConfig) -> bool:
@@ -463,20 +467,11 @@ def _build_configuration(**raw) -> InterviewConfiguration:
 def _generate_strategy(session: SessionManager, config: AppConfig) -> None:
     if not session.begin_operation("strategy"):
         return
-    pricing = get_pricing_service()
-    interview_service, _, _, client = build_services(config, pricing)
     try:
         with st.spinner("Analysing the role…"):
-            strategy, usage = interview_service.generate_strategy(
-                session.data.config, session.data.settings
-            )
-        session.save_strategy(strategy)
-        session.record_usage(usage)
-    except ServiceError as exc:
-        session.enter_error(exc.message, recover_to=SessionState.SETUP)
+            _interview_app(config).generate_strategy(session)
     finally:
         session.end_operation()
-        client.close()
 
 
 def render_strategy(session: SessionManager) -> None:
@@ -530,37 +525,11 @@ def _generate_next_question(session: SessionManager, *, first: bool = False) -> 
         session.end_operation()
         st.error("No OpenRouter API key is configured; cannot generate a question.")
         return
-    pricing = get_pricing_service()
-    interview_service, _, _, client = build_services(config, pricing)
-    data = session.data
-    history = QuestionHistory(
-        questions=list(data.questions),
-        answers=list(data.answers),
-        evaluations=list(data.evaluations),
-    )
-    recover = (
-        SessionState.STRATEGY_READY if first else SessionState.INTERVIEW_IN_PROGRESS
-    )
     try:
         with st.spinner("Preparing the next question…"):
-            question, usage = interview_service.generate_next_question(
-                data.config,
-                data.settings,
-                current_question_number=len(data.questions) + 1,
-                history=history,
-            )
-        session.add_question(question)
-        session.record_usage(usage)
-        session.add_chat_message(
-            "assistant",
-            f"**Question {len(session.data.questions)}** "
-            f"({session.data.questions[-1].competency})\n\n{question.question}",
-        )
-    except ServiceError as exc:
-        session.enter_error(exc.message, recover_to=recover)
+            _interview_app(config).generate_next_question(session, first=first)
     finally:
         session.end_operation()
-        client.close()
 
 
 def _handle_answer(session: SessionManager, answer: str) -> None:
@@ -576,29 +545,11 @@ def _handle_answer(session: SessionManager, answer: str) -> None:
         session.end_operation()
         st.error("No OpenRouter API key is configured; cannot evaluate.")
         return
-    pricing = get_pricing_service()
-    _, evaluation_service, _, client = build_services(config, pricing)
-    data = session.data
-    current_question = data.questions[-1].question
     try:
-        session.add_candidate_answer(answer)
-        session.add_chat_message("user", answer)
         with st.spinner("Evaluating your answer…"):
-            evaluation, usage = evaluation_service.evaluate_answer(
-                data.config, current_question, answer, data.settings
-            )
-        session.add_evaluation(evaluation)
-        session.record_usage(usage)
-        session.add_chat_message(
-            "assistant",
-            f"Recorded — overall score **{evaluation.overall_score}/100**. "
-            "Detailed feedback is shown below.",
-        )
-    except ServiceError as exc:
-        session.enter_error(exc.message, recover_to=SessionState.AWAITING_ANSWER)
+            _interview_app(config).submit_answer(session, answer)
     finally:
         session.end_operation()
-        client.close()
 
 
 def _run_branch_generation(session: SessionManager) -> None:
@@ -612,42 +563,11 @@ def _run_branch_generation(session: SessionManager) -> None:
         session.end_operation()
         st.error("No OpenRouter API key is configured; cannot deep-dive.")
         return
-    pricing = get_pricing_service()
-    interview_service, _, _, client = build_services(config, pricing)
-    data = session.data
-    depth = len(data.branch_questions) + 1
     try:
         with st.spinner("Preparing a deeper question…"):
-            branch_question, usage = interview_service.generate_branch_question(
-                data.config,
-                data.settings,
-                parent_question=data.questions[-1],
-                candidate_answer=data.answers[-1],
-                evaluation=data.evaluations[-1],
-                branch_mode=data.branch_mode,
-                depth=depth,
-                branch_id=session.next_branch_id(),
-                previous_branch_questions=[q.question for q in data.branch_questions],
-                previous_branch_answers=list(data.branch_answers),
-            )
-        session.add_branch_question(branch_question)
-        session.record_usage(usage)
-        mode_label = ui_helpers.label_for_id(
-            ui_helpers.BRANCH_MODES, data.branch_mode
-        )
-        session.add_chat_message(
-            "assistant",
-            f"🔎 **Deep Dive — Level {branch_question.depth} of "
-            f"{constants.MAX_BRANCH_DEPTH}** · {mode_label}\n\n"
-            f"{branch_question.question}",
-        )
-    except ServiceError as exc:
-        session.enter_error(
-            exc.message, recover_to=SessionState.INTERVIEW_IN_PROGRESS
-        )
+            _interview_app(config).generate_branch_question(session)
     finally:
         session.end_operation()
-        client.close()
 
 
 def _handle_start_branch(session: SessionManager, mode: str) -> None:
@@ -668,31 +588,11 @@ def _handle_branch_answer(session: SessionManager, answer: str) -> None:
         session.end_operation()
         st.error("No OpenRouter API key is configured; cannot evaluate.")
         return
-    pricing = get_pricing_service()
-    _, evaluation_service, _, client = build_services(config, pricing)
-    data = session.data
-    branch_question = data.branch_questions[-1].question
     try:
-        session.add_branch_answer(answer)
-        session.add_chat_message("user", answer)
         with st.spinner("Evaluating your deep-dive answer…"):
-            evaluation, usage = evaluation_service.evaluate_answer(
-                data.config, branch_question, answer, data.settings
-            )
-        session.add_branch_evaluation(evaluation)
-        session.record_usage(usage)
-        session.add_chat_message(
-            "assistant",
-            f"Deep-dive feedback — overall score "
-            f"**{evaluation.overall_score}/100**. See details below.",
-        )
-    except ServiceError as exc:
-        session.enter_error(
-            exc.message, recover_to=SessionState.BRANCH_AWAITING_ANSWER
-        )
+            _interview_app(config).submit_branch_answer(session, answer)
     finally:
         session.end_operation()
-        client.close()
 
 
 def _render_branch_controls(session: SessionManager) -> None:
@@ -1165,27 +1065,11 @@ def _generate_report(session: SessionManager) -> None:
         session.end_operation()
         st.error("No OpenRouter API key is configured; cannot generate a report.")
         return
-    pricing = get_pricing_service()
-    _, _, report_service, client = build_services(config, pricing)
-    data = session.data
     try:
         with st.spinner("Compiling your report…"):
-            report, usage = report_service.generate_report(
-                data.config,
-                list(data.questions[: len(data.evaluations)]),
-                list(data.answers),
-                list(data.evaluations),
-                data.settings,
-            )
-        session.save_final_report(report)
-        session.record_usage(usage)
-    except ServiceError as exc:
-        session.enter_error(
-            exc.message, recover_to=SessionState.INTERVIEW_COMPLETE
-        )
+            _interview_app(config).generate_report(session)
     finally:
         session.end_operation()
-        client.close()
 
 
 def render_complete(session: SessionManager) -> None:
@@ -1387,161 +1271,34 @@ def render_error(session: SessionManager) -> None:
 # =============================================================================
 
 
-def _ensure_sqlite_dir(database_url: str) -> None:
-    """Create the parent directory for a SQLite file URL if needed."""
-    prefix = "sqlite:///"
-    if database_url.startswith(prefix):
-        path = database_url[len(prefix):]
-        parent = os.path.dirname(path)
-        if parent:
-            os.makedirs(parent, exist_ok=True)
-
-
 def get_repository(config: AppConfig) -> InterviewRepository:
-    """A per-session repository over the configured database (lazily built)."""
+    """A per-session repository over the configured database (lazily built).
+
+    Thin UI cache over the Streamlit-free application factory.
+    """
     key = f"_repo::{config.database_url}"
     if key not in st.session_state:
-        _ensure_sqlite_dir(config.database_url)
-        engine = make_engine(config.database_url)
-        init_db(engine)  # dev/tests; production applies Alembic migrations
-        st.session_state[key] = InterviewRepository(make_session_factory(engine))
+        st.session_state[key] = app_factories.build_repository(config)
     return st.session_state[key]
 
 
 def _current_user_id(config: AppConfig, repo: InterviewRepository) -> int | None:
     """Resolve the signed-in (or anonymous dev) user to an internal id."""
-    user = auth.current_user(config)
-    if user is None:
-        return None
-    return repo.get_or_create_user(
-        subject=user.subject,
-        provider=user.provider,
-        display_name=user.display_name,
-        email=user.email,
-    )
-
-
-def _interview_payload(data) -> dict:
-    """Assemble a persistence payload from the session (appropriate data only)."""
-    questions: list[dict] = []
-    for i, question in enumerate(data.questions):
-        answer_text = data.answers[i] if i < len(data.answers) else ""
-        evaluation = (
-            data.evaluations[i].model_dump() if i < len(data.evaluations) else None
-        )
-        guidance = timing.guidance_for_question(question)
-        timing_metrics = (
-            data.voice_metrics[i] if i < len(data.voice_metrics) else None
-        )
-        visual_metrics = (
-            data.visual_metrics[i] if i < len(data.visual_metrics) else None
-        )
-        questions.append(
-            {
-                "position": i,
-                "canonical_question": question.question,
-                "question_type": question.question_type,
-                "difficulty": question.difficulty,
-                "timing_guidance": dataclasses.asdict(guidance),
-                "is_deep_dive": False,
-                "parent_position": None,
-                "answer": (
-                    {
-                        "text": answer_text,
-                        "evaluation": evaluation,
-                        "timing_metrics": timing_metrics,
-                        "visual_metrics": visual_metrics,
-                    }
-                    if (answer_text or evaluation)
-                    else None
-                ),
-            }
-        )
-    # Deep Dive branches. Completed branches are archived into ``data.branches``
-    # (and the active lists cleared) when the candidate returns to the main
-    # interview, so serialise BOTH the archived branches and any still-active one
-    # — otherwise finished Deep Dives are silently dropped from history.
-    base = len(data.questions)
-    default_parent = base - 1 if base else None
-    position = base
-
-    def _branch_records(questions_list, answers, evaluations, parent_id):
-        nonlocal position
-        parent_pos = parent_id if isinstance(parent_id, int) else default_parent
-        for j, branch in enumerate(questions_list):
-            answer_text = answers[j] if j < len(answers) else ""
-            evaluation = evaluations[j] if j < len(evaluations) else None
-            evaluation = evaluation.model_dump() if evaluation is not None else None
-            questions.append(
-                {
-                    "position": position,
-                    "canonical_question": branch.question,
-                    "question_type": getattr(branch, "question_type", "behavioural"),
-                    "difficulty": branch.difficulty,
-                    "timing_guidance": None,
-                    "is_deep_dive": True,
-                    "parent_position": parent_pos,
-                    "answer": (
-                        {"text": answer_text, "evaluation": evaluation}
-                        if (answer_text or evaluation)
-                        else None
-                    ),
-                }
-            )
-            position += 1
-
-    for archived in getattr(data, "branches", []):
-        _branch_records(
-            archived.get("questions", []), archived.get("answers", []),
-            archived.get("evaluations", []), archived.get("parent_question_id"))
-    # Any branch still active at completion (not yet returned to main).
-    _branch_records(
-        data.branch_questions, data.branch_answers, data.branch_evaluations,
-        data.branch_parent_question_id)
-    report = None
-    if data.report is not None:
-        report = {
-            "report": data.report.model_dump(),
-            "usage": {
-                "total_tokens": sum(r.total_tokens for r in data.usage_records),
-                "requests": len(data.usage_records),
-            },
-            "cost_usd": round(data.cumulative_cost_usd, 6),
-        }
-    return {
-        "configuration": data.config.model_dump() if data.config else {},
-        "mode": st.session_state.get("_practice_mode"),
-        "status": "completed",
-        "questions": questions,
-        "report": report,
-    }
+    return history_service.resolve_user_id(config, repo)
 
 
 def _persist_if_new(session: SessionManager, config: AppConfig) -> None:
-    """Save a completed interview once per interview.
+    """Save a completed interview once per interview (delegates to the app layer).
 
-    The saved-report id lives on the session data (not a top-level Streamlit
-    key), so ``reset_interview`` clears it and a *second* interview saves too.
-    A save failure never breaks the report page: it records a bounded, safe flag
-    so the page can show a friendly warning and offer a retry — the raw DB error
-    is never surfaced.
+    Duplicate-save protection, archived Deep Dive persistence and safe failure
+    handling all live in ``history_service.save_completed_interview``; this wrapper
+    only supplies the UI-selected practice mode and the session-cached repository.
     """
-    data = session.data
-    if data.saved_report_id:
-        return
-    try:
-        repo = get_repository(config)
-        user_id = _current_user_id(config, repo)
-        if user_id is None:
-            return
-        interview_id = repo.save_interview(user_id, _interview_payload(data))
-        data.saved_report_id = interview_id
-        data.save_failed = False
-    except Exception:  # noqa: BLE001 - persistence must not break the report
-        # Record the failure safely (no DB/SQL/credential/stacktrace detail) so
-        # the report page can warn and offer a retry.
-        data.save_failed = True
-        logger.warning("Interview persistence failed", exc_info=True)
+    history_service.save_completed_interview(
+        session, config,
+        repo=get_repository(config),
+        mode=st.session_state.get("_practice_mode"),
+    )
 
 
 # =============================================================================

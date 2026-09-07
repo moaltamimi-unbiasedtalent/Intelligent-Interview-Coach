@@ -6,8 +6,8 @@ auto-merge, following the Sprint 3 workflow.
 
 | Phase | Goal | Rough estimate | Depends on |
 |---|---|---|---|
-| **0** | **Sprint baseline + rebrand** (this phase) | 0.5 day | — |
-| 1 | Decouple Streamlit orchestration from backend domain logic | 1–2 days | 0 |
+| **0** | **Sprint baseline + rebrand** ✅ done | 0.5 day | — |
+| **1** | **Decouple Streamlit orchestration from backend domain logic** ✅ done (`src/application`) | 1–2 days | 0 |
 | 2 | FastAPI backend | 2–3 days | 1 |
 | 3 | Next.js / TypeScript frontend foundation | 3–4 days | 2 |
 | 4 | LangGraph agent foundation | 2–3 days | 1 (2 helpful) |

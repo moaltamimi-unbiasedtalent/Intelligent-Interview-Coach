@@ -38,55 +38,15 @@ def render_ragas_section() -> None:
     _render_ragas_runner()
 
 
-def _ragas_run_usable(data: dict) -> bool:
-    """A usable RAGAS run has at least one finite aggregate metric.
-
-    New runs also carry an explicit status; a FAILED status is never usable.
-    Legacy runs (no status) are judged purely on metric finiteness, so an
-    all-NaN/null legacy run is correctly rejected as a baseline.
-    """
-    from src.copilot.evaluation.ragas_adapter import STATUS_FAILED, is_valid_score
-
-    if (data.get("run_config", {}) or {}).get("status") == STATUS_FAILED:
-        return False
-    return any(is_valid_score(v) for v in (data.get("metrics") or {}).values())
-
-
 def _latest_ragas_run() -> dict | None:
-    """Load the most recent USABLE RAGAS run's results.json, or None.
+    """Load the most recent USABLE RAGAS run (delegates to the application layer).
 
-    Never executes RAGAS. Invalid runs (all-NaN/null legacy runs, or FAILED runs)
-    are skipped in favour of the newest usable prior run; ``_invalid_ignored`` on
-    the returned dict flags that at least one newer invalid run was skipped.
+    Never executes RAGAS. The pure run-reading logic lives in
+    ``src.application.evaluation_service`` so a future API shares it.
     """
-    import json
-    import os
+    from src.application import evaluation_service
 
-    runs_dir = "evaluations/ragas/runs"
-    if not os.path.isdir(runs_dir):
-        return None
-    run_dirs = sorted(
-        (d for d in os.listdir(runs_dir) if os.path.isdir(os.path.join(runs_dir, d))),
-        reverse=True,
-    )
-    skipped_invalid = False
-    for name in run_dirs:
-        path = os.path.join(runs_dir, name, "results.json")
-        if not os.path.isfile(path):
-            continue
-        try:
-            with open(path, encoding="utf-8") as handle:
-                data = json.load(handle)  # strict JSON; NaN would raise here
-        except (OSError, ValueError):
-            skipped_invalid = True  # unreadable / non-standard JSON (e.g. NaN)
-            continue
-        if not _ragas_run_usable(data):
-            skipped_invalid = True
-            continue
-        data["_dir"] = os.path.join(runs_dir, name)
-        data["_invalid_ignored"] = skipped_invalid
-        return data
-    return None
+    return evaluation_service.latest_evaluation_run()
 
 
 def _render_latest_ragas_run(run: dict) -> None:
