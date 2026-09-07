@@ -50,7 +50,15 @@ assumptions in core logic, prompts, scoring or examples.
   every request carries an `X-Request-Id`; CORS comes from `FRONTEND_ORIGINS`.
   In-progress interview state uses a transitional, bounded, user-scoped in-memory
   store; identity is a transitional header-based boundary (production needs a real
-  gateway/OIDC). No Next.js/LangGraph yet. See `docs/sprint4_architecture.md`.
+  gateway/OIDC). No LangGraph yet. See `docs/sprint4_architecture.md`.
+- **Next.js frontend foundation (Sprint 4 Phase 3B).** `frontend/*` is a Next.js 15
+  (App Router) + React 19 + TypeScript + Tailwind client of `/api/v1`, implementing
+  the Precision Coach design system (`docs/design/phase3a/`). Streamlit and Next.js
+  coexist over the same application layer. Phase 3B is the shell + design system +
+  routes + typed API client + live health/capabilities; the full Career migration
+  is Phase 3C. Frontend gates: `cd frontend && npm run lint && npm test &&
+  npm run typecheck && npm run build` (+ `npm run e2e`). No server secrets reach the
+  browser (only `NEXT_PUBLIC_*`).
 - **Providers.** Career Intelligence uses LangChain over OpenRouter; the
   Interview module uses a direct OpenRouter HTTPX client. Optional speech
   (`[speech]`) and Live (`[live]`) backends are lazily imported. **Live is

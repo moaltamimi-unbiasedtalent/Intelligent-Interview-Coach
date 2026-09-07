@@ -179,6 +179,42 @@ supports them; the surface is not yet exposed) and company-document uploads (the
 existing limits are preserved in the domain; a secure multipart endpoint is a
 later phase). No paid RAGAS run endpoint. **No Next.js and no LangGraph yet.**
 
+## 3c. Phase 3B — Next.js frontend foundation (implemented)
+
+Phase 3A selected **Concept D — Precision Coach**; Phase 3B builds the production
+frontend *foundation* for it in `frontend/` (Next.js 15 App Router · React 19 ·
+TypeScript · Tailwind). It is a typed client of the FastAPI backend; Streamlit keeps
+working alongside it over the same application layer.
+
+```mermaid
+flowchart TD
+    NX[Next.js frontend  ✅ foundation<br/>frontend/ · Precision Coach] --> API[FastAPI /api/v1]
+    ST[Streamlit UI  temporary] --> APP[Application layer — src/application]
+    API --> APP
+    APP --> DOM[Existing domain / RAG / tools / persistence]
+    LG[LangGraph agent  🔷 planned] -.later.-> APP
+```
+
+**Built:** the Precision Coach design system (tokens → CSS variables + Tailwind
+theme, light/dark, no-flash), a restrained app shell (quiet header + mobile bottom
+nav), the primary routes (Home, Prepare, Practice, Progress, History, Sources,
+Review & Diagnostics + Agent/RAG/Evaluation, Settings) as scaffolds, a small
+reusable component + UI-primitive foundation, a typed FastAPI client
+(`lib/api/*`), and **live health/capabilities integration** (the Practice page
+shows Live only when the backend reports `live_interview_enabled`). Frontend tests
+(Vitest, 17) + a Playwright smoke (7) pass; Next.js → FastAPI integration verified
+live.
+
+**Deliberately NOT in 3B:** the full Career/Preparation migration (chat, JD/gap
+analysis, planning, questions) — that's **Phase 3C**; the Prepare/Practice pages
+are visual shells with clearly-marked demo content and an architecture ready to
+swap in real API calls. No LangGraph, no model changes, Streamlit not removed.
+
+**Auth (transitional):** the frontend has an auth *seam* (`lib/auth.ts`) only;
+production OIDC/gateway is future work. A dev-only `X-User-Subject` may be set via
+`NEXT_PUBLIC_DEV_USER_SUBJECT` for local data scoping — never typed by the browser
+user.
+
 ## 4. Internal naming is intentionally stable
 
 To evolve functionality first and avoid churn/regression risk, Sprint 4 **does
