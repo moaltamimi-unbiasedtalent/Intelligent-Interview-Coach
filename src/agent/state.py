@@ -34,6 +34,12 @@ class AgentState(TypedDict, total=False):
     job_description: str | None
     candidate_background: str | None
 
+    # Structured tool outputs carried between steps (short-term; safe dicts).
+    requirements: dict[str, Any] | None  # from job-description analysis
+    gaps: dict[str, Any] | None  # from candidate gap analysis
+    preparation_plan: dict[str, Any] | None  # from the preparation planner
+    questions: dict[str, Any] | None  # from the question generator
+
     # Orchestration bookkeeping.
     tool_history: list[dict[str, Any]]
     events: list[dict[str, Any]]

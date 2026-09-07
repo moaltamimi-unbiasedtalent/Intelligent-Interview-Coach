@@ -23,7 +23,7 @@ from src.agent.nodes import (
     make_tools_node,
     route_after_agent,
 )
-from src.agent.registry import ToolRegistry, default_registry
+from src.agent.registry import ToolRegistry
 from src.agent.state import AgentState
 
 ModelFactory = Callable[[], Any]
@@ -32,11 +32,11 @@ ModelFactory = Callable[[], Any]
 def build_agent_graph(
     *,
     model_factory: ModelFactory,
-    registry: ToolRegistry | None = None,
+    registry: ToolRegistry,
     checkpointer: Any | None = None,
 ):
-    """Compile the agent graph. ``checkpointer`` defaults to in-memory (transient)."""
-    registry = registry or default_registry()
+    """Compile the agent graph. ``registry`` is the (allowlisted) Career tools;
+    ``checkpointer`` defaults to in-memory (transient)."""
     graph = StateGraph(AgentState)
     graph.add_node("initialise", make_initialise_node())
     graph.add_node("agent", make_agent_node(model_factory, registry))

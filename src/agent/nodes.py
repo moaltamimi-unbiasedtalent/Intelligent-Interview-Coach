@@ -17,6 +17,7 @@ from src.agent.errors import AgentConfigurationError, AgentToolError
 from src.agent.events import AgentEvent, AgentEventType
 from src.agent.policies import MAX_AGENT_STEPS, SYSTEM_PROMPT
 from src.agent.registry import ToolRegistry
+from src.agent.tooling import ToolContext
 from src.agent.state import (
     STATUS_COMPLETED,
     STATUS_FAILED,
@@ -75,6 +76,16 @@ def make_agent_node(model_factory: ModelFactory, registry: ToolRegistry) -> Call
     return agent
 
 
+def _tool_context(state: AgentState) -> ToolContext:
+    return ToolContext(
+        target_role=state.get("target_role"),
+        job_description=state.get("job_description"),
+        candidate_background=state.get("candidate_background"),
+        requirements=state.get("requirements"),
+        gaps=state.get("gaps"),
+    )
+
+
 def make_tools_node(registry: ToolRegistry) -> Callable[[AgentState], dict]:
     def tools(state: AgentState) -> dict:
         last = state["messages"][-1]
@@ -82,6 +93,8 @@ def make_tools_node(registry: ToolRegistry) -> Callable[[AgentState], dict]:
         history = list(state.get("tool_history", []) or [])
         out_messages: list[ToolMessage] = []
         step = int(state.get("step_count", 0))
+        ctx = _tool_context(state)
+        state_updates: dict[str, Any] = {}
 
         for call in getattr(last, "tool_calls", []) or []:
             name = call.get("name", "")
@@ -98,20 +111,39 @@ def make_tools_node(registry: ToolRegistry) -> Callable[[AgentState], dict]:
             events.append(AgentEvent(AgentEventType.TOOL_STARTED, step=step, tool_name=name).to_dict())
             t0 = time.perf_counter()
             try:
-                result = registry.validate_and_run(name, args)
+                # Later tool calls in the same step see earlier patches this step.
+                outcome = registry.validate_and_run(name, args, _merge_ctx(ctx, state_updates))
                 dur = int((time.perf_counter() - t0) * 1000)
-                events.append(AgentEvent(AgentEventType.TOOL_COMPLETED, step=step, tool_name=name, duration_ms=dur, status="ok").to_dict())
+                state_updates.update(outcome.state_patch or {})
+                events.append(AgentEvent(
+                    AgentEventType.TOOL_COMPLETED, step=step, tool_name=name, duration_ms=dur,
+                    status="ok", message=outcome.summary, source_count=outcome.source_count,
+                ).to_dict())
                 history.append({"tool": name, "status": "ok"})
-                out_messages.append(ToolMessage(content=json.dumps(result), tool_call_id=call_id))
-            except AgentToolError:
+                out_messages.append(ToolMessage(content=json.dumps(outcome.result), tool_call_id=call_id))
+            except AgentToolError as exc:
                 dur = int((time.perf_counter() - t0) * 1000)
                 events.append(AgentEvent(AgentEventType.TOOL_FAILED, step=step, tool_name=name, duration_ms=dur, status="error", message="The tool could not run with those inputs.").to_dict())
                 history.append({"tool": name, "status": "error"})
-                out_messages.append(ToolMessage(content=json.dumps({"error": "The tool could not run with those inputs."}), tool_call_id=call_id))
+                # The safe message (never a raw cause) goes back to the model as data.
+                out_messages.append(ToolMessage(content=json.dumps({"error": str(exc)}), tool_call_id=call_id))
 
-        return {"messages": out_messages, "events": events, "tool_history": history}
+        return {"messages": out_messages, "events": events, "tool_history": history, **state_updates}
 
     return tools
+
+
+def _merge_ctx(ctx: ToolContext, updates: dict[str, Any]) -> ToolContext:
+    """A ToolContext reflecting patches applied earlier in this same tools step."""
+    if not updates:
+        return ctx
+    return ToolContext(
+        target_role=updates.get("target_role", ctx.target_role),
+        job_description=updates.get("job_description", ctx.job_description),
+        candidate_background=updates.get("candidate_background", ctx.candidate_background),
+        requirements=updates.get("requirements", ctx.requirements),
+        gaps=updates.get("gaps", ctx.gaps),
+    )
 
 
 def make_finalize_node() -> Callable[[AgentState], dict]:
