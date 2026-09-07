@@ -2,6 +2,42 @@
 
 **Understand the opportunity. Prepare intelligently. Practise realistically.**
 
+## What it solves
+
+Intelligent Interview Coach solves the **fragmentation of interview preparation**.
+Candidates typically research roles, analyse job descriptions, identify gaps, plan
+preparation and practise interviews across disconnected tools. The application
+brings these activities into one workflow.
+
+In **Sprint 4**, the product evolves from a primarily retrieval/workflow-driven
+career preparation system into a **stateful AI agent**. The agent will decide which
+controlled tools it needs, whether career retrieval is necessary, when
+clarification or human approval is required, and how preparation context should
+carry into Interview Practice.
+
+**Target users:** candidates preparing for professional, specialist and leadership
+interviews.
+
+### Sprint 4 architectural goal (planned)
+
+```
+Next.js / TypeScript frontend
+  → FastAPI Python backend
+    → LangGraph agent (stateful orchestration)
+      → controlled tools / agentic RAG / memory / human-in-the-loop
+        → Interview Practice
+```
+
+> **Status:** the components above are **Planned for Sprint 4** and are *not yet
+> implemented*. This phase (Phase 0) only establishes the Sprint 4 baseline,
+> branding and planning documents — see
+> [docs/sprint4_roadmap.md](docs/sprint4_roadmap.md),
+> [docs/sprint4_architecture.md](docs/sprint4_architecture.md) and
+> [docs/sprint4_requirements_map.md](docs/sprint4_requirements_map.md). The
+> current shipping product remains the Streamlit application described below.
+
+## Current product (Sprint 3)
+
 Intelligent Interview Coach is one Streamlit application (`streamlit run app.py`, one URL)
 that combines two product modules:
 
