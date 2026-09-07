@@ -105,17 +105,21 @@ def _run(model, career=None, **kw):
 # --- registry / allowlist (§4, §36.10) ---------------------------------------
 
 
-def test_registry_registers_the_four_career_tools():
+def test_registry_registers_the_five_career_tools():
+    # Phase 6 adds SearchCareerKnowledge (agentic RAG) as the fifth real tool.
     reg = career_tool_registry(FakeCareer())
     assert set(reg.names()) == {
         "AnalyzeJobDescription", "AnalyzeCandidateGaps",
-        "BuildPreparationPlan", "GenerateInterviewQuestions",
+        "BuildPreparationPlan", "GenerateInterviewQuestions", "SearchCareerKnowledge",
     }
 
 
-def test_no_retrieval_tool_is_registered():
+def test_only_the_high_level_retrieval_tool_is_registered():
+    # Retrieval is exposed as ONE high-level tool; low-level stores are never tools
+    # (the deterministic router owns lane selection). See tests/test_agent_retrieval.py.
     names = career_tool_registry(FakeCareer()).names()
-    assert not any("search" in n.lower() or "retriev" in n.lower() or "knowledge" in n.lower() for n in names)
+    assert "SearchCareerKnowledge" in names
+    assert not any(tok in n.lower() for n in names for tok in ("vector", "bm25", "chroma", "repository"))
 
 
 # --- tool selection (§36.1-4, 6, 7) ------------------------------------------
