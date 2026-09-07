@@ -380,6 +380,22 @@ One process, one URL. Everything (both modules) lives here.
   the frontend unit suite. There is **no camera/visual coaching** — the product
   never requests camera access (asserted by an e2e test).
 
+## API (Sprint 4 Phase 2)
+
+A thin, typed **FastAPI** backend (`src/api`) serves the same application layer as
+the Streamlit UI — both coexist. Run it locally:
+
+```bash
+uvicorn src.api.main:app --reload        # interactive docs at /docs
+```
+
+Base path is `/api/v1` (plus `/api/health` for infra liveness). It exposes career
+chat + tools, the interview lifecycle, user-scoped history, and read-only
+knowledge/evaluation status. CORS origins come from `FRONTEND_ORIGINS` (defaults to
+`http://localhost:3000` in development). The Docker image can serve the API via a
+command override — see the Dockerfile. **Next.js and LangGraph are still planned**
+(later Sprint 4 phases); Career routing remains deterministic.
+
 ## Testing
 
 ```bash
@@ -390,7 +406,7 @@ python scripts/eval_expanded.py          # 11R-A expanded evaluation
 (cd components/live_interviewer/frontend && npm test)   # frontend (vitest)
 ```
 
-Latest: **1261 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
+Latest: **1305 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
 guards); **22 passed** (frontend). Browser E2E: **5 passed** (Playwright/chromium).
 
 ## Known limitations

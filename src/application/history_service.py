@@ -135,19 +135,24 @@ def save_completed_interview(
     *,
     repo: Any | None = None,
     mode: str | None = None,
+    user_id: int | None = None,
 ) -> None:
     """Save a completed interview once per interview (safe on failure).
 
     The saved-report id lives on the session data, so a reset lets a second
     interview save too. A save failure records a bounded ``save_failed`` flag and
     logs safely; the raw DB error is never surfaced.
+
+    ``user_id`` may be passed explicitly (the API resolves identity itself); when
+    omitted it is resolved from the Streamlit-side auth (unchanged UI behaviour).
     """
     data = session.data
     if data.saved_report_id:
         return
     try:
         repo = repo or build_repository(config)
-        user_id = resolve_user_id(config, repo)
+        if user_id is None:
+            user_id = resolve_user_id(config, repo)
         if user_id is None:
             return
         interview_id = repo.save_interview(user_id, build_interview_payload(data, mode=mode))
@@ -163,6 +168,10 @@ def list_interview_reports(repo, user_id: int):
     return repo.list_interviews(user_id)
 
 
-def get_interview_report(repo, interview_id: int):
-    """Fetch one saved interview's detail (repository passthrough)."""
-    return repo.get_interview(interview_id)
+def get_interview_report(repo, user_id: int, interview_id: int):
+    """Fetch one saved interview's detail, scoped to ``user_id``.
+
+    The repository filters by ``user_id``, so one user can never read another
+    user's report (returns ``None`` when the id is not theirs).
+    """
+    return repo.get_interview(user_id, interview_id)

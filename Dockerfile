@@ -29,9 +29,14 @@ COPY .streamlit/config.toml ./.streamlit/config.toml
 RUN useradd --create-home appuser && chown -R appuser /app
 USER appuser
 
-EXPOSE 8501
+# Streamlit UI on 8501 (default). The same image can also serve the FastAPI
+# backend (Sprint 4 Phase 2) on 8000 via a command override — no separate image:
+#   docker run -p 8000:8000 <image> \
+#     uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+# FastAPI health: GET /api/health  (base path /api/v1).
+EXPOSE 8501 8000
 
-# Streamlit's built-in health endpoint.
+# Streamlit's built-in health endpoint (default CMD).
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8501/_stcore/health').status==200 else 1)"
 
