@@ -46,7 +46,10 @@ _REFUSAL_MESSAGE = (
     "guidance, job analysis and interview preparation."
 )
 
-__all__ = ["CareerIntelligenceService", "OrchestrationResult", "PipelineTrace"]
+__all__ = [
+    "CareerIntelligenceService", "OrchestrationResult", "PipelineTrace",
+    "KnowledgeRetrievalResult",
+]
 
 _MARKER_RE = re.compile(r"\[(\d+)\]")
 
@@ -185,6 +188,61 @@ class OrchestrationResult:
         return self.response.tool_calls
 
 
+@dataclass
+class KnowledgeRetrievalResult:
+    """Typed result of the retrieval-ONLY operation (Agentic RAG boundary).
+
+    This is the **complete deterministic evidence-retrieval layer** — input
+    validation, injection scanning, query translation, occupation/geography
+    resolution, deterministic routing, hybrid + structured retrieval, RRF fusion,
+    optional reranking, retrieval security screening, geographic source precedence,
+    evidence assembly and citation creation — WITHOUT Career tool execution and
+    WITHOUT final answer synthesis. The caller (e.g. the LangGraph agent) decides
+    what to do with the evidence.
+
+    It carries only safe, serialisable data plus the inspector-facing
+    :class:`PipelineTrace`; it never exposes embeddings, raw store rows or provider
+    payloads.
+    """
+
+    evidence: list[KnowledgeEvidence] = field(default_factory=list)
+    citations: list[Citation] = field(default_factory=list)
+    resolved_occupation: str = ""
+    resolved_geography: str | None = None
+    retrieval_lane: str = ""
+    retrieval_strategy: str = ""
+    source_count: int = 0
+    insufficient_evidence: bool = True
+    blocked: bool = False
+    refusal: str | None = None
+    clarify: str | None = None
+    # Safe, inspector-facing trace (no hidden reasoning, no raw provider payload).
+    trace: PipelineTrace = field(default_factory=PipelineTrace)
+
+
+@dataclass
+class _EvidenceBundle:
+    """Internal result of the shared retrieval stages (used by BOTH the retrieval-
+    only operation and the full ``answer`` pipeline). Not a public type."""
+
+    trace: PipelineTrace
+    route: object | None = None
+    route_decision: object | None = None
+    translated: object | None = None
+    cleaned_query: str = ""
+    job_description: str | None = None
+    candidate_background: str | None = None
+    results: list = field(default_factory=list)  # narrative RetrievalResult(s)
+    structured_evidence: list = field(default_factory=list)
+    coverage_notes: list = field(default_factory=list)
+    evidence: list = field(default_factory=list)
+    sections: dict = field(default_factory=dict)
+    citations: list = field(default_factory=list)
+    blocked: bool = False
+    stop_message: str | None = None
+    clarify: str | None = None
+
+
 class CareerIntelligenceService:
     """Domain service that orchestrates RAG + tools into one grounded answer."""
 
@@ -243,7 +301,171 @@ class CareerIntelligenceService:
         model: str | None = None,
         progress=None,
     ) -> OrchestrationResult:
+        # Stages 1–8 (validation → routing → hybrid + structured retrieval →
+        # evidence assembly) are the SHARED evidence-retrieval layer, reused by the
+        # retrieval-only operation. ``answer`` then adds Career tool execution and
+        # OpenRouter synthesis on top.
+        bundle = self._gather_evidence(
+            query,
+            job_description=job_description,
+            candidate_background=candidate_background,
+            progress=progress,
+        )
+        trace = bundle.trace
+
+        def _step(label: str) -> None:
+            if progress is not None:
+                try:
+                    progress(label)
+                except Exception:  # pragma: no cover - progress must never break the run
+                    pass
+
+        if bundle.stop_message is not None:
+            # Validation failure or injection block — a safe plain result.
+            return self._plain_result(bundle.stop_message, trace)
+
+        # If the occupation is genuinely ambiguous, ask to clarify rather than
+        # guessing — but only for a pure structured question (no vector evidence,
+        # no tools planned) so we never suppress an otherwise-answerable turn.
+        if bundle.clarify and not bundle.results and not bundle.route.tools:
+            return self._plain_result(bundle.clarify, trace)
+
+        # 6) Tool requirement + 7) tool execution (controlled) — answer() ONLY.
+        if bundle.route.tools:
+            _step("Running tools")
+        tool_outcome = self._run_tools(
+            bundle.route,
+            trace,
+            job_description=bundle.job_description,
+            candidate_background=bundle.candidate_background,
+            days_until_interview=days_until_interview,
+            hours_per_week=hours_per_week,
+            question_focus=question_focus,
+            results=bundle.results,
+        )
+        tool_execs = tool_outcome.executions
+        tool_summaries = tool_outcome.summaries
+
+        evidence, sections, citations = bundle.evidence, bundle.sections, bundle.citations
+
+        # 9) OpenRouter synthesis over the multi-section evidence — answer() ONLY.
+        _step("Preparing response")
+        company_summary = None
+        if company_context is not None:
+            try:
+                company_summary = company_context.safe_summary()
+                trace.notes.append("Company context supplied (time-sensitive; labelled).")
+            except Exception:  # noqa: BLE001 - never break the turn on company context
+                company_summary = None
+        messages = build_evidence_messages(
+            query=bundle.cleaned_query,
+            sections=sections,
+            tool_summaries=tool_summaries,
+            job_description=bundle.job_description,
+            candidate_background=bundle.candidate_background,
+            coverage_notes=bundle.coverage_notes,
+            company_summary=company_summary,
+        )
+        answer_text, usage = self._synthesize(
+            messages, trace, rag_required=trace.rag_required,
+            results=bundle.results, tool_summaries=tool_summaries, model=model,
+            structured_evidence=bundle.structured_evidence, coverage_notes=bundle.coverage_notes,
+        )
+
+        # Output guard: redact secret-like strings, flag leakage / bad citations.
+        allowed_markers = {c.marker for c in citations}
+        guarded = guard_output(answer_text, allowed_markers=allowed_markers)
+        answer_text = guarded.safe_answer
+        if guarded.findings:
+            trace.output_findings = guarded.findings
+            trace.notes.extend(guarded.findings)
+
+        # 10) Citations map to referenced, real evidence (structured or narrative).
+        referenced = {f"[{n}]" for n in _MARKER_RE.findall(answer_text)}
+        cited = [c for c in citations if c.marker in referenced]
+
+        response = ChatResponse(
+            answer=answer_text,
+            citations=cited,
+            retrieved=bundle.results,
+            evidence=evidence,
+            tool_calls=[te.execution for te in tool_execs],
+            translated_query=bundle.translated,
+            usage=usage,
+        )
+        return OrchestrationResult(
+            response=response, trace=trace,
+            preparation_artifacts=tool_outcome.artifacts,
+        )
+
+    # -- retrieval-only operation (Agentic RAG boundary) -------------------
+
+    def retrieve_evidence(
+        self,
+        query: str,
+        *,
+        job_description: str | None = None,
+        candidate_background: str | None = None,
+        progress=None,
+    ) -> KnowledgeRetrievalResult:
+        """Run ONLY the deterministic evidence-retrieval layer and return typed
+        evidence + citations — no Career tools, no final answer synthesis.
+
+        This is the boundary the agent's ``SearchCareerKnowledge`` tool uses: the
+        agent decides *whether* to retrieve; this method (and the deterministic
+        router inside it) decides *which* lanes/sources are queried. It executes the
+        exact same shared stages as :meth:`answer` up to evidence assembly — input
+        validation, injection scan, query translation, routing, hybrid + structured
+        retrieval, screening, precedence and citations — then stops.
+
+        Note on query translation: the shared stages may consult the configured
+        translation model to expand the query (an established part of retrieval),
+        but the FINAL grounded-answer synthesis model is never invoked here.
+        """
+        bundle = self._gather_evidence(
+            query,
+            job_description=job_description,
+            candidate_background=candidate_background,
+            progress=progress,
+        )
+        trace = bundle.trace
+        if bundle.blocked:
+            return KnowledgeRetrievalResult(
+                blocked=True, refusal=bundle.stop_message,
+                insufficient_evidence=True, trace=trace,
+            )
+        if bundle.stop_message is not None:
+            # Validation failure (e.g. empty query) — safe, no evidence.
+            return KnowledgeRetrievalResult(insufficient_evidence=True, trace=trace)
+        return KnowledgeRetrievalResult(
+            evidence=list(bundle.evidence),
+            citations=list(bundle.citations),
+            resolved_occupation=trace.resolved_occupation,
+            resolved_geography=trace.detected_country,
+            retrieval_lane=trace.retrieval_lane,
+            retrieval_strategy=trace.retrieval_strategy,
+            source_count=len(bundle.evidence),
+            insufficient_evidence=not bundle.evidence,
+            clarify=bundle.clarify,
+            trace=trace,
+        )
+
+    def _gather_evidence(
+        self,
+        query: str,
+        *,
+        job_description: str | None,
+        candidate_background: str | None,
+        progress,
+    ) -> _EvidenceBundle:
+        """Shared retrieval stages for both ``answer`` and ``retrieve_evidence``.
+
+        Runs stages 1–8 (validation, injection scan, sanitisation, routing, query
+        translation, hybrid retrieval + screening + rerank, structured retrieval,
+        evidence assembly + citations). Executes NO Career tools and NO synthesis.
+        """
         trace = PipelineTrace()
+        bundle = _EvidenceBundle(trace=trace)
 
         def _step(label: str) -> None:
             if progress is not None:
@@ -257,8 +479,10 @@ class CareerIntelligenceService:
         validation = validate_input(query or "", "query")
         trace.notes.extend(validation.notes)
         if not validation.ok:
-            return self._plain_result(validation.error or "Please enter a question.", trace)
+            bundle.stop_message = validation.error or "Please enter a question."
+            return bundle
         query = validation.cleaned
+        bundle.cleaned_query = query
 
         scan = scan_text(query)
         trace.input_verdict = scan.verdict
@@ -268,21 +492,23 @@ class CareerIntelligenceService:
             trace.notes.append(
                 "User input blocked by the injection guard: " + ", ".join(scan.indicators)
             )
-            return self._plain_result(_REFUSAL_MESSAGE, trace)
+            bundle.blocked = True
+            bundle.stop_message = _REFUSAL_MESSAGE
+            return bundle
         if scan.flagged:
             trace.notes.append(
                 "User input flagged (allowed with warning): " + ", ".join(scan.indicators)
             )
 
         # Untrusted structured inputs: validate + scan; drop any that are attacks.
-        job_description = self._sanitize_context(
+        bundle.job_description = self._sanitize_context(
             job_description, "job_description", "Job description", trace
         )
-        candidate_background = self._sanitize_context(
+        bundle.candidate_background = self._sanitize_context(
             candidate_background, "candidate_background", "Candidate background", trace
         )
 
-        # Knowledge-router lane classification — this now drives real structured
+        # Knowledge-router lane classification — this drives real structured
         # retrieval (roles/compensation/competency/labour-market) alongside vector
         # RAG, not just inspector classification.
         from src.copilot.knowledge.router import detect_country, route_question
@@ -290,6 +516,7 @@ class CareerIntelligenceService:
         route_decision = route_question(query)
         trace.retrieval_lane = route_decision.lane
         trace.detected_country = detect_country(query)
+        bundle.route_decision = route_decision
 
         # 2) Intent understanding + 3) query translation (fallback built in).
         # Session TTL cache: translation is deterministic for a given query, so a
@@ -311,12 +538,14 @@ class CareerIntelligenceService:
         if translated.strategy in ("heuristic", "fallback"):
             trace.degraded.append("translation")
             trace.notes.append("Query translation degraded; used heuristic understanding.")
+        bundle.translated = translated
 
         # 4) Route: does this need RAG, tools, both or neither?
         route = route_for_intent(translated.intent)
         rag_required = route.rag_required and translated.retrieval_required
         trace.rag_required = rag_required
         trace.tools_planned = list(route.tools)
+        bundle.route = route
 
         # 5) Hybrid retrieval (controlled).
         results: list[RetrievalResult] = []
@@ -342,6 +571,7 @@ class CareerIntelligenceService:
         self._record_weight_trace(query, trace)
 
         trace.context_count = len(results)
+        bundle.results = results
 
         # 5b) Structured multi-lane retrieval (injected coordinator). Runs the
         # real stores for the router's lane; empty when no coordinator (prior
@@ -349,85 +579,21 @@ class CareerIntelligenceService:
         structured_evidence, coverage_notes = self._structured_retrieval(
             route_decision, query, trace
         )
+        bundle.structured_evidence = structured_evidence
+        bundle.coverage_notes = coverage_notes
 
-        # If the occupation is genuinely ambiguous, ask to clarify rather than
-        # guessing — but only for a pure structured question (no vector evidence,
-        # no tools planned) so we never suppress an otherwise-answerable turn.
         clarify_msg = getattr(self, "_clarify_message", None)
         self._clarify_message = None
-        if clarify_msg and not results and not route.tools:
-            return self._plain_result(clarify_msg, trace)
-
-        # 6) Tool requirement + 7) tool execution (controlled).
-        if route.tools:
-            _step("Running tools")
-        tool_outcome = self._run_tools(
-            route,
-            trace,
-            job_description=job_description,
-            candidate_background=candidate_background,
-            days_until_interview=days_until_interview,
-            hours_per_week=hours_per_week,
-            question_focus=question_focus,
-            results=results,
-        )
-        tool_execs = tool_outcome.executions
-        tool_summaries = tool_outcome.summaries
+        bundle.clarify = clarify_msg
 
         # 8) Assemble unified, numbered evidence (structured first, then narrative)
         # into trust-separated sections; build matching citations.
         evidence, sections, citations = self._assemble_evidence(structured_evidence, results)
         trace.evidence_sources = [c.label for c in citations]
-
-        # 9) OpenRouter synthesis over the multi-section evidence.
-        _step("Preparing response")
-        company_summary = None
-        if company_context is not None:
-            try:
-                company_summary = company_context.safe_summary()
-                trace.notes.append("Company context supplied (time-sensitive; labelled).")
-            except Exception:  # noqa: BLE001 - never break the turn on company context
-                company_summary = None
-        messages = build_evidence_messages(
-            query=query,
-            sections=sections,
-            tool_summaries=tool_summaries,
-            job_description=job_description,
-            candidate_background=candidate_background,
-            coverage_notes=coverage_notes,
-            company_summary=company_summary,
-        )
-        answer_text, usage = self._synthesize(
-            messages, trace, rag_required=rag_required,
-            results=results, tool_summaries=tool_summaries, model=model,
-            structured_evidence=structured_evidence, coverage_notes=coverage_notes,
-        )
-
-        # Output guard: redact secret-like strings, flag leakage / bad citations.
-        allowed_markers = {c.marker for c in citations}
-        guarded = guard_output(answer_text, allowed_markers=allowed_markers)
-        answer_text = guarded.safe_answer
-        if guarded.findings:
-            trace.output_findings = guarded.findings
-            trace.notes.extend(guarded.findings)
-
-        # 10) Citations map to referenced, real evidence (structured or narrative).
-        referenced = {f"[{n}]" for n in _MARKER_RE.findall(answer_text)}
-        cited = [c for c in citations if c.marker in referenced]
-
-        response = ChatResponse(
-            answer=answer_text,
-            citations=cited,
-            retrieved=results,
-            evidence=evidence,
-            tool_calls=[te.execution for te in tool_execs],
-            translated_query=translated,
-            usage=usage,
-        )
-        return OrchestrationResult(
-            response=response, trace=trace,
-            preparation_artifacts=tool_outcome.artifacts,
-        )
+        bundle.evidence = evidence
+        bundle.sections = sections
+        bundle.citations = citations
+        return bundle
 
     # -- dry-run planning (OPT-5) ------------------------------------------
 
