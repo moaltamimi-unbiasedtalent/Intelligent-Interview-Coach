@@ -424,8 +424,12 @@ generation, and — new in **Phase 6 (Agentic RAG)** — `SearchCareerKnowledge`
 Retrieval is now **conditional and tool-selected**: the agent decides *whether*
 external career evidence is needed, while the deterministic Sprint 3 router still
 decides *which* lanes/sources (the model never touches low-level vector/BM25/
-repository stores). Retrieved content stays untrusted data and citations come only
-from retrieved evidence. Memory and human-in-the-loop are later phases. See
+repository stores). `SearchCareerKnowledge` runs a **retrieval-only** operation
+(`search_knowledge` → `retrieve_evidence`) that shares its extraction with the full
+`answer()` pipeline but runs **no** other Career tools and **no** final answer
+synthesis — it returns evidence, and the agent decides what to say. Retrieved
+content stays untrusted data and citations come only from retrieved evidence. Memory
+and human-in-the-loop are later phases. See
 [docs/sprint4_architecture.md](docs/sprint4_architecture.md).
 
 ## Testing
@@ -438,7 +442,7 @@ python scripts/eval_expanded.py          # 11R-A expanded evaluation
 (cd components/live_interviewer/frontend && npm test)   # frontend (vitest)
 ```
 
-Latest: **1371 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
+Latest: **1384 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
 guards); **35 passed** (frontend). Browser E2E: **5 passed** (Playwright/chromium).
 
 ## Known limitations
