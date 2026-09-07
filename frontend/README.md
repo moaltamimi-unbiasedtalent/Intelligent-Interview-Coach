@@ -5,8 +5,14 @@ Production frontend **foundation** (Sprint 4 Phase 3B) implementing the selected
 client of the FastAPI backend (`/api/v1`). The Streamlit app keeps working
 independently; both talk to the same application layer.
 
-> Phase 3B builds the shell, design system, routes and API client foundation. The
-> full Career/Preparation migration is **Phase 3C**. No LangGraph yet.
+> Phase 3B built the shell/design system/routes/API client; **Phase 3C** made
+> `/prepare` live — the coach, the four preparation tools, sources, history and the
+> Career→Interview handoff run against the FastAPI contracts. Retrieval stays
+> deterministic; **no LangGraph yet**.
+>
+> **Dependency note:** `npm audit` reports 2 production advisories (`next`/`postcss`)
+> whose only fix is the **Next 16 major upgrade** — deferred (out of scope; would
+> also change linting). 5 further advisories are dev-tooling only. Not auto-fixed.
 
 ## Stack
 

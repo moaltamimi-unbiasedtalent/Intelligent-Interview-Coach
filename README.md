@@ -410,10 +410,10 @@ uvicorn src.api.main:app --reload
 cd frontend && npm install && npm run dev   # http://localhost:3000
 ```
 
-The full Career/Preparation migration is Phase 3C; today Prepare/Practice are
-visual shells with live health/capabilities integration. See
-[frontend/README.md](frontend/README.md). **Next.js and LangGraph beyond this
-foundation remain planned.**
+**Prepare is live** (Phase 3C): the coach, the four preparation tools, sources and
+the Career→Interview handoff all run against the FastAPI contracts. Retrieval stays
+deterministic (agentic RAG is a later phase); **LangGraph remains planned**. See
+[frontend/README.md](frontend/README.md).
 
 ## Testing
 

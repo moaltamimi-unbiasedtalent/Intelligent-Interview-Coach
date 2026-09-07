@@ -1,6 +1,25 @@
 import { config } from "../config";
 import { ApiError, apiErrorFromBody } from "./errors";
-import type { CapabilitiesResponse, HealthResponse } from "./types";
+import type {
+  CapabilitiesResponse,
+  CareerChatRequest,
+  CareerChatResponse,
+  CreateInterviewRequest,
+  GapAnalysisRequest,
+  GapAnalysisResult,
+  HealthResponse,
+  InterviewListResponse,
+  InterviewQuestionSet,
+  InterviewStateResponse,
+  JobAnalysisRequest,
+  KnowledgeSnapshotResponse,
+  KnowledgeSourcesResponse,
+  PreparationPlan,
+  PreparationPlanRequest,
+  QuestionsRequest,
+  RoleRequirements,
+  ToolResultResponse,
+} from "./types";
 
 const REQUEST_ID_HEADER = "x-request-id";
 
@@ -32,7 +51,7 @@ async function request<T>(
       signal,
     });
   } catch (cause) {
-    // Network / CORS / abort — never leak the raw cause to the UI.
+    if (cause instanceof DOMException && cause.name === "AbortError") throw cause;
     throw new ApiError({
       kind: "network",
       status: null,
@@ -56,6 +75,38 @@ export const api = {
   health: (opts?: RequestOptions) => request<HealthResponse>("GET", "/health", opts),
   capabilities: (opts?: RequestOptions) =>
     request<CapabilitiesResponse>("GET", "/capabilities", opts),
+
+  career: {
+    chat: (body: CareerChatRequest, opts?: RequestOptions) =>
+      request<CareerChatResponse>("POST", "/career/chat", { body, ...opts }),
+    jobAnalysis: (body: JobAnalysisRequest, opts?: RequestOptions) =>
+      request<ToolResultResponse<RoleRequirements>>("POST", "/career/job-analysis", { body, ...opts }),
+    gapAnalysis: (body: GapAnalysisRequest, opts?: RequestOptions) =>
+      request<ToolResultResponse<GapAnalysisResult>>("POST", "/career/gap-analysis", { body, ...opts }),
+    preparationPlan: (body: PreparationPlanRequest, opts?: RequestOptions) =>
+      request<ToolResultResponse<PreparationPlan>>("POST", "/career/preparation-plan", { body, ...opts }),
+    questions: (body: QuestionsRequest, opts?: RequestOptions) =>
+      request<ToolResultResponse<InterviewQuestionSet>>("POST", "/career/questions", { body, ...opts }),
+  },
+
+  interviews: {
+    create: (body: CreateInterviewRequest, opts?: RequestOptions) =>
+      request<InterviewStateResponse>("POST", "/interviews", { body, ...opts }),
+    get: (sessionId: string, opts?: RequestOptions) =>
+      request<InterviewStateResponse>("GET", `/interviews/${encodeURIComponent(sessionId)}`, opts),
+  },
+
+  knowledge: {
+    sources: (opts?: RequestOptions) =>
+      request<KnowledgeSourcesResponse>("GET", "/knowledge/sources", opts),
+    snapshot: (opts?: RequestOptions) =>
+      request<KnowledgeSnapshotResponse>("GET", "/knowledge/snapshot", opts),
+  },
+
+  history: {
+    list: (opts?: RequestOptions) =>
+      request<InterviewListResponse>("GET", "/history/interviews", opts),
+  },
 };
 
 export { ApiError };

@@ -11,7 +11,7 @@ auto-merge, following the Sprint 3 workflow.
 | **2** | **FastAPI backend** ✅ done (`src/api`, `/api/v1`) | 2–3 days | 1 |
 | **3A** | **Product UX + visual design spike** ✅ done (`docs/design/phase3a`, four concepts) | 1 day | 2 |
 | **3B** | **Next.js foundation + Precision Coach design system** ✅ done (`frontend/`) | 3–4 days | 3A (design chosen) |
-| 3C | Career/Preparation frontend integration | 3–4 days | 3B |
+| **3C** | **Career/Preparation frontend integration** ✅ done (live `/prepare` + handoff) | 3–4 days | 3B |
 | 3 | Next.js / TypeScript frontend foundation | 3–4 days | 2 |
 | 4 | LangGraph agent foundation | 2–3 days | 1 (2 helpful) |
 | 5 | Convert capabilities into agent tools | 2–3 days | 4 |
