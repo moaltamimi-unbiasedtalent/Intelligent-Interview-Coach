@@ -84,6 +84,45 @@ These are fixed now so later phases do not drift:
 14. **RAGAS** remains the generation-quality evaluation layer.
 15. Existing **security / privacy boundaries must be preserved.**
 
+## 3a. Phase 1 — application boundary (implemented)
+
+Phase 1 introduced a thin, **Streamlit-free application layer** (`src/application`)
+so the existing capabilities are callable without Streamlit UI state or rendering.
+Streamlit is now a *consumer* of these services; a future FastAPI backend will
+call the same functions.
+
+```mermaid
+flowchart TD
+    ST[Streamlit UI<br/>src/career/ui.py, src/interview/studio_app.py] --> APP
+    subgraph APP[Application layer — src/application  ✅]
+        CA[CareerApplicationService<br/>chat + 4 tools]
+        IA[InterviewApplicationService<br/>strategy/questions/answers/deep dive/report]
+        HS[history_service<br/>save / list / get]
+        KS[knowledge_service]
+        ES[evaluation_service]
+        FA[factories<br/>services / repository / stores]
+    end
+    APP --> DOM[Existing domain / RAG / tools / persistence<br/>src/copilot, src/*, src/integration]
+    FUT[FastAPI  🔷 later] -.calls the same services.-> APP
+```
+
+**What moved:** service construction (vector store, retriever, tool invoker,
+interview/evaluation/report services, repository, pricing) into Streamlit-free
+factories; Career chat/tools orchestration into `CareerApplicationService`;
+interview strategy/question/answer/deep-dive/report orchestration into
+`InterviewApplicationService` (driving a store-agnostic `SessionManager`);
+persistence (payload build, duplicate-save guard, safe-failure handling) into
+`history_service`; read-only knowledge/evaluation snapshots into their services.
+
+**What did NOT change:** RAG/retrieval behaviour, tool execution, RAGAS scoring,
+the interview state machine and scoring, the DB schema, auth, security guards, and
+Live/Type/Record behaviour (Live stays flag-gated OFF). No FastAPI, Next.js or
+LangGraph was added.
+
+**Enforced by tests:** `src/application` imports no Streamlit and no UI module
+(`tests/test_application_boundary.py`); the UI may import the application layer,
+never the reverse.
+
 ## 4. Internal naming is intentionally stable
 
 To evolve functionality first and avoid churn/regression risk, Sprint 4 **does
