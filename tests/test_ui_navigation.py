@@ -1,7 +1,13 @@
 """OS-5 tests: grouped product navigation + shared design-system exports."""
 
+import pathlib
+
+from streamlit.testing.v1 import AppTest
+
 from src.ui import navigation as nav
 from src.ui import shared
+
+APP_PATH = str(pathlib.Path(__file__).resolve().parent.parent / "app.py")
 
 
 class TestNavigation:
@@ -55,6 +61,27 @@ class TestNavigation:
         # The reviewer-mode gate that used to hide diagnostics no longer exists.
         assert not hasattr(nav, "visible_nav_items")
         assert not hasattr(nav, "ADVANCED_ROUTES")
+
+
+class TestBranding:
+    """Sprint 4 rebrand: the user-facing product name is Intelligent Interview
+    Coach and it is the single source of truth for the page title, sidebar and
+    home heading."""
+
+    def test_app_title_is_the_rebranded_product_name(self) -> None:
+        assert nav.APP_TITLE == "Intelligent Interview Coach"
+
+    def test_home_page_renders_rebranded_name(self) -> None:
+        at = AppTest.from_file(APP_PATH, default_timeout=30)
+        at.session_state["os_nav"] = nav.HOME
+        at.run()
+        assert not at.exception
+        rendered = (
+            " ".join(t.value for t in at.title)
+            + " ".join(getattr(h, "value", "") for h in at.header)
+            + " ".join(m.value for m in at.markdown)
+        )
+        assert "Intelligent Interview Coach" in rendered
 
 
 class TestSharedDesignSystem:
