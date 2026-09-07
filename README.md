@@ -396,6 +396,25 @@ knowledge/evaluation status. CORS origins come from `FRONTEND_ORIGINS` (defaults
 command override — see the Dockerfile. **Next.js and LangGraph are still planned**
 (later Sprint 4 phases); Career routing remains deterministic.
 
+## Frontend (Sprint 4 Phase 3B)
+
+A production frontend **foundation** lives in [`frontend/`](frontend/) — Next.js 15
+(App Router) + React 19 + TypeScript + Tailwind, implementing the selected
+**Precision Coach** design system (`docs/design/phase3a/`). It's a typed client of
+the FastAPI backend; Streamlit keeps working alongside it.
+
+```bash
+# Terminal 1 — backend
+uvicorn src.api.main:app --reload
+# Terminal 2 — frontend
+cd frontend && npm install && npm run dev   # http://localhost:3000
+```
+
+The full Career/Preparation migration is Phase 3C; today Prepare/Practice are
+visual shells with live health/capabilities integration. See
+[frontend/README.md](frontend/README.md). **Next.js and LangGraph beyond this
+foundation remain planned.**
+
 ## Testing
 
 ```bash
