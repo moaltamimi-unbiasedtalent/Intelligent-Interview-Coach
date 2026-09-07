@@ -21,7 +21,10 @@ class AgentRunResponse(BaseModel):
     run_id: str
     status: str
     response: str
+    tools_used: list[str] = Field(default_factory=list)
     events: list[dict] = Field(default_factory=list)
     tool_calls: list[dict] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     step_count: int = 0
+    # A PreparationContext (safe dict) when the run gathered enough — else null.
+    preparation_context: dict | None = None
