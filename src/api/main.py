@@ -23,7 +23,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.api.config import API_PREFIX, ApiSettings
 from src.api.exception_handlers import register_exception_handlers
 from src.api.middleware import RequestIdMiddleware
-from src.api.routes import career, evaluation, health, history, interview, knowledge
+from src.api.routes import agent, career, evaluation, health, history, interview, knowledge
 from src.api.session_store import InMemorySessionStore
 
 logger = logging.getLogger("api")
@@ -35,6 +35,7 @@ TAGS_METADATA = [
     {"name": "history", "description": "The caller's saved interviews (user-scoped)."},
     {"name": "knowledge", "description": "Read-only knowledge-base status."},
     {"name": "evaluation", "description": "Read-only evaluation status (no paid runs)."},
+    {"name": "agent", "description": "Experimental LangGraph preparation agent (Sprint 4 preview)."},
 ]
 
 DESCRIPTION = (
@@ -83,7 +84,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
 
     # Infra liveness alias (unversioned) + versioned API surface.
     app.include_router(health.router, prefix="/api")
-    for module in (health, career, interview, history, knowledge, evaluation):
+    for module in (health, career, interview, history, knowledge, evaluation, agent):
         app.include_router(module.router, prefix=API_PREFIX)
     return app
 
