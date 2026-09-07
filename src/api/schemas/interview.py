@@ -80,6 +80,9 @@ class InterviewStateResponse(BaseModel):
     current_question: QuestionOut | None = None
     report_available: bool = False
     last_evaluation: dict | None = None
+    # Sprint 4 Phase 3C: the resolved target role, so the frontend Practice page can
+    # show the session's role/context. Additive + optional (backward-compatible).
+    target_role: str | None = None
 
 
 class AnswerRequest(BaseModel):

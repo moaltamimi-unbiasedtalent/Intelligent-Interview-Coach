@@ -105,6 +105,7 @@ def _state(session_id: str, session: SessionManager,
         current_question=current,
         report_available=data.report is not None,
         last_evaluation=last_evaluation,
+        target_role=(data.config.target_role if data.config else None),
     )
 
 
