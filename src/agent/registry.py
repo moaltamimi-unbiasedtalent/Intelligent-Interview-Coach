@@ -63,7 +63,10 @@ class ToolRegistry:
 
 
 def career_tool_registry(career_service: Any) -> ToolRegistry:
-    """The Phase 5 allowlist — the four real Career tools (no retrieval tool)."""
+    """The allowlist — the five real Career tools: job analysis, gap analysis,
+    preparation plan, question generation, and (Phase 6) career-knowledge retrieval.
+    Low-level stores (vector/BM25/repositories) are NEVER registered — the
+    deterministic router owns lane selection inside SearchCareerKnowledge."""
     registry = ToolRegistry()
     for args_model, handler in build_career_tools(career_service):
         registry.register(args_model, handler)
