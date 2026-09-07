@@ -8,7 +8,7 @@ Phase 4 — items still in progress say so; nothing future is overstated.
 | Requirement | Status (Phase 4) | Notes |
 |---|---|---|
 | Clear agent purpose | ✅ implemented/documented | Career & Interview Preparation Agent — one primary agent from target role to practised interview. |
-| 3+ tools (agent) | ⚙️ foundation only | The agent registers **1 deterministic foundation tool** to prove orchestration. The four Career tools + retrieval are migrated into the agent in **Phase 5** (they already exist and are used by the deterministic flow / FastAPI). |
+| 3+ tools (agent) | ✅ complete | The agent registers **4 real Career tools** (job analysis, gap analysis, preparation plan, question generation) as thin adapters over the existing capabilities. Career retrieval becomes an agent tool in **Phase 6** (Agentic RAG). |
 | LangGraph / LangChain | ✅ implemented | Single stateful bounded LangGraph agent; LangChain/OpenRouter model integration reused. |
 | User interface | ✅ implemented | Next.js/TypeScript frontend (Streamlit retained temporarily). |
 | Error handling | ✅ implemented | Safe errors + graph/tool failure handling (bounded loop, tool-failure recovery, safe messages). |
@@ -21,7 +21,7 @@ Phase 4 — items still in progress say so; nothing future is overstated.
 |---|---|---|
 | Medium | Memory (long-term) | 🔷 planned (Phase 7) |
 | Medium | Authentication / personalisation | ⚙️ transitional seam (production OIDC later) |
-| Medium | 5 tools (agent-registered) | 🔷 planned (Phase 5) |
+| Medium | 5 tools (agent-registered) | ⚙️ 4 today; a 5th (retrieval) lands in Phase 6 |
 | Medium | Security guard | ✅ existing / preserved (agent adds allowlist + injection-safe prompt) |
 | Hard | Agentic RAG | 🔷 planned (Phase 6) |
 | Hard | RAGAS | ✅ existing / extend to agent runs later |

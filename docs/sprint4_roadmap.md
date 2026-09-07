@@ -14,7 +14,7 @@ auto-merge, following the Sprint 3 workflow.
 | **3C** | **Career/Preparation frontend integration** ✅ done (live `/prepare` + handoff) | 3–4 days | 3B |
 | 3 | Next.js / TypeScript frontend foundation | 3–4 days | 2 |
 | **4** | **LangGraph agent foundation** ✅ done (`src/agent`, side-by-side) | 2–3 days | 1 (2 helpful) |
-| 5 | Convert capabilities into agent tools | 2–3 days | 4 |
+| **5** | **Convert capabilities into agent tools** ✅ done (4 real Career tools) | 2–3 days | 4 |
 | 6 | Agentic RAG (retrieval as an agent-selected tool) | 2–3 days | 5 |
 | 7 | Short-term + long-term memory | 2–3 days | 4, 5 |
 | 8 | Human-in-the-loop (role confirm, memory-write, handoff) | 1–2 days | 4, 7 |
