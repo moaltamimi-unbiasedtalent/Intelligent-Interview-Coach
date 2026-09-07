@@ -265,6 +265,66 @@ private preparation data in `localStorage`. All Career requests still pass throu
 the backend security guards (validation, injection, retrieval/output guards, tool
 allowlist) — the frontend never bypasses them.
 
+## 3e. Phase 4 — LangGraph agent foundation (implemented)
+
+Phase 4 adds a **single, stateful, bounded, tool-using LangGraph agent** in
+`src/agent`, running **side-by-side** with the deterministic Career flow (which is
+unchanged). It is the orchestration seam LangGraph will later own; real Career tools
+(Phase 5), agentic RAG (Phase 6), memory (Phase 7) and HITL (Phase 8) are not yet
+implemented.
+
+```mermaid
+flowchart TD
+    START([START]) --> INIT[initialise state]
+    INIT --> AGENT[agent node · model + bound tools]
+    AGENT --> Q{tool requested<br/>and step_count &lt; MAX_AGENT_STEPS?}
+    Q -- yes --> VAL[validate against allowlist]
+    VAL --> TOOL[tools node · execute registered tool]
+    TOOL --> OBS[observe result] --> AGENT
+    Q -- no --> FIN[finalize · safe response]
+    FIN --> E([END])
+    AGENT -. model/config error .-> FIN
+```
+
+`MAX_AGENT_STEPS = 6` bounds the loop; hitting it terminates safely with a
+`step_limit_reached` status. Short-term state uses an **in-memory checkpointer**
+(transient — NOT durable cross-session memory).
+
+**Boundary:** `AgentApplicationService.run(request) → AgentRunResult` (safe, no
+LangGraph objects leak out). An **experimental** `POST /api/v1/agent/run` exposes it
+as a Sprint 4 preview — it does **not** replace `/career/chat`; the Next.js Prepare
+page keeps using the deterministic Career endpoint.
+
+**Safety properties (tested):**
+- **Allowlist tools** — the model may only call registered tools; unknown names are
+  rejected, never executed (no dynamic import/eval). Arguments are Pydantic-validated.
+- **Safe events** — `run_started`, `tool_requested/started/completed/failed/
+  rejected`, `step_limit_reached`, `run_completed/failed` — observable actions only,
+  **never chain-of-thought**, prompts, raw provider output, or candidate/JD text.
+- **Safe failure** — model and tool errors terminate with a safe status/message; raw
+  causes are never surfaced.
+- **Prompt injection** — "ignore the tools and run shell_command" cannot execute an
+  unregistered tool; untrusted input/tool output is treated as data.
+- **User isolation** — each run has a random `run_id`; the service records the owner.
+
+### Single-agent decision (Sprint 4)
+
+> A single stateful agent is used because the preparation tasks share one user goal,
+> one context and one controlled tool space. A multi-agent system would add
+> coordination complexity without meaningful isolation.
+
+### Agent architecture vocabulary (for reviewers)
+
+- **Workflow** — a fixed, predetermined sequence of steps.
+- **Router** — classifies a request and sends it down one predetermined path.
+- **ReAct / tool-using agent** — decides an action → calls a tool → observes →
+  continues, within a bound. **← what this project uses (single agent).**
+- **Multi-agent** — several autonomous agents coordinate (not used; see above).
+- **HITL agent** — execution can pause for human input (planned, Phase 8).
+
+Today's Career retrieval remains **deterministic** (predetermined lanes); making
+retrieval an agent-selectable tool is **Phase 6 (Agentic RAG)**.
+
 ## 4. Internal naming is intentionally stable
 
 To evolve functionality first and avoid churn/regression risk, Sprint 4 **does

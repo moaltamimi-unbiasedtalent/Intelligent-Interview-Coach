@@ -412,8 +412,14 @@ cd frontend && npm install && npm run dev   # http://localhost:3000
 
 **Prepare is live** (Phase 3C): the coach, the four preparation tools, sources and
 the Career→Interview handoff all run against the FastAPI contracts. Retrieval stays
-deterministic (agentic RAG is a later phase); **LangGraph remains planned**. See
+deterministic (agentic RAG is a later phase). See
 [frontend/README.md](frontend/README.md).
+
+A **LangGraph agent foundation** (Phase 4) runs side-by-side with the deterministic
+Career flow: a single, stateful, bounded, tool-using agent (`src/agent`) behind an
+experimental `POST /api/v1/agent/run` — it does **not** replace `/career/chat`.
+Real Career-tool migration, agentic RAG, memory and human-in-the-loop are later
+phases. See [docs/sprint4_architecture.md](docs/sprint4_architecture.md).
 
 ## Testing
 
@@ -425,7 +431,7 @@ python scripts/eval_expanded.py          # 11R-A expanded evaluation
 (cd components/live_interviewer/frontend && npm test)   # frontend (vitest)
 ```
 
-Latest: **1305 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
+Latest: **1327 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
 guards); **22 passed** (frontend). Browser E2E: **5 passed** (Playwright/chromium).
 
 ## Known limitations
