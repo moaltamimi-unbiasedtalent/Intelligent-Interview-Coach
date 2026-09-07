@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Precision Coach design tokens (Sprint 4 Phase 3A, Concept D).
+ * Source of truth: docs/design/phase3a/design-tokens.md.
+ * Light is the base; dark is redefined under both prefers-color-scheme and an
+ * explicit [data-theme="dark"] so the user toggle wins in either direction.
+ */
+:root {
+  --background: #f7f7f5;
+  --foreground: #16171a;
+  --surface: #ffffff;
+  --surface-2: #efefec;
+  --muted: #5f626a;
+  --border: #e4e4e0;
+  --accent: #1a5e63;
+  --accent-foreground: #ffffff;
+  --secondary: #c9bba0;
+  --success: #2e7d4f;
+  --warning: #a66412;
+  --danger: #a83246;
+  --shadow: 0 1px 2px rgba(16, 17, 20, 0.04), 0 8px 24px rgba(16, 17, 20, 0.06);
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+:root[data-theme="dark"],
+:root:not([data-theme="light"]) {
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: #131414;
+    --foreground: #f0f0ee;
+    --surface: #1b1c1d;
+    --surface-2: #232424;
+    --muted: #a5a7ac;
+    --border: #2e2f2e;
+    --accent: #63c0c2;
+    --accent-foreground: #05201f;
+    --secondary: #5a5342;
+    --success: #6fbf8e;
+    --warning: #e0a758;
+    --danger: #e58794;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+}
+
+:root[data-theme="dark"] {
+  --background: #131414;
+  --foreground: #f0f0ee;
+  --surface: #1b1c1d;
+  --surface-2: #232424;
+  --muted: #a5a7ac;
+  --border: #2e2f2e;
+  --accent: #63c0c2;
+  --accent-foreground: #05201f;
+  --secondary: #5a5342;
+  --success: #6fbf8e;
+  --warning: #e0a758;
+  --danger: #e58794;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+@layer base {
+  html {
+    color-scheme: light dark;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 {
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    font-weight: 600;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Small reusable animation for content/state entrance. */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.animate-enter {
+  animation: fade-in 0.2s ease-out;
+}
