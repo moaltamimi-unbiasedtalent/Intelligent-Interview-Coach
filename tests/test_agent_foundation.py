@@ -106,11 +106,13 @@ def _run(model, career=None, **kw):
 
 
 def test_registry_registers_the_five_career_tools():
-    # Phase 6 adds SearchCareerKnowledge (agentic RAG) as the fifth real tool.
+    # Five real Career tools (Phase 6 adds SearchCareerKnowledge) plus two Phase 8
+    # human-action tools (separate from the Career evidence tools).
     reg = career_tool_registry(FakeCareer())
     assert set(reg.names()) == {
         "AnalyzeJobDescription", "AnalyzeCandidateGaps",
         "BuildPreparationPlan", "GenerateInterviewQuestions", "SearchCareerKnowledge",
+        "ProposePreparationMemory", "RequestPracticeHandoff",
     }
 
 

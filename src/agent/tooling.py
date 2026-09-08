@@ -22,6 +22,7 @@ class ToolContext:
     candidate_background: str | None = None
     requirements: dict[str, Any] | None = None  # prior job-analysis (RoleRequirements)
     gaps: dict[str, Any] | None = None  # prior gap-analysis (GapAnalysisResult)
+    confirmed_target_role: str | None = None  # role the user confirmed via HITL
     # Prior retrieval (for duplicate-retrieval protection within a run).
     last_retrieval_query: str | None = None
     evidence: list[dict[str, Any]] | None = None

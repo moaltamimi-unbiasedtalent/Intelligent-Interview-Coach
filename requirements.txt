@@ -29,3 +29,6 @@ uvicorn[standard]>=0.30,<1.0
 
 # Sprint 4 Phase 4: LangGraph agent foundation.
 langgraph>=0.3,<0.4
+# Sprint 4 Phase 8: durable HITL checkpoints (official SQLite saver; 2.0.x keeps
+# langgraph-checkpoint on 2.x, compatible with langgraph 0.3.34).
+langgraph-checkpoint-sqlite>=2.0,<3.0

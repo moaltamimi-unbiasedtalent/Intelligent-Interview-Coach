@@ -18,11 +18,20 @@ from typing import Any, Callable
 
 from src.agent.errors import AgentConfigurationError, AgentError
 from src.agent.graph import build_agent_graph
+from src.agent.human import validate_decision, InvalidHumanDecision
 from src.agent.models import AgentRunRequest, AgentRunResult
 from src.agent.registry import ToolRegistry, career_tool_registry
-from src.agent.state import STATUS_FAILED
+from src.agent.state import STATUS_AWAITING_HUMAN, STATUS_COMPLETED, STATUS_FAILED
 
 ModelFactory = Callable[[], Any]
+
+
+class RunNotFoundError(AgentError):
+    """The requested run does not exist or is not owned by the caller."""
+
+
+class RunNotResumableError(AgentError):
+    """The run exists but is not currently awaiting a human decision."""
 
 
 def _default_model_factory() -> Any:
@@ -50,19 +59,47 @@ class AgentApplicationService:
         career_service: Any | None = None,
         registry: ToolRegistry | None = None,
         checkpointer: Any | None = None,
+        checkpoint_durable: bool | None = None,
         memory_service: Any | None = None,
+        checkpoint_url: str | None = None,
+        database_url: str | None = None,
     ) -> None:
         if registry is None:
             registry = career_tool_registry(career_service or _default_career_service())
+        # Durable HITL checkpointer (Phase 8). Injectable for tests; otherwise built
+        # from configuration (official SQLite/Postgres saver, MemorySaver fallback,
+        # or a fail-closed configuration error when durability is required).
+        if checkpointer is None:
+            from src.agent.checkpoint import build_checkpointer
+
+            info = build_checkpointer(checkpoint_url=checkpoint_url, database_url=database_url)
+            checkpointer = info.saver
+            self._checkpoint_durable = info.durable
+        else:
+            # An injected saver declares its own durability explicitly (never inferred
+            # from a class name). Unknown → False, the safe default.
+            self._checkpoint_durable = bool(checkpoint_durable)
+        self._memory_service = memory_service
         self._graph = build_agent_graph(
             model_factory=model_factory or _default_model_factory,
             registry=registry,
             checkpointer=checkpointer,
+            memory_service=memory_service,
         )
-        # Optional long-term preparation memory (Phase 7). When absent (e.g. tests
-        # that don't exercise memory) no memory is loaded and behaviour is unchanged.
-        self._memory_service = memory_service
-        self._owners: dict[str, str | None] = {}
+
+    @property
+    def checkpoint_durable(self) -> bool:
+        return self._checkpoint_durable
+
+    # -- helpers --------------------------------------------------------------
+
+    @staticmethod
+    def _config(run_id: str) -> dict:
+        return {"configurable": {"thread_id": run_id}}
+
+    def _snapshot(self, run_id: str):
+        """The current graph StateSnapshot for a run (empty values if unknown)."""
+        return self._graph.get_state(self._config(run_id))
 
     def _load_memory(self, request: AgentRunRequest) -> list[dict]:
         """Deterministically load a bounded set of relevant memories (no model call).
@@ -81,9 +118,10 @@ class AgentApplicationService:
         except Exception:  # noqa: BLE001 - memory is supplemental; never break a run
             return []
 
+    # -- run / resume / lookup ------------------------------------------------
+
     def run(self, request: AgentRunRequest, *, request_id: str | None = None) -> AgentRunResult:
         run_id = uuid.uuid4().hex
-        self._owners[run_id] = request.user_id
         initial = {
             "run_id": run_id,
             "user_id": request.user_id,
@@ -92,20 +130,83 @@ class AgentApplicationService:
             "job_description": request.job_description,
             "candidate_background": request.candidate_background,
             "memory_items": self._load_memory(request),
+            "pending_action": None,
+            "human_decisions": [],
+            "handoff_approved": False,
             "events": [],
             "tool_history": [],
+            "warnings": [],
             "step_count": 0,
         }
         try:
-            final = self._graph.invoke(initial, config={"configurable": {"thread_id": run_id}})
+            self._graph.invoke(initial, config=self._config(run_id))
         except AgentError:
             raise
         except Exception as exc:  # noqa: BLE001 - never leak a raw error
             raise AgentError("The assistant could not complete the request.") from exc
-        return _to_result(run_id, final, request_id)
+        # Read authoritative state (detects an interrupt / pending human action).
+        return self._result_from_snapshot(run_id, self._snapshot(run_id), request_id)
+
+    def resume(
+        self, run_id: str, user_id: str | None, decision: dict, *, request_id: str | None = None
+    ) -> AgentRunResult:
+        """Continue a paused run on the SAME thread after a validated human decision.
+
+        Ownership is read from the durable checkpoint (survives service recreation);
+        the decision is validated against the current pending action BEFORE the graph
+        is touched — an invalid decision leaves the run paused and unchanged.
+        """
+        from langgraph.types import Command
+
+        snapshot = self._snapshot(run_id)
+        self._require_owned(snapshot, user_id)
+        if not self._is_awaiting(snapshot):
+            raise RunNotResumableError("This run is not awaiting a decision.")
+        pending = (snapshot.values or {}).get("pending_action")
+        try:
+            normalised = validate_decision(pending, decision or {})
+        except InvalidHumanDecision as exc:
+            from src.application.errors import ValidationError
+
+            raise ValidationError(str(exc)) from exc
+        try:
+            self._graph.invoke(Command(resume=normalised), config=self._config(run_id))
+        except AgentError:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            raise AgentError("The assistant could not resume the request.") from exc
+        return self._result_from_snapshot(run_id, self._snapshot(run_id), request_id)
+
+    def get_run(self, run_id: str, user_id: str | None, *, request_id: str | None = None) -> AgentRunResult:
+        snapshot = self._snapshot(run_id)
+        self._require_owned(snapshot, user_id)
+        return self._result_from_snapshot(run_id, snapshot, request_id)
+
+    # -- ownership / status ---------------------------------------------------
+
+    @staticmethod
+    def _is_awaiting(snapshot) -> bool:
+        return bool(getattr(snapshot, "next", ()) or ()) and bool(
+            (snapshot.values or {}).get("pending_action"))
+
+    def _require_owned(self, snapshot, user_id: str | None) -> None:
+        values = getattr(snapshot, "values", None) or {}
+        if not values or "user_id" not in values:
+            raise RunNotFoundError("Run not found.")
+        # Ownership comes from the durable checkpoint, never from the request body.
+        if values.get("user_id") != user_id:
+            raise RunNotFoundError("Run not found.")
 
     def owns(self, run_id: str, user_id: str | None) -> bool:
-        return run_id in self._owners and self._owners[run_id] == user_id
+        try:
+            self._require_owned(self._snapshot(run_id), user_id)
+            return True
+        except RunNotFoundError:
+            return False
+
+    def _result_from_snapshot(self, run_id, snapshot, request_id) -> AgentRunResult:
+        return _to_result(run_id, dict(snapshot.values or {}),
+                          request_id, awaiting=self._is_awaiting(snapshot))
 
 
 def _build_preparation_context(state: dict) -> dict | None:
@@ -132,7 +233,7 @@ def _build_preparation_context(state: dict) -> dict | None:
         return None
 
 
-def _to_result(run_id: str, state: dict, request_id: str | None) -> AgentRunResult:
+def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bool = False) -> AgentRunResult:
     messages = state.get("messages", []) or []
     response = ""
     for msg in reversed(messages):
@@ -143,13 +244,22 @@ def _to_result(run_id: str, state: dict, request_id: str | None) -> AgentRunResu
     tool_history = list(state.get("tool_history", []) or [])
     tools_used = [t["tool"] for t in tool_history if t.get("status") == "ok"]
     memory_items = list(state.get("memory_items", []) or [])
-    warnings: list[str] = []
-    if state.get("status") == STATUS_FAILED:
+    pending_action = state.get("pending_action") if awaiting else None
+    if awaiting:
+        status = STATUS_AWAITING_HUMAN
+    elif state.get("status") in (None, "", "running"):
+        status = STATUS_COMPLETED
+    else:
+        status = state.get("status")
+    # Safe warnings accumulated in state (e.g. an approved memory that failed to
+    # persist) plus a terminal-failure note. Never contains raw errors/content.
+    warnings: list[str] = list(state.get("warnings") or [])
+    if status == STATUS_FAILED:
         warnings.append("The run did not complete successfully.")
     return AgentRunResult(
         run_id=run_id,
-        status=state.get("status", "unknown"),
-        response=response,
+        status=status,
+        response="" if awaiting else response,
         events=list(state.get("events", []) or []),
         tool_calls=tool_history,
         tools_used=tools_used,
@@ -160,6 +270,9 @@ def _to_result(run_id: str, state: dict, request_id: str | None) -> AgentRunResu
         resolved_geography=state.get("resolved_geography"),
         memory_used=bool(memory_items),
         memory_count=len(memory_items),
+        awaiting_human_input=awaiting,
+        pending_action=pending_action,
+        handoff_approved=bool(state.get("handoff_approved", False)),
         warnings=warnings,
         step_count=int(state.get("step_count", 0)),
         request_id=request_id,

@@ -415,7 +415,7 @@ the Career→Interview handoff all run against the FastAPI contracts. Retrieval 
 deterministic (agentic RAG is a later phase). See
 [frontend/README.md](frontend/README.md).
 
-A **LangGraph agent** (Phases 4–7) runs side-by-side with the deterministic Career
+A **LangGraph agent** (Phases 4–8) runs side-by-side with the deterministic Career
 flow: a single, stateful, bounded, tool-using agent (`src/agent`) behind an
 experimental `POST /api/v1/agent/run` — it does **not** replace `/career/chat`. It
 wields **five real Career tools** as allowlisted functions, selecting and sequencing
@@ -440,8 +440,18 @@ Writes are **explicit and user-initiated** via `POST/GET/DELETE /api/v1/memory`
 of a run the agent loads a bounded, deterministic set (role-matched then general; no
 vector search, no extra model call) and treats it as user-approved **DATA** (never
 instructions; the current request always takes precedence). The `/progress` page
-shows what the coach remembers, grouped, with delete. Human-in-the-loop is a later
-phase. See [docs/sprint4_architecture.md](docs/sprint4_architecture.md).
+shows what the coach remembers, grouped, with delete.
+
+**Human-in-the-loop** (Phase 8) uses LangGraph's real `interrupt`/`Command(resume)`
+so the agent pauses for decisions that shouldn't be autonomous — confirming an
+ambiguous target role, approving a proposed preparation memory before it is saved,
+and approving the hand-off into Interview Practice — then resumes the **same** run.
+Paused runs persist in an official durable checkpoint (SQLite locally, PostgreSQL in
+production) so they survive a refresh or restart; ownership and every decision are
+validated server-side (a human response is untrusted input), and the durable
+checkpoint (execution state) is kept separate from long-term memory (approved
+knowledge). Owner-scoped `GET`/`POST .../agent/runs/{id}[/resume]` drive it.
+See [docs/sprint4_architecture.md](docs/sprint4_architecture.md).
 
 ## Testing
 
@@ -453,7 +463,7 @@ python scripts/eval_expanded.py          # 11R-A expanded evaluation
 (cd components/live_interviewer/frontend && npm test)   # frontend (vitest)
 ```
 
-Latest: **1424 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
+Latest: **1471 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
 guards); **41 passed** (frontend). Browser E2E: **15 passed** (Playwright/chromium).
 
 ## Known limitations

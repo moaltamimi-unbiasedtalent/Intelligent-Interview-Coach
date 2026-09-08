@@ -21,7 +21,12 @@ class AgentEventType(str, Enum):
     TOOL_COMPLETED = "tool_completed"
     TOOL_FAILED = "tool_failed"
     TOOL_REJECTED = "tool_rejected"  # unknown/unregistered tool
-    HUMAN_INPUT_REQUIRED = "human_input_required"
+    HUMAN_INPUT_REQUIRED = "human_input_required"  # graph paused for a human decision
+    HUMAN_INPUT_RESUMED = "human_input_resumed"    # a human decision was applied
+    HUMAN_INPUT_REJECTED = "human_input_rejected"  # a human declined an approval
+    MEMORY_SAVED = "memory_saved"                  # approved memory persisted (or already existed)
+    MEMORY_SAVE_FAILED = "memory_save_failed"      # approved memory could NOT be persisted
+    HANDOFF_APPROVED = "handoff_approved"          # practice handoff approved
     STEP_LIMIT_REACHED = "step_limit_reached"
     RUN_COMPLETED = "run_completed"
     RUN_FAILED = "run_failed"

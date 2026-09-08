@@ -12,9 +12,11 @@ import time
 from typing import Any, Callable
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
+from langgraph.types import interrupt
 
 from src.agent.errors import AgentConfigurationError, AgentToolError
 from src.agent.events import AgentEvent, AgentEventType
+from src.agent.human import DECISION_APPROVE, DECISION_SELECT, HumanActionType
 from src.agent.policies import MAX_AGENT_STEPS, SYSTEM_PROMPT
 from src.agent.registry import ToolRegistry
 from src.agent.tooling import ToolContext
@@ -25,6 +27,8 @@ from src.agent.state import (
     STATUS_STEP_LIMIT,
     AgentState,
 )
+
+MemoryService = Any
 
 ModelFactory = Callable[[], Any]
 
@@ -114,6 +118,7 @@ def _tool_context(state: AgentState) -> ToolContext:
         candidate_background=state.get("candidate_background"),
         requirements=state.get("requirements"),
         gaps=state.get("gaps"),
+        confirmed_target_role=state.get("confirmed_target_role"),
         last_retrieval_query=state.get("last_retrieval_query"),
         evidence=state.get("evidence"),
         citations=state.get("citations"),
@@ -162,6 +167,15 @@ def make_tools_node(registry: ToolRegistry) -> Callable[[AgentState], dict]:
                 # The safe message (never a raw cause) goes back to the model as data.
                 out_messages.append(ToolMessage(content=json.dumps({"error": str(exc)}), tool_call_id=call_id))
 
+        # If a tool requested a human decision, record ONE safe event now (so it is
+        # not re-emitted when the human-review node replays across the interrupt).
+        pending = state_updates.get("pending_action")
+        if pending:
+            events.append(AgentEvent(
+                AgentEventType.HUMAN_INPUT_REQUIRED, step=step,
+                status="awaiting", message=pending.get("type"),
+            ).to_dict())
+
         return {"messages": out_messages, "events": events, "tool_history": history, **state_updates}
 
     return tools
@@ -177,10 +191,132 @@ def _merge_ctx(ctx: ToolContext, updates: dict[str, Any]) -> ToolContext:
         candidate_background=updates.get("candidate_background", ctx.candidate_background),
         requirements=updates.get("requirements", ctx.requirements),
         gaps=updates.get("gaps", ctx.gaps),
+        confirmed_target_role=updates.get("confirmed_target_role", ctx.confirmed_target_role),
         last_retrieval_query=updates.get("last_retrieval_query", ctx.last_retrieval_query),
         evidence=updates.get("evidence", ctx.evidence),
         citations=updates.get("citations", ctx.citations),
     )
+
+
+def make_human_review_node(memory_service: MemoryService | None = None) -> Callable[[AgentState], dict]:
+    """Pause the graph for a human decision, then apply the VALIDATED decision.
+
+    ``interrupt(pending)`` is the FIRST statement — nothing with a side effect runs
+    before it, so LangGraph's replay-across-interrupt semantics cannot double-apply
+    (see §28). Side effects (memory persistence) run only AFTER a validated approval
+    and are made idempotent via ``human_decisions`` (§22). No model call happens here.
+    """
+
+    def human_review(state: AgentState) -> dict:
+        pending = state.get("pending_action") or {}
+        # PAUSE. On resume, ``decision`` is the normalised dict the service validated
+        # and passed to Command(resume=...). Keep this the first statement.
+        decision = interrupt(pending)
+
+        events = list(state.get("events", []) or [])
+        step = int(state.get("step_count", 0))
+        applied = {d.get("action_id") for d in (state.get("human_decisions") or [])}
+        action_id = pending.get("action_id")
+        updates: dict[str, Any] = {"pending_action": None}
+
+        # Idempotency: a replayed/retried resume for an already-applied action is a
+        # no-op beyond clearing the pending flag (never a duplicate side effect).
+        if action_id in applied:
+            return updates
+
+        atype = pending.get("type")
+        verdict = (decision or {}).get("decision")
+        record = {"action_id": action_id, "type": atype, "decision": verdict}
+
+        if atype == HumanActionType.CONFIRM_ROLE.value:
+            if verdict == DECISION_SELECT:
+                role = (decision or {}).get("selected_role")
+                updates["confirmed_target_role"] = role
+                updates["target_role"] = role
+                events.append(AgentEvent(AgentEventType.HUMAN_INPUT_RESUMED, step=step,
+                                         status="ok", message=atype).to_dict())
+            else:
+                events.append(AgentEvent(AgentEventType.HUMAN_INPUT_REJECTED, step=step,
+                                         status="rejected", message=atype).to_dict())
+
+        elif atype == HumanActionType.APPROVE_MEMORY.value:
+            if verdict == DECISION_APPROVE:
+                candidate = state.get("memory_candidate") or {}
+                result = _persist_memory(memory_service, state.get("user_id"), candidate)
+                if result in (MEMORY_SAVED, MEMORY_ALREADY_EXISTS):
+                    # Truthful success: newly created OR deterministic dedupe confirmed
+                    # the memory already exists (idempotent).
+                    events.append(AgentEvent(AgentEventType.MEMORY_SAVED, step=step,
+                                             status="ok", message=candidate.get("category")).to_dict())
+                else:
+                    # Persistence genuinely failed / unavailable — never claim success.
+                    events.append(AgentEvent(AgentEventType.MEMORY_SAVE_FAILED, step=step,
+                                             status="error", message=candidate.get("category")).to_dict())
+                    updates["warnings"] = list(state.get("warnings") or []) + [
+                        _MEMORY_SAVE_WARNING]
+            else:
+                events.append(AgentEvent(AgentEventType.HUMAN_INPUT_REJECTED, step=step,
+                                         status="rejected", message=atype).to_dict())
+            updates["memory_candidate"] = None
+
+        elif atype == HumanActionType.APPROVE_PRACTICE_HANDOFF.value:
+            approved = verdict == DECISION_APPROVE
+            updates["handoff_approved"] = approved
+            events.append(AgentEvent(
+                AgentEventType.HANDOFF_APPROVED if approved else AgentEventType.HUMAN_INPUT_REJECTED,
+                step=step, status="ok" if approved else "rejected", message=atype,
+            ).to_dict())
+
+        updates["human_decisions"] = list(state.get("human_decisions") or []) + [record]
+        updates["events"] = events
+        return updates
+
+    return human_review
+
+
+# Memory-write outcomes (returned by _persist_memory; SAVED/ALREADY_EXISTS are the
+# two truthful-success cases, FAILED/NOT_AVAILABLE are not).
+MEMORY_SAVED = "saved"
+MEMORY_ALREADY_EXISTS = "already_exists"
+MEMORY_FAILED = "failed"
+MEMORY_NOT_AVAILABLE = "not_available"
+
+_MEMORY_SAVE_WARNING = "The approved preparation memory could not be saved."
+
+
+def _persist_memory(memory_service, user_id, candidate: dict) -> str:
+    """Persist an approved memory and REPORT the true outcome (no silent success).
+
+    Returns one of MEMORY_SAVED / MEMORY_ALREADY_EXISTS / MEMORY_FAILED /
+    MEMORY_NOT_AVAILABLE. Never raises into the graph and never exposes a raw DB
+    error — a persistence failure is reported, not swallowed as success.
+    """
+    if memory_service is None or not candidate or not user_id:
+        return MEMORY_NOT_AVAILABLE
+    try:
+        uid = int(user_id)
+    except (TypeError, ValueError):
+        return MEMORY_NOT_AVAILABLE
+
+    # Distinguish a brand-new write from a deterministic duplicate where the service
+    # supports it (both are truthful success); fall back gracefully if it does not.
+    pre_existing = False
+    exists = getattr(memory_service, "exists", None)
+    if callable(exists):
+        try:
+            pre_existing = bool(exists(
+                uid, category=candidate.get("category"), summary=candidate.get("summary"),
+                target_role=candidate.get("target_role")))
+        except Exception:  # noqa: BLE001 - a lookup failure must not block the write
+            pre_existing = False
+    try:
+        memory_service.create(
+            uid, category=candidate.get("category"), summary=candidate.get("summary"),
+            target_role=candidate.get("target_role"),
+        )
+    except Exception:  # noqa: BLE001 - report failure; never claim success
+        return MEMORY_FAILED
+    return MEMORY_ALREADY_EXISTS if pre_existing else MEMORY_SAVED
 
 
 def make_finalize_node() -> Callable[[AgentState], dict]:
@@ -214,3 +350,10 @@ def route_after_agent(state: AgentState) -> str:
     if pending and int(state.get("step_count", 0)) < MAX_AGENT_STEPS:
         return "tools"
     return "finalize"
+
+
+def route_after_tools(state: AgentState) -> str:
+    """After tools: pause for a human decision if one was requested, else continue."""
+    if state.get("pending_action"):
+        return "human_review"
+    return "agent"

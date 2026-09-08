@@ -59,6 +59,13 @@ EXPECTED = {
     },
     "MemoryListResponse": {"memories"},
     "MemoryDeleteResponse": {"deleted", "id"},
+    # Agent HITL (Phase 8) — paused runs and typed resume decisions.
+    "AgentRunResponse": {
+        "run_id", "status", "response", "awaiting_human_input", "pending_action",
+        "handoff_approved", "memory_used", "step_count",
+    },
+    "PendingActionResponse": {"action_id", "type", "message", "options", "data"},
+    "HumanDecisionRequest": {"action_id", "decision", "selected_role"},
 }
 
 

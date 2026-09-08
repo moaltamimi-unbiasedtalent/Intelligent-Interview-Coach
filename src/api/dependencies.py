@@ -120,14 +120,25 @@ def get_agent_service(request: Request):
     """
     from src.application.agent_service import AgentApplicationService
 
-    # Inject long-term memory (Phase 7): the agent loads a bounded, user-scoped set
-    # of approved memories at the start of a run. Built once over the shared repo.
-    return _shared(
-        request, "agent_service",
-        lambda: AgentApplicationService(
-            memory_service=get_memory_service(request),
-        ),
-    )
+    # Inject long-term memory (Phase 7) + a durable HITL checkpointer (Phase 8). The
+    # checkpoint DB is derived from AGENT_CHECKPOINT_DATABASE_URL or the app database
+    # URL (a dedicated sqlite file / Postgres); it is never exposed to clients.
+    def _build():
+        from src.agent.errors import AgentConfigurationError
+        from src.application.errors import ConfigurationError
+
+        database_url = getattr(get_app_config(request), "database_url", None)
+        try:
+            return AgentApplicationService(
+                memory_service=get_memory_service(request),
+                database_url=database_url,
+            )
+        except AgentConfigurationError as exc:
+            # Fail closed: durable checkpointing configured but unavailable → a safe
+            # 503 (never a silent transient downgrade). Message carries no URL.
+            raise ConfigurationError(str(exc)) from exc
+
+    return _shared(request, "agent_service", _build)
 
 
 # --- request-scoped application services -------------------------------------

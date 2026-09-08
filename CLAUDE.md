@@ -112,7 +112,37 @@ assumptions in core logic, prompts, scoring or examples.
   a saved injection string cannot escape the tool allowlist. Precedence: current
   request → current context → saved memory. A safe `memory_loaded` event records
   counts/categories only. The `/progress` page shows saved memory (grouped, with
-  delete). HITL Phase 8.
+  delete).
+- **Human-in-the-loop (Sprint 4 Phase 8).** Real LangGraph `interrupt()` /
+  `Command(resume=...)` on a **durable** checkpoint. A dedicated `human_review` node
+  pauses for three (and only three) decisions — ambiguous-role confirmation
+  (`CONFIRM_ROLE`, triggered deterministically when retrieval is ambiguous),
+  approval-gated memory writes (`APPROVE_MEMORY`, from the `ProposePreparationMemory`
+  action tool, which proposes but never persists), and practice handoff
+  (`APPROVE_PRACTICE_HANDOFF`, from `RequestPracticeHandoff`; sets a flag, never
+  creates an interview in the graph). These two action tools are registered but
+  counted **separately** from the five Career tools. `interrupt()` is the first
+  statement in `human_review` so replay runs no side effect before the pause;
+  approvals apply once (guarded by `human_decisions` + memory dedupe). Decisions are
+  validated against the current pending action *before* the graph is touched (invalid/
+  stale → `422`/`409`, run stays paused); a human response is untrusted input. Owner-
+  scoped API: `POST /api/v1/agent/run`, `GET /api/v1/agent/runs/{id}`,
+  `POST /api/v1/agent/runs/{id}/resume`; ownership is read from the checkpoint, not an
+  in-process map. Checkpointer: official `SqliteSaver`/`PostgresSaver` via
+  `src/agent/checkpoint.py` (`AGENT_CHECKPOINT_DATABASE_URL` → app DB fallback;
+  `langgraph-checkpoint-sqlite` pinned `2.0.x` to keep `langgraph-checkpoint` on `2.x`);
+  saver-owned schema, separate from Alembic (no `0003`). **Fail-closed:** when
+  durability is explicitly configured (explicit checkpoint URL, or a Postgres URL)
+  and the saver can't be built, construction raises `AgentConfigurationError` →
+  safe `503` — never a silent `MemorySaver` downgrade; `MemorySaver` is allowed only
+  for an explicit `:memory:` or a dev sqlite-file fallback (`durable=False`, and an
+  injected saver declares durability explicitly, never guessed). Approved-memory
+  writes are **truthful**: `memory_saved` only on real success/dedupe, else
+  `memory_save_failed` + a safe warning (never a raw DB error or the memory text; the
+  run still completes). `awaiting_human_input` is a normal status; `MAX_AGENT_STEPS`
+  preserved and `step_count` never reset on resume. Durable checkpoint (execution
+  state) is separate from long-term memory (approved cross-session knowledge).
+  `/prepare` is NOT switched to the agent.
 - **Providers.** Career Intelligence uses LangChain over OpenRouter; the
   Interview module uses a direct OpenRouter HTTPX client. Optional speech
   (`[speech]`) and Live (`[live]`) backends are lazily imported. **Live is
@@ -160,7 +190,7 @@ assumptions in core logic, prompts, scoring or examples.
   (mock the boundaries). Do not weaken tests to pass or silently swallow errors.
 - Tests must not mutate committed artifacts (write to `tmp_path`).
 - `ruff check .` (conservative `F`/`E9` rules) must pass.
-- Current measured suite on this branch: **1424 passed, 2 skipped** (the skips are
+- Current measured suite on this branch: **1471 passed, 2 skipped** (the skips are
   the RAGAS installed/absent guards). Re-measure with `pytest -q` rather than
   hard-coding a number in multiple places.
 

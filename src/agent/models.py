@@ -35,6 +35,11 @@ class AgentRunResult:
     # Long-term preparation memory read into this run (counts only — never content).
     memory_used: bool = False
     memory_count: int = 0
+    # Human-in-the-loop (Phase 8). When paused, `pending_action` is the safe
+    # PendingHumanAction dict the client must resolve via the resume endpoint.
+    awaiting_human_input: bool = False
+    pending_action: dict[str, Any] | None = None
+    handoff_approved: bool = False
     warnings: list[str] = field(default_factory=list)
     step_count: int = 0
     request_id: str | None = None
