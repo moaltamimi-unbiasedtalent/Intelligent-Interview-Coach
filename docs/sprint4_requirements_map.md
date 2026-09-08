@@ -10,7 +10,11 @@ Phase 9.5 — items still in progress say so; nothing future is overstated.
 | Clear agent purpose | ✅ implemented/documented | Career & Interview Preparation Agent — one primary agent from target role to practised interview. |
 | 3+ tools (agent) | ✅ complete | The agent registers **5 real Career tools** (job analysis, gap analysis, preparation plan, question generation, and career-knowledge retrieval) as thin adapters over the existing capabilities. |
 | LangGraph / LangChain | ✅ implemented | Single stateful bounded LangGraph agent; LangChain/OpenRouter model integration reused. |
-| User interface | ✅ implemented | Next.js/TypeScript frontend (Streamlit retained temporarily). |
+| User interface | ✅ implemented | **Next.js is the primary frontend**; Streamlit is legacy/deprecated (retained until Phase 11). See `sprint4_interview_parity.md`. |
+| Next.js core Interview Practice | ✅ complete | Full lifecycle in Next.js: question → typed answer → structured feedback → next → end early → complete → report; standalone setup + Agent Coach handoff (**Phase 10**). |
+| Durable in-progress interview | ✅ complete | `interview_sessions` table + `DurableInterviewSessionStore`; refresh AND backend-restart resume; optimistic concurrency + operation lease; durable idempotent create; explicit `SessionData` codec (no pickle) (**Phase 10**). |
+| Deep Dive (branching) | ✅ complete | HTTP surface (start/answer/next/return) + Next.js panel; main progress isolated; max depth enforced; archived branches persist through restart (**Phase 10**). |
+| Streamlit migration | ◑ per parity matrix | Candidate-critical, non-experimental features MIGRATED; Record voice deferred, Live experimental, Prompt Lab developer-only — `sprint4_interview_parity.md`. |
 | Error handling | ✅ implemented | Safe errors + graph/tool failure handling (bounded loop, tool-failure recovery, safe messages). |
 | Memory (short-term) | ✅ implemented | Agent execution state (in-run LangGraph checkpoint; transient). |
 | Memory (long-term) | ✅ complete | Selective, user-scoped `preparation_memories` (durable DB) + `/api/v1/memory`; the agent loads a bounded, deterministic set per run. Explicit writes only — no automatic agent persistence (**Phase 7**). |

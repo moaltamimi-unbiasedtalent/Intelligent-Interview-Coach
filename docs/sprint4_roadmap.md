@@ -37,7 +37,12 @@ auto-merge, following the Sprint 3 workflow.
   (ambiguous-role confirmation, agent-proposed memory writes, practice handoff). The
   durable checkpoint (execution state) is separate from long-term memory (approved,
   cross-session knowledge).
-- **Streamlit stays as a fallback** until Phase 10 proves Next.js parity.
+- **Phase 10 (complete): durable Interview Practice + full Next.js interview flow.**
+  In-progress interviews are durably persisted (`interview_sessions`), so a refresh
+  or backend restart resumes the same interview; the whole lifecycle (question →
+  answer → feedback → Deep Dive → next → complete → report) runs in Next.js. Next.js
+  is now the **primary** frontend; Streamlit is **legacy/deprecated** (retained until
+  Phase 11 hardening). Parity: `sprint4_interview_parity.md`.
 - **Evaluation (Phase 11)** extends the existing RAGAS layer to agent runs rather
   than replacing it.
 

@@ -21,20 +21,25 @@ interviews.
 ### Sprint 4 architectural goal (planned)
 
 ```
-Next.js / TypeScript frontend
+Next.js / TypeScript frontend   ← primary UI
   → FastAPI Python backend
-    → LangGraph agent (stateful orchestration)
-      → controlled tools / agentic RAG / memory / human-in-the-loop
-        → Interview Practice
+    → Application services
+      → LangGraph agent (tools / agentic RAG / memory / human-in-the-loop)
+      → Interview Practice (unchanged SessionManager state machine)
+          → Durable interview-session store (in-progress, resumable)
+          → Completed history persistence (reports)
 ```
 
-> **Status:** the components above are **Planned for Sprint 4** and are *not yet
-> implemented*. This phase (Phase 0) only establishes the Sprint 4 baseline,
-> branding and planning documents — see
+> **Status (through Sprint 4 Phase 10):** the stack above is **implemented**.
+> **Next.js is the primary frontend**; the LangGraph Agent Coach and the full
+> Interview Practice lifecycle (question → answer → structured feedback → Deep Dive →
+> report) run over FastAPI. In-progress interviews are **durably persisted**, so a
+> browser refresh or a backend restart resumes the same interview. Streamlit is now
+> **legacy/deprecated** (retained until Phase 11 hardening). See
 > [docs/sprint4_roadmap.md](docs/sprint4_roadmap.md),
-> [docs/sprint4_architecture.md](docs/sprint4_architecture.md) and
-> [docs/sprint4_requirements_map.md](docs/sprint4_requirements_map.md). The
-> current shipping product remains the Streamlit application described below.
+> [docs/sprint4_architecture.md](docs/sprint4_architecture.md),
+> [docs/sprint4_requirements_map.md](docs/sprint4_requirements_map.md) and
+> [docs/sprint4_interview_parity.md](docs/sprint4_interview_parity.md).
 
 ## Current product (Sprint 3)
 

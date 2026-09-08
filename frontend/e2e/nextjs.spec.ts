@@ -48,17 +48,18 @@ test("prepare workspace is responsive (mobile shows a context tab)", async ({ pa
   await expect(page.getByRole("tab", { name: "Coach" })).toHaveCount(0);
 });
 
-test("practice page is distraction-free and offers Type/Record", async ({ page }) => {
-  // No session and no backend reachable: standalone practice entry with Type/Record.
+test("practice page offers standalone setup (typed only; no fake Record)", async ({ page }) => {
+  // No session: standalone setup form. Phase 10 removed the fake Record control.
   await page.goto("/practice");
-  await expect(page.getByRole("button", { name: /^type$/i })).toBeVisible();
-  await expect(page.getByRole("button", { name: /^record$/i })).toBeVisible();
-  await expect(page.getByText(/No camera/i)).toBeVisible();
+  await expect(page.getByText("Practise an interview")).toBeVisible();
+  await expect(page.getByLabel("Target role")).toBeVisible();
+  await expect(page.getByRole("button", { name: /^record$/i })).toHaveCount(0);
 });
 
-test("Live is not offered when the backend capability is unavailable", async ({ page }) => {
+test("Live is not offered in Practice", async ({ page }) => {
+  // Live remains experimental/flagged off and is not surfaced in the Next.js UI.
   await page.goto("/practice");
-  await expect(page.getByRole("button", { name: /^type$/i })).toBeVisible();
+  await expect(page.getByText("Practise an interview")).toBeVisible();
   await expect(page.getByText(/Live conversation practice/i)).toHaveCount(0);
 });
 
