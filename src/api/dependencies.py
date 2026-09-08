@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from fastapi import Depends, Header, Request
+from fastapi import Depends, Header, HTTPException, Request
 
 from src.application.career_service import CareerApplicationService
 from src.application.interview_service import InterviewApplicationService
@@ -181,6 +181,7 @@ def get_request_id(request: Request) -> str:
 
 
 def get_current_user(
+    request: Request,
     x_user_subject: str | None = Header(default=None),
     x_user_provider: str | None = Header(default=None),
     x_user_email: str | None = Header(default=None),
@@ -188,12 +189,15 @@ def get_current_user(
 ) -> AuthUser:
     """Resolve the caller's identity for data scoping (TRANSITIONAL boundary).
 
-    In development the anonymous developer identity is used unless an
-    ``X-User-Subject`` header is supplied (which lets a trusted upstream gateway —
-    or a test — select the user whose data is scoped). This does not grant
-    privileges; it only identifies whose records apply. **Production must place a
-    real authenticating gateway / OIDC in front of the API and set these headers
-    only from verified claims** — see docs/sprint4_architecture.md.
+    An ``X-User-Subject`` header (set only by a trusted upstream gateway from verified
+    claims, or by a test) selects the user whose data is scoped. It does not grant
+    privileges; it only identifies whose records apply.
+
+    **Fail-closed in production:** if no identity is supplied, a non-development
+    environment REJECTS the request (401) rather than silently sharing one anonymous
+    identity across callers. Development/test keep the convenient anonymous developer
+    identity. Production must still place a real authenticating gateway / OIDC in front
+    of the API — see docs/sprint4_security_privacy.md.
     """
     if x_user_subject:
         return AuthUser(
@@ -202,6 +206,9 @@ def get_current_user(
             display_name=x_user_name,
             email=x_user_email,
         )
+    env = str(getattr(getattr(request.app.state, "settings", None), "env", "development")).lower()
+    if env not in ("development", "dev", "test", "testing", "local"):
+        raise HTTPException(status_code=401, detail="Authentication required.")
     return ANONYMOUS_USER
 
 
