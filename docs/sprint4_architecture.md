@@ -547,10 +547,102 @@ database of selected preparation facts, such as recurring gaps, strengths and
 completed preparation topics. I deliberately do not store the whole conversation as
 memory. Persistent memory is explicit, reviewable and deletable by the user.*
 
-The transient checkpointer is intentionally **kept** — long-term memory being durable
-does not require durable graph checkpoints; that review belongs to Phase 8 (HITL
-resume). The `/progress` page surfaces saved memory (grouped, with delete); identity
-still uses the transitional `X-User-Subject` seam (production OIDC remains required).
+The `/progress` page surfaces saved memory (grouped, with delete); identity still
+uses the transitional `X-User-Subject` seam (production OIDC remains required).
+(Phase 8 makes the graph checkpoint durable — see §3i.)
+
+## 3i. Phase 8 — LangGraph human-in-the-loop (implemented)
+
+Phase 8 adds genuine **pause / resume** for decisions that should not be made
+autonomously, using LangGraph's supported primitives: `interrupt(payload)` inside a
+dedicated `human_review` node and `Command(resume=decision)` to continue the **same
+graph thread**. It is NOT simulated with if/else confirmation and never starts a new
+run to "resume".
+
+**Three HITL decisions (and only these — HITL minimisation):**
+
+| Action | Trigger | Side effect on approval |
+|---|---|---|
+| `CONFIRM_ROLE` | the deterministic retrieval pipeline reports an ambiguous occupation (`clarify` + `occupation_candidates`) | set the confirmed `target_role` |
+| `APPROVE_MEMORY` | the model calls the `ProposePreparationMemory` action tool | `MemoryApplicationService.create(...)` (user-scoped, deduped) |
+| `APPROVE_PRACTICE_HANDOFF` | the model calls the `RequestPracticeHandoff` action tool once a plan exists | set `handoff_approved` (the existing `POST /interviews` still creates the session) |
+
+Ordinary tool calls, retrieval and deterministic calculations never interrupt.
+
+```mermaid
+flowchart TD
+    AG[LangGraph Agent] --> T[Tool execution]
+    T --> Q{human decision needed?}
+    Q -- no --> AG
+    Q -- yes --> PA[PendingHumanAction<br/>safe: id, type, message, options, data]
+    PA --> HR[human_review node]
+    HR --> INT[interrupt payload]
+    INT --> CP[(Durable checkpoint<br/>SQLite / Postgres — saver-owned)]
+    CP --> RESP[FastAPI: awaiting_human_input + pending_action]
+    RESP --> USER[User decides]
+    USER --> API[POST /agent/runs/:id/resume]
+    API --> OWN[ownership from checkpoint + decision validation]
+    OWN --> CMD[Command resume=validated]
+    CMD --> HR2[human_review applies decision · idempotent]
+    HR2 --> AG
+    MEM[(preparation_memories · Alembic — SEPARATE from checkpoint)]
+    HR2 -. approved memory .-> MEM
+```
+
+**Two action tools, separate from the five Career tools.** `ProposePreparationMemory`
+and `RequestPracticeHandoff` are registered alongside the five Career evidence tools
+but are documented and counted separately — they analyse/persist nothing; they only
+*propose* a decision that pauses the graph. `ProposePreparationMemory` validates the
+category/summary/role and sets a pending action; it does **not** call the memory
+service. Persistence happens only in `human_review`, **after** a validated approval.
+
+**Replay-safe side effects.** `interrupt()` is the first statement in `human_review`,
+so LangGraph's replay-across-interrupt semantics run no side effect before the pause;
+the approval side effect runs once after resume and is guarded by an `action_id`
+record in `human_decisions` (plus the memory service's own deduplication). No
+interview session is created inside the graph — that would risk duplication on
+replay; only a `handoff_approved` flag is set.
+
+**Untrusted human input.** A resume decision is validated deterministically against
+the current pending action *before the graph is touched*: the `action_id` must match,
+the verdict must be valid for the action type, and a selected role must be one of the
+offered options. An invalid or stale decision returns a safe `422`/`409` and leaves
+the run paused and unchanged — an injection string in a "role selection" is simply
+not an offered option, so it is rejected and can never patch state or run a tool.
+
+**Durable checkpoints (execution state ≠ memory).** The app wires an **official**
+persistent saver — `SqliteSaver` (dev) or `PostgresSaver` (production, optional `[db]`
+extra) — selected by `AGENT_CHECKPOINT_DATABASE_URL` (falling back to the app DB URL)
+in `src/agent/checkpoint.py`. `langgraph-checkpoint-sqlite` is pinned to the `2.0.x`
+line so `langgraph-checkpoint` stays on `2.x` (compatible with langgraph 0.3.34; the
+`3.x` saver would force an incompatible `>=4.1` upgrade). A paused run survives another
+request, a refresh, application-service recreation and a process restart (regression-
+tested across separate service instances). The saver manages **its own** tables via
+`setup()`, kept separate from the Alembic-owned application schema (no `0003` needed;
+0001/0002 untouched). For `:memory:`/unset, it degrades to a transitional `MemorySaver`
+(interrupt/resume still work in-process but do not survive a restart). The checkpoint
+URL and payload are never exposed through the API, `/capabilities`, events or logs;
+checkpoint state can contain transient JD/candidate text and is treated as private
+application data (retention is a documented production follow-up).
+
+**Ownership & status.** Run ownership is read from the durable checkpoint
+(`state.user_id`), not an in-process map, so a foreign user's `get`/`resume` returns
+`404` even after a restart. `awaiting_human_input` is a first-class status, never an
+error/`FAILED`; `MAX_AGENT_STEPS` is preserved (interrupts are not steps and
+`step_count` is never reset on resume).
+
+**Reviewer story.** *The agent uses LangGraph's interrupt/resume mechanism for
+decisions that should not be made autonomously. It can pause for ambiguous role
+confirmation, permission to persist preparation memory, or approval to hand off into
+Interview Practice. The checkpoint preserves the same graph thread, and the user's
+response resumes that execution rather than starting a new agent run. Not every tool
+call requires approval — HITL is reserved for ambiguity or persistent/consequential
+actions. The agent may propose a preparation memory, but the proposal does not write
+to the database; LangGraph pauses and shows the exact memory, and only an explicit
+approval resumes the graph and calls the user-scoped memory service. Checkpoint
+persistence and long-term memory are separate: a checkpoint preserves execution state
+to resume a paused graph, while long-term memory holds only selected, user-approved
+information useful across future sessions.*
 
 ## 4. Internal naming is intentionally stable
 
@@ -616,7 +708,8 @@ internal docstrings are internal references and are left as-is.
 | Agentic RAG | — | ✅ (Phase 6 — `SearchCareerKnowledge`) |
 | Short-term memory | — | ✅ (LangGraph run state, Phase 4) |
 | Long-term memory | — | ✅ (Phase 7 — `preparation_memories`, `/memory`) |
-| Human-in-the-loop (HITL) | — | 🔷 (Phase 8) |
+| Human-in-the-loop (HITL) | — | ✅ (Phase 8 — interrupt/resume) |
+| Durable agent checkpoints | — | ✅ (Phase 8 — official SQLite/Postgres saver) |
 | Agent Inspector UI | — | 🔷 |
 | Agent evaluation metrics | — | 🔷 |
 

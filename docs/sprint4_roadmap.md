@@ -17,7 +17,7 @@ auto-merge, following the Sprint 3 workflow.
 | **5** | **Convert capabilities into agent tools** ✅ done (4 real Career tools) | 2–3 days | 4 |
 | **6** | **Agentic RAG (retrieval as an agent-selected tool)** ✅ done (5th tool `SearchCareerKnowledge`) | 2–3 days | 5 |
 | **7** | **Selective long-term preparation memory** ✅ done (`preparation_memories`, `/memory`, agent read) | 2–3 days | 4, 5 |
-| 8 | Human-in-the-loop (role confirm, memory-write, handoff) | 1–2 days | 4, 7 |
+| **8** | **LangGraph human-in-the-loop** ✅ done (interrupt/resume; role confirm, memory approval, handoff; durable SQLite/Postgres checkpoints) | 1–2 days | 4, 7 |
 | 9 | Agent Coach + Agent Inspector UI | 2–3 days | 3, 4 |
 | 10 | Complete Streamlit → Next.js migration (prove parity, retire fallback) | 3–5 days | 3, 9 |
 | 11 | Agent evaluation / RAGAS extension / hardening | 2–3 days | 5–10 |
@@ -31,8 +31,11 @@ auto-merge, following the Sprint 3 workflow.
 - **Long-term memory (Phase 7)** is a separate durable, user-scoped DB
   (`preparation_memories`) from the transient LangGraph checkpoint; writes are
   explicit/user-initiated (no automatic agent persistence yet).
-- **HITL (Phase 8)** depends on the agent (Phase 4) and memory (Phase 7) so that
-  approvals gate real state changes (e.g. agent-proposed memory writes).
+- **HITL (Phase 8)** uses LangGraph's `interrupt`/`Command(resume=...)` on a durable
+  checkpoint (official SQLite/Postgres saver) so approvals gate real state changes
+  (ambiguous-role confirmation, agent-proposed memory writes, practice handoff). The
+  durable checkpoint (execution state) is separate from long-term memory (approved,
+  cross-session knowledge).
 - **Streamlit stays as a fallback** until Phase 10 proves Next.js parity.
 - **Evaluation (Phase 11)** extends the existing RAGAS layer to agent runs rather
   than replacing it.

@@ -1,11 +1,11 @@
 # Sprint 4 Requirements Map — Intelligent Interview Coach
 
 Maps the Sprint 4 course requirements to implementation. Status is accurate as of
-Phase 7 — items still in progress say so; nothing future is overstated.
+Phase 8 — items still in progress say so; nothing future is overstated.
 
 ## Core requirements
 
-| Requirement | Status (Phase 7) | Notes |
+| Requirement | Status (Phase 8) | Notes |
 |---|---|---|
 | Clear agent purpose | ✅ implemented/documented | Career & Interview Preparation Agent — one primary agent from target role to practised interview. |
 | 3+ tools (agent) | ✅ complete | The agent registers **5 real Career tools** (job analysis, gap analysis, preparation plan, question generation, and career-knowledge retrieval) as thin adapters over the existing capabilities. |
@@ -14,7 +14,8 @@ Phase 7 — items still in progress say so; nothing future is overstated.
 | Error handling | ✅ implemented | Safe errors + graph/tool failure handling (bounded loop, tool-failure recovery, safe messages). |
 | Memory (short-term) | ✅ implemented | Agent execution state (in-run LangGraph checkpoint; transient). |
 | Memory (long-term) | ✅ complete | Selective, user-scoped `preparation_memories` (durable DB) + `/api/v1/memory`; the agent loads a bounded, deterministic set per run. Explicit writes only — no automatic agent persistence (**Phase 7**). |
-| Human-in-the-loop | 🔷 planned | Role confirm / memory-write / handoff approval — **Phase 8**. |
+| Human-in-the-loop | ✅ complete | Real LangGraph `interrupt`/`Command(resume=...)` on a durable checkpoint: ambiguous-role confirmation, approval-gated memory writes, and practice-handoff approval; owner-scoped run/get/resume API (**Phase 8**). |
+| Persistent checkpoints | ✅ complete (SQLite/Postgres) | Official saver (`langgraph-checkpoint-sqlite`/`-postgres`); paused runs survive service recreation. `MemorySaver` remains the transitional fallback for `:memory:`/unset. Checkpoint schema is saver-owned, separate from Alembic. |
 
 ## Optional requirements
 
@@ -25,6 +26,7 @@ Phase 7 — items still in progress say so; nothing future is overstated.
 | Medium | 5 tools (agent-registered) | ✅ complete — 5 real tools incl. `SearchCareerKnowledge` (Phase 6) |
 | Medium | Security guard | ✅ existing / preserved (agent adds allowlist + injection-safe prompt; retrieved content stays untrusted DATA) |
 | Hard | Agentic RAG | ✅ complete — the agent decides *whether* to retrieve; the deterministic Sprint 3 router still decides *which* lanes (Phase 6) |
+| Hard | Human-in-the-loop | ✅ complete — LangGraph interrupt/resume with durable checkpoints (Phase 8) |
 | Hard | RAGAS | ✅ existing / extend to agent runs later |
 | Hard | External source | 🔷 possible company research tool |
 
