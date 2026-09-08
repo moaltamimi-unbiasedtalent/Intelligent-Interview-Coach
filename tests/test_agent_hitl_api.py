@@ -133,6 +133,34 @@ def test_unknown_run_resume_returns_404(client):
     assert r.status_code == 404
 
 
+def test_durable_checkpoint_config_failure_fails_closed_503():
+    # A durable checkpoint that cannot be built must fail closed (503) — never a
+    # silent transient downgrade — and must not leak the checkpoint URL/credentials.
+    # This drives the REAL build_checkpointer fail-closed path + the exact
+    # AgentConfigurationError -> ConfigurationError -> 503 mapping the dependency uses.
+    from src.agent.checkpoint import build_checkpointer
+    from src.agent.errors import AgentConfigurationError
+    from src.application.errors import ConfigurationError
+
+    secret = "postgresql://u:sup3rsecret@db.internal:5432/prod"
+
+    def failing_agent_service():
+        try:
+            build_checkpointer(checkpoint_url=secret)  # durable required -> raises
+        except AgentConfigurationError as exc:
+            raise ConfigurationError(str(exc)) from exc
+        raise AssertionError("expected a fail-closed configuration error")
+
+    app = create_app()
+    app.dependency_overrides[deps.get_repository] = lambda: _FakeRepo()
+    app.dependency_overrides[deps.get_agent_service] = failing_agent_service
+    with TestClient(app) as c:
+        r = c.post("/api/v1/agent/run", json={"goal": "Prep"}, headers=ALICE)
+    assert r.status_code == 503
+    body = str(r.json())
+    assert "sup3rsecret" not in body and "db.internal" not in body
+
+
 def test_resume_completed_run_returns_409(client):
     run = client.post("/api/v1/agent/run", json={"goal": "Prep"}, headers=ALICE).json()
     run_id = run["run_id"]

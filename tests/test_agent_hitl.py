@@ -200,6 +200,110 @@ def test_repeated_resume_is_idempotent_and_safe():
     assert len(mem.list(9)) == 1
 
 
+# --- memory-write truthfulness (pre-merge hardening §1-5) --------------------
+
+
+class _FailingMemory:
+    """Memory service whose persistence always fails (raises inside create)."""
+
+    def load_for_agent(self, *a, **k):
+        return []
+
+    def exists(self, *a, **k):
+        return False
+
+    def create(self, *a, **k):
+        raise RuntimeError("database unavailable")
+
+
+class _CountingMemory:
+    """Wrap a real memory service, counting create() calls."""
+
+    def __init__(self, inner):
+        self._inner = inner
+        self.creates = 0
+
+    def load_for_agent(self, *a, **k):
+        return self._inner.load_for_agent(*a, **k)
+
+    def exists(self, *a, **k):
+        return self._inner.exists(*a, **k)
+
+    def create(self, *a, **k):
+        self.creates += 1
+        return self._inner.create(*a, **k)
+
+
+def test_successful_persistence_emits_memory_saved():
+    mem = _memory()
+    svc = _memory_proposal_service(mem)
+    res = svc.run(AgentRunRequest(goal="Prep", user_id="9"))
+    done = svc.resume(res.run_id, "9", {"action_id": res.pending_action["action_id"], "decision": "approve"})
+    types = [e["event_type"] for e in done.events]
+    assert "memory_saved" in types and "memory_save_failed" not in types
+    assert done.warnings == []
+    assert len(mem.list(9)) == 1
+
+
+def test_deterministic_duplicate_stays_truthful_no_second_row():
+    mem = _memory()
+    # Pre-seed the exact memory the agent will propose.
+    mem.create(9, category="recurring_gap", summary="Executive communication", target_role="Head of People")
+    svc = _memory_proposal_service(mem)
+    res = svc.run(AgentRunRequest(goal="Prep", user_id="9"))
+    done = svc.resume(res.run_id, "9", {"action_id": res.pending_action["action_id"], "decision": "approve"})
+    # Truthful success (dedupe), and NO duplicate row.
+    assert "memory_saved" in [e["event_type"] for e in done.events]
+    assert done.warnings == []
+    assert len(mem.list(9)) == 1
+
+
+def test_persistence_failure_never_emits_memory_saved():
+    svc = _memory_proposal_service(_FailingMemory())
+    res = svc.run(AgentRunRequest(goal="Prep", user_id="9"))
+    done = svc.resume(res.run_id, "9", {"action_id": res.pending_action["action_id"], "decision": "approve"})
+    types = [e["event_type"] for e in done.events]
+    assert "memory_saved" not in types      # never claim success
+    assert "memory_save_failed" in types     # a safe failure event instead
+
+
+def test_persistence_failure_surfaces_a_safe_warning_and_completes():
+    svc = _memory_proposal_service(_FailingMemory())
+    res = svc.run(AgentRunRequest(goal="Prep", user_id="9"))
+    done = svc.resume(res.run_id, "9", {"action_id": res.pending_action["action_id"], "decision": "approve"})
+    # The run itself still finishes (memory is supplemental) with a safe warning.
+    assert done.status == "completed"
+    assert any("could not be saved" in w for w in done.warnings)
+
+
+def test_failure_event_contains_no_memory_content_or_raw_error():
+    svc = _memory_proposal_service(_FailingMemory())
+    res = svc.run(AgentRunRequest(goal="Prep", user_id="9"))
+    done = svc.resume(res.run_id, "9", {"action_id": res.pending_action["action_id"], "decision": "approve"})
+    blob = str(done.events) + str(done.warnings)
+    assert "Executive communication" not in blob   # no memory summary text
+    assert "database unavailable" not in blob        # no raw exception text
+
+
+def test_failed_persistence_does_not_corrupt_the_thread():
+    svc = _memory_proposal_service(_FailingMemory())
+    res = svc.run(AgentRunRequest(goal="Prep", user_id="9"))
+    svc.resume(res.run_id, "9", {"action_id": res.pending_action["action_id"], "decision": "approve"})
+    # The thread is intact and readable after a failed side effect.
+    assert svc.get_run(res.run_id, "9").status == "completed"
+
+
+def test_retry_after_applied_success_writes_only_once():
+    counting = _CountingMemory(_memory())
+    svc = _memory_proposal_service(counting)
+    res = svc.run(AgentRunRequest(goal="Prep", user_id="9"))
+    aid = res.pending_action["action_id"]
+    svc.resume(res.run_id, "9", {"action_id": aid, "decision": "approve"})
+    with pytest.raises(RunNotResumableError):
+        svc.resume(res.run_id, "9", {"action_id": aid, "decision": "approve"})
+    assert counting.creates == 1  # exactly one write despite the retry
+
+
 # --- practice handoff (§23-25, §59.8-9) --------------------------------------
 
 
