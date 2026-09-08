@@ -100,7 +100,22 @@ timestamp and valid/invalid counts (never credentials).
   Deep Dive → return → next → complete → report), refresh-restore, standalone setup,
   and the no-fake-Record / no-camera guarantees.
 
-## 7. Known limitations
+## 7. Dependency audit (disposition)
+
+- **npm audit:** 7 findings (1 critical, 2 high, 4 moderate). All are in **dev/build
+  tooling**, not runtime dependencies of the deployed app: `vitest` (critical) and its
+  `vite`/`esbuild`/`vite-node` chain are the test runner; `postcss` (high) and `next`
+  (moderate) are build-time. Production audit (`npm audit --omit=dev`) shows only the
+  `postcss`-via-`next@15` build-time items. Remediation requires breaking major
+  upgrades (`vitest@4`, `next@16`); **deferred** rather than destabilise the final
+  sprint (§39). No runtime request-handling exposure in the shipped product.
+- **pip-audit** (run as a dev-only tool, then removed): ~60 advisories across the
+  LangGraph/LangChain, `pypdf` and `chromadb` ecosystem. Fixes require **major**
+  version upgrades (e.g. `langchain-core` 0.3→1.2, `langgraph` 0.3→1.0) that would
+  require revalidating the whole agent stack; **documented as a maintenance follow-up**
+  (§40 — do not blindly perform major upgrades). None are added as new runtime deps.
+
+## 8. Known limitations
 
 See `docs/sprint4_reviewer_guide.md` §Known limitations (production OIDC not
 implemented; PostgreSQL full integration a deployment check; Record voice deferred;
