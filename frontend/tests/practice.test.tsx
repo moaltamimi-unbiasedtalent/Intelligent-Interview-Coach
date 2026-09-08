@@ -22,7 +22,12 @@ const { replace, push, iv } = vi.hoisted(() => ({
     deepDive: { start: vi.fn(), answer: vi.fn(), next: vi.fn(), return: vi.fn() },
   },
 }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace, push }),
+  // Tests render <PracticeClient sessionId=...> directly; the client-side param is
+  // empty so the component falls back to the SSR prop.
+  useSearchParams: () => new URLSearchParams(""),
+}));
 vi.mock("@/lib/api/client", () => ({ api: { interviews: iv } }));
 
 import { PracticeClient } from "@/components/interview/PracticeClient";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { api } from "@/lib/api/client";
 import { Button } from "@/components/ui/Button";
@@ -23,15 +23,19 @@ import { useInterview } from "./useInterview";
  */
 export function PracticeClient({ sessionId }: { sessionId?: string }) {
   const router = useRouter();
+  // Prefer the live client-side URL param so a create → replace transition switches
+  // to the session view immediately (no server round-trip); fall back to the SSR prop.
+  const params = useSearchParams();
+  const activeSession = params?.get("session") ?? sessionId;
 
-  if (!sessionId) {
+  if (!activeSession) {
     return (
       <section className="mx-auto max-w-2xl animate-enter">
         <InterviewSessionSetup onCreated={(id) => router.replace(`/practice?session=${encodeURIComponent(id)}`)} />
       </section>
     );
   }
-  return <ActiveInterview key={sessionId} sessionId={sessionId} router={router} />;
+  return <ActiveInterview key={activeSession} sessionId={activeSession} router={router} />;
 }
 
 function ActiveInterview({ sessionId, router }: { sessionId: string; router: ReturnType<typeof useRouter> }) {
