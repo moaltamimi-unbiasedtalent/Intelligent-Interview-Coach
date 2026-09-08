@@ -17,7 +17,8 @@ STATUS_RUNNING = "running"
 STATUS_COMPLETED = "completed"
 STATUS_FAILED = "failed"
 STATUS_STEP_LIMIT = "step_limit_reached"
-STATUS_NEEDS_HUMAN = "needs_human"
+# A paused run awaiting a human decision — a NORMAL state, never an error (Phase 8).
+STATUS_AWAITING_HUMAN = "awaiting_human_input"
 
 
 class AgentState(TypedDict, total=False):
@@ -51,6 +52,15 @@ class AgentState(TypedDict, total=False):
     last_retrieval_query: str | None
     resolved_occupation: str | None
     resolved_geography: str | None
+
+    # Human-in-the-loop (Phase 8). `pending_action` is the safe PendingHumanAction
+    # dict the graph interrupts on; `human_decisions` records applied decisions
+    # (action_id-keyed) so a replayed resume never repeats a side effect.
+    pending_action: dict[str, Any] | None
+    human_decisions: list[dict[str, Any]]
+    confirmed_target_role: str | None
+    memory_candidate: dict[str, Any] | None  # proposed memory awaiting approval
+    handoff_approved: bool
 
     # Orchestration bookkeeping.
     tool_history: list[dict[str, Any]]
