@@ -29,6 +29,10 @@ dependencies = [
     # Sprint 4 Phase 4: LangGraph agent foundation (single stateful, bounded agent).
     # Pinned to the 0.3.x line verified against langchain-core 0.3.x here.
     "langgraph>=0.3,<0.4",
+    # Sprint 4 Phase 8: durable HITL checkpoints. The official SQLite saver — the
+    # 2.0.x line keeps langgraph-checkpoint on 2.x (3.x would force checkpoint>=4.1,
+    # incompatible with langgraph 0.3.34). Postgres saver is optional (see [db]).
+    "langgraph-checkpoint-sqlite>=2.0,<3.0",
 ]
 
 [project.optional-dependencies]
@@ -57,6 +61,9 @@ live = [
 db = [
     "alembic>=1.13,<2.0",
     "psycopg[binary]>=3.1,<4.0",
+    # Optional official Postgres HITL checkpointer (production). 2.0.x keeps
+    # langgraph-checkpoint on the 2.x line compatible with langgraph 0.3.34.
+    "langgraph-checkpoint-postgres>=2.0,<3.0",
 ]
 # Optional generation-quality evaluation with RAGAS. The deterministic retrieval
 # harnesses are pure-Python and run on the base install; RAGAS is an OPTIONAL
