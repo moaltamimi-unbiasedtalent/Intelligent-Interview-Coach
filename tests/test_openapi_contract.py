@@ -69,6 +69,7 @@ EXPECTED = {
     "PendingActionResponse": {"action_id", "type", "message", "options", "data"},
     "HumanDecisionRequest": {"action_id", "decision", "selected_role"},
     "AgentContinueRequest": {"message"},
+    "InterviewOptionsResponse": {"career_levels", "interview_types"},
 }
 
 
