@@ -415,7 +415,7 @@ the Career→Interview handoff all run against the FastAPI contracts. Retrieval 
 deterministic (agentic RAG is a later phase). See
 [frontend/README.md](frontend/README.md).
 
-A **LangGraph agent** (Phases 4–6) runs side-by-side with the deterministic Career
+A **LangGraph agent** (Phases 4–7) runs side-by-side with the deterministic Career
 flow: a single, stateful, bounded, tool-using agent (`src/agent`) behind an
 experimental `POST /api/v1/agent/run` — it does **not** replace `/career/chat`. It
 wields **five real Career tools** as allowlisted functions, selecting and sequencing
@@ -428,9 +428,20 @@ repository stores). `SearchCareerKnowledge` runs a **retrieval-only** operation
 (`search_knowledge` → `retrieve_evidence`) that shares its extraction with the full
 `answer()` pipeline but runs **no** other Career tools and **no** final answer
 synthesis — it returns evidence, and the agent decides what to say. Retrieved
-content stays untrusted data and citations come only from retrieved evidence. Memory
-and human-in-the-loop are later phases. See
-[docs/sprint4_architecture.md](docs/sprint4_architecture.md).
+content stays untrusted data and citations come only from retrieved evidence.
+
+**Selective long-term preparation memory** (Phase 7) is a *separate*, durable,
+user-scoped store (`preparation_memories`, Alembic `0002`) from the agent's transient
+run state. It keeps only concise, structured preparation facts — recurring gaps,
+strengths, completed topics, preferences, goals, target roles — **never** whole
+conversations, JDs, CVs, transcripts or answers, and no protected-trait categories.
+Writes are **explicit and user-initiated** via `POST/GET/DELETE /api/v1/memory`
+(the agent never persists memory automatically — that's Phase 8 HITL). At the start
+of a run the agent loads a bounded, deterministic set (role-matched then general; no
+vector search, no extra model call) and treats it as user-approved **DATA** (never
+instructions; the current request always takes precedence). The `/progress` page
+shows what the coach remembers, grouped, with delete. Human-in-the-loop is a later
+phase. See [docs/sprint4_architecture.md](docs/sprint4_architecture.md).
 
 ## Testing
 
@@ -442,8 +453,8 @@ python scripts/eval_expanded.py          # 11R-A expanded evaluation
 (cd components/live_interviewer/frontend && npm test)   # frontend (vitest)
 ```
 
-Latest: **1384 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
-guards); **35 passed** (frontend). Browser E2E: **5 passed** (Playwright/chromium).
+Latest: **1424 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
+guards); **41 passed** (frontend). Browser E2E: **15 passed** (Playwright/chromium).
 
 ## Known limitations
 
