@@ -14,6 +14,7 @@ Where enough tool data exists, the service builds the existing typed
 from __future__ import annotations
 
 import threading
+import time
 import uuid
 from typing import Any, Callable
 
@@ -44,15 +45,38 @@ class RunNotResumableError(AgentError):
     """The run exists but is not currently awaiting a human decision."""
 
 
-def _default_model_factory() -> Any:
+def _resolve_profile(value: Any) -> "Any":
+    """Validate a candidate-supplied Agent profile → a ``ModelProfile`` (default Balanced).
+
+    Only the three registry tiers are accepted; a raw provider slug or any other value
+    is rejected (never silently honoured), so the browser cannot select an arbitrary
+    model. An unset/blank value defaults to Balanced.
+    """
+    from src.llm.models import ModelProfile
+
+    if value is None or (isinstance(value, str) and not value.strip()):
+        return ModelProfile.BALANCED
+    if isinstance(value, ModelProfile):
+        return value
+    text = str(value).strip().lower()
+    for profile in ModelProfile:
+        if text == profile.value:
+            return profile
+    from src.application.errors import ValidationError
+
+    raise ValidationError("Unknown model profile.")
+
+
+def _default_model_factory(profile: "Any" = None) -> Any:
     from src.copilot.config import load_config
     from src.copilot.llm.openrouter import build_chat_model
-    from src.llm.models import Workload, workload_profile, spec
+    from src.llm.models import ModelProfile, Workload, spec, workload_profile
 
-    # The agent uses the AGENT workload profile (Balanced) and MUST support tool
-    # calling; fail with a safe configuration error rather than silently running
-    # without tools if a deployment maps it to a non-tool model.
-    agent_spec = spec(workload_profile(Workload.AGENT))
+    # Use the requested profile (candidate Fast/Balanced/Advanced) or the AGENT
+    # workload default (Balanced). The chosen model MUST support tool calling; fail
+    # with a safe configuration error rather than silently running without tools.
+    chosen = profile if isinstance(profile, ModelProfile) else workload_profile(Workload.AGENT)
+    agent_spec = spec(chosen)
     if not agent_spec.supports_tools:
         raise AgentConfigurationError(
             "The configured agent model does not support tool calling.")
@@ -155,6 +179,7 @@ class AgentApplicationService:
 
     def run(self, request: AgentRunRequest, *, request_id: str | None = None) -> AgentRunResult:
         run_id = uuid.uuid4().hex
+        profile = _resolve_profile(request.profile)
         initial = {
             "run_id": run_id,
             "user_id": request.user_id,
@@ -168,18 +193,26 @@ class AgentApplicationService:
             "handoff_approved": False,
             "events": [],
             "tool_history": [],
+            "usage_entries": [],
+            "retrieval_cache": [],
+            "retrieval_cache_hits": 0,
+            "retrieval_cache_misses": 0,
             "warnings": [],
             "step_count": 0,
             "turn_step_count": 0,
+            "model_profile": profile.value,
         }
+        started = time.perf_counter()
         try:
             self._graph.invoke(initial, config=self._config(run_id))
         except AgentError:
             raise
         except Exception as exc:  # noqa: BLE001 - never leak a raw error
             raise AgentError("The assistant could not complete the request.") from exc
+        latency_ms = int((time.perf_counter() - started) * 1000)
         # Read authoritative state (detects an interrupt / pending human action).
-        return self._result_from_snapshot(run_id, self._snapshot(run_id), request_id)
+        return self._result_from_snapshot(
+            run_id, self._snapshot(run_id), request_id, latency_ms=latency_ms)
 
     def resume(
         self, run_id: str, user_id: str | None, decision: dict, *, request_id: str | None = None
@@ -204,13 +237,16 @@ class AgentApplicationService:
                 from src.application.errors import ValidationError
 
                 raise ValidationError(str(exc)) from exc
+            started = time.perf_counter()
             try:
                 self._graph.invoke(Command(resume=normalised), config=self._config(run_id))
             except AgentError:
                 raise
             except Exception as exc:  # noqa: BLE001
                 raise AgentError("The assistant could not resume the request.") from exc
-            return self._result_from_snapshot(run_id, self._snapshot(run_id), request_id)
+            latency_ms = int((time.perf_counter() - started) * 1000)
+            return self._result_from_snapshot(
+                run_id, self._snapshot(run_id), request_id, latency_ms=latency_ms)
 
     def continue_run(
         self, run_id: str, user_id: str | None, message: str, *, request_id: str | None = None
@@ -256,13 +292,16 @@ class AgentApplicationService:
                 },
                 as_node="initialise",
             )
+            started = time.perf_counter()
             try:
                 self._graph.invoke(None, config=self._config(run_id))
             except AgentError:
                 raise
             except Exception as exc:  # noqa: BLE001
                 raise AgentError("The assistant could not continue the request.") from exc
-            return self._result_from_snapshot(run_id, self._snapshot(run_id), request_id)
+            latency_ms = int((time.perf_counter() - started) * 1000)
+            return self._result_from_snapshot(
+                run_id, self._snapshot(run_id), request_id, latency_ms=latency_ms)
 
     def get_run(self, run_id: str, user_id: str | None, *, request_id: str | None = None) -> AgentRunResult:
         snapshot = self._snapshot(run_id)
@@ -291,9 +330,11 @@ class AgentApplicationService:
         except RunNotFoundError:
             return False
 
-    def _result_from_snapshot(self, run_id, snapshot, request_id) -> AgentRunResult:
+    def _result_from_snapshot(self, run_id, snapshot, request_id, *,
+                              latency_ms: int | None = None) -> AgentRunResult:
         return _to_result(run_id, dict(snapshot.values or {}),
-                          request_id, awaiting=self._is_awaiting(snapshot))
+                          request_id, awaiting=self._is_awaiting(snapshot),
+                          latency_ms=latency_ms)
 
 
 def _build_preparation_context(state: dict) -> dict | None:
@@ -320,7 +361,8 @@ def _build_preparation_context(state: dict) -> dict | None:
         return None
 
 
-def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bool = False) -> AgentRunResult:
+def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bool = False,
+               latency_ms: int | None = None, profile: str | None = None) -> AgentRunResult:
     messages = state.get("messages", []) or []
     response = ""
     for msg in reversed(messages):
@@ -384,7 +426,19 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
         conversation=conversation,
         request_id=request_id,
         preparation_context=_build_preparation_context(state),
+        usage=_aggregate_usage(state),
+        latency_ms=latency_ms,
+        profile=profile or state.get("model_profile"),
+        cache_hits=int(state.get("retrieval_cache_hits", 0) or 0),
+        cache_misses=int(state.get("retrieval_cache_misses", 0) or 0),
     )
+
+
+def _aggregate_usage(state: dict) -> dict:
+    """Aggregate the run's safe per-call usage entries into one AgentRunUsage dict."""
+    from src.agent.usage import aggregate_usage
+
+    return aggregate_usage(state.get("usage_entries") or []).to_dict()
 
 
 # The injected long-term-memory DATA block header (see src/agent/nodes.py). Its

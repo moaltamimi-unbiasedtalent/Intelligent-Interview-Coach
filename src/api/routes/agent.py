@@ -22,6 +22,7 @@ from src.api.schemas.agent import (
     AgentContinueRequest,
     AgentRunRequest,
     AgentRunResponse,
+    AgentUsageResponse,
     HumanDecisionRequest,
 )
 
@@ -29,6 +30,7 @@ router = APIRouter(prefix="/agent", tags=["agent"])
 
 
 def _to_response(result) -> AgentRunResponse:
+    usage = AgentUsageResponse(**result.usage) if getattr(result, "usage", None) else None
     return AgentRunResponse(
         run_id=result.run_id,
         status=result.status,
@@ -51,6 +53,11 @@ def _to_response(result) -> AgentRunResponse:
         turn_step_count=result.turn_step_count,
         conversation=result.conversation,
         preparation_context=result.preparation_context,
+        usage=usage,
+        profile=result.profile,
+        latency_ms=result.latency_ms,
+        cache_hits=result.cache_hits,
+        cache_misses=result.cache_misses,
     )
 
 
@@ -69,6 +76,7 @@ def run_agent(
             job_description=body.job_description,
             candidate_background=body.candidate_background,
             user_id=str(user_id),
+            profile=body.profile,
         ),
         request_id=request_id,
     )

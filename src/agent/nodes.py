@@ -94,6 +94,37 @@ def make_initialise_node() -> Callable[[AgentState], dict]:
     return initialise
 
 
+def _build_model(model_factory: ModelFactory, profile_value: Any) -> Any:
+    """Build the chat model, passing the run's model profile to profile-aware factories.
+
+    The real default factory selects the Fast/Balanced/Advanced model from the profile;
+    test-injected no-argument factories are still supported (called with no argument).
+    """
+    import inspect
+
+    from src.llm.models import profile_for_model
+
+    try:
+        accepts_arg = len(inspect.signature(model_factory).parameters) >= 1
+    except (TypeError, ValueError):
+        accepts_arg = False
+    if accepts_arg:
+        profile = profile_for_model(None) if not profile_value else _profile_from_value(profile_value)
+        return model_factory(profile)
+    return model_factory()
+
+
+def _profile_from_value(value: Any) -> Any:
+    from src.llm.models import ModelProfile
+
+    if isinstance(value, ModelProfile):
+        return value
+    for profile in ModelProfile:
+        if str(value).strip().lower() == profile.value:
+            return profile
+    return ModelProfile.BALANCED
+
+
 def make_agent_node(model_factory: ModelFactory, registry: ToolRegistry) -> Callable[[AgentState], dict]:
     def agent(state: AgentState) -> dict:
         # `step_count` is the thread-lifetime total (inspector); `turn_step_count` is
@@ -105,7 +136,7 @@ def make_agent_node(model_factory: ModelFactory, registry: ToolRegistry) -> Call
         if turn_step == 1:
             events.append(AgentEvent(AgentEventType.REQUEST_UNDERSTOOD, step=step, status="ok").to_dict())
         try:
-            model = model_factory()
+            model = _build_model(model_factory, state.get("model_profile"))
             bound = model.bind_tools(registry.bind_schemas())
             ai = bound.invoke(state["messages"])
         except AgentConfigurationError:
@@ -114,7 +145,13 @@ def make_agent_node(model_factory: ModelFactory, registry: ToolRegistry) -> Call
         except Exception:  # noqa: BLE001 - never leak a raw provider error
             events.append(AgentEvent(AgentEventType.RUN_FAILED, step=step, status="error", message=_SAFE_MODEL_ERROR).to_dict())
             return {"messages": [AIMessage(content="")], "step_count": step, "turn_step_count": turn_step, "status": STATUS_FAILED, "last_error": "model_unavailable", "events": events, "completed": True}
-        return {"messages": [ai], "step_count": step, "turn_step_count": turn_step, "events": events}
+        # Record this outer agent model call's safe usage (tokens/cost where the
+        # provider reported them; counted as one call regardless — unknown ≠ zero).
+        from src.agent.usage import usage_from_message
+
+        usage_entries = _append(state, "usage_entries", usage_from_message(ai))
+        return {"messages": [ai], "step_count": step, "turn_step_count": turn_step,
+                "events": events, "usage_entries": usage_entries}
 
     return agent
 
@@ -130,6 +167,7 @@ def _tool_context(state: AgentState) -> ToolContext:
         last_retrieval_query=state.get("last_retrieval_query"),
         evidence=state.get("evidence"),
         citations=state.get("citations"),
+        retrieval_cache=state.get("retrieval_cache"),
     )
 
 
@@ -142,6 +180,9 @@ def make_tools_node(registry: ToolRegistry) -> Callable[[AgentState], dict]:
         step = int(state.get("step_count", 0))
         ctx = _tool_context(state)
         state_updates: dict[str, Any] = {}
+        usage_entries = list(state.get("usage_entries", []) or [])
+        cache_hits = int(state.get("retrieval_cache_hits", 0) or 0)
+        cache_misses = int(state.get("retrieval_cache_misses", 0) or 0)
 
         for call in getattr(last, "tool_calls", []) or []:
             name = call.get("name", "")
@@ -162,6 +203,15 @@ def make_tools_node(registry: ToolRegistry) -> Callable[[AgentState], dict]:
                 outcome = registry.validate_and_run(name, args, _merge_ctx(ctx, state_updates))
                 dur = int((time.perf_counter() - t0) * 1000)
                 state_updates.update(outcome.state_patch or {})
+                # Accumulate this tool call's safe provider usage (model-backed tools
+                # only; deterministic tools carry no usage — never a fabricated record).
+                if outcome.usage:
+                    usage_entries.append(outcome.usage)
+                # Safe, key-free retrieval-cache observability (counts only, never keys).
+                if outcome.cache == "hit":
+                    cache_hits += 1
+                elif outcome.cache == "miss":
+                    cache_misses += 1
                 events.append(AgentEvent(
                     AgentEventType.TOOL_COMPLETED, step=step, tool_name=name, duration_ms=dur,
                     status="ok", message=outcome.summary, source_count=outcome.source_count,
@@ -188,7 +238,9 @@ def make_tools_node(registry: ToolRegistry) -> Callable[[AgentState], dict]:
                 status="awaiting", message=pending.get("type"),
             ).to_dict())
 
-        return {"messages": out_messages, "events": events, "tool_history": history, **state_updates}
+        return {"messages": out_messages, "events": events, "tool_history": history,
+                "usage_entries": usage_entries, "retrieval_cache_hits": cache_hits,
+                "retrieval_cache_misses": cache_misses, **state_updates}
 
     return tools
 
@@ -207,6 +259,7 @@ def _merge_ctx(ctx: ToolContext, updates: dict[str, Any]) -> ToolContext:
         last_retrieval_query=updates.get("last_retrieval_query", ctx.last_retrieval_query),
         evidence=updates.get("evidence", ctx.evidence),
         citations=updates.get("citations", ctx.citations),
+        retrieval_cache=updates.get("retrieval_cache", ctx.retrieval_cache),
     )
 
 

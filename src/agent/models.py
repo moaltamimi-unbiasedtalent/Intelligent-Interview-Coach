@@ -15,6 +15,9 @@ class AgentRunRequest:
     job_description: str | None = None
     candidate_background: str | None = None
     user_id: str | None = None
+    # Optional Agent model profile (fast | balanced | advanced). Validated server-side;
+    # a raw provider slug is never accepted. Defaults to Balanced when unset/invalid.
+    profile: str | None = None
 
 
 @dataclass
@@ -50,3 +53,13 @@ class AgentRunResult:
     request_id: str | None = None
     # A typed PreparationContext (as a dict) when enough tool data exists — else None.
     preparation_context: dict[str, Any] | None = None
+    # Safe provider-usage aggregate for the run (AgentRunUsage.to_dict); never prompts,
+    # reasoning or candidate text. See src/agent/usage.py.
+    usage: dict[str, Any] | None = None
+    # Wall-clock latency of the model/graph work for THIS call (run/resume/continue).
+    latency_ms: int | None = None
+    # The Agent model profile in effect for the run (fast | balanced | advanced).
+    profile: str | None = None
+    # Safe retrieval-cache observability (thread-lifetime counts only — never keys).
+    cache_hits: int = 0
+    cache_misses: int = 0

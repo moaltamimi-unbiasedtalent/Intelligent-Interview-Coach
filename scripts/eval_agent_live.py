@@ -71,7 +71,7 @@ def _run_live(profile: str, cases: list[dict], record: bool, limit: int | None):
             model_factory=lambda: build_chat_model(load_config(), model=slug),
             career_service=career)
         t0 = time.perf_counter()
-        res = svc.run(AgentRunRequest(goal=case["goal"], user_id="live-eval"))
+        res = svc.run(AgentRunRequest(goal=case["goal"], user_id="live-eval", profile=prof.value))
         latency = int((time.perf_counter() - t0) * 1000)
         obs = observation_from_result(case["id"], profile, res, latency)
         if record:

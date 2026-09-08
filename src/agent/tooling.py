@@ -27,6 +27,8 @@ class ToolContext:
     last_retrieval_query: str | None = None
     evidence: list[dict[str, Any]] | None = None
     citations: list[dict[str, Any]] | None = None
+    # Bounded per-thread retrieval cache (safe evidence entries; see usage/cache docs).
+    retrieval_cache: list[dict[str, Any]] | None = None
 
 
 @dataclass
@@ -37,3 +39,8 @@ class ToolOutcome:
     state_patch: dict[str, Any] = field(default_factory=dict)  # merged into AgentState
     summary: str | None = None  # safe event summary — NEVER raw candidate/JD text
     source_count: int | None = None
+    # Safe provider-usage for a model-backed tool call (token/call counts + model slug
+    # only; never prompts/candidate text). None for deterministic tools. See usage.py.
+    usage: dict[str, Any] | None = None
+    # Retrieval cache outcome for observability: "hit" | "miss" | None (non-retrieval).
+    cache: str | None = None
