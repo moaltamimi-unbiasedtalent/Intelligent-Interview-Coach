@@ -80,6 +80,19 @@ def test_aggregate_rates():
 # --- sanitised trace record / replay ----------------------------------------
 
 
+def test_hitl_frequency_metrics():
+    obs = [
+        Observation("a", "balanced", awaiting_human_input=True, pending_action_type="confirm_role"),
+        Observation("b", "balanced", awaiting_human_input=True, pending_action_type="approve_memory"),
+        Observation("c", "balanced", awaiting_human_input=False),
+        Observation("d", "balanced", awaiting_human_input=False),
+    ]
+    m = le.hitl_frequency(obs)
+    assert m["runs"] == 4 and m["runs_with_interrupt"] == 2
+    assert m["interrupt_rate"] == 0.5
+    assert m["interrupt_type_counts"] == {"confirm_role": 1, "approve_memory": 1}
+
+
 def test_trace_round_trip_is_sanitised(tmp_path):
     obs = Observation("salary_range", "balanced", tools_used=["SearchCareerKnowledge"],
                       retrieval_used=True, latency_ms=120, total_tokens=None)

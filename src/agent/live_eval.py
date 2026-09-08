@@ -129,6 +129,25 @@ def aggregate(results: list[dict]) -> dict:
     }
 
 
+def hitl_frequency(observations: list[Observation]) -> dict:
+    """Safe HITL interruption metrics over a set of runs (types + rates only; never
+    any HITL response text). Goal: important decisions interrupt, routine ones do not."""
+    runs = len(observations)
+    with_interrupt = [o for o in observations if o.awaiting_human_input]
+    type_counts: dict[str, int] = {}
+    for o in with_interrupt:
+        key = o.pending_action_type or "unknown"
+        type_counts[key] = type_counts.get(key, 0) + 1
+    return {
+        "runs": runs,
+        "runs_with_interrupt": len(with_interrupt),
+        "total_interrupts": len(with_interrupt),
+        "interrupt_rate": _rate(len(with_interrupt), runs),
+        "interrupts_per_run": _avg([1 if o.awaiting_human_input else 0 for o in observations]) or 0.0,
+        "interrupt_type_counts": type_counts,
+    }
+
+
 # --- sanitised trace persistence --------------------------------------------
 
 
