@@ -12,14 +12,20 @@ from src.config import API_KEY_NAME, AppConfig, load_config
 class TestConstants:
     """The approved models and safe defaults are defined centrally."""
 
-    def test_default_model_is_gpt_5_mini(self) -> None:
-        assert constants.DEFAULT_MODEL == "openai/gpt-5-mini"
+    def test_default_model_is_the_balanced_profile(self) -> None:
+        # The default resolves from the model registry (Balanced profile), no longer a
+        # hardcoded slug (Sprint 4 Phase 9.5).
+        from src.llm.models import ModelProfile, model_id
+
+        assert constants.DEFAULT_MODEL == model_id(ModelProfile.BALANCED)
 
     def test_all_three_approved_models_are_defined(self) -> None:
+        from src.llm.models import ModelProfile, model_id
+
         assert set(constants.APPROVED_MODELS) == {
-            "openai/gpt-5-mini",
-            "openai/gpt-5-nano",
-            "openai/gpt-5",
+            model_id(ModelProfile.FAST),
+            model_id(ModelProfile.BALANCED),
+            model_id(ModelProfile.ADVANCED),
         }
 
     def test_default_model_is_approved(self) -> None:

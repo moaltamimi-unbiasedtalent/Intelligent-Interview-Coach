@@ -25,7 +25,7 @@ from src.models import (
 from src.openrouter_client import AuthenticationError, ChatResult
 from src.pricing_service import PricingService
 
-MODEL = "openai/gpt-5-mini"
+MODEL = constants.DEFAULT_MODEL
 
 
 class FakeClient:
@@ -135,7 +135,7 @@ def _models(supported=("temperature", "max_tokens", "response_format")):
             "supported_parameters": list(supported),
         },
         {
-            "id": "openai/gpt-5-nano",
+            "id": constants.LOW_COST_MODEL,
             "pricing": {"prompt": "0.0000001", "completion": "0.0000004"},
             "supported_parameters": ["temperature", "max_tokens"],
         },
@@ -575,7 +575,7 @@ class TestServiceBehaviour:
         client = FakeClient([_strategy_json()])
         # nano's metadata has no response_format.
         service = InterviewService(client, _pricing())
-        service.generate_strategy(_config(), _settings(model="openai/gpt-5-nano"))
+        service.generate_strategy(_config(), _settings(model=constants.LOW_COST_MODEL))
         assert client.calls[0]["response_format"] is None
 
     def test_services_have_independent_sessions(self) -> None:

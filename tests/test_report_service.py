@@ -4,6 +4,8 @@ import json
 
 import pytest
 
+from src import constants
+
 from src.interview_service import ModelResponseError, ServiceInputError
 from src.models import (
     AnswerEvaluation,
@@ -16,7 +18,7 @@ from src.openrouter_client import ChatResult
 from src.pricing_service import PricingService
 from src.report_service import ReportService
 
-MODEL = "openai/gpt-5-mini"
+MODEL = constants.DEFAULT_MODEL
 
 
 class FakeClient:
