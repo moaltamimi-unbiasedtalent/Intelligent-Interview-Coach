@@ -46,6 +46,16 @@ jobs:
           PY
       - name: Pytest (knowledge fixtures, structured retrieval, security, Streamlit smoke)
         run: python -m pytest -q
+      - name: Deterministic agent orchestration evaluation (offline; gates, no paid calls)
+        run: python scripts/eval_agent.py
+      - name: Alembic migration validation (fresh upgrade + downgrade, single head)
+        env:
+          DATABASE_URL: sqlite:////tmp/ci_migrations.db
+        run: |
+          alembic upgrade head
+          alembic downgrade 0003_interview_sessions
+          alembic upgrade head
+          test "$(alembic heads | wc -l)" -eq 1
       - name: Knowledge expansion eval smoke
         run: python scripts/eval_knowledge_expansion.py
       - name: Product coverage smoke (offline; no live keys)
