@@ -171,7 +171,8 @@ assumptions in core logic, prompts, scoring or examples.
   Per-thread resume/continue is serialised with an in-process lock (multi-process
   needs shared locking — documented). **Agent Inspector** (`/review/agent`) shows
   owner-scoped, observable-only execution (never CoT/prompts/raw checkpoint; token/cost
-  honestly "not captured"). No model modernisation; production auth still transitional.
+  usage is captured with honest Complete/Partial coverage as of P1 — see the Agent
+  cost/performance bullet below). Production auth still transitional.
 - **Model registry (Sprint 4 Phase 9.5).** One typed source of truth
   (`src/llm/models.py`): `ModelProfile` = Fast/Balanced/Advanced → current OpenRouter
   slugs (`openai/gpt-5.6-luna`/`terra`/`sol`), overridable via
@@ -213,6 +214,23 @@ assumptions in core logic, prompts, scoring or examples.
   no supplied identity). Retention: `scripts/cleanup_runtime_data.py` (dry-run default)
   removes only stale in-progress sessions (never history/memory/checkpoints). Reviewer
   package in `docs/sprint4_{reviewer_guide,demo_script,final_evaluation,security_privacy}.md`.
+- **Agent cost/performance (post-Sprint 4, P1 — measure first).** `src/agent/usage.py`
+  is one canonical safe `AgentRunUsage` (agent/tool/total model-call counts, tokens,
+  cost, `usage_complete` + `missing_usage_sources`). Outer agent usage is read from the
+  returned `AIMessage`; tool-internal usage is captured at the AGENT boundary via
+  LangChain's usage-metadata callback (the Sprint-3 structured-output path is unchanged).
+  Each provider call is counted **once** (no double count); **unknown usage is never 0**
+  (it flips `usage_complete=false`); cost is reported-or-resolver-or-`None` (never
+  invented). An optional request `profile` selects the Fast/Balanced/Advanced registry
+  model (validated Literal — a raw slug is rejected; a candidate can never send one);
+  every tier keeps grounding, HITL, the tool allowlist and the bounded step budget (kept
+  at 6 for all tiers). A bounded, **per-thread** retrieval cache (`retrieval_cache` in
+  agent state, keyed by the normalised query) reuses evidence for an equivalent
+  same-thread request — thread-scoped ⇒ per-user/per-run, never shared; hit/miss counts
+  are observable, keys are never logged/exposed. `AgentRunResult`/`AgentRunResponse` carry
+  `usage`, `profile`, `latency_ms`, `cache_hits/misses`; the Coach shows a subtle usage
+  line and the Inspector a full safe breakdown. No paid comparative benchmark executed.
+  See `docs/sprint4_final_evaluation.md` §11.
 - **Providers.** Career Intelligence uses LangChain over OpenRouter; the
   Interview module uses a direct OpenRouter HTTPX client. Optional speech
   (`[speech]`) and Live (`[live]`) backends are lazily imported. **Live is
