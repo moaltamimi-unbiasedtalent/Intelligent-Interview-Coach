@@ -31,17 +31,27 @@ def default_model_kwargs(
     temperature: float | None = None,
     max_tokens: int | None = None,
 ) -> dict[str, Any]:
-    """Resolve the keyword arguments for the chat model (no secrets included)."""
-    return {
-        "model": model or config.default_model,
-        "temperature": (
-            temperature if temperature is not None else constants.DEFAULT_TEMPERATURE
-        ),
+    """Resolve the keyword arguments for the chat model (no secrets included).
+
+    Temperature is OMITTED for models that don't accept a custom value (the gpt-5.x
+    reasoning family), resolved from the model registry — so a reasoning model runs at
+    the provider default rather than being sent a rejected parameter.
+    """
+    from src.llm import models as model_registry
+
+    resolved_model = model or config.default_model
+    kwargs: dict[str, Any] = {
+        "model": resolved_model,
         "max_tokens": max_tokens or constants.DEFAULT_MAX_OUTPUT_TOKENS,
         "base_url": config.base_url,
         "timeout": config.read_timeout_seconds,
         "max_retries": constants.LLM_MAX_RETRIES,
     }
+    if model_registry.supports_temperature(resolved_model):
+        kwargs["temperature"] = (
+            temperature if temperature is not None else constants.DEFAULT_TEMPERATURE
+        )
+    return kwargs
 
 
 def build_chat_model(

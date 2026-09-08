@@ -9,6 +9,7 @@ import json
 import pytest
 
 from src import constants
+from src.llm import models as _model_registry
 from src.interview_service import (
     InterviewService,
     ModelResponseError,
@@ -25,7 +26,7 @@ from src.models import (
 from src.openrouter_client import AuthenticationError, ChatResult
 from src.pricing_service import PricingService
 
-MODEL = "openai/gpt-5-mini"
+MODEL = constants.DEFAULT_MODEL
 
 
 class FakeClient:
@@ -135,7 +136,7 @@ def _models(supported=("temperature", "max_tokens", "response_format")):
             "supported_parameters": list(supported),
         },
         {
-            "id": "openai/gpt-5-nano",
+            "id": constants.LOW_COST_MODEL,
             "pricing": {"prompt": "0.0000001", "completion": "0.0000004"},
             "supported_parameters": ["temperature", "max_tokens"],
         },
@@ -575,7 +576,7 @@ class TestServiceBehaviour:
         client = FakeClient([_strategy_json()])
         # nano's metadata has no response_format.
         service = InterviewService(client, _pricing())
-        service.generate_strategy(_config(), _settings(model="openai/gpt-5-nano"))
+        service.generate_strategy(_config(), _settings(model=constants.LOW_COST_MODEL))
         assert client.calls[0]["response_format"] is None
 
     def test_services_have_independent_sessions(self) -> None:
@@ -585,3 +586,21 @@ class TestServiceBehaviour:
         )
         assert pricing_a.session_totals().requests == 1
         assert pricing_b.session_totals().requests == 0
+
+
+class TestSessionProfileEffectiveModel:
+    """Phase 9.5 truthfulness: the session-selected ModelSettings.model is the effective
+    model for ALL interview operations (no per-operation registry tier)."""
+
+    @pytest.mark.parametrize("profile", list(_model_registry.ModelProfile))
+    def test_session_profile_drives_strategy_and_questions(self, profile) -> None:
+        slug = _model_registry.model_id(profile)
+        client = FakeClient([_strategy_json(), _question_json()])
+        service = InterviewService(client, _pricing())
+        settings = _settings(model=slug)
+        service.generate_strategy(_config(), settings)
+        service.generate_next_question(
+            _config(), settings, current_question_number=1,
+            history=QuestionHistory(questions=[], answers=[], evaluations=[]),
+        )
+        assert client.calls and all(c["model"] == slug for c in client.calls)

@@ -464,7 +464,18 @@ no private content in the URL or `localStorage`). HITL appears as approval cards
 frontend and routes to `/practice`. The **Agent Inspector** (`/review/agent`) shows
 owner-scoped, observable execution only — tools, retrieval, sources, memory use and
 human approvals — never chain-of-thought, prompts or raw checkpoint state.
-See [docs/sprint4_architecture.md](docs/sprint4_architecture.md).
+
+**Model registry** (Phase 9.5) addresses the reviewer's "outdated LLMs" note: model
+choice runs through a typed registry (`src/llm/models.py`) with three workload
+profiles — **Fast**, **Balanced**, **Advanced** — resolving to current OpenRouter
+models (`openai/gpt-5.6-luna` / `-terra` / `-sol`), each overridable via
+`OPENROUTER_MODEL_FAST|BALANCED|ADVANCED`. Agent and Career workloads resolve centrally
+(Balanced); bounded utility uses Fast; gap analysis and preparation planning stay
+deterministic. Interview Practice uses one candidate-selected profile per session
+(default Balanced) for strategy, questions, evaluation and reporting — Advanced is the
+*recommended* tier for evaluation/reporting, and per-operation routing is intentionally
+deferred. Changing models is configuration, not code. See
+[docs/sprint4_architecture.md](docs/sprint4_architecture.md).
 
 ## Testing
 
@@ -476,7 +487,7 @@ python scripts/eval_expanded.py          # 11R-A expanded evaluation
 (cd components/live_interviewer/frontend && npm test)   # frontend (vitest)
 ```
 
-Latest: **1495 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
+Latest: **1526 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
 guards); **52 passed** (frontend). Browser E2E: **21 passed** (Playwright/chromium).
 
 ## Known limitations

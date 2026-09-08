@@ -751,6 +751,92 @@ and resume the same run. The Agent Inspector exposes observable execution — to
 calls, retrieval, sources, memory use and human approvals — but never chain-of-thought,
 prompts or raw checkpoint state.*
 
+## 3k. Phase 9.5 — model registry & modern OpenRouter models (implemented)
+
+Phase 9.5 addresses the Sprint 3 reviewer note *"using outdated LLMs."* Instead of
+model identifiers scattered across the app, there is one typed registry
+(`src/llm/models.py`) with three **workload profiles** — Fast / Balanced / Advanced —
+each resolving to a current OpenRouter slug, overridable per deployment:
+
+| Profile | Env override | Current default (impl. time) |
+|---|---|---|
+| Fast | `OPENROUTER_MODEL_FAST` | `openai/gpt-5.6-luna` |
+| Balanced | `OPENROUTER_MODEL_BALANCED` | `openai/gpt-5.6-terra` |
+| Advanced | `OPENROUTER_MODEL_ADVANCED` | `openai/gpt-5.6-sol` |
+
+**Why not one model everywhere.** The strongest model is not automatically the right
+model for every operation — the registry makes the cost/quality/latency trade-off
+explicit through a workload→profile policy:
+
+| Workload | Profile | Why |
+|---|---|---|
+| Agent orchestration | Balanced | tool reliability + latency/cost |
+| Career synthesis (`/career/chat`) | Balanced | grounded explanation |
+| Job-description analysis | Balanced | structured extraction |
+| Gap analysis | none (deterministic) | no model |
+| Preparation planning | none (deterministic) | no model |
+| Question generation | Balanced | quality/latency |
+| Interview strategy/questions | session-selected (default Balanced) | quality/latency |
+| Answer evaluation | session-selected (Advanced *recommended*) | feedback quality |
+| Final report | session-selected (Advanced *recommended*) | complex synthesis |
+
+The Interview rows are **session-selected**, not registry-selected: the effective model
+is the candidate/session `ModelSettings.model` (one profile per session, reused for all
+four operations). Advanced is the **recommended** quality tier for evaluation/reporting,
+but it is only effective when the session is actually set to Advanced — the registry does
+not claim per-operation routing that isn't implemented (see `ModelSelectionMode`;
+`effective_interview_profile(settings.model)` resolves the real tier). Centrally-selected
+(`REGISTRY`) workloads above ARE the effective runtime model.
+| Utility / repair | Fast | bounded task |
+| RAGAS (offline, manual) | Fast | evaluator cost |
+
+**Documented adjustment (interview).** The Interview service applies ONE
+candidate-selected profile (Fast/Balanced/Advanced; default Balanced) across a
+session's strategy/questions/evaluation/report — the existing single-model-per-session
+design. Routing individual interview operations to different tiers (e.g. Advanced only
+for evaluation/report) would require changing the interview service signature, which
+this config-only phase deliberately avoids; it is noted as a follow-up.
+
+**Registry is the source of truth.** `constants.DEFAULT_MODEL` / `LOW_COST_MODEL` /
+`HIGH_CAPABILITY_MODEL` (Interview) and the Career `DEFAULT_MODEL` are now thin aliases
+resolving from the registry (no second source). Capability metadata (tool calling,
+structured output, temperature, a documented reasoning hint) lives with the registry;
+temperature is **omitted** for the reasoning family (resolved centrally) rather than
+sent-and-rejected. The agent model factory fails closed if the agent profile lacks
+tool support. **Legacy compatibility:** previous app slugs (`openai/gpt-5-mini` →
+Balanced, `-nano` → Fast, `gpt-5` → Advanced) coerce via the `ApprovedModel` synonyms
+so persisted sessions never crash; arbitrary/other-provider models remain unapproved.
+No live OpenRouter call at import or `/health`; reasoning output is never stored,
+logged or exposed (regression-tested). Embeddings and RAGAS evaluator config are
+unchanged; a manual, paid-only comparison harness was **not** run (no automated spend).
+
+**Capability flags are profile contracts.** The registry's `supports_tools` /
+`supports_structured_output` / `supports_temperature` describe what a profile *requires*
+of whatever slug fills it. Offline validation does **not** prove provider capability for
+an arbitrary env override — an operator who sets `OPENROUTER_MODEL_BALANCED` is
+responsible for choosing a model compatible with the Balanced contract (e.g. tool
+calling). No startup network call is added to verify this.
+
+**Model landscape & slug status.** The three default slugs
+(`openai/gpt-5.6-luna`/`terra`/`sol`) are valid OpenRouter models at implementation
+time; their external availability is verified, but they have **not** been live-generation
+smoke-tested through this project's OpenRouter credential (offline gates only) — env
+overrides exist precisely to adjust per deployment. **GPT-6 Astra** became available
+(Sept 2026) and is a candidate for the Advanced tier, but the current Advanced default
+remains **GPT-5.6 Sol** until a project-specific quality/cost comparison is run (Astra is
+materially more expensive; Sol is a current complex-professional model, not billed here
+as "the latest").
+
+**Reviewer story.** *Agent and Career workloads resolve centrally from the model
+registry. Interview Practice currently differs: one model profile is selected for the
+session and is reused for strategy, questions, evaluation and reporting. I document
+Advanced as the recommended future tier for evaluation/reporting, but I do not claim
+that per-operation routing is implemented when it is not. Models remain configurable
+through environment variables,
+so changing provider models no longer requires changing business logic. Model
+capabilities such as tool calling and structured outputs are validated by the
+integration layer rather than assumed.*
+
 ## 4. Internal naming is intentionally stable
 
 To evolve functionality first and avoid churn/regression risk, Sprint 4 **does
@@ -784,8 +870,10 @@ internal docstrings are internal references and are left as-is.
 - Retrieval should be exposed as a **tool** rather than only a predetermined step.
 
 **How Sprint 4 addresses them:**
-- A **model registry / current-model review** will be added in a later Sprint 4
-  phase (not changed in Phase 0, to avoid runtime behaviour change).
+- **Outdated LLMs — ADDRESSED (Phase 9.5, §3k).** A typed model registry
+  (`src/llm/models.py`) replaces scattered slugs with Fast/Balanced/Advanced workload
+  profiles resolving to current OpenRouter models (env-overridable), with an explicit
+  workload→profile policy and centralised capability/temperature/legacy handling.
 - **Retrieval is now an explicit agent tool** — `SearchCareerKnowledge`, delivered
   in **Phase 6 (Agentic RAG, §3g)**: the agent decides *whether* to retrieve while
   the deterministic Sprint 3 router still decides *which* lanes, internals preserved.

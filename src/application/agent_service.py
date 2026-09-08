@@ -47,9 +47,19 @@ class RunNotResumableError(AgentError):
 def _default_model_factory() -> Any:
     from src.copilot.config import load_config
     from src.copilot.llm.openrouter import build_chat_model
+    from src.llm.models import Workload, workload_profile, spec
 
+    # The agent uses the AGENT workload profile (Balanced) and MUST support tool
+    # calling; fail with a safe configuration error rather than silently running
+    # without tools if a deployment maps it to a non-tool model.
+    agent_spec = spec(workload_profile(Workload.AGENT))
+    if not agent_spec.supports_tools:
+        raise AgentConfigurationError(
+            "The configured agent model does not support tool calling.")
     try:
-        return build_chat_model(load_config())
+        return build_chat_model(load_config(), model=agent_spec.openrouter_id)
+    except AgentConfigurationError:
+        raise
     except Exception as exc:  # noqa: BLE001 - map any config/import issue safely
         raise AgentConfigurationError("The assistant isn't configured.") from exc
 

@@ -49,10 +49,23 @@ class TestFactory:
         assert "HTTP-Referer" in model.kwargs["default_headers"]
 
     def test_temperature_override(self) -> None:
+        # A temperature-capable model (not a reasoning model) keeps the override.
         model = build_chat_model(
-            _config(), temperature=0.9, chat_openai_cls=_FakeChatOpenAI
+            _config(), model="some/temperature-model", temperature=0.9,
+            chat_openai_cls=_FakeChatOpenAI,
         )
         assert model.kwargs["temperature"] == 0.9
+
+    def test_temperature_omitted_for_reasoning_model(self) -> None:
+        # The registry reasoning family runs at the provider default — temperature is
+        # not sent at all rather than being rejected by the provider.
+        from src.llm.models import ModelProfile, model_id
+
+        model = build_chat_model(
+            _config(), model=model_id(ModelProfile.BALANCED), temperature=0.9,
+            chat_openai_cls=_FakeChatOpenAI,
+        )
+        assert "temperature" not in model.kwargs
 
     def test_builds_real_langchain_model_without_network(self) -> None:
         # Constructing ChatOpenAI does not call the API; this proves the real

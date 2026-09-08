@@ -18,11 +18,17 @@ APP_TAGLINE = (
 # OpenRouter is used via its OpenAI-compatible API through LangChain.
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-DEFAULT_MODEL = "openai/gpt-5-mini"
+
+# Career defaults resolve from the central registry (src/llm/models.py). Career
+# synthesis and the LLM-backed Career tools use the Balanced profile; Fast/Advanced
+# are available for utility/higher-stakes use. Env-overridable via the registry.
+from src.llm import models as _model_registry
+
+DEFAULT_MODEL = _model_registry.model_id(_model_registry.ModelProfile.BALANCED)
 APPROVED_MODELS: dict[str, str] = {
-    "openai/gpt-5-mini": "Balanced default: good quality at moderate cost",
-    "openai/gpt-5-nano": "Lower-cost option for quick tasks",
-    "openai/gpt-5": "Higher-capability option for detailed analysis",
+    _model_registry.model_id(_model_registry.ModelProfile.BALANCED): "Balanced — recommended default",
+    _model_registry.model_id(_model_registry.ModelProfile.FAST): "Fast — quick, lower-cost tasks",
+    _model_registry.model_id(_model_registry.ModelProfile.ADVANCED): "Advanced — detailed analysis",
 }
 
 # Attribution headers (not secrets; safe to send/log).
