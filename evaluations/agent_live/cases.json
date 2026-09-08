@@ -1,0 +1,32 @@
+{
+  "description": "LIVE MODEL EVALUATION dataset — realistic natural-language goals for the REAL agent model to route. Distinct from the deterministic scripted regression (evaluations/agent/tool_selection_cases.json). Expectations describe required/forbidden tools, whether retrieval/HITL should occur, and a tool-call budget — never exact answer text.",
+  "cases": [
+    {"id": "salary_range", "goal": "What's the typical salary range for a Product Manager in Germany?", "required_tools": ["SearchCareerKnowledge"], "forbidden_tools": [], "retrieval_expected": true, "hitl_expected": false, "max_tool_calls": 2},
+    {"id": "competency_expectations", "goal": "What competencies are expected of a senior data scientist?", "required_tools": ["SearchCareerKnowledge"], "forbidden_tools": [], "retrieval_expected": true, "hitl_expected": false, "max_tool_calls": 2},
+    {"id": "market_geography", "goal": "How is the labour market for software engineers in the UK right now?", "required_tools": ["SearchCareerKnowledge"], "forbidden_tools": [], "retrieval_expected": true, "hitl_expected": false, "max_tool_calls": 2},
+    {"id": "credential_question", "goal": "What certifications matter most for a project manager role?", "required_tools": ["SearchCareerKnowledge"], "forbidden_tools": [], "retrieval_expected": true, "hitl_expected": false, "max_tool_calls": 2},
+
+    {"id": "smalltalk_hello", "goal": "Hello!", "required_tools": [], "forbidden_tools": ["SearchCareerKnowledge", "AnalyzeJobDescription"], "retrieval_expected": false, "hitl_expected": false, "max_tool_calls": 0},
+    {"id": "what_can_you_do", "goal": "What can you help me with?", "required_tools": [], "forbidden_tools": ["SearchCareerKnowledge"], "retrieval_expected": false, "hitl_expected": false, "max_tool_calls": 0},
+    {"id": "how_practice_works", "goal": "How does the interview practice part work?", "required_tools": [], "forbidden_tools": ["SearchCareerKnowledge"], "retrieval_expected": false, "hitl_expected": false, "max_tool_calls": 0},
+    {"id": "recall_earlier", "goal": "Can you summarise what we discussed so far?", "required_tools": [], "forbidden_tools": ["SearchCareerKnowledge"], "retrieval_expected": false, "hitl_expected": false, "max_tool_calls": 0},
+    {"id": "process_question", "goal": "What are the next steps in preparing with you?", "required_tools": [], "forbidden_tools": ["SearchCareerKnowledge"], "retrieval_expected": false, "hitl_expected": false, "max_tool_calls": 0},
+
+    {"id": "jd_explicit_analysis", "goal": "Here is a job description for a Senior Product Manager at a fintech: [JD]. Please analyse what the role requires.", "required_tools": ["AnalyzeJobDescription"], "forbidden_tools": [], "retrieval_expected": false, "hitl_expected": false, "max_tool_calls": 2},
+    {"id": "jd_plus_candidate_gap", "goal": "Here is the JD [JD] and my background: 8 years as a PM leading fraud roadmaps. Where are my gaps?", "required_tools": ["AnalyzeJobDescription", "AnalyzeCandidateGaps"], "forbidden_tools": [], "retrieval_expected": false, "hitl_expected": false, "max_tool_calls": 3},
+    {"id": "prep_plan_request", "goal": "I have 2 weeks and about 6 hours a week — build me a preparation plan from my gaps.", "required_tools": ["BuildPreparationPlan"], "forbidden_tools": [], "retrieval_expected": false, "hitl_expected": false, "max_tool_calls": 2},
+    {"id": "questions_request", "goal": "Give me practice interview questions for a Senior Product Manager role.", "required_tools": ["GenerateInterviewQuestions"], "forbidden_tools": [], "retrieval_expected": false, "hitl_expected": false, "max_tool_calls": 2},
+
+    {"id": "conversational_role", "goal": "I'm interviewing for a Senior Product Manager job next week — help me get ready.", "required_tools": [], "forbidden_tools": [], "retrieval_expected": false, "hitl_expected": false, "max_tool_calls": 4},
+    {"id": "help_prepare_this_role", "goal": "Help me prepare for this role. [JD attached]", "required_tools": ["AnalyzeJobDescription"], "forbidden_tools": [], "retrieval_expected": false, "hitl_expected": false, "max_tool_calls": 4},
+    {"id": "jd_and_background_together", "goal": "JD: [JD]. My background: 6 years PM. Prepare me fully.", "required_tools": ["AnalyzeJobDescription"], "forbidden_tools": [], "retrieval_expected": false, "hitl_expected": false, "max_tool_calls": 4},
+    {"id": "full_prep_intent", "goal": "Take me from this job description all the way to practice questions. [JD]", "required_tools": ["AnalyzeJobDescription", "GenerateInterviewQuestions"], "forbidden_tools": [], "retrieval_expected": false, "hitl_expected": false, "max_tool_calls": 5},
+
+    {"id": "factual_plus_prep", "goal": "What's the market rate for this role, and then give me practice questions? [Senior PM, Germany]", "required_tools": ["SearchCareerKnowledge"], "forbidden_tools": [], "retrieval_expected": true, "hitl_expected": false, "max_tool_calls": 4},
+    {"id": "insufficient_evidence", "goal": "What are the official labour statistics for a highly obscure niche role that likely has no data?", "required_tools": ["SearchCareerKnowledge"], "forbidden_tools": [], "retrieval_expected": true, "hitl_expected": false, "max_tool_calls": 2},
+
+    {"id": "ambiguous_role_hitl", "goal": "What's expected of a 'PM' — I mean the ambiguous kind, could be several roles?", "required_tools": ["SearchCareerKnowledge"], "forbidden_tools": [], "retrieval_expected": true, "hitl_expected": true, "hitl_type": "confirm_role", "max_tool_calls": 3},
+    {"id": "memory_approval_hitl", "goal": "Please remember that I'm targeting senior product leadership roles for future sessions.", "required_tools": [], "forbidden_tools": [], "retrieval_expected": false, "hitl_expected": true, "hitl_type": "approve_memory", "max_tool_calls": 2},
+    {"id": "practice_handoff_hitl", "goal": "I think I'm ready — let's move on to practising the interview now.", "required_tools": [], "forbidden_tools": [], "retrieval_expected": false, "hitl_expected": true, "hitl_type": "approve_practice_handoff", "max_tool_calls": 2}
+  ]
+}

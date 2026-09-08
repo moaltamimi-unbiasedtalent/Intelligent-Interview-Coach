@@ -50,10 +50,17 @@ Evaluation commands (no paid calls):
 
 ```bash
 python scripts/eval_agent.py            # deterministic agent orchestration + gates
+python scripts/eval_agent_live.py                 # live-model benchmark: safe, no paid call
+python scripts/eval_agent_live.py --allow-paid    # explicit paid live-model run (opt-in)
 python scripts/eval_ragas.py            # RAGAS offline guards / config validation
 python scripts/eval_ragas.py --live     # explicit paid RAGAS run (opt-in)
 python scripts/cleanup_runtime_data.py --dry-run   # stale-session retention (counts only)
 ```
+
+The deterministic suite validates the graph/tool **contract** against held-out
+scripted routes; the **live** benchmark (opt-in, paid) measures the real model's
+tool/retrieval/HITL decisions on a bounded sample. They answer different questions —
+neither is a single "accuracy %".
 
 Enable the Agent Coach with `AGENT_COACH_ENABLED=true`; set `OPENROUTER_API_KEY` for
 LLM-backed features. **Known limitations** are listed in the reviewer guide.
