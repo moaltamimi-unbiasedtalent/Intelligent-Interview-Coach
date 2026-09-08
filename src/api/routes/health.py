@@ -11,9 +11,12 @@ from src.api.schemas.common import CapabilitiesResponse, HealthResponse
 router = APIRouter(tags=["health"])
 
 
+def _flag_enabled(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _live_enabled() -> bool:
-    return os.environ.get("INTERVIEW_LIVE_ENABLED", "").strip().lower() in {
-        "1", "true", "yes", "on"}
+    return _flag_enabled("INTERVIEW_LIVE_ENABLED")
 
 
 @router.get("/health", response_model=HealthResponse, summary="Liveness")
@@ -35,9 +38,12 @@ def ready(request: Request) -> HealthResponse:
 @router.get("/capabilities", response_model=CapabilitiesResponse,
             summary="Safe feature availability")
 def capabilities() -> CapabilitiesResponse:
-    # Long-term preparation memory is available (Phase 7). Human-in-the-loop stays
-    # off (Phase 8). The agent surface itself remains experimental (not cut over).
+    # Agentic RAG (Phase 6), long-term memory (Phase 7) and HITL (Phase 8) are all
+    # available. The candidate Agent Coach cutover is a deployment flag (Phase 9).
     return CapabilitiesResponse(
         live_interview_enabled=_live_enabled(),
+        agentic_rag=True,
         agent_memory=True,
+        human_in_the_loop=True,
+        agent_coach_enabled=_flag_enabled("AGENT_COACH_ENABLED"),
     )
