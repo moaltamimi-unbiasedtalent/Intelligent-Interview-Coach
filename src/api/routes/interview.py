@@ -411,6 +411,10 @@ def next_deep_dive(
 ) -> InterviewStateResponse:
     try:
         with store.mutate(session_id, user_id, operation="deep_dive_next") as session:
+            # Enforce the depth/turn rule using the state machine's own predicate
+            # BEFORE any provider call (no wasted paid generation, no duplicated logic).
+            if not session.can_go_deeper():
+                raise ValidationError("No further deep-dive level is available right now.")
             svc.generate_branch_question(session)
     except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
         raise _translate_store_error(exc) from None
