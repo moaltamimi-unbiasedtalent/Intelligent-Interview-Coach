@@ -17,6 +17,8 @@ import { AgentComposer } from "./AgentComposer";
 import { AgentContextRail } from "./AgentContextRail";
 import { PendingHumanActionCard } from "./PendingHumanActionCard";
 import { AgentRunLink } from "./AgentRunLink";
+import { AgentProfileSelector, DEFAULT_PROFILE, usageSummaryLine } from "./usage";
+import type { AgentProfile } from "@/lib/api/types";
 
 /** Candidate-facing Agent Coach — the LangGraph agent behind the Precision Coach UI. */
 export function AgentPrepareWorkspace() {
@@ -76,6 +78,12 @@ export function AgentPrepareWorkspace() {
         />
       )}
 
+      {!busy && !run.awaiting_human_input && usageSummaryLine(run) ? (
+        <p className="mt-3 text-xs text-muted" role="status" aria-label="Run usage">
+          {usageSummaryLine(run)}
+        </p>
+      ) : null}
+
       {run.warnings.length ? (
         <ul className="mt-3 space-y-1" role="status">
           {run.warnings.map((w, i) => (
@@ -133,7 +141,7 @@ function FirstMessageForm({
   error,
   onDismissError,
 }: {
-  onStart: (req: { goal: string; target_role?: string; job_description?: string; candidate_background?: string }) => void;
+  onStart: (req: { goal: string; target_role?: string; job_description?: string; candidate_background?: string; profile?: AgentProfile }) => void;
   busy: boolean;
   error: { message: string; requestId?: string | null; notFound?: boolean } | null;
   onDismissError: () => void;
@@ -143,6 +151,27 @@ function FirstMessageForm({
   const [targetRole, setTargetRole] = useState("");
   const [jd, setJd] = useState("");
   const [background, setBackground] = useState("");
+  const [profile, setProfile] = useState<AgentProfile>(DEFAULT_PROFILE);
+
+  // A harmless UI preference (the chosen speed) may be remembered — never any private
+  // conversation data (§21). Guarded so private windows / blocked storage never throw.
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("agent.profile");
+      if (saved === "fast" || saved === "balanced" || saved === "advanced") setProfile(saved);
+    } catch {
+      /* storage unavailable — keep the default */
+    }
+  }, []);
+
+  const chooseProfile = (p: AgentProfile) => {
+    setProfile(p);
+    try {
+      window.localStorage.setItem("agent.profile", p);
+    } catch {
+      /* ignore */
+    }
+  };
 
   const canStart = !busy && goal.trim().length > 0;
 
@@ -154,6 +183,7 @@ function FirstMessageForm({
       target_role: targetRole.trim() || undefined,
       job_description: jd.trim() || undefined,
       candidate_background: background.trim() || undefined,
+      profile,
     });
   }
 
@@ -190,6 +220,8 @@ function FirstMessageForm({
             </div>
           </div>
         ) : null}
+
+        <AgentProfileSelector value={profile} onChange={chooseProfile} disabled={busy} />
 
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted" aria-live="polite">{busy ? "Starting your session…" : ""}</span>

@@ -65,7 +65,16 @@ EXPECTED = {
         "run_id", "status", "response", "awaiting_human_input", "pending_action",
         "handoff_approved", "memory_used", "step_count", "turn_step_count",
         "conversation", "sources", "citations", "tools_used", "events",
+        # Cost/performance instrumentation (P1) consumed by the Coach + Inspector.
+        "usage", "profile", "latency_ms", "cache_hits", "cache_misses",
     },
+    "AgentUsageResponse": {
+        "agent_model_calls", "tool_model_calls", "model_calls", "input_tokens",
+        "output_tokens", "total_tokens", "estimated_cost_usd", "usage_complete",
+        "missing_usage_sources",
+    },
+    # The candidate-selectable Agent tier (validated Literal — never a raw model slug).
+    "AgentRunRequest": {"goal", "profile"},
     "PendingActionResponse": {"action_id", "type", "message", "options", "data"},
     "HumanDecisionRequest": {"action_id", "decision", "selected_role"},
     "AgentContinueRequest": {"message"},
