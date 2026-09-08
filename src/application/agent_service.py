@@ -13,6 +13,7 @@ Where enough tool data exists, the service builds the existing typed
 
 from __future__ import annotations
 
+import threading
 import uuid
 from typing import Any, Callable
 
@@ -21,7 +22,16 @@ from src.agent.graph import build_agent_graph
 from src.agent.human import validate_decision, InvalidHumanDecision
 from src.agent.models import AgentRunRequest, AgentRunResult
 from src.agent.registry import ToolRegistry, career_tool_registry
-from src.agent.state import STATUS_AWAITING_HUMAN, STATUS_COMPLETED, STATUS_FAILED
+from src.agent.state import (
+    STATUS_AWAITING_HUMAN,
+    STATUS_COMPLETED,
+    STATUS_FAILED,
+    STATUS_STEP_LIMIT,
+)
+
+# Bounded candidate-safe conversation history returned to the UI (latest N visible
+# user/assistant messages — never system/tool/internal messages).
+CONVERSATION_LIMIT = 30
 
 ModelFactory = Callable[[], Any]
 
@@ -86,6 +96,19 @@ class AgentApplicationService:
             checkpointer=checkpointer,
             memory_service=memory_service,
         )
+        # Smallest-safe per-thread serialization: a resume/continue on one thread must
+        # not interleave with another on the SAME thread within this process (in-memory
+        # locks; a multi-process deployment would need shared locking — documented).
+        self._locks_guard = threading.Lock()
+        self._thread_locks: dict[str, threading.Lock] = {}
+
+    def _lock_for(self, run_id: str) -> threading.Lock:
+        with self._locks_guard:
+            lock = self._thread_locks.get(run_id)
+            if lock is None:
+                lock = threading.Lock()
+                self._thread_locks[run_id] = lock
+            return lock
 
     @property
     def checkpoint_durable(self) -> bool:
@@ -137,6 +160,7 @@ class AgentApplicationService:
             "tool_history": [],
             "warnings": [],
             "step_count": 0,
+            "turn_step_count": 0,
         }
         try:
             self._graph.invoke(initial, config=self._config(run_id))
@@ -158,24 +182,77 @@ class AgentApplicationService:
         """
         from langgraph.types import Command
 
-        snapshot = self._snapshot(run_id)
-        self._require_owned(snapshot, user_id)
-        if not self._is_awaiting(snapshot):
-            raise RunNotResumableError("This run is not awaiting a decision.")
-        pending = (snapshot.values or {}).get("pending_action")
-        try:
-            normalised = validate_decision(pending, decision or {})
-        except InvalidHumanDecision as exc:
+        with self._lock_for(run_id):
+            snapshot = self._snapshot(run_id)
+            self._require_owned(snapshot, user_id)
+            if not self._is_awaiting(snapshot):
+                raise RunNotResumableError("This run is not awaiting a decision.")
+            pending = (snapshot.values or {}).get("pending_action")
+            try:
+                normalised = validate_decision(pending, decision or {})
+            except InvalidHumanDecision as exc:
+                from src.application.errors import ValidationError
+
+                raise ValidationError(str(exc)) from exc
+            try:
+                self._graph.invoke(Command(resume=normalised), config=self._config(run_id))
+            except AgentError:
+                raise
+            except Exception as exc:  # noqa: BLE001
+                raise AgentError("The assistant could not resume the request.") from exc
+            return self._result_from_snapshot(run_id, self._snapshot(run_id), request_id)
+
+    def continue_run(
+        self, run_id: str, user_id: str | None, message: str, *, request_id: str | None = None
+    ) -> AgentRunResult:
+        """Add a new user message to an existing thread and continue the SAME run.
+
+        This is short-term conversational memory: the checkpointed thread (messages,
+        confirmed role, requirements, gaps, plan, evidence, human decisions) is
+        preserved; only a NEW bounded per-turn step allowance is granted. It is NOT a
+        new run and never bypasses a pending human decision.
+        """
+        from langchain_core.messages import HumanMessage
+
+        text = (message or "").strip()
+        if not text:
             from src.application.errors import ValidationError
 
-            raise ValidationError(str(exc)) from exc
-        try:
-            self._graph.invoke(Command(resume=normalised), config=self._config(run_id))
-        except AgentError:
-            raise
-        except Exception as exc:  # noqa: BLE001
-            raise AgentError("The assistant could not resume the request.") from exc
-        return self._result_from_snapshot(run_id, self._snapshot(run_id), request_id)
+            raise ValidationError("A message is required to continue.")
+
+        with self._lock_for(run_id):
+            snapshot = self._snapshot(run_id)
+            self._require_owned(snapshot, user_id)
+            if self._is_awaiting(snapshot):
+                # A pending approval must be answered via /resume, never bypassed.
+                raise RunNotResumableError("Answer the pending request before continuing.")
+            status = (snapshot.values or {}).get("status")
+            if status not in (STATUS_COMPLETED, STATUS_STEP_LIMIT):
+                raise RunNotResumableError("This run cannot accept a new message yet.")
+
+            # Append the new user turn, reset ONLY the per-turn allowance + terminal
+            # flags, and resume at the agent node (as_node="initialise" so the fresh-run
+            # initialise does NOT re-run and wipe/duplicate the thread).
+            self._graph.update_state(
+                self._config(run_id),
+                {
+                    "messages": [HumanMessage(content=text)],
+                    "goal": text,
+                    "turn_step_count": 0,
+                    "pending_action": None,
+                    "completed": False,
+                    "status": "running",
+                    "last_error": None,
+                },
+                as_node="initialise",
+            )
+            try:
+                self._graph.invoke(None, config=self._config(run_id))
+            except AgentError:
+                raise
+            except Exception as exc:  # noqa: BLE001
+                raise AgentError("The assistant could not continue the request.") from exc
+            return self._result_from_snapshot(run_id, self._snapshot(run_id), request_id)
 
     def get_run(self, run_id: str, user_id: str | None, *, request_id: str | None = None) -> AgentRunResult:
         snapshot = self._snapshot(run_id)
@@ -275,6 +352,35 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
         handoff_approved=bool(state.get("handoff_approved", False)),
         warnings=warnings,
         step_count=int(state.get("step_count", 0)),
+        turn_step_count=int(state.get("turn_step_count", 0)),
+        conversation=_safe_conversation(messages),
         request_id=request_id,
         preparation_context=_build_preparation_context(state),
     )
+
+
+# The injected long-term-memory DATA block header (see src/agent/nodes.py). Its
+# HumanMessage is internal context, never part of the candidate-visible conversation.
+_MEMORY_BLOCK_MARKER = "USER-APPROVED PREPARATION MEMORY"
+
+
+def _safe_conversation(messages: list) -> list[dict[str, Any]]:
+    """A bounded, candidate-safe view of the thread: only visible user/assistant text.
+
+    Excludes System prompts, Tool messages, the memory-injection block, and
+    assistant messages that carry only tool calls (no visible content). This is what
+    the candidate should have seen — never raw LangChain/internal messages.
+    """
+    convo: list[dict[str, Any]] = []
+    for msg in messages:
+        mtype = getattr(msg, "type", "")
+        content = getattr(msg, "content", None)
+        if not isinstance(content, str) or not content.strip():
+            continue
+        if mtype == "human":
+            if content.startswith(_MEMORY_BLOCK_MARKER):
+                continue  # internal memory DATA block, not candidate-visible
+            convo.append({"role": "user", "content": content})
+        elif mtype in ("ai", "AIMessageChunk", "assistant"):
+            convo.append({"role": "assistant", "content": content})
+    return convo[-CONVERSATION_LIMIT:]
