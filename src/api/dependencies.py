@@ -4,11 +4,12 @@ Resource lifecycle (Phase 2, §18):
 - **Application-lifetime** (built once, cached on ``app.state`` under a lock, reused
   across requests): the career config, the interview ``AppConfig``, the expensive
   vector store, the shared translation cache, the pricing service, the repository,
-  and the in-memory interview session store.
+  and the durable interview session store (``DurableInterviewSessionStore``, Phase
+  10 — in-progress interviews persist in the database, surviving refresh/restart).
 - **Request-scoped** (cheap wrappers built per request over the shared resources):
   ``CareerApplicationService`` and ``InterviewApplicationService``.
-- **No global mutable per-user state** beyond the explicitly user-scoped, bounded
-  in-memory session store.
+- **No global mutable per-user state**: in-progress interview state lives in the
+  durable, user-scoped ``interview_sessions`` table, not in process memory.
 
 These are FastAPI dependency functions (no DI container). Tests override them via
 ``app.dependency_overrides`` so no real provider/DB/vector resources are built.

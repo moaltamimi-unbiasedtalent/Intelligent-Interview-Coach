@@ -19,14 +19,14 @@ class _FakeRepo:
         self.saved = []
         self._next = 100
 
-    def save_interview(self, user_id, payload):
+    def save_interview(self, user_id, payload, source_session_id=None):
         self._next += 1
         self.saved.append((user_id, payload))
         return self._next
 
 
 class _BoomRepo:
-    def save_interview(self, user_id, payload):
+    def save_interview(self, user_id, payload, source_session_id=None):
         raise RuntimeError("database connection refused at db://secret-host")
 
 

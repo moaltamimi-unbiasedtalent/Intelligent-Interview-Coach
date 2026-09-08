@@ -450,18 +450,36 @@ def generate_report(
     user_id: int = Depends(get_current_user_id),
 ) -> ReportResponse:
     """Generate the report if absent (never regenerated once it exists), persist the
-    completed interview to History exactly once, and return the result."""
+    completed interview to History exactly once, and return the result.
+
+    Crash-safe ordering (§9): (A) generate the report and durably persist it into the
+    interview session FIRST — so a crash before history save never regenerates the
+    model; then (B) idempotently save completed History keyed by the durable
+    ``source_session_id`` and repair ``saved_report_id`` in the session. No DB
+    transaction is held open while the model generates.
+    """
+    # A. Generate + durably persist the report (guarded by the operation lease).
     try:
         with store.mutate(session_id, user_id, operation="report") as session:
             if session.data.report is None:
                 svc.generate_report(session)
-            if session.data.report is None:
-                raise ValidationError("The report could not be generated yet.")
-            # Persist to completed history (second-save protected by saved_report_id).
-            history_service.save_completed_interview(session, config, repo=repo, user_id=user_id)
     except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
         raise _translate_store_error(exc) from None
+    if session.data.report is None:
+        # Generation failed (state persisted as ERROR); nothing to save to History.
+        raise ValidationError("The report could not be generated yet.")
+
+    # B. Idempotently save to completed History + repair saved_report_id in a second,
+    #    provider-free save. A crash between the two never duplicates the History row.
+    try:
+        with store.mutate(session_id, user_id) as session:
+            history_service.save_completed_interview(
+                session, config, repo=repo, user_id=user_id, source_session_id=session_id)
+    except (SessionNotFoundError, SessionConflictError) as exc:
+        raise _translate_store_error(exc) from None
     data = session.data
+    # §11: report the saved id only when History genuinely holds the row; otherwise the
+    # report remains available from durable session state with save_failed=true.
     return ReportResponse(
         session_id=session_id, report=data.report.model_dump(),
         saved_report_id=data.saved_report_id, save_failed=data.save_failed)

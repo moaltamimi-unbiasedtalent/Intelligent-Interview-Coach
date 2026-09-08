@@ -116,7 +116,7 @@ class _FakeEval:
 
 
 class _FakeReport:
-    def generate_report(self, config, questions, answers, evaluations, settings):
+    def generate_report(self, config, questions, answers, evaluations, settings, branch_summaries=()):
         return _report(), _usage()
 
 
@@ -140,9 +140,16 @@ class _FakeRepo:
             self._next_user += 1
         return self._users[subject]
 
-    def save_interview(self, user_id, payload):
+    def save_interview(self, user_id, payload, source_session_id=None):
+        # Idempotent per (user_id, source_session_id), mirroring the real repository:
+        # a repeat returns the existing id instead of inserting a duplicate row.
+        if source_session_id is not None:
+            for iid, row in self._interviews.items():
+                if row["user_id"] == user_id and row.get("source_session_id") == source_session_id:
+                    return iid
         self._next_iv += 1
-        self._interviews[self._next_iv] = {"user_id": user_id, "payload": payload}
+        self._interviews[self._next_iv] = {
+            "user_id": user_id, "payload": payload, "source_session_id": source_session_id}
         return self._next_iv
 
     def list_interviews(self, user_id):

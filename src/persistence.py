@@ -120,11 +120,23 @@ class PreparationMemory(Base):
 
 class Interview(Base):
     __tablename__ = "interviews"
+    __table_args__ = (
+        # Crash-safe completed-history idempotency (Sprint 4 Phase 10 correction): a
+        # durable interview session maps to at most ONE completed history row per user.
+        # A unique INDEX (not a table constraint) so NULLs are distinct — legacy rows
+        # with source_session_id = NULL never collide — and it is SQLite+Postgres
+        # portable. Never keyed on candidate data.
+        Index("uq_interviews_user_source_session", "user_id", "source_session_id", unique=True),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
+    # The durable in-progress session this completed interview was saved from, when
+    # known (nullable for legacy rows and non-session saves). An idempotency/linking
+    # seam only — it does NOT merge in-progress session storage with History.
+    source_session_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     configuration: Mapped[dict] = mapped_column(JSON, default=dict)
     mode: Mapped[str | None] = mapped_column(String(32), nullable=True)
     status: Mapped[str] = mapped_column(String(32), default="completed")

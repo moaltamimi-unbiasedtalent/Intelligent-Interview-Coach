@@ -40,7 +40,7 @@ class _Eval:
 
 
 class _Report:
-    def generate_report(self, config, questions, answers, evaluations, settings):
+    def generate_report(self, config, questions, answers, evaluations, settings, branch_summaries=()):
         return f.report(), f.usage()
 
 

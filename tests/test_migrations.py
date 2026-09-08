@@ -57,14 +57,49 @@ def test_upgrade_head_creates_baseline_schema(tmp_path, monkeypatch):
 
 
 def test_single_head_after_phase10(tmp_path, monkeypatch):
-    # Alembic must have exactly one head, and it must be the 0003 revision (Phase 10).
+    # Alembic must have exactly one head, and it must be the 0004 revision (Phase 10
+    # pre-merge correction: completed-history source_session_id idempotency).
     from alembic.config import Config
     from alembic.script import ScriptDirectory
 
     cfg = Config("alembic.ini")
     cfg.set_main_option("script_location", "migrations")
     heads = ScriptDirectory.from_config(cfg).get_heads()
-    assert list(heads) == ["0003_interview_sessions"]
+    assert list(heads) == ["0004_completed_interview_source_session"]
+
+
+def test_upgrade_head_adds_source_session_id(tmp_path, monkeypatch):
+    from alembic import command
+    from sqlalchemy import create_engine, inspect
+
+    db_url = f"sqlite:///{tmp_path/'m.db'}"
+    monkeypatch.setenv("DATABASE_URL", db_url)
+    command.upgrade(_alembic_config(db_url), "head")
+
+    insp = inspect(create_engine(db_url))
+    cols = {c["name"] for c in insp.get_columns("interviews")}
+    idx = {i["name"] for i in insp.get_indexes("interviews")}
+    assert "source_session_id" in cols
+    assert "uq_interviews_user_source_session" in idx
+
+
+def test_downgrade_0004_keeps_phase10_schema(tmp_path, monkeypatch):
+    # 0004 → 0003 removes only source_session_id; interview_sessions is untouched.
+    from alembic import command
+    from alembic.config import Config
+    from sqlalchemy import create_engine, inspect
+
+    db_url = f"sqlite:///{tmp_path/'m.db'}"
+    monkeypatch.setenv("DATABASE_URL", db_url)
+    cfg = Config("alembic.ini")
+    cfg.set_main_option("script_location", "migrations")
+    cfg.set_main_option("sqlalchemy.url", db_url)
+    command.upgrade(cfg, "head")
+    command.downgrade(cfg, "0003_interview_sessions")
+
+    insp = inspect(create_engine(db_url))
+    assert "source_session_id" not in {c["name"] for c in insp.get_columns("interviews")}
+    assert "interview_sessions" in insp.get_table_names()  # 0003 intact
 
 
 def test_downgrade_0003_keeps_phase7_schema(tmp_path, monkeypatch):
