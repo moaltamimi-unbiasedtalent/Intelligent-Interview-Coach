@@ -162,11 +162,21 @@ translation cache, configs) are built once and cached on `app.state` under a loc
 (application-lifetime); `CareerApplicationService`/`InterviewApplicationService`
 are cheap request-scoped wrappers. Nothing runs a provider/DB call at import.
 
-**Interview session state (transitional):** in-progress interviews live in a
-bounded, thread-safe, **user-scoped in-memory** store (`src/api/session_store.py`)
-— the current schema persists only *completed* interviews. This is in-process
-only (documented); durable in-progress session state is a later phase. Completed
-reports still persist through `history_service`.
+**Interview session state (durable, Phase 10):** in-progress interviews are now
+**durably persisted**, user-scoped, in the `interview_sessions` table
+(`src/interview/session_repository.py` → `DurableInterviewSessionStore`). The
+validated `SessionData` is serialised to JSON by an explicit codec
+(`src/interview/session_codec.py` — never pickle) and restored on demand, so a
+candidate can refresh the browser and the backend can restart without losing an
+interview. The FastAPI routes load a payload → mutate through the **unchanged**
+`SessionManager` state machine → serialise + save under **optimistic concurrency**
+(`version`); provider-backed steps take a bounded, recoverable **operation lease**
+so a duplicate concurrent request cannot launch the same paid call twice. Idempotent
+create (`agent-handoff:<run_id>`) is durable across restart. The old in-process
+`InMemorySessionStore` remains only as a unit-test/legacy helper — it is no longer
+the production path. This durable *in-progress* store is distinct from **completed
+history** (`interviews`/`reports` via `history_service`); see
+`docs/sprint4_interview_parity.md`.
 
 **Auth (transitional):** identity comes from the anonymous dev user unless an
 `X-User-Subject` header is supplied (set only by a trusted upstream gateway or in

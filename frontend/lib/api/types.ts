@@ -196,7 +196,19 @@ export interface PreparationContextInput {
   priority_competencies?: string[];
 }
 
+export interface InterviewConfigInput {
+  target_role: string;
+  industry_or_sector: string;
+  career_level: string;
+  interview_types?: string[];
+  interviewer_persona?: string;
+  difficulty?: string;
+  response_detail?: string;
+  number_of_questions?: number | null;
+}
+
 export interface CreateInterviewRequest {
+  configuration?: InterviewConfigInput;
   preparation_context?: PreparationContextInput;
   industry_or_sector?: string | null;
   career_level?: string | null;
@@ -215,6 +227,45 @@ export interface QuestionOut {
   difficulty: string;
 }
 
+/** Candidate-safe answer feedback (mirrors the backend EvaluationOut exactly). */
+export interface EvaluationOut {
+  overall_score: number;
+  relevance: number;
+  structure: number;
+  evidence: number;
+  role_knowledge: number;
+  problem_solving: number;
+  communication: number;
+  credibility: number;
+  strengths: string[];
+  improvement_areas: string[];
+  missing_evidence: string[];
+  stronger_answer_structure: string;
+  improved_example_answer: string;
+  follow_up_question: string;
+}
+
+export interface BranchQuestionOut {
+  branch_id: string;
+  parent_question_id: number;
+  question: string;
+  branch_mode: string;
+  focus_area: string;
+  difficulty: string;
+  depth: number;
+}
+
+export interface DeepDiveStateOut {
+  active: boolean;
+  mode?: string | null;
+  depth: number;
+  max_depth: number;
+  parent_question_id?: number | null;
+  current_branch_question?: BranchQuestionOut | null;
+  last_branch_evaluation?: EvaluationOut | null;
+  can_go_deeper: boolean;
+}
+
 export interface InterviewStateResponse {
   session_id: string;
   state: string;
@@ -222,8 +273,32 @@ export interface InterviewStateResponse {
   questions_planned?: number | null;
   current_question?: QuestionOut | null;
   report_available: boolean;
-  last_evaluation?: Record<string, unknown> | null;
+  last_evaluation?: EvaluationOut | null;
   target_role?: string | null;
+  deep_dive?: DeepDiveStateOut | null;
+  error?: string | null;
+  error_recoverable?: boolean;
+  cumulative_cost_usd?: number | null;
+}
+
+export interface ReportResponse {
+  session_id: string;
+  report: Record<string, unknown>;
+  saved_report_id?: number | null;
+  save_failed?: boolean;
+}
+
+export interface ActiveSessionSummary {
+  session_id: string;
+  target_role?: string | null;
+  state: string;
+  question_number: number;
+  questions_planned?: number | null;
+  updated_at?: string | null;
+}
+
+export interface ActiveSessionsResponse {
+  sessions: ActiveSessionSummary[];
 }
 
 // --- Knowledge / history -----------------------------------------------------
@@ -249,6 +324,7 @@ export interface InterviewListResponse {
 export interface InterviewOptionsResponse {
   career_levels: string[];
   interview_types: string[];
+  deep_dive_modes?: string[];
 }
 
 // --- Preparation memory (Phase 7) -------------------------------------------

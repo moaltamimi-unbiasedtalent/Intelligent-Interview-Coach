@@ -11,6 +11,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.memory import MemoryItem, normalize_role, normalize_summary
@@ -80,16 +81,35 @@ class InterviewRepository:
 
     # -- writes ---------------------------------------------------------------
 
-    def save_interview(self, user_id: int, payload: dict) -> int:
-        """Persist a completed interview for a user; returns the new id.
+    def save_interview(
+        self, user_id: int, payload: dict, source_session_id: str | None = None
+    ) -> int:
+        """Persist a completed interview for a user; returns its id.
 
         ``payload`` is a plain dict assembled from the session (configuration,
         mode, status, timestamps, questions[] with nested answer, and report).
         Only aggregated visual metrics are accepted — never frames.
+
+        When ``source_session_id`` is given, the save is IDEMPOTENT per
+        ``(user_id, source_session_id)``: a repeat (e.g. a crash retry) returns the
+        existing interview id instead of inserting a duplicate. A concurrent first
+        save is resolved by the DB unique index — the loser re-reads the winner and
+        returns the same id. When ``source_session_id`` is None, behaviour is
+        unchanged (always insert).
         """
         with self._session_factory() as session:
+            if source_session_id is not None:
+                existing = session.scalar(
+                    select(Interview.id).where(
+                        Interview.user_id == user_id,
+                        Interview.source_session_id == source_session_id,
+                    )
+                )
+                if existing is not None:
+                    return existing
             interview = Interview(
                 user_id=user_id,
+                source_session_id=source_session_id,
                 configuration=payload.get("configuration") or {},
                 mode=payload.get("mode"),
                 status=payload.get("status", "completed"),
@@ -124,7 +144,22 @@ class InterviewRepository:
                     cost_usd=report_payload.get("cost_usd"),
                 )
             session.add(interview)
-            session.commit()
+            try:
+                session.commit()
+            except IntegrityError:
+                # A concurrent first save won the unique (user_id, source_session_id);
+                # re-read and return the winner's id (no duplicate row).
+                session.rollback()
+                if source_session_id is not None:
+                    existing = session.scalar(
+                        select(Interview.id).where(
+                            Interview.user_id == user_id,
+                            Interview.source_session_id == source_session_id,
+                        )
+                    )
+                    if existing is not None:
+                        return existing
+                raise
             return interview.id
 
     # -- reads (all user-scoped) ---------------------------------------------

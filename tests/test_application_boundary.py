@@ -276,7 +276,7 @@ class _FakeRepo:
     def __init__(self):
         self.saved = []
 
-    def save_interview(self, user_id, payload):
+    def save_interview(self, user_id, payload, source_session_id=None):
         self.saved.append((user_id, payload))
         return 123
 
@@ -302,7 +302,7 @@ def test_report_persistence_and_read(monkeypatch):
 
 def test_save_failure_becomes_safe_flag(monkeypatch):
     class _Boom:
-        def save_interview(self, user_id, payload):
+        def save_interview(self, user_id, payload, source_session_id=None):
             raise RuntimeError("connection refused at db://secret-host:5432 password=x")
 
     monkeypatch.setattr(history_service, "resolve_user_id", lambda config, r: 7)

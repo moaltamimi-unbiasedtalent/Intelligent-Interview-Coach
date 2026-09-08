@@ -83,9 +83,12 @@ def ctx():
     domain = _CountingDomain()
     svc = InterviewApplicationService(config=None, services=(domain, _FakeEval(), _FakeReport(), _FakeClient()))
     repo = _FakeRepo()  # one instance → stable subject→id mapping across requests
+    from tests._interview_factories import make_durable_store
+    store = make_durable_store()
     app.dependency_overrides[deps.get_interview_service] = lambda: svc
     app.dependency_overrides[deps.get_repository] = lambda: repo
     app.dependency_overrides[deps.get_app_config] = lambda: None
+    app.dependency_overrides[deps.get_session_store] = lambda: store
     return app, domain
 
 

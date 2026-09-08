@@ -72,6 +72,51 @@ class QuestionOut(BaseModel):
     difficulty: str
 
 
+class EvaluationOut(BaseModel):
+    """Candidate-safe, typed answer feedback (mirrors AnswerEvaluation exactly — no
+    invented fields). Practice feedback only; never a hiring decision."""
+
+    overall_score: int
+    relevance: int
+    structure: int
+    evidence: int
+    role_knowledge: int
+    problem_solving: int
+    communication: int
+    credibility: int
+    strengths: list[str] = Field(default_factory=list)
+    improvement_areas: list[str] = Field(default_factory=list)
+    missing_evidence: list[str] = Field(default_factory=list)
+    stronger_answer_structure: str = ""
+    improved_example_answer: str = ""
+    follow_up_question: str = ""
+
+
+class BranchQuestionOut(BaseModel):
+    """Candidate-safe view of the current Deep Dive branch question."""
+
+    branch_id: str
+    parent_question_id: int
+    question: str
+    branch_mode: str
+    focus_area: str
+    difficulty: str
+    depth: int
+
+
+class DeepDiveStateOut(BaseModel):
+    """Candidate-safe Deep Dive (branch) state — never raw archived structures."""
+
+    active: bool = False
+    mode: str | None = None
+    depth: int = 0
+    max_depth: int = 0
+    parent_question_id: int | None = None
+    current_branch_question: BranchQuestionOut | None = None
+    last_branch_evaluation: EvaluationOut | None = None
+    can_go_deeper: bool = False
+
+
 class InterviewStateResponse(BaseModel):
     session_id: str
     state: str
@@ -79,10 +124,32 @@ class InterviewStateResponse(BaseModel):
     questions_planned: int | None = None
     current_question: QuestionOut | None = None
     report_available: bool = False
-    last_evaluation: dict | None = None
+    last_evaluation: EvaluationOut | None = None
     # Sprint 4 Phase 3C: the resolved target role, so the frontend Practice page can
     # show the session's role/context. Additive + optional (backward-compatible).
     target_role: str | None = None
+    # Sprint 4 Phase 10 additive, candidate-safe fields.
+    deep_dive: DeepDiveStateOut | None = None
+    error: str | None = None
+    error_recoverable: bool = False
+    # Cumulative practice cost (USD) if the product chooses to display it; never a
+    # provider key, DB id, raw payload or operation token.
+    cumulative_cost_usd: float | None = None
+
+
+class ActiveSessionSummary(BaseModel):
+    """Safe summary for resumable-session discovery (never JD/background/answers)."""
+
+    session_id: str
+    target_role: str | None = None
+    state: str
+    question_number: int = 0
+    questions_planned: int | None = None
+    updated_at: str | None = None
+
+
+class ActiveSessionsResponse(BaseModel):
+    sessions: list[ActiveSessionSummary] = Field(default_factory=list)
 
 
 class AnswerRequest(BaseModel):
@@ -106,3 +173,5 @@ class InterviewOptionsResponse(BaseModel):
 
     career_levels: list[str] = Field(default_factory=list)
     interview_types: list[str] = Field(default_factory=list)
+    # Backend-owned Deep Dive taxonomy so the frontend never maintains its own list.
+    deep_dive_modes: list[str] = Field(default_factory=list)

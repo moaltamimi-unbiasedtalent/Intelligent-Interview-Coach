@@ -19,10 +19,13 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src.application.errors import (
     ConfigurationError,
+    ConflictError,
     PersistenceError,
     UnavailableServiceError,
     ValidationError,
 )
+from src.interview.session_codec import SessionCodecError
+from src.session_manager import DuplicateSubmissionError, SessionError
 
 logger = logging.getLogger("api")
 
@@ -54,6 +57,30 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(PersistenceError)
     async def _persistence(request: Request, exc: PersistenceError):
         return _envelope(503, "persistence_error", str(exc), _request_id(request))
+
+    @app.exception_handler(ConflictError)
+    async def _conflict(request: Request, exc: ConflictError):
+        return _envelope(409, "conflict", str(exc), _request_id(request))
+
+    # Interview state-machine errors (safe messages). A duplicate submission is a
+    # conflict (409, recoverable by re-reading state); other invalid transitions are
+    # a 422. Registered from most specific to least — DuplicateSubmissionError first.
+    @app.exception_handler(DuplicateSubmissionError)
+    async def _duplicate(request: Request, exc: DuplicateSubmissionError):
+        return _envelope(409, "duplicate_submission", str(exc), _request_id(request))
+
+    @app.exception_handler(SessionError)
+    async def _session_error(request: Request, exc: SessionError):
+        return _envelope(422, "invalid_transition", str(exc), _request_id(request))
+
+    @app.exception_handler(SessionCodecError)
+    async def _session_codec(request: Request, exc: SessionCodecError):
+        # Stored interview state could not be decoded (corrupt/unsupported). Fail
+        # safely with a generic message — never expose the payload or the raw cause.
+        return _envelope(
+            503, "session_unreadable",
+            "This interview session could not be read. Please start a new interview.",
+            _request_id(request))
 
     @app.exception_handler(StarletteHTTPException)
     async def _http(request: Request, exc: StarletteHTTPException):

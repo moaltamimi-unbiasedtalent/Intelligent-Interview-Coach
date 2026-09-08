@@ -4,11 +4,12 @@ Resource lifecycle (Phase 2, §18):
 - **Application-lifetime** (built once, cached on ``app.state`` under a lock, reused
   across requests): the career config, the interview ``AppConfig``, the expensive
   vector store, the shared translation cache, the pricing service, the repository,
-  and the in-memory interview session store.
+  and the durable interview session store (``DurableInterviewSessionStore``, Phase
+  10 — in-progress interviews persist in the database, surviving refresh/restart).
 - **Request-scoped** (cheap wrappers built per request over the shared resources):
   ``CareerApplicationService`` and ``InterviewApplicationService``.
-- **No global mutable per-user state** beyond the explicitly user-scoped, bounded
-  in-memory session store.
+- **No global mutable per-user state**: in-progress interview state lives in the
+  durable, user-scoped ``interview_sessions`` table, not in process memory.
 
 These are FastAPI dependency functions (no DI container). Tests override them via
 ``app.dependency_overrides`` so no real provider/DB/vector resources are built.
@@ -107,8 +108,20 @@ def get_memory_service(request: Request):
 
 
 def get_session_store(request: Request):
-    """The transitional in-memory interview session store (set up in lifespan)."""
-    return request.app.state.session_store
+    """The DURABLE, user-scoped interview session store (Sprint 4 Phase 10).
+
+    In-progress interview state is persisted (SessionData serialised to the
+    ``interview_sessions`` table) so it survives a browser refresh and a backend
+    restart. Built once for the app lifetime over the shared repository engine. The
+    old in-process ``InMemorySessionStore`` is no longer the production path (it
+    remains for unit tests / legacy Streamlit helpers).
+    """
+    from src.interview.session_repository import DurableInterviewSessionStore
+
+    return _shared(
+        request, "durable_session_store",
+        lambda: DurableInterviewSessionStore(get_repository(request).session_factory),
+    )
 
 
 def get_agent_service(request: Request):

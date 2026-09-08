@@ -136,6 +136,7 @@ def save_completed_interview(
     repo: Any | None = None,
     mode: str | None = None,
     user_id: int | None = None,
+    source_session_id: str | None = None,
 ) -> None:
     """Save a completed interview once per interview (safe on failure).
 
@@ -145,6 +146,12 @@ def save_completed_interview(
 
     ``user_id`` may be passed explicitly (the API resolves identity itself); when
     omitted it is resolved from the Streamlit-side auth (unchanged UI behaviour).
+
+    ``source_session_id`` (the durable interview session) makes the save
+    CRASH-IDEMPOTENT: if the history row was already committed for this session but a
+    later durable save of ``saved_report_id`` failed, a retry finds the existing row
+    (via the repository's user-scoped uniqueness) and REPAIRS ``saved_report_id``
+    rather than inserting a duplicate.
     """
     data = session.data
     if data.saved_report_id:
@@ -155,12 +162,24 @@ def save_completed_interview(
             user_id = resolve_user_id(config, repo)
         if user_id is None:
             return
-        interview_id = repo.save_interview(user_id, build_interview_payload(data, mode=mode))
+        interview_id = repo.save_interview(
+            user_id, build_interview_payload(data, mode=mode),
+            source_session_id=source_session_id,
+        )
+        # interview_id is a brand-new row OR the pre-existing row for this durable
+        # session (idempotent) — either way SessionData is repaired truthfully.
         data.saved_report_id = interview_id
         data.save_failed = False
-    except Exception:  # noqa: BLE001 - persistence must not break the report
+    except Exception as exc:  # noqa: BLE001 - persistence must not break the report
         data.save_failed = True
-        logger.warning("Interview persistence failed", exc_info=True)
+        # SAFE METADATA ONLY. A raw DB exception (SQLAlchemy StatementError/
+        # OperationalError) can carry the SQL statement + bound parameters — which may
+        # include the JD, candidate background, answers, evaluations or report content
+        # — plus the DB URL/credentials. Never log the exception string, a traceback
+        # (no exc_info) or repr; only the exception CLASS NAME as a coarse category.
+        logger.warning(
+            "Interview persistence failed", extra={"error_category": type(exc).__name__}
+        )
 
 
 def list_interview_reports(repo, user_id: int):

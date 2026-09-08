@@ -217,6 +217,7 @@ class InterviewApplicationService:
                 list(data.answers),
                 list(data.evaluations),
                 data.settings,
+                branch_summaries=_build_branch_summaries(data),
             )
             session.save_final_report(report)
             session.record_usage(usage)
@@ -233,3 +234,58 @@ class InterviewApplicationService:
             return security.validate_field(answer, "candidate_answer")
         except security.InputValidationError as exc:
             raise ValidationError(str(exc)) from exc
+
+
+# Bound the Deep Dive evidence added to the final report so a candidate with many
+# branches cannot produce an unbounded prompt (each branch is capped at
+# MAX_BRANCH_DEPTH levels; this is a further overall ceiling).
+_MAX_BRANCH_SUMMARIES = 12
+
+
+def _eval_field(ev, name):
+    """Read a field from an AnswerEvaluation (pydantic) or a plain dict (defensive)."""
+    if ev is None:
+        return None
+    value = getattr(ev, name, None)
+    if value is None and isinstance(ev, dict):
+        value = ev.get(name)
+    return value
+
+
+def _build_branch_summaries(data) -> list[str]:
+    """Deterministic, bounded Deep Dive evidence for the final report.
+
+    THE single source of Deep Dive report-summary logic (never duplicated in the API,
+    Streamlit or Next.js). Built from the archived branches (and any completed active
+    branch, defensively) using the recorded evaluations — no extra model call, and
+    Deep Dive turns are never counted as scheduled main questions. Prefers concise
+    evaluation-based summaries over dumping raw answers.
+    """
+    summaries: list[str] = []
+
+    def add_from(branch_mode, evaluations) -> bool:
+        label = (branch_mode or "deep dive").replace("_", " ")
+        for level, ev in enumerate(evaluations or [], start=1):
+            score = _eval_field(ev, "overall_score")
+            strengths = _eval_field(ev, "strengths") or []
+            improvements = _eval_field(ev, "improvement_areas") or []
+            parts = [f"{label}, level {level}: score {score}/100"]
+            if strengths:
+                parts.append("strengths: " + "; ".join(list(strengths)[:2]))
+            if improvements:
+                parts.append("improve: " + "; ".join(list(improvements)[:2]))
+            summaries.append("; ".join(parts))
+            if len(summaries) >= _MAX_BRANCH_SUMMARIES:
+                return True
+        return False
+
+    for branch in (getattr(data, "branches", None) or []):
+        mode = branch.get("mode") if isinstance(branch, dict) else None
+        evals = branch.get("evaluations") if isinstance(branch, dict) else None
+        if add_from(mode, evals):
+            return summaries
+    # Defensive: include a completed-but-not-yet-archived active branch's evidence
+    # (report generation normally requires no active branch, so this is usually empty).
+    if getattr(data, "branch_active", False):
+        add_from(getattr(data, "branch_mode", None), getattr(data, "branch_evaluations", None))
+    return summaries

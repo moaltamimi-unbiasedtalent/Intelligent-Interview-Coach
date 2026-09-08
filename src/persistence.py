@@ -46,6 +46,7 @@ __all__ = [
     "Answer",
     "Report",
     "PreparationMemory",
+    "InterviewSession",
     "make_engine",
     "make_session_factory",
     "init_db",
@@ -119,11 +120,23 @@ class PreparationMemory(Base):
 
 class Interview(Base):
     __tablename__ = "interviews"
+    __table_args__ = (
+        # Crash-safe completed-history idempotency (Sprint 4 Phase 10 correction): a
+        # durable interview session maps to at most ONE completed history row per user.
+        # A unique INDEX (not a table constraint) so NULLs are distinct — legacy rows
+        # with source_session_id = NULL never collide — and it is SQLite+Postgres
+        # portable. Never keyed on candidate data.
+        Index("uq_interviews_user_source_session", "user_id", "source_session_id", unique=True),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
+    # The durable in-progress session this completed interview was saved from, when
+    # known (nullable for legacy rows and non-session saves). An idempotency/linking
+    # seam only — it does NOT merge in-progress session storage with History.
+    source_session_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     configuration: Mapped[dict] = mapped_column(JSON, default=dict)
     mode: Mapped[str | None] = mapped_column(String(32), nullable=True)
     status: Mapped[str] = mapped_column(String(32), default="completed")
@@ -197,6 +210,59 @@ class Report(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     interview: Mapped[Interview] = relationship(back_populates="report")
+
+
+class InterviewSession(Base):
+    """Durable IN-PROGRESS interview session state (Sprint 4 Phase 10).
+
+    This is operational, resumable state — the serialised ``SessionData`` for an
+    interview a candidate is still taking — and is DISTINCT from the completed
+    interview record in ``interviews``/``reports`` (long-term history). A candidate
+    can refresh the browser or the backend can restart without losing an in-progress
+    interview because the state lives here, not in process memory.
+
+    The state machine (``SessionManager``) is unchanged; only its ``SessionData`` is
+    serialised here via ``src.interview.session_codec`` (explicit JSON, never pickle).
+    ``version`` provides optimistic concurrency; ``active_operation`` /
+    ``operation_leased_at`` provide a bounded, recoverable lease so a paid model call
+    is not launched twice concurrently. Ownership is always enforced by ``user_id``.
+    """
+
+    __tablename__ = "interview_sessions"
+    __table_args__ = (
+        # A given idempotency key maps to at most one session per user. NULL keys are
+        # distinct (many keyless sessions per user are allowed).
+        UniqueConstraint("user_id", "idempotency_key", name="uq_interview_sessions_user_idem"),
+        Index("ix_interview_sessions_user_status", "user_id", "status"),
+    )
+
+    # Opaque, random, non-sequential id (set by the store; never a DB sequence).
+    session_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    idempotency_key: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    # The serialised SessionData (safe JSON via the codec) and its schema version.
+    state_payload: Mapped[dict] = mapped_column(JSON, default=dict)
+    state_schema_version: Mapped[int] = mapped_column(Integer, default=1)
+    # Optimistic concurrency control: every save requires the loaded version and
+    # increments it; a stale write updates zero rows and is rejected.
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    # A convenience projection of SessionData.state for cheap listing/filtering. Never
+    # the authority for transitions — that remains SessionManager.
+    status: Mapped[str] = mapped_column(String(32), default="SETUP")
+    # Durable operation lease (bounded, recoverable) around provider-backed mutations.
+    active_operation: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    operation_leased_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+    last_accessed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow
+    )
 
 
 def make_engine(database_url: str) -> Engine:
