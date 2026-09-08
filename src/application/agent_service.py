@@ -332,6 +332,7 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
     tools_used = [t["tool"] for t in tool_history if t.get("status") == "ok"]
     memory_items = list(state.get("memory_items", []) or [])
     pending_action = state.get("pending_action") if awaiting else None
+    conversation = _safe_conversation(messages)
     if awaiting:
         status = STATUS_AWAITING_HUMAN
     elif state.get("status") in (None, "", "running"):
@@ -343,6 +344,17 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
     warnings: list[str] = list(state.get("warnings") or [])
     if status == STATUS_FAILED:
         warnings.append("The run did not complete successfully.")
+    # Grounding guard (P0): strip any citation marker in the final answer that is not
+    # backed by this run's retrieved evidence (no fabricated/stale source references).
+    citations = list(state.get("citations", []) or [])
+    if response:
+        from src.agent.grounding import validate_citations
+
+        response, citation_warnings = validate_citations(response, citations)
+        warnings.extend(citation_warnings)
+        # Keep the candidate-visible conversation consistent with the grounded answer.
+        if conversation and conversation[-1].get("role") == "assistant":
+            conversation[-1]["content"] = response
     return AgentRunResult(
         run_id=run_id,
         status=status,
@@ -351,7 +363,7 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
         tool_calls=tool_history,
         tools_used=tools_used,
         sources=list(state.get("evidence", []) or []),
-        citations=list(state.get("citations", []) or []),
+        citations=citations,
         retrieval_used=bool(state.get("retrieval_used", False)),
         resolved_occupation=state.get("resolved_occupation"),
         resolved_geography=state.get("resolved_geography"),
@@ -363,7 +375,7 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
         warnings=warnings,
         step_count=int(state.get("step_count", 0)),
         turn_step_count=int(state.get("turn_step_count", 0)),
-        conversation=_safe_conversation(messages),
+        conversation=conversation,
         request_id=request_id,
         preparation_context=_build_preparation_context(state),
     )
