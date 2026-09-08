@@ -115,7 +115,29 @@ timestamp and valid/invalid counts (never credentials).
   require revalidating the whole agent stack; **documented as a maintenance follow-up**
   (§40 — do not blindly perform major upgrades). None are added as new runtime deps.
 
-## 8. Known limitations
+## 8. Final GO / NO-GO checklist
+
+| Gate | Status |
+|---|---|
+| Deterministic agent gates green (`scripts/eval_agent.py`) | ✅ PASS |
+| No cross-user leaks | ✅ 0 |
+| No tool-allowlist violations | ✅ 0 executions |
+| No private content in logs | ✅ (safe-by-default; regressions) |
+| Alembic clean (single head 0004, up/down) | ✅ |
+| Backend suite + ruff + compileall | ✅ 1655 passed / 2 skipped |
+| Frontend build + unit + lint + typecheck | ✅ |
+| Browser core flow (Playwright) | ✅ 25 passed |
+| Docker build + container API smoke | ✅ (health/openapi/capabilities 200) |
+| Secret scan (production code) | ✅ clean |
+| No unresolved critical implementation blocker | ✅ |
+
+Documented non-Sprint production follow-ups remain (see §9): production OIDC,
+PostgreSQL live integration, dependency major-upgrade advisories, deferred
+Record/Live/per-operation tiering, and opt-in paid model/RAGAS runs.
+
+**Result: GO — ready for review.**
+
+## 9. Known limitations
 
 See `docs/sprint4_reviewer_guide.md` §Known limitations (production OIDC not
 implemented; PostgreSQL full integration a deployment check; Record voice deferred;
