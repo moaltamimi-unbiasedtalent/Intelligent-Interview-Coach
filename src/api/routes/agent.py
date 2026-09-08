@@ -44,6 +44,8 @@ def run_agent(
         citations=result.citations,
         resolved_occupation=result.resolved_occupation,
         resolved_geography=result.resolved_geography,
+        memory_used=result.memory_used,
+        memory_count=result.memory_count,
         events=result.events,
         tool_calls=result.tool_calls,
         warnings=result.warnings,

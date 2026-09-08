@@ -27,6 +27,8 @@ class AgentRunResponse(BaseModel):
     citations: list[dict] = Field(default_factory=list)
     resolved_occupation: str | None = None
     resolved_geography: str | None = None
+    memory_used: bool = False
+    memory_count: int = 0
     events: list[dict] = Field(default_factory=list)
     tool_calls: list[dict] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

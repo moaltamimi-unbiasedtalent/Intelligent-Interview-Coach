@@ -32,6 +32,9 @@ class AgentRunResult:
     retrieval_used: bool = False
     resolved_occupation: str | None = None
     resolved_geography: str | None = None
+    # Long-term preparation memory read into this run (counts only — never content).
+    memory_used: bool = False
+    memory_count: int = 0
     warnings: list[str] = field(default_factory=list)
     step_count: int = 0
     request_id: str | None = None

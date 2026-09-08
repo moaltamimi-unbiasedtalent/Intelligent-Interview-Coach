@@ -14,6 +14,7 @@ from enum import Enum
 
 class AgentEventType(str, Enum):
     RUN_STARTED = "run_started"
+    MEMORY_LOADED = "memory_loaded"  # long-term memory loaded into the run (counts only)
     REQUEST_UNDERSTOOD = "request_understood"
     TOOL_REQUESTED = "tool_requested"
     TOOL_STARTED = "tool_started"

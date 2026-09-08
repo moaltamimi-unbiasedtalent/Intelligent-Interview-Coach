@@ -40,6 +40,10 @@ class AgentState(TypedDict, total=False):
     preparation_plan: dict[str, Any] | None  # from the preparation planner
     questions: dict[str, Any] | None  # from the question generator
 
+    # Long-term preparation memory loaded for this run (user-approved DATA; safe
+    # projections — category/summary/target_role only, never raw private content).
+    memory_items: list[dict[str, Any]] | None
+
     # Retrieval outputs (Agentic RAG; safe evidence/citations — no raw store rows).
     evidence: list[dict[str, Any]] | None
     citations: list[dict[str, Any]] | None
