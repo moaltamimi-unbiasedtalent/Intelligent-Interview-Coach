@@ -25,13 +25,19 @@ from enum import Enum
 __all__ = [
     "ModelProfile",
     "ModelSpec",
+    "ModelSelectionMode",
     "Workload",
     "WORKLOAD_PROFILE",
+    "INTERVIEW_SESSION_DEFAULT_PROFILE",
+    "INTERVIEW_RECOMMENDED_PROFILE",
     "model_id",
     "spec",
     "all_specs",
+    "selection_mode",
     "workload_profile",
     "workload_model",
+    "recommended_profile",
+    "effective_interview_profile",
     "profile_for_model",
     "legacy_synonyms",
     "supports_temperature",
@@ -138,7 +144,7 @@ class Workload(str, Enum):
     """Every LLM-backed operation in the app (deterministic ops are absent on purpose)."""
 
     AGENT = "agent"                      # LangGraph orchestration / Agent Coach
-    CAREER_SYNTHESIS = "career_synthesis"  # deterministic /career/chat grounded answer
+    CAREER_SYNTHESIS = "career_synthesis"  # /career/chat grounded answer
     JD_ANALYSIS = "jd_analysis"          # AnalyzeJobDescription (structured)
     QUESTION_GENERATION = "question_generation"  # GenerateInterviewQuestions (structured)
     INTERVIEW_STRATEGY = "interview_strategy"
@@ -149,29 +155,81 @@ class Workload(str, Enum):
     RAGAS = "ragas"                      # optional offline evaluator (paid, manual)
 
 
-# Workload → profile policy. Balanced is the default workhorse; Advanced is reserved
-# for higher-stakes evaluation/report; Fast for bounded utility. Gap analysis and the
-# preparation planner are DETERMINISTIC (no model) and deliberately not listed.
+class ModelSelectionMode(str, Enum):
+    """How a workload's EFFECTIVE model is chosen.
+
+    - ``REGISTRY``: application policy picks the profile centrally (this registry).
+    - ``INTERVIEW_SESSION``: the effective model is the candidate/session-selected
+      ``ModelSettings.model`` (one profile per interview session, reused for all its
+      model-backed operations); the registry only records a *recommended* tier.
+    """
+
+    REGISTRY = "registry"
+    INTERVIEW_SESSION = "interview_session"
+
+
+# Centrally-selected workloads: the registry profile IS the effective runtime model.
+# Gap analysis and the preparation planner are DETERMINISTIC (no model) and absent.
 WORKLOAD_PROFILE: dict[Workload, ModelProfile] = {
     Workload.AGENT: ModelProfile.BALANCED,
     Workload.CAREER_SYNTHESIS: ModelProfile.BALANCED,
     Workload.JD_ANALYSIS: ModelProfile.BALANCED,
     Workload.QUESTION_GENERATION: ModelProfile.BALANCED,
-    Workload.INTERVIEW_STRATEGY: ModelProfile.BALANCED,
-    Workload.INTERVIEW_QUESTION: ModelProfile.BALANCED,
-    Workload.ANSWER_EVALUATION: ModelProfile.ADVANCED,
-    Workload.FINAL_REPORT: ModelProfile.ADVANCED,
     Workload.UTILITY: ModelProfile.FAST,
     Workload.RAGAS: ModelProfile.FAST,
 }
 
+# Interview Practice uses ONE session-selected profile for all of these operations
+# (default Balanced). The registry does NOT control their effective tier — it only
+# records the recommended quality tier. Per-operation routing is intentionally
+# deferred (would require an interview-service redesign). Effective model resolution
+# is via ``effective_interview_profile(ModelSettings.model)``.
+INTERVIEW_SESSION_DEFAULT_PROFILE: ModelProfile = ModelProfile.BALANCED
+
+INTERVIEW_RECOMMENDED_PROFILE: dict[Workload, ModelProfile] = {
+    Workload.INTERVIEW_STRATEGY: ModelProfile.BALANCED,
+    Workload.INTERVIEW_QUESTION: ModelProfile.BALANCED,
+    Workload.ANSWER_EVALUATION: ModelProfile.ADVANCED,  # RECOMMENDED, not effective
+    Workload.FINAL_REPORT: ModelProfile.ADVANCED,       # RECOMMENDED, not effective
+}
+
+
+def selection_mode(workload: Workload) -> ModelSelectionMode:
+    return (ModelSelectionMode.INTERVIEW_SESSION
+            if workload in INTERVIEW_RECOMMENDED_PROFILE
+            else ModelSelectionMode.REGISTRY)
+
 
 def workload_profile(workload: Workload) -> ModelProfile:
+    """The EFFECTIVE profile for a centrally-selected (REGISTRY) workload.
+
+    Raises for INTERVIEW_SESSION workloads — their effective model comes from the
+    session; use :func:`effective_interview_profile` / :func:`recommended_profile`.
+    """
+    if workload not in WORKLOAD_PROFILE:
+        raise ValueError(
+            f"{workload.value} is session-selected, not registry-selected; use "
+            "effective_interview_profile(settings.model) or recommended_profile().")
     return WORKLOAD_PROFILE[workload]
 
 
 def workload_model(workload: Workload) -> str:
+    """The effective OpenRouter slug for a centrally-selected workload."""
     return model_id(workload_profile(workload))
+
+
+def recommended_profile(workload: Workload) -> ModelProfile:
+    """The recommended quality tier for any workload (effective for REGISTRY
+    workloads; a documented recommendation for INTERVIEW_SESSION ones)."""
+    if workload in WORKLOAD_PROFILE:
+        return WORKLOAD_PROFILE[workload]
+    return INTERVIEW_RECOMMENDED_PROFILE[workload]
+
+
+def effective_interview_profile(model_slug: str | None) -> ModelProfile:
+    """The EFFECTIVE profile for an interview session: resolved from the session's
+    ``ModelSettings.model`` (all four interview operations share it)."""
+    return profile_for_model(model_slug)
 
 
 def profile_for_model(model_slug: str | None) -> ModelProfile:
