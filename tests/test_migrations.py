@@ -21,6 +21,11 @@ _EXPECTED_INDEXES = {
     "ix_users_subject", "ix_interviews_user_id", "ix_questions_interview_id",
     "ix_answers_question_id", "ix_reports_interview_id",
 }
+# Phase 7 (0002) adds the long-term preparation-memory table.
+_MEMORY_TABLE = "preparation_memories"
+_MEMORY_INDEXES = {
+    "ix_preparation_memories_user_id", "ix_preparation_memories_user_category",
+}
 
 
 def _alembic_config(db_url: str):
@@ -43,8 +48,40 @@ def test_upgrade_head_creates_baseline_schema(tmp_path, monkeypatch):
     insp = inspect(create_engine(db_url))
     tables = set(insp.get_table_names())
     assert _EXPECTED_TABLES <= tables
+    assert _MEMORY_TABLE in tables  # 0002 preparation-memory table present at head
     indexes = {ix["name"] for t in _EXPECTED_TABLES for ix in insp.get_indexes(t)}
     assert _EXPECTED_INDEXES <= indexes
+    memory_indexes = {ix["name"] for ix in insp.get_indexes(_MEMORY_TABLE)}
+    assert _MEMORY_INDEXES <= memory_indexes
+
+
+def test_single_head_after_phase7(tmp_path, monkeypatch):
+    # Alembic must have exactly one head, and it must be the 0002 revision.
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    cfg = Config("alembic.ini")
+    cfg.set_main_option("script_location", "migrations")
+    heads = ScriptDirectory.from_config(cfg).get_heads()
+    assert list(heads) == ["0002_preparation_memory"]
+
+
+def test_downgrade_0002_keeps_baseline_schema(tmp_path, monkeypatch):
+    from alembic import command
+    from alembic.config import Config
+    from sqlalchemy import create_engine, inspect
+
+    db_url = f"sqlite:///{tmp_path/'m.db'}"
+    monkeypatch.setenv("DATABASE_URL", db_url)
+    cfg = Config("alembic.ini")
+    cfg.set_main_option("script_location", "migrations")
+    cfg.set_main_option("sqlalchemy.url", db_url)
+    command.upgrade(cfg, "head")
+    command.downgrade(cfg, "0001_initial")
+
+    tables = set(inspect(create_engine(db_url)).get_table_names())
+    assert _MEMORY_TABLE not in tables      # 0002 table removed
+    assert _EXPECTED_TABLES <= tables        # 0001 baseline intact
 
 
 def test_downgrade_base_removes_schema(tmp_path, monkeypatch):
