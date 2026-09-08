@@ -16,6 +16,7 @@ import type {
   AgentRunRequest,
   AgentRunResponse,
   HumanDecisionRequest,
+  InterviewOptionsResponse,
   KnowledgeSnapshotResponse,
   KnowledgeSourcesResponse,
   MemoryCategory,
@@ -44,7 +45,7 @@ function authHeaders(): Record<string, string> {
 async function request<T>(
   method: "GET" | "POST" | "DELETE",
   path: string,
-  { body, signal }: { body?: unknown; signal?: AbortSignal } = {},
+  { body, signal, headers }: { body?: unknown; signal?: AbortSignal; headers?: Record<string, string> } = {},
 ): Promise<T> {
   const url = `${config.apiBaseUrl}${path}`;
   let res: Response;
@@ -55,6 +56,7 @@ async function request<T>(
         Accept: "application/json",
         ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
         ...authHeaders(),
+        ...(headers ?? {}),
       },
       body: body !== undefined ? JSON.stringify(body) : undefined,
       signal,
@@ -99,10 +101,18 @@ export const api = {
   },
 
   interviews: {
-    create: (body: CreateInterviewRequest, opts?: RequestOptions) =>
-      request<InterviewStateResponse>("POST", "/interviews", { body, ...opts }),
+    // `idempotencyKey` (e.g. an agent handoff's run id) makes creation safe to retry:
+    // the same key returns the same session without re-running generation.
+    create: (body: CreateInterviewRequest, opts?: RequestOptions & { idempotencyKey?: string }) =>
+      request<InterviewStateResponse>("POST", "/interviews", {
+        body,
+        signal: opts?.signal,
+        headers: opts?.idempotencyKey ? { "Idempotency-Key": opts.idempotencyKey } : undefined,
+      }),
     get: (sessionId: string, opts?: RequestOptions) =>
       request<InterviewStateResponse>("GET", `/interviews/${encodeURIComponent(sessionId)}`, opts),
+    options: (opts?: RequestOptions) =>
+      request<InterviewOptionsResponse>("GET", "/interviews/options", opts),
   },
 
   knowledge: {

@@ -92,7 +92,7 @@ export function AgentPrepareWorkspace() {
       ) : null}
 
       <div className="mt-4">{runId ? <AgentRunLink runId={runId} /> : null}</div>
-      <HandoffRunner run={run} />
+      {runId ? <HandoffRunner run={run} runId={runId} /> : null}
     </div>
   );
 
@@ -209,46 +209,126 @@ function FirstMessageForm({
 
 /**
  * After an approved practice handoff, create the Interview session from the returned
- * PreparationContext and navigate to /practice — creation happens in the FRONTEND
- * (never inside LangGraph), once, guarded against double-submit.
+ * PreparationContext and navigate to /practice. Creation happens in the FRONTEND
+ * (never inside LangGraph) and is idempotent: the same handoff (keyed by the agent
+ * run id) resolves to the SAME session across double-click, refresh, remount or
+ * retry. Missing industry/career level are requested explicitly — never fabricated.
  */
-function HandoffRunner({ run }: { run: { handoff_approved: boolean; preparation_context?: unknown } }) {
+function HandoffRunner({
+  run,
+  runId,
+}: {
+  run: { handoff_approved: boolean; preparation_context?: unknown };
+  runId: string;
+}) {
   const router = useRouter();
-  const started = useRef(false);
+  const attempted = useRef(false);
+  const [needsConfig, setNeedsConfig] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const go = useCallback(async () => {
-    if (started.current) return;
-    started.current = true;
-    const ctx = run.preparation_context as
-      | (Record<string, unknown> & { target_role?: string; industry?: string })
-      | null
-      | undefined;
-    if (!ctx?.target_role) {
-      setError("Your preparation isn't ready for practice yet.");
-      return;
-    }
-    try {
-      const session = await api.interviews.create({
-        preparation_context: ctx as never,
-        industry_or_sector: (ctx.industry as string) || "General",
-        career_level: "senior",
-      });
-      router.push(`/practice?session=${encodeURIComponent(session.session_id)}`);
-    } catch (e) {
-      started.current = false; // allow a retry on genuine failure
-      setError((e as ApiError).userMessage ?? "Couldn't start practice.");
-    }
-  }, [router, run.preparation_context]);
+  const idempotencyKey = `agent-handoff:${runId}`;
+
+  const create = useCallback(
+    async (extra?: { industry_or_sector: string; career_level: string }) => {
+      const ctx = run.preparation_context as (Record<string, unknown> & { target_role?: string }) | null | undefined;
+      if (!ctx?.target_role) {
+        setError("Your preparation isn't ready for practice yet.");
+        return;
+      }
+      try {
+        // Send the PreparationContext (backend derives industry/seniority→career_level);
+        // include user-supplied gap-fillers only when the backend asked for them.
+        const session = await api.interviews.create(
+          { preparation_context: ctx as never, ...(extra ?? {}) },
+          { idempotencyKey },
+        );
+        router.push(`/practice?session=${encodeURIComponent(session.session_id)}`);
+      } catch (e) {
+        const err = e as ApiError;
+        if (err.status === 422 && !extra) {
+          // The context lacks industry/career level — ask the user, don't invent.
+          setNeedsConfig(true);
+        } else {
+          setError(err.userMessage ?? "Couldn't start practice.");
+        }
+      }
+    },
+    [router, run.preparation_context, idempotencyKey],
+  );
 
   useEffect(() => {
-    if (run.handoff_approved) void go();
-  }, [run.handoff_approved, go]);
+    if (run.handoff_approved && !attempted.current) {
+      attempted.current = true;
+      void create();
+    }
+  }, [run.handoff_approved, create]);
 
   if (!run.handoff_approved) return null;
+  if (needsConfig) {
+    return (
+      <HandoffCompletionCard
+        onSubmit={(industry_or_sector, career_level) => { setError(null); void create({ industry_or_sector, career_level }); }}
+        error={error}
+      />
+    );
+  }
   return (
     <div role="status" className="mt-3 text-sm text-muted">
       {error ? <span role="alert" className="text-danger">{error}</span> : "Setting up your interview practice…"}
     </div>
+  );
+}
+
+/** Asks ONLY for the genuinely-missing interview configuration (§3), using the
+ * backend career-level taxonomy as the single source of truth. */
+function HandoffCompletionCard({
+  onSubmit,
+  error,
+}: {
+  onSubmit: (industry: string, careerLevel: string) => void;
+  error: string | null;
+}) {
+  const [industry, setIndustry] = useState("");
+  const [careerLevel, setCareerLevel] = useState("");
+  const [levels, setLevels] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+    api.interviews.options({ signal: ctrl.signal }).then((o) => setLevels(o.career_levels)).catch(() => setLevels([]));
+    return () => ctrl.abort();
+  }, []);
+
+  // Re-enable the button if creation came back with an error (allow a retry).
+  useEffect(() => { if (error) setBusy(false); }, [error]);
+
+  const ready = industry.trim().length > 0 && careerLevel.length > 0 && !busy;
+
+  return (
+    <Card className="mt-3 border-accent">
+      <CardBody className="space-y-3">
+        <p className="font-medium">One last detail before practice</p>
+        <div>
+          <label htmlFor="handoff-industry" className="block text-sm text-muted">Industry / sector</label>
+          <Input id="handoff-industry" value={industry} onChange={(e) => setIndustry(e.target.value)} maxLength={200} />
+        </div>
+        <div>
+          <label htmlFor="handoff-level" className="block text-sm text-muted">Career level</label>
+          <select
+            id="handoff-level"
+            value={careerLevel}
+            onChange={(e) => setCareerLevel(e.target.value)}
+            className="w-full rounded-lg border border-border bg-surface px-3.5 py-3"
+          >
+            <option value="">Select…</option>
+            {levels.map((l) => <option key={l} value={l}>{l}</option>)}
+          </select>
+        </div>
+        <Button size="sm" disabled={!ready} onClick={() => { setBusy(true); onSubmit(industry.trim(), careerLevel); }}>
+          Start practice
+        </Button>
+        {error ? <p role="alert" className="text-sm text-danger">{error}</p> : null}
+      </CardBody>
+    </Card>
   );
 }

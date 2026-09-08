@@ -246,6 +246,11 @@ export interface InterviewListResponse {
   interviews: Array<Record<string, unknown>>;
 }
 
+export interface InterviewOptionsResponse {
+  career_levels: string[];
+  interview_types: string[];
+}
+
 // --- Preparation memory (Phase 7) -------------------------------------------
 
 export type MemoryCategory =
