@@ -603,6 +603,14 @@ record in `human_decisions` (plus the memory service's own deduplication). No
 interview session is created inside the graph — that would risk duplication on
 replay; only a `handoff_approved` flag is set.
 
+**Truthful memory writes.** Persisting an approved memory reports its true outcome
+(`SAVED` / `ALREADY_EXISTS` / `FAILED` / `NOT_AVAILABLE`): a `memory_saved` event is
+emitted **only** when the write actually succeeded or deterministic dedupe confirmed
+the memory already exists. A genuine persistence failure emits `memory_save_failed`
+and adds a safe run warning ("The approved preparation memory could not be saved.")
+— it never claims success and never exposes the raw DB error or the memory text. The
+run itself still completes (memory is supplemental).
+
 **Untrusted human input.** A resume decision is validated deterministically against
 the current pending action *before the graph is touched*: the `action_id` must match,
 the verdict must be valid for the action type, and a selected role must be one of the
@@ -619,11 +627,21 @@ line so `langgraph-checkpoint` stays on `2.x` (compatible with langgraph 0.3.34;
 request, a refresh, application-service recreation and a process restart (regression-
 tested across separate service instances). The saver manages **its own** tables via
 `setup()`, kept separate from the Alembic-owned application schema (no `0003` needed;
-0001/0002 untouched). For `:memory:`/unset, it degrades to a transitional `MemorySaver`
-(interrupt/resume still work in-process but do not survive a restart). The checkpoint
-URL and payload are never exposed through the API, `/capabilities`, events or logs;
-checkpoint state can contain transient JD/candidate text and is treated as private
-application data (retention is a documented production follow-up).
+0001/0002 untouched). The `PostgresSaver` context manager is **retained** on
+`CheckpointerInfo` (with a `close()`), not entered-and-discarded, so its connection
+lifetime is owned for the app lifetime rather than leaked.
+
+**Fail-closed, never a silent downgrade.** When durability is explicitly requested —
+an explicit `AGENT_CHECKPOINT_DATABASE_URL`/`checkpoint_url`, or a Postgres URL
+(production) — and the durable saver cannot be built, `build_checkpointer` raises
+`AgentConfigurationError` (mapped to a safe `503` at the API), rather than pretending
+durability by falling back to `MemorySaver`. Only an **explicit transient** mode (a
+`:memory:` URL) or an unconfigured/dev sqlite-file fallback may degrade to
+`MemorySaver`, always reported as `durable=False`. An injected saver declares its
+durability explicitly (`checkpoint_durable=`), never inferred from a class name. The
+checkpoint URL/credentials are never exposed through the API, `/capabilities`, events,
+logs or error text; checkpoint state can contain transient JD/candidate text and is
+treated as private application data (retention is a documented production follow-up).
 
 **Ownership & status.** Run ownership is read from the durable checkpoint
 (`state.user_id`), not an in-process map, so a foreign user's `get`/`resume` returns

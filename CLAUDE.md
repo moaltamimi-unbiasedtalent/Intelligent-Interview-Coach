@@ -131,11 +131,18 @@ assumptions in core logic, prompts, scoring or examples.
   in-process map. Checkpointer: official `SqliteSaver`/`PostgresSaver` via
   `src/agent/checkpoint.py` (`AGENT_CHECKPOINT_DATABASE_URL` → app DB fallback;
   `langgraph-checkpoint-sqlite` pinned `2.0.x` to keep `langgraph-checkpoint` on `2.x`);
-  saver-owned schema, separate from Alembic (no `0003`); `MemorySaver` is the
-  transitional fallback for `:memory:`/unset. `awaiting_human_input` is a normal
-  status; `MAX_AGENT_STEPS` preserved and `step_count` never reset on resume.
-  Durable checkpoint (execution state) is separate from long-term memory (approved
-  cross-session knowledge). `/prepare` is NOT switched to the agent.
+  saver-owned schema, separate from Alembic (no `0003`). **Fail-closed:** when
+  durability is explicitly configured (explicit checkpoint URL, or a Postgres URL)
+  and the saver can't be built, construction raises `AgentConfigurationError` →
+  safe `503` — never a silent `MemorySaver` downgrade; `MemorySaver` is allowed only
+  for an explicit `:memory:` or a dev sqlite-file fallback (`durable=False`, and an
+  injected saver declares durability explicitly, never guessed). Approved-memory
+  writes are **truthful**: `memory_saved` only on real success/dedupe, else
+  `memory_save_failed` + a safe warning (never a raw DB error or the memory text; the
+  run still completes). `awaiting_human_input` is a normal status; `MAX_AGENT_STEPS`
+  preserved and `step_count` never reset on resume. Durable checkpoint (execution
+  state) is separate from long-term memory (approved cross-session knowledge).
+  `/prepare` is NOT switched to the agent.
 - **Providers.** Career Intelligence uses LangChain over OpenRouter; the
   Interview module uses a direct OpenRouter HTTPX client. Optional speech
   (`[speech]`) and Live (`[live]`) backends are lazily imported. **Live is
@@ -183,7 +190,7 @@ assumptions in core logic, prompts, scoring or examples.
   (mock the boundaries). Do not weaken tests to pass or silently swallow errors.
 - Tests must not mutate committed artifacts (write to `tmp_path`).
 - `ruff check .` (conservative `F`/`E9` rules) must pass.
-- Current measured suite on this branch: **1458 passed, 2 skipped** (the skips are
+- Current measured suite on this branch: **1471 passed, 2 skipped** (the skips are
   the RAGAS installed/absent guards). Re-measure with `pytest -q` rather than
   hard-coding a number in multiple places.
 

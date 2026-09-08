@@ -463,7 +463,7 @@ python scripts/eval_expanded.py          # 11R-A expanded evaluation
 (cd components/live_interviewer/frontend && npm test)   # frontend (vitest)
 ```
 
-Latest: **1458 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
+Latest: **1471 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
 guards); **41 passed** (frontend). Browser E2E: **15 passed** (Playwright/chromium).
 
 ## Known limitations
