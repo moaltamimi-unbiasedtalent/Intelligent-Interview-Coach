@@ -98,3 +98,11 @@ class ReportResponse(BaseModel):
     report: dict
     saved_report_id: int | None = None
     save_failed: bool = False
+
+
+class InterviewOptionsResponse(BaseModel):
+    """Safe interview-configuration taxonomies (the single source of truth for a
+    frontend completion form; never a duplicated client-side list)."""
+
+    career_levels: list[str] = Field(default_factory=list)
+    interview_types: list[str] = Field(default_factory=list)

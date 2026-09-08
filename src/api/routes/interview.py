@@ -12,7 +12,7 @@ No interview business logic, scoring or persistence rules are re-implemented her
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Path, Request
+from fastapi import APIRouter, Depends, Header, Path, Request
 
 from src.api.dependencies import (
     get_app_config,
@@ -24,6 +24,7 @@ from src.api.dependencies import (
 from src.api.schemas.interview import (
     AnswerRequest,
     CreateInterviewRequest,
+    InterviewOptionsResponse,
     InterviewStateResponse,
     QuestionOut,
     ReportResponse,
@@ -120,6 +121,9 @@ def _session(store: InMemorySessionStore, session_id: str, user_id: int) -> Sess
 # --- routes ------------------------------------------------------------------
 
 
+_MAX_IDEMPOTENCY_KEY = 200
+
+
 @router.post("", response_model=InterviewStateResponse, summary="Create an interview")
 def create_interview(
     body: CreateInterviewRequest,
@@ -127,16 +131,48 @@ def create_interview(
     svc: InterviewApplicationService = Depends(get_interview_service),
     store: InMemorySessionStore = Depends(get_session_store),
     user_id: int = Depends(get_current_user_id),
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
 ) -> InterviewStateResponse:
+    """Create an interview. An optional ``Idempotency-Key`` header makes creation
+    safe to retry: a repeat with the same key (same user) returns the SAME session
+    without re-running strategy/first-question generation. Without a key, behaviour is
+    unchanged (a new session every call)."""
     from src.models import ModelSettings
 
+    # Validate the config first (deterministic, no provider call) so a bad body never
+    # creates an idempotency mapping.
     configuration = _build_configuration(body)
-    session_id = store.create(user_id)
-    session = _session(store, session_id, user_id)
+
+    key = (idempotency_key or "").strip()
+    if key:
+        if len(key) > _MAX_IDEMPOTENCY_KEY:
+            raise ValidationError("The idempotency key is too long.")
+        session_id, created = store.create_or_get(user_id, key)
+        session = _session(store, session_id, user_id)
+        if not created:
+            # A prior create with this key already ran generation — return it as-is.
+            return _state(session_id, session)
+    else:
+        session_id = store.create(user_id)
+        session = _session(store, session_id, user_id)
+
     svc.start_interview(session, configuration, ModelSettings())
     svc.generate_strategy(session)
     svc.generate_next_question(session, first=True)
     return _state(session_id, session)
+
+
+@router.get("/options", response_model=InterviewOptionsResponse,
+            summary="Safe interview configuration taxonomies (career levels, types)")
+def interview_options() -> InterviewOptionsResponse:
+    """The supported career-level and interview-type ids — the single source of truth
+    for a frontend completion form (never a duplicated client-side taxonomy)."""
+    from src import constants
+
+    return InterviewOptionsResponse(
+        career_levels=list(constants.CAREER_LEVELS),
+        interview_types=list(constants.INTERVIEW_TYPES),
+    )
 
 
 @router.get("/{session_id}", response_model=InterviewStateResponse,
