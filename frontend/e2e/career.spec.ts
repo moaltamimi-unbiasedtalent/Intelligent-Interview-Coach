@@ -88,7 +88,9 @@ test("prepare: backend error shows a safe message with no raw internals", async 
   await page.goto("/prepare");
   await page.getByLabel("Ask the coach").fill("hi");
   await page.getByRole("button", { name: "Ask" }).click();
-  const alert = page.getByRole("alert");
+  // Scope to the alert that carries text (Next's route announcer is also role=alert
+  // but empty), so strict mode resolves to the real error message.
+  const alert = page.getByRole("alert").filter({ hasText: /\S/ });
   await expect(alert).toBeVisible();
   await expect(alert).not.toContainText(/Traceback/i);
   await expect(alert).not.toContainText(/sql/i);
