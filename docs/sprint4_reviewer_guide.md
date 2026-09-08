@@ -113,12 +113,17 @@ isolation, safe logging, no chain-of-thought exposure. See
 
 Beyond the Sprint 4 requirements, a polish pass added (offline-tested, no architecture
 change): a **live-model evaluation harness** separate from the scripted regression
-(`scripts/eval_agent_live.py`, manual/paid); a deterministic **citation grounding
-guard** that strips unsupported markers from final answers; a sharper
-**retrieve-vs-not** policy + preferred preparation sequence; and safe **HITL
-frequency** metrics. See `docs/sprint4_final_evaluation.md` §10. Larger items (agent
-cost accounting + Fast candidate mode, memory-management UI, journey chrome, feedback
-loop, external company research) are documented follow-ups.
+(`scripts/eval_agent_live.py`, manual/paid); a deterministic **agent output guard**
+that (reusing the Sprint-3 `guard_output`) redacts secret-like strings, flags verbatim
+system-instruction leakage, and **validates citation provenance** — removing
+fabricated/stale citation references from the final answer — plus a safe
+uncited-retrieval observability warning. This guard validates citation *provenance*, not
+semantic claim-level faithfulness (that remains an evaluation concern, measured by
+RAGAS / live evaluation when executed). Also: a sharper **retrieve-vs-not** policy +
+preferred preparation sequence; and safe **HITL frequency** metrics. See
+`docs/sprint4_final_evaluation.md` §10. Larger items (agent cost accounting + Fast
+candidate mode, memory-management UI, journey chrome, feedback loop, external company
+research) are documented follow-ups.
 
 ## Known limitations (explicit)
 

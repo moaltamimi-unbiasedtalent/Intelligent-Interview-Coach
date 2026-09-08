@@ -344,14 +344,20 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
     warnings: list[str] = list(state.get("warnings") or [])
     if status == STATUS_FAILED:
         warnings.append("The run did not complete successfully.")
-    # Grounding guard (P0): strip any citation marker in the final answer that is not
-    # backed by this run's retrieved evidence (no fabricated/stale source references).
+    # Output guard (P0.1): apply the shared Sprint-3 output protections to the final
+    # answer (redact secret-like strings, flag system-instruction leakage, remove
+    # citation markers not backed by THIS run's retrieved evidence), then the
+    # agent-specific grounding policy (a safe uncited-retrieval observability warning).
+    # Deterministic — no extra model call; provenance only, NOT semantic faithfulness.
     citations = list(state.get("citations", []) or [])
+    retrieval_used = bool(state.get("retrieval_used", False))
     if response:
-        from src.agent.grounding import validate_citations
+        from src.agent.grounding import guard_agent_answer
 
-        response, citation_warnings = validate_citations(response, citations)
-        warnings.extend(citation_warnings)
+        response, grounding_warnings = guard_agent_answer(
+            response, citations, retrieval_used=retrieval_used
+        )
+        warnings.extend(grounding_warnings)
         # Keep the candidate-visible conversation consistent with the grounded answer.
         if conversation and conversation[-1].get("role") == "assistant":
             conversation[-1]["content"] = response
@@ -364,7 +370,7 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
         tools_used=tools_used,
         sources=list(state.get("evidence", []) or []),
         citations=citations,
-        retrieval_used=bool(state.get("retrieval_used", False)),
+        retrieval_used=retrieval_used,
         resolved_occupation=state.get("resolved_occupation"),
         resolved_geography=state.get("resolved_geography"),
         memory_used=bool(memory_items),

@@ -165,9 +165,18 @@ evaluation honesty and observability without changing the Sprint 4 architecture.
   the REAL model's tool/retrieval/HITL decisions on a bounded held-out sample, with
   sanitised recorded traces (`--record` / `--evaluate-recorded`). **Manual/paid,
   never in CI.** Distinct from the deterministic scripted regression.
-- **Citation grounding guard** (`src/agent/grounding.py`): deterministically strips
-  final-answer citation markers not backed by the current run's retrieved evidence
-  (fabricated/stale), records a safe warning; no extra model call.
+- **Agent output guard** (`src/agent/grounding.py`, reusing Sprint-3
+  `src/copilot/security/output_guard.py:guard_output`): deterministically redacts
+  secret-like strings, flags verbatim system-instruction leakage, and validates
+  **citation provenance** — removing final-answer citation markers not backed by the
+  current run's retrieved evidence (fabricated/stale) and recording a safe warning. It
+  also raises a safe uncited-retrieval observability warning when retrieval genuinely
+  ran and produced citations but the answer carries no inline reference (never blocks).
+  The deterministic Agent grounding guard validates citation provenance and blocks
+  fabricated/stale citation references; **semantic claim-level faithfulness remains an
+  evaluation concern measured by RAGAS/live evaluation when executed**, not a runtime
+  cost. Removing an unsupported marker is a provenance fix, not a claim that the
+  sentence is factually wrong. No extra model call.
 - **Retrieve-vs-not policy** strengthened in the agent system prompt (no retrieval for
   small talk / process / rewrite / already-answered; retrieval for factual career
   evidence) + a preferred (not hard-coded) preparation sequence.
