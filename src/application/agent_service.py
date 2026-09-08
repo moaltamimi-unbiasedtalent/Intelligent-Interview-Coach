@@ -59,6 +59,7 @@ class AgentApplicationService:
         career_service: Any | None = None,
         registry: ToolRegistry | None = None,
         checkpointer: Any | None = None,
+        checkpoint_durable: bool | None = None,
         memory_service: Any | None = None,
         checkpoint_url: str | None = None,
         database_url: str | None = None,
@@ -66,14 +67,18 @@ class AgentApplicationService:
         if registry is None:
             registry = career_tool_registry(career_service or _default_career_service())
         # Durable HITL checkpointer (Phase 8). Injectable for tests; otherwise built
-        # from configuration (official SQLite/Postgres saver, MemorySaver fallback).
-        self._checkpoint_durable = False
+        # from configuration (official SQLite/Postgres saver, MemorySaver fallback,
+        # or a fail-closed configuration error when durability is required).
         if checkpointer is None:
             from src.agent.checkpoint import build_checkpointer
 
             info = build_checkpointer(checkpoint_url=checkpoint_url, database_url=database_url)
             checkpointer = info.saver
             self._checkpoint_durable = info.durable
+        else:
+            # An injected saver declares its own durability explicitly (never inferred
+            # from a class name). Unknown → False, the safe default.
+            self._checkpoint_durable = bool(checkpoint_durable)
         self._memory_service = memory_service
         self._graph = build_agent_graph(
             model_factory=model_factory or _default_model_factory,
@@ -130,6 +135,7 @@ class AgentApplicationService:
             "handoff_approved": False,
             "events": [],
             "tool_history": [],
+            "warnings": [],
             "step_count": 0,
         }
         try:
@@ -245,7 +251,9 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
         status = STATUS_COMPLETED
     else:
         status = state.get("status")
-    warnings: list[str] = []
+    # Safe warnings accumulated in state (e.g. an approved memory that failed to
+    # persist) plus a terminal-failure note. Never contains raw errors/content.
+    warnings: list[str] = list(state.get("warnings") or [])
     if status == STATUS_FAILED:
         warnings.append("The run did not complete successfully.")
     return AgentRunResult(

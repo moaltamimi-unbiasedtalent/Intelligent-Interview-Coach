@@ -242,9 +242,18 @@ def make_human_review_node(memory_service: MemoryService | None = None) -> Calla
         elif atype == HumanActionType.APPROVE_MEMORY.value:
             if verdict == DECISION_APPROVE:
                 candidate = state.get("memory_candidate") or {}
-                _persist_memory(memory_service, state.get("user_id"), candidate)
-                events.append(AgentEvent(AgentEventType.MEMORY_SAVED, step=step,
-                                         status="ok", message=candidate.get("category")).to_dict())
+                result = _persist_memory(memory_service, state.get("user_id"), candidate)
+                if result in (MEMORY_SAVED, MEMORY_ALREADY_EXISTS):
+                    # Truthful success: newly created OR deterministic dedupe confirmed
+                    # the memory already exists (idempotent).
+                    events.append(AgentEvent(AgentEventType.MEMORY_SAVED, step=step,
+                                             status="ok", message=candidate.get("category")).to_dict())
+                else:
+                    # Persistence genuinely failed / unavailable — never claim success.
+                    events.append(AgentEvent(AgentEventType.MEMORY_SAVE_FAILED, step=step,
+                                             status="error", message=candidate.get("category")).to_dict())
+                    updates["warnings"] = list(state.get("warnings") or []) + [
+                        _MEMORY_SAVE_WARNING]
             else:
                 events.append(AgentEvent(AgentEventType.HUMAN_INPUT_REJECTED, step=step,
                                          status="rejected", message=atype).to_dict())
@@ -265,22 +274,49 @@ def make_human_review_node(memory_service: MemoryService | None = None) -> Calla
     return human_review
 
 
-def _persist_memory(memory_service, user_id, candidate: dict) -> None:
-    """Persist an approved memory (idempotent via the service's dedupe). Never raises
-    into the graph — a persistence failure must not corrupt the run."""
+# Memory-write outcomes (returned by _persist_memory; SAVED/ALREADY_EXISTS are the
+# two truthful-success cases, FAILED/NOT_AVAILABLE are not).
+MEMORY_SAVED = "saved"
+MEMORY_ALREADY_EXISTS = "already_exists"
+MEMORY_FAILED = "failed"
+MEMORY_NOT_AVAILABLE = "not_available"
+
+_MEMORY_SAVE_WARNING = "The approved preparation memory could not be saved."
+
+
+def _persist_memory(memory_service, user_id, candidate: dict) -> str:
+    """Persist an approved memory and REPORT the true outcome (no silent success).
+
+    Returns one of MEMORY_SAVED / MEMORY_ALREADY_EXISTS / MEMORY_FAILED /
+    MEMORY_NOT_AVAILABLE. Never raises into the graph and never exposes a raw DB
+    error — a persistence failure is reported, not swallowed as success.
+    """
     if memory_service is None or not candidate or not user_id:
-        return
+        return MEMORY_NOT_AVAILABLE
     try:
         uid = int(user_id)
     except (TypeError, ValueError):
-        return
+        return MEMORY_NOT_AVAILABLE
+
+    # Distinguish a brand-new write from a deterministic duplicate where the service
+    # supports it (both are truthful success); fall back gracefully if it does not.
+    pre_existing = False
+    exists = getattr(memory_service, "exists", None)
+    if callable(exists):
+        try:
+            pre_existing = bool(exists(
+                uid, category=candidate.get("category"), summary=candidate.get("summary"),
+                target_role=candidate.get("target_role")))
+        except Exception:  # noqa: BLE001 - a lookup failure must not block the write
+            pre_existing = False
     try:
         memory_service.create(
             uid, category=candidate.get("category"), summary=candidate.get("summary"),
             target_role=candidate.get("target_role"),
         )
-    except Exception:  # noqa: BLE001 - memory is supplemental; never break the run
-        pass
+    except Exception:  # noqa: BLE001 - report failure; never claim success
+        return MEMORY_FAILED
+    return MEMORY_ALREADY_EXISTS if pre_existing else MEMORY_SAVED
 
 
 def make_finalize_node() -> Callable[[AgentState], dict]:

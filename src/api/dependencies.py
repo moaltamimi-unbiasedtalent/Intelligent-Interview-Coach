@@ -124,11 +124,19 @@ def get_agent_service(request: Request):
     # checkpoint DB is derived from AGENT_CHECKPOINT_DATABASE_URL or the app database
     # URL (a dedicated sqlite file / Postgres); it is never exposed to clients.
     def _build():
+        from src.agent.errors import AgentConfigurationError
+        from src.application.errors import ConfigurationError
+
         database_url = getattr(get_app_config(request), "database_url", None)
-        return AgentApplicationService(
-            memory_service=get_memory_service(request),
-            database_url=database_url,
-        )
+        try:
+            return AgentApplicationService(
+                memory_service=get_memory_service(request),
+                database_url=database_url,
+            )
+        except AgentConfigurationError as exc:
+            # Fail closed: durable checkpointing configured but unavailable → a safe
+            # 503 (never a silent transient downgrade). Message carries no URL.
+            raise ConfigurationError(str(exc)) from exc
 
     return _shared(request, "agent_service", _build)
 

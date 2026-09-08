@@ -104,6 +104,21 @@ class MemoryApplicationService:
     def get(self, user_id: int, memory_id: int) -> MemoryItem | None:
         return self._repo.get(user_id, memory_id)
 
+    def exists(self, user_id: int, *, category: str, summary: str,
+               target_role: str | None = None) -> bool:
+        """True if an equivalent memory already exists (deterministic dedupe key).
+
+        Lets a caller distinguish a fresh write from an idempotent duplicate without
+        exposing the repository. Invalid categories simply return False.
+        """
+        try:
+            cat = MemoryCategory.from_value(category).value
+        except ValueError:
+            return False
+        role = (target_role or "").strip() or None
+        return self._repo.find_duplicate(
+            user_id, category=cat, summary=(summary or "").strip(), target_role=role) is not None
+
     def delete(self, user_id: int, memory_id: int) -> bool:
         return self._repo.delete(user_id, memory_id)
 

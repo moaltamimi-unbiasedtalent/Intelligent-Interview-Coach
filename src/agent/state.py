@@ -65,6 +65,7 @@ class AgentState(TypedDict, total=False):
     # Orchestration bookkeeping.
     tool_history: list[dict[str, Any]]
     events: list[dict[str, Any]]
+    warnings: list[str]  # safe, user-facing warnings accumulated during the run
     step_count: int
     status: str
     last_error: str | None
