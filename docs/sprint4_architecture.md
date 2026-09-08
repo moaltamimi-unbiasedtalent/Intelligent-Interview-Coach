@@ -662,6 +662,84 @@ persistence and long-term memory are separate: a checkpoint preserves execution 
 to resume a paused graph, while long-term memory holds only selected, user-approved
 information useful across future sessions.*
 
+## 3j. Phase 9 — Agent Coach + Agent Inspector + multi-turn (implemented)
+
+Phase 9 turns the real LangGraph agent into a candidate-facing product (Agent Coach)
+and a reviewer-facing safe view (Agent Inspector), and adds same-thread multi-turn
+conversation.
+
+**Deployment-controlled cutover (not a user toggle).** `/prepare` renders the Agent
+Coach when the backend advertises `agent_coach_enabled` (env `AGENT_COACH_ENABLED`);
+otherwise it stays on the proven deterministic Career flow. `/capabilities` now
+reports the true state (`agentic_rag`, `agent_memory`, `human_in_the_loop` all true;
+`agent_coach_enabled` = the flag). The deterministic `/career/*` routes and the
+Streamlit app are untouched — a safe rollback path.
+
+```mermaid
+flowchart TD
+    C[Candidate] --> P[Precision Coach /prepare]
+    P -->|AGENT_COACH_ENABLED| AC[Agent Coach]
+    P -->|else| DET[Deterministic Career flow]
+    AC --> API[FastAPI agent API]
+    API --> LG[LangGraph agent · one checkpointed thread]
+    LG --> T[5 Career tools]
+    LG --> RAG[Agentic RAG]
+    LG --> MEM[(long-term memory)]
+    LG --> HITL[HITL: role / memory / handoff]
+    HITL --> AC
+    LG --> PC[PreparationContext]
+    PC --> IV[POST /interviews → Interview Practice]
+    AC -.- INS[Agent Inspector /review/agent · safe timeline]
+```
+
+**Multi-turn on ONE thread.** A completed run continues via
+`POST /api/v1/agent/runs/{id}/messages` (`continue_run`), which appends the new user
+message with `update_state(..., as_node="initialise")` and resumes at the agent node —
+the SAME `run_id`/`thread_id`, never a new run. Prior messages, confirmed role,
+requirements, gaps, plan, evidence, human decisions and PreparationContext all carry
+over from the checkpoint. Continuation is owner-scoped (from the checkpoint), rejects
+an oversized/empty message, treats the message as untrusted input (tool allowlist
+holds), and is refused while the run is `awaiting_human_input` (a pending approval
+must go through `/resume`, never be bypassed).
+
+**Per-turn step limit.** `MAX_AGENT_STEPS` now bounds each USER TURN (`turn_step_count`),
+not the thread lifetime: a new turn resets the per-turn allowance, a HITL resume does
+NOT reset it, and `step_count` remains the thread-lifetime total (shown in the
+Inspector). A multi-turn conversation is therefore not capped at one turn's worth of
+steps, and execution is still bounded.
+
+**Candidate-safe conversation.** `AgentRunResponse.conversation` is a bounded
+(latest 30) `{role, content}` projection of only visible user/assistant messages —
+never System/Tool messages, the memory-injection block, tool JSON or hidden prompts —
+so refresh (`GET /agent/runs/{id}` from `?run=<id>` in the URL) and multi-turn UX
+work without exposing internals. The run id is random and owner-scoped; no role, JD,
+candidate background or memory ever goes in the URL or `localStorage`.
+
+**HITL as approval cards.** The Coach renders the pending action as a first-class
+Precision Coach card: role confirmation (accessible options), memory approval (shows
+the exact category/summary/role, persists only on Save), and practice handoff. On an
+approved handoff the FRONTEND creates the interview (`POST /interviews` from the
+returned PreparationContext, guarded against double-submit) and routes to `/practice`
+— the session is never created inside LangGraph (preserving Phase 8 replay safety).
+A single in-flight request is enforced per thread (no parallel turns), and the
+service serialises resume/continue per thread with an in-process lock (a multi-process
+deployment would need shared locking — documented).
+
+**Agent Inspector (`/review/agent`).** Owner-scoped, safe observable execution only:
+run summary, an event timeline, tool calls/status, retrieval + sources, resolved
+occupation/geography, memory use, human-approval counts and warnings. It never shows
+chain-of-thought, prompts, raw messages/ToolMessages or checkpoint state; token/cost
+is honestly reported as *not captured for this run* (no fabrication), a documented
+observability follow-up.
+
+**Reviewer story.** *The candidate-facing Coach now talks directly to the LangGraph
+agent. A conversation stays on one checkpointed thread, so tool outputs, resolved role
+and preparation state carry into later turns. The UI also handles LangGraph interrupts
+directly: role ambiguity, memory writes and practice handoff appear as approval cards
+and resume the same run. The Agent Inspector exposes observable execution — tool
+calls, retrieval, sources, memory use and human approvals — but never chain-of-thought,
+prompts or raw checkpoint state.*
+
 ## 4. Internal naming is intentionally stable
 
 To evolve functionality first and avoid churn/regression risk, Sprint 4 **does
@@ -728,6 +806,8 @@ internal docstrings are internal references and are left as-is.
 | Long-term memory | — | ✅ (Phase 7 — `preparation_memories`, `/memory`) |
 | Human-in-the-loop (HITL) | — | ✅ (Phase 8 — interrupt/resume) |
 | Durable agent checkpoints | — | ✅ (Phase 8 — official SQLite/Postgres saver) |
+| Agent Coach (candidate UI) | — | ✅ (Phase 9 — `/prepare` via the agent, flag-gated; multi-turn) |
+| Agent Inspector (safe) | — | ✅ (Phase 9 — `/review/agent`, observable-only) |
 | Agent Inspector UI | — | 🔷 |
 | Agent evaluation metrics | — | 🔷 |
 

@@ -18,7 +18,7 @@ auto-merge, following the Sprint 3 workflow.
 | **6** | **Agentic RAG (retrieval as an agent-selected tool)** ✅ done (5th tool `SearchCareerKnowledge`) | 2–3 days | 5 |
 | **7** | **Selective long-term preparation memory** ✅ done (`preparation_memories`, `/memory`, agent read) | 2–3 days | 4, 5 |
 | **8** | **LangGraph human-in-the-loop** ✅ done (interrupt/resume; role confirm, memory approval, handoff; durable SQLite/Postgres checkpoints) | 1–2 days | 4, 7 |
-| 9 | Agent Coach + Agent Inspector UI | 2–3 days | 3, 4 |
+| **9** | **Agent Coach + Agent Inspector + multi-turn** ✅ done (candidate `/prepare` via the agent behind `AGENT_COACH_ENABLED`; same-thread continuation; HITL cards; safe Inspector) | 2–3 days | 3, 4 |
 | 10 | Complete Streamlit → Next.js migration (prove parity, retire fallback) | 3–5 days | 3, 9 |
 | 11 | Agent evaluation / RAGAS extension / hardening | 2–3 days | 5–10 |
 
