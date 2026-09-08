@@ -73,15 +73,22 @@ class AnalyzeJobDescription(BaseModel):
 
 def _analyze_job_description(career_service) -> Handler:
     def handler(args: AnalyzeJobDescription, ctx: ToolContext) -> ToolOutcome:
+        from src.agent.usage import capture_tool_usage
+
         jd = (args.job_description or ctx.job_description or "").strip()
         _require(jd, "A job description is required to analyse the role.")
-        role = _ok(career_service.analyze_job_description(jd))
+        # Capture this model-backed tool's provider usage at the agent boundary (the
+        # usage callback auto-hooks the nested structured-output call); no Sprint-3 change.
+        call, usage = capture_tool_usage(
+            "AnalyzeJobDescription", lambda: career_service.analyze_job_description(jd))
+        role = _ok(call)
         data = role.model_dump()
         return ToolOutcome(
             result=data,
             state_patch={"requirements": data, "target_role": role.role_title or ctx.target_role, "job_description": jd},
             summary=f"role={role.role_title or 'n/a'}, seniority={role.seniority or 'n/a'}",
             source_count=len(role.required_skills or []),
+            usage=usage,
         )
 
     return handler
@@ -191,7 +198,12 @@ def _generate_interview_questions(career_service) -> Handler:
         reqs: list[str] = []
         if ctx.requirements:
             reqs = list(ctx.requirements.get("required_skills") or []) + list(ctx.requirements.get("technologies") or [])
-        qset = _ok(career_service.generate_questions(role, reqs, list(args.focus or [])))
+        from src.agent.usage import capture_tool_usage
+
+        call, usage = capture_tool_usage(
+            "GenerateInterviewQuestions",
+            lambda: career_service.generate_questions(role, reqs, list(args.focus or [])))
+        qset = _ok(call)
         data = qset.model_dump()
         count = sum(len(c.questions) for c in qset.categories)
         patch: dict[str, Any] = {"questions": data}
@@ -205,6 +217,7 @@ def _generate_interview_questions(career_service) -> Handler:
             state_patch=patch,
             summary=f"questions={count}, categories={len(qset.categories)}",
             source_count=count,
+            usage=usage,
         )
 
     return handler
@@ -224,6 +237,23 @@ class SearchCareerKnowledge(BaseModel):
 
 
 _MAX_EVIDENCE = 6
+# Bounded per-thread retrieval cache: at most this many distinct queries are kept
+# (FIFO eviction), so process memory stays bounded over a long conversation (§30).
+_RETRIEVAL_CACHE_MAX = 8
+
+
+def _normalise_query(query: str) -> str:
+    """The structured cache key for a retrieval query.
+
+    Case- and whitespace-normalised query text. The normalised query is the COMPLETE
+    key material: the deterministic pipeline derives geography (detect_country),
+    occupation and lane (route_question) from the query text itself, so a different
+    country / role / seniority / recency in the request produces different query text
+    → a different key → a cache miss (Germany→France, PM→EM, mid→senior, 2025→current
+    all re-retrieve). Job description / candidate background never influence which
+    lanes or sources are retrieved, so they are correctly absent from the key.
+    """
+    return " ".join((query or "").lower().split())
 
 
 def _search_career_knowledge(career_service) -> Handler:
@@ -231,36 +261,49 @@ def _search_career_knowledge(career_service) -> Handler:
         query = (args.query or "").strip()
         _require(query, "A search query is required.")
 
-        # Duplicate-retrieval protection: same query within a run reuses evidence.
-        # Cache identity is the normalized QUERY alone, and that is correct AND
-        # complete: retrieval depends only on the query — the deterministic pipeline
-        # derives geography (detect_country), occupation and lane (route_question)
-        # from the query text, and job_description/candidate_background do NOT
-        # influence which lanes/sources are retrieved. A different question produces
-        # a different query and is retrieved afresh (see the retrieval tests).
-        if ctx.last_retrieval_query and query.lower() == ctx.last_retrieval_query.lower() and ctx.evidence is not None:
+        # Duplicate-retrieval protection (§28): an equivalent factual request already
+        # answered in THIS thread reuses the cached evidence instead of paying for the
+        # deterministic pipeline again. The cache is bounded and thread-scoped (never
+        # shared across users or runs). A materially different question (different
+        # country/role/seniority/recency) has different query text ⇒ a different key ⇒
+        # a miss (see _normalise_query).
+        key = _normalise_query(query)
+        cache = list(ctx.retrieval_cache or [])
+        hit = next((e for e in cache if e.get("key") == key), None)
+        if hit is not None:
+            ev = list(hit.get("evidence") or [])
+            cit = list(hit.get("citations") or [])
             return ToolOutcome(
-                result={"has_evidence": bool(ctx.evidence), "sources": ctx.evidence,
-                        "citations": ctx.citations or [], "reused": True,
-                        "insufficient_evidence": not ctx.evidence},
-                state_patch={},
-                summary=f"reused prior retrieval ({len(ctx.evidence)} sources)",
-                source_count=len(ctx.evidence),
+                result={"has_evidence": bool(ev), "sources": ev, "citations": cit,
+                        "reused": True, "insufficient_evidence": hit.get("insufficient", not ev)},
+                state_patch={"retrieval_used": True, "last_retrieval_query": query,
+                             "evidence": ev, "citations": cit,
+                             "resolved_occupation": hit.get("resolved_occupation"),
+                             "resolved_geography": hit.get("resolved_geography")},
+                summary=f"reused prior retrieval ({len(ev)} sources)",
+                source_count=len(ev),
+                cache="hit",
             )
 
         # Delegate to the RETRIEVAL-ONLY operation (deterministic router, hybrid +
         # structured retrieval, geographic precedence, evidence, citations,
         # security). It executes NO other Career tools and NO answer synthesis — the
         # agent, not this tool, decides what to do with the retrieved evidence.
+        from src.agent.usage import capture_tool_usage
         from src.application.errors import ApplicationError
         from src.application.models import KnowledgeSearchRequest
 
+        retrieval_usage = None
         try:
-            result = career_service.search_knowledge(KnowledgeSearchRequest(
-                query=query,
-                job_description=ctx.job_description,
-                candidate_background=ctx.candidate_background,
-            ))
+            # Retrieval routing is deterministic; capture usage ONLY if a real model
+            # call actually happens inside it (e.g. query translation) — never fabricate.
+            result, retrieval_usage = capture_tool_usage(
+                "SearchCareerKnowledge",
+                lambda: career_service.search_knowledge(KnowledgeSearchRequest(
+                    query=query,
+                    job_description=ctx.job_description,
+                    candidate_background=ctx.candidate_background,
+                )))
         except ApplicationError as exc:
             raise AgentToolError("Career knowledge is temporarily unavailable.",
                                  category=TOOL_FAILURE_EXECUTION_FAILED) from exc
@@ -282,6 +325,8 @@ def _search_career_knowledge(career_service) -> Handler:
                              "evidence": [], "citations": []},
                 summary="blocked=true, sources=0",
                 source_count=0,
+                usage=retrieval_usage,
+                cache="miss",  # the pipeline was invoked; nothing cacheable is stored
             )
 
         sources = [
@@ -320,14 +365,31 @@ def _search_career_knowledge(career_service) -> Handler:
         # occupation, don't guess — pause for the user to confirm the role. The
         # candidates come from the pipeline trace (public occupation titles).
         candidates = list(getattr(getattr(result, "trace", None), "occupation_candidates", []) or [])
-        if getattr(result, "clarify", None) and len(candidates) > 1 and not ctx.confirmed_target_role:
+        clarifying = bool(getattr(result, "clarify", None)) and len(candidates) > 1 and not ctx.confirmed_target_role
+        if clarifying:
             observation["clarify"] = result.clarify
             patch["pending_action"] = confirm_role_action(candidates)
+        else:
+            # Store the resolved evidence in the bounded thread cache so an equivalent
+            # request later in the thread is served without a second pipeline call. We
+            # do NOT cache an ambiguous (clarify) result — it is not yet resolved. Only
+            # safe, already-bounded evidence/citations are stored (never keys are logged).
+            entry = {
+                "key": key,
+                "evidence": sources,
+                "citations": citations,
+                "resolved_occupation": patch["resolved_occupation"],
+                "resolved_geography": patch["resolved_geography"],
+                "insufficient": observation["insufficient_evidence"],
+            }
+            patch["retrieval_cache"] = (cache + [entry])[-_RETRIEVAL_CACHE_MAX:]
         return ToolOutcome(
             result=observation,
             state_patch=patch,
             summary=f"lane={getattr(result, 'retrieval_lane', None)}, strategy={getattr(result, 'retrieval_strategy', None)}, sources={len(sources)}",
             source_count=len(sources),
+            usage=retrieval_usage,
+            cache="miss",
         )
 
     return handler

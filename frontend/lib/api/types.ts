@@ -371,11 +371,28 @@ export interface CapabilitiesAgent {
   agent_coach_enabled: boolean;
 }
 
+/** The three Agent speed/quality tiers a candidate may pick (never a raw model slug). */
+export type AgentProfile = "fast" | "balanced" | "advanced";
+
 export interface AgentRunRequest {
   goal: string;
   target_role?: string | null;
   job_description?: string | null;
   candidate_background?: string | null;
+  profile?: AgentProfile | null;
+}
+
+/** Safe provider-usage aggregate. Unknown usage is never reported as zero. */
+export interface AgentUsage {
+  agent_model_calls: number;
+  tool_model_calls: number;
+  model_calls: number;
+  input_tokens?: number | null;
+  output_tokens?: number | null;
+  total_tokens?: number | null;
+  estimated_cost_usd?: number | null;
+  usage_complete: boolean;
+  missing_usage_sources: string[];
 }
 
 export interface AgentContinueRequest {
@@ -472,4 +489,10 @@ export interface AgentRunResponse {
   turn_step_count: number;
   conversation: AgentConversationMessage[];
   preparation_context?: PreparationContextInput | null;
+  /** Cost/performance instrumentation (P1). */
+  usage?: AgentUsage | null;
+  profile?: AgentProfile | string | null;
+  latency_ms?: number | null;
+  cache_hits?: number;
+  cache_misses?: number;
 }

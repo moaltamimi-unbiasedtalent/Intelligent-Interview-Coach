@@ -193,8 +193,8 @@ evaluation honesty and observability without changing the Sprint 4 architecture.
 - Live model benchmark run (needs `--allow-paid`); Fast/Balanced/Advanced comparison.
 
 ### Optional / deferred (documented follow-ups)
-- P1: broader session retrieval cache + Agent usage/cost aggregation + candidate-facing
-  Fast mode.
+- P1: **implemented** — agent usage accounting, Fast/Balanced/Advanced Coach modes and
+  a safe per-thread retrieval cache. See §11.
 - P2: memory-management UI (edit/pin, approval preview, next-run preview); expanded
   checkpoint-retention seam.
 - P4: journey chrome (UNDERSTAND→PREPARE→PRACTISE), handoff provenance, Streamlit
@@ -207,3 +207,69 @@ Claims stay accurate: the deterministic suite validates graph/tool contracts aga
 scripted routes; the live benchmark (when run) measures actual model decisions on a
 bounded sample; RAGAS evaluates generated-answer grounding/relevance where executed.
 No "100% accuracy" claims.
+
+## 11. Agent cost/performance instrumentation (P1)
+
+A second polish branch (`feature/post-sprint4-agent-cost-performance`) follows one
+principle: **MEASURE FIRST, OPTIMISE SECOND.** It instruments the agent, then adds a
+profile control and a measurable cache — all offline-tested, no paid provider call,
+Sprint-3 Career internals untouched.
+
+### Four DISTINCT measurement layers (kept separate)
+1. **Deterministic orchestration regression** (`src/agent/eval.py`, `scripts/eval_agent.py`)
+   — graph/tool contract against scripted routes (CI gate). Not a live-model benchmark.
+2. **Live real-model evaluation** (`scripts/eval_agent_live.py`) — the real model's
+   tool/retrieval/HITL decisions on a bounded sample; manual/paid, never in CI. Now also
+   records profile, latency and (where the provider reports it) token usage + cost.
+3. **RAGAS** — generated-answer grounding/relevance (opt-in, paid).
+4. **Performance/cost metrics** (this section) — per-run token/model-call usage, latency
+   and retrieval-cache hit/miss counts. Deterministic parts unit-tested; live cost is
+   opt-in.
+
+### Usage accounting (`src/agent/usage.py`)
+One canonical safe `AgentRunUsage`: agent/tool/total model-call counts, input/output/
+total tokens, estimated cost, `usage_complete` and `missing_usage_sources`. Outer agent
+usage is read from the returned `AIMessage`; tool-internal usage is captured at the AGENT
+boundary via LangChain's usage-metadata callback (no Sprint-3 change). Each provider call
+is counted exactly once (agent turn + JD tool + question tool ⇒ 3, not 5–6).
+**Unknown usage is never reported as zero** — a call without usage flips
+`usage_complete=false` and is named in `missing_usage_sources`. Cost is reported-cost
+where the provider gives it, else resolver-computed where pricing is wired, else `null`
+(never invented; no false precision).
+
+### Fast / Balanced / Advanced Coach modes
+An optional request `profile` selects the registry model tier (a validated Literal — a
+raw provider slug is rejected server-side, never accepted from the browser). Default is
+Balanced. **Every profile preserves** the tool allowlist, retrieval grounding, the P0.1
+citation guard, HITL, memory policy and the bounded step budget. The per-turn step
+ceiling is kept at 6 for **all** profiles: Fast is deliberately not crippled, so
+JD→gaps→plan→questions still completes (per §19, "if 4 is insufficient, keep 6").
+
+### Safe retrieval cache
+A bounded, per-thread cache reuses evidence for an equivalent factual request already
+answered in the SAME thread, avoiding a second deterministic-pipeline call. The key is
+the normalised query, which alone determines geography/occupation/lane — so a different
+country, role, seniority or recency misses and re-retrieves. The cache is thread-scoped
+(⇒ per-user, per-run; **never shared across users or runs**), FIFO-bounded, and lives for
+the natural thread lifetime. Hit/miss **counts** are observable; cache **keys are never
+logged or exposed**.
+
+### Claims (honest)
+- **Cost:** instrumentation and a profile-comparison harness are implemented; **NO PAID
+  COMPARATIVE BENCHMARK HAS BEEN EXECUTED.** We do NOT claim e.g. "Fast reduces cost by
+  62%." A real bake-off is run manually and opt-in:
+  ```
+  python scripts/eval_agent_live.py --allow-paid --profile fast --record
+  python scripts/eval_agent_live.py --allow-paid --profile balanced --record
+  python scripts/eval_agent_live.py --allow-paid --profile advanced --record
+  ```
+- **Cache:** a deterministic retrieval-call reduction is **proven in offline fake tests**
+  (same-thread equivalent request → one pipeline call, not two). We do **not** claim a
+  measured production latency reduction (no live latency benchmark was executed).
+
+### Reviewer story
+After completing Sprint 4, I separated orchestration regression from live model
+evaluation and then instrumented the agent before optimising it. The system now tracks
+provider usage where available, exposes truthful partial/complete coverage, supports
+registry-backed Fast/Balanced/Advanced Coach modes, and avoids redundant same-thread
+retrieval without sharing private cache state across users.

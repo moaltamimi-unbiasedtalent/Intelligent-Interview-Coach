@@ -17,6 +17,28 @@ class AgentRunRequest(BaseModel):
     target_role: str | None = Field(default=None, max_length=200)
     job_description: str | None = Field(default=None, max_length=12000)
     candidate_background: str | None = Field(default=None, max_length=12000)
+    # Candidate-selected Agent speed/quality tier. A Literal so the browser can only
+    # send one of the three registry profiles — never a raw provider model slug.
+    profile: Literal["fast", "balanced", "advanced"] | None = None
+
+
+class AgentUsageResponse(BaseModel):
+    """Safe provider-usage aggregate (token/call counts + honest coverage flags).
+
+    Never carries prompts, reasoning or candidate text. When a counted model call did
+    not report usage, ``usage_complete`` is false and the source is named in
+    ``missing_usage_sources`` — unknown usage is never reported as zero.
+    """
+
+    agent_model_calls: int = 0
+    tool_model_calls: int = 0
+    model_calls: int = 0
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    total_tokens: int | None = None
+    estimated_cost_usd: float | None = None
+    usage_complete: bool = True
+    missing_usage_sources: list[str] = Field(default_factory=list)
 
 
 class PendingActionResponse(BaseModel):
@@ -57,6 +79,14 @@ class AgentRunResponse(BaseModel):
     conversation: list[dict] = Field(default_factory=list)
     # A PreparationContext (safe dict) when the run gathered enough — else null.
     preparation_context: dict | None = None
+    # Cost/performance instrumentation (P1). Usage is aggregate + honestly partial;
+    # profile is the model tier in effect; latency is this call's wall-clock; cache
+    # counters are safe thread-lifetime totals (never cache keys).
+    usage: AgentUsageResponse | None = None
+    profile: str | None = None
+    latency_ms: int | None = None
+    cache_hits: int = 0
+    cache_misses: int = 0
 
 
 class AgentContinueRequest(BaseModel):

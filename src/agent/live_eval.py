@@ -168,16 +168,26 @@ def load_traces(traces_dir: Path = TRACES_DIR) -> list[Observation]:
 
 
 def observation_from_result(case_id: str, profile: str, result: Any, latency_ms: int) -> Observation:
-    """Build a sanitised Observation from an AgentRunResult (safe fields only)."""
+    """Build a sanitised Observation from an AgentRunResult (safe fields only).
+
+    Records profile, latency and — where the provider reported it — token usage and
+    estimated cost (P1), so a future paid bake-off can compare Fast/Balanced/Advanced.
+    Unknown usage stays None (never fabricated). Prefers the run's own reported profile.
+    """
     pending = getattr(result, "pending_action", None) or {}
+    usage = getattr(result, "usage", None) or {}
     return Observation(
         case_id=case_id,
-        model_profile=profile,
+        model_profile=getattr(result, "profile", None) or profile,
         tools_used=list(getattr(result, "tools_used", []) or []),
         retrieval_used=bool(getattr(result, "retrieval_used", False)),
         awaiting_human_input=bool(getattr(result, "awaiting_human_input", False)),
         pending_action_type=pending.get("type") if isinstance(pending, dict) else None,
         step_count=int(getattr(result, "step_count", 0) or 0),
         status=getattr(result, "status", "completed"),
-        latency_ms=latency_ms,
+        latency_ms=int(getattr(result, "latency_ms", None) or latency_ms),
+        input_tokens=usage.get("input_tokens"),
+        output_tokens=usage.get("output_tokens"),
+        total_tokens=usage.get("total_tokens"),
+        estimated_cost_usd=usage.get("estimated_cost_usd"),
     )

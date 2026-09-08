@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 import { toolLabel } from "./labels";
+import { UsageDetails } from "./usage";
 
 /** Safe, owner-scoped Agent Inspector: observable execution only — never
  * chain-of-thought, prompts, raw messages or checkpoint state. */
@@ -116,7 +117,10 @@ function RunSummary({ run }: { run: AgentRunResponse }) {
         {run.resolved_geography ? <Row label="Resolved geography" value={run.resolved_geography} /> : null}
         <Row label="Memory used" value={run.memory_used ? `Yes (${run.memory_count})` : "No"} />
         <Row label="Handoff approved" value={run.handoff_approved ? "Yes" : "No"} />
-        <Row label="Usage / cost" value={<span className="text-muted">Not captured for this run</span>} />
+        <div className="border-t border-border pt-2">
+          <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">Usage &amp; performance</h3>
+          <UsageDetails run={run} />
+        </div>
       </CardBody>
     </Card>
   );

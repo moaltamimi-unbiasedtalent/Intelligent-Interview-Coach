@@ -34,6 +34,9 @@ class AgentState(TypedDict, total=False):
     target_role: str | None
     job_description: str | None
     candidate_background: str | None
+    # Agent model profile for the run (fast | balanced | advanced); selects the
+    # Fast/Balanced/Advanced registry model. Persisted so resume/continue reuse it.
+    model_profile: str | None
 
     # Structured tool outputs carried between steps (short-term; safe dicts).
     requirements: dict[str, Any] | None  # from job-description analysis
@@ -52,6 +55,12 @@ class AgentState(TypedDict, total=False):
     last_retrieval_query: str | None
     resolved_occupation: str | None
     resolved_geography: str | None
+    # Bounded, per-thread retrieval cache (evidence/citations keyed by the normalised
+    # retrieval query, which alone determines geography/occupation/lane). Thread-scoped
+    # ⇒ per-user, per-run; never shared across users or runs. Safe evidence only.
+    retrieval_cache: list[dict[str, Any]]
+    retrieval_cache_hits: int
+    retrieval_cache_misses: int
 
     # Human-in-the-loop (Phase 8). `pending_action` is the safe PendingHumanAction
     # dict the graph interrupts on; `human_decisions` records applied decisions
@@ -61,6 +70,11 @@ class AgentState(TypedDict, total=False):
     confirmed_target_role: str | None
     memory_candidate: dict[str, Any] | None  # proposed memory awaiting approval
     handoff_approved: bool
+
+    # Safe provider-usage entries accumulated over the thread (one per model call —
+    # outer agent calls and model-backed tool calls). Token counts / model-call counts
+    # only; never prompts, reasoning or candidate text. See src/agent/usage.py.
+    usage_entries: list[dict[str, Any]]
 
     # Orchestration bookkeeping.
     tool_history: list[dict[str, Any]]

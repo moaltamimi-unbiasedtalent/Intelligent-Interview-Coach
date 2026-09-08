@@ -104,7 +104,14 @@ isolation, safe logging, no chain-of-thought exposure. See
 - **Why not expose chain-of-thought?** It is unsafe and unnecessary; the Inspector
   shows observable actions instead.
 - **Why Fast/Balanced/Advanced models?** A workload→profile policy makes the
-  cost/quality trade-off explicit; the strongest model is not always the right one.
+  cost/quality trade-off explicit; the strongest model is not always the right one. The
+  Agent Coach exposes the three tiers to the candidate (P1); every tier keeps the same
+  grounding, HITL, tool allowlist and step budget — only the model changes.
+- **How is agent usage/cost reported without overclaiming?** Per run the Inspector shows
+  model-call counts, tokens, cache hits/misses and — when the provider reports it —
+  estimated cost. Coverage is marked Complete or Partial; unknown usage is never shown as
+  zero and no paid Fast-vs-Advanced cost comparison has been run (opt-in only). See
+  `docs/sprint4_final_evaluation.md` §11.
 - **How does Interview state survive restart?** The SessionManager state machine is
   unchanged; its validated `SessionData` is serialised to a durable, user-scoped
   session store with optimistic concurrency and recoverable operation leases.
@@ -121,9 +128,16 @@ uncited-retrieval observability warning. This guard validates citation *provenan
 semantic claim-level faithfulness (that remains an evaluation concern, measured by
 RAGAS / live evaluation when executed). Also: a sharper **retrieve-vs-not** policy +
 preferred preparation sequence; and safe **HITL frequency** metrics. See
-`docs/sprint4_final_evaluation.md` §10. Larger items (agent cost accounting + Fast
-candidate mode, memory-management UI, journey chrome, feedback loop, external company
-research) are documented follow-ups.
+`docs/sprint4_final_evaluation.md` §10.
+
+A second polish pass (**P1 — measure first, optimise second**, `docs/…final_evaluation.md`
+§11) added **agent usage accounting** (safe per-run token/model-call counts with honest
+complete/partial coverage — unknown is never shown as zero), **Fast/Balanced/Advanced
+Coach modes** (registry-backed; a raw model slug is never accepted from the browser; all
+tiers keep grounding/HITL/allowlist/step-budget), and a **safe per-thread retrieval
+cache** (reuses evidence for an equivalent same-thread request; never shared across users
+or runs). No paid comparative benchmark was executed. Remaining items (memory-management
+UI, journey chrome, feedback loop, external company research) are documented follow-ups.
 
 ## Known limitations (explicit)
 

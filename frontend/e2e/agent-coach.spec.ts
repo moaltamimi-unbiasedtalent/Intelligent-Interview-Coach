@@ -126,6 +126,83 @@ test("agent inspector: shows a safe execution timeline", async ({ page }) => {
   await expect(page.getByText("Tool completed")).toBeVisible();
 });
 
+function usageBody() {
+  return {
+    agent_model_calls: 2, tool_model_calls: 1, model_calls: 3,
+    input_tokens: 5420, output_tokens: 1104, total_tokens: 6524,
+    estimated_cost_usd: 0.018, usage_complete: true, missing_usage_sources: [],
+  };
+}
+
+test("P1: Fast profile is sent, retrieval + citation + usage shown, then evidence reuse", async ({ page }) => {
+  const sentProfiles: (string | undefined)[] = [];
+  let turn = 0;
+  await page.route("**/api/v1/**", async (route) => {
+    const url = route.request().url();
+    const json = (body: unknown, status = 200) =>
+      route.fulfill({ status, contentType: "application/json", headers: { "x-request-id": "req_e2e" }, body: JSON.stringify(body) });
+    if (url.includes("/capabilities")) return json(CAPS(true));
+    if (url.endsWith("/agent/run")) {
+      const body = route.request().postDataJSON?.() ?? {};
+      sentProfiles.push(body.profile);
+      // First factual turn: retrieval ran and produced a citation.
+      return json(runBody({
+        profile: "fast", usage: usageBody(), latency_ms: 4100, cache_hits: 0, cache_misses: 1,
+        citations: [{ marker: "[1]", title: "O*NET Product manager", source: "O*NET", page: null }],
+        response: "Median pay varies by region [1].",
+        conversation: [
+          { role: "user", content: "What do PMs earn in Germany?" },
+          { role: "assistant", content: "Median pay varies by region [1]." },
+        ],
+      }));
+    }
+    if (url.match(/\/agent\/runs\/[^/]+\/messages/)) {
+      turn += 1;
+      // "Explain that more simply" reuses the prior evidence — a cache hit, no new retrieval.
+      return json(runBody({
+        profile: "fast", usage: usageBody(), latency_ms: 900, cache_hits: 1, cache_misses: 1,
+        response: "In plain terms: pay depends on where you work.",
+        conversation: [
+          { role: "user", content: "What do PMs earn in Germany?" },
+          { role: "assistant", content: "Median pay varies by region [1]." },
+          { role: "user", content: "Explain that more simply" },
+          { role: "assistant", content: "In plain terms: pay depends on where you work." },
+        ],
+      }));
+    }
+    return json({});
+  });
+
+  await page.goto("/prepare");
+  await page.getByRole("radio", { name: /Fast/ }).click();
+  await page.getByLabel("What interview are you preparing for?").fill("What do PMs earn in Germany?");
+  await page.getByRole("button", { name: "Start preparing" }).click();
+
+  await expect(page.getByText("Median pay varies by region [1].")).toBeVisible();
+  // A subtle, honest usage line is shown after the turn.
+  await expect(page.getByLabel("Run usage")).toContainText("Fast");
+  await expect(page.getByLabel("Run usage")).toContainText("3 AI calls");
+  expect(sentProfiles).toContain("fast");  // the chosen tier reached the API
+
+  // Follow-up restatement → served from reuse; the flow completes without a new run.
+  await page.getByLabel("Message your coach").fill("Explain that more simply");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(page.getByText("In plain terms: pay depends on where you work.")).toBeVisible();
+  expect(turn).toBe(1);
+});
+
+test("P1: inspector shows the safe usage & performance breakdown", async ({ page }) => {
+  await mock(page, {
+    onGet: runBody({
+      profile: "advanced", usage: usageBody(), latency_ms: 5200, cache_hits: 2, cache_misses: 1,
+    }),
+  });
+  await page.goto("/review/agent?run=run_e2e");
+  await expect(page.getByText("Usage & performance")).toBeVisible();
+  await expect(page.getByText("Complete", { exact: true })).toBeVisible();
+  await expect(page.getByText("6,524")).toBeVisible();  // total tokens, localised
+});
+
 test("deterministic fallback: /prepare stays on the Career flow when disabled", async ({ page }) => {
   await mock(page, { agentCoach: false });
   await page.goto("/prepare");
