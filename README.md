@@ -469,10 +469,12 @@ human approvals — never chain-of-thought, prompts or raw checkpoint state.
 choice runs through a typed registry (`src/llm/models.py`) with three workload
 profiles — **Fast**, **Balanced**, **Advanced** — resolving to current OpenRouter
 models (`openai/gpt-5.6-luna` / `-terra` / `-sol`), each overridable via
-`OPENROUTER_MODEL_FAST|BALANCED|ADVANCED`. The agent and normal generation use
-Balanced; higher-stakes answer evaluation and the final report use Advanced; bounded
-utility uses Fast; gap analysis and preparation planning stay deterministic. Changing
-models is configuration, not code. See
+`OPENROUTER_MODEL_FAST|BALANCED|ADVANCED`. Agent and Career workloads resolve centrally
+(Balanced); bounded utility uses Fast; gap analysis and preparation planning stay
+deterministic. Interview Practice uses one candidate-selected profile per session
+(default Balanced) for strategy, questions, evaluation and reporting — Advanced is the
+*recommended* tier for evaluation/reporting, and per-operation routing is intentionally
+deferred. Changing models is configuration, not code. See
 [docs/sprint4_architecture.md](docs/sprint4_architecture.md).
 
 ## Testing

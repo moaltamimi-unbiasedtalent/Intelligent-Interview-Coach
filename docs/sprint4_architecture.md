@@ -776,9 +776,17 @@ explicit through a workload→profile policy:
 | Gap analysis | none (deterministic) | no model |
 | Preparation planning | none (deterministic) | no model |
 | Question generation | Balanced | quality/latency |
-| Interview strategy/questions | Balanced (session profile) | quality/latency |
-| Answer evaluation | Advanced | feedback quality |
-| Final report | Advanced | complex synthesis |
+| Interview strategy/questions | session-selected (default Balanced) | quality/latency |
+| Answer evaluation | session-selected (Advanced *recommended*) | feedback quality |
+| Final report | session-selected (Advanced *recommended*) | complex synthesis |
+
+The Interview rows are **session-selected**, not registry-selected: the effective model
+is the candidate/session `ModelSettings.model` (one profile per session, reused for all
+four operations). Advanced is the **recommended** quality tier for evaluation/reporting,
+but it is only effective when the session is actually set to Advanced — the registry does
+not claim per-operation routing that isn't implemented (see `ModelSelectionMode`;
+`effective_interview_profile(settings.model)` resolves the real tier). Centrally-selected
+(`REGISTRY`) workloads above ARE the effective runtime model.
 | Utility / repair | Fast | bounded task |
 | RAGAS (offline, manual) | Fast | evaluator cost |
 
@@ -802,11 +810,29 @@ No live OpenRouter call at import or `/health`; reasoning output is never stored
 logged or exposed (regression-tested). Embeddings and RAGAS evaluator config are
 unchanged; a manual, paid-only comparison harness was **not** run (no automated spend).
 
-**Reviewer story.** *The previous version used fixed model identifiers scattered across
-the application. I replaced that with a typed model registry and workload profiles:
-Fast, Balanced and Advanced. The agent and normal generation use the Balanced profile
-by default, while higher-stakes evaluation/reporting use Advanced and lightweight
-bounded operations use Fast. Models remain configurable through environment variables,
+**Capability flags are profile contracts.** The registry's `supports_tools` /
+`supports_structured_output` / `supports_temperature` describe what a profile *requires*
+of whatever slug fills it. Offline validation does **not** prove provider capability for
+an arbitrary env override — an operator who sets `OPENROUTER_MODEL_BALANCED` is
+responsible for choosing a model compatible with the Balanced contract (e.g. tool
+calling). No startup network call is added to verify this.
+
+**Model landscape & slug status.** The three default slugs
+(`openai/gpt-5.6-luna`/`terra`/`sol`) are valid OpenRouter models at implementation
+time; their external availability is verified, but they have **not** been live-generation
+smoke-tested through this project's OpenRouter credential (offline gates only) — env
+overrides exist precisely to adjust per deployment. **GPT-6 Astra** became available
+(Sept 2026) and is a candidate for the Advanced tier, but the current Advanced default
+remains **GPT-5.6 Sol** until a project-specific quality/cost comparison is run (Astra is
+materially more expensive; Sol is a current complex-professional model, not billed here
+as "the latest").
+
+**Reviewer story.** *Agent and Career workloads resolve centrally from the model
+registry. Interview Practice currently differs: one model profile is selected for the
+session and is reused for strategy, questions, evaluation and reporting. I document
+Advanced as the recommended future tier for evaluation/reporting, but I do not claim
+that per-operation routing is implemented when it is not. Models remain configurable
+through environment variables,
 so changing provider models no longer requires changing business logic. Model
 capabilities such as tool calling and structured outputs are validated by the
 integration layer rather than assumed.*

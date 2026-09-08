@@ -172,9 +172,14 @@ assumptions in core logic, prompts, scoring or examples.
   (`src/llm/models.py`): `ModelProfile` = Fast/Balanced/Advanced → current OpenRouter
   slugs (`openai/gpt-5.6-luna`/`terra`/`sol`), overridable via
   `OPENROUTER_MODEL_FAST|BALANCED|ADVANCED`. A `Workload`→profile policy makes the
-  cost/quality trade-off explicit (Agent/Career synthesis/JD/questions → Balanced;
-  answer evaluation + final report → Advanced; utility/RAGAS → Fast; gap analysis +
-  preparation planner stay **deterministic/no-model**). `constants.DEFAULT_MODEL`/
+  cost/quality trade-off explicit. Two selection modes (`ModelSelectionMode`):
+  **REGISTRY** workloads (Agent/Career synthesis/JD/questions → Balanced; utility/RAGAS
+  → Fast) resolve their EFFECTIVE model centrally; **INTERVIEW_SESSION** workloads
+  (strategy/questions/evaluation/report) use the one candidate-selected session profile
+  (default Balanced) — Advanced is only a *recommended* tier for evaluation/report, not
+  effective per-operation (no interview redesign; `effective_interview_profile(model)`
+  resolves the real tier). Gap analysis + preparation planner stay
+  **deterministic/no-model**. `constants.DEFAULT_MODEL`/
   `LOW_COST_MODEL`/`HIGH_CAPABILITY_MODEL` and the Career `DEFAULT_MODEL` are thin
   aliases resolving from the registry (no second source). Capability metadata (tools,
   structured output, temperature, reasoning hint) lives with the registry; temperature
