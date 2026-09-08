@@ -191,8 +191,9 @@ def test_capabilities_safe_metadata():
         body = c.get("/api/v1/capabilities").json()
         assert body["career_intelligence"] is True
         assert body["live_interview_enabled"] is False
-        # Planned features are advertised as not-yet-available.
-        assert body["agentic_rag"] is False and body["agent_memory"] is False
+        # Long-term preparation memory is available (Phase 7); HITL is not (Phase 8).
+        assert body["agent_memory"] is True
+        assert body["human_in_the_loop"] is False
 
 
 # --- 3, 4, 5, 6: career chat happy path + error translation ------------------

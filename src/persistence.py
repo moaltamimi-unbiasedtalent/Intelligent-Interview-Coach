@@ -22,6 +22,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -44,6 +45,7 @@ __all__ = [
     "Question",
     "Answer",
     "Report",
+    "PreparationMemory",
     "make_engine",
     "make_session_factory",
     "init_db",
@@ -77,6 +79,42 @@ class User(Base):
     interviews: Mapped[list["Interview"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    memories: Mapped[list["PreparationMemory"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+
+
+class PreparationMemory(Base):
+    """Long-term, user-scoped preparation memory (Sprint 4 Phase 7).
+
+    Selective, structured, cross-session preparation facts (recurring gaps,
+    strengths, completed topics, preferences, goals, target roles). Stores only a
+    concise ``summary`` — never a whole conversation, JD, CV, transcript, interview
+    answer, retrieved evidence, provider response or system prompt. Distinct from
+    the transient LangGraph checkpoint (short-term execution state).
+    """
+
+    __tablename__ = "preparation_memories"
+    __table_args__ = (
+        Index("ix_preparation_memories_user_category", "user_id", "category"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    category: Mapped[str] = mapped_column(String(64))
+    summary: Mapped[str] = mapped_column(String(500))
+    target_role: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    # The agent run this memory was created from, when known (no cross-user leak:
+    # ownership is always enforced via user_id, never via this field).
+    source_run_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    user: Mapped[User] = relationship(back_populates="memories")
 
 
 class Interview(Base):

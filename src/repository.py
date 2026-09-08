@@ -10,12 +10,20 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
-from src.persistence import Answer, Interview, Question, Report, User
+from src.memory import MemoryItem, normalize_role, normalize_summary
+from src.persistence import (
+    Answer,
+    Interview,
+    PreparationMemory,
+    Question,
+    Report,
+    User,
+)
 
-__all__ = ["InterviewRepository"]
+__all__ = ["InterviewRepository", "MemoryRepository"]
 
 
 def _parse_dt(value) -> datetime | None:
@@ -34,6 +42,11 @@ class InterviewRepository:
 
     def __init__(self, session_factory: sessionmaker) -> None:
         self._session_factory = session_factory
+
+    @property
+    def session_factory(self) -> sessionmaker:
+        """The underlying session factory (so sibling repositories share one DB)."""
+        return self._session_factory
 
     # -- users ----------------------------------------------------------------
 
@@ -298,3 +311,108 @@ class InterviewRepository:
                 else None
             ),
         }
+
+
+class MemoryRepository:
+    """User-scoped persistence for long-term preparation memory (Phase 7).
+
+    Every read and write is scoped to a ``user_id``; a memory id that belongs to
+    another user resolves to ``None`` / a no-op delete, never to that user's data.
+    Validation and bounds live in the application service; this layer is pure
+    data-access plus deterministic duplicate detection.
+    """
+
+    def __init__(self, session_factory: sessionmaker) -> None:
+        self._session_factory = session_factory
+
+    @staticmethod
+    def _to_item(row: PreparationMemory) -> MemoryItem:
+        return MemoryItem(
+            id=row.id, user_id=row.user_id, category=row.category,
+            summary=row.summary, target_role=row.target_role,
+            source_run_id=row.source_run_id,
+            created_at=row.created_at, updated_at=row.updated_at,
+        )
+
+    def count_for_user(self, user_id: int) -> int:
+        with self._session_factory() as session:
+            return int(session.scalar(
+                select(func.count()).select_from(PreparationMemory)
+                .where(PreparationMemory.user_id == user_id)
+            ) or 0)
+
+    def find_duplicate(
+        self, user_id: int, category: str, summary: str, target_role: str | None
+    ) -> MemoryItem | None:
+        """Return an existing equivalent memory (same user/category/normalized
+        summary/role), or None. Deterministic — no fuzzy/LLM matching."""
+        norm_summary = normalize_summary(summary)
+        norm_role = normalize_role(target_role)
+        with self._session_factory() as session:
+            rows = session.scalars(
+                select(PreparationMemory).where(
+                    PreparationMemory.user_id == user_id,
+                    PreparationMemory.category == category,
+                )
+            ).all()
+            for row in rows:
+                if (normalize_summary(row.summary) == norm_summary
+                        and normalize_role(row.target_role) == norm_role):
+                    return self._to_item(row)
+        return None
+
+    def create(
+        self, user_id: int, *, category: str, summary: str,
+        target_role: str | None = None, source_run_id: str | None = None,
+    ) -> MemoryItem:
+        with self._session_factory() as session:
+            row = PreparationMemory(
+                user_id=user_id, category=category, summary=summary,
+                target_role=target_role, source_run_id=source_run_id,
+            )
+            session.add(row)
+            session.commit()
+            return self._to_item(row)
+
+    def list_for_user(
+        self, user_id: int, *, category: str | None = None,
+        target_role: str | None = None,
+    ) -> list[MemoryItem]:
+        """Return a user's memories, newest first (optional category/role filter)."""
+        with self._session_factory() as session:
+            stmt = select(PreparationMemory).where(
+                PreparationMemory.user_id == user_id
+            )
+            if category is not None:
+                stmt = stmt.where(PreparationMemory.category == category)
+            if target_role is not None:
+                stmt = stmt.where(PreparationMemory.target_role == target_role)
+            rows = session.scalars(
+                stmt.order_by(PreparationMemory.created_at.desc(),
+                              PreparationMemory.id.desc())
+            ).all()
+            return [self._to_item(r) for r in rows]
+
+    def get(self, user_id: int, memory_id: int) -> MemoryItem | None:
+        with self._session_factory() as session:
+            row = session.scalar(
+                select(PreparationMemory).where(
+                    PreparationMemory.id == memory_id,
+                    PreparationMemory.user_id == user_id,
+                )
+            )
+            return self._to_item(row) if row is not None else None
+
+    def delete(self, user_id: int, memory_id: int) -> bool:
+        with self._session_factory() as session:
+            row = session.scalar(
+                select(PreparationMemory).where(
+                    PreparationMemory.id == memory_id,
+                    PreparationMemory.user_id == user_id,
+                )
+            )
+            if row is None:
+                return False
+            session.delete(row)
+            session.commit()
+            return True

@@ -51,6 +51,14 @@ EXPECTED = {
         "current_question", "report_available", "last_evaluation", "target_role",
     },
     "QuestionOut": {"question_id", "question", "question_type", "competency", "difficulty"},
+    # Preparation memory (Phase 7) — user-scoped, no internal user id exposed.
+    "MemoryCreateRequest": {"category", "summary", "target_role"},
+    "MemoryResponse": {
+        "id", "category", "summary", "target_role", "source_run_id",
+        "created_at", "updated_at",
+    },
+    "MemoryListResponse": {"memories"},
+    "MemoryDeleteResponse": {"deleted", "id"},
 }
 
 
@@ -73,6 +81,7 @@ def test_required_request_fields_are_marked_required():
         "JobAnalysisRequest": {"job_description"},
         "GapAnalysisRequest": {"candidate_background", "role_requirements"},
         "PreparationContextIn": {"target_role"},
+        "MemoryCreateRequest": {"category", "summary"},
     }
     for name, fields in required.items():
         marked = set((schemas.get(name) or {}).get("required", []))

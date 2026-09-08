@@ -50,6 +50,7 @@ class AgentApplicationService:
         career_service: Any | None = None,
         registry: ToolRegistry | None = None,
         checkpointer: Any | None = None,
+        memory_service: Any | None = None,
     ) -> None:
         if registry is None:
             registry = career_tool_registry(career_service or _default_career_service())
@@ -58,7 +59,27 @@ class AgentApplicationService:
             registry=registry,
             checkpointer=checkpointer,
         )
+        # Optional long-term preparation memory (Phase 7). When absent (e.g. tests
+        # that don't exercise memory) no memory is loaded and behaviour is unchanged.
+        self._memory_service = memory_service
         self._owners: dict[str, str | None] = {}
+
+    def _load_memory(self, request: AgentRunRequest) -> list[dict]:
+        """Deterministically load a bounded set of relevant memories (no model call).
+
+        Never raises into the run: any memory-loading failure degrades to no memory.
+        """
+        if self._memory_service is None or not request.user_id:
+            return []
+        try:
+            user_id = int(request.user_id)
+        except (TypeError, ValueError):
+            return []
+        try:
+            items = self._memory_service.load_for_agent(user_id, request.target_role)
+            return [m.to_agent_context() for m in items]
+        except Exception:  # noqa: BLE001 - memory is supplemental; never break a run
+            return []
 
     def run(self, request: AgentRunRequest, *, request_id: str | None = None) -> AgentRunResult:
         run_id = uuid.uuid4().hex
@@ -70,6 +91,7 @@ class AgentApplicationService:
             "target_role": request.target_role,
             "job_description": request.job_description,
             "candidate_background": request.candidate_background,
+            "memory_items": self._load_memory(request),
             "events": [],
             "tool_history": [],
             "step_count": 0,
@@ -120,6 +142,7 @@ def _to_result(run_id: str, state: dict, request_id: str | None) -> AgentRunResu
             break
     tool_history = list(state.get("tool_history", []) or [])
     tools_used = [t["tool"] for t in tool_history if t.get("status") == "ok"]
+    memory_items = list(state.get("memory_items", []) or [])
     warnings: list[str] = []
     if state.get("status") == STATUS_FAILED:
         warnings.append("The run did not complete successfully.")
@@ -135,6 +158,8 @@ def _to_result(run_id: str, state: dict, request_id: str | None) -> AgentRunResu
         retrieval_used=bool(state.get("retrieval_used", False)),
         resolved_occupation=state.get("resolved_occupation"),
         resolved_geography=state.get("resolved_geography"),
+        memory_used=bool(memory_items),
+        memory_count=len(memory_items),
         warnings=warnings,
         step_count=int(state.get("step_count", 0)),
         request_id=request_id,

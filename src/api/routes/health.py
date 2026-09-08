@@ -35,5 +35,9 @@ def ready(request: Request) -> HealthResponse:
 @router.get("/capabilities", response_model=CapabilitiesResponse,
             summary="Safe feature availability")
 def capabilities() -> CapabilitiesResponse:
-    # Deterministic RAG today; agent features are planned (advertised as False).
-    return CapabilitiesResponse(live_interview_enabled=_live_enabled())
+    # Long-term preparation memory is available (Phase 7). Human-in-the-loop stays
+    # off (Phase 8). The agent surface itself remains experimental (not cut over).
+    return CapabilitiesResponse(
+        live_interview_enabled=_live_enabled(),
+        agent_memory=True,
+    )

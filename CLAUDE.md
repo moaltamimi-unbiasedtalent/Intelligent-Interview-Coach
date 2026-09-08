@@ -94,7 +94,25 @@ assumptions in core logic, prompts, scoring or examples.
   `evaluations/agent/tool_selection_cases.json` + `src/agent/eval.py` (33 cases,
   incl. retrieval recall / unnecessary-retrieval / citation-validity metrics; not a
   live-LLM benchmark). `src/agent` imports no Streamlit/UI and makes no provider
-  call on import; memory Phase 7, HITL Phase 8.
+  call on import; HITL Phase 8.
+- **Long-term preparation memory (Sprint 4 Phase 7).** Two DISTINCT kinds of memory:
+  the LangGraph run state / checkpoint is **short-term** (transient `MemorySaver`);
+  **long-term** memory is a selective, user-scoped, durable DB table
+  (`preparation_memories`, Alembic `0002`) of preparation facts — a `category` (fixed
+  enum), a concise `summary` (≤500 chars) and an optional `target_role`. It NEVER
+  stores whole conversations, JDs, CVs, transcripts, answers, retrieved evidence,
+  provider responses or system prompts, and has no protected-trait categories.
+  `src/memory.py` (vocabulary/bounds/DTO) → `src/repository.py:MemoryRepository`
+  (user-scoped) → `src/application/memory_service.py` (validate/bound/dedupe/
+  `load_for_agent`) → `POST/GET/DELETE /api/v1/memory`. **Writes are explicit and
+  user-initiated only** — the agent never persists memory automatically in Phase 7
+  (agent-proposed, human-approved writes are Phase 8). At run start the agent loads a
+  bounded (≤10), deterministic set (role-matched then general; no vector search, no
+  model call) and injects it as trust-separated **DATA** (never system instructions);
+  a saved injection string cannot escape the tool allowlist. Precedence: current
+  request → current context → saved memory. A safe `memory_loaded` event records
+  counts/categories only. The `/progress` page shows saved memory (grouped, with
+  delete). HITL Phase 8.
 - **Providers.** Career Intelligence uses LangChain over OpenRouter; the
   Interview module uses a direct OpenRouter HTTPX client. Optional speech
   (`[speech]`) and Live (`[live]`) backends are lazily imported. **Live is
@@ -142,7 +160,7 @@ assumptions in core logic, prompts, scoring or examples.
   (mock the boundaries). Do not weaken tests to pass or silently swallow errors.
 - Tests must not mutate committed artifacts (write to `tmp_path`).
 - `ruff check .` (conservative `F`/`E9` rules) must pass.
-- Current measured suite on this branch: **1384 passed, 2 skipped** (the skips are
+- Current measured suite on this branch: **1424 passed, 2 skipped** (the skips are
   the RAGAS installed/absent guards). Re-measure with `pytest -q` rather than
   hard-coding a number in multiple places.
 
