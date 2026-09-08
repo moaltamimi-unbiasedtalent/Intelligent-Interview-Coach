@@ -66,7 +66,8 @@ class AgentState(TypedDict, total=False):
     tool_history: list[dict[str, Any]]
     events: list[dict[str, Any]]
     warnings: list[str]  # safe, user-facing warnings accumulated during the run
-    step_count: int
+    step_count: int          # thread-lifetime total steps (all turns)
+    turn_step_count: int     # steps in the CURRENT user turn (bounds the turn)
     status: str
     last_error: str | None
     completed: bool

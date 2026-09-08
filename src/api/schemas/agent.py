@@ -51,8 +51,21 @@ class AgentRunResponse(BaseModel):
     tool_calls: list[dict] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     step_count: int = 0
+    turn_step_count: int = 0
+    # Bounded, candidate-safe conversation ({role, content}) — never system/tool/
+    # internal messages. Used by the Agent Coach for refresh/multi-turn UX.
+    conversation: list[dict] = Field(default_factory=list)
     # A PreparationContext (safe dict) when the run gathered enough — else null.
     preparation_context: dict | None = None
+
+
+class AgentContinueRequest(BaseModel):
+    """A new user turn on an existing thread (short-term conversational memory).
+
+    Carries ONLY the message — never a user_id, tool selection or graph state.
+    """
+
+    message: str = Field(min_length=1, max_length=4000)
 
 
 class HumanDecisionRequest(BaseModel):

@@ -14,6 +14,7 @@ vi.mock("@/lib/useCapabilities", () => ({
       agentic_rag: false,
       agent_memory: false,
       human_in_the_loop: false,
+      agent_coach_enabled: false,
     };
     return { capabilities, loading: false, offline: false };
   },

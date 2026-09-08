@@ -415,9 +415,9 @@ the Career→Interview handoff all run against the FastAPI contracts. Retrieval 
 deterministic (agentic RAG is a later phase). See
 [frontend/README.md](frontend/README.md).
 
-A **LangGraph agent** (Phases 4–8) runs side-by-side with the deterministic Career
-flow: a single, stateful, bounded, tool-using agent (`src/agent`) behind an
-experimental `POST /api/v1/agent/run` — it does **not** replace `/career/chat`. It
+A **LangGraph agent** (Phases 4–9) runs side-by-side with the deterministic Career
+flow: a single, stateful, bounded, tool-using agent (`src/agent`) behind
+`POST /api/v1/agent/run` — it does **not** replace `/career/chat`. It
 wields **five real Career tools** as allowlisted functions, selecting and sequencing
 them by intent: job-description analysis, gap analysis, preparation plan, question
 generation, and — new in **Phase 6 (Agentic RAG)** — `SearchCareerKnowledge`.
@@ -451,6 +451,19 @@ production) so they survive a refresh or restart; ownership and every decision a
 validated server-side (a human response is untrusted input), and the durable
 checkpoint (execution state) is kept separate from long-term memory (approved
 knowledge). Owner-scoped `GET`/`POST .../agent/runs/{id}[/resume]` drive it.
+
+**Agent Coach + Agent Inspector** (Phase 9) make the agent a candidate-facing product.
+When the backend advertises `agent_coach_enabled` (env `AGENT_COACH_ENABLED`),
+`/prepare` talks directly to the LangGraph agent behind the Precision Coach UI;
+otherwise it stays on the deterministic Career flow (safe rollback). A conversation
+stays on **one checkpointed thread** — follow-ups continue the same run
+(`POST /agent/runs/{id}/messages`), each user turn gets a fresh bounded step
+allowance, and refresh restores the run from `?run=<id>` (a random, owner-scoped id;
+no private content in the URL or `localStorage`). HITL appears as approval cards
+(role / memory / practice handoff); an approved handoff creates the interview in the
+frontend and routes to `/practice`. The **Agent Inspector** (`/review/agent`) shows
+owner-scoped, observable execution only — tools, retrieval, sources, memory use and
+human approvals — never chain-of-thought, prompts or raw checkpoint state.
 See [docs/sprint4_architecture.md](docs/sprint4_architecture.md).
 
 ## Testing
@@ -463,8 +476,8 @@ python scripts/eval_expanded.py          # 11R-A expanded evaluation
 (cd components/live_interviewer/frontend && npm test)   # frontend (vitest)
 ```
 
-Latest: **1471 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
-guards); **41 passed** (frontend). Browser E2E: **15 passed** (Playwright/chromium).
+Latest: **1484 passed, 2 skipped** (Python; skips are the RAGAS installed/absent
+guards); **51 passed** (frontend). Browser E2E: **21 passed** (Playwright/chromium).
 
 ## Known limitations
 

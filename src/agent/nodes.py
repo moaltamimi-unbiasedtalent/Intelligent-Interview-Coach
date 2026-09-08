@@ -92,9 +92,13 @@ def make_initialise_node() -> Callable[[AgentState], dict]:
 
 def make_agent_node(model_factory: ModelFactory, registry: ToolRegistry) -> Callable[[AgentState], dict]:
     def agent(state: AgentState) -> dict:
+        # `step_count` is the thread-lifetime total (inspector); `turn_step_count` is
+        # the per-user-turn allowance that bounds this turn (reset on each new turn,
+        # never reset by a HITL resume).
         step = int(state.get("step_count", 0)) + 1
+        turn_step = int(state.get("turn_step_count", 0)) + 1
         events = list(state.get("events", []) or [])
-        if step == 1:
+        if turn_step == 1:
             events.append(AgentEvent(AgentEventType.REQUEST_UNDERSTOOD, step=step, status="ok").to_dict())
         try:
             model = model_factory()
@@ -102,11 +106,11 @@ def make_agent_node(model_factory: ModelFactory, registry: ToolRegistry) -> Call
             ai = bound.invoke(state["messages"])
         except AgentConfigurationError:
             events.append(AgentEvent(AgentEventType.RUN_FAILED, step=step, status="not_configured", message=_SAFE_CONFIG_ERROR).to_dict())
-            return {"messages": [AIMessage(content="")], "step_count": step, "status": STATUS_FAILED, "last_error": "not_configured", "events": events, "completed": True}
+            return {"messages": [AIMessage(content="")], "step_count": step, "turn_step_count": turn_step, "status": STATUS_FAILED, "last_error": "not_configured", "events": events, "completed": True}
         except Exception:  # noqa: BLE001 - never leak a raw provider error
             events.append(AgentEvent(AgentEventType.RUN_FAILED, step=step, status="error", message=_SAFE_MODEL_ERROR).to_dict())
-            return {"messages": [AIMessage(content="")], "step_count": step, "status": STATUS_FAILED, "last_error": "model_unavailable", "events": events, "completed": True}
-        return {"messages": [ai], "step_count": step, "events": events}
+            return {"messages": [AIMessage(content="")], "step_count": step, "turn_step_count": turn_step, "status": STATUS_FAILED, "last_error": "model_unavailable", "events": events, "completed": True}
+        return {"messages": [ai], "step_count": step, "turn_step_count": turn_step, "events": events}
 
     return agent
 
@@ -323,6 +327,7 @@ def make_finalize_node() -> Callable[[AgentState], dict]:
     def finalize(state: AgentState) -> dict:
         events = list(state.get("events", []) or [])
         step = int(state.get("step_count", 0))
+        turn_step = int(state.get("turn_step_count", 0))
         last = state["messages"][-1]
 
         if state.get("status") == STATUS_FAILED:
@@ -330,8 +335,10 @@ def make_finalize_node() -> Callable[[AgentState], dict]:
             # A RUN_FAILED event was already recorded by the agent node.
             return {"messages": [AIMessage(content=msg)], "completed": True}
 
+        # The step limit is per USER TURN (turn_step_count), not thread-lifetime, so a
+        # multi-turn conversation is not capped at one turn's worth of steps.
         pending = bool(getattr(last, "tool_calls", []) or [])
-        if pending and step >= MAX_AGENT_STEPS:
+        if pending and turn_step >= MAX_AGENT_STEPS:
             events.append(AgentEvent(AgentEventType.STEP_LIMIT_REACHED, step=step, status="step_limit").to_dict())
             return {"messages": [AIMessage(content=_SAFE_STEP_LIMIT)], "status": STATUS_STEP_LIMIT, "events": events, "completed": True}
 
@@ -342,12 +349,12 @@ def make_finalize_node() -> Callable[[AgentState], dict]:
 
 
 def route_after_agent(state: AgentState) -> str:
-    """Bounded routing: run a requested tool only within the step budget."""
+    """Bounded routing: run a requested tool only within the per-turn step budget."""
     if state.get("status") == STATUS_FAILED:
         return "finalize"
     last = state["messages"][-1]
     pending = bool(getattr(last, "tool_calls", []) or [])
-    if pending and int(state.get("step_count", 0)) < MAX_AGENT_STEPS:
+    if pending and int(state.get("turn_step_count", 0)) < MAX_AGENT_STEPS:
         return "tools"
     return "finalize"
 

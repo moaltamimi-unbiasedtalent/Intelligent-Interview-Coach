@@ -191,9 +191,12 @@ def test_capabilities_safe_metadata():
         body = c.get("/api/v1/capabilities").json()
         assert body["career_intelligence"] is True
         assert body["live_interview_enabled"] is False
-        # Long-term preparation memory is available (Phase 7); HITL is not (Phase 8).
+        # Agentic RAG (Phase 6), memory (Phase 7) and HITL (Phase 8) are all available.
+        assert body["agentic_rag"] is True
         assert body["agent_memory"] is True
-        assert body["human_in_the_loop"] is False
+        assert body["human_in_the_loop"] is True
+        # Agent Coach cutover is a deployment flag (default off in tests).
+        assert body["agent_coach_enabled"] is False
 
 
 # --- 3, 4, 5, 6: career chat happy path + error translation ------------------

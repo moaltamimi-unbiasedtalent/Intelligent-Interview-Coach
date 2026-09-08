@@ -21,6 +21,7 @@ EXPECTED = {
     "CapabilitiesResponse": {
         "career_intelligence", "interview_practice", "knowledge_base", "evaluation",
         "live_interview_enabled", "agentic_rag", "agent_memory", "human_in_the_loop",
+        "agent_coach_enabled",
     },
     "CareerChatRequest": {
         "question", "job_description", "candidate_background",
@@ -62,10 +63,12 @@ EXPECTED = {
     # Agent HITL (Phase 8) — paused runs and typed resume decisions.
     "AgentRunResponse": {
         "run_id", "status", "response", "awaiting_human_input", "pending_action",
-        "handoff_approved", "memory_used", "step_count",
+        "handoff_approved", "memory_used", "step_count", "turn_step_count",
+        "conversation", "sources", "citations", "tools_used", "events",
     },
     "PendingActionResponse": {"action_id", "type", "message", "options", "data"},
     "HumanDecisionRequest": {"action_id", "decision", "selected_role"},
+    "AgentContinueRequest": {"message"},
 }
 
 

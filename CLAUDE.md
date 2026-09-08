@@ -142,7 +142,25 @@ assumptions in core logic, prompts, scoring or examples.
   run still completes). `awaiting_human_input` is a normal status; `MAX_AGENT_STEPS`
   preserved and `step_count` never reset on resume. Durable checkpoint (execution
   state) is separate from long-term memory (approved cross-session knowledge).
-  `/prepare` is NOT switched to the agent.
+- **Agent Coach + Inspector + multi-turn (Sprint 4 Phase 9).** `/prepare` renders the
+  candidate-facing **Agent Coach** (real LangGraph agent) when the backend advertises
+  `agent_coach_enabled` (env `AGENT_COACH_ENABLED`); otherwise it stays on the
+  deterministic Career flow (safe rollback; `/career/*` and Streamlit untouched).
+  `/capabilities` now reports the true agent state. Same-thread **multi-turn**:
+  `POST /api/v1/agent/runs/{id}/messages` (`continue_run`) appends a user turn via
+  `update_state(as_node="initialise")` + resumes at `agent` — SAME run/thread, never a
+  new run; owner-scoped; refused while `awaiting_human_input`. `MAX_AGENT_STEPS` now
+  bounds each USER TURN (`turn_step_count`; reset per turn, never on HITL resume);
+  `step_count` stays the thread-lifetime total. `AgentRunResponse.conversation` is a
+  bounded (30) candidate-safe `{role,content}` projection (never system/tool/internal
+  messages); the run id lives in `?run=` (random, owner-scoped) for refresh via
+  `GET /agent/runs/{id}`. HITL renders as Precision Coach approval cards
+  (`components/agent/*`); an approved handoff creates the interview in the FRONTEND
+  (`POST /interviews`, double-submit-guarded) → `/practice`, never inside LangGraph.
+  Per-thread resume/continue is serialised with an in-process lock (multi-process
+  needs shared locking — documented). **Agent Inspector** (`/review/agent`) shows
+  owner-scoped, observable-only execution (never CoT/prompts/raw checkpoint; token/cost
+  honestly "not captured"). No model modernisation; production auth still transitional.
 - **Providers.** Career Intelligence uses LangChain over OpenRouter; the
   Interview module uses a direct OpenRouter HTTPX client. Optional speech
   (`[speech]`) and Live (`[live]`) backends are lazily imported. **Live is
@@ -190,7 +208,7 @@ assumptions in core logic, prompts, scoring or examples.
   (mock the boundaries). Do not weaken tests to pass or silently swallow errors.
 - Tests must not mutate committed artifacts (write to `tmp_path`).
 - `ruff check .` (conservative `F`/`E9` rules) must pass.
-- Current measured suite on this branch: **1471 passed, 2 skipped** (the skips are
+- Current measured suite on this branch: **1484 passed, 2 skipped** (the skips are
   the RAGAS installed/absent guards). Re-measure with `pytest -q` rather than
   hard-coding a number in multiple places.
 

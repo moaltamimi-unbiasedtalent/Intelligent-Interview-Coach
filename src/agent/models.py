@@ -40,6 +40,11 @@ class AgentRunResult:
     awaiting_human_input: bool = False
     pending_action: dict[str, Any] | None = None
     handoff_approved: bool = False
+    # Per-turn step count (bounds a turn); step_count is the thread-lifetime total.
+    turn_step_count: int = 0
+    # Bounded, candidate-safe conversation projection ({role, content}); never
+    # contains system/tool/internal messages.
+    conversation: list[dict[str, Any]] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     step_count: int = 0
     request_id: str | None = None

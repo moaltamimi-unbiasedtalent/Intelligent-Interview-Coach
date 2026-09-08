@@ -19,11 +19,15 @@ class CapabilitiesResponse(BaseModel):
     knowledge_base: bool = True
     evaluation: bool = True
     live_interview_enabled: bool = False
-    # Planned Sprint 4 work — advertised as not-yet-available so a frontend can
-    # feature-detect without assuming it exists.
-    agentic_rag: bool = False
-    agent_memory: bool = False
-    human_in_the_loop: bool = False
+    # Sprint 4 agent capabilities (delivered in Phases 6–8): the frontend feature-
+    # detects these rather than inferring them from route existence.
+    agentic_rag: bool = True
+    agent_memory: bool = True
+    human_in_the_loop: bool = True
+    # Candidate-facing Agent Coach cutover (Phase 9) — a DEPLOYMENT capability
+    # controlled by AGENT_COACH_ENABLED, not a user preference. When false, /prepare
+    # stays on the deterministic Career flow.
+    agent_coach_enabled: bool = False
 
 
 class ErrorBody(BaseModel):

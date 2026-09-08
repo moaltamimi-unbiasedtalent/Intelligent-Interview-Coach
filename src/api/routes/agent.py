@@ -18,7 +18,12 @@ from fastapi import APIRouter, Depends, HTTPException, Path
 from src.agent.models import AgentRunRequest as AppAgentRunRequest
 from src.application.agent_service import RunNotFoundError, RunNotResumableError
 from src.api.dependencies import get_agent_service, get_current_user_id, get_request_id
-from src.api.schemas.agent import AgentRunRequest, AgentRunResponse, HumanDecisionRequest
+from src.api.schemas.agent import (
+    AgentContinueRequest,
+    AgentRunRequest,
+    AgentRunResponse,
+    HumanDecisionRequest,
+)
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 
@@ -43,6 +48,8 @@ def _to_response(result) -> AgentRunResponse:
         tool_calls=result.tool_calls,
         warnings=result.warnings,
         step_count=result.step_count,
+        turn_step_count=result.turn_step_count,
+        conversation=result.conversation,
         preparation_context=result.preparation_context,
     )
 
@@ -80,6 +87,24 @@ def get_agent_run(
         result = service.get_run(run_id, str(user_id), request_id=request_id)
     except RunNotFoundError:
         raise HTTPException(status_code=404, detail="Run not found.")
+    return _to_response(result)
+
+
+@router.post("/runs/{run_id}/messages", response_model=AgentRunResponse,
+             summary="Continue an agent run with a new user message (owner-scoped)")
+def continue_agent_run(
+    body: AgentContinueRequest,
+    run_id: str = Path(..., min_length=1, max_length=64),
+    service=Depends(get_agent_service),
+    user_id: int = Depends(get_current_user_id),
+    request_id: str = Depends(get_request_id),
+) -> AgentRunResponse:
+    try:
+        result = service.continue_run(run_id, str(user_id), body.message, request_id=request_id)
+    except RunNotFoundError:
+        raise HTTPException(status_code=404, detail="Run not found.")
+    except RunNotResumableError:
+        raise HTTPException(status_code=409, detail="This run cannot accept a new message right now.")
     return _to_response(result)
 
 

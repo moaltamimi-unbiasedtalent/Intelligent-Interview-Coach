@@ -23,6 +23,7 @@ export interface CapabilitiesResponse {
   agentic_rag: boolean;
   agent_memory: boolean;
   human_in_the_loop: boolean;
+  agent_coach_enabled: boolean;
 }
 
 export interface ApiErrorBody {
@@ -278,4 +279,112 @@ export interface MemoryListResponse {
 export interface MemoryDeleteResponse {
   deleted: boolean;
   id: number;
+}
+
+// --- Agent Coach + HITL (Phase 9) -------------------------------------------
+
+export interface CapabilitiesAgent {
+  agentic_rag: boolean;
+  agent_memory: boolean;
+  human_in_the_loop: boolean;
+  agent_coach_enabled: boolean;
+}
+
+export interface AgentRunRequest {
+  goal: string;
+  target_role?: string | null;
+  job_description?: string | null;
+  candidate_background?: string | null;
+}
+
+export interface AgentContinueRequest {
+  message: string;
+}
+
+export type HumanActionType =
+  | "confirm_role"
+  | "approve_memory"
+  | "approve_practice_handoff";
+
+export interface PendingHumanAction {
+  action_id: string;
+  type: HumanActionType;
+  message: string;
+  options: string[];
+  data: Record<string, unknown>;
+  created_at?: string | null;
+}
+
+export interface HumanDecisionRequest {
+  action_id: string;
+  decision: "select" | "approve" | "reject";
+  selected_role?: string | null;
+}
+
+export interface AgentConversationMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface AgentToolCall {
+  tool: string;
+  status: string;
+}
+
+export interface AgentEvent {
+  event_type: string;
+  step?: number;
+  tool_name?: string | null;
+  duration_ms?: number | null;
+  source_count?: number | null;
+  status?: string | null;
+  message?: string | null;
+  timestamp?: number;
+}
+
+export interface AgentSource {
+  title?: string | null;
+  source_url?: string | null;
+  evidence_type?: string | null;
+  geography?: string | null;
+  occupation_title?: string | null;
+  reference_year?: number | null;
+}
+
+export interface AgentCitation {
+  marker?: string | null;
+  title?: string | null;
+  source?: string | null;
+  page?: number | null;
+}
+
+export type AgentStatus =
+  | "running"
+  | "completed"
+  | "failed"
+  | "step_limit_reached"
+  | "awaiting_human_input";
+
+export interface AgentRunResponse {
+  run_id: string;
+  status: AgentStatus | string;
+  response: string;
+  tools_used: string[];
+  retrieval_used: boolean;
+  sources: AgentSource[];
+  citations: AgentCitation[];
+  resolved_occupation?: string | null;
+  resolved_geography?: string | null;
+  memory_used: boolean;
+  memory_count: number;
+  awaiting_human_input: boolean;
+  pending_action?: PendingHumanAction | null;
+  handoff_approved: boolean;
+  events: AgentEvent[];
+  tool_calls: AgentToolCall[];
+  warnings: string[];
+  step_count: number;
+  turn_step_count: number;
+  conversation: AgentConversationMessage[];
+  preparation_context?: PreparationContextInput | null;
 }
