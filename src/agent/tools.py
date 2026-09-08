@@ -31,6 +31,11 @@ from typing import Any, Callable
 from pydantic import BaseModel, Field
 
 from src.agent.errors import AgentToolError
+from src.agent.human import (
+    approve_handoff_action,
+    approve_memory_action,
+    confirm_role_action,
+)
 from src.agent.tooling import ToolContext, ToolOutcome
 
 Handler = Callable[[BaseModel, ToolContext], ToolOutcome]
@@ -263,8 +268,6 @@ def _search_career_knowledge(career_service) -> Handler:
             "sources": sources,
             "citations": citations,
         }
-        if getattr(result, "clarify", None):
-            observation["clarify"] = result.clarify
         patch = {
             "evidence": sources,
             "citations": citations,
@@ -273,11 +276,91 @@ def _search_career_knowledge(career_service) -> Handler:
             "resolved_occupation": getattr(result, "resolved_occupation", None) or None,
             "resolved_geography": getattr(result, "resolved_geography", None),
         }
+        # Agentic HITL (Phase 8): when the DETERMINISTIC pipeline reports an ambiguous
+        # occupation, don't guess — pause for the user to confirm the role. The
+        # candidates come from the pipeline trace (public occupation titles).
+        candidates = list(getattr(getattr(result, "trace", None), "occupation_candidates", []) or [])
+        if getattr(result, "clarify", None) and len(candidates) > 1 and not ctx.confirmed_target_role:
+            observation["clarify"] = result.clarify
+            patch["pending_action"] = confirm_role_action(candidates)
         return ToolOutcome(
             result=observation,
             state_patch=patch,
             summary=f"lane={getattr(result, 'retrieval_lane', None)}, strategy={getattr(result, 'retrieval_strategy', None)}, sources={len(sources)}",
             source_count=len(sources),
+        )
+
+    return handler
+
+
+# --- 6. Propose preparation memory (HITL action tool, Phase 8) ---------------
+
+
+class ProposePreparationMemory(BaseModel):
+    """Propose ONE concise, genuinely reusable preparation fact for the user to
+    approve saving (a recurring gap, strength, completed topic, preference, goal or
+    target role). This does NOT save anything — it asks the user for approval. Use it
+    sparingly, never for ordinary facts, whole analyses, job descriptions or chatter."""
+
+    category: str = Field(description="One of the fixed preparation-memory categories.")
+    summary: str = Field(max_length=500, description="A concise fact to remember (not a transcript/JD/CV).")
+    target_role: str | None = Field(default=None, max_length=200, description="Optional role this relates to.")
+
+
+def _propose_preparation_memory(career_service) -> Handler:
+    def handler(args: ProposePreparationMemory, ctx: ToolContext) -> ToolOutcome:
+        from src.memory import MemoryCategory
+
+        try:
+            category = MemoryCategory.from_value(args.category).value
+        except ValueError as exc:
+            raise AgentToolError("That memory category is not allowed.") from exc
+        summary = (args.summary or "").strip()
+        _require(summary, "A memory summary is required to propose it.")
+        role = (args.target_role or "").strip() or None
+        # Propose ONLY — no persistence here. The human-review node persists on approval.
+        candidate = {"category": category, "summary": summary, "target_role": role}
+        return ToolOutcome(
+            result={"proposed": True, "awaiting_approval": True, **candidate},
+            state_patch={
+                "memory_candidate": candidate,
+                "pending_action": approve_memory_action(
+                    category=category, summary=summary, target_role=role),
+            },
+            summary=f"proposed memory: category={category}",
+            source_count=0,
+        )
+
+    return handler
+
+
+# --- 7. Request Interview Practice handoff (HITL action tool, Phase 8) -------
+
+
+class RequestPracticeHandoff(BaseModel):
+    """Ask the user to approve moving from preparation into Interview Practice. Use
+    only once a preparation plan / requirements exist. This does NOT start an
+    interview — it requests approval; the existing interview endpoint creates the
+    session afterwards."""
+
+    ready: bool = Field(default=True, description="Set true when preparation is ready to practise.")
+
+
+def _request_practice_handoff(career_service) -> Handler:
+    def handler(args: RequestPracticeHandoff, ctx: ToolContext) -> ToolOutcome:
+        requirements = ctx.requirements or {}
+        role = (ctx.target_role or requirements.get("role_title") or "").strip()
+        _require(role, "A target role and a preparation plan are needed before a handoff.")
+        priorities = (ctx.gaps or {}).get("priority_gaps") if ctx.gaps else None
+        priority_count = len(priorities or [])
+        return ToolOutcome(
+            result={"handoff_requested": True, "awaiting_approval": True, "target_role": role},
+            state_patch={
+                "pending_action": approve_handoff_action(
+                    target_role=role, priority_count=priority_count),
+            },
+            summary=f"handoff requested: priorities={priority_count}",
+            source_count=0,
         )
 
     return handler
@@ -291,4 +374,17 @@ def build_career_tools(career_service) -> list[tuple[type[BaseModel], Handler]]:
         (BuildPreparationPlan, _build_preparation_plan(career_service)),
         (GenerateInterviewQuestions, _generate_interview_questions(career_service)),
         (SearchCareerKnowledge, _search_career_knowledge(career_service)),
+    ]
+
+
+def build_human_action_tools(career_service) -> list[tuple[type[BaseModel], Handler]]:
+    """HITL action tools (Phase 8) — SEPARATE from the five Career evidence tools.
+
+    These do not analyse, calculate or persist anything; they PROPOSE a decision
+    that pauses the graph for human approval (memory proposal, practice handoff).
+    Role confirmation is triggered deterministically inside SearchCareerKnowledge.
+    """
+    return [
+        (ProposePreparationMemory, _propose_preparation_memory(career_service)),
+        (RequestPracticeHandoff, _request_practice_handoff(career_service)),
     ]

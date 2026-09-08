@@ -15,7 +15,7 @@ from pydantic import BaseModel, ValidationError
 
 from src.agent.errors import AgentToolError
 from src.agent.tooling import ToolContext, ToolOutcome
-from src.agent.tools import build_career_tools
+from src.agent.tools import build_career_tools, build_human_action_tools
 
 Handler = Callable[[BaseModel, ToolContext], ToolOutcome]
 
@@ -63,11 +63,16 @@ class ToolRegistry:
 
 
 def career_tool_registry(career_service: Any) -> ToolRegistry:
-    """The allowlist — the five real Career tools: job analysis, gap analysis,
-    preparation plan, question generation, and (Phase 6) career-knowledge retrieval.
-    Low-level stores (vector/BM25/repositories) are NEVER registered — the
-    deterministic router owns lane selection inside SearchCareerKnowledge."""
+    """The allowlist. Five real Career tools (job analysis, gap analysis, preparation
+    plan, question generation, and Phase 6 career-knowledge retrieval) PLUS two Phase 8
+    human-action tools (ProposePreparationMemory, RequestPracticeHandoff) — separate
+    from the Career evidence tools; they propose a decision for human approval and
+    never persist or start anything themselves. Low-level stores (vector/BM25/
+    repositories) are NEVER registered — the deterministic router owns lane selection
+    inside SearchCareerKnowledge."""
     registry = ToolRegistry()
     for args_model, handler in build_career_tools(career_service):
+        registry.register(args_model, handler)
+    for args_model, handler in build_human_action_tools(career_service):
         registry.register(args_model, handler)
     return registry
