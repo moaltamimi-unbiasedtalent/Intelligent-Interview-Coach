@@ -107,8 +107,20 @@ def get_memory_service(request: Request):
 
 
 def get_session_store(request: Request):
-    """The transitional in-memory interview session store (set up in lifespan)."""
-    return request.app.state.session_store
+    """The DURABLE, user-scoped interview session store (Sprint 4 Phase 10).
+
+    In-progress interview state is persisted (SessionData serialised to the
+    ``interview_sessions`` table) so it survives a browser refresh and a backend
+    restart. Built once for the app lifetime over the shared repository engine. The
+    old in-process ``InMemorySessionStore`` is no longer the production path (it
+    remains for unit tests / legacy Streamlit helpers).
+    """
+    from src.interview.session_repository import DurableInterviewSessionStore
+
+    return _shared(
+        request, "durable_session_store",
+        lambda: DurableInterviewSessionStore(get_repository(request).session_factory),
+    )
 
 
 def get_agent_service(request: Request):

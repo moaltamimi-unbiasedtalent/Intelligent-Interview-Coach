@@ -23,6 +23,7 @@ __all__ = [
     "ConfigurationError",
     "UnavailableServiceError",
     "PersistenceError",
+    "ConflictError",
 ]
 
 
@@ -44,3 +45,8 @@ class UnavailableServiceError(ApplicationError):
 
 class PersistenceError(ApplicationError):
     """Saving or loading persisted data failed; the raw cause is never exposed."""
+
+
+class ConflictError(ApplicationError):
+    """The resource changed concurrently (e.g. another tab/worker), or an operation
+    is already in progress; the caller should reload the latest state and retry."""

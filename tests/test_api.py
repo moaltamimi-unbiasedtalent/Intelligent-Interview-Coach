@@ -168,10 +168,16 @@ def _make_client(*, career=None, interview_domain_fail=None, repo=None):
         services = (_FakeInterviewDomain(), _FakeEval(), _FakeReport(), _FakeClient())
         return InterviewApplicationService(config=None, services=services)
 
+    # Durable interview sessions over an isolated temp DB (never the dev DB). One
+    # store instance per client so idempotency/persistence work across requests.
+    from tests._interview_factories import make_durable_store
+    _store = make_durable_store()
+
     app.dependency_overrides[deps.get_career_service] = _career
     app.dependency_overrides[deps.get_interview_service] = _interview
     app.dependency_overrides[deps.get_repository] = lambda: fake_repo
     app.dependency_overrides[deps.get_app_config] = lambda: None
+    app.dependency_overrides[deps.get_session_store] = lambda: _store
     return TestClient(app)
 
 

@@ -6,6 +6,9 @@ durable-store/codec tests can construct realistic SessionData without a real mod
 
 from __future__ import annotations
 
+import os
+import tempfile
+
 from src import constants
 from src.models import (
     AnswerEvaluation,
@@ -121,6 +124,22 @@ def external_usage() -> ExternalServiceUsage:
         cost_usd=0.002,
         cost_source="reported",
     )
+
+
+def make_durable_store():
+    """A DurableInterviewSessionStore over an isolated temp SQLite DB (one per call).
+
+    Used by API tests to exercise the durable path without touching the dev DB. Keep
+    ONE instance per test and reuse it (state lives in the DB, not the object).
+    """
+    from src.interview.session_repository import DurableInterviewSessionStore
+    from src.persistence import init_db, make_engine, make_session_factory
+
+    fd, path = tempfile.mkstemp(suffix=".db")
+    os.close(fd)
+    engine = make_engine(f"sqlite:///{path}")
+    init_db(engine, force=True)
+    return DurableInterviewSessionStore(make_session_factory(engine))
 
 
 def branch_question(qid: int = 1, depth: int = 1, parent_id: int = 1) -> BranchQuestion:
