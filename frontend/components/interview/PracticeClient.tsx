@@ -1,123 +1,192 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+
 import { api } from "@/lib/api/client";
-import { ApiError } from "@/lib/api/errors";
-import type { InterviewStateResponse } from "@/lib/api/types";
-import { AnswerInput } from "@/components/interview/AnswerInput";
-import { InterviewProgress } from "@/components/interview/InterviewProgress";
 import { Button } from "@/components/ui/Button";
+import { Card, CardBody } from "@/components/ui/Card";
 import { ErrorState, LoadingState } from "@/components/ui/States";
-import { useCapabilities } from "@/lib/useCapabilities";
+import { InterviewProgress } from "./InterviewProgress";
+import { InterviewAnswerComposer } from "./InterviewAnswerComposer";
+import { InterviewEvaluation } from "./InterviewEvaluation";
+import { InterviewReport } from "./InterviewReport";
+import { InterviewSessionSetup } from "./InterviewSessionSetup";
+import { DeepDivePanel } from "./DeepDivePanel";
+import { useInterview } from "./useInterview";
 
 /**
- * Practice shell. With `?session=<id>` it shows the real interview session created
- * by the preparation handoff (role/context/first question from the Interview API).
- * Without a session it shows a standalone practice entry. Live is only offered when
- * the backend reports `live_interview_enabled`; no microphone/camera call on load.
+ * Interview Practice — the full candidate lifecycle over the durable backend. With
+ * `?session=<id>` it drives question → answer → feedback → (optional Deep Dive) →
+ * next → complete → report, and restores that state on refresh. Without a session it
+ * offers standalone setup. The backend is the only authority for transitions/scoring.
  */
 export function PracticeClient({ sessionId }: { sessionId?: string }) {
-  const { capabilities } = useCapabilities();
-  const liveEnabled = capabilities.live_interview_enabled;
+  const router = useRouter();
 
-  const [state, setState] = useState<InterviewStateResponse | null>(null);
-  const [status, setStatus] = useState<"idle" | "loading" | "error">(
-    sessionId ? "loading" : "idle",
-  );
-  const [error, setError] = useState<{ message: string; requestId?: string | null } | null>(null);
+  if (!sessionId) {
+    return (
+      <section className="mx-auto max-w-2xl animate-enter">
+        <InterviewSessionSetup onCreated={(id) => router.replace(`/practice?session=${encodeURIComponent(id)}`)} />
+      </section>
+    );
+  }
+  return <ActiveInterview key={sessionId} sessionId={sessionId} router={router} />;
+}
+
+function ActiveInterview({ sessionId, router }: { sessionId: string; router: ReturnType<typeof useRouter> }) {
+  const ctrl = useInterview(sessionId);
+  const [answer, setAnswer] = useState("");
+  const [modes, setModes] = useState<string[]>([]);
+  const [confirmingEnd, setConfirmingEnd] = useState(false);
+  const evalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!sessionId) return;
-    const ctrl = new AbortController();
-    setStatus("loading");
-    api.interviews
-      .get(sessionId, { signal: ctrl.signal })
-      .then((s) => {
-        setState(s);
-        setStatus("idle");
-      })
-      .catch((e) => {
-        if (e instanceof DOMException && e.name === "AbortError") return;
-        const err = e as ApiError;
-        setError({ message: err.userMessage ?? "Couldn't load the session.", requestId: err.requestId });
-        setStatus("error");
-      });
-    return () => ctrl.abort();
-  }, [sessionId]);
+    let alive = true;
+    api.interviews.options().then((o) => { if (alive) setModes(o.deep_dive_modes ?? []); }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
 
-  if (status === "loading") {
+  const state = ctrl.state;
+
+  if (ctrl.busy === "loading" && !state) {
+    return <Section><LoadingState label="Preparing your interview" /></Section>;
+  }
+  if (ctrl.loadError && !state) {
+    return <Section><ErrorState message={ctrl.loadError.message} requestId={ctrl.loadError.requestId} /></Section>;
+  }
+  if (!state) return <Section><LoadingState label="Preparing your interview" /></Section>;
+
+  const s = state.state;
+  const role = state.target_role ?? "Interview practice";
+  const planned = state.questions_planned ?? Math.max(state.question_number, 1);
+
+  // Terminal: report.
+  if (s === "REPORT_READY") {
+    return <Section><InterviewReport sessionId={sessionId} /></Section>;
+  }
+
+  // Recoverable error.
+  if (s === "ERROR") {
     return (
-      <section className="mx-auto max-w-2xl">
-        <LoadingState label="Preparing your interview" />
-      </section>
+      <Section>
+        <Card><CardBody>
+          <h1 className="text-lg font-semibold">Something interrupted your interview</h1>
+          <p className="mt-2 text-sm text-muted" role="alert">
+            {state.error ?? "A temporary problem occurred."}
+          </p>
+          <p className="mt-1 text-sm text-muted">Your interview is saved. You can pick up where you left off.</p>
+          <div className="mt-4 flex gap-2">
+            {state.error_recoverable ? (
+              <Button onClick={() => ctrl.recover()} disabled={Boolean(ctrl.busy)} aria-busy={ctrl.busy === "recover"}>
+                {ctrl.busy === "recover" ? "Resuming…" : "Resume interview"}
+              </Button>
+            ) : null}
+            <Button variant="ghost" onClick={() => router.push("/history")}>Leave for now</Button>
+          </div>
+        </CardBody></Card>
+      </Section>
     );
   }
 
-  if (status === "error" && error) {
-    return (
-      <section className="mx-auto max-w-2xl">
-        <ErrorState message={error.message} requestId={error.requestId} />
-      </section>
-    );
-  }
-
-  const role = state?.target_role ?? "Interview practice";
-  const question = state?.current_question;
-  // The backend couldn't produce a question (e.g. no model configured in dev).
-  const notReady = Boolean(sessionId && state && !question && state.state !== "AWAITING_ANSWER");
+  const q = state.current_question;
+  const branchActive = Boolean(state.deep_dive?.active);
 
   return (
-    <section className="mx-auto max-w-2xl animate-enter">
-      <p className="text-center text-sm text-muted">{role}</p>
+    <Section>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-muted">{role}</p>
+        <Button variant="ghost" size="sm" onClick={() => router.push("/history")}
+                title="Your interview is saved; come back any time">
+          Pause
+        </Button>
+      </div>
 
-      {sessionId && state ? (
-        <div className="my-5">
-          <InterviewProgress
-            total={state.questions_planned ?? Math.max(state.question_number, 1)}
-            current={Math.max(state.question_number, 1)}
-          />
-        </div>
+      <div className="my-4">
+        <InterviewProgress total={planned} current={Math.max(state.question_number, 1)} />
+      </div>
+
+      {ctrl.conflict ? (
+        <p className="mb-3 rounded border border-border bg-surface-2 px-3 py-2 text-sm text-muted" role="status">
+          This session changed in another tab. We reloaded the latest version.
+        </p>
+      ) : null}
+      {ctrl.actionError ? (
+        <p className="mb-3 text-sm text-danger" role="alert">{ctrl.actionError}</p>
       ) : null}
 
-      {question ? (
-        <h1 className="mx-auto mb-2 mt-6 max-w-[24ch] text-center text-2xl font-semibold md:text-3xl">
-          {question.question}
-        </h1>
-      ) : notReady ? (
-        <div className="mt-8 rounded-lg border border-border bg-surface px-6 py-10 text-center">
-          <h1 className="text-lg font-semibold">Your session is ready to set up</h1>
-          <p className="mx-auto mt-2 max-w-reading text-muted">
-            We couldn&rsquo;t generate the first question just now. This usually means the
-            interview model isn&rsquo;t configured in this environment. Your preparation is
-            saved to the session.
-          </p>
-        </div>
-      ) : (
-        <h1 className="mx-auto mb-2 mt-6 max-w-[24ch] text-center text-2xl font-semibold md:text-3xl">
-          {sessionId ? "Let’s begin." : "Practise an interview"}
-        </h1>
-      )}
-
-      {question || !sessionId ? (
+      {/* Main question awaiting an answer. */}
+      {s === "AWAITING_ANSWER" && q ? (
         <>
-          <div className="mt-6">
-            <AnswerInput recordEnabled />
-          </div>
-          <div className="mt-4 flex items-center justify-between">
-            <Button variant="ghost" size="sm">Pause</Button>
-            <Button>Submit answer</Button>
-          </div>
+          <h1 className="mb-4 mt-2 text-xl font-semibold md:text-2xl" role="heading" aria-level={1}>
+            {q.question}
+          </h1>
+          <InterviewAnswerComposer
+            value={answer}
+            onChange={setAnswer}
+            busy={ctrl.busy === "submit"}
+            onSubmit={async () => { const ok = await ctrl.submitAnswer(answer); if (ok) setAnswer(""); }}
+          />
         </>
       ) : null}
 
-      {liveEnabled ? (
-        <p className="mt-6 text-center text-xs text-muted">
-          Live conversation practice is available (experimental).
-        </p>
+      {/* After a main evaluation (and not inside a branch): feedback + actions. */}
+      {s === "INTERVIEW_IN_PROGRESS" && !branchActive && state.last_evaluation ? (
+        <div ref={evalRef} tabIndex={-1} className="space-y-4">
+          <InterviewEvaluation evaluation={state.last_evaluation} />
+          <DeepDivePanel ctrl={ctrl} modes={modes} />
+          <MainActions ctrl={ctrl} confirmingEnd={confirmingEnd} setConfirmingEnd={setConfirmingEnd} />
+        </div>
       ) : null}
+
+      {/* Deep Dive active (branch question / branch feedback / go deeper / return). */}
+      {branchActive ? <DeepDivePanel ctrl={ctrl} modes={modes} /> : null}
+
+      {/* Interview complete → generate the report. */}
+      {s === "INTERVIEW_COMPLETE" ? (
+        <Card><CardBody>
+          <h1 className="text-lg font-semibold">Interview complete</h1>
+          <p className="mt-1 text-sm text-muted">Generate your performance review to see how you did.</p>
+          <div className="mt-4">
+            <Button onClick={() => ctrl.generateReport()} disabled={Boolean(ctrl.busy)} aria-busy={ctrl.busy === "report"}>
+              {ctrl.busy === "report" ? "Creating your performance review…" : "Generate performance review"}
+            </Button>
+          </div>
+        </CardBody></Card>
+      ) : null}
+
       <p className="mt-6 text-center text-xs text-muted">
         Distraction-free by design. No camera; timing is guidance only.
       </p>
-    </section>
+    </Section>
   );
+}
+
+function MainActions({ ctrl, confirmingEnd, setConfirmingEnd }: {
+  ctrl: ReturnType<typeof useInterview>;
+  confirmingEnd: boolean;
+  setConfirmingEnd: (v: boolean) => void;
+}) {
+  const busy = Boolean(ctrl.busy);
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <Button onClick={() => ctrl.nextQuestion()} disabled={busy} aria-busy={ctrl.busy === "next"}>
+        {ctrl.busy === "next" ? "Preparing your next question…" : "Next question"}
+      </Button>
+      {confirmingEnd ? (
+        <span className="flex items-center gap-2 text-sm">
+          <span className="text-muted">End the interview now?</span>
+          <Button variant="ghost" size="sm" onClick={() => { setConfirmingEnd(false); void ctrl.complete(); }}
+                  disabled={busy}>Yes, end</Button>
+          <Button variant="ghost" size="sm" onClick={() => setConfirmingEnd(false)} disabled={busy}>Keep going</Button>
+        </span>
+      ) : (
+        <Button variant="ghost" size="sm" onClick={() => setConfirmingEnd(true)} disabled={busy}>End interview</Button>
+      )}
+    </div>
+  );
+}
+
+function Section({ children }: { children: React.ReactNode }) {
+  return <section className="mx-auto max-w-2xl animate-enter">{children}</section>;
 }

@@ -1,10 +1,12 @@
 import { config } from "../config";
 import { ApiError, apiErrorFromBody } from "./errors";
 import type {
+  ActiveSessionsResponse,
   CapabilitiesResponse,
   CareerChatRequest,
   CareerChatResponse,
   CreateInterviewRequest,
+  ReportResponse,
   GapAnalysisRequest,
   GapAnalysisResult,
   HealthResponse,
@@ -113,6 +115,32 @@ export const api = {
       request<InterviewStateResponse>("GET", `/interviews/${encodeURIComponent(sessionId)}`, opts),
     options: (opts?: RequestOptions) =>
       request<InterviewOptionsResponse>("GET", "/interviews/options", opts),
+    listActive: (opts?: RequestOptions) =>
+      request<ActiveSessionsResponse>("GET", "/interviews", opts),
+    remove: (sessionId: string, opts?: RequestOptions) =>
+      request<{ deleted: boolean }>("DELETE", `/interviews/${encodeURIComponent(sessionId)}`, opts),
+    submitAnswer: (sessionId: string, answer: string, opts?: RequestOptions) =>
+      request<InterviewStateResponse>("POST", `/interviews/${encodeURIComponent(sessionId)}/answers`, { body: { answer }, ...opts }),
+    nextQuestion: (sessionId: string, opts?: RequestOptions) =>
+      request<InterviewStateResponse>("POST", `/interviews/${encodeURIComponent(sessionId)}/next-question`, opts),
+    complete: (sessionId: string, opts?: RequestOptions) =>
+      request<InterviewStateResponse>("POST", `/interviews/${encodeURIComponent(sessionId)}/complete`, opts),
+    recover: (sessionId: string, opts?: RequestOptions) =>
+      request<InterviewStateResponse>("POST", `/interviews/${encodeURIComponent(sessionId)}/recover`, opts),
+    report: (sessionId: string, opts?: RequestOptions) =>
+      request<ReportResponse>("GET", `/interviews/${encodeURIComponent(sessionId)}/report`, opts),
+    generateReport: (sessionId: string, opts?: RequestOptions) =>
+      request<ReportResponse>("POST", `/interviews/${encodeURIComponent(sessionId)}/report`, opts),
+    deepDive: {
+      start: (sessionId: string, mode: string, opts?: RequestOptions) =>
+        request<InterviewStateResponse>("POST", `/interviews/${encodeURIComponent(sessionId)}/deep-dive`, { body: { mode }, ...opts }),
+      answer: (sessionId: string, answer: string, opts?: RequestOptions) =>
+        request<InterviewStateResponse>("POST", `/interviews/${encodeURIComponent(sessionId)}/deep-dive/answers`, { body: { answer }, ...opts }),
+      next: (sessionId: string, opts?: RequestOptions) =>
+        request<InterviewStateResponse>("POST", `/interviews/${encodeURIComponent(sessionId)}/deep-dive/next`, opts),
+      return: (sessionId: string, opts?: RequestOptions) =>
+        request<InterviewStateResponse>("POST", `/interviews/${encodeURIComponent(sessionId)}/deep-dive/return`, opts),
+    },
   },
 
   knowledge: {
