@@ -244,3 +244,38 @@ export interface KnowledgeSnapshotResponse {
 export interface InterviewListResponse {
   interviews: Array<Record<string, unknown>>;
 }
+
+// --- Preparation memory (Phase 7) -------------------------------------------
+
+export type MemoryCategory =
+  | "target_role"
+  | "recurring_gap"
+  | "strength"
+  | "completed_topic"
+  | "interview_preference"
+  | "preparation_goal";
+
+export interface MemoryCreateRequest {
+  category: MemoryCategory;
+  summary: string;
+  target_role?: string | null;
+}
+
+export interface MemoryResponse {
+  id: number;
+  category: MemoryCategory;
+  summary: string;
+  target_role: string | null;
+  source_run_id: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface MemoryListResponse {
+  memories: MemoryResponse[];
+}
+
+export interface MemoryDeleteResponse {
+  deleted: boolean;
+  id: number;
+}

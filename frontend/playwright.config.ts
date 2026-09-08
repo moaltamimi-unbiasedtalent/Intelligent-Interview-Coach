@@ -6,6 +6,11 @@ import { defineConfig, devices } from "@playwright/test";
  * shell/nav/responsive checks (capabilities are stubbed at the network layer in
  * the specs that need them).
  */
+// The port is env-overridable (E2E_PORT) so the suite can run on a free port when
+// :3000 is occupied by an unrelated local process; the default is unchanged (3000).
+const E2E_PORT = process.env.E2E_PORT || "3000";
+const E2E_URL = process.env.BASE_URL || `http://localhost:${E2E_PORT}`;
+
 export default defineConfig({
   testDir: "./e2e",
   timeout: 60_000,
@@ -14,14 +19,14 @@ export default defineConfig({
   workers: 1,
   fullyParallel: false,
   use: {
-    baseURL: process.env.BASE_URL || "http://localhost:3000",
+    baseURL: E2E_URL,
     trace: "on-first-retry",
   },
   webServer: {
-    command: "npm run build && npm run start -- --port 3000",
-    url: "http://localhost:3000",
-    // §35: CI must NOT reuse an existing server — a stale :3000 process could mask a
-    // bad build. `!process.env.CI` is false in CI, so Playwright starts (and owns) a
+    command: `npm run build && npm run start -- --port ${E2E_PORT}`,
+    url: E2E_URL,
+    // §35: CI must NOT reuse an existing server — a stale process could mask a bad
+    // build. `!process.env.CI` is false in CI, so Playwright starts (and owns) a
     // freshly built instance there. Local devs may reuse a running dev server.
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

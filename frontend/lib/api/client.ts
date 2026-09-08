@@ -14,6 +14,11 @@ import type {
   JobAnalysisRequest,
   KnowledgeSnapshotResponse,
   KnowledgeSourcesResponse,
+  MemoryCategory,
+  MemoryCreateRequest,
+  MemoryDeleteResponse,
+  MemoryListResponse,
+  MemoryResponse,
   PreparationPlan,
   PreparationPlanRequest,
   QuestionsRequest,
@@ -33,7 +38,7 @@ function authHeaders(): Record<string, string> {
 }
 
 async function request<T>(
-  method: "GET" | "POST",
+  method: "GET" | "POST" | "DELETE",
   path: string,
   { body, signal }: { body?: unknown; signal?: AbortSignal } = {},
 ): Promise<T> {
@@ -106,6 +111,18 @@ export const api = {
   history: {
     list: (opts?: RequestOptions) =>
       request<InterviewListResponse>("GET", "/history/interviews", opts),
+  },
+
+  // Long-term preparation memory (Phase 7). Writes are explicit/user-initiated.
+  memory: {
+    list: (params?: { category?: MemoryCategory }, opts?: RequestOptions) => {
+      const query = params?.category ? `?category=${encodeURIComponent(params.category)}` : "";
+      return request<MemoryListResponse>("GET", `/memory${query}`, opts);
+    },
+    create: (body: MemoryCreateRequest, opts?: RequestOptions) =>
+      request<MemoryResponse>("POST", "/memory", { body, ...opts }),
+    remove: (id: number, opts?: RequestOptions) =>
+      request<MemoryDeleteResponse>("DELETE", `/memory/${id}`, opts),
   },
 };
 
