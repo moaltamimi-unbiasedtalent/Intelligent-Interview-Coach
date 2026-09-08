@@ -334,6 +334,8 @@ export interface AgentConversationMessage {
 export interface AgentToolCall {
   tool: string;
   status: string;
+  /** Safe failure category on a failed call (missing_prerequisite | invalid_arguments | execution_failed). */
+  category?: string | null;
 }
 
 export interface AgentEvent {
@@ -343,6 +345,8 @@ export interface AgentEvent {
   duration_ms?: number | null;
   source_count?: number | null;
   status?: string | null;
+  /** Safe failure category on a tool_failed event; never arguments or content. */
+  category?: string | null;
   message?: string | null;
   timestamp?: number;
 }

@@ -42,6 +42,9 @@ class AgentEvent:
     duration_ms: int | None = None
     source_count: int | None = None
     status: str | None = None
+    # Safe, coarse failure category (a TOOL_FAILURE_* value) on tool failures; never
+    # arguments, content or a raw exception. None for non-failure events.
+    category: str | None = None
     message: str | None = None
     timestamp: float = field(default_factory=time.time)
 

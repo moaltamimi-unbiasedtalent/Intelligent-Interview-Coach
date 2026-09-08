@@ -13,7 +13,7 @@ from typing import Any, Callable
 
 from pydantic import BaseModel, ValidationError
 
-from src.agent.errors import AgentToolError
+from src.agent.errors import TOOL_FAILURE_INVALID_ARGUMENTS, AgentToolError
 from src.agent.tooling import ToolContext, ToolOutcome
 from src.agent.tools import build_career_tools, build_human_action_tools
 
@@ -58,7 +58,8 @@ class ToolRegistry:
         try:
             args = spec.args_model(**(raw_args or {}))
         except ValidationError as exc:
-            raise AgentToolError(f"Invalid arguments for tool '{name}'.") from exc
+            raise AgentToolError(f"Invalid arguments for tool '{name}'.",
+                                 category=TOOL_FAILURE_INVALID_ARGUMENTS) from exc
         return spec.handler(args, ctx)
 
 

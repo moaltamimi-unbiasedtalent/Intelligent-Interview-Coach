@@ -67,6 +67,18 @@ describe("Agent Inspector", () => {
     expect(text).toContain("Not captured for this run");
   });
 
+  it("shows the safe failure category for a failed tool call", async () => {
+    getRun.mockResolvedValue({
+      ...RUN,
+      tools_used: [],
+      tool_calls: [{ tool: "GenerateInterviewQuestions", status: "error", category: "missing_prerequisite" }],
+    });
+    render(<AgentInspector />);
+    expect(await screen.findByText("Run summary")).toBeInTheDocument();
+    expect(screen.getByText("missing prerequisite")).toBeInTheDocument();
+    expect(screen.getByText("error")).toBeInTheDocument();
+  });
+
   it("shows a safe error for an unknown/foreign run", async () => {
     getRun.mockRejectedValue(Object.assign(new Error("nf"), { status: 404 }));
     render(<AgentInspector />);

@@ -26,10 +26,13 @@ describe("Markdown", () => {
     expect(container.textContent).not.toContain("1.");
   });
 
-  it("renders headings without the leading hashes", () => {
+  it("renders headings without the leading hashes, with heading semantics", () => {
     render(<Markdown text={"## Behavioral round"} />);
     const heading = screen.getByText("Behavioral round");
     expect(heading.textContent).not.toContain("#");
+    // Accessible heading semantics without injecting real <h1>–<h6> into the outline.
+    expect(heading).toHaveAttribute("role", "heading");
+    expect(heading).toHaveAttribute("aria-level", "4");
   });
 
   it("renders inline `code`", () => {
