@@ -20,8 +20,10 @@ auto-merge, following the Sprint 3 workflow.
 | **8** | **LangGraph human-in-the-loop** ✅ done (interrupt/resume; role confirm, memory approval, handoff; durable SQLite/Postgres checkpoints) | 1–2 days | 4, 7 |
 | **9** | **Agent Coach + Agent Inspector + multi-turn** ✅ done (candidate `/prepare` via the agent behind `AGENT_COACH_ENABLED`; same-thread continuation; HITL cards; safe Inspector) | 2–3 days | 3, 4 |
 | **9.5** | **Model registry + modern OpenRouter models** ✅ done (typed Fast/Balanced/Advanced profiles; env-overridable; workload policy; addresses "outdated LLMs" feedback) | 1 day | 9 |
-| 10 | Complete Streamlit → Next.js migration (prove parity, retire fallback) | 3–5 days | 3, 9 |
-| 11 | Agent evaluation / RAGAS extension / hardening | 2–3 days | 5–10 |
+| **10** | **Durable Interview Practice + full Next.js interview flow** ✅ done (durable session store, OCC, leases, crash-safe history; Next.js lifecycle + Deep Dive + report; Streamlit legacy) | 3–5 days | 3, 9 |
+| **11** | **Final evaluation, observability, security/privacy, retention & submission readiness** ✅ done (deterministic agent eval + gates; safe logging + fail-closed prod auth; retention cleanup; reviewer package) | 2–3 days | 5–10 |
+
+All Sprint 4 phases (0–11) are complete. There is no Phase 12.
 
 ## Key dependencies and sequencing notes
 

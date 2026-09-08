@@ -1,0 +1,119 @@
+# Sprint 4 — Reviewer Guide
+
+A 5-minute orientation to the Intelligent Interview Coach.
+
+## What it is
+
+A career-preparation agent that takes a candidate from a target role to a practised
+interview. A stateful **LangGraph agent** (the "Agent Coach") decides which controlled
+Career tools to call and when to retrieve evidence, asks for human approval on
+important assumptions and persistent side effects, and hands an approved
+**PreparationContext** into a durable **Interview Practice** flow (question → answer →
+structured feedback → optional Deep Dive → final report).
+
+## Why it is useful / who it is for
+
+Candidates preparing for a specific role get grounded, role-aware preparation and
+realistic interview practice with structured feedback — without losing progress if
+they refresh or come back later.
+
+## Architecture
+
+```
+Next.js (primary UI)  →  FastAPI  →  Application Services
+                                        ├── LangGraph agent ── 5 Career tools
+                                        │        ├── Agentic RAG (retrieval-as-data)
+                                        │        ├── durable long-term memory
+                                        │        ├── real HITL interrupt/resume
+                                        │        └── safe Agent Inspector
+                                        │        └── durable checkpoint
+                                        └── Interview Practice ── SessionManager
+                                                 ├── durable session store (resumable)
+                                                 └── completed History (report)
+```
+
+Identity boundary: a trusted gateway sets `X-User-Subject`; all data is scoped by
+`user_id`. See `docs/sprint4_architecture.md` and `docs/sprint4_security_privacy.md`.
+
+## Tools (agent-registered, allowlisted)
+
+`AnalyzeJobDescription`, `AnalyzeCandidateGaps`, `BuildPreparationPlan`,
+`GenerateInterviewQuestions`, `SearchCareerKnowledge` (retrieval-only), plus HITL
+action tools (`ProposePreparationMemory`, `RequestPracticeHandoff`). Unknown tools are
+rejected, never executed.
+
+## Agentic RAG
+
+The agent decides *whether* retrieval is needed; once it calls
+`SearchCareerKnowledge`, the existing deterministic engine decides *which*
+lanes/sources (occupation resolution, structured + hybrid retrieval, geographic
+precedence, ranking, citations). Retrieval returns evidence to LangGraph as data; it
+does not run other tools or synthesize a nested answer.
+
+## Memory
+
+Short-term = the LangGraph checkpoint (execution state). Long-term = a separate,
+user-scoped database of **selected, approved** preparation facts (summaries only). The
+whole conversation is deliberately NOT saved as long-term memory.
+
+## HITL
+
+Real LangGraph `interrupt`/`Command(resume=...)`: the graph checkpoints, the HTTP
+request ends, the user decides, and the SAME thread continues — reserved for role
+ambiguity, memory persistence and Practice handoff (not every tool call).
+
+## Evaluation
+
+Deterministic orchestration regression (56 held-out cases, `python
+scripts/eval_agent.py`, gated in CI) + preserved RAGAS for answer quality (opt-in,
+paid). See `docs/sprint4_final_evaluation.md`.
+
+## Security
+
+Trusted vs untrusted data, tool allowlist, retrieval/memory/HITL-as-data, user
+isolation, safe logging, no chain-of-thought exposure. See
+`docs/sprint4_security_privacy.md`.
+
+## Reviewer Q&A
+
+- **Why LangGraph / not a simple chain?** A chain runs a fixed sequence; the task needs
+  the model to *decide* which tools/retrieval to use, to pause for human decisions, and
+  to persist/resume state across HTTP requests — that is stateful graph orchestration.
+- **How is this different from Sprint 3?** Sprint 3 was a largely deterministic Career
+  Intelligence pipeline. Sprint 4 wraps those trusted capabilities inside a stateful
+  agent that decides tool/retrieval use, with human approval for assumptions and
+  persistent side effects — the deterministic retrieval engine still owns evidence
+  selection and citations.
+- **What makes the RAG agentic?** The agent decides whether to retrieve; the
+  deterministic router decides what to retrieve. See Agentic RAG above.
+- **How do you prevent arbitrary tool execution?** A strict allowlist registry — no
+  dynamic import/eval; unknown names rejected. Low-level stores are never registered.
+- **Short-term vs long-term memory?** Checkpoint (execution) vs approved durable
+  preparation facts — see Memory.
+- **How does HITL actually work / resume after the request ends?** LangGraph
+  `interrupt` checkpoints the thread; a later `Command(resume=...)` (validated) resumes
+  the same thread. See HITL.
+- **How do you prevent cross-user memory/checkpoint/interview access?** Everything is
+  keyed by `user_id`; unknown and foreign ids are indistinguishable (not-found).
+- **What is RAGAS measuring?** Faithfulness / relevancy / context precision & recall of
+  generated answers — not a single "accuracy %".
+- **Why not expose chain-of-thought?** It is unsafe and unnecessary; the Inspector
+  shows observable actions instead.
+- **Why Fast/Balanced/Advanced models?** A workload→profile policy makes the
+  cost/quality trade-off explicit; the strongest model is not always the right one.
+- **How does Interview state survive restart?** The SessionManager state machine is
+  unchanged; its validated `SessionData` is serialised to a durable, user-scoped
+  session store with optimistic concurrency and recoverable operation leases.
+
+## Known limitations (explicit)
+
+- Production **OIDC not implemented** — the API must run behind an authenticating
+  gateway; identity is transitional (`X-User-Subject`), fail-closed in production.
+- **PostgreSQL** full integration is a deployment check (schema/SQL are portable and
+  tested on SQLite; a bounded Postgres run is documented as a follow-up).
+- Agent **checkpoint retention** cleanup is a deployment responsibility where the saver
+  does not expose thread deletion.
+- **Record voice** deferred (no production transcription path); **Live** is
+  experimental and off by default; **no camera**.
+- **Per-operation Interview model tiering** deferred (one profile per session).
+- **Paid** model comparison and live RAGAS runs were **not executed** (opt-in only).

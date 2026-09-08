@@ -1,10 +1,41 @@
 # Sprint 4 Architecture — Intelligent Interview Coach
 
-This document records the **Sprint 3 → Sprint 4 evolution**, the agent
-architecture decisions, and how Sprint 3 reviewer feedback is addressed in the
-design. It is a **planning document**: nothing here is implemented in Phase 0.
-The current shipping product is the Streamlit application described in the
-[README](../README.md).
+> **Sprint 4 is complete (Phases 0–11).** The architecture below is implemented.
+> Next.js is the primary UI; Streamlit is a legacy/development fallback.
+
+## Final architecture (as built)
+
+```
+                     Next.js (primary UI)
+                            │
+                         FastAPI            ← identity: trusted gateway sets
+                            │                 X-User-Subject; fail-closed in prod;
+              ┌─────────────┴─────────────┐   all data scoped by user_id
+              │                           │
+        LangGraph Agent            Interview Practice
+              │                           │
+        controlled tools             SessionManager (state machine, unchanged)
+              │                           │
+        Agentic RAG               durable interview session store (resumable;
+              │                    OCC + operation leases; codec, no pickle)
+        memory + HITL                     │
+              │                     completed History (crash-safe, idempotent)
+        durable checkpoint
+```
+
+- Trusted instructions come only from the app; retrieval, memory, HITL responses and
+  candidate input are **data**. Tool capability is bounded by an allowlist.
+- In-progress interview state (private, resumable) is distinct from completed History
+  (long-term record) and from approved preparation memory (selected durable facts) and
+  the agent checkpoint (short-term execution state). See
+  [security & privacy](sprint4_security_privacy.md) and
+  [reviewer guide](sprint4_reviewer_guide.md).
+
+---
+
+The remainder of this document records the **Sprint 3 → Sprint 4 evolution** and the
+design decisions (originally written as a planning document — historical sections
+below use the ✅ Current / 🔷 Planned legend from that time).
 
 Status legend: ✅ **Current (Sprint 3, implemented)** · 🔷 **Planned (Sprint 4)**
 
