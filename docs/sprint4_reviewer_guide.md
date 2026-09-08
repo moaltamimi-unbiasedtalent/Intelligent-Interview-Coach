@@ -109,6 +109,17 @@ isolation, safe logging, no chain-of-thought exposure. See
   unchanged; its validated `SessionData` is serialised to a durable, user-scoped
   session store with optimistic concurrency and recoverable operation leases.
 
+## Post-Sprint polish (bonus)
+
+Beyond the Sprint 4 requirements, a polish pass added (offline-tested, no architecture
+change): a **live-model evaluation harness** separate from the scripted regression
+(`scripts/eval_agent_live.py`, manual/paid); a deterministic **citation grounding
+guard** that strips unsupported markers from final answers; a sharper
+**retrieve-vs-not** policy + preferred preparation sequence; and safe **HITL
+frequency** metrics. See `docs/sprint4_final_evaluation.md` §10. Larger items (agent
+cost accounting + Fast candidate mode, memory-management UI, journey chrome, feedback
+loop, external company research) are documented follow-ups.
+
 ## Known limitations (explicit)
 
 - Production **OIDC not implemented** — the API must run behind an authenticating

@@ -153,3 +153,48 @@ See `docs/sprint4_reviewer_guide.md` §Known limitations (production OIDC not
 implemented; PostgreSQL full integration a deployment check; Record voice deferred;
 Live experimental/off; per-operation Interview model tiering deferred; paid
 model/RAGAS comparison not executed).
+
+## 10. Post-Sprint optimisation (bonus polish)
+
+A separate polish branch (`feature/post-sprint4-agent-polish`) improves quality,
+evaluation honesty and observability without changing the Sprint 4 architecture.
+
+### Implemented + tested (offline)
+- **Live model evaluation harness** (`scripts/eval_agent_live.py`,
+  `src/agent/live_eval.py`, `evaluations/agent_live/cases.json`, 22 cases). Measures
+  the REAL model's tool/retrieval/HITL decisions on a bounded held-out sample, with
+  sanitised recorded traces (`--record` / `--evaluate-recorded`). **Manual/paid,
+  never in CI.** Distinct from the deterministic scripted regression.
+- **Citation grounding guard** (`src/agent/grounding.py`): deterministically strips
+  final-answer citation markers not backed by the current run's retrieved evidence
+  (fabricated/stale), records a safe warning; no extra model call.
+- **Retrieve-vs-not policy** strengthened in the agent system prompt (no retrieval for
+  small talk / process / rewrite / already-answered; retrieval for factual career
+  evidence) + a preferred (not hard-coded) preparation sequence.
+- **HITL interruption-frequency metrics** (`hitl_frequency`): safe rates + type
+  breakdown for the offline HITL quality report.
+- (Near-duplicate retrieval reuse already existed and is covered by
+  `test_agent_retrieval`.)
+
+### Measured
+- Deterministic gates still PASS (see §1). Polish added offline tests only; **no paid
+  run executed** (live benchmark ready but opt-in).
+
+### Not executed
+- Live model benchmark run (needs `--allow-paid`); Fast/Balanced/Advanced comparison.
+
+### Optional / deferred (documented follow-ups)
+- P1: broader session retrieval cache + Agent usage/cost aggregation + candidate-facing
+  Fast mode.
+- P2: memory-management UI (edit/pin, approval preview, next-run preview); expanded
+  checkpoint-retention seam.
+- P4: journey chrome (UNDERSTAND→PREPARE→PRACTISE), handoff provenance, Streamlit
+  deprecation banner.
+- Bonus: user-feedback learning loop; external company-research tool; external tracing
+  provider. (External research/tracing are intentionally NOT implemented without a
+  safe provider and guaranteed redaction — see the stop conditions.)
+
+Claims stay accurate: the deterministic suite validates graph/tool contracts against
+scripted routes; the live benchmark (when run) measures actual model decisions on a
+bounded sample; RAGAS evaluates generated-answer grounding/relevance where executed.
+No "100% accuracy" claims.
