@@ -24,6 +24,7 @@ from src.application.errors import (
     UnavailableServiceError,
     ValidationError,
 )
+from src.interview.session_codec import SessionCodecError
 from src.session_manager import DuplicateSubmissionError, SessionError
 
 logger = logging.getLogger("api")
@@ -71,6 +72,15 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(SessionError)
     async def _session_error(request: Request, exc: SessionError):
         return _envelope(422, "invalid_transition", str(exc), _request_id(request))
+
+    @app.exception_handler(SessionCodecError)
+    async def _session_codec(request: Request, exc: SessionCodecError):
+        # Stored interview state could not be decoded (corrupt/unsupported). Fail
+        # safely with a generic message — never expose the payload or the raw cause.
+        return _envelope(
+            503, "session_unreadable",
+            "This interview session could not be read. Please start a new interview.",
+            _request_id(request))
 
     @app.exception_handler(StarletteHTTPException)
     async def _http(request: Request, exc: StarletteHTTPException):
