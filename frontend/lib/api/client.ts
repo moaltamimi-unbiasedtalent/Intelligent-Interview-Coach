@@ -12,6 +12,10 @@ import type {
   InterviewQuestionSet,
   InterviewStateResponse,
   JobAnalysisRequest,
+  AgentContinueRequest,
+  AgentRunRequest,
+  AgentRunResponse,
+  HumanDecisionRequest,
   KnowledgeSnapshotResponse,
   KnowledgeSourcesResponse,
   MemoryCategory,
@@ -111,6 +115,19 @@ export const api = {
   history: {
     list: (opts?: RequestOptions) =>
       request<InterviewListResponse>("GET", "/history/interviews", opts),
+  },
+
+  // Agent Coach (Phase 9): the candidate-facing LangGraph agent. All owner-scoped;
+  // continue keeps the SAME run/thread; resume answers a pending HITL decision.
+  agent: {
+    start: (body: AgentRunRequest, opts?: RequestOptions) =>
+      request<AgentRunResponse>("POST", "/agent/run", { body, ...opts }),
+    getRun: (runId: string, opts?: RequestOptions) =>
+      request<AgentRunResponse>("GET", `/agent/runs/${encodeURIComponent(runId)}`, opts),
+    continue: (runId: string, body: AgentContinueRequest, opts?: RequestOptions) =>
+      request<AgentRunResponse>("POST", `/agent/runs/${encodeURIComponent(runId)}/messages`, { body, ...opts }),
+    resume: (runId: string, body: HumanDecisionRequest, opts?: RequestOptions) =>
+      request<AgentRunResponse>("POST", `/agent/runs/${encodeURIComponent(runId)}/resume`, { body, ...opts }),
   },
 
   // Long-term preparation memory (Phase 7). Writes are explicit/user-initiated.

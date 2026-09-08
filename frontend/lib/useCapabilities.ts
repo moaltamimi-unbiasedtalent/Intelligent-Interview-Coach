@@ -14,6 +14,7 @@ const SAFE_DEFAULT: CapabilitiesResponse = {
   agentic_rag: false,
   agent_memory: false,
   human_in_the_loop: false,
+  agent_coach_enabled: false,
 };
 
 export interface CapabilitiesState {
