@@ -11,17 +11,24 @@ APP_NAME = "Interview Practice Studio"
 APP_TAGLINE = "Prepare for any role. Practise realistically. Improve every answer."
 
 # --- Approved OpenRouter model identifiers ----------------------------------
-# Only these three models may be used anywhere in the application.
+# Model identifiers resolve from the central registry (src/llm/models.py) — the single
+# source of truth for OpenRouter slugs and their env overrides. These names are kept as
+# thin, backwards-compatible aliases mapping to the Balanced/Fast/Advanced profiles.
+from src.llm import models as _model_registry
 
-DEFAULT_MODEL = "openai/gpt-5-mini"
-LOW_COST_MODEL = "openai/gpt-5-nano"
-HIGH_CAPABILITY_MODEL = "openai/gpt-5"
+DEFAULT_MODEL = _model_registry.model_id(_model_registry.ModelProfile.BALANCED)
+LOW_COST_MODEL = _model_registry.model_id(_model_registry.ModelProfile.FAST)
+HIGH_CAPABILITY_MODEL = _model_registry.model_id(_model_registry.ModelProfile.ADVANCED)
 
 APPROVED_MODELS: dict[str, str] = {
-    DEFAULT_MODEL: "Balanced default: good quality at moderate cost",
-    LOW_COST_MODEL: "Lower-cost option for quick practice rounds",
-    HIGH_CAPABILITY_MODEL: "Higher-capability option for detailed feedback",
+    DEFAULT_MODEL: "Balanced — recommended for most interviews",
+    LOW_COST_MODEL: "Fast — quick preparation and practice",
+    HIGH_CAPABILITY_MODEL: "Advanced — more detailed evaluation and feedback",
 }
+
+# Legacy slug → current model id, so a persisted old selection coerces cleanly instead
+# of failing validation (see ApprovedModel in src/models.py).
+MODEL_SYNONYMS: dict[str, str] = _model_registry.legacy_synonyms()
 
 # --- Safe generation defaults ------------------------------------------------
 # Conservative values chosen so a fresh install behaves predictably.
@@ -35,9 +42,10 @@ MAX_TEMPERATURE = 1.0
 # call; live OpenRouter ``supported_parameters`` metadata overrides this when
 # available (see ui_helpers.model_supports_temperature).
 MODELS_WITHOUT_TEMPERATURE: set[str] = {
-    "openai/gpt-5",
-    "openai/gpt-5-mini",
-    "openai/gpt-5-nano",
+    # The current registry models (gpt-5.x reasoning family) run at the provider
+    # default temperature; legacy gpt-5 ids are kept so old sessions still gate.
+    DEFAULT_MODEL, LOW_COST_MODEL, HIGH_CAPABILITY_MODEL,
+    "openai/gpt-5", "openai/gpt-5-mini", "openai/gpt-5-nano",
 }
 
 DEFAULT_MAX_OUTPUT_TOKENS = 1024

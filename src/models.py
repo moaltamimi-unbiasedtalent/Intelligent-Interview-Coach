@@ -298,7 +298,8 @@ BranchMode = _make_enum_type(constants.BRANCH_MODES, "branch_mode")
 ResponseDetail = _make_enum_type(constants.RESPONSE_DETAIL_LEVELS, "response_detail")
 PromptTechnique = _make_enum_type(constants.PROMPT_TECHNIQUES, "prompt_technique")
 CostSource = _make_enum_type(constants.COST_SOURCES, "cost_source")
-ApprovedModel = _make_enum_type(tuple(constants.APPROVED_MODELS), "model")
+ApprovedModel = _make_enum_type(
+    tuple(constants.APPROVED_MODELS), "model", constants.MODEL_SYNONYMS)
 
 # Classification fields the MODEL fills in freely in its output. These are
 # lenient: a value that cannot be mapped to the vocabulary is recorded as the
