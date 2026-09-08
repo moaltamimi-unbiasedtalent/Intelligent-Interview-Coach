@@ -48,9 +48,12 @@ assumptions in core logic, prompts, scoring or examples.
   `uvicorn src.api.main:app --reload`. Streamlit and FastAPI coexist over the same
   application layer. Routes hold no business logic; errors return a safe envelope;
   every request carries an `X-Request-Id`; CORS comes from `FRONTEND_ORIGINS`.
-  In-progress interview state uses a transitional, bounded, user-scoped in-memory
-  store; identity is a transitional header-based boundary (production needs a real
-  gateway/OIDC). No LangGraph yet. See `docs/sprint4_architecture.md`.
+  In-progress interview state is **durably persisted** (Phase 10) in the user-scoped
+  `interview_sessions` table via `DurableInterviewSessionStore` (OCC + operation
+  leases; the old in-memory store is a test/legacy helper only). Identity is a
+  transitional `X-User-Subject` boundary, **fail-closed in production** (401 without a
+  supplied identity); production still needs a real gateway/OIDC. The full LangGraph
+  Agent Coach ships (Phases 4–9.5). See `docs/sprint4_architecture.md`.
 - **Next.js frontend foundation (Sprint 4 Phase 3B).** `frontend/*` is a Next.js 15
   (App Router) + React 19 + TypeScript + Tailwind client of `/api/v1`, implementing
   the Precision Coach design system (`docs/design/phase3a/`). Streamlit and Next.js
@@ -58,7 +61,8 @@ assumptions in core logic, prompts, scoring or examples.
   coach (`career/chat`), the four preparation tools, sources (`knowledge/*`),
   history (`history/*`) and the `PreparationContext` → `interviews` handoff all run
   against the FastAPI contracts (no Career logic in TypeScript; retrieval stays
-  deterministic; LangGraph still planned). Frontend gates: `cd frontend &&
+  deterministic; the LangGraph Agent Coach and full durable Interview Practice landed
+  in later phases — 4–11). Frontend gates: `cd frontend &&
   npm run lint && npm test && npm run typecheck && npm run build` (+ `npm run e2e`;
   Playwright runs serially and never reuses a server in CI). Hand-written TS
   contracts are guarded by `tests/test_openapi_contract.py`. No server secrets reach
@@ -189,6 +193,26 @@ assumptions in core logic, prompts, scoring or examples.
   OpenRouter call at import/`/health`; provider reasoning is never stored/logged/exposed.
   The Interview service keeps one candidate-selected profile per session (default
   Balanced); per-operation tiering is a deferred follow-up (no interview redesign).
+- **Durable Interview Practice + full Next.js flow (Sprint 4 Phase 10).** In-progress
+  interviews persist in the user-scoped `interview_sessions` table
+  (`DurableInterviewSessionStore`, migration 0003): the FastAPI routes load a payload →
+  mutate the **unchanged** `SessionManager` → serialise (`session_codec`, no pickle) →
+  save under **optimistic concurrency** (`version`), with a stale-reclaimable
+  **operation lease** guarding provider-backed steps and **durable idempotency** on
+  create. Next.js drives the whole lifecycle (question → answer → typed evaluation →
+  Deep Dive → complete → report; standalone setup + refresh/restart resume). Completed
+  history is crash-safe/idempotent via `interviews.source_session_id` (migration 0004),
+  saved AFTER the report is durably persisted; the fake Record control was removed.
+  Streamlit is legacy/deprecated. See `docs/sprint4_interview_parity.md`.
+- **Final evaluation + hardening (Sprint 4 Phase 11).** Deterministic agent
+  orchestration eval (56 held-out cases, `src/agent/eval.py`, `scripts/eval_agent.py`,
+  gated: required/retrieval recall, unnecessary rates, citation & retrieval-sequence
+  validity, completion, unregistered attempts, HITL/cross-user probe). RAGAS preserved
+  (opt-in paid). Logging is safe-by-default (unhandled handler no `exc_info` in prod;
+  history failures metadata-only). Identity is **fail-closed in production** (401 with
+  no supplied identity). Retention: `scripts/cleanup_runtime_data.py` (dry-run default)
+  removes only stale in-progress sessions (never history/memory/checkpoints). Reviewer
+  package in `docs/sprint4_{reviewer_guide,demo_script,final_evaluation,security_privacy}.md`.
 - **Providers.** Career Intelligence uses LangChain over OpenRouter; the
   Interview module uses a direct OpenRouter HTTPX client. Optional speech
   (`[speech]`) and Live (`[live]`) backends are lazily imported. **Live is

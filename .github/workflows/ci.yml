@@ -14,10 +14,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install (with dev + speech + live extras)
+      - name: Install (dev + db + speech + live extras)
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev,speech,live]"
+          pip install -e ".[dev,db,speech,live]"
       - name: Compile
         run: python -m compileall -q app.py src scripts tests
       - name: Ruff (conservative F/E9 rules)
@@ -46,6 +46,16 @@ jobs:
           PY
       - name: Pytest (knowledge fixtures, structured retrieval, security, Streamlit smoke)
         run: python -m pytest -q
+      - name: Deterministic agent orchestration evaluation (offline; gates, no paid calls)
+        run: python scripts/eval_agent.py
+      - name: Alembic migration validation (fresh upgrade + downgrade, single head)
+        env:
+          DATABASE_URL: sqlite:////tmp/ci_migrations.db
+        run: |
+          alembic upgrade head
+          alembic downgrade 0003_interview_sessions
+          alembic upgrade head
+          test "$(alembic heads | wc -l)" -eq 1
       - name: Knowledge expansion eval smoke
         run: python scripts/eval_knowledge_expansion.py
       - name: Product coverage smoke (offline; no live keys)
@@ -62,6 +72,26 @@ jobs:
 
   frontend:
     name: Frontend tests & build
+    # The PRIMARY Sprint 4 frontend is the Next.js app in frontend/.
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+
+  legacy-live-component:
+    name: Legacy Live component
+    # Legacy/experimental Streamlit Live component — kept as a separate, clearly
+    # labelled job (not the primary frontend gate). The candidate product is Next.js.
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -71,7 +101,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - run: npm install
+      - run: npm ci
       - run: npm test
       - run: npm run typecheck
       - run: npm run build

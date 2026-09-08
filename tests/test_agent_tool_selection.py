@@ -9,7 +9,13 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from src.agent.eval import evaluate, load_cases
+from src.agent.eval import (
+    build_eval_career,
+    evaluate,
+    gate_failures,
+    hitl_and_isolation_probe,
+    load_cases,
+)
 from src.copilot.models import Citation, KnowledgeEvidence
 from src.copilot.service import KnowledgeRetrievalResult
 from src.copilot.tools.schemas import (
@@ -59,7 +65,7 @@ class FakeCareer:
 
 def test_tool_selection_regression_metrics():
     cases = load_cases()
-    assert 30 <= len(cases) <= 40  # extended with agentic-RAG retrieval cases (Phase 6)
+    assert len(cases) >= 50  # held-out orchestration dataset finalised in Phase 11
     metrics = evaluate(cases, FakeCareer())
 
     # Every case's required tools all executed (missing-prereq/adversarial expect none).
@@ -80,3 +86,16 @@ def test_tool_selection_regression_metrics():
     assert metrics["citation_validity"] == 1.0
     # The retrieval_used flag always matched an executed retrieval tool.
     assert metrics["retrieval_sequence_validity"] == 1.0
+
+
+def test_release_gates_pass_on_held_out_dataset():
+    # The deterministic release gates (src/agent/eval.GATES) must pass — this is the
+    # same check scripts/eval_agent.py enforces in CI.
+    metrics = evaluate(load_cases(), build_eval_career())
+    assert gate_failures(metrics) == []
+
+
+def test_hitl_and_isolation_probe_invariants():
+    probe = hitl_and_isolation_probe()
+    assert probe["hitl_trigger_recall"] == 1.0          # ambiguous role paused for a human
+    assert probe["cross_user_access_failures"] == 0     # no cross-user leak

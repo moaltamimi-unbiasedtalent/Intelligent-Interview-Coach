@@ -30,16 +30,33 @@ Next.js / TypeScript frontend   ← primary UI
           → Completed history persistence (reports)
 ```
 
-> **Status (through Sprint 4 Phase 10):** the stack above is **implemented**.
+> **Status — Sprint 4 complete (Phases 0–11).** The stack above is **implemented**.
 > **Next.js is the primary frontend**; the LangGraph Agent Coach and the full
 > Interview Practice lifecycle (question → answer → structured feedback → Deep Dive →
 > report) run over FastAPI. In-progress interviews are **durably persisted**, so a
-> browser refresh or a backend restart resumes the same interview. Streamlit is now
-> **legacy/deprecated** (retained until Phase 11 hardening). See
-> [docs/sprint4_roadmap.md](docs/sprint4_roadmap.md),
-> [docs/sprint4_architecture.md](docs/sprint4_architecture.md),
-> [docs/sprint4_requirements_map.md](docs/sprint4_requirements_map.md) and
-> [docs/sprint4_interview_parity.md](docs/sprint4_interview_parity.md).
+> browser refresh or a backend restart resumes the same interview. Streamlit is
+> **legacy/deprecated** (development fallback only).
+
+### Reviewer / evaluation package
+
+New reviewers should start here:
+
+- [Reviewer guide](docs/sprint4_reviewer_guide.md) — 5-minute orientation + Q&A + limitations
+- [Demo script](docs/sprint4_demo_script.md) — 5–8 minute walkthrough
+- [Final evaluation](docs/sprint4_final_evaluation.md) — deterministic metrics + RAGAS status
+- [Security & privacy](docs/sprint4_security_privacy.md) · [Architecture](docs/sprint4_architecture.md) · [Requirements map](docs/sprint4_requirements_map.md) · [Interview parity](docs/sprint4_interview_parity.md)
+
+Evaluation commands (no paid calls):
+
+```bash
+python scripts/eval_agent.py            # deterministic agent orchestration + gates
+python scripts/eval_ragas.py            # RAGAS offline guards / config validation
+python scripts/eval_ragas.py --live     # explicit paid RAGAS run (opt-in)
+python scripts/cleanup_runtime_data.py --dry-run   # stale-session retention (counts only)
+```
+
+Enable the Agent Coach with `AGENT_COACH_ENABLED=true`; set `OPENROUTER_API_KEY` for
+LLM-backed features. **Known limitations** are listed in the reviewer guide.
 
 ## Current product (Sprint 3)
 

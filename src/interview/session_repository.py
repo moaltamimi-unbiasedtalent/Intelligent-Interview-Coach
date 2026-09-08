@@ -31,7 +31,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, Callable, Iterator
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
@@ -299,6 +299,33 @@ class DurableInterviewSessionStore:
             if row is not None and row.user_id == user_id:
                 db.delete(row)
                 db.commit()
+
+    def count_stale_sessions(self, before) -> int:
+        """Count durable sessions not accessed since ``before`` (dry-run helper)."""
+        with self._session_factory() as db:
+            return int(db.execute(
+                select(func.count()).select_from(InterviewSession)
+                .where(InterviewSession.last_accessed_at < before)
+            ).scalar_one())
+
+    def cleanup_stale_sessions(self, before) -> int:
+        """Delete stale durable runtime interview-session rows (those whose
+        ``last_accessed_at`` is older than ``before``); return the count.
+
+        This is time-based operational retention over the ``interview_sessions`` table,
+        which holds only resumable runtime state — it NEVER touches completed interview
+        history (a separate, user-owned store). Rows accessed on or after ``before``
+        are preserved. The caller derives ``before`` from a retention policy (e.g.
+        ``constants.INTERVIEW_SESSION_RETENTION_DAYS``).
+        """
+        n = self.count_stale_sessions(before)
+        if n:
+            with self._session_factory() as db:
+                db.execute(
+                    delete(InterviewSession).where(InterviewSession.last_accessed_at < before)
+                )
+                db.commit()
+        return n
 
     def list_active(self, user_id: Any) -> list[SessionSummary]:
         """Safe summaries of a user's resumable sessions (newest first).

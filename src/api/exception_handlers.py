@@ -105,8 +105,18 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(Exception)
     async def _unhandled(request: Request, exc: Exception):
         rid = _request_id(request)
-        # Log with detail server-side (safe logger), return a generic message only.
-        logger.error("Unhandled API error [request_id=%s]", rid, exc_info=True)
+        # SAFE BY DEFAULT: log only the request id + exception CLASS NAME. A raw
+        # traceback (exc_info) can capture private request data held in stack frames
+        # (JD/background/answers, DB params, credentials), so it is emitted ONLY in an
+        # explicitly non-production environment for local debugging. The client always
+        # receives a generic message.
+        env = getattr(getattr(request.app.state, "settings", None), "env", "production")
+        dev = str(env).lower() in ("development", "dev", "test")
+        logger.error(
+            "Unhandled API error",
+            extra={"request_id": rid, "error_category": type(exc).__name__},
+            exc_info=dev,
+        )
         return _envelope(
             500, "internal_error",
             "An unexpected error occurred. Please try again.", rid,
