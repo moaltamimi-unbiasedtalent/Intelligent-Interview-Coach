@@ -1,6 +1,7 @@
 "use client";
 
 import type { AgentConversationMessage, AgentRunResponse } from "@/lib/api/types";
+import { Markdown } from "@/components/coach/Markdown";
 import { AgentSources } from "./AgentSources";
 import { activityFromEvents } from "./labels";
 
@@ -27,7 +28,11 @@ export function AgentConversation({
                   : "max-w-[92%] rounded-2xl bg-surface-2 px-4 py-2.5"
               }
             >
-              <p className="whitespace-pre-wrap break-words text-sm">{m.content}</p>
+              {m.role === "user" ? (
+                <p className="whitespace-pre-wrap break-words text-sm">{m.content}</p>
+              ) : (
+                <Markdown text={m.content} />
+              )}
             </div>
           </li>
         ))}
