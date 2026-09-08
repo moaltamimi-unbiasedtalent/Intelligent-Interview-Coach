@@ -202,18 +202,68 @@ def test_report_persist_then_history_crash_retry_does_not_regenerate(tmp_path, m
         assert len(repo.list_interviews(uid)) == 1  # exactly one completed-history row
 
 
-def test_no_private_content_in_persistence_failure_log(tmp_path, caplog):
-    # A persistence failure logs safely — never the candidate answer / JD / report text.
+# Markers a real DB exception could carry (SQL statement, bound params with candidate
+# content, and the DB URL with credentials). NONE may reach the logs.
+_LEAK_MARKERS = [
+    "SECRET-ANSWER-TEXT",
+    "SECRET-JD-TEXT",
+    "SECRET-REPORT-TEXT",
+    "postgresql://user:password@secret-host/db",
+    "password",
+    "INSERT INTO",
+    "parameters=",
+    "Traceback",
+]
+
+
+def _assert_no_leak(caplog):
+    blob = caplog.text
+    for marker in _LEAK_MARKERS:
+        assert marker not in blob, f"leaked {marker!r} into logs"
+    assert "Interview persistence failed" in blob  # the safe message is present
+
+
+def test_persistence_failure_log_omits_exception_message(tmp_path, caplog):
+    # The exception message deliberately embeds SQL, bound params (candidate content)
+    # and DB credentials — none may be logged (no exc_info, no str(exc)).
     repo, _sf, alice, _bob = _repo(tmp_path)
     session = _completed_session()
-    session.data.answers = ["SECRET-ANSWER-TEXT"]
 
     class _BoomRepo:
         def save_interview(self, *a, **k):
-            raise RuntimeError("db down")
+            raise RuntimeError(
+                "INSERT INTO interviews (...) VALUES (...) "
+                "parameters={'answer':'SECRET-ANSWER-TEXT','jd':'SECRET-JD-TEXT',"
+                "'report':'SECRET-REPORT-TEXT'} "
+                "postgresql://user:password@secret-host/db")
 
     with caplog.at_level("WARNING"):
-        history_service.save_completed_interview(session, config=None, repo=_BoomRepo(), user_id=alice,
-                                                 source_session_id="sess-x")
+        history_service.save_completed_interview(session, config=None, repo=_BoomRepo(),
+                                                 user_id=alice, source_session_id="sess-x")
     assert session.data.save_failed is True
-    assert "SECRET-ANSWER-TEXT" not in caplog.text
+    _assert_no_leak(caplog)
+    # A coarse, safe category (class name only) is acceptable metadata.
+    assert any(getattr(r, "error_category", None) == "RuntimeError" for r in caplog.records)
+
+
+def test_persistence_failure_sqlalchemy_like_error_is_safe(tmp_path, caplog):
+    # Emulate a SQLAlchemy StatementError, which stringifies to its statement + params.
+    from sqlalchemy.exc import StatementError
+    repo, _sf, alice, _bob = _repo(tmp_path)
+    session = _completed_session()
+
+    class _BoomRepo:
+        def save_interview(self, *a, **k):
+            raise StatementError(
+                message="(psycopg2.OperationalError) connection failed to "
+                        "postgresql://user:password@secret-host/db",
+                statement="INSERT INTO answers (text) VALUES (%(text)s)",
+                params={"text": "SECRET-ANSWER-TEXT", "jd": "SECRET-JD-TEXT"},
+                orig=Exception("SECRET-REPORT-TEXT"),
+            )
+
+    with caplog.at_level("WARNING"):
+        history_service.save_completed_interview(session, config=None, repo=_BoomRepo(),
+                                                 user_id=alice, source_session_id="sess-y")
+    assert session.data.save_failed is True
+    _assert_no_leak(caplog)

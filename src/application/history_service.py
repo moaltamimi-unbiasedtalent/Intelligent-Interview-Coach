@@ -170,9 +170,16 @@ def save_completed_interview(
         # session (idempotent) — either way SessionData is repaired truthfully.
         data.saved_report_id = interview_id
         data.save_failed = False
-    except Exception:  # noqa: BLE001 - persistence must not break the report
+    except Exception as exc:  # noqa: BLE001 - persistence must not break the report
         data.save_failed = True
-        logger.warning("Interview persistence failed", exc_info=True)
+        # SAFE METADATA ONLY. A raw DB exception (SQLAlchemy StatementError/
+        # OperationalError) can carry the SQL statement + bound parameters — which may
+        # include the JD, candidate background, answers, evaluations or report content
+        # — plus the DB URL/credentials. Never log the exception string, a traceback
+        # (no exc_info) or repr; only the exception CLASS NAME as a coarse category.
+        logger.warning(
+            "Interview persistence failed", extra={"error_category": type(exc).__name__}
+        )
 
 
 def list_interview_reports(repo, user_id: int):
