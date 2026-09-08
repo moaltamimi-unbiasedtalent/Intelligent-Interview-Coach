@@ -190,6 +190,16 @@ BRANCH_MODES = (
 DEFAULT_BRANCH_MODE = "deepen_reasoning"
 MAX_BRANCH_DEPTH = 2
 
+# --- Durable interview sessions (Sprint 4 Phase 10) --------------------------
+# Bounded, recoverable lease around a provider-backed interview mutation so a
+# concurrent duplicate request cannot launch the same paid model call twice. A
+# lease older than this is considered stale (a crashed worker) and may be reclaimed,
+# so a dead worker never leaves a session permanently stuck.
+INTERVIEW_OPERATION_LEASE_SECONDS = 120
+# Retention policy for durable IN-PROGRESS interview sessions (operational state,
+# not completed history). Sessions untouched for longer are eligible for cleanup.
+INTERVIEW_SESSION_RETENTION_DAYS = 30
+
 # --- Scoring bounds ----------------------------------------------------------
 # Practice-feedback scores only — never treated as objective hiring decisions.
 
