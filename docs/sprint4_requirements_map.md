@@ -1,11 +1,11 @@
 # Sprint 4 Requirements Map — Intelligent Interview Coach
 
 Maps the Sprint 4 course requirements to implementation. Status is accurate as of
-Phase 9 — items still in progress say so; nothing future is overstated.
+Phase 9.5 — items still in progress say so; nothing future is overstated.
 
 ## Core requirements
 
-| Requirement | Status (Phase 9) | Notes |
+| Requirement | Status (Phase 9.5) | Notes |
 |---|---|---|
 | Clear agent purpose | ✅ implemented/documented | Career & Interview Preparation Agent — one primary agent from target role to practised interview. |
 | 3+ tools (agent) | ✅ complete | The agent registers **5 real Career tools** (job analysis, gap analysis, preparation plan, question generation, and career-knowledge retrieval) as thin adapters over the existing capabilities. |
@@ -19,6 +19,7 @@ Phase 9 — items still in progress say so; nothing future is overstated.
 | Agent Inspector | ✅ complete | `/review/agent`: owner-scoped, safe observable execution (tools, retrieval, sources, memory, human approvals, warnings) — never chain-of-thought, prompts or raw checkpoint (**Phase 9**). |
 | Safe observability | ✅ complete (local event level) | Safe agent events power the Coach activity line and the Inspector timeline; token/cost is honestly reported as not captured. |
 | Persistent checkpoints | ✅ complete (SQLite/Postgres) | Official saver (`langgraph-checkpoint-sqlite`/`-postgres`); paused runs survive service recreation. `MemorySaver` remains the transitional fallback for `:memory:`/unset. Checkpoint schema is saver-owned, separate from Alembic. |
+| Model selection (reviewer: "outdated LLMs") | ✅ ADDRESSED | Typed model registry (`src/llm/models.py`) with Fast/Balanced/Advanced profiles → current OpenRouter slugs (env-overridable); explicit workload→profile policy; capability/temperature/legacy handling centralised (**Phase 9.5**). |
 
 ## Optional requirements
 

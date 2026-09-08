@@ -168,6 +168,22 @@ assumptions in core logic, prompts, scoring or examples.
   needs shared locking — documented). **Agent Inspector** (`/review/agent`) shows
   owner-scoped, observable-only execution (never CoT/prompts/raw checkpoint; token/cost
   honestly "not captured"). No model modernisation; production auth still transitional.
+- **Model registry (Sprint 4 Phase 9.5).** One typed source of truth
+  (`src/llm/models.py`): `ModelProfile` = Fast/Balanced/Advanced → current OpenRouter
+  slugs (`openai/gpt-5.6-luna`/`terra`/`sol`), overridable via
+  `OPENROUTER_MODEL_FAST|BALANCED|ADVANCED`. A `Workload`→profile policy makes the
+  cost/quality trade-off explicit (Agent/Career synthesis/JD/questions → Balanced;
+  answer evaluation + final report → Advanced; utility/RAGAS → Fast; gap analysis +
+  preparation planner stay **deterministic/no-model**). `constants.DEFAULT_MODEL`/
+  `LOW_COST_MODEL`/`HIGH_CAPABILITY_MODEL` and the Career `DEFAULT_MODEL` are thin
+  aliases resolving from the registry (no second source). Capability metadata (tools,
+  structured output, temperature, reasoning hint) lives with the registry; temperature
+  is omitted for the reasoning family; the agent factory fails closed if its profile
+  lacks tool support. Legacy slugs (`gpt-5-mini`→Balanced, `-nano`→Fast, `gpt-5`→
+  Advanced) coerce via `ApprovedModel` synonyms so saved sessions never crash. No live
+  OpenRouter call at import/`/health`; provider reasoning is never stored/logged/exposed.
+  The Interview service keeps one candidate-selected profile per session (default
+  Balanced); per-operation tiering is a deferred follow-up (no interview redesign).
 - **Providers.** Career Intelligence uses LangChain over OpenRouter; the
   Interview module uses a direct OpenRouter HTTPX client. Optional speech
   (`[speech]`) and Live (`[live]`) backends are lazily imported. **Live is
@@ -215,7 +231,7 @@ assumptions in core logic, prompts, scoring or examples.
   (mock the boundaries). Do not weaken tests to pass or silently swallow errors.
 - Tests must not mutate committed artifacts (write to `tmp_path`).
 - `ruff check .` (conservative `F`/`E9` rules) must pass.
-- Current measured suite on this branch: **1495 passed, 2 skipped** (the skips are
+- Current measured suite on this branch: **1526 passed, 2 skipped** (the skips are
   the RAGAS installed/absent guards). Re-measure with `pytest -q` rather than
   hard-coding a number in multiple places.
 

@@ -751,6 +751,66 @@ and resume the same run. The Agent Inspector exposes observable execution — to
 calls, retrieval, sources, memory use and human approvals — but never chain-of-thought,
 prompts or raw checkpoint state.*
 
+## 3k. Phase 9.5 — model registry & modern OpenRouter models (implemented)
+
+Phase 9.5 addresses the Sprint 3 reviewer note *"using outdated LLMs."* Instead of
+model identifiers scattered across the app, there is one typed registry
+(`src/llm/models.py`) with three **workload profiles** — Fast / Balanced / Advanced —
+each resolving to a current OpenRouter slug, overridable per deployment:
+
+| Profile | Env override | Current default (impl. time) |
+|---|---|---|
+| Fast | `OPENROUTER_MODEL_FAST` | `openai/gpt-5.6-luna` |
+| Balanced | `OPENROUTER_MODEL_BALANCED` | `openai/gpt-5.6-terra` |
+| Advanced | `OPENROUTER_MODEL_ADVANCED` | `openai/gpt-5.6-sol` |
+
+**Why not one model everywhere.** The strongest model is not automatically the right
+model for every operation — the registry makes the cost/quality/latency trade-off
+explicit through a workload→profile policy:
+
+| Workload | Profile | Why |
+|---|---|---|
+| Agent orchestration | Balanced | tool reliability + latency/cost |
+| Career synthesis (`/career/chat`) | Balanced | grounded explanation |
+| Job-description analysis | Balanced | structured extraction |
+| Gap analysis | none (deterministic) | no model |
+| Preparation planning | none (deterministic) | no model |
+| Question generation | Balanced | quality/latency |
+| Interview strategy/questions | Balanced (session profile) | quality/latency |
+| Answer evaluation | Advanced | feedback quality |
+| Final report | Advanced | complex synthesis |
+| Utility / repair | Fast | bounded task |
+| RAGAS (offline, manual) | Fast | evaluator cost |
+
+**Documented adjustment (interview).** The Interview service applies ONE
+candidate-selected profile (Fast/Balanced/Advanced; default Balanced) across a
+session's strategy/questions/evaluation/report — the existing single-model-per-session
+design. Routing individual interview operations to different tiers (e.g. Advanced only
+for evaluation/report) would require changing the interview service signature, which
+this config-only phase deliberately avoids; it is noted as a follow-up.
+
+**Registry is the source of truth.** `constants.DEFAULT_MODEL` / `LOW_COST_MODEL` /
+`HIGH_CAPABILITY_MODEL` (Interview) and the Career `DEFAULT_MODEL` are now thin aliases
+resolving from the registry (no second source). Capability metadata (tool calling,
+structured output, temperature, a documented reasoning hint) lives with the registry;
+temperature is **omitted** for the reasoning family (resolved centrally) rather than
+sent-and-rejected. The agent model factory fails closed if the agent profile lacks
+tool support. **Legacy compatibility:** previous app slugs (`openai/gpt-5-mini` →
+Balanced, `-nano` → Fast, `gpt-5` → Advanced) coerce via the `ApprovedModel` synonyms
+so persisted sessions never crash; arbitrary/other-provider models remain unapproved.
+No live OpenRouter call at import or `/health`; reasoning output is never stored,
+logged or exposed (regression-tested). Embeddings and RAGAS evaluator config are
+unchanged; a manual, paid-only comparison harness was **not** run (no automated spend).
+
+**Reviewer story.** *The previous version used fixed model identifiers scattered across
+the application. I replaced that with a typed model registry and workload profiles:
+Fast, Balanced and Advanced. The agent and normal generation use the Balanced profile
+by default, while higher-stakes evaluation/reporting use Advanced and lightweight
+bounded operations use Fast. Models remain configurable through environment variables,
+so changing provider models no longer requires changing business logic. Model
+capabilities such as tool calling and structured outputs are validated by the
+integration layer rather than assumed.*
+
 ## 4. Internal naming is intentionally stable
 
 To evolve functionality first and avoid churn/regression risk, Sprint 4 **does
@@ -784,8 +844,10 @@ internal docstrings are internal references and are left as-is.
 - Retrieval should be exposed as a **tool** rather than only a predetermined step.
 
 **How Sprint 4 addresses them:**
-- A **model registry / current-model review** will be added in a later Sprint 4
-  phase (not changed in Phase 0, to avoid runtime behaviour change).
+- **Outdated LLMs — ADDRESSED (Phase 9.5, §3k).** A typed model registry
+  (`src/llm/models.py`) replaces scattered slugs with Fast/Balanced/Advanced workload
+  profiles resolving to current OpenRouter models (env-overridable), with an explicit
+  workload→profile policy and centralised capability/temperature/legacy handling.
 - **Retrieval is now an explicit agent tool** — `SearchCareerKnowledge`, delivered
   in **Phase 6 (Agentic RAG, §3g)**: the agent decides *whether* to retrieve while
   the deterministic Sprint 3 router still decides *which* lanes, internals preserved.
