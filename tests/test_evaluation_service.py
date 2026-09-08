@@ -5,6 +5,7 @@ import json
 import pytest
 
 from src import constants
+from src.llm import models as _model_registry
 
 from src.evaluation_service import EvaluationService
 from src.interview_service import ModelResponseError
@@ -166,3 +167,12 @@ class TestFailureLoggingPrivacy:
         assert "SECRET_ANSWER_TOKEN" not in blob
         # Safe metadata (schema name) is fine and expected.
         assert "AnswerEvaluation" in blob
+
+
+@pytest.mark.parametrize("profile", list(_model_registry.ModelProfile))
+def test_session_profile_drives_evaluation(profile) -> None:
+    slug = _model_registry.model_id(profile)
+    client = FakeClient([_evaluation_json()])
+    service = EvaluationService(client, _pricing())
+    service.evaluate_answer(_config(), "Q?", "An answer.", ModelSettings(model=slug, prompt_technique="structured_procedure"))
+    assert client.calls and all(c["model"] == slug for c in client.calls)

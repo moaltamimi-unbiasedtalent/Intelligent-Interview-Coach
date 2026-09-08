@@ -11,13 +11,19 @@ import pytest
 from langchain_core.messages import AIMessage
 
 from src.llm.models import (
+    INTERVIEW_RECOMMENDED_PROFILE,
+    INTERVIEW_SESSION_DEFAULT_PROFILE,
     ModelProfile,
+    ModelSelectionMode,
     Workload,
     WORKLOAD_PROFILE,
     all_specs,
+    effective_interview_profile,
     legacy_synonyms,
     model_id,
     profile_for_model,
+    recommended_profile,
+    selection_mode,
     spec,
     supports_temperature,
     workload_profile,
@@ -60,7 +66,8 @@ def test_agent_profile_supports_tools():
 def test_structured_workloads_require_structured_output():
     for wl in (Workload.JD_ANALYSIS, Workload.QUESTION_GENERATION,
                Workload.ANSWER_EVALUATION, Workload.FINAL_REPORT):
-        assert spec(workload_profile(wl)).supports_structured_output is True
+        # recommended_profile works for both registry- and session-selected workloads.
+        assert spec(recommended_profile(wl)).supports_structured_output is True
 
 
 def test_registry_import_uses_no_secret():
@@ -70,7 +77,7 @@ def test_registry_import_uses_no_secret():
     assert "API_KEY" not in src and "api_key" not in src
 
 
-# --- workload mapping (§43) --------------------------------------------------
+# --- workload mapping (§43) — centrally-selected (REGISTRY) --------------------
 
 
 @pytest.mark.parametrize("workload,expected", [
@@ -78,20 +85,53 @@ def test_registry_import_uses_no_secret():
     (Workload.CAREER_SYNTHESIS, ModelProfile.BALANCED),
     (Workload.JD_ANALYSIS, ModelProfile.BALANCED),
     (Workload.QUESTION_GENERATION, ModelProfile.BALANCED),
+    (Workload.UTILITY, ModelProfile.FAST),
+    (Workload.RAGAS, ModelProfile.FAST),
+])
+def test_registry_workload_effective_profile(workload, expected):
+    assert selection_mode(workload) == ModelSelectionMode.REGISTRY
+    assert workload_profile(workload) == expected
+
+
+# Interview workloads are session-selected: their registry entry is a RECOMMENDATION,
+# never an unconditional effective tier (evaluation/report recommend Advanced).
+@pytest.mark.parametrize("workload,recommended", [
     (Workload.INTERVIEW_STRATEGY, ModelProfile.BALANCED),
     (Workload.INTERVIEW_QUESTION, ModelProfile.BALANCED),
     (Workload.ANSWER_EVALUATION, ModelProfile.ADVANCED),
     (Workload.FINAL_REPORT, ModelProfile.ADVANCED),
-    (Workload.UTILITY, ModelProfile.FAST),
-    (Workload.RAGAS, ModelProfile.FAST),
 ])
-def test_workload_profile_policy(workload, expected):
-    assert WORKLOAD_PROFILE[workload] == expected
+def test_interview_workload_is_session_selected_with_recommendation(workload, recommended):
+    assert selection_mode(workload) == ModelSelectionMode.INTERVIEW_SESSION
+    assert recommended_profile(workload) == recommended
+    # It must NOT be exposed as an effective centrally-selected profile.
+    assert workload not in WORKLOAD_PROFILE
+    with pytest.raises(ValueError):
+        workload_profile(workload)
 
 
-def test_every_workload_has_a_profile():
+def test_every_workload_is_classified_exactly_once():
     for wl in Workload:
-        assert wl in WORKLOAD_PROFILE
+        in_registry = wl in WORKLOAD_PROFILE
+        in_interview = wl in INTERVIEW_RECOMMENDED_PROFILE
+        assert in_registry != in_interview  # exactly one
+
+
+def test_interview_session_default_is_balanced():
+    assert INTERVIEW_SESSION_DEFAULT_PROFILE == ModelProfile.BALANCED
+
+
+@pytest.mark.parametrize("profile", list(ModelProfile))
+def test_effective_interview_profile_follows_the_session_model(profile):
+    # All four interview operations share ModelSettings.model, so the effective tier
+    # is whatever the session selected — not an unused registry entry.
+    assert effective_interview_profile(model_id(profile)) == profile
+
+
+def test_default_interview_model_settings_resolve_to_balanced():
+    from src.models import ModelSettings
+    assert effective_interview_profile(ModelSettings().model) == ModelProfile.BALANCED
+    assert effective_interview_profile(ModelSettings().model) == INTERVIEW_SESSION_DEFAULT_PROFILE
 
 
 # --- legacy compatibility (§44) ---------------------------------------------

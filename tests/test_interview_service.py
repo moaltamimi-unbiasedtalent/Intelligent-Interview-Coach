@@ -9,6 +9,7 @@ import json
 import pytest
 
 from src import constants
+from src.llm import models as _model_registry
 from src.interview_service import (
     InterviewService,
     ModelResponseError,
@@ -585,3 +586,21 @@ class TestServiceBehaviour:
         )
         assert pricing_a.session_totals().requests == 1
         assert pricing_b.session_totals().requests == 0
+
+
+class TestSessionProfileEffectiveModel:
+    """Phase 9.5 truthfulness: the session-selected ModelSettings.model is the effective
+    model for ALL interview operations (no per-operation registry tier)."""
+
+    @pytest.mark.parametrize("profile", list(_model_registry.ModelProfile))
+    def test_session_profile_drives_strategy_and_questions(self, profile) -> None:
+        slug = _model_registry.model_id(profile)
+        client = FakeClient([_strategy_json(), _question_json()])
+        service = InterviewService(client, _pricing())
+        settings = _settings(model=slug)
+        service.generate_strategy(_config(), settings)
+        service.generate_next_question(
+            _config(), settings, current_question_number=1,
+            history=QuestionHistory(questions=[], answers=[], evaluations=[]),
+        )
+        assert client.calls and all(c["model"] == slug for c in client.calls)

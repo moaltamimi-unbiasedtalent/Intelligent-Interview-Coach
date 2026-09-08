@@ -5,6 +5,7 @@ import json
 import pytest
 
 from src import constants
+from src.llm import models as _model_registry
 
 from src.interview_service import ModelResponseError, ServiceInputError
 from src.models import (
@@ -178,3 +179,12 @@ class TestGenerateReport:
                 [_evaluation(70)],
                 _settings(),
             )
+
+
+@pytest.mark.parametrize("profile", list(_model_registry.ModelProfile))
+def test_session_profile_drives_report(profile) -> None:
+    slug = _model_registry.model_id(profile)
+    client = FakeClient([_report_json()])
+    service = ReportService(client, _pricing())
+    service.generate_report(_config(), [_question(1)], ["a"], [_evaluation(70)], ModelSettings(model=slug, prompt_technique="rubric_json"))
+    assert client.calls and all(c["model"] == slug for c in client.calls)
