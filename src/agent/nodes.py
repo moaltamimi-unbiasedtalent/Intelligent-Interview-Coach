@@ -14,7 +14,11 @@ from typing import Any, Callable
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langgraph.types import interrupt
 
-from src.agent.errors import AgentConfigurationError, AgentToolError
+from src.agent.errors import (
+    TOOL_FAILURE_EXECUTION_FAILED,
+    AgentConfigurationError,
+    AgentToolError,
+)
 from src.agent.events import AgentEvent, AgentEventType
 from src.agent.human import DECISION_APPROVE, DECISION_SELECT, HumanActionType
 from src.agent.policies import MAX_AGENT_STEPS, SYSTEM_PROMPT
@@ -166,8 +170,12 @@ def make_tools_node(registry: ToolRegistry) -> Callable[[AgentState], dict]:
                 out_messages.append(ToolMessage(content=json.dumps(outcome.result), tool_call_id=call_id))
             except AgentToolError as exc:
                 dur = int((time.perf_counter() - t0) * 1000)
-                events.append(AgentEvent(AgentEventType.TOOL_FAILED, step=step, tool_name=name, duration_ms=dur, status="error", message="The tool could not run with those inputs.").to_dict())
-                history.append({"tool": name, "status": "error"})
+                # A safe, coarse category (never arguments/content/raw cause) so the
+                # Inspector can distinguish a missing prerequisite from bad arguments
+                # or an execution failure. Defaults to execution_failed.
+                category = getattr(exc, "category", None) or TOOL_FAILURE_EXECUTION_FAILED
+                events.append(AgentEvent(AgentEventType.TOOL_FAILED, step=step, tool_name=name, duration_ms=dur, status="error", category=category, message="The tool could not run with those inputs.").to_dict())
+                history.append({"tool": name, "status": "error", "category": category})
                 # The safe message (never a raw cause) goes back to the model as data.
                 out_messages.append(ToolMessage(content=json.dumps({"error": str(exc)}), tool_call_id=call_id))
 

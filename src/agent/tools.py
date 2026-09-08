@@ -30,7 +30,12 @@ from typing import Any, Callable
 
 from pydantic import BaseModel, Field
 
-from src.agent.errors import AgentToolError
+from src.agent.errors import (
+    TOOL_FAILURE_EXECUTION_FAILED,
+    TOOL_FAILURE_INVALID_ARGUMENTS,
+    TOOL_FAILURE_MISSING_PREREQUISITE,
+    AgentToolError,
+)
 from src.agent.human import (
     approve_handoff_action,
     approve_memory_action,
@@ -42,14 +47,16 @@ Handler = Callable[[BaseModel, ToolContext], ToolOutcome]
 
 
 def _require(value: Any, message: str) -> Any:
+    # A missing required input/prior result is a prerequisite failure, not a crash.
     if not value:
-        raise AgentToolError(message)
+        raise AgentToolError(message, category=TOOL_FAILURE_MISSING_PREREQUISITE)
     return value
 
 
 def _ok(call) -> Any:
     if not getattr(call, "ok", False) or call.value is None:
-        raise AgentToolError("The tool could not produce a valid result.")
+        raise AgentToolError("The tool could not produce a valid result.",
+                             category=TOOL_FAILURE_EXECUTION_FAILED)
     return call.value
 
 
@@ -147,14 +154,39 @@ def _build_preparation_plan(career_service) -> Handler:
 
 class GenerateInterviewQuestions(BaseModel):
     """Generate interview questions grounded in the known role requirements and
-    preparation context. Use when the user asks for practice questions."""
+    preparation context. Use when the user asks for practice questions.
+
+    Role handling: prefer the role already established in this conversation's
+    structured state (a confirmed role, an analysed job description). Only when the
+    candidate has EXPLICITLY named a target role in the conversation AND no structured
+    role is known yet, pass that role in ``target_role``. Never invent a role the
+    candidate did not state."""
 
     focus: list[str] = Field(default_factory=list, description="Optional focus categories.")
+    target_role: str | None = Field(
+        default=None,
+        max_length=200,
+        description="The target role to generate questions for — supply ONLY when the "
+        "candidate explicitly named it in the conversation and no structured role is "
+        "known yet. Leave empty if the role is already established. Never invent a role.",
+    )
 
 
 def _generate_interview_questions(career_service) -> Handler:
     def handler(args: GenerateInterviewQuestions, ctx: ToolContext) -> ToolOutcome:
-        role = (ctx.target_role or (ctx.requirements or {}).get("role_title") or "").strip()
+        # Conservative role precedence: a role the user CONFIRMED (HITL) or that is
+        # already in structured state always wins over a role the model supplied from
+        # conversation, so the question tool never silently overrides an established
+        # role. The model-supplied ``target_role`` is a fallback ONLY when no
+        # structured role exists (e.g. the role was named in conversation but no job
+        # description was analysed and no target_role was set on the run).
+        structured_role = (
+            (ctx.confirmed_target_role or "").strip()
+            or (ctx.target_role or "").strip()
+            or ((ctx.requirements or {}).get("role_title") or "").strip()
+        )
+        arg_role = (args.target_role or "").strip()
+        role = structured_role or arg_role
         _require(role, "A target role is required — analyse a job description or name the role.")
         reqs: list[str] = []
         if ctx.requirements:
@@ -162,9 +194,15 @@ def _generate_interview_questions(career_service) -> Handler:
         qset = _ok(career_service.generate_questions(role, reqs, list(args.focus or [])))
         data = qset.model_dump()
         count = sum(len(c.questions) for c in qset.categories)
+        patch: dict[str, Any] = {"questions": data}
+        # Persist a fallback role into state ONLY when it came from the model argument
+        # because structured role state was absent — so later turns retain the
+        # now-known role. Never overwrite an existing/confirmed structured role.
+        if arg_role and not structured_role:
+            patch["target_role"] = arg_role
         return ToolOutcome(
             result=data,
-            state_patch={"questions": data},
+            state_patch=patch,
             summary=f"questions={count}, categories={len(qset.categories)}",
             source_count=count,
         )
@@ -224,9 +262,11 @@ def _search_career_knowledge(career_service) -> Handler:
                 candidate_background=ctx.candidate_background,
             ))
         except ApplicationError as exc:
-            raise AgentToolError("Career knowledge is temporarily unavailable.") from exc
+            raise AgentToolError("Career knowledge is temporarily unavailable.",
+                                 category=TOOL_FAILURE_EXECUTION_FAILED) from exc
         except Exception as exc:  # noqa: BLE001 - never leak a raw retrieval/provider error
-            raise AgentToolError("Career knowledge could not be searched.") from exc
+            raise AgentToolError("Career knowledge could not be searched.",
+                                 category=TOOL_FAILURE_EXECUTION_FAILED) from exc
 
         # A blocked retrieval (the query itself tripped the injection guard) is safe
         # DATA for the agent, not a tool crash.
@@ -314,7 +354,8 @@ def _propose_preparation_memory(career_service) -> Handler:
         try:
             category = MemoryCategory.from_value(args.category).value
         except ValueError as exc:
-            raise AgentToolError("That memory category is not allowed.") from exc
+            raise AgentToolError("That memory category is not allowed.",
+                                 category=TOOL_FAILURE_INVALID_ARGUMENTS) from exc
         summary = (args.summary or "").strip()
         _require(summary, "A memory summary is required to propose it.")
         role = (args.target_role or "").strip() or None

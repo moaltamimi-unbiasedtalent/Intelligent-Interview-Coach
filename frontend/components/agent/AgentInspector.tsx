@@ -187,7 +187,12 @@ function ToolExecutionList({ run }: { run: AgentRunResponse }) {
           {run.tool_calls.map((t, i) => (
             <li key={i} className="flex items-center justify-between gap-2">
               <span>{toolLabel(t.tool)}</span>
-              <Badge tone={t.status === "ok" ? "low" : t.status === "rejected" ? "high" : "medium"}>{t.status}</Badge>
+              <span className="flex items-center gap-1.5">
+                {t.status === "error" && t.category ? (
+                  <span className="text-xs text-muted">{t.category.replace(/_/g, " ")}</span>
+                ) : null}
+                <Badge tone={t.status === "ok" ? "low" : t.status === "rejected" ? "high" : "medium"}>{t.status}</Badge>
+              </span>
             </li>
           ))}
         </ul>

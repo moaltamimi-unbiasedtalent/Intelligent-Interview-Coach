@@ -86,8 +86,12 @@ function renderBlocks(text: string): ReactNode {
             : b.level === 2
               ? "text-sm font-semibold"
               : "text-sm font-semibold text-muted";
+        // Expose heading semantics to assistive tech via role/aria-level rather than
+        // real <h1>–<h6> elements: coach messages are nested content, so injecting
+        // document-outline headings would disrupt the page hierarchy. Levels are
+        // offset (3–5) to sit beneath the page's own headings.
         return (
-          <p key={i} className={cls}>
+          <p key={i} className={cls} role="heading" aria-level={Math.min(6, b.level + 2)}>
             {renderInline(b.text)}
           </p>
         );
