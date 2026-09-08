@@ -1,18 +1,39 @@
 name: Browser E2E
 
-# Playwright browser smoke for the unified Home → Interview Practice journey.
-# Runs on pull requests (a review gate) and on demand. It starts two real
-# Streamlit apps (Live OFF on :8501, Live ON on :8502 via INTERVIEW_LIVE_ENABLED,
-# both configured in e2e/playwright.config.ts) and installs a browser, so it is a
-# separate job from the fast Python/frontend CI. No paid provider calls: the app
-# runs without an API key and the smoke exercises navigation, the mode cards
-# (including the Live feature flag), the setup form, and a camera-access spy only.
+# Browser gates. The PRIMARY Sprint 4 gate is the Next.js Playwright suite
+# (frontend/e2e), which mocks the API at the network layer and builds/starts Next.js
+# itself — no backend and no paid provider calls. The legacy Streamlit smoke is kept
+# as a separate, clearly labelled job. Runs on pull requests and on demand.
 on:
   pull_request:
   workflow_dispatch:
 
 jobs:
-  e2e:
+  nextjs-e2e:
+    name: Next.js Playwright (primary)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install (reproducible)
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Run Playwright (Playwright builds + starts Next.js)
+        env:
+          CI: "true"
+        run: npm run e2e
+
+  legacy-streamlit-smoke:
+    name: Legacy Streamlit smoke
+    # Legacy Sprint 3 browser smoke over the Streamlit app (Live OFF/ON). Retained as
+    # a separate, non-primary job; the candidate product is the Next.js app above.
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

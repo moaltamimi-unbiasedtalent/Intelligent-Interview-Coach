@@ -36,8 +36,15 @@ deterministically with **no provider calls**.
 | hitl_trigger_recall (probe) | 1.0 | ambiguous role pauses | PASS |
 | cross_user_access_failures (probe) | 0 | == 0 | PASS |
 
-These names are **deterministic orchestration regression metrics** — not RAGAS scores
-and not model-accuracy claims.
+**What this suite is (and is not).** The deterministic orchestration suite validates
+the graph/tool **contract** against held-out **scripted** routes — expected-tool
+execution, tool prerequisites, state carry-over, retrieval flags, citation/provenance
+invariants, rejection of unregistered tools, completion, and selected HITL/isolation
+invariants. It is **not a live-model tool-selection benchmark**: because each case
+scripts the model's tool calls, `required_tool_recall = 1.0` means "expected-tool
+execution recall under the scripted orchestration cases", **not** "the real model
+chooses the right tool 100% of the time". A live agent benchmark (real model choosing
+tools) is separate, manual and paid (§3), and was not run.
 
 ## 2. RAG / RAGAS status
 
@@ -106,9 +113,12 @@ timestamp and valid/invalid counts (never credentials).
   tooling**, not runtime dependencies of the deployed app: `vitest` (critical) and its
   `vite`/`esbuild`/`vite-node` chain are the test runner; `postcss` (high) and `next`
   (moderate) are build-time. Production audit (`npm audit --omit=dev`) shows only the
-  `postcss`-via-`next@15` build-time items. Remediation requires breaking major
-  upgrades (`vitest@4`, `next@16`); **deferred** rather than destabilise the final
-  sprint (§39). No runtime request-handling exposure in the shipped product.
+  `postcss`-via-`next@15` items. Note `next` is a runtime dependency of the deployed
+  Next.js server (not purely build-time), so this is a production-dependency finding.
+  Audit findings and their current package paths are documented; **no exploit was
+  demonstrated in the tested product flows**, and remediation requiring breaking major
+  upgrades (`vitest@4`, `next@16`) is **deferred and remains a production maintenance
+  item** (§39). The `vitest`/`vite`/`esbuild` findings are dev/test-only tooling.
 - **pip-audit** (run as a dev-only tool, then removed): ~60 advisories across the
   LangGraph/LangChain, `pypdf` and `chromadb` ecosystem. Fixes require **major**
   version upgrades (e.g. `langchain-core` 0.3→1.2, `langgraph` 0.3→1.0) that would

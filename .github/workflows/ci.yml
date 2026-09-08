@@ -72,6 +72,26 @@ jobs:
 
   frontend:
     name: Frontend tests & build
+    # The PRIMARY Sprint 4 frontend is the Next.js app in frontend/.
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+
+  legacy-live-component:
+    name: Legacy Live component
+    # Legacy/experimental Streamlit Live component — kept as a separate, clearly
+    # labelled job (not the primary frontend gate). The candidate product is Next.js.
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -81,7 +101,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - run: npm install
+      - run: npm ci
       - run: npm test
       - run: npm run typecheck
       - run: npm run build

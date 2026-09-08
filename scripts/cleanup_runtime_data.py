@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 """Operator cleanup for durable runtime data (Sprint 4 Phase 11).
 
-Removes only IN-PROGRESS interview sessions untouched for longer than the retention
-window. It NEVER deletes completed interview history (user-owned durable data), agent
-checkpoints, or approved preparation memory — those have their own lifecycles (see
-docs/sprint4_security_privacy.md).
+Removes only stale durable runtime interview-session rows — those whose
+``last_accessed_at`` is older than the retention window (the ``interview_sessions``
+table holds only resumable runtime state). It NEVER deletes completed interview history
+(user-owned durable data), agent checkpoints, or approved preparation memory — those
+have their own lifecycles (see docs/sprint4_security_privacy.md).
 
 Dry-run by default (reports COUNTS only, never interview contents):
 

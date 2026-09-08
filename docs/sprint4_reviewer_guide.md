@@ -66,7 +66,11 @@ ambiguity, memory persistence and Practice handoff (not every tool call).
 
 Deterministic orchestration regression (56 held-out cases, `python
 scripts/eval_agent.py`, gated in CI) + preserved RAGAS for answer quality (opt-in,
-paid). See `docs/sprint4_final_evaluation.md`.
+paid). The deterministic suite validates the graph/tool **contract** against held-out
+**scripted** routes — it is **not a live-model tool-selection benchmark** (e.g.
+`required_tool_recall = 1.0` is expected-tool execution recall under the scripted
+cases, not a claim that the real model always picks the right tool). See
+`docs/sprint4_final_evaluation.md`.
 
 ## Security
 

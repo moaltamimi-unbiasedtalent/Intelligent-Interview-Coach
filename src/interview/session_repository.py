@@ -309,12 +309,14 @@ class DurableInterviewSessionStore:
             ).scalar_one())
 
     def cleanup_stale_sessions(self, before) -> int:
-        """Delete IN-PROGRESS sessions untouched since ``before``; return the count.
+        """Delete stale durable runtime interview-session rows (those whose
+        ``last_accessed_at`` is older than ``before``); return the count.
 
-        Operational retention only — this NEVER touches completed interview history
-        (a separate, user-owned store). Recent/active interviews (accessed on or after
-        ``before``) are preserved. The caller derives ``before`` from a retention
-        policy (e.g. ``constants.INTERVIEW_SESSION_RETENTION_DAYS``).
+        This is time-based operational retention over the ``interview_sessions`` table,
+        which holds only resumable runtime state — it NEVER touches completed interview
+        history (a separate, user-owned store). Rows accessed on or after ``before``
+        are preserved. The caller derives ``before`` from a retention policy (e.g.
+        ``constants.INTERVIEW_SESSION_RETENTION_DAYS``).
         """
         n = self.count_stale_sessions(before)
         if n:

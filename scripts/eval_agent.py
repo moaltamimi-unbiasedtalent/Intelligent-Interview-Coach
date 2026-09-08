@@ -16,8 +16,13 @@ from __future__ import annotations
 
 import sys
 import time
+from pathlib import Path
 
-from src.agent.eval import (
+# Make the repo root importable when run directly from a clean checkout / CI
+# (`python scripts/eval_agent.py`), matching the other scripts/eval_*.py.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from src.agent.eval import (  # noqa: E402
     GATES,
     build_eval_career,
     evaluate,
