@@ -37,6 +37,10 @@ tmp/
 
 # Local database (dev)
 *.db
+# Agent HITL checkpoint store (runtime-generated; SqliteSaver manages its own tables)
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
 # Knowledge base: keep the structure + docs, ignore generated stores and the
 # (potentially large / licensed) source documents.
 data/chroma/*

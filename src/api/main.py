@@ -60,8 +60,11 @@ async def lifespan(app: FastAPI):
     # App-lifetime state. Expensive resources (vector store, repository, …) are
     # built lazily on first use and cached here under a lock — nothing that makes
     # a provider/DB call runs at import or startup.
+    # RLock (reentrant) is required: a resource factory may itself resolve another
+    # shared resource (e.g. get_agent_service's factory calls get_app_config), which
+    # re-enters ``_shared`` on the SAME thread — a plain Lock would self-deadlock.
     app.state.resources = {}
-    app.state.resources_lock = threading.Lock()
+    app.state.resources_lock = threading.RLock()
     app.state.session_store = InMemorySessionStore()
     logger.info("API started (env=%s)", app.state.settings.env)
     yield
