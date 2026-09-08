@@ -89,6 +89,23 @@ def get_repository(request: Request):
     )
 
 
+def get_memory_repository(request: Request):
+    """App-lifetime preparation-memory repository, sharing the interview DB engine."""
+    from src.repository import MemoryRepository
+
+    return _shared(
+        request, "memory_repository",
+        lambda: MemoryRepository(get_repository(request).session_factory),
+    )
+
+
+def get_memory_service(request: Request):
+    """Request-scoped preparation-memory application service (Phase 7)."""
+    from src.application.memory_service import MemoryApplicationService
+
+    return MemoryApplicationService(get_memory_repository(request))
+
+
 def get_session_store(request: Request):
     """The transitional in-memory interview session store (set up in lifespan)."""
     return request.app.state.session_store
@@ -103,7 +120,14 @@ def get_agent_service(request: Request):
     """
     from src.application.agent_service import AgentApplicationService
 
-    return _shared(request, "agent_service", AgentApplicationService)
+    # Inject long-term memory (Phase 7): the agent loads a bounded, user-scoped set
+    # of approved memories at the start of a run. Built once over the shared repo.
+    return _shared(
+        request, "agent_service",
+        lambda: AgentApplicationService(
+            memory_service=get_memory_service(request),
+        ),
+    )
 
 
 # --- request-scoped application services -------------------------------------
