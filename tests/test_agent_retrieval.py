@@ -164,12 +164,16 @@ def _events_of(res, event_type):
 # --- §40 no low-level RAG tools are registered -------------------------------
 
 
-def test_registry_registers_exactly_the_five_real_tools():
+def test_registry_registers_the_five_real_career_tools():
+    # The five Career evidence tools remain exactly these (Phase 8 adds two SEPARATE
+    # human-action tools, asserted below — not Career evidence tools).
     reg = career_tool_registry(FakeCareer())
-    assert set(reg.names()) == {
+    career_tools = {
         "AnalyzeJobDescription", "AnalyzeCandidateGaps", "BuildPreparationPlan",
         "GenerateInterviewQuestions", "SearchCareerKnowledge",
     }
+    assert career_tools <= set(reg.names())
+    assert set(reg.names()) - career_tools == {"ProposePreparationMemory", "RequestPracticeHandoff"}
 
 
 def test_retrieval_is_a_single_high_level_tool():
