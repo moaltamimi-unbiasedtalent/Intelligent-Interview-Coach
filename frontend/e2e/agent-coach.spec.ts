@@ -75,15 +75,26 @@ test("agent coach: role confirmation pauses and resumes the same run", async ({ 
   await expect(page.getByText("Here is your grounded guidance.")).toBeVisible();
 });
 
-test("agent coach: practice handoff creates an interview and redirects", async ({ page }) => {
-  await mock(page, {
-    onRun: runBody({ handoff_approved: true, preparation_context: { target_role: "Senior PM", industry: "Tech" } }),
+test("agent coach: practice handoff creates an interview (idempotency key) and redirects", async ({ page }) => {
+  const interviewKeys: string[] = [];
+  await page.route("**/api/v1/**", async (route) => {
+    const url = route.request().url();
+    const json = (body: unknown, status = 200) =>
+      route.fulfill({ status, contentType: "application/json", headers: { "x-request-id": "req_e2e" }, body: JSON.stringify(body) });
+    if (url.includes("/capabilities")) return json(CAPS(true));
+    if (url.endsWith("/agent/run")) return json(runBody({ handoff_approved: true, preparation_context: { target_role: "Senior PM", industry: "Tech", seniority: "senior" } }));
+    if (url.endsWith("/interviews")) {
+      interviewKeys.push(route.request().headers()["idempotency-key"] ?? "");
+      return json({ session_id: "sess_e2e", state: "AWAITING_ANSWER", question_number: 1, questions_planned: 5, current_question: { question_id: 1, question: "Q1", question_type: "behavioural", competency: "x", difficulty: "moderate" }, report_available: false, target_role: "Senior PM" });
+    }
+    return json({});
   });
   await page.goto("/prepare");
   await page.getByLabel("What interview are you preparing for?").fill("Ready to practise");
   await page.getByRole("button", { name: "Start preparing" }).click();
   await page.waitForURL(/\/practice\?session=sess_e2e/);
-  expect(page.url()).toContain("/practice?session=sess_e2e");
+  // The interview creation carried a stable idempotency key derived from the run id.
+  expect(interviewKeys.some((k) => k.startsWith("agent-handoff:"))).toBeTruthy();
 });
 
 test("agent coach: refresh restores the pending approval", async ({ page }) => {

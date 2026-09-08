@@ -156,7 +156,14 @@ assumptions in core logic, prompts, scoring or examples.
   messages); the run id lives in `?run=` (random, owner-scoped) for refresh via
   `GET /agent/runs/{id}`. HITL renders as Precision Coach approval cards
   (`components/agent/*`); an approved handoff creates the interview in the FRONTEND
-  (`POST /interviews`, double-submit-guarded) → `/practice`, never inside LangGraph.
+  (`POST /interviews`) → `/practice`, never inside LangGraph. Interview creation is
+  **idempotent** via an `Idempotency-Key` header (`agent-handoff:<run_id>`) →
+  `InMemorySessionStore.create_or_get(user_id, key)` (user-scoped, bounded, eviction-
+  cleaned, in-process): refresh/remount/retry resolve to the SAME session with NO
+  repeated strategy/first-question generation. The frontend never fabricates
+  industry/`career_level` — it sends the PreparationContext (backend derives them from
+  `seniority`); a genuine gap returns `422` and a completion card sources career levels
+  from `GET /interviews/options`.
   Per-thread resume/continue is serialised with an in-process lock (multi-process
   needs shared locking — documented). **Agent Inspector** (`/review/agent`) shows
   owner-scoped, observable-only execution (never CoT/prompts/raw checkpoint; token/cost
@@ -208,7 +215,7 @@ assumptions in core logic, prompts, scoring or examples.
   (mock the boundaries). Do not weaken tests to pass or silently swallow errors.
 - Tests must not mutate committed artifacts (write to `tmp_path`).
 - `ruff check .` (conservative `F`/`E9` rules) must pass.
-- Current measured suite on this branch: **1484 passed, 2 skipped** (the skips are
+- Current measured suite on this branch: **1495 passed, 2 skipped** (the skips are
   the RAGAS installed/absent guards). Re-measure with `pytest -q` rather than
   hard-coding a number in multiple places.
 

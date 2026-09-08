@@ -719,8 +719,19 @@ candidate background or memory ever goes in the URL or `localStorage`.
 Precision Coach card: role confirmation (accessible options), memory approval (shows
 the exact category/summary/role, persists only on Save), and practice handoff. On an
 approved handoff the FRONTEND creates the interview (`POST /interviews` from the
-returned PreparationContext, guarded against double-submit) and routes to `/practice`
-— the session is never created inside LangGraph (preserving Phase 8 replay safety).
+returned PreparationContext) and routes to `/practice` — the session is never created
+inside LangGraph (preserving Phase 8 replay safety). Interview creation is
+**idempotent**: the client sends an `Idempotency-Key` header derived from the agent
+run id (`agent-handoff:<run_id>`, no private content), and the transitional session
+store's `create_or_get(user_id, key)` returns the SAME session (per user) across
+double-click, refresh, remount or retry — without re-running strategy/first-question
+generation (the mapping is bounded and cleaned on eviction/discard, in-process only,
+matching the session store's own durability). The frontend **never fabricates**
+interview metadata: it sends only the PreparationContext (the backend derives
+industry and `career_level` from `seniority`); if the context genuinely lacks that
+config the backend returns `422` and the Coach shows a small completion card that
+asks the user, sourcing career levels from `GET /interviews/options` (the backend
+taxonomy — no duplicated client list).
 A single in-flight request is enforced per thread (no parallel turns), and the
 service serialises resume/continue per thread with an in-process lock (a multi-process
 deployment would need shared locking — documented).

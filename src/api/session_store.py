@@ -36,18 +36,53 @@ class InMemorySessionStore:
     def __init__(self, max_sessions: int = DEFAULT_MAX_SESSIONS) -> None:
         self._max = max_sessions
         self._lock = threading.Lock()
-        # session_id -> {"user_id": Any, "store": dict}
+        # session_id -> {"user_id": Any, "store": dict, "idem_key": str | None}
         self._sessions: "OrderedDict[str, dict]" = OrderedDict()
+        # (user_id, idempotency_key) -> session_id. Same lifetime as the session it
+        # points to (removed on eviction/discard); in-process only, like the store.
+        self._idem: dict[tuple, str] = {}
+
+    def _evict_locked(self) -> None:
+        """Evict oldest sessions past the cap, cleaning their idempotency mappings."""
+        while len(self._sessions) > self._max:
+            _old_id, old_entry = self._sessions.popitem(last=False)
+            key = old_entry.get("idem_key")
+            if key is not None:
+                self._idem.pop((old_entry["user_id"], key), None)
 
     def create(self, user_id: Any) -> str:
         """Create a fresh session for ``user_id`` and return its opaque id."""
         session_id = uuid.uuid4().hex
         with self._lock:
-            self._sessions[session_id] = {"user_id": user_id, "store": {}}
+            self._sessions[session_id] = {"user_id": user_id, "store": {}, "idem_key": None}
             self._sessions.move_to_end(session_id)
-            while len(self._sessions) > self._max:
-                self._sessions.popitem(last=False)  # evict oldest
+            self._evict_locked()
         return session_id
+
+    def create_or_get(self, user_id: Any, idempotency_key: str) -> tuple[str, bool]:
+        """Return ``(session_id, created)`` for a user-scoped idempotency key.
+
+        A repeat call with the same ``(user_id, idempotency_key)`` returns the SAME
+        live session and ``created=False`` (so the caller must not re-run any
+        generation). A different key — or a different user with the same key — yields
+        a distinct session. Ownership is enforced by keying on ``user_id``; a key is
+        never shared across users.
+        """
+        idem = (user_id, idempotency_key)
+        with self._lock:
+            existing = self._idem.get(idem)
+            if existing is not None:
+                entry = self._sessions.get(existing)
+                if entry is not None and entry["user_id"] == user_id:
+                    self._sessions.move_to_end(existing)  # LRU touch
+                    return existing, False
+                self._idem.pop(idem, None)  # stale (session was evicted)
+            session_id = uuid.uuid4().hex
+            self._sessions[session_id] = {"user_id": user_id, "store": {}, "idem_key": idempotency_key}
+            self._idem[idem] = session_id
+            self._sessions.move_to_end(session_id)
+            self._evict_locked()
+        return session_id, True
 
     def store_for(self, session_id: str, user_id: Any) -> MutableMapping[str, Any]:
         """Return the SessionManager backing store, enforcing ownership.
@@ -69,6 +104,9 @@ class InMemorySessionStore:
             entry = self._sessions.get(session_id)
             if entry is not None and entry["user_id"] == user_id:
                 self._sessions.pop(session_id, None)
+                key = entry.get("idem_key")
+                if key is not None:
+                    self._idem.pop((user_id, key), None)
 
     def __len__(self) -> int:  # pragma: no cover - trivial
         with self._lock:

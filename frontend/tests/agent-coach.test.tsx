@@ -7,6 +7,7 @@ const getRun = vi.fn();
 const resume = vi.fn();
 const cont = vi.fn();
 const createInterview = vi.fn();
+const interviewOptions = vi.fn();
 const push = vi.fn();
 const replace = vi.fn();
 let searchRun: string | null = null;
@@ -23,7 +24,10 @@ vi.mock("@/lib/api/client", () => ({
       resume: (...a: unknown[]) => resume(...a),
       continue: (...a: unknown[]) => cont(...a),
     },
-    interviews: { create: (...a: unknown[]) => createInterview(...a) },
+    interviews: {
+      create: (...a: unknown[]) => createInterview(...a),
+      options: (...a: unknown[]) => interviewOptions(...a),
+    },
   },
 }));
 const capsRef = { current: { agent_coach_enabled: true } as Record<string, boolean> };
@@ -91,17 +95,50 @@ describe("Agent Coach", () => {
     expect(resume).toHaveBeenCalledWith("run_1", { action_id: "m1", decision: "approve" });
   });
 
-  it("on practice handoff approval creates an interview and redirects", async () => {
+  it("on handoff approval creates an interview with an idempotency key and no fabricated metadata", async () => {
     start.mockResolvedValue(runResponse({
       status: "completed", handoff_approved: true,
-      preparation_context: { target_role: "Product Manager", industry: "Tech" },
+      preparation_context: { target_role: "Product Manager", industry: "Tech", seniority: "senior" },
     }));
     createInterview.mockResolvedValue({ session_id: "sess_9" });
     render(<AgentPrepareWorkspace />);
     await userEvent.type(screen.getByLabelText("What interview are you preparing for?"), "Prep");
     await userEvent.click(screen.getByRole("button", { name: "Start preparing" }));
     await waitFor(() => expect(createInterview).toHaveBeenCalledTimes(1));
+    const [body, opts] = createInterview.mock.calls[0];
+    // No fabricated "General"/"senior": only the PreparationContext is sent.
+    expect(body).not.toHaveProperty("industry_or_sector");
+    expect(body).not.toHaveProperty("career_level");
+    // A stable idempotency key derived from the run id (safe: no private content).
+    expect(opts).toEqual({ idempotencyKey: "agent-handoff:run_1" });
     await waitFor(() => expect(push).toHaveBeenCalledWith("/practice?session=sess_9"));
+  });
+
+  it("asks for missing industry/career level (never fabricates) then retries with the same key", async () => {
+    start.mockResolvedValue(runResponse({
+      status: "completed", handoff_approved: true,
+      preparation_context: { target_role: "Product Manager" }, // no industry/seniority
+    }));
+    // First create → 422 (backend requires the missing config); retry → success.
+    createInterview
+      .mockRejectedValueOnce(Object.assign(new Error("422"), { status: 422, userMessage: "missing" }))
+      .mockResolvedValueOnce({ session_id: "sess_done" });
+    interviewOptions.mockResolvedValue({ career_levels: ["mid", "senior", "executive"], interview_types: [] });
+    render(<AgentPrepareWorkspace />);
+    await userEvent.type(screen.getByLabelText("What interview are you preparing for?"), "Prep");
+    await userEvent.click(screen.getByRole("button", { name: "Start preparing" }));
+
+    expect(await screen.findByText("One last detail before practice")).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText("Industry / sector"), "Public sector");
+    await userEvent.selectOptions(screen.getByLabelText("Career level"), "executive");
+    await userEvent.click(screen.getByRole("button", { name: "Start practice" }));
+
+    await waitFor(() => expect(createInterview).toHaveBeenCalledTimes(2));
+    const [body, opts] = createInterview.mock.calls[1];
+    expect(body.industry_or_sector).toBe("Public sector");
+    expect(body.career_level).toBe("executive");
+    expect(opts).toEqual({ idempotencyKey: "agent-handoff:run_1" }); // SAME key on retry
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/practice?session=sess_done"));
   });
 
   it("restores a bookmarked run from the URL on load", async () => {
