@@ -120,14 +120,17 @@ def get_agent_service(request: Request):
     """
     from src.application.agent_service import AgentApplicationService
 
-    # Inject long-term memory (Phase 7): the agent loads a bounded, user-scoped set
-    # of approved memories at the start of a run. Built once over the shared repo.
-    return _shared(
-        request, "agent_service",
-        lambda: AgentApplicationService(
+    # Inject long-term memory (Phase 7) + a durable HITL checkpointer (Phase 8). The
+    # checkpoint DB is derived from AGENT_CHECKPOINT_DATABASE_URL or the app database
+    # URL (a dedicated sqlite file / Postgres); it is never exposed to clients.
+    def _build():
+        database_url = getattr(get_app_config(request), "database_url", None)
+        return AgentApplicationService(
             memory_service=get_memory_service(request),
-        ),
-    )
+            database_url=database_url,
+        )
+
+    return _shared(request, "agent_service", _build)
 
 
 # --- request-scoped application services -------------------------------------

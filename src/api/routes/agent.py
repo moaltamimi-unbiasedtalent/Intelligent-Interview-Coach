@@ -1,19 +1,50 @@
-"""Experimental agent route (Sprint 4 preview).
+"""Experimental agent route (Sprint 4 preview) with human-in-the-loop.
 
-`POST /api/v1/agent/run` invokes the LangGraph foundation agent via the application
-service. It is explicitly experimental and does NOT replace `/career/chat`. The run
-is scoped to the current user; only safe result data is returned.
+`POST /api/v1/agent/run` invokes the LangGraph agent via the application service. A
+run may pause for a human decision (Phase 8): it returns `awaiting_human_input` with
+a safe `pending_action`. The client answers via
+`POST /api/v1/agent/runs/{run_id}/resume` (typed decision), which continues the SAME
+graph thread. `GET /api/v1/agent/runs/{run_id}` returns the current safe status.
+
+Everything is owner-scoped and does NOT replace `/career/chat`. Only safe result
+data is returned — never chain-of-thought, prompts, raw provider output or raw
+checkpoint state.
 """
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Path
 
 from src.agent.models import AgentRunRequest as AppAgentRunRequest
+from src.application.agent_service import RunNotFoundError, RunNotResumableError
 from src.api.dependencies import get_agent_service, get_current_user_id, get_request_id
-from src.api.schemas.agent import AgentRunRequest, AgentRunResponse
+from src.api.schemas.agent import AgentRunRequest, AgentRunResponse, HumanDecisionRequest
 
 router = APIRouter(prefix="/agent", tags=["agent"])
+
+
+def _to_response(result) -> AgentRunResponse:
+    return AgentRunResponse(
+        run_id=result.run_id,
+        status=result.status,
+        response=result.response,
+        tools_used=result.tools_used,
+        retrieval_used=result.retrieval_used,
+        sources=result.sources,
+        citations=result.citations,
+        resolved_occupation=result.resolved_occupation,
+        resolved_geography=result.resolved_geography,
+        memory_used=result.memory_used,
+        memory_count=result.memory_count,
+        awaiting_human_input=result.awaiting_human_input,
+        pending_action=result.pending_action,
+        handoff_approved=result.handoff_approved,
+        events=result.events,
+        tool_calls=result.tool_calls,
+        warnings=result.warnings,
+        step_count=result.step_count,
+        preparation_context=result.preparation_context,
+    )
 
 
 @router.post("/run", response_model=AgentRunResponse,
@@ -34,21 +65,42 @@ def run_agent(
         ),
         request_id=request_id,
     )
-    return AgentRunResponse(
-        run_id=result.run_id,
-        status=result.status,
-        response=result.response,
-        tools_used=result.tools_used,
-        retrieval_used=result.retrieval_used,
-        sources=result.sources,
-        citations=result.citations,
-        resolved_occupation=result.resolved_occupation,
-        resolved_geography=result.resolved_geography,
-        memory_used=result.memory_used,
-        memory_count=result.memory_count,
-        events=result.events,
-        tool_calls=result.tool_calls,
-        warnings=result.warnings,
-        step_count=result.step_count,
-        preparation_context=result.preparation_context,
-    )
+    return _to_response(result)
+
+
+@router.get("/runs/{run_id}", response_model=AgentRunResponse,
+            summary="Get the current safe status of an agent run (owner-scoped)")
+def get_agent_run(
+    run_id: str = Path(..., min_length=1, max_length=64),
+    service=Depends(get_agent_service),
+    user_id: int = Depends(get_current_user_id),
+    request_id: str = Depends(get_request_id),
+) -> AgentRunResponse:
+    try:
+        result = service.get_run(run_id, str(user_id), request_id=request_id)
+    except RunNotFoundError:
+        raise HTTPException(status_code=404, detail="Run not found.")
+    return _to_response(result)
+
+
+@router.post("/runs/{run_id}/resume", response_model=AgentRunResponse,
+             summary="Resume a paused agent run with a human decision (owner-scoped)")
+def resume_agent_run(
+    body: HumanDecisionRequest,
+    run_id: str = Path(..., min_length=1, max_length=64),
+    service=Depends(get_agent_service),
+    user_id: int = Depends(get_current_user_id),
+    request_id: str = Depends(get_request_id),
+) -> AgentRunResponse:
+    try:
+        result = service.resume(
+            run_id, str(user_id),
+            {"action_id": body.action_id, "decision": body.decision,
+             "selected_role": body.selected_role},
+            request_id=request_id,
+        )
+    except RunNotFoundError:
+        raise HTTPException(status_code=404, detail="Run not found.")
+    except RunNotResumableError:
+        raise HTTPException(status_code=409, detail="This run is not awaiting a decision.")
+    return _to_response(result)
