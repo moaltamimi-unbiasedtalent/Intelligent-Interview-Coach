@@ -18,6 +18,27 @@ Coach**. The previous product name must not appear anywhere in the decks.
 
 (The `.pptx` files are external to this repository; apply these renames there.)
 
+## Final navigation (use the REAL shell in screenshots/mockups)
+
+- **Primary:** Prepare · Practice · Progress · History
+- **More:** Sources · Review & Diagnostics
+- **Account:** Settings
+- **Home:** the "Intelligent Interview Coach" wordmark
+- **Mobile:** bottom bar = the four primary destinations only; header **More** +
+  account reach the supporting and settings routes.
+
+Do NOT draw Home / Sources / Settings / Review as extra primary tabs.
+
+### Screen classification (for the deck)
+
+- **Primary screens:** Prepare, Practice, Progress, History
+- **Supporting screens:** Sources (`/sources`), Review hub (`/review`)
+- **Reviewer diagnostic:** Agent Inspector (`/review/agent`)
+- **Legacy/info diagnostics:** RAG Inspector (`/review/rag`), Evaluation (`/review/evaluation`)
+- **Account:** Settings (`/settings`)
+- **Conditional states (never nav entries):** role confirmation, memory approval,
+  practice handoff, and the three feedback surfaces.
+
 ## Final facts to put on the slides
 
 - Sprint 4: **COMPLETE**
