@@ -80,7 +80,7 @@ test("Flow 1: connected journey → handoff provenance → approve → Practise"
   await expect(nav.getByText("Role understood", { exact: true })).toBeVisible();
 
   // Handoff provenance is visible before creating the interview.
-  await expect(page.getByText("Practise this role")).toBeVisible();
+  await expect(page.getByText("Ready to practise?")).toBeVisible();
   await expect(page.getByText(/confirmed in Coach/)).toBeVisible();
   await expect(page.getByText(/from your gap analysis/)).toBeVisible();
   await expect(page.getByText(/8 practice questions/)).toBeVisible();
@@ -88,7 +88,7 @@ test("Flow 1: connected journey → handoff provenance → approve → Practise"
   // Approve → interview is created → Practise, with honest Coach provenance.
   await page.getByRole("button", { name: "Start practice" }).click();
   await page.waitForURL(/\/practice\?session=sess_e2e.*from=coach/);
-  await expect(page.getByTestId("coach-provenance")).toHaveText("Prepared in your Coach session");
+  await expect(page.getByTestId("coach-provenance")).toHaveText("Prepared with Mo");
   await expect(page.getByText("Tell me about a project.")).toBeVisible();
 });
 

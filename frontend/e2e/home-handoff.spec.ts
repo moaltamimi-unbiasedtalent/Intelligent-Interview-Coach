@@ -42,7 +42,7 @@ test("Home Start transfers the goal and auto-starts the Coach (no re-entry)", as
   await mock(page);
   await page.goto("/");
   await page.getByLabel("What interview are you preparing for?").fill(GOAL);
-  await page.getByRole("button", { name: "Start" }).click();
+  await page.getByRole("button", { name: "Ask Mo" }).click();
 
   await expect(page).toHaveURL(/\/prepare/);
   // The Coach started automatically with the exact goal — shown in the conversation.
@@ -56,7 +56,7 @@ test("candidate text never appears in the URL", async ({ page }) => {
   await mock(page);
   await page.goto("/");
   await page.getByLabel("What interview are you preparing for?").fill(GOAL);
-  await page.getByRole("button", { name: "Start" }).click();
+  await page.getByRole("button", { name: "Ask Mo" }).click();
   await expect(page.getByText(GOAL)).toBeVisible();
 
   const url = page.url();

@@ -223,7 +223,7 @@ test("P1: Fast profile is sent, retrieval + citation + usage shown, then evidenc
   expect(sentProfiles).toContain("fast");  // the chosen tier reached the API
 
   // Follow-up restatement → served from reuse; the flow completes without a new run.
-  await page.getByLabel("Message your coach").fill("Explain that more simply");
+  await page.getByLabel("Message Mo").fill("Explain that more simply");
   await page.getByRole("button", { name: "Send" }).click();
   await expect(page.getByText("In plain terms: pay depends on where you work.")).toBeVisible();
   expect(turn).toBe(1);

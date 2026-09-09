@@ -454,7 +454,7 @@ def test_api_import_has_no_side_effects():
 def test_openapi_schema_generates():
     app = create_app()
     schema = app.openapi()
-    assert schema["info"]["title"] == "Intelligent Interview Coach API"
+    assert schema["info"]["title"] == "Ask4Mo — Intelligent Interview Coach API"
     assert "/api/v1/career/chat" in schema["paths"]
 
 

@@ -25,7 +25,7 @@ interface Turn {
   requestId?: string | null;
 }
 
-const ACTIVITY = "Checking career evidence…";
+const ACTIVITY = "Mo is checking relevant career evidence…";
 
 export function PrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft | null }) {
   const goalDraft = initialDraft?.action === "start" ? (initialDraft.goal?.trim() ?? "") : "";
@@ -110,7 +110,7 @@ export function PrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft
       {turns.length === 0 ? (
         <Card>
           <CardBody>
-            <h2 className="text-lg font-semibold">Tell the coach what you&rsquo;re preparing for</h2>
+            <h2 className="text-lg font-semibold">Tell Mo what you&rsquo;re preparing for</h2>
             <p className="mt-1 text-muted">
               Ask about the role, what to focus on, or how to prepare an answer. Add a
               job description below for more grounded guidance.

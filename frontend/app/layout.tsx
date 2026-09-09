@@ -12,11 +12,10 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Intelligent Interview Coach",
-    template: "%s · Intelligent Interview Coach",
+    default: "Ask4Mo — Intelligent Interview Coach",
+    template: "%s · Ask4Mo",
   },
-  description:
-    "Prepare for the interview that matters. Understand the role, see your strengths and gaps, and practise what counts.",
+  description: "AI-powered interview preparation, practice and feedback. Ask More. Be More.",
 };
 
 export const viewport: Viewport = {

@@ -31,7 +31,7 @@ describe("Practice prefill provenance", () => {
   it("shows a 'prepared in Coach' note when launched from the Coach handoff", async () => {
     search = "session=sess_1&from=coach";
     render(<PracticeClient sessionId="sess_1" />);
-    expect(await screen.findByTestId("coach-provenance")).toHaveTextContent("Prepared in your Coach session");
+    expect(await screen.findByTestId("coach-provenance")).toHaveTextContent("Prepared with Mo");
   });
 
   it("shows NO provenance for a standalone Practice session (no fabrication)", async () => {

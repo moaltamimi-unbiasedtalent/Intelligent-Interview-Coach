@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Ask4Mo mark">
+  <!--
+    PLACEHOLDER "Conversation Bridge" mark for Ask4Mo — NOT the final approved logo.
+    Replace this file with the official vector asset when available. Concept: two
+    conversation arcs joined by a bridge/ribbon (preparation → confidence → opportunity),
+    in the brand palette (deep navy, electric blue, cyan, violet).
+  -->
+  <defs>
+    <linearGradient id="a4m" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1b2a6b"/>
+      <stop offset="0.5" stop-color="#2f6bff"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+  </defs>
+  <path d="M12 40c6-10 16-10 20 0 4 10 14 10 20 0" fill="none" stroke="url(#a4m)" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="12" cy="22" r="5" fill="#7c3aed"/>
+  <circle cx="52" cy="22" r="5" fill="#22d3ee"/>
+</svg>

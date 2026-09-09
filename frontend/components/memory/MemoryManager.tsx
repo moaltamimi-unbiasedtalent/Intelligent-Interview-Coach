@@ -69,7 +69,7 @@ export function MemoryManager() {
   return (
     <div className="grid gap-6">
       <div>
-        <h2 className="text-base font-semibold">Preparation memory</h2>
+        <h2 className="text-base font-semibold">What Mo remembers</h2>
         <p className="mt-1 text-sm text-muted">
           These are preparation details you chose to save for future Coach sessions. You
           can edit, prioritise or remove them at any time.
@@ -84,7 +84,7 @@ export function MemoryManager() {
         items.length === 0 ? (
           <EmptyState
             title="Nothing saved yet."
-            description="When you approve saving a preparation detail in the Coach, it appears here. Your coach never saves anything without you asking."
+            description="Mo can remember selected preparation preferences that you explicitly approve. Mo never saves anything without you asking."
           />
         ) : (
           <ul className="grid gap-3">

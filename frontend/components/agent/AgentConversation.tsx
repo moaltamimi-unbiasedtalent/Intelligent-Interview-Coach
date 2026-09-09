@@ -44,7 +44,7 @@ export function AgentConversation({
       {busy ? (
         <div role="status" aria-live="polite" className="flex items-center gap-2 text-sm text-muted">
           <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-accent" aria-hidden />
-          {run ? activityFromEvents(run.events) : "Understanding your request…"}
+          {run ? activityFromEvents(run.events) : "Mo is understanding your request…"}
         </div>
       ) : null}
     </div>

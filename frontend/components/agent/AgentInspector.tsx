@@ -54,7 +54,7 @@ export function AgentInspector() {
       <PageHeader
         eyebrow="Review & Diagnostics"
         title="Agent Inspector"
-        description="Safe execution traces — tools, retrieval, sources, approvals and warnings. Never chain-of-thought, prompts or secrets."
+        description="See what Mo's Agent did — tools, retrieval, memory, HITL and usage — without exposing chain-of-thought, prompts or secrets."
       />
 
       <form

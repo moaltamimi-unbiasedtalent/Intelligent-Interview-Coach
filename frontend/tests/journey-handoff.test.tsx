@@ -104,7 +104,7 @@ async function renderHandoff(summary: Record<string, unknown> | null) {
   render(<AgentPrepareWorkspace />);
   await userEvent.type(screen.getByLabelText("What interview are you preparing for?"), "Prep");
   await userEvent.click(screen.getByRole("button", { name: "Start preparing" }));
-  expect(await screen.findByText("Practise this role")).toBeInTheDocument();
+  expect(await screen.findByText("Ready to practise?")).toBeInTheDocument();
 }
 
 describe("Practice handoff provenance card", () => {

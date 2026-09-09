@@ -4,17 +4,28 @@ No `.pptx` source lives in this repo, so this file is the authoritative source f
 separate PowerPoint update. Every figure below is verified against merged `main` at the
 final freeze. Do not claim any future/deferred item as implemented.
 
-## Product name (canonical, everywhere)
+## Brand (canonical, everywhere)
 
-The product name across every deck — title, slide titles, footers, speaker notes,
-architecture labels, closing slide and the file names — is **Intelligent Interview
-Coach**. The previous product name must not appear anywhere in the decks.
+The brand hierarchy across every deck — opening slide, titles, footers, speaker notes,
+closing slide and file names — is:
+
+> **ASK4MO**
+> **INTELLIGENT INTERVIEW COACH**
+> **Ask More. Be More.**
+
+**Ask4Mo** is the consumer-facing brand; **Intelligent Interview Coach** is the
+descriptor; **Ask More. Be More.** is the slogan (exact capitalisation/punctuation).
+The candidate-facing AI Coach is **Mo**. When explaining the journey, use "**Ask Mo**",
+"Mo helps the candidate prepare…", "Mo uses controlled tools…", "Mo decides whether
+Career evidence is needed…". Technical slides must say: *"Mo is the candidate-facing
+identity of the Career Preparation Agent."* Never call Mo a chatbot. No earlier product
+name may appear.
 
 ### Rename the deck files to
 
-- `Intelligent_Interview_Coach_Product_Journey_Final.pptx`
-- `Intelligent_Interview_Coach_Sprint_Review_Walkthrough_Final.pptx`
-- `Intelligent_Interview_Coach_Complete_App_Walkthrough.pptx`
+- `Ask4Mo_Product_Journey_Final.pptx`
+- `Ask4Mo_Sprint_Review_Walkthrough_Final.pptx`
+- `Ask4Mo_Complete_App_Walkthrough.pptx`
 
 (The `.pptx` files are external to this repository; apply these renames there.)
 

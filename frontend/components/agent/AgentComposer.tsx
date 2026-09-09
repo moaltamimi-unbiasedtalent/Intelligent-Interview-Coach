@@ -28,12 +28,12 @@ export function AgentComposer({
 
   return (
     <div className="mt-4">
-      <label htmlFor="agent-composer" className="sr-only">Message your coach</label>
+      <label htmlFor="agent-composer" className="sr-only">Message Mo</label>
       <Textarea
         id="agent-composer"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Ask a follow-up, or tell your coach what to focus on next…"
+        placeholder="Ask a follow-up, or tell Mo what to focus on next…"
         disabled={busy || disabled}
         className="min-h-[80px]"
         maxLength={4000}

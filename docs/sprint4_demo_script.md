@@ -1,7 +1,8 @@
 # Sprint 4 — Demo Script (8–12 minutes)
 
-A guided review walkthrough of the Intelligent Interview Coach (Career Preparation
-Agent). Primary interface is **Next.js + FastAPI**.
+A guided review walkthrough of **Ask4Mo — Intelligent Interview Coach**. The
+candidate-facing AI Coach is **Mo** (the identity of the Career Preparation Agent);
+the slogan is **Ask More. Be More.** Primary interface is **Next.js + FastAPI**.
 
 > **Setup.** Run FastAPI (`uvicorn src.api.main:app --reload`) and Next.js
 > (`cd frontend && npm run dev`) with `AGENT_COACH_ENABLED=true` and an
@@ -15,9 +16,10 @@ preparation and realistic practice without losing progress. Sprint 3 built the C
 Intelligence layer; Sprint 4 turned it into a stateful LangGraph agent. Show the diagram
 in `docs/sprint4_architecture.md`.
 
-**0:45–2:00 — Home → Prepare.** From the Home page, type the interview goal in "What
-interview are you preparing for?" and press **Start**: Prepare opens and the Agent Coach
-begins with *that same goal* — no re-entry. (The goal is transferred ephemerally, never
+**0:45–2:00 — Home → Prepare.** From the Home page (Ask4Mo · Intelligent Interview
+Coach · *Ask More. Be More.*), type the interview goal in "What interview are you
+preparing for?" and press **Ask Mo**: Prepare opens and **Mo** begins with *that same
+goal* — introducing itself once, no re-entry. (The goal is transferred ephemerally, never
 in the URL.) The Home shortcuts "Paste a job description" / "Add your background" open
 and focus the matching context field. On `/prepare`, point out the **UNDERSTAND →
 PREPARE → PRACTISE** journey chrome and the **Speed** selector (Fast / Balanced /

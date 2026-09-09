@@ -59,7 +59,7 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
   if (restoring && !run) {
     return (
       <section>
-        <PageHeader eyebrow="Prepare" title="Your interview coach" />
+        <PageHeader eyebrow="Prepare" title="Mo — your interview coach" />
         <LoadingState label="Restoring your preparation session" />
       </section>
     );
@@ -69,7 +69,7 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
   if (error?.notFound && !run) {
     return (
       <section>
-        <PageHeader eyebrow="Prepare" title="Your interview coach" />
+        <PageHeader eyebrow="Prepare" title="Mo — your interview coach" />
         <ErrorState message={error.message} requestId={error.requestId} />
         <div className="mt-4">
           <Button onClick={reset}>Start new preparation</Button>
@@ -83,8 +83,8 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
       <section>
         <PageHeader
           eyebrow="Prepare"
-          title="Your interview coach"
-          description="Tell me what interview you're preparing for and I'll help you get ready."
+          title="Mo — your interview coach"
+          description="Tell Mo what you're preparing for and get a focused preparation plan."
         />
         <FirstMessageForm
           onStart={start}
@@ -158,7 +158,7 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
 
   return (
     <section>
-      <PageHeader eyebrow="Prepare" title="Your interview coach" />
+      <PageHeader eyebrow="Prepare" title="Mo — your interview coach" />
       {isDesktop ? (
         <div className="grid grid-cols-[minmax(0,1fr)_320px] gap-6">
           <div>{coach}</div>
@@ -168,7 +168,7 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
         <div>
           <div role="tablist" aria-label="Coach and preparation" className="mb-4 flex gap-2">
             <button role="tab" aria-selected={mobileTab === "coach"} onClick={() => setMobileTab("coach")}
-              className={tabClass(mobileTab === "coach")}>Coach</button>
+              className={tabClass(mobileTab === "coach")}>Mo</button>
             <button role="tab" aria-selected={mobileTab === "prep"} onClick={() => setMobileTab("prep")}
               className={tabClass(mobileTab === "prep")}>Preparation</button>
           </div>

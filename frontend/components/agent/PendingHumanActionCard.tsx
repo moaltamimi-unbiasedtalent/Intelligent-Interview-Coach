@@ -176,9 +176,9 @@ export function PracticeHandoffCard({ action, busy, onDecision, summary }: CardP
 
   return (
     <Shell>
-      <h3 className="font-medium">Practise this role</h3>
+      <h3 className="font-medium">Ready to practise?</h3>
       {role ? <p className="mt-1 text-lg font-semibold">{role}</p> : null}
-      <p className="mt-3 text-sm text-muted">Your practice setup will use:</p>
+      <p className="mt-3 text-sm text-muted">Mo has prepared the focus for your interview practice:</p>
       <ul className="mt-2 grid gap-1.5 text-sm">
         {role ? (
           <li className="flex items-start gap-2">

@@ -47,7 +47,7 @@ export function HomeEntry() {
           placeholder="What interview are you preparing for?  e.g. Senior Product Manager at a fintech"
           className="border-0 bg-transparent shadow-none focus-visible:outline-none"
         />
-        <Button type="submit" disabled={!canStart}>Start</Button>
+        <Button type="submit" disabled={!canStart}>Ask Mo</Button>
       </form>
       <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
         <button type="button" onClick={() => shortcut("job_description")} className="text-muted hover:text-foreground">
