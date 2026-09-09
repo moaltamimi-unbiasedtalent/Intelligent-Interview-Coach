@@ -1,6 +1,28 @@
 # Sprint 4 — Reviewer Guide
 
-A 5-minute orientation to the Intelligent Interview Coach.
+A practical orientation to the Intelligent Interview Coach — enough to understand and
+demo it without reading the whole repo. Companion docs: `sprint4_demo_script.md`,
+`sprint4_reviewer_qa.md`, `sprint4_final_requirements_matrix.md`,
+`sprint4_final_evidence.md`.
+
+## First 60 seconds
+
+> "Sprint 3 gave Interview OS Coach an evidence-backed Career Intelligence layer. In
+> Sprint 4 I turned those capabilities into a stateful LangGraph Agent. The Agent
+> decides which controlled tool to use and when, including whether Career retrieval is
+> needed. It carries short-term checkpoint state, selectively loads user-approved
+> long-term memory, and pauses for human approval where the system should not decide
+> autonomously. The result becomes a typed PreparationContext that moves into durable
+> Interview Practice. I also added multi-model execution, feedback-informed improvement
+> and privacy-safe observability."
+
+- **Why it's an agent:** not a fixed chain — a bounded tool set, and LangGraph decides
+  the next action from state; deterministic logic stays inside the tools.
+- **Why LangGraph:** explicit state transitions, checkpoint persistence, real
+  interrupt/resume — needed for multi-turn preparation and HITL. LangChain provides the
+  OpenRouter model/tool-calling integration; LangGraph owns orchestration.
+
+(Full answers in `docs/sprint4_reviewer_qa.md`.)
 
 ## What it is
 

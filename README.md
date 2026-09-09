@@ -9,16 +9,16 @@ Candidates typically research roles, analyse job descriptions, identify gaps, pl
 preparation and practise interviews across disconnected tools. The application
 brings these activities into one workflow.
 
-In **Sprint 4**, the product evolves from a primarily retrieval/workflow-driven
-career preparation system into a **stateful AI agent**. The agent will decide which
+In **Sprint 4**, the product evolved from a primarily retrieval/workflow-driven
+career preparation system into a **stateful AI agent**. The agent decides which
 controlled tools it needs, whether career retrieval is necessary, when
-clarification or human approval is required, and how preparation context should
-carry into Interview Practice.
+clarification or human approval is required, and how preparation context carries
+into Interview Practice.
 
 **Target users:** candidates preparing for professional, specialist and leadership
 interviews.
 
-### Sprint 4 architectural goal (planned)
+### Sprint 4 architecture (implemented)
 
 ```
 Next.js / TypeScript frontend   ← primary UI
@@ -41,19 +41,24 @@ Next.js / TypeScript frontend   ← primary UI
 
 New reviewers should start here:
 
-- [Reviewer guide](docs/sprint4_reviewer_guide.md) — 5-minute orientation + Q&A + limitations
-- [Demo script](docs/sprint4_demo_script.md) — 5–8 minute walkthrough
+- [Submission summary](docs/sprint4_submission_summary.md) — 1–2 page overview
+- [Reviewer guide](docs/sprint4_reviewer_guide.md) — orientation, first-60-seconds, Q&A
+- [Reviewer Q&A](docs/sprint4_reviewer_qa.md) — concise answers to likely questions
+- [Demo script](docs/sprint4_demo_script.md) — 8–12 minute walkthrough (+ offline fallback)
+- [Final requirements matrix](docs/sprint4_final_requirements_matrix.md) — requirement → evidence
+- [Final evidence](docs/sprint4_final_evidence.md) — verified test/evaluation numbers
 - [Final evaluation](docs/sprint4_final_evaluation.md) — deterministic metrics + RAGAS status
-- [Security & privacy](docs/sprint4_security_privacy.md) · [Architecture](docs/sprint4_architecture.md) · [Requirements map](docs/sprint4_requirements_map.md) · [Interview parity](docs/sprint4_interview_parity.md)
+- [Security & privacy](docs/sprint4_security_privacy.md) · [Architecture](docs/sprint4_architecture.md) · [Interview parity](docs/sprint4_interview_parity.md)
 
 Evaluation commands (no paid calls):
 
 ```bash
-python scripts/eval_agent.py            # deterministic agent orchestration + gates
-python scripts/eval_agent_live.py                 # live-model benchmark: safe, no paid call
+python scripts/eval_agent.py            # deterministic agent orchestration + gates (56 cases)
+python scripts/eval_agent_live.py                 # live-model harness: safe, no paid call (22 cases)
 python scripts/eval_agent_live.py --allow-paid    # explicit paid live-model run (opt-in)
-python scripts/eval_ragas.py            # RAGAS offline guards / config validation
+python scripts/eval_ragas.py            # RAGAS offline guards / config validation (35 cases)
 python scripts/eval_ragas.py --live     # explicit paid RAGAS run (opt-in)
+python scripts/export_feedback_summary.py          # aggregate feedback metrics (human review)
 python scripts/cleanup_runtime_data.py --dry-run   # stale-session retention (counts only)
 ```
 
@@ -65,16 +70,18 @@ neither is a single "accuracy %".
 Enable the Agent Coach with `AGENT_COACH_ENABLED=true`; set `OPENROUTER_API_KEY` for
 LLM-backed features. **Known limitations** are listed in the reviewer guide.
 
-## Current product (Sprint 3)
+## Product modules (Sprint 3 foundation, now behind the Sprint 4 agent)
 
-Intelligent Interview Coach is one Streamlit application (`streamlit run app.py`, one URL)
-that combines two product modules:
+> These two modules are the domain foundation. In Sprint 4 they are driven primarily
+> through **Next.js + FastAPI** and the LangGraph Agent Coach; `streamlit run app.py`
+> remains as a legacy/development interface only.
 
 - **Career Intelligence** — evidence-grounded career guidance and interview
   preparation using RAG over a labour-market/careers knowledge base: LangChain +
   OpenRouter, embeddings, Chroma vector search, BM25 + hybrid retrieval, advanced
-  query translation, four domain tool calls, citations, and prompt-injection
-  security. Code: `src/career/ui.py` (UI) over the engine in `src/copilot/*`.
+  query translation, five agent-controlled domain tools, citations, and
+  prompt-injection security. Code: `src/career/ui.py` (legacy UI) over the engine in
+  `src/copilot/*`; the agent tools are in `src/agent/tools.py`.
 - **Interview Practice** — realistic interview simulation, rubric evaluation,
   Interview Deep Dive, final report, and voice/live practice with delivery
   coaching. Code: `src/interview/studio_app.py` over `src/*.py`.
@@ -427,6 +434,15 @@ experimental and off by default.
   (provider-driven barge-in, token-expiry refresh, bounded reconnect), covered by
   the frontend unit suite. There is **no camera/visual coaching** — the product
   never requests camera access (asserted by an e2e test).
+- **External agent observability (Langfuse)** is **optional and OFF by default**. The
+  first-party Agent Inspector is the primary view. To opt in, install
+  `pip install -e ".[observability]"`, set `AGENT_EXTERNAL_OBSERVABILITY_ENABLED=true`
+  and `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` (optionally `LANGFUSE_HOST`). Even
+  then only a **sanitised operational projection** is sent (no prompts, candidate text,
+  JD/CV, memory, retrieved chunks, answers, system prompt or tool arguments); a provider
+  outage never affects a run. No external call is made in tests/CI.
+- **RAGAS** generation-quality evaluation is optional (`pip install -e ".[evaluation]"`)
+  and manual/paid — never part of normal CI or app runtime.
 
 ## API (Sprint 4 Phase 2)
 
@@ -441,8 +457,8 @@ Base path is `/api/v1` (plus `/api/health` for infra liveness). It exposes caree
 chat + tools, the interview lifecycle, user-scoped history, and read-only
 knowledge/evaluation status. CORS origins come from `FRONTEND_ORIGINS` (defaults to
 `http://localhost:3000` in development). The Docker image can serve the API via a
-command override — see the Dockerfile. **Next.js and LangGraph are still planned**
-(later Sprint 4 phases); Career routing remains deterministic.
+command override — see the Dockerfile. **Next.js (primary UI) and the LangGraph Agent
+Coach are implemented**; within retrieval, the Career routing remains deterministic.
 
 ## Frontend (Sprint 4 Phase 3B)
 
@@ -458,10 +474,10 @@ uvicorn src.api.main:app --reload
 cd frontend && npm install && npm run dev   # http://localhost:3000
 ```
 
-**Prepare is live** (Phase 3C): the coach, the four preparation tools, sources and
-the Career→Interview handoff all run against the FastAPI contracts. Retrieval stays
-deterministic (agentic RAG is a later phase). See
-[frontend/README.md](frontend/README.md).
+**Prepare is live**: the Agent Coach, the five agent-controlled tools, sources and the
+Career→Interview handoff all run against the FastAPI contracts. Agentic RAG is
+implemented — the agent decides *whether* to retrieve while the deterministic Career
+router decides *which* lanes/sources. See [frontend/README.md](frontend/README.md).
 
 A **LangGraph agent** (Phases 4–9) runs side-by-side with the deterministic Career
 flow: a single, stateful, bounded, tool-using agent (`src/agent`) behind
