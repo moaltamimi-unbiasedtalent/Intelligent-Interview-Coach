@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Brand } from "./Brand";
 import { MobileNavigation } from "./MobileNavigation";
+import { MoreMenu } from "./MoreMenu";
 import { PrimaryNavigation } from "./PrimaryNavigation";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -22,12 +23,16 @@ export function AppShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-20 border-b border-border bg-surface">
         <div className="mx-auto flex max-w-content items-center gap-4 px-5 py-3">
           <Brand />
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
             <PrimaryNavigation />
+            {/* Supporting destinations (Sources, Review & Diagnostics) — available on
+                desktop and mobile without crowding the primary nav / bottom bar. */}
+            <MoreMenu />
             <ThemeToggle />
             <Link
               href="/settings"
               aria-label="Account and settings"
+              title="Account & settings"
               className="grid h-8 w-8 place-items-center rounded-full bg-secondary text-xs font-bold text-[#3a3324]"
             >
               MA

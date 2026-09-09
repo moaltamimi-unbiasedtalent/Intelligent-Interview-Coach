@@ -26,7 +26,8 @@ controlled tools; a factual question (*"typical pay range for PMs in Germany?"*)
 **SearchCareerKnowledge** with **citations**; the preparation checklist fills in from
 real completed steps.
 
-**4:00–5:00 — Agent Inspector.** Open `/review/agent` for the run. Show the tool
+**4:00–5:00 — Agent Inspector.** Reach it via the header **More → Review & Diagnostics**
+→ Agent Inspector (or open `/review/agent` directly) for the run. Show the tool
 sequence, retrieval, model **profile**, model calls, **tokens / cost coverage**,
 **latency**, **cache hits/misses**, and the **journey** rows — and that **no
 chain-of-thought / prompts / raw checkpoint** appear.

@@ -57,6 +57,15 @@ Next.js (primary UI)  →  FastAPI  →  Application Services
 Identity boundary: a trusted gateway sets `X-User-Subject`; all data is scoped by
 `user_id`. See `docs/sprint4_architecture.md` and `docs/sprint4_security_privacy.md`.
 
+## Navigation
+
+The candidate-facing primary navigation remains deliberately focused on **Prepare,
+Practice, Progress and History**. Supporting evidence and technical review routes
+(**Sources**, **Review & Diagnostics**) are available under a **More** control, while
+**Settings** remains under the account control and **Home** under the wordmark. On
+mobile the bottom bar keeps exactly the four primary destinations; the header **More**
+and account controls reach the supporting and settings routes.
+
 ## Tools (agent-registered, allowlisted)
 
 `AnalyzeJobDescription`, `AnalyzeCandidateGaps`, `BuildPreparationPlan`,
