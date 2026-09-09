@@ -55,11 +55,15 @@ EXPECTED = {
     # Preparation memory (Phase 7) — user-scoped, no internal user id exposed.
     "MemoryCreateRequest": {"category", "summary", "target_role"},
     "MemoryResponse": {
-        "id", "category", "summary", "target_role", "source_run_id",
+        "id", "category", "summary", "target_role", "pinned", "source_run_id",
         "created_at", "updated_at",
     },
     "MemoryListResponse": {"memories"},
     "MemoryDeleteResponse": {"deleted", "id"},
+    # Memory management UX (P2): edit/pin + next-run preview.
+    "MemoryUpdateRequest": {"category", "summary", "target_role", "pinned"},
+    "MemoryPreviewResponse": {"target_role", "load_limit", "items"},
+    "MemoryPreviewItem": {"id", "category", "summary", "target_role", "pinned", "order", "reason"},
     # Agent HITL (Phase 8) — paused runs and typed resume decisions.
     "AgentRunResponse": {
         "run_id", "status", "response", "awaiting_human_input", "pending_action",
@@ -76,7 +80,9 @@ EXPECTED = {
     # The candidate-selectable Agent tier (validated Literal — never a raw model slug).
     "AgentRunRequest": {"goal", "profile"},
     "PendingActionResponse": {"action_id", "type", "message", "options", "data"},
-    "HumanDecisionRequest": {"action_id", "decision", "selected_role"},
+    # HITL edit-before-save (P2): optional edited memory on an approval.
+    "HumanDecisionRequest": {"action_id", "decision", "selected_role", "memory"},
+    "AgentRunDeleteResponse": {"deleted", "run_id"},
     "AgentContinueRequest": {"message"},
     "InterviewOptionsResponse": {"career_levels", "interview_types"},
 }

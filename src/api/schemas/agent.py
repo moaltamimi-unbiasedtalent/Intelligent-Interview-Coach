@@ -89,6 +89,13 @@ class AgentRunResponse(BaseModel):
     cache_misses: int = 0
 
 
+class AgentRunDeleteResponse(BaseModel):
+    """Result of deleting a run's checkpoint thread (execution state only)."""
+
+    deleted: bool
+    run_id: str
+
+
 class AgentContinueRequest(BaseModel):
     """A new user turn on an existing thread (short-term conversational memory).
 
@@ -96,6 +103,20 @@ class AgentContinueRequest(BaseModel):
     """
 
     message: str = Field(min_length=1, max_length=4000)
+
+
+class EditedMemoryRequest(BaseModel):
+    """An edited memory for an APPROVE_MEMORY 'approve' (edit-before-save, P2).
+
+    Only the memory CONTENT may be edited — extra keys (pinned/source_run_id/user_id/
+    graph state) are rejected. Pinning is a Settings action, not an agent proposal.
+    """
+
+    model_config = {"extra": "forbid"}
+
+    category: str = Field(min_length=1, max_length=64)
+    summary: str = Field(min_length=1, max_length=500)
+    target_role: str | None = Field(default=None, max_length=200)
 
 
 class HumanDecisionRequest(BaseModel):
@@ -106,3 +127,5 @@ class HumanDecisionRequest(BaseModel):
     decision: Literal["select", "approve", "reject"]
     # Required only for a CONFIRM_ROLE 'select'; must be one of the offered options.
     selected_role: str | None = Field(default=None, max_length=200)
+    # Optional edited memory for an APPROVE_MEMORY 'approve' (edit-before-save).
+    memory: EditedMemoryRequest | None = None

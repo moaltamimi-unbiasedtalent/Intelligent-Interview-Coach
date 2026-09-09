@@ -306,7 +306,11 @@ def make_human_review_node(memory_service: MemoryService | None = None) -> Calla
 
         elif atype == HumanActionType.APPROVE_MEMORY.value:
             if verdict == DECISION_APPROVE:
-                candidate = state.get("memory_candidate") or {}
+                # Edit-before-save: use the validated edited memory from the decision if
+                # the candidate changed it; otherwise the originally proposed candidate.
+                # (The edit was validated in validate_decision before resume.)
+                edited = (decision or {}).get("memory")
+                candidate = edited if isinstance(edited, dict) and edited else (state.get("memory_candidate") or {})
                 result = _persist_memory(memory_service, state.get("user_id"), candidate)
                 if result in (MEMORY_SAVED, MEMORY_ALREADY_EXISTS):
                     # Truthful success: newly created OR deterministic dedupe confirmed

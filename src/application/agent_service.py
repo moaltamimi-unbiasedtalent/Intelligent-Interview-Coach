@@ -45,6 +45,10 @@ class RunNotResumableError(AgentError):
     """The run exists but is not currently awaiting a human decision."""
 
 
+class CheckpointDeleteUnsupportedError(AgentError):
+    """The configured checkpoint saver does not support safe thread deletion."""
+
+
 def _resolve_profile(value: Any) -> "Any":
     """Validate a candidate-supplied Agent profile → a ``ModelProfile`` (default Balanced).
 
@@ -124,6 +128,7 @@ class AgentApplicationService:
             # from a class name). Unknown → False, the safe default.
             self._checkpoint_durable = bool(checkpoint_durable)
         self._memory_service = memory_service
+        self._checkpointer = checkpointer
         self._graph = build_agent_graph(
             model_factory=model_factory or _default_model_factory,
             registry=registry,
@@ -307,6 +312,37 @@ class AgentApplicationService:
         snapshot = self._snapshot(run_id)
         self._require_owned(snapshot, user_id)
         return self._result_from_snapshot(run_id, snapshot, request_id)
+
+    @property
+    def checkpoint_thread_delete_supported(self) -> bool:
+        """Whether the configured saver exposes an official thread-delete API.
+
+        Detected from the saver (never assumed); when false, delete_run refuses rather
+        than pretending to delete. We NEVER touch checkpoint tables with raw SQL.
+        """
+        return callable(getattr(self._checkpointer, "delete_thread", None))
+
+    def delete_run(self, run_id: str, user_id: str | None) -> bool:
+        """Delete one owned Agent run's execution/checkpoint thread (P2).
+
+        Deletes ONLY the LangGraph checkpoint thread via the saver's official
+        ``delete_thread`` API — never long-term memory, Interview History or another
+        run. Ownership is read from the checkpoint; a foreign/unknown run is a
+        not-found. Refuses (never fakes success) when the saver has no delete API.
+        """
+        with self._lock_for(run_id):
+            snapshot = self._snapshot(run_id)
+            self._require_owned(snapshot, user_id)  # RunNotFoundError if not owned
+            if not self.checkpoint_thread_delete_supported:
+                raise CheckpointDeleteUnsupportedError(
+                    "The configured checkpoint store does not support deleting a run.")
+            try:
+                self._checkpointer.delete_thread(run_id)
+            except AgentError:
+                raise
+            except Exception as exc:  # noqa: BLE001 - never leak a raw saver error
+                raise AgentError("The run could not be deleted.") from exc
+            return True
 
     # -- ownership / status ---------------------------------------------------
 

@@ -93,6 +93,7 @@ class MemoryItem:
     source_run_id: str | None
     created_at: datetime | None
     updated_at: datetime | None
+    pinned: bool = False
 
     def to_public(self) -> dict:
         """Public projection for API/UI — deliberately omits ``user_id``."""
@@ -101,13 +102,18 @@ class MemoryItem:
             "category": self.category,
             "summary": self.summary,
             "target_role": self.target_role,
+            "pinned": self.pinned,
             "source_run_id": self.source_run_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
 
     def to_agent_context(self) -> dict:
-        """Minimal projection the agent loads as DATA (category + summary + role)."""
+        """Minimal projection the agent loads as DATA (category + summary + role).
+
+        Pinning is deliberately absent: it affects selection/order only, never what
+        the model sees — the model still receives category/summary/target_role as DATA.
+        """
         return {
             "category": self.category,
             "summary": self.summary,

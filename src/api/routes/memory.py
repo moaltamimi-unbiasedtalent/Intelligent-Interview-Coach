@@ -18,9 +18,12 @@ from src.api.schemas.memory import (
     MemoryCreateRequest,
     MemoryDeleteResponse,
     MemoryListResponse,
+    MemoryPreviewItem,
+    MemoryPreviewResponse,
     MemoryResponse,
+    MemoryUpdateRequest,
 )
-from src.memory import MemoryCategory
+from src.memory import MEMORY_MAX_LOAD_PER_RUN, MemoryCategory
 
 router = APIRouter(prefix="/memory", tags=["memory"])
 
@@ -56,6 +59,22 @@ def create_memory(
     return MemoryResponse(**item.to_public())
 
 
+@router.get("/preview", response_model=MemoryPreviewResponse,
+            summary="Preview the memories a new run for a role would load")
+def preview_memory(
+    target_role: str | None = Query(default=None, max_length=200),
+    service=Depends(get_memory_service),
+    user_id: int = Depends(get_current_user_id),
+) -> MemoryPreviewResponse:
+    # Delegates to the SAME load_for_agent selection the agent uses — no drift.
+    rows = service.preview_for_agent(user_id, (target_role or "").strip() or None)
+    return MemoryPreviewResponse(
+        target_role=(target_role or "").strip() or None,
+        load_limit=MEMORY_MAX_LOAD_PER_RUN,
+        items=[MemoryPreviewItem(**r) for r in rows],
+    )
+
+
 @router.get("/{memory_id}", response_model=MemoryResponse,
             summary="Fetch one of the caller's preparation memories")
 def get_memory(
@@ -64,6 +83,35 @@ def get_memory(
     user_id: int = Depends(get_current_user_id),
 ) -> MemoryResponse:
     item = service.get(user_id, memory_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Memory not found.")
+    return MemoryResponse(**item.to_public())
+
+
+@router.patch("/{memory_id}", response_model=MemoryResponse,
+              summary="Edit / pin one of the caller's preparation memories")
+def update_memory(
+    body: MemoryUpdateRequest,
+    memory_id: int = Path(..., ge=1),
+    service=Depends(get_memory_service),
+    user_id: int = Depends(get_current_user_id),
+) -> MemoryResponse:
+    provided = body.model_fields_set
+    # Only fields the client explicitly sent are applied — an omitted field is left
+    # untouched, while ``target_role: null`` explicitly clears the role. Extra keys
+    # (user_id/source_run_id/…) are already rejected by the schema (extra=forbid).
+    kwargs: dict = {}
+    if "category" in provided and body.category is not None:
+        kwargs["category"] = body.category.value
+    if "summary" in provided and body.summary is not None:
+        kwargs["summary"] = body.summary
+    if "target_role" in provided:
+        kwargs["target_role"] = body.target_role  # may be None → clears the role
+    if "pinned" in provided and body.pinned is not None:
+        kwargs["pinned"] = body.pinned
+    if not kwargs:
+        raise HTTPException(status_code=422, detail="Provide at least one field to update.")
+    item = service.update(user_id, memory_id, **kwargs)
     if item is None:
         raise HTTPException(status_code=404, detail="Memory not found.")
     return MemoryResponse(**item.to_public())
