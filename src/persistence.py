@@ -46,6 +46,7 @@ __all__ = [
     "Answer",
     "Report",
     "PreparationMemory",
+    "UserFeedback",
     "InterviewSession",
     "make_engine",
     "make_session_factory",
@@ -81,6 +82,9 @@ class User(Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     memories: Mapped[list["PreparationMemory"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    feedback: Mapped[list["UserFeedback"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
 
@@ -120,6 +124,38 @@ class PreparationMemory(Base):
     )
 
     user: Mapped[User] = relationship(back_populates="memories")
+
+
+class UserFeedback(Base):
+    """Candidate feedback on ONE logical output (post-Sprint 4 P5).
+
+    A user-scoped rating (helpful / not_helpful) + optional bounded comment attached by
+    reference to an Agent answer, Interview evaluation or final report. Stores NO copy of
+    any answer, prompt, JD, CV, evaluation, report, memory, retrieved evidence, system
+    prompt, provider output or checkpoint — only references, the rating and the comment.
+    """
+
+    __tablename__ = "user_feedback"
+    __table_args__ = (
+        # One current rating per (user, surface, logical output) — an upsert target.
+        UniqueConstraint("user_id", "surface", "target_id", name="uq_user_feedback_target"),
+        Index("ix_user_feedback_surface", "surface"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    surface: Mapped[str] = mapped_column(String(32))
+    target_id: Mapped[str] = mapped_column(String(128))
+    rating: Mapped[str] = mapped_column(String(16))
+    comment: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    user: Mapped[User] = relationship(back_populates="feedback")
 
 
 class Interview(Base):

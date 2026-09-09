@@ -154,6 +154,53 @@ def get_agent_service(request: Request):
     return _shared(request, "agent_service", _build)
 
 
+def _session_owned(store, session_id: str, user_id) -> bool:
+    """True only if the durable interview session belongs to this user (read-only)."""
+    try:
+        store.load_state(session_id, user_id)
+        return True
+    except Exception:  # noqa: BLE001 - not owned / unknown / unreadable → not-found
+        return False
+
+
+def get_feedback_service(request: Request):
+    """Request-scoped candidate-feedback service (P5).
+
+    Ownership verifiers prove the rated target belongs to the caller before any
+    feedback is accepted: an Agent answer's run must be owned; an interview
+    evaluation / final report's session must be owned. A foreign/unknown target is a
+    not-found. Feedback events also flow to the (default no-op) observability sink.
+    """
+    from src.application.feedback_service import FeedbackApplicationService
+    from src.repository import FeedbackRepository
+
+    def _agent_owns(target_id: str, user_id: int) -> bool:
+        run_id = (target_id or "").split(":", 1)[0]
+        try:
+            return bool(get_agent_service(request).owns(run_id, str(user_id)))
+        except Exception:  # noqa: BLE001 - agent service unavailable → not-found
+            return False
+
+    def _session_verifier(target_id: str, user_id: int) -> bool:
+        session_id = (target_id or "").split(":", 1)[0]
+        return _session_owned(get_session_store(request), session_id, user_id)
+
+    from src.observability import build_observability_sink
+
+    repo = _shared(request, "feedback_repository",
+                   lambda: FeedbackRepository(get_repository(request).session_factory))
+    obs = _shared(request, "observability", build_observability_sink)
+    return FeedbackApplicationService(
+        repo,
+        target_verifiers={
+            "agent_answer": _agent_owns,
+            "interview_evaluation": _session_verifier,
+            "final_report": _session_verifier,
+        },
+        observability=obs,
+    )
+
+
 # --- request-scoped application services -------------------------------------
 
 
