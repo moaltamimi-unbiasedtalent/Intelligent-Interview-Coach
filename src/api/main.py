@@ -75,7 +75,7 @@ async def lifespan(app: FastAPI):
 def create_app(settings: ApiSettings | None = None) -> FastAPI:
     settings = settings or ApiSettings.from_env()
     app = FastAPI(
-        title="Intelligent Interview Coach API",
+        title="Ask4Mo — Intelligent Interview Coach API",
         version=settings.version,
         description=DESCRIPTION,
         openapi_tags=TAGS_METADATA,

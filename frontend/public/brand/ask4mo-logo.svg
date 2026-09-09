@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 96" role="img" aria-label="Ask4Mo — Intelligent Interview Coach">
+  <!--
+    PLACEHOLDER logo lockup for Ask4Mo — NOT the final approved logo. Replace with the
+    official vector asset when available. Lockup: [Conversation Bridge mark] + wordmark
+    "Ask4Mo" + descriptor "INTELLIGENT INTERVIEW COACH" + slogan "Ask More. Be More."
+  -->
+  <defs>
+    <linearGradient id="a4mL" x1="0" y1="0" x2="72" y2="72" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1b2a6b"/>
+      <stop offset="0.5" stop-color="#2f6bff"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(8 16)">
+    <path d="M4 40c6-10 16-10 20 0 4 10 14 10 20 0" fill="none" stroke="url(#a4mL)" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="4" cy="22" r="5" fill="#7c3aed"/>
+    <circle cx="44" cy="22" r="5" fill="#22d3ee"/>
+  </g>
+  <g transform="translate(72 0)" fill="#0f1a3a">
+    <text x="0" y="42" font-family="Inter, system-ui, sans-serif" font-size="34" font-weight="700">Ask4Mo</text>
+    <text x="2" y="62" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="1.5" fill="#475569">INTELLIGENT INTERVIEW COACH</text>
+    <text x="2" y="82" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="600" fill="#2f6bff">Ask More. Be More.</text>
+  </g>
+</svg>
