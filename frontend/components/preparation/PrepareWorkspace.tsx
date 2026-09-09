@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import type { CareerChatResponse } from "@/lib/api/types";
+import type { PrepareDraft } from "@/lib/prepareDraft";
 import { CoachActivity, CoachMessage } from "@/components/coach/CoachMessage";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
@@ -26,23 +27,26 @@ interface Turn {
 
 const ACTIVITY = "Checking career evidence…";
 
-export function PrepareWorkspace() {
+export function PrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft | null }) {
+  const goalDraft = initialDraft?.action === "start" ? (initialDraft.goal?.trim() ?? "") : "";
+  const draftOpensContext =
+    initialDraft?.action === "job_description" || initialDraft?.action === "candidate_background";
+
   const [turns, setTurns] = useState<Turn[]>([]);
-  const [question, setQuestion] = useState("");
-  const [showContext, setShowContext] = useState(false);
+  const [question, setQuestion] = useState(goalDraft);
+  const [showContext, setShowContext] = useState(!!draftOpensContext);
   const [jd, setJd] = useState("");
   const [bg, setBg] = useState("");
   const [prep, setPrep] = useState<PrepState>({});
   const [busy, setBusy] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const autoAsked = useRef(false);
 
   function patchPrep(p: PrepContextPatch) {
     setPrep((prev) => ({ ...prev, ...p }));
   }
 
-  async function ask(e: React.FormEvent) {
-    e.preventDefault();
-    const q = question.trim();
+  async function runQuestion(q: string) {
     if (!q || busy) return;
     setBusy(true);
     const id =
@@ -77,6 +81,27 @@ export function PrepareWorkspace() {
       setBusy(false);
     }
   }
+
+  function ask(e: React.FormEvent) {
+    e.preventDefault();
+    void runQuestion(question.trim());
+  }
+
+  // Home → Prepare handoff (deterministic fallback §14): a "start" draft submits the
+  // transferred goal automatically (once); a shortcut opens + focuses the right field.
+  useEffect(() => {
+    if (autoAsked.current) return;
+    autoAsked.current = true;
+    if (goalDraft) {
+      void runQuestion(goalDraft);
+    } else if (initialDraft?.action === "job_description") {
+      window.document.getElementById("ctx-jd")?.focus();
+    } else if (initialDraft?.action === "candidate_background") {
+      window.document.getElementById("ctx-bg")?.focus();
+    }
+    // Run once on mount for the initial handoff.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const lastResponse = [...turns].reverse().find((t) => t.status === "done")?.response;
 

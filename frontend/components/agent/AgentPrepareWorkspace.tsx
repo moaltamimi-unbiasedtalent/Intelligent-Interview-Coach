@@ -21,12 +21,40 @@ import { AgentProfileSelector, DEFAULT_PROFILE, usageSummaryLine } from "./usage
 import { JourneyChrome, PreparationChecklist } from "./JourneyChrome";
 import { FeedbackControl } from "@/components/feedback/FeedbackControl";
 import type { AgentProfile } from "@/lib/api/types";
+import type { PrepareDraft } from "@/lib/prepareDraft";
+
+/** The saved candidate speed preference, or Balanced (§13). Never a raw model name. */
+function savedProfile(): AgentProfile {
+  try {
+    const s = window.localStorage.getItem("agent.profile");
+    if (s === "fast" || s === "balanced" || s === "advanced") return s;
+  } catch {
+    /* storage unavailable — fall through to the default */
+  }
+  return DEFAULT_PROFILE;
+}
 
 /** Candidate-facing Agent Coach — the LangGraph agent behind the Precision Coach UI. */
-export function AgentPrepareWorkspace() {
+export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft | null }) {
   const { run, busy, restoring, error, runId, start, send, resume, reset, clearError } = useAgentRun();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [mobileTab, setMobileTab] = useState<"coach" | "prep">("coach");
+
+  // Home → Prepare handoff. Auto-start EXACTLY ONCE from a "start" draft, and only
+  // when no run is being restored/active — an existing ?run= always wins (§9/§21/§26).
+  const autoStarted = useRef(false);
+  const goalDraft = initialDraft?.action === "start" ? (initialDraft.goal?.trim() ?? "") : "";
+  const openContextField =
+    initialDraft?.action === "job_description" ? "jd"
+      : initialDraft?.action === "candidate_background" ? "bg"
+      : null;
+  useEffect(() => {
+    if (autoStarted.current) return;
+    if (!goalDraft) return;
+    if (runId || run || restoring) return; // restored/active run takes precedence
+    autoStarted.current = true;
+    void start({ goal: goalDraft, profile: savedProfile() });
+  }, [goalDraft, runId, run, restoring, start]);
 
   if (restoring && !run) {
     return (
@@ -58,7 +86,14 @@ export function AgentPrepareWorkspace() {
           title="Your interview coach"
           description="Tell me what interview you're preparing for and I'll help you get ready."
         />
-        <FirstMessageForm onStart={start} busy={busy} error={error} onDismissError={clearError} />
+        <FirstMessageForm
+          onStart={start}
+          busy={busy}
+          error={error}
+          onDismissError={clearError}
+          initialGoal={goalDraft}
+          openContextField={openContextField}
+        />
       </section>
     );
   }
@@ -182,14 +217,20 @@ function FirstMessageForm({
   busy,
   error,
   onDismissError,
+  initialGoal = "",
+  openContextField = null,
 }: {
   onStart: (req: { goal: string; target_role?: string; job_description?: string; candidate_background?: string; profile?: AgentProfile }) => void;
   busy: boolean;
   error: { message: string; requestId?: string | null; notFound?: boolean } | null;
   onDismissError: () => void;
+  /** Prefill the goal from a Home handoff so it is never re-typed (§11/§12). */
+  initialGoal?: string;
+  /** A Home shortcut opens + focuses the matching context field (§15/§16). */
+  openContextField?: "jd" | "bg" | null;
 }) {
-  const [goal, setGoal] = useState("");
-  const [showContext, setShowContext] = useState(false);
+  const [goal, setGoal] = useState(initialGoal);
+  const [showContext, setShowContext] = useState(!!openContextField);
   const [targetRole, setTargetRole] = useState("");
   const [jd, setJd] = useState("");
   const [background, setBackground] = useState("");
@@ -204,6 +245,18 @@ function FirstMessageForm({
     } catch {
       /* storage unavailable — keep the default */
     }
+  }, []);
+
+  // Focus the field the Home entry pointed at (accessibility §17) — the JD or the
+  // background for a shortcut, otherwise the goal box when it arrives prefilled.
+  useEffect(() => {
+    const id = openContextField === "jd" ? "agent-jd"
+      : openContextField === "bg" ? "agent-bg"
+      : initialGoal ? "agent-goal"
+      : null;
+    if (id) window.document.getElementById(id)?.focus();
+    // Run once on mount for the initial handoff.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const chooseProfile = (p: AgentProfile) => {

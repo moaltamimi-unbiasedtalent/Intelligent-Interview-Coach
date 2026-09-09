@@ -4,17 +4,30 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
+import { writePrepareDraft, type PrepareDraftAction } from "@/lib/prepareDraft";
 
 /**
- * Home entry scaffold: a single question that leads into Prepare. Phase 3B does
- * NOT call the preparation API (Phase 3C) — Start navigates to /prepare.
+ * Home is a genuine entry point into Prepare. The goal typed here is transferred
+ * ephemerally (never via the URL) and starts the preparation session on /prepare
+ * without the candidate re-entering it. The two shortcuts open the matching context
+ * field in Prepare. See {@link writePrepareDraft}.
  */
 export function HomeEntry() {
   const router = useRouter();
   const [value, setValue] = useState("");
+  const canStart = value.trim().length > 0;
 
   function start(e: React.FormEvent) {
     e.preventDefault();
+    const goal = value.trim();
+    if (!goal) return; // never navigate / start a blank run (§6)
+    writePrepareDraft({ source: "home", action: "start", goal });
+    router.push("/prepare");
+  }
+
+  // A shortcut carries only its intent; Prepare opens and focuses the right field.
+  function shortcut(action: Exclude<PrepareDraftAction, "start">) {
+    writePrepareDraft({ source: "home", action });
     router.push("/prepare");
   }
 
@@ -34,14 +47,14 @@ export function HomeEntry() {
           placeholder="What interview are you preparing for?  e.g. Senior Product Manager at a fintech"
           className="border-0 bg-transparent shadow-none focus-visible:outline-none"
         />
-        <Button type="submit">Start</Button>
+        <Button type="submit" disabled={!canStart}>Start</Button>
       </form>
       <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
-        <button type="button" onClick={() => router.push("/prepare")} className="text-muted hover:text-foreground">
+        <button type="button" onClick={() => shortcut("job_description")} className="text-muted hover:text-foreground">
           ＋ Paste a job description
         </button>
-        <button type="button" onClick={() => router.push("/prepare")} className="text-muted hover:text-foreground">
-          ＋ Add your CV <span className="text-muted">(optional)</span>
+        <button type="button" onClick={() => shortcut("candidate_background")} className="text-muted hover:text-foreground">
+          ＋ Add your background <span className="text-muted">(optional)</span>
         </button>
       </div>
       <p className="mt-3 text-sm text-muted">
