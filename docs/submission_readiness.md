@@ -118,7 +118,7 @@ lexical embedder, **keyword edges out hybrid** — reported, not rewritten.
   secret-like strings. No raw audio is persisted (Record is transient). No system-
   prompt leakage (output guard + tests). No cross-module trust escalation:
   injected JD/candidate/chunks stay untrusted data; PreparationContext is plain
-  data (verified in `test_os_e2e.py`).
+  data (verified in `test_product_e2e.py`).
 - Repo hygiene: a stray committed virtualenv was untracked in 12R.
 
 ## Source / licence status

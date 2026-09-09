@@ -7,8 +7,8 @@ original Sprint 1 scope). Historical Sprint 1 notes live in git history and the
 
 ## Product
 
-**Intelligent Interview Coach** — one Streamlit application (`streamlit run app.py`, one
-URL) combining two modules:
+**Intelligent Interview Coach** — delivered primarily as **Next.js + FastAPI** (Streamlit
+`streamlit run app.py` is a legacy/development interface), combining two modules:
 
 - **Career Intelligence** — evidence-grounded career guidance and interview
   preparation using retrieval-augmented generation over a labour-market/careers
@@ -37,7 +37,7 @@ assumptions in core logic, prompts, scoring or examples.
   gaps and grounding sources from Career Intelligence to Interview Practice. No
   Chroma/LangChain/DB objects cross the boundary.
 - **Application layer (Sprint 4 Phase 1).** `src/application/*` is a thin,
-  Streamlit-free boundary the UI consumes and a future FastAPI backend will reuse:
+  Streamlit-free boundary the UI consumes and the FastAPI backend reuses:
   `CareerApplicationService`, `InterviewApplicationService`, `history_service`,
   `knowledge_service`, `evaluation_service`, plus `factories` and safe `errors`.
   It imports no Streamlit and no UI module (enforced by
@@ -341,7 +341,7 @@ assumptions in core logic, prompts, scoring or examples.
 
 ## Git rules
 
-- Remote: `moaltamimi-unbiasedtalent/Interview-OS-Coach` (`origin`). Turing
+- Remote: `origin` (configured locally; the GitHub repo rename to Intelligent-Interview-Coach is a follow-up). Turing
   submissions are pushed to the `TuringCollegeSubmissions/*` remote.
 - Work on a feature branch; open a PR. **Do not auto-merge.** Commit and push only
   when a phase/prompt instructs it.

@@ -51,7 +51,7 @@ def safe_extra(**fields) -> dict:
     }
 
 
-def get_logger(name: str = "interview_os") -> logging.Logger:
+def get_logger(name: str = "intelligent_interview_coach") -> logging.Logger:
     """Return the platform logger (child loggers by dotted name)."""
     return logging.getLogger(name)
 

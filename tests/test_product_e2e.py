@@ -1,4 +1,4 @@
-"""Phase 12R: full Interview OS end-to-end, security and failure tests (offline).
+"""Phase 12R: full Intelligent Interview Coach end-to-end, security and failure tests (offline).
 
 All LLM/tool/embedding calls are mocked or use the local embedder; no network,
 no paid API calls. Covers Career scenarios A–J, the flagship journey, cross-

@@ -1,4 +1,4 @@
-# Interview OS — Performance Report
+# Intelligent Interview Coach — Performance Report
 
 Representative latencies for the Career Intelligence lanes, measured offline (local hashing embedder, heuristic translator, fake model) so they are reproducible and free. Micro-stages: 200 iterations; full pipeline: 50. These are machine-dependent measurements, **not** targets.
 

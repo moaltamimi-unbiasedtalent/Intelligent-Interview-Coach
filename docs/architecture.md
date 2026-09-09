@@ -1,5 +1,8 @@
 # Architecture — RAG + Tool Orchestration
 
+> **Historical (Sprint 3 architecture).** The current, authoritative architecture is [`docs/sprint4_architecture.md`](sprint4_architecture.md). Kept as a historical record.
+
+
 Phase 7 combines advanced RAG and domain tool calling into **one explainable,
 non-autonomous** LangChain workflow behind a single domain service,
 `CareerIntelligenceService`. The Streamlit layer calls the service; it never wires
@@ -114,8 +117,9 @@ See also [`docs/rag.md`](rag.md), [`docs/query_translation.md`](query_translatio
 
 ## Module boundaries (canonical)
 
-The distribution is named `interview-os-coach` (`pyproject.toml`). Within it the
-Career Intelligence layer is split into a **backend** and a **UI adapter**:
+The distribution package is defined in `pyproject.toml` (final name:
+`intelligent-interview-coach`). Within it the Career Intelligence layer is split into a
+**backend** and a **UI adapter**:
 
 | Package | Role | Contains |
 |---|---|---|

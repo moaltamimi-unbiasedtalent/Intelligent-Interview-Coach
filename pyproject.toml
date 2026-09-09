@@ -1,5 +1,5 @@
 [project]
-name = "interview-os-coach"
+name = "intelligent-interview-coach"
 version = "0.1.0"
 description = "Prepare for any role. Practise realistically. Improve every answer."
 requires-python = ">=3.10"

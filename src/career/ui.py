@@ -1533,7 +1533,7 @@ def _page_evaluation() -> None:
         st.caption(f"Over {len(probes)} probes. See docs/hybrid_search.md.")
 
 
-# --- Public entry points for the Interview OS shell --------------------------
+# --- Public entry points for the application shell --------------------------
 # The unified app.py owns st.set_page_config and the top-level navigation; these
 # render the Career Intelligence module's pages within that shell.
 
@@ -1638,7 +1638,7 @@ def _render_usage_diagnostics() -> None:
         )
         cols[2].download_button(
             "Combined session JSON", data=combined,
-            file_name="interview_os_session.json", mime="application/json",
+            file_name="intelligent_interview_coach_session.json", mime="application/json",
         )
         if st.button("Clear conversation history"):
             career_history.clear_history(ss)

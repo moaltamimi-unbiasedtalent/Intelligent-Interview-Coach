@@ -88,6 +88,6 @@ Interview Practice **691 (+1 skipped)**.
 | Cross-module navigation (one app, both products) | **new** | `src/ui/navigation.py`, `app.py` |
 | Unified home page | **new** | `src/ui/home.py` |
 
-See `docs/interview_os_architecture.md` for the target tree and the
-`PreparationContext` contract, and `docs/interview_os_migration_plan.md` for
+See `docs/legacy_sprint3_architecture.md` for the target tree and the
+`PreparationContext` contract, and `docs/legacy_sprint3_migration_plan.md` for
 sequencing.

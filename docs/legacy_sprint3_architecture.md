@@ -82,7 +82,7 @@ usage accounting and generic security primitives are shared.
 src/core/
 ├── secrets.py        # single Streamlit→env reader (no default keys, SecretStr)
 ├── config.py         # AppConfig: {openrouter (shared), career, interview}
-├── errors.py         # InterviewOSError / ConfigError / SafeError
+├── errors.py         # InterviewCoachError / ConfigError / SafeError
 ├── logging.py        # safe_extra() redaction; SENSITIVE_KEYS; get_logger
 ├── usage.py          # Operation enum + UsageRecord + UsageLedger (no double count)
 └── security/

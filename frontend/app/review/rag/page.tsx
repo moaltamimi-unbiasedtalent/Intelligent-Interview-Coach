@@ -13,8 +13,8 @@ export default function RagInspectorPage() {
         description="Retrieval lanes, evidence and citations behind an answer."
       />
       <EmptyState
-        title="Retrieval inspection connects in a later phase"
-        description="The backend already exposes safe retrieval data; the Next.js integration lands with the Career migration (Phase 3C). The Streamlit RAG Inspector remains available meanwhile."
+        title="RAG diagnostics live in the existing review tools"
+        description="Career retrieval is fully implemented and its safe source/citation activity is visible through the Agent Inspector. The dedicated Next.js RAG Inspector has not been migrated; the legacy Streamlit diagnostic remains available for deeper retrieval inspection."
       />
     </section>
   );

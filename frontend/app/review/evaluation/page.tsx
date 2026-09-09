@@ -13,8 +13,8 @@ export default function EvaluationPage() {
         description="Deterministic retrieval metrics and the optional RAGAS generation-quality layer (read-only)."
       />
       <EmptyState
-        title="Evaluation views connect in a later phase"
-        description="The backend exposes read-only evaluation status (no paid runs). The Next.js integration lands after the Career migration. RAGAS never runs from a page load."
+        title="Evaluation is run through the project evaluation tools"
+        description="Deterministic Agent evaluation, the live-model harness and optional RAGAS evaluation are available through the repository scripts and evidence artifacts. Paid evaluation never runs from this page."
       />
     </section>
   );

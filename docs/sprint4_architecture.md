@@ -1,7 +1,47 @@
 # Sprint 4 Architecture — Intelligent Interview Coach
 
-> **Sprint 4 is complete (Phases 0–11).** The architecture below is implemented.
-> Next.js is the primary UI; Streamlit is a legacy/development fallback.
+> **Sprint 4 is complete (Phases 0–11) and the post-Sprint polish (P0–P5) is merged.**
+> The architecture below is implemented. Next.js + FastAPI is the primary interface;
+> Streamlit is a legacy/development fallback. For the reviewer package see
+> `docs/sprint4_final_requirements_matrix.md`, `docs/sprint4_final_evidence.md`,
+> `docs/sprint4_reviewer_guide.md`, `docs/sprint4_reviewer_qa.md`,
+> `docs/sprint4_demo_script.md` and `docs/sprint4_submission_summary.md`.
+
+## Final submission view (P0–P5 complete)
+
+```
+Candidate
+   ↓
+Next.js  →  FastAPI
+   ↓
+LangGraph Career Preparation Agent
+   ├── short-term checkpoint state
+   ├── selective approved long-term memory  (list / edit / pin / preview / edit-before-save)
+   ├── HITL interrupts  (role · memory write · practice handoff)
+   ├── Fast / Balanced / Advanced model profiles
+   └── controlled tools
+        ├── SearchCareerKnowledge → deterministic Career retrieval router
+        │        → structured + hybrid evidence (+ citations/provenance)
+        ├── AnalyzeJobDescription
+        ├── AnalyzeCandidateGaps
+        ├── BuildPreparationPlan
+        └── GenerateInterviewQuestions
+               ↓
+        PreparationContext  (typed handoff; provenance shown)
+               ↓
+        HITL Practice approval  →  Interview creation OUTSIDE LangGraph (idempotent)
+               ↓
+        durable Interview Practice → Deep Dive → Final Report → History
+
+Observability:  Agent Inspector (first-party)  +  optional sanitised Langfuse sink (OFF by default)
+Feedback:       candidate rating → Feedback DB → aggregate → human review → evaluation case → controlled change
+```
+
+**No overclaims.** This is a SINGLE bounded agent (not multi-agent). It makes no
+autonomous hiring decision, no diagnosis, and does not self-learn from feedback. MCP,
+production OIDC, live PostgreSQL production validation, a paid model bake-off and a paid
+live RAGAS baseline are NOT implemented/executed. There is no camera/video; voice is
+experimental and off.
 
 ## Final architecture (as built)
 
@@ -917,9 +957,10 @@ not** rename internal identifiers:
 - The GitHub repository is **not** renamed in Sprint 4.
 - No package-wide `copilot → agent` rename.
 
-Only the **user-facing product name** changed (Interview OS Coach → Intelligent
-Interview Coach). Bare "Interview OS" shell/architecture terms in code comments and
-internal docstrings are internal references and are left as-is.
+The canonical product name is **Intelligent Interview Coach** across the UI,
+documentation, distribution metadata and current source identifiers. Historical Git
+history is retained, but current tracked files no longer use the previous product
+branding.
 
 ---
 

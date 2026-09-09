@@ -1,61 +1,71 @@
-# Sprint 4 — Demo Script (5–8 minutes)
+# Sprint 4 — Demo Script (8–12 minutes)
 
-A guided walkthrough of the Intelligent Interview Coach. Assumes the Next.js frontend
-and FastAPI backend are running with `AGENT_COACH_ENABLED=true` and an
-`OPENROUTER_API_KEY` set (see README quick start).
+A guided review walkthrough of the Intelligent Interview Coach (Career Preparation
+Agent). Primary interface is **Next.js + FastAPI**.
 
-> Ports: use free ports if :3000 is occupied (e.g. frontend on :3200, backend on
-> :8000). The frontend's API base defaults to `http://localhost:8000/api/v1`.
+> **Setup.** Run FastAPI (`uvicorn src.api.main:app --reload`) and Next.js
+> (`cd frontend && npm run dev`) with `AGENT_COACH_ENABLED=true` and an
+> `OPENROUTER_API_KEY`. Use a free port if 3000 is busy (e.g. frontend on 3200; the API
+> base defaults to `http://localhost:8000/api/v1`). See the README quick start.
 
-## Main path
+## Timed flow
 
-1. **Open the Agent Coach** — go to `/prepare`. The heading "Your interview coach"
-   confirms the LangGraph-backed coach is active.
-2. **Ask for preparation** — e.g. *"I have a Senior Product Manager interview at a
-   fintech next week — help me prepare for the behavioral and product-sense rounds."*
-   Click **Start preparing**.
-3. **Show a Career tool** — ask a follow-up that needs analysis, e.g. paste a short JD
-   or *"generate practice questions for this role"* — the coach calls a controlled
-   Career tool (`AnalyzeJobDescription` / `GenerateInterviewQuestions`).
-4. **Show retrieval + citations** — ask a knowledge question, e.g. *"What's the typical
-   salary range and expectations for this role?"* — the coach calls
-   `SearchCareerKnowledge`; point out the evidence/citations surfaced.
-5. **HITL (role/memory)** — if an ambiguous role or a memory proposal arises, an
-   approval card appears; approve/select it. *(Fallback if none occurs naturally: open
-   the Agent Inspector and show a prior run's `human_input_required` / `_resumed`
-   events, and explain the interrupt/resume mechanism.)*
-6. **Continue the same thread** — send another message; note the conversation continues
-   on the same run (multi-turn).
-7. **Open the Agent Inspector** — click **View run details**.
-8. **Point out the safe trace** — tools used, retrieval, sources, memory use,
-   approvals, timing, safe tool-failure categories. Emphasise: **no chain-of-thought,
-   no prompts, no raw checkpoint** are shown.
-9. **Approve the Practice handoff** — approve moving into Interview Practice (or start
-   Practice directly).
-10. **Answer one Interview question** — type an answer and submit.
-11. **Show the evaluation** — structured feedback (score, what worked, what to improve,
-    stronger structure). Note "practice feedback only — not a hiring decision".
-12. **Deep Dive** — click **Go deeper**, answer the follow-up, see branch feedback;
-    note the main question counter does not change.
-13. **Final report** — return to the interview, finish/complete, **Generate
-    performance review** — show the readiness score and sections.
-14. **Durability (optional, strong)** — refresh the page mid-interview (or point out a
-    restart): the same question/state is restored from the durable session store.
+**0:00–0:45 — Problem + architecture.** Candidates need grounded, role-aware
+preparation and realistic practice without losing progress. Sprint 3 built the Career
+Intelligence layer; Sprint 4 turned it into a stateful LangGraph agent. Show the diagram
+in `docs/sprint4_architecture.md`.
 
-## Standalone fallback demo (no coach handoff)
+**0:45–2:00 — Prepare page.** Open `/prepare`. Point out the **UNDERSTAND → PREPARE →
+PRACTISE** journey chrome and the **Speed** selector (Fast / Balanced / Advanced —
+Balanced recommended). No raw model names in the UI.
 
-Go to `/practice` with no session → the standalone setup form. Enter target role,
-industry, career level → **Start interview** → answer → feedback. This shows Interview
-Practice works without the Agent Coach.
+**2:00–4:00 — Agent decides tools.** Enter a role/JD, e.g. *"Senior Product Manager at a
+fintech next week — prep the behavioural and product-sense rounds"* and (optionally)
+paste a short JD / a few lines of background. Start preparing. Show: the agent calls
+controlled tools; a factual question (*"typical pay range for PMs in Germany?"*) triggers
+**SearchCareerKnowledge** with **citations**; the preparation checklist fills in from
+real completed steps.
 
-## Deterministic Career fallback
+**4:00–5:00 — Agent Inspector.** Open `/review/agent` for the run. Show the tool
+sequence, retrieval, model **profile**, model calls, **tokens / cost coverage**,
+**latency**, **cache hits/misses**, and the **journey** rows — and that **no
+chain-of-thought / prompts / raw checkpoint** appear.
 
-Set `AGENT_COACH_ENABLED=false` and reload `/prepare` — the deterministic Career flow
-renders instead of the agent. Useful to contrast Sprint 3's deterministic pipeline with
-Sprint 4's agentic wrapper.
+**5:00–6:00 — Memory.** When the coach proposes a memory, show **What will be
+remembered** → **Edit before saving** → approve. Then **Settings → Preparation memory**:
+edit, **pin**, and **What may be used next time** (enter a role → preview). Note pinning
+changes priority only.
 
-## If no key is configured
+**6:00–7:00 — Practice handoff.** When ready, the handoff card shows **what** transfers
+and **where each piece came from** (role / focus / questions). Approve → the interview is
+created (outside LangGraph, idempotent) and Practice opens with a subtle "Prepared in
+your Coach session" note.
 
-The UI still loads; agent runs and LLM-backed steps return a safe "not configured"
-message. Use `python scripts/eval_agent.py` to demonstrate the deterministic
-orchestration evaluation with no provider calls.
+**7:00–9:00 — Interview Practice.** Answer a question → structured **evaluation** →
+optional **Deep Dive** → **complete** → **final report**. Mention durable
+sessions/refresh-resume.
+
+**9:00–10:00 — Feedback.** Rate an Agent answer / evaluation / report **Helpful / Not
+helpful** (+ optional comment). Explain: feedback → aggregate → human review → evaluation
+case → controlled change. **Not** autonomous self-learning; only the exact owned output
+can be rated.
+
+**10:00–11:00 — Evaluation evidence.** Show `docs/sprint4_final_evidence.md`: the
+deterministic agent gate (56 cases, PASS), the live harness (22 cases, paid opt-in — not
+run), RAGAS (35 cases, optional), and the product regression totals.
+
+**11:00–12:00 — Limitations + close.** Production OIDC, Postgres deployment validation,
+paid model/RAGAS baselines, bulk checkpoint retention — all intentional follow-ups.
+
+## Fallback (no live provider / API key)
+
+If OpenRouter is unavailable, do **not** invent a live result. You can still show:
+
+- The UI: `/prepare` journey chrome + Speed selector, `/settings` memory management,
+  the Practice setup and History pages.
+- The **Agent Inspector** and feedback UI against a saved/known run id where available.
+- **Deterministic artifacts:** `python scripts/eval_agent.py` (no provider calls, gate
+  PASS) and the evidence sheet.
+- **Tests:** `pytest -q`, `cd frontend && npm test` / `npm run e2e` (Playwright mocks the
+  API — no provider needed).
+- The architecture and requirements matrix docs.

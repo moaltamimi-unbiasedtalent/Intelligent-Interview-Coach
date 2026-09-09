@@ -15,13 +15,10 @@ export default function HomePage() {
         <HomeEntry />
         <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted">
           <span>◦ Evidence-grounded guidance</span>
-          <span>◦ Practise by typing or speaking</span>
+          <span>◦ Realistic interview practice</span>
           <span>◦ Calm, focused, private</span>
         </div>
       </div>
-      <p className="mt-8 text-xs text-muted">
-        Foundation preview — preparation is wired to live data in a later phase.
-      </p>
     </section>
   );
 }

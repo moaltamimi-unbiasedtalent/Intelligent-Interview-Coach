@@ -17,7 +17,7 @@ Evidence-based plan produced during the OS-1 audit. **No code moved in OS-1.**
 
 ## Target repository / structure
 
-See `docs/interview_os_architecture.md`. Modular monolith: `src/core`,
+See `docs/legacy_sprint3_architecture.md`. Modular monolith: `src/core`,
 `src/career`, `src/interview`, `src/integration`, `src/ui`; one `app.py`; one
 `streamlit run app.py`.
 

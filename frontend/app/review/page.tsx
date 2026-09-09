@@ -6,9 +6,9 @@ import { Card, CardBody } from "@/components/ui/Card";
 export const metadata: Metadata = { title: "Review & Diagnostics" };
 
 const AREAS = [
-  { href: "/review/agent", name: "Agent Inspector", note: "Safe action traces for agent runs.", status: "Planned for Sprint 4" },
-  { href: "/review/rag", name: "RAG Inspector", note: "Retrieval lanes, evidence and citations.", status: "Integration pending" },
-  { href: "/review/evaluation", name: "Evaluation", note: "Retrieval metrics and optional RAGAS.", status: "Integration pending" },
+  { href: "/review/agent", name: "Agent Inspector", note: "Safe action traces for agent runs.", status: "Available" },
+  { href: "/review/rag", name: "RAG Inspector", note: "Retrieval lanes, evidence and citations.", status: "Legacy diagnostic" },
+  { href: "/review/evaluation", name: "Evaluation", note: "Retrieval metrics and optional RAGAS.", status: "Evaluation tooling available" },
 ];
 
 export default function ReviewPage() {

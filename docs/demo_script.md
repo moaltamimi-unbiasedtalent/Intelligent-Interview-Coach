@@ -1,5 +1,8 @@
 # Demo Script — Intelligent Interview Coach (10 minutes)
 
+> **Historical demo (Sprint 3 / Streamlit).** For Sprint 4 use [`docs/sprint4_demo_script.md`](sprint4_demo_script.md) (Next.js + FastAPI). Kept as a historical record.
+
+
 Run `streamlit run app.py`. Times are guides. Keep the RAG Inspector open in a
 second glance to show transparency.
 

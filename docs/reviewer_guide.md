@@ -1,5 +1,8 @@
 # Reviewer Guide — Career Intelligence in plain language
 
+> **Historical (Sprint 3 Career Intelligence).** Superseded for Sprint 4 review by [`docs/sprint4_reviewer_guide.md`](sprint4_reviewer_guide.md). Kept as a historical record; the primary interface is now Next.js + FastAPI (Streamlit is legacy).
+
+
 Short, plain answers to the concepts a reviewer may ask about. (No step-by-step
 model reasoning — just what each thing is and why it's here.)
 
