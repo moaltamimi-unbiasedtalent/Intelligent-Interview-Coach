@@ -8,6 +8,7 @@ import type { ApiErrorBody } from "./types";
 export type ApiErrorKind =
   | "network" // couldn't reach the backend
   | "validation" // 4xx — the request/input was rejected
+  | "conflict" // 409 — the resource changed concurrently / operation already running
   | "unavailable" // 503 — a service is not configured / temporarily down
   | "server" // 5xx — unexpected
   | "unknown";
@@ -40,6 +41,8 @@ export class ApiError extends Error {
         return "We couldn't connect right now. Please check your connection and try again.";
       case "validation":
         return "Please check the information and try again.";
+      case "conflict":
+        return "This is already being processed. Please wait a moment and try again.";
       case "unavailable":
         return "That feature isn't available right now. Please try again shortly.";
       case "server":
@@ -52,6 +55,7 @@ export class ApiError extends Error {
 export function kindForStatus(status: number): ApiErrorKind {
   if (status >= 500) return "server";
   if (status === 503) return "unavailable";
+  if (status === 409) return "conflict";
   if (status >= 400) return "validation";
   return "unknown";
 }

@@ -8,6 +8,7 @@ LangChain, Chroma or tool internals.
 
 from __future__ import annotations
 
+from src import constants
 from src.integration.models import PreparationContext
 
 __all__ = [
@@ -31,7 +32,14 @@ INTERVIEW_SUMMARY_KEY = "integration.interview_summary"
 _PENDING_NAV_KEY = "_pending_nav"
 _NAV_INTERVIEW = "Interview Practice"
 _NAV_CAREER = "Career Intelligence"
-_MAX_BACKGROUND_CHARS = 6_000
+# The handoff PROJECTION into Interview Practice must satisfy the Interview domain's
+# InterviewConfiguration limits: a PreparationContext that is valid for Career (JD up
+# to 12k) can otherwise become an INVALID InterviewConfiguration (JD max 8k, background
+# max 4k) and fail with an opaque 422 on Start practice. We therefore bound only the
+# Interview-bound projection to the Interview limits (the full PreparationContext is
+# preserved for Career). Reuse the Interview domain constants — no magic numbers.
+_MAX_INTERVIEW_JOB_DESCRIPTION_CHARS = constants.MAX_JOB_DESCRIPTION_CHARS
+_MAX_INTERVIEW_BACKGROUND_CHARS = constants.MAX_CANDIDATE_BACKGROUND_CHARS
 
 
 # --- Session state -----------------------------------------------------------
@@ -122,7 +130,7 @@ def _compose_background(context: PreparationContext) -> str:
         parts.append("Strengths: " + "; ".join(context.candidate_strengths) + ".")
     if context.candidate_gaps:
         parts.append("Development areas: " + "; ".join(context.candidate_gaps) + ".")
-    return " ".join(parts)[:_MAX_BACKGROUND_CHARS]
+    return " ".join(parts)[:_MAX_INTERVIEW_BACKGROUND_CHARS]
 
 
 def interview_prefill(session_state) -> dict:
@@ -140,7 +148,7 @@ def interview_prefill(session_state) -> dict:
         "industry": context.industry or "",
         "career_level": seniority_to_career_level(context.seniority),
         "company_context": context.company_context or "",
-        "job_description": context.job_description or "",
+        "job_description": (context.job_description or "")[:_MAX_INTERVIEW_JOB_DESCRIPTION_CHARS],
         "candidate_background": _compose_background(context),
         "difficulty": seniority_to_difficulty(context.seniority),
         "source_count": context.source_count,

@@ -321,11 +321,15 @@ function HandoffRunner({
         router.push(`/practice?session=${encodeURIComponent(session.session_id)}&from=coach`);
       } catch (e) {
         const err = e as ApiError;
-        if (err.status === 422 && !extra) {
-          // The context lacks industry/career level — ask the user, don't invent.
+        // Show the completion form ONLY for the specific missing-config case (stable
+        // backend code) — never inferred from status 422 alone, which also covers other
+        // validation problems. Any other error surfaces the backend's safe, actionable
+        // message (falling back to a calm default), so the candidate never sees a bare
+        // "check the information" when a better message exists.
+        if (err.code === "missing_interview_handoff_config" && !extra) {
           setNeedsConfig(true);
         } else {
-          setError(err.userMessage ?? "Couldn't start practice.");
+          setError(err.message || err.userMessage || "Couldn't start practice.");
         }
       }
     },
@@ -386,7 +390,7 @@ function HandoffCompletionCard({
         <p className="font-medium">One last detail before practice</p>
         <div>
           <label htmlFor="handoff-industry" className="block text-sm text-muted">Industry / sector</label>
-          <Input id="handoff-industry" value={industry} onChange={(e) => setIndustry(e.target.value)} maxLength={200} />
+          <Input id="handoff-industry" value={industry} onChange={(e) => setIndustry(e.target.value)} maxLength={200} disabled={busy} />
         </div>
         <div>
           <label htmlFor="handoff-level" className="block text-sm text-muted">Career level</label>
@@ -394,14 +398,17 @@ function HandoffCompletionCard({
             id="handoff-level"
             value={careerLevel}
             onChange={(e) => setCareerLevel(e.target.value)}
-            className="w-full rounded-lg border border-border bg-surface px-3.5 py-3"
+            disabled={busy}
+            className="w-full rounded-lg border border-border bg-surface px-3.5 py-3 disabled:opacity-60"
           >
             <option value="">Select…</option>
             {levels.map((l) => <option key={l} value={l}>{l}</option>)}
           </select>
         </div>
+        {/* Busy state guards against duplicate/concurrent submits (backend idempotency
+            via the agent-handoff key remains the real safety boundary — §14/§15). */}
         <Button size="sm" disabled={!ready} onClick={() => { setBusy(true); onSubmit(industry.trim(), careerLevel); }}>
-          Start practice
+          {busy ? "Starting practice…" : "Start practice"}
         </Button>
         {error ? <p role="alert" className="text-sm text-danger">{error}</p> : null}
       </CardBody>

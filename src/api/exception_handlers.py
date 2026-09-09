@@ -20,6 +20,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from src.application.errors import (
     ConfigurationError,
     ConflictError,
+    MissingHandoffConfigError,
     PersistenceError,
     UnavailableServiceError,
     ValidationError,
@@ -42,6 +43,15 @@ def _request_id(request: Request) -> str:
 
 
 def register_exception_handlers(app: FastAPI) -> None:
+    # A practice-handoff context missing industry/career level is a SPECIFIC 422 with
+    # a stable code, so the Coach UI asks for exactly those two fields — never inferred
+    # from status alone. Registered as its own handler; Starlette matches the most
+    # specific class in the exception's MRO, so this wins over the generic below.
+    @app.exception_handler(MissingHandoffConfigError)
+    async def _missing_handoff_config(request: Request, exc: MissingHandoffConfigError):
+        return _envelope(
+            422, "missing_interview_handoff_config", str(exc), _request_id(request))
+
     @app.exception_handler(ValidationError)
     async def _validation(request: Request, exc: ValidationError):
         return _envelope(422, "validation_error", str(exc), _request_id(request))
