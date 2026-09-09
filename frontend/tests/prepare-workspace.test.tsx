@@ -86,8 +86,8 @@ describe("Prepare workspace", () => {
     render(<PrepareWorkspace />);
     await userEvent.type(screen.getByLabelText("Ask the coach"), "hi");
     await userEvent.click(screen.getByRole("button", { name: "Ask" }));
-    expect(screen.getByText(/Checking career evidence/i)).toBeInTheDocument();
+    expect(screen.getByText(/Mo is checking relevant career evidence/i)).toBeInTheDocument();
     resolve(grounded);
-    await waitFor(() => expect(screen.queryByText(/Checking career evidence/i)).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText(/Mo is checking relevant career evidence/i)).not.toBeInTheDocument());
   });
 });

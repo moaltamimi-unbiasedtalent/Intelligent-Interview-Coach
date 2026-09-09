@@ -102,7 +102,7 @@ test("Flow 2: Agent answer → Not helpful → comment → conversation continue
   await page.getByRole("button", { name: "Save comment" }).click();
   await expect(page.getByRole("button", { name: "Not helpful" })).toHaveAttribute("aria-pressed", "true");
   // The coach still works normally after feedback (behaviour unchanged).
-  await page.getByLabel("Message your coach").fill("Tell me more");
+  await page.getByLabel("Message Mo").fill("Tell me more");
   await page.getByRole("button", { name: "Send" }).click();
   await expect(page.getByText("Grounded guidance.")).toBeVisible();
 });

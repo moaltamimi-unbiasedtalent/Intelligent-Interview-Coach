@@ -21,7 +21,7 @@ describe("Prepare responsive workspace", () => {
   it("mobile shows a Coach / Preparation tab control (rendered once)", () => {
     setMobile(true);
     render(<PrepareResponsive coach={<p>coach panel</p>} context={<p>context panel</p>} />);
-    expect(screen.getByRole("tab", { name: "Coach" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Mo" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Preparation" })).toBeInTheDocument();
   });
 

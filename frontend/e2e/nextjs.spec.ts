@@ -15,7 +15,7 @@ test("home primary CTA navigates to Prepare", async ({ page }) => {
   await page.goto("/");
   // Start requires a goal (it is transferred into Prepare, never in the URL).
   await page.getByLabel("What interview are you preparing for?").fill("Prep for a PM role");
-  await page.getByRole("button", { name: "Start" }).click();
+  await page.getByRole("button", { name: "Ask Mo" }).click();
   await expect(page).toHaveURL(/\/prepare$/);
   // The live Prepare workspace shows the coach composer.
   await expect(page.getByLabel("Ask the coach")).toBeVisible();
@@ -38,7 +38,7 @@ test("prepare workspace is responsive (mobile shows a context tab)", async ({ pa
   await page.setViewportSize({ width: 390, height: 780 });
   await page.goto("/prepare");
   // Mobile: a Coach / Preparation tab set is present.
-  await expect(page.getByRole("tab", { name: "Coach" })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Mo" })).toBeVisible();
   await expect(page.getByRole("tab", { name: "Preparation" })).toBeVisible();
 
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -47,7 +47,7 @@ test("prepare workspace is responsive (mobile shows a context tab)", async ({ pa
   await expect(
     page.getByRole("button", { name: /Start interview practice/i }),
   ).toBeVisible();
-  await expect(page.getByRole("tab", { name: "Coach" })).toHaveCount(0);
+  await expect(page.getByRole("tab", { name: "Mo" })).toHaveCount(0);
 });
 
 test("practice page offers standalone setup (typed only; no fake Record)", async ({ page }) => {
@@ -79,7 +79,7 @@ test("no camera or microphone permission is requested on load", async ({ page })
   });
   await page.goto("/");
   await page.getByLabel("What interview are you preparing for?").fill("Prep for a PM role");
-  await page.getByRole("button", { name: "Start" }).click();
+  await page.getByRole("button", { name: "Ask Mo" }).click();
   await page.goto("/practice");
   const requested = await page.evaluate(
     () => (window as unknown as { __mediaRequested: boolean }).__mediaRequested,

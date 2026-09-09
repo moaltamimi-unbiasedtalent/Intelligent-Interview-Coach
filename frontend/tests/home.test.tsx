@@ -19,7 +19,7 @@ describe("Home entry", () => {
       screen.getByLabelText("What interview are you preparing for?"),
       "Executive HR Director role at a fashion company",
     );
-    await userEvent.click(screen.getByRole("button", { name: "Start" }));
+    await userEvent.click(screen.getByRole("button", { name: "Ask Mo" }));
 
     expect(push).toHaveBeenCalledWith("/prepare"); // §24: no ?goal= in the URL
     expect(readPrepareDraft()).toEqual({
@@ -29,9 +29,9 @@ describe("Home entry", () => {
     });
   });
 
-  it("disables Start and does nothing for whitespace-only input (§6/§23)", async () => {
+  it("disables the CTA and does nothing for whitespace-only input (§6/§23)", async () => {
     render(<HomeEntry />);
-    const start = screen.getByRole("button", { name: "Start" });
+    const start = screen.getByRole("button", { name: "Ask Mo" });
     expect(start).toBeDisabled();
     await userEvent.type(screen.getByLabelText("What interview are you preparing for?"), "   ");
     expect(start).toBeDisabled();

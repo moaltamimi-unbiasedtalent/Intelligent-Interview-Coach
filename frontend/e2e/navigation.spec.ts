@@ -60,7 +60,7 @@ test("Flow 5: account control → Settings", async ({ page }) => {
 test("Flow 6: wordmark → home", async ({ page }) => {
   await mock(page);
   await page.goto("/prepare");
-  await page.getByRole("link", { name: "Intelligent Interview Coach — home" }).click();
+  await page.getByRole("link", { name: "Ask4Mo — home" }).click();
   await expect(page).toHaveURL(new RegExp(`${3200}/$|localhost:\\d+/$`));
 });
 

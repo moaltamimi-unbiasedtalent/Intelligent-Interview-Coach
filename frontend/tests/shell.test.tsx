@@ -16,7 +16,7 @@ describe("AppShell", () => {
   it("renders children and the product branding", () => {
     render(<AppShell><p>Hello content</p></AppShell>);
     expect(screen.getByText("Hello content")).toBeInTheDocument();
-    expect(screen.getAllByText("Intelligent Interview Coach").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Ask4Mo").length).toBeGreaterThan(0);
   });
 
   it("exposes the four primary navigation destinations", () => {
@@ -40,7 +40,7 @@ describe("AppShell", () => {
 
   it("home wordmark links to /", () => {
     render(<AppShell><span /></AppShell>);
-    expect(screen.getByRole("link", { name: "Intelligent Interview Coach — home" }))
+    expect(screen.getByRole("link", { name: "Ask4Mo — home" }))
       .toHaveAttribute("href", "/");
   });
 
