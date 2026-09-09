@@ -13,6 +13,8 @@ test("home loads with the Precision Coach headline", async ({ page }) => {
 
 test("home primary CTA navigates to Prepare", async ({ page }) => {
   await page.goto("/");
+  // Start requires a goal (it is transferred into Prepare, never in the URL).
+  await page.getByLabel("What interview are you preparing for?").fill("Prep for a PM role");
   await page.getByRole("button", { name: "Start" }).click();
   await expect(page).toHaveURL(/\/prepare$/);
   // The live Prepare workspace shows the coach composer.
@@ -76,6 +78,7 @@ test("no camera or microphone permission is requested on load", async ({ page })
     }
   });
   await page.goto("/");
+  await page.getByLabel("What interview are you preparing for?").fill("Prep for a PM role");
   await page.getByRole("button", { name: "Start" }).click();
   await page.goto("/practice");
   const requested = await page.evaluate(
