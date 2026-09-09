@@ -81,6 +81,14 @@ evaluation = [
     "ragas>=0.2.15,<0.3",
     "langchain-openai>=0.2,<0.4",
 ]
+# Optional external agent observability (P5). The provider-neutral sink defaults to a
+# NoOp with NO external network; this group only installs the vendor SDK so an operator
+# can opt in via AGENT_EXTERNAL_OBSERVABILITY_ENABLED=true + credentials. The sink lazy-
+# imports langfuse and emits ONLY a sanitised operational projection (never prompts or
+# candidate content). Not part of default/dev/CI installs and never called in CI.
+observability = [
+    "langfuse>=2.0,<4.0",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -201,6 +201,50 @@ instrumentation / Fast-Balanced-Advanced Coach / same-thread retrieval cache; **
 candidate-controlled memory (edit / pin / preview / editable HITL / checkpoint
 deletion); **P4** visible end-to-end journey and transparent Practice handoff.
 
+## Post-Sprint polish (bonus) — P5: feedback loop & observability
+
+**Turing College capability map**
+
+| Capability | Status |
+|---|---|
+| Multi-model support | ✅ P1 — Fast/Balanced/Advanced (registry-backed, server-validated) |
+| Feedback / learning loop | ✅ P5 — candidate ratings → human-reviewed engineering loop |
+| Observability / tool usage | ✅ Agent Inspector + ✅ P1 usage/cost/cache + ✅ P4 journey/handoff + ✅ P5 optional external sink |
+
+**Feedback (a controlled loop, not self-modification).** Candidates rate an Agent
+answer, an interview evaluation or a final report (Helpful / Not helpful + optional
+comment). Ratings are user-scoped, attached by reference (never a copy of the rated
+content), and verified against ownership. They are aggregated for human review; a
+recurring pattern becomes a new evaluation case and a human-reviewed, regression-tested
+prompt/policy change. Feedback **never** modifies prompts, tools, retrieval, memory,
+HITL or the model automatically.
+
+> Concrete example (§29). Repeated "the Coach searched Career Knowledge when I only
+> asked how the app works" → a developer adds an `evaluations/agent_live/` case with
+> `retrieval_expected=false`, tightens the retrieve-vs-not policy, and re-runs
+> `eval_agent` + the live harness before shipping. `scripts/export_feedback_summary.py`
+> surfaces the aggregate (comments only with an explicit `--include-comments`).
+
+**Observability.** The Agent Inspector remains the primary, first-party view (tools,
+retrieval, HITL, model usage, latency, cache, journey, handoff — never chain-of-thought).
+An optional external sink (Langfuse) is provider-neutral, **OFF by default**, and
+receives only a sanitised operational projection (never prompts, candidate text, JD/CV,
+memory, retrieved chunks, answers, the system prompt, tool arguments or tool output);
+a provider outage never affects a run.
+
+Reviewer lines:
+
+- **Feedback:** *"The application learns from feedback through a controlled engineering
+  loop rather than autonomously rewriting itself. Ratings are aggregated, recurring
+  failure patterns become evaluation cases, and any prompt or policy improvement is
+  human-reviewed and regression-tested."*
+- **Observability:** *"The Agent Inspector shows what the system did — tools, retrieval,
+  HITL, model usage, latency, cache and journey state — without exposing chain-of-thought.
+  Optional external observability receives only a sanitised operational projection."*
+- **Multi-model:** *"The Coach supports registry-backed Fast, Balanced and Advanced
+  model profiles. Changing the model does not change the controlled tool set, grounding
+  policy, memory rules or HITL safeguards."* No paid profile comparison has been executed.
+
 ## Known limitations (explicit)
 
 - Production **OIDC not implemented** — the API must run behind an authenticating

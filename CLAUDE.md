@@ -263,6 +263,25 @@ assumptions in core logic, prompts, scoring or examples.
   stays OUTSIDE LangGraph (idempotent frontend path — unchanged). Streamlit shows a
   legacy-interface banner; Next.js + FastAPI is the primary product. Pure
   UX/transparency — no new agent/tool/retrieval/memory/interview behaviour.
+- **Feedback loop + observability (post-Sprint 4, P5).** Candidate feedback
+  (`src/feedback.py`, `user_feedback` table, Alembic `0006`, single head) is a
+  user-scoped rating (helpful/not_helpful) + optional bounded comment attached BY
+  REFERENCE to one output — an Agent answer (stable `response_id` = `<run_id>:<absolute
+  assistant index>`, never a content hash), an interview evaluation (`session:question`)
+  or a final report (`session`). It stores NO copy of any rated content; the comment is
+  untrusted text, never fed into any prompt/tool/policy. `FeedbackApplicationService`
+  validates + verifies target OWNERSHIP (injected per-surface verifiers: agent-run owns
+  / session owns) → foreign/unknown is not-found; idempotent upsert; safe aggregate
+  metrics. `POST/GET/DELETE /api/v1/feedback` (server sets user_id). The loop is
+  human-reviewed (`scripts/export_feedback_summary.py`, aggregate-only unless
+  `--include-comments`) — NEVER autonomous self-modification. Observability
+  (`src/observability/`) is a provider-neutral `ObservabilitySink`: NoOp default
+  (external OFF via `AGENT_EXTERNAL_OBSERVABILITY_ENABLED`), optional Langfuse sink
+  emitting ONLY a sanitised allow-listed projection via manual events (never the
+  auto-trace callback → no prompt/content capture), lazily imported, best-effort (a
+  provider outage never breaks a run/interview/feedback). Unknown usage stays None
+  (never 0). The Agent Inspector remains the primary first-party view. See
+  `docs/sprint4_reviewer_guide.md`.
 - **Providers.** Career Intelligence uses LangChain over OpenRouter; the
   Interview module uses a direct OpenRouter HTTPX client. Optional speech
   (`[speech]`) and Live (`[live]`) backends are lazily imported. **Live is
