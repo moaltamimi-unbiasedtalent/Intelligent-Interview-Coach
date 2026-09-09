@@ -97,6 +97,43 @@ test("agent coach: practice handoff creates an interview (idempotency key) and r
   expect(interviewKeys.some((k) => k.startsWith("agent-handoff:"))).toBeTruthy();
 });
 
+test("agent coach: missing-config handoff asks for industry/level then starts practice", async ({ page }) => {
+  let interviewPosts = 0;
+  await page.route("**/api/v1/**", async (route) => {
+    const url = route.request().url();
+    const method = route.request().method();
+    const json = (body: unknown, status = 200) =>
+      route.fulfill({ status, contentType: "application/json", headers: { "x-request-id": "req_e2e" }, body: JSON.stringify(body) });
+    if (url.includes("/capabilities")) return json(CAPS(true));
+    if (url.endsWith("/interviews/options")) return json({ career_levels: ["entry", "mid", "senior", "executive"], interview_types: ["behavioural"] });
+    // The context lacks industry/career level → the FIRST create is refused with the
+    // dedicated stable code (not a generic 422); after the candidate supplies them the
+    // SECOND create succeeds.
+    if (url.endsWith("/agent/run")) return json(runBody({ handoff_approved: true, preparation_context: { target_role: "Senior PM" } }));
+    if (url.endsWith("/interviews") && method === "POST") {
+      interviewPosts += 1;
+      if (interviewPosts === 1) {
+        return json({ error: { code: "missing_interview_handoff_config", message: "Add the missing industry and career level to start practice.", request_id: "req_e2e" } }, 422);
+      }
+      return json({ session_id: "sess_e2e", state: "AWAITING_ANSWER", question_number: 1, questions_planned: 5, current_question: { question_id: 1, question: "Q1", question_type: "behavioural", competency: "x", difficulty: "moderate" }, report_available: false, target_role: "Senior PM" });
+    }
+    return json({});
+  });
+
+  await page.goto("/prepare");
+  await page.getByLabel("What interview are you preparing for?").fill("Ready to practise");
+  await page.getByRole("button", { name: "Start preparing" }).click();
+
+  // The completion form appears ONLY because of the specific missing-config code.
+  await expect(page.getByText("One last detail before practice")).toBeVisible();
+  await page.getByLabel("Industry / sector").fill("Fashion");
+  await page.getByLabel("Career level").selectOption("executive");
+  await page.getByRole("button", { name: /Start practice/ }).click();
+
+  await page.waitForURL(/\/practice\?session=sess_e2e&from=coach/);
+  expect(interviewPosts).toBe(2);
+});
+
 test("agent coach: refresh restores the pending approval", async ({ page }) => {
   await mock(page, {
     onGet: runBody({
