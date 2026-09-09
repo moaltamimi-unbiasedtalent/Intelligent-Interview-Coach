@@ -367,6 +367,7 @@ class MemoryRepository:
             summary=row.summary, target_role=row.target_role,
             source_run_id=row.source_run_id,
             created_at=row.created_at, updated_at=row.updated_at,
+            pinned=bool(row.pinned),
         )
 
     def count_for_user(self, user_id: int) -> int:
@@ -377,10 +378,15 @@ class MemoryRepository:
             ) or 0)
 
     def find_duplicate(
-        self, user_id: int, category: str, summary: str, target_role: str | None
+        self, user_id: int, category: str, summary: str, target_role: str | None,
+        *, exclude_id: int | None = None,
     ) -> MemoryItem | None:
         """Return an existing equivalent memory (same user/category/normalized
-        summary/role), or None. Deterministic — no fuzzy/LLM matching."""
+        summary/role), or None. Deterministic — no fuzzy/LLM matching.
+
+        ``exclude_id`` skips one memory (the one being edited) so an update that does
+        not change the dedupe key is never flagged as colliding with itself.
+        """
         norm_summary = normalize_summary(summary)
         norm_role = normalize_role(target_role)
         with self._session_factory() as session:
@@ -391,6 +397,8 @@ class MemoryRepository:
                 )
             ).all()
             for row in rows:
+                if exclude_id is not None and row.id == exclude_id:
+                    continue
                 if (normalize_summary(row.summary) == norm_summary
                         and normalize_role(row.target_role) == norm_role):
                     return self._to_item(row)
@@ -407,6 +415,32 @@ class MemoryRepository:
             )
             session.add(row)
             session.commit()
+            return self._to_item(row)
+
+    def update(
+        self, user_id: int, memory_id: int, *, fields: dict
+    ) -> MemoryItem | None:
+        """Apply already-validated field changes to a user's memory (user-scoped).
+
+        Ownership is part of the WHERE clause — a foreign/unknown id returns None (a
+        not-found), never another user's row. Only the given keys are changed;
+        ``updated_at`` refreshes via the column's ``onupdate``.
+        """
+        allowed = {"category", "summary", "target_role", "pinned"}
+        with self._session_factory() as session:
+            row = session.scalar(
+                select(PreparationMemory).where(
+                    PreparationMemory.id == memory_id,
+                    PreparationMemory.user_id == user_id,
+                )
+            )
+            if row is None:
+                return None
+            for key, value in fields.items():
+                if key in allowed:
+                    setattr(row, key, value)
+            session.commit()
+            session.refresh(row)
             return self._to_item(row)
 
     def list_for_user(

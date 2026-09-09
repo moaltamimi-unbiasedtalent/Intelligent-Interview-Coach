@@ -107,6 +107,10 @@ class PreparationMemory(Base):
     category: Mapped[str] = mapped_column(String(64))
     summary: Mapped[str] = mapped_column(String(500))
     target_role: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    # Candidate "pin": prefer this memory within otherwise-relevant memories at load
+    # time (P2). Deterministic priority only — never makes memory an instruction and
+    # never overrides the current request. Existing rows default to False (migration 0005).
+    pinned: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     # The agent run this memory was created from, when known (no cross-user leak:
     # ownership is always enforced via user_id, never via this field).
     source_run_id: Mapped[str | None] = mapped_column(String(64), nullable=True)

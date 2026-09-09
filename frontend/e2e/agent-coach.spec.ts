@@ -106,7 +106,8 @@ test("agent coach: refresh restores the pending approval", async ({ page }) => {
   });
   await page.goto("/prepare?run=run_e2e");
   await expect(page.getByText("Executive communication")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Save" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Approve" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Edit before saving" })).toBeVisible();
 });
 
 test("agent inspector: shows a safe execution timeline", async ({ page }) => {

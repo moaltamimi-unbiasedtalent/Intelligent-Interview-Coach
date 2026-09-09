@@ -105,6 +105,49 @@ class InvalidHumanDecision(ValueError):
     """A human decision that does not validate against the pending action."""
 
 
+# The ONLY keys an edited APPROVE_MEMORY decision may carry — a candidate edits the
+# memory content, nothing else. pinned/source_run_id/user_id/id and any graph/tool/
+# checkpoint state are rejected (pinning is a Settings action, not an agent proposal).
+_EDITABLE_MEMORY_KEYS = {"category", "summary", "target_role"}
+
+
+def _validate_edited_memory(memory: Any) -> dict[str, Any]:
+    """Validate an untrusted edited memory from an APPROVE_MEMORY decision.
+
+    Enforces the SAME allowlist/bounds as a normal memory write and rejects any key
+    other than category/summary/target_role, so an approval can never smuggle arbitrary
+    graph-state (pinned, source_run_id, user_id, checkpoint/tool values, nested objects).
+    The edited memory remains UNTRUSTED user DATA — it is later injected as DATA, never
+    as instructions.
+    """
+    from src.memory import (
+        MEMORY_MAX_SUMMARY_CHARS,
+        MEMORY_MAX_TARGET_ROLE_CHARS,
+        MemoryCategory,
+    )
+
+    if not isinstance(memory, dict):
+        raise InvalidHumanDecision("Edited memory must be an object.")
+    extra = set(memory.keys()) - _EDITABLE_MEMORY_KEYS
+    if extra:
+        raise InvalidHumanDecision(f"Unexpected memory field(s): {sorted(extra)}.")
+    try:
+        category = MemoryCategory.from_value(memory.get("category")).value
+    except ValueError as exc:
+        raise InvalidHumanDecision("That memory category is not allowed.") from exc
+    summary = str(memory.get("summary") or "").strip()
+    if not summary:
+        raise InvalidHumanDecision("A memory summary is required.")
+    if len(summary) > MEMORY_MAX_SUMMARY_CHARS:
+        raise InvalidHumanDecision(
+            f"A memory summary must be {MEMORY_MAX_SUMMARY_CHARS} characters or fewer.")
+    role = str(memory.get("target_role") or "").strip() or None
+    if role and len(role) > MEMORY_MAX_TARGET_ROLE_CHARS:
+        raise InvalidHumanDecision(
+            f"A target role must be {MEMORY_MAX_TARGET_ROLE_CHARS} characters or fewer.")
+    return {"category": category, "summary": summary, "target_role": role}
+
+
 def validate_decision(pending: dict[str, Any] | None, decision: dict[str, Any]) -> dict[str, Any]:
     """Validate an untrusted human decision against the current pending action.
 
@@ -142,5 +185,10 @@ def validate_decision(pending: dict[str, Any] | None, decision: dict[str, Any]) 
         if verdict not in (DECISION_APPROVE, DECISION_REJECT):
             raise InvalidHumanDecision("Decision must be 'approve' or 'reject'.")
         normalised["decision"] = verdict
+        # Edit-before-save: an APPROVE_MEMORY approval may carry an edited memory. It is
+        # validated HERE (before Command(resume=...)); an invalid edit leaves the run
+        # paused and unchanged. Only APPROVE_MEMORY accepts a `memory` object.
+        if atype is HumanActionType.APPROVE_MEMORY and verdict == DECISION_APPROVE and "memory" in decision:
+            normalised["memory"] = _validate_edited_memory(decision.get("memory"))
 
     return normalised

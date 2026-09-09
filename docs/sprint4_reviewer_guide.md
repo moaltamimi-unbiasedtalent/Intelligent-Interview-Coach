@@ -139,6 +139,35 @@ cache** (reuses evidence for an equivalent same-thread request; never shared acr
 or runs). No paid comparative benchmark was executed. Remaining items (memory-management
 UI, journey chrome, feedback loop, external company research) are documented follow-ups.
 
+## Post-Sprint polish (bonus) — P2: memory management UX
+
+Long-term preparation memory became a candidate-controlled feature (trust model
+unchanged: selective, user-scoped, bounded, explicitly approved, DATA only). Demo:
+
+1. The Coach proposes a useful memory during a run.
+2. The candidate sees the **exact** value that would be saved (category / memory / for
+   / a static "why").
+3. They **edit it before saving** (or approve as-is, or reject).
+4. **Settings → Preparation memory** shows the saved memory.
+5. They **pin** it.
+6. **What may be used next time** (enter a role) shows it will be preferred for a
+   relevant future role — the preview uses the *same* loader a real run uses.
+
+Also: a candidate can **delete a Coach run** (its checkpoint thread only) without
+touching saved memory or Interview History.
+
+- **What memory is:** *"Long-term memory is not hidden chat history. It is a small
+  user-controlled set of approved preparation facts that the candidate can inspect,
+  edit, prioritise and delete."*
+- **What pinning does:** *"Pinning changes deterministic load priority only. It does
+  not make the memory an instruction and it never overrides the user's current
+  request."*
+- **Checkpoint vs memory:** *"Checkpoint state and long-term memory remain separate.
+  Where the official LangGraph saver supports thread deletion, the user can explicitly
+  delete that execution thread without touching their approved long-term memories."*
+
+See `docs/sprint4_architecture.md` §3h.
+
 ## Known limitations (explicit)
 
 - Production **OIDC not implemented** — the API must run behind an authenticating

@@ -16,10 +16,15 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Path
 
 from src.agent.models import AgentRunRequest as AppAgentRunRequest
-from src.application.agent_service import RunNotFoundError, RunNotResumableError
+from src.application.agent_service import (
+    CheckpointDeleteUnsupportedError,
+    RunNotFoundError,
+    RunNotResumableError,
+)
 from src.api.dependencies import get_agent_service, get_current_user_id, get_request_id
 from src.api.schemas.agent import (
     AgentContinueRequest,
+    AgentRunDeleteResponse,
     AgentRunRequest,
     AgentRunResponse,
     AgentUsageResponse,
@@ -43,6 +48,7 @@ def _to_response(result) -> AgentRunResponse:
         resolved_geography=result.resolved_geography,
         memory_used=result.memory_used,
         memory_count=result.memory_count,
+        memory_loaded=result.memory_loaded,
         awaiting_human_input=result.awaiting_human_input,
         pending_action=result.pending_action,
         handoff_approved=result.handoff_approved,
@@ -125,15 +131,35 @@ def resume_agent_run(
     user_id: int = Depends(get_current_user_id),
     request_id: str = Depends(get_request_id),
 ) -> AgentRunResponse:
+    decision: dict = {"action_id": body.action_id, "decision": body.decision,
+                      "selected_role": body.selected_role}
+    # Edit-before-save (APPROVE_MEMORY only): pass the edited memory through for
+    # validation in the service. Absent → the originally proposed memory is used.
+    if body.memory is not None:
+        decision["memory"] = body.memory.model_dump()
     try:
-        result = service.resume(
-            run_id, str(user_id),
-            {"action_id": body.action_id, "decision": body.decision,
-             "selected_role": body.selected_role},
-            request_id=request_id,
-        )
+        result = service.resume(run_id, str(user_id), decision, request_id=request_id)
     except RunNotFoundError:
         raise HTTPException(status_code=404, detail="Run not found.")
     except RunNotResumableError:
         raise HTTPException(status_code=409, detail="This run is not awaiting a decision.")
     return _to_response(result)
+
+
+@router.delete("/runs/{run_id}", response_model=AgentRunDeleteResponse,
+               summary="Delete an owned Coach run's execution/checkpoint thread")
+def delete_agent_run(
+    run_id: str = Path(..., min_length=1, max_length=64),
+    service=Depends(get_agent_service),
+    user_id: int = Depends(get_current_user_id),
+) -> AgentRunDeleteResponse:
+    # Deletes ONLY this run's checkpoint thread — not long-term memory, Interview
+    # History or other runs. Foreign/unknown run → 404; unsupported saver → 501
+    # (never a fake success).
+    try:
+        service.delete_run(run_id, str(user_id))
+    except RunNotFoundError:
+        raise HTTPException(status_code=404, detail="Run not found.")
+    except CheckpointDeleteUnsupportedError as exc:
+        raise HTTPException(status_code=501, detail=str(exc))
+    return AgentRunDeleteResponse(deleted=True, run_id=run_id)

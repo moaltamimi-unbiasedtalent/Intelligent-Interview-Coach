@@ -173,3 +173,60 @@ def test_resume_completed_run_returns_409(client):
     again = client.post(f"/api/v1/agent/runs/{run_id}/resume",
                         json={"action_id": r2["pending_action"]["action_id"], "decision": "approve"}, headers=ALICE)
     assert again.status_code == 409
+
+
+# --- P2: edit-before-save over HTTP + run deletion ---------------------------
+
+
+def _to_approve_memory(client, headers=ALICE):
+    """Drive a run to the APPROVE_MEMORY pending action; return (run_id, action_id)."""
+    run = client.post("/api/v1/agent/run", json={"goal": "Prep"}, headers=headers).json()
+    r2 = client.post(f"/api/v1/agent/runs/{run['run_id']}/resume",
+                     json={"action_id": run["pending_action"]["action_id"], "decision": "select",
+                           "selected_role": "Product Manager"}, headers=headers).json()
+    assert r2["pending_action"]["type"] == "approve_memory"
+    return run["run_id"], r2["pending_action"]["action_id"]
+
+
+def test_resume_accepts_an_edited_memory(client):
+    run_id, action_id = _to_approve_memory(client)
+    r = client.post(f"/api/v1/agent/runs/{run_id}/resume",
+                    json={"action_id": action_id, "decision": "approve",
+                          "memory": {"category": "recurring_gap", "summary": "Edited fact", "target_role": "Senior PM"}},
+                    headers=ALICE)
+    assert r.status_code == 200, r.text
+    assert r.json()["status"] in ("completed", "step_limit_reached")
+
+
+def test_resume_rejects_an_invalid_edited_memory(client):
+    run_id, action_id = _to_approve_memory(client)
+    # Invalid category → 422; run stays paused.
+    r = client.post(f"/api/v1/agent/runs/{run_id}/resume",
+                    json={"action_id": action_id, "decision": "approve",
+                          "memory": {"category": "medical", "summary": "x"}}, headers=ALICE)
+    assert r.status_code == 422
+    assert client.get(f"/api/v1/agent/runs/{run_id}", headers=ALICE).json()["awaiting_human_input"] is True
+
+
+def test_resume_rejects_edited_memory_with_extra_field(client):
+    run_id, action_id = _to_approve_memory(client)
+    r = client.post(f"/api/v1/agent/runs/{run_id}/resume",
+                    json={"action_id": action_id, "decision": "approve",
+                          "memory": {"category": "strength", "summary": "ok", "pinned": True}}, headers=ALICE)
+    assert r.status_code == 422  # extra key rejected by the schema
+
+
+def test_delete_run_removes_it(client):
+    run = client.post("/api/v1/agent/run", json={"goal": "Prep"}, headers=ALICE).json()
+    run_id = run["run_id"]
+    d = client.delete(f"/api/v1/agent/runs/{run_id}", headers=ALICE)
+    assert d.status_code == 200 and d.json() == {"deleted": True, "run_id": run_id}
+    assert client.get(f"/api/v1/agent/runs/{run_id}", headers=ALICE).status_code == 404
+
+
+def test_delete_run_foreign_user_is_404(client):
+    run = client.post("/api/v1/agent/run", json={"goal": "Prep"}, headers=ALICE).json()
+    run_id = run["run_id"]
+    assert client.delete(f"/api/v1/agent/runs/{run_id}", headers=BOB).status_code == 404
+    # Still there for the owner.
+    assert client.get(f"/api/v1/agent/runs/{run_id}", headers=ALICE).status_code == 200

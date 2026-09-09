@@ -592,6 +592,32 @@ The `/progress` page surfaces saved memory (grouped, with delete); identity stil
 uses the transitional `X-User-Subject` seam (production OIDC remains required).
 (Phase 8 makes the graph checkpoint durable — see §3i.)
 
+**Post-Sprint 4 (P2) — candidate-controlled memory management.** The same long-term
+memory (unchanged trust model: selective, user-scoped, bounded, explicitly approved,
+DATA only) becomes a product feature the candidate controls:
+
+- **Edit + pin.** `PATCH /api/v1/memory/{id}` (partial update; the same create
+  validation; ownership-scoped; a dedupe collision is a `409`) and a new
+  `pinned` column (Alembic `0005`). Pinning is a **deterministic load-priority signal
+  only** — it never makes memory an instruction and never overrides the current
+  request. Load order becomes: role-matched pinned → role-matched → general pinned →
+  general (and the no-role variant), capped at 10, different-role excluded.
+- **Next-run preview.** `GET /api/v1/memory/preview?target_role=` delegates to the
+  **same** `load_for_agent`, so the preview can never drift from what a real run
+  loads.
+- **Edit-before-save HITL.** An `APPROVE_MEMORY` approval may carry an edited `memory`
+  (category/summary/target_role only), validated **before** the graph resumes; it can
+  never smuggle arbitrary graph-state (pinned/source_run_id/user_id/checkpoint values
+  are rejected). It persists via the same `MemoryApplicationService.create` path and
+  stays untrusted DATA.
+- **Settings** is the primary management surface (list/edit/pin/delete + preview);
+  `/progress` links to it. A safe Coach cue shows how many memories were loaded and
+  their safe summaries (never checkpoint/prompt internals).
+- **Checkpoint user control.** `DELETE /api/v1/agent/runs/{id}` deletes ONE run's
+  LangGraph checkpoint thread via the saver's official `delete_thread` API (no raw
+  SQL); it never touches long-term memory or Interview History. An unsupported saver
+  is reported truthfully, never faked.
+
 ## 3i. Phase 8 — LangGraph human-in-the-loop (implemented)
 
 Phase 8 adds genuine **pause / resume** for decisions that should not be made

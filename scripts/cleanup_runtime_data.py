@@ -52,6 +52,14 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[dry-run] {stale} in-progress interview session(s) are stale as of "
               f"{cutoff.isoformat()} (retention_days={args.retention_days}). "
               f"Re-run with --apply to delete. Completed history is never affected.")
+
+    # Agent checkpoint cleanup status (P2). The official LangGraph saver supports
+    # deleting ONE thread (used by the candidate-facing "delete this Coach session"),
+    # but exposes no safe bulk list+timestamp+delete API, so age-based bulk cleanup is a
+    # deployment responsibility — we never invent it or touch checkpoint tables directly.
+    print("Agent checkpoint bulk cleanup: unsupported by configured saver "
+          "(per-run deletion is available via DELETE /api/v1/agent/runs/{run_id}).")
+    print("Long-term preparation memory: untouched (user-owned; managed in Settings).")
     return 0
 
 

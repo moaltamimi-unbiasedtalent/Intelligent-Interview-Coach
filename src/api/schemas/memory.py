@@ -28,6 +28,21 @@ class MemoryCreateRequest(BaseModel):
     )
 
 
+class MemoryUpdateRequest(BaseModel):
+    """A partial edit to one preparation memory (P2). At least one field required.
+
+    A field left OUT is untouched; ``target_role: null`` explicitly clears the role.
+    Never accepts ``user_id``, ``source_run_id`` or timestamps — the server owns those.
+    """
+
+    model_config = {"extra": "forbid"}
+
+    category: MemoryCategory | None = None
+    summary: str | None = Field(default=None, min_length=1, max_length=MEMORY_MAX_SUMMARY_CHARS)
+    target_role: str | None = Field(default=None, max_length=MEMORY_MAX_TARGET_ROLE_CHARS)
+    pinned: bool | None = None
+
+
 class MemoryResponse(BaseModel):
     """A single saved preparation memory (safe projection)."""
 
@@ -35,6 +50,7 @@ class MemoryResponse(BaseModel):
     category: str
     summary: str
     target_role: str | None = None
+    pinned: bool = False
     source_run_id: str | None = None
     created_at: str | None = None
     updated_at: str | None = None
@@ -47,3 +63,23 @@ class MemoryListResponse(BaseModel):
 class MemoryDeleteResponse(BaseModel):
     deleted: bool
     id: int
+
+
+class MemoryPreviewItem(BaseModel):
+    """One memory that WOULD be loaded for a run (safe projection + order/reason)."""
+
+    id: int
+    category: str
+    summary: str
+    target_role: str | None = None
+    pinned: bool = False
+    order: int
+    reason: str
+
+
+class MemoryPreviewResponse(BaseModel):
+    """The memories a new run for ``target_role`` would load (matches the real loader)."""
+
+    target_role: str | None = None
+    load_limit: int
+    items: list[MemoryPreviewItem] = Field(default_factory=list)
