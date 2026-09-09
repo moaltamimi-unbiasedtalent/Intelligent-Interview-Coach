@@ -28,7 +28,11 @@ from src.repository import FeedbackRepository
 
 __all__ = ["FeedbackApplicationService", "TargetVerifier"]
 
-# Proves a target (by its id) belongs to a user; returns True only when owned + exists.
+# Proves an EXACT feedback target. Returns True ONLY if this precise rated output
+# exists AND belongs to this user — e.g. an Agent response with that response_id, an
+# Interview question that has a completed evaluation, or a session that has generated
+# its final report. Owning the parent run/session is necessary but NOT sufficient.
+# Fails closed: any parse/service/missing-resource error must return False.
 TargetVerifier = Callable[[str, int], bool]
 
 

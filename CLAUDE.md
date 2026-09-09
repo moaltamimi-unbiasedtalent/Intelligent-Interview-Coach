@@ -272,7 +272,13 @@ assumptions in core logic, prompts, scoring or examples.
   untrusted text, never fed into any prompt/tool/policy. `FeedbackApplicationService`
   validates + verifies target OWNERSHIP (injected per-surface verifiers: agent-run owns
   / session owns) → foreign/unknown is not-found; idempotent upsert; safe aggregate
-  metrics. `POST/GET/DELETE /api/v1/feedback` (server sets user_id). The loop is
+  metrics. **Exact-target validation (P5.1):** each verifier proves the EXACT rated
+  output exists AND is owned — an assistant message with that `response_id` in the run's
+  safe conversation, an Interview question with a completed evaluation at that position,
+  or a session that has generated its final report — never just parent ownership;
+  foreign/unknown/malformed/nonexistent targets all return the same safe not-found
+  (`src/api/feedback_targets.py`, fail-closed). `POST/GET/DELETE /api/v1/feedback`
+  (server sets user_id). The loop is
   human-reviewed (`scripts/export_feedback_summary.py`, aggregate-only unless
   `--include-comments`) — NEVER autonomous self-modification. Observability
   (`src/observability/`) is a provider-neutral `ObservabilitySink`: NoOp default

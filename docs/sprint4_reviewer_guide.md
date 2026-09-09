@@ -214,7 +214,12 @@ deletion); **P4** visible end-to-end journey and transparent Practice handoff.
 **Feedback (a controlled loop, not self-modification).** Candidates rate an Agent
 answer, an interview evaluation or a final report (Helpful / Not helpful + optional
 comment). Ratings are user-scoped, attached by reference (never a copy of the rated
-content), and verified against ownership. They are aggregated for human review; a
+content), and accepted only for an **exact candidate-visible output that exists and
+belongs to the current user** — the backend verifies the exact Agent response
+(`response_id`), the evaluated Interview question, or the generated final report before
+accepting a rating (owning the parent run/session alone is not enough; foreign,
+unknown, malformed and nonexistent targets all return the same safe not-found). They are
+aggregated for human review; a
 recurring pattern becomes a new evaluation case and a human-reviewed, regression-tested
 prompt/policy change. Feedback **never** modifies prompts, tools, retrieval, memory,
 HITL or the model automatically.
@@ -238,6 +243,9 @@ Reviewer lines:
   loop rather than autonomously rewriting itself. Ratings are aggregated, recurring
   failure patterns become evaluation cases, and any prompt or policy improvement is
   human-reviewed and regression-tested."*
+- **Exact target (P5.1):** *"Feedback is not attached merely to a run or session. The
+  backend verifies the exact Agent response, evaluated Interview question, or generated
+  final report before accepting the rating."*
 - **Observability:** *"The Agent Inspector shows what the system did — tools, retrieval,
   HITL, model usage, latency, cache and journey state — without exposing chain-of-thought.
   Optional external observability receives only a sanitised operational projection."*
