@@ -1,7 +1,9 @@
 # Sprint 4 — Submission Summary
 
-Intelligent Interview Coach is a stateful AI Career Preparation Agent that turns evidence-backed
-career intelligence into targeted interview practice. LangGraph decides which controlled
+**Ask4Mo — Intelligent Interview Coach** (*Ask More. Be More.*) is a stateful AI Career
+Preparation Agent that turns evidence-backed career intelligence into targeted interview
+practice. Its candidate-facing AI Coach is **Mo** — the identity of that same agent (not
+a new agent, model or backend). LangGraph decides which controlled
 tools to use and when. Agentic RAG supplies grounded career evidence; selective memory
 preserves user-approved context; HITL protects important assumptions and persistent
 actions; and a typed `PreparationContext` carries the result into durable Interview

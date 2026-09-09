@@ -1,10 +1,19 @@
-# Intelligent Interview Coach
+# Ask4Mo
 
-**Understand the opportunity. Prepare intelligently. Practise realistically.**
+**Intelligent Interview Coach**
+
+**Ask More. Be More.**
+
+Ask4Mo is an AI-powered interview preparation platform that helps candidates understand
+what a role requires, prepare with evidence, practise realistically and improve through
+structured feedback.
+
+**Mo** is the candidate-facing AI Coach, built on the application's existing stateful
+LangGraph **Career Preparation Agent**.
 
 ## What it solves
 
-Intelligent Interview Coach solves the **fragmentation of interview preparation**.
+Ask4Mo solves the **fragmentation of interview preparation**.
 Candidates typically research roles, analyse job descriptions, identify gaps, plan
 preparation and practise interviews across disconnected tools. The application
 brings these activities into one workflow.

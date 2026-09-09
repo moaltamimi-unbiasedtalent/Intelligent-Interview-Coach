@@ -1,9 +1,21 @@
 # Sprint 4 — Reviewer Guide
 
-A practical orientation to the Intelligent Interview Coach — enough to understand and
-demo it without reading the whole repo. Companion docs: `sprint4_demo_script.md`,
-`sprint4_reviewer_qa.md`, `sprint4_final_requirements_matrix.md`,
-`sprint4_final_evidence.md`.
+A practical orientation to **Ask4Mo — Intelligent Interview Coach** — enough to
+understand and demo it without reading the whole repo. Companion docs:
+`sprint4_demo_script.md`, `sprint4_reviewer_qa.md`,
+`sprint4_final_requirements_matrix.md`, `sprint4_final_evidence.md`.
+
+## Brand & Mo (identity)
+
+- **Ask4Mo** is the consumer-facing brand; **Intelligent Interview Coach** is the
+  descriptor; the slogan is **Ask More. Be More.** The primary Home action is **Ask Mo**.
+- **Mo** is the candidate-facing **AI Coach** — the identity of the *existing* stateful
+  LangGraph **Career Preparation Agent**. Mo is **not** a new agent, model, memory
+  system or backend service; the architecture below is unchanged. Mo introduces itself
+  once at the start of a new preparation conversation and resolves "Mo" to itself, while
+  deferring to context when the candidate names another person Mo (e.g. an interviewer).
+- Mo is an **AI Coach** — never a "chatbot"/"bot". In technical/reviewer contexts it is
+  the *Career Preparation Agent*.
 
 ## First 60 seconds
 
