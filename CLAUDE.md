@@ -231,6 +231,23 @@ assumptions in core logic, prompts, scoring or examples.
   `usage`, `profile`, `latency_ms`, `cache_hits/misses`; the Coach shows a subtle usage
   line and the Inspector a full safe breakdown. No paid comparative benchmark executed.
   See `docs/sprint4_final_evaluation.md` §11.
+- **Memory management UX (post-Sprint 4, P2).** Long-term preparation memory is now
+  candidate-controlled (trust model unchanged: selective, user-scoped, bounded,
+  explicitly approved, DATA only). A `pinned` column (Alembic `0005`, single head) adds
+  a deterministic load-priority signal — NOT an instruction and never overriding the
+  current request; load order is role-matched pinned → role-matched → general pinned →
+  general (no-role variant symmetric), capped at 10, different-role excluded.
+  `MemoryApplicationService.update` (partial, shared validators, dedupe-excluding-self →
+  `409`) backs `PATCH /api/v1/memory/{id}`; `GET /api/v1/memory/preview` delegates to
+  the SAME `load_for_agent` so a next-run preview cannot drift. HITL gains
+  edit-before-save: an `APPROVE_MEMORY` approval may carry an edited `memory`
+  (category/summary/target_role only, validated before resume; pinned/source_run_id/
+  user_id/graph-state rejected), persisted via the same `create` path, still untrusted
+  DATA. `AgentApplicationService.delete_run` + `DELETE /api/v1/agent/runs/{id}` delete
+  ONLY a run's checkpoint thread via the saver's official `delete_thread` (no raw SQL;
+  unsupported saver reported truthfully, never faked). Settings is the primary memory
+  UI (edit/pin/delete/preview); `/progress` links to it; a safe Coach cue shows loaded
+  memory count + summaries. See `docs/sprint4_architecture.md` §3h.
 - **Providers.** Career Intelligence uses LangChain over OpenRouter; the
   Interview module uses a direct OpenRouter HTTPX client. Optional speech
   (`[speech]`) and Live (`[live]`) backends are lazily imported. **Live is
