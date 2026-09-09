@@ -89,7 +89,7 @@ def main() -> int:
     }
 
     lines = [
-        "# Interview OS — Performance Report",
+        "# Intelligent Interview Coach — Performance Report",
         "",
         "Representative latencies for the Career Intelligence lanes, measured offline "
         "(local hashing embedder, heuristic translator, fake model) so they are "

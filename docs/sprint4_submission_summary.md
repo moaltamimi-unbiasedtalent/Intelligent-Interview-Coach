@@ -1,6 +1,6 @@
 # Sprint 4 — Submission Summary
 
-Interview OS Coach is a stateful AI Career Preparation Agent that turns evidence-backed
+Intelligent Interview Coach is a stateful AI Career Preparation Agent that turns evidence-backed
 career intelligence into targeted interview practice. LangGraph decides which controlled
 tools to use and when. Agentic RAG supplies grounded career evidence; selective memory
 preserves user-approved context; HITL protects important assumptions and persistent

@@ -19,7 +19,7 @@ def _project_version() -> str:
     try:
         from importlib.metadata import version
 
-        return version("interview-os-coach")
+        return version("intelligent-interview-coach")
     except Exception:  # noqa: BLE001 - packaging metadata may be absent in dev
         return "0.1.0"
 

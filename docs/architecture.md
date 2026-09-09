@@ -117,8 +117,9 @@ See also [`docs/rag.md`](rag.md), [`docs/query_translation.md`](query_translatio
 
 ## Module boundaries (canonical)
 
-The distribution is named `interview-os-coach` (`pyproject.toml`). Within it the
-Career Intelligence layer is split into a **backend** and a **UI adapter**:
+The distribution package is defined in `pyproject.toml` (final name:
+`intelligent-interview-coach`). Within it the Career Intelligence layer is split into a
+**backend** and a **UI adapter**:
 
 | Package | Role | Contains |
 |---|---|---|

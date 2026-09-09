@@ -7,7 +7,7 @@ demo it without reading the whole repo. Companion docs: `sprint4_demo_script.md`
 
 ## First 60 seconds
 
-> "Sprint 3 gave Interview OS Coach an evidence-backed Career Intelligence layer. In
+> "Sprint 3 gave Intelligent Interview Coach an evidence-backed Career Intelligence layer. In
 > Sprint 4 I turned those capabilities into a stateful LangGraph Agent. The Agent
 > decides which controlled tool to use and when, including whether Career retrieval is
 > needed. It carries short-term checkpoint state, selectively loads user-approved

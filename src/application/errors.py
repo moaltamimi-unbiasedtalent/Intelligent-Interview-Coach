@@ -12,10 +12,10 @@ introduced — this is a small, explicit vocabulary shared by both frontends.
 
 from __future__ import annotations
 
-from src.core.errors import ConfigError, InterviewOSError, SafeError
+from src.core.errors import ConfigError, InterviewCoachError, SafeError
 
 __all__ = [
-    "InterviewOSError",
+    "InterviewCoachError",
     "SafeError",
     "ConfigError",
     "ApplicationError",

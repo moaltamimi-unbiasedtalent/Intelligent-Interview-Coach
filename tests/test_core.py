@@ -5,7 +5,7 @@ import pytest
 
 from src.core import secrets as core_secrets
 from src.core.config import AppConfig, OpenRouterCredentials, load_app_config
-from src.core.errors import ConfigError, InterviewOSError, SafeError
+from src.core.errors import ConfigError, InterviewCoachError, SafeError
 from src.core.logging import SENSITIVE_KEYS, safe_extra
 from src.core.security import count_control_chars, strip_zero_width
 from src.core.usage import Operation, UsageLedger, UsageRecord
@@ -143,8 +143,8 @@ class TestSecurityPrimitives:
 
 class TestErrors:
     def test_hierarchy(self) -> None:
-        assert issubclass(ConfigError, InterviewOSError)
-        assert issubclass(SafeError, InterviewOSError)
+        assert issubclass(ConfigError, InterviewCoachError)
+        assert issubclass(SafeError, InterviewCoachError)
 
     def test_safe_error_hides_detail(self) -> None:
         err = SafeError("Something went wrong.", detail="secret stacktrace")

@@ -50,12 +50,12 @@ revisions (`alembic revision --autogenerate`), never by editing `0001`.
 ## Docker
 
 ```bash
-docker build -t interview-os-coach .
+docker build -t intelligent-interview-coach .
 docker run --rm -p 8501:8501 \
   -e OPENROUTER_API_KEY=... \
   -e DATABASE_URL=postgresql+psycopg://user:pass@host:5432/db \
   -e APP_AUTH_REQUIRED=true \
-  interview-os-coach
+  intelligent-interview-coach
 ```
 
 Secrets are provided at **runtime** (env or mounted file) — never in the image

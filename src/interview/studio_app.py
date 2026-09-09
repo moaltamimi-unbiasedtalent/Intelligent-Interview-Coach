@@ -1494,7 +1494,7 @@ def _render_practice_page(session: SessionManager, config: AppConfig, dev: dict)
 
 
 def render_studio() -> None:
-    """Render the Interview Practice module inside the Interview OS shell.
+    """Render the Interview Practice module inside the application shell.
 
     The unified ``app.py`` owns ``st.set_page_config`` and the top-level nav; this
     renders the full Interview Practice experience (its own sub-menu intact).

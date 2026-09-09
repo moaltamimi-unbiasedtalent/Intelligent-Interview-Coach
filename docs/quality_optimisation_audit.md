@@ -31,7 +31,7 @@ functionality is not reimplemented. Statuses: **DONE** (already implemented),
 | 5D | Journey progress indicator | `WORKFLOW_STEPS` static breadcrumb only | PARTIAL | `ui/navigation.py:45` | compact per-module progress | low | UI smoke |
 | 5E | Practise-this-role provenance labels | handoff editable; no field provenance labels | PARTIAL | `career/ui.py`, `integration/*` | add short provenance captions | low | UI smoke |
 | 5F | Demo knowledge pack loader | fixtures exist; no `load_sample_knowledge.py`, no demo store | TODO | `scripts/` | add offline demo loader (separate store, --force) | med | run offline |
-| 6A | Distribution name `interview-os-coach` | `interview-practice-studio` | TODO | `pyproject.toml:2` | rename dist (keep import pkgs) | low | editable install |
+| 6A | Distribution package name | unified product slug (final: `intelligent-interview-coach`) | DONE | `pyproject.toml:2` | rename dist (keep import pkgs) | low | editable install |
 | 6B | copilot(domain)/career(UI) canonical, no "temporary" language | some docs implied `src/career` would replace `src/copilot` | PARTIAL | `docs/sprint_requirements_after_integration.md` | document canonical split | low | — |
 | 6C | Product labels (Intelligent Interview Coach / Career Intelligence) | present in UI | DONE | `ui/*`, `constants` | keep | low | — |
 | 6D | Reviewer mode (Career-only) | none | TODO | — | `COPILOT_REVIEWER_MODE` nav filter | low | UI smoke |

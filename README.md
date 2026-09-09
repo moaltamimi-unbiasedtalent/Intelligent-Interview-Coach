@@ -89,7 +89,7 @@ LLM-backed features. **Known limitations** are listed in the reviewer guide.
 Platform workflow: **UNDERSTAND → PREPARE → PRACTISE → REVIEW → IMPROVE**
 (Career Intelligence covers Understand & Prepare; Interview Practice covers
 Practise, Review & Improve). The two modules keep clear boundaries and are each
-independently testable; see [docs/interview_os_architecture.md](docs/interview_os_architecture.md).
+independently testable; see [docs/legacy_sprint3_architecture.md](docs/legacy_sprint3_architecture.md).
 
 **Navigation.** The sidebar has a **primary product journey** (Home, Career
 Intelligence, Interview Practice, Knowledge Base) and a separate **Review &

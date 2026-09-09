@@ -341,7 +341,7 @@ assumptions in core logic, prompts, scoring or examples.
 
 ## Git rules
 
-- Remote: `moaltamimi-unbiasedtalent/Interview-OS-Coach` (`origin`). Turing
+- Remote: `origin` (configured locally; the GitHub repo rename to Intelligent-Interview-Coach is a follow-up). Turing
   submissions are pushed to the `TuringCollegeSubmissions/*` remote.
 - Work on a feature branch; open a PR. **Do not auto-merge.** Commit and push only
   when a phase/prompt instructs it.

@@ -18,7 +18,7 @@ product-coverage benchmarks. The audit that scoped the work is
 | OPT-3 | Invalid `[n]` markers stripped from answers; structured-facts panel; evidence/guidance UX; deterministic faithfulness v2 | `security/output_guard.py`, `career/ui.py`, `scripts/eval_faithfulness_v2.py` |
 | OPT-4 | Session TTL cache (translation); quality/balanced/cheap modes | `copilot/cache.py`, `service.py` |
 | OPT-5 | Dry-run plan (`plan()`); journey progress stepper; handoff provenance labels; synthetic demo knowledge pack | `service.py`, `ui/home.py`, `scripts/load_sample_knowledge.py` |
-| OPT-6 | Distribution renamed `interview-os-coach`; reviewer-mode nav filter; canonical copilot/career split doc | `pyproject.toml`, `ui/navigation.py`, `app.py`, `docs/architecture.md` |
+| OPT-6 | Distribution renamed to the unified product package (final: `intelligent-interview-coach`); reviewer-mode nav filter; canonical copilot/career split doc | `pyproject.toml`, `ui/navigation.py`, `app.py`, `docs/architecture.md` |
 | OPT-7 | Held-out retrieval + tool + OOD + faithfulness evaluation; human review template | `evaluations/quality_v2/`, `scripts/eval_quality_v2.py` |
 | OPT-8 | Deterministic source freshness (CURRENT/REFRESH DUE/UNKNOWN); health panel + answer-level freshness; offline check + dry-run refresh helpers | `knowledge/status.py`, `career/ui.py`, `scripts/check_source_freshness.py`, `scripts/refresh_public_sources.py` |
 

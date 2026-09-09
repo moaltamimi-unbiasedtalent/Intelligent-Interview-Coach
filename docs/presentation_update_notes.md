@@ -4,6 +4,20 @@ No `.pptx` source lives in this repo, so this file is the authoritative source f
 separate PowerPoint update. Every figure below is verified against merged `main` at the
 final freeze. Do not claim any future/deferred item as implemented.
 
+## Product name (canonical, everywhere)
+
+The product name across every deck — title, slide titles, footers, speaker notes,
+architecture labels, closing slide and the file names — is **Intelligent Interview
+Coach**. The previous name **Interview OS Coach** must not appear anywhere in the decks.
+
+### Rename the deck files to
+
+- `Intelligent_Interview_Coach_Product_Journey_Final.pptx`
+- `Intelligent_Interview_Coach_Sprint_Review_Walkthrough_Final.pptx`
+- `Intelligent_Interview_Coach_Complete_App_Walkthrough.pptx`
+
+(The `.pptx` files are external to this repository; apply these renames there.)
+
 ## Final facts to put on the slides
 
 - Sprint 4: **COMPLETE**

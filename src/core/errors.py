@@ -7,18 +7,18 @@ useful, but keep their own specific exceptions too.
 
 from __future__ import annotations
 
-__all__ = ["InterviewOSError", "ConfigError", "SafeError"]
+__all__ = ["InterviewCoachError", "ConfigError", "SafeError"]
 
 
-class InterviewOSError(Exception):
+class InterviewCoachError(Exception):
     """Base class for platform errors."""
 
 
-class ConfigError(InterviewOSError):
+class ConfigError(InterviewCoachError):
     """Raised when configuration is missing or invalid."""
 
 
-class SafeError(InterviewOSError):
+class SafeError(InterviewCoachError):
     """An error carrying a user-safe message, hiding any sensitive detail."""
 
     def __init__(self, user_message: str, *, detail: str | None = None) -> None:

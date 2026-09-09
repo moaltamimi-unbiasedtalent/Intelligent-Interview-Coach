@@ -957,9 +957,10 @@ not** rename internal identifiers:
 - The GitHub repository is **not** renamed in Sprint 4.
 - No package-wide `copilot → agent` rename.
 
-Only the **user-facing product name** changed (Interview OS Coach → Intelligent
-Interview Coach). Bare "Interview OS" shell/architecture terms in code comments and
-internal docstrings are internal references and are left as-is.
+The canonical product name is **Intelligent Interview Coach** across the UI,
+documentation, distribution metadata and current source identifiers. Historical Git
+history is retained, but current tracked files no longer use the previous product
+branding.
 
 ---
 
