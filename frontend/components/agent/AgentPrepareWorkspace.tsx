@@ -19,6 +19,7 @@ import { PendingHumanActionCard } from "./PendingHumanActionCard";
 import { AgentRunLink } from "./AgentRunLink";
 import { AgentProfileSelector, DEFAULT_PROFILE, usageSummaryLine } from "./usage";
 import { JourneyChrome, PreparationChecklist } from "./JourneyChrome";
+import { FeedbackControl } from "@/components/feedback/FeedbackControl";
 import type { AgentProfile } from "@/lib/api/types";
 
 /** Candidate-facing Agent Coach — the LangGraph agent behind the Precision Coach UI. */
@@ -87,6 +88,16 @@ export function AgentPrepareWorkspace() {
           {usageSummaryLine(run)}
         </p>
       ) : null}
+
+      {(() => {
+        // Feedback on the latest visible assistant answer — never while awaiting HITL,
+        // on a failed run, or when there is no answer (§19).
+        if (busy || run.awaiting_human_input || run.status === "failed") return null;
+        const answers = run.conversation.filter((m) => m.role === "assistant" && m.response_id);
+        const latest = answers[answers.length - 1];
+        if (!latest?.response_id || !latest.content.trim()) return null;
+        return <FeedbackControl surface="agent_answer" targetId={latest.response_id} />;
+      })()}
 
       {run.warnings.length ? (
         <ul className="mt-3 space-y-1" role="status">

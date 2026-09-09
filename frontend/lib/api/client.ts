@@ -20,6 +20,9 @@ import type {
   AgentRunResponse,
   HumanDecisionRequest,
   InterviewOptionsResponse,
+  FeedbackCreateRequest,
+  FeedbackResponse,
+  FeedbackSurface,
   KnowledgeSnapshotResponse,
   KnowledgeSourcesResponse,
   MemoryCategory,
@@ -189,6 +192,24 @@ export const api = {
       const query = targetRole ? `?target_role=${encodeURIComponent(targetRole)}` : "";
       return request<MemoryPreviewResponse>("GET", `/memory/preview${query}`, opts);
     },
+  },
+
+  // Candidate feedback (P5). Never modifies Agent behaviour — a human-reviewed signal.
+  feedback: {
+    submit: (body: FeedbackCreateRequest, opts?: RequestOptions) =>
+      request<FeedbackResponse>("POST", "/feedback", { body, ...opts }),
+    get: (surface: FeedbackSurface, targetId: string, opts?: RequestOptions) =>
+      request<FeedbackResponse | null>(
+        "GET",
+        `/feedback?surface=${encodeURIComponent(surface)}&target_id=${encodeURIComponent(targetId)}`,
+        opts,
+      ),
+    remove: (surface: FeedbackSurface, targetId: string, opts?: RequestOptions) =>
+      request<{ deleted: boolean }>(
+        "DELETE",
+        `/feedback?surface=${encodeURIComponent(surface)}&target_id=${encodeURIComponent(targetId)}`,
+        opts,
+      ),
   },
 };
 

@@ -461,6 +461,8 @@ export interface HumanDecisionRequest {
 export interface AgentConversationMessage {
   role: "user" | "assistant";
   content: string;
+  /** Stable per-answer id for feedback targeting (assistant messages only, P5). */
+  response_id?: string;
 }
 
 export interface AgentToolCall {
@@ -556,4 +558,26 @@ export interface AgentRunResponse {
   /** Candidate journey + handoff provenance (P4). */
   journey?: PreparationJourney;
   handoff_summary?: PracticeHandoffSummary | null;
+}
+
+// --- Candidate feedback (P5) -------------------------------------------------
+
+export type FeedbackSurface = "agent_answer" | "interview_evaluation" | "final_report";
+export type FeedbackRating = "helpful" | "not_helpful";
+
+export interface FeedbackCreateRequest {
+  surface: FeedbackSurface;
+  target_id: string;
+  rating: FeedbackRating;
+  comment?: string | null;
+}
+
+export interface FeedbackResponse {
+  id: number;
+  surface: FeedbackSurface;
+  target_id: string;
+  rating: FeedbackRating;
+  comment: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }

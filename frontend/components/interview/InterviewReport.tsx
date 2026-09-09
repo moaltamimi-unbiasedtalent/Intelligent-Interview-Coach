@@ -7,6 +7,7 @@ import { ApiError } from "@/lib/api/errors";
 import type { ReportResponse } from "@/lib/api/types";
 import { Card, CardBody } from "@/components/ui/Card";
 import { ErrorState, LoadingState } from "@/components/ui/States";
+import { FeedbackControl } from "@/components/feedback/FeedbackControl";
 
 /** Fields the backend FinalInterviewReport actually provides (no invented metrics). */
 interface Report {
@@ -82,6 +83,12 @@ export function InterviewReport({ sessionId }: { sessionId: string }) {
       <ListCard title="Evidence gaps" items={report.evidence_gaps} />
       <ListCard title="Recommended practice actions" items={report.recommended_practice_actions} />
       <ListCard title="Final interview checklist" items={report.final_interview_checklist} />
+
+      <Card>
+        <CardBody>
+          <FeedbackControl surface="final_report" targetId={sessionId} prompt="Was this report useful?" />
+        </CardBody>
+      </Card>
     </div>
   );
 }
