@@ -1,5 +1,8 @@
 # Architecture — RAG + Tool Orchestration
 
+> **Historical (Sprint 3 architecture).** The current, authoritative architecture is [`docs/sprint4_architecture.md`](sprint4_architecture.md). Kept as a historical record.
+
+
 Phase 7 combines advanced RAG and domain tool calling into **one explainable,
 non-autonomous** LangChain workflow behind a single domain service,
 `CareerIntelligenceService`. The Streamlit layer calls the service; it never wires
