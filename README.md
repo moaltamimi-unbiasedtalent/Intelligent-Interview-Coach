@@ -391,11 +391,30 @@ Optionally add an OpenRouter key to `.streamlit/secrets.toml` or the environment
 
 ## Running
 
+**The primary product experience is Next.js + FastAPI.** Run both, then use
+**Prepare → Practice**:
+
+```bash
+# 1) Backend (FastAPI)
+uvicorn src.api.main:app --reload            # http://localhost:8000  (docs at /docs)
+
+# 2) Frontend (Next.js — the primary UI)
+cd frontend && npm install && npm run dev    # http://localhost:3000
+```
+
+Then open the frontend and go to **Prepare**: the Agent Coach helps you understand the
+opportunity, prepare against it (with human approval for assumptions and saved memory),
+hands the approved preparation into **Practice**, and produces a final report.
+
+### Legacy Streamlit interface (development only)
+
 ```bash
 streamlit run app.py
 ```
 
-One process, one URL. Everything (both modules) lives here.
+Streamlit is a **legacy development interface** (it shows a banner saying so) and is
+**not** the recommended product experience — use Next.js + FastAPI above. **Live** is
+experimental and off by default.
 
 ## Optional services
 

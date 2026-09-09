@@ -168,6 +168,39 @@ touching saved memory or Interview History.
 
 See `docs/sprint4_architecture.md` §3h.
 
+## Post-Sprint polish (bonus) — P4: visible journey & transparent handoff
+
+The lifecycle the architecture implements is now visible to the candidate, and the
+Practice handoff is explained rather than magical. Run the primary path (Next.js +
+FastAPI) and open **Prepare**:
+
+1. Start a role/JD preparation → the **UNDERSTAND → PREPARE → PRACTISE** journey chrome
+   updates from real state.
+2. As controlled tools complete, an observable **preparation checklist** fills in
+   (understand the opportunity → compare your experience → build priorities → create
+   questions).
+3. At handoff, the approval card shows **what** will be carried into Practice and
+   **where** each piece came from (role, focus areas, generated questions).
+4. Approve → Practice opens with a subtle "Prepared in your Coach session" note;
+   standalone Practice shows none.
+
+Reviewer lines:
+
+- **Journey:** *"The candidate can now see the same lifecycle the architecture
+  implements: understand the opportunity, prepare against it, and practise using that
+  context."*
+- **Handoff:** *"The handoff is transparent rather than magical. The candidate can see
+  which role, focus areas and generated preparation outputs are being carried into
+  Practice and where each one came from."*
+- **Progress:** *"The preparation checklist reflects completed tools and structured
+  state. It is observable workflow progress, not exposed chain-of-thought."*
+
+The full over-delivery story now spans: **P0** live-model evaluation harness /
+retrieval restraint / grounding provenance / HITL metrics; **P1** usage-cost
+instrumentation / Fast-Balanced-Advanced Coach / same-thread retrieval cache; **P2**
+candidate-controlled memory (edit / pin / preview / editable HITL / checkpoint
+deletion); **P4** visible end-to-end journey and transparent Practice handoff.
+
 ## Known limitations (explicit)
 
 - Production **OIDC not implemented** — the API must run behind an authenticating
