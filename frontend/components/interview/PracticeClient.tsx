@@ -27,6 +27,9 @@ export function PracticeClient({ sessionId }: { sessionId?: string }) {
   // to the session view immediately (no server round-trip); fall back to the SSR prop.
   const params = useSearchParams();
   const activeSession = params?.get("session") ?? sessionId;
+  // Only true on the Agent Coach → Practice handoff path (never for standalone setup),
+  // so provenance is shown honestly and never fabricated (§22/§23).
+  const fromCoach = params?.get("from") === "coach";
 
   if (!activeSession) {
     return (
@@ -35,10 +38,10 @@ export function PracticeClient({ sessionId }: { sessionId?: string }) {
       </section>
     );
   }
-  return <ActiveInterview key={activeSession} sessionId={activeSession} router={router} />;
+  return <ActiveInterview key={activeSession} sessionId={activeSession} router={router} fromCoach={fromCoach} />;
 }
 
-function ActiveInterview({ sessionId, router }: { sessionId: string; router: ReturnType<typeof useRouter> }) {
+function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; router: ReturnType<typeof useRouter>; fromCoach?: boolean }) {
   const ctrl = useInterview(sessionId);
   const [answer, setAnswer] = useState("");
   const [modes, setModes] = useState<string[]>([]);
@@ -99,7 +102,14 @@ function ActiveInterview({ sessionId, router }: { sessionId: string; router: Ret
   return (
     <Section>
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-muted">{role}</p>
+        <div className="min-w-0">
+          <p className="text-sm text-muted">{role}</p>
+          {fromCoach ? (
+            <p className="text-xs text-muted" data-testid="coach-provenance">
+              Prepared in your Coach session
+            </p>
+          ) : null}
+        </div>
         <Button variant="ghost" size="sm" onClick={() => router.push("/history")}
                 title="Your interview is saved; come back any time">
           Pause

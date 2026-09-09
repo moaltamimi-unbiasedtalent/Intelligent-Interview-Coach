@@ -18,6 +18,7 @@ import { AgentContextRail } from "./AgentContextRail";
 import { PendingHumanActionCard } from "./PendingHumanActionCard";
 import { AgentRunLink } from "./AgentRunLink";
 import { AgentProfileSelector, DEFAULT_PROFILE, usageSummaryLine } from "./usage";
+import { JourneyChrome, PreparationChecklist } from "./JourneyChrome";
 import type { AgentProfile } from "@/lib/api/types";
 
 /** Candidate-facing Agent Coach — the LangGraph agent behind the Precision Coach UI. */
@@ -63,12 +64,14 @@ export function AgentPrepareWorkspace() {
 
   const coach = (
     <div>
+      <JourneyChrome journey={run.journey} />
+      <PreparationChecklist journey={run.journey} />
       <MemoryLoadedCue run={run} />
       <AgentConversation run={run} busy={busy} messages={run.conversation} />
 
       {run.awaiting_human_input && run.pending_action ? (
         <div className="mt-4">
-          <PendingHumanActionCard action={run.pending_action} busy={busy} onDecision={resume} />
+          <PendingHumanActionCard action={run.pending_action} busy={busy} onDecision={resume} handoffSummary={run.handoff_summary} />
         </div>
       ) : (
         <AgentComposer
@@ -302,7 +305,9 @@ function HandoffRunner({
           { preparation_context: ctx as never, ...(extra ?? {}) },
           { idempotencyKey },
         );
-        router.push(`/practice?session=${encodeURIComponent(session.session_id)}`);
+        // `from=coach` lets Practice show honest "prepared in Coach" provenance (P4);
+        // a standalone Practice has no such flag and shows no provenance.
+        router.push(`/practice?session=${encodeURIComponent(session.session_id)}&from=coach`);
       } catch (e) {
         const err = e as ApiError;
         if (err.status === 422 && !extra) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { HumanDecisionRequest, MemoryCategory, PendingHumanAction } from "@/lib/api/types";
+import type { HumanDecisionRequest, MemoryCategory, PendingHumanAction, PracticeHandoffSummary } from "@/lib/api/types";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -15,11 +15,25 @@ interface CardProps {
   onDecision: (decision: HumanDecisionRequest) => void;
 }
 
+/** Candidate-facing source labels for handoff provenance (never technical tool names). */
+export function handoffSourceLabel(source: string): string {
+  switch (source) {
+    case "confirmed_role": return "confirmed in Coach";
+    case "job_analysis": return "from your job description";
+    case "gap_analysis": return "from your gap analysis";
+    case "preparation_plan": return "from your preparation plan";
+    case "question_generator": return "generated for this role";
+    default: return "from your preparation";
+  }
+}
+
 /** Dispatches a pending HITL action to the right first-class approval card. */
-export function PendingHumanActionCard({ action, busy, onDecision }: CardProps) {
+export function PendingHumanActionCard({
+  action, busy, onDecision, handoffSummary,
+}: CardProps & { handoffSummary?: PracticeHandoffSummary | null }) {
   if (action.type === "confirm_role") return <RoleConfirmationCard action={action} busy={busy} onDecision={onDecision} />;
   if (action.type === "approve_memory") return <MemoryApprovalCard action={action} busy={busy} onDecision={onDecision} />;
-  if (action.type === "approve_practice_handoff") return <PracticeHandoffCard action={action} busy={busy} onDecision={onDecision} />;
+  if (action.type === "approve_practice_handoff") return <PracticeHandoffCard action={action} busy={busy} onDecision={onDecision} summary={handoffSummary} />;
   return null;
 }
 
@@ -150,24 +164,53 @@ export function MemoryApprovalCard({ action, busy, onDecision }: CardProps) {
   );
 }
 
-export function PracticeHandoffCard({ action, busy, onDecision }: CardProps) {
-  const role = action.data.target_role ? String(action.data.target_role) : null;
-  const priorities = typeof action.data.priority_count === "number" ? action.data.priority_count : null;
-  const questions = typeof action.data.question_count === "number" ? action.data.question_count : null;
+export function PracticeHandoffCard({ action, busy, onDecision, summary }: CardProps & { summary?: PracticeHandoffSummary | null }) {
+  // Prefer the safe provenance summary (what/where each item came from); fall back to
+  // the pending action's coarse counts. Only actually-present fields are shown.
+  const role = summary?.target_role?.value ?? (action.data.target_role ? String(action.data.target_role) : null);
+  const roleSource = summary?.target_role?.source;
+  const focus = summary?.focus_areas ?? [];
+  const focusSource = focus[0]?.source;
+  const questionCount = summary?.question_count
+    ?? (typeof action.data.question_count === "number" ? action.data.question_count : null);
+
   return (
     <Shell>
-      <p className="font-medium">{action.message}</p>
-      <ul className="mt-2 flex flex-wrap gap-2 text-xs text-muted">
-        {role ? <li><Badge tone="neutral">{role}</Badge></li> : null}
-        {priorities !== null ? <li><Badge>{priorities} priorities</Badge></li> : null}
-        {questions !== null ? <li><Badge>{questions} questions</Badge></li> : null}
+      <h3 className="font-medium">Practise this role</h3>
+      {role ? <p className="mt-1 text-lg font-semibold">{role}</p> : null}
+      <p className="mt-3 text-sm text-muted">Your practice setup will use:</p>
+      <ul className="mt-2 grid gap-1.5 text-sm">
+        {role ? (
+          <li className="flex items-start gap-2">
+            <span aria-hidden>✓</span>
+            <span>Role — <span className="text-muted">{roleSource ? handoffSourceLabel(roleSource) : "from your preparation"}</span></span>
+          </li>
+        ) : null}
+        {focus.length ? (
+          <li className="flex items-start gap-2">
+            <span aria-hidden>✓</span>
+            <span>
+              {focusSource === "preparation_plan" ? "Preparation focus" : "Priority areas"} —{" "}
+              <span className="text-muted">{handoffSourceLabel(focusSource ?? "gap_analysis")}</span>
+              <span className="mt-1 flex flex-wrap gap-1.5">
+                {focus.map((f, i) => <Badge key={i} tone="neutral">{f.value}</Badge>)}
+              </span>
+            </span>
+          </li>
+        ) : null}
+        {questionCount ? (
+          <li className="flex items-start gap-2">
+            <span aria-hidden>✓</span>
+            <span>{questionCount} practice questions — <span className="text-muted">generated for this role</span></span>
+          </li>
+        ) : null}
       </ul>
       <div className="mt-3 flex gap-2">
         <Button size="sm" disabled={busy} onClick={() => onDecision({ action_id: action.action_id, decision: "approve" })}>
           Start practice
         </Button>
         <Button size="sm" variant="ghost" disabled={busy} onClick={() => onDecision({ action_id: action.action_id, decision: "reject" })}>
-          Not now
+          Not yet
         </Button>
       </div>
     </Shell>

@@ -499,6 +499,23 @@ export interface AgentCitation {
   page?: number | null;
 }
 
+export type JourneyStageStatus = "not_started" | "in_progress" | "complete";
+
+/** Candidate journey (UNDERSTAND→PREPARE→PRACTISE) derived from real state (P4). */
+export interface PreparationJourney {
+  understand: { status: JourneyStageStatus; role_known: boolean; requirements_known: boolean; evidence_used: boolean };
+  prepare: { status: JourneyStageStatus; gaps_known: boolean; plan_known: boolean; questions_known: boolean };
+  practise: { status: JourneyStageStatus; handoff_approved: boolean };
+}
+
+/** Safe explanation of what/where the Practice handoff carries (P4). */
+export interface PracticeHandoffSummary {
+  target_role: { value: string; source: string };
+  focus_areas?: { value: string; source: string }[];
+  question_count?: number;
+  question_source?: string;
+}
+
 export type AgentStatus =
   | "running"
   | "completed"
@@ -536,4 +553,7 @@ export interface AgentRunResponse {
   latency_ms?: number | null;
   cache_hits?: number;
   cache_misses?: number;
+  /** Candidate journey + handoff provenance (P4). */
+  journey?: PreparationJourney;
+  handoff_summary?: PracticeHandoffSummary | null;
 }
