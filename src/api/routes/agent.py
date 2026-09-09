@@ -48,6 +48,7 @@ def _to_response(result) -> AgentRunResponse:
         resolved_geography=result.resolved_geography,
         memory_used=result.memory_used,
         memory_count=result.memory_count,
+        memory_loaded=result.memory_loaded,
         awaiting_human_input=result.awaiting_human_input,
         pending_action=result.pending_action,
         handoff_approved=result.handoff_approved,

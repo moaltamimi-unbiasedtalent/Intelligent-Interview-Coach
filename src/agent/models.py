@@ -38,6 +38,9 @@ class AgentRunResult:
     # Long-term preparation memory read into this run (counts only — never content).
     memory_used: bool = False
     memory_count: int = 0
+    # Safe summaries of the memories loaded this run (category/summary/target_role) so
+    # the candidate can inspect exactly what was used — never internal ids or raw state.
+    memory_loaded: list[dict[str, Any]] = field(default_factory=list)
     # Human-in-the-loop (Phase 8). When paused, `pending_action` is the safe
     # PendingHumanAction dict the client must resolve via the resume endpoint.
     awaiting_human_input: bool = False

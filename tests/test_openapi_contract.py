@@ -71,6 +71,8 @@ EXPECTED = {
         "conversation", "sources", "citations", "tools_used", "events",
         # Cost/performance instrumentation (P1) consumed by the Coach + Inspector.
         "usage", "profile", "latency_ms", "cache_hits", "cache_misses",
+        # Safe loaded-memory summaries for the Coach cue (P2).
+        "memory_loaded",
     },
     "AgentUsageResponse": {
         "agent_model_calls", "tool_model_calls", "model_calls", "input_tokens",

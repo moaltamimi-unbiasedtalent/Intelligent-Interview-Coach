@@ -15,6 +15,7 @@ import type {
   InterviewStateResponse,
   JobAnalysisRequest,
   AgentContinueRequest,
+  AgentRunDeleteResponse,
   AgentRunRequest,
   AgentRunResponse,
   HumanDecisionRequest,
@@ -25,7 +26,9 @@ import type {
   MemoryCreateRequest,
   MemoryDeleteResponse,
   MemoryListResponse,
+  MemoryPreviewResponse,
   MemoryResponse,
+  MemoryUpdateRequest,
   PreparationPlan,
   PreparationPlanRequest,
   QuestionsRequest,
@@ -45,7 +48,7 @@ function authHeaders(): Record<string, string> {
 }
 
 async function request<T>(
-  method: "GET" | "POST" | "DELETE",
+  method: "GET" | "POST" | "PATCH" | "DELETE",
   path: string,
   { body, signal, headers }: { body?: unknown; signal?: AbortSignal; headers?: Record<string, string> } = {},
 ): Promise<T> {
@@ -166,6 +169,8 @@ export const api = {
       request<AgentRunResponse>("POST", `/agent/runs/${encodeURIComponent(runId)}/messages`, { body, ...opts }),
     resume: (runId: string, body: HumanDecisionRequest, opts?: RequestOptions) =>
       request<AgentRunResponse>("POST", `/agent/runs/${encodeURIComponent(runId)}/resume`, { body, ...opts }),
+    remove: (runId: string, opts?: RequestOptions) =>
+      request<AgentRunDeleteResponse>("DELETE", `/agent/runs/${encodeURIComponent(runId)}`, opts),
   },
 
   // Long-term preparation memory (Phase 7). Writes are explicit/user-initiated.
@@ -176,8 +181,14 @@ export const api = {
     },
     create: (body: MemoryCreateRequest, opts?: RequestOptions) =>
       request<MemoryResponse>("POST", "/memory", { body, ...opts }),
+    update: (id: number, body: MemoryUpdateRequest, opts?: RequestOptions) =>
+      request<MemoryResponse>("PATCH", `/memory/${id}`, { body, ...opts }),
     remove: (id: number, opts?: RequestOptions) =>
       request<MemoryDeleteResponse>("DELETE", `/memory/${id}`, opts),
+    preview: (targetRole?: string | null, opts?: RequestOptions) => {
+      const query = targetRole ? `?target_role=${encodeURIComponent(targetRole)}` : "";
+      return request<MemoryPreviewResponse>("GET", `/memory/preview${query}`, opts);
+    },
   },
 };
 

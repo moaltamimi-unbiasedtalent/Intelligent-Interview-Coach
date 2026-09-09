@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { HumanDecisionRequest, PendingHumanAction } from "@/lib/api/types";
+import type { HumanDecisionRequest, MemoryCategory, PendingHumanAction } from "@/lib/api/types";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { Input, Textarea } from "@/components/ui/Field";
+import { CATEGORIES, CATEGORY_LABEL } from "@/components/memory/MemoryManager";
 import { memoryCategoryLabel } from "./labels";
 
 interface CardProps {
@@ -67,27 +69,83 @@ export function RoleConfirmationCard({ action, busy, onDecision }: CardProps) {
 }
 
 export function MemoryApprovalCard({ action, busy, onDecision }: CardProps) {
-  const category = String(action.data.category ?? "");
-  const summary = String(action.data.summary ?? "");
-  const targetRole = action.data.target_role ? String(action.data.target_role) : null;
+  const origCategory = (String(action.data.category ?? "recurring_gap")) as MemoryCategory;
+  const origSummary = String(action.data.summary ?? "");
+  const origRole = action.data.target_role ? String(action.data.target_role) : "";
+
+  const [editing, setEditing] = useState(false);
+  const [category, setCategory] = useState<MemoryCategory>(origCategory);
+  const [summary, setSummary] = useState(origSummary);
+  const [role, setRole] = useState(origRole);
+
+  const approveEdited = () =>
+    onDecision({
+      action_id: action.action_id,
+      decision: "approve",
+      memory: { category, summary: summary.trim(), target_role: role.trim() || null },
+    });
+
   return (
     <Shell>
-      <p className="font-medium">{action.message}</p>
-      <div className="mt-3 rounded-lg border border-border bg-surface-2 p-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge>{memoryCategoryLabel(category)}</Badge>
-          {targetRole ? <Badge tone="neutral">{targetRole}</Badge> : null}
+      <p className="font-medium">What will be remembered</p>
+      {editing ? (
+        <div className="mt-3 grid gap-3">
+          <div>
+            <label htmlFor="approve-cat" className="block text-sm text-muted">Category</label>
+            <select id="approve-cat" value={category} disabled={busy}
+              onChange={(e) => setCategory(e.target.value as MemoryCategory)}
+              className="w-full rounded-lg border border-border bg-surface px-3.5 py-3">
+              {CATEGORIES.map((c) => <option key={c} value={c}>{CATEGORY_LABEL[c]}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="approve-sum" className="block text-sm text-muted">Memory</label>
+            <Textarea id="approve-sum" value={summary} maxLength={500} disabled={busy}
+              onChange={(e) => setSummary(e.target.value)} />
+          </div>
+          <div>
+            <label htmlFor="approve-role" className="block text-sm text-muted">For (role, optional)</label>
+            <Input id="approve-role" value={role} maxLength={200} disabled={busy}
+              onChange={(e) => setRole(e.target.value)} />
+          </div>
+          <p className="text-xs text-muted">Why: useful in future preparation sessions.</p>
+          <div className="flex gap-2">
+            <Button size="sm" disabled={busy || summary.trim().length === 0} onClick={approveEdited}>
+              Save
+            </Button>
+            <Button size="sm" variant="ghost" disabled={busy} onClick={() => setEditing(false)}>
+              Cancel
+            </Button>
+          </div>
         </div>
-        <p className="mt-2 break-words text-sm">{summary}</p>
-      </div>
-      <div className="mt-3 flex gap-2">
-        <Button size="sm" disabled={busy} onClick={() => onDecision({ action_id: action.action_id, decision: "approve" })}>
-          Save
-        </Button>
-        <Button size="sm" variant="ghost" disabled={busy} onClick={() => onDecision({ action_id: action.action_id, decision: "reject" })}>
-          Not now
-        </Button>
-      </div>
+      ) : (
+        <>
+          <dl className="mt-3 rounded-lg border border-border bg-surface-2 p-3 text-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <dt className="sr-only">Category</dt>
+              <dd><Badge>{memoryCategoryLabel(category)}</Badge></dd>
+              {role ? <dd><Badge tone="neutral">{role}</Badge></dd> : null}
+            </div>
+            <dt className="mt-2 text-xs text-muted">Memory</dt>
+            <dd className="break-words">{summary}</dd>
+            <dt className="mt-2 text-xs text-muted">Why</dt>
+            <dd className="text-xs text-muted">Useful in future preparation sessions.</dd>
+          </dl>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button size="sm" disabled={busy}
+              onClick={() => onDecision({ action_id: action.action_id, decision: "approve" })}>
+              Approve
+            </Button>
+            <Button size="sm" variant="ghost" disabled={busy} onClick={() => setEditing(true)}>
+              Edit before saving
+            </Button>
+            <Button size="sm" variant="ghost" disabled={busy}
+              onClick={() => onDecision({ action_id: action.action_id, decision: "reject" })}>
+              Reject
+            </Button>
+          </div>
+        </>
+      )}
     </Shell>
   );
 }

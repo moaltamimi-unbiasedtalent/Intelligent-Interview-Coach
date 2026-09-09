@@ -453,6 +453,11 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
         resolved_geography=state.get("resolved_geography"),
         memory_used=bool(memory_items),
         memory_count=len(memory_items),
+        memory_loaded=[
+            {"category": m.get("category"), "summary": m.get("summary"),
+             "target_role": m.get("target_role")}
+            for m in memory_items if isinstance(m, dict)
+        ],
         awaiting_human_input=awaiting,
         pending_action=pending_action,
         handoff_approved=bool(state.get("handoff_approved", False)),

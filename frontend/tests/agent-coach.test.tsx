@@ -90,8 +90,8 @@ describe("Agent Coach", () => {
     await userEvent.type(screen.getByLabelText("What interview are you preparing for?"), "Prep");
     await userEvent.click(screen.getByRole("button", { name: "Start preparing" }));
     expect(await screen.findByText("Executive communication")).toBeInTheDocument();
-    expect(resume).not.toHaveBeenCalled();               // nothing persisted before Save
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(resume).not.toHaveBeenCalled();               // nothing persisted before approval
+    await userEvent.click(screen.getByRole("button", { name: "Approve" }));
     expect(resume).toHaveBeenCalledWith("run_1", { action_id: "m1", decision: "approve" });
   });
 

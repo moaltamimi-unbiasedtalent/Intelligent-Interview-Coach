@@ -79,6 +79,13 @@ export function ProgressClient() {
         description="What your coach remembers — preparation priorities, strengths and preferences you've chosen to save."
       />
 
+      <p className="-mt-2 mb-4 text-sm">
+        <a href="/settings" className="font-medium text-accent underline">
+          Manage in Settings
+        </a>{" "}
+        <span className="text-muted">— edit, pin or remove your saved preparation memory.</span>
+      </p>
+
       {status === "loading" ? <LoadingState label="Loading your preparation memory" /> : null}
       {status === "error" && error ? <ErrorState message={error.message} requestId={error.requestId} /> : null}
 
@@ -106,6 +113,7 @@ export function ProgressClient() {
                             <div className="mt-1 flex flex-wrap items-center gap-2">
                               <Badge>{CATEGORY_LABEL[m.category]}</Badge>
                               {m.target_role ? <Badge tone="neutral">{m.target_role}</Badge> : null}
+                              {m.pinned ? <Badge tone="low">📌 Pinned</Badge> : null}
                             </div>
                           </div>
                           <div className="shrink-0">

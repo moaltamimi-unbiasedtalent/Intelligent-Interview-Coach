@@ -64,6 +64,8 @@ class AgentRunResponse(BaseModel):
     resolved_geography: str | None = None
     memory_used: bool = False
     memory_count: int = 0
+    # Safe summaries of the memories loaded into this run (never internal ids/state).
+    memory_loaded: list[dict] = Field(default_factory=list)
     # HITL (Phase 8): a paused run carries the pending action; awaiting is a NORMAL
     # status, never an error.
     awaiting_human_input: bool = False

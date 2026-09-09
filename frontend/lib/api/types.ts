@@ -343,11 +343,20 @@ export interface MemoryCreateRequest {
   target_role?: string | null;
 }
 
+/** Partial edit (P2). Omit a field to leave it untouched; target_role:null clears it. */
+export interface MemoryUpdateRequest {
+  category?: MemoryCategory;
+  summary?: string;
+  target_role?: string | null;
+  pinned?: boolean;
+}
+
 export interface MemoryResponse {
   id: number;
   category: MemoryCategory;
   summary: string;
   target_role: string | null;
+  pinned: boolean;
   source_run_id: string | null;
   created_at: string | null;
   updated_at: string | null;
@@ -360,6 +369,23 @@ export interface MemoryListResponse {
 export interface MemoryDeleteResponse {
   deleted: boolean;
   id: number;
+}
+
+/** One memory that WOULD load for a run (safe projection + order/reason). */
+export interface MemoryPreviewItem {
+  id: number;
+  category: MemoryCategory;
+  summary: string;
+  target_role: string | null;
+  pinned: boolean;
+  order: number;
+  reason: string;
+}
+
+export interface MemoryPreviewResponse {
+  target_role: string | null;
+  load_limit: number;
+  items: MemoryPreviewItem[];
 }
 
 // --- Agent Coach + HITL (Phase 9) -------------------------------------------
@@ -399,6 +425,11 @@ export interface AgentContinueRequest {
   message: string;
 }
 
+export interface AgentRunDeleteResponse {
+  deleted: boolean;
+  run_id: string;
+}
+
 export type HumanActionType =
   | "confirm_role"
   | "approve_memory"
@@ -413,10 +444,18 @@ export interface PendingHumanAction {
   created_at?: string | null;
 }
 
+/** An edited memory for an APPROVE_MEMORY 'approve' (edit-before-save, P2). */
+export interface EditedMemory {
+  category: MemoryCategory;
+  summary: string;
+  target_role?: string | null;
+}
+
 export interface HumanDecisionRequest {
   action_id: string;
   decision: "select" | "approve" | "reject";
   selected_role?: string | null;
+  memory?: EditedMemory;
 }
 
 export interface AgentConversationMessage {
@@ -479,6 +518,8 @@ export interface AgentRunResponse {
   resolved_geography?: string | null;
   memory_used: boolean;
   memory_count: number;
+  /** Safe summaries of the memories loaded into this run (category/summary/role). */
+  memory_loaded?: { category: MemoryCategory; summary: string; target_role: string | null }[];
   awaiting_human_input: boolean;
   pending_action?: PendingHumanAction | null;
   handoff_approved: boolean;

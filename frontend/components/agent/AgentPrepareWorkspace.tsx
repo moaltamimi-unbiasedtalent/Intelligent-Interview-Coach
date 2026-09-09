@@ -63,6 +63,7 @@ export function AgentPrepareWorkspace() {
 
   const coach = (
     <div>
+      <MemoryLoadedCue run={run} />
       <AgentConversation run={run} busy={busy} messages={run.conversation} />
 
       {run.awaiting_human_input && run.pending_action ? (
@@ -126,6 +127,33 @@ export function AgentPrepareWorkspace() {
         </div>
       )}
     </section>
+  );
+}
+
+/** Safe cue that saved preparation memory was used this run (count + inspectable
+ * summaries only — never checkpoint, prompt formatting or internal state). §35. */
+function MemoryLoadedCue({ run }: { run: { memory_used: boolean; memory_count: number; memory_loaded?: { category: string; summary: string; target_role: string | null }[] } }) {
+  if (!run.memory_used || run.memory_count === 0) return null;
+  const loaded = run.memory_loaded ?? [];
+  return (
+    <details className="mb-3 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm">
+      <summary className="cursor-pointer text-muted">
+        Using {run.memory_count} saved preparation {run.memory_count === 1 ? "memory" : "memories"}
+      </summary>
+      {loaded.length ? (
+        <ul className="mt-2 grid gap-1">
+          {loaded.map((m, i) => (
+            <li key={i} className="break-words">
+              <span className="text-muted">{m.category}:</span> {m.summary}
+              {m.target_role ? <span className="text-muted"> ({m.target_role})</span> : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <p className="mt-2 text-xs text-muted">
+        <a href="/settings" className="text-accent underline">Manage in Settings</a>
+      </p>
+    </details>
   );
 }
 
