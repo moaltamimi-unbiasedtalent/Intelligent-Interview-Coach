@@ -22,7 +22,7 @@ boot without exception via `AppTest`.
 | Streamlit smoke (Home, Career, Interview, KB, RAG Inspector, Evaluation) | 6/6 OK |
 | Secret scan (repo-wide) | clean |
 
-New in 12R: `tests/test_os_e2e.py` (21 tests) — Career scenarios A–J, the flagship
+New in 12R: `tests/test_product_e2e.py` (21 tests) — Career scenarios A–J, the flagship
 journey, cross-module security, structured-data safety, and provider/KB failure
 fallbacks.
 

@@ -8,7 +8,7 @@ final freeze. Do not claim any future/deferred item as implemented.
 
 The product name across every deck — title, slide titles, footers, speaker notes,
 architecture labels, closing slide and the file names — is **Intelligent Interview
-Coach**. The previous name **Interview OS Coach** must not appear anywhere in the decks.
+Coach**. The previous product name must not appear anywhere in the decks.
 
 ### Rename the deck files to
 
