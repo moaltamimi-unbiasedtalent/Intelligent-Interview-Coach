@@ -116,6 +116,14 @@ function RunSummary({ run }: { run: AgentRunResponse }) {
         {run.resolved_occupation ? <Row label="Resolved occupation" value={run.resolved_occupation} /> : null}
         {run.resolved_geography ? <Row label="Resolved geography" value={run.resolved_geography} /> : null}
         <Row label="Memory used" value={run.memory_used ? `Yes (${run.memory_count})` : "No"} />
+        {run.journey ? (
+          <>
+            <Row label="Journey · Understand" value={(run.journey.understand?.status ?? "—").replace(/_/g, " ")} />
+            <Row label="Journey · Prepare" value={(run.journey.prepare?.status ?? "—").replace(/_/g, " ")} />
+            <Row label="Journey · Practise" value={(run.journey.practise?.status ?? "—").replace(/_/g, " ")} />
+          </>
+        ) : null}
+        <Row label="Handoff prepared" value={run.handoff_summary ? "Yes" : "No"} />
         <Row label="Handoff approved" value={run.handoff_approved ? "Yes" : "No"} />
         <div className="border-t border-border pt-2">
           <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">Usage &amp; performance</h3>

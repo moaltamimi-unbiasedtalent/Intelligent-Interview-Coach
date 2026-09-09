@@ -472,7 +472,21 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
         profile=profile or state.get("model_profile"),
         cache_hits=int(state.get("retrieval_cache_hits", 0) or 0),
         cache_misses=int(state.get("retrieval_cache_misses", 0) or 0),
+        journey=_derive_journey(state),
+        handoff_summary=_derive_handoff_summary(state),
     )
+
+
+def _derive_journey(state: dict) -> dict:
+    from src.agent.journey import derive_journey
+
+    return derive_journey(state)
+
+
+def _derive_handoff_summary(state: dict) -> dict | None:
+    from src.agent.journey import derive_handoff_summary
+
+    return derive_handoff_summary(state)
 
 
 def _aggregate_usage(state: dict) -> dict:

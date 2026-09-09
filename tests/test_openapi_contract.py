@@ -73,6 +73,8 @@ EXPECTED = {
         "usage", "profile", "latency_ms", "cache_hits", "cache_misses",
         # Safe loaded-memory summaries for the Coach cue (P2).
         "memory_loaded",
+        # Candidate journey + handoff provenance (P4).
+        "journey", "handoff_summary",
     },
     "AgentUsageResponse": {
         "agent_model_calls", "tool_model_calls", "model_calls", "input_tokens",

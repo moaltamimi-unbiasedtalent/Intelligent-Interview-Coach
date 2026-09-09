@@ -248,6 +248,21 @@ assumptions in core logic, prompts, scoring or examples.
   unsupported saver reported truthfully, never faked). Settings is the primary memory
   UI (edit/pin/delete/preview); `/progress` links to it; a safe Coach cue shows loaded
   memory count + summaries. See `docs/sprint4_architecture.md` §3h.
+- **Candidate journey + handoff transparency (post-Sprint 4, P4).** `src/agent/journey.py`
+  holds two PURE derivations over safe state (no model call, no chain-of-thought, no raw
+  tool args/checkpoint): `derive_journey` → UNDERSTAND→PREPARE→PRACTISE with each stage
+  status derived ONLY from real structured outputs (plus the per-tool booleans the UI
+  checklist reads), and `derive_handoff_summary` → a candidate-safe
+  `PracticeHandoffSummary` (target role + focus areas + question count, each with a
+  truthful source) that PROJECTS the existing PreparationContext — only fields that
+  exist, never fabricated. Both ride on `AgentRunResult`/`AgentRunResponse` (`journey`,
+  `handoff_summary`). The frontend renders restrained journey chrome + an observable
+  preparation checklist (completed controlled steps, never reasoning), a provenance-rich
+  practice-handoff card, and a subtle "Prepared in your Coach session" note on Practice
+  ONLY via the `?from=coach` handoff path (standalone shows none). Interview creation
+  stays OUTSIDE LangGraph (idempotent frontend path — unchanged). Streamlit shows a
+  legacy-interface banner; Next.js + FastAPI is the primary product. Pure
+  UX/transparency — no new agent/tool/retrieval/memory/interview behaviour.
 - **Providers.** Career Intelligence uses LangChain over OpenRouter; the
   Interview module uses a direct OpenRouter HTTPX client. Optional speech
   (`[speech]`) and Live (`[live]`) backends are lazily imported. **Live is

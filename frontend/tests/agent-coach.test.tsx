@@ -111,7 +111,7 @@ describe("Agent Coach", () => {
     expect(body).not.toHaveProperty("career_level");
     // A stable idempotency key derived from the run id (safe: no private content).
     expect(opts).toEqual({ idempotencyKey: "agent-handoff:run_1" });
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/practice?session=sess_9"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/practice?session=sess_9&from=coach"));
   });
 
   it("asks for missing industry/career level (never fabricates) then retries with the same key", async () => {
@@ -138,7 +138,7 @@ describe("Agent Coach", () => {
     expect(body.industry_or_sector).toBe("Public sector");
     expect(body.career_level).toBe("executive");
     expect(opts).toEqual({ idempotencyKey: "agent-handoff:run_1" }); // SAME key on retry
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/practice?session=sess_done"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/practice?session=sess_done&from=coach"));
   });
 
   it("restores a bookmarked run from the URL on load", async () => {
