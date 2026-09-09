@@ -60,6 +60,14 @@ def main() -> None:
 
     inject_once()  # emit the small design-system style block for this run
 
+    # Legacy-interface banner (P4): the primary product experience is Next.js + FastAPI.
+    # Streamlit is kept as a development/legacy surface only — never the recommended UI.
+    st.info(
+        "Legacy development interface. The primary product experience is "
+        "**Next.js + FastAPI** — see the README for how to run it.",
+        icon="🧭",
+    )
+
     active = _resolve_active_page()
 
     from src.copilot.config import load_config

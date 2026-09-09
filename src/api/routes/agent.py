@@ -64,6 +64,8 @@ def _to_response(result) -> AgentRunResponse:
         latency_ms=result.latency_ms,
         cache_hits=result.cache_hits,
         cache_misses=result.cache_misses,
+        journey=result.journey,
+        handoff_summary=result.handoff_summary,
     )
 
 

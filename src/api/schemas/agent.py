@@ -89,6 +89,9 @@ class AgentRunResponse(BaseModel):
     latency_ms: int | None = None
     cache_hits: int = 0
     cache_misses: int = 0
+    # Candidate journey (UNDERSTAND→PREPARE→PRACTISE) + safe handoff provenance (P4).
+    journey: dict = Field(default_factory=dict)
+    handoff_summary: dict | None = None
 
 
 class AgentRunDeleteResponse(BaseModel):

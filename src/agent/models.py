@@ -66,3 +66,7 @@ class AgentRunResult:
     # Safe retrieval-cache observability (thread-lifetime counts only — never keys).
     cache_hits: int = 0
     cache_misses: int = 0
+    # Candidate journey (UNDERSTAND→PREPARE→PRACTISE) derived from real state (P4).
+    journey: dict[str, Any] = field(default_factory=dict)
+    # Safe explanation of what/where/why the Practice handoff carries — else None (P4).
+    handoff_summary: dict[str, Any] | None = None
