@@ -137,7 +137,8 @@ describe("Practice handoff completion", () => {
     await screen.findByText("One last detail before practice");
     expect(options).toHaveBeenCalled();
     const select = screen.getByLabelText<HTMLSelectElement>("Career level");
-    const optionLabels = within(select).getAllByRole("option").map((o) => o.textContent);
-    expect(optionLabels).toContain("executive");
+    // The options load asynchronously — wait for the returned "executive" option to be
+    // rendered rather than reading the select before the promise commits to state.
+    expect(await within(select).findByRole("option", { name: "executive" })).toBeInTheDocument();
   });
 });
