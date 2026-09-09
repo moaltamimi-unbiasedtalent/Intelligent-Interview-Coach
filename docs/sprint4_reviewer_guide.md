@@ -66,6 +66,16 @@ Practice, Progress and History**. Supporting evidence and technical review route
 mobile the bottom bar keeps exactly the four primary destinations; the header **More**
 and account controls reach the supporting and settings routes.
 
+**Home is a genuine entry point into Prepare.** A goal typed in the Home field ("What
+interview are you preparing for?") is transferred *ephemerally* to `/prepare` and starts
+the preparation session automatically — the candidate never re-enters it. The transfer
+uses a short-lived, same-tab browser draft (`sessionStorage`, with an in-memory
+fallback); the candidate's text never enters the URL, `localStorage`, logs, long-term
+memory or observability. The two Home shortcuts ("Paste a job description", "Add your
+background") open and focus the matching context field in Prepare. An existing
+`?run=<id>` always takes precedence over a stale Home draft, and the draft is consumed
+once the session starts (so it never starts a duplicate run on refresh).
+
 ## Tools (agent-registered, allowlisted)
 
 `AnalyzeJobDescription`, `AnalyzeCandidateGaps`, `BuildPreparationPlan`,

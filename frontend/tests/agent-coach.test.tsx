@@ -119,9 +119,10 @@ describe("Agent Coach", () => {
       status: "completed", handoff_approved: true,
       preparation_context: { target_role: "Product Manager" }, // no industry/seniority
     }));
-    // First create → 422 (backend requires the missing config); retry → success.
+    // First create → the SPECIFIC missing-config error (stable code, not status alone);
+    // retry with the supplied fields → success.
     createInterview
-      .mockRejectedValueOnce(Object.assign(new Error("422"), { status: 422, userMessage: "missing" }))
+      .mockRejectedValueOnce(Object.assign(new Error("missing"), { status: 422, code: "missing_interview_handoff_config", message: "Add the missing industry and career level to start practice.", userMessage: "missing" }))
       .mockResolvedValueOnce({ session_id: "sess_done" });
     interviewOptions.mockResolvedValue({ career_levels: ["mid", "senior", "executive"], interview_types: [] });
     render(<AgentPrepareWorkspace />);

@@ -20,6 +20,7 @@ __all__ = [
     "ConfigError",
     "ApplicationError",
     "ValidationError",
+    "MissingHandoffConfigError",
     "ConfigurationError",
     "UnavailableServiceError",
     "PersistenceError",
@@ -33,6 +34,13 @@ class ApplicationError(SafeError):
 
 class ValidationError(ApplicationError):
     """The caller supplied invalid input (e.g. a missing/empty target role)."""
+
+
+class MissingHandoffConfigError(ValidationError):
+    """A practice handoff's PreparationContext lacks the required industry/sector or
+    career level, so the interview cannot be configured until the candidate supplies
+    them. A *specific* validation case (distinct from any other invalid input) so the
+    UI can ask for exactly those two fields instead of assuming every 422 is this."""
 
 
 class ConfigurationError(ApplicationError, ConfigError):

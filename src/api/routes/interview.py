@@ -40,7 +40,11 @@ from src.api.schemas.interview import (
     ReportResponse,
 )
 from src.application import history_service
-from src.application.errors import ConflictError, ValidationError
+from src.application.errors import (
+    ConflictError,
+    MissingHandoffConfigError,
+    ValidationError,
+)
 from src.application.interview_service import InterviewApplicationService
 from src.interview.session_repository import (
     DurableInterviewSessionStore,
@@ -79,9 +83,11 @@ def _build_configuration(body: CreateInterviewRequest):
         industry = (prefill.get("industry") or body.industry_or_sector or "").strip()
         career_level = (prefill.get("career_level") or body.career_level or "").strip()
         if not industry or not career_level:
-            raise ValidationError(
-                "The preparation context is missing an industry/sector or career "
-                "level; supply 'industry_or_sector' and 'career_level'.")
+            # SPECIFIC case (stable code): the context genuinely lacks these fields, so
+            # the Coach UI can ask for exactly them. Distinct from any other invalid
+            # configuration below, which must NOT be treated as "missing handoff config".
+            raise MissingHandoffConfigError(
+                "Add the missing industry and career level to start practice.")
         raw = {
             "target_role": prefill["target_role"],
             "industry_or_sector": industry,
@@ -102,7 +108,13 @@ def _build_configuration(body: CreateInterviewRequest):
     try:
         return InterviewConfiguration(**raw)
     except PydanticValidationError as exc:
-        raise ValidationError("Invalid interview configuration.") from exc
+        # A safe, actionable message — never the raw Pydantic detail (which can name
+        # private field paths/content). The handoff projection is already bounded to the
+        # Interview limits, so a valid approved context reaches here cleanly; this guards
+        # genuinely invalid input (e.g. a career level outside the taxonomy).
+        raise ValidationError(
+            "We couldn't set up practice from these details. Please review the "
+            "industry and career level and try again.") from exc
 
 
 # --- safe response builders --------------------------------------------------
