@@ -57,15 +57,15 @@ def test_upgrade_head_creates_baseline_schema(tmp_path, monkeypatch):
 
 
 def test_single_head_after_phase10(tmp_path, monkeypatch):
-    # Alembic must have exactly one head. The current head is the P2 revision 0005
-    # (preparation-memory pinning), which chains from 0004.
+    # Alembic must have exactly one head. The current head is the P5 revision 0006
+    # (user_feedback), which chains from 0005.
     from alembic.config import Config
     from alembic.script import ScriptDirectory
 
     cfg = Config("alembic.ini")
     cfg.set_main_option("script_location", "migrations")
     heads = ScriptDirectory.from_config(cfg).get_heads()
-    assert list(heads) == ["0005_preparation_memory_pinning"]
+    assert list(heads) == ["0006_user_feedback"]
 
 
 def test_upgrade_head_adds_source_session_id(tmp_path, monkeypatch):

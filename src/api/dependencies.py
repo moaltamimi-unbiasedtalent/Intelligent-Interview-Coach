@@ -154,6 +154,54 @@ def get_agent_service(request: Request):
     return _shared(request, "agent_service", _build)
 
 
+def get_feedback_service(request: Request):
+    """Request-scoped candidate-feedback service (P5, exact-target validation P5.1).
+
+    Each verifier proves BOTH that the parent resource belongs to the caller AND that
+    the EXACT rated output exists — an Agent response with that response_id, an
+    Interview question that has a completed evaluation, or a session that has generated
+    its final report. A foreign, unknown or nonexistent target is indistinguishable
+    (not-found). Verifiers FAIL CLOSED: any parse/service/missing-resource error is
+    False, never an ownership grant. Feedback events flow to the (default no-op) sink.
+    """
+    from src.api.feedback_targets import (
+        agent_answer_verifier,
+        final_report_verifier,
+        interview_evaluation_verifier,
+    )
+    from src.application.feedback_service import FeedbackApplicationService
+    from src.observability import build_observability_sink
+    from src.repository import FeedbackRepository
+
+    # Verifiers resolve the owned services lazily so an unavailable service (e.g. a
+    # misconfigured agent checkpointer) becomes a not-found, never an ownership grant.
+    def _agent(target_id: str, user_id: int) -> bool:
+        try:
+            svc = get_agent_service(request)
+        except Exception:  # noqa: BLE001
+            return False
+        return agent_answer_verifier(svc)(target_id, user_id)
+
+    def _eval(target_id: str, user_id: int) -> bool:
+        return interview_evaluation_verifier(get_session_store(request))(target_id, user_id)
+
+    def _report(target_id: str, user_id: int) -> bool:
+        return final_report_verifier(get_session_store(request))(target_id, user_id)
+
+    repo = _shared(request, "feedback_repository",
+                   lambda: FeedbackRepository(get_repository(request).session_factory))
+    obs = _shared(request, "observability", build_observability_sink)
+    return FeedbackApplicationService(
+        repo,
+        target_verifiers={
+            "agent_answer": _agent,
+            "interview_evaluation": _eval,
+            "final_report": _report,
+        },
+        observability=obs,
+    )
+
+
 # --- request-scoped application services -------------------------------------
 
 

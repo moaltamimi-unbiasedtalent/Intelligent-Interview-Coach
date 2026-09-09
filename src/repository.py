@@ -14,6 +14,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
+from src.feedback import FeedbackItem
 from src.memory import MemoryItem, normalize_role, normalize_summary
 from src.persistence import (
     Answer,
@@ -22,9 +23,10 @@ from src.persistence import (
     Question,
     Report,
     User,
+    UserFeedback,
 )
 
-__all__ = ["InterviewRepository", "MemoryRepository"]
+__all__ = ["InterviewRepository", "MemoryRepository", "FeedbackRepository"]
 
 
 def _parse_dt(value) -> datetime | None:
@@ -485,3 +487,143 @@ class MemoryRepository:
             session.delete(row)
             session.commit()
             return True
+
+
+class FeedbackRepository:
+    """User-scoped persistence for candidate feedback (post-Sprint 4 P5).
+
+    Every read/write is scoped to ``user_id``; a feedback row that belongs to another
+    user resolves to ``None`` / a no-op. One current rating per
+    ``(user_id, surface, target_id)`` (an upsert). Stores references + rating +
+    optional comment only — never a copy of any rated content.
+    """
+
+    def __init__(self, session_factory: sessionmaker) -> None:
+        self._session_factory = session_factory
+
+    @staticmethod
+    def _to_item(row: UserFeedback) -> FeedbackItem:
+        return FeedbackItem(
+            id=row.id, user_id=row.user_id, surface=row.surface,
+            target_id=row.target_id, rating=row.rating, comment=row.comment,
+            created_at=row.created_at, updated_at=row.updated_at,
+        )
+
+    def get(self, user_id: int, surface: str, target_id: str) -> FeedbackItem | None:
+        with self._session_factory() as session:
+            row = session.scalar(
+                select(UserFeedback).where(
+                    UserFeedback.user_id == user_id,
+                    UserFeedback.surface == surface,
+                    UserFeedback.target_id == target_id,
+                )
+            )
+            return self._to_item(row) if row is not None else None
+
+    def upsert(self, user_id: int, *, surface: str, target_id: str, rating: str,
+               comment: str | None) -> FeedbackItem:
+        """Create or update the single rating for this (user, surface, target).
+
+        A rating change (helpful ↔ not_helpful) updates the SAME row — never a duplicate.
+        """
+        with self._session_factory() as session:
+            row = session.scalar(
+                select(UserFeedback).where(
+                    UserFeedback.user_id == user_id,
+                    UserFeedback.surface == surface,
+                    UserFeedback.target_id == target_id,
+                )
+            )
+            if row is None:
+                row = UserFeedback(user_id=user_id, surface=surface, target_id=target_id,
+                                   rating=rating, comment=comment)
+                session.add(row)
+                try:
+                    session.commit()
+                except IntegrityError:
+                    # A concurrent insert won the unique key; update that row instead.
+                    session.rollback()
+                    row = session.scalar(
+                        select(UserFeedback).where(
+                            UserFeedback.user_id == user_id,
+                            UserFeedback.surface == surface,
+                            UserFeedback.target_id == target_id,
+                        )
+                    )
+                    if row is None:
+                        raise
+                    row.rating = rating
+                    row.comment = comment
+                    session.commit()
+            else:
+                row.rating = rating
+                row.comment = comment
+                session.commit()
+            session.refresh(row)
+            return self._to_item(row)
+
+    def delete(self, user_id: int, surface: str, target_id: str) -> bool:
+        with self._session_factory() as session:
+            row = session.scalar(
+                select(UserFeedback).where(
+                    UserFeedback.user_id == user_id,
+                    UserFeedback.surface == surface,
+                    UserFeedback.target_id == target_id,
+                )
+            )
+            if row is None:
+                return False
+            session.delete(row)
+            session.commit()
+            return True
+
+    def metrics(self, *, since: datetime | None = None) -> dict:
+        """Aggregate feedback metrics across ALL users (no raw comments, no identities).
+
+        Returns totals + per-surface breakdown + helpful_rate. ``since`` bounds by
+        ``created_at`` (e.g. last 7 days). Deterministic; safe to log/export.
+        """
+        with self._session_factory() as session:
+            stmt = select(UserFeedback.surface, UserFeedback.rating, func.count())
+            if since is not None:
+                stmt = stmt.where(UserFeedback.created_at >= since)
+            rows = session.execute(stmt.group_by(UserFeedback.surface, UserFeedback.rating)).all()
+        surfaces: dict[str, dict[str, int]] = {}
+        total = helpful = not_helpful = 0
+        for surface, rating, count in rows:
+            count = int(count)
+            bucket = surfaces.setdefault(surface, {"helpful": 0, "not_helpful": 0})
+            if rating in bucket:
+                bucket[rating] += count
+            total += count
+            if rating == "helpful":
+                helpful += count
+            elif rating == "not_helpful":
+                not_helpful += count
+        by_surface = {
+            s: {
+                "feedback_count": b["helpful"] + b["not_helpful"],
+                "helpful_count": b["helpful"],
+                "not_helpful_count": b["not_helpful"],
+                "helpful_rate": round(b["helpful"] / (b["helpful"] + b["not_helpful"]), 3)
+                if (b["helpful"] + b["not_helpful"]) else None,
+            }
+            for s, b in surfaces.items()
+        }
+        return {
+            "feedback_count": total,
+            "helpful_count": helpful,
+            "not_helpful_count": not_helpful,
+            "helpful_rate": round(helpful / total, 3) if total else None,
+            "by_surface": by_surface,
+        }
+
+    def list_all(self, *, surface: str | None = None) -> list[FeedbackItem]:
+        """All feedback rows (for the human-review export). Comment inclusion/redaction
+        is decided by the caller — the repository just returns the rows."""
+        with self._session_factory() as session:
+            stmt = select(UserFeedback)
+            if surface is not None:
+                stmt = stmt.where(UserFeedback.surface == surface)
+            rows = session.scalars(stmt.order_by(UserFeedback.created_at.asc())).all()
+            return [self._to_item(r) for r in rows]

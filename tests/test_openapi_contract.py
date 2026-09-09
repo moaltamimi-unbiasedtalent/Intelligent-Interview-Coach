@@ -89,6 +89,9 @@ EXPECTED = {
     "AgentRunDeleteResponse": {"deleted", "run_id"},
     "AgentContinueRequest": {"message"},
     "InterviewOptionsResponse": {"career_levels", "interview_types"},
+    # Candidate feedback (P5) — user-scoped, no internal user id exposed.
+    "FeedbackCreateRequest": {"surface", "target_id", "rating", "comment"},
+    "FeedbackResponse": {"id", "surface", "target_id", "rating", "comment", "created_at", "updated_at"},
 }
 
 

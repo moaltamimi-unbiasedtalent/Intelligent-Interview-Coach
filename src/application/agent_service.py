@@ -111,6 +111,7 @@ class AgentApplicationService:
         memory_service: Any | None = None,
         checkpoint_url: str | None = None,
         database_url: str | None = None,
+        observability: Any | None = None,
     ) -> None:
         if registry is None:
             registry = career_tool_registry(career_service or _default_career_service())
@@ -129,6 +130,11 @@ class AgentApplicationService:
             self._checkpoint_durable = bool(checkpoint_durable)
         self._memory_service = memory_service
         self._checkpointer = checkpointer
+        if observability is None:
+            from src.observability import build_observability_sink
+
+            observability = build_observability_sink()
+        self._obs = observability
         self._graph = build_agent_graph(
             model_factory=model_factory or _default_model_factory,
             registry=registry,
@@ -140,6 +146,29 @@ class AgentApplicationService:
         # locks; a multi-process deployment would need shared locking — documented).
         self._locks_guard = threading.Lock()
         self._thread_locks: dict[str, threading.Lock] = {}
+
+    def _emit_started(self, run_id: str, profile: str) -> None:
+        try:
+            self._obs.run_started(run_id=run_id, profile=profile)
+        except Exception:  # noqa: BLE001 - telemetry is non-critical, never breaks a run
+            pass
+
+    def _emit_completed(self, result: AgentRunResult) -> None:
+        """Emit a SANITISED completion trace (safe fields only). Never raises."""
+        try:
+            from src.observability import safe_hitl_event, safe_tool_events, safe_trace_projection
+
+            for ev in safe_tool_events(result):
+                self._obs.tool_event(
+                    run_id=result.run_id, tool_name=ev.get("tool_name") or "",
+                    status=ev.get("status") or "", failure_category=ev.get("failure_category"))
+            hitl = safe_hitl_event(result)
+            if hitl:
+                self._obs.hitl_event(run_id=result.run_id, hitl_type=hitl["hitl_type"],
+                                     status=hitl["status"])
+            self._obs.run_completed(run_id=result.run_id, projection=safe_trace_projection(result))
+        except Exception:  # noqa: BLE001 - telemetry is non-critical, never breaks a run
+            pass
 
     def _lock_for(self, run_id: str) -> threading.Lock:
         with self._locks_guard:
@@ -207,6 +236,7 @@ class AgentApplicationService:
             "turn_step_count": 0,
             "model_profile": profile.value,
         }
+        self._emit_started(run_id, profile.value)
         started = time.perf_counter()
         try:
             self._graph.invoke(initial, config=self._config(run_id))
@@ -216,8 +246,10 @@ class AgentApplicationService:
             raise AgentError("The assistant could not complete the request.") from exc
         latency_ms = int((time.perf_counter() - started) * 1000)
         # Read authoritative state (detects an interrupt / pending human action).
-        return self._result_from_snapshot(
+        result = self._result_from_snapshot(
             run_id, self._snapshot(run_id), request_id, latency_ms=latency_ms)
+        self._emit_completed(result)
+        return result
 
     def resume(
         self, run_id: str, user_id: str | None, decision: dict, *, request_id: str | None = None
@@ -250,8 +282,10 @@ class AgentApplicationService:
             except Exception as exc:  # noqa: BLE001
                 raise AgentError("The assistant could not resume the request.") from exc
             latency_ms = int((time.perf_counter() - started) * 1000)
-            return self._result_from_snapshot(
+            result = self._result_from_snapshot(
                 run_id, self._snapshot(run_id), request_id, latency_ms=latency_ms)
+            self._emit_completed(result)
+            return result
 
     def continue_run(
         self, run_id: str, user_id: str | None, message: str, *, request_id: str | None = None
@@ -305,8 +339,10 @@ class AgentApplicationService:
             except Exception as exc:  # noqa: BLE001
                 raise AgentError("The assistant could not continue the request.") from exc
             latency_ms = int((time.perf_counter() - started) * 1000)
-            return self._result_from_snapshot(
+            result = self._result_from_snapshot(
                 run_id, self._snapshot(run_id), request_id, latency_ms=latency_ms)
+            self._emit_completed(result)
+            return result
 
     def get_run(self, run_id: str, user_id: str | None, *, request_id: str | None = None) -> AgentRunResult:
         snapshot = self._snapshot(run_id)
@@ -410,7 +446,7 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
     tools_used = [t["tool"] for t in tool_history if t.get("status") == "ok"]
     memory_items = list(state.get("memory_items", []) or [])
     pending_action = state.get("pending_action") if awaiting else None
-    conversation = _safe_conversation(messages)
+    conversation = _safe_conversation(messages, run_id)
     if awaiting:
         status = STATUS_AWAITING_HUMAN
     elif state.get("status") in (None, "", "running"):
@@ -501,14 +537,21 @@ def _aggregate_usage(state: dict) -> dict:
 _MEMORY_BLOCK_MARKER = "USER-APPROVED PREPARATION MEMORY"
 
 
-def _safe_conversation(messages: list) -> list[dict[str, Any]]:
+def _safe_conversation(messages: list, run_id: str) -> list[dict[str, Any]]:
     """A bounded, candidate-safe view of the thread: only visible user/assistant text.
 
     Excludes System prompts, Tool messages, the memory-injection block, and
     assistant messages that carry only tool calls (no visible content). This is what
     the candidate should have seen — never raw LangChain/internal messages.
+
+    Each assistant answer carries a stable, candidate-safe ``response_id``
+    (``<run_id>:<absolute assistant index>``) so feedback can identify the EXACT answer
+    even when a run has several answers. The index is absolute over the full thread
+    (assigned before the bounded tail is taken), so it never shifts when older turns
+    scroll out of the projection — and it is NOT a hash of the answer content (P5 §8).
     """
     convo: list[dict[str, Any]] = []
+    assistant_index = 0
     for msg in messages:
         mtype = getattr(msg, "type", "")
         content = getattr(msg, "content", None)
@@ -519,5 +562,7 @@ def _safe_conversation(messages: list) -> list[dict[str, Any]]:
                 continue  # internal memory DATA block, not candidate-visible
             convo.append({"role": "user", "content": content})
         elif mtype in ("ai", "AIMessageChunk", "assistant"):
-            convo.append({"role": "assistant", "content": content})
+            assistant_index += 1
+            convo.append({"role": "assistant", "content": content,
+                          "response_id": f"{run_id}:{assistant_index}"})
     return convo[-CONVERSATION_LIMIT:]

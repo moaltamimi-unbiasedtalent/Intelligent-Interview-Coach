@@ -28,7 +28,13 @@ vi.mock("next/navigation", () => ({
   // empty so the component falls back to the SSR prop.
   useSearchParams: () => new URLSearchParams(""),
 }));
-vi.mock("@/lib/api/client", () => ({ api: { interviews: iv } }));
+vi.mock("@/lib/api/client", () => ({
+  api: {
+    interviews: iv,
+    // Feedback controls appear beside evaluations/report; no saved rating in these tests.
+    feedback: { get: () => Promise.resolve(null), submit: vi.fn(), remove: vi.fn() },
+  },
+}));
 
 import { PracticeClient } from "@/components/interview/PracticeClient";
 

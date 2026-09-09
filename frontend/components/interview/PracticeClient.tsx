@@ -14,6 +14,7 @@ import { InterviewReport } from "./InterviewReport";
 import { InterviewSessionSetup } from "./InterviewSessionSetup";
 import { DeepDivePanel } from "./DeepDivePanel";
 import { useInterview } from "./useInterview";
+import { FeedbackControl } from "@/components/feedback/FeedbackControl";
 
 /**
  * Interview Practice — the full candidate lifecycle over the durable backend. With
@@ -148,6 +149,9 @@ function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; 
       {s === "INTERVIEW_IN_PROGRESS" && !branchActive && state.last_evaluation ? (
         <div ref={evalRef} tabIndex={-1} className="space-y-4">
           <InterviewEvaluation evaluation={state.last_evaluation} />
+          <FeedbackControl surface="interview_evaluation"
+            targetId={`${sessionId}:${state.question_number}`}
+            prompt="Was this feedback helpful?" />
           <DeepDivePanel ctrl={ctrl} modes={modes} />
           <MainActions ctrl={ctrl} confirmingEnd={confirmingEnd} setConfirmingEnd={setConfirmingEnd} />
         </div>
