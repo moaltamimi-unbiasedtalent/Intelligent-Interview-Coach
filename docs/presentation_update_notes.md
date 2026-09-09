@@ -29,6 +29,12 @@ Coach**. The previous product name must not appear anywhere in the decks.
 
 Do NOT draw Home / Sources / Settings / Review as extra primary tabs.
 
+**Home is a real entry point.** The Home field "What interview are you preparing for?"
+transfers the typed goal into Prepare and starts the Coach — no re-entry required. The
+transfer is ephemeral and same-tab (never in the URL, `localStorage`, logs or
+observability). Any earlier statement that Home input did not forward into Prepare is
+obsolete and must be removed from the decks.
+
 ### Screen classification (for the deck)
 
 - **Primary screens:** Prepare, Practice, Progress, History

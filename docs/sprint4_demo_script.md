@@ -15,9 +15,13 @@ preparation and realistic practice without losing progress. Sprint 3 built the C
 Intelligence layer; Sprint 4 turned it into a stateful LangGraph agent. Show the diagram
 in `docs/sprint4_architecture.md`.
 
-**0:45–2:00 — Prepare page.** Open `/prepare`. Point out the **UNDERSTAND → PREPARE →
-PRACTISE** journey chrome and the **Speed** selector (Fast / Balanced / Advanced —
-Balanced recommended). No raw model names in the UI.
+**0:45–2:00 — Home → Prepare.** From the Home page, type the interview goal in "What
+interview are you preparing for?" and press **Start**: Prepare opens and the Agent Coach
+begins with *that same goal* — no re-entry. (The goal is transferred ephemerally, never
+in the URL.) The Home shortcuts "Paste a job description" / "Add your background" open
+and focus the matching context field. On `/prepare`, point out the **UNDERSTAND →
+PREPARE → PRACTISE** journey chrome and the **Speed** selector (Fast / Balanced /
+Advanced — Balanced recommended). No raw model names in the UI.
 
 **2:00–4:00 — Agent decides tools.** Enter a role/JD, e.g. *"Senior Product Manager at a
 fintech next week — prep the behavioural and product-sense rounds"* and (optionally)
