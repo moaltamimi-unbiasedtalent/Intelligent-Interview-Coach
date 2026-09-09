@@ -66,11 +66,17 @@ def interview_evaluation_verifier(session_store: Any) -> TargetVerifier:
 
 
 def final_report_verifier(session_store: Any) -> TargetVerifier:
-    """True iff ``<session_id>`` is an owned session that has generated its final report."""
+    """True iff the target is EXACTLY an owned session id whose final report exists.
+
+    The final-report target is the bare session id used by the report UI — no suffix,
+    no second component. A session id is an opaque ``uuid4().hex`` (no colon), so any
+    target containing ``:`` is rejected rather than silently reduced to a prefix (which
+    would let ``<owned_session>:anything`` be accepted).
+    """
 
     def verify(target_id: str, user_id: int) -> bool:
-        session_id = (target_id or "").split(":", 1)[0]
-        if not session_id:
+        session_id = (target_id or "").strip()
+        if not session_id or ":" in session_id:
             return False
         try:
             manager = session_store.load_state(session_id, user_id)

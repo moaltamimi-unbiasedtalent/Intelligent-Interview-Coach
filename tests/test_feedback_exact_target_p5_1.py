@@ -154,6 +154,14 @@ def test_report_foreign_and_unknown_rejected():
     assert final_report_verifier(store)("nope", 1) is False  # unknown
 
 
+@pytest.mark.parametrize("bad", ["", "s1:garbage", "s1:1", ":garbage", "s1:", " s1:x "])
+def test_report_requires_exact_session_id_no_suffix(bad):
+    # An owned session with a report must NOT be reachable via a suffixed target (P5.2):
+    # the target must be exactly the session id, never a silently-extracted prefix.
+    store = _FakeStore({("s1", 1): _mgr(report=object())})
+    assert final_report_verifier(store)(bad, 1) is False
+
+
 # --- API end-to-end: exact target maps to the same safe 404 (§20) -----------
 
 
@@ -203,6 +211,9 @@ def test_api_interview_and_report_exact_target(api):
     assert api.client.post("/api/v1/feedback", json={"surface": "interview_evaluation", "target_id": "s1:1", "rating": "helpful"}, headers=ALICE).status_code == 201
     assert api.client.post("/api/v1/feedback", json={"surface": "interview_evaluation", "target_id": "s1:2", "rating": "helpful"}, headers=ALICE).status_code == 404
     assert api.client.post("/api/v1/feedback", json={"surface": "final_report", "target_id": "s1", "rating": "helpful"}, headers=ALICE).status_code == 201
+    # A suffixed final-report target is NOT silently reduced to the owned session (P5.2).
+    suffixed = api.client.post("/api/v1/feedback", json={"surface": "final_report", "target_id": "s1:anything", "rating": "helpful"}, headers=ALICE)
+    assert suffixed.status_code == 404 and "not found" in suffixed.text.lower()
     # Bob owns nothing here → not-found for both.
     assert api.client.post("/api/v1/feedback", json={"surface": "interview_evaluation", "target_id": "s1:1", "rating": "helpful"}, headers=BOB).status_code == 404
     assert api.client.post("/api/v1/feedback", json={"surface": "final_report", "target_id": "s1", "rating": "helpful"}, headers=BOB).status_code == 404
