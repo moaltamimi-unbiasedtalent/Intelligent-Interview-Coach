@@ -41,8 +41,8 @@ export function activityFromEvents(events: AgentEvent[]): string {
     if (e.event_type === "tool_started" || e.event_type === "tool_requested") {
       return `${toolLabel(e.tool_name)}…`;
     }
-    if (e.event_type === "request_understood") return "Understanding your request…";
-    if (e.event_type === "memory_loaded") return "Reviewing your saved preparation…";
+    if (e.event_type === "request_understood") return "Mo is understanding your request…";
+    if (e.event_type === "memory_loaded") return "Mo is reviewing your saved preparation…";
   }
-  return "Working on your preparation…";
+  return "Mo is working on your preparation…";
 }

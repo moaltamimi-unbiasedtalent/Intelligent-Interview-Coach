@@ -107,7 +107,7 @@ function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; 
           <p className="text-sm text-muted">{role}</p>
           {fromCoach ? (
             <p className="text-xs text-muted" data-testid="coach-provenance">
-              Prepared in your Coach session
+              Prepared with Mo
             </p>
           ) : null}
         </div>

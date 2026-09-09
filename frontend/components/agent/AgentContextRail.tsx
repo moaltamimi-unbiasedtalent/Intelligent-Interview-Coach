@@ -15,8 +15,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 /**
  * The Precision Coach context rail: real, evolving preparation state derived from
- * the agent run — never raw internal state. Keeps the Coach from feeling like a
- * generic chatbot.
+ * the agent run — never raw internal state. Keeps Mo feeling like a real coach with
+ * evolving context, not a generic Q&A box.
  */
 export function AgentContextRail({ run }: { run: AgentRunResponse }) {
   const ctx = run.preparation_context ?? null;

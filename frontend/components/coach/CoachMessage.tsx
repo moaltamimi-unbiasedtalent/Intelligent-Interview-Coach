@@ -12,7 +12,7 @@ export function CoachMessage({
   const isCoach = from === "coach";
   return (
     <div className="grid gap-1.5">
-      <span className="text-xs font-semibold text-muted">{isCoach ? "Coach" : "You"}</span>
+      <span className="text-xs font-semibold text-muted">{isCoach ? "Mo" : "You"}</span>
       <div
         className={cn(
           "rounded-lg px-4 py-3.5",
