@@ -149,6 +149,29 @@ def _normalise(phrase: str) -> list[str]:
     return out
 
 
+# Longest occupation-phrase window scanned when the whole extracted phrase does
+# not resolve (e.g. verbose keyword queries that embed the role among other terms).
+_MAX_WINDOW = 5
+
+
+def _leading_windows(phrase: str, max_n: int = _MAX_WINDOW):
+    """Yield the query's leading word windows, longest first.
+
+    Anchored at the START of the query on purpose: in a non-scaffolded keyword
+    query a candidate genuinely leads with the role ("Senior Product Manager
+    typical responsibilities…", "registered nurse day-to-day duties…"), so the
+    leading phrase is the occupation. Scanning every interior window instead would
+    pluck a real occupation word out of an otherwise-unrelated phrase
+    ("intergalactic vibe *curator*") and invent a role — exactly the wrong-role
+    failure the spec forbids. Longest-first so a multi-word occupation is preferred
+    over a shorter, noisier prefix; the caller stops at the first length that
+    resolves anything.
+    """
+    tokens = _clean(phrase).split()
+    for n in range(min(max_n, len(tokens)), 0, -1):
+        yield " ".join(tokens[:n])
+
+
 def resolve_occupation(repo, query: str, *, country: str | None = None,
                        limit: int = 5) -> ResolvedOccupation:
     """Resolve an occupation from ``query`` using the role repository.
@@ -156,9 +179,19 @@ def resolve_occupation(repo, query: str, *, country: str | None = None,
     Candidates are ranked by source precedence for ``country`` (national official
     sources first), then by how closely the title matches the phrase. Ambiguity is
     reported rather than resolved silently.
+
+    Resolution has two general stages (no role or query is special-cased):
+
+    1. Extract the occupation phrase from the question scaffolding and look it up.
+    2. If that resolves nothing — typically a verbose keyword query that embeds the
+       role among other terms — scan contiguous word windows of the query (longest
+       first) and keep only close (exact/prefix) title matches. This lets an
+       occupation-bearing natural query resolve without an exact bare-occupation
+       string, while genuinely different occupations still surface as ambiguous
+       (the caller then reports insufficient rather than guessing a role).
     """
     phrase = extract_occupation_phrase(query)
-    if not phrase or repo is None:
+    if repo is None:
         return ResolvedOccupation(phrase=phrase)
 
     priority = source_priority(country)
@@ -168,7 +201,9 @@ def resolve_occupation(repo, query: str, *, country: str | None = None,
         return priority.index(base) if base in priority else len(priority)
 
     seen: dict[tuple, OccupationCandidate] = {}
-    for variant in _normalise(phrase):
+
+    def _collect(variant: str, *, min_match: float = 1.0) -> None:
+        """Look up one title variant and record candidates scoring >= ``min_match``."""
         for row in repo.search(variant, limit=limit * 4):
             title = row.get("title", "")
             sid = row.get("source_id", "")
@@ -183,11 +218,28 @@ def resolve_occupation(repo, query: str, *, country: str | None = None,
                 match = 2.0
             else:
                 match = 1.0
+            if match < min_match:
+                continue
             score = match - _src_rank(sid) * 0.1
             seen[key] = OccupationCandidate(
                 occupation_code=row.get("occupation_code", ""),
                 title=title, source_id=sid, score=score,
             )
+
+    # Stage 1: the extracted phrase (unchanged behaviour for scaffolded questions).
+    if phrase:
+        for variant in _normalise(phrase):
+            _collect(variant)
+
+    # Stage 2: window fallback — only when the phrase resolved nothing, so clean
+    # queries are byte-for-byte unaffected. Require a close (exact/prefix) match so
+    # noise windows ("core skills", a bare "manager") never invent a role.
+    if not seen:
+        for window in _leading_windows(query):
+            for variant in _normalise(window):
+                _collect(variant, min_match=2.0)
+            if seen:
+                break  # longest leading phrase that matched wins; stop descending
 
     candidates = sorted(seen.values(), key=lambda c: (-c.score, c.title))[:limit]
     # Ambiguous when the top candidates are materially different occupations

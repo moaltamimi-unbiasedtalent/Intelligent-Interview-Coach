@@ -24,10 +24,14 @@ import { FeedbackControl } from "@/components/feedback/FeedbackControl";
  */
 export function PracticeClient({ sessionId }: { sessionId?: string }) {
   const router = useRouter();
-  // Prefer the live client-side URL param so a create → replace transition switches
-  // to the session view immediately (no server round-trip); fall back to the SSR prop.
   const params = useSearchParams();
-  const activeSession = params?.get("session") ?? sessionId;
+  // A just-created session id, held in state so the setup → interview transition is
+  // immediate and deterministic — it does not wait on useSearchParams() re-rendering
+  // after router.replace (which otherwise left the setup form stuck on "Preparing your
+  // interview…" until a manual reload). The URL is still updated for refresh-safety.
+  const [createdSession, setCreatedSession] = useState<string | undefined>(undefined);
+  // Prefer the just-created id, then the live client-side URL param, then the SSR prop.
+  const activeSession = createdSession ?? params?.get("session") ?? sessionId;
   // Only true on the Agent Coach → Practice handoff path (never for standalone setup),
   // so provenance is shown honestly and never fabricated (§22/§23).
   const fromCoach = params?.get("from") === "coach";
@@ -35,7 +39,10 @@ export function PracticeClient({ sessionId }: { sessionId?: string }) {
   if (!activeSession) {
     return (
       <section className="mx-auto max-w-2xl animate-enter">
-        <InterviewSessionSetup onCreated={(id) => router.replace(`/practice?session=${encodeURIComponent(id)}`)} />
+        <InterviewSessionSetup onCreated={(id) => {
+          setCreatedSession(id);  // immediate transition
+          router.replace(`/practice?session=${encodeURIComponent(id)}`);  // refresh-safe URL
+        }} />
       </section>
     );
   }

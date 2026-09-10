@@ -140,6 +140,25 @@ def test_go_deeper_then_max_depth_enforced(db_url):
         assert r3.status_code == 422
 
 
+def test_return_to_main_surfaces_last_main_evaluation(db_url):
+    # Phase 5.1 Defect C: the return response must carry last_evaluation exactly as GET
+    # does. Without it the client has no evaluation to render on return, so the main
+    # actions (Next question / End) only appear after a manual reload.
+    repo = _FakeRepo()
+    with _client(_store_over(db_url), repo) as c:
+        sid = _to_evaluated(c)
+        c.post(f"/api/v1/interviews/{sid}/deep-dive", json={"mode": MODE}, headers=ALICE)
+        c.post(f"/api/v1/interviews/{sid}/deep-dive/answers", json={"answer": "b1"}, headers=ALICE)
+        r = c.post(f"/api/v1/interviews/{sid}/deep-dive/return", headers=ALICE)
+        assert r.status_code == 200
+        body = r.json()
+        assert body["deep_dive"] is None and body["state"] == "INTERVIEW_IN_PROGRESS"
+        assert body["last_evaluation"] is not None
+        # Identical to what GET reports on resume — no reload needed to see it.
+        got = c.get(f"/api/v1/interviews/{sid}", headers=ALICE).json()
+        assert body["last_evaluation"] == got["last_evaluation"]
+
+
 def test_return_to_main_resumes_and_archives(db_url):
     repo = _FakeRepo()
     store = _store_over(db_url)

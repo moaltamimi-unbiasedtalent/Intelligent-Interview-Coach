@@ -142,7 +142,31 @@ test("interview: standalone setup starts an interview without the coach", async 
   await page.getByLabel("Target role").fill("Senior Product Manager");
   await page.getByLabel("Industry or sector").fill("fintech");
   await page.getByRole("button", { name: /Start interview/i }).click();
+  // Phase 5.1 Defect C(A): the client must auto-transition to Q1 with NO reload — the
+  // setup form leaves the DOM and the interview is interactive (previously the form
+  // stayed stuck on "Preparing your interview…" until a manual reload).
   await expect(page.getByRole("heading", { name: /Question 1/i })).toBeVisible();
+  await expect(page.getByText("Practise an interview")).toHaveCount(0);
+  await expect(page.getByLabel("Your answer")).toBeVisible();
+  // The URL is still updated so a refresh restores the same session.
+  await expect(page).toHaveURL(new RegExp(`/practice\\?session=${SID}`));
+});
+
+test("interview: deep-dive return refreshes the main actions without reload", async ({ page }) => {
+  // Phase 5.1 Defect C(B): after Return to interview, the main evaluation + actions
+  // must render immediately (the backend now surfaces last_evaluation on return).
+  await mockInterview(page);
+  await page.goto(`/practice?session=${SID}`);
+  await page.getByLabel("Your answer").fill("I prioritised by impact and measured the result.");
+  await page.getByRole("button", { name: "Submit answer" }).click();
+  await page.getByRole("button", { name: /^Go deeper$/ }).click();
+  await page.getByLabel("Your answer").fill("Because it aligned incentives.");
+  await page.getByRole("button", { name: /Submit deep-dive answer/i }).click();
+  await page.getByRole("button", { name: /Return to interview/i }).click();
+  // Controls are present with no reload: the evaluation is shown and Next/End work.
+  await expect(page.getByText("Answer feedback")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Next question/i })).toBeEnabled();
+  await expect(page.getByRole("button", { name: /End interview/i })).toBeVisible();
 });
 
 test("interview: no fake Record control and no camera claim", async ({ page }) => {

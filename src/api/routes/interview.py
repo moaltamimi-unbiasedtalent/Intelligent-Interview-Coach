@@ -466,7 +466,14 @@ def return_from_deep_dive(
             session.return_to_main_interview()
     except (SessionNotFoundError, SessionConflictError) as exc:
         raise _translate_store_error(exc) from None
-    return _state(session_id, session)
+    # Returning to the main interview lands on the just-completed main question's
+    # evaluation (state is INTERVIEW_IN_PROGRESS, not awaiting), so surface it the
+    # same way GET does — otherwise the client has no evaluation to render and the
+    # main actions (Next question / End) only appear after a manual reload.
+    data = session.data
+    awaiting = data.state in (SessionState.AWAITING_ANSWER, SessionState.BRANCH_AWAITING_ANSWER)
+    last = _eval_out(data.evaluations[-1]) if (data.evaluations and not awaiting) else None
+    return _state(session_id, session, last_evaluation=last)
 
 
 # --- routes: report ----------------------------------------------------------
