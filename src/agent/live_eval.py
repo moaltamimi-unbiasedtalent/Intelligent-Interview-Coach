@@ -43,6 +43,10 @@ class Observation:
     output_tokens: int | None = None
     total_tokens: int | None = None
     estimated_cost_usd: float | None = None
+    # Sanitised material for the LLM-as-judge layer (synthetic-case response only): the
+    # model's final answer text and safe source TITLES — never prompts/state/secrets.
+    response_text: str | None = None
+    source_titles: list[str] = field(default_factory=list)
 
     def to_trace(self) -> dict:
         return asdict(self)
@@ -176,6 +180,13 @@ def observation_from_result(case_id: str, profile: str, result: Any, latency_ms:
     """
     pending = getattr(result, "pending_action", None) or {}
     usage = getattr(result, "usage", None) or {}
+    # Safe source titles only (title strings) — never chunk ids, scores or lane names.
+    titles = [
+        str(s.get("title")).strip()
+        for s in (getattr(result, "sources", None) or [])
+        if isinstance(s, dict) and s.get("title")
+    ]
+    response = getattr(result, "response", None)
     return Observation(
         case_id=case_id,
         model_profile=getattr(result, "profile", None) or profile,
@@ -190,4 +201,6 @@ def observation_from_result(case_id: str, profile: str, result: Any, latency_ms:
         output_tokens=usage.get("output_tokens"),
         total_tokens=usage.get("total_tokens"),
         estimated_cost_usd=usage.get("estimated_cost_usd"),
+        response_text=(str(response)[:4000] if response else None),
+        source_titles=titles,
     )
