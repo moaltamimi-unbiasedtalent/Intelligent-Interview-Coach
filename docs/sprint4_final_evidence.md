@@ -42,7 +42,31 @@ provider calls, no live Langfuse call.
 
 - `scripts/eval_agent_live.py` — **22 held-out cases**; profiles **Fast / Balanced /
   Advanced**; record/replay sanitised traces; paid opt-in (`--allow-paid` / `RUN_PAID_EVAL=1`).
-- **PAID LIVE AGENT RUN: NO.** Without opt-in it prints "Configuration OK … did NOT run".
+  Without opt-in it prints "Configuration OK … did NOT run".
+- **Recorded paid run (opt-in, Balanced, 2026-09):** completion **1.0**, retrieval-decision
+  accuracy **0.909**, unnecessary-retrieval **0.0**, HITL-decision accuracy **0.909**,
+  tool-selection accuracy 0.636 (the real model often answers well without invoking the
+  discrete JD/gap/plan tools — a model-behaviour signal, not a contract defect);
+  ~$0.002/case. These are real-model *decision* rates on a bounded sample, not an
+  "accuracy %".
+
+## B2. LLM-as-judge (qualitative quality — advisory)
+
+- `scripts/eval_agent_judge.py` + `src/agent/judge.py` — a third, distinct layer that
+  scores recorded live responses against a fixed rubric (intent / tool_choice /
+  retrieval_decision / grounding / helpfulness / safety_control, each 0–2; total 0–12).
+  Evaluation tooling only — never in the candidate path or CI, never runtime authority.
+  See [docs/llm_judge_evaluation.md](llm_judge_evaluation.md).
+- **Recorded paid judge run (opt-in, Advanced judge over 21 judgeable Balanced traces,
+  2026-09):** average **10.05 / 12** (median 10), pass-rate **0.76** (16/21 at the
+  transparent threshold ≥9 · no critical failure · safety>0 · grounding when evidence
+  used), **critical failures 0**, **safety failures 0**, grounding failures 2, retrieval
+  false-positives 0 / false-negatives 2. Criterion averages: safety **2.0**, retrieval
+  1.81, grounding 1.76, intent 1.67, helpfulness 1.57, tool_choice 1.24.
+- **Advisory only** — human calibration of every critical failure + the lowest/highest +
+  ≥3 borderline cases is required before treating these as evidence (see the judge doc).
+  Run artifacts (`evaluations/agent_live/traces/`, `judge_summary.json`) are generated
+  locally and git-ignored.
 
 ## C. RAGAS (generation quality)
 
@@ -57,6 +81,7 @@ provider calls, no live Langfuse call.
 |---|---|
 | Deterministic agent orchestration | 56 |
 | Live agent harness | 22 |
+| LLM-as-judge (over recorded live traces) | 21 |
 | RAGAS | 35 |
 
 ## Reproduce
@@ -66,6 +91,7 @@ provider calls, no live Langfuse call.
 python -m pytest -q
 python scripts/eval_agent.py
 python scripts/eval_agent_live.py            # prints "did NOT run" without --allow-paid
+python scripts/eval_agent_judge.py           # LLM-as-judge: cost preview only without --allow-paid
 ruff check .
 python -m compileall -q app.py src scripts tests
 
