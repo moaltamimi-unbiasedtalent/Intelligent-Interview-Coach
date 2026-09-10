@@ -91,8 +91,21 @@ special-casing, no graph/tool changes, thresholds unchanged, first-run baseline 
 - **Comprehensive preparation intent** is recognised (use the capabilities that add value
   when inputs exist), while a single specific request is still honoured as just that.
 
-The behavioural effect is **not yet measured** — no improved live score is claimed until a
-second run is separately authorised. Deterministic coverage: `tests/test_agent_policy_hardening.py`.
+Deterministic coverage: `tests/test_agent_policy_hardening.py`.
+
+**SECOND LIVE RUN (opt-in, Balanced record + Advanced judge, 2026-09) — post-remediation,
+measured honestly:** the hardening did **not** produce a measurable improvement in this
+single 22-case run. Live: tool-selection 0.591, required-tool recall 0.591,
+retrieval-decision 0.864, HITL 0.909, completion 1.0. Judge: average **9.67 / 12** (median
+10), pass-rate **0.71** (15/21), **0 critical**, **0 safety failures**, grounding failures
+2, retrieval false-negatives 3. All deltas vs the first run are small and *negative*,
+consistent with small-n run-to-run variance, not a real change. On the four targeted cases
+(`ambiguous_role_hitl`, `insufficient_evidence`, `competency_expectations`,
+`full_prep_intent`) the model's tool/retrieval/HITL decisions were **identical** to the
+first run — prompt-only hardening did not move this model's decisions here. **No live
+improvement is claimed.** Strengths preserved: unnecessary-tool 0, unnecessary-retrieval 0
+(the hardening did not cause over-retrieval), 0 critical, 0 safety failures. Both runs'
+raw artifacts are generated locally and git-ignored; the numbers above are the record.
 
 ## C. RAGAS (generation quality)
 
