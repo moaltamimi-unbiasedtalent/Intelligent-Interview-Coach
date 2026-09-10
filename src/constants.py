@@ -48,13 +48,19 @@ MODELS_WITHOUT_TEMPERATURE: set[str] = {
     "openai/gpt-5", "openai/gpt-5-mini", "openai/gpt-5-nano",
 }
 
-DEFAULT_MAX_OUTPUT_TOKENS = 1024
-# Floor for the output budget. Every use case produces a structured JSON object
-# (a strategy or final report can be ~600-900 tokens plus a repair round), so a
-# very small budget truncates the response mid-object and it cannot be parsed.
-# 512 keeps short outputs (a single question/evaluation) working while removing
-# the sub-512 range that cannot reliably hold a structured answer; the default
-# (1024) is the recommended value for the larger strategy and report tasks.
+DEFAULT_MAX_OUTPUT_TOKENS = 3072
+# Output budget for interview generation. Every use case returns a structured JSON
+# object; the strategy (10 sections) and final report are the largest at ~600-900
+# tokens, and the defensive path may add one repair round. Critically, the current
+# registry models are the gpt-5.x REASONING family: their internal reasoning tokens
+# are drawn from this same completion budget BEFORE any JSON is emitted (we already
+# request the minimal reasoning effort). At the old 1024 default, minimal reasoning
+# plus a full strategy reliably truncated the response mid-object
+# (finish_reason=length) and interview creation failed with a safe 503. 3072 leaves
+# bounded headroom for minimal reasoning + the largest structured contract + a
+# repair round, and stays within MAX_OUTPUT_TOKENS_LIMIT (it is a ceiling, not a
+# target — callers are billed for actual tokens, so short outputs cost the same).
+# 512 keeps the floor above the sub-512 range that cannot hold a structured answer.
 MIN_OUTPUT_TOKENS = 512
 MAX_OUTPUT_TOKENS_LIMIT = 4096
 

@@ -14,6 +14,21 @@ identity of the stateful LangGraph Career Preparation Agent). Primary interface 
 
 Use the same role, JD, background, memory and practice answer for the whole demo.
 
+## Canonical demo configuration (use these exact ports — no improvisation)
+
+| Piece | Value |
+|---|---|
+| Backend | `http://localhost:8000` (`uvicorn src.api.main:app --port 8000`) |
+| Frontend | `http://localhost:3000` (`cd frontend && npm run dev`) |
+| `FRONTEND_ORIGINS` | `http://localhost:3000` (the backend's default dev allow-list) |
+
+The backend allows `http://localhost:3000` (and `http://127.0.0.1:3000`) out of the box, so
+the default configuration needs no CORS env var. **If you must run the frontend on a
+different port**, start the backend with that exact origin allow-listed —
+`FRONTEND_ORIGINS=http://localhost:<port> uvicorn src.api.main:app --port 8000` — otherwise
+the browser's first call fails a CORS preflight and "Ask Mo" shows a connection error
+(this is what cost time in rehearsal #2). Never use a wildcard origin.
+
 ## Pre-flight checklist (all must be true before starting)
 
 - [ ] Backend running: `uvicorn src.api.main:app --reload` → http://localhost:8000/api/v1/health OK
@@ -21,6 +36,7 @@ Use the same role, JD, background, memory and practice answer for the whole demo
 - [ ] `OPENROUTER_API_KEY` configured and `AGENT_COACH_ENABLED=true`
 - [ ] **KB readiness:** `python scripts/check_demo_knowledge.py` → **DEMO KNOWLEDGE: READY** (do not start otherwise — see §KB precheck)
 - [ ] **Demo identity + persistence readiness:** `python scripts/ensure_demo_user.py` → **DEMO IDENTITY: READY** (do not start otherwise — see §Identity precheck)
+- [ ] **CORS / frontend-origin readiness:** `python scripts/check_demo_cors.py` → **DEMO CORS: READY** (backend must be running; see §CORS precheck)
 - [ ] Speed selector on **Balanced** (default)
 - [ ] Database migrated: `alembic upgrade head` (single head `0006_user_feedback`)
 - [ ] Clean demo session: no stale/failed in-progress interview (start Practice fresh)
@@ -62,6 +78,19 @@ Production databases are migrated with `alembic upgrade head`, never recreated. 
 demo identity from the frontend, set `NEXT_PUBLIC_DEV_USER_SUBJECT=demo-reviewer` before
 `npm run dev` (leaving it unset uses the anonymous dev user — both persist correctly once
 the schema is at head; the failure was schema drift, not the identity).
+
+### CORS precheck (required; backend must be running)
+
+```bash
+python scripts/check_demo_cors.py
+```
+
+With the canonical configuration (frontend on `http://localhost:3000`) this prints **DEMO
+CORS: READY** without any env var. If it prints **NOT READY**, the frontend origin is not in
+the backend's allow-list — the checker prints the exact `FRONTEND_ORIGINS=…` command to fix
+it. This is the preventable friction from rehearsal #2, now caught before the demo rather
+than as a mystery "connection error" on the first Ask Mo. Override the checked origin with
+`FRONTEND_ORIGIN=http://localhost:<port>` if you run the frontend elsewhere.
 
 ## Exact inputs (copy/paste — no improvisation)
 
@@ -201,8 +230,38 @@ end-to-end; every failure was recoverable and reported *truthfully* to the candi
 said saving didn't complete rather than pretending it had); no crash; and **no code was
 changed during the observation** — the run was recorded as-is, then remediated afterward.
 
-A second live rehearsal has **not** been run yet (Phase 5.1 is defect-remediation only; no
-new paid live rehearsal authorised).
+### GOLDEN DEMO LIVE REHEARSAL #2: FAIL under strict demo criteria
+
+Post-Phase-5.1 authorised paid re-run (no judge). **Verdict: FAIL** under strict demo
+criteria. This verdict is immutable and is **not** rewritten by the Phase 5.2 fixes below.
+
+What passed: **KB preflight PASS**, **identity preflight PASS**, Home → Ask Mo, Prepare (JD
+analysis, gaps, plan), the memory-approval HITL and **memory persistence PASS**, the Mo →
+Practice handoff card (**Mo → Practice PASS**), and the **History read PASS** (loaded
+cleanly under the dev identity — the exact path that errored in rehearsal #1). **No code was
+changed during the observation.**
+
+What failed:
+
+1. **Visible citation FAIL (P1).** The Agent reformulated the evidence question with the
+   role **trailing** — "typical skills and responsibilities expected of a Senior Product
+   Manager" — and the occupation resolver (which then handled scaffolded questions and
+   occupation-*leading* keyword queries only) matched nothing, so retrieval returned **0
+   sources**. Mo answered truthfully from the JD without fabricating a citation.
+2. **Practice creation FAIL (P0).** Interview creation failed during **strategy generation**:
+   the gpt-5.x reasoning model's output was truncated at the configured **1024** output-token
+   budget (`finish_reason=length`), surfaced safely as a 503, and the retry re-ran the same
+   doomed request. This blocked the entire Practice half (Q1, evaluation, Deep Dive, return,
+   report), so Phase 5.1's Practice-client refresh fixes could not be validated live.
+
+Also noted (P2): reaching a valid stack required manually setting `FRONTEND_ORIGINS` because
+the frontend was started on a non-default port (a self-inflicted setup surprise).
+
+**Both blockers were remediated in Phase 5.2** (P0: bounded strategy output-budget increase
+to 3072 with the truncation/retry handling preserved; P1: position-agnostic, scaffold-anchored
+occupation resolution; plus a documented canonical demo port + a CORS precheck). The
+remediation is covered by deterministic/fake-provider tests — no paid re-run was performed in
+Phase 5.2. A third live rehearsal is the next step; this #2 record stays **FAIL**.
 
 ## Fallback (no live provider / API key)
 

@@ -157,7 +157,7 @@ _MAX_WINDOW = 5
 def _leading_windows(phrase: str, max_n: int = _MAX_WINDOW):
     """Yield the query's leading word windows, longest first.
 
-    Anchored at the START of the query on purpose: in a non-scaffolded keyword
+    Anchored at the START of the phrase on purpose: in a non-scaffolded keyword
     query a candidate genuinely leads with the role ("Senior Product Manager
     typical responsibilities…", "registered nurse day-to-day duties…"), so the
     leading phrase is the occupation. Scanning every interior window instead would
@@ -172,6 +172,34 @@ def _leading_windows(phrase: str, max_n: int = _MAX_WINDOW):
         yield " ".join(tokens[:n])
 
 
+# Role-introducing scaffolding: a connective + an article strongly signals that an
+# occupation follows, wherever it sits in the query ("… expected of a <role>",
+# "for a <role>", "as a <role>", "skills needed by a <role>", "does a <role>…").
+# This makes resolution position-agnostic (role at the start, middle or end)
+# WITHOUT the "pick any occupation word found somewhere" failure the spec forbids:
+# a bare noun with no connective ("intergalactic vibe curator") is never captured.
+# "expected of a" is covered by the "of" alternative, "needed by a" by "by",
+# "required for a" by "for". The captured phrase runs to the next clause boundary.
+_SCAFFOLD = re.compile(
+    r"\b(?:of|for|as|by|does|do)\s+(?:a|an|the)\s+([\w][\w\s&/+-]*?)(?=[,.;:?!]|$)",
+    re.I,
+)
+
+
+def _scaffolded_candidates(query: str):
+    """Yield occupation-candidate phrases that follow a role-introducing connective.
+
+    Each captured phrase begins with the occupation (the connective + article are
+    the anchor), so the caller resolves it with the same conservative leading-window
+    matching. Multiple matches (e.g. two different roles) all surface, so genuinely
+    ambiguous queries still resolve to ambiguity rather than a guess.
+    """
+    for m in _SCAFFOLD.finditer(query or ""):
+        cand = _clean(m.group(1))
+        if cand:
+            yield cand
+
+
 def resolve_occupation(repo, query: str, *, country: str | None = None,
                        limit: int = 5) -> ResolvedOccupation:
     """Resolve an occupation from ``query`` using the role repository.
@@ -180,15 +208,22 @@ def resolve_occupation(repo, query: str, *, country: str | None = None,
     sources first), then by how closely the title matches the phrase. Ambiguity is
     reported rather than resolved silently.
 
-    Resolution has two general stages (no role or query is special-cased):
+    Resolution has three general stages (no role, prompt or query is special-cased),
+    each tried only when the previous resolved nothing, so clean queries are
+    unaffected:
 
     1. Extract the occupation phrase from the question scaffolding and look it up.
-    2. If that resolves nothing — typically a verbose keyword query that embeds the
-       role among other terms — scan contiguous word windows of the query (longest
-       first) and keep only close (exact/prefix) title matches. This lets an
-       occupation-bearing natural query resolve without an exact bare-occupation
-       string, while genuinely different occupations still surface as ambiguous
-       (the caller then reports insufficient rather than guessing a role).
+    2. Scaffold-anchored, position-agnostic: find candidates that follow a
+       role-introducing connective + article ("… expected of a <role>", "for a
+       <role>", "as a <role>") anywhere in the query — this resolves a trailing or
+       mid-sentence occupation the Agent may generate.
+    3. Leading-window: for a non-scaffolded keyword query that leads with the role
+       ("Senior Product Manager typical responsibilities …"), scan the leading
+       windows.
+
+    Stages 2 and 3 keep only close (exact/prefix) title matches, so noise never
+    invents a role; genuinely different occupations still surface as ambiguous and
+    the caller then reports insufficient rather than guessing.
     """
     phrase = extract_occupation_phrase(query)
     if repo is None:
@@ -226,20 +261,31 @@ def resolve_occupation(repo, query: str, *, country: str | None = None,
                 title=title, source_id=sid, score=score,
             )
 
+    def _collect_leading(text: str) -> None:
+        """Collect close matches from ``text``'s leading windows, longest first,
+        stopping at the first window length that resolves anything."""
+        for window in _leading_windows(text):
+            before = len(seen)
+            for variant in _normalise(window):
+                _collect(variant, min_match=2.0)
+            if len(seen) > before:
+                break
+
     # Stage 1: the extracted phrase (unchanged behaviour for scaffolded questions).
     if phrase:
         for variant in _normalise(phrase):
             _collect(variant)
 
-    # Stage 2: window fallback — only when the phrase resolved nothing, so clean
-    # queries are byte-for-byte unaffected. Require a close (exact/prefix) match so
-    # noise windows ("core skills", a bare "manager") never invent a role.
+    # Stage 2: scaffold-anchored, position-agnostic. Each candidate begins with the
+    # role (the connective + article are the anchor); every candidate is tried so
+    # two distinct roles still surface as ambiguous.
     if not seen:
-        for window in _leading_windows(query):
-            for variant in _normalise(window):
-                _collect(variant, min_match=2.0)
-            if seen:
-                break  # longest leading phrase that matched wins; stop descending
+        for cand in _scaffolded_candidates(query):
+            _collect_leading(cand)
+
+    # Stage 3: leading-window fallback for occupation-leading keyword queries.
+    if not seen:
+        _collect_leading(query)
 
     candidates = sorted(seen.values(), key=lambda c: (-c.score, c.title))[:limit]
     # Ambiguous when the top candidates are materially different occupations
