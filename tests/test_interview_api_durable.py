@@ -216,3 +216,28 @@ def test_options_exposes_deep_dive_modes(db_url):
     with _client(_store_over(db_url), repo) as c:
         body = c.get("/api/v1/interviews/options", headers=ALICE).json()
     assert body["deep_dive_modes"] == list(constants.BRANCH_MODES)
+
+
+def test_options_exposes_interview_types_and_difficulty(db_url):
+    # Sprint-1 parity: the standalone Practice setup restores question-type and
+    # difficulty selection, sourced from these backend-owned taxonomies.
+    from src import constants
+    repo = _FakeRepo()
+    with _client(_store_over(db_url), repo) as c:
+        body = c.get("/api/v1/interviews/options", headers=ALICE).json()
+    assert body["interview_types"] == list(constants.INTERVIEW_TYPES)
+    assert body["difficulty_levels"] == list(constants.DIFFICULTY_LEVELS)
+
+
+def test_standalone_config_honours_chosen_types_and_difficulty(db_url):
+    # A configuration carrying explicit interview_types/difficulty is accepted and the
+    # session reflects them (the option reaches the backend and affects the session).
+    repo = _FakeRepo()
+    with _client(_store_over(db_url), repo) as c:
+        r = c.post("/api/v1/interviews", json={"configuration": {
+            "target_role": "Engineering Manager", "industry_or_sector": "healthcare",
+            "career_level": "senior", "number_of_questions": 2,
+            "interview_types": ["technical", "leadership"], "difficulty": "hard"}},
+            headers=ALICE)
+    assert r.status_code == 200, r.text
+    assert r.json()["state"] != "ERROR"

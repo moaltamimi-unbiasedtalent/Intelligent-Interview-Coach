@@ -173,5 +173,7 @@ class InterviewOptionsResponse(BaseModel):
 
     career_levels: list[str] = Field(default_factory=list)
     interview_types: list[str] = Field(default_factory=list)
+    # Backend-owned difficulty taxonomy so the frontend never maintains its own list.
+    difficulty_levels: list[str] = Field(default_factory=list)
     # Backend-owned Deep Dive taxonomy so the frontend never maintains its own list.
     deep_dive_modes: list[str] = Field(default_factory=list)
