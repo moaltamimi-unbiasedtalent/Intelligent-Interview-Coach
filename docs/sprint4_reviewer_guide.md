@@ -7,6 +7,16 @@ understand and demo it without reading the whole repo. Companion docs:
 
 ## Brand & Mo (identity)
 
+> **Canonical statement:** Ask4Mo is the product brand. Intelligent Interview Coach is
+> the descriptor. Mo is the candidate-facing AI Coach and identity of the existing
+> Career Preparation Agent.
+
+The final brand system follows the authoritative brand documents (brand guide, logo
+production brief, homepage copy): chosen logo concept **The Conversation Bridge**;
+palette Deep Navy `#071A38`, Electric Blue `#1E83F3`, Cyan `#26D5E7`, Violet `#8A58EE`,
+Ice `#F4F8FC`. Final vector logo production is a designer follow-up — the product ships a
+polished text wordmark plus placeholder mark assets under `frontend/public/brand/`.
+
 - **Ask4Mo** is the consumer-facing brand; **Intelligent Interview Coach** is the
   descriptor; the slogan is **Ask More. Be More.** The primary Home action is **Ask Mo**.
 - **Mo** is the candidate-facing **AI Coach** — the identity of the *existing* stateful

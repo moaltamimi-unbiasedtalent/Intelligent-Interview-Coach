@@ -1,18 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Ask4Mo mark">
   <!--
     PLACEHOLDER "Conversation Bridge" mark for Ask4Mo — NOT the final approved logo.
-    Replace this file with the official vector asset when available. Concept: two
-    conversation arcs joined by a bridge/ribbon (preparation → confidence → opportunity),
-    in the brand palette (deep navy, electric blue, cyan, violet).
+    Replace with the production vector when available (see Ask4Mo_Logo_Production_Brief).
+    Concept: two speech bubbles (left blue→cyan, right violet), three dots each, joined
+    by one sweeping bridge/ribbon — dialogue → preparation → progress → opportunity.
+    Brand palette: Navy #071A38 · Electric Blue #1E83F3 · Cyan #26D5E7 · Violet #8A58EE.
   -->
   <defs>
-    <linearGradient id="a4m" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#1b2a6b"/>
-      <stop offset="0.5" stop-color="#2f6bff"/>
-      <stop offset="1" stop-color="#22d3ee"/>
+    <linearGradient id="a4mLeft" x1="8" y1="26" x2="34" y2="52" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1E83F3"/>
+      <stop offset="1" stop-color="#26D5E7"/>
+    </linearGradient>
+    <linearGradient id="a4mBridge" x1="12" y1="14" x2="52" y2="14" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#26D5E7"/>
+      <stop offset="1" stop-color="#8A58EE"/>
     </linearGradient>
   </defs>
-  <path d="M12 40c6-10 16-10 20 0 4 10 14 10 20 0" fill="none" stroke="url(#a4m)" stroke-width="6" stroke-linecap="round"/>
-  <circle cx="12" cy="22" r="5" fill="#7c3aed"/>
-  <circle cx="52" cy="22" r="5" fill="#22d3ee"/>
+  <!-- bridge/ribbon connecting the two conversations -->
+  <path d="M14 22c8-13 28-13 36 0" fill="none" stroke="url(#a4mBridge)" stroke-width="4.5" stroke-linecap="round"/>
+  <!-- left speech bubble + tail -->
+  <path d="M10 30h20a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4h-9l-6 5v-5h-5a4 4 0 0 1-4-4v-8a4 4 0 0 1 4-4z" fill="url(#a4mLeft)"/>
+  <g fill="#F4F8FC"><circle cx="16" cy="38" r="2"/><circle cx="22" cy="38" r="2"/><circle cx="28" cy="38" r="2"/></g>
+  <!-- right speech bubble + tail -->
+  <path d="M34 30h20a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4h-5v5l-6-5h-9a4 4 0 0 1-4-4v-8a4 4 0 0 1 4-4z" fill="#8A58EE"/>
+  <g fill="#F4F8FC"><circle cx="40" cy="38" r="2"/><circle cx="46" cy="38" r="2"/><circle cx="52" cy="38" r="2"/></g>
 </svg>

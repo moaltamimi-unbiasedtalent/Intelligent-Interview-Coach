@@ -44,7 +44,7 @@ export function HomeEntry() {
           id="home-entry"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="What interview are you preparing for?  e.g. Senior Product Manager at a fintech"
+          placeholder="e.g. Executive HR Director role in fashion"
           className="border-0 bg-transparent shadow-none focus-visible:outline-none"
         />
         <Button type="submit" disabled={!canStart}>Ask Mo</Button>
@@ -58,7 +58,7 @@ export function HomeEntry() {
         </button>
       </div>
       <p className="mt-3 text-sm text-muted">
-        Your information is used only to personalise your preparation.
+        Your preparation stays focused on evidence, your context and your choices.
       </p>
     </div>
   );
