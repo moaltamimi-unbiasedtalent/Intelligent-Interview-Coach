@@ -60,3 +60,8 @@ data/knowledge_demo/
 # RAGAS run artifacts are generated locally (may contain generated answers);
 # never commit them. The public cases + README under evaluations/ragas/ stay tracked.
 evaluations/ragas/runs/
+
+# Live agent-eval run outputs are generated locally (recorded traces + judge summary);
+# never commit them. The case definitions (evaluations/agent_live/cases.json) stay tracked.
+evaluations/agent_live/traces/
+evaluations/agent_live/judge_summary.json
