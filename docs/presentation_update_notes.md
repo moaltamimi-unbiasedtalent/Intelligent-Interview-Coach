@@ -25,9 +25,24 @@ name may appear.
 
 - `Ask4Mo_Product_Journey_Final.pptx`
 - `Ask4Mo_Sprint_Review_Walkthrough_Final.pptx`
-- `Ask4Mo_Complete_App_Walkthrough.pptx`
+- `Ask4Mo_Complete_App_Walkthrough_Final.pptx`
 
 (The `.pptx` files are external to this repository; apply these renames there.)
+
+### Marketing toolkit (from the authoritative brand documents)
+
+- **Master promise:** Ask More. Be More.
+- **Approved supporting lines:** "Prepare with purpose." · "Real conversations. Better
+  preparation." · "Practise. Improve. Progress." · "From preparation to opportunity." ·
+  "Ask Mo what matters. Practise what matters."
+- **Logo concept:** The Conversation Bridge (two speech bubbles + one sweeping bridge; no
+  robot imagery). **Palette:** Navy `#071A38`, Electric Blue `#1E83F3`, Cyan `#26D5E7`,
+  Violet `#8A58EE`, Ice `#F4F8FC`.
+- **Presentation truth:** Home = enter goal → **Ask Mo** → Prepare starts with the same
+  goal (no re-entry); Mo introduces itself once; navigation is Prepare/Practice/Progress/
+  History + More(Sources, Review & Diagnostics) + Account(Settings); the Prepare→Practice
+  handoff is fixed (stable missing-config, valid industry/level, idempotent creation).
+- **Never** call Mo a chatbot; avoid "guaranteed success"/"AI magic"/"perfect answers".
 
 ## Final navigation (use the REAL shell in screenshots/mockups)
 
