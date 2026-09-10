@@ -12,11 +12,12 @@ export function Brand() {
       className="inline-flex items-center gap-2.5 font-bold tracking-tight text-foreground"
       aria-label="Ask4Mo — home"
     >
-      <span
-        aria-hidden="true"
-        className="h-4 w-4 rounded-[5px] bg-accent"
-        style={{ boxShadow: "inset 0 0 0 3px color-mix(in srgb, var(--accent) 55%, #fff)" }}
-      />
+      {/* Conversation Bridge mark (placeholder asset). Decorative — the link's
+          aria-label carries the accessible name; the text wordmark is the fallback. A
+          plain <img> is intentional for this tiny static SVG icon (no optimisation
+          benefit from next/image). */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/brand/ask4mo-mark.svg" alt="" aria-hidden="true" width={20} height={20} className="h-5 w-5" />
       <span>Ask4Mo</span>
     </Link>
   );

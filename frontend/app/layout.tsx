@@ -16,6 +16,12 @@ export const metadata: Metadata = {
     template: "%s · Ask4Mo",
   },
   description: "AI-powered interview preparation, practice and feedback. Ask More. Be More.",
+  openGraph: {
+    title: "Ask4Mo — Intelligent Interview Coach",
+    description: "Prepare with evidence, practise with purpose, improve with feedback. Ask More. Be More.",
+    siteName: "Ask4Mo",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {
