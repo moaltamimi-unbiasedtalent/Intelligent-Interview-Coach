@@ -27,6 +27,37 @@ polished text wordmark plus placeholder mark assets under `frontend/public/brand
 - Mo is an **AI Coach** — never a "chatbot"/"bot". In technical/reviewer contexts it is
   the *Career Preparation Agent*.
 
+## Reviewer quick path
+
+**What to review** — the one candidate journey: **Home → Prepare → Practice →
+Progress/History**, plus the **Agent Inspector** (`/review/agent`) for safe execution
+traces. Streamlit, RAG Inspector, the Evaluation page and Langfuse are *not* part of the
+official review path.
+
+**How to run**
+```bash
+# Backend
+pip install -e . && AGENT_COACH_ENABLED=true OPENROUTER_API_KEY=... uvicorn src.api.main:app --reload
+# Frontend (primary UI)
+cd frontend && npm ci && npm run dev            # http://localhost:3000
+# Before a live demo, confirm evidence readiness (citations need the local KB):
+python scripts/check_demo_knowledge.py          # expect: DEMO KNOWLEDGE: READY
+```
+
+**What to demo** — follow the 8–12 minute **[golden demo script](sprint4_demo_script.md)**
+(one role: Senior Product Manager, B2B SaaS/FinTech, Germany) with exact copy/paste inputs
+and a pre-flight checklist. It shows: Home → Ask Mo, JD/background analysis, an
+evidence-backed answer with **visible citations**, a memory-approval HITL, the Mo →
+Practice handoff, an evaluation, and the Agent Inspector.
+
+**How requirements map** — [final requirements matrix](sprint4_final_requirements_matrix.md)
+(requirement → implementation → test) and [final evidence](sprint4_final_evidence.md)
+(current test counts + the two authorised live-quality runs).
+
+**Limitations** — production OIDC not implemented; live PostgreSQL deployment validation
+outstanding; the knowledge base must be provisioned/built for evidence-backed retrieval;
+voice/Live is experimental and off by default (no camera).
+
 ## First 60 seconds
 
 > "Sprint 3 gave Intelligent Interview Coach an evidence-backed Career Intelligence layer. In

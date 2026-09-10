@@ -1,78 +1,151 @@
-# Sprint 4 — Demo Script (8–12 minutes)
+# Ask4Mo — Golden Demo Script (8–12 minutes)
 
-A guided review walkthrough of **Ask4Mo — Intelligent Interview Coach**. The
-candidate-facing AI Coach is **Mo** (the identity of the Career Preparation Agent);
-the slogan is **Ask More. Be More.** Primary interface is **Next.js + FastAPI**.
+**Ask4Mo · Intelligent Interview Coach · Mo · *Ask More. Be More.***
 
-> **Setup.** Run FastAPI (`uvicorn src.api.main:app --reload`) and Next.js
-> (`cd frontend && npm run dev`) with `AGENT_COACH_ENABLED=true` and an
-> `OPENROUTER_API_KEY`. Use a free port if 3000 is busy (e.g. frontend on 3200; the API
-> base defaults to `http://localhost:8000/api/v1`). See the README quick start.
+One role, one story, no improvisation. The candidate-facing AI Coach is **Mo** (the
+identity of the stateful LangGraph Career Preparation Agent). Primary interface is
+**Next.js + FastAPI** (Streamlit is legacy dev only — not part of this demo).
+
+## Golden scenario (use throughout)
+
+- **Role:** Senior Product Manager
+- **Domain:** B2B SaaS / FinTech
+- **Location:** Germany / EU
+
+Use the same role, JD, background, memory and practice answer for the whole demo.
+
+## Pre-flight checklist (all must be true before starting)
+
+- [ ] Backend running: `uvicorn src.api.main:app --reload` → http://localhost:8000/api/v1/health OK
+- [ ] Frontend running: `cd frontend && npm run dev` → http://localhost:3000
+- [ ] `OPENROUTER_API_KEY` configured and `AGENT_COACH_ENABLED=true`
+- [ ] **KB readiness:** `python scripts/check_demo_knowledge.py` → **DEMO KNOWLEDGE: READY** (do not start otherwise — see §KB precheck)
+- [ ] Speed selector on **Balanced** (default)
+- [ ] Database migrated: `alembic upgrade head` (single head `0006_user_feedback`)
+- [ ] Clean demo session: no stale/failed in-progress interview (start Practice fresh)
+
+### KB precheck (required)
+
+```bash
+python scripts/check_demo_knowledge.py
+```
+
+If it prints anything other than **DEMO KNOWLEDGE: READY**, **do not run the live demo** —
+citations depend on the local knowledge base being built (a fresh checkout is empty). The
+checker prints the exact build commands. Verified when READY: the golden retrieval query
+below returns visible ESCO product-manager sources.
+
+## Exact inputs (copy/paste — no improvisation)
+
+**1) Home goal**
+```
+I have a Senior Product Manager interview at a B2B SaaS fintech in Germany next week — help me prepare the product-sense and behavioural rounds.
+```
+
+**2) Job description** (paste into Prepare → "Paste a job description")
+```
+Senior Product Manager — B2B SaaS (FinTech), Berlin (hybrid).
+Own the product strategy and roadmap for a payments/analytics platform serving
+enterprise finance teams. Discover customer problems, prioritise the backlog, and
+align engineering, design, data and go-to-market. Define and track outcome metrics
+(activation, retention, revenue). Partner with compliance on regulated workflows.
+Requirements: 5+ years product management, B2B SaaS, data-informed prioritisation,
+strong stakeholder communication, experience with API/platform products; FinTech or
+regulated-domain exposure a plus.
+```
+
+**3) Candidate background** (paste into "Add your background")
+```
+7 years in product, last 3 as a PM on a B2B analytics SaaS. Shipped an API/platform
+integration used by ~40 enterprise customers; led discovery and roadmap for a
+reporting suite. Strong on stakeholder alignment and metrics (activation/retention);
+less exposure to payments/regulated-compliance workflows.
+```
+
+**4) Retrieval-worthy question to Mo** (produces a VISIBLE citation)
+```
+What skills and responsibilities are typically expected of a Senior Product Manager?
+```
+> Verified: this returns grounded **Sources** (ESCO — product manager — Skills). Avoid
+> "competencies for a product manager" — that phrasing currently returns insufficient
+> evidence, and Mo will (correctly) say so rather than cite.
+
+**5) Memory statement** (triggers a memory-approval HITL)
+```
+Remember that my priority gap is payments/regulated-compliance workflows.
+```
+
+**6) Practice answer** (for the first interview question)
+```
+I start from the customer problem and the outcome metric. On my analytics SaaS I ran
+discovery interviews, sized the opportunity with usage data, then framed 2–3 options
+with trade-offs for eng/design/GTM. For a payments feature I'd add a compliance
+partner early, define guardrail metrics, ship a thin slice behind a flag, and measure
+activation before scaling.
+```
 
 ## Timed flow
 
-**0:00–0:45 — Problem + architecture.** Candidates need grounded, role-aware
-preparation and realistic practice without losing progress. Sprint 3 built the Career
-Intelligence layer; Sprint 4 turned it into a stateful LangGraph agent. Show the diagram
-in `docs/sprint4_architecture.md`.
+**0:00–0:45 — Problem + value.** Candidates prepare in fragments — research a role, guess
+gaps, practise blind. Ask4Mo joins **understand → prepare → practise → improve** into one
+Mo-led flow, grounded in evidence and under the candidate's control.
 
-**0:45–2:00 — Home → Prepare.** From the Home page (Ask4Mo · Intelligent Interview
-Coach · *Ask More. Be More.*), type the interview goal in "What interview are you
-preparing for?" and press **Ask Mo**: Prepare opens and **Mo** begins with *that same
-goal* — introducing itself once, no re-entry. (The goal is transferred ephemerally, never
-in the URL.) The Home shortcuts "Paste a job description" / "Add your background" open
-and focus the matching context field. On `/prepare`, point out the **UNDERSTAND →
-PREPARE → PRACTISE** journey chrome and the **Speed** selector (Fast / Balanced /
-Advanced — Balanced recommended). No raw model names in the UI.
+**0:45–1:30 — Home → Ask Mo → Prepare.** On Home (Ask4Mo · Intelligent Interview Coach ·
+*Ask More. Be More.*) paste input **(1)** and press **Ask Mo** → Prepare opens and Mo
+begins with that same goal (introduces itself once; the goal never appears in the URL).
 
-**2:00–4:00 — Agent decides tools.** Enter a role/JD, e.g. *"Senior Product Manager at a
-fintech next week — prep the behavioural and product-sense rounds"* and (optionally)
-paste a short JD / a few lines of background. Start preparing. Show: the agent calls
-controlled tools; a factual question (*"typical pay range for PMs in Germany?"*) triggers
-**SearchCareerKnowledge** with **citations**; the preparation checklist fills in from
-real completed steps.
+**1:30–3:00 — Mo analyses JD + background.** Add inputs **(2)** and **(3)**. Mo analyses the
+job description into requirements and compares your background, surfacing strengths and the
+priority gap (payments/compliance). Point out the restrained UNDERSTAND → PREPARE →
+PRACTISE journey chrome and the Balanced speed tier (no raw model names).
 
-**4:00–5:00 — Agent Inspector.** Reach it via the header **More → Review & Diagnostics**
-→ Agent Inspector (or open `/review/agent` directly) for the run. Show the tool
-sequence, retrieval, model **profile**, model calls, **tokens / cost coverage**,
-**latency**, **cache hits/misses**, and the **journey** rows — and that **no
-chain-of-thought / prompts / raw checkpoint** appear.
+**3:00–4:00 — One evidence-backed question → visible citation.** Ask Mo input **(4)**. Mo
+retrieves career evidence and answers with a visible **Sources** list (ESCO product-manager
+skills). Note: Mo retrieves only when it adds value, and shows only source titles/links —
+never chunk ids or scores.
 
-**5:00–6:00 — Memory.** When the coach proposes a memory, show **What will be
-remembered** → **Edit before saving** → approve. Then **Settings → Preparation memory**:
-edit, **pin**, and **What may be used next time** (enter a role → preview). Note pinning
-changes priority only.
+**4:00–5:00 — One HITL memory approval.** Send input **(5)**. Mo proposes a memory; show
+**What will be remembered → Edit before saving → Approve**. Mo never saves without approval.
 
-**6:00–7:00 — Practice handoff.** When ready, the handoff card shows **what** transfers
-and **where each piece came from** (role / focus / questions). Approve → the interview is
-created (outside LangGraph, idempotent) and Practice opens with a subtle "Prepared in
-your Coach session" note.
+**5:00–6:00 — Journey / preparation progress.** Show the preparation checklist filling from
+real completed steps, and (optionally) Progress / Settings → *What Mo remembers* with
+edit/pin/preview.
 
-**7:00–9:00 — Interview Practice.** Answer a question → structured **evaluation** →
-optional **Deep Dive** → **complete** → **final report**. Mention durable
-sessions/refresh-resume.
+**6:00–7:00 — Mo → Practice handoff.** When a plan exists, Mo offers **Ready to practise?**
+The handoff card shows what transfers and where each piece came from (role / focus /
+questions). Approve → the interview is created (idempotent, outside LangGraph) and Practice
+opens with a subtle "Prepared with Mo" note.
 
-**9:00–10:00 — Feedback.** Rate an Agent answer / evaluation / report **Helpful / Not
-helpful** (+ optional comment). Explain: feedback → aggregate → human review → evaluation
-case → controlled change. **Not** autonomous self-learning; only the exact owned output
-can be rated.
+**7:00–9:00 — One interview question → answer → evaluation.** Answer the first question with
+input **(6)**. Show the structured **evaluation** (score + strengths/improvements).
 
-**10:00–11:00 — Evaluation evidence.** Show `docs/sprint4_final_evidence.md`: the
-deterministic agent gate (56 cases, PASS), the live harness (22 cases, paid opt-in — not
-run), RAGAS (35 cases, optional), and the product regression totals.
+**9:00–10:00 — Deep Dive or report / history.** Either start a **Deep Dive** on the answer,
+or complete the interview to generate the **final report**, then open **History** (durable,
+refresh-safe).
 
-**11:00–12:00 — Limitations + close.** Production OIDC, Postgres deployment validation,
-paid model/RAGAS baselines, bulk checkpoint retention — all intentional follow-ups.
+**10:00–11:00 — Agent Inspector.** Header **More → Review & Diagnostics → Agent Inspector**
+(or `/review/agent`). Show the safe execution timeline: tools, retrieval, profile, model
+calls, tokens/cost coverage, latency, cache — and that **no chain-of-thought, prompts or
+raw checkpoint** appear.
+
+**11:00–12:00 — Architecture + limitations + close.** One line: Next.js + FastAPI, Mo = a
+bounded LangGraph agent (controlled tools, agentic RAG, selective memory, HITL) handing
+into durable Interview Practice. Limitations: production OIDC, live PostgreSQL validation,
+KB provisioning, experimental voice (off). Close on *Ask More. Be More.*
+
+## Live-quality status (for questions)
+
+Two authorised paid live runs were used as evaluation evidence (see
+`docs/sprint4_final_evidence.md`): completion 1.0 both runs, 0 critical and 0 safety
+failures both runs, unnecessary-retrieval 0 both runs; LLM-as-judge average ~10/12. A
+targeted prompt experiment did not show measurable improvement and was reverted — measured
+honestly, not tuned. Tool-selection recall is an identified model-behaviour area, not a
+task-breaking defect.
 
 ## Fallback (no live provider / API key)
 
-If OpenRouter is unavailable, do **not** invent a live result. You can still show:
-
-- The UI: `/prepare` journey chrome + Speed selector, `/settings` memory management,
-  the Practice setup and History pages.
-- The **Agent Inspector** and feedback UI against a saved/known run id where available.
-- **Deterministic artifacts:** `python scripts/eval_agent.py` (no provider calls, gate
-  PASS) and the evidence sheet.
-- **Tests:** `pytest -q`, `cd frontend && npm test` / `npm run e2e` (Playwright mocks the
-  API — no provider needed).
-- The architecture and requirements matrix docs.
+Do not invent a live result. You can still show: the `/prepare` UI + Speed selector,
+`/settings` memory management, Practice setup and History; the Agent Inspector against a
+saved run id; deterministic artifacts (`python scripts/eval_agent.py` — gate PASS) and the
+evidence sheet; tests (`pytest -q`, `cd frontend && npm test` / `npm run e2e` — Playwright
+mocks the API); and the architecture + requirements-matrix docs.
