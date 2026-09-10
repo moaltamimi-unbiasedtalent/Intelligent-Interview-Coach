@@ -5,6 +5,7 @@ import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
+import { ButtonLink } from "@/components/ui/Button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 /** User-scoped interview history from /history/interviews. */
@@ -50,6 +51,7 @@ export function HistoryClient() {
           <EmptyState
             title="Completed interview sessions will appear here"
             description="Finish a practice interview to see its report."
+            action={<ButtonLink href="/practice">Practise an interview</ButtonLink>}
           />
         )
       ) : null}

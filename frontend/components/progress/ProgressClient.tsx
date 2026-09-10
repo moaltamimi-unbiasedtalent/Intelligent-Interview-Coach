@@ -7,7 +7,7 @@ import type { MemoryCategory, MemoryResponse } from "@/lib/api/types";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
 /** Candidate-friendly labels — technical categories are never shown raw. */
@@ -94,6 +94,7 @@ export function ProgressClient() {
           <EmptyState
             title="Nothing saved yet."
             description="When you choose to save preparation priorities, they'll appear here. Your coach never saves anything without you asking."
+            action={<ButtonLink href="/prepare">Prepare with Mo</ButtonLink>}
           />
         ) : (
           <div className="grid gap-6">
