@@ -16,8 +16,9 @@ export function Brand() {
           aria-label carries the accessible name; the text wordmark is the fallback. A
           plain <img> is intentional for this tiny static SVG icon (no optimisation
           benefit from next/image). */}
+      {/* ~1.5× larger for presence (28px mobile → 30px desktop, up from 20px). */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/brand/ask4mo-mark.svg" alt="" aria-hidden="true" width={20} height={20} className="h-5 w-5" />
+      <img src="/brand/ask4mo-mark.svg" alt="" aria-hidden="true" width={30} height={30} className="h-7 w-7 sm:h-[30px] sm:w-[30px]" />
       <span>Ask4Mo</span>
     </Link>
   );
