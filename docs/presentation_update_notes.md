@@ -44,6 +44,27 @@ name may appear.
   handoff is fixed (stable missing-config, valid industry/level, idempotent creation).
 - **Never** call Mo a chatbot; avoid "guaranteed success"/"AI magic"/"perfect answers".
 
+### Final completeness pass (restored capabilities + fixes)
+
+- **Sprint-1 Practice parity restored:** the standalone Practice setup now exposes
+  **Question types** (multi-select) and **Difficulty** under a "Customise (optional)"
+  section, sourced from backend-owned taxonomies (`/interviews/options` now also returns
+  `difficulty_levels`). Every option reaches the backend and affects the session; blank =
+  backend defaults (behavioural / moderate). Core stays: role, industry, career level,
+  number of questions.
+- **P0 Mo → Practice regression fixed:** the "Cannot add a question from state ERROR"
+  message was a *masking* secondary error — interview setup now stops as soon as a
+  provider step fails and surfaces the original safe cause (503); the durable session
+  stays resumable for an idempotent retry. The exact Non-Profit Organization / executive
+  case is covered by a regression test.
+- **Citations:** the retrieval → citation → Next.js path works; citations require the
+  local KB to be built (datasets are not committed, so a fresh checkout is empty and Mo
+  shows an explicit insufficient-evidence state instead). Verified retrieval: "registered
+  nurse" → 5 O*NET citations, lane `structured_role`.
+- **Logo:** the header Conversation Bridge mark was enlarged ~1.5× (20px → 30px).
+- **QA counts** (this pass): Python 1868 passed / 2 skipped · frontend 149 · Playwright 50
+  · deterministic agent GATE PASS. (Re-measure at freeze.)
+
 ## Final navigation (use the REAL shell in screenshots/mockups)
 
 - **Primary:** Prepare · Practice · Progress · History

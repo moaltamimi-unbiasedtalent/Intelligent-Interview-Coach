@@ -58,7 +58,7 @@ function state(overrides: Partial<InterviewStateResponse>): InterviewStateRespon
 
 beforeEach(() => {
   vi.clearAllMocks();
-  iv.options.mockResolvedValue({ career_levels: ["senior"], interview_types: ["behavioural"], deep_dive_modes: ["deepen_reasoning"] });
+  iv.options.mockResolvedValue({ career_levels: ["senior"], interview_types: ["behavioural", "technical", "leadership"], difficulty_levels: ["easy", "moderate", "hard"], deep_dive_modes: ["deepen_reasoning"] });
 });
 afterEach(() => vi.clearAllMocks());
 
@@ -82,6 +82,39 @@ describe("Practice standalone setup", () => {
     await user.type(screen.getByLabelText("Industry or sector"), "fintech");
     await user.click(screen.getByRole("button", { name: /start interview/i }));
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/practice?session=new-1"));
+  });
+
+  it("restores Sprint-1 options: chosen question types + difficulty reach the backend (§41)", async () => {
+    iv.create.mockResolvedValue(state({ session_id: "new-2" }));
+    const user = userEvent.setup();
+    render(<PracticeClient />);
+    await user.type(await screen.findByLabelText("Target role"), "Engineering Manager");
+    await user.type(screen.getByLabelText("Industry or sector"), "healthcare");
+
+    // The options are backend-owned (from GET /interviews/options), not hard-coded.
+    await user.click(screen.getByRole("button", { name: /Customise/i }));
+    await user.click(screen.getByRole("checkbox", { name: "Technical" }));
+    await user.click(screen.getByRole("checkbox", { name: "Leadership" }));
+    await user.selectOptions(screen.getByLabelText("Difficulty"), "hard");
+    await user.click(screen.getByRole("button", { name: /start interview/i }));
+
+    await waitFor(() => expect(iv.create).toHaveBeenCalled());
+    const cfg = iv.create.mock.calls[0][0].configuration;
+    expect(cfg.interview_types).toEqual(["technical", "leadership"]);
+    expect(cfg.difficulty).toBe("hard");
+  });
+
+  it("omits optional fields when not customised (backend defaults apply)", async () => {
+    iv.create.mockResolvedValue(state({ session_id: "new-3" }));
+    const user = userEvent.setup();
+    render(<PracticeClient />);
+    await user.type(await screen.findByLabelText("Target role"), "Nurse");
+    await user.type(screen.getByLabelText("Industry or sector"), "healthcare");
+    await user.click(screen.getByRole("button", { name: /start interview/i }));
+    await waitFor(() => expect(iv.create).toHaveBeenCalled());
+    const cfg = iv.create.mock.calls[0][0].configuration;
+    expect(cfg.interview_types).toBeUndefined();
+    expect(cfg.difficulty).toBeUndefined();
   });
 });
 

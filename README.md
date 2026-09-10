@@ -27,6 +27,32 @@ into Interview Practice.
 **Target users:** candidates preparing for professional, specialist and leadership
 interviews.
 
+## Quick start
+
+```bash
+# 1) Backend — FastAPI (http://localhost:8000/api/v1)
+pip install -e .
+AGENT_COACH_ENABLED=true OPENROUTER_API_KEY=... uvicorn src.api.main:app --reload
+
+# 2) Frontend — Next.js, the primary Ask4Mo UI (http://localhost:3200)
+cd frontend && npm ci && npm run dev
+```
+
+The official demo is **Next.js + FastAPI**. Streamlit is a legacy development interface
+only. Then open Home → type an interview goal → **Ask Mo**.
+
+### Knowledge base & citations (grounded evidence)
+
+Mo shows **Sources/citations** only when the local knowledge base is built. **Datasets
+are not committed**, so a fresh checkout starts with an *empty* KB — Mo then falls back to
+an explicit "insufficient verified evidence" state rather than inventing citations (this
+is why citations may appear missing on a clean clone). Build it from the local-first
+loaders (see [Knowledge sources](#knowledge-sources)): `source_status`,
+`download_sources`, `normalise_roles`, `load_competencies`, `load_labour_market`,
+`load_compensation`, then `rebuild_vector_index`. Once built, a retrieval-worthy question
+(e.g. *"What skills and responsibilities are important for a registered nurse?"*) returns
+visible **Sources** with O*NET/ESCO citations (verified: 5 sources, lane `structured_role`).
+
 ### Sprint 4 architecture (implemented)
 
 ```

@@ -324,6 +324,7 @@ export interface InterviewListResponse {
 export interface InterviewOptionsResponse {
   career_levels: string[];
   interview_types: string[];
+  difficulty_levels?: string[];
   deep_dive_modes?: string[];
 }
 

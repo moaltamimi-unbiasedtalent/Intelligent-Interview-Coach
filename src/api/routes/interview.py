@@ -43,6 +43,7 @@ from src.application import history_service
 from src.application.errors import (
     ConflictError,
     MissingHandoffConfigError,
+    UnavailableServiceError,
     ValidationError,
 )
 from src.application.interview_service import InterviewApplicationService
@@ -206,12 +207,31 @@ def _translate_store_error(exc: Exception) -> Exception:
 # --- routes: lifecycle -------------------------------------------------------
 
 
+def _raise_if_setup_failed(session: SessionManager) -> None:
+    """Stop interview setup as soon as a provider-backed step fails.
+
+    ``generate_strategy`` / ``generate_next_question`` catch a provider ``ServiceError``
+    by moving the session to ERROR (recording the safe cause) WITHOUT re-raising. If we
+    then blindly ran the next step, ``add_question`` would reject the ERROR state and
+    raise a confusing "Cannot add a question from state ERROR" that MASKS the real cause.
+    Instead, surface the original safe message and stop — the state machine is untouched,
+    and because ``store.mutate`` does not persist on exception the durable session stays
+    in bare SETUP so an idempotent retry re-runs setup cleanly."""
+    if session.data.state is SessionState.ERROR:
+        raise UnavailableServiceError(
+            session.data.error
+            or "We couldn't set up your interview right now. Please try again."
+        )
+
+
 def _run_setup(svc: InterviewApplicationService, session: SessionManager, configuration) -> None:
     from src.models import ModelSettings
 
     svc.start_interview(session, configuration, ModelSettings())
     svc.generate_strategy(session)
+    _raise_if_setup_failed(session)
     svc.generate_next_question(session, first=True)
+    _raise_if_setup_failed(session)
 
 
 @router.post("", response_model=InterviewStateResponse, summary="Create an interview")
@@ -258,6 +278,7 @@ def interview_options() -> InterviewOptionsResponse:
     return InterviewOptionsResponse(
         career_levels=list(constants.CAREER_LEVELS),
         interview_types=list(constants.INTERVIEW_TYPES),
+        difficulty_levels=list(constants.DIFFICULTY_LEVELS),
         deep_dive_modes=list(constants.BRANCH_MODES),
     )
 
