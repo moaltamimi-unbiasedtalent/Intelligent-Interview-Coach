@@ -6,7 +6,7 @@ import { ApiError } from "@/lib/api/errors";
 import type { MemoryCategory, MemoryPreviewItem, MemoryResponse } from "@/lib/api/types";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Field";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 
@@ -85,6 +85,7 @@ export function MemoryManager() {
           <EmptyState
             title="Nothing saved yet."
             description="Mo can remember selected preparation preferences that you explicitly approve. Mo never saves anything without you asking."
+            action={<ButtonLink href="/prepare">Prepare with Mo</ButtonLink>}
           />
         ) : (
           <ul className="grid gap-3">
