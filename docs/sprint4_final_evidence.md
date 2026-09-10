@@ -1,16 +1,16 @@
 # Sprint 4 — Final Evidence Sheet
 
-Numeric reviewer evidence, captured at the final-submission freeze from merged `main`
-(`f890f3d`, containing the P5 merge `bac1bf9`). All values are actual runs — no paid
-provider calls, no live Langfuse call.
+Numeric reviewer evidence from merged `main` (post-Phase-4, `1a1697c`). Regression values
+are actual local runs with no paid provider calls and no live Langfuse call; the two
+authorised paid live-quality runs are recorded separately in Section B (opt-in).
 
 ## Product regression
 
 | Gate | Result |
 |---|---|
-| Python tests (`pytest -q`) | **1845 passed, 2 skipped** (the 2 skips are the RAGAS installed/absent guards) |
-| Frontend unit tests (`npm test`) | **111 passed** |
-| Playwright e2e (`npm run e2e`) | **37 passed** |
+| Python tests (`pytest -q`) | **1891 passed, 2 skipped** (the 2 skips are the RAGAS installed/absent guards) |
+| Frontend unit tests (`npm test`) | **152 passed** |
+| Playwright e2e (`npm run e2e`) | **50 passed** |
 | Alembic head | **single head `0006_user_feedback`** (fresh upgrade; `0005→0006`; `0006→0005`; upgrade head — all OK) |
 | Docker | production image **builds** |
 | `ruff check .` | **pass** |

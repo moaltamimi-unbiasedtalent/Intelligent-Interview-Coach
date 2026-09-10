@@ -62,8 +62,24 @@ name may appear.
   shows an explicit insufficient-evidence state instead). Verified retrieval: "registered
   nurse" → 5 O*NET citations, lane `structured_role`.
 - **Logo:** the header Conversation Bridge mark was enlarged ~1.5× (20px → 30px).
-- **QA counts** (this pass): Python 1868 passed / 2 skipped · frontend 149 · Playwright 50
-  · deterministic agent GATE PASS. (Re-measure at freeze.)
+- **QA counts** (reviewer freeze): Python 1891 passed / 2 skipped · frontend 152 · Playwright 50
+  · deterministic agent GATE PASS.
+
+### Reviewer package (Phase 5)
+
+- **Golden demo:** one role throughout — **Senior Product Manager, B2B SaaS/FinTech,
+  Germany**. `docs/sprint4_demo_script.md` has exact copy/paste inputs, a pre-flight
+  checklist and the 8–12 minute timed flow. Official review path: Home → Prepare →
+  Practice → Progress/History → Agent Inspector (Streamlit / RAG Inspector / Evaluation
+  page / Langfuse are NOT in the demo).
+- **KB precheck:** run `python scripts/check_demo_knowledge.py` → **DEMO KNOWLEDGE: READY**
+  before any live demo (3,528 vector passages locally; citations need the built KB).
+- **Citations in the demo:** the query "What skills and responsibilities are typically
+  expected of a Senior Product Manager?" returns visible ESCO product-manager sources.
+- **Live-quality status:** two authorised paid runs recorded as evidence — completion 1.0,
+  0 critical / 0 safety failures, 0 unnecessary retrieval (both runs); judge avg ~10/12. A
+  targeted prompt experiment showed no measurable improvement and was reverted (measured,
+  not tuned).
 
 ## Final navigation (use the REAL shell in screenshots/mockups)
 
@@ -103,7 +119,7 @@ obsolete and must be removed from the decks.
 - Feedback: **3 surfaces** (Agent answer, interview evaluation, final report); human-reviewed loop
 - Observability: **Agent Inspector** + **optional Langfuse (OFF by default)**
 - Alembic head: **0006**
-- Tests: **Python 1845 passed / 2 skipped · frontend 111 · Playwright 37**
+- Tests: **Python 1891 passed / 2 skipped · frontend 152 · Playwright 50**
 - Deterministic agent gate: **PASS** (56 cases)
 
 ### Evaluation figures
