@@ -229,11 +229,9 @@ def _generate_interview_questions(career_service) -> Handler:
 class SearchCareerKnowledge(BaseModel):
     """Search trusted career and labour-market knowledge when the request needs
     factual external evidence about occupations, competencies, compensation, labour
-    markets, credentials or established role expectations. Use it BEFORE stating any
-    such external career fact — do not answer these from general knowledge. Do NOT use
-    it when the answer comes from information the user already provided or from an
-    existing Career tool result (e.g. rewriting text, or building a plan from known
-    gaps)."""
+    markets, credentials or established role expectations. Do NOT use it when the
+    answer comes from information the user already provided or from an existing
+    Career tool result (e.g. rewriting text, or building a plan from known gaps)."""
 
     query: str = Field(max_length=4000, description="What to look up in career knowledge.")
 

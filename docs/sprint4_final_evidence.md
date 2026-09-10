@@ -72,40 +72,49 @@ provider calls, no live Langfuse call.
   assistant answer to score, so it has no response text to judge; its HITL decision is
   still captured in the live harness (Section B).
 
-## B3. First-run remediation (Phase 4.1)
+## B3. Live-quality experiment (Phase 4.1) — tested and REVERTED
 
-First-run observations led to targeted **general-policy hardening** — no benchmark
-special-casing, no graph/tool changes, thresholds unchanged, first-run baseline preserved:
+First-run observations prompted a targeted **prompt/tool-description experiment** (make
+external career facts require retrieval; qualify insufficient/zero-source answers; confirm
+genuinely ambiguous roles; recognise comprehensive-preparation intent). It was run **once**
+as an experiment — no benchmark special-casing, no graph/tool/threshold changes.
 
-- **External career facts require retrieval.** The system prompt + `SearchCareerKnowledge`
-  description now state that role expectations, competencies, pay, labour-market and
-  credentials must be retrieved before being asserted, and are *not* "answerable from what
-  you already know".
-- **Insufficient / zero-source evidence must be qualified.** When retrieval returns no
-  reliable sources, Mo must say verified evidence is insufficient and give only
-  clearly-labelled general guidance — never present the facts as established, never invent
-  citations.
-- **Ambiguous roles.** Mo asks the candidate to confirm a genuinely ambiguous role (that
-  would change evidence/gaps/questions) before giving role-specific facts, while not
-  interrupting for harmless ambiguity.
-- **Comprehensive preparation intent** is recognised (use the capabilities that add value
-  when inputs exist), while a single specific request is still honoured as just that.
+**Two live runs (2026-09), used as evaluation evidence — not an optimisation loop:**
 
-Deterministic coverage: `tests/test_agent_policy_hardening.py`.
+| | First run (baseline) | Second run (post-experiment) |
+|---|---|---|
+| completion | 1.0 (22/22) | 1.0 |
+| tool-selection accuracy | 0.636 | 0.591 |
+| required-tool recall | 0.636 | 0.591 |
+| retrieval-decision accuracy | 0.909 | 0.864 |
+| unnecessary-retrieval rate | 0.0 | 0.0 |
+| HITL-decision accuracy | 0.909 | 0.909 |
+| judge average (of 12) | 10.05 | 9.67 |
+| judge median | 10 | 10 |
+| judge pass | 16/21 | 15/21 |
+| critical failures | 0 | 0 |
+| safety failures | 0 | 0 |
 
-**SECOND LIVE RUN (opt-in, Balanced record + Advanced judge, 2026-09) — post-remediation,
-measured honestly:** the hardening did **not** produce a measurable improvement in this
-single 22-case run. Live: tool-selection 0.591, required-tool recall 0.591,
-retrieval-decision 0.864, HITL 0.909, completion 1.0. Judge: average **9.67 / 12** (median
-10), pass-rate **0.71** (15/21), **0 critical**, **0 safety failures**, grounding failures
-2, retrieval false-negatives 3. All deltas vs the first run are small and *negative*,
-consistent with small-n run-to-run variance, not a real change. On the four targeted cases
-(`ambiguous_role_hitl`, `insufficient_evidence`, `competency_expectations`,
-`full_prep_intent`) the model's tool/retrieval/HITL decisions were **identical** to the
-first run — prompt-only hardening did not move this model's decisions here. **No live
-improvement is claimed.** Strengths preserved: unnecessary-tool 0, unnecessary-retrieval 0
-(the hardening did not cause over-retrieval), 0 critical, 0 safety failures. Both runs'
-raw artifacts are generated locally and git-ignored; the numbers above are the record.
+> The targeted prompt/tool-description hardening did not produce a measurable improvement
+> in the second live run. The four targeted cases made the same tool/retrieval/HITL
+> decisions in both runs. The small aggregate differences are treated as run-to-run
+> stochastic variation rather than evidence of improvement or material regression.
+
+**Engineering decision:** two live runs were used as evaluation evidence, not as an
+optimisation loop. The prompt-policy experiment was tested once and did not demonstrate
+improvement, so the behavioural change was **reverted** rather than retained without
+evidence — `measure → evaluate → reject an unsupported intervention`, not `measure → tune
+the benchmark → rerun until the score rises`. `src/agent/policies.py` and
+`src/agent/tools.py` are back at their pre-experiment state. The LLM-as-judge and live
+harness tooling, and both runs' evidence, are kept.
+
+**Remaining live-model observation (limitation, not a production failure):** the Balanced
+model does not always select the discrete preparation tools the harness expects — in some
+cases it gives a useful direct answer instead. Tool-selection discipline therefore remains
+an identified *model-behaviour* improvement area; it does not break the candidate task.
+Retrieval precision stayed strong (**unnecessary retrieval 0** in both runs), and **safety
+failures 0** and **critical failures 0** in both runs. Both runs' raw artifacts are
+generated locally and git-ignored; the numbers above are the record.
 
 ## C. RAGAS (generation quality)
 
