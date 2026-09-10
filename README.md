@@ -87,6 +87,16 @@ retrieval-worthy question (e.g. *"What skills and responsibilities are important
 registered nurse?"*) returns visible **Sources** with O*NET/ESCO citations (verified: 5
 sources, lane `structured_role`).
 
+**Before a reviewer demo, confirm readiness in one command** (no provider/LLM call):
+
+```bash
+python scripts/check_demo_knowledge.py      # → "DEMO KNOWLEDGE: READY" (exit 0)
+```
+
+It reports each structured store, the vector-passage count and a deterministic retrieval
+smoke query, and exits non-zero with the exact build commands if the KB is not built (a
+clean clone has no local indexes, so this is expected on a fresh checkout).
+
 ## Current limitations
 
 Honest, known follow-ups (not broken requirements):
