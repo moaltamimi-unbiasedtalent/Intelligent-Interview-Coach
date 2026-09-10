@@ -54,10 +54,10 @@ describe("Home entry", () => {
     expect(readPrepareDraft()).toEqual({ source: "home", action: "candidate_background" });
   });
 
-  it("states data is used only to personalise preparation", () => {
+  it("shows the brand trust line", () => {
     render(<HomeEntry />);
     expect(
-      screen.getByText(/used only to personalise your preparation/i),
+      screen.getByText(/stays focused on evidence, your context and your choices/i),
     ).toBeInTheDocument();
   });
 });
