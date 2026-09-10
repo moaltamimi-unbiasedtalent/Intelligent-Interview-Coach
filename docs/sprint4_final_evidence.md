@@ -43,12 +43,13 @@ provider calls, no live Langfuse call.
 - `scripts/eval_agent_live.py` — **22 held-out cases**; profiles **Fast / Balanced /
   Advanced**; record/replay sanitised traces; paid opt-in (`--allow-paid` / `RUN_PAID_EVAL=1`).
   Without opt-in it prints "Configuration OK … did NOT run".
-- **Recorded paid run (opt-in, Balanced, 2026-09):** completion **1.0**, retrieval-decision
-  accuracy **0.909**, unnecessary-retrieval **0.0**, HITL-decision accuracy **0.909**,
-  tool-selection accuracy 0.636 (the real model often answers well without invoking the
-  discrete JD/gap/plan tools — a model-behaviour signal, not a contract defect);
-  ~$0.002/case. These are real-model *decision* rates on a bounded sample, not an
-  "accuracy %".
+- **FIRST LIVE RUN (opt-in, Balanced, 2026-09) — immutable baseline:** 22/22 completed;
+  retrieval-decision accuracy **0.909**, unnecessary-retrieval **0.0**, HITL-decision
+  accuracy **0.909**, tool-selection accuracy 0.636, required-tool recall 0.636 (the real
+  model often answers well without invoking the discrete JD/gap/plan tools — a
+  model-behaviour signal, not a contract defect); ~$0.002/case. These are real-model
+  *decision* rates on a bounded sample (**rubric-based live quality evaluation**), not an
+  "accuracy %". This first result stays visible even if a second run is later authorised.
 
 ## B2. LLM-as-judge (qualitative quality — advisory)
 
@@ -57,8 +58,8 @@ provider calls, no live Langfuse call.
   retrieval_decision / grounding / helpfulness / safety_control, each 0–2; total 0–12).
   Evaluation tooling only — never in the candidate path or CI, never runtime authority.
   See [docs/llm_judge_evaluation.md](llm_judge_evaluation.md).
-- **Recorded paid judge run (opt-in, Advanced judge over 21 judgeable Balanced traces,
-  2026-09):** average **10.05 / 12** (median 10), pass-rate **0.76** (16/21 at the
+- **FIRST LIVE JUDGE RUN (opt-in, Advanced judge over 21 judgeable Balanced traces,
+  2026-09) — immutable baseline:** average **10.05 / 12** (median 10), pass-rate **0.76** (16/21 at the
   transparent threshold ≥9 · no critical failure · safety>0 · grounding when evidence
   used), **critical failures 0**, **safety failures 0**, grounding failures 2, retrieval
   false-positives 0 / false-negatives 2. Criterion averages: safety **2.0**, retrieval
@@ -67,6 +68,31 @@ provider calls, no live Langfuse call.
   ≥3 borderline cases is required before treating these as evidence (see the judge doc).
   Run artifacts (`evaluations/agent_live/traces/`, `judge_summary.json`) are generated
   locally and git-ignored.
+- **Why 21/22 judgeable:** one case paused for a human decision (HITL) with no final
+  assistant answer to score, so it has no response text to judge; its HITL decision is
+  still captured in the live harness (Section B).
+
+## B3. First-run remediation (Phase 4.1)
+
+First-run observations led to targeted **general-policy hardening** — no benchmark
+special-casing, no graph/tool changes, thresholds unchanged, first-run baseline preserved:
+
+- **External career facts require retrieval.** The system prompt + `SearchCareerKnowledge`
+  description now state that role expectations, competencies, pay, labour-market and
+  credentials must be retrieved before being asserted, and are *not* "answerable from what
+  you already know".
+- **Insufficient / zero-source evidence must be qualified.** When retrieval returns no
+  reliable sources, Mo must say verified evidence is insufficient and give only
+  clearly-labelled general guidance — never present the facts as established, never invent
+  citations.
+- **Ambiguous roles.** Mo asks the candidate to confirm a genuinely ambiguous role (that
+  would change evidence/gaps/questions) before giving role-specific facts, while not
+  interrupting for harmless ambiguity.
+- **Comprehensive preparation intent** is recognised (use the capabilities that add value
+  when inputs exist), while a single specific request is still honoured as just that.
+
+The behavioural effect is **not yet measured** — no improved live score is claimed until a
+second run is separately authorised. Deterministic coverage: `tests/test_agent_policy_hardening.py`.
 
 ## C. RAGAS (generation quality)
 
