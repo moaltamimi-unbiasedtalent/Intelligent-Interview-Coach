@@ -20,6 +20,7 @@ Use the same role, JD, background, memory and practice answer for the whole demo
 - [ ] Frontend running: `cd frontend && npm run dev` → http://localhost:3000
 - [ ] `OPENROUTER_API_KEY` configured and `AGENT_COACH_ENABLED=true`
 - [ ] **KB readiness:** `python scripts/check_demo_knowledge.py` → **DEMO KNOWLEDGE: READY** (do not start otherwise — see §KB precheck)
+- [ ] **Demo identity + persistence readiness:** `python scripts/ensure_demo_user.py` → **DEMO IDENTITY: READY** (do not start otherwise — see §Identity precheck)
 - [ ] Speed selector on **Balanced** (default)
 - [ ] Database migrated: `alembic upgrade head` (single head `0006_user_feedback`)
 - [ ] Clean demo session: no stale/failed in-progress interview (start Practice fresh)
@@ -34,6 +35,33 @@ If it prints anything other than **DEMO KNOWLEDGE: READY**, **do not run the liv
 citations depend on the local knowledge base being built (a fresh checkout is empty). The
 checker prints the exact build commands. Verified when READY: the golden retrieval query
 below returns visible ESCO product-manager sources.
+
+### Identity precheck (required)
+
+```bash
+python scripts/ensure_demo_user.py
+```
+
+This resolves the demo identity to a persisted user and smoke-tests the two user-scoped
+paths that failed the first rehearsal — **preparation memory** and **interview history** —
+against the local database. It must print **DEMO IDENTITY: READY**.
+
+If it prints **NOT READY**, the local SQLite file is almost certainly stale (created before
+a migration, so it is missing a column such as `preparation_memories.pinned`). This is the
+exact cause of the first rehearsal's failed memory save / failed history save / History
+load error. The checker prints the precise rebuild commands — dev/demo data is disposable
+and is backed up first:
+
+```bash
+mv data/interview_studio.db data/interview_studio.db.bak 2>/dev/null || true
+DATABASE_URL=sqlite:///data/interview_studio.db alembic upgrade head
+python scripts/ensure_demo_user.py   # re-check → DEMO IDENTITY: READY
+```
+
+Production databases are migrated with `alembic upgrade head`, never recreated. To send the
+demo identity from the frontend, set `NEXT_PUBLIC_DEV_USER_SUBJECT=demo-reviewer` before
+`npm run dev` (leaving it unset uses the anonymous dev user — both persist correctly once
+the schema is at head; the failure was schema drift, not the identity).
 
 ## Exact inputs (copy/paste — no improvisation)
 
@@ -141,6 +169,40 @@ failures both runs, unnecessary-retrieval 0 both runs; LLM-as-judge average ~10/
 targeted prompt experiment did not show measurable improvement and was reverted — measured
 honestly, not tuned. Tool-selection recall is an identified model-behaviour area, not a
 task-breaking defect.
+
+## Rehearsal log
+
+Honest record of live rehearsals. Kept immutable — a later fix does not rewrite an
+earlier rehearsal's verdict.
+
+### GOLDEN DEMO LIVE REHEARSAL #1: FAIL under strict demo criteria
+
+First full live rehearsal of the golden scenario. **Verdict: FAIL** under strict demo
+criteria, for two reasons:
+
+1. **No visible citation was produced.** The retrieval-worthy question was answered, and
+   the agent *did* decide to retrieve, but returned **0 sources** — so no visible
+   **Sources** list appeared. Root cause: the agent issued a verbose, occupation-bearing
+   natural-language query and the deterministic occupation resolver could not match it to a
+   role (it needed a near-bare occupation string). Fixed in Phase 5.1 Defect B (general
+   retrieval input handling — not special-casing the golden prompt).
+2. **User-scoped History / persistence failed under the dev identity.** Saving the proposed
+   memory failed safe; the completed report "didn't complete" saving to history; and the
+   History view errored on load. Root cause: a **stale local SQLite file** created before a
+   migration (missing `preparation_memories.pinned` / `interviews.source_session_id`) — not
+   an auth or user-scoping defect. Fixed in Phase 5.1 Defect A (schema-readiness precheck +
+   documented deterministic rebuild; see §Identity precheck).
+
+Also observed: the Practice client needed a manual reload twice (after create, and after
+Deep Dive → Return) — fixed in Phase 5.1 Defect C.
+
+**Context (do not overstate the failure):** no P0 defects; the core journey worked
+end-to-end; every failure was recoverable and reported *truthfully* to the candidate (Mo
+said saving didn't complete rather than pretending it had); no crash; and **no code was
+changed during the observation** — the run was recorded as-is, then remediated afterward.
+
+A second live rehearsal has **not** been run yet (Phase 5.1 is defect-remediation only; no
+new paid live rehearsal authorised).
 
 ## Fallback (no live provider / API key)
 
