@@ -52,7 +52,17 @@ export function useInterview(sessionId?: string): InterviewController {
   const [conflict, setConflict] = useState(false);
   const mounted = useRef(true);
 
-  useEffect(() => () => { mounted.current = false; }, []);
+  // Set true on every (re)mount, not only at initial ref creation. React StrictMode
+  // runs effects mount → cleanup → mount again in development; without restoring the
+  // flag here the cleanup's `mounted.current = false` would persist into the second
+  // mount, and successful fetch results would be silently discarded by the
+  // `if (!mounted.current) return` guards below (the interview stayed on its loading
+  // skeleton until a manual reload). The cleanup still guards against applying a
+  // response after a genuine unmount.
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
 
   const reload = useCallback(async () => {
     if (!sessionId) return;
