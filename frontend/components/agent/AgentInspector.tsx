@@ -232,7 +232,13 @@ function RetrievalSummary({ run }: { run: AgentRunResponse }) {
 
 function HumanDecisionSummary({ run }: { run: AgentRunResponse }) {
   const requested = run.events.filter((e) => e.event_type === "human_input_required").length;
-  const resumed = run.events.filter((e) => e.event_type === "human_input_resumed").length;
+  // An applied approval surfaces as its outcome event: role-confirm emits
+  // `human_input_resumed`, while approved memory/handoff emit their domain success events
+  // (`memory_saved` / `handoff_approved`). Count all three so the "Applied" total reflects
+  // the approvals that actually took effect (a rejected decision emits
+  // `human_input_rejected`, counted as Declined).
+  const appliedTypes = new Set(["human_input_resumed", "memory_saved", "handoff_approved"]);
+  const resumed = run.events.filter((e) => appliedTypes.has(e.event_type)).length;
   const rejected = run.events.filter((e) => e.event_type === "human_input_rejected").length;
   if (!requested && !resumed && !rejected) return null;
   return (

@@ -42,7 +42,7 @@ targeted Interview Practice.
 | Layer | Status | What it measures | Evidence |
 |---|---|---|---|
 | A. Deterministic agent orchestration | COMPLETE | Graph/tool contract on **56 scripted-model** cases (required/retrieval recall, unnecessary rates, citation & retrieval-sequence validity, completion, unregistered attempts, HITL/cross-user probe). **Not** live-model tool-selection accuracy. | `scripts/eval_agent.py`, `src/agent/eval.py`, gate PASS |
-| B. Live real-model agent evaluation | COMPLETE (harness); **NO PAID RUN EXECUTED** | Real-model tool/retrieval/HITL decisions on **22 held-out** cases across Fast/Balanced/Advanced; record/replay sanitised traces; paid opt-in. | `scripts/eval_agent_live.py`, `src/agent/live_eval.py` |
+| B. Live real-model agent evaluation | COMPLETE; **TWO AUTHORISED PAID RUNS EXECUTED** (Balanced) | Real-model tool/retrieval/HITL decisions on **22 held-out** cases; record/replay sanitised traces; paid opt-in. Recorded evidence: run 1 completion 1.0, retrieval-decision 0.909, unnecessary-retrieval 0.0, judge avg 10.05/12; run 2 completion 1.0, retrieval-decision 0.864, unnecessary-retrieval 0.0, judge avg 9.67/12; 0 critical / 0 safety failures both runs. A paid Fast/Advanced profile comparison was **not** executed. | `scripts/eval_agent_live.py`, `src/agent/live_eval.py`, `docs/sprint4_final_evidence.md` §B |
 | C. RAGAS | COMPLETE (available); optional paid | Generation quality (faithfulness / response relevancy / context precision / context recall) over **35** cases. Not an "accuracy %". | `evaluations/ragas/`, `docs/ragas_evaluation.md` |
 | D. Product regression | COMPLETE | pytest, frontend unit, Playwright, Alembic, Docker, secret scan. | see `docs/sprint4_final_evidence.md` |
 

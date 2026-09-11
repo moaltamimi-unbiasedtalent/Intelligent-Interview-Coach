@@ -8,9 +8,9 @@ authorised paid live-quality runs are recorded separately in Section B (opt-in).
 
 | Gate | Result |
 |---|---|
-| Python tests (`pytest -q`) | **1891 passed, 2 skipped** (the 2 skips are the RAGAS installed/absent guards) |
-| Frontend unit tests (`npm test`) | **152 passed** |
-| Playwright e2e (`npm run e2e`) | **50 passed** |
+| Python tests (`pytest -q`) | **1928 passed, 2 skipped** (the 2 skips are the RAGAS installed/absent guards) |
+| Frontend unit tests (`npm test`) | **155 passed** |
+| Playwright e2e (`npm run e2e`) | **51 passed** |
 | Alembic head | **single head `0006_user_feedback`** (fresh upgrade; `0005→0006`; `0006→0005`; upgrade head — all OK) |
 | Docker | production image **builds** |
 | `ruff check .` | **pass** |

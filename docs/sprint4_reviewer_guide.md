@@ -358,4 +358,6 @@ Reviewer lines:
 - **Record voice** deferred (no production transcription path); **Live** is
   experimental and off by default; **no camera**.
 - **Per-operation Interview model tiering** deferred (one profile per session).
-- **Paid** model comparison and live RAGAS runs were **not executed** (opt-in only).
+- Two authorised **paid live Balanced agent runs** were executed and are recorded as
+  evidence (see `docs/sprint4_final_evidence.md` §B). A paid **Fast/Advanced profile
+  comparison** and a live **RAGAS** baseline were **not executed** (opt-in only).

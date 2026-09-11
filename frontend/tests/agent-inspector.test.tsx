@@ -79,6 +79,29 @@ describe("Agent Inspector", () => {
     expect(screen.getByText("error")).toBeInTheDocument();
   });
 
+  it("counts approved memory and handoff as applied human approvals", async () => {
+    // Regression (Phase 6, P2-A): approved memory/handoff emit `memory_saved` /
+    // `handoff_approved`, not `human_input_resumed`. The "Applied" total must still
+    // reflect both approvals rather than reporting 0.
+    getRun.mockResolvedValue({
+      ...RUN, warnings: [],
+      events: [
+        { event_type: "run_started" },
+        { event_type: "human_input_required", message: "approve_memory" },
+        { event_type: "memory_saved", message: "recurring_gap" },
+        { event_type: "human_input_required", message: "approve_practice_handoff" },
+        { event_type: "handoff_approved", message: "approve_practice_handoff" },
+        { event_type: "run_completed" },
+      ],
+    });
+    render(<AgentInspector />);
+    expect(await screen.findByText("Run summary")).toBeInTheDocument();
+    const applied = screen.getByText("Applied");
+    expect(applied.parentElement?.textContent).toContain("2");
+    const requested = screen.getByText("Requested");
+    expect(requested.parentElement?.textContent).toContain("2");
+  });
+
   it("shows a safe error for an unknown/foreign run", async () => {
     getRun.mockRejectedValue(Object.assign(new Error("nf"), { status: 404 }));
     render(<AgentInspector />);

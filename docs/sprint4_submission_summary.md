@@ -77,9 +77,12 @@ creation stays outside LangGraph and is idempotent.
 ## Evaluation
 
 Four distinct layers: deterministic orchestration regression (56 scripted cases, gated
-in CI), the live real-model harness (22 cases, paid opt-in — not executed), RAGAS
-generation quality (35 cases, optional paid — no paid baseline), and product regression
-(pytest / frontend / Playwright / Alembic / Docker / secret scan).
+in CI), the live real-model harness (22 cases, paid opt-in — **two authorised paid
+Balanced runs executed and recorded as evidence**: completion 1.0 both runs, 0 critical /
+0 safety failures, unnecessary-retrieval 0.0, LLM-as-judge avg ~10/12; see
+`docs/sprint4_final_evidence.md` §B), RAGAS generation quality (35 cases, optional paid —
+no paid baseline), and product regression (pytest / frontend / Playwright / Alembic /
+Docker / secret scan).
 
 ## Security
 
@@ -89,9 +92,9 @@ observability, and fail-closed production identity.
 
 ## Results
 
-Python **1845 passed / 2 skipped**; frontend **111**; Playwright **37**; Alembic single
+Python **1928 passed / 2 skipped**; frontend **155**; Playwright **51**; Alembic single
 head **0006**; Docker builds; ruff/compileall/secret-scan clean; deterministic agent gate
-**PASS**. See `docs/sprint4_final_evidence.md`.
+**PASS** (56 cases). See `docs/sprint4_final_evidence.md`.
 
 ## Limitations (intentional)
 

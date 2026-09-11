@@ -108,6 +108,9 @@ Honest, known follow-ups (not broken requirements):
   citations (datasets are not committed).
 - **Live voice** remains experimental and **off by default**; there is no camera/visual
   coaching.
+- **Live-model tool-selection discipline is imperfect** — the real model sometimes answers
+  well without invoking the discrete preparation tools (a measured model-behaviour signal,
+  not a task-breaking defect; see `docs/sprint4_final_evidence.md` §B).
 
 ## Documentation
 
