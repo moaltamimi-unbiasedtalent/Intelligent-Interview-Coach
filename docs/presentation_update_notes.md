@@ -62,8 +62,8 @@ name may appear.
   shows an explicit insufficient-evidence state instead). Verified retrieval: "registered
   nurse" → 5 O*NET citations, lane `structured_role`.
 - **Logo:** the header Conversation Bridge mark was enlarged ~1.5× (20px → 30px).
-- **QA counts** (reviewer freeze): Python 1891 passed / 2 skipped · frontend 152 · Playwright 50
-  · deterministic agent GATE PASS.
+- **QA counts** (reviewer freeze): Python 1928 passed / 2 skipped · frontend 155 · Playwright 51
+  · deterministic agent GATE PASS (56 cases).
 
 ### Reviewer package (Phase 5)
 
@@ -119,7 +119,7 @@ obsolete and must be removed from the decks.
 - Feedback: **3 surfaces** (Agent answer, interview evaluation, final report); human-reviewed loop
 - Observability: **Agent Inspector** + **optional Langfuse (OFF by default)**
 - Alembic head: **0006**
-- Tests: **Python 1891 passed / 2 skipped · frontend 152 · Playwright 50**
+- Tests: **Python 1928 passed / 2 skipped · frontend 155 · Playwright 51**
 - Deterministic agent gate: **PASS** (56 cases)
 
 ### Evaluation figures
@@ -127,7 +127,9 @@ obsolete and must be removed from the decks.
 - Deterministic agent cases: **56**
 - Live-harness cases: **22**
 - RAGAS cases: **35**
-- Paid live model comparison: **NOT EXECUTED**
+- Paid live Balanced agent runs: **2 EXECUTED** (recorded evidence: completion 1.0 both,
+  0 critical / 0 safety failures, unnecessary-retrieval 0.0, judge avg ~10/12)
+- Paid Fast/Advanced profile comparison: **NOT EXECUTED**
 - Paid live RAGAS baseline: **NOT EXECUTED**
 
 ## Deck 1 — Product Journey: add/update

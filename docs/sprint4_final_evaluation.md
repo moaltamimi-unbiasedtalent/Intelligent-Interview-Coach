@@ -74,12 +74,17 @@ Evaluator configuration: `RAGAS_EVAL_API_KEY` (separate evaluator key, never pri
 guards and command are in place; a live run records model, case count, metrics,
 timestamp and valid/invalid counts (never credentials).
 
-## 3. Optional live-model benchmarks (manual, paid — not executed)
+## 3. Live-model benchmarks (manual, paid, opt-in)
 
-- A live agent benchmark (real model choosing tools/retrieval/HITL/arguments) and a
-  Fast/Balanced/Advanced model-comparison harness are **manual, budget-conscious and
-  opt-in**; neither is run automatically. **No paid comparative benchmark was
-  executed**, so no "Balanced is optimal" style claim is made.
+- The live agent benchmark (real model choosing tools/retrieval/HITL/arguments) is
+  **manual, budget-conscious and opt-in** (never run automatically). **Two authorised
+  paid Balanced runs were executed and recorded as evidence** (see
+  `docs/sprint4_final_evidence.md` §B): completion 1.0 both runs, retrieval-decision
+  0.909 / 0.864, unnecessary-retrieval 0.0, HITL-decision 0.909, LLM-as-judge avg
+  10.05 / 9.67 of 12, **0 critical and 0 safety failures** both runs. A between-run
+  prompt/tool-description experiment showed no measurable improvement and was reverted.
+- A **Fast/Balanced/Advanced profile-comparison** run and a paid **live RAGAS** baseline
+  were **not executed**, so no "Balanced is optimal" style claim is made.
 
 ## 4. Security & privacy results
 
@@ -133,10 +138,10 @@ timestamp and valid/invalid counts (never credentials).
 | No cross-user leaks | ✅ 0 |
 | No tool-allowlist violations | ✅ 0 executions |
 | No private content in logs | ✅ (safe-by-default; regressions) |
-| Alembic clean (single head 0004, up/down) | ✅ |
-| Backend suite + ruff + compileall | ✅ 1655 passed / 2 skipped |
-| Frontend build + unit + lint + typecheck | ✅ |
-| Browser core flow (Playwright) | ✅ 25 passed |
+| Alembic clean (single head 0006, up/down) | ✅ |
+| Backend suite + ruff + compileall | ✅ 1928 passed / 2 skipped |
+| Frontend build + unit + lint + typecheck | ✅ 155 unit |
+| Browser core flow (Playwright) | ✅ 51 passed |
 | Docker build + container API smoke | ✅ (health/openapi/capabilities 200) |
 | Secret scan (production code) | ✅ clean |
 | No unresolved critical implementation blocker | ✅ |
@@ -186,11 +191,12 @@ evaluation honesty and observability without changing the Sprint 4 architecture.
   `test_agent_retrieval`.)
 
 ### Measured
-- Deterministic gates still PASS (see §1). Polish added offline tests only; **no paid
-  run executed** (live benchmark ready but opt-in).
+- Deterministic gates still PASS (see §1). This polish added offline tests only. The live
+  agent benchmark was later run under authorisation — **two paid Balanced runs executed
+  and recorded** (see §3 and `docs/sprint4_final_evidence.md` §B).
 
 ### Not executed
-- Live model benchmark run (needs `--allow-paid`); Fast/Balanced/Advanced comparison.
+- Fast/Balanced/Advanced profile-comparison run; paid live RAGAS baseline (both opt-in).
 
 ### Optional / deferred (documented follow-ups)
 - P1: **implemented** — agent usage accounting, Fast/Balanced/Advanced Coach modes and

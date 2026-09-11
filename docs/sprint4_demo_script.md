@@ -286,8 +286,26 @@ rehearsal once the 5.2 creation fix landed.
 
 **Fixed in Phase 5.3** (`useInterview` mounted-ref lifecycle; StrictMode not disabled; no
 timeout/polling/forced reload), with a component test that renders PracticeClient under
-`<StrictMode>` and fails pre-fix / passes post-fix. No paid re-run was performed in Phase 5.3;
-a fourth live rehearsal is the next step. This #3 record stays **FAIL**.
+`<StrictMode>` and fails pre-fix / passes post-fix. This #3 record stays **FAIL**; the fix
+was validated live in the focused validation below.
+
+### FINAL SHORT LIVE VALIDATION (Golden Rehearsal #4 — focused): PASS
+
+Authorised paid, focused re-run of only the previously failing path after Phase 5.3 was
+merged (`main @ 30dc952`), frontend under `npm run dev` with **React StrictMode enabled**
+(the exact configuration that failed in #3), frontend on :3001 with the documented
+`FRONTEND_ORIGINS` override. No judge run.
+
+**Verdict: PASS.** Mo → Practice PASS · handoff completion (designed fields) PASS · Practice
+create PASS · **Q1 without reload PASS** · evaluation PASS · Deep Dive PASS · **Return without
+reload PASS** · report PASS (readiness 64/100) · **History persisted PASS** (Interview #7).
+**Browser reload required: NO. P0 = 0, P1 = 0.** No code was changed during the validation.
+
+Also confirmed live in this run: the Phase 5.2 targets — a **visible citation** ("Source:
+ESCO's product-manager skills framework [1]") and **Practice creation** (strategy generation
+no longer truncates) — and the persisted memory loading across sessions ("Using 1 saved
+preparation memory"). This is the authoritative live proof for the reviewer path; no further
+paid rehearsal is required for Sprint 4.
 
 ## Fallback (no live provider / API key)
 
