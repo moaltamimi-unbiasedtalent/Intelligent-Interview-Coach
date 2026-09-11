@@ -159,3 +159,62 @@ and the Phase 7B backbone verdict, separating blocking from non-blocking/future 
 Credentials are read ONLY from the environment and never enter source metadata, provenance,
 logs, tests or `.env.example` (which holds empty `ADZUNA_APP_ID=` / `ADZUNA_APP_KEY=`
 placeholders). `.env` stays git-ignored.
+
+## Phase 7B — the normalization build
+
+Phase 7B turns the acquired raw sources into the canonical normalized layer defined by the
+7A/7A.1 contract. It **builds `data/normalized/` only** — it does not touch the runtime
+stores (`data/knowledge/*`, `data/chroma/*`); merging normalized records into those stores
+is Phase 7C. Full detail: [knowledge_normalization.md](knowledge_normalization.md).
+
+**One orchestrated command** (`scripts/knowledge/build_normalized_knowledge.py`) reuses the
+proven `local_readers` parsers and maps their output through `knowledge/normalize.py` into
+canonical records, assigning stable ids via a single `CanonicalIdRegistry`:
+
+```bash
+python scripts/knowledge/build_normalized_knowledge.py --all           # build every source
+python scripts/knowledge/build_normalized_knowledge.py --source onet   # one/more sources
+python scripts/knowledge/build_normalized_knowledge.py --all --validate-only   # parse+map+round-trip, no writes
+python scripts/knowledge/build_normalized_knowledge.py --all --json-report
+python scripts/audit_normalized_knowledge.py            # coverage + integrity audit (+ --json)
+```
+
+**Outputs** (Parquet; JSONL fallback if pyarrow is absent) — only files with real data are
+written (no empty placeholders): `occupations`, `occupation_aliases`, `occupation_crosswalks`,
+`occupation_skills`, `technology_skills`, `knowledge_areas`, `tasks`, `work_activities`,
+`education_training`, `compensation`, `labour_market`, `competencies`, `source_records`, plus
+`build_metadata.json`, `canonical_registry.json`, `canonicalization_report.json` and
+`normalization_rejections.json` (+ `rejected_records/`). All git-ignored under
+`data/normalized/*`.
+
+**Real local build (this machine, pipeline 7B.1):** 8,035 occupations
+(onet 1,016 · esco 3,039 · isco08 613 · kldb 2,193 · bls_ooh 343 · bls_projections 831),
+23,579 aliases, 3,039 ESCO→ISCO crosswalks, 99,883 occupation-skill relations, 11,572
+technology skills, 6,968 knowledge areas, 22,383 tasks, 20,141 work activities, 1,173
+education/training facts, 1,913 compensation records, 1,904 labour-market records, 2,269
+framework competencies, 10,304 source records; 0 rejections; the build is **idempotent**
+(two independent runs produce byte-identical records and registry).
+
+**Key normalization decisions:**
+- *No ISCO-group merge (§32/§34).* An occupation's identity key is only its own native
+  scheme code; a broad `isco_code` is a crosswalk target + classification column, never an
+  identity key — so distinct ESCO/O*NET occupations sharing ISCO unit group 2511 stay
+  distinct. Cross-source linkage is intentionally conservative (no title/embedding merge).
+- *Compensation semantics preserved (§17).* Weekly (ONS ASHE), hourly and annual (BLS OEWS)
+  are kept in their native `pay_period` — `PayPeriod.WEEK` was added so UK weekly pay is
+  never silently annualised; the source-native period is also retained in metadata.
+- *Geography kept separate (§57).* DE / EU-aggregate / US / UK / sub-national region are
+  distinguished by typed fields; an EU or Euro-area aggregate is never written to `country`,
+  and a NUTS region is never rolled into its country. German compensation is comparatively
+  lower-resolution (Eurostat SES; Destatis not yet acquired) — reported honestly, not blocking.
+- *KldB `.xls` handled deliberately (§15).* The KldB **systematic index** is read from the
+  official `.xlsx` (`Systematisches-Verzeichnis-KldB-2020.xlsx`) with no conversion. The
+  supplementary legacy `.xls` (`Berufssektoren-und-Segmente…`) is a different sector-mapping
+  file, not required for occupation normalization, and is intentionally not ingested — so no
+  `xlrd`/LibreOffice/headless conversion is introduced.
+- *Provenance-or-nothing (§33).* Every occupation, alias and fact carries `source` +
+  `source_record_id`; competency frameworks (NICE/DigComp) are emitted as their own output,
+  each backed by a `SourceRecord`, and kept separate from occupations (no auto-equate).
+- *Unresolved linkage reported honestly.* Compensation rows link to a canonical occupation
+  only through an existing official code crosswalk (no fuzzy title matching); the current
+  resolved/unresolved split is reported in `canonicalization_report.json` and the audit.
