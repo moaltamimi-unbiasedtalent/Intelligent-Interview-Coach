@@ -61,6 +61,12 @@ class SourceEntry(BaseModel):
     manual_acquisition_required: bool = False
     licence_review_required: bool = False
     manual_review_required: bool = False
+    # Phase 7A.1 acquisition governance (optional; older entries omit them).
+    acquisition_type: str | None = None  # local_manual | official_api | official_download | authorized_api | manual_optional
+    download_script: str | None = None
+    credentials_required: bool = False
+    availability_status: str | None = None
+    last_checked: str | None = None
 
 
 def load_manifest(path: str = constants.SOURCE_MANIFEST_PATH) -> list[SourceEntry]:

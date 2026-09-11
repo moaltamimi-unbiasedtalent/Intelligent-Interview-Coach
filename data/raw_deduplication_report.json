@@ -1,0 +1,1584 @@
+{
+  "generated_at": "2026-09-11T17:53:48.185469+00:00",
+  "applied": true,
+  "raw_root": "data/raw",
+  "files_before": 303,
+  "files_after": 208,
+  "bytes_before": 802547245,
+  "exact_duplicate_groups": 79,
+  "redundant_copies": 95,
+  "redundant_bytes": 318440177,
+  "removed": 95,
+  "removed_bytes": 318440177,
+  "logical_duplicates_archived": 0,
+  "uncertain": 0,
+  "requires_review": 0,
+  "entries": [
+    {
+      "original_path": "data/raw/bls/oews_2025/oesm25all-2/oesm25all/all_data_M_2025.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25all-2/oesm25all/all_data_M_2025.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "bf8e6ff5072a5b37e053d1d47220a73164168d2ed2a5fd22336abfd4761fa429",
+      "size_bytes": 80657033,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/oesm25all/oesm25all/all_data_M_2025.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25all-2/oesm25all/all_data_M_2025.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "bf8e6ff5072a5b37e053d1d47220a73164168d2ed2a5fd22336abfd4761fa429",
+      "size_bytes": 80657033,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/bls/oews_2025/oesm25ma-2/oesm25ma/MSA_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25ma-2/oesm25ma/MSA_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "faf00eee127763c8c082d8fb862717ef2ad3a75f16f8975dc1e70935f27bcbb0",
+      "size_bytes": 30628700,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/oesm25ma/oesm25ma/MSA_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25ma-2/oesm25ma/MSA_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "faf00eee127763c8c082d8fb862717ef2ad3a75f16f8975dc1e70935f27bcbb0",
+      "size_bytes": 30628700,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/occupationSkillRelations_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/occupationSkillRelations_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "e1a46511f0ef4d505f106f1d41f528ef76d289f93e59d4d0cbaac38986102c44",
+      "size_bytes": 27986628,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/occupationSkillRelations_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/occupationSkillRelations_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "e1a46511f0ef4d505f106f1d41f528ef76d289f93e59d4d0cbaac38986102c44",
+      "size_bytes": 27986628,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/Work Context.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Work Context.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "406e4d93d87701e94308d6c6755bed03e3fb289b33c6e033f231593075888834",
+      "size_bytes": 16835857,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Work Context.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Work Context.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "406e4d93d87701e94308d6c6755bed03e3fb289b33c6e033f231593075888834",
+      "size_bytes": 16835857,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Work Context.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Work Context.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "406e4d93d87701e94308d6c6755bed03e3fb289b33c6e033f231593075888834",
+      "size_bytes": 16835857,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/nat4d_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/nat4d_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "d9d2528dd98f565dcaa471ecc7bbedbc2da3db2a7b7de81a8fcf103f2ee1b77c",
+      "size_bytes": 15261521,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/oesm25in4/oesm25in4/nat4d_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/nat4d_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "d9d2528dd98f565dcaa471ecc7bbedbc2da3db2a7b7de81a8fcf103f2ee1b77c",
+      "size_bytes": 15261521,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/Task Ratings.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Task Ratings.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "6f67327fd5d9a24d1dc553d3b5bbb3278bc89896efac57aa90bbe713a65a3fab",
+      "size_bytes": 10237269,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Task Ratings.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Task Ratings.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "6f67327fd5d9a24d1dc553d3b5bbb3278bc89896efac57aa90bbe713a65a3fab",
+      "size_bytes": 10237269,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Task Ratings.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Task Ratings.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "6f67327fd5d9a24d1dc553d3b5bbb3278bc89896efac57aa90bbe713a65a3fab",
+      "size_bytes": 10237269,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/bls/oews_2025/oesm25ma-2/oesm25ma/BOS_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25ma-2/oesm25ma/BOS_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "2a06fc23e9c3d487d767b76f0efa749252f4ad55f745640064845aa2c4b1aa1b",
+      "size_bytes": 9891462,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/oesm25ma/oesm25ma/BOS_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25ma-2/oesm25ma/BOS_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "2a06fc23e9c3d487d767b76f0efa749252f4ad55f745640064845aa2c4b1aa1b",
+      "size_bytes": 9891462,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/skills_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/skills_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "d03b10efca94b4bcfa260a992cfde89c375f0fa12095d6662a663cfd2f9f2950",
+      "size_bytes": 9302000,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/skills_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/skills_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "d03b10efca94b4bcfa260a992cfde89c375f0fa12095d6662a663cfd2f9f2950",
+      "size_bytes": 9302000,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/bls/oews_2025/oesm25st-2/oesm25st/state_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25st-2/oesm25st/state_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "e9590ec791fd2941341631f84ee6445d3df931c1ad5776b80ea07c9f89fba95d",
+      "size_bytes": 7675521,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/oesm25st/oesm25st/state_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25st-2/oesm25st/state_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "e9590ec791fd2941341631f84ee6445d3df931c1ad5776b80ea07c9f89fba95d",
+      "size_bytes": 7675521,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/nat3d_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/nat3d_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "2ff31601098f3f9827738f14a293ac5fd93f2e9ef960138ef9078e8a5f799e64",
+      "size_bytes": 7131947,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/oesm25in4/oesm25in4/nat3d_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/nat3d_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "2ff31601098f3f9827738f14a293ac5fd93f2e9ef960138ef9078e8a5f799e64",
+      "size_bytes": 7131947,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/Abilities.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Abilities.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "e814aa4120e4ab8d671fb5dac1fd662f495eaeb85e8363bc98b5a18879bb4aa2",
+      "size_bytes": 5067562,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Abilities.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Abilities.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "e814aa4120e4ab8d671fb5dac1fd662f495eaeb85e8363bc98b5a18879bb4aa2",
+      "size_bytes": 5067562,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Abilities.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Abilities.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "e814aa4120e4ab8d671fb5dac1fd662f495eaeb85e8363bc98b5a18879bb4aa2",
+      "size_bytes": 5067562,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/broaderRelationsSkillPillar_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/broaderRelationsSkillPillar_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "56b70f4852b1f53c6192c979310c34c93f95436621d907083cf0d55b51d8e42d",
+      "size_bytes": 4944592,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/broaderRelationsSkillPillar_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/broaderRelationsSkillPillar_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "56b70f4852b1f53c6192c979310c34c93f95436621d907083cf0d55b51d8e42d",
+      "size_bytes": 4944592,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/Work Activities.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Work Activities.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "98b46861507de7217a63b2744cc3e99ce99806a3087bf9e7f70c8e7872033ac9",
+      "size_bytes": 4294510,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Work Activities.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Work Activities.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "98b46861507de7217a63b2744cc3e99ce99806a3087bf9e7f70c8e7872033ac9",
+      "size_bytes": 4294510,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Work Activities.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Work Activities.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "98b46861507de7217a63b2744cc3e99ce99806a3087bf9e7f70c8e7872033ac9",
+      "size_bytes": 4294510,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/Knowledge.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Knowledge.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "66798560983a61a90ba586ed4273fb4711611729203fe2c3b44cc0a3c96c9b31",
+      "size_bytes": 3411578,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Knowledge.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Knowledge.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "66798560983a61a90ba586ed4273fb4711611729203fe2c3b44cc0a3c96c9b31",
+      "size_bytes": 3411578,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Knowledge.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Knowledge.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "66798560983a61a90ba586ed4273fb4711611729203fe2c3b44cc0a3c96c9b31",
+      "size_bytes": 3411578,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/nat5d_6d_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/nat5d_6d_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "dca9beafa91124701ea7afac6073cf491f926f47361e6c00a3f20c2e6a697419",
+      "size_bytes": 3200923,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/oesm25in4/oesm25in4/nat5d_6d_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/nat5d_6d_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "dca9beafa91124701ea7afac6073cf491f926f47361e6c00a3f20c2e6a697419",
+      "size_bytes": 3200923,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/occupations_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/occupations_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "8034348d84b6d1dd24a5bcf9609186ecbba0a85457ee2eacd65bddec33a51b4a",
+      "size_bytes": 3047703,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/occupations_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/occupations_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "8034348d84b6d1dd24a5bcf9609186ecbba0a85457ee2eacd65bddec33a51b4a",
+      "size_bytes": 3047703,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/natsector_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/natsector_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "dcb37fd339fe44e10744663d95d2e371a977550495653f9f8eaa5b97ce4ff753",
+      "size_bytes": 3027354,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/oesm25in4/oesm25in4/natsector_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/natsector_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "dcb37fd339fe44e10744663d95d2e371a977550495653f9f8eaa5b97ce4ff753",
+      "size_bytes": 3027354,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/Transferable Skills.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Transferable Skills.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "6f4bf0a5f9a6462b77a5faeb7d3d6be6311b0fe3ea1958d6a3c23fe2b53c7d6c",
+      "size_bytes": 2442345,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Transferable Skills.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Transferable Skills.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "6f4bf0a5f9a6462b77a5faeb7d3d6be6311b0fe3ea1958d6a3c23fe2b53c7d6c",
+      "size_bytes": 2442345,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Transferable Skills.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Transferable Skills.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "6f4bf0a5f9a6462b77a5faeb7d3d6be6311b0fe3ea1958d6a3c23fe2b53c7d6c",
+      "size_bytes": 2442345,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Specific Interest Areas.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Specific Interest Areas.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "701295068af20dcfcc6663f7518f42d36359c95f505edbc5523a7e6b707ad135",
+      "size_bytes": 2299805,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Specific Interest Areas.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Specific Interest Areas.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "701295068af20dcfcc6663f7518f42d36359c95f505edbc5523a7e6b707ad135",
+      "size_bytes": 2299805,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/nat4d_owner_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/nat4d_owner_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "eaed060a51ffe58738d98ad02cda8f6f8883284e903e65519d57757068ff0a37",
+      "size_bytes": 1843390,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/oesm25in4/oesm25in4/nat4d_owner_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/nat4d_owner_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "eaed060a51ffe58738d98ad02cda8f6f8883284e903e65519d57757068ff0a37",
+      "size_bytes": 1843390,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Training and Experience.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Training and Experience.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "04659b89cebb3a5592c52156d2dfc6758b073734d7ebbfdb8c56989bd0c5549e",
+      "size_bytes": 1485222,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Training and Experience.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Training and Experience.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "04659b89cebb3a5592c52156d2dfc6758b073734d7ebbfdb8c56989bd0c5549e",
+      "size_bytes": 1485222,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Tasks to DWAs.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Tasks to DWAs.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "c74c42cb0d30379751900dce8d39c32d81ba9de8f58c0b00cbdca791a18c3675",
+      "size_bytes": 1373306,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Tasks to DWAs.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Tasks to DWAs.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "c74c42cb0d30379751900dce8d39c32d81ba9de8f58c0b00cbdca791a18c3675",
+      "size_bytes": 1373306,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/Job Titles.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Job Titles.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "1d5f1e469e99d95b9496ca7beb094fa107c215ede6249129955345c774904c0d",
+      "size_bytes": 1230048,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Job Titles.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Job Titles.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "1d5f1e469e99d95b9496ca7beb094fa107c215ede6249129955345c774904c0d",
+      "size_bytes": 1230048,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Job Titles.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Job Titles.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "1d5f1e469e99d95b9496ca7beb094fa107c215ede6249129955345c774904c0d",
+      "size_bytes": 1230048,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/Work Styles.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Work Styles.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "d85ff3b9a96448143edef0f64daedb1288620370d6423e9f8f4533a2e7f46b05",
+      "size_bytes": 1217466,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Work Styles.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Work Styles.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "d85ff3b9a96448143edef0f64daedb1288620370d6423e9f8f4533a2e7f46b05",
+      "size_bytes": 1217466,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Work Styles.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Work Styles.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "d85ff3b9a96448143edef0f64daedb1288620370d6423e9f8f4533a2e7f46b05",
+      "size_bytes": 1217466,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/Task Statements.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Task Statements.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "afb7ba3bb00f0355d7d5f07e0a446ce880d72d15d4f3f2087973aa8c0dd102d4",
+      "size_bytes": 1149461,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Task Statements.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Task Statements.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "afb7ba3bb00f0355d7d5f07e0a446ce880d72d15d4f3f2087973aa8c0dd102d4",
+      "size_bytes": 1149461,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Task Statements.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Task Statements.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "afb7ba3bb00f0355d7d5f07e0a446ce880d72d15d4f3f2087973aa8c0dd102d4",
+      "size_bytes": 1149461,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/skillSkillRelations_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/skillSkillRelations_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "64a5f8fb7b8dda4932ff06db4738ce1beed3906e45a49b14453349056c609439",
+      "size_bytes": 1031275,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/skillSkillRelations_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/skillSkillRelations_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "64a5f8fb7b8dda4932ff06db4738ce1beed3906e45a49b14453349056c609439",
+      "size_bytes": 1031275,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/national_owner_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/national_owner_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "b1009c647aa0cb5be4ca50a81656a94b4fa11e245fda33ce38b772f1cb4155f8",
+      "size_bytes": 1030998,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/oesm25in4/oesm25in4/national_owner_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/national_owner_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "b1009c647aa0cb5be4ca50a81656a94b4fa11e245fda33ce38b772f1cb4155f8",
+      "size_bytes": 1030998,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/Software Skills.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Software Skills.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "9875a87371c8efc6ea9e1c551271a7fadefe2e6f8f5d1d2bca7b0c55face010f",
+      "size_bytes": 987547,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Software Skills.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Software Skills.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "9875a87371c8efc6ea9e1c551271a7fadefe2e6f8f5d1d2bca7b0c55face010f",
+      "size_bytes": 987547,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Software Skills.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Software Skills.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "9875a87371c8efc6ea9e1c551271a7fadefe2e6f8f5d1d2bca7b0c55face010f",
+      "size_bytes": 987547,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/Essential Skills.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Essential Skills.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "1e4d875edf9120ba934a80c0a79adba03b6c9f76c7cbf6a626c6643e7fb53900",
+      "size_bytes": 984422,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Essential Skills.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Essential Skills.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "1e4d875edf9120ba934a80c0a79adba03b6c9f76c7cbf6a626c6643e7fb53900",
+      "size_bytes": 984422,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Essential Skills.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Essential Skills.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "1e4d875edf9120ba934a80c0a79adba03b6c9f76c7cbf6a626c6643e7fb53900",
+      "size_bytes": 984422,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/ISCOGroups_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/ISCOGroups_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "7a829bb6fddccbdb028d3ae69d822f2f1ba581522667f6185949c6d0788eaa1c",
+      "size_bytes": 966601,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/ISCOGroups_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/ISCOGroups_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "7a829bb6fddccbdb028d3ae69d822f2f1ba581522667f6185949c6d0788eaa1c",
+      "size_bytes": 966601,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/conceptSchemes_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/conceptSchemes_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "4e5b4800e6cdc2013df0f22dfff72c0499cdce8bf9cfa333d6c4c14879dce517",
+      "size_bytes": 941042,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/conceptSchemes_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/conceptSchemes_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "4e5b4800e6cdc2013df0f22dfff72c0499cdce8bf9cfa333d6c4c14879dce517",
+      "size_bytes": 941042,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Occupation Level Metadata.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Occupation Level Metadata.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "a67e7a633e43850e128d724bf3936511baba5158fb13caeb3273b8bb45a6b13e",
+      "size_bytes": 864719,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Occupation Level Metadata.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Occupation Level Metadata.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "a67e7a633e43850e128d724bf3936511baba5158fb13caeb3273b8bb45a6b13e",
+      "size_bytes": 864719,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/nat3d_owner_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/nat3d_owner_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "bc525f6f2d8bb7efc2e5054bf888c0ab7fbfcb0b4e6bd0a4bed0b7ca53dc521a",
+      "size_bytes": 854044,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/oesm25in4/oesm25in4/nat3d_owner_M2025_dl.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/nat3d_owner_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "bc525f6f2d8bb7efc2e5054bf888c0ab7fbfcb0b4e6bd0a4bed0b7ca53dc521a",
+      "size_bytes": 854044,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/digitalSkillsCollection_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/digitalSkillsCollection_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "9f2ee9179f0720826cbfc65627bd3642926ba4dfb3bf29250f22cb232c225b1e",
+      "size_bytes": 811101,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/digitalSkillsCollection_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/digitalSkillsCollection_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "9f2ee9179f0720826cbfc65627bd3642926ba4dfb3bf29250f22cb232c225b1e",
+      "size_bytes": 811101,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/broaderRelationsOccPillar_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/broaderRelationsOccPillar_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "b6b457a7b248e87734a5ef01f59f0bd4d083b6ad5e9251f6ed4cce51d69c6383",
+      "size_bytes": 730008,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/broaderRelationsOccPillar_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/broaderRelationsOccPillar_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "b6b457a7b248e87734a5ef01f59f0bd4d083b6ad5e9251f6ed4cce51d69c6383",
+      "size_bytes": 730008,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/Education.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Education.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "4b31def35735af7b289d242febab3082db90ff942a08a545a384dca9bbf1d2a1",
+      "size_bytes": 617996,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Education.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Education.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "4b31def35735af7b289d242febab3082db90ff942a08a545a384dca9bbf1d2a1",
+      "size_bytes": 617996,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Education.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Education.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "4b31def35735af7b289d242febab3082db90ff942a08a545a384dca9bbf1d2a1",
+      "size_bytes": 617996,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/Related Occupations.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Related Occupations.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "2b782e6ba8061c9111816a9a12cb519273115526ef2bfa3cce09f69852da2d42",
+      "size_bytes": 459744,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Related Occupations.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Related Occupations.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "2b782e6ba8061c9111816a9a12cb519273115526ef2bfa3cce09f69852da2d42",
+      "size_bytes": 459744,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Related Occupations.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Related Occupations.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "2b782e6ba8061c9111816a9a12cb519273115526ef2bfa3cce09f69852da2d42",
+      "size_bytes": 459744,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/greenSkillsCollection_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/greenSkillsCollection_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "502eaee4f496e7576ee078a76d5da03fa14f5476f740ca965ca2ef596d9683ab",
+      "size_bytes": 455125,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/greenSkillsCollection_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/greenSkillsCollection_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "502eaee4f496e7576ee078a76d5da03fa14f5476f740ca965ca2ef596d9683ab",
+      "size_bytes": 455125,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/greenShareOcc_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/greenShareOcc_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "b181bde83460dbd766268893dd6db4393006c15d788ae4c0f3f41c49719ab16a",
+      "size_bytes": 452849,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/greenShareOcc_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/greenShareOcc_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "b181bde83460dbd766268893dd6db4393006c15d788ae4c0f3f41c49719ab16a",
+      "size_bytes": 452849,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/skillsHierarchy_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/skillsHierarchy_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "295133872c6be7b7560de943efa4a6aab833a1b15af4d60c03b050ab0a75edcb",
+      "size_bytes": 381733,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/skillsHierarchy_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/skillsHierarchy_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "295133872c6be7b7560de943efa4a6aab833a1b15af4d60c03b050ab0a75edcb",
+      "size_bytes": 381733,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/skillGroups_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/skillGroups_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "644b68a174299eb05336eec36e0716c4671a0c6bdd4ac268803ecd6533dc739d",
+      "size_bytes": 340935,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/skillGroups_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/skillGroups_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "644b68a174299eb05336eec36e0716c4671a0c6bdd4ac268803ecd6533dc739d",
+      "size_bytes": 340935,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Career Interest Types.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Career Interest Types.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "f5d94c1c99d6709879578f914e3e6a91e25d315d7136024e79b75985d00c715d",
+      "size_bytes": 302779,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Career Interest Types.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Career Interest Types.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "f5d94c1c99d6709879578f914e3e6a91e25d315d7136024e79b75985d00c715d",
+      "size_bytes": 302779,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/bls/oews_2025/oesm25nat-2/oesm25nat/national_M2025_dl.xlsx",
+      "canonical_path": "data/raw/oesm25nat/oesm25nat/national_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "852250997ceff9b721ff68f63e877d818f9c1ec8b1b69dd367958faedd5282b2",
+      "size_bytes": 289615,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/oesm25nat/oesm25nat/national_M2025_dl.xlsx",
+      "canonical_path": "data/raw/oesm25nat/oesm25nat/national_M2025_dl.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "852250997ceff9b721ff68f63e877d818f9c1ec8b1b69dd367958faedd5282b2",
+      "size_bytes": 289615,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Sample of Reported Titles.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Sample of Reported Titles.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "aa869fdfee5ed9b6e3dd139538861eb996af37a374b0a5d47cdec8d6d967a80c",
+      "size_bytes": 208118,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Sample of Reported Titles.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Sample of Reported Titles.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "aa869fdfee5ed9b6e3dd139538861eb996af37a374b0a5d47cdec8d6d967a80c",
+      "size_bytes": 208118,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/languageSkillsCollection_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/languageSkillsCollection_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "93b2ca9ef1300a34c2262753e33dbcf6a3a17ad7d2afe435849649818ec6cf33",
+      "size_bytes": 144359,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/languageSkillsCollection_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/languageSkillsCollection_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "93b2ca9ef1300a34c2262753e33dbcf6a3a17ad7d2afe435849649818ec6cf33",
+      "size_bytes": 144359,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/researchOccupationsCollection_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/researchOccupationsCollection_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "85993f6460b6bb008985cd40341c3d373fac9989d854f76d2d3c6fc8dc2d6d1a",
+      "size_bytes": 126900,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/researchOccupationsCollection_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/researchOccupationsCollection_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "85993f6460b6bb008985cd40341c3d373fac9989d854f76d2d3c6fc8dc2d6d1a",
+      "size_bytes": 126900,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Content Model Reference.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Content Model Reference.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "e1ac3680e091eb0820c41f3800ff7b6473c3bb28f9914837c7f611bff3141892",
+      "size_bytes": 108255,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Content Model Reference.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Content Model Reference.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "e1ac3680e091eb0820c41f3800ff7b6473c3bb28f9914837c7f611bff3141892",
+      "size_bytes": 108255,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/Occupation Data.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Occupation Data.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "13b2aa4c08e6c9a3708d5e5ac83e13da5cc184e3798313c8942a266d00593ace",
+      "size_bytes": 102540,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Occupation Data.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Occupation Data.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "13b2aa4c08e6c9a3708d5e5ac83e13da5cc184e3798313c8942a266d00593ace",
+      "size_bytes": 102540,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Occupation Data.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Occupation Data.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "13b2aa4c08e6c9a3708d5e5ac83e13da5cc184e3798313c8942a266d00593ace",
+      "size_bytes": 102540,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/GWAs to IWAs to DWAs.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/GWAs to IWAs to DWAs.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "024d49c7cf172514742d7ba3b6f1174487291fb1dada8a4197a2788f9a39b75a",
+      "size_bytes": 92488,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/GWAs to IWAs to DWAs.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/GWAs to IWAs to DWAs.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "024d49c7cf172514742d7ba3b6f1174487291fb1dada8a4197a2788f9a39b75a",
+      "size_bytes": 92488,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/transversalSkillsCollection_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/transversalSkillsCollection_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "40bd1884f1c62b91ab86b6c87d7fab11b082c17b425975d0d178d1b5cb5e01ca",
+      "size_bytes": 57293,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/transversalSkillsCollection_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/transversalSkillsCollection_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "40bd1884f1c62b91ab86b6c87d7fab11b082c17b425975d0d178d1b5cb5e01ca",
+      "size_bytes": 57293,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Job Zones.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Job Zones.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "6b5559fe95a2b9d6a159b0f62aa2c68962491fafd4cbc1c8e865a96e2b52e79c",
+      "size_bytes": 39540,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Job Zones.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Job Zones.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "6b5559fe95a2b9d6a159b0f62aa2c68962491fafd4cbc1c8e865a96e2b52e79c",
+      "size_bytes": 39540,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Level Scale Anchors.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Level Scale Anchors.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "c50c0f30f5be195dffd2cea442c58ca8f40bd3ff53b84ce8a9998f1a3bb70485",
+      "size_bytes": 30490,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Level Scale Anchors.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Level Scale Anchors.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "c50c0f30f5be195dffd2cea442c58ca8f40bd3ff53b84ce8a9998f1a3bb70485",
+      "size_bytes": 30490,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Emerging Tasks.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Emerging Tasks.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "58ca04243539d4a9091f150f1f6bb8110b5346c973c551b2a325cb0c0cbbbaa0",
+      "size_bytes": 29731,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Emerging Tasks.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Emerging Tasks.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "58ca04243539d4a9091f150f1f6bb8110b5346c973c551b2a325cb0c0cbbbaa0",
+      "size_bytes": 29731,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/researchSkillsCollection_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/researchSkillsCollection_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "fd9b6bd45df2bad68e50d963ac366b5c7dec2917e178e69003b6d94bb1e41d13",
+      "size_bytes": 27033,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/researchSkillsCollection_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/researchSkillsCollection_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "fd9b6bd45df2bad68e50d963ac366b5c7dec2917e178e69003b6d94bb1e41d13",
+      "size_bytes": 27033,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/dictionary_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/dictionary_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "f20857239063a52af0a7668ae5b178144cb33ff626519fb50451457d59b54fec",
+      "size_bytes": 19719,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/dictionary_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/dictionary_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "f20857239063a52af0a7668ae5b178144cb33ff626519fb50451457d59b54fec",
+      "size_bytes": 19719,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/digCompSkillsCollection_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/digCompSkillsCollection_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "814108ed9bc93268abc6d717bbd36f876a73180da2ff1a89b4f867c50e1ae9d4",
+      "size_bytes": 18759,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/esco/1.2.1/digCompSkillsCollection_en.csv",
+      "canonical_path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/digCompSkillsCollection_en.csv",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "814108ed9bc93268abc6d717bbd36f876a73180da2ff1a89b4f867c50e1ae9d4",
+      "size_bytes": 18759,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/GWAs to IWAs.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/GWAs to IWAs.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "315ccfbe12b95a391b9d1cbc8971eeb89bd6c00102a374eb0363a35ce588d84b",
+      "size_bytes": 18421,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/GWAs to IWAs.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/GWAs to IWAs.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "315ccfbe12b95a391b9d1cbc8971eeb89bd6c00102a374eb0363a35ce588d84b",
+      "size_bytes": 18421,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/Work Context Categories.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Work Context Categories.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "de335e61820c2f0ac7c551541c74e94ec24199f278e226aede80026d87926c99",
+      "size_bytes": 14531,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Work Context Categories.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Work Context Categories.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "de335e61820c2f0ac7c551541c74e94ec24199f278e226aede80026d87926c99",
+      "size_bytes": 14531,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Work Context Categories.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Work Context Categories.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "de335e61820c2f0ac7c551541c74e94ec24199f278e226aede80026d87926c99",
+      "size_bytes": 14531,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Survey Booklet Locations.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Survey Booklet Locations.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "115e1121a298a71ec0cc291bf90c5ef0cbd8f9f5c7f43f35e8c2a9b800f00b88",
+      "size_bytes": 14211,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Survey Booklet Locations.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Survey Booklet Locations.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "115e1121a298a71ec0cc291bf90c5ef0cbd8f9f5c7f43f35e8c2a9b800f00b88",
+      "size_bytes": 14211,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Abilities to Work Activities.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Abilities to Work Activities.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "423b54c95fd1f7297942f55fd3a1b8ef0a699333715c2f9388d82c98610feb50",
+      "size_bytes": 14026,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Abilities to Work Activities.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Abilities to Work Activities.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "423b54c95fd1f7297942f55fd3a1b8ef0a699333715c2f9388d82c98610feb50",
+      "size_bytes": 14026,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Interests Illustrative Occupations.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Interests Illustrative Occupations.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "a92f5de94b4ed30b6fceb7c36f5506eb81c4e3c8571ff65b56a1b014edeae2e7",
+      "size_bytes": 13439,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Interests Illustrative Occupations.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Interests Illustrative Occupations.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "a92f5de94b4ed30b6fceb7c36f5506eb81c4e3c8571ff65b56a1b014edeae2e7",
+      "size_bytes": 13439,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Interests Illustrative Activities.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Interests Illustrative Activities.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "b13023f4cf8673db06d9995d4a27fa63bc67e9ad2992bddf9f35a269d3eec295",
+      "size_bytes": 13329,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Interests Illustrative Activities.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Interests Illustrative Activities.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "b13023f4cf8673db06d9995d4a27fa63bc67e9ad2992bddf9f35a269d3eec295",
+      "size_bytes": 13329,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Work Styles to Work Activities.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Work Styles to Work Activities.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "55dcbb559f4b53ca9573739ea709fafc3acbb7f942a8044b9c4f276610038e09",
+      "size_bytes": 12352,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Work Styles to Work Activities.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Work Styles to Work Activities.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "55dcbb559f4b53ca9573739ea709fafc3acbb7f942a8044b9c4f276610038e09",
+      "size_bytes": 12352,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/file_descriptions.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/file_descriptions.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "056f054ef94fc4ee71198ae09e3f33dcf418f08f1b7043b74e5c9aff0673bc64",
+      "size_bytes": 12054,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/oesm25in4/oesm25in4/file_descriptions.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25in4-2/oesm25in4/file_descriptions.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "056f054ef94fc4ee71198ae09e3f33dcf418f08f1b7043b74e5c9aff0673bc64",
+      "size_bytes": 12054,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/bls/oews_2025/oesm25ma-2/oesm25ma/file_descriptions.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25ma-2/oesm25ma/file_descriptions.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "66f52b71018add12fd60826769a6ceb34f9d8c7b8f4f9609234854cf4ef91266",
+      "size_bytes": 11986,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/oesm25ma/oesm25ma/file_descriptions.xlsx",
+      "canonical_path": "data/raw/bls/oews_2025/oesm25ma-2/oesm25ma/file_descriptions.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "66f52b71018add12fd60826769a6ceb34f9d8c7b8f4f9609234854cf4ef91266",
+      "size_bytes": 11986,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Work Styles to Work Context.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Work Styles to Work Context.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "6e465fd27d6d7b32011b81651597f990425669075ff0e4a9063d1231d1c07974",
+      "size_bytes": 11818,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Work Styles to Work Context.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Work Styles to Work Context.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "6e465fd27d6d7b32011b81651597f990425669075ff0e4a9063d1231d1c07974",
+      "size_bytes": 11818,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Abilities to Work Context.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Abilities to Work Context.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "e81f8cd47bd9e13199aa73514ac82b19e66dc07b40f971ab3da98ec9de49c4e2",
+      "size_bytes": 9774,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Abilities to Work Context.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Abilities to Work Context.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "e81f8cd47bd9e13199aa73514ac82b19e66dc07b40f971ab3da98ec9de49c4e2",
+      "size_bytes": 9774,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Transferable Skills to Work Activities.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Transferable Skills to Work Activities.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "22acad48b3640c6c57995aa47529b4730c74b6bd5b4858e50e98ffaec78a4536",
+      "size_bytes": 9199,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Transferable Skills to Work Activities.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Transferable Skills to Work Activities.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "22acad48b3640c6c57995aa47529b4730c74b6bd5b4858e50e98ffaec78a4536",
+      "size_bytes": 9199,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Essential Skills to Work Activities.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Essential Skills to Work Activities.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "f20ce42abdcfb4a9317a46a2f678dfb536e60f14af0b085e6139851f81612813",
+      "size_bytes": 8859,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Essential Skills to Work Activities.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Essential Skills to Work Activities.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "f20ce42abdcfb4a9317a46a2f678dfb536e60f14af0b085e6139851f81612813",
+      "size_bytes": 8859,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Career Interest Type Keywords.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Career Interest Type Keywords.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "4cfcd66b8a4fc33c7e94c54be05ab4f1378bfd8d22e97486238acf2f9aac19a9",
+      "size_bytes": 7748,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Career Interest Type Keywords.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Career Interest Type Keywords.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "4cfcd66b8a4fc33c7e94c54be05ab4f1378bfd8d22e97486238acf2f9aac19a9",
+      "size_bytes": 7748,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Transferable Skills to Work Context.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Transferable Skills to Work Context.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "ca24035e4c3bb1fd366a9093296a336a6b1e7fd04e52e0043ce53c08191ef82f",
+      "size_bytes": 7669,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Transferable Skills to Work Context.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Transferable Skills to Work Context.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "ca24035e4c3bb1fd366a9093296a336a6b1e7fd04e52e0043ce53c08191ef82f",
+      "size_bytes": 7669,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Specific Interest Areas to Career Interest Types.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Specific Interest Areas to Career Interest Types.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "09daffd25ecba8db10b7ac9309bb6703f53da29158223cb2f5f05536e573b854",
+      "size_bytes": 7496,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Specific Interest Areas to Career Interest Types.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Specific Interest Areas to Career Interest Types.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "09daffd25ecba8db10b7ac9309bb6703f53da29158223cb2f5f05536e573b854",
+      "size_bytes": 7496,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Job Zone Reference.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Job Zone Reference.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "c9ec6f403071be81e0db4aa371dfc81f366b04ae6ba8a7c372d442d071a880db",
+      "size_bytes": 7479,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Job Zone Reference.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Job Zone Reference.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "c9ec6f403071be81e0db4aa371dfc81f366b04ae6ba8a7c372d442d071a880db",
+      "size_bytes": 7479,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Essential Skills to Work Context.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Essential Skills to Work Context.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "1e36d6000ec0868ef3a4bfcf30af21b4bcac06a7e0f639c8f99b4e3408352a52",
+      "size_bytes": 7282,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Essential Skills to Work Context.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Essential Skills to Work Context.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "1e36d6000ec0868ef3a4bfcf30af21b4bcac06a7e0f639c8f99b4e3408352a52",
+      "size_bytes": 7282,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/Education Categories.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Education Categories.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "76358c4fe2c7f6947dc5f0bd342a325422fa5dc4e15515eb2d1b8c28d87b2fee",
+      "size_bytes": 7017,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Education Categories.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Education Categories.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "76358c4fe2c7f6947dc5f0bd342a325422fa5dc4e15515eb2d1b8c28d87b2fee",
+      "size_bytes": 7017,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Education Categories.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Education Categories.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "76358c4fe2c7f6947dc5f0bd342a325422fa5dc4e15515eb2d1b8c28d87b2fee",
+      "size_bytes": 7017,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Scales Reference.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Scales Reference.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "0ffac0236a59b9aa71ddc9d347a57b150f204e7ae450945e199e43a41dad99f3",
+      "size_bytes": 7004,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Scales Reference.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Scales Reference.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "0ffac0236a59b9aa71ddc9d347a57b150f204e7ae450945e199e43a41dad99f3",
+      "size_bytes": 7004,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Training and Experience Categories.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Training and Experience Categories.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "8e751b667431ca567475600d0d9034fc5902549e5fb47235cd3ce571401d698d",
+      "size_bytes": 6980,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Training and Experience Categories.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Training and Experience Categories.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "8e751b667431ca567475600d0d9034fc5902549e5fb47235cd3ce571401d698d",
+      "size_bytes": 6980,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Task Categories.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Task Categories.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "e68d76132b71991bced497d8f9d626da5102391ab9431cfc92e11ef3525ddf30",
+      "size_bytes": 6136,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Task Categories.xlsx",
+      "canonical_path": "data/raw/db_31_0_excel/Task Categories.xlsx",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "e68d76132b71991bced497d8f9d626da5102391ab9431cfc92e11ef3525ddf30",
+      "size_bytes": 6136,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    },
+    {
+      "original_path": "data/raw/db_31_0_excel/Read Me.txt",
+      "canonical_path": "data/raw/db_31_0_excel/Read Me.txt",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "856cdcb89d42eed169d51561ae2f822ddfa8fc8c5b87fcb36363558ab5821870",
+      "size_bytes": 513,
+      "action": "kept",
+      "reason": "canonical"
+    },
+    {
+      "original_path": "data/raw/onet/31.0/Read Me.txt",
+      "canonical_path": "data/raw/db_31_0_excel/Read Me.txt",
+      "classification": "EXACT_DUPLICATE",
+      "sha256": "856cdcb89d42eed169d51561ae2f822ddfa8fc8c5b87fcb36363558ab5821870",
+      "size_bytes": 513,
+      "action": "deleted_exact_duplicate",
+      "reason": "redundant_copy_removed"
+    }
+  ]
+}
