@@ -650,6 +650,7 @@ class CompensationStatistic(str, Enum):
 
 class PayPeriod(str, Enum):
     HOUR = "hour"
+    WEEK = "week"    # e.g. ONS ASHE weekly pay — kept native, never silently annualised (§17)
     MONTH = "month"
     YEAR = "year"
 
