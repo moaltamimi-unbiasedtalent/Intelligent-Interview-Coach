@@ -263,6 +263,32 @@ occupation resolution; plus a documented canonical demo port + a CORS precheck).
 remediation is covered by deterministic/fake-provider tests — no paid re-run was performed in
 Phase 5.2. A third live rehearsal is the next step; this #2 record stays **FAIL**.
 
+### GOLDEN DEMO LIVE REHEARSAL #3: FAIL under strict criterion
+
+Post-Phase-5.2 authorised paid re-run (no judge; frontend on :3001 with the documented
+`FRONTEND_ORIGINS` override, as :3000 was held by an unrelated tunnel). **Verdict: FAIL**
+under the strict criterion. This verdict is immutable and is **not** rewritten by the Phase
+5.3 fix below.
+
+What passed (the Phase 5.2 targets both confirmed live): **visible citation PASS** ("Source:
+ESCO's product-manager skills framework [1]", source count 1) and **Practice creation PASS**
+(strategy generation no longer truncates). Also PASS: Home → Ask Mo, Prepare, **memory
+persistence**, **Mo → Practice**, evaluation, Deep Dive, **Return without reload**, report,
+**History**, and Agent Inspector. **P0 = 0.**
+
+What failed — **P1 = 1: "Q1 without reload".** After the handoff, Practice creation succeeded
+and the session was ready server-side (two 200 GETs), but under `npm run dev` the client
+stayed on the loading skeleton until a manual reload. Root cause: React StrictMode
+double-invokes effects in dev, and `useInterview`'s `mounted` ref was set false in cleanup
+but never restored to true on the second mount, so the successful GET was discarded. Production
+(the production-build Playwright suite) was unaffected; the path was only reachable in a dev
+rehearsal once the 5.2 creation fix landed.
+
+**Fixed in Phase 5.3** (`useInterview` mounted-ref lifecycle; StrictMode not disabled; no
+timeout/polling/forced reload), with a component test that renders PracticeClient under
+`<StrictMode>` and fails pre-fix / passes post-fix. No paid re-run was performed in Phase 5.3;
+a fourth live rehearsal is the next step. This #3 record stays **FAIL**.
+
 ## Fallback (no live provider / API key)
 
 Do not invent a live result. You can still show: the `/prepare` UI + Speed selector,
