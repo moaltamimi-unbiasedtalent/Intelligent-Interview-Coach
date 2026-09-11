@@ -89,6 +89,17 @@ evaluation = [
 observability = [
     "langfuse>=2.0,<4.0",
 ]
+# Optional knowledge-build / data-normalization tooling (Phase 7). pandas + openpyxl
+# are already base dependencies (used by the existing local readers); pyarrow is added
+# here — NOT in the base runtime — because it is only needed to write/read the canonical
+# normalized layer (data/normalized/*.parquet) during an offline knowledge rebuild. The
+# FastAPI app and the retrieval runtime never import it: the parquet helpers in
+# src/copilot/knowledge/canonical.py lazy-import pyarrow and raise a clear install hint
+# if it is absent, and JSONL is the always-available fallback. Install with:
+#   pip install -e ".[knowledge]"
+knowledge = [
+    "pyarrow>=15,<25",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

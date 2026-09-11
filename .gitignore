@@ -48,11 +48,16 @@ data/processed/*
 data/raw/*
 data/knowledge/*
 data/knowledge_demo/
+# Phase 7: canonical normalized build layer (generated from data/raw by the
+# knowledge loaders) and the generated build-reproducibility metadata.
+data/normalized/*
+data/build_metadata.json
 !data/raw/.gitkeep
 !data/raw/README.md
 !data/processed/.gitkeep
 !data/chroma/.gitkeep
 !data/knowledge/.gitkeep
+!data/normalized/.gitkeep
 
 # Local editor/launch config
 .claude/
