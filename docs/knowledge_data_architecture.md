@@ -122,3 +122,40 @@ draws **no legal conclusions**.
 Raw source parsing treats all imported content as untrusted **data**: no macro/formula/
 HTML/JS execution, and no `pickle`-based ingestion of untrusted datasets. Readers use
 pandas/openpyxl and stdlib parsers over the raw files.
+
+## Phase 7A.1 additions (gap closure & acquisition)
+
+**Raw deduplication.** `scripts/knowledge/dedup_raw_sources.py` removes exact byte-duplicate
+raw files (SHA-256), keeping one canonical copy per group. Canonical selection is
+reader-safe: a path referenced by `local_readers.py` is always kept (so ingestion never
+breaks), else the most organized/versioned path wins. The full record is
+`data/raw_deduplication_report.json` (committed). Phase 7A.1 removed 95 redundant copies
+(~304 MB; 765→462 MB) with zero content loss.
+
+**Compensation semantics (three distinct classes, never merged):** `observed_earnings`
+(Destatis/BLS/ONS/Eurostat/BA), `advertised_salary` (Adzuna), `modeled_estimate`. Carried
+by the first-class `CompensationRecord` (statistic / pay_period / gross_net / country /
+year all explicit) — never a generic "salary". `LabourMarketRecord`, `CredentialRecord`
+and `OccupationCrosswalk` are likewise first-class (`canonical.py`).
+
+**Canonical-ID stability.** `CanonicalIdRegistry` (`canonical.py`) persists
+source-identifier → `ask4mo:occ:<hash>` so adding a richer classification later (e.g. an
+ESCO URI on top of ISCO) never regenerates an already-assigned id. Crosswalk enrichment
+adds identifiers; it does not mutate identity. A broad taxonomy link (same ISCO group) is
+`broader`/`related`, never `exact`.
+
+**Acquisition providers (data infrastructure only — never Agent tools):**
+- `scripts/knowledge/download_destatis.py` — Destatis GENESIS German earnings
+  (table 62361-0034). Credentials from `DESTATIS_USERNAME`/`DESTATIS_PASSWORD` (or
+  `DESTATIS_TOKEN`); absent → NOT CONFIGURED, non-blocking (Eurostat SES already covers DE).
+- `src/copilot/knowledge/providers/adzuna.py` + `scripts/knowledge/check_adzuna.py` —
+  Adzuna authorized market API (`authorized_market_api`), advertised-market evidence only.
+  Credentials from `ADZUNA_APP_ID`/`ADZUNA_APP_KEY` (env only, never logged/committed);
+  Germany connectivity via `/jobs/de/search` (the `/version` endpoint is not required).
+
+**Gap audit.** `scripts/audit_knowledge_gaps.py` (+`--json`) reports per-domain readiness
+and the Phase 7B backbone verdict, separating blocking from non-blocking/future gaps.
+
+Credentials are read ONLY from the environment and never enter source metadata, provenance,
+logs, tests or `.env.example` (which holds empty `ADZUNA_APP_ID=` / `ADZUNA_APP_KEY=`
+placeholders). `.env` stays git-ignored.

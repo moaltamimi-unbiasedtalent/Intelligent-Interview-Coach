@@ -3,29 +3,29 @@
 Measured inventory of `data/raw` mapped to `data/source_manifest.json`.
 Read-only over the raw corpus; no files were moved, renamed or deleted.
 
-- Files discovered: **198**
-- Total size: **470.6 MB**
+- Files discovered: **206**
+- Total size: **461.7 MB**
 - Distinct sources found locally: **22**
-- Unresolved files: **0**
+- Unresolved files: **3**
 
 ## Source → local files
 
 ### `bls_oews` — 15 file(s)
+- `bls/oews_2025/oesm25all-2/oesm25all/all_data_M_2025.xlsx`
+- `bls/oews_2025/oesm25in4-2/oesm25in4/file_descriptions.xlsx`
+- `bls/oews_2025/oesm25in4-2/oesm25in4/nat3d_M2025_dl.xlsx`
+- `bls/oews_2025/oesm25in4-2/oesm25in4/nat3d_owner_M2025_dl.xlsx`
+- `bls/oews_2025/oesm25in4-2/oesm25in4/nat4d_M2025_dl.xlsx`
+- `bls/oews_2025/oesm25in4-2/oesm25in4/nat4d_owner_M2025_dl.xlsx`
+- `bls/oews_2025/oesm25in4-2/oesm25in4/nat5d_6d_M2025_dl.xlsx`
+- `bls/oews_2025/oesm25in4-2/oesm25in4/national_owner_M2025_dl.xlsx`
+- `bls/oews_2025/oesm25in4-2/oesm25in4/natsector_M2025_dl.xlsx`
+- `bls/oews_2025/oesm25ma-2/oesm25ma/BOS_M2025_dl.xlsx`
+- `bls/oews_2025/oesm25ma-2/oesm25ma/MSA_M2025_dl.xlsx`
+- `bls/oews_2025/oesm25ma-2/oesm25ma/file_descriptions.xlsx`
+- `bls/oews_2025/oesm25st-2/oesm25st/state_M2025_dl.xlsx`
 - `occupation_definitions_m2025.xlsx`
-- `oesm25all/oesm25all/all_data_M_2025.xlsx`
-- `oesm25in4/oesm25in4/file_descriptions.xlsx`
-- `oesm25in4/oesm25in4/nat3d_M2025_dl.xlsx`
-- `oesm25in4/oesm25in4/nat3d_owner_M2025_dl.xlsx`
-- `oesm25in4/oesm25in4/nat4d_M2025_dl.xlsx`
-- `oesm25in4/oesm25in4/nat4d_owner_M2025_dl.xlsx`
-- `oesm25in4/oesm25in4/nat5d_6d_M2025_dl.xlsx`
-- `oesm25in4/oesm25in4/national_owner_M2025_dl.xlsx`
-- `oesm25in4/oesm25in4/natsector_M2025_dl.xlsx`
-- `oesm25ma/oesm25ma/BOS_M2025_dl.xlsx`
-- `oesm25ma/oesm25ma/MSA_M2025_dl.xlsx`
-- `oesm25ma/oesm25ma/file_descriptions.xlsx`
 - `oesm25nat/oesm25nat/national_M2025_dl.xlsx`
-- `oesm25st/oesm25st/state_M2025_dl.xlsx`
 
 ### `bls_ooh` — 1 file(s)
 - `OOH xml-compilation.xml`
@@ -36,7 +36,28 @@ Read-only over the raw corpus; no files were moved, renamed or deleted.
 ### `cedefop_clssi` — 1 file(s)
 - `2026_cedefop_labour_skills_shortage_index_clssi_dataset.xlsx`
 
-### `cedefop_skills_forecast` — 1 file(s)
+### `cedefop_skills_forecast` — 22 file(s)
+- `cedefop/skills_forecast_2026/CedefopSkillsForecast2026_documentation.pdf`
+- `cedefop/skills_forecast_2026/Employment_occupation.xlsx`
+- `cedefop/skills_forecast_2026/Employment_occupation_detail.xlsx`
+- `cedefop/skills_forecast_2026/Employment_occupation_detail_qualification.xlsx`
+- `cedefop/skills_forecast_2026/Employment_qualification.xlsx`
+- `cedefop/skills_forecast_2026/Employment_sector.xlsx`
+- `cedefop/skills_forecast_2026/Employment_sector_broad.xlsx`
+- `cedefop/skills_forecast_2026/Employment_sector_detail.xlsx`
+- `cedefop/skills_forecast_2026/Employment_sector_occupation_detail.xlsx`
+- `cedefop/skills_forecast_2026/Employment_total.xlsx`
+- `cedefop/skills_forecast_2026/Job_openings_occupation.xlsx`
+- `cedefop/skills_forecast_2026/Labour_force_age_gender.xlsx`
+- `cedefop/skills_forecast_2026/Labour_force_age_qualification.xlsx`
+- `cedefop/skills_forecast_2026/Labour_force_gender_qualification.xlsx`
+- `cedefop/skills_forecast_2026/Labour_force_total.xlsx`
+- `cedefop/skills_forecast_2026/Population_age.xlsx`
+- `cedefop/skills_forecast_2026/Replacement_demand_occupation.xlsx`
+- `cedefop/skills_forecast_2026/Replacement_demand_occupation_detail.xlsx`
+- `cedefop/skills_forecast_2026/Replacement_demand_occupation_detail_qualification.xlsx`
+- `cedefop/skills_forecast_2026/Replacement_demand_qualification.xlsx`
+- `cedefop/skills_forecast_2026/Replacement_demand_total.xlsx`
 - `skills_forecast_2026_technical_report.pdf`
 
 ### `cedefop_stas` — 1 file(s)
@@ -103,23 +124,7 @@ Read-only over the raw corpus; no files were moved, renamed or deleted.
 - `NICE Framework Components v2.2.0.xlsx`
 - `NIST.SP.800-181r1.pdf`
 
-### `onet` — 62 file(s)
-- `Abilities.xlsx`
-- `Education Categories.xlsx`
-- `Education.xlsx`
-- `Essential Skills.xlsx`
-- `Job Titles.xlsx`
-- `Knowledge.xlsx`
-- `Occupation Data.xlsx`
-- `Related Occupations.xlsx`
-- `Software Skills.xlsx`
-- `Task Ratings.xlsx`
-- `Task Statements.xlsx`
-- `Transferable Skills.xlsx`
-- `Work Activities.xlsx`
-- `Work Context Categories.xlsx`
-- `Work Context.xlsx`
-- `Work Styles.xlsx`
+### `onet` — 46 file(s)
 - `db_31_0_excel/Abilities to Work Activities.xlsx`
 - `db_31_0_excel/Abilities to Work Context.xlsx`
 - `db_31_0_excel/Abilities.xlsx`
@@ -144,7 +149,23 @@ Read-only over the raw corpus; no files were moved, renamed or deleted.
 - `db_31_0_excel/Occupation Data.xlsx`
 - `db_31_0_excel/Occupation Level Metadata.xlsx`
 - `db_31_0_excel/Read Me.txt`
-- … and 22 more
+- `db_31_0_excel/Related Occupations.xlsx`
+- `db_31_0_excel/Sample of Reported Titles.xlsx`
+- `db_31_0_excel/Scales Reference.xlsx`
+- `db_31_0_excel/Software Skills.xlsx`
+- `db_31_0_excel/Specific Interest Areas to Career Interest Types.xlsx`
+- `db_31_0_excel/Specific Interest Areas.xlsx`
+- `db_31_0_excel/Survey Booklet Locations.xlsx`
+- `db_31_0_excel/Task Categories.xlsx`
+- `db_31_0_excel/Task Ratings.xlsx`
+- `db_31_0_excel/Task Statements.xlsx`
+- `db_31_0_excel/Tasks to DWAs.xlsx`
+- `db_31_0_excel/Training and Experience Categories.xlsx`
+- `db_31_0_excel/Training and Experience.xlsx`
+- `db_31_0_excel/Transferable Skills to Work Activities.xlsx`
+- `db_31_0_excel/Transferable Skills to Work Context.xlsx`
+- `db_31_0_excel/Transferable Skills.xlsx`
+- … and 6 more
 
 ### `ons_ashe` — 66 file(s)
 - `ashetable142025provisional/PROV - Occupation SOC20 (4) Table 14.10a   Paid hours worked - Basic 2025.xlsx`
@@ -203,6 +224,11 @@ Read-only over the raw corpus; no files were moved, renamed or deleted.
 - `Guidance-Application_of_Success_Profiles_during_HR_Director_recruitment_v0e.pdf`
 - `Success_Profile-HR_Director_Collection_v0e.pdf`
 
+### `unresolved` — 3 file(s)
+- `bls/oews_2025/stem-alternate-2023.xlsx`
+- `bls/oews_2025/stem_2025.xlsx`
+- `esco/1.2.1/delta.csv`
+
 ### `wef_future_of_jobs` — 1 file(s)
 - `WEF_Future_of_Jobs_Report_2025.pdf`
 
@@ -211,7 +237,6 @@ Read-only over the raw corpus; no files were moved, renamed or deleted.
 | File | Source | Ver | Year | Store | Parse | Licence | Conf |
 |---|---|---|---|---|---|---|---|
 | `2026_cedefop_labour_skills_shortage_index_clssi_dataset.xlsx` | cedefop_clssi | 2026 | 2026 | structured | ✓ | review required | high |
-| `Abilities.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
 | `Aenderungen-KldB-2010-Ueberarbeitung-2020.pdf` | kldb | 2010 (Fassung 2020) | 2020 | structured | ✓ | review required | high |
 | `Alphabetisches-Verzeichnis-Berufsbenennungen.xlsx` | kldb | 2010 (Fassung 2020) | 2020 | structured | ✓ | review required | medium |
 | `Berufssektoren-und-Segmente-KldB2010-ueF2020.xls` | kldb | 2010 (Fassung 2020) | 2020 | structured | ✓ | review required | high |
@@ -236,9 +261,6 @@ Read-only over the raw corpus; no files were moved, renamed or deleted.
 | `ESCO dataset - v1.2.1 - classification - en - csv/skillsHierarchy_en.csv` | esco | v1.2.1 | 2022 | structured | ✓ | review required | high |
 | `ESCO dataset - v1.2.1 - classification - en - csv/skills_en.csv` | esco | v1.2.1 | 2022 | structured | ✓ | review required | high |
 | `ESCO dataset - v1.2.1 - classification - en - csv/transversalSkillsCollection_en.csv` | esco | v1.2.1 | 2022 | structured | ✓ | review required | high |
-| `Education Categories.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
-| `Education.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
-| `Essential Skills.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
 | `Guidance-Application_of_Success_Profile_Guides_during_delegated_grade__EO-Grade_6__recruitment_v0b.pdf` | uk_civil_service_success_profiles | — | — | vector | ✓ | Open Government Licence v3.0 | high |
 | `Guidance-Application_of_Success_Profiles_during_HR_Deputy_Director_recruitment_v0e.pdf` | uk_hr_success_profiles | v0e | — | vector | ✓ | Open Government Licence v3.0 | high |
 | `Guidance-Application_of_Success_Profiles_during_HR_Director_recruitment_v0e.pdf` | uk_hr_success_profiles | v0e | — | vector | ✓ | Open Government Licence v3.0 | high |
@@ -249,30 +271,18 @@ Read-only over the raw corpus; no files were moved, renamed or deleted.
 | `ISCO-08 EN Vol 1.pdf` | isco08 | ISCO-08 | 2008 | structured | ✓ | review required | high |
 | `ISCO-08 EN.csv` | isco08 | ISCO-08 | 2008 | structured | ✓ | review required | high |
 | `JRC144121_01.pdf` | digcomp | 3.0 | 2025 | vector | ✓ | review required | high |
-| `Job Titles.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
 | `KS-01-25-044-EN-N.pdf` | eurostat_earnings | SES 2022 | 2022 | vector | ✓ | CC BY 4.0 | high |
 | `KldB2010-PDF-Version-Band1-Fassung2020.pdf` | kldb | 2010 (Fassung 2020) | 2020 | structured | ✓ | review required | high |
 | `KldB2010-PDF-Version-Band2-Fassung2020.pdf` | kldb | 2010 (Fassung 2020) | 2020 | structured | ✓ | review required | high |
 | `Knowledge Occupations Matrix Tables_ESCOv1.2.1.xlsx` | esco_matrix | v1.2.1 | 2022 | structured | ✓ | review required | high |
-| `Knowledge.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
 | `NICE Framework Components v2.2.0.xlsx` | nice_framework | v2.2.0 | 2024 | structured | ✓ | Public domain (U.S. Government work) | high |
 | `NIST.SP.800-181r1.pdf` | nice_framework | SP 800-181r1 | 2020 | vector | ✓ | Public domain (U.S. Government work) | high |
 | `OOH xml-compilation.xml` | bls_ooh | 2025 | 2025 | structured | ✗ | Public domain (U.S. Government work) | high |
-| `Occupation Data.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
-| `Related Occupations.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
 | `Skills Occupations Matrix Tables_ESCOv1.2.1.xlsx` | esco_matrix | v1.2.1 | 2022 | structured | ✓ | review required | high |
-| `Software Skills.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
 | `Success_Profile-HR_Director_Collection_v0e.pdf` | uk_hr_success_profiles | v0e | — | vector | ✓ | Open Government Licence v3.0 | high |
 | `Success_Profile_Matrices_v0f.pdf` | uk_civil_service_success_profiles | v0f | — | vector | ✓ | Open Government Licence v3.0 | high |
 | `Systematisches-Verzeichnis-KldB-2020.xlsx` | kldb | 2010 (Fassung 2020) | 2020 | structured | ✓ | review required | high |
-| `Task Ratings.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
-| `Task Statements.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
-| `Transferable Skills.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
 | `WEF_Future_of_Jobs_Report_2025.pdf` | wef_future_of_jobs | 2025 | 2025 | vector | ✓ | review required | high |
-| `Work Activities.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
-| `Work Context Categories.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
-| `Work Context.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
-| `Work Styles.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
 | `ashetable142025provisional/PROV - Occupation SOC20 (4) Table 14.10a   Paid hours worked - Basic 2025.xlsx` | ons_ashe | 2025 provisional | 2025 | structured | ✓ | Open Government Licence v3.0 | high |
 | `ashetable142025provisional/PROV - Occupation SOC20 (4) Table 14.10b   Paid hours worked - Basic 2025 CV.xlsx` | ons_ashe | 2025 provisional | 2025 | structured | ✓ | Open Government Licence v3.0 | high |
 | `ashetable142025provisional/PROV - Occupation SOC20 (4) Table 14.11a   Paid hours worked - Overtime 2025.xlsx` | ons_ashe | 2025 provisional | 2025 | structured | ✓ | Open Government Licence v3.0 | high |
@@ -339,6 +349,42 @@ Read-only over the raw corpus; no files were moved, renamed or deleted.
 | `ashetable152025provisional/ASHE Table 15 (4) 2025 Provisional/PROV - Work Region Occupation SOC20 (4) Table 15 (4).8b   Annual pay - Incentive 2025 CV.xlsx` | ons_ashe | 2025 provisional | 2025 | structured | ✓ | Open Government Licence v3.0 | high |
 | `ashetable152025provisional/ASHE Table 15 (4) 2025 Provisional/PROV - Work Region Occupation SOC20 (4) Table 15 (4).9a   Paid hours worked - Total 2025.xlsx` | ons_ashe | 2025 provisional | 2025 | structured | ✓ | Open Government Licence v3.0 | high |
 | `ashetable152025provisional/ASHE Table 15 (4) 2025 Provisional/PROV - Work Region Occupation SOC20 (4) Table 15 (4).9b   Paid hours worked - Total 2025 CV.xlsx` | ons_ashe | 2025 provisional | 2025 | structured | ✓ | Open Government Licence v3.0 | high |
+| `bls/oews_2025/oesm25all-2/oesm25all/all_data_M_2025.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
+| `bls/oews_2025/oesm25in4-2/oesm25in4/file_descriptions.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
+| `bls/oews_2025/oesm25in4-2/oesm25in4/nat3d_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
+| `bls/oews_2025/oesm25in4-2/oesm25in4/nat3d_owner_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
+| `bls/oews_2025/oesm25in4-2/oesm25in4/nat4d_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
+| `bls/oews_2025/oesm25in4-2/oesm25in4/nat4d_owner_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
+| `bls/oews_2025/oesm25in4-2/oesm25in4/nat5d_6d_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
+| `bls/oews_2025/oesm25in4-2/oesm25in4/national_owner_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
+| `bls/oews_2025/oesm25in4-2/oesm25in4/natsector_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
+| `bls/oews_2025/oesm25ma-2/oesm25ma/BOS_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
+| `bls/oews_2025/oesm25ma-2/oesm25ma/MSA_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
+| `bls/oews_2025/oesm25ma-2/oesm25ma/file_descriptions.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
+| `bls/oews_2025/oesm25st-2/oesm25st/state_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
+| `bls/oews_2025/stem-alternate-2023.xlsx` | unresolved | — | 2023 | — | ✓ | unknown | none |
+| `bls/oews_2025/stem_2025.xlsx` | unresolved | — | 2025 | — | ✓ | unknown | none |
+| `cedefop/skills_forecast_2026/CedefopSkillsForecast2026_documentation.pdf` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Employment_occupation.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Employment_occupation_detail.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Employment_occupation_detail_qualification.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Employment_qualification.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Employment_sector.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Employment_sector_broad.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Employment_sector_detail.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Employment_sector_occupation_detail.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Employment_total.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Job_openings_occupation.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Labour_force_age_gender.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Labour_force_age_qualification.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Labour_force_gender_qualification.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Labour_force_total.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Population_age.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Replacement_demand_occupation.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Replacement_demand_occupation_detail.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Replacement_demand_occupation_detail_qualification.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Replacement_demand_qualification.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
+| `cedefop/skills_forecast_2026/Replacement_demand_total.xlsx` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
 | `classifierhandbook.pdf` | opm_occupational_groups | TS-107 1991 | 1991 | vector | ✓ | Public domain (U.S. Government work) | medium |
 | `db_31_0_excel/Abilities to Work Activities.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
 | `db_31_0_excel/Abilities to Work Context.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
@@ -387,24 +433,12 @@ Read-only over the raw corpus; no files were moved, renamed or deleted.
 | `db_31_0_excel/Work Styles to Work Context.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
 | `db_31_0_excel/Work Styles.xlsx` | onet | 31.0 | 2026 | structured | ✓ | CC BY 4.0 | high |
 | `en_ESCO Skill-Occupation Matrix Tables Technical Report.pdf` | esco_matrix | v1.2.1 | 2022 | vector | ✓ | review required | high |
+| `esco/1.2.1/delta.csv` | unresolved | — | — | — | ✓ | unknown | none |
 | `jvs_a_isco3_r1$defaultview_spreadsheet.xlsx` | eurostat_occ_vacancy | jvs_a_isco3_r1 | 2026 | structured | ✓ | CC BY 4.0 | high |
 | `occupation.xlsx` | bls_projections | 2025-2035 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
 | `occupation_definitions_m2025.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
 | `occupationalhandbook.pdf` | opm_occupational_groups | Dec 2018 | 2018 | vector | ✓ | Public domain (U.S. Government work) | high |
-| `oesm25all/oesm25all/all_data_M_2025.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
-| `oesm25in4/oesm25in4/file_descriptions.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
-| `oesm25in4/oesm25in4/nat3d_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
-| `oesm25in4/oesm25in4/nat3d_owner_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
-| `oesm25in4/oesm25in4/nat4d_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
-| `oesm25in4/oesm25in4/nat4d_owner_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
-| `oesm25in4/oesm25in4/nat5d_6d_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
-| `oesm25in4/oesm25in4/national_owner_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
-| `oesm25in4/oesm25in4/natsector_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
-| `oesm25ma/oesm25ma/BOS_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
-| `oesm25ma/oesm25ma/MSA_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
-| `oesm25ma/oesm25ma/file_descriptions.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
 | `oesm25nat/oesm25nat/national_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
-| `oesm25st/oesm25st/state_M2025_dl.xlsx` | bls_oews | M2025 | 2025 | structured | ✓ | Public domain (U.S. Government work) | high |
 | `positionclassificationintro-app-1-edits-per-cap-request-final.pdf` | opm_occupational_groups | 2009 rev | 2009 | vector | ✓ | Public domain (U.S. Government work) | medium |
 | `skills_forecast_2026_technical_report.pdf` | cedefop_skills_forecast | 2026 | 2026 | vector | ✓ | review required | high |
 | `stas_dataset_release_jan_2026.xlsx` | cedefop_stas | Jan 2026 | 2026 | structured | ✓ | review required | medium |

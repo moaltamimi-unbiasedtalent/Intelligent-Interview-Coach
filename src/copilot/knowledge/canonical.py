@@ -606,3 +606,369 @@ def _unflatten_from_parquet(d: dict[str, Any]) -> dict[str, Any]:
                 pass
         out[k] = v
     return out
+
+
+# ======================================================================================
+# Phase 7A.1 — specialized records (compensation / labour market / credentials /
+# crosswalk), source-quality category, requirement level, and the canonical-id registry.
+# ======================================================================================
+
+class SourceQualityCategory(str, Enum):
+    """Deterministic source category (a provenance kind — NOT a numeric trust score) (§28)."""
+
+    OFFICIAL_TAXONOMY = "official_taxonomy"          # O*NET, ESCO, ISCO, KldB
+    OFFICIAL_STATISTICS = "official_statistics"      # Destatis, BLS OEWS, ONS, Eurostat
+    OFFICIAL_REGULATORY = "official_regulatory"      # regulators / competent authorities
+    OFFICIAL_LABOUR_MARKET = "official_labour_market"  # Cedefop, BA, EURES
+    AUTHORIZED_MARKET_API = "authorized_market_api"  # Adzuna (advertised market)
+    COMMERCIAL_ESTIMATE = "commercial_estimate"      # commercial salary estimators
+    CURATED_INTERNAL = "curated_internal"            # Ask4Mo-authored
+
+
+class RequirementLevel(str, Enum):
+    """Task/qualification requirement (e.g. BA Anforderungsniveau) — a DIFFERENT dimension
+    from :class:`Seniority` (§23). A helper role can still be 'senior'; do not map 1:1."""
+
+    HELPER = "helper"          # Helfer / angelernt
+    SKILLED = "skilled"        # Fachkraft
+    SPECIALIST = "specialist"  # Spezialist
+    EXPERT = "expert"          # Experte
+    UNKNOWN = "unknown"
+
+
+class CompensationStatistic(str, Enum):
+    MEAN = "mean"
+    MEDIAN = "median"
+    P10 = "p10"
+    P25 = "p25"
+    P50 = "p50"
+    P75 = "p75"
+    P90 = "p90"
+    MIN = "min"
+    MAX = "max"
+
+
+class PayPeriod(str, Enum):
+    HOUR = "hour"
+    MONTH = "month"
+    YEAR = "year"
+
+
+class GrossNet(str, Enum):
+    GROSS = "gross"
+    NET = "net"
+    UNKNOWN = "unknown"
+
+
+class CompensationType(str, Enum):
+    """The semantic KIND of pay evidence — never collapse these into a generic 'salary' (§15)."""
+
+    OBSERVED_EARNINGS = "observed_earnings"      # official statistics (Destatis/BLS/ONS/Eurostat/BA)
+    ADVERTISED_SALARY = "advertised_salary"      # job-ad salaries (Adzuna)
+    MODELED_ESTIMATE = "modeled_estimate"        # a model/estimator output
+    BASE_SALARY = "base_salary"
+    TOTAL_CASH = "total_cash"
+    TOTAL_COMPENSATION = "total_compensation"
+
+
+class EmploymentBasis(str, Enum):
+    FULL_TIME = "full_time"
+    PART_TIME = "part_time"
+    ALL = "all"
+    UNKNOWN = "unknown"
+
+
+class CompensationRecord(BaseModel):
+    """First-class compensation evidence (§16). NOT forced into KnowledgeFact so its
+    statistic / period / gross-net / observed-vs-advertised semantics stay explicit and
+    can be validated (§17)."""
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    compensation_id: str = Field(min_length=1)
+
+    occupation_id: str | None = None
+    source_occupation_id: str | None = None
+    occupation_code: str | None = None
+    classification: ClassificationScheme | None = None
+
+    country: str | None = None
+    region: str | None = None
+    city: str | None = None
+    geography_type: GeographyType | None = None
+    geography_code: str | None = None
+
+    industry: str | None = None
+    requirement_level: RequirementLevel | None = None
+    seniority: Seniority | None = None
+
+    currency: str | None = Field(default=None, description="ISO-4217, e.g. EUR/USD/GBP.")
+    amount: float | None = None
+    statistic: CompensationStatistic | None = None
+    pay_period: PayPeriod | None = None
+    gross_net: GrossNet = GrossNet.UNKNOWN
+    compensation_type: CompensationType
+    employment_basis: EmploymentBasis = EmploymentBasis.UNKNOWN
+
+    effective_year: int | None = Field(default=None, ge=1900, le=2100)
+    effective_period: str | None = None
+
+    sample_size: int | None = None
+    sample_size_known: bool = False
+    suppressed: bool = False
+    top_coded: bool = False
+    estimated: bool = False
+
+    source: str = Field(min_length=1)
+    source_version: str | None = None
+    source_record_id: str
+    source_url: str | None = None
+    source_quality: SourceQualityCategory | None = None
+    retrieved_at: date | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("country", "currency")
+    @classmethod
+    def _upper(cls, v: str | None) -> str | None:
+        return v.upper() if v else v
+
+    @field_validator("occupation_id")
+    @classmethod
+    def _canon(cls, v: str | None) -> str | None:
+        if v and not v.startswith("ask4mo:occ:"):
+            raise ValueError("occupation_id must be an ask4mo:occ:<hash> canonical id.")
+        return v
+
+
+class MetricType(str, Enum):
+    EMPLOYMENT = "employment"
+    VACANCIES = "vacancies"
+    UNEMPLOYMENT = "unemployment"
+    GROWTH_RATE = "growth_rate"
+    REPLACEMENT_DEMAND = "replacement_demand"
+    JOB_OPENINGS = "job_openings"
+    SHORTAGE_INDICATOR = "shortage_indicator"
+    JOB_DENSITY = "job_density"
+    CURRENT_POSTINGS = "current_postings"
+
+
+class LabourMarketRecord(BaseModel):
+    """Labour-market metric evidence (§18) — employment / vacancies / shortage / forecast."""
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    labour_market_id: str = Field(min_length=1)
+
+    occupation_id: str | None = None
+    source_occupation_id: str | None = None
+    classification: ClassificationScheme | None = None
+
+    country: str | None = None
+    region: str | None = None
+    geography_type: GeographyType | None = None
+    geography_code: str | None = None
+    industry: str | None = None
+
+    metric_type: MetricType
+    value: float | None = None
+    unit: str | None = None
+
+    effective_period: str | None = None
+    forecast_period: str | None = None
+
+    source: str = Field(min_length=1)
+    source_version: str | None = None
+    source_record_id: str
+    source_url: str | None = None
+    source_quality: SourceQualityCategory | None = None
+    retrieved_at: date | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("country")
+    @classmethod
+    def _upper_c(cls, v: str | None) -> str | None:
+        return v.upper() if v else v
+
+    @field_validator("occupation_id")
+    @classmethod
+    def _canon(cls, v: str | None) -> str | None:
+        if v and not v.startswith("ask4mo:occ:"):
+            raise ValueError("occupation_id must be an ask4mo:occ:<hash> canonical id.")
+        return v
+
+
+class CredentialType(str, Enum):
+    LICENCE = "licence"
+    CERTIFICATION = "certification"
+    QUALIFICATION = "qualification"
+    REGISTRATION = "registration"
+    ACCREDITATION = "accreditation"
+    UNKNOWN = "unknown"
+
+
+class CredentialRecord(BaseModel):
+    """Credential / regulated-profession evidence (§19). No scraping — schema only here."""
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    credential_id: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+    credential_type: CredentialType = CredentialType.UNKNOWN
+
+    occupation_id: str | None = None
+    source_occupation_id: str | None = None
+
+    country: str | None = None
+    region: str | None = None
+
+    required: bool = False
+    recommended: bool = False
+    regulated_profession: bool = False
+    qualification_level: str | None = None
+
+    issuing_body: str | None = None
+    competent_authority: str | None = None
+
+    source: str = Field(min_length=1)
+    source_version: str | None = None
+    source_record_id: str
+    source_url: str | None = None
+    source_quality: SourceQualityCategory | None = None
+    effective_date: date | None = None
+    retrieved_at: date | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("country")
+    @classmethod
+    def _upper_c(cls, v: str | None) -> str | None:
+        return v.upper() if v else v
+
+
+class MappingType(str, Enum):
+    EXACT = "exact"
+    BROADER = "broader"
+    NARROWER = "narrower"
+    RELATED = "related"
+    PARTIAL = "partial"
+
+
+class MappingStrength(str, Enum):
+    OFFICIAL = "official"       # published crosswalk from an authority
+    DERIVED = "derived"         # deterministic transform
+    CURATED = "curated"         # Ask4Mo-authored
+
+
+class OccupationCrosswalk(BaseModel):
+    """A mapping between two occupation identities/classifications (§20).
+
+    IMPORTANT: a broad taxonomy relationship (e.g. same ISCO group) is ``broader`` /
+    ``related`` — NOT ``exact``. Crosswalks describe relationships; they must not silently
+    collapse two occupations into one.
+    """
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    crosswalk_id: str = Field(min_length=1)
+
+    source_occupation_id: str
+    target_occupation_id: str
+    source_classification: ClassificationScheme
+    target_classification: ClassificationScheme
+    source_code: str
+    target_code: str
+
+    mapping_type: MappingType = MappingType.RELATED
+    mapping_strength: MappingStrength = MappingStrength.OFFICIAL
+    official_mapping: bool = True
+
+    source: str = Field(min_length=1)
+    source_version: str | None = None
+    valid_from: date | None = None
+    valid_to: date | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class CanonicalIdRegistry:
+    """Persistent source-identifier → canonical Ask4Mo occupation-id map (§21).
+
+    Guarantees canonical-id STABILITY: once an occupation has a canonical id, adding a
+    richer classification later (e.g. an ESCO URI on top of an ISCO code) must NOT
+    regenerate the id. The registry remembers every classification key that resolves to a
+    given canonical id, so a later lookup by ANY of the occupation's keys returns the same
+    id — even though :func:`canonical_occupation_id` alone would derive a different id from
+    the higher-precedence key.
+    """
+
+    def __init__(self, mapping: dict[str, str] | None = None) -> None:
+        # key ("scheme:value" / "native:src:id") -> canonical id
+        self._map: dict[str, str] = dict(mapping or {})
+
+    @staticmethod
+    def _keys(**ids: str | None) -> list[str]:
+        out: list[str] = []
+        if ids.get("esco_uri"):
+            out.append(f"{ClassificationScheme.ESCO.value}:{ids['esco_uri'].strip()}")
+        if ids.get("onet_soc_code"):
+            out.append(f"{ClassificationScheme.ONET_SOC.value}:{ids['onet_soc_code'].strip().lower()}")
+        if ids.get("isco_code"):
+            out.append(f"{ClassificationScheme.ISCO.value}:{str(ids['isco_code']).strip()}")
+        if ids.get("soc_code"):
+            out.append(f"{ClassificationScheme.SOC.value}:{str(ids['soc_code']).strip()}")
+        if ids.get("kldb_code"):
+            out.append(f"{ClassificationScheme.KLDB.value}:{str(ids['kldb_code']).strip()}")
+        if ids.get("source") and ids.get("source_occupation_id"):
+            out.append(f"native:{ids['source'].strip()}:{ids['source_occupation_id'].strip()}")
+        return out
+
+    def resolve_or_assign(self, **ids: str | None) -> str:
+        """Return the stable canonical id for this occupation, assigning one on first sight.
+
+        If any of the supplied identifiers is already known, its existing canonical id is
+        returned and every new identifier is bound to it (enrichment). Otherwise a new id
+        is derived (by the fixed precedence in :func:`canonical_occupation_id`) and all
+        identifiers are registered to it.
+        """
+        keys = self._keys(**ids)
+        if not keys:
+            raise ValueError("resolve_or_assign needs at least one occupation identifier.")
+        existing = next((self._map[k] for k in keys if k in self._map), None)
+        canonical = existing or canonical_occupation_id(**ids)
+        for k in keys:
+            self._map.setdefault(k, canonical)
+        return canonical
+
+    def get(self, **ids: str | None) -> str | None:
+        return next((self._map[k] for k in self._keys(**ids) if k in self._map), None)
+
+    def as_dict(self) -> dict[str, str]:
+        return dict(self._map)
+
+    def save(self, path: str | Path) -> None:
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps({"version": 1, "map": self._map}, indent=2), encoding="utf-8")
+
+    @classmethod
+    def load(cls, path: str | Path) -> "CanonicalIdRegistry":
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+        return cls(mapping=data.get("map", {}))
+
+
+__all__ += [
+    "SourceQualityCategory",
+    "RequirementLevel",
+    "CompensationStatistic",
+    "PayPeriod",
+    "GrossNet",
+    "CompensationType",
+    "EmploymentBasis",
+    "CompensationRecord",
+    "MetricType",
+    "LabourMarketRecord",
+    "CredentialType",
+    "CredentialRecord",
+    "MappingType",
+    "MappingStrength",
+    "OccupationCrosswalk",
+    "CanonicalIdRegistry",
+]

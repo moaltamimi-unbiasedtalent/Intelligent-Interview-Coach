@@ -52,6 +52,11 @@ data/knowledge_demo/
 # knowledge loaders) and the generated build-reproducibility metadata.
 data/normalized/*
 data/build_metadata.json
+# Phase 7A.1: archived/quarantined duplicates and external API caches (generated,
+# potentially large / licensed). The small dedup report at data/ root stays tracked.
+data/_archive/
+data/cache/
+data/knowledge/canonical_id_registry.json
 !data/raw/.gitkeep
 !data/raw/README.md
 !data/processed/.gitkeep
