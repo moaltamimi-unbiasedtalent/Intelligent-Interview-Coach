@@ -1,5 +1,11 @@
 # Phase 7 — Integrated Readiness (7H Quality Gate)
 
+> **Phase 7H snapshot.** This documents the Phase 7 integrated quality gate as of commit
+> `4dc3432`. The final release-candidate status — including the completed Phase 8 live golden
+> rehearsal (PASS) — lives in the canonical
+> [final submission readiness](final_submission_readiness.md); where this doc lists the live
+> golden as pending Phase 8 work, that work is now done.
+
 Concise reviewer-oriented summary of the Phase 7 system and its validation. This is a
 **quality gate**, not a new capability: Phase 7H added no product features (only one
 documentation defect fix). Machine-readable results:

@@ -116,6 +116,7 @@ Honest, known follow-ups (not broken requirements):
 
 Reviewer package:
 
+- [Final submission readiness](docs/final_submission_readiness.md) (canonical release-candidate status) · [Live golden result](docs/final_live_golden_result.md)
 - [Submission summary](docs/sprint4_submission_summary.md) · [Reviewer guide](docs/sprint4_reviewer_guide.md) · [Reviewer Q&A](docs/sprint4_reviewer_qa.md)
 - [Demo script](docs/sprint4_demo_script.md) · [Final requirements matrix](docs/sprint4_final_requirements_matrix.md)
 - [Final evidence](docs/sprint4_final_evidence.md) (current verified test/eval numbers) · [Final evaluation](docs/sprint4_final_evaluation.md)

@@ -32,10 +32,11 @@ Final Report. See `docs/sprint4_architecture.md` for the full diagram.
 
 ## Agent tools
 
-Five allowlisted Career tools — SearchCareerKnowledge, AnalyzeJobDescription,
-AnalyzeCandidateGaps, BuildPreparationPlan, GenerateInterviewQuestions — plus two
-separate HITL action boundaries (ProposePreparationMemory, RequestPracticeHandoff).
-Unknown tools are rejected, never executed.
+Six allowlisted Career tools — SearchCareerKnowledge, AnalyzeJobDescription,
+AnalyzeCandidateGaps, BuildPreparationPlan, GenerateInterviewQuestions,
+ResearchCurrentMarket — plus two separate HITL action boundaries
+(ProposePreparationMemory, RequestPracticeHandoff). Unknown tools are rejected,
+never executed.
 
 ## Agentic RAG
 
@@ -99,5 +100,7 @@ head **0006**; Docker builds; ruff/compileall/secret-scan clean; deterministic a
 ## Limitations (intentional)
 
 Production OIDC; live PostgreSQL deployment validation; bulk checkpoint retention; paid
-Fast/Balanced/Advanced comparison; paid live RAGAS baseline; external company research;
-Streamlit retained as legacy; Live voice experimental/off; no camera/video.
+Fast/Balanced/Advanced comparison; paid live RAGAS baseline; live external-research
+integration (Adzuna / company web) not validated in this environment (bounded
+`ResearchCurrentMarket` tool implemented, Phase 7F); Streamlit retained as legacy;
+Live voice experimental/off; no camera/video.
