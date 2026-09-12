@@ -1,0 +1,203 @@
+{
+  "description": "Phase 7G deterministic feedback-intelligence cases (offline, synthetic).",
+  "cases": [
+    {
+      "case_id": "pattern_eligible",
+      "kind": "support_pattern",
+      "operation": "agent_answer",
+      "not_helpful": 6,
+      "helpful": 1,
+      "expect_status": "recommendation_eligible"
+    },
+    {
+      "case_id": "pattern_pattern",
+      "kind": "support_pattern",
+      "operation": "agent_answer",
+      "not_helpful": 3,
+      "helpful": 1,
+      "expect_status": "pattern"
+    },
+    {
+      "case_id": "below_threshold",
+      "kind": "support_pattern",
+      "operation": "final_report",
+      "not_helpful": 2,
+      "helpful": 0,
+      "expect_status": "observation_only"
+    },
+    {
+      "case_id": "single_neg",
+      "kind": "support_pattern",
+      "operation": "final_report",
+      "not_helpful": 1,
+      "helpful": 0,
+      "expect_status": "observation_only"
+    },
+    {
+      "case_id": "positive_helpful",
+      "kind": "positive",
+      "operation": "interview_evaluation",
+      "helpful": 12,
+      "not_helpful": 1,
+      "expect_positive": true
+    },
+    {
+      "case_id": "duplicate_ignored",
+      "kind": "duplicate",
+      "expect_unique": 1
+    },
+    {
+      "case_id": "safety_regression",
+      "kind": "safety_metric",
+      "metric": "unknown_role_safety_rate",
+      "value": 0.8,
+      "expect_severity": "critical"
+    },
+    {
+      "case_id": "safety_citation_regression",
+      "kind": "safety_metric",
+      "metric": "citation_completeness_rate",
+      "value": 0.9,
+      "expect_severity": "critical"
+    },
+    {
+      "case_id": "safety_holding",
+      "kind": "safety_metric",
+      "metric": "geography_correctness_rate",
+      "value": 1.0,
+      "expect_positive": true
+    },
+    {
+      "case_id": "ragas_not_run",
+      "kind": "metric_missing",
+      "note": "no numeric mean \u2192 no zero finding"
+    },
+    {
+      "case_id": "not_applicable",
+      "kind": "metric_missing",
+      "note": "None value skipped"
+    },
+    {
+      "case_id": "incompatible_metric",
+      "kind": "drift_incompatible",
+      "metric": "pass_rate",
+      "baseline": 0.95,
+      "value": 0.9,
+      "base_hash": "A",
+      "cur_hash": "B",
+      "expect_regression": false
+    },
+    {
+      "case_id": "compatible_drift",
+      "kind": "drift_compatible",
+      "metric": "pass_rate",
+      "baseline": 0.95,
+      "value": 0.9,
+      "dhash": "ds",
+      "expect_regression": true
+    },
+    {
+      "case_id": "rec_references_evidence",
+      "kind": "rec_quality",
+      "check": "finding_ids"
+    },
+    {
+      "case_id": "rec_complete",
+      "kind": "rec_quality",
+      "check": "complete"
+    },
+    {
+      "case_id": "experiment_guardrails",
+      "kind": "rec_quality",
+      "check": "guardrails"
+    },
+    {
+      "case_id": "experiment_no_dataset_edit",
+      "kind": "rec_quality",
+      "check": "no_dataset_edit"
+    },
+    {
+      "case_id": "approval_required",
+      "kind": "review",
+      "action": "required"
+    },
+    {
+      "case_id": "approval_no_execute",
+      "kind": "review",
+      "action": "approve_no_execute"
+    },
+    {
+      "case_id": "reject_remains",
+      "kind": "review",
+      "action": "reject"
+    },
+    {
+      "case_id": "defer_recorded",
+      "kind": "review",
+      "action": "defer"
+    },
+    {
+      "case_id": "review_history_immutable",
+      "kind": "review",
+      "action": "immutable"
+    },
+    {
+      "case_id": "no_raw_content_field",
+      "kind": "privacy",
+      "field": "cv_text"
+    },
+    {
+      "case_id": "no_candidate_email_field",
+      "kind": "privacy",
+      "field": "candidate_email"
+    },
+    {
+      "case_id": "no_free_text_comment",
+      "kind": "privacy",
+      "field": "comment"
+    },
+    {
+      "case_id": "no_write_outside_root",
+      "kind": "boundary",
+      "path": "src/evil.py",
+      "expect_blocked": true
+    },
+    {
+      "case_id": "no_write_git",
+      "kind": "boundary",
+      "path": ".github/workflows/x.yml",
+      "expect_blocked": true
+    },
+    {
+      "case_id": "write_inside_root_ok",
+      "kind": "boundary",
+      "path": "evaluations/feedback_intelligence/runs/t/x.json",
+      "expect_blocked": false
+    },
+    {
+      "case_id": "no_subprocess_import",
+      "kind": "capability",
+      "token": "subprocess-exec"
+    },
+    {
+      "case_id": "no_httpx_import",
+      "kind": "capability",
+      "token": "network"
+    },
+    {
+      "case_id": "no_git_capability",
+      "kind": "capability",
+      "token": "git"
+    },
+    {
+      "case_id": "missing_source_handled",
+      "kind": "missing_source",
+      "note": "absent adapter \u2192 warning, no crash"
+    },
+    {
+      "case_id": "malformed_artifact",
+      "kind": "missing_source",
+      "note": "corrupt file \u2192 warning"
+    }
+  ]
+}
