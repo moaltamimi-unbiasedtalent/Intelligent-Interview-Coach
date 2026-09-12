@@ -164,13 +164,14 @@ def _events_of(res, event_type):
 # --- §40 no low-level RAG tools are registered -------------------------------
 
 
-def test_registry_registers_the_five_real_career_tools():
-    # The five Career evidence tools remain exactly these (Phase 8 adds two SEPARATE
-    # human-action tools, asserted below — not Career evidence tools).
+def test_registry_registers_the_real_career_tools():
+    # The Career evidence tools: the five originals plus the Phase 7F bounded current-market
+    # tool (ResearchCurrentMarket). Phase 8 adds two SEPARATE human-action tools (asserted
+    # below — not Career evidence tools).
     reg = career_tool_registry(FakeCareer())
     career_tools = {
         "AnalyzeJobDescription", "AnalyzeCandidateGaps", "BuildPreparationPlan",
-        "GenerateInterviewQuestions", "SearchCareerKnowledge",
+        "GenerateInterviewQuestions", "SearchCareerKnowledge", "ResearchCurrentMarket",
     }
     assert career_tools <= set(reg.names())
     assert set(reg.names()) - career_tools == {"ProposePreparationMemory", "RequestPracticeHandoff"}
@@ -178,9 +179,16 @@ def test_registry_registers_the_five_real_career_tools():
 
 def test_retrieval_is_a_single_high_level_tool():
     names = career_tool_registry(FakeCareer()).names()
-    # Exactly one retrieval-shaped tool, and it is the high-level one.
+    # Exactly one LOCAL knowledge-retrieval tool, and it is the high-level one. (ResearchCurrentMarket
+    # is external current-market research, a distinct bounded tool — not a local retrieval lane;
+    # the substring "search" inside "reSEARCH" must not be miscounted.)
     assert "SearchCareerKnowledge" in names
-    assert sum(1 for n in names if "search" in n.lower() or "retriev" in n.lower()) == 1
+    local_retrieval = [n for n in names
+                       if ("search" in n.lower() or "retriev" in n.lower())
+                       and "research" not in n.lower()]
+    assert local_retrieval == ["SearchCareerKnowledge"]
+    # No low-level RAG store tools are ever registered (§40).
+    assert not ({"search_vector_store", "search_bm25"} & set(names))
 
 
 @pytest.mark.parametrize("low_level", LOW_LEVEL_TOOL_NAMES)

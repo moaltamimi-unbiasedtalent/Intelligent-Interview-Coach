@@ -105,13 +105,14 @@ def _run(model, career=None, **kw):
 # --- registry / allowlist (§4, §36.10) ---------------------------------------
 
 
-def test_registry_registers_the_five_career_tools():
-    # Five real Career tools (Phase 6 adds SearchCareerKnowledge) plus two Phase 8
-    # human-action tools (separate from the Career evidence tools).
+def test_registry_registers_the_six_career_tools():
+    # Six real Career tools (Phase 6 adds SearchCareerKnowledge; Phase 7F adds the bounded
+    # ResearchCurrentMarket) plus two Phase 8 human-action tools (separate from the evidence tools).
     reg = career_tool_registry(FakeCareer())
     assert set(reg.names()) == {
         "AnalyzeJobDescription", "AnalyzeCandidateGaps",
         "BuildPreparationPlan", "GenerateInterviewQuestions", "SearchCareerKnowledge",
+        "ResearchCurrentMarket",
         "ProposePreparationMemory", "RequestPracticeHandoff",
     }
 
