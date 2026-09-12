@@ -79,3 +79,8 @@ evaluations/agent_live/judge_summary.json
 # Phase 7C: regenerable retrieval-eval full outputs (summaries live in coverage_report.json)
 evaluations/knowledge/retrieval_before.json
 evaluations/knowledge/retrieval_after.json
+
+# Phase 7G: generated Feedback Intelligence analysis runs (offline, reproducible from
+# fixtures/artifacts). The synthetic fixtures + cases + reviewed example report stay tracked.
+evaluations/feedback_intelligence/runs/
+data/feedback_intelligence/

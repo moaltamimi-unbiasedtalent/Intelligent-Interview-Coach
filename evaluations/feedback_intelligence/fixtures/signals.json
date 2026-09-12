@@ -1,0 +1,474 @@
+{
+  "description": "Phase 7G synthetic feedback signals (no candidate data).",
+  "signals": [
+    {
+      "signal_id": "uf:1",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "interview_evaluation",
+      "rating": "helpful",
+      "run_id_hash": "iv00",
+      "observed_at": "2026-09-01T00:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:2",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "interview_evaluation",
+      "rating": "helpful",
+      "run_id_hash": "iv01",
+      "observed_at": "2026-09-01T01:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:3",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "interview_evaluation",
+      "rating": "helpful",
+      "run_id_hash": "iv02",
+      "observed_at": "2026-09-01T02:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:4",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "interview_evaluation",
+      "rating": "helpful",
+      "run_id_hash": "iv03",
+      "observed_at": "2026-09-01T03:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:5",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "interview_evaluation",
+      "rating": "helpful",
+      "run_id_hash": "iv04",
+      "observed_at": "2026-09-01T04:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:6",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "interview_evaluation",
+      "rating": "helpful",
+      "run_id_hash": "iv05",
+      "observed_at": "2026-09-01T05:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:7",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "interview_evaluation",
+      "rating": "helpful",
+      "run_id_hash": "iv06",
+      "observed_at": "2026-09-01T06:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:8",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "interview_evaluation",
+      "rating": "helpful",
+      "run_id_hash": "iv07",
+      "observed_at": "2026-09-01T07:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:9",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "interview_evaluation",
+      "rating": "helpful",
+      "run_id_hash": "iv08",
+      "observed_at": "2026-09-01T08:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:10",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "interview_evaluation",
+      "rating": "helpful",
+      "run_id_hash": "iv09",
+      "observed_at": "2026-09-01T09:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:11",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "interview_evaluation",
+      "rating": "helpful",
+      "run_id_hash": "iv10",
+      "observed_at": "2026-09-01T10:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:12",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "interview_evaluation",
+      "rating": "helpful",
+      "run_id_hash": "iv11",
+      "observed_at": "2026-09-01T11:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:13",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "interview_evaluation",
+      "rating": "not_helpful",
+      "run_id_hash": "iv99",
+      "observed_at": "2026-09-01T13:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:14",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "agent_answer",
+      "rating": "not_helpful",
+      "run_id_hash": "aa00",
+      "observed_at": "2026-09-01T20:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:15",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "agent_answer",
+      "rating": "not_helpful",
+      "run_id_hash": "aa01",
+      "observed_at": "2026-09-01T21:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:16",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "agent_answer",
+      "rating": "not_helpful",
+      "run_id_hash": "aa02",
+      "observed_at": "2026-09-01T22:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:17",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "agent_answer",
+      "rating": "not_helpful",
+      "run_id_hash": "aa03",
+      "observed_at": "2026-09-01T23:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:18",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "agent_answer",
+      "rating": "not_helpful",
+      "run_id_hash": "aa04",
+      "observed_at": "2026-09-02T00:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:19",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "agent_answer",
+      "rating": "not_helpful",
+      "run_id_hash": "aa05",
+      "observed_at": "2026-09-02T01:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:20",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "agent_answer",
+      "rating": "helpful",
+      "run_id_hash": "aah00",
+      "observed_at": "2026-09-02T06:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:21",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "agent_answer",
+      "rating": "helpful",
+      "run_id_hash": "aah01",
+      "observed_at": "2026-09-02T07:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:22",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "agent_answer",
+      "rating": "helpful",
+      "run_id_hash": "aah02",
+      "observed_at": "2026-09-02T08:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:23",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "final_report",
+      "rating": "not_helpful",
+      "run_id_hash": "fr0",
+      "observed_at": "2026-09-02T16:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:24",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "final_report",
+      "rating": "not_helpful",
+      "run_id_hash": "fr1",
+      "observed_at": "2026-09-02T17:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:dup",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "agent_answer",
+      "rating": "not_helpful",
+      "run_id_hash": "aadup",
+      "observed_at": "2026-09-02T21:00:00+00:00"
+    },
+    {
+      "signal_id": "uf:dup",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "agent_answer",
+      "rating": "not_helpful",
+      "run_id_hash": "aadup",
+      "observed_at": "2026-09-02T21:00:00+00:00"
+    },
+    {
+      "signal_id": "m:25",
+      "signal_type": "retrieval_evaluation",
+      "source": "retrieval_evaluation",
+      "metric_name": "citation_completeness_rate",
+      "metric_value": 1.0,
+      "metric_dataset_hash": "ds81",
+      "metric_version": "7C"
+    },
+    {
+      "signal_id": "m:26",
+      "signal_type": "retrieval_evaluation",
+      "source": "retrieval_evaluation",
+      "metric_name": "geography_correctness_rate",
+      "metric_value": 1.0,
+      "metric_dataset_hash": "ds81",
+      "metric_version": "7C"
+    },
+    {
+      "signal_id": "m:27",
+      "signal_type": "retrieval_evaluation",
+      "source": "retrieval_evaluation",
+      "metric_name": "unknown_role_safety_rate",
+      "metric_value": 0.83,
+      "metric_dataset_hash": "ds81",
+      "metric_version": "7C"
+    },
+    {
+      "signal_id": "m:28",
+      "signal_type": "ragas_evaluation",
+      "source": "ragas_evaluation",
+      "metric_name": "id_context_precision",
+      "metric_value": 0.676,
+      "metric_dataset_hash": "0e0e9298ba77a8bc",
+      "metric_version": "0.2.15"
+    },
+    {
+      "signal_id": "m:29",
+      "signal_type": "external_research_evaluation",
+      "source": "external_research_evaluation",
+      "metric_name": "ssrf_safety",
+      "metric_value": 1.0,
+      "metric_dataset_hash": "er38"
+    },
+    {
+      "signal_id": "gap:30",
+      "signal_type": "knowledge_coverage",
+      "source": "knowledge_coverage",
+      "outcome": "known_gap",
+      "domain": "knowledge",
+      "metadata": {
+        "gap_index": 0
+      }
+    },
+    {
+      "signal_id": "gap:31",
+      "signal_type": "knowledge_coverage",
+      "source": "knowledge_coverage",
+      "outcome": "known_gap",
+      "domain": "knowledge",
+      "metadata": {
+        "gap_index": 1
+      }
+    },
+    {
+      "signal_id": "gap:32",
+      "signal_type": "knowledge_coverage",
+      "source": "knowledge_coverage",
+      "outcome": "known_gap",
+      "domain": "knowledge",
+      "metadata": {
+        "gap_index": 2
+      }
+    },
+    {
+      "signal_id": "gap:33",
+      "signal_type": "knowledge_coverage",
+      "source": "knowledge_coverage",
+      "outcome": "known_gap",
+      "domain": "knowledge",
+      "metadata": {
+        "gap_index": 3
+      }
+    },
+    {
+      "signal_id": "err:34",
+      "signal_type": "error_category",
+      "source": "observability_aggregate",
+      "error_category": "provider_timeout",
+      "observed_at": "2026-09-03T02:00:00+00:00"
+    },
+    {
+      "signal_id": "err:35",
+      "signal_type": "error_category",
+      "source": "observability_aggregate",
+      "error_category": "provider_timeout",
+      "observed_at": "2026-09-03T03:00:00+00:00"
+    },
+    {
+      "signal_id": "err:36",
+      "signal_type": "error_category",
+      "source": "observability_aggregate",
+      "error_category": "provider_timeout",
+      "observed_at": "2026-09-03T04:00:00+00:00"
+    },
+    {
+      "signal_id": "err:37",
+      "signal_type": "error_category",
+      "source": "observability_aggregate",
+      "error_category": "provider_timeout",
+      "observed_at": "2026-09-03T05:00:00+00:00"
+    },
+    {
+      "signal_id": "err:38",
+      "signal_type": "error_category",
+      "source": "observability_aggregate",
+      "error_category": "provider_timeout",
+      "observed_at": "2026-09-03T06:00:00+00:00"
+    },
+    {
+      "signal_id": "err:39",
+      "signal_type": "error_category",
+      "source": "observability_aggregate",
+      "error_category": "retrieval_error"
+    },
+    {
+      "signal_id": "lat:40",
+      "signal_type": "observability_aggregate",
+      "source": "observability_aggregate",
+      "operation": "agent_run",
+      "latency_bucket": "slow",
+      "observed_at": "2026-09-03T12:00:00+00:00"
+    },
+    {
+      "signal_id": "lat:41",
+      "signal_type": "observability_aggregate",
+      "source": "observability_aggregate",
+      "operation": "agent_run",
+      "latency_bucket": "slow",
+      "observed_at": "2026-09-03T13:00:00+00:00"
+    },
+    {
+      "signal_id": "lat:42",
+      "signal_type": "observability_aggregate",
+      "source": "observability_aggregate",
+      "operation": "agent_run",
+      "latency_bucket": "slow",
+      "observed_at": "2026-09-03T14:00:00+00:00"
+    },
+    {
+      "signal_id": "lat:43",
+      "signal_type": "observability_aggregate",
+      "source": "observability_aggregate",
+      "operation": "agent_run",
+      "latency_bucket": "slow",
+      "observed_at": "2026-09-03T15:00:00+00:00"
+    },
+    {
+      "signal_id": "iv:44",
+      "signal_type": "interview_practice_operation",
+      "source": "interview",
+      "operation": "generate_report",
+      "outcome": "success",
+      "observed_at": "2026-09-03T22:00:00+00:00"
+    },
+    {
+      "signal_id": "iv:45",
+      "signal_type": "interview_practice_operation",
+      "source": "interview",
+      "operation": "generate_report",
+      "outcome": "success",
+      "observed_at": "2026-09-03T23:00:00+00:00"
+    },
+    {
+      "signal_id": "iv:46",
+      "signal_type": "interview_practice_operation",
+      "source": "interview",
+      "operation": "generate_report",
+      "outcome": "success",
+      "observed_at": "2026-09-04T00:00:00+00:00"
+    },
+    {
+      "signal_id": "prep:1001",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "interview_evaluation",
+      "rating": "helpful",
+      "run_id_hash": "extra0",
+      "observed_at": "2026-09-05T00:00:00+00:00"
+    },
+    {
+      "signal_id": "prep:1002",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "agent_answer",
+      "rating": "helpful",
+      "run_id_hash": "extra1",
+      "observed_at": "2026-09-05T01:00:00+00:00"
+    },
+    {
+      "signal_id": "prep:1003",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "interview_evaluation",
+      "rating": "helpful",
+      "run_id_hash": "extra2",
+      "observed_at": "2026-09-05T02:00:00+00:00"
+    },
+    {
+      "signal_id": "prep:1004",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "agent_answer",
+      "rating": "helpful",
+      "run_id_hash": "extra3",
+      "observed_at": "2026-09-05T03:00:00+00:00"
+    },
+    {
+      "signal_id": "prep:1005",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "interview_evaluation",
+      "rating": "helpful",
+      "run_id_hash": "extra4",
+      "observed_at": "2026-09-05T04:00:00+00:00"
+    },
+    {
+      "signal_id": "prep:1006",
+      "signal_type": "user_feedback",
+      "source": "user_feedback",
+      "operation": "agent_answer",
+      "rating": "helpful",
+      "run_id_hash": "extra5",
+      "observed_at": "2026-09-05T05:00:00+00:00"
+    }
+  ]
+}
