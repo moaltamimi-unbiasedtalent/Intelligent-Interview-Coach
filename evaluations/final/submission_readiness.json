@@ -141,9 +141,16 @@
     "live_langfuse": 0, "live_golden": "NOT RUN"
   },
   "live_golden": {
-    "plan": "READY", "profile": "Balanced", "synthetic_public_inputs": true,
-    "estimated_provider_calls": "~6-12", "estimated_cost": "unknown (small; no pricing call)",
-    "authorization": "REQUIRED", "status": "READY_FOR_AUTHORIZATION", "executed": false
+    "plan": "EXECUTED", "profile": "Balanced", "model": "openai/gpt-5.6-terra",
+    "synthetic_public_inputs": true, "run_id": "final-golden-20260912-192348",
+    "validated_code_sha": "afb4f4567ff6b3307a8e0b0e175cbe1a41665148", "date": "2026-09-12",
+    "authorized_runs": 1, "runs_executed": 1, "rerun_performed": false,
+    "provider_calls": "~14 (agent run 11 model calls / 32,250 tokens, coverage Complete; ~3 interview practice)",
+    "cost": "UNKNOWN (Inspector reported '—')",
+    "http_5xx": 0, "product_defects": 0, "P0": 0, "P1": 0,
+    "status": "PASS",
+    "caveat": "All product-functionality and safety criteria passed with 0 product defects and 0 5xx. The 'visible governed citation' demonstration criterion was NOT met for the software-engineering scenario because the KB returned insufficient evidence (a documented coverage gap); the agent retrieved via SearchCareerKnowledge and correctly refused to fabricate citations (no-fabricated-citation safety intact). Deterministic citation capability is independently proven (retrieval citation_completeness 1.0).",
+    "evidence": ["docs/final_live_golden_result.md", "evaluations/final/golden_run_result.json"]
   },
   "defects": {"P0": 0, "P1": 0, "P2": 0, "P3": 2,
     "details": [
@@ -162,8 +169,9 @@
     "final_release_candidate": "YES",
     "deterministic_submission_readiness": "PASS",
     "live_golden_ready": "YES",
-    "live_golden_executed": false,
-    "explicit_paid_authorization_required": true,
+    "live_golden_executed": true,
+    "live_golden_status": "PASS (with documented citation-coverage caveat; 0 product defects, 0 P0/P1)",
+    "explicit_paid_authorization_required": false,
     "ready_for_human_merge_review": "YES",
     "ready_for_final_live_authorization": "YES",
     "ready_for_final_tag_after_merge": "YES"
