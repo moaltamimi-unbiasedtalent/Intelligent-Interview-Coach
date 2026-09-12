@@ -605,7 +605,7 @@ flowchart TD
     LOAD --> STATE[AgentState.memory_items<br/>user-approved DATA]
     STATE --> INIT[initialise node injects a<br/>trust-separated DATA message]
     INIT --> AGENT[LangGraph Agent]
-    AGENT --> TOOLS[5 tools]
+    AGENT --> TOOLS[6 tools]
     CP[LangGraph checkpoint<br/>SHORT-TERM · transient MemorySaver] -.separate concern.- AGENT
 ```
 

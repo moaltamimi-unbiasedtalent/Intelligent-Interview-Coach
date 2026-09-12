@@ -1,0 +1,235 @@
+{
+  "report": "phase7_integrated_quality_gate",
+  "phase": "7H",
+  "generated_at": "2026-09-12T18:18:52Z",
+  "provenance": {
+    "baseline_validated_sha": "4dc3432bee3b0c6a934ec3b6630d1b2b491e2f20",
+    "baseline_validated_ref": "main (Phase 7G merged, PR #66)",
+    "git_dirty_at_validation": false,
+    "head_sha_after_docfix": "5066500130cbb04352f653694e4a91245ad8f04e",
+    "protected_baseline_tag": "sprint4-pre-phase7-baseline",
+    "protected_baseline_commit": "238561252a085c3675aafa967cf946425ccbe238",
+    "protected_baseline_tag_unchanged": true,
+    "branch": "feature/phase7-integrated-quality-gate",
+    "note": "All gates ran against the clean main tip 4dc3432; the only working change during 7H was a documentation defect fix (stale 5-tool -> 6-tool), committed separately at 5066500 before this report was written. Docs do not affect any gate result."
+  },
+  "phase7_merges": {
+    "7A_knowledge_foundation": "PASS",
+    "7A1_gap_closure_governance": "PASS (PR #60)",
+    "7B_multi_source_normalization": "PASS (PR #61)",
+    "7C_runtime_knowledge_integration": "PASS (PR #62)",
+    "7D_privacy_safe_langfuse": "PASS (PR #63)",
+    "7E_ragas_harness": "PASS (PR #64)",
+    "7F_research_current_market": "PASS (PR #65)",
+    "7G_offline_feedback_intelligence": "PASS (PR #66)"
+  },
+  "tests": {
+    "python_passed": 2137,
+    "python_skipped": 3,
+    "python_failed": 0,
+    "new_unexpected_skips": 0,
+    "frontend_vitest": {"files": 27, "passed": 155, "failed": 0},
+    "frontend_e2e_playwright": {"passed": 51, "failed": 0, "port_override": "E2E_PORT=3999 (:3000 held by unrelated container)"},
+    "legacy_live_component_vitest": {"files": 2, "passed": 22, "failed": 0}
+  },
+  "static_checks": {
+    "ruff": "PASS",
+    "compileall": "PASS",
+    "frontend_lint": "PASS",
+    "frontend_typecheck": "PASS",
+    "frontend_build": "PASS",
+    "legacy_component_typecheck": "PASS",
+    "legacy_component_build": "PASS",
+    "import_checks": "PASS",
+    "source_manifest": "PASS (31 sources, unique ids)"
+  },
+  "agent": {
+    "eval_agent_gate": "PASS",
+    "eval_agent_live_no_paid": "CONFIG OK, NOT RUN (22 cases, balanced; no --allow-paid)",
+    "candidate_agent_count": 1,
+    "candidate_tool_count": 6,
+    "candidate_tools": ["AnalyzeJobDescription", "AnalyzeCandidateGaps", "BuildPreparationPlan", "GenerateInterviewQuestions", "SearchCareerKnowledge", "ResearchCurrentMarket"],
+    "hitl_action_tools": ["ProposePreparationMemory", "RequestPracticeHandoff"],
+    "total_registered_tools": 8,
+    "generic_web_or_search_tool_exposed": false,
+    "feedback_intelligence_tool_exposed": false,
+    "cross_user_access_failures": 0
+  },
+  "knowledge": {
+    "canonical_occupations": 8035,
+    "aliases": 23579,
+    "skills": 111455,
+    "knowledge_areas": 6968,
+    "tasks": 22383,
+    "work_activities": 20141,
+    "relationships": 12016,
+    "mappings_crosswalks": 3039,
+    "attributes": 2971,
+    "compensation": 1913,
+    "labour_market": 2398,
+    "competencies": 2275,
+    "credentials": 5,
+    "vector_passages": 14087,
+    "sources": 31,
+    "runtime_pipeline_version": "7C.1",
+    "normalized_pipeline_version": "7B.1",
+    "audit_raw_sources": "READY",
+    "audit_knowledge_gaps": "READY (4 non-blocking gaps: compensation_de, industry_context, emerging_roles, current_market)",
+    "audit_normalized_knowledge": "PASS (1088 compensation rows intentionally unlinked - no fuzzy title matching by design)",
+    "audit_knowledge_coverage": "PASS",
+    "check_demo_knowledge": "READY",
+    "eval_knowledge_expansion": "geo precedence 100%, coverage 23/31, 14621 structured records (informational)"
+  },
+  "retrieval": {
+    "cases": 81,
+    "passed": 74,
+    "pass_rate": 0.9136,
+    "evidence_coverage_rate": 0.8857,
+    "occupation_resolution_rate": 0.9143,
+    "citation_completeness_rate": 1.0,
+    "geography_correctness_rate": 1.0,
+    "unknown_role_safety_rate": 1.0,
+    "unsupported_geography_safety_rate": 1.0,
+    "no_fabricated_citation_rate": 1.0,
+    "safety_pass_rate": 1.0,
+    "gate": "PASS"
+  },
+  "ragas": {
+    "deterministic_gate": "PASS",
+    "id_context_precision": 0.6757,
+    "id_context_recall": 0.5161,
+    "dataset_hash": "0e0e9298ba77a8bc",
+    "reviewed_baseline_git_dirty": false,
+    "reviewed_baseline_sha": "7a9b97ee2667",
+    "paid_judge": "NOT RUN",
+    "audit": "READY",
+    "runtime_imports_ragas": false,
+    "estimate_only_makes_no_calls": true
+  },
+  "external_research": {
+    "cases": 38,
+    "passed": 38,
+    "provider_routing": 1.0,
+    "ssrf_safety": 1.0,
+    "prompt_injection_safety": 1.0,
+    "provider_failure_isolation": 1.0,
+    "generic_web_search": false,
+    "candidate_data_outbound": false,
+    "network_default": "OFF",
+    "permanent_kb_ingestion": false,
+    "live_calls": 0,
+    "gate": "PASS",
+    "audit": "READY"
+  },
+  "feedback_intelligence": {
+    "cases": 33,
+    "passed": 33,
+    "gate": "PASS",
+    "offline": true,
+    "candidate_facing": false,
+    "self_modification": false,
+    "human_approval": "REQUIRED",
+    "approval_auto_executes": false,
+    "network_default": false,
+    "git_writes": false,
+    "filesystem_boundary": "PASS",
+    "privacy": "PASS",
+    "audit": "READY"
+  },
+  "observability": {
+    "audit": "READY",
+    "optional": true,
+    "metadata_only_default": true,
+    "candidate_content": false,
+    "prompt_content": false,
+    "response_content": false,
+    "chain_of_thought": false,
+    "checkpoint": false,
+    "secrets": false,
+    "failure_isolation": "PASS",
+    "live_langfuse": "NOT RUN (DISABLED / not configured)"
+  },
+  "privacy": {
+    "cv_external_exposure": false,
+    "candidate_background_exposure": false,
+    "candidate_pii_exposure": false,
+    "raw_answers_exposure": false,
+    "memory_exposure": false,
+    "secret_exposure": false
+  },
+  "security": {
+    "secret_scan_ci_exact": "PASS",
+    "env_example_placeholders_only": true,
+    "caches_gitignored": true,
+    "generated_data_tracked": false
+  },
+  "database": {
+    "alembic_single_head": true,
+    "alembic_head": "0006_user_feedback",
+    "alembic_cycle_upgrade_downgrade_reupgrade": "PASS",
+    "new_migration_added": false
+  },
+  "startup": {
+    "fastapi_import_all_optional_off": "PASS (14 routes, no network)",
+    "heavy_optional_imports_leaked": []
+  },
+  "product_coverage": {
+    "command_exit": 0,
+    "note": "insufficient_evidence sub-metric varies run-to-run because gen_product_coverage_cases samples cases; informational, non-gating (P3)"
+  },
+  "performance": {
+    "structured_retrieval_p50_ms": 28.92,
+    "structured_retrieval_p95_ms": 52.4,
+    "feedback_intelligence_run_ms": 144,
+    "material_regression": false
+  },
+  "optional_services": {
+    "adzuna": "NOT CONFIGURED (no live calls; tool wired, credentials absent)",
+    "langfuse": "DISABLED / NOT CONFIGURED",
+    "ragas_paid": "NOT RUN",
+    "destatis": "NOT CONFIGURED / PARTIAL (Germany compensation lower-resolution)"
+  },
+  "documentation": {
+    "readme": "PASS",
+    "knowledge_docs": "PASS",
+    "observability_docs": "PASS",
+    "ragas_docs": "PASS",
+    "external_research_docs": "PASS",
+    "feedback_intelligence_docs": "PASS",
+    "phase7_readiness_doc": "PASS",
+    "stale_5_tool_claim_fixed": true
+  },
+  "paid_and_live_calls": {
+    "paid_llm": 0,
+    "paid_ragas": 0,
+    "live_adzuna": 0,
+    "live_company_web": 0,
+    "live_langfuse": 0
+  },
+  "defects": {
+    "P0": 0,
+    "P1": 0,
+    "P2": 1,
+    "P3": 2,
+    "details": [
+      {"id": "P2-1", "title": "Stale '5 tools' claim in 3 reviewer-facing docs", "status": "FIXED at 5066500", "root_cause": "Phase 7F added ResearchCurrentMarket (6th tool) but sprint4_reviewer_qa.md, sprint4_requirements_map.md, sprint4_architecture.md were not updated."},
+      {"id": "P3-1", "title": "gen_product_coverage_cases sampling non-determinism", "status": "documented, non-blocking", "root_cause": "generator samples cases so informational coverage sub-metrics shift run-to-run; command exit stays 0."},
+      {"id": "P3-2", "title": "npm audit advisories in frontend/legacy deps", "status": "documented, non-blocking", "root_cause": "upstream transitive dependency advisories; not Phase 7 code."}
+    ]
+  },
+  "verdict": {
+    "phase7h": "PASS",
+    "phase7": "PASS",
+    "candidate_runtime": "READY",
+    "knowledge": "READY",
+    "agentic_rag": "READY",
+    "external_research": "READY",
+    "observability": "READY",
+    "ragas_harness": "READY",
+    "feedback_intelligence": "READY",
+    "security_privacy": "PASS",
+    "phase7_freeze_candidate": "YES",
+    "ready_for_phase8": "YES",
+    "merge_ready": "YES (do not auto-merge)"
+  }
+}

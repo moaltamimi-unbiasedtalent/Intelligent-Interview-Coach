@@ -36,7 +36,7 @@ overstated.
 |---|---|---|
 | Medium | Memory (long-term) | ✅ complete — selective preparation memory, Phase 7 |
 | Medium | Authentication / personalisation | ⚙️ transitional seam (production OIDC later) |
-| Medium | 5 tools (agent-registered) | ✅ complete — 5 real tools incl. `SearchCareerKnowledge` (Phase 6) |
+| Medium | Tools (agent-registered) | ✅ complete — 6 real tools incl. `SearchCareerKnowledge` (Phase 6) and `ResearchCurrentMarket` (Phase 7F) |
 | Medium | Security guard | ✅ existing / preserved (agent adds allowlist + injection-safe prompt; retrieved content stays untrusted DATA) |
 | Hard | Agentic RAG | ✅ complete — the agent decides *whether* to retrieve; the deterministic Sprint 3 router still decides *which* lanes (Phase 6) |
 | Hard | Human-in-the-loop | ✅ complete — LangGraph interrupt/resume with durable checkpoints (Phase 8) |
