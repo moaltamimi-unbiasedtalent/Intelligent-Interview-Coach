@@ -111,3 +111,32 @@ written with `json.dumps(allow_nan=False)`, so a non-finite value can never leak
 into `results.json` / `run_config.json`. The Evaluation page skips invalid/legacy
 all-NaN runs and uses the newest *usable* run as the baseline (warning that an
 invalid run was ignored); it never deletes historical folders.
+
+## Phase 7E — two modes, free ID metrics, paid guard
+
+Phase 7E made the harness reviewer-ready with two clearly separated modes and a new FREE
+deterministic layer, without altering prompts, tools, retrieval ranking or the runtime (§25).
+
+**Mode A — deterministic (FREE, default, CI-safe).** `python scripts/eval_ragas.py` computes
+**ID-based context precision/recall** (`src/copilot/evaluation/rag_id_metrics.py`) from the real
+retrieval over the public cases — scoring retrieved-evidence *source ids* against each case's
+expected source family, marking safety/open-ended cases `NOT_APPLICABLE` (never 0). No LLM, no
+network. It also prints the judge NOT-RUN notice.
+
+**Mode B — LLM judge (OPT-IN, paid).** RAGAS Faithfulness / Response Relevancy / Context
+Precision / Context Recall over a **fixed** 24-case reviewer subset
+(`evaluations/ragas/judge_case_ids.json`, stable for comparable runs, §24). Requires explicit
+`--allow-paid` (or legacy `--live`); `--mode judge` alone never spends. `--estimate-only` prints
+a cost estimate with **no** model call.
+
+**Interpretation** (report each metric separately; no single magic score): Faithfulness =
+grounded in supplied contexts (not global truth); Response Relevancy = addresses the question;
+Context Precision = relevant evidence ranked appropriately; Context Recall = reference covered.
+Geography/citation/unknown-role **safety** stays deterministic and is never delegated to the
+judge (§46/§59).
+
+**Provenance & privacy.** Deterministic results record git SHA, RAGAS version, dataset hash and
+timestamp (`evaluations/ragas/deterministic_baseline.json`, reviewed baseline). The dataset is
+synthetic/public/curated; results never contain the API key, candidate PII or chain-of-thought.
+Audit: `python scripts/audit_ragas_evaluation.py`. Human report:
+[ragas_evaluation_report.md](ragas_evaluation_report.md).

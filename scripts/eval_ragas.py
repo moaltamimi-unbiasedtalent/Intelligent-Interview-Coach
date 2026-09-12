@@ -35,14 +35,131 @@ from src.copilot.evaluation import ragas_runner as runner  # noqa: E402
 _NOT_RUN = "RAGAS evaluation not run — evaluator credentials not configured."
 
 
+_JUDGE_SUBSET_PATH = "evaluations/ragas/judge_case_ids.json"
+
+
+def _load_judge_subset() -> list[str]:
+    import json
+    from pathlib import Path
+    p = Path(_JUDGE_SUBSET_PATH)
+    if not p.is_file():
+        return []
+    return json.loads(p.read_text(encoding="utf-8")).get("case_ids", [])
+
+
+def _git(*args: str) -> str | None:
+    """Run a git command, returning stripped stdout or None if git/metadata is unavailable."""
+    import subprocess
+    try:
+        return subprocess.check_output(["git", *args],  # noqa: S603,S607
+                                       stderr=subprocess.DEVNULL, timeout=5).decode().strip()
+    except Exception:  # noqa: BLE001 - missing git / not a repo → provenance stays unknown
+        return None
+
+
+def _run_provenance() -> dict:
+    """Truthful, worktree-aware evaluation provenance (Phase 7E hotfix).
+
+    Records the FULL evaluator git SHA and whether the worktree was DIRTY when the run began
+    (``git status --porcelain`` non-empty → dirty). A reviewed baseline must be generated from a
+    clean checkout so ``git_dirty`` is ``false`` and ``git_sha`` refers to a commit that actually
+    contains the evaluator code. When git metadata is unavailable, values are ``None`` (unknown)
+    — an ordinary ad-hoc run is never blocked, its provenance is just recorded honestly."""
+    from datetime import datetime, timezone
+
+    sha = _git("rev-parse", "HEAD")
+    porcelain = _git("status", "--porcelain")
+    git_dirty = None if porcelain is None else (porcelain != "")
+    ragas_version = None
+    try:
+        from importlib.metadata import version
+        ragas_version = version("ragas")
+    except Exception:  # noqa: BLE001
+        ragas_version = None
+    return {
+        "git_sha": sha,
+        "git_sha_short": sha[:7] if sha else None,
+        "git_dirty": git_dirty,
+        "ragas_version": ragas_version,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "mode": "deterministic",
+    }
+
+
+def _run_deterministic(json_out: bool, output: str | None = None) -> int:
+    """FREE, no-network deterministic RAG evaluation: ID-based context precision/recall over
+    the public cases, plus the judge NOT-RUN notice. Makes NO paid/LLM call (§4A/§5/§28)."""
+    import json
+    from pathlib import Path
+
+    from src.copilot.evaluation import rag_id_metrics as idm
+
+    cases = idm.load_ragas_cases()
+    try:
+        retrieve = idm.default_retrieve_fn()
+    except Exception as exc:  # noqa: BLE001 - never crash the free eval on a KB/setup issue
+        print(f"Deterministic evaluation could not build retrieval ({type(exc).__name__}); "
+              "is the runtime knowledge base built? See scripts/check_demo_knowledge.py.")
+        return 0
+    report = idm.compute_id_metrics(cases, retrieve)
+    payload = {**_run_provenance(), **report.to_dict()}
+    if output:
+        Path(output).parent.mkdir(parents=True, exist_ok=True)
+        Path(output).write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        print(f"Wrote deterministic RAG evaluation to {output}")
+    if json_out:
+        print(json.dumps(payload, indent=2))
+    else:
+        print("RAGAS DETERMINISTIC (FREE) EVALUATION")
+        print(f"  cases: {report.case_count}  dataset_hash: {report.dataset_hash}")
+        print(f"  ID context precision (mean): {report.precision_mean} "
+              f"[{report.precision_applicable} applicable]")
+        print(f"  ID context recall (mean):    {report.recall_mean} "
+              f"[{report.recall_applicable} applicable]")
+        print(f"  not-applicable cases: {report.not_applicable}")
+        print("\nLLM-JUDGED METRICS:\n  NOT RUN — paid evaluation not authorized")
+        print("  Estimate a paid run: python scripts/eval_ragas.py --mode judge --estimate-only")
+        print("  Authorize a paid run: python scripts/eval_ragas.py --mode judge --subset reviewer --allow-paid")
+    return 0
+
+
+def _estimate_judge(subset_ids: list[str], all_cases: int) -> int:
+    """Print a cost estimate for a paid judge run — makes NO model call (§6/§29)."""
+    n = len(subset_ids) if subset_ids else all_cases
+    # 4 metrics; context_recall only on referenced cases — estimate ~4 judge calls/case.
+    metrics = ["faithfulness", "response_relevancy", "context_precision", "context_recall"]
+    est_calls = n * len(metrics)
+    evaluator = ra.evaluator_config_from_env(allow_chat_fallback=False)
+    model = evaluator.model if evaluator else "gpt-4o-mini (default; RAGAS_EVAL_MODEL)"
+    print("RAGAS JUDGE COST ESTIMATE (no calls made)")
+    print(f"  judge cases: {n}")
+    print(f"  metrics: {', '.join(metrics)}")
+    print(f"  estimated judge calls: ~{est_calls} (≈{len(metrics)}/case; recall only on referenced cases)")
+    print(f"  judge model: {model}")
+    print("  estimated input/output volume: a few hundred tokens per call (short case Q/contexts)")
+    print("  cost: unknown (provider pricing not queried; run with pricing metadata to compute)")
+    print("  To execute: add --allow-paid (requires RAGAS_EVAL_API_KEY + a chat credential).")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Optional RAGAS generation-quality evaluation.")
-    parser.add_argument("--live", action="store_true", help="run the live evaluation")
+    parser.add_argument("--mode", choices=["deterministic", "judge"], default=None,
+                        help="deterministic (free, default) or judge (LLM, opt-in/paid)")
+    parser.add_argument("--live", action="store_true",
+                        help="run the live LLM judge (paid authorization; == --mode judge --allow-paid)")
+    parser.add_argument("--allow-paid", action="store_true",
+                        help="explicitly authorize paid judge calls (required for --mode judge)")
+    parser.add_argument("--estimate-only", action="store_true",
+                        help="print a judge cost estimate; make NO model calls")
+    parser.add_argument("--subset", choices=["reviewer"], default=None,
+                        help="use the fixed reviewer judge subset (evaluations/ragas/judge_case_ids.json)")
     parser.add_argument("--require-live", action="store_true",
                         help="exit non-zero if the live run cannot proceed")
     parser.add_argument("--category", default=None, help="filter to one category")
     parser.add_argument("--limit", type=int, default=None, help="cap the number of cases")
     parser.add_argument("--output-dir", default=None, help="override the run directory")
+    parser.add_argument("--json", action="store_true", help="machine-readable deterministic output")
     parser.add_argument("--allow-chat-fallback", action="store_true",
                         help="opt in to reuse the production chat key as the evaluator key")
     args = parser.parse_args(argv)
@@ -51,9 +168,24 @@ def main(argv: list[str] | None = None) -> int:
         print(msg)
         return 1 if args.require_live else 0
 
-    if not args.live:
-        print(_NOT_RUN)
-        print("Run a live evaluation with:  python scripts/eval_ragas.py --live")
+    # --- Mode routing -------------------------------------------------------
+    judge_mode = args.live or args.mode == "judge" or args.require_live
+    subset_ids = _load_judge_subset() if args.subset == "reviewer" else []
+
+    if args.estimate_only:
+        from src.copilot.evaluation import rag_id_metrics as idm
+        return _estimate_judge(subset_ids, len(idm.load_ragas_cases()))
+
+    if not judge_mode:
+        # DEFAULT = free deterministic evaluation (no paid calls, §5/§28).
+        return _run_deterministic(args.json, output=args.output_dir)
+
+    # Judge mode requires explicit paid authorization (§4B/§5): --allow-paid or the
+    # legacy --live flag. --mode judge WITHOUT authorization never spends.
+    if not (args.allow_paid or args.live):
+        print("LLM-JUDGED METRICS:\n  NOT RUN — paid evaluation not authorized")
+        print("  Re-run with --allow-paid to authorize paid judge calls, or use "
+              "--estimate-only for a cost estimate.")
         return 1 if args.require_live else 0
 
     # Preconditions (safe checks; no secret values).
@@ -74,7 +206,8 @@ def main(argv: list[str] | None = None) -> int:
           f"(limit={args.limit or 'all'}, category={args.category or 'all'})…")
     result = runner.run_live_ragas(
         config=config, evaluator_config=evaluator,
-        limit=args.limit, category=args.category, output_dir=args.output_dir)
+        limit=args.limit, category=args.category, case_ids=subset_ids or None,
+        output_dir=args.output_dir)
 
     # HARD STOP: an all-invalid run is never persisted as a normal result.
     if result.is_failed:

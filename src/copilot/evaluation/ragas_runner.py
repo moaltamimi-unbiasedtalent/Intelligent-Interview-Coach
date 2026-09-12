@@ -136,8 +136,13 @@ def check_configuration(*, allow_chat_fallback: bool = False) -> dict:
 # --- Live run ----------------------------------------------------------------
 
 
-def _load_filtered_cases(cases_path: str, category: str | None, limit: int | None):
+def _load_filtered_cases(cases_path: str, category: str | None, limit: int | None,
+                         case_ids: list[str] | None = None):
     cases = ra.load_cases(cases_path)
+    if case_ids:
+        # Preserve the fixed subset's order for stable, comparable paid runs (§24).
+        by_id = {c.case_id: c for c in cases}
+        cases = [by_id[cid] for cid in case_ids if cid in by_id]
     if category:
         cases = [c for c in cases if c.metadata.get("category") == category]
     if limit:
@@ -165,6 +170,7 @@ def run_live_ragas(
     evaluator_config,
     limit: int | None = None,
     category: str | None = None,
+    case_ids: list[str] | None = None,
     persist: bool = True,
     cases_path: str = CASES_PATH,
     runs_dir: Path | str = RUNS_DIR,
@@ -181,7 +187,7 @@ def run_live_ragas(
     ``*_fn`` / ``service`` / ``timestamp`` hooks are injection points for offline
     tests; production uses the real defaults.
     """
-    cases = _load_filtered_cases(cases_path, category, limit)
+    cases = _load_filtered_cases(cases_path, category, limit, case_ids)
     if not cases:
         return RagasRunResult(status=ra.STATUS_FAILED, error_category="no_cases",
                               safe_message="No matching cases to evaluate.")

@@ -1,0 +1,474 @@
+{
+  "git_sha": "7a9b97ee2667b9f9d1d259ad9a1ec5d62e33b3f5",
+  "git_sha_short": "7a9b97e",
+  "git_dirty": false,
+  "ragas_version": "0.2.15",
+  "generated_at": "2026-09-12T13:45:33.655010+00:00",
+  "mode": "deterministic",
+  "case_count": 35,
+  "id_context_precision": {
+    "mean": 0.6757,
+    "applicable_cases": 19
+  },
+  "id_context_recall": {
+    "mean": 0.5161,
+    "applicable_cases": 31
+  },
+  "not_applicable_cases": 4,
+  "dataset_hash": "0e0e9298ba77a8bc",
+  "per_case": [
+    {
+      "case_id": "role_us_data_analyst",
+      "category": "role_responsibilities",
+      "expected_family": "role",
+      "precision": 1.0,
+      "recall": 1.0,
+      "retrieved_sources": [
+        "esco",
+        "esco",
+        "esco",
+        "esco",
+        "bls_ooh",
+        "bls_ooh"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "role_uk_operations_manager",
+      "category": "role_responsibilities",
+      "expected_family": "role",
+      "precision": "NOT_APPLICABLE",
+      "recall": 0.0,
+      "retrieved_sources": [],
+      "insufficient_evidence": true
+    },
+    {
+      "case_id": "role_us_devops_engineer",
+      "category": "role_responsibilities",
+      "expected_family": "role",
+      "precision": 0.8333333333333334,
+      "recall": 1.0,
+      "retrieved_sources": [
+        "esco",
+        "opm_occupational_groups",
+        "esco",
+        "nice_framework",
+        "esco",
+        "esco"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "role_global_nurse",
+      "category": "role_responsibilities",
+      "expected_family": "role",
+      "precision": 0.9,
+      "recall": 1.0,
+      "retrieved_sources": [
+        "onet",
+        "onet",
+        "onet",
+        "onet",
+        "onet",
+        "bls_ooh",
+        "bls_ooh",
+        "bls_ooh"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "skills_us_data_roles",
+      "category": "skills",
+      "expected_family": "skills",
+      "precision": "NOT_APPLICABLE",
+      "recall": 0.0,
+      "retrieved_sources": [],
+      "insufficient_evidence": true
+    },
+    {
+      "case_id": "skills_global_soft_skills",
+      "category": "skills",
+      "expected_family": "skills",
+      "precision": "NOT_APPLICABLE",
+      "recall": 0.0,
+      "retrieved_sources": [],
+      "insufficient_evidence": true
+    },
+    {
+      "case_id": "skills_uk_project_management",
+      "category": "skills",
+      "expected_family": "skills",
+      "precision": 1.0,
+      "recall": 1.0,
+      "retrieved_sources": [
+        "esco"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "tech_us_cloud",
+      "category": "technologies",
+      "expected_family": "skills",
+      "precision": 0.6,
+      "recall": 1.0,
+      "retrieved_sources": [
+        "esco",
+        "wef_future_of_jobs",
+        "esco",
+        "esco",
+        "wef_future_of_jobs"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "tech_global_data_stack",
+      "category": "technologies",
+      "expected_family": "skills",
+      "precision": "NOT_APPLICABLE",
+      "recall": 0.0,
+      "retrieved_sources": [],
+      "insufficient_evidence": true
+    },
+    {
+      "case_id": "edu_us_data_scientist",
+      "category": "education",
+      "expected_family": "role",
+      "precision": 0.5714285714285714,
+      "recall": 1.0,
+      "retrieved_sources": [
+        "bls_ooh",
+        "bls_projections",
+        "bls_ooh",
+        "esco",
+        "digcomp",
+        "nice_framework",
+        "nice_framework"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "edu_uk_nursing",
+      "category": "education",
+      "expected_family": "role",
+      "precision": 0.4,
+      "recall": 1.0,
+      "retrieved_sources": [
+        "eqf",
+        "esco_handbook",
+        "esco",
+        "esco",
+        "nice_framework"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "comp_us_data_analyst",
+      "category": "compensation",
+      "expected_family": "compensation",
+      "precision": 0.0,
+      "recall": 0.0,
+      "retrieved_sources": [
+        "bls_ooh",
+        "bls_ooh",
+        "bls_ooh",
+        "bls_ooh",
+        "opm_occupational_groups"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "comp_uk_software_engineer",
+      "category": "compensation",
+      "expected_family": "compensation",
+      "precision": "NOT_APPLICABLE",
+      "recall": 0.0,
+      "retrieved_sources": [],
+      "insufficient_evidence": true
+    },
+    {
+      "case_id": "comp_de_engineer",
+      "category": "compensation",
+      "expected_family": "compensation",
+      "precision": "NOT_APPLICABLE",
+      "recall": 0.0,
+      "retrieved_sources": [],
+      "insufficient_evidence": true
+    },
+    {
+      "case_id": "comp_us_nurse",
+      "category": "compensation",
+      "expected_family": "compensation",
+      "precision": 0.0,
+      "recall": 0.0,
+      "retrieved_sources": [
+        "bls_ooh",
+        "cedefop_skills_forecast",
+        "wef_future_of_jobs",
+        "cedefop_skills_forecast",
+        "wef_future_of_jobs"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "labour_us_ai_demand",
+      "category": "labour_market",
+      "expected_family": "labour_market",
+      "precision": "NOT_APPLICABLE",
+      "recall": 0.0,
+      "retrieved_sources": [],
+      "insufficient_evidence": true
+    },
+    {
+      "case_id": "labour_global_automation",
+      "category": "labour_market",
+      "expected_family": "labour_market",
+      "precision": 1.0,
+      "recall": 1.0,
+      "retrieved_sources": [
+        "wef_future_of_jobs",
+        "wef_future_of_jobs",
+        "wef_future_of_jobs",
+        "cedefop_skills_forecast",
+        "wef_future_of_jobs"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "labour_us_outlook_devops",
+      "category": "labour_market",
+      "expected_family": "labour_market",
+      "precision": "NOT_APPLICABLE",
+      "recall": 0.0,
+      "retrieved_sources": [],
+      "insufficient_evidence": true
+    },
+    {
+      "case_id": "shortage_uk_cyber",
+      "category": "shortage",
+      "expected_family": "labour_market",
+      "precision": "NOT_APPLICABLE",
+      "recall": 0.0,
+      "retrieved_sources": [],
+      "insufficient_evidence": true
+    },
+    {
+      "case_id": "shortage_de_it",
+      "category": "shortage",
+      "expected_family": "labour_market",
+      "precision": "NOT_APPLICABLE",
+      "recall": 0.0,
+      "retrieved_sources": [],
+      "insufficient_evidence": true
+    },
+    {
+      "case_id": "transition_support_to_data",
+      "category": "transition",
+      "expected_family": "skills",
+      "precision": 0.6666666666666666,
+      "recall": 1.0,
+      "retrieved_sources": [
+        "kldb",
+        "onet",
+        "nice_framework",
+        "digcomp",
+        "isco08",
+        "nice_framework"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "transition_teacher_to_ux",
+      "category": "transition",
+      "expected_family": "skills",
+      "precision": "NOT_APPLICABLE",
+      "recall": 0.0,
+      "retrieved_sources": [],
+      "insufficient_evidence": true
+    },
+    {
+      "case_id": "digital_eu_competency",
+      "category": "digital_competency",
+      "expected_family": "competency",
+      "precision": 1.0,
+      "recall": 1.0,
+      "retrieved_sources": [
+        "digcomp",
+        "digcomp",
+        "digcomp",
+        "digcomp",
+        "digcomp",
+        "digcomp",
+        "digcomp",
+        "digcomp"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "digital_uk_data_literacy",
+      "category": "digital_competency",
+      "expected_family": "competency",
+      "precision": 0.4,
+      "recall": 1.0,
+      "retrieved_sources": [
+        "eqf",
+        "bls_ooh",
+        "esco_handbook",
+        "bls_ooh",
+        "digcomp"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "cyber_us_analyst_tasks",
+      "category": "cybersecurity",
+      "expected_family": "competency",
+      "precision": 0.6666666666666666,
+      "recall": 1.0,
+      "retrieved_sources": [
+        "esco",
+        "bls_ooh",
+        "bls_ooh",
+        "nice_framework",
+        "eqf",
+        "nice_framework"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "cyber_global_incident_response",
+      "category": "cybersecurity",
+      "expected_family": "competency",
+      "precision": "NOT_APPLICABLE",
+      "recall": 0.0,
+      "retrieved_sources": [],
+      "insufficient_evidence": true
+    },
+    {
+      "case_id": "seniority_ic_vs_manager",
+      "category": "seniority",
+      "expected_family": "role",
+      "precision": 1.0,
+      "recall": 1.0,
+      "retrieved_sources": [
+        "esco",
+        "isco08",
+        "isco08",
+        "isco08",
+        "esco"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "seniority_junior_expectations",
+      "category": "seniority",
+      "expected_family": "role",
+      "precision": 0.0,
+      "recall": 0.0,
+      "retrieved_sources": [
+        "wef_future_of_jobs",
+        "wef_future_of_jobs",
+        "nice_framework",
+        "eurostat_earnings",
+        "nice_framework"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "mixed_us_data_analyst_prep",
+      "category": "mixed",
+      "expected_family": "role",
+      "precision": 1.0,
+      "recall": 1.0,
+      "retrieved_sources": [
+        "esco"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "mixed_uk_devops_outlook",
+      "category": "mixed",
+      "expected_family": "role",
+      "precision": 0.8,
+      "recall": 1.0,
+      "retrieved_sources": [
+        "eqf",
+        "esco",
+        "bls_ooh",
+        "bls_ooh",
+        "opm_occupational_groups"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "mixed_global_cyber_transition",
+      "category": "mixed",
+      "expected_family": "competency",
+      "precision": 1.0,
+      "recall": 1.0,
+      "retrieved_sources": [
+        "esco"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "insufficient_weather",
+      "category": "insufficient_evidence",
+      "expected_family": "none",
+      "precision": "NOT_APPLICABLE",
+      "recall": "NOT_APPLICABLE",
+      "retrieved_sources": [
+        "esco_handbook",
+        "eqf",
+        "nice_framework",
+        "eurostat_earnings",
+        "bls_ooh"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "insufficient_pizza",
+      "category": "insufficient_evidence",
+      "expected_family": "none",
+      "precision": "NOT_APPLICABLE",
+      "recall": "NOT_APPLICABLE",
+      "retrieved_sources": [
+        "eqf",
+        "wef_future_of_jobs",
+        "eurostat_earnings",
+        "digcomp",
+        "nice_framework"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "insufficient_football",
+      "category": "insufficient_evidence",
+      "expected_family": "none",
+      "precision": "NOT_APPLICABLE",
+      "recall": "NOT_APPLICABLE",
+      "retrieved_sources": [
+        "esco",
+        "esco",
+        "esco",
+        "esco",
+        "esco"
+      ],
+      "insufficient_evidence": false
+    },
+    {
+      "case_id": "insufficient_stock_tip",
+      "category": "insufficient_evidence",
+      "expected_family": "none",
+      "precision": "NOT_APPLICABLE",
+      "recall": "NOT_APPLICABLE",
+      "retrieved_sources": [
+        "opm_occupational_groups",
+        "opm_occupational_groups",
+        "opm_occupational_groups",
+        "opm_occupational_groups",
+        "opm_occupational_groups"
+      ],
+      "insufficient_evidence": false
+    }
+  ]
+}
