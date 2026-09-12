@@ -47,23 +47,43 @@ def _load_judge_subset() -> list[str]:
     return json.loads(p.read_text(encoding="utf-8")).get("case_ids", [])
 
 
-def _run_provenance() -> dict:
+def _git(*args: str) -> str | None:
+    """Run a git command, returning stripped stdout or None if git/metadata is unavailable."""
     import subprocess
-    from datetime import datetime, timezone
-    sha = None
     try:
-        sha = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"],  # noqa: S603,S607
-                                      stderr=subprocess.DEVNULL, timeout=3).decode().strip()
-    except Exception:  # noqa: BLE001
-        pass
+        return subprocess.check_output(["git", *args],  # noqa: S603,S607
+                                       stderr=subprocess.DEVNULL, timeout=5).decode().strip()
+    except Exception:  # noqa: BLE001 - missing git / not a repo → provenance stays unknown
+        return None
+
+
+def _run_provenance() -> dict:
+    """Truthful, worktree-aware evaluation provenance (Phase 7E hotfix).
+
+    Records the FULL evaluator git SHA and whether the worktree was DIRTY when the run began
+    (``git status --porcelain`` non-empty → dirty). A reviewed baseline must be generated from a
+    clean checkout so ``git_dirty`` is ``false`` and ``git_sha`` refers to a commit that actually
+    contains the evaluator code. When git metadata is unavailable, values are ``None`` (unknown)
+    — an ordinary ad-hoc run is never blocked, its provenance is just recorded honestly."""
+    from datetime import datetime, timezone
+
+    sha = _git("rev-parse", "HEAD")
+    porcelain = _git("status", "--porcelain")
+    git_dirty = None if porcelain is None else (porcelain != "")
     ragas_version = None
     try:
         from importlib.metadata import version
         ragas_version = version("ragas")
     except Exception:  # noqa: BLE001
-        pass
-    return {"git_sha": sha, "ragas_version": ragas_version,
-            "generated_at": datetime.now(timezone.utc).isoformat(), "mode": "deterministic"}
+        ragas_version = None
+    return {
+        "git_sha": sha,
+        "git_sha_short": sha[:7] if sha else None,
+        "git_dirty": git_dirty,
+        "ragas_version": ragas_version,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "mode": "deterministic",
+    }
 
 
 def _run_deterministic(json_out: bool, output: str | None = None) -> int:

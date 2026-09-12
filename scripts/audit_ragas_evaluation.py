@@ -27,6 +27,55 @@ from src.copilot.evaluation import ragas_adapter as ra  # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent
 
 
+def _is_ancestor(sha: str) -> str:
+    """PASS if `sha` is an ancestor of HEAD, FAIL if not, UNKNOWN if git metadata is absent."""
+    if not sha:
+        return "UNKNOWN"
+    out = subprocess.run(["git", "merge-base", "--is-ancestor", sha, "HEAD"],  # noqa: S603,S607
+                         cwd=str(ROOT), capture_output=True)
+    if out.returncode == 0:
+        return "PASS"
+    if out.returncode == 1:
+        return "FAIL"
+    return "UNKNOWN"  # e.g. unknown revision / no git
+
+
+def _reviewed_baseline_provenance(current_dataset_hash: str,
+                                  path: Path | str = "evaluations/ragas/deterministic_baseline.json") -> dict:
+    """Validate the TRACKED reviewed baseline's provenance (§2/§6/§7).
+
+    A reviewed baseline must be reproducible: generated from a CLEAN worktree (git_dirty=false),
+    with a full git SHA that is an ancestor of HEAD, the current dataset hash, RAGAS version and
+    a timestamp. A dirty ad-hoc run is valid diagnostics but must never be the tracked baseline.
+    """
+    path = Path(path)
+    if not path.is_file():
+        return {"present": False, "status": "MISSING"}
+    d = json.loads(path.read_text(encoding="utf-8"))
+    sha = d.get("git_sha")
+    dirty = d.get("git_dirty")
+    checks = {
+        "present": True,
+        "git_sha_present": bool(sha),
+        "full_git_sha": bool(sha) and len(sha) >= 40,
+        "git_dirty_false": dirty is False,
+        "dataset_hash_present": bool(d.get("dataset_hash")),
+        "dataset_hash_matches_current": d.get("dataset_hash") == current_dataset_hash,
+        "ragas_version_present": bool(d.get("ragas_version")),
+        "generated_at_present": bool(d.get("generated_at")),
+    }
+    ancestry = _is_ancestor(sha or "")
+    checks["ancestry"] = ancestry
+    # Reproducible when clean, full SHA, dataset hash matches, metadata present, and the SHA is
+    # an ancestor of HEAD (ancestry UNKNOWN — no git — is tolerated, not a hard fail).
+    ok = (checks["git_dirty_false"] and checks["full_git_sha"] and checks["git_sha_present"]
+          and checks["dataset_hash_matches_current"] and checks["ragas_version_present"]
+          and checks["generated_at_present"] and ancestry in ("PASS", "UNKNOWN"))
+    checks["status"] = "PASS" if ok else "FAIL"
+    checks["git_sha"] = (sha[:12] + "…") if sha else None
+    return checks
+
+
 def _runtime_free_of_ragas() -> bool:
     """A fresh interpreter importing the app/service must NOT import ragas (not a runtime dep)."""
     code = ("import app, src.copilot.service, sys; print('ragas' in sys.modules)")
@@ -52,9 +101,12 @@ def audit() -> dict:
     except Exception:  # noqa: BLE001
         id_ready = False
 
+    baseline = _reviewed_baseline_provenance(idm.dataset_hash(cases_path))
+
     report = {
         "ragas_installed": ra.ragas_available(),
         "runtime_dependency": not _runtime_free_of_ragas(),  # True would be bad
+        "reviewed_baseline": baseline,
         "default_paid_calls": False,   # default routes to deterministic (verified by tests)
         "deterministic_dataset": "READY" if cases else "MISSING",
         "dataset_case_count": len(cases),
@@ -72,7 +124,8 @@ def audit() -> dict:
         "result_serialization": "PASS",
     }
     ready = (report["deterministic_dataset"] == "READY" and report["judge_subset"] in ("READY", "PRESENT")
-             and id_ready and not report["runtime_dependency"])
+             and id_ready and not report["runtime_dependency"]
+             and baseline.get("status") == "PASS")
     report["status"] = "READY" if ready else "NOT READY"
     return report
 
@@ -90,6 +143,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"runtime dependency: {'YES' if r['runtime_dependency'] else 'NO'}")
         print(f"default paid calls: {'YES' if r['default_paid_calls'] else 'NO'}")
         print(f"deterministic dataset: {r['deterministic_dataset']} ({r['dataset_case_count']} cases, hash {r['dataset_hash']})")
+        b = r["reviewed_baseline"]
+        print(f"reviewed baseline: {b.get('status')} (git_sha={b.get('git_sha')}, "
+              f"git_dirty={b.get('git_dirty_false') and 'false'}, ancestry={b.get('ancestry')})")
         print(f"judge subset: {r['judge_subset']} ({r['judge_subset_count']} cases)")
         print(f"ID precision: {r['id_precision']}")
         print(f"ID recall: {r['id_recall']}")
