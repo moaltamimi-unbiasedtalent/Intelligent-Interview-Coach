@@ -18,9 +18,10 @@ that is stateful graph orchestration, not a fixed sequence.
 capabilities are exposed as controlled tools rather than adding autonomous agents
 without a real coordination need.
 
-**Why five tools?** They map to the real preparation workflow: SearchCareerKnowledge,
+**Why six tools?** They map to the real preparation workflow: SearchCareerKnowledge,
 AnalyzeJobDescription, AnalyzeCandidateGaps, BuildPreparationPlan,
-GenerateInterviewQuestions. (ProposePreparationMemory and RequestPracticeHandoff are
+GenerateInterviewQuestions and ResearchCurrentMarket (bounded current-market evidence,
+Phase 7F). (ProposePreparationMemory and RequestPracticeHandoff are
 HITL action boundaries, counted separately — not evidence tools.)
 
 **What is Agentic RAG?** The agent decides *whether* to retrieve; the deterministic
