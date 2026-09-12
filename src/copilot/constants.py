@@ -136,6 +136,20 @@ VECTOR_METADATA_KEYS = (
     "source",
     "page",
     "section",
+    # Phase 7C §24 — provenance for governed structured passages (kept scalar for Chroma).
+    "canonical_occupation_id",
+    "source_occupation_id",
+    "source_record_id",
+    "source_version",
+    "domain",
+    "geography",
+    "country",
+    "region",
+    "industry",
+    "reference_year",
+    "effective_period",
+    "classification",
+    "language",
 )
 # Default number of chunks to retrieve for a query.
 DEFAULT_TOP_K = 5

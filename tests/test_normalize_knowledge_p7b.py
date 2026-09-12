@@ -63,7 +63,7 @@ def _esco(uri="http://data.europa.eu/esco/occupation/x", title="Data Scientist",
 def test_esco_occupation_maps_to_canonical_with_typed_facts():
     reg = C.CanonicalIdRegistry()
     occ = _esco()
-    can, aliases, facts, xwalks, srec = N.occupation_to_canonical(occ, reg, raw_file="data/raw/esco/x.csv")
+    can, aliases, facts, xwalks, rels, srec = N.occupation_to_canonical(occ, reg, raw_file="data/raw/esco/x.csv")
     assert can.occupation_id.startswith("ask4mo:occ:")
     assert can.esco_uri == occ.occupation_code and can.isco_code == "2511"
     ftypes = {(f.fact_type, f.fact_value) for f in facts}
@@ -74,6 +74,7 @@ def test_esco_occupation_maps_to_canonical_with_typed_facts():
     assert (C.FactType.WORK_ACTIVITY, "analyse data") in ftypes
     assert (C.FactType.EDUCATION, "Bachelor's degree") in ftypes
     assert srec.record_type == "occupation" and srec.raw_file == "data/raw/esco/x.csv"
+    assert isinstance(rels, list)  # relationships returned as its own list
 
 
 def test_esco_aliases_are_parsed_per_alias_not_one_blob():
@@ -113,7 +114,7 @@ def test_canonical_id_stable_and_no_isco_group_merge():
 def test_crosswalk_is_official_and_cross_scheme_only():
     reg = C.CanonicalIdRegistry()
     occ = _esco(isco="2511")
-    _, _, _, xwalks, _ = N.occupation_to_canonical(occ, reg)
+    _, _, _, xwalks, _, _ = N.occupation_to_canonical(occ, reg)
     assert len(xwalks) == 1
     xw = xwalks[0]
     assert xw.source_classification == C.ClassificationScheme.ESCO
@@ -138,7 +139,7 @@ def test_alias_ambiguity_one_alias_maps_to_multiple_occupations():
 
 def test_every_fact_and_occupation_carries_provenance():
     reg = C.CanonicalIdRegistry()
-    can, aliases, facts, _, srec = N.occupation_to_canonical(
+    can, aliases, facts, _, _, srec = N.occupation_to_canonical(
         _esco(), reg, source_meta={"source_url": "http://x", "license": "CC-BY"})
     assert can.source and can.source_record_id
     assert all(f.source and f.source_record_id for f in facts)
@@ -240,7 +241,7 @@ def test_dedupe_is_order_preserving_and_deterministic():
 
 def test_parquet_round_trip_for_each_record_type(tmp_path):
     reg = C.CanonicalIdRegistry()
-    can, aliases, facts, xwalks, srec = N.occupation_to_canonical(_esco(), reg)
+    can, aliases, facts, xwalks, _, srec = N.occupation_to_canonical(_esco(), reg)
     comp, _ = N.compensation_to_canonical(
         SrcComp(source_id="bls_oews", occupation_code="15-1252", country="US", geography="US",
                 year=2025, currency="USD", pay_period="annual", statistic_type="median", value=1.0), reg)

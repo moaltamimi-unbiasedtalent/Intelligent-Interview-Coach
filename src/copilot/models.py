@@ -270,6 +270,11 @@ class KnowledgeEvidence(_Base):
     @classmethod
     def from_retrieval_result(cls, result: "RetrievalResult", *, index: int) -> "KnowledgeEvidence":
         meta = result.metadata or {}
+        ref_year = meta.get("reference_year")
+        try:
+            ref_year = int(ref_year) if ref_year not in (None, "") else None
+        except (TypeError, ValueError):
+            ref_year = None
         return cls(
             evidence_id=result.chunk.chunk_id,
             text=result.text,
@@ -278,8 +283,14 @@ class KnowledgeEvidence(_Base):
             source_url=meta.get("source_url"),
             evidence_type="narrative",
             retrieval_lane="vector",
-            geography=meta.get("geography"),
-            metadata={"page": result.page, "document_type": meta.get("document_type")},
+            geography=meta.get("geography") or None,
+            country=meta.get("country") or None,
+            region=meta.get("region") or None,
+            occupation_code=meta.get("canonical_occupation_id") or None,
+            reference_year=ref_year,
+            version=meta.get("source_version") or None,
+            metadata={"page": result.page, "document_type": meta.get("document_type"),
+                      "domain": meta.get("domain")},
             score=result.score,
         )
 

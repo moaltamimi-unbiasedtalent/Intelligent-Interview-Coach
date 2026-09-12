@@ -1,0 +1,76 @@
+{
+  "captured_at": "2026-09-11T21:26:31.793910+00:00",
+  "note": "Pre-Phase-7C runtime snapshot (runtime built directly from raw via load_local_sources; Phase 7C rebuilds it from data/normalized).",
+  "structured": {
+    "roles": {
+      "occupations": 8035,
+      "occupation_aliases": 23587,
+      "occupation_tasks": 22339,
+      "occupation_skills": 111455,
+      "occupation_knowledge": 6968,
+      "occupation_activities": 20141,
+      "occupation_relationships": 12016,
+      "occupation_mappings": 3039,
+      "occupation_attributes": 2971,
+      "occupation_certifications": 0,
+      "occupation_licences": 0,
+      "occupation_industries": 0
+    },
+    "compensation": {
+      "compensation_records": 1920
+    },
+    "competencies": {
+      "competencies": 2275,
+      "competency_levels": 0,
+      "occupation_competencies": 0,
+      "role_behaviours": 5,
+      "qualification_requirements": 3
+    },
+    "labour_market": {
+      "labour_market_forecasts": 833,
+      "labour_market_openings": 833,
+      "labour_shortages": 1181,
+      "labour_vacancies": 126
+    },
+    "credentials": {
+      "certifications": 3,
+      "occupational_licences": 2
+    }
+  },
+  "headline": {
+    "roles": 8035,
+    "occupation_aliases": 23587,
+    "occupation_skills": 111455,
+    "occupation_mappings": 3039,
+    "competencies": 2275,
+    "compensation": 1920,
+    "labour_market": 2973,
+    "credentials": 5,
+    "vector_passages": 3528,
+    "vector_sources": {
+      "eqf": 78,
+      "uk_civil_service_success_profiles": 39,
+      "uk_hr_success_profiles": 101,
+      "esco_handbook": 239,
+      "digcomp": 462,
+      "eurostat_earnings": 85,
+      "nice_framework": 99,
+      "wef_future_of_jobs": 1088,
+      "opm_occupational_groups": 1233,
+      "esco_matrix": 33,
+      "cedefop_skills_forecast": 71
+    },
+    "registered_sources": 31
+  },
+  "retrieval_before": {
+    "cases": 81,
+    "pass_rate": 0.8889,
+    "safety_pass_rate": 0.4444,
+    "unknown_role_safety_rate": 0.1667,
+    "evidence_coverage_rate": 0.9714,
+    "citation_completeness_rate": 1.0,
+    "geography_correctness_rate": 1.0,
+    "no_evidence_rate": 0.037,
+    "note": "Captured against the pre-7C runtime with the pre-7C retrieval code (no occupation-grounding guard) \u2014 the true baseline."
+  }
+}

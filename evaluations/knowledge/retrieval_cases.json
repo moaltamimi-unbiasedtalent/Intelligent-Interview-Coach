@@ -1,0 +1,508 @@
+[
+  {
+    "case_id": "exact_01",
+    "query": "What does a registered nurse do?",
+    "category": "occupation",
+    "expect_resolution": true,
+    "expected_domain": "structured_role"
+  },
+  {
+    "case_id": "exact_02",
+    "query": "What does a software developer do?",
+    "category": "occupation",
+    "expect_resolution": true,
+    "expected_domain": "structured_role"
+  },
+  {
+    "case_id": "exact_03",
+    "query": "financial analyst responsibilities",
+    "category": "occupation",
+    "expect_resolution": true,
+    "expected_domain": "structured_role"
+  },
+  {
+    "case_id": "exact_04",
+    "query": "accountant duties",
+    "category": "occupation",
+    "expect_resolution": true,
+    "expected_domain": "structured_role"
+  },
+  {
+    "case_id": "exact_05",
+    "query": "What does a product manager do?",
+    "category": "occupation",
+    "expect_resolution": true,
+    "expected_domain": "structured_role"
+  },
+  {
+    "case_id": "exact_06",
+    "query": "mechanical engineer role",
+    "category": "occupation",
+    "expect_resolution": true,
+    "expected_domain": "structured_role"
+  },
+  {
+    "case_id": "exact_07",
+    "query": "what does an electrician do",
+    "category": "occupation",
+    "expect_resolution": true,
+    "expected_domain": "structured_role"
+  },
+  {
+    "case_id": "exact_08",
+    "query": "data scientist role overview",
+    "category": "occupation",
+    "expect_resolution": true,
+    "expected_domain": "structured_role"
+  },
+  {
+    "case_id": "exact_09",
+    "query": "graphic designer responsibilities",
+    "category": "occupation",
+    "expect_resolution": true,
+    "expected_domain": "structured_role"
+  },
+  {
+    "case_id": "exact_10",
+    "query": "civil engineer duties",
+    "category": "occupation",
+    "expect_resolution": true,
+    "expected_domain": "structured_role"
+  },
+  {
+    "case_id": "alias_01",
+    "query": "software engineer skills",
+    "category": "alias",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "alias_02",
+    "query": "technology skills for a web developer",
+    "category": "alias",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "alias_03",
+    "query": "HRBP responsibilities",
+    "category": "alias",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "alias_04",
+    "query": "computer programmer tasks",
+    "category": "alias",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "alias_05",
+    "query": "system administrator responsibilities",
+    "category": "alias",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "alias_06",
+    "query": "project manager responsibilities",
+    "category": "alias",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "seniority_01",
+    "query": "senior product manager skills",
+    "category": "seniority",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "seniority_02",
+    "query": "junior software developer responsibilities",
+    "category": "seniority",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "seniority_03",
+    "query": "lead data scientist skills",
+    "category": "seniority",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "seniority_04",
+    "query": "principal engineer responsibilities",
+    "category": "seniority",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "skills_01",
+    "query": "What skills does a product manager need?",
+    "category": "skills",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "skills_02",
+    "query": "key skills for a data analyst",
+    "category": "skills",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "skills_03",
+    "query": "skills required for a registered nurse",
+    "category": "skills",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "skills_04",
+    "query": "what skills does an accountant need",
+    "category": "skills",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "skills_05",
+    "query": "skills for a marketing manager",
+    "category": "skills",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "resp_01",
+    "query": "registered nurse responsibilities",
+    "category": "responsibilities",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "resp_02",
+    "query": "daily tasks of a software developer",
+    "category": "responsibilities",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "resp_03",
+    "query": "main duties of a project manager",
+    "category": "responsibilities",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "resp_04",
+    "query": "what are the responsibilities of a teacher",
+    "category": "responsibilities",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "knowledge_01",
+    "query": "what knowledge does a mechanical engineer need",
+    "category": "knowledge",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "knowledge_02",
+    "query": "knowledge areas for an accountant",
+    "category": "knowledge",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "knowledge_03",
+    "query": "what should a data scientist know",
+    "category": "knowledge",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "tech_01",
+    "query": "technology skills for a software developer",
+    "category": "technology",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "tech_02",
+    "query": "what software does a graphic designer use",
+    "category": "technology",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "tech_03",
+    "query": "tools used by a data analyst",
+    "category": "technology",
+    "expect_resolution": true
+  },
+  {
+    "case_id": "education_01",
+    "query": "what education do i need to become a registered nurse",
+    "category": "education",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "education_02",
+    "query": "typical entry education for an accountant",
+    "category": "education",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "education_03",
+    "query": "training required to become an electrician",
+    "category": "education",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "salary_us_01",
+    "query": "software developer salary in the United States",
+    "category": "compensation",
+    "expected_geography": "US",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "salary_us_02",
+    "query": "registered nurse salary in the United States",
+    "category": "compensation",
+    "expected_geography": "US",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "salary_us_03",
+    "query": "accountant pay in the United States",
+    "category": "compensation",
+    "expected_geography": "US",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "salary_us_04",
+    "query": "financial analyst salary in the US",
+    "category": "compensation",
+    "expected_geography": "US",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "salary_uk_01",
+    "query": "nurse salary in the United Kingdom",
+    "category": "compensation",
+    "expected_geography": "UK",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "salary_uk_02",
+    "query": "software developer salary in the UK",
+    "category": "compensation",
+    "expected_geography": "UK",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "salary_uk_03",
+    "query": "teacher pay in the United Kingdom",
+    "category": "compensation",
+    "expected_geography": "UK",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "salary_de_01",
+    "query": "software developer salary in Germany",
+    "category": "compensation",
+    "expected_geography": "DE",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "salary_de_02",
+    "query": "nurse salary in Germany",
+    "category": "compensation",
+    "expected_geography": "DE",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "salary_de_03",
+    "query": "average earnings in Germany for engineers",
+    "category": "compensation",
+    "expected_geography": "DE",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "eu_01",
+    "query": "job vacancy rate in the European Union",
+    "category": "labour_market",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "eu_02",
+    "query": "labour shortages in the EU",
+    "category": "labour_market",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "forecast_01",
+    "query": "employment outlook for software developers",
+    "category": "forecast",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "forecast_02",
+    "query": "job growth for registered nurses",
+    "category": "forecast",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "forecast_03",
+    "query": "future demand for data scientists",
+    "category": "forecast",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "forecast_04",
+    "query": "employment projections for accountants",
+    "category": "forecast",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "labour_01",
+    "query": "how many job openings for software developers",
+    "category": "labour_market",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "labour_02",
+    "query": "labour shortage for nurses in Germany",
+    "category": "labour_market",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "labour_03",
+    "query": "vacancy rate for engineers",
+    "category": "labour_market",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "cred_01",
+    "query": "what certification do i need to be a project manager",
+    "category": "credentials",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "cred_02",
+    "query": "is a licence required to be a registered nurse",
+    "category": "credentials",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "cred_03",
+    "query": "what credential for information security analyst",
+    "category": "credentials",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "industry_01",
+    "query": "product manager in fintech",
+    "category": "industry",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "industry_02",
+    "query": "software developer in healthcare",
+    "category": "industry",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "industry_03",
+    "query": "data scientist in finance",
+    "category": "industry",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "emerging_01",
+    "query": "AI Engineer skills",
+    "category": "emerging",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "emerging_02",
+    "query": "LLM Engineer responsibilities",
+    "category": "emerging",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "emerging_03",
+    "query": "AI Product Manager role",
+    "category": "emerging",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "emerging_04",
+    "query": "Responsible AI specialist",
+    "category": "emerging",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "ambiguous_01",
+    "query": "manager",
+    "category": "ambiguous",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "ambiguous_02",
+    "query": "consultant",
+    "category": "ambiguous",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "ambiguous_03",
+    "query": "engineer",
+    "category": "ambiguous",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "ambiguous_04",
+    "query": "analyst",
+    "category": "ambiguous",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "ambiguous_05",
+    "query": "specialist",
+    "category": "ambiguous",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "unknown_01",
+    "query": "flurble wizard skills",
+    "category": "unknown",
+    "expect_insufficient": true
+  },
+  {
+    "case_id": "unknown_02",
+    "query": "quantum basket weaver responsibilities",
+    "category": "unknown",
+    "expect_insufficient": true
+  },
+  {
+    "case_id": "unknown_03",
+    "query": "chief vibes officer duties",
+    "category": "unknown",
+    "expect_insufficient": true
+  },
+  {
+    "case_id": "unknown_04",
+    "query": "zorptek engineer role",
+    "category": "unknown",
+    "expect_insufficient": true
+  },
+  {
+    "case_id": "unknown_05",
+    "query": "what does a snarfblatt technician do",
+    "category": "unknown",
+    "expect_insufficient": true
+  },
+  {
+    "case_id": "unknown_06",
+    "query": "responsibilities of a moon whisperer",
+    "category": "unknown",
+    "expect_insufficient": true
+  },
+  {
+    "case_id": "unsupported_geo_01",
+    "query": "software developer salary in Japan",
+    "category": "unsupported_geography",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "unsupported_geo_02",
+    "query": "nurse salary in Brazil",
+    "category": "unsupported_geography",
+    "allow_insufficient": true
+  },
+  {
+    "case_id": "unsupported_geo_03",
+    "query": "accountant pay in Nigeria",
+    "category": "unsupported_geography",
+    "allow_insufficient": true
+  }
+]

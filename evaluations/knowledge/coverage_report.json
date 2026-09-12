@@ -1,0 +1,116 @@
+{
+  "generated": "phase7c",
+  "runtime_build": {
+    "runtime_pipeline_version": "7C.1",
+    "git_commit": "8522dc577e1688b00234a07b83af6dfe75f50426",
+    "built_at": "2026-09-12T06:50:02Z",
+    "normalized_pipeline_version": "7B.1"
+  },
+  "before_after": {
+    "roles": {
+      "before": 8035,
+      "after": 8035
+    },
+    "aliases": {
+      "before": 23587,
+      "after": 23579
+    },
+    "compensation": {
+      "before": 1920,
+      "after": 1913
+    },
+    "labour_market": {
+      "before": 2973,
+      "after": 2398
+    },
+    "competencies": {
+      "before": 2275,
+      "after": 2275
+    },
+    "credentials": {
+      "before": 5,
+      "after": 5
+    },
+    "vector_passages": {
+      "before": 3528,
+      "after": 14087
+    }
+  },
+  "retrieval_before_after": {
+    "pass_rate": {
+      "before": 0.8889,
+      "after": 0.9136
+    },
+    "safety_pass_rate": {
+      "before": 0.4444,
+      "after": 1.0
+    },
+    "unknown_role_safety_rate": {
+      "before": 0.1667,
+      "after": 1.0
+    },
+    "evidence_coverage_rate": {
+      "before": 0.9714,
+      "after": 0.8857
+    },
+    "citation_completeness_rate": {
+      "before": 1.0,
+      "after": 1.0
+    },
+    "geography_correctness_rate": {
+      "before": 1.0,
+      "after": 1.0
+    },
+    "no_evidence_rate": {
+      "before": 0.037,
+      "after": 0.2099
+    }
+  },
+  "domain_coverage_after": {
+    "skills": {
+      "occupations": 3962,
+      "pct": 49.3
+    },
+    "tasks": {
+      "occupations": 1526,
+      "pct": 19.0
+    },
+    "knowledge": {
+      "occupations": 903,
+      "pct": 11.2
+    },
+    "activities": {
+      "occupations": 911,
+      "pct": 11.3
+    },
+    "relationships": {
+      "occupations": 3709,
+      "pct": 46.2
+    },
+    "attributes": {
+      "occupations": 1173,
+      "pct": 14.6
+    },
+    "technology": {
+      "occupations": 923,
+      "pct": 11.5
+    },
+    "education_training": {
+      "occupations": 1173,
+      "pct": 14.6
+    }
+  },
+  "geography_after": {
+    "compensation_by_country": {
+      "UK": 527,
+      "US": 1386
+    }
+  },
+  "top_remaining_gaps": [
+    "German occupation-specific compensation is aggregate (Eurostat SES); Destatis not yet acquired (\u00a718/\u00a747).",
+    "Router sends some role phrasings ('data scientist role overview', 'what does an electrician do') to the vector lane, so they return general (not occupation-grounded) evidence \u2014 a routing-coverage gap, not a safety gap.",
+    "Credential coverage is fixtures-only (5 records); regulated-profession coverage not yet normalized (\u00a722/\u00a747).",
+    "Emerging AI roles (AI Engineer, LLM Engineer) are not in the official taxonomies yet \u2014 return general/insufficient by design (\u00a747/\u00a752).",
+    "Compensation\u2192canonical-occupation linkage is 825/1913 (official codes only; no fuzzy title matching by design, \u00a716)."
+  ]
+}

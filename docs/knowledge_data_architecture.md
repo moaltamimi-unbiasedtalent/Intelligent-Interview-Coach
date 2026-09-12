@@ -218,3 +218,14 @@ framework competencies, 10,304 source records; 0 rejections; the build is **idem
 - *Unresolved linkage reported honestly.* Compensation rows link to a canonical occupation
   only through an existing official code crosswalk (no fuzzy title matching); the current
   resolved/unresolved split is reported in `canonicalization_report.json` and the audit.
+
+## Phase 7C — normalized becomes the governed runtime source
+
+Phase 7C rebuilds the runtime stores (`data/knowledge/*.db`, `data/chroma/`) FROM the
+normalized layer via `scripts/knowledge/build_runtime_knowledge.py` (atomic promotion, build
+metadata, reproducible), adds the §39/§40 occupation-grounding guard and geography-safe
+compensation, and quantifies coverage (`scripts/audit_knowledge_coverage.py`,
+`scripts/eval_knowledge_retrieval.py`). Full detail:
+[knowledge_runtime_architecture.md](knowledge_runtime_architecture.md) and the before/after
+[knowledge_coverage_report.md](knowledge_coverage_report.md). The normalizer was extended in
+7C to carry occupation relationships and career attributes so the runtime rebuild is loss-free.

@@ -154,6 +154,7 @@ def build(selected: list[str], *, output_dir: str, validate_only: bool) -> Build
     occupations: list[C.CanonicalOccupation] = []
     aliases: list[C.OccupationAlias] = []
     crosswalks: list[C.OccupationCrosswalk] = []
+    relationships: list[C.OccupationRelationship] = []
     source_records: list[C.SourceRecord] = []
     facts: list[C.KnowledgeFact] = []
     compensation: list[C.CompensationRecord] = []
@@ -172,8 +173,9 @@ def build(selected: list[str], *, output_dir: str, validate_only: bool) -> Build
             result.fingerprints.append(fp)
         if version:
             result.source_versions[manifest_id] = version
-        counts = {"occupations": 0, "aliases": 0, "crosswalks": 0, "facts": 0,
-                  "compensation": 0, "labour_market": 0, "competencies": 0, "rejected": 0}
+        counts = {"occupations": 0, "aliases": 0, "crosswalks": 0, "relationships": 0,
+                  "facts": 0, "compensation": 0, "labour_market": 0, "competencies": 0,
+                  "rejected": 0}
 
         try:
             produced = spec.reader()
@@ -188,7 +190,7 @@ def build(selected: list[str], *, output_dir: str, validate_only: bool) -> Build
         if spec.kind == "occupation":
             for occ in produced:
                 try:
-                    can, al, fa, xw, sr = N.occupation_to_canonical(
+                    can, al, fa, xw, rel, sr = N.occupation_to_canonical(
                         occ, registry, raw_file=spec.raw_path, source_meta=smeta)
                 except Exception as exc:  # noqa: BLE001
                     result.rejections.append({"source": spec.name, "severity": "warning",
@@ -197,10 +199,10 @@ def build(selected: list[str], *, output_dir: str, validate_only: bool) -> Build
                     counts["rejected"] += 1
                     continue
                 occupations.append(can); aliases.extend(al); facts.extend(fa)
-                crosswalks.extend(xw); source_records.append(sr)
+                crosswalks.extend(xw); relationships.extend(rel); source_records.append(sr)
                 counts["occupations"] += 1
                 counts["aliases"] += len(al); counts["crosswalks"] += len(xw)
-                counts["facts"] += len(fa)
+                counts["relationships"] += len(rel); counts["facts"] += len(fa)
 
         elif spec.kind == "compensation":
             for rec in produced:
@@ -246,6 +248,8 @@ def build(selected: list[str], *, output_dir: str, validate_only: bool) -> Build
     aliases = N.dedupe(sorted(aliases, key=lambda r: (r.canonical_occupation_id, r.normalized_alias, r.source)),
                        key=lambda r: (r.canonical_occupation_id, r.normalized_alias, r.source))
     crosswalks = N.dedupe(sorted(crosswalks, key=lambda r: r.crosswalk_id), key=lambda r: r.crosswalk_id)
+    relationships = N.dedupe(sorted(relationships, key=lambda r: r.relationship_id),
+                             key=lambda r: r.relationship_id)
     facts = N.dedupe(sorted(facts, key=lambda r: r.fact_id), key=lambda r: r.fact_id)
     source_records = N.dedupe(sorted(source_records, key=lambda r: (r.record_type, r.source_record_id)),
                               key=lambda r: r.source_record_id)
@@ -260,16 +264,22 @@ def build(selected: list[str], *, output_dir: str, validate_only: bool) -> Build
     result.resolved_compensation = sum(1 for r in compensation if r.occupation_id)
     result.unresolved_compensation = sum(1 for r in compensation if not r.occupation_id)
 
-    # Partition facts by output file.
+    # Partition facts by output file. Career scalar attributes (tagged metadata.attribute)
+    # go to a dedicated occupation_attributes output for lossless runtime reconstruction;
+    # everything else partitions by fact_type into its domain output.
     fact_files: dict[str, list] = {}
     for f in facts:
-        fact_files.setdefault(_FACT_OUTPUT.get(f.fact_type, "facts_other"), []).append(f)
+        if (f.metadata or {}).get("attribute"):
+            fact_files.setdefault("occupation_attributes", []).append(f)
+        else:
+            fact_files.setdefault(_FACT_OUTPUT.get(f.fact_type, "facts_other"), []).append(f)
 
     # --- Assemble the output plan -----------------------------------------------------
     outputs: dict[str, list] = {
         "occupations": occupations,
         "occupation_aliases": aliases,
         "occupation_crosswalks": crosswalks,
+        "occupation_relationships": relationships,
         "compensation": compensation,
         "labour_market": labour_market,
         "competencies": competencies,
@@ -319,7 +329,10 @@ def _validate_roundtrip(outputs: dict[str, list]) -> None:
 
     model_of = {
         "occupations": C.CanonicalOccupation, "occupation_aliases": C.OccupationAlias,
-        "occupation_crosswalks": C.OccupationCrosswalk, "compensation": C.CompensationRecord,
+        "occupation_crosswalks": C.OccupationCrosswalk,
+        "occupation_relationships": C.OccupationRelationship,
+        "occupation_attributes": C.KnowledgeFact,
+        "compensation": C.CompensationRecord,
         "labour_market": C.LabourMarketRecord, "source_records": C.SourceRecord,
     }
     with tempfile.TemporaryDirectory() as d:

@@ -119,6 +119,7 @@ class FactType(str, Enum):
     WORK_CONTEXT = "work_context"
     EDUCATION = "education"
     TRAINING = "training"
+    WORK_EXPERIENCE = "work_experience"
     WAGE = "wage"
     EMPLOYMENT = "employment"
     FORECAST = "forecast"
@@ -889,6 +890,32 @@ class OccupationCrosswalk(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class OccupationRelationship(BaseModel):
+    """A same-source occupation→occupation relationship (O*NET related, ISCO/KldB parent,
+    OOH similar). Distinct from :class:`OccupationCrosswalk` (which links *classification
+    schemes*); this links two occupations within one source's own hierarchy/graph. Preserved
+    so the runtime transition/related-role lane keeps its evidence (Phase 7C)."""
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    relationship_id: str = Field(min_length=1)
+    occupation_id: str
+    source_occupation_id: str = Field(min_length=1)
+    related_code: str = Field(min_length=1)
+    relation_type: str = "related"  # related | parent | similar (source-native)
+    source: str = Field(min_length=1)
+    source_version: str | None = None
+    source_record_id: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("occupation_id")
+    @classmethod
+    def _canon(cls, v: str) -> str:
+        if not v.startswith("ask4mo:occ:"):
+            raise ValueError("occupation_id must be an ask4mo:occ:<hash> canonical id.")
+        return v
+
+
 class CanonicalIdRegistry:
     """Persistent source-identifier → canonical Ask4Mo occupation-id map (§21).
 
@@ -971,5 +998,6 @@ __all__ += [
     "MappingType",
     "MappingStrength",
     "OccupationCrosswalk",
+    "OccupationRelationship",
     "CanonicalIdRegistry",
 ]

@@ -103,8 +103,14 @@ def source_meta_from_manifest(entry) -> dict:
 def occupation_to_canonical(occ: NormalisedOccupation, registry: C.CanonicalIdRegistry,
                             *, raw_file: str | None = None, source_meta: dict | None = None):
     """Return (CanonicalOccupation, [OccupationAlias], [KnowledgeFact], [OccupationCrosswalk],
-    SourceRecord) for one source occupation. Identity is assigned/looked-up via the registry
-    so it stays stable as later sources enrich the same occupation."""
+    [OccupationRelationship], SourceRecord) for one source occupation. Identity is assigned/
+    looked-up via the registry so it stays stable as later sources enrich the same occupation.
+
+    Career scalar attributes (entry_education, work_experience, on_the_job_training, outlook)
+    are emitted as typed KnowledgeFacts carrying ``metadata['attribute']`` so the runtime build
+    can reconstruct the occupation_attributes store losslessly. Same-source occupation→occupation
+    links (related/parent/similar) are emitted as OccupationRelationship (kept distinct from
+    cross-scheme OccupationCrosswalk)."""
     pv = _provenance_bits(occ, source_meta)
     oid = registry.resolve_or_assign(**_id_kwargs(occ))
     src_rec_id = f"{occ.source_id}:{occ.occupation_code}"
@@ -194,8 +200,22 @@ def occupation_to_canonical(occ: NormalisedOccupation, registry: C.CanonicalIdRe
         _fact(C.FactType.TASK, t)
     for a in occ.activities:
         _fact(C.FactType.WORK_ACTIVITY, a)
-    if occ.entry_education:
-        _fact(C.FactType.EDUCATION, occ.entry_education)
+    # Career scalar attributes → typed facts tagged for lossless attribute reconstruction.
+    _fact(C.FactType.EDUCATION, occ.entry_education or "", {"attribute": "entry_education"})
+    _fact(C.FactType.WORK_EXPERIENCE, occ.work_experience or "", {"attribute": "work_experience"})
+    _fact(C.FactType.TRAINING, occ.on_the_job_training or "", {"attribute": "on_the_job_training"})
+    _fact(C.FactType.FORECAST, occ.outlook or "", {"attribute": "outlook"})
+
+    relationships = []
+    for r in occ.relationships:
+        if not r.related_code:
+            continue
+        relationships.append(C.OccupationRelationship(
+            relationship_id=f"{occ.source_id}:{_short(occ.occupation_code, r.relation_type, r.related_code)}",
+            occupation_id=oid, source_occupation_id=occ.occupation_code,
+            related_code=r.related_code, relation_type=r.relation_type,
+            source=occ.source_id, source_version=pv.get("source_version"),
+            source_record_id=src_rec_id))
 
     crosswalks = []
     # Inherent: an O*NET-SOC / SOC / KldB / ISCO occupation IS a code in its own scheme —
@@ -214,7 +234,7 @@ def occupation_to_canonical(occ: NormalisedOccupation, registry: C.CanonicalIdRe
             mapping_strength=C.MappingStrength.OFFICIAL, official_mapping=True,
             source=occ.source_id, source_version=pv.get("source_version")))
 
-    return canonical, aliases, facts, crosswalks, source_record
+    return canonical, aliases, facts, crosswalks, relationships, source_record
 
 
 _STAT = {"median": C.CompensationStatistic.MEDIAN, "mean": C.CompensationStatistic.MEAN,
@@ -348,7 +368,11 @@ def labour_openings_to_canonical(o: LabourOpenings, *, source_meta: dict | None 
 def labour_shortage_to_canonical(s: LabourShortage, *, source_meta: dict | None = None):
     meta = source_meta or {}
     g = _geo(s.country)
-    lm_id = f"{s.source_id}:sh:{_short(s.occupation, s.country, s.period or '')}"
+    # Full-content key: CLSSI emits one row per (country, occupation group) and the
+    # distinguishing detail is the skill level + shortage indicator — include them so
+    # genuinely distinct shortage records are preserved (only true content-dupes collapse, §50).
+    lm_id = (f"{s.source_id}:sh:"
+             f"{_short(s.occupation, s.country, s.period or '', s.skill_level or '', s.shortage_indicator or '')}")
     return C.LabourMarketRecord(
         labour_market_id=lm_id, country=g["country"], region=g["region"],
         geography_type=g["geography_type"],

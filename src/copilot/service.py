@@ -216,6 +216,14 @@ class KnowledgeRetrievalResult:
     blocked: bool = False
     refusal: str | None = None
     clarify: str | None = None
+    # Phase 7C §40: whether the evidence is grounded in a resolved, KNOWN occupation.
+    # When a query NAMES an occupation the knowledge base does not contain, the pipeline
+    # must not present similar narrative chunks as if they were about that role — such
+    # evidence is suppressed (occupation_grounded=False, insufficient). When a query names
+    # no specific occupation and only general narrative is found, it is returned but flagged
+    # general_evidence=True so the candidate layer can label it as general guidance.
+    occupation_grounded: bool = False
+    general_evidence: bool = False
     # Safe, inspector-facing trace (no hidden reasoning, no raw provider payload).
     trace: PipelineTrace = field(default_factory=PipelineTrace)
 
@@ -437,15 +445,60 @@ class CareerIntelligenceService:
         if bundle.stop_message is not None:
             # Validation failure (e.g. empty query) — safe, no evidence.
             return KnowledgeRetrievalResult(insufficient_evidence=True, trace=trace)
+
+        # Phase 7C §39/§40 — occupation-grounding guard.
+        # A query "names" an occupation when the resolver extracted a phrase; it is
+        # "grounded" only when that phrase matched at least one KNOWN occupation
+        # (occupation_candidates). Structured evidence is inherently occupation-grounded.
+        named = bool((trace.resolved_occupation or "").strip())
+        # Ambiguous resolution (§9): the query matched several materially-different
+        # occupations. Ask the user to clarify — never present occupation-specific evidence
+        # for a guessed single interpretation.
+        if bundle.clarify:
+            trace.notes.append("Ambiguous occupation — clarification requested; evidence withheld.")
+            return KnowledgeRetrievalResult(
+                evidence=[], citations=[], resolved_occupation=trace.resolved_occupation,
+                resolved_geography=trace.detected_country, retrieval_lane=trace.retrieval_lane,
+                retrieval_strategy=trace.retrieval_strategy, source_count=0,
+                insufficient_evidence=True, occupation_grounded=False,
+                general_evidence=False, clarify=bundle.clarify, trace=trace,
+            )
+        # Grounded ONLY when the resolver matched at least one KNOWN occupation. Structured
+        # evidence exists only in that case, so this single signal is authoritative; a
+        # narrative chunk that merely looks similar never counts as grounding (§39).
+        grounded = bool(trace.occupation_candidates)
+        evidence = list(bundle.evidence)
+        general_evidence = False
+        if named and not grounded and evidence:
+            # Occupation named but not in the KB: do NOT present similar narrative chunks
+            # as role evidence. Suppress it and report insufficient (never fabricate grounding).
+            note = (f'No supported occupation matched "{trace.resolved_occupation}"; '
+                    "narrative-only matches were withheld to avoid implying occupation-"
+                    "specific evidence.")
+            trace.notes.append(note)
+            return KnowledgeRetrievalResult(
+                evidence=[], citations=[], resolved_occupation=trace.resolved_occupation,
+                resolved_geography=trace.detected_country, retrieval_lane=trace.retrieval_lane,
+                retrieval_strategy=trace.retrieval_strategy, source_count=0,
+                insufficient_evidence=True, occupation_grounded=False,
+                general_evidence=False, clarify=bundle.clarify, trace=trace,
+            )
+        if evidence and not grounded:
+            # No specific occupation named; only general narrative found — return it, but
+            # flag it so the candidate layer labels it as general (not role-specific) guidance.
+            general_evidence = True
+
         return KnowledgeRetrievalResult(
-            evidence=list(bundle.evidence),
+            evidence=evidence,
             citations=list(bundle.citations),
             resolved_occupation=trace.resolved_occupation,
             resolved_geography=trace.detected_country,
             retrieval_lane=trace.retrieval_lane,
             retrieval_strategy=trace.retrieval_strategy,
-            source_count=len(bundle.evidence),
-            insufficient_evidence=not bundle.evidence,
+            source_count=len(evidence),
+            insufficient_evidence=not evidence,
+            occupation_grounded=grounded,
+            general_evidence=general_evidence,
             clarify=bundle.clarify,
             trace=trace,
         )
