@@ -1,0 +1,171 @@
+{
+  "report": "final_submission_readiness",
+  "phase": "8",
+  "release_candidate": "sprint4-final-rc",
+  "generated_at": "2026-09-12T18:50:53Z",
+  "provenance": {
+    "validated_sha": "5dec4fa60bbda4a4fc498ec786533374a098fe4b",
+    "validated_ref": "main (Phase 7H merged, PR #67)",
+    "git_dirty_at_validation": false,
+    "release_docs_commit": "ff25912d2a0a9cf6c177796d1238bad4e4f19624",
+    "branch": "release/sprint4-final-freeze",
+    "historical_rollback_tag": "sprint4-pre-phase7-baseline",
+    "historical_rollback_commit": "238561252a085c3675aafa967cf946425ccbe238",
+    "historical_tag_unchanged": true,
+    "proposed_final_tag": "sprint4-submission-ready",
+    "final_tag_created": false,
+    "note": "All gates ran against the clean main tip 5dec4fa. Phase 8 made no product/code changes; release documentation and this report are committed on top. The report's own commit is not the code it evaluated."
+  },
+  "feature_freeze": {
+    "active": true,
+    "product_features_added": 0,
+    "agent_tools_changed": false,
+    "retrieval_changed": false,
+    "model_profiles_changed": false,
+    "prompts_changed": false
+  },
+  "product": {
+    "name": "Ask4Mo",
+    "descriptor": "Intelligent Interview Coach",
+    "ai_coach": "Mo",
+    "slogan": "Ask More. Be More.",
+    "primary_frontend": "Next.js 15 / React 19",
+    "backend": "FastAPI",
+    "legacy_frontend": "Streamlit (legacy/development)"
+  },
+  "architecture": {
+    "candidate_agent_count": 1,
+    "career_tool_count": 6,
+    "career_tools": ["AnalyzeJobDescription", "AnalyzeCandidateGaps", "BuildPreparationPlan", "GenerateInterviewQuestions", "SearchCareerKnowledge", "ResearchCurrentMarket"],
+    "hitl_action_tools": ["ProposePreparationMemory", "RequestPracticeHandoff"],
+    "total_registered_tools": 8,
+    "generic_web_or_search_tool": false,
+    "feedback_intelligence_candidate_facing": false,
+    "self_modification": false
+  },
+  "model_profiles": {
+    "fast": "openai/gpt-5.6-luna",
+    "balanced": "openai/gpt-5.6-terra",
+    "advanced": "openai/gpt-5.6-sol",
+    "default_reviewer_profile": "Balanced"
+  },
+  "knowledge": {
+    "canonical_occupations": 8035, "aliases": 23579, "skills": 111455, "tasks": 22383,
+    "knowledge_areas": 6968, "work_activities": 20141, "compensation": 1913,
+    "labour_market": 2398, "competencies": 2275, "credentials": 5,
+    "vector_passages": 14087, "sources": 31,
+    "audit_raw_sources": "READY", "audit_knowledge_gaps": "READY",
+    "audit_normalized_knowledge": "PASS", "audit_knowledge_coverage": "PASS",
+    "check_demo_knowledge": "READY"
+  },
+  "retrieval": {
+    "cases": 81, "passed": 74, "pass_rate": 0.9136, "evidence_coverage_rate": 0.8857,
+    "citation_completeness_rate": 1.0, "geography_correctness_rate": 1.0,
+    "unknown_role_safety_rate": 1.0, "unsupported_geography_safety_rate": 1.0,
+    "no_fabricated_citation_rate": 1.0, "gate": "PASS"
+  },
+  "agent": {
+    "deterministic_gate": "PASS", "cross_user_access_failures": 0,
+    "eval_agent_live_no_paid": "CONFIG OK, NOT RUN (22 cases, balanced)",
+    "paid_live_evaluation": "NOT RUN"
+  },
+  "ragas": {
+    "deterministic_gate": "PASS", "id_context_precision": 0.6757, "id_context_recall": 0.5161,
+    "dataset_hash": "0e0e9298ba77a8bc", "reviewed_baseline_git_dirty": false,
+    "provenance_audit": "READY", "paid_judge": "NOT RUN",
+    "paid_estimate": {"judge_model": "gpt-4o-mini", "estimated_calls": 140, "cost": "unknown (no pricing call)"},
+    "authorization": "REQUIRED"
+  },
+  "external_research": {
+    "cases": 38, "passed": 38, "ssrf_safety": 1.0, "prompt_injection_safety": 1.0,
+    "provider_failure_isolation": 1.0, "provider_routing": 1.0, "generic_web_search": false,
+    "candidate_data_outbound": false, "network_default": "OFF", "permanent_kb_ingestion": false,
+    "live_adzuna_calls": 0, "live_company_web_calls": 0, "gate": "PASS", "audit": "READY"
+  },
+  "feedback_intelligence": {
+    "cases": 33, "passed": 33, "gate": "PASS", "offline": true, "candidate_facing": false,
+    "self_modification": false, "human_approval": "REQUIRED", "approval_auto_executes": false,
+    "network_default": false, "git_writes": false, "audit": "READY", "paid_synthesis": "NOT RUN"
+  },
+  "observability": {
+    "audit": "READY", "optional": true, "metadata_only_default": true,
+    "candidate_content": false, "prompt_content": false, "response_content": false,
+    "chain_of_thought": false, "failure_isolation": "PASS",
+    "langfuse": "DISABLED / NOT CONFIGURED", "live_telemetry_calls": 0
+  },
+  "privacy_security": {
+    "candidate_pii_exposed": false, "cv_exposed": false, "memory_exposed": false,
+    "chain_of_thought_exposed": false, "secrets_exposed": false,
+    "ssrf": "PASS", "prompt_injection": "PASS", "cross_user": "PASS",
+    "secret_scan_ci_exact": "PASS"
+  },
+  "tests": {
+    "python_passed": 2137, "python_skipped": 3, "python_failed": 0, "new_unexpected_skips": 0,
+    "frontend_vitest": {"files": 27, "passed": 155, "failed": 0},
+    "frontend_e2e_playwright": {"passed": 51, "failed": 0, "port_override": "E2E_PORT=3999"},
+    "legacy_live_component_vitest": {"passed": 22, "failed": 0},
+    "strictmode_regression_covered": true
+  },
+  "static_checks": {
+    "ruff": "PASS", "compileall": "PASS", "frontend_lint": "PASS",
+    "frontend_typecheck": "PASS", "frontend_build": "PASS",
+    "legacy_component_typecheck": "PASS", "legacy_component_build": "PASS",
+    "startup_all_optional_off": "PASS (14 routes, no network, no leaked ragas/langfuse imports)"
+  },
+  "database": {
+    "alembic_single_head": true, "alembic_head": "0006_user_feedback",
+    "alembic_cycle": "PASS (upgrade/downgrade/re-upgrade)", "new_migration_added": false
+  },
+  "performance": {
+    "structured_retrieval_p50_ms": 28.92, "structured_retrieval_p95_ms": 52.4,
+    "feedback_intelligence_run_ms": 193, "material_regression": false
+  },
+  "ci_parity": {
+    "python_job": "REPRODUCED LOCALLY (pytest, ruff, compileall, imports, manifest, eval_agent, alembic, knowledge expansion, product coverage, secret scan)",
+    "frontend_job": "REPRODUCED LOCALLY (npm ci/lint/test/typecheck/build)",
+    "nextjs_e2e_job": "REPRODUCED LOCALLY (Playwright 51, E2E_PORT override)",
+    "legacy_streamlit_smoke_job": "component-level reproduced (live_interviewer/frontend); Streamlit browser smoke not run locally",
+    "github_actions_status": "PENDING (push triggers CI; verify on GitHub)"
+  },
+  "documentation": {
+    "readme": "PASS", "requirements_map": "PASS", "architecture": "PASS", "reviewer_qa": "PASS",
+    "phase7_integrated_readiness": "PASS", "final_submission_readiness": "PASS",
+    "stale_current_state_claims": 0, "branding_correct": true
+  },
+  "optional_services": {
+    "adzuna": "NOT CONFIGURED", "langfuse": "DISABLED / NOT CONFIGURED",
+    "destatis": "NOT CONFIGURED / PARTIAL", "ragas_paid": "NOT RUN"
+  },
+  "paid_and_live_calls_this_phase": {
+    "paid_llm": 0, "paid_ragas": 0, "live_adzuna": 0, "live_company_web": 0,
+    "live_langfuse": 0, "live_golden": "NOT RUN"
+  },
+  "live_golden": {
+    "plan": "READY", "profile": "Balanced", "synthetic_public_inputs": true,
+    "estimated_provider_calls": "~6-12", "estimated_cost": "unknown (small; no pricing call)",
+    "authorization": "REQUIRED", "status": "READY_FOR_AUTHORIZATION", "executed": false
+  },
+  "defects": {"P0": 0, "P1": 0, "P2": 0, "P3": 2,
+    "details": [
+      {"id": "P3-1", "title": "gen_product_coverage_cases sampling non-determinism", "status": "documented, non-blocking (command exit 0)"},
+      {"id": "P3-2", "title": "npm audit advisories in frontend/legacy transitive deps", "status": "documented, non-blocking (upstream, not Phase 7/8 code)"}
+    ]
+  },
+  "final_tag": {
+    "historical": "sprint4-pre-phase7-baseline -> 238561252a085c3675aafa967cf946425ccbe238 (unchanged)",
+    "proposed": "sprint4-submission-ready",
+    "created": false,
+    "post_merge_command": "git checkout main && git pull --ff-only && git tag -a sprint4-submission-ready -m 'Ask4Mo Sprint 4 submission-ready release' && git push origin sprint4-submission-ready"
+  },
+  "verdict": {
+    "phase8": "PASS",
+    "final_release_candidate": "YES",
+    "deterministic_submission_readiness": "PASS",
+    "live_golden_ready": "YES",
+    "live_golden_executed": false,
+    "explicit_paid_authorization_required": true,
+    "ready_for_human_merge_review": "YES",
+    "ready_for_final_live_authorization": "YES",
+    "ready_for_final_tag_after_merge": "YES"
+  }
+}
