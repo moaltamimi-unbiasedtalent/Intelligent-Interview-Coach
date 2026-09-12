@@ -96,7 +96,7 @@ they refresh or come back later.
 
 ```
 Next.js (primary UI)  →  FastAPI  →  Application Services
-                                        ├── LangGraph agent ── 5 Career tools
+                                        ├── LangGraph agent ── 6 Career tools
                                         │        ├── Agentic RAG (retrieval-as-data)
                                         │        ├── durable long-term memory
                                         │        ├── real HITL interrupt/resume

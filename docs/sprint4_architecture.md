@@ -108,7 +108,7 @@ flowchart TD
     DEC -->|gap analysis| GAP[Candidate gap tool]
     DEC -->|preparation plan| PLAN[Preparation planning tool]
     DEC -->|question generation| QG[Question generation tool]
-    DEC -->|company research| EXT[External research tool<br/>later]
+    DEC -->|current-market research| EXT[ResearchCurrentMarket tool<br/>bounded, Phase 7F]
     RT --> OBS[Observe tool result]
     JD --> OBS
     GAP --> OBS
@@ -696,8 +696,8 @@ flowchart TD
     HR2 -. approved memory .-> MEM
 ```
 
-**Two action tools, separate from the five Career tools.** `ProposePreparationMemory`
-and `RequestPracticeHandoff` are registered alongside the five Career evidence tools
+**Two action tools, separate from the six Career tools.** `ProposePreparationMemory`
+and `RequestPracticeHandoff` are registered alongside the six Career evidence tools
 but are documented and counted separately — they analyse/persist nothing; they only
 *propose* a decision that pauses the graph. `ProposePreparationMemory` validates the
 category/summary/role and sets a pending action; it does **not** call the memory
@@ -789,7 +789,7 @@ flowchart TD
     P -->|else| DET[Deterministic Career flow]
     AC --> API[FastAPI agent API]
     API --> LG[LangGraph agent · one checkpointed thread]
-    LG --> T[5 Career tools]
+    LG --> T[6 Career tools]
     LG --> RAG[Agentic RAG]
     LG --> MEM[(long-term memory)]
     LG --> HITL[HITL: role / memory / handoff]

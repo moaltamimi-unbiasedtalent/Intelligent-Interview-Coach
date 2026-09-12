@@ -31,6 +31,13 @@ Career router decides *which* lanes/sources. The model never becomes the fact so
 resolution and citations must be reliable and reproducible — that belongs in
 deterministic code, not model discretion.
 
+**What is ResearchCurrentMarket, and why no generic web search?** It is the sixth Career
+tool (Phase 7F): bounded *current-market* evidence from a specific provider layer — Adzuna
+advertised-market signals and an SSRF-safe fetch of an *explicit public* company page. It is
+not a crawler and not a general web search: no arbitrary URLs from model input, no candidate
+data outbound, network OFF by default, and nothing is written back into the knowledge base.
+Governed local knowledge stays the default; this only supplements it with current signals.
+
 **How do you prevent hallucinated citations?** A deterministic output guard removes any
 citation marker not backed by the current run's retrieved evidence (provenance, not
 semantic faithfulness) and reuses the Sprint-3 secret/leak guard.
@@ -81,6 +88,16 @@ context recall of generated answers — not a single accuracy percentage.
 **Why isn't the scripted suite 100% live-model accuracy?** It validates the graph/tool
 contract against scripted routes; it is deliberately not a live-model tool-selection
 benchmark (that is the separate live harness).
+
+**What happened in the final live rehearsal?** One authorized, paid, end-to-end live run
+(Balanced profile, synthetic inputs) exercised the whole journey — Home → Prepare → Ask Mo
+→ HITL practice handoff → Practice → evaluation → Deep Dive → report → History → resume —
+with Q1 appearing without a reload, no candidate-data leakage, and a coherent Agent Inspector
+(no chain-of-thought/prompt/secret). Result: **PASS**, 0 product defects, 0 HTTP 5xx, 0 reruns.
+One documented caveat: for a software-engineering evidence request the governed KB returned
+insufficient evidence (a known coverage gap) and Mo **declined to fabricate a citation** — the
+grounding guard working as designed. Evidence:
+[final live golden result](final_live_golden_result.md).
 
 **How do you protect candidate data?** Trust separation (only app rules + tool code are
 instructions), tool allowlist, injection guards, the output guard, sanitised logging and

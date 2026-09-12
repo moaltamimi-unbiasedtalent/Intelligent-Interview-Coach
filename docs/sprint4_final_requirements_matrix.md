@@ -18,7 +18,7 @@ targeted Interview Practice.
 | Requirement | Status | Implementation | Evidence / code | Reviewer demo | Limitations |
 |---|---|---|---|---|---|
 | Stateful AI Agent | COMPLETE | A single bounded LangGraph agent decides whether/which/what-order tools to call within a tool allowlist, bounded loop and HITL constraints. Sprint 3 was a largely deterministic Career workflow; Sprint 4 introduced agent-owned orchestration. | `src/agent/graph.py`, `src/agent/nodes.py`, `src/agent/policies.py`, `src/application/agent_service.py` | Prepare page → give a role/JD → watch the agent choose tools | Single agent by design (not multi-agent) |
-| Controlled tools | COMPLETE | Five Career tools via a strict allowlist registry (no dynamic import/eval; unknown names rejected). Two SEPARATE human-action tools request approvals. | `src/agent/tools.py`, `src/agent/registry.py` | Inspector → tool timeline | UI actions are never counted as tools |
+| Controlled tools | COMPLETE | Six Career tools via a strict allowlist registry (no dynamic import/eval; unknown names rejected), incl. `ResearchCurrentMarket` (bounded current-market research, Phase 7F). Two SEPARATE human-action tools request approvals. | `src/agent/tools.py`, `src/agent/registry.py` | Inspector → tool timeline | UI actions are never counted as tools |
 | Agentic RAG | COMPLETE | The agent decides *whether* to retrieve; `SearchCareerKnowledge` then calls the existing deterministic Career retrieval layer, which decides *which* lanes/sources. The LLM is not the fact source; evidence returns normalised with provenance/citations. | `src/agent/tools.py` (`_search_career_knowledge`), `src/copilot/service.py` | Ask a factual pay/labour-market question → citations appear | Retrieval quality bounded by the KB |
 | Long-term memory | COMPLETE | User-approved, bounded, user-scoped DB records (list/edit/pin/unpin/delete/next-run preview/edit-before-save HITL/safe loaded-memory cue). Pinning changes deterministic load priority only; the current request always wins. | `src/memory.py`, `src/application/memory_service.py`, `src/repository.py` (`MemoryRepository`), migrations `0002`/`0005`, `frontend/components/memory/MemoryManager.tsx` | Settings → Preparation memory | Deterministic selection (no vector memory) |
 | Short-term memory | COMPLETE | LangGraph checkpoint (execution state), durable saver, separate from long-term memory. | `src/agent/checkpoint.py`, `src/agent/state.py` | Inspector → steps | — |
@@ -50,4 +50,6 @@ targeted Interview Practice.
 
 Production OIDC · live PostgreSQL deployment validation · bulk LangGraph checkpoint
 retention (deployment op) · paid Fast/Balanced/Advanced comparison · paid live RAGAS
-baseline · external company research · voice (experimental, off) · camera/video (never).
+baseline · live external-research integration (Adzuna / company web) not validated in
+this environment — bounded `ResearchCurrentMarket` tool implemented (Phase 7F) ·
+voice (experimental, off) · camera/video (never).

@@ -1,0 +1,73 @@
+{
+  "artifact": "final_live_golden_run_result",
+  "run_id": "final-golden-20260912-192348",
+  "started_at": "2026-09-12T19:23:48Z",
+  "completed_at": "2026-09-12T19:45:19Z",
+  "branch": "release/sprint4-final-freeze",
+  "validated_code_sha": "afb4f4567ff6b3307a8e0b0e175cbe1a41665148",
+  "git_dirty_before_run": false,
+  "profile": "Balanced",
+  "model": "openai/gpt-5.6-terra",
+  "synthetic_inputs": true,
+  "credential": {
+    "source": ".streamlit/secrets.toml (existing local OpenRouter key)",
+    "bridged_ephemerally": true,
+    "exposed": false,
+    "note": "Read programmatically into the backend process env only; never printed, logged, or committed."
+  },
+  "provider": {
+    "agent_run_model_calls": 11,
+    "agent_run_model_calls_breakdown": "8 agent / 3 tool (Agent Inspector, canonical)",
+    "agent_run_tokens": {"input": 29751, "output": 2499, "total": 32250},
+    "agent_usage_coverage": "Complete",
+    "interview_practice_model_calls_est": 3,
+    "interview_practice_calls_detail": "Q1 answer evaluation, deep-dive evaluation, final report",
+    "total_provider_calls_est": 14,
+    "cost": "UNKNOWN (Inspector reported estimated cost as '—'; no pricing metadata)",
+    "provider_failures": 0
+  },
+  "golden_runs_authorized": 1,
+  "golden_runs_started": 1,
+  "golden_runs_completed": 1,
+  "rerun_performed": false,
+  "steps": {
+    "home_prepare": "PASS",
+    "mo_analysis": "PASS",
+    "citations": "NOT_MET (agent retrieved via SearchCareerKnowledge twice; KB returned insufficient evidence for a software-engineering role — a known coverage gap; Mo correctly REFUSED to fabricate citations — no-fabricated-citation safety intact)",
+    "preparation": "PASS",
+    "memory_hitl": "NOT_TRIGGERED (model variance; not forced)",
+    "practice_handoff": "PASS (RequestPracticeHandoff → handoff card with provenance → APPROVE_PRACTICE_HANDOFF)",
+    "practice_setup": "PASS (POST /interviews 422 for a genuine PreparationContext gap → graceful 'one last detail' card → industry+career level → 200 created; no fabrication)",
+    "q1_without_reload": "PASS (auto-navigated to /practice; Q1 of 6 shown without any reload)",
+    "answer_evaluation": "PASS (82/100, structured, 'not a hiring decision')",
+    "deep_dive": "PASS (level 1 of 2 loaded)",
+    "deep_dive_return": "PASS (returned to Q1 view; feedback state preserved)",
+    "final_report": "PASS (Performance review 82/100; structured; no internal metadata)",
+    "history": "PASS (completed session present in server-backed history list)",
+    "reload_resume": "PASS (fresh navigation to the session URL re-loaded the durable report)",
+    "inspector": "PASS (coherent timeline: tools, retrieval, HITL, usage; no CoT/prompt/checkpoint/secret)"
+  },
+  "security": {
+    "candidate_data_url": false,
+    "candidate_data_localstorage": false,
+    "cross_user_issue": false,
+    "cot_exposed": false,
+    "raw_prompt_exposed": false,
+    "secret_exposure": false
+  },
+  "http_5xx_count": 0,
+  "masked_provider_error": false,
+  "non_2xx_responses": ["one 422 on POST /api/v1/interviews — expected graceful handling of a PreparationContext gap (industry/career level), surfaced as a setup card, not a crash"],
+  "optional_services": {"paid_ragas": 0, "live_adzuna": 0, "live_company_web": 0, "live_langfuse": 0, "research_current_market_forced": false},
+  "provider_failures": 0,
+  "product_defects": 0,
+  "model_variance_notes": [
+    "Turn 2 (role map + gap analysis) answered from the JD/background without invoking SearchCareerKnowledge — valid agentic tool-selection variance.",
+    "On the explicit evidence request, the agent DID invoke SearchCareerKnowledge; the KB returned insufficient evidence for 'backend software engineer' (documented coverage gap) and Mo refused to fabricate citations.",
+    "Memory proposal was not offered naturally (optional; not forced)."
+  ],
+  "P0": 0, "P1": 0, "P2": 0,
+  "P3": ["Governed citations not surfaced for the software-engineering scenario due to a known KB coverage gap (documented limitation); safety behaviour (no fabrication) intact."],
+  "final_status": "PASS",
+  "final_status_caveat": "All product-functionality and safety criteria passed with zero product defects and zero 5xx. The 'visible governed citation' demonstration criterion was NOT met for this scenario because the knowledge base returned insufficient evidence for a software-engineering role (a documented coverage gap); the agent retrieved and correctly refused to fabricate citations, so the safety-critical no-fabricated-citation property passed. Deterministic citation capability is independently proven (retrieval suite: citation_completeness 1.0)."
+}

@@ -1,5 +1,10 @@
 # Intelligent Interview Coach — Submission Readiness
 
+> **HISTORICAL — superseded by [docs/final_submission_readiness.md](final_submission_readiness.md).**
+> This is an earlier Career-Intelligence sprint audit (Phase 14R); its numbers reflect that
+> phase. For the CURRENT Sprint 4 release-candidate status, live-golden result, and metrics, use
+> the canonical [final submission readiness](final_submission_readiness.md) document.
+
 Final pre-submission audit (Phase 14R). Evidence-based; verdict at the end.
 
 > **Current numbers are generated, not hand-maintained.** Test counts, source

@@ -23,7 +23,7 @@ behave.
 The agent may only call tools in a strict registry (`src/agent/registry.py`). Tool
 names are Pydantic arg-model class names; unknown names are **rejected, never
 executed** — no dynamic import, `eval`, or arbitrary function resolution. Low-level
-stores (vector/BM25/repositories) are never registered; only the five Career tools and
+stores (vector/BM25/repositories) are never registered; only the six Career tools and
 the HITL action tools are. Verified: `unregistered_tool_attempts` rejected across the
 evaluation dataset and `tests/test_security_phase11.py` (0 executions).
 

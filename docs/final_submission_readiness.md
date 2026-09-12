@@ -109,6 +109,14 @@ NOT RUN (authorization required) · Destatis: NOT CONFIGURED / PARTIAL.
 ## Final freeze status
 
 Release candidate **sprint4-final-rc**. P0 = 0, P1 = 0. Deterministic submission readiness:
-**PASS**. Live golden rehearsal: **READY — explicit authorization required, NOT RUN**. The
-final tag `sprint4-submission-ready` is **not** created in this phase and must point to the
-merged main commit after acceptance. Do not auto-merge; do not run paid/live validation.
+**PASS**. Live golden rehearsal: **EXECUTED — PASS** (one authorized run, `final-golden-20260912-192348`,
+Balanced profile, synthetic inputs; 0 5xx, 0 product defects; full journey Home → Prepare → Ask Mo →
+HITL handoff → Practice → evaluation → Deep Dive → report → History → resume, with Q1 shown without
+reload and no candidate-data leakage). One documented caveat: governed citations were not surfaced
+for the software-engineering scenario because the knowledge base returned insufficient evidence (a
+known coverage gap) and the agent correctly **refused to fabricate** — the no-fabricated-citation
+safety property held; deterministic citation capability is independently proven (retrieval
+citation_completeness 1.0). Evidence: [`docs/final_live_golden_result.md`](final_live_golden_result.md),
+[`evaluations/final/golden_run_result.json`](../evaluations/final/golden_run_result.json). The
+final tag `sprint4-submission-ready` is **not** created in this phase and must point to the merged
+main commit after acceptance. Do not auto-merge.
