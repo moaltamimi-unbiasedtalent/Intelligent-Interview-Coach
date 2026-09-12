@@ -1,0 +1,30 @@
+{
+  "description": "Fixed, deterministic subset of evaluations/ragas/cases.json used for the OPT-IN paid RAGAS LLM-judge run (Phase 7E). Kept small (24 cases) and STABLE so paid runs are comparable across commits. Covers role/skills/technology/education, US+UK+Germany compensation, labour market + shortage, transition, digital competency, cybersecurity, seniority, mixed, and safety (insufficient-evidence) cases. Do NOT randomise; edit deliberately.",
+  "version": 1,
+  "case_ids": [
+    "role_us_data_analyst",
+    "role_uk_operations_manager",
+    "role_global_nurse",
+    "skills_us_data_roles",
+    "skills_uk_project_management",
+    "tech_us_cloud",
+    "edu_us_data_scientist",
+    "edu_uk_nursing",
+    "comp_us_data_analyst",
+    "comp_uk_software_engineer",
+    "comp_de_engineer",
+    "comp_us_nurse",
+    "labour_us_ai_demand",
+    "labour_us_outlook_devops",
+    "shortage_uk_cyber",
+    "shortage_de_it",
+    "transition_teacher_to_ux",
+    "digital_eu_competency",
+    "cyber_us_analyst_tasks",
+    "seniority_junior_expectations",
+    "mixed_us_data_analyst_prep",
+    "insufficient_weather",
+    "insufficient_pizza",
+    "insufficient_stock_tip"
+  ]
+}
