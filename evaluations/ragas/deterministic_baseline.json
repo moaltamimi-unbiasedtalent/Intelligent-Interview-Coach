@@ -1,7 +1,9 @@
 {
-  "git_sha": "d892acc",
+  "git_sha": "7a9b97ee2667b9f9d1d259ad9a1ec5d62e33b3f5",
+  "git_sha_short": "7a9b97e",
+  "git_dirty": false,
   "ragas_version": "0.2.15",
-  "generated_at": "2026-09-12T10:56:00.422566+00:00",
+  "generated_at": "2026-09-12T13:45:33.655010+00:00",
   "mode": "deterministic",
   "case_count": 35,
   "id_context_precision": {

@@ -30,7 +30,10 @@ design) are `NOT_APPLICABLE`, never 0 (§15). Baseline `evaluations/ragas/determ
 | ID context recall (mean) | **0.516** | 31 |
 | NOT_APPLICABLE | — | 4 |
 
-- dataset cases: 35 · dataset hash: `0e0e9298ba77a8bc` · git: `d892acc` · RAGAS: 2.15
+- dataset cases: 35 · dataset hash: `0e0e9298ba77a8bc` · evaluated-code SHA: `7a9b97e`
+  (git_dirty=false) · RAGAS: 0.2.15. The baseline was generated from a **clean checkout** of
+  `7a9b97e`; this reviewed artifact is committed in a subsequent commit, so the evaluated-code
+  SHA intentionally refers to its parent evaluator commit.
 - Granularity is the stable **source id / source family** (never a mutable vector rank), so
   results reproduce across runs. Family overlap (ESCO serves role/skills/competency) makes
   precision a *source-family membership* signal — labelled as such, not exact-passage precision.
