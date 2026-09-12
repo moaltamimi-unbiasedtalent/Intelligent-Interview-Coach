@@ -117,10 +117,13 @@ def get_session_store(request: Request):
     remains for unit tests / legacy Streamlit helpers).
     """
     from src.interview.session_repository import DurableInterviewSessionStore
+    from src.observability import build_observability_sink
 
     return _shared(
         request, "durable_session_store",
-        lambda: DurableInterviewSessionStore(get_repository(request).session_factory),
+        lambda: DurableInterviewSessionStore(
+            get_repository(request).session_factory,
+            observability=_shared(request, "observability", build_observability_sink)),
     )
 
 

@@ -170,4 +170,9 @@ def test_feedback_event_emitted_safely():
     svc.submit(1, surface="agent_answer", target_id="run1:1", rating="not_helpful",
                comment="SECRET-COMMENT that must not be traced")
     fb = [kw for n, kw in sink.events if n == "feedback_event"]
-    assert fb == [{"surface": "agent_answer", "rating": "not_helpful"}]  # no comment traced
+    # Safe fields only (surface/rating + safe run correlation + category) — never the comment
+    # or rated content (§26). run_id is the opaque run id parsed from "run1:1".
+    assert len(fb) == 1
+    assert fb[0]["surface"] == "agent_answer" and fb[0]["rating"] == "not_helpful"
+    assert fb[0].get("run_id") == "run1" and fb[0].get("category") == "agent_answer"
+    assert "comment" not in fb[0] and "SECRET-COMMENT" not in repr(fb[0])

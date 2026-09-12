@@ -36,7 +36,25 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
 from src import constants
-from src.interview.session_codec import (
+
+
+def _error_category(exc: BaseException) -> str:
+    """Sanitized diagnostic code for an interview mutation failure (never the raw message)."""
+    name = type(exc).__name__
+    if name == "SessionConflictError":
+        return "occ_conflict"
+    if name == "OperationInProgressError":
+        return "lease_conflict"
+    if name == "SessionNotFoundError":
+        return "not_found"
+    try:
+        from src.observability.sanitizer import error_category
+        return error_category(exc)
+    except Exception:  # noqa: BLE001
+        return "unknown_error"
+
+
+from src.interview.session_codec import (  # noqa: E402
     SESSION_STATE_SCHEMA_VERSION,
     decode_session_data,
     encode_session_data,
@@ -91,10 +109,18 @@ class DurableInterviewSessionStore:
         *,
         clock: Callable[[], float] | None = None,
         lease_seconds: int = constants.INTERVIEW_OPERATION_LEASE_SECONDS,
+        observability: Any | None = None,
     ) -> None:
         self._session_factory = session_factory
         self._clock = clock
         self._lease_seconds = lease_seconds
+        # Optional, best-effort telemetry sink (Phase 7D). Defaults to a genuine no-op so the
+        # store has zero external dependency; NEVER receives candidate content — only the
+        # operation label, opaque session id, status, latency and safe durability signals.
+        if observability is None:
+            from src.observability.noop import NoOpObservabilitySink
+            observability = NoOpObservabilitySink()
+        self._obs = observability
 
     # -- internal helpers -----------------------------------------------------
 
@@ -111,6 +137,18 @@ class DurableInterviewSessionStore:
     @staticmethod
     def _status_of(data: SessionData) -> str:
         return getattr(data.state, "value", str(data.state))
+
+    def _emit(self, operation: str, status: str, *, session_id: str = "",
+              duration_ms: int | None = None, failure_category: str | None = None,
+              metadata: dict | None = None) -> None:
+        """Best-effort interview telemetry. Session id is an opaque uuid; NEVER any candidate
+        content, answer text, JD/CV or scores from here (§22/§23). Never raises."""
+        try:
+            self._obs.interview_event(
+                session_id=session_id or "unknown", operation=operation, status=status,
+                duration_ms=duration_ms, failure_category=failure_category, metadata=metadata)
+        except Exception:  # noqa: BLE001 - telemetry must never affect the interview
+            pass
 
     # -- creation -------------------------------------------------------------
 
@@ -144,6 +182,8 @@ class DurableInterviewSessionStore:
                 )
             ).scalar_one_or_none()
             if existing is not None:
+                self._emit("create", "idempotent_hit", session_id=existing,
+                           metadata={"idempotency_hit": True})
                 return existing, False
 
             session_id = self._new_id()
@@ -167,7 +207,10 @@ class DurableInterviewSessionStore:
                 ).scalar_one_or_none()
                 if won is None:
                     raise
+                self._emit("create", "idempotent_hit", metadata={"idempotency_hit": True,
+                                                                  "race_resolved": True})
                 return won, False
+        self._emit("create", "created", session_id=session_id, metadata={"idempotency_hit": False})
         return session_id, True
 
     # -- read-only load -------------------------------------------------------
@@ -213,16 +256,29 @@ class DurableInterviewSessionStore:
 
         # 2. Claim the operation lease (atomic, recoverable) if requested.
         if operation is not None:
-            self._claim_lease(session_id, user_id, operation)
+            try:
+                self._claim_lease(session_id, user_id, operation)
+            except OperationInProgressError:
+                self._emit(operation or "mutate", "lease_conflict", session_id=session_id,
+                           metadata={"lease_conflict": True})
+                raise
 
         # 3. Let the caller mutate via SessionManager, then persist.
+        import time as _time
+        started = _time.perf_counter()
         try:
             yield manager
             self._save(session_id, user_id, manager.data, expected_version=expected_version)
-        except Exception:
+        except Exception as exc:
             if operation is not None:
                 self._release_lease(session_id, user_id, operation)
+            self._emit(operation or "mutate", "error", session_id=session_id,
+                       duration_ms=int((_time.perf_counter() - started) * 1000),
+                       failure_category=_error_category(exc),
+                       metadata={"occ_conflict": type(exc).__name__ == "SessionConflictError"})
             raise
+        self._emit(operation or "mutate", "ok", session_id=session_id,
+                   duration_ms=int((_time.perf_counter() - started) * 1000))
 
     def _claim_lease(self, session_id: str, user_id: Any, operation: str) -> None:
         now = utcnow()

@@ -84,10 +84,15 @@ class FeedbackApplicationService:
 
         item = self._repo.upsert(
             user_id, surface=surf.value, target_id=tid, rating=rat.value, comment=cleaned)
-        # Safe observability: surface + rating only (never the comment or rated content).
+        # Safe observability: surface + rating (+ safe run correlation) only — never the
+        # comment or rated content (§26/§27). For an agent answer the target id is
+        # "<run_id>:<index>", so the opaque run_id can correlate a Langfuse score; other
+        # surfaces (interview/report) are session-scoped and carry no run_id.
         if self._obs is not None:
+            run_id = tid.split(":", 1)[0] if surf.value == "agent_answer" and ":" in tid else None
             try:
-                self._obs.feedback_event(surface=surf.value, rating=rat.value)
+                self._obs.feedback_event(surface=surf.value, rating=rat.value,
+                                         run_id=run_id, category=surf.value)
             except Exception:  # noqa: BLE001 - telemetry is non-critical, never fails feedback
                 pass
         return item

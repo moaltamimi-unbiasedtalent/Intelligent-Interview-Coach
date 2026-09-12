@@ -86,8 +86,13 @@ evaluation = [
 # can opt in via AGENT_EXTERNAL_OBSERVABILITY_ENABLED=true + credentials. The sink lazy-
 # imports langfuse and emits ONLY a sanitised operational projection (never prompts or
 # candidate content). Not part of default/dev/CI installs and never called in CI.
+# Phase 7D pins the Langfuse v2 line: the sanitised sink targets the v2 client API
+# (client.trace / client.event / score / flush / shutdown, plus release/environment/
+# sample_rate constructor args). v3 is an OTel-based redesign with a different API; pin
+# <3.0 so the declared dependency matches the adapter. A different installed major still
+# degrades safely to the NoOp sink (defensive getattr), never breaking a request.
 observability = [
-    "langfuse>=2.0,<4.0",
+    "langfuse>=2.0,<3.0",
 ]
 # Optional knowledge-build / data-normalization tooling (Phase 7). pandas + openpyxl
 # are already base dependencies (used by the existing local readers); pyarrow is added
