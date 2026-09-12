@@ -64,7 +64,7 @@ jobs:
           python scripts/eval_product_coverage.py
       - name: Secret scan (fail on real-looking secrets in source)
         run: |
-          if grep -rnE "sk-or-[A-Za-z0-9]{12}|AIza[0-9A-Za-z_-]{30}|-----BEGIN [A-Z ]*PRIVATE KEY-----" \
+          if grep -rnE "sk-or-[A-Za-z0-9]{12}|AIza[0-9A-Za-z_-]{30}|-----BEGIN [A-Z ]*PRIVATE KEY-----|(sk|pk)-lf-[A-Za-z0-9]{16}" \
              app.py src scripts; then
             echo "Potential secret found in source"; exit 1
           fi

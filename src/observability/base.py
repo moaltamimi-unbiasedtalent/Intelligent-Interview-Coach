@@ -16,12 +16,17 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
-__all__ = ["ObservabilitySink", "safe_trace_projection", "safe_tool_events", "safe_hitl_event"]
+__all__ = ["ObservabilitySink", "safe_trace_projection", "safe_tool_events", "safe_hitl_event",
+           "safe_retrieval_metadata"]
 
 
 @runtime_checkable
 class ObservabilitySink(Protocol):
-    """The only observability surface Agent/feedback code depends on."""
+    """The only observability surface Agent / interview / feedback code depends on.
+
+    Every method is best-effort and must never raise into a candidate request. New Phase 7D
+    methods carry keyword defaults so older sink implementations remain structurally valid.
+    """
 
     def run_started(self, *, run_id: str, profile: str | None = None) -> None: ...
 
@@ -33,7 +38,20 @@ class ObservabilitySink(Protocol):
 
     def run_completed(self, *, run_id: str, projection: dict[str, Any]) -> None: ...
 
-    def feedback_event(self, *, surface: str, rating: str) -> None: ...
+    def feedback_event(self, *, surface: str, rating: str,
+                       run_id: str | None = None, category: str | None = None) -> None: ...
+
+    # -- Phase 7D additions ---------------------------------------------------
+    def interview_event(self, *, session_id: str, operation: str, status: str,
+                        duration_ms: int | None = None, failure_category: str | None = None,
+                        metadata: dict[str, Any] | None = None) -> None: ...
+
+    def retrieval_event(self, *, run_id: str | None = None,
+                        metadata: dict[str, Any] | None = None) -> None: ...
+
+    def flush(self) -> None: ...
+
+    def shutdown(self) -> None: ...
 
 
 def _usage(result: Any) -> dict[str, Any]:
@@ -106,3 +124,24 @@ def safe_hitl_event(result: Any) -> dict[str, Any] | None:
     if isinstance(pending, dict) and pending.get("type"):
         return {"hitl_type": pending.get("type"), "status": "requested"}
     return None
+
+
+def safe_retrieval_metadata(result: Any) -> dict[str, Any]:
+    """Safe retrieval telemetry from a ``KnowledgeRetrievalResult`` (§18).
+
+    Only booleans/counts/labels — NEVER passages, chunk text, embedding vectors, raw SQL or
+    the resolved occupation phrase (which can echo candidate text). ``resolved`` is a boolean.
+    """
+    return {
+        "retrieval_lane": getattr(result, "retrieval_lane", None) or None,
+        "retrieval_strategy": getattr(result, "retrieval_strategy", None) or None,
+        "occupation_resolved": bool((getattr(result, "resolved_occupation", "") or "").strip()),
+        "occupation_grounded": bool(getattr(result, "occupation_grounded", False)),
+        "general_evidence": bool(getattr(result, "general_evidence", False)),
+        "geography_requested": (getattr(result, "resolved_geography", None) or None),
+        "source_count": int(getattr(result, "source_count", 0) or 0),
+        "citation_count": len(getattr(result, "citations", []) or []),
+        "insufficient_evidence": bool(getattr(result, "insufficient_evidence", False)),
+        "blocked": bool(getattr(result, "blocked", False)),
+        "clarify": bool(getattr(result, "clarify", None)),
+    }

@@ -28,5 +28,21 @@ class NoOpObservabilitySink:
     def run_completed(self, *, run_id: str, projection: dict[str, Any]) -> None:
         return None
 
-    def feedback_event(self, *, surface: str, rating: str) -> None:
+    def feedback_event(self, *, surface: str, rating: str,
+                       run_id: str | None = None, category: str | None = None) -> None:
+        return None
+
+    def interview_event(self, *, session_id: str, operation: str, status: str,
+                        duration_ms: int | None = None, failure_category: str | None = None,
+                        metadata: dict[str, Any] | None = None) -> None:
+        return None
+
+    def retrieval_event(self, *, run_id: str | None = None,
+                        metadata: dict[str, Any] | None = None) -> None:
+        return None
+
+    def flush(self) -> None:
+        return None
+
+    def shutdown(self) -> None:
         return None
