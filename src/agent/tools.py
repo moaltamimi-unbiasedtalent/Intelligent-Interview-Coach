@@ -469,14 +469,125 @@ def _request_practice_handoff(career_service) -> Handler:
     return handler
 
 
-def build_career_tools(career_service) -> list[tuple[type[BaseModel], Handler]]:
-    """The five real Career tools, bound to a CareerApplicationService."""
+class ResearchCurrentMarket(BaseModel):
+    """Retrieve bounded, CURRENT job-market or explicit company-site evidence when the answer
+    depends on recent information not reliably available in local career knowledge — current
+    openings, live advertised salary, whether a company is hiring, or what a company's own public
+    page (given its URL) says. Uses ONLY approved market APIs and validated official/company
+    public URLs. Prefer SearchCareerKnowledge for occupation facts, skills, responsibilities,
+    education and official historical/statistical compensation; use this ONLY for time-sensitive
+    or company-specific needs."""
+
+    intent: str = Field(description="One of: job_market, advertised_salary, current_vacancies, "
+                        "company_context, hiring_activity.")
+    role: str | None = Field(default=None, max_length=120, description="Occupation/role, if any.")
+    location_country: str | None = Field(default=None, max_length=40,
+                                         description="Country name or ISO-2 (e.g. Germany/DE).")
+    location_city: str | None = Field(default=None, max_length=80)
+    company: str | None = Field(default=None, max_length=120)
+    company_url: str | None = Field(default=None, max_length=500,
+                                    description="Explicit public company URL (company_context only).")
+    industry: str | None = Field(default=None, max_length=120)
+    results_limit: int = Field(default=10, ge=1, le=25)
+
+
+_COUNTRY_ALIASES = {"germany": "DE", "deutschland": "DE", "united states": "US", "usa": "US",
+                    "united kingdom": "UK", "uk": "UK", "great britain": "UK"}
+_MARKET_EVIDENCE_MAX = 6
+
+
+def _research_current_market(research_service) -> Handler:
+    def handler(args: ResearchCurrentMarket, ctx: ToolContext) -> ToolOutcome:
+        from src.copilot.research.models import (
+            CurrentMarketResearchRequest, Geography, ResearchIntent, ResearchStatus)
+
+        try:
+            intent = ResearchIntent(args.intent.strip().lower())
+        except ValueError:
+            raise AgentToolError(
+                "intent must be one of: job_market, advertised_salary, current_vacancies, "
+                "company_context, hiring_activity.", category=TOOL_FAILURE_INVALID_ARGUMENTS) from None
+
+        country = (args.location_country or "").strip()
+        country = _COUNTRY_ALIASES.get(country.lower(), country.upper() if len(country) == 2 else country)
+        geo = Geography(country=country or None, city=(args.location_city or None)) \
+            if (country or args.location_city) else None
+        request = CurrentMarketResearchRequest(
+            intent=intent, role=(args.role or None), location=geo,
+            company=(args.company or None), company_url=(args.company_url or None),
+            industry=(args.industry or None), results_limit=args.results_limit)
+
+        try:
+            result = research_service.research(request)
+        except Exception as exc:  # noqa: BLE001 - never leak a raw provider/network error
+            raise AgentToolError("Current-market research is temporarily unavailable.",
+                                 category=TOOL_FAILURE_EXECUTION_FAILED) from exc
+
+        # Compact, safe evidence for the model (no raw payloads); labelled by source type.
+        ev_dicts = []
+        for e in result.evidence[:_MARKET_EVIDENCE_MAX]:
+            ev_dicts.append({
+                "title": e.title, "source_url": e.public_url,
+                "evidence_type": _EVIDENCE_TYPE_OF.get(e.source_type.value, "current_market"),
+                "geography": e.country or (e.region or None),
+                "occupation_title": e.role, "reference_year": None,
+                "provider": e.provider, "company": e.company,
+                "advertised_salary": (e.advertised_salary.model_dump() if e.advertised_salary else None),
+                "self_reported": bool(e.metadata.get("self_reported")),
+            })
+        observation = {
+            "status": result.status.value, "intent": intent.value, "provider": result.provider,
+            "source_category": (result.source_category.value if result.source_category else None),
+            "result_count": result.result_count,
+            "provider_reported_total": result.provider_reported_total,
+            "retrieved_at": (result.retrieved_at.isoformat() if result.retrieved_at else None),
+            "effective_as_of": result.effective_as_of,
+            "summary_facts": result.summary_facts,
+            "sample_statistic": (result.sample_statistic.model_dump(mode="json")
+                                 if result.sample_statistic else None),
+            "sources": ev_dicts, "warnings": result.warnings,
+            "insufficient_evidence": result.status in (
+                ResearchStatus.INSUFFICIENT_EVIDENCE, ResearchStatus.UNAVAILABLE,
+                ResearchStatus.RATE_LIMITED),
+        }
+        # Surface external sources to the candidate via the EXISTING evidence projection, with
+        # distinct evidence_type labels — WITHOUT setting retrieval_used (that stays owned by
+        # SearchCareerKnowledge, keeping the deterministic agent gate/metrics unchanged).
+        merged_evidence = list(ctx.evidence or []) + ev_dicts
+        patch = {"evidence": merged_evidence,
+                 "external_research_used": True,
+                 "external_research_status": result.status.value}
+        return ToolOutcome(
+            result=observation, state_patch=patch,
+            summary=(f"external_research={result.status.value}, provider={result.provider}, "
+                     f"sources={result.result_count}"),
+            source_count=result.result_count,
+            cache=("hit" if result.cache_hit else "miss"),
+        )
+    return handler
+
+
+# ExternalEvidence source category → candidate-facing evidence_type label (§40/§41).
+_EVIDENCE_TYPE_OF = {
+    "authorized_market_api": "advertised_market",
+    "company_official_web": "company_web",
+    "official_public_web": "official_web",
+}
+
+
+def build_career_tools(career_service, research_service=None) -> list[tuple[type[BaseModel], Handler]]:
+    """The six real Career tools, bound to a CareerApplicationService (+ an external-research
+    service for the sixth, bounded current-market tool)."""
+    if research_service is None:
+        from src.copilot.research.service import default_research_service
+        research_service = default_research_service()
     return [
         (AnalyzeJobDescription, _analyze_job_description(career_service)),
         (AnalyzeCandidateGaps, _analyze_candidate_gaps(career_service)),
         (BuildPreparationPlan, _build_preparation_plan(career_service)),
         (GenerateInterviewQuestions, _generate_interview_questions(career_service)),
         (SearchCareerKnowledge, _search_career_knowledge(career_service)),
+        (ResearchCurrentMarket, _research_current_market(research_service)),
     ]
 
 

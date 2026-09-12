@@ -62,6 +62,12 @@ class AgentState(TypedDict, total=False):
     retrieval_cache_hits: int
     retrieval_cache_misses: int
 
+    # External current-market research (Phase 7F, sixth tool). Bounded, ephemeral evidence
+    # from approved providers (Adzuna / validated company web); NEVER sets retrieval_used
+    # (that stays owned by SearchCareerKnowledge). Safe status/flag only.
+    external_research_used: bool
+    external_research_status: str | None
+
     # Human-in-the-loop (Phase 8). `pending_action` is the safe PendingHumanAction
     # dict the graph interrupts on; `human_decisions` records applied decisions
     # (action_id-keyed) so a replayed resume never repeats a side effect.
