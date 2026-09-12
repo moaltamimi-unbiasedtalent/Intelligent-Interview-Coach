@@ -226,13 +226,18 @@ class StructuredRetrievalCoordinator:
         out.structured_queries.append(
             f"compensation.filter(title~{variants}, country={country!r})")
         if not rows and country:
-            # Requested a specific country but have no record for it: do not fake it.
+            # Requested a specific country but have no record for it: do not fake it, and
+            # NEVER substitute another nation's official statistics (§18/§36 — e.g. US BLS
+            # or UK ONS may not stand in for a German salary). Only same-country records or
+            # supra-national aggregates (no specific country, e.g. EU) may be offered as
+            # clearly-labelled broader context.
             out.insufficient = True
             out.notes.append(
-                f"No official compensation record for '{phrase}' in {country}.")
-            # Offer neighbouring evidence (other geographies), clearly labelled.
-            rows = _filter(None)
-            out.structured_queries.append("compensation.filter [neighbouring geographies]")
+                f"No official occupation-specific compensation for '{phrase}' in {country}.")
+            rows = [r for r in _filter(None)
+                    if not (r.country or "").strip()  # supra-national / unspecified only
+                    or (r.country or "").upper() == country]
+            out.structured_queries.append("compensation.filter [supra-national context only]")
         # De-duplicate equivalent records surfaced by multiple title variants.
         seen_rows, unique = set(), []
         for r in rows:

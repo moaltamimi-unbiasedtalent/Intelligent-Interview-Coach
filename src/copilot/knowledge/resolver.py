@@ -126,13 +126,39 @@ def title_variants(phrase: str) -> list[str]:
     return _normalise(phrase)
 
 
+# Trailing intent nouns that describe what is ASKED about an occupation, not the
+# occupation itself ("software developer salary", "data analyst skills"). Stripping a
+# trailing run of these yields the bare occupation phrase so it resolves — added as an
+# extra variant (the original is kept, so nothing regresses). Never applied to the whole
+# phrase (an intent word alone is not an occupation).
+_INTENT_TAIL = re.compile(
+    r"(?:\s+(?:salary|salaries|pay|wage|wages|compensation|earnings?|remuneration|"
+    r"outlook|demand|forecasts?|projections?|jobs?|employment|vacancy|vacancies|"
+    r"openings?|growth|shortages?|"
+    r"certifications?|licen[cs]es?|qualifications?|credentials?|requirements?|"
+    r"skills?|responsibilities|duties|tasks?|knowledge|abilities|role|roles))+$",
+    re.I,
+)
+
+
+def _strip_intent_tail(text: str) -> str:
+    stripped = _INTENT_TAIL.sub("", text).strip()
+    return stripped if stripped else text
+
+
 def _normalise(phrase: str) -> list[str]:
     """Return search variants for a phrase (alias-expanded, seniority-stripped)."""
     base = phrase.strip().lower()
     variants = [base]
+    # Bare occupation with any trailing intent nouns removed (e.g. "... salary"/"... skills").
+    intent_free = _strip_intent_tail(base)
+    if intent_free != base:
+        variants.append(intent_free)
     if base in _ALIASES:
         variants.append(_ALIASES[base])
-    stripped = _SENIORITY.sub("", base).strip()
+    if intent_free in _ALIASES:
+        variants.append(_ALIASES[intent_free])
+    stripped = _SENIORITY.sub("", intent_free).strip()
     if stripped and stripped != base:
         variants.append(stripped)
         if stripped in _ALIASES:

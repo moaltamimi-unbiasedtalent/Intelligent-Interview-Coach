@@ -75,3 +75,7 @@ evaluations/ragas/runs/
 # never commit them. The case definitions (evaluations/agent_live/cases.json) stay tracked.
 evaluations/agent_live/traces/
 evaluations/agent_live/judge_summary.json
+
+# Phase 7C: regenerable retrieval-eval full outputs (summaries live in coverage_report.json)
+evaluations/knowledge/retrieval_before.json
+evaluations/knowledge/retrieval_after.json

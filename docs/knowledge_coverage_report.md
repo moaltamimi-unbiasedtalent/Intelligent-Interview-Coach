@@ -1,146 +1,105 @@
-# Knowledge Coverage Report
+# Knowledge Coverage Report (Phase 7C)
 
-Measured from the loaded structured stores — every number is a real row count, never an estimate. Only sources with data actually loaded are listed as active coverage.
+Measured coverage of the runtime Career Intelligence knowledge after integrating the Phase 7B
+governed normalized corpus into the runtime stores. Generated from
+`evaluations/knowledge/coverage_report.json` (counts), the retrieval evaluation
+(`scripts/eval_knowledge_retrieval.py`), and the coverage audit
+(`scripts/audit_knowledge_coverage.py`). All numbers are from a real local build; the
+pre-Phase-7 snapshot is `evaluations/knowledge/pre_phase7_runtime_baseline.json`.
 
-## Headline counts
+## Runtime build provenance
 
-- Retrieval-ready total: **26** (anything loaded locally, real or fixture)
-- Production-ready real-data total: **11** (real official data with a clear licence)
-- Real-data sources: **21** · Fixture-only: **5**
+`data/knowledge/build_metadata.json` — runtime pipeline **7C.1**, built from normalized
+pipeline **7B.1** (raw → normalized → runtime), git commit recorded. Stores are rebuilt from
+`data/normalized/` and promoted atomically; the vector index uses the free offline
+`local-hash-v1` embedder (zero paid calls).
 
-## Coverage by area (measured)
+## Before → after (counts)
 
-### Occupations
-- ESCO — Occupations & Skills (`esco`) — 3,039 records
-- Klassifikation der Berufe (KldB) (`kldb`) — 2,193 records
-- O*NET Database (`onet`) — 1,016 records
-- BLS Employment Projections (`bls_projections`) — 831 records
-- ISCO-08 Classification of Occupations (`isco08`) — 613 records
-- Occupational Outlook Handbook (OOH) (`bls_ooh`) — 343 records
+| Store | Before (pre-7C) | After (7C) | Note |
+|---|--:|--:|---|
+| Occupations (roles) | 8,035 | 8,035 | governed rebuild, same corpus |
+| Occupation aliases | 23,587 | 23,579 | normalized-form dedup (−8) |
+| Compensation records | 1,920 | 1,913 | semantic dedup (−7) |
+| Labour-market records | 2,973 | 2,398 | **deduped** 560 exact-duplicate CLSSI shortage rows (quality ↑, count ↓) |
+| Competencies | 2,275 | 2,275 | NICE/DigComp from normalized + e‑CF/BA supplementary |
+| Credentials | 5 | 5 | fixtures (not yet normalized) |
+| Vector passages | 3,528 | 14,087 | + 10,559 governed structured passages (occupation/task/knowledge/competency) |
 
-### Responsibilities / tasks
-- O*NET Database (`onet`) — 17,939 records
-- ISCO-08 Classification of Occupations (`isco08`) — 4,400 records
+Count is not quality (§45): the labour-market decrease is the removal of exact-duplicate
+shortage rows the previous direct-from-raw load left in; the occupation/compensation deltas are
+semantic de-duplication. No occupation, compensation source, or competency framework was lost.
 
-### Skills
-- ESCO — Occupations & Skills (`esco`) — 93,974 records
-- O*NET Database (`onet`) — 17,481 records
+## Before → after (retrieval behaviour)
 
-### Knowledge
-- O*NET Database (`onet`) — 6,968 records
+Deterministic evaluation over **81 held-out cases**, no LLM calls
+(`evaluations/knowledge/retrieval_cases.json`).
 
-### Work activities / context
-- O*NET Database (`onet`) — 20,141 records
+| Metric | Before | After |
+|---|--:|--:|
+| Overall pass rate | 0.889 | 0.914 |
+| **Safety pass rate** | **0.444** | **1.000** |
+| **Unknown-role safety** | **0.167** | **1.000** |
+| Citation completeness | 1.000 | 1.000 |
+| Geography correctness | 1.000 | 1.000 |
+| Evidence coverage (non-safety) | 0.971 | 0.886 |
+| No-evidence rate | 0.037 | 0.210 |
 
-### Technologies
-- O*NET Database (`onet`) — 11,572 records
+The headline is safety. Before Phase 7C, nonsense/unknown occupations ("moon whisperer",
+"chief vibes officer") returned five generic narrative chunks presented as if occupation-
+specific — the §39/§40 generic-vector-fallback defect. The 7C occupation-grounding guard fixes
+this: **evidence-coverage falling and no-evidence-rate rising are the *intended* effect** — the
+pipeline now withholds ungrounded evidence for unknown occupations and asks for clarification on
+ambiguous ones, instead of returning misleading matches. Grounded queries are unaffected.
 
-### Career transitions (relationships)
-- O*NET Database (`onet`) — 9,230 records
-- Klassifikation der Berufe (KldB) (`kldb`) — 2,183 records
-- ISCO-08 Classification of Occupations (`isco08`) — 603 records
+## Domain coverage (after)
 
-### Competencies
-- NICE Workforce Framework for Cybersecurity (`nice_framework`) — 2,252 records
-- DigComp — European Digital Competence Framework (`digcomp`) — 17 records
-- BA Kompetenzkatalog (`ba_kompetenzkatalog`) — 3 records — 🧪 FIXTURE
-- European e-Competence Framework (e-CF) (`ecf`) — 3 records — 🧪 FIXTURE
+Occupations backed by each evidence domain (of 8,035):
 
-### Seniority / interview behaviours
-- UK Civil Service Success Profiles (`uk_civil_service_success_profiles`) — 5 records
+| Domain | Occupations | % |
+|---|--:|--:|
+| Skills | 3,962 | 49.3% |
+| Relationships | 3,709 | 46.2% |
+| Tasks | 1,526 | 19.0% |
+| Education/training | 1,173 | 14.6% |
+| Attributes | 1,173 | 14.6% |
+| Technology skills | 923 | 11.5% |
+| Activities | 911 | 11.3% |
+| Knowledge | 903 | 11.2% |
 
-### Qualification requirements
-- OPM General Schedule Qualification Standards (`opm_qualification_standards`) — 3 records — 🧪 FIXTURE
+Skills/relationships coverage is broad (ESCO + O*NET); tasks/knowledge/technology/activities
+are concentrated in the O*NET-detailed occupations (that is where those O*NET rating rows
+exist), which is honest source coverage, not a defect.
 
-### Compensation
-- Occupational Employment and Wage Statistics (OEWS) (`bls_oews`) — 1,393 records
-- Annual Survey of Hours and Earnings (ASHE) (`ons_ashe`) — 527 records
+## Geography (kept separate, §36/§57)
 
-### Future demand (forecast)
-- BLS Employment Projections (`bls_projections`) — 831 records
-- Cedefop Skills Forecast (`cedefop_skills_forecast`) — 2 records
+- **Compensation**: US 1,386 (BLS OEWS), UK 527 (ONS ASHE). Germany occupation-specific
+  compensation is **aggregate only** (Eurostat SES) — a DE salary query returns
+  insufficient-occupation-specific or clearly-labelled EU/DE context, and **never** substitutes
+  US BLS / UK ONS (enforced in the compensation lane and verified by the evaluation).
+- **Labour market**: US (BLS projections), EU aggregates + member states (Cedefop CLSSI,
+  Eurostat vacancies) — EU aggregates are never counted as Germany.
 
-### Future job openings
-- BLS Employment Projections (`bls_projections`) — 831 records
-- Cedefop Future Job Openings (`cedefop_future_job_openings`) — 2 records — 🧪 FIXTURE
+## Top remaining gaps (legitimate; §47)
 
-### Shortages
-- Cedefop Labour & Skills Shortage Index (CLSSI) (`cedefop_clssi`) — 1,178 records
-- Cedefop Labour & Skills Shortage Index (`cedefop_shortage_index`) — 3 records — 🧪 FIXTURE
+1. **German occupation-specific compensation** — aggregate only (Eurostat SES); Destatis not
+   yet acquired. Reported honestly; not substituted.
+2. **Router coverage** — some role phrasings ("data scientist role overview", "what does an
+   electrician do") are routed to the vector lane and return general (not occupation-grounded)
+   evidence. A routing-coverage gap, not a safety gap; candidates still see grounded or
+   clearly-general evidence, never fabricated role facts.
+3. **Credentials** — fixtures only (5 records); regulated-profession coverage not yet normalized.
+4. **Emerging AI roles** (AI Engineer, LLM Engineer) — absent from the official taxonomies;
+   return general/insufficient by design rather than a fabricated taxonomy entry.
+5. **Compensation → canonical-occupation linkage** — 825 / 1,913 via official codes only; no
+   fuzzy title matching by design.
 
-## Acquisition lists
+## How to reproduce
 
-### 1. Available locally and current
-- `ba_kompetenzkatalog` — lifecycle AVAILABLE, 3 records, version — (VERSION_UNKNOWN)
-- `bls_oews` — lifecycle AVAILABLE, 1,393 records, version M2025 (VERSION_UNKNOWN)
-- `bls_ooh` — lifecycle AVAILABLE, 343 records, version 2025 (VERSION_UNKNOWN)
-- `bls_projections` — lifecycle AVAILABLE, 2,493 records, version 2025-2035 (VERSION_UNKNOWN)
-- `cedefop_clssi` — lifecycle AVAILABLE, 1,178 records, version 2026 (VERSION_UNKNOWN)
-- `cedefop_future_job_openings` — lifecycle AVAILABLE, 2 records, version — (VERSION_UNKNOWN)
-- `cedefop_shortage_index` — lifecycle AVAILABLE, 3 records, version — (VERSION_UNKNOWN)
-- `cedefop_skills_forecast` — lifecycle AVAILABLE, 2 records, version 2026 (VERSION_UNKNOWN)
-- `cedefop_stas` — lifecycle LOCAL FILE FOUND, 0 records, version Jan 2026 (VERSION_UNKNOWN)
-- `digcomp` — lifecycle AVAILABLE, 17 records, version 2.2 (VERSION_UNKNOWN)
-- `ecf` — lifecycle AVAILABLE, 3 records, version — (VERSION_UNKNOWN)
-- `eqf` — lifecycle AVAILABLE, 0 records, version brochure (VERSION_UNKNOWN)
-- `esco` — lifecycle AVAILABLE, 3,039 records, version v1.2.1 (CURRENT)
-- `esco_handbook` — lifecycle AVAILABLE, 0 records, version Sept 2017 (VERSION_UNKNOWN)
-- `esco_matrix` — lifecycle AVAILABLE, 0 records, version v1.2.1 (CURRENT)
-- `eurostat_earnings` — lifecycle AVAILABLE, 0 records, version SES 2022 (VERSION_UNKNOWN)
-- `eurostat_occ_vacancy` — lifecycle AVAILABLE, 126 records, version jvs_a_isco3_r1 (VERSION_UNKNOWN)
-- `isco08` — lifecycle AVAILABLE, 613 records, version ISCO-08 (CURRENT)
-- `kldb` — lifecycle AVAILABLE, 2,193 records, version 2010 (Fassung 2020) (VERSION_UNKNOWN)
-- `nice_framework` — lifecycle AVAILABLE, 2,252 records, version v2.2.0 (VERSION_UNKNOWN)
-- `onet` — lifecycle AVAILABLE, 1,016 records, version 31.0 (CURRENT)
-- `ons_ashe` — lifecycle AVAILABLE, 527 records, version 2025 provisional (VERSION_UNKNOWN)
-- `opm_occupational_groups` — lifecycle AVAILABLE, 0 records, version TS-107 1991 (VERSION_UNKNOWN)
-- `opm_qualification_standards` — lifecycle AVAILABLE, 3 records, version — (VERSION_UNKNOWN)
-- `uk_civil_service_success_profiles` — lifecycle AVAILABLE, 5 records, version v0f (VERSION_UNKNOWN)
-- `uk_hr_success_profiles` — lifecycle AVAILABLE, 0 records, version v0e (VERSION_UNKNOWN)
-- `wef_future_of_jobs` — lifecycle AVAILABLE, 0 records, version 2025 (VERSION_UNKNOWN)
-
-### 2. Available locally but outdated
-- _none detected_
-
-### 3. Configured but NOT found locally
-- `ba_entgeltatlas` — Entgeltatlas (acquisition: manual)
-- `berufenet` — BERUFENET occupation information (acquisition: manual)
-
-### 4. Recommended sources not yet available
-- BLS Occupational Outlook Handbook structured export (adds US outlook narrative + entry education)
-- BERUFENET authorised export (adds German occupation detail beyond KldB)
-- BA Entgeltatlas authorised export (adds German compensation, currently sample-only)
-
-## Version notes (offline)
-
-Local versions are reported as detected; latest official versions were **not fetched live** (local-first, no network). Nothing is auto-updated.
-
-| Source | Local version | Known latest | Class |
-|---|---|---|---|
-| `ba_kompetenzkatalog` | — | — | VERSION_UNKNOWN |
-| `bls_oews` | M2025 | — | VERSION_UNKNOWN |
-| `bls_ooh` | 2025 | — | VERSION_UNKNOWN |
-| `bls_projections` | 2025-2035 | — | VERSION_UNKNOWN |
-| `cedefop_clssi` | 2026 | — | VERSION_UNKNOWN |
-| `cedefop_future_job_openings` | — | — | VERSION_UNKNOWN |
-| `cedefop_shortage_index` | — | — | VERSION_UNKNOWN |
-| `cedefop_skills_forecast` | 2026 | — | VERSION_UNKNOWN |
-| `cedefop_stas` | Jan 2026 | — | VERSION_UNKNOWN |
-| `digcomp` | 2.2 | — | VERSION_UNKNOWN |
-| `ecf` | — | — | VERSION_UNKNOWN |
-| `eqf` | brochure | — | VERSION_UNKNOWN |
-| `esco` | v1.2.1 | v1.2.1 | CURRENT |
-| `esco_handbook` | Sept 2017 | — | VERSION_UNKNOWN |
-| `esco_matrix` | v1.2.1 | v1.2.1 | CURRENT |
-| `eurostat_earnings` | SES 2022 | — | VERSION_UNKNOWN |
-| `eurostat_occ_vacancy` | jvs_a_isco3_r1 | — | VERSION_UNKNOWN |
-| `isco08` | ISCO-08 | ISCO-08 | CURRENT |
-| `kldb` | 2010 (Fassung 2020) | — | VERSION_UNKNOWN |
-| `nice_framework` | v2.2.0 | — | VERSION_UNKNOWN |
-| `onet` | 31.0 | 31.0 | CURRENT |
-| `ons_ashe` | 2025 provisional | — | VERSION_UNKNOWN |
-| `opm_occupational_groups` | TS-107 1991 | — | VERSION_UNKNOWN |
-| `opm_qualification_standards` | — | — | VERSION_UNKNOWN |
-| `uk_civil_service_success_profiles` | v0f | — | VERSION_UNKNOWN |
-| `uk_hr_success_profiles` | v0e | — | VERSION_UNKNOWN |
-| `wef_future_of_jobs` | 2025 | — | VERSION_UNKNOWN |
+```bash
+python scripts/knowledge/build_normalized_knowledge.py --all      # raw → normalized (7B)
+python scripts/knowledge/build_runtime_knowledge.py --all         # normalized → runtime (7C)
+python scripts/audit_knowledge_coverage.py                        # coverage
+python scripts/eval_knowledge_retrieval.py                        # retrieval behaviour + safety
+python scripts/check_demo_knowledge.py                            # readiness + smoke
+```
