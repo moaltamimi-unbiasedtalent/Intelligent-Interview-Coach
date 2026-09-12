@@ -1,0 +1,55 @@
+{
+  "artifact": "final_live_golden_run_plan",
+  "phase": "8",
+  "status": "READY_AUTHORIZATION_REQUIRED",
+  "executed": false,
+  "configuration": {
+    "profile": "Balanced",
+    "model_slug": "openai/gpt-5.6-terra",
+    "backend": "FastAPI (uvicorn src.api.main:app), AGENT_COACH_ENABLED=true",
+    "frontend": "Next.js (npm run start), http://localhost:3000 (free port if :3000 busy)",
+    "external_research_required": false,
+    "live_langfuse_required": false,
+    "paid_ragas": "not part of this golden"
+  },
+  "inputs": {
+    "candidate_profile": "synthetic mid-level backend software engineer (no real PII)",
+    "job_description": "public/synthetic Backend Software Engineer JD",
+    "real_candidate_data": false,
+    "real_pii": false
+  },
+  "path": [
+    "Home -> Prepare",
+    "Mo analyses candidate + JD (AnalyzeJobDescription)",
+    "Career Intelligence retrieval with visible real citations",
+    "gap analysis + preparation plan (AnalyzeCandidateGaps, BuildPreparationPlan)",
+    "optional memory proposal -> human approval",
+    "Mo -> Practice handoff (RequestPracticeHandoff)",
+    "Practice setup; Q1 without reload",
+    "answer -> structured evaluation",
+    "Deep Dive works; return works",
+    "next question or completion; final report",
+    "History; reload/resume",
+    "Agent Inspector timeline coherent"
+  ],
+  "success_criteria": [
+    "no 5xx", "no masked provider error", "no reload needed for Q1", "citation-backed evidence",
+    "correct handoff", "Practice evaluation works", "Deep Dive works", "return works",
+    "report works", "History works", "no candidate-data leakage", "no cross-user issue",
+    "Inspector timeline coherent", "no P0/P1"
+  ],
+  "abort_criteria": [
+    "any 5xx", "masked provider error", "Q1 requires reload", "candidate-data leakage",
+    "cross-user access"
+  ],
+  "failure_classification": {
+    "model_variance": "not automatically a product bug",
+    "provider_failure": "recorded separately (environmental)",
+    "product_defect": "P0/P1 by severity; fix separately then re-authorize"
+  },
+  "one_run_rule": "run exactly once; no prompt tuning, tool changes, model swap, scenario change, or retries",
+  "estimated_provider_calls": "~6-12 model calls for one full path (deterministic gap/planner excluded)",
+  "estimated_cost": "unknown (no pricing call); expected small, single-session Balanced profile",
+  "authorization": "REQUIRED",
+  "keys_included": false
+}
