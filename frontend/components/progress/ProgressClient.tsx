@@ -73,7 +73,7 @@ export function ProgressClient() {
   }, []);
 
   return (
-    <section>
+    <section data-tour="progress">
       <PageHeader
         eyebrow="Your journey"
         title="Progress"
@@ -82,11 +82,13 @@ export function ProgressClient() {
 
       <PracticeProgress />
 
-      <p className="-mt-2 mb-4 text-sm">
+      <p className="-mt-2 mb-4 text-sm" data-tour="memory">
         <a href="/settings" className="font-medium text-accent underline">
           Manage in Settings
         </a>{" "}
         <span className="text-muted">— edit, pin or remove your saved preparation memory.</span>
+        {"  "}
+        <a href="/help#progress" className="font-medium text-accent underline">How Progress works</a>
       </p>
 
       {status === "loading" ? <LoadingState label="Loading your preparation memory" /> : null}

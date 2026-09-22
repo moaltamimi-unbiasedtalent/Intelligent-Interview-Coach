@@ -7,6 +7,7 @@ import type { KnowledgeSnapshotResponse, KnowledgeSource } from "@/lib/api/types
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
+import { ButtonLink } from "@/components/ui/Button";
 
 /** Candidate-friendly "career evidence" view, backed by /knowledge/*. */
 export function SourcesClient() {
@@ -36,12 +37,15 @@ export function SourcesClient() {
   }, []);
 
   return (
-    <section>
+    <section data-tour="sources">
       <PageHeader
         eyebrow="Trust"
         title="Career evidence"
         description="Your preparation is grounded in curated, public career evidence — not opinions. You can always see where guidance comes from."
       />
+      <p className="-mt-2 mb-4 text-sm">
+        <a href="/help#sources" className="font-medium text-accent underline">How Ask4Mo uses evidence</a>
+      </p>
       {status === "loading" ? <LoadingState label="Loading sources" /> : null}
       {status === "error" && error ? (
         <ErrorState message={error.message} requestId={error.requestId} />
@@ -89,8 +93,9 @@ export function SourcesClient() {
           </>
         ) : (
           <EmptyState
-            title="No sources are indexed yet"
-            description="Career evidence appears here once the knowledge base is populated."
+            title="Knowledge index not ready"
+            description="The governed source catalogue is available, but the local knowledge index has not been built yet."
+            action={<ButtonLink href="/help#sources">How Sources work</ButtonLink>}
           />
         )
       ) : null}

@@ -106,3 +106,14 @@
 .animate-enter {
   animation: fade-in 0.2s ease-out;
 }
+
+/* Guided tour: highlight a step's target element (outline only — never blocks it). */
+.ask4mo-tour-highlight {
+  outline: 3px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 10px;
+  scroll-margin: 6rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ask4mo-tour-highlight { transition: none; }
+}

@@ -35,6 +35,7 @@ export function HomeEntry() {
     <div className="mt-2 max-w-2xl">
       <form
         onSubmit={start}
+        data-tour="home-start"
         className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-2.5 shadow-soft sm:flex-row"
       >
         <label htmlFor="home-entry" className="sr-only">

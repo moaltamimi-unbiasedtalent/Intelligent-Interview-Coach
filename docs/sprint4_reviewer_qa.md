@@ -142,3 +142,11 @@ triggers a paid run. The **Help** page explains every surface and the safety con
 **Why isn't there a personality/tone picker?** No rubric requirement mandates one, and a
 candidate-editable tone would touch the controlled agent prompt for uncertain value, so it is
 intentionally left out (kept LIMITED) — model style stays consistent and controlled.
+
+**Is there onboarding / help?** Yes — three layers: a first-visit **guided tour** (route-aware,
+~12 steps, replayable, non-blocking, keyboard-accessible), **contextual "Learn more" links** on
+product surfaces, and a searchable **Help Center** at `/help` (Getting started, Prepare, Practice,
+Progress, History, Sources, Memory, Privacy & safety, Troubleshooting, and a Reviewer guide).
+The tour stores only a UI preference (version/step/completed/dismissed) — never candidate data.
+Candidate onboarding never walks through the reviewer/diagnostics surfaces. See
+`docs/guided_tutorial.md`.
