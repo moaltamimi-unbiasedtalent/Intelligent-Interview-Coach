@@ -9,6 +9,7 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
+import { PracticeProgress } from "@/components/progress/PracticeProgress";
 
 /** Candidate-friendly labels — technical categories are never shown raw. */
 const CATEGORY_LABEL: Record<MemoryCategory, string> = {
@@ -76,8 +77,10 @@ export function ProgressClient() {
       <PageHeader
         eyebrow="Your journey"
         title="Progress"
-        description="What your coach remembers — preparation priorities, strengths and preferences you've chosen to save."
+        description="Your practice progress, and what your coach remembers — the priorities, strengths and preferences you've chosen to save."
       />
+
+      <PracticeProgress />
 
       <p className="-mt-2 mb-4 text-sm">
         <a href="/settings" className="font-medium text-accent underline">

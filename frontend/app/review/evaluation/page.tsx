@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { EmptyState } from "@/components/ui/States";
+import { EvaluationClient } from "@/components/review/EvaluationClient";
 
 export const metadata: Metadata = { title: "Evaluation" };
 
@@ -10,12 +10,9 @@ export default function EvaluationPage() {
       <PageHeader
         eyebrow="Review & Diagnostics"
         title="Evaluation"
-        description="Deterministic retrieval metrics and the optional RAGAS generation-quality layer (read-only)."
+        description="Deterministic retrieval metrics and the optional RAGAS generation-quality layer (read-only, offline)."
       />
-      <EmptyState
-        title="Evaluation is run through the project evaluation tools"
-        description="Deterministic Agent evaluation, the live-model harness and optional RAGAS evaluation are available through the repository scripts and evidence artifacts. Paid evaluation never runs from this page."
-      />
+      <EvaluationClient />
     </section>
   );
 }

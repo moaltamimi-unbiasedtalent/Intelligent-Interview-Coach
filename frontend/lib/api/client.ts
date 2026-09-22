@@ -11,6 +11,9 @@ import type {
   GapAnalysisResult,
   HealthResponse,
   InterviewListResponse,
+  InterviewDetailResponse,
+  ProgressResponse,
+  EvaluationRunResponse,
   InterviewQuestionSet,
   InterviewStateResponse,
   JobAnalysisRequest,
@@ -156,9 +159,22 @@ export const api = {
       request<KnowledgeSnapshotResponse>("GET", "/knowledge/snapshot", opts),
   },
 
+  progress: {
+    get: (opts?: RequestOptions) =>
+      request<ProgressResponse>("GET", "/progress", opts),
+  },
+
+  evaluation: {
+    latest: (opts?: RequestOptions) =>
+      request<EvaluationRunResponse>("GET", "/evaluation/latest", opts),
+  },
+
   history: {
     list: (opts?: RequestOptions) =>
       request<InterviewListResponse>("GET", "/history/interviews", opts),
+    get: (reportId: number | string, opts?: RequestOptions) =>
+      request<InterviewDetailResponse>(
+        "GET", `/history/interviews/${encodeURIComponent(String(reportId))}`, opts),
   },
 
   // Agent Coach (Phase 9): the candidate-facing LangGraph agent. All owner-scoped;
