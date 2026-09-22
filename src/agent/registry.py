@@ -43,9 +43,14 @@ class ToolRegistry:
     def names(self) -> list[str]:
         return list(self._tools)
 
-    def bind_schemas(self) -> list[type[BaseModel]]:
-        """Pydantic schemas for ``model.bind_tools`` (name == class name)."""
-        return [spec.args_model for spec in self._tools.values()]
+    def bind_schemas(self, exclude: set[str] | None = None) -> list[type[BaseModel]]:
+        """Pydantic schemas for ``model.bind_tools`` (name == class name).
+
+        ``exclude`` drops named tools from what the model can see — used to enforce a
+        per-run capability toggle server-side (a disabled tool is never offered).
+        """
+        ex = exclude or set()
+        return [spec.args_model for name, spec in self._tools.items() if name not in ex]
 
     def validate_and_run(
         self, name: str, raw_args: dict[str, Any] | None, ctx: ToolContext

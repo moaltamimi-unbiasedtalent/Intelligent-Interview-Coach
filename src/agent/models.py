@@ -18,6 +18,10 @@ class AgentRunRequest:
     # Optional Agent model profile (fast | balanced | advanced). Validated server-side;
     # a raw provider slug is never accepted. Defaults to Balanced when unset/invalid.
     profile: str | None = None
+    # Optional user capability toggle for bounded current-market research. None keeps
+    # the existing safe default (available); False withholds ResearchCurrentMarket from
+    # the run server-side (the model can neither see nor call it). Other tools unaffected.
+    enable_current_market_research: bool | None = None
 
 
 @dataclass

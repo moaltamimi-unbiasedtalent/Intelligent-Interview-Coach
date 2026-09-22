@@ -121,6 +121,7 @@ Reviewer package:
 - [Demo script](docs/sprint4_demo_script.md) · [Final requirements matrix](docs/sprint4_final_requirements_matrix.md)
 - [Final evidence](docs/sprint4_final_evidence.md) (current verified test/eval numbers) · [Final evaluation](docs/sprint4_final_evaluation.md)
 - [Architecture](docs/sprint4_architecture.md) · [Security & privacy](docs/sprint4_security_privacy.md) · [Interview parity](docs/sprint4_interview_parity.md)
+- [Technical critique](docs/sprint4_technical_critique.md) · [Deliverable implementation stories](docs/sprint4_deliverable_implementation_stories.md) · [Post-release surface audit](docs/post_release_product_surface_audit.md)
 
 Evaluation commands (no paid calls by default):
 

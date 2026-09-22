@@ -127,3 +127,35 @@ external-research / feedback-intelligence / observability gates unchanged (PASS/
 3. `/review/rag` remains a legacy placeholder (the Streamlit RAG diagnostic is unchanged).
 4. Governed sources without a public record link are shown as inspectable provenance, never a
    fabricated URL.
+
+---
+
+# Completion Audit — Sprint 4 Deliverables Closure (addendum)
+
+The original audit above found genuine post-release defects — that record is preserved as
+engineering evidence. This addendum records the closure of the remaining Review/Diagnostics
+gaps and optional-task coverage. No Agent runtime, retrieval ranking, prompts, models or
+datasets were changed.
+
+| Surface / item | Before | After |
+|---|---|---|
+| Progress | partial (memory only) | **fixed** — practice metrics + memory |
+| History | partial (bare list) | **fixed** — metadata + detail report |
+| Sources | partial (unlinked) | **fixed** — safe public links + governed provenance |
+| Evaluation | placeholder | **fixed** — offline RAGAS metrics read-only |
+| Knowledge & RAG (`/review/rag`) | static placeholder | **real page** — governed runtime counts + offline retrieval-quality metrics + known gaps |
+| Agent Inspector discovery | run-id only | **documented P3** — opens from a run link or pasted id; hub/inspector copy clarified; no new run-index subsystem built |
+| Help (`/help`) | none/partial | **added** — compact guide to each surface + key safety concepts |
+| Capability control (#16) | partial | **added** — server-enforced current-market-research ON/OFF toggle (model cannot override) |
+
+**Enforcement note (toggle):** when off, `ResearchCurrentMarket` is withheld from the model's
+tool schemas for the whole run (`disabled_tools` in `AgentState` → `registry.bind_schemas(exclude=…)`)
+and rejected by the tools node; the other five Career tools are unaffected.
+
+**Quality after closure:** Python 2145 passed / 3 skipped; frontend 166 unit + 57 e2e; ruff,
+typecheck, build, OpenAPI contract, secret scan all pass; agent / retrieval / external-research /
+feedback-intelligence / observability gates PASS/READY. P0 = 0, P1 = 0.
+
+**Remaining honest limitations:** no per-user Agent-run browser (P3); Progress has no longitudinal
+trend chart (not persisted); production OIDC is deployment work; RAG coverage gaps are documented
+and now shown in-product on the Knowledge & RAG page.

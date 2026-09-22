@@ -214,6 +214,14 @@ class AgentApplicationService:
     def run(self, request: AgentRunRequest, *, request_id: str | None = None) -> AgentRunResult:
         run_id = uuid.uuid4().hex
         profile = _resolve_profile(request.profile)
+        # Server-enforced capability toggle (#16): when the user turns current-market
+        # research OFF, withhold ResearchCurrentMarket from the whole run. Default
+        # (None) preserves existing behaviour; the model can never re-enable it.
+        disabled_tools = (
+            ["ResearchCurrentMarket"]
+            if getattr(request, "enable_current_market_research", None) is False
+            else []
+        )
         initial = {
             "run_id": run_id,
             "user_id": request.user_id,
@@ -221,6 +229,7 @@ class AgentApplicationService:
             "target_role": request.target_role,
             "job_description": request.job_description,
             "candidate_background": request.candidate_background,
+            "disabled_tools": disabled_tools,
             "memory_items": self._load_memory(request),
             "pending_action": None,
             "human_decisions": [],

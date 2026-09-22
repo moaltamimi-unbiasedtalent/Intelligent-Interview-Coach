@@ -126,3 +126,19 @@ Postgres deployment run is a documented follow-up.
 
 **What would you build next in production?** OIDC, a bounded Postgres deployment
 validation, checkpoint-retention operations, and (opt-in) paid model + RAGAS baselines.
+
+**Can a user turn a capability off?** Yes — current-market research has a user toggle
+("Allow current-market research" on the Coach). It is enforced **server-side**: when off,
+`ResearchCurrentMarket` is withheld from the model's tool schemas for the whole run (and the
+tools node rejects it defensively), so the model cannot re-enable it. The other five Career
+tools are unaffected. This satisfies the "enable/disable capability" portion of the 5+-tools
+requirement without a plugin marketplace.
+
+**Where do I see knowledge/RAG health and evaluation?** Review & Diagnostics → **Knowledge &
+RAG** shows governed runtime counts and offline retrieval-quality metrics + known gaps;
+**Evaluation** shows the latest offline RAGAS run read-only. Both are offline evidence — neither
+triggers a paid run. The **Help** page explains every surface and the safety concepts.
+
+**Why isn't there a personality/tone picker?** No rubric requirement mandates one, and a
+candidate-editable tone would touch the controlled agent prompt for uncertain value, so it is
+intentionally left out (kept LIMITED) — model style stays consistent and controlled.

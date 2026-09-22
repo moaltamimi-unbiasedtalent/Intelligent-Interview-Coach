@@ -34,6 +34,20 @@ function savedProfile(): AgentProfile {
   return DEFAULT_PROFILE;
 }
 
+/** Saved current-market-research capability preference (default ON). A harmless UI pref. */
+function savedResearch(): boolean {
+  try {
+    return window.localStorage.getItem("agent.currentMarketResearch") !== "off";
+  } catch {
+    return true;
+  }
+}
+
+/** Send `false` only when the user turned research OFF; otherwise keep the safe default. */
+function researchFlag(): boolean | undefined {
+  return savedResearch() ? undefined : false;
+}
+
 /** Candidate-facing Agent Coach — the LangGraph agent behind the Precision Coach UI. */
 export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft | null }) {
   const { run, busy, restoring, error, runId, start, send, resume, reset, clearError } = useAgentRun();
@@ -53,7 +67,7 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
     if (!goalDraft) return;
     if (runId || run || restoring) return; // restored/active run takes precedence
     autoStarted.current = true;
-    void start({ goal: goalDraft, profile: savedProfile() });
+    void start({ goal: goalDraft, profile: savedProfile(), enable_current_market_research: researchFlag() });
   }, [goalDraft, runId, run, restoring, start]);
 
   if (restoring && !run) {
@@ -220,7 +234,7 @@ function FirstMessageForm({
   initialGoal = "",
   openContextField = null,
 }: {
-  onStart: (req: { goal: string; target_role?: string; job_description?: string; candidate_background?: string; profile?: AgentProfile }) => void;
+  onStart: (req: { goal: string; target_role?: string; job_description?: string; candidate_background?: string; profile?: AgentProfile; enable_current_market_research?: boolean }) => void;
   busy: boolean;
   error: { message: string; requestId?: string | null; notFound?: boolean } | null;
   onDismissError: () => void;
@@ -235,6 +249,7 @@ function FirstMessageForm({
   const [jd, setJd] = useState("");
   const [background, setBackground] = useState("");
   const [profile, setProfile] = useState<AgentProfile>(DEFAULT_PROFILE);
+  const [research, setResearch] = useState(true);
 
   // A harmless UI preference (the chosen speed) may be remembered — never any private
   // conversation data (§21). Guarded so private windows / blocked storage never throw.
@@ -242,6 +257,7 @@ function FirstMessageForm({
     try {
       const saved = window.localStorage.getItem("agent.profile");
       if (saved === "fast" || saved === "balanced" || saved === "advanced") setProfile(saved);
+      setResearch(window.localStorage.getItem("agent.currentMarketResearch") !== "off");
     } catch {
       /* storage unavailable — keep the default */
     }
@@ -268,6 +284,15 @@ function FirstMessageForm({
     }
   };
 
+  const toggleResearch = (on: boolean) => {
+    setResearch(on);
+    try {
+      window.localStorage.setItem("agent.currentMarketResearch", on ? "on" : "off");
+    } catch {
+      /* ignore */
+    }
+  };
+
   const canStart = !busy && goal.trim().length > 0;
 
   function submit() {
@@ -279,6 +304,7 @@ function FirstMessageForm({
       job_description: jd.trim() || undefined,
       candidate_background: background.trim() || undefined,
       profile,
+      enable_current_market_research: research ? undefined : false,
     });
   }
 
@@ -317,6 +343,20 @@ function FirstMessageForm({
         ) : null}
 
         <AgentProfileSelector value={profile} onChange={chooseProfile} disabled={busy} />
+
+        <label className="flex items-center gap-2 text-sm text-muted">
+          <input
+            type="checkbox"
+            checked={research}
+            onChange={(e) => toggleResearch(e.target.checked)}
+            disabled={busy}
+            aria-label="Allow current-market research"
+          />
+          <span>
+            Allow current-market research{" "}
+            <span className="text-xs">(bounded external evidence; off keeps preparation to governed sources)</span>
+          </span>
+        </label>
 
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted" aria-live="polite">{busy ? "Starting your session…" : ""}</span>

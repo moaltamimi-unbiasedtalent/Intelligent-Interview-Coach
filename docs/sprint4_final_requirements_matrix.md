@@ -53,3 +53,26 @@ retention (deployment op) · paid Fast/Balanced/Advanced comparison · paid live
 baseline · live external-research integration (Adzuna / company web) not validated in
 this environment — bounded `ResearchCurrentMarket` tool implemented (Phase 7F) ·
 voice (experimental, off) · camera/video (never).
+
+## Sprint 4 deliverables closure (post-release)
+
+These update earlier statuses after the post-release surface audit and the closure phase.
+Full narrative: `docs/post_release_product_surface_audit.md`, `docs/sprint4_deliverable_implementation_stories.md`, `docs/sprint4_technical_critique.md`.
+
+| # | Requirement | Status | How / evidence | Limitation |
+|---|---|---|---|---|
+| 1 | Purpose | COMPLETE | Unified understand→prepare→practise→improve journey | English-first; generic across professions |
+| 2 | Core functionality | COMPLETE | Bounded LangGraph agent, allowlisted tools, agentic RAG, HITL, approved memory, durable Practice, evaluation, Deep Dive, report, History, Progress | Live tool-selection ~0.59–0.64 |
+| 3 | UI | COMPLETE | Every primary + supporting surface renders real data; no unexplained placeholder (`frontend/app/*`, 166 vitest + 57 e2e) | No per-user Agent-run browser (P3) |
+| 4 | Technical | COMPLETE | FastAPI over app layer, durable persistence, user scoping, SSRF/injection guards (2145 pytest, contract, secret scan) | Production OIDC is deployment work |
+| 5 | Documentation | COMPLETE | README + reviewer package + critique + stories + audit | Re-check vs behaviour each phase |
+| 6 | Technical critique | YES | `docs/sprint4_technical_critique.md` | — |
+| 7 | Personality/tone | LIMITED (by choice) | No rubric requirement for a tone preference; model style stays consistent/controlled | Not implemented to avoid touching the frozen agent prompt for uncertain value |
+| 10 | Help / guide | YES | `/help` page + `help.test.tsx` + e2e | Compact by design |
+| 16 | 5+ tools + capability control | YES | 6 career + 2 HITL tools; server-enforced current-market-research ON/OFF toggle (`tests/test_agent_capability_toggle.py`) | One capability today (same mechanism extends to others) |
+| 21 | RAGAS | YES (deterministic) | Reproducible harness; visible read-only at `/review/evaluation`; **paid judge NOT RUN** | Paid judge is opt-in only |
+| — | Progress surface | COMPLETE | `/progress` practice metrics + memory (`GET /api/v1/progress`) | No longitudinal trend chart |
+| — | History surface | COMPLETE | `/history/[id]` detail report | — |
+| — | Sources surface | COMPLETE | Safe public links + governed provenance | Governed sources without a public record are shown, not linked |
+| — | Evaluation surface | COMPLETE | `/review/evaluation` offline RAGAS read-only | — |
+| — | Knowledge & RAG surface | COMPLETE | `/review/rag` governed counts + offline retrieval quality + known gaps (`GET /knowledge/diagnostics`) | Coverage gaps documented in-product |
