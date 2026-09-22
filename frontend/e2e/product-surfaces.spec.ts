@@ -139,6 +139,7 @@ test("help: explains the journey and key safety concepts", async ({ page }) => {
   await mockAll(page);
   await page.goto("/help");
   await expect(page.getByRole("heading", { name: "Help" })).toBeVisible();
-  await expect(page.getByText(/AI coach, not an autonomous decision-maker/i)).toBeVisible();
-  await expect(page.getByText(/Human-in-the-loop/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Getting started" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Privacy & safety" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Take the tour" })).toBeVisible();
 });

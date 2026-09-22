@@ -8,6 +8,7 @@ import { MobileNavigation } from "@/components/layout/MobileNavigation";
 let pathname = "/prepare";
 vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 
 afterEach(() => { pathname = "/prepare"; });
