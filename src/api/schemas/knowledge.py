@@ -10,6 +10,14 @@ class SourceEntryOut(BaseModel):
     title: str | None = None
     group: str | None = None
     source_type: str | None = None
+    # Safe provenance so a source is inspectable and (where a public record exists)
+    # clickable. `source_url` is the curated official landing page from the source
+    # manifest — never an authenticated/download endpoint. Absent when the governed
+    # source has no appropriate public URL (then the source stays inspectable, not linked).
+    source_url: str | None = None
+    provider: str | None = None
+    country: str | None = None
+    reference_year: int | None = None
 
 
 class KnowledgeSourcesResponse(BaseModel):

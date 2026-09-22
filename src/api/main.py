@@ -33,6 +33,7 @@ from src.api.routes import (
     interview,
     knowledge,
     memory,
+    progress,
 )
 from src.api.session_store import InMemorySessionStore
 
@@ -98,7 +99,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
 
     # Infra liveness alias (unversioned) + versioned API surface.
     app.include_router(health.router, prefix="/api")
-    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, feedback):
+    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, feedback, progress):
         app.include_router(module.router, prefix=API_PREFIX)
     return app
 

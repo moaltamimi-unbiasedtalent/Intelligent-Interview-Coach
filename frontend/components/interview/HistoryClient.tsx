@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -39,13 +40,40 @@ export function HistoryClient() {
       {status === "ready" ? (
         rows && rows.length ? (
           <div className="grid gap-3">
-            {rows.map((row, i) => (
-              <Card key={(row.id as number) ?? i}>
+            {rows.map((row, i) => {
+              const id = row.id as number | undefined;
+              const role = (row.target_role as string | undefined) ?? null;
+              const questions = row.questions as number | undefined;
+              const created = row.created_at
+                ? new Date(String(row.created_at)).toLocaleDateString()
+                : null;
+              const meta = [
+                role,
+                typeof questions === "number" ? `${questions} question(s)` : null,
+                created,
+              ]
+                .filter(Boolean)
+                .join(" · ");
+              const body = (
                 <CardBody>
-                  <p className="font-medium">Interview #{String(row.id ?? i + 1)}</p>
+                  <p className="font-medium">
+                    {role ? role : `Interview #${String(id ?? i + 1)}`}
+                  </p>
+                  {meta ? <p className="mt-1 text-sm text-muted">{meta}</p> : null}
                 </CardBody>
-              </Card>
-            ))}
+              );
+              return id != null ? (
+                <Link
+                  key={id}
+                  href={`/history/${id}`}
+                  className="block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                >
+                  <Card className="transition-colors hover:bg-surface-2">{body}</Card>
+                </Link>
+              ) : (
+                <Card key={i}>{body}</Card>
+              );
+            })}
           </div>
         ) : (
           <EmptyState

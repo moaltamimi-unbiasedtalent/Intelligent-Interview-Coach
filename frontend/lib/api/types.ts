@@ -308,6 +308,11 @@ export interface KnowledgeSource {
   title?: string | null;
   group?: string | null;
   source_type?: string | null;
+  /** Curated official landing page (https only); absent when no public record exists. */
+  source_url?: string | null;
+  provider?: string | null;
+  country?: string | null;
+  reference_year?: number | null;
 }
 export interface KnowledgeSourcesResponse {
   sources: KnowledgeSource[];
@@ -317,8 +322,53 @@ export interface KnowledgeSnapshotResponse {
   chunks: number;
   document_types: number;
 }
+export interface InterviewSummary {
+  id: number;
+  target_role?: string | null;
+  mode?: string | null;
+  status?: string | null;
+  questions?: number | null;
+  created_at?: string | null;
+}
+
+/** A stored (offline) RAGAS evaluation run from GET /evaluation/latest. Read-only. */
+export interface EvaluationRunResponse {
+  available: boolean;
+  metrics?: Record<string, number> | null;
+  run_config?: Record<string, unknown> | null;
+}
+
+/** Practice progress from GET /progress — derived only from the caller's own interviews. */
+export interface ProgressResponse {
+  interviews_completed: number;
+  answers_evaluated: number;
+  average_practice_score?: number | null;
+  most_common_improvement_area?: string | null;
+  average_answer_seconds?: number | null;
+  recent_interviews: InterviewSummary[];
+}
 export interface InterviewListResponse {
   interviews: Array<Record<string, unknown>>;
+}
+
+/** Full history record from GET /history/interviews/{id} (report already included). */
+export interface InterviewDetail {
+  id: number;
+  configuration?: Record<string, unknown> | null;
+  mode?: string | null;
+  status?: string | null;
+  started_at?: string | null;
+  ended_at?: string | null;
+  created_at?: string | null;
+  questions?: Array<Record<string, unknown>>;
+  report?: {
+    report?: Record<string, unknown> | null;
+    usage?: Record<string, unknown> | null;
+    cost_usd?: number | null;
+  } | null;
+}
+export interface InterviewDetailResponse {
+  interview: InterviewDetail;
 }
 
 export interface InterviewOptionsResponse {

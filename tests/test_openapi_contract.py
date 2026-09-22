@@ -92,6 +92,16 @@ EXPECTED = {
     # Candidate feedback (P5) — user-scoped, no internal user id exposed.
     "FeedbackCreateRequest": {"surface", "target_id", "rating", "comment"},
     "FeedbackResponse": {"id", "surface", "target_id", "rating", "comment", "created_at", "updated_at"},
+    # Post-release product-surface fixes: sources carry safe provenance/links;
+    # Progress surfaces persisted practice metrics; Evaluation shows offline runs.
+    "SourceEntryOut": {"source_id", "title", "group", "source_type", "source_url",
+                       "provider", "country", "reference_year"},
+    "ProgressResponse": {
+        "interviews_completed", "answers_evaluated", "average_practice_score",
+        "most_common_improvement_area", "average_answer_seconds", "recent_interviews",
+    },
+    "RecentInterview": {"id", "target_role", "mode", "status", "questions", "created_at"},
+    "EvaluationRunResponse": {"available", "metrics", "run_config"},
 }
 
 

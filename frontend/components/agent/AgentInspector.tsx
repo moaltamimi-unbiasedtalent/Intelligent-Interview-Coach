@@ -222,7 +222,21 @@ function RetrievalSummary({ run }: { run: AgentRunResponse }) {
         <Row label="Sources" value={run.sources.length} />
         <ul className="mt-2 space-y-1 text-sm text-muted">
           {run.sources.map((s, i) => (
-            <li key={i}>{s.title ?? s.source_url ?? "Source"}{s.reference_year ? ` · ${s.reference_year}` : ""}</li>
+            <li key={i}>
+              {s.source_url ? (
+                <a
+                  href={s.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline decoration-dotted underline-offset-4 hover:decoration-solid"
+                >
+                  {s.title ?? s.source_url}
+                </a>
+              ) : (
+                (s.title ?? "Source")
+              )}
+              {s.reference_year ? ` · ${s.reference_year}` : ""}
+            </li>
           ))}
         </ul>
       </CardBody>
