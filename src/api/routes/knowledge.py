@@ -19,6 +19,18 @@ from src.application import knowledge_service
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
 
 
+def _public_url(url: str | None) -> str | None:
+    """Return `url` only when it is a safe public https link; otherwise None.
+
+    Guards the source projection so the frontend can link a source without ever
+    exposing a non-public or non-https reference.
+    """
+    if not url:
+        return None
+    url = url.strip()
+    return url if url.lower().startswith("https://") else None
+
+
 @router.get("/sources", response_model=KnowledgeSourcesResponse,
             summary="Curated knowledge sources")
 def sources() -> KnowledgeSourcesResponse:
@@ -29,6 +41,11 @@ def sources() -> KnowledgeSourcesResponse:
             title=getattr(e, "title", None),
             group=getattr(e, "group", None),
             source_type=getattr(e, "source_type", None),
+            # Only surface a public URL over https; never a download/auth endpoint.
+            source_url=_public_url(getattr(e, "source_url", None)),
+            provider=getattr(e, "authority", None),
+            country=getattr(e, "country", None),
+            reference_year=getattr(e, "reference_year", None),
         )
         for e in entries
     ]

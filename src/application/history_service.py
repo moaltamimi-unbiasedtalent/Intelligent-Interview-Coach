@@ -187,6 +187,15 @@ def list_interview_reports(repo, user_id: int):
     return repo.list_interviews(user_id)
 
 
+def practice_progress(repo, user_id: int) -> dict:
+    """Aggregate the user's persisted practice metrics (repository passthrough).
+
+    Derived only from the user's own completed interviews — practice guidance, not a
+    score or a hiring signal. Empty/None fields when the user has no practice yet.
+    """
+    return repo.dashboard_metrics(user_id)
+
+
 def get_interview_report(repo, user_id: int, interview_id: int):
     """Fetch one saved interview's detail, scoped to ``user_id``.
 

@@ -153,11 +153,34 @@ class _FakeRepo:
         return self._next_iv
 
     def list_interviews(self, user_id):
-        return [{"id": i} for i, r in self._interviews.items() if r["user_id"] == user_id]
+        return [
+            {"id": i, "target_role": "Test Role", "mode": None, "status": "completed",
+             "questions": 2, "created_at": "2026-01-01T00:00:00"}
+            for i, r in self._interviews.items() if r["user_id"] == user_id
+        ]
 
     def get_interview(self, user_id, interview_id):
         row = self._interviews.get(interview_id)
-        return {"id": interview_id} if row and row["user_id"] == user_id else None
+        if not (row and row["user_id"] == user_id):
+            return None
+        return {
+            "id": interview_id, "configuration": {"target_role": "Test Role"},
+            "mode": None, "status": "completed", "started_at": None, "ended_at": None,
+            "created_at": "2026-01-01T00:00:00", "questions": [],
+            "report": {"report": {"overall_readiness_score": 70, "performance_summary": "ok"},
+                       "usage": None, "cost_usd": None},
+        }
+
+    def dashboard_metrics(self, user_id):
+        ivs = [r for r in self._interviews.values() if r["user_id"] == user_id]
+        return {
+            "interviews_completed": len(ivs),
+            "answers_evaluated": len(ivs),
+            "average_practice_score": 70.0 if ivs else None,
+            "most_common_improvement_area": "metrics" if ivs else None,
+            "average_answer_seconds": None,
+            "recent_interviews": self.list_interviews(user_id)[:5],
+        }
 
 
 # --- client factory with overrides -------------------------------------------
@@ -398,6 +421,75 @@ def test_knowledge_snapshot_and_sources():
     with _make_client() as c:
         assert c.get("/api/v1/knowledge/snapshot").status_code == 200
         assert c.get("/api/v1/knowledge/sources").status_code == 200
+
+
+def test_knowledge_sources_include_safe_public_url():
+    """Post-release surface fix: the source projection carries a safe public URL and
+    provenance so the frontend can link/inspect a source (governed URLs come from the
+    manifest; only https is surfaced; never a fabricated/non-public link)."""
+    with _make_client() as c:
+        sources = c.get("/api/v1/knowledge/sources").json()["sources"]
+        assert sources, "expected curated sources"
+        # Every item stays inspectable (id/title present); the URL field exists.
+        for s in sources:
+            assert "source_url" in s and "provider" in s
+            if s["source_url"] is not None:
+                assert s["source_url"].startswith("https://")  # never http/auth/download
+        # At least one governed source resolves to a real public https URL.
+        assert any((s.get("source_url") or "").startswith("https://") for s in sources)
+
+
+def test_public_url_guard_drops_non_https():
+    from src.api.routes.knowledge import _public_url
+
+    assert _public_url("https://www.bls.gov/ooh/") == "https://www.bls.gov/ooh/"
+    assert _public_url("http://insecure.example") is None
+    assert _public_url("  https://ok.example  ") == "https://ok.example"
+    assert _public_url(None) is None
+    assert _public_url("") is None
+
+
+def test_progress_metrics_wired_and_user_scoped():
+    """Post-release surface fix: /progress exposes the caller's own persisted practice
+    metrics (derived from completed interviews), and never another user's."""
+    repo = _FakeRepo()
+    with _make_client(repo=repo) as c:
+        alice = {"X-User-Subject": "alice"}
+        bob = {"X-User-Subject": "bob"}
+        # A fresh user has an honest empty state — zeros/None, not fabricated numbers.
+        empty = c.get("/api/v1/progress", headers=bob).json()
+        assert empty["interviews_completed"] == 0
+        assert empty["average_practice_score"] is None
+        assert empty["recent_interviews"] == []
+        # Alice completes an interview and persists a report.
+        sid = c.post("/api/v1/interviews", json=_config_body(), headers=alice).json()["session_id"]
+        c.post(f"/api/v1/interviews/{sid}/answers", json={"answer": "a1"}, headers=alice)
+        c.post(f"/api/v1/interviews/{sid}/next-question", headers=alice)
+        c.post(f"/api/v1/interviews/{sid}/answers", json={"answer": "a2"}, headers=alice)
+        c.post(f"/api/v1/interviews/{sid}/next-question", headers=alice)
+        c.post(f"/api/v1/interviews/{sid}/report", headers=alice)
+        prog = c.get("/api/v1/progress", headers=alice).json()
+        assert prog["interviews_completed"] >= 1
+        assert prog["recent_interviews"] and prog["recent_interviews"][0]["id"]
+        # Bob still sees nothing — strict user scoping.
+        assert c.get("/api/v1/progress", headers=bob).json()["interviews_completed"] == 0
+
+
+def test_history_detail_returns_report_for_owner():
+    """Post-release surface fix: the (previously orphaned) history detail endpoint
+    returns the full report so the frontend detail view can render it."""
+    repo = _FakeRepo()
+    with _make_client(repo=repo) as c:
+        alice = {"X-User-Subject": "alice"}
+        sid = c.post("/api/v1/interviews", json=_config_body(), headers=alice).json()["session_id"]
+        c.post(f"/api/v1/interviews/{sid}/answers", json={"answer": "a1"}, headers=alice)
+        c.post(f"/api/v1/interviews/{sid}/next-question", headers=alice)
+        c.post(f"/api/v1/interviews/{sid}/answers", json={"answer": "a2"}, headers=alice)
+        c.post(f"/api/v1/interviews/{sid}/next-question", headers=alice)
+        saved_id = c.post(f"/api/v1/interviews/{sid}/report", headers=alice).json()["saved_report_id"]
+        detail = c.get(f"/api/v1/history/interviews/{saved_id}", headers=alice).json()["interview"]
+        assert detail["id"] == saved_id
+        assert detail["report"]["report"]["overall_readiness_score"] == 70
 
 
 def test_evaluation_latest_and_config(tmp_path, monkeypatch):
