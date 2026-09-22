@@ -68,7 +68,7 @@ Full narrative: `docs/post_release_product_surface_audit.md`, `docs/sprint4_deli
 | 5 | Documentation | COMPLETE | README + reviewer package + critique + stories + audit | Re-check vs behaviour each phase |
 | 6 | Technical critique | YES | `docs/sprint4_technical_critique.md` | — |
 | 7 | Personality/tone | LIMITED (by choice) | No rubric requirement for a tone preference; model style stays consistent/controlled | Not implemented to avoid touching the frozen agent prompt for uncertain value |
-| 10 | Help / guide | YES | `/help` page + `help.test.tsx` + e2e | Compact by design |
+| 10 | Help / guide | YES (strengthened) | Interactive route-aware guided tour + searchable Help Center + contextual links (`frontend/components/tutorial/*`, `frontend/components/help/HelpCenter.tsx`, `docs/guided_tutorial.md`); tests `tutorial.test.tsx`/`help.test.tsx`/`tutorial.spec.ts`. History: PARTIAL → Help Center (closure) → interactive onboarding (this phase) | No behavioural-analytics adaptation; keyword search by design |
 | 16 | 5+ tools + capability control | YES | 6 career + 2 HITL tools; server-enforced current-market-research ON/OFF toggle (`tests/test_agent_capability_toggle.py`) | One capability today (same mechanism extends to others) |
 | 21 | RAGAS | YES (deterministic) | Reproducible harness; visible read-only at `/review/evaluation`; **paid judge NOT RUN** | Paid judge is opt-in only |
 | — | Progress surface | COMPLETE | `/progress` practice metrics + memory (`GET /api/v1/progress`) | No longitudinal trend chart |

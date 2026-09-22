@@ -65,9 +65,25 @@ experiment, single- vs multi-agent, lessons). **STATUS: YES.**
 
 ## Optional 10 — Help / guide
 
-- **WHAT:** explain how the product works. **DESIGN DECISION:** one compact `/help` page (surfaces
-  + key concepts), not an onboarding framework. **HOW:** `frontend/app/help/page.tsx`.
-  **EVIDENCE:** `help.test.tsx`, e2e. **STATUS: YES.**
+- **WHAT:** user guidance for a complex AI application. **WHY:** Ask4Mo combines Agent
+  preparation, evidence, memory approval, Interview Practice, Progress, History and review
+  surfaces; a first-time user should not need repository knowledge to understand the workflow.
+- **DESIGN DECISION:** an interactive **guided tutorial** + a persistent **Help Center** +
+  **contextual help** links — not another AI agent or a Help RAG.
+- **HOW:** route-aware tour (`frontend/components/tutorial/*`, `frontend/lib/tutorial/*`) with
+  stable `data-tour` targets, safe UI-preference state, replay via a start-tour event, reusing
+  Help articles; a searchable Help Center (`frontend/components/help/HelpCenter.tsx`) with
+  anchored sections; contextual "Learn more" links on Sources/Progress/History. Accessible
+  (keyboard/Escape/ARIA, non-blocking) and responsive. See `docs/guided_tutorial.md`.
+- **EVIDENCE:** `frontend/tests/tutorial.test.tsx`, `frontend/tests/help.test.tsx`,
+  `frontend/e2e/tutorial.spec.ts`.
+- **TRADE-OFF:** deterministic documentation + a small internal tour over an AI Help assistant
+  (cheaper, safer, easier to maintain; no new onboarding dependency).
+- **LIMITATION:** the tutorial does not adapt from behavioural analytics; Help search is keyword-
+  based by design.
+- **STATUS PROGRESSION (accurate history):** before closure **PARTIAL** → Deliverables Closure
+  **YES (Help Center)** → after this phase **YES — strengthened with interactive onboarding,
+  contextual help and replayable guidance.**
 
 ## Optional 16 — 5+ tools + capability control
 
