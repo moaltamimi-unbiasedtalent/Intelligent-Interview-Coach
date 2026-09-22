@@ -137,7 +137,10 @@ def make_agent_node(model_factory: ModelFactory, registry: ToolRegistry) -> Call
             events.append(AgentEvent(AgentEventType.REQUEST_UNDERSTOOD, step=step, status="ok").to_dict())
         try:
             model = _build_model(model_factory, state.get("model_profile"))
-            bound = model.bind_tools(registry.bind_schemas())
+            # A disabled tool is withheld from the model entirely (server-enforced
+            # capability toggle); it is never offered and cannot be re-enabled by the model.
+            disabled = set(state.get("disabled_tools", []) or [])
+            bound = model.bind_tools(registry.bind_schemas(exclude=disabled))
             ai = bound.invoke(state["messages"])
         except AgentConfigurationError:
             events.append(AgentEvent(AgentEventType.RUN_FAILED, step=step, status="not_configured", message=_SAFE_CONFIG_ERROR).to_dict())
@@ -183,6 +186,7 @@ def make_tools_node(registry: ToolRegistry) -> Callable[[AgentState], dict]:
         usage_entries = list(state.get("usage_entries", []) or [])
         cache_hits = int(state.get("retrieval_cache_hits", 0) or 0)
         cache_misses = int(state.get("retrieval_cache_misses", 0) or 0)
+        disabled = set(state.get("disabled_tools", []) or [])
 
         for call in getattr(last, "tool_calls", []) or []:
             name = call.get("name", "")
@@ -190,7 +194,9 @@ def make_tools_node(registry: ToolRegistry) -> Callable[[AgentState], dict]:
             args = call.get("args", {}) or {}
             events.append(AgentEvent(AgentEventType.TOOL_REQUESTED, step=step, tool_name=name).to_dict())
 
-            if not registry.has(name):
+            # Defense in depth: a disabled tool is rejected even if the model names it
+            # (it is not offered in the first place). Treated like an unavailable tool.
+            if name in disabled or not registry.has(name):
                 events.append(AgentEvent(AgentEventType.TOOL_REJECTED, step=step, tool_name=name, status="rejected", message="Tool not available.").to_dict())
                 history.append({"tool": name, "status": "rejected"})
                 out_messages.append(ToolMessage(content=json.dumps({"error": "This tool is not available."}), tool_call_id=call_id))

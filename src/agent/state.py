@@ -37,6 +37,11 @@ class AgentState(TypedDict, total=False):
     # Agent model profile for the run (fast | balanced | advanced); selects the
     # Fast/Balanced/Advanced registry model. Persisted so resume/continue reuse it.
     model_profile: str | None
+    # Server-enforced per-run capability toggle: names of registered tools withheld
+    # from the model this run (e.g. ResearchCurrentMarket when the user turns off
+    # current-market research). A withheld tool is never offered and never executed;
+    # the model cannot re-enable it. Persisted so resume/continue keep the choice.
+    disabled_tools: list[str]
 
     # Structured tool outputs carried between steps (short-term; safe dicts).
     requirements: dict[str, Any] | None  # from job-description analysis

@@ -20,6 +20,10 @@ class AgentRunRequest(BaseModel):
     # Candidate-selected Agent speed/quality tier. A Literal so the browser can only
     # send one of the three registry profiles — never a raw provider model slug.
     profile: Literal["fast", "balanced", "advanced"] | None = None
+    # User capability toggle (requirement #16): withhold bounded current-market
+    # research from this run. None = safe default (available); False = ResearchCurrentMarket
+    # is server-side unavailable to the Agent. The other five Career tools are unaffected.
+    enable_current_market_research: bool | None = None
 
 
 class AgentUsageResponse(BaseModel):

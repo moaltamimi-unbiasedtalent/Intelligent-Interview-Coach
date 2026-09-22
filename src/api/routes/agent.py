@@ -85,6 +85,7 @@ def run_agent(
             candidate_background=body.candidate_background,
             user_id=str(user_id),
             profile=body.profile,
+            enable_current_market_research=body.enable_current_market_research,
         ),
         request_id=request_id,
     )
