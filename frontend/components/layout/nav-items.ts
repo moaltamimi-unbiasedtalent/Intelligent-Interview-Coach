@@ -12,6 +12,7 @@ export const PRIMARY_NAV = [
  */
 export const SECONDARY_NAV = [
   { href: "/sources", label: "Sources", description: "Career evidence" },
+  { href: "/help", label: "Help", description: "How Ask4Mo works" },
   { href: "/review", label: "Review & Diagnostics", description: "Technical inspection" },
 ] as const;
 

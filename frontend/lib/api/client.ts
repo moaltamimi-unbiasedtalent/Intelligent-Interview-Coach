@@ -28,6 +28,7 @@ import type {
   FeedbackSurface,
   KnowledgeSnapshotResponse,
   KnowledgeSourcesResponse,
+  KnowledgeDiagnosticsResponse,
   MemoryCategory,
   MemoryCreateRequest,
   MemoryDeleteResponse,
@@ -157,6 +158,8 @@ export const api = {
       request<KnowledgeSourcesResponse>("GET", "/knowledge/sources", opts),
     snapshot: (opts?: RequestOptions) =>
       request<KnowledgeSnapshotResponse>("GET", "/knowledge/snapshot", opts),
+    diagnostics: (opts?: RequestOptions) =>
+      request<KnowledgeDiagnosticsResponse>("GET", "/knowledge/diagnostics", opts),
   },
 
   progress: {

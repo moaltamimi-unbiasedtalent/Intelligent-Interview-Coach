@@ -322,6 +322,39 @@ export interface KnowledgeSnapshotResponse {
   chunks: number;
   document_types: number;
 }
+
+/** Read-only Knowledge/RAG diagnostics — runtime counts + offline retrieval evaluation. */
+export interface KnowledgeDiagnosticsResponse {
+  runtime: {
+    occupations?: number | null;
+    aliases?: number | null;
+    skills?: number | null;
+    tasks?: number | null;
+    knowledge_areas?: number | null;
+    work_activities?: number | null;
+    compensation?: number | null;
+    labour_market?: number | null;
+    competencies?: number | null;
+    credentials?: number | null;
+    sources?: number | null;
+    runtime_pipeline_version?: string | null;
+    normalized_pipeline_version?: string | null;
+    built_at?: string | null;
+  };
+  retrieval_evaluation: {
+    cases?: number | null;
+    passed?: number | null;
+    pass_rate?: number | null;
+    evidence_coverage_rate?: number | null;
+    citation_completeness_rate?: number | null;
+    geography_correctness_rate?: number | null;
+    unknown_role_safety_rate?: number | null;
+    unsupported_geography_safety_rate?: number | null;
+    no_fabricated_citation_rate?: number | null;
+    safety_pass_rate?: number | null;
+  };
+  known_gaps: string[];
+}
 export interface InterviewSummary {
   id: number;
   target_role?: string | null;
@@ -457,6 +490,8 @@ export interface AgentRunRequest {
   job_description?: string | null;
   candidate_background?: string | null;
   profile?: AgentProfile | null;
+  /** Capability toggle (#16): false withholds ResearchCurrentMarket for the run (server-enforced). */
+  enable_current_market_research?: boolean | null;
 }
 
 /** Safe provider-usage aggregate. Unknown usage is never reported as zero. */

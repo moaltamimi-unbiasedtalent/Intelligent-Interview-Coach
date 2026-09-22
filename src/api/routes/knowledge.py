@@ -10,6 +10,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from src.api.schemas.knowledge import (
+    KnowledgeDiagnosticsResponse,
     KnowledgeSnapshotResponse,
     KnowledgeSourcesResponse,
     SourceEntryOut,
@@ -50,6 +51,12 @@ def sources() -> KnowledgeSourcesResponse:
         for e in entries
     ]
     return KnowledgeSourcesResponse(sources=out)
+
+
+@router.get("/diagnostics", response_model=KnowledgeDiagnosticsResponse,
+            summary="Knowledge runtime counts + offline retrieval evaluation")
+def diagnostics() -> KnowledgeDiagnosticsResponse:
+    return KnowledgeDiagnosticsResponse(**knowledge_service.get_knowledge_diagnostics())
 
 
 @router.get("/snapshot", response_model=KnowledgeSnapshotResponse,

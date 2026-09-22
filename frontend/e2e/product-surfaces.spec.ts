@@ -55,6 +55,21 @@ const EVALUATION = {
   run_config: { timestamp: "20260902_090140", status: "COMPLETE", case_count: 35, evaluator_model: "openai/gpt-4o-mini" },
 };
 
+const DIAGNOSTICS = {
+  runtime: {
+    occupations: 8035, aliases: 23579, skills: 111455, tasks: 22383, knowledge_areas: 6968,
+    work_activities: 20141, compensation: 1913, labour_market: 2398, competencies: 2275,
+    credentials: 5, sources: 31, runtime_pipeline_version: "7C.1", normalized_pipeline_version: "7B.1",
+    built_at: "2026-09-12T06:50:02Z",
+  },
+  retrieval_evaluation: {
+    cases: 81, passed: 74, pass_rate: 0.9136, evidence_coverage_rate: 0.8857,
+    citation_completeness_rate: 1.0, geography_correctness_rate: 1.0, unknown_role_safety_rate: 1.0,
+    unsupported_geography_safety_rate: 1.0, no_fabricated_citation_rate: 1.0, safety_pass_rate: 1.0,
+  },
+  known_gaps: ["German occupation-specific compensation is aggregate."],
+};
+
 async function mockAll(page: Page) {
   await page.route("**/api/v1/**", async (route) => {
     const url = route.request().url();
@@ -63,6 +78,7 @@ async function mockAll(page: Page) {
     if (url.includes("/history/interviews/")) return json(HISTORY_DETAIL);
     if (url.includes("/history/interviews")) return json(HISTORY_LIST);
     if (url.includes("/progress")) return json(PROGRESS);
+    if (url.includes("/knowledge/diagnostics")) return json(DIAGNOSTICS);
     if (url.includes("/knowledge/sources")) return json(SOURCES);
     if (url.includes("/knowledge/snapshot")) return json({ documents: 31, chunks: 14087, document_types: 6 });
     if (url.includes("/evaluation/latest")) return json(EVALUATION);
@@ -108,4 +124,21 @@ test("review/evaluation: shows offline metrics read-only, clearly not live analy
   await expect(page.getByText("faithfulness")).toBeVisible();
   await expect(page.getByText("0.405")).toBeVisible();
   await expect(page.getByText(/never triggers a paid evaluation/i)).toBeVisible();
+});
+
+test("review/rag: shows real knowledge runtime + offline retrieval quality (no placeholder)", async ({ page }) => {
+  await mockAll(page);
+  await page.goto("/review/rag");
+  await expect(page.getByText("Knowledge runtime")).toBeVisible();
+  await expect(page.getByText("8,035")).toBeVisible();
+  await expect(page.getByText("Offline retrieval evaluation")).toBeVisible();
+  await expect(page.getByText("74/81")).toBeVisible();
+});
+
+test("help: explains the journey and key safety concepts", async ({ page }) => {
+  await mockAll(page);
+  await page.goto("/help");
+  await expect(page.getByRole("heading", { name: "Help" })).toBeVisible();
+  await expect(page.getByText(/AI coach, not an autonomous decision-maker/i)).toBeVisible();
+  await expect(page.getByText(/Human-in-the-loop/i)).toBeVisible();
 });

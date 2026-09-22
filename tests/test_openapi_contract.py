@@ -81,8 +81,9 @@ EXPECTED = {
         "output_tokens", "total_tokens", "estimated_cost_usd", "usage_complete",
         "missing_usage_sources",
     },
-    # The candidate-selectable Agent tier (validated Literal — never a raw model slug).
-    "AgentRunRequest": {"goal", "profile"},
+    # The candidate-selectable Agent tier (validated Literal — never a raw model slug)
+    # + the server-enforced current-market-research capability toggle (#16).
+    "AgentRunRequest": {"goal", "profile", "enable_current_market_research"},
     "PendingActionResponse": {"action_id", "type", "message", "options", "data"},
     # HITL edit-before-save (P2): optional edited memory on an approval.
     "HumanDecisionRequest": {"action_id", "decision", "selected_role", "memory"},
@@ -102,6 +103,8 @@ EXPECTED = {
     },
     "RecentInterview": {"id", "target_role", "mode", "status", "questions", "created_at"},
     "EvaluationRunResponse": {"available", "metrics", "run_config"},
+    # Sprint 4 closure: read-only Knowledge/RAG diagnostics surface.
+    "KnowledgeDiagnosticsResponse": {"runtime", "retrieval_evaluation", "known_gaps"},
 }
 
 
