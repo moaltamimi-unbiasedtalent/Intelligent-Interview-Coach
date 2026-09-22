@@ -314,6 +314,7 @@ function FirstMessageForm({
         <label htmlFor="agent-goal" className="block text-sm font-medium">What interview are you preparing for?</label>
         <Textarea
           id="agent-goal"
+          data-tour="target-role"
           value={goal}
           onChange={(e) => setGoal(e.target.value)}
           placeholder="e.g. I have a Senior Product Manager interview next week and want to prepare."
@@ -360,7 +361,7 @@ function FirstMessageForm({
 
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted" aria-live="polite">{busy ? "Starting your session…" : ""}</span>
-          <Button onClick={submit} disabled={!canStart}>{busy ? "Starting…" : "Start preparing"}</Button>
+          <Button data-tour="ask-mo" onClick={submit} disabled={!canStart}>{busy ? "Starting…" : "Start preparing"}</Button>
         </div>
 
         {error && !error.notFound ? (

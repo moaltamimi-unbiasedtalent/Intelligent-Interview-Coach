@@ -33,8 +33,11 @@ export function HistoryClient() {
   }, []);
 
   return (
-    <section>
+    <section data-tour="history">
       <PageHeader eyebrow="Your sessions" title="History" description="Completed interview sessions and their reports." />
+      <p className="-mt-2 mb-4 text-sm">
+        <a href="/help#history" className="font-medium text-accent underline">What appears in History?</a>
+      </p>
       {status === "loading" ? <LoadingState label="Loading history" /> : null}
       {status === "error" && error ? <ErrorState message={error.message} requestId={error.requestId} /> : null}
       {status === "ready" ? (
@@ -77,9 +80,14 @@ export function HistoryClient() {
           </div>
         ) : (
           <EmptyState
-            title="Completed interview sessions will appear here"
-            description="Finish a practice interview to see its report."
-            action={<ButtonLink href="/practice">Practise an interview</ButtonLink>}
+            title="No completed interviews yet"
+            description="Your completed interview reports will appear here."
+            action={
+              <div className="flex flex-wrap gap-2">
+                <ButtonLink href="/practice">Start Practice</ButtonLink>
+                <ButtonLink href="/help#history" variant="ghost">Learn about History</ButtonLink>
+              </div>
+            }
           />
         )
       ) : null}

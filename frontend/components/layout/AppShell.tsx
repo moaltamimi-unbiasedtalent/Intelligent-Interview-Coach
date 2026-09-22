@@ -5,6 +5,7 @@ import { MobileNavigation } from "./MobileNavigation";
 import { MoreMenu } from "./MoreMenu";
 import { PrimaryNavigation } from "./PrimaryNavigation";
 import { ThemeToggle } from "./ThemeToggle";
+import { TutorialController } from "@/components/tutorial/TutorialController";
 
 /**
  * Restrained product shell: a quiet top header (wordmark · primary nav · theme ·
@@ -44,6 +45,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {children}
       </main>
       <MobileNavigation />
+      <TutorialController />
     </div>
   );
 }
