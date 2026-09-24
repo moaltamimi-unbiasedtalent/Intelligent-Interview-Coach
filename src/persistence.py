@@ -48,11 +48,39 @@ __all__ = [
     "PreparationMemory",
     "UserFeedback",
     "InterviewSession",
+    "AccountIdentity",
+    "PasswordCredential",
+    "AuthSession",
+    "AuthToken",
+    "ProductEntitlement",
+    "AuditEvent",
     "make_engine",
     "make_session_factory",
     "init_db",
     "utcnow",
 ]
+
+# --- identity/platform vocabulary (Capstone P1/E1) ---------------------------
+# Platform role is the ONLY overloaded-free "role" the principal carries. It is
+# deliberately separate from a workspace role (membership-scoped, deferred to the
+# Teams phase) and from a product entitlement (tier, see ProductEntitlement).
+PLATFORM_ROLE_USER = "user"
+PLATFORM_ROLE_ADMIN = "platform_admin"
+PLATFORM_ROLES = (PLATFORM_ROLE_USER, PLATFORM_ROLE_ADMIN)
+
+# Account lifecycle status (privacy/account foundation).
+ACCOUNT_STATUS_ACTIVE = "active"
+ACCOUNT_STATUS_DEACTIVATED = "deactivated"
+ACCOUNT_STATUS_DELETION_REQUESTED = "deletion_requested"
+
+# Product tiers (entitlement FOUNDATION only — no billing in P1).
+TIER_BASIC = "basic"
+TIER_PREMIUM = "premium"
+PRODUCT_TIERS = (TIER_BASIC, TIER_PREMIUM)
+
+# Auth token purposes.
+TOKEN_PURPOSE_EMAIL_VERIFICATION = "email_verification"
+TOKEN_PURPOSE_PASSWORD_RESET = "password_reset"
 
 
 def utcnow() -> datetime:
@@ -73,6 +101,20 @@ class User(Base):
     provider: Mapped[str] = mapped_column(String(64))
     display_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    # --- identity/platform foundation (Capstone P1/E1, migration 0007) --------
+    # The principal's PLATFORM role (user/platform_admin) — never a workspace role
+    # or a product tier. No user may self-promote (server-side enforced).
+    platform_role: Mapped[str] = mapped_column(
+        String(32), nullable=False, default=PLATFORM_ROLE_USER, server_default=PLATFORM_ROLE_USER
+    )
+    # Account lifecycle (active / deactivated / deletion_requested).
+    status: Mapped[str] = mapped_column(
+        String(32), nullable=False, default=ACCOUNT_STATUS_ACTIVE, server_default=ACCOUNT_STATUS_ACTIVE
+    )
+    # Whether the primary email has been verified (gates flows that require it).
+    email_verified: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="0"
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
@@ -87,6 +129,192 @@ class User(Base):
     feedback: Mapped[list["UserFeedback"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    identities: Mapped[list["AccountIdentity"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    credential: Mapped["PasswordCredential | None"] = relationship(
+        back_populates="user", cascade="all, delete-orphan", uselist=False
+    )
+    entitlement: Mapped["ProductEntitlement | None"] = relationship(
+        back_populates="user", cascade="all, delete-orphan", uselist=False
+    )
+    sessions: Mapped[list["AuthSession"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    auth_tokens: Mapped[list["AuthToken"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+
+
+class AccountIdentity(Base):
+    """A single authentication method linked to a principal (Capstone P1/E1).
+
+    Separates IDENTITY (a login method — email/password or a social provider) from
+    the OWNER principal (:class:`User`). One user may hold several identities (e.g.
+    a password identity and a linked Google identity), which is how account-linking
+    and duplicate-email handling are expressed without splitting a user's data
+    across rows. ``(provider, provider_subject)`` is globally unique.
+
+    Legacy transitional identities (``provider``/``subject`` on ``users``) are
+    backfilled here by migration 0007 so existing lookups keep resolving to the
+    same owner and no candidate data is orphaned.
+    """
+
+    __tablename__ = "account_identities"
+    __table_args__ = (
+        UniqueConstraint("provider", "provider_subject", name="uq_identity_provider_subject"),
+        Index("ix_account_identities_email", "email"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    # e.g. "password", "google", or a legacy provider ("dev", an OIDC issuer).
+    provider: Mapped[str] = mapped_column(String(64))
+    # The stable subject within the provider (email for password; ``sub`` for OIDC).
+    provider_subject: Mapped[str] = mapped_column(String(320))
+    email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    email_verified: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="0"
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    user: Mapped[User] = relationship(back_populates="identities")
+
+
+class PasswordCredential(Base):
+    """A user's password hash (Capstone P1/E1) — never the password itself.
+
+    Kept in its own table (one row per user) so the hash is not loaded on every
+    user fetch and AUTHENTICATION stays cleanly separated from the principal.
+    """
+
+    __tablename__ = "password_credentials"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), unique=True, index=True
+    )
+    # bcrypt self-describing hash string (algorithm/cost/salt embedded). Never plaintext.
+    password_hash: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    user: Mapped[User] = relationship(back_populates="credential")
+
+
+class AuthSession(Base):
+    """A server-side authentication session (Capstone P1/E1).
+
+    The client holds an opaque random session token in an HttpOnly/Secure/SameSite
+    cookie; only the token's SHA-256 hash is stored here, so a database read never
+    yields a live session credential. Logout and expiry are enforced server-side
+    (``revoked_at`` / ``expires_at``); the primary key IS the token hash.
+    """
+
+    __tablename__ = "auth_sessions"
+    __table_args__ = (Index("ix_auth_sessions_user", "user_id"),)
+
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    last_used_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Coarse, non-identifying client hint for the account's session list (bounded).
+    user_agent: Mapped[str | None] = mapped_column(String(256), nullable=True)
+
+    user: Mapped[User] = relationship(back_populates="sessions")
+
+
+class AuthToken(Base):
+    """A single-use, expiring token for email verification or password reset.
+
+    Only the SHA-256 hash of the raw token is stored; the raw token travels only in
+    the emailed link. ``consumed_at`` enforces single use; ``expires_at`` enforces
+    expiry. ``purpose`` distinguishes the two flows.
+    """
+
+    __tablename__ = "auth_tokens"
+    __table_args__ = (
+        Index("ix_auth_tokens_user_purpose", "user_id", "purpose"),
+    )
+
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    purpose: Mapped[str] = mapped_column(String(32))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    user: Mapped[User] = relationship(back_populates="auth_tokens")
+
+
+class ProductEntitlement(Base):
+    """A user's product tier (Capstone P1/E1) — the entitlement FOUNDATION.
+
+    One row per user; ``tier`` is resolved server-side to a capability set. This is
+    deliberately separate from platform role and workspace role, and is
+    future-billing-ready (a ``source`` records how the tier was granted) WITHOUT any
+    billing/payment logic in P1.
+    """
+
+    __tablename__ = "product_entitlements"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), unique=True, index=True
+    )
+    tier: Mapped[str] = mapped_column(
+        String(32), nullable=False, default=TIER_BASIC, server_default=TIER_BASIC
+    )
+    # How the tier was granted (e.g. "default", "admin_grant"); never payment data.
+    source: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    user: Mapped[User] = relationship(back_populates="entitlement")
+
+
+class AuditEvent(Base):
+    """A bounded security/privacy audit event (Capstone P1/E1).
+
+    Answers WHO did WHAT to WHAT, WHEN and with what RESULT — without becoming a
+    surveillance log. It stores NO password, token, provider secret, prompt,
+    chain-of-thought, CV/interview content or other private candidate content; the
+    optional ``context`` JSON is a small, safe, allow-listed projection.
+    """
+
+    __tablename__ = "audit_events"
+    __table_args__ = (
+        Index("ix_audit_events_actor", "actor_user_id"),
+        Index("ix_audit_events_type", "event_type"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    # Nullable: some events (e.g. a failed login for an unknown email) have no actor.
+    actor_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    event_type: Mapped[str] = mapped_column(String(64))
+    target_type: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    target_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    result: Mapped[str] = mapped_column(String(32), default="success")
+    request_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    context: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class PreparationMemory(Base):

@@ -25,6 +25,7 @@ from src.api.exception_handlers import register_exception_handlers
 from src.api.middleware import RequestIdMiddleware
 from src.api.routes import (
     agent,
+    auth,
     career,
     evaluation,
     feedback,
@@ -48,6 +49,7 @@ TAGS_METADATA = [
     {"name": "evaluation", "description": "Read-only evaluation status (no paid runs)."},
     {"name": "agent", "description": "Experimental LangGraph preparation agent (Sprint 4 preview)."},
     {"name": "memory", "description": "User-scoped long-term preparation memory (Sprint 4 Phase 7)."},
+    {"name": "auth", "description": "Accounts, authentication, sessions and account lifecycle (Capstone P1/E1)."},
 ]
 
 DESCRIPTION = (
@@ -99,7 +101,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
 
     # Infra liveness alias (unversioned) + versioned API surface.
     app.include_router(health.router, prefix="/api")
-    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, feedback, progress):
+    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, feedback, progress, auth):
         app.include_router(module.router, prefix=API_PREFIX)
     return app
 

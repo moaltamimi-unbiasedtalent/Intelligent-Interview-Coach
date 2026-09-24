@@ -29,15 +29,17 @@ def test_production_rejects_missing_identity():
         assert r.json()["error"]["code"] == "unauthorized"
 
 
-def test_production_accepts_supplied_identity_header():
-    # With a gateway-supplied identity, production resolves normally (no 401 for auth).
+def test_production_rejects_dev_header():
+    # Capstone P1/E1: the transitional X-User-Subject header is DEV-ONLY. In production
+    # it must NOT be honoured as identity — only a trusted session cookie is accepted.
     from tests._interview_factories import make_durable_store
     with _client("production") as c:
         c.app.dependency_overrides[deps.get_session_store] = lambda: make_durable_store()
         from tests.test_api import _FakeRepo
         c.app.dependency_overrides[deps.get_repository] = lambda: _FakeRepo()
-        r = c.get("/api/v1/interviews", headers={"X-User-Subject": "verified-user"})
-        assert r.status_code == 200
+        r = c.get("/api/v1/interviews", headers={"X-User-Subject": "attacker"})
+        assert r.status_code == 401
+        assert r.json()["error"]["code"] == "unauthorized"
 
 
 def test_development_allows_anonymous_fallback():

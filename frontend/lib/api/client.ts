@@ -41,6 +41,11 @@ import type {
   QuestionsRequest,
   RoleRequirements,
   ToolResultResponse,
+  AccountResponse,
+  AuthMessageResponse,
+  LoginRequest,
+  RegisterRequest,
+  PremiumStatusResponse,
 } from "./types";
 
 const REQUEST_ID_HEADER = "x-request-id";
@@ -50,7 +55,9 @@ interface RequestOptions {
 }
 
 function authHeaders(): Record<string, string> {
-  // Transitional local-dev identity only (see lib/config.ts). Omitted when unset.
+  // Transitional local-dev identity only (see lib/config.ts). Sent ONLY in dev, and
+  // ignored by the backend in production (where a real session cookie is required).
+  // A valid session cookie always takes precedence over this header server-side.
   return config.devUserSubject ? { "X-User-Subject": config.devUserSubject } : {};
 }
 
@@ -64,6 +71,9 @@ async function request<T>(
   try {
     res = await fetch(url, {
       method,
+      // Send the session cookie with every request (the trusted production identity).
+      // CORS on the backend allows credentials for the configured frontend origin.
+      credentials: "include",
       headers: {
         Accept: "application/json",
         ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
@@ -211,6 +221,30 @@ export const api = {
       const query = targetRole ? `?target_role=${encodeURIComponent(targetRole)}` : "";
       return request<MemoryPreviewResponse>("GET", `/memory/preview${query}`, opts);
     },
+  },
+
+  // Accounts, authentication & session (Capstone P1/E1). The session lives in an
+  // HttpOnly cookie sent automatically (credentials: "include"); no token in JS.
+  auth: {
+    register: (body: RegisterRequest, opts?: RequestOptions) =>
+      request<AuthMessageResponse>("POST", "/auth/register", { body, ...opts }),
+    login: (body: LoginRequest, opts?: RequestOptions) =>
+      request<AuthMessageResponse>("POST", "/auth/login", { body, ...opts }),
+    logout: (opts?: RequestOptions) =>
+      request<AuthMessageResponse>("POST", "/auth/logout", opts),
+    me: (opts?: RequestOptions) => request<AccountResponse>("GET", "/auth/me", opts),
+    verifyEmail: (token: string, opts?: RequestOptions) =>
+      request<AuthMessageResponse>("POST", "/auth/verify-email", { body: { token }, ...opts }),
+    resendVerification: (opts?: RequestOptions) =>
+      request<AuthMessageResponse>("POST", "/auth/verify-email/resend", opts),
+    forgotPassword: (email: string, opts?: RequestOptions) =>
+      request<AuthMessageResponse>("POST", "/auth/forgot-password", { body: { email }, ...opts }),
+    resetPassword: (token: string, password: string, opts?: RequestOptions) =>
+      request<AuthMessageResponse>("POST", "/auth/reset-password", { body: { token, password }, ...opts }),
+    premiumStatus: (opts?: RequestOptions) =>
+      request<PremiumStatusResponse>("GET", "/auth/premium/status", opts),
+    requestDeletion: (opts?: RequestOptions) =>
+      request<AuthMessageResponse>("POST", "/auth/account/delete-request", opts),
   },
 
   // Candidate feedback (P5). Never modifies Agent behaviour — a human-reviewed signal.

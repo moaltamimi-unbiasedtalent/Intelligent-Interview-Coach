@@ -39,22 +39,22 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 ## Group D — Platform productisation (owner-added)
 | ID | Requirement | Current | Target | Phase | Acceptance |
 |---|---|---|---|---|---|
-| D1 | Admin Console | ABSENT | Bounded PLATFORM_ADMIN control plane | P1 foundation → P6 | new AC (admin authz) |
-| D2 | Platform roles / RBAC | ABSENT | USER / PLATFORM_ADMIN | P1 | AC-02 ext |
-| D3 | Basic/Premium entitlement model | ABSENT | Entitlement dimension (no billing) | P1 | new EX (entitlement) |
-| D4 | Server-side entitlement enforcement | ABSENT | Enforced at API/service | P1→P6 | new EX |
-| D5 | User privacy/data controls | PARTIAL | Export/delete/consent self-service | P1/P4/P6 | EX-01, privacy |
+| D1 | Admin Console | FOUNDATION (P1) — guarded API only, no UI | Bounded PLATFORM_ADMIN control plane | P1 foundation → P6 | new AC (admin authz) |
+| D2 | Platform roles / RBAC | DELIVERED (P1) — USER/PLATFORM_ADMIN, audited bootstrap | USER / PLATFORM_ADMIN | P1 | AC-02 ext |
+| D3 | Basic/Premium entitlement model | DELIVERED (P1) — persisted tier + capability map | Entitlement dimension (no billing) | P1 | new EX (entitlement) |
+| D4 | Server-side entitlement enforcement | DELIVERED (P1) — `require_capability`, negative tests | Enforced at API/service | P1→P6 | new EX |
+| D5 | User privacy/data controls | PARTIAL (P1) — export + deletion-request boundary | Export/delete/consent self-service | P1/P4/P6 | EX-01, privacy |
 | D6 | Privacy/legal public surfaces | ABSENT | Policy/terms/AI-transparency pages | P8 | AC-25 |
 | D7 | Public marketing website | ABSENT | Public front door | P8 | AC-25 |
-| D8 | Public/authenticated route separation | ABSENT | Route boundary | P1/P8 | AC-01/19 |
+| D8 | Public/authenticated route separation | DELIVERED (P1) — server fail-closed + client RouteGuard | Route boundary | P1/P8 | AC-01/19 |
 | D9 | Pricing/product presentation | ABSENT | Basic/Premium presentation | P8 | AC-25 |
 
 ## Group E — Identity / collaboration
 | ID | Requirement | Current | Target | Phase | Acceptance |
 |---|---|---|---|---|---|
-| B1 | Registration + verified login + logout/expiry | PARTIAL (transitional subject) | Real backend-verified accounts | P1 | AC-01/03 |
-| C6 | Social + email auth, recovery | ABSENT | One social + email verify + recovery | P1 | EX-07 |
-| C5 | Teams/workspaces + roles + invitations | ABSENT | Bounded workspace model | P6 | EX-06 |
+| B1 | Registration + verified login + logout/expiry | DELIVERED (P1) — accounts, sessions, verify, recovery | Real backend-verified accounts | P1 | AC-01/03 |
+| C6 | Social + email auth, recovery | DELIVERED (P1); Google live = UNVALIDATED | One social + email verify + recovery | P1 | EX-07 |
+| C5 | Teams/workspaces + roles + invitations | FOUNDATION (P1) — workspace-role contract only, no tables | Bounded workspace model | P6 | EX-06 |
 | P/share | Explicit resource sharing + revocation | ABSENT | Selected-resource shares | P6 | EX-06 |
 
 ## Group F — Candidate data / documents
@@ -89,8 +89,9 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 ## Group J — Security / privacy
 | ID | Requirement | Current | Target | Phase | Acceptance |
 |---|---|---|---|---|---|
-| J-authz | Object-level ownership / cross-user isolation | DELIVERED | Extend to teams/shares/docs | P1/P6 | AC-02 |
-| J-privacy | Data export/delete/retention | PARTIAL | Full lifecycle + policy | P1/P4/P6 | EX-01/10 |
+| J-authz | Object-level ownership / cross-user isolation | DELIVERED (extended P1 — session auth + composable authz) | Extend to teams/shares/docs | P1/P6 | AC-02 |
+| J-audit | Security/privacy audit events | DELIVERED (P1) — bounded audit log, no secrets | Extend to teams/admin ops | P1/P6 | new AC |
+| J-privacy | Data export/delete/retention | PARTIAL (P1 export + deletion request) | Full lifecycle + policy | P1/P4/P6 | EX-01/10 |
 | J-inject | Injection/SSRF guards | DELIVERED | Extend to docs/OCR | P4 | EX-03 |
 
 ## Group K — Deployment / operations
@@ -111,3 +112,21 @@ DELIVERED ≈ 20 · PARTIAL ≈ 12 · ABSENT ≈ 22 · OUT_OF_SCOPE (see exclusi
 
 ## Explicit OUT_OF_SCOPE
 Camera/emotion/biometric assessment; recruiter rankings; automatic job applications; unrestricted crawling / job-board scraping; autonomous prompt/code/model changes; plugin marketplace; billing/payment; enterprise SSO/SCIM/HRIS; whole-app UI translation; comprehensive enterprise administration. Spoken feedback and PDF export remain optional enhancements.
+
+## P1/E1 presentation evidence (delivered this phase)
+Standard presentation table — see `p1_e1_identity_platform.md` for the full story.
+
+| # | Requirement | Status | How implemented | Evidence |
+|---|---|---|---|---|
+| B1 | Accounts: register/verify/login/logout/recovery | DELIVERED | `AuthenticationService` + `/auth/*`; server-side sessions in HttpOnly cookie; bcrypt | `tests/test_auth_api.py`, `eval_identity_platform.py` (authentication_flow 5/5, verification_recovery 6/6) |
+| C6 | One social provider + email verify + recovery | DELIVERED (Google live UNVALIDATED) | `src/application/oidc.py` + `/auth/oidc/google/*`; state+redirect allowlist; verified-email linking | `tests/test_auth_oidc.py` (17), fake provider |
+| D2 | Platform roles (USER/PLATFORM_ADMIN) | DELIVERED | `users.platform_role`; `require_platform_admin`; audited `scripts/bootstrap_admin.py`; no self-promote | `tests/test_auth_security_matrix.py`, `tests/test_bootstrap_admin.py` |
+| D3/D4 | Basic/Premium entitlement + server enforcement | DELIVERED (no billing) | `product_entitlements`; capability map; `require_capability`; premium-only endpoint | security matrix (entitlement_bypass_prevention 1.0) |
+| D8 | Public/authenticated route boundary | DELIVERED | Server fail-closed (401) + client `RouteGuard` | `tests/test_auth_failclosed.py`, `e2e/auth.spec.ts` |
+| J-authz | Cross-user isolation under session auth | DELIVERED | ownership in data layer + trusted session identity | cross_user_isolation 1.0 |
+| J-audit | Security/privacy audit log (no secrets) | DELIVERED | `audit_events` + `AuditRepository` | audit_safety 1.0 |
+| D5/J-privacy | Account export + deletion request | PARTIAL | `/auth/account/export`, `/auth/account/delete-request` | full hard-delete cascade deferred |
+| D1 | Admin control plane | FOUNDATION | guarded `/auth/admin/audit` (no Console UI) | admin_rejection/admin_grant 1.0 |
+| C5 | Workspace role foundation | FOUNDATION | contract only (`WORKSPACE_OWNER/MEMBER`); no tables | deferred to Teams phase |
+
+Legacy preservation: migration `0007` adds tables/columns + backfills; no candidate row re-keyed (`tests/test_migration_0007_identity.py`; legacy_data_preservation 1.0). Paid/live calls this phase: 0.

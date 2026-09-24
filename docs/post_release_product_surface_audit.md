@@ -1,3 +1,9 @@
+<!-- CORRECTION (Capstone P1 docs reconciliation): where this audit states that "no
+Agent runtime changed", that phrasing is imprecise — the current-market capability
+toggle DOES alter the agent's bound tool schemas and tool-node execution
+(`src/agent/nodes.py`, `src/agent/registry.py`). Original text preserved as historical
+evidence; see docs/capstone/documentation_reconciliation.md. -->
+
 # Post-Release Product-Surface Audit — Progress, History, Sources, Review & Diagnostics
 
 Investigation and minimal corrective fixes for four surfaces reported as empty/broken after
