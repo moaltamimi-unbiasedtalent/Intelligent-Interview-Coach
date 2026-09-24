@@ -46,6 +46,7 @@ import type {
   LoginRequest,
   RegisterRequest,
   PremiumStatusResponse,
+  PreferencesRequest,
 } from "./types";
 
 const REQUEST_ID_HEADER = "x-request-id";
@@ -233,6 +234,8 @@ export const api = {
     logout: (opts?: RequestOptions) =>
       request<AuthMessageResponse>("POST", "/auth/logout", opts),
     me: (opts?: RequestOptions) => request<AccountResponse>("GET", "/auth/me", opts),
+    updatePreferences: (body: PreferencesRequest, opts?: RequestOptions) =>
+      request<AccountResponse>("PATCH", "/auth/preferences", { body, ...opts }),
     verifyEmail: (token: string, opts?: RequestOptions) =>
       request<AuthMessageResponse>("POST", "/auth/verify-email", { body: { token }, ...opts }),
     resendVerification: (opts?: RequestOptions) =>

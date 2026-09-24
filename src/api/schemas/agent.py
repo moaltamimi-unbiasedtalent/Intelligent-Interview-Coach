@@ -96,6 +96,10 @@ class AgentRunResponse(BaseModel):
     # Candidate journey (UNDERSTAND→PREPARE→PRACTISE) + safe handoff provenance (P4).
     journey: dict = Field(default_factory=dict)
     handoff_summary: dict | None = None
+    # Presentation contract (P2/E2): a deterministic, non-truncating split of the FULL
+    # grounded answer for progressive disclosure — {answer, details, has_details,
+    # next_step}. Purely presentational; the model output is unchanged.
+    presentation: dict | None = None
 
 
 class AgentRunDeleteResponse(BaseModel):

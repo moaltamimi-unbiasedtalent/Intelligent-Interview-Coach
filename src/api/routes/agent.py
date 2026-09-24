@@ -36,7 +36,19 @@ router = APIRouter(prefix="/agent", tags=["agent"])
 
 def _to_response(result) -> AgentRunResponse:
     usage = AgentUsageResponse(**result.usage) if getattr(result, "usage", None) else None
+    # Presentation contract (P2/E2): a pure, deterministic split of the FULL grounded
+    # answer for progressive disclosure. No model call; content is never truncated.
+    from src.agent.presentation import build_presentation
+
+    presentation = build_presentation(
+        result.response,
+        preparation_context=result.preparation_context,
+        awaiting_human_input=result.awaiting_human_input,
+        handoff_approved=result.handoff_approved,
+        status=result.status,
+    ).to_dict()
     return AgentRunResponse(
+        presentation=presentation,
         run_id=result.run_id,
         status=result.status,
         response=result.response,

@@ -33,6 +33,7 @@ from src.api.schemas.auth import (
     ForgotPasswordRequest,
     LoginRequest,
     MessageResponse,
+    PreferencesRequest,
     PremiumStatusResponse,
     RegisterRequest,
     ResetPasswordRequest,
@@ -175,9 +176,7 @@ def reset_password(
     return MessageResponse(message="Your password has been reset. Please sign in.")
 
 
-@router.get("/me", response_model=AccountResponse,
-            summary="The caller's own account/profile summary")
-def me(principal=Depends(get_current_principal)) -> AccountResponse:
+def _account_response(principal) -> AccountResponse:
     return AccountResponse(
         user_id=principal.user_id,
         email=principal.email,
@@ -189,7 +188,47 @@ def me(principal=Depends(get_current_principal)) -> AccountResponse:
         providers=[],
         auth_method=principal.auth_method,
         capabilities=sorted(capabilities_for(principal.tier)),
+        response_detail=principal.response_detail,
     )
+
+
+@router.get("/me", response_model=AccountResponse,
+            summary="The caller's own account/profile summary")
+def me(principal=Depends(get_current_principal)) -> AccountResponse:
+    return _account_response(principal)
+
+
+@router.patch("/preferences", response_model=AccountResponse,
+              summary="Update low-sensitivity preferences (response detail)")
+def update_preferences(
+    body: PreferencesRequest,
+    account_repo=Depends(get_account_repository),
+    audit=Depends(get_audit_repository),
+    principal=Depends(get_current_principal),
+    request_id: str = Depends(get_request_id),
+) -> AccountResponse:
+    # Response detail is a presentation preference available to EVERY tier — never
+    # entitlement-gated, never candidate content. Stored server-side, user-scoped.
+    account_repo.set_response_detail(principal.user_id, body.response_detail)
+    audit.record(
+        event_type="account.preferences_change",
+        result="success",
+        actor_user_id=principal.user_id,
+        request_id=request_id,
+        context={"response_detail": body.response_detail},
+    )
+    # Reflect the new value without a second round-trip.
+    updated = principal.__class__(
+        user_id=principal.user_id,
+        platform_role=principal.platform_role,
+        tier=principal.tier,
+        status=principal.status,
+        email=principal.email,
+        email_verified=principal.email_verified,
+        auth_method=principal.auth_method,
+        response_detail=body.response_detail,
+    )
+    return _account_response(updated)
 
 
 @router.post("/verify-email/resend", response_model=MessageResponse,

@@ -6,6 +6,8 @@ password hash or session token (the session travels only in an HttpOnly cookie).
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 __all__ = [
@@ -17,6 +19,7 @@ __all__ = [
     "MessageResponse",
     "AccountResponse",
     "PremiumStatusResponse",
+    "PreferencesRequest",
 ]
 
 
@@ -63,6 +66,14 @@ class AccountResponse(BaseModel):
     providers: list[str]
     auth_method: str
     capabilities: list[str]
+    # Presentation depth preference (P2/E2) — brief/detailed. Low-sensitivity metadata.
+    response_detail: str = "brief"
+
+
+class PreferencesRequest(BaseModel):
+    """Update low-sensitivity user preferences (P2/E2)."""
+
+    response_detail: Literal["brief", "detailed"]
 
 
 class PremiumStatusResponse(BaseModel):

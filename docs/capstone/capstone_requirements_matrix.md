@@ -9,10 +9,10 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 ## Group A — Core product (carry-forward + gaps)
 | ID | Requirement | Current | Target | Phase | Acceptance |
 |---|---|---|---|---|---|
-| A1 | History detail + report | DELIVERED | Preserve, account-scope | P2 | AC-04 |
-| A2 | Active-session discovery/resume | ABSENT | Discoverable owned unfinished sessions | P2 | AC-05 |
-| A3 | Progress metrics | DELIVERED | Preserve | P2 | AC-06 |
-| A4 | Sources catalogue + links | DELIVERED | Preserve | P2 | AC-07 |
+| A1 | History detail + report | DELIVERED (P2 re-verified under real accounts) | Preserve, account-scope | P2 | AC-04 |
+| A2 | Active-session discovery/resume | DELIVERED (P2) — return-journey card resumes owned sessions | Discoverable owned unfinished sessions | P2 | AC-05 |
+| A3 | Progress metrics | DELIVERED (P2 continuity verified; trend deferred, documented) | Preserve | P2 | AC-06 |
+| A4 | Sources catalogue + links | DELIVERED (P2 evidence stays discoverable behind disclosure) | Preserve | P2 | AC-07 |
 | A5 | Knowledge readiness distinction | PARTIAL | Distinguish catalogue/snapshot/live | P2/P6 | AC-07 |
 | A6 | Owned recent agent-run list | ABSENT | Owned run discovery | P6 | AC-18 |
 | A7 | Evaluation evidence UI | DELIVERED (data env-dep) | Correct artifact provenance | P6 | AC-18 |
@@ -130,3 +130,17 @@ Standard presentation table — see `p1_e1_identity_platform.md` for the full st
 | C5 | Workspace role foundation | FOUNDATION | contract only (`WORKSPACE_OWNER/MEMBER`); no tables | deferred to Teams phase |
 
 Legacy preservation: migration `0007` adds tables/columns + backfills; no candidate row re-keyed (`tests/test_migration_0007_identity.py`; legacy_data_preservation 1.0). Paid/live calls this phase: 0.
+
+## P2/E2 presentation evidence (delivered this phase)
+Return journey + response experience. See `p2_e2_return_response_experience.md`.
+
+| # | Requirement | Status | How implemented | Why | Evidence |
+|---|---|---|---|---|---|
+| A2 | Authenticated return journey + active-session resume | DELIVERED | `ReturnJourney` Home card over `GET /interviews` (existing `list_active`); resumes `/practice?session=` | A returning user must continue, not restart | `e2e/return-response.spec.ts`, `tests/return-journey.test.tsx` |
+| A1/A3 | History + Progress continuity under real accounts | DELIVERED | re-verified owner-scoped; wired into return card | Identity must not orphan the journey | `eval_identity_platform` cross-user 1.0; existing history/progress tests |
+| Memory | Memory continuity under real accounts | DELIVERED | unchanged selective model; owner-scoped | Approved memory must persist across sign-in | cross-user isolation tests |
+| UX-Q1 | Progressive response disclosure (answer/next-step/details/sources) | DELIVERED | deterministic `presentation` contract + `Disclosure`/`AgentAnswer`; no model call, no truncation | Reviewer: answers too long/hard to scan | `scripts/eval_response_experience.py` (all 1.0), `tests/response-ux.test.tsx`, `tests/test_response_presentation.py` |
+| Pref | Brief/Detailed preference | DELIVERED (every tier; not paywalled) | `user_preferences` (migration 0008), `PATCH /auth/preferences`, Settings control; distinct from model profile | User-controlled response depth | `tests/test_preferences_api.py`, `tests/response-detail-preference.test.tsx`, `e2e/return-response.spec.ts` |
+| Trend | Progress longitudinal trend | DEFERRED (documented) | not added — insufficient data would mislead | Honest analytics only | `p2_e2_return_response_experience.md` §trend decision |
+
+Agent preserved: no change to tool selection, ReAct loop, retrieval, citations, HITL or the output guard; `eval_agent` GATE PASS unchanged. Paid/live calls this phase: 0.

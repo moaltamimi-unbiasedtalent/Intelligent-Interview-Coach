@@ -476,6 +476,7 @@ def get_current_principal(
         status=account.status,
         email=account.email,
         email_verified=account.email_verified,
+        response_detail=account.response_detail,
         auth_method=auth_method,
     )
 

@@ -92,6 +92,9 @@ class Principal:
     # "session" (trusted cookie), "dev_header" (transitional dev fallback) or
     # "anonymous" (dev only). Never used to grant privilege beyond identity.
     auth_method: str = "session"
+    # Presentation-depth preference (P2/E2) — brief/detailed. Low-sensitivity; never
+    # affects authorization.
+    response_detail: str = "brief"
 
 
 def capabilities_for(tier: str) -> frozenset[str]:
