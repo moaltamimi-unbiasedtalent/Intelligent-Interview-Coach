@@ -27,8 +27,13 @@ assumptions in core logic, prompts, scoring or examples.
 
 ## Architecture
 
-- **Modular Streamlit monolith.** `app.py` owns page config + top-level
-  navigation and delegates to the two modules; business logic lives in `src/`.
+- **Next.js + FastAPI is the primary product; Streamlit is legacy.** The current
+  architecture is a Next.js 15 App Router frontend (`frontend/`) over a typed FastAPI
+  backend (`src/api/`, `/api/v1`) sitting on the application layer (`src/application/`)
+  and domain (`src/agent/`, `src/copilot/`, `src/interview/`). The original modular
+  **Streamlit monolith** (`app.py` + `src/*/ui.py`) still runs over the same
+  application layer but is a legacy/development interface. Business logic lives in
+  `src/` and is UI-agnostic.
 - **Career backend/UI split.** `src/copilot/*` is the domain backend (no
   Streamlit import); `src/career/ui.py` renders it. The backend is unit-testable
   without a UI.
@@ -50,10 +55,16 @@ assumptions in core logic, prompts, scoring or examples.
   every request carries an `X-Request-Id`; CORS comes from `FRONTEND_ORIGINS`.
   In-progress interview state is **durably persisted** (Phase 10) in the user-scoped
   `interview_sessions` table via `DurableInterviewSessionStore` (OCC + operation
-  leases; the old in-memory store is a test/legacy helper only). Identity is a
-  transitional `X-User-Subject` boundary, **fail-closed in production** (401 without a
-  supplied identity); production still needs a real gateway/OIDC. The full LangGraph
-  Agent Coach ships (Phases 4–9.5). See `docs/sprint4_architecture.md`.
+  leases; the old in-memory store is a test/legacy helper only). **Identity (Capstone
+  P1/E1):** real accounts — email/password registration, email verification, password
+  recovery, server-side sessions in an HttpOnly cookie, and one bounded social provider
+  (Google OIDC; live UNVALIDATED) — resolved by `get_current_user_id` in
+  `src/api/dependencies.py`. The transitional `X-User-Subject` header is now
+  **development-only** (rejected in production, never overrides a valid session);
+  production is fail-closed (401 without a session). Platform roles, product
+  entitlements, an audit log and an account lifecycle are established (see
+  `docs/capstone/p1_e1_identity_platform.md`). The full LangGraph Agent Coach ships
+  (Phases 4–9.5). See `docs/sprint4_architecture.md`.
 - **Next.js frontend foundation (Sprint 4 Phase 3B).** `frontend/*` is a Next.js 15
   (App Router) + React 19 + TypeScript + Tailwind client of `/api/v1`, implementing
   the Precision Coach design system (`docs/design/phase3a/`). Streamlit and Next.js
@@ -301,8 +312,12 @@ assumptions in core logic, prompts, scoring or examples.
   labour-market, credentials) + a Chroma vector store with a local-hash embedder
   fallback; a deterministic router picks lanes; hybrid (vector + BM25) fusion.
 - **Persistence & auth.** SQLAlchemy ORM over SQLite (dev/tests) or PostgreSQL
-  (production, schema owned by Alembic — see `docs/operations_deployment.md`);
-  interview history is per-user with strict isolation. Auth in `src/auth.py`.
+  (production, schema owned by Alembic — single head `0007_identity_platform`; see
+  `docs/operations_deployment.md`); interview history is per-user with strict
+  isolation. Account authentication/authorization lives in `src/authsec/` (password
+  hashing, tokens), `src/auth_repository.py`, `src/application/auth_service.py` and
+  `src/application/authorization.py`; the Streamlit-side OIDC seam remains in
+  `src/auth.py`. `src/security.py` is the (separate) prompt-injection guard.
 - **Evaluation.** Deterministic, offline retrieval/coverage evaluations are the
   primary CI gate (11R, 11R-A, KB-2, product coverage, quality_v2,
   faithfulness_v2). **RAGAS** is an *optional* secondary generation-quality layer
@@ -335,9 +350,12 @@ assumptions in core logic, prompts, scoring or examples.
   (mock the boundaries). Do not weaken tests to pass or silently swallow errors.
 - Tests must not mutate committed artifacts (write to `tmp_path`).
 - `ruff check .` (conservative `F`/`E9` rules) must pass.
-- Current measured suite on this branch: **1928 passed, 2 skipped** (the skips are
-  the RAGAS installed/absent guards). Re-measure with `pytest -q` rather than
-  hard-coding a number in multiple places.
+- Test totals: **always re-measure with `pytest -q`** rather than trusting a number
+  copied across docs (historical docs cite different totals from their own point in
+  time — that is expected, not a defect). The measured backend suite after Capstone
+  P1/E1 is **2220 passed, 3 skipped** (skips are RAGAS installed/absent guards); the
+  frontend unit suite is **183 passed** (`cd frontend && npm test`) and the Playwright
+  e2e suite is **65 passed** (`npm run e2e`).
 
 ## Git rules
 

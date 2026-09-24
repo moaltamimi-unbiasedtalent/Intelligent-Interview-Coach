@@ -48,6 +48,8 @@ jobs:
         run: python -m pytest -q
       - name: Deterministic agent orchestration evaluation (offline; gates, no paid calls)
         run: python scripts/eval_agent.py
+      - name: Identity & platform evaluation (Capstone P1/E1; offline; safety invariants = 1.0)
+        run: python scripts/eval_identity_platform.py
       - name: Alembic migration validation (fresh upgrade + downgrade, single head)
         env:
           DATABASE_URL: sqlite:////tmp/ci_migrations.db

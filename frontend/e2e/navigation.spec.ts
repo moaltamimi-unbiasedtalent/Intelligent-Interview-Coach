@@ -50,11 +50,13 @@ test("Flow 4: Review hub → Agent Inspector", async ({ page }) => {
   await expect(page).toHaveURL(/\/review\/agent$/);
 });
 
-test("Flow 5: account control → Settings", async ({ page }) => {
+test("Flow 5: account control → account page", async ({ page }) => {
   await mock(page);
   await page.goto("/prepare");
-  await page.getByRole("link", { name: "Account and settings" }).click();
-  await expect(page).toHaveURL(/\/settings$/);
+  // Capstone P1/E1: the header account control opens the account page (Settings is
+  // reachable from there); it is not the primary nav.
+  await page.getByRole("link", { name: "Your account" }).click();
+  await expect(page).toHaveURL(/\/account$/);
 });
 
 test("Flow 6: wordmark → home", async ({ page }) => {
@@ -94,7 +96,7 @@ test("Mobile (390px): 4-item bottom nav; supporting routes still reachable", asy
   await page.getByRole("menuitem", { name: /Sources/ }).click();
   await expect(page).toHaveURL(/\/sources$/);
 
-  // Settings reachable via the account control.
-  await page.getByRole("link", { name: "Account and settings" }).click();
-  await expect(page).toHaveURL(/\/settings$/);
+  // The account page reachable via the account control (Settings lives there).
+  await page.getByRole("link", { name: "Your account" }).click();
+  await expect(page).toHaveURL(/\/account$/);
 });

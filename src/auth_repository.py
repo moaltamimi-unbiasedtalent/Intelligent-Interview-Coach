@@ -1,0 +1,499 @@
+"""Data-access for the identity/platform foundation (Capstone P1/E1).
+
+Sibling repositories to :mod:`src.repository`, sharing the same session factory /
+database engine. They own the durable identity tables introduced in migration
+0007 (accounts, identities, credentials, sessions, tokens, entitlements, audit).
+
+Design rules preserved from the rest of the data layer:
+* Every account-scoped read/write is keyed by the internal integer ``user_id``.
+* A foreign/unknown row resolves to ``None`` / a no-op, never another user's data.
+* Nothing here logs a password, a raw token, or a token hash.
+
+These repositories return plain dataclasses (never live ORM objects) so callers in
+the application layer depend on data, not the session lifecycle.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import sessionmaker
+
+from src.persistence import (
+    ACCOUNT_STATUS_ACTIVE,
+    PLATFORM_ROLE_USER,
+    TIER_BASIC,
+    AccountIdentity,
+    AuditEvent,
+    AuthSession,
+    AuthToken,
+    PasswordCredential,
+    ProductEntitlement,
+    User,
+    utcnow,
+)
+
+__all__ = [
+    "AccountRecord",
+    "SessionRecord",
+    "AccountRepository",
+    "SessionRepository",
+    "TokenRepository",
+    "AuditRepository",
+]
+
+
+@dataclass(frozen=True)
+class AccountRecord:
+    """A safe projection of a principal + its platform/entitlement state."""
+
+    user_id: int
+    email: str | None
+    display_name: str | None
+    platform_role: str
+    status: str
+    email_verified: bool
+    tier: str
+    has_password: bool
+    providers: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class SessionRecord:
+    user_id: int
+    expires_at: datetime
+    revoked_at: datetime | None
+
+
+def _aware(dt: datetime | None) -> datetime | None:
+    """Normalise a possibly-naive DB datetime to timezone-aware UTC for comparison."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+class AccountRepository:
+    """Users, identities, credentials and entitlements (the principal)."""
+
+    def __init__(self, session_factory: sessionmaker) -> None:
+        self._session_factory = session_factory
+
+    @property
+    def session_factory(self) -> sessionmaker:
+        return self._session_factory
+
+    # -- lookups --------------------------------------------------------------
+
+    def _project(self, session, user: User) -> AccountRecord:
+        cred = session.scalar(
+            select(PasswordCredential).where(PasswordCredential.user_id == user.id)
+        )
+        ent = session.scalar(
+            select(ProductEntitlement).where(ProductEntitlement.user_id == user.id)
+        )
+        idents = session.scalars(
+            select(AccountIdentity).where(AccountIdentity.user_id == user.id)
+        ).all()
+        return AccountRecord(
+            user_id=user.id,
+            email=user.email,
+            display_name=user.display_name,
+            platform_role=user.platform_role,
+            status=user.status,
+            email_verified=bool(user.email_verified),
+            tier=ent.tier if ent else TIER_BASIC,
+            has_password=cred is not None,
+            providers=tuple(sorted({i.provider for i in idents})),
+        )
+
+    def get_account(self, user_id: int) -> AccountRecord | None:
+        with self._session_factory() as session:
+            user = session.get(User, user_id)
+            return self._project(session, user) if user else None
+
+    def find_by_email(self, email: str) -> AccountRecord | None:
+        """Case-insensitive lookup by primary email (for login / reset)."""
+        norm = _normalize_email(email)
+        with self._session_factory() as session:
+            user = session.scalar(
+                select(User).where(User.email == norm)
+            )
+            return self._project(session, user) if user else None
+
+    def get_password_hash(self, user_id: int) -> str | None:
+        with self._session_factory() as session:
+            cred = session.scalar(
+                select(PasswordCredential).where(PasswordCredential.user_id == user_id)
+            )
+            return cred.password_hash if cred else None
+
+    def find_identity_user(self, provider: str, provider_subject: str) -> int | None:
+        with self._session_factory() as session:
+            ident = session.scalar(
+                select(AccountIdentity).where(
+                    AccountIdentity.provider == provider,
+                    AccountIdentity.provider_subject == provider_subject,
+                )
+            )
+            return ident.user_id if ident else None
+
+    # -- account creation / mutation -----------------------------------------
+
+    def create_password_account(
+        self,
+        *,
+        email: str,
+        password_hash: str,
+        display_name: str | None,
+    ) -> int | None:
+        """Create a principal with a password identity + credential + basic tier.
+
+        Returns the new ``user_id``, or ``None`` if the email is already taken
+        (unique violation) — the caller maps that to a safe, non-enumerating result.
+        """
+        norm = _normalize_email(email)
+        with self._session_factory() as session:
+            user = User(
+                subject=norm,
+                provider="password",
+                display_name=display_name,
+                email=norm,
+                platform_role=PLATFORM_ROLE_USER,
+                status=ACCOUNT_STATUS_ACTIVE,
+                email_verified=False,
+            )
+            session.add(user)
+            try:
+                session.flush()  # allocate user.id, surface unique violations early
+                session.add(
+                    AccountIdentity(
+                        user_id=user.id,
+                        provider="password",
+                        provider_subject=norm,
+                        email=norm,
+                        email_verified=False,
+                    )
+                )
+                session.add(
+                    PasswordCredential(user_id=user.id, password_hash=password_hash)
+                )
+                session.add(
+                    ProductEntitlement(user_id=user.id, tier=TIER_BASIC, source="default")
+                )
+                session.commit()
+                return user.id
+            except IntegrityError:
+                session.rollback()
+                return None
+
+    def link_or_create_oidc(
+        self,
+        *,
+        provider: str,
+        provider_subject: str,
+        email: str | None,
+        email_verified: bool,
+        display_name: str | None,
+    ) -> int:
+        """Resolve a social identity to a principal (account linking by verified email).
+
+        * Existing (provider, subject) → that user.
+        * Else a VERIFIED email matching an existing account → link a new identity to it.
+        * Else create a fresh principal (+ identity + basic tier).
+        """
+        norm = _normalize_email(email) if email else None
+        with self._session_factory() as session:
+            existing = session.scalar(
+                select(AccountIdentity).where(
+                    AccountIdentity.provider == provider,
+                    AccountIdentity.provider_subject == provider_subject,
+                )
+            )
+            if existing is not None:
+                return existing.user_id
+
+            user: User | None = None
+            # Link only on a provider-verified email — never merge on an unverified one.
+            if norm and email_verified:
+                user = session.scalar(select(User).where(User.email == norm))
+
+            if user is None:
+                user = User(
+                    subject=provider_subject,
+                    provider=provider,
+                    display_name=display_name,
+                    email=norm,
+                    platform_role=PLATFORM_ROLE_USER,
+                    status=ACCOUNT_STATUS_ACTIVE,
+                    email_verified=bool(email_verified and norm),
+                )
+                session.add(user)
+                session.flush()
+                session.add(
+                    ProductEntitlement(user_id=user.id, tier=TIER_BASIC, source="default")
+                )
+            session.add(
+                AccountIdentity(
+                    user_id=user.id,
+                    provider=provider,
+                    provider_subject=provider_subject,
+                    email=norm,
+                    email_verified=bool(email_verified),
+                )
+            )
+            if email_verified and norm and not user.email_verified:
+                user.email_verified = True
+            session.commit()
+            return user.id
+
+    def set_password(self, user_id: int, password_hash: str) -> bool:
+        with self._session_factory() as session:
+            cred = session.scalar(
+                select(PasswordCredential).where(PasswordCredential.user_id == user_id)
+            )
+            if cred is None:
+                session.add(PasswordCredential(user_id=user_id, password_hash=password_hash))
+            else:
+                cred.password_hash = password_hash
+            session.commit()
+            return True
+
+    def mark_email_verified(self, user_id: int) -> bool:
+        with self._session_factory() as session:
+            user = session.get(User, user_id)
+            if user is None:
+                return False
+            user.email_verified = True
+            for ident in session.scalars(
+                select(AccountIdentity).where(AccountIdentity.user_id == user_id)
+            ):
+                if ident.email and user.email and _normalize_email(ident.email) == _normalize_email(user.email):
+                    ident.email_verified = True
+            session.commit()
+            return True
+
+    def set_platform_role(self, user_id: int, role: str) -> bool:
+        with self._session_factory() as session:
+            user = session.get(User, user_id)
+            if user is None:
+                return False
+            user.platform_role = role
+            session.commit()
+            return True
+
+    def set_tier(self, user_id: int, tier: str, *, source: str | None = None) -> bool:
+        with self._session_factory() as session:
+            ent = session.scalar(
+                select(ProductEntitlement).where(ProductEntitlement.user_id == user_id)
+            )
+            if ent is None:
+                session.add(ProductEntitlement(user_id=user_id, tier=tier, source=source))
+            else:
+                ent.tier = tier
+                if source:
+                    ent.source = source
+            session.commit()
+            return True
+
+    def set_status(self, user_id: int, status: str) -> bool:
+        with self._session_factory() as session:
+            user = session.get(User, user_id)
+            if user is None:
+                return False
+            user.status = status
+            session.commit()
+            return True
+
+
+class SessionRepository:
+    """Server-side authentication sessions (opaque token hash → user)."""
+
+    def __init__(self, session_factory: sessionmaker) -> None:
+        self._session_factory = session_factory
+
+    def create(
+        self, *, token_hash: str, user_id: int, ttl_seconds: int, user_agent: str | None = None
+    ) -> None:
+        now = utcnow()
+        with self._session_factory() as session:
+            session.add(
+                AuthSession(
+                    token_hash=token_hash,
+                    user_id=user_id,
+                    created_at=now,
+                    expires_at=now + timedelta(seconds=ttl_seconds),
+                    last_used_at=now,
+                    user_agent=(user_agent or None),
+                )
+            )
+            session.commit()
+
+    def resolve(self, token_hash: str) -> int | None:
+        """Return the owning user_id for a live session, else None.
+
+        A session is live when it exists, is not revoked and has not expired.
+        Updates ``last_used_at`` opportunistically.
+        """
+        now = utcnow()
+        with self._session_factory() as session:
+            row = session.get(AuthSession, token_hash)
+            if row is None:
+                return None
+            if row.revoked_at is not None:
+                return None
+            if _aware(row.expires_at) <= now:
+                return None
+            row.last_used_at = now
+            session.commit()
+            return row.user_id
+
+    def revoke(self, token_hash: str) -> bool:
+        with self._session_factory() as session:
+            row = session.get(AuthSession, token_hash)
+            if row is None or row.revoked_at is not None:
+                return False
+            row.revoked_at = utcnow()
+            session.commit()
+            return True
+
+    def revoke_all_for_user(self, user_id: int) -> int:
+        now = utcnow()
+        with self._session_factory() as session:
+            rows = session.scalars(
+                select(AuthSession).where(
+                    AuthSession.user_id == user_id, AuthSession.revoked_at.is_(None)
+                )
+            ).all()
+            for row in rows:
+                row.revoked_at = now
+            session.commit()
+            return len(rows)
+
+    def list_active(self, user_id: int) -> list[SessionRecord]:
+        now = utcnow()
+        with self._session_factory() as session:
+            rows = session.scalars(
+                select(AuthSession).where(AuthSession.user_id == user_id)
+            ).all()
+            return [
+                SessionRecord(user_id=r.user_id, expires_at=r.expires_at, revoked_at=r.revoked_at)
+                for r in rows
+                if r.revoked_at is None and _aware(r.expires_at) > now
+            ]
+
+
+class TokenRepository:
+    """Single-use, expiring email-verification / password-reset tokens (hash only)."""
+
+    def __init__(self, session_factory: sessionmaker) -> None:
+        self._session_factory = session_factory
+
+    def issue(
+        self, *, token_hash: str, user_id: int, purpose: str, ttl_seconds: int
+    ) -> None:
+        now = utcnow()
+        with self._session_factory() as session:
+            session.add(
+                AuthToken(
+                    token_hash=token_hash,
+                    user_id=user_id,
+                    purpose=purpose,
+                    created_at=now,
+                    expires_at=now + timedelta(seconds=ttl_seconds),
+                )
+            )
+            session.commit()
+
+    def consume(self, *, token_hash: str, purpose: str) -> int | None:
+        """Atomically consume a valid token, returning its user_id (else None).
+
+        Returns None for unknown, wrong-purpose, expired, or already-consumed tokens
+        (token replay is therefore impossible).
+        """
+        now = utcnow()
+        with self._session_factory() as session:
+            row = session.get(AuthToken, token_hash)
+            if row is None or row.purpose != purpose:
+                return None
+            if row.consumed_at is not None:
+                return None
+            if _aware(row.expires_at) <= now:
+                return None
+            row.consumed_at = now
+            session.commit()
+            return row.user_id
+
+    def invalidate_for_user(self, *, user_id: int, purpose: str) -> int:
+        """Consume all outstanding tokens of a purpose (e.g. after a completed reset)."""
+        now = utcnow()
+        with self._session_factory() as session:
+            rows = session.scalars(
+                select(AuthToken).where(
+                    AuthToken.user_id == user_id,
+                    AuthToken.purpose == purpose,
+                    AuthToken.consumed_at.is_(None),
+                )
+            ).all()
+            for row in rows:
+                row.consumed_at = now
+            session.commit()
+            return len(rows)
+
+
+class AuditRepository:
+    """Bounded security/privacy audit log (append-only in practice)."""
+
+    def __init__(self, session_factory: sessionmaker) -> None:
+        self._session_factory = session_factory
+
+    def record(
+        self,
+        *,
+        event_type: str,
+        result: str = "success",
+        actor_user_id: int | None = None,
+        target_type: str | None = None,
+        target_id: str | None = None,
+        request_id: str | None = None,
+        context: dict | None = None,
+    ) -> None:
+        with self._session_factory() as session:
+            session.add(
+                AuditEvent(
+                    actor_user_id=actor_user_id,
+                    event_type=event_type,
+                    target_type=target_type,
+                    target_id=target_id,
+                    result=result,
+                    request_id=request_id,
+                    context=(context or None),
+                )
+            )
+            session.commit()
+
+    def recent_for_actor(self, actor_user_id: int, *, limit: int = 50) -> list[dict]:
+        with self._session_factory() as session:
+            rows = session.scalars(
+                select(AuditEvent)
+                .where(AuditEvent.actor_user_id == actor_user_id)
+                .order_by(AuditEvent.created_at.desc())
+                .limit(limit)
+            ).all()
+            return [
+                {
+                    "event_type": r.event_type,
+                    "result": r.result,
+                    "target_type": r.target_type,
+                    "created_at": r.created_at.isoformat() if r.created_at else None,
+                }
+                for r in rows
+            ]
+
+
+def _normalize_email(email: str) -> str:
+    return email.strip().lower()

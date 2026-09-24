@@ -32,3 +32,6 @@ langgraph>=0.3,<0.4
 # Sprint 4 Phase 8: durable HITL checkpoints (official SQLite saver; 2.0.x keeps
 # langgraph-checkpoint on 2.x, compatible with langgraph 0.3.34).
 langgraph-checkpoint-sqlite>=2.0,<3.0
+
+# Capstone P1/E1: account authentication password hasher.
+bcrypt>=4.1,<6.0

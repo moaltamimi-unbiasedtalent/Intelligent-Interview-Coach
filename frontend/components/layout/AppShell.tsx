@@ -1,11 +1,12 @@
-import Link from "next/link";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Brand } from "./Brand";
 import { MobileNavigation } from "./MobileNavigation";
 import { MoreMenu } from "./MoreMenu";
 import { PrimaryNavigation } from "./PrimaryNavigation";
 import { ThemeToggle } from "./ThemeToggle";
 import { TutorialController } from "@/components/tutorial/TutorialController";
+import { AccountMenu } from "@/components/auth/AccountMenu";
+import { RouteGuard } from "@/components/auth/RouteGuard";
 
 /**
  * Restrained product shell: a quiet top header (wordmark · primary nav · theme ·
@@ -30,19 +31,16 @@ export function AppShell({ children }: { children: ReactNode }) {
                 desktop and mobile without crowding the primary nav / bottom bar. */}
             <MoreMenu />
             <ThemeToggle />
-            <Link
-              href="/settings"
-              aria-label="Account and settings"
-              title="Account & settings"
-              className="grid h-8 w-8 place-items-center rounded-full bg-secondary text-xs font-bold text-[#3a3324]"
-            >
-              MA
-            </Link>
+            <AccountMenu />
           </div>
         </div>
       </header>
       <main id="main" className="mx-auto max-w-content px-5 pb-28 pt-7 md:pb-20">
-        {children}
+        {/* RouteGuard reads the URL (useSearchParams); a Suspense boundary keeps
+            static prerender (e.g. /_not-found) from bailing the whole page to CSR. */}
+        <Suspense fallback={children}>
+          <RouteGuard>{children}</RouteGuard>
+        </Suspense>
       </main>
       <MobileNavigation />
       <TutorialController />

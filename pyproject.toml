@@ -33,6 +33,10 @@ dependencies = [
     # 2.0.x line keeps langgraph-checkpoint on 2.x (3.x would force checkpoint>=4.1,
     # incompatible with langgraph 0.3.34). Postgres saver is optional (see [db]).
     "langgraph-checkpoint-sqlite>=2.0,<3.0",
+    # Capstone P1/E1: account authentication. bcrypt is the password hasher for the
+    # identity foundation (modern, salted, adaptive KDF). No JWT/OIDC library is a
+    # hard dependency — social login uses an optional, lazily-imported provider.
+    "bcrypt>=4.1,<6.0",
 ]
 
 [project.optional-dependencies]

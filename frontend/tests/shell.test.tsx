@@ -9,6 +9,25 @@ let pathname = "/prepare";
 vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+// AppShell now composes the auth-aware account menu + route guard. Provide a
+// deterministic authenticated session so the shell renders without a real fetch.
+vi.mock("@/components/auth/AuthProvider", () => ({
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useAuth: () => ({
+    account: {
+      user_id: 1, email: "user@example.com", display_name: null,
+      platform_role: "user", tier: "basic", status: "active",
+      email_verified: true, providers: ["password"], auth_method: "session",
+      capabilities: [],
+    },
+    status: "authenticated",
+    isRealSession: true,
+    refresh: vi.fn(),
+    signOut: vi.fn(),
+  }),
 }));
 
 afterEach(() => { pathname = "/prepare"; });
@@ -45,10 +64,10 @@ describe("AppShell", () => {
       .toHaveAttribute("href", "/");
   });
 
-  it("Settings is reachable via the account control, not the primary nav", () => {
+  it("exposes the account control (links to the account page), not in the primary nav", () => {
     render(<AppShell><span /></AppShell>);
-    const account = screen.getByRole("link", { name: "Account and settings" });
-    expect(account).toHaveAttribute("href", "/settings");
+    const account = screen.getByRole("link", { name: "Your account" });
+    expect(account).toHaveAttribute("href", "/account");
   });
 });
 

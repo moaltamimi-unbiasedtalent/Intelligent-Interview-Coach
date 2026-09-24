@@ -559,9 +559,21 @@ def test_openapi_schemas_do_not_expose_secrets():
     components = schema.get("components", {}).get("schemas", {})
     forbidden = {"api_key", "token", "system_prompt", "chain_of_thought",
                  "raw_response", "database_url", "embedding", "password"}
+    # Capstone P1/E1: authentication introduces legitimate secret-bearing INPUT fields
+    # (a password/token on a request body). These are inputs the caller supplies, never
+    # values the API returns — so they are allowed ONLY on the auth request models and
+    # remain forbidden everywhere else (all responses included).
+    auth_input_models = {
+        "RegisterRequest", "LoginRequest", "ResetPasswordRequest", "VerifyEmailRequest",
+    }
+    auth_input_fields = {"password", "token"}
     for name, model in components.items():
         for field in (model.get("properties") or {}):
-            assert field.lower() not in forbidden, f"{name}.{field} leaks"
+            f = field.lower()
+            if f in forbidden:
+                if name in auth_input_models and f in auth_input_fields:
+                    continue  # legitimate auth input, never present in any response
+                assert False, f"{name}.{field} leaks"
 
 
 # --- 31: session-store isolation + bounded eviction --------------------------

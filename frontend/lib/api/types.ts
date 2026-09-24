@@ -667,3 +667,39 @@ export interface FeedbackResponse {
   created_at: string | null;
   updated_at: string | null;
 }
+
+// --- Authentication & account (Capstone P1/E1) -------------------------------
+
+export interface AuthMessageResponse {
+  message: string;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  display_name?: string | null;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface AccountResponse {
+  user_id: number;
+  email: string | null;
+  display_name: string | null;
+  platform_role: string;
+  tier: string;
+  status: string;
+  email_verified: boolean;
+  providers: string[];
+  auth_method: string;
+  capabilities: string[];
+}
+
+export interface PremiumStatusResponse {
+  entitled: boolean;
+  tier: string;
+  message: string;
+}
