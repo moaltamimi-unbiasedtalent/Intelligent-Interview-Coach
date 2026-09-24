@@ -24,6 +24,10 @@ class AgentRunRequest(BaseModel):
     # research from this run. None = safe default (available); False = ResearchCurrentMarket
     # is server-side unavailable to the Agent. The other five Career tools are unaffected.
     enable_current_market_research: bool | None = None
+    # Mo conversation language (Capstone P3.5): a bounded Literal so the browser can only
+    # send a supported locale code — never free text. It sets the language of Mo's prose
+    # only; it never changes retrieval geography, tools or grounding.
+    conversation_language: Literal["en", "de", "fr", "es", "it", "pt", "nl"] | None = None
 
 
 class AgentUsageResponse(BaseModel):

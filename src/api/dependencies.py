@@ -477,6 +477,8 @@ def get_current_principal(
         email=account.email,
         email_verified=account.email_verified,
         response_detail=account.response_detail,
+        interface_locale=account.interface_locale,
+        conversation_language=account.conversation_language,
         auth_method=auth_method,
     )
 

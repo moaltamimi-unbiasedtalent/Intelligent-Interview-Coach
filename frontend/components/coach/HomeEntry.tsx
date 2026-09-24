@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
+import { useT } from "@/components/i18n/I18nProvider";
 import { writePrepareDraft, type PrepareDraftAction } from "@/lib/prepareDraft";
 
 /**
@@ -14,6 +15,7 @@ import { writePrepareDraft, type PrepareDraftAction } from "@/lib/prepareDraft";
  */
 export function HomeEntry() {
   const router = useRouter();
+  const t = useT();
   const [value, setValue] = useState("");
   const canStart = value.trim().length > 0;
 
@@ -39,7 +41,7 @@ export function HomeEntry() {
         className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-2.5 shadow-soft sm:flex-row"
       >
         <label htmlFor="home-entry" className="sr-only">
-          What interview are you preparing for?
+          {t("home.goalLabel")}
         </label>
         <Input
           id="home-entry"
@@ -48,7 +50,7 @@ export function HomeEntry() {
           placeholder="e.g. Executive HR Director role in fashion"
           className="border-0 bg-transparent shadow-none focus-visible:outline-none"
         />
-        <Button type="submit" disabled={!canStart}>Ask Mo</Button>
+        <Button type="submit" disabled={!canStart}>{t("home.askMo")}</Button>
       </form>
       <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
         <button type="button" onClick={() => shortcut("job_description")} className="text-muted hover:text-foreground">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/components/i18n/I18nProvider";
 import { SECONDARY_NAV } from "./nav-items";
 
 /**
@@ -17,6 +18,7 @@ import { SECONDARY_NAV } from "./nav-items";
  */
 export function MoreMenu() {
   const pathname = usePathname();
+  const t = useT();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -79,7 +81,7 @@ export function MoreMenu() {
           supportingActive ? "bg-surface-2 text-foreground" : "text-muted hover:text-foreground",
         )}
       >
-        More
+        {t("nav.more")}
         <span aria-hidden="true" className="text-xs">▾</span>
       </button>
 
@@ -105,7 +107,7 @@ export function MoreMenu() {
                   active ? "text-foreground" : "text-foreground",
                 )}
               >
-                <span className="font-medium">{item.label}</span>
+                <span className="font-medium">{t(item.labelKey)}</span>
                 {item.description ? (
                   <span className="text-xs text-muted">{item.description}</span>
                 ) : null}

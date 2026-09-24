@@ -91,6 +91,15 @@ RESPONSE_DETAIL_BRIEF = "brief"
 RESPONSE_DETAIL_DETAILED = "detailed"
 RESPONSE_DETAIL_VALUES = (RESPONSE_DETAIL_BRIEF, RESPONSE_DETAIL_DETAILED)
 
+# Internationalization (Capstone P3.5). Two INDEPENDENT language preferences, both
+# distinct from each other, from the model profile, and from the P3 dictation locale:
+#   * interface_locale     — the UI language (application locale).
+#   * conversation_language — the language the candidate wants Mo to communicate in.
+# Bounded to the supported Ask4Mo candidate-product language set. A language is NOT a
+# labour market: it never changes retrieval/salary/credential geography.
+SUPPORTED_LOCALES = ("en", "de", "fr", "es", "it", "pt", "nl")
+DEFAULT_LOCALE = "en"
+
 
 def utcnow() -> datetime:
     return datetime.now(timezone.utc)
@@ -317,6 +326,13 @@ class UserPreference(Base):
     response_detail: Mapped[str] = mapped_column(
         String(16), nullable=False, default=RESPONSE_DETAIL_BRIEF,
         server_default=RESPONSE_DETAIL_BRIEF,
+    )
+    # P3.5: UI language and Mo-conversation language (independent; bounded allow-list).
+    interface_locale: Mapped[str] = mapped_column(
+        String(8), nullable=False, default=DEFAULT_LOCALE, server_default=DEFAULT_LOCALE
+    )
+    conversation_language: Mapped[str] = mapped_column(
+        String(8), nullable=False, default=DEFAULT_LOCALE, server_default=DEFAULT_LOCALE
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(

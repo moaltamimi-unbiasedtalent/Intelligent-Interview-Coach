@@ -353,9 +353,17 @@ assumptions in core logic, prompts, scoring or examples.
 - Test totals: **always re-measure with `pytest -q`** rather than trusting a number
   copied across docs (historical docs cite different totals from their own point in
   time — that is expected, not a defect). The measured backend suite after Capstone
-  P3 is **2235 passed, 3 skipped** (skips are RAGAS installed/absent guards; P3 is a
-  frontend phase and added no backend tests); the frontend unit suite is **204 passed**
-  (`cd frontend && npm test`) and the Playwright e2e suite is **71 passed** (`npm run e2e`).
+  P3.5 is **2248 passed, 3 skipped** (skips are RAGAS installed/absent guards); the
+  frontend unit suite is **215 passed** (`cd frontend && npm test`) and the Playwright
+  e2e suite is **79 passed** (`npm run e2e`).
+
+- **Internationalization coding standard (Capstone P3.5+).** New candidate-facing,
+  user-visible strings MUST use the i18n system: add a key to the English source
+  catalogue (`frontend/lib/i18n/messages/en.ts`) and every locale catalogue (de/fr/es/
+  it/pt/nl), and render via `useT()` / `translate()`. Interface language, Mo conversation
+  language and dictation locale are **independent** settings, and a language choice never
+  changes labour-market geography. Do not hard-code new English strings in candidate UI;
+  reviewer/diagnostic-only text is exempt. See `docs/capstone/p3_5_i18n_l10n.md`.
 
 ## Git rules
 

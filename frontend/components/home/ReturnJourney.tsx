@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api/client";
 import type { ActiveSessionSummary } from "@/lib/api/types";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
+import { useT } from "@/components/i18n/I18nProvider";
 import { Card, CardBody } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/Button";
 
@@ -27,6 +28,7 @@ interface ReturnState {
 
 export function ReturnJourney() {
   const status = useAuthOptional()?.status ?? "unauthenticated";
+  const t = useT();
   const [state, setState] = useState<ReturnState | null>(null);
 
   useEffect(() => {
@@ -76,53 +78,52 @@ export function ReturnJourney() {
   // First-use (no real activity): render nothing so onboarding/marketing is unchanged.
   if (!hasActivity) return null;
 
+  const progressSuffix =
+    state.active && state.active.questions_planned
+      ? " — " +
+        t("home.questionsProgress", {
+          done: Math.min(state.active.question_number, state.active.questions_planned),
+          total: state.active.questions_planned,
+        })
+      : "";
+
   return (
     <Card className="mb-6">
       <CardBody className="space-y-4">
-        <h2 className="text-lg font-bold text-foreground">Welcome back</h2>
+        <h2 className="text-lg font-bold text-foreground">{t("home.welcomeBack")}</h2>
 
         {state.active ? (
           <div className="space-y-2">
             <p className="text-sm text-foreground">
-              Continue your{" "}
-              <span className="font-semibold">
-                {state.active.target_role || "interview"}
-              </span>{" "}
-              practice
-              {state.active.questions_planned
-                ? ` — ${Math.min(
-                    state.active.question_number,
-                    state.active.questions_planned,
-                  )} of ${state.active.questions_planned} questions`
-                : ""}
-              .
+              {t("home.continueYourPractice", { role: state.active.target_role || "interview" })}
+              {progressSuffix}.
             </p>
             <ButtonLink href={`/practice?session=${encodeURIComponent(state.active.session_id)}`}>
-              Continue practice
+              {t("home.continuePractice")}
             </ButtonLink>
           </div>
         ) : (
-          <p className="text-sm text-muted">Pick up where you left off, or prepare for a new role.</p>
+          <p className="text-sm text-muted">{t("home.pickUp")}</p>
         )}
 
         <div className="flex flex-wrap gap-2 pt-1 text-sm">
           {state.completedCount > 0 ? (
             <Link href="/history" className="rounded border border-border px-3 py-1.5 font-medium text-foreground hover:bg-surface-2">
-              History ({state.completedCount})
+              {t("home.historyCount", { count: state.completedCount })}
             </Link>
           ) : null}
           {state.answersEvaluated > 0 ? (
             <Link href="/progress" className="rounded border border-border px-3 py-1.5 font-medium text-foreground hover:bg-surface-2">
-              Progress
+              {t("nav.progress")}
             </Link>
           ) : null}
           {state.memoryCount > 0 ? (
             <Link href="/settings" className="rounded border border-border px-3 py-1.5 font-medium text-foreground hover:bg-surface-2">
-              Saved memory ({state.memoryCount})
+              {t("home.savedMemory", { count: state.memoryCount })}
             </Link>
           ) : null}
           <Link href="/prepare" className="rounded border border-border px-3 py-1.5 font-medium text-foreground hover:bg-surface-2">
-            Prepare for another role
+            {t("home.prepareAnother")}
           </Link>
         </div>
       </CardBody>

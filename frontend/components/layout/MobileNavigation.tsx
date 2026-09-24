@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useT } from "@/components/i18n/I18nProvider";
 import { PRIMARY_NAV } from "./nav-items";
 
 /**
@@ -11,6 +12,7 @@ import { PRIMARY_NAV } from "./nav-items";
  */
 export function MobileNavigation() {
   const pathname = usePathname();
+  const t = useT();
   return (
     <nav
       aria-label="Primary"
@@ -35,7 +37,7 @@ export function MobileNavigation() {
                 active ? "bg-accent" : "bg-transparent",
               )}
             />
-            {item.label}
+            {t(item.labelKey)}
           </Link>
         );
       })}

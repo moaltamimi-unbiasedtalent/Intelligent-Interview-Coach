@@ -11,6 +11,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "./AuthProvider";
+import { useT } from "@/components/i18n/I18nProvider";
 
 function initials(email: string | null, displayName: string | null): string {
   const source = (displayName || email || "").trim();
@@ -23,6 +24,7 @@ function initials(email: string | null, displayName: string | null): string {
 export function AccountMenu() {
   const { account, status, isRealSession, signOut } = useAuth();
   const router = useRouter();
+  const t = useT();
 
   if (status === "loading") {
     return <span className="h-8 w-8 animate-pulse rounded-full bg-surface-2" aria-hidden />;
@@ -34,7 +36,7 @@ export function AccountMenu() {
         href="/sign-in"
         className="inline-flex min-h-[36px] items-center rounded border border-border px-3 text-sm font-semibold text-foreground hover:bg-surface-2"
       >
-        Sign in
+        {t("common.signIn")}
       </Link>
     );
   }
@@ -48,8 +50,8 @@ export function AccountMenu() {
     <div className="flex items-center gap-2">
       <Link
         href="/account"
-        aria-label="Your account"
-        title={account.email || "Your account"}
+        aria-label={t("nav.account")}
+        title={account.email || t("nav.account")}
         className="grid h-8 w-8 place-items-center rounded-full bg-secondary text-xs font-bold text-[#3a3324]"
       >
         {initials(account.email, account.display_name)}
@@ -60,7 +62,7 @@ export function AccountMenu() {
           onClick={handleSignOut}
           className="hidden text-sm font-medium text-muted hover:text-foreground sm:inline"
         >
-          Sign out
+          {t("common.signOut")}
         </button>
       ) : null}
     </div>
