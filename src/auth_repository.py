@@ -25,6 +25,8 @@ from sqlalchemy.orm import sessionmaker
 from src.persistence import (
     ACCOUNT_STATUS_ACTIVE,
     PLATFORM_ROLE_USER,
+    RESPONSE_DETAIL_BRIEF,
+    RESPONSE_DETAIL_VALUES,
     TIER_BASIC,
     AccountIdentity,
     AuditEvent,
@@ -33,6 +35,7 @@ from src.persistence import (
     PasswordCredential,
     ProductEntitlement,
     User,
+    UserPreference,
     utcnow,
 )
 
@@ -59,6 +62,7 @@ class AccountRecord:
     tier: str
     has_password: bool
     providers: tuple[str, ...]
+    response_detail: str = RESPONSE_DETAIL_BRIEF
 
 
 @dataclass(frozen=True)
@@ -99,6 +103,9 @@ class AccountRepository:
         idents = session.scalars(
             select(AccountIdentity).where(AccountIdentity.user_id == user.id)
         ).all()
+        pref = session.scalar(
+            select(UserPreference).where(UserPreference.user_id == user.id)
+        )
         return AccountRecord(
             user_id=user.id,
             email=user.email,
@@ -109,6 +116,7 @@ class AccountRepository:
             tier=ent.tier if ent else TIER_BASIC,
             has_password=cred is not None,
             providers=tuple(sorted({i.provider for i in idents})),
+            response_detail=pref.response_detail if pref else RESPONSE_DETAIL_BRIEF,
         )
 
     def get_account(self, user_id: int) -> AccountRecord | None:
@@ -306,6 +314,34 @@ class AccountRepository:
             if user is None:
                 return False
             user.status = status
+            session.commit()
+            return True
+
+    # -- preferences (P2/E2) --------------------------------------------------
+
+    def get_response_detail(self, user_id: int) -> str:
+        with self._session_factory() as session:
+            pref = session.scalar(
+                select(UserPreference).where(UserPreference.user_id == user_id)
+            )
+            return pref.response_detail if pref else RESPONSE_DETAIL_BRIEF
+
+    def set_response_detail(self, user_id: int, value: str) -> bool:
+        """Set the user's response-detail preference (validated brief/detailed)."""
+        if value not in RESPONSE_DETAIL_VALUES:
+            return False
+        with self._session_factory() as session:
+            # Only upsert for a real user (never create a preference row for a
+            # non-existent principal — keeps the table clean and FK-valid).
+            if session.get(User, user_id) is None:
+                return False
+            pref = session.scalar(
+                select(UserPreference).where(UserPreference.user_id == user_id)
+            )
+            if pref is None:
+                session.add(UserPreference(user_id=user_id, response_detail=value))
+            else:
+                pref.response_detail = value
             session.commit()
             return True
 

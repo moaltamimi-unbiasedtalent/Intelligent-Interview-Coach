@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { Alert } from "@/components/ui/Alert";
 import { Card, CardBody } from "@/components/ui/Card";
 import { MemoryManager } from "@/components/memory/MemoryManager";
+import { ResponseDetailPreference } from "@/components/settings/ResponseDetailPreference";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -23,6 +23,12 @@ export default function SettingsPage() {
 
         <Card>
           <CardBody>
+            <ResponseDetailPreference />
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardBody>
             <MemoryManager />
           </CardBody>
         </Card>
@@ -34,15 +40,15 @@ export default function SettingsPage() {
               Information you share (a role, a job description, a CV) is used only to
               personalise your preparation. Long-term memory holds only the concise
               preparation details you explicitly approve — never whole conversations,
-              job descriptions or CVs — and you control it above.
+              job descriptions or CVs — and you control it above. Manage your account,
+              export your data or sign out from{" "}
+              <a href="/account" className="font-medium text-accent hover:underline">
+                your account
+              </a>
+              .
             </p>
           </CardBody>
         </Card>
-
-        <Alert title="Sign-in is coming">
-          Production accounts (single sign-on) are planned for a later phase. Until then,
-          preparation runs without an account in development.
-        </Alert>
       </div>
     </section>
   );

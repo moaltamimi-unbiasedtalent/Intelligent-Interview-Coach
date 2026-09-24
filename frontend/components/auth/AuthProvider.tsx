@@ -13,7 +13,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { api, ApiError } from "@/lib/api/client";
-import type { AccountResponse } from "@/lib/api/types";
+import type { AccountResponse, ResponseDetail } from "@/lib/api/types";
 
 // "unknown" = identity could not be determined (backend unreachable / non-401 error).
 // It is deliberately distinct from "unauthenticated" (a definitive 401): the route
@@ -25,8 +25,11 @@ interface AuthContextValue {
   status: AuthStatus;
   /** True when the identity is a real signed-in session (not the dev fallback). */
   isRealSession: boolean;
+  /** Presentation depth preference (defaults to brief until the account resolves). */
+  responseDetail: ResponseDetail;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
+  setResponseDetail: (value: ResponseDetail) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -53,6 +56,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const setResponseDetail = useCallback(async (value: ResponseDetail) => {
+    // Optimistic local update, then persist server-side; refresh reconciles on error.
+    setAccount((prev) => (prev ? { ...prev, response_detail: value } : prev));
+    try {
+      const updated = await api.auth.updatePreferences({ response_detail: value });
+      setAccount(updated);
+      setStatus("authenticated");
+    } catch {
+      await refresh();
+    }
+  }, [refresh]);
+
   const signOut = useCallback(async () => {
     try {
       await api.auth.logout();
@@ -72,10 +87,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       account,
       status,
       isRealSession: account?.auth_method === "session",
+      responseDetail: account?.response_detail ?? "brief",
       refresh,
       signOut,
+      setResponseDetail,
     }),
-    [account, status, refresh, signOut],
+    [account, status, refresh, signOut, setResponseDetail],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -87,4 +104,14 @@ export function useAuth(): AuthContextValue {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return ctx;
+}
+
+/**
+ * Non-throwing accessor for components that can render outside a provider (e.g. an
+ * agent message rendered in isolation in a unit test). In the running app the shell
+ * always provides the context, so this returns the real value there. Returns null
+ * when no provider is mounted — callers supply their own safe default.
+ */
+export function useAuthOptional(): AuthContextValue | null {
+  return useContext(AuthContext);
 }

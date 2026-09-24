@@ -23,6 +23,7 @@ const SECTIONS: Section[] = [
     articles: [
       { q: "What is Ask4Mo?", a: "An AI interview coach. Mo is a bounded AI agent that helps you understand a role, prepare with evidence, practise realistic questions, and track improvement." },
       { q: "How the journey works", a: "Home → Ask Mo → Prepare → Practise → Progress/History. Evidence and human approval run throughout; you stay in control." },
+      { q: "Continuing where you left off", a: "When you return, Home shows a “Welcome back” card built from your real activity — resume an in-progress interview, or jump to your latest report, Progress or History. It only appears once you have activity." },
       { q: "Taking the guided tour", a: "Use “Take the tour” below (or on first visit) for a 2-minute route-aware walkthrough. You can replay it any time." },
     ],
   },
@@ -34,6 +35,8 @@ const SECTIONS: Section[] = [
       { q: "Job descriptions", a: "Paste a JD when you have one — Mo analyses requirements and compares them to your background." },
       { q: "Asking Mo", a: "Mo decides whether to retrieve evidence and which bounded tools to use. It suggests; you decide." },
       { q: "Preparation plans", a: "Mo builds a focused plan and tailored questions from the role and your gaps." },
+      { q: "Brief or Detailed answers", a: "In Settings, choose Response detail: Brief leads with the key answer and next step; Detailed shows the fuller explanation inline. This is presentation only — it never changes what Mo works out, and it is separate from the Fast/Balanced/Advanced model speed." },
+      { q: "“Show more” and sources", a: "In Brief mode, supporting detail sits behind a “Show more” control and sources stay in their own expandable list — nothing is removed, only tucked away until you want it. Important qualifications always stay visible." },
     ],
   },
   {
@@ -61,6 +64,7 @@ const SECTIONS: Section[] = [
       { q: "What gets stored", a: "Your completed interview sessions and their reports, private to you." },
       { q: "When a report appears", a: "After a session is completed and its report generated. In-progress sessions are not listed as history." },
       { q: "How to reopen a session", a: "Open any row in History to re-read its full performance review." },
+      { q: "Resuming an in-progress interview", a: "An interview you haven’t finished isn’t in History — it’s resumable from the “Welcome back” card on Home. Completed interviews live in History; in-progress ones you continue." },
     ],
   },
   {

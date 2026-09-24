@@ -57,15 +57,15 @@ def test_upgrade_head_creates_baseline_schema(tmp_path, monkeypatch):
 
 
 def test_single_head_after_phase10(tmp_path, monkeypatch):
-    # Alembic must have exactly one head. The current head is the Capstone P1/E1
-    # revision 0007 (identity_platform), which chains from 0006 (user_feedback).
+    # Alembic must have exactly one head. The current head is the Capstone P2/E2
+    # revision 0008 (user_preferences), which chains from 0007 (identity_platform).
     from alembic.config import Config
     from alembic.script import ScriptDirectory
 
     cfg = Config("alembic.ini")
     cfg.set_main_option("script_location", "migrations")
     heads = ScriptDirectory.from_config(cfg).get_heads()
-    assert list(heads) == ["0007_identity_platform"]
+    assert list(heads) == ["0008_user_preferences"]
 
 
 def test_upgrade_head_adds_source_session_id(tmp_path, monkeypatch):

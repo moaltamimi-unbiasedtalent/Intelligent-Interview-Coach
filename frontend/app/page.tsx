@@ -1,9 +1,13 @@
 import { HomeEntry } from "@/components/coach/HomeEntry";
+import { ReturnJourney } from "@/components/home/ReturnJourney";
 
 export default function HomePage() {
   return (
     <section className="animate-enter">
       <div className="grid max-w-3xl gap-5 py-8 md:py-12">
+        {/* Returning users see a focused continuation card (real data only); first-use
+            renders nothing here, preserving the onboarding experience. */}
+        <ReturnJourney />
         <div>
           <p className="text-2xl font-bold tracking-tight text-accent">Ask4Mo</p>
           <p className="text-sm font-semibold text-muted">Intelligent Interview Coach</p>

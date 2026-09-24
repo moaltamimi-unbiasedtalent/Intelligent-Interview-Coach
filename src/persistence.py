@@ -54,6 +54,7 @@ __all__ = [
     "AuthToken",
     "ProductEntitlement",
     "AuditEvent",
+    "UserPreference",
     "make_engine",
     "make_session_factory",
     "init_db",
@@ -81,6 +82,14 @@ PRODUCT_TIERS = (TIER_BASIC, TIER_PREMIUM)
 # Auth token purposes.
 TOKEN_PURPOSE_EMAIL_VERIFICATION = "email_verification"
 TOKEN_PURPOSE_PASSWORD_RESET = "password_reset"
+
+# Response presentation depth (Capstone P2/E2). This is a PRESENTATION preference —
+# distinct from the model/capability profile (fast/balanced/advanced) and from any
+# future personality/tone preference. It never changes what the agent computes; it
+# only controls how much of the (full) grounded answer is shown before "Show more".
+RESPONSE_DETAIL_BRIEF = "brief"
+RESPONSE_DETAIL_DETAILED = "detailed"
+RESPONSE_DETAIL_VALUES = (RESPONSE_DETAIL_BRIEF, RESPONSE_DETAIL_DETAILED)
 
 
 def utcnow() -> datetime:
@@ -143,6 +152,9 @@ class User(Base):
     )
     auth_tokens: Mapped[list["AuthToken"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
+    )
+    preferences: Mapped["UserPreference | None"] = relationship(
+        back_populates="user", cascade="all, delete-orphan", uselist=False
     )
 
 
@@ -286,6 +298,32 @@ class ProductEntitlement(Base):
     )
 
     user: Mapped[User] = relationship(back_populates="entitlement")
+
+
+class UserPreference(Base):
+    """Low-sensitivity, user-scoped product preferences (Capstone P2/E2).
+
+    Currently holds only ``response_detail`` (brief/detailed) — the presentation depth
+    of Mo's answers. It is NOT candidate content, NOT a model profile, and NOT a
+    personality setting; it is available to every tier (never entitlement-gated).
+    """
+
+    __tablename__ = "user_preferences"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), unique=True, index=True
+    )
+    response_detail: Mapped[str] = mapped_column(
+        String(16), nullable=False, default=RESPONSE_DETAIL_BRIEF,
+        server_default=RESPONSE_DETAIL_BRIEF,
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    user: Mapped[User] = relationship(back_populates="preferences")
 
 
 class AuditEvent(Base):

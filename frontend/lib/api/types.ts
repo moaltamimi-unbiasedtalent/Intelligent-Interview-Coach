@@ -644,6 +644,8 @@ export interface AgentRunResponse {
   /** Candidate journey + handoff provenance (P4). */
   journey?: PreparationJourney;
   handoff_summary?: PracticeHandoffSummary | null;
+  /** Presentation contract for progressive disclosure (P2/E2). */
+  presentation?: ResponsePresentation | null;
 }
 
 // --- Candidate feedback (P5) -------------------------------------------------
@@ -685,6 +687,8 @@ export interface LoginRequest {
   password: string;
 }
 
+export type ResponseDetail = "brief" | "detailed";
+
 export interface AccountResponse {
   user_id: number;
   email: string | null;
@@ -696,6 +700,20 @@ export interface AccountResponse {
   providers: string[];
   auth_method: string;
   capabilities: string[];
+  /** Presentation depth (P2/E2) — brief/detailed. Not a model profile. */
+  response_detail: ResponseDetail;
+}
+
+export interface PreferencesRequest {
+  response_detail: ResponseDetail;
+}
+
+/** Deterministic presentation contract for progressive disclosure (P2/E2). */
+export interface ResponsePresentation {
+  answer: string;
+  details: string;
+  has_details: boolean;
+  next_step: { label: string; kind: string } | null;
 }
 
 export interface PremiumStatusResponse {
