@@ -1,21 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { Textarea } from "@/components/ui/Field";
-import { Button } from "@/components/ui/Button";
+import type { SpeechRecognitionAdapter } from "@/lib/speech/types";
+import { Composer } from "@/components/ui/Composer";
 
 /** Follow-up message composer for an ongoing agent thread. Disabled while a request
- * is in flight or while the run is awaiting a human decision (answer that first). */
+ * is in flight or while the run is awaiting a human decision (answer that first).
+ *
+ * P3: dictation (input only) is available via the shared Composer — recognised speech
+ * is appended to the editable field; sending remains an explicit click. */
 export function AgentComposer({
   onSend,
   busy,
   disabled,
   disabledHint,
+  dictationAdapter,
 }: {
   onSend: (message: string) => void;
   busy: boolean;
   disabled?: boolean;
   disabledHint?: string;
+  dictationAdapter?: SpeechRecognitionAdapter;
 }) {
   const [value, setValue] = useState("");
   const canSend = !busy && !disabled && value.trim().length > 0;
@@ -28,22 +33,21 @@ export function AgentComposer({
 
   return (
     <div className="mt-4">
-      <label htmlFor="agent-composer" className="sr-only">Message Mo</label>
-      <Textarea
+      <Composer
         id="agent-composer"
+        label="Message Mo"
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={setValue}
+        onSubmit={submit}
+        busy={busy}
+        disabled={disabled}
         placeholder="Ask a follow-up, or tell Mo what to focus on next…"
-        disabled={busy || disabled}
-        className="min-h-[80px]"
-        maxLength={4000}
+        submitLabel="Send"
+        busyLabel="Sending…"
+        footerNote={disabled && disabledHint ? disabledHint : undefined}
+        buttonSize="sm"
+        dictationAdapter={dictationAdapter}
       />
-      <div className="mt-2 flex items-center justify-between">
-        <span className="text-xs text-muted">{disabled && disabledHint ? disabledHint : ""}</span>
-        <Button size="sm" onClick={submit} disabled={!canSend}>
-          {busy ? "Sending…" : "Send"}
-        </Button>
-      </div>
     </div>
   );
 }
