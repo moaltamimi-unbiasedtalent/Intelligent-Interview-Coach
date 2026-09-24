@@ -12,6 +12,7 @@ export const PRIMARY_NAV = [
  * Settings is intentionally NOT here — it lives under the account control.
  */
 export const SECONDARY_NAV = [
+  { href: "/documents", label: "Documents", labelKey: "documents.title", description: "Your private evidence" },
   { href: "/sources", label: "Sources", labelKey: "nav.sources", description: "Career evidence" },
   { href: "/help", label: "Help", labelKey: "nav.help", description: "How Ask4Mo works" },
   { href: "/review", label: "Review & Diagnostics", labelKey: "nav.review", description: "Technical inspection" },

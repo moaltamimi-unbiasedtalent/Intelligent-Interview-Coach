@@ -730,3 +730,64 @@ export interface PremiumStatusResponse {
   tier: string;
   message: string;
 }
+
+// --- Private documents & evidence (Capstone P4/E2/E3) ------------------------
+
+export interface DocumentSummary {
+  id: number;
+  category: string;
+  title: string;
+  status: string;
+  current_version: number;
+  updated_at?: string | null;
+}
+
+export interface DocumentVersionOut {
+  version: number;
+  original_filename: string;
+  mime_type: string;
+  size_bytes: number;
+  page_count?: number | null;
+  extraction_origin?: string | null;
+  status: string;
+  failure_reason?: string | null;
+  language_hint?: string | null;
+}
+
+export interface ClaimOut {
+  id: number;
+  document_id: number;
+  version_id: number;
+  claim_type: string;
+  text: string;
+  edited_text?: string | null;
+  display_text: string;
+  source_page?: number | null;
+  source_section?: string | null;
+  review_state: string;
+}
+
+export interface DocumentDetail {
+  id: number;
+  category: string;
+  title: string;
+  status: string;
+  current_version: number;
+  created_at?: string | null;
+  versions: DocumentVersionOut[];
+  claims: ClaimOut[];
+}
+
+export interface StoryOut {
+  id: number;
+  title: string;
+  situation?: string | null;
+  task?: string | null;
+  action?: string | null;
+  result?: string | null;
+  competencies: string[];
+  status: string;
+  evidence_state: string;
+  evidence_claim_ids: number[];
+  updated_at?: string | null;
+}

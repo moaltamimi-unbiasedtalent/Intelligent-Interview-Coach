@@ -17,7 +17,7 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 | A6 | Owned recent agent-run list | ABSENT | Owned run discovery | P6 | AC-18 |
 | A7 | Evaluation evidence UI | DELIVERED (data env-dep) | Correct artifact provenance | P6 | AC-18 |
 | A8 | Retrieval/RAG diagnostics | PARTIAL (overview only) | Selected-run evidence | P6 | AC-18/22 |
-| A9 | Report export + completed-history deletion | ABSENT | MD/JSON export + confirmed deletion (PDF optional) | P4 | EX-01 |
+| A9 | Report export + completed-history deletion | DELIVERED (P4) — MD/JSON export (owner-scoped) + existing confirmed deletion; PDF optional | MD/JSON export + confirmed deletion (PDF optional) | P4 | EX-01 |
 
 ## Group B — Agent / orchestration
 | ID | Requirement | Current | Target | Phase | Acceptance |
@@ -60,9 +60,9 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 ## Group F — Candidate data / documents
 | ID | Requirement | Current | Target | Phase | Acceptance |
 |---|---|---|---|---|---|
-| B4 | Private document library (PDF/DOCX/TXT) | ABSENT | Upload + extract + review + index | P4 | AC-08/09/10 |
-| C2 | OCR (scanned PDF/images) | ABSENT | Bounded OCR worker, provenance | P4/E2 | EX-03 |
-| C7 | Evidence/story bank | ABSENT | Source-backed STAR drafts | P3/E3 | EX-08 |
+| B4 | Private document library (PDF/DOCX/TXT) | DELIVERED (P4) — upload + validate + parse + review + delete | Upload + extract + review + index | P4 | AC-08/09/10 |
+| C2 | OCR (scanned PDF/images) | DELIVERED (P4) — bounded engine abstraction + provenance; live UNVALIDATED | Bounded OCR worker, provenance | P4/E2 | EX-03 |
+| C7 | Evidence/story bank | DELIVERED (P4/E3) — deterministic, provenance-backed, revocation-aware | Source-backed STAR drafts | P3/E3 | EX-08 |
 | B2–B3 | Profile + opportunities | PARTIAL | Durable scoped context | P1/P6 | AC-03/17 |
 
 ## Group G — Interview Practice
@@ -183,3 +183,22 @@ Flow: **explicit user choice → server-persisted/cookie locale → typed catalo
 | i18n-review | Translation review status | No fabricated review claims | all locales labelled ENGINEERING DRAFT; review matrix | `p3_5_i18n_l10n.md` matrix | HONEST |
 
 Also updated: C3 (multilingual speech EN+DE) is now bounded to the 7-language dictation set from P3; whole-application UI translation is explicitly NOT implied by multilingual speech. Paid/live calls this phase: 0.
+
+## P4 / E2 / E3 Private documents & evidence presentation evidence (delivered this phase)
+See `p4_e2_e3_documents_evidence.md` + `p4_privacy_data_inventory.md`.
+
+Flow: **private document → validate → parse/OCR → deterministic extraction → user review → approved evidence → story bank → preparation/reuse.** NO automatic submission to Mo (documents are DATA, never prompts); NO audio/biometric/emotion analysis; NO public exposure.
+
+| Requirement | Status | Why | How | Evidence | Limitation |
+|---|---|---|---|---|---|
+| Private upload (PDF/DOCX/TXT + images) | DELIVERED | Candidate evidence workflow | multipart upload, allow-list + magic-byte + size/page limits, private random-key store | `test_documents_api.py`, `test_documents_pipeline.py` | content validation, not malware scanning |
+| OCR (E2) | DELIVERED (live UNVALIDATED) | Read scanned files | native-first routing; Tesseract abstraction (fake-tested); origin='ocr'; 7 langs CONFIGURED | `eval_documents_evidence.py` (ocr_*), pipeline tests | live quality browser/engine-dependent |
+| Provenance | PASS | Trace every claim | claims carry document→version→page/section; verbatim text | eval (extraction_provenance/no_invention) | heuristic extraction |
+| Review/approval | DELIVERED | Candidate controls facts | accept/correct/reject; edited = user-corrected; nothing auto-approved | api tests | — |
+| Story bank (E3) | DELIVERED | Reusable examples | deterministic source-backed draft; explicit states; **revocation on source delete** | eval (story_*), api tests | no LLM invention |
+| Report export (A9) | DELIVERED | Own your data | owner-scoped MD + versioned JSON from stored report; no LLM, no internal state | export tests | PDF optional (not built) |
+| Deletion / privacy lifecycle | DELIVERED (account cascade PARTIAL) | Data control | doc delete purges file+claims, re-derives stories; deletion inventory updated | privacy inventory, api tests | private-file + checkpoint purge on full account delete = remaining wiring |
+| Security | PASS | Cross-user + injection safety | owner-scoped (foreign→404); traversal/spoof/oversize blocked; documents never prompted | `test_documents_api.py`, eval (cross_user_isolation, injection_inert) | — |
+| I18n | DELIVERED (engineering draft) | 7-language product | `documents` namespace in all 7 catalogues; document language ≠ geography | catalogue parity test | human/legal review pending |
+
+Paid LLM / OCR-provider / live calls this phase: 0.

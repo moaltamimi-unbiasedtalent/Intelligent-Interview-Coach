@@ -57,15 +57,15 @@ def test_upgrade_head_creates_baseline_schema(tmp_path, monkeypatch):
 
 
 def test_single_head_after_phase10(tmp_path, monkeypatch):
-    # Alembic must have exactly one head. The current head is the Capstone P3.5
-    # revision 0009 (locale_preferences), which chains from 0008 (user_preferences).
+    # Alembic must have exactly one head. The current head is the Capstone P4 revision
+    # 0010 (candidate_documents), which chains from 0009 (locale_preferences).
     from alembic.config import Config
     from alembic.script import ScriptDirectory
 
     cfg = Config("alembic.ini")
     cfg.set_main_option("script_location", "migrations")
     heads = ScriptDirectory.from_config(cfg).get_heads()
-    assert list(heads) == ["0009_locale_preferences"]
+    assert list(heads) == ["0010_candidate_documents"]
 
 
 def test_upgrade_head_adds_source_session_id(tmp_path, monkeypatch):

@@ -93,6 +93,25 @@ const SECTIONS: Section[] = [
     ],
   },
   {
+    id: "documents",
+    title: "Documents & evidence",
+    articles: [
+      { q: "Uploading documents", a: "On the Documents page you can privately upload a CV, a job description, a portfolio or a brief. Files are private to you — never shared, never added to public knowledge." },
+      { q: "Supported formats", a: "PDF, DOCX and TXT (up to 10 MB). Scanned PDFs and images (PNG/JPEG) are read with OCR where your deployment supports it." },
+      { q: "OCR (scanned files)", a: "When a file has no selectable text, Ask4Mo uses optical character recognition to read it. OCR text is labelled as OCR-derived and its quality depends on the scan and the browser/engine." },
+      { q: "Why a file can't be read", a: "Password-protected, corrupt, empty or unsupported files can't be processed — you'll see a clear status and can upload a different file. Typing is never blocked." },
+      { q: "Reviewing extracted facts", a: "Ask4Mo extracts evidence with a link back to the page/section it came from. Nothing becomes reusable until you accept it — you can accept, correct or reject each item." },
+      { q: "Correcting extraction", a: "Editing an item marks it as your correction; the original extracted text is kept for provenance. Ask4Mo never invents facts." },
+      { q: "Evidence provenance", a: "Every claim shows its source document and location. Model inference, current-market evidence and your private documents are kept distinct." },
+      { q: "Story bank", a: "Turn approved evidence into reusable interview stories. A story built from your evidence is “source-backed”; one you write yourself is “your own”." },
+      { q: "Verified vs suggested stories", a: "A source-backed story stays “evidence verified” only while its supporting evidence exists. Editing it marks it “you corrected”. Ask4Mo never fabricates numbers or outcomes." },
+      { q: "Replacing a CV", a: "Uploading a new version keeps the old version for provenance so earlier outputs still know which version they used." },
+      { q: "Deleting documents", a: "Deleting a document removes the file, its extracted text and claims immediately. Stories that relied on it lose their source and are marked “source removed”." },
+      { q: "Exporting reports", a: "From a completed interview in History you can export the report as Markdown or JSON. Export uses the stored report only and never includes internal system data." },
+      { q: "Privacy", a: "Your documents are private, never public knowledge, and never analysed for identity or emotion. This is content validation, not malware scanning; a production deployment adds a scanner." },
+    ],
+  },
+  {
     id: "memory",
     title: "Memory & approvals",
     articles: [

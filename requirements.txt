@@ -35,3 +35,7 @@ langgraph-checkpoint-sqlite>=2.0,<3.0
 
 # Capstone P1/E1: account authentication password hasher.
 bcrypt>=4.1,<6.0
+
+# Capstone P4: private candidate document parsing (DOCX). PDF uses pypdf (above);
+# OCR is an optional extra (pip install -e ".[ocr]") — not required at runtime.
+python-docx>=1.1,<2.0

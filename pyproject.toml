@@ -37,6 +37,10 @@ dependencies = [
     # identity foundation (modern, salted, adaptive KDF). No JWT/OIDC library is a
     # hard dependency — social login uses an optional, lazily-imported provider.
     "bcrypt>=4.1,<6.0",
+    # Capstone P4: private candidate document parsing. pypdf (already present) extracts
+    # text PDFs with page provenance; python-docx extracts DOCX with paragraph
+    # provenance. Both are pure-Python and CI-safe. OCR is an OPTIONAL extra (see [ocr]).
+    "python-docx>=1.1,<2.0",
 ]
 
 [project.optional-dependencies]
@@ -52,6 +56,15 @@ dev = [
 # Install with:  pip install -e ".[speech]"
 speech = [
     "google-cloud-speech>=2.26,<3.0",
+]
+# Capstone P4/E2: OCR for scanned/image-backed documents. OPTIONAL and lazily
+# imported — the base app parses text PDF/DOCX/TXT without it, and the OCR path
+# degrades safely to a clear FAILED state when Tesseract / these packages are
+# absent. Tesseract is open-source/local (no paid provider). Requires the system
+# `tesseract` binary plus (for scanned PDFs) `poppler`. Install with: pip install -e ".[ocr]"
+ocr = [
+    "pytesseract>=0.3.10,<1.0",
+    "pdf2image>=1.17,<2.0",
 ]
 # Live interview (experimental Gemini Live). Optional backend token minting; the
 # SDK is imported lazily so a missing package degrades to the fallback.

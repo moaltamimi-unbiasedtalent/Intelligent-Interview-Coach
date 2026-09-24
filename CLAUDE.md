@@ -353,9 +353,19 @@ assumptions in core logic, prompts, scoring or examples.
 - Test totals: **always re-measure with `pytest -q`** rather than trusting a number
   copied across docs (historical docs cite different totals from their own point in
   time — that is expected, not a defect). The measured backend suite after Capstone
-  P3.5 is **2248 passed, 3 skipped** (skips are RAGAS installed/absent guards); the
-  frontend unit suite is **215 passed** (`cd frontend && npm test`) and the Playwright
-  e2e suite is **79 passed** (`npm run e2e`).
+  P4 is **2277 passed, 3 skipped** (skips are RAGAS installed/absent guards); the
+  frontend unit suite is **219 passed** (`cd frontend && npm test`) and the Playwright
+  e2e suite is **81 passed** (`npm run e2e`).
+
+- **Private candidate documents (Capstone P4).** `src/documents/*` + `src/application/
+  {documents_service,stories_service,report_export}.py` implement owner-scoped upload →
+  validate → private store (`DocumentStore`, never a public URL) → parse (pypdf/
+  python-docx/txt) or OCR (optional `[ocr]` extra; `OcrEngine` abstraction, live
+  UNVALIDATED) → **deterministic, verbatim, provenance-bearing extraction (no LLM)** →
+  user review → story bank (source-backed/revocation-aware) → MD/JSON report export.
+  Candidate documents are **untrusted DATA and are never placed in an LLM prompt**;
+  tables (migration 0010) cascade from `users.id`. See
+  `docs/capstone/p4_e2_e3_documents_evidence.md` and `p4_privacy_data_inventory.md`.
 
 - **Internationalization coding standard (Capstone P3.5+).** New candidate-facing,
   user-visible strings MUST use the i18n system: add a key to the English source
