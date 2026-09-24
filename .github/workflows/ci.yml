@@ -56,6 +56,8 @@ jobs:
         run: python scripts/eval_dictation_experience.py
       - name: i18n/l10n evaluation (Capstone P3.5; offline; locale + language/geography safety)
         run: python scripts/eval_i18n_l10n.py
+      - name: Documents & evidence evaluation (Capstone P4/E2/E3; offline; privacy + provenance + security)
+        run: python scripts/eval_documents_evidence.py
       - name: Alembic migration validation (fresh upgrade + downgrade, single head)
         env:
           DATABASE_URL: sqlite:////tmp/ci_migrations.db

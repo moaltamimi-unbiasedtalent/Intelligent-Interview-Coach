@@ -264,6 +264,51 @@ def get_email_sender(request: Request):
     return _shared(request, "email_sender", build_email_sender)
 
 
+# --- private candidate documents & evidence (Capstone P4) ---------------------
+
+
+def get_document_store(request: Request):
+    from src.documents.storage import build_document_store
+
+    return _shared(request, "document_store", build_document_store)
+
+
+def get_ocr_engine(request: Request):
+    from src.documents.ocr import build_ocr_engine
+
+    return _shared(request, "ocr_engine", build_ocr_engine)
+
+
+def get_documents_service(
+    repo=Depends(get_repository),
+    store=Depends(get_document_store),
+    ocr=Depends(get_ocr_engine),
+):
+    """Owner-scoped documents service (built over injected seams, so tests can override
+    the repository, file store or OCR engine independently)."""
+    from src.application.documents_service import DocumentsApplicationService
+    from src.documents.repository import DocumentRepository, StoryRepository
+
+    sf = repo.session_factory
+    return DocumentsApplicationService(
+        repo=DocumentRepository(sf),
+        stories=StoryRepository(sf),
+        store=store,
+        ocr=ocr,
+    )
+
+
+def get_stories_service(repo=Depends(get_repository)):
+    from src.application.stories_service import StoriesApplicationService
+    from src.documents.repository import DocumentRepository, StoryRepository
+
+    sf = repo.session_factory
+    return StoriesApplicationService(
+        stories=StoryRepository(sf),
+        documents=DocumentRepository(sf),
+    )
+
+
 def get_auth_config(request: Request):
     from src.application.auth_service import AuthConfig
 

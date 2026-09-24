@@ -55,6 +55,11 @@ __all__ = [
     "ProductEntitlement",
     "AuditEvent",
     "UserPreference",
+    "CandidateDocument",
+    "DocumentVersion",
+    "DocumentClaim",
+    "CandidateStory",
+    "StoryEvidence",
     "make_engine",
     "make_session_factory",
     "init_db",
@@ -99,6 +104,42 @@ RESPONSE_DETAIL_VALUES = (RESPONSE_DETAIL_BRIEF, RESPONSE_DETAIL_DETAILED)
 # labour market: it never changes retrieval/salary/credential geography.
 SUPPORTED_LOCALES = ("en", "de", "fr", "es", "it", "pt", "nl")
 DEFAULT_LOCALE = "en"
+
+# --- Private candidate documents & evidence (Capstone P4/E2/E3) ---------------
+# Bounded document categories (never silently inferred).
+DOC_CATEGORY_CV = "cv"
+DOC_CATEGORY_JOB_DESCRIPTION = "job_description"
+DOC_CATEGORY_PORTFOLIO = "portfolio"
+DOC_CATEGORY_BRIEF = "company_brief"
+DOC_CATEGORY_OTHER = "other"
+DOC_CATEGORIES = (
+    DOC_CATEGORY_CV, DOC_CATEGORY_JOB_DESCRIPTION, DOC_CATEGORY_PORTFOLIO,
+    DOC_CATEGORY_BRIEF, DOC_CATEGORY_OTHER,
+)
+# Explicit document lifecycle statuses.
+DOC_STATUS_UPLOADED = "uploaded"
+DOC_STATUS_PROCESSING = "processing"
+DOC_STATUS_REVIEW_REQUIRED = "review_required"
+DOC_STATUS_READY = "ready"
+DOC_STATUS_FAILED = "failed"
+DOC_STATUS_DELETED = "deleted"
+# Extraction origin (native parser vs OCR) — carried for provenance/labelling.
+EXTRACTION_ORIGIN_NATIVE = "native"
+EXTRACTION_ORIGIN_OCR = "ocr"
+# Claim review states (candidate-controlled).
+CLAIM_PENDING = "pending"
+CLAIM_ACCEPTED = "accepted"
+CLAIM_EDITED = "edited"
+CLAIM_REJECTED = "rejected"
+# Story provenance/verification states (must remain distinguishable).
+STORY_SOURCE_BACKED = "source_backed"
+STORY_USER_CORRECTED = "user_corrected"
+STORY_USER_CREATED = "user_created"
+STORY_MODEL_SUGGESTED = "model_suggested"
+# Whether a source-backed story still has live supporting evidence.
+STORY_EVIDENCE_VERIFIED = "verified"
+STORY_EVIDENCE_REVOKED = "source_revoked"
+STORY_EVIDENCE_NONE = "none"
 
 
 def utcnow() -> datetime:
@@ -340,6 +381,150 @@ class UserPreference(Base):
     )
 
     user: Mapped[User] = relationship(back_populates="preferences")
+
+
+class CandidateDocument(Base):
+    """A private candidate document (Capstone P4). Owner-scoped; DATA, never a prompt.
+
+    The logical document; each uploaded file is a :class:`DocumentVersion`. The original
+    file is stored privately (never a public URL) under a random ``storage_key`` on the
+    current version. Nothing here becomes public knowledge or approved memory
+    automatically.
+    """
+
+    __tablename__ = "candidate_documents"
+    __table_args__ = (Index("ix_candidate_documents_user_status", "user_id", "status"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    category: Mapped[str] = mapped_column(String(32), default=DOC_CATEGORY_OTHER)
+    title: Mapped[str] = mapped_column(String(255))
+    status: Mapped[str] = mapped_column(String(32), default=DOC_STATUS_UPLOADED)
+    current_version: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    user: Mapped[User] = relationship()
+    versions: Mapped[list["DocumentVersion"]] = relationship(
+        back_populates="document", cascade="all, delete-orphan", order_by="DocumentVersion.version"
+    )
+    claims: Mapped[list["DocumentClaim"]] = relationship(
+        back_populates="document", cascade="all, delete-orphan"
+    )
+
+
+class DocumentVersion(Base):
+    """One uploaded file for a document (Capstone P4). Stable provenance target.
+
+    Extracted claims and (later) stories reference the version that produced them, so a
+    replaced CV keeps historical provenance. The private file lives at ``storage_key``
+    (opaque/random); it is never a public path/URL.
+    """
+
+    __tablename__ = "document_versions"
+    __table_args__ = (
+        UniqueConstraint("storage_key", name="uq_document_versions_storage_key"),
+        Index("ix_document_versions_document", "document_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    document_id: Mapped[int] = mapped_column(ForeignKey("candidate_documents.id", ondelete="CASCADE"), index=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    original_filename: Mapped[str] = mapped_column(String(255))
+    storage_key: Mapped[str] = mapped_column(String(128))
+    mime_type: Mapped[str] = mapped_column(String(128))
+    size_bytes: Mapped[int] = mapped_column(Integer, default=0)
+    page_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    extraction_origin: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    status: Mapped[str] = mapped_column(String(32), default=DOC_STATUS_UPLOADED)
+    failure_reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    language_hint: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    document: Mapped[CandidateDocument] = relationship(back_populates="versions")
+
+
+class DocumentClaim(Base):
+    """A structured, provenance-bearing claim extracted from a document (Capstone P4).
+
+    Deterministic extraction only — never a fabricated/inferred fact. The candidate
+    reviews each claim (accept/edit/reject) before it is reusable. ``edited_text`` marks
+    a USER-CORRECTED value; the original ``text`` is preserved for provenance.
+    """
+
+    __tablename__ = "document_claims"
+    __table_args__ = (Index("ix_document_claims_user", "user_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    document_id: Mapped[int] = mapped_column(ForeignKey("candidate_documents.id", ondelete="CASCADE"), index=True)
+    version_id: Mapped[int] = mapped_column(ForeignKey("document_versions.id", ondelete="CASCADE"))
+    claim_type: Mapped[str] = mapped_column(String(32))
+    text: Mapped[str] = mapped_column(Text)
+    edited_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_page: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    source_section: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    review_state: Mapped[str] = mapped_column(String(16), default=CLAIM_PENDING)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    document: Mapped[CandidateDocument] = relationship(back_populates="claims")
+
+
+class CandidateStory(Base):
+    """A reusable interview story/example (Capstone P4/E3). Owner-scoped, private.
+
+    Provenance/verification state is explicit and must stay truthful: a source-backed
+    story whose supporting claims are all deleted becomes ``source_revoked`` (never
+    silently "verified"). Model-suggested text is labelled and editable; unsupported
+    metrics are never fabricated.
+    """
+
+    __tablename__ = "candidate_stories"
+    __table_args__ = (Index("ix_candidate_stories_user", "user_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    title: Mapped[str] = mapped_column(String(255))
+    situation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    task: Mapped[str | None] = mapped_column(Text, nullable=True)
+    action: Mapped[str | None] = mapped_column(Text, nullable=True)
+    result: Mapped[str | None] = mapped_column(Text, nullable=True)
+    competencies: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    status: Mapped[str] = mapped_column(String(24), default=STORY_USER_CREATED)
+    evidence_state: Mapped[str] = mapped_column(String(24), default=STORY_EVIDENCE_NONE)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    evidence: Mapped[list["StoryEvidence"]] = relationship(
+        back_populates="story", cascade="all, delete-orphan"
+    )
+
+
+class StoryEvidence(Base):
+    """Links a story to a supporting document claim (Capstone P4/E3).
+
+    When the underlying claim/document is deleted this link is removed (FK cascade); the
+    story service then re-derives the story's evidence_state so a source-backed story can
+    never remain "verified" with no live evidence.
+    """
+
+    __tablename__ = "story_evidence"
+    __table_args__ = (
+        UniqueConstraint("story_id", "claim_id", name="uq_story_evidence"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    story_id: Mapped[int] = mapped_column(ForeignKey("candidate_stories.id", ondelete="CASCADE"), index=True)
+    claim_id: Mapped[int] = mapped_column(ForeignKey("document_claims.id", ondelete="CASCADE"), index=True)
+
+    story: Mapped[CandidateStory] = relationship(back_populates="evidence")
 
 
 class AuditEvent(Base):

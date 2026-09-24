@@ -4,7 +4,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const list = vi.fn();
 const get = vi.fn();
 vi.mock("@/lib/api/client", () => ({
-  api: { history: { list: (...a: unknown[]) => list(...a), get: (...a: unknown[]) => get(...a) } },
+  api: {
+    history: { list: (...a: unknown[]) => list(...a), get: (...a: unknown[]) => get(...a) },
+    reports: {
+      exportMarkdownUrl: (id: number) => `/api/v1/reports/${id}/export.md`,
+      exportJsonUrl: (id: number) => `/api/v1/reports/${id}/export.json`,
+    },
+  },
 }));
 
 import { HistoryClient } from "@/components/interview/HistoryClient";

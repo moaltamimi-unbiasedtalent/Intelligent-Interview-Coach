@@ -47,6 +47,10 @@ import type {
   RegisterRequest,
   PremiumStatusResponse,
   PreferencesRequest,
+  DocumentSummary,
+  DocumentDetail,
+  ClaimOut,
+  StoryOut,
 } from "./types";
 
 const REQUEST_ID_HEADER = "x-request-id";
@@ -60,6 +64,27 @@ function authHeaders(): Record<string, string> {
   // ignored by the backend in production (where a real session cookie is required).
   // A valid session cookie always takes precedence over this header server-side.
   return config.devUserSubject ? { "X-User-Subject": config.devUserSubject } : {};
+}
+
+/** Multipart upload helper (P4): sends FormData with the session cookie; no JSON body. */
+async function upload<T>(path: string, form: FormData): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`${config.apiBaseUrl}${path}`, {
+      method: "POST",
+      credentials: "include",
+      headers: { Accept: "application/json", ...authHeaders() }, // no Content-Type: browser sets the boundary
+      body: form,
+    });
+  } catch (cause) {
+    if (cause instanceof DOMException && cause.name === "AbortError") throw cause;
+    throw new ApiError({ kind: "network", status: null, code: "network_error", message: "Could not reach the service." });
+  }
+  const requestId = res.headers.get(REQUEST_ID_HEADER);
+  const isJson = res.headers.get("content-type")?.includes("application/json");
+  const payload = isJson ? await res.json().catch(() => undefined) : undefined;
+  if (!res.ok) throw apiErrorFromBody(res.status, payload, requestId);
+  return payload as T;
 }
 
 async function request<T>(
@@ -248,6 +273,46 @@ export const api = {
       request<PremiumStatusResponse>("GET", "/auth/premium/status", opts),
     requestDeletion: (opts?: RequestOptions) =>
       request<AuthMessageResponse>("POST", "/auth/account/delete-request", opts),
+  },
+
+  // Private candidate documents, evidence & story bank (Capstone P4/E2/E3).
+  documents: {
+    list: (opts?: RequestOptions) => request<{ documents: DocumentSummary[] }>("GET", "/documents", opts),
+    get: (id: number, opts?: RequestOptions) => request<DocumentDetail>("GET", `/documents/${id}`, opts),
+    upload: (file: File, category: string, languageHint?: string) => {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("category", category);
+      if (languageHint) form.append("language_hint", languageHint);
+      return upload<DocumentDetail>("/documents", form);
+    },
+    replace: (id: number, file: File, languageHint?: string) => {
+      const form = new FormData();
+      form.append("file", file);
+      if (languageHint) form.append("language_hint", languageHint);
+      return upload<DocumentDetail>(`/documents/${id}/replace`, form);
+    },
+    reviewClaim: (documentId: number, claimId: number, action: string, editedText?: string, opts?: RequestOptions) =>
+      request<ClaimOut>("POST", `/documents/${documentId}/claims/${claimId}/review`, { body: { action, edited_text: editedText }, ...opts }),
+    remove: (id: number, opts?: RequestOptions) => request<{ deleted: boolean }>("DELETE", `/documents/${id}`, opts),
+    downloadUrl: (id: number) => `${config.apiBaseUrl}/documents/${id}/download`,
+  },
+
+  stories: {
+    list: (opts?: RequestOptions) => request<{ stories: StoryOut[] }>("GET", "/stories", opts),
+    get: (id: number, opts?: RequestOptions) => request<StoryOut>("GET", `/stories/${id}`, opts),
+    create: (body: Partial<StoryOut> & { title: string; status?: string; claim_ids?: number[] }, opts?: RequestOptions) =>
+      request<StoryOut>("POST", "/stories", { body, ...opts }),
+    draft: (title: string, claimIds: number[], opts?: RequestOptions) =>
+      request<StoryOut>("POST", "/stories/draft", { body: { title, claim_ids: claimIds }, ...opts }),
+    update: (id: number, body: Partial<StoryOut>, opts?: RequestOptions) =>
+      request<StoryOut>("PATCH", `/stories/${id}`, { body, ...opts }),
+    remove: (id: number, opts?: RequestOptions) => request<{ deleted: boolean }>("DELETE", `/stories/${id}`, opts),
+  },
+
+  reports: {
+    exportJsonUrl: (reportId: number) => `${config.apiBaseUrl}/reports/${reportId}/export.json`,
+    exportMarkdownUrl: (reportId: number) => `${config.apiBaseUrl}/reports/${reportId}/export.md`,
   },
 
   // Candidate feedback (P5). Never modifies Agent behaviour — a human-reviewed signal.
