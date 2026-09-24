@@ -353,9 +353,9 @@ assumptions in core logic, prompts, scoring or examples.
 - Test totals: **always re-measure with `pytest -q`** rather than trusting a number
   copied across docs (historical docs cite different totals from their own point in
   time — that is expected, not a defect). The measured backend suite after Capstone
-  P2/E2 is **2235 passed, 3 skipped** (skips are RAGAS installed/absent guards); the
-  frontend unit suite is **191 passed** (`cd frontend && npm test`) and the Playwright
-  e2e suite is **69 passed** (`npm run e2e`).
+  P3 is **2235 passed, 3 skipped** (skips are RAGAS installed/absent guards; P3 is a
+  frontend phase and added no backend tests); the frontend unit suite is **204 passed**
+  (`cd frontend && npm test`) and the Playwright e2e suite is **71 passed** (`npm run e2e`).
 
 ## Git rules
 

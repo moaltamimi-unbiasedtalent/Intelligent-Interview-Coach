@@ -9,6 +9,8 @@ import { useMediaQuery } from "@/lib/useMediaQuery";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Field";
+import { DictationControl } from "@/components/ui/DictationControl";
+import { useDictationLanguage } from "@/lib/speech/useDictationLanguage";
 import { ErrorState, LoadingState } from "@/components/ui/States";
 import { Card, CardBody } from "@/components/ui/Card";
 import { useAgentRun } from "./useAgentRun";
@@ -250,6 +252,9 @@ function FirstMessageForm({
   const [background, setBackground] = useState("");
   const [profile, setProfile] = useState<AgentProfile>(DEFAULT_PROFILE);
   const [research, setResearch] = useState(true);
+  // Dictation recognition locale — deliberately SEPARATE from the (future) application
+  // locale, the model profile and the response-detail preference.
+  const [dictationLang, setDictationLang] = useDictationLanguage();
 
   // A harmless UI preference (the chosen speed) may be remembered — never any private
   // conversation data (§21). Guarded so private windows / blocked storage never throw.
@@ -320,6 +325,15 @@ function FirstMessageForm({
           placeholder="e.g. I have a Senior Product Manager interview next week and want to prepare."
           disabled={busy}
           maxLength={4000}
+        />
+        {/* Dictation is input-only: recognised speech is appended to the editable goal;
+            starting is never submitting (§6). */}
+        <DictationControl
+          value={goal}
+          onChange={(next) => setGoal(next)}
+          disabled={busy}
+          lang={dictationLang}
+          onLangChange={setDictationLang}
         />
 
         <button type="button" onClick={() => setShowContext((v) => !v)} className="text-sm font-medium text-accent">

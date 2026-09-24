@@ -74,7 +74,7 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 ## Group H — Speech / multimodal
 | ID | Requirement | Current | Target | Phase | Acceptance |
 |---|---|---|---|---|---|
-| B5 | App-wide dictation | ABSENT | Every eligible input, editable transcript, no auto-submit | P3/P8 | AC-11/12 |
+| B5 | App-wide dictation | DELIVERED on two surfaces (P3); broader roll-out later | Every eligible input, editable transcript, no auto-submit | P3/P8 | AC-11/12 |
 | C1 | Realtime voice + interruption | PARTIAL/experimental | Streaming + interrupt + fallback | P7 | EX-02 |
 | C3 | Multilingual speech (EN/DE) | ABSENT | Real EN/DE STT/TTS | P7 | EX-04, AC-23 |
 
@@ -144,3 +144,23 @@ Return journey + response experience. See `p2_e2_return_response_experience.md`.
 | Trend | Progress longitudinal trend | DEFERRED (documented) | not added — insufficient data would mislead | Honest analytics only | `p2_e2_return_response_experience.md` §trend decision |
 
 Agent preserved: no change to tool selection, ReAct loop, retrieval, citations, HITL or the output guard; `eval_agent` GATE PASS unchanged. Paid/live calls this phase: 0.
+
+## P3 / E-Dictation presentation evidence (delivered this phase)
+Reusable UI + safe speech-to-text input. See `p3_e_dictation_reusable_ui.md` and `p3_ui_reuse_audit.md`.
+
+Architecture flow: **Speech → recognition adapter → editable transcript → existing text input → explicit user submit → existing Ask4Mo workflow.** Explicitly: **NO automatic submission · NO audio persistence · NO emotion analysis.**
+
+| Deliverable | Why | How implemented | Evidence | Status |
+|---|---|---|---|---|
+| Reusable input primitive | Remove 3-way composer duplication; one home for dictation | `components/ui/Composer.tsx` (controlled; click-only submit) used by agent + practice composers | `p3_ui_reuse_audit.md`; agent-coach/practice tests unchanged | DELIVERED |
+| Shared dictation capability | One tested mic, not per-surface | `DictationControl` over `lib/speech/{types,browserAdapter,useDictation,useDictationLanguage}` (vendor-decoupled, fake-testable) | `tests/dictation-control.test.tsx` (9) | DELIVERED |
+| Dictation on 2 real surfaces | Prepare + Practice input | Prepare goal box + follow-up composer; Practice answer composer | `e2e/dictation.spec.ts`; no-autosubmit unit tests | DELIVERED |
+| No auto-submit (critical) | User must review/edit before sending | no submit call in commit path; explicit click only | `tests/dictation-no-autosubmit.test.tsx` (both surfaces) | DELIVERED |
+| Typed-text preservation | Never destroy user input | `appendTranscript` (append, one space); interim = preview only | unit tests | DELIVERED |
+| Graceful degradation | Typing always works | unsupported → control renders nothing; permission/failure → safe copy, no data loss | unit tests | DELIVERED |
+| Accessibility | Keyboard + screen-reader usable | native button, aria-pressed/label, aria-live status, motion-safe | unit tests; audit | DELIVERED |
+| Multilingual (bounded) | EN/DE/FR/ES/IT/PT/NL recognition | fixed BCP-47 allow-list, browser-locale init, honest support status | `eval_dictation_experience.py`; Help | DELIVERED (browser-engine-dependent) |
+| Privacy | No audio/biometric/emotion | no recorder/getUserMedia/Blob; only lang code stored; honest vendor disclosure | eval; Help "Using dictation" | DELIVERED |
+| i18n readiness | Don't make later localization harder | `lib/i18n/locales.ts` (typed app locales, not applied); localization debt documented | `p3_ui_reuse_audit.md` §localization | READINESS ONLY |
+
+Response experience (P2) preserved: dictation is input-only; no change to model verbosity, presentation split, sources, citations, grounding, next-step logic or Brief/Detailed. Paid/live/speech-provider calls this phase: 0.

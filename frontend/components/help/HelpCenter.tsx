@@ -79,6 +79,20 @@ const SECTIONS: Section[] = [
     ],
   },
   {
+    id: "dictation",
+    title: "Using dictation",
+    articles: [
+      { q: "Where dictation is available", a: "Where your browser supports speech recognition, a microphone button appears next to text inputs on Prepare (talking to Mo) and in Interview Practice (your answer). If it isn't shown, your browser doesn't support it — you can always type." },
+      { q: "How to start and stop", a: "Click the microphone to start; the button shows a listening state. Click it again (or use the keyboard) to stop. Speech is transcribed into the normal text box." },
+      { q: "Editing and sending", a: "Recognised speech is added to the editable field so you can read and edit it first. Dictation never sends anything on its own — you always press Send or Submit yourself." },
+      { q: "Choosing a dictation language", a: "A small selector offers Ask4Mo's supported dictation languages: English, German, French, Spanish, Italian, Portuguese and Dutch. This sets the speech-recognition language only — it does not translate your words and does not change the app's language." },
+      { q: "Which languages actually work", a: "The languages above are configured and offered, but which ones your device can actually transcribe is browser- and engine-dependent. If a language isn't recognised well in your browser, type instead or try another supported browser." },
+      { q: "Browser compatibility", a: "Dictation uses your browser's built-in speech recognition (best supported in Chrome-based browsers). Where it isn't available, the microphone simply isn't shown and typing works as normal." },
+      { q: "Microphone permission", a: "Your browser asks for microphone permission the first time. If you decline, dictation won't run and Ask4Mo shows a short note — you can still type. You can re-enable the microphone in your browser's site settings." },
+      { q: "Privacy", a: "Ask4Mo does not analyse your emotions, voice characteristics, or identity. It does not record or store audio. Only the text you explicitly submit is sent — exactly like typing. Note that browser speech recognition may send audio to your browser/vendor's speech service to produce the transcript; that processing is your browser's, not Ask4Mo's." },
+    ],
+  },
+  {
     id: "memory",
     title: "Memory & approvals",
     articles: [
