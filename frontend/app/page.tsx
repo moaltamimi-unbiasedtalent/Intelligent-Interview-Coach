@@ -1,5 +1,6 @@
 import { HomeEntry } from "@/components/coach/HomeEntry";
 import { ReturnJourney } from "@/components/home/ReturnJourney";
+import { HomeHero } from "@/components/home/HomeHero";
 
 export default function HomePage() {
   return (
@@ -8,18 +9,7 @@ export default function HomePage() {
         {/* Returning users see a focused continuation card (real data only); first-use
             renders nothing here, preserving the onboarding experience. */}
         <ReturnJourney />
-        <div>
-          <p className="text-2xl font-bold tracking-tight text-accent">Ask4Mo</p>
-          <p className="text-sm font-semibold text-muted">Intelligent Interview Coach</p>
-        </div>
-        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl lg:text-6xl">
-          Prepare for the interview that matters.
-        </h1>
-        <p className="text-lg font-semibold text-foreground">Ask More. Be More.</p>
-        <p className="max-w-reading text-lg text-muted">
-          Tell Mo what you&rsquo;re preparing for. Get a focused plan, evidence when
-          needed, and a clear path into practice.
-        </p>
+        <HomeHero />
         <HomeEntry />
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {[

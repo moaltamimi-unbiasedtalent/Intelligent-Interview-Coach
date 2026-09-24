@@ -164,3 +164,22 @@ Architecture flow: **Speech → recognition adapter → editable transcript → 
 | i18n readiness | Don't make later localization harder | `lib/i18n/locales.ts` (typed app locales, not applied); localization debt documented | `p3_ui_reuse_audit.md` §localization | READINESS ONLY |
 
 Response experience (P2) preserved: dictation is input-only; no change to model verbosity, presentation split, sources, citations, grounding, next-step logic or Brief/Detailed. Paid/live/speech-provider calls this phase: 0.
+
+## P3.5 Internationalization & Localization presentation evidence (delivered this phase)
+Seven-language candidate product (en, de, fr, es, it, pt, nl). See `p3_5_i18n_l10n.md`.
+
+Flow: **explicit user choice → server-persisted/cookie locale → typed catalogue (English fallback) → localized UI + locale-aware formatting.** Three INDEPENDENT controls: interface / Mo-conversation / dictation. Language NEVER changes labour-market geography.
+
+| # | Requirement | Why | How implemented | Evidence | Status |
+|---|---|---|---|---|---|
+| i18n-arch | Internationalization architecture | Localize without a second system or route rewrite | typed catalogues + registry + `I18nProvider` + cookie/account resolution + English fallback | `tests/i18n.test.tsx`, `eval_i18n_l10n.py` | DELIVERED |
+| i18n-langs | 7 locale catalogues | European candidate reach | `lib/i18n/messages/{en,de,fr,es,it,pt,nl}.ts` (Catalog-typed, key-parity enforced) | catalogue parity test (all 7) | DELIVERED (engineering draft) |
+| i18n-interface | Interface-language preference | UI in the candidate's language | `interface_locale` (migration 0009), Settings control, `<html lang>` | `test_locale_preferences.py`, `e2e/i18n.spec.ts` | DELIVERED |
+| C3 | Mo conversation language | Prep for an interview in another language | bounded `conversation_language` → allow-listed agent directive; live quality UNVALIDATED | `test_conversation_language.py` | DELIVERED (plumbing); live UNVALIDATED |
+| B5-dict | Dictation language (separate) | Speech input locale ≠ UI language | preserved from P3; distinct control | `eval_i18n_l10n` (separation) | DELIVERED |
+| i18n-geo | Language ≠ geography | Career-intelligence safety | geography = `detect_country(query)`; no language coupling | `test_conversation_language.py`, eval | PASS |
+| i18n-surfaces | Candidate surfaces localized | Usable 7-language product | shell/nav/account/auth/settings/home/return/dictation localized; deep pages + Help bodies + tutorial incremental | e2e locale matrix | PARTIAL (core done; incremental) |
+| i18n-a11y | Accessibility preserved | Longer strings, screen readers | `<html lang>` dynamic; accessible controls; DE/FR checked | e2e | DELIVERED |
+| i18n-review | Translation review status | No fabricated review claims | all locales labelled ENGINEERING DRAFT; review matrix | `p3_5_i18n_l10n.md` matrix | HONEST |
+
+Also updated: C3 (multilingual speech EN+DE) is now bounded to the 7-language dictation set from P3; whole-application UI translation is explicitly NOT implied by multilingual speech. Paid/live calls this phase: 0.

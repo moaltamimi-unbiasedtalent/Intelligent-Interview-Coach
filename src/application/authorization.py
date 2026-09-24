@@ -95,6 +95,10 @@ class Principal:
     # Presentation-depth preference (P2/E2) — brief/detailed. Low-sensitivity; never
     # affects authorization.
     response_detail: str = "brief"
+    # Internationalization (P3.5) — independent language preferences. Never affect
+    # authorization, and never change labour-market geography.
+    interface_locale: str = "en"
+    conversation_language: str = "en"
 
 
 def capabilities_for(tier: str) -> frozenset[str]:

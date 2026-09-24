@@ -22,6 +22,11 @@ class AgentRunRequest:
     # the existing safe default (available); False withholds ResearchCurrentMarket from
     # the run server-side (the model can neither see nor call it). Other tools unaffected.
     enable_current_market_research: bool | None = None
+    # Optional Mo conversation language (Capstone P3.5): a bounded locale code
+    # (en/de/fr/es/it/pt/nl) chosen explicitly by the candidate. Validated server-side
+    # against an allow-list; it only sets the language of Mo's prose and never changes
+    # geography, tools or grounding. None/invalid → English (default).
+    conversation_language: str | None = None
 
 
 @dataclass

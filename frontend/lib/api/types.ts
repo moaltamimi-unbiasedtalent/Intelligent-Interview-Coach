@@ -492,6 +492,8 @@ export interface AgentRunRequest {
   profile?: AgentProfile | null;
   /** Capability toggle (#16): false withholds ResearchCurrentMarket for the run (server-enforced). */
   enable_current_market_research?: boolean | null;
+  /** Mo conversation language (P3.5): a bounded locale code; sets Mo's prose language only. */
+  conversation_language?: string | null;
 }
 
 /** Safe provider-usage aggregate. Unknown usage is never reported as zero. */
@@ -702,10 +704,17 @@ export interface AccountResponse {
   capabilities: string[];
   /** Presentation depth (P2/E2) — brief/detailed. Not a model profile. */
   response_detail: ResponseDetail;
+  /** Interface UI language (P3.5). Independent of conversation/dictation language. */
+  interface_locale: string;
+  /** Mo conversation language (P3.5). Independent of interface/dictation language. */
+  conversation_language: string;
 }
 
+/** Partial preference update (P2/E2 + P3.5) — send only the fields you change. */
 export interface PreferencesRequest {
-  response_detail: ResponseDetail;
+  response_detail?: ResponseDetail;
+  interface_locale?: string;
+  conversation_language?: string;
 }
 
 /** Deterministic presentation contract for progressive disclosure (P2/E2). */

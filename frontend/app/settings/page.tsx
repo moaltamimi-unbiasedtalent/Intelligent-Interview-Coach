@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 import { MemoryManager } from "@/components/memory/MemoryManager";
 import { ResponseDetailPreference } from "@/components/settings/ResponseDetailPreference";
+import { LanguageSettings } from "@/components/settings/LanguageSettings";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -13,11 +14,7 @@ export default function SettingsPage() {
       <div className="grid gap-4">
         <Card>
           <CardBody>
-            <h2 className="text-base font-semibold">Appearance</h2>
-            <p className="mt-1 text-sm text-muted">
-              The interface follows your system light/dark preference; the header toggle
-              overrides it and is remembered on this device.
-            </p>
+            <LanguageSettings />
           </CardBody>
         </Card>
 

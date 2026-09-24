@@ -1,0 +1,196 @@
+/**
+ * English source catalogue (Capstone P3.5). English is the canonical reference; every
+ * other locale is typed as `typeof messages` and falls back to these values for any
+ * missing key. Keys are grouped by namespace. `{var}` placeholders are interpolated by
+ * the translator. Status: ENGINEERING DRAFT (English is the authored source).
+ */
+export const messages = {
+  common: {
+    appName: "Ask4Mo",
+    tagline: "Ask More. Be More.",
+    productName: "Intelligent Interview Coach",
+    signIn: "Sign in",
+    signOut: "Sign out",
+    cancel: "Cancel",
+    save: "Save",
+    loading: "Loading",
+    skipToContent: "Skip to content",
+  },
+  nav: {
+    prepare: "Prepare",
+    practice: "Practice",
+    progress: "Progress",
+    history: "History",
+    sources: "Sources",
+    review: "Review & Diagnostics",
+    more: "More",
+    help: "Help",
+    account: "Your account",
+  },
+  states: {
+    loading: "Loading",
+    checkingSession: "Checking your session",
+    genericError: "That request couldn’t be processed. Please try again.",
+    networkError: "We couldn’t connect right now. Please check your connection and try again.",
+    retry: "Try again",
+    empty: "Nothing here yet.",
+  },
+  auth: {
+    signInTitle: "Sign in",
+    signInSubtitle: "Welcome back to Ask4Mo.",
+    registerTitle: "Create your account",
+    registerSubtitle: "Prepare with evidence, practise with purpose. Ask More. Be More.",
+    email: "Email",
+    password: "Password",
+    name: "Name (optional)",
+    newPassword: "New password",
+    passwordHint: "At least {min} characters.",
+    signingIn: "Signing in…",
+    createAccount: "Create account",
+    creatingAccount: "Creating account…",
+    forgotPassword: "Forgot password?",
+    newHere: "New here?",
+    haveAccount: "Already have an account?",
+    backToSignIn: "Back to sign in",
+    goToSignIn: "Go to sign in",
+    checkEmail: "Check your email",
+    incorrectCredentials: "Incorrect email or password.",
+    resetTitle: "Reset your password",
+    resetSubtitle: "Enter your email and we’ll send a reset link.",
+    sendResetLink: "Send reset link",
+    sending: "Sending…",
+    chooseNewPassword: "Choose a new password",
+    updatePassword: "Update password",
+    updating: "Updating…",
+    passwordUpdated: "Password updated",
+    verifyTitle: "Email verification",
+    verifying: "Verifying your email",
+    weakPassword: "Password must be at least {min} characters.",
+    signInFailed: "Sign-in failed. Please try again.",
+  },
+  account: {
+    title: "Your account",
+    emailStatus: "Email status",
+    verified: "Verified",
+    unverified: "Unverified",
+    resendLink: "Resend link",
+    plan: "Plan",
+    basic: "Basic",
+    premium: "Premium",
+    role: "Role",
+    signInMethod: "Sign-in method",
+    privacyData: "Privacy & data",
+    exportData: "Export my data",
+    deleteAccount: "Delete my account",
+    confirmDelete: "Are you sure?",
+    yesDelete: "Yes, delete",
+    memoryAndPreferences: "Preparation memory & preferences",
+  },
+  home: {
+    headline: "Prepare for the interview that matters.",
+    subcopy: "Tell Mo what you’re preparing for. Get a focused plan, evidence when needed, and a clear path into practice.",
+    goalLabel: "What interview are you preparing for?",
+    askMo: "Ask Mo",
+    welcomeBack: "Welcome back",
+    continuePractice: "Continue practice",
+    continueYourPractice: "Continue your {role} practice",
+    questionsProgress: "{done} of {total} questions",
+    prepareAnother: "Prepare for another role",
+    savedMemory: "Saved memory ({count})",
+    historyCount: "History ({count})",
+    pickUp: "Pick up where you left off, or prepare for a new role.",
+  },
+  settings: {
+    title: "Settings",
+    appearance: "Appearance",
+    appearanceHelp:
+      "The interface follows your system light/dark preference; the header toggle overrides it and is remembered on this device.",
+    responseDetail: "Response detail",
+    responseDetailHelp:
+      "How much of Mo’s answer to show first. Supporting detail and sources stay available behind “Show more” either way — nothing is removed.",
+    brief: "Brief",
+    briefHelp: "Short answers with the key action first.",
+    detailed: "Detailed",
+    detailedHelp: "More explanation and supporting context.",
+    language: "Language",
+    interfaceLanguage: "Interface language",
+    interfaceLanguageHelp: "The language used across Ask4Mo’s screens, buttons and help.",
+    conversationLanguage: "Mo conversation language",
+    conversationLanguageHelp:
+      "The language you’d like Mo to use for coaching and preparation. Independent of the interface and dictation languages.",
+    dictationLanguage: "Dictation language",
+    dictationLanguageHelp:
+      "The language used for speech-to-text input. Independent of the interface and conversation languages; it does not translate your words.",
+    languageIndependenceNote:
+      "These three language settings are independent — for example, a German interface with English dictation and English coaching.",
+    yourData: "Your data",
+  },
+  dictation: {
+    start: "Start dictation",
+    stop: "Stop dictation",
+    listening: "Listening… speak, then review before sending.",
+    heard: "Heard: {text}",
+    languageLabel: "Dictation language",
+    unsupported: "Dictation isn’t available in this browser. You can type instead.",
+    permissionDenied: "Microphone access was blocked. You can still type.",
+    noMicrophone: "No microphone was found. You can still type.",
+    noSpeech: "I didn’t catch that — try again, or type.",
+    network: "Dictation is temporarily unavailable. You can still type.",
+    error: "Dictation stopped unexpectedly. You can still type.",
+  },
+  help: {
+    title: "Help Center",
+    searchPlaceholder: "Search help…",
+    gettingStarted: "Getting started",
+    prepare: "Prepare",
+    practice: "Practice",
+    progress: "Progress",
+    history: "History",
+    sources: "Sources",
+    dictation: "Using dictation",
+    memory: "Memory & approvals",
+    privacy: "Privacy & safety",
+    troubleshooting: "Troubleshooting",
+    languages: "Languages",
+    languagesHelp:
+      "Ask4Mo’s interface is available in English, German, French, Spanish, Italian, Portuguese and Dutch. Your interface language, Mo’s conversation language and the dictation language are set separately in Settings. Changing a language never changes the labour-market region your evidence comes from.",
+  },
+  practice: {
+    title: "Practise an interview",
+    yourAnswer: "Your answer",
+    submitAnswer: "Submit answer",
+    reviewing: "Reviewing your answer…",
+  },
+  prepare: {
+    messageMo: "Message Mo",
+    send: "Send",
+    sending: "Sending…",
+    startPreparing: "Start preparing",
+    starting: "Starting…",
+  },
+  progress: {
+    title: "Progress",
+    empty: "Progress fills in after your first completed practice session.",
+  },
+  history: {
+    title: "History",
+    empty: "Your completed interviews will appear here.",
+  },
+  sources: {
+    title: "Sources",
+  },
+} as const;
+
+export type Messages = typeof messages;
+
+/**
+ * The structural catalogue type: the same two-level shape as the English source, but
+ * with `string` leaves (so a translation may differ from the English literal). Every
+ * locale catalogue is typed as `Catalog`, which guarantees the exact same keys exist.
+ */
+export type Catalog = { [N in keyof Messages]: { [K in keyof Messages[N]]: string } };
+
+export type Namespace = keyof Messages;
+
+const en: Catalog = messages;
+export default en;

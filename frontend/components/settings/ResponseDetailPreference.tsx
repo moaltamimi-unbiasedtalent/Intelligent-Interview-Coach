@@ -13,15 +13,17 @@
 import { useState } from "react";
 import type { ResponseDetail } from "@/lib/api/types";
 import { useAuth } from "@/components/auth/AuthProvider";
-
-const OPTIONS: { value: ResponseDetail; label: string; help: string }[] = [
-  { value: "brief", label: "Brief", help: "Short answers with the key action first." },
-  { value: "detailed", label: "Detailed", help: "More explanation and supporting context." },
-];
+import { useT } from "@/components/i18n/I18nProvider";
 
 export function ResponseDetailPreference() {
   const { responseDetail, setResponseDetail, status } = useAuth();
+  const t = useT();
   const [saving, setSaving] = useState<ResponseDetail | null>(null);
+
+  const OPTIONS: { value: ResponseDetail; label: string; help: string }[] = [
+    { value: "brief", label: t("settings.brief"), help: t("settings.briefHelp") },
+    { value: "detailed", label: t("settings.detailed"), help: t("settings.detailedHelp") },
+  ];
 
   const choose = async (value: ResponseDetail) => {
     if (value === responseDetail) return;
@@ -35,12 +37,9 @@ export function ResponseDetailPreference() {
 
   return (
     <div>
-      <h2 className="text-base font-semibold">Response detail</h2>
-      <p className="mt-1 text-sm text-muted">
-        How much of Mo&rsquo;s answer to show first. Supporting detail and sources stay
-        available behind &ldquo;Show more&rdquo; either way — nothing is removed.
-      </p>
-      <fieldset className="mt-3 space-y-2" aria-label="Response detail">
+      <h2 className="text-base font-semibold">{t("settings.responseDetail")}</h2>
+      <p className="mt-1 text-sm text-muted">{t("settings.responseDetailHelp")}</p>
+      <fieldset className="mt-3 space-y-2" aria-label={t("settings.responseDetail")}>
         {OPTIONS.map((opt) => {
           const checked = responseDetail === opt.value;
           return (

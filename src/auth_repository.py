@@ -24,9 +24,11 @@ from sqlalchemy.orm import sessionmaker
 
 from src.persistence import (
     ACCOUNT_STATUS_ACTIVE,
+    DEFAULT_LOCALE,
     PLATFORM_ROLE_USER,
     RESPONSE_DETAIL_BRIEF,
     RESPONSE_DETAIL_VALUES,
+    SUPPORTED_LOCALES,
     TIER_BASIC,
     AccountIdentity,
     AuditEvent,
@@ -63,6 +65,8 @@ class AccountRecord:
     has_password: bool
     providers: tuple[str, ...]
     response_detail: str = RESPONSE_DETAIL_BRIEF
+    interface_locale: str = DEFAULT_LOCALE
+    conversation_language: str = DEFAULT_LOCALE
 
 
 @dataclass(frozen=True)
@@ -117,6 +121,8 @@ class AccountRepository:
             has_password=cred is not None,
             providers=tuple(sorted({i.provider for i in idents})),
             response_detail=pref.response_detail if pref else RESPONSE_DETAIL_BRIEF,
+            interface_locale=pref.interface_locale if pref else DEFAULT_LOCALE,
+            conversation_language=pref.conversation_language if pref else DEFAULT_LOCALE,
         )
 
     def get_account(self, user_id: int) -> AccountRecord | None:
@@ -330,6 +336,22 @@ class AccountRepository:
         """Set the user's response-detail preference (validated brief/detailed)."""
         if value not in RESPONSE_DETAIL_VALUES:
             return False
+        return self._upsert_preference(user_id, response_detail=value)
+
+    def set_interface_locale(self, user_id: int, value: str) -> bool:
+        """Set the UI language (validated against the supported allow-list)."""
+        if value not in SUPPORTED_LOCALES:
+            return False
+        return self._upsert_preference(user_id, interface_locale=value)
+
+    def set_conversation_language(self, user_id: int, value: str) -> bool:
+        """Set Mo's conversation language (validated against the supported allow-list)."""
+        if value not in SUPPORTED_LOCALES:
+            return False
+        return self._upsert_preference(user_id, conversation_language=value)
+
+    def _upsert_preference(self, user_id: int, **fields: str) -> bool:
+        """Create/update the user's preference row for the given validated fields."""
         with self._session_factory() as session:
             # Only upsert for a real user (never create a preference row for a
             # non-existent principal — keeps the table clean and FK-valid).
@@ -339,9 +361,10 @@ class AccountRepository:
                 select(UserPreference).where(UserPreference.user_id == user_id)
             )
             if pref is None:
-                session.add(UserPreference(user_id=user_id, response_detail=value))
+                session.add(UserPreference(user_id=user_id, **fields))
             else:
-                pref.response_detail = value
+                for key, value in fields.items():
+                    setattr(pref, key, value)
             session.commit()
             return True
 

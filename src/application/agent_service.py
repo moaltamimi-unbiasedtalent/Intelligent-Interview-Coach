@@ -71,6 +71,21 @@ def _resolve_profile(value: Any) -> "Any":
     raise ValidationError("Unknown model profile.")
 
 
+def _resolve_language(value: Any) -> str | None:
+    """Validate a candidate-supplied conversation language against the allow-list.
+
+    Returns a supported locale code, or None (English/default) for anything unknown or
+    blank. Never honours arbitrary text — the value can only ever set the language of
+    Mo's prose, and only from this bounded set.
+    """
+    from src.agent.policies import RESPONSE_LANGUAGE_NAMES
+
+    if value is None:
+        return None
+    code = str(value).strip().lower()
+    return code if code in RESPONSE_LANGUAGE_NAMES else None
+
+
 def _default_model_factory(profile: "Any" = None) -> Any:
     from src.copilot.config import load_config
     from src.copilot.llm.openrouter import build_chat_model
@@ -244,6 +259,9 @@ class AgentApplicationService:
             "step_count": 0,
             "turn_step_count": 0,
             "model_profile": profile.value,
+            "response_language": _resolve_language(
+                getattr(request, "conversation_language", None)
+            ),
         }
         self._emit_started(run_id, profile.value)
         started = time.perf_counter()

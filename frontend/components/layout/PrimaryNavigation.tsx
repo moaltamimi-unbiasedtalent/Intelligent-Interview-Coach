@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useT } from "@/components/i18n/I18nProvider";
 import { PRIMARY_NAV } from "./nav-items";
 
 /** Desktop header navigation (hidden on small screens; mobile uses the bottom bar). */
 export function PrimaryNavigation() {
   const pathname = usePathname();
+  const t = useT();
   return (
     <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
       {PRIMARY_NAV.map((item) => {
@@ -24,7 +26,7 @@ export function PrimaryNavigation() {
                 : "text-muted hover:text-foreground",
             )}
           >
-            {item.label}
+            {t(item.labelKey)}
           </Link>
         );
       })}

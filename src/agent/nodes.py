@@ -21,7 +21,7 @@ from src.agent.errors import (
 )
 from src.agent.events import AgentEvent, AgentEventType
 from src.agent.human import DECISION_APPROVE, DECISION_SELECT, HumanActionType
-from src.agent.policies import MAX_AGENT_STEPS, SYSTEM_PROMPT
+from src.agent.policies import MAX_AGENT_STEPS, SYSTEM_PROMPT, response_language_directive
 from src.agent.registry import ToolRegistry
 from src.agent.tooling import ToolContext
 from src.agent.state import (
@@ -66,14 +66,24 @@ def _format_memory_block(memory_items: list[dict]) -> str:
 def make_initialise_node() -> Callable[[AgentState], dict]:
     def initialise(state: AgentState) -> dict:
         events = _append(state, "events", AgentEvent(AgentEventType.RUN_STARTED, step=0, status="running").to_dict())
-        messages = [SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=state["goal"])]
+        messages: list = [SystemMessage(content=SYSTEM_PROMPT)]
+        # Mo conversation language (P3.5): a bounded, allow-listed directive appended
+        # after the base prompt. Built only from the allow-list (never the raw code), so
+        # it cannot carry injection; absent/English → no directive. It changes only the
+        # language of Mo's prose, never geography/tools/grounding.
+        directive = response_language_directive(state.get("response_language"))
+        if directive:
+            messages.append(SystemMessage(content=directive))
+        messages.append(HumanMessage(content=state["goal"]))
 
         # Long-term memory is user-approved DATA, injected as a trust-separated
         # message BEFORE the goal — never merged into the system instructions. The
         # event records counts/categories only (never the saved text).
         memory_items = list(state.get("memory_items", []) or [])
         if memory_items:
-            messages.insert(1, HumanMessage(content=_format_memory_block(memory_items)))
+            # Insert the trust-separated memory DATA immediately before the goal (the
+            # last message), after any system prompt/directive.
+            messages.insert(len(messages) - 1, HumanMessage(content=_format_memory_block(memory_items)))
             categories = sorted({m.get("category") for m in memory_items if m.get("category")})
             events.append(AgentEvent(
                 AgentEventType.MEMORY_LOADED, step=0, status="ok",

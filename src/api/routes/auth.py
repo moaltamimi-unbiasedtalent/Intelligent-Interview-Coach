@@ -189,6 +189,8 @@ def _account_response(principal) -> AccountResponse:
         auth_method=principal.auth_method,
         capabilities=sorted(capabilities_for(principal.tier)),
         response_detail=principal.response_detail,
+        interface_locale=principal.interface_locale,
+        conversation_language=principal.conversation_language,
     )
 
 
@@ -199,7 +201,7 @@ def me(principal=Depends(get_current_principal)) -> AccountResponse:
 
 
 @router.patch("/preferences", response_model=AccountResponse,
-              summary="Update low-sensitivity preferences (response detail)")
+              summary="Update low-sensitivity preferences (response detail, languages)")
 def update_preferences(
     body: PreferencesRequest,
     account_repo=Depends(get_account_repository),
@@ -207,17 +209,29 @@ def update_preferences(
     principal=Depends(get_current_principal),
     request_id: str = Depends(get_request_id),
 ) -> AccountResponse:
-    # Response detail is a presentation preference available to EVERY tier — never
+    # These are presentation/language preferences available to EVERY tier — never
     # entitlement-gated, never candidate content. Stored server-side, user-scoped.
-    account_repo.set_response_detail(principal.user_id, body.response_detail)
-    audit.record(
-        event_type="account.preferences_change",
-        result="success",
-        actor_user_id=principal.user_id,
-        request_id=request_id,
-        context={"response_detail": body.response_detail},
-    )
-    # Reflect the new value without a second round-trip.
+    # Interface locale, conversation language and (P3) dictation locale are independent:
+    # a language choice never changes labour-market geography.
+    changed: dict[str, str] = {}
+    if body.response_detail is not None:
+        account_repo.set_response_detail(principal.user_id, body.response_detail)
+        changed["response_detail"] = body.response_detail
+    if body.interface_locale is not None:
+        account_repo.set_interface_locale(principal.user_id, body.interface_locale)
+        changed["interface_locale"] = body.interface_locale
+    if body.conversation_language is not None:
+        account_repo.set_conversation_language(principal.user_id, body.conversation_language)
+        changed["conversation_language"] = body.conversation_language
+    if changed:
+        audit.record(
+            event_type="account.preferences_change",
+            result="success",
+            actor_user_id=principal.user_id,
+            request_id=request_id,
+            context=changed,
+        )
+    # Reflect the new values without a second round-trip.
     updated = principal.__class__(
         user_id=principal.user_id,
         platform_role=principal.platform_role,
@@ -226,7 +240,9 @@ def update_preferences(
         email=principal.email,
         email_verified=principal.email_verified,
         auth_method=principal.auth_method,
-        response_detail=body.response_detail,
+        response_detail=changed.get("response_detail", principal.response_detail),
+        interface_locale=changed.get("interface_locale", principal.interface_locale),
+        conversation_language=changed.get("conversation_language", principal.conversation_language),
     )
     return _account_response(updated)
 

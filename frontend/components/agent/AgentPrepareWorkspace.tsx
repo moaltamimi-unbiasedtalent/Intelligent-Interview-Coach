@@ -22,6 +22,7 @@ import { AgentRunLink } from "./AgentRunLink";
 import { AgentProfileSelector, DEFAULT_PROFILE, usageSummaryLine } from "./usage";
 import { JourneyChrome, PreparationChecklist } from "./JourneyChrome";
 import { FeedbackControl } from "@/components/feedback/FeedbackControl";
+import { useAuthOptional } from "@/components/auth/AuthProvider";
 import type { AgentProfile } from "@/lib/api/types";
 import type { PrepareDraft } from "@/lib/prepareDraft";
 
@@ -55,6 +56,13 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
   const { run, busy, restoring, error, runId, start, send, resume, reset, clearError } = useAgentRun();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [mobileTab, setMobileTab] = useState<"coach" | "prep">("coach");
+  // Mo conversation language (P3.5): sent with every run from the account preference
+  // (independent of interface/dictation language). Undefined → server default (English).
+  const conversationLanguage = useAuthOptional()?.account?.conversation_language ?? undefined;
+  const startRun = useCallback(
+    (req: Parameters<typeof start>[0]) => start({ ...req, conversation_language: conversationLanguage }),
+    [start, conversationLanguage],
+  );
 
   // Home → Prepare handoff. Auto-start EXACTLY ONCE from a "start" draft, and only
   // when no run is being restored/active — an existing ?run= always wins (§9/§21/§26).
@@ -69,8 +77,8 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
     if (!goalDraft) return;
     if (runId || run || restoring) return; // restored/active run takes precedence
     autoStarted.current = true;
-    void start({ goal: goalDraft, profile: savedProfile(), enable_current_market_research: researchFlag() });
-  }, [goalDraft, runId, run, restoring, start]);
+    void startRun({ goal: goalDraft, profile: savedProfile(), enable_current_market_research: researchFlag() });
+  }, [goalDraft, runId, run, restoring, startRun]);
 
   if (restoring && !run) {
     return (
@@ -103,7 +111,7 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
           description="Tell Mo what you're preparing for and get a focused preparation plan."
         />
         <FirstMessageForm
-          onStart={start}
+          onStart={startRun}
           busy={busy}
           error={error}
           onDismissError={clearError}

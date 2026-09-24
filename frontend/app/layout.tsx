@@ -1,8 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { cookies } from "next/headers";
 import { AppShell } from "@/components/layout/AppShell";
 import { ThemeScript } from "@/components/layout/ThemeScript";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { I18nProvider } from "@/components/i18n/I18nProvider";
+import { LOCALE_COOKIE } from "@/lib/i18n/cookie";
+import { DEFAULT_APP_LOCALE, toSupportedLocale } from "@/lib/i18n/locales";
 import "./globals.css";
 
 const inter = Inter({
@@ -29,15 +33,22 @@ export const viewport: Viewport = {
   themeColor: "#1a5e63",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Initial interface locale from the anonymous cookie (the account preference, once
+  // loaded, becomes authoritative client-side). Never trusts an unsupported value.
+  const cookieStore = await cookies();
+  const initialLocale =
+    toSupportedLocale(cookieStore.get(LOCALE_COOKIE)?.value) ?? DEFAULT_APP_LOCALE;
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang={initialLocale} className={inter.variable} suppressHydrationWarning>
       <head>
         <ThemeScript />
       </head>
       <body>
         <AuthProvider>
-          <AppShell>{children}</AppShell>
+          <I18nProvider initialLocale={initialLocale}>
+            <AppShell>{children}</AppShell>
+          </I18nProvider>
         </AuthProvider>
       </body>
     </html>

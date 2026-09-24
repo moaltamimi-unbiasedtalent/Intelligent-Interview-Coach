@@ -68,12 +68,23 @@ class AccountResponse(BaseModel):
     capabilities: list[str]
     # Presentation depth preference (P2/E2) — brief/detailed. Low-sensitivity metadata.
     response_detail: str = "brief"
+    # Internationalization (P3.5) — independent, bounded language preferences.
+    interface_locale: str = "en"
+    conversation_language: str = "en"
 
 
 class PreferencesRequest(BaseModel):
-    """Update low-sensitivity user preferences (P2/E2)."""
+    """Partial update of low-sensitivity user preferences (P2/E2 + P3.5).
 
-    response_detail: Literal["brief", "detailed"]
+    Every field is optional; only supplied fields are changed. Each is a bounded enum,
+    so a spoofed/arbitrary value is rejected (422) and can never be persisted.
+    """
+
+    model_config = {"extra": "forbid"}
+
+    response_detail: Literal["brief", "detailed"] | None = None
+    interface_locale: Literal["en", "de", "fr", "es", "it", "pt", "nl"] | None = None
+    conversation_language: Literal["en", "de", "fr", "es", "it", "pt", "nl"] | None = None
 
 
 class PremiumStatusResponse(BaseModel):
