@@ -1,0 +1,34 @@
+{
+  "description": "Bounded multilingual retrieval fixtures (Capstone P6). The SAME semantic career question in each of the 7 supported product languages (EN/DE/FR/ES/IT/PT/NL). Used to check that language selection preserves the intended domain and geography and does not change grounding. This is a BOUNDED handling check, not a parity claim; live multilingual retrieval quality remains UNVALIDATED.",
+  "languages": ["en", "de", "fr", "es", "it", "pt", "nl"],
+  "cases": [
+    {
+      "concept_id": "de_software_pay",
+      "expected_domain": "compensation",
+      "expected_geography": "DE",
+      "translations": {
+        "en": "What does a software developer earn in Germany?",
+        "de": "Was verdient ein Softwareentwickler in Deutschland?",
+        "fr": "Combien gagne un développeur de logiciels en Allemagne ?",
+        "es": "¿Cuánto gana un desarrollador de software en Alemania?",
+        "it": "Quanto guadagna uno sviluppatore di software in Germania?",
+        "pt": "Quanto ganha um desenvolvedor de software na Alemanha?",
+        "nl": "Wat verdient een softwareontwikkelaar in Duitsland?"
+      }
+    },
+    {
+      "concept_id": "nurse_credentials_de",
+      "expected_domain": "credentials",
+      "expected_geography": "DE",
+      "translations": {
+        "en": "What qualifications does a registered nurse need in Germany?",
+        "de": "Welche Qualifikationen braucht eine Krankenpflegerin in Deutschland?",
+        "fr": "Quelles qualifications faut-il pour être infirmière en Allemagne ?",
+        "es": "¿Qué cualificaciones necesita una enfermera en Alemania?",
+        "it": "Quali qualifiche servono per un infermiere in Germania?",
+        "pt": "Que qualificações precisa um enfermeiro na Alemanha?",
+        "nl": "Welke kwalificaties heeft een verpleegkundige nodig in Duitsland?"
+      }
+    }
+  ]
+}

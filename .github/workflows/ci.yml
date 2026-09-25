@@ -60,6 +60,14 @@ jobs:
         run: python scripts/eval_documents_evidence.py
       - name: Multi-agent & model-policy evaluation (Capstone P5/E4; offline; isolation + no-fabrication + injection-inert)
         run: python scripts/eval_multi_agent.py
+      - name: Knowledge governance evaluation (Capstone P6/K1-K4; offline; manifest/readiness/abstention/multilingual)
+        run: python scripts/eval_knowledge_governance.py
+      - name: Prompt Lab evaluation (Capstone P6/E6; offline; isolation + no-auto-promotion + versioning)
+        run: python scripts/eval_prompt_lab.py
+      - name: Feedback learning evaluation (Capstone P6/E7; offline; taxonomy + lifecycle + no-auto-change)
+        run: python scripts/eval_feedback_learning.py
+      - name: Retention evaluation (Capstone P6/E7; fixture-only; dry-run/owner-scope/idempotent)
+        run: python scripts/eval_retention.py
       - name: Alembic migration validation (fresh upgrade + downgrade, single head)
         env:
           DATABASE_URL: sqlite:////tmp/ci_migrations.db

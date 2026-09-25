@@ -63,6 +63,10 @@ data/knowledge/canonical_id_registry.json
 !data/chroma/.gitkeep
 !data/knowledge/.gitkeep
 !data/normalized/.gitkeep
+# Capstone P6: the governed, curated, COMMITTED K1–K4 datasets are a deliverable —
+# re-include them even though data/knowledge/* is otherwise generated/ignored.
+!data/knowledge/governed/
+!data/knowledge/governed/**
 
 # Local editor/launch config
 .claude/
@@ -84,3 +88,7 @@ evaluations/knowledge/retrieval_after.json
 # fixtures/artifacts). The synthetic fixtures + cases + reviewed example report stay tracked.
 evaluations/feedback_intelligence/runs/
 data/feedback_intelligence/
+
+# Capstone P6: generated Prompt Lab experiment store (reviewer tooling; not committed)
+var/prompt_lab/
+var/
