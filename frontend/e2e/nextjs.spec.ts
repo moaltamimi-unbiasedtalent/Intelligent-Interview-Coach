@@ -23,14 +23,33 @@ test("home primary CTA navigates to Prepare", async ({ page }) => {
 
 test("primary navigation reaches the four candidate routes", async ({ page }) => {
   await page.goto("/");
+  // Both the desktop header nav and the mobile bottom bar render PRIMARY_NAV with the same
+  // accessible name ("Primary"), so a global `.first()` link is ambiguous and the click can
+  // race a re-render. Scope to the VISIBLE desktop header Primary nav, assert the href, then
+  // click while explicitly waiting for the URL — no arbitrary waits, no `.first()`.
+  const headerNav = () =>
+    page.locator("header").getByRole("navigation", { name: "Primary" });
+
   for (const [label, path] of [
     ["Practice", "/practice"],
     ["Progress", "/progress"],
     ["History", "/history"],
     ["Prepare", "/prepare"],
   ] as const) {
-    await page.getByRole("link", { name: label }).first().click();
-    await expect(page).toHaveURL(new RegExp(`${path}$`));
+    await expect(headerNav()).toBeVisible();
+    const link = headerNav().getByRole("link", { name: label, exact: true });
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute("href", path);
+
+    await Promise.all([
+      page.waitForURL(new RegExp(`${path}$`)),
+      link.click(),
+    ]);
+
+    // The newly-rendered header link for this route marks itself active.
+    await expect(
+      headerNav().getByRole("link", { name: label, exact: true }),
+    ).toHaveAttribute("aria-current", "page");
   }
 });
 
