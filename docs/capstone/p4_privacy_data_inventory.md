@@ -53,3 +53,33 @@ control plane remains bounded (audit metadata only), designed separately.
 ## Not claimed
 No malware scanning (content validation only); no legal-compliance certification; live OCR
 quality unvalidated.
+
+## P6.5 — Teams / Workspaces & sharing data inventory
+
+| Data | Purpose | Where stored | Visibility | Retention | Revocation | Deletion |
+|---|---|---|---|---|---|---|
+| Workspace (name, owner, status) | collaboration space | `workspaces` (DB) | members (metadata); admin (metadata) | until deactivated/deleted | n/a | owner deactivate; account cascade for the owner |
+| Membership (role, status) | who belongs + workspace role | `workspace_memberships` (DB) | the workspace's members (metadata) | until removed/left | leave/remove marks inactive | cascade on workspace or account delete |
+| Invitation (email, hashed token, expiry) | secure join | `workspace_invitations` (DB) | inviting owner | single-use / 72h expiry | revoke/expire | cascade on workspace or inviter account delete |
+| Share grant (resource ref, VIEW, status) | explicit sharing | `share_grants` (DB) | owner + members of the target workspace | until revoked / source deleted | owner revoke (immediate); source delete invalidates | cascade on owner/workspace delete |
+| Feedback category | governed improvement signal | `user_feedback.category` (DB) | self (+ admin aggregate counts) | with the feedback row | n/a | with the feedback row / account cascade |
+
+**Joining a workspace never changes ownership of existing personal data.** Membership is not
+consent to inspect an account; the ONLY cross-member visibility is an explicit VIEW share
+grant, which the owner can revoke at any time (immediate). Shared content is NOT copied — it
+is read live from the owner's record and disappears on revoke or source deletion.
+
+### Account-deletion dependency map (updated for P6.5)
+
+| Resource | Cascade on account delete | Notes |
+|---|---|---|
+| `workspace_memberships` (as member) | ✅ FK `users.id` CASCADE | rows removed |
+| `workspace_invitations` (as inviter) | ✅ FK CASCADE; `accepted_user_id` SET NULL | rows removed; accepted-by ref nulled |
+| `share_grants` (as owner) | ✅ FK CASCADE | outbound shares removed → members lose access |
+| `workspaces` (as owner) | ✅ FK CASCADE today | **Documented semantics:** deleting an owner's account removes their owned workspaces (and, by cascade, their memberships/invitations/shares). A production hardening step may instead require ownership transfer before owner-account deletion; for P6.5 the cascade is the defined behaviour. |
+| `user_feedback.category` | ✅ (column on cascaded row) | removed with the feedback row |
+| Private files + LangGraph checkpoints | ⚠️ still PARTIAL (carried from P1/P4) | global hard-delete NOT claimed complete |
+
+**Workspace deletion/deactivation semantics:** deactivating a workspace revokes its share
+grants and hides it from members, but **never deletes member-owned candidate resources** —
+candidate ownership is preserved. **Platform Admin does not own or delete member resources.**

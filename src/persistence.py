@@ -60,6 +60,10 @@ __all__ = [
     "DocumentClaim",
     "CandidateStory",
     "StoryEvidence",
+    "Workspace",
+    "WorkspaceMembership",
+    "WorkspaceInvitation",
+    "ShareGrant",
     "make_engine",
     "make_session_factory",
     "init_db",
@@ -140,6 +144,35 @@ STORY_MODEL_SUGGESTED = "model_suggested"
 STORY_EVIDENCE_VERIFIED = "verified"
 STORY_EVIDENCE_REVOKED = "source_revoked"
 STORY_EVIDENCE_NONE = "none"
+
+# --- Teams / Workspaces & explicit sharing (Capstone P6.5) --------------------
+# Workspace role lives on the MEMBERSHIP, never on the User (orthogonal to platform
+# role and to product entitlement). Bounded to two roles by design.
+WORKSPACE_ROLE_OWNER = "workspace_owner"
+WORKSPACE_ROLE_MEMBER = "workspace_member"
+WORKSPACE_ROLES = (WORKSPACE_ROLE_OWNER, WORKSPACE_ROLE_MEMBER)
+# Workspace lifecycle.
+WORKSPACE_STATUS_ACTIVE = "active"
+WORKSPACE_STATUS_DEACTIVATED = "deactivated"
+# Membership lifecycle (a removed/left member row is kept for audit, marked inactive).
+MEMBERSHIP_STATUS_ACTIVE = "active"
+MEMBERSHIP_STATUS_REMOVED = "removed"
+MEMBERSHIP_STATUS_LEFT = "left"
+# Invitation lifecycle (single-use, opaque, expiring token stored hashed).
+INVITATION_STATUS_PENDING = "pending"
+INVITATION_STATUS_ACCEPTED = "accepted"
+INVITATION_STATUS_DECLINED = "declined"
+INVITATION_STATUS_EXPIRED = "expired"
+INVITATION_STATUS_REVOKED = "revoked"
+# Explicit sharing: the ALLOW-LISTED shareable resource types (never a raw document,
+# CV text, Memory, auth data or audit trail). Ownership never transfers on a share.
+SHARE_RESOURCE_REPORT = "interview_report"
+SHARE_RESOURCE_STORY = "story"
+SHARE_RESOURCE_PREP_SUMMARY = "preparation_summary"
+SHAREABLE_RESOURCE_TYPES = (SHARE_RESOURCE_REPORT, SHARE_RESOURCE_STORY, SHARE_RESOURCE_PREP_SUMMARY)
+SHARE_PERMISSION_VIEW = "view"          # VIEW-only in P6.5 (no edit permissions)
+SHARE_STATUS_ACTIVE = "active"
+SHARE_STATUS_REVOKED = "revoked"
 
 
 def utcnow() -> datetime:
@@ -617,12 +650,125 @@ class UserFeedback(Base):
     target_id: Mapped[str] = mapped_column(String(128))
     rating: Mapped[str] = mapped_column(String(16))
     comment: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    # Optional bounded issue category from the P6 feedback taxonomy (Capstone P6.5, §24).
+    # Nullable so a simple thumbs rating stays effortless; validated against the taxonomy.
+    category: Mapped[str | None] = mapped_column(String(32), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
 
     user: Mapped[User] = relationship(back_populates="feedback")
+
+
+class Workspace(Base):
+    """A bounded collaboration space (Capstone P6.5). NOT a company/legal entity — the
+    name is a label only. Membership grants nothing about a member's private account."""
+
+    __tablename__ = "workspaces"
+    __table_args__ = (Index("ix_workspaces_owner", "owner_user_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    name: Mapped[str] = mapped_column(String(120))
+    status: Mapped[str] = mapped_column(String(16), default=WORKSPACE_STATUS_ACTIVE)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+
+class WorkspaceMembership(Base):
+    """Who belongs to a workspace and their WORKSPACE role (owner/member). At most one
+    membership row per (workspace, user)."""
+
+    __tablename__ = "workspace_memberships"
+    __table_args__ = (
+        UniqueConstraint("workspace_id", "user_id", name="uq_workspace_member"),
+        Index("ix_workspace_memberships_user", "user_id"),
+        Index("ix_workspace_memberships_workspace", "workspace_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    workspace_id: Mapped[int] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    role: Mapped[str] = mapped_column(String(24), default=WORKSPACE_ROLE_MEMBER)
+    status: Mapped[str] = mapped_column(String(16), default=MEMBERSHIP_STATUS_ACTIVE)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+
+class WorkspaceInvitation(Base):
+    """A secure, single-use, expiring workspace invitation. The raw token is NEVER
+    stored — only its hash — and no member email is enumerable through it."""
+
+    __tablename__ = "workspace_invitations"
+    __table_args__ = (
+        Index("ix_workspace_invitations_workspace", "workspace_id"),
+        Index("ix_workspace_invitations_token", "token_hash"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    workspace_id: Mapped[int] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    inviter_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    email: Mapped[str] = mapped_column(String(320))
+    token_hash: Mapped[str] = mapped_column(String(128))
+    role: Mapped[str] = mapped_column(String(24), default=WORKSPACE_ROLE_MEMBER)
+    status: Mapped[str] = mapped_column(String(16), default=INVITATION_STATUS_PENDING)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    accepted_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+
+class ShareGrant(Base):
+    """An EXPLICIT, VIEW-only, revocable grant of ONE owned resource into ONE workspace.
+
+    Ownership stays with the candidate (a share never transfers it). Only allow-listed
+    resource types may be shared; access is re-checked on every read so revocation and
+    source deletion take effect immediately."""
+
+    __tablename__ = "share_grants"
+    __table_args__ = (
+        UniqueConstraint(
+            "owner_user_id", "workspace_id", "resource_type", "resource_id",
+            name="uq_share_grant",
+        ),
+        Index("ix_share_grants_workspace", "workspace_id"),
+        Index("ix_share_grants_owner", "owner_user_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    workspace_id: Mapped[int] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    resource_type: Mapped[str] = mapped_column(String(32))
+    resource_id: Mapped[str] = mapped_column(String(128))
+    permission: Mapped[str] = mapped_column(String(16), default=SHARE_PERMISSION_VIEW)
+    status: Mapped[str] = mapped_column(String(16), default=SHARE_STATUS_ACTIVE)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
 
 class Interview(Base):

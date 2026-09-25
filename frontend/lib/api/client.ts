@@ -26,6 +26,10 @@ import type {
   FeedbackCreateRequest,
   FeedbackResponse,
   FeedbackSurface,
+  MyWorkspaces,
+  ShareGrantOut,
+  WorkspaceDetail,
+  WorkspaceSummary,
   KnowledgeSnapshotResponse,
   KnowledgeSourcesResponse,
   KnowledgeDiagnosticsResponse,
@@ -331,6 +335,56 @@ export const api = {
         `/feedback?surface=${encodeURIComponent(surface)}&target_id=${encodeURIComponent(targetId)}`,
         opts,
       ),
+  },
+
+  // Teams / Workspaces & explicit sharing (Capstone P6.5). Private-by-default: nothing
+  // is shared unless the owner explicitly creates a VIEW share grant.
+  workspaces: {
+    list: (opts?: RequestOptions) => request<MyWorkspaces>("GET", "/workspaces", opts),
+    create: (name: string, opts?: RequestOptions) =>
+      request<WorkspaceSummary>("POST", "/workspaces", { body: { name }, ...opts }),
+    get: (id: number, opts?: RequestOptions) => request<WorkspaceDetail>("GET", `/workspaces/${id}`, opts),
+    invite: (id: number, email: string, role = "workspace_member", opts?: RequestOptions) =>
+      request<{ invitation_id: number; status: string }>("POST", `/workspaces/${id}/invite`, { body: { email, role }, ...opts }),
+    accept: (token: string, opts?: RequestOptions) =>
+      request<WorkspaceSummary>("POST", "/workspaces/invitations/accept", { body: { token }, ...opts }),
+    decline: (token: string, opts?: RequestOptions) =>
+      request<{ status: string }>("POST", "/workspaces/invitations/decline", { body: { token }, ...opts }),
+    leave: (id: number, opts?: RequestOptions) =>
+      request<{ status: string }>("POST", `/workspaces/${id}/leave`, opts),
+    removeMember: (id: number, targetUserId: number, opts?: RequestOptions) =>
+      request<{ status: string }>("POST", `/workspaces/${id}/members/${targetUserId}/remove`, opts),
+    transfer: (id: number, newOwnerUserId: number, opts?: RequestOptions) =>
+      request<WorkspaceSummary>("POST", `/workspaces/${id}/transfer`, { body: { new_owner_user_id: newOwnerUserId }, ...opts }),
+    deactivate: (id: number, opts?: RequestOptions) =>
+      request<WorkspaceSummary>("POST", `/workspaces/${id}/deactivate`, opts),
+  },
+
+  shares: {
+    mine: (opts?: RequestOptions) => request<{ shares: ShareGrantOut[] }>("GET", "/shares/mine", opts),
+    withMe: (opts?: RequestOptions) => request<{ shares: ShareGrantOut[] }>("GET", "/shares/with-me", opts),
+    create: (workspaceId: number, resourceType: string, resourceId: string, opts?: RequestOptions) =>
+      request<{ share_id: number; status: string }>("POST", "/shares", { body: { workspace_id: workspaceId, resource_type: resourceType, resource_id: resourceId }, ...opts }),
+    revoke: (shareId: number, opts?: RequestOptions) =>
+      request<{ status: string }>("DELETE", `/shares/${shareId}`, opts),
+  },
+
+  // Platform Admin operations (Capstone P6.5). PLATFORM_ADMIN only; metadata only.
+  admin: {
+    home: (opts?: RequestOptions) => request<Record<string, unknown>>("GET", "/admin/home", opts),
+    users: (query?: string, opts?: RequestOptions) =>
+      request<{ users: Record<string, unknown>[] }>("GET", `/admin/users${query ? `?query=${encodeURIComponent(query)}` : ""}`, opts),
+    setRole: (userId: number, role: string, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/users/${userId}/role`, { body: { role }, ...opts }),
+    setTier: (userId: number, tier: string, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/users/${userId}/tier`, { body: { tier }, ...opts }),
+    setStatus: (userId: number, status: string, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/users/${userId}/status`, { body: { status }, ...opts }),
+    workspaces: (opts?: RequestOptions) => request<{ workspaces: Record<string, unknown>[] }>("GET", "/admin/workspaces", opts),
+    privacyRequests: (opts?: RequestOptions) => request<Record<string, unknown>>("GET", "/admin/privacy-requests", opts),
+    feedback: (opts?: RequestOptions) => request<Record<string, unknown>>("GET", "/admin/feedback", opts),
+    providers: (opts?: RequestOptions) => request<Record<string, unknown>>("GET", "/admin/providers", opts),
+    audit: (opts?: RequestOptions) => request<{ events: Record<string, unknown>[] }>("GET", "/admin/audit", opts),
   },
 };
 

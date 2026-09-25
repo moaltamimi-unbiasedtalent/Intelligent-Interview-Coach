@@ -61,7 +61,7 @@ class FeedbackApplicationService:
 
     def submit(
         self, user_id: int, *, surface: str, target_id: str, rating: str,
-        comment: str | None = None,
+        comment: str | None = None, category: str | None = None,
     ) -> FeedbackItem | None:
         """Validate + verify ownership + upsert. Returns None when the target is not
         owned by the user (a not-found), so a caller maps it to 404 without disclosure.
@@ -79,11 +79,19 @@ class FeedbackApplicationService:
             raise ValidationError(
                 f"A comment must be {FEEDBACK_MAX_COMMENT_CHARS} characters or fewer.")
 
+        # Optional bounded issue category (P6 taxonomy). None stays None; an unknown value
+        # normalises to "other" — a simple thumbs rating never requires a category.
+        clean_category = None
+        if category is not None and str(category).strip():
+            from src.feedback_taxonomy import normalize_category
+            clean_category = normalize_category(category)
+
         if not self._verify_target(surf, tid, user_id):
             return None
 
         item = self._repo.upsert(
-            user_id, surface=surf.value, target_id=tid, rating=rat.value, comment=cleaned)
+            user_id, surface=surf.value, target_id=tid, rating=rat.value, comment=cleaned,
+            category=clean_category)
         # Safe observability: surface + rating (+ safe run correlation) only — never the
         # comment or rated content (§26/§27). For an agent answer the target id is
         # "<run_id>:<index>", so the opaque run_id can correlate a Langfuse score; other

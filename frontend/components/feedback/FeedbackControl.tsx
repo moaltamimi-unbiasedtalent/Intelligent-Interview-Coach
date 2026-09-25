@@ -6,6 +6,23 @@ import { ApiError } from "@/lib/api/errors";
 import type { FeedbackRating, FeedbackSurface } from "@/lib/api/types";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Field";
+import { useT } from "@/components/i18n/I18nProvider";
+
+// The bounded P6 feedback taxonomy (Capstone P6.5, §24) → i18n label keys. An optional
+// detail; a simple thumbs rating never requires a category.
+const CATEGORIES: { value: string; key: string }[] = [
+  { value: "incorrect", key: "workspaces.fbIncorrect" },
+  { value: "irrelevant", key: "workspaces.fbIrrelevant" },
+  { value: "too_verbose", key: "workspaces.fbTooVerbose" },
+  { value: "too_brief", key: "workspaces.fbTooBrief" },
+  { value: "missing_evidence", key: "workspaces.fbMissingEvidence" },
+  { value: "poor_source", key: "workspaces.fbPoorSource" },
+  { value: "tool_choice", key: "workspaces.fbToolChoice" },
+  { value: "language_quality", key: "workspaces.fbLanguageQuality" },
+  { value: "retrieval_problem", key: "workspaces.fbRetrievalProblem" },
+  { value: "practice_quality", key: "workspaces.fbPracticeQuality" },
+  { value: "other", key: "workspaces.fbOther" },
+];
 
 /**
  * Candidate feedback control (P5): "Helpful / Not helpful" + optional comment for one
@@ -22,8 +39,10 @@ export function FeedbackControl({
   targetId: string;
   prompt?: string;
 }) {
+  const t = useT();
   const [rating, setRating] = useState<FeedbackRating | null>(null);
   const [comment, setComment] = useState("");
+  const [category, setCategory] = useState<string>("");
   const [showComment, setShowComment] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +59,7 @@ export function FeedbackControl({
         if (f) {
           setRating(f.rating);
           setComment(f.comment ?? "");
+          setCategory(f.category ?? "");
           loadedComment.current = f.comment ?? "";
         }
       })
@@ -48,12 +68,15 @@ export function FeedbackControl({
   }, [surface, targetId]);
 
   const persist = useCallback(
-    async (nextRating: FeedbackRating, nextComment: string | null) => {
+    async (nextRating: FeedbackRating, nextComment: string | null, nextCategory: string | null) => {
       setBusy(true);
       setError(null);
       setSaved(false);
       try {
-        await api.feedback.submit({ surface, target_id: targetId, rating: nextRating, comment: nextComment });
+        // Only include ``category`` when the candidate chose one (keeps a plain thumbs
+        // rating's payload minimal; the optional taxonomy detail is additive).
+        const body = { surface, target_id: targetId, rating: nextRating, comment: nextComment };
+        await api.feedback.submit(nextCategory ? { ...body, category: nextCategory } : body);
         setRating(nextRating);
         loadedComment.current = nextComment ?? "";
         setSaved(true);
@@ -69,7 +92,7 @@ export function FeedbackControl({
 
   const choose = (next: FeedbackRating) => {
     setShowComment(true);
-    void persist(next, comment.trim() || null);
+    void persist(next, comment.trim() || null, category || null);
   };
 
   return (
@@ -88,6 +111,25 @@ export function FeedbackControl({
           <label htmlFor={`fb-${surface}-${targetId}`} className="block text-xs text-muted">
             {rating === "not_helpful" ? "What could be better? (optional)" : "Add a comment (optional)"}
           </label>
+          {rating === "not_helpful" ? (
+            <div className="mb-2">
+              <label htmlFor={`fbcat-${surface}-${targetId}`} className="block text-xs text-muted">
+                {t("workspaces.fbPrompt")}
+              </label>
+              <select
+                id={`fbcat-${surface}-${targetId}`}
+                value={category}
+                onChange={(e) => {
+                  setCategory(e.target.value);
+                  if (rating) void persist(rating, comment.trim() || null, e.target.value || null);
+                }}
+                className="mt-1 rounded-md border border-default bg-transparent px-2 py-1 text-sm"
+              >
+                <option value="">—</option>
+                {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{t(c.key)}</option>)}
+              </select>
+            </div>
+          ) : null}
           <Textarea
             id={`fb-${surface}-${targetId}`}
             value={comment}
@@ -97,7 +139,7 @@ export function FeedbackControl({
           />
           <div className="mt-1 flex items-center gap-2">
             <Button size="sm" disabled={busy || !rating || comment.trim() === loadedComment.current}
-              onClick={() => rating && persist(rating, comment.trim() || null)}>
+              onClick={() => rating && persist(rating, comment.trim() || null, category || null)}>
               Save comment
             </Button>
           </div>

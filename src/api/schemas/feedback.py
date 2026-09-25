@@ -20,6 +20,8 @@ class FeedbackCreateRequest(BaseModel):
     rating: FeedbackRating = Field(description="helpful | not_helpful.")
     comment: str | None = Field(default=None, max_length=FEEDBACK_MAX_COMMENT_CHARS,
                                 description="Optional bounded comment (untrusted text).")
+    category: str | None = Field(default=None, max_length=32,
+                                 description="Optional bounded issue category (P6 taxonomy).")
 
 
 class FeedbackResponse(BaseModel):
@@ -30,6 +32,7 @@ class FeedbackResponse(BaseModel):
     target_id: str
     rating: str
     comment: str | None = None
+    category: str | None = None
     created_at: str | None = None
     updated_at: str | None = None
 

@@ -660,6 +660,7 @@ export interface FeedbackCreateRequest {
   target_id: string;
   rating: FeedbackRating;
   comment?: string | null;
+  category?: string | null;
 }
 
 export interface FeedbackResponse {
@@ -668,8 +669,59 @@ export interface FeedbackResponse {
   target_id: string;
   rating: FeedbackRating;
   comment: string | null;
+  category?: string | null;
   created_at: string | null;
   updated_at: string | null;
+}
+
+// --- Teams / Workspaces & sharing (Capstone P6.5) ----------------------------
+
+export interface WorkspaceSummary {
+  id: number;
+  name: string;
+  status: string;
+  owner_user_id: number;
+  member_count: number;
+  created_at: string | null;
+  my_role?: string;
+}
+
+export interface WorkspaceMember {
+  user_id: number;
+  role: string;
+  status: string;
+  joined_at: string | null;
+}
+
+export interface WorkspaceInvite {
+  id: number;
+  workspace_id: number;
+  role: string;
+  status: string;
+  expires_at: string | null;
+  workspace_name?: string | null;
+}
+
+export interface WorkspaceDetail extends WorkspaceSummary {
+  members: WorkspaceMember[];
+  pending_invitations?: WorkspaceInvite[];
+}
+
+export interface MyWorkspaces {
+  workspaces: WorkspaceSummary[];
+  invited: WorkspaceInvite[];
+}
+
+export interface ShareGrantOut {
+  id: number;
+  owner_user_id: number;
+  workspace_id: number;
+  resource_type: string;
+  resource_id: string;
+  permission: string;
+  status: string;
+  created_at: string | null;
+  revoked_at: string | null;
 }
 
 // --- Authentication & account (Capstone P1/E1) -------------------------------

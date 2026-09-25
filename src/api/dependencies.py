@@ -276,6 +276,61 @@ def get_email_sender(request: Request):
     return _shared(request, "email_sender", build_email_sender)
 
 
+# --- Teams / Workspaces & sharing (Capstone P6.5) ----------------------------
+
+
+def get_workspace_repository(repo=Depends(get_repository)):
+    from src.workspace_repository import WorkspaceRepository
+
+    return WorkspaceRepository(repo.session_factory)
+
+
+def get_workspace_service(
+    request: Request,
+    workspaces=Depends(get_workspace_repository),
+    accounts=Depends(get_account_repository),
+    audit=Depends(get_audit_repository),
+    email=Depends(get_email_sender),
+):
+    from src.application.workspace_service import WorkspaceService
+
+    base = getattr(getattr(request.app.state, "settings", None), "app_base_url", None) \
+        or "https://app.ask4mo.local"
+    return WorkspaceService(workspaces=workspaces, accounts=accounts, audit=audit,
+                           email=email, app_base_url=base)
+
+
+def get_sharing_service(
+    workspaces=Depends(get_workspace_repository),
+    audit=Depends(get_audit_repository),
+):
+    # Owner verifiers/loaders for the allow-listed shareable resource types. Ownership is
+    # ALWAYS checked as the sharing/reading user; a share never bypasses owner scoping.
+    from src.application.sharing_service import SharingService
+    from src.documents.repository import StoryRepository
+
+    session_factory = workspaces.session_factory
+    story_repo = StoryRepository(session_factory)
+
+    def _story_owns(resource_id: str, owner_user_id: int) -> bool:
+        try:
+            return story_repo.get(user_id=owner_user_id, story_id=int(resource_id)) is not None
+        except (ValueError, TypeError):
+            return False
+
+    def _story_load(resource_id: str, owner_user_id: int):
+        try:
+            return story_repo.get(user_id=owner_user_id, story_id=int(resource_id))
+        except (ValueError, TypeError):
+            return None
+
+    return SharingService(
+        workspaces=workspaces, audit=audit,
+        owner_verifiers={"story": _story_owns},
+        owner_loaders={"story": _story_load},
+    )
+
+
 # --- private candidate documents & evidence (Capstone P4) ---------------------
 
 

@@ -24,6 +24,7 @@ from src.api.config import API_PREFIX, ApiSettings
 from src.api.exception_handlers import register_exception_handlers
 from src.api.middleware import RequestIdMiddleware
 from src.api.routes import (
+    admin,
     agent,
     auth,
     career,
@@ -37,6 +38,7 @@ from src.api.routes import (
     memory,
     progress,
     reviewer,
+    workspaces,
 )
 from src.api.session_store import InMemorySessionStore
 
@@ -54,6 +56,8 @@ TAGS_METADATA = [
     {"name": "auth", "description": "Accounts, authentication, sessions and account lifecycle (Capstone P1/E1)."},
     {"name": "documents", "description": "Private candidate documents, evidence, story bank and report export (Capstone P4)."},
     {"name": "reviewer", "description": "PLATFORM_ADMIN-gated knowledge/retention/Prompt Lab diagnostics (Capstone P6)."},
+    {"name": "workspaces", "description": "Teams/workspaces, membership, invitations and explicit sharing (Capstone P6.5)."},
+    {"name": "admin", "description": "PLATFORM_ADMIN operations: account/workspace/entitlement/privacy metadata (Capstone P6.5)."},
 ]
 
 DESCRIPTION = (
@@ -105,8 +109,10 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
 
     # Infra liveness alias (unversioned) + versioned API surface.
     app.include_router(health.router, prefix="/api")
-    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, feedback, progress, auth, reviewer):
+    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, feedback, progress, auth, reviewer, workspaces, admin):
         app.include_router(module.router, prefix=API_PREFIX)
+    # Workspaces registers a second router for explicit sharing under the same prefix.
+    app.include_router(workspaces.shares_router, prefix=API_PREFIX)
     # Documents phase (P4) registers three routers under the same prefix.
     app.include_router(documents.router, prefix=API_PREFIX)
     app.include_router(documents.stories_router, prefix=API_PREFIX)
