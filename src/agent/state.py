@@ -54,6 +54,13 @@ class AgentState(TypedDict, total=False):
     preparation_plan: dict[str, Any] | None  # from the preparation planner
     questions: dict[str, Any] | None  # from the question generator
 
+    # Bounded specialist outputs (Capstone P5). Safe structured projections produced by
+    # the specialist tools behind Mo; carried between steps and surfaced in the safe
+    # result for the reviewer diagnostic. Never raw documents or chain-of-thought.
+    role_brief: dict[str, Any] | None  # Role & Opportunity specialist
+    evidence_selection: dict[str, Any] | None  # Candidate Evidence specialist (owner-scoped)
+    coaching_plan: dict[str, Any] | None  # Interview Strategy / Coach specialist
+
     # Long-term preparation memory loaded for this run (user-approved DATA; safe
     # projections — category/summary/target_role only, never raw private content).
     memory_items: list[dict[str, Any]] | None

@@ -353,10 +353,44 @@ assumptions in core logic, prompts, scoring or examples.
 - Test totals: **always re-measure with `pytest -q`** rather than trusting a number
   copied across docs (historical docs cite different totals from their own point in
   time — that is expected, not a defect). The measured backend suite after Capstone
-  P4 is **2277 passed, 3 skipped** (skips are RAGAS installed/absent guards); the
+  P5 is **2303 passed, 3 skipped** (Capstone P4 was 2277; P5 adds the model-policy +
+  multi-agent specialist suites); the skips are RAGAS installed/absent guards; the
   frontend unit suite is **219 passed** (`cd frontend && npm test`) and the Playwright
   e2e suite is **81 passed** (`npm run e2e`).
 
+- **Bounded multi-agent architecture + per-operation model policy (Capstone P5 + E4).**
+  Mo stays the SINGLE candidate-facing orchestrator (its ReAct loop/graph/nodes/HITL/RAG
+  governance/Practice are unchanged). Three materially distinct **bounded specialists** sit
+  BEHIND Mo, reached only through allowlisted tools (`src/agent/specialist_tools.py` →
+  `career_tool_registry`): **Role & Opportunity** (`AnalyzeRoleOpportunity`, structured
+  `RoleBrief`, reuses the governed JD-analysis op), **Candidate Evidence**
+  (`FindCandidateEvidence`, **deterministic**, owner-scoped selection of APPROVED claims +
+  verified stories via `EvidenceAccessService` — the `user_id` is TRUSTED run state, never
+  model-supplied; rejected/unreviewed/`source_revoked`/`model_suggested` excluded at the
+  repo; no model ⇒ injection-inert, never reads raw documents), and **Interview
+  Strategy/Coach** (`BuildCoachingStrategy`, maps evidence→competencies, raises
+  CLARIFICATION_NEEDED instead of inventing metrics; injectable reasoner + deterministic
+  fallback — the live coaching model is UNVALIDATED, so the deterministic path ships and
+  every test/eval makes 0 paid calls; a reasoner's evidence ids are re-validated against the
+  owner-scoped set). Specialists are advisory (no side effects, no auto-memory, cannot start
+  Practice) and never set `retrieval_used` (owned by `SearchCareerKnowledge`). Typed
+  contracts in `src/agent/specialists/schemas.py`; a closed `SpecialistRegistry` +
+  deterministic bounded `recommend_specialists` router validate routing. **E4**:
+  `src/llm/policy.py` is ONE central per-operation model policy (operations ORCHESTRATION /
+  SPECIALIST_ROLE_ANALYSIS / SPECIALIST_EVIDENCE_ANALYSIS / SPECIALIST_COACHING /
+  FINAL_RESPONSE / STRUCTURED_GENERATION / EVALUATION), a pure resolver over
+  `src/llm/models.py` (no provider call/secret at import). Effective tier = max(user
+  profile envelope, operation min-capability floor), capped at Advanced; a deterministic
+  operation declares `capability=NONE` (no client built); bounded lower-tier fallback to a
+  floor (orchestration/final never degrade to Fast). Profile, per-operation policy,
+  Brief/Detailed and interface/conversation/dictation language are independent — none
+  changes the model; a raw client slug is rejected (`_resolve_profile` + `resolve_policy`
+  accept only fast/balanced/advanced). Safe diagnostics only:
+  `AgentRunResult.specialist_outputs` + `ResolvedModelPolicy.to_dict()` carry no
+  CoT/secret/private content; no new candidate chat surface. Deterministic gate
+  `scripts/eval_multi_agent.py` (7-language injection-inert fixtures, cross-user isolation,
+  no-fabrication, id sanitisation) in CI; the existing `eval_agent` gate is unchanged. See
+  `docs/capstone/p5_agent_decomposition_audit.md` + `p5_e4_multi_agent_model_policy.md`.
 - **Private candidate documents (Capstone P4).** `src/documents/*` + `src/application/
   {documents_service,stories_service,report_export}.py` implement owner-scoped upload →
   validate → private store (`DocumentStore`, never a public URL) → parse (pypdf/

@@ -17,6 +17,7 @@ from src.persistence import (
     STORY_EVIDENCE_NONE,
     STORY_EVIDENCE_REVOKED,
     STORY_EVIDENCE_VERIFIED,
+    STORY_MODEL_SUGGESTED,
     STORY_SOURCE_BACKED,
     CandidateDocument,
     CandidateStory,
@@ -175,6 +176,22 @@ class DocumentRepository:
                 for d in docs
             ]
 
+    def approved_claims(self, user_id: int) -> list[dict]:
+        """A user's APPROVED claims only (review_state accepted or edited), owner-scoped.
+
+        Excludes pending (unreviewed) and rejected claims by design (Capstone P5 §8/§9):
+        a specialist only ever sees candidate-approved evidence. Returns safe dict
+        projections (``display_text`` + provenance), never raw ORM rows or file bytes.
+        """
+        with self._sf() as s:
+            rows = s.scalars(
+                select(DocumentClaim).where(
+                    DocumentClaim.user_id == user_id,
+                    DocumentClaim.review_state.in_((CLAIM_ACCEPTED, CLAIM_EDITED)),
+                ).order_by(DocumentClaim.id)
+            ).all()
+            return [_claim_dict(c) for c in rows]
+
     def add_claims(self, *, user_id: int, document_id: int, version_id: int, claims: list) -> int:
         with self._sf() as s:
             doc = s.get(CandidateDocument, document_id)
@@ -284,6 +301,28 @@ class StoryRepository:
                 .order_by(CandidateStory.updated_at.desc())
             ).all()
             return [self._dict(s, st) for st in rows]
+
+    def evidence_stories(self, user_id: int) -> list[dict]:
+        """A user's stories that are SAFE to use as evidence, owner-scoped (Capstone P5).
+
+        Includes source-backed stories only while still verified, plus stories the
+        candidate authored/corrected themselves. Excludes ``source_revoked`` stories
+        (their supporting source was deleted) and ``model_suggested`` drafts (not yet
+        candidate-approved). Safe dict projections only.
+        """
+        with self._sf() as s:
+            rows = s.scalars(
+                select(CandidateStory).where(CandidateStory.user_id == user_id)
+                .order_by(CandidateStory.updated_at.desc())
+            ).all()
+            out: list[dict] = []
+            for st in rows:
+                if st.status == STORY_MODEL_SUGGESTED:
+                    continue  # not candidate-approved
+                if st.status == STORY_SOURCE_BACKED and st.evidence_state != STORY_EVIDENCE_VERIFIED:
+                    continue  # source revoked → never presented as verified evidence
+                out.append(self._dict(s, st))
+            return out
 
     def update(self, *, user_id: int, story_id: int, fields: dict, mark_corrected: bool) -> dict | None:
         with self._sf() as s:

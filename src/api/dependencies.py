@@ -149,9 +149,21 @@ def get_agent_service(request: Request):
         from src.application.errors import ConfigurationError
 
         database_url = getattr(get_app_config(request), "database_url", None)
+        # Owner-scoped approved-evidence access for the P5 Candidate Evidence specialist.
+        # Built over the shared app engine; every read is user-scoped (the specialist
+        # only ever receives the trusted run-state user id).
+        from src.application.evidence_access_service import EvidenceAccessService
+        from src.documents.repository import DocumentRepository, StoryRepository
+
+        session_factory = get_repository(request).session_factory
+        evidence_service = EvidenceAccessService(
+            documents=DocumentRepository(session_factory),
+            stories=StoryRepository(session_factory),
+        )
         try:
             return AgentApplicationService(
                 memory_service=get_memory_service(request),
+                evidence_service=evidence_service,
                 database_url=database_url,
             )
         except AgentConfigurationError as exc:

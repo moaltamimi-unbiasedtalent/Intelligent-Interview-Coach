@@ -124,12 +124,16 @@ class AgentApplicationService:
         checkpointer: Any | None = None,
         checkpoint_durable: bool | None = None,
         memory_service: Any | None = None,
+        evidence_service: Any | None = None,
         checkpoint_url: str | None = None,
         database_url: str | None = None,
         observability: Any | None = None,
     ) -> None:
         if registry is None:
-            registry = career_tool_registry(career_service or _default_career_service())
+            # The owner-scoped evidence service (P5) is threaded to the Candidate
+            # Evidence specialist tool; None keeps a safe empty selection.
+            registry = career_tool_registry(
+                career_service or _default_career_service(), evidence_service=evidence_service)
         # Durable HITL checkpointer (Phase 8). Injectable for tests; otherwise built
         # from configuration (official SQLite/Postgres saver, MemorySaver fallback,
         # or a fail-closed configuration error when durability is required).
@@ -537,7 +541,35 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
         cache_misses=int(state.get("retrieval_cache_misses", 0) or 0),
         journey=_derive_journey(state),
         handoff_summary=_derive_handoff_summary(state),
+        specialist_outputs=_derive_specialist_outputs(state),
     )
+
+
+def _derive_specialist_outputs(state: dict) -> dict:
+    """Safe projection of the P5 specialists that ran this run (for the diagnostic).
+
+    Includes only bounded structured outputs already stored in state (role brief,
+    owner-scoped evidence selection, coaching plan) plus the list of specialists that
+    produced output. Never raw documents, secrets or chain-of-thought.
+    """
+    role_brief = state.get("role_brief")
+    evidence_selection = state.get("evidence_selection")
+    coaching_plan = state.get("coaching_plan")
+    used: list[str] = []
+    if role_brief:
+        used.append("role_opportunity")
+    if evidence_selection:
+        used.append("candidate_evidence")
+    if coaching_plan:
+        used.append("interview_strategy")
+    if not used:
+        return {}
+    return {
+        "specialists_used": used,
+        "role_brief": role_brief,
+        "evidence_selection": evidence_selection,
+        "coaching_plan": coaching_plan,
+    }
 
 
 def _derive_journey(state: dict) -> dict:

@@ -217,7 +217,7 @@ def test_not_registered_as_candidate_agent_tool():
             return lambda *a, **k: None
     names = career_tool_registry(_Fake()).names()
     assert not any("feedback" in n.lower() for n in names)
-    assert len(names) == 8  # 6 career + 2 HITL — unchanged by Phase 7G
+    assert len(names) == 11  # 6 career + 3 P5 specialist + 2 HITL — feedback is never a tool
 
 
 # --- end-to-end run + provenance + LLM-synthesis safety ------------------------------

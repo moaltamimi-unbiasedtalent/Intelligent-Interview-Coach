@@ -79,3 +79,8 @@ class AgentRunResult:
     journey: dict[str, Any] = field(default_factory=dict)
     # Safe explanation of what/where/why the Practice handoff carries — else None (P4).
     handoff_summary: dict[str, Any] | None = None
+    # Bounded specialist outputs (Capstone P5): safe structured projections from the
+    # specialists Mo invoked this run (role brief / owner-scoped evidence selection /
+    # coaching plan) plus which specialists ran — for the reviewer diagnostic. Never
+    # raw documents, secrets or chain-of-thought.
+    specialist_outputs: dict[str, Any] = field(default_factory=dict)
