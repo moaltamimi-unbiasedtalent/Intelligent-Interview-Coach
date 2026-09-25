@@ -18,18 +18,21 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
 from src.persistence import (
     ACCOUNT_STATUS_ACTIVE,
+    ACCOUNT_STATUS_DELETION_REQUESTED,
     DEFAULT_LOCALE,
+    PLATFORM_ROLE_ADMIN,
     PLATFORM_ROLE_USER,
     RESPONSE_DETAIL_BRIEF,
     RESPONSE_DETAIL_VALUES,
     SUPPORTED_LOCALES,
     TIER_BASIC,
+    TIER_PREMIUM,
     AccountIdentity,
     AuditEvent,
     AuthSession,
@@ -323,6 +326,57 @@ class AccountRepository:
             session.commit()
             return True
 
+    # -- admin operational reads (Capstone P6.5) — METADATA ONLY -------------
+
+    def list_accounts(self, *, limit: int = 100, query: str | None = None) -> list[dict]:
+        """Bounded account METADATA for the Platform Admin surface. NEVER candidate-private
+        content — only identity/status/role/tier/verification/created metadata."""
+        with self._session_factory() as session:
+            stmt = select(User).order_by(User.created_at.desc()).limit(max(1, min(int(limit), 500)))
+            if query:
+                like = f"%{query.strip().lower()}%"
+                stmt = select(User).where(func.lower(User.email).like(like)).order_by(
+                    User.created_at.desc()).limit(max(1, min(int(limit), 500)))
+            users = session.scalars(stmt).all()
+            out = []
+            for u in users:
+                ent = session.scalar(select(ProductEntitlement).where(ProductEntitlement.user_id == u.id))
+                out.append({
+                    "user_id": u.id, "email": u.email, "display_name": u.display_name,
+                    "platform_role": u.platform_role, "status": u.status,
+                    "email_verified": bool(u.email_verified),
+                    "tier": ent.tier if ent else None,
+                    "created_at": u.created_at.isoformat() if u.created_at else None,
+                })
+            return out
+
+    def account_stats(self) -> dict:
+        """Aggregate account metadata for the admin home (counts only)."""
+        with self._session_factory() as session:
+            total = int(session.scalar(select(func.count()).select_from(User)) or 0)
+            admins = int(session.scalar(select(func.count()).select_from(User).where(
+                User.platform_role == PLATFORM_ROLE_ADMIN)) or 0)
+            verified = int(session.scalar(select(func.count()).select_from(User).where(
+                User.email_verified.is_(True))) or 0)
+            premium = int(session.scalar(select(func.count()).select_from(ProductEntitlement).where(
+                ProductEntitlement.tier == TIER_PREMIUM)) or 0)
+            deletion_requested = int(session.scalar(select(func.count()).select_from(User).where(
+                User.status == ACCOUNT_STATUS_DELETION_REQUESTED)) or 0)
+            return {"users_total": total, "platform_admins": admins,
+                    "email_verified": verified, "premium_accounts": premium,
+                    "deletion_requests_open": deletion_requested}
+
+    def list_privacy_requests(self, *, limit: int = 100) -> list[dict]:
+        """Open privacy/deletion requests — METADATA ONLY (never the user's private data)."""
+        with self._session_factory() as session:
+            users = session.scalars(select(User).where(
+                User.status == ACCOUNT_STATUS_DELETION_REQUESTED)
+                .order_by(User.updated_at.desc()).limit(max(1, min(int(limit), 500)))).all()
+            return [{"user_id": u.id, "email": u.email, "request_type": "account_deletion",
+                     "status": u.status,
+                     "requested_at": u.updated_at.isoformat() if u.updated_at else None}
+                    for u in users]
+
     # -- preferences (P2/E2) --------------------------------------------------
 
     def get_response_detail(self, user_id: int) -> str:
@@ -548,6 +602,27 @@ class AuditRepository:
                     "event_type": r.event_type,
                     "result": r.result,
                     "target_type": r.target_type,
+                    "created_at": r.created_at.isoformat() if r.created_at else None,
+                }
+                for r in rows
+            ]
+
+    def recent(self, *, limit: int = 100, event_type: str | None = None) -> list[dict]:
+        """Cross-actor recent audit events for the Platform Admin audit view (Capstone
+        P6.5). Returns ONLY safe allow-listed metadata — never the secret-free ``context``
+        blob's arbitrary contents beyond a bounded projection, never passwords/tokens/PII."""
+        with self._session_factory() as session:
+            stmt = select(AuditEvent).order_by(AuditEvent.created_at.desc()).limit(
+                max(1, min(int(limit), 500)))
+            if event_type:
+                stmt = select(AuditEvent).where(AuditEvent.event_type == event_type).order_by(
+                    AuditEvent.created_at.desc()).limit(max(1, min(int(limit), 500)))
+            rows = session.scalars(stmt).all()
+            return [
+                {
+                    "event_type": r.event_type, "result": r.result,
+                    "actor_user_id": r.actor_user_id, "target_type": r.target_type,
+                    "target_id": r.target_id,
                     "created_at": r.created_at.isoformat() if r.created_at else None,
                 }
                 for r in rows

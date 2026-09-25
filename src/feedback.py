@@ -79,6 +79,8 @@ class FeedbackItem:
     comment: str | None
     created_at: datetime | None
     updated_at: datetime | None
+    # Optional bounded issue category from the P6 taxonomy (Capstone P6.5).
+    category: str | None = None
 
     def to_public(self) -> dict:
         """Public projection for API/UI — deliberately omits ``user_id``."""
@@ -88,6 +90,7 @@ class FeedbackItem:
             "target_id": self.target_id,
             "rating": self.rating,
             "comment": self.comment,
+            "category": self.category,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

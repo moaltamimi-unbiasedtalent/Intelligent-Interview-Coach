@@ -14,9 +14,8 @@ vi.mock("next/navigation", () => ({
 
 // AppShell now composes the auth-aware account menu + route guard. Provide a
 // deterministic authenticated session so the shell renders without a real fetch.
-vi.mock("@/components/auth/AuthProvider", () => ({
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  useAuth: () => ({
+vi.mock("@/components/auth/AuthProvider", () => {
+  const auth = () => ({
     account: {
       user_id: 1, email: "user@example.com", display_name: null,
       platform_role: "user", tier: "basic", status: "active",
@@ -27,8 +26,14 @@ vi.mock("@/components/auth/AuthProvider", () => ({
     isRealSession: true,
     refresh: vi.fn(),
     signOut: vi.fn(),
-  }),
-}));
+  });
+  return {
+    AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    useAuth: auth,
+    // MoreMenu (role-aware Admin nav, P6.5) uses the non-throwing optional accessor.
+    useAuthOptional: auth,
+  };
+});
 
 afterEach(() => { pathname = "/prepare"; });
 

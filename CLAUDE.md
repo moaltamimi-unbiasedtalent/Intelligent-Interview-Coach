@@ -353,12 +353,42 @@ assumptions in core logic, prompts, scoring or examples.
 - Test totals: **always re-measure with `pytest -q`** rather than trusting a number
   copied across docs (historical docs cite different totals from their own point in
   time — that is expected, not a defect). The measured backend suite after Capstone
-  P6 is **2334 passed, 3 skipped** (P4 2277; P5 2303; P6 adds knowledge-governance,
-  Prompt Lab, feedback-learning, retention + reviewer-API suites); the skips are RAGAS
-  installed/absent guards; the frontend unit suite is **219 passed** (`cd frontend &&
-  npm test`; unchanged in P6 — no candidate-facing UI added) and the Playwright
-  e2e suite is **81 passed** (`npm run e2e`).
+  P6.5 is **2352 passed, 3 skipped** (P4 2277; P5 2303; P6 2334; P6.5 adds workspaces,
+  platform-admin + per-type sharing security suites); the skips are RAGAS installed/absent
+  guards; the frontend unit suite is **222 passed** (`cd frontend && npm test`; P6.5 adds
+  `/workspaces` + `/admin` pages, feedback category, role-aware Admin nav, i18n key-parity
+  across 7 locales) and the Playwright e2e suite adds `workspaces.spec.ts` + `admin.spec.ts`
+  (`npm run e2e`).
 
+- **Teams/Workspaces + Platform Admin (Capstone P6.5).** Bounded collaboration + a bounded
+  operations console. Tables (migration `0011_workspaces_shares`, head now
+  `0011_workspaces_shares`): `workspaces`, `workspace_memberships` (role WORKSPACE_OWNER/MEMBER
+  **on the membership**, never on the User), `workspace_invitations` (opaque token stored
+  **hashed**, single-use, 72h expiry), `share_grants` (owner + workspace + resource + VIEW +
+  status), plus a `user_feedback.category` column (P6 taxonomy). `src/workspace_repository.py`
+  is owner/workspace-scoped; `src/application/workspace_service.py` +
+  `src/application/sharing_service.py` enforce every invariant server-side and audit them.
+  **Private-by-default**: joining a workspace exposes nothing — the only cross-member access
+  is an explicit, allow-listed, **VIEW-only** share grant — operational types **interview
+  report + story** (both wired to owner-scoped loaders + bounded VIEW projections;
+  preparation summary is PLANNED/excluded); never raw documents/CV/Memory/auth/audit.
+  Ownership never transfers;
+  revocation and source deletion cut access immediately (the decision is re-derived on every
+  read via `active_share_owner_for_member`, so a cached link can't bypass it); shared content
+  is read **as the owner** (owner scoping intact). Invitations require the accepting account's
+  own email to match (no foreign acceptance), are single-use and expiring; the last owner
+  can't orphan a workspace; leave/remove revokes that member's outbound shares. **Platform
+  Admin** (`src/api/routes/admin.py`, router-level `require_platform_admin`) is an OPERATIONS
+  surface, **not a data superuser**: account/workspace/entitlement/privacy/provider/audit
+  **metadata only** (no CV/answers/Memory/documents), audited privileged changes (role/tier/
+  status) with self-lockout guards, no "view as user", no private-data search, owner-scoped
+  repos stay owner-scoped. Teams access is a **separate dimension from BASIC/PREMIUM**; no
+  billing, no enterprise SSO. Admin reuses the P6 reviewer APIs (no second backend;
+  no-auto-promotion preserved). Candidate `FeedbackControl` gains an optional bounded category
+  (P6 taxonomy), i18n across 7 locales. Routes: `/api/v1/workspaces/*`, `/api/v1/shares/*`,
+  `/api/v1/admin/*`; frontend `/workspaces` (candidate, i18n) + `/admin` (English ops).
+  New CI gates: `eval_workspace_security`, `eval_platform_admin`. See
+  `docs/capstone/p6_5_workspace_admin_design.md` + `p6_5_workspaces_platform_admin.md`.
 - **Knowledge governance, Prompt Lab & feedback learning (Capstone P6 + E6 + E7).** A
   governance layer over the UNCHANGED KB plus three governed systems. **Knowledge (K1–K4):**
   `src/copilot/knowledge/governed_datasets.py` + committed `data/knowledge/governed/*.json`

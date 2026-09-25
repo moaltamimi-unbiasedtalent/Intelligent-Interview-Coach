@@ -561,10 +561,13 @@ def test_openapi_schemas_do_not_expose_secrets():
                  "raw_response", "database_url", "embedding", "password"}
     # Capstone P1/E1: authentication introduces legitimate secret-bearing INPUT fields
     # (a password/token on a request body). These are inputs the caller supplies, never
-    # values the API returns — so they are allowed ONLY on the auth request models and
-    # remain forbidden everywhere else (all responses included).
+    # values the API returns — so they are allowed ONLY on these request models and
+    # remain forbidden everywhere else (all responses included). Capstone P6.5 adds
+    # ``TokenRequest`` (the invitation token a caller supplies to accept/decline) — also a
+    # caller-supplied input, never returned.
     auth_input_models = {
         "RegisterRequest", "LoginRequest", "ResetPasswordRequest", "VerifyEmailRequest",
+        "TokenRequest",
     }
     auth_input_fields = {"password", "token"}
     for name, model in components.items():

@@ -39,7 +39,7 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 ## Group D — Platform productisation (owner-added)
 | ID | Requirement | Current | Target | Phase | Acceptance |
 |---|---|---|---|---|---|
-| D1 | Admin Console | FOUNDATION (P1) — guarded API only, no UI | Bounded PLATFORM_ADMIN control plane | P1 foundation → P6 | new AC (admin authz) |
+| D1 | Admin Console | DELIVERED (P6.5) — bounded PLATFORM_ADMIN ops console (metadata only; audited; no data superuser) | Bounded PLATFORM_ADMIN control plane | P1 foundation → P6.5 | new AC (admin authz) |
 | D2 | Platform roles / RBAC | DELIVERED (P1) — USER/PLATFORM_ADMIN, audited bootstrap | USER / PLATFORM_ADMIN | P1 | AC-02 ext |
 | D3 | Basic/Premium entitlement model | DELIVERED (P1) — persisted tier + capability map | Entitlement dimension (no billing) | P1 | new EX (entitlement) |
 | D4 | Server-side entitlement enforcement | DELIVERED (P1) — `require_capability`, negative tests | Enforced at API/service | P1→P6 | new EX |
@@ -54,8 +54,8 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 |---|---|---|---|---|---|
 | B1 | Registration + verified login + logout/expiry | DELIVERED (P1) — accounts, sessions, verify, recovery | Real backend-verified accounts | P1 | AC-01/03 |
 | C6 | Social + email auth, recovery | DELIVERED (P1); Google live = UNVALIDATED | One social + email verify + recovery | P1 | EX-07 |
-| C5 | Teams/workspaces + roles + invitations | FOUNDATION (P1) — workspace-role contract only, no tables | Bounded workspace model | P6 | EX-06 |
-| P/share | Explicit resource sharing + revocation | ABSENT | Selected-resource shares | P6 | EX-06 |
+| C5 | Teams/workspaces + roles + invitations | DELIVERED (P6.5) — workspaces/memberships (OWNER/MEMBER)/hashed single-use invitations | Bounded workspace model | P6.5 | EX-06 |
+| P/share | Explicit resource sharing + revocation | DELIVERED (P6.5) — allow-listed VIEW share grants, immediate revocation, deletion invalidation | Selected-resource shares | P6.5 | EX-06 |
 
 ## Group F — Candidate data / documents
 | ID | Requirement | Current | Target | Phase | Acceptance |
@@ -256,3 +256,30 @@ Shape: **governance layer over the unchanged KB (manifest/readiness/coverage/sou
 | Reviewer authorization | PASS | Candidate cannot access diagnostics | `/api/v1/reviewer/*` `require_platform_admin`; candidate 403 | `test_reviewer_api_p6.py` | API-only (no admin console) |
 
 Migrations added: 0 (Alembic head stays `0010_candidate_documents`). Paid/live LLM/Adzuna/judge calls this phase: 0.
+
+## P6.5 Teams/Workspaces & Platform Admin (delivered this phase)
+See `p6_5_workspace_admin_design.md` + `p6_5_workspaces_platform_admin.md`.
+
+Shape: **bounded workspaces with membership roles on the membership, secure single-use invitations, explicit allow-listed VIEW-only sharing (private-by-default, immediate revocation), and a bounded PLATFORM_ADMIN operations console (metadata only, audited, never a data superuser).** Migration 0011 (single head). No billing, no enterprise SSO. Paid/live calls: 0.
+
+| Requirement | Status | Why | How | Evidence | Limitation |
+|---|---|---|---|---|---|
+| C5 Workspaces + roles + invitations | DELIVERED | Bounded collaboration | `workspaces`/`workspace_memberships` (OWNER/MEMBER)/`workspace_invitations` (hashed, single-use, 72h); `WorkspaceService` | `test_workspaces_p6_5.py`, `eval_workspace_security.py` | VIEW-only sharing; no org hierarchy |
+| Invitations (expiry/replay/foreign) | PASS | Secure joins | opaque token stored hashed; own-email match; single-use; expiry | eval (invite_single_use/invite_expiry/foreign_invite_rejected) | live email UNVALIDATED (memory adapter in tests) |
+| Membership (leave/remove/transfer/last-owner) | DELIVERED | Safe lifecycle | server-authorized; last-owner guard; leave/remove revokes outbound shares | tests + eval | — |
+| P/share Explicit sharing | DELIVERED | Explicit, allow-listed | `share_grants` VIEW-only; operational types **interview report + story** wired end-to-end (owner-scoped loaders + bounded VIEW projection); owner+member verified | `test_sharing_p6_5.py` (per-type matrix), `eval_workspace_security.py` (incl. operational_allowlist_truthful) | preparation_summary PLANNED / excluded from the operational allowlist (no durable owned resource yet) |
+| Private-by-default | PASS | Membership ≠ access | no share ⇒ no visibility; decision re-derived each read | eval (private_by_default/explicit_share_required) | — |
+| Revocation + deletion invalidation | PASS | Immediate, no resurrection | revoke sets status; source delete invalidates grants | eval (share_revocation/deleted_resource_invalidation) | — |
+| Cross-workspace isolation | PASS | 0 leakage | membership+share re-checked; client workspace id never overrides authz | eval (cross_workspace_isolation) | — |
+| Teams ≠ Premium | PASS | Orthogonal dimensions | workspace access separate from BASIC/PREMIUM; no billing | design doc + entitlement code | — |
+| D1 Platform Admin console | DELIVERED | Bounded ops | `/api/v1/admin/*` router-gated; `/admin` UI | `test_platform_admin_p6_5.py`, `eval_platform_admin.py` | not a full enterprise console |
+| Admin authorization | PASS | Least privilege | normal user 403, unauth 401; router-level `require_platform_admin` | eval (admin_authorization/normal_user_rejected) | — |
+| Admin ≠ data superuser | PASS | Private data protected | metadata-only projections; no view-as-user; owner repos stay owner-scoped | eval (admin_not_data_superuser), tests | — |
+| Entitlement/role admin (audited) | DELIVERED | Governed changes | `set_tier`/`set_platform_role`/`set_status`; audited; self-lockout guard | eval (entitlement/role change audited, self_lockout) | — |
+| Knowledge/Prompt Lab/Feedback reuse | DELIVERED | No second backend | admin console reuses P6 reviewer APIs; no-auto-promotion preserved | eval (knowledge_diagnostics_access/promptlab_boundary/feedback_boundary) | — |
+| Privacy request queue | DELIVERED | Ops visibility | `/admin/privacy-requests` metadata; deletion not falsely complete | eval (privacy_request_boundary) | global hard-delete still PARTIAL |
+| Provider/audit safety | PASS | No secret leakage | providers/audit return booleans/metadata only | eval (provider_secret_safety/audit_safety) | — |
+| Candidate feedback taxonomy UI | DELIVERED | P6 carried item | optional category on `FeedbackControl`; `user_feedback.category`; i18n | frontend build + backend threading | candidate category selection now available |
+| I18n (7 locales) | DELIVERED (engineering draft) | Candidate reach | `workspaces` namespace in all 7 catalogues; parity enforced | `frontend/tests/i18n.test.tsx` | human review pending |
+
+Migration added: `0011_workspaces_shares` (Alembic head now `0011_workspaces_shares`). Paid/live LLM/email calls this phase: 0.

@@ -68,6 +68,10 @@ jobs:
         run: python scripts/eval_feedback_learning.py
       - name: Retention evaluation (Capstone P6/E7; fixture-only; dry-run/owner-scope/idempotent)
         run: python scripts/eval_retention.py
+      - name: Workspace security evaluation (Capstone P6.5; offline; sharing/membership isolation)
+        run: python scripts/eval_workspace_security.py
+      - name: Platform admin evaluation (Capstone P6.5; offline; authz + metadata boundary + audit)
+        run: python scripts/eval_platform_admin.py
       - name: Alembic migration validation (fresh upgrade + downgrade, single head)
         env:
           DATABASE_URL: sqlite:////tmp/ci_migrations.db

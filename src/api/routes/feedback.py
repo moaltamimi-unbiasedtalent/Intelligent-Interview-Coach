@@ -30,7 +30,7 @@ def submit_feedback(
 ) -> FeedbackResponse:
     item = service.submit(
         user_id, surface=body.surface.value, target_id=body.target_id,
-        rating=body.rating.value, comment=body.comment,
+        rating=body.rating.value, comment=body.comment, category=body.category,
     )
     if item is None:  # not owned / unknown target → not-found (no disclosure)
         raise HTTPException(status_code=404, detail="Feedback target not found.")

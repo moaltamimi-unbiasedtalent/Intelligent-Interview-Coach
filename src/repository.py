@@ -506,7 +506,7 @@ class FeedbackRepository:
         return FeedbackItem(
             id=row.id, user_id=row.user_id, surface=row.surface,
             target_id=row.target_id, rating=row.rating, comment=row.comment,
-            created_at=row.created_at, updated_at=row.updated_at,
+            category=row.category, created_at=row.created_at, updated_at=row.updated_at,
         )
 
     def get(self, user_id: int, surface: str, target_id: str) -> FeedbackItem | None:
@@ -521,7 +521,7 @@ class FeedbackRepository:
             return self._to_item(row) if row is not None else None
 
     def upsert(self, user_id: int, *, surface: str, target_id: str, rating: str,
-               comment: str | None) -> FeedbackItem:
+               comment: str | None, category: str | None = None) -> FeedbackItem:
         """Create or update the single rating for this (user, surface, target).
 
         A rating change (helpful ↔ not_helpful) updates the SAME row — never a duplicate.
@@ -536,7 +536,7 @@ class FeedbackRepository:
             )
             if row is None:
                 row = UserFeedback(user_id=user_id, surface=surface, target_id=target_id,
-                                   rating=rating, comment=comment)
+                                   rating=rating, comment=comment, category=category)
                 session.add(row)
                 try:
                     session.commit()
@@ -554,10 +554,12 @@ class FeedbackRepository:
                         raise
                     row.rating = rating
                     row.comment = comment
+                    row.category = category
                     session.commit()
             else:
                 row.rating = rating
                 row.comment = comment
+                row.category = category
                 session.commit()
             session.refresh(row)
             return self._to_item(row)

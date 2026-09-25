@@ -13,6 +13,7 @@ export const PRIMARY_NAV = [
  */
 export const SECONDARY_NAV = [
   { href: "/documents", label: "Documents", labelKey: "documents.title", description: "Your private evidence" },
+  { href: "/workspaces", label: "Workspaces", labelKey: "workspaces.nav", description: "Teams & explicit sharing" },
   { href: "/sources", label: "Sources", labelKey: "nav.sources", description: "Career evidence" },
   { href: "/help", label: "Help", labelKey: "nav.help", description: "How Ask4Mo works" },
   { href: "/review", label: "Review & Diagnostics", labelKey: "nav.review", description: "Technical inspection" },

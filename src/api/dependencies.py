@@ -276,6 +276,83 @@ def get_email_sender(request: Request):
     return _shared(request, "email_sender", build_email_sender)
 
 
+# --- Teams / Workspaces & sharing (Capstone P6.5) ----------------------------
+
+
+def get_workspace_repository(repo=Depends(get_repository)):
+    from src.workspace_repository import WorkspaceRepository
+
+    return WorkspaceRepository(repo.session_factory)
+
+
+def get_workspace_service(
+    request: Request,
+    workspaces=Depends(get_workspace_repository),
+    accounts=Depends(get_account_repository),
+    audit=Depends(get_audit_repository),
+    email=Depends(get_email_sender),
+):
+    from src.application.workspace_service import WorkspaceService
+
+    base = getattr(getattr(request.app.state, "settings", None), "app_base_url", None) \
+        or "https://app.ask4mo.local"
+    return WorkspaceService(workspaces=workspaces, accounts=accounts, audit=audit,
+                           email=email, app_base_url=base)
+
+
+def get_sharing_service(
+    request: Request,
+    workspaces=Depends(get_workspace_repository),
+    audit=Depends(get_audit_repository),
+    repo=Depends(get_repository),
+):
+    # Owner verifiers/loaders for the OPERATIONAL allow-listed shareable resource types.
+    # Ownership is ALWAYS checked as the resource OWNER (from the trusted grant), and the
+    # loader returns a BOUNDED VIEW projection — a share never bypasses owner scoping and
+    # never exposes internal state (usage/prompts/secrets). Interview report + story only;
+    # preparation_summary is PLANNED (not in the operational allowlist).
+    from src.application.report_export import build_json_export
+    from src.application.sharing_service import SharingService
+    from src.documents.repository import StoryRepository
+
+    story_repo = StoryRepository(workspaces.session_factory)
+
+    def _story_owns(resource_id: str, owner_user_id: int) -> bool:
+        try:
+            return story_repo.get(user_id=owner_user_id, story_id=int(resource_id)) is not None
+        except (ValueError, TypeError):
+            return False
+
+    def _story_load(resource_id: str, owner_user_id: int):
+        try:
+            return story_repo.get(user_id=owner_user_id, story_id=int(resource_id))
+        except (ValueError, TypeError):
+            return None
+
+    def _report_owns(resource_id: str, owner_user_id: int) -> bool:
+        try:
+            return repo.get_interview(owner_user_id, int(resource_id)) is not None
+        except (ValueError, TypeError):
+            return False
+
+    def _report_load(resource_id: str, owner_user_id: int):
+        try:
+            detail = repo.get_interview(owner_user_id, int(resource_id))
+        except (ValueError, TypeError):
+            return None
+        if detail is None:
+            return None
+        # Safe, bounded VIEW projection (no usage/prompt/internal state — same guard the
+        # owner's own export uses).
+        return build_json_export(detail)
+
+    return SharingService(
+        workspaces=workspaces, audit=audit,
+        owner_verifiers={"story": _story_owns, "interview_report": _report_owns},
+        owner_loaders={"story": _story_load, "interview_report": _report_load},
+    )
+
+
 # --- private candidate documents & evidence (Capstone P4) ---------------------
 
 
