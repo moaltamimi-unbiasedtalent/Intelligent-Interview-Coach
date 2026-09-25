@@ -355,8 +355,9 @@ assumptions in core logic, prompts, scoring or examples.
   time — that is expected, not a defect). The measured backend suite after Capstone
   P7 is **2354 passed, 3 skipped** (P4 2277; P5 2303; P6 2334; P6.5 2352; P7 adds the
   voice-experience gate); the skips are RAGAS installed/absent guards; the frontend unit suite
-  is **230 passed** (`cd frontend && npm test`; P7 adds the TTS/voice-control suite, 8 tests)
-  and the Playwright e2e suite is **88 passed** (`npm run e2e`; P7 adds `e2e/voice.spec.ts`).
+  is **237 passed** (`cd frontend && npm test`; P7 adds TTS/voice-control + voice-concurrency +
+  voice-help-i18n suites) and the Playwright e2e suite is **89 passed** (`npm run e2e`; P7 adds
+  `e2e/voice.spec.ts` incl. STT/TTS mutual-exclusion).
 
 - **Multilingual turn-based voice (Capstone P7 + E5).** A bounded voice MODALITY (not a
   human-trait signal): hear Mo/questions via browser TTS and answer by speaking via the reused
@@ -369,13 +370,16 @@ assumptions in core logic, prompts, scoring or examples.
   citations→"sources on screen"), `fakeSpeechOutputAdapter.ts`. `components/ui/VoicePlaybackControl.tsx`
   (Listen/Stop; renders null when unsupported) is wired into `AgentConversation` (speaks
   `presentation.answer`, brief-first) and `PracticeClient` (the visible question). **Invariants:**
-  speech never auto-submits; TTS never auto-opens the mic (no voice loop); Practice evaluation
+  speech never auto-submits; TTS never auto-opens the mic (no voice loop); **STT and TTS are
+  mutually exclusive per surface** via a shared `voiceCoordination` provider (both hooks claim/
+  release one audio channel; starting one stops the other, never auto-starts it, never clears
+  text; `/prepare` + `/practice` wrap the provider); Practice evaluation
   stays TEXT-only; speech-output language follows the Mo conversation language and never changes
   career geography; Ask4Mo stores NO audio (no MediaRecorder/Blob/voiceprint) and derives NO
   human-trait signal (emotion/accent/confidence/personality/intelligence/honesty/hiring — none);
   voice preference is device-local (localStorage); Admin sees only speech *architecture*
   metadata; workspaces never auto-share audio/voice. Realtime/streaming voice (C1) is DEFERRED.
-  Deterministic gate `scripts/eval_voice_experience.py` (21 invariants incl. the human-trait
+  Deterministic gate `scripts/eval_voice_experience.py` (26 invariants incl. the human-trait
   prohibition scanned as code identifiers) + `tests/test_voice_experience_p7.py`; unit
   `tests/voice-output.test.tsx`; Playwright `e2e/voice.spec.ts` (fake speech engines). i18n
   `voice` namespace across 7 locales. No migration (Alembic head `0011_workspaces_shares`); 0

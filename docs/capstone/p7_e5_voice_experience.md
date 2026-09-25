@@ -52,8 +52,27 @@ are untouched — voice is only the interaction layer.
 ## Explicit submission & safety
 - **Speech never auto-submits** (P3 invariant, extended to all voice surfaces).
 - **TTS never auto-opens the microphone**; there is no speak→auto-mic→auto-submit loop.
-- Starting playback cancels any prior utterance; `VoicePlaybackControl` exposes `onSpeakStart`
-  so a surface may stop active dictation. Route change/unmount cancels playback.
+- Starting playback cancels any prior utterance. Route change/unmount cancels playback.
+
+## Voice concurrency — STT/TTS mutual exclusion (pre-merge closure)
+On a given surface, Ask4Mo STT and Ask4Mo TTS are **never actively running at the same time**.
+A small shared **voice coordinator** (`lib/speech/voiceCoordination.tsx`,
+`VoiceCoordinationProvider` + `useVoiceCoordinator`) owns a single audio channel per surface.
+Both shared hooks opt in: `useSpeechOutput` and `useDictation` **claim** the channel when they
+start (which **stops** whatever else was active first) and **release** it when they end. So:
+- starting **Listen** stops any active dictation, then speaks;
+- starting **Speak** stops any active playback, then listens;
+- neither action submits; stopping a modality **never clears** typed/recognised text;
+- the coordinator **only stops** the other modality — it never auto-starts STT or TTS (no
+  feedback loop);
+- when a surface is not wrapped in the provider the hooks are a **no-op** (backward
+  compatible). The two candidate voice surfaces (`/prepare`, `/practice`) wrap their voice
+  subtree in the provider. Route change/unmount still cancels cleanly.
+Chosen as the smallest architecture that works for both surfaces without threading callbacks
+through the Composer/DictationControl nesting, without a global audio daemon, second
+adapter, polling or DOM hacks. Proven by `voice-concurrency.test.tsx` (unit),
+`voice.spec.ts` (E2E) and the eval invariants `stt_tts_mutual_exclusion`,
+`tts_stops_active_stt`, `stt_stops_active_tts`, `no_feedback_loop`.
 
 ## Privacy
 Ask4Mo hands **candidate-visible text** to the browser/OS speech engine and stores **no
@@ -73,16 +92,23 @@ speech-rate score. No recruiter-facing voice rating. Enforced by `eval_voice_exp
 
 ## i18n
 New candidate-facing strings live under the `voice` namespace in all 7 catalogues (key-parity
-enforced). ENGINEERING DRAFT; no human review claimed. The admin console stays English.
+enforced) — the voice controls AND the **Voice Help section**, which is rendered from the
+catalogues via `useT()` (P3.5 coding standard), so it shows in the selected interface language
+(EN/DE/FR/ES/IT/PT/NL). Translations are ENGINEERING DRAFT; no human review claimed. Older
+pre-P7 Help article bodies remain English on the documented localization-completion backlog —
+the whole Help Center is **not** claimed as fully localized. The admin console stays English.
 
 ## Evaluation
-`scripts/eval_voice_experience.py` — 21 deterministic invariants (adapter boundary, 7-language
+`scripts/eval_voice_experience.py` — 26 deterministic invariants (adapter boundary, 7-language
 config, user-initiated TTS/STT, no-auto-submit, no-auto-mic, editable transcript, text-only
 Practice eval, no audio persistence, no trait analysis, no biometric storage, stop control,
 unsupported/permission fallback, language/geography separation, Brief/Detailed preserved,
-source visibility, admin boundary, workspace no-auto-share, navigation cleanup). Unit:
-`tests/voice-output.test.tsx` (8). Playwright: `e2e/voice.spec.ts` (Practice Listen+Speak+
-Submit; Prepare Listen + no-auto-mic) with fake speech engines.
+source visibility, admin boundary, workspace no-auto-share, navigation cleanup, PLUS the
+closure's STT/TTS mutual-exclusion set: `stt_tts_mutual_exclusion`, `tts_stops_active_stt`,
+`stt_stops_active_tts`, `surfaces_scope_coordinator`, `no_feedback_loop`). Unit:
+`tests/voice-output.test.tsx` (8), `tests/voice-concurrency.test.tsx` (3),
+`tests/voice-help-i18n.test.tsx` (4). Playwright: `e2e/voice.spec.ts` (Practice Listen+Speak+
+Submit; Practice mutual-exclusion; Prepare Listen + no-auto-mic) with fake speech engines.
 
 ## Live validation matrix (§37) — honest status
 

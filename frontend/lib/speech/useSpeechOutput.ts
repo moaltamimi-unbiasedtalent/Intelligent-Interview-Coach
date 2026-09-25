@@ -12,6 +12,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { browserSpeechSynthesisAdapter } from "./speechSynthesisAdapter";
+import { useVoiceCoordinator } from "./voiceCoordination";
 import type {
   SpeechOutputAdapter,
   SpeechOutputErrorKind,
@@ -41,6 +42,18 @@ export function useSpeechOutput({ adapter, lang, voiceURI }: UseSpeechOutputOpti
   const [status, setStatus] = useState<SpeechOutputStatus>(supported ? "idle" : "unsupported");
   const [error, setError] = useState<SpeechOutputErrorKind | null>(null);
 
+  // Voice coordination (P7 closure): claim the surface's single audio channel when we start
+  // speaking (stops any active dictation first) and release it when playback ends. No-op when
+  // the surface is not wrapped in a VoiceCoordinationProvider.
+  const coordinator = useVoiceCoordinator();
+  const ownerId = useRef<symbol>(Symbol("tts"));
+
+  const stop = useCallback(() => {
+    engine.stop();
+    coordinator?.release(ownerId.current);
+    setStatus((s) => (s === "unsupported" ? s : "stopped"));
+  }, [engine, coordinator]);
+
   const speak = useCallback(
     (text: string) => {
       if (!supported) {
@@ -49,13 +62,22 @@ export function useSpeechOutput({ adapter, lang, voiceURI }: UseSpeechOutputOpti
         return;
       }
       setError(null);
+      // Claim BEFORE speaking so active dictation is stopped first (mutual exclusion).
+      coordinator?.claim(ownerId.current, () => {
+        engine.stop();
+        setStatus((s) => (s === "unsupported" ? s : "stopped"));
+      });
       engine.speak(
         text,
         { lang, voiceURI },
         {
           onStart: () => setStatus("speaking"),
-          onEnd: () => setStatus("idle"),
+          onEnd: () => {
+            coordinator?.release(ownerId.current);
+            setStatus("idle");
+          },
           onError: (kind) => {
+            coordinator?.release(ownerId.current);
             setError(kind);
             setStatus("error");
           },
@@ -64,13 +86,8 @@ export function useSpeechOutput({ adapter, lang, voiceURI }: UseSpeechOutputOpti
         },
       );
     },
-    [engine, lang, voiceURI, supported],
+    [engine, lang, voiceURI, supported, coordinator],
   );
-
-  const stop = useCallback(() => {
-    engine.stop();
-    setStatus((s) => (s === "unsupported" ? s : "stopped"));
-  }, [engine]);
 
   // Stop any active playback on unmount / adapter change — no zombie speech after
   // navigation (§22).

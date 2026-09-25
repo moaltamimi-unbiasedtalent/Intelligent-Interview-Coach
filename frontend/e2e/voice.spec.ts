@@ -131,6 +131,26 @@ test("Practice: Listen speaks the question; Speak fills transcript; no auto-subm
   await expect(page.getByText(/74/)).toBeVisible();
 });
 
+test("Practice: starting Listen stops active dictation (STT/TTS mutual exclusion); no submit", async ({ page }) => {
+  await installFakeVoice(page);
+  await mockPractice(page);
+  await page.goto(`/practice?session=${SID}`);
+  await expect(page.getByRole("heading", { name: /tell me about a decision/i })).toBeVisible();
+
+  // Start dictation → listening.
+  await page.getByRole("button", { name: "Start dictation" }).click();
+  await expect(page.getByRole("button", { name: "Stop dictation" })).toBeVisible();
+
+  // Click Listen → dictation is stopped first (mic returns to "Start"), playback happens.
+  await page.getByRole("button", { name: /listen to the question/i }).click();
+  await expect(page.getByRole("button", { name: "Start dictation" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Stop dictation" })).toHaveCount(0);
+  expect((await spoken(page)).join(" ")).toContain("tell me about a decision");
+
+  // No submission occurred — still awaiting the answer.
+  await expect(page.getByRole("heading", { name: /tell me about a decision/i })).toBeVisible();
+});
+
 async function mockPrepare(page: Page) {
   const run = {
     run_id: "run_e2e", status: "completed", response: "Focus on measurable impact.",

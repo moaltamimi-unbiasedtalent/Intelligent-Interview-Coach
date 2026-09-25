@@ -162,6 +162,40 @@ def run() -> dict[str, tuple[bool, str]]:
           "useEffect" in hook and "return () => engine.stop()" in hook,
           "unmount stops active playback")
 
+    # --- P7 closure: STT/TTS mutual exclusion (no feedback loop) ---
+    coord = read("lib/speech/voiceCoordination.tsx")
+    prepare_page = read("app/prepare/page.tsx")
+    practice_page = read("app/practice/page.tsx")
+
+    # 21) A coordinator seam exists and BOTH modality hooks claim/release it.
+    check("stt_tts_mutual_exclusion",
+          "VoiceCoordinationProvider" in coord and "claim" in coord and "release" in coord
+          and "useVoiceCoordinator" in hook and "useVoiceCoordinator" in dictation_hook,
+          "shared coordinator; both hooks claim/release the single audio channel")
+
+    # 22) Starting TTS stops active STT: the speech-output hook claims before speaking.
+    check("tts_stops_active_stt",
+          "coordinator?.claim(ownerId.current" in hook and "coordinator?.release" in hook,
+          "useSpeechOutput claims (stops the other) before playback")
+
+    # 23) Starting STT stops active TTS: the dictation hook claims before listening.
+    check("stt_stops_active_tts",
+          "coordinator?.claim(ownerId.current" in dictation_hook and "coordinator?.release" in dictation_hook,
+          "useDictation claims (stops the other) before listening")
+
+    # 24) The two candidate voice surfaces scope the coordinator (mutual exclusion applies).
+    check("surfaces_scope_coordinator",
+          "VoiceCoordinationProvider" in prepare_page and "VoiceCoordinationProvider" in practice_page,
+          "Prepare and Practice wrap their voice subtree in the provider")
+
+    # 25) No feedback loop: claiming only STOPS the other modality — it never START/ speak/
+    #     start()s it, and the coordinator itself never auto-starts anything.
+    coord_code = strip_comments(coord)
+    check("no_feedback_loop",
+          ".start(" not in coord_code and ".speak(" not in coord_code
+          and "engine.start" not in coord_code,
+          "coordinator only stops the other modality; never auto-starts STT or TTS")
+
     # bonus) Help documents voice + the human-trait prohibition honestly.
     check("help_documents_voice",
           "voice" in help_center.lower() or "listen" in help_center.lower(),

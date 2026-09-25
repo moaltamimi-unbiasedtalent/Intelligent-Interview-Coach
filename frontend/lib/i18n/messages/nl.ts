@@ -279,6 +279,17 @@ const nl: Catalog = {
     stopped: "Gestopt",
     unavailable: "Spraakweergave is niet beschikbaar in deze browser.",
     privacyNote: "Ask4Mo gebruikt uw stem nooit om emoties, persoonlijkheid, intelligentie, eerlijkheid of geschiktheid voor werk af te leiden.",
+    helpTitle: "Stem: luisteren & spreken",
+    hListenQ: "Naar Mo of een vraag luisteren",
+    hListenA: "Waar uw browser spraak ondersteunt, leest een knop Beluisteren het antwoord van Mo of een oefenvraag voor. Het afspelen start nooit vanzelf — u drukt op Beluisteren en kunt altijd op Stoppen drukken.",
+    hSpeakQ: "Een antwoord inspreken en bewerken vóór verzenden",
+    hSpeakA: "Gebruik de microfoon om uw antwoord in te spreken. Uw woorden verschijnen als een bewerkbaar transcript; u leest en corrigeert ze en drukt daarna zelf op Verzenden. Spreken verzendt nooit vanzelf, en beginnen met spreken stopt het afspelen (en omgekeerd) — de twee zijn nooit tegelijk actief.",
+    hLangQ: "Talen, browserafhankelijkheid en bronnen",
+    hLangA: "Spraakweergave volgt uw Mo-gesprekstaal binnen de zeven ondersteunde talen (Engels, Duits, Frans, Spaans, Italiaans, Portugees, Nederlands). Of er een stem is geïnstalleerd hangt af van de browser/het systeem; is er geen, dan blijft de tekst op het scherm. Lange links worden niet voorgelezen — het afspelen meldt dat bronnen op het scherm beschikbaar zijn, en de bronlinks blijven zichtbaar.",
+    hPrivacyQ: "Privacy en waarvoor stem NIET wordt gebruikt",
+    hPrivacyA: "Ask4Mo geeft de zichtbare tekst door aan de spraak-engine van uw browser/systeem en slaat geen audio op. Ask4Mo gebruikt uw stem nooit om emoties, persoonlijkheid, intelligentie, eerlijkheid, misleiding, accent of geschiktheid voor werk af te leiden — stem dient alleen om te luisteren en tekst in te voeren. Er is geen enkele stemscore.",
+    hUnsupportedQ: "Als stem niet beschikbaar is",
+    hUnsupportedA: "Heeft uw browser geen spraaksynthese of geen geïnstalleerde stem, dan verschijnt de knop Beluisteren simpelweg niet en leest u de tekst normaal. Stem blokkeert nooit een functie.",
   },
 };
 

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Field";
 import { TutorialLauncher } from "@/components/tutorial/TutorialLauncher";
+import { useT } from "@/components/i18n/I18nProvider";
 
 interface Article {
   q: string;
@@ -93,18 +94,6 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: "voice",
-    title: "Voice: listening & speaking",
-    articles: [
-      { q: "Listen to Mo or a question", a: "Where your browser supports speech synthesis, a Listen button lets you hear Mo's response or an Interview Practice question read aloud. Playback never starts on its own — you press Listen, and you can press Stop any time." },
-      { q: "Speak an answer", a: "Use the microphone (dictation) to speak your answer or message. Your words appear as an editable transcript; you review and edit them, then press Send or Submit yourself. Speaking never submits automatically, and Listen never opens the microphone for you." },
-      { q: "Languages", a: "Voice playback maps your Mo conversation language to a bounded speech voice (English, German, French, Spanish, Italian, Portuguese, Dutch). Whether a suitable voice is installed is browser/OS-dependent; if none is available, the text stays on screen to read. Your interface language, dictation language and Mo conversation language remain separate settings, and a voice language never changes career/salary geography." },
-      { q: "Sources when listening", a: "Long links aren't read aloud. When a response cites sources, playback says the sources are available on screen — the source links stay visible and inspectable in the normal view." },
-      { q: "Privacy & what voice is NOT used for", a: "Ask4Mo hands the visible text to your browser/OS speech engine and stores no synthesised audio. Ask4Mo never uses your voice to infer emotions, personality, intelligence, honesty, deception, accent quality or hiring suitability — voice is only a way to listen and to enter text. There is no voice score of any kind." },
-      { q: "If voice isn't available", a: "If your browser has no speech synthesis or no installed voice, the Listen button simply doesn't appear and you read the text normally. Voice never blocks any feature." },
-    ],
-  },
-  {
     id: "documents",
     title: "Documents & evidence",
     articles: [
@@ -171,11 +160,29 @@ const SECTIONS: Section[] = [
 
 export function HelpCenter() {
   const [query, setQuery] = useState("");
+  const t = useT();
+
+  // The P7 Voice section is localised via the i18n catalogues (P3.5 coding standard); older
+  // Help bodies remain English on the documented localization backlog.
+  const sections = useMemo<Section[]>(() => {
+    const voice: Section = {
+      id: "voice",
+      title: t("voice.helpTitle"),
+      articles: [
+        { q: t("voice.hListenQ"), a: t("voice.hListenA") },
+        { q: t("voice.hSpeakQ"), a: t("voice.hSpeakA") },
+        { q: t("voice.hLangQ"), a: t("voice.hLangA") },
+        { q: t("voice.hPrivacyQ"), a: t("voice.hPrivacyA") },
+        { q: t("voice.hUnsupportedQ"), a: t("voice.hUnsupportedA") },
+      ],
+    };
+    return [...SECTIONS, voice];
+  }, [t]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return SECTIONS;
-    return SECTIONS.map((s) => ({
+    if (!q) return sections;
+    return sections.map((s) => ({
       ...s,
       articles: s.articles.filter(
         (a) =>
@@ -184,7 +191,7 @@ export function HelpCenter() {
           a.a.toLowerCase().includes(q),
       ),
     })).filter((s) => s.articles.length > 0);
-  }, [query]);
+  }, [query, sections]);
 
   return (
     <div className="space-y-6">

@@ -279,6 +279,17 @@ const it: Catalog = {
     stopped: "Fermato",
     unavailable: "La riproduzione vocale non è disponibile in questo browser.",
     privacyNote: "Ask4Mo non usa mai la tua voce per dedurre emozioni, personalità, intelligenza, onestà o idoneità all’assunzione.",
+    helpTitle: "Voce: ascoltare e parlare",
+    hListenQ: "Ascoltare Mo o una domanda",
+    hListenA: "Dove il browser supporta la voce, un pulsante Ascolta legge ad alta voce la risposta di Mo o una domanda di pratica. La riproduzione non parte mai da sola — premi Ascolta e puoi premere Ferma in qualsiasi momento.",
+    hSpeakQ: "Dettare una risposta e modificarla prima di inviare",
+    hSpeakA: "Usa il microfono per dettare la tua risposta. Le tue parole appaiono come trascrizione modificabile; le rileggi e le correggi, poi premi tu stesso Invia. Parlare non invia mai da solo, e iniziare a parlare ferma la riproduzione (e viceversa) — i due non sono mai attivi insieme.",
+    hLangQ: "Lingue, dipendenza dal browser e fonti",
+    hLangA: "La riproduzione vocale segue la tua lingua di conversazione con Mo tra le sette lingue supportate (inglese, tedesco, francese, spagnolo, italiano, portoghese, olandese). Se una voce è installata dipende dal browser/sistema; se non ce n’è, il testo resta a schermo. I link lunghi non vengono letti — la riproduzione segnala che le fonti sono disponibili a schermo, e i link delle fonti restano visibili.",
+    hPrivacyQ: "Privacy e usi ESCLUSI della voce",
+    hPrivacyA: "Ask4Mo passa il testo visibile al motore vocale del browser/sistema e non memorizza audio. Ask4Mo non usa mai la tua voce per dedurre emozioni, personalità, intelligenza, onestà, inganno, accento o idoneità all’assunzione — la voce serve solo ad ascoltare e a inserire testo. Non esiste alcun punteggio vocale.",
+    hUnsupportedQ: "Se la voce non è disponibile",
+    hUnsupportedA: "Se il browser non ha la sintesi vocale o nessuna voce installata, il pulsante Ascolta semplicemente non appare e leggi il testo normalmente. La voce non blocca mai alcuna funzione.",
   },
 };
 

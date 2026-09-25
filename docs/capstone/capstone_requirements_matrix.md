@@ -299,6 +299,7 @@ Shape: **turn-based voice — Listen (browser TTS) to Mo responses & Practice qu
 | Speak answers | DELIVERED (reuse P3) | Answer by voice | existing `DictationControl` in the answer composer | dictation + voice e2e | browser STT dependent |
 | Editable transcript + explicit submit | PASS | User control | P3 append-only + explicit Submit; no auto-submit on any voice surface | eval (no_auto_submit), e2e | — |
 | TTS does not auto-open mic | PASS | No voice loop | no recognition/mic start in TTS layer/onEnd | eval (tts_does_not_auto_start_mic), e2e | — |
+| STT/TTS mutual exclusion (closure) | PASS | Never both active on a surface | shared `voiceCoordination` provider; both hooks claim/release; starting one stops the other; no auto-start | eval (stt_tts_mutual_exclusion/tts_stops_active_stt/stt_stops_active_tts/no_feedback_loop), `voice-concurrency.test.tsx`, `voice.spec.ts` | — |
 | Text-only Practice evaluation | PASS | Determinism preserved | submit sends the text answer; no audio score | eval (practice_uses_text_evaluation) | — |
 | 7-language TTS configuration | CONFIGURED + DETERMINISTIC | Bounded reach | `ttsLocales.ts` (en/de/fr/es/it/pt/nl) + honest status | eval (seven_language_configuration), unit | browser voice availability varies; live UNVALIDATED |
 | Language/geography separation | PASS | Safety | TTS locale never touches career geo/jurisdiction | eval (language_geography_separation) | — |
@@ -307,7 +308,7 @@ Shape: **turn-based voice — Listen (browser TTS) to Mo responses & Practice qu
 | Unsupported/permission fallback | PASS | Never blocks | control renders null when unsupported; P3 permission handling | eval (unsupported_fallback/permission_failure_fallback) | — |
 | Navigation cleanup | PASS | No zombie speech | `useSpeechOutput` cancels on unmount | eval (navigation_cleanup) | — |
 | Admin/workspace voice boundary | PASS | No private voice data | admin providers = architecture only; no audio/voice sharing | eval (admin_no_voice_private_data/workspace_no_auto_share) | — |
-| i18n (7 locales) | DELIVERED (engineering draft) | Candidate reach | `voice` namespace in all 7 catalogues; parity enforced | `tests/i18n.test.tsx` | human review pending |
-| Realtime voice (C1) | DEFERRED | Turn-based chosen | not built (out of P7 scope) | — | EX-02 remains open |
+| i18n (7 locales) | DELIVERED (engineering draft) | Candidate reach | `voice` namespace in all 7 catalogues (controls + localized Voice Help via useT); parity enforced | `tests/i18n.test.tsx`, `voice-help-i18n.test.tsx` | human review pending; legacy Help bodies on localization backlog |
+| Realtime voice (C1) | DEFERRED / OPEN | Turn-based chosen | not built (out of P7 scope); mutual exclusion ≠ realtime | — | EX-02 remains open |
 
 Migration added: 0. Paid/live/speech-provider calls this phase: 0.

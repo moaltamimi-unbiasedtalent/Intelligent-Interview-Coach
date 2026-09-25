@@ -279,6 +279,17 @@ const fr: Catalog = {
     stopped: "Arrêté",
     unavailable: "La lecture vocale n’est pas disponible dans ce navigateur.",
     privacyNote: "Ask4Mo n’utilise jamais votre voix pour déduire des émotions, la personnalité, l’intelligence, l’honnêteté ou l’aptitude à l’embauche.",
+    helpTitle: "Voix : écouter et parler",
+    hListenQ: "Écouter Mo ou une question",
+    hListenA: "Lorsque votre navigateur prend en charge la parole, un bouton Écouter lit à voix haute la réponse de Mo ou une question d’entraînement. La lecture ne démarre jamais seule — vous appuyez sur Écouter et pouvez appuyer sur Arrêter à tout moment.",
+    hSpeakQ: "Dicter une réponse et la modifier avant l’envoi",
+    hSpeakA: "Utilisez le microphone pour dicter votre réponse. Vos mots apparaissent sous forme de transcription modifiable ; vous les relisez et les corrigez, puis vous appuyez vous-même sur Envoyer ou Soumettre. Parler n’envoie jamais tout seul, et parler arrête la lecture (et inversement) — les deux ne sont jamais actifs en même temps.",
+    hLangQ: "Langues, dépendance au navigateur et sources",
+    hLangA: "La lecture vocale suit votre langue de conversation avec Mo parmi les sept langues prises en charge (anglais, allemand, français, espagnol, italien, portugais, néerlandais). La présence d’une voix installée dépend du navigateur/système ; si aucune n’est disponible, le texte reste à l’écran. Les liens longs ne sont pas lus — la lecture indique que les sources sont disponibles à l’écran, et les liens des sources restent visibles.",
+    hPrivacyQ: "Confidentialité et usages EXCLUS de la voix",
+    hPrivacyA: "Ask4Mo transmet le texte visible au moteur vocal de votre navigateur/système et ne stocke aucun audio. Ask4Mo n’utilise jamais votre voix pour déduire des émotions, la personnalité, l’intelligence, l’honnêteté, la tromperie, l’accent ou l’aptitude à l’embauche — la voix sert uniquement à écouter et à saisir du texte. Il n’existe aucun score vocal.",
+    hUnsupportedQ: "Si la voix n’est pas disponible",
+    hUnsupportedA: "Si votre navigateur n’a pas de synthèse vocale ou aucune voix installée, le bouton Écouter n’apparaît tout simplement pas et vous lisez le texte normalement. La voix ne bloque jamais aucune fonctionnalité.",
   },
 };
 
