@@ -24,6 +24,40 @@ export interface CapabilitiesResponse {
   agent_memory: boolean;
   human_in_the_loop: boolean;
   agent_coach_enabled: boolean;
+  // Realtime voice (Capstone P7.5) — deployment flag AND a configured provider key.
+  // When false, the UI stays on P7 turn-based voice.
+  realtime_voice_enabled: boolean;
+}
+
+// Realtime voice (Capstone P7.5, C1).
+export interface RealtimeSessionRequest {
+  locale?: string;
+  surface?: "practice" | "prepare";
+  interview_session_id?: string | null;
+}
+
+export interface RealtimeSessionResponse {
+  provider: string;
+  model: string;
+  voice: string;
+  locale: string;
+  client_secret: string; // ephemeral, short-lived — never the long-lived key
+  expires_at: number;
+  session_id: string;
+  base_url: string;
+  max_session_seconds: number;
+  idle_timeout_seconds: number;
+}
+
+export interface RealtimeStatusResponse {
+  enabled: boolean;
+  configured: boolean;
+  available: boolean;
+  provider: string;
+  supported_locales: string[];
+  max_session_seconds: number;
+  max_concurrent_per_user: number;
+  fallback: string;
 }
 
 export interface ApiErrorBody {

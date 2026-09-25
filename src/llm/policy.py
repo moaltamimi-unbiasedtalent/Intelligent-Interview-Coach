@@ -63,6 +63,11 @@ class ModelCapability(str, Enum):
     - ``TOOL_CALLING``: the model must support bound-tool calling (Mo's ReAct loop).
     - ``STRUCTURED``: the model must support JSON-schema-constrained output.
     - ``TEXT``: plain grounded generation is enough.
+    - ``REALTIME``: a bidirectional low-latency audio/session model (Capstone P7.5).
+      This is NOT an OpenRouter chat slug — the effective provider/model is resolved by
+      the dedicated realtime registry (``src/voice/realtime.py``), server-authoritatively.
+      Declared here so realtime is a first-class operation in the single policy view and a
+      raw client slug is still rejected, without pretending a realtime model is a chat tier.
     - ``NONE``: the operation is DETERMINISTIC — it uses no model at all. A policy
       with this capability resolves to no slug; callers must not build a client.
     """
@@ -70,6 +75,7 @@ class ModelCapability(str, Enum):
     TOOL_CALLING = "tool_calling"
     STRUCTURED = "structured"
     TEXT = "text"
+    REALTIME = "realtime"
     NONE = "none"
 
 
@@ -85,6 +91,7 @@ class ModelOperation(str, Enum):
     FINAL_RESPONSE = "final_response"                        # High-stakes candidate-facing synthesis
     STRUCTURED_GENERATION = "structured_generation"          # Generic schema-constrained generation
     EVALUATION = "evaluation"                                # Answer/report evaluation (Practice)
+    REALTIME_VOICE = "realtime_voice"                        # P7.5 realtime voice session (audio)
 
 
 @dataclass(frozen=True)
@@ -261,6 +268,23 @@ OPERATION_POLICY: dict[ModelOperation, OperationPolicy] = {
         "policy view; Interview Practice keeps its session-selected effective model "
         "(no interview redesign in P5 — see src/llm/models.py INTERVIEW_SESSION).",
     ),
+    ModelOperation.REALTIME_VOICE: OperationPolicy(
+        operation=ModelOperation.REALTIME_VOICE,
+        capability=ModelCapability.REALTIME,      # audio session — NOT an OpenRouter tier
+        min_capability=ModelProfile.BALANCED,     # advisory only (realtime slug is separate)
+        fallback_floor=ModelProfile.BALANCED,
+        structured_output=False,
+        requires_tools=False,
+        temperature=None,
+        max_output_tokens=0,                      # audio session, not token-capped here
+        timeout_s=60.0,
+        max_retries=0,                            # no auto-retry of a live audio session
+        rationale="Capstone P7.5 realtime voice. The effective provider/model is chosen "
+        "server-side by the dedicated realtime registry (src/voice/realtime.py), never by a "
+        "client slug. Declared here so realtime is a first-class, observable operation and "
+        "the model-policy boundary rejects client overrides; falls back to P7 turn-based "
+        "voice when unavailable. Live model UNVALIDATED (no realtime provider authorised).",
+    ),
 }
 
 
@@ -303,6 +327,21 @@ def resolve_policy(
             profile=None, model_id=None, spec=None,
             structured_output=False, requires_tools=False, temperature=None,
             max_output_tokens=0, timeout_s=policy.timeout_s, max_retries=0,
+            fallback_profiles=[], fallback_model_ids=[], capability_capped=False,
+        )
+
+    if policy.capability is ModelCapability.REALTIME:
+        # Realtime is a separate provider surface (audio session), not an OpenRouter chat
+        # tier — so it resolves to NO chat slug here. The effective realtime provider/model
+        # is chosen server-side by src/voice/realtime.py. uses_model=True marks it as a
+        # provider-backed operation (for the reviewer diagnostic) while keeping model_id None
+        # so no chat slug is ever attributed to it.
+        return ResolvedModelPolicy(
+            operation=op, capability=policy.capability, uses_model=True,
+            profile=None, model_id=None, spec=None,
+            structured_output=False, requires_tools=policy.requires_tools, temperature=None,
+            max_output_tokens=policy.max_output_tokens, timeout_s=policy.timeout_s,
+            max_retries=policy.max_retries,
             fallback_profiles=[], fallback_model_ids=[], capability_capped=False,
         )
 

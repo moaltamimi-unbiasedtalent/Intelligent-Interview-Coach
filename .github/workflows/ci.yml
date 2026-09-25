@@ -74,6 +74,8 @@ jobs:
         run: python scripts/eval_platform_admin.py
       - name: Voice experience evaluation (Capstone P7/E5; offline; TTS/STT invariants + no human-trait inference)
         run: python scripts/eval_voice_experience.py
+      - name: Realtime voice evaluation (Capstone P7.5/C1; offline; secret boundary, barge-in, fallback, no audio/trait)
+        run: python scripts/eval_realtime_voice.py
       - name: Alembic migration validation (fresh upgrade + downgrade, single head)
         env:
           DATABASE_URL: sqlite:////tmp/ci_migrations.db

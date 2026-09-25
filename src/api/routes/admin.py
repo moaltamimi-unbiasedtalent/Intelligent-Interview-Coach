@@ -144,6 +144,23 @@ def feedback_overview(accounts=Depends(get_account_repository)) -> dict:
     }
 
 
+def _realtime_provider_status() -> dict:
+    """Safe realtime-voice operational metadata for admins (Capstone P7.5).
+
+    Booleans/labels ONLY — never a key, an ephemeral secret, audio, or any transcript. Admins
+    see whether realtime is configured/available and its bounds, and an explicit statement
+    that no audio or private transcript is ever exposed here."""
+    from src.voice.realtime import resolve_realtime_config
+
+    cfg = resolve_realtime_config().safe_dict()
+    cfg.update({
+        "live_validation": "NOT_RUN",            # no authorised realtime provider call made
+        "audio_visible_to_admin": False,
+        "transcript_visible_to_admin": False,
+    })
+    return cfg
+
+
 @router.get("/providers", summary="Provider/system configuration status (no secrets)")
 def providers() -> dict:
     import os
@@ -169,6 +186,7 @@ def providers() -> dict:
             "audio_persisted_by_ask4mo": False,          # no recordings/voiceprints stored
             "voice_trait_inference": "none",             # no emotion/personality/accent/hiring signal
             "live_quality": "UNVALIDATED",
+            "realtime": _realtime_provider_status(),     # P7.5 realtime voice (booleans/labels only)
         },
         "ocr": {"status": ocr, "live_quality": "UNVALIDATED"},
         "adzuna": {"configured": configured("ADZUNA_APP_ID", "ADZUNA_APP_KEY"),

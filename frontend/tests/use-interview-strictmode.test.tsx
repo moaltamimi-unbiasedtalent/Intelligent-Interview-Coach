@@ -41,6 +41,7 @@ vi.mock("@/lib/api/client", () => ({
   api: {
     interviews: iv,
     feedback: { get: () => Promise.resolve(null), submit: vi.fn(), remove: vi.fn() },
+    capabilities: () => Promise.resolve({ realtime_voice_enabled: false }),
   },
 }));
 

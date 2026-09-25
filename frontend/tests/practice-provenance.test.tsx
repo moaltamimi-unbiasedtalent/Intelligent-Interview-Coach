@@ -10,7 +10,10 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(search),
 }));
 vi.mock("@/lib/api/client", () => ({
-  api: { interviews: { options: () => Promise.resolve({ deep_dive_modes: [] }) } },
+  api: {
+    interviews: { options: () => Promise.resolve({ deep_dive_modes: [] }) },
+    capabilities: () => Promise.resolve({ realtime_voice_enabled: false }),
+  },
 }));
 
 const state = {

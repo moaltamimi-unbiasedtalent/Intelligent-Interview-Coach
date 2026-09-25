@@ -28,6 +28,10 @@ class CapabilitiesResponse(BaseModel):
     # controlled by AGENT_COACH_ENABLED, not a user preference. When false, /prepare
     # stays on the deterministic Career flow.
     agent_coach_enabled: bool = False
+    # Realtime voice (Capstone P7.5, C1) — a DEPLOYMENT capability requiring both the
+    # REALTIME_VOICE_ENABLED flag AND a configured realtime provider key. When false, the
+    # UI stays on P7 turn-based voice (the safe default). Never implies a key is present.
+    realtime_voice_enabled: bool = False
 
 
 class ErrorBody(BaseModel):

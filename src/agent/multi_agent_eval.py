@@ -110,7 +110,14 @@ def evaluate_model_policy() -> dict:
     for op in ModelOperation:
         for prof in ModelProfile:
             rp = resolve_policy(op, prof)
-            if rp.uses_model:
+            if rp.capability is ModelCapability.REALTIME:
+                # Realtime (Capstone P7.5) is model-backed but is a SEPARATE provider surface
+                # (audio session), not an OpenRouter chat tier — so it resolves NO chat slug
+                # and NO ModelProfile here; the realtime registry (src/voice/realtime.py)
+                # chooses the provider/model server-side.
+                _check(rp.uses_model and rp.model_id is None and rp.profile is None,
+                       f"{op.value}: realtime op must resolve no chat slug/tier")
+            elif rp.uses_model:
                 _check(rp.profile is not None and rp.model_id is not None,
                        f"{op.value}/{prof.value}: model-backed op resolved no model")
                 # Fallbacks are strictly lower than the effective tier (bounded, monotone).

@@ -35,6 +35,15 @@ def ready(request: Request) -> HealthResponse:
     return health(request)
 
 
+def _realtime_voice_available() -> bool:
+    """Realtime voice (P7.5) is available only when the deployment flag is on AND a realtime
+    provider key is configured — otherwise the UI falls back to P7 turn-based voice. Reads
+    booleans only; never touches or returns the key value."""
+    from src.voice.realtime import resolve_realtime_config
+
+    return resolve_realtime_config().available
+
+
 @router.get("/capabilities", response_model=CapabilitiesResponse,
             summary="Safe feature availability")
 def capabilities() -> CapabilitiesResponse:
@@ -46,4 +55,5 @@ def capabilities() -> CapabilitiesResponse:
         agent_memory=True,
         human_in_the_loop=True,
         agent_coach_enabled=_flag_enabled("AGENT_COACH_ENABLED"),
+        realtime_voice_enabled=_realtime_voice_available(),
     )

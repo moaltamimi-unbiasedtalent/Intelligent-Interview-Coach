@@ -38,6 +38,7 @@ from src.api.routes import (
     memory,
     progress,
     reviewer,
+    voice,
     workspaces,
 )
 from src.api.session_store import InMemorySessionStore
@@ -109,7 +110,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
 
     # Infra liveness alias (unversioned) + versioned API surface.
     app.include_router(health.router, prefix="/api")
-    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, feedback, progress, auth, reviewer, workspaces, admin):
+    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, feedback, progress, auth, reviewer, voice, workspaces, admin):
         app.include_router(module.router, prefix=API_PREFIX)
     # Workspaces registers a second router for explicit sharing under the same prefix.
     app.include_router(workspaces.shares_router, prefix=API_PREFIX)
