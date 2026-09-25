@@ -44,8 +44,10 @@ resource; revocation and source-deletion both cut access immediately.
 
 ## Shareable vs never-shareable
 
-**Allow-listed shareable (VIEW-only, owner-initiated):** a selected interview **report**, a
-selected approved **story/evidence** item, a selected **preparation summary**.
+**Allow-listed shareable (VIEW-only, owner-initiated):** OPERATIONAL today = a selected
+interview **report** and a selected approved **story/evidence** item (both durable,
+owner-scoped, with wired owner loaders). A **preparation summary** is PLANNED / NOT YET
+WIRED (no durable owned resource yet) and is excluded from the operational allowlist.
 
 **Never auto/shareable:** raw uploaded document / full CV / raw extracted text, approved
 **Memory**, authentication data, audit trail, account-recovery information. (These are not

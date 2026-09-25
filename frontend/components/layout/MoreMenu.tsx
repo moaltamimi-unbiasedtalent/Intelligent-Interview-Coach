@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useT } from "@/components/i18n/I18nProvider";
+import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { SECONDARY_NAV } from "./nav-items";
 
 /**
@@ -19,6 +20,12 @@ import { SECONDARY_NAV } from "./nav-items";
 export function MoreMenu() {
   const pathname = usePathname();
   const t = useT();
+  // Role-aware Admin entry: visible ONLY to a PLATFORM_ADMIN. Derived from trusted account
+  // state (server-provided), never a client override. `account` is null until the session
+  // resolves, so the privileged item never flashes during loading/unknown. Hiding the link
+  // is a UX affordance, NOT the security boundary — the API stays authoritative.
+  const auth = useAuthOptional();
+  const isAdmin = auth?.account?.platform_role === "platform_admin";
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -114,6 +121,19 @@ export function MoreMenu() {
               </Link>
             );
           })}
+          {isAdmin ? (
+            <Link
+              href="/admin"
+              role="menuitem"
+              aria-current={pathname.startsWith("/admin") ? "page" : undefined}
+              onClick={() => close()}
+              className="flex min-h-[44px] flex-col justify-center gap-0.5 px-3.5 py-2 text-sm text-foreground transition-colors hover:bg-surface-2 focus:bg-surface-2 focus:outline-none"
+            >
+              {/* Internal operations surface — English label (§14). */}
+              <span className="font-medium">Admin</span>
+              <span className="text-xs text-muted">Platform operations</span>
+            </Link>
+          ) : null}
         </div>
       ) : null}
     </div>

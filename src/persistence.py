@@ -166,10 +166,13 @@ INVITATION_STATUS_EXPIRED = "expired"
 INVITATION_STATUS_REVOKED = "revoked"
 # Explicit sharing: the ALLOW-LISTED shareable resource types (never a raw document,
 # CV text, Memory, auth data or audit trail). Ownership never transfers on a share.
+# OPERATIONAL (durable, owner-scoped, with a wired loader): interview report + story.
 SHARE_RESOURCE_REPORT = "interview_report"
 SHARE_RESOURCE_STORY = "story"
+# PLANNED — not yet a durable, owned resource with a stable id + owner-scoped loader, so it
+# is deliberately EXCLUDED from the operational allowlist (a share attempt is rejected).
 SHARE_RESOURCE_PREP_SUMMARY = "preparation_summary"
-SHAREABLE_RESOURCE_TYPES = (SHARE_RESOURCE_REPORT, SHARE_RESOURCE_STORY, SHARE_RESOURCE_PREP_SUMMARY)
+SHAREABLE_RESOURCE_TYPES = (SHARE_RESOURCE_REPORT, SHARE_RESOURCE_STORY)
 SHARE_PERMISSION_VIEW = "view"          # VIEW-only in P6.5 (no edit permissions)
 SHARE_STATUS_ACTIVE = "active"
 SHARE_STATUS_REVOKED = "revoked"

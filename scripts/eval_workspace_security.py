@@ -187,6 +187,18 @@ def evaluate() -> dict:
     leaked = any(k in forbidden for row in rows for k in row)
     m["admin_not_data_superuser"] = 0 if leaked else 1
 
+    # operational_allowlist_truthful — the operational shareable set is exactly the wired,
+    # durable, owner-scoped resource types (interview report + story). A type advertised but
+    # not consumable (e.g. preparation_summary) must NOT be in the operational allowlist.
+    from src.persistence import (
+        SHARE_RESOURCE_PREP_SUMMARY, SHARE_RESOURCE_REPORT, SHARE_RESOURCE_STORY,
+        SHAREABLE_RESOURCE_TYPES,
+    )
+    m["operational_allowlist_truthful"] = 1 if (
+        set(SHAREABLE_RESOURCE_TYPES) == {SHARE_RESOURCE_REPORT, SHARE_RESOURCE_STORY}
+        and SHARE_RESOURCE_PREP_SUMMARY not in SHAREABLE_RESOURCE_TYPES
+    ) else 0
+
     return m
 
 
@@ -195,7 +207,7 @@ GATES = {
     "explicit_share_required": 1, "share_owner_validation": 1, "share_workspace_validation": 1,
     "share_revocation": 1, "deleted_resource_invalidation": 1, "invite_single_use": 1,
     "invite_expiry": 1, "role_escalation_prevention": 1, "admin_not_data_superuser": 1,
-    "foreign_invite_rejected": 1,
+    "foreign_invite_rejected": 1, "operational_allowlist_truthful": 1,
 }
 
 

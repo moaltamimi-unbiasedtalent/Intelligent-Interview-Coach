@@ -42,11 +42,26 @@ accepting account's **own verified email to match** the invitation (foreign acce
 rejected); replay/expired/used tokens are refused; no member enumeration.
 
 ## Sharing (explicit, allow-listed, VIEW-only)
-Only allow-listed resource types may be shared: **interview report, story, preparation
-summary**. Never shareable: raw documents/CV, raw extracted text, Memory, auth data, audit
+The **operational** allow-listed resource types are exactly the two that are durable,
+owner-scoped and have a wired owner loader: **interview report** and **story**. Both are
+fully wired end-to-end:
+- **interview report** → `InterviewRepository.get_interview(owner_id, id)` (owner-scoped) →
+  VIEW via `report_export.build_json_export` (safe bounded projection: score/summary/
+  strengths/focus/target-role — never usage, prompts or internal state).
+- **story** → `StoryRepository.get(owner_id, id)` (owner-scoped) → safe story projection.
+
+**Preparation summary is PLANNED, not operational.** There is no durable, owned
+`preparation_summary` resource with a stable id + owner-scoped loader today (the
+`PreparationContext` is transient), so it is **deliberately excluded from the operational
+allowlist** — a share attempt returns 422. It is documented here and in the UI/matrix as
+NOT YET WIRED so implementation and docs tell the same truth.
+
+Never shareable at all: raw documents/CV, raw extracted text, Memory, auth data, audit
 trail, recovery info. A share requires the caller to **own** the resource (owner-verified)
 AND be an active member of the target workspace. Ownership never transfers. Reading a shared
-resource loads it **as the owner** (owner scoping intact), gated by a valid grant.
+resource loads it **as the owner** (owner scoping intact), gated by a valid grant — the read
+path is: authenticated member → active grant → resource owner from the trusted grant →
+owner-scoped resource service → bounded VIEW projection (never an unrestricted repo read).
 
 ## Private-by-default
 Joining a workspace exposes **nothing** automatically. The only path to another member's
@@ -109,18 +124,31 @@ workspace metadata boundary, reviewer reuse, prompt-lab boundary, feedback bound
 privacy-request boundary, provider secret safety, audit safety.
 
 ## Evaluation
-`eval_workspace_security` and `eval_platform_admin` are wired into CI alongside the existing
-gates. Backend suite: 2348 passed, 3 skipped. Frontend: 219 unit tests; lint/typecheck/build
-green. Paid/live calls: 0.
+`eval_workspace_security` (now incl. `operational_allowlist_truthful`) and
+`eval_platform_admin` are wired into CI alongside the existing gates. Backend suite: 2352
+passed, 3 skipped (P6.5 closure adds the per-type sharing security matrix). Frontend: **222**
+unit tests (adds role-aware nav coverage); **Playwright** adds `workspaces.spec.ts` +
+`admin.spec.ts` (5 cases); lint/typecheck/build green. Paid/live calls: 0.
+
+**Test-responsibility division:** backend Python suites
+(`test_workspaces_p6_5`, `test_sharing_p6_5`, `test_platform_admin_p6_5`, and the two eval
+scripts) are the **authoritative security evidence** (membership, invitation single-use/
+expiry/foreign-rejection, per-type share owner/workspace validation, revocation, deletion
+invalidation, cross-workspace isolation, admin-not-superuser). Playwright covers the
+**browser-level UX states** (rendering, create/revoke interactions, role-aware nav gate,
+admin-only access) using deterministic network mocks — it complements, never replaces, the
+server-side tests.
 
 ## Known limitations
 - Global account hard-delete cascade for private files + agent checkpoints remains PARTIAL
   (carried) — deletion is not claimed complete.
 - Sharing is VIEW-only; no edit permissions (by design).
-- Content loaders are wired for stories; report/prep-summary loaders are pluggable seams
-  (owner-verified) — the access DECISION is fully enforced for all allow-listed types.
-- Admin nav link is not role-gated in the primary nav (admins open `/admin` directly); the
-  page and API enforce authorization.
+- Operational share types are **interview report + story** (both fully wired + tested).
+  **Preparation summary is PLANNED / NOT YET WIRED** (no durable owned resource) and is
+  excluded from the operational allowlist.
+- The `SharingService` owner-verifier/loader map is extensible: adding a new operational
+  type requires a durable owner-scoped loader + a bounded VIEW projection (the access
+  DECISION is already enforced generically).
 
 ## Deferred enterprise features (§37/§48, NOT built)
 Billing/Stripe, enterprise SSO/SAML/SCIM/HRIS, directory sync, org hierarchy, custom roles,

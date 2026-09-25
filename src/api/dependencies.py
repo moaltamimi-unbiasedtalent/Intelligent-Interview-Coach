@@ -301,16 +301,21 @@ def get_workspace_service(
 
 
 def get_sharing_service(
+    request: Request,
     workspaces=Depends(get_workspace_repository),
     audit=Depends(get_audit_repository),
+    repo=Depends(get_repository),
 ):
-    # Owner verifiers/loaders for the allow-listed shareable resource types. Ownership is
-    # ALWAYS checked as the sharing/reading user; a share never bypasses owner scoping.
+    # Owner verifiers/loaders for the OPERATIONAL allow-listed shareable resource types.
+    # Ownership is ALWAYS checked as the resource OWNER (from the trusted grant), and the
+    # loader returns a BOUNDED VIEW projection — a share never bypasses owner scoping and
+    # never exposes internal state (usage/prompts/secrets). Interview report + story only;
+    # preparation_summary is PLANNED (not in the operational allowlist).
+    from src.application.report_export import build_json_export
     from src.application.sharing_service import SharingService
     from src.documents.repository import StoryRepository
 
-    session_factory = workspaces.session_factory
-    story_repo = StoryRepository(session_factory)
+    story_repo = StoryRepository(workspaces.session_factory)
 
     def _story_owns(resource_id: str, owner_user_id: int) -> bool:
         try:
@@ -324,10 +329,27 @@ def get_sharing_service(
         except (ValueError, TypeError):
             return None
 
+    def _report_owns(resource_id: str, owner_user_id: int) -> bool:
+        try:
+            return repo.get_interview(owner_user_id, int(resource_id)) is not None
+        except (ValueError, TypeError):
+            return False
+
+    def _report_load(resource_id: str, owner_user_id: int):
+        try:
+            detail = repo.get_interview(owner_user_id, int(resource_id))
+        except (ValueError, TypeError):
+            return None
+        if detail is None:
+            return None
+        # Safe, bounded VIEW projection (no usage/prompt/internal state — same guard the
+        # owner's own export uses).
+        return build_json_export(detail)
+
     return SharingService(
         workspaces=workspaces, audit=audit,
-        owner_verifiers={"story": _story_owns},
-        owner_loaders={"story": _story_load},
+        owner_verifiers={"story": _story_owns, "interview_report": _report_owns},
+        owner_loaders={"story": _story_load, "interview_report": _report_load},
     )
 
 
