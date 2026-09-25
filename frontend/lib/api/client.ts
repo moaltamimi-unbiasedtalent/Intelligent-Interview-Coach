@@ -17,6 +17,9 @@ import type {
   InterviewQuestionSet,
   InterviewStateResponse,
   JobAnalysisRequest,
+  RealtimeSessionRequest,
+  RealtimeSessionResponse,
+  RealtimeStatusResponse,
   AgentContinueRequest,
   AgentRunDeleteResponse,
   AgentRunRequest,
@@ -367,6 +370,18 @@ export const api = {
       request<{ share_id: number; status: string }>("POST", "/shares", { body: { workspace_id: workspaceId, resource_type: resourceType, resource_id: resourceId }, ...opts }),
     revoke: (shareId: number, opts?: RequestOptions) =>
       request<{ status: string }>("DELETE", `/shares/${shareId}`, opts),
+  },
+
+  // Realtime voice (Capstone P7.5, C1). Mints a short-lived, user-scoped session
+  // credential; the browser streams audio directly to the provider. Never returns a
+  // long-lived key. A 503 means "unavailable" → the UI falls back to turn-based voice.
+  voice: {
+    realtimeStatus: (opts?: RequestOptions) =>
+      request<RealtimeStatusResponse>("GET", "/voice/realtime/status", opts),
+    realtimeSession: (body: RealtimeSessionRequest, opts?: RequestOptions) =>
+      request<RealtimeSessionResponse>("POST", "/voice/realtime/session", { body, ...opts }),
+    endRealtimeSession: (opts?: RequestOptions) =>
+      request<{ status: string }>("POST", "/voice/realtime/session/end", opts),
   },
 
   // Platform Admin operations (Capstone P6.5). PLATFORM_ADMIN only; metadata only.

@@ -33,6 +33,8 @@ vi.mock("@/lib/api/client", () => ({
     interviews: iv,
     // Feedback controls appear beside evaluations/report; no saved rating in these tests.
     feedback: { get: () => Promise.resolve(null), submit: vi.fn(), remove: vi.fn() },
+    // Practice reads capabilities to gate the optional realtime-voice entry point (P7.5).
+    capabilities: () => Promise.resolve({ realtime_voice_enabled: false }),
   },
 }));
 

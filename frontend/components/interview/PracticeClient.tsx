@@ -16,8 +16,10 @@ import { DeepDivePanel } from "./DeepDivePanel";
 import { useInterview } from "./useInterview";
 import { FeedbackControl } from "@/components/feedback/FeedbackControl";
 import { VoicePlaybackControl } from "@/components/ui/VoicePlaybackControl";
+import { RealtimeVoiceControl } from "@/components/ui/RealtimeVoiceControl";
 import { useT } from "@/components/i18n/I18nProvider";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
+import { useCapabilities } from "@/lib/useCapabilities";
 import { toSpeechLocale } from "@/lib/speech/ttsLocales";
 
 /**
@@ -59,7 +61,11 @@ function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; 
   const t = useT();
   // Question playback follows the candidate's conversation language (§11); never the UI
   // locale and never career geography (§12). Falls back to en-US.
-  const questionSpeechLang = toSpeechLocale(useAuthOptional()?.account?.conversation_language);
+  const conversationLanguage = useAuthOptional()?.account?.conversation_language;
+  const questionSpeechLang = toSpeechLocale(conversationLanguage);
+  // Realtime voice (P7.5) is a DEPLOYMENT capability; when off, only turn-based voice shows.
+  const { capabilities } = useCapabilities();
+  const realtimeEnabled = capabilities.realtime_voice_enabled;
   const [modes, setModes] = useState<string[]>([]);
   const [confirmingEnd, setConfirmingEnd] = useState(false);
   const evalRef = useRef<HTMLDivElement>(null);
@@ -162,6 +168,28 @@ function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; 
             busy={ctrl.busy === "submit"}
             onSubmit={async () => { const ok = await ctrl.submitAnswer(answer); if (ok) setAnswer(""); }}
           />
+          {/* Optional realtime voice (Capstone P7.5, C1). Explicitly started by the candidate.
+              The final spoken answer commits through the SAME durable answer service — the
+              Practice state machine stays authoritative; commit is once per turn. When
+              realtime is off/unsupported this is absent and turn-based voice + typing remain. */}
+          {realtimeEnabled ? (
+            <details className="mt-4 rounded-md border p-3" data-testid="realtime-practice">
+              <summary className="cursor-pointer text-sm font-medium">
+                {t("voice.realtimeStart")}
+              </summary>
+              <div className="mt-3">
+                <RealtimeVoiceControl
+                  surface="practice"
+                  interviewSessionId={sessionId}
+                  locale={conversationLanguage ?? undefined}
+                  onCommit={async (text) => {
+                    const ok = await ctrl.submitAnswer(text);
+                    if (ok) setAnswer("");
+                  }}
+                />
+              </div>
+            </details>
+          ) : null}
         </>
       ) : null}
 

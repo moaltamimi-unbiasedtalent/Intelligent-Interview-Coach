@@ -76,7 +76,7 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 |---|---|---|---|---|---|
 | B5 | App-wide dictation | DELIVERED (P3, reused by P7 voice) | Every eligible input, editable transcript, no auto-submit | P3/P8 | AC-11/12 |
 | B6–B7 | Recorded/spoken answers + spoken questions | DELIVERED (P7/E5) — turn-based: Listen to questions/Mo + Speak answers; text-only evaluation | Spoken Qs + spoken answers | P7 | AC-13/14 |
-| C1 | Realtime voice + interruption | DEFERRED (out of P7 scope) — turn-based voice delivered instead; realtime streaming not built | Streaming + interrupt + fallback | P7+ | EX-02 |
+| C1 | Realtime voice + interruption | PARTIAL (P7.5) — realtime architecture DELIVERED + DETERMINISTICALLY VALIDATED (provider-neutral WebRTC adapter, ephemeral-secret session, barge-in/cancel, commit-once, turn-based fallback); LIVE PROVIDER VALIDATION NOT RUN (no realtime key; OpenRouter cannot serve realtime) | Streaming + interrupt + fallback | P7.5 | EX-02 |
 | C3 | Multilingual speech (7-lang) | DELIVERED (P7/E5) — STT (P3) + TTS 7-language mapping configured + deterministically tested; live human quality UNVALIDATED | Configured 7-lang STT/TTS; honest status | P7 | EX-04, AC-23 |
 | E5 | Turn-based voice experience | DELIVERED (P7) — browser TTS + reused STT; editable transcript; explicit submit; no audio storage; no human-trait inference | Bounded voice modality | P7 | EX-04 |
 
@@ -309,6 +309,28 @@ Shape: **turn-based voice — Listen (browser TTS) to Mo responses & Practice qu
 | Navigation cleanup | PASS | No zombie speech | `useSpeechOutput` cancels on unmount | eval (navigation_cleanup) | — |
 | Admin/workspace voice boundary | PASS | No private voice data | admin providers = architecture only; no audio/voice sharing | eval (admin_no_voice_private_data/workspace_no_auto_share) | — |
 | i18n (7 locales) | DELIVERED (engineering draft) | Candidate reach | `voice` namespace in all 7 catalogues (controls + localized Voice Help via useT); parity enforced | `tests/i18n.test.tsx`, `voice-help-i18n.test.tsx` | human review pending; legacy Help bodies on localization backlog |
-| Realtime voice (C1) | DEFERRED / OPEN | Turn-based chosen | not built (out of P7 scope); mutual exclusion ≠ realtime | — | EX-02 remains open |
+| Realtime voice (C1) | DEFERRED / OPEN (superseded by P7.5) | Turn-based chosen for P7 | not built in P7; realtime delivered in P7.5 (see below) | — | now PARTIAL — see P7.5 |
 
 Migration added: 0. Paid/live/speech-provider calls this phase: 0.
+
+## P7.5 / C1 Realtime voice + interruption (delivered this phase)
+See `p7_5_c1_realtime_voice.md` + `p7_5_realtime_voice_feasibility.md`.
+
+Shape: **genuine realtime voice — provider-neutral `RealtimeVoiceAdapter` seam; WebRTC to an OpenAI-Realtime-shaped provider; server mints a short-lived ephemeral session credential (long-lived key never reaches the browser); streaming transcript; barge-in (response.cancel + conversation.item.truncate); commit-ONCE through the existing Practice answer service (deterministic Practice stays authoritative); mandatory fallback to P7 turn-based voice.** OFF by default. NO audio storage, NO human-trait inference. No migration (Alembic head `0011_workspaces_shares`). Paid/live/realtime-provider calls: 0.
+
+| Requirement | Status | Why | How | Evidence | Limitation |
+|---|---|---|---|---|---|
+| Realtime voice + interruption (C1) | DELIVERED (architecture) + DETERMINISTIC; LIVE NOT RUN | Feasibility-first C1 | provider-neutral adapter + WebRTC OpenAI-Realtime adapter + ephemeral-secret session route | `eval_realtime_voice.py` (28), `test_realtime_voice.py` (15), `realtime-voice.test.tsx` (6), `e2e/realtime-voice.spec.ts` (2) | live provider round-trip UNVALIDATED (no realtime key) |
+| Secret boundary (ephemeral only) | PASS | Long-lived key never in browser | `read_secret` → Bearer once; response carries only `client_secret` | `test_realtime_voice` (ephemeral boundary), eval (`ephemeral_secret_boundary`, `no_long_lived_secret_in_browser`) | — |
+| Barge-in / interruption | PASS (deterministic) | Core C1 | `response.cancel`+`conversation.item.truncate`+clear local audio behind adapter | `realtime-voice.test.tsx` (barge-in), e2e | live VAD timing UNVALIDATED |
+| Duplicate-turn prevention | PASS | No stale/duplicate commit | commit-once guard (`committedTurn`/`turnId`); durable state via `submitAnswer` | unit + e2e (one answer POST) | — |
+| Fallback to turn-based | PASS | Never a dead end | 503/unsupported/mic-denied/disconnect → end + keep committed + P7 + typing | eval (`fallback_to_turn_based`), e2e (End → fallback) | — |
+| Practice determinism preserved | PASS | Realtime is bounded voice mode | transcript commits through existing answer contract; state machine authoritative | eval (`practice_state_authority`), e2e | — |
+| Model-policy boundary | PASS | No client model override | `ModelOperation.REALTIME_VOICE` (REALTIME cap, no chat slug); request has no model field | `test_realtime_voice`, `multi_agent_eval` | — |
+| Rate/cost bounds | PASS (local) | Bounded provider sessions | per-user rate limit + concurrency + session/idle caps | `test_realtime_voice` (429), eval (`rate_bound`) | in-memory; prod needs shared store |
+| No audio storage / no trait inference | PASS | Sensitive-modality integrity | no recorder/blob/voiceprint; no emotion/accent/confidence/hiring | eval (`no_audio_persistence`,`no_voice_trait_inference`) | provider-side transient processing per provider policy |
+| Admin/workspace privacy | PASS | No private audio/transcript | `/admin/providers` realtime booleans; `audio/transcript_visible_to_admin: false` | `test_realtime_voice`, eval (`admin_workspace_privacy`) | — |
+| 7 languages | CONFIGURED + DETERMINISTIC | Candidate reach | locale coercion to en/de/fr/es/it/pt/nl; i18n keys in 7 catalogues | eval (`language_geography_separation`), i18n parity | live/human quality NOT RUN |
+| Realtime voice (C1) — live | NOT RUN | No authorised realtime key | deterministic only; OpenRouter cannot serve realtime | — | EX-02 live round-trip open |
+
+Migration added: 0. Paid/live/realtime-provider calls this phase: 0.

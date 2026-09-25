@@ -174,6 +174,11 @@ export function HelpCenter() {
         { q: t("voice.hLangQ"), a: t("voice.hLangA") },
         { q: t("voice.hPrivacyQ"), a: t("voice.hPrivacyA") },
         { q: t("voice.hUnsupportedQ"), a: t("voice.hUnsupportedA") },
+        // Realtime voice (Capstone P7.5, C1).
+        { q: t("voice.hRealtimeQ"), a: t("voice.hRealtimeA") },
+        { q: t("voice.hRealtimeInterruptQ"), a: t("voice.hRealtimeInterruptA") },
+        { q: t("voice.hRealtimeFallbackQ"), a: t("voice.hRealtimeFallbackA") },
+        { q: t("voice.hRealtimeAudioQ"), a: t("voice.hRealtimeAudioA") },
       ],
     };
     return [...SECTIONS, voice];

@@ -15,6 +15,7 @@ const SAFE_DEFAULT: CapabilitiesResponse = {
   agent_memory: false,
   human_in_the_loop: false,
   agent_coach_enabled: false,
+  realtime_voice_enabled: false,
 };
 
 export interface CapabilitiesState {
