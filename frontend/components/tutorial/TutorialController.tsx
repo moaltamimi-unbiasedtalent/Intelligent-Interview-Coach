@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { TUTORIAL_STEPS } from "@/lib/tutorial/steps";
 import { readTutorialState, shouldInvite, writeTutorialState } from "@/lib/tutorial/storage";
+import { APP_HOME } from "@/lib/auth/routes";
 
 /** Custom event any "Take the tour" control can dispatch to start the tour. */
 export const START_TOUR_EVENT = "ask4mo:start-tour";
@@ -42,7 +43,7 @@ export function TutorialController() {
   }, [start]);
 
   useEffect(() => {
-    if (mode === "idle" && pathname === "/" && shouldInvite()) setMode("invitation");
+    if (mode === "idle" && pathname === APP_HOME && shouldInvite()) setMode("invitation");
     // Only auto-evaluate on mount / route change while idle.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);

@@ -1,16 +1,32 @@
 /**
- * Public / authenticated route boundary (Capstone P1/E1, §13).
+ * Public / authenticated route boundary (Capstone P1/E1 · P8 §3).
  *
- * PUBLIC pages render without a session (marketing/home, help and the auth pages).
- * Everything else is the authenticated product and requires a resolved identity.
- * In development the backend's anonymous fallback resolves an identity, so the guard
- * does not add friction locally; in production an unauthenticated visitor to a
- * protected route is redirected to sign in.
+ * P8 introduces a public marketing front door at `/` and moves the authenticated candidate
+ * home to `/app`. MARKETING routes are public and render the marketing chrome (no app nav);
+ * the authenticated product (`/app`, `/prepare`, …) requires a resolved identity and renders
+ * the app chrome. Auth pages and Help remain public. Everything not listed is protected.
+ * In development the backend's anonymous fallback resolves an identity, so the guard adds no
+ * local friction; in production an unauthenticated visitor to a protected route is redirected.
  */
 
-/** Exact public paths (no session required). */
-export const PUBLIC_ROUTES = new Set<string>([
+/** Where an authenticated candidate lands (post-login, brand link inside the app). */
+export const APP_HOME = "/app";
+
+/** Public marketing pages (rendered with marketing chrome, no session required). */
+export const MARKETING_ROUTES = new Set<string>([
   "/",
+  "/product",
+  "/pricing",
+  "/trust",
+  "/privacy",
+  "/terms",
+  "/ai-transparency",
+  "/about",
+]);
+
+/** Exact public paths (no session required): marketing + help + auth pages. */
+export const PUBLIC_ROUTES = new Set<string>([
+  ...MARKETING_ROUTES,
   "/help",
   "/sign-in",
   "/register",
@@ -26,6 +42,10 @@ export const AUTH_ONLY_ROUTES = new Set<string>([
   "/forgot-password",
   "/reset-password",
 ]);
+
+export function isMarketingRoute(pathname: string): boolean {
+  return MARKETING_ROUTES.has(pathname);
+}
 
 export function isPublicRoute(pathname: string): boolean {
   if (PUBLIC_ROUTES.has(pathname)) return true;

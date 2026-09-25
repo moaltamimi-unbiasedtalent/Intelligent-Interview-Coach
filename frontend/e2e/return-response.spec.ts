@@ -66,7 +66,7 @@ async function mock(page: Page, opts: { active?: boolean } = {}) {
 
 test("returning user sees a continue-practice card on Home", async ({ page }) => {
   await mock(page, { active: true });
-  await page.goto("/");
+  await page.goto("/app");
   await expect(page.getByText("Welcome back")).toBeVisible();
   await expect(page.getByText(/Backend Engineer/)).toBeVisible();
   const cont = page.getByRole("link", { name: /Continue practice/i });
@@ -75,7 +75,7 @@ test("returning user sees a continue-practice card on Home", async ({ page }) =>
 
 test("first-use Home shows no return card", async ({ page }) => {
   await mock(page, { active: false });
-  await page.goto("/");
+  await page.goto("/app");
   await expect(page.getByRole("heading", { name: /Prepare for the interview that matters/i })).toBeVisible();
   await expect(page.getByText("Welcome back")).toHaveCount(0);
 });
@@ -92,7 +92,7 @@ test("Settings can switch response detail to Detailed (persisted server-side)", 
 test("Coach answer collapses details behind Show more in Brief mode", async ({ page }) => {
   await mock(page);
   // Start a run through the Home CTA (sets the prepare draft → auto-starts on /prepare).
-  await page.goto("/");
+  await page.goto("/app");
   await page.getByLabel("What interview are you preparing for?").fill("Prep for a PM interview");
   await page.getByRole("button", { name: "Ask Mo" }).click();
   await expect(page).toHaveURL(/\/prepare/);

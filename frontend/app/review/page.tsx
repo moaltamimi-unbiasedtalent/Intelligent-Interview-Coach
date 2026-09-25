@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 
-export const metadata: Metadata = { title: "Review & Diagnostics" };
+export const metadata: Metadata = { title: "Review & Diagnostics", robots: { index: false, follow: false } };
 
 const AREAS = [
   { href: "/review/agent", name: "Agent Inspector", note: "Safe action traces for a run — open from a Coach run's “View run details”, or paste a run ID.", status: "Available" },

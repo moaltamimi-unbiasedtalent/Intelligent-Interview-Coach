@@ -22,6 +22,7 @@ from src.application.agent_service import (
     RunNotResumableError,
 )
 from src.api.dependencies import get_agent_service, get_current_user_id, get_request_id
+from src.api.guards import cost_limit, require_not_paused
 from src.api.schemas.agent import (
     AgentContinueRequest,
     AgentRunDeleteResponse,
@@ -88,6 +89,8 @@ def run_agent(
     service=Depends(get_agent_service),
     user_id: int = Depends(get_current_user_id),
     request_id: str = Depends(get_request_id),
+    _cost=Depends(cost_limit("cost_agent_user")),
+    _pause=Depends(require_not_paused("agent")),
 ) -> AgentRunResponse:
     result = service.run(
         AppAgentRunRequest(

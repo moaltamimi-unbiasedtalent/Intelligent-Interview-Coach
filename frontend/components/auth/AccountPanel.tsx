@@ -38,7 +38,9 @@ export function AccountPanel() {
   const requestDeletion = async () => {
     setError(null);
     try {
-      await api.auth.requestDeletion();
+      // Capstone P8: permanent, application-controlled deletion (data + private files +
+      // checkpoints). Signs out on completion.
+      await api.auth.deleteAccount();
       await refresh();
       router.replace("/sign-in");
     } catch (err) {
@@ -105,10 +107,27 @@ export function AccountPanel() {
 
       <Card>
         <CardBody className="space-y-3">
+          <h2 className="text-base font-semibold text-foreground">Manage your data</h2>
+          <p className="text-sm text-muted">
+            Your data rights are always free. Manage what Ask4Mo keeps:
+          </p>
+          <div className="flex flex-wrap gap-2" data-testid="data-rights-links">
+            <a href="/settings" className="inline-flex min-h-[36px] items-center rounded border border-border px-3 text-sm text-foreground hover:bg-surface-2">Manage Memory</a>
+            <a href="/documents" className="inline-flex min-h-[36px] items-center rounded border border-border px-3 text-sm text-foreground hover:bg-surface-2">Manage documents</a>
+            <a href="/workspaces" className="inline-flex min-h-[36px] items-center rounded border border-border px-3 text-sm text-foreground hover:bg-surface-2">Manage sharing</a>
+          </div>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardBody className="space-y-3">
           <h2 className="text-base font-semibold text-foreground">Privacy &amp; data</h2>
           <p className="text-sm text-muted">
-            You can request a copy of your data or ask to delete your account. Deletion signs you
-            out and schedules your account for removal.
+            You can export a copy of your data, or permanently delete your account. Deletion
+            removes your account and its application-controlled data (documents, private files,
+            Practice history, Memory, Story Bank, sessions and agent context) and signs you out.
+            Security/audit records are anonymized, not deleted; historical infrastructure backups
+            age out per the provider&apos;s retention schedule.
           </p>
           <div className="flex flex-wrap gap-3">
             <a

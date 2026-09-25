@@ -21,7 +21,7 @@ async function mockApi(page: Page) {
 
 test("first visit: invitation → start → advance → dismiss → stays dismissed after refresh", async ({ page }) => {
   await mockApi(page);
-  await page.goto("/");
+  await page.goto("/app");
   const invite = page.getByRole("dialog", { name: "Welcome to Ask4Mo" });
   await expect(invite).toBeVisible();
 
@@ -36,7 +36,7 @@ test("first visit: invitation → start → advance → dismiss → stays dismis
   await page.getByRole("button", { name: "Skip" }).click();
   await expect(page.getByText("Give Mo the right context")).toHaveCount(0);
 
-  await page.goto("/");
+  await page.goto("/app");
   await expect(page.getByRole("dialog", { name: "Welcome to Ask4Mo" })).toHaveCount(0);
 });
 

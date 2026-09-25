@@ -40,7 +40,7 @@ const GOAL = "Senior Product Manager interview at a fintech";
 
 test("Home Start transfers the goal and auto-starts the Coach (no re-entry)", async ({ page }) => {
   await mock(page);
-  await page.goto("/");
+  await page.goto("/app");
   await page.getByLabel("What interview are you preparing for?").fill(GOAL);
   await page.getByRole("button", { name: "Ask Mo" }).click();
 
@@ -54,7 +54,7 @@ test("Home Start transfers the goal and auto-starts the Coach (no re-entry)", as
 
 test("candidate text never appears in the URL", async ({ page }) => {
   await mock(page);
-  await page.goto("/");
+  await page.goto("/app");
   await page.getByLabel("What interview are you preparing for?").fill(GOAL);
   await page.getByRole("button", { name: "Ask Mo" }).click();
   await expect(page.getByText(GOAL)).toBeVisible();
@@ -67,7 +67,7 @@ test("candidate text never appears in the URL", async ({ page }) => {
 
 test("Home 'Paste a job description' opens and focuses the JD field", async ({ page }) => {
   await mock(page);
-  await page.goto("/");
+  await page.goto("/app");
   await page.getByRole("button", { name: /Paste a job description/ }).click();
   await expect(page).toHaveURL(/\/prepare/);
   const jd = page.getByLabel("Job description (optional)");
@@ -77,7 +77,7 @@ test("Home 'Paste a job description' opens and focuses the JD field", async ({ p
 
 test("Home 'Add your background' opens and focuses the background field", async ({ page }) => {
   await mock(page);
-  await page.goto("/");
+  await page.goto("/app");
   await page.getByRole("button", { name: /Add your background/ }).click();
   await expect(page).toHaveURL(/\/prepare/);
   const bg = page.getByLabel("Your background (optional)");

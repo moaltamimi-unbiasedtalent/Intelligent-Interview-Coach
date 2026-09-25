@@ -1,4 +1,8 @@
+"use client";
+
 import { Suspense, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
+
 import { Brand } from "./Brand";
 import { MobileNavigation } from "./MobileNavigation";
 import { MoreMenu } from "./MoreMenu";
@@ -7,13 +11,20 @@ import { ThemeToggle } from "./ThemeToggle";
 import { TutorialController } from "@/components/tutorial/TutorialController";
 import { AccountMenu } from "@/components/auth/AccountMenu";
 import { RouteGuard } from "@/components/auth/RouteGuard";
+import { MarketingShell } from "@/components/marketing/MarketingShell";
+import { isMarketingRoute } from "@/lib/auth/routes";
 
 /**
- * Restrained product shell: a quiet top header (wordmark · primary nav · theme ·
- * account) and a content region. Mobile uses a bottom nav instead of the header
- * nav. No giant sidebar + giant header — one quiet header only.
+ * Chrome router (Capstone P8 §3). Public marketing routes render the marketing chrome
+ * (its own header/footer, no app nav, no RouteGuard); everything else renders the
+ * restrained product shell — a quiet top header (wordmark · primary nav · theme · account)
+ * and a guarded content region, with a mobile bottom nav.
  */
 export function AppShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname() || "/";
+  if (isMarketingRoute(pathname)) {
+    return <MarketingShell>{children}</MarketingShell>;
+  }
   return (
     <div className="min-h-dvh">
       <a

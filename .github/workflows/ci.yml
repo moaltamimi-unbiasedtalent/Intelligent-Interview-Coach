@@ -76,6 +76,12 @@ jobs:
         run: python scripts/eval_voice_experience.py
       - name: Realtime voice evaluation (Capstone P7.5/C1; offline; secret boundary, barge-in, fallback, no audio/trait)
         run: python scripts/eval_realtime_voice.py
+      - name: Account deletion evaluation (Capstone P8; offline; cascade + files + checkpoints + isolation + idempotency)
+        run: python scripts/eval_account_deletion.py
+      - name: Rate-limit evaluation (Capstone P8; offline; auth + cost buckets, window reset, anti-enumeration)
+        run: python scripts/eval_rate_limits.py
+      - name: Hosting-readiness evaluation (Capstone P8; offline; env/cookies/CORS/headers/pause/malware — does NOT certify EX-12)
+        run: python scripts/eval_hosting_readiness.py
       - name: Alembic migration validation (fresh upgrade + downgrade, single head)
         env:
           DATABASE_URL: sqlite:////tmp/ci_migrations.db

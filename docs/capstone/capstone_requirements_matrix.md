@@ -43,11 +43,11 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 | D2 | Platform roles / RBAC | DELIVERED (P1) — USER/PLATFORM_ADMIN, audited bootstrap | USER / PLATFORM_ADMIN | P1 | AC-02 ext |
 | D3 | Basic/Premium entitlement model | DELIVERED (P1) — persisted tier + capability map | Entitlement dimension (no billing) | P1 | new EX (entitlement) |
 | D4 | Server-side entitlement enforcement | DELIVERED (P1) — `require_capability`, negative tests | Enforced at API/service | P1→P6 | new EX |
-| D5 | User privacy/data controls | PARTIAL (P1) — export + deletion-request boundary | Export/delete/consent self-service | P1/P4/P6 | EX-01, privacy |
-| D6 | Privacy/legal public surfaces | ABSENT | Policy/terms/AI-transparency pages | P8 | AC-25 |
-| D7 | Public marketing website | ABSENT | Public front door | P8 | AC-25 |
-| D8 | Public/authenticated route separation | DELIVERED (P1) — server fail-closed + client RouteGuard | Route boundary | P1/P8 | AC-01/19 |
-| D9 | Pricing/product presentation | ABSENT | Basic/Premium presentation | P8 | AC-25 |
+| D5 | User privacy/data controls | DELIVERED (P8) — coherent data-rights hub (export + manage Memory/documents/sharing) + full application-controlled deletion cascade | Export/delete/consent self-service | P1/P4/P6/P8 | EX-01, privacy |
+| D6 | Privacy/legal public surfaces | DELIVERED (P8, engineering draft) — Privacy, Terms, AI-transparency, Trust pages with legal-review banners | Policy/terms/AI-transparency pages | P8 | AC-25 (legal review required) |
+| D7 | Public marketing website | DELIVERED (P8) — public `/` marketing site (Home/Product/Pricing/Trust/About) + marketing chrome; app moved to `/app` | Public front door | P8 | AC-25 |
+| D8 | Public/authenticated route separation | DELIVERED (P1, strengthened P8) — server fail-closed + client RouteGuard; marketing `/` vs product `/app` | Route boundary | P1/P8 | AC-01/19 |
+| D9 | Pricing/product presentation | DELIVERED (P8) — Basic/Premium presentation, centralized config, truthful CTAs; NO billing/checkout | Basic/Premium presentation | P8 | AC-25 |
 
 ## Group E — Identity / collaboration
 | ID | Requirement | Current | Target | Phase | Acceptance |
@@ -85,7 +85,7 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 |---|---|---|---|---|---|
 | I-eval | Deterministic agent/retrieval eval | DELIVERED | Extend (separate suite) | P9 | AC-22 |
 | I-ragas | RAGAS harness (opt-in paid) | DELIVERED | Preserve | P9 | AC-22 |
-| C8 | Per-operation model policy | PARTIAL (registry) | Server allowlist per op | P5/E4 | EX-09 |
+| C8 | Per-operation model policy | DELIVERED (P5/E4) — central per-operation policy (`src/llm/policy.py`, 8 operations incl. REALTIME_VOICE; server allowlist; client cannot override the model) | Server allowlist per op | P5/E4 | EX-09 (gate Not run) |
 | I-obs | Observability (optional Langfuse) | DELIVERED | Preserve | — | — |
 
 ## Group J — Security / privacy
@@ -93,27 +93,29 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 |---|---|---|---|---|---|
 | J-authz | Object-level ownership / cross-user isolation | DELIVERED (extended P1 — session auth + composable authz) | Extend to teams/shares/docs | P1/P6 | AC-02 |
 | J-audit | Security/privacy audit events | DELIVERED (P1) — bounded audit log, no secrets | Extend to teams/admin ops | P1/P6 | new AC |
-| J-privacy | Data export/delete/retention | PARTIAL (P1 export + deletion request) | Full lifecycle + policy | P1/P4/P6 | EX-01/10 |
+| J-privacy | Data export/delete/retention | DELIVERED (P8) — export + full application-controlled deletion cascade (files + checkpoints) + audit anonymize; backups documented | Full lifecycle + policy | P1/P4/P6/P8 | EX-01/10 |
 | J-inject | Injection/SSRF guards | DELIVERED | Extend to docs/OCR | P4 | EX-03 |
 
 ## Group K — Deployment / operations
 | ID | Requirement | Current | Target | Phase | Acceptance |
 |---|---|---|---|---|---|
-| C12 | Public hosting (HTTPS, verified-email reg) | ABSENT | Reproducible deploy + limits + rollback | P8 | EX-12 |
+| C12 | Public hosting (HTTPS, verified-email reg) | READY (P8) — deploy artifacts + env validation + limits + pause + backup/restore/rollback docs; EX-12 BLOCKED/NOT RUN (needs authorized deployment) | Reproducible deploy + limits + rollback | P8 | EX-12 |
 | C9 | Bulk retention cleanup | DELIVERED (P6) — inventory + safe temp cleaner (dry-run/owner-scope/idempotent) + existing session cleanup | Dry-run + bounded batches | P6/E7 | EX-10 |
 | C11 | Prompt Lab (admin-only) | DELIVERED (P6) — versioned, isolated, human-reviewed, no auto-promotion | Versioned synthetic experiments | P6/E6 | EX-11 |
 
 ## Group L — Marketing / product experience
 | ID | Requirement | Current | Target | Phase | Acceptance |
 |---|---|---|---|---|---|
-| L-mkt | Marketing site + positioning | ABSENT | Public IA + pricing + trust | P8 | AC-25 |
+| L-mkt | Marketing site + positioning | DELIVERED (P8, engineering draft) — public IA + pricing + trust; 7-locale marketing i18n; claims follow the claims audit | Public IA + pricing + trust | P8 | AC-25 |
 | C10 | Guided onboarding / Help | DELIVERED | Preserve/adapt | P8 | AC-19 (C10 optional) |
 
 ## Totals (P0/E0 snapshot)
 DELIVERED ≈ 20 · PARTIAL ≈ 12 · ABSENT ≈ 22 · OUT_OF_SCOPE (see exclusions) · UNVALIDATED: eval/knowledge data on fresh clone · BLOCKED: none at planning stage (auth/hosting/providers require owner authorization to *activate*, not to *plan*).
 
 ## Explicit OUT_OF_SCOPE
-Camera/emotion/biometric assessment; recruiter rankings; automatic job applications; unrestricted crawling / job-board scraping; autonomous prompt/code/model changes; plugin marketplace; billing/payment; enterprise SSO/SCIM/HRIS; whole-app UI translation; comprehensive enterprise administration. Spoken feedback and PDF export remain optional enhancements.
+Camera/emotion/biometric assessment; recruiter rankings; automatic job applications; unrestricted crawling / job-board scraping; autonomous prompt/code/model changes; plugin marketplace; billing/payment; enterprise SSO/SCIM/HRIS; comprehensive enterprise administration. Spoken feedback and PDF export remain optional enhancements.
+
+**Scope reconciliation (P8):** ~~whole-app UI translation~~ was originally OUT_OF_SCOPE, but the owner later EXPANDED scope to make seven-language internationalization/localization a Capstone deliverable (P3.5 foundation + P8 marketing localization + bounded candidate-surface completion). It is therefore IN scope and is tracked as `i18n-surfaces` / `L10n`. Billing/payment remains OUT_OF_SCOPE, but pricing/product **presentation** (D9) is in scope for P8 (presentation only, no checkout). The `Totals` line above is the P0/E0 baseline snapshot and does not reflect P1–P8 deliveries.
 
 ## P1/E1 presentation evidence (delivered this phase)
 Standard presentation table — see `p1_e1_identity_platform.md` for the full story.
@@ -334,3 +336,26 @@ Shape: **genuine realtime voice — provider-neutral `RealtimeVoiceAdapter` seam
 | Realtime voice (C1) — live | NOT RUN | No authorised realtime key | deterministic only; OpenRouter cannot serve realtime | — | EX-02 live round-trip open |
 
 Migration added: 0. Paid/live/realtime-provider calls this phase: 0.
+
+## P8 / E8 Productisation, public surfaces & hosted-operation readiness (delivered this phase)
+See `p8_e8_productisation_hosting.md` + `p8_productisation_gap_audit.md` + `p8_public_claims_audit.md` + `p8_hosting_operations.md`.
+
+Shape: **public marketing site at `/` + authenticated product at `/app`; Trust/Privacy/Terms/AI-transparency (engineering draft); Basic/Premium pricing PRESENTATION (NO billing); coherent data-rights hub + full application-controlled account deletion; auth + cost rate limiting; operator pause switch; env fail-fast; security headers; real readiness probe; malware fail-safe; reproducible staging deploy artifacts + backup/restore/rollback runbook.** No migration (Alembic head `0011_workspaces_shares`). Paid/live provider calls: 0. NOT merged; NOT deployed.
+
+| Requirement | Status | Why | How | Evidence | Limitation |
+|---|---|---|---|---|---|
+| D7 Public marketing website | DELIVERED | Public front door | `/` marketing (Home/Product/Pricing/Trust/About) + `MarketingShell`; app → `/app` | `e2e/marketing.spec.ts`, `route-migration.spec.ts` | copy engineering draft; human review pending |
+| D6 Privacy/legal public surfaces | DELIVERED (engineering draft) | Trust/transparency | Privacy/Terms/AI-transparency/Trust pages with legal-review banners | `marketing.spec.ts` (draft banner) | **legal review required** |
+| D9 Pricing presentation | DELIVERED | Commercial model | `lib/pricing.ts`; Basic €0 / Premium preview; truthful CTAs | `marketing.spec.ts` (no billing/cards) | NO checkout/billing (out of scope) |
+| D5/J-privacy Data rights + deletion | DELIVERED | Candidate control | data-rights hub + `AccountDeletionService` (DB + files + checkpoints + audit anonymize) | `eval_account_deletion.py`, `test_p8_hardening.py` | backups age out per provider; untracked-run checkpoints residual |
+| Auth rate limiting | DELIVERED | Abuse/enumeration | `rate_limit.py` per-IP/account/global, hashed email key | `eval_rate_limits.py`, `test_p8_hardening.py` | single-process store |
+| Cost/provider limits + pause | DELIVERED | Cost/incident control | `guards.py` cost buckets; `pause.py` + `/admin/pause` | `test_p8_hardening.py` | single-process; shared store for multi-replica |
+| Security headers + CORS + cookies | DELIVERED | Hosted hardening | `SecurityHeadersMiddleware`; allowlist CORS; HttpOnly/Lax/Secure | `eval_hosting_readiness.py` | CSRF beyond SameSite carried |
+| Env validation + readiness | DELIVERED | Fail-fast prod | `env_validation.py` (prod raises); real `/ready` probe | `eval_hosting_readiness.py`, `test_p8_hardening.py` | — |
+| Upload malware policy | DELIVERED | Public upload safety | `file_security.py` fail-closed; EICAR fake | `eval_hosting_readiness.py` | live ClamAV UNVALIDATED |
+| Hosting artifacts + backup/restore/rollback | READY | Reproducible staging | `deploy/*` + `p8_hosting_operations.md` | `bash -n`; `eval_hosting_readiness.py` (docs present) | not deployed |
+| SEO (robots/sitemap/noindex) | DELIVERED | Crawlable marketing; private app | `robots.ts`/`sitemap.ts`; noindex app/admin/review | build output | — |
+| Marketing i18n (7 locales) | DELIVERED (engineering draft) | Candidate reach | `marketing` namespace in all 7 catalogues | `marketing.spec.ts` (de) | human/legal review pending |
+| C12 hosted operation (EX-12) | BLOCKED / NOT RUN | No authorized deployment | implementation ready; hosting can't be certified locally | — | needs authorized HTTPS deploy |
+
+Migration added: 0. Paid/live provider calls this phase: 0.

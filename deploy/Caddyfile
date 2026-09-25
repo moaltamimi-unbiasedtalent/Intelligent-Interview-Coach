@@ -1,0 +1,102 @@
+# Ask4Mo Capstone (P8) — edge reverse proxy (STAGING).
+#
+# Caddy terminates TLS (automatic certificates via ACME/Let's Encrypt) and is the
+# ONLY component exposed to the internet (ports 80/443). It routes to the internal
+# `web` and `api` services over the compose network.
+#
+# COOKIE TOPOLOGY (why two subdomains of ONE parent domain):
+#   app.staging.example.com  -> web  (Next.js :3000)
+#   api.staging.example.com  -> api  (FastAPI :8000)
+#   Both are subdomains of the SAME parent (staging.example.com). Because the
+#   session cookie is issued by the API as HttpOnly + Secure + SameSite=Lax, a
+#   same-site topology means the browser keeps sending it on top-level requests
+#   from the app to the API without needing SameSite=None (which would require
+#   cross-site third-party-cookie handling and is easily blocked). Keep frontend
+#   and API under one parent domain. If you ever split them across unrelated
+#   domains you must move to SameSite=None; Secure AND a strict CORS allowlist —
+#   avoid that in staging.
+#
+# HSTS: set once here at the edge (max-age >= 1 year). Do NOT also emit HSTS from
+# the API for browser responses to avoid conflicting max-age; the API keeps its
+# own strict security headers (see the runbook) but the edge owns HSTS + page CSP.
+#
+# Domains and ACME email come from the environment (deploy/.env.staging):
+#   {$APP_DOMAIN}  {$API_DOMAIN}  {$ACME_EMAIL}
+
+{
+	email {$ACME_EMAIL}
+	# For local/dry-run testing without hitting Let's Encrypt rate limits, you can
+	# uncomment the staging CA directory below:
+	# acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+# ----------------------------------------------------------------------------
+# Frontend (Next.js) — serves the pages and owns the page Content-Security-Policy.
+{$APP_DOMAIN} {
+	encode gzip zstd
+
+	header {
+		# HSTS (1 year + preload). Owned by the edge.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# Least-privilege browser permissions. `microphone=(self)` is required for
+		# browser speech / realtime voice capture on the app origin ONLY.
+		Permissions-Policy "camera=(), geolocation=(), microphone=(self)"
+
+		# Page Content-Security-Policy (edge/frontend responsibility). This is a
+		# STARTING baseline — tighten to the exact hosts you use. NEVER use
+		# `connect-src *`. connect-src must explicitly list:
+		#   - the API origin (XHR/fetch)
+		#   - the API origin over wss:// if the app opens WebSockets to it
+		#   - the realtime voice provider origin (only when REALTIME_VOICE_ENABLED),
+		#     e.g. https://api.openai.com wss://api.openai.com — add the exact host.
+		Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:; connect-src 'self' https://{$API_DOMAIN} wss://{$API_DOMAIN}; media-src 'self' blob:; form-action 'self'"
+
+		# Never advertise the upstream server.
+		-Server
+	}
+
+	reverse_proxy web:3000
+}
+
+# ----------------------------------------------------------------------------
+# API (FastAPI). The API sets its OWN strict security headers via middleware
+# (SecurityHeadersMiddleware); the edge here adds HSTS and forwards proxy headers.
+{$API_DOMAIN} {
+	encode gzip zstd
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		-Server
+	}
+
+	reverse_proxy api:8000 {
+		# Forwarded headers let the app compute the real client IP for rate
+		# limiting (app honours X-Forwarded-For only when TRUST_PROXY=true).
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Forwarded-Host {host}
+	}
+}
+
+# ----------------------------------------------------------------------------
+# ALTERNATIVE single-domain (path-based) topology.
+# If you prefer ONE hostname with /api routed to the backend (also same-site,
+# even simpler for cookies), use a block like this instead of the two above:
+#
+# {$APP_DOMAIN} {
+#	encode gzip zstd
+#	header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+#	handle /api/* {
+#		reverse_proxy api:8000 {
+#			header_up X-Forwarded-For {remote_host}
+#			header_up X-Forwarded-Proto {scheme}
+#		}
+#	}
+#	handle {
+#		reverse_proxy web:3000
+#	}
+# }
+# With this topology set NEXT_PUBLIC_API_BASE_URL=https://{$APP_DOMAIN}/api/v1.

@@ -43,6 +43,10 @@ class StatusRequest(BaseModel):
     status: str = Field(max_length=32)
 
 
+class PauseRequest(BaseModel):
+    paused: bool
+
+
 def _audit(audit, event_type, actor_id, target_user_id, **ctx):
     try:
         audit.record(event_type=event_type, actor_user_id=actor_id, target_type="user",
@@ -161,9 +165,40 @@ def _realtime_provider_status() -> dict:
     return cfg
 
 
+@router.get("/pause", summary="Operator pause switches for costly/external capabilities")
+def pause_state() -> dict:
+    """Current pause state (booleans only). A paused capability returns 503 to candidates."""
+    from src.application.pause import PAUSABLE_CAPABILITIES, get_pause_registry
+
+    return {"pausable": list(PAUSABLE_CAPABILITIES), "paused": get_pause_registry().snapshot()}
+
+
+@router.post("/pause/{capability}", summary="Pause or resume a costly/external capability")
+def set_pause(
+    capability: str,
+    body: PauseRequest,
+    principal=Depends(get_current_principal),
+    audit=Depends(get_audit_repository),
+) -> dict:
+    from src.application.pause import PAUSABLE_CAPABILITIES, get_pause_registry
+
+    if capability not in PAUSABLE_CAPABILITIES:
+        raise HTTPException(status_code=422, detail="Unknown pausable capability.")
+    get_pause_registry().set(capability, body.paused)
+    try:
+        audit.record(event_type="platform.pause_toggled", actor_user_id=principal.user_id,
+                     target_type="capability", target_id=capability,
+                     context={"paused": body.paused})
+    except Exception:  # noqa: BLE001
+        pass
+    return {"capability": capability, "paused": body.paused}
+
+
 @router.get("/providers", summary="Provider/system configuration status (no secrets)")
 def providers() -> dict:
     import os
+
+    from src.application.pause import get_pause_registry
 
     def configured(*names: str) -> bool:
         return any(bool(os.environ.get(n, "").strip()) for n in names)
@@ -193,8 +228,20 @@ def providers() -> dict:
                    "live_validation": "UNVALIDATED"},
         "langfuse": {"configured": configured("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY"),
                      "external_enabled": configured("AGENT_EXTERNAL_OBSERVABILITY_ENABLED")},
+        "pause": get_pause_registry().snapshot(),  # operator pause switches (§21)
+        "rate_limit": {"backend": os.environ.get("RATE_LIMIT_BACKEND", "in_memory") or "in_memory",
+                       "distributed": _rate_limit_distributed()},
         "note": "Booleans/status only — no API keys, secrets, tokens or connection strings.",
     }
+
+
+def _rate_limit_distributed() -> bool:
+    try:
+        from src.api.rate_limit import get_rate_limiter
+
+        return bool(getattr(get_rate_limiter(), "distributed", False))
+    except Exception:  # noqa: BLE001
+        return False
 
 
 @router.get("/audit", summary="Recent audit events (safe metadata)")

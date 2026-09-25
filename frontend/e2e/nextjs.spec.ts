@@ -12,7 +12,7 @@ test("home loads with the Precision Coach headline", async ({ page }) => {
 });
 
 test("home primary CTA navigates to Prepare", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/app");
   // Start requires a goal (it is transferred into Prepare, never in the URL).
   await page.getByLabel("What interview are you preparing for?").fill("Prep for a PM role");
   await page.getByRole("button", { name: "Ask Mo" }).click();
@@ -22,7 +22,7 @@ test("home primary CTA navigates to Prepare", async ({ page }) => {
 });
 
 test("primary navigation reaches the four candidate routes", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/app");
   // Both the desktop header nav and the mobile bottom bar render PRIMARY_NAV with the same
   // accessible name ("Primary"), so a global `.first()` link is ambiguous and the click can
   // race a re-render. Scope to the VISIBLE desktop header Primary nav, assert the href, then
@@ -96,7 +96,7 @@ test("no camera or microphone permission is requested on load", async ({ page })
       };
     }
   });
-  await page.goto("/");
+  await page.goto("/app");
   await page.getByLabel("What interview are you preparing for?").fill("Prep for a PM role");
   await page.getByRole("button", { name: "Ask Mo" }).click();
   await page.goto("/practice");

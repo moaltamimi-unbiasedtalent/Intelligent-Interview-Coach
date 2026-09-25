@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AdminConsole } from "@/components/admin/AdminConsole";
 
-export const metadata: Metadata = { title: "Platform Admin" };
+export const metadata: Metadata = { title: "Platform Admin", robots: { index: false, follow: false } };
 
 // Internal operations surface (PLATFORM_ADMIN only). English by design (§14): not a
 // candidate-facing screen. The server enforces authorization; the client only hides UI.

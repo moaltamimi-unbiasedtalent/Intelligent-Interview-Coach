@@ -501,6 +501,14 @@ def _research_current_market(research_service) -> Handler:
         from src.copilot.research.models import (
             CurrentMarketResearchRequest, Geography, ResearchIntent, ResearchStatus)
 
+        # Operator pause (§21): while current-market research is paused, abstain safely rather
+        # than calling an external provider (cost/incident control).
+        from src.application.pause import is_paused
+
+        if is_paused("current_market"):
+            raise AgentToolError("Current-market research is temporarily paused.",
+                                 category=TOOL_FAILURE_EXECUTION_FAILED)
+
         try:
             intent = ResearchIntent(args.intent.strip().lower())
         except ValueError:

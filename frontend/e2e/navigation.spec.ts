@@ -22,7 +22,7 @@ async function mock(page: Page) {
 
 test("Flow 1: home → Prepare", async ({ page }) => {
   await mock(page);
-  await page.goto("/");
+  await page.goto("/app");
   await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Prepare" }).click();
   await expect(page).toHaveURL(/\/prepare$/);
 });
@@ -63,7 +63,7 @@ test("Flow 6: wordmark → home", async ({ page }) => {
   await mock(page);
   await page.goto("/prepare");
   await page.getByRole("link", { name: "Ask4Mo — home" }).click();
-  await expect(page).toHaveURL(new RegExp(`${3200}/$|localhost:\\d+/$`));
+  await expect(page).toHaveURL(/\/app$/);
 });
 
 test("Flow 7: keyboard — focus More, open, Escape closes", async ({ page }) => {
