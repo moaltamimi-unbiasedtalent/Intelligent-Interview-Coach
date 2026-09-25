@@ -68,16 +68,26 @@ class ToolRegistry:
         return spec.handler(args, ctx)
 
 
-def career_tool_registry(career_service: Any) -> ToolRegistry:
-    """The allowlist. Five real Career tools (job analysis, gap analysis, preparation
-    plan, question generation, and Phase 6 career-knowledge retrieval) PLUS two Phase 8
-    human-action tools (ProposePreparationMemory, RequestPracticeHandoff) — separate
-    from the Career evidence tools; they propose a decision for human approval and
+def career_tool_registry(career_service: Any, *, evidence_service: Any = None,
+                         coaching_reasoner: Any = None) -> ToolRegistry:
+    """The allowlist. Six real Career tools (job analysis, gap analysis, preparation
+    plan, question generation, career-knowledge retrieval, current-market research) PLUS
+    three bounded P5 specialist tools (AnalyzeRoleOpportunity, FindCandidateEvidence,
+    BuildCoachingStrategy) behind Mo, PLUS two Phase 8 human-action tools
+    (ProposePreparationMemory, RequestPracticeHandoff). The specialist and human-action
+    tools are separate from the Career evidence tools: specialists are bounded,
+    side-effect-free advisors; human-action tools propose a decision for approval and
     never persist or start anything themselves. Low-level stores (vector/BM25/
     repositories) are NEVER registered — the deterministic router owns lane selection
-    inside SearchCareerKnowledge."""
+    inside SearchCareerKnowledge, and the owner-scoped Candidate Evidence specialist is
+    the ONLY path to private approved evidence (via the trusted run-state user id)."""
+    from src.agent.specialist_tools import build_specialist_tools
+
     registry = ToolRegistry()
     for args_model, handler in build_career_tools(career_service):
+        registry.register(args_model, handler)
+    for args_model, handler in build_specialist_tools(
+        career_service, evidence_service=evidence_service, coaching_reasoner=coaching_reasoner):
         registry.register(args_model, handler)
     for args_model, handler in build_human_action_tools(career_service):
         registry.register(args_model, handler)

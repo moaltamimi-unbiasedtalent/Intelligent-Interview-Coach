@@ -107,12 +107,15 @@ def _run(model, career=None, **kw):
 
 def test_registry_registers_the_six_career_tools():
     # Six real Career tools (Phase 6 adds SearchCareerKnowledge; Phase 7F adds the bounded
-    # ResearchCurrentMarket) plus two Phase 8 human-action tools (separate from the evidence tools).
+    # ResearchCurrentMarket), three Capstone P5 specialist tools (Role/Evidence/Coach —
+    # bounded, side-effect-free advisors behind Mo), plus two Phase 8 human-action tools
+    # (separate from the evidence tools).
     reg = career_tool_registry(FakeCareer())
     assert set(reg.names()) == {
         "AnalyzeJobDescription", "AnalyzeCandidateGaps",
         "BuildPreparationPlan", "GenerateInterviewQuestions", "SearchCareerKnowledge",
         "ResearchCurrentMarket",
+        "AnalyzeRoleOpportunity", "FindCandidateEvidence", "BuildCoachingStrategy",
         "ProposePreparationMemory", "RequestPracticeHandoff",
     }
 

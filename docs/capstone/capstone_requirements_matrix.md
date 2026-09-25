@@ -202,3 +202,26 @@ Flow: **private document → validate → parse/OCR → deterministic extraction
 | I18n | DELIVERED (engineering draft) | 7-language product | `documents` namespace in all 7 catalogues; document language ≠ geography | catalogue parity test | human/legal review pending |
 
 Paid LLM / OCR-provider / live calls this phase: 0.
+
+## P5 / E4 Bounded multi-agent architecture & per-operation model policy (delivered this phase)
+See `p5_agent_decomposition_audit.md` + `p5_e4_multi_agent_model_policy.md`.
+
+Shape: **Mo stays the single candidate-facing orchestrator; three materially distinct bounded specialists sit behind Mo (reached only via allowlisted tools); one central per-operation model policy replaces scattered model selection.** No agent-to-agent free chat, no recursion, bounded budgets, schema-validated outputs, owner-scoped access to APPROVED private evidence only.
+
+| Requirement | Status | Why | How | Evidence | Limitation |
+|---|---|---|---|---|---|
+| Decomposition audit (§1) | DELIVERED | Complexity only where it adds value | every Mo capability classified DET/TOOL/SPECIALIST/HITL/KEEP; 3 specialists justified; nothing agentified to inflate count | `p5_agent_decomposition_audit.md` | — |
+| Specialist A: Role & Opportunity | DELIVERED | Multi-step role synthesis | structured `RoleBrief`; reuses the governed JD-analysis op (no new raw model path) | `test_multi_agent_specialists.py` (role_*) | — |
+| Specialist B: Candidate Evidence | DELIVERED | Evidence comparison, privacy-safe | **deterministic**, owner-scoped selection of APPROVED claims + verified stories; no model ⇒ injection-inert | eval (cross_user/other_user/no_owner), specialist tests | keyword-overlap ranking, not semantic |
+| Specialist C: Interview Strategy / Coach | DELIVERED (live UNVALIDATED) | Synthesis + uncertainty handling | maps evidence→competencies; **CLARIFICATION_NEEDED instead of fabricated metrics**; injectable reasoner + deterministic fallback | eval (no-fabrication, id sanitisation), tests | live coaching model unvalidated; deterministic path shipped |
+| Mo stays sole orchestrator | PASS | One coach, one voice | specialists are tools behind Mo; ReAct loop/graph/nodes unchanged | agent eval unchanged (recall 1.0, seq validity 1.0) | — |
+| E4 central model policy | DELIVERED | No scattered model selection | `src/llm/policy.py`: 7 operations, capability floors, bounded fallback, deterministic-op (`NONE`), no secrets; pure resolver over the registry | `test_model_policy.py`, eval (policy_pass_rate 1.0) | — |
+| Independent dimensions | PASS | Profile / policy / Brief-Detailed / language orthogonal | effective = max(user profile, op floor); language & presentation never change the model | `test_model_policy.py`, eval | — |
+| Raw client slug rejected | PASS | Browser can't pick a model | `_resolve_profile` (Literal) + `resolve_policy` accepts only ModelProfile/None | `test_model_policy.py` (raw slug), eval | — |
+| Owner-scoped evidence access | PASS | No cross-user leak; approved-only | `EvidenceAccessService` → `approved_claims`/`evidence_stories`; trusted `user_id` from state, never model-supplied; rejected/unreviewed/revoked excluded at repo | eval zero-invariants, specialist tests | — |
+| Bounded fallback + degradation | DELIVERED | Safe on provider failure | ordered lower-tier chain to a floor; orchestration/final never degrade to Fast | `test_model_policy.py` | — |
+| Safe observability / diagnostic | PASS | No CoT/secret/private content | `specialist_outputs` + `ResolvedModelPolicy.to_dict()` safe projections; no new chat surface | model-policy `to_dict` test | — |
+| Prompt-injection inert (7 langs) | PASS | Multilingual safety | deterministic specialists tokenise-only; EN/DE/FR/ES/IT/PT/NL fixtures | eval (injection_inert_rate 1.0) | — |
+| Deterministic eval + CI | DELIVERED | Repeatable gate, no cost | `scripts/eval_multi_agent.py` wired into CI; all gates pass | CI step; GATE STATUS PASS | not a live benchmark |
+
+Migrations added: 0 (no schema change; Alembic head stays `0010_candidate_documents`). Paid/live LLM calls this phase: 0.

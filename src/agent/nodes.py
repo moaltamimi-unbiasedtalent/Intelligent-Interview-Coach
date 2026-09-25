@@ -181,6 +181,9 @@ def _tool_context(state: AgentState) -> ToolContext:
         evidence=state.get("evidence"),
         citations=state.get("citations"),
         retrieval_cache=state.get("retrieval_cache"),
+        user_id=state.get("user_id"),
+        role_brief=state.get("role_brief"),
+        evidence_selection=state.get("evidence_selection"),
     )
 
 
@@ -276,6 +279,9 @@ def _merge_ctx(ctx: ToolContext, updates: dict[str, Any]) -> ToolContext:
         evidence=updates.get("evidence", ctx.evidence),
         citations=updates.get("citations", ctx.citations),
         retrieval_cache=updates.get("retrieval_cache", ctx.retrieval_cache),
+        user_id=ctx.user_id,  # trusted, never patched by a tool
+        role_brief=updates.get("role_brief", ctx.role_brief),
+        evidence_selection=updates.get("evidence_selection", ctx.evidence_selection),
     )
 
 

@@ -174,7 +174,11 @@ def test_registry_registers_the_real_career_tools():
         "GenerateInterviewQuestions", "SearchCareerKnowledge", "ResearchCurrentMarket",
     }
     assert career_tools <= set(reg.names())
-    assert set(reg.names()) - career_tools == {"ProposePreparationMemory", "RequestPracticeHandoff"}
+    # The remaining tools are the three P5 specialist tools + two Phase 8 human-action tools.
+    assert set(reg.names()) - career_tools == {
+        "AnalyzeRoleOpportunity", "FindCandidateEvidence", "BuildCoachingStrategy",
+        "ProposePreparationMemory", "RequestPracticeHandoff",
+    }
 
 
 def test_retrieval_is_a_single_high_level_tool():

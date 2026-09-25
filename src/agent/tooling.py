@@ -29,6 +29,14 @@ class ToolContext:
     citations: list[dict[str, Any]] | None = None
     # Bounded per-thread retrieval cache (safe evidence entries; see usage/cache docs).
     retrieval_cache: list[dict[str, Any]] | None = None
+    # TRUSTED owner id from run state (Capstone P5). Used ONLY by the owner-scoped
+    # Candidate Evidence specialist to reach the signed-in candidate's approved
+    # evidence — it is never a model-supplied argument.
+    user_id: str | None = None
+    # Prior specialist outputs (Capstone P5): a structured role brief and an
+    # owner-scoped approved-evidence selection, carried to the coaching specialist.
+    role_brief: dict[str, Any] | None = None
+    evidence_selection: dict[str, Any] | None = None
 
 
 @dataclass

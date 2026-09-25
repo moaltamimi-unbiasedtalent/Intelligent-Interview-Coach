@@ -58,6 +58,8 @@ jobs:
         run: python scripts/eval_i18n_l10n.py
       - name: Documents & evidence evaluation (Capstone P4/E2/E3; offline; privacy + provenance + security)
         run: python scripts/eval_documents_evidence.py
+      - name: Multi-agent & model-policy evaluation (Capstone P5/E4; offline; isolation + no-fabrication + injection-inert)
+        run: python scripts/eval_multi_agent.py
       - name: Alembic migration validation (fresh upgrade + downgrade, single head)
         env:
           DATABASE_URL: sqlite:////tmp/ci_migrations.db
