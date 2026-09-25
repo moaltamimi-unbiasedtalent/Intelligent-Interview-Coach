@@ -271,6 +271,26 @@ const de: Catalog = {
     fbPracticeQuality: "Übungsqualität",
     fbOther: "Sonstiges",
   },
+  voice: {
+    listen: "Vorlesen",
+    listenQuestion: "Frage vorlesen",
+    stop: "Stopp",
+    speaking: "Spricht",
+    stopped: "Gestoppt",
+    unavailable: "Sprachausgabe ist in diesem Browser nicht verfügbar.",
+    privacyNote: "Ask4Mo nutzt Ihre Stimme niemals, um Emotionen, Persönlichkeit, Intelligenz, Ehrlichkeit oder Eignung abzuleiten.",
+    helpTitle: "Stimme: Zuhören & Sprechen",
+    hListenQ: "Mo oder eine Frage anhören",
+    hListenA: "Wo Ihr Browser Sprache unterstützt, liest eine Schaltfläche „Vorlesen“ Mos Antwort oder eine Übungsfrage vor. Die Wiedergabe startet nie von selbst — Sie drücken Vorlesen und können jederzeit Stopp drücken.",
+    hSpeakQ: "Eine Antwort sprechen und vor dem Senden bearbeiten",
+    hSpeakA: "Nutzen Sie das Mikrofon, um Ihre Antwort zu sprechen. Ihre Worte erscheinen als bearbeitbares Transkript; Sie prüfen und bearbeiten sie und drücken dann selbst Senden oder Absenden. Sprechen sendet nie von selbst, und das Sprechen stoppt die Wiedergabe (und umgekehrt) — beide sind nie gleichzeitig aktiv.",
+    hLangQ: "Sprachen, Browser-Abhängigkeit und Quellen",
+    hLangA: "Die Sprachausgabe folgt Ihrer Mo-Gesprächssprache in den sieben unterstützten Sprachen (Englisch, Deutsch, Französisch, Spanisch, Italienisch, Portugiesisch, Niederländisch). Ob eine Stimme installiert ist, hängt vom Browser/Betriebssystem ab; ist keine verfügbar, bleibt der Text auf dem Bildschirm. Lange Links werden nicht vorgelesen — die Wiedergabe verweist darauf, dass Quellen auf dem Bildschirm verfügbar sind, und die Quelllinks bleiben sichtbar.",
+    hPrivacyQ: "Datenschutz und wofür die Stimme NICHT genutzt wird",
+    hPrivacyA: "Ask4Mo übergibt den sichtbaren Text an die Sprach-Engine Ihres Browsers/Betriebssystems und speichert kein Audio. Ask4Mo nutzt Ihre Stimme niemals, um Emotionen, Persönlichkeit, Intelligenz, Ehrlichkeit, Täuschung, Akzent oder Eignung abzuleiten — Stimme dient nur zum Zuhören und zur Texteingabe. Es gibt keinerlei Stimm-Bewertung.",
+    hUnsupportedQ: "Wenn Stimme nicht verfügbar ist",
+    hUnsupportedA: "Hat Ihr Browser keine Sprachsynthese oder keine installierte Stimme, erscheint die Schaltfläche „Vorlesen“ einfach nicht und Sie lesen den Text normal. Stimme blockiert nie eine Funktion.",
+  },
 };
 
 export default de;

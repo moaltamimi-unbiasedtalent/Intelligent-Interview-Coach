@@ -274,6 +274,26 @@ export const messages = {
     fbPracticeQuality: "Practice quality",
     fbOther: "Other",
   },
+  voice: {
+    listen: "Listen",
+    listenQuestion: "Listen to the question",
+    stop: "Stop",
+    speaking: "Speaking",
+    stopped: "Stopped",
+    unavailable: "Voice playback isn’t available in this browser.",
+    privacyNote: "Ask4Mo never uses your voice to infer emotions, personality, intelligence, honesty or hiring suitability.",
+    helpTitle: "Voice: listening & speaking",
+    hListenQ: "Listen to Mo or a question",
+    hListenA: "Where your browser supports speech, a Listen button reads Mo’s response or an Interview Practice question aloud. Playback never starts on its own — you press Listen, and you can press Stop any time.",
+    hSpeakQ: "Speak an answer and edit before sending",
+    hSpeakA: "Use the microphone to speak your answer or message. Your words appear as an editable transcript; you review and edit them, then press Send or Submit yourself. Speaking never submits on its own, and starting to speak stops playback (and vice-versa) so the two are never active at once.",
+    hLangQ: "Languages, browser dependency and sources",
+    hLangA: "Voice playback follows your Mo conversation language across the seven supported languages (English, German, French, Spanish, Italian, Portuguese, Dutch). Whether a voice is installed is browser/OS-dependent; if none is available the text stays on screen. Long links aren’t read aloud — playback notes that sources are available on screen, and the source links stay visible.",
+    hPrivacyQ: "Privacy and what voice is NOT used for",
+    hPrivacyA: "Ask4Mo hands the visible text to your browser/OS speech engine and stores no audio. Ask4Mo never uses your voice to infer emotions, personality, intelligence, honesty, deception, accent or hiring suitability — voice is only a way to listen and to enter text. There is no voice score of any kind.",
+    hUnsupportedQ: "If voice isn’t available",
+    hUnsupportedA: "If your browser has no speech synthesis or no installed voice, the Listen button simply doesn’t appear and you read the text normally. Voice never blocks any feature.",
+  },
 } as const;
 
 export type Messages = typeof messages;

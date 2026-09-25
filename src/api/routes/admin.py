@@ -162,7 +162,14 @@ def providers() -> dict:
         "email": {"provider": os.environ.get("EMAIL_PROVIDER", "console"),
                   "configured": configured("BREVO_API_KEY", "EMAIL_PROVIDER"),
                   "live_validation": "UNVALIDATED"},
-        "speech": {"architecture": "browser_web_speech", "camera": "never_requested"},
+        "speech": {
+            "architecture": "browser_web_speech", "camera": "never_requested",
+            "input": "browser_web_speech_stt",          # P3 dictation (STT)
+            "output": "browser_speech_synthesis_tts",    # P7 voice playback (TTS)
+            "audio_persisted_by_ask4mo": False,          # no recordings/voiceprints stored
+            "voice_trait_inference": "none",             # no emotion/personality/accent/hiring signal
+            "live_quality": "UNVALIDATED",
+        },
         "ocr": {"status": ocr, "live_quality": "UNVALIDATED"},
         "adzuna": {"configured": configured("ADZUNA_APP_ID", "ADZUNA_APP_KEY"),
                    "live_validation": "UNVALIDATED"},

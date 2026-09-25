@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Field";
 import { TutorialLauncher } from "@/components/tutorial/TutorialLauncher";
+import { useT } from "@/components/i18n/I18nProvider";
 
 interface Article {
   q: string;
@@ -159,11 +160,29 @@ const SECTIONS: Section[] = [
 
 export function HelpCenter() {
   const [query, setQuery] = useState("");
+  const t = useT();
+
+  // The P7 Voice section is localised via the i18n catalogues (P3.5 coding standard); older
+  // Help bodies remain English on the documented localization backlog.
+  const sections = useMemo<Section[]>(() => {
+    const voice: Section = {
+      id: "voice",
+      title: t("voice.helpTitle"),
+      articles: [
+        { q: t("voice.hListenQ"), a: t("voice.hListenA") },
+        { q: t("voice.hSpeakQ"), a: t("voice.hSpeakA") },
+        { q: t("voice.hLangQ"), a: t("voice.hLangA") },
+        { q: t("voice.hPrivacyQ"), a: t("voice.hPrivacyA") },
+        { q: t("voice.hUnsupportedQ"), a: t("voice.hUnsupportedA") },
+      ],
+    };
+    return [...SECTIONS, voice];
+  }, [t]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return SECTIONS;
-    return SECTIONS.map((s) => ({
+    if (!q) return sections;
+    return sections.map((s) => ({
       ...s,
       articles: s.articles.filter(
         (a) =>
@@ -172,7 +191,7 @@ export function HelpCenter() {
           a.a.toLowerCase().includes(q),
       ),
     })).filter((s) => s.articles.length > 0);
-  }, [query]);
+  }, [query, sections]);
 
   return (
     <div className="space-y-6">

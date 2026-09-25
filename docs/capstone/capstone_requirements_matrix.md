@@ -69,14 +69,16 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 | ID | Requirement | Current | Target | Phase | Acceptance |
 |---|---|---|---|---|---|
 | G-practice | Durable Practice + evaluation + report | DELIVERED | Preserve | — | AC-04/17 |
-| B6–B7 | Recorded answers + spoken questions | PARTIAL (experimental) | Recorded mode + spoken Qs | P7 | AC-13/14 |
+| B6–B7 | Recorded/spoken answers + spoken questions | DELIVERED (P7/E5) — turn-based voice (see Group H); text-only evaluation preserved | Spoken Qs + spoken answers | P7 | AC-13/14 |
 
 ## Group H — Speech / multimodal
 | ID | Requirement | Current | Target | Phase | Acceptance |
 |---|---|---|---|---|---|
-| B5 | App-wide dictation | DELIVERED on two surfaces (P3); broader roll-out later | Every eligible input, editable transcript, no auto-submit | P3/P8 | AC-11/12 |
-| C1 | Realtime voice + interruption | PARTIAL/experimental | Streaming + interrupt + fallback | P7 | EX-02 |
-| C3 | Multilingual speech (EN/DE) | ABSENT | Real EN/DE STT/TTS | P7 | EX-04, AC-23 |
+| B5 | App-wide dictation | DELIVERED (P3, reused by P7 voice) | Every eligible input, editable transcript, no auto-submit | P3/P8 | AC-11/12 |
+| B6–B7 | Recorded/spoken answers + spoken questions | DELIVERED (P7/E5) — turn-based: Listen to questions/Mo + Speak answers; text-only evaluation | Spoken Qs + spoken answers | P7 | AC-13/14 |
+| C1 | Realtime voice + interruption | DEFERRED (out of P7 scope) — turn-based voice delivered instead; realtime streaming not built | Streaming + interrupt + fallback | P7+ | EX-02 |
+| C3 | Multilingual speech (7-lang) | DELIVERED (P7/E5) — STT (P3) + TTS 7-language mapping configured + deterministically tested; live human quality UNVALIDATED | Configured 7-lang STT/TTS; honest status | P7 | EX-04, AC-23 |
+| E5 | Turn-based voice experience | DELIVERED (P7) — browser TTS + reused STT; editable transcript; explicit submit; no audio storage; no human-trait inference | Bounded voice modality | P7 | EX-04 |
 
 ## Group I — Evaluation / observability
 | ID | Requirement | Current | Target | Phase | Acceptance |
@@ -283,3 +285,30 @@ Shape: **bounded workspaces with membership roles on the membership, secure sing
 | I18n (7 locales) | DELIVERED (engineering draft) | Candidate reach | `workspaces` namespace in all 7 catalogues; parity enforced | `frontend/tests/i18n.test.tsx` | human review pending |
 
 Migration added: `0011_workspaces_shares` (Alembic head now `0011_workspaces_shares`). Paid/live LLM/email calls this phase: 0.
+
+## P7 / E5 Multilingual turn-based voice experience (delivered this phase)
+See `p7_voice_architecture_audit.md` + `p7_e5_voice_experience.md`.
+
+Shape: **turn-based voice — Listen (browser TTS) to Mo responses & Practice questions; Speak (reused P3 STT) answers; editable transcript; explicit submit; text-only evaluation.** NO realtime streaming, NO audio storage, NO human-trait inference. No migration (Alembic head `0011_workspaces_shares`). Paid/live/speech-provider calls: 0.
+
+| Requirement | Status | Why | How | Evidence | Limitation |
+|---|---|---|---|---|---|
+| TTS provider-independent adapter | ARCHITECTURE + DETERMINISTIC | Vendor-neutral, testable | `lib/speech/{ttsTypes,speechSynthesisAdapter,useSpeechOutput,fakeSpeechOutputAdapter}.ts` | `voice-output.test.tsx`, `eval_voice_experience.py` | live human quality UNVALIDATED |
+| Listen on Mo responses | DELIVERED | Hear grounded guidance | `VoicePlaybackControl` in `AgentConversation` (speaks `presentation.answer`) | `e2e/voice.spec.ts` (Prepare) | — |
+| Listen on Practice questions | DELIVERED | Hear the question | `VoicePlaybackControl` in `PracticeClient` (`q.question`) | `e2e/voice.spec.ts` (Practice) | — |
+| Speak answers | DELIVERED (reuse P3) | Answer by voice | existing `DictationControl` in the answer composer | dictation + voice e2e | browser STT dependent |
+| Editable transcript + explicit submit | PASS | User control | P3 append-only + explicit Submit; no auto-submit on any voice surface | eval (no_auto_submit), e2e | — |
+| TTS does not auto-open mic | PASS | No voice loop | no recognition/mic start in TTS layer/onEnd | eval (tts_does_not_auto_start_mic), e2e | — |
+| STT/TTS mutual exclusion (closure) | PASS | Never both active on a surface | shared `voiceCoordination` provider; both hooks claim/release; starting one stops the other; no auto-start | eval (stt_tts_mutual_exclusion/tts_stops_active_stt/stt_stops_active_tts/no_feedback_loop), `voice-concurrency.test.tsx`, `voice.spec.ts` | — |
+| Text-only Practice evaluation | PASS | Determinism preserved | submit sends the text answer; no audio score | eval (practice_uses_text_evaluation) | — |
+| 7-language TTS configuration | CONFIGURED + DETERMINISTIC | Bounded reach | `ttsLocales.ts` (en/de/fr/es/it/pt/nl) + honest status | eval (seven_language_configuration), unit | browser voice availability varies; live UNVALIDATED |
+| Language/geography separation | PASS | Safety | TTS locale never touches career geo/jurisdiction | eval (language_geography_separation) | — |
+| No audio persistence / no biometric | PASS | Privacy | no MediaRecorder/Blob/voiceprint; localStorage pref only | eval (no_audio_persistence/no_biometric_storage) | STT audio browser/vendor-processed (stated) |
+| No human-trait inference | NONE | Absolute boundary (§16) | trait identifiers absent as code; scanned comment-stripped | eval + `test_voice_experience_p7.py` | — |
+| Unsupported/permission fallback | PASS | Never blocks | control renders null when unsupported; P3 permission handling | eval (unsupported_fallback/permission_failure_fallback) | — |
+| Navigation cleanup | PASS | No zombie speech | `useSpeechOutput` cancels on unmount | eval (navigation_cleanup) | — |
+| Admin/workspace voice boundary | PASS | No private voice data | admin providers = architecture only; no audio/voice sharing | eval (admin_no_voice_private_data/workspace_no_auto_share) | — |
+| i18n (7 locales) | DELIVERED (engineering draft) | Candidate reach | `voice` namespace in all 7 catalogues (controls + localized Voice Help via useT); parity enforced | `tests/i18n.test.tsx`, `voice-help-i18n.test.tsx` | human review pending; legacy Help bodies on localization backlog |
+| Realtime voice (C1) | DEFERRED / OPEN | Turn-based chosen | not built (out of P7 scope); mutual exclusion ≠ realtime | — | EX-02 remains open |
+
+Migration added: 0. Paid/live/speech-provider calls this phase: 0.

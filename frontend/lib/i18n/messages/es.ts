@@ -271,6 +271,26 @@ const es: Catalog = {
     fbPracticeQuality: "Calidad de la práctica",
     fbOther: "Otro",
   },
+  voice: {
+    listen: "Escuchar",
+    listenQuestion: "Escuchar la pregunta",
+    stop: "Detener",
+    speaking: "Hablando",
+    stopped: "Detenido",
+    unavailable: "La reproducción de voz no está disponible en este navegador.",
+    privacyNote: "Ask4Mo nunca usa tu voz para inferir emociones, personalidad, inteligencia, honestidad o idoneidad para un empleo.",
+    helpTitle: "Voz: escuchar y hablar",
+    hListenQ: "Escuchar a Mo o una pregunta",
+    hListenA: "Donde tu navegador admite voz, un botón Escuchar lee en voz alta la respuesta de Mo o una pregunta de práctica. La reproducción nunca empieza sola — pulsas Escuchar y puedes pulsar Detener cuando quieras.",
+    hSpeakQ: "Hablar una respuesta y editarla antes de enviar",
+    hSpeakA: "Usa el micrófono para hablar tu respuesta. Tus palabras aparecen como una transcripción editable; las revisas y corriges, y luego pulsas Enviar tú mismo. Hablar nunca envía solo, y empezar a hablar detiene la reproducción (y viceversa) — nunca están activos a la vez.",
+    hLangQ: "Idiomas, dependencia del navegador y fuentes",
+    hLangA: "La reproducción de voz sigue tu idioma de conversación con Mo entre los siete idiomas admitidos (inglés, alemán, francés, español, italiano, portugués, neerlandés). Que haya una voz instalada depende del navegador/sistema; si no hay ninguna, el texto permanece en pantalla. Los enlaces largos no se leen — la reproducción indica que las fuentes están disponibles en pantalla, y los enlaces de las fuentes siguen visibles.",
+    hPrivacyQ: "Privacidad y para qué NO se usa la voz",
+    hPrivacyA: "Ask4Mo entrega el texto visible al motor de voz de tu navegador/sistema y no almacena audio. Ask4Mo nunca usa tu voz para inferir emociones, personalidad, inteligencia, honestidad, engaño, acento o idoneidad para un empleo — la voz solo sirve para escuchar e introducir texto. No existe ninguna puntuación de voz.",
+    hUnsupportedQ: "Si la voz no está disponible",
+    hUnsupportedA: "Si tu navegador no tiene síntesis de voz o no hay voz instalada, el botón Escuchar simplemente no aparece y lees el texto con normalidad. La voz nunca bloquea ninguna función.",
+  },
 };
 
 export default es;

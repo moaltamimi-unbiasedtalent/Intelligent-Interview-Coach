@@ -83,3 +83,28 @@ is read live from the owner's record and disappears on revoke or source deletion
 **Workspace deletion/deactivation semantics:** deactivating a workspace revokes its share
 grants and hides it from members, but **never deletes member-owned candidate resources** —
 candidate ownership is preserved. **Platform Admin does not own or delete member resources.**
+
+## P7 — Voice (STT + TTS) data inventory
+
+Turn-based voice is a browser modality. Ask4Mo stores no audio and derives no human-trait
+signal. This is a technical design statement, not a legal-compliance certification.
+
+| Data | Purpose | Where processed | Persisted by Ask4Mo? | Sent to LLM? |
+|---|---|---|---|---|
+| Microphone audio (STT / dictation) | Speech → transcript | Browser/OS/vendor speech-recognition service (browser-managed) | **No** — no MediaRecorder/getUserMedia/Blob; no recording, no voiceprint | No |
+| Recognised transcript (pre-submit) | Editable input | In-page only (React state) | No (not stored/logged before submit) | No |
+| Submitted text | The candidate's answer/message | Normal application flow | Yes — as the existing text answer/message (unchanged) | Yes (existing text path) |
+| Synthesised audio (TTS / Listen) | Read visible text aloud | Browser/OS speech-synthesis engine (Ask4Mo passes visible text) | **No** — no synthesised audio stored | No |
+| Voice preference (on/off, device voice) | Per-device convenience | Browser localStorage | Device-local only (no candidate content) | No |
+| Voice human-trait signals (emotion/accent/confidence/hiring/…) | — | **Never derived, stored or transmitted** | **No** | No |
+
+- **STT honesty:** browser speech recognition may send audio to the browser/vendor's speech
+  service to produce the transcript — that processing is the browser's, not Ask4Mo's. We do
+  NOT claim "audio never leaves the device."
+- **TTS honesty:** how the browser/OS synthesises audio is browser-dependent; Ask4Mo provides
+  text and stores no synthesised audio.
+- **Admin/workspace boundary:** Platform Admin receives only speech *architecture* metadata
+  (input/output = browser Web Speech; `audio_persisted=false`; `voice_trait_inference=none`),
+  never audio/transcripts/voiceprints. Workspaces never auto-share audio, transcripts or voice
+  preferences.
+- **No new persistence** and **no migration** for voice (Alembic head unchanged).

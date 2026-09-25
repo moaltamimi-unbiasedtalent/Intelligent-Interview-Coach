@@ -16,6 +16,7 @@ import type {
   SpeechRecognitionAdapter,
 } from "./types";
 import { browserSpeechAdapter } from "./browserAdapter";
+import { useVoiceCoordinator } from "./voiceCoordination";
 
 export type DictationStatus = "idle" | "listening";
 
@@ -47,6 +48,13 @@ export function useDictation({ adapter, lang, onCommitFinal }: UseDictationOptio
 
   const supported = engine.isSupported();
 
+  // Voice coordination (P7 closure): claim the surface's single audio channel when we start
+  // listening (stops any active TTS first) and release it when recognition ends. No-op when
+  // the surface is not wrapped in a VoiceCoordinationProvider. Stopping the other modality
+  // never clears typed/recognised text and never submits.
+  const coordinator = useVoiceCoordinator();
+  const ownerId = useRef<symbol>(Symbol("stt"));
+
   const start = useCallback(() => {
     if (!supported) {
       setError("unsupported");
@@ -54,6 +62,8 @@ export function useDictation({ adapter, lang, onCommitFinal }: UseDictationOptio
     }
     setError(null);
     setInterim("");
+    // Claim BEFORE listening so active playback is stopped first (mutual exclusion).
+    coordinator?.claim(ownerId.current, () => engine.stop());
     engine.start(
       { lang },
       {
@@ -68,21 +78,24 @@ export function useDictation({ adapter, lang, onCommitFinal }: UseDictationOptio
           }
         },
         onError: (kind) => {
+          coordinator?.release(ownerId.current);
           setError(kind);
           setStatus("idle");
           setInterim("");
         },
         onEnd: () => {
+          coordinator?.release(ownerId.current);
           setStatus("idle");
           setInterim("");
         },
       },
     );
-  }, [engine, lang, supported]);
+  }, [engine, lang, supported, coordinator]);
 
   const stop = useCallback(() => {
     engine.stop();
-  }, [engine]);
+    coordinator?.release(ownerId.current);
+  }, [engine, coordinator]);
 
   // Abort on unmount so a background recognition never outlives the component.
   useEffect(() => {
