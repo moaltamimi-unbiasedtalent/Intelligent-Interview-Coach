@@ -271,6 +271,15 @@ const pt: Catalog = {
     fbPracticeQuality: "Qualidade da prática",
     fbOther: "Outro",
   },
+  voice: {
+    listen: "Ouvir",
+    listenQuestion: "Ouvir a pergunta",
+    stop: "Parar",
+    speaking: "A falar",
+    stopped: "Parado",
+    unavailable: "A reprodução de voz não está disponível neste navegador.",
+    privacyNote: "O Ask4Mo nunca usa a sua voz para inferir emoções, personalidade, inteligência, honestidade ou adequação para contratação.",
+  },
 };
 
 export default pt;

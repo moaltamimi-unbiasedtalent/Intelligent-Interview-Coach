@@ -271,6 +271,15 @@ const nl: Catalog = {
     fbPracticeQuality: "Oefenkwaliteit",
     fbOther: "Overig",
   },
+  voice: {
+    listen: "Beluisteren",
+    listenQuestion: "Luister naar de vraag",
+    stop: "Stoppen",
+    speaking: "Aan het spreken",
+    stopped: "Gestopt",
+    unavailable: "Spraakweergave is niet beschikbaar in deze browser.",
+    privacyNote: "Ask4Mo gebruikt uw stem nooit om emoties, persoonlijkheid, intelligentie, eerlijkheid of geschiktheid voor werk af te leiden.",
+  },
 };
 
 export default nl;

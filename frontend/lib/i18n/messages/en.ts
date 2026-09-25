@@ -274,6 +274,15 @@ export const messages = {
     fbPracticeQuality: "Practice quality",
     fbOther: "Other",
   },
+  voice: {
+    listen: "Listen",
+    listenQuestion: "Listen to the question",
+    stop: "Stop",
+    speaking: "Speaking",
+    stopped: "Stopped",
+    unavailable: "Voice playback isn’t available in this browser.",
+    privacyNote: "Ask4Mo never uses your voice to infer emotions, personality, intelligence, honesty or hiring suitability.",
+  },
 } as const;
 
 export type Messages = typeof messages;

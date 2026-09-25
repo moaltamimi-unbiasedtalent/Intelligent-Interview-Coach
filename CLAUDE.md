@@ -353,13 +353,34 @@ assumptions in core logic, prompts, scoring or examples.
 - Test totals: **always re-measure with `pytest -q`** rather than trusting a number
   copied across docs (historical docs cite different totals from their own point in
   time — that is expected, not a defect). The measured backend suite after Capstone
-  P6.5 is **2352 passed, 3 skipped** (P4 2277; P5 2303; P6 2334; P6.5 adds workspaces,
-  platform-admin + per-type sharing security suites); the skips are RAGAS installed/absent
-  guards; the frontend unit suite is **222 passed** (`cd frontend && npm test`; P6.5 adds
-  `/workspaces` + `/admin` pages, feedback category, role-aware Admin nav, i18n key-parity
-  across 7 locales) and the Playwright e2e suite adds `workspaces.spec.ts` + `admin.spec.ts`
-  (`npm run e2e`).
+  P7 is **2354 passed, 3 skipped** (P4 2277; P5 2303; P6 2334; P6.5 2352; P7 adds the
+  voice-experience gate); the skips are RAGAS installed/absent guards; the frontend unit suite
+  is **230 passed** (`cd frontend && npm test`; P7 adds the TTS/voice-control suite, 8 tests)
+  and the Playwright e2e suite is **88 passed** (`npm run e2e`; P7 adds `e2e/voice.spec.ts`).
 
+- **Multilingual turn-based voice (Capstone P7 + E5).** A bounded voice MODALITY (not a
+  human-trait signal): hear Mo/questions via browser TTS and answer by speaking via the reused
+  P3 STT, with editable transcripts and explicit submission preserved. New TTS layer mirrors
+  the P3 STT seam under `frontend/lib/speech/`: `ttsTypes.ts` (`SpeechOutputAdapter`),
+  `speechSynthesisAdapter.ts` (browser `speechSynthesis`), `useSpeechOutput.ts` (state machine
+  IDLE/SPEAKING/PAUSED/STOPPED/UNSUPPORTED/ERROR; cancels on unmount — no zombie speech),
+  `ttsLocales.ts` (7-language product→speech locale map + honest per-language status),
+  `speechText.ts` (`toSpeechText` — deterministic markdown/link/URL/citation sanitiser, NO LLM;
+  citations→"sources on screen"), `fakeSpeechOutputAdapter.ts`. `components/ui/VoicePlaybackControl.tsx`
+  (Listen/Stop; renders null when unsupported) is wired into `AgentConversation` (speaks
+  `presentation.answer`, brief-first) and `PracticeClient` (the visible question). **Invariants:**
+  speech never auto-submits; TTS never auto-opens the mic (no voice loop); Practice evaluation
+  stays TEXT-only; speech-output language follows the Mo conversation language and never changes
+  career geography; Ask4Mo stores NO audio (no MediaRecorder/Blob/voiceprint) and derives NO
+  human-trait signal (emotion/accent/confidence/personality/intelligence/honesty/hiring — none);
+  voice preference is device-local (localStorage); Admin sees only speech *architecture*
+  metadata; workspaces never auto-share audio/voice. Realtime/streaming voice (C1) is DEFERRED.
+  Deterministic gate `scripts/eval_voice_experience.py` (21 invariants incl. the human-trait
+  prohibition scanned as code identifiers) + `tests/test_voice_experience_p7.py`; unit
+  `tests/voice-output.test.tsx`; Playwright `e2e/voice.spec.ts` (fake speech engines). i18n
+  `voice` namespace across 7 locales. No migration (Alembic head `0011_workspaces_shares`); 0
+  paid/speech-provider calls; live human voice quality UNVALIDATED. See
+  `docs/capstone/p7_voice_architecture_audit.md` + `p7_e5_voice_experience.md`.
 - **Teams/Workspaces + Platform Admin (Capstone P6.5).** Bounded collaboration + a bounded
   operations console. Tables (migration `0011_workspaces_shares`, head now
   `0011_workspaces_shares`): `workspaces`, `workspace_memberships` (role WORKSPACE_OWNER/MEMBER

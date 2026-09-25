@@ -15,6 +15,10 @@ import { InterviewSessionSetup } from "./InterviewSessionSetup";
 import { DeepDivePanel } from "./DeepDivePanel";
 import { useInterview } from "./useInterview";
 import { FeedbackControl } from "@/components/feedback/FeedbackControl";
+import { VoicePlaybackControl } from "@/components/ui/VoicePlaybackControl";
+import { useT } from "@/components/i18n/I18nProvider";
+import { useAuthOptional } from "@/components/auth/AuthProvider";
+import { toSpeechLocale } from "@/lib/speech/ttsLocales";
 
 /**
  * Interview Practice — the full candidate lifecycle over the durable backend. With
@@ -52,6 +56,10 @@ export function PracticeClient({ sessionId }: { sessionId?: string }) {
 function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; router: ReturnType<typeof useRouter>; fromCoach?: boolean }) {
   const ctrl = useInterview(sessionId);
   const [answer, setAnswer] = useState("");
+  const t = useT();
+  // Question playback follows the candidate's conversation language (§11); never the UI
+  // locale and never career geography (§12). Falls back to en-US.
+  const questionSpeechLang = toSpeechLocale(useAuthOptional()?.account?.conversation_language);
   const [modes, setModes] = useState<string[]>([]);
   const [confirmingEnd, setConfirmingEnd] = useState(false);
   const evalRef = useRef<HTMLDivElement>(null);
@@ -140,9 +148,14 @@ function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; 
       {/* Main question awaiting an answer. */}
       {s === "AWAITING_ANSWER" && q ? (
         <>
-          <h1 className="mb-4 mt-2 text-xl font-semibold md:text-2xl" role="heading" aria-level={1}>
+          <h1 className="mb-2 mt-2 text-xl font-semibold md:text-2xl" role="heading" aria-level={1}>
             {q.question}
           </h1>
+          {/* Optional playback of the VISIBLE question (§8). Never auto-plays; the answer
+              composer below reuses the P3 dictation control for "Speak answer". */}
+          <div className="mb-4">
+            <VoicePlaybackControl text={q.question} lang={questionSpeechLang} label={t("voice.listenQuestion")} />
+          </div>
           <InterviewAnswerComposer
             value={answer}
             onChange={setAnswer}

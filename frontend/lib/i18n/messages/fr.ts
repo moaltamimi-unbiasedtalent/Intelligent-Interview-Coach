@@ -271,6 +271,15 @@ const fr: Catalog = {
     fbPracticeQuality: "Qualité de l’entraînement",
     fbOther: "Autre",
   },
+  voice: {
+    listen: "Écouter",
+    listenQuestion: "Écouter la question",
+    stop: "Arrêter",
+    speaking: "Lecture en cours",
+    stopped: "Arrêté",
+    unavailable: "La lecture vocale n’est pas disponible dans ce navigateur.",
+    privacyNote: "Ask4Mo n’utilise jamais votre voix pour déduire des émotions, la personnalité, l’intelligence, l’honnêteté ou l’aptitude à l’embauche.",
+  },
 };
 
 export default fr;

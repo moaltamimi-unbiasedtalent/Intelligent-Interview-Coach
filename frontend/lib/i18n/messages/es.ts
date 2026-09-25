@@ -271,6 +271,15 @@ const es: Catalog = {
     fbPracticeQuality: "Calidad de la práctica",
     fbOther: "Otro",
   },
+  voice: {
+    listen: "Escuchar",
+    listenQuestion: "Escuchar la pregunta",
+    stop: "Detener",
+    speaking: "Hablando",
+    stopped: "Detenido",
+    unavailable: "La reproducción de voz no está disponible en este navegador.",
+    privacyNote: "Ask4Mo nunca usa tu voz para inferir emociones, personalidad, inteligencia, honestidad o idoneidad para un empleo.",
+  },
 };
 
 export default es;

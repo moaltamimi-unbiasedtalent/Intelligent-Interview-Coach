@@ -271,6 +271,15 @@ const de: Catalog = {
     fbPracticeQuality: "Übungsqualität",
     fbOther: "Sonstiges",
   },
+  voice: {
+    listen: "Vorlesen",
+    listenQuestion: "Frage vorlesen",
+    stop: "Stopp",
+    speaking: "Spricht",
+    stopped: "Gestoppt",
+    unavailable: "Sprachausgabe ist in diesem Browser nicht verfügbar.",
+    privacyNote: "Ask4Mo nutzt Ihre Stimme niemals, um Emotionen, Persönlichkeit, Intelligenz, Ehrlichkeit oder Eignung abzuleiten.",
+  },
 };
 
 export default de;
