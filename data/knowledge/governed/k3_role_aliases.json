@@ -1,0 +1,19 @@
+{
+  "dataset_id": "k3_role_aliases",
+  "title": "Emerging roles / aliases (versioned)",
+  "requirement": "K3",
+  "version": "1.0.0",
+  "data_review_status": "engineering_draft",
+  "coverage_note": "Versioned alias → canonical-role map for emerging/newer role titles. Aliases IMPROVE resolution for declared cases only; they never override an existing canonical resolution and are advisory. Unknown/ambiguous roles remain unresolved (safe abstention) — an alias is only applied on a confident, unambiguous match.",
+  "aliases": [
+    {"alias": "ml engineer", "canonical": "machine learning engineer", "canonical_family": "software_developer", "added_in": "1.0.0", "confidence": "high"},
+    {"alias": "mlops engineer", "canonical": "machine learning operations engineer", "canonical_family": "software_developer", "added_in": "1.0.0", "confidence": "high"},
+    {"alias": "prompt engineer", "canonical": "prompt engineer", "canonical_family": "software_developer", "added_in": "1.0.0", "confidence": "moderate"},
+    {"alias": "ai engineer", "canonical": "artificial intelligence engineer", "canonical_family": "software_developer", "added_in": "1.0.0", "confidence": "moderate"},
+    {"alias": "data reliability engineer", "canonical": "data reliability engineer", "canonical_family": "data_analyst", "added_in": "1.0.0", "confidence": "moderate"},
+    {"alias": "sre", "canonical": "site reliability engineer", "canonical_family": "software_developer", "added_in": "1.0.0", "confidence": "high"},
+    {"alias": "growth pm", "canonical": "growth product manager", "canonical_family": "product_manager", "added_in": "1.0.0", "confidence": "moderate"},
+    {"alias": "devrel", "canonical": "developer relations engineer", "canonical_family": "software_developer", "added_in": "1.0.0", "confidence": "moderate"},
+    {"alias": "cloud architect", "canonical": "cloud solutions architect", "canonical_family": "software_developer", "added_in": "1.0.0", "confidence": "high"}
+  ]
+}

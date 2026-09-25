@@ -353,11 +353,45 @@ assumptions in core logic, prompts, scoring or examples.
 - Test totals: **always re-measure with `pytest -q`** rather than trusting a number
   copied across docs (historical docs cite different totals from their own point in
   time — that is expected, not a defect). The measured backend suite after Capstone
-  P5 is **2303 passed, 3 skipped** (Capstone P4 was 2277; P5 adds the model-policy +
-  multi-agent specialist suites); the skips are RAGAS installed/absent guards; the
-  frontend unit suite is **219 passed** (`cd frontend && npm test`) and the Playwright
+  P6 is **2334 passed, 3 skipped** (P4 2277; P5 2303; P6 adds knowledge-governance,
+  Prompt Lab, feedback-learning, retention + reviewer-API suites); the skips are RAGAS
+  installed/absent guards; the frontend unit suite is **219 passed** (`cd frontend &&
+  npm test`; unchanged in P6 — no candidate-facing UI added) and the Playwright
   e2e suite is **81 passed** (`npm run e2e`).
 
+- **Knowledge governance, Prompt Lab & feedback learning (Capstone P6 + E6 + E7).** A
+  governance layer over the UNCHANGED KB plus three governed systems. **Knowledge (K1–K4):**
+  `src/copilot/knowledge/governed_datasets.py` + committed `data/knowledge/governed/*.json`
+  add bounded, reviewed datasets with **abstention-first** access — K1 German occupation
+  compensation (provenance + pay unit + reference year; never invents a salary), K2
+  credentials/regulated-professions matrix (required vs preferred + authority lineage), K3
+  versioned role aliases (confident exact matches only; never overrides existing
+  resolution), K4 additional Adzuna operations as a bounded, allow-listed, parameter-validated
+  spec (live UNVALIDATED / cost-gated, no live call). `src/copilot/knowledge/governance.py`
+  adds a first-class **Knowledge Manifest**, a **deterministic readiness** state machine
+  (`ReadinessState`; READY ≠ "folder exists" — a fresh clone honestly reports
+  SOURCE_MISSING/INDEX_MISSING for the generated stores), **source health**, a **coverage
+  matrix** (no universal-coverage claim) and the **7-language boundary** (UI support ≠ KB
+  content coverage). The committed deterministic **RAGAS** baseline (0.6757/0.5161) is
+  preserved; the model-judged judge is NOT RUN. **E6 Prompt Lab** (`src/application/prompt_lab/`)
+  is a bounded, admin-only, human-reviewed experiment framework: variants over
+  prompt/model-policy/specialist CONFIG run against fixed deterministic evaluators with NO
+  live model and NO cost, isolated from production (a run never mutates the model policy),
+  with **no auto-promotion** (`applied_to_production=False` always) and prompt/config version
+  identity (`src/config_versions.py`). **E7 feedback learning** builds on the offline
+  Feedback Intelligence (7G): a bounded taxonomy (`src/feedback_taxonomy.py`) + an
+  improvement-candidate lifecycle (`src/copilot/feedback_intelligence/improvement.py`:
+  PROPOSED→TRIAGED→EXPERIMENTING→ACCEPTED→IMPLEMENTED, human-only transitions, IMPLEMENTED
+  never automatic) — governed improvement, never autonomous self-modification. **Retention**
+  (`src/application/retention_service.py`): a classified inventory + a safe
+  `TemporaryArtifactCleaner` (dry-run default, only under one root, idempotent). A
+  PLATFORM_ADMIN-gated reviewer surface (`/api/v1/reviewer/*`) exposes readiness/manifest/
+  coverage/source-health/config-versions/retention/Prompt Lab — candidates get 403; no
+  secret/embedding/prompt/CoT leaks. `scripts/demo_readiness.py` fails non-zero on a missing
+  KB. New CI gates: `eval_knowledge_governance`, `eval_prompt_lab`, `eval_feedback_learning`,
+  `eval_retention` (all offline, 0 paid calls). No migration (Alembic head stays
+  `0010_candidate_documents`). See `docs/capstone/p6_knowledge_current_state_audit.md` +
+  `p6_e6_e7_knowledge_promptlab_learning.md`.
 - **Bounded multi-agent architecture + per-operation model policy (Capstone P5 + E4).**
   Mo stays the SINGLE candidate-facing orchestrator (its ReAct loop/graph/nodes/HITL/RAG
   governance/Practice are unchanged). Three materially distinct **bounded specialists** sit

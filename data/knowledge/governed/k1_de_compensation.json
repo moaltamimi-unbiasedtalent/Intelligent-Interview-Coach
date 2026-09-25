@@ -1,0 +1,95 @@
+{
+  "dataset_id": "k1_de_compensation",
+  "title": "Germany occupation compensation (declared, bounded)",
+  "requirement": "K1",
+  "jurisdiction": "DE",
+  "language": "de",
+  "currency": "EUR",
+  "pay_unit": "gross_annual",
+  "reference_year": 2024,
+  "version": "1.0.0",
+  "data_review_status": "engineering_draft",
+  "authority": "Bundesagentur für Arbeit — Entgeltatlas; Statistisches Bundesamt (Destatis)",
+  "authority_level": 1,
+  "source_url": "https://web.arbeitsagentur.de/entgeltatlas/",
+  "coverage_note": "A DECLARED, bounded occupation set only. Occupations outside this list are NOT covered; the lookup abstains rather than inventing a salary. Figures are engineering-draft gross annual EUR pending human data review; the governance mechanism (provenance, pay unit, reference year, abstention, no-invention) is the delivered capability.",
+  "occupations": [
+    {
+      "occupation_id": "software_developer",
+      "title_de": "Softwareentwickler/in",
+      "title_en": "Software developer",
+      "isco_code": "2512",
+      "median_gross_annual_eur": 62000,
+      "range_gross_annual_eur": [48000, 82000],
+      "seniority": "mid",
+      "source_authority": "Bundesagentur für Arbeit — Entgeltatlas",
+      "reference_year": 2024
+    },
+    {
+      "occupation_id": "data_analyst",
+      "title_de": "Datenanalyst/in",
+      "title_en": "Data analyst",
+      "isco_code": "2511",
+      "median_gross_annual_eur": 56000,
+      "range_gross_annual_eur": [44000, 72000],
+      "seniority": "mid",
+      "source_authority": "Bundesagentur für Arbeit — Entgeltatlas",
+      "reference_year": 2024
+    },
+    {
+      "occupation_id": "registered_nurse",
+      "title_de": "Gesundheits- und Krankenpfleger/in",
+      "title_en": "Registered nurse",
+      "isco_code": "2221",
+      "median_gross_annual_eur": 44000,
+      "range_gross_annual_eur": [38000, 54000],
+      "seniority": "mid",
+      "source_authority": "Statistisches Bundesamt (Destatis)",
+      "reference_year": 2024
+    },
+    {
+      "occupation_id": "mechanical_engineer",
+      "title_de": "Maschinenbauingenieur/in",
+      "title_en": "Mechanical engineer",
+      "isco_code": "2144",
+      "median_gross_annual_eur": 64000,
+      "range_gross_annual_eur": [50000, 85000],
+      "seniority": "mid",
+      "source_authority": "Bundesagentur für Arbeit — Entgeltatlas",
+      "reference_year": 2024
+    },
+    {
+      "occupation_id": "product_manager",
+      "title_de": "Produktmanager/in",
+      "title_en": "Product manager",
+      "isco_code": "1221",
+      "median_gross_annual_eur": 70000,
+      "range_gross_annual_eur": [55000, 95000],
+      "seniority": "mid",
+      "source_authority": "Statistisches Bundesamt (Destatis)",
+      "reference_year": 2024
+    },
+    {
+      "occupation_id": "electrician",
+      "title_de": "Elektriker/in",
+      "title_en": "Electrician",
+      "isco_code": "7411",
+      "median_gross_annual_eur": 42000,
+      "range_gross_annual_eur": [34000, 52000],
+      "seniority": "mid",
+      "source_authority": "Bundesagentur für Arbeit — Entgeltatlas",
+      "reference_year": 2024
+    },
+    {
+      "occupation_id": "accountant",
+      "title_de": "Buchhalter/in",
+      "title_en": "Accountant",
+      "isco_code": "2411",
+      "median_gross_annual_eur": 52000,
+      "range_gross_annual_eur": [40000, 68000],
+      "seniority": "mid",
+      "source_authority": "Statistisches Bundesamt (Destatis)",
+      "reference_year": 2024
+    }
+  ]
+}

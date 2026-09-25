@@ -31,10 +31,10 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 | ID | Requirement | Current | Target | Phase | Acceptance |
 |---|---|---|---|---|---|
 | C-rag | Governed agentic RAG | DELIVERED | Preserve | — | AC-07/22 |
-| K1 | Germany occupation compensation | ABSENT | Bounded reviewed dataset | P6/E6 | EX-13 |
-| K2 | Credentials / regulated professions | ABSENT | Declared jurisdiction matrix | P6/E6 | EX-14 |
-| K3 | Emerging roles / aliases | ABSENT | Versioned aliases | P6/E6 | EX-15 |
-| K4 | Additional Adzuna capabilities | ABSENT | Entitled ops as bounded tools | P6/E6 | EX-16 |
+| K1 | Germany occupation compensation | DELIVERED (P6) — bounded reviewed dataset + abstention (figures engineering-draft) | Bounded reviewed dataset | P6/E6 | EX-13 |
+| K2 | Credentials / regulated professions | DELIVERED (P6) — declared profession/jurisdiction matrix + abstention | Declared jurisdiction matrix | P6/E6 | EX-14 |
+| K3 | Emerging roles / aliases | DELIVERED (P6) — versioned aliases (confident matches only) | Versioned aliases | P6/E6 | EX-15 |
+| K4 | Additional Adzuna capabilities | DELIVERED (P6) — bounded op spec + validation; live UNVALIDATED/cost-gated | Entitled ops as bounded tools | P6/E6 | EX-16 |
 
 ## Group D — Platform productisation (owner-added)
 | ID | Requirement | Current | Target | Phase | Acceptance |
@@ -98,8 +98,8 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 | ID | Requirement | Current | Target | Phase | Acceptance |
 |---|---|---|---|---|---|
 | C12 | Public hosting (HTTPS, verified-email reg) | ABSENT | Reproducible deploy + limits + rollback | P8 | EX-12 |
-| C9 | Bulk retention cleanup | PARTIAL (`cleanup_runtime_data.py`) | Dry-run + bounded batches | P6/E7 | EX-10 |
-| C11 | Prompt Lab (admin-only) | ABSENT | Versioned synthetic experiments | P6/E6 | EX-11 |
+| C9 | Bulk retention cleanup | DELIVERED (P6) — inventory + safe temp cleaner (dry-run/owner-scope/idempotent) + existing session cleanup | Dry-run + bounded batches | P6/E7 | EX-10 |
+| C11 | Prompt Lab (admin-only) | DELIVERED (P6) — versioned, isolated, human-reviewed, no auto-promotion | Versioned synthetic experiments | P6/E6 | EX-11 |
 
 ## Group L — Marketing / product experience
 | ID | Requirement | Current | Target | Phase | Acceptance |
@@ -225,3 +225,34 @@ Shape: **Mo stays the single candidate-facing orchestrator; three materially dis
 | Deterministic eval + CI | DELIVERED | Repeatable gate, no cost | `scripts/eval_multi_agent.py` wired into CI; all gates pass | CI step; GATE STATUS PASS | not a live benchmark |
 
 Migrations added: 0 (no schema change; Alembic head stays `0010_candidate_documents`). Paid/live LLM calls this phase: 0.
+
+## P6 / E6 / E7 Knowledge governance, Prompt Lab & feedback learning (delivered this phase)
+See `p6_knowledge_current_state_audit.md` + `p6_e6_e7_knowledge_promptlab_learning.md`.
+
+Shape: **governance layer over the unchanged KB (manifest/readiness/coverage/source-health), K1–K4 bounded reviewed datasets with abstention, an isolated human-reviewed Prompt Lab with no auto-promotion, a governed feedback→improvement loop, and a retention inventory + safe temporary cleanup.** No production prompt/code/model/routing auto-modified. Alembic head unchanged (0010). Paid/live calls: 0.
+
+| Requirement | Status | Why | How | Evidence | Limitation |
+|---|---|---|---|---|---|
+| K1 German compensation | DELIVERED | Close the German-compensation gap safely | `data/knowledge/governed/k1_de_compensation.json` + `lookup_compensation` (provenance, pay unit, reference year); abstains outside set/jurisdiction; never invents a salary | `test_knowledge_governance_p6.py`, `eval_knowledge_governance.py` | figures engineering-draft (human data review carried) |
+| K2 Credentials matrix | DELIVERED | Differentiate required vs preferred with lineage | `k2_credentials.json` + `lookup_credentials`; abstains outside matrix | same | legal verification carried |
+| K3 Emerging roles/aliases | DELIVERED | Improve resolution for new roles safely | `k3_role_aliases.json` + `resolve_alias` (confident exact match only; never overrides existing) | same | curated; conservative matching |
+| K4 Adzuna extensions | DELIVERED (live UNVALIDATED) | Entitled ops as bounded tools | `k4_adzuna_capabilities.json` + `validate_adzuna_operation` (allow-list, bounds, entitlement, safe output); no live call | same | live calls UNVALIDATED/cost-gated |
+| Knowledge manifest | DELIVERED | Auditable KB without opening embeddings | `governance.knowledge_manifest` (governed + curated + provenance) | governance tests, reviewer API | — |
+| Deterministic readiness | DELIVERED | READY ≠ "folder exists" | `governance.component_readiness` + states; honest SOURCE_MISSING/INDEX_MISSING on fresh clone | tests, `demo_readiness.py` | — |
+| Source health | DELIVERED | Per-store diagnostics | `governance.source_health`; admin reviewer route | reviewer API test | — |
+| Coverage matrix | DELIVERED | No universal-coverage claim | `governance.coverage_matrix` (domain/geo/lang/authority/limitation + disclaimer) | governance test | — |
+| Retrieval evaluation | PRESERVED/STRENGTHENED | Deterministic, citations, geography, unsupported | existing 11R/KB-2/product/quality_v2/faithfulness_v2 + governance abstention checks | eval scripts | — |
+| RAGAS separation | DELIVERED (honest) | Deterministic vs model-judged | committed deterministic baseline (0.6757/0.5161) preserved; judge NOT RUN | `evaluations/ragas/deterministic_baseline.json` | live judge UNVALIDATED (paid) |
+| Multilingual retrieval | PARTIAL (bounded) | 7-lang boundary, not parity | `multilingual_cases.json` + language-boundary table; UI≠KB coverage | governance eval | live quality UNVALIDATED |
+| E6 Prompt Lab | DELIVERED | Human-reviewed, isolated experiments | `src/application/prompt_lab/*`; deterministic evaluators; versioned; admin route | `eval_prompt_lab.py`, `test_prompt_lab_p6.py` | no live model comparison (cost-gated) |
+| No auto-promotion | PASS | Production immutable from experiments | `applied_to_production=False` always; production policy byte-identical after runs | eval + tests | — |
+| Prompt/config versioning | DELIVERED | Attributable production behaviour | `src/config_versions.py` (prompt/policy/specialist/knowledge) | reviewer config-versions test | — |
+| Failed-experiment evidence | PRESERVED | Evidence-based engineering | `security_classifier_experiment.json` + registry left intact | repo artifact | — |
+| E7 Feedback learning | DELIVERED | Governed improvement, not autonomy | taxonomy + improvement lifecycle over 7G; human triage; links to Prompt Lab | `eval_feedback_learning.py`, tests | candidate-facing category UI carried |
+| Improvement lifecycle | DELIVERED | Explicit, human-driven | PROPOSED→…→IMPLEMENTED; IMPLEMENTED only from ACCEPTED, never automatic | tests | — |
+| No autonomous change | PASS | No self-modification | `executed=False`, `applied_to_production=False`, lifecycle + isolation | evals | — |
+| C9 Retention | DELIVERED | Explicit inventory + safe cleanup | `retention_service` inventory + `TemporaryArtifactCleaner` (dry-run/owner-scope/idempotent) | `eval_retention.py`, tests | bulk checkpoint cleanup carried |
+| Reproducibility / demo readiness | DELIVERED | No silent PASS on missing artifacts | `demo_readiness.py` (non-zero on missing KB) + governance eval reports runtime state | script | — |
+| Reviewer authorization | PASS | Candidate cannot access diagnostics | `/api/v1/reviewer/*` `require_platform_admin`; candidate 403 | `test_reviewer_api_p6.py` | API-only (no admin console) |
+
+Migrations added: 0 (Alembic head stays `0010_candidate_documents`). Paid/live LLM/Adzuna/judge calls this phase: 0.

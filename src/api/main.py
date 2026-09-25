@@ -36,6 +36,7 @@ from src.api.routes import (
     knowledge,
     memory,
     progress,
+    reviewer,
 )
 from src.api.session_store import InMemorySessionStore
 
@@ -52,6 +53,7 @@ TAGS_METADATA = [
     {"name": "memory", "description": "User-scoped long-term preparation memory (Sprint 4 Phase 7)."},
     {"name": "auth", "description": "Accounts, authentication, sessions and account lifecycle (Capstone P1/E1)."},
     {"name": "documents", "description": "Private candidate documents, evidence, story bank and report export (Capstone P4)."},
+    {"name": "reviewer", "description": "PLATFORM_ADMIN-gated knowledge/retention/Prompt Lab diagnostics (Capstone P6)."},
 ]
 
 DESCRIPTION = (
@@ -103,7 +105,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
 
     # Infra liveness alias (unversioned) + versioned API surface.
     app.include_router(health.router, prefix="/api")
-    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, feedback, progress, auth):
+    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, feedback, progress, auth, reviewer):
         app.include_router(module.router, prefix=API_PREFIX)
     # Documents phase (P4) registers three routers under the same prefix.
     app.include_router(documents.router, prefix=API_PREFIX)

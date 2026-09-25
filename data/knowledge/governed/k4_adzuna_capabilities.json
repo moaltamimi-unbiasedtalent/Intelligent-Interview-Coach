@@ -1,0 +1,65 @@
+{
+  "dataset_id": "k4_adzuna_capabilities",
+  "title": "Additional Adzuna capabilities (entitled operations as bounded tools)",
+  "requirement": "K4",
+  "version": "1.0.0",
+  "provider": "adzuna",
+  "live_validation_status": "UNVALIDATED",
+  "coverage_note": "Declares a bounded, allow-listed set of ADDITIONAL Adzuna operations beyond the existing current-vacancy search, each with strict parameter bounds, an entitlement requirement and a safe-output shape. This phase delivers the bounded SPEC + parameter validation + quota/failure/security handling deterministically; live provider calls remain UNVALIDATED and cost-gated (never called by default). Operations not on this allow-list are rejected.",
+  "default_quota_per_day": 250,
+  "operations": [
+    {
+      "operation_id": "salary_histogram",
+      "adzuna_endpoint": "history",
+      "description": "Advertised-salary distribution for a role in a country (histogram buckets).",
+      "entitlement": "PREMIUM_PREVIEW",
+      "params": {
+        "country": {"type": "country_code", "required": true},
+        "role": {"type": "string", "required": true, "max_length": 120},
+        "months": {"type": "int", "required": false, "min": 1, "max": 24, "default": 12}
+      },
+      "safe_output": ["buckets", "currency", "reference_period", "provider", "self_reported_note"]
+    },
+    {
+      "operation_id": "top_companies",
+      "adzuna_endpoint": "top_companies",
+      "description": "Companies advertising most for a role in a country.",
+      "entitlement": "PREMIUM_PREVIEW",
+      "params": {
+        "country": {"type": "country_code", "required": true},
+        "role": {"type": "string", "required": true, "max_length": 120},
+        "results_limit": {"type": "int", "required": false, "min": 1, "max": 25, "default": 10}
+      },
+      "safe_output": ["companies", "advert_counts", "provider", "self_reported_note"]
+    },
+    {
+      "operation_id": "category_breakdown",
+      "adzuna_endpoint": "categories",
+      "description": "Advertised-vacancy counts by occupation category in a country.",
+      "entitlement": "PREMIUM_PREVIEW",
+      "params": {
+        "country": {"type": "country_code", "required": true}
+      },
+      "safe_output": ["categories", "advert_counts", "provider"]
+    },
+    {
+      "operation_id": "regional_breakdown",
+      "adzuna_endpoint": "geodata",
+      "description": "Advertised-vacancy counts by region for a role in a country.",
+      "entitlement": "PREMIUM_PREVIEW",
+      "params": {
+        "country": {"type": "country_code", "required": true},
+        "role": {"type": "string", "required": true, "max_length": 120}
+      },
+      "safe_output": ["regions", "advert_counts", "provider"]
+    }
+  ],
+  "allowed_countries": ["DE", "UK", "US", "FR", "ES", "IT", "NL", "AT", "PL"],
+  "safety_rules": [
+    "Advertised-market data is self-reported job-board data, NOT official observed earnings.",
+    "Every result must be labelled with provider and self_reported_note where salary is involved.",
+    "Operations outside this allow-list are rejected; parameters outside declared bounds are rejected.",
+    "Requires the declared entitlement; unentitled callers are refused.",
+    "Quota-limited; a quota breach returns a safe rate-limited status, never an error stack."
+  ]
+}
