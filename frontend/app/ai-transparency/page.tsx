@@ -20,13 +20,13 @@ export default function AiTransparencyPage() {
       <h2>What Mo is</h2>
       <p>
         Mo is an AI coaching assistant that helps you prepare. Mo uses a bounded set of tools and
-        follows a governed workflow — it does not act autonomously beyond preparing with you.
+        follows a governed workflow - it does not act autonomously beyond preparing with you.
       </p>
 
       <h2>When AI is used vs deterministic logic</h2>
       <ul>
         <li><strong>AI (a model)</strong> is used for conversational coaching, grounded synthesis, question generation and answer/report evaluation.</li>
-        <li><strong>Deterministic logic</strong> (no model) is used for things that must be exact and injection-safe — for example selecting and ranking your already-approved evidence.</li>
+        <li><strong>Deterministic logic</strong> (no model) is used for things that must be exact and injection-safe - for example selecting and ranking your already-approved evidence.</li>
         <li>The choice of model per operation is governed by a central server-side policy; your browser can never choose a raw model.</li>
       </ul>
 
@@ -50,7 +50,7 @@ export default function AiTransparencyPage() {
 
       <h2>What Ask4Mo never does</h2>
       <ul>
-        <li>No inference of emotion, mood, stress, confidence, accent, personality, intelligence, honesty, or hiring suitability — from your voice or otherwise.</li>
+        <li>No inference of emotion, mood, stress, confidence, accent, personality, intelligence, honesty, or hiring suitability - from your voice or otherwise.</li>
         <li>No hiring decisions and no recruiter-facing candidate ranking.</li>
         <li>No exposure of system prompts, developer prompts, chain-of-thought or secrets.</li>
       </ul>

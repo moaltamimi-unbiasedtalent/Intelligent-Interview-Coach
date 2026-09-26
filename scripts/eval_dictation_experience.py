@@ -70,15 +70,23 @@ def run() -> dict[str, tuple[bool, str]]:
           or "preserves existing" in control_test,
           "append preserves prior text (unit-tested)")
 
-    # 5) Unsupported browsers degrade: control renders null when not supported.
+    # 5) Unsupported browsers degrade GRACEFULLY (P10B Wave 1): the control must NOT go silent.
+    #    It renders an accessible fallback note so the candidate learns dictation exists and that
+    #    typing stays the guaranteed path — replacing the earlier silent `return null`.
     check("unsupported_fallback",
-          "if (!supported) return null" in control and "isSupported" in adapter,
-          "renders nothing when unsupported; typing remains")
+          'data-testid="dictation-unsupported"' in control
+          and 'role="note"' in control
+          and "return null" not in control
+          and "isSupported" in adapter,
+          "unsupported → accessible fallback note (not silence); typing remains")
 
-    # 6) Permission/failure isolation: errors mapped to safe copy, no throw, typing remains.
+    # 6) Permission/failure isolation: errors mapped to safe, LOCALIZED copy, no throw, typing
+    #    remains. P10B Wave 1 replaced the hardcoded ERROR_COPY with an i18n key map (ERROR_KEY)
+    #    resolved via t(); the safety property (safe copy, no crash, text preserved) is unchanged.
     check("permission_failure_isolation",
-          "permission-denied" in control and "ERROR_COPY" in control and "onError" in hook,
-          "safe error copy; failures never lose text or crash")
+          "permission-denied" in control and "ERROR_KEY" in control
+          and "errorText" in control and "onError" in hook,
+          "safe localized error copy; failures never lose text or crash")
 
     # 7) Accessibility contract on the control.
     a11y = all(t in control for t in ("aria-pressed", "aria-label", 'role="status"', "aria-live"))

@@ -51,13 +51,16 @@ afterEach(() => {
 });
 
 describe("AccountMenu", () => {
-  it("shows the account avatar and sign-out for a real session", async () => {
+  it("opens an account menu exposing Account, Settings and Sign out for a real session", async () => {
     me.mockResolvedValue(SESSION_ACCOUNT);
     render(<AuthProvider><AccountMenu /></AuthProvider>);
-    await waitFor(() =>
-      expect(screen.getByRole("link", { name: "Your account" })).toHaveAttribute("href", "/account"),
-    );
-    expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
+    // The header control is now an accessible avatar button that opens a menu
+    // (P10B Wave 1: Settings is reachable here, not only via Progress → Manage).
+    const trigger = await screen.findByRole("button", { name: "Your account" });
+    await userEvent.click(trigger);
+    expect(screen.getByRole("menuitem", { name: "Your account" })).toHaveAttribute("href", "/account");
+    expect(screen.getByRole("menuitem", { name: "Settings" })).toHaveAttribute("href", "/settings");
+    expect(screen.getByRole("menuitem", { name: "Sign out" })).toBeInTheDocument();
   });
 
   it("shows Sign in when unauthenticated", async () => {

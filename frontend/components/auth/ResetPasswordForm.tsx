@@ -8,10 +8,12 @@ import { AuthCard, LabelledField } from "./AuthCard";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
+import { useT } from "@/components/i18n/I18nProvider";
 
 const MIN_PASSWORD = 10;
 
 export function ResetPasswordForm() {
+  const t = useT();
   const params = useSearchParams();
   const router = useRouter();
   const token = params.get("token") || "";
@@ -24,7 +26,7 @@ export function ResetPasswordForm() {
     e.preventDefault();
     setError(null);
     if (password.length < MIN_PASSWORD) {
-      setError(`Password must be at least ${MIN_PASSWORD} characters.`);
+      setError(t("auth.weakPassword", { min: MIN_PASSWORD }));
       return;
     }
     setBusy(true);
@@ -32,7 +34,7 @@ export function ResetPasswordForm() {
       await api.auth.resetPassword(token, password);
       setDone(true);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not reset your password.");
+      setError(err instanceof ApiError ? err.message : t("auth.couldNotReset"));
     } finally {
       setBusy(false);
     }
@@ -40,11 +42,11 @@ export function ResetPasswordForm() {
 
   if (!token) {
     return (
-      <AuthCard title="Reset your password">
-        <Alert tone="danger">This reset link is missing or invalid. Please request a new one.</Alert>
+      <AuthCard title={t("auth.resetTitle")}>
+        <Alert tone="danger">{t("auth.resetLinkInvalid")}</Alert>
         <div className="mt-4">
           <Link href="/forgot-password" className="font-semibold text-accent hover:underline">
-            Request a new link
+            {t("auth.requestNewLink")}
           </Link>
         </div>
       </AuthCard>
@@ -53,23 +55,23 @@ export function ResetPasswordForm() {
 
   if (done) {
     return (
-      <AuthCard title="Password updated">
-        <Alert tone="info">Your password has been reset. You can now sign in.</Alert>
+      <AuthCard title={t("auth.passwordUpdated")}>
+        <Alert tone="info">{t("auth.passwordResetDone")}</Alert>
         <Button className="mt-4 w-full" onClick={() => router.replace("/sign-in")}>
-          Go to sign in
+          {t("auth.goToSignIn")}
         </Button>
       </AuthCard>
     );
   }
 
   return (
-    <AuthCard title="Choose a new password">
+    <AuthCard title={t("auth.chooseNewPassword")}>
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
         {error ? <Alert tone="danger">{error}</Alert> : null}
         <LabelledField
-          label="New password"
+          label={t("auth.newPassword")}
           htmlFor="password"
-          hint={`At least ${MIN_PASSWORD} characters.`}
+          hint={t("auth.passwordHint", { min: MIN_PASSWORD })}
         >
           <Input
             id="password"
@@ -82,7 +84,7 @@ export function ResetPasswordForm() {
           />
         </LabelledField>
         <Button type="submit" disabled={busy} className="w-full">
-          {busy ? "Updating…" : "Update password"}
+          {busy ? t("auth.updating") : t("auth.updatePassword")}
         </Button>
       </form>
     </AuthCard>

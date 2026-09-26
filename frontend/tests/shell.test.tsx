@@ -65,14 +65,17 @@ describe("AppShell", () => {
 
   it("home wordmark links to the app home (/app)", () => {
     render(<AppShell><span /></AppShell>);
-    expect(screen.getByRole("link", { name: "Ask4Mo — home" }))
+    expect(screen.getByRole("link", { name: "Ask4Mo - home" }))
       .toHaveAttribute("href", "/app");
   });
 
-  it("exposes the account control (links to the account page), not in the primary nav", () => {
+  it("exposes an account menu (Account + Settings), not a primary-nav link", async () => {
     render(<AppShell><span /></AppShell>);
-    const account = screen.getByRole("link", { name: "Your account" });
-    expect(account).toHaveAttribute("href", "/account");
+    // The account control is a menu button; Settings must be reachable from it (P10B Wave 1).
+    const trigger = screen.getByRole("button", { name: "Your account" });
+    await userEvent.click(trigger);
+    expect(screen.getByRole("menuitem", { name: "Your account" })).toHaveAttribute("href", "/account");
+    expect(screen.getByRole("menuitem", { name: "Settings" })).toHaveAttribute("href", "/settings");
   });
 });
 

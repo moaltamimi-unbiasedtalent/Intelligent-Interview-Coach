@@ -10,13 +10,26 @@
  *
  * Accessibility: native <button> with aria-pressed + aria-label, an aria-live status,
  * a keyboard-operable stop, no colour-only state, and motion only when the user allows
- * it. When recognition is unsupported the control renders nothing, so typing remains
- * the guaranteed path.
+ * it. When recognition is unsupported the control renders a small accessible fallback note
+ * (never silence, P10B Wave 1) so the candidate knows dictation exists; typing stays the
+ * guaranteed path.
  */
 
 import { useId, useRef } from "react";
 import type { SpeechRecognitionAdapter, DictationErrorKind } from "@/lib/speech/types";
 import { appendTranscript, useDictation } from "@/lib/speech/useDictation";
+import { useT } from "@/components/i18n/I18nProvider";
+
+// Map a runtime dictation error to its i18n key (P10B Wave 1 — localized error copy).
+const ERROR_KEY: Record<DictationErrorKind, string> = {
+  unsupported: "dictation.unsupported",
+  "permission-denied": "dictation.permissionDenied",
+  "no-microphone": "dictation.noMicrophone",
+  "no-speech": "dictation.noSpeech",
+  network: "dictation.network",
+  aborted: "",
+  error: "dictation.error",
+};
 
 export interface DictationLanguage {
   code: string;
@@ -39,16 +52,6 @@ export const DICTATION_LANGUAGES: DictationLanguage[] = [
   { code: "nl-NL", label: "Dutch" },
 ];
 
-const ERROR_COPY: Record<DictationErrorKind, string> = {
-  unsupported: "Dictation isn’t available in this browser. You can type instead.",
-  "permission-denied": "Microphone access was blocked. You can still type.",
-  "no-microphone": "No microphone was found. You can still type.",
-  "no-speech": "I didn’t catch that — try again, or type.",
-  network: "Dictation is temporarily unavailable. You can still type.",
-  aborted: "",
-  error: "Dictation stopped unexpectedly. You can still type.",
-};
-
 export function DictationControl({
   value,
   onChange,
@@ -66,6 +69,7 @@ export function DictationControl({
   onLangChange?: (code: string) => void;
   className?: string;
 }) {
+  const t = useT();
   // Always append to the LATEST field value (avoids stale-closure overwrite).
   const valueRef = useRef(value);
   valueRef.current = value;
@@ -79,11 +83,19 @@ export function DictationControl({
     onCommitFinal: (chunk) => onChange(appendTranscript(valueRef.current, chunk)),
   });
 
-  // Unsupported → offer nothing; typing is the guaranteed fallback.
-  if (!supported) return null;
+  // Unsupported → do NOT go silent (P10B Wave 1): typing stays the guaranteed path, but show a
+  // small, accessible note so the candidate knows dictation exists and why it's absent here.
+  if (!supported) {
+    return (
+      <p className={className} role="note" data-testid="dictation-unsupported"
+         style={{ fontSize: "0.8rem" }}>
+        <span className="text-muted">{t("dictation.unsupported")}</span>
+      </p>
+    );
+  }
 
   const listening = status === "listening";
-  const errorText = error ? ERROR_COPY[error] : "";
+  const errorText = error && ERROR_KEY[error] ? t(ERROR_KEY[error]) : "";
 
   return (
     <div className={className}>
@@ -93,7 +105,7 @@ export function DictationControl({
           onClick={() => (listening ? stop() : start())}
           disabled={disabled}
           aria-pressed={listening}
-          aria-label={listening ? "Stop dictation" : "Start dictation"}
+          aria-label={listening ? t("dictation.stop") : t("dictation.start")}
           className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 disabled:opacity-50 ${
             listening
               ? "border-accent bg-accent text-accent-foreground"
@@ -113,7 +125,7 @@ export function DictationControl({
         ) : null}
 
         <label className="sr-only" htmlFor={langSelectId}>
-          Dictation language
+          {t("dictation.languageLabel")}
         </label>
         <select
           id={langSelectId}
@@ -121,7 +133,7 @@ export function DictationControl({
           onChange={(e) => onLangChange?.(e.target.value)}
           disabled={disabled || listening || !onLangChange}
           className="rounded border border-border bg-surface px-2 py-1 text-xs text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-          aria-label="Dictation language"
+          aria-label={t("dictation.languageLabel")}
         >
           {DICTATION_LANGUAGES.map((l) => (
             <option key={l.code} value={l.code}>
@@ -134,7 +146,7 @@ export function DictationControl({
       {/* Status + interim preview for assistive tech and sighted users. Interim text is
           preview only — it is NOT part of the editable field until finalised. */}
       <p role="status" aria-live="polite" className="mt-1 min-h-[1rem] text-xs text-muted">
-        {listening ? (interim ? `Heard: ${interim}` : "Listening… speak, then review before sending.") : errorText}
+        {listening ? (interim ? t("dictation.heard", { text: interim }) : t("dictation.listening")) : errorText}
       </p>
     </div>
   );
