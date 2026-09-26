@@ -9,6 +9,8 @@ import Link from "next/link";
 import { useT } from "@/components/i18n/I18nProvider";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { ButtonLink } from "@/components/ui/Button";
+import { Logo } from "@/components/ui/Logo";
+import { LanguageMenu } from "@/components/i18n/LanguageMenu";
 import { APP_HOME } from "@/lib/auth/routes";
 
 const NAV = [
@@ -26,10 +28,7 @@ function MarketingHeader() {
   return (
     <header className="border-b border-border bg-surface">
       <div className="mx-auto flex max-w-content items-center justify-between gap-4 px-4 py-3">
-        <Link href="/" className="flex items-center gap-2 font-semibold" aria-label="Ask4Mo — home">
-          <span aria-hidden>🎯</span>
-          <span>Ask4Mo</span>
-        </Link>
+        <Logo href="/" />
         <nav aria-label="Marketing" className="hidden items-center gap-5 md:flex">
           {NAV.map((item) => (
             <Link key={item.href} href={item.href} className="text-sm text-muted hover:text-foreground">
@@ -38,6 +37,8 @@ function MarketingHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-2">
+          {/* Global language control - anonymous visitors can switch the marketing language. */}
+          <LanguageMenu />
           {authed ? (
             <ButtonLink href={APP_HOME} size="sm">{t("marketing.goToApp")}</ButtonLink>
           ) : (
@@ -50,6 +51,14 @@ function MarketingHeader() {
           )}
         </div>
       </div>
+      {/* Mobile marketing nav: the desktop nav is hidden below md, so surface the links here. */}
+      <nav aria-label="Marketing (mobile)" className="mx-auto flex max-w-content flex-wrap gap-x-4 gap-y-1 px-4 pb-2 md:hidden">
+        {NAV.map((item) => (
+          <Link key={item.href} href={item.href} className="text-sm text-muted hover:text-foreground">
+            {t(item.key)}
+          </Link>
+        ))}
+      </nav>
     </header>
   );
 }

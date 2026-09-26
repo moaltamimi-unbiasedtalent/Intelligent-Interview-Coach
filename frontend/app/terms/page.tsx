@@ -5,7 +5,7 @@ import { LegalPage } from "@/components/marketing/LegalPage";
 export const metadata: Metadata = {
   title: "Terms of use",
   description:
-    "Terms for using Ask4Mo. AI preparation guidance is not professional, legal or employment advice. Engineering draft — pending legal review.",
+    "Terms for using Ask4Mo. AI preparation guidance is not professional, legal or employment advice. Engineering draft - pending legal review.",
   alternates: { canonical: "/terms" },
 };
 

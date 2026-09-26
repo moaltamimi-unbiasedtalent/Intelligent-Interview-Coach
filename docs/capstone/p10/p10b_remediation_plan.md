@@ -32,6 +32,26 @@ Complexity: **S** (≤1 day) · **M** (2–4 days) · **L** (1–2 weeks) · **X
 - **Acceptance:** one logo across marketing+app; a "Settings" nav entry; anonymous + authed language switch changes Account/Settings/auth pages; no em dashes in customer copy; i18n test asserts rendering.
 - **Dependencies:** none. **Risk:** low. **Complexity:** M.
 
+> **Wave 1 — DELIVERED (2026-09-26, branch `feature/capstone-p10b-founder-remediation`, not merged).**
+> Implemented per the approved-with-amendments spec. Delta vs. the plan above:
+> - Brand: introduced a shared `components/ui/Logo.tsx` lockup (existing `/brand/ask4mo-mark.svg`
+>   vector, no new asset, no emoji) used by `Brand.tsx` (app) and `MarketingShell.tsx` (marketing);
+>   the `🎯` emoji logo is removed. Favicon/OG finalisation deferred (asset-production task).
+> - Navigation: `AccountMenu` became an accessible dropdown exposing **Account + Settings + Sign out**
+>   (fixes "Progress → Manage → Settings"). A global `LanguageMenu` sits in both the app shell and the
+>   marketing header (desktop + mobile), plus a mobile marketing nav.
+> - i18n rendering: AccountPanel, Settings chrome, and Register/Forgot/Reset/Verify now render via
+>   `useT()`; 24 new keys added across all 7 locales (TS parity enforced). Em-dash → "-" pass across
+>   customer copy with a deterministic guard (`tests/no-emdash.test.ts`).
+> - **Pulled forward from Wave 2:** the `DictationControl` silent-null was replaced with an accessible
+>   fallback hint now (Wave 1 spec item h), not deferred to Wave 2.
+> - **Practice language (spec item g): DEFERRED to Wave 4** — see the note on Wave 4 below.
+> - Tests: `tests/wave1-foundation.test.tsx` + `tests/no-emdash.test.ts` added; `auth`/`shell`/`brand`
+>   unit specs and `navigation`/`route-migration` e2e updated for the dropdown + brand aria-label.
+>   All gates green (263 unit, 104 e2e, lint, typecheck, build). No migration; 0 paid/live calls.
+> - **RC:** none created. RC-P9-001 remains the immutable release candidate; RC-P10-002 is created
+>   only after material P10B remediation completes and the full gate is re-run (Wave 8).
+
 ## Wave 2 — Premium first-run onboarding & Mo configuration (likely migration)
 - **Objective:** a premium first-run setup wizard that configures the product once.
 - **Scope:** a guided wizard (interface language · target role · career geography · coaching
@@ -80,6 +100,15 @@ Complexity: **S** (≤1 day) · **M** (2–4 days) · **L** (1–2 weeks) · **X
 - **Tests:** backend: interview content generated in DE when conversation_language=de; evidence reference owner-scoped + rejects foreign ids; frontend: contextual upload; e2e: Prepare→Practice with CV evidence; regression on agent/interview evals.
 - **Acceptance:** a candidate can upload/reference their CV+JD from Prepare/Practice; Practice questions/feedback appear in the chosen language; evidence flows without weakening provenance.
 - **Dependencies:** Wave 3 (documents). **Risk:** medium-high (touches interview generation). **Complexity:** L.
+
+> **Practice-language ownership confirmed here (from Wave 1, 2026-09-26).** Wave 1 investigated
+> spec item (g) and confirmed the interview module has **no `conversation_language` plumbing**:
+> `src/interview_service.py`, `src/evaluation_service.py`, `src/report_service.py`,
+> `src/application/interview_service.py` and `src/api/schemas/interview.py` neither accept nor
+> thread a conversation language. Propagating it safely means adding a language directive to
+> question generation, evaluation and report **without** altering scoring semantics — a multi-service
+> backend change. This is out of Wave 1's no-migration/no-scoring-change envelope, so it stays in
+> **Wave 4 scope item (c)**. Wave 1 makes no partial/unsafe change to interview generation.
 
 ## Wave 5 — Company intelligence (surface existing backend; assess providers; no scraping)
 - **Objective:** a directable candidate-facing company-research experience over the existing

@@ -7,10 +7,12 @@ import { AuthCard, LabelledField } from "./AuthCard";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
+import { useT } from "@/components/i18n/I18nProvider";
 
 const MIN_PASSWORD = 10;
 
 export function RegisterForm() {
+  const t = useT();
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +24,7 @@ export function RegisterForm() {
     e.preventDefault();
     setError(null);
     if (password.length < MIN_PASSWORD) {
-      setError(`Password must be at least ${MIN_PASSWORD} characters.`);
+      setError(t("auth.weakPassword", { min: MIN_PASSWORD }));
       return;
     }
     setBusy(true);
@@ -35,7 +37,7 @@ export function RegisterForm() {
       // Uniform, non-enumerating message from the backend.
       setDone(res.message);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Registration failed. Please try again.");
+      setError(err instanceof ApiError ? err.message : t("auth.registrationFailed"));
     } finally {
       setBusy(false);
     }
@@ -44,10 +46,10 @@ export function RegisterForm() {
   if (done) {
     return (
       <AuthCard
-        title="Check your email"
+        title={t("auth.checkEmail")}
         footer={
           <Link href="/sign-in" className="font-semibold text-accent hover:underline">
-            Go to sign in
+            {t("auth.goToSignIn")}
           </Link>
         }
       >
@@ -58,20 +60,20 @@ export function RegisterForm() {
 
   return (
     <AuthCard
-      title="Create your account"
-      subtitle="Prepare with evidence, practise with purpose. Ask More. Be More."
+      title={t("auth.registerTitle")}
+      subtitle={t("auth.registerSubtitle")}
       footer={
         <>
-          Already have an account?{" "}
+          {t("auth.haveAccount")}{" "}
           <Link href="/sign-in" className="font-semibold text-accent hover:underline">
-            Sign in
+            {t("auth.signIn")}
           </Link>
         </>
       }
     >
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
         {error ? <Alert tone="danger">{error}</Alert> : null}
-        <LabelledField label="Name (optional)" htmlFor="name">
+        <LabelledField label={t("auth.name")} htmlFor="name">
           <Input
             id="name"
             type="text"
@@ -80,7 +82,7 @@ export function RegisterForm() {
             onChange={(e) => setDisplayName(e.target.value)}
           />
         </LabelledField>
-        <LabelledField label="Email" htmlFor="email">
+        <LabelledField label={t("auth.email")} htmlFor="email">
           <Input
             id="email"
             type="email"
@@ -91,9 +93,9 @@ export function RegisterForm() {
           />
         </LabelledField>
         <LabelledField
-          label="Password"
+          label={t("auth.password")}
           htmlFor="password"
-          hint={`At least ${MIN_PASSWORD} characters.`}
+          hint={t("auth.passwordHint", { min: MIN_PASSWORD })}
         >
           <Input
             id="password"
@@ -106,7 +108,7 @@ export function RegisterForm() {
           />
         </LabelledField>
         <Button type="submit" disabled={busy} className="w-full">
-          {busy ? "Creating account…" : "Create account"}
+          {busy ? t("auth.creatingAccount") : t("auth.createAccount")}
         </Button>
       </form>
     </AuthCard>

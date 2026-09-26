@@ -7,10 +7,12 @@ import { api, ApiError } from "@/lib/api/client";
 import { AuthCard } from "./AuthCard";
 import { Alert } from "@/components/ui/Alert";
 import { LoadingState } from "@/components/ui/States";
+import { useT } from "@/components/i18n/I18nProvider";
 
 type State = "verifying" | "ok" | "error";
 
 export function VerifyEmailPanel() {
+  const t = useT();
   const params = useSearchParams();
   const token = params.get("token") || "";
   const [state, setState] = useState<State>(token ? "verifying" : "error");
@@ -28,27 +30,23 @@ export function VerifyEmailPanel() {
       })
       .catch((err) => {
         setState("error");
-        setMessage(
-          err instanceof ApiError ? err.message : "This verification link is invalid or has expired.",
-        );
+        setMessage(err instanceof ApiError ? err.message : t("auth.verifyLinkInvalid"));
       });
-  }, [token]);
+  }, [token, t]);
 
   return (
     <AuthCard
-      title="Email verification"
+      title={t("auth.verifyTitle")}
       footer={
         <Link href="/sign-in" className="font-semibold text-accent hover:underline">
-          Go to sign in
+          {t("auth.goToSignIn")}
         </Link>
       }
     >
-      {state === "verifying" ? <LoadingState label="Verifying your email" /> : null}
+      {state === "verifying" ? <LoadingState label={t("auth.verifying")} /> : null}
       {state === "ok" ? <Alert tone="info">{message}</Alert> : null}
       {state === "error" ? (
-        <Alert tone="danger">
-          {message || "This verification link is invalid or has expired."}
-        </Alert>
+        <Alert tone="danger">{message || t("auth.verifyLinkInvalid")}</Alert>
       ) : null}
     </AuthCard>
   );

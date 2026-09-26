@@ -5,7 +5,7 @@ import { LegalPage } from "@/components/marketing/LegalPage";
 export const metadata: Metadata = {
   title: "Privacy",
   description:
-    "How Ask4Mo handles your data: what is collected, how it is used, retention, export and deletion. Engineering draft — pending legal review.",
+    "How Ask4Mo handles your data: what is collected, how it is used, retention, export and deletion. Engineering draft - pending legal review.",
   alternates: { canonical: "/privacy" },
 };
 
@@ -22,7 +22,7 @@ export default function PrivacyPage() {
       <ul>
         <li><strong>Account data</strong>: email, display name, verification status, sign-in method, plan tier and platform role.</li>
         <li><strong>Preparation data</strong>: your goals, conversations with Mo and generated preparation context.</li>
-        <li><strong>Private documents</strong>: files you upload (e.g. CV) stored privately under a random key — never a public URL. OCR-extracted text and detected claims.</li>
+        <li><strong>Private documents</strong>: files you upload (e.g. CV) stored privately under a random key - never a public URL. OCR-extracted text and detected claims.</li>
         <li><strong>Interview Practice</strong>: your answers, evaluations and reports.</li>
         <li><strong>Memory</strong>: long-term preparation facts you have explicitly approved.</li>
         <li><strong>Story Bank</strong>: reusable evidence-backed stories you create.</li>

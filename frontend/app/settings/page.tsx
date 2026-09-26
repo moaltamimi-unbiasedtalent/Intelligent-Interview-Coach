@@ -1,52 +1,8 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { Card, CardBody } from "@/components/ui/Card";
-import { MemoryManager } from "@/components/memory/MemoryManager";
-import { ResponseDetailPreference } from "@/components/settings/ResponseDetailPreference";
-import { LanguageSettings } from "@/components/settings/LanguageSettings";
+import { SettingsContent } from "@/components/settings/SettingsContent";
 
 export const metadata: Metadata = { title: "Settings" };
 
 export default function SettingsPage() {
-  return (
-    <section className="max-w-reading">
-      <PageHeader eyebrow="Account" title="Settings" />
-      <div className="grid gap-4">
-        <Card>
-          <CardBody>
-            <LanguageSettings />
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardBody>
-            <ResponseDetailPreference />
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardBody>
-            <MemoryManager />
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardBody>
-            <h2 className="text-base font-semibold">Your data</h2>
-            <p className="mt-1 text-sm text-muted">
-              Information you share (a role, a job description, a CV) is used only to
-              personalise your preparation. Long-term memory holds only the concise
-              preparation details you explicitly approve — never whole conversations,
-              job descriptions or CVs — and you control it above. Manage your account,
-              export your data or sign out from{" "}
-              <a href="/account" className="font-medium text-accent hover:underline">
-                your account
-              </a>
-              .
-            </p>
-          </CardBody>
-        </Card>
-      </div>
-    </section>
-  );
+  return <SettingsContent />;
 }

@@ -5,7 +5,7 @@ import { ButtonLink } from "@/components/ui/Button";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "About Ask4Mo — an intelligent interview coach built to be trustworthy: grounded, private by default, and honest about its limitations.",
+    "About Ask4Mo - an intelligent interview coach built to be trustworthy: grounded, private by default, and honest about its limitations.",
   alternates: { canonical: "/about" },
 };
 
@@ -14,7 +14,7 @@ export default function AboutPage() {
     <div className="mx-auto max-w-reading px-4 py-16">
       <h1 className="text-3xl font-bold md:text-4xl">About Ask4Mo</h1>
       <p className="mt-4 text-muted">
-        Ask4Mo — the Intelligent Interview Coach — helps candidates prepare for interviews that
+        Ask4Mo - the Intelligent Interview Coach - helps candidates prepare for interviews that
         matter. Its guiding idea is simple: <strong>Ask More. Be More.</strong> Better questions,
         grounded answers and honest practice lead to better outcomes.
       </p>

@@ -53,16 +53,18 @@ test("Flow 4: Review hub → Agent Inspector", async ({ page }) => {
 test("Flow 5: account control → account page", async ({ page }) => {
   await mock(page);
   await page.goto("/prepare");
-  // Capstone P1/E1: the header account control opens the account page (Settings is
-  // reachable from there); it is not the primary nav.
-  await page.getByRole("link", { name: "Your account" }).click();
+  // P10B Wave 1: the header account control is a menu button; opening it reveals
+  // Account + Settings (Settings is no longer buried under Progress → Manage).
+  await page.getByRole("button", { name: "Your account" }).click();
+  await expect(page.getByRole("menuitem", { name: "Settings" })).toBeVisible();
+  await page.getByRole("menuitem", { name: "Your account" }).click();
   await expect(page).toHaveURL(/\/account$/);
 });
 
 test("Flow 6: wordmark → home", async ({ page }) => {
   await mock(page);
   await page.goto("/prepare");
-  await page.getByRole("link", { name: "Ask4Mo — home" }).click();
+  await page.getByRole("link", { name: "Ask4Mo - home" }).click();
   await expect(page).toHaveURL(/\/app$/);
 });
 
@@ -96,7 +98,8 @@ test("Mobile (390px): 4-item bottom nav; supporting routes still reachable", asy
   await page.getByRole("menuitem", { name: /Sources/ }).click();
   await expect(page).toHaveURL(/\/sources$/);
 
-  // The account page reachable via the account control (Settings lives there).
-  await page.getByRole("link", { name: "Your account" }).click();
+  // The account page reachable via the account menu (Settings also lives there).
+  await page.getByRole("button", { name: "Your account" }).click();
+  await page.getByRole("menuitem", { name: "Your account" }).click();
   await expect(page).toHaveURL(/\/account$/);
 });

@@ -8,7 +8,7 @@ import { useT } from "@/components/i18n/I18nProvider";
 // certification badges. Detailed control statements are engineering copy (English), pending
 // localization/legal review (see the release matrix); the page title/subtitle are localized.
 const CONTROLS: [string, string][] = [
-  ["Account isolation", "Your data is scoped to your account. Platform admins operate a bounded operations console with metadata only — there is no 'view as user' and no private-data search."],
+  ["Account isolation", "Your data is scoped to your account. Platform admins operate a bounded operations console with metadata only - there is no 'view as user' and no private-data search."],
   ["Private by default", "Your CV, answers, reports, Memory and Story Bank are private. Nothing is shared with anyone unless you take an explicit sharing action."],
   ["Explicit workspace sharing", "Sharing into a workspace is view-only and always initiated by you. Removing a share or leaving revokes access."],
   ["Sources you can check", "Grounded answers cite the sources behind them. When evidence is missing, Mo abstains rather than inventing facts."],

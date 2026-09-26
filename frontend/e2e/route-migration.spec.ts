@@ -56,7 +56,7 @@ test("authenticated /app renders the candidate home", async ({ page }) => {
   await page.goto("/app");
   await expect(page.getByText("Ask More. Be More.")).toBeVisible();
   // App chrome present (brand links to /app).
-  await expect(page.getByRole("link", { name: "Ask4Mo — home" })).toHaveAttribute("href", "/app");
+  await expect(page.getByRole("link", { name: "Ask4Mo - home" })).toHaveAttribute("href", "/app");
 });
 
 test("deep link to a protected route still works when authenticated", async ({ page }) => {

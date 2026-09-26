@@ -12,6 +12,7 @@ import { TutorialController } from "@/components/tutorial/TutorialController";
 import { AccountMenu } from "@/components/auth/AccountMenu";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
+import { LanguageMenu } from "@/components/i18n/LanguageMenu";
 import { isMarketingRoute } from "@/lib/auth/routes";
 
 /**
@@ -41,6 +42,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             {/* Supporting destinations (Sources, Review & Diagnostics) — available on
                 desktop and mobile without crowding the primary nav / bottom bar. */}
             <MoreMenu />
+            {/* Global interface-language control (P10B Wave 1). */}
+            <LanguageMenu />
             <ThemeToggle />
             <AccountMenu />
           </div>

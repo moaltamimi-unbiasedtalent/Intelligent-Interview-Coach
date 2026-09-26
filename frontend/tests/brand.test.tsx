@@ -32,9 +32,9 @@ describe("Ask4Mo brand — authenticated Home (/app)", () => {
 });
 
 describe("Ask4Mo brand — header wordmark", () => {
-  it("is an accessible link to the app home named 'Ask4Mo — home'", () => {
+  it("is an accessible link to the app home named 'Ask4Mo - home'", () => {
     render(<Brand />);
-    const link = screen.getByRole("link", { name: "Ask4Mo — home" });
+    const link = screen.getByRole("link", { name: "Ask4Mo - home" });
     // P8: inside the product the wordmark links to the authenticated home (/app).
     expect(link).toHaveAttribute("href", "/app");
     expect(link).toHaveTextContent("Ask4Mo");

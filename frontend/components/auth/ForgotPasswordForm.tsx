@@ -7,8 +7,10 @@ import { AuthCard, LabelledField } from "./AuthCard";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
+import { useT } from "@/components/i18n/I18nProvider";
 
 export function ForgotPasswordForm() {
+  const t = useT();
   const [email, setEmail] = useState("");
   const [done, setDone] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +24,7 @@ export function ForgotPasswordForm() {
       const res = await api.auth.forgotPassword(email);
       setDone(res.message); // uniform message regardless of whether the email exists
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+      setError(err instanceof ApiError ? err.message : t("auth.genericError"));
     } finally {
       setBusy(false);
     }
@@ -30,11 +32,11 @@ export function ForgotPasswordForm() {
 
   return (
     <AuthCard
-      title="Reset your password"
-      subtitle="Enter your email and we'll send a reset link."
+      title={t("auth.resetTitle")}
+      subtitle={t("auth.resetSubtitle")}
       footer={
         <Link href="/sign-in" className="font-semibold text-accent hover:underline">
-          Back to sign in
+          {t("auth.backToSignIn")}
         </Link>
       }
     >
@@ -43,7 +45,7 @@ export function ForgotPasswordForm() {
       ) : (
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
           {error ? <Alert tone="danger">{error}</Alert> : null}
-          <LabelledField label="Email" htmlFor="email">
+          <LabelledField label={t("auth.email")} htmlFor="email">
             <Input
               id="email"
               type="email"
@@ -54,7 +56,7 @@ export function ForgotPasswordForm() {
             />
           </LabelledField>
           <Button type="submit" disabled={busy} className="w-full">
-            {busy ? "Sending…" : "Send reset link"}
+            {busy ? t("auth.sending") : t("auth.sendResetLink")}
           </Button>
         </form>
       )}
