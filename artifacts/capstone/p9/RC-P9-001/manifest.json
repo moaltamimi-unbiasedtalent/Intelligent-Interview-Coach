@@ -1,0 +1,47 @@
+{
+  "release_candidate": "RC-P9-001",
+  "phase": "P9 — Integrated Quality & Release-Candidate Hardening",
+  "baseline_main_sha": "eb911255a0d71a6793634b0f392df832bf4130a0",
+  "baseline_pr": "#84 (P8 productisation & hosting)",
+  "rc_branch": "feature/capstone-p9-integrated-hardening",
+  "rc_commit_sha": "recorded at commit time (branch tip after the P9 evidence commit)",
+  "generated": "2026-09-26",
+  "version_identity": {
+    "alembic_head": "0011_workspaces_shares",
+    "evaluation_set_version": "p9-rc1-frozen",
+    "knowledge_index_version": "P6 governed datasets + governance manifest (schema 0011)",
+    "prompt_config_version": "P6 Prompt Lab governed (no auto-promotion)",
+    "model_policy_version": "P5 src/llm/policy.py — 8 operations incl. REALTIME_VOICE",
+    "specialist_version": "P5 bounded specialists (role/evidence[deterministic]/coaching)",
+    "fixture_version": "frozen P9-rc1 (agent routing, retrieval, specialist, unsupported-role, HITL, private-evidence cases)"
+  },
+  "gate_results": {
+    "backend_pytest": "2381 passed, 3 skipped",
+    "frontend_unit": "242 passed",
+    "playwright_e2e": "104 passed (chromium)",
+    "evaluators_deterministic": "20 PASS (19 CI evals + eval_restart_recovery)",
+    "ruff": "pass", "compileall": "pass", "lint": "pass", "typecheck": "pass",
+    "build": "pass", "openapi": "105 paths", "alembic_single_head": true, "secret_scan": "clean"
+  },
+  "acceptance": {
+    "AC": {"PASS": 15, "PARTIAL": 7, "NOT_RUN": 1, "BLOCKED": 0},
+    "EX": {"PASS": 5, "PARTIAL": 10, "NOT_RUN": 0, "BLOCKED": 1}
+  },
+  "retrieval": {
+    "historical_baseline_ID_PR": "0.6757 / 0.5161 (HISTORICAL ONLY — not re-derived, not pooled)",
+    "capstone_extension_pass_rate": 0.9136,
+    "citation_completeness_rate": 1.0,
+    "no_fabricated_citation_rate": 1.0,
+    "evidence_coverage_rate": 0.8857
+  },
+  "defects": {"P0": 0, "P1": 0, "P2": 0, "P3": 0},
+  "paid_live_calls": 0,
+  "ex12_hosted_operation": "BLOCKED / NOT RUN (no authorized deployment)",
+  "public_launch": "NOT AUTHORIZED",
+  "configuration_assumptions": {
+    "external_providers": "all deterministic fakes/stubs; no OpenRouter/OpenAI-realtime/Google/Brevo/Adzuna/RAGAS live calls",
+    "database": "SQLite for local/test; PostgreSQL for hosted (deploy artifacts)",
+    "rate_limit_store": "in-memory single-process (single-replica assumption)",
+    "browser": "Chromium fully tested; Firefox/WebKit not tested in this environment"
+  }
+}

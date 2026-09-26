@@ -82,6 +82,8 @@ jobs:
         run: python scripts/eval_rate_limits.py
       - name: Hosting-readiness evaluation (Capstone P8; offline; env/cookies/CORS/headers/pause/malware — does NOT certify EX-12)
         run: python scripts/eval_hosting_readiness.py
+      - name: Restart/recovery evaluation (Capstone P9/AC-20; offline; restart + backup/restore on disposable state)
+        run: python scripts/eval_restart_recovery.py
       - name: Alembic migration validation (fresh upgrade + downgrade, single head)
         env:
           DATABASE_URL: sqlite:////tmp/ci_migrations.db
