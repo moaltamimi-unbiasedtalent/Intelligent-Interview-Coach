@@ -21,7 +21,7 @@ export interface TutorialStep {
 
 export const TUTORIAL_STEPS: TutorialStep[] = [
   {
-    id: "home-start", route: "/", target: "home-start",
+    id: "home-start", route: "/app", target: "home-start",
     title: "Start with your goal",
     body: "Ask4Mo helps you prepare for a target role, practise realistic interview questions and track improvement.",
     helpHref: "/help#getting-started",

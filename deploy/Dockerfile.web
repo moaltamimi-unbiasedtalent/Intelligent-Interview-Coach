@@ -1,0 +1,64 @@
+# syntax=docker/dockerfile:1
+#
+# Ask4Mo Capstone (P8) — Next.js 15 frontend image (STAGING).
+#
+# Runtime:  Node 20, `next start` on :3000, single replica.
+# Client:   pure client of the FastAPI backend. The ONLY build/run input it needs
+#           is NEXT_PUBLIC_API_BASE_URL (e.g. https://api.staging.example.com/api/v1).
+#           NEXT_PUBLIC_* values are inlined into the browser bundle at BUILD time,
+#           so it is passed as a build ARG and re-exported for `next start`.
+# Secrets:  none. The frontend holds NO server secrets (see next.config.mjs).
+#
+# Build from the REPO ROOT:
+#   docker build -f deploy/Dockerfile.web \
+#     --build-arg NEXT_PUBLIC_API_BASE_URL=https://api.staging.example.com/api/v1 \
+#     -t ask4mo-web:staging .
+
+# ---- Build stage -----------------------------------------------------------
+FROM node:20-slim AS build
+ENV NODE_ENV=production
+WORKDIR /app/frontend
+
+# NEXT_PUBLIC_API_BASE_URL must be present at build time to be inlined.
+ARG NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+
+# Install deps against the committed lockfile for reproducible builds.
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+
+# Build the app.
+COPY frontend/ ./
+RUN npm run build
+
+# ---- Runtime stage ---------------------------------------------------------
+FROM node:20-slim AS runtime
+ENV NODE_ENV=production
+WORKDIR /app/frontend
+
+# curl for the container healthcheck.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Re-declare so `next start` sees the same public base URL at runtime.
+ARG NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+
+# Copy the built app and production node_modules from the build stage.
+COPY --from=build /app/frontend/package.json /app/frontend/package-lock.json ./
+COPY --from=build /app/frontend/node_modules ./node_modules
+COPY --from=build /app/frontend/.next ./.next
+COPY --from=build /app/frontend/public ./public
+COPY --from=build /app/frontend/next.config.mjs ./next.config.mjs
+
+# node:20-slim ships a non-root `node` user (uid 1000).
+USER node
+
+EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl -fsS http://localhost:3000/ || exit 1
+
+# `npm run start` == `next start`; bind the port explicitly.
+CMD ["npm", "run", "start", "--", "-p", "3000"]

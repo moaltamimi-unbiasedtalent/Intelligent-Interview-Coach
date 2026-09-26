@@ -13,7 +13,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "./AuthProvider";
-import { isProtectedRoute, AUTH_ONLY_ROUTES } from "@/lib/auth/routes";
+import { isProtectedRoute, AUTH_ONLY_ROUTES, APP_HOME } from "@/lib/auth/routes";
 import { LoadingState } from "@/components/ui/States";
 
 export function RouteGuard({ children }: { children: ReactNode }) {
@@ -32,7 +32,7 @@ export function RouteGuard({ children }: { children: ReactNode }) {
       router.replace(`/sign-in?next=${next}`);
     } else if (authOnly && status === "authenticated") {
       const next = params.get("next");
-      router.replace(next && next.startsWith("/") ? next : "/");
+      router.replace(next && next.startsWith("/") ? next : APP_HOME);
     }
   }, [status, protectedRoute, authOnly, pathname, params, router]);
 

@@ -1,0 +1,63 @@
+# syntax=docker/dockerfile:1
+#
+# Ask4Mo Capstone (P8) — FastAPI backend image (STAGING).
+#
+# ASGI app:   src.api.main:app  (base path /api/v1, liveness /api/health)
+# Runtime:    Python 3.11, uvicorn on :8000, single replica.
+# Secrets:    NEVER baked in. Supplied at runtime via env_file / environment.
+# Migrations: run as a SEPARATE step (deploy/scripts/migrate.sh / the `migrate`
+#             compose service). This image never auto-migrates on boot — that would
+#             race across replicas. See docs/capstone/p8_hosting_operations.md.
+#
+# Build from the REPO ROOT so the build context contains src/, migrations/,
+# requirements.txt, etc.:
+#   docker build -f deploy/Dockerfile.api -t ask4mo-api:staging .
+
+FROM python:3.11-slim AS base
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Minimal OS deps: curl for the container healthcheck, libpq for psycopg (PostgreSQL).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl libpq5 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install Python dependencies first for better layer caching. The [db] extra
+# (pyproject.toml) adds Alembic + the psycopg PostgreSQL driver needed for the
+# postgresql+psycopg DATABASE_URL and for the migrate step.
+COPY requirements.txt pyproject.toml README.md ./
+COPY src ./src
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt \
+    && pip install ".[db]"
+
+# Application code + migration assets (kept minimal; tests/data/docs excluded).
+COPY alembic.ini ./
+COPY migrations ./migrations
+COPY scripts ./scripts
+
+# Private document storage mount point. The real durable volume is mounted here at
+# run time (DOCUMENT_STORAGE_DIR=/data/documents). NEVER a public bucket, and never
+# under the frontend's public assets.
+RUN mkdir -p /data/documents
+
+# Run as a non-root user and own the app + data dirs.
+RUN useradd --create-home --uid 10001 appuser \
+    && chown -R appuser:appuser /app /data
+USER appuser
+
+EXPOSE 8000
+
+# Liveness healthcheck — hits the unversioned infra alias GET /api/health.
+# (Readiness is GET /api/v1/ready and is probed by the load balancer / Caddy,
+# not by the container healthcheck, so a transient DB blip does not kill the
+# container.)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl -fsS http://localhost:8000/api/health || exit 1
+
+CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

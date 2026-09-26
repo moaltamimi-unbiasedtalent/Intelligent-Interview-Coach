@@ -280,6 +280,9 @@ export const api = {
       request<PremiumStatusResponse>("GET", "/auth/premium/status", opts),
     requestDeletion: (opts?: RequestOptions) =>
       request<AuthMessageResponse>("POST", "/auth/account/delete-request", opts),
+    // Capstone P8: permanent, application-controlled account + data deletion (§14/§15).
+    deleteAccount: (opts?: RequestOptions) =>
+      request<AuthMessageResponse>("POST", "/auth/account/delete", opts),
   },
 
   // Private candidate documents, evidence & story bank (Capstone P4/E2/E3).

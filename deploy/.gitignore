@@ -1,0 +1,6 @@
+# Never commit the filled staging env — it holds real secrets.
+# The committed template is deploy/.env.staging.example (safe placeholders only).
+.env.staging
+.env.staging.local
+*.env
+!.env.staging.example

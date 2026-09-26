@@ -21,6 +21,8 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 
 from src.api.dependencies import get_current_principal
+from src.api.guards import ensure_not_paused
+from src.api.rate_limit import enforce, user_key
 from src.api.schemas.voice import (
     RealtimeSessionCreateRequest,
     RealtimeSessionResponse,
@@ -91,6 +93,10 @@ def create_realtime_session(
     config: RealtimeConfig = Depends(get_realtime_config),
 ) -> RealtimeSessionResponse:
     user_id = principal.user_id
+
+    # 0) Operator pause + per-user cost ceiling (§19/§21), on top of the concurrency limiter.
+    ensure_not_paused("realtime_voice")
+    enforce("cost_realtime_user", user_key(user_id))
 
     # 1) Availability → 503 so the client falls back to turn-based voice (never a dead-end).
     if provider is None or not config.available:

@@ -1,14 +1,17 @@
 import Link from "next/link";
 
+import { APP_HOME } from "@/lib/auth/routes";
+
 /**
  * Ask4Mo wordmark with a small "Conversation Bridge" mark (a placeholder for the final
  * vector logo — see /public/brand/ask4mo-mark.svg when supplied). The compact header
- * shows only "Ask4Mo"; the full lockup (descriptor + slogan) lives on Home (§3/§32).
+ * shows only "Ask4Mo". Inside the authenticated product the wordmark links to the app
+ * home (`/app`); the public marketing chrome has its own brand link to `/` (P8 §3).
  */
 export function Brand() {
   return (
     <Link
-      href="/"
+      href={APP_HOME}
       className="inline-flex items-center gap-2.5 font-bold tracking-tight text-foreground"
       aria-label="Ask4Mo — home"
     >

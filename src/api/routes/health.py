@@ -28,20 +28,53 @@ def health(request: Request) -> HealthResponse:
     )
 
 
-@router.get("/ready", response_model=HealthResponse, summary="Readiness")
-def ready(request: Request) -> HealthResponse:
-    # Liveness == readiness for now: the app has no blocking startup dependency and
-    # expensive resources build lazily on first use. No provider call here.
-    return health(request)
+@router.get("/ready", summary="Readiness (DB + config; no provider calls)")
+def ready(request: Request) -> dict:
+    """Real readiness probe (§32): checks DB connectivity and critical config WITHOUT any
+    expensive provider call. Returns 503 when not ready so a load balancer holds traffic."""
+    from fastapi import HTTPException
+    from sqlalchemy import text
+
+    checks: dict[str, bool] = {}
+
+    # 1) Database connectivity (cheap SELECT 1).
+    try:
+        from src.api.dependencies import get_repository
+
+        repo = get_repository(request)
+        with repo.session_factory() as s:
+            s.execute(text("SELECT 1"))
+        checks["database"] = True
+    except Exception:  # noqa: BLE001 - readiness never leaks the error detail
+        checks["database"] = False
+
+    # 2) Critical config (production fails fast at boot, but report here too).
+    try:
+        report = getattr(request.app.state, "env_report", None)
+        checks["config"] = bool(report.ok) if report is not None else True
+    except Exception:  # noqa: BLE001
+        checks["config"] = True
+
+    ready_ok = all(checks.values())
+    body = {
+        "status": "ready" if ready_ok else "not_ready",
+        "service": "intelligent-interview-coach",
+        "version": request.app.state.settings.version,
+        "checks": checks,
+    }
+    if not ready_ok:
+        raise HTTPException(status_code=503, detail=body)
+    return body
 
 
 def _realtime_voice_available() -> bool:
     """Realtime voice (P7.5) is available only when the deployment flag is on AND a realtime
-    provider key is configured — otherwise the UI falls back to P7 turn-based voice. Reads
-    booleans only; never touches or returns the key value."""
+    provider key is configured AND an operator has not paused it — otherwise the UI falls back
+    to P7 turn-based voice. Reads booleans only; never touches or returns the key value."""
+    from src.application.pause import is_paused
     from src.voice.realtime import resolve_realtime_config
 
-    return resolve_realtime_config().available
+    return resolve_realtime_config().available and not is_paused("realtime_voice")
 
 
 @router.get("/capabilities", response_model=CapabilitiesResponse,

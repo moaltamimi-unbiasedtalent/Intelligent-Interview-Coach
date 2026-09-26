@@ -63,10 +63,10 @@ describe("AppShell", () => {
     expect(screen.getByRole("main")).toHaveAttribute("id", "main");
   });
 
-  it("home wordmark links to /", () => {
+  it("home wordmark links to the app home (/app)", () => {
     render(<AppShell><span /></AppShell>);
     expect(screen.getByRole("link", { name: "Ask4Mo — home" }))
-      .toHaveAttribute("href", "/");
+      .toHaveAttribute("href", "/app");
   });
 
   it("exposes the account control (links to the account page), not in the primary nav", () => {

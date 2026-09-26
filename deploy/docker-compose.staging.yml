@@ -1,0 +1,143 @@
+# Ask4Mo Capstone (P8) — STAGING topology (single-replica).
+#
+#   db      PostgreSQL 16 (named volume + healthcheck)
+#   migrate one-shot `alembic upgrade head` (runs ONCE, after db is healthy;
+#           never per-replica auto-migrate)
+#   api     FastAPI/uvicorn :8000  (after migrate completes + db healthy;
+#           mounts the private documents volume at /data/documents)
+#   web     Next.js 15 :3000       (after api)
+#   caddy   edge reverse proxy — terminates TLS, adds HSTS, routes / -> web
+#           and /api -> api
+#
+# Secrets live ONLY in deploy/.env.staging (copy from .env.staging.example and
+# fill real values there; that file is git-ignored). Nothing real is committed.
+#
+#   cp deploy/.env.staging.example deploy/.env.staging   # then edit
+#   docker compose -f deploy/docker-compose.staging.yml up -d --build
+#
+# Build context is the repo ROOT (..) so src/, migrations/, frontend/ are visible.
+
+name: ask4mo-staging
+
+services:
+  # --------------------------------------------------------------------------
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      # These MUST match the credentials embedded in DATABASE_URL /
+      # AGENT_CHECKPOINT_DATABASE_URL in deploy/.env.staging.
+      POSTGRES_USER: ${POSTGRES_USER:-ask4mo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env.staging}
+      POSTGRES_DB: ${POSTGRES_DB:-ask4mo_staging}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ask4mo} -d ${POSTGRES_DB:-ask4mo_staging}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    # Not published to the host in staging; only the compose network reaches it.
+    expose:
+      - "5432"
+    env_file:
+      - .env.staging
+
+  # --------------------------------------------------------------------------
+  # One-shot migration step. Applies `alembic upgrade head` exactly once per
+  # deploy, BEFORE the API starts. This is the ONLY place migrations run — the
+  # api image never migrates on boot (avoids the multi-replica race, §33).
+  migrate:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env.staging
+    # Use the repo migration wrapper: upgrade head, then assert a single head.
+    command: ["bash", "scripts/migrate.sh"]
+
+  # --------------------------------------------------------------------------
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    env_file:
+      - .env.staging
+    # Private document storage — a mounted named volume, NEVER a public bucket
+    # and never under the frontend public assets. Matches DOCUMENT_STORAGE_DIR.
+    volumes:
+      - documents:/data/documents
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # --------------------------------------------------------------------------
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+      args:
+        # Public base URL of the API, baked into the browser bundle at build.
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://api.staging.example.com/api/v1}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://api.staging.example.com/api/v1}
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # --------------------------------------------------------------------------
+  # Edge reverse proxy: automatic TLS (Let's Encrypt), HSTS, and routing.
+  #   app.staging.example.com  -> web:3000
+  #   api.staging.example.com  -> api:8000   (same parent domain => SameSite=Lax
+  #                                            session cookie stays valid)
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - web
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data      # persisted TLS certificates/keys
+      - caddy-config:/config
+    environment:
+      # Domains + ACME email are read from deploy/.env.staging by the Caddyfile.
+      APP_DOMAIN: ${APP_DOMAIN:-app.staging.example.com}
+      API_DOMAIN: ${API_DOMAIN:-api.staging.example.com}
+      ACME_EMAIL: ${ACME_EMAIL:-ops@example.com}
+    env_file:
+      - .env.staging
+
+volumes:
+  db-data:
+  documents:
+  caddy-data:
+  caddy-config:

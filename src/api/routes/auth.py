@@ -21,6 +21,7 @@ from src.api.dependencies import (
     get_auth_service,
     get_current_principal,
     get_current_user_id,
+    get_document_store,
     get_oidc_provider,
     get_repository,
     get_request_id,
@@ -39,6 +40,7 @@ from src.api.schemas.auth import (
     ResetPasswordRequest,
     VerifyEmailRequest,
 )
+from src.api.rate_limit import client_ip, email_key, enforce, user_key
 from src.application.authorization import Capability, capabilities_for
 from src.application.auth_service import InvalidCredentialsError
 
@@ -85,6 +87,14 @@ def register(
     service=Depends(get_auth_service),
     request_id: str = Depends(get_request_id),
 ) -> MessageResponse:
+    # Operator pause (§21): open registration can be paused without a deploy.
+    from src.api.guards import ensure_not_paused
+
+    ensure_not_paused("public_registration")
+    # Abuse bound (§18): per-IP + global. No account key here — registration must not reveal
+    # whether an email exists, so the limit is IP-scoped only.
+    enforce("auth_register_ip", client_ip(request))
+    enforce("auth_global", "all")
     # Uniform outcome whether or not the email already exists; a verification email is
     # sent on creation. Registration does not auto-sign-in (verify then sign in).
     service.register(
@@ -105,6 +115,11 @@ def login(
     service=Depends(get_auth_service),
     request_id: str = Depends(get_request_id),
 ) -> MessageResponse:
+    # Abuse bound (§18): per-IP, per-account (hashed email — identical whether or not the
+    # account exists, so limits never leak existence), and a global ceiling.
+    enforce("auth_login_ip", client_ip(request))
+    enforce("auth_login_account", email_key(body.email))
+    enforce("auth_global", "all")
     ua = request.headers.get("user-agent")
     try:
         result = service.login(
@@ -137,9 +152,13 @@ def logout(
              summary="Verify an email address with a single-use token")
 def verify_email(
     body: VerifyEmailRequest,
+    request: Request,
     service=Depends(get_auth_service),
     request_id: str = Depends(get_request_id),
 ) -> MessageResponse:
+    # Token-validation abuse bound (§18): per-IP. Tokens are 256-bit single-use, but this
+    # bounds brute-force attempts regardless.
+    enforce("auth_reset_ip", client_ip(request))
     ok = service.verify_email(token=body.token, request_id=request_id)
     if not ok:
         raise HTTPException(status_code=400, detail="This verification link is invalid or has expired.")
@@ -150,9 +169,14 @@ def verify_email(
              summary="Request a password-reset link — uniform, non-enumerating")
 def forgot_password(
     body: ForgotPasswordRequest,
+    request: Request,
     service=Depends(get_auth_service),
     request_id: str = Depends(get_request_id),
 ) -> MessageResponse:
+    # Abuse bound (§18): per-IP + per-account (hashed email, existence-agnostic). The response
+    # stays uniform regardless of the limit, so no enumeration signal is added.
+    enforce("auth_forgot_ip", client_ip(request))
+    enforce("auth_forgot_account", email_key(body.email))
     service.request_password_reset(email=body.email, request_id=request_id)
     return MessageResponse(message=_UNIFORM_FORGOT)
 
@@ -166,6 +190,7 @@ def reset_password(
     service=Depends(get_auth_service),
     request_id: str = Depends(get_request_id),
 ) -> MessageResponse:
+    enforce("auth_reset_ip", client_ip(request))
     ok = service.reset_password(
         token=body.token, new_password=body.password, request_id=request_id
     )
@@ -253,6 +278,8 @@ def resend_verification(
     service=Depends(get_auth_service),
     user_id: int = Depends(get_current_user_id),
 ) -> MessageResponse:
+    # Mail-bomb bound (§18): per-account (the authenticated caller).
+    enforce("auth_verify_resend", user_key(user_id))
     service.send_verification(user_id=user_id)
     return MessageResponse(message="If your email is unverified, we've sent a new link.")
 
@@ -295,6 +322,7 @@ def google_start(
     from src.authsec import tokens
     from src.application.oidc import is_safe_redirect
 
+    enforce("auth_oidc_start_ip", client_ip(request))
     if provider is None:
         raise HTTPException(status_code=404, detail="Google sign-in is not available.")
     state = tokens.generate_token(16)
@@ -399,6 +427,44 @@ def request_account_deletion(
     return MessageResponse(
         message="Your account is scheduled for deletion and you've been signed out."
     )
+
+
+@router.post("/account/delete", response_model=MessageResponse,
+             summary="Permanently delete the account and all application-controlled data")
+def delete_account(
+    request: Request,
+    response: Response,
+    repo=Depends(get_repository),
+    document_store=Depends(get_document_store),
+    audit=Depends(get_audit_repository),
+    user_id: int = Depends(get_current_user_id),
+) -> MessageResponse:
+    """Complete, application-controlled account deletion (Capstone P8, §14/§15).
+
+    Authenticated + owner-scoped (a caller can only delete their OWN account) + idempotent.
+    Removes/anonymizes every app-controlled resource (DB rows, private files, agent
+    checkpoints), then clears the session. Historical hosting backups follow the provider's
+    retention (documented) and are not claimed as instantly erased.
+    """
+    from src.application.account_deletion_service import AccountDeletionService
+
+    # Agent service (for checkpoint purge) is best-effort — never block deletion if it can't
+    # be constructed in a given environment.
+    agent_service = None
+    try:
+        from src.api.dependencies import get_agent_service
+
+        agent_service = get_agent_service(request)
+    except Exception:  # noqa: BLE001
+        agent_service = None
+
+    service = AccountDeletionService(
+        repo.session_factory, document_store=document_store,
+        agent_service=agent_service, audit_repository=audit)
+    service.delete_account(user_id)
+    _clear_session_cookie(request, response)
+    return MessageResponse(
+        message="Your account and data have been deleted. You've been signed out.")
 
 
 # --- platform-admin foundation (guarded API only — no Admin Console UI) --------

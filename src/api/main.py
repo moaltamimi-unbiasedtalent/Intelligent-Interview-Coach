@@ -22,7 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.config import API_PREFIX, ApiSettings
 from src.api.exception_handlers import register_exception_handlers
-from src.api.middleware import RequestIdMiddleware
+from src.api.middleware import RequestIdMiddleware, SecurityHeadersMiddleware
 from src.api.routes import (
     admin,
     agent,
@@ -95,6 +95,12 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
     )
     app.state.settings = settings
 
+    # Fail fast in production when a mandatory dependency is missing (§31). Dev/test/staging
+    # never raise here; production refuses to boot "healthy" without critical config.
+    from src.api.env_validation import enforce_runtime_config
+
+    app.state.env_report = enforce_runtime_config()
+
     # CORS for the future Next.js frontend. Never wildcard-with-credentials.
     if settings.frontend_origins:
         app.add_middleware(
@@ -106,6 +112,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
             expose_headers=["X-Request-Id"],
         )
     app.add_middleware(RequestIdMiddleware)
+    app.add_middleware(SecurityHeadersMiddleware, env=settings.env)
     register_exception_handlers(app)
 
     # Infra liveness alias (unversioned) + versioned API surface.

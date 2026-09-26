@@ -16,6 +16,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://ask4mo.example.com"),
   title: {
     default: "Ask4Mo — Intelligent Interview Coach",
     template: "%s · Ask4Mo",

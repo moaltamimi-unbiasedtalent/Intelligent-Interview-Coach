@@ -18,7 +18,7 @@ async function mock(page: Page) {
 
 test("default (no cookie) renders the English interface", async ({ page }) => {
   await mock(page);
-  await page.goto("/");
+  await page.goto("/app");
   await expect(page.getByRole("link", { name: "Prepare" }).first()).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
 });
@@ -38,7 +38,7 @@ for (const { code, nav } of MATRIX) {
     await page.context().addCookies([
       { name: "ask4mo_locale", value: code, url: baseURL ?? "http://localhost:3000" },
     ]);
-    await page.goto("/");
+    await page.goto("/app");
     await expect(page.getByRole("link", { name: nav }).first()).toBeVisible();
     await expect(page.locator("html")).toHaveAttribute("lang", code);
   });
