@@ -510,6 +510,23 @@ assumptions in core logic, prompts, scoring or examples.
   language and dictation locale are **independent** settings, and a language choice never
   changes labour-market geography. Do not hard-code new English strings in candidate UI;
   reviewer/diagnostic-only text is exempt. See `docs/capstone/p3_5_i18n_l10n.md`.
+  **P10B Wave 4:** the INTERVIEW (Practice) generation language is a bounded
+  `conversation_language` on `InterviewConfiguration` (persisted via the JSON session codec — no
+  migration) turned into a trusted, allow-list-only directive by `prompts._language_directive`,
+  injected into every task's SYSTEM prompt. The directive is PROSE-ONLY: it never changes scoring
+  (LLM scores are not recomputed; the user-message DATA is identical across languages), evidence,
+  grounding or geography. Never pass a raw language string to the model — resolve names only from the
+  allow-list.
+
+- **Prepare/Practice context seam (Capstone P10B Wave 4).** Prepare and Practice consume the ONE
+  governed document system — reuse `frontend/components/documents/DocumentPicker.tsx` (over
+  `DocumentUpload`); do not build a second uploader/endpoint/store. A candidate-selected JD is passed
+  as `job_description_document_id` and resolved to text SERVER-side (owner-scoped,
+  `DocumentsApplicationService.extracted_text` / `dependencies.resolve_document_text`) into the
+  existing screened `job_description` DATA field — never expose raw document text to the client, and
+  never open a new raw-model path. Candidate CV context comes ONLY from APPROVED evidence via
+  `EvidenceAccessService` (`use_candidate_evidence` → `candidate_background`), never the raw CV. See
+  `docs/capstone/p10/p10b_wave4_prepare_practice_integration.md`.
 
 ## Git rules
 

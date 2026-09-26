@@ -239,6 +239,12 @@ export interface InterviewConfigInput {
   difficulty?: string;
   response_detail?: string;
   number_of_questions?: number | null;
+  /** Prose language for generated question/evaluation/report (Practice multilingual, Wave 4). */
+  conversation_language?: string | null;
+  /** Owner-scoped selected JD document; the server resolves it to text (raw text never sent). */
+  job_description_document_id?: number | null;
+  /** Compose candidate context from the caller's APPROVED evidence only. */
+  use_candidate_evidence?: boolean;
 }
 
 export interface CreateInterviewRequest {
@@ -528,6 +534,8 @@ export interface AgentRunRequest {
   enable_current_market_research?: boolean | null;
   /** Mo conversation language (P3.5): a bounded locale code; sets Mo's prose language only. */
   conversation_language?: string | null;
+  /** Owner-scoped selected JD document; the server resolves it to text (raw text never sent). */
+  job_description_document_id?: number | null;
 }
 
 /** Safe provider-usage aggregate. Unknown usage is never reported as zero. */

@@ -389,6 +389,16 @@ class InterviewConfiguration(_StudioModel):
     response_detail: ResponseDetail = Field(
         description="How detailed the interviewer's feedback should be."
     )
+    conversation_language: str = Field(
+        default="",
+        max_length=8,
+        description=(
+            "Optional candidate-chosen language for the interview's generated prose "
+            "(question/evaluation/report). One of the 7 product locales or empty for English. "
+            "Prose-only: it never changes scoring, evidence, or labour-market geography. Any "
+            "value not on the allow-list is ignored at prompt build (never reaches the model)."
+        ),
+    )
 
 
 class ModelSettings(_StudioModel):

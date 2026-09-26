@@ -145,6 +145,25 @@ Complexity: **S** (≤1 day) · **M** (2–4 days) · **L** (1–2 weeks) · **X
 > backend change. This is out of Wave 1's no-migration/no-scoring-change envelope, so it stays in
 > **Wave 4 scope item (c)**. Wave 1 makes no partial/unsafe change to interview generation.
 
+> **Wave 4 — DELIVERED (2026-09-27, branch `feature/capstone-p10b-wave4-integration`, not merged).**
+> - **Practice language (the Wave 1 deferral): CLOSED.** `conversation_language` added to
+>   `InterviewConfiguration` (persists via the JSON session codec — NO migration) + create/agent
+>   schemas; a trusted allow-list-only directive (`prompts._language_directive`) injected into every
+>   generation task's SYSTEM prompt, so question/evaluation/report all follow the chosen language.
+>   Scores proven language-independent (identical user-message DATA + identical API scores EN vs DE).
+> - **Document integration (one governed pipeline):** reusable `DocumentPicker` (lists by category +
+>   inline `DocumentUpload`) mounted in Prepare (JD select) and Practice setup (JD select + "use my
+>   approved CV evidence"). A selected JD is resolved to text SERVER-side (owner-scoped,
+>   `job_description_document_id`); approved evidence composes `candidate_background` via
+>   `EvidenceAccessService` (approved-only; raw CV never dumped). No second uploader/endpoint/storage.
+> - **UX/i18n:** Practice setup rebuilt (Target role → Your evidence → Interview), localized; new
+>   `prepctx` namespace + `practice` keys × 7 locales (parity). Interview language shown/selectable
+>   in-flow, distinguished from interface/dictation.
+> - Security preserved: owner scope, JD/CV as DATA (screened), foreign id → no context, no new agent,
+>   voice coordination intact. New eval `scripts/eval_prepare_practice_integration.py` (19 invariants,
+>   PASS). Gates: 270 frontend unit, 104 e2e, backend suite green; 0 paid/live calls. No RC. Docs:
+>   `docs/capstone/p10/p10b_wave4_prepare_practice_integration.md`. Opportunity model deferred to Wave 6.
+
 ## Wave 5 — Company intelligence (surface existing backend; assess providers; no scraping)
 - **Objective:** a directable candidate-facing company-research experience over the existing
   `src/copilot/research/*` backend.

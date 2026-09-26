@@ -28,6 +28,9 @@ class AgentRunRequest(BaseModel):
     # send a supported locale code — never free text. It sets the language of Mo's prose
     # only; it never changes retrieval geography, tools or grounding.
     conversation_language: Literal["en", "de", "fr", "es", "it", "pt", "nl"] | None = None
+    # Owner-scoped selected JD document (P10B Wave 4): the SERVER resolves it to text and uses it
+    # as the job description when none was pasted — raw document text never travels via the client.
+    job_description_document_id: int | None = Field(default=None, ge=1)
 
 
 class AgentUsageResponse(BaseModel):

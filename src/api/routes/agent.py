@@ -13,7 +13,7 @@ checkpoint state.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, Request
 
 from src.agent.models import AgentRunRequest as AppAgentRunRequest
 from src.application.agent_service import (
@@ -86,17 +86,30 @@ def _to_response(result) -> AgentRunResponse:
              summary="Run the experimental preparation agent (Sprint 4 preview)")
 def run_agent(
     body: AgentRunRequest,
+    request: Request,
     service=Depends(get_agent_service),
     user_id: int = Depends(get_current_user_id),
     request_id: str = Depends(get_request_id),
     _cost=Depends(cost_limit("cost_agent_user")),
     _pause=Depends(require_not_paused("agent")),
 ) -> AgentRunResponse:
+    # Owner-scoped: a candidate may SELECT a stored JD instead of pasting it (P10B Wave 4). The
+    # server resolves the document text (never the client); an explicit pasted JD takes priority,
+    # and a foreign/missing id resolves to no JD (never another user's data).
+    job_description = body.job_description
+    if not (job_description or "").strip() and body.job_description_document_id is not None:
+        from src.api.dependencies import resolve_document_text
+
+        job_description = resolve_document_text(
+            request, user_id=user_id, document_id=body.job_description_document_id,
+            max_chars=12000,
+        ) or None
+
     result = service.run(
         AppAgentRunRequest(
             goal=body.goal,
             target_role=body.target_role,
-            job_description=body.job_description,
+            job_description=job_description,
             candidate_background=body.candidate_background,
             user_id=str(user_id),
             profile=body.profile,
