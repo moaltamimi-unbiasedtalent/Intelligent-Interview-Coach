@@ -203,11 +203,10 @@ def providers() -> dict:
     def configured(*names: str) -> bool:
         return any(bool(os.environ.get(n, "").strip()) for n in names)
 
-    try:
-        import pytesseract  # noqa: F401
-        ocr = "configured"
-    except Exception:  # noqa: BLE001
-        ocr = "not_configured"
+    # Truthful OCR operational status: the real runtime chain (binary + Poppler + language
+    # data), not merely whether pytesseract imports (P10B Wave 3 OCR closure).
+    from src.documents.ocr import ocr_runtime_status
+    ocr_status = ocr_runtime_status()
     return {
         "google_oidc": {"configured": configured("GOOGLE_OIDC_CLIENT_ID", "GOOGLE_CLIENT_ID"),
                         "live_validation": "UNVALIDATED"},
@@ -223,7 +222,7 @@ def providers() -> dict:
             "live_quality": "UNVALIDATED",
             "realtime": _realtime_provider_status(),     # P7.5 realtime voice (booleans/labels only)
         },
-        "ocr": {"status": ocr, "live_quality": "UNVALIDATED"},
+        "ocr": ocr_status,
         "adzuna": {"configured": configured("ADZUNA_APP_ID", "ADZUNA_APP_KEY"),
                    "live_validation": "UNVALIDATED"},
         "langfuse": {"configured": configured("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY"),

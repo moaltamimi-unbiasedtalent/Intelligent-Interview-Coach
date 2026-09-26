@@ -85,6 +85,41 @@ Complexity: **S** (≤1 day) · **M** (2–4 days) · **L** (1–2 weeks) · **X
 - **Acceptance:** a real image/scanned résumé no longer shows a bare "Couldn't read this file"; the list shows document type + processing state; category drives display.
 - **Dependencies:** none (can parallel Wave 1). **Risk:** medium (OCR packaging decision). **Complexity:** M.
 
+> **Wave 3 — DELIVERED (2026-09-26, branch `feature/capstone-p10b-wave3-documents`, not merged).**
+> - **Root cause:** the founder's résumé was a scanned/image PDF; OCR (`[ocr]` extra +
+>   `tesseract`/`poppler`) is not installed, so it failed and the UI showed only a generic state.
+> - **Failure taxonomy:** `ParseError`/`OcrError` now carry a bounded `kind`; a new
+>   `document_versions.failure_kind` column (migration `0012_document_failure_kind`, single head)
+>   stores it and it is exposed on the version + inventory summary. The UI maps each kind to a
+>   localized, actionable message (`documents.fail*`) - scanned docs report `ocr_unavailable`, never
+>   "corrupt".
+> - **OCR graceful degradation:** no paid provider, no bundled binaries (live OCR still UNVALIDATED);
+>   the stored file is preserved and a new owner-scoped `POST /documents/{id}/reprocess` retries the
+>   same pipeline (recovers once OCR is enabled) without re-upload.
+> - **Inventory:** responsive table/cards with name, type, status, updated, version, actions
+>   (review/download/retry/delete). **Upload:** reusable `DocumentUpload` with pre-upload guidance,
+>   client pre-validation, a11y status, success/failure states.
+> - **Reuse seam:** `DocumentUpload` props ready for Wave 4 (Prepare/Practice) - NOT wired yet; one
+>   governed pipeline preserved; no prompt injection of document text; scoring untouched.
+> - **Correction to the plan estimate:** this wave DID need a migration (the additive
+>   `failure_kind` column) - the "category already migrated" note held only for category, not for
+>   the taxonomy.
+> - i18n: 32 keys × 7 locales (parity enforced). Security/privacy controls preserved; foreign
+>   reprocess → 404. 0 paid/live calls. No RC created. Docs:
+>   `docs/capstone/p10/p10b_wave3_documents_reliability.md`.
+
+> **Wave 3 OCR operational-readiness CLOSURE (2026-09-26, same branch).** The first Wave 3 report
+> overstated G1 as fully fixed while NO OCR runtime existed. Closure: `deploy/Dockerfile.api` now
+> installs the real runtime (`tesseract-ocr` + `-{deu,fra,spa,ita,por,nld}` + `poppler-utils` +
+> `pip ".[db,ocr]"`); `is_available()` verifies the **binary** (not just the Python import) and
+> scanned-PDF OCR requires Poppler; `ocr_runtime_status()` reports safe per-language availability at
+> `GET /admin/providers`. **Validated:** a real local open-source OCR smoke read scanned PNG/PDF (EN)
+> + DE end-to-end (0 paid calls), and the **built Docker image** reports `runtime_available: true`
+> with all 7 language packs + Poppler. Image +~150–200 MB (OCR layer). **G1 = RESOLVED for the
+> supported runtime; live/human OCR accuracy remains UNVALIDATED.** Deterministic detection tests
+> added; a real smoke test auto-skips where the runtime is absent. See
+> `p8_hosting_operations.md §14a` + `p10b_wave3_documents_reliability.md §20`.
+
 ## Wave 4 — Prepare/Practice journey integration (backend + frontend; maybe small migration)
 - **Objective:** connect documents/evidence and JD/company context into Prepare **and** Practice;
   localize Practice content.

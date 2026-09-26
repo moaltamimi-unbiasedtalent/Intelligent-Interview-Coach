@@ -79,6 +79,7 @@ class DocumentRepository:
     def set_version_result(
         self, *, version_id: int, status: str, extraction_origin: str | None = None,
         page_count: int | None = None, failure_reason: str | None = None,
+        failure_kind: str | None = None,
     ) -> None:
         with self._sf() as s:
             v = s.get(DocumentVersion, version_id)
@@ -90,6 +91,8 @@ class DocumentRepository:
             if page_count is not None:
                 v.page_count = page_count
             v.failure_reason = failure_reason
+            # Cleared on success (failure_kind=None), set to a bounded tag on failure.
+            v.failure_kind = failure_kind
             s.commit()
 
     def set_document_status(self, *, user_id: int, document_id: int, status: str) -> bool:
@@ -156,6 +159,7 @@ class DocumentRepository:
                         "mime_type": v.mime_type, "size_bytes": v.size_bytes,
                         "page_count": v.page_count, "extraction_origin": v.extraction_origin,
                         "status": v.status, "failure_reason": v.failure_reason,
+                        "failure_kind": v.failure_kind,
                         "language_hint": v.language_hint,
                     }
                     for v in versions
@@ -169,12 +173,25 @@ class DocumentRepository:
                 select(CandidateDocument).where(CandidateDocument.user_id == user_id)
                 .order_by(CandidateDocument.updated_at.desc())
             ).all()
-            return [
-                {"id": d.id, "category": d.category, "title": d.title, "status": d.status,
-                 "current_version": d.current_version,
-                 "updated_at": d.updated_at.isoformat() if d.updated_at else None}
-                for d in docs
-            ]
+            out: list[dict] = []
+            for d in docs:
+                # Current version carries the failure taxonomy + extraction origin the
+                # inventory row needs, so the UI can render a localized state without a
+                # second round-trip. Owner scoping is already guaranteed by the doc query.
+                cur = s.scalar(
+                    select(DocumentVersion).where(
+                        DocumentVersion.document_id == d.id,
+                        DocumentVersion.version == d.current_version,
+                    )
+                )
+                out.append({
+                    "id": d.id, "category": d.category, "title": d.title, "status": d.status,
+                    "current_version": d.current_version,
+                    "updated_at": d.updated_at.isoformat() if d.updated_at else None,
+                    "failure_kind": cur.failure_kind if cur else None,
+                    "extraction_origin": cur.extraction_origin if cur else None,
+                })
+            return out
 
     def approved_claims(self, user_id: int) -> list[dict]:
         """A user's APPROVED claims only (review_state accepted or edited), owner-scoped.
@@ -204,6 +221,25 @@ class DocumentRepository:
                 ))
             s.commit()
             return len(claims)
+
+    def clear_version_claims(self, *, user_id: int, document_id: int, version_id: int) -> int:
+        """Delete the claims a specific version produced (owner-scoped), so a reprocess does
+        not duplicate extraction. Only touches the caller's own document's claims."""
+        with self._sf() as s:
+            doc = s.get(CandidateDocument, document_id)
+            if doc is None or doc.user_id != user_id:
+                return 0
+            rows = s.scalars(
+                select(DocumentClaim).where(
+                    DocumentClaim.user_id == user_id,
+                    DocumentClaim.document_id == document_id,
+                    DocumentClaim.version_id == version_id,
+                )
+            ).all()
+            for c in rows:
+                s.delete(c)
+            s.commit()
+            return len(rows)
 
     def update_claim(self, *, user_id: int, claim_id: int, review_state: str, edited_text: str | None = None) -> dict | None:
         with self._sf() as s:

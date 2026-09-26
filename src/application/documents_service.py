@@ -25,7 +25,10 @@ from src.persistence import (
     CLAIM_REJECTED,
     DOC_CATEGORIES,
     DOC_CATEGORY_OTHER,
+    DOC_FAIL_INTERNAL,
+    DOC_FAIL_NO_TEXT,
     DOC_STATUS_FAILED,
+    DOC_STATUS_PROCESSING,
     DOC_STATUS_READY,
     DOC_STATUS_REVIEW_REQUIRED,
     EXTRACTION_ORIGIN_NATIVE,
@@ -105,7 +108,9 @@ class DocumentsApplicationService:
                     parsed = ocr_parse(self._ocr, data, extension, lang=lang)
                     origin = EXTRACTION_ORIGIN_OCR
                 except OcrError as exc:
-                    self._fail(user_id, document_id, version_id, str(exc))
+                    # ocr_unavailable (deployment gap) vs ocr_failed (unreadable scan) — the
+                    # kind lets the UI explain a scanned document honestly, never as "corrupt".
+                    self._fail(user_id, document_id, version_id, str(exc), getattr(exc, "kind", "ocr_failed"))
                     return
             else:
                 parsed = native
@@ -113,25 +118,61 @@ class DocumentsApplicationService:
 
             if not parsed.has_text:
                 self._fail(user_id, document_id, version_id,
-                           "No readable text was found in this document.")
+                           "No readable text was found in this document.", DOC_FAIL_NO_TEXT)
                 return
 
             claims = extract_claims(parsed, category="cv")
             self._repo.add_claims(user_id=user_id, document_id=document_id, version_id=version_id, claims=claims)
             self._repo.set_version_result(
                 version_id=version_id, status=DOC_STATUS_READY, extraction_origin=origin,
-                page_count=parsed.page_count,
+                page_count=parsed.page_count, failure_reason=None, failure_kind=None,
             )
             status = DOC_STATUS_REVIEW_REQUIRED if claims else DOC_STATUS_READY
             self._repo.set_document_status(user_id=user_id, document_id=document_id, status=status)
         except ParseError as exc:
-            self._fail(user_id, document_id, version_id, str(exc))
+            self._fail(user_id, document_id, version_id, str(exc), getattr(exc, "kind", "corrupt"))
         except Exception:  # noqa: BLE001 - never leak internals; safe generic failure
-            self._fail(user_id, document_id, version_id, "This document could not be processed.")
+            self._fail(user_id, document_id, version_id, "This document could not be processed.", DOC_FAIL_INTERNAL)
 
-    def _fail(self, user_id: int, document_id: int, version_id: int, reason: str) -> None:
-        self._repo.set_version_result(version_id=version_id, status=DOC_STATUS_FAILED, failure_reason=reason[:255])
+    def _fail(self, user_id: int, document_id: int, version_id: int, reason: str, kind: str) -> None:
+        self._repo.set_version_result(
+            version_id=version_id, status=DOC_STATUS_FAILED,
+            failure_reason=reason[:255], failure_kind=kind,
+        )
         self._repo.set_document_status(user_id=user_id, document_id=document_id, status=DOC_STATUS_FAILED)
+
+    def reprocess(self, *, user_id: int, document_id: int) -> dict | None:
+        """Re-run extraction on the CURRENT version's already-stored file (P10B Wave 3).
+
+        Owner-scoped and idempotent: it reads the private file we already hold (no new upload,
+        no second pipeline) and runs the same ``_process`` path again. This is the safe retry
+        for transient conditions (e.g. security scanning was briefly offline) and for a
+        scanned/image document once OCR has been enabled in the deployment - without asking the
+        candidate to re-upload. It never fabricates content and never bypasses validation
+        (the stored file already passed validation at upload time).
+        """
+        existing = self._repo.get_document(user_id=user_id, document_id=document_id)
+        if existing is None:
+            return None
+        version_id = self._repo.current_version_id(user_id=user_id, document_id=document_id)
+        info = self._repo.get_download(user_id=user_id, document_id=document_id)
+        if version_id is None or info is None:
+            return None
+        try:
+            data = self._store.read(info["storage_key"])
+        except (FileNotFoundError, ValueError):
+            return None
+        extension = (info["filename"].rsplit(".", 1)[-1].lower() if "." in info["filename"] else "")
+        # Reset the current version's claims so a retry does not duplicate prior extraction.
+        self._repo.clear_version_claims(user_id=user_id, document_id=document_id, version_id=version_id)
+        self._repo.set_document_status(user_id=user_id, document_id=document_id, status=DOC_STATUS_PROCESSING)
+        lang = existing["versions"][-1].get("language_hint") if existing.get("versions") else None
+        self._process(user_id=user_id, document_id=document_id, version_id=version_id,
+                      data=data, extension=extension, lang=lang or "en")
+        # Re-extraction replaces claim ids; re-derive so any story that cited an old claim
+        # reflects its true evidence state (never left silently "verified" against a gone id).
+        self._stories.rederive_all_for_user(user_id)
+        return self._repo.get_document(user_id=user_id, document_id=document_id)
 
     # -- read / review / download / delete ------------------------------------
 

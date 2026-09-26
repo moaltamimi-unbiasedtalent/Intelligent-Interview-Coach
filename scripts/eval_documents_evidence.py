@@ -130,13 +130,50 @@ def run() -> dict[str, tuple[bool, str]]:
         check("export_markdown_json", export_ok, "MD + JSON export work and omit internal state")
         check("export_owner_scoped", foreign_ok, "foreign report export → 404")
 
+    # --- P10B Wave 3: failure taxonomy, graceful OCR degradation, reprocess recovery ---
+    class _UnavailableOcr:
+        def is_available(self):
+            return False
+        def image_to_text(self, *a, **k):
+            return ""
+        def pdf_to_text(self, *a, **k):
+            return []
+
+    app2, _repo2, _ = build_auth_app()
+    app2.dependency_overrides[deps.get_ocr_engine] = lambda: _UnavailableOcr()
+    png = b"\x89PNG\r\n\x1a\n" + b"0" * 64
+    with TestClient(app2) as c2:
+        register(c2, "a@example.com", PW)
+        register(c2, "b@example.com", PW)
+        a2 = login_token(c2, "a@example.com", PW)
+        b2 = login_token(c2, "b@example.com", PW)
+        scan = c2.post("/api/v1/documents", files={"file": ("scan.png", png, "image/png")},
+                       data={"category": "job_description"}, cookies=cookies_for(a2)).json()
+        did2 = scan["id"]
+        # A scanned doc with OCR off is classified ocr_unavailable (a capability gap), never
+        # collapsed into a generic/corrupt failure — the UI can then explain it honestly.
+        taxonomy_ok = scan["status"] == "failed" and scan["versions"][-1]["failure_kind"] == "ocr_unavailable"
+        check("failure_taxonomy_ocr_unavailable", taxonomy_ok, "scanned doc + no OCR → failure_kind=ocr_unavailable (not generic)")
+        # Category is stored and survives reads (list + detail).
+        summ = next(d for d in c2.get("/api/v1/documents", cookies=cookies_for(a2)).json()["documents"] if d["id"] == did2)
+        check("category_persists", summ["category"] == "job_description" and summ["failure_kind"] == "ocr_unavailable", "category + taxonomy exposed in the inventory summary")
+        # Reprocess is owner-scoped.
+        check("reprocess_owner_scoped", c2.post(f"/api/v1/documents/{did2}/reprocess", cookies=cookies_for(b2)).status_code == 404, "foreign reprocess → 404")
+        # Once OCR is available, reprocess recovers the SAME document (no re-upload) truthfully.
+        app2.dependency_overrides[deps.get_ocr_engine] = lambda: _FakeOcr()
+        rr = c2.post(f"/api/v1/documents/{did2}/reprocess", cookies=cookies_for(a2)).json()
+        recovered = (rr["status"] in {"ready", "review_required"} and rr["versions"][-1]["extraction_origin"] == "ocr"
+                     and rr["versions"][-1]["failure_kind"] is None and rr["current_version"] == 1 and len(rr["versions"]) == 1)
+        check("reprocess_recovers", recovered, "reprocess recovers a failed scan once OCR is enabled, no new version, no false success")
+
     return results
 
 
 SAFETY = {
     "cross_user_isolation", "injection_inert", "story_revocation_on_delete",
     "export_owner_scoped", "extraction_no_invention", "ocr_unavailable_safe",
-    "deleted_document_unavailable",
+    "deleted_document_unavailable", "reprocess_owner_scoped",
+    "failure_taxonomy_ocr_unavailable", "reprocess_recovers",
 }
 
 

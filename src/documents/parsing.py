@@ -16,7 +16,16 @@ __all__ = ["Segment", "ParseResult", "ParseError", "parse_document", "needs_ocr"
 
 
 class ParseError(Exception):
-    """A safe, user-facing parse failure (encrypted / corrupt / unreadable)."""
+    """A safe, user-facing parse failure (encrypted / corrupt / unreadable).
+
+    ``kind`` is a bounded, machine-readable taxonomy tag (P10B Wave 3) so the UI can render
+    a localized, actionable message instead of collapsing every failure into one generic
+    string. It never carries internal exception detail, paths or provider text.
+    """
+
+    def __init__(self, message: str, *, kind: str = "corrupt") -> None:
+        super().__init__(message)
+        self.kind = kind
 
 
 @dataclass(frozen=True)
@@ -48,16 +57,16 @@ def parse_pdf(data: bytes) -> ParseResult:
     try:
         reader = PdfReader(_bytes_io(data))
     except (PdfReadError, Exception) as exc:  # noqa: BLE001 - normalise to a safe error
-        raise ParseError("This PDF could not be read (it may be corrupt).") from exc
+        raise ParseError("This PDF could not be read (it may be corrupt).", kind="corrupt") from exc
     if getattr(reader, "is_encrypted", False):
         # Attempt an empty-password decrypt; if it still needs one, fail safely.
         try:
             if reader.decrypt("") == 0:  # 0 = failed
-                raise ParseError("This PDF is password-protected. Remove the password and re-upload.")
+                raise ParseError("This PDF is password-protected. Remove the password and re-upload.", kind="encrypted")
         except ParseError:
             raise
         except Exception as exc:  # noqa: BLE001
-            raise ParseError("This PDF is password-protected. Remove the password and re-upload.") from exc
+            raise ParseError("This PDF is password-protected. Remove the password and re-upload.", kind="encrypted") from exc
 
     pages = reader.pages[:MAX_PAGES]
     segments: list[Segment] = []
@@ -79,7 +88,7 @@ def parse_docx(data: bytes) -> ParseResult:
     try:
         document = docx.Document(_bytes_io(data))
     except Exception as exc:  # noqa: BLE001
-        raise ParseError("This DOCX could not be read (it may be corrupt).") from exc
+        raise ParseError("This DOCX could not be read (it may be corrupt).", kind="corrupt") from exc
     segments: list[Segment] = []
     for idx, para in enumerate(document.paragraphs, start=1):
         text = (para.text or "").strip()

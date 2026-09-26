@@ -14,13 +14,17 @@ OCR output is always labelled as OCR-derived (origin='ocr') with page identity p
 
 from __future__ import annotations
 
+import shutil
 from dataclasses import dataclass
 from typing import Protocol
 
 from src.documents.parsing import ParseResult, Segment
 from src.documents.validation import MAX_PAGES
 
-__all__ = ["OcrEngine", "OcrResult", "OcrError", "TesseractOcrEngine", "build_ocr_engine", "TESSERACT_LANGS"]
+__all__ = [
+    "OcrEngine", "OcrResult", "OcrError", "TesseractOcrEngine", "build_ocr_engine",
+    "TESSERACT_LANGS", "ocr_runtime_status", "installed_tesseract_languages",
+]
 
 # Supported product locales → Tesseract language codes (configured, not quality-tested).
 TESSERACT_LANGS: dict[str, str] = {
@@ -28,8 +32,76 @@ TESSERACT_LANGS: dict[str, str] = {
 }
 
 
+def _tesseract_binary_ok() -> bool:
+    """True only when the Tesseract BINARY is actually runnable — not merely importable.
+
+    `import pytesseract` succeeds even with no OCR engine installed; the real capability is the
+    `tesseract` executable, which `get_tesseract_version()` invokes. This is what makes
+    availability reflect the COMPLETE runtime chain (P10B Wave 3 OCR closure)."""
+    try:
+        import pytesseract
+
+        pytesseract.get_tesseract_version()  # runs the binary; raises if absent/broken
+        return True
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _poppler_ok() -> bool:
+    """Scanned-PDF OCR renders pages with Poppler's `pdftoppm` (used by pdf2image)."""
+    return shutil.which("pdftoppm") is not None
+
+
+def installed_tesseract_languages() -> set[str]:
+    """The Tesseract language DATA packs actually present at runtime (e.g. {"eng","deu"}).
+
+    Empty when the binary/packs are absent — never guesses. Used to report a language as
+    RUNTIME AVAILABLE only when its data is genuinely installed."""
+    try:
+        import pytesseract
+
+        return set(pytesseract.get_languages(config=""))
+    except Exception:  # noqa: BLE001
+        return set()
+
+
+def ocr_runtime_status() -> dict:
+    """Safe OCR operational status for readiness/admin surfaces (no paths, binaries or secrets).
+
+    Distinguishes, per configured product locale:
+      - CONFIGURED         → the locale is mapped to a Tesseract code (always true here);
+      - RUNTIME AVAILABLE  → the binary is present AND that language's data pack is installed.
+    `available` = image OCR is possible now; `pdf_ocr_available` also requires Poppler. Live/human
+    OCR quality is a separate axis and stays UNVALIDATED (never asserted from availability)."""
+    binary = _tesseract_binary_ok()
+    poppler = _poppler_ok()
+    installed = installed_tesseract_languages() if binary else set()
+    languages = {
+        loc: {"configured": True, "runtime_available": bool(binary and code in installed)}
+        for loc, code in TESSERACT_LANGS.items()
+    }
+    return {
+        "engine": "tesseract",
+        "available": binary,                       # image OCR possible now
+        "pdf_ocr_available": bool(binary and poppler),  # scanned-PDF OCR possible now
+        "poppler_available": poppler,
+        "languages": languages,
+        "live_quality": "UNVALIDATED",
+    }
+
+
 class OcrError(Exception):
-    """A safe OCR failure (engine unavailable / unreadable scan)."""
+    """A safe OCR failure (engine unavailable / unreadable scan).
+
+    ``kind`` (P10B Wave 3) distinguishes ``ocr_unavailable`` (the engine/binaries are not
+    installed in this environment - a deployment capability gap, NOT a corrupt file) from
+    ``ocr_failed`` (a scan the installed engine could not read). This lets the UI explain the
+    scanned-document case honestly instead of implying the résumé is broken.
+    """
+
+    def __init__(self, message: str, *, kind: str = "ocr_failed") -> None:
+        super().__init__(message)
+        self.kind = kind
 
 
 @dataclass(frozen=True)
@@ -48,12 +120,9 @@ class TesseractOcrEngine:
     """Local Tesseract engine (lazily imported). Live quality UNVALIDATED."""
 
     def is_available(self) -> bool:
-        try:
-            import pytesseract  # noqa: F401
-
-            return True
-        except Exception:  # noqa: BLE001
-            return False
+        # Availability = the Tesseract BINARY runs, not merely that pytesseract imports
+        # (P10B Wave 3 OCR closure). This reflects the real runtime capability.
+        return _tesseract_binary_ok()
 
     def image_to_text(self, image_bytes: bytes, *, lang: str = "en") -> str:  # pragma: no cover - live path
         try:
@@ -67,6 +136,13 @@ class TesseractOcrEngine:
             raise OcrError("Could not read this image.") from exc
 
     def pdf_to_text(self, pdf_bytes: bytes, *, lang: str = "en") -> list[OcrResult]:  # pragma: no cover - live path
+        # Scanned-PDF OCR also needs Poppler (pdftoppm). Treat its absence as a capability gap
+        # (ocr_unavailable), not a corrupt file, so the UI/retry story stays honest.
+        if not _poppler_ok():
+            raise OcrError(
+                "Scanned-PDF OCR is not available in this environment.",
+                kind="ocr_unavailable",
+            )
         try:
             from pdf2image import convert_from_bytes
 
@@ -86,7 +162,10 @@ class TesseractOcrEngine:
 def ocr_parse(engine: OcrEngine, data: bytes, extension: str, *, lang: str = "en") -> ParseResult:
     """Run OCR and return a ParseResult labelled origin='ocr' with page provenance."""
     if not engine.is_available():
-        raise OcrError("Scanned-document OCR is not available in this environment.")
+        raise OcrError(
+            "Scanned-document OCR is not available in this environment.",
+            kind="ocr_unavailable",
+        )
     segments: list[Segment] = []
     if extension in ("png", "jpg", "jpeg"):
         text = engine.image_to_text(data, lang=lang)

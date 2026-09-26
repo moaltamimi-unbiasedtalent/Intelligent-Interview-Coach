@@ -146,11 +146,75 @@ def test_ocr_path_for_image_upload():
 
 
 def test_ocr_unavailable_fails_document_gracefully():
-    c, a, b, _ = _two_users()  # default engine: pytesseract absent → unavailable
+    # Deterministic regardless of whether the host has Tesseract installed: inject an engine that
+    # reports the runtime as unavailable, so this always exercises the ocr_unavailable path.
+    c, a, b, _ = _two_users(ocr=_UnavailableOcr())
     png = b"\x89PNG\r\n\x1a\n" + b"0" * 64
     r = c.post("/api/v1/documents", files={"file": ("scan.png", png, "image/png")}, data={"category": "cv"}, cookies=cookies_for(a))
     assert r.status_code == 201
     assert r.json()["status"] == "failed"  # never crashes; safe FAILED state
+
+
+# --- P10B Wave 3: failure taxonomy, reprocess, category persistence ----------
+
+class _UnavailableOcr:
+    def is_available(self):
+        return False
+
+    def image_to_text(self, *a, **k):
+        return ""
+
+    def pdf_to_text(self, *a, **k):
+        return []
+
+
+def test_failure_kind_ocr_unavailable_surfaced_in_detail_and_list():
+    # A scanned/image document with OCR disabled must be classified as ocr_unavailable
+    # (a capability gap), NOT collapsed into a generic/corrupt failure.
+    c, a, b, _ = _two_users(ocr=_UnavailableOcr())
+    png = b"\x89PNG\r\n\x1a\n" + b"0" * 64
+    doc = c.post("/api/v1/documents", files={"file": ("scan.png", png, "image/png")},
+                 data={"category": "cv"}, cookies=cookies_for(a)).json()
+    assert doc["status"] == "failed"
+    assert doc["versions"][-1]["failure_kind"] == "ocr_unavailable"
+    # The inventory summary carries the taxonomy so the list can localize it without a fetch.
+    summary = next(d for d in c.get("/api/v1/documents", cookies=cookies_for(a)).json()["documents"] if d["id"] == doc["id"])
+    assert summary["failure_kind"] == "ocr_unavailable" and summary["status"] == "failed"
+
+
+def test_reprocess_recovers_document_once_ocr_available():
+    # Upload a scan while OCR is unavailable → failed(ocr_unavailable). Then OCR becomes
+    # available and a reprocess (no re-upload) recovers the SAME document to a ready/review state.
+    c, a, b, _ = _two_users(ocr=_UnavailableOcr())
+    png = b"\x89PNG\r\n\x1a\n" + b"0" * 64
+    did = c.post("/api/v1/documents", files={"file": ("scan.png", png, "image/png")},
+                 data={"category": "cv"}, cookies=cookies_for(a)).json()["id"]
+    # Enable OCR on the same app, then retry.
+    from src.api import dependencies as deps
+    c.app.dependency_overrides[deps.get_ocr_engine] = lambda: _FakeOcr()
+    r = c.post(f"/api/v1/documents/{did}/reprocess", cookies=cookies_for(a))
+    assert r.status_code == 200, r.text
+    detail = r.json()
+    assert detail["status"] in {"ready", "review_required"}
+    assert detail["versions"][-1]["extraction_origin"] == "ocr"
+    assert detail["versions"][-1]["failure_kind"] is None
+    # Still a single version — reprocess does NOT create a new upload.
+    assert detail["current_version"] == 1 and len(detail["versions"]) == 1
+
+
+def test_reprocess_owner_scoped():
+    c, a, b, _ = _two_users()
+    did = _upload(c, cookies_for(a)).json()["id"]
+    assert c.post(f"/api/v1/documents/{did}/reprocess", cookies=cookies_for(b)).status_code == 404
+    assert c.post("/api/v1/documents/999999/reprocess", cookies=cookies_for(a)).status_code == 404
+
+
+def test_category_persists_across_reads():
+    c, a, b, _ = _two_users()
+    did = _upload(c, cookies_for(a), category="job_description").json()["id"]
+    assert c.get(f"/api/v1/documents/{did}", cookies=cookies_for(a)).json()["category"] == "job_description"
+    summary = next(d for d in c.get("/api/v1/documents", cookies=cookies_for(a)).json()["documents"] if d["id"] == did)
+    assert summary["category"] == "job_description"
 
 
 # --- stories + revocation (§36) ----------------------------------------------

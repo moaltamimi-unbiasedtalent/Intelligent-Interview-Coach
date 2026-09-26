@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-type Tone = "info" | "warning" | "danger";
+type Tone = "info" | "warning" | "danger" | "success";
 
 const tones: Record<Tone, string> = {
   info: "border-border",
   warning: "border-warning",
   danger: "border-danger",
+  success: "border-success",
 };
 
 export function Alert({

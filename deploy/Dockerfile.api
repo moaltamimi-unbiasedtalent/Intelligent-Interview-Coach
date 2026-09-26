@@ -20,9 +20,22 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Minimal OS deps: curl for the container healthcheck, libpq for psycopg (PostgreSQL).
+# OS deps:
+#  - curl: container healthcheck
+#  - libpq5: psycopg (PostgreSQL)
+#  - tesseract-ocr + language packs (deu/fra/spa/ita/por/nld; eng ships with the base pkg):
+#    the OCR engine binary + the language DATA for the 7 configured product locales.
+#  - poppler-utils: provides `pdftoppm`, used by pdf2image to render scanned PDFs for OCR.
+# Together these make the [ocr] extra a genuinely operational capability (P10B Wave 3 closure);
+# without them scanned/image documents honestly report ocr_unavailable. Size note: the OCR
+# packs add roughly ~150–200 MB to the image (tesseract core + 7 language data files + poppler).
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl libpq5 \
+    && apt-get install -y --no-install-recommends \
+        curl libpq5 \
+        tesseract-ocr \
+        tesseract-ocr-deu tesseract-ocr-fra tesseract-ocr-spa \
+        tesseract-ocr-ita tesseract-ocr-por tesseract-ocr-nld \
+        poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -32,9 +45,11 @@ WORKDIR /app
 # postgresql+psycopg DATABASE_URL and for the migrate step.
 COPY requirements.txt pyproject.toml README.md ./
 COPY src ./src
+# [db] adds Alembic + psycopg; [ocr] adds pytesseract + pdf2image (the Python bindings for the
+# system OCR deps installed above). Both are needed for a fully operational hosted backend.
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt \
-    && pip install ".[db]"
+    && pip install ".[db,ocr]"
 
 # Application code + migration assets (kept minimal; tests/data/docs excluded).
 COPY alembic.ini ./

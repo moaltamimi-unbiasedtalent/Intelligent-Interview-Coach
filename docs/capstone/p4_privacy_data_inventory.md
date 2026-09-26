@@ -37,6 +37,15 @@ P1 left full account hard-delete **PARTIAL**. P4-owned resources are now in the 
 private-file purge and the LangGraph checkpoint purge are the remaining wiring, tracked in
 the quality register. Documents are now inside the deletion model (no longer omitted).
 
+### P10B Wave 3 delta (2026-09-26)
+- New column `document_versions.failure_kind` (migration `0012`) holds a **bounded enum tag**
+  (`encrypted` / `corrupt` / `ocr_unavailable` / `ocr_failed` / `no_text` / `internal`). It stores
+  **no personal content** and no exception text; it cascades/deletes exactly as the row does.
+- `POST /documents/{id}/reprocess` reads the **already-stored** private file (no new upload, no new
+  storage location) and re-runs the same extraction; it is owner-scoped (foreign id → 404). It
+  introduces no new data category and no new retention surface. Story evidence is re-derived so a
+  reprocessed document never leaves a story silently "verified".
+
 ## Retention / backup / checkpoint consequences
 - Deleted documents/claims/stories are removed from the live database immediately.
 - Exported copies (Markdown/JSON the user downloaded) leave application control — the UI/
