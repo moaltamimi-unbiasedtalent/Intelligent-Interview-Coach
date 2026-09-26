@@ -359,3 +359,27 @@ Shape: **public marketing site at `/` + authenticated product at `/app`; Trust/P
 | C12 hosted operation (EX-12) | BLOCKED / NOT RUN | No authorized deployment | implementation ready; hosting can't be certified locally | — | needs authorized HTTPS deploy |
 
 Migration added: 0. Paid/live provider calls this phase: 0.
+
+## P9 Integrated quality & release-candidate acceptance (executed this phase)
+See `p9_acceptance_ledger.md` + `p9_quality_register.md` + `p9_integrated_quality_hardening.md` + `p9_voice_measurement.md` + `p9_localization_completeness.md`; evidence package `artifacts/capstone/p9/RC-P9-001/`.
+
+Release candidate **RC-P9-001** (baseline main `eb91125`, P8 merged PR #84; Alembic head `0011_workspaces_shares`). Deterministic/local acceptance executed at this SHA; live/deployment/human-review portions kept separate. Paid/live calls: 0.
+
+| Gate | Result | Evidence |
+|---|---|---|
+| AC-01..AC-12, AC-16, AC-17 | PASS | backend suites + Playwright + evaluators (see ledger) |
+| AC-14/AC-15 | PASS (deterministic) | voice/multi-agent evals; live model quality NOT RUN |
+| AC-13 | PARTIAL | deterministic STT; live correction burden NOT RUN |
+| AC-18 | PARTIAL | review surfaces (A6/A8 partial diagnostics) |
+| AC-19 | PASS | renders + mobile no-overflow + a11y; Chromium fully tested (matrix documented) |
+| AC-20 restart/recovery | **PASS** | `eval_restart_recovery` (restart+backup+restore) + migration up/down/up single head |
+| AC-21 regression gate | **PASS** | full gate green; 3 justified skips (live Adzuna / legacy Streamlit / ragas-conditional) |
+| AC-22 agent/retrieval | PARTIAL | policy 1.0; extension pass 0.9136, citation 1.0, no-fabrication 1.0; historical ID P/R 0.6757/0.5161 preserved; live benchmark NOT RUN |
+| AC-23 voice | PARTIAL | EN/DE reference set + deterministic latency; live STT/latency NOT RUN |
+| AC-24 pilot | NOT RUN | P10 |
+| AC-25 submission | PARTIAL | matrix/docs truthful; final package P11/P12 |
+| EX-06/08/09/10/11 | PASS (deterministic) | workspace/story/model-policy/cleanup/prompt-lab evals |
+| EX-01/02/03/04/05/07/13/14/15/16 | PARTIAL | deterministic PASS; live/human-review portions NOT RUN |
+| EX-12 hosted | BLOCKED / NOT RUN | implementation READY; no authorized deployment |
+
+Totals: **AC** 18 PASS / 6 PARTIAL / 1 NOT RUN / 0 BLOCKED (25) · **EX** 5 PASS / 10 PARTIAL / 0 NOT RUN / 1 BLOCKED (16). Defects: P0=0, P1=0. No gate FAIL. Not merged; not deployed; P10 not started.
