@@ -64,7 +64,7 @@ Evidence key: **B**=backend pytest (2381 passed/3 skipped), **U**=frontend unit 
 | EX-16 | K4 Adzuna extensions | executed (det.) | B `test_external_research` bounded ops/params/entitlement/security | live Adzuna (skipped: needs creds) | **PARTIAL** (deterministic PASS; live NOT RUN) |
 
 ## Summary
-- **AC PASS:** 15 · **PARTIAL:** 7 (AC-03/13/18/22/23/25) · **NOT RUN:** 1 (AC-24 → P10).
+- **AC PASS:** 18 · **PARTIAL:** 6 (AC-03/13/18/22/23/25) · **NOT RUN:** 1 (AC-24 → P10) · **BLOCKED:** 0 (total 25).
 - **EX PASS:** 5 (EX-06/08/09/10/11) · **PARTIAL:** 10 · **BLOCKED:** 1 (EX-12).
 - No gate is FAIL. All PARTIAL/NOT RUN/BLOCKED items are gated on **live provider access**,
   **authorized deployment**, **human/legal review**, or the **P10 pilot** — none on a code

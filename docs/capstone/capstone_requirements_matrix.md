@@ -382,4 +382,4 @@ Release candidate **RC-P9-001** (baseline main `eb91125`, P8 merged PR #84; Alem
 | EX-01/02/03/04/05/07/13/14/15/16 | PARTIAL | deterministic PASS; live/human-review portions NOT RUN |
 | EX-12 hosted | BLOCKED / NOT RUN | implementation READY; no authorized deployment |
 
-Totals: **AC** 15 PASS / 7 PARTIAL / 1 NOT RUN · **EX** 5 PASS / 10 PARTIAL / 1 BLOCKED. Defects: P0=0, P1=0. No gate FAIL. Not merged; not deployed; P10 not started.
+Totals: **AC** 18 PASS / 6 PARTIAL / 1 NOT RUN / 0 BLOCKED (25) · **EX** 5 PASS / 10 PARTIAL / 0 NOT RUN / 1 BLOCKED (16). Defects: P0=0, P1=0. No gate FAIL. Not merged; not deployed; P10 not started.

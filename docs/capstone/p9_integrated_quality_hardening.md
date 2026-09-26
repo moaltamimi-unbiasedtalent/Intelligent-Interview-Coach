@@ -26,7 +26,7 @@ recovery, provider-failure, deletion, claims, UX. 8. Assign RC-P9-001 + evidence
 material change after freeze without a new RC id.
 
 ## Acceptance ledger
-See `p9_acceptance_ledger.md`. Result: **AC** 15 PASS / 7 PARTIAL / 1 NOT RUN (AC-24→P10); **EX**
+See `p9_acceptance_ledger.md`. Result: **AC** 18 PASS / 6 PARTIAL / 1 NOT RUN (AC-24→P10); **EX**
 5 PASS / 10 PARTIAL / 1 BLOCKED (EX-12). No FAIL. Every non-PASS is gated on live access,
 authorized deployment, human/legal review, or the P10 pilot — none on a code defect.
 
@@ -124,9 +124,13 @@ human/legal review, distributed rate-limit store, checkpoint residual, CSRF post
 matrix, localization debt.
 
 ## Release candidate
-**RC-P9-001** — assigned when all deterministic gates pass with 0 P0/P1 defects. SHA + versions
-recorded in `artifacts/capstone/p9/RC-P9-001/manifest.json`. No release tag yet; P10 may
-supersede with RC-P9-002 on any material change.
+**RC-P9-001** — assigned when all deterministic gates pass with 0 P0/P1 defects. **Code/
+evaluation SHA `319759db1dd7c91ddd6ca313837326c40e05219c`** (`319759d`); versions in
+`artifacts/capstone/p9/RC-P9-001/manifest.json`. A later documentation-only evidence-closure
+commit corrected the AC totals and recorded this SHA — it changed no product/runtime code, no
+acceptance denominator, no evaluation case, and reran no gate for a more favourable result, so
+**RC-P9-001 stays valid and does NOT become RC-P9-002**. A material runtime/code change during
+P10 would require a new RC. No release tag yet.
 
 ---
 

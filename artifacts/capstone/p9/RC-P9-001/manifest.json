@@ -4,7 +4,8 @@
   "baseline_main_sha": "eb911255a0d71a6793634b0f392df832bf4130a0",
   "baseline_pr": "#84 (P8 productisation & hosting)",
   "rc_branch": "feature/capstone-p9-integrated-hardening",
-  "rc_commit_sha": "recorded at commit time (branch tip after the P9 evidence commit)",
+  "release_candidate_sha": "319759db1dd7c91ddd6ca313837326c40e05219c",
+  "evidence_correction": "documentation-only follow-up after RC freeze; RC-P9-001 remains the code/evaluation candidate identified by 319759d",
   "generated": "2026-09-26",
   "version_identity": {
     "alembic_head": "0011_workspaces_shares",
@@ -24,8 +25,8 @@
     "build": "pass", "openapi": "105 paths", "alembic_single_head": true, "secret_scan": "clean"
   },
   "acceptance": {
-    "AC": {"PASS": 15, "PARTIAL": 7, "NOT_RUN": 1, "BLOCKED": 0},
-    "EX": {"PASS": 5, "PARTIAL": 10, "NOT_RUN": 0, "BLOCKED": 1}
+    "AC": {"PASS": 18, "PARTIAL": 6, "NOT_RUN": 1, "BLOCKED": 0, "total": 25},
+    "EX": {"PASS": 5, "PARTIAL": 10, "NOT_RUN": 0, "BLOCKED": 1, "total": 16}
   },
   "retrieval": {
     "historical_baseline_ID_PR": "0.6757 / 0.5161 (HISTORICAL ONLY — not re-derived, not pooled)",
@@ -35,6 +36,17 @@
     "evidence_coverage_rate": 0.8857
   },
   "defects": {"P0": 0, "P1": 0, "P2": 0, "P3": 0},
+  "freeze_semantics": {
+    "rc_code_evaluation_sha": "319759db1dd7c91ddd6ca313837326c40e05219c",
+    "this_closure": "evidence metadata/documentation only",
+    "product_or_runtime_changed": false,
+    "acceptance_denominator_changed": false,
+    "evaluation_case_changed": false,
+    "gate_rerun_for_favourable_result": false,
+    "new_feature_introduced": false,
+    "requires_new_rc": false,
+    "note": "RC-P9-001 does NOT become RC-P9-002; a material runtime/code change during P10 would require a new RC."
+  },
   "paid_live_calls": 0,
   "ex12_hosted_operation": "BLOCKED / NOT RUN (no authorized deployment)",
   "public_launch": "NOT AUTHORIZED",
