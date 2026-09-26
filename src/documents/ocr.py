@@ -29,7 +29,17 @@ TESSERACT_LANGS: dict[str, str] = {
 
 
 class OcrError(Exception):
-    """A safe OCR failure (engine unavailable / unreadable scan)."""
+    """A safe OCR failure (engine unavailable / unreadable scan).
+
+    ``kind`` (P10B Wave 3) distinguishes ``ocr_unavailable`` (the engine/binaries are not
+    installed in this environment - a deployment capability gap, NOT a corrupt file) from
+    ``ocr_failed`` (a scan the installed engine could not read). This lets the UI explain the
+    scanned-document case honestly instead of implying the résumé is broken.
+    """
+
+    def __init__(self, message: str, *, kind: str = "ocr_failed") -> None:
+        super().__init__(message)
+        self.kind = kind
 
 
 @dataclass(frozen=True)
@@ -86,7 +96,10 @@ class TesseractOcrEngine:
 def ocr_parse(engine: OcrEngine, data: bytes, extension: str, *, lang: str = "en") -> ParseResult:
     """Run OCR and return a ParseResult labelled origin='ocr' with page provenance."""
     if not engine.is_available():
-        raise OcrError("Scanned-document OCR is not available in this environment.")
+        raise OcrError(
+            "Scanned-document OCR is not available in this environment.",
+            kind="ocr_unavailable",
+        )
     segments: list[Segment] = []
     if extension in ("png", "jpg", "jpeg"):
         text = engine.image_to_text(data, lang=lang)

@@ -23,6 +23,10 @@ class DocumentSummary(BaseModel):
     status: str
     current_version: int
     updated_at: str | None = None
+    # P10B Wave 3: the current version's failure taxonomy + extraction origin, so the
+    # inventory can render a localized, actionable state without fetching the full detail.
+    failure_kind: str | None = None
+    extraction_origin: str | None = None
 
 
 class DocumentListResponse(BaseModel):
@@ -38,6 +42,7 @@ class DocumentVersionOut(BaseModel):
     extraction_origin: str | None = None
     status: str
     failure_reason: str | None = None
+    failure_kind: str | None = None
     language_hint: str | None = None
 
 

@@ -130,6 +130,19 @@ DOC_STATUS_DELETED = "deleted"
 # Extraction origin (native parser vs OCR) — carried for provenance/labelling.
 EXTRACTION_ORIGIN_NATIVE = "native"
 EXTRACTION_ORIGIN_OCR = "ocr"
+# Failure taxonomy (P10B Wave 3) — a bounded, machine-readable reason a version FAILED, so the
+# UI can show a localized, actionable message instead of a single generic "couldn't read the
+# file". None of these carry internal exception text, paths, providers or secrets.
+DOC_FAIL_ENCRYPTED = "encrypted"          # password-protected document
+DOC_FAIL_CORRUPT = "corrupt"              # unreadable/damaged file
+DOC_FAIL_OCR_UNAVAILABLE = "ocr_unavailable"  # scanned/image doc but OCR not enabled here
+DOC_FAIL_OCR_FAILED = "ocr_failed"        # OCR engine ran but could not read the scan
+DOC_FAIL_NO_TEXT = "no_text"             # parsed/OCR'd but contained no readable text
+DOC_FAIL_INTERNAL = "internal"           # unexpected processing error (details never leaked)
+DOC_FAIL_KINDS = (
+    DOC_FAIL_ENCRYPTED, DOC_FAIL_CORRUPT, DOC_FAIL_OCR_UNAVAILABLE,
+    DOC_FAIL_OCR_FAILED, DOC_FAIL_NO_TEXT, DOC_FAIL_INTERNAL,
+)
 # Claim review states (candidate-controlled).
 CLAIM_PENDING = "pending"
 CLAIM_ACCEPTED = "accepted"
@@ -476,6 +489,8 @@ class DocumentVersion(Base):
     extraction_origin: Mapped[str | None] = mapped_column(String(16), nullable=True)
     status: Mapped[str] = mapped_column(String(32), default=DOC_STATUS_UPLOADED)
     failure_reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Bounded, machine-readable failure taxonomy (P10B Wave 3); see DOC_FAIL_* above.
+    failure_kind: Mapped[str | None] = mapped_column(String(32), nullable=True)
     language_hint: Mapped[str | None] = mapped_column(String(8), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 

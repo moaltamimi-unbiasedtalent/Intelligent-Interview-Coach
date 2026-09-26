@@ -118,6 +118,25 @@ async def replace_document(
     return DocumentDetail(**detail)
 
 
+@router.post("/{document_id}/reprocess", response_model=DocumentDetail, summary="Retry extraction on an already-stored document")
+def reprocess_document(
+    document_id: int = Path(...),
+    svc=Depends(get_documents_service),
+    user_id: int = Depends(get_current_user_id),
+) -> DocumentDetail:
+    # Owner-scoped retry of the same governed pipeline on the file we already hold (no new
+    # upload). Blocked while OCR is paused (extraction may run) and rate-limited like uploads.
+    from src.api.guards import ensure_not_paused
+    from src.api.rate_limit import enforce, user_key
+
+    ensure_not_paused("ocr")
+    enforce("cost_upload_user", user_key(user_id))
+    detail = svc.reprocess(user_id=user_id, document_id=document_id)
+    if detail is None:
+        raise HTTPException(status_code=404, detail="Document not found.")
+    return DocumentDetail(**detail)
+
+
 @router.get("/{document_id}/download", summary="Download the caller's own document file")
 def download_document(
     document_id: int = Path(...),

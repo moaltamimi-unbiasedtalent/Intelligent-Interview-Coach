@@ -129,9 +129,11 @@ test("review/evaluation: shows offline metrics read-only, clearly not live analy
 test("review/rag: shows real knowledge runtime + offline retrieval quality (no placeholder)", async ({ page }) => {
   await mockAll(page);
   await page.goto("/review/rag");
-  await expect(page.getByText("Knowledge runtime")).toBeVisible();
+  // Target the section heading specifically: the page description also contains the phrase
+  // "knowledge runtime", so a bare getByText is ambiguous under strict mode (pre-existing flake).
+  await expect(page.getByRole("heading", { name: "Knowledge runtime" })).toBeVisible();
   await expect(page.getByText("8,035")).toBeVisible();
-  await expect(page.getByText("Offline retrieval evaluation")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Offline retrieval evaluation" })).toBeVisible();
   await expect(page.getByText("74/81")).toBeVisible();
 });
 

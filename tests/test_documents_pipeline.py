@@ -84,8 +84,28 @@ def test_pdf_text_extraction_with_page_provenance():
 def test_corrupt_pdf_fails_safely():
     from src.documents.parsing import ParseError
 
-    with pytest.raises(ParseError):
+    with pytest.raises(ParseError) as exc:
         parse_document(b"%PDF-1.4 broken garbage not a real pdf", "pdf")
+    # P10B Wave 3: the failure carries a bounded taxonomy tag for a localized UI message.
+    assert exc.value.kind == "corrupt"
+
+
+def test_encrypted_pdf_reports_encrypted_kind():
+    from src.documents.parsing import ParseError
+
+    fpdf = pytest.importorskip("fpdf")
+    pdf = fpdf.FPDF()
+    pdf.add_page()
+    pdf.set_font("Helvetica", size=12)
+    pdf.cell(0, 8, "Secret CV")
+    try:
+        pdf.set_encryption("ownerpw", "userpw")  # requires a password to open
+    except Exception:  # pragma: no cover - older fpdf without encryption
+        pytest.skip("fpdf build has no encryption support")
+    data = bytes(pdf.output())
+    with pytest.raises(ParseError) as exc:
+        parse_document(data, "pdf")
+    assert exc.value.kind == "encrypted"
 
 
 def test_needs_ocr_routing():
@@ -143,5 +163,7 @@ def test_ocr_unavailable_raises_safely():
         def pdf_to_text(self, *a, **k):
             return []
 
-    with pytest.raises(OcrError):
+    with pytest.raises(OcrError) as exc:
         ocr_parse(_NoOcr(), b"x", "png")
+    # ocr_unavailable is a DEPLOYMENT capability gap, distinct from a corrupt/unreadable file.
+    assert exc.value.kind == "ocr_unavailable"

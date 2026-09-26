@@ -9,7 +9,7 @@
  * Documents are private DATA — never public, never analysed for identity/emotion.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api/client";
 import type { ClaimOut, DocumentDetail, DocumentSummary, StoryOut } from "@/lib/api/types";
 import { useI18n } from "@/components/i18n/I18nProvider";
@@ -19,16 +19,27 @@ import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { LoadingState } from "@/components/ui/States";
-
-const CATEGORIES = ["cv", "job_description", "portfolio", "company_brief", "other"] as const;
+import { DocumentUpload, categoryLabelKey } from "@/components/documents/DocumentUpload";
 
 function statusKey(status: string): string {
   const map: Record<string, string> = {
     uploaded: "documents.statusUploaded", processing: "documents.statusProcessing",
     review_required: "documents.statusReview", ready: "documents.statusReady",
-    failed: "documents.statusFailed",
+    failed: "documents.statusFailedShort",
   };
   return map[status] ?? "documents.statusUploaded";
+}
+
+// Map a bounded backend failure_kind to its localized, actionable message. Falls back to the
+// stored (English) failure_reason, then a generic line — never a raw exception or path.
+function failureMessage(t: (k: string) => string, kind?: string | null, reason?: string | null): string {
+  const map: Record<string, string> = {
+    encrypted: "documents.failEncrypted", corrupt: "documents.failCorrupt",
+    ocr_unavailable: "documents.failOcrUnavailable", ocr_failed: "documents.failOcrFailed",
+    no_text: "documents.failNoText", internal: "documents.failInternal",
+  };
+  if (kind && map[kind]) return t(map[kind]);
+  return reason || t("documents.failGeneric");
 }
 
 export function DocumentsClient() {
@@ -43,10 +54,10 @@ export function DocumentsClient() {
       setDocs(d.documents);
       setStories(s.stories);
     } catch (err) {
-      setError(err instanceof ApiError ? err.userMessage : "Could not load your documents.");
+      setError(err instanceof ApiError ? err.userMessage : t("documents.loadError"));
       setDocs([]);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void refresh();
@@ -54,24 +65,25 @@ export function DocumentsClient() {
 
   return (
     <section className="max-w-reading">
-      <PageHeader eyebrow="Evidence" title={t("documents.title")} description={t("documents.subtitle")} />
+      <PageHeader eyebrow={t("documents.eyebrow")} title={t("documents.title")} description={t("documents.subtitle")} />
       {error ? <Alert tone="danger" className="mb-4">{error}</Alert> : null}
 
-      <UploadCard onUploaded={refresh} />
+      <Card>
+        <CardBody>
+          <h2 className="text-base font-semibold text-foreground">{t("documents.uploadTitle")}</h2>
+          <DocumentUpload className="mt-2" onUploaded={refresh} />
+        </CardBody>
+      </Card>
 
-      {docs === null ? (
-        <LoadingState label={t("common.loading")} />
-      ) : docs.length === 0 ? (
-        <p className="mt-4 text-sm text-muted">{t("documents.empty")}</p>
-      ) : (
-        <ul className="mt-4 space-y-3">
-          {docs.map((d) => (
-            <li key={d.id}>
-              <DocumentRow summary={d} onChanged={refresh} />
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="mt-8">
+        {docs === null ? (
+          <LoadingState label={t("common.loading")} />
+        ) : docs.length === 0 ? (
+          <p className="mt-3 text-sm text-muted">{t("documents.empty")}</p>
+        ) : (
+          <DocumentInventory docs={docs} onChanged={refresh} />
+        )}
+      </div>
 
       <StoryBank stories={stories} onChanged={refresh} />
 
@@ -80,72 +92,83 @@ export function DocumentsClient() {
   );
 }
 
-function UploadCard({ onUploaded }: { onUploaded: () => void }) {
-  const { t } = useI18n();
-  const [category, setCategory] = useState("cv");
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+function formatDate(iso?: string | null): string {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  } catch {
+    return "—";
+  }
+}
 
-  const onFile = async (file: File) => {
-    setErr(null);
-    setBusy(true);
-    try {
-      await api.documents.upload(file, category);
-      onUploaded();
-    } catch (e) {
-      setErr(e instanceof ApiError ? e.message : t("documents.uploadFailed"));
-    } finally {
-      setBusy(false);
-      if (inputRef.current) inputRef.current.value = "";
-    }
-  };
+// Responsive inventory: ONE list of rows (never duplicated across layouts). Each row aligns as
+// columns on md+ (with a header) and stacks into a card on mobile via responsive utilities, so
+// the expandable detail is rendered exactly once. Name, type, status, updated date, version and
+// safe actions are shown; internal storage keys/paths never are. Selecting the name opens the
+// extracted-evidence review (or the localized failure explanation) inline.
+function DocumentInventory({ docs, onChanged }: { docs: DocumentSummary[]; onChanged: () => void }) {
+  const { t } = useI18n();
+  const [openId, setOpenId] = useState<number | null>(null);
 
   return (
-    <Card>
-      <CardBody className="space-y-3">
-        {err ? <Alert tone="danger">{err}</Alert> : null}
-        <div className="flex flex-wrap items-end gap-3">
-          <label className="text-sm">
-            <span className="mb-1 block font-medium text-foreground">{t("documents.category")}</span>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              disabled={busy}
-              className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
-              aria-label={t("documents.category")}
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {t(`documents.cat${c === "cv" ? "Cv" : c === "job_description" ? "Job" : c === "portfolio" ? "Portfolio" : c === "company_brief" ? "Brief" : "Other"}`)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div>
-            <input
-              ref={inputRef}
-              type="file"
-              accept=".pdf,.docx,.txt,.png,.jpg,.jpeg"
-              aria-label={t("documents.upload")}
-              disabled={busy}
-              onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
-              className="block text-sm"
+    <div className="mt-3">
+      {/* Column header (desktop only). */}
+      <div className="hidden gap-3 border-b border-border px-1 pb-2 text-xs uppercase tracking-wide text-muted md:grid md:grid-cols-[minmax(0,2fr)_1fr_1fr_1fr_auto_auto]">
+        <span>{t("documents.invName")}</span>
+        <span>{t("documents.invType")}</span>
+        <span>{t("documents.invStatus")}</span>
+        <span>{t("documents.invUpdated")}</span>
+        <span>{t("documents.invVersion")}</span>
+        <span className="text-right">{t("documents.invActions")}</span>
+      </div>
+      <ul className="divide-y divide-border">
+        {docs.map((d) => (
+          <li key={d.id}>
+            <DocumentInventoryRow
+              summary={d} open={openId === d.id}
+              onToggle={() => setOpenId((id) => (id === d.id ? null : d.id))}
+              onChanged={onChanged}
             />
-          </div>
-          {busy ? <span className="text-sm text-muted">{t("documents.uploading")}</span> : null}
-        </div>
-        <p className="text-xs text-muted">{t("documents.dropHint")}</p>
-      </CardBody>
-    </Card>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
-function DocumentRow({ summary, onChanged }: { summary: DocumentSummary; onChanged: () => void }) {
+function RowActions({
+  summary, onChanged, retry, retrying,
+}: { summary: DocumentSummary; onChanged: () => void; retry: () => void; retrying: boolean }) {
   const { t } = useI18n();
-  const [open, setOpen] = useState(false);
-  const [detail, setDetail] = useState<DocumentDetail | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const remove = async () => { await api.documents.remove(summary.id); onChanged(); };
+  return (
+    <div className="flex flex-wrap items-center gap-3 text-sm md:justify-end">
+      <a href={api.documents.downloadUrl(summary.id)} className="text-accent hover:underline">{t("documents.download")}</a>
+      {summary.status === "failed" ? (
+        <button onClick={retry} disabled={retrying} className="text-accent hover:underline disabled:opacity-50">
+          {retrying ? t("documents.retrying") : t("documents.retry")}
+        </button>
+      ) : null}
+      {!confirmDelete ? (
+        <button onClick={() => setConfirmDelete(true)} className="text-muted hover:text-danger">{t("documents.delete")}</button>
+      ) : (
+        <span className="flex items-center gap-2">
+          <span className="text-xs text-danger">{t("documents.deleteConfirm")}</span>
+          <button onClick={remove} className="font-semibold text-danger">{t("documents.delete")}</button>
+          <button onClick={() => setConfirmDelete(false)} className="text-muted">{t("common.cancel")}</button>
+        </span>
+      )}
+    </div>
+  );
+}
+
+function DocumentInventoryRow({
+  summary, open, onToggle, onChanged,
+}: { summary: DocumentSummary; open: boolean; onToggle: () => void; onChanged: () => void }) {
+  const { t } = useI18n();
+  const [detail, setDetail] = useState<DocumentDetail | null>(null);
+  const [retrying, setRetrying] = useState(false);
 
   const load = useCallback(async () => {
     setDetail(await api.documents.get(summary.id));
@@ -155,37 +178,46 @@ function DocumentRow({ summary, onChanged }: { summary: DocumentSummary; onChang
     if (open && !detail) void load();
   }, [open, detail, load]);
 
-  const remove = async () => {
-    await api.documents.remove(summary.id);
-    onChanged();
-  };
+  const retry = useCallback(async () => {
+    setRetrying(true);
+    try {
+      await api.documents.reprocess(summary.id);
+      onChanged();
+    } catch {
+      /* the refreshed list surfaces the resulting state */
+    } finally {
+      setRetrying(false);
+    }
+  }, [summary.id, onChanged]);
+
+  const lastVersion = detail?.versions[detail.versions.length - 1];
 
   return (
-    <Card>
-      <CardBody>
-        <div className="flex items-center justify-between gap-3">
-          <button type="button" onClick={() => setOpen((v) => !v)} className="text-left">
-            <span className="font-medium text-foreground">{summary.title}</span>{" "}
-            <Badge>{t(statusKey(summary.status))}</Badge>
+    <div className="py-3">
+      <div className="grid grid-cols-1 gap-1 md:grid-cols-[minmax(0,2fr)_1fr_1fr_1fr_auto_auto] md:items-center md:gap-3">
+        <div className="min-w-0">
+          <button type="button" onClick={onToggle} aria-expanded={open} className="text-left font-medium text-foreground hover:underline">
+            {summary.title}
           </button>
-          <div className="flex items-center gap-3 text-sm">
-            <a href={api.documents.downloadUrl(summary.id)} className="text-accent hover:underline">{t("documents.download")}</a>
-            {!confirmDelete ? (
-              <button onClick={() => setConfirmDelete(true)} className="text-muted hover:text-danger">{t("documents.delete")}</button>
-            ) : (
-              <span className="flex items-center gap-2">
-                <span className="text-xs text-danger">{t("documents.deleteConfirm")}</span>
-                <button onClick={remove} className="font-semibold text-danger">{t("documents.delete")}</button>
-                <button onClick={() => setConfirmDelete(false)} className="text-muted">{t("common.cancel")}</button>
-              </span>
-            )}
-          </div>
         </div>
-        {confirmDelete ? <p className="mt-1 text-xs text-muted">{t("documents.deleteExplain")}</p> : null}
-
-        {open && detail ? <ClaimReview detail={detail} onReviewed={load} onDrafted={onChanged} /> : null}
-      </CardBody>
-    </Card>
+        <div><Badge>{t(categoryLabelKey(summary.category))}</Badge></div>
+        <div><Badge>{t(statusKey(summary.status))}</Badge></div>
+        <div className="text-sm text-muted">{formatDate(summary.updated_at)}</div>
+        <div className="text-sm text-muted">{t("documents.versionShort", { n: summary.current_version })}</div>
+        <RowActions summary={summary} onChanged={onChanged} retry={retry} retrying={retrying} />
+      </div>
+      {open ? (
+        <div className="mt-2">
+          {summary.status === "failed" ? (
+            <Alert tone="warning">{failureMessage(t, summary.failure_kind, lastVersion?.failure_reason)}</Alert>
+          ) : detail ? (
+            <ClaimReview detail={detail} onReviewed={load} onDrafted={onChanged} />
+          ) : (
+            <LoadingState label={t("common.loading")} />
+          )}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -209,8 +241,8 @@ function ClaimReview({ detail, onReviewed, onDrafted }: { detail: DocumentDetail
   };
 
   if (detail.status === "failed") {
-    const reason = detail.versions[detail.versions.length - 1]?.failure_reason;
-    return <Alert tone="warning" className="mt-3">{reason || t("documents.statusFailed")}</Alert>;
+    const last = detail.versions[detail.versions.length - 1];
+    return <Alert tone="warning" className="mt-3">{failureMessage(t, last?.failure_kind, last?.failure_reason)}</Alert>;
   }
 
   return (

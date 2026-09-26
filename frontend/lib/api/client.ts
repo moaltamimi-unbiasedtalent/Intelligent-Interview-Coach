@@ -302,6 +302,8 @@ export const api = {
       if (languageHint) form.append("language_hint", languageHint);
       return upload<DocumentDetail>(`/documents/${id}/replace`, form);
     },
+    reprocess: (id: number, opts?: RequestOptions) =>
+      request<DocumentDetail>("POST", `/documents/${id}/reprocess`, opts),
     reviewClaim: (documentId: number, claimId: number, action: string, editedText?: string, opts?: RequestOptions) =>
       request<ClaimOut>("POST", `/documents/${documentId}/claims/${claimId}/review`, { body: { action, edited_text: editedText }, ...opts }),
     remove: (id: number, opts?: RequestOptions) => request<{ deleted: boolean }>("DELETE", `/documents/${id}`, opts),

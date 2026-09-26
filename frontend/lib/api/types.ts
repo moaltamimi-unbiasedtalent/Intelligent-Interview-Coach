@@ -826,6 +826,8 @@ export interface DocumentSummary {
   status: string;
   current_version: number;
   updated_at?: string | null;
+  failure_kind?: string | null;
+  extraction_origin?: string | null;
 }
 
 export interface DocumentVersionOut {
@@ -837,6 +839,7 @@ export interface DocumentVersionOut {
   extraction_origin?: string | null;
   status: string;
   failure_reason?: string | null;
+  failure_kind?: string | null;
   language_hint?: string | null;
 }
 

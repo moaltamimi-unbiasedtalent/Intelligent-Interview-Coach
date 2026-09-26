@@ -489,6 +489,14 @@ assumptions in core logic, prompts, scoring or examples.
   Candidate documents are **untrusted DATA and are never placed in an LLM prompt**;
   tables (migration 0010) cascade from `users.id`. See
   `docs/capstone/p4_e2_e3_documents_evidence.md` and `p4_privacy_data_inventory.md`.
+  **P10B Wave 3 hardening:** failures carry a bounded taxonomy (`ParseError`/`OcrError.kind`
+  → `document_versions.failure_kind`, migration `0012`; `DOC_FAIL_*` in `persistence.py`) so the
+  UI shows a localized, actionable reason (a scanned/image doc with OCR uninstalled is
+  `ocr_unavailable`, never "corrupt") — never a raw exception/path. `POST /documents/{id}/reprocess`
+  re-runs the SAME pipeline on the already-stored file (owner-scoped) as the safe retry once OCR is
+  enabled. **There is ONE governed upload pipeline and ONE upload component,
+  `frontend/components/documents/DocumentUpload.tsx`** — reuse it (do not build a second uploader);
+  Prepare/Practice integration is Wave 4.
 
 - **Internationalization coding standard (Capstone P3.5+).** New candidate-facing,
   user-visible strings MUST use the i18n system: add a key to the English source
