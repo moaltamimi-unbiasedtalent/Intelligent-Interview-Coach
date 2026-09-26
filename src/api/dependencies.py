@@ -398,6 +398,35 @@ def get_stories_service(repo=Depends(get_repository)):
     )
 
 
+def get_evidence_access_service(repo=Depends(get_repository)):
+    """Owner-scoped approved-evidence access (P5) — reused by Practice to compose candidate
+    context from APPROVED claims/verified stories only (P10B Wave 4)."""
+    from src.application.evidence_access_service import EvidenceAccessService
+    from src.documents.repository import DocumentRepository, StoryRepository
+
+    sf = repo.session_factory
+    return EvidenceAccessService(documents=DocumentRepository(sf), stories=StoryRepository(sf))
+
+
+def resolve_document_text(request: Request, *, user_id: int, document_id: int,
+                          max_chars: int = 8000) -> str | None:
+    """Owner-scoped plain text of a candidate's selected document (P10B Wave 4).
+
+    A shared helper for Prepare (agent run) and Practice (interview create) so a candidate can
+    SELECT a stored JD instead of pasting it, WITHOUT the raw text ever travelling via the client.
+    Built lazily (only when a document was selected). Returns None for a foreign/missing/unreadable
+    document — never another user's data. The caller screens the result as untrusted DATA."""
+    from src.application.documents_service import DocumentsApplicationService
+    from src.documents.repository import DocumentRepository, StoryRepository
+
+    sf = get_repository(request).session_factory
+    svc = DocumentsApplicationService(
+        repo=DocumentRepository(sf), stories=StoryRepository(sf),
+        store=get_document_store(request), ocr=get_ocr_engine(request),
+    )
+    return svc.extracted_text(user_id=user_id, document_id=document_id, max_chars=max_chars)
+
+
 def get_auth_config(request: Request):
     from src.application.auth_service import AuthConfig
 

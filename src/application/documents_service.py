@@ -193,6 +193,31 @@ class DocumentsApplicationService:
             edited_text=(edited_text.strip() if edited_text else None),
         )
 
+    def extracted_text(self, *, user_id: int, document_id: int, max_chars: int = 12000) -> str | None:
+        """Owner-scoped plain text of a document's CURRENT version (P10B Wave 4).
+
+        The governed way to reuse a candidate-selected document (e.g. a Job Description) as
+        role context WITHOUT a second pipeline and WITHOUT the raw text ever travelling via the
+        client: the SERVER reads the already-stored private file and runs the SAME parse/OCR
+        path. Returns None if the document is not owned / missing / unreadable. The caller must
+        still treat the result as untrusted DATA (it is injection-screened before any prompt).
+        """
+        info = self._repo.get_download(user_id=user_id, document_id=document_id)
+        if info is None:
+            return None
+        try:
+            data = self._store.read(info["storage_key"])
+        except (FileNotFoundError, ValueError):
+            return None
+        extension = info["filename"].rsplit(".", 1)[-1].lower() if "." in info["filename"] else ""
+        try:
+            native = parse_document(data, extension)
+            parsed = ocr_parse(self._ocr, data, extension, lang="en") if needs_ocr(extension, native) else native
+        except (ParseError, OcrError):
+            return None
+        text = parsed.full_text.strip()
+        return text[:max_chars] if text else None
+
     def download(self, *, user_id: int, document_id: int, version: int | None = None) -> tuple[bytes, str, str] | None:
         info = self._repo.get_download(user_id=user_id, document_id=document_id, version=version)
         if info is None:

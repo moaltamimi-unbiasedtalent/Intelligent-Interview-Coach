@@ -9,7 +9,13 @@ already-validated domain dicts.
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
+
+# Bounded conversation-language identifier (P10B Wave 4) — the 7 product locales only. A raw
+# user string can never reach interview generation; anything else is rejected at the boundary.
+ConversationLanguage = Literal["en", "de", "fr", "es", "it", "pt", "nl"]
 
 
 class InterviewConfigIn(BaseModel):
@@ -24,6 +30,12 @@ class InterviewConfigIn(BaseModel):
     company_context: str | None = Field(default=None, max_length=4000)
     job_description: str | None = Field(default=None, max_length=12000)
     candidate_background: str | None = Field(default=None, max_length=12000)
+    # Prose language for generated question/evaluation/report (Practice multilingual, Wave 4).
+    conversation_language: ConversationLanguage | None = None
+    # Owner-scoped governed context selected from the candidate's private documents (Wave 4).
+    # The SERVER resolves these to text/evidence; raw document text never travels via the client.
+    job_description_document_id: int | None = Field(default=None, ge=1)
+    use_candidate_evidence: bool = False
 
 
 class PreparationContextIn(BaseModel):
@@ -62,6 +74,10 @@ class CreateInterviewRequest(BaseModel):
     difficulty: str = "moderate"
     response_detail: str = "standard"
     number_of_questions: int | None = Field(default=None, ge=1, le=20)
+    # Also accepted on the preparation-context handoff path (Wave 4).
+    conversation_language: ConversationLanguage | None = None
+    job_description_document_id: int | None = Field(default=None, ge=1)
+    use_candidate_evidence: bool = False
 
 
 class QuestionOut(BaseModel):

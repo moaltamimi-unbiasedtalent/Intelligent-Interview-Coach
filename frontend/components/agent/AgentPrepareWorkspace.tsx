@@ -23,6 +23,8 @@ import { AgentProfileSelector, DEFAULT_PROFILE, usageSummaryLine } from "./usage
 import { JourneyChrome, PreparationChecklist } from "./JourneyChrome";
 import { FeedbackControl } from "@/components/feedback/FeedbackControl";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
+import { useT } from "@/components/i18n/I18nProvider";
+import { DocumentPicker } from "@/components/documents/DocumentPicker";
 import type { AgentProfile } from "@/lib/api/types";
 import type { PrepareDraft } from "@/lib/prepareDraft";
 
@@ -244,7 +246,7 @@ function FirstMessageForm({
   initialGoal = "",
   openContextField = null,
 }: {
-  onStart: (req: { goal: string; target_role?: string; job_description?: string; candidate_background?: string; profile?: AgentProfile; enable_current_market_research?: boolean }) => void;
+  onStart: (req: { goal: string; target_role?: string; job_description?: string; candidate_background?: string; job_description_document_id?: number; profile?: AgentProfile; enable_current_market_research?: boolean }) => void;
   busy: boolean;
   error: { message: string; requestId?: string | null; notFound?: boolean } | null;
   onDismissError: () => void;
@@ -253,10 +255,12 @@ function FirstMessageForm({
   /** A Home shortcut opens + focuses the matching context field (§15/§16). */
   openContextField?: "jd" | "bg" | null;
 }) {
+  const t = useT();
   const [goal, setGoal] = useState(initialGoal);
   const [showContext, setShowContext] = useState(!!openContextField);
   const [targetRole, setTargetRole] = useState("");
   const [jd, setJd] = useState("");
+  const [jdDocId, setJdDocId] = useState<number | null>(null);
   const [background, setBackground] = useState("");
   const [profile, setProfile] = useState<AgentProfile>(DEFAULT_PROFILE);
   const [research, setResearch] = useState(true);
@@ -315,6 +319,8 @@ function FirstMessageForm({
       goal: goal.trim(),
       target_role: targetRole.trim() || undefined,
       job_description: jd.trim() || undefined,
+      // A selected JD document is resolved server-side (owner-scoped); a pasted JD takes priority.
+      job_description_document_id: !jd.trim() && jdDocId ? jdDocId : undefined,
       candidate_background: background.trim() || undefined,
       profile,
       enable_current_market_research: research ? undefined : false,
@@ -358,6 +364,12 @@ function FirstMessageForm({
               <label htmlFor="agent-jd" className="block text-sm text-muted">Job description (optional)</label>
               <Textarea id="agent-jd" value={jd} onChange={(e) => setJd(e.target.value)} disabled={busy} maxLength={12000} className="min-h-[100px]" />
             </div>
+            {/* Or SELECT a stored JD from the one governed document system (P10B Wave 4). A pasted
+                JD above takes priority; a selected document is resolved to text server-side. */}
+            {!jd.trim() ? (
+              <DocumentPicker category="job_description" value={jdDocId} onChange={setJdDocId}
+                              label={t("prepctx.jobDescriptionDoc")} disabled={busy} />
+            ) : null}
             <div>
               <label htmlFor="agent-bg" className="block text-sm text-muted">Your background (optional)</label>
               <Textarea id="agent-bg" value={background} onChange={(e) => setBackground(e.target.value)} disabled={busy} maxLength={12000} className="min-h-[100px]" />

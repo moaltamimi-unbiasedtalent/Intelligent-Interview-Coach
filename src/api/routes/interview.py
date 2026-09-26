@@ -76,6 +76,10 @@ def _build_configuration(body: CreateInterviewRequest):
 
     if body.configuration is not None:
         raw = body.configuration.model_dump()
+        # These are resolved SERVER-side into job_description/candidate_background (owner-scoped);
+        # they are not domain-config fields, so strip them before building the domain object.
+        raw.pop("job_description_document_id", None)
+        raw.pop("use_candidate_evidence", None)
     elif body.preparation_context is not None:
         pc = PreparationContext(**body.preparation_context.model_dump())
         store: dict = {}
@@ -100,6 +104,7 @@ def _build_configuration(body: CreateInterviewRequest):
             "job_description": prefill.get("job_description") or None,
             "candidate_background": prefill.get("candidate_background") or None,
             "company_context": prefill.get("company_context") or None,
+            "conversation_language": body.conversation_language or None,
         }
         if body.number_of_questions is not None:
             raw["number_of_questions"] = body.number_of_questions
@@ -116,6 +121,70 @@ def _build_configuration(body: CreateInterviewRequest):
         raise ValidationError(
             "We couldn't set up practice from these details. Please review the "
             "industry and career level and try again.") from exc
+
+
+# --- governed document / evidence context (P10B Wave 4) ----------------------
+
+
+def _compose_evidence_background(evidence_svc, user_id: int) -> str:
+    """Compose a bounded candidate-background summary from APPROVED evidence only.
+
+    Uses EvidenceAccessService, so ONLY accepted/edited claims and safe/verified stories are
+    included — never pending/rejected/source-revoked/model-suggested items, and never the raw
+    uploaded document. Owner-scoped (trusted user_id). The result is treated as untrusted DATA
+    downstream (screened by the interview service before any prompt)."""
+    lines: list[str] = []
+    for c in evidence_svc.approved_claims(user_id)[:25]:
+        text = (c.get("display_text") or c.get("text") or "").strip()
+        if text:
+            lines.append(f"- {text}")
+    for s in evidence_svc.evidence_stories(user_id)[:10]:
+        title = (s.get("title") or "").strip()
+        result = (s.get("result") or "").strip()
+        if title:
+            lines.append(f"- {title}: {result}" if result else f"- {title}")
+    return "\n".join(lines)[: constants.MAX_CANDIDATE_BACKGROUND_CHARS].strip()
+
+
+def _apply_governed_context(configuration, body: CreateInterviewRequest, *, user_id: int, request: Request):
+    """Resolve candidate-selected private context into the config's governed, injection-screened
+    text fields — SERVER-side and owner-scoped (P10B Wave 4). A selected JD document id becomes
+    ``job_description`` (its stored text, re-parsed via the one governed pipeline); an opt-in to
+    candidate evidence becomes ``candidate_background`` from APPROVED evidence only. A foreign or
+    missing id resolves to no context (never another user's data), and an explicit pasted value
+    already present is never overwritten. Raw document text never travels via the client.
+
+    The document/evidence services are built lazily, ONLY when context is actually requested, so
+    a plain create (no selected document/evidence) needs neither service."""
+    cfg = body.configuration
+    if cfg is None or (cfg.job_description_document_id is None and not cfg.use_candidate_evidence):
+        return configuration
+
+    from src.api.dependencies import get_document_store, get_ocr_engine, get_repository
+    from src.application.documents_service import DocumentsApplicationService
+    from src.application.evidence_access_service import EvidenceAccessService
+    from src.documents.repository import DocumentRepository, StoryRepository
+
+    sf = get_repository(request).session_factory
+    docs_svc = DocumentsApplicationService(
+        repo=DocumentRepository(sf), stories=StoryRepository(sf),
+        store=get_document_store(request), ocr=get_ocr_engine(request),
+    )
+    evidence_svc = EvidenceAccessService(documents=DocumentRepository(sf), stories=StoryRepository(sf))
+
+    updates: dict = {}
+    if cfg.job_description_document_id is not None and not (configuration.job_description or "").strip():
+        text = docs_svc.extracted_text(
+            user_id=user_id, document_id=cfg.job_description_document_id,
+            max_chars=constants.MAX_JOB_DESCRIPTION_CHARS,
+        )
+        if text:
+            updates["job_description"] = text
+    if cfg.use_candidate_evidence and not (configuration.candidate_background or "").strip():
+        summary = _compose_evidence_background(evidence_svc, user_id)
+        if summary:
+            updates["candidate_background"] = summary
+    return configuration.model_copy(update=updates) if updates else configuration
 
 
 # --- safe response builders --------------------------------------------------
@@ -247,6 +316,9 @@ def create_interview(
     to retry — a repeat (same user + key) returns the SAME session without re-running
     strategy/first-question generation, and now survives a backend restart (durable)."""
     configuration = _build_configuration(body)
+    # Owner-scoped governed context: a selected JD document + approved evidence (Wave 4).
+    # Resolved lazily — only when the request actually selected document/evidence context.
+    configuration = _apply_governed_context(configuration, body, user_id=user_id, request=request)
 
     key = (idempotency_key or "").strip()
     if key:

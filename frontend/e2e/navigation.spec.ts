@@ -64,7 +64,19 @@ test("Flow 5: account control → account page", async ({ page }) => {
 test("Flow 6: wordmark → home", async ({ page }) => {
   await mock(page);
   await page.goto("/prepare");
-  await page.getByRole("link", { name: "Ask4Mo - home" }).click();
+  // There is exactly one app-header wordmark (AppShell → Brand → Logo); assert the product
+  // contract explicitly: it is visible and points at the app home.
+  const wordmark = page.getByRole("link", { name: "Ask4Mo - home" });
+  await expect(wordmark).toBeVisible();
+  await expect(wordmark).toHaveAttribute("href", "/app");
+  // Synchronise the click with the client navigation. Asserting-URL-after-click races the
+  // Next.js <Link> hydration window: a click landing before the client handler is ready can be
+  // swallowed, leaving the URL on /prepare. Waiting for the navigation concurrently with the
+  // click is the deterministic Playwright pattern (no sleep / retry / forced click / raised timeout).
+  await Promise.all([
+    page.waitForURL(/\/app$/),
+    wordmark.click(),
+  ]);
   await expect(page).toHaveURL(/\/app$/);
 });
 

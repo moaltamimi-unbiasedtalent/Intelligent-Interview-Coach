@@ -196,6 +196,34 @@ def _session_parameters(config: InterviewConfiguration) -> str:
     )
 
 
+# Candidate conversation language (P10B Wave 4). Bounded to the 7 product locales; the
+# language NAME comes only from this allow-list, never from the code string itself, so no
+# untrusted text can reach the model. This mirrors the agent path's response_language_directive
+# and sets ONLY the language of the generated prose — it never changes scoring, evidence,
+# grounding, or the labour-market/geography of the interview content.
+_CONVERSATION_LANGUAGE_NAMES: dict[str, str] = {
+    "en": "English", "de": "German", "fr": "French", "es": "Spanish",
+    "it": "Italian", "pt": "Portuguese", "nl": "Dutch",
+}
+
+
+def _language_directive(config: InterviewConfiguration) -> str | None:
+    """Return a trusted 'write in <language>' directive, or None for English/unknown."""
+    code = getattr(config, "conversation_language", "") or ""
+    name = _CONVERSATION_LANGUAGE_NAMES.get(code.strip().lower())
+    if not name or name == "English":
+        return None
+    return (
+        f"CONVERSATION LANGUAGE (trusted, chosen from fixed options)\n"
+        f"The candidate has chosen to practise in {name}. Write ALL candidate-facing prose "
+        f"— questions, feedback, the report and its strengths/focus areas/recommendations — "
+        f"in {name}. This changes ONLY the language of your prose: keep the same rubric, "
+        f"scoring, evidence and grounding rules, and do not change the labour market, "
+        f"salary or geography of any career information because of the language. Do not "
+        f"translate the candidate's own answers, names, or company names."
+    )
+
+
 _TASK = (
     "TASK\n"
     "Evaluate the candidate's answer to the interview question, using the "
@@ -585,16 +613,20 @@ def build_task_system_prompt(
     directive = (
         f"METHOD — {technique_id}\n{_TECHNIQUE_DIRECTIVES[technique_id]}"
     )
-    return "\n\n".join(
-        [
-            _MISSION,
-            _GUARDRAILS,
-            _session_parameters(config),
-            _TASK_INSTRUCTIONS[task],
-            directive,
-            _output_contract_for(schema),
-        ]
-    )
+    # Conversation-language directive (P10B Wave 4): prose-only, trusted, allow-listed. Placed
+    # in the system prompt alongside the other trusted session parameters; omitted for English.
+    language = _language_directive(config)
+    blocks = [
+        _MISSION,
+        _GUARDRAILS,
+        _session_parameters(config),
+        _TASK_INSTRUCTIONS[task],
+        directive,
+        _output_contract_for(schema),
+    ]
+    if language:
+        blocks.insert(3, language)  # after session parameters, before task instructions
+    return "\n\n".join(blocks)
 
 
 def build_task_user_message(
