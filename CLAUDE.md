@@ -496,7 +496,12 @@ assumptions in core logic, prompts, scoring or examples.
   re-runs the SAME pipeline on the already-stored file (owner-scoped) as the safe retry once OCR is
   enabled. **There is ONE governed upload pipeline and ONE upload component,
   `frontend/components/documents/DocumentUpload.tsx`** — reuse it (do not build a second uploader);
-  Prepare/Practice integration is Wave 4.
+  Prepare/Practice integration is Wave 4. **OCR runtime (Wave 3 closure):** availability is verified
+  against the real chain — `OcrEngine.is_available()` runs the Tesseract **binary**, scanned-PDF OCR
+  also needs Poppler (`pdftoppm`); never mark OCR available merely because `pytesseract` imports.
+  `deploy/Dockerfile.api` installs the runtime (`tesseract-ocr` + `-{deu,fra,spa,ita,por,nld}` +
+  `poppler-utils` + `pip ".[db,ocr]"`, ~+150–200 MB); `ocr_runtime_status()` gives safe per-language
+  availability at `GET /admin/providers`. Live/human OCR accuracy stays UNVALIDATED.
 
 - **Internationalization coding standard (Capstone P3.5+).** New candidate-facing,
   user-visible strings MUST use the i18n system: add a key to the English source

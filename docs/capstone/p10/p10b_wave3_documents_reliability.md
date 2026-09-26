@@ -1,12 +1,20 @@
 # P10B Wave 3 — Document Reliability, Classification & Discoverability
 
-**Status:** DELIVERED (implementation complete; gates green).
+**Status:** DELIVERED (implementation complete; gates green). **OCR operational-readiness closure
+added 2026-09-26 — see §20.**
 **Branch:** `feature/capstone-p10b-wave3-documents` — **not merged**.
 **Date:** 2026-09-26.
 **Baseline:** `main` @ `30cd9f9` (Wave 1 merged via PR #87).
 **Migration:** `0012_document_failure_kind` (single head; additive nullable column).
 **Release candidate:** none. RC-P9-001 remains immutable; RC-P10-002 is cut only at Wave 8.
-**Paid/live calls:** 0 (no OCR/LLM/scanner/provider calls; live OCR quality remains UNVALIDATED).
+**Paid/live calls:** 0 (open-source local Tesseract/Poppler only; no paid OCR/LLM/provider calls;
+live/human OCR accuracy remains UNVALIDATED).
+
+> **Founder G1 status:** **RESOLVED for the supported runtime.** The OCR runtime is now installed by
+> `deploy/Dockerfile.api` and was validated end-to-end with the identical open-source engine locally
+> (a scanned résumé is actually read — see §20 and §5). Live/human OCR **accuracy** remains
+> UNVALIDATED. The initial Wave 3 report overstated G1 as fully fixed while no OCR runtime existed;
+> that is corrected here.
 
 ---
 
@@ -169,11 +177,14 @@ runtime before Wave 8, a new RC must be cut first.
 
 ## 16. Known limitations
 
-- **OCR is not enabled in this environment** — scanned/image documents report `ocr_unavailable`
-  until the `[ocr]` extra + `tesseract`/`poppler` are installed; live OCR quality UNVALIDATED.
-- **Human/legal translation review of the 35 new keys is NOT done** (engineering translations only).
+- **Live/human OCR accuracy is UNVALIDATED** — the runtime works end-to-end on synthetic fixtures
+  (§20), but real-world scan quality (skew, noise, multi-column, handwriting) is not benchmarked.
+- The OCR-enabled image is **~150–200 MB larger** (Tesseract + 7 language packs + Poppler).
+- **Human/legal translation review of the new i18n keys is NOT done** (engineering translations only).
 - No automatic document classification (deliberate; user selects the category).
 - Prepare/Practice upload integration is deferred to **Wave 4** (only the reusable seam is built).
+- OCR **language data must be installed per language**; a language is reported `runtime_available`
+  only when its Tesseract pack is present (admin `providers.ocr.languages`).
 
 ## 17. Documentation
 
@@ -190,6 +201,56 @@ the reusable upload seam and owns the deferred interview-language work.
 
 The résumé-read failure is root-caused and fixed: scanned/image documents now fail **honestly and
 specifically** (`ocr_unavailable`) with a clear, localized, actionable message and a one-click
-retry, instead of a silent generic "Couldn't read the file". Categories, a responsive inventory, and
-an understandable upload flow are in place; a single reusable upload seam is ready for Wave 4. No
-security/privacy control was weakened, one additive migration, 0 paid/live calls, no new RC.
+retry — **and, per the §20 closure, are now actually read** by the open-source OCR runtime that the
+hosted image installs. Categories, a responsive inventory, and an understandable upload flow are in
+place; a single reusable upload seam is ready for Wave 4. No security/privacy control was weakened,
+one additive migration, 0 paid/live calls, no new RC.
+
+---
+
+## 20. OCR operational-readiness closure (addendum, 2026-09-26)
+
+The original Wave 3 report improved OCR *failure handling* but overstated the founder P1 (G1) as
+fully fixed while the environment had **no working OCR runtime** — so a scanned résumé still could
+not actually be read. This bounded closure makes OCR a genuinely installable, operational capability
+and validates it.
+
+**Runtime audit.** The OCR path needs, beyond the `[ocr]` Python extra (`pytesseract`,
+`pdf2image`): the **Tesseract binary**, its **language data packs** (per language), and **Poppler**
+(`pdftoppm`) for scanned PDFs. `deploy/Dockerfile.api` previously installed only `curl`+`libpq5` and
+`pip install ".[db]"` — so OCR was inoperable even in staging.
+
+**Deployment fix.** `deploy/Dockerfile.api` now installs `tesseract-ocr`,
+`tesseract-ocr-{deu,fra,spa,ita,por,nld}` (English ships with the base), `poppler-utils`, and
+`pip install ".[db,ocr]"`. Image-size impact: **~150–200 MB**. Build not broken; health/readiness,
+security hardening, private storage and malware fail-closed are unchanged.
+
+**Truthful availability.** `is_available()` now runs the Tesseract **binary**
+(`get_tesseract_version()`) rather than trusting the Python import; scanned-PDF OCR additionally
+requires `pdftoppm`. `src/documents/ocr.py::ocr_runtime_status()` reports safe operational metadata
+(no paths/binaries/secrets), surfaced at `GET /api/v1/admin/providers → ocr`: `available`,
+`pdf_ocr_available`, `poppler_available`, and per-locale `configured` vs `runtime_available`.
+
+**Language status (not collapsed):**
+| Locale | CONFIGURED | RUNTIME AVAILABLE (local validation host) | DETERMINISTICALLY TESTED | LIVE/HUMAN QUALITY |
+|---|---|---|---|---|
+| en | ✅ | ✅ | ✅ (smoke) | ❌ UNVALIDATED |
+| de | ✅ | ✅ | ✅ (smoke) | ❌ UNVALIDATED |
+| fr/es/it/pt/nl | ✅ | ✅ (packs installed) | ⚠️ via shared engine path | ❌ UNVALIDATED |
+
+**Real local validation (open-source; 0 paid calls).** With `brew install tesseract tesseract-lang
+poppler` + the `[ocr]` extra, a real end-to-end smoke passed: an English **PNG** and an **image-only
+PDF** and a **German PNG** were each **routed to OCR → text extracted → status review_required/ready
+→ origin=`ocr` → page/section provenance → deterministic claims → review state pending**, and
+**reprocess** recovered a document. Tesseract 5.5.3; packs eng/deu/fra/ita/nld/por/spa present.
+
+**Deterministic tests (CI-portable, no binary required).** `tests/test_documents_pipeline.py` adds:
+binary-vs-import detection, Poppler guard → `ocr_unavailable`, `ocr_runtime_status` shape +
+per-language availability, all-unavailable-when-binary-absent. A **real** smoke test
+(`test_real_local_ocr_reads_synthetic_image`) runs where the runtime is installed and **auto-skips**
+otherwise (reported separately from the deterministic tests).
+
+**Can a scanned résumé now actually be processed in the supported runtime?** **Yes** — the hosted
+image installs the exact runtime, and the identical open-source engine reads scanned image/PDF
+résumés end-to-end (validated locally). The remaining caveat is **live/human accuracy on real-world
+scans**, which stays UNVALIDATED.

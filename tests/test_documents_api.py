@@ -146,7 +146,9 @@ def test_ocr_path_for_image_upload():
 
 
 def test_ocr_unavailable_fails_document_gracefully():
-    c, a, b, _ = _two_users()  # default engine: pytesseract absent → unavailable
+    # Deterministic regardless of whether the host has Tesseract installed: inject an engine that
+    # reports the runtime as unavailable, so this always exercises the ocr_unavailable path.
+    c, a, b, _ = _two_users(ocr=_UnavailableOcr())
     png = b"\x89PNG\r\n\x1a\n" + b"0" * 64
     r = c.post("/api/v1/documents", files={"file": ("scan.png", png, "image/png")}, data={"category": "cv"}, cookies=cookies_for(a))
     assert r.status_code == 201

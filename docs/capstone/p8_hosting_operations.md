@@ -322,6 +322,37 @@ strict on CORS/DB/APP_BASE_URL.
 
 ---
 
+## 14a. OCR runtime (scanned/image documents) — P10B Wave 3
+
+Native-text PDF/DOCX/TXT never need OCR. **Scanned/image documents (image-only PDF, PNG, JPEG)
+require an OCR runtime**; without it they are honestly reported as `ocr_unavailable` (never
+"corrupt") and can be retried later via `POST /documents/{id}/reprocess`.
+
+- **Dependencies (open-source, self-hosted, no paid provider):**
+  - Python: the `[ocr]` extra — `pytesseract` + `pdf2image` (installed by `deploy/Dockerfile.api`).
+  - System: `tesseract-ocr` (engine) + the language packs `tesseract-ocr-{deu,fra,spa,ita,por,nld}`
+    (English ships with the base package) + `poppler-utils` (`pdftoppm`, used to render scanned
+    PDFs). All installed by `deploy/Dockerfile.api`.
+- **Availability is verified against the full runtime chain**, not just the Python import:
+  `is_available()` runs the Tesseract binary (`get_tesseract_version()`), and scanned-PDF OCR
+  additionally requires `pdftoppm`. `GET /api/v1/admin/providers` → `ocr` reports safe operational
+  metadata: `available` (image OCR), `pdf_ocr_available` (needs Poppler), `poppler_available`, and
+  per-locale `configured` vs `runtime_available` (a language is only `runtime_available` when its
+  Tesseract data pack is actually installed). No paths, binaries or secrets are exposed.
+- **Image-size impact:** the OCR engine + 7 language data files + Poppler add roughly
+  **~150–200 MB** to the API image. If a deployment does not need OCR, remove the OCR apt packages
+  and the `,ocr` pip extra from `deploy/Dockerfile.api`; scanned uploads then degrade gracefully to
+  `ocr_unavailable` rather than failing the build.
+- **Language status axes (do not collapse):** CONFIGURED (mapped to a Tesseract code — all 7),
+  RUNTIME AVAILABLE (data pack installed — reported by the admin endpoint), DETERMINISTICALLY TESTED
+  (EN + DE exercised by the local smoke test), LIVE/HUMAN QUALITY VALIDATED (**not done** — OCR
+  accuracy on real-world scans remains UNVALIDATED).
+- **Local validation:** on a dev host, `brew install tesseract tesseract-lang poppler` +
+  `pip install -e ".[ocr]"`, then the smoke test `tests/test_documents_pipeline.py::
+  test_real_local_ocr_reads_synthetic_image` runs (it auto-skips where the runtime is absent).
+
+---
+
 ## 15. Distributed / multi-replica limitations
 
 This staging topology is **single-replica by design**. Before scaling out, the

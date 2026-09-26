@@ -104,9 +104,21 @@ Complexity: **S** (≤1 day) · **M** (2–4 days) · **L** (1–2 weeks) · **X
 > - **Correction to the plan estimate:** this wave DID need a migration (the additive
 >   `failure_kind` column) - the "category already migrated" note held only for category, not for
 >   the taxonomy.
-> - i18n: 35 keys × 7 locales (parity enforced). Security/privacy controls preserved; foreign
+> - i18n: 32 keys × 7 locales (parity enforced). Security/privacy controls preserved; foreign
 >   reprocess → 404. 0 paid/live calls. No RC created. Docs:
 >   `docs/capstone/p10/p10b_wave3_documents_reliability.md`.
+
+> **Wave 3 OCR operational-readiness CLOSURE (2026-09-26, same branch).** The first Wave 3 report
+> overstated G1 as fully fixed while NO OCR runtime existed. Closure: `deploy/Dockerfile.api` now
+> installs the real runtime (`tesseract-ocr` + `-{deu,fra,spa,ita,por,nld}` + `poppler-utils` +
+> `pip ".[db,ocr]"`); `is_available()` verifies the **binary** (not just the Python import) and
+> scanned-PDF OCR requires Poppler; `ocr_runtime_status()` reports safe per-language availability at
+> `GET /admin/providers`. **Validated:** a real local open-source OCR smoke read scanned PNG/PDF (EN)
+> + DE end-to-end (0 paid calls), and the **built Docker image** reports `runtime_available: true`
+> with all 7 language packs + Poppler. Image +~150–200 MB (OCR layer). **G1 = RESOLVED for the
+> supported runtime; live/human OCR accuracy remains UNVALIDATED.** Deterministic detection tests
+> added; a real smoke test auto-skips where the runtime is absent. See
+> `p8_hosting_operations.md §14a` + `p10b_wave3_documents_reliability.md §20`.
 
 ## Wave 4 — Prepare/Practice journey integration (backend + frontend; maybe small migration)
 - **Objective:** connect documents/evidence and JD/company context into Prepare **and** Practice;

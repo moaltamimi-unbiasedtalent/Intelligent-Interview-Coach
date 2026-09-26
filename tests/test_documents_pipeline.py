@@ -167,3 +167,89 @@ def test_ocr_unavailable_raises_safely():
         ocr_parse(_NoOcr(), b"x", "png")
     # ocr_unavailable is a DEPLOYMENT capability gap, distinct from a corrupt/unreadable file.
     assert exc.value.kind == "ocr_unavailable"
+
+
+# --- OCR runtime-dependency detection (P10B Wave 3 OCR closure) ---------------
+# These are deterministic and DO NOT require the Tesseract binary: they monkeypatch the
+# detection seams, so they pass identically on CI (no OCR) and locally (OCR installed).
+
+def test_is_available_reflects_binary_not_python_import(monkeypatch):
+    """Availability must track the real binary, not merely that pytesseract imports."""
+    import src.documents.ocr as ocr_mod
+
+    engine = ocr_mod.TesseractOcrEngine()
+    monkeypatch.setattr(ocr_mod, "_tesseract_binary_ok", lambda: False)
+    assert engine.is_available() is False
+    monkeypatch.setattr(ocr_mod, "_tesseract_binary_ok", lambda: True)
+    assert engine.is_available() is True
+
+
+def test_pdf_ocr_requires_poppler(monkeypatch):
+    """A scanned PDF with the binary present but Poppler absent is a capability gap, not corrupt."""
+    import src.documents.ocr as ocr_mod
+
+    engine = ocr_mod.TesseractOcrEngine()
+    monkeypatch.setattr(ocr_mod, "_poppler_ok", lambda: False)
+    with pytest.raises(ocr_mod.OcrError) as exc:
+        engine.pdf_to_text(b"%PDF-1.4 scan", lang="en")
+    assert exc.value.kind == "ocr_unavailable"
+
+
+def test_runtime_status_shape_and_language_map(monkeypatch):
+    """ocr_runtime_status reports every configured locale with configured/runtime_available flags,
+    and only marks a language runtime-available when the binary AND its data pack are present."""
+    import src.documents.ocr as ocr_mod
+
+    # Simulate: binary present, poppler present, only English + German data installed.
+    monkeypatch.setattr(ocr_mod, "_tesseract_binary_ok", lambda: True)
+    monkeypatch.setattr(ocr_mod, "_poppler_ok", lambda: True)
+    monkeypatch.setattr(ocr_mod, "installed_tesseract_languages", lambda: {"eng", "deu"})
+    st = ocr_mod.ocr_runtime_status()
+    assert st["available"] is True and st["pdf_ocr_available"] is True
+    assert st["live_quality"] == "UNVALIDATED"
+    assert set(st["languages"]) == {"en", "de", "fr", "es", "it", "pt", "nl"}
+    assert all(v["configured"] is True for v in st["languages"].values())
+    assert st["languages"]["en"]["runtime_available"] is True
+    assert st["languages"]["de"]["runtime_available"] is True
+    assert st["languages"]["fr"]["runtime_available"] is False  # data pack not installed
+
+
+def test_runtime_status_all_unavailable_when_binary_absent(monkeypatch):
+    import src.documents.ocr as ocr_mod
+
+    monkeypatch.setattr(ocr_mod, "_tesseract_binary_ok", lambda: False)
+    monkeypatch.setattr(ocr_mod, "_poppler_ok", lambda: False)
+    st = ocr_mod.ocr_runtime_status()
+    assert st["available"] is False and st["pdf_ocr_available"] is False
+    assert all(v["runtime_available"] is False for v in st["languages"].values())
+    assert all(v["configured"] is True for v in st["languages"].values())  # still CONFIGURED
+
+
+# --- Real local OCR smoke test (open-source; SKIPPED when Tesseract is not installed) ---------
+# Reported SEPARATELY from the deterministic tests above. Runs only where the real binary +
+# Poppler + language data are present (e.g. a dev machine or the OCR-enabled hosted image).
+
+def _ocr_runtime_ready() -> bool:
+    from src.documents.ocr import _poppler_ok, _tesseract_binary_ok
+
+    return _tesseract_binary_ok() and _poppler_ok()
+
+
+@pytest.mark.skipif(not _ocr_runtime_ready(), reason="Tesseract/Poppler OCR runtime not installed")
+def test_real_local_ocr_reads_synthetic_image():
+    """A synthetic image with rendered English text is actually OCR'd (no fabrication, provenance)."""
+    import io
+
+    from PIL import Image, ImageDraw
+
+    from src.documents.ocr import TesseractOcrEngine, ocr_parse
+
+    img = Image.new("RGB", (900, 200), "white")
+    ImageDraw.Draw(img).text((20, 60), "Reduced latency by forty percent", fill="black")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    parse = ocr_parse(TesseractOcrEngine(), buf.getvalue(), "png", lang="en")
+    assert parse.origin == "ocr"
+    text = parse.full_text.lower()
+    # Some recognised word from the rendered content (real OCR; not asserting exact string).
+    assert any(w in text for w in ("latency", "reduced", "percent"))
