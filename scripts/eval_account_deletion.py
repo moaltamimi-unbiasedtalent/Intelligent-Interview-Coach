@@ -9,13 +9,19 @@ calls, no network. Also importable (``run()``) so the pytest suite shares the in
 
 from __future__ import annotations
 
+import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+# Make the script runnable directly from a fresh CI checkout (python scripts/eval_*.py):
+# add the repo root to sys.path before importing any `src.*` module.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from sqlalchemy import func, select
 
-from src import persistence as P
-from src.application.account_deletion_service import AccountDeletionService
+from src import persistence as P  # noqa: E402
+from src.application.account_deletion_service import AccountDeletionService  # noqa: E402
 
 
 class _FakeStore:

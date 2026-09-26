@@ -3,8 +3,10 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const push = vi.fn();
+// P8: the tutorial auto-invites on the AUTHENTICATED app home (/app), not the public
+// marketing homepage (/). Mock the real authenticated Home route.
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/",
+  usePathname: () => "/app",
   useRouter: () => ({ push, replace: vi.fn() }),
 }));
 

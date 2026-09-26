@@ -13,9 +13,13 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+# Make the script runnable directly from a fresh CI checkout (python scripts/eval_*.py):
+# add the repo root to sys.path before importing any `src.*` module (imported inside run()).
+sys.path.insert(0, str(ROOT))
 
 
 def read(rel: str) -> str:

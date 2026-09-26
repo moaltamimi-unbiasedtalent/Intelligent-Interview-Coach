@@ -9,7 +9,14 @@ costly-capability buckets. Importable via ``run()`` for the pytest suite.
 
 from __future__ import annotations
 
-from src.api import rate_limit as RL
+import sys
+from pathlib import Path
+
+# Make the script runnable directly from a fresh CI checkout (python scripts/eval_*.py):
+# add the repo root to sys.path before importing any `src.*` module.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from src.api import rate_limit as RL  # noqa: E402
 
 
 class _Clock:
