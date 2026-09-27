@@ -73,6 +73,42 @@ test("locale cookie localizes the marketing interface", async ({ page, baseURL }
     .getByRole("link", { name: "Produkt" })).toBeVisible();
 });
 
+test("home tells an Opportunity-centred story (P10B Wave 7)", async ({ page }) => {
+  await page.goto("/");
+  // The product is framed as one connected system per job, with the Opportunity journey.
+  await expect(page.getByRole("heading", { name: /one connected system/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /create an opportunity/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /company intelligence/i }).first()).toBeVisible();
+  // Differentiation from a generic generator is stated.
+  await expect(page.getByRole("heading", { name: /not another generic interview generator/i })).toBeVisible();
+});
+
+test("public home makes no fabricated or unsupported provider claims (P10B Wave 7)", async ({ page }) => {
+  await page.goto("/");
+  const body = (await page.locator("body").innerText()).toLowerCase();
+  // No employee-review provider is claimed as integrated on the public site.
+  expect(body).not.toContain("glassdoor");
+  expect(body).not.toContain("kununu");
+  // No fabricated social proof or unsupported absolutes.
+  for (const banned of ["testimonial", "trusted by", "5-star", "100% accurate", "guaranteed", "bias-free"]) {
+    expect(body).not.toContain(banned);
+  }
+});
+
+test("product page explains the Opportunity workflow (P10B Wave 7)", async ({ page }) => {
+  await page.goto("/product");
+  await expect(page.getByRole("heading", { name: /one connected system/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /understand the company/i })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Get started/i }).first()).toBeVisible();
+});
+
+test("trust page states Wave 5/6 boundaries (P10B Wave 7)", async ({ page }) => {
+  await page.goto("/trust");
+  await expect(page.getByText(/Your Opportunity is private/i)).toBeVisible();
+  await expect(page.getByText(/not integrated/i)).toBeVisible();
+  await expect(page.getByText(/AI suggestions are not facts/i)).toBeVisible();
+});
+
 test("marketing home renders on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/");
