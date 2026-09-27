@@ -14,7 +14,7 @@ function account(over: Record<string, unknown> = {}) {
   };
 }
 
-async function mock(page: Page, state: { completed: boolean; step: number }) {
+async function mock(page: Page, state: { completed: boolean; step: number; failComplete?: boolean }) {
   await page.route("**/api/v1/**", async (route) => {
     const url = route.request().url();
     const method = route.request().method();
@@ -25,6 +25,9 @@ async function mock(page: Page, state: { completed: boolean; step: number }) {
     if (url.includes("/auth/onboarding") && method === "POST") {
       const body = route.request().postDataJSON() as { step?: number; complete?: boolean };
       if (typeof body.step === "number") state.step = Math.max(state.step, body.step);
+      // Simulate a server-side completion failure: state is NOT marked complete and a 500 is
+      // returned, so the candidate must not be admitted to /app.
+      if (body.complete && state.failComplete) return json({ error: { code: "server_error", message: "x" } }, 500);
       if (body.complete) state.completed = true;
       return json(account({ onboarding_completed: state.completed, onboarding_step: state.step }));
     }
@@ -48,12 +51,33 @@ test("E2E 1: new user is gated into onboarding and completes to /app", async ({ 
   const state = { completed: false, step: 0 };
   await mock(page, state);
   await page.goto("/prepare");
-  await expect(page).toHaveURL(/\/onboarding$/);
+  // Both the gate and the completion are asynchronous CLIENT navigations (RouteGuard redirect;
+  // OnboardingClient's router.replace after the completion API + account refresh). Synchronise on
+  // the navigation with page.waitForURL rather than polling the URL after the fact — the latter
+  // races the client redirect (the observed CI flake). No sleep / retry / raised timeout / force.
+  await page.waitForURL(/\/onboarding$/);
   await expect(page.getByRole("heading", { name: /set up Mo around you/i })).toBeVisible();
   await advanceToFinish(page);
   await expect(page.getByRole("button", { name: "Enter Ask4Mo" })).toBeVisible();
-  await page.getByRole("button", { name: "Enter Ask4Mo" }).click();
+  await Promise.all([
+    page.waitForURL(/\/app$/),
+    page.getByRole("button", { name: "Enter Ask4Mo" }).click(),
+  ]);
   await expect(page).toHaveURL(/\/app$/);
+});
+
+test("E2E 5: a failed completion keeps the candidate in onboarding (not admitted to /app)", async ({ page }) => {
+  // Completion-failure contract: the completion API is authoritative. When it fails, the account is
+  // NOT marked complete and the candidate stays in onboarding — never silently admitted to /app.
+  const state = { completed: false, step: 6, failComplete: true };
+  await mock(page, state);
+  await page.goto("/onboarding");
+  await expect(page.getByRole("button", { name: "Enter Ask4Mo" })).toBeVisible();
+  await page.getByRole("button", { name: "Enter Ask4Mo" }).click();
+  // No navigation occurs (finish() never reaches router.replace), so the onboarding UI persists and
+  // the URL stays on /onboarding — deterministic (absence of a client navigation).
+  await expect(page.getByRole("button", { name: "Enter Ask4Mo" })).toBeVisible();
+  await expect(page).toHaveURL(/\/onboarding$/);
 });
 
 test("E2E 2: interrupted onboarding resumes at the saved step", async ({ page }) => {
