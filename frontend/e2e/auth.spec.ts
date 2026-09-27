@@ -4,6 +4,9 @@ import { expect, test, type Page } from "@playwright/test";
 // mocked at the network layer (page.route). No backend, no paid provider calls.
 // A closure flag simulates the server-side session so sign-in/out changes /auth/me.
 
+// Canonical existing (onboarding-complete) user. Includes the P10B Wave 2 authenticated-user
+// fields so the mock matches the real /auth/me contract — an EXISTING user is onboarding-complete
+// and must never be gated into onboarding.
 const ACCOUNT = {
   user_id: 1,
   email: "user@example.com",
@@ -15,10 +18,19 @@ const ACCOUNT = {
   providers: ["password"],
   auth_method: "session",
   capabilities: ["current_market_research"],
+  response_detail: "brief",
+  interface_locale: "en",
+  conversation_language: "en",
+  coaching_style: "balanced",
+  career_geography: "",
+  target_role: "",
+  onboarding_completed: true,
+  onboarding_step: 0,
 };
 
-async function mockAuth(page: Page, opts: { signedIn?: boolean } = {}) {
+async function mockAuth(page: Page, opts: { signedIn?: boolean; account?: Record<string, unknown> } = {}) {
   const state = { signedIn: opts.signedIn ?? false };
+  const account = opts.account ?? ACCOUNT;
   await page.route("**/api/v1/**", async (route) => {
     const url = route.request().url();
     const method = route.request().method();
@@ -32,7 +44,7 @@ async function mockAuth(page: Page, opts: { signedIn?: boolean } = {}) {
 
     if (url.includes("/auth/me")) {
       return state.signedIn
-        ? json(ACCOUNT)
+        ? json(account)
         : json({ error: { code: "unauthorized", message: "Authentication required.", request_id: "req_e2e" } }, 401);
     }
     if (url.includes("/auth/login") && method === "POST") {
@@ -62,14 +74,53 @@ test("unauthenticated visitor is redirected from a protected route to sign in", 
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
 });
 
+// Deterministic hydration gate (no sleep/retry): the header account control is a client-only
+// signal. Its "Sign in" LINK renders only AFTER AuthProvider hydrates and its /auth/me effect
+// resolves — so once it is visible, the whole client root (including the SignInForm submit handler)
+// is hydrated. This proves interactivity before we submit, closing the pre-hydration native-submit
+// race that visible/enabled alone cannot (the SSR form is visible/enabled before hydration).
+async function waitForClientHydrated(page: Page) {
+  await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
+}
+
 test("sign-in flow authenticates and returns to the requested page", async ({ page }) => {
   await mockAuth(page, { signedIn: false });
   await page.goto("/sign-in?next=%2Fprogress");
-  await page.getByLabel("Email").fill("user@example.com");
+  await waitForClientHydrated(page);
+  const email = page.getByLabel("Email");
+  await expect(email).toBeVisible();
+  await email.fill("user@example.com");
   await page.getByLabel("Password").fill("correcthorsebattery");
-  await page.getByRole("button", { name: /sign in/i }).click();
-  // After login the guard bounces the auth page to the requested destination.
+  const submit = page.getByRole("button", { name: /sign in/i });
+  await expect(submit).toBeEnabled();
+  // An existing (onboarding-complete) user returns to the requested destination. Synchronise the
+  // post-login client navigation with the submit rather than asserting the URL after the click —
+  // a submit landing before the form has hydrated native-reloads /sign-in and drops the login
+  // (the observed CI failure). Deterministic: no sleep / retry / forced click / raised timeout.
+  await Promise.all([
+    page.waitForURL(/\/progress/),
+    submit.click(),
+  ]);
   await expect(page).toHaveURL(/\/progress/);
+});
+
+test("new-user sign-in is gated into onboarding, not the app", async ({ page }) => {
+  // A new account (onboarding not complete) that signs in is routed through /onboarding before
+  // normal product use — the Wave 2 first-run contract, tested independently of the existing user.
+  await mockAuth(page, { signedIn: false, account: { ...ACCOUNT, onboarding_completed: false, onboarding_step: 0 } });
+  await page.goto("/sign-in?next=%2Fprogress");
+  await waitForClientHydrated(page);
+  const email = page.getByLabel("Email");
+  await expect(email).toBeVisible();
+  await email.fill("new@example.com");
+  await page.getByLabel("Password").fill("correcthorsebattery");
+  const submit = page.getByRole("button", { name: /sign in/i });
+  await expect(submit).toBeEnabled();
+  await Promise.all([
+    page.waitForURL(/\/onboarding$/),
+    submit.click(),
+  ]);
+  await expect(page).toHaveURL(/\/onboarding$/);
 });
 
 test("register page shows the uniform, non-enumerating confirmation", async ({ page }) => {

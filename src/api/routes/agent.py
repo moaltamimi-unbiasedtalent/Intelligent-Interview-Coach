@@ -115,6 +115,7 @@ def run_agent(
             profile=body.profile,
             enable_current_market_research=body.enable_current_market_research,
             conversation_language=body.conversation_language,
+            coaching_style=body.coaching_style,
         ),
         request_id=request_id,
     )

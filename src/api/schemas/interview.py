@@ -32,6 +32,9 @@ class InterviewConfigIn(BaseModel):
     candidate_background: str | None = Field(default=None, max_length=12000)
     # Prose language for generated question/evaluation/report (Practice multilingual, Wave 4).
     conversation_language: ConversationLanguage | None = None
+    # Bounded Mo coaching tone for FEEDBACK wording only (P10B Wave 2). Never changes scoring/
+    # difficulty/rubric. When omitted, the server applies the candidate's account default.
+    coaching_style: Literal["supportive", "balanced", "direct", "challenging"] | None = None
     # Owner-scoped governed context selected from the candidate's private documents (Wave 4).
     # The SERVER resolves these to text/evidence; raw document text never travels via the client.
     job_description_document_id: int | None = Field(default=None, ge=1)

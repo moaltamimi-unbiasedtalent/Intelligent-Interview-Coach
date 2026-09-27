@@ -99,6 +99,16 @@ class Principal:
     # authorization, and never change labour-market geography.
     interface_locale: str = "en"
     conversation_language: str = "en"
+    # P10B Wave 2 personalisation + onboarding lifecycle. Low-sensitivity; never affect
+    # authorization. display_name/target_role are DATA (never fed to a model as a prompt);
+    # coaching_style is a bounded tone that never changes scoring; career_geography is
+    # independent of any language.
+    display_name: str | None = None
+    coaching_style: str = "balanced"
+    career_geography: str = ""
+    target_role: str = ""
+    onboarding_completed: bool = True
+    onboarding_step: int = 0
 
 
 def capabilities_for(tier: str) -> frozenset[str]:

@@ -69,6 +69,26 @@ Complexity: **S** (≤1 day) · **M** (2–4 days) · **L** (1–2 weeks) · **X
 - **Acceptance:** new user gets a coherent first-run setup; preferences persist; coaching style applied to Mo; STT unsupported state is visible not silent.
 - **Dependencies:** Wave 1 (settings hub). **Risk:** medium (migration + scope). **Complexity:** L.
 
+> **Wave 2 — DELIVERED (2026-09-27, branch `feature/capstone-p10b-wave2-onboarding`, not merged).**
+> - 8-step first-run flow (`/onboarding`): Welcome → About You → Career Focus → How Mo Coaches →
+>   Language & Communication → Privacy & Memory → Review → Complete → `/app`. Focused chrome via
+>   AppShell; `RouteGuard` gates incomplete accounts. Nothing auto-starts on completion.
+> - **New vs existing:** migration `0013_onboarding_personalisation` adds `users.onboarding_completed_at`
+>   (+`onboarding_step`) and backfills existing accounts to completed (never blocked). New accounts →
+>   NULL → onboarding. Resumable server-side (`POST /auth/onboarding`).
+> - **ONE Mo, configured:** bounded coaching style (supportive/balanced/direct/challenging) →
+>   trusted allow-list directive (`src/coaching_style.py`), applied to Prepare Mo chat + interview
+>   **evaluation/report wording only** (never question generation, never scoring — proved by tests).
+> - **Preferences:** reused the existing `user_preferences` + `PATCH /auth/preferences` (added
+>   coaching_style, career_geography, target_role, display_name); new bounded `career_geography`
+>   independent of language; response_detail reused. Settings gains a Personalisation card.
+> - i18n: new `onboarding`/`coaching`/`geography` namespaces × 7 locales (parity). New eval
+>   `scripts/eval_onboarding_personalisation.py` (20 invariants, PASS). Gates: 273 frontend unit,
+>   108 e2e, backend suite green; 0 paid/live calls. No RC. Docs:
+>   `docs/capstone/p10/p10b_wave2_premium_onboarding.md`.
+> - **Correction to the plan:** the STT unsupported-hint (listed here) was already delivered in
+>   Wave 1; Wave 2 does not re-do it.
+
 ## Wave 3 — Documents/JD/CV integration & upload reliability (defect fix; mostly no migration)
 - **Objective:** fix the résumé read failure; make document type/state visible; a proper inventory.
 - **Scope:** (a) **G1 defect:** handle scanned/image PDFs + images gracefully — either bundle an

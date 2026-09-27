@@ -71,13 +71,28 @@ class AccountResponse(BaseModel):
     # Internationalization (P3.5) — independent, bounded language preferences.
     interface_locale: str = "en"
     conversation_language: str = "en"
+    # P10B Wave 2 personalisation + first-run onboarding lifecycle (low-sensitivity; every tier).
+    coaching_style: str = "balanced"
+    career_geography: str = ""
+    target_role: str = ""
+    onboarding_completed: bool = True
+    onboarding_step: int = 0
+
+
+# Bounded career-geography identifier (P10B Wave 2) — account-default target market, DELIBERATELY
+# independent of any language/locale. "" means unspecified.
+CareerGeography = Literal[
+    "", "global", "de", "at", "ch", "fr", "es", "it", "pt", "nl", "be", "lu",
+    "gb", "ie", "us", "ca", "au", "nz", "other",
+]
 
 
 class PreferencesRequest(BaseModel):
-    """Partial update of low-sensitivity user preferences (P2/E2 + P3.5).
+    """Partial update of low-sensitivity user preferences (P2/E2 + P3.5 + P10B Wave 2).
 
-    Every field is optional; only supplied fields are changed. Each is a bounded enum,
-    so a spoofed/arbitrary value is rejected (422) and can never be persisted.
+    Every field is optional; only supplied fields are changed. Each bounded field is a Literal,
+    so a spoofed/arbitrary value is rejected (422) and can never be persisted. ``display_name`` and
+    ``target_role`` are free text stored as DATA (bounded length) — never fed to a model as a prompt.
     """
 
     model_config = {"extra": "forbid"}
@@ -85,6 +100,19 @@ class PreferencesRequest(BaseModel):
     response_detail: Literal["brief", "detailed"] | None = None
     interface_locale: Literal["en", "de", "fr", "es", "it", "pt", "nl"] | None = None
     conversation_language: Literal["en", "de", "fr", "es", "it", "pt", "nl"] | None = None
+    coaching_style: Literal["supportive", "balanced", "direct", "challenging"] | None = None
+    career_geography: CareerGeography | None = None
+    target_role: str | None = Field(default=None, max_length=200)
+    display_name: str | None = Field(default=None, max_length=255)
+
+
+class OnboardingRequest(BaseModel):
+    """Persist onboarding progress (resume) and/or mark it complete (P10B Wave 2)."""
+
+    model_config = {"extra": "forbid"}
+
+    step: int | None = Field(default=None, ge=0, le=8)
+    complete: bool = False
 
 
 class PremiumStatusResponse(BaseModel):
