@@ -74,6 +74,14 @@ def make_initialise_node() -> Callable[[AgentState], dict]:
         directive = response_language_directive(state.get("response_language"))
         if directive:
             messages.append(SystemMessage(content=directive))
+        # Mo coaching style (P10B Wave 2): a bounded, allow-listed TONE directive, appended the
+        # same trust-separated way. Built only from the fixed map (never the raw code); balanced/
+        # unknown → none. It changes only how coaching is worded, never factuality/evidence/scoring.
+        from src.coaching_style import coaching_style_directive
+
+        style_directive = coaching_style_directive(state.get("coaching_style"))
+        if style_directive:
+            messages.append(SystemMessage(content=style_directive))
         messages.append(HumanMessage(content=state["goal"]))
 
         # Long-term memory is user-approved DATA, injected as a trust-separated

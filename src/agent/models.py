@@ -27,6 +27,11 @@ class AgentRunRequest:
     # against an allow-list; it only sets the language of Mo's prose and never changes
     # geography, tools or grounding. None/invalid → English (default).
     conversation_language: str | None = None
+    # Optional Mo coaching style (Capstone P10B Wave 2): a bounded tone
+    # (supportive/balanced/direct/challenging) chosen by the candidate. Validated server-side
+    # against an allow-list; it only sets the TONE of Mo's coaching prose and never changes
+    # factuality, evidence, scoring, grounding or safety. None/invalid/balanced → no directive.
+    coaching_style: str | None = None
 
 
 @dataclass

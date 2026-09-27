@@ -642,6 +642,12 @@ def get_current_principal(
         response_detail=account.response_detail,
         interface_locale=account.interface_locale,
         conversation_language=account.conversation_language,
+        display_name=account.display_name,
+        coaching_style=getattr(account, "coaching_style", "balanced"),
+        career_geography=getattr(account, "career_geography", ""),
+        target_role=getattr(account, "target_role", ""),
+        onboarding_completed=getattr(account, "onboarding_completed", True),
+        onboarding_step=getattr(account, "onboarding_step", 0),
         auth_method=auth_method,
     )
 

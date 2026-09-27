@@ -42,6 +42,7 @@ class AgentState(TypedDict, total=False):
     # JD/CV. It only sets the language of Mo's prose; it NEVER changes retrieval
     # geography, tool selection or grounding. None = English (default).
     response_language: str | None
+    coaching_style: str | None
     # Server-enforced per-run capability toggle: names of registered tools withheld
     # from the model this run (e.g. ResearchCurrentMarket when the user turns off
     # current-market research). A withheld tool is never offered and never executed;
