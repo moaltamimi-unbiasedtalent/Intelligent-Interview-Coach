@@ -141,11 +141,22 @@ determinism under stress is claimed.
 The note above addressed the **completion→`/app`** navigation and the sign-in navigation, and it
 applied the same `waitForURL` synchronisation to the **initial `/prepare`→`/onboarding` gate** in
 E2E 1. Subsequent CI evidence (Wave 8 Stage A branch) showed E2E 1's **gate** `waitForURL(/\/onboarding$/)`
-timing out at the full 60s with the browser remaining on `/prepare` — i.e. the RouteGuard redirect was
-**never initiated** in that CI run. Synchronisation of an *observation* cannot make a client redirect
-occur, so "insufficient test synchronisation" does **not** explain this gate failure; it is a
-state/effect-initiation symptom (the redirect fires only from RouteGuard's `useEffect`, and only when
-`/auth/me` resolves to `status:"authenticated"` with `onboarding_completed:false`).
+timing out at the full 60s with the browser remaining on `/prepare`.
+
+**What this establishes (only):** the `/prepare`→`/onboarding` navigation did **not complete or
+become observable within 60s** in that CI run. It does **not**, on its own, distinguish between "the
+redirect was never initiated", "it was initiated but did not complete", and "it completed but was not
+observed" — the trace needed to tell these apart was not captured (see below). What it does show is
+that a 60s `waitForURL` timeout is **not** explained by observation-synchronisation timing (a redirect
+that had occurred would have been observed well within 60s), so the earlier "insufficient test
+synchronisation" framing does not carry over to this gate failure.
+
+**Leading hypothesis (not demonstrated):** because the redirect is fired only from RouteGuard's
+`useEffect` and only when `/auth/me` resolves to `status:"authenticated"` with
+`onboarding_completed:false`, the most likely path to "stays on `/prepare`" is that `/auth/me`
+resolved to a non-`authenticated` state in CI — e.g. `status:"unknown"` from a mock-miss escaping to
+the absent `:8000` backend. This is a **hypothesis to be confirmed or refuted by a CI trace**, not a
+demonstrated mechanism; it was **not** reproducible locally.
 
 What remains valid: the earlier completion/sign-in observations and their stress evidence stand. What
 is corrected: the gate failure is a distinct class from the completion-navigation class, and the
