@@ -58,16 +58,12 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
   const { run, busy, restoring, error, runId, start, send, resume, reset, clearError } = useAgentRun();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [mobileTab, setMobileTab] = useState<"coach" | "prep">("coach");
-  // Mo conversation language (P3.5) + coaching style (P10B Wave 2): sent with every run from the
-  // account preferences (independent of interface/dictation language; coaching tone never scores).
-  // Undefined → server defaults (English / balanced).
-  const account = useAuthOptional()?.account;
-  const conversationLanguage = account?.conversation_language ?? undefined;
-  const coachingStyle = account?.coaching_style ?? undefined;
+  // Mo conversation language (P3.5): sent with every run from the account preference
+  // (independent of interface/dictation language). Undefined → server default (English).
+  const conversationLanguage = useAuthOptional()?.account?.conversation_language ?? undefined;
   const startRun = useCallback(
-    (req: Parameters<typeof start>[0]) =>
-      start({ ...req, conversation_language: conversationLanguage, coaching_style: coachingStyle }),
-    [start, conversationLanguage, coachingStyle],
+    (req: Parameters<typeof start>[0]) => start({ ...req, conversation_language: conversationLanguage }),
+    [start, conversationLanguage],
   );
 
   // Home → Prepare handoff. Auto-start EXACTLY ONCE from a "start" draft, and only

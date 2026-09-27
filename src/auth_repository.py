@@ -22,12 +22,9 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
-from src.coaching_style import COACHING_STYLES, DEFAULT_COACHING_STYLE
 from src.persistence import (
     ACCOUNT_STATUS_ACTIVE,
     ACCOUNT_STATUS_DELETION_REQUESTED,
-    CAREER_GEOGRAPHIES,
-    DEFAULT_CAREER_GEOGRAPHY,
     DEFAULT_LOCALE,
     PLATFORM_ROLE_ADMIN,
     PLATFORM_ROLE_USER,
@@ -73,12 +70,6 @@ class AccountRecord:
     response_detail: str = RESPONSE_DETAIL_BRIEF
     interface_locale: str = DEFAULT_LOCALE
     conversation_language: str = DEFAULT_LOCALE
-    # P10B Wave 2 personalisation + onboarding lifecycle (low-sensitivity; every tier).
-    coaching_style: str = DEFAULT_COACHING_STYLE
-    career_geography: str = DEFAULT_CAREER_GEOGRAPHY
-    target_role: str = ""
-    onboarding_completed: bool = True
-    onboarding_step: int = 0
 
 
 @dataclass(frozen=True)
@@ -135,11 +126,6 @@ class AccountRepository:
             response_detail=pref.response_detail if pref else RESPONSE_DETAIL_BRIEF,
             interface_locale=pref.interface_locale if pref else DEFAULT_LOCALE,
             conversation_language=pref.conversation_language if pref else DEFAULT_LOCALE,
-            coaching_style=pref.coaching_style if pref else DEFAULT_COACHING_STYLE,
-            career_geography=pref.career_geography if pref else DEFAULT_CAREER_GEOGRAPHY,
-            target_role=pref.target_role if pref else "",
-            onboarding_completed=user.onboarding_completed_at is not None,
-            onboarding_step=int(user.onboarding_step or 0),
         )
 
     def get_account(self, user_id: int) -> AccountRecord | None:
@@ -417,59 +403,6 @@ class AccountRepository:
         if value not in SUPPORTED_LOCALES:
             return False
         return self._upsert_preference(user_id, conversation_language=value)
-
-    def set_coaching_style(self, user_id: int, value: str) -> bool:
-        """Set the bounded Mo coaching style (tone only; validated against the allow-list)."""
-        if value not in COACHING_STYLES:
-            return False
-        return self._upsert_preference(user_id, coaching_style=value)
-
-    def set_career_geography(self, user_id: int, value: str) -> bool:
-        """Set the account-default career geography (bounded; independent of any language)."""
-        if value not in CAREER_GEOGRAPHIES:
-            return False
-        return self._upsert_preference(user_id, career_geography=value)
-
-    def set_target_role(self, user_id: int, value: str) -> bool:
-        """Set the account-default career-focus role (bounded length; free text is DATA, never a prompt)."""
-        value = (value or "").strip()[:200]
-        return self._upsert_preference(user_id, target_role=value)
-
-    def set_display_name(self, user_id: int, value: str) -> bool:
-        """Set the account display name (on the User row; bounded length)."""
-        cleaned = (value or "").strip()[:255]
-        with self._session_factory() as session:
-            user = session.get(User, user_id)
-            if user is None:
-                return False
-            user.display_name = cleaned or None
-            session.commit()
-            return True
-
-    # -- onboarding lifecycle (P10B Wave 2) -----------------------------------
-
-    def set_onboarding_step(self, user_id: int, step: int) -> bool:
-        """Persist the current onboarding step so an interrupted flow resumes (never regresses)."""
-        with self._session_factory() as session:
-            user = session.get(User, user_id)
-            if user is None:
-                return False
-            user.onboarding_step = max(int(user.onboarding_step or 0), int(step))
-            session.commit()
-            return True
-
-    def complete_onboarding(self, user_id: int) -> bool:
-        """Mark first-run onboarding complete (idempotent; only sets the timestamp once)."""
-        from src.persistence import utcnow
-
-        with self._session_factory() as session:
-            user = session.get(User, user_id)
-            if user is None:
-                return False
-            if user.onboarding_completed_at is None:
-                user.onboarding_completed_at = utcnow()
-            session.commit()
-            return True
 
     def _upsert_preference(self, user_id: int, **fields: str) -> bool:
         """Create/update the user's preference row for the given validated fields."""

@@ -37,18 +37,6 @@ P1 left full account hard-delete **PARTIAL**. P4-owned resources are now in the 
 private-file purge and the LangGraph checkpoint purge are the remaining wiring, tracked in
 the quality register. Documents are now inside the deletion model (no longer omitted).
 
-### P10B Wave 2 delta (2026-09-27)
-- New low-sensitivity account columns (migration `0013`): `users.onboarding_completed_at` +
-  `onboarding_step` (lifecycle only, no personal content); `user_preferences.coaching_style`
-  (bounded enum), `career_geography` (bounded code, independent of language), `target_role`
-  (short free-text career-focus DATA). None are candidate documents, protected traits, or model
-  content; all cascade/delete with the account. Available to every tier (never entitlement-gated);
-  privacy/data-rights are never gated.
-- `display_name` (already on `users`) is now editable via `PATCH /auth/preferences` and projected in
-  `/auth/me`. Free-text preferences (`display_name`, `target_role`) are audited as "set" — the value
-  is never logged verbatim, never placed in a URL, and never fed to a model as a prompt (coaching
-  style reaches the model only as a fixed allow-list directive).
-
 ### P10B Wave 3 delta (2026-09-26)
 - New column `document_versions.failure_kind` (migration `0012`) holds a **bounded enum tag**
   (`encrypted` / `corrupt` / `ocr_unavailable` / `ocr_failed` / `no_text` / `internal`). It stores

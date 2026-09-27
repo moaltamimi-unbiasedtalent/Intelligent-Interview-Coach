@@ -187,23 +187,6 @@ def _apply_governed_context(configuration, body: CreateInterviewRequest, *, user
     return configuration.model_copy(update=updates) if updates else configuration
 
 
-def _resolve_coaching_default(configuration, *, user_id: int, request: Request):
-    """Default the interview's coaching TONE from the candidate's account preference when the
-    request did not set one (P10B Wave 2). Owner-scoped; best-effort (any lookup failure leaves
-    the default balanced/no-directive). Coaching tone affects only feedback wording, never scoring."""
-    if (getattr(configuration, "coaching_style", "") or "").strip():
-        return configuration
-    try:
-        from src.api.dependencies import get_repository
-        from src.auth_repository import AccountRepository
-
-        account = AccountRepository(get_repository(request).session_factory).get_account(user_id)
-        style = getattr(account, "coaching_style", "") if account else ""
-    except Exception:  # noqa: BLE001 - coaching tone is supplemental; never block a create
-        style = ""
-    return configuration.model_copy(update={"coaching_style": style}) if style else configuration
-
-
 # --- safe response builders --------------------------------------------------
 
 
@@ -336,8 +319,6 @@ def create_interview(
     # Owner-scoped governed context: a selected JD document + approved evidence (Wave 4).
     # Resolved lazily — only when the request actually selected document/evidence context.
     configuration = _apply_governed_context(configuration, body, user_id=user_id, request=request)
-    # Default the coaching tone from the account preference when unset (Wave 2; feedback wording only).
-    configuration = _resolve_coaching_default(configuration, user_id=user_id, request=request)
 
     key = (idempotency_key or "").strip()
     if key:

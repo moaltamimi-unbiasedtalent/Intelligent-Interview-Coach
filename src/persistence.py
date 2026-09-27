@@ -109,19 +109,6 @@ RESPONSE_DETAIL_VALUES = (RESPONSE_DETAIL_BRIEF, RESPONSE_DETAIL_DETAILED)
 SUPPORTED_LOCALES = ("en", "de", "fr", "es", "it", "pt", "nl")
 DEFAULT_LOCALE = "en"
 
-# Coaching style (Capstone P10B Wave 2) — bounded tone preference for ONE Mo (not personas).
-# The enum + trusted directive live in `src/coaching_style.py`; the model default comes from there.
-from src.coaching_style import DEFAULT_COACHING_STYLE  # noqa: E402,F401 (used in the column default)
-
-# Account-default CAREER GEOGRAPHY (Capstone P10B Wave 2). A bounded, validated set of career
-# markets. It is DELIBERATELY independent of interface/conversation/dictation language and is NEVER
-# inferred from a locale (a German UI does not imply the German market). "" means unspecified.
-CAREER_GEOGRAPHIES = (
-    "", "global", "de", "at", "ch", "fr", "es", "it", "pt", "nl", "be", "lu",
-    "gb", "ie", "us", "ca", "au", "nz", "other",
-)
-DEFAULT_CAREER_GEOGRAPHY = ""
-
 # --- Private candidate documents & evidence (Capstone P4/E2/E3) ---------------
 # Bounded document categories (never silently inferred).
 DOC_CATEGORY_CV = "cv"
@@ -236,13 +223,6 @@ class User(Base):
     email_verified: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="0"
     )
-    # First-run onboarding lifecycle (Capstone P10B Wave 2). NULL completed_at = onboarding not
-    # yet finished (new accounts). The 0013 migration BACKFILLS every existing account to completed
-    # so no current user is ever blocked. `onboarding_step` supports resuming an interrupted flow.
-    onboarding_completed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    onboarding_step: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
@@ -444,17 +424,6 @@ class UserPreference(Base):
     conversation_language: Mapped[str] = mapped_column(
         String(8), nullable=False, default=DEFAULT_LOCALE, server_default=DEFAULT_LOCALE
     )
-    # P10B Wave 2 personalisation (all low-sensitivity, every tier, never entitlement-gated):
-    #   * coaching_style   — bounded tone for Mo's coaching prose (NEVER changes scoring/rubric).
-    #   * career_geography — account-default target market (independent of any language).
-    #   * target_role      — account-default career-focus role (a default, not the Wave 6 Opportunity).
-    coaching_style: Mapped[str] = mapped_column(
-        String(16), nullable=False, default=DEFAULT_COACHING_STYLE, server_default=DEFAULT_COACHING_STYLE
-    )
-    career_geography: Mapped[str] = mapped_column(
-        String(32), nullable=False, default=DEFAULT_CAREER_GEOGRAPHY, server_default=""
-    )
-    target_role: Mapped[str] = mapped_column(String(200), nullable=False, default="", server_default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
