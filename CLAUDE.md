@@ -539,6 +539,25 @@ assumptions in core logic, prompts, scoring or examples.
   `EvidenceAccessService` (`use_candidate_evidence` → `candidate_background`), never the raw CV. See
   `docs/capstone/p10/p10b_wave4_prepare_practice_integration.md`.
 
+- **Company Intelligence (Capstone P10B Wave 5).** The candidate-facing company-research surface is a
+  thin directable layer over the EXISTING Phase 7F engine (`src/copilot/research/*`) — do NOT build a
+  second research architecture and do NOT weaken its SSRF/robots/size/injection guards.
+  `src/application/company_intelligence_service.py` orchestrates the governed `ExternalResearchService`
+  and returns a candidate report with an EXPLICIT claim taxonomy the UI must never blur: **FACT**
+  (official/company source), **REVIEW** (third-party opinion — NOT integrated; link-only, never
+  scraped/copied), **MODEL_INFERENCE** (deterministic, source-derived suggestion, never a verified
+  fact — this layer makes NO model call). Endpoint `POST /api/v1/research/company`
+  (`src/api/routes/company.py`) is gated by capability `current_market_research` + pause
+  `current_market` + cost `cost_research_user`, and resolves any selected JD owner-scoped via
+  `resolve_document_text` (foreign/missing → no text; JD is DATA, never a prompt). **Identity is
+  disambiguated deterministically:** research runs only against an explicit, validated website — never
+  guess a domain from a name. Geography comes only from explicit country/location, never inferred from
+  language; company names are never translated. No migration (read-mostly; ephemeral 7F file cache
+  only — durable per-role persistence is Wave 6's Opportunity model). Glassdoor/Kununu/Google are
+  NOT_INTEGRATED (ToS/licensing) — link out, never scrape. Deterministic gate
+  `scripts/eval_company_intelligence.py`; UI at `frontend/app/company/*` + `components/company/*` (no
+  emoji, no em dash). See `docs/capstone/p10/p10b_wave5_company_intelligence.md`.
+
 ## Git rules
 
 - Remote: `origin` (configured locally; the GitHub repo rename to Intelligent-Interview-Coach is a follow-up). Turing

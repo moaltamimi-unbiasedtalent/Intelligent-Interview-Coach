@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useCapabilities } from "@/lib/useCapabilities";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { LoadingState } from "@/components/ui/States";
 import { PrepareWorkspace } from "@/components/preparation/PrepareWorkspace";
 import { AgentPrepareWorkspace } from "@/components/agent/AgentPrepareWorkspace";
@@ -29,9 +31,32 @@ export function PrepareEntry() {
   }, []);
 
   if (loading) return <LoadingState label="Loading your preparation workspace" />;
-  return capabilities.agent_coach_enabled ? (
-    <AgentPrepareWorkspace initialDraft={initialDraft} />
-  ) : (
-    <PrepareWorkspace initialDraft={initialDraft} />
+  return (
+    <div className="space-y-4">
+      {capabilities.company_research_enabled ? <CompanyResearchLink /> : null}
+      {capabilities.agent_coach_enabled ? (
+        <AgentPrepareWorkspace initialDraft={initialDraft} />
+      ) : (
+        <PrepareWorkspace initialDraft={initialDraft} />
+      )}
+    </div>
+  );
+}
+
+/** Discoverable entry point (P10B Wave 5): a restrained link to the Company Intelligence
+ * experience from the top of Prepare (fixes the founder's "couldn't find company research"). */
+function CompanyResearchLink() {
+  const { t } = useI18n();
+  return (
+    <Link
+      href="/company"
+      className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface px-4 py-3 hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+    >
+      <span>
+        <span className="block text-sm font-semibold text-foreground">{t("company.title")}</span>
+        <span className="block text-sm text-muted">{t("company.subtitle")}</span>
+      </span>
+      <span aria-hidden className="shrink-0 text-accent">&rarr;</span>
+    </Link>
   );
 }

@@ -58,6 +58,21 @@ the quality register. Documents are now inside the deletion model (no longer omi
   introduces no new data category and no new retention surface. Story evidence is re-derived so a
   reprocessed document never leaves a story silently "verified".
 
+### P10B Wave 5 delta (2026-09-27) - Company Intelligence
+- **No new persistence and no migration.** The directable `POST /api/v1/research/company` reuses the
+  existing Phase 7F engine. Its only storage is the pre-existing ephemeral file cache
+  (`data/cache/external/`, git-ignored, ~30-min TTL) keyed on **safe request parameters only**
+  (provider/intent/role/country/company-url/limit) - **never candidate data**, never raw HTML, never
+  credentials.
+- **Candidate inputs** (company name, location, website, target role) are request-time only and are
+  not persisted per-user. A selected **JD document** is resolved **owner-scoped** server-side
+  (`resolve_document_text`) and used as bounded keywords for display only; a foreign/missing/deleted
+  document yields nothing (`jd_linked=false`) and is never disclosed. JD text is never placed in a
+  model prompt (no model call in this service).
+- **No third-party personal data is stored.** Employee-review platforms (Glassdoor/Kununu) and
+  Google/LinkedIn are **not integrated**; the UI links out and copies no review content.
+- **Admin boundary unchanged:** Platform Admin gains no candidate research data.
+
 ## Retention / backup / checkpoint consequences
 - Deleted documents/claims/stories are removed from the live database immediately.
 - Exported copies (Markdown/JSON the user downloaded) leave application control — the UI/

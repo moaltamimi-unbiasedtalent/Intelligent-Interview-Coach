@@ -27,6 +27,98 @@ export interface CapabilitiesResponse {
   // Realtime voice (Capstone P7.5) — deployment flag AND a configured provider key.
   // When false, the UI stays on P7 turn-based voice.
   realtime_voice_enabled: boolean;
+  // Company Intelligence (P10B Wave 5) — the directable company-research surface is on
+  // (external research enabled and not operator-paused). Never implies a provider key.
+  company_research_enabled: boolean;
+}
+
+// --- Company Intelligence (P10B Wave 5) --------------------------------------
+// Mirrors src/application/company_intelligence_service.py. The UI must render FACT / REVIEW /
+// MODEL_INFERENCE distinctly and never blur them.
+
+export type CompanyClaimKind = "fact" | "review" | "model_inference";
+
+export type CompanyProviderState =
+  | "configured" | "unavailable" | "disabled" | "partial" | "failed" | "stale"
+  | "not_integrated" | "live_unvalidated";
+
+export type CompanyReportStatus =
+  | "ready" | "partial" | "needs_clarification" | "insufficient_evidence" | "unavailable";
+
+export interface CompanyIntelligenceRequest {
+  company_name: string;
+  location?: string | null;
+  country?: string | null;
+  website?: string | null;
+  target_role?: string | null;
+  job_description_document_id?: number | null;
+}
+
+export interface CompanySourceRef {
+  id: string;
+  title: string;
+  url?: string | null;
+  source_type: string;
+  provider: string;
+  retrieved_at?: string | null;
+  effective_date?: string | null;
+  self_reported: boolean;
+}
+
+export interface CompanyClaim {
+  kind: CompanyClaimKind;
+  text: string;
+  source_ids: string[];
+}
+
+export interface CompanyProviderStatus {
+  key: string;
+  label: string;
+  state: CompanyProviderState;
+  detail?: string | null;
+  external_url?: string | null;
+}
+
+export interface CompanyIdentity {
+  company_name: string;
+  location?: string | null;
+  country?: string | null;
+  website?: string | null;
+  domain?: string | null;
+  confidence: "confirmed" | "needs_clarification";
+  note?: string | null;
+}
+
+export interface CompanySnapshot {
+  industry?: string | null;
+  description?: string | null;
+  website?: string | null;
+  retrieved_at?: string | null;
+}
+
+export interface CompanyInterviewPreparation {
+  topics: CompanyClaim[];
+  questions_to_ask: CompanyClaim[];
+  clarify: CompanyClaim[];
+}
+
+export interface CompanyIntelligenceReport {
+  status: CompanyReportStatus;
+  identity: CompanyIdentity;
+  snapshot: CompanySnapshot;
+  business_market: CompanyClaim[];
+  recent_developments: CompanyClaim[];
+  culture: CompanyClaim[];
+  review_signals: CompanyClaim[];
+  role_relevance: CompanyClaim[];
+  interview_preparation: CompanyInterviewPreparation;
+  sources: CompanySourceRef[];
+  provider_statuses: CompanyProviderStatus[];
+  limitations: string[];
+  warnings: string[];
+  retrieved_at?: string | null;
+  cache_hit: boolean;
+  jd_linked: boolean;
 }
 
 // Realtime voice (Capstone P7.5, C1).

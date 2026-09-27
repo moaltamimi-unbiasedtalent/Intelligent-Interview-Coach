@@ -185,6 +185,14 @@ Complexity: **S** (≤1 day) · **M** (2–4 days) · **L** (1–2 weeks) · **X
 >   `docs/capstone/p10/p10b_wave4_prepare_practice_integration.md`. Opportunity model deferred to Wave 6.
 
 ## Wave 5 — Company intelligence (surface existing backend; assess providers; no scraping)
+- **STATUS: DELIVERED** on `feature/capstone-p10b-wave5-company-intelligence` (not merged; no
+  migration; 0 paid/live calls). Directable `POST /api/v1/research/company` over the existing 7F
+  engine + a `/company` candidate experience (discoverable from Prepare and "More"), with strict
+  FACT / REVIEW / MODEL_INFERENCE separation, deterministic identity disambiguation (website
+  required; no domain guessing), owner-scoped JD reuse, honest provider status, and a provider
+  feasibility matrix (Glassdoor/Kununu/Google **NOT INTEGRATED** — link-only, no scraping). Gated by
+  capability `current_market_research` + pause `current_market` + cost `cost_research_user`. See
+  `p10b_wave5_company_intelligence.md`. Live company-web/Adzuna remain UNVALIDATED.
 - **Objective:** a directable candidate-facing company-research experience over the existing
   `src/copilot/research/*` backend.
 - **Scope:** a **Company Research** UI where the candidate enters **company name + location** and
