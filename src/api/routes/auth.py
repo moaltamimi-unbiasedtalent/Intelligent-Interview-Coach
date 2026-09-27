@@ -34,7 +34,6 @@ from src.api.schemas.auth import (
     ForgotPasswordRequest,
     LoginRequest,
     MessageResponse,
-    OnboardingRequest,
     PreferencesRequest,
     PremiumStatusResponse,
     RegisterRequest,
@@ -206,7 +205,7 @@ def _account_response(principal) -> AccountResponse:
     return AccountResponse(
         user_id=principal.user_id,
         email=principal.email,
-        display_name=getattr(principal, "display_name", None),
+        display_name=None,
         platform_role=principal.platform_role,
         tier=principal.tier,
         status=principal.status,
@@ -217,33 +216,6 @@ def _account_response(principal) -> AccountResponse:
         response_detail=principal.response_detail,
         interface_locale=principal.interface_locale,
         conversation_language=principal.conversation_language,
-        coaching_style=getattr(principal, "coaching_style", "balanced"),
-        career_geography=getattr(principal, "career_geography", ""),
-        target_role=getattr(principal, "target_role", ""),
-        onboarding_completed=getattr(principal, "onboarding_completed", True),
-        onboarding_step=getattr(principal, "onboarding_step", 0),
-    )
-
-
-def _reload_principal(account_repo, principal):
-    """Rebuild the caller's Principal from a fresh owner-scoped account read (reflects just-saved
-    preferences), preserving the request's auth method. Falls back to the existing principal."""
-    from src.application.authorization import Principal
-
-    account = account_repo.get_account(principal.user_id)
-    if account is None:
-        return principal
-    return Principal(
-        user_id=account.user_id, platform_role=account.platform_role, tier=account.tier,
-        status=account.status, email=account.email, email_verified=account.email_verified,
-        response_detail=account.response_detail, interface_locale=account.interface_locale,
-        conversation_language=account.conversation_language, display_name=account.display_name,
-        coaching_style=getattr(account, "coaching_style", "balanced"),
-        career_geography=getattr(account, "career_geography", ""),
-        target_role=getattr(account, "target_role", ""),
-        onboarding_completed=getattr(account, "onboarding_completed", True),
-        onboarding_step=getattr(account, "onboarding_step", 0),
-        auth_method=principal.auth_method,
     )
 
 
@@ -251,29 +223,6 @@ def _reload_principal(account_repo, principal):
             summary="The caller's own account/profile summary")
 def me(principal=Depends(get_current_principal)) -> AccountResponse:
     return _account_response(principal)
-
-
-@router.post("/onboarding", response_model=AccountResponse,
-             summary="Persist first-run onboarding progress and/or mark it complete")
-def update_onboarding(
-    body: OnboardingRequest,
-    account_repo=Depends(get_account_repository),
-    audit=Depends(get_audit_repository),
-    principal=Depends(get_current_principal),
-    request_id: str = Depends(get_request_id),
-) -> AccountResponse:
-    # Owner-scoped lifecycle only (no candidate content). Resumable: `step` never regresses;
-    # `complete` sets the completion timestamp once (idempotent). Available to every tier.
-    if body.step is not None:
-        account_repo.set_onboarding_step(principal.user_id, body.step)
-    if body.complete:
-        account_repo.complete_onboarding(principal.user_id)
-    audit.record(
-        event_type="account.onboarding_change", result="success",
-        actor_user_id=principal.user_id, request_id=request_id,
-        context={"step": str(body.step) if body.step is not None else "", "complete": str(body.complete)},
-    )
-    return _account_response(_reload_principal(account_repo, principal))
 
 
 @router.patch("/preferences", response_model=AccountResponse,
@@ -299,20 +248,6 @@ def update_preferences(
     if body.conversation_language is not None:
         account_repo.set_conversation_language(principal.user_id, body.conversation_language)
         changed["conversation_language"] = body.conversation_language
-    # P10B Wave 2 personalisation (bounded; still never entitlement-gated, never authorization).
-    if body.coaching_style is not None:
-        account_repo.set_coaching_style(principal.user_id, body.coaching_style)
-        changed["coaching_style"] = body.coaching_style
-    if body.career_geography is not None:
-        account_repo.set_career_geography(principal.user_id, body.career_geography)
-        # A language choice never changes geography; audit the geography change on its own key.
-        changed["career_geography"] = body.career_geography
-    if body.target_role is not None:
-        account_repo.set_target_role(principal.user_id, body.target_role)
-        changed["target_role"] = "set"  # value is DATA — never logged verbatim
-    if body.display_name is not None:
-        account_repo.set_display_name(principal.user_id, body.display_name)
-        changed["display_name"] = "set"  # value is DATA — never logged verbatim
     if changed:
         audit.record(
             event_type="account.preferences_change",
@@ -321,8 +256,20 @@ def update_preferences(
             request_id=request_id,
             context=changed,
         )
-    # Reflect the persisted values from a fresh read (owner-scoped) rather than reconstructing.
-    return _account_response(_reload_principal(account_repo, principal))
+    # Reflect the new values without a second round-trip.
+    updated = principal.__class__(
+        user_id=principal.user_id,
+        platform_role=principal.platform_role,
+        tier=principal.tier,
+        status=principal.status,
+        email=principal.email,
+        email_verified=principal.email_verified,
+        auth_method=principal.auth_method,
+        response_detail=changed.get("response_detail", principal.response_detail),
+        interface_locale=changed.get("interface_locale", principal.interface_locale),
+        conversation_language=changed.get("conversation_language", principal.conversation_language),
+    )
+    return _account_response(updated)
 
 
 @router.post("/verify-email/resend", response_model=MessageResponse,

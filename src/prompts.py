@@ -207,17 +207,6 @@ _CONVERSATION_LANGUAGE_NAMES: dict[str, str] = {
 }
 
 
-def _coaching_directive(config: InterviewConfiguration) -> str | None:
-    """Return the trusted coaching-tone directive for the config's bounded coaching_style, or None.
-
-    Delegates to the shared allow-list mapping in `src/coaching_style.py`; the raw code never
-    reaches the model. Applied by the caller ONLY to feedback/report tasks, never to scoring.
-    """
-    from src.coaching_style import coaching_style_directive
-
-    return coaching_style_directive(getattr(config, "coaching_style", "") or "")
-
-
 def _language_directive(config: InterviewConfiguration) -> str | None:
     """Return a trusted 'write in <language>' directive, or None for English/unknown."""
     code = getattr(config, "conversation_language", "") or ""
@@ -637,13 +626,6 @@ def build_task_system_prompt(
     ]
     if language:
         blocks.insert(3, language)  # after session parameters, before task instructions
-    # Coaching-style directive (P10B Wave 2): applied ONLY to FEEDBACK wording — the evaluation
-    # and the report — never to question/strategy generation (so it cannot change difficulty), and
-    # never to scoring. Trusted, allow-list-only; balanced/unknown → omitted.
-    if task in (TASK_EVALUATION, TASK_REPORT):
-        style = _coaching_directive(config)
-        if style:
-            blocks.insert(3, style)
     return "\n\n".join(blocks)
 
 

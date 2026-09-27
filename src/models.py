@@ -399,16 +399,6 @@ class InterviewConfiguration(_StudioModel):
             "value not on the allow-list is ignored at prompt build (never reaches the model)."
         ),
     )
-    coaching_style: str = Field(
-        default="",
-        max_length=16,
-        description=(
-            "Optional bounded Mo coaching TONE (supportive/balanced/direct/challenging). Applied "
-            "ONLY to the wording of feedback and report recommendations - never to question "
-            "difficulty, the rubric or the numeric scores. Any value not on the allow-list is "
-            "ignored at prompt build (never reaches the model)."
-        ),
-    )
 
 
 class ModelSettings(_StudioModel):

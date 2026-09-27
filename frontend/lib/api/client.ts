@@ -268,8 +268,6 @@ export const api = {
     me: (opts?: RequestOptions) => request<AccountResponse>("GET", "/auth/me", opts),
     updatePreferences: (body: PreferencesRequest, opts?: RequestOptions) =>
       request<AccountResponse>("PATCH", "/auth/preferences", { body, ...opts }),
-    onboarding: (body: { step?: number; complete?: boolean }, opts?: RequestOptions) =>
-      request<AccountResponse>("POST", "/auth/onboarding", { body, ...opts }),
     verifyEmail: (token: string, opts?: RequestOptions) =>
       request<AuthMessageResponse>("POST", "/auth/verify-email", { body: { token }, ...opts }),
     resendVerification: (opts?: RequestOptions) =>
