@@ -45,6 +45,7 @@ __all__ = [
     "Question",
     "Answer",
     "Report",
+    "Opportunity",
     "PreparationMemory",
     "UserFeedback",
     "InterviewSession",
@@ -249,6 +250,9 @@ class User(Base):
     )
 
     interviews: Mapped[list["Interview"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    opportunities: Mapped[list["Opportunity"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
     memories: Mapped[list["PreparationMemory"]] = relationship(
@@ -839,6 +843,11 @@ class Interview(Base):
     # known (nullable for legacy rows and non-session saves). An idempotency/linking
     # seam only — it does NOT merge in-progress session storage with History.
     source_session_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # Optional organising link to a candidate Opportunity (P10B Wave 6). SET NULL on
+    # opportunity delete so completed history is never lost; NULL for standalone/legacy rows.
+    opportunity_id: Mapped[int | None] = mapped_column(
+        ForeignKey("opportunities.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     configuration: Mapped[dict] = mapped_column(JSON, default=dict)
     mode: Mapped[str | None] = mapped_column(String(32), nullable=True)
     status: Mapped[str] = mapped_column(String(32), default="completed")
@@ -914,6 +923,54 @@ class Report(Base):
     interview: Mapped[Interview] = relationship(back_populates="report")
 
 
+class Opportunity(Base):
+    """A candidate's private preparation context for ONE specific job (P10B Wave 6).
+
+    An Opportunity groups a role + company + optional JD, and is the organising home for
+    Company Intelligence, Prepare, Practice, reports and progress for that job. It is a
+    candidate-preparation concept, DISTINCT from a Workspace (collaboration/sharing). It is
+    owner-scoped and private by default; it grants no cross-user access and never
+    auto-creates a Workspace. Interviews and in-progress sessions reference it OPTIONALLY
+    (nullable FK, SET NULL on delete) so deleting an Opportunity never destroys history and
+    existing standalone sessions remain valid with a NULL link.
+    """
+
+    __tablename__ = "opportunities"
+    __table_args__ = (
+        Index("ix_opportunities_user_status", "user_id", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    # A human display label (e.g. "Senior PM - Acme - Berlin"); defaults from role/company.
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    target_role: Mapped[str] = mapped_column(String(200), nullable=False, server_default="")
+    company_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    company_location: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    # ISO-3166 alpha-2 hint (never inferred from language); independent of career geography.
+    company_country: Mapped[str | None] = mapped_column(String(2), nullable=True)
+    company_domain: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Optional link to a governed JD document; SET NULL if that document is deleted so the
+    # Opportunity survives without retaining inaccessible content.
+    job_description_document_id: Mapped[int | None] = mapped_column(
+        ForeignKey("candidate_documents.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    # Bounded lifecycle: active | interviewing | offer | closed | archived.
+    status: Mapped[str] = mapped_column(String(24), nullable=False, server_default="active")
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+    archived_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    user: Mapped[User] = relationship(back_populates="opportunities")
+
+
 class InterviewSession(Base):
     """Durable IN-PROGRESS interview session state (Sprint 4 Phase 10).
 
@@ -944,6 +1001,11 @@ class InterviewSession(Base):
         ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
     idempotency_key: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    # Optional organising link to a candidate Opportunity (P10B Wave 6). SET NULL on
+    # opportunity delete; NULL for standalone sessions.
+    opportunity_id: Mapped[int | None] = mapped_column(
+        ForeignKey("opportunities.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     # The serialised SessionData (safe JSON via the codec) and its schema version.
     state_payload: Mapped[dict] = mapped_column(JSON, default=dict)
     state_schema_version: Mapped[int] = mapped_column(Integer, default=1)

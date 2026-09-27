@@ -558,6 +558,29 @@ assumptions in core logic, prompts, scoring or examples.
   `scripts/eval_company_intelligence.py`; UI at `frontend/app/company/*` + `components/company/*` (no
   emoji, no em dash). See `docs/capstone/p10/p10b_wave5_company_intelligence.md`.
 
+- **Opportunity vs Workspace (Capstone P10B Wave 6) - durable product rule.** An **Opportunity** is a
+  candidate's PRIVATE preparation context for ONE job (role + company + optional JD); it is the
+  organising home for Company Intelligence, Prepare, Practice, reports and progress for that job. A
+  **Workspace** is for COLLABORATION/sharing with other people (VIEW-only grants). These are distinct -
+  never merge them; an Opportunity never auto-creates a Workspace and is never required. ORM
+  `Opportunity` in `src/persistence.py` (owner-scoped, FK `users.id` CASCADE; optional
+  `job_description_document_id` FK SET NULL); `interviews`/`interview_sessions` carry a NULLABLE
+  `opportunity_id` (SET NULL) - deleting an Opportunity never destroys history, and legacy/standalone
+  rows stay valid with NULL. Migration `0014_opportunities` (additive; single head; the two
+  `opportunity_id` FKs are added only on DBs that support ALTER-ADD-FK, plain column+index on SQLite).
+  `src/opportunity_repository.py` + `src/application/opportunity_service.py` +
+  `src/api/routes/opportunity.py` (`/api/v1/opportunities`, BASIC, owner-scoped → 404 on foreign,
+  metadata-only audit events). Opportunity is CONTEXT that PRE-POPULATES Company Intelligence / Prepare
+  / Practice (via `?opportunity=<id>`), never a replacement: reuse the Wave 5 research engine and the
+  interview flow. **Precedence = explicit session choice > Opportunity context > account preference >
+  default** (Opportunity context is an initial value, never a silent override; it carries no
+  conversation_language/career_geography - those stay account/session-owned). No CV/evidence text or
+  research content is copied into an Opportunity; evidence stays governed (approved-only). Deterministic
+  gate `scripts/eval_opportunity_journey.py`; UI `frontend/app/opportunities/*` +
+  `components/opportunities/*` (no emoji, no em dash). Opportunity SHARING is deferred (a future seam
+  over the existing VIEW-only share model - no new authorization). See
+  `docs/capstone/p10/p10b_wave6_opportunity_model.md`.
+
 ## Git rules
 
 - Remote: `origin` (configured locally; the GitHub repo rename to Intelligent-Interview-Coach is a follow-up). Turing

@@ -181,6 +181,10 @@ class AccountDeletionService:
             self._delete_where(s, P.InterviewSession,
                                P.InterviewSession.user_id == user_id, summary,
                                "interview_sessions")
+            # Opportunities (P10B Wave 6) - deleted AFTER interviews/sessions so no SET NULL
+            # back-reference remains; the owner's opportunities are removed with the account.
+            self._delete_where(s, P.Opportunity, P.Opportunity.user_id == user_id,
+                               summary, "opportunities")
 
             # 5) Memory + feedback.
             self._delete_where(s, P.PreparationMemory,

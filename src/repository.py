@@ -84,7 +84,8 @@ class InterviewRepository:
     # -- writes ---------------------------------------------------------------
 
     def save_interview(
-        self, user_id: int, payload: dict, source_session_id: str | None = None
+        self, user_id: int, payload: dict, source_session_id: str | None = None,
+        opportunity_id: int | None = None,
     ) -> int:
         """Persist a completed interview for a user; returns its id.
 
@@ -112,6 +113,7 @@ class InterviewRepository:
             interview = Interview(
                 user_id=user_id,
                 source_session_id=source_session_id,
+                opportunity_id=opportunity_id,
                 configuration=payload.get("configuration") or {},
                 mode=payload.get("mode"),
                 status=payload.get("status", "completed"),

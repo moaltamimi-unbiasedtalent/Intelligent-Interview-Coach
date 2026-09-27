@@ -4,6 +4,12 @@ _Analysis + recommendation only (no implementation). Compares the current IA aga
 founder's proposed journey and recommends a target structure. Reuses existing capabilities;
 proposes no destructive rename/migration in this phase._
 
+> **Status update (P10B Wave 6, 2026-09-27):** the recommended **Opportunity** container is now
+> DELIVERED (owner-scoped model + additive migration `0014`; `/opportunities` list, create wizard and
+> home; Company Intelligence / Prepare / Practice integration), and **Workspace** is reframed in copy
+> as collaboration/sharing only (behaviour unchanged). Opportunity sharing is deferred. See
+> `p10b_wave6_opportunity_model.md`.
+
 ## Current IA (as built)
 ```
 /  (marketing)  →  /register or /sign-in  →  /app (candidate home / return journey)

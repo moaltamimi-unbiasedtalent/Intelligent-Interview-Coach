@@ -44,9 +44,10 @@ describe("AppShell", () => {
     expect(screen.getAllByText("Ask4Mo").length).toBeGreaterThan(0);
   });
 
-  it("exposes the four primary navigation destinations", () => {
+  it("exposes the primary navigation destinations", () => {
     render(<AppShell><span /></AppShell>);
-    for (const label of ["Prepare", "Practice", "Progress", "History"]) {
+    // Opportunities (P10B Wave 6) is the organising hub, listed first.
+    for (const label of ["Opportunities", "Prepare", "Practice", "Progress", "History"]) {
       expect(screen.getAllByRole("link", { name: label }).length).toBeGreaterThan(0);
     }
   });
@@ -123,13 +124,14 @@ describe("More menu (secondary navigation)", () => {
 });
 
 describe("Mobile navigation", () => {
-  it("bottom nav has exactly the four primary destinations (no Sources/Review)", () => {
+  it("bottom nav has exactly the primary destinations (no Sources/Review)", () => {
     render(<MobileNavigation />);
     const nav = screen.getByRole("navigation", { name: "Primary" });
     const links = within(nav).getAllByRole("link");
-    expect(links).toHaveLength(4);
+    expect(links).toHaveLength(5);
     const labels = links.map((l) => l.textContent);
-    expect(labels).toEqual(["Prepare", "Practice", "Progress", "History"]);
+    // Opportunities (P10B Wave 6) leads as the organising hub.
+    expect(labels).toEqual(["Opportunities", "Prepare", "Practice", "Progress", "History"]);
     expect(within(nav).queryByText("Sources")).not.toBeInTheDocument();
     expect(within(nav).queryByText("Review & Diagnostics")).not.toBeInTheDocument();
   });

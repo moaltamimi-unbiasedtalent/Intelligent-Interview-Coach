@@ -152,21 +152,26 @@ class DurableInterviewSessionStore:
 
     # -- creation -------------------------------------------------------------
 
-    def create(self, user_id: Any) -> str:
-        """Create a fresh empty durable session and return its opaque id."""
+    def create(self, user_id: Any, *, opportunity_id: int | None = None) -> str:
+        """Create a fresh empty durable session and return its opaque id.
+
+        ``opportunity_id`` (P10B Wave 6) is an OPTIONAL owner-scoped organising link; the caller
+        must have validated ownership. NULL for standalone sessions."""
         session_id = self._new_id()
         payload = encode_session_data(SessionData())
         now = utcnow()
         with self._session_factory() as db:
             db.add(InterviewSession(
                 session_id=session_id, user_id=user_id, idempotency_key=None,
+                opportunity_id=opportunity_id,
                 state_payload=payload, state_schema_version=SESSION_STATE_SCHEMA_VERSION,
                 version=1, status=SessionState.SETUP.value,
                 created_at=now, updated_at=now, last_accessed_at=now))
             db.commit()
         return session_id
 
-    def create_or_get(self, user_id: Any, idempotency_key: str) -> tuple[str, bool]:
+    def create_or_get(self, user_id: Any, idempotency_key: str, *,
+                      opportunity_id: int | None = None) -> tuple[str, bool]:
         """Return ``(session_id, created)`` for a user-scoped idempotency key.
 
         Durable: a repeat with the same ``(user_id, idempotency_key)`` returns the
@@ -191,6 +196,7 @@ class DurableInterviewSessionStore:
             now = utcnow()
             db.add(InterviewSession(
                 session_id=session_id, user_id=user_id, idempotency_key=idempotency_key,
+                opportunity_id=opportunity_id,
                 state_payload=payload, state_schema_version=SESSION_STATE_SCHEMA_VERSION,
                 version=1, status=SessionState.SETUP.value,
                 created_at=now, updated_at=now, last_accessed_at=now))
@@ -212,6 +218,15 @@ class DurableInterviewSessionStore:
                 return won, False
         self._emit("create", "created", session_id=session_id, metadata={"idempotency_hit": False})
         return session_id, True
+
+    def opportunity_id_for(self, session_id: str, user_id: Any) -> int | None:
+        """The owner-scoped Opportunity link for a session, or None (P10B Wave 6). A foreign/
+        unknown session returns None (never another user's data)."""
+        with self._session_factory() as db:
+            row = db.get(InterviewSession, session_id)
+            if row is None or row.user_id != user_id:
+                return None
+            return row.opportunity_id
 
     # -- read-only load -------------------------------------------------------
 

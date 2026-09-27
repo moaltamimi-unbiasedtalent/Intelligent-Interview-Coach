@@ -5,6 +5,11 @@ import type {
   CapabilitiesResponse,
   CompanyIntelligenceRequest,
   CompanyIntelligenceReport,
+  Opportunity,
+  OpportunityOverview,
+  OpportunityListResponse,
+  OpportunityCreateRequest,
+  OpportunityUpdateRequest,
   CareerChatRequest,
   CareerChatResponse,
   CreateInterviewRequest,
@@ -245,6 +250,23 @@ export const api = {
   company: {
     research: (body: CompanyIntelligenceRequest, opts?: RequestOptions) =>
       request<CompanyIntelligenceReport>("POST", "/research/company", { body, ...opts }),
+  },
+
+  // Opportunities (P10B Wave 6). Owner-scoped candidate preparation contexts.
+  opportunities: {
+    list: (includeArchived = false, opts?: RequestOptions) =>
+      request<OpportunityListResponse>(
+        "GET", `/opportunities${includeArchived ? "?include_archived=true" : ""}`, opts),
+    create: (body: OpportunityCreateRequest, opts?: RequestOptions) =>
+      request<Opportunity>("POST", "/opportunities", { body, ...opts }),
+    get: (id: number, opts?: RequestOptions) =>
+      request<OpportunityOverview>("GET", `/opportunities/${id}`, opts),
+    update: (id: number, body: OpportunityUpdateRequest, opts?: RequestOptions) =>
+      request<Opportunity>("PATCH", `/opportunities/${id}`, { body, ...opts }),
+    archive: (id: number, opts?: RequestOptions) =>
+      request<Opportunity>("POST", `/opportunities/${id}/archive`, opts),
+    remove: (id: number, opts?: RequestOptions) =>
+      request<{ deleted: boolean }>("DELETE", `/opportunities/${id}`, opts),
   },
 
   // Long-term preparation memory (Phase 7). Writes are explicit/user-initiated.

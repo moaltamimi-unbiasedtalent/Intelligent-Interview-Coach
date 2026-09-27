@@ -16,7 +16,8 @@ export function MobileNavigation() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border bg-surface md:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 grid border-t border-border bg-surface md:hidden"
+      style={{ gridTemplateColumns: `repeat(${PRIMARY_NAV.length}, minmax(0, 1fr))` }}
     >
       {PRIMARY_NAV.map((item) => {
         const active = pathname === item.href || pathname.startsWith(item.href + "/");
@@ -37,7 +38,7 @@ export function MobileNavigation() {
                 active ? "bg-accent" : "bg-transparent",
               )}
             />
-            {t(item.labelKey)}
+            <span className="max-w-full truncate">{t(item.labelKey)}</span>
           </Link>
         );
       })}

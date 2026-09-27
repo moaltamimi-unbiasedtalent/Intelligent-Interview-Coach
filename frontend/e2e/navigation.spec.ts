@@ -92,22 +92,30 @@ test("Flow 7: keyboard — focus More, open, Escape closes", async ({ page }) =>
   await expect(more).toHaveAttribute("aria-expanded", "false");
 });
 
-test("Mobile (390px): 4-item bottom nav; supporting routes still reachable", async ({ page }) => {
+test("Mobile (390px): primary bottom nav; supporting routes still reachable", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mock(page);
   await page.goto("/prepare");
 
-  // Bottom nav shows exactly the four primary destinations.
+  // Bottom nav shows exactly the primary destinations (Opportunities added in P10B Wave 6).
   const bottom = page.locator("nav.fixed");
-  await expect(bottom.getByRole("link")).toHaveCount(4);
-  for (const label of ["Prepare", "Practice", "Progress", "History"]) {
+  await expect(bottom.getByRole("link")).toHaveCount(5);
+  for (const label of ["Opportunities", "Prepare", "Practice", "Progress", "History"]) {
     await expect(bottom.getByRole("link", { name: label })).toBeVisible();
   }
   await expect(bottom.getByText("Sources")).toHaveCount(0);
 
-  // Sources reachable via the header More control (no URL typing).
+  // Sources reachable via the header More control (no URL typing). This click-triggered client
+  // navigation is the exact assertion that failed on CI (URL left on /prepare). Pair the click
+  // with its navigation so the wait is bound to the navigation lifecycle rather than a fixed poll
+  // window - the standard Playwright pattern for click-triggered navigation, already used by
+  // Flow 6 here. Deterministic: no sleep / retry / forced click / raised timeout / weakened
+  // assertion. (The precise CI-only timing mechanism was not reproduced locally; see the report.)
   await page.getByRole("button", { name: /More/ }).click();
-  await page.getByRole("menuitem", { name: /Sources/ }).click();
+  await Promise.all([
+    page.waitForURL(/\/sources$/),
+    page.getByRole("menuitem", { name: /Sources/ }).click(),
+  ]);
   await expect(page).toHaveURL(/\/sources$/);
 
   // The account page reachable via the account menu (Settings also lives there).

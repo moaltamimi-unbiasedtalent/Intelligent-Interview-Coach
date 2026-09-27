@@ -31,6 +31,7 @@ P1 left full account hard-delete **PARTIAL**. P4-owned resources are now in the 
 | Private files in the DocumentStore | ⚠️ requires the document-delete code path (files are outside the DB) | The account-deletion service must iterate owned documents and call the store; **documented as the remaining wiring** — the per-document delete already purges files, and `delete_all_for_user` should call it |
 | `candidate_stories` / `story_evidence` | ✅ via `users.id` FK cascade | DB rows removed |
 | Interviews / reports / memory / sessions / feedback | ✅ (P1) | Existing cascade |
+| `opportunities` (P10B W6) | ✅ explicit delete in `AccountDeletionService` (after interviews/sessions) | FK `user_id` CASCADE; interviews/sessions links are SET NULL, so history is never destroyed by an opportunity delete |
 | LangGraph agent checkpoints | ⚠️ saver-owned (outside Alembic) | Still PARTIAL (carried from P1) |
 
 **Status:** account deletion is **PARTIAL** — DB cascade is complete for P4 tables; the
@@ -72,6 +73,22 @@ the quality register. Documents are now inside the deletion model (no longer omi
 - **No third-party personal data is stored.** Employee-review platforms (Glassdoor/Kununu) and
   Google/LinkedIn are **not integrated**; the UI links out and copies no review content.
 - **Admin boundary unchanged:** Platform Admin gains no candidate research data.
+
+### P10B Wave 6 delta (2026-09-27) - Opportunity model
+- **New table `opportunities`** (migration `0014`, additive): owner-scoped candidate preparation
+  context - `title`, `target_role`, `company_name`, `company_location`, `company_country`,
+  `company_domain`, `job_description_document_id` (FK, SET NULL), `status`, `notes`, timestamps. It
+  stores only **bounded candidate-entered strings + a JD reference** - **no CV/evidence text, no
+  research content, no secrets**. FK `user_id → users.id ON DELETE CASCADE`.
+- **`interviews.opportunity_id` / `interview_sessions.opportunity_id`** (nullable, SET NULL): an
+  organising link only; no candidate content. Deleting an Opportunity never deletes interviews,
+  documents or evidence (SET NULL / kept). A deleted JD clears the Opportunity's link (no stale
+  content); `context`/`overview` re-check ownership on every read.
+- **Account deletion:** owned `opportunities` are removed (explicit, after interviews/sessions) - added
+  to `AccountDeletionService`. **Admin boundary unchanged:** Platform Admin gains no opportunity data.
+- Company/career geography stay independent; geography is never inferred from language; user-entered
+  role/company/notes are never auto-translated. Audit events (`opportunity.created/archived/deleted`)
+  are metadata-only.
 
 ## Retention / backup / checkpoint consequences
 - Deleted documents/claims/stories are removed from the live database immediately.

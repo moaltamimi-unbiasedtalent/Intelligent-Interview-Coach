@@ -81,6 +81,9 @@ class CreateInterviewRequest(BaseModel):
     conversation_language: ConversationLanguage | None = None
     job_description_document_id: int | None = Field(default=None, ge=1)
     use_candidate_evidence: bool = False
+    # Optional organising link to a candidate Opportunity (P10B Wave 6). Ownership is verified
+    # server-side; a foreign/unknown id is rejected. Never fabricated for legacy sessions.
+    opportunity_id: int | None = Field(default=None, ge=1)
 
 
 class QuestionOut(BaseModel):
