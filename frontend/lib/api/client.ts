@@ -3,6 +3,8 @@ import { ApiError, apiErrorFromBody } from "./errors";
 import type {
   ActiveSessionsResponse,
   CapabilitiesResponse,
+  CompanyIntelligenceRequest,
+  CompanyIntelligenceReport,
   CareerChatRequest,
   CareerChatResponse,
   CreateInterviewRequest,
@@ -236,6 +238,13 @@ export const api = {
       request<AgentRunResponse>("POST", `/agent/runs/${encodeURIComponent(runId)}/resume`, { body, ...opts }),
     remove: (runId: string, opts?: RequestOptions) =>
       request<AgentRunDeleteResponse>("DELETE", `/agent/runs/${encodeURIComponent(runId)}`, opts),
+  },
+
+  // Company Intelligence (P10B Wave 5). Directable company research; the server enforces
+  // capability + operator pause + per-user cost, and resolves any selected JD owner-scoped.
+  company: {
+    research: (body: CompanyIntelligenceRequest, opts?: RequestOptions) =>
+      request<CompanyIntelligenceReport>("POST", "/research/company", { body, ...opts }),
   },
 
   // Long-term preparation memory (Phase 7). Writes are explicit/user-initiated.

@@ -32,6 +32,11 @@ class CapabilitiesResponse(BaseModel):
     # REALTIME_VOICE_ENABLED flag AND a configured realtime provider key. When false, the
     # UI stays on P7 turn-based voice (the safe default). Never implies a key is present.
     realtime_voice_enabled: bool = False
+    # Company Intelligence (P10B Wave 5) — the directable company-research surface. True when
+    # external research is enabled and not operator-paused; it never implies a provider key is
+    # present (the company-web path works from a user-supplied website; market data degrades
+    # honestly without credentials).
+    company_research_enabled: bool = False
 
 
 class ErrorBody(BaseModel):

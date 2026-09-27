@@ -12,6 +12,7 @@ export const PRIMARY_NAV = [
  * Settings is intentionally NOT here — it lives under the account control.
  */
 export const SECONDARY_NAV = [
+  { href: "/company", label: "Company research", labelKey: "nav.company", description: "Research an employer" },
   { href: "/documents", label: "Documents", labelKey: "documents.title", description: "Your private evidence" },
   { href: "/workspaces", label: "Workspaces", labelKey: "workspaces.nav", description: "Teams & explicit sharing" },
   { href: "/sources", label: "Sources", labelKey: "nav.sources", description: "Career evidence" },

@@ -26,6 +26,8 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 | B-tools | 6 career + 2 HITL tools, allowlist | DELIVERED | Preserve; add specialist tools | P5 | AC-15 |
 | C4 | Preparation + Evaluation specialists (multi-agent) | ABSENT | Bounded orchestrator/specialist | P5 | EX-05 |
 | B8 | Mo coordinates Research/Candidate specialists | PARTIAL | Bounded delegation | P5 | AC-15/16 |
+| H1 | Candidate-facing company research (name + location) | DELIVERED (P10B W5) — directable `/company` over the 7F engine; FACT/REVIEW/MODEL_INFERENCE separation; identity disambiguation; owner-scoped JD; discoverable from Prepare + "More"; 0 paid/live | Directable, discoverable UI | P10B W5 | — |
+| H2 | Live employer-review sources (Glassdoor/Kununu/Google) | NOT INTEGRATED (P10B W5) — provider feasibility matrix documented; ToS/licensing prohibit scraping; UI links out, copies no content | Provider review required before any integration | P10B W5 | — |
 
 ## Group C — Knowledge / RAG
 | ID | Requirement | Current | Target | Phase | Acceptance |

@@ -427,6 +427,38 @@ def resolve_document_text(request: Request, *, user_id: int, document_id: int,
     return svc.extracted_text(user_id=user_id, document_id=document_id, max_chars=max_chars)
 
 
+def get_research_service(request: Request):
+    """The governed external research engine (P10B Wave 5, reused from Phase 7F).
+
+    Production builds the real, SSRF-safe providers (env-gated; degrade to UNAVAILABLE without
+    credentials, so no paid call is ever forced). When ``COMPANY_RESEARCH_FIXTURE`` is truthy the
+    deterministic offline fixture provider is used instead (dev demos with 0 live calls). Tests
+    override this dependency to inject a fake provider so no network is touched."""
+    import os
+
+    def _build():
+        from src.copilot.research.service import ExternalResearchService, default_research_service
+
+        raw = (os.environ.get("COMPANY_RESEARCH_FIXTURE", "") or "").strip().lower()
+        if raw in ("1", "true", "yes", "on"):
+            from src.copilot.research.fake_provider import FakeCompanyResearchProvider
+
+            return ExternalResearchService([FakeCompanyResearchProvider()], enabled=True)
+        return default_research_service()
+
+    return _shared(request, "research_service", _build)
+
+
+def adzuna_credentials_configured() -> bool:
+    """Safe, credential-free hint for honest provider status (never exposes the keys)."""
+    try:
+        from src.copilot.knowledge.providers import adzuna as _adzuna
+
+        return bool(_adzuna.credentials_configured())
+    except Exception:  # noqa: BLE001 - status probing must never break a request
+        return False
+
+
 def get_auth_config(request: Request):
     from src.application.auth_service import AuthConfig
 

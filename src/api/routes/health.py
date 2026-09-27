@@ -77,6 +77,16 @@ def _realtime_voice_available() -> bool:
     return resolve_realtime_config().available and not is_paused("realtime_voice")
 
 
+def _company_research_available() -> bool:
+    """Company Intelligence (P10B Wave 5) is available when external research is enabled (default
+    on) and not operator-paused. Reads booleans only; never implies a provider key is present."""
+    from src.application.pause import is_paused
+
+    enabled = os.environ.get("EXTERNAL_RESEARCH_ENABLED", "true").strip().lower() in {
+        "1", "true", "yes", "on"}
+    return enabled and not is_paused("current_market")
+
+
 @router.get("/capabilities", response_model=CapabilitiesResponse,
             summary="Safe feature availability")
 def capabilities() -> CapabilitiesResponse:
@@ -89,4 +99,5 @@ def capabilities() -> CapabilitiesResponse:
         human_in_the_loop=True,
         agent_coach_enabled=_flag_enabled("AGENT_COACH_ENABLED"),
         realtime_voice_enabled=_realtime_voice_available(),
+        company_research_enabled=_company_research_available(),
     )
