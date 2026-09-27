@@ -74,9 +74,19 @@ test("unauthenticated visitor is redirected from a protected route to sign in", 
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
 });
 
+// Deterministic hydration gate (no sleep/retry): the header account control is a client-only
+// signal. Its "Sign in" LINK renders only AFTER AuthProvider hydrates and its /auth/me effect
+// resolves — so once it is visible, the whole client root (including the SignInForm submit handler)
+// is hydrated. This proves interactivity before we submit, closing the pre-hydration native-submit
+// race that visible/enabled alone cannot (the SSR form is visible/enabled before hydration).
+async function waitForClientHydrated(page: Page) {
+  await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
+}
+
 test("sign-in flow authenticates and returns to the requested page", async ({ page }) => {
   await mockAuth(page, { signedIn: false });
   await page.goto("/sign-in?next=%2Fprogress");
+  await waitForClientHydrated(page);
   const email = page.getByLabel("Email");
   await expect(email).toBeVisible();
   await email.fill("user@example.com");
@@ -99,6 +109,7 @@ test("new-user sign-in is gated into onboarding, not the app", async ({ page }) 
   // normal product use — the Wave 2 first-run contract, tested independently of the existing user.
   await mockAuth(page, { signedIn: false, account: { ...ACCOUNT, onboarding_completed: false, onboarding_step: 0 } });
   await page.goto("/sign-in?next=%2Fprogress");
+  await waitForClientHydrated(page);
   const email = page.getByLabel("Email");
   await expect(email).toBeVisible();
   await email.fill("new@example.com");
