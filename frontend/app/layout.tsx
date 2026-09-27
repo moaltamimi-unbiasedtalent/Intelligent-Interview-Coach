@@ -18,15 +18,22 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://ask4mo.example.com"),
   title: {
-    default: "Ask4Mo — Intelligent Interview Coach",
+    default: "Ask4Mo - Intelligent Interview Coach",
     template: "%s · Ask4Mo",
   },
-  description: "AI-powered interview preparation, practice and feedback. Ask More. Be More.",
+  // Opportunity-centred, restrained (P10B Wave 7); brand rule: no em dash in customer-facing copy.
+  description:
+    "Prepare for a specific job in one place. Ask4Mo brings the role, company research, your evidence, coaching and realistic practice into a single Opportunity. Ask More. Be More.",
+  applicationName: "Ask4Mo",
+  // Icons derived from the canonical Ask4Mo mark (no new logo). See public/brand/ask4mo-mark.svg.
+  icons: { icon: "/brand/ask4mo-mark.svg", shortcut: "/brand/ask4mo-mark.svg", apple: "/brand/ask4mo-mark.svg" },
   openGraph: {
-    title: "Ask4Mo — Intelligent Interview Coach",
-    description: "Prepare with evidence, practise with purpose, improve with feedback. Ask More. Be More.",
+    title: "Ask4Mo - Intelligent Interview Coach",
+    description:
+      "Prepare for a specific job in one Opportunity: the role, company research, your evidence, coaching and realistic practice. Ask More. Be More.",
     siteName: "Ask4Mo",
     type: "website",
+    images: [{ url: "/brand/ask4mo-logo.svg", width: 1200, height: 630, alt: "Ask4Mo" }],
   },
 };
 

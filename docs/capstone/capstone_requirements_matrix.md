@@ -111,6 +111,7 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 | ID | Requirement | Current | Target | Phase | Acceptance |
 |---|---|---|---|---|---|
 | L-mkt | Marketing site + positioning | DELIVERED (P8, engineering draft) — public IA + pricing + trust; 7-locale marketing i18n; claims follow the claims audit | Public IA + pricing + trust | P8 | AC-25 |
+| L-mkt7 | Opportunity-centred public product story (Wave 7) | DELIVERED (P10B W7) — homepage/product re-centred on the Opportunity (Wave 6) + Company Intelligence (Wave 5); emoji icons replaced with inline SVG; Trust extended (Opportunity private, reviews NOT integrated, AI-suggestions-not-facts, layered context, language/market independence); pricing preserved (no billing), "higher usage" softened; SEO (robots +/opportunities+/company, icons/OG/JSON-LD from canonical mark, metadata de-em-dashed); i18n 10 changed+29 new x7; `eval_marketing_product_trust.py` (32 invariants). No migration; 0 paid/live | Public product/trust/pricing reflect Waves 1-6 | P10B W7 | AC-25 |
 | C10 | Guided onboarding / Help | DELIVERED | Preserve/adapt | P8 | AC-19 (C10 optional) |
 
 ## Totals (P0/E0 snapshot)

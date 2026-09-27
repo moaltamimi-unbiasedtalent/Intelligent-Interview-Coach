@@ -12,6 +12,8 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         disallow: [
           "/app",
+          "/opportunities",
+          "/company",
           "/prepare",
           "/practice",
           "/progress",

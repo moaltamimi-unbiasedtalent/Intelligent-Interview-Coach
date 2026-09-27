@@ -233,6 +233,17 @@ Complexity: **S** (≤1 day) · **M** (2–4 days) · **L** (1–2 weeks) · **X
 - **Dependencies:** Waves 3–5 (feeds the Opportunity tabs). **Risk:** high (new core concept). **Complexity:** XL.
 
 ## Wave 7 — Marketing / Product / Trust / About / Pricing redesign (+ commercial model)
+- **STATUS: DELIVERED** on `feature/capstone-p10b-wave7-marketing-product-trust-pricing` (not merged;
+  **no migration**; 0 paid/live). Public story re-centred on the **Opportunity** (Wave 6): homepage
+  rewritten (hero -> problem -> one connected system -> 6-step journey -> why-different -> trust +
+  pricing teasers -> CTA), emoji feature icons replaced with a restrained inline-SVG set, Company
+  Intelligence (Wave 5) added to the story, Workspaces reframed as collaboration. Trust extended
+  (Opportunity private, company facts vs opinion + reviews NOT integrated, AI-suggestions-not-facts,
+  layered context, language/market independence). Pricing preserved (Basic EUR 0 / Premium EUR 19.99
+  preview, no billing); the unenforced "higher usage" claim softened. SEO: robots also disallows
+  /opportunities + /company, metadata de-em-dashed + Opportunity-aware, icons/OG from the canonical
+  mark, Organization JSON-LD (no ratings). i18n: 10 changed + 29 new marketing keys x7 (parity).
+  `eval_marketing_product_trust.py` (32 invariants). See `p10b_wave7_marketing_product_trust_pricing.md`.
 - **Objective:** a premium public site with real visuals, a founder section, a pricing comparison,
   and an honest commercial model.
 - **Scope:** implement the design direction (icons, imagery/screenshots, Trust architecture

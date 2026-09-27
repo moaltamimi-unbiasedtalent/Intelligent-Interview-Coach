@@ -581,6 +581,24 @@ assumptions in core logic, prompts, scoring or examples.
   over the existing VIEW-only share model - no new authorization). See
   `docs/capstone/p10/p10b_wave6_opportunity_model.md`.
 
+- **Public marketing claim discipline (Capstone P10B Wave 7) - durable rules.** Market only what
+  exists: every public claim must be traceable to implemented behaviour, deterministic evidence,
+  documented provider status, or an explicit limitation (status ladder CONFIGURED / IMPLEMENTED /
+  DETERMINISTICALLY TESTED / LIVE VALIDATED / HUMAN VALIDATED - never collapsed). The public story is
+  **Opportunity-centred** (Opportunity = private job-preparation context; Workspace = collaboration -
+  never conflate on marketing). Provider discipline: Glassdoor / Kununu / Google / LinkedIn are **NOT
+  INTEGRATED** and must never be claimed as sources (link-out only); no "real-time company
+  intelligence" or unrestricted-web-browsing claims. Pricing reflects authoritative entitlements
+  (`lib/pricing.ts`): Basic EUR 0, Premium EUR 19.99 **preview** - `BILLING_ENABLED=false`, never a
+  purchase path; do not invent prices or billing. **Never** fabricate testimonials, customer counts,
+  ratings, logos or reviews, and never use unsupported absolutes ("100%", "bias-free", "GDPR
+  certified/compliant", outcome guarantees). Canonical Ask4Mo logo only (no invented mark, **no emoji
+  as iconography** - use the inline-SVG `MarketingIcon` set). No em dash in customer-facing copy
+  (guarded). Interface language never determines career geography / conversation / dictation / session
+  language. Public routes must never expose candidate-private content; new authenticated routes must be
+  added to `app/robots.ts` disallow. Deterministic gate `scripts/eval_marketing_product_trust.py`. See
+  `docs/capstone/p10/p10b_wave7_marketing_product_trust_pricing.md`.
+
 ## Git rules
 
 - Remote: `origin` (configured locally; the GitHub repo rename to Intelligent-Interview-Coach is a follow-up). Turing
