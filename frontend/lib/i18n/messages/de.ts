@@ -244,6 +244,7 @@ const de: Catalog = {
     notSet: "Nicht festgelegt",
     completeTitle: "Mo ist bereit",
     completeBody: "Ihr Coach ist eingerichtet. Wählen Sie, was als Nächstes geschieht; nichts startet von selbst.",
+    completionError: "Wir konnten Ihre Einrichtung nicht abschließen. Ihre Auswahl ist gespeichert. Bitte versuchen Sie es erneut.",
     stepWelcome: "Willkommen",
     stepAbout: "Über Sie",
     stepCareer: "Karrierefokus",

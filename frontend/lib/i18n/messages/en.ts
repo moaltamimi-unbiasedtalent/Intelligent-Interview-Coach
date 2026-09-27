@@ -258,6 +258,7 @@ export const messages = {
     // Step 8 - Complete
     completeTitle: "Mo is ready",
     completeBody: "Your coach is set up. Choose what to do next - nothing starts on its own.",
+    completionError: "We couldn’t complete your setup. Your choices are saved. Please try again.",
     stepWelcome: "Welcome",
     stepAbout: "About you",
     stepCareer: "Career focus",

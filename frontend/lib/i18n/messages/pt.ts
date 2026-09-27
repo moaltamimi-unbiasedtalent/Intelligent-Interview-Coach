@@ -244,6 +244,7 @@ const pt: Catalog = {
     notSet: "Não definido",
     completeTitle: "O Mo está pronto",
     completeBody: "O seu coach está configurado. Escolha o que fazer a seguir; nada começa sozinho.",
+    completionError: "Não foi possível concluir a sua configuração. As suas escolhas foram guardadas. Tente novamente.",
     stepWelcome: "Bem-vindo",
     stepAbout: "Sobre si",
     stepCareer: "Foco de carreira",

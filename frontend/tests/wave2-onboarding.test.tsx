@@ -83,4 +83,29 @@ describe("Wave 2 — OnboardingClient", () => {
     await waitFor(() => expect(screen.getByText(/Step 4 of 7/i)).toBeInTheDocument());
     account = { ...account, onboarding_step: 0 }; // reset for other tests
   });
+
+  it("shows a recoverable error on completion failure, does not navigate, and retry succeeds", async () => {
+    account = { ...account, onboarding_step: 6 }; // start on the Review step
+    updatePreferences.mockResolvedValue(account);
+    // First completion attempt fails; the retry succeeds.
+    onboarding.mockRejectedValueOnce(new Error("server")).mockResolvedValue(account);
+    render(<OnboardingClient />);
+
+    const enter = await screen.findByRole("button", { name: "Enter Ask4Mo" });
+    await userEvent.click(enter);
+
+    // Announced, recoverable error; stayed put (no navigation to /app).
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(/couldn.?t complete your setup/i);
+    expect(alert).toHaveTextContent(/choices are saved/i);
+    expect(replace).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled(); // never refreshed/entered the app on failure
+
+    // Retry: clears the error, completes, refreshes, enters /app.
+    await userEvent.click(screen.getByRole("button", { name: "Enter Ask4Mo" }));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/app"));
+    expect(refresh).toHaveBeenCalled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    account = { ...account, onboarding_step: 0 }; // reset for other tests
+  });
 });

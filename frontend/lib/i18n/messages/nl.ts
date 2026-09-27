@@ -244,6 +244,7 @@ const nl: Catalog = {
     notSet: "Niet ingesteld",
     completeTitle: "Mo is klaar",
     completeBody: "Uw coach is ingesteld. Kies wat u nu wilt doen; niets begint vanzelf.",
+    completionError: "We konden je installatie niet voltooien. Je keuzes zijn opgeslagen. Probeer het opnieuw.",
     stepWelcome: "Welkom",
     stepAbout: "Over u",
     stepCareer: "Loopbaanfocus",

@@ -107,6 +107,28 @@ prompt, coaching-not-scoring, response-detail independence, language separation,
 separation, session override, Settings editing, 7-locale parity, no auto mic/interview, no sensitive
 collection, no private prefs in logs, migration safety). 0 paid/live calls.
 
+## Completion failure (recoverable)
+`OnboardingClient.finish()` treats the completion API as authoritative. On failure it stays on
+`/onboarding`, does not mark onboarding complete locally, does not navigate to `/app`, keeps every
+saved preference/step, and shows a localized, announced (`role="alert"`) recoverable error
+(`onboarding.completionError`, all 7 locales) — never a raw API/provider error, never a logged
+preference value. "Enter Ask4Mo" is disabled while a request is in flight (no duplicate submissions)
+and re-enabled for retry; a successful retry clears the error and performs
+server-completion → account refresh → `onboarding_completed=true` → `/app`. Covered by
+`e2e/onboarding.spec.ts` E2E 5 and a `wave2-onboarding.test.tsx` unit test.
+
+## CI-closure testing note
+Two Wave 2 CI failures (`auth.spec` sign-in→`/progress`; `onboarding.spec` E2E 1 completion→`/app`)
+were **test-synchronization** issues, not product defects. Evidence: the completion lifecycle was
+verified robust under targeted stress (server completion persists, `refresh()` returns
+`onboarding_completed:true` before navigation, `/app` does not bounce). The accurate conclusion is
+narrow: **the tests had insufficient synchronization around asynchronous client-side navigation.**
+Explicitly waiting for the intended navigation, and pairing a click-triggered navigation with
+`page.waitForURL(...)`, produced deterministic behaviour under the targeted stress runs (E2E 1 20/20;
+sign-in tests 40/40). This does not assert any particular Playwright implementation mechanism (e.g.
+that `toHaveURL` "polls" and `waitForURL` does not — both are waiting mechanisms); only the observed
+determinism under stress is claimed.
+
 ## Known limitations
 - Human/legal translation review of the new strings is not done (engineering draft).
 - Career-geography is a bounded curated list (not an exhaustive market taxonomy).

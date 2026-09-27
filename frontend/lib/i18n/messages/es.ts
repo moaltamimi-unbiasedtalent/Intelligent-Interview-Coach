@@ -244,6 +244,7 @@ const es: Catalog = {
     notSet: "Sin definir",
     completeTitle: "Mo está listo",
     completeBody: "Tu coach está configurado. Elige qué hacer a continuación; nada empieza por sí solo.",
+    completionError: "No pudimos completar tu configuración. Tus elecciones están guardadas. Inténtalo de nuevo.",
     stepWelcome: "Bienvenida",
     stepAbout: "Sobre ti",
     stepCareer: "Enfoque profesional",

@@ -23,6 +23,7 @@ import { APP_HOME } from "@/lib/auth/routes";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Field";
+import { Alert } from "@/components/ui/Alert";
 import { LanguageSettings } from "@/components/settings/LanguageSettings";
 import { ResponseDetailPreference } from "@/components/settings/ResponseDetailPreference";
 import { CoachingStyleField, type CoachingStyle } from "@/components/settings/CoachingStyleField";
@@ -38,6 +39,7 @@ export function OnboardingClient() {
 
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [targetRole, setTargetRole] = useState("");
   const [geography, setGeography] = useState<CareerGeography>("");
@@ -65,6 +67,7 @@ export function OnboardingClient() {
 
   const goNext = useCallback(async () => {
     setBusy(true);
+    setError(null);
     try {
       await saveCurrentStep();
       const next = Math.min(step + 1, TOTAL - 1);
@@ -75,12 +78,16 @@ export function OnboardingClient() {
     }
   }, [saveCurrentStep, step]);
 
-  const goBack = useCallback(() => setStep((s) => Math.max(0, s - 1)), []);
+  const goBack = useCallback(() => { setError(null); setStep((s) => Math.max(0, s - 1)); }, []);
 
   const finish = useCallback(async () => {
+    // Guard against a duplicate completion while one is already in flight.
+    if (busy) return;
     setBusy(true);
+    setError(null);  // clear any previous completion error when a retry begins
     try {
-      // Safety re-save of all account-backed fields, then mark complete.
+      // Safety re-save of all account-backed fields, then mark complete. The completion API is
+      // authoritative: only on success do we refresh the account and enter the app.
       await api.auth.updatePreferences({
         display_name: name.trim(), target_role: targetRole.trim(),
         career_geography: geography, coaching_style: coaching,
@@ -88,10 +95,13 @@ export function OnboardingClient() {
       await api.auth.onboarding({ complete: true });
       await refresh();
       router.replace(APP_HOME);
-    } finally {
+    } catch {
+      // Stay on onboarding, keep every saved choice, and surface a safe, recoverable message
+      // (never a raw API/provider error, never a logged preference value). The candidate can retry.
+      setError(t("onboarding.completionError"));
       setBusy(false);
     }
-  }, [name, targetRole, geography, coaching, refresh, router]);
+  }, [busy, name, targetRole, geography, coaching, refresh, router, t]);
 
   const pct = Math.round(((step + 1) / TOTAL) * 100);
 
@@ -181,6 +191,10 @@ export function OnboardingClient() {
               </dl>
             </>
           ) : null}
+
+          {/* Recoverable completion error (announced via Alert's role="alert"). The candidate stays
+              in onboarding with all choices saved and can retry "Enter Ask4Mo". */}
+          {error ? <Alert tone="danger">{error}</Alert> : null}
 
           {/* Navigation. Welcome uses a single Get started; Review offers Enter Ask4Mo. */}
           <div className="flex items-center justify-between gap-2 pt-2">

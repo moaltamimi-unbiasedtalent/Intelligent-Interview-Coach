@@ -66,18 +66,32 @@ test("E2E 1: new user is gated into onboarding and completes to /app", async ({ 
   await expect(page).toHaveURL(/\/app$/);
 });
 
-test("E2E 5: a failed completion keeps the candidate in onboarding (not admitted to /app)", async ({ page }) => {
-  // Completion-failure contract: the completion API is authoritative. When it fails, the account is
-  // NOT marked complete and the candidate stays in onboarding — never silently admitted to /app.
+test("E2E 5: failed completion shows a recoverable error, stays in onboarding, then retry succeeds to /app", async ({ page }) => {
+  // Completion-failure contract: the completion API is authoritative. On failure the account is NOT
+  // marked complete, the candidate stays in onboarding with a visible recoverable error, and is
+  // never silently admitted to /app. A retry (after the server recovers) completes to /app.
   const state = { completed: false, step: 6, failComplete: true };
   await mock(page, state);
   await page.goto("/onboarding");
   await expect(page.getByRole("button", { name: "Enter Ask4Mo" })).toBeVisible();
+
+  // Attempt 1 fails.
   await page.getByRole("button", { name: "Enter Ask4Mo" }).click();
-  // No navigation occurs (finish() never reaches router.replace), so the onboarding UI persists and
-  // the URL stays on /onboarding — deterministic (absence of a client navigation).
-  await expect(page.getByRole("button", { name: "Enter Ask4Mo" })).toBeVisible();
+  // A recoverable, announced error appears (rendered in a role="alert" Alert — asserted by the unit
+  // test; here we match the message text to avoid Next.js's own empty route-announcer alert). URL
+  // stays on /onboarding; the candidate is not admitted.
+  await expect(page.getByText(/couldn.?t complete your setup/i)).toBeVisible();
+  await expect(page.getByText(/choices are saved/i)).toBeVisible();
   await expect(page).toHaveURL(/\/onboarding$/);
+  await expect(page.getByRole("button", { name: "Enter Ask4Mo" })).toBeEnabled();
+
+  // Server recovers; retry clears the error and completes to /app.
+  state.failComplete = false;
+  await Promise.all([
+    page.waitForURL(/\/app$/),
+    page.getByRole("button", { name: "Enter Ask4Mo" }).click(),
+  ]);
+  await expect(page).toHaveURL(/\/app$/);
 });
 
 test("E2E 2: interrupted onboarding resumes at the saved step", async ({ page }) => {
