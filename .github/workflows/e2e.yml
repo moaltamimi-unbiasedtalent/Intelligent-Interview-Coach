@@ -29,6 +29,18 @@ jobs:
         env:
           CI: "true"
         run: npm run e2e
+      # Diagnostic only: preserve the failure trace (network/console/DOM/navigation) so a
+      # CI-only failure that does not reproduce locally can be root-caused from evidence.
+      - name: Upload Playwright traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: |
+            frontend/test-results/
+            frontend/playwright-report/
+          retention-days: 14
+          if-no-files-found: ignore
 
   legacy-streamlit-smoke:
     name: Legacy Streamlit smoke

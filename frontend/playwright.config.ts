@@ -20,7 +20,13 @@ export default defineConfig({
   fullyParallel: false,
   use: {
     baseURL: E2E_URL,
-    trace: "on-first-retry",
+    // Capture a full trace (network + console + DOM snapshots + navigation) whenever a test
+    // FAILS, including on the first attempt. `on-first-retry` produced NO trace for CI-only
+    // failures because the suite runs with retries:0 (a first-attempt failure never retries),
+    // which is why the onboarding-gate CI failure left no artifact to root-cause. This is
+    // diagnostic observability only: it adds NO retries, timeouts, sleeps, or assertion changes,
+    // and does not alter what is tested.
+    trace: "retain-on-failure",
   },
   webServer: {
     command: `npm run build && npm run start -- --port ${E2E_PORT}`,
