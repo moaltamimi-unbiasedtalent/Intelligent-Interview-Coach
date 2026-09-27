@@ -534,6 +534,8 @@ export interface AgentRunRequest {
   enable_current_market_research?: boolean | null;
   /** Mo conversation language (P3.5): a bounded locale code; sets Mo's prose language only. */
   conversation_language?: string | null;
+  /** Mo coaching style (P10B Wave 2): a bounded tone; wording only, never scoring. */
+  coaching_style?: string | null;
   /** Owner-scoped selected JD document; the server resolves it to text (raw text never sent). */
   job_description_document_id?: number | null;
 }
@@ -802,13 +804,26 @@ export interface AccountResponse {
   interface_locale: string;
   /** Mo conversation language (P3.5). Independent of interface/dictation language. */
   conversation_language: string;
+  /** Bounded Mo coaching tone (P10B Wave 2). Tone only — never changes scoring. */
+  coaching_style: string;
+  /** Account-default career geography (P10B Wave 2). Independent of any language. */
+  career_geography: string;
+  /** Account-default career-focus role (P10B Wave 2). */
+  target_role: string;
+  /** First-run onboarding lifecycle (P10B Wave 2). */
+  onboarding_completed: boolean;
+  onboarding_step: number;
 }
 
-/** Partial preference update (P2/E2 + P3.5) — send only the fields you change. */
+/** Partial preference update (P2/E2 + P3.5 + P10B Wave 2) — send only the fields you change. */
 export interface PreferencesRequest {
   response_detail?: ResponseDetail;
   interface_locale?: string;
   conversation_language?: string;
+  coaching_style?: string;
+  career_geography?: string;
+  target_role?: string;
+  display_name?: string;
 }
 
 /** Deterministic presentation contract for progressive disclosure (P2/E2). */

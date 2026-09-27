@@ -124,6 +124,10 @@ export const messages = {
   },
   settings: {
     title: "Settings",
+    saved: "Saved",
+    savePersonalisation: "Update personalisation",
+    revisitSetup: "Revisit setup",
+    personalisation: "Personalisation & coaching",
     appearance: "Appearance",
     appearanceHelp:
       "The interface follows your system light/dark preference; the header toggle overrides it and is remembered on this device.",
@@ -203,6 +207,87 @@ export const messages = {
     startError: "Couldn’t start the interview. Please check the details and try again.",
   },
   // Shared Prepare/Practice context UI (P10B Wave 4): role/evidence/language.
+  // P10B Wave 2 - premium first-run onboarding + coaching/geography personalisation.
+  onboarding: {
+    progress: "Step {n} of {total}",
+    back: "Back",
+    next: "Continue",
+    saving: "Saving…",
+    getStarted: "Get started",
+    finish: "Enter Ask4Mo",
+    edit: "Edit",
+    // Step 1 - Welcome
+    welcomeTitle: "Let’s set up Mo around you",
+    welcomeBody: "A few quick choices tailor how Mo coaches you. You can change everything later in Settings.",
+    // Step 2 - About you
+    aboutTitle: "About you",
+    aboutBody: "This helps Mo address you and focus your preparation.",
+    nameLabel: "Preferred name",
+    nameHelp: "What should Mo call you? Optional.",
+    // Step 3 - Career focus
+    careerTitle: "Career focus",
+    careerBody: "Your default target. You can still set a different role per interview.",
+    targetRoleLabel: "Target role",
+    targetRoleHelp: "The role you’re preparing for. Optional.",
+    geographyLabel: "Career geography",
+    geographyHelp: "The job market you’re targeting. This is separate from your language and is never guessed from it.",
+    // Step 4 - Coaching
+    coachingTitle: "How Mo should coach you",
+    coachingBody: "Pick a coaching style. This changes how feedback is communicated, not how your interview performance is scored.",
+    detailSectionTitle: "Feedback detail",
+    // Step 5 - Language
+    languageTitle: "Language & communication",
+    languageBody: "Interface, conversation and dictation languages are independent - set each as you like. None of them changes your career geography.",
+    // Step 6 - Privacy & memory
+    privacyTitle: "Privacy & memory",
+    privacyMemory: "Mo only remembers what you approve, and you can edit or delete it any time.",
+    privacyDocuments: "Uploaded documents stay private evidence; only evidence you approve is ever used.",
+    privacyAudio: "Ask4Mo never stores audio and never analyses your voice.",
+    privacyControl: "You can view, export or delete your data from Settings and Account.",
+    // Step 7 - Review
+    reviewTitle: "Review",
+    reviewBody: "Here’s your setup. Edit anything, or enter Ask4Mo.",
+    rowName: "Preferred name",
+    rowTargetRole: "Target role",
+    rowGeography: "Career geography",
+    rowCoaching: "Coaching style",
+    rowDetail: "Feedback detail",
+    rowInterface: "Interface language",
+    rowConversation: "Conversation language",
+    notSet: "Not set",
+    // Step 8 - Complete
+    completeTitle: "Mo is ready",
+    completeBody: "Your coach is set up. Choose what to do next - nothing starts on its own.",
+    stepWelcome: "Welcome",
+    stepAbout: "About you",
+    stepCareer: "Career focus",
+    stepCoaching: "Coaching",
+    stepLanguage: "Language",
+    stepPrivacy: "Privacy",
+    stepReview: "Review",
+  },
+  // Shared coaching-style + geography controls (onboarding + Settings).
+  coaching: {
+    title: "Mo coaching style",
+    scoringNote: "Coaching style changes how feedback is communicated, not how your interview performance is scored.",
+    supportive: "Supportive",
+    supportiveDesc: "Encouraging and constructive while still identifying gaps.",
+    balanced: "Balanced",
+    balancedDesc: "Clear feedback with an even balance of strengths and improvements.",
+    direct: "Direct",
+    directDesc: "Concise, candid feedback with minimal cushioning.",
+    challenging: "Challenging",
+    challengingDesc: "Pushes harder with probing questions and stronger developmental challenge.",
+  },
+  geography: {
+    label: "Career geography",
+    unspecified: "Not specified",
+    global: "Global / remote",
+    de: "Germany", at: "Austria", ch: "Switzerland", fr: "France", es: "Spain",
+    it: "Italy", pt: "Portugal", nl: "Netherlands", be: "Belgium", lu: "Luxembourg",
+    gb: "United Kingdom", ie: "Ireland", us: "United States", ca: "Canada",
+    au: "Australia", nz: "New Zealand", other: "Other",
+  },
   prepctx: {
     targetRoleSection: "Target role",
     yourEvidence: "Your evidence",
