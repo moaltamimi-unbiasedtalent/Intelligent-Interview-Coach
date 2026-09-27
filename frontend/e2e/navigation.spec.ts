@@ -23,10 +23,7 @@ async function mock(page: Page) {
 test("Flow 1: home → Prepare", async ({ page }) => {
   await mock(page);
   await page.goto("/app");
-  // Pair the client <Link> click with its navigation (see Flow 6): asserting the URL immediately
-  // after the click races the Next router hydration window and can be swallowed on slow CI.
-  const prepareLink = page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Prepare" });
-  await Promise.all([page.waitForURL(/\/prepare$/), prepareLink.click()]);
+  await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Prepare" }).click();
   await expect(page).toHaveURL(/\/prepare$/);
 });
 
@@ -34,12 +31,7 @@ test("Flow 2: More → Sources", async ({ page }) => {
   await mock(page);
   await page.goto("/prepare");
   await page.getByRole("button", { name: /More/ }).click();
-  // Sources is a client <Link>; pair its click with the navigation (see Flow 6) so a click
-  // landing in the router hydration window is not swallowed (URL left on /prepare) on slow CI.
-  await Promise.all([
-    page.waitForURL(/\/sources$/),
-    page.getByRole("menuitem", { name: /Sources/ }).click(),
-  ]);
+  await page.getByRole("menuitem", { name: /Sources/ }).click();
   await expect(page).toHaveURL(/\/sources$/);
 });
 
@@ -47,20 +39,14 @@ test("Flow 3: More → Review & Diagnostics", async ({ page }) => {
   await mock(page);
   await page.goto("/prepare");
   await page.getByRole("button", { name: /More/ }).click();
-  await Promise.all([
-    page.waitForURL(/\/review$/),
-    page.getByRole("menuitem", { name: /Review & Diagnostics/ }).click(),
-  ]);
+  await page.getByRole("menuitem", { name: /Review & Diagnostics/ }).click();
   await expect(page).toHaveURL(/\/review$/);
 });
 
 test("Flow 4: Review hub → Agent Inspector", async ({ page }) => {
   await mock(page);
   await page.goto("/review");
-  await Promise.all([
-    page.waitForURL(/\/review\/agent$/),
-    page.getByRole("link", { name: /Agent Inspector/ }).click(),
-  ]);
+  await page.getByRole("link", { name: /Agent Inspector/ }).click();
   await expect(page).toHaveURL(/\/review\/agent$/);
 });
 
@@ -71,10 +57,7 @@ test("Flow 5: account control → account page", async ({ page }) => {
   // Account + Settings (Settings is no longer buried under Progress → Manage).
   await page.getByRole("button", { name: "Your account" }).click();
   await expect(page.getByRole("menuitem", { name: "Settings" })).toBeVisible();
-  await Promise.all([
-    page.waitForURL(/\/account$/),
-    page.getByRole("menuitem", { name: "Your account" }).click(),
-  ]);
+  await page.getByRole("menuitem", { name: "Your account" }).click();
   await expect(page).toHaveURL(/\/account$/);
 });
 
@@ -122,10 +105,12 @@ test("Mobile (390px): primary bottom nav; supporting routes still reachable", as
   }
   await expect(bottom.getByText("Sources")).toHaveCount(0);
 
-  // Sources reachable via the header More control (no URL typing). Sources is a client <Link>;
-  // pair the click with its navigation (see Flow 6) so a click landing in the router hydration
-  // window is not swallowed (URL left on /prepare) under slow single-worker CI - the observed
-  // failure. Deterministic: no sleep / retry / forced click / raised timeout / weakened assertion.
+  // Sources reachable via the header More control (no URL typing). This click-triggered client
+  // navigation is the exact assertion that failed on CI (URL left on /prepare). Pair the click
+  // with its navigation so the wait is bound to the navigation lifecycle rather than a fixed poll
+  // window - the standard Playwright pattern for click-triggered navigation, already used by
+  // Flow 6 here. Deterministic: no sleep / retry / forced click / raised timeout / weakened
+  // assertion. (The precise CI-only timing mechanism was not reproduced locally; see the report.)
   await page.getByRole("button", { name: /More/ }).click();
   await Promise.all([
     page.waitForURL(/\/sources$/),
@@ -135,9 +120,6 @@ test("Mobile (390px): primary bottom nav; supporting routes still reachable", as
 
   // The account page reachable via the account menu (Settings also lives there).
   await page.getByRole("button", { name: "Your account" }).click();
-  await Promise.all([
-    page.waitForURL(/\/account$/),
-    page.getByRole("menuitem", { name: "Your account" }).click(),
-  ]);
+  await page.getByRole("menuitem", { name: "Your account" }).click();
   await expect(page).toHaveURL(/\/account$/);
 });
