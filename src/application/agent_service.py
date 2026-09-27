@@ -86,6 +86,21 @@ def _resolve_language(value: Any) -> str | None:
     return code if code in RESPONSE_LANGUAGE_NAMES else None
 
 
+def _resolve_coaching_style(value: Any) -> str | None:
+    """Validate a candidate-supplied coaching style against the bounded allow-list.
+
+    Returns a supported style, or None (balanced/default → no directive) for anything unknown or
+    blank. Never honours arbitrary text — it can only ever set the TONE of Mo's coaching prose,
+    and only from this bounded set; it never affects scoring, evidence or grounding.
+    """
+    from src.coaching_style import COACHING_STYLES
+
+    if value is None:
+        return None
+    code = str(value).strip().lower()
+    return code if code in COACHING_STYLES else None
+
+
 def _default_model_factory(profile: "Any" = None) -> Any:
     from src.copilot.config import load_config
     from src.copilot.llm.openrouter import build_chat_model
@@ -265,6 +280,9 @@ class AgentApplicationService:
             "model_profile": profile.value,
             "response_language": _resolve_language(
                 getattr(request, "conversation_language", None)
+            ),
+            "coaching_style": _resolve_coaching_style(
+                getattr(request, "coaching_style", None)
             ),
         }
         self._emit_started(run_id, profile.value)

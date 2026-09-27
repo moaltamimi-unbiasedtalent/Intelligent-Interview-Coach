@@ -13,6 +13,7 @@ import { AccountMenu } from "@/components/auth/AccountMenu";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { LanguageMenu } from "@/components/i18n/LanguageMenu";
+import { Logo } from "@/components/ui/Logo";
 import { isMarketingRoute } from "@/lib/auth/routes";
 
 /**
@@ -25,6 +26,29 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname() || "/";
   if (isMarketingRoute(pathname)) {
     return <MarketingShell>{children}</MarketingShell>;
+  }
+  // Focused first-run onboarding chrome (P10B Wave 2): auth-gated (RouteGuard) but without the app
+  // nav/bottom-bar/tutorial, so setup reads as configuring a coach — not a page inside the product.
+  // The interface-language control stays available so the candidate can localize setup in-flow.
+  if (pathname === "/onboarding") {
+    return (
+      <div className="min-h-dvh">
+        <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-[8px] focus:bg-surface focus:px-3 focus:py-2 focus:shadow-soft">
+          Skip to content
+        </a>
+        <header className="border-b border-border bg-surface">
+          <div className="mx-auto flex max-w-content items-center justify-between gap-4 px-5 py-3">
+            <Logo href="/onboarding" />
+            <LanguageMenu />
+          </div>
+        </header>
+        <main id="main" className="mx-auto max-w-content px-5 py-8">
+          <Suspense fallback={children}>
+            <RouteGuard>{children}</RouteGuard>
+          </Suspense>
+        </main>
+      </div>
+    );
   }
   return (
     <div className="min-h-dvh">

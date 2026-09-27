@@ -5,6 +5,7 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { MemoryManager } from "@/components/memory/MemoryManager";
 import { ResponseDetailPreference } from "@/components/settings/ResponseDetailPreference";
 import { LanguageSettings } from "@/components/settings/LanguageSettings";
+import { PersonalisationSettings } from "@/components/settings/PersonalisationSettings";
 import { useT } from "@/components/i18n/I18nProvider";
 
 /** Settings page chrome (P10B Wave 1 — localized via useT). Metadata stays in the server page. */
@@ -14,6 +15,12 @@ export function SettingsContent() {
     <section className="max-w-reading">
       <PageHeader eyebrow={t("nav.account")} title={t("settings.title")} />
       <div className="grid gap-4">
+        <Card>
+          <CardBody>
+            <PersonalisationSettings />
+          </CardBody>
+        </Card>
+
         <Card>
           <CardBody>
             <LanguageSettings />

@@ -510,6 +510,17 @@ assumptions in core logic, prompts, scoring or examples.
   language and dictation locale are **independent** settings, and a language choice never
   changes labour-market geography. Do not hard-code new English strings in candidate UI;
   reviewer/diagnostic-only text is exempt. See `docs/capstone/p3_5_i18n_l10n.md`.
+  **P10B Wave 2 — coaching style + onboarding:** Mo coaching style is a **bounded enum**
+  (supportive/balanced/direct/challenging) in `src/coaching_style.py` → a **trusted allow-list-only
+  directive** (`coaching_style_directive`) appended like the language directive. It sets only the
+  TONE of coaching prose (Prepare Mo chat; interview **evaluation/report wording only**, never
+  question/strategy generation) and NEVER changes scoring, rubric, evidence, difficulty, grounding
+  or safety — never pass the raw code to the model. First-run onboarding is gated by
+  `users.onboarding_completed_at` (NULL = pending; existing accounts backfilled to completed by
+  migration `0013`); it reuses `user_preferences` + `PATCH /auth/preferences` (no parallel store).
+  Preference ownership stays separate and independent: interface ≠ conversation ≠ dictation ≠
+  **career_geography** (account-default market, never inferred from locale) ≠ session language
+  (per-interview override). See `docs/capstone/p10/p10b_wave2_premium_onboarding.md`.
   **P10B Wave 4:** the INTERVIEW (Practice) generation language is a bounded
   `conversation_language` on `InterviewConfiguration` (persisted via the JSON session codec — no
   migration) turned into a trusted, allow-list-only directive by `prompts._language_directive`,
