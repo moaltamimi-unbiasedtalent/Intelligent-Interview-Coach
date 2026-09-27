@@ -210,6 +210,14 @@ Complexity: **S** (≤1 day) · **M** (2–4 days) · **L** (1–2 weeks) · **X
   assessment. **Risk:** medium (external validity). **Complexity:** L.
 
 ## Wave 6 — Opportunity vs Workspace information architecture (new model + additive migration)
+- **STATUS: DELIVERED** on `feature/capstone-p10b-wave6-opportunities` (not merged; **additive
+  migration `0014_opportunities`, single head**; 0 paid/live). New owner-scoped `opportunities` table
+  + nullable `interviews/interview_sessions.opportunity_id` (SET NULL); `/opportunities` list + 4-step
+  create wizard + home; context propagation into Company Intelligence / Prepare / Practice (explicit
+  session > opportunity > account > default); Workspace reframed in copy only (no behaviour change);
+  BASIC + owner-scoped (foreign → 404) + audit events; account deletion + JD-deletion safety;
+  `eval_opportunity_journey.py` (25+ invariants). Opportunity sharing DEFERRED (future seam). See
+  `p10b_wave6_opportunity_model.md`.
 - **Objective:** introduce **Opportunity** (a candidate's private prep space for one role/company)
   and reframe **Workspace** as collaboration/sharing only.
 - **Scope:** a new owner-scoped `opportunity` grouping linking existing interviews, documents,

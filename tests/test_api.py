@@ -140,9 +140,10 @@ class _FakeRepo:
             self._next_user += 1
         return self._users[subject]
 
-    def save_interview(self, user_id, payload, source_session_id=None):
+    def save_interview(self, user_id, payload, source_session_id=None, opportunity_id=None):
         # Idempotent per (user_id, source_session_id), mirroring the real repository:
         # a repeat returns the existing id instead of inserting a duplicate row.
+        # opportunity_id (P10B Wave 6) is accepted to match the real signature.
         if source_session_id is not None:
             for iid, row in self._interviews.items():
                 if row["user_id"] == user_id and row.get("source_session_id") == source_session_id:

@@ -1,6 +1,7 @@
 /** Candidate-facing primary navigation (deliberately focused). `labelKey` is the i18n
  * key; `label` is the English fallback used only if the catalogue is unavailable. */
 export const PRIMARY_NAV = [
+  { href: "/opportunities", label: "Opportunities", labelKey: "nav.opportunities" },
   { href: "/prepare", label: "Prepare", labelKey: "nav.prepare" },
   { href: "/practice", label: "Practice", labelKey: "nav.practice" },
   { href: "/progress", label: "Progress", labelKey: "nav.progress" },

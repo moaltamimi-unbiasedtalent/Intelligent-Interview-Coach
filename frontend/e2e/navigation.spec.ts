@@ -92,15 +92,15 @@ test("Flow 7: keyboard — focus More, open, Escape closes", async ({ page }) =>
   await expect(more).toHaveAttribute("aria-expanded", "false");
 });
 
-test("Mobile (390px): 4-item bottom nav; supporting routes still reachable", async ({ page }) => {
+test("Mobile (390px): primary bottom nav; supporting routes still reachable", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mock(page);
   await page.goto("/prepare");
 
-  // Bottom nav shows exactly the four primary destinations.
+  // Bottom nav shows exactly the primary destinations (Opportunities added in P10B Wave 6).
   const bottom = page.locator("nav.fixed");
-  await expect(bottom.getByRole("link")).toHaveCount(4);
-  for (const label of ["Prepare", "Practice", "Progress", "History"]) {
+  await expect(bottom.getByRole("link")).toHaveCount(5);
+  for (const label of ["Opportunities", "Prepare", "Practice", "Progress", "History"]) {
     await expect(bottom.getByRole("link", { name: label })).toBeVisible();
   }
   await expect(bottom.getByText("Sources")).toHaveCount(0);

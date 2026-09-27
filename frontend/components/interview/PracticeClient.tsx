@@ -28,7 +28,7 @@ import { toSpeechLocale } from "@/lib/speech/ttsLocales";
  * next → complete → report, and restores that state on refresh. Without a session it
  * offers standalone setup. The backend is the only authority for transitions/scoring.
  */
-export function PracticeClient({ sessionId }: { sessionId?: string }) {
+export function PracticeClient({ sessionId, opportunityId }: { sessionId?: string; opportunityId?: string }) {
   const router = useRouter();
   const params = useSearchParams();
   // A just-created session id, held in state so the setup → interview transition is
@@ -43,12 +43,16 @@ export function PracticeClient({ sessionId }: { sessionId?: string }) {
   const fromCoach = params?.get("from") === "coach";
 
   if (!activeSession) {
+    const oppId = opportunityId ?? params?.get("opportunity") ?? undefined;
     return (
       <section className="mx-auto max-w-2xl animate-enter">
-        <InterviewSessionSetup onCreated={(id) => {
-          setCreatedSession(id);  // immediate transition
-          router.replace(`/practice?session=${encodeURIComponent(id)}`);  // refresh-safe URL
-        }} />
+        <InterviewSessionSetup
+          opportunityId={oppId && /^\d+$/.test(oppId) ? Number(oppId) : null}
+          onCreated={(id) => {
+            setCreatedSession(id);  // immediate transition
+            router.replace(`/practice?session=${encodeURIComponent(id)}`);  // refresh-safe URL
+          }}
+        />
       </section>
     );
   }

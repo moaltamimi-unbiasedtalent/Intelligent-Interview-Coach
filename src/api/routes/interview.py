@@ -17,7 +17,7 @@ operation already in flight is rejected rather than duplicated.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Header, Path, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Path, Request
 
 from src import constants
 from src.api.dependencies import (
@@ -339,11 +339,24 @@ def create_interview(
     # Default the coaching tone from the account preference when unset (Wave 2; feedback wording only).
     configuration = _resolve_coaching_default(configuration, user_id=user_id, request=request)
 
+    # Optional Opportunity link (P10B Wave 6): verify OWNERSHIP server-side before attaching a
+    # session to it. Resolved lazily - only when a link was requested - so the common path adds no
+    # repository dependency. A foreign/unknown opportunity is rejected (never another user's).
+    opportunity_id = body.opportunity_id
+    if opportunity_id is not None:
+        from src.application.opportunity_service import OpportunityApplicationService
+        from src.opportunity_repository import OpportunityRepository
+
+        opp_service = OpportunityApplicationService(
+            OpportunityRepository(get_repository(request).session_factory))
+        if opp_service.get(user_id, opportunity_id) is None:
+            raise HTTPException(status_code=404, detail="Opportunity not found.")
+
     key = (idempotency_key or "").strip()
     if key:
         if len(key) > _MAX_IDEMPOTENCY_KEY:
             raise ValidationError("The idempotency key is too long.")
-        session_id, created = store.create_or_get(user_id, key)
+        session_id, created = store.create_or_get(user_id, key, opportunity_id=opportunity_id)
         if not created:
             existing = _load(store, session_id, user_id)
             # A completed-or-in-progress prior create is returned as-is (never reset).
@@ -351,7 +364,7 @@ def create_interview(
             if existing.data.state != _INCOMPLETE_SETUP or existing.data.questions:
                 return _state(session_id, existing)
     else:
-        session_id = store.create(user_id)
+        session_id = store.create(user_id, opportunity_id=opportunity_id)
 
     try:
         with store.mutate(session_id, user_id, operation="create") as session:
@@ -602,10 +615,14 @@ def generate_report(
 
     # B. Idempotently save to completed History + repair saved_report_id in a second,
     #    provider-free save. A crash between the two never duplicates the History row.
+    # Carry the session's Opportunity link (P10B Wave 6) onto the completed-history row so the
+    # report is discoverable from the Opportunity. Owner-scoped; None for standalone sessions.
+    opp_id = store.opportunity_id_for(session_id, user_id)
     try:
         with store.mutate(session_id, user_id) as session:
             history_service.save_completed_interview(
-                session, config, repo=repo, user_id=user_id, source_session_id=session_id)
+                session, config, repo=repo, user_id=user_id, source_session_id=session_id,
+                opportunity_id=opp_id)
     except (SessionNotFoundError, SessionConflictError) as exc:
         raise _translate_store_error(exc) from None
     data = session.data

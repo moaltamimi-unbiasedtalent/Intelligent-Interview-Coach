@@ -32,6 +32,62 @@ export interface CapabilitiesResponse {
   company_research_enabled: boolean;
 }
 
+// --- Opportunities (P10B Wave 6) ---------------------------------------------
+// A candidate's private preparation context for one job. Distinct from a Workspace
+// (collaboration/sharing). Owner-scoped; mirrors src/api/schemas/opportunity.py.
+
+export type OpportunityStatus =
+  | "active" | "interviewing" | "offer" | "closed" | "archived";
+
+export interface Opportunity {
+  id: number;
+  title: string;
+  target_role: string;
+  company_name?: string | null;
+  company_location?: string | null;
+  company_country?: string | null;
+  company_domain?: string | null;
+  job_description_document_id?: number | null;
+  status: OpportunityStatus;
+  notes?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  archived_at?: string | null;
+}
+
+export interface OpportunityOverview extends Opportunity {
+  jd_available: boolean;
+  interview_ids: number[];
+  interview_count: number;
+}
+
+export interface OpportunityListResponse {
+  opportunities: Opportunity[];
+}
+
+export interface OpportunityCreateRequest {
+  target_role: string;
+  title?: string | null;
+  company_name?: string | null;
+  company_location?: string | null;
+  company_country?: string | null;
+  company_domain?: string | null;
+  job_description_document_id?: number | null;
+  notes?: string | null;
+}
+
+export interface OpportunityUpdateRequest {
+  target_role?: string | null;
+  title?: string | null;
+  company_name?: string | null;
+  company_location?: string | null;
+  company_country?: string | null;
+  company_domain?: string | null;
+  job_description_document_id?: number | null;
+  notes?: string | null;
+  status?: OpportunityStatus | null;
+}
+
 // --- Company Intelligence (P10B Wave 5) --------------------------------------
 // Mirrors src/application/company_intelligence_service.py. The UI must render FACT / REVIEW /
 // MODEL_INFERENCE distinctly and never blur them.
@@ -349,6 +405,8 @@ export interface CreateInterviewRequest {
   difficulty?: string;
   response_detail?: string;
   number_of_questions?: number | null;
+  // Optional organising link to a candidate Opportunity (P10B Wave 6); server verifies ownership.
+  opportunity_id?: number | null;
 }
 
 export interface QuestionOut {

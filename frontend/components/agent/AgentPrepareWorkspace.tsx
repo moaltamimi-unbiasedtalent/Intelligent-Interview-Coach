@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Field";
 import { DictationControl } from "@/components/ui/DictationControl";
 import { useDictationLanguage } from "@/lib/speech/useDictationLanguage";
+import { useOpportunityContext } from "@/lib/useOpportunityContext";
 import { ErrorState, LoadingState } from "@/components/ui/States";
 import { Card, CardBody } from "@/components/ui/Card";
 import { useAgentRun } from "./useAgentRun";
@@ -268,6 +269,22 @@ function FirstMessageForm({
   const [background, setBackground] = useState("");
   const [profile, setProfile] = useState<AgentProfile>(DEFAULT_PROFILE);
   const [research, setResearch] = useState(true);
+
+  // P10B Wave 6: when Prepare is opened from an Opportunity (`?opportunity=<id>`), pre-populate the
+  // role + JD context (the candidate can still edit them; never overrides an explicit entry).
+  const { opportunity } = useOpportunityContext();
+  const oppPrefilled = useRef(false);
+  const [oppNote, setOppNote] = useState(false);
+  useEffect(() => {
+    if (!opportunity || oppPrefilled.current) return;
+    oppPrefilled.current = true;
+    setOppNote(true);
+    setShowContext(true);
+    if (opportunity.target_role) setTargetRole((cur) => cur || opportunity.target_role);
+    if (opportunity.jd_available && opportunity.job_description_document_id) {
+      setJdDocId((cur) => cur ?? opportunity.job_description_document_id ?? null);
+    }
+  }, [opportunity]);
   // Dictation recognition locale — deliberately SEPARATE from the (future) application
   // locale, the model profile and the response-detail preference.
   const [dictationLang, setDictationLang] = useDictationLanguage();
@@ -353,6 +370,12 @@ function FirstMessageForm({
           lang={dictationLang}
           onLangChange={setDictationLang}
         />
+
+        {oppNote ? (
+          <p className="rounded border border-border bg-surface-2 px-3 py-2 text-sm text-muted">
+            {t("opportunity.savedNote")}
+          </p>
+        ) : null}
 
         <button type="button" onClick={() => setShowContext((v) => !v)} className="text-sm font-medium text-accent">
           {showContext ? "− Hide extra context" : "+ Add context (optional)"}

@@ -28,6 +28,8 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 | B8 | Mo coordinates Research/Candidate specialists | PARTIAL | Bounded delegation | P5 | AC-15/16 |
 | H1 | Candidate-facing company research (name + location) | DELIVERED (P10B W5) — directable `/company` over the 7F engine; FACT/REVIEW/MODEL_INFERENCE separation; identity disambiguation; owner-scoped JD; discoverable from Prepare + "More"; 0 paid/live | Directable, discoverable UI | P10B W5 | — |
 | H2 | Live employer-review sources (Glassdoor/Kununu/Google) | NOT INTEGRATED (P10B W5) — provider feasibility matrix documented; ToS/licensing prohibit scraping; UI links out, copies no content | Provider review required before any integration | P10B W5 | — |
+| I1 | Workspace purpose unclear | DELIVERED (P10B W6) — Workspace reframed as collaboration/sharing (copy only; behaviour unchanged); Opportunity added as the solo prep concept; `workspaces.vsOpportunity` clarifies the distinction | Distinct, clear concepts | P10B W6 | — |
+| I2 | No Opportunity (per-role/company prep space) | DELIVERED (P10B W6) — owner-scoped `opportunities` model (mig 0014, additive) grouping role/company/JD + Company Intelligence/Prepare/Practice/reports; context propagation; account-deletion + JD-deletion safe; sharing deferred | Opportunity container | P10B W6 | — |
 
 ## Group C — Knowledge / RAG
 | ID | Requirement | Current | Target | Phase | Acceptance |

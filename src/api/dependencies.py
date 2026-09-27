@@ -427,6 +427,15 @@ def resolve_document_text(request: Request, *, user_id: int, document_id: int,
     return svc.extracted_text(user_id=user_id, document_id=document_id, max_chars=max_chars)
 
 
+def get_opportunity_service(repo=Depends(get_repository)):
+    """Owner-scoped Opportunity service (P10B Wave 6), built over the injected app repository
+    (so tests can override the repository/database)."""
+    from src.application.opportunity_service import OpportunityApplicationService
+    from src.opportunity_repository import OpportunityRepository
+
+    return OpportunityApplicationService(OpportunityRepository(repo.session_factory))
+
+
 def get_research_service(request: Request):
     """The governed external research engine (P10B Wave 5, reused from Phase 7F).
 

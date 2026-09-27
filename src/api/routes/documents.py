@@ -170,9 +170,13 @@ def review_claim(
 
 
 @router.delete("/{document_id}", response_model=DeleteResponse, summary="Delete a document and all derived evidence")
-def delete_document(document_id: int = Path(...), svc=Depends(get_documents_service), user_id: int = Depends(get_current_user_id)) -> DeleteResponse:
+def delete_document(document_id: int = Path(...), svc=Depends(get_documents_service), repo=Depends(get_repository), user_id: int = Depends(get_current_user_id)) -> DeleteResponse:
     if not svc.delete(user_id=user_id, document_id=document_id):
         raise HTTPException(status_code=404, detail="Document not found.")
+    # P10B Wave 6: clear any Opportunity's JD link to this now-deleted document so the Opportunity
+    # survives without pointing at inaccessible content (Postgres also SET NULLs via the FK).
+    from src.opportunity_repository import OpportunityRepository
+    OpportunityRepository(repo.session_factory).clear_jd_links(document_id)
     return DeleteResponse(deleted=True)
 
 

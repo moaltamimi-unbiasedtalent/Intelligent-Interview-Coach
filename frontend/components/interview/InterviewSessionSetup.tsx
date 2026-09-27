@@ -22,7 +22,10 @@ const labelize = (id: string) => id.charAt(0).toUpperCase() + id.slice(1).replac
  * backend-owned taxonomies (career levels) stay the single source of truth; the server resolves
  * any selected document/evidence, so no raw candidate text is held in the browser.
  */
-export function InterviewSessionSetup({ onCreated }: { onCreated: (sessionId: string) => void }) {
+export function InterviewSessionSetup({ onCreated, opportunityId = null }: {
+  onCreated: (sessionId: string) => void;
+  opportunityId?: number | null;
+}) {
   const { t } = useI18n();
   const account = useAuthOptional()?.account;
   const [role, setRole] = useState("");
@@ -50,6 +53,25 @@ export function InterviewSessionSetup({ onCreated }: { onCreated: (sessionId: st
     const pref = toSupportedLocale(account?.conversation_language ?? null);
     if (pref) setConversationLanguage(pref);
   }, [account?.conversation_language]);
+
+  // P10B Wave 6: when started from an Opportunity, pre-populate role + JD (the candidate can still
+  // edit them). Opportunity context is an initial value, never an override of an explicit choice.
+  const [savedNote, setSavedNote] = useState(false);
+  useEffect(() => {
+    if (opportunityId == null) return;
+    let alive = true;
+    api.opportunities.get(opportunityId)
+      .then((o) => {
+        if (!alive) return;
+        setSavedNote(true);
+        setRole((cur) => cur || o.target_role || "");
+        if (o.jd_available && o.job_description_document_id) {
+          setJdDocId((cur) => cur ?? o.job_description_document_id ?? null);
+        }
+      })
+      .catch(() => { /* foreign/unknown id: prefill nothing */ });
+    return () => { alive = false; };
+  }, [opportunityId]);
 
   useEffect(() => {
     let alive = true;
@@ -88,6 +110,8 @@ export function InterviewSessionSetup({ onCreated }: { onCreated: (sessionId: st
           ...(interviewTypes.length ? { interview_types: interviewTypes } : {}),
           ...(difficulty ? { difficulty } : {}),
         },
+        // Owner-scoped organising link (P10B Wave 6); server verifies ownership.
+        ...(opportunityId != null ? { opportunity_id: opportunityId } : {}),
       });
       onCreated(state.session_id);
     } catch (e) {
@@ -102,6 +126,11 @@ export function InterviewSessionSetup({ onCreated }: { onCreated: (sessionId: st
       <CardBody>
         <h1 className="text-lg font-semibold">{t("practice.title")}</h1>
         <p className="mt-1 text-sm text-muted">{t("practice.setupSubtitle")}</p>
+        {savedNote ? (
+          <p className="mt-2 rounded border border-border bg-surface-2 px-3 py-2 text-sm text-muted">
+            {t("opportunity.savedNote")}
+          </p>
+        ) : null}
 
         {/* TARGET ROLE */}
         <section className="mt-5 grid gap-3">

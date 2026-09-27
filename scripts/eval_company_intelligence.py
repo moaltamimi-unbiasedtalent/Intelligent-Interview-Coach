@@ -166,12 +166,13 @@ def run() -> dict[str, tuple[bool, str]]:
           "company_research_enabled" in common and "_company_research_available" in health,
           "capabilities advertise company_research_enabled")
 
-    # --- no migration (Wave 5 is read-mostly; Opportunity persistence is Wave 6) ---
+    # --- no COMPANY-RESEARCH migration (Wave 5 is read-mostly; company research persists nothing).
+    # Later waves may add unrelated migrations (e.g. Wave 6 opportunities) - only assert that
+    # company intelligence itself introduced no migration/table. ---
     migs = sorted(p.name for p in (ROOT / "migrations" / "versions").glob("0*.py"))
-    check("no_new_migration",
-          migs and migs[-1].startswith("0013_") and not any("company" in m for m in migs)
-          and not any("opportunity" in m for m in migs),
-          f"migration head unchanged ({migs[-1] if migs else 'none'}); no company/opportunity table")
+    check("no_company_research_migration",
+          migs and not any("company" in m or "research" in m for m in migs),
+          "company intelligence introduced no migration/table (research stays ephemeral)")
 
     # --- frontend: 7-locale parity for the company namespace + no emoji/em-dash ---
     locales = ["en", "de", "fr", "es", "it", "pt", "nl"]

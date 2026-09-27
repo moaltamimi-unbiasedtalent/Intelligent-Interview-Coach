@@ -57,15 +57,15 @@ def test_upgrade_head_creates_baseline_schema(tmp_path, monkeypatch):
 
 
 def test_single_head_after_phase10(tmp_path, monkeypatch):
-    # Alembic must have exactly one head. The current head is the P10B Wave 2 revision
-    # 0013 (onboarding_personalisation), which chains from 0012 (document_failure_kind) → 0011.
+    # Alembic must have exactly one head. The current head is the P10B Wave 6 revision
+    # 0014 (opportunities), which chains from 0013 (onboarding_personalisation) → 0012 → 0011.
     from alembic.config import Config
     from alembic.script import ScriptDirectory
 
     cfg = Config("alembic.ini")
     cfg.set_main_option("script_location", "migrations")
     heads = ScriptDirectory.from_config(cfg).get_heads()
-    assert list(heads) == ["0013_onboarding_personalisation"]
+    assert list(heads) == ["0014_opportunities"]
 
 
 def test_upgrade_head_adds_source_session_id(tmp_path, monkeypatch):

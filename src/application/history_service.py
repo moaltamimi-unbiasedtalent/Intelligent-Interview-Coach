@@ -137,6 +137,7 @@ def save_completed_interview(
     mode: str | None = None,
     user_id: int | None = None,
     source_session_id: str | None = None,
+    opportunity_id: int | None = None,
 ) -> None:
     """Save a completed interview once per interview (safe on failure).
 
@@ -164,7 +165,7 @@ def save_completed_interview(
             return
         interview_id = repo.save_interview(
             user_id, build_interview_payload(data, mode=mode),
-            source_session_id=source_session_id,
+            source_session_id=source_session_id, opportunity_id=opportunity_id,
         )
         # interview_id is a brand-new row OR the pre-existing row for this durable
         # session (idempotent) — either way SessionData is repaired truthfully.

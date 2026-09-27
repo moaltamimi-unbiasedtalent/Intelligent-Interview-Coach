@@ -10,11 +10,12 @@
  * separation) lives in CompanyReport. All copy is localized; no emoji, no em dash.
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import type { CompanyIntelligenceReport } from "@/lib/api/types";
+import { useOpportunityContext } from "@/lib/useOpportunityContext";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
@@ -36,6 +37,23 @@ export function CompanyResearchClient() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ message: string; requestId?: string | null } | null>(null);
   const [report, setReport] = useState<CompanyIntelligenceReport | null>(null);
+
+  // P10B Wave 6: prefill from an Opportunity when opened via `?opportunity=<id>`. Applied once;
+  // the candidate can still edit every field (Opportunity context never overrides an edit).
+  const { opportunity } = useOpportunityContext();
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (!opportunity || prefilled.current) return;
+    prefilled.current = true;
+    if (opportunity.company_name) setName(opportunity.company_name);
+    if (opportunity.company_location) setLocation(opportunity.company_location);
+    if (opportunity.company_country) setCountry(opportunity.company_country);
+    if (opportunity.company_domain) setWebsite(opportunity.company_domain);
+    if (opportunity.target_role) setRole(opportunity.target_role);
+    if (opportunity.jd_available && opportunity.job_description_document_id) {
+      setJdDocId(opportunity.job_description_document_id);
+    }
+  }, [opportunity]);
 
   const canSubmit = name.trim().length > 0 && !busy;
 
