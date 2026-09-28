@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button, ButtonLink } from "@/components/ui/Button";
-import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
+import { EmptyState, EmptyStateIllustration, ErrorState, LoadingState } from "@/components/ui/States";
 import { PracticeProgress } from "@/components/progress/PracticeProgress";
 
 /** Candidate-friendly labels — technical categories are never shown raw. */
@@ -99,6 +99,12 @@ export function ProgressClient() {
           <EmptyState
             title="Nothing saved yet."
             description="When you choose to save preparation priorities, they'll appear here. Your coach never saves anything without you asking."
+            illustration={
+              <EmptyStateIllustration
+                src="/images/ask4mo/ask4mo-empty-progress-ink.png"
+                alt="Hand-painted stepping stones leading from a pencil toward a focused goal."
+              />
+            }
             action={<ButtonLink href="/prepare">Prepare with Mo</ButtonLink>}
           />
         ) : (

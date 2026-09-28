@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useT } from "@/components/i18n/I18nProvider";
 import { ButtonLink } from "@/components/ui/Button";
 import { MarketingIcon, type IconName } from "@/components/marketing/MarketingIcon";
@@ -34,6 +36,19 @@ export function ProductContent() {
         <h1 className="text-3xl font-bold md:text-4xl">{t("marketing.systemTitle")}</h1>
         <p className="mt-3 text-lg text-muted">{t("marketing.systemLead")}</p>
       </header>
+
+      {/* Wave 8 B0: hand-drawn editorial illustration of the one connected system. Its warm paper
+          background is preserved inside a clean bordered figure; shown full-frame (no crop). */}
+      <figure className="mt-8 overflow-hidden rounded-lg border border-border">
+        <Image
+          src="/images/ask4mo/ask4mo-product-connected-system-editorial.png"
+          alt="A hand-drawn opportunity folder connecting company research, evidence, conversation, practice and feedback."
+          width={1536}
+          height={1024}
+          sizes="(max-width: 1152px) 100vw, 1152px"
+          className="h-auto w-full"
+        />
+      </figure>
 
       {/* The parts of one system */}
       <div className="mt-10 grid gap-6 sm:grid-cols-2">

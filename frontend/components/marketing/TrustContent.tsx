@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
 import { useT } from "@/components/i18n/I18nProvider";
@@ -33,6 +34,18 @@ export function TrustContent() {
     <div className="mx-auto max-w-reading px-4 py-16">
       <h1 className="text-3xl font-bold md:text-4xl">{t("marketing.trustTitle")}</h1>
       <p className="mt-3 text-muted">{t("marketing.trustSubtitle")}</p>
+      {/* Wave 8 B0: privacy/evidence still life. Shown full (no crop) so both hands, the folio and
+          the source card remain visible; photograph uses the border radius + border token. */}
+      <figure className="mt-6 overflow-hidden rounded-lg border border-border">
+        <Image
+          src="/images/ask4mo/ask4mo-trust-private-evidence-photo.png"
+          alt="A person placing private evidence into a controlled document folio beside source material."
+          width={1448}
+          height={1086}
+          sizes="(max-width: 720px) 100vw, 720px"
+          className="h-auto w-full"
+        />
+      </figure>
       <dl className="mt-10 space-y-6">
         {CONTROLS.map(([term, desc]) => (
           <div key={term} className="rounded-lg border border-border bg-surface p-5">
