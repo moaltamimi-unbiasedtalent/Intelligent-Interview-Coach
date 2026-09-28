@@ -1,0 +1,68 @@
+{
+  "release_candidate": "RC-P10-002",
+  "phase": "P10B Wave 8 Stage B — Release Candidate + Pilot 2 readiness (post Visual System v2)",
+  "baseline_main_sha": "d255d34807e665a3af50dfba886d40e16ff2630d",
+  "baseline_pr": "#97 (P10B Wave 8 integrated release qualification)",
+  "rc_branch": "origin/main @ ab9ff73 (PR #98 merge of feature/capstone-p10b-wave8-b0-visual-system onto main)",
+  "release_candidate_sha": "ab9ff7381ee02ed8de358e549ebf2e466e6ca08d",
+  "evidence_correction": "documentation-only; RC-P10-002 is the code/evaluation candidate identified by ab9ff73 (merged main, Stage B0 Visual System v2). This artifact and the Pilot 2 readiness materials are committed on top and do not change the candidate.",
+  "generated": "2026-09-28",
+  "supersedes_note": "RC-P9-001 (319759d) remains immutable and untouched; RC-P10-002 is the current candidate after Waves 1-8 + Stage B0.",
+  "version_identity": {
+    "alembic_head": "0014_opportunities",
+    "visual_system_version": "ask4mo-image-system-v2 (12 PNG assets; 6 empty-state illustrations with alpha; 4 photos + 2 editorial illustrations)",
+    "evaluation_set_version": "p9-rc1-frozen (unchanged)",
+    "knowledge_index_version": "P6 governed datasets + governance manifest",
+    "prompt_config_version": "P6 Prompt Lab governed (no auto-promotion)",
+    "model_policy_version": "P5 src/llm/policy.py — 8 operations incl. REALTIME_VOICE",
+    "specialist_version": "P5 bounded specialists (role/evidence[deterministic]/coaching)",
+    "fixture_version": "frozen P9-rc1 + Wave 8 eval_release_candidate (27 invariants)"
+  },
+  "gate_results": {
+    "backend_pytest": "2455 passed, 3 skipped, 0 failed",
+    "frontend_unit": "282 passed (53 files)",
+    "playwright_e2e": "119 passed (chromium)",
+    "evaluators_deterministic": "release_candidate(27)/marketing_product_trust(32)/opportunity_journey/workspace_security/documents_evidence/identity_platform/security/i18n_l10n — PASS; full CI eval set green as of Wave 8",
+    "ruff": "pass", "compileall": "pass", "lint": "pass", "typecheck": "pass",
+    "build": "pass", "openapi": "112 paths", "alembic_single_head": true, "alembic_up_down_up": "valid (0014)", "secret_scan": "clean"
+  },
+  "visual_system_qualification": {
+    "assets_present": 12,
+    "empty_state_alpha_verified": true,
+    "public_placements": ["/ hero", "/ still-life", "/product", "/trust", "/about", "/help"],
+    "empty_state_placements": ["opportunities", "company (initial only)", "documents story bank", "progress", "history", "workspaces (once, both empty)"],
+    "image_free_surfaces_scan": "0 leaked references",
+    "alt_text": "verbatim from claude-implementation-prompt.md",
+    "provenance": "photographs labelled AI-generated illustrative brand photography; no testimonials/fabricated identities",
+    "b0_opportunities_closure": "authenticated flow verified: empty shows illustration, populated hides it, creation works, 390px no overflow, error path shows no illustration; no product defect"
+  },
+  "acceptance": {
+    "note": "Deterministic AC/EX baseline carried from RC-P9-001; AC-24 human pilot remains NOT RUN / PENDING PILOT 2. Pilot 2 readiness prepared this stage (kit + runbook + methodology).",
+    "AC": {"PASS": 18, "PARTIAL": 6, "NOT_RUN": 1, "BLOCKED": 0, "total": 25},
+    "EX": {"PASS": 5, "PARTIAL": 10, "NOT_RUN": 0, "BLOCKED": 1, "total": 16},
+    "AC-24_human_pilot": "NOT RUN / PENDING PILOT 2"
+  },
+  "defects": {"P0": 0, "P1": 0, "P2": 0, "P3": 0},
+  "freeze_semantics": {
+    "rc_code_evaluation_sha": "ab9ff7381ee02ed8de358e549ebf2e466e6ca08d",
+    "this_closure": "RC identification + Pilot 2 readiness documentation only",
+    "product_or_runtime_changed": false,
+    "acceptance_denominator_changed": false,
+    "evaluation_case_changed": false,
+    "gate_rerun_for_favourable_result": false,
+    "new_feature_introduced": false,
+    "note": "A material runtime/code change during Pilot 2 triage would require a new RC (RC-P10-003); RC-P10-002 must remain traceable to ab9ff73."
+  },
+  "paid_live_calls": 0,
+  "ex12_hosted_operation": "BLOCKED / NOT RUN (no authorized deployment)",
+  "live_provider_validation": "NOT RUN (no paid/live calls authorized; deterministic fakes/stubs only)",
+  "human_pilot": "NOT RUN / PENDING PILOT 2 (owner-supplied participants required)",
+  "public_launch": "NOT AUTHORIZED",
+  "ci_status_note": "GitHub CI for PR #98 could not be queried from this environment (no gh/token/bound PR); qualification was reproduced locally on the exact merged SHA ab9ff73.",
+  "configuration_assumptions": {
+    "external_providers": "all deterministic fakes/stubs; no OpenRouter/OpenAI-realtime/Google/Brevo/Adzuna/RAGAS live calls",
+    "database": "SQLite for local/test; PostgreSQL for hosted (deploy artifacts)",
+    "rate_limit_store": "in-memory single-process (single-replica assumption)",
+    "browser": "Chromium fully tested; Firefox/WebKit not tested in this environment"
+  }
+}
