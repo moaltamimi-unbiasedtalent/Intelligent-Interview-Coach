@@ -137,6 +137,38 @@ sign-in tests 40/40). This does not assert any particular Playwright implementat
 that `toHaveURL` "polls" and `waitForURL` does not — both are waiting mechanisms); only the observed
 determinism under stress is claimed.
 
+### Correction (2026-09-28, Wave 8 Stage A CI evidence)
+The note above addressed the **completion→`/app`** navigation and the sign-in navigation, and it
+applied the same `waitForURL` synchronisation to the **initial `/prepare`→`/onboarding` gate** in
+E2E 1. Subsequent CI evidence (Wave 8 Stage A branch) showed E2E 1's **gate** `waitForURL(/\/onboarding$/)`
+timing out at the full 60s with the browser remaining on `/prepare`.
+
+**What this establishes (only):** the `/prepare`→`/onboarding` navigation did **not complete or
+become observable within 60s** in that CI run. It does **not**, on its own, distinguish between "the
+redirect was never initiated", "it was initiated but did not complete", and "it completed but was not
+observed" — the trace needed to tell these apart was not captured (see below). What it does show is
+that a 60s `waitForURL` timeout is **not** explained by observation-synchronisation timing (a redirect
+that had occurred would have been observed well within 60s), so the earlier "insufficient test
+synchronisation" framing does not carry over to this gate failure.
+
+**Leading hypothesis (not demonstrated):** because the redirect is fired only from RouteGuard's
+`useEffect` and only when `/auth/me` resolves to `status:"authenticated"` with
+`onboarding_completed:false`, the most likely path to "stays on `/prepare`" is that `/auth/me`
+resolved to a non-`authenticated` state in CI — e.g. `status:"unknown"` from a mock-miss escaping to
+the absent `:8000` backend. This is a **hypothesis to be confirmed or refuted by a CI trace**, not a
+demonstrated mechanism; it was **not** reproducible locally.
+
+What remains valid: the earlier completion/sign-in observations and their stress evidence stand. What
+is corrected: the gate failure is a distinct class from the completion-navigation class, and the
+synchronisation framing must not be extended to it. As of this correction the gate failure has **not
+been reproduced locally** despite extensive stress (E2E 1 ×50; instrumented gate ×15 at 8× CPU
+throttle and ×20 at 20× throttle + 250 ms `/auth/me` delay, all redirected; full CI suite ×5, 119/119
+each). The mechanism is therefore **not yet demonstrated**; CI trace capture on failure has been
+enabled (`trace: retain-on-failure` + a failure-artifact upload in `e2e.yml`) to obtain first-hand
+network/console/navigation evidence from the next CI occurrence. No product or test-assertion code was
+changed on this basis. Wave 8 Stage A is **not merge-ready** and RC-P10-002 is **not eligible** until
+the gate failure is root-caused and CI is green.
+
 ## Known limitations
 - Human/legal translation review of the new strings is not done (engineering draft).
 - Career-geography is a bounded curated list (not an exhaustive market taxonomy).
