@@ -210,9 +210,14 @@ def run() -> dict[str, tuple[bool, str]]:
 
     # RC gate discipline: RC-P10-002 is NOT silently created; the gate is documented.
     rc_exists = (ROOT / "artifacts/capstone/p10/RC-P10-002").exists()
+    rc_gate_results = (ROOT / "artifacts/capstone/p10/RC-P10-002/gate_results.md").exists()
+    rc_manifest = (ROOT / "artifacts/capstone/p10/RC-P10-002/manifest.json").exists()
     gate_doc = "Release qualification criteria" in read("docs/capstone/p10/p10b_wave8_release_qualification.md")
-    check("rc_gate_not_bypassed", (not rc_exists) and gate_doc,
-          "RC-P10-002 is not created without passing the documented qualification gate")
+    # Invariant intent: RC-P10-002 may exist ONLY with a documented qualification gate AND its own
+    # gate_results.md + manifest.json (the RC-P9-001 convention). It must never be created bypassing
+    # that evidence. (Stage B legitimately creates it after the gate passes; earlier stages had no RC.)
+    check("rc_gate_not_bypassed", gate_doc and ((not rc_exists) or (rc_gate_results and rc_manifest)),
+          "RC-P10-002 is only created alongside its documented qualification gate + gate_results/manifest")
 
     return results
 
