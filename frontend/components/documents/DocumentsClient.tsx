@@ -18,6 +18,7 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
+import { EmptyStateIllustration } from "@/components/ui/States";
 import { LoadingState } from "@/components/ui/States";
 import { DocumentUpload, categoryLabelKey } from "@/components/documents/DocumentUpload";
 
@@ -310,7 +311,16 @@ function StoryBank({ stories, onChanged }: { stories: StoryOut[]; onChanged: () 
       <h2 className="text-lg font-bold text-foreground">{t("documents.storiesTitle")}</h2>
       <p className="text-sm text-muted">{t("documents.storiesSubtitle")}</p>
       {stories.length === 0 ? (
-        <p className="mt-3 text-sm text-muted">{t("documents.storyEmpty")}</p>
+        <>
+          {/* Wave 8 B0: empty Story bank illustration between the subtitle and the empty message. */}
+          <div className="mt-3 flex justify-center">
+            <EmptyStateIllustration
+              src="/images/ask4mo/ask4mo-empty-documents-story-bank-ink.png"
+              alt="A hand reviewing private evidence and turning it into reusable story cards."
+            />
+          </div>
+          <p className="mt-3 text-sm text-muted">{t("documents.storyEmpty")}</p>
+        </>
       ) : (
         <ul className="mt-3 space-y-2">
           {stories.map((s) => (

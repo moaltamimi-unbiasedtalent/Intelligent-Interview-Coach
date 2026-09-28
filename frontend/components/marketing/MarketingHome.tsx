@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -55,6 +56,20 @@ export function MarketingHome() {
           </Link>
         </div>
         <p className="mt-4 text-xs text-muted">{t("marketing.heroNote")}</p>
+        {/* Wave 8 B0: documentary hero. Full width on desktop (natural 1840x854); a deliberate
+            mobile crop keeps the subject, notes and folio (never the face/hands) via object-position. */}
+        <figure className="mx-auto mt-10 overflow-hidden rounded-lg border border-border">
+          <div className="relative aspect-[3/2] w-full sm:aspect-[1840/854]">
+            <Image
+              src="/images/ask4mo/ask4mo-home-hero-documentary.png"
+              alt="A professional preparing interview notes at a dining table in soft morning light."
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 1152px"
+              className="object-cover object-[72%_50%] sm:object-center"
+            />
+          </div>
+        </figure>
       </section>
 
       {/* Trust strip */}
@@ -79,6 +94,18 @@ export function MarketingHome() {
             <p className="mt-3 text-muted">{t("marketing.problemResolveBody")}</p>
           </div>
         </div>
+        {/* Wave 8 B0: overhead still life of scattered materials organised into one folder. Shown in
+            full (object-contain, no crop) so both the scattered and organised sides stay visible. */}
+        <figure className="mx-auto mt-8 max-w-[960px] overflow-hidden rounded-lg border border-border">
+          <Image
+            src="/images/ask4mo/ask4mo-home-preparation-still-life.png"
+            alt="Hands organising job research, notes and interview materials into one opportunity folder."
+            width={1536}
+            height={1024}
+            sizes="(max-width: 960px) 100vw, 960px"
+            className="h-auto w-full"
+          />
+        </figure>
       </section>
 
       {/* One connected system, per Opportunity */}

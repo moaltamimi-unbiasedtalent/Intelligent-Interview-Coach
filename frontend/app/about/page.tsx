@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 
 import { ButtonLink } from "@/components/ui/Button";
 
@@ -31,6 +32,18 @@ export default function AboutPage() {
         <a href="/trust" className="underline">Trust</a> and{" "}
         <a href="/ai-transparency" className="underline">AI transparency</a> pages.
       </p>
+      {/* Wave 8 B0: candid coaching conversation. Illustrative AI-generated brand photography - the
+          depicted people are not Ask4Mo employees, customers or testimonial subjects. */}
+      <figure className="mt-8 overflow-hidden rounded-lg border border-border">
+        <Image
+          src="/images/ask4mo/ask4mo-about-human-conversation.png"
+          alt="Two people having a thoughtful coaching conversation in a quiet library."
+          width={1448}
+          height={1086}
+          sizes="(max-width: 720px) 100vw, 720px"
+          className="h-auto w-full"
+        />
+      </figure>
       <p className="mt-6 text-sm text-muted">
         Questions or privacy requests? Contact support at the address configured for your
         deployment (see the Help centre once signed in).

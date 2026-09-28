@@ -19,7 +19,7 @@ import { useI18n } from "@/components/i18n/I18nProvider";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
-import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
+import { EmptyState, EmptyStateIllustration, ErrorState, LoadingState } from "@/components/ui/States";
 import { OpportunityStatusBadge } from "@/components/opportunities/OpportunityStatusBadge";
 import { OpportunityCreate } from "@/components/opportunities/OpportunityCreate";
 
@@ -83,6 +83,12 @@ export function OpportunitiesClient() {
         <EmptyState
           title={t("opportunity.emptyTitle")}
           description={t("opportunity.emptyBody")}
+          illustration={
+            <EmptyStateIllustration
+              src="/images/ask4mo/ask4mo-empty-opportunities-ink.png"
+              alt="An open hand-drawn folder ready for role, company and evidence cards."
+            />
+          }
           action={<Button onClick={() => setCreating(true)}>{t("opportunity.create")}</Button>}
         />
       ) : (

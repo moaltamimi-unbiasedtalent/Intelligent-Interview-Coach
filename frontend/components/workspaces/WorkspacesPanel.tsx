@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useT } from "@/components/i18n/I18nProvider";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
+import { EmptyStateIllustration } from "@/components/ui/States";
 import { api } from "@/lib/api/client";
 import type { MyWorkspaces, ShareGrantOut } from "@/lib/api/types";
 
@@ -138,6 +139,17 @@ export function WorkspacesPanel() {
             </Card>
           ))}
         </section>
+      )}
+
+      {/* Wave 8 B0: a single sharing empty-state illustration, shown once only when BOTH sharing
+          lists are empty. The two section headings and their empty messages are retained below. */}
+      {sharedByMe.length === 0 && sharedWithMe.length === 0 && (
+        <div className="flex justify-center">
+          <EmptyStateIllustration
+            src="/images/ask4mo/ask4mo-empty-workspaces-sharing-ink.png"
+            alt="A hand moving one selected card between two otherwise private workspaces."
+          />
+        </div>
       )}
 
       <section className="grid gap-2">

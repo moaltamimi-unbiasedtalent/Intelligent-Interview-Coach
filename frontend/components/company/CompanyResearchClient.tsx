@@ -20,7 +20,7 @@ import { useI18n } from "@/components/i18n/I18nProvider";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Field";
-import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
+import { EmptyState, EmptyStateIllustration, ErrorState, LoadingState } from "@/components/ui/States";
 import { DocumentPicker } from "@/components/documents/DocumentPicker";
 import { CompanyReport } from "@/components/company/CompanyReport";
 
@@ -168,7 +168,16 @@ export function CompanyResearchClient() {
             <CompanyReport report={report} />
           )
         ) : (
-          <EmptyState title={t("company.emptyTitle")} description={t("company.emptyBody")} />
+          <EmptyState
+            title={t("company.emptyTitle")}
+            description={t("company.emptyBody")}
+            illustration={
+              <EmptyStateIllustration
+                src="/images/ask4mo/ask4mo-empty-company-research-ink.png"
+                alt="A hand-drawn company viewed through a research lens and connected to source material."
+              />
+            }
+          />
         )}
       </div>
     </section>

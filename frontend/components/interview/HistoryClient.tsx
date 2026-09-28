@@ -7,7 +7,7 @@ import { ApiError } from "@/lib/api/errors";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/Button";
-import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
+import { EmptyState, EmptyStateIllustration, ErrorState, LoadingState } from "@/components/ui/States";
 
 /** User-scoped interview history from /history/interviews. */
 export function HistoryClient() {
@@ -82,6 +82,12 @@ export function HistoryClient() {
           <EmptyState
             title="No completed interviews yet"
             description="Your completed interview reports will appear here."
+            illustration={
+              <EmptyStateIllustration
+                src="/images/ask4mo/ask4mo-empty-history-ink.png"
+                alt="A blank report following a dotted path toward an empty archive tray."
+              />
+            }
             action={
               <div className="flex flex-wrap gap-2">
                 <ButtonLink href="/practice">Start Practice</ButtonLink>
