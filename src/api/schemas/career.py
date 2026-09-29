@@ -34,7 +34,12 @@ class SourceOut(BaseModel):
     title: str | None = None
     source_url: str | None = None
     evidence_type: str | None = None
-    authority_level: str | None = None
+    # Numeric authority tier (1=industry .. 3=official), matching the domain model
+    # (src/copilot/models.py KnowledgeEvidence.authority_level: int, ge=1 le=3). Declaring
+    # this as `str` here caused CareerChatResponse.from_orchestration to raise a Pydantic
+    # ValidationError (int -> str) and 500 the /career/chat endpoint whenever retrieval
+    # returned grounded evidence, which the browser surfaced as a generic connection error.
+    authority_level: int | None = None
     geography: str | None = None
     occupation_title: str | None = None
     reference_year: int | None = None

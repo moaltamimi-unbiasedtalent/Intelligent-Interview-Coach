@@ -240,7 +240,7 @@ export interface Source {
   title?: string | null;
   source_url?: string | null;
   evidence_type?: string | null;
-  authority_level?: string | null;
+  authority_level?: number | null; // numeric authority tier (1..3), matches the API SourceOut
   geography?: string | null;
   occupation_title?: string | null;
   reference_year?: number | null;
