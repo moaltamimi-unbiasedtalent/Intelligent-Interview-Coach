@@ -1,36 +1,53 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api/client";
-import { ApiError } from "@/lib/api/errors";
+import { ApiError, stateKeyForError } from "@/lib/api/errors";
+import { useT } from "@/components/i18n/I18nProvider";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/Button";
 import { EmptyState, EmptyStateIllustration, ErrorState, LoadingState } from "@/components/ui/States";
 
-/** User-scoped interview history from /history/interviews. */
+/** User-scoped interview history from /history/interviews. In-place recoverable (P10B-W9.2). */
 export function HistoryClient() {
+  const t = useT();
   const [rows, setRows] = useState<Array<Record<string, unknown>> | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
-  const [error, setError] = useState<{ message: string; requestId?: string | null } | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const ctrlRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
+  // Safe re-runnable GET: aborts any in-flight load (latest wins; a stale response can never
+  // overwrite a newer success), and never replays a write.
+  const load = useCallback((isRetry = false) => {
+    ctrlRef.current?.abort();
     const ctrl = new AbortController();
+    ctrlRef.current = ctrl;
+    if (isRetry) setRetrying(true);
+    else setStatus("loading");
     api.history
       .list({ signal: ctrl.signal })
       .then((r) => {
+        if (ctrl.signal.aborted) return;
         setRows(r.interviews);
+        setError(null);
         setStatus("ready");
+        setRetrying(false);
       })
       .catch((e) => {
-        if (e instanceof DOMException && e.name === "AbortError") return;
-        const err = e as ApiError;
-        setError({ message: err.userMessage ?? "Couldn't load history.", requestId: err.requestId });
+        if (ctrl.signal.aborted || (e instanceof DOMException && e.name === "AbortError")) return;
+        setError(e as ApiError);
         setStatus("error");
+        setRetrying(false);
       });
-    return () => ctrl.abort();
   }, []);
+
+  useEffect(() => {
+    load();
+    return () => ctrlRef.current?.abort();
+  }, [load]);
 
   return (
     <section data-tour="history">
@@ -39,7 +56,14 @@ export function HistoryClient() {
         <a href="/help#history" className="font-medium text-accent underline">What appears in History?</a>
       </p>
       {status === "loading" ? <LoadingState label="Loading history" /> : null}
-      {status === "error" && error ? <ErrorState message={error.message} requestId={error.requestId} /> : null}
+      {status === "error" && error ? (
+        <ErrorState
+          message={t(stateKeyForError(error.kind))}
+          requestId={error.requestId}
+          retrying={retrying}
+          onRetry={() => load(true)}
+        />
+      ) : null}
       {status === "ready" ? (
         rows && rows.length ? (
           <div className="grid gap-3">

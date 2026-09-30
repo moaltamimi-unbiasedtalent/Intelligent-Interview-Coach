@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import type { MemoryCategory, MemoryPreviewItem, MemoryResponse } from "@/lib/api/types";
@@ -35,25 +35,39 @@ export function MemoryManager() {
   const [items, setItems] = useState<MemoryResponse[] | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState<{ message: string; requestId?: string | null } | null>(null);
+  const [retrying, setRetrying] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const ctrlRef = useRef<AbortController | null>(null);
 
-  const load = useCallback((signal?: AbortSignal) => {
-    setStatus("loading");
+  // Safe re-runnable GET (P10B-W9.2): aborts any in-flight load so a stale response cannot
+  // overwrite a newer success; a manual retry starts a fresh bounded request cycle.
+  const load = useCallback((isRetry = false) => {
+    ctrlRef.current?.abort();
+    const ctrl = new AbortController();
+    ctrlRef.current = ctrl;
+    if (isRetry) setRetrying(true);
+    else setStatus("loading");
     api.memory
-      .list(undefined, { signal })
-      .then((r) => { setItems(r.memories); setStatus("ready"); })
+      .list(undefined, { signal: ctrl.signal })
+      .then((r) => {
+        if (ctrl.signal.aborted) return;
+        setItems(r.memories);
+        setError(null);
+        setStatus("ready");
+        setRetrying(false);
+      })
       .catch((e) => {
-        if (e instanceof DOMException && e.name === "AbortError") return;
+        if (ctrl.signal.aborted || (e instanceof DOMException && e.name === "AbortError")) return;
         const err = e as ApiError;
         setError({ message: err.userMessage ?? "Couldn't load your preparation memory.", requestId: err.requestId });
         setStatus("error");
+        setRetrying(false);
       });
   }, []);
 
   useEffect(() => {
-    const ctrl = new AbortController();
-    load(ctrl.signal);
-    return () => ctrl.abort();
+    load();
+    return () => ctrlRef.current?.abort();
   }, [load]);
 
   const onSaved = useCallback((updated: MemoryResponse, msg: string) => {
@@ -78,7 +92,9 @@ export function MemoryManager() {
 
       {notice ? <p role="status" aria-live="polite" className="text-xs text-success">{notice}</p> : null}
       {status === "loading" ? <LoadingState label="Loading your preparation memory" /> : null}
-      {status === "error" && error ? <ErrorState message={error.message} requestId={error.requestId} /> : null}
+      {status === "error" && error ? (
+        <ErrorState message={error.message} requestId={error.requestId} retrying={retrying} onRetry={() => load(true)} />
+      ) : null}
 
       {status === "ready" && items ? (
         items.length === 0 ? (

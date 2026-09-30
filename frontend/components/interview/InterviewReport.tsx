@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
@@ -31,23 +31,42 @@ export function InterviewReport({ sessionId }: { sessionId: string }) {
   const [data, setData] = useState<ReportResponse | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState<{ message: string; requestId?: string | null } | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const ctrlRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    let alive = true;
-    setStatus("loading");
-    api.interviews.report(sessionId)
-      .then((r) => { if (alive) { setData(r); setStatus("ready"); } })
+  // Safe re-runnable GET (P10B-W9.2): report retrieval is idempotent; aborts any in-flight load.
+  const load = useCallback((isRetry = false) => {
+    ctrlRef.current?.abort();
+    const ctrl = new AbortController();
+    ctrlRef.current = ctrl;
+    if (isRetry) setRetrying(true);
+    else setStatus("loading");
+    api.interviews.report(sessionId, { signal: ctrl.signal })
+      .then((r) => {
+        if (ctrl.signal.aborted) return;
+        setData(r);
+        setError(null);
+        setStatus("ready");
+        setRetrying(false);
+      })
       .catch((e) => {
-        if (!alive) return;
+        if (ctrl.signal.aborted || (e instanceof DOMException && e.name === "AbortError")) return;
         const err = e as ApiError;
         setError({ message: err.userMessage ?? "Couldn't load your performance review.", requestId: err.requestId });
         setStatus("error");
+        setRetrying(false);
       });
-    return () => { alive = false; };
   }, [sessionId]);
 
+  useEffect(() => {
+    load();
+    return () => ctrlRef.current?.abort();
+  }, [load]);
+
   if (status === "loading") return <LoadingState label="Creating your performance review" />;
-  if (status === "error" && error) return <ErrorState message={error.message} requestId={error.requestId} />;
+  if (status === "error" && error) {
+    return <ErrorState message={error.message} requestId={error.requestId} retrying={retrying} onRetry={() => load(true)} />;
+  }
   if (!data) return null;
 
   const report = data.report as Report;

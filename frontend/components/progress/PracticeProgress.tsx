@@ -1,44 +1,19 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { api } from "@/lib/api/client";
-import { ApiError } from "@/lib/api/errors";
 import type { ProgressResponse } from "@/lib/api/types";
 import { Card, CardBody } from "@/components/ui/Card";
 
 /**
- * Practice progress derived from the caller's own completed interviews (from
- * /progress). Practice guidance, never a score or hiring signal. Renders nothing
- * when the user has no practice yet — the surrounding memory view carries the
- * empty state — and a bounded, non-blocking note on error.
+ * Practice progress derived from the caller's own completed interviews (from /progress).
+ * Practice guidance, never a score or hiring signal.
+ *
+ * P10B-W9.2: this is now a PURE presentational component. The parent (`ProgressClient`) owns the
+ * network lifecycle for BOTH page regions (practice + memory) so it can present coherent degraded
+ * states (one region can fail/recover without blanking the other, and both failing collapse to a
+ * single page-level error). Renders nothing when there is no practice yet — the memory view owns
+ * the page-level empty state — and `!interviews_completed` covers 0/undefined/null.
  */
-export function PracticeProgress() {
-  const [data, setData] = useState<ProgressResponse | null>(null);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
-
-  useEffect(() => {
-    const ctrl = new AbortController();
-    api.progress
-      .get({ signal: ctrl.signal })
-      .then((r) => {
-        setData(r);
-        setStatus("ready");
-      })
-      .catch((e) => {
-        if (e instanceof DOMException && e.name === "AbortError") return;
-        void (e as ApiError);
-        setStatus("error");
-      });
-    return () => ctrl.abort();
-  }, []);
-
-  if (status === "error") {
-    return <p className="mb-6 text-sm text-muted">Couldn&rsquo;t load practice progress.</p>;
-  }
-  if (status !== "ready" || !data || !data.interviews_completed) {
-    // No practice yet (or still loading, or a malformed/empty response): stay quiet;
-    // the memory view owns the page. `!interviews_completed` covers 0/undefined/null.
+export function PracticeProgress({ data }: { data: ProgressResponse | null }) {
+  if (!data || !data.interviews_completed) {
     return null;
   }
 

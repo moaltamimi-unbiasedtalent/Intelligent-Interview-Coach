@@ -86,7 +86,18 @@ function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; 
     return <Section><LoadingState label="Preparing your interview" /></Section>;
   }
   if (ctrl.loadError && !state) {
-    return <Section><ErrorState message={ctrl.loadError.message} requestId={ctrl.loadError.requestId} /></Section>;
+    // P10B-W9.2: the session LOAD is a safe idempotent GET; recover in place via ctrl.reload()
+    // (no browser reload, no re-login) rather than stranding the candidate on a dead error.
+    return (
+      <Section>
+        <ErrorState
+          message={ctrl.loadError.message}
+          requestId={ctrl.loadError.requestId}
+          retrying={ctrl.busy === "loading"}
+          onRetry={() => void ctrl.reload()}
+        />
+      </Section>
+    );
   }
   if (!state) return <Section><LoadingState label="Preparing your interview" /></Section>;
 

@@ -52,7 +52,15 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 - **STOP:** after deterministic gates green + the header/taxonomy tests pass; do not proceed to W9.2
   until reviewed.
 
-## W9.2 — Progress/History recovery & degraded states  *(P2)*
+## W9.2 — Progress/History recovery & degraded states  *(P2)* — ✅ DELIVERED
+
+> **Status: DELIVERED** on branch `fix/p10b-w9-2-recovery-ux` (see `P10B_W9_2_RECOVERY_UX.md`).
+> Progress redesigned into two independent, coherently-degrading regions (one page-level error when
+> both fail — never the Pilot's duplicate pattern); History + 5 other candidate read surfaces gained
+> race-safe in-place Retry (3→10 retry-capable); `ErrorState` gained a compact `section` variant +
+> `retrying`. Recovery works with no reload/re-login. Frontend vitest 320, full E2E 125, build green;
+> no backend/schema change; no RC; 0 paid/live. W9.3 not started.
+
 
 - **Objective:** no duplicate catastrophic errors; every error state recovers in place; partial content
   stays usable. Fixes PF-03, PF-04, PF-05.

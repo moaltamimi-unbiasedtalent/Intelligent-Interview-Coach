@@ -14,6 +14,13 @@ Date captured: 2026-09-30. Author: Claude Opus 4.8 (assisted). Read-only audit.
 > failing closed on missing CORS config. See `P10B_W9_1_SERVICE_RESILIENCE.md`. The test/eval
 > baseline in §4 is otherwise unchanged (the `.env` model-override artifact persists and is out of
 > W9.1 scope; new W9.1 tests are hermetic).
+>
+> **Update (W9.2 delivered):** candidate read surfaces now recover gracefully after an outage
+> (branch `fix/p10b-w9-2-recovery-ux`). Progress renders two independent, coherently-degrading
+> regions (one page-level error when both fail; per-region section errors otherwise); History + 5
+> other read surfaces gained race-safe in-place Retry (retry-capable `ErrorState` 3→10); recovery
+> needs no reload or re-login. Frontend-only: vitest **320** (56 files), full Playwright **125**,
+> typecheck/lint/build green; no backend/schema/migration change. See `P10B_W9_2_RECOVERY_UX.md`.
 
 ---
 
