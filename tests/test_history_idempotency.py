@@ -188,8 +188,13 @@ def test_report_persist_then_history_crash_retry_does_not_regenerate(tmp_path, m
             raise RuntimeError("crash before history save")
 
         monkeypatch.setattr(route_mod.history_service, "save_completed_interview", _crash)
-        with pytest.raises(RuntimeError):
-            c.post(f"/api/v1/interviews/{sid}/report", headers=ALICE)
+        # P10B-W9.1: an otherwise-unhandled crash is now converted to a SAFE 500 response by
+        # CatchAllErrorMiddleware (with CORS + X-Request-Id, no leaked exception) instead of
+        # propagating the raw RuntimeError. The idempotency contract below is unchanged.
+        crash = c.post(f"/api/v1/interviews/{sid}/report", headers=ALICE)
+        assert crash.status_code == 500
+        assert crash.json()["error"]["code"] == "internal_error"
+        assert "crash before history save" not in crash.text  # no exception detail leaks
         assert report.calls == 1  # report was generated once and persisted
 
         # Retry with history save restored: report is NOT regenerated, history saved once.

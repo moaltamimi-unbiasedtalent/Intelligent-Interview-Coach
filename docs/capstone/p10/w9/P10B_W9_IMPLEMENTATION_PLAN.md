@@ -14,7 +14,14 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 
 ---
 
-## W9.1 — Service resilience & truthful error handling  *(P1, blocks Pilot 2)*
+## W9.1 — Service resilience & truthful error handling  *(P1, blocks Pilot 2)* — ✅ DELIVERED
+
+> **Status: DELIVERED** on branch `fix/p10b-w9-1-service-resilience`. All W9.1 acceptance gates pass
+> (see `P10B_W9_1_SERVICE_RESILIENCE.md`). CORS + `X-Request-Id` now reach every response including
+> the catch-all 500; frontend distinguishes offline vs unreachable vs server; bounded GET-only
+> retry with Retry-After; staging + production fail closed. No RC created. No migration. 0 paid/live
+> calls. W9.2 not started.
+
 
 - **Objective:** a server 500 or backend outage never tells the user their internet is the problem, and
   every error is honestly classified with a reference id.

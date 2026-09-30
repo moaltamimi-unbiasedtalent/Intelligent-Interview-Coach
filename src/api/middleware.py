@@ -9,11 +9,14 @@ later Agent Inspector.
 
 from __future__ import annotations
 
+import logging
 import os
 import uuid
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
+
+logger = logging.getLogger("api")
 
 REQUEST_ID_HEADER = "X-Request-Id"
 
@@ -53,3 +56,48 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 def security_headers_env() -> str:
     return (os.environ.get("API_ENV", "development") or "development").strip().lower()
+
+
+_DEV_LIKE_ENVS = {"development", "dev", "local", "test", "testing"}
+
+
+class CatchAllErrorMiddleware(BaseHTTPMiddleware):
+    """Convert any otherwise-unhandled exception into the safe 500 envelope FROM INSIDE the
+    CORS/RequestId layers (P10B-W9.1, PF-01/PF-02).
+
+    Starlette's ``ServerErrorMiddleware`` — which turns an unhandled exception into a 500 —
+    runs OUTSIDE all user middleware. A 500 produced there bypasses ``CORSMiddleware`` and
+    ``RequestIdMiddleware``, so the browser receives a header-less cross-origin response and
+    reports a misleading "network"/"couldn't connect" failure for what is actually a server
+    bug. Installing this catch-all as the INNERMOST user middleware (so it is wrapped by CORS
+    and RequestId) means the safe error response it returns still flows out through those
+    layers and carries ``Access-Control-Allow-Origin`` and ``X-Request-Id``.
+
+    The response body is the single safe contract; exception detail, tracebacks, SQL,
+    filesystem paths, secrets and provider payloads are never returned (only a generic message
+    and the request id). A traceback is logged only in non-production environments.
+    """
+
+    def __init__(self, app, *, env: str = "development") -> None:
+        super().__init__(app)
+        self._is_dev = str(env).strip().lower() in _DEV_LIKE_ENVS
+
+    async def dispatch(self, request: Request, call_next):
+        try:
+            return await call_next(request)
+        except Exception as exc:  # noqa: BLE001 - deliberate catch-all; detail is never leaked
+            # Import here to avoid any import cycle at module load; exception_handlers does not
+            # import this module.
+            from src.api.exception_handlers import safe_internal_error_response
+
+            request_id = getattr(request.state, "request_id", "")
+            logger.error(
+                "Unhandled API error",
+                extra={"request_id": request_id, "error_category": type(exc).__name__},
+                exc_info=self._is_dev,
+            )
+            response = safe_internal_error_response(request_id)
+            # Stamp the correlation id on the response too, so it is present even if the
+            # request-id middleware is not in the stack for some reason.
+            response.headers[REQUEST_ID_HEADER] = request_id
+            return response

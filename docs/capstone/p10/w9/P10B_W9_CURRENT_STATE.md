@@ -6,6 +6,15 @@ known point.
 
 Date captured: 2026-09-30. Author: Claude Opus 4.8 (assisted). Read-only audit.
 
+> **Update (W9.1 delivered):** the error/resilience foundation has since been implemented on branch
+> `fix/p10b-w9-1-service-resilience` (from this audit branch). Unhandled 500s now carry CORS +
+> `X-Request-Id` (new `CatchAllErrorMiddleware`, CORS installed outermost), the frontend error
+> taxonomy is truthful (offline vs unreachable vs server, no "check your connection" for server
+> faults), a bounded GET-only retry honours `Retry-After`, and staging joins production in
+> failing closed on missing CORS config. See `P10B_W9_1_SERVICE_RESILIENCE.md`. The test/eval
+> baseline in §4 is otherwise unchanged (the `.env` model-override artifact persists and is out of
+> W9.1 scope; new W9.1 tests are hermetic).
+
 ---
 
 ## 1. Exact repository baseline
