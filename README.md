@@ -82,8 +82,9 @@ tools, three specialist tools, two human-action tools).
   sign-in button in the frontend and has not been validated live**. It is not a production
   login path today.
 - **Known limits:** sign-in does not currently require a verified email; the rate limiter
-  is in-memory (not safe across multiple replicas); production OIDC and live PostgreSQL
-  validation are follow-ups.
+  is in-memory by default (a shared Redis adapter exists behind `RATE_LIMIT_BACKEND=redis` + `REDIS_URL`
+  but is optional, off by default and not validated against a live Redis, so distributed limiting is not
+  claimed); production OIDC and live PostgreSQL validation are follow-ups.
 - **Admin today:** a `platform_admin` role gates a bounded, read-mostly operations console
   (`/admin`: metadata only, pause switches, audit view) plus reviewer/evaluation/knowledge
   diagnostics. Admins are not a private-data superuser (no view-as-user, no content search).
@@ -178,7 +179,7 @@ Genuine present limitations (see also [docs/product/PRODUCT_CLAIMS.md](docs/prod
   and the full Admin Platform are not implemented** (planned, P10B-W10); the Help Center is
   documentation, not a ticketing system.
 - **Identity:** production OIDC and live PostgreSQL validation are not done; email
-  verification is not required to sign in; rate limiting is single-replica.
+  verification is not required to sign in; rate limiting is per-process unless the optional, unvalidated Redis adapter is configured.
 - The **knowledge base must be provisioned/built** for evidence-backed retrieval and
   citations (datasets are not committed). Sources are shown only when retrieved career
   evidence is used.

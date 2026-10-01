@@ -84,6 +84,8 @@ jobs:
         run: python scripts/eval_product_positioning.py
       - name: Documentation consistency guard (P10B-W9.11; offline; authority semantics, locale vs speech sets, specialists, tool registry, current-state docs)
         run: python scripts/eval_doc_consistency.py
+      - name: Engineering-quality guard (P10B-W9.12; offline; test isolation, token opacity, rate-limit boundary, legacy auth removal)
+        run: python scripts/eval_engineering_quality.py
       - name: Rate-limit evaluation (Capstone P8; offline; auth + cost buckets, window reset, anti-enumeration)
         run: python scripts/eval_rate_limits.py
       - name: Hosting-readiness evaluation (Capstone P8; offline; env/cookies/CORS/headers/pause/malware — does NOT certify EX-12)
@@ -117,6 +119,12 @@ jobs:
             echo "Potential secret found in source"; exit 1
           fi
           echo "No secrets found in source."
+      - name: Working tree must be clean after tests and evaluators
+        run: |
+          # Deterministic qualification must never dirty tracked files (evaluators write to temp dirs by default).
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Tracked/untracked changes were produced by tests or evaluators:"; git status --porcelain; exit 1
+          fi
 
   frontend:
     name: Frontend tests & build

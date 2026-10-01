@@ -7,9 +7,12 @@ controls, while staying honest about the deployment topology (§20):
 - ``InMemoryRateLimiter`` is a single-process sliding-window limiter. It is correct for a
   single replica (the documented default staging topology) and for tests. It is NOT shared
   across workers/replicas — do not claim distributed safety from it.
-- ``RateLimiter`` is the abstraction; a production multi-replica deployment supplies a shared
-  store adapter (e.g. Redis) implementing the same protocol. ``build_rate_limiter`` selects the
-  in-memory adapter and records whether a shared store was requested but is unavailable.
+- ``RateLimiter`` is the abstraction. ``RedisRateLimiter`` is a shared-store adapter for multi-replica
+  deployments (atomic sliding window in Redis). It is OPTIONAL and OFF by default: it is selected only when
+  ``RATE_LIMIT_BACKEND=redis`` (or ``shared``) AND ``REDIS_URL`` is set AND the ``redis`` package is installed.
+  It has been unit-tested against a fake client only and has NOT been validated against a live Redis, so
+  distributed limiting must not be claimed as live. ``build_rate_limiter`` otherwise falls back to the
+  in-memory adapter and records that a shared store was requested but is not active.
 
 Keying is privacy-safe: an email-derived key is hashed (never stored raw), and auth limits are
 applied identically whether or not an account exists, so rate-limit behaviour never leaks
@@ -19,7 +22,9 @@ account existence (§18 anti-enumeration).
 from __future__ import annotations
 
 import hashlib
+import logging
 import os
+import uuid
 import threading
 import time
 from dataclasses import dataclass
@@ -27,15 +32,20 @@ from typing import Protocol
 
 from fastapi import HTTPException, Request
 
+logger = logging.getLogger(__name__)
+
 __all__ = [
     "RateLimitPolicy",
     "RateLimitResult",
     "RateLimiter",
     "InMemoryRateLimiter",
+    "RedisRateLimiter",
     "AUTH_POLICIES",
     "COST_POLICIES",
     "POLICIES",
     "build_rate_limiter",
+    "shared_store_active",
+    "shared_store_requested",
     "get_rate_limiter",
     "reset_rate_limiter",
     "enforce",
@@ -137,23 +147,92 @@ class InMemoryRateLimiter:
             self._events.clear()
 
 
+# Atomic sliding window: trim, count, then add - all inside one Redis script so concurrent replicas
+# cannot both slip under the limit. Returns {allowed(1/0), count, oldest_score}.
+_REDIS_WINDOW_SCRIPT = """
+local k = KEYS[1]
+local now = tonumber(ARGV[1])
+local window = tonumber(ARGV[2])
+local limit = tonumber(ARGV[3])
+redis.call('ZREMRANGEBYSCORE', k, 0, now - window)
+local c = redis.call('ZCARD', k)
+if c >= limit then
+  local o = redis.call('ZRANGE', k, 0, 0, 'WITHSCORES')
+  return {0, c, o[2]}
+end
+redis.call('ZADD', k, now, ARGV[4])
+redis.call('EXPIRE', k, math.ceil(window) + 1)
+return {1, c + 1, 0}
+"""
+
+
+class RedisRateLimiter:
+    """Shared sliding-window limiter over Redis (multi-replica). NOT validated against a live Redis.
+
+    ``client`` is any object exposing ``eval(script, numkeys, *keys_and_args)`` (the ``redis`` client).
+    If Redis errors at runtime the limiter degrades to a per-process in-memory limiter (logged), so an
+    infrastructure fault never takes sign-in or the product offline; while degraded it is no longer shared.
+    """
+
+    distributed = True
+
+    def __init__(self, client, *, prefix: str = "ask4mo:rl:", clock=time.time,
+                 fallback: "RateLimiter | None" = None) -> None:
+        self._client = client
+        self._prefix = prefix
+        self._clock = clock
+        self._fallback = fallback or InMemoryRateLimiter()
+        self.degraded = False
+
+    def hit(self, bucket: str, key: str, policy: RateLimitPolicy) -> RateLimitResult:
+        now = self._clock()
+        try:
+            allowed, count, oldest = self._client.eval(
+                _REDIS_WINDOW_SCRIPT, 1, f"{self._prefix}{bucket}:{key}",
+                now, policy.window_seconds, policy.limit, f"{now}:{uuid.uuid4().hex}")
+        except Exception:  # noqa: BLE001 - never let the limiter backend take the product down
+            if not self.degraded:
+                logger.warning("rate-limit store unavailable; degrading to per-process limiting")
+            self.degraded = True
+            return self._fallback.hit(bucket, key, policy)
+        if int(allowed) == 1:
+            return RateLimitResult(allowed=True, remaining=max(0, policy.limit - int(count)), retry_after=0)
+        retry = max(1, int(policy.window_seconds - (now - float(oldest))))
+        return RateLimitResult(allowed=False, remaining=0, retry_after=retry)
+
+    def reset(self) -> None:  # test seam only; a shared store is never bulk-cleared in production
+        self._fallback.reset()
+
+
 # Process-global limiter (single-replica default). Tests override via get/reset.
 _limiter: RateLimiter | None = None
 _shared_store_requested = False
+_shared_store_active = False
 
 
 def build_rate_limiter() -> RateLimiter:
     """Select the rate limiter for this deployment.
 
-    Today only the in-memory adapter exists. ``RATE_LIMIT_BACKEND=redis`` (or a ``REDIS_URL``)
-    signals intent to use a shared store; since no Redis adapter is bundled, we record the
-    request (surfaced by hosting-readiness) and fall back to in-memory. Do NOT claim
-    distributed safety in that case — run a single replica or add a shared-store adapter.
+    Default: the in-memory adapter (correct for one replica and for tests). A shared store is used only
+    when explicitly requested (``RATE_LIMIT_BACKEND=redis|shared``, or a ``REDIS_URL``) AND a ``REDIS_URL``
+    is configured AND the optional ``redis`` package is importable; otherwise the request is recorded
+    (surfaced by hosting-readiness) and the in-memory adapter is used. Distributed limiting is only live when
+    :func:`shared_store_active` is True, and even then the adapter has not been validated against a live Redis.
     """
-    global _shared_store_requested
+    global _shared_store_requested, _shared_store_active
     backend = (os.environ.get("RATE_LIMIT_BACKEND", "") or "").strip().lower()
-    _shared_store_requested = backend in {"redis", "shared"} or bool(
-        os.environ.get("REDIS_URL", "").strip())
+    url = os.environ.get("REDIS_URL", "").strip()
+    _shared_store_requested = backend in {"redis", "shared"} or bool(url)
+    _shared_store_active = False
+    if _shared_store_requested and url:
+        try:
+            import redis  # optional dependency, not installed by default
+
+            limiter = RedisRateLimiter(redis.Redis.from_url(url, socket_timeout=1.0, socket_connect_timeout=1.0))
+            _shared_store_active = True
+            return limiter
+        except Exception:  # noqa: BLE001 - missing package or bad URL: stay on the safe default
+            logger.warning("shared rate-limit store requested but unavailable; using in-memory limiter")
     return InMemoryRateLimiter()
 
 
@@ -168,6 +247,11 @@ def reset_rate_limiter(limiter: RateLimiter | None = None) -> None:
     """Test seam: install a fresh limiter (or a supplied one)."""
     global _limiter
     _limiter = limiter if limiter is not None else build_rate_limiter()
+
+
+def shared_store_active() -> bool:
+    """Whether a shared (distributed) rate-limit store is actually in use right now."""
+    return _shared_store_active
 
 
 def shared_store_requested() -> bool:

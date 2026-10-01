@@ -1,7 +1,9 @@
 """KB-2 knowledge-expansion evaluation (offline, deterministic).
 
 Measures the expanded knowledge system without touching the preserved 11R / 11R-A
-baseline artifacts. It writes ONLY under ``evaluations/knowledge_expansion/``:
+baseline artifacts. By default it writes results to a TEMPORARY directory (so a qualification run leaves the
+tracked tree clean); ``--write`` (or ASK4MO_EVAL_WRITE=1) refreshes the committed artifacts under
+``evaluations/knowledge_expansion/``:
 
   routing_results.csv     — per-case lane routing accuracy (new + existing lanes)
   geo_results.csv         — per-case geographic source precedence
@@ -18,7 +20,9 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -32,7 +36,11 @@ from src.copilot.knowledge.router import (  # noqa: E402
     source_priority,
 )
 
-OUT = Path("evaluations/knowledge_expansion")
+OUT = Path("evaluations/knowledge_expansion")  # committed INPUTS (cases) live here
+# Results go to a temp directory unless a maintainer deliberately refreshes the committed artifacts with
+# ``--write`` (or ASK4MO_EVAL_WRITE=1), so a normal qualification run never dirties tracked files (W9.12).
+_WRITE = "--write" in sys.argv or os.environ.get("ASK4MO_EVAL_WRITE") == "1"
+RESULTS = OUT if _WRITE else Path(tempfile.mkdtemp(prefix="ask4mo_eval_kb2_"))
 
 
 def _load(name: str) -> dict:
@@ -95,15 +103,15 @@ def _write_csv(path: Path, rows: list[dict]) -> None:
 
 
 def main() -> int:
-    OUT.mkdir(parents=True, exist_ok=True)
+    RESULTS.mkdir(parents=True, exist_ok=True)
 
     routing_rows, routing_acc = evaluate_routing()
     geo_rows, geo_acc = evaluate_geo()
     coverage_rows, health = evaluate_coverage()
 
-    _write_csv(OUT / "routing_results.csv", routing_rows)
-    _write_csv(OUT / "geo_results.csv", geo_rows)
-    _write_csv(OUT / "coverage.csv", coverage_rows)
+    _write_csv(RESULTS / "routing_results.csv", routing_rows)
+    _write_csv(RESULTS / "geo_results.csv", geo_rows)
+    _write_csv(RESULTS / "coverage.csv", coverage_rows)
 
     # Provenance completeness: every measured structured record has a source_id
     # (guaranteed by schema; report the measured structured total for the record).
@@ -138,13 +146,13 @@ def main() -> int:
               "vector manifest — a configured source is never assumed loaded.")
     md.append("- No network or paid LLM calls.\n")
 
-    (OUT / "results.md").write_text("\n".join(md), encoding="utf-8")
+    (RESULTS / "results.md").write_text("\n".join(md), encoding="utf-8")
 
     print(f"Routing accuracy      : {routing_acc:.0%}")
     print(f"Geo precedence accuracy: {geo_acc:.0%}")
     print(f"Coverage available    : {health['available_locally']}/{health['configured']}")
     print(f"Structured records    : {structured_records}")
-    print(f"Wrote results under {OUT}/")
+    print(f"Wrote results under {RESULTS}/" + ("" if _WRITE else " (temporary; pass --write to refresh the committed artifacts)"))
     return 0
 
 
