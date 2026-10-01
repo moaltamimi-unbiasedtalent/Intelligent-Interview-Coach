@@ -338,7 +338,7 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 - **Dependencies:** none. **Risk:** none. **Complexity:** S.
 - **STOP:** after the contract test passes. **Do NOT add an Evaluation Specialist.**
 
-## W9.12 — Engineering Quality & Technical Debt Closure  *(Capstone critical, Cx M-L)*  [new]
+## W9.12 — Engineering Quality & Technical Debt Closure  *(Capstone critical, Cx M-L)*  [new] — ✅ DELIVERED (see `P10B_W9_12_ENGINEERING_QUALITY.md`; TD-W9-01 and TD-W9-02 closed)
 
 - **Scope:** **TD-W9-01** (Tailwind `token/NN` opacity classes: inventory, supported token strategy, light/dark/mobile
   visual regression); **TD-W9-02** (backend test isolation leak: identify path, isolated test DB, prove no dev/prod DB
@@ -367,7 +367,7 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 
 ## Recommended sequence (revised at main d6c3493)
 
-Completed: W9.1-W9.7B and W9.8-W9.11. Remaining: **W9.12 -> W9.13**, then P10B-W10
+Completed: W9.1-W9.7B and W9.8-W9.12. Remaining: **W9.13**, then P10B-W10
 (Admin, W10.0-W10.14), P10B-W11 (integrated requalification), RC-P10-003, Pilot 2, P10C-P10F, P11. The canonical
 roadmap is `docs/capstone/capstone_phase_plan.md`. W9.9/W9.10 are off the critical path.
 

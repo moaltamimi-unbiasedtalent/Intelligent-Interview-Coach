@@ -23,7 +23,7 @@ from fastapi import Depends, Header, HTTPException, Request
 
 from src.application.career_service import CareerApplicationService
 from src.application.interview_service import InterviewApplicationService
-from src.auth import ANONYMOUS_USER, AuthUser
+from src.auth import ANONYMOUS_USER
 
 # Environments where the transitional dev conveniences (anonymous fallback + the
 # X-User-Subject header) are permitted. Any other env (e.g. "production") is
@@ -543,31 +543,6 @@ def _session_cookie_name(request: Request) -> str:
         return get_auth_config(request).cookie_name
     except Exception:  # noqa: BLE001 - fall back to the default name
         return "ask4mo_session"
-
-
-def get_current_user(
-    request: Request,
-    x_user_subject: str | None = Header(default=None),
-    x_user_provider: str | None = Header(default=None),
-    x_user_email: str | None = Header(default=None),
-    x_user_name: str | None = Header(default=None),
-) -> AuthUser:
-    """Resolve a header/anonymous identity descriptor (dev/transitional only).
-
-    Retained for the development ``X-User-Subject`` path; the production identity is a
-    trusted session cookie resolved in :func:`get_current_user_id`. In a non-dev
-    environment with no session cookie, this fails closed (401).
-    """
-    if x_user_subject and _env(request) in DEV_ENVS:
-        return AuthUser(
-            subject=x_user_subject,
-            provider=(x_user_provider or "api"),
-            display_name=x_user_name,
-            email=x_user_email,
-        )
-    if _env(request) not in DEV_ENVS:
-        raise HTTPException(status_code=401, detail="Authentication required.")
-    return ANONYMOUS_USER
 
 
 def get_current_user_id(

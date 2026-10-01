@@ -1,4 +1,4 @@
-// P10B-W9.6A — Help Center content fragment (all seven locales).
+// P10B-W9.6A — Help Center content fragment (all supported locales).
 //
 // Each locale file is a flat key -> string map of Help section titles and article question/answer
 // copy (moved out of components/help/HelpCenter.tsx). This index shapes them into the standard W9.6

@@ -10,7 +10,8 @@ year correctness, tool selection, insufficient-evidence correctness, latency.
 No LLM call is required; if no dedicated embedding key is set the run is labelled
 lexical/offline (never called "semantic").
 
-Writes: results.csv, summary.md, failures.md under evaluations/product_coverage/.
+Writes results.csv, summary.md, failures.md to a TEMPORARY directory by default (tracked tree stays clean);
+``--write`` / ASK4MO_EVAL_WRITE=1 refreshes the committed copies under evaluations/product_coverage/.
 Does NOT touch the 11R / 11R-A / KB-2 artifacts.
 
 Usage:  python scripts/eval_product_coverage.py
@@ -20,7 +21,9 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import sys
+import tempfile
 import time
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -33,7 +36,10 @@ from src.copilot.knowledge.router import detect_country, route_question  # noqa:
 from src.copilot.rag.routing import route_for_intent  # noqa: E402
 from src.copilot.rag.translation import QueryTranslator  # noqa: E402
 
-DIR = Path("evaluations/product_coverage")
+DIR = Path("evaluations/product_coverage")  # committed INPUTS (cases.json) live here
+# Results go to a temp directory unless refreshed deliberately with ``--write`` / ASK4MO_EVAL_WRITE=1 (W9.12).
+_WRITE = "--write" in sys.argv or os.environ.get("ASK4MO_EVAL_WRITE") == "1"
+RESULTS = DIR if _WRITE else Path(tempfile.mkdtemp(prefix="ask4mo_eval_pc_"))
 GATES = {
     "routing": 0.95, "geo_source": 0.95, "evidence_hit@5": 0.90,
     "citation_validity": 1.00, "salary_context": 1.00, "tool_selection": 0.95,
@@ -174,8 +180,8 @@ def _categorise(r) -> str | None:
 
 def write_reports(res: dict) -> None:
     rows = res["rows"]
-    DIR.mkdir(parents=True, exist_ok=True)
-    with open(DIR / "results.csv", "w", newline="", encoding="utf-8") as fh:
+    RESULTS.mkdir(parents=True, exist_ok=True)
+    with open(RESULTS / "results.csv", "w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
         w.writeheader(); w.writerows(rows)
 
@@ -248,7 +254,7 @@ def write_reports(res: dict) -> None:
             src_counter[s] += 1
     for s, n in src_counter.most_common():
         lines.append(f"- `{s}` — {n} cases")
-    (DIR / "summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (RESULTS / "summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     # Failures + ranked remediation.
     fails = [(r, _categorise(r)) for r in rows]
@@ -276,7 +282,7 @@ def write_reports(res: dict) -> None:
     flines.append("|---|---|---|---|---|---|")
     for r, cat in fails[:200]:
         flines.append(f"| {r['id']} | {r['question_family']} | {r['geography']} | {cat} | {r['lane']} | {r['evidence']} |")
-    (DIR / "failures.md").write_text("\n".join(flines) + "\n", encoding="utf-8")
+    (RESULTS / "failures.md").write_text("\n".join(flines) + "\n", encoding="utf-8")
 
 
 def main() -> int:

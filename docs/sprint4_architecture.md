@@ -60,7 +60,7 @@ candidate only when retrieved career evidence is used; with insufficient evidenc
 session cookie; production is fail-closed. The `X-User-Subject` header and an anonymous developer user
 exist only when `API_ENV` is a development/test value and never override a valid session. Google OIDC
 is implemented in the backend behind `FEATURE_GOOGLE_LOGIN`, disabled by default, not wired into the
-frontend and not validated live. Sign-in does not require a verified email; rate limiting is in-memory.
+frontend and not validated live. Sign-in does not require a verified email (an open product-policy decision, pinned by tests); rate limiting is in-memory by default (optional, not-live-validated Redis adapter behind `RATE_LIMIT_BACKEND=redis`).
 
 **Admin (current vs planned):** *current* = a `platform_admin` role, a bounded read-mostly `/admin`
 console (metadata only, pause switches, audit view) and admin-gated reviewer/evaluation/knowledge

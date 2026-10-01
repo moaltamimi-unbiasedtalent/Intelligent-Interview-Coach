@@ -351,7 +351,7 @@ assumptions in core logic, prompts, scoring or examples.
 
 - Pytest for all automated tests; never make live/paid provider calls in tests
   (mock the boundaries). Do not weaken tests to pass or silently swallow errors.
-- Tests must not mutate committed artifacts (write to `tmp_path`).
+- Tests must not mutate committed artifacts (write to `tmp_path`). **Test isolation (W9.12, durable):** `tests/conftest.py` disables `.env` loading, scrubs provider/model variables, forces a temp `DATABASE_URL`, refuses any SQLAlchemy engine that is not in-memory or in the system temp directory, and fails the session if development stores (`data/*.db`, checkpoints, caches) change. Never open the development database or call a live provider from a test; CI also fails if tests/evaluators dirty the working tree. Evaluators write to a temp dir unless run with `--write`.
 - `ruff check .` (conservative `F`/`E9` rules) must pass.
 - Test totals: **always re-measure with `pytest -q`** rather than trusting a number
   copied across docs (historical docs cite different totals from their own point in
@@ -536,7 +536,7 @@ assumptions in core logic, prompts, scoring or examples.
   JSX text mixed with `{}` expressions and HTML-entity text - never hide candidate copy in a literal array. Loading
   placeholders must be bounded and labelled and must resolve on every settled state (incl. auth `unknown`).
   `ErrorState` has three tiers: `section` (compact), `page` (default, proportional) and `fatal` (route error
-  boundary only). Tailwind `token/NN` opacity classes do NOT generate CSS with the current token setup.
+  boundary only). Colour tokens are alpha-capable since W9.12 (`token()` helper in `frontend/tailwind.config.ts`; `bg-warning/10`-style utilities emit `color-mix(...)` of the same CSS variable); `frontend/tests/tailwind-token-opacity.test.ts` fails if any such utility would emit no CSS.
   **P10B Wave 2 — coaching style + onboarding:** Mo coaching style is a **bounded enum**
   (supportive/balanced/direct/challenging) in `src/coaching_style.py` → a **trusted allow-list-only
   directive** (`coaching_style_directive`) appended like the language directive. It sets only the

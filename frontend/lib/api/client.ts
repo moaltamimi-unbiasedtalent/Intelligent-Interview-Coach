@@ -332,8 +332,6 @@ export const api = {
       request<AuthMessageResponse>("POST", "/auth/reset-password", { body: { token, password }, ...opts }),
     premiumStatus: (opts?: RequestOptions) =>
       request<PremiumStatusResponse>("GET", "/auth/premium/status", opts),
-    requestDeletion: (opts?: RequestOptions) =>
-      request<AuthMessageResponse>("POST", "/auth/account/delete-request", opts),
     // Capstone P8: permanent, application-controlled account + data deletion (§14/§15).
     deleteAccount: (opts?: RequestOptions) =>
       request<AuthMessageResponse>("POST", "/auth/account/delete", opts),

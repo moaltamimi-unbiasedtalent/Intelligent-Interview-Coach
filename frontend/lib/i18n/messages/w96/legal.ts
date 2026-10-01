@@ -5,7 +5,7 @@
 // strengthened or weakened) pending legal review. Proper nouns (Ask4Mo, Mo, Story Bank, CV, JD,
 // OCR, Glassdoor, Kununu, Premium, Basic) are intentionally left untranslated. No em dash is used.
 //
-// Every locale object is typed `typeof en`, so TypeScript enforces identical keys across all seven
+// Every locale object is typed `typeof en`, so TypeScript enforces identical keys across all supported
 // locales (missing or extra keys fail `tsc --noEmit`). Namespaces: privacy, terms, aiTransparency,
 // about, help, marketing, trust.
 

@@ -5,7 +5,7 @@
 // checkingSession, progress.title, home.goalLabel/askMo) are reused via t(...) in the components
 // and are intentionally NOT duplicated here. The English block is the canonical shape; every
 // other locale is typed as `Shell`, so TypeScript enforces identical namespaces + keys across all
-// seven locales (missing or extra keys fail `npm run typecheck`). Product terms are kept
+// all supported locales (missing or extra keys fail `npm run typecheck`). Product terms are kept
 // consistent per locale; "Ask4Mo" and "Mo" are never translated; no em dash is used anywhere.
 
 const en = {
@@ -112,7 +112,7 @@ const en = {
 
 /** Structural shape: the same namespaces + keys as English, with string leaves (so a translation
  *  may differ from the English literal). Each locale below is typed as `Shell`, which makes
- *  TypeScript enforce exact key parity across all seven locales at build time. */
+ *  TypeScript enforce exact key parity across all supported locales at build time. */
 type Shell = { [N in keyof typeof en]: { [K in keyof (typeof en)[N]]: string } };
 
 const de: Shell = {

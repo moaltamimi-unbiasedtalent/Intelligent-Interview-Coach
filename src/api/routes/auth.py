@@ -25,7 +25,6 @@ from src.api.dependencies import (
     get_oidc_provider,
     get_repository,
     get_request_id,
-    get_session_repository,
     require_capability,
     require_platform_admin,
 )
@@ -449,35 +448,6 @@ def export_account(
         "Content-Disposition": 'attachment; filename="ask4mo-my-data.json"',
         "Cache-Control": "no-store",
     })
-
-
-@router.post("/account/delete-request", response_model=MessageResponse,
-             summary="Request account deletion (foundation — flips status + audits)")
-def request_account_deletion(
-    request: Request,
-    response: Response,
-    account_repo=Depends(get_account_repository),
-    audit=Depends(get_audit_repository),
-    session_repo=Depends(get_session_repository),
-    user_id: int = Depends(get_current_user_id),
-    request_id: str = Depends(get_request_id),
-) -> MessageResponse:
-    from src.persistence import ACCOUNT_STATUS_DELETION_REQUESTED
-
-    account_repo.set_status(user_id, ACCOUNT_STATUS_DELETION_REQUESTED)
-    session_repo.revoke_all_for_user(user_id)
-    audit.record(
-        event_type="account.delete_request",
-        result="success",
-        actor_user_id=user_id,
-        request_id=request_id,
-    )
-    _clear_session_cookie(request, response)
-    # NOTE: full hard-delete cascade (incl. agent checkpoints) is a later phase; this
-    # is the deletion-request boundary (see docs/capstone/p1_e1_identity_platform.md).
-    return MessageResponse(
-        message="Your account is scheduled for deletion and you've been signed out."
-    )
 
 
 @router.post("/account/delete", response_model=MessageResponse,
