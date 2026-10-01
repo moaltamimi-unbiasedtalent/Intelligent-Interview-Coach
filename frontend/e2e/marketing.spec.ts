@@ -79,8 +79,10 @@ test("home tells an Opportunity-centred story (P10B Wave 7)", async ({ page }) =
   await expect(page.getByRole("heading", { name: /one connected system/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: /create an opportunity/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: /company intelligence/i }).first()).toBeVisible();
-  // Differentiation from a generic generator is stated.
-  await expect(page.getByRole("heading", { name: /not another generic interview generator/i })).toBeVisible();
+  // Differentiation is stated factually (W9.10 replaced the comparative "not another generic interview
+  // generator" jab with a neutral heading; the four differentiators beneath it are unchanged).
+  await expect(page.getByRole("heading", { name: /what makes ask4mo different/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /built around your job/i })).toBeVisible();
 });
 
 test("public home makes no fabricated or unsupported provider claims (P10B Wave 7)", async ({ page }) => {

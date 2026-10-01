@@ -80,6 +80,8 @@ jobs:
         run: python scripts/eval_account_deletion.py
       - name: Privacy controls evaluation (P10B-W9.8; offline; export scope, owner-scoped deletes, no write retry, honest copy)
         run: python scripts/eval_privacy_controls.py
+      - name: Product positioning claim guard (P10B-W9.10; offline; claim register, prohibited phrases, no competitor claims)
+        run: python scripts/eval_product_positioning.py
       - name: Rate-limit evaluation (Capstone P8; offline; auth + cost buckets, window reset, anti-enumeration)
         run: python scripts/eval_rate_limits.py
       - name: Hosting-readiness evaluation (Capstone P8; offline; env/cookies/CORS/headers/pause/malware — does NOT certify EX-12)
