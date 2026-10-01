@@ -39,6 +39,7 @@ const nl: Catalog = {
     rateLimited: "Te veel verzoeken. Wacht even en probeer het opnieuw.",
     sessionExpired: "Uw sessie is verlopen. Meld u opnieuw aan.",
     forbidden: "U hebt hier geen toegang toe.",
+    accessDeniedTitle: "Toegang geweigerd",
     notFound: "We konden niet vinden wat u zocht.",
     validationError: "Controleer de gegevens en probeer het opnieuw.",
     conflict: "Dit wordt al verwerkt. Wacht even en probeer het opnieuw.",

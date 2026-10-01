@@ -70,11 +70,22 @@ const DIAGNOSTICS = {
   known_gaps: ["German occupation-specific compensation is aggregate."],
 };
 
-async function mockAll(page: Page) {
+function surfaceAccount(role: string) {
+  return {
+    user_id: 1, email: "u@example.com", display_name: null, platform_role: role,
+    tier: "basic", status: "active", email_verified: true, providers: ["password"],
+    auth_method: "session", capabilities: [], response_detail: "brief",
+    interface_locale: "en", conversation_language: "en", coaching_style: "balanced",
+    career_geography: "", target_role: "", onboarding_completed: true, onboarding_step: 0,
+  };
+}
+
+async function mockAll(page: Page, role = "user") {
   await page.route("**/api/v1/**", async (route) => {
     const url = route.request().url();
     const json = (body: unknown, status = 200) =>
       route.fulfill({ status, contentType: "application/json", headers: { "x-request-id": "req_surface" }, body: JSON.stringify(body) });
+    if (url.includes("/auth/me")) return json(surfaceAccount(role));
     if (url.includes("/history/interviews/")) return json(HISTORY_DETAIL);
     if (url.includes("/history/interviews")) return json(HISTORY_LIST);
     if (url.includes("/progress")) return json(PROGRESS);
@@ -119,7 +130,7 @@ test("sources: public source is a safe external link; governed source is inspect
 });
 
 test("review/evaluation: shows offline metrics read-only, clearly not live analytics", async ({ page }) => {
-  await mockAll(page);
+  await mockAll(page, "platform_admin"); // W9.3: Review & Diagnostics is platform-admin-only
   await page.goto("/review/evaluation");
   await expect(page.getByText("faithfulness")).toBeVisible();
   await expect(page.getByText("0.405")).toBeVisible();
@@ -127,7 +138,7 @@ test("review/evaluation: shows offline metrics read-only, clearly not live analy
 });
 
 test("review/rag: shows real knowledge runtime + offline retrieval quality (no placeholder)", async ({ page }) => {
-  await mockAll(page);
+  await mockAll(page, "platform_admin"); // W9.3: Review & Diagnostics is platform-admin-only
   await page.goto("/review/rag");
   // Target the section heading specifically: the page description also contains the phrase
   // "knowledge runtime", so a bare getByText is ambiguous under strict mode (pre-existing flake).

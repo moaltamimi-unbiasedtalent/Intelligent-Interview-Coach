@@ -21,6 +21,16 @@ Date captured: 2026-09-30. Author: Claude Opus 4.8 (assisted). Read-only audit.
 > other read surfaces gained race-safe in-place Retry (retry-capable `ErrorState` 3→10); recovery
 > needs no reload or re-login. Frontend-only: vitest **320** (56 files), full Playwright **125**,
 > typecheck/lint/build green; no backend/schema/migration change. See `P10B_W9_2_RECOVERY_UX.md`.
+>
+> **Update (W9.3 delivered):** internal Review & Diagnostics is now **platform-admin-only** (branch
+> `fix/p10b-w9-3-security-menu`), closing the Pilot "security lapse on menu items". Nav item moved to
+> an admin-only `INTERNAL_NAV`; `/review` + `/review/rag` + `/review/evaluation` guarded by
+> `RequirePlatformAdmin`; `GET /knowledge/diagnostics` + all `/evaluation/*` now require
+> `require_platform_admin` server-side (`knowledge/sources`+`/snapshot` stay candidate-facing;
+> `/review/agent` stays owner-scoped). No migration, no new role. Frontend vitest **326**, full
+> Playwright 126/127 (1 pre-existing unrelated `nextjs.spec` flake, passes in isolation), backend 13
+> env-artifact only; security/admin/workspace/identity/multi-agent/RC/i18n evals PASS. See
+> `P10B_W9_3_SECURITY_MENU.md`.
 
 ---
 

@@ -81,7 +81,9 @@ describe("AppShell", () => {
 });
 
 describe("More menu (secondary navigation)", () => {
-  it("collapses by default and exposes Sources + Review on open", async () => {
+  it("collapses by default and exposes Sources on open, but hides internal Review for a candidate", async () => {
+    // The mocked account is a normal candidate (platform_role: "user"). P10B-W9.3: candidate-facing
+    // supporting items (Sources) are shown; INTERNAL Review & Diagnostics is NOT (admin-only).
     render(<MoreMenu />);
     const trigger = screen.getByRole("button", { name: /More/ });
     expect(trigger).toHaveAttribute("aria-expanded", "false");
@@ -91,7 +93,7 @@ describe("More menu (secondary navigation)", () => {
     expect(trigger).toHaveAttribute("aria-expanded", "true");
     const menu = screen.getByRole("menu");
     expect(within(menu).getByRole("menuitem", { name: /Sources/ })).toHaveAttribute("href", "/sources");
-    expect(within(menu).getByRole("menuitem", { name: /Review & Diagnostics/ })).toHaveAttribute("href", "/review");
+    expect(within(menu).queryByRole("menuitem", { name: /Review & Diagnostics/ })).not.toBeInTheDocument();
   });
 
   it("does NOT contain Settings", async () => {

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useT } from "@/components/i18n/I18nProvider";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
-import { SECONDARY_NAV } from "./nav-items";
+import { INTERNAL_NAV, SECONDARY_NAV } from "./nav-items";
 
 /**
  * "More" — a compact secondary-navigation menu for supporting destinations
@@ -31,10 +31,11 @@ export function MoreMenu() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuId = useId();
 
-  // A supporting destination is active → mark the More control (not a primary tab).
-  const supportingActive = SECONDARY_NAV.some(
-    (item) => pathname === item.href || pathname.startsWith(item.href + "/"),
-  );
+  // A supporting destination is active → mark the More control (not a primary tab). Internal
+  // destinations count too, but only when the caller is an admin (others never see them).
+  const supportingActive =
+    SECONDARY_NAV.some((item) => pathname === item.href || pathname.startsWith(item.href + "/")) ||
+    (isAdmin && INTERNAL_NAV.some((item) => pathname === item.href || pathname.startsWith(item.href + "/")));
 
   const close = useCallback((focusButton = false) => {
     setOpen(false);
@@ -121,19 +122,27 @@ export function MoreMenu() {
               </Link>
             );
           })}
-          {isAdmin ? (
-            <Link
-              href="/admin"
-              role="menuitem"
-              aria-current={pathname.startsWith("/admin") ? "page" : undefined}
-              onClick={() => close()}
-              className="flex min-h-[44px] flex-col justify-center gap-0.5 px-3.5 py-2 text-sm text-foreground transition-colors hover:bg-surface-2 focus:bg-surface-2 focus:outline-none"
-            >
-              {/* Internal operations surface — English label (§14). */}
-              <span className="font-medium">Admin</span>
-              <span className="text-xs text-muted">Platform operations</span>
-            </Link>
-          ) : null}
+          {/* INTERNAL destinations (Review & Diagnostics, Admin) — rendered ONLY for a
+              server-authoritative PLATFORM_ADMIN. Ordinary candidates never see these items.
+              Each destination's backend is independently authorized (hiding is UX only). */}
+          {isAdmin
+            ? INTERNAL_NAV.map((item) => {
+                const active = pathname === item.href || pathname.startsWith(item.href + "/");
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    role="menuitem"
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => close()}
+                    className="flex min-h-[44px] flex-col justify-center gap-0.5 px-3.5 py-2 text-sm text-foreground transition-colors hover:bg-surface-2 focus:bg-surface-2 focus:outline-none"
+                  >
+                    <span className="font-medium">{"labelKey" in item ? t(item.labelKey) : item.label}</span>
+                    {item.description ? <span className="text-xs text-muted">{item.description}</span> : null}
+                  </Link>
+                );
+              })
+            : null}
         </div>
       ) : null}
     </div>

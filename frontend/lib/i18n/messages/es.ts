@@ -39,6 +39,7 @@ const es: Catalog = {
     rateLimited: "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
     sessionExpired: "Tu sesión ha caducado. Inicia sesión de nuevo.",
     forbidden: "No tienes acceso a eso.",
+    accessDeniedTitle: "Acceso denegado",
     notFound: "No encontramos lo que buscabas.",
     validationError: "Comprueba la información e inténtalo de nuevo.",
     conflict: "Esto ya se está procesando. Espera un momento e inténtalo de nuevo.",

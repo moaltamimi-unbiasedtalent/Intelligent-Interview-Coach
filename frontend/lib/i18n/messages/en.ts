@@ -42,6 +42,7 @@ export const messages = {
     rateLimited: "You’ve made too many requests. Please wait a moment and try again.",
     sessionExpired: "Your session has expired. Please sign in again.",
     forbidden: "You don’t have access to that.",
+    accessDeniedTitle: "Access denied",
     notFound: "We couldn’t find what you were looking for.",
     validationError: "Please check the information and try again.",
     conflict: "This is already being processed. Please wait a moment and try again.",

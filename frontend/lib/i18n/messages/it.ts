@@ -39,6 +39,7 @@ const it: Catalog = {
     rateLimited: "Troppe richieste. Attendi un momento e riprova.",
     sessionExpired: "La tua sessione è scaduta. Accedi di nuovo.",
     forbidden: "Non hai accesso a questo.",
+    accessDeniedTitle: "Accesso negato",
     notFound: "Non abbiamo trovato ciò che cercavi.",
     validationError: "Controlla le informazioni e riprova.",
     conflict: "L’operazione è già in corso. Attendi un momento e riprova.",

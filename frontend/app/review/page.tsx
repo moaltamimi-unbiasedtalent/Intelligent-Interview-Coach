@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
+import { RequirePlatformAdmin } from "@/components/auth/RequirePlatformAdmin";
 
 export const metadata: Metadata = { title: "Review & Diagnostics", robots: { index: false, follow: false } };
 
@@ -11,8 +12,12 @@ const AREAS = [
   { href: "/review/evaluation", name: "Evaluation", note: "Offline RAGAS metrics (read-only; never a paid run).", status: "Available" },
 ];
 
+// P10B-W9.3: the Review & Diagnostics index lists internal engineering surfaces (RAG + evaluation),
+// so it is platform-admin-only. The candidate's own Agent Inspector (/review/agent) is reached
+// directly from the Coach and is NOT gated here (owner-scoped).
 export default function ReviewPage() {
   return (
+    <RequirePlatformAdmin>
     <section>
       <PageHeader
         eyebrow="For reviewers & developers"
@@ -33,5 +38,6 @@ export default function ReviewPage() {
         ))}
       </div>
     </section>
+    </RequirePlatformAdmin>
   );
 }

@@ -39,6 +39,7 @@ const pt: Catalog = {
     rateLimited: "Demasiados pedidos. Aguarde um momento e tente novamente.",
     sessionExpired: "A sua sessão expirou. Inicie sessão novamente.",
     forbidden: "Não tem acesso a isso.",
+    accessDeniedTitle: "Acesso negado",
     notFound: "Não encontrámos o que procurava.",
     validationError: "Verifique as informações e tente novamente.",
     conflict: "Isto já está a ser processado. Aguarde um momento e tente novamente.",

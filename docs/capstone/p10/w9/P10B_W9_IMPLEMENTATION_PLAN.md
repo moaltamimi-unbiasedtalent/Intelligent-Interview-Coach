@@ -79,7 +79,17 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 - **Dependencies:** W9.1 (taxonomy). **Risk:** low. **Complexity:** M.
 - **STOP:** after the restart-recovery E2E passes.
 
-## W9.3 — Security/menu investigation & remediation  *(Low, but before Pilot 2)*
+## W9.3 — Security/menu investigation & remediation  *(Low, but before Pilot 2)* — ✅ DELIVERED
+
+> **Status: DELIVERED** on branch `fix/p10b-w9-3-security-menu` (see `P10B_W9_3_SECURITY_MENU.md`).
+> Internal Review & Diagnostics is now platform-admin-only: the nav item moved to an admin-only
+> `INTERNAL_NAV`, `/review` + `/review/rag` + `/review/evaluation` are guarded (safe "Access denied"),
+> and `GET /knowledge/diagnostics` + all `/evaluation/*` now require `require_platform_admin`
+> (server-authoritative). `/review/agent` stays candidate owner-scoped; `knowledge/sources`+`/snapshot`
+> stay candidate-facing; admin does not bypass owner-scoping. New backend authz test (7) + frontend
+> nav-security (6) + E2E; all security/admin/workspace/identity/multi-agent/RC evals PASS. No
+> migration, no new role, no RC, 0 paid/live. W9.4 not started.
+
 
 - **Objective:** remove the dev/reviewer surface from candidate view; keep server-side authz intact.
   Fixes PF-09.

@@ -39,6 +39,7 @@ const de: Catalog = {
     rateLimited: "Zu viele Anfragen. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
     sessionExpired: "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
     forbidden: "Sie haben keinen Zugriff darauf.",
+    accessDeniedTitle: "Zugriff verweigert",
     notFound: "Das Gesuchte wurde nicht gefunden.",
     validationError: "Bitte prüfen Sie die Angaben und versuchen Sie es erneut.",
     conflict: "Dies wird bereits verarbeitet. Bitte warten Sie einen Moment und versuchen Sie es erneut.",

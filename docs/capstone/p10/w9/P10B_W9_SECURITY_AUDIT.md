@@ -6,6 +6,33 @@ classifies the report.
 
 ---
 
+## 0. Status — CLOSED in P10B-W9.3 (post-remediation)
+
+> The exact finding below (F1/F2: the internal **Review & Diagnostics** surface + two unauthenticated
+> diagnostics endpoints visible/reachable to ordinary candidates) is now **CLOSED** — see
+> `P10B_W9_3_SECURITY_MENU.md`.
+>
+> - **Previously exposed endpoints:** `GET /api/v1/knowledge/diagnostics`,
+>   `GET /api/v1/evaluation/{latest,runs,runs/{id},ragas/configuration}` — were unauthenticated.
+> - **Authorization added:** all now require `require_platform_admin` (server-authoritative;
+>   evaluation at router level, knowledge `/diagnostics` per-route). `knowledge/sources` + `/snapshot`
+>   stay candidate-facing (unchanged).
+> - **Frontend visibility:** the "Review & Diagnostics" item moved from `SECONDARY_NAV` to an
+>   admin-only `INTERNAL_NAV` in `MoreMenu`; `/review`, `/review/rag`, `/review/evaluation` are wrapped
+>   in `RequirePlatformAdmin` (safe "Access denied" for non-admins). `/review/agent` stays candidate
+>   owner-scoped (reached from the Coach).
+> - **Direct-route behaviour:** candidate → access-denied (not the diagnostic experience); every
+>   `/review/*` child enforces the correct boundary; menu-hidden AND API-protected (both layers).
+> - **Negative tests:** no self-elevation via header/body/query; workspace membership ≠ admin; platform
+>   admin does NOT bypass owner-scoping for agent runs.
+> - **Residual risk:** internal diagnostics are platform-admin-only (no separate reviewer role — a
+>   future migration-bearing change). No candidate-data authorization bypass was ever demonstrated;
+>   server-side ownership/admin controls remain intact and all security evaluators still pass.
+>
+> The audit text below is the original (pre-remediation) finding, retained as historical context.
+
+---
+
 ## 1. Bottom line
 
 The pilot's "security lapse on certain menu items" reproduces as a **route-visibility /

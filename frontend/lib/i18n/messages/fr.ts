@@ -39,6 +39,7 @@ const fr: Catalog = {
     rateLimited: "Trop de requêtes. Veuillez patienter un moment et réessayer.",
     sessionExpired: "Votre session a expiré. Veuillez vous reconnecter.",
     forbidden: "Vous n’avez pas accès à cela.",
+    accessDeniedTitle: "Accès refusé",
     notFound: "Nous n’avons pas trouvé ce que vous cherchiez.",
     validationError: "Veuillez vérifier les informations et réessayer.",
     conflict: "Ceci est déjà en cours de traitement. Veuillez patienter un moment et réessayer.",

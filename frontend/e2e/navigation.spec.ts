@@ -3,17 +3,29 @@ import { expect, test, type Page } from "@playwright/test";
 // Navigation discoverability flows. Broad safe API mock so every route renders
 // without a backend. No provider calls.
 
-async function mock(page: Page) {
+function account(role: string) {
+  return {
+    user_id: 1, email: "u@example.com", display_name: null, platform_role: role,
+    tier: "basic", status: "active", email_verified: true, providers: ["password"],
+    auth_method: "session", capabilities: [], response_detail: "brief",
+    interface_locale: "en", conversation_language: "en", coaching_style: "balanced",
+    career_geography: "", target_role: "", onboarding_completed: true, onboarding_step: 0,
+  };
+}
+
+async function mock(page: Page, role = "user") {
   await page.route("**/api/v1/**", async (route) => {
     const url = route.request().url();
     const json = (body: unknown, status = 200) =>
       route.fulfill({ status, contentType: "application/json", headers: { "x-request-id": "req_e2e" }, body: JSON.stringify(body) });
+    if (url.includes("/auth/me")) return json(account(role));
     if (url.includes("/capabilities")) return json({
       career_intelligence: true, interview_practice: true, knowledge_base: true,
       evaluation: true, live_interview_enabled: false, agentic_rag: true,
       agent_memory: true, human_in_the_loop: true, agent_coach_enabled: true });
     if (url.includes("/memory/preview")) return json({ target_role: null, load_limit: 10, items: [] });
     if (url.includes("/memory")) return json({ memories: [] });
+    if (url.includes("/knowledge/diagnostics")) return json({ vectors: 1, documents: 1, retrieval: { passed: 1, total: 1 } });
     if (url.includes("/knowledge")) return json({ sources: [], snapshot: {} });
     if (url.includes("/history")) return json({ interviews: [] });
     return json({});
@@ -35,17 +47,20 @@ test("Flow 2: More → Sources", async ({ page }) => {
   await expect(page).toHaveURL(/\/sources$/);
 });
 
-test("Flow 3: More → Review & Diagnostics", async ({ page }) => {
-  await mock(page);
+test("Flow 3: candidate does NOT see internal Review & Diagnostics in More (W9.3)", async ({ page }) => {
+  await mock(page); // default = normal candidate
+  await page.goto("/prepare");
+  await page.getByRole("button", { name: /More/ }).click();
+  await expect(page.getByRole("menuitem", { name: /Sources/ })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: /Review & Diagnostics/ })).toHaveCount(0);
+});
+
+test("Flow 4: platform admin — More → Review hub → Agent Inspector", async ({ page }) => {
+  await mock(page, "platform_admin");
   await page.goto("/prepare");
   await page.getByRole("button", { name: /More/ }).click();
   await page.getByRole("menuitem", { name: /Review & Diagnostics/ }).click();
   await expect(page).toHaveURL(/\/review$/);
-});
-
-test("Flow 4: Review hub → Agent Inspector", async ({ page }) => {
-  await mock(page);
-  await page.goto("/review");
   await page.getByRole("link", { name: /Agent Inspector/ }).click();
   await expect(page).toHaveURL(/\/review\/agent$/);
 });

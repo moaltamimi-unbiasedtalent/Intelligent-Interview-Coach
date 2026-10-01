@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { EvaluationClient } from "@/components/review/EvaluationClient";
+import { RequirePlatformAdmin } from "@/components/auth/RequirePlatformAdmin";
 
-export const metadata: Metadata = { title: "Evaluation" };
+export const metadata: Metadata = { title: "Evaluation", robots: { index: false, follow: false } };
 
+// P10B-W9.3: internal evaluation diagnostics — platform-admin-only.
 export default function EvaluationPage() {
   return (
+    <RequirePlatformAdmin>
     <section>
       <PageHeader
         eyebrow="Review & Diagnostics"
@@ -14,5 +17,6 @@ export default function EvaluationPage() {
       />
       <EvaluationClient />
     </section>
+    </RequirePlatformAdmin>
   );
 }
