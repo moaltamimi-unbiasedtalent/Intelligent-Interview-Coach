@@ -14,6 +14,7 @@ import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "./AuthProvider";
 import { isProtectedRoute, AUTH_ONLY_ROUTES, APP_HOME } from "@/lib/auth/routes";
+import { redirectVerified } from "@/lib/auth/redirect";
 import { LoadingState } from "@/components/ui/States";
 import { useT } from "@/components/i18n/I18nProvider";
 
@@ -37,12 +38,12 @@ export function RouteGuard({ children }: { children: ReactNode }) {
     if (status === "loading") return;
     if (protectedRoute && status === "unauthenticated") {
       const next = encodeURIComponent(pathname);
-      router.replace(`/sign-in?next=${next}`);
+      return redirectVerified(router, `/sign-in?next=${next}`);
     } else if (authOnly && status === "authenticated") {
       const next = params.get("next");
-      router.replace(next && next.startsWith("/") ? next : APP_HOME);
+      return redirectVerified(router, next && next.startsWith("/") ? next : APP_HOME);
     } else if (needsOnboarding && protectedRoute && !onOnboarding) {
-      router.replace("/onboarding");
+      return redirectVerified(router, "/onboarding");
     }
   }, [status, protectedRoute, authOnly, needsOnboarding, onOnboarding, pathname, params, router]);
 
