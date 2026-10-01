@@ -631,9 +631,34 @@ assumptions in core logic, prompts, scoring or examples.
 
 - Remote: `origin` (configured locally; the GitHub repo rename to Intelligent-Interview-Coach is a follow-up). Turing
   submissions are pushed to the `TuringCollegeSubmissions/*` remote.
-- Work on a feature branch; open a PR. **Do not auto-merge.** Commit and push only
-  when a phase/prompt instructs it.
+- Work on a feature branch and integrate through a Pull Request (see the **Completed Wave Integration
+  Rule** below). Never force-push `main`; never bypass required CI without explicit owner instruction.
 - End commit messages with `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+
+### Completed Wave Integration Rule (permanent, owner-established)
+
+A completed implementation wave must not remain local-only. Every approved Ask4Mo implementation wave must:
+
+1. complete its acceptance gates;
+2. run the required deterministic tests/evaluators;
+3. commit all intended changes;
+4. ensure no secrets, local databases, database backups, logs or private data are included;
+5. push the implementation branch to GitHub (never `--force` on `main`);
+6. open or update a Pull Request into `main`;
+7. allow required CI to complete;
+8. fix CI failures, or explicitly block and report them (including GitHub Actions billing/spending-limit
+   failures: never claim CI passed when jobs did not execute);
+9. merge only after required checks pass, using the repository's normal merge strategy;
+10. `git fetch origin --prune`, switch to `main` and fast-forward it from `origin/main`
+    (`git pull --ff-only origin main`); if it cannot fast-forward, inspect and report - never reset
+    destructively;
+11. verify `local main == origin/main` with a clean working tree (and that the Alembic head is as expected);
+12. report the GitHub PR and the final SHA.
+
+A wave must NOT be reported as "fully integrated" if it exists only as a local commit. Deliberately cumulative
+local development waves may be synchronized through one cumulative PR before continuing, but that is the
+exception; afterwards return to per-wave integration. Workflow:
+implement -> test -> commit -> push -> PR -> CI -> merge -> sync local main -> verify SHA equality.
 - Never commit `.env`, `.streamlit/secrets.toml`, virtual environments, caches,
   generated evaluation runs, or `node_modules`.
 

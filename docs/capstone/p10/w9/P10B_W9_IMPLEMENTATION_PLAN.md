@@ -343,7 +343,8 @@ conversation/dictation/geography; do not change authority-level semantics; commi
   paid/live).
 - **Files:** `tests/conftest.py` or the 5 affected test files; CI config.
 - **Acceptance:** 0 failed backend (incl. isolation), all frontend gates, all evals PASS, 0 paid/live;
-  no unresolved P0/P1.
+  no unresolved P0/P1; **TD-W9-01 and TD-W9-02 (technical-debt register below) closed** before final release
+  qualification.
 - **Dependencies:** W9.1–W9.11. **Risk:** low. **Complexity:** M.
 - **STOP:** produce the RC readiness assessment against ACCEPTANCE_GATES. **Do NOT create RC-P10-003 in
   this task** — creation is a separate, explicitly-approved step after the gate.
@@ -358,3 +359,46 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 
 Waves are independent PRs; W9.6 depends on the string-producing waves before it, so land W9.1–W9.5 first
 then sweep localization in W9.6, then W9.7 Russian on top of the canonical locale source.
+
+---
+
+## Roadmap addition: P10B-W10 - Platform Administration, Support & Commercial Operations  *(approved concept, NOT started)*
+
+An operational **control plane** so a platform administrator can run normal day-to-day Ask4Mo operations
+without routinely editing source code or querying the database directly. Intended coverage:
+
+- admin command center / platform health;
+- users and access administration; session/access revocation; workspaces;
+- support ticketing and troubleshooting;
+- subscription-plan creation/editing; entitlements; billing/payments administration;
+- API/integration management; AI/provider/model configuration;
+- knowledge-base administration; RAG/source health; source ingestion/approval; jobs/queues;
+- GDPR/data-subject operations; privacy/legal versions;
+- feature flags; safe system configuration;
+- product / operational / commercial reporting; AI usage and cost reporting;
+- audit logs; security/incidents; release/environment health.
+
+**Architectural principle (non-negotiable):** an administrator operates the platform, but
+**platform admin != unrestricted private-candidate-data superuser** (consistent with P6.5/W9.3: metadata-only
+operations, no "view as user", no private-data search, owner-scoped repositories stay owner-scoped, privileged
+changes audited). Existing seams to build on: `require_platform_admin`, the admin router, audit events,
+entitlements, the Prompt Lab/reviewer APIs. Sequencing relative to W9.8-W9.12 and P10C is an owner decision.
+
+## Technical-debt register (W9)
+
+- **TD-W9-01 - Invalid Tailwind opacity-modifier usage.** About 15 classes such as `border-warning/50`,
+  `bg-warning/10`, `text-foreground/80` generate no CSS because the project's custom colour tokens are plain
+  `var()` values. Impact: intended opacity styling is silently absent; about 10 approved UI elements may change
+  appearance when this is fixed properly. Required task: inventory all affected classes, choose a valid
+  colour-token strategy, and visually regression-test light/dark/mobile before changing anything. **Open;
+  must be closed before final release qualification (W9.12).**
+- **TD-W9-02 - Backend test-isolation leak.** A backend test wrote a fixture interview/report into the local
+  development database during a full test run (previously hidden by the dev-DB schema lag). Impact: the
+  deterministic suite is not fully isolated from local dev persistence. Required task: identify the exact
+  test/config path, make tests use isolated temporary databases, and prove no dev/production DB writes during
+  the suite. **Open; must be closed before final release qualification (W9.12).**
+- **TD-W9-03 - Locale-aware font/subset loading (optimization, optional).** W9.7A added the `cyrillic` subset
+  to the existing Inter loader (kept; ~18.7 kB woff2 preloaded on every page for every locale, accepted
+  provisionally because Russian is a supported language and typography is consistent). A locale-aware
+  loading strategy may be evaluated during performance optimization, only with measurement. **Open, low
+  priority.**

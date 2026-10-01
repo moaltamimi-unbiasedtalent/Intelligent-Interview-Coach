@@ -103,6 +103,15 @@ Date captured: 2026-09-30. Author: Claude Opus 4.8 (assisted). Read-only audit.
 > data carried over, backup kept). Catalogue 1,443 keys x 33 ns x 8 locales. vitest **477**, backend **2,518
 > passed / 3 skipped / 0 failed**, Playwright **189/189**, 17 evaluators pass; 0 paid/live; no migration created,
 > no RC. See `P10B_W9_7A_EXPERIENCE_CLOSURE.md`. W9.8 not started.
+>
+> **Integration status:** the cumulative W9.1-W9.7A chain (10 commits, `334ffbd`..`344a8f6`, a clean linear
+> descendant of `main` @ `80354f3`) is integrated to GitHub `main` through a single cumulative Pull Request per
+> the owner's Completed Wave Integration Rule (see `CLAUDE.md`). The final PR number and merge SHA are recorded
+> in the PR and in the synchronization report. **Open technical debt (must close before W9.12 release
+> qualification):** TD-W9-01 (invalid Tailwind `token/NN` opacity classes), TD-W9-02 (backend test writes to the
+> dev database), and optional TD-W9-03 (locale-aware font subset loading); see the register in
+> `P10B_W9_IMPLEMENTATION_PLAN.md`. The approved future phase P10B-W10 (Platform Administration, Support &
+> Commercial Operations) is recorded there and is not started.
 
 ---
 
