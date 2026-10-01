@@ -164,7 +164,7 @@ No layout change; the changed strings were checked at 390px in de and ru (no ove
 JS unchanged. Tests: `tests/positioning-claims.test.tsx` (public pages render allowed claims, no prohibited phrases, no named
 competitors, trust/privacy links, 8-locale completeness); evaluator `scripts/eval_product_positioning.py` (added to CI: claim register
 integrity, C1-C4 counts match, prohibited-phrase and named-competitor scan of public copy, no `vs`/comparison routes, PRIV items
-present, no migration). Results are in the PR.
+present, no migration). Final results are in section 31.
 
 ## 26. Open items
 PRIV-W9-01, PRIV-W9-02, TD-W9-01, TD-W9-02 remain OPEN; native Russian and legal copy review, live generated-language validation,
@@ -188,3 +188,28 @@ No competitor research was performed. No migration. 0 paid/live calls.
 7. Pre-existing translation-quality defect: the Wave 7 `marketing` block in de/fr/es/it/pt contains ASCII-folded text
    without diacritics (for example "Fuehren", "Uebungen", "Vorschlaege", "reponses"). W9.10 restored diacritics only on the
    keys it edited; the rest needs a pass (translation review / W9.11).
+8. Authority-level documentation/comment discrepancy remains. Canonical semantics (code is right): 1 = official/statistical,
+   2 = public/professional framework, 3 = reputable industry. W9.11 must correct the documentation/comment, not the code.
+9. Evaluation is deterministic service architecture; the specialists are exactly three and there is no Evaluation Specialist.
+
+W9.11 rule: fix documentation to match the code, never change working code to match stale documentation.
+
+## 31. Final qualification (on the final tree, commit `fb42762`)
+- **Playwright:** one complete run of `npm run e2e` on the final tree: **199 passed / 199** (no retries, timeouts, sleeps,
+  skips or weakened assertions; the only test edit was the deliberately changed home heading in `e2e/marketing.spec.ts`).
+- **Frontend unit:** 511 passed; typecheck, lint, build green; hardcoded-English scanner 0 offenders; catalogue parity green.
+- **Evaluators:** 23 CI evaluators green including `eval_product_positioning.py`; ruff clean; 3 backend claim-guard tests green.
+  The known `.env`-dependent backend baseline failures are unrelated and were not touched.
+- **Registers verified:** 28 capabilities (C1 9, C2 10, C3 5, C4 4), 20 allowed claims, 20 prohibited claims (evaluator
+  cross-checks the counts); no C3 capability appears in an allowed claim.
+- **Visual QA (completed):** Home, `/product`, `/trust` and `/ai-transparency` were driven in **German and Russian x desktop
+  (1280) and mobile (390) x light and dark = 8 configurations** with programmatic checks on every page: no horizontal
+  overflow, no raw translation keys, Trust page "Manage your data and privacy" link targets `/account/data`. Screenshots were
+  inspected for: German desktop light Home hero and `/product`; German mobile dark "what makes Ask4Mo different"; Russian
+  desktop dark "what makes Ask4Mo different"; Russian mobile light Home hero and `/trust`. Result: headline and CTA wrapping
+  fine, Cyrillic renders correctly, no clipped controls, contrast readable. Not every page/theme combination was inspected by
+  eye (the others are covered by the programmatic checks). Finding: German pages still show ASCII-folded text in keys W9.10
+  did not touch (for example "fuer", "Moeglichkeit", "Uebung", "Pruefen", "standardmaessig"); this is the pre-existing defect
+  recorded in the W9.11 handoff, intentionally not fixed here.
+- **Bundle:** copy-only; shared first-load JS 103 kB unchanged; routes about +1 kB.
+- **Backend/schema:** only a bounded evaluator and guard tests were added; no migration; Alembic head `0014_opportunities`.
