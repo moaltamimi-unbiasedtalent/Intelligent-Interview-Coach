@@ -1,10 +1,11 @@
 /** Dutch catalogue (Capstone P3.5). Status: ENGINEERING DRAFT (not human/legal reviewed). */
 import type { Catalog } from "./en";
+import { BRAND_SLOGAN } from "../../brand";
 
 const nl: Catalog = {
   common: {
     appName: "Ask4Mo",
-    tagline: "Vraag meer. Word meer.",
+    tagline: BRAND_SLOGAN,
     productName: "Intelligente sollicitatiecoach",
     signIn: "Inloggen",
     signOut: "Uitloggen",
@@ -50,7 +51,7 @@ const nl: Catalog = {
     signInTitle: "Inloggen",
     signInSubtitle: "Welkom terug bij Ask4Mo.",
     registerTitle: "Maak uw account",
-    registerSubtitle: "Bereid u voor met bewijs, oefen met een doel. Vraag meer. Word meer.",
+    registerSubtitle: "Bereid u voor met bewijs, oefen met een doel. " + BRAND_SLOGAN,
     email: "E-mail",
     password: "Wachtwoord",
     name: "Naam (optioneel)",
@@ -197,7 +198,7 @@ const nl: Catalog = {
     troubleshooting: "Problemen oplossen",
     languages: "Talen",
     languagesHelp:
-      "De interface van Ask4Mo is beschikbaar in het Engels, Duits, Frans, Spaans, Italiaans, Portugees en Nederlands. De interfacetaal, Mo’s gesprekstaal en de dicteertaal stelt u apart in bij Instellingen. Een taalwijziging verandert nooit de arbeidsmarktregio van uw bewijs.",
+      "De interface van Ask4Mo is beschikbaar in het Engels, Duits, Frans, Spaans, Italiaans, Portugees, Nederlands en Russisch. De interfacetaal, Mo’s gesprekstaal en de dicteertaal stelt u apart in bij Instellingen. Een taalwijziging verandert nooit de arbeidsmarktregio van uw bewijs.",
   },
   practice: {
     title: "Een sollicitatiegesprek oefenen",
@@ -347,6 +348,7 @@ const nl: Catalog = {
     manageDocuments: "Documenten beheren",
   },
   prepare: {
+    contextTab: "Voorbereiding",
     messageMo: "Bericht aan Mo",
     send: "Versturen",
     sending: "Versturen…",
@@ -666,7 +668,7 @@ const nl: Catalog = {
     hSpeakQ: "Een antwoord inspreken en bewerken vóór verzenden",
     hSpeakA: "Gebruik de microfoon om uw antwoord in te spreken. Uw woorden verschijnen als een bewerkbaar transcript; u leest en corrigeert ze en drukt daarna zelf op Verzenden. Spreken verzendt nooit vanzelf, en beginnen met spreken stopt het afspelen (en omgekeerd) - de twee zijn nooit tegelijk actief.",
     hLangQ: "Talen, browserafhankelijkheid en bronnen",
-    hLangA: "Spraakweergave volgt uw Mo-gesprekstaal binnen de zeven ondersteunde talen (Engels, Duits, Frans, Spaans, Italiaans, Portugees, Nederlands). Of er een stem is geïnstalleerd hangt af van de browser/het systeem; is er geen, dan blijft de tekst op het scherm. Lange links worden niet voorgelezen - het afspelen meldt dat bronnen op het scherm beschikbaar zijn, en de bronlinks blijven zichtbaar.",
+    hLangA: "Spraakweergave volgt uw Mo-gesprekstaal binnen de zeven ondersteunde talen (Engels, Duits, Frans, Spaans, Italiaans, Portugees, Nederlands). Of er een stem is geïnstalleerd hangt af van de browser/het systeem; is er geen, dan blijft de tekst op het scherm. Lange links worden niet voorgelezen - het afspelen meldt dat bronnen op het scherm beschikbaar zijn, en de bronlinks blijven zichtbaar. Russisch is beschikbaar als interface- en gesprekstaal, maar spraakweergave is daarvoor nog niet beschikbaar.",
     hPrivacyQ: "Privacy en waarvoor stem NIET wordt gebruikt",
     hPrivacyA: "Ask4Mo geeft de zichtbare tekst door aan de spraak-engine van uw browser/systeem en slaat geen audio op. Ask4Mo gebruikt uw stem nooit om emoties, persoonlijkheid, intelligentie, eerlijkheid, misleiding, accent of geschiktheid voor werk af te leiden - stem dient alleen om te luisteren en tekst in te voeren. Er is geen enkele stemscore.",
     hUnsupportedQ: "Als stem niet beschikbaar is",

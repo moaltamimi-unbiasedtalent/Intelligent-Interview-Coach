@@ -102,6 +102,7 @@ RESPONSE_LANGUAGE_NAMES: dict[str, str] = {
     "it": "Italian",
     "pt": "Portuguese",
     "nl": "Dutch",
+    "ru": "Russian",
 }
 
 

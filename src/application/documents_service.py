@@ -33,8 +33,8 @@ from src.persistence import (
     DOC_STATUS_REVIEW_REQUIRED,
     EXTRACTION_ORIGIN_NATIVE,
     EXTRACTION_ORIGIN_OCR,
-    SUPPORTED_LOCALES,
 )
+from src.locales import DOCUMENT_LANGUAGE_CODES
 
 __all__ = ["DocumentsApplicationService"]
 
@@ -57,7 +57,7 @@ class DocumentsApplicationService:
 
     def upload(self, *, user_id: int, filename: str, data: bytes, category: str, language_hint: str | None = None) -> dict:
         cat = category if category in DOC_CATEGORIES else DOC_CATEGORY_OTHER
-        lang = language_hint if language_hint in SUPPORTED_LOCALES else None
+        lang = language_hint if language_hint in DOCUMENT_LANGUAGE_CODES else None
         try:
             validated = validate_upload(filename, data)
         except DocumentValidationError as exc:
@@ -79,7 +79,7 @@ class DocumentsApplicationService:
         existing = self._repo.get_document(user_id=user_id, document_id=document_id)
         if existing is None:
             return None
-        lang = language_hint if language_hint in SUPPORTED_LOCALES else None
+        lang = language_hint if language_hint in DOCUMENT_LANGUAGE_CODES else None
         try:
             validated = validate_upload(filename, data)
         except DocumentValidationError as exc:

@@ -77,6 +77,19 @@ Date captured: 2026-09-30. Author: Claude Opus 4.8 (assisted). Read-only audit.
 > `eval_dictation` read-path updated → PASS; i18n/voice/realtime-voice/RC(27)/identity(1.0) evals PASS;
 > 0 paid/live; no migration, no API/backend-locale change, no RC. With W9.6A, **W9.6 is fully
 > DELIVERED**. See `P10B_W9_6A_LOCALIZATION_CLOSURE.md`.
+>
+> **Update (W9.7 delivered):** Russian is the **eighth** application locale (branch
+> `feat/p10b-w9-7-russian-locale`, from W9.6A `a82081e`): interface + Mo-conversation language, label
+> "Русский", **1,428 keys x 33 namespaces per locale with exact parity**, Practice/agent routing via the
+> canonical `src/locales.py`. Russian is NOT a speech, OCR/document, labour-market or ESCO language (speech
+> controls are hidden for a Russian conversation language; `DOCUMENT_LANGUAGE_CODES` is a separate list;
+> geography/KB lists unchanged). **`Ask More. Be More.` is a permanent untranslated brand invariant**
+> (`frontend/lib/brand.ts`); six existing locales that had translated it were corrected. A W9.6A regression
+> (`prepare.contextTab`) and a W9.6 marketing-evaluator read-path break were found and fixed. vitest **414**
+> (63 files), backend **2,489 passed / 3 skipped / 0 failed**, full Playwright **166/166**, 17 evaluators
+> pass, typecheck/lint/build green, scanner 0 offenders; 0 paid/live; no migration, no RC. Russian
+> translations are engineering translations (native + legal review PENDING). See
+> `P10B_W9_7_RUSSIAN_LOCALE.md`. W9.8 not started.
 
 ---
 

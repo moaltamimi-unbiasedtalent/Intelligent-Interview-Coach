@@ -64,7 +64,7 @@ def test_unsupported_locale_rejected():
     with TestClient(app) as c:
         register(c, "a@example.com", PW)
         tok = login_token(c, "a@example.com", PW)
-        # Not in the seven-language allow-list → 422; nothing persisted.
+        # Not in the eight-language allow-list → 422; nothing persisted.
         assert c.patch("/api/v1/auth/preferences", json={"interface_locale": "zz"}, cookies=cookies_for(tok)).status_code == 422
         assert c.patch("/api/v1/auth/preferences", json={"conversation_language": "xx"}, cookies=cookies_for(tok)).status_code == 422
         assert c.get("/api/v1/auth/me", cookies=cookies_for(tok)).json()["interface_locale"] == "en"

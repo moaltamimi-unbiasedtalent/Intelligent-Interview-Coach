@@ -12,9 +12,9 @@ function flatKeys(cat: Record<string, Record<string, string>>): string[] {
 }
 
 describe("i18n catalogues", () => {
-  it("registers exactly the seven supported locales", () => {
+  it("registers exactly the eight supported locales", () => {
     expect(Object.keys(CATALOGS).sort()).toEqual([...SUPPORTED_LOCALE_CODES].sort());
-    expect(SUPPORTED_LOCALE_CODES).toEqual(["en", "de", "fr", "es", "it", "pt", "nl"]);
+    expect(SUPPORTED_LOCALE_CODES).toEqual(["en", "de", "fr", "es", "it", "pt", "nl", "ru"]);
   });
 
   it("every locale has the exact same keys as English (complete, no missing/extra)", () => {

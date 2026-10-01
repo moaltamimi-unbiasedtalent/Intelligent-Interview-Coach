@@ -7,7 +7,7 @@ import { AgentAnswer } from "./AgentAnswer";
 import { activityFromEvents } from "./labels";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { VoicePlaybackControl } from "@/components/ui/VoicePlaybackControl";
-import { toSpeechLocale } from "@/lib/speech/ttsLocales";
+import { isSpeechOutputLocale, toSpeechLocale } from "@/lib/speech/ttsLocales";
 import { useT } from "@/components/i18n/I18nProvider";
 
 /** The coaching conversation: safe user/assistant turns, latest evidence, and a
@@ -27,6 +27,9 @@ export function AgentConversation({
   // Speech-output locale follows the Mo conversation language (§11), never the UI locale
   // and never career geography (§12). Falls back to en-US.
   const speechLang = toSpeechLocale(auth?.account?.conversation_language);
+  // Languages without speech support (e.g. Russian) get no Listen control: never an English voice
+  // reading another language. The text stays on screen.
+  const speechSupported = isSpeechOutputLocale(auth?.account?.conversation_language);
   // Apply progressive disclosure to the CURRENT answer only (the last assistant turn),
   // and only when the run carries a presentation contract with real details and is not
   // mid-flight/awaiting a human decision. Everything else renders in full — no content
@@ -71,7 +74,7 @@ export function AgentConversation({
                 {body}
                 {/* Listen to the PRIMARY visible answer (brief-first, §6). Assistant turns
                     only; speaks the same text the candidate can read. */}
-                {m.role === "assistant" && m.content.trim() ? (
+                {m.role === "assistant" && m.content.trim() && speechSupported ? (
                   <div className="mt-1.5">
                     <VoicePlaybackControl
                       text={usePresentation && presentation ? presentation.answer : m.content}

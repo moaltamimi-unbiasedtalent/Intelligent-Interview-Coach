@@ -1,10 +1,11 @@
 /** Portuguese catalogue (Capstone P3.5). Status: ENGINEERING DRAFT (not human/legal reviewed). */
 import type { Catalog } from "./en";
+import { BRAND_SLOGAN } from "../../brand";
 
 const pt: Catalog = {
   common: {
     appName: "Ask4Mo",
-    tagline: "Pergunte mais. Seja mais.",
+    tagline: BRAND_SLOGAN,
     productName: "Coach de entrevistas inteligente",
     signIn: "Entrar",
     signOut: "Sair",
@@ -50,7 +51,7 @@ const pt: Catalog = {
     signInTitle: "Entrar",
     signInSubtitle: "Bem-vindo de volta ao Ask4Mo.",
     registerTitle: "Crie a sua conta",
-    registerSubtitle: "Prepare-se com evidências, pratique com propósito. Pergunte mais. Seja mais.",
+    registerSubtitle: "Prepare-se com evidências, pratique com propósito. " + BRAND_SLOGAN,
     email: "E-mail",
     password: "Palavra-passe",
     name: "Nome (opcional)",
@@ -197,7 +198,7 @@ const pt: Catalog = {
     troubleshooting: "Resolução de problemas",
     languages: "Idiomas",
     languagesHelp:
-      "A interface do Ask4Mo está disponível em inglês, alemão, francês, espanhol, italiano, português e neerlandês. O idioma da interface, o de conversa do Mo e o de ditado definem-se separadamente nas Definições. Mudar de idioma nunca muda a região do mercado de trabalho das suas evidências.",
+      "A interface do Ask4Mo está disponível em inglês, alemão, francês, espanhol, italiano, português, neerlandês e russo. O idioma da interface, o de conversa do Mo e o de ditado definem-se separadamente nas Definições. Mudar de idioma nunca muda a região do mercado de trabalho das suas evidências.",
   },
   practice: {
     title: "Praticar uma entrevista",
@@ -347,6 +348,7 @@ const pt: Catalog = {
     manageDocuments: "Gerir documentos",
   },
   prepare: {
+    contextTab: "Preparação",
     messageMo: "Mensagem para o Mo",
     send: "Enviar",
     sending: "A enviar…",
@@ -666,7 +668,7 @@ const pt: Catalog = {
     hSpeakQ: "Falar uma resposta e editar antes de enviar",
     hSpeakA: "Use o microfone para falar a sua resposta. As suas palavras aparecem como uma transcrição editável; revê-as e corrige-as e depois carrega em Enviar você mesmo. Falar nunca envia sozinho, e começar a falar para a reprodução (e vice-versa) - os dois nunca estão ativos ao mesmo tempo.",
     hLangQ: "Idiomas, dependência do navegador e fontes",
-    hLangA: "A reprodução de voz segue o seu idioma de conversa com o Mo entre os sete idiomas suportados (inglês, alemão, francês, espanhol, italiano, português, neerlandês). Se há uma voz instalada depende do navegador/sistema; se não houver, o texto permanece no ecrã. Ligações longas não são lidas - a reprodução indica que as fontes estão disponíveis no ecrã, e as ligações das fontes continuam visíveis.",
+    hLangA: "A reprodução de voz segue o seu idioma de conversa com o Mo entre os sete idiomas suportados (inglês, alemão, francês, espanhol, italiano, português, neerlandês). Se há uma voz instalada depende do navegador/sistema; se não houver, o texto permanece no ecrã. Ligações longas não são lidas - a reprodução indica que as fontes estão disponíveis no ecrã, e as ligações das fontes continuam visíveis. O russo está disponível como idioma da interface e de conversa, mas a reprodução de voz ainda não está disponível para esse idioma.",
     hPrivacyQ: "Privacidade e para que a voz NÃO é usada",
     hPrivacyA: "O Ask4Mo entrega o texto visível ao motor de voz do seu navegador/sistema e não armazena áudio. O Ask4Mo nunca usa a sua voz para inferir emoções, personalidade, inteligência, honestidade, engano, sotaque ou adequação para contratação - a voz serve apenas para ouvir e introduzir texto. Não existe qualquer pontuação de voz.",
     hUnsupportedQ: "Se a voz não estiver disponível",

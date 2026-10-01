@@ -1,5 +1,6 @@
 /**
- * Bounded 7-language speech-OUTPUT (TTS) locale mapping + honest availability status
+ * Bounded 7-language speech-OUTPUT (TTS) locale mapping (the product now has 8 interface/conversation
+ * languages; Russian is NOT a speech language) + honest availability status
  * (Capstone P7 / E5). The product/conversation language set (en/de/fr/es/it/pt/nl) maps to
  * a bounded BCP-47 speech-synthesis locale. This is SEPARATE from the P3 dictation (STT)
  * locale set and never changes career geography/jurisdiction.
@@ -48,6 +49,20 @@ export function ttsLanguageStatus(): TtsLanguageStatus[] {
     deterministicallyTested: true,
     liveHumanQualityTested: false,
   }));
+}
+
+/**
+ * True when speech OUTPUT (and realtime voice, which shares this same seven-language set on the
+ * backend: `SUPPORTED_REALTIME_LOCALES`) is supported for a conversation language. An unset language
+ * means the English default. A product locale outside this set (e.g. Russian, an interface and
+ * conversation language since W9.7) must NOT be read aloud with a fallback English voice or start a
+ * realtime session that the server would silently coerce to English: callers hide the voice control
+ * and the visible text remains the guaranteed path.
+ */
+export function isSpeechOutputLocale(locale: string | null | undefined): boolean {
+  if (!locale) return true;
+  const key = locale.slice(0, 2).toLowerCase();
+  return (SUPPORTED_TTS_LOCALES as string[]).includes(key);
 }
 
 /** Resolve a product/conversation locale to its speech-synthesis locale (safe fallback en-US). */

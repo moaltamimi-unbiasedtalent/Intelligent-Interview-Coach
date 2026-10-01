@@ -18,6 +18,18 @@ Audit phase. No runtime code changed. Findings #6 (completeness) and #7 (add `ru
 > spots (a Prepare tab label, dictation language option labels) were localized. **Corrected final
 > coverage: 0 unexplained candidate-facing offenders; the only deferrals are page `metadata` titles
 > (architecture-bound) and human/legal review of the engineering-draft legal + Help translations.**
+>
+> **Update (W9.7 DELIVERED - eight locales):** Finding #7 is closed on `feat/p10b-w9-7-russian-locale`
+> (see `P10B_W9_7_RUSSIAN_LOCALE.md`). The product now has **eight** application locales
+> (en/de/fr/es/it/pt/nl/**ru**; Russian label "Русский"), **1,428 keys x 33 namespaces per locale, exact
+> parity**. Russian is an interface + Mo-conversation language ONLY: it is NOT a speech language
+> (dictation/TTS/realtime unchanged at 7; speech controls hidden for a `ru` conversation language), NOT a
+> labour market, NOT an OCR/document language and NOT an ESCO/KB language (future P10C Russian aliases need
+> Ask4Mo-curated provenance). **Permanent invariant: the slogan `Ask More. Be More.` is NEVER translated,
+> transliterated or re-punctuated in any locale (current or future).** It is defined once
+> (`frontend/lib/brand.ts` `BRAND_SLOGAN`); W9.7 also corrected six existing locales that had translated it;
+> the scanner approves only that exact string. Russian translations (incl. legal/privacy) are ENGINEERING
+> translations: native-speaker and legal review PENDING.
 
 **Requirement:** changing the interface language must change EVERY Ask4Mo-owned candidate-facing
 string. Do NOT translate user content, CV/JD text, employer material, evidence quotations, or official

@@ -4,10 +4,12 @@
  * missing key. Keys are grouped by namespace. `{var}` placeholders are interpolated by
  * the translator. Status: ENGINEERING DRAFT (English is the authored source).
  */
+import { BRAND_SLOGAN } from "../../brand";
+
 export const messages = {
   common: {
     appName: "Ask4Mo",
-    tagline: "Ask More. Be More.",
+    tagline: BRAND_SLOGAN,
     productName: "Intelligent Interview Coach",
     signIn: "Sign in",
     signOut: "Sign out",
@@ -53,7 +55,7 @@ export const messages = {
     signInTitle: "Sign in",
     signInSubtitle: "Welcome back to Ask4Mo.",
     registerTitle: "Create your account",
-    registerSubtitle: "Prepare with evidence, practise with purpose. Ask More. Be More.",
+    registerSubtitle: "Prepare with evidence, practise with purpose. " + BRAND_SLOGAN,
     email: "Email",
     password: "Password",
     name: "Name (optional)",
@@ -200,7 +202,7 @@ export const messages = {
     troubleshooting: "Troubleshooting",
     languages: "Languages",
     languagesHelp:
-      "Ask4Mo’s interface is available in English, German, French, Spanish, Italian, Portuguese and Dutch. Your interface language, Mo’s conversation language and the dictation language are set separately in Settings. Changing a language never changes the labour-market region your evidence comes from.",
+      "Ask4Mo’s interface is available in English, German, French, Spanish, Italian, Portuguese, Dutch and Russian. Your interface language, Mo’s conversation language and the dictation language are set separately in Settings. Changing a language never changes the labour-market region your evidence comes from.",
   },
   practice: {
     title: "Practise an interview",
@@ -365,6 +367,7 @@ export const messages = {
     manageDocuments: "Manage documents",
   },
   prepare: {
+    contextTab: "Preparation",
     messageMo: "Message Mo",
     send: "Send",
     sending: "Sending…",
@@ -685,7 +688,7 @@ export const messages = {
     hSpeakQ: "Speak an answer and edit before sending",
     hSpeakA: "Use the microphone to speak your answer or message. Your words appear as an editable transcript; you review and edit them, then press Send or Submit yourself. Speaking never submits on its own, and starting to speak stops playback (and vice-versa) so the two are never active at once.",
     hLangQ: "Languages, browser dependency and sources",
-    hLangA: "Voice playback follows your Mo conversation language across the seven supported languages (English, German, French, Spanish, Italian, Portuguese, Dutch). Whether a voice is installed is browser/OS-dependent; if none is available the text stays on screen. Long links aren’t read aloud - playback notes that sources are available on screen, and the source links stay visible.",
+    hLangA: "Voice playback follows your Mo conversation language across the seven supported languages (English, German, French, Spanish, Italian, Portuguese, Dutch). Whether a voice is installed is browser/OS-dependent; if none is available the text stays on screen. Long links aren’t read aloud - playback notes that sources are available on screen, and the source links stay visible. Russian is available as an interface and conversation language, but voice playback is not available for it yet.",
     hPrivacyQ: "Privacy and what voice is NOT used for",
     hPrivacyA: "Ask4Mo hands the visible text to your browser/OS speech engine and stores no audio. Ask4Mo never uses your voice to infer emotions, personality, intelligence, honesty, deception, accent or hiring suitability - voice is only a way to listen and to enter text. There is no voice score of any kind.",
     hUnsupportedQ: "If voice isn’t available",

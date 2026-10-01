@@ -26,7 +26,7 @@ export function PrepareResponsive({
       <Tabs
         items={[
           { id: "coach", label: "Mo", content: coach },
-          { id: "prep", label: t("nav.prepare"), content: <div className="grid gap-4">{context}</div> },
+          { id: "prep", label: t("prepare.contextTab"), content: <div className="grid gap-4">{context}</div> },
         ]}
       />
     );

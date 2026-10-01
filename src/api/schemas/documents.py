@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from src.locales import AppLocale
+from src.locales import DocumentLanguage
 
 __all__ = [
     "DocumentSummary", "DocumentVersionOut", "ClaimOut", "DocumentDetail",
@@ -15,7 +15,7 @@ __all__ = [
 ]
 
 DocCategory = Literal["cv", "job_description", "portfolio", "company_brief", "other"]
-Locale = AppLocale
+Locale = DocumentLanguage  # OCR/document language, NOT the app locale (see src/locales.py)
 
 
 class DocumentSummary(BaseModel):

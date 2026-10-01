@@ -20,7 +20,7 @@ import { RealtimeVoiceControl } from "@/components/ui/RealtimeVoiceControl";
 import { useT } from "@/components/i18n/I18nProvider";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { useCapabilities } from "@/lib/useCapabilities";
-import { toSpeechLocale } from "@/lib/speech/ttsLocales";
+import { isSpeechOutputLocale, toSpeechLocale } from "@/lib/speech/ttsLocales";
 
 /**
  * Interview Practice — the full candidate lifecycle over the durable backend. With
@@ -67,9 +67,12 @@ function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; 
   // locale and never career geography (§12). Falls back to en-US.
   const conversationLanguage = useAuthOptional()?.account?.conversation_language;
   const questionSpeechLang = toSpeechLocale(conversationLanguage);
+  // Speech (playback + live voice) exists only for the seven speech languages; Russian is an
+  // interface/conversation language without speech support, so those controls are not offered.
+  const speechSupported = isSpeechOutputLocale(conversationLanguage);
   // Realtime voice (P7.5) is a DEPLOYMENT capability; when off, only turn-based voice shows.
   const { capabilities } = useCapabilities();
-  const realtimeEnabled = capabilities.realtime_voice_enabled;
+  const realtimeEnabled = capabilities.realtime_voice_enabled && speechSupported;
   const [modes, setModes] = useState<string[]>([]);
   const [confirmingEnd, setConfirmingEnd] = useState(false);
   const evalRef = useRef<HTMLDivElement>(null);
@@ -174,9 +177,11 @@ function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; 
           </h1>
           {/* Optional playback of the VISIBLE question (§8). Never auto-plays; the answer
               composer below reuses the P3 dictation control for "Speak answer". */}
-          <div className="mb-4">
-            <VoicePlaybackControl text={q.question} lang={questionSpeechLang} label={t("voice.listenQuestion")} />
-          </div>
+          {speechSupported ? (
+            <div className="mb-4">
+              <VoicePlaybackControl text={q.question} lang={questionSpeechLang} label={t("voice.listenQuestion")} />
+            </div>
+          ) : null}
           <InterviewAnswerComposer
             value={answer}
             onChange={setAnswer}

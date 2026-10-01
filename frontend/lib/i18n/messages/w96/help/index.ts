@@ -15,6 +15,7 @@ import es from "./es";
 import it from "./it";
 import pt from "./pt";
 import nl from "./nl";
+import ru from "./ru";
 
 /** Every Help key, from the English source of record. */
 type HelpKey = keyof typeof en;
@@ -28,6 +29,7 @@ const esMap: HelpMap = es;
 const itMap: HelpMap = it;
 const ptMap: HelpMap = pt;
 const nlMap: HelpMap = nl;
+const ruMap: HelpMap = ru;
 
 const help: Record<string, { help: HelpMap }> = {
   en: { help: en },
@@ -37,6 +39,7 @@ const help: Record<string, { help: HelpMap }> = {
   it: { help: itMap },
   pt: { help: ptMap },
   nl: { help: nlMap },
+  ru: { help: ruMap },
 };
 
 export default help;

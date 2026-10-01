@@ -506,10 +506,27 @@ assumptions in core logic, prompts, scoring or examples.
 - **Internationalization coding standard (Capstone P3.5+).** New candidate-facing,
   user-visible strings MUST use the i18n system: add a key to the English source
   catalogue (`frontend/lib/i18n/messages/en.ts`) and every locale catalogue (de/fr/es/
-  it/pt/nl), and render via `useT()` / `translate()`. Interface language, Mo conversation
+  it/pt/nl/ru), and render via `useT()` / `translate()`. Interface language, Mo conversation
   language and dictation locale are **independent** settings, and a language choice never
   changes labour-market geography. Do not hard-code new English strings in candidate UI;
   reviewer/diagnostic-only text is exempt. See `docs/capstone/p3_5_i18n_l10n.md`.
+  **P10B-W9.6/W9.7 — full localization, Russian, protected slogan (durable rules):** the product has
+  **eight** interface/conversation locales (en/de/fr/es/it/pt/nl/**ru**), declared ONCE in
+  `src/locales.py` (`SUPPORTED_LOCALE_CODES`, `AppLocale`) and `frontend/lib/i18n/locales.ts`
+  (`APP_LOCALES`, Russian label "Русский"). Adding an app locale NEVER enables other dimensions: speech
+  (dictation `DICTATION_LANGUAGES`, TTS `ttsLocales`, realtime `SUPPORTED_REALTIME_LOCALES`), document/OCR
+  language (`DOCUMENT_LANGUAGE_CODES`), KB/taxonomy languages (`governance.SUPPORTED_LANGUAGES`; Russian is
+  NOT an ESCO language) and labour-market geography (`CAREER_GEOGRAPHIES`; Russia is not a market) are
+  separate lists; hide speech controls for a conversation language without speech support
+  (`isSpeechOutputLocale`). A fragment missing a supported locale is a hard error (no silent English
+  fallback). The deterministic scanner `frontend/scripts/scan-i18n.mjs` (+ `tests/no-hardcoded-english.test.ts`,
+  `eval_i18n_l10n`) must stay at 0 unexplained candidate-facing literals, including copy stored in object
+  literals. **The slogan "Ask More. Be More." is a protected brand invariant: it is NEVER translated,
+  transliterated or re-punctuated in any locale (current or future).** It is defined once as `BRAND_SLOGAN`
+  in `frontend/lib/brand.ts`; every locale's `common.tagline` is that constant; embedded copy uses the exact
+  phrase; the scanner approves ONLY that exact string. Enforced by `tests/brand-slogan-invariant.test.ts`
+  and `eval_i18n_l10n`. New languages are ENGINEERING translations until native/legal review. See
+  `docs/capstone/p10/w9/P10B_W9_7_RUSSIAN_LOCALE.md`.
   **P10B Wave 2 — coaching style + onboarding:** Mo coaching style is a **bounded enum**
   (supportive/balanced/direct/challenging) in `src/coaching_style.py` → a **trusted allow-list-only
   directive** (`coaching_style_directive`) appended like the language directive. It sets only the

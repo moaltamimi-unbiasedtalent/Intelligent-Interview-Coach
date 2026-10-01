@@ -217,7 +217,21 @@ conversation/dictation/geography; do not change authority-level semantics; commi
   **Risk:** medium (volume). **Complexity:** L.
 - **STOP:** after the guard is green and the locale-switch E2E passes.
 
-## W9.7 — Russian locale #8  *(feature)*
+## W9.7 — Russian locale #8  *(feature)* — ✅ DELIVERED
+
+> **Status: DELIVERED** on branch `feat/p10b-w9-7-russian-locale` (from W9.6A @ `a82081e`; see
+> `P10B_W9_7_RUSSIAN_LOCALE.md`). Russian is the 8th interface + Mo-conversation language (label
+> "Русский"): canonical `src/locales.py` + `APP_LOCALES`, a full Russian catalogue (**1,428 keys x 33
+> namespaces per locale, exact parity**, incl. the 144 Help strings, Tutorial v2, legal/trust copy), Practice
+> and agent prompt routing ("Russian", prose-only, scoring untouched). Russian is NOT a speech/OCR/labour-market/
+> ESCO language (speech controls hidden for a `ru` conversation language; separate `DOCUMENT_LANGUAGE_CODES`;
+> no geography/taxonomy change). **Permanent brand invariant: `Ask More. Be More.` is never translated in any
+> locale** (single `BRAND_SLOGAN`; six existing locales that had translated it were corrected; the scanner
+> approves only that exact string). Also fixed a W9.6A regression (`prepare.contextTab`) and a W9.6 evaluator
+> read-path break. Gates: vitest 414, backend 2,489 passed/3 skipped/0 failed, full Playwright 166/166 (incl.
+> Russian core/first-run/independence/error/Help/speech-boundary), typecheck/lint/build green, scanner 0, 17
+> evaluators pass; 0 paid/live; no migration, no RC. Russian translations are ENGINEERING translations
+> (native + legal review PENDING; live generated-Russian quality PENDING). W9.8 not started.
 
 - **Objective:** add `ru` end-to-end without coupling language to geography, and without pretending
   generated Russian terms are official taxonomy. Fixes PF-14.

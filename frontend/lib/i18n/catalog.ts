@@ -15,6 +15,7 @@ import es from "./messages/es";
 import it from "./messages/it";
 import pt from "./messages/pt";
 import nl from "./messages/nl";
+import ru from "./messages/ru";
 import { mergeW96Into } from "./messages/w96";
 
 // P10B-W9.6: the full-localization fragments are deep-merged onto each base locale catalogue so
@@ -31,6 +32,7 @@ export const CATALOGS: Record<AppLocale, Catalog> = {
   it: mergeW96Into(it, "it"),
   pt: mergeW96Into(pt, "pt"),
   nl: mergeW96Into(nl, "nl"),
+  ru: mergeW96Into(ru, "ru"),
 };
 
 export type Namespace = keyof Messages;

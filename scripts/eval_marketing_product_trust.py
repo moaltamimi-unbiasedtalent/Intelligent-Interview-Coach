@@ -23,7 +23,23 @@ def read(rel: str) -> str:
     return p.read_text(encoding="utf-8") if p.exists() else ""
 
 
-LOCALES = ["en", "de", "fr", "es", "it", "pt", "nl"]
+LOCALES = ["en", "de", "fr", "es", "it", "pt", "nl", "ru"]
+
+
+def locale_source(loc: str) -> str:
+    """All source text making up one locale's base catalogue (Russian is composed from parts, W9.7)."""
+    if loc == "ru":
+        return "".join(read(f"lib/i18n/messages/{f}") for f in
+                       ("ru.ts", "ru-parts/a.ts", "ru-parts/b.ts", "ru-parts/c.ts"))
+    return read(f"lib/i18n/messages/{loc}.ts")
+
+
+def legal_en_trust() -> str:
+    """English `trust` namespace of the W9.6 legal fragment. The Trust page copy moved out of
+    TrustContent.tsx into this catalogue block in W9.6, so the trust-claim checks must read it here."""
+    legal = read("lib/i18n/messages/w96/legal.ts")
+    en_block = legal.split("const en = {", 1)[-1].split("export type LegalFragment", 1)[0]
+    return en_block.split("  trust: {", 1)[-1].split("\n  },", 1)[0] if "  trust: {" in en_block else ""
 MARKETING_COMPONENTS = [
     "components/marketing/MarketingHome.tsx",
     "components/marketing/ProductContent.tsx",
@@ -43,7 +59,7 @@ def run() -> dict[str, tuple[bool, str]]:
     en_marketing = en.split("marketing: {", 1)[-1].split("\n  },", 1)[0] if "marketing: {" in en else ""
     home = read("components/marketing/MarketingHome.tsx")
     product = read("components/marketing/ProductContent.tsx")
-    trust = read("components/marketing/TrustContent.tsx")
+    trust = read("components/marketing/TrustContent.tsx") + "\n" + legal_en_trust()
     shell = read("components/marketing/MarketingShell.tsx")
     pricing_ts = read("lib/pricing.ts")
     robots = read("app/robots.ts")
@@ -152,12 +168,12 @@ def run() -> dict[str, tuple[bool, str]]:
     # --- I18N ---
     new_keys = ["featureOpportunityTitle", "featureCompanyTitle", "systemTitle", "whyTitle",
                 "howStep6Title", "homePricingTitle"]
-    parity = {loc: all(k in read(f"lib/i18n/messages/{loc}.ts") for k in new_keys) for loc in LOCALES}
+    parity = {loc: all(k in locale_source(loc) for k in new_keys) for loc in LOCALES}
     check("i18n_marketing_parity", all(parity.values()),
-          "new marketing keys exist in all 7 locales: "
+          "new marketing keys exist in all 8 locales: "
           + (",".join(l for l, v in parity.items() if not v) or "all present"))
     emdash_files = [c for c in MARKETING_COMPONENTS if "—" in read(c)] + \
-                   [f"lib/i18n/messages/{l}.ts" for l in LOCALES if "—" in read(f"lib/i18n/messages/{l}.ts")]
+                   [f"lib/i18n/messages/{l}.ts" for l in LOCALES if "—" in locale_source(l)]
     check("no_emdash_marketing", not emdash_files, f"no em dash in marketing copy ({emdash_files or 'none'})")
 
     # --- NO EMOJI / CANONICAL BRAND ---

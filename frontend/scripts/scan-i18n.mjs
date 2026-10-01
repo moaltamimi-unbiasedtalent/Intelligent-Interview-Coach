@@ -45,6 +45,13 @@ const CONTENT_KEYS = [
   "tooltip", "caption", "empty", "emptyText", "text",
 ];
 
+// Protected brand invariants (P10B-W9.7): EXACT-match only, reported separately as "approved brand
+// invariants" and never counted as offenders. This is deliberately NOT a general English-marketing
+// exception: a partial match, different punctuation/case ("Ask more. Be more.", "Ask More, Be More") or
+// any other English copy is still flagged. Keep in sync with `BRAND_SLOGAN` in lib/brand.ts
+// (tests/brand-slogan-invariant.test.ts asserts equality).
+const APPROVED_BRAND_INVARIANTS = new Set(["Ask More. Be More."]);
+
 // Proper nouns / technical tokens that are never translated (substring or exact, case-sensitive).
 const ALLOW_SUBSTR = [
   "Ask4Mo", "Mo", "O*NET", "ONET", "ESCO", "ISCO", "SOC", "NOC", "KldB", "RAGAS", "OpenAI",
@@ -120,21 +127,24 @@ function looksEnglish(text) {
  * Pure detection over a SOURCE STRING (exported so a regression test can prove the blind spots are
  * closed without touching the filesystem). Returns [{ kind, text }]. `stripNoise` is applied here.
  */
-export function scanSource(rawSrc) {
+export function scanAll(rawSrc) {
   const src = stripNoise(rawSrc);
   const hits = [];
+  const approved = [];
+  const record = (kind, text) => {
+    if (APPROVED_BRAND_INVARIANTS.has(text)) approved.push({ kind, text });
+    else if (looksEnglish(text)) hits.push({ kind, text });
+  };
 
   // (a) Visible JSX text nodes: text between > and < that is not an expression and not a tag.
   for (const m of src.matchAll(/>\s*([^<>{}\n][^<>{}]*?)\s*</g)) {
-    const text = m[1].trim();
-    if (looksEnglish(text)) hits.push({ kind: "jsx-text", text });
+    record("jsx-text", m[1].trim());
   }
 
   // (b) Candidate-facing attribute literals.
   const attrRe = new RegExp(`\\b(${ATTRS.join("|")})\\s*=\\s*"([^"]+)"`, "g");
   for (const m of src.matchAll(attrRe)) {
-    const text = m[2].trim();
-    if (looksEnglish(text)) hits.push({ kind: `attr:${m[1]}`, text });
+    record(`attr:${m[1]}`, m[2].trim());
   }
 
   // (c) Candidate-facing CONTENT in object/array literals: `key: "English"` where key is a known
@@ -144,23 +154,30 @@ export function scanSource(rawSrc) {
   // like "help.gs1q" or "getting-started" is not flagged).
   const keyRe = new RegExp(`(?:^|[\\s,{[(])(${CONTENT_KEYS.join("|")})\\s*:\\s*("(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*')`, "g");
   for (const m of src.matchAll(keyRe)) {
-    const raw = m[2];
-    const text = raw.slice(1, -1).trim(); // strip surrounding quotes
-    if (looksEnglish(text)) hits.push({ kind: `obj:${m[1]}`, text });
+    record(`obj:${m[1]}`, m[2].slice(1, -1).trim()); // strip surrounding quotes
   }
-  return hits;
+  return { hits, approved };
 }
 
-export { looksEnglish, stripNoise };
+/** Offender hits only (the original API; approved brand invariants are excluded). */
+export function scanSource(rawSrc) {
+  return scanAll(rawSrc).hits;
+}
+
+export { looksEnglish, stripNoise, APPROVED_BRAND_INVARIANTS };
 
 // CLI entrypoint only (guarded so importing this module for tests has no side effects / no exit).
 const isCli = process.argv[1] && process.argv[1].replace(/\\/g, "/").endsWith("scripts/scan-i18n.mjs");
 if (isCli) {
   const ROOT = join(fileURLToPath(new URL(".", import.meta.url)), "..");
-  const scanFile = (abs) =>
-    scanSource(readFileSync(abs, "utf8")).map((h) => ({ file: relative(ROOT, abs), ...h }));
   const files = SCAN_DIRS.flatMap((d) => walk(join(ROOT, d))).filter((p) => !EXCLUDE_PATH(p));
-  const all = files.flatMap(scanFile);
+  const all = [];
+  const approvedAll = [];
+  for (const abs of files) {
+    const { hits, approved } = scanAll(readFileSync(abs, "utf8"));
+    for (const h of hits) all.push({ file: relative(ROOT, abs), ...h });
+    for (const h of approved) approvedAll.push({ file: relative(ROOT, abs), ...h });
+  }
 
   if (process.argv.includes("--count")) {
     console.log(all.length);
@@ -175,6 +192,9 @@ if (isCli) {
       for (const h of hits) console.log(`  [${h.kind}] ${JSON.stringify(h.text)}`);
     }
     console.log(`\nTOTAL candidate-facing hardcoded-English offenders: ${all.length} in ${byFile.size} files`);
+    // Approved brand invariants (exact-match only) are reported separately and never fail the guard.
+    console.log(`Approved brand invariants (exact "Ask More. Be More." literals in scanned source): ${approvedAll.length}`);
+    for (const h of approvedAll) console.log(`  [${h.kind}] ${h.file}`);
   }
   process.exit(all.length > 0 ? 1 : 0);
 }

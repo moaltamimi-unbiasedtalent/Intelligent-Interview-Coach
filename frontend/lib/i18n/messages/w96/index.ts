@@ -13,7 +13,7 @@
 // Every fragment is authored with identical keys across all seven supported locales (enforced at
 // compile time in each fragment, and re-verified by `tests/i18n.test.tsx`). This module is
 // side-effect free; the central catalogue (`lib/i18n/catalog.ts`) deep-merges `w96[locale]` onto
-// each base locale catalogue so these keys resolve at runtime, with English fallback.
+// each base locale catalogue so these keys resolve at runtime.
 
 import type { AppLocale } from "../../locales";
 import { SUPPORTED_LOCALE_CODES } from "../../locales";
@@ -23,21 +23,30 @@ import surfaces from "./surfaces";
 import legal from "./legal";
 import shell from "./shell";
 import help from "./help"; // P10B-W9.6A — Help Center section/article content
+// P10B-W9.7: Russian blocks live beside (not inside) the 7-locale fragment files, each typed against
+// its fragment's English shape so missing/extra keys fail `tsc`. `help` carries its own `ru` entry.
+import prepareRu from "./ru/prepare";
+import practiceRu from "./ru/practice";
+import surfacesRu from "./ru/surfaces";
+import legalRu from "./ru/legal";
+import shellRu from "./ru/shell";
 
 /** A namespace -> key -> string map for one locale. */
 type NsMap = Record<string, Record<string, string>>;
 
-/** Each fragment, keyed by locale code (missing namespaces simply do not contribute). */
+/** One fragment: its per-locale blocks, keyed by locale code. */
+type Fragment = Record<string, NsMap>;
+
 // Each fragment is authored with its own precise type (some as a typed interface without a string
 // index signature); they all share the runtime shape `{ locale: { namespace: { key: value }}}`, so
-// they are bridged to the common `Record<string, NsMap>` via `unknown`.
-const FRAGMENTS: Array<Record<string, NsMap>> = [
-  prepare as unknown as Record<string, NsMap>,
-  practice as unknown as Record<string, NsMap>,
-  surfaces as unknown as Record<string, NsMap>,
-  legal as unknown as Record<string, NsMap>,
-  shell as unknown as Record<string, NsMap>,
-  help as unknown as Record<string, NsMap>,
+// they are bridged to the common `Fragment` via `unknown`. Russian is attached per fragment here.
+const FRAGMENTS: Array<{ name: string; blocks: Fragment }> = [
+  { name: "prepare", blocks: { ...(prepare as unknown as Fragment), ru: prepareRu as unknown as NsMap } },
+  { name: "practice", blocks: { ...(practice as unknown as Fragment), ru: practiceRu as unknown as NsMap } },
+  { name: "surfaces", blocks: { ...(surfaces as unknown as Fragment), ru: surfacesRu as unknown as NsMap } },
+  { name: "legal", blocks: { ...(legal as unknown as Fragment), ru: legalRu as unknown as NsMap } },
+  { name: "shell", blocks: { ...(shell as unknown as Fragment), ru: shellRu as unknown as NsMap } },
+  { name: "help", blocks: help as unknown as Fragment },
 ];
 
 /** Additively merge `source` namespaces/keys into `target` (mutates and returns `target`). */
@@ -48,12 +57,16 @@ function mergeNs(target: NsMap, source: NsMap): NsMap {
   return target;
 }
 
-/** W9.6 translations by locale code, every fragment deep-merged (en fallback per fragment). */
+/**
+ * W9.6/W9.7 translations by locale code, every fragment deep-merged. A fragment that lacks a supported
+ * locale is a hard error (NOT a silent English fallback): a product locale must be complete.
+ */
 export const w96 = SUPPORTED_LOCALE_CODES.reduce((acc, locale) => {
   const merged: NsMap = {};
-  for (const fragment of FRAGMENTS) {
-    const forLocale = (fragment[locale] ?? fragment.en) as NsMap | undefined;
-    if (forLocale) mergeNs(merged, forLocale);
+  for (const { name, blocks } of FRAGMENTS) {
+    const forLocale = blocks[locale];
+    if (!forLocale) throw new Error(`i18n fragment "${name}" has no "${locale}" block`);
+    mergeNs(merged, forLocale);
   }
   acc[locale] = merged;
   return acc;
@@ -68,7 +81,7 @@ export function mergeW96Into<T extends Record<string, Record<string, string>>>(
   base: T,
   locale: AppLocale,
 ): T {
-  const fragment = w96[locale] ?? w96.en;
+  const fragment = w96[locale];
   const out: Record<string, Record<string, string>> = { ...base };
   for (const [ns, entries] of Object.entries(fragment)) {
     out[ns] = { ...(out[ns] ?? {}), ...entries };

@@ -13,7 +13,7 @@
  * and a language choice NEVER changes labour-market geography.
  */
 
-/** The seven supported application UI languages (English is the source language). */
+/** The eight supported application UI languages (English is the source language; Russian added in W9.7). */
 export const APP_LOCALES = [
   { code: "en", label: "English", nativeLabel: "English" },
   { code: "de", label: "German", nativeLabel: "Deutsch" },
@@ -22,6 +22,7 @@ export const APP_LOCALES = [
   { code: "it", label: "Italian", nativeLabel: "Italiano" },
   { code: "pt", label: "Portuguese", nativeLabel: "Português" },
   { code: "nl", label: "Dutch", nativeLabel: "Nederlands" },
+  { code: "ru", label: "Russian", nativeLabel: "Русский" },
 ] as const;
 
 export type AppLocale = (typeof APP_LOCALES)[number]["code"];
