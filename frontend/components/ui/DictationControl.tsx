@@ -19,6 +19,7 @@ import { useId, useRef } from "react";
 import type { SpeechRecognitionAdapter, DictationErrorKind } from "@/lib/speech/types";
 import { appendTranscript, useDictation } from "@/lib/speech/useDictation";
 import { useT } from "@/components/i18n/I18nProvider";
+import { APP_LOCALES, toSupportedLocale } from "@/lib/i18n/locales";
 
 // Map a runtime dictation error to its i18n key (P10B Wave 1 — localized error copy).
 const ERROR_KEY: Record<DictationErrorKind, string> = {
@@ -33,24 +34,32 @@ const ERROR_KEY: Record<DictationErrorKind, string> = {
 
 export interface DictationLanguage {
   code: string;
-  label: string;
 }
 
 // Bounded Ask4Mo dictation language set → recognition locale (BCP-47). This is a fixed
 // allow-list: the browser engine only ever receives one of these tags, never an
 // arbitrary language/provider parameter. Whether a given browser actually supports a
 // given tag is BROWSER/ENGINE-DEPENDENT (documented in Help); we do not claim every
-// language works in every browser. Whole-application UI translation is NOT implied by
-// this — application localisation is a separate future phase.
+// language works in every browser. Dictation is a separate dimension from the interface
+// language and never changes it (P3.5 independence).
 export const DICTATION_LANGUAGES: DictationLanguage[] = [
-  { code: "en-US", label: "English" },
-  { code: "de-DE", label: "German" },
-  { code: "fr-FR", label: "French" },
-  { code: "es-ES", label: "Spanish" },
-  { code: "it-IT", label: "Italian" },
-  { code: "pt-PT", label: "Portuguese" },
-  { code: "nl-NL", label: "Dutch" },
+  { code: "en-US" },
+  { code: "de-DE" },
+  { code: "fr-FR" },
+  { code: "es-ES" },
+  { code: "it-IT" },
+  { code: "pt-PT" },
+  { code: "nl-NL" },
 ];
+
+// Display a dictation BCP-47 tag as the language's own native name (endonym), reusing the canonical
+// locale registry — identical to how the interface/conversation selectors render their options. This
+// keeps the option label consistent and locale-independent (no per-interface translation of language
+// names), and carries no hardcoded English. Falls back to the raw tag if unmapped.
+export function dictationLanguageName(code: string): string {
+  const sub = toSupportedLocale(code);
+  return (sub && APP_LOCALES.find((l) => l.code === sub)?.nativeLabel) || code;
+}
 
 export function DictationControl({
   value,
@@ -137,7 +146,7 @@ export function DictationControl({
         >
           {DICTATION_LANGUAGES.map((l) => (
             <option key={l.code} value={l.code}>
-              {l.label}
+              {dictationLanguageName(l.code)}
             </option>
           ))}
         </select>

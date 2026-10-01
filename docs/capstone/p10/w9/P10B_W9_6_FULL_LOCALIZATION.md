@@ -1,5 +1,14 @@
 # P10B-W9.6 — Full-App Localization Completion
 
+> **Closure update (W9.6A):** at review it was found that the Help Center article bodies (stored in a
+> TS object literal) were still English AND escaped the scanner (which only inspected JSX text +
+> attributes, not object-literal content). This is **corrected in W9.6A**
+> (`P10B_W9_6A_LOCALIZATION_CLOSURE.md`, branch `fix/p10b-w9-6a-help-localization-closure`): the Help
+> Center (12 sections / 66 articles = 144 strings) is now fully localized across 7 locales, the scanner
+> detects object-literal candidate content, and two further blind spots (a Prepare tab label, the
+> dictation language option labels) were localized. The "Help article bodies deferred" limitation below
+> is therefore **superseded/closed**. W9.6 is DELIVERED only together with W9.6A.
+
 Implementation record. Frontend localization + a backend locale-source consolidation (no behaviour
 change). **No migration**, no new API, no RC, no Pilot 2, no P10C work, 0 paid/live calls. Russian
 (W9.7) explicitly deferred.
@@ -126,9 +135,10 @@ and warning-free now that `t` is stable.
 - **Page `metadata` titles** (server-component `export const metadata`) remain English. Localizing
   them needs a request-locale-aware `generateMetadata` path and is deferred as architecture-bound
   (not a candidate-facing rendered string; not scanner-flagged).
-- **Help article bodies** (`HelpCenter.tsx` `SECTIONS`, ~130 Q/A strings) remain the pre-existing
-  documented localization backlog; all actual scanner offenders in that file were localized. Pre-
-  existing em dashes there are outside this wave's no-em-dash customer-file scope.
+- ~~**Help article bodies** (`HelpCenter.tsx` `SECTIONS`) remain the pre-existing documented
+  localization backlog.~~ **CLOSED in W9.6A** — the 12 sections / 66 articles (144 strings) are now
+  localized across all 7 locales and the scanner detects object-literal content. See
+  `P10B_W9_6A_LOCALIZATION_CLOSURE.md`.
 - Live/human translation-quality validation is UNVALIDATED (deterministic parity + rendering only).
 
 ## 6. W9.7 (Russian) insertion points — do NOT action now

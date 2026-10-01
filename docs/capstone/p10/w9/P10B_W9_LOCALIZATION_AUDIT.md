@@ -8,7 +8,16 @@ Audit phase. No runtime code changed. Findings #6 (completeness) and #7 (add `ru
 > five fragments merged in `catalog.ts`; a deterministic scanner + vitest guard + `eval_i18n_l10n`
 > invariant keep candidate-facing hardcoded English at **0**. Backend locale allowlists consolidated to
 > `src/locales.py` (§7.3). Finding #7 (`ru`) is **W9.7, NOT started** — insertion points documented.
-> Deferred: page `metadata` titles, Help article bodies; legal-copy drafts await human/legal review.
+>
+> **Update (W9.6A — Help + guard closure):** the original scanner inspected only JSX text/attributes,
+> so the Help Center content (stored as a TS object literal) was still English yet reported 0 offenders.
+> Closed on `fix/p10b-w9-6a-help-localization-closure` (see `P10B_W9_6A_LOCALIZATION_CLOSURE.md`): the
+> Help Center (12 sections / 66 articles = **144 strings**) is now localized across 7 locales (a sixth
+> `help` fragment, **671 total new keys/locale**); the scanner gained an object-literal content pass
+> (bounded content-key set) + a regression test proving the blind spot is closed; two further blind
+> spots (a Prepare tab label, dictation language option labels) were localized. **Corrected final
+> coverage: 0 unexplained candidate-facing offenders; the only deferrals are page `metadata` titles
+> (architecture-bound) and human/legal review of the engineering-draft legal + Help translations.**
 
 **Requirement:** changing the interface language must change EVERY Ask4Mo-owned candidate-facing
 string. Do NOT translate user content, CV/JD text, employer material, evidence quotations, or official

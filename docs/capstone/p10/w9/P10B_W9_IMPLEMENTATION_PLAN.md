@@ -165,7 +165,17 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 - **Dependencies:** W9.4. **Risk:** medium (tour DOM anchors). **Complexity:** L.
 - **STOP:** after onboarding + tour E2E pass.
 
-## W9.6 — Full-app localization completion  *(P1, before Pilot 2)* — ✅ DELIVERED
+## W9.6 — Full-app localization completion  *(P1, before Pilot 2)* — ✅ DELIVERED (incl. W9.6A closure)
+
+> **Closure (W9.6A):** W9.6 was conditionally delivered but a gate inconsistency was found — the Help
+> Center article bodies (a TS object literal) were still English and the JSX-only scanner did not detect
+> them. Closed on branch `fix/p10b-w9-6a-help-localization-closure` (see
+> `P10B_W9_6A_LOCALIZATION_CLOSURE.md`): Help Center (12 sections / 66 articles = 144 strings) localized
+> across 7 locales as a sixth `help` fragment; scanner extended with an object-literal content pass +
+> regression test; a Prepare tab label and the dictation language option labels (now native-name
+> endonyms) localized. Gates: typecheck/lint(0)/build green; vitest **350** (61 files); scanner **0**;
+> `e2e/help-localization` 11/0; `eval_dictation` read-path updated → PASS; i18n/voice/realtime/RC/identity
+> evals PASS; 0 paid/live; no migration, no RC. **Only with W9.6A is W9.6 fully DELIVERED.**
 
 > **Status: DELIVERED** on branch `fix/p10b-w9-6-full-localization` (from W9.5 @ `dc655ff`; see
 > `P10B_W9_6_FULL_LOCALIZATION.md`). Every Ask4Mo-owned candidate-facing string across Prepare/Mo,

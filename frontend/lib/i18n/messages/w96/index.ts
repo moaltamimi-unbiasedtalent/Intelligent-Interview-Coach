@@ -22,6 +22,7 @@ import practice from "./practice";
 import surfaces from "./surfaces";
 import legal from "./legal";
 import shell from "./shell";
+import help from "./help"; // P10B-W9.6A — Help Center section/article content
 
 /** A namespace -> key -> string map for one locale. */
 type NsMap = Record<string, Record<string, string>>;
@@ -36,6 +37,7 @@ const FRAGMENTS: Array<Record<string, NsMap>> = [
   surfaces as unknown as Record<string, NsMap>,
   legal as unknown as Record<string, NsMap>,
   shell as unknown as Record<string, NsMap>,
+  help as unknown as Record<string, NsMap>,
 ];
 
 /** Additively merge `source` namespaces/keys into `target` (mutates and returns `target`). */

@@ -16,144 +16,149 @@ interface Section {
   articles: Article[];
 }
 
-/** The permanent Help Center content. Deterministic docs — no LLM, no embeddings. */
-const SECTIONS: Section[] = [
+/**
+ * The permanent Help Center STRUCTURE. Section ids/order and article counts live here; every
+ * candidate-facing string (section titles + article questions/answers) lives in the i18n `help`
+ * namespace (P10B-W9.6A, lib/i18n/messages/w96/help), resolved via t() at render so Help localises
+ * with the interface language. Deterministic docs: no LLM, no embeddings.
+ */
+const HELP_SECTIONS: { id: string; titleKey: string; articles: { q: string; a: string }[] }[] = [
   {
     id: "getting-started",
-    title: "Getting started",
+    titleKey: "help.gsTitle",
     articles: [
-      { q: "What is Ask4Mo?", a: "An AI interview coach. Mo is a bounded AI agent that helps you understand a role, prepare with evidence, practise realistic questions, and track improvement." },
-      { q: "How the journey works", a: "Home → Ask Mo → Prepare → Practise → Progress/History. Evidence and human approval run throughout; you stay in control." },
-      { q: "Continuing where you left off", a: "When you return, Home shows a “Welcome back” card built from your real activity — resume an in-progress interview, or jump to your latest report, Progress or History. It only appears once you have activity." },
-      { q: "Taking the guided tour", a: "Use “Take the tour” below (or on first visit) for a 2-minute route-aware walkthrough. You can replay it any time." },
+      { q: "help.gs1q", a: "help.gs1a" },
+      { q: "help.gs2q", a: "help.gs2a" },
+      { q: "help.gs3q", a: "help.gs3a" },
+      { q: "help.gs4q", a: "help.gs4a" },
     ],
   },
   {
     id: "prepare",
-    title: "Prepare",
+    titleKey: "help.prepTitle",
     articles: [
-      { q: "Role context", a: "Tell Mo the target role. More context yields more relevant preparation; nothing is required beyond a goal." },
-      { q: "Job descriptions", a: "Paste a JD when you have one — Mo analyses requirements and compares them to your background." },
-      { q: "Asking Mo", a: "Mo decides whether to retrieve evidence and which bounded tools to use. It suggests; you decide." },
-      { q: "Preparation plans", a: "Mo builds a focused plan and tailored questions from the role and your gaps." },
-      { q: "Brief or Detailed answers", a: "In Settings, choose Response detail: Brief leads with the key answer and next step; Detailed shows the fuller explanation inline. This is presentation only — it never changes what Mo works out, and it is separate from the Fast/Balanced/Advanced model speed." },
-      { q: "“Show more” and sources", a: "In Brief mode, supporting detail sits behind a “Show more” control and sources stay in their own expandable list — nothing is removed, only tucked away until you want it. Important qualifications always stay visible." },
+      { q: "help.prep1q", a: "help.prep1a" },
+      { q: "help.prep2q", a: "help.prep2a" },
+      { q: "help.prep3q", a: "help.prep3a" },
+      { q: "help.prep4q", a: "help.prep4a" },
+      { q: "help.prep5q", a: "help.prep5a" },
+      { q: "help.prep6q", a: "help.prep6a" },
     ],
   },
   {
     id: "practice",
-    title: "Practice",
+    titleKey: "help.pracTitle",
     articles: [
-      { q: "Starting Practice", a: "Approve the handoff from Prepare, or start Practice standalone. A session runs one question at a time." },
-      { q: "Evaluations", a: "Each answer gets structured feedback — strengths, improvements and evidence gaps. It is practice guidance, not a hiring decision." },
-      { q: "Deep Dive", a: "Deep Dive lets you investigate a specific answer or evaluation in more detail, then return to the interview." },
-      { q: "Reports", a: "Completing a session produces a performance review with an overall readiness score, strengths and priorities." },
+      { q: "help.prac1q", a: "help.prac1a" },
+      { q: "help.prac2q", a: "help.prac2a" },
+      { q: "help.prac3q", a: "help.prac3a" },
+      { q: "help.prac4q", a: "help.prac4a" },
     ],
   },
   {
     id: "progress",
-    title: "Progress",
+    titleKey: "help.progTitle",
     articles: [
-      { q: "What the metrics mean", a: "Sessions completed, answers evaluated, average practice score and your most common focus area — derived only from your completed practice." },
-      { q: "Why Progress may be empty", a: "Progress fills in after your first completed practice session. Saved preparation memory also appears here once you approve it." },
+      { q: "help.prog1q", a: "help.prog1a" },
+      { q: "help.prog2q", a: "help.prog2a" },
     ],
   },
   {
     id: "history",
-    title: "History",
+    titleKey: "help.histTitle",
     articles: [
-      { q: "What gets stored", a: "Your completed interview sessions and their reports, private to you." },
-      { q: "When a report appears", a: "After a session is completed and its report generated. In-progress sessions are not listed as history." },
-      { q: "How to reopen a session", a: "Open any row in History to re-read its full performance review." },
-      { q: "Resuming an in-progress interview", a: "An interview you haven’t finished isn’t in History — it’s resumable from the “Welcome back” card on Home. Completed interviews live in History; in-progress ones you continue." },
+      { q: "help.hist1q", a: "help.hist1a" },
+      { q: "help.hist2q", a: "help.hist2a" },
+      { q: "help.hist3q", a: "help.hist3a" },
+      { q: "help.hist4q", a: "help.hist4a" },
     ],
   },
   {
     id: "sources",
-    title: "Sources",
+    titleKey: "help.srcTitle",
     articles: [
-      { q: "Governed Career Intelligence", a: "Evidence comes from a curated, governed knowledge base (official taxonomies, statistics and frameworks) — not open-web opinions." },
-      { q: "Public source links", a: "Where an official public record exists, a source links out so you can verify it yourself (opens safely in a new tab)." },
-      { q: "Knowledge-index readiness", a: "The Knowledge & RAG page shows governed counts and offline retrieval quality. Some deployments show the source catalogue before the local index is built." },
-      { q: "Current-market evidence", a: "Bounded current-market research (advertised roles and an explicit public company page) can supplement governed knowledge; it is off unless enabled and never sends your data out." },
-      { q: "Why evidence may be unavailable", a: "If reliable evidence is not available for a query, Mo says so rather than inventing a citation." },
+      { q: "help.src1q", a: "help.src1a" },
+      { q: "help.src2q", a: "help.src2a" },
+      { q: "help.src3q", a: "help.src3a" },
+      { q: "help.src4q", a: "help.src4a" },
+      { q: "help.src5q", a: "help.src5a" },
     ],
   },
   {
     id: "dictation",
-    title: "Using dictation",
+    titleKey: "help.dictTitle",
     articles: [
-      { q: "Where dictation is available", a: "Where your browser supports speech recognition, a microphone button appears next to text inputs on Prepare (talking to Mo) and in Interview Practice (your answer). If it isn't shown, your browser doesn't support it — you can always type." },
-      { q: "How to start and stop", a: "Click the microphone to start; the button shows a listening state. Click it again (or use the keyboard) to stop. Speech is transcribed into the normal text box." },
-      { q: "Editing and sending", a: "Recognised speech is added to the editable field so you can read and edit it first. Dictation never sends anything on its own — you always press Send or Submit yourself." },
-      { q: "Choosing a dictation language", a: "A small selector offers Ask4Mo's supported dictation languages: English, German, French, Spanish, Italian, Portuguese and Dutch. This sets the speech-recognition language only — it does not translate your words and does not change the app's language." },
-      { q: "Which languages actually work", a: "The languages above are configured and offered, but which ones your device can actually transcribe is browser- and engine-dependent. If a language isn't recognised well in your browser, type instead or try another supported browser." },
-      { q: "Browser compatibility", a: "Dictation uses your browser's built-in speech recognition (best supported in Chrome-based browsers). Where it isn't available, the microphone simply isn't shown and typing works as normal." },
-      { q: "Microphone permission", a: "Your browser asks for microphone permission the first time. If you decline, dictation won't run and Ask4Mo shows a short note — you can still type. You can re-enable the microphone in your browser's site settings." },
-      { q: "Privacy", a: "Ask4Mo does not analyse your emotions, voice characteristics, or identity. It does not record or store audio. Only the text you explicitly submit is sent — exactly like typing. Note that browser speech recognition may send audio to your browser/vendor's speech service to produce the transcript; that processing is your browser's, not Ask4Mo's." },
+      { q: "help.dict1q", a: "help.dict1a" },
+      { q: "help.dict2q", a: "help.dict2a" },
+      { q: "help.dict3q", a: "help.dict3a" },
+      { q: "help.dict4q", a: "help.dict4a" },
+      { q: "help.dict5q", a: "help.dict5a" },
+      { q: "help.dict6q", a: "help.dict6a" },
+      { q: "help.dict7q", a: "help.dict7a" },
+      { q: "help.dict8q", a: "help.dict8a" },
     ],
   },
   {
     id: "documents",
-    title: "Documents & evidence",
+    titleKey: "help.docTitle",
     articles: [
-      { q: "Uploading documents", a: "On the Documents page you can privately upload a CV, a job description, a portfolio or a brief. Files are private to you — never shared, never added to public knowledge." },
-      { q: "Supported formats", a: "PDF, DOCX and TXT (up to 10 MB). Scanned PDFs and images (PNG/JPEG) are read with OCR where your deployment supports it." },
-      { q: "OCR (scanned files)", a: "When a file has no selectable text, Ask4Mo uses optical character recognition to read it. OCR text is labelled as OCR-derived and its quality depends on the scan and the browser/engine." },
-      { q: "Why a file can't be read", a: "Password-protected, corrupt, empty or unsupported files can't be processed — you'll see a clear status and can upload a different file. Typing is never blocked." },
-      { q: "Reviewing extracted facts", a: "Ask4Mo extracts evidence with a link back to the page/section it came from. Nothing becomes reusable until you accept it — you can accept, correct or reject each item." },
-      { q: "Correcting extraction", a: "Editing an item marks it as your correction; the original extracted text is kept for provenance. Ask4Mo never invents facts." },
-      { q: "Evidence provenance", a: "Every claim shows its source document and location. Model inference, current-market evidence and your private documents are kept distinct." },
-      { q: "Story bank", a: "Turn approved evidence into reusable interview stories. A story built from your evidence is “source-backed”; one you write yourself is “your own”." },
-      { q: "Verified vs suggested stories", a: "A source-backed story stays “evidence verified” only while its supporting evidence exists. Editing it marks it “you corrected”. Ask4Mo never fabricates numbers or outcomes." },
-      { q: "Replacing a CV", a: "Uploading a new version keeps the old version for provenance so earlier outputs still know which version they used." },
-      { q: "Deleting documents", a: "Deleting a document removes the file, its extracted text and claims immediately. Stories that relied on it lose their source and are marked “source removed”." },
-      { q: "Exporting reports", a: "From a completed interview in History you can export the report as Markdown or JSON. Export uses the stored report only and never includes internal system data." },
-      { q: "Privacy", a: "Your documents are private, never public knowledge, and never analysed for identity or emotion. This is content validation, not malware scanning; a production deployment adds a scanner." },
+      { q: "help.doc1q", a: "help.doc1a" },
+      { q: "help.doc2q", a: "help.doc2a" },
+      { q: "help.doc3q", a: "help.doc3a" },
+      { q: "help.doc4q", a: "help.doc4a" },
+      { q: "help.doc5q", a: "help.doc5a" },
+      { q: "help.doc6q", a: "help.doc6a" },
+      { q: "help.doc7q", a: "help.doc7a" },
+      { q: "help.doc8q", a: "help.doc8a" },
+      { q: "help.doc9q", a: "help.doc9a" },
+      { q: "help.doc10q", a: "help.doc10a" },
+      { q: "help.doc11q", a: "help.doc11a" },
+      { q: "help.doc12q", a: "help.doc12a" },
+      { q: "help.doc13q", a: "help.doc13a" },
     ],
   },
   {
     id: "memory",
-    title: "Memory & approvals",
+    titleKey: "help.memTitle",
     articles: [
-      { q: "Approval", a: "Long-term preparation facts are saved only when you approve them. Mo never silently turns your conversation into memory." },
-      { q: "Edit, pin, delete", a: "Manage saved memory in Settings — edit wording, pin priorities, or delete anything." },
-      { q: "What Mo does not automatically save", a: "Whole conversations, CVs, job descriptions, answers, reports and retrieved evidence are never auto-saved as memory." },
+      { q: "help.mem1q", a: "help.mem1a" },
+      { q: "help.mem2q", a: "help.mem2a" },
+      { q: "help.mem3q", a: "help.mem3a" },
     ],
   },
   {
     id: "privacy",
-    title: "Privacy & safety",
+    titleKey: "help.privTitle",
     articles: [
-      { q: "User scoping", a: "Your sessions, history, progress and memory are private to your account; one user can never read another's data." },
-      { q: "Human approval", a: "The decisions that matter — ambiguous role, saving memory, practice handoff — pause for your approval." },
-      { q: "External research boundaries", a: "Current-market research is bounded (specific providers, SSRF-safe, no arbitrary browsing) and never sends candidate data outward." },
-      { q: "AI limitations", a: "Mo can be wrong or lack evidence; scores are practice guidance, not a hiring decision, and Mo declines to fabricate sources." },
+      { q: "help.priv1q", a: "help.priv1a" },
+      { q: "help.priv2q", a: "help.priv2a" },
+      { q: "help.priv3q", a: "help.priv3a" },
+      { q: "help.priv4q", a: "help.priv4a" },
     ],
   },
   {
     id: "troubleshooting",
-    title: "Troubleshooting",
+    titleKey: "help.tsTitle",
     articles: [
-      { q: "No progress yet", a: "Complete a practice session — Progress is derived from completed practice." },
-      { q: "No history yet", a: "History lists completed sessions with reports; finish a session to see it." },
-      { q: "No sources shown", a: "Sources appear when preparation uses governed evidence; some queries need none." },
-      { q: "Knowledge index not ready", a: "The governed source catalogue is available even before the local vector index is built; see Knowledge & RAG." },
-      { q: "Incomplete Practice", a: "You can resume an in-progress session; a report appears once the session is completed." },
-      { q: "Report unavailable", a: "Generate the performance review at the end of a session; reopen it later from History." },
-      { q: "Cannot find an Inspector run", a: "Open the Agent Inspector from a Coach run's “View run details”, or paste the run ID. There is no run browser." },
-      { q: "A request failed", a: "Retry; if it persists, the error card shows a request id you can quote. No internal details are exposed." },
+      { q: "help.ts1q", a: "help.ts1a" },
+      { q: "help.ts2q", a: "help.ts2a" },
+      { q: "help.ts3q", a: "help.ts3a" },
+      { q: "help.ts4q", a: "help.ts4a" },
+      { q: "help.ts5q", a: "help.ts5a" },
+      { q: "help.ts6q", a: "help.ts6a" },
+      { q: "help.ts7q", a: "help.ts7a" },
+      { q: "help.ts8q", a: "help.ts8a" },
     ],
   },
   {
     id: "reviewer",
-    title: "Reviewer & technical guide",
+    titleKey: "help.revTitle",
     articles: [
-      { q: "Agent Inspector", a: "Safe per-run traces: tools, retrieval, HITL, model/profile, tokens, latency — never chain-of-thought, prompts, checkpoints or secrets." },
-      { q: "Knowledge & RAG", a: "Governed runtime counts + offline deterministic retrieval-quality metrics and known gaps (read-only)." },
-      { q: "Evaluation", a: "The latest offline RAGAS run, read-only. It never triggers a paid evaluation and is not live candidate analytics." },
-      { q: "Model profiles", a: "Fast / Balanced / Advanced select the model tier only; tools, grounding, memory, HITL and security are identical across tiers." },
-      { q: "Tool activity & HITL events", a: "The Inspector timeline shows tool requests/results and human-approval events as safe metadata." },
+      { q: "help.rev1q", a: "help.rev1a" },
+      { q: "help.rev2q", a: "help.rev2a" },
+      { q: "help.rev3q", a: "help.rev3a" },
+      { q: "help.rev4q", a: "help.rev4a" },
+      { q: "help.rev5q", a: "help.rev5a" },
     ],
   },
 ];
@@ -162,9 +167,14 @@ export function HelpCenter() {
   const [query, setQuery] = useState("");
   const t = useT();
 
-  // The P7 Voice section is localised via the i18n catalogues (P3.5 coding standard); older
-  // Help bodies remain English on the documented localization backlog.
+  // All Help content is localised via the i18n `help` namespace (P10B-W9.6A); the P7/P7.5 Voice
+  // section reuses the `voice` namespace. Section structure (ids/order/counts) stays in code.
   const sections = useMemo<Section[]>(() => {
+    const built: Section[] = HELP_SECTIONS.map((s) => ({
+      id: s.id,
+      title: t(s.titleKey),
+      articles: s.articles.map((a) => ({ q: t(a.q), a: t(a.a) })),
+    }));
     const voice: Section = {
       id: "voice",
       title: t("voice.helpTitle"),
@@ -181,7 +191,7 @@ export function HelpCenter() {
         { q: t("voice.hRealtimeAudioQ"), a: t("voice.hRealtimeAudioA") },
       ],
     };
-    return [...SECTIONS, voice];
+    return [...built, voice];
   }, [t]);
 
   const filtered = useMemo(() => {

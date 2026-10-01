@@ -38,7 +38,10 @@ def run() -> dict[str, tuple[bool, str]]:
     lang_hook = read("lib/speech/useDictationLanguage.ts")
     no_autosubmit_test = read("tests/dictation-no-autosubmit.test.tsx")
     control_test = read("tests/dictation-control.test.tsx")
-    help_center = read("components/help/HelpCenter.tsx")
+    # P10B-W9.6A: Help Center article bodies moved out of HelpCenter.tsx (the SECTIONS array) into the
+    # typed i18n catalogue (lib/i18n/messages/w96/help). The dictation documentation now lives there and
+    # is localized across all 7 locales; read both so the "Help documents support honestly" check sees it.
+    help_center = read("components/help/HelpCenter.tsx") + read("lib/i18n/messages/w96/help/en.ts")
 
     def check(name: str, ok: bool, detail: str = "") -> None:
         results[name] = (ok, detail)

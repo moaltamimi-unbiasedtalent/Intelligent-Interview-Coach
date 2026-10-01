@@ -64,6 +64,19 @@ Date captured: 2026-09-30. Author: Claude Opus 4.8 (assisted). Read-only audit.
 > onboarding/dictation/voice evals PASS; backend ruff + locale tests green; 0 paid/live. Human/legal
 > review of legal-copy drafts PENDING; page `metadata` titles + Help article bodies deferred; W9.7
 > (Russian) NOT started. See `P10B_W9_6_FULL_LOCALIZATION.md`.
+>
+> **Update (W9.6A — Help + guard closure):** a W9.6 gate inconsistency was found and closed on branch
+> `fix/p10b-w9-6a-help-localization-closure`. The Help Center article bodies (a TS object literal) were
+> still English and had escaped the JSX-only scanner (false "0 offenders"). Now the Help Center (12
+> sections / 66 articles = **144 strings**) is localized across 7 locales (a sixth `help` fragment; 671
+> total new keys/locale); the scanner gained a bounded object-literal content pass + a regression test
+> proving the blind spot is closed; a Prepare tab label and the dictation language option labels (now
+> native-name endonyms from the canonical locale registry) were localized. **Corrected scanner result:
+> 0 unexplained candidate-facing offenders** (allowlist = reviewer-only `AgentInspector`). vitest
+> **350** (61 files), new `e2e/help-localization.spec.ts` **11/0**, typecheck/lint(0)/build green;
+> `eval_dictation` read-path updated → PASS; i18n/voice/realtime-voice/RC(27)/identity(1.0) evals PASS;
+> 0 paid/live; no migration, no API/backend-locale change, no RC. With W9.6A, **W9.6 is fully
+> DELIVERED**. See `P10B_W9_6A_LOCALIZATION_CLOSURE.md`.
 
 ---
 

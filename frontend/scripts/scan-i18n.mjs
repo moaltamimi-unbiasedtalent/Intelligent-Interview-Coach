@@ -14,7 +14,8 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const ROOT = join(fileURLToPath(new URL(".", import.meta.url)), "..");
+// Resolved lazily in the CLI path only — importing this module (e.g. from a test) must not depend on
+// `import.meta.url` being a file URL.
 const SCAN_DIRS = ["components", "app"];
 
 // Reviewer/admin surfaces are intentionally English-ops (not candidate-facing) per the i18n standard.
@@ -30,6 +31,19 @@ const EXCLUDE_PATH = (p) =>
   Object.keys(ALLOW_FILES).some((f) => p.endsWith(f));
 
 const ATTRS = ["placeholder", "aria-label", "title", "label", "description", "alt"];
+
+// Candidate-facing CONTENT keys in object/array literals (not JSX): FAQ/help datasets, card/
+// empty-state/nav content maps, comparison tables, tutorial-like definitions. These render to
+// candidates as copy, so a string literal assigned to one of them must be localized. This is the
+// category that escaped the original (JSX-only) scan — e.g. `{ q: "...", a: "..." }` in HelpCenter.
+// Deliberately bounded: it does NOT include structural/technical keys (id, key, href, name, type,
+// value, className, testId, slug, icon, variant, role, path, url, code, ...), so class names, routes,
+// enum tokens, test IDs and import paths are not flagged.
+const CONTENT_KEYS = [
+  "title", "subtitle", "heading", "description", "label", "hint", "helper", "placeholder",
+  "question", "answer", "q", "a", "body", "message", "summary", "intro", "note", "cta",
+  "tooltip", "caption", "empty", "emptyText", "text",
+];
 
 // Proper nouns / technical tokens that are never translated (substring or exact, case-sensitive).
 const ALLOW_SUBSTR = [
@@ -54,10 +68,21 @@ function walk(dir) {
 
 // Strip JSX expression containers {…}, comments, and string-literal attribute VALUES we don't scan,
 // so that `className="flex ..."` etc. are not treated as visible text.
+//
+// Also strip Next.js page `metadata` / `generateMetadata` blocks: localizing server-component
+// `export const metadata` titles needs a locale-aware `generateMetadata` path and is a documented,
+// architecture-bound deferral (P10B-W9.6 §5 / W9.6A §L). They are not rendered candidate chrome, so
+// the content-key pass below must not flag their `title:`/`description:` object properties.
 function stripNoise(src) {
   return src
     .replace(/\/\*[\s\S]*?\*\//g, " ") // block comments
-    .replace(/\/\/[^\n]*/g, " "); // line comments
+    .replace(/\/\/[^\n]*/g, " ") // line comments
+    .replace(/export\s+const\s+metadata\b[\s\S]*?\};/g, " ") // export const metadata = {...}; (single- or multi-line)
+    .replace(/export\s+async\s+function\s+generateMetadata\b[\s\S]*?\n\}/g, " ") // generateMetadata(){...}
+    // schema.org JSON-LD structured data (rendered into <script type="application/ld+json">): this is
+    // machine-readable crawler metadata, not candidate-rendered chrome — same deferred category as page
+    // metadata. Strip any object literal carrying an "@context" marker.
+    .replace(/const\s+\w+\s*=\s*\{[\s\S]*?"@context"[\s\S]*?\n\s*\};/g, " ");
 }
 
 function looksEnglish(text) {
@@ -91,9 +116,12 @@ function looksEnglish(text) {
   return true;
 }
 
-function scanFile(abs) {
-  const rel = relative(ROOT, abs);
-  const src = stripNoise(readFileSync(abs, "utf8"));
+/**
+ * Pure detection over a SOURCE STRING (exported so a regression test can prove the blind spots are
+ * closed without touching the filesystem). Returns [{ kind, text }]. `stripNoise` is applied here.
+ */
+export function scanSource(rawSrc) {
+  const src = stripNoise(rawSrc);
   const hits = [];
 
   // (a) Visible JSX text nodes: text between > and < that is not an expression and not a tag.
@@ -108,24 +136,45 @@ function scanFile(abs) {
     const text = m[2].trim();
     if (looksEnglish(text)) hits.push({ kind: `attr:${m[1]}`, text });
   }
-  return hits.map((h) => ({ file: rel, ...h }));
+
+  // (c) Candidate-facing CONTENT in object/array literals: `key: "English"` where key is a known
+  // content key (title/q/a/body/...). This catches copy stored OUTSIDE JSX (FAQ/help datasets,
+  // content maps, card/empty-state config) that passes (a)/(b) by. Both quote styles; the value
+  // must still read as English prose (looksEnglish filters identifiers/keys/code tokens, so a value
+  // like "help.gs1q" or "getting-started" is not flagged).
+  const keyRe = new RegExp(`(?:^|[\\s,{[(])(${CONTENT_KEYS.join("|")})\\s*:\\s*("(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*')`, "g");
+  for (const m of src.matchAll(keyRe)) {
+    const raw = m[2];
+    const text = raw.slice(1, -1).trim(); // strip surrounding quotes
+    if (looksEnglish(text)) hits.push({ kind: `obj:${m[1]}`, text });
+  }
+  return hits;
 }
 
-const files = SCAN_DIRS.flatMap((d) => walk(join(ROOT, d))).filter((p) => !EXCLUDE_PATH(p));
-const all = files.flatMap(scanFile);
+export { looksEnglish, stripNoise };
 
-if (process.argv.includes("--count")) {
-  console.log(all.length);
-} else {
-  const byFile = new Map();
-  for (const h of all) {
-    if (!byFile.has(h.file)) byFile.set(h.file, []);
-    byFile.get(h.file).push(h);
+// CLI entrypoint only (guarded so importing this module for tests has no side effects / no exit).
+const isCli = process.argv[1] && process.argv[1].replace(/\\/g, "/").endsWith("scripts/scan-i18n.mjs");
+if (isCli) {
+  const ROOT = join(fileURLToPath(new URL(".", import.meta.url)), "..");
+  const scanFile = (abs) =>
+    scanSource(readFileSync(abs, "utf8")).map((h) => ({ file: relative(ROOT, abs), ...h }));
+  const files = SCAN_DIRS.flatMap((d) => walk(join(ROOT, d))).filter((p) => !EXCLUDE_PATH(p));
+  const all = files.flatMap(scanFile);
+
+  if (process.argv.includes("--count")) {
+    console.log(all.length);
+  } else {
+    const byFile = new Map();
+    for (const h of all) {
+      if (!byFile.has(h.file)) byFile.set(h.file, []);
+      byFile.get(h.file).push(h);
+    }
+    for (const [file, hits] of [...byFile.entries()].sort()) {
+      console.log(`\n${file}  (${hits.length})`);
+      for (const h of hits) console.log(`  [${h.kind}] ${JSON.stringify(h.text)}`);
+    }
+    console.log(`\nTOTAL candidate-facing hardcoded-English offenders: ${all.length} in ${byFile.size} files`);
   }
-  for (const [file, hits] of [...byFile.entries()].sort()) {
-    console.log(`\n${file}  (${hits.length})`);
-    for (const h of hits) console.log(`  [${h.kind}] ${JSON.stringify(h.text)}`);
-  }
-  console.log(`\nTOTAL candidate-facing hardcoded-English offenders: ${all.length} in ${byFile.size} files`);
+  process.exit(all.length > 0 ? 1 : 0);
 }
-process.exit(all.length > 0 ? 1 : 0);

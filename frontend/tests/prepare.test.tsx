@@ -22,7 +22,9 @@ describe("Prepare responsive workspace", () => {
     setMobile(true);
     render(<PrepareResponsive coach={<p>coach panel</p>} context={<p>context panel</p>} />);
     expect(screen.getByRole("tab", { name: "Mo" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Preparation" })).toBeInTheDocument();
+    // P10B-W9.6A: the Preparation tab label is localized via t("nav.prepare"); with no provider the
+    // English fallback renders "Prepare".
+    expect(screen.getByRole("tab", { name: "Prepare" })).toBeInTheDocument();
   });
 
   it("desktop shows both panels side by side without duplicating them", () => {
