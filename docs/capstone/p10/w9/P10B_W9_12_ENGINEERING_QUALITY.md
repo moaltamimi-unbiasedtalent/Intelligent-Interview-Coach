@@ -33,7 +33,7 @@ borders and the warning banner tint resolve as intended; screenshots of the draf
 dead styles now apply by design, so a few elements look slightly more tinted than before.
 **Guard:** `frontend/tests/tailwind-token-opacity.test.ts` runs Tailwind itself over every `<utility>-<token>/<alpha>` found in source and fails if
 any emits no CSS; verified to FAIL against the old config (10 dead classes listed) and pass with the fix. Browser support note: `color-mix` needs a
-current evergreen browser (Chrome 111+, Safari 16.2+, Firefox 113+); on older engines only these alpha accents are ignored.
+current evergreen browser (Chrome 111+, Safari 16.2+, Firefox 113+); on older engines only these alpha accents are lost. Universal legacy-browser support is not claimed.
 
 ## 7-12. TD-W9-02 - test isolation and the 13 `.env` failures (closed)
 **Root causes (all verified):**
@@ -107,12 +107,21 @@ None. Alembic head `0014_opportunities`.
 ## 30. Open privacy items (not touched; need data-model work)
 PRIV-W9-01 (preparation-chat indexing/deletion) and PRIV-W9-02 (consent/legal acceptance persistence): carry into W10.10 / the approved architecture.
 
+## Final status (after integration)
+TD-W9-01 **CLOSED**. TD-W9-02 **CLOSED**. PRIV-W9-01 **OPEN**. PRIV-W9-02 **OPEN**. Full backend **2565 passed / 3 skipped / 0 failed**; the development persistence stores are
+unchanged by the run. The shared rate-limit Redis adapter is optional and **NOT live** (distributed limiting is not enabled and not claimed). Verified-email behaviour is
+**unchanged**. **No evaluation tolerance or recalculation formula was introduced.** Legacy Streamlit is **retained**. No migration; 0 paid/live calls.
+
 ## 31. W9.13 handoff
 - **Accepted limitations:** PRIV-W9-01; PRIV-W9-02; Russian speech unsupported; engineering translations (native/legal review pending); live generated-language
   quality unvalidated; metadata localization; locale/bundle optimisation; realtime voice and Google OIDC not live-validated; Premium preview; no ticketing; full admin
   platform planned (W10).
-- **Unresolved policy decisions (owner):** email-verification policy (recommend B); whether to adopt a deterministic overall-vs-criteria tolerance for evaluation;
-  retirement of the legacy Streamlit interface.
+- **Accepted decisions / policies carried into W9.13:**
+  - **POLICY-01 (email verification):** current behaviour retained and accepted for W9.13. Preferred future direction: consider requiring verified email for sensitive
+    actions such as export, destructive deletion, sharing and invitations. Not implemented; an owner/product-policy decision that does not block W9.13.
+  - **POLICY-02 (evaluation consistency):** no deterministic score relationship is invented; the current schema/range validation remains the contract. A tolerance or
+    recalculation rule would be an owner/product-contract decision.
+  - **LEGACY-01 (Streamlit):** retained intentionally for this release cycle; retirement requires a separate approved task.
 - **Production-ready but not live:** shared Redis rate-limit adapter (needs `redis` package, `REDIS_URL`, live validation).
 - **Intentionally retained legacy:** Streamlit UI, `src/auth.py`, `DATA_RETENTION_NOTE`, root `Dockerfile` Streamlit entry point.
 - W9.13 must re-run the full qualification from a clean tree and confirm the clean-tree CI step passes.
