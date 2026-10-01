@@ -627,6 +627,10 @@ assumptions in core logic, prompts, scoring or examples.
   added to `app/robots.ts` disallow. Deterministic gate `scripts/eval_marketing_product_trust.py`. See
   `docs/capstone/p10/p10b_wave7_marketing_product_trust_pricing.md`.
 
+## Roadmap
+
+The single canonical forward-looking roadmap is `docs/capstone/capstone_phase_plan.md` (status section at the top). Admin/operations phase P10B-W10 is planned in `docs/capstone/admin/ADMIN_PLATFORM_MASTER_PLAN.md`. Core admin rule: platform admin is not an unrestricted private-candidate-data superuser.
+
 ## Git rules
 
 - Remote: `origin` (configured locally; the GitHub repo rename to Intelligent-Interview-Coach is a follow-up). Turing

@@ -3,6 +3,8 @@
 Audit phase. **No runtime code changed by this task.** This is the proposed, wave-structured plan for
 P10B-W9. Nothing here is implemented yet; each wave has an explicit STOP condition and awaits approval.
 
+**Status (main d6c3493):** W9.1-W9.7, W9.7A and W9.7B (CI onboarding-gate fix: verified redirects) are DELIVERED and merged (PR #101 chain). Remaining: W9.8-W9.13. Forward roadmap: `../../capstone_phase_plan.md`. Note: the "do not auto-merge" wording below is historical; the current rule is the Completed Wave Integration Rule (PR, CI green, merge, sync local main).
+
 **Global constraints (every wave):** RC-P10-002 immutable; 0 paid/live provider calls unless
 explicitly authorised; never print/log/commit the OpenRouter key; do not weaken tests, security,
 provenance, HITL, scoring semantics or ownership; keep interface language independent of
@@ -270,7 +272,9 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 - **STOP:** after all 8-locale gates pass; Russian translation quality is engineering-draft, not
   human-validated — state so.
 
-## W9.8 — Privacy / Data control UX  *(P2)*
+## W9.8 — Privacy & Candidate Data Controls  *(Capstone critical, Cx L)*
+
+> Renamed and widened (roadmap reconciliation): a Data & Privacy Center covering what is stored, export, selective deletion (documents, memory, Opportunities, interviews, reports), agent-run/checkpoint implications, workspace/shared-data visibility and revocation, account deletion, retention, consent/legal versions, request status, all 8 locales, preserving audit/legal records. W10.10 is the operator side.
 
 - **Objective:** a read-only "Your Data / Privacy Center" that surfaces every data class and links to
   its existing control. Fixes PF-15 (view/discoverability); no new deletion semantics.
@@ -289,7 +293,7 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 - **Dependencies:** W9.6 (localized). **Risk:** low (read-only). **Complexity:** M.
 - **STOP:** after the center renders and no integrity gate regresses.
 
-## W9.9 — Trust + visual hierarchy polish  *(P2)*
+## W9.9 — Trust & Visual Product Polish  *(desirable, Cx M)*
 
 - **Objective:** clearer, more premium Trust presentation + fixed visual hierarchy. Fixes PF-16, PF-17.
 - **Frontend:** group Trust `CONTROLS` into ~4 sections + cross-links + localize; nav salience; reserve
@@ -305,7 +309,9 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 - **Dependencies:** W9.6. **Risk:** low. **Complexity:** M.
 - **STOP:** after marketing/trust gate + visual review.
 
-## W9.10 — Product comparison foundation  *(P3 / feature)*
+## W9.10 — Product Positioning / Comparison Foundation  *(desirable, Cx S)*
+
+> Factual only; no unsupported superiority claims; external competitor research needs separate authorization.
 
 - **Objective:** a factual "what's different" comparison scaffold with zero unsupported claims. Fixes
   PF-18.
@@ -318,7 +324,7 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 - **Dependencies:** W9.6, W9.9. **Risk:** medium (claim discipline) — keep to the ledger. **Complexity:** M.
 - **STOP:** after the marketing gate confirms no unsupported claim.
 
-## W9.11 — Architecture / documentation consistency  *(P3)*
+## W9.11 — Architecture & Documentation Consistency  *(Capstone critical, Cx M)*
 
 - **Objective:** remove doc/code contradictions surfaced by the audit. Fixes PF-21, PF-22.
 - **Scope:** correct the authority-level comment `src/api/schemas/career.py:37` to "1=official ..
@@ -332,7 +338,16 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 - **Dependencies:** none. **Risk:** none. **Complexity:** S.
 - **STOP:** after the contract test passes. **Do NOT add an Evaluation Specialist.**
 
-## W9.12 — Full deterministic release requalification  *(gate)*
+## W9.12 — Engineering Quality & Technical Debt Closure  *(Capstone critical, Cx M-L)*  [new]
+
+- **Scope:** **TD-W9-01** (Tailwind `token/NN` opacity classes: inventory, supported token strategy, light/dark/mobile
+  visual regression); **TD-W9-02** (backend test isolation leak: identify path, isolated test DB, prove no dev/prod DB
+  writes, defensive guards); metadata localization architecture if deferred; 8-locale bundle/performance review;
+  optional locale-aware font subset (TD-W9-03) only if profiling justifies.
+- **Acceptance:** TD-W9-01 and TD-W9-02 closed with evidence; no regression; 0 paid/live.
+- **Dependencies:** W9.8-W9.11 (any order, ideally after W9.9 for visual work). **STOP:** do not start W9.13.
+
+## W9.13 — Full P10B Requalification  *(gate, Capstone critical, Cx L)*  [formerly W9.12]
 
 - **Objective:** the whole deterministic suite is green and the test-env artifact is intrinsically
   isolated, so a replacement RC can be qualified.
@@ -343,46 +358,26 @@ conversation/dictation/geography; do not change authority-level semantics; commi
   paid/live).
 - **Files:** `tests/conftest.py` or the 5 affected test files; CI config.
 - **Acceptance:** 0 failed backend (incl. isolation), all frontend gates, all evals PASS, 0 paid/live;
-  no unresolved P0/P1; **TD-W9-01 and TD-W9-02 (technical-debt register below) closed** before final release
-  qualification.
-- **Dependencies:** W9.1–W9.11. **Risk:** low. **Complexity:** M.
+  no unresolved P0/P1; **TD-W9-01 and TD-W9-02 already closed in W9.12** (verify, do not defer).
+- **Dependencies:** W9.1–W9.12. **Risk:** low. **Complexity:** M.
 - **STOP:** produce the RC readiness assessment against ACCEPTANCE_GATES. **Do NOT create RC-P10-003 in
   this task** — creation is a separate, explicitly-approved step after the gate.
 
 ---
 
-## Recommended sequence
+## Recommended sequence (revised at main d6c3493)
 
-**Before resuming Pilot 2 (P0/P1):** W9.1 → W9.2 → W9.3 → W9.4 → W9.5 → W9.6 → W9.11 (docs/comment; cheap).
-**Can follow (P2/P3):** W9.7 (Russian), W9.8 (Data Center), W9.9 (Trust/visual), W9.10 (comparison).
-**Always last:** W9.12 requalification, then (separately approved) cut the replacement RC.
-
-Waves are independent PRs; W9.6 depends on the string-producing waves before it, so land W9.1–W9.5 first
-then sweep localization in W9.6, then W9.7 Russian on top of the canonical locale source.
+Completed: W9.1-W9.7B. Remaining: **W9.8 -> W9.9 -> W9.10 -> W9.11 -> W9.12 -> W9.13**, then P10B-W10
+(Admin, W10.0-W10.14), P10B-W11 (integrated requalification), RC-P10-003, Pilot 2, P10C-P10F, P11. The canonical
+roadmap is `docs/capstone/capstone_phase_plan.md`. W9.9/W9.10 are off the critical path.
 
 ---
 
-## Roadmap addition: P10B-W10 - Platform Administration, Support & Commercial Operations  *(approved concept, NOT started)*
+## Roadmap: P10B-W10 - Platform Administration, Support & Commercial Operations  *(approved, NOT started)*
 
-An operational **control plane** so a platform administrator can run normal day-to-day Ask4Mo operations
-without routinely editing source code or querying the database directly. Intended coverage:
-
-- admin command center / platform health;
-- users and access administration; session/access revocation; workspaces;
-- support ticketing and troubleshooting;
-- subscription-plan creation/editing; entitlements; billing/payments administration;
-- API/integration management; AI/provider/model configuration;
-- knowledge-base administration; RAG/source health; source ingestion/approval; jobs/queues;
-- GDPR/data-subject operations; privacy/legal versions;
-- feature flags; safe system configuration;
-- product / operational / commercial reporting; AI usage and cost reporting;
-- audit logs; security/incidents; release/environment health.
-
-**Architectural principle (non-negotiable):** an administrator operates the platform, but
-**platform admin != unrestricted private-candidate-data superuser** (consistent with P6.5/W9.3: metadata-only
-operations, no "view as user", no private-data search, owner-scoped repositories stay owner-scoped, privileged
-changes audited). Existing seams to build on: `require_platform_admin`, the admin router, audit events,
-entitlements, the Prompt Lab/reviewer APIs. Sequencing relative to W9.8-W9.12 and P10C is an owner decision.
+Superseded by the dedicated plan: `docs/capstone/admin/ADMIN_PLATFORM_MASTER_PLAN.md` (waves W10.0-W10.14) and
+`docs/capstone/admin/ADMIN_CAPABILITY_MATRIX.md`. Core principle retained: **platform admin != unrestricted
+private-candidate-data superuser.** W10 follows W9.13 and is not part of W9.
 
 ## Technical-debt register (W9)
 
@@ -391,14 +386,14 @@ entitlements, the Prompt Lab/reviewer APIs. Sequencing relative to W9.8-W9.12 an
   `var()` values. Impact: intended opacity styling is silently absent; about 10 approved UI elements may change
   appearance when this is fixed properly. Required task: inventory all affected classes, choose a valid
   colour-token strategy, and visually regression-test light/dark/mobile before changing anything. **Open;
-  must be closed before final release qualification (W9.12).**
+  scheduled for W9.12.**
 - **TD-W9-02 - Backend test-isolation leak.** A backend test wrote a fixture interview/report into the local
   development database during a full test run (previously hidden by the dev-DB schema lag). Impact: the
   deterministic suite is not fully isolated from local dev persistence. Required task: identify the exact
   test/config path, make tests use isolated temporary databases, and prove no dev/production DB writes during
-  the suite. **Open; must be closed before final release qualification (W9.12).**
+  the suite. **Open; scheduled for W9.12.**
 - **TD-W9-03 - Locale-aware font/subset loading (optimization, optional).** W9.7A added the `cyrillic` subset
   to the existing Inter loader (kept; ~18.7 kB woff2 preloaded on every page for every locale, accepted
   provisionally because Russian is a supported language and typography is consistent). A locale-aware
   loading strategy may be evaluated during performance optimization, only with measurement. **Open, low
-  priority.**
+  priority; optional in W9.12.**

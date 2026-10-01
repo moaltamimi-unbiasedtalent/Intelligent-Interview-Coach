@@ -20,6 +20,13 @@ All evidence-backed at planning time; owner decisions noted where required.
 | R-13 | Scope creep into excluded areas (crawling, billing, emotion, SSO) | P2 | broad ambition | Enforce exclusion list; every feature checked against it | all |
 | R-14 | Provider lock-in / EU data handling | P2 | provider choices pending | Abstract interfaces; EU region; DPAs; mock/local paths | E0/P7/P8 |
 | R-15 | Regression to Sprint 4 features during expansion | P1 | large surface | DoD requires green regression each phase; preserve tags | all |
+| R-16 | Admin privilege creep: platform admin becomes a private-candidate-data superuser | P1 | W10 scope adds support/users/KB tooling | Capability-based authz, metadata-only defaults, governed break-glass only if approved (reason, time-box, audit), candidate-denied tests | W10.0/W10.2/W10.14 |
+| R-17 | Mock billing/payment represented as live | P1 | W10.5 permits mock adapter | Visible mock/sandbox labelling in UI/docs/reports; qualification check | W10.5/W10.14 |
+| R-18 | Secret exposure through admin integration/config UI | P1 | W10.6/W10.11 | Write-only secrets, rotate/disable/test only, no secrets in config/audit/logs/exports | W10.6/W10.11 |
+| R-19 | Unqualified AI model/prompt activated by an admin | P1 | W10.7 | Draft->Validate->Evaluate->Approve->Activate; no bypass; second approver | W10.7 |
+| R-20 | Manual KB upload becomes production RAG without provenance/safety review | P1 | W10.8 | Safety->Parse->Classify->Provenance/licence->Preview->Approval->Index; distinct upload/approve capabilities | W10.8 |
+| R-21 | Admin scope (W10, 15 sub-waves, two XL) delays RC/Pilot 2/P10C | P1 | critical path in roadmap | W10.0 design gate; must-have vs mock-acceptable split; desirable waves may ship reduced | W10 |
+| R-22 | Technical debt TD-W9-01/02 (invalid Tailwind opacity classes; test-isolation leak) reaches release | P2 | W9 register | Scheduled in W9.12; closure evidence required before W9.13 | W9.12 |
 
 ## Owner decisions required (not blockers to P0/E0)
 Weekly capacity; provider budget; chosen social IdP + email + STT/TTS + hosting providers; EU hosting
