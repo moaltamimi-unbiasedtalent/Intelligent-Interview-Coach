@@ -37,6 +37,13 @@ def build_auth_app(env: str = "test"):
 
     app = create_app(ApiSettings(env=env, frontend_origins=("http://localhost:3000",)))
     app.dependency_overrides[deps.get_repository] = lambda: repo
+    # get_memory_service/get_memory_repository build their repository by calling get_repository(request)
+    # directly (not via Depends), so a repository override alone does NOT reach them: memory writes would
+    # land in the configured (dev) DB. Override the service seam too (this was the TD-W9-02 leak path).
+    from src.application.memory_service import MemoryApplicationService
+    from src.repository import MemoryRepository
+    _mem_service = MemoryApplicationService(MemoryRepository(repo.session_factory))
+    app.dependency_overrides[deps.get_memory_service] = lambda: _mem_service
     app.dependency_overrides[deps.get_email_sender] = lambda: mail
     return app, repo, mail
 

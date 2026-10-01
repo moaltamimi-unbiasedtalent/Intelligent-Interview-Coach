@@ -245,6 +245,10 @@ export const api = {
     get: (reportId: number | string, opts?: RequestOptions) =>
       request<InterviewDetailResponse>(
         "GET", `/history/interviews/${encodeURIComponent(String(reportId))}`, opts),
+    // P10B-W9.8: owner delete of one completed interview (hard delete; writes are never auto-retried).
+    remove: (reportId: number | string, opts?: RequestOptions) =>
+      request<{ deleted: boolean }>(
+        "DELETE", `/history/interviews/${encodeURIComponent(String(reportId))}`, opts),
   },
 
   // Agent Coach (Phase 9): the candidate-facing LangGraph agent. All owner-scoped;
