@@ -37,7 +37,8 @@ class SourceOut(BaseModel):
     title: str | None = None
     source_url: str | None = None
     evidence_type: str | None = None
-    # Numeric authority tier (1=industry .. 3=official), matching the domain model
+    # Numeric authority tier (1=official/statistical, 2=public/professional framework, 3=reputable
+    # industry; see src/copilot/constants.py), matching the domain model
     # (src/copilot/models.py KnowledgeEvidence.authority_level: int, ge=1 le=3). Declaring
     # this as `str` here caused CareerChatResponse.from_orchestration to raise a Pydantic
     # ValidationError (int -> str) and 500 the /career/chat endpoint whenever retrieval

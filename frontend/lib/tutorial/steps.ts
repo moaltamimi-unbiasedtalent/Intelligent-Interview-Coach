@@ -5,7 +5,7 @@
  * Practice -> improve. It leads with the candidate mental model (not agents/RAG/model internals).
  * Every step either targets a `data-tour` anchor that reliably exists on its route, or is intentionally
  * route-only (no highlight) — there are ZERO permanently-dead targets (v1 had 4: practice-handoff,
- * practice-answer, deep-dive, report). Titles/bodies are i18n keys (localized across all 7 locales);
+ * practice-answer, deep-dive, report). Titles/bodies are i18n keys (localized across all 8 supported locales);
  * a step never requires fabricated candidate/product state to render.
  */
 

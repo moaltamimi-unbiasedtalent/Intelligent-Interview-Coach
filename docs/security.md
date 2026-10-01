@@ -1,5 +1,7 @@
 # Security & Prompt-Injection Protection
 
+> **Historical document - describes the Sprint 1-3 state.** Current behaviour: see [README.md](../README.md), [sprint4_architecture.md](sprint4_architecture.md) (Current-state overview) and [README.md](README.md) in this folder. Statements below about authentication, persistence, tools, privacy and the Streamlit interface are NOT current (real accounts and sessions, per-user storage, a larger tool registry and the Next.js product now exist).
+
 Phase 8 implements the medium optional requirement — *protect the app against
 prompt injection* — and satisfies the sprint's domain-security expectation. The
 defences are **deterministic, explainable and best effort**: they stop obvious

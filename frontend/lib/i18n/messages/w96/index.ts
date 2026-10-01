@@ -10,7 +10,7 @@
 //   - legal     : Privacy / Terms / AI transparency / About / Help / Marketing / Trust surfaces
 //   - shell     : Shared chrome (progress / memory / home / common / states / nav)
 //
-// Every fragment is authored with identical keys across all seven supported locales (enforced at
+// Every fragment is authored with identical keys across all supported locales (eight; Russian lives in separate `ru` blocks) (enforced at
 // compile time in each fragment, and re-verified by `tests/i18n.test.tsx`). This module is
 // side-effect free; the central catalogue (`lib/i18n/catalog.ts`) deep-merges `w96[locale]` onto
 // each base locale catalogue so these keys resolve at runtime.

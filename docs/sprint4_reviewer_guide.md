@@ -1,5 +1,7 @@
 # Sprint 4 — Reviewer Guide
 
+> **Historical document - describes the state at the close of Sprint 4.** Since then the product gained real accounts and sessions (Google OIDC is implemented in the backend but disabled by default and not validated live), Opportunities, workspaces and sharing, the Data & Privacy Center, eight interface locales, three bounded specialists and a bounded admin console. For current behaviour see [README.md](../README.md), [sprint4_architecture.md](sprint4_architecture.md) (Current-state overview) and [privacy.md](privacy.md). Kept as period evidence; not rewritten.
+
 A practical orientation to **Ask4Mo — Intelligent Interview Coach** — enough to
 understand and demo it without reading the whole repo. Companion docs:
 `sprint4_demo_script.md`, `sprint4_reviewer_qa.md`,

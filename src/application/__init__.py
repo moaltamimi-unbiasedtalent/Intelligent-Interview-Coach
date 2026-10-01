@@ -1,7 +1,7 @@
 """Application layer for Intelligent Interview Coach.
 
 A thin, Streamlit-free boundary between the frontend and the domain/services.
-Both the current Streamlit UI and a future FastAPI backend call the same
+The FastAPI backend (primary) and the legacy Streamlit UI call the same
 functions here; nothing in this package imports Streamlit or the UI modules.
 
 See ``docs/sprint4_architecture.md`` for the Phase 1 boundary.

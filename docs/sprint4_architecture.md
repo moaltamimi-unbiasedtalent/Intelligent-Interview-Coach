@@ -7,6 +7,78 @@
 > `docs/sprint4_reviewer_guide.md`, `docs/sprint4_reviewer_qa.md`,
 > `docs/sprint4_demo_script.md` and `docs/sprint4_submission_summary.md`.
 
+## Current-state overview (reconciled in P10B-W9.11)
+
+> The sections below record the Sprint 4 build **as it was delivered**; where a section says
+> "transitional", "four tools", "single agent" or describes Streamlit as the fallback UI it is
+> historical. This overview is the current picture. Source of truth is the code; product
+> claims must stay within [product/PRODUCT_CLAIMS.md](product/PRODUCT_CLAIMS.md).
+
+**Candidate journey:** Opportunity -> Prepare -> Practice -> Progress / History, with Mo available
+throughout. An *Opportunity* is a private preparation context for one job; a *Workspace* is for
+collaboration (VIEW-only share grants of an interview report or a story) and is never created or
+required by an Opportunity.
+
+**Layers (current):**
+
+```
+Next.js frontend: candidate app, public marketing/trust site, English-only /admin console
+  -> FastAPI /api/v1  (owner-scoped; request id + safe error envelope; rate limits; pause switches)
+    -> src/application services
+       - Mo: bounded LangGraph agent (allow-listed tools, three bounded specialists, agentic RAG,
+         approved long-term memory, HITL interrupts, durable checkpoints)
+       - Interview Practice: durable sessions; LLM-backed question generation and answer evaluation
+       - Documents and evidence, Stories, Opportunities, Workspaces and shares, Account lifecycle
+    -> SQLAlchemy persistence (Alembic) + knowledge stores / vector index
+    -> optional provider adapters (LLM via OpenRouter, email, speech, bounded external research)
+```
+
+**Reasoning vs deterministic vs approval (what is and is not an "agent"):**
+
+| Component | Role |
+|---|---|
+| Mo (LangGraph agent) | reasons and orchestrates; only calls allow-listed tools |
+| Specialists `role_opportunity` (model-backed), `candidate_evidence` (deterministic, owner-scoped), `interview_strategy` (model-backed, deterministic fallback) | bounded advisors behind Mo; side-effect-free; **exactly three; there is no Evaluation specialist** |
+| Interview evaluation (`src/evaluation_service.py`) | an LLM-backed service with a validated structured output (`AnswerEvaluation`); it is not an agent, specialist or tool |
+| Career retrieval router, structured stores, gap analysis, preparation plan | deterministic (no model) |
+| Human approval (HITL) | memory writes and practice handoff only; the agent never persists memory on its own |
+| `src/application/evaluation_service.py` | unrelated name: reads stored offline RAGAS run artifacts for the admin view |
+| `scripts/eval_*.py` | CI/release evaluator gates, not candidate-facing evaluation |
+
+**Tools:** the allow-list is `career_tool_registry` in `src/agent/registry.py` and is the single
+source of truth for tool names and counts: six Career tools (`AnalyzeJobDescription`,
+`AnalyzeCandidateGaps`, `BuildPreparationPlan`, `GenerateInterviewQuestions`,
+`SearchCareerKnowledge`, `ResearchCurrentMarket`), three specialist tools and two human-action
+tools (`ProposePreparationMemory`, `RequestPracticeHandoff`). `ResearchCurrentMarket` can be hidden
+per run (candidate toggle); the others are always registered.
+
+**Knowledge authority levels (metadata, not a truth score):** 1 = official/statistical, 2 = public or
+professional framework, 3 = reputable industry (`src/copilot/constants.py`). Sources are shown to the
+candidate only when retrieved career evidence is used; with insufficient evidence Mo says so.
+
+**Identity (current):** server-side accounts (email/password, verification, recovery) with an HttpOnly
+session cookie; production is fail-closed. The `X-User-Subject` header and an anonymous developer user
+exist only when `API_ENV` is a development/test value and never override a valid session. Google OIDC
+is implemented in the backend behind `FEATURE_GOOGLE_LOGIN`, disabled by default, not wired into the
+frontend and not validated live. Sign-in does not require a verified email; rate limiting is in-memory.
+
+**Admin (current vs planned):** *current* = a `platform_admin` role, a bounded read-mostly `/admin`
+console (metadata only, pause switches, audit view) and admin-gated reviewer/evaluation/knowledge
+diagnostics; admins are not a private-data superuser. *Planned (P10B-W10, not implemented)* = full
+users/access management, support ticketing, plans/entitlements and billing, integrations, KB/RAG
+administration UI, GDPR operations, reporting, incident management. Premium is a preview
+(`BILLING_ENABLED=false`); the Help Center is documentation, not a ticketing system.
+
+**Language dimensions (distinct):** 8 interface locales and 8 Mo conversation languages
+(`src/locales.py`); dictation, text-to-speech and realtime voice support 7 languages (not Russian);
+document/OCR language, KB language and labour-market geography are separate lists; Russian is not an
+official ESCO language. Interface language never changes the labour market.
+
+**Privacy controls:** `/account/data` (overview, JSON export, delete individual documents / memories /
+Opportunities / interviews, revoke shares, delete account). Limits: PRIV-W9-01 (preparation chats cannot
+be listed or removed individually; some working data may remain) and PRIV-W9-02 (no consent-version
+history). See [privacy.md](privacy.md).
+
 ## Final submission view (P0–P5 complete)
 
 ```
@@ -37,7 +109,7 @@ Observability:  Agent Inspector (first-party)  +  optional sanitised Langfuse si
 Feedback:       candidate rating → Feedback DB → aggregate → human review → evaluation case → controlled change
 ```
 
-**No overclaims.** This is a SINGLE bounded agent (not multi-agent). It makes no
+**No overclaims (as of Sprint 4 close).** This was a SINGLE bounded agent; three bounded specialists were added later behind Mo (see the Current-state overview). It makes no
 autonomous hiring decision, no diagnosis, and does not self-learn from feedback. MCP,
 production OIDC, live PostgreSQL production validation, a paid model bake-off and a paid
 live RAGAS baseline are NOT implemented/executed. There is no camera/video; voice is
@@ -148,7 +220,7 @@ These are fixed now so later phases do not drift:
 7. Existing **Python RAG and Interview logic remain Python.**
 8. **Next.js / TypeScript** becomes the target frontend.
 9. **FastAPI** becomes the target API boundary.
-10. **Streamlit remains temporarily** as a migration fallback until parity is proven.
+10. **Streamlit remained temporarily** as a migration fallback (it is now a legacy/development interface only).
 11. Important assumptions / memory writes use **human-in-the-loop approval.**
 12. Agent loops are **bounded.**
 13. **No private chain-of-thought is exposed**; only safe tool/action traces.
@@ -166,7 +238,7 @@ call the same functions.
 flowchart TD
     ST[Streamlit UI<br/>src/career/ui.py, src/interview/studio_app.py] --> APP
     subgraph APP[Application layer — src/application  ✅]
-        CA[CareerApplicationService<br/>chat + 4 tools]
+        CA[CareerApplicationService<br/>chat + Career tools]
         IA[InterviewApplicationService<br/>strategy/questions/answers/deep dive/report]
         HS[history_service<br/>save / list / get]
         KS[knowledge_service]
@@ -249,7 +321,7 @@ the production path. This durable *in-progress* store is distinct from **complet
 history** (`interviews`/`reports` via `history_service`); see
 `docs/sprint4_interview_parity.md`.
 
-**Auth (transitional):** identity comes from the anonymous dev user unless an
+**Auth (historical, Phase 2-3; superseded by real accounts and sessions, see the Current-state overview):** identity came from the anonymous dev user unless an
 `X-User-Subject` header is supplied (set only by a trusted upstream gateway or in
 tests). History is strictly user-scoped (`repo.get_interview(user_id, id)`), so no
 user can read another's reports. **Production must front the API with a real
@@ -291,7 +363,7 @@ analysis, planning, questions) — that's **Phase 3C**; the Prepare/Practice pag
 are visual shells with clearly-marked demo content and an architecture ready to
 swap in real API calls. No LangGraph, no model changes, Streamlit not removed.
 
-**Auth (transitional):** the frontend has an auth *seam* (`lib/auth.ts`) only;
+**Auth (historical, Phase 3B; superseded by session cookies):** the frontend had an auth *seam* (`lib/auth.ts`) only;
 production OIDC/gateway is future work. A dev-only `X-User-Subject` may be set via
 `NEXT_PUBLIC_DEV_USER_SUBJECT` for local data scoping — never typed by the browser
 user.
@@ -628,8 +700,8 @@ database of selected preparation facts, such as recurring gaps, strengths and
 completed preparation topics. I deliberately do not store the whole conversation as
 memory. Persistent memory is explicit, reviewable and deletable by the user.*
 
-The `/progress` page surfaces saved memory (grouped, with delete); identity still
-uses the transitional `X-User-Subject` seam (production OIDC remains required).
+The `/progress` page surfaces saved memory (grouped, with delete); identity at that phase
+used the transitional `X-User-Subject` seam (since replaced by server-side sessions).
 (Phase 8 makes the graph checkpoint durable — see §3i.)
 
 **Post-Sprint 4 (P2) — candidate-controlled memory management.** The same long-term

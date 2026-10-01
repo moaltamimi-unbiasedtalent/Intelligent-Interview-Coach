@@ -2,13 +2,15 @@
 
 Production frontend **foundation** (Sprint 4 Phase 3B) implementing the selected
 **Precision Coach** design system (see `docs/design/phase3a/`). It is a typed
-client of the FastAPI backend (`/api/v1`). The Streamlit app keeps working
-independently; both talk to the same application layer.
+client of the FastAPI backend (`/api/v1`). The legacy Streamlit app still runs
+independently; both talk to the same application layer. This file's phase notes below are
+historical; current architecture: [`../docs/sprint4_architecture.md`](../docs/sprint4_architecture.md)
+(Current-state overview) and [`../README.md`](../README.md).
 
 > Phase 3B built the shell/design system/routes/API client; **Phase 3C** made
-> `/prepare` live — the coach, the four preparation tools, sources, history and the
-> Career→Interview handoff run against the FastAPI contracts. Retrieval stays
-> deterministic; **no LangGraph yet**.
+> `/prepare` live — the coach, the preparation tools, sources, history and the
+> Career→Interview handoff run against the FastAPI contracts (historical note: the
+> LangGraph agent, Opportunities, workspaces and Data & Privacy shipped in later phases).
 >
 > **Dependency note:** `npm audit` reports 2 production advisories (`next`/`postcss`)
 > whose only fix is the **Next 16 major upgrade** — deferred (out of scope; would
@@ -71,8 +73,11 @@ the stored theme before paint.
 
 ## Notes
 
-- **Auth** is a transitional seam only (`lib/auth.ts`); production OIDC/gateway is
-  future work. The optional `NEXT_PUBLIC_DEV_USER_SUBJECT` maps to the backend's
-  transitional `X-User-Subject` header for local data scoping.
+- **Auth:** real accounts use a server-side session in an HttpOnly cookie sent
+  automatically (`credentials: "include"`); production is fail-closed. `lib/auth.ts` is only
+  the seam for the optional dev identity: `NEXT_PUBLIC_DEV_USER_SUBJECT` maps to the
+  backend's dev-only `X-User-Subject` header, honoured only in development/test
+  environments and never over a valid session. Google OIDC exists in the backend but is
+  disabled by default, not wired into the frontend and not validated live.
 - **Live** is only offered when the backend reports `live_interview_enabled`; it is
   never hardcoded on and no microphone/camera call is made on load.

@@ -52,7 +52,7 @@ reason/act loop with allowlisted tools, observations, bounded step budget + stop
 effects, deterministic tools for facts/calculations. This already satisfies the goal-based-agent
 requirement.
 **Recommendation:** adopt a **bounded orchestrator/specialist** pattern in P5 **only** for genuinely
-independent objectives — Research, Candidate, Preparation, Evaluation specialists under Mo — with:
+independent objectives — Research, Candidate, Preparation, Evaluation specialists under Mo (planning text; as built: three specialists, no Evaluation specialist, reconciled W9.11) — with:
 1) independent goal per specialist; 2) justified as agent vs tool only where autonomous reasoning
 adds value; 3) allowlisted tools; 4) read-scoped state; 5) narrow write scope via typed hand-off;
 6) explicit stopping/budget; 7) typed hand-off to the supervisor; 8) safety boundary (no auth/

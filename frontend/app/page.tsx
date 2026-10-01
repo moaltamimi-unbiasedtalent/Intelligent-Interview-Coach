@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   // Opportunity-centred; no em dash in customer-facing copy (P10B Wave 7).
   title: "Ask4Mo - Intelligent Interview Coach",
   description:
-    "Prepare for a specific job in one Opportunity: the role, company research, your evidence, coaching with Mo and realistic practice. Private by default, in seven languages. Free to start.",
+    "Prepare for a specific job in one Opportunity: the role, company research, your evidence, coaching with Mo and realistic practice. Private by default, in eight languages. Free to start.",
   alternates: { canonical: "/" },
   openGraph: {
     title: "Ask4Mo - Intelligent Interview Coach",

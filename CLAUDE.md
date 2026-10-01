@@ -86,7 +86,7 @@ assumptions in core logic, prompts, scoring or examples.
   output); model/tool failures terminate safely. Boundary:
   `src/application/agent_service.py` (`AgentApplicationService.run → AgentRunResult`);
   experimental `POST /api/v1/agent/run` (does **not** replace `/career/chat`).
-  **Phase 5** registers the four real Career tools as thin adapters over
+  **Phase 5** registered the first four Career tools as thin adapters over
   `CareerApplicationService` (job analysis + question generation are LLM-backed;
   gap analysis + preparation plan are deterministic). Tools enforce preconditions
   from prior state (gap needs the job-analysis requirements; the planner needs the
@@ -136,7 +136,7 @@ assumptions in core logic, prompts, scoring or examples.
   action tool, which proposes but never persists), and practice handoff
   (`APPROVE_PRACTICE_HANDOFF`, from `RequestPracticeHandoff`; sets a flag, never
   creates an interview in the graph). These two action tools are registered but
-  counted **separately** from the five Career tools. `interrupt()` is the first
+  counted **separately** from the Career evidence tools (the full, current allow-list is `career_tool_registry` in `src/agent/registry.py`: six Career tools, three specialist tools, two human-action tools). `interrupt()` is the first
   statement in `human_review` so replay runs no side effect before the pause;
   approvals apply once (guarded by `human_decisions` + memory dedupe). Decisions are
   validated against the current pending action *before* the graph is touched (invalid/
@@ -183,7 +183,7 @@ assumptions in core logic, prompts, scoring or examples.
   needs shared locking — documented). **Agent Inspector** (`/review/agent`) shows
   owner-scoped, observable-only execution (never CoT/prompts/raw checkpoint; token/cost
   usage is captured with honest Complete/Partial coverage as of P1 — see the Agent
-  cost/performance bullet below). Production auth still transitional.
+  cost/performance bullet below). (At that phase production auth was still transitional; current identity is described under **Persistence & auth**.)
 - **Model registry (Sprint 4 Phase 9.5).** One typed source of truth
   (`src/llm/models.py`): `ModelProfile` = Fast/Balanced/Advanced → current OpenRouter
   slugs (`openai/gpt-5.6-luna`/`terra`/`sol`), overridable via
@@ -312,9 +312,12 @@ assumptions in core logic, prompts, scoring or examples.
   labour-market, credentials) + a Chroma vector store with a local-hash embedder
   fallback; a deterministic router picks lanes; hybrid (vector + BM25) fusion.
 - **Persistence & auth.** SQLAlchemy ORM over SQLite (dev/tests) or PostgreSQL
-  (production, schema owned by Alembic — single head `0007_identity_platform`; see
+  (production, schema owned by Alembic — single head, currently `0014_opportunities` (see `migrations/versions/`); see
   `docs/operations_deployment.md`); interview history is per-user with strict
-  isolation. Account authentication/authorization lives in `src/authsec/` (password
+  isolation. Identity is server-side accounts and sessions (HttpOnly cookie); production is
+  fail-closed; the `X-User-Subject` header and anonymous developer user exist only in
+  development/test environments and never override a valid session; Google OIDC is implemented
+  in the backend but disabled by default, not wired into the frontend and not validated live. Account authentication/authorization lives in `src/authsec/` (password
   hashing, tokens), `src/auth_repository.py`, `src/application/auth_service.py` and
   `src/application/authorization.py`; the Streamlit-side OIDC seam remains in
   `src/auth.py`. `src/security.py` is the (separate) prompt-injection guard.
@@ -352,12 +355,8 @@ assumptions in core logic, prompts, scoring or examples.
 - `ruff check .` (conservative `F`/`E9` rules) must pass.
 - Test totals: **always re-measure with `pytest -q`** rather than trusting a number
   copied across docs (historical docs cite different totals from their own point in
-  time — that is expected, not a defect). The measured backend suite after Capstone
-  P7 is **2354 passed, 3 skipped** (P4 2277; P5 2303; P6 2334; P6.5 2352; P7 adds the
-  voice-experience gate); the skips are RAGAS installed/absent guards; the frontend unit suite
-  is **237 passed** (`cd frontend && npm test`; P7 adds TTS/voice-control + voice-concurrency +
-  voice-help-i18n suites) and the Playwright e2e suite is **89 passed** (`npm run e2e`; P7 adds
-  `e2e/voice.spec.ts` incl. STT/TTS mutual-exclusion).
+  time — that is expected, not a defect). Measured totals are recorded per wave in the evidence documents under `docs/capstone/p10/w9/` and by CI; do not copy figures here (the per-phase numbers once listed in this bullet were period evidence).
+  Known baseline: a few model-registry tests depend on a local `.env` (`OPENROUTER_MODEL_*`) and fail in a dirty local environment only (TD-W9-02 scope).
 
 - **Multilingual turn-based voice (Capstone P7 + E5).** A bounded voice MODALITY (not a
   human-trait signal): hear Mo/questions via browser TTS and answer by speaking via the reused
@@ -382,7 +381,7 @@ assumptions in core logic, prompts, scoring or examples.
   Deterministic gate `scripts/eval_voice_experience.py` (26 invariants incl. the human-trait
   prohibition scanned as code identifiers) + `tests/test_voice_experience_p7.py`; unit
   `tests/voice-output.test.tsx`; Playwright `e2e/voice.spec.ts` (fake speech engines). i18n
-  `voice` namespace across 7 locales. No migration (Alembic head `0011_workspaces_shares`); 0
+  `voice` namespace across the 7 locales then supported (8 now; speech remains 7 languages). No migration (Alembic head `0011_workspaces_shares`); 0
   paid/speech-provider calls; live human voice quality UNVALIDATED. See
   `docs/capstone/p7_voice_architecture_audit.md` + `p7_e5_voice_experience.md`.
 - **Teams/Workspaces + Platform Admin (Capstone P6.5).** Bounded collaboration + a bounded
@@ -408,9 +407,9 @@ assumptions in core logic, prompts, scoring or examples.
   **metadata only** (no CV/answers/Memory/documents), audited privileged changes (role/tier/
   status) with self-lockout guards, no "view as user", no private-data search, owner-scoped
   repos stay owner-scoped. Teams access is a **separate dimension from BASIC/PREMIUM**; no
-  billing, no enterprise SSO. Admin reuses the P6 reviewer APIs (no second backend;
+  billing at that phase (billing/payment administration is now planned under P10B-W10; enterprise SSO remains out of scope). Admin reuses the P6 reviewer APIs (no second backend;
   no-auto-promotion preserved). Candidate `FeedbackControl` gains an optional bounded category
-  (P6 taxonomy), i18n across 7 locales. Routes: `/api/v1/workspaces/*`, `/api/v1/shares/*`,
+  (P6 taxonomy), i18n across the locales then supported (7; 8 now). Routes: `/api/v1/workspaces/*`, `/api/v1/shares/*`,
   `/api/v1/admin/*`; frontend `/workspaces` (candidate, i18n) + `/admin` (English ops).
   New CI gates: `eval_workspace_security`, `eval_platform_admin`. See
   `docs/capstone/p6_5_workspace_admin_design.md` + `p6_5_workspaces_platform_admin.md`.
