@@ -59,9 +59,13 @@ test("E2E 1: new user is gated into onboarding and completes to /app", async ({ 
   await expect(page.getByRole("heading", { name: /set up Mo around you/i })).toBeVisible();
   await advanceToFinish(page);
   await expect(page.getByRole("button", { name: "Enter Ask4Mo" })).toBeVisible();
+  await page.getByRole("button", { name: "Enter Ask4Mo" }).click();
+  // P10B-W9.5: completion now shows the intentional Welcome handoff (not an immediate /app redirect).
+  await expect(page.getByRole("heading", { name: /Mo is ready/i })).toBeVisible();
+  // The candidate enters the workspace from the Welcome (onboarding stays complete).
   await Promise.all([
     page.waitForURL(/\/app$/),
-    page.getByRole("button", { name: "Enter Ask4Mo" }).click(),
+    page.getByRole("button", { name: /Go to your workspace/i }).click(),
   ]);
   await expect(page).toHaveURL(/\/app$/);
 });
@@ -85,11 +89,14 @@ test("E2E 5: failed completion shows a recoverable error, stays in onboarding, t
   await expect(page).toHaveURL(/\/onboarding$/);
   await expect(page.getByRole("button", { name: "Enter Ask4Mo" })).toBeEnabled();
 
-  // Server recovers; retry clears the error and completes to /app.
+  // Server recovers; retry clears the error and completes to the Welcome handoff (W9.5), from which
+  // the candidate can enter /app.
   state.failComplete = false;
+  await page.getByRole("button", { name: "Enter Ask4Mo" }).click();
+  await expect(page.getByRole("heading", { name: /Mo is ready/i })).toBeVisible();
   await Promise.all([
     page.waitForURL(/\/app$/),
-    page.getByRole("button", { name: "Enter Ask4Mo" }).click(),
+    page.getByRole("button", { name: /Go to your workspace/i }).click(),
   ]);
   await expect(page).toHaveURL(/\/app$/);
 });

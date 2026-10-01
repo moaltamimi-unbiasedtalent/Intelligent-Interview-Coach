@@ -101,10 +101,14 @@ describe("Wave 2 — OnboardingClient", () => {
     expect(replace).not.toHaveBeenCalled();
     expect(refresh).not.toHaveBeenCalled(); // never refreshed/entered the app on failure
 
-    // Retry: clears the error, completes, refreshes, enters /app.
+    // Retry: clears the error, completes, refreshes. P10B-W9.5: instead of an immediate redirect to
+    // /app, completion now shows the intentional Welcome handoff (onboarding is durably complete).
     await userEvent.click(screen.getByRole("button", { name: "Enter Ask4Mo" }));
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/app"));
-    expect(refresh).toHaveBeenCalled();
+    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    expect(await screen.findByRole("heading", { name: /Mo is ready/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Create your first opportunity/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Take the quick tour/i })).toBeInTheDocument();
+    expect(replace).not.toHaveBeenCalled(); // no automatic redirect; the candidate chooses
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     account = { ...account, onboarding_step: 0 }; // reset for other tests
   });

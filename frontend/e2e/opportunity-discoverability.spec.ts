@@ -57,11 +57,13 @@ async function mock(page: Page) {
 // The first-run Tutorial invitation (a separate W9.5 surface) auto-fires on /app and would overlap
 // the create wizard; suppress it deterministically so this test isolates W9.4 discoverability.
 async function suppressTutorial(page: Page) {
+  // W9.5: tutorial state is account-scoped (key `ask4mo.tutorial:<user_id>`). The mocked account is
+  // user_id 1, so suppress that account's invitation (version 2).
   await page.addInitScript(() => {
     try {
       localStorage.setItem(
-        "ask4mo.tutorial",
-        JSON.stringify({ version: 1, completed: true, dismissed: true, lastStep: 0 }),
+        "ask4mo.tutorial:1",
+        JSON.stringify({ version: 2, completed: true, dismissed: true, lastStep: 0 }),
       );
     } catch { /* storage blocked — ignore */ }
   });

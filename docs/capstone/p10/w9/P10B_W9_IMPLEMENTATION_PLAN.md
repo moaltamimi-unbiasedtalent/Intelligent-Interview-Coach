@@ -134,7 +134,18 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 - **Dependencies:** none (but pairs with W9.5). **Risk:** low. **Complexity:** M.
 - **STOP:** after the discoverability E2E passes.
 
-## W9.5 — Welcome + Tutorial v2  *(P1/P2, before Pilot 2)*
+## W9.5 — Welcome + Tutorial v2  *(P1/P2, before Pilot 2)* — ✅ DELIVERED
+
+> **Status: DELIVERED** on branch `fix/p10b-w9-5-welcome-tutorial-v2` (see
+> `P10B_W9_5_WELCOME_TUTORIAL_V2.md`). Onboarding completion now renders an intentional Welcome (Mo is
+> ready + concept + Create-opportunity / Take-tour / Go-to-workspace, none mandatory) instead of
+> dumping into `/app`. Tutorial v2: 9-step Opportunity-centred journey (Opportunity before
+> Prepare/Practice), **0 dead targets** (v1 had 4), localized chrome + steps across 7 locales, and
+> **account-scoped** state (`ask4mo.tutorial:<user_id>`) closing the shared-browser leak. **No
+> migration** (typed-column prefs can't hold it without one; account-scoped localStorage used per the
+> non-negotiable rule). vitest 342, full Playwright 132 (131 pass + 1 unrelated batch flake, isolated-green), build green; onboarding/opportunity/
+> identity/security/i18n/RC evals PASS; 0 paid/live; no RC. W9.6 not started.
+
 
 - **Objective:** an intentional post-onboarding handoff and an Opportunity-centred, localized,
   account-scoped tour. Fixes PF-11, PF-12.

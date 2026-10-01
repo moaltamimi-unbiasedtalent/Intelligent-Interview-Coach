@@ -40,6 +40,15 @@ Date captured: 2026-09-30. Author: Claude Opus 4.8 (assisted). Read-only audit.
 > **336** (59 files), full Playwright **129/0-fail**, typecheck/lint/build green; no
 > backend/schema/migration; opportunity/security/identity/i18n/RC/marketing evals PASS. See
 > `P10B_W9_4_OPPORTUNITY_DISCOVERABILITY.md`.
+>
+> **Update (W9.5 delivered):** Post-onboarding Welcome + Tutorial v2 (PF-11/PF-12) on branch
+> `fix/p10b-w9-5-welcome-tutorial-v2`. Onboarding completion renders an intentional Welcome (Create
+> opportunity / Take tour / Go to workspace, none mandatory); Tutorial v2 is a 9-step
+> Opportunity-centred journey with 0 dead targets, localized chrome+steps across 7 locales, and
+> account-scoped state (`ask4mo.tutorial:<user_id>`) closing the shared-browser leak. **No migration**
+> (typed-column prefs; account-scoped localStorage used). Frontend-only: vitest **342** (59 files),
+> full Playwright **132 (131 pass; 1 unrelated batch flake, isolated-green)**, typecheck/lint/build green; onboarding/opportunity/identity/security/
+> i18n/RC evals PASS. See `P10B_W9_5_WELCOME_TUTORIAL_V2.md`.
 
 ---
 

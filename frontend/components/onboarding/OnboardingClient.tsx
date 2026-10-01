@@ -20,6 +20,7 @@ import { api } from "@/lib/api/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { APP_HOME } from "@/lib/auth/routes";
+import { TUTORIAL_AUTOSTART_KEY } from "@/components/tutorial/TutorialController";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Field";
@@ -45,6 +46,9 @@ export function OnboardingClient() {
   const [geography, setGeography] = useState<CareerGeography>("");
   const [coaching, setCoaching] = useState<CoachingStyle>("balanced");
   const [hydrated, setHydrated] = useState(false);
+  // P10B-W9.5: after completion the candidate stays on /onboarding and sees an intentional Welcome
+  // (not dumped into /app). Onboarding is already durably marked complete before this renders.
+  const [completedLocal, setCompletedLocal] = useState(false);
 
   // Resume from the persisted account state exactly once (never clobber in-flight edits).
   useEffect(() => {
@@ -94,14 +98,53 @@ export function OnboardingClient() {
       });
       await api.auth.onboarding({ complete: true });
       await refresh();
-      router.replace(APP_HOME);
+      // Durably complete now — show the Welcome handoff instead of dumping into /app (PF-11).
+      setCompletedLocal(true);
     } catch {
       // Stay on onboarding, keep every saved choice, and surface a safe, recoverable message
       // (never a raw API/provider error, never a logged preference value). The candidate can retry.
       setError(t("onboarding.completionError"));
       setBusy(false);
     }
-  }, [busy, name, targetRole, geography, coaching, refresh, router, t]);
+  }, [busy, name, targetRole, geography, coaching, refresh, t]);
+
+  // Welcome handoff actions (none mandatory). Create reuses the W9.4 flow; Tour sets a one-time
+  // auto-start flag then enters the workspace; Workspace enters /app directly.
+  const goCreateOpportunity = useCallback(() => router.push("/opportunities?create=1"), [router]);
+  const goWorkspace = useCallback(() => router.push(APP_HOME), [router]);
+  const startTour = useCallback(() => {
+    try { window.sessionStorage.setItem(TUTORIAL_AUTOSTART_KEY, "2"); } catch { /* ignore */ }
+    router.push(APP_HOME);
+  }, [router]);
+
+  // Intentional post-onboarding Welcome. Shown once completion is durably persisted (or when a
+  // completed account lands here again) — never dumping the candidate straight into /app (PF-11).
+  if (completedLocal || account?.onboarding_completed === true) {
+    return (
+      <section className="mx-auto max-w-2xl animate-enter">
+        <Card>
+          <CardBody className="space-y-5">
+            <div>
+              <h1 className="text-2xl font-semibold text-foreground">{t("onboarding.completeTitle")}</h1>
+              <p className="mt-2 text-sm text-muted">{t("onboarding.completeBody")}</p>
+              <p className="mt-3 max-w-reading text-sm text-muted">{t("tutorial.welcomeConcept")}</p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+              <Button onClick={goCreateOpportunity}>{t("tutorial.welcomeCreate")}</Button>
+              <Button variant="ghost" onClick={startTour}>{t("tutorial.welcomeTour")}</Button>
+              <button
+                type="button"
+                onClick={goWorkspace}
+                className="text-sm font-medium text-accent hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+              >
+                {t("tutorial.welcomeWorkspace")}
+              </button>
+            </div>
+          </CardBody>
+        </Card>
+      </section>
+    );
+  }
 
   const pct = Math.round(((step + 1) / TOTAL) * 100);
 
