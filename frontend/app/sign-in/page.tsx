@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Sign in" };
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={<LoadingState label="Loading" />}>
+    <Suspense fallback={<LoadingState />}>
       <SignInForm />
     </Suspense>
   );

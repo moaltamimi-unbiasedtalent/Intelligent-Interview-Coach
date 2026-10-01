@@ -51,11 +51,11 @@ export function HistoryClient() {
 
   return (
     <section data-tour="history">
-      <PageHeader eyebrow="Your sessions" title="History" description="Completed interview sessions and their reports." />
+      <PageHeader eyebrow={t("history.eyebrow")} title={t("history.title")} description={t("history.description")} />
       <p className="-mt-2 mb-4 text-sm">
-        <a href="/help#history" className="font-medium text-accent underline">What appears in History?</a>
+        <a href="/help#history" className="font-medium text-accent underline">{t("history.whatAppears")}</a>
       </p>
-      {status === "loading" ? <LoadingState label="Loading history" /> : null}
+      {status === "loading" ? <LoadingState label={t("history.loading")} /> : null}
       {status === "error" && error ? (
         <ErrorState
           message={t(stateKeyForError(error.kind))}
@@ -76,7 +76,7 @@ export function HistoryClient() {
                 : null;
               const meta = [
                 role,
-                typeof questions === "number" ? `${questions} question(s)` : null,
+                typeof questions === "number" ? t("history.questionCount", { n: questions }) : null,
                 created,
               ]
                 .filter(Boolean)
@@ -84,7 +84,7 @@ export function HistoryClient() {
               const body = (
                 <CardBody>
                   <p className="font-medium">
-                    {role ? role : `Interview #${String(id ?? i + 1)}`}
+                    {role ? role : t("history.interviewNumber", { n: String(id ?? i + 1) })}
                   </p>
                   {meta ? <p className="mt-1 text-sm text-muted">{meta}</p> : null}
                 </CardBody>
@@ -104,18 +104,18 @@ export function HistoryClient() {
           </div>
         ) : (
           <EmptyState
-            title="No completed interviews yet"
-            description="Your completed interview reports will appear here."
+            title={t("history.emptyTitle")}
+            description={t("history.emptyDescription")}
             illustration={
               <EmptyStateIllustration
                 src="/images/ask4mo/ask4mo-empty-history-ink.png"
-                alt="A blank report following a dotted path toward an empty archive tray."
+                alt={t("history.emptyAlt")}
               />
             }
             action={
               <div className="flex flex-wrap gap-2">
-                <ButtonLink href="/practice">Start Practice</ButtonLink>
-                <ButtonLink href="/help#history" variant="ghost">Learn about History</ButtonLink>
+                <ButtonLink href="/practice">{t("history.startPractice")}</ButtonLink>
+                <ButtonLink href="/help#history" variant="ghost">{t("history.learnAbout")}</ButtonLink>
               </div>
             }
           />

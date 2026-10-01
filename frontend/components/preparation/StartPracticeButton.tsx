@@ -6,6 +6,7 @@ import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import type { PreparationContextInput } from "@/lib/api/types";
 import { Button } from "@/components/ui/Button";
+import { useT } from "@/components/i18n/I18nProvider";
 
 export interface PrepState {
   targetRole?: string;
@@ -25,6 +26,7 @@ export interface PrepState {
  * session; role precedence is preserved (target role is required and never faked).
  */
 export function StartPracticeButton({ prep }: { prep: PrepState }) {
+  const t = useT();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ message: string; requestId?: string | null } | null>(null);
@@ -55,7 +57,7 @@ export function StartPracticeButton({ prep }: { prep: PrepState }) {
       router.push(`/practice?session=${encodeURIComponent(session.session_id)}`);
     } catch (e) {
       const err = e as ApiError;
-      setError({ message: err.userMessage ?? "Couldn't start practice.", requestId: err.requestId });
+      setError({ message: err.userMessage ?? t("prepare.couldntStartPractice"), requestId: err.requestId });
       setBusy(false);
     }
   }
@@ -63,17 +65,17 @@ export function StartPracticeButton({ prep }: { prep: PrepState }) {
   return (
     <div>
       <Button onClick={start} disabled={!ready || busy} className="w-full">
-        {busy ? "Starting…" : "Start interview practice →"}
+        {busy ? t("prepare.starting") : t("prepare.startInterviewPractice")}
       </Button>
       {!ready ? (
         <p className="mt-2 text-xs text-muted">
-          Add or confirm a target role (analyze a job description) to practise.
+          {t("prepare.addConfirmRole")}
         </p>
       ) : null}
       {error ? (
         <p role="alert" className="mt-2 text-xs text-danger">
           {error.message}
-          {error.requestId ? <span className="block text-muted">Reference: {error.requestId}</span> : null}
+          {error.requestId ? <span className="block text-muted">{t("prepare.reference", { id: error.requestId })}</span> : null}
         </p>
       ) : null}
     </div>

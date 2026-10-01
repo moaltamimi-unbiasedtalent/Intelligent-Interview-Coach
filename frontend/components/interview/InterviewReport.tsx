@@ -8,6 +8,7 @@ import type { ReportResponse } from "@/lib/api/types";
 import { Card, CardBody } from "@/components/ui/Card";
 import { ErrorState, LoadingState } from "@/components/ui/States";
 import { FeedbackControl } from "@/components/feedback/FeedbackControl";
+import { useT } from "@/components/i18n/I18nProvider";
 
 /** Fields the backend FinalInterviewReport actually provides (no invented metrics). */
 interface Report {
@@ -28,6 +29,7 @@ interface Report {
  * employment probability.
  */
 export function InterviewReport({ sessionId }: { sessionId: string }) {
+  const t = useT();
   const [data, setData] = useState<ReportResponse | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState<{ message: string; requestId?: string | null } | null>(null);
@@ -52,18 +54,18 @@ export function InterviewReport({ sessionId }: { sessionId: string }) {
       .catch((e) => {
         if (ctrl.signal.aborted || (e instanceof DOMException && e.name === "AbortError")) return;
         const err = e as ApiError;
-        setError({ message: err.userMessage ?? "Couldn't load your performance review.", requestId: err.requestId });
+        setError({ message: err.userMessage ?? t("practice.reportLoadError"), requestId: err.requestId });
         setStatus("error");
         setRetrying(false);
       });
-  }, [sessionId]);
+  }, [sessionId, t]);
 
   useEffect(() => {
     load();
     return () => ctrlRef.current?.abort();
   }, [load]);
 
-  if (status === "loading") return <LoadingState label="Creating your performance review" />;
+  if (status === "loading") return <LoadingState label={t("practice.reportCreating")} />;
   if (status === "error" && error) {
     return <ErrorState message={error.message} requestId={error.requestId} retrying={retrying} onRetry={() => load(true)} />;
   }
@@ -74,38 +76,38 @@ export function InterviewReport({ sessionId }: { sessionId: string }) {
     <div className="space-y-4">
       <Card>
         <CardBody>
-          <h1 className="text-lg font-semibold">Performance review</h1>
+          <h1 className="text-lg font-semibold">{t("practice.reportTitle")}</h1>
           {typeof report.overall_readiness_score === "number" ? (
             <p className="mt-1 text-sm text-muted">
-              Practice readiness:{" "}
+              {t("practice.readinessLabel")}{" "}
               <span className="text-2xl font-semibold text-foreground">{report.overall_readiness_score}</span>/100
             </p>
           ) : null}
           <p className="mt-1 text-xs text-muted">
-            Practice guidance to help you prepare — not an employment decision.
+            {t("practice.reportDisclaimer")}
           </p>
           {report.performance_summary ? (
             <p className="mt-3 whitespace-pre-wrap text-sm">{report.performance_summary}</p>
           ) : null}
           {data.save_failed ? (
             <p className="mt-3 text-sm text-danger">
-              Your review is ready, but saving it to your history didn&rsquo;t complete. You can retry from History.
+              {t("practice.reportSaveFailed")}
             </p>
           ) : null}
         </CardBody>
       </Card>
 
-      <ListCard title="Key strengths" items={report.strongest_competencies} />
-      <ListCard title="Priority improvements" items={report.development_priorities} />
-      <ListCard title="Recurring answer patterns" items={report.recurring_answer_patterns} />
-      <ListCard title="Highest-risk questions" items={report.highest_risk_questions} />
-      <ListCard title="Evidence gaps" items={report.evidence_gaps} />
-      <ListCard title="Recommended practice actions" items={report.recommended_practice_actions} />
-      <ListCard title="Final interview checklist" items={report.final_interview_checklist} />
+      <ListCard title={t("practice.reportStrengths")} items={report.strongest_competencies} />
+      <ListCard title={t("practice.reportImprovements")} items={report.development_priorities} />
+      <ListCard title={t("practice.reportPatterns")} items={report.recurring_answer_patterns} />
+      <ListCard title={t("practice.reportRiskQuestions")} items={report.highest_risk_questions} />
+      <ListCard title={t("practice.reportEvidenceGaps")} items={report.evidence_gaps} />
+      <ListCard title={t("practice.reportActions")} items={report.recommended_practice_actions} />
+      <ListCard title={t("practice.reportChecklist")} items={report.final_interview_checklist} />
 
       <Card>
         <CardBody>
-          <FeedbackControl surface="final_report" targetId={sessionId} prompt="Was this report useful?" />
+          <FeedbackControl surface="final_report" targetId={sessionId} prompt={t("feedback.reportPrompt")} />
         </CardBody>
       </Card>
     </div>

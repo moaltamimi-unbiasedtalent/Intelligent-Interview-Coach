@@ -14,7 +14,7 @@ export default async function OpportunityDetailPage({
   const { id } = await params;
   const numericId = Number(id);
   return (
-    <Suspense fallback={<LoadingState label="Loading" />}>
+    <Suspense fallback={<LoadingState />}>
       <OpportunityHome opportunityId={numericId} />
     </Suspense>
   );

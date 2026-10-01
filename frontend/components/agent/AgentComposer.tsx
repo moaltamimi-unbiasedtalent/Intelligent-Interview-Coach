@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { SpeechRecognitionAdapter } from "@/lib/speech/types";
 import { Composer } from "@/components/ui/Composer";
+import { useT } from "@/components/i18n/I18nProvider";
 
 /** Follow-up message composer for an ongoing agent thread. Disabled while a request
  * is in flight or while the run is awaiting a human decision (answer that first).
@@ -22,6 +23,7 @@ export function AgentComposer({
   disabledHint?: string;
   dictationAdapter?: SpeechRecognitionAdapter;
 }) {
+  const t = useT();
   const [value, setValue] = useState("");
   const canSend = !busy && !disabled && value.trim().length > 0;
 
@@ -35,15 +37,15 @@ export function AgentComposer({
     <div className="mt-4">
       <Composer
         id="agent-composer"
-        label="Message Mo"
+        label={t("prepare.messageMo")}
         value={value}
         onChange={setValue}
         onSubmit={submit}
         busy={busy}
         disabled={disabled}
-        placeholder="Ask a follow-up, or tell Mo what to focus on next…"
-        submitLabel="Send"
-        busyLabel="Sending…"
+        placeholder={t("prepare.composerPlaceholder")}
+        submitLabel={t("prepare.send")}
+        busyLabel={t("prepare.sending")}
         footerNote={disabled && disabledHint ? disabledHint : undefined}
         buttonSize="sm"
         dictationAdapter={dictationAdapter}

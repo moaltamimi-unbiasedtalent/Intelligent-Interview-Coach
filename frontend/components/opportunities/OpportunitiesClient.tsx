@@ -90,7 +90,7 @@ export function OpportunitiesClient() {
           illustration={
             <EmptyStateIllustration
               src="/images/ask4mo/ask4mo-empty-opportunities-ink.png"
-              alt="An open hand-drawn folder ready for role, company and evidence cards."
+              alt={t("opportunity.emptyIllustrationAlt")}
             />
           }
           action={<Button onClick={() => setCreating(true)}>{t("opportunity.create")}</Button>}

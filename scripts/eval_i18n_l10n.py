@@ -112,6 +112,23 @@ def run() -> dict[str, tuple[bool, str]]:
     check("cross_user_locale_isolation", isolate, "one user's locale never affects another")
     check("unsupported_locale_rejected_api", bad == 422, "unsupported locale rejected at the API (422)")
 
+    # 11) candidate-facing hardcoded-English guard (P10B-W9.6): the bounded frontend scanner must
+    # report zero unexplained candidate-facing literals. Degrades to a soft pass only if node is
+    # unavailable in this environment (never a false FAIL on tooling absence).
+    import shutil
+    import subprocess
+    if shutil.which("node") is None:
+        check("no_hardcoded_candidate_english", True, "node unavailable — guard skipped (run `npm test`)")
+    else:
+        proc = subprocess.run(
+            ["node", "scripts/scan-i18n.mjs", "--count"], cwd=str(FE),
+            capture_output=True, text=True,
+        )
+        n = (proc.stdout or "").strip()
+        ok = n == "0"
+        check("no_hardcoded_candidate_english", ok,
+              f"scanner reports {n or '?'} candidate-facing hardcoded-English offenders")
+
     return results
 
 

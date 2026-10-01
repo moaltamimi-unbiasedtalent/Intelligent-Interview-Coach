@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Opportunities" };
 
 export default function OpportunitiesPage() {
   return (
-    <Suspense fallback={<LoadingState label="Loading" />}>
+    <Suspense fallback={<LoadingState />}>
       <OpportunitiesClient />
     </Suspense>
   );

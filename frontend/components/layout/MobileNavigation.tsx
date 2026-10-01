@@ -15,7 +15,7 @@ export function MobileNavigation() {
   const t = useT();
   return (
     <nav
-      aria-label="Primary"
+      aria-label={t("nav.primary")}
       className="fixed inset-x-0 bottom-0 z-30 grid border-t border-border bg-surface md:hidden"
       style={{ gridTemplateColumns: `repeat(${PRIMARY_NAV.length}, minmax(0, 1fr))` }}
     >

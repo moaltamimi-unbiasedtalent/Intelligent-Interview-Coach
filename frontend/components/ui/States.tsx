@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { useT } from "@/components/i18n/I18nProvider";
 import { Skeleton } from "./Skeleton";
 
 /**
@@ -45,10 +48,11 @@ export function EmptyState({
   );
 }
 
-export function LoadingState({ label = "Loading" }: { label?: string }) {
+export function LoadingState({ label }: { label?: string }) {
+  const t = useT();
   return (
     <div role="status" aria-live="polite" className="space-y-3">
-      <span className="sr-only">{label}</span>
+      <span className="sr-only">{label ?? t("states.loading")}</span>
       <Skeleton className="h-6 w-2/5" />
       <Skeleton className="h-24 w-full" />
       <Skeleton className="h-24 w-3/4" />
@@ -72,8 +76,8 @@ export function ErrorState({
   requestId,
   onRetry,
   retrying = false,
-  retryLabel = "Try again",
-  retryingLabel = "Retrying…",
+  retryLabel,
+  retryingLabel,
   variant = "page",
 }: {
   message: string;
@@ -84,6 +88,9 @@ export function ErrorState({
   retryingLabel?: string;
   variant?: "page" | "section";
 }) {
+  const t = useT();
+  const retryText = retryLabel ?? t("states.retry");
+  const retryingText = retryingLabel ?? t("states.retrying");
   const isSection = variant === "section";
   const retry = onRetry ? (
     <button
@@ -96,7 +103,7 @@ export function ErrorState({
         " rounded border border-border text-sm font-semibold hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60"
       }
     >
-      {retrying ? retryingLabel : retryLabel}
+      {retrying ? retryingText : retryText}
     </button>
   ) : null;
   const details = requestId ? (
@@ -105,8 +112,8 @@ export function ErrorState({
         "mt-3 max-w-reading text-xs text-muted" + (isSection ? " text-left" : " mx-auto text-left")
       }
     >
-      <summary className="cursor-pointer">Technical details</summary>
-      <p className="mt-1">Reference: {requestId}</p>
+      <summary className="cursor-pointer">{t("states.technicalDetails")}</summary>
+      <p className="mt-1">{t("states.reference")} {requestId}</p>
     </details>
   ) : null;
 
@@ -123,7 +130,7 @@ export function ErrorState({
 
   return (
     <div role="alert" className="rounded-lg border border-danger bg-surface px-6 py-10 text-center">
-      <h2 className="text-lg font-semibold">Something went wrong</h2>
+      <h2 className="text-lg font-semibold">{t("states.somethingWentWrong")}</h2>
       <p className="mx-auto mt-2 max-w-reading text-muted">{message}</p>
       {retry}
       {details}

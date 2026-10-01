@@ -13,9 +13,11 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from src.locales import AppLocale
+
 # Bounded conversation-language identifier (P10B Wave 4) — the 7 product locales only. A raw
 # user string can never reach interview generation; anything else is rejected at the boundary.
-ConversationLanguage = Literal["en", "de", "fr", "es", "it", "pt", "nl"]
+ConversationLanguage = AppLocale
 
 
 class InterviewConfigIn(BaseModel):

@@ -15,12 +15,14 @@ import type { ReactNode } from "react";
 import { useAuth } from "./AuthProvider";
 import { isProtectedRoute, AUTH_ONLY_ROUTES, APP_HOME } from "@/lib/auth/routes";
 import { LoadingState } from "@/components/ui/States";
+import { useT } from "@/components/i18n/I18nProvider";
 
 export function RouteGuard({ children }: { children: ReactNode }) {
   const pathname = usePathname() || "/";
   const router = useRouter();
   const params = useSearchParams();
   const { status, account } = useAuth();
+  const t = useT();
 
   const protectedRoute = isProtectedRoute(pathname);
   const authOnly = AUTH_ONLY_ROUTES.has(pathname);
@@ -48,7 +50,7 @@ export function RouteGuard({ children }: { children: ReactNode }) {
   // definitively-unauthenticated visitor is being redirected. An "unknown" status
   // (backend unreachable) renders the page — the server still enforces authorization.
   if (protectedRoute && (status === "loading" || status === "unauthenticated")) {
-    return <LoadingState label="Checking your session" />;
+    return <LoadingState label={t("states.checkingSession")} />;
   }
   return <>{children}</>;
 }

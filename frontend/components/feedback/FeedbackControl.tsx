@@ -33,13 +33,14 @@ const CATEGORIES: { value: string; key: string }[] = [
 export function FeedbackControl({
   surface,
   targetId,
-  prompt = "Was this helpful?",
+  prompt,
 }: {
   surface: FeedbackSurface;
   targetId: string;
   prompt?: string;
 }) {
   const t = useT();
+  const promptText = prompt ?? t("feedback.prompt");
   const [rating, setRating] = useState<FeedbackRating | null>(null);
   const [comment, setComment] = useState("");
   const [category, setCategory] = useState<string>("");
@@ -82,12 +83,12 @@ export function FeedbackControl({
         setSaved(true);
       } catch (e) {
         // Never pretend success — surface an error and keep the entered text.
-        setError((e as ApiError).userMessage ?? "Couldn't save your feedback. Please try again.");
+        setError((e as ApiError).userMessage ?? t("feedback.saveError"));
       } finally {
         setBusy(false);
       }
     },
-    [surface, targetId],
+    [surface, targetId, t],
   );
 
   const choose = (next: FeedbackRating) => {
@@ -96,20 +97,20 @@ export function FeedbackControl({
   };
 
   return (
-    <div className="mt-2 text-sm" role="group" aria-label={prompt}>
+    <div className="mt-2 text-sm" role="group" aria-label={promptText}>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-muted">{prompt}</span>
+        <span className="text-muted">{promptText}</span>
         <Button size="sm" variant="ghost" aria-pressed={rating === "helpful"} disabled={busy}
-          onClick={() => choose("helpful")} aria-label="Helpful">👍 Helpful</Button>
+          onClick={() => choose("helpful")} aria-label={t("feedback.helpful")}>👍 {t("feedback.helpful")}</Button>
         <Button size="sm" variant="ghost" aria-pressed={rating === "not_helpful"} disabled={busy}
-          onClick={() => choose("not_helpful")} aria-label="Not helpful">👎 Not helpful</Button>
-        {saved && !error ? <span className="text-xs text-success" role="status" aria-live="polite">Thanks — saved.</span> : null}
+          onClick={() => choose("not_helpful")} aria-label={t("feedback.notHelpful")}>👎 {t("feedback.notHelpful")}</Button>
+        {saved && !error ? <span className="text-xs text-success" role="status" aria-live="polite">{t("feedback.savedThanks")}</span> : null}
       </div>
 
       {showComment || rating ? (
         <div className="mt-2">
           <label htmlFor={`fb-${surface}-${targetId}`} className="block text-xs text-muted">
-            {rating === "not_helpful" ? "What could be better? (optional)" : "Add a comment (optional)"}
+            {rating === "not_helpful" ? t("feedback.whatBetter") : t("feedback.addComment")}
           </label>
           {rating === "not_helpful" ? (
             <div className="mb-2">
@@ -140,7 +141,7 @@ export function FeedbackControl({
           <div className="mt-1 flex items-center gap-2">
             <Button size="sm" disabled={busy || !rating || comment.trim() === loadedComment.current}
               onClick={() => rating && persist(rating, comment.trim() || null, category || null)}>
-              Save comment
+              {t("feedback.saveComment")}
             </Button>
           </div>
         </div>

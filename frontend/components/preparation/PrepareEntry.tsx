@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCapabilities } from "@/lib/useCapabilities";
-import { useI18n } from "@/components/i18n/I18nProvider";
+import { useI18n, useT } from "@/components/i18n/I18nProvider";
 import { LoadingState } from "@/components/ui/States";
 import { PrepareWorkspace } from "@/components/preparation/PrepareWorkspace";
 import { AgentPrepareWorkspace } from "@/components/agent/AgentPrepareWorkspace";
@@ -21,6 +21,7 @@ import { clearPrepareDraft, readPrepareDraft } from "@/lib/prepareDraft";
  * (§10) while remaining available for the active workspace to consume (§11).
  */
 export function PrepareEntry() {
+  const t = useT();
   const { capabilities, loading } = useCapabilities();
   const [initialDraft] = useState(() => readPrepareDraft());
 
@@ -30,7 +31,7 @@ export function PrepareEntry() {
     clearPrepareDraft();
   }, []);
 
-  if (loading) return <LoadingState label="Loading your preparation workspace" />;
+  if (loading) return <LoadingState label={t("prepare.loadingWorkspace")} />;
   return (
     <div className="space-y-4">
       {capabilities.company_research_enabled ? <CompanyResearchLink /> : null}

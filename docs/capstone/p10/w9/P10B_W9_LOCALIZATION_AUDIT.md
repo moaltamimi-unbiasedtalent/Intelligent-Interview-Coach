@@ -2,6 +2,14 @@
 
 Audit phase. No runtime code changed. Findings #6 (completeness) and #7 (add `ru`).
 
+> **Update (W9.6 DELIVERED):** Finding #6 (full-app completeness) is closed on branch
+> `fix/p10b-w9-6-full-localization` (see `P10B_W9_6_FULL_LOCALIZATION.md`). The ≈190 audited hardcoded
+> strings — and more found by the scanner — are now localized; **527 new keys × 7 locales** added as
+> five fragments merged in `catalog.ts`; a deterministic scanner + vitest guard + `eval_i18n_l10n`
+> invariant keep candidate-facing hardcoded English at **0**. Backend locale allowlists consolidated to
+> `src/locales.py` (§7.3). Finding #7 (`ru`) is **W9.7, NOT started** — insertion points documented.
+> Deferred: page `metadata` titles, Help article bodies; legal-copy drafts await human/legal review.
+
 **Requirement:** changing the interface language must change EVERY Ask4Mo-owned candidate-facing
 string. Do NOT translate user content, CV/JD text, employer material, evidence quotations, or official
 source names (provenance).

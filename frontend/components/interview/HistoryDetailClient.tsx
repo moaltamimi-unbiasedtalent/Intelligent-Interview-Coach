@@ -46,11 +46,11 @@ export function HistoryDetailClient({ reportId }: { reportId: string }) {
           setRetrying(false);
           return;
         }
-        setError({ message: err.userMessage ?? "Couldn't load this session.", requestId: err.requestId });
+        setError({ message: err.userMessage ?? t("history.loadError"), requestId: err.requestId });
         setStatus("error");
         setRetrying(false);
       });
-  }, [reportId]);
+  }, [reportId, t]);
 
   useEffect(() => {
     load();
@@ -64,12 +64,12 @@ export function HistoryDetailClient({ reportId }: { reportId: string }) {
   return (
     <section>
       <PageHeader
-        eyebrow="Your sessions"
-        title={role ? `Interview — ${role}` : `Interview #${reportId}`}
-        description={created ? `Completed ${created}` : "Completed interview session"}
+        eyebrow={t("history.eyebrow")}
+        title={role ? t("history.detailTitleRole", { role }) : t("history.interviewNumber", { n: reportId })}
+        description={created ? t("history.completedOn", { date: created }) : t("history.completedSession")}
       />
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <ButtonLink href="/history" variant="ghost">← Back to history</ButtonLink>
+        <ButtonLink href="/history" variant="ghost">← {t("history.backToHistory")}</ButtonLink>
         {status === "ready" && report ? (
           <span className="flex items-center gap-2 text-sm">
             <span className="text-muted">{t("documents.exportReport")}:</span>
@@ -83,15 +83,15 @@ export function HistoryDetailClient({ reportId }: { reportId: string }) {
         ) : null}
       </div>
 
-      {status === "loading" ? <LoadingState label="Loading session" /> : null}
+      {status === "loading" ? <LoadingState label={t("history.loadingSession")} /> : null}
       {status === "error" && error ? (
         <ErrorState message={error.message} requestId={error.requestId} retrying={retrying} onRetry={() => load(true)} />
       ) : null}
       {status === "notfound" ? (
         <EmptyState
-          title="Session not found"
-          description="This session doesn't exist or isn't yours."
-          action={<ButtonLink href="/history">Back to history</ButtonLink>}
+          title={t("history.notFoundTitle")}
+          description={t("history.notFoundDescription")}
+          action={<ButtonLink href="/history">{t("history.backToHistory")}</ButtonLink>}
         />
       ) : null}
       {status === "ready" ? (
@@ -101,7 +101,7 @@ export function HistoryDetailClient({ reportId }: { reportId: string }) {
           <Card>
             <CardBody>
               <p className="text-sm text-muted">
-                This session was completed but has no saved performance review.
+                {t("history.noReview")}
               </p>
             </CardBody>
           </Card>

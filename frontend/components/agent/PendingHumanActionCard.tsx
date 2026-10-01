@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/Badge";
 import { Input, Textarea } from "@/components/ui/Field";
 import { CATEGORIES, CATEGORY_LABEL } from "@/components/memory/MemoryManager";
 import { memoryCategoryLabel } from "./labels";
+import { useT } from "@/components/i18n/I18nProvider";
+
+type Translate = (key: string, vars?: Record<string, string | number>) => string;
 
 interface CardProps {
   action: PendingHumanAction;
@@ -16,14 +19,14 @@ interface CardProps {
 }
 
 /** Candidate-facing source labels for handoff provenance (never technical tool names). */
-export function handoffSourceLabel(source: string): string {
+export function handoffSourceLabel(source: string, t: Translate): string {
   switch (source) {
-    case "confirmed_role": return "confirmed in Coach";
-    case "job_analysis": return "from your job description";
-    case "gap_analysis": return "from your gap analysis";
-    case "preparation_plan": return "from your preparation plan";
-    case "question_generator": return "generated for this role";
-    default: return "from your preparation";
+    case "confirmed_role": return t("prepare.sourceConfirmedRole");
+    case "job_analysis": return t("prepare.sourceJobAnalysis");
+    case "gap_analysis": return t("prepare.sourceGapAnalysis");
+    case "preparation_plan": return t("prepare.sourcePreparationPlan");
+    case "question_generator": return t("prepare.sourceQuestionGenerator");
+    default: return t("prepare.sourceDefault");
   }
 }
 
@@ -38,10 +41,11 @@ export function PendingHumanActionCard({
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
+  const t = useT();
   return (
     <Card className="border-accent">
       <CardBody>
-        <div role="group" aria-label="Your input is needed" tabIndex={-1}>
+        <div role="group" aria-label={t("prepare.inputNeededAria")} tabIndex={-1}>
           {children}
         </div>
       </CardBody>
@@ -50,12 +54,13 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 export function RoleConfirmationCard({ action, busy, onDecision }: CardProps) {
+  const t = useT();
   const [selected, setSelected] = useState<string>("");
   return (
     <Shell>
       <p className="font-medium">{action.message}</p>
       <fieldset className="mt-3 grid gap-2" disabled={busy}>
-        <legend className="sr-only">Choose the role you are preparing for</legend>
+        <legend className="sr-only">{t("prepare.chooseRole")}</legend>
         {action.options.map((role) => (
           <label key={role} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-surface-2">
             <input
@@ -75,7 +80,7 @@ export function RoleConfirmationCard({ action, busy, onDecision }: CardProps) {
           disabled={busy || !selected}
           onClick={() => onDecision({ action_id: action.action_id, decision: "select", selected_role: selected })}
         >
-          Confirm role
+          {t("prepare.confirmRole")}
         </Button>
       </div>
     </Shell>
@@ -83,6 +88,7 @@ export function RoleConfirmationCard({ action, busy, onDecision }: CardProps) {
 }
 
 export function MemoryApprovalCard({ action, busy, onDecision }: CardProps) {
+  const t = useT();
   const origCategory = (String(action.data.category ?? "recurring_gap")) as MemoryCategory;
   const origSummary = String(action.data.summary ?? "");
   const origRole = action.data.target_role ? String(action.data.target_role) : "";
@@ -101,11 +107,11 @@ export function MemoryApprovalCard({ action, busy, onDecision }: CardProps) {
 
   return (
     <Shell>
-      <p className="font-medium">What will be remembered</p>
+      <p className="font-medium">{t("prepare.whatRemembered")}</p>
       {editing ? (
         <div className="mt-3 grid gap-3">
           <div>
-            <label htmlFor="approve-cat" className="block text-sm text-muted">Category</label>
+            <label htmlFor="approve-cat" className="block text-sm text-muted">{t("prepare.category")}</label>
             <select id="approve-cat" value={category} disabled={busy}
               onChange={(e) => setCategory(e.target.value as MemoryCategory)}
               className="w-full rounded-lg border border-border bg-surface px-3.5 py-3">
@@ -113,22 +119,22 @@ export function MemoryApprovalCard({ action, busy, onDecision }: CardProps) {
             </select>
           </div>
           <div>
-            <label htmlFor="approve-sum" className="block text-sm text-muted">Memory</label>
+            <label htmlFor="approve-sum" className="block text-sm text-muted">{t("prepare.memory")}</label>
             <Textarea id="approve-sum" value={summary} maxLength={500} disabled={busy}
               onChange={(e) => setSummary(e.target.value)} />
           </div>
           <div>
-            <label htmlFor="approve-role" className="block text-sm text-muted">For (role, optional)</label>
+            <label htmlFor="approve-role" className="block text-sm text-muted">{t("prepare.forRoleOptional")}</label>
             <Input id="approve-role" value={role} maxLength={200} disabled={busy}
               onChange={(e) => setRole(e.target.value)} />
           </div>
-          <p className="text-xs text-muted">Why: useful in future preparation sessions.</p>
+          <p className="text-xs text-muted">{t("prepare.whyUseful")}</p>
           <div className="flex gap-2">
             <Button size="sm" disabled={busy || summary.trim().length === 0} onClick={approveEdited}>
-              Save
+              {t("prepare.save")}
             </Button>
             <Button size="sm" variant="ghost" disabled={busy} onClick={() => setEditing(false)}>
-              Cancel
+              {t("prepare.cancel")}
             </Button>
           </div>
         </div>
@@ -136,26 +142,26 @@ export function MemoryApprovalCard({ action, busy, onDecision }: CardProps) {
         <>
           <dl className="mt-3 rounded-lg border border-border bg-surface-2 p-3 text-sm">
             <div className="flex flex-wrap items-center gap-2">
-              <dt className="sr-only">Category</dt>
+              <dt className="sr-only">{t("prepare.category")}</dt>
               <dd><Badge>{memoryCategoryLabel(category)}</Badge></dd>
               {role ? <dd><Badge tone="neutral">{role}</Badge></dd> : null}
             </div>
-            <dt className="mt-2 text-xs text-muted">Memory</dt>
+            <dt className="mt-2 text-xs text-muted">{t("prepare.memory")}</dt>
             <dd className="break-words">{summary}</dd>
-            <dt className="mt-2 text-xs text-muted">Why</dt>
-            <dd className="text-xs text-muted">Useful in future preparation sessions.</dd>
+            <dt className="mt-2 text-xs text-muted">{t("prepare.why")}</dt>
+            <dd className="text-xs text-muted">{t("prepare.usefulFuture")}</dd>
           </dl>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button size="sm" disabled={busy}
               onClick={() => onDecision({ action_id: action.action_id, decision: "approve" })}>
-              Approve
+              {t("prepare.approve")}
             </Button>
             <Button size="sm" variant="ghost" disabled={busy} onClick={() => setEditing(true)}>
-              Edit before saving
+              {t("prepare.editBeforeSaving")}
             </Button>
             <Button size="sm" variant="ghost" disabled={busy}
               onClick={() => onDecision({ action_id: action.action_id, decision: "reject" })}>
-              Reject
+              {t("prepare.reject")}
             </Button>
           </div>
         </>
@@ -165,6 +171,7 @@ export function MemoryApprovalCard({ action, busy, onDecision }: CardProps) {
 }
 
 export function PracticeHandoffCard({ action, busy, onDecision, summary }: CardProps & { summary?: PracticeHandoffSummary | null }) {
+  const t = useT();
   // Prefer the safe provenance summary (what/where each item came from); fall back to
   // the pending action's coarse counts. Only actually-present fields are shown.
   const role = summary?.target_role?.value ?? (action.data.target_role ? String(action.data.target_role) : null);
@@ -176,22 +183,22 @@ export function PracticeHandoffCard({ action, busy, onDecision, summary }: CardP
 
   return (
     <Shell>
-      <h3 className="font-medium">Ready to practise?</h3>
+      <h3 className="font-medium">{t("prepare.readyToPractise")}</h3>
       {role ? <p className="mt-1 text-lg font-semibold">{role}</p> : null}
-      <p className="mt-3 text-sm text-muted">Mo has prepared the focus for your interview practice:</p>
+      <p className="mt-3 text-sm text-muted">{t("prepare.moPreparedFocus")}</p>
       <ul className="mt-2 grid gap-1.5 text-sm">
         {role ? (
           <li className="flex items-start gap-2">
             <span aria-hidden>✓</span>
-            <span>Role — <span className="text-muted">{roleSource ? handoffSourceLabel(roleSource) : "from your preparation"}</span></span>
+            <span>{t("prepare.roleLabel")} <span className="text-muted">{roleSource ? handoffSourceLabel(roleSource, t) : t("prepare.sourceDefault")}</span></span>
           </li>
         ) : null}
         {focus.length ? (
           <li className="flex items-start gap-2">
             <span aria-hidden>✓</span>
             <span>
-              {focusSource === "preparation_plan" ? "Preparation focus" : "Priority areas"} —{" "}
-              <span className="text-muted">{handoffSourceLabel(focusSource ?? "gap_analysis")}</span>
+              {focusSource === "preparation_plan" ? t("prepare.preparationFocus") : t("prepare.priorityAreas")}{" "}
+              <span className="text-muted">{handoffSourceLabel(focusSource ?? "gap_analysis", t)}</span>
               <span className="mt-1 flex flex-wrap gap-1.5">
                 {focus.map((f, i) => <Badge key={i} tone="neutral">{f.value}</Badge>)}
               </span>
@@ -201,16 +208,16 @@ export function PracticeHandoffCard({ action, busy, onDecision, summary }: CardP
         {questionCount ? (
           <li className="flex items-start gap-2">
             <span aria-hidden>✓</span>
-            <span>{questionCount} practice questions — <span className="text-muted">generated for this role</span></span>
+            <span>{t("prepare.practiceQuestionsCount", { count: questionCount })} <span className="text-muted">{t("prepare.sourceQuestionGenerator")}</span></span>
           </li>
         ) : null}
       </ul>
       <div className="mt-3 flex gap-2">
         <Button size="sm" disabled={busy} onClick={() => onDecision({ action_id: action.action_id, decision: "approve" })}>
-          Start practice
+          {t("prepare.startPractice")}
         </Button>
         <Button size="sm" variant="ghost" disabled={busy} onClick={() => onDecision({ action_id: action.action_id, decision: "reject" })}>
-          Not yet
+          {t("prepare.notYet")}
         </Button>
       </div>
     </Shell>

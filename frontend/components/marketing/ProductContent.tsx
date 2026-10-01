@@ -42,7 +42,7 @@ export function ProductContent() {
       <figure className="mt-8 overflow-hidden rounded-lg border border-border">
         <Image
           src="/images/ask4mo/ask4mo-product-connected-system-editorial.png"
-          alt="A hand-drawn opportunity folder connecting company research, evidence, conversation, practice and feedback."
+          alt={t("marketing.productImageAlt")}
           width={1536}
           height={1024}
           sizes="(max-width: 1152px) 100vw, 1152px"

@@ -12,21 +12,22 @@ import { Button, ButtonLink } from "@/components/ui/Button";
 import { EmptyState, EmptyStateIllustration, ErrorState, LoadingState } from "@/components/ui/States";
 import { PracticeProgress } from "@/components/progress/PracticeProgress";
 
-/** Candidate-friendly labels — technical categories are never shown raw. */
-const CATEGORY_LABEL: Record<MemoryCategory, string> = {
-  target_role: "Target role",
-  recurring_gap: "Priority",
-  strength: "Strength",
-  completed_topic: "Completed",
-  interview_preference: "Preference",
-  preparation_goal: "Goal",
+/** Candidate-friendly labels - technical categories are never shown raw. Mapped to i18n keys
+ *  (resolved via t() at render) so category names localise with the interface language. */
+const CATEGORY_KEY: Record<MemoryCategory, string> = {
+  target_role: "memory.catTargetRole",
+  recurring_gap: "memory.catPriority",
+  strength: "memory.catStrength",
+  completed_topic: "memory.catCompleted",
+  interview_preference: "memory.catPreference",
+  preparation_goal: "memory.catGoal",
 };
 
-const GROUPS: Array<{ label: string; hint: string; categories: MemoryCategory[] }> = [
-  { label: "Priorities", hint: "Areas you've chosen to work on.", categories: ["recurring_gap", "preparation_goal"] },
-  { label: "Strengths", hint: "What you're doing well.", categories: ["strength"] },
-  { label: "Completed preparation", hint: "Topics you've already practised.", categories: ["completed_topic"] },
-  { label: "Preferences", hint: "Roles and interview styles you prefer.", categories: ["interview_preference", "target_role"] },
+const GROUPS: Array<{ labelKey: string; hintKey: string; categories: MemoryCategory[] }> = [
+  { labelKey: "progress.groupPriorities", hintKey: "progress.groupPrioritiesHint", categories: ["recurring_gap", "preparation_goal"] },
+  { labelKey: "progress.groupStrengths", hintKey: "progress.groupStrengthsHint", categories: ["strength"] },
+  { labelKey: "progress.groupCompleted", hintKey: "progress.groupCompletedHint", categories: ["completed_topic"] },
+  { labelKey: "progress.groupPreferences", hintKey: "progress.groupPreferencesHint", categories: ["interview_preference", "target_role"] },
 ];
 
 // P10B-W9.2: one small explicit read-resource shape shared by the two independent Progress regions
@@ -125,9 +126,9 @@ export function ProgressClient() {
   return (
     <section data-tour="progress">
       <PageHeader
-        eyebrow="Your journey"
-        title="Progress"
-        description="Your practice progress, and what your coach remembers — the priorities, strengths and preferences you've chosen to save."
+        eyebrow={t("progress.eyebrow")}
+        title={t("progress.title")}
+        description={t("progress.description")}
       />
 
       {bothError ? (
@@ -148,8 +149,8 @@ export function ProgressClient() {
               failure; tiles when ready. A practice failure never hides the memory region below. */}
           {practice.status === "error" ? (
             <div className="mb-8">
-              <h2 className="text-sm font-semibold text-foreground">Practice progress</h2>
-              <p className="mb-3 text-xs text-muted">From your completed practice interviews.</p>
+              <h2 className="text-sm font-semibold text-foreground">{t("progress.practiceTitle")}</h2>
+              <p className="mb-3 text-xs text-muted">{t("progress.practiceSubtitle")}</p>
               <ErrorState
                 variant="section"
                 message={errMessage(practice)}
@@ -164,11 +165,11 @@ export function ProgressClient() {
 
           <p className="-mt-2 mb-4 text-sm" data-tour="memory">
             <a href="/settings" className="font-medium text-accent underline">
-              Manage in Settings
+              {t("progress.manageInSettings")}
             </a>{" "}
-            <span className="text-muted">— edit, pin or remove your saved preparation memory.</span>
+            <span className="text-muted">{t("progress.manageHint")}</span>
             {"  "}
-            <a href="/help#progress" className="font-medium text-accent underline">How Progress works</a>
+            <a href="/help#progress" className="font-medium text-accent underline">{t("progress.howItWorks")}</a>
           </p>
 
           {removeError ? (
@@ -178,7 +179,7 @@ export function ProgressClient() {
           {/* Memory region: loading -> skeleton; error -> section error (with Retry); ready ->
               empty state or grouped list. */}
           {memory.status === "loading" ? (
-            <LoadingState label="Loading your preparation memory" />
+            <LoadingState label={t("memory.loadingLabel")} />
           ) : null}
           {memory.status === "error" ? (
             <ErrorState
@@ -193,15 +194,15 @@ export function ProgressClient() {
           {memory.status === "ready" && memory.data ? (
             memory.data.length === 0 ? (
               <EmptyState
-                title="Nothing saved yet."
-                description="When you choose to save preparation priorities, they'll appear here. Your coach never saves anything without you asking."
+                title={t("memory.emptyTitle")}
+                description={t("progress.emptyDescription")}
                 illustration={
                   <EmptyStateIllustration
                     src="/images/ask4mo/ask4mo-empty-progress-ink.png"
-                    alt="Hand-painted stepping stones leading from a pencil toward a focused goal."
+                    alt={t("progress.emptyAlt")}
                   />
                 }
-                action={<ButtonLink href="/prepare">Prepare with Mo</ButtonLink>}
+                action={<ButtonLink href="/prepare">{t("common.prepareWithMo")}</ButtonLink>}
               />
             ) : (
               <div className="grid gap-6">
@@ -209,9 +210,9 @@ export function ProgressClient() {
                   const groupItems = memory.data!.filter((m) => group.categories.includes(m.category));
                   if (groupItems.length === 0) return null;
                   return (
-                    <div key={group.label}>
-                      <h2 className="text-sm font-semibold text-foreground">{group.label}</h2>
-                      <p className="mb-2 text-xs text-muted">{group.hint}</p>
+                    <div key={group.labelKey}>
+                      <h2 className="text-sm font-semibold text-foreground">{t(group.labelKey)}</h2>
+                      <p className="mb-2 text-xs text-muted">{t(group.hintKey)}</p>
                       <div className="grid gap-3">
                         {groupItems.map((m) => (
                           <Card key={m.id}>
@@ -219,9 +220,9 @@ export function ProgressClient() {
                               <div className="min-w-0">
                                 <p className="font-medium break-words">{m.summary}</p>
                                 <div className="mt-1 flex flex-wrap items-center gap-2">
-                                  <Badge>{CATEGORY_LABEL[m.category]}</Badge>
+                                  <Badge>{t(CATEGORY_KEY[m.category])}</Badge>
                                   {m.target_role ? <Badge tone="neutral">{m.target_role}</Badge> : null}
-                                  {m.pinned ? <Badge tone="low">📌 Pinned</Badge> : null}
+                                  {m.pinned ? <Badge tone="low">📌 {t("memory.pinned")}</Badge> : null}
                                 </div>
                               </div>
                               <div className="shrink-0">
@@ -229,18 +230,18 @@ export function ProgressClient() {
                                   <div
                                     className="flex items-center gap-2"
                                     role="group"
-                                    aria-label={`Remove “${m.summary}”?`}
+                                    aria-label={t("memory.removeItemAria", { summary: m.summary })}
                                   >
-                                    <span className="text-xs text-muted">Remove this?</span>
+                                    <span className="text-xs text-muted">{t("common.removeThis")}</span>
                                     <Button size="sm" variant="ghost" onClick={() => setConfirmingId(null)}>
-                                      Cancel
+                                      {t("common.cancel")}
                                     </Button>
                                     <Button
                                       size="sm"
                                       onClick={() => remove(m.id)}
                                       disabled={busyId === m.id}
                                     >
-                                      Remove
+                                      {t("common.remove")}
                                     </Button>
                                   </div>
                                 ) : (
@@ -248,9 +249,9 @@ export function ProgressClient() {
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => setConfirmingId(m.id)}
-                                    aria-label={`Remove saved memory: ${m.summary}`}
+                                    aria-label={t("memory.removeAria", { summary: m.summary })}
                                   >
-                                    Remove
+                                    {t("common.remove")}
                                   </Button>
                                 )}
                               </div>

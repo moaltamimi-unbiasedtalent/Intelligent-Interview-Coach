@@ -97,7 +97,7 @@ export function MoreMenu() {
         <div
           id={menuId}
           role="menu"
-          aria-label="More destinations"
+          aria-label={t("nav.moreDestinations")}
           onKeyDown={onMenuKeyDown}
           className="absolute right-0 z-40 mt-1 w-60 overflow-hidden rounded-[10px] border border-border bg-surface shadow-soft"
         >

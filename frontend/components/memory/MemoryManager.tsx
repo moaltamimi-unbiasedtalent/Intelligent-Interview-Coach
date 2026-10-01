@@ -9,8 +9,21 @@ import { Badge } from "@/components/ui/Badge";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Field";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
+import { useT } from "@/components/i18n/I18nProvider";
 
-/** Candidate-friendly labels — technical categories are never shown raw. */
+/** Candidate-friendly category labels - technical categories are never shown raw. Mapped to i18n
+ *  keys (resolved via t() at render) so names localise with the interface language. */
+export const CATEGORY_KEY: Record<MemoryCategory, string> = {
+  target_role: "memory.catTargetRole",
+  recurring_gap: "memory.catPriority",
+  strength: "memory.catStrength",
+  completed_topic: "memory.catCompleted",
+  interview_preference: "memory.catPreference",
+  preparation_goal: "memory.catGoal",
+};
+
+/** English category labels retained for an out-of-scope consumer (agent/PendingHumanActionCard).
+ *  Candidate-facing rendering in THIS file uses CATEGORY_KEY + t(); do not add new callers. */
 export const CATEGORY_LABEL: Record<MemoryCategory, string> = {
   target_role: "Target role",
   recurring_gap: "Priority",
@@ -32,6 +45,7 @@ export const CATEGORIES: MemoryCategory[] = [
  * hidden chat history.
  */
 export function MemoryManager() {
+  const t = useT();
   const [items, setItems] = useState<MemoryResponse[] | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState<{ message: string; requestId?: string | null } | null>(null);
@@ -59,11 +73,11 @@ export function MemoryManager() {
       .catch((e) => {
         if (ctrl.signal.aborted || (e instanceof DOMException && e.name === "AbortError")) return;
         const err = e as ApiError;
-        setError({ message: err.userMessage ?? "Couldn't load your preparation memory.", requestId: err.requestId });
+        setError({ message: err.userMessage ?? t("memory.loadError"), requestId: err.requestId });
         setStatus("error");
         setRetrying(false);
       });
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     load();
@@ -77,21 +91,20 @@ export function MemoryManager() {
 
   const onRemoved = useCallback((id: number) => {
     setItems((prev) => (prev ? prev.filter((m) => m.id !== id) : prev));
-    setNotice("Preparation memory removed.");
-  }, []);
+    setNotice(t("memory.removedNotice"));
+  }, [t]);
 
   return (
     <div className="grid gap-6">
       <div>
-        <h2 className="text-base font-semibold">What Mo remembers</h2>
+        <h2 className="text-base font-semibold">{t("memory.title")}</h2>
         <p className="mt-1 text-sm text-muted">
-          These are preparation details you chose to save for future Coach sessions. You
-          can edit, prioritise or remove them at any time.
+          {t("memory.intro")}
         </p>
       </div>
 
       {notice ? <p role="status" aria-live="polite" className="text-xs text-success">{notice}</p> : null}
-      {status === "loading" ? <LoadingState label="Loading your preparation memory" /> : null}
+      {status === "loading" ? <LoadingState label={t("memory.loadingLabel")} /> : null}
       {status === "error" && error ? (
         <ErrorState message={error.message} requestId={error.requestId} retrying={retrying} onRetry={() => load(true)} />
       ) : null}
@@ -99,9 +112,9 @@ export function MemoryManager() {
       {status === "ready" && items ? (
         items.length === 0 ? (
           <EmptyState
-            title="Nothing saved yet."
-            description="Mo can remember selected preparation preferences that you explicitly approve. Mo never saves anything without you asking."
-            action={<ButtonLink href="/prepare">Prepare with Mo</ButtonLink>}
+            title={t("memory.emptyTitle")}
+            description={t("memory.emptyDescription")}
+            action={<ButtonLink href="/prepare">{t("common.prepareWithMo")}</ButtonLink>}
           />
         ) : (
           <ul className="grid gap-3">
@@ -128,6 +141,7 @@ function MemoryRow({
   onSaved: (m: MemoryResponse, msg: string) => void;
   onRemoved: (id: number) => void;
 }) {
+  const t = useT();
   const [editing, setEditing] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -138,9 +152,9 @@ function MemoryRow({
     setError(null);
     try {
       const updated = await api.memory.update(memory.id, { pinned: !memory.pinned });
-      onSaved(updated, updated.pinned ? "Pinned." : "Unpinned.");
+      onSaved(updated, updated.pinned ? t("memory.pinnedNotice") : t("memory.unpinnedNotice"));
     } catch (e) {
-      setError((e as ApiError).userMessage ?? "Couldn't update that memory.");
+      setError((e as ApiError).userMessage ?? t("memory.updateError"));
     } finally {
       setBusy(false);
     }
@@ -153,7 +167,7 @@ function MemoryRow({
       await api.memory.remove(memory.id);
       onRemoved(memory.id);
     } catch (e) {
-      setError((e as ApiError).userMessage ?? "Couldn't remove that memory.");
+      setError((e as ApiError).userMessage ?? t("memory.removeError"));
       setBusy(false);
     }
   };
@@ -163,7 +177,7 @@ function MemoryRow({
       <MemoryEditForm
         memory={memory}
         onCancel={() => setEditing(false)}
-        onSaved={(m) => { setEditing(false); onSaved(m, "Saved."); }}
+        onSaved={(m) => { setEditing(false); onSaved(m, t("common.saved")); }}
       />
     );
   }
@@ -174,30 +188,30 @@ function MemoryRow({
         <div className="min-w-0">
           <p className="font-medium break-words">{memory.summary}</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
-            <Badge>{CATEGORY_LABEL[memory.category]}</Badge>
+            <Badge>{t(CATEGORY_KEY[memory.category])}</Badge>
             {memory.target_role ? <Badge tone="neutral">{memory.target_role}</Badge> : null}
-            {memory.pinned ? <Badge tone="low">📌 Pinned</Badge> : null}
+            {memory.pinned ? <Badge tone="low">📌 {t("memory.pinned")}</Badge> : null}
           </div>
           {error ? <p role="alert" className="mt-1 text-sm text-danger">{error}</p> : null}
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           {confirming ? (
-            <div className="flex items-center gap-2" role="group" aria-label={`Remove “${memory.summary}”?`}>
-              <span className="text-xs text-muted">Remove this saved preparation memory?</span>
-              <Button size="sm" variant="ghost" onClick={() => setConfirming(false)} disabled={busy}>Cancel</Button>
-              <Button size="sm" onClick={remove} disabled={busy}>Remove</Button>
+            <div className="flex items-center gap-2" role="group" aria-label={t("memory.removeItemAria", { summary: memory.summary })}>
+              <span className="text-xs text-muted">{t("memory.removeConfirm")}</span>
+              <Button size="sm" variant="ghost" onClick={() => setConfirming(false)} disabled={busy}>{t("common.cancel")}</Button>
+              <Button size="sm" onClick={remove} disabled={busy}>{t("common.remove")}</Button>
             </div>
           ) : (
             <>
               <Button size="sm" variant="ghost" onClick={() => setEditing(true)}
-                aria-label={`Edit saved memory: ${memory.summary}`}>Edit</Button>
+                aria-label={t("memory.editAria", { summary: memory.summary })}>{t("common.edit")}</Button>
               <Button size="sm" variant="ghost" onClick={pinToggle} disabled={busy}
                 aria-pressed={memory.pinned}
-                aria-label={`${memory.pinned ? "Unpin" : "Pin"} saved memory: ${memory.summary}`}>
-                {memory.pinned ? "Unpin" : "Pin"}
+                aria-label={t(memory.pinned ? "memory.unpinAria" : "memory.pinAria", { summary: memory.summary })}>
+                {memory.pinned ? t("memory.unpin") : t("memory.pin")}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setConfirming(true)}
-                aria-label={`Remove saved memory: ${memory.summary}`}>Remove</Button>
+                aria-label={t("memory.removeAria", { summary: memory.summary })}>{t("common.remove")}</Button>
             </>
           )}
         </div>
@@ -215,6 +229,7 @@ function MemoryEditForm({
   onCancel: () => void;
   onSaved: (m: MemoryResponse) => void;
 }) {
+  const t = useT();
   const [category, setCategory] = useState<MemoryCategory>(memory.category);
   const [summary, setSummary] = useState(memory.summary);
   const [role, setRole] = useState(memory.target_role ?? "");
@@ -235,7 +250,7 @@ function MemoryEditForm({
       onSaved(updated);
     } catch (e) {
       // Preserve the entered text so the user can correct and retry.
-      setError((e as ApiError).userMessage ?? "Couldn't save that change.");
+      setError((e as ApiError).userMessage ?? t("memory.saveError"));
       setBusy(false);
     }
   };
@@ -244,34 +259,34 @@ function MemoryEditForm({
     <Card className="border-accent">
       <CardBody className="grid gap-3">
         <div>
-          <label htmlFor={`cat-${memory.id}`} className="block text-sm text-muted">Category</label>
+          <label htmlFor={`cat-${memory.id}`} className="block text-sm text-muted">{t("memory.categoryLabel")}</label>
           <select
             id={`cat-${memory.id}`}
             value={category}
             onChange={(e) => setCategory(e.target.value as MemoryCategory)}
             className="w-full rounded-lg border border-border bg-surface px-3.5 py-3"
           >
-            {CATEGORIES.map((c) => <option key={c} value={c}>{CATEGORY_LABEL[c]}</option>)}
+            {CATEGORIES.map((c) => <option key={c} value={c}>{t(CATEGORY_KEY[c])}</option>)}
           </select>
         </div>
         <div>
-          <label htmlFor={`sum-${memory.id}`} className="block text-sm text-muted">Memory</label>
+          <label htmlFor={`sum-${memory.id}`} className="block text-sm text-muted">{t("memory.memoryLabel")}</label>
           <Textarea id={`sum-${memory.id}`} value={summary} maxLength={500}
             onChange={(e) => setSummary(e.target.value)} />
         </div>
         <div>
-          <label htmlFor={`role-${memory.id}`} className="block text-sm text-muted">Target role (optional)</label>
+          <label htmlFor={`role-${memory.id}`} className="block text-sm text-muted">{t("memory.targetRoleOptional")}</label>
           <Input id={`role-${memory.id}`} value={role} maxLength={200}
             onChange={(e) => setRole(e.target.value)} />
         </div>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={pinned} onChange={(e) => setPinned(e.target.checked)} />
-          Pin (prioritised when relevant to the role you&apos;re preparing for)
+          {t("memory.pinHelp")}
         </label>
         {error ? <p role="alert" className="text-sm text-danger">{error}</p> : null}
         <div className="flex items-center gap-2">
-          <Button size="sm" onClick={save} disabled={busy || summary.trim().length === 0}>Save</Button>
-          <Button size="sm" variant="ghost" onClick={onCancel} disabled={busy}>Cancel</Button>
+          <Button size="sm" onClick={save} disabled={busy || summary.trim().length === 0}>{t("common.save")}</Button>
+          <Button size="sm" variant="ghost" onClick={onCancel} disabled={busy}>{t("common.cancel")}</Button>
         </div>
       </CardBody>
     </Card>
@@ -279,6 +294,7 @@ function MemoryEditForm({
 }
 
 function NextRunPreview() {
+  const t = useT();
   const [role, setRole] = useState("");
   const [items, setItems] = useState<MemoryPreviewItem[] | null>(null);
   const [limit, setLimit] = useState(10);
@@ -293,36 +309,35 @@ function NextRunPreview() {
       setItems(r.items);
       setLimit(r.load_limit);
     } catch (e) {
-      setError((e as ApiError).userMessage ?? "Couldn't build the preview.");
+      setError((e as ApiError).userMessage ?? t("memory.previewError"));
     } finally {
       setBusy(false);
     }
-  }, [role]);
+  }, [role, t]);
 
   return (
     <Card>
       <CardBody className="grid gap-3">
         <div>
-          <h3 className="text-sm font-semibold">What may be used next time</h3>
+          <h3 className="text-sm font-semibold">{t("memory.previewTitle")}</h3>
           <p className="mt-1 text-xs text-muted">
-            Up to {limit} memories may be loaded for a session, most relevant first.
-            Pinned memories are preferred when they match the role.
+            {t("memory.previewIntro", { limit })}
           </p>
         </div>
         <div className="flex flex-wrap items-end gap-2">
           <div className="grow">
-            <label htmlFor="preview-role" className="block text-sm text-muted">Target role (optional)</label>
+            <label htmlFor="preview-role" className="block text-sm text-muted">{t("memory.targetRoleOptional")}</label>
             <Input id="preview-role" value={role} maxLength={200}
-              placeholder="e.g. Senior Product Manager"
+              placeholder={t("memory.rolePlaceholder")}
               onChange={(e) => setRole(e.target.value)} />
           </div>
-          <Button size="sm" onClick={run} disabled={busy}>Preview</Button>
+          <Button size="sm" onClick={run} disabled={busy}>{t("memory.previewButton")}</Button>
         </div>
         {error ? <p role="alert" className="text-sm text-danger">{error}</p> : null}
         {items !== null ? (
           items.length === 0 ? (
             <p className="text-sm text-muted">
-              No saved preparation memories would be loaded for this role.
+              {t("memory.previewEmpty")}
             </p>
           ) : (
             <ol className="grid gap-2">
@@ -330,8 +345,8 @@ function NextRunPreview() {
                 <li key={it.id} className="rounded-lg border border-border px-3 py-2">
                   <p className="text-sm break-words">{it.summary}</p>
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
-                    <Badge>{CATEGORY_LABEL[it.category]}</Badge>
-                    {it.pinned ? <Badge tone="low">📌 Pinned</Badge> : null}
+                    <Badge>{t(CATEGORY_KEY[it.category])}</Badge>
+                    {it.pinned ? <Badge tone="low">📌 {t("memory.pinned")}</Badge> : null}
                     <span>{it.reason}</span>
                   </div>
                 </li>

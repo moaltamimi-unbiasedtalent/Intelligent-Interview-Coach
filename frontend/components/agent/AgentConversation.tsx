@@ -8,6 +8,7 @@ import { activityFromEvents } from "./labels";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { VoicePlaybackControl } from "@/components/ui/VoicePlaybackControl";
 import { toSpeechLocale } from "@/lib/speech/ttsLocales";
+import { useT } from "@/components/i18n/I18nProvider";
 
 /** The coaching conversation: safe user/assistant turns, latest evidence, and a
  * live activity line while the agent is working (observable status, not reasoning). */
@@ -20,6 +21,7 @@ export function AgentConversation({
   busy: boolean;
   messages: AgentConversationMessage[];
 }) {
+  const t = useT();
   const auth = useAuthOptional();
   const responseDetail = auth?.responseDetail ?? "brief";
   // Speech-output locale follows the Mo conversation language (§11), never the UI locale
@@ -40,13 +42,23 @@ export function AgentConversation({
 
   return (
     <div className="space-y-4">
-      <ol className="space-y-4" aria-label="Coaching conversation">
+      <ol className="space-y-4" aria-label={t("prepare.coachingConversation")}>
         {messages.map((m, i) => {
           const usePresentation =
             m.role === "assistant" &&
             i === lastAssistantIndex &&
             presentation != null &&
             presentation.has_details;
+          // Compute the body as a variable (rather than an inline ternary between JSX
+          // tags) so no code expression is rendered as visible-looking text.
+          let body: React.ReactNode;
+          if (m.role === "user") {
+            body = <p className="whitespace-pre-wrap break-words text-sm">{m.content}</p>;
+          } else if (usePresentation && presentation) {
+            body = <AgentAnswer presentation={presentation} detailed={responseDetail === "detailed"} />;
+          } else {
+            body = <Markdown text={m.content} />;
+          }
           return (
             <li key={i} className={m.role === "user" ? "flex justify-end" : ""}>
               <div
@@ -56,13 +68,7 @@ export function AgentConversation({
                     : "max-w-[92%] rounded-2xl bg-surface-2 px-4 py-2.5"
                 }
               >
-                {m.role === "user" ? (
-                  <p className="whitespace-pre-wrap break-words text-sm">{m.content}</p>
-                ) : usePresentation && presentation ? (
-                  <AgentAnswer presentation={presentation} detailed={responseDetail === "detailed"} />
-                ) : (
-                  <Markdown text={m.content} />
-                )}
+                {body}
                 {/* Listen to the PRIMARY visible answer (brief-first, §6). Assistant turns
                     only; speaks the same text the candidate can read. */}
                 {m.role === "assistant" && m.content.trim() ? (
@@ -85,7 +91,7 @@ export function AgentConversation({
       {busy ? (
         <div role="status" aria-live="polite" className="flex items-center gap-2 text-sm text-muted">
           <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-accent" aria-hidden />
-          {run ? activityFromEvents(run.events) : "Mo is understanding your request…"}
+          {run ? activityFromEvents(run.events) : t("prepare.moUnderstanding")}
         </div>
       ) : null}
     </div>

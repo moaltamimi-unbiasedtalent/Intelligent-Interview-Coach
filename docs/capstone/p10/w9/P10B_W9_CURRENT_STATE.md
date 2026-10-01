@@ -49,6 +49,21 @@ Date captured: 2026-09-30. Author: Claude Opus 4.8 (assisted). Read-only audit.
 > (typed-column prefs; account-scoped localStorage used). Frontend-only: vitest **342** (59 files),
 > full Playwright **132 (131 pass; 1 unrelated batch flake, isolated-green)**, typecheck/lint/build green; onboarding/opportunity/identity/security/
 > i18n/RC evals PASS. See `P10B_W9_5_WELCOME_TUTORIAL_V2.md`.
+>
+> **Update (W9.6 delivered):** Full-app localization completion (PF-13) on branch
+> `fix/p10b-w9-6-full-localization`. Every Ask4Mo-owned candidate-facing string across Prepare/Mo,
+> Practice/Interview, Opportunities/Documents/Company/Workspaces, Progress/Memory, the public
+> legal/trust/marketing/help pages and shared chrome now renders via `useT()`/`translate()` — **527 new
+> keys × 7 locales (3,689 strings)** as five fragments merged in `catalog.ts`. A deterministic scanner
+> (`frontend/scripts/scan-i18n.mjs`) + vitest guard + `eval_i18n_l10n` invariant keep candidate-facing
+> hardcoded English at **0** (one allowlist entry: reviewer-only `AgentInspector`). Backend locale
+> allowlists consolidated to `src/locales.py` (W9.7 insertion point); a shared `I18nProvider`
+> fallback-stability fix removes an effect-reload bug surfaced by the change. **No migration, no API
+> change, no RC.** vitest **343** (60 files), new `e2e/localization.spec.ts` **11/0** (+50 regression
+> specs green), typecheck/lint(0 warnings)/build green; i18n/RC(27)/security/identity(1.0)/opportunity/
+> onboarding/dictation/voice evals PASS; backend ruff + locale tests green; 0 paid/live. Human/legal
+> review of legal-copy drafts PENDING; page `metadata` titles + Help article bodies deferred; W9.7
+> (Russian) NOT started. See `P10B_W9_6_FULL_LOCALIZATION.md`.
 
 ---
 

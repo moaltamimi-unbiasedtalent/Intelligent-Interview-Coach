@@ -6,6 +6,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from src.locales import AppLocale
+
 __all__ = [
     "DocumentSummary", "DocumentVersionOut", "ClaimOut", "DocumentDetail",
     "DocumentListResponse", "ClaimReviewRequest", "StoryOut", "StoryListResponse",
@@ -13,7 +15,7 @@ __all__ = [
 ]
 
 DocCategory = Literal["cv", "job_description", "portfolio", "company_brief", "other"]
-Locale = Literal["en", "de", "fr", "es", "it", "pt", "nl"]
+Locale = AppLocale
 
 
 class DocumentSummary(BaseModel):

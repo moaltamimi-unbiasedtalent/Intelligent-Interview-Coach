@@ -14,6 +14,7 @@ import { RouteGuard } from "@/components/auth/RouteGuard";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { LanguageMenu } from "@/components/i18n/LanguageMenu";
 import { Logo } from "@/components/ui/Logo";
+import { useT } from "@/components/i18n/I18nProvider";
 import { isMarketingRoute } from "@/lib/auth/routes";
 
 /**
@@ -24,6 +25,7 @@ import { isMarketingRoute } from "@/lib/auth/routes";
  */
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname() || "/";
+  const t = useT();
   if (isMarketingRoute(pathname)) {
     return <MarketingShell>{children}</MarketingShell>;
   }
@@ -34,7 +36,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     return (
       <div className="min-h-dvh">
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-[8px] focus:bg-surface focus:px-3 focus:py-2 focus:shadow-soft">
-          Skip to content
+          {t("common.skipToContent")}
         </a>
         <header className="border-b border-border bg-surface">
           <div className="mx-auto flex max-w-content items-center justify-between gap-4 px-5 py-3">
@@ -56,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-[8px] focus:bg-surface focus:px-3 focus:py-2 focus:shadow-soft"
       >
-        Skip to content
+        {t("common.skipToContent")}
       </a>
       <header className="sticky top-0 z-20 border-b border-border bg-surface">
         <div className="mx-auto flex max-w-content items-center gap-4 px-5 py-3">

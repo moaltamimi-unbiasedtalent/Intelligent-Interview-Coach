@@ -203,26 +203,26 @@ export function HelpCenter() {
       <Card>
         <CardBody className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-base font-semibold">New here?</h2>
-            <p className="text-sm text-muted">Take a 2-minute guided tour of the whole journey.</p>
+            <h2 className="text-base font-semibold">{t("help.tourTitle")}</h2>
+            <p className="text-sm text-muted">{t("help.tourBody")}</p>
           </div>
           <TutorialLauncher />
         </CardBody>
       </Card>
 
       <div>
-        <label htmlFor="help-search" className="sr-only">Search help</label>
+        <label htmlFor="help-search" className="sr-only">{t("help.searchLabel")}</label>
         <Input
           id="help-search"
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search help — e.g. progress, sources, memory, report"
+          placeholder={t("help.searchExamples")}
         />
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-muted">No help topics match “{query}”. Try a different word.</p>
+        <p className="text-sm text-muted">{t("help.noMatch", { query })}</p>
       ) : (
         filtered.map((s) => (
           <section key={s.id} id={s.id} className="scroll-mt-24">

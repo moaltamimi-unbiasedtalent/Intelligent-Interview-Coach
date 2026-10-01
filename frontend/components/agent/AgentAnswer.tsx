@@ -3,6 +3,7 @@
 import type { ResponsePresentation } from "@/lib/api/types";
 import { Markdown } from "@/components/coach/Markdown";
 import { Disclosure } from "@/components/ui/Disclosure";
+import { useT } from "@/components/i18n/I18nProvider";
 
 /**
  * Renders Mo's latest answer with progressive disclosure (Capstone P2/E2).
@@ -25,6 +26,7 @@ export function AgentAnswer({
   detailed: boolean;
 }) {
   const { answer, details, has_details, next_step } = presentation;
+  const t = useT();
 
   return (
     <div className="space-y-3">
@@ -32,7 +34,7 @@ export function AgentAnswer({
 
       {next_step ? (
         <p className="text-sm">
-          <span className="font-semibold text-foreground">Next step: </span>
+          <span className="font-semibold text-foreground">{t("prepare.nextStep")} </span>
           <span className="text-muted">{next_step.label}</span>
         </p>
       ) : null}
@@ -43,7 +45,7 @@ export function AgentAnswer({
             <Markdown text={details} />
           </div>
         ) : (
-          <Disclosure showLabel="Show more" hideLabel="Show less">
+          <Disclosure showLabel={t("prepare.showMore")} hideLabel={t("prepare.showLess")}>
             <Markdown text={details} />
           </Disclosure>
         )

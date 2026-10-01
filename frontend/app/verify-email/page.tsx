@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Verify email" };
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense fallback={<LoadingState label="Loading" />}>
+    <Suspense fallback={<LoadingState />}>
       <VerifyEmailPanel />
     </Suspense>
   );

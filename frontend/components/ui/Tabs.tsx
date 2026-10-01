@@ -2,6 +2,7 @@
 
 import { useId, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/components/i18n/I18nProvider";
 
 export interface TabItem {
   id: string;
@@ -13,6 +14,7 @@ export interface TabItem {
 export function Tabs({ items, className }: { items: TabItem[]; className?: string }) {
   const [active, setActive] = useState(items[0]?.id);
   const base = useId();
+  const t = useT();
 
   function onKeyDown(e: React.KeyboardEvent) {
     const idx = items.findIndex((i) => i.id === active);
@@ -29,7 +31,7 @@ export function Tabs({ items, className }: { items: TabItem[]; className?: strin
     <div className={className}>
       <div
         role="tablist"
-        aria-label="Sections"
+        aria-label={t("common.sections")}
         onKeyDown={onKeyDown}
         className="inline-flex gap-1 rounded-full bg-surface-2 p-1"
       >

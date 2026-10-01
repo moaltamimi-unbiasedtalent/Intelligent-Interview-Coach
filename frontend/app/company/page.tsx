@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Company research" };
 
 export default function CompanyPage() {
   return (
-    <Suspense fallback={<LoadingState label="Loading" />}>
+    <Suspense fallback={<LoadingState />}>
       <CompanyResearchClient />
     </Suspense>
   );

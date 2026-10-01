@@ -3,7 +3,6 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CATALOGS, translate } from "@/lib/i18n/catalog";
 import { SUPPORTED_LOCALE_CODES, toSupportedLocale } from "@/lib/i18n/locales";
-import enDefault from "@/lib/i18n/messages/en";
 
 // Deterministic key set from the English source (the reference catalogue).
 function flatKeys(cat: Record<string, Record<string, string>>): string[] {
@@ -19,7 +18,12 @@ describe("i18n catalogues", () => {
   });
 
   it("every locale has the exact same keys as English (complete, no missing/extra)", () => {
-    const enKeys = flatKeys(enDefault as never);
+    // English is the reference catalogue. Since P10B-W9.6, the full-localization fragments
+    // (lib/i18n/messages/w96) are deep-merged into every locale (including English) in CATALOGS,
+    // so the reference key set is the MERGED English catalogue, not the raw en.ts source. This still
+    // fully enforces parity: a key present in a locale fragment but absent from the English fragment
+    // (or vice versa) surfaces here as an extra/missing key against the merged English reference.
+    const enKeys = flatKeys(CATALOGS.en as never);
     for (const [code, cat] of Object.entries(CATALOGS)) {
       expect({ code, keys: flatKeys(cat as never) }).toEqual({ code, keys: enKeys });
     }
@@ -36,7 +40,7 @@ describe("i18n catalogues", () => {
   });
 
   it("English is a complete non-empty source", () => {
-    expect(flatKeys(enDefault as never).length).toBeGreaterThan(60);
+    expect(flatKeys(CATALOGS.en as never).length).toBeGreaterThan(60);
   });
 });
 

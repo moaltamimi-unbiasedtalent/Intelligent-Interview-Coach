@@ -144,7 +144,7 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 > **account-scoped** state (`ask4mo.tutorial:<user_id>`) closing the shared-browser leak. **No
 > migration** (typed-column prefs can't hold it without one; account-scoped localStorage used per the
 > non-negotiable rule). vitest 342, full Playwright 132 (131 pass + 1 unrelated batch flake, isolated-green), build green; onboarding/opportunity/
-> identity/security/i18n/RC evals PASS; 0 paid/live; no RC. W9.6 not started.
+> identity/security/i18n/RC evals PASS; 0 paid/live; no RC. W9.6 now DELIVERED (see below).
 
 
 - **Objective:** an intentional post-onboarding handoff and an Opportunity-centred, localized,
@@ -165,7 +165,23 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 - **Dependencies:** W9.4. **Risk:** medium (tour DOM anchors). **Complexity:** L.
 - **STOP:** after onboarding + tour E2E pass.
 
-## W9.6 — Full-app localization completion  *(P1, before Pilot 2)*
+## W9.6 — Full-app localization completion  *(P1, before Pilot 2)* — ✅ DELIVERED
+
+> **Status: DELIVERED** on branch `fix/p10b-w9-6-full-localization` (from W9.5 @ `dc655ff`; see
+> `P10B_W9_6_FULL_LOCALIZATION.md`). Every Ask4Mo-owned candidate-facing string across Prepare/Mo,
+> Practice/Interview, Opportunities/Documents/Company/Workspaces, Progress/Memory, the public
+> legal/trust/marketing/help pages and shared chrome now renders via `useT()`/`translate()`. **527 new
+> keys × 7 locales (3,689 strings)** added as five per-domain fragments merged centrally in
+> `catalog.ts`. A deterministic scanner (`frontend/scripts/scan-i18n.mjs`) + a vitest guard
+> (`no-hardcoded-english.test.ts`) + an `eval_i18n_l10n` invariant drive and keep candidate-facing
+> hardcoded English at **0** (one documented allowlist entry: the reviewer-only `AgentInspector`).
+> Backend locale allowlists consolidated into `src/locales.py` (W9.7 insertion point). A shared
+> `I18nProvider` fallback-stability fix removes an effect-reload bug surfaced by the change. **No
+> migration, no API change, no RC.** Gates: typecheck/lint(0 warnings)/build green; vitest 343;
+> scanner 0; new `e2e/localization.spec.ts` 11/0 (+50 regression specs green);
+> i18n/RC(27)/security/identity(1.0)/opportunity/onboarding/dictation/voice evals PASS; backend ruff +
+> locale tests green; 0 paid/live. Human/legal review of legal-copy drafts PENDING; page `metadata`
+> titles + Help article bodies deferred (see doc §5). W9.7 (Russian) not started.
 
 - **Objective:** every Ask4Mo-owned candidate-facing string switches with the interface language; a
   guard prevents regressions. Fixes PF-13.

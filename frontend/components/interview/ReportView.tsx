@@ -1,4 +1,7 @@
+"use client";
+
 import { Card, CardBody } from "@/components/ui/Card";
+import { useT } from "@/components/i18n/I18nProvider";
 
 /** Fields the backend FinalInterviewReport provides (no invented metrics). */
 export interface Report {
@@ -19,14 +22,15 @@ export interface Report {
  * Shared by the live practice report and the History detail view.
  */
 export function ReportView({ report }: { report: Report }) {
+  const t = useT();
   return (
     <div className="space-y-4">
       <Card>
         <CardBody>
-          <h1 className="text-lg font-semibold">Performance review</h1>
+          <h1 className="text-lg font-semibold">{t("practice.reportTitle")}</h1>
           {typeof report.overall_readiness_score === "number" ? (
             <p className="mt-1 text-sm text-muted">
-              Practice readiness:{" "}
+              {t("practice.readinessLabel")}{" "}
               <span className="text-2xl font-semibold text-foreground">
                 {report.overall_readiness_score}
               </span>
@@ -34,7 +38,7 @@ export function ReportView({ report }: { report: Report }) {
             </p>
           ) : null}
           <p className="mt-1 text-xs text-muted">
-            Practice guidance to help you prepare — not an employment decision.
+            {t("practice.reportDisclaimer")}
           </p>
           {report.performance_summary ? (
             <p className="mt-3 whitespace-pre-wrap text-sm">{report.performance_summary}</p>
@@ -42,13 +46,13 @@ export function ReportView({ report }: { report: Report }) {
         </CardBody>
       </Card>
 
-      <ListCard title="Key strengths" items={report.strongest_competencies} />
-      <ListCard title="Priority improvements" items={report.development_priorities} />
-      <ListCard title="Recurring answer patterns" items={report.recurring_answer_patterns} />
-      <ListCard title="Highest-risk questions" items={report.highest_risk_questions} />
-      <ListCard title="Evidence gaps" items={report.evidence_gaps} />
-      <ListCard title="Recommended practice actions" items={report.recommended_practice_actions} />
-      <ListCard title="Final interview checklist" items={report.final_interview_checklist} />
+      <ListCard title={t("practice.reportStrengths")} items={report.strongest_competencies} />
+      <ListCard title={t("practice.reportImprovements")} items={report.development_priorities} />
+      <ListCard title={t("practice.reportPatterns")} items={report.recurring_answer_patterns} />
+      <ListCard title={t("practice.reportRiskQuestions")} items={report.highest_risk_questions} />
+      <ListCard title={t("practice.reportEvidenceGaps")} items={report.evidence_gaps} />
+      <ListCard title={t("practice.reportActions")} items={report.recommended_practice_actions} />
+      <ListCard title={t("practice.reportChecklist")} items={report.final_interview_checklist} />
     </div>
   );
 }

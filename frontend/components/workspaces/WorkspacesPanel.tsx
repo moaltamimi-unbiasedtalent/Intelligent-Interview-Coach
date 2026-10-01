@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useT } from "@/components/i18n/I18nProvider";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyStateIllustration } from "@/components/ui/States";
@@ -42,12 +43,12 @@ export function WorkspacesPanel() {
       api.workspaces
         .accept(token)
         .then(() => {
-          setNotice("Invitation accepted.");
+          setNotice(t("workspaces.inviteAccepted"));
           void refresh();
         })
-        .catch(() => setNotice("That invitation could not be accepted (it may be expired or for a different email)."));
+        .catch(() => setNotice(t("workspaces.inviteAcceptError")));
     }
-  }, [refresh]);
+  }, [refresh, t]);
 
   const create = async () => {
     if (!name.trim()) return;
@@ -67,7 +68,7 @@ export function WorkspacesPanel() {
       await api.workspaces.leave(id);
       await refresh();
     } catch {
-      setNotice("You cannot leave as the last owner — transfer ownership first.");
+      setNotice(t("workspaces.leaveLastOwnerError"));
     } finally {
       setBusy(false);
     }
@@ -83,11 +84,33 @@ export function WorkspacesPanel() {
     }
   };
 
-  if (status === "loading") return <p className="text-sm text-muted">{t("states.loading")}…</p>;
-  if (status === "error") return <p className="text-sm text-muted">{t("states.genericError")}</p>;
+  const header = (
+    <PageHeader
+      eyebrow={t("workspaces.eyebrow")}
+      title={t("workspaces.title")}
+      description={t("workspaces.subtitle")}
+    />
+  );
+
+  if (status === "loading")
+    return (
+      <section>
+        {header}
+        <p className="text-sm text-muted">{t("states.loading")}…</p>
+      </section>
+    );
+  if (status === "error")
+    return (
+      <section>
+        {header}
+        <p className="text-sm text-muted">{t("states.genericError")}</p>
+      </section>
+    );
 
   return (
-    <div className="grid gap-4">
+    <section>
+      {header}
+      <div className="grid gap-4">
       <Card>
         <CardBody className="grid gap-2">
           <p className="text-sm text-muted">{t("workspaces.privacyNote")}</p>
@@ -134,7 +157,7 @@ export function WorkspacesPanel() {
             <Card key={inv.id}>
               <CardBody>
                 <p className="text-sm">{inv.workspace_name ?? `#${inv.workspace_id}`}</p>
-                <p className="text-xs text-muted">{t("workspaces.accept")} — check your email link.</p>
+                <p className="text-xs text-muted">{t("workspaces.inviteCheckEmail")}</p>
               </CardBody>
             </Card>
           ))}
@@ -147,7 +170,7 @@ export function WorkspacesPanel() {
         <div className="flex justify-center">
           <EmptyStateIllustration
             src="/images/ask4mo/ask4mo-empty-workspaces-sharing-ink.png"
-            alt="A hand moving one selected card between two otherwise private workspaces."
+            alt={t("workspaces.sharingIllustrationAlt")}
           />
         </div>
       )}
@@ -176,6 +199,7 @@ export function WorkspacesPanel() {
           </Card>
         ))}
       </section>
-    </div>
+      </div>
+    </section>
   );
 }

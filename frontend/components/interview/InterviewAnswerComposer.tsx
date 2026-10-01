@@ -2,6 +2,7 @@
 
 import type { SpeechRecognitionAdapter } from "@/lib/speech/types";
 import { Composer } from "@/components/ui/Composer";
+import { useT } from "@/components/i18n/I18nProvider";
 
 /**
  * Controlled typed-answer composer. The parent workflow owns the answer value so it
@@ -18,9 +19,9 @@ export function InterviewAnswerComposer({
   onChange,
   onSubmit,
   busy,
-  label = "Your answer",
-  submitLabel = "Submit answer",
-  placeholder = "Take a breath. Structure it as situation → action → result…",
+  label,
+  submitLabel,
+  placeholder,
   dictationAdapter,
 }: {
   value: string;
@@ -32,17 +33,18 @@ export function InterviewAnswerComposer({
   placeholder?: string;
   dictationAdapter?: SpeechRecognitionAdapter;
 }) {
+  const t = useT();
   return (
     <Composer
       id="answer"
-      label={label}
+      label={label ?? t("practice.answerLabel")}
       value={value}
       onChange={onChange}
       onSubmit={onSubmit}
       busy={busy}
-      placeholder={placeholder}
-      submitLabel={submitLabel}
-      busyLabel="Reviewing your answer…"
+      placeholder={placeholder ?? t("practice.answerPlaceholder")}
+      submitLabel={submitLabel ?? t("practice.submitAnswer")}
+      busyLabel={t("practice.reviewingAnswer")}
       textareaClassName="min-h-[150px]"
       dictationAdapter={dictationAdapter}
     />

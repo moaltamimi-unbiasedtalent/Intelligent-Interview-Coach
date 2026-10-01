@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Input, Textarea } from "@/components/ui/Field";
+import { useT } from "@/components/i18n/I18nProvider";
 
 export interface PrepContextPatch {
   targetRole?: string;
@@ -24,12 +25,13 @@ export interface PrepContextPatch {
   priorities?: string[];
 }
 
-function errText(e: unknown): string {
-  return e instanceof ApiError ? e.userMessage : "That request couldn't be processed.";
+function errText(e: unknown, fallback: string): string {
+  return e instanceof ApiError ? e.userMessage : fallback;
 }
 
 /** The four existing Career tools, connected to /api/v1/career/*. */
 export function PreparationTools({ onContext }: { onContext: (p: PrepContextPatch) => void }) {
+  const t = useT();
   const [jd, setJd] = useState("");
   const [role, setRole] = useState<RoleRequirements | null>(null);
   const [background, setBackground] = useState("");
@@ -49,7 +51,7 @@ export function PreparationTools({ onContext }: { onContext: (p: PrepContextPatc
     try {
       await fn();
     } catch (e) {
-      setErr((prev) => ({ ...prev, [key]: errText(e) }));
+      setErr((prev) => ({ ...prev, [key]: errText(e, t("prepare.requestFailed")) }));
     } finally {
       setBusy(null);
     }
@@ -60,13 +62,13 @@ export function PreparationTools({ onContext }: { onContext: (p: PrepContextPatc
       {/* 1. Job Description Analyzer */}
       <Card>
         <CardBody className="grid gap-3">
-          <h3 className="text-base font-semibold">1 · Understand a job description</h3>
-          <label htmlFor="tool-jd" className="sr-only">Job description</label>
+          <h3 className="text-base font-semibold">{t("prepare.tool1Title")}</h3>
+          <label htmlFor="tool-jd" className="sr-only">{t("prepare.jobDescription")}</label>
           <Textarea
             id="tool-jd"
             value={jd}
             onChange={(e) => setJd(e.target.value)}
-            placeholder="Paste a job description…"
+            placeholder={t("prepare.pasteJdPlaceholder")}
             className="min-h-[110px]"
           />
           <div>
@@ -88,15 +90,15 @@ export function PreparationTools({ onContext }: { onContext: (p: PrepContextPatc
                 })
               }
             >
-              {busy === "role" ? "Analyzing…" : "Analyze"}
+              {busy === "role" ? t("prepare.analyzing") : t("prepare.analyze")}
             </Button>
           </div>
           {err.role ? <p className="text-sm text-danger">{err.role}</p> : null}
           {role ? (
             <div className="text-sm">
-              <p><span className="text-muted">Role:</span> {role.role_title || "—"} · <span className="text-muted">Seniority:</span> {role.seniority || "—"}</p>
-              {role.required_skills?.length ? <p className="mt-1"><span className="text-muted">Required skills:</span> {role.required_skills.join(", ")}</p> : null}
-              {role.likely_interview_themes?.length ? <p className="mt-1"><span className="text-muted">Interview themes:</span> {role.likely_interview_themes.join(", ")}</p> : null}
+              <p><span className="text-muted">{t("prepare.roleColon")}</span> {role.role_title || "—"} · <span className="text-muted">{t("prepare.seniorityColon")}</span> {role.seniority || "—"}</p>
+              {role.required_skills?.length ? <p className="mt-1"><span className="text-muted">{t("prepare.requiredSkills")}</span> {role.required_skills.join(", ")}</p> : null}
+              {role.likely_interview_themes?.length ? <p className="mt-1"><span className="text-muted">{t("prepare.interviewThemes")}</span> {role.likely_interview_themes.join(", ")}</p> : null}
             </div>
           ) : null}
         </CardBody>
@@ -105,14 +107,14 @@ export function PreparationTools({ onContext }: { onContext: (p: PrepContextPatc
       {/* 2. Candidate Gap Analyzer */}
       <Card>
         <CardBody className="grid gap-3">
-          <h3 className="text-base font-semibold">2 · Compare your background</h3>
-          <p className="text-sm text-muted">Add a little about your experience so the coach can compare the role with your background. Analyze a job description first.</p>
-          <label htmlFor="tool-bg" className="sr-only">About you</label>
+          <h3 className="text-base font-semibold">{t("prepare.tool2Title")}</h3>
+          <p className="text-sm text-muted">{t("prepare.tool2Help")}</p>
+          <label htmlFor="tool-bg" className="sr-only">{t("prepare.aboutYou")}</label>
           <Textarea
             id="tool-bg"
             value={background}
             onChange={(e) => setBackground(e.target.value)}
-            placeholder="A few lines about your experience…"
+            placeholder={t("prepare.experiencePlaceholder")}
             className="min-h-[90px]"
           />
           <div>
@@ -133,13 +135,13 @@ export function PreparationTools({ onContext }: { onContext: (p: PrepContextPatc
                 })
               }
             >
-              {busy === "gaps" ? "Comparing…" : "Compare"}
+              {busy === "gaps" ? t("prepare.comparing") : t("prepare.compare")}
             </Button>
           </div>
           {err.gaps ? <p className="text-sm text-danger">{err.gaps}</p> : null}
           {gaps ? (
             <div className="text-sm">
-              <p><span className="text-muted">Match:</span> {gaps.stats.match_percentage}% ({gaps.stats.matched}/{gaps.stats.total_requirements})</p>
+              <p><span className="text-muted">{t("prepare.matchColon")}</span> {gaps.stats.match_percentage}% ({gaps.stats.matched}/{gaps.stats.total_requirements})</p>
               {gaps.priority_gaps?.length ? (
                 <ul className="mt-2 space-y-1">
                   {gaps.priority_gaps.map((g, i) => (
@@ -158,12 +160,12 @@ export function PreparationTools({ onContext }: { onContext: (p: PrepContextPatc
       {/* 3. Preparation Plan */}
       <Card>
         <CardBody className="grid gap-3">
-          <h3 className="text-base font-semibold">3 · Build a preparation plan</h3>
+          <h3 className="text-base font-semibold">{t("prepare.tool3Title")}</h3>
           <div className="flex flex-wrap gap-3">
-            <label className="text-sm">Days until interview
+            <label className="text-sm">{t("prepare.daysUntilInterview")}
               <Input type="number" min={1} max={365} value={days} onChange={(e) => setDays(Number(e.target.value))} className="mt-1 w-28" />
             </label>
-            <label className="text-sm">Hours per week
+            <label className="text-sm">{t("prepare.hoursPerWeek")}
               <Input type="number" min={1} max={80} step={0.5} value={hours} onChange={(e) => setHours(Number(e.target.value))} className="mt-1 w-28" />
             </label>
           </div>
@@ -179,13 +181,13 @@ export function PreparationTools({ onContext }: { onContext: (p: PrepContextPatc
                 })
               }
             >
-              {busy === "plan" ? "Building…" : "Build plan"}
+              {busy === "plan" ? t("prepare.building") : t("prepare.buildPlan")}
             </Button>
           </div>
           {err.plan ? <p className="text-sm text-danger">{err.plan}</p> : null}
           {plan ? (
             <div className="text-sm">
-              <p><span className="text-muted">Total available:</span> {plan.total_available_hours}h</p>
+              <p><span className="text-muted">{t("prepare.totalAvailable")}</span> {plan.total_available_hours}h</p>
               <ul className="mt-2 space-y-1">
                 {plan.allocations.map((a, i) => (
                   <li key={i}>{a.requirement} — {a.allocated_hours}h ({a.share_percentage}%)</li>
@@ -199,9 +201,9 @@ export function PreparationTools({ onContext }: { onContext: (p: PrepContextPatc
       {/* 4. Interview Question Generator */}
       <Card>
         <CardBody className="grid gap-3">
-          <h3 className="text-base font-semibold">4 · Generate practice questions</h3>
-          <label htmlFor="tool-role" className="sr-only">Role</label>
-          <Input id="tool-role" value={roleName} onChange={(e) => setRoleName(e.target.value)} placeholder="Role, e.g. Senior Product Manager" />
+          <h3 className="text-base font-semibold">{t("prepare.tool4Title")}</h3>
+          <label htmlFor="tool-role" className="sr-only">{t("prepare.role")}</label>
+          <Input id="tool-role" value={roleName} onChange={(e) => setRoleName(e.target.value)} placeholder={t("prepare.rolePlaceholder")} />
           <div>
             <Button
               size="sm"
@@ -216,7 +218,7 @@ export function PreparationTools({ onContext }: { onContext: (p: PrepContextPatc
                 })
               }
             >
-              {busy === "q" ? "Generating…" : "Generate questions"}
+              {busy === "q" ? t("prepare.generating") : t("prepare.generateQuestions")}
             </Button>
           </div>
           {err.q ? <p className="text-sm text-danger">{err.q}</p> : null}

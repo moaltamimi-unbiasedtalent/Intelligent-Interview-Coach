@@ -44,7 +44,7 @@ export function MarketingHome() {
     <div>
       {/* Hero */}
       <section className="mx-auto max-w-content px-4 py-16 text-center md:py-24">
-        <p className="text-sm font-semibold uppercase tracking-wide text-accent">Ask More. Be More.</p>
+        <p className="text-sm font-semibold uppercase tracking-wide text-accent">{t("common.tagline")}</p>
         <h1 className="mx-auto mt-3 max-w-3xl text-3xl font-bold tracking-tight md:text-5xl">
           {t("marketing.heroTitle")}
         </h1>
@@ -62,7 +62,7 @@ export function MarketingHome() {
           <div className="relative aspect-[3/2] w-full sm:aspect-[1840/854]">
             <Image
               src="/images/ask4mo/ask4mo-home-hero-documentary.png"
-              alt="A professional preparing interview notes at a dining table in soft morning light."
+              alt={t("marketing.heroImageAlt")}
               fill
               priority
               sizes="(max-width: 1024px) 100vw, 1152px"
@@ -99,7 +99,7 @@ export function MarketingHome() {
         <figure className="mx-auto mt-8 max-w-[960px] overflow-hidden rounded-lg border border-border">
           <Image
             src="/images/ask4mo/ask4mo-home-preparation-still-life.png"
-            alt="Hands organising job research, notes and interview materials into one opportunity folder."
+            alt={t("marketing.problemImageAlt")}
             width={1536}
             height={1024}
             sizes="(max-width: 960px) 100vw, 960px"

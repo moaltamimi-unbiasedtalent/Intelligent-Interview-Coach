@@ -11,7 +11,7 @@ export function PrimaryNavigation() {
   const pathname = usePathname();
   const t = useT();
   return (
-    <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
+    <nav aria-label={t("nav.primary")} className="hidden items-center gap-1 md:flex">
       {PRIMARY_NAV.map((item) => {
         const active = pathname === item.href || pathname.startsWith(item.href + "/");
         return (

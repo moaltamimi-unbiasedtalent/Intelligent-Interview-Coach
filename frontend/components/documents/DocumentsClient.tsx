@@ -316,7 +316,7 @@ function StoryBank({ stories, onChanged }: { stories: StoryOut[]; onChanged: () 
           <div className="mt-3 flex justify-center">
             <EmptyStateIllustration
               src="/images/ask4mo/ask4mo-empty-documents-story-bank-ink.png"
-              alt="A hand reviewing private evidence and turning it into reusable story cards."
+              alt={t("documents.storyEmptyIllustrationAlt")}
             />
           </div>
           <p className="mt-3 text-sm text-muted">{t("documents.storyEmpty")}</p>
