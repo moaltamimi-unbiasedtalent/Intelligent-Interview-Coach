@@ -90,6 +90,19 @@ Date captured: 2026-09-30. Author: Claude Opus 4.8 (assisted). Read-only audit.
 > pass, typecheck/lint/build green, scanner 0 offenders; 0 paid/live; no migration, no RC. Russian
 > translations are engineering translations (native + legal review PENDING). See
 > `P10B_W9_7_RUSSIAN_LOCALE.md`. W9.8 not started.
+>
+> **Update (W9.7A delivered):** post-W9.7 localization/visual/runtime closure on branch
+> `fix/p10b-w9-7a-experience-closure` (from `4ae9ff4`). Home feature blocks localized; scanner extended with
+> string-tuple-array, mixed-JSX-text and HTML-entity passes (0 -> 13 on the previous sources); Mo-voiced text
+> (response-template headings, insufficient-evidence note, deterministic fallback) now follows the Mo
+> **conversation** language via `conversation_language` on `/career/chat` (English byte-identical), UI labels
+> follow the interface language; the Opportunity action can no longer be a permanent blank placeholder;
+> recoverable errors use a proportional `page` tier (232px -> 162px) with `fatal` reserved for a new localized
+> route error boundary; Inter preloads Cyrillic; the local dev DB is at Alembic head `0014_opportunities`
+> (existing migrations only; the chain failed on a drifted schema so a fresh head-schema DB was built and the
+> data carried over, backup kept). Catalogue 1,443 keys x 33 ns x 8 locales. vitest **477**, backend **2,518
+> passed / 3 skipped / 0 failed**, Playwright **189/189**, 17 evaluators pass; 0 paid/live; no migration created,
+> no RC. See `P10B_W9_7A_EXPERIENCE_CLOSURE.md`. W9.8 not started.
 
 ---
 

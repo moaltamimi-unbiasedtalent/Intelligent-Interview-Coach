@@ -33,6 +33,8 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from src.locales import LANGUAGE_NAMES
+
 from src.models import (
     AnswerEvaluation,
     BranchQuestion,
@@ -201,10 +203,7 @@ def _session_parameters(config: InterviewConfiguration) -> str:
 # untrusted text can reach the model. This mirrors the agent path's response_language_directive
 # and sets ONLY the language of the generated prose — it never changes scoring, evidence,
 # grounding, or the labour-market/geography of the interview content.
-_CONVERSATION_LANGUAGE_NAMES: dict[str, str] = {
-    "en": "English", "de": "German", "fr": "French", "es": "Spanish",
-    "it": "Italian", "pt": "Portuguese", "nl": "Dutch", "ru": "Russian",
-}
+_CONVERSATION_LANGUAGE_NAMES: dict[str, str] = dict(LANGUAGE_NAMES)  # single copy: src/locales.py
 
 
 def _coaching_directive(config: InterviewConfiguration) -> str | None:

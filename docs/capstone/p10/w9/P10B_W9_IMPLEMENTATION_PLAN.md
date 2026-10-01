@@ -233,6 +233,21 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 > evaluators pass; 0 paid/live; no migration, no RC. Russian translations are ENGINEERING translations
 > (native + legal review PENDING; live generated-Russian quality PENDING). W9.8 not started.
 
+> **W9.7A closure (DELIVERED, `fix/p10b-w9-7a-experience-closure`; see `P10B_W9_7A_EXPERIENCE_CLOSURE.md`):**
+> post-W9.7 visual QA closure. (1) Home feature blocks localized (8 locales); the scanner gained 3 structural
+> passes it was blind to (old 0 -> new 13 on W9.7 sources). (2) Language ownership made explicit and correct:
+> the response-template headings, insufficient-evidence note and deterministic fallback are Mo-owned
+> (conversation language; `conversation_language` now flows through the Career chat path, English
+> byte-identical), UI labels are interface-owned. (3) Opportunity "blank rectangle" = a permanent placeholder
+> after a failed `/auth/me`; replaced by a bounded, labelled state machine. (4) Error card 232px/29% -> 162px/20%
+> via a section/page/fatal hierarchy (+ localized route error boundary, focus restoration). (5) Inter now
+> preloads its Cyrillic subset (W9.7's "system fallback" diagnosis was wrong: Cyrillic was already Inter,
+> loaded late). (6) Local dev DB reconciled to Alembic head 0014 using only existing migrations (the chain
+> itself failed on a drifted schema; data preserved 25/25 tables, backup kept). Gates: vitest 477, backend
+> 2,518/3 skipped/0 failed, Playwright 189/189, 17 evaluators pass, typecheck/lint/build green; 0 paid/live; no
+> migration created, no RC. Separate tasks filed: dead Tailwind `token/NN` classes; a test writing to the dev
+> DB. W9.8 not started.
+
 - **Objective:** add `ru` end-to-end without coupling language to geography, and without pretending
   generated Russian terms are official taxonomy. Fixes PF-14.
 - **Scope/files:** the full footprint in LOCALIZATION_AUDIT §4 — core i18n (+new `ru.ts`), 2 speech

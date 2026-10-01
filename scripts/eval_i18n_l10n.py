@@ -180,6 +180,29 @@ def run() -> dict[str, tuple[bool, str]]:
           'new Set(["Ask More. Be More."])' in guard and "APPROVED_BRAND_INVARIANTS.has(text)" in guard,
           "the hardcoded-English guard approves ONLY the exact slogan (not arbitrary English copy)")
 
+    # 14) W9.7A: structural blind-spot coverage + Mo-prose language ownership.
+    # (a) The hardcoded-English guard must keep its three structural passes (string-tuple arrays like the Home
+    #     feature blocks, HTML entities, JSX text mixed with `{}` expressions) - W9.7 visual QA found real
+    #     English that the JSX-text/attribute/object-key passes could not see.
+    guard_src = read("scripts/scan-i18n.mjs")
+    check("scanner_structural_coverage",
+          all(tok in guard_src for tok in ('"array-literal"', '"jsx-text-mixed"', "decodeEntities", "`obj:")),
+          "scanner covers string-tuple arrays, mixed JSX text, HTML entities and object-literal content")
+    # (b) Language ownership: Mo's prose (incl. the 3 response-template headings, the insufficient-evidence
+    #     sentence and the deterministic fallback) follows the CONVERSATION language; English stays byte-identical.
+    from src.api.schemas.career import CareerChatRequest as _ApiReq
+    from src.copilot.rag import localized as _loc
+    from src.copilot.rag.synthesis import build_evidence_messages as _bem
+    owner_ok = (
+        set(_loc.SECTION_HEADINGS) == set(_loc.INSUFFICIENT) == set(_loc.FALLBACK) == set(SUPPORTED_LOCALE_CODES)
+        and "conversation_language" in _ApiReq.model_fields
+        and _bem(query="q", sections={}, language=None) == _bem(query="q", sections={}, language="en")
+        and "Подтверждения (из источников):" in _bem(query="q", sections={}, language="ru")[0]["content"]
+        and "Evidence (from sources):" not in _bem(query="q", sections={}, language="de")[0]["content"]
+    )
+    check("mo_prose_language_ownership", owner_ok,
+          "Career-chat headings/fallback follow the Mo conversation language; English default unchanged")
+
     return results
 
 
@@ -192,6 +215,7 @@ SAFETY = {
     "app_locale_does_not_imply_speech",
     "russian_not_geography_ocr_or_taxonomy",
     "brand_slogan_invariant",
+    "mo_prose_language_ownership",
 }
 
 

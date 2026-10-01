@@ -9,6 +9,13 @@
 > dictation language option labels) were localized. The "Help article bodies deferred" limitation below
 > is therefore **superseded/closed**. W9.6 is DELIVERED only together with W9.6A.
 
+> **Second closure (W9.7A):** visual QA of the running product found further English that the W9.6/W9.6A
+> scanner could not detect: the four Home feature blocks (a string-tuple array in a server page), the
+> `Career evidence: n sources` / `Source` / `Sources:` labels, `Question n of m` and `Last updated:` (JSX text
+> mixed with `{}` expressions), and the insufficient-evidence note (HTML-entity text). Closed in
+> `P10B_W9_7A_EXPERIENCE_CLOSURE.md` by three new scanner passes (verified: 0 on the old sources -> 13 with the
+> new scanner) and catalogue keys in all 8 locales.
+
 Implementation record. Frontend localization + a backend locale-source consolidation (no behaviour
 change). **No migration**, no new API, no RC, no Pilot 2, no P10C work, 0 paid/live calls. Russian
 (W9.7) explicitly deferred.

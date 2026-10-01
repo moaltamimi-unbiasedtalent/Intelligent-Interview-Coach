@@ -22,6 +22,7 @@ const RU_PART_FILES = [
   "lib/i18n/messages/w96/ru/shell.ts",
   "lib/i18n/messages/w96/ru/legal.ts",
   "lib/i18n/messages/w96/help/ru.ts",
+  "lib/i18n/messages/w96/closure.ts", // W9.7A fragment (all locales; same dash rule)
 ];
 
 const CUSTOMER_FILES = [

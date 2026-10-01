@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Input, Textarea } from "@/components/ui/Field";
 import { useT } from "@/components/i18n/I18nProvider";
+import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { CareerAnswer } from "./CareerAnswer";
 import { PrepareResponsive } from "./PrepareResponsive";
 import { PreparationTools, type PrepContextPatch } from "./PreparationTools";
@@ -29,6 +30,7 @@ interface Turn {
 export function PrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft | null }) {
   // Named `tr` (not `t`) because the turns array is mapped with a `t` element below.
   const tr = useT();
+  const conversationLanguage = useAuthOptional()?.account?.conversation_language;
   const activityLabel = tr("prepare.activityChecking");
   const goalDraft = initialDraft?.action === "start" ? (initialDraft.goal?.trim() ?? "") : "";
   const draftOpensContext =
@@ -64,6 +66,8 @@ export function PrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft
           question: q,
           job_description: jd.trim() || undefined,
           candidate_background: bg.trim() || undefined,
+          // Mo's prose follows the CONVERSATION language (never the interface language or geography).
+          conversation_language: conversationLanguage || undefined,
         },
         { signal: ctrl.signal },
       );

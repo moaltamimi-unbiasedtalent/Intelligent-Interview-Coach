@@ -29,9 +29,18 @@ SUPPORTED_LOCALE_CODES: tuple[str, ...] = ("en", "de", "fr", "es", "it", "pt", "
 # Typed allow-list for request schemas (validated; an out-of-list value is rejected 422).
 AppLocale = Literal["en", "de", "fr", "es", "it", "pt", "nl", "ru"]
 
+# English display names, used ONLY to build trusted "write in <language>" directives. The model only ever
+# sees a name from this allow-list (never the raw code). Single copy: `src/prompts.py` (Practice) and
+# `src/agent/policies.py` (Mo/agent) derive their maps from it, so a locale cannot be added to one and
+# forgotten in another.
+LANGUAGE_NAMES: dict[str, str] = {
+    "en": "English", "de": "German", "fr": "French", "es": "Spanish",
+    "it": "Italian", "pt": "Portuguese", "nl": "Dutch", "ru": "Russian",
+}
+
 # Document language (OCR) is its own capability, NOT the app locale: it is limited to the languages
 # whose Tesseract data packs ship in deploy/Dockerfile.api. Adding an app locale never extends it.
 DOCUMENT_LANGUAGE_CODES: tuple[str, ...] = ("en", "de", "fr", "es", "it", "pt", "nl")
 DocumentLanguage = Literal["en", "de", "fr", "es", "it", "pt", "nl"]
 
-__all__ = ["SUPPORTED_LOCALE_CODES", "AppLocale", "DOCUMENT_LANGUAGE_CODES", "DocumentLanguage"]
+__all__ = ["SUPPORTED_LOCALE_CODES", "AppLocale", "LANGUAGE_NAMES", "DOCUMENT_LANGUAGE_CODES", "DocumentLanguage"]

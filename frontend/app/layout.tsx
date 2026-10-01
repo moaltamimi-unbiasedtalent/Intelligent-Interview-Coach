@@ -9,8 +9,12 @@ import { LOCALE_COOKIE } from "@/lib/i18n/cookie";
 import { DEFAULT_APP_LOCALE, toSupportedLocale } from "@/lib/i18n/locales";
 import "./globals.css";
 
+// P10B-W9.7A: the SAME Inter family now also loads its `cyrillic` subset so Russian copy renders in Inter
+// instead of the system fallback (W9.7 finding). next/font self-hosts the subset at build time; the browser
+// downloads it only when a page actually contains Cyrillic (unicode-range), so Latin-only users pay nothing.
+// No new family and no manually distributed font file.
 const inter = Inter({
-  subsets: ["latin"],
+  subsets: ["latin", "cyrillic"],
   variable: "--font-inter",
   display: "swap",
 });

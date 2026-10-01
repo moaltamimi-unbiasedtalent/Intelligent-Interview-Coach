@@ -177,12 +177,12 @@ RELIANCE.** (release-readiness note, not a candidate-facing warning.)
 
 ## 17. Typography / Cyrillic assessment
 
-- The app font is **Inter loaded with `subsets: ["latin"]` only** (`app/layout.tsx`). Cyrillic therefore
-  falls through the configured stack (`system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`), whose
-  fonts all contain Cyrillic: **no missing-glyph boxes**, but Cyrillic renders in the platform font rather
-  than Inter (a subtle typeface mismatch with Latin brand words). **No font was added or changed.**
-  Recommendation (owner decision, not done): add the `"cyrillic"` subset to the existing Inter config
-  (build-time subset, no font file committed; adds a small payload).
+- **Correction (W9.7A):** this section originally claimed Cyrillic fell back to the system font because Inter
+  was loaded with `subsets: ["latin"]`. That was wrong. `next/font` self-hosts every Inter subset and the
+  `subsets` option only controls preloading; measured with Chrome DevTools, Russian text was already rendered in
+  the **Inter webfont**, just loaded late (the Cyrillic file was not preloaded). W9.7A adds `"cyrillic"` to the
+  existing Inter config so it is preloaded (+~18.7 kB preload on every page). No new family or font file. See
+  `P10B_W9_7A_EXPERIENCE_CLOSURE.md` section 12.
 - Real-browser layout probe: 6 routes × (1280px, 390px), Russian: **0 horizontal overflow, 0 page errors**;
   headings wrap naturally; the five-item mobile bottom nav (Вакансии, Подготовка, Тренировка, Прогресс,
   История) fits; the Tutorial/invitation card and Opportunity CTA remain usable.
@@ -256,8 +256,7 @@ from W9.6 (Trust copy moved into the catalogue) was likewise found and fixed (se
 ## 23. Known limitations
 
 Russian has no speech (dictation/playback/live voice) support; no Russian occupation/ESCO layer; no
-Russian labour market or salary data; Cyrillic renders in the system fallback font (Inter subset is
-latin-only); plural forms for count strings are worded to avoid Russian few/many inflection rather than
+Russian labour market or salary data; plural forms for count strings are worded to avoid Russian few/many inflection rather than
 implementing CLDR plural rules; page `metadata` titles remain English (architecture-bound, as in W9.6);
 all catalogues are bundled into the client (+~77 kB first load).
 

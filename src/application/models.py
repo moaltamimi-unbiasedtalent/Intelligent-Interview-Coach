@@ -29,6 +29,9 @@ class CareerChatRequest:
     company_context: Any | None = None
     model: str | None = None
     retrieval_mode: str | None = None
+    # Mo conversation language (bounded allow-list code, P10B-W9.7A): owns Mo's prose + deterministic
+    # fallback text. NOT the interface language and never the labour-market geography.
+    conversation_language: str | None = None
 
 
 @dataclass

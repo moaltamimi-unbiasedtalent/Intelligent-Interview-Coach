@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 // @ts-expect-error — plain ESM script, no type declarations (it is a build/guard tool, not app code).
-import { scanSource } from "../scripts/scan-i18n.mjs";
+import { scanSource, scanAll } from "../scripts/scan-i18n.mjs";
 
 /**
  * P10B-W9.6A — guard regression tests.
@@ -85,5 +85,52 @@ describe("scan-i18n guard — must NOT flag (bounded, no indiscriminate string s
 
   it("ignores inline-ternary / expression fragments the JSX-text pass captures", () => {
     expect(scanSource(`{cond ? (<A/>) : error ? (<B/>) : (<C/>)}`)).toHaveLength(0);
+  });
+});
+
+// ─── P10B-W9.7A: the three structural blind spots found by visual QA ───────────────────────────────
+describe("scan-i18n guard - W9.7A structural blind spots (string-tuple arrays, HTML entities, mixed text)", () => {
+  it("detects the Home feature-block pattern: an array of string tuples rendered via .map", () => {
+    const fixture = `
+      {[
+        ["Prepare with evidence", "Grounded career information and citations when needed."],
+        ["Stay in control", "Memory and important handoffs require clear approval."],
+      ].map(([title, body]) => (<div key={title}><p>{title}</p><p>{body}</p></div>))}
+    `;
+    const hits = scanSource(fixture).filter((h: { kind: string }) => h.kind === "array-literal");
+    expect(hits.map((h: { text: string }) => h.text)).toEqual(expect.arrayContaining([
+      "Prepare with evidence", "Grounded career information and citations when needed.", "Stay in control",
+    ]));
+  });
+
+  it("detects copy hidden behind an HTML entity (&rsquo; used to trip the ';' code filter)", () => {
+    const fixture = `<p className="x">I don&rsquo;t have enough reliable evidence to answer that confidently.</p>`;
+    expect(kinds(fixture)).toContain("jsx-text");
+  });
+
+  it("detects JSX text MIXED with expressions (text before / after a {value})", () => {
+    expect(kinds(`<summary>Career evidence: {n} source{n === 1 ? "" : "s"}</summary>`)).toContain("jsx-text-mixed");
+    expect(kinds(`<p>Question {current} of {total}</p>`)).toContain("jsx-text-mixed");
+    expect(kinds(`<p>Last updated: {date} · Draft</p>`)).toContain("jsx-text-mixed");
+  });
+
+  it("does NOT flag identifier/route/enum arrays, single-word lists, key refs or TS declarations", () => {
+    for (const ok of [
+      `const A = ["coach", "prep", "practice"];`,
+      `const R = ["/app", "/help", "/settings"];`,
+      `const S = ["en-US", "de-DE"] as const;`,
+      `const K = ["feat1", "feat2", "feat3"] as const;`,
+      `interface Section { id: string }`,
+      `<p>{t("home.feat1Title")}</p>`,
+      `<p>{count} {t("x.y")}</p>`,
+      `const cls = cn("flex gap-2", { "a b": true });`,
+    ]) {
+      expect(scanSource(ok), ok).toHaveLength(0);
+    }
+  });
+
+  it("the exact protected slogan inside a rendered array is an approved invariant, a variant is not", () => {
+    expect(scanAll(`const x = ["Ask More. Be More.", "Title here"];`).approved).toHaveLength(1);
+    expect(scanSource(`const x = ["Ask More, Be More", "Title here"];`).length).toBeGreaterThan(0);
   });
 });

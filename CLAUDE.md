@@ -527,6 +527,17 @@ assumptions in core logic, prompts, scoring or examples.
   phrase; the scanner approves ONLY that exact string. Enforced by `tests/brand-slogan-invariant.test.ts`
   and `eval_i18n_l10n`. New languages are ENGINEERING translations until native/legal review. See
   `docs/capstone/p10/w9/P10B_W9_7_RUSSIAN_LOCALE.md`.
+  **P10B-W9.7A - language ownership + guard + error tiers (durable rules):** two language dimensions own
+  different text and must not be coupled: the **interface** language owns Ask4Mo UI chrome (labels, buttons,
+  source summaries); the Mo **conversation** language owns everything Mo "says" - the model's prose AND the
+  deterministic text standing in for it (the Career-chat response-template headings, the insufficient-evidence
+  sentence/note, the "model unavailable" fallback). `/career/chat` takes a bounded optional
+  `conversation_language`; bounded text lives in `src/copilot/rag/localized.py`; English/default output must stay
+  byte-identical. `LANGUAGE_NAMES` has one copy (`src/locales.py`). The scanner also detects string-tuple arrays,
+  JSX text mixed with `{}` expressions and HTML-entity text - never hide candidate copy in a literal array. Loading
+  placeholders must be bounded and labelled and must resolve on every settled state (incl. auth `unknown`).
+  `ErrorState` has three tiers: `section` (compact), `page` (default, proportional) and `fatal` (route error
+  boundary only). Tailwind `token/NN` opacity classes do NOT generate CSS with the current token setup.
   **P10B Wave 2 — coaching style + onboarding:** Mo coaching style is a **bounded enum**
   (supportive/balanced/direct/challenging) in `src/coaching_style.py` → a **trusted allow-list-only
   directive** (`coaching_style_directive`) appended like the language directive. It sets only the

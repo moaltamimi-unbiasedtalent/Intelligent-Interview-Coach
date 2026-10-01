@@ -30,6 +30,15 @@ Audit phase. No runtime code changed. Findings #6 (completeness) and #7 (add `ru
 > (`frontend/lib/brand.ts` `BRAND_SLOGAN`); W9.7 also corrected six existing locales that had translated it;
 > the scanner approves only that exact string. Russian translations (incl. legal/privacy) are ENGINEERING
 > translations: native-speaker and legal review PENDING.
+>
+> **Update (W9.7A - manually discovered misses closed):** direct visual inspection found English the W9.6A
+> scanner could not see (string-tuple arrays, text mixed with `{}` expressions, HTML-entity text). The scanner
+> now has `array-literal`, `jsx-text-mixed` and entity-decoding passes (old scanner 0 -> new scanner 13 on the
+> W9.7 sources; now 0 after the fixes). Fixed: Home feature blocks, source/question-progress/last-updated
+> labels, and **language ownership of Mo-voiced text**: the response-template headings, the insufficient-
+> evidence sentence/note and the deterministic fallback follow the Mo **conversation** language (the Career
+> chat path now receives it; English default is byte-identical), while UI chrome follows the interface
+> language. Catalogue: 1,443 keys x 33 namespaces x 8 locales. The slogan `Ask More. Be More.` is untouched.
 
 **Requirement:** changing the interface language must change EVERY Ask4Mo-owned candidate-facing
 string. Do NOT translate user content, CV/JD text, employer material, evidence quotations, or official

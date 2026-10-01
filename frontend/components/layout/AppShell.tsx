@@ -44,7 +44,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <LanguageMenu />
           </div>
         </header>
-        <main id="main" className="mx-auto max-w-content px-5 py-8">
+        <main id="main" tabIndex={-1} className="mx-auto max-w-content px-5 py-8 focus:outline-none">
           <Suspense fallback={children}>
             <RouteGuard>{children}</RouteGuard>
           </Suspense>
@@ -75,7 +75,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <main id="main" className="mx-auto max-w-content px-5 pb-28 pt-7 md:pb-20">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-content px-5 pb-28 pt-7 focus:outline-none md:pb-20">
         {/* RouteGuard reads the URL (useSearchParams); a Suspense boundary keeps
             static prerender (e.g. /_not-found) from bailing the whole page to CSR. */}
         <Suspense fallback={children}>

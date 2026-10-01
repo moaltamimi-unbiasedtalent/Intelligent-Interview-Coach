@@ -23,6 +23,7 @@ import surfaces from "./surfaces";
 import legal from "./legal";
 import shell from "./shell";
 import help from "./help"; // P10B-W9.6A — Help Center section/article content
+import closure from "./closure"; // P10B-W9.7A — strings found by visual QA (all 8 locales)
 // P10B-W9.7: Russian blocks live beside (not inside) the 7-locale fragment files, each typed against
 // its fragment's English shape so missing/extra keys fail `tsc`. `help` carries its own `ru` entry.
 import prepareRu from "./ru/prepare";
@@ -47,6 +48,7 @@ const FRAGMENTS: Array<{ name: string; blocks: Fragment }> = [
   { name: "legal", blocks: { ...(legal as unknown as Fragment), ru: legalRu as unknown as NsMap } },
   { name: "shell", blocks: { ...(shell as unknown as Fragment), ru: shellRu as unknown as NsMap } },
   { name: "help", blocks: help as unknown as Fragment },
+  { name: "closure", blocks: closure as unknown as Fragment },
 ];
 
 /** Additively merge `source` namespaces/keys into `target` (mutates and returns `target`). */

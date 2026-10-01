@@ -108,6 +108,8 @@ function looksEnglish(text) {
   // text that begins with `)` / ends with `(` (an expression boundary, never a sentence).
   if (/\)\s*:/.test(t) || /\?\s*\(/.test(t) || /\.\w+\s*\(/.test(t)) return false;
   if (/^\)/.test(t) || /\($/.test(t)) return false;
+  // TS declarations captured between `}` and `{` (e.g. `interface Section`, `type Props`, `class X extends Y`).
+  if (/^(interface|type|class|enum)\s+[A-Z]\w*(\s+extends\s+\w+)?$/.test(t)) return false;
   if (/\b(const|let|return|null|undefined|useState|useRef|useCallback|function|import|export)\b/.test(t)) return false;
   // Single bare TS type/identifier tokens that slip through as pseudo "text".
   const TYPE_WORDS = new Set(["Promise", "Void", "ReactNode", "AbortSignal", "HTMLElement", "Record", "Partial", "Readonly", "Array", "Map", "Set", "Props", "Ref"]);
@@ -127,6 +129,10 @@ function looksEnglish(text) {
  * Pure detection over a SOURCE STRING (exported so a regression test can prove the blind spots are
  * closed without touching the filesystem). Returns [{ kind, text }]. `stripNoise` is applied here.
  */
+// HTML entities are copy, not code (`&rsquo;` would otherwise trip the ';' code-syntax filter and hide
+// a whole sentence from the scan - the W9.7A `CareerAnswer` blind spot).
+const decodeEntities = (t) => t.replace(/&(?:[a-zA-Z]+|#\d+|#x[0-9a-fA-F]+);/g, "'");
+
 export function scanAll(rawSrc) {
   const src = stripNoise(rawSrc);
   const hits = [];
@@ -138,7 +144,30 @@ export function scanAll(rawSrc) {
 
   // (a) Visible JSX text nodes: text between > and < that is not an expression and not a tag.
   for (const m of src.matchAll(/>\s*([^<>{}\n][^<>{}]*?)\s*</g)) {
-    record("jsx-text", m[1].trim());
+    record("jsx-text", decodeEntities(m[1].trim()));
+  }
+
+  // (a2) JSX text that is MIXED with expressions: `>Career evidence: {n} source{...}<`. The pure-text pass
+  // above cannot match a node containing `{...}`, so copy before/between/after an expression escaped.
+  // Segments: text after a tag close up to `{`, between `}` and `{`, and after `}` up to the next tag.
+  // Only text that is actually ADJACENT to an expression (so pure `>text<` nodes are not re-matched/double
+  // counted): (i) text after a tag/`}` that runs into a `{`, (ii) text after a `}` that runs into a tag.
+  const mixed = [
+    /(?:>|\})\s*([A-Za-z][^<>{}\n]*?[A-Za-z.:?!'])\s*(?=\{)/g,
+    /\}\s*([A-Za-z][^<>{}\n]*?[A-Za-z.:?!'])\s*(?=<)/g,
+  ];
+  for (const re of mixed) {
+    for (const m of src.matchAll(re)) record("jsx-text-mixed", decodeEntities(m[1].trim()));
+  }
+
+  // (a3) Arrays of string literals used as rendered content (`["Title", "Body"]` tuples/lists, e.g. the
+  // Home feature blocks rendered via `.map(([title, body]) => ...)`). Only multi-word prose elements
+  // count, so identifier/enum/route lists (["a", "b"], ["/app", "/help"]) are not flagged.
+  for (const m of src.matchAll(/\[\s*((?:"(?:[^"\\\n]|\\.)*"\s*,?\s*){2,})\]/g)) {
+    for (const lit of m[1].matchAll(/"((?:[^"\\\n]|\\.)*)"/g)) {
+      const text = lit[1].trim();
+      if (/\s/.test(text)) record("array-literal", text);
+    }
   }
 
   // (b) Candidate-facing attribute literals.
