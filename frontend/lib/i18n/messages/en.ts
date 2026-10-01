@@ -134,6 +134,12 @@ export const messages = {
     savedMemory: "Saved memory ({count})",
     historyCount: "History ({count})",
     pickUp: "Pick up where you left off, or prepare for a new role.",
+    opportunityTitle: "Prepare for a specific job",
+    opportunityBody: "An opportunity keeps everything for one job in one place: the role, company, your evidence, preparation and practice.",
+    opportunityCreate: "Create an opportunity",
+    opportunityView: "View your opportunities",
+    opportunityCreateAnother: "Create another",
+    yourOpportunities: "Your opportunities",
   },
   settings: {
     title: "Settings",

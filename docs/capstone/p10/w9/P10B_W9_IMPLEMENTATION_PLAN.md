@@ -107,7 +107,19 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 - **Dependencies:** none. **Risk:** low. **Complexity:** S.
 - **STOP:** after the authz tests + E2E pass.
 
-## W9.4 — Opportunity discoverability  *(P1, before Pilot 2)*
+## W9.4 — Opportunity discoverability  *(P1, before Pilot 2)* — ✅ DELIVERED
+
+> **Status: DELIVERED** on branch `fix/p10b-w9-4-opportunity-discoverability` (see
+> `P10B_W9_4_OPPORTUNITY_DISCOVERABILITY.md`). New Home `OpportunityEntry` card (concept + adaptive
+> Create/View CTA, `data-tour="opportunity-entry"`) placed before the Prepare composer; `?create=1`
+> deep-links into the existing inline create flow (no second implementation); ReturnJourney gains a
+> "Your opportunities" chip; desktop+mobile nav salience improved (legible default, mobile full
+> accessible name, no ambiguous truncation). Opportunity→Prepare governed context verified. New copy
+> localized across 7 locales. Frontend-only: vitest 336, full Playwright 129/0-fail, build green; no
+> backend/schema/migration; opportunity/security/identity/i18n/RC/marketing evals PASS; 0 paid/live;
+> no RC. The Home→Prepare flake is a pre-existing unrelated `nextjs.spec` timing flake (35/35 in
+> isolation). W9.5 not started.
+
 
 - **Objective:** a first-time user finds/creates an Opportunity without moderator help. Fixes PF-10.
 - **Frontend:** Opportunity-first CTA on `/app`; add `/opportunities` to `ReturnJourney`; salience for

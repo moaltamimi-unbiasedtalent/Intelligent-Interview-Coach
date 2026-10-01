@@ -20,10 +20,13 @@ export function PrimaryNavigation() {
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
+              // P10B-W9.4: inactive items use a legible default (not muted grey) so the primary
+              // nav reads as navigation and the first item (Opportunities) is discoverable, without
+              // making any item look disabled. Active state unchanged.
               "rounded-[8px] px-3 py-1.5 text-sm font-medium transition-colors",
               active
                 ? "bg-surface-2 text-foreground"
-                : "text-muted hover:text-foreground",
+                : "text-foreground/80 hover:text-foreground hover:bg-surface-2",
             )}
           >
             {t(item.labelKey)}

@@ -21,14 +21,19 @@ export function MobileNavigation() {
     >
       {PRIMARY_NAV.map((item) => {
         const active = pathname === item.href || pathname.startsWith(item.href + "/");
+        const label = t(item.labelKey);
         return (
           <Link
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
+            // Explicit accessible name = the full concept label, so it is never ambiguous even if the
+            // visible text is tight at ~390px (P10B-W9.4 / H).
+            aria-label={label}
             className={cn(
-              "flex min-h-[52px] flex-col items-center justify-center gap-0.5 px-2 py-2 text-xs font-medium transition-colors",
-              active ? "text-accent" : "text-muted",
+              "flex min-h-[52px] flex-col items-center justify-center gap-0.5 px-1 py-2 font-medium transition-colors",
+              // Inactive uses a legible default (not muted grey) so Opportunities is discoverable.
+              active ? "text-accent" : "text-foreground/70",
             )}
           >
             <span
@@ -38,7 +43,9 @@ export function MobileNavigation() {
                 active ? "bg-accent" : "bg-transparent",
               )}
             />
-            <span className="max-w-full truncate">{t(item.labelKey)}</span>
+            {/* Full word kept (no ambiguous ellipsis); slightly smaller + tighter so "Opportunities"
+                fits a 5-column bar at ~390px. */}
+            <span className="max-w-full text-center text-[11px] leading-tight tracking-tight">{label}</span>
           </Link>
         );
       })}

@@ -10,7 +10,11 @@ vi.mock("@/lib/api/client", () => ({
   api: { opportunities: { list: (...a: unknown[]) => list(...a), create: (...a: unknown[]) => create(...a) } },
 }));
 vi.mock("@/components/documents/DocumentPicker", () => ({ DocumentPicker: () => null }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), prefetch: vi.fn() }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), prefetch: vi.fn() }),
+  // W9.4: OpportunitiesClient reads ?create=1 to deep-link into the inline create flow.
+  useSearchParams: () => new URLSearchParams(""),
+}));
 
 import { OpportunitiesClient } from "@/components/opportunities/OpportunitiesClient";
 import { OpportunityStatusBadge } from "@/components/opportunities/OpportunityStatusBadge";

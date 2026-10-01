@@ -131,6 +131,12 @@ const es: Catalog = {
     savedMemory: "Memoria guardada ({count})",
     historyCount: "Historial ({count})",
     pickUp: "Retoma donde lo dejaste o prepara un nuevo puesto.",
+    opportunityTitle: "Prepárate para un puesto concreto",
+    opportunityBody: "Una oportunidad reúne todo para un puesto en un solo lugar: el rol, la empresa, tus evidencias, la preparación y la práctica.",
+    opportunityCreate: "Crear una oportunidad",
+    opportunityView: "Ver tus oportunidades",
+    opportunityCreateAnother: "Crear otra",
+    yourOpportunities: "Tus oportunidades",
   },
   settings: {
     title: "Ajustes",

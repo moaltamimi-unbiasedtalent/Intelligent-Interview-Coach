@@ -31,6 +31,15 @@ Date captured: 2026-09-30. Author: Claude Opus 4.8 (assisted). Read-only audit.
 > Playwright 126/127 (1 pre-existing unrelated `nextjs.spec` flake, passes in isolation), backend 13
 > env-artifact only; security/admin/workspace/identity/multi-agent/RC/i18n evals PASS. See
 > `P10B_W9_3_SECURITY_MENU.md`.
+>
+> **Update (W9.4 delivered):** Opportunity discoverability (Pilot PF-10) on branch
+> `fix/p10b-w9-4-opportunity-discoverability`. New Home `OpportunityEntry` (job-centric concept +
+> adaptive Create/View, before the Prepare composer, `data-tour="opportunity-entry"`); `?create=1`
+> deep-links into the existing inline create flow; ReturnJourney "Your opportunities" chip; desktop +
+> mobile nav salience + full mobile accessible name. New copy across 7 locales. Frontend-only: vitest
+> **336** (59 files), full Playwright **129/0-fail**, typecheck/lint/build green; no
+> backend/schema/migration; opportunity/security/identity/i18n/RC/marketing evals PASS. See
+> `P10B_W9_4_OPPORTUNITY_DISCOVERABILITY.md`.
 
 ---
 

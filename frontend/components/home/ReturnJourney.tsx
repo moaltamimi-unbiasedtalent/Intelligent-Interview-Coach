@@ -122,6 +122,11 @@ export function ReturnJourney() {
               {t("home.savedMemory", { count: state.memoryCount })}
             </Link>
           ) : null}
+          {/* P10B-W9.4: a returning candidate can reach their Opportunities without relying on the
+              top navigation. Links to the list (never guesses a "current"/"recent" one). */}
+          <Link href="/opportunities" className="rounded border border-border px-3 py-1.5 font-medium text-foreground hover:bg-surface-2">
+            {t("home.yourOpportunities")}
+          </Link>
           <Link href="/prepare" className="rounded border border-border px-3 py-1.5 font-medium text-foreground hover:bg-surface-2">
             {t("home.prepareAnother")}
           </Link>

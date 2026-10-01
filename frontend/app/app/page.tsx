@@ -1,6 +1,7 @@
 import { HomeEntry } from "@/components/coach/HomeEntry";
 import { ReturnJourney } from "@/components/home/ReturnJourney";
 import { HomeHero } from "@/components/home/HomeHero";
+import { OpportunityEntry } from "@/components/home/OpportunityEntry";
 
 export const metadata = { title: "Home", robots: { index: false, follow: false } };
 
@@ -14,6 +15,10 @@ export default function AppHomePage() {
             renders nothing here, preserving the onboarding experience. */}
         <ReturnJourney />
         <HomeHero />
+        {/* P10B-W9.4: the job-centric Opportunity entry comes BEFORE the general Prepare composer,
+            so the Opportunity mental model is discoverable first. Prepare (HomeEntry) stays below as
+            the secondary path — Opportunity creation is never mandatory. */}
+        <OpportunityEntry />
         <HomeEntry />
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {[

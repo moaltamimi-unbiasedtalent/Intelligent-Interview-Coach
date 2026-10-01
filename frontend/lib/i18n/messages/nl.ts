@@ -131,6 +131,12 @@ const nl: Catalog = {
     savedMemory: "Opgeslagen geheugen ({count})",
     historyCount: "Geschiedenis ({count})",
     pickUp: "Ga verder waar u gebleven was, of bereid een nieuwe functie voor.",
+    opportunityTitle: "Bereid je voor op een specifieke baan",
+    opportunityBody: "Een kans houdt alles voor één baan op één plek: de functie, het bedrijf, je bewijs, voorbereiding en oefening.",
+    opportunityCreate: "Een kans aanmaken",
+    opportunityView: "Jouw kansen bekijken",
+    opportunityCreateAnother: "Nog een aanmaken",
+    yourOpportunities: "Jouw kansen",
   },
   settings: {
     title: "Instellingen",

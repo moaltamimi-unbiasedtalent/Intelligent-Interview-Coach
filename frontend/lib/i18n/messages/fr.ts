@@ -131,6 +131,12 @@ const fr: Catalog = {
     savedMemory: "Mémoire enregistrée ({count})",
     historyCount: "Historique ({count})",
     pickUp: "Reprenez où vous vous êtes arrêté, ou préparez un nouveau poste.",
+    opportunityTitle: "Préparez-vous pour un poste précis",
+    opportunityBody: "Une opportunité regroupe tout pour un poste au même endroit : le rôle, l'entreprise, vos preuves, la préparation et l'entraînement.",
+    opportunityCreate: "Créer une opportunité",
+    opportunityView: "Voir vos opportunités",
+    opportunityCreateAnother: "En créer une autre",
+    yourOpportunities: "Vos opportunités",
   },
   settings: {
     title: "Paramètres",

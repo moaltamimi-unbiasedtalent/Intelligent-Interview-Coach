@@ -11,6 +11,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
@@ -25,10 +26,13 @@ import { OpportunityCreate } from "@/components/opportunities/OpportunityCreate"
 
 export function OpportunitiesClient() {
   const { t } = useI18n();
+  const searchParams = useSearchParams();
   const [items, setItems] = useState<Opportunity[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
-  const [creating, setCreating] = useState(false);
+  // P10B-W9.4: Home's "Create an opportunity" CTA deep-links here with ?create=1 to open the
+  // EXISTING inline create flow directly (no second creation implementation).
+  const [creating, setCreating] = useState(searchParams.get("create") === "1");
 
   const load = useCallback(async () => {
     setError(null);

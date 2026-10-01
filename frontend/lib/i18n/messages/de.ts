@@ -131,6 +131,12 @@ const de: Catalog = {
     savedMemory: "Gespeicherte Notizen ({count})",
     historyCount: "Verlauf ({count})",
     pickUp: "Machen Sie dort weiter, wo Sie aufgehört haben, oder bereiten Sie eine neue Rolle vor.",
+    opportunityTitle: "Für eine bestimmte Stelle vorbereiten",
+    opportunityBody: "Eine Möglichkeit bündelt alles für eine Stelle an einem Ort: Rolle, Unternehmen, Ihre Nachweise, Vorbereitung und Übung.",
+    opportunityCreate: "Möglichkeit erstellen",
+    opportunityView: "Ihre Möglichkeiten ansehen",
+    opportunityCreateAnother: "Weitere erstellen",
+    yourOpportunities: "Ihre Möglichkeiten",
   },
   settings: {
     title: "Einstellungen",
