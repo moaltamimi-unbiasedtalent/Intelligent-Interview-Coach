@@ -122,6 +122,8 @@ Camera/emotion/biometric assessment; recruiter rankings; automatic job applicati
 
 **Scope reconciliation (P8):** ~~whole-app UI translation~~ was originally OUT_OF_SCOPE, but the owner later EXPANDED scope to make seven-language internationalization/localization a Capstone deliverable (P3.5 foundation + P8 marketing localization + bounded candidate-surface completion). It is therefore IN scope and is tracked as `i18n-surfaces` / `L10n`. Billing/payment remains OUT_OF_SCOPE, but pricing/product **presentation** (D9) is in scope for P8 (presentation only, no checkout). The `Totals` line above is the P0/E0 baseline snapshot and does not reflect P1–P8 deliveries.
 
+**Scope reconciliation (P10B-W10):** the owner approved **billing/payment administration** and **comprehensive platform administration** as IN scope (phase P10B-W10, W10.0-W10.14; planning in `admin/ADMIN_PLATFORM_MASTER_PLAN.md`, rows in `admin/ADMIN_CAPABILITY_MATRIX.md`). Payments may use a production-ready interface plus a clearly labelled mock/sandbox adapter and are never represented as live. **Still OUT_OF_SCOPE:** enterprise SSO/SCIM/HRIS, plugin marketplace, user impersonation/"view as user", raw card data handling. D1 (Admin Console) remains DELIVERED as the bounded P6.5 foundation; W10 extends it. Planned, not delivered: support/ticketing, plans/entitlements, billing, integration/secret admin, KB/RAG admin UI, GDPR operations UI, reporting, incident management.
+
 ## P1/E1 presentation evidence (delivered this phase)
 Standard presentation table — see `p1_e1_identity_platform.md` for the full story.
 

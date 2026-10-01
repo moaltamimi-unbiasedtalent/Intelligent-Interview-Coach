@@ -1,5 +1,7 @@
 # P10C Handoff Impact — What W9 Must (and Must Not) Do for the Global Overhaul
 
+> **Roadmap note (reconciled at main d6c3493):** P10C remains a separate phase after RC-P10-003/Pilot 2. P10B-W10 (Admin) is also separate; W10.8 later provides the operational Admin UI for P10C sources but does not implement or replace the P10C architecture. See `docs/capstone/capstone_phase_plan.md` and `docs/capstone/admin/ADMIN_PLATFORM_MASTER_PLAN.md`.
+
 Audit phase. No runtime code changed. P10C (Global Career Intelligence & Compensation Overhaul) is **not
 implemented in W9**. This records how W9 decisions affect P10C so W9 does not build architecture that
 conflicts with it.

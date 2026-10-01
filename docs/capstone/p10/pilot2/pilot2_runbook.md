@@ -1,5 +1,7 @@
 # Pilot 2 — owner runbook (RC-P10-002)
 
+> **STATUS UPDATE (roadmap reconciliation, main d6c3493): Pilot 2 is PAUSED.** It resumes only after candidate remediation (W9.8-W9.13) is complete, admin changes affecting support/privacy are stable, and the full integrated qualification (P10B-W11) passes against a replacement RC-P10-003 (which does not exist yet). This document and the RC-P10-002 evidence below are immutable historical record; expect the resumed pilot to use a different RC. See `docs/capstone/capstone_phase_plan.md`.
+
 A concise, repeatable session runbook so each Pilot 2 session tests the **same** product version.
 Pair this with `pilot2_readiness.md` (journey/fields/taxonomy) and the existing kit
 (`participant_tasks.md`, `moderator_guide.md`, `participant_notice.md`, `pilot_data_handling.md`,

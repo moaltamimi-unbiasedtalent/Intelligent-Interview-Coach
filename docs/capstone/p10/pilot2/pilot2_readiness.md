@@ -1,5 +1,7 @@
 # Pilot 2 — readiness & methodology (RC-P10-002)
 
+> **STATUS UPDATE (roadmap reconciliation, main d6c3493): Pilot 2 is PAUSED.** It resumes only after candidate remediation (W9.8-W9.13) is complete, admin changes affecting support/privacy are stable, and the full integrated qualification (P10B-W11) passes against a replacement RC-P10-003 (which does not exist yet). This document and the RC-P10-002 evidence below are immutable historical record; expect the resumed pilot to use a different RC. See `docs/capstone/capstone_phase_plan.md`.
+
 **Candidate under test:** RC-P10-002 = origin/main `ab9ff7381ee02ed8de358e549ebf2e466e6ca08d`
 (post Waves 1-8 + Stage B0 Visual System v2). **One release candidate for the whole pilot.**
 **Status:** READINESS ONLY. Pilot 2 has **NOT** been run. No human observations exist yet.

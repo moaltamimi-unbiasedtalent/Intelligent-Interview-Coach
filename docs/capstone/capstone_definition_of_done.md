@@ -20,9 +20,11 @@ Reusable standard for every Capstone implementation phase (P1+). Code existing i
 15. Presentation evidence recorded.
 16. Known limitations documented.
 17. Git clean; only intended files changed.
-18. Branch pushed.
-19. No automatic merge.
-20. Explicit human review before merge.
+18. Branch pushed to GitHub (never force-push `main`).
+19. PR opened into `main`; required CI green (a run that did not execute is not a pass).
+20. Merged after required checks pass; local `main` fast-forwarded (`git pull --ff-only origin main`); local `main` == `origin/main` verified; working tree clean. A local-only wave is not integrated.
+
+> Items 18-20 originally read "Branch pushed / No automatic merge / Explicit human review before merge". Superseded by the permanent Completed Wave Integration Rule (see `CLAUDE.md` and `capstone_phase_plan.md`). Merge is still performed only after required checks pass.
 
 ## Non-negotiables carried from Sprint 4
 Private-by-default; server-side enforcement; no fabricated citations/data/compliance; no CoT/prompt/
