@@ -8,8 +8,9 @@ and cost confirmation and must never run on GET.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path
 
+from src.api.dependencies import require_platform_admin
 from src.api.schemas.evaluation import (
     EvaluationRunResponse,
     EvaluationRunsResponse,
@@ -17,7 +18,14 @@ from src.api.schemas.evaluation import (
 )
 from src.application import evaluation_service
 
-router = APIRouter(prefix="/evaluation", tags=["evaluation"])
+# P10B-W9.3: these are INTERNAL engineering/reviewer diagnostics (offline evaluation metrics),
+# never candidate-facing. Gate the whole router at platform-admin level so an ordinary candidate
+# (or anonymous caller) can neither read them nor discover their contents by URL. Server-side
+# authorization is the boundary; hiding the /review UI is only defense-in-depth.
+router = APIRouter(
+    prefix="/evaluation", tags=["evaluation"],
+    dependencies=[Depends(require_platform_admin)],
+)
 
 
 @router.get("/latest", response_model=EvaluationRunResponse,

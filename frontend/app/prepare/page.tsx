@@ -10,7 +10,7 @@ export default function PreparePage() {
   // Suspense boundary: the Agent Coach reads the run id from the URL (useSearchParams).
   // VoiceCoordinationProvider scopes STT/TTS mutual exclusion to this surface (P7 closure).
   return (
-    <Suspense fallback={<LoadingState label="Loading your preparation workspace" />}>
+    <Suspense fallback={<LoadingState />}>
       <VoiceCoordinationProvider>
         <PrepareEntry />
       </VoiceCoordinationProvider>

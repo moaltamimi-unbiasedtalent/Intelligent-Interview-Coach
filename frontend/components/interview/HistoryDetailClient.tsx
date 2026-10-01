@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import type { InterviewDetail } from "@/lib/api/types";
@@ -17,28 +17,45 @@ export function HistoryDetailClient({ reportId }: { reportId: string }) {
   const [interview, setInterview] = useState<InterviewDetail | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "notfound" | "error">("loading");
   const [error, setError] = useState<{ message: string; requestId?: string | null } | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const ctrlRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
+  // Safe re-runnable GET (P10B-W9.2). A 404 stays a distinct not-found state (never retried as a
+  // service error); only genuine service/network/server errors get an in-place Retry.
+  const load = useCallback((isRetry = false) => {
+    ctrlRef.current?.abort();
     const ctrl = new AbortController();
+    ctrlRef.current = ctrl;
+    if (isRetry) setRetrying(true);
+    else setStatus("loading");
     api.history
       .get(reportId, { signal: ctrl.signal })
       .then((r) => {
+        if (ctrl.signal.aborted) return;
         setInterview(r.interview);
+        setError(null);
         setStatus("ready");
+        setRetrying(false);
       })
       .catch((e) => {
-        if (e instanceof DOMException && e.name === "AbortError") return;
+        if (ctrl.signal.aborted || (e instanceof DOMException && e.name === "AbortError")) return;
         const err = e as ApiError;
         // A foreign or unknown id returns 404 → safe not-found (never another user's data).
         if (err.status === 404) {
           setStatus("notfound");
+          setRetrying(false);
           return;
         }
-        setError({ message: err.userMessage ?? "Couldn't load this session.", requestId: err.requestId });
+        setError({ message: err.userMessage ?? t("history.loadError"), requestId: err.requestId });
         setStatus("error");
+        setRetrying(false);
       });
-    return () => ctrl.abort();
-  }, [reportId]);
+  }, [reportId, t]);
+
+  useEffect(() => {
+    load();
+    return () => ctrlRef.current?.abort();
+  }, [load]);
 
   const role = (interview?.configuration?.target_role as string | undefined) ?? null;
   const created = interview?.created_at ? new Date(interview.created_at).toLocaleString() : null;
@@ -47,12 +64,12 @@ export function HistoryDetailClient({ reportId }: { reportId: string }) {
   return (
     <section>
       <PageHeader
-        eyebrow="Your sessions"
-        title={role ? `Interview — ${role}` : `Interview #${reportId}`}
-        description={created ? `Completed ${created}` : "Completed interview session"}
+        eyebrow={t("history.eyebrow")}
+        title={role ? t("history.detailTitleRole", { role }) : t("history.interviewNumber", { n: reportId })}
+        description={created ? t("history.completedOn", { date: created }) : t("history.completedSession")}
       />
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <ButtonLink href="/history" variant="ghost">← Back to history</ButtonLink>
+        <ButtonLink href="/history" variant="ghost">← {t("history.backToHistory")}</ButtonLink>
         {status === "ready" && report ? (
           <span className="flex items-center gap-2 text-sm">
             <span className="text-muted">{t("documents.exportReport")}:</span>
@@ -66,13 +83,15 @@ export function HistoryDetailClient({ reportId }: { reportId: string }) {
         ) : null}
       </div>
 
-      {status === "loading" ? <LoadingState label="Loading session" /> : null}
-      {status === "error" && error ? <ErrorState message={error.message} requestId={error.requestId} /> : null}
+      {status === "loading" ? <LoadingState label={t("history.loadingSession")} /> : null}
+      {status === "error" && error ? (
+        <ErrorState message={error.message} requestId={error.requestId} retrying={retrying} onRetry={() => load(true)} />
+      ) : null}
       {status === "notfound" ? (
         <EmptyState
-          title="Session not found"
-          description="This session doesn't exist or isn't yours."
-          action={<ButtonLink href="/history">Back to history</ButtonLink>}
+          title={t("history.notFoundTitle")}
+          description={t("history.notFoundDescription")}
+          action={<ButtonLink href="/history">{t("history.backToHistory")}</ButtonLink>}
         />
       ) : null}
       {status === "ready" ? (
@@ -82,7 +101,7 @@ export function HistoryDetailClient({ reportId }: { reportId: string }) {
           <Card>
             <CardBody>
               <p className="text-sm text-muted">
-                This session was completed but has no saved performance review.
+                {t("history.noReview")}
               </p>
             </CardBody>
           </Card>

@@ -1,13 +1,25 @@
 /**
- * Tutorial state — a NON-SENSITIVE UI preference only. It stores the tour version and
- * whether the user completed/dismissed it. It NEVER stores candidate data (CV, JD,
- * answers, roles, reports, memory, provider data or secrets). Guarded so private windows
- * or blocked storage never throw.
+ * Tutorial state — a NON-SENSITIVE UI preference only. It stores the tour version and whether the
+ * user completed/dismissed it (plus the last step). It NEVER stores candidate data (CV, JD, answers,
+ * roles, reports, memory, provider data or secrets). Guarded so private windows or blocked storage
+ * never throw.
+ *
+ * P10B-W9.5: state is ACCOUNT-SCOPED. The key includes the account's own opaque `user_id`, so on a
+ * shared browser Account A's completed/dismissed tour can NEVER suppress Account B's tour (the Pilot
+ * shared-browser defect). The legacy global v1 key `ask4mo.tutorial` is deliberately NOT read as
+ * authoritative for any authenticated account (see `readTutorialState`), so a device where v1 was
+ * completed globally no longer hides v2 for a specific signed-in user. Durable cross-device state would
+ * require a preferences migration, intentionally out of scope for W9.5 (see the W9.5 doc).
  */
 
 import { ASK4MO_TUTORIAL_VERSION } from "./steps";
 
-const KEY = "ask4mo.tutorial";
+const LEGACY_KEY = "ask4mo.tutorial"; // v1 global key — intentionally ignored for account state.
+
+/** Per-account key. `scope` is the opaque account id (or "anon" before an identity resolves). */
+function keyFor(scope: string): string {
+  return `ask4mo.tutorial:${scope || "anon"}`;
+}
 
 export interface TutorialState {
   version: number;
@@ -23,9 +35,9 @@ const DEFAULT_STATE: TutorialState = {
   lastStep: 0,
 };
 
-export function readTutorialState(): TutorialState {
+export function readTutorialState(scope: string): TutorialState {
   try {
-    const raw = window.localStorage.getItem(KEY);
+    const raw = window.localStorage.getItem(keyFor(scope));
     if (!raw) return { ...DEFAULT_STATE };
     const parsed = JSON.parse(raw) as Partial<TutorialState>;
     return {
@@ -39,18 +51,27 @@ export function readTutorialState(): TutorialState {
   }
 }
 
-export function writeTutorialState(patch: Partial<TutorialState>): void {
+export function writeTutorialState(scope: string, patch: Partial<TutorialState>): void {
   try {
-    const next = { ...readTutorialState(), ...patch, version: ASK4MO_TUTORIAL_VERSION };
-    window.localStorage.setItem(KEY, JSON.stringify(next));
+    const next = { ...readTutorialState(scope), ...patch, version: ASK4MO_TUTORIAL_VERSION };
+    window.localStorage.setItem(keyFor(scope), JSON.stringify(next));
   } catch {
     /* storage unavailable — the tour still works this session, just not remembered */
   }
 }
 
-/** First-visit eligibility: not completed and not dismissed for the CURRENT version. */
-export function shouldInvite(): boolean {
-  const s = readTutorialState();
+/** First-visit eligibility for THIS account: not completed and not dismissed for the current version. */
+export function shouldInvite(scope: string): boolean {
+  const s = readTutorialState(scope);
   if (s.version !== ASK4MO_TUTORIAL_VERSION) return true; // a newer tour re-invites once
   return !s.completed && !s.dismissed;
+}
+
+/** One-time best-effort cleanup of the legacy global v1 key (never used for account state). */
+export function forgetLegacyTutorialState(): void {
+  try {
+    window.localStorage.removeItem(LEGACY_KEY);
+  } catch {
+    /* ignore */
+  }
 }

@@ -40,9 +40,13 @@ def run() -> dict[str, tuple[bool, str]]:
     tasks = [prompts.TASK_STRATEGY, prompts.TASK_QUESTION, prompts.TASK_EVALUATION, prompts.TASK_REPORT]
 
     # --- language ---
-    check("seven_languages_configured",
-          set(prompts._CONVERSATION_LANGUAGE_NAMES) == {"en", "de", "fr", "es", "it", "pt", "nl"},
-          "7 product locales mapped to language names")
+    # Derived from the ONE canonical locale source (src/locales.py), so a new locale can never leave this
+    # prompt allow-list stale; W9.7 added Russian (8 product locales).
+    from src.locales import SUPPORTED_LOCALE_CODES
+    check("eight_languages_configured",
+          set(prompts._CONVERSATION_LANGUAGE_NAMES) == set(SUPPORTED_LOCALE_CODES)
+          and set(SUPPORTED_LOCALE_CODES) == {"en", "de", "fr", "es", "it", "pt", "nl", "ru"},
+          "8 product locales (incl. ru) mapped to language names, in lock-step with src/locales.py")
     de_prompts = {t: prompts.build_task_system_prompt(t, "zero_shot", cfg("de")) for t in tasks}
     check("practice_language_propagated",
           all("German" in de_prompts[t] for t in (prompts.TASK_STRATEGY, prompts.TASK_QUESTION, prompts.TASK_EVALUATION)),

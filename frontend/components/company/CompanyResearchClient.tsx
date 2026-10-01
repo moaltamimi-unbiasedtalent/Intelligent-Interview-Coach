@@ -174,7 +174,7 @@ export function CompanyResearchClient() {
             illustration={
               <EmptyStateIllustration
                 src="/images/ask4mo/ask4mo-empty-company-research-ink.png"
-                alt="A hand-drawn company viewed through a research lens and connected to source material."
+                alt={t("company.emptyIllustrationAlt")}
               />
             }
           />

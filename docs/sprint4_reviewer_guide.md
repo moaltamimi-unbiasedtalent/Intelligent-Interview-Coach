@@ -113,11 +113,21 @@ Identity boundary: a trusted gateway sets `X-User-Subject`; all data is scoped b
 ## Navigation
 
 The candidate-facing primary navigation remains deliberately focused on **Prepare,
-Practice, Progress and History**. Supporting evidence and technical review routes
-(**Sources**, **Review & Diagnostics**) are available under a **More** control, while
-**Settings** remains under the account control and **Home** under the wordmark. On
-mobile the bottom bar keeps exactly the four primary destinations; the header **More**
-and account controls reach the supporting and settings routes.
+Practice, Progress and History**. Supporting **candidate** routes (**Sources**, Company,
+Documents, Workspaces, Help) are available under a **More** control, while **Settings**
+remains under the account control and **Home** under the wordmark. On mobile the bottom
+bar keeps exactly the four primary destinations.
+
+**Review & Diagnostics access (updated P10B-W9.3).** The internal **Review & Diagnostics**
+hub (`/review`, `/review/rag`, `/review/evaluation`) is now **platform-admin-only**: an
+ordinary candidate session no longer sees the "Review & Diagnostics" menu item and cannot
+open those routes (they render a safe "Access denied"), and the underlying diagnostics APIs
+(`/api/v1/knowledge/diagnostics`, `/api/v1/evaluation/*`) require platform-admin server-side.
+To review them, use a platform-admin account (set `platform_role = platform_admin`). The
+candidate's own **Agent Inspector** (`/review/agent`) is unchanged and remains reachable from
+a Coach run's "View run details" — it stays **owner-scoped** (only the caller's own safe
+execution trace; platform admin is not a private-data superuser). Candidate-facing **Sources**
+(career evidence, `/api/v1/knowledge/sources` + `/snapshot`) are unaffected.
 
 **Home is a genuine entry point into Prepare.** A goal typed in the Home field ("What
 interview are you preparing for?") is transferred *ephemerally* to `/prepare` and starts

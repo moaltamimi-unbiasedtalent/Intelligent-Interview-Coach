@@ -20,7 +20,7 @@ import { RealtimeVoiceControl } from "@/components/ui/RealtimeVoiceControl";
 import { useT } from "@/components/i18n/I18nProvider";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { useCapabilities } from "@/lib/useCapabilities";
-import { toSpeechLocale } from "@/lib/speech/ttsLocales";
+import { isSpeechOutputLocale, toSpeechLocale } from "@/lib/speech/ttsLocales";
 
 /**
  * Interview Practice — the full candidate lifecycle over the durable backend. With
@@ -67,9 +67,12 @@ function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; 
   // locale and never career geography (§12). Falls back to en-US.
   const conversationLanguage = useAuthOptional()?.account?.conversation_language;
   const questionSpeechLang = toSpeechLocale(conversationLanguage);
+  // Speech (playback + live voice) exists only for the seven speech languages; Russian is an
+  // interface/conversation language without speech support, so those controls are not offered.
+  const speechSupported = isSpeechOutputLocale(conversationLanguage);
   // Realtime voice (P7.5) is a DEPLOYMENT capability; when off, only turn-based voice shows.
   const { capabilities } = useCapabilities();
-  const realtimeEnabled = capabilities.realtime_voice_enabled;
+  const realtimeEnabled = capabilities.realtime_voice_enabled && speechSupported;
   const [modes, setModes] = useState<string[]>([]);
   const [confirmingEnd, setConfirmingEnd] = useState(false);
   const evalRef = useRef<HTMLDivElement>(null);
@@ -83,15 +86,26 @@ function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; 
   const state = ctrl.state;
 
   if (ctrl.busy === "loading" && !state) {
-    return <Section><LoadingState label="Preparing your interview" /></Section>;
+    return <Section><LoadingState label={t("practice.preparingInterview")} /></Section>;
   }
   if (ctrl.loadError && !state) {
-    return <Section><ErrorState message={ctrl.loadError.message} requestId={ctrl.loadError.requestId} /></Section>;
+    // P10B-W9.2: the session LOAD is a safe idempotent GET; recover in place via ctrl.reload()
+    // (no browser reload, no re-login) rather than stranding the candidate on a dead error.
+    return (
+      <Section>
+        <ErrorState
+          message={ctrl.loadError.message}
+          requestId={ctrl.loadError.requestId}
+          retrying={ctrl.busy === "loading"}
+          onRetry={() => void ctrl.reload()}
+        />
+      </Section>
+    );
   }
-  if (!state) return <Section><LoadingState label="Preparing your interview" /></Section>;
+  if (!state) return <Section><LoadingState label={t("practice.preparingInterview")} /></Section>;
 
   const s = state.state;
-  const role = state.target_role ?? "Interview practice";
+  const role = state.target_role ?? t("practice.interviewPracticeTitle");
   const planned = state.questions_planned ?? Math.max(state.question_number, 1);
 
   // Terminal: report.
@@ -104,18 +118,18 @@ function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; 
     return (
       <Section>
         <Card><CardBody>
-          <h1 className="text-lg font-semibold">Something interrupted your interview</h1>
+          <h1 className="text-lg font-semibold">{t("practice.interruptedTitle")}</h1>
           <p className="mt-2 text-sm text-muted" role="alert">
-            {state.error ?? "A temporary problem occurred."}
+            {state.error ?? t("practice.temporaryProblem")}
           </p>
-          <p className="mt-1 text-sm text-muted">Your interview is saved. You can pick up where you left off.</p>
+          <p className="mt-1 text-sm text-muted">{t("practice.savedResume")}</p>
           <div className="mt-4 flex gap-2">
             {state.error_recoverable ? (
               <Button onClick={() => ctrl.recover()} disabled={Boolean(ctrl.busy)} aria-busy={ctrl.busy === "recover"}>
-                {ctrl.busy === "recover" ? "Resuming…" : "Resume interview"}
+                {ctrl.busy === "recover" ? t("practice.resuming") : t("practice.resumeInterview")}
               </Button>
             ) : null}
-            <Button variant="ghost" onClick={() => router.push("/history")}>Leave for now</Button>
+            <Button variant="ghost" onClick={() => router.push("/history")}>{t("practice.leaveForNow")}</Button>
           </div>
         </CardBody></Card>
       </Section>
@@ -132,13 +146,13 @@ function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; 
           <p className="text-sm text-muted">{role}</p>
           {fromCoach ? (
             <p className="text-xs text-muted" data-testid="coach-provenance">
-              Prepared with Mo
+              {t("practice.preparedWithMo")}
             </p>
           ) : null}
         </div>
         <Button variant="ghost" size="sm" onClick={() => router.push("/history")}
-                title="Your interview is saved; come back any time">
-          Pause
+                title={t("practice.pauseTitle")}>
+          {t("practice.pause")}
         </Button>
       </div>
 
@@ -148,7 +162,7 @@ function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; 
 
       {ctrl.conflict ? (
         <p className="mb-3 rounded border border-border bg-surface-2 px-3 py-2 text-sm text-muted" role="status">
-          This session changed in another tab. We reloaded the latest version.
+          {t("practice.sessionChangedReload")}
         </p>
       ) : null}
       {ctrl.actionError ? (
@@ -163,9 +177,11 @@ function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; 
           </h1>
           {/* Optional playback of the VISIBLE question (§8). Never auto-plays; the answer
               composer below reuses the P3 dictation control for "Speak answer". */}
-          <div className="mb-4">
-            <VoicePlaybackControl text={q.question} lang={questionSpeechLang} label={t("voice.listenQuestion")} />
-          </div>
+          {speechSupported ? (
+            <div className="mb-4">
+              <VoicePlaybackControl text={q.question} lang={questionSpeechLang} label={t("voice.listenQuestion")} />
+            </div>
+          ) : null}
           <InterviewAnswerComposer
             value={answer}
             onChange={setAnswer}
@@ -203,7 +219,7 @@ function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; 
           <InterviewEvaluation evaluation={state.last_evaluation} />
           <FeedbackControl surface="interview_evaluation"
             targetId={`${sessionId}:${state.question_number}`}
-            prompt="Was this feedback helpful?" />
+            prompt={t("feedback.evalPrompt")} />
           <DeepDivePanel ctrl={ctrl} modes={modes} />
           <MainActions ctrl={ctrl} confirmingEnd={confirmingEnd} setConfirmingEnd={setConfirmingEnd} />
         </div>
@@ -215,18 +231,18 @@ function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; 
       {/* Interview complete → generate the report. */}
       {s === "INTERVIEW_COMPLETE" ? (
         <Card><CardBody>
-          <h1 className="text-lg font-semibold">Interview complete</h1>
-          <p className="mt-1 text-sm text-muted">Generate your performance review to see how you did.</p>
+          <h1 className="text-lg font-semibold">{t("practice.interviewComplete")}</h1>
+          <p className="mt-1 text-sm text-muted">{t("practice.generatePrompt")}</p>
           <div className="mt-4">
             <Button onClick={() => ctrl.generateReport()} disabled={Boolean(ctrl.busy)} aria-busy={ctrl.busy === "report"}>
-              {ctrl.busy === "report" ? "Creating your performance review…" : "Generate performance review"}
+              {ctrl.busy === "report" ? t("practice.generatingReportBusy") : t("practice.generateReport")}
             </Button>
           </div>
         </CardBody></Card>
       ) : null}
 
       <p className="mt-6 text-center text-xs text-muted">
-        Distraction-free by design. No camera; timing is guidance only.
+        {t("practice.distractionFree")}
       </p>
     </Section>
   );
@@ -237,21 +253,22 @@ function MainActions({ ctrl, confirmingEnd, setConfirmingEnd }: {
   confirmingEnd: boolean;
   setConfirmingEnd: (v: boolean) => void;
 }) {
+  const t = useT();
   const busy = Boolean(ctrl.busy);
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
       <Button onClick={() => ctrl.nextQuestion()} disabled={busy} aria-busy={ctrl.busy === "next"}>
-        {ctrl.busy === "next" ? "Preparing your next question…" : "Next question"}
+        {ctrl.busy === "next" ? t("practice.preparingNext") : t("practice.nextQuestion")}
       </Button>
       {confirmingEnd ? (
         <span className="flex items-center gap-2 text-sm">
-          <span className="text-muted">End the interview now?</span>
+          <span className="text-muted">{t("practice.endConfirm")}</span>
           <Button variant="ghost" size="sm" onClick={() => { setConfirmingEnd(false); void ctrl.complete(); }}
-                  disabled={busy}>Yes, end</Button>
-          <Button variant="ghost" size="sm" onClick={() => setConfirmingEnd(false)} disabled={busy}>Keep going</Button>
+                  disabled={busy}>{t("practice.endYes")}</Button>
+          <Button variant="ghost" size="sm" onClick={() => setConfirmingEnd(false)} disabled={busy}>{t("practice.keepGoing")}</Button>
         </span>
       ) : (
-        <Button variant="ghost" size="sm" onClick={() => setConfirmingEnd(true)} disabled={busy}>End interview</Button>
+        <Button variant="ghost" size="sm" onClick={() => setConfirmingEnd(true)} disabled={busy}>{t("practice.endInterview")}</Button>
       )}
     </div>
   );

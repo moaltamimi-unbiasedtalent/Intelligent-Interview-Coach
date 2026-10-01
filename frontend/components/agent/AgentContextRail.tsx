@@ -3,6 +3,7 @@
 import type { AgentRunResponse } from "@/lib/api/types";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { useT } from "@/components/i18n/I18nProvider";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -19,6 +20,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
  * evolving context, not a generic Q&A box.
  */
 export function AgentContextRail({ run }: { run: AgentRunResponse }) {
+  const t = useT();
   const ctx = run.preparation_context ?? null;
   const role = ctx?.target_role ?? run.resolved_occupation ?? null;
   const strengths = ctx?.candidate_strengths ?? [];
@@ -28,14 +30,14 @@ export function AgentContextRail({ run }: { run: AgentRunResponse }) {
   return (
     <Card>
       <CardBody className="space-y-4">
-        <h2 className="text-sm font-semibold">Your preparation</h2>
+        <h2 className="text-sm font-semibold">{t("prepare.yourPreparation")}</h2>
 
-        <Section title="Target role">
-          {role ? <span className="font-medium">{role}</span> : <span className="text-muted">Not set yet</span>}
+        <Section title={t("prepare.targetRole")}>
+          {role ? <span className="font-medium">{role}</span> : <span className="text-muted">{t("prepare.notSetYet")}</span>}
         </Section>
 
         {strengths.length ? (
-          <Section title="Strengths">
+          <Section title={t("prepare.strengths")}>
             <ul className="flex flex-wrap gap-1.5">
               {strengths.slice(0, 6).map((s, i) => <li key={i}><Badge tone="low">{s}</Badge></li>)}
             </ul>
@@ -43,28 +45,28 @@ export function AgentContextRail({ run }: { run: AgentRunResponse }) {
         ) : null}
 
         {(priorities.length ? priorities : gaps).length ? (
-          <Section title="Priority gaps">
+          <Section title={t("prepare.priorityGaps")}>
             <ul className="flex flex-wrap gap-1.5">
               {(priorities.length ? priorities : gaps).slice(0, 6).map((g, i) => <li key={i}><Badge tone="high">{g}</Badge></li>)}
             </ul>
           </Section>
         ) : null}
 
-        <Section title="Preparation plan">
-          {ctx ? <span className="text-muted">Ready — {role ?? "role"} plan available</span> : <span className="text-muted">Not built yet</span>}
+        <Section title={t("prepare.preparationPlan")}>
+          {ctx ? <span className="text-muted">{t("prepare.planReadyWith", { role: role ?? t("prepare.roleWord") })}</span> : <span className="text-muted">{t("prepare.notBuiltYet")}</span>}
         </Section>
 
-        <Section title="Career evidence">
+        <Section title={t("prepare.careerEvidence")}>
           {run.retrieval_used ? (
-            <span className="text-muted">{run.sources.length} source{run.sources.length === 1 ? "" : "s"} considered</span>
+            <span className="text-muted">{t(run.sources.length === 1 ? "prepare.sourcesConsidered_one" : "prepare.sourcesConsidered_other", { count: run.sources.length })}</span>
           ) : (
-            <span className="text-muted">None yet</span>
+            <span className="text-muted">{t("prepare.noneYet")}</span>
           )}
         </Section>
 
         {run.memory_used ? (
-          <Section title="Saved preparation">
-            <span className="text-muted">Using {run.memory_count} saved note{run.memory_count === 1 ? "" : "s"}</span>
+          <Section title={t("prepare.savedPreparation")}>
+            <span className="text-muted">{t(run.memory_count === 1 ? "prepare.savedNotes_one" : "prepare.savedNotes_other", { count: run.memory_count })}</span>
           </Section>
         ) : null}
       </CardBody>

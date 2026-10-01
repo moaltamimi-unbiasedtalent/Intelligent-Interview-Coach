@@ -1,7 +1,11 @@
+"use client";
+
 import { cn } from "@/lib/utils";
+import { useT } from "@/components/i18n/I18nProvider";
 
 /** Question progress dots + count. Purely visual in Phase 3B. */
 export function InterviewProgress({ total, current }: { total: number; current: number }) {
+  const t = useT();
   return (
     <div className="text-center">
       <div className="flex justify-center gap-1.5" aria-hidden="true">
@@ -20,7 +24,7 @@ export function InterviewProgress({ total, current }: { total: number; current: 
         ))}
       </div>
       <p className="mt-2 text-sm text-muted">
-        Question {current} of {total}
+        {t("practice.questionProgress", { current, total })}
       </p>
     </div>
   );

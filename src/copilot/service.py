@@ -31,6 +31,7 @@ from src.copilot.models import (
 )
 from src.copilot.rag.responder import Responder
 from src.copilot.rag.routing import route_for_intent
+from src.copilot.rag import localized
 from src.copilot.rag.synthesis import build_evidence_messages
 from src.copilot.rag.translation import QueryTranslator
 from src.copilot.retrieval.fusion import reciprocal_rank_fusion
@@ -308,6 +309,7 @@ class CareerIntelligenceService:
         company_context=None,
         model: str | None = None,
         progress=None,
+        conversation_language: str | None = None,
     ) -> OrchestrationResult:
         # Stages 1–8 (validation → routing → hybrid + structured retrieval →
         # evidence assembly) are the SHARED evidence-retrieval layer, reused by the
@@ -373,11 +375,13 @@ class CareerIntelligenceService:
             candidate_background=bundle.candidate_background,
             coverage_notes=bundle.coverage_notes,
             company_summary=company_summary,
+            language=conversation_language,
         )
         answer_text, usage = self._synthesize(
             messages, trace, rag_required=trace.rag_required,
             results=bundle.results, tool_summaries=tool_summaries, model=model,
             structured_evidence=bundle.structured_evidence, coverage_notes=bundle.coverage_notes,
+            language=conversation_language,
         )
 
         # Output guard: redact secret-like strings, flag leakage / bad citations.
@@ -1066,7 +1070,7 @@ class CareerIntelligenceService:
 
     def _synthesize(
         self, messages, trace, *, rag_required, results, tool_summaries, model,
-        structured_evidence=None, coverage_notes=None,
+        structured_evidence=None, coverage_notes=None, language=None,
     ):
         structured_evidence = structured_evidence or []
         coverage_notes = coverage_notes or []
@@ -1084,28 +1088,32 @@ class CareerIntelligenceService:
                     "output-token limit); returned a limited summary instead."
                 )
                 return self._fallback_answer(
-                    rag_required, results, tool_summaries, structured_evidence, coverage_notes
+                    rag_required, results, tool_summaries, structured_evidence, coverage_notes, language
                 ), reply.usage
             return content, reply.usage
         except Exception:  # noqa: BLE001 - model/config failure must not crash
             trace.degraded.append("model")
             trace.notes.append("The model was unavailable; returned a limited summary.")
             return self._fallback_answer(
-                rag_required, results, tool_summaries, structured_evidence, coverage_notes
+                rag_required, results, tool_summaries, structured_evidence, coverage_notes, language
             ), None
 
     @staticmethod
     def _fallback_answer(rag_required, results, tool_summaries,
-                         structured_evidence=None, coverage_notes=None) -> str:
-        parts = ["The assistant model is currently unavailable, so this is a limited summary."]
+                         structured_evidence=None, coverage_notes=None, language=None) -> str:
+        # Deterministic text that stands in for Mo's prose -> Mo CONVERSATION language (English default,
+        # byte-identical to the previous behaviour). Bounded allow-list in `rag.localized`.
+        fb = localized.fallback_strings(language)
+        _, tools_heading, _ = localized.section_headings(language)
+        parts = [fb["unavailable"]]
         if tool_summaries:
-            parts.append("Tool results (calculated): " + " ".join(tool_summaries))
+            parts.append(tools_heading + " " + " ".join(tool_summaries))
         for i, e in enumerate(structured_evidence or [], start=1):
             parts.append(f"[{i}] {e.text}")
         if results:
-            parts.append(f"Retrieved {len(results)} narrative passage(s) — see sources.")
+            parts.append(fb["retrieved"].format(n=len(results)))
         elif rag_required and not structured_evidence:
-            parts.append(constants.INSUFFICIENT_EVIDENCE_MESSAGE)
+            parts.append(localized.insufficient_message(language))
         for note in coverage_notes or []:
             parts.append(note)
         return " ".join(parts)

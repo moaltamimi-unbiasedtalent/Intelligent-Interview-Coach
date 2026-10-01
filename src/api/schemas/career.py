@@ -12,6 +12,7 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 from src.copilot import constants
+from src.locales import AppLocale
 
 
 class CareerChatRequest(BaseModel):
@@ -20,6 +21,8 @@ class CareerChatRequest(BaseModel):
     candidate_background: str | None = Field(default=None, max_length=constants.MAX_JOB_DESCRIPTION_CHARS)
     days_until_interview: int | None = Field(default=None, ge=0, le=365)
     hours_per_week: float | None = Field(default=None, ge=0, le=168)
+    # Mo conversation language (bounded Literal, never free text). Prose-only; geography unaffected.
+    conversation_language: AppLocale | None = None
 
 
 class CitationOut(BaseModel):

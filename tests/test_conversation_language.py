@@ -24,8 +24,9 @@ def test_directive_is_injection_safe():
         assert response_language_directive(bad) is None
 
 
-def test_all_seven_languages_configured():
-    assert set(RESPONSE_LANGUAGE_NAMES) == {"en", "de", "fr", "es", "it", "pt", "nl"}
+def test_all_eight_languages_configured():
+    # 8 product languages since W9.7 (Russian); the allow-list is the only source of language names.
+    assert set(RESPONSE_LANGUAGE_NAMES) == {"en", "de", "fr", "es", "it", "pt", "nl", "ru"}
 
 
 def test_resolve_language_allowlist():

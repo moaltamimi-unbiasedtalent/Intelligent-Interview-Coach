@@ -19,13 +19,21 @@ os.environ.setdefault("EMAIL_PROVIDER", "memory")
 
 ROOT = Path(__file__).resolve().parent.parent
 FE = ROOT / "frontend"
-LOCALES = ["en", "de", "fr", "es", "it", "pt", "nl"]
+LOCALES = ["en", "de", "fr", "es", "it", "pt", "nl", "ru"]
 PW = "correcthorsebattery"
 
 
 def read(rel: str, base: Path = FE) -> str:
     p = base / rel
     return p.read_text(encoding="utf-8") if p.exists() else ""
+
+
+def locale_src(loc: str) -> str:
+    """Source text of one locale's base catalogue. Russian (W9.7) is composed from three part files."""
+    base = read(f"lib/i18n/messages/{loc}.ts")
+    if loc == "ru":
+        base += "".join(read(f"lib/i18n/messages/ru-parts/{x}.ts") for x in ("a", "b", "c"))
+    return base
 
 
 def run() -> dict[str, tuple[bool, str]]:
@@ -38,7 +46,7 @@ def run() -> dict[str, tuple[bool, str]]:
     files_ok = all((FE / f"lib/i18n/messages/{c}.ts").exists() for c in LOCALES)
     locales_ts = read("lib/i18n/locales.ts")
     registry_ok = all(f'"{c}"' in locales_ts for c in LOCALES)
-    check("locale_registry", files_ok and registry_ok, "7 catalogue files + typed locale registry")
+    check("locale_registry", files_ok and registry_ok, "8 catalogue files + typed locale registry")
 
     # 2) catalogue completeness — each non-English catalogue is typed `Catalog` (which
     #    enforces the exact English key set at compile time) and default-exports.
@@ -87,10 +95,10 @@ def run() -> dict[str, tuple[bool, str]]:
     check("conversation_directive_injection_safe", inj_safe, "directive built only from the allow-list")
 
     # 9) help + validation strings exist in the catalogue for all locales (titles/keys).
-    help_ok = all("languages:" in read(f"lib/i18n/messages/{c}.ts") and "gettingStarted:" in read(f"lib/i18n/messages/{c}.ts") for c in LOCALES)
-    check("help_localization", help_ok, "help namespace present in all 7 catalogues (titles/notes)")
-    val_ok = all("weakPassword" in read(f"lib/i18n/messages/{c}.ts") and "incorrectCredentials" in read(f"lib/i18n/messages/{c}.ts") for c in LOCALES)
-    check("validation_message_localization", val_ok, "auth validation/error messages in all 7 catalogues")
+    help_ok = all("languages:" in locale_src(c) and "gettingStarted:" in locale_src(c) for c in LOCALES)
+    check("help_localization", help_ok, "help namespace present in all 8 catalogues (titles/notes)")
+    val_ok = all("weakPassword" in locale_src(c) and "incorrectCredentials" in locale_src(c) for c in LOCALES)
+    check("validation_message_localization", val_ok, "auth validation/error messages in all 8 catalogues")
 
     # 10) preference persistence + cross-user isolation (API).
     from fastapi.testclient import TestClient
@@ -112,6 +120,89 @@ def run() -> dict[str, tuple[bool, str]]:
     check("cross_user_locale_isolation", isolate, "one user's locale never affects another")
     check("unsupported_locale_rejected_api", bad == 422, "unsupported locale rejected at the API (422)")
 
+    # 11) candidate-facing hardcoded-English guard (P10B-W9.6): the bounded frontend scanner must
+    # report zero unexplained candidate-facing literals. Degrades to a soft pass only if node is
+    # unavailable in this environment (never a false FAIL on tooling absence).
+    import shutil
+    import subprocess
+    if shutil.which("node") is None:
+        check("no_hardcoded_candidate_english", True, "node unavailable — guard skipped (run `npm test`)")
+    else:
+        proc = subprocess.run(
+            ["node", "scripts/scan-i18n.mjs", "--count"], cwd=str(FE),
+            capture_output=True, text=True,
+        )
+        n = (proc.stdout or "").strip()
+        ok = n == "0"
+        check("no_hardcoded_candidate_english", ok,
+              f"scanner reports {n or '?'} candidate-facing hardcoded-English offenders")
+
+    # 12) Russian (W9.7) is the 8th app/conversation locale and is NOT thereby a speech language, a
+    # labour market, an OCR/document language or a KB/taxonomy (ESCO) language. Each of those is its own
+    # capability; adding an app locale must never enable them.
+    from src.copilot.knowledge import governance
+    from src.documents.ocr import TESSERACT_LANGS
+    from src.locales import DOCUMENT_LANGUAGE_CODES, SUPPORTED_LOCALE_CODES
+    from src.voice.realtime import SUPPORTED_REALTIME_LOCALES
+    app_ok = "ru" in SUPPORTED_LOCALE_CODES and len(SUPPORTED_LOCALE_CODES) == 8 and '"ru"' in locales_ts
+    check("russian_is_eighth_app_locale", app_ok, "ru in the canonical backend + frontend locale registries (8 locales)")
+    dict_src = read("components/ui/DictationControl.tsx")
+    tts_src = read("lib/speech/ttsLocales.ts")
+    speech_ok = (
+        "ru" not in SUPPORTED_REALTIME_LOCALES
+        and "ru-RU" not in dict_src and "ru-" not in dict_src.split("DICTATION_LANGUAGES", 1)[-1].split("];", 1)[0]
+        and 'ru: "' not in tts_src
+    )
+    check("app_locale_does_not_imply_speech", speech_ok,
+          "ru is NOT in dictation / TTS / realtime lists (speech capability is a separate, unchanged dimension)")
+    other_ok = (
+        "ru" not in governance.SUPPORTED_LANGUAGES
+        and "ru" not in TESSERACT_LANGS and "ru" not in DOCUMENT_LANGUAGE_CODES
+        and '"ru"' not in read("components/settings/CareerGeographyField.tsx")
+    )
+    check("russian_not_geography_ocr_or_taxonomy", other_ok,
+          "ru is NOT a labour market, OCR/document language or KB/ESCO language")
+
+    # 13) Protected brand slogan (W9.7): ONE constant, every locale's tagline is that constant verbatim
+    # (never translated/transliterated/re-punctuated), and no catalogue carries a translated variant.
+    brand = read("lib/brand.ts")
+    slogan_defined = 'export const BRAND_SLOGAN = "Ask More. Be More.";' in brand
+    taglines_ok = all(
+        "tagline: BRAND_SLOGAN," in locale_src(c) and "BRAND_SLOGAN" in locale_src(c) for c in LOCALES
+    )
+    translated_variants = ("Frag mehr", "Demandez plus", "Pregunta más", "Chiedi di più",
+                           "Pergunte mais", "Vraag meer", "Спрашивай больше")
+    no_variants = not any(v in "".join(locale_src(c) for c in LOCALES) for v in translated_variants)
+    check("brand_slogan_invariant", slogan_defined and taglines_ok and no_variants,
+          'every locale resolves common.tagline to BRAND_SLOGAN == "Ask More. Be More." (single source, no variants)')
+    guard = read("scripts/scan-i18n.mjs")
+    check("brand_slogan_guard_is_exact_only",
+          'new Set(["Ask More. Be More."])' in guard and "APPROVED_BRAND_INVARIANTS.has(text)" in guard,
+          "the hardcoded-English guard approves ONLY the exact slogan (not arbitrary English copy)")
+
+    # 14) W9.7A: structural blind-spot coverage + Mo-prose language ownership.
+    # (a) The hardcoded-English guard must keep its three structural passes (string-tuple arrays like the Home
+    #     feature blocks, HTML entities, JSX text mixed with `{}` expressions) - W9.7 visual QA found real
+    #     English that the JSX-text/attribute/object-key passes could not see.
+    guard_src = read("scripts/scan-i18n.mjs")
+    check("scanner_structural_coverage",
+          all(tok in guard_src for tok in ('"array-literal"', '"jsx-text-mixed"', "decodeEntities", "`obj:")),
+          "scanner covers string-tuple arrays, mixed JSX text, HTML entities and object-literal content")
+    # (b) Language ownership: Mo's prose (incl. the 3 response-template headings, the insufficient-evidence
+    #     sentence and the deterministic fallback) follows the CONVERSATION language; English stays byte-identical.
+    from src.api.schemas.career import CareerChatRequest as _ApiReq
+    from src.copilot.rag import localized as _loc
+    from src.copilot.rag.synthesis import build_evidence_messages as _bem
+    owner_ok = (
+        set(_loc.SECTION_HEADINGS) == set(_loc.INSUFFICIENT) == set(_loc.FALLBACK) == set(SUPPORTED_LOCALE_CODES)
+        and "conversation_language" in _ApiReq.model_fields
+        and _bem(query="q", sections={}, language=None) == _bem(query="q", sections={}, language="en")
+        and "Подтверждения (из источников):" in _bem(query="q", sections={}, language="ru")[0]["content"]
+        and "Evidence (from sources):" not in _bem(query="q", sections={}, language="de")[0]["content"]
+    )
+    check("mo_prose_language_ownership", owner_ok,
+          "Career-chat headings/fallback follow the Mo conversation language; English default unchanged")
+
     return results
 
 
@@ -121,6 +212,10 @@ SAFETY = {
     "cross_user_locale_isolation",
     "unsupported_locale_rejected_api",
     "fallback_correctness",
+    "app_locale_does_not_imply_speech",
+    "russian_not_geography_ocr_or_taxonomy",
+    "brand_slogan_invariant",
+    "mo_prose_language_ownership",
 }
 
 

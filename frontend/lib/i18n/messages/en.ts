@@ -4,10 +4,12 @@
  * missing key. Keys are grouped by namespace. `{var}` placeholders are interpolated by
  * the translator. Status: ENGINEERING DRAFT (English is the authored source).
  */
+import { BRAND_SLOGAN } from "../../brand";
+
 export const messages = {
   common: {
     appName: "Ask4Mo",
-    tagline: "Ask More. Be More.",
+    tagline: BRAND_SLOGAN,
     productName: "Intelligent Interview Coach",
     signIn: "Sign in",
     signOut: "Sign out",
@@ -35,6 +37,17 @@ export const messages = {
     checkingSession: "Checking your session",
     genericError: "That request couldn’t be processed. Please try again.",
     networkError: "We couldn’t connect right now. Please check your connection and try again.",
+    offline: "You’re offline. Check your internet connection and try again.",
+    serviceUnreachable: "Ask4Mo can’t reach the service right now. Please try again shortly.",
+    serverError: "Ask4Mo hit a problem while processing that request. Please try again.",
+    serviceUnavailable: "Ask4Mo is temporarily unavailable. Please try again shortly.",
+    rateLimited: "You’ve made too many requests. Please wait a moment and try again.",
+    sessionExpired: "Your session has expired. Please sign in again.",
+    forbidden: "You don’t have access to that.",
+    accessDeniedTitle: "Access denied",
+    notFound: "We couldn’t find what you were looking for.",
+    validationError: "Please check the information and try again.",
+    conflict: "This is already being processed. Please wait a moment and try again.",
     retry: "Try again",
     empty: "Nothing here yet.",
   },
@@ -42,7 +55,7 @@ export const messages = {
     signInTitle: "Sign in",
     signInSubtitle: "Welcome back to Ask4Mo.",
     registerTitle: "Create your account",
-    registerSubtitle: "Prepare with evidence, practise with purpose. Ask More. Be More.",
+    registerSubtitle: "Prepare with evidence, practise with purpose. " + BRAND_SLOGAN,
     email: "Email",
     password: "Password",
     name: "Name (optional)",
@@ -123,6 +136,12 @@ export const messages = {
     savedMemory: "Saved memory ({count})",
     historyCount: "History ({count})",
     pickUp: "Pick up where you left off, or prepare for a new role.",
+    opportunityTitle: "Prepare for a specific job",
+    opportunityBody: "An opportunity keeps everything for one job in one place: the role, company, your evidence, preparation and practice.",
+    opportunityCreate: "Create an opportunity",
+    opportunityView: "View your opportunities",
+    opportunityCreateAnother: "Create another",
+    yourOpportunities: "Your opportunities",
   },
   settings: {
     title: "Settings",
@@ -183,7 +202,7 @@ export const messages = {
     troubleshooting: "Troubleshooting",
     languages: "Languages",
     languagesHelp:
-      "Ask4Mo’s interface is available in English, German, French, Spanish, Italian, Portuguese and Dutch. Your interface language, Mo’s conversation language and the dictation language are set separately in Settings. Changing a language never changes the labour-market region your evidence comes from.",
+      "Ask4Mo’s interface is available in English, German, French, Spanish, Italian, Portuguese, Dutch and Russian. Your interface language, Mo’s conversation language and the dictation language are set separately in Settings. Changing a language never changes the labour-market region your evidence comes from.",
   },
   practice: {
     title: "Practise an interview",
@@ -270,6 +289,45 @@ export const messages = {
     stepReview: "Review",
   },
   // Shared coaching-style + geography controls (onboarding + Settings).
+  tutorial: {
+    // Welcome (post-onboarding) call-to-action copy (reuses onboarding.completeTitle/completeBody).
+    welcomeConcept: "Ask4Mo works best when you keep the role, company, job description, evidence, preparation and practice for one job together in an opportunity.",
+    welcomeCreate: "Create your first opportunity",
+    welcomeTour: "Take the quick tour",
+    welcomeWorkspace: "Go to your workspace",
+    // Tour chrome.
+    invitationTitle: "Welcome to Ask4Mo",
+    invitationBody: "A quick tour of how to prepare, practise and improve. About 2 minutes.",
+    start: "Start tour",
+    later: "Maybe later",
+    close: "Close tour",
+    learnMore: "Learn more",
+    stepOf: "{n} of {total}",
+    skip: "Skip",
+    back: "Back",
+    next: "Next",
+    finish: "Finish",
+    openHelp: "Open Help Center",
+    // Tour steps (v2).
+    s1Title: "Welcome to your workspace",
+    s1Body: "This is your home base. From here you set up a job, prepare with Mo, practise and track your progress.",
+    s2Title: "Keep one job together",
+    s2Body: "An opportunity keeps everything for one job in one place: the role, company, evidence, preparation and practice. Open or create one to begin.",
+    s3Title: "Add the role and job description",
+    s3Body: "Give Mo the target role and, when you have it, the job description. Better context means more relevant preparation.",
+    s4Title: "Your evidence stays yours",
+    s4Body: "Add your CV and supporting documents privately. You review and approve what becomes evidence; nothing is shared without you.",
+    s5Title: "Prepare with Mo",
+    s5Body: "Ask Mo to analyse the role, find gaps and build a focused plan. Mo cites evidence when it helps, and says so when it cannot.",
+    s6Title: "Practise realistically",
+    s6Body: "Answer realistic interview questions and get structured feedback on each answer, at your own pace.",
+    s7Title: "Track your improvement",
+    s7Body: "Progress turns your completed practice into clear activity, focus areas and trends over time.",
+    s8Title: "Revisit past sessions",
+    s8Body: "History keeps your completed interviews and reports so you can reopen and review them anytime.",
+    s9Title: "Help whenever you need it",
+    s9Body: "Search the Help Center, or replay this tour from Help at any time.",
+  },
   coaching: {
     title: "Mo coaching style",
     scoringNote: "Coaching style changes how feedback is communicated, not how your interview performance is scored.",
@@ -309,6 +367,7 @@ export const messages = {
     manageDocuments: "Manage documents",
   },
   prepare: {
+    contextTab: "Preparation",
     messageMo: "Message Mo",
     send: "Send",
     sending: "Sending…",
@@ -629,7 +688,7 @@ export const messages = {
     hSpeakQ: "Speak an answer and edit before sending",
     hSpeakA: "Use the microphone to speak your answer or message. Your words appear as an editable transcript; you review and edit them, then press Send or Submit yourself. Speaking never submits on its own, and starting to speak stops playback (and vice-versa) so the two are never active at once.",
     hLangQ: "Languages, browser dependency and sources",
-    hLangA: "Voice playback follows your Mo conversation language across the seven supported languages (English, German, French, Spanish, Italian, Portuguese, Dutch). Whether a voice is installed is browser/OS-dependent; if none is available the text stays on screen. Long links aren’t read aloud - playback notes that sources are available on screen, and the source links stay visible.",
+    hLangA: "Voice playback follows your Mo conversation language across the seven supported languages (English, German, French, Spanish, Italian, Portuguese, Dutch). Whether a voice is installed is browser/OS-dependent; if none is available the text stays on screen. Long links aren’t read aloud - playback notes that sources are available on screen, and the source links stay visible. Russian is available as an interface and conversation language, but voice playback is not available for it yet.",
     hPrivacyQ: "Privacy and what voice is NOT used for",
     hPrivacyA: "Ask4Mo hands the visible text to your browser/OS speech engine and stores no audio. Ask4Mo never uses your voice to infer emotions, personality, intelligence, honesty, deception, accent or hiring suitability - voice is only a way to listen and to enter text. There is no voice score of any kind.",
     hUnsupportedQ: "If voice isn’t available",

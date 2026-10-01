@@ -13,9 +13,9 @@ import pytest
 from src import prompts
 from src.models import InterviewConfiguration
 
-LOCALES = ["en", "de", "fr", "es", "it", "pt", "nl"]
+LOCALES = ["en", "de", "fr", "es", "it", "pt", "nl", "ru"]
 LANGUAGE_NAMES = {"de": "German", "fr": "French", "es": "Spanish",
-                  "it": "Italian", "pt": "Portuguese", "nl": "Dutch"}
+                  "it": "Italian", "pt": "Portuguese", "nl": "Dutch", "ru": "Russian"}
 TASKS = [prompts.TASK_STRATEGY, prompts.TASK_QUESTION, prompts.TASK_EVALUATION, prompts.TASK_REPORT]
 
 
@@ -84,7 +84,7 @@ def test_language_is_prose_only_and_does_not_change_user_message():
     # differs) — so it cannot change what is scored. Compare the user message across languages.
     kwargs = dict(question="Describe a challenge.", candidate_answer="I solved it.")
     base = prompts.build_task_user_message(prompts.TASK_EVALUATION, _config(conversation_language="en"), **kwargs)
-    for code in ["de", "fr", "es", "it", "pt", "nl"]:
+    for code in ["de", "fr", "es", "it", "pt", "nl", "ru"]:
         assert prompts.build_task_user_message(prompts.TASK_EVALUATION, _config(conversation_language=code), **kwargs) == base
 
 

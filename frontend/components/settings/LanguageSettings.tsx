@@ -15,7 +15,7 @@ import { api } from "@/lib/api/client";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { APP_LOCALES, type AppLocale, toSupportedLocale } from "@/lib/i18n/locales";
-import { DICTATION_LANGUAGES } from "@/components/ui/DictationControl";
+import { DICTATION_LANGUAGES, dictationLanguageName } from "@/components/ui/DictationControl";
 import { useDictationLanguage } from "@/lib/speech/useDictationLanguage";
 
 function Row({
@@ -112,7 +112,7 @@ export function LanguageSettings() {
         >
           {DICTATION_LANGUAGES.map((l) => (
             <option key={l.code} value={l.code}>
-              {l.label}
+              {dictationLanguageName(l.code)}
             </option>
           ))}
         </select>

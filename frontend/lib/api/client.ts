@@ -1,5 +1,6 @@
 import { config } from "../config";
-import { ApiError, apiErrorFromBody } from "./errors";
+import { ApiError, apiErrorFromBody, parseRetryAfter, unreachableError } from "./errors";
+import { runWithRetry } from "./retry";
 import type {
   ActiveSessionsResponse,
   CapabilitiesResponse,
@@ -68,9 +69,15 @@ import type {
 } from "./types";
 
 const REQUEST_ID_HEADER = "x-request-id";
+const RETRY_AFTER_HEADER = "retry-after";
 
 interface RequestOptions {
   signal?: AbortSignal;
+}
+
+/** True unless the browser explicitly reports the device offline (SSR: assume online). */
+function browserIsOnline(): boolean {
+  return typeof navigator === "undefined" ? true : navigator.onLine;
 }
 
 function authHeaders(): Record<string, string> {
@@ -82,6 +89,8 @@ function authHeaders(): Record<string, string> {
 
 /** Multipart upload helper (P4): sends FormData with the session cookie; no JSON body. */
 async function upload<T>(path: string, form: FormData): Promise<T> {
+  // Uploads are writes (POST multipart): NEVER auto-retried, so a document is never
+  // ingested twice by transport-level resilience.
   let res: Response;
   try {
     res = await fetch(`${config.apiBaseUrl}${path}`, {
@@ -92,12 +101,14 @@ async function upload<T>(path: string, form: FormData): Promise<T> {
     });
   } catch (cause) {
     if (cause instanceof DOMException && cause.name === "AbortError") throw cause;
-    throw new ApiError({ kind: "network", status: null, code: "network_error", message: "Could not reach the service." });
+    throw unreachableError(browserIsOnline());
   }
   const requestId = res.headers.get(REQUEST_ID_HEADER);
   const isJson = res.headers.get("content-type")?.includes("application/json");
   const payload = isJson ? await res.json().catch(() => undefined) : undefined;
-  if (!res.ok) throw apiErrorFromBody(res.status, payload, requestId);
+  if (!res.ok) {
+    throw apiErrorFromBody(res.status, payload, requestId, parseRetryAfter(res.headers.get(RETRY_AFTER_HEADER)));
+  }
   return payload as T;
 }
 
@@ -107,40 +118,46 @@ async function request<T>(
   { body, signal, headers }: { body?: unknown; signal?: AbortSignal; headers?: Record<string, string> } = {},
 ): Promise<T> {
   const url = `${config.apiBaseUrl}${path}`;
-  let res: Response;
-  try {
-    res = await fetch(url, {
-      method,
-      // Send the session cookie with every request (the trusted production identity).
-      // CORS on the backend allows credentials for the configured frontend origin.
-      credentials: "include",
-      headers: {
-        Accept: "application/json",
-        ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
-        ...authHeaders(),
-        ...(headers ?? {}),
-      },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-      signal,
-    });
-  } catch (cause) {
-    if (cause instanceof DOMException && cause.name === "AbortError") throw cause;
-    throw new ApiError({
-      kind: "network",
-      status: null,
-      code: "network_error",
-      message: "Could not reach the service.",
-    });
-  }
 
-  const requestId = res.headers.get(REQUEST_ID_HEADER);
-  const isJson = res.headers.get("content-type")?.includes("application/json");
-  const payload = isJson ? await res.json().catch(() => undefined) : undefined;
+  // One network attempt. Wrapped by runWithRetry, which re-sends ONLY safe/idempotent
+  // methods (GET/HEAD) on transient failures — never writes, so career chat, agent
+  // messages, Practice answers, handoffs and memory mutations can't execute twice.
+  const attempt = async (): Promise<T> => {
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method,
+        // Send the session cookie with every request (the trusted production identity).
+        // CORS on the backend allows credentials for the configured frontend origin.
+        credentials: "include",
+        headers: {
+          Accept: "application/json",
+          ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+          ...authHeaders(),
+          ...(headers ?? {}),
+        },
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+        signal,
+      });
+    } catch (cause) {
+      if (cause instanceof DOMException && cause.name === "AbortError") throw cause;
+      // fetch() rejected: the response never arrived. Classify truthfully — offline vs an
+      // Ask4Mo/backend/CORS problem — instead of blaming the candidate's connection.
+      throw unreachableError(browserIsOnline());
+    }
 
-  if (!res.ok) {
-    throw apiErrorFromBody(res.status, payload, requestId);
-  }
-  return payload as T;
+    const requestId = res.headers.get(REQUEST_ID_HEADER);
+    const isJson = res.headers.get("content-type")?.includes("application/json");
+    const payload = isJson ? await res.json().catch(() => undefined) : undefined;
+
+    if (!res.ok) {
+      throw apiErrorFromBody(
+        res.status, payload, requestId, parseRetryAfter(res.headers.get(RETRY_AFTER_HEADER)));
+    }
+    return payload as T;
+  };
+
+  return runWithRetry(method, attempt, { signal });
 }
 
 /** Typed FastAPI client. Add new typed methods here rather than calling fetch ad hoc. */

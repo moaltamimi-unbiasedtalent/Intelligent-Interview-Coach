@@ -47,21 +47,21 @@ export function HomeEntry() {
           id="home-entry"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="e.g. Executive HR Director role in fashion"
+          placeholder={t("home.goalPlaceholder")}
           className="border-0 bg-transparent shadow-none focus-visible:outline-none"
         />
         <Button type="submit" disabled={!canStart}>{t("home.askMo")}</Button>
       </form>
       <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
         <button type="button" onClick={() => shortcut("job_description")} className="text-muted hover:text-foreground">
-          ＋ Paste a job description
+          ＋ {t("home.pasteJobDescription")}
         </button>
         <button type="button" onClick={() => shortcut("candidate_background")} className="text-muted hover:text-foreground">
-          ＋ Add your background <span className="text-muted">(optional)</span>
+          ＋ {t("home.addBackground")} <span className="text-muted">{t("common.optional")}</span>
         </button>
       </div>
       <p className="mt-3 text-sm text-muted">
-        Your preparation stays focused on evidence, your context and your choices.
+        {t("home.focusNote")}
       </p>
     </div>
   );

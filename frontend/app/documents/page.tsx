@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Documents" };
 
 export default function DocumentsPage() {
   return (
-    <Suspense fallback={<LoadingState label="Loading" />}>
+    <Suspense fallback={<LoadingState />}>
       <DocumentsClient />
     </Suspense>
   );

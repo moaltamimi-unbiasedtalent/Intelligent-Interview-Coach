@@ -15,8 +15,25 @@ import es from "./messages/es";
 import it from "./messages/it";
 import pt from "./messages/pt";
 import nl from "./messages/nl";
+import ru from "./messages/ru";
+import { mergeW96Into } from "./messages/w96";
 
-export const CATALOGS: Record<AppLocale, Catalog> = { en, de, fr, es, it, pt, nl };
+// P10B-W9.6: the full-localization fragments are deep-merged onto each base locale catalogue so
+// every Ask4Mo-owned candidate-facing string resolves in the selected interface language (with
+// English fallback per key). The merge is additive and non-destructive — base keys always win is
+// NOT the rule; W9.6 only ADDS namespaces/keys that the base catalogues do not already define, so
+// pre-existing keys are untouched. Key parity across all seven locales is enforced by the fragments
+// themselves and re-verified by `tests/i18n.test.tsx`.
+export const CATALOGS: Record<AppLocale, Catalog> = {
+  en: mergeW96Into(en, "en"),
+  de: mergeW96Into(de, "de"),
+  fr: mergeW96Into(fr, "fr"),
+  es: mergeW96Into(es, "es"),
+  it: mergeW96Into(it, "it"),
+  pt: mergeW96Into(pt, "pt"),
+  nl: mergeW96Into(nl, "nl"),
+  ru: mergeW96Into(ru, "ru"),
+};
 
 export type Namespace = keyof Messages;
 /** A "namespace.key" translation key, typed against the English source. */
@@ -43,7 +60,9 @@ export function translate(
 ): string {
   const [ns, k] = String(key).split(".");
   const localeCat = getCatalog(locale) as Record<string, Record<string, string>>;
-  const enCat = en as Record<string, Record<string, string>>;
+  // Fall back to the MERGED English catalogue (CATALOGS.en), so W9.6 namespaces/keys resolve in the
+  // fallback path, not just the raw base `en` source.
+  const enCat = CATALOGS[DEFAULT_APP_LOCALE] as Record<string, Record<string, string>>;
   const value = localeCat[ns]?.[k] ?? enCat[ns]?.[k];
   if (value == null) return String(key); // never render undefined/blank
   return interpolate(value, vars);

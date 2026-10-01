@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
+import { useT } from "@/components/i18n/I18nProvider";
 
 /**
  * Canonical Ask4Mo brand lockup (P10B Wave 1). ONE implementation used across marketing, the
@@ -16,6 +19,7 @@ export function Logo({
   className?: string;
   markClassName?: string;
 }) {
+  const t = useT();
   return (
     <Link
       href={href}
@@ -23,7 +27,7 @@ export function Logo({
         "inline-flex items-center gap-2.5 font-bold tracking-tight text-foreground",
         className,
       )}
-      aria-label="Ask4Mo - home"
+      aria-label={t("common.homeAria")}
       data-testid="ask4mo-logo"
     >
       {/* Decorative mark; the link's aria-label carries the accessible name and the wordmark

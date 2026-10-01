@@ -30,6 +30,7 @@ const MATRIX: { code: string; nav: string }[] = [
   { code: "it", nav: "Prepara" },
   { code: "pt", nav: "Preparar" },
   { code: "nl", nav: "Voorbereiden" },
+  { code: "ru", nav: "Подготовка" },
 ];
 
 for (const { code, nav } of MATRIX) {

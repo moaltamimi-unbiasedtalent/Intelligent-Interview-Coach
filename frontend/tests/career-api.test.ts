@@ -90,7 +90,8 @@ describe("Career API client", () => {
   });
 
   it("network failure is a safe ApiError with no raw cause", async () => {
+    // P10B-W9.1: a failed fetch (browser online) is classified "unreachable", not "network".
     mockFetch(() => { throw new Error("ECONNREFUSED secret-host"); });
-    await expect(api.interviews.get("s1")).rejects.toMatchObject({ kind: "network" });
+    await expect(api.interviews.get("s1")).rejects.toMatchObject({ kind: "unreachable" });
   });
 });

@@ -34,6 +34,7 @@ def chat(body: CareerChatRequest,
         candidate_background=body.candidate_background,
         days_until_interview=body.days_until_interview,
         hours_per_week=body.hours_per_week,
+        conversation_language=body.conversation_language,
     ))
     return CareerChatResponse.from_orchestration(result)
 

@@ -493,13 +493,12 @@ def test_history_detail_returns_report_for_owner():
         assert detail["report"]["report"]["overall_readiness_score"] == 70
 
 
-def test_evaluation_latest_and_config(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)  # no runs present
-    with _make_client() as c:
-        assert c.get("/api/v1/evaluation/latest").json()["available"] is False
-        assert c.get("/api/v1/evaluation/runs").json()["runs"] == []
-        cfg = c.get("/api/v1/evaluation/ragas/configuration").json()
-        assert "can_run" in cfg
+# P10B-W9.3: evaluation diagnostics became INTERNAL (platform-admin-only). The former
+# `test_evaluation_latest_and_config` data-shape check moved to
+# tests/test_review_diagnostics_authz_w9_3.py, which exercises the full authorization matrix
+# (anonymous 401/403, BASIC candidate 403, platform admin 200 + response shape) using the real
+# auth harness. It cannot run under this module's `_FakeRepo` (no session_factory), so it is not
+# duplicated here.
 
 
 # --- 19: request id ----------------------------------------------------------

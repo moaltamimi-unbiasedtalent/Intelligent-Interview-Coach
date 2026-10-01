@@ -22,7 +22,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.config import API_PREFIX, ApiSettings
 from src.api.exception_handlers import register_exception_handlers
-from src.api.middleware import RequestIdMiddleware, SecurityHeadersMiddleware
+from src.api.middleware import (
+    CatchAllErrorMiddleware,
+    RequestIdMiddleware,
+    SecurityHeadersMiddleware,
+)
 from src.api.routes import (
     admin,
     agent,
@@ -103,7 +107,26 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
 
     app.state.env_report = enforce_runtime_config()
 
-    # CORS for the future Next.js frontend. Never wildcard-with-credentials.
+    # Error/resilience middleware stack (P10B-W9.1). ORDER IS LOAD-BEARING.
+    # ``add_middleware`` PREPENDS, so the LAST one added is the OUTERMOST. Starlette also wraps
+    # every user middleware inside its own ServerErrorMiddleware, so an unhandled 500 raised in
+    # a route would otherwise be turned into a response OUTSIDE this stack and bypass CORS —
+    # the browser then sees a header-less cross-origin response and reports a misleading
+    # "couldn't connect" network failure for what is really a server bug (PF-01/PF-02).
+    #
+    # We therefore add (inner -> outer): CatchAllError -> RequestId -> SecurityHeaders -> CORS.
+    # Effective nesting becomes CORS(outer) -> SecurityHeaders -> RequestId -> CatchAllError ->
+    # routes. CatchAllErrorMiddleware converts unhandled exceptions to the safe envelope from
+    # INSIDE the stack, so every response — success, expected error, or catastrophic 500 —
+    # flows back out through RequestId (X-Request-Id) and CORS (Access-Control-Allow-Origin).
+    app.add_middleware(CatchAllErrorMiddleware, env=settings.env)
+    app.add_middleware(RequestIdMiddleware)
+    app.add_middleware(SecurityHeadersMiddleware, env=settings.env)
+    # CORS — exact allow-list only, never wildcard-with-credentials. In staging/production
+    # enforce_runtime_config() (above) has already failed fast when FRONTEND_ORIGINS is unset,
+    # so the allow-list is always present there; development falls back to safe localhost
+    # origins (see ApiSettings.from_env). Added LAST so it is the OUTERMOST layer and stamps
+    # CORS headers on every response, including the catch-all 500.
     if settings.frontend_origins:
         app.add_middleware(
             CORSMiddleware,
@@ -113,8 +136,6 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
             allow_headers=["*"],
             expose_headers=["X-Request-Id"],
         )
-    app.add_middleware(RequestIdMiddleware)
-    app.add_middleware(SecurityHeadersMiddleware, env=settings.env)
     register_exception_handlers(app)
 
     # Infra liveness alias (unversioned) + versioned API surface.

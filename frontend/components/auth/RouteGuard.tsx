@@ -14,13 +14,16 @@ import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "./AuthProvider";
 import { isProtectedRoute, AUTH_ONLY_ROUTES, APP_HOME } from "@/lib/auth/routes";
+import { redirectVerified } from "@/lib/auth/redirect";
 import { LoadingState } from "@/components/ui/States";
+import { useT } from "@/components/i18n/I18nProvider";
 
 export function RouteGuard({ children }: { children: ReactNode }) {
   const pathname = usePathname() || "/";
   const router = useRouter();
   const params = useSearchParams();
   const { status, account } = useAuth();
+  const t = useT();
 
   const protectedRoute = isProtectedRoute(pathname);
   const authOnly = AUTH_ONLY_ROUTES.has(pathname);
@@ -35,12 +38,12 @@ export function RouteGuard({ children }: { children: ReactNode }) {
     if (status === "loading") return;
     if (protectedRoute && status === "unauthenticated") {
       const next = encodeURIComponent(pathname);
-      router.replace(`/sign-in?next=${next}`);
+      return redirectVerified(router, `/sign-in?next=${next}`);
     } else if (authOnly && status === "authenticated") {
       const next = params.get("next");
-      router.replace(next && next.startsWith("/") ? next : APP_HOME);
+      return redirectVerified(router, next && next.startsWith("/") ? next : APP_HOME);
     } else if (needsOnboarding && protectedRoute && !onOnboarding) {
-      router.replace("/onboarding");
+      return redirectVerified(router, "/onboarding");
     }
   }, [status, protectedRoute, authOnly, needsOnboarding, onOnboarding, pathname, params, router]);
 
@@ -48,7 +51,7 @@ export function RouteGuard({ children }: { children: ReactNode }) {
   // definitively-unauthenticated visitor is being redirected. An "unknown" status
   // (backend unreachable) renders the page — the server still enforces authorization.
   if (protectedRoute && (status === "loading" || status === "unauthenticated")) {
-    return <LoadingState label="Checking your session" />;
+    return <LoadingState label={t("states.checkingSession")} />;
   }
   return <>{children}</>;
 }

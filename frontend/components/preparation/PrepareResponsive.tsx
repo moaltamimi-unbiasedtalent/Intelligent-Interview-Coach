@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { Tabs } from "@/components/ui/Tabs";
 import { useMediaQuery } from "@/lib/useMediaQuery";
+import { useT } from "@/components/i18n/I18nProvider";
 
 /**
  * Desktop: conversation + context rail side by side. Mobile: a Coach / Preparation
@@ -18,13 +19,14 @@ export function PrepareResponsive({
   context: ReactNode;
 }) {
   const isMobile = useMediaQuery("(max-width: 767px)");
+  const t = useT();
 
   if (isMobile) {
     return (
       <Tabs
         items={[
           { id: "coach", label: "Mo", content: coach },
-          { id: "prep", label: "Preparation", content: <div className="grid gap-4">{context}</div> },
+          { id: "prep", label: t("prepare.contextTab"), content: <div className="grid gap-4">{context}</div> },
         ]}
       />
     );

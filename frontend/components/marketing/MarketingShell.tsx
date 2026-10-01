@@ -29,7 +29,7 @@ function MarketingHeader() {
     <header className="border-b border-border bg-surface">
       <div className="mx-auto flex max-w-content items-center justify-between gap-4 px-4 py-3">
         <Logo href="/" />
-        <nav aria-label="Marketing" className="hidden items-center gap-5 md:flex">
+        <nav aria-label={t("marketing.navAria")} className="hidden items-center gap-5 md:flex">
           {NAV.map((item) => (
             <Link key={item.href} href={item.href} className="text-sm text-muted hover:text-foreground">
               {t(item.key)}
@@ -52,7 +52,7 @@ function MarketingHeader() {
         </div>
       </div>
       {/* Mobile marketing nav: the desktop nav is hidden below md, so surface the links here. */}
-      <nav aria-label="Marketing (mobile)" className="mx-auto flex max-w-content flex-wrap gap-x-4 gap-y-1 px-4 pb-2 md:hidden">
+      <nav aria-label={t("marketing.navAriaMobile")} className="mx-auto flex max-w-content flex-wrap gap-x-4 gap-y-1 px-4 pb-2 md:hidden">
         {NAV.map((item) => (
           <Link key={item.href} href={item.href} className="text-sm text-muted hover:text-foreground">
             {t(item.key)}

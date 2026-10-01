@@ -104,9 +104,16 @@ def validate_runtime_config(env: str | None = None) -> EnvReport:
 
 
 def enforce_runtime_config() -> EnvReport:
-    """Validate and, in production, raise on any CRITICAL problem so the app fails fast."""
+    """Validate and, in hosted environments, raise on any CRITICAL problem so the app fails
+    fast rather than booting with missing/insecure config.
+
+    Both PRODUCTION and STAGING fail closed (P10B-W9.1): a missing required CORS allow-list
+    (``FRONTEND_ORIGINS``) — or any other critical — stops startup instead of silently opening
+    access or serving header-less error responses. Dev/test remain permissive.
+    """
     report = validate_runtime_config()
-    if report.env == "production" and report.critical:
+    if report.env in ("production", "staging") and report.critical:
         raise RuntimeError(
-            "Production configuration is incomplete:\n  - " + "\n  - ".join(report.critical))
+            f"Hosted configuration is incomplete (env={report.env}):\n  - "
+            + "\n  - ".join(report.critical))
     return report

@@ -7,8 +7,9 @@ config, embeddings or index internals are returned.
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from src.api.dependencies import require_platform_admin
 from src.api.schemas.knowledge import (
     KnowledgeDiagnosticsResponse,
     KnowledgeSnapshotResponse,
@@ -53,8 +54,12 @@ def sources() -> KnowledgeSourcesResponse:
     return KnowledgeSourcesResponse(sources=out)
 
 
+# P10B-W9.3: INTERNAL engineering diagnostics (runtime counts + offline retrieval metrics), unlike
+# the candidate-facing /sources and /snapshot below. Gate at platform-admin level. The candidate
+# "Career evidence" (Sources) page uses /sources + /snapshot only and is deliberately unaffected.
 @router.get("/diagnostics", response_model=KnowledgeDiagnosticsResponse,
-            summary="Knowledge runtime counts + offline retrieval evaluation")
+            summary="Knowledge runtime counts + offline retrieval evaluation",
+            dependencies=[Depends(require_platform_admin)])
 def diagnostics() -> KnowledgeDiagnosticsResponse:
     return KnowledgeDiagnosticsResponse(**knowledge_service.get_knowledge_diagnostics())
 

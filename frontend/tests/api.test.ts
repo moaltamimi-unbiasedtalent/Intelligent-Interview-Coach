@@ -50,8 +50,11 @@ describe("API client", () => {
       await api.health();
     } catch (e) {
       const err = e as ApiError;
-      expect(err.kind).toBe("network");
-      expect(err.userMessage).toMatch(/couldn't connect/i);
+      // P10B-W9.1: a failed fetch while the browser is online is "unreachable" (an Ask4Mo /
+      // backend / CORS problem) — NOT "network", and it must never blame the user's connection.
+      expect(err.kind).toBe("unreachable");
+      expect(err.userMessage).toMatch(/ask4mo/i);
+      expect(err.userMessage).not.toMatch(/check your (internet|connection)/i);
       // The raw cause must never be surfaced.
       expect(err.message).not.toContain("ECONNREFUSED");
       expect(err.userMessage).not.toContain("secret-internal-detail");

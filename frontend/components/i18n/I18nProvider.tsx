@@ -111,18 +111,22 @@ export function I18nProvider({
 
 export function useI18n(): I18nValue {
   const ctx = useContext(I18nContext);
-  if (!ctx) {
-    // Safe fallback so a component rendered without the provider (e.g. an isolated unit
-    // test) still works in English rather than throwing.
-    return {
+  // Safe fallback so a component rendered without the provider (e.g. an isolated unit test) still
+  // works in English rather than throwing. It MUST be stable across renders: `t` et al. are used as
+  // dependencies of `useCallback`/`useEffect` in consumers, so a fresh object each render would make
+  // those callbacks change identity every render and re-fire their effects (e.g. a data-load effect
+  // refetching and clobbering optimistic state). Memoised once, identity-stable.
+  const fallback = useMemo<I18nValue>(
+    () => ({
       locale: DEFAULT_APP_LOCALE,
       t: (key, vars) => translate(DEFAULT_APP_LOCALE, key, vars),
       setLocale: async () => {},
       formatDate: (v) => String(v),
       formatNumber: (v) => String(v),
-    };
-  }
-  return ctx;
+    }),
+    [],
+  );
+  return ctx ?? fallback;
 }
 
 /** Convenience hook: just the translator. */

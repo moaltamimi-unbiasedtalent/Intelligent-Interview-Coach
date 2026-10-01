@@ -38,6 +38,18 @@ def _envelope(status: int, code: str, message: str, request_id: str) -> JSONResp
     )
 
 
+# The single safe message for an otherwise-unhandled server error. Never carries exception
+# detail, SQL, filesystem paths, secrets, provider payloads or private candidate data.
+INTERNAL_ERROR_MESSAGE = "An unexpected error occurred. Please try again."
+
+
+def safe_internal_error_response(request_id: str) -> JSONResponse:
+    """The one canonical safe 500 envelope, shared by the catch-all middleware and the
+    registered ``Exception`` handler so every catastrophic path returns an identical,
+    leak-free contract (``{"error": {code, message, request_id}}``)."""
+    return _envelope(500, "internal_error", INTERNAL_ERROR_MESSAGE, request_id)
+
+
 def _request_id(request: Request) -> str:
     return getattr(request.state, "request_id", "")
 
@@ -127,7 +139,8 @@ def register_exception_handlers(app: FastAPI) -> None:
             extra={"request_id": rid, "error_category": type(exc).__name__},
             exc_info=dev,
         )
-        return _envelope(
-            500, "internal_error",
-            "An unexpected error occurred. Please try again.", rid,
-        )
+        # NOTE (P10B-W9.1): in normal operation CatchAllErrorMiddleware (installed INSIDE the
+        # CORS layer) converts unhandled exceptions to this same envelope so the response
+        # still carries CORS + X-Request-Id. This handler remains as the last-resort safety
+        # net (Starlette's ServerErrorMiddleware) and returns the identical safe contract.
+        return safe_internal_error_response(rid)

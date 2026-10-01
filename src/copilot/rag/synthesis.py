@@ -16,7 +16,7 @@ answer's evidence, tool results and recommendations distinctly.
 
 from __future__ import annotations
 
-from src.copilot import constants
+from src.copilot.rag import localized
 
 __all__ = [
     "SYNTHESIS_SYSTEM_PROMPT", "build_synthesis_messages",
@@ -47,17 +47,33 @@ Rules:
 1. Ground factual/knowledge claims in [RETRIEVED EVIDENCE] and cite them with \
 markers like [1], [2]. ALWAYS attach a citation marker to every sentence that \
 draws on the evidence — if [RETRIEVED EVIDENCE] contains any passages, your \
-"Evidence (from sources):" section must reference them with [n]. Never invent a \
+"{h_evidence}" section must reference them with [n]. Never invent a \
 citation or cite unsupported claims.
 2. If the evidence is insufficient for a knowledge question, say so plainly: \
 "{insufficient}"
 3. Clearly separate three things in your answer:
-   - "Evidence (from sources):" claims grounded in retrieved documents, with [n];
-   - "Tool results (calculated):" facts/numbers taken from [TOOL RESULTS] \
+   - "{h_evidence}" claims grounded in retrieved documents, with [n];
+   - "{h_tools}" facts/numbers taken from [TOOL RESULTS] \
 (e.g. match statistics, hours) — do not recompute them;
-   - "Recommendation:" your own advice, labelled as such and uncited.
+   - "{h_reco}" your own advice, labelled as such and uncited.
 4. Do not fabricate statistics, sources, or requirements. Be concise and \
 practical. This is preparation and guidance, not a hiring decision."""
+
+
+def _system_prompt(language: str | None = None) -> str:
+    """Render the synthesis system prompt for a Mo conversation language (P10B-W9.7A).
+
+    English (default/unknown) reproduces the original prompt exactly. For another supported language
+    the three response-template headings, the insufficient-evidence sentence and a trusted allow-list
+    language directive are localized - all from `src.copilot.rag.localized` (bounded; no raw client
+    string reaches the prompt)."""
+    h_evidence, h_tools, h_reco = localized.section_headings(language)
+    system = SYNTHESIS_SYSTEM_PROMPT.format(
+        insufficient=localized.insufficient_message(language),
+        h_evidence=h_evidence, h_tools=h_tools, h_reco=h_reco,
+    )
+    directive = localized.language_directive(language)
+    return f"{system}\n\n{directive}" if directive else system
 
 
 def _clip(text: str) -> str:
@@ -72,11 +88,10 @@ def build_synthesis_messages(
     tool_summaries: list[str] | None = None,
     job_description: str | None = None,
     candidate_background: str | None = None,
+    language: str | None = None,
 ) -> list[dict]:
     """Assemble the system + user messages with separated trust blocks."""
-    system = SYNTHESIS_SYSTEM_PROMPT.format(
-        insufficient=constants.INSUFFICIENT_EVIDENCE_MESSAGE
-    )
+    system = _system_prompt(language)
 
     blocks: list[str] = [f"[USER QUESTION]\n{query.strip()}"]
     if job_description:
@@ -106,6 +121,7 @@ def build_evidence_messages(
     candidate_background: str | None = None,
     coverage_notes: list[str] | None = None,
     company_summary: str | None = None,
+    language: str | None = None,
 ) -> list[dict]:
     """Assemble synthesis messages with separated multi-lane evidence sections.
 
@@ -113,9 +129,7 @@ def build_evidence_messages(
     already-numbered evidence lines, e.g. ``{"compensation": ["[1] median …"]}``.
     All evidence is DATA, never instructions; every factual claim must cite [n].
     """
-    system = SYNTHESIS_SYSTEM_PROMPT.format(
-        insufficient=constants.INSUFFICIENT_EVIDENCE_MESSAGE
-    )
+    system = _system_prompt(language)
     blocks: list[str] = [f"[USER QUESTION]\n{query.strip()}"]
     if job_description:
         blocks.append(f"[JOB DESCRIPTION] (data)\n{_clip(job_description)}")

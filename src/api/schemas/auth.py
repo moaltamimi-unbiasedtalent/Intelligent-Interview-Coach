@@ -10,6 +10,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from src.locales import AppLocale
+
 __all__ = [
     "RegisterRequest",
     "LoginRequest",
@@ -98,8 +100,8 @@ class PreferencesRequest(BaseModel):
     model_config = {"extra": "forbid"}
 
     response_detail: Literal["brief", "detailed"] | None = None
-    interface_locale: Literal["en", "de", "fr", "es", "it", "pt", "nl"] | None = None
-    conversation_language: Literal["en", "de", "fr", "es", "it", "pt", "nl"] | None = None
+    interface_locale: AppLocale | None = None
+    conversation_language: AppLocale | None = None
     coaching_style: Literal["supportive", "balanced", "direct", "challenging"] | None = None
     career_geography: CareerGeography | None = None
     target_role: str | None = Field(default=None, max_length=200)

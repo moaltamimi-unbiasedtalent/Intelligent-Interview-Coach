@@ -11,6 +11,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from src.locales import AppLocale
+
 
 class AgentRunRequest(BaseModel):
     goal: str = Field(min_length=1, max_length=4000)
@@ -27,7 +29,7 @@ class AgentRunRequest(BaseModel):
     # Mo conversation language (Capstone P3.5): a bounded Literal so the browser can only
     # send a supported locale code — never free text. It sets the language of Mo's prose
     # only; it never changes retrieval geography, tools or grounding.
-    conversation_language: Literal["en", "de", "fr", "es", "it", "pt", "nl"] | None = None
+    conversation_language: AppLocale | None = None
     # Mo coaching style (P10B Wave 2): a bounded tone; sets only how Mo words coaching, never
     # factuality/evidence/scoring. The browser sends the account default; None/balanced → no change.
     coaching_style: Literal["supportive", "balanced", "direct", "challenging"] | None = None

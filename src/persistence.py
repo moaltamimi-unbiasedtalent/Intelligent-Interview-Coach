@@ -107,7 +107,8 @@ RESPONSE_DETAIL_VALUES = (RESPONSE_DETAIL_BRIEF, RESPONSE_DETAIL_DETAILED)
 #   * conversation_language — the language the candidate wants Mo to communicate in.
 # Bounded to the supported Ask4Mo candidate-product language set. A language is NOT a
 # labour market: it never changes retrieval/salary/credential geography.
-SUPPORTED_LOCALES = ("en", "de", "fr", "es", "it", "pt", "nl")
+# P10B-W9.6: single canonical source (src/locales.py); re-exported here for existing callers.
+from src.locales import SUPPORTED_LOCALE_CODES as SUPPORTED_LOCALES  # noqa: F401,E402  (re-export)
 DEFAULT_LOCALE = "en"
 
 # Coaching style (Capstone P10B Wave 2) — bounded tone preference for ONE Mo (not personas).

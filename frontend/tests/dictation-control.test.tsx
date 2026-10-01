@@ -93,7 +93,10 @@ describe("DictationControl", () => {
       <DictationControl value="" onChange={() => {}} adapter={adapter} lang="en-US" onLangChange={() => {}} />,
     );
     expect(screen.getByLabelText("Dictation language")).toBeInTheDocument();
-    for (const name of ["English", "German", "French", "Spanish", "Italian", "Portuguese", "Dutch"]) {
+    // P10B-W9.6A: dictation options render each language's own native name (endonym) from the
+    // canonical locale registry — consistent with the interface/conversation selectors and free of
+    // hardcoded English (no raw "German"/"French" literals in the component).
+    for (const name of ["English", "Deutsch", "Français", "Español", "Italiano", "Português", "Nederlands"]) {
       expect(screen.getByRole("option", { name })).toBeInTheDocument();
     }
     // Bounded: exactly the supported set, no arbitrary options.

@@ -9,6 +9,8 @@ import { CoachActivity, CoachMessage } from "@/components/coach/CoachMessage";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Input, Textarea } from "@/components/ui/Field";
+import { useT } from "@/components/i18n/I18nProvider";
+import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { CareerAnswer } from "./CareerAnswer";
 import { PrepareResponsive } from "./PrepareResponsive";
 import { PreparationTools, type PrepContextPatch } from "./PreparationTools";
@@ -25,9 +27,11 @@ interface Turn {
   requestId?: string | null;
 }
 
-const ACTIVITY = "Mo is checking relevant career evidence…";
-
 export function PrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft | null }) {
+  // Named `tr` (not `t`) because the turns array is mapped with a `t` element below.
+  const tr = useT();
+  const conversationLanguage = useAuthOptional()?.account?.conversation_language;
+  const activityLabel = tr("prepare.activityChecking");
   const goalDraft = initialDraft?.action === "start" ? (initialDraft.goal?.trim() ?? "") : "";
   const draftOpensContext =
     initialDraft?.action === "job_description" || initialDraft?.action === "candidate_background";
@@ -62,6 +66,8 @@ export function PrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft
           question: q,
           job_description: jd.trim() || undefined,
           candidate_background: bg.trim() || undefined,
+          // Mo's prose follows the CONVERSATION language (never the interface language or geography).
+          conversation_language: conversationLanguage || undefined,
         },
         { signal: ctrl.signal },
       );
@@ -73,7 +79,7 @@ export function PrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft
       setTurns((t) =>
         t.map((x) =>
           x.id === id
-            ? { ...x, status: "error", error: err.userMessage ?? "That request couldn't be processed.", requestId: err.requestId }
+            ? { ...x, status: "error", error: err.userMessage ?? tr("prepare.requestFailed"), requestId: err.requestId }
             : x,
         ),
       );
@@ -110,11 +116,8 @@ export function PrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft
       {turns.length === 0 ? (
         <Card>
           <CardBody>
-            <h2 className="text-lg font-semibold">Tell Mo what you&rsquo;re preparing for</h2>
-            <p className="mt-1 text-muted">
-              Ask about the role, what to focus on, or how to prepare an answer. Add a
-              job description below for more grounded guidance.
-            </p>
+            <h2 className="text-lg font-semibold">{tr("prepare.tellMoPreparing")}</h2>
+            <p className="mt-1 text-muted">{tr("prepare.askAboutRole")}</p>
           </CardBody>
         </Card>
       ) : (
@@ -122,12 +125,12 @@ export function PrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft
           {turns.map((t) => (
             <div key={t.id} className="grid gap-3.5">
               <CoachMessage from="you">{t.question}</CoachMessage>
-              {t.status === "loading" ? <CoachActivity label={ACTIVITY} /> : null}
+              {t.status === "loading" ? <CoachActivity label={activityLabel} /> : null}
               {t.status === "done" && t.response ? <CareerAnswer response={t.response} /> : null}
               {t.status === "error" ? (
                 <div role="alert" className="rounded-lg border border-danger bg-surface px-4 py-3 text-sm">
                   <p className="text-foreground">{t.error}</p>
-                  {t.requestId ? <p className="mt-1 text-xs text-muted">Reference: {t.requestId}</p> : null}
+                  {t.requestId ? <p className="mt-1 text-xs text-muted">{tr("prepare.reference", { id: t.requestId })}</p> : null}
                 </div>
               ) : null}
             </div>
@@ -137,17 +140,17 @@ export function PrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft
 
       <form onSubmit={ask} className="mt-4">
         <div className="flex items-center gap-2 rounded-lg border border-border bg-surface p-2 pl-3.5 shadow-soft">
-          <label htmlFor="prep-q" className="sr-only">Ask the coach</label>
+          <label htmlFor="prep-q" className="sr-only">{tr("prepare.askTheCoach")}</label>
           <Input
             id="prep-q"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             maxLength={4000}
-            placeholder="What interview are you preparing for?"
+            placeholder={tr("prepare.whatPreparingFor")}
             className="border-0 bg-transparent px-1 py-1 shadow-none focus-visible:outline-none"
           />
           <Button type="submit" size="sm" disabled={busy || !question.trim()}>
-            {busy ? "Sending…" : "Ask"}
+            {busy ? tr("prepare.sending") : tr("prepare.ask")}
           </Button>
         </div>
         <button
@@ -156,18 +159,18 @@ export function PrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft
           aria-expanded={showContext}
           className="mt-2 text-sm text-muted hover:text-foreground"
         >
-          {showContext ? "− Hide context" : "＋ Add context"}
+          {showContext ? tr("prepare.hideContext") : tr("prepare.addContext")}
         </button>
         {showContext ? (
           <div className="mt-3 grid gap-3 rounded-lg border border-border bg-surface p-4">
             <div>
-              <label htmlFor="ctx-jd" className="text-sm font-medium">Job description <span className="text-muted">(optional)</span></label>
-              <Textarea id="ctx-jd" value={jd} onChange={(e) => setJd(e.target.value)} placeholder="Paste the job description…" className="mt-1 min-h-[90px]" />
+              <label htmlFor="ctx-jd" className="text-sm font-medium">{tr("prepare.jobDescription")} <span className="text-muted">{tr("prepare.optional")}</span></label>
+              <Textarea id="ctx-jd" value={jd} onChange={(e) => setJd(e.target.value)} placeholder={tr("prepare.pasteJobDescription")} className="mt-1 min-h-[90px]" />
             </div>
             <div>
-              <label htmlFor="ctx-bg" className="text-sm font-medium">About you <span className="text-muted">(optional)</span></label>
-              <Textarea id="ctx-bg" value={bg} onChange={(e) => setBg(e.target.value)} placeholder="A few lines about your experience so the coach can compare it with the role…" className="mt-1 min-h-[80px]" />
-              <p className="mt-1 text-xs text-muted">Used only to personalise this preparation — not stored.</p>
+              <label htmlFor="ctx-bg" className="text-sm font-medium">{tr("prepare.aboutYou")} <span className="text-muted">{tr("prepare.optional")}</span></label>
+              <Textarea id="ctx-bg" value={bg} onChange={(e) => setBg(e.target.value)} placeholder={tr("prepare.experiencePlaceholderLong")} className="mt-1 min-h-[80px]" />
+              <p className="mt-1 text-xs text-muted">{tr("prepare.usedToPersonalise")}</p>
             </div>
           </div>
         ) : null}
@@ -179,31 +182,31 @@ export function PrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft
     <>
       <Card>
         <CardBody>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">Target role</h3>
-          <p className="mt-1 text-sm">{prep.targetRole ? prep.targetRole : <span className="text-muted">Not set yet — analyze a job description below.</span>}</p>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">{tr("prepare.targetRole")}</h3>
+          <p className="mt-1 text-sm">{prep.targetRole ? prep.targetRole : <span className="text-muted">{tr("prepare.notSetYetAnalyze")}</span>}</p>
         </CardBody>
       </Card>
       {prep.strengths?.length ? (
         <Card><CardBody>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">Your strengths</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">{tr("prepare.yourStrengths")}</h3>
           <ul className="mt-1.5 space-y-1 text-sm">{prep.strengths.slice(0, 6).map((s, i) => <li key={i}>{s}</li>)}</ul>
         </CardBody></Card>
       ) : null}
       {prep.priorities?.length ? (
         <Card><CardBody>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">Priorities to prepare</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">{tr("prepare.prioritiesToPrepare")}</h3>
           <ul className="mt-1.5 space-y-1 text-sm">{prep.priorities.slice(0, 6).map((s, i) => <li key={i}>{s}</li>)}</ul>
         </CardBody></Card>
       ) : null}
       {lastResponse && lastResponse.sources.length ? (
         <Card><CardBody>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">Career evidence</h3>
-          <p className="mt-1.5 text-sm text-muted">{lastResponse.sources.length} source{lastResponse.sources.length === 1 ? "" : "s"} behind the latest answer.</p>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">{tr("prepare.careerEvidence")}</h3>
+          <p className="mt-1.5 text-sm text-muted">{tr(lastResponse.sources.length === 1 ? "prepare.sourcesBehind_one" : "prepare.sourcesBehind_other", { count: lastResponse.sources.length })}</p>
         </CardBody></Card>
       ) : null}
       <Card>
         <CardBody className="grid gap-2.5">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">Ready when you are</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">{tr("prepare.readyWhenYouAre")}</h3>
           <StartPracticeButton prep={prep} />
         </CardBody>
       </Card>
@@ -218,7 +221,7 @@ export function PrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft
       ) : null}
       <PrepareResponsive coach={coach} context={context} />
       <details className="mt-8 rounded-lg border border-border bg-surface">
-        <summary className="cursor-pointer px-5 py-4 font-semibold">Preparation tools</summary>
+        <summary className="cursor-pointer px-5 py-4 font-semibold">{tr("prepare.preparationTools")}</summary>
         <div className="border-t border-border p-5">
           <PreparationTools onContext={patchPrep} />
         </div>

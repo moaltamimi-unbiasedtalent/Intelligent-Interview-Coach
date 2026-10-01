@@ -22,6 +22,7 @@ const EMPTY_PROGRESS = {
 };
 
 import { ProgressClient } from "@/components/progress/ProgressClient";
+import { ApiError } from "@/lib/api/errors";
 
 const memories = [
   { id: 1, category: "recurring_gap", summary: "Executive communication", target_role: "Head of People", source_run_id: null, created_at: null, updated_at: null },
@@ -75,10 +76,13 @@ describe("Progress — preparation memory", () => {
     await waitFor(() => expect(screen.queryByText("Executive communication")).not.toBeInTheDocument());
   });
 
-  it("shows a safe error state when the API fails", async () => {
-    list.mockRejectedValue(Object.assign(new Error("boom"), { userMessage: "Couldn't load your preparation memory.", requestId: "req-1" }));
+  it("shows a safe, truthful, recoverable error when the memory API fails", async () => {
+    // W9.2: memory fails but practice is empty (loads) -> a section error with Retry, using the
+    // W9.1 truthful taxonomy (never "check your connection" for a server-side problem).
+    list.mockRejectedValue(new ApiError({ kind: "unreachable", status: null, code: "unreachable", message: "x", requestId: "req-1" }));
     render(<ProgressClient />);
-    expect(await screen.findByText("Couldn't load your preparation memory.")).toBeInTheDocument();
+    expect(await screen.findByText(/can’t reach the service|can't reach the service/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
   });
 
   it("never displays an internal user id", async () => {

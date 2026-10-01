@@ -71,6 +71,7 @@ class CareerApplicationService:
                 hours_per_week=request.hours_per_week,
                 company_context=request.company_context,
                 model=request.model,
+                conversation_language=request.conversation_language,
                 progress=progress,
             )
         except SafeError:

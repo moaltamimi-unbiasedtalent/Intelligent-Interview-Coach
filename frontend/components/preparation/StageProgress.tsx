@@ -1,13 +1,24 @@
+"use client";
+
 import { cn } from "@/lib/utils";
+import { useT } from "@/components/i18n/I18nProvider";
 
 const STAGES = ["Understand", "Prepare", "Practise", "Review"] as const;
 type Stage = (typeof STAGES)[number];
 
+const STAGE_KEY: Record<Stage, string> = {
+  Understand: "prepare.stageUnderstand",
+  Prepare: "prepare.stagePrepare",
+  Practise: "prepare.stagePractise",
+  Review: "prepare.stageReview",
+};
+
 /** Lightweight stage cue (borrowed from Guided Journey) — never heavy chrome. */
 export function StageProgress({ current }: { current: Stage }) {
+  const t = useT();
   const currentIndex = STAGES.indexOf(current);
   return (
-    <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm" aria-label="Progress">
+    <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm" aria-label={t("prepare.progressStagesAria")}>
       {STAGES.map((stage, i) => {
         const done = i < currentIndex;
         const active = i === currentIndex;
@@ -27,7 +38,7 @@ export function StageProgress({ current }: { current: Stage }) {
               {done ? "✓" : i + 1}
             </span>
             <span className={cn(active ? "font-semibold text-foreground" : "text-muted")}>
-              {stage}
+              {t(STAGE_KEY[stage])}
             </span>
             {i < STAGES.length - 1 ? (
               <span aria-hidden="true" className="mx-1 text-border">

@@ -18,7 +18,21 @@ export const SECONDARY_NAV = [
   { href: "/workspaces", label: "Workspaces", labelKey: "workspaces.nav", description: "Teams & explicit sharing" },
   { href: "/sources", label: "Sources", labelKey: "nav.sources", description: "Career evidence" },
   { href: "/help", label: "Help", labelKey: "nav.help", description: "How Ask4Mo works" },
+] as const;
+
+/**
+ * INTERNAL platform-admin-only destinations (P10B-W9.3). Shown in "More" ONLY to a
+ * server-authoritative PLATFORM_ADMIN — never to anonymous or ordinary candidates. Review &
+ * Diagnostics (RAG + evaluation engineering surfaces) and Admin operations live here.
+ * Hiding these is UX defense-in-depth; each destination's backend is independently authorized.
+ * Note: the candidate's OWN Agent Inspector (`/review/agent`) is reached via the Coach's
+ * "View run details" link and stays owner-scoped/candidate-accessible — it is deliberately NOT
+ * gated here.
+ */
+export const INTERNAL_NAV = [
   { href: "/review", label: "Review & Diagnostics", labelKey: "nav.review", description: "Technical inspection" },
+  // Admin uses an English label by design (internal operations surface, §14) — no labelKey.
+  { href: "/admin", label: "Admin", description: "Platform operations" },
 ] as const;
 
 /** Account-related destination (reached via the avatar/account control, not "More"). */

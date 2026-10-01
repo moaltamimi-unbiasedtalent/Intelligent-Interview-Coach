@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import type { KnowledgeSnapshotResponse, KnowledgeSource } from "@/lib/api/types";
@@ -8,54 +8,70 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 import { ButtonLink } from "@/components/ui/Button";
+import { useT } from "@/components/i18n/I18nProvider";
 
-/** Candidate-friendly "career evidence" view, backed by /knowledge/*. */
+/** Candidate-friendly "career evidence" view, backed by /knowledge/*. In-place recoverable (W9.2). */
 export function SourcesClient() {
+  const t = useT();
   const [sources, setSources] = useState<KnowledgeSource[] | null>(null);
   const [snapshot, setSnapshot] = useState<KnowledgeSnapshotResponse | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState<{ message: string; requestId?: string | null } | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const ctrlRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
+  const load = useCallback((isRetry = false) => {
+    ctrlRef.current?.abort();
     const ctrl = new AbortController();
+    ctrlRef.current = ctrl;
+    if (isRetry) setRetrying(true);
+    else setStatus("loading");
     Promise.all([
       api.knowledge.sources({ signal: ctrl.signal }),
       api.knowledge.snapshot({ signal: ctrl.signal }).catch(() => null),
     ])
       .then(([s, snap]) => {
+        if (ctrl.signal.aborted) return;
         setSources(s.sources);
         setSnapshot(snap);
+        setError(null);
         setStatus("ready");
+        setRetrying(false);
       })
       .catch((e) => {
-        if (e instanceof DOMException && e.name === "AbortError") return;
+        if (ctrl.signal.aborted || (e instanceof DOMException && e.name === "AbortError")) return;
         const err = e as ApiError;
-        setError({ message: err.userMessage ?? "Couldn't load sources.", requestId: err.requestId });
+        setError({ message: err.userMessage ?? t("prepare.couldntLoadSources"), requestId: err.requestId });
         setStatus("error");
+        setRetrying(false);
       });
-    return () => ctrl.abort();
-  }, []);
+  }, [t]);
+
+  useEffect(() => {
+    load();
+    return () => ctrlRef.current?.abort();
+  }, [load]);
 
   return (
     <section data-tour="sources">
       <PageHeader
-        eyebrow="Trust"
-        title="Career evidence"
-        description="Your preparation is grounded in curated, public career evidence — not opinions. You can always see where guidance comes from."
+        eyebrow={t("prepare.trust")}
+        title={t("prepare.careerEvidence")}
+        description={t("prepare.sourcesDescription")}
       />
       <p className="-mt-2 mb-4 text-sm">
-        <a href="/help#sources" className="font-medium text-accent underline">How Ask4Mo uses evidence</a>
+        <a href="/help#sources" className="font-medium text-accent underline">{t("prepare.howAsk4MoUsesEvidence")}</a>
       </p>
-      {status === "loading" ? <LoadingState label="Loading sources" /> : null}
+      {status === "loading" ? <LoadingState label={t("prepare.loadingSources")} /> : null}
       {status === "error" && error ? (
-        <ErrorState message={error.message} requestId={error.requestId} />
+        <ErrorState message={error.message} requestId={error.requestId} retrying={retrying} onRetry={() => load(true)} />
       ) : null}
       {status === "ready" ? (
         sources && sources.length ? (
           <>
             {snapshot ? (
               <p className="mb-4 text-sm text-muted">
-                {snapshot.documents} document(s) · {snapshot.chunks} passage(s) indexed.
+                {t("prepare.snapshotIndexed", { documents: snapshot.documents, chunks: snapshot.chunks })}
               </p>
             ) : null}
             <div className="grid gap-4 sm:grid-cols-2">
@@ -74,16 +90,16 @@ export function SourcesClient() {
                             rel="noopener noreferrer"
                             className="underline decoration-dotted underline-offset-4 hover:decoration-solid"
                           >
-                            {s.title || s.source_id || "Source"}
+                            {s.title || s.source_id || t("prepare.sourceFallback")}
                           </a>
                         ) : (
-                          s.title || s.source_id || "Source"
+                          s.title || s.source_id || t("prepare.sourceFallback")
                         )}
                       </h2>
                       {s.group ? <p className="mt-1 text-sm text-muted">{s.group}</p> : null}
                       {meta ? <p className="mt-1 text-xs text-muted">{meta}</p> : null}
                       {!s.source_url ? (
-                        <p className="mt-1 text-xs text-muted">Governed source · no public record link</p>
+                        <p className="mt-1 text-xs text-muted">{t("prepare.governedSource")}</p>
                       ) : null}
                     </CardBody>
                   </Card>
@@ -93,9 +109,9 @@ export function SourcesClient() {
           </>
         ) : (
           <EmptyState
-            title="Knowledge index not ready"
-            description="The governed source catalogue is available, but the local knowledge index has not been built yet."
-            action={<ButtonLink href="/help#sources">How Sources work</ButtonLink>}
+            title={t("prepare.indexNotReadyTitle")}
+            description={t("prepare.indexNotReadyDesc")}
+            action={<ButtonLink href="/help#sources">{t("prepare.howSourcesWork")}</ButtonLink>}
           />
         )
       ) : null}

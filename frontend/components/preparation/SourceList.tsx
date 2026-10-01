@@ -1,3 +1,7 @@
+"use client";
+
+import { useT } from "@/components/i18n/I18nProvider";
+
 /** Quiet, expandable evidence line. Candidate-friendly language ("evidence"). */
 export function SourceList({
   summary,
@@ -6,9 +10,10 @@ export function SourceList({
   summary: string;
   detail?: string;
 }) {
+  const t = useT();
   return (
     <p className="text-sm text-muted">
-      <span className="mr-1">Career evidence:</span>
+      <span className="mr-1">{t("prepare.careerEvidenceColon")}</span>
       {detail ? (
         <details className="inline">
           <summary className="inline cursor-pointer text-foreground">{summary}</summary>

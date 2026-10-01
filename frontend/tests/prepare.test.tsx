@@ -22,6 +22,7 @@ describe("Prepare responsive workspace", () => {
     setMobile(true);
     render(<PrepareResponsive coach={<p>coach panel</p>} context={<p>context panel</p>} />);
     expect(screen.getByRole("tab", { name: "Mo" })).toBeInTheDocument();
+    // The tab label is localized via t("prepare.contextTab"); the English value is unchanged ("Preparation").
     expect(screen.getByRole("tab", { name: "Preparation" })).toBeInTheDocument();
   });
 

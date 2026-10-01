@@ -26,7 +26,7 @@ export function LegalPage({
         {t("marketing.draftBanner")}
       </div>
       <h1 className="text-3xl font-bold">{title}</h1>
-      <p className="mt-1 text-xs text-muted">Last updated: {updated} · Engineering draft</p>
+      <p className="mt-1 text-xs text-muted">{t("marketing.lastUpdated", { date: updated })}</p>
       <div className="prose mt-6 space-y-4 text-sm leading-relaxed text-foreground [&_h2]:mt-8 [&_h2]:text-lg [&_h2]:font-semibold [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mt-1">
         {children}
       </div>

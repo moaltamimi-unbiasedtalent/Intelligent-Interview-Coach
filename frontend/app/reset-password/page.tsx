@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Reset password" };
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<LoadingState label="Loading" />}>
+    <Suspense fallback={<LoadingState />}>
       <ResetPasswordForm />
     </Suspense>
   );

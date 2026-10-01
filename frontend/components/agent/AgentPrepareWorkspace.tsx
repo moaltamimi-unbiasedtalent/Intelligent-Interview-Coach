@@ -56,6 +56,7 @@ function researchFlag(): boolean | undefined {
 
 /** Candidate-facing Agent Coach — the LangGraph agent behind the Precision Coach UI. */
 export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft | null }) {
+  const t = useT();
   const { run, busy, restoring, error, runId, start, send, resume, reset, clearError } = useAgentRun();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [mobileTab, setMobileTab] = useState<"coach" | "prep">("coach");
@@ -90,8 +91,8 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
   if (restoring && !run) {
     return (
       <section>
-        <PageHeader eyebrow="Prepare" title="Mo — your interview coach" />
-        <LoadingState label="Restoring your preparation session" />
+        <PageHeader eyebrow={t("prepare.eyebrow")} title={t("prepare.coachTitle")} />
+        <LoadingState label={t("prepare.restoringSession")} />
       </section>
     );
   }
@@ -100,10 +101,10 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
   if (error?.notFound && !run) {
     return (
       <section>
-        <PageHeader eyebrow="Prepare" title="Mo — your interview coach" />
+        <PageHeader eyebrow={t("prepare.eyebrow")} title={t("prepare.coachTitle")} />
         <ErrorState message={error.message} requestId={error.requestId} />
         <div className="mt-4">
-          <Button onClick={reset}>Start new preparation</Button>
+          <Button onClick={reset}>{t("prepare.startNewPreparation")}</Button>
         </div>
       </section>
     );
@@ -113,9 +114,9 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
     return (
       <section>
         <PageHeader
-          eyebrow="Prepare"
-          title="Mo — your interview coach"
-          description="Tell Mo what you're preparing for and get a focused preparation plan."
+          eyebrow={t("prepare.eyebrow")}
+          title={t("prepare.coachTitle")}
+          description={t("prepare.coachDescription")}
         />
         <FirstMessageForm
           onStart={startRun}
@@ -145,13 +146,13 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
           onSend={send}
           busy={busy}
           disabled={run.awaiting_human_input}
-          disabledHint="Answer the request above to continue."
+          disabledHint={t("prepare.answerAboveToContinue")}
         />
       )}
 
-      {!busy && !run.awaiting_human_input && usageSummaryLine(run) ? (
-        <p className="mt-3 text-xs text-muted" role="status" aria-label="Run usage">
-          {usageSummaryLine(run)}
+      {!busy && !run.awaiting_human_input && usageSummaryLine(run, t) ? (
+        <p className="mt-3 text-xs text-muted" role="status" aria-label={t("prepare.runUsageAria")}>
+          {usageSummaryLine(run, t)}
         </p>
       ) : null}
 
@@ -176,7 +177,7 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
       {error && !error.notFound ? (
         <p role="alert" className="mt-3 text-sm text-danger">
           {error.message}
-          {error.requestId ? <span className="block text-xs text-muted">Reference: {error.requestId}</span> : null}
+          {error.requestId ? <span className="block text-xs text-muted">{t("prepare.reference", { id: error.requestId })}</span> : null}
         </p>
       ) : null}
 
@@ -189,19 +190,19 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
 
   return (
     <section>
-      <PageHeader eyebrow="Prepare" title="Mo — your interview coach" />
+      <PageHeader eyebrow={t("prepare.eyebrow")} title={t("prepare.coachTitle")} />
       {isDesktop ? (
         <div className="grid grid-cols-[minmax(0,1fr)_320px] gap-6">
           <div>{coach}</div>
-          <aside aria-label="Preparation context">{rail}</aside>
+          <aside aria-label={t("prepare.preparationContextAria")}>{rail}</aside>
         </div>
       ) : (
         <div>
-          <div role="tablist" aria-label="Coach and preparation" className="mb-4 flex gap-2">
+          <div role="tablist" aria-label={t("prepare.coachAndPrepAria")} className="mb-4 flex gap-2">
             <button role="tab" aria-selected={mobileTab === "coach"} onClick={() => setMobileTab("coach")}
               className={tabClass(mobileTab === "coach")}>Mo</button>
             <button role="tab" aria-selected={mobileTab === "prep"} onClick={() => setMobileTab("prep")}
-              className={tabClass(mobileTab === "prep")}>Preparation</button>
+              className={tabClass(mobileTab === "prep")}>{t("prepare.preparationTab")}</button>
           </div>
           {mobileTab === "coach" ? coach : rail}
         </div>
@@ -213,12 +214,13 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
 /** Safe cue that saved preparation memory was used this run (count + inspectable
  * summaries only — never checkpoint, prompt formatting or internal state). §35. */
 function MemoryLoadedCue({ run }: { run: { memory_used: boolean; memory_count: number; memory_loaded?: { category: string; summary: string; target_role: string | null }[] } }) {
+  const t = useT();
   if (!run.memory_used || run.memory_count === 0) return null;
   const loaded = run.memory_loaded ?? [];
   return (
     <details className="mb-3 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm">
       <summary className="cursor-pointer text-muted">
-        Using {run.memory_count} saved preparation {run.memory_count === 1 ? "memory" : "memories"}
+        {t(run.memory_count === 1 ? "prepare.savedMemory_one" : "prepare.savedMemory_other", { count: run.memory_count })}
       </summary>
       {loaded.length ? (
         <ul className="mt-2 grid gap-1">
@@ -231,7 +233,7 @@ function MemoryLoadedCue({ run }: { run: { memory_used: boolean; memory_count: n
         </ul>
       ) : null}
       <p className="mt-2 text-xs text-muted">
-        <a href="/settings" className="text-accent underline">Manage in Settings</a>
+        <a href="/settings" className="text-accent underline">{t("prepare.manageInSettings")}</a>
       </p>
     </details>
   );
@@ -351,13 +353,13 @@ function FirstMessageForm({
   return (
     <Card>
       <CardBody className="space-y-3">
-        <label htmlFor="agent-goal" className="block text-sm font-medium">What interview are you preparing for?</label>
+        <label htmlFor="agent-goal" className="block text-sm font-medium">{t("prepare.whatPreparingFor")}</label>
         <Textarea
           id="agent-goal"
           data-tour="target-role"
           value={goal}
           onChange={(e) => setGoal(e.target.value)}
-          placeholder="e.g. I have a Senior Product Manager interview next week and want to prepare."
+          placeholder={t("prepare.goalPlaceholder")}
           disabled={busy}
           maxLength={4000}
         />
@@ -378,17 +380,17 @@ function FirstMessageForm({
         ) : null}
 
         <button type="button" onClick={() => setShowContext((v) => !v)} className="text-sm font-medium text-accent">
-          {showContext ? "− Hide extra context" : "+ Add context (optional)"}
+          {showContext ? t("prepare.hideExtraContext") : t("prepare.addContextOptional")}
         </button>
 
         {showContext ? (
           <div className="space-y-3">
             <div>
-              <label htmlFor="agent-role" className="block text-sm text-muted">Target role (optional)</label>
+              <label htmlFor="agent-role" className="block text-sm text-muted">{t("prepare.targetRoleOptional")}</label>
               <Input id="agent-role" value={targetRole} onChange={(e) => setTargetRole(e.target.value)} disabled={busy} maxLength={200} />
             </div>
             <div>
-              <label htmlFor="agent-jd" className="block text-sm text-muted">Job description (optional)</label>
+              <label htmlFor="agent-jd" className="block text-sm text-muted">{t("prepare.jobDescriptionOptional")}</label>
               <Textarea id="agent-jd" value={jd} onChange={(e) => setJd(e.target.value)} disabled={busy} maxLength={12000} className="min-h-[100px]" />
             </div>
             {/* Or SELECT a stored JD from the one governed document system (P10B Wave 4). A pasted
@@ -398,7 +400,7 @@ function FirstMessageForm({
                               label={t("prepctx.jobDescriptionDoc")} disabled={busy} />
             ) : null}
             <div>
-              <label htmlFor="agent-bg" className="block text-sm text-muted">Your background (optional)</label>
+              <label htmlFor="agent-bg" className="block text-sm text-muted">{t("prepare.yourBackgroundOptional")}</label>
               <Textarea id="agent-bg" value={background} onChange={(e) => setBackground(e.target.value)} disabled={busy} maxLength={12000} className="min-h-[100px]" />
             </div>
           </div>
@@ -412,23 +414,23 @@ function FirstMessageForm({
             checked={research}
             onChange={(e) => toggleResearch(e.target.checked)}
             disabled={busy}
-            aria-label="Allow current-market research"
+            aria-label={t("prepare.allowResearchAria")}
           />
           <span>
-            Allow current-market research{" "}
-            <span className="text-xs">(bounded external evidence; off keeps preparation to governed sources)</span>
+            {t("prepare.allowResearch")}{" "}
+            <span className="text-xs">{t("prepare.researchHint")}</span>
           </span>
         </label>
 
         <div className="flex items-center justify-between">
-          <span className="text-xs text-muted" aria-live="polite">{busy ? "Starting your session…" : ""}</span>
-          <Button data-tour="ask-mo" onClick={submit} disabled={!canStart}>{busy ? "Starting…" : "Start preparing"}</Button>
+          <span className="text-xs text-muted" aria-live="polite">{busy ? t("prepare.startingSession") : ""}</span>
+          <Button data-tour="ask-mo" onClick={submit} disabled={!canStart}>{busy ? t("prepare.starting") : t("prepare.startPreparing")}</Button>
         </div>
 
         {error && !error.notFound ? (
           <p role="alert" className="text-sm text-danger">
             {error.message}
-            {error.requestId ? <span className="block text-xs text-muted">Reference: {error.requestId}</span> : null}
+            {error.requestId ? <span className="block text-xs text-muted">{t("prepare.reference", { id: error.requestId })}</span> : null}
           </p>
         ) : null}
       </CardBody>
@@ -450,6 +452,7 @@ function HandoffRunner({
   run: { handoff_approved: boolean; preparation_context?: unknown };
   runId: string;
 }) {
+  const t = useT();
   const router = useRouter();
   const attempted = useRef(false);
   const [needsConfig, setNeedsConfig] = useState(false);
@@ -461,7 +464,7 @@ function HandoffRunner({
     async (extra?: { industry_or_sector: string; career_level: string }) => {
       const ctx = run.preparation_context as (Record<string, unknown> & { target_role?: string }) | null | undefined;
       if (!ctx?.target_role) {
-        setError("Your preparation isn't ready for practice yet.");
+        setError(t("prepare.notReadyForPractice"));
         return;
       }
       try {
@@ -484,11 +487,11 @@ function HandoffRunner({
         if (err.code === "missing_interview_handoff_config" && !extra) {
           setNeedsConfig(true);
         } else {
-          setError(err.message || err.userMessage || "Couldn't start practice.");
+          setError(err.message || err.userMessage || t("prepare.couldntStartPractice"));
         }
       }
     },
-    [router, run.preparation_context, idempotencyKey],
+    [router, run.preparation_context, idempotencyKey, t],
   );
 
   useEffect(() => {
@@ -509,7 +512,7 @@ function HandoffRunner({
   }
   return (
     <div role="status" className="mt-3 text-sm text-muted">
-      {error ? <span role="alert" className="text-danger">{error}</span> : "Setting up your interview practice…"}
+      {error ? <span role="alert" className="text-danger">{error}</span> : t("prepare.settingUpPractice")}
     </div>
   );
 }
@@ -523,6 +526,7 @@ function HandoffCompletionCard({
   onSubmit: (industry: string, careerLevel: string) => void;
   error: string | null;
 }) {
+  const t = useT();
   const [industry, setIndustry] = useState("");
   const [careerLevel, setCareerLevel] = useState("");
   const [levels, setLevels] = useState<string[]>([]);
@@ -542,13 +546,13 @@ function HandoffCompletionCard({
   return (
     <Card className="mt-3 border-accent">
       <CardBody className="space-y-3">
-        <p className="font-medium">One last detail before practice</p>
+        <p className="font-medium">{t("prepare.oneLastDetail")}</p>
         <div>
-          <label htmlFor="handoff-industry" className="block text-sm text-muted">Industry / sector</label>
+          <label htmlFor="handoff-industry" className="block text-sm text-muted">{t("prepare.industrySector")}</label>
           <Input id="handoff-industry" value={industry} onChange={(e) => setIndustry(e.target.value)} maxLength={200} disabled={busy} />
         </div>
         <div>
-          <label htmlFor="handoff-level" className="block text-sm text-muted">Career level</label>
+          <label htmlFor="handoff-level" className="block text-sm text-muted">{t("prepare.careerLevel")}</label>
           <select
             id="handoff-level"
             value={careerLevel}
@@ -556,14 +560,14 @@ function HandoffCompletionCard({
             disabled={busy}
             className="w-full rounded-lg border border-border bg-surface px-3.5 py-3 disabled:opacity-60"
           >
-            <option value="">Select…</option>
+            <option value="">{t("prepare.selectPlaceholder")}</option>
             {levels.map((l) => <option key={l} value={l}>{l}</option>)}
           </select>
         </div>
         {/* Busy state guards against duplicate/concurrent submits (backend idempotency
             via the agent-handoff key remains the real safety boundary — §14/§15). */}
         <Button size="sm" disabled={!ready} onClick={() => { setBusy(true); onSubmit(industry.trim(), careerLevel); }}>
-          {busy ? "Starting practice…" : "Start practice"}
+          {busy ? t("prepare.startingPractice") : t("prepare.startPractice")}
         </Button>
         {error ? <p role="alert" className="text-sm text-danger">{error}</p> : null}
       </CardBody>

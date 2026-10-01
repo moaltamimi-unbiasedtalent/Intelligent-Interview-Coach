@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from src.locales import LANGUAGE_NAMES
+
 # The bounded loop can take at most this many agent steps before terminating
 # safely. Kept small on purpose — the foundation needs only a couple of steps.
 MAX_AGENT_STEPS = 6
@@ -94,15 +96,7 @@ SYSTEM_PROMPT = (
 # candidate-supplied value can never inject prompt text — an unknown code yields no
 # directive at all. This sets the language of Mo's prose only; it never changes
 # retrieval geography, tool selection or grounding.
-RESPONSE_LANGUAGE_NAMES: dict[str, str] = {
-    "en": "English",
-    "de": "German",
-    "fr": "French",
-    "es": "Spanish",
-    "it": "Italian",
-    "pt": "Portuguese",
-    "nl": "Dutch",
-}
+RESPONSE_LANGUAGE_NAMES: dict[str, str] = dict(LANGUAGE_NAMES)  # single copy: src/locales.py
 
 
 def response_language_directive(code: str | None) -> str | None:

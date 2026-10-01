@@ -26,15 +26,18 @@ test("first visit: invitation → start → advance → dismiss → stays dismis
   await expect(invite).toBeVisible();
 
   await page.getByRole("button", { name: "Start tour" }).click();
-  await expect(page.getByText("Start with your goal")).toBeVisible();
-  await expect(page.getByText("1 of 12")).toBeVisible();
+  // Tutorial v2 (P10B-W9.5): Opportunity-centred journey, localized steps, 9 steps.
+  await expect(page.getByText("Welcome to your workspace")).toBeVisible();
+  await expect(page.getByText("1 of 9")).toBeVisible();
 
-  await page.getByRole("button", { name: "Next" }).click();
-  await expect(page.getByText("Give Mo the right context")).toBeVisible();
+  await page.getByRole("button", { name: "Next" }).click(); // -> Opportunities (/app)
+  await expect(page.getByText("Keep one job together")).toBeVisible();
+  await page.getByRole("button", { name: "Next" }).click(); // -> Role & JD (/prepare)
+  await expect(page.getByText("Add the role and job description")).toBeVisible();
   await expect(page).toHaveURL(/\/prepare/); // route-aware
 
   await page.getByRole("button", { name: "Skip" }).click();
-  await expect(page.getByText("Give Mo the right context")).toHaveCount(0);
+  await expect(page.getByText("Add the role and job description")).toHaveCount(0);
 
   await page.goto("/app");
   await expect(page.getByRole("dialog", { name: "Welcome to Ask4Mo" })).toHaveCount(0);
@@ -51,9 +54,9 @@ test("Help: search, sections, and replaying the tour", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Troubleshooting" })).toHaveCount(0);
   await page.getByLabel("Search help").fill("");
 
-  // Replay the tour from Help.
+  // Replay the tour from Help (starts at step 1 of Tutorial v2).
   await page.getByRole("button", { name: "Take the tour" }).click();
-  await expect(page.getByText("Start with your goal")).toBeVisible();
+  await expect(page.getByText("Welcome to your workspace")).toBeVisible();
 });
 
 test("contextual help: Sources links to the Sources help section", async ({ page }) => {

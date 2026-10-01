@@ -226,6 +226,8 @@ export interface CareerChatRequest {
   candidate_background?: string | null;
   days_until_interview?: number | null;
   hours_per_week?: number | null;
+  /** Mo conversation language (bounded locale code). Owns Mo's prose + deterministic fallback text. */
+  conversation_language?: string | null;
 }
 
 export interface Citation {

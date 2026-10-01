@@ -506,10 +506,38 @@ assumptions in core logic, prompts, scoring or examples.
 - **Internationalization coding standard (Capstone P3.5+).** New candidate-facing,
   user-visible strings MUST use the i18n system: add a key to the English source
   catalogue (`frontend/lib/i18n/messages/en.ts`) and every locale catalogue (de/fr/es/
-  it/pt/nl), and render via `useT()` / `translate()`. Interface language, Mo conversation
+  it/pt/nl/ru), and render via `useT()` / `translate()`. Interface language, Mo conversation
   language and dictation locale are **independent** settings, and a language choice never
   changes labour-market geography. Do not hard-code new English strings in candidate UI;
   reviewer/diagnostic-only text is exempt. See `docs/capstone/p3_5_i18n_l10n.md`.
+  **P10B-W9.6/W9.7 — full localization, Russian, protected slogan (durable rules):** the product has
+  **eight** interface/conversation locales (en/de/fr/es/it/pt/nl/**ru**), declared ONCE in
+  `src/locales.py` (`SUPPORTED_LOCALE_CODES`, `AppLocale`) and `frontend/lib/i18n/locales.ts`
+  (`APP_LOCALES`, Russian label "Русский"). Adding an app locale NEVER enables other dimensions: speech
+  (dictation `DICTATION_LANGUAGES`, TTS `ttsLocales`, realtime `SUPPORTED_REALTIME_LOCALES`), document/OCR
+  language (`DOCUMENT_LANGUAGE_CODES`), KB/taxonomy languages (`governance.SUPPORTED_LANGUAGES`; Russian is
+  NOT an ESCO language) and labour-market geography (`CAREER_GEOGRAPHIES`; Russia is not a market) are
+  separate lists; hide speech controls for a conversation language without speech support
+  (`isSpeechOutputLocale`). A fragment missing a supported locale is a hard error (no silent English
+  fallback). The deterministic scanner `frontend/scripts/scan-i18n.mjs` (+ `tests/no-hardcoded-english.test.ts`,
+  `eval_i18n_l10n`) must stay at 0 unexplained candidate-facing literals, including copy stored in object
+  literals. **The slogan "Ask More. Be More." is a protected brand invariant: it is NEVER translated,
+  transliterated or re-punctuated in any locale (current or future).** It is defined once as `BRAND_SLOGAN`
+  in `frontend/lib/brand.ts`; every locale's `common.tagline` is that constant; embedded copy uses the exact
+  phrase; the scanner approves ONLY that exact string. Enforced by `tests/brand-slogan-invariant.test.ts`
+  and `eval_i18n_l10n`. New languages are ENGINEERING translations until native/legal review. See
+  `docs/capstone/p10/w9/P10B_W9_7_RUSSIAN_LOCALE.md`.
+  **P10B-W9.7A - language ownership + guard + error tiers (durable rules):** two language dimensions own
+  different text and must not be coupled: the **interface** language owns Ask4Mo UI chrome (labels, buttons,
+  source summaries); the Mo **conversation** language owns everything Mo "says" - the model's prose AND the
+  deterministic text standing in for it (the Career-chat response-template headings, the insufficient-evidence
+  sentence/note, the "model unavailable" fallback). `/career/chat` takes a bounded optional
+  `conversation_language`; bounded text lives in `src/copilot/rag/localized.py`; English/default output must stay
+  byte-identical. `LANGUAGE_NAMES` has one copy (`src/locales.py`). The scanner also detects string-tuple arrays,
+  JSX text mixed with `{}` expressions and HTML-entity text - never hide candidate copy in a literal array. Loading
+  placeholders must be bounded and labelled and must resolve on every settled state (incl. auth `unknown`).
+  `ErrorState` has three tiers: `section` (compact), `page` (default, proportional) and `fatal` (route error
+  boundary only). Tailwind `token/NN` opacity classes do NOT generate CSS with the current token setup.
   **P10B Wave 2 — coaching style + onboarding:** Mo coaching style is a **bounded enum**
   (supportive/balanced/direct/challenging) in `src/coaching_style.py` → a **trusted allow-list-only
   directive** (`coaching_style_directive`) appended like the language directive. It sets only the
@@ -603,9 +631,34 @@ assumptions in core logic, prompts, scoring or examples.
 
 - Remote: `origin` (configured locally; the GitHub repo rename to Intelligent-Interview-Coach is a follow-up). Turing
   submissions are pushed to the `TuringCollegeSubmissions/*` remote.
-- Work on a feature branch; open a PR. **Do not auto-merge.** Commit and push only
-  when a phase/prompt instructs it.
+- Work on a feature branch and integrate through a Pull Request (see the **Completed Wave Integration
+  Rule** below). Never force-push `main`; never bypass required CI without explicit owner instruction.
 - End commit messages with `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+
+### Completed Wave Integration Rule (permanent, owner-established)
+
+A completed implementation wave must not remain local-only. Every approved Ask4Mo implementation wave must:
+
+1. complete its acceptance gates;
+2. run the required deterministic tests/evaluators;
+3. commit all intended changes;
+4. ensure no secrets, local databases, database backups, logs or private data are included;
+5. push the implementation branch to GitHub (never `--force` on `main`);
+6. open or update a Pull Request into `main`;
+7. allow required CI to complete;
+8. fix CI failures, or explicitly block and report them (including GitHub Actions billing/spending-limit
+   failures: never claim CI passed when jobs did not execute);
+9. merge only after required checks pass, using the repository's normal merge strategy;
+10. `git fetch origin --prune`, switch to `main` and fast-forward it from `origin/main`
+    (`git pull --ff-only origin main`); if it cannot fast-forward, inspect and report - never reset
+    destructively;
+11. verify `local main == origin/main` with a clean working tree (and that the Alembic head is as expected);
+12. report the GitHub PR and the final SHA.
+
+A wave must NOT be reported as "fully integrated" if it exists only as a local commit. Deliberately cumulative
+local development waves may be synchronized through one cumulative PR before continuing, but that is the
+exception; afterwards return to per-wave integration. Workflow:
+implement -> test -> commit -> push -> PR -> CI -> merge -> sync local main -> verify SHA equality.
 - Never commit `.env`, `.streamlit/secrets.toml`, virtual environments, caches,
   generated evaluation runs, or `node_modules`.
 
