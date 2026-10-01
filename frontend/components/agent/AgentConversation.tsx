@@ -91,6 +91,15 @@ export function AgentConversation({
       {/* Latest evidence lives under the most recent assistant answer. */}
       {run && !busy && run.sources.length ? <AgentSources sources={run.sources} /> : null}
 
+      {messages.some((m) => m.role === "assistant") ? (
+        <p className="text-xs text-muted" data-testid="ai-cue">
+          {t("trustUx.aiCueBody")}{" "}
+          <a href="/ai-transparency" target="_blank" rel="noopener noreferrer" className="underline">
+            {t("trustUx.aiCueLink")}
+          </a>
+        </p>
+      ) : null}
+
       {busy ? (
         <div role="status" aria-live="polite" className="flex items-center gap-2 text-sm text-muted">
           <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-accent" aria-hidden />

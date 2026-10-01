@@ -59,7 +59,7 @@ export function PersonalisationSettings() {
 
   return (
     <div className="grid gap-4">
-      <h2 className="text-base font-semibold">{t("coaching.title")}</h2>
+      <h2 className="text-base font-semibold">{t("trustUx.settingsProfileTitle")}</h2>
       <label className="grid gap-1">
         <span className="text-sm font-medium text-foreground">{t("onboarding.nameLabel")}</span>
         <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={255} disabled={disabled} />

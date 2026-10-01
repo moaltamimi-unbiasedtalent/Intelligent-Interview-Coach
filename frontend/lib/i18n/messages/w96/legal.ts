@@ -52,7 +52,7 @@ const en = {
     externalKeys: "Long-lived provider keys stay server-side and are never sent to your browser.",
     retentionHeading: "Retention, export and deletion",
     retentionExport:
-      "You can export your data and permanently delete your account and its application-controlled data (documents, private files, Practice history, Memory, Story Bank, sessions and agent checkpoints).",
+      "You can export your data and permanently delete your account and its application-controlled data (documents, private files, Practice history, Memory, Story Bank and sessions).",
     retentionAudit:
       "Security and audit records are retained and anonymized (the link to your account is removed) rather than deleted, for security review.",
     retentionBackups:
@@ -266,7 +266,7 @@ const de: LegalFragment = {
       "Langlebige Anbieterschlüssel bleiben serverseitig und werden niemals an Ihren Browser gesendet.",
     retentionHeading: "Aufbewahrung, Export und Löschung",
     retentionExport:
-      "Sie können Ihre Daten exportieren und Ihr Konto sowie seine von der Anwendung kontrollierten Daten dauerhaft löschen (Dokumente, private Dateien, Practice-Verlauf, Memory, Story Bank, Sitzungen und Agenten-Checkpoints).",
+      "Sie können Ihre Daten exportieren und Ihr Konto sowie seine von der Anwendung kontrollierten Daten dauerhaft löschen (Dokumente, private Dateien, Practice-Verlauf, Memory, Story Bank und Sitzungen).",
     retentionAudit:
       "Sicherheits- und Prüfprotokolle werden zur Sicherheitsüberprüfung aufbewahrt und anonymisiert (die Verknüpfung mit Ihrem Konto wird entfernt), statt gelöscht zu werden.",
     retentionBackups:
@@ -485,7 +485,7 @@ const fr: LegalFragment = {
       "Les clés de fournisseur à longue durée restent côté serveur et ne sont jamais envoyées à votre navigateur.",
     retentionHeading: "Conservation, export et suppression",
     retentionExport:
-      "Vous pouvez exporter vos données et supprimer définitivement votre compte et les données contrôlées par l'application (documents, fichiers privés, historique de Practice, Memory, Story Bank, sessions et points de contrôle de l'agent).",
+      "Vous pouvez exporter vos données et supprimer définitivement votre compte et les données contrôlées par l'application (documents, fichiers privés, historique de Practice, Memory, Story Bank et sessions).",
     retentionAudit:
       "Les enregistrements de sécurité et d'audit sont conservés et anonymisés (le lien avec votre compte est retiré) plutôt que supprimés, à des fins de revue de sécurité.",
     retentionBackups:
@@ -706,7 +706,7 @@ const es: LegalFragment = {
       "Las claves de proveedor de larga duración permanecen en el servidor y nunca se envían a su navegador.",
     retentionHeading: "Conservación, exportación y eliminación",
     retentionExport:
-      "Puede exportar sus datos y eliminar de forma permanente su cuenta y los datos controlados por la aplicación (documentos, archivos privados, historial de Practice, Memory, Story Bank, sesiones y puntos de control del agente).",
+      "Puede exportar sus datos y eliminar de forma permanente su cuenta y los datos controlados por la aplicación (documentos, archivos privados, historial de Practice, Memory, Story Bank y sesiones).",
     retentionAudit:
       "Los registros de seguridad y auditoría se conservan y se anonimizan (se elimina el vínculo con su cuenta) en lugar de borrarse, para la revisión de seguridad.",
     retentionBackups:
@@ -927,7 +927,7 @@ const it: LegalFragment = {
       "Le chiavi dei provider a lunga durata restano lato server e non vengono mai inviate al tuo browser.",
     retentionHeading: "Conservazione, esportazione ed eliminazione",
     retentionExport:
-      "Puoi esportare i tuoi dati ed eliminare in modo permanente il tuo account e i dati controllati dall'applicazione (documenti, file privati, cronologia di Practice, Memory, Story Bank, sessioni e checkpoint dell'agente).",
+      "Puoi esportare i tuoi dati ed eliminare in modo permanente il tuo account e i dati controllati dall'applicazione (documenti, file privati, cronologia di Practice, Memory, Story Bank e sessioni).",
     retentionAudit:
       "I registri di sicurezza e di audit vengono conservati e anonimizzati (il collegamento al tuo account viene rimosso) anziché eliminati, per la revisione di sicurezza.",
     retentionBackups:
@@ -1148,7 +1148,7 @@ const pt: LegalFragment = {
       "As chaves de fornecedor de longa duração permanecem no servidor e nunca são enviadas para o seu navegador.",
     retentionHeading: "Retenção, exportação e eliminação",
     retentionExport:
-      "Pode exportar os seus dados e eliminar de forma permanente a sua conta e os dados controlados pela aplicação (documentos, ficheiros privados, histórico de Practice, Memory, Story Bank, sessões e checkpoints do agente).",
+      "Pode exportar os seus dados e eliminar de forma permanente a sua conta e os dados controlados pela aplicação (documentos, ficheiros privados, histórico de Practice, Memory, Story Bank e sessões).",
     retentionAudit:
       "Os registos de segurança e auditoria são retidos e anonimizados (a ligação à sua conta é removida) em vez de eliminados, para revisão de segurança.",
     retentionBackups:
@@ -1369,7 +1369,7 @@ const nl: LegalFragment = {
       "Langlevende providersleutels blijven aan de serverzijde en worden nooit naar uw browser gestuurd.",
     retentionHeading: "Bewaring, export en verwijdering",
     retentionExport:
-      "U kunt uw gegevens exporteren en uw account en de door de applicatie beheerde gegevens permanent verwijderen (documenten, privébestanden, Practice-geschiedenis, Memory, Story Bank, sessies en agent-checkpoints).",
+      "U kunt uw gegevens exporteren en uw account en de door de applicatie beheerde gegevens permanent verwijderen (documenten, privébestanden, Practice-geschiedenis, Memory, Story Bank en sessies).",
     retentionAudit:
       "Beveiligings- en auditregistraties worden bewaard en geanonimiseerd (de koppeling met uw account wordt verwijderd) in plaats van verwijderd, voor beveiligingsbeoordeling.",
     retentionBackups:

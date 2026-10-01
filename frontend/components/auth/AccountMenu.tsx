@@ -114,6 +114,22 @@ export function AccountMenu() {
           >
             {t("settings.title")}
           </Link>
+          <Link
+            href="/account/data"
+            role="menuitem"
+            onClick={() => close()}
+            className="flex min-h-[44px] items-center px-3.5 py-2 text-sm font-medium text-foreground hover:bg-surface-2 focus:bg-surface-2 focus:outline-none"
+          >
+            {t("trustUx.navDataPrivacy")}
+          </Link>
+          <Link
+            href="/trust"
+            role="menuitem"
+            onClick={() => close()}
+            className="flex min-h-[44px] items-center px-3.5 py-2 text-sm font-medium text-foreground hover:bg-surface-2 focus:bg-surface-2 focus:outline-none"
+          >
+            {t("trustUx.navTrust")}
+          </Link>
           {isRealSession ? (
             <button
               type="button"

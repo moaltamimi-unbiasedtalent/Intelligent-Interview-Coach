@@ -117,7 +117,7 @@ export const messages = {
     manageMemory: "Manage Memory",
     manageDocuments: "Manage documents",
     manageSharing: "Manage sharing",
-    privacyDataDesc: "You can export a copy of your data, or permanently delete your account. Deletion removes your account and its application-controlled data (documents, private files, Practice history, Memory, Story Bank, sessions and agent context) and signs you out. Security and audit records are anonymised, not deleted; historical infrastructure backups age out per the provider's retention schedule.",
+    privacyDataDesc: "You can export a copy of your data, or permanently delete your account. Deletion removes your account and its application-controlled data (documents, private files, Practice history, Memory, Story Bank and sessions) and signs you out. Some preparation-chat working data may remain until it is cleaned up. Security and audit records are anonymised, not deleted; historical infrastructure backups age out per the provider's retention schedule.",
     devIdentity: "You're using the local development identity. Sign in with a real account for the full session experience.",
     methodSession: "Password / social",
     methodDev: "Development header",

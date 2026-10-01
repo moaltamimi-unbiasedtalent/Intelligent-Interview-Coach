@@ -113,7 +113,7 @@ const pt: Catalog = {
     manageMemory: "Gerir a Memória",
     manageDocuments: "Gerir documentos",
     manageSharing: "Gerir a partilha",
-    privacyDataDesc: "Pode exportar uma cópia dos seus dados ou eliminar permanentemente a sua conta. A eliminação remove a sua conta e os dados controlados pela aplicação (documentos, ficheiros privados, histórico de prática, Memória, Banco de histórias, sessões e contexto do agente) e termina a sua sessão. Os registos de segurança e auditoria são anonimizados, não eliminados; as cópias de segurança de infraestrutura históricas expiram de acordo com o calendário de retenção do fornecedor.",
+    privacyDataDesc: "Pode exportar uma cópia dos seus dados ou eliminar permanentemente a sua conta. A eliminação remove a sua conta e os dados controlados pela aplicação (documentos, ficheiros privados, histórico de prática, Memória, Banco de histórias e sessões) e termina a sua sessão. Alguns dados de trabalho do chat de preparação podem permanecer até serem limpos. Os registos de segurança e auditoria são anonimizados, não eliminados; as cópias de segurança de infraestrutura históricas expiram de acordo com o calendário de retenção do fornecedor.",
     devIdentity: "Está a usar a identidade de desenvolvimento local. Inicie sessão com uma conta real para a experiência de sessão completa.",
     methodSession: "Palavra-passe / rede social",
     methodDev: "Cabeçalho de desenvolvimento",

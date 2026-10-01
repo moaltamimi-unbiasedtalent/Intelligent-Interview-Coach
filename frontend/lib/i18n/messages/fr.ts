@@ -113,7 +113,7 @@ const fr: Catalog = {
     manageMemory: "Gérer la Mémoire",
     manageDocuments: "Gérer les documents",
     manageSharing: "Gérer le partage",
-    privacyDataDesc: "Vous pouvez exporter une copie de vos données ou supprimer définitivement votre compte. La suppression retire votre compte et les données gérées par l’application (documents, fichiers privés, historique d’entraînement, Mémoire, Banque d’histoires, sessions et contexte de l’agent) et vous déconnecte. Les journaux de sécurité et d’audit sont anonymisés, pas supprimés ; les sauvegardes d’infrastructure historiques expirent selon le calendrier de conservation du fournisseur.",
+    privacyDataDesc: "Vous pouvez exporter une copie de vos données ou supprimer définitivement votre compte. La suppression retire votre compte et les données gérées par l’application (documents, fichiers privés, historique d’entraînement, Mémoire, Banque d’histoires et sessions) et vous déconnecte. Certaines données de travail du chat de préparation peuvent subsister jusqu’à leur nettoyage. Les journaux de sécurité et d’audit sont anonymisés, pas supprimés ; les sauvegardes d’infrastructure historiques expirent selon le calendrier de conservation du fournisseur.",
     devIdentity: "Vous utilisez l’identité de développement locale. Connectez-vous avec un vrai compte pour profiter de l’expérience de session complète.",
     methodSession: "Mot de passe / réseau social",
     methodDev: "En-tête de développement",

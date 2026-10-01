@@ -45,7 +45,7 @@ export function SettingsContent() {
             <p className="mt-1 text-sm text-muted">
               {t("settings.yourDataDesc")}{" "}
               <a href="/account/data" className="font-medium text-accent hover:underline">
-                {t("settings.yourDataManage")}
+                {t("trustUx.settingsDataManage")}
               </a>
               .
             </p>

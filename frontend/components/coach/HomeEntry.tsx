@@ -34,7 +34,7 @@ export function HomeEntry() {
   }
 
   return (
-    <div className="mt-2 max-w-2xl">
+    <div className="mt-2">
       <form
         onSubmit={start}
         data-tour="home-start"
@@ -50,7 +50,7 @@ export function HomeEntry() {
           placeholder={t("home.goalPlaceholder")}
           className="border-0 bg-transparent shadow-none focus-visible:outline-none"
         />
-        <Button type="submit" disabled={!canStart}>{t("home.askMo")}</Button>
+        <Button type="submit" disabled={!canStart} className="shrink-0 whitespace-nowrap">{t("home.askMo")}</Button>
       </form>
       <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
         <button type="button" onClick={() => shortcut("job_description")} className="text-muted hover:text-foreground">
