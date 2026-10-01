@@ -71,3 +71,13 @@ def test_streamlit_secrets_do_not_read_the_developers_local_secrets_file():
 
     assert not st.secrets.get("OPENROUTER_API_KEY")          # never print or assert on a value
     assert "OPENROUTER_API_KEY" not in os.environ              # and st.secrets must not export keys into the env
+
+
+def test_vector_store_is_redirected_to_temp_and_non_temp_paths_are_refused(tmp_path):
+    import chromadb
+
+    configured = Path(os.environ["COPILOT_CHROMA_DIR"]).resolve()
+    assert ROOT / "data" not in configured.parents
+    with pytest.raises(RuntimeError, match="Test isolation"):
+        chromadb.PersistentClient(path=str(ROOT / "data" / "chroma"))
+    chromadb.PersistentClient(path=str(tmp_path / "ok"))  # temp location is allowed

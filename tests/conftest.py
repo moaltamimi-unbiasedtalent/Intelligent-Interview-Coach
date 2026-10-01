@@ -36,7 +36,7 @@ _SYSTEM_TMP = Path(tempfile.gettempdir()).resolve()
 _SCRUB_PREFIXES = (
     "OPENROUTER_", "ADZUNA_", "GOOGLE_", "BREVO_", "LANGFUSE_", "GEMINI_", "FEATURE_GOOGLE_LOGIN",
     "AGENT_CHECKPOINT_DATABASE_URL", "AGENT_EXTERNAL_OBSERVABILITY", "EMAIL_", "REDIS_", "RATE_LIMIT_BACKEND",
-    "DOCUMENT_STORAGE_DIR",
+    "DOCUMENT_STORAGE_DIR", "COPILOT_",
 )
 
 if not _ALLOW_DEV:
@@ -45,6 +45,9 @@ if not _ALLOW_DEV:
     os.environ["PYTHON_DOTENV_DISABLED"] = "1"
     os.environ["DATABASE_URL"] = f"sqlite:///{_TMP_ROOT / 'ask4mo_test.db'}"
     os.environ["EMAIL_PROVIDER"] = "memory"
+    # The default vector-store directory is ``data/chroma`` (relative to the cwd). On a fresh clone (CI) opening it CREATES
+    # ``data/chroma/chroma.sqlite3``; locally the pre-built store hid that write. Point it at the temp dir.
+    os.environ["COPILOT_CHROMA_DIR"] = str(_TMP_ROOT / "chroma")
 
     try:  # belt and braces for python-dotenv versions that ignore PYTHON_DOTENV_DISABLED
         import dotenv
@@ -100,6 +103,24 @@ if not _ALLOW_DEV:
 
     sqlalchemy.create_engine = _guarded_create_engine
     sqlalchemy.engine.create_engine = _guarded_create_engine
+
+    try:  # same fail-fast rule for the vector store: only temp-directory Chroma persistence is allowed in tests
+        import chromadb
+
+        _real_persistent_client = chromadb.PersistentClient
+
+        def _guarded_persistent_client(path=None, *args, **kwargs):
+            resolved = (Path(path) if path else Path("chroma")).expanduser()
+            resolved = (resolved if resolved.is_absolute() else Path.cwd() / resolved).resolve()
+            if _SYSTEM_TMP not in resolved.parents and _TMP_ROOT not in resolved.parents:
+                raise RuntimeError(
+                    f"Test isolation: refusing to open the vector store at {resolved}. Tests must use a "
+                    "temp-directory Chroma path (COPILOT_CHROMA_DIR is redirected there by tests/conftest.py).")
+            return _real_persistent_client(path, *args, **kwargs)
+
+        chromadb.PersistentClient = _guarded_persistent_client
+    except Exception:  # pragma: no cover - chromadb is a hard dependency; never block collection
+        pass
 
 
 def _fingerprint_dev_stores() -> dict[str, tuple[int, int]]:

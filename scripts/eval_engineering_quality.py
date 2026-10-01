@@ -35,6 +35,8 @@ def run() -> dict[str, tuple[bool, str]]:
           "engine guard + temp DATABASE_URL")
     check("test_dev_store_fingerprint_fails_session",
           "pytest_sessionfinish" in conftest and "session.exitstatus = 1" in conftest, "dev stores fingerprinted")
+    check("test_vector_store_redirected_and_guarded", "COPILOT_CHROMA_DIR" in conftest and "_guarded_persistent_client" in conftest,
+          "Chroma persistence confined to the temp dir (found by the first CI run)")
     check("isolation_regression_tests_exist", "test_opening_the_development_database_is_refused" in read("tests/test_test_isolation.py"),
           "tests/test_test_isolation.py")
 

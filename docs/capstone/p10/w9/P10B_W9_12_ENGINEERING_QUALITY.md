@@ -44,12 +44,13 @@ current evergreen browser (Chrome 111+, Safari 16.2+, Firefox 113+); on older en
 3. `DATABASE_URL` defaulted to the real `sqlite:///data/interview_studio.db`; any test that built the real app wrote there (the memory-service leak
    found in W9.8 was one instance; the clean-main baseline run still modified the dev DB).
 4. The external-research cache defaulted to `data/cache/external` and one test wrote (and could read) there.
+5. (Found by the first CI run, reproduced in a fresh clone) the default vector-store directory `data/chroma` did not exist on a clean checkout, so a test that opened it CREATED `data/chroma/chroma.sqlite3`; locally the pre-built store hid the write. The session guard correctly failed the run in CI (all tests passed, the isolation check did not). Fixed by redirecting `COPILOT_CHROMA_DIR` to the temp dir and refusing any non-temp `chromadb.PersistentClient` path. Lesson recorded: qualify from a fresh clone (a worktree without ignored local data), not only from the developer checkout.
 **Stores audited:** development SQLite DB, agent-checkpoint SQLite (derived from the DB path), document store, Chroma/vector dir, knowledge SQLite stores,
 external-research cache, feedback-intelligence outputs, `.env`, Streamlit secrets. Only the DB and the research cache were written by tests.
-**Implementation (`tests/conftest.py`, no product change):** disable `.env` loading (env flag + no-op `load_dotenv`); scrub provider/model/persistence
+**Implementation (`tests/conftest.py`, no product change):** disable `.env` loading (env flag + no-op `load_dotenv`); scrub provider/model/persistence/`COPILOT_*`
 variables; point Streamlit secrets at an empty file; force a per-process temp `DATABASE_URL`; refuse any SQLAlchemy engine that is not in-memory or inside
-the system temp directory (non-sqlite URLs too) with a clear message; default the research cache to a temp dir; and fail the whole session if any
-development store changed. Opt-out only by an explicit `ASK4MO_TEST_ALLOW_DEV_PERSISTENCE=1`. Regression tests: `tests/test_test_isolation.py` (7).
+the system temp directory (non-sqlite URLs too) with a clear message; default the research cache and the Chroma directory to the temp dir (and refuse non-temp Chroma paths); and fail the whole session if any
+development store changed. Opt-out only by an explicit `ASK4MO_TEST_ALLOW_DEV_PERSISTENCE=1`. Regression tests: `tests/test_test_isolation.py` (7+).
 **Result:** the full backend suite passes without any local `.env`/secrets pinning: **2565 passed, 3 skipped, 0 failed**. The 3 skips are the documented RAGAS
 installed/absent guards. The dev DB is byte-identical before and after the run. While debugging, a local provider key was echoed once into this session's
 tool output (not written to any file, log or commit); rotate that key if the session transcript is retained or shared.
