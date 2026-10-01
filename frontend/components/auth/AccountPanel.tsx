@@ -12,12 +12,11 @@ import { LoadingState } from "@/components/ui/States";
 import { useT } from "@/components/i18n/I18nProvider";
 
 export function AccountPanel() {
-  const { account, status, isRealSession, refresh, signOut } = useAuth();
+  const { account, status, isRealSession, signOut } = useAuth();
   const router = useRouter();
   const t = useT();
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (status === "loading") return <LoadingState label={t("account.loadingAccount")} />;
   if (!account) return <Alert tone="warning">{t("account.notSignedIn")}</Alert>;
@@ -35,19 +34,6 @@ export function AccountPanel() {
   const doSignOut = async () => {
     await signOut();
     router.replace("/sign-in");
-  };
-
-  const requestDeletion = async () => {
-    setError(null);
-    try {
-      // Capstone P8: permanent, application-controlled deletion (data + private files +
-      // checkpoints). Signs out on completion.
-      await api.auth.deleteAccount();
-      await refresh();
-      router.replace("/sign-in");
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not process the request.");
-    }
   };
 
   return (
@@ -106,43 +92,15 @@ export function AccountPanel() {
 
       <Card>
         <CardBody className="space-y-3">
-          <h2 className="text-base font-semibold text-foreground">{t("account.manageDataTitle")}</h2>
-          <p className="text-sm text-muted">{t("account.manageDataIntro")}</p>
-          <div className="flex flex-wrap gap-2" data-testid="data-rights-links">
-            <a href="/settings" className="inline-flex min-h-[36px] items-center rounded border border-border px-3 text-sm text-foreground hover:bg-surface-2">{t("account.manageMemory")}</a>
-            <a href="/documents" className="inline-flex min-h-[36px] items-center rounded border border-border px-3 text-sm text-foreground hover:bg-surface-2">{t("account.manageDocuments")}</a>
-            <a href="/workspaces" className="inline-flex min-h-[36px] items-center rounded border border-border px-3 text-sm text-foreground hover:bg-surface-2">{t("account.manageSharing")}</a>
-          </div>
-        </CardBody>
-      </Card>
-
-      <Card>
-        <CardBody className="space-y-3">
           <h2 className="text-base font-semibold text-foreground">{t("account.privacyData")}</h2>
           <p className="text-sm text-muted">{t("account.privacyDataDesc")}</p>
-          <div className="flex flex-wrap gap-3">
-            <a
-              href={`${apiExportUrl()}`}
-              className="inline-flex min-h-[36px] items-center rounded border border-border px-3 text-sm font-semibold text-foreground hover:bg-surface-2"
-            >
-              {t("account.exportData")}
-            </a>
-            {!confirmDelete ? (
-              <Button variant="ghost" onClick={() => setConfirmDelete(true)}>
-                {t("account.deleteAccount")}
-              </Button>
-            ) : (
-              <span className="flex items-center gap-2">
-                <span className="text-sm text-danger">{t("account.confirmDelete")}</span>
-                <Button variant="ghost" onClick={requestDeletion}>
-                  {t("account.yesDelete")}
-                </Button>
-                <button className="text-sm text-muted hover:text-foreground" onClick={() => setConfirmDelete(false)}>
-                  {t("common.cancel")}
-                </button>
-              </span>
-            )}
-          </div>
+          <a
+            href="/account/data"
+            data-testid="data-privacy-link"
+            className="inline-flex min-h-[44px] items-center rounded border border-border px-3 text-sm font-semibold text-foreground hover:bg-surface-2"
+          >
+            {t("dataPrivacy.title")}
+          </a>
         </CardBody>
       </Card>
     </div>
@@ -162,12 +120,4 @@ function methodLabel(method: string, t: (key: string) => string): string {
   if (method === "session") return t("account.methodSession");
   if (method === "dev_header") return t("account.methodDev");
   return t("account.methodAnon");
-}
-
-function apiExportUrl(): string {
-  // Direct link so the browser sends the session cookie and downloads the JSON.
-  const base =
-    (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "")) ||
-    "http://localhost:8000/api/v1";
-  return `${base}/auth/account/export`;
 }

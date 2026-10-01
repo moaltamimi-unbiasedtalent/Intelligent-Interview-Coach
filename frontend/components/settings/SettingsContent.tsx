@@ -44,7 +44,7 @@ export function SettingsContent() {
             <h2 className="text-base font-semibold">{t("settings.yourData")}</h2>
             <p className="mt-1 text-sm text-muted">
               {t("settings.yourDataDesc")}{" "}
-              <a href="/account" className="font-medium text-accent hover:underline">
+              <a href="/account/data" className="font-medium text-accent hover:underline">
                 {t("settings.yourDataManage")}
               </a>
               .

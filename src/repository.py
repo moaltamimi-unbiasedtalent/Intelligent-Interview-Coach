@@ -204,6 +204,20 @@ class InterviewRepository:
             session.commit()
             return True
 
+    def delete_interview_with_source(self, user_id: int, interview_id: int) -> tuple[bool, str | None]:
+        """Delete one owned completed interview; return (deleted, source in-progress session id).
+
+        Questions, answers, evaluations and the report go with it (ORM cascade). The caller discards the
+        linked in-progress session so no copy of the answers stays resumable (P10B-W9.8)."""
+        with self._session_factory() as session:
+            interview = self._owned(session, user_id, interview_id)
+            if interview is None:
+                return False, None
+            source = interview.source_session_id
+            session.delete(interview)
+            session.commit()
+            return True, source
+
     def delete_all_for_user(self, user_id: int) -> int:
         """Delete every interview for a user; returns the count removed."""
         with self._session_factory() as session:

@@ -11,7 +11,7 @@ No response ever echoes a password, token, hash or session id.
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from src.api.dependencies import (
     DEV_ENVS,
@@ -439,18 +439,16 @@ def export_account(
     repo=Depends(get_repository),
     account_repo=Depends(get_account_repository),
 ) -> dict:
+    from src.application.data_export import build_candidate_export
+
     account = account_repo.get_account(user_id)
-    data = repo.export_user_data(user_id)
-    return {
-        "account": {
-            "user_id": user_id,
-            "email": account.email if account else None,
-            "tier": account.tier if account else None,
-            "status": account.status if account else None,
-            "email_verified": account.email_verified if account else False,
-        },
-        "data": data,
-    }
+    payload = build_candidate_export(user_id=user_id, session_factory=repo.session_factory,
+                                     repo=repo, account=account)
+    # Private + never cached; downloads as a file. The export content is never logged.
+    return JSONResponse(payload, headers={
+        "Content-Disposition": 'attachment; filename="ask4mo-my-data.json"',
+        "Cache-Control": "no-store",
+    })
 
 
 @router.post("/account/delete-request", response_model=MessageResponse,

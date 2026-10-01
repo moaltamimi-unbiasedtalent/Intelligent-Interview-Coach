@@ -1,6 +1,6 @@
 # P10B-W9 — Current State (Baseline)
 
-> **Baseline note:** this file records the pre-W9 audit baseline (historical). W9.1-W9.7B have since merged (main d6c3493). Current status and the remaining sequence (W9.8-W9.13, then W10) are in `docs/capstone/capstone_phase_plan.md`.
+> **Baseline note:** this file records the pre-W9 audit baseline (historical). W9.1-W9.7B have since merged (main d6c3493); W9.8 (privacy and candidate data controls) is delivered on its own branch/PR. Current status and the remaining sequence (W9.8-W9.13, then W10) are in `docs/capstone/capstone_phase_plan.md`.
 
 Audit phase. **No runtime code changed.** This file records the exact repository
 baseline P10B-W9 is planned against, so every later wave can be diffed from a

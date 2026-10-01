@@ -14,7 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.opportunity import ARCHIVED_STATUS, DEFAULT_STATUS
-from src.persistence import CandidateDocument, Interview, Opportunity
+from src.persistence import CandidateDocument, Interview, InterviewSession, Opportunity
 
 __all__ = ["OpportunityRepository"]
 
@@ -122,6 +122,13 @@ class OpportunityRepository:
             o = self._owned(session, user_id, opportunity_id)
             if o is None:
                 return False
+            # Keep history but unlink it explicitly: SQLite has no FK SET NULL for the ALTER-added column,
+            # and a dangling id could later be re-used by a new Opportunity (P10B-W9.8).
+            for model in (Interview, InterviewSession):
+                for row in session.execute(
+                    select(model).where(model.opportunity_id == opportunity_id, model.user_id == user_id)
+                ).scalars().all():
+                    row.opportunity_id = None
             session.delete(o)
             session.commit()
             return True

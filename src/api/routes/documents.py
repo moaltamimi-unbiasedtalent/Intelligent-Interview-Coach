@@ -17,6 +17,7 @@ from src.api.dependencies import (
     get_current_user_id,
     get_documents_service,
     get_repository,
+    get_sharing_service,
     get_stories_service,
 )
 from src.api.schemas.documents import (
@@ -224,9 +225,12 @@ def update_story(body: StoryUpdateRequest, story_id: int = Path(...), svc=Depend
 
 
 @stories_router.delete("/{story_id}", response_model=DeleteResponse, summary="Delete a story")
-def delete_story(story_id: int = Path(...), svc=Depends(get_stories_service), user_id: int = Depends(get_current_user_id)) -> DeleteResponse:
+def delete_story(story_id: int = Path(...), svc=Depends(get_stories_service),
+                 sharing=Depends(get_sharing_service), user_id: int = Depends(get_current_user_id)) -> DeleteResponse:
     if not svc.delete(user_id=user_id, story_id=story_id):
         raise HTTPException(status_code=404, detail="Story not found.")
+    # A deleted source must not leave an active-looking grant (ids can be reused on SQLite).
+    sharing.invalidate_on_delete(owner_user_id=user_id, resource_type="story", resource_id=str(story_id))
     return DeleteResponse(deleted=True)
 
 

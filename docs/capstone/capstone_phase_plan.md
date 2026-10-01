@@ -39,7 +39,7 @@ never-translated slogan. Local `main` == `origin/main`; GitHub integration is pa
 
 | Step | Scope | Cx | Priority |
 |---|---|---|---|
-| **W9.8** Privacy & Candidate Data Controls | Data & Privacy Center: what is stored; export; selective deletion (documents, memory, Opportunities, interviews, reports); agent-run/checkpoint implications; workspace/shared-data visibility and revocation; account deletion; retention; consent/legal versions; request status; 8 locales; audit/legal records preserved | L | Capstone critical |
+| **W9.8** Privacy & Candidate Data Controls (**DELIVERED** - `p10/w9/P10B_W9_8_PRIVACY_DATA_CONTROLS.md`; deferred: preparation-chat run index, consent/legal-version history (need migration/owner decision), bulk memory clear) | Data & Privacy Center: what is stored; export; selective deletion (documents, memory, Opportunities, interviews, reports); agent-run/checkpoint implications; workspace/shared-data visibility and revocation; account deletion; retention; consent/legal versions; request status; 8 locales; audit/legal records preserved | L | Capstone critical |
 | **W9.9** Trust & Visual Product Polish | Visual/trust consistency pass over candidate surfaces | M | Desirable |
 | **W9.10** Product Positioning / Comparison Foundation | Factual positioning; no unsupported superiority claims; external competitor research separately authorized | S | Desirable |
 | **W9.11** Architecture & Documentation Consistency | Specialist reconciliation (no false Evaluation Specialist claim), authority-level comment, stale tool counts, docs aligned to code | M | Capstone critical |

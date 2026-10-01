@@ -272,7 +272,7 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 - **STOP:** after all 8-locale gates pass; Russian translation quality is engineering-draft, not
   human-validated — state so.
 
-## W9.8 — Privacy & Candidate Data Controls  *(Capstone critical, Cx L)*
+## W9.8 — Privacy & Candidate Data Controls  *(Capstone critical, Cx L)* — ✅ DELIVERED (see `P10B_W9_8_PRIVACY_DATA_CONTROLS.md`; deferred gaps listed there: preparation-chat index, consent history, bulk memory clear)
 
 > Renamed and widened (roadmap reconciliation): a Data & Privacy Center covering what is stored, export, selective deletion (documents, memory, Opportunities, interviews, reports), agent-run/checkpoint implications, workspace/shared-data visibility and revocation, account deletion, retention, consent/legal versions, request status, all 8 locales, preserving audit/legal records. W10.10 is the operator side.
 
@@ -367,7 +367,7 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 
 ## Recommended sequence (revised at main d6c3493)
 
-Completed: W9.1-W9.7B. Remaining: **W9.8 -> W9.9 -> W9.10 -> W9.11 -> W9.12 -> W9.13**, then P10B-W10
+Completed: W9.1-W9.7B and W9.8. Remaining: **W9.9 -> W9.10 -> W9.11 -> W9.12 -> W9.13**, then P10B-W10
 (Admin, W10.0-W10.14), P10B-W11 (integrated requalification), RC-P10-003, Pilot 2, P10C-P10F, P11. The canonical
 roadmap is `docs/capstone/capstone_phase_plan.md`. W9.9/W9.10 are off the critical path.
 
@@ -391,7 +391,7 @@ private-candidate-data superuser.** W10 follows W9.13 and is not part of W9.
   development database during a full test run (previously hidden by the dev-DB schema lag). Impact: the
   deterministic suite is not fully isolated from local dev persistence. Required task: identify the exact
   test/config path, make tests use isolated temporary databases, and prove no dev/production DB writes during
-  the suite. **Open; scheduled for W9.12.**
+  the suite. **Open; scheduled for W9.12.** W9.8 finding: `get_memory_service`/`get_memory_repository` call `get_repository()` directly, so a `get_repository` override did not reach them; `build_auth_app` now overrides `get_memory_service` (partial fix; W9.12 must still audit other direct-call dependencies and add a defensive DB guard).
 - **TD-W9-03 - Locale-aware font/subset loading (optimization, optional).** W9.7A added the `cyrillic` subset
   to the existing Inter loader (kept; ~18.7 kB woff2 preloaded on every page for every locale, accepted
   provisionally because Russian is a supported language and typography is consistent). A locale-aware
