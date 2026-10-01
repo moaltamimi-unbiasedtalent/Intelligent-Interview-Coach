@@ -14,42 +14,107 @@ durable **Interview Practice** session.
 
 ## What it solves
 
-Interview preparation is fragmented: candidates research a role in one place, guess their
-gaps, and practise blind. Ask4Mo brings **understand → prepare → practise → improve** into
-one flow, grounded in evidence and always under the candidate's control.
+When preparation for a job is spread across separate tools, feedback is hard to connect to
+the role and to your own experience. Ask4Mo organises **preparation, practice and feedback
+around one job at a time**, grounded in evidence and under the candidate's control. It is an
+AI-assisted interview and career preparation platform for candidates (not recruiter, ATS or
+HR software). Mo is AI and can make mistakes; interview feedback is practice guidance, not a
+hiring decision.
 
 **Target users:** candidates preparing for professional, specialist and leadership
-interviews.
+interviews. Claims about the product must stay within
+[docs/product/PRODUCT_CLAIMS.md](docs/product/PRODUCT_CLAIMS.md).
 
 ## The candidate journey
 
 ```
-Home  →  Ask Mo  →  Prepare  →  Practise  →  Progress
+Opportunity  →  Prepare  →  Practice  →  Progress / History      (Mo is available throughout)
 ```
 
-- **Understand** — Mo reads the role/JD and what it really requires.
-- **Prepare** — Mo compares your background, retrieves grounded career evidence when
-  useful, builds a focused plan and tailored questions, and remembers only what you
-  approve.
-- **Practise** — the approved preparation hands off into a realistic Interview Practice
-  session (question → structured feedback → Deep Dive → final report).
-- **Improve** — Progress and History let you return, review and prepare again.
+- **Opportunity** - a private space for one specific job (role, company, optional job
+  description). Distinct from a Workspace, which is for sharing with other people.
+- **Prepare** - Mo reads the role, compares your approved evidence, retrieves grounded
+  career evidence when useful, builds a plan and tailored questions, and remembers only
+  what you approve.
+- **Practice** - a realistic interview (question, structured feedback, Deep Dive, final
+  report). Answers can be typed or dictated where the browser supports it.
+- **Progress / History** - return, review reports and prepare again.
+- **Data & Privacy** (`/account/data`) - see what is stored, download a copy, remove
+  individual items, revoke sharing, delete the account (with the limits listed below).
 
 ## Architecture at a glance
 
-Primary product stack: **Next.js + FastAPI**.
+Primary product stack: **Next.js + FastAPI**. The authoritative architecture description is
+[docs/sprint4_architecture.md](docs/sprint4_architecture.md) (start with its "Current-state
+overview"); other documents are mapped in [docs/README.md](docs/README.md).
 
 ```
-Next.js / TypeScript frontend        ← primary UI (Mo)
-  → FastAPI backend (/api/v1)
-    → Application services
-      → LangGraph agent  (controlled tools · agentic RAG · memory · human-in-the-loop)
-      → Interview Practice (durable, resumable SessionManager)
+Next.js / TypeScript frontend (candidate UI, public site, English-only /admin console)
+  → FastAPI (/api/v1): owner-scoped routes, safe error envelope, request ids
+    → Application services (src/application)
+      → Mo: bounded LangGraph agent  (allow-listed tools · three bounded specialists ·
+            agentic RAG · approved memory · human-in-the-loop)
+      → Interview Practice (durable sessions; LLM-backed question + evaluation services)
+      → Documents/evidence, Opportunities, Workspaces/shares, Account lifecycle
+    → Persistence (SQLAlchemy; Alembic migrations) · Knowledge stores + vector index
+    → External provider adapters (LLM, email, speech, research) - optional, never in tests
 ```
 
-Mo is the **candidate-facing identity of the stateful LangGraph Career Preparation
-Agent** — not a separate product, model or service. Deeper detail:
-[docs/sprint4_architecture.md](docs/sprint4_architecture.md).
+Mo is the candidate-facing identity of one stateful, bounded LangGraph agent. It reaches
+the three specialists (`role_opportunity`, `candidate_evidence`, `interview_strategy`)
+only through allow-listed tools. **Interview evaluation is not a specialist or an agent**:
+it is a separate LLM-backed service with a validated structured output. The registered
+tool set is defined in code (`career_tool_registry`, `src/agent/registry.py`: six Career
+tools, three specialist tools, two human-action tools).
+
+## Authentication and security
+
+- **Accounts:** email/password registration, email verification, password recovery and
+  server-side sessions (opaque token in an HttpOnly cookie, 14-day TTL). Registration and
+  recovery responses do not reveal whether an email exists.
+- **Production is fail-closed:** a request without a valid session is `401`. A cookie that
+  is present but invalid is `401`, never a downgrade.
+- **Development only:** the `X-User-Subject` header and an anonymous developer identity are
+  honoured only when `API_ENV` is `development`, `dev`, `test`, `testing` or `local`, and
+  never over a valid session. Any other `API_ENV` value is treated as non-development.
+- **Google OIDC:** a backend authorization-code flow exists (`/api/v1/auth/oidc/google/*`)
+  behind `FEATURE_GOOGLE_LOGIN` and Google credentials. It is **off by default, has no
+  sign-in button in the frontend and has not been validated live**. It is not a production
+  login path today.
+- **Known limits:** sign-in does not currently require a verified email; the rate limiter
+  is in-memory (not safe across multiple replicas); production OIDC and live PostgreSQL
+  validation are follow-ups.
+- **Admin today:** a `platform_admin` role gates a bounded, read-mostly operations console
+  (`/admin`: metadata only, pause switches, audit view) plus reviewer/evaluation/knowledge
+  diagnostics. Admins are not a private-data superuser (no view-as-user, no content search).
+  The full Platform Administration, Support & Commercial Operations phase (users and access
+  management, ticketing, plans and billing, provider and KB administration, GDPR
+  operations, reporting, incidents) is **planned (P10B-W10), not implemented**.
+- **Prompt-injection and data-handling rules** are summarised below and in
+  [docs/security.md](docs/security.md) and [docs/privacy.md](docs/privacy.md).
+
+## Privacy and data control
+
+Owner-scoped data; private by default. From `/account/data` a candidate can view stored
+categories, **download** one JSON export (account, preferences, Opportunities, document
+details and extracted evidence, stories, memories, interviews, feedback, memberships,
+shares; not the original files), **delete** individual documents, memories, Opportunities
+and interviews, **revoke** shares, and **delete the account**. Terms used precisely:
+*delete* removes it now, *archive* hides but keeps, *revoke* stops future access (it does not
+recall what was already seen), *unlink* detaches history from a deleted Opportunity,
+*anonymise* removes the identity from retained security records. Details and limits:
+[docs/privacy.md](docs/privacy.md).
+
+## Localization and voice boundaries
+
+Eight **interface locales** (en, de, fr, es, it, pt, nl, ru; `src/locales.py`) and the same
+eight **Mo conversation languages**. These are separate dimensions that never imply each
+other: **dictation, text-to-speech and realtime voice support seven languages** (not
+Russian); document/OCR language, knowledge-base language and **labour-market geography**
+are separate lists; **Russian is not an official ESCO language** and Russia is not a
+supported labour market. Interface language never changes the labour market. Translations
+other than English are engineering translations pending native/legal review. The slogan
+**Ask More. Be More.** is never translated.
 
 ## Quick start
 
@@ -76,7 +141,7 @@ Open **http://localhost:3000**, type an interview goal on Home and press **Ask M
 
 ### Knowledge base & citations (grounded evidence)
 
-Mo shows **Sources/citations** only when the local knowledge base is built. **Datasets
+Mo shows **Sources/citations** only when retrieved career evidence is used, which needs the local knowledge base to be built. **Datasets
 are not committed**, so a fresh checkout starts with an *empty* KB — Mo then falls back to
 an explicit "insufficient verified evidence" state rather than inventing citations (this
 is why citations may appear missing on a clean clone). Build it from the local-first
@@ -99,22 +164,37 @@ clean clone has no local indexes, so this is expected on a fresh checkout).
 
 ## Current limitations
 
-Honest, known follow-ups (not broken requirements):
+Genuine present limitations (see also [docs/product/PRODUCT_CLAIMS.md](docs/product/PRODUCT_CLAIMS.md)):
 
-- Production **OIDC** is not implemented (identity is a transitional, fail-closed
-  boundary).
-- Live **PostgreSQL** deployment validation remains a follow-up (SQLite for dev/tests).
+- **Preparation-chat deletion/indexing is incomplete (PRIV-W9-01):** there is no per-user run
+  index, so a candidate cannot list or remove individual preparation chats, and account
+  deletion may leave some preparation-chat working data until it is cleaned up.
+- **Consent/legal acceptance history is not persisted (PRIV-W9-02).**
+- **Russian speech is unsupported;** speech is seven languages. Non-English copy, including
+  Russian and the legal/privacy text, is an engineering translation pending review; live
+  generated-language quality is not yet validated; some European-language marketing copy
+  still lacks diacritics; metadata localization and locale/bundle optimisation are pending.
+- **Premium is a preview** (no purchase path, `BILLING_ENABLED=false`). **Support ticketing
+  and the full Admin Platform are not implemented** (planned, P10B-W10); the Help Center is
+  documentation, not a ticketing system.
+- **Identity:** production OIDC and live PostgreSQL validation are not done; email
+  verification is not required to sign in; rate limiting is single-replica.
 - The **knowledge base must be provisioned/built** for evidence-backed retrieval and
-  citations (datasets are not committed).
-- **Live voice** remains experimental and **off by default**; there is no camera/visual
-  coaching.
-- **Live-model tool-selection discipline is imperfect** — the real model sometimes answers
-  well without invoking the discrete preparation tools (a measured model-behaviour signal,
-  not a task-breaking defect; see `docs/sprint4_final_evidence.md` §B).
+  citations (datasets are not committed). Sources are shown only when retrieved career
+  evidence is used.
+- **Live/realtime voice** is off by default and not live-validated; there is no camera or
+  visual coaching.
+- **Live-model tool-selection discipline is imperfect** - the real model sometimes answers
+  well without invoking the discrete preparation tools (a measured model-behaviour signal;
+  see `docs/sprint4_final_evidence.md`).
+- Open engineering debt (Tailwind opacity-token architecture, test-isolation audit) is
+  tracked in the roadmap, [docs/capstone/capstone_phase_plan.md](docs/capstone/capstone_phase_plan.md).
 
 ## Documentation
 
-Reviewer package:
+Map of canonical documents: [docs/README.md](docs/README.md). Roadmap: [docs/capstone/capstone_phase_plan.md](docs/capstone/capstone_phase_plan.md).
+
+Reviewer package (Sprint 4 era; historical evidence unless a document says otherwise):
 
 - [Final submission readiness](docs/final_submission_readiness.md) (canonical release-candidate status) · [Live golden result](docs/final_live_golden_result.md)
 - [Submission summary](docs/sprint4_submission_summary.md) · [Reviewer guide](docs/sprint4_reviewer_guide.md) · [Reviewer Q&A](docs/sprint4_reviewer_qa.md)
@@ -142,14 +222,18 @@ Everything below is deeper reference material: the current system architecture, 
 **Sprint 3 Career Intelligence** domain foundation that now runs *behind* Mo. It is not
 required to understand or demo the product — start with the front door above.
 
-### System architecture
+### System architecture (foundation view)
+
+This section describes the original module layering that still holds; the current end-to-end
+view is above and in [docs/sprint4_architecture.md](docs/sprint4_architecture.md).
 
 - **Shared Core** (`src/core/`) — infrastructure only: secrets, one composed `AppConfig`,
   safe logging, usage records, security primitives.
 - **Career Intelligence** (`src/copilot/*`) — the domain engine: knowledge, retrieval,
   RAG, tools, security. Exposed to Mo through the agent's controlled tools.
 - **Interview Practice** (`src/*.py`, `src/interview/*`) — the durable interview
-  simulator (unchanged `SessionManager` state machine).
+  simulator (`SessionManager` state machine; question generation and answer evaluation are
+  LLM-backed services with validated structured output).
 - **Integration** (`src/integration/`) — the only cross-module surface: the typed
   `PreparationContext` handoff. Career and Interview never import each other.
 - **FastAPI** (`src/api/*`) over `src/application/*`; **Next.js** (`frontend/*`) is the
@@ -236,10 +320,13 @@ Representative sources (full list + licences in the catalogue):
 | OEWS / ASHE / Eurostat / Entgeltatlas | BLS / ONS / Eurostat / BA | compensation | US/UK/EU/DE | public domain / OGL / CC BY / review |
 | Cedefop forecast / openings / shortage | Cedefop | labour market | EU | review before reuse |
 
-**Controlled domain tools** (allowlisted; no arbitrary code): Job Description Analyzer
-(LLM), Candidate Gap Analyzer (deterministic), Preparation Plan Calculator
-(deterministic), Interview Question Generator (LLM), and `SearchCareerKnowledge`
-(retrieval-only). See [docs/tool_calling.md](docs/tool_calling.md).
+**Controlled domain tools** (allowlisted; no arbitrary code). The Career tools are Job
+Description Analyzer (LLM), Candidate Gap Analyzer (deterministic), Preparation Plan
+Calculator (deterministic), Interview Question Generator (LLM), `SearchCareerKnowledge`
+(retrieval-only) and `ResearchCurrentMarket` (bounded external research). They sit beside
+three bounded specialist tools and two human-action tools; the complete, current list is the
+registry in `src/agent/registry.py` (the single source of truth for tool counts).
+See [docs/tool_calling.md](docs/tool_calling.md) for the original Sprint 3 design.
 
 **RAG evaluation** is versioned and offline-first (deterministic retrieval metrics are the
 CI gate; RAGAS is an optional, opt-in generation-quality layer that never runs in normal
@@ -249,16 +336,20 @@ CI). Current figures live in [docs/metrics_snapshot.md](docs/metrics_snapshot.md
 
 ### Interview Practice (module)
 
+Current candidate voice in the Next.js product is browser dictation, text-to-speech playback
+and optional realtime voice (seven languages, off by default where it needs a provider); the
+items below about Record and Live describe the legacy Streamlit path.
+
 Realistic interview simulation: configuration (with restored Sprint-1 options — question
 types, difficulty), durable sessions, tailored questions, structured evaluation, Interview
 Deep Dive, final report, and refresh/restart resume. **Text Practice is complete**;
-**Record** (Google Speech) degrades to text without the `[speech]` extra; **Live** (Gemini)
+In the legacy Streamlit interface, **Record** (Google Speech) degrades to text without the `[speech]` extra; **Live** (Gemini)
 is experimental and hidden behind `INTERVIEW_LIVE_ENABLED`. There is **no camera/visual
 coaching**. See [docs/sprint4_interview_parity.md](docs/sprint4_interview_parity.md).
 
 ### Optional services
 
-- **Record** (voice answers): `pip install -e ".[speech]"` + a Google Speech project;
+- **Record** (voice answers, legacy Streamlit interface): `pip install -e ".[speech]"` + a Google Speech project;
   degrades to text otherwise.
 - **Live** (Gemini): experimental, OFF by default; needs `INTERVIEW_LIVE_ENABLED=true`,
   `pip install -e ".[live]"` and a key.

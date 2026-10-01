@@ -309,7 +309,7 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 - **Dependencies:** W9.6. **Risk:** low. **Complexity:** M.
 - **STOP:** after marketing/trust gate + visual review.
 
-## W9.10 — Product Positioning / Comparison Foundation  *(desirable, Cx S)*
+## W9.10 — Product Positioning / Comparison Foundation  *(desirable, Cx S)* — ✅ DELIVERED (see `P10B_W9_10_PRODUCT_POSITIONING.md`)
 
 > Factual only; no unsupported superiority claims; external competitor research needs separate authorization.
 
@@ -324,7 +324,7 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 - **Dependencies:** W9.6, W9.9. **Risk:** medium (claim discipline) — keep to the ledger. **Complexity:** M.
 - **STOP:** after the marketing gate confirms no unsupported claim.
 
-## W9.11 — Architecture & Documentation Consistency  *(Capstone critical, Cx M)*
+## W9.11 — Architecture & Documentation Consistency  *(Capstone critical, Cx M)* — ✅ DELIVERED (see `P10B_W9_11_ARCHITECTURE_DOCUMENTATION_CONSISTENCY.md`)
 
 - **Objective:** remove doc/code contradictions surfaced by the audit. Fixes PF-21, PF-22.
 - **Scope:** correct the authority-level comment `src/api/schemas/career.py:37` to "1=official ..
@@ -367,7 +367,7 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 
 ## Recommended sequence (revised at main d6c3493)
 
-Completed: W9.1-W9.7B, W9.8 and W9.9. Remaining: **W9.10 -> W9.11 -> W9.12 -> W9.13**, then P10B-W10
+Completed: W9.1-W9.7B and W9.8-W9.11. Remaining: **W9.12 -> W9.13**, then P10B-W10
 (Admin, W10.0-W10.14), P10B-W11 (integrated requalification), RC-P10-003, Pilot 2, P10C-P10F, P11. The canonical
 roadmap is `docs/capstone/capstone_phase_plan.md`. W9.9/W9.10 are off the critical path.
 

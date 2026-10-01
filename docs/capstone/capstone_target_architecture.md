@@ -59,7 +59,7 @@ ADMIN, REVIEWER. Preserve `/api/v1` contracts and the OpenAPI contract test; ext
 Keep the single bounded ReAct agent as the default. Introduce a **bounded orchestrator/specialist**
 pattern only where an independent goal justifies it (see multi-agent assessment in the requirements
 matrix / product model): Mo (supervisor) delegating to Research, Candidate, Preparation and
-Evaluation specialists with typed hand-offs, per-run budgets, and deterministic Practice retaining
+Evaluation specialists with typed hand-offs (as planned; as built, specialists are three - role_opportunity, candidate_evidence, interview_strategy - and evaluation is a service, see W9.11), per-run budgets, and deterministic Practice retaining
 session authority. Specialists never own auth, permissions, migrations, billing or self-modification.
 
 ## Data

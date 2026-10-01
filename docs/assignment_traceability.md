@@ -1,5 +1,7 @@
 # Assignment Traceability — Building Applications with AI
 
+> **Historical document - describes the Sprint 1-3 state.** Current behaviour: see [README.md](../README.md), [sprint4_architecture.md](sprint4_architecture.md) (Current-state overview) and [README.md](README.md) in this folder. Statements below about authentication, persistence, tools, privacy and the Streamlit interface are NOT current (real accounts and sessions, per-user storage, a larger tool registry and the Next.js product now exist).
+
 The sprint deliverable is the **Career Intelligence** module. Every requirement
 maps to its implementation, files, tests and a demo step. Status reflects what is
 actually implemented and tested.

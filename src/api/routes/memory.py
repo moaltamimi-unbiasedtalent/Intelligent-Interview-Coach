@@ -6,7 +6,7 @@ another user's memory (a foreign id returns 404, never another user's data).
 
 Phase 7 memory writes are EXPLICIT and user-initiated (POST). The agent never
 persists memory automatically here; agent-proposed, human-approved writes are Phase
-8. Identity uses the existing transitional API boundary (see dependencies).
+8. Identity comes from the API's session-based boundary (see ``get_current_user_id``).
 """
 
 from __future__ import annotations

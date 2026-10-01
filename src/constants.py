@@ -459,8 +459,10 @@ PRACTICE_MODE_CARDS = (
 # URL selects SQLite for development or PostgreSQL for production via one mature
 # ORM. Data is written to a local file by default; production overrides this.
 DEFAULT_DATABASE_URL = "sqlite:///data/interview_studio.db"
-# Retention: interview data is kept until the candidate deletes it. They can
-# export everything and delete individual interviews or all of it (Settings).
+# Retention: interview data is kept until the candidate deletes it. This note is shown ONLY in
+# the legacy Streamlit interface (src/interview/studio_app.py), where Settings offers export and
+# delete-all. The current Next.js product uses /account/data (see docs/privacy.md); its wording
+# and limits (e.g. PRIV-W9-01) live in the frontend i18n catalogue, not here.
 DATA_RETENTION_NOTE = (
     "Your interviews are stored so you can review your progress. You can export "
     "your data or delete individual interviews or everything, at any time, from "

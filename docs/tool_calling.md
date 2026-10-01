@@ -1,5 +1,7 @@
 # Domain Tool Calling
 
+> **Historical document - describes the Sprint 1-3 state.** Current behaviour: see [README.md](../README.md), [sprint4_architecture.md](sprint4_architecture.md) (Current-state overview) and [README.md](README.md) in this folder. Statements below about authentication, persistence, tools, privacy and the Streamlit interface are NOT current (real accounts and sessions, per-user storage, a larger tool registry and the Next.js product now exist).
+
 Phase 6 satisfies the sprint's **Tool Calling** core requirement: the assignment
 needs at least three domain-relevant tools; the Copilot implements **four**,
 through LangChain tool calling over the existing OpenRouter integration — and

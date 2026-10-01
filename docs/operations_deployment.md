@@ -1,5 +1,12 @@
 # Operations & Deployment
 
+> **Scope.** This page documents shared environment settings and the legacy Streamlit interface.
+> The current product is Next.js + FastAPI: its production authentication is server-side
+> accounts and sessions (fail-closed; `API_ENV` selects dev vs non-dev), not Streamlit OIDC. See
+> [privacy.md](privacy.md), [../README.md](../README.md) and the deployment artifacts in
+> [`../deploy/`](../deploy/) (`.env.staging.example` etc.). Rows marked "legacy Streamlit" below
+> do not apply to the FastAPI service.
+
 ## Configuration
 
 All configuration is via environment variables or `.streamlit/secrets.toml`
@@ -8,19 +15,19 @@ All configuration is via environment variables or `.streamlit/secrets.toml`
 | Setting | Purpose | Default |
 |---|---|---|
 | `OPENROUTER_API_KEY` | Core interview engine (required) | — |
-| `APP_AUTH_REQUIRED` | Require OIDC login (production) | `false` |
+| `APP_AUTH_REQUIRED` | Require OIDC login (legacy Streamlit interface only) | `false` |
 | `DATABASE_URL` | SQLite (dev) / PostgreSQL (prod) | `sqlite:///data/interview_studio.db` |
 | `GOOGLE_SPEECH_PROJECT_ID` | Enables Voice (Speech-to-Text) | — |
 | `GOOGLE_SPEECH_LOCATION` | Speech region | `global` |
 | `GOOGLE_APPLICATION_CREDENTIALS` | ADC for Speech | — |
 | `GEMINI_API_KEY` | Enables Live (backend-only; mints ephemeral tokens) | — |
 | `GEMINI_LIVE_MODEL` | Live model id | `gemini-3.1-flash-live-preview` |
-| `[auth]` (secrets.toml) | Streamlit OIDC provider config | — |
+| `[auth]` (secrets.toml) | Streamlit OIDC provider config (legacy Streamlit interface only) | — |
 
-> **Capstone note:** Voice (Speech-to-Text) and Live (Gemini) are wired end to
-> end in code but ship as **placeholders pending credentials** — they are to be
-> completed and verified live during the capstone. Without their keys the app
-> runs fully on **Text Practice** and shows graceful fallbacks for the other two.
+> **Voice note:** speech features (browser dictation and playback, optional realtime voice, and
+> the legacy Streamlit Record/Live paths) are optional and provider-dependent. Realtime voice is
+> off by default and has not been validated live. Without credentials the app runs fully on text
+> and shows graceful fallbacks.
 
 ## Startup validation & health
 

@@ -105,6 +105,6 @@ configured the build STOPs rather than spending silently.
 
 ## What did NOT change
 
-No new agent or RAG subsystem; LangGraph topology, the five Career tools + two HITL actions,
+No new agent or RAG subsystem; LangGraph topology, the Career tools + two HITL actions (as registered at that phase),
 memory, authentication and Interview Practice are all unchanged. Adzuna remains acquisition-only
 (not an Agent tool). No Langfuse, no RAGAS, no external-research tool (later phases).

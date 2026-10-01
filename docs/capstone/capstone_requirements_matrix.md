@@ -23,9 +23,9 @@ EX-01–16 (`reference/02_Expanded_Acceptance_Checklist.md`).
 | ID | Requirement | Current | Target | Phase | Acceptance |
 |---|---|---|---|---|---|
 | B-agent | ReAct/goal-based bounded agent | DELIVERED | Preserve | — | AC-15/16 |
-| B-tools | 6 career + 2 HITL tools, allowlist | DELIVERED | Preserve; add specialist tools | P5 | AC-15 |
-| C4 | Preparation + Evaluation specialists (multi-agent) | ABSENT | Bounded orchestrator/specialist | P5 | EX-05 |
-| B8 | Mo coordinates Research/Candidate specialists | PARTIAL | Bounded delegation | P5 | AC-15/16 |
+| B-tools | Allow-listed tools: 6 Career + 3 specialist + 2 human-action = 11 (`career_tool_registry` is the source of truth) | DELIVERED | Preserve | P5 | AC-15 |
+| C4 | Preparation + Evaluation specialists (multi-agent) | DELIVERED as THREE bounded specialists (P5): role_opportunity, candidate_evidence, interview_strategy. **There is no Evaluation specialist** (reconciled W9.11): interview evaluation stays an LLM-backed service with validated structured output | Bounded orchestrator/specialist | P5 | EX-05 |
+| B8 | Mo coordinates Research/Candidate specialists | DELIVERED (P5): Mo delegates to the three bounded specialists through allow-listed tools (reconciled W9.11) | Bounded delegation | P5 | AC-15/16 |
 | H1 | Candidate-facing company research (name + location) | DELIVERED (P10B W5) — directable `/company` over the 7F engine; FACT/REVIEW/MODEL_INFERENCE separation; identity disambiguation; owner-scoped JD; discoverable from Prepare + "More"; 0 paid/live | Directable, discoverable UI | P10B W5 | — |
 | H2 | Live employer-review sources (Glassdoor/Kununu/Google) | NOT INTEGRATED (P10B W5) — provider feasibility matrix documented; ToS/licensing prohibit scraping; UI links out, copies no content | Provider review required before any integration | P10B W5 | — |
 | I1 | Workspace purpose unclear | DELIVERED (P10B W6) — Workspace reframed as collaboration/sharing (copy only; behaviour unchanged); Opportunity added as the solo prep concept; `workspaces.vsOpportunity` clarifies the distinction | Distinct, clear concepts | P10B W6 | — |
@@ -122,6 +122,8 @@ Camera/emotion/biometric assessment; recruiter rankings; automatic job applicati
 
 **Scope reconciliation (P8):** ~~whole-app UI translation~~ was originally OUT_OF_SCOPE, but the owner later EXPANDED scope to make seven-language internationalization/localization a Capstone deliverable (P3.5 foundation + P8 marketing localization + bounded candidate-surface completion). It is therefore IN scope and is tracked as `i18n-surfaces` / `L10n`. Billing/payment remains OUT_OF_SCOPE, but pricing/product **presentation** (D9) is in scope for P8 (presentation only, no checkout). The `Totals` line above is the P0/E0 baseline snapshot and does not reflect P1–P8 deliveries.
 
+**Language reconciliation (W9.11):** rows above that say "seven-language"/"7 catalogues" predate Russian (W9.7). The product now has **8 interface locales and 8 Mo conversation languages**; speech (dictation, TTS, realtime), document/OCR language and KB language remain **7**; Russian is not an official ESCO language and Russia is not a supported labour market.
+
 **Scope reconciliation (P10B-W10):** the owner approved **billing/payment administration** and **comprehensive platform administration** as IN scope (phase P10B-W10, W10.0-W10.14; planning in `admin/ADMIN_PLATFORM_MASTER_PLAN.md`, rows in `admin/ADMIN_CAPABILITY_MATRIX.md`). Payments may use a production-ready interface plus a clearly labelled mock/sandbox adapter and are never represented as live. **Still OUT_OF_SCOPE:** enterprise SSO/SCIM/HRIS, plugin marketplace, user impersonation/"view as user", raw card data handling. D1 (Admin Console) remains DELIVERED as the bounded P6.5 foundation; W10 extends it. Planned, not delivered: support/ticketing, plans/entitlements, billing, integration/secret admin, KB/RAG admin UI, GDPR operations UI, reporting, incident management.
 
 ## P1/E1 presentation evidence (delivered this phase)
@@ -136,7 +138,7 @@ Standard presentation table — see `p1_e1_identity_platform.md` for the full st
 | D8 | Public/authenticated route boundary | DELIVERED | Server fail-closed (401) + client `RouteGuard` | `tests/test_auth_failclosed.py`, `e2e/auth.spec.ts` |
 | J-authz | Cross-user isolation under session auth | DELIVERED | ownership in data layer + trusted session identity | cross_user_isolation 1.0 |
 | J-audit | Security/privacy audit log (no secrets) | DELIVERED | `audit_events` + `AuditRepository` | audit_safety 1.0 |
-| D5/J-privacy | Account export + deletion request | PARTIAL | `/auth/account/export`, `/auth/account/delete-request` | full hard-delete cascade deferred |
+| D5/J-privacy | Account export + deletion + selective deletion (W9.8) | DELIVERED with limits | `/account/data`, `/auth/account/export`, `/auth/account/delete`, per-item deletes | PRIV-W9-01 (preparation chats), PRIV-W9-02 (no consent history); original `delete-request` endpoint is unused by the UI |
 | D1 | Admin control plane | FOUNDATION | guarded `/auth/admin/audit` (no Console UI) | admin_rejection/admin_grant 1.0 |
 | C5 | Workspace role foundation | FOUNDATION | contract only (`WORKSPACE_OWNER/MEMBER`); no tables | deferred to Teams phase |
 

@@ -1,4 +1,7 @@
-"""TRANSITIONAL in-memory interview session store for the API.
+"""In-memory interview session store (test/legacy helper; the production path is the durable
+DurableInterviewSessionStore in src/interview/session_repository.py).
+
+Original note: in-memory interview session store for the API.
 
 The current persistence schema stores only *completed* interviews (via the
 repository). In-progress interview state used to live in Streamlit's per-browser

@@ -14,7 +14,8 @@ Tool → implementation → nature:
 The Pydantic arg-model CLASS NAME is the tool name the model calls (and the
 registry key), keeping bind_tools and the allowlist in sync.
 
-Phase 6 (Agentic RAG) adds a fifth tool, ``SearchCareerKnowledge``, a thin adapter
+Phase 6 (Agentic RAG) added ``SearchCareerKnowledge`` (``career_tool_registry`` in
+registry.py is the authoritative tool list), a thin adapter
 over the RETRIEVAL-ONLY operation (``CareerApplicationService.search_knowledge`` →
 ``CareerIntelligenceService.retrieve_evidence``). The AGENT decides *whether* to
 retrieve; the existing DETERMINISTIC router still decides *which* lanes/sources are
@@ -600,7 +601,7 @@ def build_career_tools(career_service, research_service=None) -> list[tuple[type
 
 
 def build_human_action_tools(career_service) -> list[tuple[type[BaseModel], Handler]]:
-    """HITL action tools (Phase 8) — SEPARATE from the five Career evidence tools.
+    """HITL action tools (Phase 8) — SEPARATE from the Career evidence tools.
 
     These do not analyse, calculate or persist anything; they PROPOSE a decision
     that pauses the graph for human approval (memory proposal, practice handoff).

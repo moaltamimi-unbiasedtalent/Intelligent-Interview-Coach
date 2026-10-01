@@ -1,4 +1,8 @@
-"""Authentication abstraction over Streamlit's native OIDC support.
+"""Authentication abstraction over Streamlit's native OIDC support (LEGACY Streamlit interface).
+
+The FastAPI/Next.js product does not use this module for identity: it resolves users from a
+server-side session cookie (see ``get_current_user_id`` in ``src/api/dependencies.py``); only
+``AuthUser``/``ANONYMOUS_USER`` are shared.
 
 The rest of the app never touches ``st.user`` directly — it calls
 :func:`current_user` / :func:`resolve_user`, so identity handling lives in one

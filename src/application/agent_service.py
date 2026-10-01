@@ -5,8 +5,10 @@ past it. It builds run state, invokes the compiled graph on a fresh random
 ``run_id`` (also the checkpoint thread id), and returns a safe
 :class:`AgentRunResult`. No Streamlit/FastAPI imports.
 
-Phase 5 registers the four real Career tools (thin adapters over
-``CareerApplicationService``). Career retrieval is still NOT an agent tool (Phase 6).
+The service runs the allow-listed tool set defined by ``career_tool_registry``
+(``src/agent/registry.py``, the source of truth for tool names and counts): Career tools (thin
+adapters over ``CareerApplicationService``, including retrieval-only ``SearchCareerKnowledge``),
+three bounded specialist tools and two human-action tools.
 Where enough tool data exists, the service builds the existing typed
 ``PreparationContext`` (reused from ``src/integration``) — never a fabricated one.
 """

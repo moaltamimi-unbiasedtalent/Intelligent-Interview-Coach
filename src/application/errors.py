@@ -5,8 +5,8 @@ its boundary. They are deliberately few and build on the existing
 :class:`src.core.errors.SafeError`, whose message is guaranteed safe to show a
 user — no secrets, DB URLs, SQL, credentials or stack traces.
 
-Streamlit maps these to existing user-friendly messages today; a future FastAPI
-backend will map the same classes to HTTP status codes. No new error framework is
+The legacy Streamlit UI maps these to user-friendly messages; the FastAPI backend
+maps the same classes to HTTP status codes. No new error framework is
 introduced — this is a small, explicit vocabulary shared by both frontends.
 """
 
