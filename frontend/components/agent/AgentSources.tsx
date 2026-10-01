@@ -17,9 +17,11 @@ export function AgentSources({ sources }: { sources: AgentSource[] }) {
           ? t("prepare.evidenceSourcesOne")
           : t("prepare.evidenceSourcesOther", { n: sources.length })}
       </summary>
-      <ul className="mt-2 space-y-2">
+      <p className="mt-1 text-xs text-muted">{t("trustUx.sourcesHint")}</p>
+      <ol className="mt-2 space-y-2">
         {sources.map((s, i) => (
           <li key={i} className="text-muted">
+            <span className="mr-1 font-mono text-xs" aria-hidden="true">[{i + 1}]</span>
             {s.source_url ? (
               <a href={s.source_url} target="_blank" rel="noopener noreferrer" className="font-medium text-foreground underline">
                 {s.title ?? s.source_url}
@@ -32,7 +34,7 @@ export function AgentSources({ sources }: { sources: AgentSource[] }) {
             </span>
           </li>
         ))}
-      </ul>
+      </ol>
     </details>
   );
 }

@@ -113,7 +113,7 @@ const nl: Catalog = {
     manageMemory: "Geheugen beheren",
     manageDocuments: "Documenten beheren",
     manageSharing: "Delen beheren",
-    privacyDataDesc: "U kunt een kopie van uw gegevens exporteren of uw account permanent verwijderen. Verwijderen wist uw account en de door de applicatie beheerde gegevens (documenten, privébestanden, oefengeschiedenis, Geheugen, Verhalenbank, sessies en agentcontext) en meldt u af. Beveiligings- en auditgegevens worden geanonimiseerd, niet verwijderd; historische infrastructuurback-ups verlopen volgens het bewaarschema van de provider.",
+    privacyDataDesc: "U kunt een kopie van uw gegevens exporteren of uw account permanent verwijderen. Verwijderen wist uw account en de door de applicatie beheerde gegevens (documenten, privébestanden, oefengeschiedenis, Geheugen, Verhalenbank en sessies) en meldt u af. Sommige werkgegevens van de voorbereidingschat kunnen blijven bestaan totdat ze worden opgeschoond. Beveiligings- en auditgegevens worden geanonimiseerd, niet verwijderd; historische infrastructuurback-ups verlopen volgens het bewaarschema van de provider.",
     devIdentity: "U gebruikt de lokale ontwikkelidentiteit. Log in met een echt account voor de volledige sessie-ervaring.",
     methodSession: "Wachtwoord / sociaal",
     methodDev: "Ontwikkelheader",

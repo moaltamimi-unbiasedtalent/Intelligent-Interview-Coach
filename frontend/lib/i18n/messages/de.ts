@@ -113,7 +113,7 @@ const de: Catalog = {
     manageMemory: "Notizen verwalten",
     manageDocuments: "Dokumente verwalten",
     manageSharing: "Freigaben verwalten",
-    privacyDataDesc: "Sie können eine Kopie Ihrer Daten exportieren oder Ihr Konto dauerhaft löschen. Das Löschen entfernt Ihr Konto und die von der Anwendung verwalteten Daten (Dokumente, private Dateien, Übungsverlauf, Notizen, Story-Bank, Sitzungen und Agent-Kontext) und meldet Sie ab. Sicherheits- und Prüfprotokolle werden anonymisiert, nicht gelöscht; historische Infrastruktur-Backups laufen gemäß dem Aufbewahrungsplan des Anbieters aus.",
+    privacyDataDesc: "Sie können eine Kopie Ihrer Daten exportieren oder Ihr Konto dauerhaft löschen. Das Löschen entfernt Ihr Konto und die von der Anwendung verwalteten Daten (Dokumente, private Dateien, Übungsverlauf, Notizen, Story-Bank und Sitzungen) und meldet Sie ab. Einige Arbeitsdaten des Vorbereitungs-Chats können bestehen bleiben, bis sie bereinigt werden. Sicherheits- und Prüfprotokolle werden anonymisiert, nicht gelöscht; historische Infrastruktur-Backups laufen gemäß dem Aufbewahrungsplan des Anbieters aus.",
     devIdentity: "Sie verwenden die lokale Entwicklungsidentität. Melden Sie sich mit einem echten Konto an, um die vollständige Sitzungserfahrung zu erhalten.",
     methodSession: "Passwort / Social",
     methodDev: "Entwicklungs-Header",

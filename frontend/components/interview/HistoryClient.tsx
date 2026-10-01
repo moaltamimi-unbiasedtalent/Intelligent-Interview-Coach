@@ -74,8 +74,8 @@ export function HistoryClient() {
               const created = row.created_at
                 ? new Date(String(row.created_at)).toLocaleDateString()
                 : null;
+              // The role is already the row title; repeating it in the metadata line is noise.
               const meta = [
-                role,
                 typeof questions === "number" ? t("history.questionCount", { n: questions }) : null,
                 created,
               ]

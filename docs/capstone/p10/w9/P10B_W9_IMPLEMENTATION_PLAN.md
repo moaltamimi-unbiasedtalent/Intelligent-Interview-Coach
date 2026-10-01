@@ -293,7 +293,7 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 - **Dependencies:** W9.6 (localized). **Risk:** low (read-only). **Complexity:** M.
 - **STOP:** after the center renders and no integrity gate regresses.
 
-## W9.9 — Trust & Visual Product Polish  *(desirable, Cx M)*
+## W9.9 — Trust & Visual Product Polish  *(desirable, Cx M)* — ✅ DELIVERED (see `P10B_W9_9_TRUST_VISUAL_POLISH.md`; deferred P3 polish listed there)
 
 - **Objective:** clearer, more premium Trust presentation + fixed visual hierarchy. Fixes PF-16, PF-17.
 - **Frontend:** group Trust `CONTROLS` into ~4 sections + cross-links + localize; nav salience; reserve
@@ -367,7 +367,7 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 
 ## Recommended sequence (revised at main d6c3493)
 
-Completed: W9.1-W9.7B and W9.8. Remaining: **W9.9 -> W9.10 -> W9.11 -> W9.12 -> W9.13**, then P10B-W10
+Completed: W9.1-W9.7B, W9.8 and W9.9. Remaining: **W9.10 -> W9.11 -> W9.12 -> W9.13**, then P10B-W10
 (Admin, W10.0-W10.14), P10B-W11 (integrated requalification), RC-P10-003, Pilot 2, P10C-P10F, P11. The canonical
 roadmap is `docs/capstone/capstone_phase_plan.md`. W9.9/W9.10 are off the critical path.
 
