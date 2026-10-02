@@ -1,7 +1,17 @@
 import { config } from "../config";
 import { ApiError, apiErrorFromBody, parseRetryAfter, unreachableError } from "./errors";
 import { runWithRetry } from "./retry";
-import type { AdminAuditEvent, AdminCommandCenter, AdminProviders } from "../admin/types";
+import type {
+  AdminAuditEvent,
+  AdminCommandCenter,
+  AdminPage,
+  AdminProviders,
+  AdminUserDetail,
+  AdminUserQuery,
+  AdminUserSummary,
+  AdminWorkspaceDetail,
+  AdminWorkspaceSummary,
+} from "../admin/types";
 import type {
   ActiveSessionsResponse,
   CapabilitiesResponse,
@@ -159,6 +169,16 @@ async function request<T>(
   };
 
   return runWithRetry(method, attempt, { signal });
+}
+
+/** Query string from defined, non-empty values only (admin list filters). */
+function qs(params: Record<string, unknown>): string {
+  const sp = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== null && v !== "") sp.set(k, String(v));
+  }
+  const text = sp.toString();
+  return text ? `?${text}` : "";
 }
 
 /** Typed FastAPI client. Add new typed methods here rather than calling fetch ad hoc. */
@@ -445,15 +465,28 @@ export const api = {
   // Platform Admin operations (Capstone P6.5). PLATFORM_ADMIN only; metadata only.
   admin: {
     home: (opts?: RequestOptions) => request<AdminCommandCenter>("GET", "/admin/home", opts),
-    users: (query?: string, opts?: RequestOptions) =>
-      request<{ users: Record<string, unknown>[] }>("GET", `/admin/users${query ? `?query=${encodeURIComponent(query)}` : ""}`, opts),
-    setRole: (userId: number, role: string, opts?: RequestOptions) =>
-      request<Record<string, unknown>>("POST", `/admin/users/${userId}/role`, { body: { role }, ...opts }),
+    users: (query: AdminUserQuery = {}, opts?: RequestOptions) =>
+      request<AdminPage<AdminUserSummary>>("GET", `/admin/users${qs(query as Record<string, unknown>)}`, opts),
+    userDetail: (userId: number, opts?: RequestOptions) =>
+      request<AdminUserDetail>("GET", `/admin/users/${userId}`, opts),
+    setRole: (userId: number, role: string, reason?: string, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/users/${userId}/role`, { body: { role, reason }, ...opts }),
     setTier: (userId: number, tier: string, opts?: RequestOptions) =>
       request<Record<string, unknown>>("POST", `/admin/users/${userId}/tier`, { body: { tier }, ...opts }),
-    setStatus: (userId: number, status: string, opts?: RequestOptions) =>
-      request<Record<string, unknown>>("POST", `/admin/users/${userId}/status`, { body: { status }, ...opts }),
-    workspaces: (opts?: RequestOptions) => request<{ workspaces: Record<string, unknown>[] }>("GET", "/admin/workspaces", opts),
+    setStatus: (userId: number, status: string, reason?: string, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/users/${userId}/status`, { body: { status, reason }, ...opts }),
+    revokeSessions: (userId: number, reason?: string, opts?: RequestOptions) =>
+      request<{ user_id: number; sessions_revoked: number }>("POST", `/admin/users/${userId}/sessions/revoke`, { body: { reason }, ...opts }),
+    workspaces: (query: { q?: string; status?: string; page?: number; page_size?: number } = {}, opts?: RequestOptions) =>
+      request<AdminPage<AdminWorkspaceSummary>>("GET", `/admin/workspaces${qs(query)}`, opts),
+    workspaceDetail: (id: number, opts?: RequestOptions) =>
+      request<AdminWorkspaceDetail>("GET", `/admin/workspaces/${id}`, opts),
+    addWorkspaceMember: (id: number, userId: number, role: string, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/workspaces/${id}/members`, { body: { user_id: userId, role }, ...opts }),
+    removeWorkspaceMember: (id: number, userId: number, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("DELETE", `/admin/workspaces/${id}/members/${userId}`, opts),
+    setWorkspaceMemberRole: (id: number, userId: number, role: string, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/workspaces/${id}/members/${userId}/role`, { body: { role }, ...opts }),
     privacyRequests: (opts?: RequestOptions) => request<Record<string, unknown>>("GET", "/admin/privacy-requests", opts),
     feedback: (opts?: RequestOptions) => request<Record<string, unknown>>("GET", "/admin/feedback", opts),
     providers: (opts?: RequestOptions) => request<AdminProviders>("GET", "/admin/providers", opts),

@@ -636,7 +636,7 @@ assumptions in core logic, prompts, scoring or examples.
   change back) using canonical names in `src/application/admin_audit.py`; a failed denial audit never grants
   access. `/admin/providers` returns only the allowlist schema in `src/api/schemas/admin.py` (no secrets, no
   open dicts, health "not tested"). The frontend gets resolved permissions as `account.admin_permissions` and
-  only reflects them (no role mapping, no browser storage). The admin UI is English-only. See
+  only reflects them (no role mapping, no browser storage). The admin UI is English-only. **W10.2:** account deactivation revokes all live sessions in the same transaction (`AdminUserRepository`), and `SessionRepository.resolve` rejects any non-active account at request time (SEC-W10-01); reactivation never revives sessions; the last active `platform_admin` and self-deactivation are protected server-side; roles are the code-defined presets only; admin responses are allowlist schemas with no candidate content; new admin links use `VerifiedLink`; gate `scripts/eval_admin_access.py`. See
   `docs/capstone/admin/W10_1_ADMIN_FOUNDATION_COMMAND_CENTER.md`.
 
 ## Roadmap

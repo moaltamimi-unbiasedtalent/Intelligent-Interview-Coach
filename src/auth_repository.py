@@ -535,7 +535,10 @@ class SessionRepository:
     def resolve(self, token_hash: str) -> int | None:
         """Return the owning user_id for a live session, else None.
 
-        A session is live when it exists, is not revoked and has not expired.
+        A session is live when it exists, is not revoked, has not expired AND its account is still
+        ACTIVE. The account-status check is defence in depth (SEC-W10-01, W10.2): deactivation also
+        revokes sessions, but an inactive account must never authenticate merely because a session row
+        survived (missed revocation path, race, future session mechanism). Fail closed on any doubt.
         Updates ``last_used_at`` opportunistically.
         """
         now = utcnow()
@@ -546,6 +549,9 @@ class SessionRepository:
             if row.revoked_at is not None:
                 return None
             if _aware(row.expires_at) <= now:
+                return None
+            status = session.scalar(select(User.status).where(User.id == row.user_id))
+            if status != ACCOUNT_STATUS_ACTIVE:
                 return None
             row.last_used_at = now
             session.commit()

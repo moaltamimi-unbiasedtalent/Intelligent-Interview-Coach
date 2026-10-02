@@ -77,3 +77,114 @@ class ProvidersResponse(_Strict):
     rate_limit_mode: str
     rate_limit_distributed: bool
     note: str
+
+
+# --- W10.2: users, sessions, workspaces (allowlist; metadata only) --------------------------------------
+# No field here may carry candidate content (CV/document text, answers, report text, Mo conversations,
+# memories, preparation chats, evidence) and none may carry a session token or its hash. A deterministic
+# test and eval_admin_access.py introspect these models for banned names.
+
+ScalarMeta = str | int | bool | None
+
+
+class AdminUserSummary(_Strict):
+    user_id: int
+    email: str | None
+    display_name: str | None
+    status: str
+    platform_role: str
+    tier: str
+    onboarding_completed: bool
+    interface_locale: str
+    email_verified: bool
+    created_at: str | None
+    updated_at: str | None
+    workspace_count: int
+    active_session_count: int
+
+
+class AdminUserList(_Strict):
+    items: list[AdminUserSummary]
+    total: int
+    page: int
+    page_size: int
+    users: list[AdminUserSummary] = []   # same page, kept for the pre-W10.2 response shape
+
+
+class AdminSessionMeta(_Strict):
+    created_at: str | None
+    last_used_at: str | None
+    expires_at: str | None
+
+
+class AdminSessions(_Strict):
+    active_count: int
+    recent: list[AdminSessionMeta]
+
+
+class AdminUserWorkspace(_Strict):
+    workspace_id: int
+    name: str
+    workspace_status: str
+    role: str
+    membership_status: str
+    joined_at: str | None
+
+
+class AdminAuditEntry(_Strict):
+    event_type: str
+    result: str
+    actor_user_id: int | None
+    request_id: str | None
+    created_at: str | None
+    context: dict[str, ScalarMeta] | None
+
+
+class AdminAccess(_Strict):
+    platform_role: str
+    capabilities: list[str]          # server-resolved from the code-defined preset
+    assignable_roles: list[str]      # the code-defined presets an admin may select (never custom)
+    is_self: bool
+
+
+class AdminUserDetail(_Strict):
+    account: AdminUserSummary
+    access: AdminAccess
+    sessions: AdminSessions
+    workspaces: list[AdminUserWorkspace]
+    audit: list[AdminAuditEntry]
+
+
+class AdminWorkspaceSummary(_Strict):
+    id: int
+    name: str
+    status: str
+    owner_user_id: int
+    owner_email: str | None
+    member_count: int
+    created_at: str | None
+
+
+class AdminWorkspaceList(_Strict):
+    items: list[AdminWorkspaceSummary]
+    total: int
+    page: int
+    page_size: int
+    workspaces: list[AdminWorkspaceSummary] = []
+
+
+class AdminWorkspaceMember(_Strict):
+    user_id: int
+    email: str | None
+    account_status: str
+    role: str
+    membership_status: str
+    joined_at: str | None
+
+
+class AdminWorkspaceDetail(_Strict):
+    workspace: AdminWorkspaceSummary
+    members: list[AdminWorkspaceMember]
+    active_share_count: int
+    active_owner_count: int
+    workspace_roles: list[str]

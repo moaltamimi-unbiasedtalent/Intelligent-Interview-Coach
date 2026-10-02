@@ -56,3 +56,67 @@ export interface AdminAuditEvent {
   context: Record<string, unknown> | null;
   created_at: string | null;
 }
+
+// --- W10.2: users, sessions, workspaces (allowlist contracts; metadata only) ---
+export interface AdminUserSummary {
+  user_id: number;
+  email: string | null;
+  display_name: string | null;
+  status: string;
+  platform_role: string;
+  tier: string;
+  onboarding_completed: boolean;
+  interface_locale: string;
+  email_verified: boolean;
+  created_at: string | null;
+  updated_at: string | null;
+  workspace_count: number;
+  active_session_count: number;
+}
+export interface AdminPage<T> {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+export interface AdminUserDetail {
+  account: AdminUserSummary;
+  access: { platform_role: string; capabilities: string[]; assignable_roles: string[]; is_self: boolean };
+  sessions: { active_count: number; recent: { created_at: string | null; last_used_at: string | null; expires_at: string | null }[] };
+  workspaces: { workspace_id: number; name: string; workspace_status: string; role: string; membership_status: string; joined_at: string | null }[];
+  audit: AdminAuditEntry[];
+}
+export interface AdminAuditEntry {
+  event_type: string;
+  result: string;
+  actor_user_id: number | null;
+  request_id: string | null;
+  created_at: string | null;
+  context: Record<string, string | number | boolean | null> | null;
+}
+export interface AdminWorkspaceSummary {
+  id: number;
+  name: string;
+  status: string;
+  owner_user_id: number;
+  owner_email: string | null;
+  member_count: number;
+  created_at: string | null;
+}
+export interface AdminWorkspaceDetail {
+  workspace: AdminWorkspaceSummary;
+  members: { user_id: number; email: string | null; account_status: string; role: string; membership_status: string; joined_at: string | null }[];
+  active_share_count: number;
+  active_owner_count: number;
+  workspace_roles: string[];
+}
+export interface AdminUserQuery {
+  q?: string;
+  status?: string;
+  role?: string;
+  tier?: string;
+  onboarding?: string;
+  email_verified?: string;
+  page?: number;
+  page_size?: number;
+}

@@ -16,6 +16,10 @@ export const P = {
   integrations: "platform.integrations.read",
   ai: "platform.ai.read",
   knowledge: "platform.knowledge.read",
+  usersManage: "platform.users.manage",
+  roleAssign: "platform.users.role.assign",
+  sessionsRevoke: "platform.users.sessions.revoke",
+  workspacesManage: "platform.workspaces.manage",
 } as const;
 
 export interface AdminDestination {

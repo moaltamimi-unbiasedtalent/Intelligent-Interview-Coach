@@ -20,10 +20,16 @@ ADMIN_ENTITLEMENT_CHANGE: Final = "admin.entitlement_change"
 ADMIN_ACCOUNT_STATUS_CHANGE: Final = "admin.account_status_change"
 PLATFORM_PAUSE_TOGGLED: Final = "platform.pause_toggled"
 ADMIN_ACCESS_DENIED: Final = "admin.access.denied"
+# W10.2
+ADMIN_SESSIONS_REVOKED: Final = "admin.sessions_revoked"
+ADMIN_WORKSPACE_MEMBER_ADDED: Final = "admin.workspace_member_added"
+ADMIN_WORKSPACE_MEMBER_REMOVED: Final = "admin.workspace_member_removed"
+ADMIN_WORKSPACE_MEMBER_ROLE_CHANGED: Final = "admin.workspace_member_role_changed"
 
 ADMIN_EVENT_NAMES: Final[frozenset[str]] = frozenset({
     ADMIN_PLATFORM_ROLE_CHANGE, ADMIN_ENTITLEMENT_CHANGE, ADMIN_ACCOUNT_STATUS_CHANGE,
-    PLATFORM_PAUSE_TOGGLED, ADMIN_ACCESS_DENIED,
+    PLATFORM_PAUSE_TOGGLED, ADMIN_ACCESS_DENIED, ADMIN_SESSIONS_REVOKED,
+    ADMIN_WORKSPACE_MEMBER_ADDED, ADMIN_WORKSPACE_MEMBER_REMOVED, ADMIN_WORKSPACE_MEMBER_ROLE_CHANGED,
 })
 
 # Context keys that may never be written (defence in depth against a careless caller).

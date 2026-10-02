@@ -11,6 +11,10 @@ const SHELL = [
   "components/auth/AccountMenu.tsx",
   "components/admin/AdminShell.tsx",
   "components/admin/CommandCenter.tsx",
+  "components/admin/UsersView.tsx",
+  "components/admin/UserDetailView.tsx",
+  "components/admin/WorkspacesView.tsx",
+  "components/admin/WorkspaceDetailView.tsx",
   "app/review/page.tsx",
 ];
 

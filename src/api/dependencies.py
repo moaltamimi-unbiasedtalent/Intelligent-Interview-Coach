@@ -264,6 +264,12 @@ def get_auth_token_repository(repo=Depends(get_repository)):
     return TokenRepository(repo.session_factory)
 
 
+def get_admin_user_repository(repo=Depends(get_repository)):
+    from src.admin_repository import AdminUserRepository
+
+    return AdminUserRepository(repo.session_factory)
+
+
 def get_audit_repository(repo=Depends(get_repository)):
     from src.auth_repository import AuditRepository
 

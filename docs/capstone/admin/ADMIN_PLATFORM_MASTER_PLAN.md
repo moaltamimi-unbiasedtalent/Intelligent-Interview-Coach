@@ -37,7 +37,7 @@ background-job abstraction (all long operations are synchronous), DB-backed feat
 
 | ID | Finding | Target | Required direction |
 |---|---|---|---|
-| SEC-W10-01 | account deactivation does not revoke active sessions (status checked only at login) | **W10.2** (first task) | required security fix: revoke sessions on deactivation and add admin session revocation |
+| SEC-W10-01 | account deactivation does not revoke active sessions (status checked only at login) | **W10.2** (first task; CLOSED by W10.2 when merged: sessions revoked in the deactivation transaction + request-time active-account check) | required security fix: revoke sessions on deactivation and add admin session revocation |
 | SEC-W10-02 | privileged admin audit writes swallow errors | **W10.1** | a sensitive privileged write must not silently succeed without audit evidence; transaction and failure semantics defined explicitly |
 | SEC-W10-03 | admin audit events lack request ids, failed admin access is not audited, naming is inconsistent | **W10.1** | canonical event names, request/correlation id, failed-authorization events, safe target/action metadata, no content or secrets |
 | SEC-W10-04 | admin privacy-request queue is permanently empty | **W10.10** | do not present a "working" privacy-request queue before the privacy-request domain exists: the W10.1 shell does not link or present it as operational |
@@ -319,7 +319,7 @@ Critical path: W10.1 -> W10.2 -> W10.4 -> W10.6 -> W10.9 -> W10.8 -> W10.10 -> W
 |---|---|---|---|---|
 | W10.0 | Architecture & control-plane design (this) | M | critical | 0 |
 | W10.1 | Admin shell, command center, permission framework, audit foundation, build metadata | L | critical | 1 |
-| W10.2 | Users, access & workspace administration (incl. SEC-W10-01) | L | critical | 2 |
+| W10.2 | Users, access & workspace administration (incl. SEC-W10-01) (implemented on `feat/p10b-w10-2-users-access-workspaces`; complete when merged) | L | critical | 2 |
 | W10.3 | Customer support & ticketing | XL | critical | 3 |
 | W10.4 | Plans, subscriptions & entitlements | L | critical | 4 |
 | W10.6 | Integrations & API connections (+ SecretStore) | L | critical | 5 |
