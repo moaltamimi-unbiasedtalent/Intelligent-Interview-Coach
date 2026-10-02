@@ -1,6 +1,6 @@
 # P10B-W10.1 - Admin Shell, Permission & Audit Foundation, Command Center
 
-**Status:** implemented on branch `feat/p10b-w10-1-admin-foundation`; **complete when merged to `main`** (see section 33 for the integration record). **W10.2 is NOT STARTED.**
+**Status:** implemented on branch `feat/p10b-w10-1-admin-foundation`; **COMPLETE: merged to `main` in PR #110 (merge commit 301173d, qualified head 26422b9). W10.2 is NOT STARTED.**
 Migration-free (Alembic head stays `0014_opportunities`). No new dependency. No paid or live provider call.
 
 ## 1. Purpose and scope
@@ -124,7 +124,7 @@ PRIV-W9-01 and PRIV-W9-02 OPEN; POLICY-01 and POLICY-02 unchanged; LEGACY-01; A1
 W10.2 (users, sessions, SEC-W10-01), support, billing, subscriptions UI, jobs, knowledge administration, GDPR workflows, feature flags, incidents, P10C, RC-P10-003 and Pilot 2 are NOT started.
 
 ## 33. Integration record
-Branch `feat/p10b-w10-1-admin-foundation` from `main` e13bfc4. The branch is pushed and a Pull Request into `main` is opened by the owner. The PR number, CI result, merge commit and the verified local/origin `main` SHA equality are recorded in the final report rather than in this file, so that no post-merge documentation commit is needed.
+Branch `feat/p10b-w10-1-admin-foundation` from `main` e13bfc4. PR #110, merge commit `301173db0fc1e75ff8a4f734b6804564ada52614` (merge commit; qualified head `26422b9`; all required CI green before merge). Local `main` fast-forwarded and verified equal to `origin/main` with a clean tree. Alembic head `0014_opportunities`. SEC-W10-02/03/06 CLOSED; SEC-W10-01 (W10.2), SEC-W10-04 (W10.10), SEC-W10-05 (W10.11) OPEN. The role-assignment second approver is carried to W10.13.
 
 ## 34. Rollback
 Revert the PR. There is no migration and no data change; role strings written with the new presets remain valid strings, and an older build would simply treat them as non-admin (default deny).
