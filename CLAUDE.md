@@ -312,7 +312,7 @@ assumptions in core logic, prompts, scoring or examples.
   labour-market, credentials) + a Chroma vector store with a local-hash embedder
   fallback; a deterministic router picks lanes; hybrid (vector + BM25) fusion.
 - **Persistence & auth.** SQLAlchemy ORM over SQLite (dev/tests) or PostgreSQL
-  (production, schema owned by Alembic — single head, currently `0014_opportunities` (see `migrations/versions/`); see
+  (production, schema owned by Alembic — single head, currently `0015_support_ticketing` (see `migrations/versions/`); see
   `docs/operations_deployment.md`); interview history is per-user with strict
   isolation. Identity is server-side accounts and sessions (HttpOnly cookie); production is
   fail-closed; the `X-User-Subject` header and anonymous developer user exist only in
@@ -636,7 +636,7 @@ assumptions in core logic, prompts, scoring or examples.
   change back) using canonical names in `src/application/admin_audit.py`; a failed denial audit never grants
   access. `/admin/providers` returns only the allowlist schema in `src/api/schemas/admin.py` (no secrets, no
   open dicts, health "not tested"). The frontend gets resolved permissions as `account.admin_permissions` and
-  only reflects them (no role mapping, no browser storage). The admin UI is English-only. **W10.2:** account deactivation revokes all live sessions in the same transaction (`AdminUserRepository`), and `SessionRepository.resolve` rejects any non-active account at request time (SEC-W10-01); reactivation never revives sessions; the last active `platform_admin` and self-deactivation are protected server-side; roles are the code-defined presets only; admin responses are allowlist schemas with no candidate content; new admin links use `VerifiedLink`; gate `scripts/eval_admin_access.py`. See
+  only reflects them (no role mapping, no browser storage). The admin UI is English-only. **W10.2:** account deactivation revokes all live sessions in the same transaction (`AdminUserRepository`), and `SessionRepository.resolve` rejects any non-active account at request time (SEC-W10-01); reactivation never revives sessions; the last active `platform_admin` and self-deactivation are protected server-side; roles are the code-defined presets only; admin responses are allowlist schemas with no candidate content; new admin links use `VerifiedLink`; gate `scripts/eval_admin_access.py`. **W10.3 support:** `support_tickets` / `support_messages` (customer-visible) / `support_internal_notes` (Admin-only, a separate table with NO candidate code path; never in a candidate response, export or audit payload); candidate routes `/support/tickets*` are owner-scoped and strict (`extra=forbid`), admin routes `/admin/support/*` use `platform.support.read|reply|manage|note`; status lifecycle and priority are server-validated and candidate-immutable; no SLA, email, attachment or live provider; messages are plain text; tickets/messages/notes are deleted with the account and the visible thread (not notes) is in the self-service export; gate `scripts/eval_admin_support.py`. See
   `docs/capstone/admin/W10_1_ADMIN_FOUNDATION_COMMAND_CENTER.md`.
 
 ## Roadmap

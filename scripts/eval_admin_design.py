@@ -47,11 +47,11 @@ def run() -> dict[str, tuple[bool, str]]:
     check("current_admin_routes_exist", not missing, ", ".join(missing) or f"{len(current_routes)} documented routes exist")
 
     routes_dir = ROOT / "src/api/routes"
-    forbidden_files = [f for f in routes_dir.glob("*.py") if re.search(r"support|ticket|billing|plan|subscription|integration|incident|legal", f.name)]
-    check("planned_domains_not_built_routes", not forbidden_files, ", ".join(f.name for f in forbidden_files) or "no support/billing/plans/integrations/incident/legal routes yet")
+    forbidden_files = [f for f in routes_dir.glob("*.py") if re.search(r"billing|plan|subscription|integration|incident|legal", f.name)]  # support/ticket shipped in W10.3
+    check("planned_domains_not_built_routes", not forbidden_files, ", ".join(f.name for f in forbidden_files) or "no billing/plans/integrations/incident/legal routes yet (support shipped in W10.3)")
 
     persistence = read(ROOT / "src/persistence.py").lower()
-    built = [t for t in ("support_ticket", "subscription_plan", "background_job", "feature_flag", "privacy_request", "legal_acceptance",
+    built = [t for t in ("subscription_plan", "background_job", "feature_flag", "privacy_request", "legal_acceptance",
                          "preparation_run", "integration_config", "secret_reference", "incident") if t in persistence]
     check("planned_entities_not_in_schema", not built, ", ".join(built) or "no W10 entities in persistence.py")
 
@@ -73,7 +73,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("preset_names_final", all(n in plan for n in ("platform_admin", "support_operator", "billing_admin", "knowledge_admin", "security_privacy_admin", "operations_admin")),
           "six role presets named")
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_migration_added", mig[-1].startswith("0014_"), mig[-1])
+    check("no_migration_added", mig[-1].startswith(("0014_", "0015_")), mig[-1])
     check("referenced_source_paths_exist",
           all((ROOT / p).exists() for p in re.findall(r"`(src/[A-Za-z0-9_/]+\.py)`", plan + adr)),
           "every `src/...py` path named in the plan exists")

@@ -81,6 +81,10 @@ AI_READ = "platform.ai.read"
 KNOWLEDGE_READ = "platform.knowledge.read"
 RELEASES_READ = "platform.releases.read"
 SECURITY_READ = "platform.security.read"
+SUPPORT_READ = "platform.support.read"
+SUPPORT_REPLY = "platform.support.reply"
+SUPPORT_MANAGE = "platform.support.manage"
+SUPPORT_NOTE = "platform.support.note"
 
 # --- role presets (AD-08: code-defined; never persisted as tables) ---------------------------------
 ROLE_CANDIDATE = "user"
@@ -106,6 +110,7 @@ ROLE_PRESETS: Final[dict[str, frozenset[str]]] = {
         OVERVIEW_READ, USERS_READ, USERS_MANAGE, USERS_ROLE_ASSIGN,
         WORKSPACES_READ, "platform.workspaces.manage", "platform.users.sessions.revoke",
         SUBSCRIPTIONS_MANAGE, "platform.subscriptions.read",
+        SUPPORT_READ, SUPPORT_REPLY, SUPPORT_MANAGE, SUPPORT_NOTE,
         PRIVACY_READ, REPORTS_READ, FLAGS_READ, FLAGS_MANAGE, INTEGRATIONS_READ,
         AUDIT_READ, AI_READ, KNOWLEDGE_READ, RELEASES_READ, SECURITY_READ,
     }),

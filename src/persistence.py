@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from sqlalchemy import (
     JSON,
     Boolean,
+    CheckConstraint,
     DateTime,
     Float,
     ForeignKey,
@@ -1035,6 +1036,97 @@ class InterviewSession(Base):
     last_accessed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow
     )
+
+
+# --- Customer support & ticketing (P10B-W10.3, migration 0015_support_ticketing) ------------------------
+# Three DISTINCT tables keep the data boundaries physical: the ticket (operational record), the
+# customer-visible message thread (candidate + support), and the Admin-only internal notes. Internal notes
+# have no candidate-facing code path and are never joined into a candidate response.
+SUPPORT_CATEGORIES = (
+    "account_login", "opportunity", "prepare", "practice_interview", "documents", "ai_response",
+    "billing", "privacy", "accessibility", "technical", "data_issue", "other",
+)
+SUPPORT_PRIORITIES = ("low", "normal", "high", "urgent")
+SUPPORT_STATUSES = ("new", "triaged", "in_progress", "waiting_for_customer", "resolved", "closed")
+SUPPORT_AUTHOR_CANDIDATE = "candidate"
+SUPPORT_AUTHOR_SUPPORT = "support"
+SUPPORT_AUTHOR_KINDS = (SUPPORT_AUTHOR_CANDIDATE, SUPPORT_AUTHOR_SUPPORT)
+
+
+def _in_list(column: str, values: tuple[str, ...]) -> str:
+    return f"{column} IN ({', '.join(repr(v) for v in values)})"
+
+
+class SupportTicket(Base):
+    """An operational support ticket owned by one candidate. No SLA fields: no SLA policy is approved."""
+
+    __tablename__ = "support_tickets"
+    __table_args__ = (
+        CheckConstraint(_in_list("category", SUPPORT_CATEGORIES), name="ck_support_tickets_category"),
+        CheckConstraint(_in_list("priority", SUPPORT_PRIORITIES), name="ck_support_tickets_priority"),
+        CheckConstraint(_in_list("status", SUPPORT_STATUSES), name="ck_support_tickets_status"),
+        Index("ix_support_tickets_owner_updated", "owner_user_id", "updated_at"),
+        Index("ix_support_tickets_status_updated", "status", "updated_at"),
+        Index("ix_support_tickets_assignee_status", "assigned_user_id", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    # Opaque candidate-visible reference (uuid4 hex). Authorization never relies on its secrecy.
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    category: Mapped[str] = mapped_column(String(32))
+    priority: Mapped[str] = mapped_column(String(16), default="normal", server_default="normal")
+    status: Mapped[str] = mapped_column(String(24), default="new", server_default="new")
+    subject: Mapped[str] = mapped_column(String(200))
+    assigned_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    initial_request_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    source_route: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    source_environment: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class SupportMessage(Base):
+    """A CUSTOMER-VISIBLE message in a ticket thread (candidate or support)."""
+
+    __tablename__ = "support_messages"
+    __table_args__ = (
+        CheckConstraint(_in_list("author_kind", SUPPORT_AUTHOR_KINDS), name="ck_support_messages_author_kind"),
+        Index("ix_support_messages_ticket", "ticket_id", "id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    ticket_id: Mapped[int] = mapped_column(ForeignKey("support_tickets.id", ondelete="CASCADE"))
+    # SET NULL: a deleted support operator's replies stay in the candidate's thread.
+    author_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    author_kind: Mapped[str] = mapped_column(String(16))
+    body: Mapped[str] = mapped_column(Text)
+    request_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class SupportInternalNote(Base):
+    """An ADMIN-ONLY support note. Never serialised by any candidate API or export."""
+
+    __tablename__ = "support_internal_notes"
+    __table_args__ = (Index("ix_support_internal_notes_ticket", "ticket_id", "id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    ticket_id: Mapped[int] = mapped_column(ForeignKey("support_tickets.id", ondelete="CASCADE"))
+    author_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    body: Mapped[str] = mapped_column(Text)
+    request_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 def make_engine(database_url: str) -> Engine:

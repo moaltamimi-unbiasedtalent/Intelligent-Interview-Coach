@@ -1056,3 +1056,40 @@ export interface StoryOut {
   evidence_claim_ids: number[];
   updated_at?: string | null;
 }
+
+// --- Customer support (P10B-W10.3). Candidate-visible shapes only: no internal notes, priority or operator identity.
+export type SupportCategory =
+  | "account_login" | "opportunity" | "prepare" | "practice_interview" | "documents" | "ai_response"
+  | "billing" | "privacy" | "accessibility" | "technical" | "data_issue" | "other";
+export type SupportStatus = "new" | "triaged" | "in_progress" | "waiting_for_customer" | "resolved" | "closed";
+export interface SupportTicketSummary {
+  public_id: string;
+  category: SupportCategory;
+  status: SupportStatus;
+  subject: string;
+  created_at: string | null;
+  updated_at: string | null;
+}
+export interface SupportTicketList {
+  items: SupportTicketSummary[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+export interface SupportThreadMessage {
+  id: number;
+  author_kind: "candidate" | "support";
+  body: string;
+  created_at: string | null;
+}
+export interface SupportTicketDetail extends SupportTicketSummary {
+  can_reply: boolean;
+  messages: SupportThreadMessage[];
+}
+export interface SupportCreateRequest {
+  category: SupportCategory;
+  subject: string;
+  message: string;
+  request_id?: string;
+  source_route?: string;
+}

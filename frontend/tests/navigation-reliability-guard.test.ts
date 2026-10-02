@@ -15,6 +15,11 @@ const SHELL = [
   "components/admin/UserDetailView.tsx",
   "components/admin/WorkspacesView.tsx",
   "components/admin/WorkspaceDetailView.tsx",
+  "components/admin/SupportQueueView.tsx",
+  "components/admin/SupportTicketAdminView.tsx",
+  "components/support/SupportHome.tsx",
+  "components/support/SupportTicketView.tsx",
+  "components/help/HelpPageContent.tsx",
   "app/review/page.tsx",
 ];
 

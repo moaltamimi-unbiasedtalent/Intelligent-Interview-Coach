@@ -20,6 +20,10 @@ export const P = {
   roleAssign: "platform.users.role.assign",
   sessionsRevoke: "platform.users.sessions.revoke",
   workspacesManage: "platform.workspaces.manage",
+  supportRead: "platform.support.read",
+  supportReply: "platform.support.reply",
+  supportManage: "platform.support.manage",
+  supportNote: "platform.support.note",
 } as const;
 
 export interface AdminDestination {
@@ -36,6 +40,7 @@ export const ADMIN_DESTINATIONS: readonly AdminDestination[] = [
   { id: "overview", label: "Overview", href: "/admin", description: "Command Center", anyOf: [P.overview] },
   { id: "users", label: "Users", href: "/admin/users", description: "Account metadata", anyOf: [P.users] },
   { id: "workspaces", label: "Workspaces", href: "/admin/workspaces", description: "Workspace metadata", anyOf: [P.workspaces] },
+  { id: "support", label: "Support", href: "/admin/support", description: "Customer support queue", anyOf: [P.supportRead] },
   { id: "review", label: "Review / Diagnostics", href: "/review", description: "Evaluation and knowledge diagnostics", anyOf: [P.ai, P.knowledge] },
   { id: "audit", label: "Audit", href: "/admin/audit", description: "Privileged-action log", anyOf: [P.audit] },
   { id: "providers", label: "Provider status", href: "/admin/providers", description: "Configuration status", anyOf: [P.integrations] },
