@@ -60,6 +60,16 @@ def run() -> dict[str, tuple[bool, str]]:
     src_text = "".join(read(p) for p in (ROOT / "src").rglob("*.py"))
     check("break_glass_not_implemented", "breakglass" not in src_text.lower() and "break_glass" not in src_text.lower(), "reserved design only")
 
+    final = all(k in adr for k in ("FINAL, approved", "MOCK BILLING", "externally managed", "transactional claiming", "ownership/lifecycle index", "counsel", "require_permission"))
+    check("owner_decisions_recorded_final", final, "AD-01..AD-08 recorded as FINAL with their constraints")
+    check("no_breakglass_permission_in_namespace", "platform.breakglass" not in plan.replace("`platform.breakglass.*` permission", "") and "platform.breakglass" not in matrix,
+          "no break-glass permission exists in the canonical list or matrix (AD-02)")
+    perm_block = re.search(r"Canonical permission list.*?```\n(.*?)```", plan, re.S)
+    n_perm = len([l for l in perm_block.group(1).split("\n") if l.startswith("platform.")]) if perm_block else 0
+    check("canonical_permission_count", n_perm == 43, f"{n_perm} canonical permissions")
+    check("defect_placement_recorded", all(f"SEC-W10-0{i}" in plan and f"SEC-W10-0{i}" in adr for i in range(1, 7)), "SEC-W10-01..06 placed in plan and ADR")
+    check("preset_names_final", all(n in plan for n in ("platform_admin", "support_operator", "billing_admin", "knowledge_admin", "security_privacy_admin", "operations_admin")),
+          "six role presets named")
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
     check("no_migration_added", mig[-1].startswith("0014_"), mig[-1])
     check("referenced_source_paths_exist",

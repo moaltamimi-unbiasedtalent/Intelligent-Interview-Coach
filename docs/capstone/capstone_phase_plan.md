@@ -59,8 +59,8 @@ never-translated slogan. Local `main` == `origin/main`; GitHub integration is pa
 
 | Wave | Title | Cx | Priority |
 |---|---|---|---|
-| W10.0 | Admin architecture and control-plane design (**DELIVERED** as design only - `admin/ADMIN_PLATFORM_MASTER_PLAN.md`, `admin/ADMIN_CAPABILITY_MATRIX.md`, `admin/ADMIN_ARCHITECTURE_DECISIONS.md`) | M | Capstone critical |
-| W10.1 | Admin shell and Command Center (audit foundation) | L | Capstone critical |
+| W10.0 | Admin architecture and control-plane design (**owner-approved design, AD-01..AD-08 FINAL; complete when merged**; design only - `admin/ADMIN_PLATFORM_MASTER_PLAN.md`, `admin/ADMIN_CAPABILITY_MATRIX.md`, `admin/ADMIN_ARCHITECTURE_DECISIONS.md`) | M | Capstone critical |
+| W10.1 | Admin Shell, Permission & Audit Foundation, Command Center (NOT STARTED; also closes SEC-W10-02/03/06) | L | Capstone critical |
 | W10.2 | Users, access and workspaces | L | Capstone critical |
 | W10.3 | Support and ticketing | XL | Capstone critical |
 | W10.4 | Plans, subscriptions and entitlements | L | Capstone critical |

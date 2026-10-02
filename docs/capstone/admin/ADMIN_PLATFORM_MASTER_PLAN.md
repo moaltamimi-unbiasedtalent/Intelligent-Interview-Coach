@@ -1,6 +1,6 @@
 # P10B-W10 - Platform Administration, Support & Commercial Operations: Master Plan (W10.0 architecture)
 
-**Status: DESIGN / PLANNING. Nothing planned here is implemented.** W10.0 changes no route, model, migration, permission, dependency or UI. It is the
+**Status: DESIGN / PLANNING, owner decisions AD-01..AD-08 FINAL (approved). Nothing planned here is implemented.** W10.0 changes no route, model, migration, permission, dependency or UI. It is the
 approved architecture and implementation plan that W10.1-W10.14 must follow. Companion files: [ADMIN_CAPABILITY_MATRIX.md](ADMIN_CAPABILITY_MATRIX.md) (every
 capability, permission and wave) and [ADMIN_ARCHITECTURE_DECISIONS.md](ADMIN_ARCHITECTURE_DECISIONS.md) (decisions and open decisions AD-01..AD-08). Roadmap:
 [../capstone_phase_plan.md](../capstone_phase_plan.md). Baseline: `main` f272f00 (P10B QUALIFIED AND INTEGRATED), Alembic head `0014_opportunities`.
@@ -33,10 +33,16 @@ NOT YET BUILT (verified absent): comprehensive user administration, session revo
 integration and secret administration, model administration, governed KB ingestion UI, GDPR admin workflows, incident centre, operations/commercial reporting,
 background-job abstraction (all long operations are synchronous), DB-backed feature flags (env flags only), consent/legal-version persistence, preparation-run index, MFA.
 
-**Current findings that W10 must remediate (not deferred to "later"):** SEC-W10-01 deactivated accounts keep working sessions (W10.2, first); SEC-W10-02 admin audit writes
-swallow errors, i.e. a privileged change can succeed without an audit row (W10.1: sensitive writes become fail-closed); SEC-W10-03 audit events lack `request_id` on admin
-paths, failed admin access is not audited and bootstrap vs API event names differ (W10.1); SEC-W10-04 dead privacy-request queue (W10.10); SEC-W10-05 pause state not durable
-(W10.11); SEC-W10-06 `email.provider` is echoed raw in `/admin/providers` (W10.6).
+**Current findings and their APPROVED remediation placement (not deferred "to later"):**
+
+| ID | Finding | Target | Required direction |
+|---|---|---|---|
+| SEC-W10-01 | account deactivation does not revoke active sessions (status checked only at login) | **W10.2** (first task) | required security fix: revoke sessions on deactivation and add admin session revocation |
+| SEC-W10-02 | privileged admin audit writes swallow errors | **W10.1** | a sensitive privileged write must not silently succeed without audit evidence; transaction and failure semantics defined explicitly |
+| SEC-W10-03 | admin audit events lack request ids, failed admin access is not audited, naming is inconsistent | **W10.1** | canonical event names, request/correlation id, failed-authorization events, safe target/action metadata, no content or secrets |
+| SEC-W10-04 | admin privacy-request queue is permanently empty | **W10.10** | do not present a "working" privacy-request queue before the privacy-request domain exists: the W10.1 shell does not link or present it as operational |
+| SEC-W10-05 | pause state is process-local, lost on restart/replicas | **W10.11** (durable configuration) | until then the Admin UI must not represent pause state as durable/shared: label it process-local or withhold it |
+| SEC-W10-06 | `/admin/providers` echoes the raw email-provider setting | **W10.1** (early) | admin provider/config responses return safe metadata only (established now, before W10.6 expands them) |
 
 ## 3. Target architecture
 ```
@@ -58,9 +64,8 @@ in the same transaction; mocks are labelled; no browser-based code deployment.
 | Billing Administrator | plans, subscriptions, invoices | preset `billing_admin` |
 | Knowledge Administrator | sources, ingestion, indexing, provenance | preset `knowledge_admin` |
 | Security / Privacy Administrator | audit, incidents, DSAR, legal versions | preset `security_privacy_admin` |
-| Operations Administrator | health, jobs, integrations, config | preset `ops_admin` |
-**Decision (AD-08):** permissions are defined first; roles are named presets of permissions defined in code; the UI and routes check permissions, never role names. Runtime role
-separation ships in W10.1 using the existing `users.platform_role` column (widened set of values, no schema change); a roles table is deferred until multi-role is needed.
+| Operations Administrator | health, jobs, integrations, config | preset `operations_admin` |
+**Decision (AD-08, FINAL):** code-defined role presets (`platform_admin`, `support_operator`, `billing_admin`, `knowledge_admin`, `security_privacy_admin`, `operations_admin`) resolve to the canonical permissions; **no user-configurable or custom roles during the Capstone.** Backend checks use `require_permission(...)` (role preset -> permissions -> check), never `if user.role == ...` in domain code; default deny. Frontend visibility follows permissions but is not the security boundary. The preset is stored in the existing `users.platform_role` column (widened set of values, no schema change in W10.0).
 
 ## 5. Permission model (capability namespace, default deny)
 `platform.<domain>.<action>`. Read and manage are separate; high-risk actions have their own permission and, where noted, second-approver or step-up.
@@ -81,8 +86,8 @@ separation ships in W10.1 using the existing `users.platform_role` column (widen
 | reporting | `platform.reports.read`, `platform.reports.commercial.read` |
 | security | `platform.security.read`, `.manage`, `platform.incidents.manage`, `platform.audit.read`, `.export` |
 | releases | `platform.releases.read` |
-| RESERVED (not built) | `platform.breakglass.request`, `.approve` |
-**Canonical permission list (stable identifiers; `platform.breakglass.request` / `.approve` are reserved and unimplemented):**
+| NOT CREATED (AD-02) | no break-glass permission exists or is reserved in the permission namespace; any future break-glass needs a separately approved phase |
+**Canonical permission list (stable identifiers; 43 permissions; the earlier 44th, a reserved break-glass permission, was removed by owner decision AD-02):**
 ```
 platform.ai.activate
 platform.ai.manage
@@ -91,7 +96,6 @@ platform.audit.export
 platform.audit.read
 platform.billing.read
 platform.billing.refund
-platform.breakglass.request
 platform.config.manage
 platform.flags.manage
 platform.flags.read
@@ -151,7 +155,7 @@ Enforcement: FastAPI dependency `require_permission("platform.x.y")` on every ad
 | Reports | Product/Commercial | aggregates | none | aggregates only | reports.* | no | W10.12 |
 | Security / Audit / Incidents | Security | audit, events, incidents | manage incidents | metadata | security.*, audit.* | yes | W10.13 |
 | Releases / System | Ops | version, SHA, migration head, model profile, knowledge snapshot | none | none | releases.read | no | W10.1 |
-Admin is desktop-first, English-only internal tooling (AD-01), accessible (section 31).
+Admin is desktop-first, English-only internal operator tooling (AD-01, FINAL), accessible (section 31).
 
 ## 7. Private-data boundary
 **Default: admin never sees** CV/document contents, answers, preparation chats, Mo conversations, memories, evidence, reports or private files. **Admin may see** account id, email,
@@ -159,10 +163,10 @@ status, onboarding state, plan, timestamps, request ids, error metadata, ticket 
 Rules: admin services never import candidate-content repositories; reports are aggregates with a minimum cohort size; universal search targets operational identifiers only
 (never full-text private content); a CI invariant fails if an admin route returns fields on a deny-list (document text, answer text, memory summary, report body).
 
-## 8. Break-glass (decision AD-02: NOT needed for Capstone)
+## 8. Break-glass (decision AD-02, FINAL: NO break-glass private-content access for the Capstone)
 Support operates from metadata, request ids, structured diagnostics and **user-provided ticket attachments**. Reserved design if later required: explicit reason, linked ticket or incident,
 named operator, requested scope, time-boxed grant (auto-expiry), second approver, candidate notification (consent where the use case allows), read-only, audited, no impersonation,
-prohibited for export or bulk access. Permissions `platform.breakglass.*` are reserved and unimplemented.
+prohibited for export or bulk access. W10 must NOT create any break-glass permission, private-content admin browser, impersonation flow, private-message search, CV/content browsing, memory browsing or interview-answer browsing; the concept above is documentation only and would need a separately approved future phase.
 
 ## 9. Support domain (W10.3)
 Candidate entry: "Contact support / Report a problem" (localized x8). Entities: ticket (id, user, category, priority, status, assignee, subject, body, request id, route, app version,
@@ -179,17 +183,20 @@ application code asks for a capability or a limit, never `if premium`. Existing 
 
 ## 11. Billing abstraction (W10.5)
 `BillingService -> BillingProvider (interface) -> MockBillingAdapter (Capstone) -> future hosted-checkout adapter`. Provider-owned: card data, tax computation, payment authorisation.
-Ask4Mo stores only provider customer/subscription ids, state, invoice metadata and events. Webhook handling idempotent via the job model. The mock adapter is labelled MOCK in UI, API and
-reports and can never be enabled in a production environment flagged live. Refunds: mock only.
+Ask4Mo stores only provider customer/subscription ids, state, invoice metadata and events. Webhook handling idempotent via the job model. The mock adapter is labelled MOCK BILLING (never LIVE BILLING) in UI, API, documentation and
+reports and can never be enabled in a production environment flagged live; payments, refunds, card processing and invoices are never presented as production-live while mocked (AD-03, FINAL: live provider selection deferred; future adapter such as Stripe or equivalent). Refunds: mock only.
 
 ## 12. Integration architecture (W10.6)
 Registry of integrations (AI providers, email, OCR, storage, STT/TTS/realtime, research/Career Intelligence sources): configured?, enabled?, environment, provider, capability, last
 success/failure, latency, health, rate-limit state, credential last-rotated. Health probes are explicit, bounded and never run on page load. Admin actions: enable/disable, set/rotate secret, test connection.
 
-## 13. Secrets architecture
-`Admin -> IntegrationService -> SecretStore (interface) -> EnvSecretStore (read from env; Capstone default) / LocalEncryptedSecretStore (dev, key from env) -> future vault adapter`.
-Admin UI may **set/rotate, test, disable**; it can never read plaintext, display a full key, log a value, or put a value in audit. Stored/returned metadata: `configured`, `last_rotated_at`,
-`last_tested_at`, `health`, and a secret *reference*. Configuration tables never hold secrets. Rotation requires step-up.
+## 13. Secrets architecture (AD-04, FINAL: approved with constraints)
+`Admin -> IntegrationService -> SecretStore (interface) -> environment adapter (read-only, EXTERNALLY MANAGED) / local development adapter (clearly labelled) -> future production-vault adapter`.
+**Environment-backed secrets are externally managed**: the runtime cannot persist an environment-variable change, so the Admin Portal must **not claim to have rotated or replaced one**. For such
+integrations Admin shows only truthful metadata: configured yes/no, provider, last test, connection health, "externally managed", and a masked identifier where safe. **Writable secret management
+(set/rotate) is exposed only when the active SecretStore adapter genuinely supports secure writes**; test connection and disable are available regardless. The Admin Portal must never return current plaintext,
+log plaintext, write plaintext into audit events, place secrets in query strings, or expose a full key after save. Configuration tables never hold secrets; rotation requires step-up where writable.
+Local/mock behaviour stays labelled.
 
 ## 14. AI / model configuration lifecycle (W10.7)
 Draft -> Validate (schema, allow-list) -> Evaluate (deterministic evaluator suite must pass) -> Approve (second approver) -> Activate (versioned, audited, instantly rollbackable).
@@ -204,13 +211,14 @@ rollback to prior snapshot, diagnostics, retrieval test console (admin-only, sou
 does not replace P10C.
 
 ## 16. Jobs / queues (W10.9; decision AD-05)
-Today every long operation is synchronous and no worker exists. Design: a small DB-backed `background_job` abstraction (no external broker): states Pending, Running, Completed, Failed,
-Retrying, Dead-letter; linked entity, request id, attempts, failure reason (sanitised), timestamps; a separate worker process (compose service) polls with row locking; retry/cancel are admin
-actions; handlers are idempotent. First consumers: KB ingestion/indexing, DSAR export/deletion execution, webhook processing. Existing synchronous paths stay synchronous unless migrated deliberately.
+Today every long operation is synchronous and no worker exists. Design (AD-05, FINAL): a DB-backed `background_job` abstraction with a **separate worker process** and **no external broker**.
+Required properties: **transactional job claiming** (never "select pending and hope"), lease/ownership with heartbeat or lease expiry, attempt count, retry policy with backoff, idempotency key,
+failed and dead-letter (final failure) states, request/correlation id, entity linkage, created/started/completed timestamps, sanitised failure reasons. Claiming uses safe locking per database:
+PostgreSQL `FOR UPDATE SKIP LOCKED` inside the claim transaction; SQLite (local/dev) an atomic conditional `UPDATE ... WHERE status='pending'` under a write transaction that returns the claimed row with a lease token; the two
+behaviours are specified and tested separately. States: Pending, Running, Completed, Failed, Retrying, Dead-letter; retry/cancel are admin actions; handlers are idempotent. Implementation: W10.9 (before W10.8/W10.10); not in W10.0. First consumers: KB ingestion/indexing, DSAR export/deletion execution, webhook processing. Existing synchronous paths stay synchronous unless migrated deliberately.
 
 ## 17. Privacy / legal operations (W10.10)
-Reuse W9.8 services (section 30). **PRIV-W9-01:** `preparation_run` index (AD-06) enables candidate-side list/delete and complete account deletion. **PRIV-W9-02:** `legal_document_version` and
-`legal_acceptance` (AD-07) with a re-acceptance gate and translation-review status. Admin workflow: request intake (candidate-initiated or on-behalf with identity verification), status, execution
+Reuse W9.8 services (section 30). **PRIV-W9-01 (AD-06, FINAL direction):** `preparation_run` is an **ownership/lifecycle index that must not duplicate chat content**. Likely metadata (subject to the implementation audit): run id, user id, Opportunity id where applicable, the underlying agent/checkpoint run identifier, run type, status, created/updated/completed timestamps, deletion state. The row is created at or before durable run creation so an owned run can never be undiscoverable; indexed for user id, run id, Opportunity id and lifecycle/deletion state. Outcome: user/account deletion enumerates owned runs without scanning the checkpoint store. Historical pre-index runs need an explicit migration/backfill strategy (a bounded job; a full-store scan in a request is not acceptable). PRIV-W9-01 stays OPEN until implementation and deletion verification complete. **PRIV-W9-02 (AD-07, FINAL structure):** separate the legal document/version (document type, version, locale, publication/effective date, content hash or immutable reference, active/superseded, re-acceptance required) from the user acceptance (user id, legal version id, accepted_at, acceptance source, minimal supporting metadata only where justified). **No IP, user agent or device fingerprint is collected by default** (data minimisation). **Retention of acceptance records after account deletion is NOT an owner-defined legal policy yet:** the schema must support governed retention, anonymisation or pseudonymisation, and the design hard-codes no retention period and makes no claim that records must be retained or must be erased; counsel confirmation is required before production reliance. PRIV-W9-02 stays OPEN until versions and acceptances persist, candidate visibility and the admin/legal workflow work, and the retention/deletion semantics are approved and tested. Admin workflow: request intake (candidate-initiated or on-behalf with identity verification), status, execution
 via jobs, retention state, privacy incident log. No GDPR certification claim.
 
 ## 18. Feature flags / configuration (W10.11)
@@ -260,7 +268,7 @@ at build time (new, W10.1). Observability before deployment control; no browser 
 ## 24. Data-model forecast and migration groups (no migration in W10.0)
 | Entity | Purpose | Sensitive fields | Retention | Wave | Migration |
 |---|---|---|---|---|---|
-| (permissions code-defined) | roles/permissions | none | n/a | W10.1 | **none** |
+| (permissions code-defined) | roles/permissions | none | n/a | W10.1 | Admin Shell, Permission & Audit Foundation, Command Center (43 permissions, presets, `require_permission`, fail-closed audit, SEC-W10-02/03/06, release metadata) |
 | audit_events (extend) | request_id/reason/before-after | metadata | retained, anonymised on deletion | W10.1 | MG-1 (columns/indexes) |
 | support_ticket, support_message, support_internal_note, support_attachment | support | candidate text | until closed + policy | W10.3 | MG-2 |
 | subscription_plan, plan_entitlement, plan_price, subscription | commerce | none | life of account/legal | W10.4 | MG-3 |
@@ -275,7 +283,7 @@ at build time (new, W10.1). Observability before deployment control; no browser 
 | feature_flag | flags | none | n/a | W10.11 | MG-11 |
 | incident, admin_notification | ops | none | n/a | W10.13 | MG-12 |
 Group by domain wave (about 12 small migrations, never one giant migration); each is additive, reversible and has its own rollback test. Candidate-owned tables use FK `ON DELETE CASCADE`
-to users unless legal retention requires anonymisation (AD-07).
+to users except legal acceptance records, whose post-deletion retention/anonymisation is a counsel-dependent policy (AD-07; no period or obligation is assumed).
 
 ## 25. Capstone scope
 CAPSTONE CRITICAL: admin shell and permission framework, health/release visibility, users/access incl. session revocation, support/ticketing, plan creation + entitlement model, integration/provider
@@ -306,7 +314,7 @@ all waves -> admin qualification (W10.14) -> integrated candidate + admin requal
 ```
 Critical path: W10.1 -> W10.2 -> W10.4 -> W10.6 -> W10.9 -> W10.8 -> W10.10 -> W10.14 (support W10.3 and reporting W10.12 run beside it).
 
-## 28. Wave plan (execution order; numbering unchanged)
+## 28. Wave plan (execution order; numbering unchanged; **the execution order intentionally differs from numeric order because of dependencies**)
 | Wave | Title | Cx | Priority | Order |
 |---|---|---|---|---|
 | W10.0 | Architecture & control-plane design (this) | M | critical | 0 |
@@ -343,7 +351,7 @@ Opportunities, `delete_interview_with_source`); sharing revoke = `SharingService
 inside an audited, permission-checked, reason-bearing admin workflow (execution as a job); they never reimplement deletion.
 
 ## 31. Cross-cutting decisions
-- **Localization (AD-01):** admin is English-only internal tooling for Capstone; candidate-facing strings that W10 adds (support form, legal-version prompt, plan names/pricing) are localized x8 and scanned.
+- **Localization (AD-01, FINAL):** the internal `/admin` operator UI is English-only for the Capstone. Anything candidate-facing that W10 introduces (Contact Support forms, candidate ticket views, candidate-visible support responses/templates, privacy communications, candidate notifications, candidate billing/subscription messaging) follows the candidate contract in all 8 locales (en, de, fr, es, it, pt, nl, ru) and the hardcoded-English scanner. English-only Admin is not permission for English-only candidate copy.
 - **Accessibility:** semantic landmarks, keyboard-operable tables and filters with labels, focus-managed dialogs, non-colour status, desktop-first with usable tablet width; no WCAG certification claim.
 - **Support diagnostics (safe):** account status, route, request id, error class, timestamp, app version, provider involved, latency, retry count, flag state, plan/entitlement, related ticket/incident; never raw prompts or answers.
 - **Universal operator search:** user email/id, workspace, ticket, request id, subscription/invoice, Opportunity id, report id, job, provider, source; identifiers/metadata only.
@@ -355,5 +363,14 @@ inside an audited, permission-checked, reason-bearing admin workflow (execution 
   consistent with current auth, no plaintext secrets, rate limits on sensitive admin actions, secure uploads, input validation, anti-IDOR tests, never rely on hidden UI.
 
 ## 32. Open decisions
-See ADMIN_ARCHITECTURE_DECISIONS.md: AD-01 (English-only admin), AD-02 (no break-glass), AD-03 (payment provider deferred), AD-04 (secret store interface + env/local adapter), AD-05 (DB-backed job abstraction),
-AD-06 (`preparation_run` index), AD-07 (legal version/acceptance model), AD-08 (code-defined role presets). Owner confirmation requested on AD-03, AD-04, AD-05 and AD-07 before W10.4/W10.6/W10.9/W10.10 start.
+AD-01..AD-08 were approved by the owner and are recorded as FINAL in ADMIN_ARCHITECTURE_DECISIONS.md (AD-01 English-only operator UI with localized candidate-facing W10 copy; AD-02 no break-glass; AD-03 mock billing now, live provider deferred;
+AD-04 SecretStore with externally-managed env adapter; AD-05 DB-backed jobs with a separate worker; AD-06 `preparation_run` ownership index; AD-07 legal version/acceptance with counsel-dependent retention; AD-08 code-defined role presets).
+No open architecture decision blocks W10.1.
+
+## 33. W10.1 approved scope (not started)
+**W10.1 - Admin Shell, Permission & Audit Foundation, Command Center.** Expected implementation: (1) the canonical permission framework (43 permissions); (2) code-defined role presets; (3) `require_permission(...)`;
+(4) default-deny admin authorization; (5) a CI invariant that every Admin route declares a required permission; (6) capability-gated Admin navigation/shell; (7) a fail-closed privileged audit foundation (SEC-W10-02);
+(8) canonical admin audit event naming; (9) request/correlation id support; (10) failed privileged-access audit where appropriate (SEC-W10-03); (11) a safe `/admin/providers` response contract (SEC-W10-06);
+(12) the Admin overview / Command Center (the privacy-request queue is not presented as operational, SEC-W10-04; pause state is labelled process-local or withheld, SEC-W10-05); (13) build/release metadata: Git SHA,
+build time/version, environment, Alembic head; (14) safe platform-health summaries; (15) the minimal operational event capture the Command Center needs; (16) existing reviewer/admin diagnostics linked appropriately;
+(17) no candidate private-content browsing. **W10.1 remains migration-free** unless its implementation audit proves a requirement; if so, STOP before creating one.
