@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/VerifiedLink";
 import { api } from "@/lib/api/client";
 import { P } from "@/lib/admin/capabilities";
 import { KeyValue, Panel, PermissionGate, ResourceState, Stat, StatusLabel, useAdminResource } from "./ui";

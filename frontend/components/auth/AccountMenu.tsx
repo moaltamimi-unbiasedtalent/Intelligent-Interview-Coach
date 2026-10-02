@@ -9,7 +9,7 @@
  * (authorization stays server-side).
  */
 
-import Link from "next/link";
+import Link from "@/components/ui/VerifiedLink";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useAuth } from "./AuthProvider";

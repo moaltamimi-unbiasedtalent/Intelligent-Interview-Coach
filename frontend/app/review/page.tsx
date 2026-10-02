@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/VerifiedLink";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 import { RequirePlatformAdmin } from "@/components/auth/RequirePlatformAdmin";

@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 // flashes during loading. Hiding the link is UX only; the API stays authoritative.
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/",
+  useRouter: () => ({ push: () => {}, replace: () => {} }), usePathname: () => "/",
 }));
 
 const me = vi.fn();

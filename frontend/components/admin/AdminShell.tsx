@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/VerifiedLink";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { RequirePlatformAdmin } from "@/components/auth/RequirePlatformAdmin";
