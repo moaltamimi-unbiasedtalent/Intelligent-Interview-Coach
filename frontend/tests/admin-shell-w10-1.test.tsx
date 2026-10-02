@@ -10,7 +10,7 @@ type Account = { platform_role: string; admin_permissions?: string[] } | null;
 let mockAccount: Account = null;
 let mockPath = "/admin";
 
-vi.mock("next/navigation", () => ({ usePathname: () => mockPath }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: () => {}, replace: () => {} }), usePathname: () => mockPath }));
 vi.mock("next/link", () => ({
   default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
     <a href={href} {...rest}>{children}</a>

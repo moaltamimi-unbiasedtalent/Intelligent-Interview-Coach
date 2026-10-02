@@ -4,7 +4,7 @@ import { afterEach, expect, it, vi } from "vitest";
 // P10B-W9.4 - Opportunity navigation salience & accessibility (D4/D5/D6).
 
 let mockPath = "/app";
-vi.mock("next/navigation", () => ({ usePathname: () => mockPath }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: () => {}, replace: () => {} }), usePathname: () => mockPath }));
 
 import { PRIMARY_NAV } from "@/components/layout/nav-items";
 import { PrimaryNavigation } from "@/components/layout/PrimaryNavigation";

@@ -9,7 +9,7 @@ type Account = { platform_role: string; admin_permissions?: string[] } | null;
 let mockAccount: Account = null;
 let mockStatus: "loading" | "authenticated" | "unauthenticated" | "unknown" = "authenticated";
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/app" }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: () => {}, replace: () => {} }), usePathname: () => "/app" }));
 
 vi.mock("@/components/auth/AuthProvider", () => ({
   useAuthOptional: () => ({ account: mockAccount, status: mockStatus }),
