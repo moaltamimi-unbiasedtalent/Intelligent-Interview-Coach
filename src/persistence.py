@@ -77,7 +77,13 @@ __all__ = [
 # Teams phase) and from a product entitlement (tier, see ProductEntitlement).
 PLATFORM_ROLE_USER = "user"
 PLATFORM_ROLE_ADMIN = "platform_admin"
-PLATFORM_ROLES = (PLATFORM_ROLE_USER, PLATFORM_ROLE_ADMIN)
+# W10.1: code-defined admin role presets (AD-08). The column is a plain String(32) with no DB CHECK, so
+# widening the vocabulary needs no migration; the permission mapping lives in
+# src/application/admin_permissions.py (a test keeps the two lists identical).
+PLATFORM_ROLES = (
+    PLATFORM_ROLE_USER, PLATFORM_ROLE_ADMIN, "support_operator", "billing_admin",
+    "knowledge_admin", "security_privacy_admin", "operations_admin",
+)
 
 # Account lifecycle status (privacy/account foundation).
 ACCOUNT_STATUS_ACTIVE = "active"

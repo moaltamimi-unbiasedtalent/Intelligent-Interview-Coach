@@ -6,6 +6,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useT } from "@/components/i18n/I18nProvider";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
+import { adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
 import { INTERNAL_NAV, SECONDARY_NAV } from "./nav-items";
 
 /**
@@ -20,12 +21,14 @@ import { INTERNAL_NAV, SECONDARY_NAV } from "./nav-items";
 export function MoreMenu() {
   const pathname = usePathname();
   const t = useT();
-  // Role-aware Admin entry: visible ONLY to a PLATFORM_ADMIN. Derived from trusted account
-  // state (server-provided), never a client override. `account` is null until the session
+  // Capability-aware Admin entry: visible ONLY with server-resolved admin permissions. Derived from
+  // trusted account state (`admin_permissions`, server-provided), never a client override. `account` is null until the session
   // resolves, so the privileged item never flashes during loading/unknown. Hiding the link
   // is a UX affordance, NOT the security boundary — the API stays authoritative.
   const auth = useAuthOptional();
-  const isAdmin = auth?.account?.platform_role === "platform_admin";
+  const granted = adminPermissions(auth?.account);
+  const internalItems = INTERNAL_NAV.filter((item) => hasAnyPermission(granted, item.anyOf));
+  const isAdmin = internalItems.length > 0;
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -35,7 +38,7 @@ export function MoreMenu() {
   // destinations count too, but only when the caller is an admin (others never see them).
   const supportingActive =
     SECONDARY_NAV.some((item) => pathname === item.href || pathname.startsWith(item.href + "/")) ||
-    (isAdmin && INTERNAL_NAV.some((item) => pathname === item.href || pathname.startsWith(item.href + "/")));
+    (isAdmin && internalItems.some((item) => pathname === item.href || pathname.startsWith(item.href + "/")));
 
   const close = useCallback((focusButton = false) => {
     setOpen(false);
@@ -126,7 +129,7 @@ export function MoreMenu() {
               server-authoritative PLATFORM_ADMIN. Ordinary candidates never see these items.
               Each destination's backend is independently authorized (hiding is UX only). */}
           {isAdmin
-            ? INTERNAL_NAV.map((item) => {
+            ? internalItems.map((item) => {
                 const active = pathname === item.href || pathname.startsWith(item.href + "/");
                 return (
                   <Link

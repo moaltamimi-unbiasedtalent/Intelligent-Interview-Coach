@@ -56,8 +56,10 @@ def run() -> dict[str, tuple[bool, str]]:
     check("planned_entities_not_in_schema", not built, ", ".join(built) or "no W10 entities in persistence.py")
 
     deps = read(ROOT / "src/api/dependencies.py")
-    check("permission_framework_not_yet_built", "def require_permission" not in deps, "W10.1 builds it")
-    src_text = "".join(read(p) for p in (ROOT / "src").rglob("*.py"))
+    # W10.1 built the permission framework exactly as designed here (guarded by eval_admin_foundation).
+    check("permission_framework_matches_design", "def require_permission" in deps, "W10.1 built require_permission")
+    # The only place the words may appear is the registry's own deny-list of banned permission fragments.
+    src_text = "".join(read(p) for p in (ROOT / "src").rglob("*.py") if p.name != "admin_permissions.py")
     check("break_glass_not_implemented", "breakglass" not in src_text.lower() and "break_glass" not in src_text.lower(), "reserved design only")
 
     final = all(k in adr for k in ("FINAL, approved", "MOCK BILLING", "externally managed", "transactional claiming", "ownership/lifecycle index", "counsel", "require_permission"))

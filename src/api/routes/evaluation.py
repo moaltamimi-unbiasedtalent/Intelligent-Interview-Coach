@@ -10,7 +10,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Path
 
-from src.api.dependencies import require_platform_admin
+from src.api.dependencies import require_permission
+from src.application import admin_permissions as perm
 from src.api.schemas.evaluation import (
     EvaluationRunResponse,
     EvaluationRunsResponse,
@@ -24,7 +25,7 @@ from src.application import evaluation_service
 # authorization is the boundary; hiding the /review UI is only defense-in-depth.
 router = APIRouter(
     prefix="/evaluation", tags=["evaluation"],
-    dependencies=[Depends(require_platform_admin)],
+    dependencies=[Depends(require_permission(perm.AI_READ))],
 )
 
 

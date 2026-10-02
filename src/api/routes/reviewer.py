@@ -11,60 +11,61 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from src.api.dependencies import require_platform_admin
+from src.api.dependencies import require_permission
+from src.application import admin_permissions as perm
 
-router = APIRouter(prefix="/reviewer", tags=["reviewer"], dependencies=[Depends(require_platform_admin)])
+router = APIRouter(prefix="/reviewer", tags=["reviewer"])
 
 
-@router.get("/knowledge/readiness", summary="Deterministic knowledge readiness (admin)")
+@router.get("/knowledge/readiness", dependencies=[Depends(require_permission(perm.KNOWLEDGE_READ))], summary="Deterministic knowledge readiness (admin)")
 def knowledge_readiness() -> dict:
     from src.copilot.knowledge import governance as gov
     return gov.overall_readiness()
 
 
-@router.get("/knowledge/manifest", summary="Knowledge manifest (admin)")
+@router.get("/knowledge/manifest", dependencies=[Depends(require_permission(perm.KNOWLEDGE_READ))], summary="Knowledge manifest (admin)")
 def knowledge_manifest() -> dict:
     from src.copilot.knowledge import governance as gov
     return gov.knowledge_manifest()
 
 
-@router.get("/knowledge/source-health", summary="Per-source health (admin)")
+@router.get("/knowledge/source-health", dependencies=[Depends(require_permission(perm.KNOWLEDGE_READ))], summary="Per-source health (admin)")
 def source_health() -> dict:
     from src.copilot.knowledge import governance as gov
     return {"sources": gov.source_health()}
 
 
-@router.get("/knowledge/coverage", summary="Knowledge coverage matrix (admin)")
+@router.get("/knowledge/coverage", dependencies=[Depends(require_permission(perm.KNOWLEDGE_READ))], summary="Knowledge coverage matrix (admin)")
 def coverage() -> dict:
     from src.copilot.knowledge import governance as gov
     return gov.coverage_matrix()
 
 
-@router.get("/knowledge/language-boundary", summary="7-language knowledge boundary (admin)")
+@router.get("/knowledge/language-boundary", dependencies=[Depends(require_permission(perm.KNOWLEDGE_READ))], summary="7-language knowledge boundary (admin)")
 def language_boundary() -> dict:
     from src.copilot.knowledge import governance as gov
     return {"languages": gov.language_boundary()}
 
 
-@router.get("/config-versions", summary="Production configuration versions (admin)")
+@router.get("/config-versions", dependencies=[Depends(require_permission(perm.AI_READ))], summary="Production configuration versions (admin)")
 def config_versions() -> dict:
     from src.config_versions import production_versions
     return production_versions()
 
 
-@router.get("/retention/inventory", summary="Retention inventory (admin)")
+@router.get("/retention/inventory", dependencies=[Depends(require_permission(perm.PRIVACY_READ))], summary="Retention inventory (admin)")
 def retention_inventory() -> dict:
     from src.application.retention_service import retention_inventory as inv
     return {"inventory": inv()}
 
 
-@router.get("/prompt-lab/experiments", summary="Prompt Lab experiments (admin)")
+@router.get("/prompt-lab/experiments", dependencies=[Depends(require_permission(perm.AI_READ))], summary="Prompt Lab experiments (admin)")
 def list_experiments() -> dict:
     from src.application.prompt_lab import PromptLabService
     return {"experiments": PromptLabService().list()}
 
 
-@router.get("/prompt-lab/experiments/{experiment_id}", summary="One Prompt Lab experiment (admin)")
+@router.get("/prompt-lab/experiments/{experiment_id}", dependencies=[Depends(require_permission(perm.AI_READ))], summary="One Prompt Lab experiment (admin)")
 def get_experiment(experiment_id: str) -> dict:
     from src.application.prompt_lab import PromptLabService
     exp = PromptLabService().get(experiment_id)

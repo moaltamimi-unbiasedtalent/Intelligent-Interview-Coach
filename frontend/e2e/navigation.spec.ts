@@ -6,6 +6,7 @@ import { expect, test, type Page } from "@playwright/test";
 function account(role: string) {
   return {
     user_id: 1, email: "u@example.com", display_name: null, platform_role: role,
+    admin_permissions: role === "platform_admin" ? ["platform.overview.read", "platform.ai.read", "platform.knowledge.read"] : [],
     tier: "basic", status: "active", email_verified: true, providers: ["password"],
     auth_method: "session", capabilities: [], response_detail: "brief",
     interface_locale: "en", conversation_language: "en", coaching_style: "balanced",

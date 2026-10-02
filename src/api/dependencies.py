@@ -669,12 +669,47 @@ def get_current_principal(
 
 
 def require_platform_admin(principal=Depends(get_current_principal)):
-    """Authorize a platform-admin-only operation (server-side; 403 otherwise)."""
+    """DEPRECATED (W10.1): coarse platform-admin gate kept for compatibility. New admin routes MUST use
+    ``require_permission``; a CI invariant fails any admin route without an explicit permission."""
     from src.application.authorization import is_platform_admin
 
     if not is_platform_admin(principal):
         raise HTTPException(status_code=403, detail="Administrator access required.")
     return principal
+
+
+def require_permission(permission: str) -> Callable[..., Any]:
+    """Build a dependency that authorizes ONE admin permission (P10B-W10.1; default deny).
+
+    The caller must be authenticated (``get_current_principal``) and have an ACTIVE account; the role is
+    read from the server-side account record and resolved to permissions in code
+    (``admin_permissions``). Nothing comes from the browser. A denial is audited best-effort, but access
+    is denied whether or not that audit write succeeds (a failed audit never grants access).
+    The permission string is validated at import time so a typo cannot silently deny everything.
+    The returned dependency carries ``.permission`` so a CI invariant can introspect route metadata.
+    """
+    from src.application.admin_permissions import PERMISSION_SET, permissions_for_role
+
+    if permission not in PERMISSION_SET:
+        raise ValueError(f"Unknown admin permission: {permission!r}")
+
+    def _dep(request: Request, principal=Depends(get_current_principal),
+             audit=Depends(get_audit_repository)):
+        from src.application.admin_audit import record_denial
+        from src.persistence import ACCOUNT_STATUS_ACTIVE
+
+        active = principal.status == ACCOUNT_STATUS_ACTIVE
+        if active and permission in permissions_for_role(principal.platform_role):
+            return principal
+        record_denial(
+            audit, actor_user_id=principal.user_id, request_id=get_request_id(request),
+            permission=permission, method=request.method, path=request.url.path,
+            reason="inactive_account" if not active else "missing_permission",
+        )
+        raise HTTPException(status_code=403, detail="Administrator access required.")
+
+    _dep.permission = permission  # type: ignore[attr-defined]
+    return _dep
 
 
 def require_capability(capability: str) -> Callable[..., Any]:

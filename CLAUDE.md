@@ -402,7 +402,7 @@ assumptions in core logic, prompts, scoring or examples.
   is read **as the owner** (owner scoping intact). Invitations require the accepting account's
   own email to match (no foreign acceptance), are single-use and expiring; the last owner
   can't orphan a workspace; leave/remove revokes that member's outbound shares. **Platform
-  Admin** (`src/api/routes/admin.py`, router-level `require_platform_admin`) is an OPERATIONS
+  Admin** (`src/api/routes/admin.py`; since W10.1 every route declares an explicit `require_permission(...)`) is an OPERATIONS
   surface, **not a data superuser**: account/workspace/entitlement/privacy/provider/audit
   **metadata only** (no CV/answers/Memory/documents), audited privileged changes (role/tier/
   status) with self-lockout guards, no "view as user", no private-data search, owner-scoped
@@ -625,6 +625,19 @@ assumptions in core logic, prompts, scoring or examples.
   language. Public routes must never expose candidate-private content; new authenticated routes must be
   added to `app/robots.ts` disallow. Deterministic gate `scripts/eval_marketing_product_trust.py`. See
   `docs/capstone/p10/p10b_wave7_marketing_product_trust_pricing.md`.
+
+- **Admin permissions, audit and Command Center (P10B-W10.1) - durable rules.** Admin authorization is
+  `require_permission("platform.<domain>.<action>")` (`src/api/dependencies.py`) over the code-defined registry
+  and role presets in `src/application/admin_permissions.py` (43 permissions, six presets; default deny; no
+  custom roles, no role tables, no break-glass, no content-inspection permission; role strings live in
+  `users.platform_role`, a plain column). Never add an admin route without a permission (CI invariant:
+  `src/api/admin_route_invariant.py`, `scripts/eval_admin_foundation.py`). Privileged changes are audited in
+  the SAME transaction as the mutation (`audit=` on `AccountRepository.set_*`; an audit failure rolls the
+  change back) using canonical names in `src/application/admin_audit.py`; a failed denial audit never grants
+  access. `/admin/providers` returns only the allowlist schema in `src/api/schemas/admin.py` (no secrets, no
+  open dicts, health "not tested"). The frontend gets resolved permissions as `account.admin_permissions` and
+  only reflects them (no role mapping, no browser storage). The admin UI is English-only. See
+  `docs/capstone/admin/W10_1_ADMIN_FOUNDATION_COMMAND_CENTER.md`.
 
 ## Roadmap
 

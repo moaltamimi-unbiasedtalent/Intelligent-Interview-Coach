@@ -1,6 +1,7 @@
 """Platform Admin / Operations routes (Capstone P6.5).
 
-PLATFORM_ADMIN-only (router-level gate). This is an OPERATIONS surface, not a data
+Permission-gated (W10.1): every route declares an explicit ``require_permission(...)``; there is no
+router-level coarse gate. This is an OPERATIONS surface, not a data
 superuser: it exposes account/workspace/entitlement/privacy/provider/audit METADATA and
 performs audited privileged changes — it NEVER returns candidate-private content (CV,
 answers, Memory, Story Bank, raw conversation, documents), has no "view as user" and no
@@ -12,13 +13,18 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from fastapi import Request
+
 from src.api.dependencies import (
     get_account_repository,
     get_audit_repository,
-    get_current_principal,
+    get_request_id,
     get_workspace_repository,
-    require_platform_admin,
+    require_permission,
 )
+from src.api.schemas.admin import ProvidersResponse
+from src.application import admin_audit as A
+from src.application import admin_permissions as perm
 from src.persistence import (
     ACCOUNT_STATUS_ACTIVE,
     ACCOUNT_STATUS_DEACTIVATED,
@@ -27,8 +33,7 @@ from src.persistence import (
     PRODUCT_TIERS,
 )
 
-router = APIRouter(prefix="/admin", tags=["admin"],
-                   dependencies=[Depends(require_platform_admin)])
+router = APIRouter(prefix="/admin", tags=["admin"])
 
 
 class RoleRequest(BaseModel):
@@ -47,77 +52,95 @@ class PauseRequest(BaseModel):
     paused: bool
 
 
-def _audit(audit, event_type, actor_id, target_user_id, **ctx):
-    try:
-        audit.record(event_type=event_type, actor_user_id=actor_id, target_type="user",
-                     target_id=str(target_user_id),
-                     context={k: v for k, v in ctx.items() if v is not None})
-    except Exception:  # noqa: BLE001
-        pass
+@router.get("/home", summary="Command Center (operational metadata only)")
+def home(request: Request, principal=Depends(require_permission(perm.OVERVIEW_READ)),
+         accounts=Depends(get_account_repository), workspaces=Depends(get_workspace_repository)) -> dict:
+    from src.application.admin_command_center import command_center
 
-
-@router.get("/home", summary="Operational overview (metadata only)")
-def home(accounts=Depends(get_account_repository), workspaces=Depends(get_workspace_repository)) -> dict:
-    from src.copilot.knowledge import governance as gov
-    return {
-        "accounts": accounts.account_stats(),
-        "workspaces": workspaces.workspace_stats(),
-        "knowledge": {"overall_readiness": gov.overall_readiness().get("overall")},
-        "notes": "Operational metadata only. No candidate-private content is accessible here.",
-    }
+    return command_center(
+        version=request.app.state.settings.version, session_factory=accounts.session_factory,
+        accounts=accounts, workspaces=workspaces,
+        allowed=perm.permissions_for_role(principal.platform_role),
+    )
 
 
 @router.get("/users", summary="Account metadata (never candidate content)")
 def list_users(query: str | None = Query(default=None, max_length=320), limit: int = Query(default=100, ge=1, le=500),
+               _p=Depends(require_permission(perm.USERS_READ)),
                accounts=Depends(get_account_repository)) -> dict:
     return {"users": accounts.list_accounts(limit=limit, query=query)}
 
 
-@router.post("/users/{user_id}/role", summary="Set platform role (audited)")
-def set_role(user_id: int, body: RoleRequest, principal=Depends(get_current_principal),
-             accounts=Depends(get_account_repository), audit=Depends(get_audit_repository)) -> dict:
+def _current(accounts, user_id: int):
+    """Safe before-state (a single enum value) for the audit; None when the account is unknown."""
+    return accounts.get_account(user_id)
+
+
+@router.post("/users/{user_id}/role", summary="Set platform role (audited, atomic)")
+def set_role(user_id: int, body: RoleRequest, request: Request,
+             principal=Depends(require_permission(perm.USERS_ROLE_ASSIGN)),
+             accounts=Depends(get_account_repository)) -> dict:
     if body.role not in PLATFORM_ROLES:
         raise HTTPException(status_code=422, detail="Unknown platform role.")
     # Self-lockout guard: an admin may not demote their own admin role.
     if user_id == principal.user_id and body.role != PLATFORM_ROLE_ADMIN:
         raise HTTPException(status_code=409, detail="You cannot remove your own admin role.")
-    if not accounts.set_platform_role(user_id, body.role):
+    before = _current(accounts, user_id)
+    if before is None:
         raise HTTPException(status_code=404, detail="Account not found.")
-    _audit(audit, "admin.platform_role_change", principal.user_id, user_id, role=body.role)
+    audit = A.build_audit(event_type=A.ADMIN_PLATFORM_ROLE_CHANGE, actor_user_id=principal.user_id,
+                          request_id=get_request_id(request), target_type="user", target_id=user_id,
+                          before=before.platform_role, after=body.role, role=body.role)
+    if not accounts.set_platform_role(user_id, body.role, audit=audit):  # state + audit: one transaction
+        raise HTTPException(status_code=404, detail="Account not found.")
     return {"user_id": user_id, "platform_role": body.role}
 
 
-@router.post("/users/{user_id}/tier", summary="Set product entitlement tier (audited)")
-def set_tier(user_id: int, body: TierRequest, principal=Depends(get_current_principal),
-             accounts=Depends(get_account_repository), audit=Depends(get_audit_repository)) -> dict:
+@router.post("/users/{user_id}/tier", summary="Set product entitlement tier (audited, atomic)")
+def set_tier(user_id: int, body: TierRequest, request: Request,
+             principal=Depends(require_permission(perm.SUBSCRIPTIONS_MANAGE)),
+             accounts=Depends(get_account_repository)) -> dict:
     if body.tier not in PRODUCT_TIERS:
         raise HTTPException(status_code=422, detail="Unknown tier.")
-    if not accounts.set_tier(user_id, body.tier, source="admin"):
+    before = _current(accounts, user_id)
+    if before is None:
         raise HTTPException(status_code=404, detail="Account not found.")
-    _audit(audit, "admin.entitlement_change", principal.user_id, user_id, tier=body.tier)
+    audit = A.build_audit(event_type=A.ADMIN_ENTITLEMENT_CHANGE, actor_user_id=principal.user_id,
+                          request_id=get_request_id(request), target_type="user", target_id=user_id,
+                          before=before.tier, after=body.tier, tier=body.tier)
+    if not accounts.set_tier(user_id, body.tier, source="admin", audit=audit):
+        raise HTTPException(status_code=404, detail="Account not found.")
     return {"user_id": user_id, "tier": body.tier}
 
 
-@router.post("/users/{user_id}/status", summary="Set account status (audited)")
-def set_status(user_id: int, body: StatusRequest, principal=Depends(get_current_principal),
-               accounts=Depends(get_account_repository), audit=Depends(get_audit_repository)) -> dict:
+@router.post("/users/{user_id}/status", summary="Set account status (audited, atomic)")
+def set_status(user_id: int, body: StatusRequest, request: Request,
+               principal=Depends(require_permission(perm.USERS_MANAGE)),
+               accounts=Depends(get_account_repository)) -> dict:
     if body.status not in (ACCOUNT_STATUS_ACTIVE, ACCOUNT_STATUS_DEACTIVATED):
         raise HTTPException(status_code=422, detail="Unsupported status for admin change.")
     if user_id == principal.user_id and body.status != ACCOUNT_STATUS_ACTIVE:
         raise HTTPException(status_code=409, detail="You cannot deactivate your own account.")
-    if not accounts.set_status(user_id, body.status):
+    before = _current(accounts, user_id)
+    if before is None:
         raise HTTPException(status_code=404, detail="Account not found.")
-    _audit(audit, "admin.account_status_change", principal.user_id, user_id, status=body.status)
+    audit = A.build_audit(event_type=A.ADMIN_ACCOUNT_STATUS_CHANGE, actor_user_id=principal.user_id,
+                          request_id=get_request_id(request), target_type="user", target_id=user_id,
+                          before=before.status, after=body.status, status=body.status)
+    if not accounts.set_status(user_id, body.status, audit=audit):
+        raise HTTPException(status_code=404, detail="Account not found.")
     return {"user_id": user_id, "status": body.status}
 
 
 @router.get("/workspaces", summary="Workspace metadata (no shared content)")
-def list_workspaces(workspaces=Depends(get_workspace_repository)) -> dict:
+def list_workspaces(_p=Depends(require_permission(perm.WORKSPACES_READ)),
+                    workspaces=Depends(get_workspace_repository)) -> dict:
     return {"workspaces": workspaces.list_workspaces_admin()}
 
 
 @router.get("/privacy-requests", summary="Open privacy/deletion requests (metadata only)")
-def privacy_requests(accounts=Depends(get_account_repository)) -> dict:
+def privacy_requests(_p=Depends(require_permission(perm.PRIVACY_READ)),
+                     accounts=Depends(get_account_repository)) -> dict:
     return {
         "requests": accounts.list_privacy_requests(),
         "note": "Global hard-delete (private-file + agent checkpoint purge) remains PARTIAL; "
@@ -126,7 +149,8 @@ def privacy_requests(accounts=Depends(get_account_repository)) -> dict:
 
 
 @router.get("/feedback", summary="Feedback taxonomy + aggregate counts (no raw content)")
-def feedback_overview(accounts=Depends(get_account_repository)) -> dict:
+def feedback_overview(_p=Depends(require_permission(perm.REPORTS_READ)),
+                      accounts=Depends(get_account_repository)) -> dict:
     from sqlalchemy import func, select
 
     from src.copilot.feedback_intelligence.improvement import ImprovementStatus
@@ -148,103 +172,58 @@ def feedback_overview(accounts=Depends(get_account_repository)) -> dict:
     }
 
 
-def _realtime_provider_status() -> dict:
-    """Safe realtime-voice operational metadata for admins (Capstone P7.5).
+@router.get("/pause", summary="Operator pause switches (process-local, non-durable)")
+def pause_state(_p=Depends(require_permission(perm.FLAGS_READ))) -> dict:
+    """Current pause state (booleans only). A paused capability returns 503 to candidates.
+    State is process-local and non-durable until W10.11 (SEC-W10-05); the response says so."""
+    from src.application.admin_command_center import pause_state as _ps
+    from src.application.pause import PAUSABLE_CAPABILITIES
 
-    Booleans/labels ONLY — never a key, an ephemeral secret, audio, or any transcript. Admins
-    see whether realtime is configured/available and its bounds, and an explicit statement
-    that no audio or private transcript is ever exposed here."""
-    from src.voice.realtime import resolve_realtime_config
-
-    cfg = resolve_realtime_config().safe_dict()
-    cfg.update({
-        "live_validation": "NOT_RUN",            # no authorised realtime provider call made
-        "audio_visible_to_admin": False,
-        "transcript_visible_to_admin": False,
-    })
-    return cfg
+    return {"pausable": list(PAUSABLE_CAPABILITIES), **_ps()}
 
 
-@router.get("/pause", summary="Operator pause switches for costly/external capabilities")
-def pause_state() -> dict:
-    """Current pause state (booleans only). A paused capability returns 503 to candidates."""
-    from src.application.pause import PAUSABLE_CAPABILITIES, get_pause_registry
-
-    return {"pausable": list(PAUSABLE_CAPABILITIES), "paused": get_pause_registry().snapshot()}
-
-
-@router.post("/pause/{capability}", summary="Pause or resume a costly/external capability")
-def set_pause(
-    capability: str,
-    body: PauseRequest,
-    principal=Depends(get_current_principal),
-    audit=Depends(get_audit_repository),
-) -> dict:
+@router.post("/pause/{capability}", summary="Pause or resume a capability (audit-first, fail-closed)")
+def set_pause(capability: str, body: PauseRequest, request: Request,
+              principal=Depends(require_permission(perm.FLAGS_MANAGE)),
+              audit=Depends(get_audit_repository)) -> dict:
     from src.application.pause import PAUSABLE_CAPABILITIES, get_pause_registry
 
     if capability not in PAUSABLE_CAPABILITIES:
         raise HTTPException(status_code=422, detail="Unknown pausable capability.")
-    get_pause_registry().set(capability, body.paused)
+    registry = get_pause_registry()
+    before = registry.is_paused(capability)
+    # The pause state is in memory (no DB row), so there is no shared transaction. The ordering
+    # guarantee is audit FIRST and fail-closed: if the audit cannot be committed, nothing is applied.
+    spec = A.build_audit(event_type=A.PLATFORM_PAUSE_TOGGLED, actor_user_id=principal.user_id,
+                         request_id=get_request_id(request), target_type="capability",
+                         target_id=capability, before=before, after=body.paused, paused=body.paused)
     try:
-        audit.record(event_type="platform.pause_toggled", actor_user_id=principal.user_id,
-                     target_type="capability", target_id=capability,
-                     context={"paused": body.paused})
+        audit.record(**spec)
     except Exception:  # noqa: BLE001
-        pass
+        raise HTTPException(status_code=503, detail="Audit unavailable; the change was not applied.")
+    registry.set(capability, body.paused)
     return {"capability": capability, "paused": body.paused}
 
 
-@router.get("/providers", summary="Provider/system configuration status (no secrets)")
-def providers() -> dict:
-    import os
+def _realtime_provider_status() -> dict:
+    """Safe realtime-voice operational metadata (Capstone P7.5): booleans/labels ONLY, now produced by the
+    allowlist provider schema (W10.1). Never a key, an ephemeral secret, audio or any transcript."""
+    from src.application.admin_providers import build_providers_response
 
-    from src.application.pause import get_pause_registry
-
-    def configured(*names: str) -> bool:
-        return any(bool(os.environ.get(n, "").strip()) for n in names)
-
-    # Truthful OCR operational status: the real runtime chain (binary + Poppler + language
-    # data), not merely whether pytesseract imports (P10B Wave 3 OCR closure).
-    from src.documents.ocr import ocr_runtime_status
-    ocr_status = ocr_runtime_status()
-    return {
-        "google_oidc": {"configured": configured("GOOGLE_OIDC_CLIENT_ID", "GOOGLE_CLIENT_ID"),
-                        "live_validation": "UNVALIDATED"},
-        "email": {"provider": os.environ.get("EMAIL_PROVIDER", "console"),
-                  "configured": configured("BREVO_API_KEY", "EMAIL_PROVIDER"),
-                  "live_validation": "UNVALIDATED"},
-        "speech": {
-            "architecture": "browser_web_speech", "camera": "never_requested",
-            "input": "browser_web_speech_stt",          # P3 dictation (STT)
-            "output": "browser_speech_synthesis_tts",    # P7 voice playback (TTS)
-            "audio_persisted_by_ask4mo": False,          # no recordings/voiceprints stored
-            "voice_trait_inference": "none",             # no emotion/personality/accent/hiring signal
-            "live_quality": "UNVALIDATED",
-            "realtime": _realtime_provider_status(),     # P7.5 realtime voice (booleans/labels only)
-        },
-        "ocr": ocr_status,
-        "adzuna": {"configured": configured("ADZUNA_APP_ID", "ADZUNA_APP_KEY"),
-                   "live_validation": "UNVALIDATED"},
-        "langfuse": {"configured": configured("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY"),
-                     "external_enabled": configured("AGENT_EXTERNAL_OBSERVABILITY_ENABLED")},
-        "pause": get_pause_registry().snapshot(),  # operator pause switches (§21)
-        "rate_limit": {"backend": os.environ.get("RATE_LIMIT_BACKEND", "in_memory") or "in_memory",
-                       "distributed": _rate_limit_distributed()},
-        "note": "Booleans/status only — no API keys, secrets, tokens or connection strings.",
-    }
+    return build_providers_response().speech.realtime.model_dump()
 
 
-def _rate_limit_distributed() -> bool:
-    try:
-        from src.api.rate_limit import get_rate_limiter
+@router.get("/providers", response_model=ProvidersResponse,
+            summary="Provider status (allowlist schema; no secrets, no live calls)")
+def providers(_p=Depends(require_permission(perm.INTEGRATIONS_READ))) -> ProvidersResponse:
+    from src.application.admin_providers import build_providers_response
 
-        return bool(getattr(get_rate_limiter(), "distributed", False))
-    except Exception:  # noqa: BLE001
-        return False
+    return build_providers_response()
 
 
 @router.get("/audit", summary="Recent audit events (safe metadata)")
 def audit_view(event_type: str | None = Query(default=None, max_length=64),
                limit: int = Query(default=100, ge=1, le=500),
+               _p=Depends(require_permission(perm.AUDIT_READ)),
                audit=Depends(get_audit_repository)) -> dict:
     return {"events": audit.recent(limit=limit, event_type=event_type)}
