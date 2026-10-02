@@ -186,6 +186,25 @@ class AccountDeletionService:
             self._delete_where(s, P.Opportunity, P.Opportunity.user_id == user_id,
                                summary, "opportunities")
 
+            # 4b) Support (W10.3): the user's tickets with their thread and internal notes are deleted with the
+            # account (explicit, children first: SQLite does not enforce FK cascades). Operator references
+            # (assignee, message/note author) are anonymized, never deleting another person's thread.
+            ticket_ids = [r[0] for r in s.execute(
+                select(P.SupportTicket.id).where(P.SupportTicket.owner_user_id == user_id)).all()]
+            if ticket_ids:
+                self._delete_where(s, P.SupportInternalNote, P.SupportInternalNote.ticket_id.in_(ticket_ids),
+                                   summary, "support_internal_notes")
+                self._delete_where(s, P.SupportMessage, P.SupportMessage.ticket_id.in_(ticket_ids),
+                                   summary, "support_messages")
+                self._delete_where(s, P.SupportTicket, P.SupportTicket.id.in_(ticket_ids),
+                                   summary, "support_tickets")
+            s.execute(update(P.SupportTicket).where(P.SupportTicket.assigned_user_id == user_id)
+                      .values(assigned_user_id=None))
+            s.execute(update(P.SupportMessage).where(P.SupportMessage.author_user_id == user_id)
+                      .values(author_user_id=None))
+            s.execute(update(P.SupportInternalNote).where(P.SupportInternalNote.author_user_id == user_id)
+                      .values(author_user_id=None))
+
             # 5) Memory + feedback.
             self._delete_where(s, P.PreparationMemory,
                                P.PreparationMemory.user_id == user_id, summary, "memories")

@@ -25,11 +25,19 @@ ADMIN_SESSIONS_REVOKED: Final = "admin.sessions_revoked"
 ADMIN_WORKSPACE_MEMBER_ADDED: Final = "admin.workspace_member_added"
 ADMIN_WORKSPACE_MEMBER_REMOVED: Final = "admin.workspace_member_removed"
 ADMIN_WORKSPACE_MEMBER_ROLE_CHANGED: Final = "admin.workspace_member_role_changed"
+# W10.3 (support). Payloads carry ids and enum before/after only, never message or note text.
+ADMIN_SUPPORT_TICKET_ASSIGNED: Final = "admin.support_ticket_assigned"
+ADMIN_SUPPORT_TICKET_STATUS_CHANGED: Final = "admin.support_ticket_status_changed"
+ADMIN_SUPPORT_TICKET_PRIORITY_CHANGED: Final = "admin.support_ticket_priority_changed"
+ADMIN_SUPPORT_REPLY_SENT: Final = "admin.support_reply_sent"
+ADMIN_SUPPORT_INTERNAL_NOTE_CREATED: Final = "admin.support_internal_note_created"
 
 ADMIN_EVENT_NAMES: Final[frozenset[str]] = frozenset({
     ADMIN_PLATFORM_ROLE_CHANGE, ADMIN_ENTITLEMENT_CHANGE, ADMIN_ACCOUNT_STATUS_CHANGE,
     PLATFORM_PAUSE_TOGGLED, ADMIN_ACCESS_DENIED, ADMIN_SESSIONS_REVOKED,
     ADMIN_WORKSPACE_MEMBER_ADDED, ADMIN_WORKSPACE_MEMBER_REMOVED, ADMIN_WORKSPACE_MEMBER_ROLE_CHANGED,
+    ADMIN_SUPPORT_TICKET_ASSIGNED, ADMIN_SUPPORT_TICKET_STATUS_CHANGED, ADMIN_SUPPORT_TICKET_PRIORITY_CHANGED,
+    ADMIN_SUPPORT_REPLY_SENT, ADMIN_SUPPORT_INTERNAL_NOTE_CREATED,
 })
 
 # Context keys that may never be written (defence in depth against a careless caller).

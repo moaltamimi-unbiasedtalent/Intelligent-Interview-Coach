@@ -42,6 +42,7 @@ __all__ = [
     "RedisRateLimiter",
     "AUTH_POLICIES",
     "COST_POLICIES",
+    "SUPPORT_POLICIES",
     "POLICIES",
     "build_rate_limiter",
     "shared_store_active",
@@ -97,7 +98,14 @@ COST_POLICIES: dict[str, RateLimitPolicy] = {
     "cost_global": RateLimitPolicy("cost_global", 5000, 3600, "global"),
 }
 
-POLICIES: dict[str, RateLimitPolicy] = {**AUTH_POLICIES, **COST_POLICIES}
+# --- Support policies (W10.3). Generous per-user ceilings that only stop automated flooding; per-process
+# (in-memory) unless a shared store is active, exactly like every other bucket here. ---
+SUPPORT_POLICIES: dict[str, RateLimitPolicy] = {
+    "support_create_user": RateLimitPolicy("support_create_user", 10, 3600, "user"),
+    "support_reply_user": RateLimitPolicy("support_reply_user", 60, 3600, "user"),
+}
+
+POLICIES: dict[str, RateLimitPolicy] = {**AUTH_POLICIES, **COST_POLICIES, **SUPPORT_POLICIES}
 
 
 class RateLimiter(Protocol):

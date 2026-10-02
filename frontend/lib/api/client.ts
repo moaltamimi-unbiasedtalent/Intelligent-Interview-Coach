@@ -5,7 +5,11 @@ import type {
   AdminAuditEvent,
   AdminCommandCenter,
   AdminPage,
+  AdminAssignee,
   AdminProviders,
+  AdminTicketDetail,
+  AdminTicketQuery,
+  AdminTicketSummary,
   AdminUserDetail,
   AdminUserQuery,
   AdminUserSummary,
@@ -14,6 +18,10 @@ import type {
 } from "../admin/types";
 import type {
   ActiveSessionsResponse,
+  SupportCreateRequest,
+  SupportTicketDetail,
+  SupportTicketList,
+  SupportTicketSummary,
   CapabilitiesResponse,
   CompanyIntelligenceRequest,
   CompanyIntelligenceReport,
@@ -462,6 +470,18 @@ export const api = {
       request<{ status: string }>("POST", "/voice/realtime/session/end", opts),
   },
 
+  // Customer support (P10B-W10.3): owner-scoped candidate endpoints.
+  support: {
+    create: (body: SupportCreateRequest, opts?: RequestOptions) =>
+      request<SupportTicketSummary>("POST", "/support/tickets", { body, ...opts }),
+    list: (page = 1, opts?: RequestOptions) =>
+      request<SupportTicketList>("GET", `/support/tickets?page=${page}&page_size=20`, opts),
+    get: (publicId: string, opts?: RequestOptions) =>
+      request<SupportTicketDetail>("GET", `/support/tickets/${encodeURIComponent(publicId)}`, opts),
+    reply: (publicId: string, message: string, opts?: RequestOptions) =>
+      request<SupportTicketDetail>("POST", `/support/tickets/${encodeURIComponent(publicId)}/messages`, { body: { message }, ...opts }),
+  },
+
   // Platform Admin operations (Capstone P6.5). PLATFORM_ADMIN only; metadata only.
   admin: {
     home: (opts?: RequestOptions) => request<AdminCommandCenter>("GET", "/admin/home", opts),
@@ -491,6 +511,22 @@ export const api = {
     feedback: (opts?: RequestOptions) => request<Record<string, unknown>>("GET", "/admin/feedback", opts),
     providers: (opts?: RequestOptions) => request<AdminProviders>("GET", "/admin/providers", opts),
     audit: (opts?: RequestOptions) => request<{ events: AdminAuditEvent[] }>("GET", "/admin/audit", opts),
+    // W10.3 support
+    supportTickets: (query: AdminTicketQuery = {}, opts?: RequestOptions) =>
+      request<AdminPage<AdminTicketSummary>>("GET", `/admin/support/tickets${qs(query as Record<string, unknown>)}`, opts),
+    supportTicket: (ref: string, opts?: RequestOptions) =>
+      request<AdminTicketDetail>("GET", `/admin/support/tickets/${encodeURIComponent(ref)}`, opts),
+    supportAssignees: (opts?: RequestOptions) => request<AdminAssignee[]>("GET", "/admin/support/assignees", opts),
+    supportAssign: (ref: string, assigneeUserId: number | null, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/support/tickets/${encodeURIComponent(ref)}/assign`, { body: { assignee_user_id: assigneeUserId }, ...opts }),
+    supportStatus: (ref: string, status: string, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/support/tickets/${encodeURIComponent(ref)}/status`, { body: { status }, ...opts }),
+    supportPriority: (ref: string, priority: string, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/support/tickets/${encodeURIComponent(ref)}/priority`, { body: { priority }, ...opts }),
+    supportReply: (ref: string, body: string, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/support/tickets/${encodeURIComponent(ref)}/reply`, { body: { body }, ...opts }),
+    supportNote: (ref: string, body: string, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/support/tickets/${encodeURIComponent(ref)}/notes`, { body: { body }, ...opts }),
   },
 };
 

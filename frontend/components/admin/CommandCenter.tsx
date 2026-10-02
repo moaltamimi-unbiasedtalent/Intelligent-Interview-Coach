@@ -79,6 +79,18 @@ function Overview({ home }: { home: Awaited<ReturnType<typeof api.admin.home>> }
         <Stat label="Workspaces" value={home.workspaces.workspaces_total} />
       </div>
 
+      {home.support ? (
+        <Panel title="Support">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Stat label="Open tickets" value={home.support.open} />
+            <Stat label="Unassigned" value={home.support.unassigned} />
+            <Stat label="Waiting for customer" value={home.support.waiting_for_customer} />
+            <Stat label="High or urgent" value={home.support.high_or_urgent} />
+          </div>
+          <p className="text-xs text-muted">Counts only. No response-time target or breach figure exists.</p>
+        </Panel>
+      ) : null}
+
       <Panel title="Privacy requests">
         <p className="text-sm text-muted">
           {pr.status === "not_operational" ? "Not available yet. " : ""}{pr.note}

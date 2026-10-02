@@ -25,6 +25,7 @@ INCLUDED = (
     "account", "preferences", "opportunities", "documents (metadata, extracted claims; not the files)",
     "stories", "memories", "interviews (questions, your answers, evaluations, reports)",
     "feedback you submitted", "workspace memberships", "items you share",
+    "support tickets you opened and the messages in them that you can see",
 )
 NOT_INCLUDED = (
     "the original uploaded files (download them from Documents)",
@@ -32,6 +33,7 @@ NOT_INCLUDED = (
     "legal-acceptance history (Ask4Mo does not record it yet)",
     "other people's data, including content shared with you",
     "internal prompts, model reasoning and provider secrets",
+    "internal notes written by support staff (they are operational records, not part of your visible conversation)",
 )
 
 # Columns that must never leave the server even though they sit on a user-owned row.
@@ -90,6 +92,10 @@ def build_candidate_export(*, user_id: int, session_factory, repo, account: Any)
             ],
             "shares": [_row(g, ("owner_user_id",)) for g in shares],
         }
+    # W10.3: the candidate-visible support conversation. Admin-only internal notes are NEVER exported here.
+    from src.support_repository import SupportRepository
+
+    data["support_tickets"] = SupportRepository(session_factory).export_for_owner(user_id)
     history = repo.export_user_data(user_id)
     return {
         "format": EXPORT_FORMAT,

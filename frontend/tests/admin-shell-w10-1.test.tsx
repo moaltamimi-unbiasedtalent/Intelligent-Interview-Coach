@@ -81,6 +81,17 @@ describe("A1-A3 capability-aware navigation", () => {
     }
   });
 
+  it("W10.3: Support appears only with platform.support.read", () => {
+    render(<AdminShell><p>body</p></AdminShell>);
+    expect(navLinks().join("|")).not.toContain("Support");
+  });
+
+  it("W10.3: a support operator sees Support", () => {
+    mockAccount = { platform_role: "support_operator", admin_permissions: ["platform.overview.read", "platform.support.read"] };
+    render(<AdminShell><p>body</p></AdminShell>);
+    expect(navLinks().join("|")).toContain("Support");
+  });
+
   it("A3 a candidate (no permissions) gets access denied and no admin navigation or body", () => {
     mockAccount = { platform_role: "user", admin_permissions: [] };
     render(<AdminShell><p>secret-body</p></AdminShell>);

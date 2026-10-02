@@ -188,3 +188,68 @@ class AdminWorkspaceDetail(_Strict):
     active_share_count: int
     active_owner_count: int
     workspace_roles: list[str]
+
+
+# --- W10.3: support (Admin side). Metadata plus content the candidate deliberately submitted to Support.
+class AdminTicketSummary(_Strict):
+    id: int
+    public_id: str
+    owner_user_id: int
+    owner_email: str | None
+    category: str
+    priority: str
+    status: str
+    subject: str
+    assigned_user_id: int | None
+    assignee_email: str | None
+    message_count: int
+    created_at: str | None
+    updated_at: str | None
+
+
+class AdminTicketPage(_Strict):
+    items: list[AdminTicketSummary]
+    total: int
+    page: int
+    page_size: int
+
+
+class AdminTicketCore(AdminTicketSummary):
+    initial_request_id: str | None
+    source_route: str | None
+    source_environment: str | None
+    resolved_at: str | None
+    closed_at: str | None
+    allowed_statuses: list[str]
+
+
+class AdminTicketMessage(_Strict):
+    id: int
+    author_kind: str
+    author_user_id: int | None
+    body: str
+    request_id: str | None
+    created_at: str | None
+
+
+class AdminInternalNote(_Strict):
+    id: int
+    author_user_id: int | None
+    body: str
+    request_id: str | None
+    created_at: str | None
+
+
+class AdminTicketDetail(_Strict):
+    ticket: AdminTicketCore
+    messages: list[AdminTicketMessage]
+    internal_notes: list[AdminInternalNote]
+    account: AdminUserSummary | None
+    priorities: list[str]
+    statuses: list[str]
+
+
+class AdminAssignee(_Strict):
+    user_id: int
+    email: str | None
+    platform_role: str

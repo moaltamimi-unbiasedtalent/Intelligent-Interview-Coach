@@ -21,6 +21,7 @@ export interface AdminCommandCenter {
   privacy_requests: { status: string; note: string };
   accounts: Record<string, number>;
   workspaces: Record<string, number>;
+  support?: { open: number; unassigned: number; waiting_for_customer: number; high_or_urgent: number; total: number };
   diagnostics_links: { label: string; path: string }[];
   boundary: string;
 }
@@ -117,6 +118,52 @@ export interface AdminUserQuery {
   tier?: string;
   onboarding?: string;
   email_verified?: string;
+  page?: number;
+  page_size?: number;
+}
+
+// --- W10.3 support (Admin side) ---
+export interface AdminTicketSummary {
+  id: number;
+  public_id: string;
+  owner_user_id: number;
+  owner_email: string | null;
+  category: string;
+  priority: string;
+  status: string;
+  subject: string;
+  assigned_user_id: number | null;
+  assignee_email: string | null;
+  message_count: number;
+  created_at: string | null;
+  updated_at: string | null;
+}
+export interface AdminTicketDetail {
+  ticket: AdminTicketSummary & {
+    initial_request_id: string | null;
+    source_route: string | null;
+    source_environment: string | null;
+    resolved_at: string | null;
+    closed_at: string | null;
+    allowed_statuses: string[];
+  };
+  messages: { id: number; author_kind: string; author_user_id: number | null; body: string; request_id: string | null; created_at: string | null }[];
+  internal_notes: { id: number; author_user_id: number | null; body: string; request_id: string | null; created_at: string | null }[];
+  account: AdminUserSummary | null;
+  priorities: string[];
+  statuses: string[];
+}
+export interface AdminAssignee {
+  user_id: number;
+  email: string | null;
+  platform_role: string;
+}
+export interface AdminTicketQuery {
+  q?: string;
+  status?: string;
+  category?: string;
+  priority?: string;
+  assignee?: string;
   page?: number;
   page_size?: number;
 }

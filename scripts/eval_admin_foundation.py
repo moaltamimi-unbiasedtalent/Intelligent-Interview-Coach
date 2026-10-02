@@ -103,12 +103,12 @@ def run() -> dict[str, tuple[bool, str]]:
     hits = sorted(f for f in CONTENT_FRAGMENTS if f in ui.lower())
     check("admin_ui_has_no_candidate_content_fields", not hits, ", ".join(hits) or "none")
     nav = caps[caps.find("ADMIN_DESTINATIONS"):]
-    future = [w for w in ("Support", "Billing", "Subscriptions", "Jobs", "Knowledge administration", "Privacy requests", "Incidents", "Feature Flags") if f'label: "{w}' in nav]
-    check("only_operational_destinations_listed", not future and len(re.findall(r'\bid: "', nav)) == 6, "six destinations, none planned")
+    future = [w for w in ("Billing", "Subscriptions", "Jobs", "Knowledge administration", "Privacy requests", "Incidents", "Feature Flags") if f'label: "{w}' in nav]
+    check("only_operational_destinations_listed", not future and len(re.findall(r'\bid: "', nav)) == 7, "seven operational destinations (Support added in W10.3), none planned")
 
     # --- scope guards ------------------------------------------------------------------------------
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_migration_added", mig[-1].startswith("0014_"), mig[-1])
+    check("no_migration_added", mig[-1].startswith(("0014_", "0015_")), mig[-1])
     pyproject = read("pyproject.toml").lower()
     check("no_new_infrastructure_dependency", not any(d in pyproject for d in ("redis", "celery", "stripe", "sentry", "prometheus", "hvac")), "none of redis/celery/stripe/sentry/prometheus/hvac")
     return out

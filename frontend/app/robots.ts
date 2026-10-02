@@ -19,6 +19,7 @@ export default function robots(): MetadataRoute.Robots {
           "/progress",
           "/history",
           "/documents",
+          "/support",
           "/workspaces",
           "/sources",
           "/settings",

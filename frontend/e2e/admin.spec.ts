@@ -14,6 +14,7 @@ const CAPS = {
 const ADMIN_PERMS = [
   "platform.overview.read", "platform.users.read", "platform.users.manage", "platform.users.role.assign",
   "platform.users.sessions.revoke", "platform.workspaces.read", "platform.workspaces.manage", "platform.audit.read",
+  "platform.support.read", "platform.support.reply", "platform.support.manage", "platform.support.note",
   "platform.integrations.read", "platform.ai.read", "platform.knowledge.read",
 ];
 
@@ -49,6 +50,14 @@ const USER_DETAIL = {
   workspaces: [{ workspace_id: 3, name: "Team Alpha", workspace_status: "active", role: "workspace_member", membership_status: "active", joined_at: null }],
   audit: [],
 };
+const TICKET_ROW = { id: 5, public_id: "d".repeat(32), owner_user_id: 2, owner_email: "jane@example.com", category: "billing", priority: "normal",
+  status: "new", subject: "Charged twice", assigned_user_id: null, assignee_email: null, message_count: 1, created_at: null, updated_at: null };
+const TICKET_DETAIL = {
+  ticket: { ...TICKET_ROW, initial_request_id: "req-1", source_route: "/pricing", source_environment: "test", resolved_at: null, closed_at: null, allowed_statuses: ["triaged", "in_progress", "closed"] },
+  messages: [{ id: 1, author_kind: "candidate", author_user_id: 2, body: "I was charged twice.", request_id: "req-1", created_at: null }],
+  internal_notes: [{ id: 2, author_user_id: 3, body: "Check the billing log", request_id: null, created_at: null }],
+  account: USER_ROW, priorities: ["low", "normal", "high", "urgent"], statuses: [],
+};
 const WS_ROW = { id: 3, name: "Team Alpha", status: "active", owner_user_id: 1, owner_email: "owner@example.com", member_count: 2, created_at: null };
 const WS_DETAIL = {
   workspace: WS_ROW,
@@ -70,6 +79,14 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
     }
     if (path.endsWith("/admin/home")) return json(HOME);
     const method = route.request().method();
+    if (/\/admin\/support\/tickets\/[^/]+\/(assign|status|priority|reply|notes)$/.test(path) && method === "POST") return json({ ok: true });
+    if (path.endsWith("/admin/support/assignees")) return json([{ user_id: 3, email: "op@example.com", platform_role: "support_operator" }]);
+    if (/\/admin\/support\/tickets\/[^/]+$/.test(path)) return json(TICKET_DETAIL);
+    if (path.endsWith("/admin/support/tickets")) {
+      const q = new URL(route.request().url()).searchParams;
+      const items = [TICKET_ROW].filter((t) => !q.get("status") || t.status === q.get("status"));
+      return json({ items, total: items.length, page: 1, page_size: 25 });
+    }
     if (/\/admin\/users\/\d+\/status$/.test(path) && method === "POST") return json({ user_id: 2, status: "deactivated", changed: true, sessions_revoked: 1 });
     if (/\/admin\/users\/\d+\/sessions\/revoke$/.test(path) && method === "POST") return json({ user_id: 2, sessions_revoked: 1 });
     if (/\/admin\/users\/\d+$/.test(path)) return json(USER_DETAIL);
@@ -108,7 +125,7 @@ test("platform admin journey: Command Center, build metadata, audit, provider st
   for (const label of ["Overview", "Users", "Workspaces", "Review / Diagnostics", "Audit", "Provider status"]) {
     await expect(nav.getByRole("link", { name: new RegExp(label) })).toBeVisible();
   }
-  for (const future of ["Billing", "Support", "Subscriptions", "Jobs", "Incidents", "Feature Flags"]) {
+  for (const future of ["Billing", "Subscriptions", "Jobs", "Incidents", "Feature Flags"]) {
     await expect(nav.getByRole("link", { name: new RegExp(future) })).toHaveCount(0);
   }
   await expect(page.getByRole("link", { name: "Knowledge readiness" })).toHaveAttribute("href", "/review/rag");
@@ -152,6 +169,36 @@ test("W10.2: users search, safe detail, governed action with confirmation, works
   await page.getByRole("alertdialog").getByRole("button", { name: "Cancel" }).click();
 });
 
+test("W10.3: support queue, filter, ticket detail, assign, status, reply and internal note", async ({ page }) => {
+  await mockAdmin(page, "support_operator", ["platform.overview.read", "platform.support.read", "platform.support.reply", "platform.support.manage", "platform.support.note"]);
+  await page.goto("/admin");
+  const nav = page.getByRole("navigation", { name: "Admin" });
+  await nav.getByRole("link", { name: /Support/ }).click();
+  await expect(page.getByRole("heading", { name: "Support", exact: true })).toBeVisible();
+  await page.getByLabel("Status").selectOption("new");
+  await page.getByRole("button", { name: "Apply" }).click();
+  await page.getByRole("link", { name: /Charged twice/ }).click();
+  await expect(page.getByRole("heading", { name: "Ticket", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Messages (visible to the candidate)" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Internal notes (never visible to the candidate)" })).toBeVisible();
+  await expect(page.getByText("Check the billing log")).toBeVisible();
+
+  await page.getByLabel("Assignee").focus();
+  await page.getByLabel("Assignee").selectOption("3");
+  await page.getByRole("alertdialog").getByRole("button", { name: "Confirm" }).click();
+  await expect(page.getByText("Ticket assigned.")).toBeVisible();
+  await page.getByLabel("Move to").selectOption("triaged");
+  await expect(page.getByRole("alertdialog").getByRole("button", { name: "Cancel" })).toBeFocused();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Change status" }).click();
+  await expect(page.getByText("Status changed to triaged.")).toBeVisible();
+  await page.getByLabel(/Reply \(the candidate/).fill("We are on it.");
+  await page.getByRole("button", { name: "Send reply to candidate" }).click();
+  await expect(page.getByText(/candidate sees it/)).toBeVisible();
+  await page.getByLabel("Internal note (staff only)").fill("Escalated to billing");
+  await page.getByRole("button", { name: "Save internal note" }).click();
+  await expect(page.getByText(/never shown to the candidate/).first()).toBeVisible();
+});
+
 test("a limited admin role sees only the destinations the server granted", async ({ page }) => {
   await mockAdmin(page, "support_operator", ["platform.overview.read", "platform.users.read"]);
   await page.goto("/admin");
@@ -159,6 +206,7 @@ test("a limited admin role sees only the destinations the server granted", async
   await expect(nav.getByRole("link", { name: /Users/ })).toBeVisible();
   await expect(nav.getByRole("link", { name: /Audit/ })).toHaveCount(0);
   await expect(nav.getByRole("link", { name: /Provider status/ })).toHaveCount(0);
+  await expect(nav.getByRole("link", { name: /Support/ })).toHaveCount(0);   // no support.read: no Support entry
 });
 
 test("candidate is denied the admin area", async ({ page }) => {

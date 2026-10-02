@@ -168,7 +168,7 @@ Support operates from metadata, request ids, structured diagnostics and **user-p
 named operator, requested scope, time-boxed grant (auto-expiry), second approver, candidate notification (consent where the use case allows), read-only, audited, no impersonation,
 prohibited for export or bulk access. W10 must NOT create any break-glass permission, private-content admin browser, impersonation flow, private-message search, CV/content browsing, memory browsing or interview-answer browsing; the concept above is documentation only and would need a separately approved future phase.
 
-## 9. Support domain (W10.3)
+## 9. Support domain (W10.3: implemented on `feat/p10b-w10-3-support-ticketing`; complete when merged; see `W10_3_CUSTOMER_SUPPORT_TICKETING.md`)
 Candidate entry: "Contact support / Report a problem" (localized x8). Entities: ticket (id, user, category, priority, status, assignee, subject, body, request id, route, app version,
 created/updated, SLA fields, related incident), message (customer-visible reply), internal note, attachment (safe-upload pipeline, owner = ticket). Status flow New, Triaged, In Progress,
 Waiting for Customer, Resolved, Closed (reopen allowed). Categories: account/login, Opportunity, Prepare, Practice/interview, documents, AI response, billing, privacy, accessibility,

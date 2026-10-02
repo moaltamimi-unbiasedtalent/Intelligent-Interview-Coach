@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 from fastapi import Request
 
 from src.admin_repository import AdminNotFound
+from src.support_repository import SupportRepository
 from src.api.dependencies import (
     get_account_repository,
     get_admin_user_repository,
@@ -91,6 +92,7 @@ def home(request: Request, principal=Depends(require_permission(perm.OVERVIEW_RE
         version=request.app.state.settings.version, session_factory=accounts.session_factory,
         accounts=accounts, workspaces=workspaces,
         allowed=perm.permissions_for_role(principal.platform_role),
+        support=SupportRepository(accounts.session_factory),
     )
 
 

@@ -270,6 +270,12 @@ def get_admin_user_repository(repo=Depends(get_repository)):
     return AdminUserRepository(repo.session_factory)
 
 
+def get_support_repository(repo=Depends(get_repository)):
+    from src.support_repository import SupportRepository
+
+    return SupportRepository(repo.session_factory)
+
+
 def get_audit_repository(repo=Depends(get_repository)):
     from src.auth_repository import AuditRepository
 

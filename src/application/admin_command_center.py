@@ -113,7 +113,8 @@ def pause_state() -> dict[str, Any]:
             "note": "Process-local and non-durable: resets on restart and is not shared across replicas."}
 
 
-def command_center(*, version: str, session_factory, accounts, workspaces, allowed: frozenset[str]) -> dict[str, Any]:
+def command_center(*, version: str, session_factory, accounts, workspaces, allowed: frozenset[str],
+                   support=None) -> dict[str, Any]:
     """Assemble the overview. Sections the caller lacks permission for are omitted, not blanked."""
     out: dict[str, Any] = {
         "build": build_info(version),
@@ -128,6 +129,9 @@ def command_center(*, version: str, session_factory, accounts, workspaces, allow
         "diagnostics_links": [],
         "boundary": "Operational metadata only. No candidate-private content is accessible here.",
     }
+    if support is not None and "platform.support.read" in allowed:
+        # Counts only; no message text, and no SLA/breach figures (no SLA policy exists).
+        out["support"] = {k: v for k, v in support.stats().items()}
     links = []
     if "platform.knowledge.read" in allowed:
         links.append({"label": "Knowledge readiness", "path": "/review/rag"})
