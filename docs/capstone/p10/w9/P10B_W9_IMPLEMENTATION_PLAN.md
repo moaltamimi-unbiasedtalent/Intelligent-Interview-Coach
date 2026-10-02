@@ -367,7 +367,7 @@ conversation/dictation/geography; do not change authority-level semantics; commi
 
 ## Recommended sequence (revised at main d6c3493)
 
-Completed: W9.1-W9.7B and W9.8-W9.12. Remaining: **W9.13**, then P10B-W10
+Completed: W9.1-W9.7B and W9.8-W9.13 (**P10B QUALIFIED**, engineering decision). Remaining before W10: none, then P10B-W10
 (Admin, W10.0-W10.14), P10B-W11 (integrated requalification), RC-P10-003, Pilot 2, P10C-P10F, P11. The canonical
 roadmap is `docs/capstone/capstone_phase_plan.md`. W9.9/W9.10 are off the critical path.
 
