@@ -1,6 +1,6 @@
 # P10B-W10.3 - Customer Support & Ticketing
 
-**Status:** implemented on branch `feat/p10b-w10-3-support-ticketing`; **complete when merged to `main`**. **W10.4 is NOT STARTED.**
+**Status:** **COMPLETE: merged to `main` in PR #114 (merge commit b80635d, qualified head 0d0071b; all required CI green). W10.4 is NOT STARTED.**
 One additive migration (`0015_support_ticketing`). No new dependency. 0 paid/live calls.
 
 ## 1. Starting point
