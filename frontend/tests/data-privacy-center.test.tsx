@@ -117,8 +117,8 @@ describe("Data & Privacy Center", () => {
     expect(docRemove).toHaveBeenCalledWith(10);
     expect(screen.getByTestId("dp-count-docs")).toHaveTextContent("0");
     // unrelated data remains
-    expect(screen.getByText("Clear storyteller")).toBeInTheDocument();
-    expect(screen.getByText("PM at Acme")).toBeInTheDocument();
+    expect(await screen.findByText("Clear storyteller")).toBeInTheDocument();
+    expect(await screen.findByText("PM at Acme")).toBeInTheDocument();
   });
 
   it("F5: memory delete works and leaves interviews alone", async () => {
@@ -129,17 +129,19 @@ describe("Data & Privacy Center", () => {
     await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: t("dataPrivacy.confirmDelete") }));
     await waitFor(() => expect(screen.queryByText("Clear storyteller")).not.toBeInTheDocument());
     expect(histRemove).not.toHaveBeenCalled();
-    expect(screen.getByTestId("dp-count-ints")).toHaveTextContent("1");
+    await waitFor(() => expect(screen.getByTestId("dp-count-ints")).toHaveTextContent("1"));
   });
 
   it("F6: Opportunity archive and delete are distinct, honestly labelled actions", async () => {
     const user = userEvent.setup();
     oppArchive.mockResolvedValue({ ...OPPS[0], status: "archived" });
     render(<DataPrivacyCenter />);
-    const box = within(await screen.findByTestId("dp-manage-opportunities"));
+    // The section container renders synchronously; its rows arrive with the async opportunities request.
+    // Wait for the loaded Archive action itself (not just the container) before asserting the full state.
+    const box = within(screen.getByTestId("dp-manage-opportunities"));
     expect(box.getByText(t("dataPrivacy.oppNote"))).toBeInTheDocument();
     // already archived item has no Archive action but does show an Archived badge
-    expect(box.getAllByRole("button", { name: new RegExp(`^${t("dataPrivacy.archiveAction")}:`) })).toHaveLength(1);
+    expect(await box.findAllByRole("button", { name: new RegExp(`^${t("dataPrivacy.archiveAction")}:`) })).toHaveLength(1);
     expect(box.getByText(t("dataPrivacy.archivedBadge"))).toBeInTheDocument();
     await user.click(box.getByRole("button", { name: `${t("dataPrivacy.archiveAction")}: PM at Acme` }));
     const dialog = screen.getByRole("alertdialog");
@@ -220,9 +222,9 @@ describe("Data & Privacy Center", () => {
     const box = within(await screen.findByTestId("dp-manage-documents"));
     expect(await box.findByRole("alert")).toBeInTheDocument();
     expect(box.getByRole("button", { name: t("states.retry") })).toBeInTheDocument();
-    // everything else still rendered
-    expect(screen.getByText("PM at Acme")).toBeInTheDocument();
-    expect(screen.getByText("Clear storyteller")).toBeInTheDocument();
+    // everything else still rendered (those sections load independently of the failed one)
+    expect(await screen.findByText("PM at Acme")).toBeInTheDocument();
+    expect(await screen.findByText("Clear storyteller")).toBeInTheDocument();
     expect(screen.getByTestId("dp-count-docs")).toHaveTextContent("-");
   });
 
