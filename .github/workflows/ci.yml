@@ -88,6 +88,8 @@ jobs:
         run: python scripts/eval_engineering_quality.py
       - name: Release acceptance matrix integrity (P10B-W9.13; offline; evidence exists, no blockers, accepted limitations present)
         run: python scripts/eval_release_matrix.py
+      - name: Admin design consistency (P10B-W10.0; offline; docs complete, current-vs-planned labels match code, nothing built early)
+        run: python scripts/eval_admin_design.py
       - name: Rate-limit evaluation (Capstone P8; offline; auth + cost buckets, window reset, anti-enumeration)
         run: python scripts/eval_rate_limits.py
       - name: Hosting-readiness evaluation (Capstone P8; offline; env/cookies/CORS/headers/pause/malware — does NOT certify EX-12)
