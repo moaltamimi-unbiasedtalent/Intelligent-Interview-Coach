@@ -12,7 +12,8 @@ const CAPS = {
 };
 
 const ADMIN_PERMS = [
-  "platform.overview.read", "platform.users.read", "platform.workspaces.read", "platform.audit.read",
+  "platform.overview.read", "platform.users.read", "platform.users.manage", "platform.users.role.assign",
+  "platform.users.sessions.revoke", "platform.workspaces.read", "platform.workspaces.manage", "platform.audit.read",
   "platform.integrations.read", "platform.ai.read", "platform.knowledge.read",
 ];
 
@@ -38,6 +39,24 @@ const HOME = {
   boundary: "Operational metadata only. No candidate-private content is accessible here.",
 };
 
+const USER_ROW = { user_id: 2, email: "jane@example.com", display_name: null, status: "active", platform_role: "user", tier: "basic",
+  onboarding_completed: true, interface_locale: "en", email_verified: false, created_at: null, updated_at: null,
+  workspace_count: 1, active_session_count: 1 };
+const USER_DETAIL = {
+  account: USER_ROW,
+  access: { platform_role: "user", capabilities: [], assignable_roles: ["user", "support_operator"], is_self: false },
+  sessions: { active_count: 1, recent: [{ created_at: "2026-10-01T10:00:00", last_used_at: null, expires_at: "2026-10-30T10:00:00" }] },
+  workspaces: [{ workspace_id: 3, name: "Team Alpha", workspace_status: "active", role: "workspace_member", membership_status: "active", joined_at: null }],
+  audit: [],
+};
+const WS_ROW = { id: 3, name: "Team Alpha", status: "active", owner_user_id: 1, owner_email: "owner@example.com", member_count: 2, created_at: null };
+const WS_DETAIL = {
+  workspace: WS_ROW,
+  members: [{ user_id: 1, email: "owner@example.com", account_status: "active", role: "workspace_owner", membership_status: "active", joined_at: null },
+            { user_id: 2, email: "jane@example.com", account_status: "active", role: "workspace_member", membership_status: "active", joined_at: null }],
+  active_share_count: 0, active_owner_count: 1, workspace_roles: ["workspace_owner", "workspace_member"],
+};
+
 async function mockAdmin(page: Page, role: string, perms: string[], authed = true) {
   await page.route("**/api/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -50,10 +69,18 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
       return json(account(role, perms));
     }
     if (path.endsWith("/admin/home")) return json(HOME);
-    if (path.endsWith("/admin/users"))
-      return json({ users: [{ user_id: 1, email: "u@example.com", platform_role: "user", tier: "basic", status: "active", email_verified: true }] });
+    const method = route.request().method();
+    if (/\/admin\/users\/\d+\/status$/.test(path) && method === "POST") return json({ user_id: 2, status: "deactivated", changed: true, sessions_revoked: 1 });
+    if (/\/admin\/users\/\d+\/sessions\/revoke$/.test(path) && method === "POST") return json({ user_id: 2, sessions_revoked: 1 });
+    if (/\/admin\/users\/\d+$/.test(path)) return json(USER_DETAIL);
+    if (path.endsWith("/admin/users")) {
+      const q = new URL(route.request().url()).searchParams.get("q") ?? "";
+      const items = [USER_ROW].filter((u) => !q || u.email.includes(q));
+      return json({ items, users: items, total: items.length, page: 1, page_size: 25 });
+    }
+    if (/\/admin\/workspaces\/\d+$/.test(path)) return json(WS_DETAIL);
     if (path.endsWith("/admin/workspaces"))
-      return json({ workspaces: [{ id: 1, name: "Team Alpha", status: "active", member_count: 2 }] });
+      return json({ items: [WS_ROW], workspaces: [WS_ROW], total: 1, page: 1, page_size: 25 });
     if (path.endsWith("/admin/providers"))
       return json({
         providers: [{ provider_id: "openrouter", label: "Language model provider (OpenRouter)", configured: true, enabled: true,
@@ -97,6 +124,32 @@ test("platform admin journey: Command Center, build metadata, audit, provider st
   await expect(page.getByText(/sk-[a-z0-9]/i)).toHaveCount(0);
   // No candidate-private content anywhere on the admin surface.
   await expect(page.getByText(/curriculum vitae|raw answer|memory summary|password_hash/i)).toHaveCount(0);
+});
+
+test("W10.2: users search, safe detail, governed action with confirmation, workspace membership", async ({ page }) => {
+  await mockAdmin(page, "platform_admin", ADMIN_PERMS);
+  await page.goto("/admin");
+  const nav = page.getByRole("navigation", { name: "Admin" });
+  await nav.getByRole("link", { name: /Users/ }).click();
+  await expect(page.getByRole("heading", { name: "Users", exact: true })).toBeVisible();
+  await page.getByLabel("Email or account id").fill("jane");
+  await page.getByRole("button", { name: "Search" }).click();
+  await page.getByRole("link", { name: "jane@example.com" }).click();
+  await expect(page.getByRole("heading", { name: "Sessions" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Access" })).toBeVisible();
+  // No candidate-private content on a user's admin page.
+  await expect(page.getByText(/curriculum vitae|interview answer|memory summary|conversation/i)).toHaveCount(0);
+  await page.getByRole("button", { name: "Deactivate account" }).click();
+  const dialog = page.getByRole("alertdialog");
+  await expect(dialog.getByRole("button", { name: "Cancel" })).toBeFocused();
+  await dialog.getByRole("button", { name: "Deactivate" }).click();
+  await expect(page.getByText(/Account deactivated/)).toBeVisible();
+  await page.getByRole("link", { name: "Team Alpha" }).click();
+  await expect(page.getByRole("heading", { name: "Members" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Remove: jane@example.com" })).toBeVisible();
+  await page.getByRole("button", { name: "Remove: jane@example.com" }).click();
+  await expect(page.getByRole("alertdialog").getByRole("button", { name: "Cancel" })).toBeFocused();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Cancel" }).click();
 });
 
 test("a limited admin role sees only the destinations the server granted", async ({ page }) => {

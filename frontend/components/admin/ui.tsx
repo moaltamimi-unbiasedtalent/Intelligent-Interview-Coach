@@ -29,9 +29,10 @@ export type Loaded<T> =
   | { state: "error" }
   | { state: "ready"; data: T };
 
-/** One bounded fetch on mount. A failure shows a safe message; nothing is retried automatically. */
-export function useAdminResource<T>(load: () => Promise<T>): Loaded<T> {
+/** One bounded fetch on mount and whenever `deps` change; `reload()` refetches after a write. Nothing is retried automatically. */
+export function useAdminResource<T>(load: () => Promise<T>, deps: readonly unknown[] = []): Loaded<T> & { reload: () => void } {
   const [value, setValue] = useState<Loaded<T>>({ state: "loading" });
+  const [tick, setTick] = useState(0);
   useEffect(() => {
     let live = true;
     load()
@@ -41,8 +42,8 @@ export function useAdminResource<T>(load: () => Promise<T>): Loaded<T> {
       live = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  return value;
+  }, [...deps, tick]);
+  return { ...value, reload: () => setTick((n) => n + 1) };
 }
 
 export function ResourceState({ loaded, children }: { loaded: Loaded<unknown>; children: ReactNode }) {
@@ -119,4 +120,28 @@ export function Table({ rows, cols, caption }: { rows: Row[]; cols: string[]; ca
       </table>
     </div>
   );
+}
+
+/** Pager for server-side pagination (page numbers are 1-based). */
+export function Pager({ page, pageSize, total, onPage }: { page: number; pageSize: number; total: number; onPage: (p: number) => void }) {
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+  return (
+    <nav aria-label="Pagination" className="flex items-center justify-between gap-3 text-sm">
+      <span role="status">{total === 0 ? "No results" : `Page ${page} of ${pages} (${total} total)`}</span>
+      <span className="flex gap-2">
+        <button type="button" disabled={page <= 1} onClick={() => onPage(page - 1)} className={btn}>Previous</button>
+        <button type="button" disabled={page >= pages} onClick={() => onPage(page + 1)} className={btn}>Next</button>
+      </span>
+    </nav>
+  );
+}
+
+export const btn =
+  "min-h-[40px] rounded border border-border px-3 text-sm font-medium text-foreground hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 disabled:opacity-50";
+export const field =
+  "min-h-[40px] rounded border border-border bg-surface px-2 text-sm text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
+
+export function apiMessage(err: unknown): string {
+  const m = err instanceof Error ? err.message : "";
+  return m && m.length < 200 ? m : "That request could not be processed.";
 }

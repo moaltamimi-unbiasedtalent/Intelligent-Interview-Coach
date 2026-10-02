@@ -81,7 +81,8 @@ def run() -> dict[str, tuple[bool, str]]:
           '"GET"' in idem and all(v not in idem for v in ("POST", "PATCH", "PUT", "DELETE")),
           "only GET/HEAD are retried")
 
-    dialog = _read("frontend/components/ui/ConfirmDialog.tsx")
+    # W10.2: the behaviour lives in ConfirmDialogBase (label-agnostic); ConfirmDialog adds localized labels.
+    dialog = _read("frontend/components/ui/ConfirmDialogBase.tsx") + _read("frontend/components/ui/ConfirmDialog.tsx")
     check("destructive_default_focus_is_cancel", "cancelRef.current?.focus()" in dialog and 'role="alertdialog"' in dialog,
           "initial focus on Cancel; alertdialog semantics")
 

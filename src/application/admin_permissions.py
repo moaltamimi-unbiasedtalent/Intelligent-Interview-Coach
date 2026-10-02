@@ -68,6 +68,8 @@ USERS_READ = "platform.users.read"
 USERS_MANAGE = "platform.users.manage"
 USERS_ROLE_ASSIGN = "platform.users.role.assign"
 WORKSPACES_READ = "platform.workspaces.read"
+WORKSPACES_MANAGE = "platform.workspaces.manage"
+USERS_SESSIONS_REVOKE = "platform.users.sessions.revoke"
 SUBSCRIPTIONS_MANAGE = "platform.subscriptions.manage"
 PRIVACY_READ = "platform.privacy.read"
 REPORTS_READ = "platform.reports.read"
@@ -102,7 +104,8 @@ ROLE_PRESETS: Final[dict[str, frozenset[str]]] = {
     # Everything the pre-W10 platform_admin could legitimately do, mapped to explicit permissions.
     ROLE_PLATFORM_ADMIN: frozenset({
         OVERVIEW_READ, USERS_READ, USERS_MANAGE, USERS_ROLE_ASSIGN,
-        WORKSPACES_READ, SUBSCRIPTIONS_MANAGE, "platform.subscriptions.read",
+        WORKSPACES_READ, "platform.workspaces.manage", "platform.users.sessions.revoke",
+        SUBSCRIPTIONS_MANAGE, "platform.subscriptions.read",
         PRIVACY_READ, REPORTS_READ, FLAGS_READ, FLAGS_MANAGE, INTEGRATIONS_READ,
         AUDIT_READ, AI_READ, KNOWLEDGE_READ, RELEASES_READ, SECURITY_READ,
     }),

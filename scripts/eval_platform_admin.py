@@ -52,8 +52,7 @@ def evaluate() -> dict:
 
         # metadata_only_user_view — user list carries only safe metadata keys.
         users = c.get("/api/v1/admin/users", cookies=cookies_for(admin)).json()["users"]
-        allowed = {"user_id", "email", "display_name", "platform_role", "status",
-                   "email_verified", "tier", "created_at"}
+        allowed = {"user_id", "email", "display_name", "platform_role", "status", "email_verified", "tier", "created_at", "updated_at", "onboarding_completed", "interface_locale", "workspace_count", "active_session_count"}
         m["metadata_only_user_view"] = 1 if users and all(set(u) <= allowed for u in users) else 0
 
         # entitlement_change_audited — set tier, then find the audit event.
@@ -73,7 +72,7 @@ def evaluate() -> dict:
         # workspace_metadata_boundary — create a workspace as the user, admin sees metadata only.
         c.post("/api/v1/workspaces", json={"name": "T"}, cookies=cookies_for(user))
         ws = c.get("/api/v1/admin/workspaces", cookies=cookies_for(admin)).json()["workspaces"]
-        ws_allowed = {"id", "name", "status", "owner_user_id", "member_count", "created_at"}
+        ws_allowed = {"id", "name", "status", "owner_user_id", "owner_email", "member_count", "created_at"}
         m["workspace_metadata_boundary"] = 1 if ws and all(set(w) <= ws_allowed for w in ws) else 0
 
         # knowledge_diagnostics_access — reuse of the P6 reviewer surface.
