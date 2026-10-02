@@ -1,6 +1,7 @@
 import { config } from "../config";
 import { ApiError, apiErrorFromBody, parseRetryAfter, unreachableError } from "./errors";
 import { runWithRetry } from "./retry";
+import type { AdminAuditEvent, AdminCommandCenter, AdminProviders } from "../admin/types";
 import type {
   ActiveSessionsResponse,
   CapabilitiesResponse,
@@ -443,7 +444,7 @@ export const api = {
 
   // Platform Admin operations (Capstone P6.5). PLATFORM_ADMIN only; metadata only.
   admin: {
-    home: (opts?: RequestOptions) => request<Record<string, unknown>>("GET", "/admin/home", opts),
+    home: (opts?: RequestOptions) => request<AdminCommandCenter>("GET", "/admin/home", opts),
     users: (query?: string, opts?: RequestOptions) =>
       request<{ users: Record<string, unknown>[] }>("GET", `/admin/users${query ? `?query=${encodeURIComponent(query)}` : ""}`, opts),
     setRole: (userId: number, role: string, opts?: RequestOptions) =>
@@ -455,8 +456,8 @@ export const api = {
     workspaces: (opts?: RequestOptions) => request<{ workspaces: Record<string, unknown>[] }>("GET", "/admin/workspaces", opts),
     privacyRequests: (opts?: RequestOptions) => request<Record<string, unknown>>("GET", "/admin/privacy-requests", opts),
     feedback: (opts?: RequestOptions) => request<Record<string, unknown>>("GET", "/admin/feedback", opts),
-    providers: (opts?: RequestOptions) => request<Record<string, unknown>>("GET", "/admin/providers", opts),
-    audit: (opts?: RequestOptions) => request<{ events: Record<string, unknown>[] }>("GET", "/admin/audit", opts),
+    providers: (opts?: RequestOptions) => request<AdminProviders>("GET", "/admin/providers", opts),
+    audit: (opts?: RequestOptions) => request<{ events: AdminAuditEvent[] }>("GET", "/admin/audit", opts),
   },
 };
 

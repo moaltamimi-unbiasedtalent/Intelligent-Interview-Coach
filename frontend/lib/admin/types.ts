@@ -1,0 +1,58 @@
+/** Hand-written admin response contracts (W10.1). Mirrors the backend allowlist schemas. */
+export interface AdminBuildInfo {
+  version: string;
+  git_sha: string;
+  build_time: string;
+  environment: string;
+  source: string;
+}
+export interface AdminMigrationStatus {
+  repository_head: string | null;
+  database_revision: string | null;
+  state: "match" | "mismatch" | "unknown";
+  warning: string | null;
+}
+export interface AdminCommandCenter {
+  build: AdminBuildInfo;
+  migrations: AdminMigrationStatus;
+  health: { database: string; providers_probed: boolean; note: string };
+  rate_limit: { mode: string; distributed: boolean; shared_store_requested: boolean; note: string };
+  pause: { paused: Record<string, boolean>; durable: boolean; note: string };
+  privacy_requests: { status: string; note: string };
+  accounts: Record<string, number>;
+  workspaces: Record<string, number>;
+  diagnostics_links: { label: string; path: string }[];
+  boundary: string;
+}
+export interface AdminProviderRow {
+  provider_id: string;
+  label: string;
+  configured: boolean;
+  enabled: boolean;
+  externally_managed: boolean;
+  writable: boolean;
+  status: "not_configured" | "configured_health_not_tested" | "internal";
+  health: string;
+  live_validation: string;
+  mode: string | null;
+}
+export interface AdminProviders {
+  providers: AdminProviderRow[];
+  speech: Record<string, unknown>;
+  ocr: { engine: string; available: boolean; pdf_ocr_available: boolean; poppler_available: boolean; live_quality: string };
+  pause: Record<string, boolean>;
+  pause_durable: boolean;
+  rate_limit_mode: string;
+  rate_limit_distributed: boolean;
+  note: string;
+}
+export interface AdminAuditEvent {
+  event_type: string;
+  result: string;
+  actor_user_id: number | null;
+  target_type: string | null;
+  target_id: string | null;
+  request_id: string | null;
+  context: Record<string, unknown> | null;
+  created_at: string | null;
+}

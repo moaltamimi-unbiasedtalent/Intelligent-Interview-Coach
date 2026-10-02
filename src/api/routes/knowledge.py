@@ -9,7 +9,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 
-from src.api.dependencies import require_platform_admin
+from src.api.dependencies import require_permission
+from src.application import admin_permissions as perm
 from src.api.schemas.knowledge import (
     KnowledgeDiagnosticsResponse,
     KnowledgeSnapshotResponse,
@@ -55,11 +56,11 @@ def sources() -> KnowledgeSourcesResponse:
 
 
 # P10B-W9.3: INTERNAL engineering diagnostics (runtime counts + offline retrieval metrics), unlike
-# the candidate-facing /sources and /snapshot below. Gate at platform-admin level. The candidate
+# the candidate-facing /sources and /snapshot below. Gated by the explicit knowledge.read permission. The candidate
 # "Career evidence" (Sources) page uses /sources + /snapshot only and is deliberately unaffected.
 @router.get("/diagnostics", response_model=KnowledgeDiagnosticsResponse,
             summary="Knowledge runtime counts + offline retrieval evaluation",
-            dependencies=[Depends(require_platform_admin)])
+            dependencies=[Depends(require_permission(perm.KNOWLEDGE_READ))])
 def diagnostics() -> KnowledgeDiagnosticsResponse:
     return KnowledgeDiagnosticsResponse(**knowledge_service.get_knowledge_diagnostics())
 

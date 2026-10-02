@@ -62,7 +62,9 @@ def run() -> dict[str, tuple[bool, str]]:
     route = read("src/api/routes/voice.py", ROOT)
     schemas_voice = read("src/api/schemas/voice.py", ROOT)
     health = read("src/api/routes/health.py", ROOT)
-    admin = read("src/api/routes/admin.py", ROOT)
+    # W10.1: the provider status is built by the allowlist schema/builder, so scan the whole admin surface.
+    admin = (read("src/api/routes/admin.py", ROOT) + read("src/api/schemas/admin.py", ROOT)
+             + read("src/application/admin_providers.py", ROOT))
     policy = read("src/llm/policy.py", ROOT)
     persistence = read("src/persistence.py", ROOT)
 
@@ -241,8 +243,8 @@ def run() -> dict[str, tuple[bool, str]]:
 
     # 25) Admin / workspace privacy: admin sees booleans only (no audio/transcript); no
     #     audio/voice added to shareable workspace types.
-    admin_ok = ('"audio_visible_to_admin": False' in admin
-                and '"transcript_visible_to_admin": False' in admin
+    admin_ok = ("audio_visible_to_admin: bool = False" in admin
+                and "transcript_visible_to_admin: bool = False" in admin
                 and "_realtime_provider_status" in admin)
     types_match = re.search(r"SHAREABLE_RESOURCE_TYPES\s*=\s*\(([^)]*)\)", persistence)
     types_val = (types_match.group(1) if types_match else "x").lower()

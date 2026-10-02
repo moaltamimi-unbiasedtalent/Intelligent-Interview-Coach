@@ -26,7 +26,7 @@ from src.api.dependencies import (
     get_repository,
     get_request_id,
     require_capability,
-    require_platform_admin,
+    require_permission,
 )
 from src.api.schemas.auth import (
     AccountResponse,
@@ -41,6 +41,7 @@ from src.api.schemas.auth import (
     VerifyEmailRequest,
 )
 from src.api.rate_limit import client_ip, email_key, enforce, user_key
+from src.application.admin_permissions import sorted_permissions
 from src.application.authorization import Capability, capabilities_for
 from src.application.auth_service import InvalidCredentialsError
 
@@ -213,6 +214,8 @@ def _account_response(principal) -> AccountResponse:
         providers=[],
         auth_method=principal.auth_method,
         capabilities=sorted(capabilities_for(principal.tier)),
+        admin_permissions=(sorted_permissions(principal.platform_role)
+                           if principal.status == "active" else []),
         response_detail=principal.response_detail,
         interface_locale=principal.interface_locale,
         conversation_language=principal.conversation_language,
@@ -494,7 +497,7 @@ def delete_account(
 @router.get("/admin/audit",
             summary="Recent audit events (PLATFORM_ADMIN only) — role-enforcement demo")
 def admin_audit(
-    principal=Depends(require_platform_admin),
+    principal=Depends(require_permission("platform.audit.read")),
     audit=Depends(get_audit_repository),
 ) -> dict:
     # Reaching here proves the platform-admin role server-side. This is a bounded read

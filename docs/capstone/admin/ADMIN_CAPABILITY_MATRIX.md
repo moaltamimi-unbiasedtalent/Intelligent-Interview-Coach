@@ -1,17 +1,19 @@
 # Admin Capability Matrix (P10B-W10.0) - PLANNING, current vs planned labelled from code
 
+> **W10.1 update:** rows delivered by P10B-W10.1 (permission framework, shell, Command Center, release visibility, audit hardening) are relabelled CURRENT / IMPLEMENTED. W10.1 is complete when merged to `main`. All other rows are unchanged.
+
 Produced by W10.0 from the verified inventory in `ADMIN_PLATFORM_MASTER_PLAN.md` (section 2). **CURRENT** = exists in code at `main` f272f00 (often partial); **PLANNED** = not built. No role, permission, table, route or screen in this document is implemented by W10.0.
 Permissions are the target namespace of the master plan (section 5); deny by default. **Status:** FOUNDATION (current, adequate), PARTIAL (current, gaps listed), NOT STARTED, RESERVED, OUT OF SCOPE. **Mock acceptable** means a labelled mock/local adapter may stand in for a live integration for the Capstone; a mock is never presented as live.
 
 | Capability | Description | Current/Planned | Admin persona | Permission | Private-data sensitivity | Candidate dependency | Audit required | Migration required | External integration | Mock acceptable | Capstone priority | Target wave | Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Admin role check | `platform_admin` role gate on admin/reviewer routes | CURRENT | Platform Administrator | platform.overview.read | None | none | No | No | No | n/a | Critical | W10.1 | FOUNDATION |
-| Permission framework | Code-defined permissions + role presets; `require_permission` on every admin route; default deny | PLANNED | Platform Administrator | platform.users.role.assign | None | none | Yes | No | No | n/a | Critical | W10.1 | NOT STARTED |
-| Admin shell & navigation | Capability-gated `/admin` shell replacing the single page | PLANNED | All | platform.overview.read | None | none | No | No | No | n/a | Critical | W10.1 | NOT STARTED |
-| Command Center | Health, alerts, recent changes, release info, provider health | PLANNED | Operations Administrator | platform.overview.read | None | none | No | No | No | n/a | Critical | W10.1 | NOT STARTED |
-| Account counts / home stats | `GET /admin/home` totals | CURRENT | Platform Administrator | platform.overview.read | Low | none | No | No | No | n/a | Critical | W10.1 | FOUNDATION |
-| Release & environment visibility | Version, Git SHA, build time, Alembic head, model profile, knowledge snapshot | PLANNED | Operations Administrator | platform.releases.read | None | none | No | No | No | n/a | Critical | W10.1 | NOT STARTED |
-| Audit foundation hardening | request_id, reason, fail-closed writes, standard event names, failed-access events | PLANNED | Security / Privacy Administrator | platform.audit.read | None | none | Is the audit | MG-1 | No | n/a | Critical | W10.1 | NOT STARTED |
+| Admin role check | Role presets resolve to explicit permissions; every admin/reviewer/evaluation/diagnostic route declares `require_permission` (W10.1) | CURRENT | Platform Administrator | platform.overview.read | None | none | No | No | No | n/a | Critical | W10.1 | IMPLEMENTED (W10.1) |
+| Permission framework | Code-defined permissions + role presets; `require_permission` on every admin route; default deny | CURRENT | Platform Administrator | platform.users.role.assign | None | none | Yes | No | No | n/a | Critical | W10.1 | IMPLEMENTED (W10.1) |
+| Admin shell & navigation | Capability-gated `/admin` shell replacing the single page | CURRENT | All | platform.overview.read | None | none | No | No | No | n/a | Critical | W10.1 | IMPLEMENTED (W10.1) |
+| Command Center | Health, alerts, recent changes, release info, provider health | CURRENT | Operations Administrator | platform.overview.read | None | none | No | No | No | n/a | Critical | W10.1 | IMPLEMENTED (W10.1) |
+| Account counts / home stats | `GET /admin/home` totals | CURRENT | Platform Administrator | platform.overview.read | Low | none | No | No | No | n/a | Critical | W10.1 | IMPLEMENTED (W10.1) |
+| Release & environment visibility | Version, Git SHA, build time, Alembic head, model profile, knowledge snapshot | CURRENT | Operations Administrator | platform.releases.read | None | none | No | No | No | n/a | Critical | W10.1 | PARTIAL (W10.1: version, Git SHA, build time, environment, Alembic head vs DB; model profile and knowledge snapshot deferred) |
+| Audit foundation hardening | request_id, reason, fail-closed writes, standard event names, failed-access events | CURRENT | Security / Privacy Administrator | platform.audit.read | None | none | Is the audit | MG-1 | No | n/a | Critical | W10.1 | IMPLEMENTED (W10.1; no migration was needed, MG-1 was not required) |
 | Audit view | `GET /admin/audit` (type, result, actor id, target) | CURRENT | Security / Privacy Administrator | platform.audit.read | None | none | No | No | No | n/a | Critical | W10.1/W10.13 | FOUNDATION |
 | Audit export & DB protection | export, no UPDATE/DELETE path, trigger where supported | PLANNED | Security / Privacy Administrator | platform.audit.export | None | none | Yes | MG-1 | No | n/a | Critical | W10.13 | NOT STARTED |
 | User search & safe metadata | email LIKE today; add id, status, plan, onboarding, last activity | CURRENT | Support Operator | platform.users.read | Low (email) | none | Search logged | No | No | n/a | Critical | W10.2 | PARTIAL |

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 // P10B-W9.3 - internal Review/Diagnostics visibility + route guard.
 // A settable auth mock lets each test act as anonymous / BASIC candidate / platform admin.
 
-type Account = { platform_role: string } | null;
+type Account = { platform_role: string; admin_permissions?: string[] } | null;
 let mockAccount: Account = null;
 let mockStatus: "loading" | "authenticated" | "unauthenticated" | "unknown" = "authenticated";
 
@@ -40,7 +40,7 @@ it("BASIC candidate: More menu shows Sources but NOT Review & Diagnostics or Adm
 });
 
 it("platform admin: More menu shows Review & Diagnostics and Admin", async () => {
-  mockAccount = { platform_role: "platform_admin" };
+  mockAccount = { platform_role: "platform_admin", admin_permissions: ["platform.overview.read", "platform.ai.read", "platform.knowledge.read"] };
   const menu = await openMore();
   expect(within(menu).getByRole("menuitem", { name: /Review & Diagnostics/ })).toHaveAttribute("href", "/review");
   expect(within(menu).getByRole("menuitem", { name: /Admin/ })).toHaveAttribute("href", "/admin");
@@ -66,7 +66,7 @@ it("RequirePlatformAdmin blocks a BASIC candidate with an access-denied message 
 });
 
 it("RequirePlatformAdmin renders children for a platform admin", () => {
-  mockAccount = { platform_role: "platform_admin" };
+  mockAccount = { platform_role: "platform_admin", admin_permissions: ["platform.overview.read", "platform.ai.read", "platform.knowledge.read"] };
   render(
     <RequirePlatformAdmin>
       <div>ADMIN DIAGNOSTICS</div>

@@ -68,6 +68,9 @@ class AccountResponse(BaseModel):
     providers: list[str]
     auth_method: str
     capabilities: list[str]
+    # W10.1: admin permissions resolved SERVER-side from the persisted role (empty for candidates). The
+    # frontend uses this list for navigation only (UX); the backend re-checks every admin request.
+    admin_permissions: list[str] = []
     # Presentation depth preference (P2/E2) — brief/detailed. Low-sensitivity metadata.
     response_detail: str = "brief"
     # Internationalization (P3.5) — independent, bounded language preferences.

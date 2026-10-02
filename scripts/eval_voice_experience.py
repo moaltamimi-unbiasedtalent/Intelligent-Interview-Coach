@@ -43,7 +43,9 @@ def run() -> dict[str, tuple[bool, str]]:
     convo = read("components/agent/AgentConversation.tsx")
     practice = read("components/interview/PracticeClient.tsx")
     dictation_hook = read("lib/speech/useDictation.ts")
-    admin = read("src/api/routes/admin.py", ROOT)
+    # W10.1: the provider status is built by the allowlist schema/builder, so scan the whole admin surface.
+    admin = (read("src/api/routes/admin.py", ROOT) + read("src/api/schemas/admin.py", ROOT)
+             + read("src/application/admin_providers.py", ROOT))
     persistence = read("src/persistence.py", ROOT)
     help_center = read("components/help/HelpCenter.tsx")
 
@@ -145,9 +147,9 @@ def run() -> dict[str, tuple[bool, str]]:
           "on-screen sources unchanged; spoken text notes sources on screen")
 
     # 18) Admin exposes only speech ARCHITECTURE metadata (positive markers; no private data).
-    admin_ok = ('"output": "browser_speech_synthesis_tts"' in admin
-                and '"audio_persisted_by_ask4mo": False' in admin
-                and '"voice_trait_inference": "none"' in admin)
+    admin_ok = ('output="browser_speech_synthesis_tts"' in admin
+                and "audio_persisted_by_ask4mo=False" in admin
+                and 'voice_trait_inference="none"' in admin)
     check("admin_no_voice_private_data", admin_ok, "admin providers = architecture booleans only")
 
     # 19) Workspace sharing unchanged: the shareable-types VALUE has no audio/voice type.

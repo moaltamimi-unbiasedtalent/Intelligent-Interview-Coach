@@ -367,7 +367,7 @@ AD-01..AD-08 were approved by the owner and are recorded as FINAL in ADMIN_ARCHI
 AD-04 SecretStore with externally-managed env adapter; AD-05 DB-backed jobs with a separate worker; AD-06 `preparation_run` ownership index; AD-07 legal version/acceptance with counsel-dependent retention; AD-08 code-defined role presets).
 No open architecture decision blocks W10.1.
 
-## 33. W10.1 approved scope (not started)
+## 33. W10.1 approved scope (implemented on branch `feat/p10b-w10-1-admin-foundation`; complete when merged; see `W10_1_ADMIN_FOUNDATION_COMMAND_CENTER.md`)
 **W10.1 - Admin Shell, Permission & Audit Foundation, Command Center.** Expected implementation: (1) the canonical permission framework (43 permissions); (2) code-defined role presets; (3) `require_permission(...)`;
 (4) default-deny admin authorization; (5) a CI invariant that every Admin route declares a required permission; (6) capability-gated Admin navigation/shell; (7) a fail-closed privileged audit foundation (SEC-W10-02);
 (8) canonical admin audit event naming; (9) request/correlation id support; (10) failed privileged-access audit where appropriate (SEC-W10-03); (11) a safe `/admin/providers` response contract (SEC-W10-06);

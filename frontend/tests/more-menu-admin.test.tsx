@@ -28,6 +28,7 @@ const ACCOUNT = (role: string) => ({
   tier: "basic", status: "active", email_verified: true, providers: ["password"],
   auth_method: "session", capabilities: [], response_detail: "brief",
   interface_locale: "en", conversation_language: "en",
+  admin_permissions: role === "platform_admin" ? ["platform.overview.read", "platform.ai.read"] : [],
 });
 
 function renderMenu() {

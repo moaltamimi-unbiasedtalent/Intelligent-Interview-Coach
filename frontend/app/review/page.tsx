@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 import { RequirePlatformAdmin } from "@/components/auth/RequirePlatformAdmin";
+import { P } from "@/lib/admin/capabilities";
 
 export const metadata: Metadata = { title: "Review & Diagnostics", robots: { index: false, follow: false } };
 
@@ -17,7 +18,7 @@ const AREAS = [
 // directly from the Coach and is NOT gated here (owner-scoped).
 export default function ReviewPage() {
   return (
-    <RequirePlatformAdmin>
+    <RequirePlatformAdmin anyOf={[P.ai, P.knowledge]}>
     <section>
       <PageHeader
         eyebrow="For reviewers & developers"

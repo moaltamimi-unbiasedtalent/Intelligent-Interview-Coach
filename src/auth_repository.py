@@ -308,16 +308,33 @@ class AccountRepository:
             session.commit()
             return True
 
-    def set_platform_role(self, user_id: int, role: str) -> bool:
+    @staticmethod
+    def _stage_audit(session, audit: dict | None) -> None:
+        """Add a privileged-change audit row to the SAME session/transaction as the mutation (W10.1,
+        SEC-W10-02). If the insert or the commit fails, the state change rolls back with it."""
+        if audit:
+            session.add(AuditEvent(
+                actor_user_id=audit.get("actor_user_id"),
+                event_type=audit["event_type"],
+                target_type=audit.get("target_type"),
+                target_id=audit.get("target_id"),
+                result=audit.get("result", "success"),
+                request_id=audit.get("request_id"),
+                context=(audit.get("context") or None),
+            ))
+
+    def set_platform_role(self, user_id: int, role: str, *, audit: dict | None = None) -> bool:
         with self._session_factory() as session:
             user = session.get(User, user_id)
             if user is None:
                 return False
             user.platform_role = role
+            self._stage_audit(session, audit)
             session.commit()
             return True
 
-    def set_tier(self, user_id: int, tier: str, *, source: str | None = None) -> bool:
+    def set_tier(self, user_id: int, tier: str, *, source: str | None = None,
+                 audit: dict | None = None) -> bool:
         with self._session_factory() as session:
             ent = session.scalar(
                 select(ProductEntitlement).where(ProductEntitlement.user_id == user_id)
@@ -328,15 +345,17 @@ class AccountRepository:
                 ent.tier = tier
                 if source:
                     ent.source = source
+            self._stage_audit(session, audit)
             session.commit()
             return True
 
-    def set_status(self, user_id: int, status: str) -> bool:
+    def set_status(self, user_id: int, status: str, *, audit: dict | None = None) -> bool:
         with self._session_factory() as session:
             user = session.get(User, user_id)
             if user is None:
                 return False
             user.status = status
+            self._stage_audit(session, audit)
             session.commit()
             return True
 
@@ -685,11 +704,16 @@ class AuditRepository:
                 stmt = select(AuditEvent).where(AuditEvent.event_type == event_type).order_by(
                     AuditEvent.created_at.desc()).limit(max(1, min(int(limit), 500)))
             rows = session.scalars(stmt).all()
+            from src.application.admin_audit import ADMIN_EVENT_NAMES
+
             return [
                 {
                     "event_type": r.event_type, "result": r.result,
                     "actor_user_id": r.actor_user_id, "target_type": r.target_type,
-                    "target_id": r.target_id,
+                    "target_id": r.target_id, "request_id": r.request_id,
+                    # Context is exposed ONLY for admin events: those are built by build_audit, which
+                    # rejects secret/content keys. Other writers' context is never projected.
+                    "context": (r.context if r.event_type in ADMIN_EVENT_NAMES else None),
                     "created_at": r.created_at.isoformat() if r.created_at else None,
                 }
                 for r in rows

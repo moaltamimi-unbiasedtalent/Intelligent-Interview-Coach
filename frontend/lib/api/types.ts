@@ -950,6 +950,7 @@ export interface AccountResponse {
   providers: string[];
   auth_method: string;
   capabilities: string[];
+  admin_permissions?: string[];
   /** Presentation depth (P2/E2) — brief/detailed. Not a model profile. */
   response_detail: ResponseDetail;
   /** Interface UI language (P3.5). Independent of conversation/dictation language. */

@@ -30,9 +30,11 @@ export const SECONDARY_NAV = [
  * gated here.
  */
 export const INTERNAL_NAV = [
-  { href: "/review", label: "Review & Diagnostics", labelKey: "nav.review", description: "Technical inspection" },
+  // `anyOf`: visible when the server-resolved admin permissions include ANY of these (W10.1; UX only).
+  { href: "/review", label: "Review & Diagnostics", labelKey: "nav.review", description: "Technical inspection",
+    anyOf: ["platform.ai.read", "platform.knowledge.read"] },
   // Admin uses an English label by design (internal operations surface, §14) — no labelKey.
-  { href: "/admin", label: "Admin", description: "Platform operations" },
+  { href: "/admin", label: "Admin", description: "Platform operations", anyOf: ["platform.overview.read"] },
 ] as const;
 
 /** Account-related destination (reached via the avatar/account control, not "More"). */
