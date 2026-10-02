@@ -59,7 +59,7 @@ never-translated slogan. Local `main` == `origin/main`; GitHub integration is pa
 
 | Wave | Title | Cx | Priority |
 |---|---|---|---|
-| W10.0 | Admin architecture and control-plane design (design approval gate) | M | Capstone critical |
+| W10.0 | Admin architecture and control-plane design (**DELIVERED** as design only - `admin/ADMIN_PLATFORM_MASTER_PLAN.md`, `admin/ADMIN_CAPABILITY_MATRIX.md`, `admin/ADMIN_ARCHITECTURE_DECISIONS.md`) | M | Capstone critical |
 | W10.1 | Admin shell and Command Center (audit foundation) | L | Capstone critical |
 | W10.2 | Users, access and workspaces | L | Capstone critical |
 | W10.3 | Support and ticketing | XL | Capstone critical |
@@ -76,6 +76,8 @@ never-translated slogan. Local `main` == `origin/main`; GitHub integration is pa
 | W10.14 | Admin qualification | L | Capstone critical |
 
 Complexity is relative (S/M/L/XL); no hour estimates are asserted.
+
+**W10 execution order (refined in W10.0; numbering unchanged):** W10.1 (shell, permission framework, audit foundation, build metadata) -> W10.2 (users, sessions, SEC-W10-01) -> W10.3 (support) -> W10.4 (plans/entitlements) -> W10.6 (integrations + SecretStore) -> W10.9 (jobs) -> W10.8 (knowledge administration) -> W10.10 (privacy/legal incl. PRIV-W9-01/02) -> W10.5 (billing, mock) -> W10.7 (model administration) -> W10.11 (flags) -> W10.12 (reporting) -> W10.13 (security/incidents) -> W10.14 (qualification), then integrated candidate + admin requalification -> RC-P10-003.
 
 **Critical path:** W9.8 -> W9.11 / W9.12 -> W9.13 -> W10.0 -> W10.1 -> W10.2 / W10.13 -> W10.4 -> {W10.3, W10.6 -> W10.8,
 W10.10, W10.12} -> W10.14 -> W11 -> RC-P10-003 -> Pilot 2 -> P10C -> P10D -> P10E -> P10F -> P11. W9.9 and W9.10 are off
