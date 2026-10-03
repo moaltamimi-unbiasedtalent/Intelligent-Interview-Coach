@@ -488,6 +488,15 @@ def test_migration_backfill_constraints_and_round_trip(tmp_path, monkeypatch):
         assert c.execute(text("SELECT tier FROM product_entitlements WHERE user_id=1")).scalar() == "premium"      # legacy column untouched
         pv = c.execute(text("SELECT id FROM plan_versions WHERE plan_code='basic'")).scalar()
 
+    # NO ACCESS REGRESSION: every migrated user resolves to exactly what the pre-W10.4 tier map granted.
+    from sqlalchemy.orm import sessionmaker
+
+    from src.application.authorization import capabilities_for
+    svc_after = E.EntitlementService(sessionmaker(bind=eng, future=True))
+    legacy_tier = {1: "premium", 2: "basic", 3: "basic"}          # user 3 had no tier row: treated as basic
+    for uid, tier in legacy_tier.items():
+        assert set(svc_after.enabled_keys(uid)) == set(capabilities_for(tier)), (uid, tier)
+
     def bad(sql, params=None):
         with pytest.raises(IntegrityError):
             with eng.begin() as c:
