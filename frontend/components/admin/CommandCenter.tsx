@@ -79,6 +79,18 @@ function Overview({ home }: { home: Awaited<ReturnType<typeof api.admin.home>> }
         <Stat label="Workspaces" value={home.workspaces.workspaces_total} />
       </div>
 
+      {home.integrations ? (
+        <Panel title="Integrations">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Stat label="Supported integrations" value={home.integrations.total} />
+            <Stat label="Configured" value={home.integrations.configured} />
+            <Stat label="Not yet tested" value={home.integrations.not_tested} />
+            <Stat label="Last test failed" value={home.integrations.unhealthy} />
+          </div>
+          <p className="text-xs text-muted">Health is shown only after a manual test; nothing is assumed healthy.</p>
+        </Panel>
+      ) : null}
+
       {home.plans ? (
         <Panel title="Plans">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

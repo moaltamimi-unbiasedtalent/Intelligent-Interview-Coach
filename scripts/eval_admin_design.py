@@ -47,7 +47,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("current_admin_routes_exist", not missing, ", ".join(missing) or f"{len(current_routes)} documented routes exist")
 
     routes_dir = ROOT / "src/api/routes"
-    forbidden_files = [f for f in routes_dir.glob("*.py") if re.search(r"billing|subscription|integration|incident|legal", f.name)]  # support (W10.3) and plans (W10.4) shipped
+    forbidden_files = [f for f in routes_dir.glob("*.py") if re.search(r"billing|subscription|incident|legal", f.name)]  # support (W10.3), plans (W10.4) and integrations (W10.6) shipped
     check("planned_domains_not_built_routes", not forbidden_files, ", ".join(f.name for f in forbidden_files) or "no billing/plans/integrations/incident/legal routes yet (support shipped in W10.3)")
 
     persistence = read(ROOT / "src/persistence.py").lower()
@@ -73,7 +73,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("preset_names_final", all(n in plan for n in ("platform_admin", "support_operator", "billing_admin", "knowledge_admin", "security_privacy_admin", "operations_admin")),
           "six role presets named")
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_")), mig[-1])
+    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_")), mig[-1])
     check("referenced_source_paths_exist",
           all((ROOT / p).exists() for p in re.findall(r"`(src/[A-Za-z0-9_/]+\.py)`", plan + adr)),
           "every `src/...py` path named in the plan exists")

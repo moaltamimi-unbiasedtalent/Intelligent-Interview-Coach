@@ -98,6 +98,8 @@ jobs:
         run: python scripts/eval_admin_support.py
       - name: Admin entitlements (P10B-W10.4; offline; code-defined registry, no invented quota/price/billing, resolver decides access, subject integrity, immutable active plans)
         run: python scripts/eval_admin_entitlements.py
+      - name: Admin integrations (P10B-W10.6; offline; code-defined registry, SecretStore with no admin read path, metadata-only responses, manual bounded probes, honest status wording)
+        run: python scripts/eval_admin_integrations.py
       - name: Rate-limit evaluation (Capstone P8; offline; auth + cost buckets, window reset, anti-enumeration)
         run: python scripts/eval_rate_limits.py
       - name: Hosting-readiness evaluation (Capstone P8; offline; env/cookies/CORS/headers/pause/malware — does NOT certify EX-12)

@@ -33,6 +33,12 @@ ADMIN_PLAN_VERSION_UPDATED: Final = "admin.plan_version_updated"
 ADMIN_PLAN_VERSION_ACTIVATED: Final = "admin.plan_version_activated"
 ADMIN_PLAN_VERSION_RETIRED: Final = "admin.plan_version_retired"
 ADMIN_SUBSCRIPTION_ASSIGNED: Final = "admin.subscription_assigned"
+# W10.6 (integrations). Payloads: integration code, credential SLOT, outcome and category; never a secret value,
+# an upstream response or a URL.
+ADMIN_INTEGRATION_TEST_RUN: Final = "admin.integration_test_run"
+ADMIN_CREDENTIAL_REPLACEMENT_REQUESTED: Final = "admin.credential_replacement_requested"
+ADMIN_CREDENTIAL_REPLACEMENT_SUCCEEDED: Final = "admin.credential_replacement_succeeded"
+ADMIN_CREDENTIAL_REPLACEMENT_FAILED: Final = "admin.credential_replacement_failed"
 ADMIN_SUPPORT_TICKET_ASSIGNED: Final = "admin.support_ticket_assigned"
 ADMIN_SUPPORT_TICKET_STATUS_CHANGED: Final = "admin.support_ticket_status_changed"
 ADMIN_SUPPORT_TICKET_PRIORITY_CHANGED: Final = "admin.support_ticket_priority_changed"
@@ -47,6 +53,8 @@ ADMIN_EVENT_NAMES: Final[frozenset[str]] = frozenset({
     ADMIN_SUPPORT_REPLY_SENT, ADMIN_SUPPORT_INTERNAL_NOTE_CREATED,
     ADMIN_PLAN_VERSION_CREATED, ADMIN_PLAN_VERSION_UPDATED, ADMIN_PLAN_VERSION_ACTIVATED,
     ADMIN_PLAN_VERSION_RETIRED, ADMIN_SUBSCRIPTION_ASSIGNED,
+    ADMIN_INTEGRATION_TEST_RUN, ADMIN_CREDENTIAL_REPLACEMENT_REQUESTED, ADMIN_CREDENTIAL_REPLACEMENT_SUCCEEDED,
+    ADMIN_CREDENTIAL_REPLACEMENT_FAILED,
 })
 
 # Context keys that may never be written (defence in depth against a careless caller).

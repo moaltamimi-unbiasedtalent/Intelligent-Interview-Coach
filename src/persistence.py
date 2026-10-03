@@ -1218,6 +1218,32 @@ class Subscription(Base):
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
+# --- Integration state (P10B-W10.6, migration 0017_integrations) ----------------------------------------
+# ONLY the safe result of an explicit manual connection test. No secret, no credential identifier, no upstream
+# response, no URL. The integration code must be in the code registry (src/integrations.py); there are no
+# custom integrations.
+INTEGRATION_TEST_OUTCOMES = ("success", "failure")
+INTEGRATION_TEST_CATEGORIES = ("ok", "unauthorized", "timeout", "unavailable", "configuration_error",
+                               "rate_limited", "unknown")
+
+
+class IntegrationState(Base):
+    __tablename__ = "integration_states"
+    __table_args__ = (
+        CheckConstraint(_in_list("last_test_outcome", INTEGRATION_TEST_OUTCOMES), name="ck_integration_states_outcome"),
+        CheckConstraint(_in_list("last_test_category", INTEGRATION_TEST_CATEGORIES), name="ck_integration_states_category"),
+    )
+
+    integration_code: Mapped[str] = mapped_column(String(40), primary_key=True)
+    last_test_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_test_outcome: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    last_test_category: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    last_test_latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    last_test_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
 def make_engine(database_url: str) -> Engine:
     """Create an engine; SQLite needs cross-thread access for Streamlit."""
     connect_args = {}

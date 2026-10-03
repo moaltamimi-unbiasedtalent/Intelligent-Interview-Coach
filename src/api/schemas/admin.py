@@ -327,3 +327,76 @@ class SubjectPlan(_Strict):
 
 AdminUserDetail.model_rebuild()
 AdminWorkspaceDetail.model_rebuild()
+
+
+# --- W10.6: integrations (metadata only: no secret value, prefix, suffix, mask, URL or upstream response) ---
+class CredentialStatus(_Strict):
+    slot: str
+    label: str
+    external_name: str      # the NAME of the environment variable the operator manages, never its value
+    configured: bool
+    source: str
+    writable: bool
+
+
+class SettingView(_Strict):
+    code: str
+    label: str
+    selected: str | None    # an allowlisted vocabulary choice, "other", or null (never a free-form value)
+
+
+class RuntimeView(_Strict):
+    enabled: bool | None
+    managed: str
+    toggle_supported: bool
+    note: str
+
+
+class CredentialStoreView(_Strict):
+    name: str
+    writable: bool
+
+
+class HealthView(_Strict):
+    status: str             # not_tested | healthy | unhealthy (only an explicit manual test can set healthy)
+    last_tested_at: str | None
+    category: str | None
+    latency_ms: int | None
+
+
+class TestSupport(_Strict):
+    supported: bool
+    note: str
+
+
+class IntegrationRow(_Strict):
+    code: str
+    name: str
+    category: str
+    category_label: str
+    adapter: str
+    description: str
+    classification: str
+    configuration_status: str
+    slots: list[CredentialStatus]
+    settings: list[SettingView]
+    runtime: RuntimeView
+    store: CredentialStoreView
+    health: HealthView
+    test: TestSupport
+    validation_note: str
+
+
+class IntegrationList(_Strict):
+    items: list[IntegrationRow]
+
+
+class IntegrationDetail(IntegrationRow):
+    audit: list[AdminAuditEntry]
+
+
+class IntegrationTestResult(_Strict):
+    integration: str
+    outcome: str
+    category: str
+    latency_ms: int | None

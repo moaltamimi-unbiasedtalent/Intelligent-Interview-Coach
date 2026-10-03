@@ -114,7 +114,7 @@ def pause_state() -> dict[str, Any]:
 
 
 def command_center(*, version: str, session_factory, accounts, workspaces, allowed: frozenset[str],
-                   support=None, plans=None) -> dict[str, Any]:
+                   support=None, plans=None, integrations=None) -> dict[str, Any]:
     """Assemble the overview. Sections the caller lacks permission for are omitted, not blanked."""
     out: dict[str, Any] = {
         "build": build_info(version),
@@ -135,6 +135,9 @@ def command_center(*, version: str, session_factory, accounts, workspaces, allow
     if plans is not None and ("platform.plans.read" in allowed or "platform.subscriptions.read" in allowed):
         # Counts only: no revenue, price or payment figure exists (billing is not implemented).
         out["plans"] = plans.stats()
+    if integrations is not None and "platform.integrations.read" in allowed:
+        # Counts only: nothing here is a secret, and "healthy" is never inferred (only a manual test sets it).
+        out["integrations"] = integrations.stats()
     links = []
     if "platform.knowledge.read" in allowed:
         links.append({"label": "Knowledge readiness", "path": "/review/rag"})
