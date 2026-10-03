@@ -1,6 +1,6 @@
 # P10B-W10.4 - Plans, Subscriptions & Entitlements
 
-**Status:** implemented on branch `feat/p10b-w10-4-plans-entitlements`; **complete when merged to `main`**. **W10.5 and W10.6 are NOT STARTED; the next approved implementation wave is W10.6 (Integrations and API connections), not W10.5.**
+**Status:** **COMPLETE: merged to `main` in PR #116 (merge commit 787178d, qualified head abf2dbb; all required CI green).** **W10.5 and W10.6 are NOT STARTED; the next approved implementation wave is W10.6 (Integrations and API connections), not W10.5.**
 One additive migration (`0016_plans_entitlements`). No new dependency. 0 paid/live calls. **No billing, no price, no invented quota.**
 
 ## 1. Starting point
