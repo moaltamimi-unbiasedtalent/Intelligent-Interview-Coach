@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, StrictInt
 
 
 class _Strict(BaseModel):
@@ -668,3 +668,206 @@ class LegalDraftUpdate(_Strict):
     content_ref: str
     content_hash: str | None = None
     effective_at: str | None = None
+
+
+# ---- W10.5 mock billing (Admin). MOCK BILLING: NOT LIVE. Allowlisted, metadata only: no card, payment-instrument, bank, tax or raw provider field. ----
+class BillingMode(_Strict):
+    provider: str
+    enabled: bool
+    live: bool
+    mode: str
+    label: str
+    configuration_error: str | None = None
+    checkout: bool
+    note: str
+
+
+class BillingTermsView(_Strict):
+    public_id: str
+    version: int
+    amount_minor: int
+    currency: str
+    interval: str
+    trial_days: int | None = None
+    visibility: str
+    state: str
+    activated_at: str | None = None
+    retired_at: str | None = None
+    approval_id: str | None = None
+
+
+class BillingPlanTerms(_Strict):
+    plan_version_id: int
+    plan_code: str
+    plan_version: int
+    plan_name: str
+    plan_status: str
+    current: BillingTermsView | None = None
+    configured: bool
+    history: list[BillingTermsView]
+    pending_approval_id: str | None = None
+
+
+class BillingTermsList(_Strict):
+    items: list[BillingPlanTerms]
+    note: str
+
+
+class BillingStats(_Strict):
+    mock: bool
+    label: str
+    open_invoices: int
+    past_due_invoices: int
+    failed_payments: int
+    pending_approvals: int
+    configured_plan_versions: int
+
+
+class BillingOverview(_Strict):
+    mode: BillingMode
+    stats: BillingStats
+    terms: BillingTermsList
+
+
+class BillingApprovalView(_Strict):
+    public_id: str
+    action_type: str
+    target_ref: str
+    proposed: dict[str, str | int | None]
+    reason: str
+    status: str
+    requested_by_user_id: int | None = None
+    requested_by_email: str | None = None
+    requested_at: str | None = None
+    decided_by_user_id: int | None = None
+    decided_at: str | None = None
+    executed_at: str | None = None
+    execution_ref: str | None = None
+    failure_category: str | None = None
+
+
+class BillingApprovalPage(_Strict):
+    items: list[BillingApprovalView]
+    total: int
+    page: int
+    page_size: int
+
+
+class BillingSubject(_Strict):
+    type: str
+    id: int | None = None
+    label: str | None = None
+
+
+class BillingPaymentView(_Strict):
+    public_id: str
+    provider: str
+    provider_payment_id: str
+    mock: bool
+    invoice_public_id: str
+    amount_minor: int
+    currency: str
+    status: str
+    failure_category: str | None = None
+    refunded_minor: int
+    refundable_minor: int
+    created_at: str | None = None
+
+
+class BillingRefundView(_Strict):
+    public_id: str
+    provider: str
+    provider_refund_id: str | None = None
+    mock: bool
+    payment_public_id: str
+    amount_minor: int
+    currency: str
+    state: str
+    created_at: str | None = None
+    executed_at: str | None = None
+
+
+class BillingInvoiceView(_Strict):
+    public_id: str
+    provider: str
+    provider_invoice_id: str
+    mock: bool
+    state: str
+    amount_due_minor: int
+    amount_paid_minor: int
+    currency: str
+    subject: BillingSubject
+    period_start: str | None = None
+    period_end: str | None = None
+    due_at: str | None = None
+    created_at: str | None = None
+
+
+class BillingInvoiceDetail(BillingInvoiceView):
+    payments: list[BillingPaymentView]
+
+
+class BillingPaymentDetail(BillingPaymentView):
+    refunds: list[BillingRefundView]
+
+
+class BillingInvoicePage(_Strict):
+    items: list[BillingInvoiceView]
+    total: int
+    page: int
+    page_size: int
+
+
+class BillingPaymentPage(_Strict):
+    items: list[BillingPaymentView]
+    total: int
+    page: int
+    page_size: int
+
+
+class BillingRefundPage(_Strict):
+    items: list[BillingRefundView]
+    total: int
+    page: int
+    page_size: int
+
+
+class BillingProviderSubscriptionView(_Strict):
+    public_id: str
+    provider_subscription_id: str
+    provider_state: str
+    plan_version_id: int
+    current_period_end: str | None = None
+    grace_until: str | None = None
+
+
+class BillingCustomerView(_Strict):
+    public_id: str
+    provider: str
+    provider_customer_id: str
+    mock: bool
+    subject: BillingSubject
+    state: str
+    provider_subscriptions: list[BillingProviderSubscriptionView]
+
+
+class BillingCustomerPage(_Strict):
+    items: list[BillingCustomerView]
+    total: int
+    page: int
+    page_size: int
+
+
+class BillingPriceChangeRequest(_Strict):
+    plan_version_id: StrictInt
+    amount_minor: StrictInt
+    currency: str
+    interval: str
+    trial_days: StrictInt | None = None
+    visibility: str
+    reason: str
+
+
+class BillingRefundRequest(_Strict):
+    amount_minor: StrictInt
+    reason: str

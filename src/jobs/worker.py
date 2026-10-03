@@ -111,6 +111,9 @@ def main() -> None:   # pragma: no cover - process entrypoint
 
     services = build_worker_services(repo.session_factory, load_copilot_config())
     services.privacy = build_privacy_runtime(repo.session_factory, load_config())
+    from src.billing.wiring import build_billing_runtime
+
+    services.billing = build_billing_runtime(repo.session_factory, JobService(repo.session_factory))
     worker = Worker(JobService(repo.session_factory), secret_store=get_secret_store(), poll_seconds=poll_seconds_from_env(),
                     services=services)
     stop = threading.Event()

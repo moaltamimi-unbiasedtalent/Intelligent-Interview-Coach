@@ -15,13 +15,14 @@ const en = {
     included: "Included",
     notIncluded: "Not included",
     previewNotice: "Premium is a preview. Ask4Mo does not currently offer purchases, so there is nothing to buy or upgrade here.",
-    noPayments: "Your plan is assigned by Ask4Mo. There are no payments, prices or invoices in your account.",
+    noPayments: "Your plan is assigned by Ask4Mo. Ask4Mo does not currently process live payments or offer checkout.",
     loadError: "We could not load your plan.",
     retry: "Try again",
     loading: "Loading…",
   },
   dataPrivacy: {
-    incPlan: "Your plan and how it changed over time (access assignments only; Ask4Mo has no payment records)",
+    incPlan: "Your plan and how it changed over time (access assignments only)",
+    incBillingMock: "Simulated (mock) billing records linked to your account, if any. No live payments are processed.",
   },
 };
 

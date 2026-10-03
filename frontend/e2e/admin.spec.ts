@@ -19,11 +19,13 @@ const ADMIN_PERMS = [
   "platform.integrations.read", "platform.ai.read", "platform.knowledge.read", "platform.jobs.read", "platform.jobs.manage",
   "platform.knowledge.manage", "platform.knowledge.approve",
   "platform.privacy.read", "platform.privacy.execute", "platform.legal.manage",
+  "platform.billing.read", "platform.billing.refund", "platform.plans.price.change",
 ];
 
+let currentUid = 1;
 function account(role: string, perms: string[]) {
   return {
-    user_id: 1, email: "u@example.com", display_name: null, platform_role: role,
+    user_id: currentUid, email: "u@example.com", display_name: null, platform_role: role,
     tier: "basic", status: "active", email_verified: true, providers: ["password"],
     auth_method: "session", capabilities: [], admin_permissions: perms, response_detail: "brief",
     interface_locale: "en", conversation_language: "en",
@@ -56,6 +58,33 @@ const USER_DETAIL = {
 };
 // Stateful stand-in for the knowledge lifecycle. The test plays the W10.9 worker by calling kb.worker(); the real lifecycle with a
 // real worker is proven by tests/test_knowledge_admin_w10_8.py and the manual QA.
+// Stateful stand-in for MOCK billing. The test plays the W10.9 worker by calling bill.worker(); the real lifecycle (worker, provider, replay) is proven by
+// tests/test_billing_w10_5.py. Entitlements are untouched by every step (asserted through the candidate-visible plan stub).
+const bill = {
+  configured: false, priceApproved: false, refundState: "none" as "none" | "pending" | "approved" | "executed", entitlements: ["standard_history"],
+  worker() { if (this.refundState === "approved") this.refundState = "executed"; },
+  mode: { provider: "mock", enabled: true, live: false, mode: "mock", label: "MOCK BILLING - NOT LIVE BILLING", configuration_error: null, checkout: false, note: "No live payments are processed." },
+  terms() {
+    const cur = this.priceApproved ? { public_id: "t".repeat(32), version: 1, amount_minor: 1099, currency: "EUR", interval: "month", trial_days: null, visibility: "internal", state: "active", activated_at: null, retired_at: null, approval_id: null } : null;
+    return { items: [{ plan_version_id: 3, plan_code: "premium", plan_version: 1, plan_name: "Premium (preview)", plan_status: "active", current: cur, configured: !!cur,
+      history: cur ? [cur] : [], pending_approval_id: this.configured && !this.priceApproved ? "p".repeat(32) : null }], note: "n" };
+  },
+  approvals() {
+    const out: unknown[] = [];
+    if (this.configured) out.push({ public_id: "p".repeat(32), action_type: "price_change", target_ref: "plan_version:3", proposed: { plan_version_id: 3, amount_minor: 1099, currency: "EUR" },
+      reason: "Initial test terms", status: this.priceApproved ? "executed" : "pending", requested_by_user_id: 1, requested_by_email: "u@example.com", requested_at: null,
+      decided_by_user_id: this.priceApproved ? 2 : null, decided_at: null, executed_at: null, execution_ref: null, failure_category: null });
+    if (this.refundState !== "none") out.push({ public_id: "r".repeat(32), action_type: "refund", target_ref: "payment:1", proposed: { amount_minor: 500, currency: "EUR" }, reason: "Duplicate",
+      status: this.refundState === "pending" ? "pending" : this.refundState, requested_by_user_id: 1, requested_by_email: "u@example.com", requested_at: null,
+      decided_by_user_id: this.refundState === "pending" ? null : 2, decided_at: null, executed_at: null, execution_ref: null, failure_category: null });
+    return out;
+  },
+  payment() {
+    const refunded = this.refundState === "executed" ? 500 : 0;
+    return { public_id: "q".repeat(32), provider: "mock", provider_payment_id: "pay_1", mock: true, invoice_public_id: "i", amount_minor: 2000, currency: "EUR", status: "succeeded",
+      failure_category: null, refunded_minor: refunded, refundable_minor: 2000 - refunded - (this.refundState === "approved" ? 500 : 0), created_at: null };
+  },
+};
 const PRIV_ID = "p".repeat(32);
 const priv = {
   status: "submitted", assignee: null as number | null, result: null as string | null, legalPublished: false,
@@ -169,6 +198,18 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
     }
     if (path.endsWith("/admin/home")) return json(HOME);
     const method = route.request().method();
+    if (path.endsWith("/admin/billing") && method === "GET") return json({ mode: bill.mode, stats: { mock: true, label: bill.mode.label, open_invoices: 0, past_due_invoices: 1, failed_payments: 1, pending_approvals: 0, configured_plan_versions: bill.priceApproved ? 1 : 0 }, terms: bill.terms() });
+    if (path.endsWith("/admin/billing/price-changes") && method === "POST") { bill.configured = true; return json(bill.approvals()[0], 201); }
+    if (/\/admin\/billing\/price-changes\/[^/]+\/approve$/.test(path) && method === "POST") { bill.priceApproved = true; return json(bill.approvals()[0]); }
+    if (/\/admin\/billing\/payments\/[^/]+\/refunds$/.test(path) && method === "POST") { bill.refundState = "pending"; return json(bill.approvals().slice(-1)[0], 201); }
+    if (/\/admin\/billing\/refunds\/[^/]+\/approve$/.test(path) && method === "POST") { bill.refundState = "approved"; return json(bill.approvals().slice(-1)[0]); }
+    if (path.endsWith("/admin/billing/approvals")) return json({ items: bill.approvals(), total: bill.approvals().length, page: 1, page_size: 50 });
+    if (path.endsWith("/admin/billing/invoices")) return json({ items: [{ public_id: "i".repeat(32), provider: "mock", provider_invoice_id: "inv_1", mock: true, state: "past_due", amount_due_minor: 2000, amount_paid_minor: 0,
+      currency: "EUR", subject: { type: "user", id: 5, label: "cand@example.com" }, period_start: null, period_end: null, due_at: null, created_at: null }], total: 1, page: 1, page_size: 25 });
+    if (path.endsWith("/admin/billing/payments")) return json({ items: [bill.payment(), { ...bill.payment(), public_id: "z".repeat(32), provider_payment_id: "pay_f", status: "failed", failure_category: "declined", refunded_minor: 0, refundable_minor: 0 }], total: 2, page: 1, page_size: 25 });
+    if (path.endsWith("/admin/billing/refunds")) return json({ items: bill.refundState === "executed" ? [{ public_id: "x", provider: "mock", provider_refund_id: "mock_re_1", mock: true, payment_public_id: "q".repeat(32), amount_minor: 500, currency: "EUR", state: "succeeded", created_at: null, executed_at: null }] : [], total: bill.refundState === "executed" ? 1 : 0, page: 1, page_size: 50 });
+    if (path.endsWith("/admin/billing/customers")) return json({ items: [], total: 0, page: 1, page_size: 50 });
+    if (path.endsWith("/auth/plan")) return json({ ...MY_PLAN, entitlements: MY_PLAN.entitlements });
     if (path.endsWith("/admin/privacy/preparation/backfill") && method === "POST") return json({ job_id: "j", created: true }, 202);
     if (path.endsWith("/admin/privacy/preparation")) return json({ indexed_runs: 4, by_state: { ready: 4 }, by_source: { created: 3, backfill: 1 }, coverage_version: 1,
       note: "Counts indexed runs only. Historical runs with no relational reference cannot be discovered and are not included." });
@@ -273,10 +314,10 @@ test("platform admin journey: Command Center, build metadata, audit, provider st
   await expect(page.getByText("Up to date")).toBeVisible();
   await expect(page.getByText("Health not tested").first()).toBeVisible();
   const nav = page.getByRole("navigation", { name: "Admin" });
-  for (const label of ["Overview", "Users", "Workspaces", "Review / Diagnostics", "Audit", "Provider status", "Jobs", "Knowledge", "Privacy", "Legal"]) {
+  for (const label of ["Overview", "Users", "Workspaces", "Review / Diagnostics", "Audit", "Provider status", "Jobs", "Knowledge", "Privacy", "Legal", "Billing"]) {
     await expect(nav.getByRole("link", { name: new RegExp(label) })).toBeVisible();
   }
-  for (const future of ["Billing", "Subscriptions", "Incidents", "Feature Flags"]) {
+  for (const future of ["Subscriptions", "Incidents", "Feature Flags"]) {
     await expect(nav.getByRole("link", { name: new RegExp(future) })).toHaveCount(0);
   }
   await expect(page.getByRole("link", { name: "Knowledge readiness" })).toHaveAttribute("href", "/review/rag");
@@ -342,6 +383,69 @@ test("W10.6: integrations inventory, environment-managed credential, manual test
   await page.goto("/admin/integrations/openrouter");
   await expect(page.getByRole("heading", { name: "Connection test" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Test connection" })).toHaveCount(0);
+});
+
+test("W10.5: mock billing: MOCK banner, terms request, no self-approval, second admin approves, entitlements unchanged, refund request, second approval, worker executes", async ({ page }) => {
+  bill.configured = false; bill.priceApproved = false; bill.refundState = "none";
+  currentUid = 1;
+  await mockAdmin(page, "billing_admin", ADMIN_PERMS);
+  await page.goto("/admin");
+  await page.getByRole("navigation", { name: "Admin" }).getByRole("link", { name: /^Billing/ }).click();
+  await expect(page.getByRole("heading", { name: "MOCK BILLING — NOT LIVE BILLING" })).toBeVisible();
+  await expect(page.getByText(/No live payments are processed/).first()).toBeVisible();
+  await expect(page.getByText("MOCK inv_1")).toBeVisible();
+  await expect(page.getByText("MOCK pay_f")).toBeVisible();
+  await expect(page.getByText(/Not configured \(this is not free\)/)).toBeVisible();
+  await expect(page.getByRole("button", { name: /buy|subscribe|checkout/i })).toHaveCount(0);
+
+  await page.getByRole("button", { name: /Propose mock terms for Premium/ }).click();
+  await page.getByLabel(/Amount in minor units/).fill("1099");
+  await page.getByLabel("Reason").fill("Initial test terms");
+  await page.getByRole("button", { name: "Request approval" }).click();
+  await expect(page.getByText(/A different administrator must approve it/)).toBeVisible();
+  await expect(page.getByText("A second approver is required")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Approve" })).toHaveCount(0);                      // the requester cannot self-approve
+
+  await page.unroute("**/api/v1/**");
+  currentUid = 2;                                                                                  // a different qualified administrator
+  await mockAdmin(page, "billing_admin", ADMIN_PERMS);
+  await page.goto("/admin/billing");
+  await page.getByRole("button", { name: "Approve" }).click();
+  await expect(page.getByRole("alertdialog").getByRole("button", { name: "Cancel" })).toBeFocused();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Approve" }).click();
+  await expect(page.getByText(/New mock commercial terms are active/)).toBeVisible();
+  await expect(page.getByText("10.99 EUR per month")).toBeVisible();
+
+  await page.unroute("**/api/v1/**");
+  currentUid = 1;
+  await mockAdmin(page, "billing_admin", ADMIN_PERMS);
+  await page.goto("/admin/billing");
+  await page.getByRole("button", { name: /Request a mock refund for pay_1/ }).click();
+  await expect(page.getByText(/Mock refund — no real money moves\./).first()).toBeVisible();
+  await page.getByLabel(/Refund amount in minor units/).fill("500");
+  await page.getByLabel("Reason").fill("Duplicate");
+  await page.getByRole("button", { name: "Request approval" }).click();
+  await expect(page.getByText("A second approver is required")).toBeVisible();
+
+  await page.unroute("**/api/v1/**");
+  currentUid = 2;
+  await mockAdmin(page, "billing_admin", ADMIN_PERMS);
+  await page.goto("/admin/billing");
+  await page.getByRole("button", { name: "Approve" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Approve" }).click();
+  await expect(page.getByText(/Mock refund approved and queued/)).toBeVisible();
+  bill.worker();                                                                                    // the W10.9 worker executes the approved refund
+  await page.reload();
+  await expect(page.getByText(/MOCK refund of 5.00 EUR/)).toBeVisible();
+  await expect(page.getByText("Executed").first()).toBeVisible();
+  expect(bill.entitlements).toEqual(["standard_history"]);                                         // billing never touched access
+
+  await page.unroute("**/api/v1/**");
+  currentUid = 1;
+  await mockAdmin(page, "platform_admin", ["platform.overview.read", "platform.billing.read"]);
+  await page.goto("/admin/billing");
+  await expect(page.getByRole("heading", { name: "MOCK BILLING — NOT LIVE BILLING" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Propose|refund|Approve|Reject/i })).toHaveCount(0);
 });
 
 test("W10.10: privacy queue, detail, assign, acknowledge, complete with a result, then legal registry publish; read-only role", async ({ page }) => {

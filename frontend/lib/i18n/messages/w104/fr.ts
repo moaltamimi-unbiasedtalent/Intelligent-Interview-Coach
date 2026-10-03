@@ -14,13 +14,14 @@ const fr: typeof en = {
     included: "Inclus",
     notIncluded: "Non inclus",
     previewNotice: "Premium est un aperçu. Ask4Mo ne propose actuellement aucun achat : il n'y a donc rien à acheter ni à améliorer ici.",
-    noPayments: "Votre offre est attribuée par Ask4Mo. Votre compte ne contient ni paiement, ni prix, ni facture.",
+    noPayments: "Votre offre est attribuée par Ask4Mo. Ask4Mo ne traite actuellement aucun paiement réel et ne propose pas de passage en caisse.",
     loadError: "Nous n'avons pas pu charger votre offre.",
     retry: "Réessayer",
     loading: "Chargement…",
   },
   dataPrivacy: {
-    incPlan: "Votre offre et son évolution dans le temps (attributions d'accès uniquement ; Ask4Mo n'a aucun enregistrement de paiement)",
+    incPlan: "Votre offre et son évolution dans le temps (attributions d'accès uniquement)",
+    incBillingMock: "Enregistrements de facturation simulés (fictifs) liés à votre compte, le cas échéant. Aucun paiement réel n'est traité.",
   },
 };
 

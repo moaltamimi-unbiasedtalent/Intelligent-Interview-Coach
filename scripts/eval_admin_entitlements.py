@@ -62,9 +62,13 @@ def run() -> dict[str, tuple[bool, str]]:
 
     billing_files = ("src/entitlements.py", "src/plans_repository.py", "src/api/routes/admin_plans.py",
                      "src/api/schemas/admin.py", "migrations/versions/0016_plans_entitlements.py")
-    hits = sorted({f for f in billing_files if BILLING_WORDS.search(code_only(read(f)))})
+    def plan_part(f: str) -> str:   # W10.5: commercial schemas live in the separate Billing* block at the END of the admin schemas file
+        src = read(f)
+        return src.split("# ---- W10.5 mock billing")[0] if f.endswith("schemas/admin.py") else src
+
+    hits = sorted({f for f in billing_files if BILLING_WORDS.search(code_only(plan_part(f)))})
     check("no_billing_price_or_payment_in_plan_code", not hits, ", ".join(hits) or "none")
-    models = code_only("PLAN_STATUS_DRAFT" + read("src/persistence.py").split("PLAN_STATUS_DRAFT", 1)[1].split("def make_engine")[0])
+    models = code_only("PLAN_STATUS_DRAFT" + read("src/persistence.py").split("PLAN_STATUS_DRAFT", 1)[1].split("# --- Integration state")[0])
     check("no_payment_columns_on_plan_models", not BILLING_WORDS.search(models) and "trial" not in models.lower(), "plan/subscription tables carry no payment data")
     check("subscription_sources_are_real", "SUBSCRIPTION_SOURCES = (\"system_default\", \"migration\", \"admin\")" in read("src/persistence.py"), "system_default, migration, admin")
 
@@ -123,10 +127,11 @@ def run() -> dict[str, tuple[bool, str]]:
         keysets[loc] = set(re.findall(r"^\s+([A-Za-z0-9_]+):", body, re.M))
     check("candidate_plan_copy_in_all_eight_locales", all(keysets[l] == keysets["en"] and len(keysets["en"]) >= 15 for l in LOCALES), f"{len(keysets['en'])} keys x 8")
     en = "\n".join(l for l in read("frontend/lib/i18n/messages/w104/en.ts").splitlines() if not l.lstrip().startswith("//"))
-    check("copy_has_no_price_or_purchase_claim", not re.search(r"[€$£]|buy now|upgrade now|per month|checkout", en, re.I) and "preview" in en.lower(), "Premium is a preview; nothing to buy")
+    # W10.5: the candidate notice may SAY there is no checkout ("or offer checkout"); it must still contain no purchase claim.
+    check("copy_has_no_price_or_purchase_claim", not re.search(r"[€$£]|buy now|upgrade now|per month|checkout", en.replace("or offer checkout", ""), re.I) and "preview" in en.lower(), "Premium is a preview; nothing to buy")
 
     heads = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("migration_chain_valid", heads[-1].startswith(("0016_", "0017_", "0018_", "0019_", "0020_")) and 'down_revision = "0015_support_ticketing"' in mig, heads[-1])
+    check("migration_chain_valid", heads[-1].startswith(("0016_", "0017_", "0018_", "0019_", "0020_", "0021_")) and 'down_revision = "0015_support_ticketing"' in mig, heads[-1])
     tests = read("tests/test_plans_entitlements_w10_4.py")
     check("tests_exist", all(t in tests for t in ("test_no_subscription_falls_back_to_basic_never_premium", "test_workspace_scope_is_explicit",
                                                   "test_draft_is_editable_active_and_retired_are_immutable", "test_every_privileged_plan_mutation_rolls_back",

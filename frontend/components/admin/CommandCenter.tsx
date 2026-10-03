@@ -91,6 +91,18 @@ function Overview({ home }: { home: Awaited<ReturnType<typeof api.admin.home>> }
         </Panel>
       ) : null}
 
+      {home.billing ? (
+        <Panel title="Billing (MOCK, not live)">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Stat label="Open mock invoices" value={home.billing.open_invoices} />
+            <Stat label="Past-due mock invoices" value={home.billing.past_due_invoices} />
+            <Stat label="Failed mock payments" value={home.billing.failed_payments} />
+            <Stat label="Pending approvals" value={home.billing.pending_approvals} />
+          </div>
+          <p className="text-xs text-muted">{home.billing.label}. Counts only: no revenue figures, and nothing here changes anyone&apos;s access.</p>
+        </Panel>
+      ) : null}
+
       {home.knowledge ? (
         <Panel title="Knowledge base">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

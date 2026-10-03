@@ -1564,6 +1564,237 @@ class LegalAcceptance(Base):
     source: Mapped[str] = mapped_column(String(16))
 
 
+# --- Mock billing (P10B-W10.5, migration 0021_billing_admin) -------------------------------------------------
+# MOCK BILLING: NOT LIVE. Billing rows are commercial METADATA and never an authority for product access (that stays with the W10.4
+# plans/subscriptions). Money is always integer minor units + a currency code. No card, payment-instrument, bank, tax or raw provider data.
+BILLING_INTERVALS = ("month", "year")
+BILLING_VISIBILITIES = ("public", "private", "internal")
+BILLING_TERMS_STATES = ("active", "retired")
+BILLING_APPROVAL_ACTIONS = ("price_change", "refund")
+BILLING_APPROVAL_STATUSES = ("pending", "approved", "rejected", "executed", "failed", "cancelled")
+BILLING_PROVIDER_SUB_STATES = ("trialing", "active", "past_due", "cancelled")
+BILLING_INVOICE_STATES = ("open", "paid", "past_due", "void")
+BILLING_PAYMENT_STATUSES = ("pending", "succeeded", "failed")
+BILLING_PAYMENT_FAILURES = ("declined", "insufficient_funds", "expired", "processing_error", "unknown")
+BILLING_REFUND_STATES = ("pending", "succeeded", "failed")
+BILLING_EVENT_TYPES = ("customer_created", "subscription_updated", "invoice_opened", "invoice_paid", "payment_succeeded", "payment_failed")
+BILLING_EVENT_STATES = ("received", "processed", "failed")
+_ACTIVE_TERMS = "state = 'active'"
+
+
+class BillingCommercialTerms(Base):
+    """Versioned commercial terms of a W10.4 plan version (price, currency, interval, trial, visibility). Immutable once written: a change is a
+    NEW version. No row means 'commercial terms unconfigured' (never free, never zero). Entitlements are NOT duplicated here."""
+
+    __tablename__ = "billing_commercial_terms"
+    __table_args__ = (
+        CheckConstraint("amount_minor >= 0 AND amount_minor <= 100000000", name="ck_bct_amount"),
+        CheckConstraint("length(currency) = 3 AND currency = upper(currency)", name="ck_bct_currency"),
+        CheckConstraint(_in_list("billing_interval", BILLING_INTERVALS), name="ck_bct_interval"),
+        CheckConstraint(_in_list("visibility", BILLING_VISIBILITIES), name="ck_bct_visibility"),
+        CheckConstraint(_in_list("state", BILLING_TERMS_STATES), name="ck_bct_state"),
+        CheckConstraint("trial_days IS NULL OR (trial_days >= 1 AND trial_days <= 365)", name="ck_bct_trial"),
+        UniqueConstraint("plan_version_id", "version", name="uq_bct_plan_version_version"),
+        Index("uq_bct_one_active", "plan_version_id", unique=True, sqlite_where=text(_ACTIVE_TERMS), postgresql_where=text(_ACTIVE_TERMS)),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    plan_version_id: Mapped[int] = mapped_column(ForeignKey("plan_versions.id", ondelete="RESTRICT"))
+    version: Mapped[int] = mapped_column(Integer)
+    amount_minor: Mapped[int] = mapped_column(Integer)
+    currency: Mapped[str] = mapped_column(String(3))
+    billing_interval: Mapped[str] = mapped_column(String(8))
+    trial_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    visibility: Mapped[str] = mapped_column(String(10))
+    state: Mapped[str] = mapped_column(String(10), default="active", server_default="active")
+    approval_public_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    activated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    retired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class BillingApprovalRequest(Base):
+    """A bounded second-approver workflow for price changes and refunds. The approver can never be the requester."""
+
+    __tablename__ = "billing_approval_requests"
+    __table_args__ = (
+        CheckConstraint(_in_list("action_type", BILLING_APPROVAL_ACTIONS), name="ck_bar_action"),
+        CheckConstraint(_in_list("status", BILLING_APPROVAL_STATUSES), name="ck_bar_status"),
+        CheckConstraint("decided_by_user_id IS NULL OR requested_by_user_id IS NULL OR decided_by_user_id <> requested_by_user_id",
+                        name="ck_bar_no_self_approval"),
+        Index("uq_bar_one_pending_per_target", "action_type", "target_ref", unique=True,
+              sqlite_where=text("status = 'pending'"), postgresql_where=text("status = 'pending'")),
+        Index("ix_bar_status_created", "status", "requested_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    action_type: Mapped[str] = mapped_column(String(16))
+    target_ref: Mapped[str] = mapped_column(String(64))
+    proposed_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    reason: Mapped[str] = mapped_column(String(300), default="")
+    status: Mapped[str] = mapped_column(String(12), default="pending", server_default="pending")
+    requested_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    decided_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    executed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    execution_ref: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    failure_category: Mapped[str | None] = mapped_column(String(24), nullable=True)
+
+
+class BillingCustomer(Base):
+    """Mirror of a provider customer reference for ONE subject (user XOR workspace). No card, address, tax id or bank data."""
+
+    __tablename__ = "billing_customers"
+    __table_args__ = (
+        CheckConstraint("(user_id IS NOT NULL AND workspace_id IS NULL) OR (user_id IS NULL AND workspace_id IS NOT NULL)", name="ck_bc_one_subject"),
+        CheckConstraint(_in_list("provider", ("mock",)), name="ck_bc_provider"),
+        CheckConstraint(_in_list("state", ("active", "closed")), name="ck_bc_state"),
+        UniqueConstraint("provider", "provider_customer_id", name="uq_bc_provider_customer"),
+        Index("uq_bc_user", "provider", "user_id", unique=True, sqlite_where=text("user_id IS NOT NULL"), postgresql_where=text("user_id IS NOT NULL")),
+        Index("uq_bc_workspace", "provider", "workspace_id", unique=True, sqlite_where=text("workspace_id IS NOT NULL"),
+              postgresql_where=text("workspace_id IS NOT NULL")),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    provider: Mapped[str] = mapped_column(String(16))
+    provider_customer_id: Mapped[str] = mapped_column(String(64))
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    workspace_id: Mapped[int | None] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=True)
+    state: Mapped[str] = mapped_column(String(10), default="active", server_default="active")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class BillingProviderSubscription(Base):
+    """Mirror of a provider-side subscription. INFORMATIONAL ONLY: its state never authorises, grants or revokes product access."""
+
+    __tablename__ = "billing_provider_subscriptions"
+    __table_args__ = (
+        CheckConstraint(_in_list("provider_state", BILLING_PROVIDER_SUB_STATES), name="ck_bps_state"),
+        UniqueConstraint("provider", "provider_subscription_id", name="uq_bps_provider_sub"),
+        Index("ix_bps_customer", "customer_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    provider: Mapped[str] = mapped_column(String(16))
+    provider_subscription_id: Mapped[str] = mapped_column(String(64))
+    customer_id: Mapped[int] = mapped_column(ForeignKey("billing_customers.id", ondelete="CASCADE"))
+    plan_version_id: Mapped[int] = mapped_column(ForeignKey("plan_versions.id", ondelete="RESTRICT"))
+    commercial_terms_id: Mapped[int | None] = mapped_column(ForeignKey("billing_commercial_terms.id", ondelete="SET NULL"), nullable=True)
+    provider_state: Mapped[str] = mapped_column(String(12))
+    current_period_start: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    current_period_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    grace_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class BillingInvoice(Base):
+    __tablename__ = "billing_invoices"
+    __table_args__ = (
+        CheckConstraint("amount_due_minor >= 0 AND amount_paid_minor >= 0 AND amount_paid_minor <= amount_due_minor", name="ck_bi_amounts"),
+        CheckConstraint("length(currency) = 3 AND currency = upper(currency)", name="ck_bi_currency"),
+        CheckConstraint(_in_list("state", BILLING_INVOICE_STATES), name="ck_bi_state"),
+        UniqueConstraint("provider", "provider_invoice_id", name="uq_bi_provider_invoice"),
+        Index("ix_bi_state_created", "state", "created_at"),
+        Index("ix_bi_customer", "customer_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    provider: Mapped[str] = mapped_column(String(16))
+    provider_invoice_id: Mapped[str] = mapped_column(String(64))
+    customer_id: Mapped[int] = mapped_column(ForeignKey("billing_customers.id", ondelete="CASCADE"))
+    provider_subscription_id: Mapped[int | None] = mapped_column(ForeignKey("billing_provider_subscriptions.id", ondelete="SET NULL"), nullable=True)
+    amount_due_minor: Mapped[int] = mapped_column(Integer)
+    amount_paid_minor: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    currency: Mapped[str] = mapped_column(String(3))
+    state: Mapped[str] = mapped_column(String(10), default="open", server_default="open")
+    period_start: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    period_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class BillingPayment(Base):
+    __tablename__ = "billing_payments"
+    __table_args__ = (
+        CheckConstraint("amount_minor >= 0", name="ck_bp_amount"),
+        CheckConstraint("length(currency) = 3 AND currency = upper(currency)", name="ck_bp_currency"),
+        CheckConstraint(_in_list("status", BILLING_PAYMENT_STATUSES), name="ck_bp_status"),
+        CheckConstraint("failure_category IS NULL OR " + _in_list("failure_category", BILLING_PAYMENT_FAILURES), name="ck_bp_failure"),
+        UniqueConstraint("provider", "provider_payment_id", name="uq_bp_provider_payment"),
+        Index("ix_bp_status_created", "status", "created_at"),
+        Index("ix_bp_invoice", "invoice_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    provider: Mapped[str] = mapped_column(String(16))
+    provider_payment_id: Mapped[str] = mapped_column(String(64))
+    invoice_id: Mapped[int] = mapped_column(ForeignKey("billing_invoices.id", ondelete="CASCADE"))
+    amount_minor: Mapped[int] = mapped_column(Integer)
+    currency: Mapped[str] = mapped_column(String(3))
+    status: Mapped[str] = mapped_column(String(10))
+    failure_category: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class BillingRefund(Base):
+    __tablename__ = "billing_refunds"
+    __table_args__ = (
+        CheckConstraint("amount_minor > 0", name="ck_br_amount"),
+        CheckConstraint("length(currency) = 3 AND currency = upper(currency)", name="ck_br_currency"),
+        CheckConstraint(_in_list("state", BILLING_REFUND_STATES), name="ck_br_state"),
+        UniqueConstraint("idempotency_key", name="uq_br_idempotency"),
+        UniqueConstraint("provider", "provider_refund_id", name="uq_br_provider_refund"),
+        Index("ix_br_payment", "payment_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    provider: Mapped[str] = mapped_column(String(16))
+    provider_refund_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    payment_id: Mapped[int] = mapped_column(ForeignKey("billing_payments.id", ondelete="CASCADE"))
+    amount_minor: Mapped[int] = mapped_column(Integer)
+    currency: Mapped[str] = mapped_column(String(3))
+    state: Mapped[str] = mapped_column(String(10), default="pending", server_default="pending")
+    approval_request_id: Mapped[int | None] = mapped_column(ForeignKey("billing_approval_requests.id", ondelete="SET NULL"), nullable=True)
+    idempotency_key: Mapped[str] = mapped_column(String(80))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    executed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class BillingEvent(Base):
+    """A NORMALISED provider event (no raw body). The unique (provider, provider_event_id) makes ingestion idempotent."""
+
+    __tablename__ = "billing_events"
+    __table_args__ = (
+        CheckConstraint(_in_list("event_type", BILLING_EVENT_TYPES), name="ck_be_type"),
+        CheckConstraint(_in_list("state", BILLING_EVENT_STATES), name="ck_be_state"),
+        UniqueConstraint("provider", "provider_event_id", name="uq_be_provider_event"),
+        Index("ix_be_state_received", "state", "received_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    provider: Mapped[str] = mapped_column(String(16))
+    provider_event_id: Mapped[str] = mapped_column(String(64))
+    event_type: Mapped[str] = mapped_column(String(24))
+    normalized_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    state: Mapped[str] = mapped_column(String(10), default="received", server_default="received")
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    failure_category: Mapped[str | None] = mapped_column(String(24), nullable=True)
+
+
 def make_engine(database_url: str) -> Engine:
     """Create an engine; SQLite needs cross-thread access for Streamlit."""
     connect_args = {}

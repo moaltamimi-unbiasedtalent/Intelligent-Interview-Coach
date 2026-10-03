@@ -1,6 +1,6 @@
 # P10B-W10.10 - GDPR, Privacy & Legal Administration
 
-**Status:** implemented on branch `feat/p10b-w10-10-privacy-legal-admin`; **complete when merged to `main`**. **W10.5 is NOT STARTED.**
+**Status:** **COMPLETE** (merged in PR #122, main `54ee591`). **W10.5 is NOT STARTED.**
 One additive migration (`0020_privacy_legal_admin`). No new dependency. 0 paid/live calls.
 
 **Legal boundary.** This is engineering support for privacy and legal workflows. It does **not** claim GDPR certification, legal compliance, completeness of any access request, or a statutory retention schedule, and it hard-codes no legal conclusion.

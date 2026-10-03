@@ -6,6 +6,13 @@ import type {
   AdminCommandCenter,
   AdminPage,
   AdminAssignee,
+  BillingApproval,
+  BillingCustomer,
+  BillingInvoice,
+  BillingOverview,
+  BillingPayment,
+  BillingPriceInput,
+  BillingRefund,
   JobDetail,
   LegalOverview,
   LegalVersionRow,
@@ -567,6 +574,20 @@ export const api = {
       request<Record<string, unknown>>("DELETE", `/admin/workspaces/${id}/members/${userId}`, opts),
     setWorkspaceMemberRole: (id: number, userId: number, role: string, opts?: RequestOptions) =>
       request<Record<string, unknown>>("POST", `/admin/workspaces/${id}/members/${userId}/role`, { body: { role }, ...opts }),
+    // W10.5 MOCK billing (no checkout, no card data, no live provider)
+    billing: (opts?: RequestOptions) => request<BillingOverview>("GET", "/admin/billing", opts),
+    billingApprovals: (opts?: RequestOptions) => request<AdminPage<BillingApproval>>("GET", "/admin/billing/approvals?page_size=50", opts),
+    billingInvoices: (page = 1, opts?: RequestOptions) => request<AdminPage<BillingInvoice>>("GET", `/admin/billing/invoices?page=${page}&page_size=25`, opts),
+    billingPayments: (page = 1, opts?: RequestOptions) => request<AdminPage<BillingPayment>>("GET", `/admin/billing/payments?page=${page}&page_size=25`, opts),
+    billingRefunds: (opts?: RequestOptions) => request<AdminPage<BillingRefund>>("GET", "/admin/billing/refunds?page_size=50", opts),
+    billingCustomers: (opts?: RequestOptions) => request<AdminPage<BillingCustomer>>("GET", "/admin/billing/customers?page_size=50", opts),
+    billingRequestPrice: (body: BillingPriceInput, opts?: RequestOptions) => request<BillingApproval>("POST", "/admin/billing/price-changes", { body, ...opts }),
+    billingDecidePrice: (id: string, approve: boolean, opts?: RequestOptions) =>
+      request<BillingApproval>("POST", `/admin/billing/price-changes/${encodeURIComponent(id)}/${approve ? "approve" : "reject"}`, opts),
+    billingRequestRefund: (paymentId: string, amountMinor: number, reason: string, opts?: RequestOptions) =>
+      request<BillingApproval>("POST", `/admin/billing/payments/${encodeURIComponent(paymentId)}/refunds`, { body: { amount_minor: amountMinor, reason }, ...opts }),
+    billingDecideRefund: (id: string, approve: boolean, opts?: RequestOptions) =>
+      request<BillingApproval>("POST", `/admin/billing/refunds/${encodeURIComponent(id)}/${approve ? "approve" : "reject"}`, opts),
     // W10.10 privacy and legal
     privacyQueue: (query: PrivacyQuery = {}, opts?: RequestOptions) =>
       request<AdminPage<PrivacyRequestRow>>("GET", `/admin/privacy/requests${qs(query as Record<string, unknown>)}`, opts),

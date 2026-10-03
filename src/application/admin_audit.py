@@ -65,6 +65,17 @@ ADMIN_PRIVACY_BACKFILL_REQUESTED: Final = "admin.privacy_preparation_backfill_re
 ADMIN_LEGAL_VERSION_CREATED: Final = "admin.legal_version_created"
 ADMIN_LEGAL_VERSION_UPDATED: Final = "admin.legal_version_updated"
 ADMIN_LEGAL_VERSION_PUBLISHED: Final = "admin.legal_version_published"
+# W10.5 (mock billing). Payloads: approval/plan-version/terms/payment/refund ids, amounts in minor units, currency and states; never a payment
+# instrument, a provider payload or a candidate's content. MOCK: no real money moves.
+ADMIN_BILLING_PRICE_CHANGE_REQUESTED: Final = "admin.billing_price_change_requested"
+ADMIN_BILLING_PRICE_CHANGE_APPROVED: Final = "admin.billing_price_change_approved"
+ADMIN_BILLING_PRICE_CHANGE_REJECTED: Final = "admin.billing_price_change_rejected"
+ADMIN_BILLING_PRICE_ACTIVATED: Final = "admin.billing_price_activated"
+ADMIN_BILLING_REFUND_REQUESTED: Final = "admin.billing_refund_requested"
+ADMIN_BILLING_REFUND_APPROVED: Final = "admin.billing_refund_approved"
+ADMIN_BILLING_REFUND_REJECTED: Final = "admin.billing_refund_rejected"
+ADMIN_BILLING_REFUND_EXECUTED: Final = "admin.billing_refund_executed"
+ADMIN_BILLING_REFUND_FAILED: Final = "admin.billing_refund_failed"
 ADMIN_SUPPORT_TICKET_ASSIGNED: Final = "admin.support_ticket_assigned"
 ADMIN_SUPPORT_TICKET_STATUS_CHANGED: Final = "admin.support_ticket_status_changed"
 ADMIN_SUPPORT_TICKET_PRIORITY_CHANGED: Final = "admin.support_ticket_priority_changed"
@@ -87,6 +98,9 @@ ADMIN_EVENT_NAMES: Final[frozenset[str]] = frozenset({
     ADMIN_PRIVACY_REQUEST_RECORDED, ADMIN_PRIVACY_REQUEST_ASSIGNED, ADMIN_PRIVACY_REQUEST_STATUS_CHANGED,
     ADMIN_PRIVACY_DELETION_INITIATED, ADMIN_PRIVACY_DELETION_COMPLETED, ADMIN_PRIVACY_BACKFILL_REQUESTED,
     ADMIN_LEGAL_VERSION_CREATED, ADMIN_LEGAL_VERSION_UPDATED, ADMIN_LEGAL_VERSION_PUBLISHED,
+    ADMIN_BILLING_PRICE_CHANGE_REQUESTED, ADMIN_BILLING_PRICE_CHANGE_APPROVED, ADMIN_BILLING_PRICE_CHANGE_REJECTED,
+    ADMIN_BILLING_PRICE_ACTIVATED, ADMIN_BILLING_REFUND_REQUESTED, ADMIN_BILLING_REFUND_APPROVED, ADMIN_BILLING_REFUND_REJECTED,
+    ADMIN_BILLING_REFUND_EXECUTED, ADMIN_BILLING_REFUND_FAILED,
 })
 
 # Context keys that may never be written (defence in depth against a careless caller).

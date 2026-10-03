@@ -114,7 +114,7 @@ def pause_state() -> dict[str, Any]:
 
 
 def command_center(*, version: str, session_factory, accounts, workspaces, allowed: frozenset[str],
-                   support=None, plans=None, integrations=None, jobs=None, knowledge=None, privacy=None) -> dict[str, Any]:
+                   support=None, plans=None, integrations=None, jobs=None, knowledge=None, privacy=None, billing=None) -> dict[str, Any]:
     """Assemble the overview. Sections the caller lacks permission for are omitted, not blanked."""
     out: dict[str, Any] = {
         "build": build_info(version),
@@ -144,6 +144,9 @@ def command_center(*, version: str, session_factory, accounts, workspaces, allow
         # SEC-W10-04: the queue is durable and real now. Counts only: no request text, no candidate data.
         out["privacy_requests"] = {"status": "operational", **privacy.stats(),
                                    "note": "Counts of privacy requests. Handling is at /admin/privacy."}
+    if billing is not None and "platform.billing.read" in allowed:
+        # MOCK BILLING counts only: no revenue, MRR/ARR, churn or card data.
+        out["billing"] = billing.stats()
     if knowledge is not None and "platform.knowledge.read" in allowed:
         # Counts only: no source text, no candidate data.
         out["knowledge"] = knowledge.stats()

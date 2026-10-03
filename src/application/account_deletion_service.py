@@ -112,6 +112,9 @@ class AccountDeletionService:
                 ):
                     for obj in s.execute(select(model).where(col == ws.id)).scalars().all():
                         s.delete(obj)
+                from src.billing.service import delete_billing_for
+
+                delete_billing_for(s, workspace_id=ws.id)         # W10.5: the workspace's MOCK billing mirrors
                 s.delete(ws)
                 summary.workspaces_deleted += 1
 
@@ -262,6 +265,15 @@ class AccountDeletionService:
                 summary.privacy_requests_anonymized = int(res2.rowcount or 0)
             else:
                 s.execute(update(PrivacyRequest).where(PrivacyRequest.user_id == user_id).values(request_note=None))
+
+            # 6c) W10.5: MOCK billing mirrors owned by this user (customer, provider subscriptions, invoices, payments, refunds). Plan and
+            # commercial-term definitions are shared product data and stay. No real payment record exists; any real-provider retention would
+            # need its own legal/provider design.
+            from src.billing.service import delete_billing_for
+
+            summary.deleted_rows["mock_billing_rows"] = delete_billing_for(s, user_id=user_id) or 0
+            if not summary.deleted_rows["mock_billing_rows"]:
+                summary.deleted_rows.pop("mock_billing_rows")
 
             # 7) Audit: anonymize (retain for security), do NOT delete.
             res = s.execute(update(P.AuditEvent)
