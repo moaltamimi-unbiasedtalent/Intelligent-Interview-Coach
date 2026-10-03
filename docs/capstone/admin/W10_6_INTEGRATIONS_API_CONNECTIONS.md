@@ -1,6 +1,6 @@
 # P10B-W10.6 - Integrations & API Connections
 
-**Status:** implemented on branch `feat/p10b-w10-6-integrations-api-connections`; **complete when merged to `main`**. **W10.9 is NOT STARTED.**
+**Status:** **COMPLETE** (merged in PR #118, main `e47ba76`). **W10.9 is NOT STARTED.**
 One small additive migration (`0017_integrations`). No new dependency. 0 paid/live calls. **Secret values are never retrievable.**
 
 ## 1. Starting point
