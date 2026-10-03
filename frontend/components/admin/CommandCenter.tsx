@@ -91,6 +91,18 @@ function Overview({ home }: { home: Awaited<ReturnType<typeof api.admin.home>> }
         </Panel>
       ) : null}
 
+      {home.jobs ? (
+        <Panel title="Jobs">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Stat label="Queued" value={home.jobs.queue.queued} />
+            <Stat label="Running" value={home.jobs.queue.running} />
+            <Stat label="Failed" value={home.jobs.queue.failed} />
+            <Stat label="Stale leases" value={home.jobs.queue.stale_leases} />
+          </div>
+          <p className="text-xs text-muted">Queue counts only. A worker is healthy only if it has reported in recently (see Jobs).</p>
+        </Panel>
+      ) : null}
+
       {home.plans ? (
         <Panel title="Plans">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

@@ -1244,6 +1244,87 @@ class IntegrationState(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
 
+JOB_STATES = ("queued", "running", "succeeded", "failed", "cancelled")
+JOB_PRIORITIES = ("low", "normal", "high")
+JOB_ERROR_CATEGORIES = (
+    "transient", "timeout", "rate_limited", "unavailable",           # retryable
+    "invalid_payload", "configuration_error", "unsupported", "unknown_job_type",   # not retryable
+    "lease_expired", "internal_error",
+)
+JOB_WORKER_STATUSES = ("running", "stopped")
+
+
+class Job(Base):
+    """One durable unit of background work (P10B-W10.9). The table is the queue AND the operational history.
+
+    Never holds a secret, a header, a raw provider response, a stack trace or private candidate content: the payload
+    is validated per job type and refers to durable records by id.
+    """
+
+    __tablename__ = "jobs"
+    __table_args__ = (
+        CheckConstraint(_in_list("state", JOB_STATES), name="ck_jobs_state"),
+        CheckConstraint(_in_list("priority", JOB_PRIORITIES), name="ck_jobs_priority"),
+        CheckConstraint("attempts >= 0", name="ck_jobs_attempts_nonneg"),
+        CheckConstraint("max_attempts >= 1", name="ck_jobs_max_attempts_pos"),
+        CheckConstraint("attempts <= max_attempts", name="ck_jobs_attempts_le_max"),
+        CheckConstraint("manual_retries >= 0", name="ck_jobs_manual_retries_nonneg"),
+        # A running job always has an owner and a lease; any other state holds no lease.
+        CheckConstraint(
+            "(state = 'running' AND lease_owner IS NOT NULL AND lease_expires_at IS NOT NULL) "
+            "OR (state <> 'running' AND lease_owner IS NULL AND lease_expires_at IS NULL)",
+            name="ck_jobs_lease_matches_state"),
+        CheckConstraint("last_error_category IS NULL OR " + _in_list("last_error_category", JOB_ERROR_CATEGORIES),
+                        name="ck_jobs_error_category"),
+        # At most one ACTIVE job per (type, idempotency key); a finished job never blocks a later one.
+        Index("uq_jobs_active_idempotency", "job_type", "idempotency_key", unique=True,
+              sqlite_where=text("idempotency_key IS NOT NULL AND state IN ('queued', 'running')"),
+              postgresql_where=text("idempotency_key IS NOT NULL AND state IN ('queued', 'running')")),
+        Index("ix_jobs_claim", "state", "available_at", "priority"),
+        Index("ix_jobs_lease_expiry", "state", "lease_expires_at"),
+        Index("ix_jobs_type_state", "job_type", "state"),
+        Index("ix_jobs_created", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    job_type: Mapped[str] = mapped_column(String(48))
+    state: Mapped[str] = mapped_column(String(16), default="queued", server_default="queued")
+    priority: Mapped[str] = mapped_column(String(8), default="normal", server_default="normal")
+    payload_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    payload_version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    idempotency_key: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    attempts: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    max_attempts: Mapped[int] = mapped_column(Integer, default=3, server_default="3")
+    manual_retries: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    available_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    lease_owner: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    heartbeat_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_error_category: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    last_error_message_safe: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    created_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class JobWorker(Base):
+    """Worker presence for diagnostics: an operational instance id, no hostname or address."""
+
+    __tablename__ = "job_workers"
+    __table_args__ = (CheckConstraint(_in_list("status", JOB_WORKER_STATUSES), name="ck_job_workers_status"),)
+
+    worker_id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    status: Mapped[str] = mapped_column(String(12), default="running", server_default="running")
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    jobs_succeeded: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    jobs_failed: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+
+
 def make_engine(database_url: str) -> Engine:
     """Create an engine; SQLite needs cross-thread access for Streamlit."""
     connect_args = {}

@@ -16,7 +16,7 @@ const ADMIN_PERMS = [
   "platform.users.sessions.revoke", "platform.workspaces.read", "platform.workspaces.manage", "platform.audit.read",
   "platform.support.read", "platform.support.reply", "platform.support.manage", "platform.support.note",
   "platform.plans.read", "platform.plans.manage", "platform.subscriptions.manage", "platform.integrations.manage",
-  "platform.integrations.read", "platform.ai.read", "platform.knowledge.read",
+  "platform.integrations.read", "platform.ai.read", "platform.knowledge.read", "platform.jobs.read", "platform.jobs.manage",
 ];
 
 function account(role: string, perms: string[]) {
@@ -52,6 +52,20 @@ const USER_DETAIL = {
   workspaces: [{ workspace_id: 3, name: "Team Alpha", workspace_status: "active", role: "workspace_member", membership_status: "active", joined_at: null }],
   audit: [],
 };
+const jobState = { retried: false, cancelled: false };
+const JOB_BASE = {
+  job_type: "diagnostic_noop", type_label: "Operational diagnostic (no-op)", priority: "normal", max_attempts: 2, manual_retries: 0,
+  available_at: "2026-10-03T10:00:00+00:00", created_at: "2026-10-03T10:00:00+00:00", updated_at: null, started_at: null,
+  lease: { held: false, owner: null, expires_at: null, heartbeat_at: null, stale: false }, waiting_for_retry: false,
+  payload_summary: { label: "Console check" },
+};
+const FAILED_ID = "b".repeat(32), QUEUED_ID = "a".repeat(32);
+const failedJob = () => ({ ...JOB_BASE, public_id: FAILED_ID, state: jobState.retried ? "queued" : "failed", attempts: jobState.retried ? 0 : 2,
+  finished_at: jobState.retried ? null : "2026-10-03T10:05:00+00:00", error_category: jobState.retried ? null : "configuration_error",
+  error_message: jobState.retried ? null : "A required integration is not configured or was rejected.", can_retry: !jobState.retried, can_cancel: jobState.retried,
+  manual_retries: jobState.retried ? 1 : 0 });
+const queuedJob = () => ({ ...JOB_BASE, public_id: QUEUED_ID, state: jobState.cancelled ? "cancelled" : "queued", attempts: 0,
+  finished_at: jobState.cancelled ? "2026-10-03T10:06:00+00:00" : null, error_category: null, error_message: null, can_retry: false, can_cancel: !jobState.cancelled });
 const itState = { tested: false };
 const INT_ROW = (tested: boolean) => ({
   code: "openrouter", name: "OpenRouter (language models)", category: "ai_model", category_label: "AI / model", adapter: "OpenRouter chat API",
@@ -101,6 +115,23 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
     }
     if (path.endsWith("/admin/home")) return json(HOME);
     const method = route.request().method();
+    if (path.endsWith("/admin/jobs/diagnostics")) return json({ queue: { queued: 1, running: 0, failed: 1, succeeded: 4, cancelled: 0, retry_waiting: 0, stale_leases: 0, oldest_ready_age_seconds: 12 },
+      by_type: [], workers: { seen_recently: 1, last_seen_at: "2026-10-03T10:00:00+00:00", stale_after_seconds: 60, items: [] } });
+    if (path.endsWith("/admin/jobs/types")) return json([{ job_type: "diagnostic_noop", label: "Operational diagnostic (no-op)", max_attempts: 2, manual_retry: true, cancellable_when_queued: true, idempotency: "x" }]);
+    if (/\/admin\/jobs\/[^/]+\/retry$/.test(path) && method === "POST") {
+      jobState.retried = true;
+      return json(failedJob());
+    }
+    if (/\/admin\/jobs\/[^/]+\/cancel$/.test(path) && method === "POST") {
+      jobState.cancelled = true;
+      return json(queuedJob());
+    }
+    if (/\/admin\/jobs\/[^/]+$/.test(path)) return json({ ...(path.includes(FAILED_ID) ? failedJob() : queuedJob()), audit: [] });
+    if (path.endsWith("/admin/jobs")) {
+      const st = new URL(route.request().url()).searchParams.get("state");
+      const items = [queuedJob(), failedJob()].filter((j) => !st || j.state === st);
+      return json({ items, total: items.length, page: 1, page_size: 25 });
+    }
     if (/\/admin\/integrations\/[^/]+\/test$/.test(path) && method === "POST") {
       itState.tested = true;
       return json({ integration: "openrouter", outcome: "success", category: "ok", latency_ms: 11 });
@@ -158,10 +189,10 @@ test("platform admin journey: Command Center, build metadata, audit, provider st
   await expect(page.getByText("Up to date")).toBeVisible();
   await expect(page.getByText("Health not tested").first()).toBeVisible();
   const nav = page.getByRole("navigation", { name: "Admin" });
-  for (const label of ["Overview", "Users", "Workspaces", "Review / Diagnostics", "Audit", "Provider status"]) {
+  for (const label of ["Overview", "Users", "Workspaces", "Review / Diagnostics", "Audit", "Provider status", "Jobs"]) {
     await expect(nav.getByRole("link", { name: new RegExp(label) })).toBeVisible();
   }
-  for (const future of ["Billing", "Subscriptions", "Jobs", "Incidents", "Feature Flags"]) {
+  for (const future of ["Billing", "Subscriptions", "Incidents", "Feature Flags"]) {
     await expect(nav.getByRole("link", { name: new RegExp(future) })).toHaveCount(0);
   }
   await expect(page.getByRole("link", { name: "Knowledge readiness" })).toHaveAttribute("href", "/review/rag");
@@ -227,6 +258,37 @@ test("W10.6: integrations inventory, environment-managed credential, manual test
   await page.goto("/admin/integrations/openrouter");
   await expect(page.getByRole("heading", { name: "Connection test" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Test connection" })).toHaveCount(0);
+});
+
+test("W10.9: jobs queue, failed filter, detail diagnostics, retry, cancel queued, read-only role", async ({ page }) => {
+  jobState.retried = false;
+  jobState.cancelled = false;
+  await mockAdmin(page, "operations_admin", ADMIN_PERMS);
+  await page.goto("/admin");
+  await page.getByRole("navigation", { name: "Admin" }).getByRole("link", { name: /Jobs/ }).click();
+  await expect(page.getByRole("heading", { name: "Jobs", exact: true })).toBeVisible();
+  await expect(page.getByText("Workers seen recently")).toBeVisible();
+  await page.getByLabel("State").selectOption("failed");
+  await page.getByRole("button", { name: "Apply" }).click();
+  await expect(page.getByRole("link", { name: "Operational diagnostic (no-op)" })).toHaveCount(1);
+  await page.getByRole("link", { name: "Operational diagnostic (no-op)" }).click();
+  await expect(page.getByRole("heading", { name: "Execution" })).toBeVisible();
+  await expect(page.getByText("Configuration problem")).toBeVisible();
+  await expect(page.getByText(/Raw job input is never displayed/)).toBeVisible();
+  await page.getByRole("button", { name: "Retry job" }).click();
+  await expect(page.getByRole("alertdialog").getByRole("button", { name: "Cancel" })).toBeFocused();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Retry job" }).click();
+  await expect(page.getByText("Job queued for another run.")).toBeVisible();
+  await page.goto(`/admin/jobs/${QUEUED_ID}`);
+  await page.getByRole("button", { name: "Cancel queued job" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Cancel job" }).click();
+  await expect(page.getByText("Job cancelled.")).toBeVisible();
+
+  await page.unroute("**/api/v1/**");
+  await mockAdmin(page, "knowledge_admin", ["platform.overview.read", "platform.jobs.read"]);
+  await page.goto(`/admin/jobs/${FAILED_ID}`);
+  await expect(page.getByRole("heading", { name: "Execution" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Retry job|Cancel queued job/ })).toHaveCount(0);
 });
 
 test("W10.4: plan catalogue, draft version, user plan assignment, candidate plan view", async ({ page }) => {

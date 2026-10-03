@@ -400,3 +400,67 @@ class IntegrationTestResult(_Strict):
     outcome: str
     category: str
     latency_ms: int | None
+
+
+# ---- W10.9 jobs: safe projections only. No raw payload field exists; the type-defined summary is the only view. ----
+class JobLease(_Strict):
+    held: bool
+    owner: str | None = None
+    expires_at: str | None = None
+    heartbeat_at: str | None = None
+    stale: bool
+
+
+class JobRow(_Strict):
+    public_id: str
+    job_type: str
+    type_label: str
+    state: str
+    priority: str
+    attempts: int
+    max_attempts: int
+    manual_retries: int
+    available_at: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
+    started_at: str | None = None
+    finished_at: str | None = None
+    error_category: str | None = None
+    error_message: str | None = None
+    lease: JobLease
+    waiting_for_retry: bool
+    payload_summary: dict[str, str]
+    can_retry: bool
+    can_cancel: bool
+
+
+class JobList(_Strict):
+    items: list[JobRow]
+    total: int
+    page: int
+    page_size: int
+
+
+class JobDetail(JobRow):
+    audit: list[AdminAuditEntry]
+
+
+class JobTypeInfo(_Strict):
+    job_type: str
+    label: str
+    max_attempts: int
+    manual_retry: bool
+    cancellable_when_queued: bool
+    idempotency: str
+
+
+class JobEnqueueRequest(_Strict):
+    job_type: str
+    payload: dict[str, str]
+    dedupe_id: str | None = None
+    priority: str = "normal"
+
+
+class JobEnqueueResult(_Strict):
+    job: JobRow
+    created: bool
