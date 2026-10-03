@@ -203,14 +203,14 @@ Draft -> Validate (schema, allow-list) -> Evaluate (deterministic evaluator suit
 Model profile/policy config is versioned; activation records the evaluator run id; admins cannot bypass evaluation; environment separation (staging activation before production); a raw slug
 from a candidate stays impossible (existing invariant). Builds on `src/llm/models.py` and `policy.py`.
 
-## 15. KB / RAG administration (W10.8)
+## 15. KB / RAG administration (W10.8: implemented on `feat/p10b-w10-8-knowledge-rag-admin`; complete when merged; see `W10_8_KNOWLEDGE_RAG_ADMINISTRATION.md`)
 Source registry fields: id, type, authority level (1 official/statistical, 2 public/professional framework, 3 reputable industry), provider, country/geography, language, classification, version,
 licence, URL, publication/retrieval dates, freshness policy, production-allowed, ingestion/index status, record/chunk counts, provenance, health. Governed flow:
 Upload -> file safety/malware -> parse -> classify -> provenance/licence declaration -> preview -> approve -> index -> activate (**never upload -> production**). Also refresh, reindex, disable,
 rollback to prior snapshot, diagnostics, retrieval test console (admin-only, sources only). Russian or generated aliases never carry "official ESCO" provenance. Operates P10C sources later;
 does not replace P10C.
 
-## 16. Jobs / queues (W10.9; decision AD-05: implemented on `feat/p10b-w10-9-jobs-operational-diagnostics`; complete when merged; see `W10_9_JOBS_QUEUES_OPERATIONAL_DIAGNOSTICS.md`)
+## 16. Jobs / queues (W10.9; decision AD-05: COMPLETE, merged in PR #120, main `f059668`; see `W10_9_JOBS_QUEUES_OPERATIONAL_DIAGNOSTICS.md`)
 Today every long operation is synchronous and no worker exists. Design (AD-05, FINAL): a DB-backed `background_job` abstraction with a **separate worker process** and **no external broker**.
 Required properties: **transactional job claiming** (never "select pending and hope"), lease/ownership with heartbeat or lease expiry, attempt count, retry policy with backoff, idempotency key,
 failed and dead-letter (final failure) states, request/correlation id, entity linkage, created/started/completed timestamps, sanitised failure reasons. Claiming uses safe locking per database:

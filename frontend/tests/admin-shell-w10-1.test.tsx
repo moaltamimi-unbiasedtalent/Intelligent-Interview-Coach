@@ -73,9 +73,9 @@ describe("A1-A3 capability-aware navigation", () => {
   it("A2 a platform admin with these permissions sees the operational destinations, none of the future ones", () => {
     render(<AdminShell><p>body</p></AdminShell>);
     const links = navLinks();
-    expect(links).toHaveLength(7);   // six W10.1 destinations plus Integrations (W10.6)
+    expect(links).toHaveLength(8);   // six W10.1 destinations plus Integrations (W10.6) and Knowledge (W10.8)
     const text = links.join("|");
-    for (const ok of ["Overview", "Users", "Workspaces", "Review / Diagnostics", "Audit", "Provider status", "Integrations"]) expect(text).toContain(ok);
+    for (const ok of ["Overview", "Users", "Workspaces", "Review / Diagnostics", "Audit", "Provider status", "Integrations", "Knowledge"]) expect(text).toContain(ok);
     for (const future of ["Support", "Billing", "Subscriptions", "Jobs", "Knowledge administration", "Privacy requests", "Incidents", "Feature Flags"]) {
       expect(text).not.toContain(future);
     }

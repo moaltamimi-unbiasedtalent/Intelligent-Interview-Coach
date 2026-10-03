@@ -62,6 +62,8 @@ class JobContext:
     session_factory: Any
     secret_store: Any = None
     probes: Any = None
+    services: Any = None            # optional worker-provided runtime services (e.g. the knowledge runtime)
+    max_attempts: int = 1           # lets a handler record a domain failure on its LAST attempt
     heartbeat: Callable[[], None] = lambda: None   # renews the lease for long handlers; short jobs never call it
 
     # Cancellation of a RUNNING job is not supported (documented): handlers are never interrupted.
@@ -184,6 +186,9 @@ def build_registry() -> dict[str, JobTypeDef]:
             max_attempts=3, lease_seconds=60, backoff_base_seconds=30, backoff_cap_seconds=300,
             admin_enqueue=True, requires_permission=perm.INTEGRATIONS_MANAGE, dependencies=("integrations",)),
     ]
+    from src.knowledge_admin import jobs as kjobs
+
+    defs += kjobs.job_types()
     return {d.code: d for d in defs}
 
 

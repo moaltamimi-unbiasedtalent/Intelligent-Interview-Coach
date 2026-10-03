@@ -91,6 +91,18 @@ function Overview({ home }: { home: Awaited<ReturnType<typeof api.admin.home>> }
         </Panel>
       ) : null}
 
+      {home.knowledge ? (
+        <Panel title="Knowledge base">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Stat label="Awaiting review" value={home.knowledge.awaiting_review} />
+            <Stat label="Indexing" value={home.knowledge.indexing} />
+            <Stat label="Failed" value={home.knowledge.failed} />
+            <Stat label="Active governed sources" value={home.knowledge.active} />
+          </div>
+          <p className="text-xs text-muted">Counts of Admin-governed sources only. Nothing is retrievable until it is approved, indexed and activated.</p>
+        </Panel>
+      ) : null}
+
       {home.jobs ? (
         <Panel title="Jobs">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

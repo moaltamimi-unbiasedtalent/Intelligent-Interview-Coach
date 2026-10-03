@@ -443,7 +443,8 @@ def test_integration_test_job_uses_fake_probes_and_maps_categories(sf, monkeypat
 
 
 def test_registry_is_code_defined_with_no_shell_or_arbitrary_handler():
-    assert set(R.REGISTRY) == {"diagnostic_noop", "integration_connection_test"}
+    assert set(R.REGISTRY) == {"diagnostic_noop", "integration_connection_test",
+                               "knowledge_parse", "knowledge_index", "knowledge_remove_index"}   # W10.8 adds the knowledge types
     for d in R.REGISTRY.values():
         assert callable(d.handler) and d.max_attempts >= 1 and d.lease_seconds > 0 and d.idempotency
     src = " ".join((ROOT / "src/jobs" / f).read_text() for f in ("registry.py", "service.py", "worker.py"))

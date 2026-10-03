@@ -42,6 +42,7 @@ def build_career_service(
     store: Any | None = None,
     translation_cache: Any | None = None,
     retrieval_mode: str | None = None,
+    governed_retriever: Any | None = None,
 ):
     """Construct a :class:`CareerIntelligenceService` and its retrieval wiring.
 
@@ -64,6 +65,7 @@ def build_career_service(
         retriever=retriever,
         knowledge_coordinator=coordinator,
         translation_cache=translation_cache,
+        governed_retriever=governed_retriever,
     )
 
 

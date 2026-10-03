@@ -114,7 +114,7 @@ def pause_state() -> dict[str, Any]:
 
 
 def command_center(*, version: str, session_factory, accounts, workspaces, allowed: frozenset[str],
-                   support=None, plans=None, integrations=None, jobs=None) -> dict[str, Any]:
+                   support=None, plans=None, integrations=None, jobs=None, knowledge=None) -> dict[str, Any]:
     """Assemble the overview. Sections the caller lacks permission for are omitted, not blanked."""
     out: dict[str, Any] = {
         "build": build_info(version),
@@ -141,6 +141,9 @@ def command_center(*, version: str, session_factory, accounts, workspaces, allow
     if jobs is not None and "platform.jobs.read" in allowed:
         # Counts only: no payload, no error body and no candidate data. Queue depth never implies a healthy worker.
         out["jobs"] = jobs.stats()
+    if knowledge is not None and "platform.knowledge.read" in allowed:
+        # Counts only: no source text, no candidate data.
+        out["knowledge"] = knowledge.stats()
     links = []
     if "platform.knowledge.read" in allowed:
         links.append({"label": "Knowledge readiness", "path": "/review/rag"})

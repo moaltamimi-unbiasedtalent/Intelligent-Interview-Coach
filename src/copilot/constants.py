@@ -150,6 +150,11 @@ VECTOR_METADATA_KEYS = (
     "effective_period",
     "classification",
     "language",
+    # P10B-W10.8 governed (Admin-managed) knowledge: control-plane provenance carried on every governed chunk.
+    "knowledge_source_id",
+    "knowledge_version_id",
+    "authority_level",
+    "publisher",
 )
 # Default number of chunks to retrieve for a query.
 DEFAULT_TOP_K = 5

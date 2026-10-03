@@ -7,6 +7,11 @@ import type {
   AdminPage,
   AdminAssignee,
   JobDetail,
+  KnowledgeMeta,
+  KnowledgeQuery,
+  KnowledgeRow,
+  KnowledgeSourceDetail,
+  KnowledgeVersionDetail,
   JobDiagnostics,
   JobQuery,
   JobRow,
@@ -547,6 +552,23 @@ export const api = {
     feedback: (opts?: RequestOptions) => request<Record<string, unknown>>("GET", "/admin/feedback", opts),
     providers: (opts?: RequestOptions) => request<AdminProviders>("GET", "/admin/providers", opts),
     audit: (opts?: RequestOptions) => request<{ events: AdminAuditEvent[] }>("GET", "/admin/audit", opts),
+    // W10.8 knowledge
+    knowledgeMeta: (opts?: RequestOptions) => request<KnowledgeMeta>("GET", "/admin/knowledge/meta", opts),
+    knowledgeSources: (query: KnowledgeQuery = {}, opts?: RequestOptions) =>
+      request<AdminPage<KnowledgeRow>>("GET", `/admin/knowledge/sources${qs(query as Record<string, unknown>)}`, opts),
+    knowledgeSource: (id: string, opts?: RequestOptions) =>
+      request<KnowledgeSourceDetail>("GET", `/admin/knowledge/sources/${encodeURIComponent(id)}`, opts),
+    knowledgeVersion: (id: string, opts?: RequestOptions) =>
+      request<KnowledgeVersionDetail>("GET", `/admin/knowledge/versions/${encodeURIComponent(id)}`, opts),
+    createKnowledgeSource: (form: FormData) => upload<{ source_public_id: string; version_public_id: string; version: number }>("/admin/knowledge/sources", form),
+    addKnowledgeVersion: (sourceId: string, form: FormData) =>
+      upload<{ source_public_id: string; version_public_id: string; version: number }>(`/admin/knowledge/sources/${encodeURIComponent(sourceId)}/versions`, form),
+    knowledgeAction: (id: string, action: "approve" | "index" | "activate" | "retire" | "reprocess", opts?: RequestOptions) =>
+      request<KnowledgeVersionDetail>("POST", `/admin/knowledge/versions/${encodeURIComponent(id)}/${action}`, opts),
+    knowledgeReject: (id: string, reason: string, opts?: RequestOptions) =>
+      request<KnowledgeVersionDetail>("POST", `/admin/knowledge/versions/${encodeURIComponent(id)}/reject`, { body: { reason }, ...opts }),
+    knowledgeDelete: (id: string, opts?: RequestOptions) =>
+      request<{ deleted: string }>("DELETE", `/admin/knowledge/versions/${encodeURIComponent(id)}`, opts),
     // W10.9 jobs
     jobs: (query: JobQuery = {}, opts?: RequestOptions) =>
       request<AdminPage<JobRow>>("GET", `/admin/jobs${qs(query as Record<string, unknown>)}`, opts),

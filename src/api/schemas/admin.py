@@ -464,3 +464,106 @@ class JobEnqueueRequest(_Strict):
 class JobEnqueueResult(_Strict):
     job: JobRow
     created: bool
+
+
+# ---- W10.8 knowledge: governance metadata only. A bounded preview is the only content view; there is no full-text or chunk field. ----
+class KnowledgeRow(_Strict):
+    source_public_id: str
+    title: str
+    version_public_id: str
+    version: int
+    state: str
+    active: bool
+    language: str
+    authority_level: int
+    authority_meaning: str
+    publisher: str
+    licence_class: str
+    licence_label: str
+    scan_status: str
+    chunk_count: int | None = None
+    failure_category: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
+
+
+class KnowledgeList(_Strict):
+    items: list[KnowledgeRow]
+    total: int
+    page: int
+    page_size: int
+
+
+class KnowledgeSourceDetail(_Strict):
+    source_public_id: str
+    title: str
+    created_at: str | None = None
+    versions: list[KnowledgeRow]
+
+
+class KnowledgeIndexInfo(_Strict):
+    state: str
+    chunk_count: int
+    embedder: str
+    collection: str
+    built_at: str | None = None
+
+
+class KnowledgeActions(_Strict):
+    edit: bool
+    approve: bool
+    reject: bool
+    index: bool
+    activate: bool
+    retire: bool
+    reprocess: bool
+    delete: bool
+
+
+class KnowledgeVersionDetail(KnowledgeRow):
+    source_reference: str | None = None
+    provenance_note: str
+    original_filename: str
+    media_type: str
+    byte_size: int
+    checksum_sha256: str
+    scanner: str | None = None
+    extracted_chars: int | None = None
+    preview: str | None = None
+    preview_is_truncated: bool
+    failed_stage: str | None = None
+    rejection_reason: str | None = None
+    approved_at: str | None = None
+    approved_by_user_id: int | None = None
+    indexed_at: str | None = None
+    activated_at: str | None = None
+    retired_at: str | None = None
+    parse_job_id: str | None = None
+    index_job_id: str | None = None
+    index: KnowledgeIndexInfo | None = None
+    blockers: list[str]
+    metadata_frozen: bool
+    can: KnowledgeActions
+    audit: list[AdminAuditEntry] = []
+
+
+class KnowledgeMetaUpdate(_Strict):
+    language: str
+    authority_level: int
+    publisher: str = ""
+    source_reference: str | None = None
+    provenance_note: str = ""
+    licence_class: str
+
+
+class KnowledgeRejectRequest(_Strict):
+    reason: str
+
+
+class KnowledgeMeta(_Strict):
+    languages: list[str]
+    authority_levels: list[dict[str, str | int]]
+    licence_classes: list[dict[str, str | bool]]
+    states: list[str]
+    rejection_reasons: list[str]
+    upload: dict[str, str | int | list[str]]

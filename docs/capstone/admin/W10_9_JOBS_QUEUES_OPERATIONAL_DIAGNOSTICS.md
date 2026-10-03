@@ -1,6 +1,6 @@
 # P10B-W10.9 - Jobs, Queues & Operational Diagnostics
 
-**Status:** implemented on branch `feat/p10b-w10-9-jobs-operational-diagnostics`; **complete when merged to `main`**. **W10.8 is NOT STARTED.**
+**Status:** **COMPLETE** (merged in PR #120, main `f059668`). **W10.8 is NOT STARTED.**
 One additive migration (`0018_jobs`). No new dependency. No external broker. 0 paid/live calls.
 
 ## 1. Starting point

@@ -24,6 +24,7 @@ export interface AdminCommandCenter {
   plans?: { by_plan: Record<string, { users: number; workspaces: number }>; accounts_without_subscription: number };
   integrations?: { total: number; configured: number; runtime_active: number; not_tested: number; unhealthy: number };
   jobs?: JobDiagnostics;
+  knowledge?: { sources: number; awaiting_review: number; indexing: number; failed: number; indexed_not_active: number; active: number };
   support?: { open: number; unassigned: number; waiting_for_customer: number; high_or_urgent: number; total: number };
   diagnostics_links: { label: string; path: string }[];
   boundary: string;
@@ -307,4 +308,75 @@ export interface JobTypeInfo {
   manual_retry: boolean;
   cancellable_when_queued: boolean;
   idempotency: string;
+}
+
+// --- W10.8 knowledge (governance metadata only; a bounded preview is the only content view) ---
+export interface KnowledgeRow {
+  source_public_id: string;
+  title: string;
+  version_public_id: string;
+  version: number;
+  state: string;
+  active: boolean;
+  language: string;
+  authority_level: number;
+  authority_meaning: string;
+  publisher: string;
+  licence_class: string;
+  licence_label: string;
+  scan_status: string;
+  chunk_count: number | null;
+  failure_category: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+export interface KnowledgeSourceDetail {
+  source_public_id: string;
+  title: string;
+  created_at: string | null;
+  versions: KnowledgeRow[];
+}
+export interface KnowledgeVersionDetail extends KnowledgeRow {
+  source_reference: string | null;
+  provenance_note: string;
+  original_filename: string;
+  media_type: string;
+  byte_size: number;
+  checksum_sha256: string;
+  scanner: string | null;
+  extracted_chars: number | null;
+  preview: string | null;
+  preview_is_truncated: boolean;
+  failed_stage: string | null;
+  rejection_reason: string | null;
+  approved_at: string | null;
+  approved_by_user_id: number | null;
+  indexed_at: string | null;
+  activated_at: string | null;
+  retired_at: string | null;
+  parse_job_id: string | null;
+  index_job_id: string | null;
+  index: { state: string; chunk_count: number; embedder: string; collection: string; built_at: string | null } | null;
+  blockers: string[];
+  metadata_frozen: boolean;
+  can: { edit: boolean; approve: boolean; reject: boolean; index: boolean; activate: boolean; retire: boolean; reprocess: boolean; delete: boolean };
+  audit: AdminAuditEntry[];
+}
+export interface KnowledgeMeta {
+  languages: string[];
+  authority_levels: { level: number; meaning: string }[];
+  licence_classes: { code: string; label: string; activatable: boolean }[];
+  states: string[];
+  rejection_reasons: string[];
+  upload: { max_bytes: number; extensions: string[]; preview_chars: number };
+}
+export interface KnowledgeQuery {
+  state?: string;
+  language?: string;
+  authority?: string;
+  licence?: string;
+  active?: string;
+  q?: string;
+  page?: number;
+  page_size?: number;
 }
