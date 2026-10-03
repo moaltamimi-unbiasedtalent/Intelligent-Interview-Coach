@@ -43,6 +43,17 @@ ADMIN_CREDENTIAL_REPLACEMENT_FAILED: Final = "admin.credential_replacement_faile
 ADMIN_JOB_ENQUEUED: Final = "admin.job_enqueued"
 ADMIN_JOB_RETRY_REQUESTED: Final = "admin.job_retry_requested"
 ADMIN_JOB_CANCELLED: Final = "admin.job_cancelled"
+# W10.8 (knowledge). Payloads: source/version public ids, version number, old/new state, authority, language, licence class and
+# a bounded rejection reason CATEGORY; never document text, a preview, a file name or a provenance note.
+ADMIN_KNOWLEDGE_VERSION_UPLOADED: Final = "admin.knowledge_version_uploaded"
+ADMIN_KNOWLEDGE_VERSION_UPDATED: Final = "admin.knowledge_version_updated"
+ADMIN_KNOWLEDGE_VERSION_APPROVED: Final = "admin.knowledge_version_approved"
+ADMIN_KNOWLEDGE_VERSION_REJECTED: Final = "admin.knowledge_version_rejected"
+ADMIN_KNOWLEDGE_INDEX_REQUESTED: Final = "admin.knowledge_index_requested"
+ADMIN_KNOWLEDGE_VERSION_ACTIVATED: Final = "admin.knowledge_version_activated"
+ADMIN_KNOWLEDGE_VERSION_RETIRED: Final = "admin.knowledge_version_retired"
+ADMIN_KNOWLEDGE_VERSION_DELETED: Final = "admin.knowledge_version_deleted"
+ADMIN_KNOWLEDGE_REPROCESS_REQUESTED: Final = "admin.knowledge_reprocess_requested"
 ADMIN_SUPPORT_TICKET_ASSIGNED: Final = "admin.support_ticket_assigned"
 ADMIN_SUPPORT_TICKET_STATUS_CHANGED: Final = "admin.support_ticket_status_changed"
 ADMIN_SUPPORT_TICKET_PRIORITY_CHANGED: Final = "admin.support_ticket_priority_changed"
@@ -59,6 +70,9 @@ ADMIN_EVENT_NAMES: Final[frozenset[str]] = frozenset({
     ADMIN_PLAN_VERSION_RETIRED, ADMIN_SUBSCRIPTION_ASSIGNED,
     ADMIN_INTEGRATION_TEST_RUN, ADMIN_CREDENTIAL_REPLACEMENT_REQUESTED, ADMIN_CREDENTIAL_REPLACEMENT_SUCCEEDED,
     ADMIN_CREDENTIAL_REPLACEMENT_FAILED, ADMIN_JOB_ENQUEUED, ADMIN_JOB_RETRY_REQUESTED, ADMIN_JOB_CANCELLED,
+    ADMIN_KNOWLEDGE_VERSION_UPLOADED, ADMIN_KNOWLEDGE_VERSION_UPDATED, ADMIN_KNOWLEDGE_VERSION_APPROVED,
+    ADMIN_KNOWLEDGE_VERSION_REJECTED, ADMIN_KNOWLEDGE_INDEX_REQUESTED, ADMIN_KNOWLEDGE_VERSION_ACTIVATED,
+    ADMIN_KNOWLEDGE_VERSION_RETIRED, ADMIN_KNOWLEDGE_VERSION_DELETED, ADMIN_KNOWLEDGE_REPROCESS_REQUESTED,
 })
 
 # Context keys that may never be written (defence in depth against a careless caller).

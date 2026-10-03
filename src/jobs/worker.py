@@ -35,13 +35,14 @@ def poll_seconds_from_env(env: dict[str, str] | None = None) -> float:
 class Worker:
     def __init__(self, service: JobService, registry: dict[str, JobTypeDef] | None = None, *,
                  worker_id: str | None = None, clock: Callable[[], datetime] = utcnow, secret_store: Any = None,
-                 probes: Any = None, poll_seconds: float = POLL_DEFAULT) -> None:
+                 probes: Any = None, poll_seconds: float = POLL_DEFAULT, services: Any = None) -> None:
         self.service = service
         self.registry = registry if registry is not None else REGISTRY
         self.worker_id = worker_id or uuid.uuid4().hex[:16]     # an operational instance id: no host, no address
         self._clock = clock
         self._store = secret_store
         self._probes = probes
+        self._services = services
         self.poll_seconds = max(POLL_MIN, min(POLL_MAX, poll_seconds))
 
     def run_once(self) -> str:
@@ -68,7 +69,8 @@ class Worker:
                 return self.service.fail(claim, "invalid_payload", retryable=False)
             ctx = JobContext(job_public_id=claim.public_id, attempt=claim.attempts,
                              created_by_user_id=claim.created_by_user_id, session_factory=self.service._sf,
-                             secret_store=self._store, probes=self._probes,
+                             secret_store=self._store, probes=self._probes, services=self._services,
+                             max_attempts=claim.max_attempts,
                              heartbeat=lambda: self.service.heartbeat(claim, now=self._clock()))
             try:
                 defn.handler(payload, ctx)
@@ -102,8 +104,11 @@ def main() -> None:   # pragma: no cover - process entrypoint
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
     repo = build_repository(load_config())
-    worker = Worker(JobService(repo.session_factory), secret_store=get_secret_store(),
-                    poll_seconds=poll_seconds_from_env())
+    from src.copilot.config import load_config as load_copilot_config
+    from src.knowledge_admin.wiring import build_worker_services
+
+    worker = Worker(JobService(repo.session_factory), secret_store=get_secret_store(), poll_seconds=poll_seconds_from_env(),
+                    services=build_worker_services(repo.session_factory, load_copilot_config()))
     stop = threading.Event()
     for sig in (signal.SIGTERM, signal.SIGINT):
         signal.signal(sig, lambda *_: stop.set())

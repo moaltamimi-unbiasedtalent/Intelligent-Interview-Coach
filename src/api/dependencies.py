@@ -225,11 +225,26 @@ def get_feedback_service(request: Request):
 # --- request-scoped application services -------------------------------------
 
 
+def get_governed_retriever(request: Request):
+    """Retriever over Admin-governed knowledge (control-plane active set only). Built once; None if it cannot be built."""
+    def _build():
+        try:
+            from src.knowledge_admin.retriever import GovernedKnowledgeRetriever
+            from src.knowledge_admin.wiring import build_governed_store
+
+            return GovernedKnowledgeRetriever(build_governed_store(get_copilot_config(request)), get_repository(request).session_factory)
+        except Exception:  # noqa: BLE001 - governed knowledge is additive
+            return None
+
+    return _shared(request, "governed_retriever", _build)
+
+
 def get_career_service(request: Request) -> CareerApplicationService:
     return CareerApplicationService(
         get_copilot_config(request),
         store=get_vector_store(request),
         translation_cache=get_translation_cache(request),
+        governed_retriever=get_governed_retriever(request),
     )
 
 
@@ -304,6 +319,15 @@ def get_job_service(repo=Depends(get_repository)):
     from src.jobs.service import JobService
 
     return JobService(repo.session_factory)
+
+
+def get_knowledge_admin_service(repo=Depends(get_repository)):
+    from src.jobs.service import JobService
+    from src.knowledge_admin.service import KnowledgeAdminService
+    from src.knowledge_admin.wiring import build_knowledge_doc_store
+
+    return KnowledgeAdminService(repo.session_factory, doc_store=build_knowledge_doc_store(),
+                                 jobs=JobService(repo.session_factory))
 
 
 def get_support_repository(repo=Depends(get_repository)):

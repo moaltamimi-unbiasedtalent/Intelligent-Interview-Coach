@@ -62,7 +62,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("distributed_limiting_not_claimed_live", "NOT live" in by_id.get("R-34", ["", "", "", "", "", "", ""])[6] or
           "NOT live" in text, "matrix states distributed limiting is not live")
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("schema_head_unchanged", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_")), mig[-1])
+    check("schema_head_unchanged", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_")), mig[-1])
     return out
 
 

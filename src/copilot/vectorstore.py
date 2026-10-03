@@ -112,6 +112,14 @@ class BaseVectorStore(ABC):
         """Return every stored chunk (so BM25 can index the same corpus)."""
         ...
 
+    def delete_where(self, filters: dict) -> int:
+        """Physically delete chunks whose metadata equals ``filters`` (P10B-W10.8). Returns the number removed.
+
+        Used only to clean up governed knowledge. Access control NEVER depends on it: retrieval is gated by the
+        control-plane (SQL) active set, so a failed or delayed deletion cannot expose retired content.
+        """
+        raise NotImplementedError("This vector store does not support deletion.")
+
 
 class InMemoryVectorStore(BaseVectorStore):
     """A dependency-free cosine store (fallback + tests)."""
@@ -158,6 +166,12 @@ class InMemoryVectorStore(BaseVectorStore):
 
     def count(self) -> int:
         return len(self._items)
+
+    def delete_where(self, filters: dict) -> int:
+        doomed = [cid for cid, item in self._items.items() if filters and _matches(item["metadata"], filters)]
+        for cid in doomed:
+            del self._items[cid]
+        return len(doomed)
 
     def reset(self) -> None:
         self._items.clear()
@@ -280,6 +294,15 @@ class ChromaStore(BaseVectorStore):
 
     def count(self) -> int:
         return self._collection.count()
+
+    def delete_where(self, filters: dict) -> int:
+        if not filters:
+            return 0
+        got = self._collection.get(where=self._where(filters), include=[])
+        ids = got.get("ids", [])
+        if ids:
+            self._collection.delete(ids=ids)
+        return len(ids)
 
     def reset(self) -> None:
         self._client.delete_collection(self.collection_name)

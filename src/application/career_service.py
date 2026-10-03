@@ -39,7 +39,9 @@ class CareerApplicationService:
         translation_cache: Any | None = None,
         service: Any | None = None,
         tool_invoker: Any | None = None,
+        governed_retriever: Any | None = None,
     ) -> None:
+        self._governed_retriever = governed_retriever
         self._config = config
         self._store = store
         self._translation_cache = translation_cache
@@ -61,6 +63,7 @@ class CareerApplicationService:
             store=self._store,
             translation_cache=self._translation_cache,
             retrieval_mode=request.retrieval_mode,
+            governed_retriever=self._governed_retriever,
         )
         try:
             return service.answer(
@@ -96,6 +99,7 @@ class CareerApplicationService:
             store=self._store,
             translation_cache=self._translation_cache,
             retrieval_mode=request.retrieval_mode,
+            governed_retriever=self._governed_retriever,
         )
         try:
             return service.retrieve_evidence(
@@ -117,6 +121,7 @@ class CareerApplicationService:
             self._config, store=self._store,
             translation_cache=self._translation_cache,
             retrieval_mode=request.retrieval_mode,
+            governed_retriever=self._governed_retriever,
         )
         return service.plan(
             request.query,

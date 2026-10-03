@@ -17,6 +17,7 @@ const ADMIN_PERMS = [
   "platform.support.read", "platform.support.reply", "platform.support.manage", "platform.support.note",
   "platform.plans.read", "platform.plans.manage", "platform.subscriptions.manage", "platform.integrations.manage",
   "platform.integrations.read", "platform.ai.read", "platform.knowledge.read", "platform.jobs.read", "platform.jobs.manage",
+  "platform.knowledge.manage", "platform.knowledge.approve",
 ];
 
 function account(role: string, perms: string[]) {
@@ -51,6 +52,33 @@ const USER_DETAIL = {
   sessions: { active_count: 1, recent: [{ created_at: "2026-10-01T10:00:00", last_used_at: null, expires_at: "2026-10-30T10:00:00" }] },
   workspaces: [{ workspace_id: 3, name: "Team Alpha", workspace_status: "active", role: "workspace_member", membership_status: "active", joined_at: null }],
   audit: [],
+};
+// Stateful stand-in for the knowledge lifecycle. The test plays the W10.9 worker by calling kb.worker(); the real lifecycle with a
+// real worker is proven by tests/test_knowledge_admin_w10_8.py and the manual QA.
+const kb = {
+  state: "none" as string,
+  worker() {
+    if (this.state === "queued") this.state = "review_required";
+    else if (this.state === "indexing") this.state = "indexed";
+  },
+  view() {
+    const s = this.state;
+    return {
+      source_public_id: "s".repeat(32), title: "Product framework", version_public_id: "v".repeat(32), version: 1, state: s, active: s === "active",
+      language: "en", authority_level: 2, authority_meaning: "Level 2: public or professional framework", publisher: "Example Body",
+      licence_class: "public_official", licence_label: "Public / official source", scan_status: s === "queued" ? "not_scanned" : "scan_passed",
+      chunk_count: ["indexed", "active", "retired"].includes(s) ? 3 : null, failure_category: null, created_at: "2026-10-03T10:00:00", updated_at: "2026-10-03T10:00:00",
+      source_reference: "https://example.org/f", provenance_note: "Public framework.", original_filename: "framework.txt", media_type: "text/plain", byte_size: 120,
+      checksum_sha256: "a".repeat(64), scanner: "fake", extracted_chars: s === "queued" ? null : 120,
+      preview: s === "queued" ? null : "Product managers prioritise a roadmap. <script>alert(1)</script>", preview_is_truncated: false, failed_stage: null,
+      rejection_reason: null, approved_at: ["approved", "indexing", "indexed", "active"].includes(s) ? "2026-10-03T10:05:00" : null, approved_by_user_id: 1,
+      indexed_at: null, activated_at: null, retired_at: null, parse_job_id: "p".repeat(32), index_job_id: s === "indexing" || s === "indexed" || s === "active" ? "i".repeat(32) : null,
+      index: ["indexed", "active"].includes(s) ? { state: "built", chunk_count: 3, embedder: "LocalHashEmbedder", collection: "governed_knowledge", built_at: null } : null,
+      blockers: [], metadata_frozen: !["queued", "review_required", "failed"].includes(s), audit: [],
+      can: { edit: s === "review_required", approve: s === "review_required", reject: s === "review_required" || s === "approved", index: s === "approved",
+        activate: s === "indexed", retire: s === "active" || s === "indexed", reprocess: false, delete: s === "review_required" },
+    };
+  },
 };
 const jobState = { retried: false, cancelled: false };
 const JOB_BASE = {
@@ -115,6 +143,23 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
     }
     if (path.endsWith("/admin/home")) return json(HOME);
     const method = route.request().method();
+    if (path.endsWith("/admin/knowledge/meta")) return json({ languages: ["en", "de", "fr", "es", "it", "pt", "nl"],
+      authority_levels: [{ level: 1, meaning: "Level 1: official or statistical source" }, { level: 2, meaning: "Level 2: public or professional framework" }, { level: 3, meaning: "Level 3: reputable public industry research" }],
+      licence_classes: [{ code: "public_official", label: "Public / official source", activatable: true }, { code: "unclear", label: "Unclear (cannot be activated)", activatable: false }],
+      states: ["queued", "review_required", "approved", "indexing", "indexed", "active", "retired"], rejection_reasons: ["out_of_scope"],
+      upload: { max_bytes: 5242880, extensions: ["md", "pdf", "txt"], preview_chars: 4000 } });
+    if (path.endsWith("/admin/knowledge/sources") && method === "POST") {
+      kb.state = "queued";
+      return json({ source_public_id: "s".repeat(32), version_public_id: "v".repeat(32), version: 1 }, 201);
+    }
+    if (/\/admin\/knowledge\/versions\/[^/]+\/(approve|index|activate|retire)$/.test(path) && method === "POST") {
+      const act = path.split("/").pop() as string;
+      kb.state = { approve: "approved", index: "indexing", activate: "active", retire: "retired" }[act] as string;
+      return json(kb.view());
+    }
+    if (/\/admin\/knowledge\/versions\/[^/]+$/.test(path)) return json(kb.view());
+    if (/\/admin\/knowledge\/sources\/[^/]+$/.test(path)) return json({ source_public_id: "s".repeat(32), title: "Product framework", created_at: null, versions: [kb.view()] });
+    if (path.endsWith("/admin/knowledge/sources")) return json({ items: kb.state === "none" ? [] : [kb.view()], total: kb.state === "none" ? 0 : 1, page: 1, page_size: 25 });
     if (path.endsWith("/admin/jobs/diagnostics")) return json({ queue: { queued: 1, running: 0, failed: 1, succeeded: 4, cancelled: 0, retry_waiting: 0, stale_leases: 0, oldest_ready_age_seconds: 12 },
       by_type: [], workers: { seen_recently: 1, last_seen_at: "2026-10-03T10:00:00+00:00", stale_after_seconds: 60, items: [] } });
     if (path.endsWith("/admin/jobs/types")) return json([{ job_type: "diagnostic_noop", label: "Operational diagnostic (no-op)", max_attempts: 2, manual_retry: true, cancellable_when_queued: true, idempotency: "x" }]);
@@ -189,7 +234,7 @@ test("platform admin journey: Command Center, build metadata, audit, provider st
   await expect(page.getByText("Up to date")).toBeVisible();
   await expect(page.getByText("Health not tested").first()).toBeVisible();
   const nav = page.getByRole("navigation", { name: "Admin" });
-  for (const label of ["Overview", "Users", "Workspaces", "Review / Diagnostics", "Audit", "Provider status", "Jobs"]) {
+  for (const label of ["Overview", "Users", "Workspaces", "Review / Diagnostics", "Audit", "Provider status", "Jobs", "Knowledge"]) {
     await expect(nav.getByRole("link", { name: new RegExp(label) })).toBeVisible();
   }
   for (const future of ["Billing", "Subscriptions", "Incidents", "Feature Flags"]) {
@@ -258,6 +303,51 @@ test("W10.6: integrations inventory, environment-managed credential, manual test
   await page.goto("/admin/integrations/openrouter");
   await expect(page.getByRole("heading", { name: "Connection test" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Test connection" })).toHaveCount(0);
+});
+
+test("W10.8: upload, scan/parse (worker), preview, approve, index (worker), activate, retire, read-only role", async ({ page }) => {
+  kb.state = "none";
+  await mockAdmin(page, "knowledge_admin", ADMIN_PERMS);
+  await page.goto("/admin");
+  await page.getByRole("navigation", { name: "Admin" }).getByRole("link", { name: /Knowledge/ }).click();
+  await expect(page.getByRole("heading", { name: "Knowledge", exact: true })).toBeVisible();
+  await expect(page.getByText("No sources match.")).toBeVisible();
+  await page.getByLabel("Title", { exact: true }).fill("Product framework");
+  await page.getByLabel("Publisher", { exact: true }).fill("Example Body");
+  await page.getByLabel(/^File/).setInputFiles({ name: "framework.txt", mimeType: "text/plain", buffer: Buffer.from("Product managers prioritise a roadmap.") });
+  await page.getByRole("button", { name: "Upload" }).click();
+  await expect(page.getByText(/queued for scanning and parsing/)).toBeVisible();
+  await expect(page.getByRole("table").getByText("Queued for scanning")).toBeVisible();
+  kb.worker();                                                   // the W10.9 worker scans and parses
+  await page.reload();
+  await page.getByRole("link", { name: "Product framework" }).click();
+  await expect(page.getByRole("heading", { name: "Preview" })).toBeVisible();
+  await expect(page.getByTestId("knowledge-preview")).toContainText("<script>alert(1)</script>");   // shown as text, not executed
+  await expect(page.getByText("Not active; not used in candidate answers")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Activate version" })).toHaveCount(0);              // parsed != approved != active
+  await page.getByRole("button", { name: "Approve version" }).click();
+  await expect(page.getByRole("alertdialog").getByRole("button", { name: "Cancel" })).toBeFocused();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Approve" }).click();
+  await expect(page.getByRole("button", { name: "Queue indexing" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Activate version" })).toHaveCount(0);              // approved != indexed
+  await page.getByRole("button", { name: "Queue indexing" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Queue indexing" }).click();
+  await expect(page.getByRole("table").getByText(/Indexing/)).toBeVisible();
+  kb.worker();                                                   // the worker indexes
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Activate version" })).toBeVisible();               // indexed, still not active
+  await page.getByRole("button", { name: "Activate version" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Activate" }).click();
+  await expect(page.getByRole("table").getByText(/Active/)).toBeVisible();
+  await page.getByRole("button", { name: "Retire version" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Retire" }).click();
+  await expect(page.getByRole("table").getByText(/Retired/)).toBeVisible();
+
+  await page.unroute("**/api/v1/**");
+  await mockAdmin(page, "platform_admin", ["platform.overview.read", "platform.knowledge.read"]);
+  await page.goto(`/admin/knowledge/${"s".repeat(32)}`);
+  await expect(page.getByRole("heading", { name: "Provenance and use rights" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Approve|Reject|Queue indexing|Activate|Retire|Delete|Upload/ })).toHaveCount(0);
 });
 
 test("W10.9: jobs queue, failed filter, detail diagnostics, retry, cancel queued, read-only role", async ({ page }) => {

@@ -1325,6 +1325,114 @@ class JobWorker(Base):
     jobs_failed: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 
 
+# --- Governed knowledge (P10B-W10.8, migration 0019_knowledge_admin) ------------------------------------------
+KNOWLEDGE_STATES = ("queued", "processing", "review_required", "approved", "indexing", "indexed", "active", "rejected", "failed", "retired")
+KNOWLEDGE_LICENCES = ("public_official", "explicit_permissive", "internal_owned", "permission_recorded", "unclear", "restricted")
+KNOWLEDGE_SCAN_STATUSES = ("not_scanned", "scan_passed", "scan_failed", "scan_unavailable")
+KNOWLEDGE_LANGUAGES = ("en", "de", "fr", "es", "it", "pt", "nl")
+KNOWLEDGE_REJECTION_REASONS = ("provenance_insufficient", "licence_not_permitted", "quality_insufficient", "out_of_scope",
+                               "unsafe_content", "duplicate", "other")
+KNOWLEDGE_INDEX_STATES = ("built", "removed", "removal_failed")
+
+
+class KnowledgeSource(Base):
+    """Stable logical identity of a platform knowledge source. Platform knowledge ONLY: never candidate content."""
+
+    __tablename__ = "knowledge_sources"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    title: Mapped[str] = mapped_column(String(200))
+    created_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class KnowledgeSourceVersion(Base):
+    """One immutable uploaded version. Governance metadata is frozen once the version is approved."""
+
+    __tablename__ = "knowledge_source_versions"
+    __table_args__ = (
+        CheckConstraint(_in_list("state", KNOWLEDGE_STATES), name="ck_ksv_state"),
+        CheckConstraint("authority_level IN (1, 2, 3)", name="ck_ksv_authority"),
+        CheckConstraint(_in_list("language", KNOWLEDGE_LANGUAGES), name="ck_ksv_language"),
+        CheckConstraint(_in_list("licence_class", KNOWLEDGE_LICENCES), name="ck_ksv_licence"),
+        CheckConstraint(_in_list("scan_status", KNOWLEDGE_SCAN_STATUSES), name="ck_ksv_scan"),
+        CheckConstraint("length(checksum_sha256) = 64", name="ck_ksv_checksum"),
+        CheckConstraint("version >= 1", name="ck_ksv_version"),
+        CheckConstraint("byte_size >= 0", name="ck_ksv_size"),
+        CheckConstraint("rejection_reason IS NULL OR " + _in_list("rejection_reason", KNOWLEDGE_REJECTION_REASONS),
+                        name="ck_ksv_rejection"),
+        # From approval onward a version always records who approved it and when (never fabricated afterwards).
+        CheckConstraint(
+            "state NOT IN ('approved', 'indexing', 'indexed', 'active') "
+            "OR (approved_by_user_id IS NOT NULL AND approved_at IS NOT NULL)", name="ck_ksv_approval_evidence"),
+        UniqueConstraint("source_id", "version", name="uq_ksv_source_version"),
+        UniqueConstraint("source_id", "checksum_sha256", name="uq_ksv_source_checksum"),
+        # At most ONE active version per source: activation is an atomic switch of this single row.
+        Index("uq_ksv_one_active", "source_id", unique=True, sqlite_where=text("state = 'active'"),
+              postgresql_where=text("state = 'active'")),
+        Index("ix_ksv_state", "state", "updated_at"),
+        Index("ix_ksv_source", "source_id", "version"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    source_id: Mapped[int] = mapped_column(ForeignKey("knowledge_sources.id", ondelete="CASCADE"))
+    version: Mapped[int] = mapped_column(Integer)
+    state: Mapped[str] = mapped_column(String(20), default="queued", server_default="queued")
+    language: Mapped[str] = mapped_column(String(2))
+    authority_level: Mapped[int] = mapped_column(Integer)
+    publisher: Mapped[str] = mapped_column(String(200), default="", server_default="")
+    source_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    provenance_note: Mapped[str] = mapped_column(String(500), default="", server_default="")
+    licence_class: Mapped[str] = mapped_column(String(24), default="unclear", server_default="unclear")
+    original_filename: Mapped[str] = mapped_column(String(255))
+    storage_key: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    media_type: Mapped[str] = mapped_column(String(64))
+    byte_size: Mapped[int] = mapped_column(Integer)
+    checksum_sha256: Mapped[str] = mapped_column(String(64))
+    scan_status: Mapped[str] = mapped_column(String(20), default="not_scanned", server_default="not_scanned")
+    scanner_name: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    preview_text: Mapped[str | None] = mapped_column(String(4100), nullable=True)   # bounded; never the full document
+    extracted_chars: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    chunk_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    failed_stage: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    failure_category: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    parse_job_public_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    index_job_public_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    approved_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    rejected_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    rejected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    rejection_reason: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    indexed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    activated_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    activated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    retired_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    retired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class KnowledgeIndexRecord(Base):
+    """What was written to the governed vector collection for a version (control-plane bookkeeping only)."""
+
+    __tablename__ = "knowledge_index_records"
+    __table_args__ = (CheckConstraint(_in_list("state", KNOWLEDGE_INDEX_STATES), name="ck_kir_state"),
+                      CheckConstraint("chunk_count >= 0", name="ck_kir_chunks"))
+
+    version_id: Mapped[int] = mapped_column(ForeignKey("knowledge_source_versions.id", ondelete="CASCADE"), primary_key=True)
+    collection: Mapped[str] = mapped_column(String(64))
+    embedder: Mapped[str] = mapped_column(String(64))
+    chunk_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    state: Mapped[str] = mapped_column(String(16), default="built", server_default="built")
+    built_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    removed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
 def make_engine(database_url: str) -> Engine:
     """Create an engine; SQLite needs cross-thread access for Streamlit."""
     connect_args = {}

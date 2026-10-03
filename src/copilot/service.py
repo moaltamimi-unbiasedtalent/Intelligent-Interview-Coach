@@ -265,6 +265,7 @@ class CareerIntelligenceService:
         synthesis_responder: Responder | None = None,
         knowledge_coordinator=None,
         translation_cache: TTLCache | None = None,
+        governed_retriever=None,
         top_k: int = constants.DEFAULT_TOP_K,
         max_context_chars: int = constants.MAX_CONTEXT_CHARS,
     ) -> None:
@@ -277,6 +278,9 @@ class CareerIntelligenceService:
         # coordinator over the real/fixture stores; when absent the service runs
         # the existing vector-only path unchanged (keeps prior tests hermetic).
         self.knowledge_coordinator = knowledge_coordinator
+        # P10B-W10.8: optional retriever over GOVERNED (Admin-approved, activated) knowledge. It checks the control plane for the
+        # active set on every call; when none is active it returns nothing and legacy retrieval is unchanged.
+        self.governed_retriever = governed_retriever
         # Quality/cost mode: "quality" (freshest, cache bypassed), "balanced"
         # (default), or "cheap" (smaller top-k, cache on). Unknown -> balanced.
         mode = (getattr(config, "quality_mode", "balanced") or "balanced").lower()
@@ -829,6 +833,15 @@ class CareerIntelligenceService:
             except Exception:  # noqa: BLE001 - one query failing must not abort
                 trace.degraded.append("retrieval")
                 per_query.append([])
+        if self.governed_retriever is not None:
+            for query in translated.all_queries:
+                try:
+                    governed = self.governed_retriever.retrieve(query, top_k=self.top_k)
+                except Exception:  # noqa: BLE001 - governed knowledge is additive; its failure must not break legacy retrieval
+                    trace.degraded.append("governed_knowledge")
+                    break
+                if governed:
+                    per_query.append(governed)
         results = reciprocal_rank_fusion(per_query, top_k=self.top_k)
 
         # Inspector strategy/channels for the non-hybrid retrievers (fused only).
