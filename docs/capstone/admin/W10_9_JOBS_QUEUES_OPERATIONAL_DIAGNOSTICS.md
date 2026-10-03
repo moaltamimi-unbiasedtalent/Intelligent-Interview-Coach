@@ -123,7 +123,11 @@ Nothing here is a platform pause. SEC-W10-05 (durable platform configuration and
 `0018_jobs` (from `0017_integrations`): `jobs` and `job_workers` with CHECK constraints (state, priority, attempts >= 0, max_attempts >= 1, attempts <= max, manual_retries >= 0, lease-matches-state, error category), unique public id, the partial unique idempotency index, and indexes `ix_jobs_claim (state, available_at, priority)`, `ix_jobs_lease_expiry (state, lease_expires_at)`, `ix_jobs_type_state`, `ix_jobs_created`. Reversible.
 
 ## 36. PostgreSQL testing
-No PostgreSQL service or driver is part of this repository's CI or dependencies. Covered today: the compiled statement for the PostgreSQL dialect contains `FOR UPDATE SKIP LOCKED` and the code path is asserted. `test_postgres_two_workers_one_claim` runs two-plus competing workers against a real PostgreSQL when `TEST_POSTGRES_URL` points at a disposable migrated database and a driver is installed; it is SKIPPED otherwise (explicit reason). **Real PostgreSQL concurrency was not exercised in this wave.**
+PostgreSQL claim SQL is structurally verified and a conditional real-concurrency integration test exists; real PostgreSQL two-worker concurrency is not currently exercised by CI.
+- The production PostgreSQL claim path uses `FOR UPDATE SKIP LOCKED`; a test compiles the statement for the PostgreSQL dialect and asserts the clause and the dialect branch.
+- `test_postgres_two_workers_one_claim` runs competing workers against a real PostgreSQL, but only when `TEST_POSTGRES_URL` points at a disposable migrated database and a PostgreSQL driver is installed. It is SKIPPED otherwise, with an explicit reason.
+- The repository and CI currently provide neither a PostgreSQL service nor a driver, so that test has not been executed.
+- This is a qualification gap, not evidence that PostgreSQL concurrency fails. PostgreSQL concurrency is NOT claimed to be runtime-validated.
 
 ## 37. SQLite concurrency testing
 File-backed temporary SQLite with real threads: 8 workers over 12 jobs claim each job exactly once with attempts == 1 (losers consume nothing); 10 competing claimers on one job produce one winner; 8 racing enqueues with one key create one active job.
@@ -138,7 +142,7 @@ File-backed temporary SQLite with real threads: 8 workers over 12 jobs claim eac
 **208 passed** (207 baseline plus the jobs journey), serial, no retries or timeout changes, all mocked.
 
 ## 41. Evaluators
-**33 of 33** CI evaluators pass, including the new `scripts/eval_admin_jobs.py` (28 checks). Two non-CI scripts (`eval_company_intelligence`, `eval_marketing_product_trust`) fail identically on the unmodified starting `main`; they are pre-existing and unrelated.
+**33 of 33** CI evaluators pass, including the new `scripts/eval_admin_jobs.py` (28 checks). Two non-CI scripts (`eval_company_intelligence`, `eval_marketing_product_trust`) fail in the same way on the unmodified starting `main` (checked in a clean worktree of `main`); they are not part of CI, W10.9 did not modify their relevant implementation, and they were deliberately not fixed or rebaselined. Running evaluators rewrites tracked files under `evaluations/` when the full `scripts/eval_*.py` set is run locally; those generated outputs are not part of W10.9 and were restored to `main`.
 
 ## 42. Manual QA
 Fresh database migrated to `0018_jobs`, API on its own port, worker as a separate process. Jobs enqueued through the API stayed `queued` until the worker started (the API does not execute jobs); the worker ran the no-op (succeeded) and a malware-scanner connection test (config error, no network, failed with `configuration_error`, 1 of 3 attempts); a queued job was cancelled; manual retry requeued and failed again as expected; Command Center and diagnostics counts matched; no response contained a raw payload; audit rows hold ids and states only. Lease expiry: a ghost worker claimed a job and "crashed"; after the lease passed the job showed a stale lease and a new worker reclaimed it (attempts 2) and completed it. No live provider was called.

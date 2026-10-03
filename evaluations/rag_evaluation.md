@@ -7,9 +7,9 @@ Embedder: **local/local-hash-v1**. Translator: **heuristic (offline)**. This run
 
 | mode | Hit@5 | MRR | Recall@5 | TermRecall@5 | Latency (ms) |
 |---|---|---|---|---|---|
-| vector | 0.97 | 0.842 | 0.955 | 0.97 | 0.379 |
+| vector | 0.97 | 0.842 | 0.955 | 0.97 | 0.389 |
 | keyword | 0.97 | 0.904 | 0.97 | 0.97 | 0.022 |
-| hybrid | 0.939 | 0.871 | 0.924 | 0.939 | 0.418 |
+| hybrid | 0.939 | 0.871 | 0.924 | 0.939 | 0.432 |
 
 Best by MRR then Hit@5: **keyword**.
 
@@ -17,8 +17,8 @@ Best by MRR then Hit@5: **keyword**.
 
 | query | Hit@5 | MRR | Recall@5 | Latency (ms) |
 |---|---|---|---|---|
-| original | 0.939 | 0.871 | 0.924 | 0.417 |
-| translated | 0.939 | 0.871 | 0.924 | 0.425 |
+| original | 0.939 | 0.871 | 0.924 | 0.424 |
+| translated | 0.939 | 0.871 | 0.924 | 0.428 |
 
 > Translation ran with the **offline heuristic** translator, which returns the original query with no alternates — so 'translated' equals 'original' here. This is reported honestly: no translation effect is measurable offline. Re-run with an LLM translator to measure the semantic effect. We do **not** assume translation is better.
 

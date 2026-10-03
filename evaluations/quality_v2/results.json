@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-03T12:04:44Z",
+  "generated": "2026-08-29T18:41:45Z",
   "held_out_dataset": "evaluations/quality_v2/held_out_relevance.json",
   "corpus": "evaluations/corpus",
   "embedding_mode": "OFFLINE LEXICAL",
@@ -12,7 +12,7 @@
       "mrr": 0.704,
       "recall_at_k": 0.917,
       "term_recall_at_k": 1.0,
-      "avg_latency_ms": 0.444
+      "avg_latency_ms": 0.526
     }
   },
   "tool_selection_accuracy": 1.0,
