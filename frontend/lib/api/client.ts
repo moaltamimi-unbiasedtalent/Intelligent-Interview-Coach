@@ -6,6 +6,9 @@ import type {
   AdminCommandCenter,
   AdminPage,
   AdminAssignee,
+  IntegrationDetail,
+  IntegrationRow,
+  IntegrationTestResult,
   AssignablePlan,
   PlanDetail,
   PlanVersionRow,
@@ -501,6 +504,15 @@ export const api = {
       request<Record<string, unknown>>("POST", `/admin/users/${userId}/plan`, { body: { plan_code: planCode }, ...opts }),
     setWorkspacePlan: (workspaceId: number, planCode: string, opts?: RequestOptions) =>
       request<Record<string, unknown>>("POST", `/admin/workspaces/${workspaceId}/plan`, { body: { plan_code: planCode }, ...opts }),
+    integrations: (opts?: RequestOptions) => request<{ items: IntegrationRow[] }>("GET", "/admin/integrations", opts),
+    integration: (code: string, opts?: RequestOptions) =>
+      request<IntegrationDetail>("GET", `/admin/integrations/${encodeURIComponent(code)}`, opts),
+    testIntegration: (code: string, opts?: RequestOptions) =>
+      request<IntegrationTestResult>("POST", `/admin/integrations/${encodeURIComponent(code)}/test`, opts),
+    /** WRITE-ONLY: the response never contains the value. Only offered when the credential store is writable. */
+    replaceCredential: (code: string, slot: string, value: string, opts?: RequestOptions) =>
+      request<{ integration: string; slot: string; configured: boolean }>(
+        "POST", `/admin/integrations/${encodeURIComponent(code)}/credentials/${encodeURIComponent(slot)}`, { body: { value }, ...opts }),
     plans: (opts?: RequestOptions) => request<{ items: PlanVersionRow[] }>("GET", "/admin/plans", opts),
     plan: (versionId: number, opts?: RequestOptions) => request<PlanDetail>("GET", `/admin/plans/${versionId}`, opts),
     assignablePlans: (opts?: RequestOptions) => request<AssignablePlan[]>("GET", "/admin/plans/assignable", opts),

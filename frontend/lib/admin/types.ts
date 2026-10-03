@@ -22,6 +22,7 @@ export interface AdminCommandCenter {
   accounts: Record<string, number>;
   workspaces: Record<string, number>;
   plans?: { by_plan: Record<string, { users: number; workspaces: number }>; accounts_without_subscription: number };
+  integrations?: { total: number; configured: number; runtime_active: number; not_tested: number; unhealthy: number };
   support?: { open: number; unassigned: number; waiting_for_customer: number; high_or_urgent: number; total: number };
   diagnostics_links: { label: string; path: string }[];
   boundary: string;
@@ -214,4 +215,40 @@ export interface SubscriptionEntry {
 export interface SubjectPlan {
   current: SubscriptionEntry | null;
   history: SubscriptionEntry[];
+}
+
+// --- W10.6 integrations (metadata only: no secret value, prefix, suffix, mask, URL or upstream response) ---
+export interface CredentialStatus {
+  slot: string;
+  label: string;
+  external_name: string;
+  configured: boolean;
+  source: string;
+  writable: boolean;
+}
+export interface IntegrationRow {
+  code: string;
+  name: string;
+  category: string;
+  category_label: string;
+  adapter: string;
+  description: string;
+  classification: string;
+  configuration_status: string;
+  slots: CredentialStatus[];
+  settings: { code: string; label: string; selected: string | null }[];
+  runtime: { enabled: boolean | null; managed: string; toggle_supported: boolean; note: string };
+  store: { name: string; writable: boolean };
+  health: { status: "not_tested" | "healthy" | "unhealthy"; last_tested_at: string | null; category: string | null; latency_ms: number | null };
+  test: { supported: boolean; note: string };
+  validation_note: string;
+}
+export interface IntegrationDetail extends IntegrationRow {
+  audit: AdminAuditEntry[];
+}
+export interface IntegrationTestResult {
+  integration: string;
+  outcome: string;
+  category: string;
+  latency_ms: number | null;
 }

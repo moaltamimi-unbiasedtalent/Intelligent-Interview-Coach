@@ -18,6 +18,7 @@ documents are historical evidence and are labelled where they could be mistaken 
 | Localization and language dimensions | [capstone/p3_5_i18n_l10n.md](capstone/p3_5_i18n_l10n.md), [capstone/p10/w9/P10B_W9_7_RUSSIAN_LOCALE.md](capstone/p10/w9/P10B_W9_7_RUSSIAN_LOCALE.md); locale constants `src/locales.py` |
 | Opportunities | [capstone/p10/p10b_wave6_opportunity_model.md](capstone/p10/p10b_wave6_opportunity_model.md) |
 | Workspaces, sharing, current admin foundations | [capstone/p6_5_workspaces_platform_admin.md](capstone/p6_5_workspaces_platform_admin.md) |
+| Admin integrations and API connections (W10.6, implemented) | [capstone/admin/W10_6_INTEGRATIONS_API_CONNECTIONS.md](capstone/admin/W10_6_INTEGRATIONS_API_CONNECTIONS.md) |
 | Admin plans, subscriptions and entitlements (W10.4, implemented) | [capstone/admin/W10_4_PLANS_SUBSCRIPTIONS_ENTITLEMENTS.md](capstone/admin/W10_4_PLANS_SUBSCRIPTIONS_ENTITLEMENTS.md) |
 | Admin customer support and ticketing (W10.3, implemented) | [capstone/admin/W10_3_CUSTOMER_SUPPORT_TICKETING.md](capstone/admin/W10_3_CUSTOMER_SUPPORT_TICKETING.md) |
 | Admin users, sessions and workspaces (W10.2, implemented) | [capstone/admin/W10_2_USERS_ACCESS_WORKSPACES.md](capstone/admin/W10_2_USERS_ACCESS_WORKSPACES.md) |

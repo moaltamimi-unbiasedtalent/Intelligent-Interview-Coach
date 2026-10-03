@@ -65,7 +65,7 @@ never-translated slogan. Local `main` == `origin/main`; GitHub integration is pa
 | W10.3 | Support and ticketing (**COMPLETE, merged in PR #114 at b80635d**; migration `0015_support_ticketing`; see `admin/W10_3_CUSTOMER_SUPPORT_TICKETING.md`) | XL | Capstone critical |
 | W10.4 | Plans, subscriptions and entitlements (**COMPLETE, merged in PR #116 at 787178d**; migration `0016_plans_entitlements`; no billing or price; see `admin/W10_4_PLANS_SUBSCRIPTIONS_ENTITLEMENTS.md`) | L | Capstone critical |
 | W10.5 | Billing and payment administration (mock adapter acceptable) | XL | Capstone desirable |
-| W10.6 | Integrations and API connections | L | Capstone critical |
+| W10.6 | Integrations and API connections (**implemented; complete when merged**; migration `0017_integrations`; see `admin/W10_6_INTEGRATIONS_API_CONNECTIONS.md`) | L | Capstone critical |
 | W10.7 | AI and model administration | L | Capstone desirable |
 | W10.8 | Knowledge base and RAG administration | XL | Capstone critical |
 | W10.9 | Jobs, queues and operational diagnostics | L | Capstone desirable |

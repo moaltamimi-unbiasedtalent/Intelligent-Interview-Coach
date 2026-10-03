@@ -15,7 +15,7 @@ const ADMIN_PERMS = [
   "platform.overview.read", "platform.users.read", "platform.users.manage", "platform.users.role.assign",
   "platform.users.sessions.revoke", "platform.workspaces.read", "platform.workspaces.manage", "platform.audit.read",
   "platform.support.read", "platform.support.reply", "platform.support.manage", "platform.support.note",
-  "platform.plans.read", "platform.plans.manage", "platform.subscriptions.manage",
+  "platform.plans.read", "platform.plans.manage", "platform.subscriptions.manage", "platform.integrations.manage",
   "platform.integrations.read", "platform.ai.read", "platform.knowledge.read",
 ];
 
@@ -52,6 +52,18 @@ const USER_DETAIL = {
   workspaces: [{ workspace_id: 3, name: "Team Alpha", workspace_status: "active", role: "workspace_member", membership_status: "active", joined_at: null }],
   audit: [],
 };
+const itState = { tested: false };
+const INT_ROW = (tested: boolean) => ({
+  code: "openrouter", name: "OpenRouter (language models)", category: "ai_model", category_label: "AI / model", adapter: "OpenRouter chat API",
+  description: "Chat model provider.", classification: "runtime_active", configuration_status: "configured",
+  slots: [{ slot: "api_key", label: "API key", external_name: "OPENROUTER_API_KEY", configured: true, source: "environment", writable: false }],
+  settings: [], runtime: { enabled: true, managed: "environment", toggle_supported: false, note: "Runtime state is owned by the deployment environment." },
+  store: { name: "environment", writable: false },
+  health: tested ? { status: "healthy", last_tested_at: "2026-10-03T10:00:00", category: "ok", latency_ms: 11 } : { status: "not_tested", last_tested_at: null, category: null, latency_ms: null },
+  test: { supported: true, note: "Calls one key-information endpoint." }, validation_note: "Healthy only after a successful manual test." });
+const INT_GOOGLE = { ...INT_ROW(false), code: "google_oidc", name: "Google sign-in (OIDC)", category: "authentication", category_label: "Authentication",
+  classification: "code_present_not_validated", test: { supported: false, note: "No manual probe." },
+  validation_note: "Backend support present; end-to-end sign-in is not validated." };
 const PLAN_ROWS = [
   { id: 2, plan_code: "premium", version: 1, display_name: "Premium (preview)", status: "active", enabled_entitlements: 5, total_entitlements: 5, subscribers: { users: 1, workspaces: 0 }, created_at: null, activated_at: "2026-10-01", retired_at: null },
   { id: 1, plan_code: "basic", version: 1, display_name: "Basic", status: "active", enabled_entitlements: 4, total_entitlements: 5, subscribers: { users: 4, workspaces: 0 }, created_at: null, activated_at: "2026-10-01", retired_at: null },
@@ -89,6 +101,12 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
     }
     if (path.endsWith("/admin/home")) return json(HOME);
     const method = route.request().method();
+    if (/\/admin\/integrations\/[^/]+\/test$/.test(path) && method === "POST") {
+      itState.tested = true;
+      return json({ integration: "openrouter", outcome: "success", category: "ok", latency_ms: 11 });
+    }
+    if (/\/admin\/integrations\/[^/]+$/.test(path)) return json({ ...INT_ROW(itState.tested), audit: [] });
+    if (path.endsWith("/admin/integrations")) return json({ items: [INT_ROW(itState.tested), INT_GOOGLE] });
     if (/\/admin\/plans\/versions\/\d+\/(activate|retire)$/.test(path) && method === "POST") return json({ ok: true });
     if (/\/admin\/plans\/versions\/\d+\/entitlements$/.test(path) && method === "PATCH") return json({ id: 3, changed: ["premium_preview"] });
     if (/\/admin\/plans\/[^/]+\/versions$/.test(path) && method === "POST") return json({ id: 3, plan_code: "premium", version: 2 });
@@ -185,6 +203,30 @@ test("W10.2: users search, safe detail, governed action with confirmation, works
   await page.getByRole("button", { name: "Remove: jane@example.com" }).click();
   await expect(page.getByRole("alertdialog").getByRole("button", { name: "Cancel" })).toBeFocused();
   await page.getByRole("alertdialog").getByRole("button", { name: "Cancel" }).click();
+});
+
+test("W10.6: integrations inventory, environment-managed credential, manual test, read-only role", async ({ page }) => {
+  itState.tested = false;
+  await mockAdmin(page, "platform_admin", ADMIN_PERMS);
+  await page.goto("/admin");
+  const nav = page.getByRole("navigation", { name: "Admin" });
+  await nav.getByRole("link", { name: /Integrations/ }).click();
+  await expect(page.getByRole("heading", { name: "Integrations", exact: true })).toBeVisible();
+  await expect(page.getByText("Code present, not validated")).toBeVisible();
+  await expect(page.getByText("Not tested").first()).toBeVisible();
+  await page.getByRole("link", { name: "OpenRouter (language models)" }).click();
+  await expect(page.getByText(/Managed outside Ask4Mo/)).toBeVisible();
+  await expect(page.getByRole("button", { name: /Replace|Set credential|Reveal|Rotate/ })).toHaveCount(0);
+  await expect(page.locator('input[type="password"], input[type="url"]')).toHaveCount(0);
+  await page.getByRole("button", { name: "Test connection" }).click();
+  await expect(page.getByText("Connection test succeeded.")).toBeVisible();
+  await expect(page.getByText("Last test succeeded")).toBeVisible();
+
+  await page.unroute("**/api/v1/**");
+  await mockAdmin(page, "support_operator", ["platform.overview.read", "platform.integrations.read"]);
+  await page.goto("/admin/integrations/openrouter");
+  await expect(page.getByRole("heading", { name: "Connection test" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Test connection" })).toHaveCount(0);
 });
 
 test("W10.4: plan catalogue, draft version, user plan assignment, candidate plan view", async ({ page }) => {

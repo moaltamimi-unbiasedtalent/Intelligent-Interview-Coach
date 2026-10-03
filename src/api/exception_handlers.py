@@ -121,7 +121,8 @@ def register_exception_handlers(app: FastAPI) -> None:
             content={"error": {"code": "invalid_request",
                                "message": "Request validation failed.",
                                "request_id": rid,
-                               "details": jsonable_encoder(exc.errors())}},
+                               "details": [{k: v for k, v in e.items() if k not in ("input", "ctx", "url")}
+                                           for e in jsonable_encoder(exc.errors())]}},
         )
 
     @app.exception_handler(Exception)

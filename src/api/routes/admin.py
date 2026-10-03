@@ -19,7 +19,9 @@ from fastapi import Request
 
 from src.admin_repository import AdminNotFound
 from src.entitlements import PLAN_CODES
+from src.integrations import IntegrationService
 from src.plans_repository import PlanRepository
+from src.secret_store import get_secret_store
 from src.support_repository import SupportRepository
 from src.api.dependencies import (
     get_account_repository,
@@ -97,6 +99,7 @@ def home(request: Request, principal=Depends(require_permission(perm.OVERVIEW_RE
         allowed=perm.permissions_for_role(principal.platform_role),
         support=SupportRepository(accounts.session_factory),
         plans=PlanRepository(accounts.session_factory),
+        integrations=IntegrationService(accounts.session_factory, get_secret_store()),
     )
 
 

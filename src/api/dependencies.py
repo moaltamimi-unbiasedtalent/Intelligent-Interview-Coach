@@ -282,6 +282,24 @@ def get_entitlement_service(repo=Depends(get_repository)):
     return EntitlementService(repo.session_factory)
 
 
+def get_secret_store():
+    from src.secret_store import get_secret_store as _get
+
+    return _get()
+
+
+def get_integration_probes():
+    """Probe table (overridable in tests so no real provider is ever contacted)."""
+    return None
+
+
+def get_integration_service(repo=Depends(get_repository), store=Depends(get_secret_store),
+                            probes=Depends(get_integration_probes)):
+    from src.integrations import IntegrationService
+
+    return IntegrationService(repo.session_factory, store, probes)
+
+
 def get_support_repository(repo=Depends(get_repository)):
     from src.support_repository import SupportRepository
 
