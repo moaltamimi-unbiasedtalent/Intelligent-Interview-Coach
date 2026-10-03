@@ -161,10 +161,13 @@ def get_agent_service(request: Request):
             stories=StoryRepository(session_factory),
         )
         try:
+            from src.privacy.preparation import PreparationRunIndex
+
             return AgentApplicationService(
                 memory_service=get_memory_service(request),
                 evidence_service=evidence_service,
                 database_url=database_url,
+                run_index=PreparationRunIndex(session_factory),
             )
         except AgentConfigurationError as exc:
             # Fail closed: durable checkpointing configured but unavailable → a safe
@@ -319,6 +322,18 @@ def get_job_service(repo=Depends(get_repository)):
     from src.jobs.service import JobService
 
     return JobService(repo.session_factory)
+
+
+def get_privacy_request_service(repo=Depends(get_repository)):
+    from src.privacy.requests import PrivacyRequestService
+
+    return PrivacyRequestService(repo.session_factory)
+
+
+def get_legal_service(repo=Depends(get_repository)):
+    from src.privacy.legal import LegalService
+
+    return LegalService(repo.session_factory)
 
 
 def get_knowledge_admin_service(repo=Depends(get_repository)):

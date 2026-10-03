@@ -145,7 +145,10 @@ class AgentApplicationService:
         checkpoint_url: str | None = None,
         database_url: str | None = None,
         observability: Any | None = None,
+        run_index: Any | None = None,
     ) -> None:
+        # PRIV-W9-01: durable ownership index for NEW preparation runs (None keeps the previous behaviour for tests).
+        self._run_index = run_index
         if registry is None:
             # The owner-scoped evidence service (P5) is threaded to the Candidate
             # Evidence specialist tool; None keeps a safe empty selection.
@@ -213,6 +216,30 @@ class AgentApplicationService:
                 lock = threading.Lock()
                 self._thread_locks[run_id] = lock
             return lock
+
+    def _mark_run(self, state: str, run_id: str) -> None:
+        if self._run_index is not None:
+            try:
+                self._run_index.mark(run_id, state)
+            except Exception:  # noqa: BLE001 - lifecycle bookkeeping must never break a run
+                pass
+
+    def _ensure_indexed(self, run_id: str, user_id: str | None) -> None:
+        """Lazy indexing of a historical run, ONLY after the checkpoint proved this caller owns it."""
+        if self._run_index is not None and user_id is not None:
+            try:
+                self._run_index.register(run_id, int(user_id), source="lazy")
+            except Exception:  # noqa: BLE001
+                pass
+
+    def purge_run(self, run_id: str) -> bool:
+        """Delete one run's checkpoint thread by id. The CALLER must already have established ownership (the ownership index);
+        used by account deletion. Uses the saver's official delete API only; refuses (never fakes success) if unsupported."""
+        with self._lock_for(run_id):
+            if not self.checkpoint_thread_delete_supported:
+                raise CheckpointDeleteUnsupportedError("The configured checkpoint store does not support deleting a run.")
+            self._checkpointer.delete_thread(run_id)
+            return True
 
     @property
     def checkpoint_durable(self) -> bool:
@@ -287,14 +314,24 @@ class AgentApplicationService:
                 getattr(request, "coaching_style", None)
             ),
         }
+        # Ownership is recorded BEFORE the durable checkpoint exists (SQL and the checkpoint store cannot be atomic, so the safe
+        # order is index first). Fail closed: no untracked checkpoint is ever created for a new run.
+        if self._run_index is not None:
+            try:
+                self._run_index.register(run_id, int(request.user_id))
+            except Exception as exc:  # noqa: BLE001
+                raise AgentError("The assistant could not start the request.") from exc
         self._emit_started(run_id, profile.value)
         started = time.perf_counter()
         try:
             self._graph.invoke(initial, config=self._config(run_id))
         except AgentError:
+            self._mark_run("failed", run_id)
             raise
         except Exception as exc:  # noqa: BLE001 - never leak a raw error
+            self._mark_run("failed", run_id)
             raise AgentError("The assistant could not complete the request.") from exc
+        self._mark_run("ready", run_id)
         latency_ms = int((time.perf_counter() - started) * 1000)
         # Read authoritative state (detects an interrupt / pending human action).
         result = self._result_from_snapshot(
@@ -316,6 +353,7 @@ class AgentApplicationService:
         with self._lock_for(run_id):
             snapshot = self._snapshot(run_id)
             self._require_owned(snapshot, user_id)
+            self._ensure_indexed(run_id, user_id)
             if not self._is_awaiting(snapshot):
                 raise RunNotResumableError("This run is not awaiting a decision.")
             pending = (snapshot.values or {}).get("pending_action")
@@ -359,6 +397,7 @@ class AgentApplicationService:
         with self._lock_for(run_id):
             snapshot = self._snapshot(run_id)
             self._require_owned(snapshot, user_id)
+            self._ensure_indexed(run_id, user_id)
             if self._is_awaiting(snapshot):
                 # A pending approval must be answered via /resume, never bypassed.
                 raise RunNotResumableError("Answer the pending request before continuing.")
@@ -398,6 +437,7 @@ class AgentApplicationService:
     def get_run(self, run_id: str, user_id: str | None, *, request_id: str | None = None) -> AgentRunResult:
         snapshot = self._snapshot(run_id)
         self._require_owned(snapshot, user_id)
+        self._ensure_indexed(run_id, user_id)
         return self._result_from_snapshot(run_id, snapshot, request_id)
 
     @property
@@ -420,6 +460,7 @@ class AgentApplicationService:
         with self._lock_for(run_id):
             snapshot = self._snapshot(run_id)
             self._require_owned(snapshot, user_id)  # RunNotFoundError if not owned
+            self._ensure_indexed(run_id, user_id)
             if not self.checkpoint_thread_delete_supported:
                 raise CheckpointDeleteUnsupportedError(
                     "The configured checkpoint store does not support deleting a run.")
@@ -429,6 +470,11 @@ class AgentApplicationService:
                 raise
             except Exception as exc:  # noqa: BLE001 - never leak a raw saver error
                 raise AgentError("The run could not be deleted.") from exc
+            if self._run_index is not None:
+                try:
+                    self._run_index.remove(run_id)
+                except Exception:  # noqa: BLE001
+                    pass
             return True
 
     # -- ownership / status ---------------------------------------------------

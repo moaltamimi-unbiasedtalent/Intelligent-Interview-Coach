@@ -1433,6 +1433,137 @@ class KnowledgeIndexRecord(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
 
+# --- Privacy and legal administration (P10B-W10.10, migration 0020_privacy_legal_admin) -------------------------
+PRIVACY_REQUEST_TYPES = ("data_access", "deletion", "correction", "consent_question", "other_privacy")
+PRIVACY_REQUEST_STATUSES = ("submitted", "acknowledged", "in_progress", "waiting_for_user", "completed", "closed", "rejected")
+PRIVACY_RESULT_CATEGORIES = ("export_provided", "deletion_performed", "correction_made", "information_provided",
+                             "no_action_required", "unable_to_verify")
+PRIVACY_REQUEST_SOURCES = ("candidate_portal", "admin_recorded")
+PREPARATION_RUN_STATES = ("started", "ready", "failed", "purge_failed")
+PREPARATION_RUN_SOURCES = ("created", "backfill", "lazy")
+LEGAL_DOCUMENT_CODES = ("terms", "privacy", "ai_transparency")
+LEGAL_VERSION_STATES = ("draft", "published", "retired")
+LEGAL_ACCEPTANCE_SOURCES = ("signup", "settings", "reacceptance")
+
+
+class PrivacyRequest(Base):
+    """A durable privacy request (SEC-W10-04). Holds NO exported data, no IP/device, no candidate dataset snapshot."""
+
+    __tablename__ = "privacy_requests"
+    __table_args__ = (
+        CheckConstraint(_in_list("request_type", PRIVACY_REQUEST_TYPES), name="ck_privacy_requests_type"),
+        CheckConstraint(_in_list("status", PRIVACY_REQUEST_STATUSES), name="ck_privacy_requests_status"),
+        CheckConstraint(_in_list("source", PRIVACY_REQUEST_SOURCES), name="ck_privacy_requests_source"),
+        CheckConstraint("result_category IS NULL OR " + _in_list("result_category", PRIVACY_RESULT_CATEGORIES),
+                        name="ck_privacy_requests_result"),
+        CheckConstraint("status <> 'completed' OR (result_category IS NOT NULL AND completed_at IS NOT NULL)",
+                        name="ck_privacy_requests_completed_evidence"),
+        Index("ix_privacy_requests_status_created", "status", "created_at"),
+        Index("ix_privacy_requests_user", "user_id"),
+        Index("ix_privacy_requests_assignee_status", "assigned_user_id", "status"),
+        Index("ix_privacy_requests_type", "request_type"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    # Plain integer (no FK): lets a deletion request resume after the account row is gone. Cleared when the request completes.
+    subject_user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    request_type: Mapped[str] = mapped_column(String(24))
+    status: Mapped[str] = mapped_column(String(20), default="submitted", server_default="submitted")
+    source: Mapped[str] = mapped_column(String(20), default="candidate_portal", server_default="candidate_portal")
+    request_note: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    assigned_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    result_category: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    related_job_public_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class PreparationRun(Base):
+    """Ownership/lifecycle INDEX for durable preparation runs (PRIV-W9-01). No chat content; no FK to users on purpose, so a
+    failed checkpoint purge can still be retried after the account row is gone."""
+
+    __tablename__ = "preparation_runs"
+    __table_args__ = (
+        CheckConstraint(_in_list("state", PREPARATION_RUN_STATES), name="ck_preparation_runs_state"),
+        CheckConstraint(_in_list("source", PREPARATION_RUN_SOURCES), name="ck_preparation_runs_source"),
+        CheckConstraint("coverage_version >= 1", name="ck_preparation_runs_coverage"),
+        Index("ix_preparation_runs_owner_state", "owner_user_id", "state"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    run_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    owner_user_id: Mapped[int] = mapped_column(Integer)
+    state: Mapped[str] = mapped_column(String(16), default="started", server_default="started")
+    source: Mapped[str] = mapped_column(String(12), default="created", server_default="created")
+    coverage_version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class LegalDocument(Base):
+    __tablename__ = "legal_documents"
+    __table_args__ = (CheckConstraint(_in_list("code", LEGAL_DOCUMENT_CODES), name="ck_legal_documents_code"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    code: Mapped[str] = mapped_column(String(24), unique=True)
+    title: Mapped[str] = mapped_column(String(120))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class LegalDocumentVersion(Base):
+    """A registered version of a legal document. The text stays in the product's own pages; this records the version, its
+    reference and (for new versions) a content hash. A published version is immutable (enforced by the service)."""
+
+    __tablename__ = "legal_document_versions"
+    __table_args__ = (
+        CheckConstraint(_in_list("state", LEGAL_VERSION_STATES), name="ck_ldv_state"),
+        CheckConstraint("content_hash IS NULL OR length(content_hash) = 64", name="ck_ldv_hash"),
+        CheckConstraint("state = 'draft' OR published_at IS NOT NULL", name="ck_ldv_published_at"),
+        CheckConstraint("state <> 'published' OR is_baseline = 1 OR content_hash IS NOT NULL", name="ck_ldv_published_hash"),
+        UniqueConstraint("document_id", "version", name="uq_ldv_document_version"),
+        # Exactly one CURRENT (published) version per document.
+        Index("uq_ldv_one_published", "document_id", unique=True, sqlite_where=text("state = 'published'"),
+              postgresql_where=text("state = 'published'")),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    document_id: Mapped[int] = mapped_column(ForeignKey("legal_documents.id"))
+    version: Mapped[str] = mapped_column(String(32))
+    state: Mapped[str] = mapped_column(String(12), default="draft", server_default="draft")
+    is_baseline: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    content_ref: Mapped[str] = mapped_column(String(300))
+    content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    effective_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    published_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class LegalAcceptance(Base):
+    """A user's recorded acceptance of ONE legal document version. No IP, no device, no fingerprint. Distinct from consent."""
+
+    __tablename__ = "legal_acceptances"
+    __table_args__ = (
+        CheckConstraint(_in_list("source", LEGAL_ACCEPTANCE_SOURCES), name="ck_legal_acceptances_source"),
+        UniqueConstraint("user_id", "version_id", name="uq_legal_acceptance_user_version"),
+        Index("ix_legal_acceptances_version", "version_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    version_id: Mapped[int] = mapped_column(ForeignKey("legal_document_versions.id"))
+    accepted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    source: Mapped[str] = mapped_column(String(16))
+
+
 def make_engine(database_url: str) -> Engine:
     """Create an engine; SQLite needs cross-thread access for Streamlit."""
     connect_args = {}

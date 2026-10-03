@@ -101,7 +101,7 @@ def run() -> dict[str, tuple[bool, str]]:
           "W10 owns admin privacy operations")
 
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_")), f"head file {mig[-1]}")
+    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_")), f"head file {mig[-1]}")
     return out
 
 

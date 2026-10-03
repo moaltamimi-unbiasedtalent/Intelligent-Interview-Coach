@@ -54,6 +54,17 @@ ADMIN_KNOWLEDGE_VERSION_ACTIVATED: Final = "admin.knowledge_version_activated"
 ADMIN_KNOWLEDGE_VERSION_RETIRED: Final = "admin.knowledge_version_retired"
 ADMIN_KNOWLEDGE_VERSION_DELETED: Final = "admin.knowledge_version_deleted"
 ADMIN_KNOWLEDGE_REPROCESS_REQUESTED: Final = "admin.knowledge_reprocess_requested"
+# W10.10 (privacy/legal). Payloads: request/document/version ids, old/new state, result category; never exported data, request
+# text, a candidate's content, an IP or a device identifier.
+ADMIN_PRIVACY_REQUEST_RECORDED: Final = "admin.privacy_request_recorded"
+ADMIN_PRIVACY_REQUEST_ASSIGNED: Final = "admin.privacy_request_assigned"
+ADMIN_PRIVACY_REQUEST_STATUS_CHANGED: Final = "admin.privacy_request_status_changed"
+ADMIN_PRIVACY_DELETION_INITIATED: Final = "admin.privacy_deletion_initiated"
+ADMIN_PRIVACY_DELETION_COMPLETED: Final = "admin.privacy_deletion_completed"
+ADMIN_PRIVACY_BACKFILL_REQUESTED: Final = "admin.privacy_preparation_backfill_requested"
+ADMIN_LEGAL_VERSION_CREATED: Final = "admin.legal_version_created"
+ADMIN_LEGAL_VERSION_UPDATED: Final = "admin.legal_version_updated"
+ADMIN_LEGAL_VERSION_PUBLISHED: Final = "admin.legal_version_published"
 ADMIN_SUPPORT_TICKET_ASSIGNED: Final = "admin.support_ticket_assigned"
 ADMIN_SUPPORT_TICKET_STATUS_CHANGED: Final = "admin.support_ticket_status_changed"
 ADMIN_SUPPORT_TICKET_PRIORITY_CHANGED: Final = "admin.support_ticket_priority_changed"
@@ -73,6 +84,9 @@ ADMIN_EVENT_NAMES: Final[frozenset[str]] = frozenset({
     ADMIN_KNOWLEDGE_VERSION_UPLOADED, ADMIN_KNOWLEDGE_VERSION_UPDATED, ADMIN_KNOWLEDGE_VERSION_APPROVED,
     ADMIN_KNOWLEDGE_VERSION_REJECTED, ADMIN_KNOWLEDGE_INDEX_REQUESTED, ADMIN_KNOWLEDGE_VERSION_ACTIVATED,
     ADMIN_KNOWLEDGE_VERSION_RETIRED, ADMIN_KNOWLEDGE_VERSION_DELETED, ADMIN_KNOWLEDGE_REPROCESS_REQUESTED,
+    ADMIN_PRIVACY_REQUEST_RECORDED, ADMIN_PRIVACY_REQUEST_ASSIGNED, ADMIN_PRIVACY_REQUEST_STATUS_CHANGED,
+    ADMIN_PRIVACY_DELETION_INITIATED, ADMIN_PRIVACY_DELETION_COMPLETED, ADMIN_PRIVACY_BACKFILL_REQUESTED,
+    ADMIN_LEGAL_VERSION_CREATED, ADMIN_LEGAL_VERSION_UPDATED, ADMIN_LEGAL_VERSION_PUBLISHED,
 })
 
 # Context keys that may never be written (defence in depth against a careless caller).

@@ -1,6 +1,6 @@
 # P10B-W10.8 - Knowledge Base & RAG Administration
 
-**Status:** implemented on branch `feat/p10b-w10-8-knowledge-rag-admin`; **complete when merged to `main`**. **W10.10 is NOT STARTED.**
+**Status:** **COMPLETE** (merged in PR #121, main `35eee19`). **W10.10 is NOT STARTED.**
 One additive migration (`0019_knowledge_admin`). No new dependency. 0 paid/live calls.
 **Invariant: unapproved knowledge never enters candidate retrieval.**
 

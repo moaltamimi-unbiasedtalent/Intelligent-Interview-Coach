@@ -7,6 +7,12 @@ import type {
   AdminPage,
   AdminAssignee,
   JobDetail,
+  LegalOverview,
+  LegalVersionRow,
+  PreparationCoverage,
+  PrivacyQuery,
+  PrivacyRequestDetail,
+  PrivacyRequestRow,
   KnowledgeMeta,
   KnowledgeQuery,
   KnowledgeRow,
@@ -35,6 +41,9 @@ import type {
 import type {
   ActiveSessionsResponse,
   PlanResponse,
+  LegalStatus,
+  PrivacyRequestList,
+  PrivacyRequestView,
   SupportCreateRequest,
   SupportTicketDetail,
   SupportTicketList,
@@ -501,6 +510,16 @@ export const api = {
       request<SupportTicketDetail>("POST", `/support/tickets/${encodeURIComponent(publicId)}/messages`, { body: { message }, ...opts }),
   },
 
+  // W10.10 candidate privacy requests and legal-version truth (owner-scoped).
+  privacy: {
+    createRequest: (body: { request_type: string; note?: string }, opts?: RequestOptions) =>
+      request<PrivacyRequestView>("POST", "/privacy/requests", { body, ...opts }),
+    requests: (opts?: RequestOptions) => request<PrivacyRequestList>("GET", "/privacy/requests?page=1&page_size=20", opts),
+    legal: (opts?: RequestOptions) => request<LegalStatus>("GET", "/privacy/legal", opts),
+    acceptLegal: (code: string, opts?: RequestOptions) =>
+      request<LegalStatus>("POST", `/privacy/legal/${encodeURIComponent(code)}/accept`, opts),
+  },
+
   // Platform Admin operations (Capstone P6.5). PLATFORM_ADMIN only; metadata only.
   admin: {
     home: (opts?: RequestOptions) => request<AdminCommandCenter>("GET", "/admin/home", opts),
@@ -548,7 +567,25 @@ export const api = {
       request<Record<string, unknown>>("DELETE", `/admin/workspaces/${id}/members/${userId}`, opts),
     setWorkspaceMemberRole: (id: number, userId: number, role: string, opts?: RequestOptions) =>
       request<Record<string, unknown>>("POST", `/admin/workspaces/${id}/members/${userId}/role`, { body: { role }, ...opts }),
-    privacyRequests: (opts?: RequestOptions) => request<Record<string, unknown>>("GET", "/admin/privacy-requests", opts),
+    // W10.10 privacy and legal
+    privacyQueue: (query: PrivacyQuery = {}, opts?: RequestOptions) =>
+      request<AdminPage<PrivacyRequestRow>>("GET", `/admin/privacy/requests${qs(query as Record<string, unknown>)}`, opts),
+    privacyRequest: (id: string, opts?: RequestOptions) =>
+      request<PrivacyRequestDetail>("GET", `/admin/privacy/requests/${encodeURIComponent(id)}`, opts),
+    privacyRecord: (account: string, requestType: string, note: string, opts?: RequestOptions) =>
+      request<PrivacyRequestDetail>("POST", "/admin/privacy/requests", { body: { account, request_type: requestType, note: note || null }, ...opts }),
+    privacyAssign: (id: string, assigneeUserId: number | null, opts?: RequestOptions) =>
+      request<PrivacyRequestDetail>("POST", `/admin/privacy/requests/${encodeURIComponent(id)}/assign`, { body: { assignee_user_id: assigneeUserId }, ...opts }),
+    privacyStatus: (id: string, status: string, resultCategory?: string, opts?: RequestOptions) =>
+      request<PrivacyRequestDetail>("POST", `/admin/privacy/requests/${encodeURIComponent(id)}/status`, { body: { status, result_category: resultCategory ?? null }, ...opts }),
+    privacyExecuteDeletion: (id: string, opts?: RequestOptions) =>
+      request<PrivacyRequestDetail>("POST", `/admin/privacy/requests/${encodeURIComponent(id)}/execute-deletion`, opts),
+    preparationCoverage: (opts?: RequestOptions) => request<PreparationCoverage>("GET", "/admin/privacy/preparation", opts),
+    preparationBackfill: (opts?: RequestOptions) => request<{ job_id: string; created: boolean }>("POST", "/admin/privacy/preparation/backfill", opts),
+    legalOverview: (opts?: RequestOptions) => request<LegalOverview>("GET", "/admin/legal", opts),
+    legalCreateDraft: (code: string, body: { version: string; content_ref: string; content_hash: string; effective_at: string }, opts?: RequestOptions) =>
+      request<LegalVersionRow>("POST", `/admin/legal/${encodeURIComponent(code)}/versions`, { body: { ...body, content_hash: body.content_hash || null, effective_at: body.effective_at || null }, ...opts }),
+    legalPublish: (versionId: number, opts?: RequestOptions) => request<LegalVersionRow>("POST", `/admin/legal/versions/${versionId}/publish`, opts),
     feedback: (opts?: RequestOptions) => request<Record<string, unknown>>("GET", "/admin/feedback", opts),
     providers: (opts?: RequestOptions) => request<AdminProviders>("GET", "/admin/providers", opts),
     audit: (opts?: RequestOptions) => request<{ events: AdminAuditEvent[] }>("GET", "/admin/audit", opts),

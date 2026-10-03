@@ -107,8 +107,12 @@ def main() -> None:   # pragma: no cover - process entrypoint
     from src.copilot.config import load_config as load_copilot_config
     from src.knowledge_admin.wiring import build_worker_services
 
+    from src.privacy.wiring import build_privacy_runtime
+
+    services = build_worker_services(repo.session_factory, load_copilot_config())
+    services.privacy = build_privacy_runtime(repo.session_factory, load_config())
     worker = Worker(JobService(repo.session_factory), secret_store=get_secret_store(), poll_seconds=poll_seconds_from_env(),
-                    services=build_worker_services(repo.session_factory, load_copilot_config()))
+                    services=services)
     stop = threading.Event()
     for sig in (signal.SIGTERM, signal.SIGINT):
         signal.signal(sig, lambda *_: stop.set())

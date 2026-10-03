@@ -27,6 +27,9 @@ INCLUDED = (
     "feedback you submitted", "workspace memberships", "items you share",
     "support tickets you opened and the messages in them that you can see",
     "your plan and its assignment history (access assignments only; Ask4Mo has no payment records)",
+    "your recorded acceptances of the Terms, Privacy notice and AI transparency versions",
+    "the privacy requests you submitted (type, status and result category; not internal handling records)",
+    "an index of your preparation-chat runs (identifiers and status only)",
 )
 NOT_INCLUDED = (
     "the original uploaded files (download them from Documents)",
@@ -35,6 +38,8 @@ NOT_INCLUDED = (
     "other people's data, including content shared with you",
     "internal prompts, model reasoning and provider secrets",
     "internal notes written by support staff (they are operational records, not part of your visible conversation)",
+    "the content of your preparation-chat runs (only identifiers and status are listed; extracting chat content is not yet supported)",
+    "acceptances from before acceptance recording existed (none were recorded)",
 )
 
 # Columns that must never leave the server even though they sit on a user-owned row.
@@ -101,6 +106,16 @@ def build_candidate_export(*, user_id: int, session_factory, repo, account: Any)
     from src.support_repository import SupportRepository
 
     data["support_tickets"] = SupportRepository(session_factory).export_for_owner(user_id)
+    # W10.10: recorded legal acceptances, the candidate-visible privacy requests and the preparation-run index (ids/status only).
+    from src.privacy.legal import LegalService
+    from src.privacy.requests import PrivacyRequestService
+
+    data["legal_acceptances"] = LegalService(session_factory).export_for_user(user_id)
+    data["privacy_requests"] = PrivacyRequestService(session_factory).export_for_owner(user_id)
+    with session_factory() as s2:
+        data["preparation_runs"] = [{"run_id": r.run_id, "state": r.state, "source": r.source, "created_at": _jsonable(r.created_at)}
+                                    for r in s2.scalars(select(P.PreparationRun).where(P.PreparationRun.owner_user_id == user_id)
+                                                        .order_by(P.PreparationRun.id)).all()]
     history = repo.export_user_data(user_id)
     return {
         "format": EXPORT_FORMAT,

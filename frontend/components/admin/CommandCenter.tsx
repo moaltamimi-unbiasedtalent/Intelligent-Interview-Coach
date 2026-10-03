@@ -140,9 +140,15 @@ function Overview({ home }: { home: Awaited<ReturnType<typeof api.admin.home>> }
       ) : null}
 
       <Panel title="Privacy requests">
-        <p className="text-sm text-muted">
-          {pr.status === "not_operational" ? "Not available yet. " : ""}{pr.note}
-        </p>
+        {pr.status === "operational" ? (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Stat label="Open" value={pr.open} />
+            <Stat label="Unassigned" value={pr.unassigned_open} />
+            <Stat label="Waiting for the candidate" value={pr.waiting_for_user} />
+            <Stat label="Completed" value={pr.completed} />
+          </div>
+        ) : null}
+        <p className="text-sm text-muted">{pr.note}</p>
       </Panel>
 
       {home.diagnostics_links.length ? (

@@ -33,6 +33,10 @@ class DeletionSummary:
     files_purged: int = 0
     files_failed: int = 0
     checkpoints_purged: int = 0
+    checkpoints_failed: int = 0
+    purge_failed_run_ids: list[str] = field(default_factory=list)
+    legal_acceptances_deleted: int = 0
+    privacy_requests_anonymized: int = 0
     workspaces_transferred: int = 0
     workspaces_deleted: int = 0
     audit_anonymized: int = 0
@@ -42,6 +46,8 @@ class DeletionSummary:
             "user_id": self.user_id, "existed": self.existed,
             "deleted_rows": self.deleted_rows, "files_purged": self.files_purged,
             "files_failed": self.files_failed, "checkpoints_purged": self.checkpoints_purged,
+            "checkpoints_failed": self.checkpoints_failed, "purge_failed_runs": len(self.purge_failed_run_ids),
+            "legal_acceptances_deleted": self.legal_acceptances_deleted, "privacy_requests_anonymized": self.privacy_requests_anonymized,
             "workspaces_transferred": self.workspaces_transferred,
             "workspaces_deleted": self.workspaces_deleted,
             "audit_anonymized": self.audit_anonymized,
@@ -52,11 +58,16 @@ class AccountDeletionService:
     """Orchestrates the full cascade over one shared session factory + external stores."""
 
     def __init__(self, session_factory, *, document_store=None, agent_service=None,
-                 audit_repository=None) -> None:
+                 audit_repository=None, preparation_index=None, retain_privacy_requests: bool = False) -> None:
         self._sf = session_factory
         self._store = document_store
         self._agent = agent_service
         self._audit = audit_repository
+        # PRIV-W9-01: the preparation-run ownership index. When present, runs are discovered with ONE indexed query (never a
+        # checkpoint-store scan) in addition to the legacy saved-memory references.
+        self._index = preparation_index
+        # An Admin-requested deletion keeps its own privacy request row until the job completes it (it is finalised by the job).
+        self._retain_requests = retain_privacy_requests
 
     # -- external-resource discovery (collected inside the txn, purged after commit) --
     def _collect_storage_keys(self, s, user_id: int) -> list[str]:
@@ -125,6 +136,15 @@ class AccountDeletionService:
 
             storage_keys = self._collect_storage_keys(s, user_id)
             run_ids = self._collect_run_ids(s, user_id)
+            indexed_run_ids = self._index.run_ids_for_owner(user_id) if self._index is not None else []
+            if self._index is not None:
+                for rid in run_ids:                       # legacy memory-referenced runs join the index so a failed purge can be retried
+                    if rid not in indexed_run_ids:
+                        try:
+                            self._index.register(rid, user_id, source="lazy")
+                            indexed_run_ids.append(rid)
+                        except Exception:  # noqa: BLE001 - never block deletion on the index
+                            pass
 
             # 1) Workspaces owned by the user (transfer or delete) BEFORE deleting memberships.
             self._handle_owned_workspaces(s, user_id, summary)
@@ -228,6 +248,21 @@ class AccountDeletionService:
             ):
                 self._delete_where(s, model, col == user_id, summary, label)
 
+            # 6b) W10.10: recorded legal acceptances are the user's own rows; privacy requests keep only minimal operational metadata
+            # (type, status, timestamps, result category): the free-text note and the account link are cleared. Whether any further
+            # retention is needed is a counsel/policy question and is NOT decided here.
+            from src.persistence import LegalAcceptance, PrivacyRequest
+
+            for obj in s.execute(select(LegalAcceptance).where(LegalAcceptance.user_id == user_id)).scalars().all():
+                s.delete(obj)
+                summary.legal_acceptances_deleted += 1
+            if not self._retain_requests:
+                res2 = s.execute(update(PrivacyRequest).where(PrivacyRequest.user_id == user_id)
+                                 .values(user_id=None, subject_user_id=None, request_note=None))
+                summary.privacy_requests_anonymized = int(res2.rowcount or 0)
+            else:
+                s.execute(update(PrivacyRequest).where(PrivacyRequest.user_id == user_id).values(request_note=None))
+
             # 7) Audit: anonymize (retain for security), do NOT delete.
             res = s.execute(update(P.AuditEvent)
                             .where(P.AuditEvent.actor_user_id == user_id)
@@ -247,13 +282,33 @@ class AccountDeletionService:
                 except Exception:  # noqa: BLE001 - best-effort; report failures honestly
                     summary.files_failed += 1
 
-        if self._agent is not None and run_ids:
-            for run_id in run_ids:
+        all_runs = list(dict.fromkeys(list(indexed_run_ids) + list(run_ids)))
+        if self._agent is not None and all_runs:
+            for run_id in all_runs:
                 try:
-                    if self._agent.delete_run(run_id, str(user_id)):
+                    # Index-known runs are owned by this user by construction: purge by id. Memory-only references keep the
+                    # ownership-verifying path.
+                    if run_id in indexed_run_ids and hasattr(self._agent, "purge_run"):
+                        ok = self._agent.purge_run(run_id)
+                    else:
+                        ok = self._agent.delete_run(run_id, str(user_id))
+                    if ok:
                         summary.checkpoints_purged += 1
-                except Exception:  # noqa: BLE001 - checkpoint purge is best-effort
-                    pass
+                        if self._index is not None:
+                            self._index.remove(run_id)
+                    elif run_id in indexed_run_ids:
+                        raise RuntimeError("not purged")
+                except Exception:  # noqa: BLE001 - never report full success: keep the index row for a retry
+                    if run_id in indexed_run_ids:
+                        summary.checkpoints_failed += 1
+                        summary.purge_failed_run_ids.append(run_id)
+                        if self._index is not None:
+                            self._index.mark(run_id, "purge_failed")
+        elif all_runs and self._index is not None:
+            for run_id in indexed_run_ids:                # no purge capability here: keep the rows and report it
+                summary.checkpoints_failed += 1
+                summary.purge_failed_run_ids.append(run_id)
+                self._index.mark(run_id, "purge_failed")
 
         # Final audit record (actor already anonymized; log the deletion itself).
         if self._audit is not None:
@@ -261,7 +316,8 @@ class AccountDeletionService:
                 self._audit.record(event_type="account.deleted", actor_user_id=None,
                                    target_type="user", target_id=str(user_id),
                                    context={"files_purged": summary.files_purged,
-                                            "checkpoints_purged": summary.checkpoints_purged})
+                                            "checkpoints_purged": summary.checkpoints_purged,
+                                            "checkpoints_failed": summary.checkpoints_failed})
             except Exception:  # noqa: BLE001
                 pass
 

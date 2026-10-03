@@ -104,6 +104,8 @@ jobs:
         run: python scripts/eval_admin_jobs.py
       - name: Admin knowledge (P10B-W10.8; offline; approval before retrieval, active-only retrieval enforced by the control plane, authority 1/2/3, 7 KB languages, provenance + licence gates, W10.9 jobs, idempotent indexing)
         run: python scripts/eval_admin_knowledge.py
+      - name: Admin privacy and legal (P10B-W10.10; offline; durable privacy requests, W9.8 services reused, preparation-run index without scans, versioned legal documents, recorded acceptance without fabricated history)
+        run: python scripts/eval_admin_privacy_legal.py
       - name: Rate-limit evaluation (Capstone P8; offline; auth + cost buckets, window reset, anti-enumeration)
         run: python scripts/eval_rate_limits.py
       - name: Hosting-readiness evaluation (Capstone P8; offline; env/cookies/CORS/headers/pause/malware — does NOT certify EX-12)

@@ -54,12 +54,19 @@ audit records.
 
 ## Known limitations
 
-- **PRIV-W9-01 - preparation chats:** there is no efficient per-user run index, so a candidate
-  cannot list or remove individual preparation chats, and account deletion removes only the
-  runs it can reach through saved-memory references. Some preparation-chat working data may
-  remain until it is cleaned up. Do not describe deletion as complete.
-- **PRIV-W9-02 - consent history:** Terms/Privacy/AI-transparency acceptance versions and
-  timestamps are not persisted, so none can be shown or exported.
+- **PRIV-W9-01 - preparation chats (closed in W10.10, with a stated limit):** every NEW preparation run is recorded in an
+  ownership index (identifiers and status only, never chat content) before its working data exists, so account deletion finds
+  the runs with one indexed query instead of scanning the chat store. If a purge fails the account deletion does not report full
+  success: the run stays flagged and a retry is queued. Older runs are indexed only when they can be found from a saved-memory
+  reference whose recorded owner matches, or when their owner opens them; an orphan with no such reference cannot be discovered
+  and is not covered. Chat CONTENT is not part of the export (only run identifiers and status are listed).
+- **PRIV-W9-02 - legal versions (closed in W10.10, with a stated limit):** the Terms, Privacy notice and AI transparency pages now
+  have registered versions, and an acceptance of the current version can be recorded (version, timestamp and source only; no IP or
+  device). Acceptance was not recorded before: accounts that predate it have none, and none is invented. A baseline version marks
+  where versioning began (its effective date was not recorded). Re-acceptance after a new version is not enforced.
+- **Privacy requests (SEC-W10-04, closed in W10.10):** a candidate can submit a privacy request for human follow-up, and operators
+  can record one received another way. This is engineering support for the workflow: it states no response time and makes no
+  statement about legal compliance or statutory retention. Self-service export and deletion are unchanged and immediate.
 - No fixed retention periods exist for candidate content (it is kept until deleted); the only
   time-based rule is an operator script that removes stale in-progress interview sessions
   (`INTERVIEW_SESSION_RETENTION_DAYS`). Expired auth rows are not purged automatically.

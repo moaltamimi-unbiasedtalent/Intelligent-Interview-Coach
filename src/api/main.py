@@ -32,6 +32,8 @@ from src.api.routes import (
     admin_integrations,
     admin_jobs,
     admin_knowledge,
+    admin_legal,
+    admin_privacy,
     admin_plans,
     admin_support,
     agent,
@@ -47,6 +49,7 @@ from src.api.routes import (
     knowledge,
     memory,
     opportunity,
+    privacy,
     progress,
     support,
     reviewer,
@@ -146,7 +149,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
 
     # Infra liveness alias (unversioned) + versioned API surface.
     app.include_router(health.router, prefix="/api")
-    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, feedback, progress, auth, reviewer, voice, workspaces, admin, admin_integrations, admin_jobs, admin_knowledge, admin_plans, admin_support, company, opportunity, support):
+    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, feedback, progress, auth, reviewer, voice, workspaces, admin, admin_integrations, admin_jobs, admin_knowledge, admin_legal, admin_privacy, admin_plans, admin_support, company, opportunity, privacy, support):
         app.include_router(module.router, prefix=API_PREFIX)
     # Workspaces registers a second router for explicit sharing under the same prefix.
     app.include_router(workspaces.shares_router, prefix=API_PREFIX)

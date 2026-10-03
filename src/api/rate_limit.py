@@ -103,6 +103,9 @@ COST_POLICIES: dict[str, RateLimitPolicy] = {
 SUPPORT_POLICIES: dict[str, RateLimitPolicy] = {
     "support_create_user": RateLimitPolicy("support_create_user", 10, 3600, "user"),
     "support_reply_user": RateLimitPolicy("support_reply_user", 60, 3600, "user"),
+    # W10.10: spam protection for candidate privacy requests and legal acceptance (same in-memory/shared-store semantics as the rest).
+    "privacy_request_user": RateLimitPolicy("privacy_request_user", 5, 3600, "user"),
+    "legal_accept_user": RateLimitPolicy("legal_accept_user", 30, 3600, "user"),
 }
 
 POLICIES: dict[str, RateLimitPolicy] = {**AUTH_POLICIES, **COST_POLICIES, **SUPPORT_POLICIES}

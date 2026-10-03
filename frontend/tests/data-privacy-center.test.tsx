@@ -34,6 +34,14 @@ vi.mock("@/lib/api/client", () => ({
     shares: { mine: (...a: unknown[]) => sharesMine(...a), revoke: (...a: unknown[]) => shareRevoke(...a) },
     workspaces: { list: (...a: unknown[]) => wsList(...a) },
     auth: { deleteAccount: (...a: unknown[]) => deleteAccount(...a) },
+    privacy: {
+      requests: () => Promise.resolve({ items: [], total: 0, page: 1, page_size: 20 }),
+      legal: () => Promise.resolve({ documents: [
+        { code: "terms", title: "Terms of use", path: "/terms", current_version: "baseline-1", effective_at: null, version_is_baseline: true, accepted_current: false, last_acceptance: null },
+      ] }),
+      acceptLegal: () => Promise.resolve({ documents: [] }),
+      createRequest: () => Promise.resolve({}),
+    },
   },
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push: vi.fn() }) }));
@@ -89,7 +97,8 @@ describe("Data & Privacy Center", () => {
     expect(link.getAttribute("href")).toMatch(/\/auth\/account\/export$/);
     expect(link).toHaveAttribute("download");
     expect(screen.getByText(t("dataPrivacy.excFiles"))).toBeInTheDocument();
-    expect(screen.getByText(t("dataPrivacy.excLegal"))).toBeInTheDocument();
+    expect(screen.getByText(t("dataPrivacy.incLegalAcceptances"))).toBeInTheDocument();      // acceptances are now recorded and exported
+    expect(screen.getByText(t("dataPrivacy.excPreparationContent"))).toBeInTheDocument();    // and the preparation-chat content limit is stated
   });
 
   it("F4/F12: document delete needs confirmation; Cancel keeps data and default focus is Cancel", async () => {
@@ -183,7 +192,8 @@ describe("Data & Privacy Center", () => {
     const retention = screen.getByTestId("dp-retention");
     expect(retention.textContent).not.toMatch(/\b\d+\s*(day|days|month|months|year|years)\b/i);
     const legal = screen.getByTestId("dp-legal");
-    expect(within(legal).getByText(t("dataPrivacy.legalNotRecorded"))).toBeInTheDocument();
+    expect(await within(legal).findByText(t("dataPrivacy.legalNotAcceptedCurrent"))).toBeInTheDocument();   // honest: nothing recorded yet
+    expect(within(legal).getByText(t("dataPrivacy.legalEffectiveUnknown"))).toBeInTheDocument();
     expect(within(legal).getByRole("link", { name: t("dataPrivacy.legalPrivacy") })).toHaveAttribute("href", "/privacy");
     expect(legal.textContent).not.toMatch(/accepted:\s*version/i);
   });

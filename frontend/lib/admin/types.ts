@@ -18,7 +18,7 @@ export interface AdminCommandCenter {
   health: { database: string; providers_probed: boolean; note: string };
   rate_limit: { mode: string; distributed: boolean; shared_store_requested: boolean; note: string };
   pause: { paused: Record<string, boolean>; durable: boolean; note: string };
-  privacy_requests: { status: string; note: string };
+  privacy_requests: { status: string; note: string; open?: number; submitted?: number; in_progress?: number; waiting_for_user?: number; unassigned_open?: number; completed?: number; total?: number; oldest_open_at?: string | null };
   accounts: Record<string, number>;
   workspaces: Record<string, number>;
   plans?: { by_plan: Record<string, { users: number; workspaces: number }>; accounts_without_subscription: number };
@@ -379,4 +379,65 @@ export interface KnowledgeQuery {
   q?: string;
   page?: number;
   page_size?: number;
+}
+
+// --- W10.10 privacy and legal administration (safe operational metadata; no candidate content, no exports, no IP/device) ---
+export interface PrivacyRequestRow {
+  public_id: string;
+  request_type: string;
+  type_label: string;
+  status: string;
+  result_category: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  source: string;
+  user_id: number | null;
+  candidate_email: string | null;
+  assigned_user_id: number | null;
+  assignee_email: string | null;
+  acknowledged_at: string | null;
+  completed_at: string | null;
+  closed_at: string | null;
+  related_job_id: string | null;
+}
+export interface PrivacyRequestDetail extends PrivacyRequestRow {
+  request_note: string | null;
+  candidate: { user_id: number; email: string | null; status: string; platform_role: string; created_at: string | null } | null;
+  allowed_statuses: string[];
+  result_categories: string[];
+  can_execute_deletion: boolean;
+  legal: { document: string; current_version: string | null; accepted_current: boolean; last_accepted_at: string | null }[];
+  audit: AdminAuditEntry[];
+}
+export interface PrivacyQuery {
+  status?: string;
+  request_type?: string;
+  assignee?: string;
+  q?: string;
+  page?: number;
+  page_size?: number;
+}
+export interface LegalVersionRow {
+  id: number;
+  version: string;
+  state: string;
+  is_baseline: boolean;
+  content_ref: string;
+  content_hash: string | null;
+  effective_at: string | null;
+  published_at: string | null;
+  created_at: string | null;
+  acceptances: number | null;
+}
+export interface LegalOverview {
+  documents: { code: string; title: string; current: LegalVersionRow | null; versions: LegalVersionRow[]; current_accepted: number; current_not_recorded: number }[];
+  active_accounts: number;
+  note: string;
+}
+export interface PreparationCoverage {
+  indexed_runs: number;
+  by_state: Record<string, number>;
+  by_source: Record<string, number>;
+  coverage_version: number;
+  note: string;
 }
