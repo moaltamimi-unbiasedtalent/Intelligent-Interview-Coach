@@ -67,9 +67,9 @@ never-translated slogan. Local `main` == `origin/main`; GitHub integration is pa
 | W10.5 | Billing and payment administration (mock adapter acceptable) | XL | Capstone desirable |
 | W10.6 | Integrations and API connections (**COMPLETE: merged in PR #118, main `e47ba76`**; migration `0017_integrations`; see `admin/W10_6_INTEGRATIONS_API_CONNECTIONS.md`) | L | Capstone critical |
 | W10.7 | AI and model administration | L | Capstone desirable |
-| W10.8 | Knowledge base and RAG administration (**implemented; complete when merged**; migration `0019_knowledge_admin`; see `admin/W10_8_KNOWLEDGE_RAG_ADMINISTRATION.md`) | XL | Capstone critical |
+| W10.8 | Knowledge base and RAG administration (**COMPLETE: merged in PR #121, main `35eee19`**; migration `0019_knowledge_admin`; see `admin/W10_8_KNOWLEDGE_RAG_ADMINISTRATION.md`) | XL | Capstone critical |
 | W10.9 | Jobs, queues and operational diagnostics (**COMPLETE: merged in PR #120, main `f059668`**; migration `0018_jobs`; see `admin/W10_9_JOBS_QUEUES_OPERATIONAL_DIAGNOSTICS.md`) | L | Capstone desirable |
-| W10.10 | GDPR, privacy and legal administration | L | Capstone critical |
+| W10.10 | GDPR, privacy and legal administration (**implemented; complete when merged**; migration `0020_privacy_legal_admin`; closes SEC-W10-04, PRIV-W9-01, PRIV-W9-02; see `admin/W10_10_GDPR_PRIVACY_LEGAL_ADMINISTRATION.md`) | L | Capstone critical |
 | W10.11 | Feature flags and safe system configuration | M | Capstone desirable |
 | W10.12 | Reporting, analytics and AI economics (essential reporting critical; AI economics desirable) | L | Capstone critical / desirable |
 | W10.13 | Security, audit and incident management | L | Capstone critical |

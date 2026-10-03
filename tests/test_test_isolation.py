@@ -81,3 +81,32 @@ def test_vector_store_is_redirected_to_temp_and_non_temp_paths_are_refused(tmp_p
     with pytest.raises(RuntimeError, match="Test isolation"):
         chromadb.PersistentClient(path=str(ROOT / "data" / "chroma"))
     chromadb.PersistentClient(path=str(tmp_path / "ok"))  # temp location is allowed
+
+
+def test_identity_evaluator_never_touches_the_developer_database_or_a_caller_supplied_one(tmp_path):
+    """P10B-W10.10 isolation fix. The evaluator used to open ``data/interview_studio.db`` (through dependencies that bypass its
+    dependency override) and ``create_all`` into it. It must now pin every store to a temporary directory and ignore the caller's
+    DATABASE_URL: neither the developer file nor a caller-supplied file may change (or even appear)."""
+    import hashlib
+    import subprocess
+    import sys
+
+    dev = ROOT / "data" / "interview_studio.db"
+    sentinel = tmp_path / "caller.db"
+    sqlalchemy.create_engine(f"sqlite:///{sentinel}").dispose()
+    sentinel.write_bytes(b"")
+    sqlite3_mod = __import__("sqlite3")
+    con = sqlite3_mod.connect(sentinel)
+    con.execute("create table caller_marker (x integer)")
+    con.commit()
+    con.close()
+
+    def snap(p: Path):
+        return (p.exists(), hashlib.sha256(p.read_bytes()).hexdigest() if p.exists() else None)
+
+    before_dev, before_sentinel = snap(dev), snap(sentinel)
+    env = {**os.environ, "DATABASE_URL": f"sqlite:///{sentinel}", "ASK4MO_TEST_ALLOW_DEV_PERSISTENCE": ""}
+    done = subprocess.run([sys.executable, "scripts/eval_identity_platform.py"], cwd=ROOT, env=env, capture_output=True, text=True, timeout=240)
+    assert done.returncode == 0, done.stdout[-400:] + done.stderr[-400:]
+    assert snap(dev) == before_dev                      # the developer database: unchanged (or still absent on a fresh clone)
+    assert snap(sentinel) == before_sentinel            # the caller-supplied database was not inherited

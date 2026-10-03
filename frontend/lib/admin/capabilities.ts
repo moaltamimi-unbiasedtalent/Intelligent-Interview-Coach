@@ -31,6 +31,9 @@ export const P = {
   supportNote: "platform.support.note",
   jobsRead: "platform.jobs.read",
   jobsManage: "platform.jobs.manage",
+  privacyRead: "platform.privacy.read",
+  privacyExecute: "platform.privacy.execute",
+  legalManage: "platform.legal.manage",
   knowledgeManage: "platform.knowledge.manage",
   knowledgeApprove: "platform.knowledge.approve",
 } as const;
@@ -53,6 +56,8 @@ export const ADMIN_DESTINATIONS: readonly AdminDestination[] = [
   { id: "support", label: "Support", href: "/admin/support", description: "Customer support queue", anyOf: [P.supportRead] },
   { id: "review", label: "Review / Diagnostics", href: "/review", description: "Evaluation and knowledge diagnostics", anyOf: [P.ai, P.knowledge] },
   { id: "audit", label: "Audit", href: "/admin/audit", description: "Privileged-action log", anyOf: [P.audit] },
+  { id: "privacy", label: "Privacy", href: "/admin/privacy", description: "Privacy requests", anyOf: [P.privacyRead] },
+  { id: "legal", label: "Legal", href: "/admin/legal", description: "Legal document versions", anyOf: [P.privacyRead] },
   { id: "knowledge", label: "Knowledge", href: "/admin/knowledge", description: "Governed knowledge sources", anyOf: [P.knowledge] },
   { id: "jobs", label: "Jobs", href: "/admin/jobs", description: "Queue and worker diagnostics", anyOf: [P.jobsRead] },
   { id: "integrations", label: "Integrations", href: "/admin/integrations", description: "Connections and credentials", anyOf: [P.integrations] },

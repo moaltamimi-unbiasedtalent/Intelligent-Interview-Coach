@@ -144,7 +144,7 @@ describe("A5 Command Center is truthful", () => {
     expect(screen.getByText("Health not tested")).toBeInTheDocument();
     expect(screen.getByText(/In memory, per process/)).toBeInTheDocument();
     expect(screen.getByText(/non-durable/i)).toBeInTheDocument();
-    expect(screen.getByText(/Not available yet/)).toBeInTheDocument();
+    expect(screen.getByText(/Privacy-request administration is not available yet/)).toBeInTheDocument();   // no stats supplied: no fake count
     expect(screen.queryByText(/open privacy requests/i)).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Knowledge readiness" })).toHaveAttribute("href", "/review/rag");
   });

@@ -18,7 +18,9 @@ Usage:  python scripts/eval_identity_platform.py
 
 from __future__ import annotations
 
+import atexit
 import os
+import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -26,6 +28,29 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 os.environ.setdefault("EMAIL_PROVIDER", "memory")
+
+# W9.12 isolation (P10B-W10.10 fix): this evaluator drives the real FastAPI app, and some dependencies build their OWN repository
+# (they bypass the evaluator's dependency override). Without this, those paths opened the DEVELOPER SQLite file (data/interview_studio.db)
+# and `create_all` added any new tables to it. Pin every persistent store to a throw-away directory BEFORE any `src` import, override
+# (never inherit) whatever the caller's environment says, and refuse to run if the resolved database is not the temporary one.
+_ISO = tempfile.mkdtemp(prefix="eval_identity_iso_")
+atexit.register(shutil.rmtree, _ISO, ignore_errors=True)
+os.environ["DATABASE_URL"] = f"sqlite:///{_ISO}/app.db"
+os.environ["AGENT_CHECKPOINT_DATABASE_URL"] = f"sqlite:///{_ISO}/checkpoints.db"
+os.environ["COPILOT_CHROMA_DIR"] = f"{_ISO}/chroma"
+os.environ["DOCUMENT_STORAGE_DIR"] = f"{_ISO}/documents"
+os.environ["KNOWLEDGE_STORAGE_DIR"] = f"{_ISO}/knowledge"
+os.environ["PYTHON_DOTENV_DISABLED"] = "1"
+
+
+def _assert_isolated() -> None:
+    from src.config import load_config
+
+    resolved = load_config().database_url
+    if _ISO not in resolved:
+        raise SystemExit(f"Refusing to run: the evaluator would use a non-temporary database ({resolved.split('///')[0]}///...).")
+
+
 
 PW = "correcthorsebattery"
 
@@ -221,6 +246,7 @@ SAFETY_METRICS = {
 
 
 def main() -> int:
+    _assert_isolated()
     print("ASK4MO — CAPSTONE P1/E1 IDENTITY & PLATFORM EVALUATION\n")
     metrics = run()
     failed_safety = False

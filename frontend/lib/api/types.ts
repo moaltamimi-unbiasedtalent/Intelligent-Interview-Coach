@@ -1105,3 +1105,33 @@ export interface PlanResponse {
   plan_version: number | null;
   entitlements: Record<string, EntitlementState>;
 }
+
+// --- W10.10 candidate privacy requests and legal-version truth ---
+export interface PrivacyRequestView {
+  public_id: string;
+  request_type: string;
+  type_label: string;
+  status: string;
+  result_category: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+export interface PrivacyRequestList {
+  items: PrivacyRequestView[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+export interface LegalDocView {
+  code: string;
+  title: string;
+  path: string;
+  current_version: string | null;
+  effective_at: string | null;
+  version_is_baseline: boolean | null;
+  accepted_current: boolean;
+  last_acceptance: { version: string; accepted_at: string | null; source: string; is_current: boolean } | null;
+}
+export interface LegalStatus {
+  documents: LegalDocView[];
+}

@@ -18,6 +18,7 @@ const ADMIN_PERMS = [
   "platform.plans.read", "platform.plans.manage", "platform.subscriptions.manage", "platform.integrations.manage",
   "platform.integrations.read", "platform.ai.read", "platform.knowledge.read", "platform.jobs.read", "platform.jobs.manage",
   "platform.knowledge.manage", "platform.knowledge.approve",
+  "platform.privacy.read", "platform.privacy.execute", "platform.legal.manage",
 ];
 
 function account(role: string, perms: string[]) {
@@ -55,6 +56,31 @@ const USER_DETAIL = {
 };
 // Stateful stand-in for the knowledge lifecycle. The test plays the W10.9 worker by calling kb.worker(); the real lifecycle with a
 // real worker is proven by tests/test_knowledge_admin_w10_8.py and the manual QA.
+const PRIV_ID = "p".repeat(32);
+const priv = {
+  status: "submitted", assignee: null as number | null, result: null as string | null, legalPublished: false,
+  row() {
+    return { public_id: PRIV_ID, request_type: "correction", type_label: "Correction of my data", status: this.status, result_category: this.result,
+      created_at: "2026-10-03T10:00:00", updated_at: null, source: "candidate_portal", user_id: 5, candidate_email: "cand@example.com",
+      assigned_user_id: this.assignee, assignee_email: this.assignee ? "admin@example.com" : null, acknowledged_at: null, completed_at: null, closed_at: null, related_job_id: null };
+  },
+  next() { return ({ submitted: ["acknowledged", "rejected"], acknowledged: ["in_progress", "waiting_for_user", "completed", "rejected"], in_progress: ["waiting_for_user", "completed", "rejected"], completed: ["closed"] } as Record<string, string[]>)[this.status] ?? []; },
+  detail() {
+    return { ...this.row(), request_note: "Please correct my surname.", candidate: { user_id: 5, email: "cand@example.com", status: "active", platform_role: "user", created_at: null },
+      allowed_statuses: this.next(), result_categories: ["correction_made", "information_provided"], can_execute_deletion: false,
+      legal: [{ document: "terms", current_version: "baseline-1", accepted_current: false, last_accepted_at: null }], audit: [] };
+  },
+  version(id: number, state: string) {
+    return { id, version: id === 1 ? "baseline-1" : "2.0", state, is_baseline: id === 1, content_ref: "/terms", content_hash: id === 1 ? null : "a".repeat(64),
+      effective_at: id === 1 ? null : "2026-12-01T00:00:00", published_at: state === "draft" ? null : "2026-10-03T10:00:00", created_at: null, acceptances: id === 1 ? 2 : 0 };
+  },
+  legal() {
+    const pub = this.legalPublished;
+    const v1 = this.version(1, pub ? "retired" : "published"), v2 = this.version(2, pub ? "published" : "draft");
+    return { documents: [{ code: "terms", title: "Terms of use", current: pub ? v2 : v1, versions: [v2, v1], current_accepted: pub ? 0 : 2, current_not_recorded: pub ? 5 : 3 }],
+      active_accounts: 5, note: "Counts reflect RECORDED acceptances only. This is not a compliance measure." };
+  },
+};
 const kb = {
   state: "none" as string,
   worker() {
@@ -143,6 +169,19 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
     }
     if (path.endsWith("/admin/home")) return json(HOME);
     const method = route.request().method();
+    if (path.endsWith("/admin/privacy/preparation/backfill") && method === "POST") return json({ job_id: "j", created: true }, 202);
+    if (path.endsWith("/admin/privacy/preparation")) return json({ indexed_runs: 4, by_state: { ready: 4 }, by_source: { created: 3, backfill: 1 }, coverage_version: 1,
+      note: "Counts indexed runs only. Historical runs with no relational reference cannot be discovered and are not included." });
+    if (/\/admin\/privacy\/requests\/[^/]+\/assign$/.test(path) && method === "POST") { priv.assignee = 1; return json(priv.detail()); }
+    if (/\/admin\/privacy\/requests\/[^/]+\/status$/.test(path) && method === "POST") {
+      const b = JSON.parse(route.request().postData() ?? "{}");
+      priv.status = b.status; if (b.result_category) priv.result = b.result_category;
+      return json(priv.detail());
+    }
+    if (/\/admin\/privacy\/requests\/[^/]+$/.test(path)) return json(priv.detail());
+    if (path.endsWith("/admin/privacy/requests")) return json({ items: [priv.row()], total: 1, page: 1, page_size: 25 });
+    if (/\/admin\/legal\/versions\/\d+\/publish$/.test(path) && method === "POST") { priv.legalPublished = true; return json(priv.version(2, "published")); }
+    if (path.endsWith("/admin/legal")) return json(priv.legal());
     if (path.endsWith("/admin/knowledge/meta")) return json({ languages: ["en", "de", "fr", "es", "it", "pt", "nl"],
       authority_levels: [{ level: 1, meaning: "Level 1: official or statistical source" }, { level: 2, meaning: "Level 2: public or professional framework" }, { level: 3, meaning: "Level 3: reputable public industry research" }],
       licence_classes: [{ code: "public_official", label: "Public / official source", activatable: true }, { code: "unclear", label: "Unclear (cannot be activated)", activatable: false }],
@@ -234,7 +273,7 @@ test("platform admin journey: Command Center, build metadata, audit, provider st
   await expect(page.getByText("Up to date")).toBeVisible();
   await expect(page.getByText("Health not tested").first()).toBeVisible();
   const nav = page.getByRole("navigation", { name: "Admin" });
-  for (const label of ["Overview", "Users", "Workspaces", "Review / Diagnostics", "Audit", "Provider status", "Jobs", "Knowledge"]) {
+  for (const label of ["Overview", "Users", "Workspaces", "Review / Diagnostics", "Audit", "Provider status", "Jobs", "Knowledge", "Privacy", "Legal"]) {
     await expect(nav.getByRole("link", { name: new RegExp(label) })).toBeVisible();
   }
   for (const future of ["Billing", "Subscriptions", "Incidents", "Feature Flags"]) {
@@ -303,6 +342,48 @@ test("W10.6: integrations inventory, environment-managed credential, manual test
   await page.goto("/admin/integrations/openrouter");
   await expect(page.getByRole("heading", { name: "Connection test" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Test connection" })).toHaveCount(0);
+});
+
+test("W10.10: privacy queue, detail, assign, acknowledge, complete with a result, then legal registry publish; read-only role", async ({ page }) => {
+  priv.status = "submitted"; priv.assignee = null; priv.result = null; priv.legalPublished = false;
+  await mockAdmin(page, "security_privacy_admin", ADMIN_PERMS);
+  await page.goto("/admin");
+  await page.getByRole("navigation", { name: "Admin" }).getByRole("link", { name: /^Privacy/ }).click();
+  await expect(page.getByRole("heading", { name: "Privacy", exact: true })).toBeVisible();
+  await expect(page.getByText(/never shows a candidate's documents/)).toBeVisible();
+  await expect(page.getByText(/cannot be discovered and are not included/)).toBeVisible();
+  await page.getByRole("link", { name: PRIV_ID }).click();
+  await expect(page.getByRole("heading", { name: "Candidate (account metadata only)" })).toBeVisible();
+  await expect(page.getByTestId("privacy-note")).toContainText("Please correct my surname.");
+  await expect(page.getByRole("button", { name: "Mark completed" })).toHaveCount(0);               // not a valid next step yet
+  await page.getByRole("button", { name: "Assign to me" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Confirm" }).click();
+  await expect(page.getByText("Assigned to you.")).toBeVisible();
+  for (const [btn, shown] of [["Mark acknowledged", "Status changed to acknowledged."], ["Mark in progress", "Status changed to in progress."]]) {
+    await page.getByRole("button", { name: btn }).click();
+    await expect(page.getByRole("alertdialog").getByRole("button", { name: "Cancel" })).toBeFocused();
+    await page.getByRole("alertdialog").getByRole("button", { name: "Confirm" }).click();
+    await expect(page.getByText(shown)).toBeVisible();
+  }
+  await page.getByRole("button", { name: "Mark completed" }).click();
+  await page.getByRole("alertdialog").getByLabel("Result").selectOption("correction_made");
+  await page.getByRole("alertdialog").getByRole("button", { name: "Confirm" }).click();
+  await expect(page.getByText("Status changed to completed.")).toBeVisible();
+
+  await page.goto("/admin/legal");
+  await expect(page.getByRole("heading", { name: "Legal", exact: true })).toBeVisible();
+  await expect(page.getByText(/baseline created when versioning was introduced/)).toBeVisible();
+  await page.getByRole("button", { name: "Publish Terms of use version 2.0" }).click();
+  await expect(page.getByRole("alertdialog").getByText(/can never be edited/)).toBeVisible();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Publish" }).click();
+  await expect(page.getByText(/Version published/)).toBeVisible();
+  await expect(page.getByRole("button", { name: /Publish Terms of use/ })).toHaveCount(0);
+
+  await page.unroute("**/api/v1/**");
+  await mockAdmin(page, "platform_admin", ["platform.overview.read", "platform.privacy.read"]);
+  await page.goto(`/admin/privacy/${PRIV_ID}`);
+  await expect(page.getByRole("heading", { name: "Candidate (account metadata only)" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Assign|Mark|Delete the account/ })).toHaveCount(0);
 });
 
 test("W10.8: upload, scan/parse (worker), preview, approve, index (worker), activate, retire, read-only role", async ({ page }) => {

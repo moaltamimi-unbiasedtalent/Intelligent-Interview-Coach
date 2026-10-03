@@ -114,7 +114,7 @@ def pause_state() -> dict[str, Any]:
 
 
 def command_center(*, version: str, session_factory, accounts, workspaces, allowed: frozenset[str],
-                   support=None, plans=None, integrations=None, jobs=None, knowledge=None) -> dict[str, Any]:
+                   support=None, plans=None, integrations=None, jobs=None, knowledge=None, privacy=None) -> dict[str, Any]:
     """Assemble the overview. Sections the caller lacks permission for are omitted, not blanked."""
     out: dict[str, Any] = {
         "build": build_info(version),
@@ -122,8 +122,7 @@ def command_center(*, version: str, session_factory, accounts, workspaces, allow
         "health": health_summary(session_factory),
         "rate_limit": rate_limit_mode(),
         "pause": pause_state(),
-        "privacy_requests": {"status": "not_operational",
-                             "note": "Privacy-request administration is not available yet."},
+        "privacy_requests": {"status": "restricted", "note": "You do not have access to privacy requests."},
         "accounts": accounts.account_stats(),
         "workspaces": workspaces.workspace_stats(),
         "diagnostics_links": [],
@@ -141,6 +140,10 @@ def command_center(*, version: str, session_factory, accounts, workspaces, allow
     if jobs is not None and "platform.jobs.read" in allowed:
         # Counts only: no payload, no error body and no candidate data. Queue depth never implies a healthy worker.
         out["jobs"] = jobs.stats()
+    if privacy is not None and "platform.privacy.read" in allowed:
+        # SEC-W10-04: the queue is durable and real now. Counts only: no request text, no candidate data.
+        out["privacy_requests"] = {"status": "operational", **privacy.stats(),
+                                   "note": "Counts of privacy requests. Handling is at /admin/privacy."}
     if knowledge is not None and "platform.knowledge.read" in allowed:
         # Counts only: no source text, no candidate data.
         out["knowledge"] = knowledge.stats()

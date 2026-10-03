@@ -31,6 +31,8 @@ type State = {
   shares: Record<string, unknown>[];
   deleted: boolean;
   calls: string[];
+  reqs: Record<string, unknown>[];
+  accepted: boolean;
 };
 
 function freshState(): State {
@@ -42,6 +44,8 @@ function freshState(): State {
     shares: [{ id: 40, owner_user_id: 1, workspace_id: 5, resource_type: "interview_report", resource_id: "30", permission: "view", status: "active", created_at: null, revoked_at: null }],
     deleted: false,
     calls: [],
+    reqs: [],
+    accepted: false,
   };
 }
 
@@ -62,6 +66,17 @@ async function mock(page: Page, locale = "en", state = freshState()) {
     if (path === "/auth/me") return state.deleted ? json({ error: { code: "unauthenticated", message: "x" } }, 401) : json(account(locale));
     if (path === "/capabilities") return json({ agent_coach_enabled: false, realtime_voice_enabled: false, company_research_enabled: false });
     if (path === "/auth/account/delete" && method === "POST") { state.deleted = true; return json({ message: "deleted" }); }
+    if (path === "/privacy/requests" && method === "POST") {
+      const body = JSON.parse(req.postData() ?? "{}");
+      const created = { public_id: "r".repeat(32), request_type: body.request_type, type_label: "x", status: "submitted", result_category: null, created_at: "2026-10-03T10:00:00", updated_at: null };
+      state.reqs.unshift(created);
+      return json(created, 201);
+    }
+    if (path === "/privacy/requests") return json({ items: state.reqs, total: state.reqs.length, page: 1, page_size: 20 });
+    const legalDoc = () => ({ code: "terms", title: "Terms of use", path: "/terms", current_version: "baseline-1", effective_at: null, version_is_baseline: true,
+      accepted_current: state.accepted, last_acceptance: state.accepted ? { version: "baseline-1", accepted_at: "2026-10-03T10:00:00", source: "settings", is_current: true } : null });
+    if (path === "/privacy/legal/terms/accept" && method === "POST") { state.accepted = true; return json({ documents: [legalDoc()] }); }
+    if (path === "/privacy/legal") return json({ documents: [legalDoc()] });
     if (path === "/auth/account/export") return route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
 
     const rm = (arr: Record<string, unknown>[], id: number) => {
@@ -138,8 +153,28 @@ test("core privacy journey: inspect, export, remove one item of each kind, revok
 
   // Retention + legal are visible, and the account deletion zone was left untouched.
   await expect(page.getByTestId("dp-retention")).toBeVisible();
-  await expect(page.getByTestId("dp-legal")).toContainText(T("en", "dataPrivacy.legalNotRecorded"));
+  await expect(page.getByTestId("dp-legal")).toContainText(T("en", "dataPrivacy.legalNotAcceptedCurrent"));
   expect(state.calls.some((c) => c.includes("/auth/account/delete"))).toBe(false);
+});
+
+test("W10.10: submit a privacy request, see it listed, and record legal acceptance of the current version", async ({ page }) => {
+  const state = await mock(page);
+  await page.goto("/account/data");
+  await expect(page.getByRole("heading", { name: T("en", "dataPrivacy.prTitle") })).toBeVisible();
+  await expect(page.getByText(T("en", "dataPrivacy.prListEmpty"))).toBeVisible();
+  await page.getByLabel(T("en", "dataPrivacy.prTypeLabel")).selectOption("correction");
+  await page.getByLabel(/Details \(optional\)/).fill("Please correct my surname.");
+  await page.getByRole("button", { name: T("en", "dataPrivacy.prSubmit") }).click();
+  await expect(page.getByRole("status")).toContainText("r".repeat(32));
+  await expect(page.getByTestId("dp-privacy-requests").getByText(T("en", "dataPrivacy.prStatusSubmitted"))).toBeVisible();
+  expect(state.calls).toEqual(["POST /privacy/requests"]);
+
+  const legal = page.getByTestId("dp-legal-versions");
+  await expect(legal.getByText(T("en", "dataPrivacy.legalNotAcceptedCurrent"))).toBeVisible();   // nothing is pre-accepted
+  await expect(legal.getByText(T("en", "dataPrivacy.legalEffectiveUnknown"))).toBeVisible();
+  await legal.getByRole("button", { name: /Record my acceptance/ }).click();
+  await expect(legal.getByText(/You recorded accepting this version on/)).toBeVisible();
+  await expect(legal.getByRole("button", { name: /Record my acceptance/ })).toHaveCount(0);
 });
 
 test("account deletion: cancel keeps the account; confirm deletes and ends the session", async ({ page }) => {

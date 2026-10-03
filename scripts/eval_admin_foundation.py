@@ -93,7 +93,7 @@ def run() -> dict[str, tuple[bool, str]]:
     # --- Command Center (SEC-W10-04/05 not claimed) --------------------------------------------------
     cc = read("src/application/admin_command_center.py")
     check("command_center_never_shells_out_or_migrates", not re.search(r"subprocess|os\.system|command\.upgrade|alembic upgrade", cc), "no git/migration execution")
-    check("privacy_queue_withheld_not_zero", "not_operational" in cc and "deletion_requests_open" not in read("frontend/components/admin/CommandCenter.tsx"), "no fake zero")
+    check("privacy_queue_real_and_permission_gated", '"operational"' in cc and '"restricted"' in cc and "privacy.stats()" in cc and "deletion_requests_open" not in read("frontend/components/admin/CommandCenter.tsx"), "SEC-W10-04: real durable-queue counts for authorised roles only; no fake zero")
     check("pause_labelled_non_durable", '"durable": False' in cc, "SEC-W10-05 stays open until W10.11")
 
     # --- frontend ----------------------------------------------------------------------------------
@@ -104,11 +104,11 @@ def run() -> dict[str, tuple[bool, str]]:
     check("admin_ui_has_no_candidate_content_fields", not hits, ", ".join(hits) or "none")
     nav = caps[caps.find("ADMIN_DESTINATIONS"):]
     future = [w for w in ("Billing", "Subscriptions", "Knowledge administration", "Privacy requests", "Incidents", "Feature Flags") if f'label: "{w}' in nav]
-    check("only_operational_destinations_listed", not future and len(re.findall(r'\bid: "', nav)) == 11, "eleven operational destinations (Support W10.3, Plans W10.4, Integrations W10.6, Jobs W10.9, Knowledge W10.8), none planned")
+    check("only_operational_destinations_listed", not future and len(re.findall(r'\bid: "', nav)) == 13, "thirteen operational destinations (Support W10.3, Plans W10.4, Integrations W10.6, Jobs W10.9, Knowledge W10.8, Privacy and Legal W10.10), none planned")
 
     # --- scope guards ------------------------------------------------------------------------------
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_")), mig[-1])
+    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_")), mig[-1])
     pyproject = read("pyproject.toml").lower()
     check("no_new_infrastructure_dependency", not any(d in pyproject for d in ("redis", "celery", "stripe", "sentry", "prometheus", "hvac")), "none of redis/celery/stripe/sentry/prometheus/hvac")
     return out

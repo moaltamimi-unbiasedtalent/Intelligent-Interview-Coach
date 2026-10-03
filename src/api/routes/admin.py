@@ -22,6 +22,7 @@ from src.entitlements import PLAN_CODES
 from src.integrations import IntegrationService
 from src.jobs.service import JobService
 from src.knowledge_admin.service import KnowledgeAdminService
+from src.privacy.requests import PrivacyRequestService
 from src.plans_repository import PlanRepository
 from src.secret_store import get_secret_store
 from src.support_repository import SupportRepository
@@ -104,6 +105,7 @@ def home(request: Request, principal=Depends(require_permission(perm.OVERVIEW_RE
         integrations=IntegrationService(accounts.session_factory, get_secret_store()),
         jobs=JobService(accounts.session_factory),
         knowledge=KnowledgeAdminService(accounts.session_factory, doc_store=None, jobs=None),
+        privacy=PrivacyRequestService(accounts.session_factory),
     )
 
 
@@ -304,13 +306,17 @@ def set_member_role(workspace_id: int, user_id: int, body: MemberRoleRequest, re
     return _guard(lambda: users.set_member_role(workspace_id, user_id, body.role, audit=audit))
 
 
-@router.get("/privacy-requests", summary="Open privacy/deletion requests (metadata only)")
+@router.get("/privacy-requests", summary="Open privacy requests (metadata only; the durable queue, SEC-W10-04)")
 def privacy_requests(_p=Depends(require_permission(perm.PRIVACY_READ)),
                      accounts=Depends(get_account_repository)) -> dict:
+    from src.privacy.requests import PrivacyRequestService
+
+    page = PrivacyRequestService(accounts.session_factory).list(status="open", page=1, page_size=100)
     return {
-        "requests": accounts.list_privacy_requests(),
-        "note": "Global hard-delete (private-file + agent checkpoint purge) remains PARTIAL; "
-                "deletion is not falsely reported complete.",
+        "requests": [{"public_id": r["public_id"], "request_type": r["request_type"], "status": r["status"], "user_id": r["user_id"],
+                      "requested_at": r["created_at"]} for r in page["items"]],
+        "total": page["total"],
+        "note": "Durable queue (W10.10). Full handling is at /admin/privacy.",
     }
 
 

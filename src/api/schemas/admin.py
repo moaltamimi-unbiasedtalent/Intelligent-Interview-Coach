@@ -567,3 +567,104 @@ class KnowledgeMeta(_Strict):
     states: list[str]
     rejection_reasons: list[str]
     upload: dict[str, str | int | list[str]]
+
+
+# ---- W10.10 privacy/legal (Admin). Safe operational metadata only: no candidate content, no exported data, no IP/device. ----
+class PrivacyRequestRow(_Strict):
+    public_id: str
+    request_type: str
+    type_label: str
+    status: str
+    result_category: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
+    source: str
+    user_id: int | None = None
+    candidate_email: str | None = None
+    assigned_user_id: int | None = None
+    assignee_email: str | None = None
+    acknowledged_at: str | None = None
+    completed_at: str | None = None
+    closed_at: str | None = None
+    related_job_id: str | None = None
+
+
+class PrivacyRequestPage(_Strict):
+    items: list[PrivacyRequestRow]
+    total: int
+    page: int
+    page_size: int
+
+
+class PrivacyCandidate(_Strict):
+    user_id: int
+    email: str | None = None
+    status: str
+    platform_role: str
+    created_at: str | None = None
+
+
+class PrivacyRequestDetail(PrivacyRequestRow):
+    request_note: str | None = None
+    candidate: PrivacyCandidate | None = None
+    allowed_statuses: list[str]
+    result_categories: list[str]
+    can_execute_deletion: bool
+    legal: list[dict[str, str | bool | None]] = []
+    audit: list[AdminAuditEntry] = []
+
+
+class PrivacyRecordRequest(_Strict):
+    account: str
+    request_type: str
+    note: str | None = None
+
+
+class PrivacyAssignRequest(_Strict):
+    assignee_user_id: int | None = None
+
+
+class PrivacyStatusRequest(_Strict):
+    status: str
+    result_category: str | None = None
+
+
+class LegalVersionRow(_Strict):
+    id: int
+    version: str
+    state: str
+    is_baseline: bool
+    content_ref: str
+    content_hash: str | None = None
+    effective_at: str | None = None
+    published_at: str | None = None
+    created_at: str | None = None
+    acceptances: int | None = None
+
+
+class LegalDocumentAdmin(_Strict):
+    code: str
+    title: str
+    current: LegalVersionRow | None = None
+    versions: list[LegalVersionRow]
+    current_accepted: int
+    current_not_recorded: int
+
+
+class LegalOverview(_Strict):
+    documents: list[LegalDocumentAdmin]
+    active_accounts: int
+    note: str
+
+
+class LegalDraftRequest(_Strict):
+    version: str
+    content_ref: str
+    content_hash: str | None = None
+    effective_at: str | None = None
+
+
+class LegalDraftUpdate(_Strict):
+    content_ref: str
+    content_hash: str | None = None
+    effective_at: str | None = None

@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorState, LoadingState } from "@/components/ui/States";
 import { useResource } from "@/lib/hooks/useResource";
+import { LegalVersionsPanel, PrivacyRequestsPanel } from "./PrivacyLegalPanels";
 import type { ResourceView } from "@/lib/hooks/useResource";
 
 /**
@@ -221,8 +222,8 @@ export function DataPrivacyCenter() {
   );
 
   const exportUrl = `${config.apiBaseUrl}/auth/account/export`;
-  const included = ["incAccount", "incOpportunities", "incDocuments", "incStories", "incMemories", "incInterviews", "incFeedback", "incSharing", "incSupport", "incPlan"];
-  const excluded = ["excFiles", "excAudit", "excOthers", "excInternal", "excSupportNotes", "excLegal"];
+  const included = ["incAccount", "incOpportunities", "incDocuments", "incStories", "incMemories", "incInterviews", "incFeedback", "incSharing", "incSupport", "incPlan", "incLegalAcceptances", "incPrivacyRequests", "incPreparationIndex"];
+  const excluded = ["excFiles", "excAudit", "excOthers", "excInternal", "excSupportNotes", "excPreparationContent"];
   const retention = ["retentionActive", "retentionDelete", "retentionSecurity", "retentionProviders"];
   const accountDeleted = ["accDelOpportunities", "accDelDocuments", "accDelMemories", "accDelInterviews", "accDelSharing", "accDelAccount"];
   const linkCls = "inline-flex min-h-[44px] items-center rounded border border-border px-3 text-sm font-semibold text-foreground hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2";
@@ -386,13 +387,17 @@ export function DataPrivacyCenter() {
         </ul>
       </Section>
 
+      <Section id="requests" title={t("dataPrivacy.prTitle")} intro={t("dataPrivacy.prIntro")}>
+        <PrivacyRequestsPanel />
+      </Section>
+
       <Section id="legal" title={t("dataPrivacy.legalTitle")} intro={t("dataPrivacy.legalIntro")}>
         <div className="flex flex-wrap gap-2">
           <Link href="/terms" className={linkCls}>{t("dataPrivacy.legalTerms")}</Link>
           <Link href="/privacy" className={linkCls}>{t("dataPrivacy.legalPrivacy")}</Link>
           <Link href="/ai-transparency" className={linkCls}>{t("dataPrivacy.legalAi")}</Link>
         </div>
-        <p className="text-sm text-muted">{t("dataPrivacy.legalNotRecorded")}</p>
+        <LegalVersionsPanel />
         <p className="text-xs text-muted">{t("dataPrivacy.legalReview")}</p>
       </Section>
 

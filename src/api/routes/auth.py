@@ -500,11 +500,28 @@ def delete_account(
     except Exception:  # noqa: BLE001
         agent_service = None
 
+    from src.privacy.preparation import PreparationRunIndex
+
     service = AccountDeletionService(
         repo.session_factory, document_store=document_store,
-        agent_service=agent_service, audit_repository=audit)
-    service.delete_account(user_id)
+        agent_service=agent_service, audit_repository=audit,
+        preparation_index=PreparationRunIndex(repo.session_factory))
+    summary = service.delete_account(user_id)
     _clear_session_cookie(request, response)
+    if summary.purge_failed_run_ids:
+        # Never claim full success: some preparation-chat working data could not be removed. Queue retries (best effort).
+        try:
+            from src.jobs.service import JobService
+            from src.privacy import policy as PP
+
+            jobs = JobService(repo.session_factory)
+            for rid in summary.purge_failed_run_ids:
+                jobs.enqueue(PP.JOB_PURGE, {"run_id": rid}, idempotency_key=f"purge:{rid}")
+        except Exception:  # noqa: BLE001
+            pass
+        return MessageResponse(
+            message="Your account and data have been deleted and you've been signed out. Some preparation-chat working data "
+                    "could not be removed yet; its removal will be retried.")
     return MessageResponse(
         message="Your account and data have been deleted. You've been signed out.")
 

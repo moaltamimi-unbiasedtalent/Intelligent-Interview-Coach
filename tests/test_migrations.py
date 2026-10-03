@@ -65,7 +65,7 @@ def test_single_head_after_phase10(tmp_path, monkeypatch):
     cfg = Config("alembic.ini")
     cfg.set_main_option("script_location", "migrations")
     heads = ScriptDirectory.from_config(cfg).get_heads()
-    assert list(heads) == ["0019_knowledge_admin"]
+    assert list(heads) == ["0020_privacy_legal_admin"]
 
 
 def test_upgrade_head_adds_source_session_id(tmp_path, monkeypatch):

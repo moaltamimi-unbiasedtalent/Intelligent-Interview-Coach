@@ -393,7 +393,7 @@ def test_c2_build_metadata_reads_injected_env_and_sanitizes(env, monkeypatch):
 
 def test_c3_repository_head_is_the_real_alembic_head():
     from src.application.admin_command_center import repository_head
-    assert repository_head() == "0019_knowledge_admin"
+    assert repository_head() == "0020_privacy_legal_admin"
 
 
 def test_c4_migration_state_unknown_match_mismatch(env):
@@ -407,7 +407,7 @@ def test_c4_migration_state_unknown_match_mismatch(env):
     m = migration_status(sf)
     assert m["state"] == "mismatch" and m["warning"] and "never migrates automatically" in m["warning"]
     with sf() as s:
-        s.execute(text("UPDATE alembic_version SET version_num='0019_knowledge_admin'"))
+        s.execute(text("UPDATE alembic_version SET version_num='0020_privacy_legal_admin'"))
         s.commit()
     assert migration_status(sf)["state"] == "match"
 
@@ -434,10 +434,11 @@ def test_c8_pause_is_labelled_non_durable(env):
     assert p["durable"] is False and "non-durable" in p["note"]
 
 
-def test_c9_privacy_queue_is_not_shown_as_operational_and_no_fake_zero(env):
+def test_c9_privacy_queue_is_operational_with_real_counts_after_sec_w10_04(env):
+    """SEC-W10-04 is fixed in W10.10: the Command Center shows the DURABLE queue's real counts (an honest zero is now a real zero)."""
     j = _home(env)
-    assert j["privacy_requests"]["status"] == "not_operational"
-    assert "count" not in j["privacy_requests"] and "open" not in j["privacy_requests"]
+    assert j["privacy_requests"]["status"] == "operational"
+    assert {"open", "unassigned_open", "total"} <= set(j["privacy_requests"])
 
 
 def test_c10_diagnostic_links_are_permission_gated_and_no_private_content(env):
