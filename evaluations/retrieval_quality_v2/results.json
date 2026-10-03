@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-29T10:38:04Z",
+  "generated": "2026-10-03T12:04:55Z",
   "corpus": "evaluations/corpus",
   "corpus_fingerprint": "39c76496afba8b1f",
   "dataset": "evaluations/rag_dataset.json",
@@ -35,7 +35,7 @@
           "mrr": 0.842,
           "recall_at_k": 0.955,
           "term_recall_at_k": 0.97,
-          "avg_latency_ms": 0.382,
+          "avg_latency_ms": 0.391,
           "chunks": 14
         },
         "keyword": {
@@ -45,7 +45,7 @@
           "mrr": 0.904,
           "recall_at_k": 0.97,
           "term_recall_at_k": 0.97,
-          "avg_latency_ms": 0.023,
+          "avg_latency_ms": 0.024,
           "chunks": 14
         },
         "hybrid": {
@@ -55,12 +55,12 @@
           "mrr": 0.871,
           "recall_at_k": 0.924,
           "term_recall_at_k": 0.939,
-          "avg_latency_ms": 0.428,
+          "avg_latency_ms": 0.446,
           "chunks": 14
         }
       },
       "top_k": 5,
-      "latency_ms": 27.77,
+      "latency_ms": 28.72,
       "chunks": 14
     },
     {
@@ -84,12 +84,12 @@
           "mrr": 0.871,
           "recall_at_k": 0.924,
           "term_recall_at_k": 0.939,
-          "avg_latency_ms": 0.431,
+          "avg_latency_ms": 0.425,
           "chunks": 14
         }
       },
       "top_k": 5,
-      "latency_ms": 14.33,
+      "latency_ms": 14.12,
       "chunks": 14
     },
     {

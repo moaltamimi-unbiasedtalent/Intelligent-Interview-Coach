@@ -100,6 +100,8 @@ jobs:
         run: python scripts/eval_admin_entitlements.py
       - name: Admin integrations (P10B-W10.6; offline; code-defined registry, SecretStore with no admin read path, metadata-only responses, manual bounded probes, honest status wording)
         run: python scripts/eval_admin_integrations.py
+      - name: Admin jobs (P10B-W10.9; offline; DB-backed queue, separate worker, code-defined job types, SKIP LOCKED + SQLite atomic claims, leases/retries/idempotency, no raw payload to Admin)
+        run: python scripts/eval_admin_jobs.py
       - name: Rate-limit evaluation (Capstone P8; offline; auth + cost buckets, window reset, anti-enumeration)
         run: python scripts/eval_rate_limits.py
       - name: Hosting-readiness evaluation (Capstone P8; offline; env/cookies/CORS/headers/pause/malware — does NOT certify EX-12)

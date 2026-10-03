@@ -1,6 +1,6 @@
 # Retrieval Quality v2
 
-Generated 2026-08-29T10:38:04Z · corpus `evaluations/corpus` (fp 39c76496afba8b1f) · dataset `evaluations/rag_dataset.json`.
+Generated 2026-10-03T12:04:55Z · corpus `evaluations/corpus` (fp 39c76496afba8b1f) · dataset `evaluations/rag_dataset.json`.
 Embedding: **OFFLINE LEXICAL** (local/local-hash-v1).
 
 > SEMANTIC EVALUATION NOT RUN — CREDENTIAL NOT CONFIGURED. Set COPILOT_EMBEDDING_API_KEY (and COPILOT_EMBEDDING_PROVIDER=openai) then re-run: python scripts/eval_retrieval_quality_v2.py

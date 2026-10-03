@@ -29,6 +29,8 @@ export const P = {
   supportReply: "platform.support.reply",
   supportManage: "platform.support.manage",
   supportNote: "platform.support.note",
+  jobsRead: "platform.jobs.read",
+  jobsManage: "platform.jobs.manage",
 } as const;
 
 export interface AdminDestination {
@@ -49,6 +51,7 @@ export const ADMIN_DESTINATIONS: readonly AdminDestination[] = [
   { id: "support", label: "Support", href: "/admin/support", description: "Customer support queue", anyOf: [P.supportRead] },
   { id: "review", label: "Review / Diagnostics", href: "/review", description: "Evaluation and knowledge diagnostics", anyOf: [P.ai, P.knowledge] },
   { id: "audit", label: "Audit", href: "/admin/audit", description: "Privileged-action log", anyOf: [P.audit] },
+  { id: "jobs", label: "Jobs", href: "/admin/jobs", description: "Queue and worker diagnostics", anyOf: [P.jobsRead] },
   { id: "integrations", label: "Integrations", href: "/admin/integrations", description: "Connections and credentials", anyOf: [P.integrations] },
   { id: "providers", label: "Provider status", href: "/admin/providers", description: "Configuration status", anyOf: [P.integrations] },
 ] as const;

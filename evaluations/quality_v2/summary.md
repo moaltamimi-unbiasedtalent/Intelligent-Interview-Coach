@@ -1,6 +1,6 @@
 # Quality v2 — held-out evaluation
 
-Generated 2026-08-29T18:41:45Z · embedding **OFFLINE LEXICAL** · top_k=5.
+Generated 2026-10-03T12:04:44Z · embedding **OFFLINE LEXICAL** · top_k=5.
 Held-out set authored after build; deterministic + offline; 11R/11R-A untouched.
 
 ## Held-out retrieval (hybrid, lexical)

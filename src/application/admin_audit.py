@@ -39,6 +39,10 @@ ADMIN_INTEGRATION_TEST_RUN: Final = "admin.integration_test_run"
 ADMIN_CREDENTIAL_REPLACEMENT_REQUESTED: Final = "admin.credential_replacement_requested"
 ADMIN_CREDENTIAL_REPLACEMENT_SUCCEEDED: Final = "admin.credential_replacement_succeeded"
 ADMIN_CREDENTIAL_REPLACEMENT_FAILED: Final = "admin.credential_replacement_failed"
+# W10.9 (jobs). Payloads: job public id, job type and old/new state; never a job payload, an error body or a secret.
+ADMIN_JOB_ENQUEUED: Final = "admin.job_enqueued"
+ADMIN_JOB_RETRY_REQUESTED: Final = "admin.job_retry_requested"
+ADMIN_JOB_CANCELLED: Final = "admin.job_cancelled"
 ADMIN_SUPPORT_TICKET_ASSIGNED: Final = "admin.support_ticket_assigned"
 ADMIN_SUPPORT_TICKET_STATUS_CHANGED: Final = "admin.support_ticket_status_changed"
 ADMIN_SUPPORT_TICKET_PRIORITY_CHANGED: Final = "admin.support_ticket_priority_changed"
@@ -54,7 +58,7 @@ ADMIN_EVENT_NAMES: Final[frozenset[str]] = frozenset({
     ADMIN_PLAN_VERSION_CREATED, ADMIN_PLAN_VERSION_UPDATED, ADMIN_PLAN_VERSION_ACTIVATED,
     ADMIN_PLAN_VERSION_RETIRED, ADMIN_SUBSCRIPTION_ASSIGNED,
     ADMIN_INTEGRATION_TEST_RUN, ADMIN_CREDENTIAL_REPLACEMENT_REQUESTED, ADMIN_CREDENTIAL_REPLACEMENT_SUCCEEDED,
-    ADMIN_CREDENTIAL_REPLACEMENT_FAILED,
+    ADMIN_CREDENTIAL_REPLACEMENT_FAILED, ADMIN_JOB_ENQUEUED, ADMIN_JOB_RETRY_REQUESTED, ADMIN_JOB_CANCELLED,
 })
 
 # Context keys that may never be written (defence in depth against a careless caller).

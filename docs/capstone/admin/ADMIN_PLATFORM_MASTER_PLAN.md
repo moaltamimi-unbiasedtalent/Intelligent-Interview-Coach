@@ -210,7 +210,7 @@ Upload -> file safety/malware -> parse -> classify -> provenance/licence declara
 rollback to prior snapshot, diagnostics, retrieval test console (admin-only, sources only). Russian or generated aliases never carry "official ESCO" provenance. Operates P10C sources later;
 does not replace P10C.
 
-## 16. Jobs / queues (W10.9; decision AD-05)
+## 16. Jobs / queues (W10.9; decision AD-05: implemented on `feat/p10b-w10-9-jobs-operational-diagnostics`; complete when merged; see `W10_9_JOBS_QUEUES_OPERATIONAL_DIAGNOSTICS.md`)
 Today every long operation is synchronous and no worker exists. Design (AD-05, FINAL): a DB-backed `background_job` abstraction with a **separate worker process** and **no external broker**.
 Required properties: **transactional job claiming** (never "select pending and hope"), lease/ownership with heartbeat or lease expiry, attempt count, retry policy with backoff, idempotency key,
 failed and dead-letter (final failure) states, request/correlation id, entity linkage, created/started/completed timestamps, sanitised failure reasons. Claiming uses safe locking per database:

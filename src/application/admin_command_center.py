@@ -114,7 +114,7 @@ def pause_state() -> dict[str, Any]:
 
 
 def command_center(*, version: str, session_factory, accounts, workspaces, allowed: frozenset[str],
-                   support=None, plans=None, integrations=None) -> dict[str, Any]:
+                   support=None, plans=None, integrations=None, jobs=None) -> dict[str, Any]:
     """Assemble the overview. Sections the caller lacks permission for are omitted, not blanked."""
     out: dict[str, Any] = {
         "build": build_info(version),
@@ -138,6 +138,9 @@ def command_center(*, version: str, session_factory, accounts, workspaces, allow
     if integrations is not None and "platform.integrations.read" in allowed:
         # Counts only: nothing here is a secret, and "healthy" is never inferred (only a manual test sets it).
         out["integrations"] = integrations.stats()
+    if jobs is not None and "platform.jobs.read" in allowed:
+        # Counts only: no payload, no error body and no candidate data. Queue depth never implies a healthy worker.
+        out["jobs"] = jobs.stats()
     links = []
     if "platform.knowledge.read" in allowed:
         links.append({"label": "Knowledge readiness", "path": "/review/rag"})

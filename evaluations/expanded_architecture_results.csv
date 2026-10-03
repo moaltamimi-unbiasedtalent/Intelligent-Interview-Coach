@@ -7,7 +7,7 @@ router,vector,accuracy,1.0
 router,mixed,accuracy,1.0
 structured_role,overall,hit_rate,1.0
 structured_role,overall,provenance_completeness,1.0
-structured_role,overall,avg_latency_ms,0.03
+structured_role,overall,avg_latency_ms,0.048
 compensation,overall,accuracy,1.0
 compensation,overall,provenance_completeness,1.0
 retrieval_current,vector,hit_rate@k,0.97

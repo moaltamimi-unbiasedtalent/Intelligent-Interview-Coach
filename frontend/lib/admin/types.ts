@@ -23,6 +23,7 @@ export interface AdminCommandCenter {
   workspaces: Record<string, number>;
   plans?: { by_plan: Record<string, { users: number; workspaces: number }>; accounts_without_subscription: number };
   integrations?: { total: number; configured: number; runtime_active: number; not_tested: number; unhealthy: number };
+  jobs?: JobDiagnostics;
   support?: { open: number; unassigned: number; waiting_for_customer: number; high_or_urgent: number; total: number };
   diagnostics_links: { label: string; path: string }[];
   boundary: string;
@@ -251,4 +252,59 @@ export interface IntegrationTestResult {
   outcome: string;
   category: string;
   latency_ms: number | null;
+}
+
+// --- W10.9 jobs (operational metadata only: no raw payload, error body, secret or candidate data) ---
+export type JobState = "queued" | "running" | "succeeded" | "failed" | "cancelled";
+export interface JobRow {
+  public_id: string;
+  job_type: string;
+  type_label: string;
+  state: JobState;
+  priority: string;
+  attempts: number;
+  max_attempts: number;
+  manual_retries: number;
+  available_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  error_category: string | null;
+  error_message: string | null;
+  lease: { held: boolean; owner: string | null; expires_at: string | null; heartbeat_at: string | null; stale: boolean };
+  waiting_for_retry: boolean;
+  payload_summary: Record<string, string>;
+  can_retry: boolean;
+  can_cancel: boolean;
+}
+export interface JobDetail extends JobRow {
+  audit: AdminAuditEntry[];
+}
+export interface JobQuery {
+  state?: string;
+  job_type?: string;
+  priority?: string;
+  q?: string;
+  page?: number;
+  page_size?: number;
+}
+export interface JobDiagnostics {
+  queue: {
+    queued: number; running: number; failed: number; succeeded: number; cancelled: number;
+    retry_waiting: number; stale_leases: number; oldest_ready_age_seconds: number | null;
+  };
+  by_type: ({ job_type: string; label: string } & Record<JobState, number>)[];
+  workers: {
+    seen_recently: number; last_seen_at: string | null; stale_after_seconds: number;
+    items: { worker_id: string; status: string; started_at: string | null; last_seen_at: string | null; jobs_succeeded: number; jobs_failed: number; active: boolean }[];
+  };
+}
+export interface JobTypeInfo {
+  job_type: string;
+  label: string;
+  max_attempts: number;
+  manual_retry: boolean;
+  cancellable_when_queued: boolean;
+  idempotency: string;
 }

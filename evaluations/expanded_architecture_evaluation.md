@@ -7,7 +7,7 @@ Phase 11R established the initial RAG benchmark (preserved in `retrieval_results
 - By lane: structured_role=1.0, compensation=1.0, forecast=1.0, vector=1.0, mixed=1.0
 
 ## Structured role retrieval
-- Hit rate: **1.0** · provenance completeness: **1.0** · latency: 0.03 ms
+- Hit rate: **1.0** · provenance completeness: **1.0** · latency: 0.048 ms
 
 ## Compensation retrieval
 - Accuracy (country+year+currency+statistic+source): **1.0** · provenance completeness: **1.0**

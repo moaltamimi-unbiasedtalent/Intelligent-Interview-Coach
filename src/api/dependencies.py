@@ -300,6 +300,12 @@ def get_integration_service(repo=Depends(get_repository), store=Depends(get_secr
     return IntegrationService(repo.session_factory, store, probes)
 
 
+def get_job_service(repo=Depends(get_repository)):
+    from src.jobs.service import JobService
+
+    return JobService(repo.session_factory)
+
+
 def get_support_repository(repo=Depends(get_repository)):
     from src.support_repository import SupportRepository
 

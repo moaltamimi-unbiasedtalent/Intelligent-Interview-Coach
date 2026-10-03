@@ -6,6 +6,11 @@ import type {
   AdminCommandCenter,
   AdminPage,
   AdminAssignee,
+  JobDetail,
+  JobDiagnostics,
+  JobQuery,
+  JobRow,
+  JobTypeInfo,
   IntegrationDetail,
   IntegrationRow,
   IntegrationTestResult,
@@ -542,6 +547,16 @@ export const api = {
     feedback: (opts?: RequestOptions) => request<Record<string, unknown>>("GET", "/admin/feedback", opts),
     providers: (opts?: RequestOptions) => request<AdminProviders>("GET", "/admin/providers", opts),
     audit: (opts?: RequestOptions) => request<{ events: AdminAuditEvent[] }>("GET", "/admin/audit", opts),
+    // W10.9 jobs
+    jobs: (query: JobQuery = {}, opts?: RequestOptions) =>
+      request<AdminPage<JobRow>>("GET", `/admin/jobs${qs(query as Record<string, unknown>)}`, opts),
+    job: (id: string, opts?: RequestOptions) => request<JobDetail>("GET", `/admin/jobs/${encodeURIComponent(id)}`, opts),
+    jobDiagnostics: (opts?: RequestOptions) => request<JobDiagnostics>("GET", "/admin/jobs/diagnostics", opts),
+    jobTypes: (opts?: RequestOptions) => request<JobTypeInfo[]>("GET", "/admin/jobs/types", opts),
+    enqueueJob: (jobType: string, payload: Record<string, string>, opts?: RequestOptions) =>
+      request<{ job: JobRow; created: boolean }>("POST", "/admin/jobs", { body: { job_type: jobType, payload }, ...opts }),
+    retryJob: (id: string, opts?: RequestOptions) => request<JobRow>("POST", `/admin/jobs/${encodeURIComponent(id)}/retry`, opts),
+    cancelJob: (id: string, opts?: RequestOptions) => request<JobRow>("POST", `/admin/jobs/${encodeURIComponent(id)}/cancel`, opts),
     // W10.3 support
     supportTickets: (query: AdminTicketQuery = {}, opts?: RequestOptions) =>
       request<AdminPage<AdminTicketSummary>>("GET", `/admin/support/tickets${qs(query as Record<string, unknown>)}`, opts),

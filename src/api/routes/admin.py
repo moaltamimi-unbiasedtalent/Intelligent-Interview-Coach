@@ -20,6 +20,7 @@ from fastapi import Request
 from src.admin_repository import AdminNotFound
 from src.entitlements import PLAN_CODES
 from src.integrations import IntegrationService
+from src.jobs.service import JobService
 from src.plans_repository import PlanRepository
 from src.secret_store import get_secret_store
 from src.support_repository import SupportRepository
@@ -100,6 +101,7 @@ def home(request: Request, principal=Depends(require_permission(perm.OVERVIEW_RE
         support=SupportRepository(accounts.session_factory),
         plans=PlanRepository(accounts.session_factory),
         integrations=IntegrationService(accounts.session_factory, get_secret_store()),
+        jobs=JobService(accounts.session_factory),
     )
 
 

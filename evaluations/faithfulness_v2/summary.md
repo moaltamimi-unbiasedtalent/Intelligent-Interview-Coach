@@ -4,8 +4,8 @@ Attribution checks over the real structured evidence — no LLM. Does not touch 
 
 | Check | Score | n |
 |---|---|---|
-| Provenance completeness | 100% | 7 |
-| Citation has source URL | 100% | 7 |
-| Citation precision (maps to real evidence) | 100% | 7 |
-| Salary-context completeness | 100% | 2 |
-| Insufficient-evidence correctness | 88% | 8 |
+| Provenance completeness | 100% | 4 |
+| Citation has source URL | 100% | 4 |
+| Citation precision (maps to real evidence) | 100% | 4 |
+| Salary-context completeness | n/a | 0 |
+| Insufficient-evidence correctness | 75% | 8 |
