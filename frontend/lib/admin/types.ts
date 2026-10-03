@@ -24,6 +24,7 @@ export interface AdminCommandCenter {
   plans?: { by_plan: Record<string, { users: number; workspaces: number }>; accounts_without_subscription: number };
   integrations?: { total: number; configured: number; runtime_active: number; not_tested: number; unhealthy: number };
   jobs?: JobDiagnostics;
+  billing?: { mock: boolean; label: string; open_invoices: number; past_due_invoices: number; failed_payments: number; pending_approvals: number; configured_plan_versions: number };
   knowledge?: { sources: number; awaiting_review: number; indexing: number; failed: number; indexed_not_active: number; active: number };
   support?: { open: number; unassigned: number; waiting_for_customer: number; high_or_urgent: number; total: number };
   diagnostics_links: { label: string; path: string }[];
@@ -440,4 +441,134 @@ export interface PreparationCoverage {
   by_source: Record<string, number>;
   coverage_version: number;
   note: string;
+}
+
+// --- W10.5 MOCK billing (metadata only; no card, payment-instrument, bank, tax or raw provider field) ---
+export interface BillingMode {
+  provider: string;
+  enabled: boolean;
+  live: boolean;
+  mode: string;
+  label: string;
+  configuration_error: string | null;
+  checkout: boolean;
+  note: string;
+}
+export interface BillingTermsView {
+  public_id: string;
+  version: number;
+  amount_minor: number;
+  currency: string;
+  interval: string;
+  trial_days: number | null;
+  visibility: string;
+  state: string;
+  activated_at: string | null;
+  retired_at: string | null;
+  approval_id: string | null;
+}
+export interface BillingPlanTerms {
+  plan_version_id: number;
+  plan_code: string;
+  plan_version: number;
+  plan_name: string;
+  plan_status: string;
+  current: BillingTermsView | null;
+  configured: boolean;
+  history: BillingTermsView[];
+  pending_approval_id: string | null;
+}
+export interface BillingStats {
+  mock: boolean;
+  label: string;
+  open_invoices: number;
+  past_due_invoices: number;
+  failed_payments: number;
+  pending_approvals: number;
+  configured_plan_versions: number;
+}
+export interface BillingOverview {
+  mode: BillingMode;
+  stats: BillingStats;
+  terms: { items: BillingPlanTerms[]; note: string };
+}
+export interface BillingApproval {
+  public_id: string;
+  action_type: string;
+  target_ref: string;
+  proposed: Record<string, string | number | null>;
+  reason: string;
+  status: string;
+  requested_by_user_id: number | null;
+  requested_by_email: string | null;
+  requested_at: string | null;
+  decided_by_user_id: number | null;
+  decided_at: string | null;
+  executed_at: string | null;
+  execution_ref: string | null;
+  failure_category: string | null;
+}
+export interface BillingSubject {
+  type: string;
+  id: number | null;
+  label: string | null;
+}
+export interface BillingInvoice {
+  public_id: string;
+  provider: string;
+  provider_invoice_id: string;
+  mock: boolean;
+  state: string;
+  amount_due_minor: number;
+  amount_paid_minor: number;
+  currency: string;
+  subject: BillingSubject;
+  period_start: string | null;
+  period_end: string | null;
+  due_at: string | null;
+  created_at: string | null;
+}
+export interface BillingPayment {
+  public_id: string;
+  provider: string;
+  provider_payment_id: string;
+  mock: boolean;
+  invoice_public_id: string;
+  amount_minor: number;
+  currency: string;
+  status: string;
+  failure_category: string | null;
+  refunded_minor: number;
+  refundable_minor: number;
+  created_at: string | null;
+}
+export interface BillingRefund {
+  public_id: string;
+  provider: string;
+  provider_refund_id: string | null;
+  mock: boolean;
+  payment_public_id: string;
+  amount_minor: number;
+  currency: string;
+  state: string;
+  created_at: string | null;
+  executed_at: string | null;
+}
+export interface BillingCustomer {
+  public_id: string;
+  provider: string;
+  provider_customer_id: string;
+  mock: boolean;
+  subject: BillingSubject;
+  state: string;
+  provider_subscriptions: { public_id: string; provider_subscription_id: string; provider_state: string; plan_version_id: number; current_period_end: string | null; grace_until: string | null }[];
+}
+export interface BillingPriceInput {
+  plan_version_id: number;
+  amount_minor: number;
+  currency: string;
+  interval: string;
+  trial_days: number | null;
+  visibility: string;
+  reason: string;
 }

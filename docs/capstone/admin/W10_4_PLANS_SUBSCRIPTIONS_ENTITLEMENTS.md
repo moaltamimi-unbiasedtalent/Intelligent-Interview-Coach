@@ -134,7 +134,7 @@ None.
 ## 40. Alembic head
 `0016_plans_entitlements` (single head).
 
-## 41. Billing handoff (W10.5, later)
+## 41. Billing handoff (W10.5: delivered as MOCK billing, see `W10_5_BILLING_PAYMENT_ADMINISTRATION.md`)
 The approved order puts W10.6 next; W10.5 (billing, mock adapter) can later attach to stable `plan_versions.id` and `(plan_code, version)`, the canonical entitlement definitions, active subscription rows with history and sources (extend `source`), the Admin plan visibility and the resolver, plus the compatibility tier bridge. It must add price and interval as new tables or columns without changing resolution, keep billing state separate from entitlement, and label MOCK BILLING.
 
 ## 42. External calls

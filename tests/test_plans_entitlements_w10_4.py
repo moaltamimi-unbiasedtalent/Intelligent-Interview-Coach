@@ -446,8 +446,8 @@ def test_plan_routes_are_permissioned_and_schemas_carry_no_price_fields():
     assert {p for r in plan_routes for p in r.permissions} == {perm.PLANS_READ, perm.PLANS_MANAGE, perm.SUBSCRIPTIONS_MANAGE}
     names = []
     for cls in vars(S).values():
-        if isinstance(cls, type) and issubclass(cls, BaseModel) and cls.__module__ == S.__name__:
-            names += list(cls.model_fields)
+        if isinstance(cls, type) and issubclass(cls, BaseModel) and cls.__module__ == S.__name__ and not cls.__name__.startswith("Billing"):
+            names += list(cls.model_fields)       # W10.5: commercial fields live ONLY in the separate Billing* schemas; plan schemas stay price-free
     assert not [n for n in names if any(w in n for w in ("price", "currency", "payment", "invoice", "amount", "interval", "trial", "card"))]
 
 

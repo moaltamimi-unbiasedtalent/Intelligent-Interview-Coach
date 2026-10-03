@@ -64,12 +64,12 @@ never-translated slogan. Local `main` == `origin/main`; GitHub integration is pa
 | W10.2 | Users, access and workspaces (**COMPLETE: merged in PR #118, main `e47ba76`**; closes SEC-W10-01; migration-free; see `admin/W10_2_USERS_ACCESS_WORKSPACES.md`) | L | Capstone critical |
 | W10.3 | Support and ticketing (**COMPLETE, merged in PR #114 at b80635d**; migration `0015_support_ticketing`; see `admin/W10_3_CUSTOMER_SUPPORT_TICKETING.md`) | XL | Capstone critical |
 | W10.4 | Plans, subscriptions and entitlements (**COMPLETE, merged in PR #116 at 787178d**; migration `0016_plans_entitlements`; no billing or price; see `admin/W10_4_PLANS_SUBSCRIPTIONS_ENTITLEMENTS.md`) | L | Capstone critical |
-| W10.5 | Billing and payment administration (mock adapter acceptable) | XL | Capstone desirable |
+| W10.5 | Billing and payment administration (**implemented, MOCK BILLING only; complete when merged**; migration `0021_billing_admin`; see `admin/W10_5_BILLING_PAYMENT_ADMINISTRATION.md`) | XL | Capstone desirable |
 | W10.6 | Integrations and API connections (**COMPLETE: merged in PR #118, main `e47ba76`**; migration `0017_integrations`; see `admin/W10_6_INTEGRATIONS_API_CONNECTIONS.md`) | L | Capstone critical |
 | W10.7 | AI and model administration | L | Capstone desirable |
 | W10.8 | Knowledge base and RAG administration (**COMPLETE: merged in PR #121, main `35eee19`**; migration `0019_knowledge_admin`; see `admin/W10_8_KNOWLEDGE_RAG_ADMINISTRATION.md`) | XL | Capstone critical |
 | W10.9 | Jobs, queues and operational diagnostics (**COMPLETE: merged in PR #120, main `f059668`**; migration `0018_jobs`; see `admin/W10_9_JOBS_QUEUES_OPERATIONAL_DIAGNOSTICS.md`) | L | Capstone desirable |
-| W10.10 | GDPR, privacy and legal administration (**implemented; complete when merged**; migration `0020_privacy_legal_admin`; closes SEC-W10-04, PRIV-W9-01, PRIV-W9-02; see `admin/W10_10_GDPR_PRIVACY_LEGAL_ADMINISTRATION.md`) | L | Capstone critical |
+| W10.10 | GDPR, privacy and legal administration (**COMPLETE: merged in PR #122, main `54ee591`**; migration `0020_privacy_legal_admin`; closes SEC-W10-04, PRIV-W9-01, PRIV-W9-02; see `admin/W10_10_GDPR_PRIVACY_LEGAL_ADMINISTRATION.md`) | L | Capstone critical |
 | W10.11 | Feature flags and safe system configuration | M | Capstone desirable |
 | W10.12 | Reporting, analytics and AI economics (essential reporting critical; AI economics desirable) | L | Capstone critical / desirable |
 | W10.13 | Security, audit and incident management | L | Capstone critical |

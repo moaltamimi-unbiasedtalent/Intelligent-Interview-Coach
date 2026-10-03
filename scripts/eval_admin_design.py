@@ -47,8 +47,8 @@ def run() -> dict[str, tuple[bool, str]]:
     check("current_admin_routes_exist", not missing, ", ".join(missing) or f"{len(current_routes)} documented routes exist")
 
     routes_dir = ROOT / "src/api/routes"
-    forbidden_files = [f for f in routes_dir.glob("*.py") if re.search(r"billing|subscription|incident", f.name)]  # support (W10.3), plans (W10.4), integrations (W10.6) and legal (W10.10) shipped
-    check("planned_domains_not_built_routes", not forbidden_files, ", ".join(f.name for f in forbidden_files) or "no billing/incident routes yet (support W10.3, plans W10.4, integrations W10.6, legal W10.10 shipped)")
+    forbidden_files = [f for f in routes_dir.glob("*.py") if re.search(r"subscription|incident", f.name)]  # support (W10.3), plans (W10.4), integrations (W10.6) and legal (W10.10) and billing (W10.5) shipped
+    check("planned_domains_not_built_routes", not forbidden_files, ", ".join(f.name for f in forbidden_files) or "no incident routes yet (support W10.3, plans W10.4, integrations W10.6, legal W10.10, billing W10.5 shipped)")
 
     persistence = read(ROOT / "src/persistence.py").lower()
     built = [t for t in ("subscription_plan", "background_job", "feature_flag", "integration_config", "secret_reference", "incident") if t in persistence]
@@ -72,7 +72,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("preset_names_final", all(n in plan for n in ("platform_admin", "support_operator", "billing_admin", "knowledge_admin", "security_privacy_admin", "operations_admin")),
           "six role presets named")
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_")), mig[-1])
+    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_")), mig[-1])
     check("referenced_source_paths_exist",
           all((ROOT / p).exists() for p in re.findall(r"`(src/[A-Za-z0-9_/]+\.py)`", plan + adr)),
           "every `src/...py` path named in the plan exists")

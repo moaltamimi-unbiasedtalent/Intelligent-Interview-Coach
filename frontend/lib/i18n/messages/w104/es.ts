@@ -14,13 +14,14 @@ const es: typeof en = {
     included: "Incluido",
     notIncluded: "No incluido",
     previewNotice: "Premium es una vista previa. Ask4Mo no ofrece compras por ahora, así que aquí no hay nada que comprar ni mejorar.",
-    noPayments: "Tu plan lo asigna Ask4Mo. Tu cuenta no tiene pagos, precios ni facturas.",
+    noPayments: "Tu plan lo asigna Ask4Mo. Ask4Mo no procesa actualmente pagos reales ni ofrece proceso de compra.",
     loadError: "No pudimos cargar tu plan.",
     retry: "Intentar de nuevo",
     loading: "Cargando…",
   },
   dataPrivacy: {
-    incPlan: "Tu plan y cómo cambió con el tiempo (solo asignaciones de acceso; Ask4Mo no tiene registros de pago)",
+    incPlan: "Tu plan y cómo cambió con el tiempo (solo asignaciones de acceso)",
+    incBillingMock: "Registros de facturación simulados (de prueba) vinculados a tu cuenta, si los hay. No se procesan pagos reales.",
   },
 };
 

@@ -324,6 +324,13 @@ def get_job_service(repo=Depends(get_repository)):
     return JobService(repo.session_factory)
 
 
+def get_billing_service(repo=Depends(get_repository)):
+    from src.billing.wiring import build_billing_service
+    from src.jobs.service import JobService
+
+    return build_billing_service(repo.session_factory, JobService(repo.session_factory))
+
+
 def get_privacy_request_service(repo=Depends(get_repository)):
     from src.privacy.requests import PrivacyRequestService
 

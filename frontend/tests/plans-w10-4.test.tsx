@@ -211,7 +211,7 @@ describe("Candidate plan view", () => {
     expect(screen.getByText(t("plan.noPayments"))).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
-    expect(document.body.textContent).not.toMatch(/\$|€|buy now|upgrade now|checkout|\/month/i);
+    expect(document.body.textContent).not.toMatch(/\$|€|buy now|upgrade now|\/month/i);   // (W10.5: the notice may SAY there is no checkout; it must offer none: no button, no link)
   });
 
   it("a Premium account is labelled as a preview and still offers nothing to buy", async () => {

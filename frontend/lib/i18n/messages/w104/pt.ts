@@ -14,13 +14,14 @@ const pt: typeof en = {
     included: "Incluído",
     notIncluded: "Não incluído",
     previewNotice: "O Premium é uma pré-visualização. A Ask4Mo não oferece compras de momento, por isso não há nada para comprar ou atualizar aqui.",
-    noPayments: "O seu plano é atribuído pela Ask4Mo. A sua conta não tem pagamentos, preços nem faturas.",
+    noPayments: "O seu plano é atribuído pela Ask4Mo. A Ask4Mo atualmente não processa pagamentos reais nem oferece checkout.",
     loadError: "Não foi possível carregar o seu plano.",
     retry: "Tentar novamente",
     loading: "A carregar…",
   },
   dataPrivacy: {
-    incPlan: "O seu plano e como mudou ao longo do tempo (apenas atribuições de acesso; a Ask4Mo não tem registos de pagamento)",
+    incPlan: "O seu plano e como mudou ao longo do tempo (apenas atribuições de acesso)",
+    incBillingMock: "Registos de faturação simulados (de teste) associados à sua conta, se existirem. Não são processados pagamentos reais.",
   },
 };
 

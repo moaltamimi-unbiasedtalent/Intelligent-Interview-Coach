@@ -14,13 +14,14 @@ const nl: typeof en = {
     included: "Inbegrepen",
     notIncluded: "Niet inbegrepen",
     previewNotice: "Premium is een preview. Ask4Mo biedt momenteel geen aankopen aan, dus hier valt niets te kopen of te upgraden.",
-    noPayments: "Je abonnement wordt door Ask4Mo toegewezen. Je account bevat geen betalingen, prijzen of facturen.",
+    noPayments: "Je abonnement wordt door Ask4Mo toegewezen. Ask4Mo verwerkt momenteel geen echte betalingen en biedt geen afrekenproces aan.",
     loadError: "We konden je abonnement niet laden.",
     retry: "Opnieuw proberen",
     loading: "Laden…",
   },
   dataPrivacy: {
-    incPlan: "Je abonnement en hoe het in de tijd veranderde (alleen toegangstoewijzingen; Ask4Mo heeft geen betalingsgegevens)",
+    incPlan: "Je abonnement en hoe het in de tijd veranderde (alleen toegangstoewijzingen)",
+    incBillingMock: "Gesimuleerde (mock) factuurgegevens die aan je account zijn gekoppeld, indien aanwezig. Er worden geen echte betalingen verwerkt.",
   },
 };
 

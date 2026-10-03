@@ -18,7 +18,8 @@ documents are historical evidence and are labelled where they could be mistaken 
 | Localization and language dimensions | [capstone/p3_5_i18n_l10n.md](capstone/p3_5_i18n_l10n.md), [capstone/p10/w9/P10B_W9_7_RUSSIAN_LOCALE.md](capstone/p10/w9/P10B_W9_7_RUSSIAN_LOCALE.md); locale constants `src/locales.py` |
 | Opportunities | [capstone/p10/p10b_wave6_opportunity_model.md](capstone/p10/p10b_wave6_opportunity_model.md) |
 | Workspaces, sharing, current admin foundations | [capstone/p6_5_workspaces_platform_admin.md](capstone/p6_5_workspaces_platform_admin.md) |
-| Admin privacy and legal administration (W10.10, implemented) | [capstone/admin/W10_10_GDPR_PRIVACY_LEGAL_ADMINISTRATION.md](capstone/admin/W10_10_GDPR_PRIVACY_LEGAL_ADMINISTRATION.md) |
+| Admin mock billing and payment administration (W10.5, implemented) | [capstone/admin/W10_5_BILLING_PAYMENT_ADMINISTRATION.md](capstone/admin/W10_5_BILLING_PAYMENT_ADMINISTRATION.md) |
+| Admin privacy and legal administration (W10.10, complete) | [capstone/admin/W10_10_GDPR_PRIVACY_LEGAL_ADMINISTRATION.md](capstone/admin/W10_10_GDPR_PRIVACY_LEGAL_ADMINISTRATION.md) |
 | Admin knowledge base and RAG administration (W10.8, complete) | [capstone/admin/W10_8_KNOWLEDGE_RAG_ADMINISTRATION.md](capstone/admin/W10_8_KNOWLEDGE_RAG_ADMINISTRATION.md) |
 | Admin jobs, queues and operational diagnostics (W10.9, complete) | [capstone/admin/W10_9_JOBS_QUEUES_OPERATIONAL_DIAGNOSTICS.md](capstone/admin/W10_9_JOBS_QUEUES_OPERATIONAL_DIAGNOSTICS.md) |
 | Admin integrations and API connections (W10.6, complete) | [capstone/admin/W10_6_INTEGRATIONS_API_CONNECTIONS.md](capstone/admin/W10_6_INTEGRATIONS_API_CONNECTIONS.md) |
