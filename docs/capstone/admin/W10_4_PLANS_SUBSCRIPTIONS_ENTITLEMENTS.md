@@ -1,6 +1,6 @@
 # P10B-W10.4 - Plans, Subscriptions & Entitlements
 
-**Status:** implemented on branch `feat/p10b-w10-4-plans-entitlements`; **complete when merged to `main`**. **W10.5 is NOT STARTED.**
+**Status:** **COMPLETE: merged to `main` in PR #116 (merge commit 787178d, qualified head abf2dbb; all required CI green).** **W10.5 and W10.6 are NOT STARTED; the next approved implementation wave is W10.6 (Integrations and API connections), not W10.5.**
 One additive migration (`0016_plans_entitlements`). No new dependency. 0 paid/live calls. **No billing, no price, no invented quota.**
 
 ## 1. Starting point
@@ -63,7 +63,7 @@ No active subscription falls back to the Basic plan (the active Basic version, o
 Password and OIDC creation, and dev/legacy principals created by `get_or_create_user`, add the default Basic subscription in the same transaction as the account, so there is no half-created access state. If the default plan has no active version, creation fails closed (tested: no account row remains).
 
 ## 17. Legacy-user backfill
-The migration seeds `basic` v1 and `premium` v1 and creates one active `migration` subscription per user from the current tier (premium to premium v1; basic or no tier row to basic v1). The entitlements equal the old map, so no user gains or loses anything. Tested from a populated 0015 database (premium, basic and no-tier users).
+The migration seeds `basic` v1 and `premium` v1 and creates one active `migration` subscription per user from the current tier (premium to premium v1; basic or no tier row to basic v1). The entitlements equal the old map, so no user gains or loses anything. Tested from a populated 0015 database (premium, basic and no-tier users). Access equivalence is pinned by test: after the migration each user's enabled entitlement keys equal exactly what the pre-W10.4 tier map (`capabilities_for(tier)`) granted (premium user: five keys; basic and no-tier users: four).
 
 ## 18. Workspace backfill decision
 No rows are created for existing workspaces: a workspace subscription is optional until used (documented section 13). Resolution for a workspace without one is the Basic fallback.
@@ -134,8 +134,8 @@ None.
 ## 40. Alembic head
 `0016_plans_entitlements` (single head).
 
-## 41. W10.5 handoff
-W10.5 (billing, mock adapter) can attach to stable `plan_versions.id` and `(plan_code, version)`, the canonical entitlement definitions, active subscription rows with history and sources (extend `source`), the Admin plan visibility and the resolver, plus the compatibility tier bridge. It must add price and interval as new tables or columns without changing resolution, keep billing state separate from entitlement, and label MOCK BILLING.
+## 41. Billing handoff (W10.5, later)
+The approved order puts W10.6 next; W10.5 (billing, mock adapter) can later attach to stable `plan_versions.id` and `(plan_code, version)`, the canonical entitlement definitions, active subscription rows with history and sources (extend `source`), the Admin plan visibility and the resolver, plus the compatibility tier bridge. It must add price and interval as new tables or columns without changing resolution, keep billing state separate from entitlement, and label MOCK BILLING.
 
 ## 42. External calls
 0 paid or live provider calls.

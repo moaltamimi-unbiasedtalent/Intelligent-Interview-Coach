@@ -6,7 +6,7 @@
 >
 > **W10.3 update:** rows delivered by P10B-W10.3 (candidate Contact Support, ticket queue and lifecycle, replies and internal notes; attachments deferred) are relabelled CURRENT. W10.3 is COMPLETE (merged in PR #114, main b80635d).
 >
-> **W10.4 update:** rows delivered by P10B-W10.4 (plan versions, entitlement resolution, subscription assignment; no billing, no price) are relabelled CURRENT. W10.4 is complete when merged to `main`.
+> **W10.4 update:** rows delivered by P10B-W10.4 (plan versions, entitlement resolution, subscription assignment; no billing, no price) are relabelled CURRENT. W10.4 is COMPLETE (merged in PR #116, main 787178d).
 
 Produced by W10.0 from the verified inventory in `ADMIN_PLATFORM_MASTER_PLAN.md` (section 2). **CURRENT** = exists in code at `main` f272f00 (often partial); **PLANNED** = not built. No role, permission, table, route or screen in this document is implemented by W10.0.
 Permissions are the target namespace of the master plan (section 5); deny by default. **Status:** FOUNDATION (current, adequate), PARTIAL (current, gaps listed), NOT STARTED, RESERVED, OUT OF SCOPE. **Mock acceptable** means a labelled mock/local adapter may stand in for a live integration for the Capstone; a mock is never presented as live.
