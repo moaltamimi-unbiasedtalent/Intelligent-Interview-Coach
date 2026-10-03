@@ -202,7 +202,7 @@ def test_aud2_audit_failure_rolls_back_the_mutation(env, monkeypatch):
     assert not env.events(A.ADMIN_PLATFORM_ROLE_CHANGE)
 
 
-def test_aud2b_commit_time_audit_failure_rolls_back_tier_and_status(env, monkeypatch):
+def test_aud2b_commit_time_audit_failure_rolls_back_plan_and_status(env, monkeypatch):
     _, admin = env.user("platform_admin")
     target, _ = env.user("user")
     from src import auth_repository as ar
@@ -217,7 +217,7 @@ def test_aud2b_commit_time_audit_failure_rolls_back_tier_and_status(env, monkeyp
     monkeypatch.setattr(ar, "AuditEvent", Bad)
     assert env.c.post(f"/api/v1/admin/users/{target}/status", json={"status": "deactivated"},
                       cookies=admin).status_code == 500
-    assert env.c.post(f"/api/v1/admin/users/{target}/tier", json={"tier": "premium"},
+    assert env.c.post(f"/api/v1/admin/users/{target}/plan", json={"plan_code": "premium"},
                       cookies=admin).status_code == 500
     monkeypatch.undo()
     acct = env.accounts.get_account(target)
@@ -282,10 +282,10 @@ def test_aud8_status_and_tier_changes_are_audited_atomically(env):
     target, _ = env.user("user")
     assert env.c.post(f"/api/v1/admin/users/{target}/status", json={"status": "deactivated"},
                       cookies=admin).status_code == 200
-    assert env.c.post(f"/api/v1/admin/users/{target}/tier", json={"tier": "premium"},
+    assert env.c.post(f"/api/v1/admin/users/{target}/plan", json={"plan_code": "premium"},
                       cookies=admin).status_code == 200
     s = env.events(A.ADMIN_ACCOUNT_STATUS_CHANGE)[0]["context"]
-    t = env.events(A.ADMIN_ENTITLEMENT_CHANGE)[0]["context"]
+    t = env.events(A.ADMIN_SUBSCRIPTION_ASSIGNED)[0]["context"]
     assert (s["before"], s["after"]) == ("active", "deactivated")
     assert (t["before"], t["after"]) == ("basic", "premium")
     assert env.c.post("/api/v1/admin/users/99999/role", json={"role": "user"}, cookies=admin).status_code == 404
@@ -393,7 +393,7 @@ def test_c2_build_metadata_reads_injected_env_and_sanitizes(env, monkeypatch):
 
 def test_c3_repository_head_is_the_real_alembic_head():
     from src.application.admin_command_center import repository_head
-    assert repository_head() == "0015_support_ticketing"
+    assert repository_head() == "0016_plans_entitlements"
 
 
 def test_c4_migration_state_unknown_match_mismatch(env):
@@ -407,7 +407,7 @@ def test_c4_migration_state_unknown_match_mismatch(env):
     m = migration_status(sf)
     assert m["state"] == "mismatch" and m["warning"] and "never migrates automatically" in m["warning"]
     with sf() as s:
-        s.execute(text("UPDATE alembic_version SET version_num='0015_support_ticketing'"))
+        s.execute(text("UPDATE alembic_version SET version_num='0016_plans_entitlements'"))
         s.commit()
     assert migration_status(sf)["state"] == "match"
 

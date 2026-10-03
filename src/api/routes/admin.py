@@ -18,10 +18,13 @@ from pydantic import BaseModel, Field
 from fastapi import Request
 
 from src.admin_repository import AdminNotFound
+from src.entitlements import PLAN_CODES
+from src.plans_repository import PlanRepository
 from src.support_repository import SupportRepository
 from src.api.dependencies import (
     get_account_repository,
     get_admin_user_repository,
+    get_plan_repository,
     get_audit_repository,
     get_request_id,
     get_workspace_repository,
@@ -57,8 +60,8 @@ class RoleRequest(BaseModel):
     reason: str | None = Field(default=None, max_length=200)
 
 
-class TierRequest(BaseModel):
-    tier: str = Field(max_length=32)
+class PlanAssignRequest(BaseModel):
+    plan_code: str = Field(max_length=32)
 
 
 class StatusRequest(BaseModel):
@@ -93,6 +96,7 @@ def home(request: Request, principal=Depends(require_permission(perm.OVERVIEW_RE
         accounts=accounts, workspaces=workspaces,
         allowed=perm.permissions_for_role(principal.platform_role),
         support=SupportRepository(accounts.session_factory),
+        plans=PlanRepository(accounts.session_factory),
     )
 
 
@@ -123,11 +127,12 @@ def list_users(
 @router.get("/users/{user_id}", response_model=AdminUserDetail,
             summary="Safe account detail: account, access, session metadata, workspaces, admin audit")
 def user_detail(user_id: int, principal=Depends(require_permission(perm.USERS_READ)),
-                users=Depends(get_admin_user_repository)) -> AdminUserDetail:
+                users=Depends(get_admin_user_repository), plans=Depends(get_plan_repository)) -> AdminUserDetail:
     d = users.get_user_detail(user_id)
     if d is None:
         raise HTTPException(status_code=404, detail="Account not found.")
     role = d["account"]["platform_role"]
+    d["plan"] = plans.subject_plan(user_id=user_id)
     d["access"] = {"platform_role": role, "capabilities": perm.sorted_permissions(role),
                    "assignable_roles": list(PLATFORM_ROLES), "is_self": user_id == principal.user_id}
     return AdminUserDetail(**d)
@@ -167,21 +172,19 @@ def set_role(user_id: int, body: RoleRequest, request: Request,
     return {"user_id": user_id, "platform_role": body.role, "changed": out["changed"]}
 
 
-@router.post("/users/{user_id}/tier", summary="Set product entitlement tier (audited, atomic)")
-def set_tier(user_id: int, body: TierRequest, request: Request,
-             principal=Depends(require_permission(perm.SUBSCRIPTIONS_MANAGE)),
-             accounts=Depends(get_account_repository)) -> dict:
-    if body.tier not in PRODUCT_TIERS:
-        raise HTTPException(status_code=422, detail="Unknown tier.")
-    before = _current(accounts, user_id)
-    if before is None:
-        raise HTTPException(status_code=404, detail="Account not found.")
-    audit = A.build_audit(event_type=A.ADMIN_ENTITLEMENT_CHANGE, actor_user_id=principal.user_id,
+@router.post("/users/{user_id}/plan", summary="Move an account to the active version of a plan (audited, atomic)")
+def set_user_plan(user_id: int, body: PlanAssignRequest, request: Request,
+                  principal=Depends(require_permission(perm.SUBSCRIPTIONS_MANAGE)),
+                  plans=Depends(get_plan_repository)) -> dict:
+    """Subscription change: the old subscription ends, a new one starts, the legacy tier column follows, and the
+    audit row is written in the same transaction. A plan assignment is access, not a payment."""
+    if body.plan_code not in PLAN_CODES:
+        raise HTTPException(status_code=422, detail="Unknown plan.")
+    before = plans.subject_plan(user_id=user_id)["current"]
+    audit = A.build_audit(event_type=A.ADMIN_SUBSCRIPTION_ASSIGNED, actor_user_id=principal.user_id,
                           request_id=get_request_id(request), target_type="user", target_id=user_id,
-                          before=before.tier, after=body.tier, tier=body.tier)
-    if not accounts.set_tier(user_id, body.tier, source="admin", audit=audit):
-        raise HTTPException(status_code=404, detail="Account not found.")
-    return {"user_id": user_id, "tier": body.tier}
+                          before=before["plan_code"] if before else None, after=body.plan_code)
+    return _guard(lambda: plans.assign(body.plan_code, user_id=user_id, source="admin", audit=audit))
 
 
 @router.post("/users/{user_id}/status", summary="Deactivate or reactivate an account (audited, atomic)")
@@ -233,11 +236,26 @@ def list_workspaces(q: str | None = Query(default=None, max_length=120),
 @router.get("/workspaces/{workspace_id}", response_model=AdminWorkspaceDetail,
             summary="Safe workspace detail: metadata and members (never workspace content)")
 def workspace_detail(workspace_id: int, _p=Depends(require_permission(perm.WORKSPACES_READ)),
-                     users=Depends(get_admin_user_repository)) -> AdminWorkspaceDetail:
+                     users=Depends(get_admin_user_repository), plans=Depends(get_plan_repository)) -> AdminWorkspaceDetail:
     d = users.get_workspace_detail(workspace_id)
     if d is None:
         raise HTTPException(status_code=404, detail="Workspace not found.")
-    return AdminWorkspaceDetail(**d, workspace_roles=list(WORKSPACE_ROLES))
+    return AdminWorkspaceDetail(**d, workspace_roles=list(WORKSPACE_ROLES), plan=plans.subject_plan(workspace_id=workspace_id))
+
+
+@router.post("/workspaces/{workspace_id}/plan", summary="Assign a plan to a workspace (audited, atomic; not billing)")
+def set_workspace_plan(workspace_id: int, body: PlanAssignRequest, request: Request,
+                       principal=Depends(require_permission(perm.SUBSCRIPTIONS_MANAGE)),
+                       plans=Depends(get_plan_repository)) -> dict:
+    """Workspace subscriptions only apply to explicitly workspace-scoped actions; they never raise a member's
+    personal access."""
+    if body.plan_code not in PLAN_CODES:
+        raise HTTPException(status_code=422, detail="Unknown plan.")
+    before = plans.subject_plan(workspace_id=workspace_id)["current"]
+    audit = A.build_audit(event_type=A.ADMIN_SUBSCRIPTION_ASSIGNED, actor_user_id=principal.user_id,
+                          request_id=get_request_id(request), target_type="workspace", target_id=workspace_id,
+                          before=before["plan_code"] if before else None, after=body.plan_code)
+    return _guard(lambda: plans.assign(body.plan_code, workspace_id=workspace_id, source="admin", audit=audit))
 
 
 def _ws_audit(event: str, request: Request, principal, workspace_id: int, **ctx):

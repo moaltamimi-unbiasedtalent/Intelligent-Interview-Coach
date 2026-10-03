@@ -27,6 +27,7 @@ import closure from "./closure"; // P10B-W9.7A — strings found by visual QA (a
 import w98 from "../w98"; // P10B-W9.8 — Data & Privacy Center (all 8 locales)
 import w99 from "../w99"; // P10B-W9.9 — Trust & visual polish copy (all 8 locales)
 import w103 from "../w103"; // P10B-W10.3 — Customer support copy (all 8 locales)
+import w104 from "../w104"; // P10B-W10.4 — Plan copy (all 8 locales)
 // P10B-W9.7: Russian blocks live beside (not inside) the 7-locale fragment files, each typed against
 // its fragment's English shape so missing/extra keys fail `tsc`. `help` carries its own `ru` entry.
 import prepareRu from "./ru/prepare";
@@ -55,6 +56,7 @@ const FRAGMENTS: Array<{ name: string; blocks: Fragment }> = [
   { name: "w98", blocks: w98 as unknown as Fragment },
   { name: "w99", blocks: w99 as unknown as Fragment },
   { name: "w103", blocks: w103 as unknown as Fragment },
+  { name: "w104", blocks: w104 as unknown as Fragment },
 ];
 
 /** Additively merge `source` namespaces/keys into `target` (mutates and returns `target`). */

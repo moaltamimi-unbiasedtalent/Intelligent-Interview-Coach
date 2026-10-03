@@ -7,6 +7,7 @@ import { useAuth } from "./AuthProvider";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { PlanSummary } from "@/components/account/PlanSummary";
 import { Card, CardBody } from "@/components/ui/Card";
 import { LoadingState } from "@/components/ui/States";
 import { useT } from "@/components/i18n/I18nProvider";
@@ -63,13 +64,14 @@ export function AccountPanel() {
               )
             }
           />
-          <Row label={t("account.plan")} value={<Badge>{account.tier === "premium" ? t("account.premium") : t("account.basic")}</Badge>} />
           {account.platform_role !== "user" ? (
             <Row label={t("account.role")} value={<Badge>{account.platform_role}</Badge>} />
           ) : null}
           <Row label={t("account.signInMethod")} value={methodLabel(account.auth_method, t)} />
         </CardBody>
       </Card>
+
+      <PlanSummary />
 
       <div className="flex flex-wrap items-center gap-3">
         <a

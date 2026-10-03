@@ -23,6 +23,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
 from src.coaching_style import COACHING_STYLES, DEFAULT_COACHING_STYLE
+from src.entitlements import ensure_default_subscription
 from src.persistence import (
     ACCOUNT_STATUS_ACTIVE,
     ACCOUNT_STATUS_DELETION_REQUESTED,
@@ -216,6 +217,7 @@ class AccountRepository:
                 session.add(
                     ProductEntitlement(user_id=user.id, tier=TIER_BASIC, source="default")
                 )
+                ensure_default_subscription(session, user.id)   # same transaction: no half-created access state
                 session.commit()
                 return user.id
             except IntegrityError:
@@ -268,6 +270,7 @@ class AccountRepository:
                 session.add(
                     ProductEntitlement(user_id=user.id, tier=TIER_BASIC, source="default")
                 )
+                ensure_default_subscription(session, user.id)
             session.add(
                 AccountIdentity(
                     user_id=user.id,
@@ -335,19 +338,17 @@ class AccountRepository:
 
     def set_tier(self, user_id: int, tier: str, *, source: str | None = None,
                  audit: dict | None = None) -> bool:
-        with self._session_factory() as session:
-            ent = session.scalar(
-                select(ProductEntitlement).where(ProductEntitlement.user_id == user_id)
-            )
-            if ent is None:
-                session.add(ProductEntitlement(user_id=user_id, tier=tier, source=source))
-            else:
-                ent.tier = tier
-                if source:
-                    ent.source = source
-            self._stage_audit(session, audit)
-            session.commit()
-            return True
+        """COMPATIBILITY bridge: a tier change is a subscription change. Delegates to the one mutation path
+        (``PlanRepository.assign``), which also keeps the legacy ``tier`` column in step. Never writes the tier
+        column on its own, so there is no second source of truth for product access."""
+        from src.admin_repository import AdminNotFound
+        from src.plans_repository import PlanRepository
+
+        try:
+            PlanRepository(self._session_factory).assign(tier, user_id=user_id, source="admin", audit=audit)
+        except AdminNotFound:
+            return False
+        return True
 
     def set_status(self, user_id: int, status: str, *, audit: dict | None = None) -> bool:
         with self._session_factory() as session:

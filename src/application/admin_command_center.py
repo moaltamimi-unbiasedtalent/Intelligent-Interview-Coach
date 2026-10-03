@@ -114,7 +114,7 @@ def pause_state() -> dict[str, Any]:
 
 
 def command_center(*, version: str, session_factory, accounts, workspaces, allowed: frozenset[str],
-                   support=None) -> dict[str, Any]:
+                   support=None, plans=None) -> dict[str, Any]:
     """Assemble the overview. Sections the caller lacks permission for are omitted, not blanked."""
     out: dict[str, Any] = {
         "build": build_info(version),
@@ -132,6 +132,9 @@ def command_center(*, version: str, session_factory, accounts, workspaces, allow
     if support is not None and "platform.support.read" in allowed:
         # Counts only; no message text, and no SLA/breach figures (no SLA policy exists).
         out["support"] = {k: v for k, v in support.stats().items()}
+    if plans is not None and ("platform.plans.read" in allowed or "platform.subscriptions.read" in allowed):
+        # Counts only: no revenue, price or payment figure exists (billing is not implemented).
+        out["plans"] = plans.stats()
     links = []
     if "platform.knowledge.read" in allowed:
         links.append({"label": "Knowledge readiness", "path": "/review/rag"})

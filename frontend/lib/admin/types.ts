@@ -21,6 +21,7 @@ export interface AdminCommandCenter {
   privacy_requests: { status: string; note: string };
   accounts: Record<string, number>;
   workspaces: Record<string, number>;
+  plans?: { by_plan: Record<string, { users: number; workspaces: number }>; accounts_without_subscription: number };
   support?: { open: number; unassigned: number; waiting_for_customer: number; high_or_urgent: number; total: number };
   diagnostics_links: { label: string; path: string }[];
   boundary: string;
@@ -86,6 +87,7 @@ export interface AdminUserDetail {
   sessions: { active_count: number; recent: { created_at: string | null; last_used_at: string | null; expires_at: string | null }[] };
   workspaces: { workspace_id: number; name: string; workspace_status: string; role: string; membership_status: string; joined_at: string | null }[];
   audit: AdminAuditEntry[];
+  plan?: SubjectPlan | null;
 }
 export interface AdminAuditEntry {
   event_type: string;
@@ -110,6 +112,7 @@ export interface AdminWorkspaceDetail {
   active_share_count: number;
   active_owner_count: number;
   workspace_roles: string[];
+  plan?: SubjectPlan | null;
 }
 export interface AdminUserQuery {
   q?: string;
@@ -166,4 +169,49 @@ export interface AdminTicketQuery {
   assignee?: string;
   page?: number;
   page_size?: number;
+}
+
+// --- W10.4 plans, subscriptions, entitlements (no price, no payment state) ---
+export interface PlanVersionRow {
+  id: number;
+  plan_code: string;
+  version: number;
+  display_name: string;
+  status: "draft" | "active" | "retired";
+  enabled_entitlements: number;
+  total_entitlements: number;
+  subscribers: { users: number; workspaces: number };
+  created_at: string | null;
+  activated_at: string | null;
+  retired_at: string | null;
+}
+export interface EntitlementRow {
+  code: string;
+  label: string;
+  description: string;
+  type: string;
+  enabled: boolean;
+  limit: number | null;
+}
+export interface PlanDetail extends Omit<PlanVersionRow, "enabled_entitlements" | "total_entitlements"> {
+  editable: boolean;
+  entitlements: EntitlementRow[];
+}
+export interface AssignablePlan {
+  plan_code: string;
+  version: number;
+  display_name: string;
+}
+export interface SubscriptionEntry {
+  plan_code: string;
+  version: number;
+  display_name: string;
+  status: string;
+  source: string;
+  started_at: string | null;
+  ended_at: string | null;
+}
+export interface SubjectPlan {
+  current: SubscriptionEntry | null;
+  history: SubscriptionEntry[];
 }

@@ -26,6 +26,7 @@ INCLUDED = (
     "stories", "memories", "interviews (questions, your answers, evaluations, reports)",
     "feedback you submitted", "workspace memberships", "items you share",
     "support tickets you opened and the messages in them that you can see",
+    "your plan and its assignment history (access assignments only; Ask4Mo has no payment records)",
 )
 NOT_INCLUDED = (
     "the original uploaded files (download them from Documents)",
@@ -92,6 +93,10 @@ def build_candidate_export(*, user_id: int, session_factory, repo, account: Any)
             ],
             "shares": [_row(g, ("owner_user_id",)) for g in shares],
         }
+    # W10.4: the candidate's own plan and subscription history (access assignments only: no payment data exists).
+    from src.plans_repository import PlanRepository
+
+    data["plan"] = PlanRepository(session_factory).subject_plan(user_id=user_id)
     # W10.3: the candidate-visible support conversation. Admin-only internal notes are NEVER exported here.
     from src.support_repository import SupportRepository
 

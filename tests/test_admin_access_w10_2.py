@@ -242,10 +242,10 @@ def test_scoped_presets_cannot_manage_accounts(env):
     assert env.c.post(f"{API}/admin/users/{tid}/role", json={"role": "user"}, cookies=sec).status_code == 403
 
 
-def test_tier_change_remains_a_plain_metadata_change(env):
+def test_plan_change_keeps_the_legacy_tier_in_step(env):
     _, _, admin, _ = mk(env, "platform_admin")
     tid, *_ = mk(env)
-    assert env.c.post(f"{API}/admin/users/{tid}/tier", json={"tier": "premium"}, cookies=admin).status_code == 200
+    assert env.c.post(f"{API}/admin/users/{tid}/plan", json={"plan_code": "premium"}, cookies=admin).status_code == 200
     assert env.c.get(f"{API}/admin/users/{tid}", cookies=admin).json()["account"]["tier"] == "premium"
 
 
@@ -281,7 +281,7 @@ def test_user_detail_is_safe_and_complete(env):
     _, _, admin, _ = mk(env, "platform_admin")
     uid, email, *_ = mk(env)
     d = env.c.get(f"{API}/admin/users/{uid}", cookies=admin).json()
-    assert set(d) == {"account", "access", "sessions", "workspaces", "audit"}
+    assert set(d) == {"account", "access", "sessions", "workspaces", "audit", "plan"}
     assert d["account"]["email"] == email and d["account"]["active_session_count"] == 1
     assert d["access"]["capabilities"] == []
     assert set(d["access"]["assignable_roles"]) == {"user", *perm.ADMIN_ROLES}

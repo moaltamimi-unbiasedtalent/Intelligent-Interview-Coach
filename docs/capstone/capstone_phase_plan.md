@@ -63,7 +63,7 @@ never-translated slogan. Local `main` == `origin/main`; GitHub integration is pa
 | W10.1 | Admin Shell, Permission & Audit Foundation, Command Center (**COMPLETE, merged in PR #110 at 301173d**; closes SEC-W10-02/03/06; migration-free; see `admin/W10_1_ADMIN_FOUNDATION_COMMAND_CENTER.md`) | L | Capstone critical |
 | W10.2 | Users, access and workspaces (**implemented; complete when merged**; closes SEC-W10-01; migration-free; see `admin/W10_2_USERS_ACCESS_WORKSPACES.md`) | L | Capstone critical |
 | W10.3 | Support and ticketing (**COMPLETE, merged in PR #114 at b80635d**; migration `0015_support_ticketing`; see `admin/W10_3_CUSTOMER_SUPPORT_TICKETING.md`) | XL | Capstone critical |
-| W10.4 | Plans, subscriptions and entitlements | L | Capstone critical |
+| W10.4 | Plans, subscriptions and entitlements (**implemented; complete when merged**; migration `0016_plans_entitlements`; no billing or price; see `admin/W10_4_PLANS_SUBSCRIPTIONS_ENTITLEMENTS.md`) | L | Capstone critical |
 | W10.5 | Billing and payment administration (mock adapter acceptable) | XL | Capstone desirable |
 | W10.6 | Integrations and API connections | L | Capstone critical |
 | W10.7 | AI and model administration | L | Capstone desirable |

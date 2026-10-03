@@ -8,6 +8,7 @@ import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities"
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import type { AdminWorkspaceDetail } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
+import { PlanControl } from "./PlanControl";
 import { KeyValue, Panel, PermissionGate, ResourceState, apiMessage, btn, field, useAdminResource } from "./ui";
 
 type Pending = null | { kind: "remove"; userId: number; email: string | null } | { kind: "role"; userId: number; email: string | null; role: string };
@@ -62,6 +63,8 @@ function Detail({ d, reload }: { d: AdminWorkspaceDetail; reload: () => void }) 
           ["Active members", w.member_count], ["Active owners", d.active_owner_count], ["Active shares", d.active_share_count]]} />
         <p className="text-xs text-muted">Shared items are never listed here; only their count.</p>
       </Panel>
+
+      <PlanControl plan={d.plan} subject={{ kind: "workspace", id: w.id }} onChanged={(m) => { setNotice(m); reload(); }} />
 
       <Panel title="Members">
         <div className="overflow-x-auto">
