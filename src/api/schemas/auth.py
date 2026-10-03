@@ -120,6 +120,20 @@ class OnboardingRequest(BaseModel):
     complete: bool = False
 
 
+class EntitlementState(BaseModel):
+    enabled: bool
+    limit: int | None = None
+    unlimited: bool = False
+
+
+class PlanResponse(BaseModel):
+    """The caller's own plan. No price, no payment state, no internal plan metadata."""
+
+    plan_code: str
+    plan_version: int | None
+    entitlements: dict[str, EntitlementState]
+
+
 class PremiumStatusResponse(BaseModel):
     """Demonstration of server-side entitlement enforcement (premium-only endpoint)."""
 

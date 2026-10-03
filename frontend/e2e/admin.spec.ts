@@ -15,6 +15,7 @@ const ADMIN_PERMS = [
   "platform.overview.read", "platform.users.read", "platform.users.manage", "platform.users.role.assign",
   "platform.users.sessions.revoke", "platform.workspaces.read", "platform.workspaces.manage", "platform.audit.read",
   "platform.support.read", "platform.support.reply", "platform.support.manage", "platform.support.note",
+  "platform.plans.read", "platform.plans.manage", "platform.subscriptions.manage",
   "platform.integrations.read", "platform.ai.read", "platform.knowledge.read",
 ];
 
@@ -44,12 +45,21 @@ const USER_ROW = { user_id: 2, email: "jane@example.com", display_name: null, st
   onboarding_completed: true, interface_locale: "en", email_verified: false, created_at: null, updated_at: null,
   workspace_count: 1, active_session_count: 1 };
 const USER_DETAIL = {
+  plan: { current: { plan_code: "basic", version: 1, display_name: "Basic", status: "active", source: "system_default", started_at: "2026-10-01", ended_at: null }, history: [] },
   account: USER_ROW,
   access: { platform_role: "user", capabilities: [], assignable_roles: ["user", "support_operator"], is_self: false },
   sessions: { active_count: 1, recent: [{ created_at: "2026-10-01T10:00:00", last_used_at: null, expires_at: "2026-10-30T10:00:00" }] },
   workspaces: [{ workspace_id: 3, name: "Team Alpha", workspace_status: "active", role: "workspace_member", membership_status: "active", joined_at: null }],
   audit: [],
 };
+const PLAN_ROWS = [
+  { id: 2, plan_code: "premium", version: 1, display_name: "Premium (preview)", status: "active", enabled_entitlements: 5, total_entitlements: 5, subscribers: { users: 1, workspaces: 0 }, created_at: null, activated_at: "2026-10-01", retired_at: null },
+  { id: 1, plan_code: "basic", version: 1, display_name: "Basic", status: "active", enabled_entitlements: 4, total_entitlements: 5, subscribers: { users: 4, workspaces: 0 }, created_at: null, activated_at: "2026-10-01", retired_at: null },
+];
+const PLAN_DETAIL = { id: 3, plan_code: "premium", version: 2, display_name: "Premium (preview)", status: "draft", editable: true,
+  entitlements: ["current_market_research", "standard_history", "standard_progress", "standard_model_profiles", "premium_preview"].map((k) => ({ code: k, label: `Label ${k}`, description: "d", type: "boolean", enabled: true, limit: null })),
+  subscribers: { users: 0, workspaces: 0 }, created_at: null, activated_at: null, retired_at: null };
+const MY_PLAN = { plan_code: "basic", plan_version: 1, entitlements: { current_market_research: { enabled: true, limit: null, unlimited: true }, premium_preview: { enabled: false, limit: null, unlimited: false } } };
 const TICKET_ROW = { id: 5, public_id: "d".repeat(32), owner_user_id: 2, owner_email: "jane@example.com", category: "billing", priority: "normal",
   status: "new", subject: "Charged twice", assigned_user_id: null, assignee_email: null, message_count: 1, created_at: null, updated_at: null };
 const TICKET_DETAIL = {
@@ -79,6 +89,14 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
     }
     if (path.endsWith("/admin/home")) return json(HOME);
     const method = route.request().method();
+    if (/\/admin\/plans\/versions\/\d+\/(activate|retire)$/.test(path) && method === "POST") return json({ ok: true });
+    if (/\/admin\/plans\/versions\/\d+\/entitlements$/.test(path) && method === "PATCH") return json({ id: 3, changed: ["premium_preview"] });
+    if (/\/admin\/plans\/[^/]+\/versions$/.test(path) && method === "POST") return json({ id: 3, plan_code: "premium", version: 2 });
+    if (path.endsWith("/admin/plans/assignable")) return json([{ plan_code: "basic", version: 1, display_name: "Basic" }, { plan_code: "premium", version: 1, display_name: "Premium (preview)" }]);
+    if (/\/admin\/plans\/\d+$/.test(path)) return json(PLAN_DETAIL);
+    if (path.endsWith("/admin/plans")) return json({ items: PLAN_ROWS });
+    if (/\/admin\/users\/\d+\/plan$/.test(path) && method === "POST") return json({ subject_type: "user", subject_id: 2, plan_code: "premium", version: 1, changed: true });
+    if (path.endsWith("/auth/plan")) return json(MY_PLAN);
     if (/\/admin\/support\/tickets\/[^/]+\/(assign|status|priority|reply|notes)$/.test(path) && method === "POST") return json({ ok: true });
     if (path.endsWith("/admin/support/assignees")) return json([{ user_id: 3, email: "op@example.com", platform_role: "support_operator" }]);
     if (/\/admin\/support\/tickets\/[^/]+$/.test(path)) return json(TICKET_DETAIL);
@@ -167,6 +185,40 @@ test("W10.2: users search, safe detail, governed action with confirmation, works
   await page.getByRole("button", { name: "Remove: jane@example.com" }).click();
   await expect(page.getByRole("alertdialog").getByRole("button", { name: "Cancel" })).toBeFocused();
   await page.getByRole("alertdialog").getByRole("button", { name: "Cancel" }).click();
+});
+
+test("W10.4: plan catalogue, draft version, user plan assignment, candidate plan view", async ({ page }) => {
+  await mockAdmin(page, "platform_admin", ADMIN_PERMS);
+  await page.goto("/admin");
+  const nav = page.getByRole("navigation", { name: "Admin" });
+  await nav.getByRole("link", { name: /Plans/ }).click();
+  await expect(page.getByRole("heading", { name: "Plans", exact: true })).toBeVisible();
+  await expect(page.getByText("5 of 5 enabled")).toBeVisible();
+  await expect(page.getByText(/no prices, payments or invoices/)).toBeVisible();
+  await page.getByRole("button", { name: "Create next draft of premium" }).click();
+  await expect(page.getByText(/Draft version 2 of premium created/)).toBeVisible();
+  await page.goto("/admin/plans/3");
+  await expect(page.getByRole("heading", { name: "Entitlements" })).toBeVisible();
+  await page.getByRole("button", { name: "Activate this version" }).click();
+  await expect(page.getByRole("alertdialog").getByRole("button", { name: "Cancel" })).toBeFocused();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Cancel" }).click();
+
+  await page.goto("/admin/users/2");
+  await expect(page.getByRole("heading", { name: "Plan", exact: true })).toBeVisible();
+  await expect(page.getByText("Basic (version 1)")).toBeVisible();
+  await page.getByLabel("Change plan").selectOption("premium");
+  await page.getByRole("button", { name: "Change plan" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Change plan" }).click();
+  await expect(page.getByText(/Plan changed to Premium \(preview\)/)).toBeVisible();
+});
+
+test("W10.4: the candidate account page shows the plan truthfully with nothing to buy", async ({ page }) => {
+  await mockAdmin(page, "user", []);
+  await page.goto("/account");
+  await expect(page.getByTestId("plan-summary")).toBeVisible();
+  await expect(page.getByText("Premium is a preview.", { exact: false })).toBeVisible();
+  await expect(page.getByTestId("plan-summary").getByRole("button")).toHaveCount(0);
+  await expect(page.getByTestId("plan-summary").getByRole("link")).toHaveCount(0);
 });
 
 test("W10.3: support queue, filter, ticket detail, assign, status, reply and internal note", async ({ page }) => {

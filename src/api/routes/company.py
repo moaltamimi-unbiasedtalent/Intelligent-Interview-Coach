@@ -3,7 +3,7 @@
 A directable, owner-scoped endpoint over the governed external research engine (Phase 7F) - the
 capability the founder could not find. It reuses every existing safety control:
 
-* authorization capability ``current_market_research`` (BASIC - all users);
+* plan entitlement ``current_market_research`` (in the Basic plan - all users);
 * the operator pause switch ``current_market`` (truthful 503 when paused);
 * the per-user cost ceiling ``cost_research_user`` and the global ceiling;
 * the SSRF/robots/injection/size guards inside the research engine (untouched).
@@ -22,7 +22,7 @@ from src.api.dependencies import (
     adzuna_credentials_configured,
     get_current_user_id,
     get_research_service,
-    require_capability,
+    require_entitlement,
     resolve_document_text,
 )
 from src.api.guards import cost_limit, require_not_paused
@@ -42,7 +42,7 @@ def company_intelligence(
     body: CompanyIntelligenceQuery,
     request: Request,
     user_id: int = Depends(get_current_user_id),
-    _principal=Depends(require_capability(Capability.CURRENT_MARKET_RESEARCH)),
+    _principal=Depends(require_entitlement(Capability.CURRENT_MARKET_RESEARCH)),
     _pause=Depends(require_not_paused("current_market")),
     _cost=Depends(cost_limit("cost_research_user")),
     research_service=Depends(get_research_service),

@@ -79,6 +79,18 @@ function Overview({ home }: { home: Awaited<ReturnType<typeof api.admin.home>> }
         <Stat label="Workspaces" value={home.workspaces.workspaces_total} />
       </div>
 
+      {home.plans ? (
+        <Panel title="Plans">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {Object.entries(home.plans.by_plan).map(([code, n]) => (
+              <Stat key={code} label={`${code} (accounts)`} value={n.users} />
+            ))}
+            <Stat label="Accounts without a subscription" value={home.plans.accounts_without_subscription} />
+          </div>
+          <p className="text-xs text-muted">Counts only. There are no prices, payments or revenue figures.</p>
+        </Panel>
+      ) : null}
+
       {home.support ? (
         <Panel title="Support">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

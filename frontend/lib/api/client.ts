@@ -6,6 +6,9 @@ import type {
   AdminCommandCenter,
   AdminPage,
   AdminAssignee,
+  AssignablePlan,
+  PlanDetail,
+  PlanVersionRow,
   AdminProviders,
   AdminTicketDetail,
   AdminTicketQuery,
@@ -18,6 +21,7 @@ import type {
 } from "../admin/types";
 import type {
   ActiveSessionsResponse,
+  PlanResponse,
   SupportCreateRequest,
   SupportTicketDetail,
   SupportTicketList,
@@ -340,6 +344,8 @@ export const api = {
   // Accounts, authentication & session (Capstone P1/E1). The session lives in an
   // HttpOnly cookie sent automatically (credentials: "include"); no token in JS.
   auth: {
+    /** The caller's own plan and entitlements (read-only). */
+    plan: (opts?: RequestOptions) => request<PlanResponse>("GET", "/auth/plan", opts),
     register: (body: RegisterRequest, opts?: RequestOptions) =>
       request<AuthMessageResponse>("POST", "/auth/register", { body, ...opts }),
     login: (body: LoginRequest, opts?: RequestOptions) =>
@@ -491,8 +497,21 @@ export const api = {
       request<AdminUserDetail>("GET", `/admin/users/${userId}`, opts),
     setRole: (userId: number, role: string, reason?: string, opts?: RequestOptions) =>
       request<Record<string, unknown>>("POST", `/admin/users/${userId}/role`, { body: { role, reason }, ...opts }),
-    setTier: (userId: number, tier: string, opts?: RequestOptions) =>
-      request<Record<string, unknown>>("POST", `/admin/users/${userId}/tier`, { body: { tier }, ...opts }),
+    setUserPlan: (userId: number, planCode: string, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/users/${userId}/plan`, { body: { plan_code: planCode }, ...opts }),
+    setWorkspacePlan: (workspaceId: number, planCode: string, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/workspaces/${workspaceId}/plan`, { body: { plan_code: planCode }, ...opts }),
+    plans: (opts?: RequestOptions) => request<{ items: PlanVersionRow[] }>("GET", "/admin/plans", opts),
+    plan: (versionId: number, opts?: RequestOptions) => request<PlanDetail>("GET", `/admin/plans/${versionId}`, opts),
+    assignablePlans: (opts?: RequestOptions) => request<AssignablePlan[]>("GET", "/admin/plans/assignable", opts),
+    createPlanDraft: (planCode: string, opts?: RequestOptions) =>
+      request<{ id: number; plan_code: string; version: number }>("POST", `/admin/plans/${encodeURIComponent(planCode)}/versions`, opts),
+    updatePlanDraft: (versionId: number, entitlements: Record<string, { enabled: boolean; limit?: number | null }>, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("PATCH", `/admin/plans/versions/${versionId}/entitlements`, { body: { entitlements }, ...opts }),
+    activatePlan: (versionId: number, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/plans/versions/${versionId}/activate`, opts),
+    retirePlan: (versionId: number, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/plans/versions/${versionId}/retire`, opts),
     setStatus: (userId: number, status: string, reason?: string, opts?: RequestOptions) =>
       request<Record<string, unknown>>("POST", `/admin/users/${userId}/status`, { body: { status, reason }, ...opts }),
     revokeSessions: (userId: number, reason?: string, opts?: RequestOptions) =>

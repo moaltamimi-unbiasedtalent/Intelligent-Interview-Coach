@@ -153,6 +153,7 @@ class AdminUserDetail(_Strict):
     sessions: AdminSessions
     workspaces: list[AdminUserWorkspace]
     audit: list[AdminAuditEntry]
+    plan: "SubjectPlan | None" = None
 
 
 class AdminWorkspaceSummary(_Strict):
@@ -188,6 +189,7 @@ class AdminWorkspaceDetail(_Strict):
     active_share_count: int
     active_owner_count: int
     workspace_roles: list[str]
+    plan: "SubjectPlan | None" = None
 
 
 # --- W10.3: support (Admin side). Metadata plus content the candidate deliberately submitted to Support.
@@ -253,3 +255,75 @@ class AdminAssignee(_Strict):
     user_id: int
     email: str | None
     platform_role: str
+
+
+# --- W10.4: plans, subscriptions, entitlements (no price, no payment state) ------------------------------
+class Subscribers(_Strict):
+    users: int
+    workspaces: int
+
+
+class PlanVersionRow(_Strict):
+    id: int
+    plan_code: str
+    version: int
+    display_name: str
+    status: str
+    enabled_entitlements: int
+    total_entitlements: int
+    subscribers: Subscribers
+    created_at: str | None
+    activated_at: str | None
+    retired_at: str | None
+
+
+class PlanList(_Strict):
+    items: list[PlanVersionRow]
+
+
+class EntitlementRow(_Strict):
+    code: str
+    label: str
+    description: str
+    type: str
+    enabled: bool
+    limit: int | None
+
+
+class PlanDetail(_Strict):
+    id: int
+    plan_code: str
+    version: int
+    display_name: str
+    status: str
+    editable: bool
+    entitlements: list[EntitlementRow]
+    subscribers: Subscribers
+    created_at: str | None
+    activated_at: str | None
+    retired_at: str | None
+
+
+class AssignablePlan(_Strict):
+    plan_code: str
+    version: int
+    display_name: str
+
+
+class SubscriptionEntry(_Strict):
+    plan_code: str
+    version: int
+    display_name: str
+    status: str
+    source: str
+    started_at: str | None
+    ended_at: str | None
+
+
+class SubjectPlan(_Strict):
+    current: SubscriptionEntry | None
+    history: list[SubscriptionEntry]
+
+
+AdminUserDetail.model_rebuild()
+AdminWorkspaceDetail.model_rebuild()

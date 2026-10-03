@@ -62,10 +62,10 @@ def test_privileged_changes_are_audited():
         register(c, "target@x.com", PW)
         ttok = login_token(c, "target@x.com", PW)
         target_uid = c.get("/api/v1/auth/me", cookies=cookies_for(ttok)).json()["user_id"]
-        assert c.post(f"/api/v1/admin/users/{target_uid}/tier", json={"tier": "premium"},
+        assert c.post(f"/api/v1/admin/users/{target_uid}/plan", json={"plan_code": "premium"},
                       cookies=cookies_for(token)).status_code == 200
         events = c.get("/api/v1/admin/audit", cookies=cookies_for(token)).json()["events"]
-        assert any(e["event_type"] == "admin.entitlement_change" for e in events)
+        assert any(e["event_type"] == "admin.subscription_assigned" for e in events)
     finally:
         c.__exit__(None, None, None)
 

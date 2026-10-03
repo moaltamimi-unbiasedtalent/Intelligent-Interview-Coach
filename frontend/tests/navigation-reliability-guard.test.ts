@@ -16,6 +16,8 @@ const SHELL = [
   "components/admin/WorkspacesView.tsx",
   "components/admin/WorkspaceDetailView.tsx",
   "components/admin/SupportQueueView.tsx",
+  "components/admin/PlansView.tsx",
+  "components/admin/PlanDetailView.tsx",
   "components/admin/SupportTicketAdminView.tsx",
   "components/support/SupportHome.tsx",
   "components/support/SupportTicketView.tsx",

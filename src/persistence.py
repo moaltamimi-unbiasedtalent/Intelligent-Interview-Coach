@@ -29,6 +29,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     create_engine,
+    text,
 )
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import (
@@ -1129,6 +1130,94 @@ class SupportInternalNote(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+# --- Plans, subscriptions and entitlements (P10B-W10.4, migration 0016_plans_entitlements) -------------
+# A plan is a stable ``plan_code`` (today only the real ones: "basic", "premium") with immutable-once-active
+# VERSIONS. A version carries typed entitlement values for code-defined keys. A subscription pins ONE subject
+# (a user XOR a workspace) to ONE plan version: it is an access assignment, NOT a payment (no price, provider,
+# invoice or payment state exists in this model; billing is W10.5).
+PLAN_STATUS_DRAFT = "draft"
+PLAN_STATUS_ACTIVE = "active"
+PLAN_STATUS_RETIRED = "retired"
+PLAN_STATUSES = (PLAN_STATUS_DRAFT, PLAN_STATUS_ACTIVE, PLAN_STATUS_RETIRED)
+SUBSCRIPTION_STATUS_ACTIVE = "active"
+SUBSCRIPTION_STATUS_ENDED = "ended"
+SUBSCRIPTION_STATUSES = (SUBSCRIPTION_STATUS_ACTIVE, SUBSCRIPTION_STATUS_ENDED)
+SUBSCRIPTION_SOURCES = ("system_default", "migration", "admin")
+
+
+class PlanVersion(Base):
+    """One version of a plan. Draft is editable; active is immutable and assignable; retired is immutable and
+    no longer assignable (existing subscriptions stay pinned to it). Never hard-deleted while referenced."""
+
+    __tablename__ = "plan_versions"
+    __table_args__ = (
+        UniqueConstraint("plan_code", "version", name="uq_plan_versions_code_version"),
+        CheckConstraint(_in_list("status", PLAN_STATUSES), name="ck_plan_versions_status"),
+        Index("uq_plan_versions_one_active", "plan_code", unique=True,
+              sqlite_where=text("status = 'active'"), postgresql_where=text("status = 'active'")),
+        Index("uq_plan_versions_one_draft", "plan_code", unique=True,
+              sqlite_where=text("status = 'draft'"), postgresql_where=text("status = 'draft'")),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    plan_code: Mapped[str] = mapped_column(String(32))
+    version: Mapped[int] = mapped_column(Integer)
+    display_name: Mapped[str] = mapped_column(String(80))
+    status: Mapped[str] = mapped_column(String(16), default=PLAN_STATUS_DRAFT)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    activated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    retired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class PlanEntitlement(Base):
+    """A typed entitlement value of a plan version. ``entitlement_key`` must be in the code registry.
+    enabled=False is DISABLED; enabled=True with limit_value NULL is ENABLED/UNLIMITED; enabled=True with an
+    integer limit_value >= 1 is a LIMIT. 0 is never used (it would be ambiguous)."""
+
+    __tablename__ = "plan_entitlements"
+    __table_args__ = (
+        UniqueConstraint("plan_version_id", "entitlement_key", name="uq_plan_entitlements_key"),
+        CheckConstraint("limit_value IS NULL OR (limit_value >= 1 AND enabled = 1)", name="ck_plan_entitlements_limit"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    plan_version_id: Mapped[int] = mapped_column(ForeignKey("plan_versions.id", ondelete="CASCADE"))
+    entitlement_key: Mapped[str] = mapped_column(String(64))
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    limit_value: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
+class Subscription(Base):
+    """Assignment of one plan version to exactly one subject (user XOR workspace). History is kept: a change
+    ends the old row and adds a new one. Carries no payment data."""
+
+    __tablename__ = "subscriptions"
+    __table_args__ = (
+        CheckConstraint(
+            "(user_id IS NOT NULL AND workspace_id IS NULL) OR (user_id IS NULL AND workspace_id IS NOT NULL)",
+            name="ck_subscriptions_one_subject"),
+        CheckConstraint(_in_list("status", SUBSCRIPTION_STATUSES), name="ck_subscriptions_status"),
+        CheckConstraint(_in_list("source", SUBSCRIPTION_SOURCES), name="ck_subscriptions_source"),
+        Index("uq_subscriptions_one_active_user", "user_id", unique=True,
+              sqlite_where=text("status = 'active' AND user_id IS NOT NULL"),
+              postgresql_where=text("status = 'active' AND user_id IS NOT NULL")),
+        Index("uq_subscriptions_one_active_workspace", "workspace_id", unique=True,
+              sqlite_where=text("status = 'active' AND workspace_id IS NOT NULL"),
+              postgresql_where=text("status = 'active' AND workspace_id IS NOT NULL")),
+        Index("ix_subscriptions_plan_version", "plan_version_id", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
+    workspace_id: Mapped[int | None] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=True, index=True)
+    plan_version_id: Mapped[int] = mapped_column(ForeignKey("plan_versions.id", ondelete="RESTRICT"))
+    status: Mapped[str] = mapped_column(String(16), default=SUBSCRIPTION_STATUS_ACTIVE)
+    source: Mapped[str] = mapped_column(String(24))
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 def make_engine(database_url: str) -> Engine:
     """Create an engine; SQLite needs cross-thread access for Streamlit."""
     connect_args = {}
@@ -1151,3 +1240,9 @@ def init_db(engine: Engine, *, force: bool = False) -> None:
     """
     if force or engine.dialect.name == "sqlite":
         Base.metadata.create_all(engine)
+        # Bootstrap schema (no Alembic): seed the two real plan versions the migration would have seeded.
+        from src.entitlements import seed_default_plans
+
+        with sessionmaker(bind=engine, expire_on_commit=False, future=True)() as s:
+            seed_default_plans(s)
+            s.commit()

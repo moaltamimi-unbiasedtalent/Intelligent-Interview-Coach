@@ -175,7 +175,7 @@ Waiting for Customer, Resolved, Closed (reopen allowed). Categories: account/log
 technical, data issue, other. Access: candidate sees own tickets and customer-visible replies; support sees tickets and safe diagnostics; internal notes never visible to candidates;
 billing/privacy tickets visible to those personas. Safe diagnostics (section 28). Help != ticketing remains true until W10.3 ships.
 
-## 10. Subscription / entitlement domain (W10.4)
+## 10. Subscription / entitlement domain (W10.4: implemented on `feat/p10b-w10-4-plans-entitlements`; complete when merged; price, interval, currency, trial and visibility deferred to W10.5; see `W10_4_PLANS_SUBSCRIPTIONS_ENTITLEMENTS.md`)
 `SubscriptionPlan -> Entitlements -> Usage Limits -> Billing Price -> User/Workspace Subscription`. Plans: create, edit, archive, visibility (public/private/internal), interval, currency,
 price, trial, entitlements (voice, Career Intelligence, company research, workspace/team), limits (documents, Opportunities, practice interviews), support tier. **Entitlement resolution**: a single
 `EntitlementService.resolve(user|workspace) -> ResolvedEntitlements` (deterministic: subscription state + plan + admin overrides + flags) replaces the current tier-to-capability map;

@@ -97,6 +97,7 @@ class AccountDeletionService:
                     (P.ShareGrant, P.ShareGrant.workspace_id),
                     (P.WorkspaceInvitation, P.WorkspaceInvitation.workspace_id),
                     (P.WorkspaceMembership, P.WorkspaceMembership.workspace_id),
+                    (P.Subscription, P.Subscription.workspace_id),   # W10.4: the workspace's own plan assignments
                 ):
                     for obj in s.execute(select(model).where(col == ws.id)).scalars().all():
                         s.delete(obj)
@@ -204,6 +205,11 @@ class AccountDeletionService:
                       .values(author_user_id=None))
             s.execute(update(P.SupportInternalNote).where(P.SupportInternalNote.author_user_id == user_id)
                       .values(author_user_id=None))
+
+            # 4c) Plan subscriptions (W10.4): the user's own assignment history is deleted with the account.
+            # Plan DEFINITIONS (versions, entitlements) are shared product data and stay; a workspace the user
+            # merely belonged to keeps its own subscription (workspace deletion follows the workspace rules).
+            self._delete_where(s, P.Subscription, P.Subscription.user_id == user_id, summary, "subscriptions")
 
             # 5) Memory + feedback.
             self._delete_where(s, P.PreparationMemory,

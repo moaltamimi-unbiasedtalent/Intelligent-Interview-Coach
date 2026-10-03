@@ -1093,3 +1093,15 @@ export interface SupportCreateRequest {
   request_id?: string;
   source_route?: string;
 }
+
+// --- Plans (P10B-W10.4): the caller's OWN plan. Read-only; no price, payment or internal plan metadata. ---
+export interface EntitlementState {
+  enabled: boolean;
+  limit: number | null;
+  unlimited: boolean;
+}
+export interface PlanResponse {
+  plan_code: string;
+  plan_version: number | null;
+  entitlements: Record<string, EntitlementState>;
+}

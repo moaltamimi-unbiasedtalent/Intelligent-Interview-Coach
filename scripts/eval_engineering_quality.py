@@ -70,7 +70,7 @@ def run() -> dict[str, tuple[bool, str]]:
 
     ci = read(".github/workflows/ci.yml")
     check("ci_enforces_clean_tree", "git status --porcelain" in ci, "CI fails if tests/evaluators dirty tracked files")
-    check("no_new_migration", sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))[-1].startswith(("0014_", "0015_")), "head is a registered revision")
+    check("no_new_migration", sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))[-1].startswith(("0014_", "0015_", "0016_")), "head is a registered revision")
     return out
 
 

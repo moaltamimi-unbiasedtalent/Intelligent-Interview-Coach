@@ -7,6 +7,7 @@ import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities"
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import type { AdminUserDetail } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
+import { PlanControl } from "./PlanControl";
 import { KeyValue, Panel, PermissionGate, ResourceState, Table, btn, field, useAdminResource } from "./ui";
 
 type Pending = null | "deactivate" | "reactivate" | "logout" | "role";
@@ -47,7 +48,7 @@ function Detail({ d, reload }: { d: AdminUserDetail; reload: () => void }) {
 
       <Panel title="Account">
         <KeyValue rows={[
-          ["Email", a.email ?? "none"], ["Account id", a.user_id], ["Status", a.status], ["Tier", a.tier],
+          ["Email", a.email ?? "none"], ["Account id", a.user_id], ["Status", a.status], ["Legacy tier (display only)", a.tier],
           ["Onboarding", a.onboarding_completed ? "Completed" : "Pending"], ["Interface language", a.interface_locale],
           ["Email verified", a.email_verified ? "Yes" : "No"], ["Created", a.created_at ?? "unknown"], ["Updated", a.updated_at ?? "unknown"],
         ]} />
@@ -79,6 +80,8 @@ function Detail({ d, reload }: { d: AdminUserDetail; reload: () => void }) {
           </div>
         ) : null}
       </Panel>
+
+      <PlanControl plan={d.plan} subject={{ kind: "user", id: a.user_id }} onChanged={done} />
 
       <Panel title="Sessions">
         <KeyValue rows={[["Active sessions", d.sessions.active_count]]} />

@@ -56,9 +56,9 @@ def evaluate() -> dict:
         m["metadata_only_user_view"] = 1 if users and all(set(u) <= allowed for u in users) else 0
 
         # entitlement_change_audited — set tier, then find the audit event.
-        c.post(f"/api/v1/admin/users/{user_uid}/tier", json={"tier": "premium"}, cookies=cookies_for(admin))
+        c.post(f"/api/v1/admin/users/{user_uid}/plan", json={"plan_code": "premium"}, cookies=cookies_for(admin))
         audit = c.get("/api/v1/admin/audit", cookies=cookies_for(admin)).json()["events"]
-        m["entitlement_change_audited"] = 1 if any(e["event_type"] == "admin.entitlement_change" for e in audit) else 0
+        m["entitlement_change_audited"] = 1 if any(e["event_type"] == "admin.subscription_assigned" for e in audit) else 0
 
         # platform_role_change_audited.
         c.post(f"/api/v1/admin/users/{user_uid}/role", json={"role": "user"}, cookies=cookies_for(admin))

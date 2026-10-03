@@ -270,6 +270,18 @@ def get_admin_user_repository(repo=Depends(get_repository)):
     return AdminUserRepository(repo.session_factory)
 
 
+def get_plan_repository(repo=Depends(get_repository)):
+    from src.plans_repository import PlanRepository
+
+    return PlanRepository(repo.session_factory)
+
+
+def get_entitlement_service(repo=Depends(get_repository)):
+    from src.entitlements import EntitlementService
+
+    return EntitlementService(repo.session_factory)
+
+
 def get_support_repository(repo=Depends(get_repository)):
     from src.support_repository import SupportRepository
 
@@ -724,15 +736,22 @@ def require_permission(permission: str) -> Callable[..., Any]:
     return _dep
 
 
-def require_capability(capability: str) -> Callable[..., Any]:
-    """Build a dependency that authorizes a capability from the caller's entitlement."""
-    from src.application.authorization import has_capability
+def require_entitlement(key: str) -> Callable[..., Any]:
+    """Build a dependency that enforces a PLAN ENTITLEMENT (P10B-W10.4): the single product-access gate.
 
-    def _dep(principal=Depends(get_current_principal)):
-        if not has_capability(principal, capability):
-            raise HTTPException(
-                status_code=403, detail="This feature requires an upgraded plan."
-            )
+    Authorization (ownership, Admin permission) and technical capability stay separate checks; this answers only
+    "does the caller's plan grant this feature?". Resolved server-side from the caller's active subscription (or
+    the explicit Basic fallback); never from the browser. The key is validated at definition time.
+    """
+    from src.entitlements import REGISTRY
+
+    if key not in REGISTRY:
+        raise ValueError(f"Unknown entitlement key: {key!r}")
+
+    def _dep(principal=Depends(get_current_principal), service=Depends(get_entitlement_service)):
+        if not service.is_enabled(principal.user_id, key):
+            raise HTTPException(status_code=403, detail="This feature is not included in your plan.")
         return principal
 
+    _dep.entitlement = key  # type: ignore[attr-defined]
     return _dep

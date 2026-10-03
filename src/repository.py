@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from src.entitlements import ensure_default_subscription
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
@@ -74,6 +75,10 @@ class InterviewRepository:
                     email=email,
                 )
                 session.add(user)
+                session.flush()
+                # W10.4: a newly created principal (dev header, anonymous dev, legacy Streamlit) also gets its
+                # deterministic default (Basic) subscription in the same transaction.
+                ensure_default_subscription(session, user.id)
             else:
                 # Keep the profile fresh without touching identity keys.
                 user.display_name = display_name or user.display_name

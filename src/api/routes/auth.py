@@ -25,7 +25,7 @@ from src.api.dependencies import (
     get_oidc_provider,
     get_repository,
     get_request_id,
-    require_capability,
+    require_entitlement,
     require_permission,
 )
 from src.api.schemas.auth import (
@@ -35,14 +35,16 @@ from src.api.schemas.auth import (
     MessageResponse,
     OnboardingRequest,
     PreferencesRequest,
+    PlanResponse,
     PremiumStatusResponse,
+    EntitlementState,
     RegisterRequest,
     ResetPasswordRequest,
     VerifyEmailRequest,
 )
 from src.api.rate_limit import client_ip, email_key, enforce, user_key
 from src.application.admin_permissions import sorted_permissions
-from src.application.authorization import Capability, capabilities_for
+from src.application.authorization import Capability
 from src.application.auth_service import InvalidCredentialsError
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -202,7 +204,9 @@ def reset_password(
     return MessageResponse(message="Your password has been reset. Please sign in.")
 
 
-def _account_response(principal) -> AccountResponse:
+def _account_response(principal, account_repo) -> AccountResponse:
+    from src.entitlements import EntitlementService
+
     return AccountResponse(
         user_id=principal.user_id,
         email=principal.email,
@@ -213,7 +217,8 @@ def _account_response(principal) -> AccountResponse:
         email_verified=principal.email_verified,
         providers=[],
         auth_method=principal.auth_method,
-        capabilities=sorted(capabilities_for(principal.tier)),
+        # Enabled plan entitlements (same identifiers as before W10.4), resolved server-side from the subscription.
+        capabilities=EntitlementService(account_repo.session_factory).enabled_keys(principal.user_id),
         admin_permissions=(sorted_permissions(principal.platform_role)
                            if principal.status == "active" else []),
         response_detail=principal.response_detail,
@@ -251,8 +256,8 @@ def _reload_principal(account_repo, principal):
 
 @router.get("/me", response_model=AccountResponse,
             summary="The caller's own account/profile summary")
-def me(principal=Depends(get_current_principal)) -> AccountResponse:
-    return _account_response(principal)
+def me(principal=Depends(get_current_principal), account_repo=Depends(get_account_repository)) -> AccountResponse:
+    return _account_response(principal, account_repo)
 
 
 @router.post("/onboarding", response_model=AccountResponse,
@@ -275,7 +280,7 @@ def update_onboarding(
         actor_user_id=principal.user_id, request_id=request_id,
         context={"step": str(body.step) if body.step is not None else "", "complete": str(body.complete)},
     )
-    return _account_response(_reload_principal(account_repo, principal))
+    return _account_response(_reload_principal(account_repo, principal), account_repo)
 
 
 @router.patch("/preferences", response_model=AccountResponse,
@@ -324,7 +329,7 @@ def update_preferences(
             context=changed,
         )
     # Reflect the persisted values from a fresh read (owner-scoped) rather than reconstructing.
-    return _account_response(_reload_principal(account_repo, principal))
+    return _account_response(_reload_principal(account_repo, principal), account_repo)
 
 
 @router.post("/verify-email/resend", response_model=MessageResponse,
@@ -339,15 +344,28 @@ def resend_verification(
     return MessageResponse(message="If your email is unverified, we've sent a new link.")
 
 
+# --- the caller's own plan (W10.4): candidate-safe, read-only; there is no candidate plan mutation -----
+
+
+@router.get("/plan", response_model=PlanResponse,
+            summary="The caller's own plan and entitlements (read-only; plans are changed only by administrators)")
+def my_plan(principal=Depends(get_current_principal), account_repo=Depends(get_account_repository)) -> PlanResponse:
+    from src.entitlements import EntitlementService
+
+    summary = EntitlementService(account_repo.session_factory).plan_summary(principal.user_id)
+    return PlanResponse(plan_code=summary["plan_code"], plan_version=summary["plan_version"],
+                        entitlements={k: EntitlementState(**v) for k, v in summary["entitlements"].items()})
+
+
 # --- entitlement enforcement demonstration (server-side, non-destructive) -----
 
 
 @router.get("/premium/status", response_model=PremiumStatusResponse,
             summary="Premium-only endpoint demonstrating server-side entitlement enforcement")
 def premium_status(
-    principal=Depends(require_capability(Capability.PREMIUM_PREVIEW)),
+    principal=Depends(require_entitlement(Capability.PREMIUM_PREVIEW)),
 ) -> PremiumStatusResponse:
-    # Reaching here means the caller's entitlement grants PREMIUM_PREVIEW. A basic-tier
+    # Reaching here means the caller's PLAN grants the premium_preview entitlement. A basic-plan
     # caller is rejected with 403 by the dependency BEFORE this body runs (server-side).
     return PremiumStatusResponse(
         entitled=True,

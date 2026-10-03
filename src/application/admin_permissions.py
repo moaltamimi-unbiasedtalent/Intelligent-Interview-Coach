@@ -81,6 +81,9 @@ AI_READ = "platform.ai.read"
 KNOWLEDGE_READ = "platform.knowledge.read"
 RELEASES_READ = "platform.releases.read"
 SECURITY_READ = "platform.security.read"
+PLANS_READ = "platform.plans.read"
+PLANS_MANAGE = "platform.plans.manage"
+SUBSCRIPTIONS_READ = "platform.subscriptions.read"
 SUPPORT_READ = "platform.support.read"
 SUPPORT_REPLY = "platform.support.reply"
 SUPPORT_MANAGE = "platform.support.manage"
@@ -111,6 +114,7 @@ ROLE_PRESETS: Final[dict[str, frozenset[str]]] = {
         WORKSPACES_READ, "platform.workspaces.manage", "platform.users.sessions.revoke",
         SUBSCRIPTIONS_MANAGE, "platform.subscriptions.read",
         SUPPORT_READ, SUPPORT_REPLY, SUPPORT_MANAGE, SUPPORT_NOTE,
+        PLANS_READ, PLANS_MANAGE,
         PRIVACY_READ, REPORTS_READ, FLAGS_READ, FLAGS_MANAGE, INTEGRATIONS_READ,
         AUDIT_READ, AI_READ, KNOWLEDGE_READ, RELEASES_READ, SECURITY_READ,
     }),

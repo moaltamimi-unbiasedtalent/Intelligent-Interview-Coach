@@ -221,7 +221,7 @@ export function DataPrivacyCenter() {
   );
 
   const exportUrl = `${config.apiBaseUrl}/auth/account/export`;
-  const included = ["incAccount", "incOpportunities", "incDocuments", "incStories", "incMemories", "incInterviews", "incFeedback", "incSharing", "incSupport"];
+  const included = ["incAccount", "incOpportunities", "incDocuments", "incStories", "incMemories", "incInterviews", "incFeedback", "incSharing", "incSupport", "incPlan"];
   const excluded = ["excFiles", "excAudit", "excOthers", "excInternal", "excSupportNotes", "excLegal"];
   const retention = ["retentionActive", "retentionDelete", "retentionSecurity", "retentionProviders"];
   const accountDeleted = ["accDelOpportunities", "accDelDocuments", "accDelMemories", "accDelInterviews", "accDelSharing", "accDelAccount"];
