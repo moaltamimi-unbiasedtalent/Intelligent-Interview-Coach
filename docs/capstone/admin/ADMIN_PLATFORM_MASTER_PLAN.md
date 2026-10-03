@@ -186,7 +186,7 @@ application code asks for a capability or a limit, never `if premium`. Existing 
 Ask4Mo stores only provider customer/subscription ids, state, invoice metadata and events. Webhook handling idempotent via the job model. The mock adapter is labelled MOCK BILLING (never LIVE BILLING) in UI, API, documentation and
 reports and can never be enabled in a production environment flagged live; payments, refunds, card processing and invoices are never presented as production-live while mocked (AD-03, FINAL: live provider selection deferred; future adapter such as Stripe or equivalent). Refunds: mock only.
 
-## 12. Integration architecture (W10.6: implemented on `feat/p10b-w10-6-integrations-api-connections`; complete when merged; see `W10_6_INTEGRATIONS_API_CONNECTIONS.md`)
+## 12. Integration architecture (W10.6: COMPLETE: merged in PR #118, main `e47ba76`; see `W10_6_INTEGRATIONS_API_CONNECTIONS.md`)
 Registry of integrations (AI providers, email, OCR, storage, STT/TTS/realtime, research/Career Intelligence sources): configured?, enabled?, environment, provider, capability, last
 success/failure, latency, health, rate-limit state, credential last-rotated. Health probes are explicit, bounded and never run on page load. Admin actions: enable/disable, set/rotate secret, test connection.
 
