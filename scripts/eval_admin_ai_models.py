@@ -83,7 +83,7 @@ def run() -> dict[str, tuple[bool, str]]:
         params = inspect.signature(getattr(AIConfigService, name)).parameters
         check(f"no_bypass_parameter_{name}", not any(w in p for p in params for w in ("force", "skip", "bypass", "override")), "none")
     check("activation_rederives_facts", "_verify_activatable" in svc and "_passed_evaluation" in svc and "decided_by_user_id == v.created_by_user_id" in svc, "stored facts")
-    check("production_requires_staging", "prior staging activation" in svc, "rule present")
+    check("production_requires_staging", "prior STAGING activation" in svc, "rule present")
     check("self_approval_blocked_service_and_db", "you cannot approve a request you made" in svc and "you cannot approve a configuration you authored" in svc
           and "ck_aica_no_self_approval" in read("migrations/versions/0022_ai_model_admin.py"), "both layers")
     check("live_calls_pinned_zero_in_db", "ck_aice_no_live_calls" in read("migrations/versions/0022_ai_model_admin.py"), "CHECK")
@@ -122,7 +122,10 @@ def run() -> dict[str, tuple[bool, str]]:
         a, b, c = ids
         jobs = JobService(sf)
         res = install_resolver(sf, environment="staging", ttl_s=60)
-        svc_ = AIConfigService(sf, jobs=jobs, resolver=res)
+        svc_ = AIConfigService(sf, jobs=jobs, resolver=res, environment="staging")
+        prod_ = AIConfigService(sf, jobs=jobs, resolver=None, environment="production")
+        dev_ = AIConfigService(sf, jobs=jobs, resolver=None, environment="development")
+        unknown_ = AIConfigService(sf, jobs=jobs, resolver=None, environment=None)
         worker = Worker(jobs, services=SimpleNamespace(ai_admin=SimpleNamespace(session_factory=sf)))
         cfg = K.baseline_config()
         cfg["profiles"]["fast"] = "terra"
@@ -145,20 +148,72 @@ def run() -> dict[str, tuple[bool, str]]:
         svc_.decide_approval(ap["public_id"], approve=True, reason="r", actor_user_id=c)
         prod_blocked = False
         try:
-            svc_.activate(pid, environment="production", reason="r", actor_user_id=c)
+            prod_.activate(pid, reason="r", actor_user_id=c)
         except Exception:
             prod_blocked = True
-        svc_.activate(pid, environment="staging", reason="r", actor_user_id=c)
+        dev_ok = False                                                    # a development activation must not count as staging evidence
+        try:
+            dev_.activate(pid, reason="r", actor_user_id=c)
+            prod_.activate(pid, reason="r", actor_user_id=c)
+        except Exception:
+            dev_ok = True
+        unknown_blocked = False
+        try:
+            unknown_.activate(pid, reason="r", actor_user_id=c)
+        except Exception:
+            unknown_blocked = True
+        dev_.rollback(to_code=True, reason="r", actor_user_id=c)
+        svc_.activate(pid, reason="r", actor_user_id=c)
+        prod_promoted = prod_.activate(pid, reason="r", actor_user_id=c)["environment"] == "production"
         governed_ok = governed.current() is not None and M.model_id(M.ModelProfile.FAST) == C.slug_for("terra")
-        svc_.rollback("staging", to_code=True, reason="r", actor_user_id=c)
+        svc_.rollback(to_code=True, reason="r", actor_user_id=c)
         back_ok = governed.current() is None and M.model_id(M.ModelProfile.FAST) == M.code_model_id(M.ModelProfile.FAST)
         uninstall_resolver()
         eng.dispose()
+    check("lifecycle_development_activation_is_not_staging_evidence", dev_ok, "promotion refused")
+    check("lifecycle_unknown_environment_fails_closed", unknown_blocked, "activation refused")
+    check("lifecycle_production_promotion_after_genuine_staging", prod_promoted, "promoted")
     check("lifecycle_unapproved_activation_blocked", unapproved_blocked, "blocked")
     check("lifecycle_self_approval_blocked", self_blocked, "blocked")
     check("lifecycle_production_blocked_before_staging", prod_blocked, "blocked")
     check("lifecycle_activation_changes_registry_then_rollback_restores", governed_ok and back_ok, "round trip")
 
+    # environment targeting is server-authoritative
+    from src.ai_admin.resolver import environment_name
+    import src.api.schemas.admin as schemas
+    check("browser_cannot_choose_environment", "environment" not in schemas.AIActivateBody.model_fields and "environment" not in schemas.AIRollbackBody.model_fields
+          and "environment" not in inspect.signature(AIConfigService.activate).parameters and "environment" not in inspect.signature(AIConfigService.rollback).parameters, "no field")
+    check("environment_vocabulary_fail_closed", environment_name("production") == "production" and environment_name("staging") == "staging"
+          and all(environment_name(e) == "development" for e in ("development", "dev", "local", "test", "testing")) and environment_name("qa") is None, "unknown -> None")
+    check("promotion_needs_staging_record_with_same_hash", "ACT.config_hash == v.config_hash" in svc and 'ACT.environment == "staging"' in svc, "rule present")
+
+    # Practice runtime: the session PROFILE resolves through the governed mapping; candidates never send a slug
+    from src.llm.runtime import governed_slug, tunables
+    from src.ai_admin.evaluator import snapshot_for
+    gcfg = K.baseline_config(); gcfg["profiles"]["balanced"] = "sol"; gcfg["operations"]["evaluation"]["max_output_tokens"] = 777
+    gcan = K.normalise(gcfg)
+    governed.set_provider(lambda: snapshot_for(gcan))
+    bal_slug = M.default_slug(M.ModelProfile.BALANCED)
+    mapped = governed_slug(bal_slug) == M.default_slug(M.ModelProfile.ADVANCED) and governed_slug("evil/model") == "evil/model"
+    tuned_ok = tunables(ModelOperation.EVALUATION).get("max_output_tokens") == 777 and "timeout_s" not in tunables(ModelOperation.EVALUATION)
+    governed.clear()
+    check("practice_profile_resolves_through_governed_mapping", mapped and governed_slug(bal_slug) == bal_slug, "balanced -> governed; unknown untouched")
+    check("legacy_saved_slugs_keep_profile", all(M.known_profile_for_slug(a) is M.ModelProfile(b) for a, b in (("openai/gpt-5-mini", "balanced"), ("openai/gpt-5-nano", "fast"), ("openai/gpt-5", "advanced"))) and M.known_profile_for_slug("x/y") is None, "compat")
+    ischema = read("src/api/schemas/interview.py")
+    check("practice_candidate_boundary_is_profile_only", "model:" not in ischema.split("class CreateInterviewRequest")[1].split("class QuestionOut")[0], "no model field")
+    isvc = read("src/interview_service.py")
+    check("practice_service_governs_at_the_boundary", "def _governed" in isvc and "governed_slug(settings.model)" in isvc and "_CALL_EXTRA" in isvc, "interview_service._generate")
+
+    # every retained tunable has a real runtime consumer; consumer-less operations are not tunable
+    consumers = {ModelOperation.ORCHESTRATION: "src/application/agent_service.py", ModelOperation.STRUCTURED_GENERATION: "src/copilot/tools/structured.py",
+                 ModelOperation.EVALUATION: "src/interview_service.py"}
+    check("every_tunable_operation_has_a_runtime_consumer", set(consumers) == set(K.TUNABLE_OPERATIONS) and all("tunables(" in read(p) and o.name in read(p) for o, p in consumers.items()), "3 operations")
+    check("tunable_values_propagate_unchanged_only_when_changed", tuned_ok, "changed field applied; unchanged field absent")
+    check("no_cosmetic_tunable", not ({ModelOperation.FINAL_RESPONSE, ModelOperation.SPECIALIST_COACHING, ModelOperation.SPECIALIST_ROLE_ANALYSIS} & set(K.TUNABLE_OPERATIONS)), "consumer-less operations removed")
+    check("client_supports_per_call_timeout_and_retries", "timeout_s" in read("src/openrouter_client.py") and "max_retries" in read("src/copilot/llm/openrouter.py"), "both clients")
+    check("runtime_tests_exist", all(x in read("tests/test_ai_runtime_w10_7.py") for x in ("test_practice_balanced_session_follows_governed_balanced_mapping_then_rolls_back",
+          "test_interview_evaluation_tunables_reach_the_client_call", "test_agent_orchestration_tunables_reach_the_chat_model",
+          "test_career_structured_producer_tunables_reach_the_chat_model", "test_openrouter_client_honours_governed_retries_and_timeout")), "present")
     check("routes_permissioned_and_separate", route.count("require_permission") >= 18 and "AI_ACTIVATE" in route and "AI_MANAGE" in route and "AI_READ" in route, "explicit")
     check("permission_registry_stays_43", len(perm.PERMISSIONS) == 43, "43")
     check("only_platform_admin_can_manage_or_activate", perm.AI_MANAGE in perm.permissions_for_role("platform_admin") and perm.AI_ACTIVATE in perm.permissions_for_role("platform_admin")

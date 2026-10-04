@@ -17,15 +17,14 @@ export function AIConfigDetailView({ id }: { id: string }) {
   );
 }
 
-type Action = "validate" | "evaluate" | "request" | "approve" | "reject" | "staging" | "production" | "retire";
+type Action = "validate" | "evaluate" | "request" | "approve" | "reject" | "activate" | "retire";
 const COPY: Record<Action, { title: string; button: string; body: string; reason: boolean }> = {
   validate: { title: "Validate this draft?", button: "Validate", body: "Deterministic checks run now. A draft that passes is frozen: its content can no longer be edited.", reason: false },
   evaluate: { title: "Queue an evaluation?", button: "Queue evaluation", body: "A background worker evaluates this exact configuration against the real resolution code. No live model is called. Refresh the page to see the result.", reason: false },
   request: { title: "Submit for approval?", button: "Submit for approval", body: "A different administrator, who is not the author and not you, must approve before it can be activated.", reason: true },
   approve: { title: "Approve this configuration?", button: "Approve", body: "You confirm you reviewed the changes and the passed evaluation. Approval does not activate it.", reason: true },
   reject: { title: "Reject this configuration?", button: "Reject", body: "A rejected configuration cannot be activated. Create a new draft to try again.", reason: true },
-  staging: { title: "Activate in staging?", button: "Activate in staging", body: "Staging servers will resolve models from this configuration within seconds. Production is not affected.", reason: true },
-  production: { title: "Activate in production?", button: "Activate in production", body: "Production servers will resolve models from this configuration. It has already run in staging. You can roll back at any time.", reason: true },
+  activate: { title: "Activate on this server's environment?", button: "Activate", body: "This server's environment resolves models from this configuration within seconds (other servers of the same environment converge within a few seconds). You can roll back at any time.", reason: true },
   retire: { title: "Retire this version?", button: "Retire", body: "A retired version can never be activated again. Its history is kept.", reason: true },
 };
 
@@ -38,6 +37,8 @@ function Body({ id }: { id: string }) {
   const canActivate = hasAnyPermission(granted, [P.aiActivate]);
   const cfg = useAdminResource(() => api.admin.aiConfig(id), [id]);
   const catalogue = useAdminResource(() => api.admin.aiCatalogue(), []);
+  const envs = useAdminResource(() => api.admin.aiEnvironments(), []);
+  const thisEnv = envs.state === "ready" ? envs.data.this_environment : "";
   const [action, setAction] = useState<Action | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -50,8 +51,7 @@ function Body({ id }: { id: string }) {
       case "request": await api.admin.aiRequestApproval(id, reason); setNotice("Submitted. A different administrator must approve."); break;
       case "approve": if (pending) await api.admin.aiDecide(pending.public_id, true, reason); setNotice("Approved. It is not active until someone activates it."); break;
       case "reject": if (pending) await api.admin.aiDecide(pending.public_id, false, reason); setNotice("Rejected."); break;
-      case "staging": await api.admin.aiActivate(id, "staging", reason); setNotice("Active in staging."); break;
-      case "production": await api.admin.aiActivate(id, "production", reason); setNotice("Active in production."); break;
+      case "activate": await api.admin.aiActivate(id, reason); setNotice(`Active in ${thisEnv}.`); break;
       case "retire": await api.admin.aiRetire(id, reason); setNotice("Retired."); break;
     }
     cfg.reload();
@@ -133,11 +133,20 @@ function Body({ id }: { id: string }) {
 
           <Panel title="Activation">
             {cfg.data.state !== "approved" ? <p className="text-sm text-muted">Only an approved configuration can be activated. It needs a passed evaluation and a different second approver first.</p> : canActivate ? (
-              <div className="flex flex-wrap gap-2">
-                <button type="button" className={btn} onClick={() => setAction("staging")} disabled={cfg.data.active_in.includes("staging")}>Activate in staging</button>
-                <button type="button" className={btn} onClick={() => setAction("production")}
-                  disabled={!cfg.data.activations.some((a) => a.environment === "staging") || cfg.data.active_in.includes("production")}>Activate in production</button>
-                {!cfg.data.activations.some((a) => a.environment === "staging") ? <span className="text-sm text-muted">Production needs a prior staging activation of this exact version.</span> : null}
+              <div className="flex flex-wrap items-center gap-2">
+                {(() => {
+                  const supported = ["development", "staging", "production"].includes(thisEnv);
+                  const needsStaging = thisEnv === "production" && !cfg.data.activations.some((a) => a.environment === "staging");
+                  return (
+                    <>
+                      <button type="button" className={btn} onClick={() => setAction("activate")} disabled={!supported || needsStaging || cfg.data.active_in.includes(thisEnv)}>
+                        {supported ? `Activate in ${thisEnv}` : "Activation unavailable"}
+                      </button>
+                      {!supported && thisEnv ? <span className="text-sm text-muted">This deployment&apos;s environment is not recognised, so governed activation is disabled.</span> : null}
+                      {needsStaging ? <span className="text-sm text-muted">Production needs a prior staging activation of this exact content. A development activation does not count.</span> : null}
+                    </>
+                  );
+                })()}
               </div>
             ) : <p className="text-sm text-muted">You can view this configuration but your role cannot activate it.</p>}
             {cfg.data.activations.length ? (

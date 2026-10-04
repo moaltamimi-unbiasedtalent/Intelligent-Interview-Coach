@@ -901,6 +901,7 @@ class AIOperationCodeView(_Strict):
     structured_output: bool
     requires_tools: bool
     tunable: bool
+    no_runtime_path: bool = False
     deterministic: bool
     realtime: bool
     code_values: dict[str, float | int]
@@ -946,7 +947,6 @@ class AIReasonBody(_Strict):
 
 
 class AIActivateBody(_Strict):
-    environment: str
     reason: str
 
 
@@ -1064,6 +1064,7 @@ class AIEnvironmentView(_Strict):
 
 
 class AIEnvironmentsView(_Strict):
+    this_environment: str
     items: list[AIEnvironmentView]
     note: str
 

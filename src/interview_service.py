@@ -17,6 +17,7 @@ Every service here is:
 
 from __future__ import annotations
 
+import contextvars
 import logging
 from collections.abc import Sequence
 from dataclasses import dataclass, field
@@ -50,6 +51,9 @@ _LOGGER = logging.getLogger(__name__)
 
 # --- Domain errors -----------------------------------------------------------
 
+
+# Per-call governed overrides (timeout / retries) for the request currently being generated (P10B-W10.7). Empty unless a governed configuration changed them.
+_CALL_EXTRA: contextvars.ContextVar[dict] = contextvars.ContextVar("interview_call_extra", default={})
 
 class ServiceError(Exception):
     """Base class for controlled service errors (safe to show to a user)."""
@@ -117,7 +121,37 @@ class BaseGenerationService:
 
     # -- core request ---------------------------------------------------------
 
-    def _generate(
+    def _governed(self, task: str, settings: ModelSettings) -> tuple[ModelSettings, dict]:
+        """Resolve this session's PROFILE through the governed profile -> model mapping (P10B-W10.7).
+
+        The session keeps ONE profile for all its operations (the persisted ``settings.model`` is the profile's compatibility marker, never trusted as
+        a slug). With no active governed configuration this is the identity. Otherwise the slug becomes the model the ACTIVE configuration assigns to
+        that profile, and bounded tunables (max output tokens, timeout, retries) that the configuration changed for the matching operation (evaluation
+        and report -> EVALUATION; strategy, question and branch -> STRUCTURED_GENERATION) are applied. No per-operation model routing happens here.
+        """
+        from src.llm.policy import ModelOperation
+        from src.llm.runtime import governed_slug, tunables
+
+        slug = governed_slug(settings.model)
+        op = ModelOperation.EVALUATION if task in (prompts.TASK_EVALUATION, prompts.TASK_REPORT) else ModelOperation.STRUCTURED_GENERATION
+        tuned = tunables(op)
+        update: dict = {}
+        if slug != settings.model:
+            update["model"] = slug
+        if "max_output_tokens" in tuned:
+            update["max_tokens"] = int(tuned["max_output_tokens"])
+        extra = {k: tuned[k] for k in ("timeout_s", "max_retries") if k in tuned}
+        return (settings.model_copy(update=update) if update else settings), extra
+
+    def _generate(self, *, task: str, settings: ModelSettings, **kwargs):
+        effective, extra = self._governed(task, settings)
+        token = _CALL_EXTRA.set(extra)
+        try:
+            return self._generate_governed(task=task, settings=effective, **kwargs)
+        finally:
+            _CALL_EXTRA.reset(token)
+
+    def _generate_governed(
         self,
         *,
         task: str,
@@ -342,6 +376,8 @@ class BaseGenerationService:
                 # "reasoning" in their metadata; it is dropped for the rest.
                 reasoning={"effort": constants.DEFAULT_REASONING_EFFORT},
                 require_parameters=require_parameters,
+                **({"timeout_s": _CALL_EXTRA.get()["timeout_s"]} if "timeout_s" in _CALL_EXTRA.get() else {}),
+                **({"max_retries": int(_CALL_EXTRA.get()["max_retries"])} if "max_retries" in _CALL_EXTRA.get() else {}),
             )
         except OpenRouterError as exc:
             # Log SAFE metadata only (status + category, never content/keys).

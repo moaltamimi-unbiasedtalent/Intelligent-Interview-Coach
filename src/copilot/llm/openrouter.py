@@ -30,6 +30,8 @@ def default_model_kwargs(
     model: str | None = None,
     temperature: float | None = None,
     max_tokens: int | None = None,
+    timeout_s: float | None = None,
+    max_retries: int | None = None,
 ) -> dict[str, Any]:
     """Resolve the keyword arguments for the chat model (no secrets included).
 
@@ -39,13 +41,16 @@ def default_model_kwargs(
     """
     from src.llm import models as model_registry
 
-    resolved_model = model or config.default_model
+    from src.llm import runtime as governed_runtime
+
+    # P10B-W10.7: a known profile slug follows the ACTIVE governed profile mapping; any other slug (e.g. an explicit COPILOT model name) is untouched.
+    resolved_model = governed_runtime.governed_slug(model or config.default_model)
     kwargs: dict[str, Any] = {
         "model": resolved_model,
         "max_tokens": max_tokens or constants.DEFAULT_MAX_OUTPUT_TOKENS,
         "base_url": config.base_url,
-        "timeout": config.read_timeout_seconds,
-        "max_retries": constants.LLM_MAX_RETRIES,
+        "timeout": config.read_timeout_seconds if timeout_s is None else float(timeout_s),
+        "max_retries": constants.LLM_MAX_RETRIES if max_retries is None else int(max_retries),
     }
     if model_registry.supports_temperature(resolved_model):
         kwargs["temperature"] = (
@@ -60,6 +65,8 @@ def build_chat_model(
     model: str | None = None,
     temperature: float | None = None,
     max_tokens: int | None = None,
+    timeout_s: float | None = None,
+    max_retries: int | None = None,
     chat_openai_cls: Any | None = None,
 ):
     """Return a configured LangChain chat model backed by OpenRouter.
@@ -84,7 +91,7 @@ def build_chat_model(
             ) from exc
 
     kwargs = default_model_kwargs(
-        config, model=model, temperature=temperature, max_tokens=max_tokens
+        config, model=model, temperature=temperature, max_tokens=max_tokens, timeout_s=timeout_s, max_retries=max_retries
     )
     # The key is passed straight to the client and never logged.
     return chat_openai_cls(

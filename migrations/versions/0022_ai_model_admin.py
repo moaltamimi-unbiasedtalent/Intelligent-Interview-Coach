@@ -23,7 +23,7 @@ depends_on = None
 STATES = ("draft", "validated", "evaluated", "evaluation_failed", "approved", "rejected", "retired")
 EVAL = ("queued", "running", "passed", "failed", "error")
 APPROVAL = ("pending", "approved", "rejected")
-ENVS = ("staging", "production")
+ENVS = ("development", "staging", "production")
 KINDS = ("activate", "rollback", "revert_to_code")
 
 

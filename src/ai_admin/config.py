@@ -37,7 +37,17 @@ class ConfigError(ValueError):
     """The submitted configuration is not well formed. The message never echoes submitted values."""
 
 
+# Only operations with a REAL, distinct runtime consumer are tunable (see src/llm/runtime.py for the consumer of each). Specialist coaching has no
+# shipped model call path (a deterministic fallback owns it); the role specialist shares the structured-generation producer; the final response is
+# produced by the orchestration model itself. A setting with no consumer would be cosmetic, so those operations are not configurable.
+TUNABLE_OPERATIONS: tuple[ModelOperation, ...] = (ModelOperation.ORCHESTRATION, ModelOperation.STRUCTURED_GENERATION, ModelOperation.EVALUATION)
+
+
 def tunable_operations() -> list[ModelOperation]:
+    return list(TUNABLE_OPERATIONS)
+
+
+def model_backed_operations() -> list[ModelOperation]:
     return [op for op, p in OPERATION_POLICY.items() if p.capability not in (ModelCapability.NONE, ModelCapability.REALTIME)]
 
 
@@ -85,7 +95,7 @@ def normalise(raw: Any) -> dict:
         raise ConfigError("Operation settings must be an object.")
     allowed = {op.value for op in tunable_operations()}
     if set(ops_in) - allowed:
-        raise ConfigError("Only model-backed operations can be tuned; code-defined and deterministic operations cannot.")
+        raise ConfigError("Only operations with a runtime consumer can be tuned; code-defined, deterministic, realtime and consumer-less operations cannot.")
     ops: dict[str, dict] = {}
     for name in sorted(allowed):
         merged = dict(base["operations"][name])
@@ -177,7 +187,7 @@ def validate(canonical: dict) -> list[Check]:
     add("time_budget", "No operation can hold a request beyond the total time budget", budget_ok, detail_t)
 
     cap_ok, floor_ok, d_cap, d_floor = True, True, "", ""
-    for op in tunable_operations():
+    for op in model_backed_operations():
         policy = OPERATION_POLICY[op]
         for user in ModelProfile:
             effective, _ = _clamp_up(user, policy.min_capability)

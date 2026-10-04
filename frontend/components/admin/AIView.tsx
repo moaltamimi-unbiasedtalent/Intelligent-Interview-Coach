@@ -96,13 +96,14 @@ function Body() {
       <ResourceState loaded={envs}>
         {envs.state === "ready" ? (
           <Panel title="Environments">
-            <div className="grid gap-3 sm:grid-cols-2">
+            <p className="text-sm">This server is <strong>{envs.data.this_environment}</strong>. It activates and rolls back only its own environment; the target cannot be chosen from the browser.</p>
+            <div className="grid gap-3 sm:grid-cols-3">
               {envs.data.items.map((env) => (
                 <div key={env.environment} className="rounded border border-default p-3">
                   <h3 className="text-sm font-semibold capitalize">{env.environment}</h3>
                   <p className="text-sm">{env.version ? <>Active: <Link href={`/admin/ai/${env.version.public_id}`}>{env.version.name} (version {env.version.version})</Link></> : "Code defaults (no configuration active)"}</p>
                   {env.active ? <p className="text-xs text-muted">Since {env.active.activated_at ?? ""} · {KIND_LABEL[env.active.kind] ?? env.active.kind}</p> : null}
-                  {canActivate && env.version ? (
+                  {canActivate && env.version && env.environment === envs.data.this_environment ? (
                     <div className="mt-2 flex flex-wrap gap-2">
                       <button type="button" className={btn} onClick={() => setRollbackFor({ env, toCode: false })} aria-label={`Roll back ${env.environment} to the previous configuration`}>Roll back</button>
                       <button type="button" className={btn} onClick={() => setRollbackFor({ env, toCode: true })} aria-label={`Revert ${env.environment} to code defaults`}>Revert to code defaults</button>
@@ -259,7 +260,7 @@ function Body() {
                       <td className="py-1 pr-4">{label(o.capability)}</td>
                       <td className="py-1 pr-4 capitalize">{o.deterministic || o.realtime ? "Not applicable" : o.min_capability}</td>
                       <td className="py-1 pr-4 capitalize">{o.deterministic || o.realtime ? "Not applicable" : o.fallback_floor}</td>
-                      <td className="py-1 pr-4">{o.tunable ? "Numbers only" : o.deterministic ? "No (deterministic, no model)" : "No (realtime voice)"}</td>
+                      <td className="py-1 pr-4">{o.tunable ? "Numbers only" : o.deterministic ? "No (deterministic, no model)" : o.realtime ? "No (realtime voice)" : "No (no separate runtime call path)"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -274,7 +275,7 @@ function Body() {
         onClose={() => setRollbackFor(null)}
         onConfirm={async (reason) => {
           if (!rollbackFor) return;
-          await api.admin.aiRollback(rollbackFor.env.environment, rollbackFor.toCode, reason);
+          await api.admin.aiRollback(rollbackFor.toCode, reason);
           setNotice(rollbackFor.toCode ? `${rollbackFor.env.environment} now uses the code-defined defaults.` : `${rollbackFor.env.environment} rolled back to the previous configuration.`);
           reloadAll();
         }}>

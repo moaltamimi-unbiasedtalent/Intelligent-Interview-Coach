@@ -7,7 +7,7 @@ import type {
   AICatalogue,
   AICodeDefined,
   AIConfigInput,
-  AIEnvironment,
+  AIEnvironments,
   AIEvaluation,
   AIOverview,
   AIRuntime,
@@ -604,7 +604,7 @@ export const api = {
     aiCatalogue: (opts?: RequestOptions) => request<AICatalogue>("GET", "/admin/ai/catalogue", opts),
     aiCodeDefined: (opts?: RequestOptions) => request<AICodeDefined>("GET", "/admin/ai/code-defined", opts),
     aiRuntime: (opts?: RequestOptions) => request<AIRuntime>("GET", "/admin/ai/runtime", opts),
-    aiEnvironments: (opts?: RequestOptions) => request<{ items: AIEnvironment[]; note: string }>("GET", "/admin/ai/environments", opts),
+    aiEnvironments: (opts?: RequestOptions) => request<AIEnvironments>("GET", "/admin/ai/environments", opts),
     aiHistory: (opts?: RequestOptions) => request<AdminPage<AIActivation>>("GET", "/admin/ai/history?page_size=50", opts),
     aiApprovals: (opts?: RequestOptions) => request<AdminPage<AIApproval>>("GET", "/admin/ai/approvals?page_size=50", opts),
     aiConfigs: (opts?: RequestOptions) => request<AdminPage<AIVersionSummary>>("GET", "/admin/ai/configs?page_size=50", opts),
@@ -619,10 +619,11 @@ export const api = {
       request<AIApproval>("POST", `/admin/ai/configs/${encodeURIComponent(id)}/request-approval`, { body: { reason }, ...opts }),
     aiDecide: (approvalId: string, approve: boolean, reason: string, opts?: RequestOptions) =>
       request<AIApproval>("POST", `/admin/ai/approvals/${encodeURIComponent(approvalId)}/${approve ? "approve" : "reject"}`, { body: { reason }, ...opts }),
-    aiActivate: (id: string, environment: string, reason: string, opts?: RequestOptions) =>
-      request<AIActivation>("POST", `/admin/ai/configs/${encodeURIComponent(id)}/activate`, { body: { environment, reason }, ...opts }),
-    aiRollback: (environment: string, toCode: boolean, reason: string, opts?: RequestOptions) =>
-      request<AIActivation>("POST", `/admin/ai/environments/${encodeURIComponent(environment)}/rollback`, { body: { reason, to_code: toCode }, ...opts }),
+    // The target environment is decided by the SERVER (its API_ENV); no request can choose it.
+    aiActivate: (id: string, reason: string, opts?: RequestOptions) =>
+      request<AIActivation>("POST", `/admin/ai/configs/${encodeURIComponent(id)}/activate`, { body: { reason }, ...opts }),
+    aiRollback: (toCode: boolean, reason: string, opts?: RequestOptions) =>
+      request<AIActivation>("POST", "/admin/ai/rollback", { body: { reason, to_code: toCode }, ...opts }),
     aiRetire: (id: string, reason: string, opts?: RequestOptions) =>
       request<AIVersionSummary>("POST", `/admin/ai/configs/${encodeURIComponent(id)}/retire`, { body: { reason }, ...opts }),
     // W10.10 privacy and legal

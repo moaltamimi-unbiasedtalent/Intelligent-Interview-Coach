@@ -1798,7 +1798,7 @@ class BillingEvent(Base):
 AI_CONFIG_STATES = ("draft", "validated", "evaluated", "evaluation_failed", "approved", "rejected", "retired")
 AI_EVAL_STATUSES = ("queued", "running", "passed", "failed", "error")
 AI_APPROVAL_STATUSES = ("pending", "approved", "rejected")
-AI_ENVIRONMENTS = ("staging", "production")
+AI_ENVIRONMENTS = ("development", "staging", "production")
 AI_ACTIVATION_KINDS = ("activate", "rollback", "revert_to_code")
 
 

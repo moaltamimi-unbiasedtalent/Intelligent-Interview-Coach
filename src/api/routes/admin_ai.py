@@ -151,20 +151,20 @@ def reject(approval_id: str, body: AIReasonBody, request: Request, principal=Dep
 
 
 @router.post("/configs/{public_id}/activate", response_model=AIActivationView, status_code=201,
-             summary="Activate an approved configuration in one environment (production needs a prior staging activation)")
+             summary="Activate an approved configuration in THIS server's environment (production needs a prior staging activation of the same hash)")
 def activate(public_id: str, body: AIActivateBody, request: Request, principal=Depends(require_permission(perm.AI_ACTIVATE)),
              svc=Depends(get_ai_config_service)) -> AIActivationView:
     return AIActivationView(**_guard(lambda: svc.activate(
-        public_id[:40], environment=body.environment, reason=body.reason, actor_user_id=principal.user_id,
+        public_id[:40], reason=body.reason, actor_user_id=principal.user_id,
         audit=_audit(request, principal, A.ADMIN_AI_ACTIVATED, "ai_config_activation"))))
 
 
-@router.post("/environments/{environment}/rollback", response_model=AIActivationView, status_code=201,
-             summary="Return an environment to its previous activation, or to the code-defined defaults")
-def rollback(environment: str, body: AIRollbackBody, request: Request, principal=Depends(require_permission(perm.AI_ACTIVATE)),
+@router.post("/rollback", response_model=AIActivationView, status_code=201,
+             summary="Return THIS server's environment to its previous activation, or to the code-defined defaults")
+def rollback(body: AIRollbackBody, request: Request, principal=Depends(require_permission(perm.AI_ACTIVATE)),
              svc=Depends(get_ai_config_service)) -> AIActivationView:
     return AIActivationView(**_guard(lambda: svc.rollback(
-        environment, to_code=body.to_code, reason=body.reason, actor_user_id=principal.user_id,
+        to_code=body.to_code, reason=body.reason, actor_user_id=principal.user_id,
         audit=_audit(request, principal, A.ADMIN_AI_ROLLED_BACK, "ai_config_activation"))))
 
 

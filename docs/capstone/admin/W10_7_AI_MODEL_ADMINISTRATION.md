@@ -8,7 +8,7 @@ One additive migration (`0022_ai_model_admin`). No new dependency. 0 paid/live c
 ## 1. Audit of the existing model layer
 - `src/llm/models.py`: three profiles (`ModelProfile` fast/balanced/advanced) resolve to OpenRouter slugs `openai/gpt-5.6-luna|terra|sol`, overridable with `OPENROUTER_MODEL_FAST|BALANCED|ADVANCED`; capability metadata (tools, structured output, no temperature); `Workload` -> profile for registry-selected workloads; Interview workloads are session-selected.
 - `src/llm/policy.py`: `OPERATION_POLICY` for eight operations (orchestration, three specialists, final response, structured generation, evaluation, realtime voice), `resolve_policy(operation, user_profile)`, bounded fallback chains.
-- Import-time constants (`constants.DEFAULT_MODEL`, `copilot.constants.DEFAULT_MODEL`, `ApprovedModel`) call `model_id()` once at import. They stay static. The runtime resolvers (`spec(profile)` in the Agent factory, `resolve_policy`, `model_id`) are what a governed configuration affects.
+- Import-time constants (`constants.DEFAULT_MODEL`, `copilot.constants.DEFAULT_MODEL`, `ApprovedModel`) call `model_id()` once at import. They stay as static legacy/validation values and are no longer the authoritative runtime selection. A governed configuration acts through `model_id`/`spec`, `resolve_policy` and the runtime consumers in `src/llm/runtime.py` (section 9A), including Interview Practice (section 19). Where Practice froze the slug: the `ModelSettings()` default at session creation, persisted in the session payload and read by `interview_service._generate`.
 
 ## 2. Approved catalogue (`src/ai_admin/catalogue.py`)
 Code-defined, versioned (`CATALOGUE_VERSION`). Three entries mirroring the registry, no new model or provider:
@@ -25,7 +25,7 @@ Slugs come from the registry's code defaults. `cost_class` is a relative ordinal
 Baseline (the code as shipped): Fast = luna, Balanced = terra, Advanced = sol. A configuration may reassign a profile to any catalogue entry the entry is approved for, provided tiers stay monotonic (Fast <= Balanced <= Advanced) and cost class never decreases.
 
 ## 4. Environment-override compatibility
-Precedence is: an ACTIVE governed configuration for the process environment, else the environment override (`OPENROUTER_MODEL_*`), else the code default. With nothing active the result is byte-identical to pre-W10.7 (`model_id == code_model_id`; proven by test and evaluator). The runtime diagnostic labels each profile `governed_configuration`, `environment_override` or `code_default`.
+Precedence is: an ACTIVE governed configuration for this process's own environment, else the environment override (`OPENROUTER_MODEL_*`), else the code default. With nothing active the result is byte-identical to pre-W10.7 (`model_id == code_model_id`; proven by test and evaluator). The runtime diagnostic labels each profile `governed_configuration`, `environment_override` or `code_default`.
 
 ## 5. Schema (migration `0022_ai_model_admin`)
 Four tables, schema only, nothing seeded (the migration changes no behaviour):
@@ -41,7 +41,21 @@ SHA-256 over canonical JSON (sorted keys, fully expanded defaults) plus the cata
 Only a draft is editable. Validation freezes it. A change is a new version (optionally based on an old one). Evaluations, approvals and activations are never edited; activations are append-only.
 
 ## 9. Tunable vs code-defined
-Tunable (per model-backed operation, bounded): `max_output_tokens` 256..4096, `timeout_s` 10..180, `max_retries` 0..3, and `timeout x (retries + 1) <= 600 s`. Code-defined and not configurable: capability, minimum tier, fallback floor, structured-output and tool flags, temperature, deterministic (`NONE`) and realtime operations, the three specialists, the Interview session profile, prompts, secrets. Unknown keys are rejected, never ignored.
+Tunable fields (bounded, per operation): `max_output_tokens` 256..4096, `timeout_s` 10..180, `max_retries` 0..3, with `timeout x (retries + 1) <= 600 s`.
+Only operations with a REAL, distinct runtime consumer are tunable, and every tunable of such an operation is wired end to end (see section 9A). Specialist coaching (no shipped model call path), the role specialist (shares the structured-generation producer) and the final response (produced by the orchestration model) have no separate consumer, so they are NOT configurable: a setting with no effect would be cosmetic.
+Semantics: a value that differs from the code operation policy is applied absolutely at every consumer of that operation; a value left at the code baseline changes nothing (the consumer keeps its real default).
+Code-defined and not configurable: capability, minimum tier, fallback floor, structured-output and tool flags, temperature, deterministic (`NONE`) and realtime operations, the three specialists, the Interview session profile, prompts, secrets. Unknown keys are rejected, never ignored.
+
+### 9A. Tunable consumer matrix
+| Operation | Runtime caller(s) | Uses governed model? | max tokens | timeout | retries |
+|---|---|---|---|---|---|
+| orchestration | `application/agent_service._default_model_factory` (Mo's chat model) | yes (profile -> `spec`) | yes | yes | yes |
+| structured_generation | `copilot/tools/structured.build_structured_producer` (JD analysis, question generation, role specialist), Interview strategy/question/branch (`interview_service._generate`) | yes | yes | yes | yes |
+| evaluation | Interview answer evaluation and report (`interview_service._generate`) | yes | yes | yes | yes |
+| final_response, specialist_role_analysis, specialist_coaching | no separate runtime path | not tunable | | | |
+| specialist_evidence_analysis | deterministic, no model | not applicable | | | |
+| realtime_voice | separate realtime registry, no chat slug | not applicable | | | |
+Career chat synthesis (`copilot/rag/responder`) follows the governed profile mapping for its model slug but has no tunable. The interview HTTP client (`OpenRouterClient`) and the LangChain chat model both accept per-call timeout and retries that are supplied only from an active governed configuration.
 
 ## 10. Validation checks (deterministic)
 catalogue membership, no raw provider slug anywhere, profile allowed for entry, tier monotonic, cost ordering, tunable bounds, time budget, capability support (tools/structured) for every operation and profile, floors preserved, code-defined operations untouched.
@@ -59,23 +73,25 @@ The version, the evaluation, the approval and each activation all store the same
 The approver must be an active account holding `platform.ai.activate`, different from the person who requested approval AND different from the configuration's author. Enforced in the service, by a DB CHECK (requester) and again at activation and in the resolver (distinct-approval re-check). Self-approval returns 403.
 
 ## 15. Activation rules
-`activate` re-derives from stored facts: state approved, latest evaluation passed by the current evaluator for this exact hash with 0 live calls, an approved record whose decider is neither requester nor author. Production additionally requires a prior staging activation of the same version. Activating the already-active version is refused.
+`activate` re-derives from stored facts: state approved, latest evaluation passed by the current evaluator for this exact hash with 0 live calls, an approved record whose decider is neither requester nor author. The target is ALWAYS this server's own environment (section 16). Production additionally requires a prior STAGING activation of the same version with the same content hash; a development activation never satisfies it. Activating the already-active version is refused.
 
-## 16. Environment model
-Two environments, `staging` and `production`. A process maps `API_ENV=production` to production and everything else (staging, development, test) to staging. One open activation per environment.
+## 16. Environment model (server-authoritative)
+Three activation environments: `development`, `staging`, `production`. The deployment's `API_ENV` decides which one a process belongs to (aliases follow the repository vocabulary: `development`/`dev`/`local`/`test`/`testing` -> development; `staging`; `production`/`prod`). An UNRECOGNISED value is unsupported: the process resolves the code defaults and refuses governed activation and rollback (it never becomes staging or production).
+There is no environment field in the activation or rollback requests and no environment in the rollback URL: a browser cannot nominate a target. A staging process can only write staging; a production process can only write production, and only after a staging record for the same hash exists in the shared control plane. Development and test activations are real but are never promotion evidence. Fixtures may inject the environment into the service for deterministic tests; HTTP callers cannot.
 
-## 17. Runtime resolver and cache
-`src/ai_admin/resolver.py` installs through the single seam `src/llm/governed.py` (set at repository construction in API and in the worker). Per-process snapshot with a 5 s TTL plus explicit invalidation on activate/rollback in the same process; other processes converge within the TTL (no broadcast, no external cache). It re-verifies hash, approved state, passed evaluation and distinct approval at load and FAILS CLOSED to code defaults (reasons: version_not_approved, hash_mismatch, catalogue_changed, no_passed_evaluation, no_distinct_approval, load_failed). A provider exception never reaches the registry.
+## 17. Runtime resolver, cache and convergence
+`src/ai_admin/resolver.py` installs through the single seam `src/llm/governed.py` (set at repository construction in the API and worker). Per-process snapshot with a 5 s TTL. Activation and rollback are immediate in the control plane and invalidate the cache of the SAME process at once; OTHER processes (for example the worker or a second API replica) converge within the bounded TTL (at most about 5 s). There is no broadcast and no external cache, so cross-process effect is NOT instant. It re-verifies hash, approved state, passed evaluation and distinct approval at load and FAILS CLOSED to code defaults (reasons: version_not_approved, hash_mismatch, catalogue_changed, no_passed_evaluation, no_distinct_approval, unsupported_environment, load_failed). A provider exception never reaches the registry.
 
 ## 18. Rollback and history
-Rollback restores the previous activated version (re-verified like any activation) or reverts to the code defaults. It needs `platform.ai.activate`, a reason and no new approval (only an already approved, previously activated version is eligible). History is append-only and visible.
+Rollback (this server's environment only) restores the previous activated version (re-verified like any activation) or reverts to the code defaults. It needs `platform.ai.activate`, a reason and no new approval. Same-process effect is immediate; other processes converge within the cache TTL (section 17). History is append-only and visible.
 
 ## 19. Boundaries
-- Raw slugs: no schema field accepts one; `_resolve_profile` still rejects a candidate slug.
-- Interview Practice keeps one session-selected profile for its four operations; its slugs come from the import-time approved list and are NOT changed by activation.
+- Raw slugs: no schema field accepts one; `_resolve_profile` still rejects a candidate slug; `known_profile_for_slug` never turns an unknown string into a profile and the governed mapping never remaps one.
+- Interview Practice stays SESSION-PROFILE selected: one profile for all of its operations (no per-operation routing). The Next.js flow sends no model at all (`CreateInterviewRequest` has no model field; an extra field is ignored) and creates `ModelSettings()` (Balanced). `ModelSettings.model` is kept only as a compatibility marker of the profile (historical sessions persist the slug); at execution `interview_service._generate` resolves it with `governed_slug(...)`: profile -> the model the ACTIVE configuration assigns to that profile. Activating a configuration that maps Balanced to another catalogue entry therefore changes the model a Balanced session uses on its next call, while the session stays Balanced. Legacy slugs (`gpt-5-mini`, `-nano`, `gpt-5`) and the current Luna/Terra/Sol slugs keep their profile. Where the slug used to freeze: `ModelSettings()` default at session creation, serialised in the session payload, read by `_generate`; it is now only a marker. Streamlit (legacy) selects from the import-time list and is governed the same way at the same boundary.
+- The import-time constants (`DEFAULT_MODEL`, `LOW_COST_MODEL`, `HIGH_CAPABILITY_MODEL`, `APPROVED_MODELS`, `ApprovedModel`) remain for validation and legacy compatibility only; they are no longer the authoritative runtime selection path. `ApprovedModel` also accepts the catalogue default slugs so a record naming the model that actually served a request validates.
 - Deterministic operations stay model-free; realtime resolves no chat slug; exactly three specialists; no evaluation specialist; candidate answer evaluation stays LLM-backed with no deterministic scorer.
 - Prompt Lab stays offline; there is no prompt CMS; no secret handling here (W10.6 owns it).
-- Candidates still choose only fast, balanced or advanced.
+- Candidates still choose only fast, balanced or advanced (and today the Next.js candidate chooses none).
 
 ## 20. Permissions, roles and ROLE-W10-01
 `platform.ai.read` (read), `platform.ai.manage` (draft/validate/evaluate/request approval/retire), `platform.ai.activate` (approve/reject/activate/rollback). Only `platform_admin` holds manage and activate. Permission count stays 43. ROLE-W10-01 (no dedicated AI/Operations activator separation) is noted: separation is enforced by the distinct-approver rule rather than a new role.
@@ -87,11 +103,7 @@ Rollback restores the previous activated version (re-verified like any activatio
 Eleven canonical events (`admin.ai_config_created|updated|validated`, `ai_evaluation_requested|completed`, `ai_approval_requested`, `ai_approved|rejected`, `ai_activated`, `ai_rolled_back`, `ai_retired`), written in the same transaction as the change. Payloads: ids, hash, environment, states. Never a prompt or candidate content.
 
 ## 23. Verification evidence (measured)
-- Backend `pytest`: 2898 passed, 4 skipped (baseline 2829; +69 in `tests/test_ai_admin_w10_7.py`). Frontend vitest 719 passed (16 new). `tsc`, lint, production build, i18n scanner (0 offenders) clean. Playwright 213 passed (212 + the W10.7 lifecycle journey). `ruff check .` clean.
-- CI evaluators: all 36 pass, including the new `scripts/eval_admin_ai_models.py` (32 checks including a real lifecycle on a temp database). `evaluations/` is untouched and the dev DB, schema, checkpoint, Chroma and cache fingerprints are identical before and after.
-- Routes: 19 new `/admin/ai` routes, 120 admin routes in total, 0 ungated; permission registry stays 43.
-- Manual QA (real API routes, separate worker process, temp DB, no provider key): 22 of 22 checks pass, including self-approval 403, activation before approval 409, production before staging 409, runtime governed with the tunable applied and realtime/deterministic untouched, rollback to code defaults and append-only history.
-- Performance: `model_id` costs 0.44 us with no provider and 0.68 us with the cached resolver; 200,000 calls caused one database load; a cold load is about 0.4 ms. New admin pages are about 4 kB each (116 to 120 kB first load).
+Measured on the correction commit: backend 2925 passed, 4 skipped; vitest 721 passed; Playwright 213 passed; all 36 CI evaluators pass (including `eval_admin_ai_models.py`, now with the environment, Practice and tunable-consumer checks); ruff, compileall, tsc, lint, build and the i18n scanner clean; dev DB, schema, checkpoint, Chroma, cache and `evaluations/` fingerprints unchanged; manual QA with a separate worker (22 original checks plus 14 environment, Practice and tunable checks) all pass; 0 paid/live calls. Test files: `tests/test_ai_admin_w10_7.py` (lifecycle, environments, resolver, boundaries, migration), `tests/test_ai_runtime_w10_7.py` (Practice governance, legacy compatibility, tunable propagation to the real call sites), vitest `tests/ai-w10-7.test.tsx`, the Playwright journey in `e2e/admin.spec.ts`, and the CI gate `scripts/eval_admin_ai_models.py`.
 
 ## 24. Known limits
-Interview Practice and import-time constants are unaffected by activation (documented, deliberate). Multi-process convergence is TTL-based. The catalogue has three entries; adding a model is a code change. Live model quality is not evaluated here.
+Cross-process convergence is TTL-based (at most about 5 s), never instant. The catalogue has three entries; adding a model is a code change. Live model quality is not evaluated here. Governed tunables are absolute when changed from the code policy value. Staging-to-production promotion assumes staging and production share the control-plane database (or a staging record exists in the production one). ROLE-W10-01 stays open for W10.14.

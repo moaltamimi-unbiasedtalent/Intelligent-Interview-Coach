@@ -11,7 +11,8 @@ Installed once per process (API and worker) through ``install_resolver``. It ans
 * Cache: one snapshot per process with a short TTL (default 5 s) so a hot path never queries per call, plus an explicit ``invalidate`` that the
   service calls on activate/rollback in the SAME process. Other processes (for example the worker) converge within the TTL; there is no
   broadcast and no external cache.
-* The environment is derived from ``API_ENV``: ``production`` -> production; everything else (staging, development, test) -> staging.
+* The environment is derived from ``API_ENV`` (see ``environment_name``): development/dev/local/test/testing -> development, staging -> staging,
+  production/prod -> production, anything else -> unsupported (code defaults, activation refused). Development is never staging.
 """
 
 from __future__ import annotations
@@ -33,9 +34,17 @@ log = logging.getLogger(__name__)
 DEFAULT_TTL_S = 5.0
 
 
-def environment_name(api_env: str | None = None) -> str:
+# The deployment's own API_ENV decides which activation environment a process belongs to. Aliases follow the repository's existing vocabulary
+# (billing MOCK_ALLOWED_ENVS: development, dev, test, testing, local). Development is NEVER staging evidence. An unrecognised value is
+# UNSUPPORTED: the process resolves code defaults and refuses governed activation (it never becomes staging or production).
+_ALIASES = {"development": "development", "dev": "development", "local": "development", "test": "development", "testing": "development",
+            "staging": "staging", "stage": "staging", "production": "production", "prod": "production"}
+
+
+def environment_name(api_env: str | None = None) -> str | None:
+    """The activation environment of this process, or None when API_ENV is not a recognised name (fail closed)."""
     env = (api_env if api_env is not None else os.environ.get("API_ENV") or "development").strip().lower()
-    return "production" if env in ("production", "prod") else "staging"
+    return _ALIASES.get(env)
 
 
 def resolve_profiles_for(config_json: dict | None) -> dict:
@@ -56,9 +65,9 @@ def resolve_profiles_for(config_json: dict | None) -> dict:
 
 
 class GovernedResolver:
-    def __init__(self, session_factory, *, environment: str | None = None, ttl_s: float = DEFAULT_TTL_S) -> None:
+    def __init__(self, session_factory, *, environment: str | None = "from_process", ttl_s: float = DEFAULT_TTL_S) -> None:
         self._sf = session_factory
-        self.environment = environment or environment_name()
+        self.environment = environment_name() if environment == "from_process" else environment   # None = unsupported: never loads a configuration
         self._ttl = ttl_s
         self._lock = threading.Lock()
         self._expires = 0.0
@@ -83,6 +92,8 @@ class GovernedResolver:
 
     def _load(self) -> tuple[governed.GovernedSnapshot | None, str | None]:
         try:
+            if self.environment is None:
+                return None, "unsupported_environment"
             with self._sf() as s:
                 act = s.scalar(select(ACT).where(ACT.environment == self.environment, ACT.deactivated_at.is_(None)))
                 if act is None or act.config_version_id is None:
@@ -111,7 +122,7 @@ class GovernedResolver:
 _installed: GovernedResolver | None = None
 
 
-def install_resolver(session_factory, *, environment: str | None = None, ttl_s: float = DEFAULT_TTL_S) -> GovernedResolver:
+def install_resolver(session_factory, *, environment: str | None = "from_process", ttl_s: float = DEFAULT_TTL_S) -> GovernedResolver:
     """Idempotently install the resolver for this process (a second call replaces it)."""
     global _installed
     _installed = GovernedResolver(session_factory, environment=environment, ttl_s=ttl_s)
@@ -152,7 +163,7 @@ def runtime_view(resolver: GovernedResolver | None = None) -> dict:
     from src.voice.realtime import realtime_policy_summary
 
     rt = realtime_policy_summary()
-    return {"environment": resolver.environment if resolver else environment_name(), "mode": "governed" if snap else "code_defaults",
+    return {"environment": (resolver.environment if resolver else environment_name()) or "unsupported", "mode": "governed" if snap else "code_defaults",
             "active_version": snap.version if snap else None, "content_hash": snap.config_hash if snap else None,
             "fallback_reason": resolver.last_error if resolver else None, "profiles": profiles, "operations": ops,
             "realtime": {"capability": rt["capability"], "chat_slug": rt["model_id"], "governed": False},

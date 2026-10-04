@@ -271,8 +271,13 @@ class OpenRouterClient:
         supported_parameters: Sequence[str] | None = None,
         reasoning: dict[str, Any] | None = None,
         require_parameters: bool = False,
+        timeout_s: float | None = None,
+        max_retries: int | None = None,
     ) -> ChatResult:
         """Make a single non-streaming chat-completion request.
+
+        ``timeout_s`` / ``max_retries`` (P10B-W10.7) are optional per-call overrides supplied only from an ACTIVE governed AI configuration;
+        None keeps the client defaults.
 
         Every optional parameter is capability-gated against
         ``supported_parameters`` (from model metadata): a parameter the model
@@ -336,9 +341,9 @@ class OpenRouterClient:
             # parameters (e.g. strict JSON Schema) instead of degrading silently.
             payload["provider"] = {"require_parameters": True}
 
-        return self._post_chat(payload, model)
+        return self._post_chat(payload, model, timeout_s=timeout_s, max_retries=max_retries)
 
-    def _post_chat(self, payload: dict[str, Any], model: str) -> ChatResult:
+    def _post_chat(self, payload: dict[str, Any], model: str, *, timeout_s: float | None = None, max_retries: int | None = None) -> ChatResult:
         """POST the request, retrying once on a *transient* failure only.
 
         Transient = a temporary network error, timeout, or one of
@@ -349,13 +354,16 @@ class OpenRouterClient:
         """
         headers = self._auth_headers()
         url = self._config.chat_completions_url
-        attempts = 1 + constants.MAX_TRANSIENT_RETRIES
+        attempts = 1 + (constants.MAX_TRANSIENT_RETRIES if max_retries is None else int(max_retries))
 
         for attempt in range(attempts):
             can_retry = attempt < attempts - 1
             start = time.monotonic()
             try:
-                response = self._client().post(url, headers=headers, json=payload)
+                if timeout_s is None:
+                    response = self._client().post(url, headers=headers, json=payload)
+                else:
+                    response = self._client().post(url, headers=headers, json=payload, timeout=float(timeout_s))
             except httpx.TimeoutException as exc:
                 if can_retry:
                     self._backoff(None)

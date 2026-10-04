@@ -47,7 +47,7 @@ class Rig:
         self.env = env
         self.jobs = JobService(sf(env))
         self.resolver = install_resolver(sf(env), environment=environment, ttl_s=60)
-        self.svc = AIConfigService(sf(env), jobs=self.jobs, resolver=self.resolver)
+        self.svc = AIConfigService(sf(env), jobs=self.jobs, resolver=self.resolver, environment=environment)
         self.worker = Worker(self.jobs, services=SimpleNamespace(ai_admin=SimpleNamespace(session_factory=sf(env))))
         self.a, _ = env.user("platform_admin")
         self.b, _ = env.user("platform_admin")
@@ -180,7 +180,7 @@ def test_governed_snapshot_changes_slug_and_tunables_only(rig):
     legal = cfg(fast="terra")
     legal["operations"] = {"orchestration": {"max_output_tokens": 2048, "timeout_s": 90.0, "max_retries": 1}}
     pid = rig.approved(legal)
-    rig.svc.activate(pid, environment="staging", reason="go", actor_user_id=rig.c)
+    rig.svc.activate(pid, reason="go", actor_user_id=rig.c)
     snap = governed.current()
     assert snap and snap.version_public_id == pid
     assert M.model_id(M.ModelProfile.FAST) == C.slug_for("terra") and M.model_id(M.ModelProfile.ADVANCED) == C.slug_for("sol")
@@ -194,7 +194,7 @@ def test_governed_snapshot_changes_slug_and_tunables_only(rig):
 
 def test_resolver_fails_closed_on_every_integrity_problem(rig):
     pid = rig.approved()
-    rig.svc.activate(pid, environment="staging", reason="go", actor_user_id=rig.c)
+    rig.svc.activate(pid, reason="go", actor_user_id=rig.c)
     assert rig.resolver().version_public_id == pid
     with sf(rig.env)() as s:
         v = s.scalar(select(AIConfigVersion).where(AIConfigVersion.public_id == pid))
@@ -207,7 +207,7 @@ def test_resolver_fails_closed_on_every_integrity_problem(rig):
 
 def test_resolver_rejects_hand_edited_rows(rig):
     pid = rig.approved()
-    rig.svc.activate(pid, environment="staging", reason="go", actor_user_id=rig.c)
+    rig.svc.activate(pid, reason="go", actor_user_id=rig.c)
 
     def reset(**vals):
         with sf(rig.env)() as s:
@@ -234,10 +234,13 @@ def test_resolver_survives_missing_tables_and_caches():
     assert bad.loads == n + 1
 
 
-def test_environment_mapping():
-    assert environment_name("production") == "production"
-    for e in ("staging", "development", "test", "", "anything"):
-        assert environment_name(e or "development") == "staging"
+def test_environment_vocabulary_is_server_authoritative_and_fails_closed():
+    assert environment_name("production") == environment_name("prod") == "production"
+    assert environment_name("staging") == "staging"
+    for dev in ("development", "dev", "local", "test", "testing"):
+        assert environment_name(dev) == "development"
+    for unknown in ("anything", "qa", "preprod", "stagingg", "Production2"):
+        assert environment_name(unknown) is None                         # never staging, never production
 
 
 def test_resolver_cache_serves_many_calls_with_one_query(rig):
@@ -273,7 +276,7 @@ def test_happy_path_lifecycle_and_hash_attribution(rig):
     assert ap["content_hash"] == detail["content_hash"]
     rig.svc.decide_approval(ap["public_id"], approve=True, reason="ok", actor_user_id=rig.c)
     assert rig.state(pid) == "approved"
-    act = rig.svc.activate(pid, environment="staging", reason="go", actor_user_id=rig.c)
+    act = rig.svc.activate(pid, reason="go", actor_user_id=rig.c)
     assert act["open"] and act["content_hash"] == detail["content_hash"]
 
 
@@ -311,7 +314,7 @@ def test_cannot_approve_or_activate_without_a_passed_evaluation(rig):
     with pytest.raises(AIConflict):
         rig.svc.request_approval(d["public_id"], reason="r", actor_user_id=rig.b)
     with pytest.raises(AIConflict):
-        rig.svc.activate(d["public_id"], environment="staging", reason="r", actor_user_id=rig.c)
+        rig.svc.activate(d["public_id"], reason="r", actor_user_id=rig.c)
 
 
 def test_failed_evaluation_blocks_the_path(rig):
@@ -327,7 +330,7 @@ def test_evaluation_bound_to_hash_blocks_after_tampering(rig):
     ap = rig.svc.request_approval(pid, reason="r", actor_user_id=rig.b)
     with sf(rig.env)() as s:
         v = s.scalar(select(AIConfigVersion).where(AIConfigVersion.public_id == pid))
-        t = copy.deepcopy(v.config_json); t["operations"]["final_response"]["max_retries"] = 3
+        t = copy.deepcopy(v.config_json); t["operations"]["evaluation"]["max_retries"] = 3
         s.execute(update(AIConfigVersion).where(AIConfigVersion.id == v.id).values(config_json=t)); s.commit()
     with pytest.raises(AIConflict):
         rig.svc.decide_approval(ap["public_id"], approve=True, reason="ok", actor_user_id=rig.c)
@@ -387,7 +390,7 @@ def test_one_pending_approval_and_rejection_is_terminal(rig):
     with pytest.raises(AIConflict):
         rig.svc.decide_approval(ap["public_id"], approve=True, reason="ok", actor_user_id=rig.c)
     with pytest.raises(AIConflict):
-        rig.svc.activate(pid, environment="staging", reason="go", actor_user_id=rig.c)
+        rig.svc.activate(pid, reason="go", actor_user_id=rig.c)
 
 
 def test_activation_rechecks_the_distinct_approver_from_stored_facts(rig):
@@ -397,7 +400,7 @@ def test_activation_rechecks_the_distinct_approver_from_stored_facts(rig):
         s.execute(update(AIConfigApproval).where(AIConfigApproval.config_version_id == v.id).values(decided_by_user_id=v.created_by_user_id, requested_by_user_id=rig.b))
         s.commit()
     with pytest.raises(AIForbidden):
-        rig.svc.activate(pid, environment="staging", reason="go", actor_user_id=rig.c)
+        rig.svc.activate(pid, reason="go", actor_user_id=rig.c)
     rig.resolver.invalidate()
     assert rig.resolver() is None
 
@@ -411,23 +414,105 @@ def test_there_is_no_bypass_or_force_in_the_service_surface():
 
 # ---------------- activation / environments / rollback ----------------------------------------------------------------------
 
-def test_production_requires_prior_staging_activation(rig):
+def svc_for(env, environment):
+    """A service for another deployment environment over the SAME database (as a staging and a production process sharing a control plane)."""
+    return AIConfigService(sf(env), jobs=JobService(sf(env)), resolver=None, environment=environment)
+
+
+def test_production_requires_prior_staging_activation_of_the_same_hash(env, rig):
     pid = rig.approved()
+    prod = svc_for(env, "production")
     with pytest.raises(AIConflict):
-        rig.svc.activate(pid, environment="production", reason="go", actor_user_id=rig.c)
-    rig.svc.activate(pid, environment="staging", reason="go", actor_user_id=rig.c)
-    out = rig.svc.activate(pid, environment="production", reason="promote", actor_user_id=rig.c)
+        prod.activate(pid, reason="go", actor_user_id=rig.c)                  # no staging record at all
+    rig.svc.activate(pid, reason="stage", actor_user_id=rig.c)                # this rig is a STAGING process
+    out = prod.activate(pid, reason="promote", actor_user_id=rig.c)
     assert out["environment"] == "production"
-    envs = {e["environment"]: e for e in rig.svc.environments()["items"]}
-    assert envs["staging"]["mode"] == envs["production"]["mode"] == "governed"
+    envs = {e["environment"]: e for e in prod.environments()["items"]}
+    assert envs["staging"]["mode"] == envs["production"]["mode"] == "governed" and envs["development"]["mode"] == "code_defaults"
+    with sf(env)() as s:                                                      # a tampered hash on the staging record does not satisfy promotion
+        s.execute(update(AIConfigActivation).where(AIConfigActivation.environment == "staging").values(config_hash="0" * 64)); s.commit()
+        s.execute(update(AIConfigActivation).where(AIConfigActivation.environment == "production").values(deactivated_at=text("CURRENT_TIMESTAMP"))); s.commit()
+    with pytest.raises(AIConflict):
+        prod.activate(pid, reason="again", actor_user_id=rig.c)
+
+
+def test_development_activation_is_not_staging_evidence_and_cannot_touch_production(env):
+    r = Rig(env, environment="development")
+    pid = r.approved()
+    assert r.svc.activate(pid, reason="dev", actor_user_id=r.c)["environment"] == "development"
+    prod = svc_for(env, "production")
+    with pytest.raises(AIConflict):
+        prod.activate(pid, reason="promote", actor_user_id=r.c)               # a development activation does not satisfy promotion
+    with sf(env)() as s:
+        assert [a.environment for a in s.scalars(select(AIConfigActivation)).all()] == ["development"]
+    uninstall_resolver()
+
+
+def test_test_environment_alias_is_development_not_staging(env):
+    assert environment_name("test") == "development"
+    r = Rig(env, environment=environment_name("test"))
+    pid = r.approved()
+    r.svc.activate(pid, reason="t", actor_user_id=r.c)
+    with pytest.raises(AIConflict):
+        svc_for(env, "production").activate(pid, reason="p", actor_user_id=r.c)
+    uninstall_resolver()
+
+
+def test_staging_process_activates_only_staging_and_cannot_write_production(env, rig):
+    pid = rig.approved()
+    assert rig.svc.activate(pid, reason="s", actor_user_id=rig.c)["environment"] == "staging"
+    with sf(env)() as s:
+        assert [a.environment for a in s.scalars(select(AIConfigActivation)).all()] == ["staging"]
+    import inspect
+    assert "environment" not in inspect.signature(AIConfigService.activate).parameters
+    assert "environment" not in inspect.signature(AIConfigService.rollback).parameters
+
+
+def test_production_process_cannot_fabricate_staging_evidence(env):
+    r = Rig(env, environment="production")
+    pid = r.approved()
+    with pytest.raises(AIConflict):
+        r.svc.activate(pid, reason="p", actor_user_id=r.c)
+    with sf(env)() as s:
+        assert s.scalars(select(AIConfigActivation)).all() == []
+    uninstall_resolver()
+
+
+def test_unknown_environment_fails_closed(env):
+    r = Rig(env, environment=None)
+    assert r.resolver.environment is None
+    pid = r.approved()
+    with pytest.raises(AIConflict):
+        r.svc.activate(pid, reason="x", actor_user_id=r.c)
+    with pytest.raises(AIConflict):
+        r.svc.rollback(to_code=True, reason="x", actor_user_id=r.c)
+    assert r.resolver() is None and r.resolver.last_error == "unsupported_environment"
+    assert runtime_view(r.resolver)["environment"] == "unsupported"
+    uninstall_resolver()
+
+
+def test_browser_cannot_choose_the_environment(env):
+    r = Rig(env, environment="development")
+    _, plat = env.user("platform_admin"); _, b = env.user("platform_admin"); _, c3 = env.user("platform_admin")
+    d = env.c.post(f"{API}/admin/ai/configs", json={"name": "x"}, cookies=plat).json()
+    pid = d["public_id"]
+    env.c.post(f"{API}/admin/ai/configs/{pid}/validate", cookies=plat); env.c.post(f"{API}/admin/ai/configs/{pid}/evaluate", cookies=plat); r.drain()
+    ap = env.c.post(f"{API}/admin/ai/configs/{pid}/request-approval", json={"reason": "r"}, cookies=b).json()
+    env.c.post(f"{API}/admin/ai/approvals/{ap['public_id']}/approve", json={"reason": "ok"}, cookies=c3)
+    for body in ({"environment": "production", "reason": "go"}, {"environment": "staging", "reason": "go"}):
+        assert env.c.post(f"{API}/admin/ai/configs/{pid}/activate", json=body, cookies=c3).status_code == 422       # the field does not exist
+    assert env.c.post(f"{API}/admin/ai/environments/production/rollback", json={"reason": "x"}, cookies=c3).status_code == 404
+    act = env.c.post(f"{API}/admin/ai/configs/{pid}/activate", json={"reason": "go"}, cookies=c3).json()
+    assert act["environment"] == "development"                                                                          # the server's own environment
+    uninstall_resolver()
 
 
 def test_one_open_activation_per_environment_and_history_is_append_only(rig):
     p1 = rig.approved(); p2 = rig.approved(cfg(fast="terra"))
-    rig.svc.activate(p1, environment="staging", reason="a", actor_user_id=rig.c)
+    rig.svc.activate(p1, reason="a", actor_user_id=rig.c)
     with pytest.raises(AIConflict):
-        rig.svc.activate(p1, environment="staging", reason="again", actor_user_id=rig.c)
-    rig.svc.activate(p2, environment="staging", reason="b", actor_user_id=rig.c)
+        rig.svc.activate(p1, reason="again", actor_user_id=rig.c)
+    rig.svc.activate(p2, reason="b", actor_user_id=rig.c)
     hist = rig.svc.history(environment="staging")["items"]
     assert [h["open"] for h in hist] == [True, False] and hist[1]["version"] < hist[0]["version"]
     with sf(rig.env)() as s, pytest.raises(IntegrityError):
@@ -436,50 +521,52 @@ def test_one_open_activation_per_environment_and_history_is_append_only(rig):
 
 def test_rollback_to_previous_then_to_code_defaults(rig):
     p1 = rig.approved(); p2 = rig.approved(cfg(fast="terra"))
-    rig.svc.activate(p1, environment="staging", reason="a", actor_user_id=rig.c)
-    rig.svc.activate(p2, environment="staging", reason="b", actor_user_id=rig.c)
+    rig.svc.activate(p1, reason="a", actor_user_id=rig.c)
+    rig.svc.activate(p2, reason="b", actor_user_id=rig.c)
     assert governed.current().version_public_id == p2
     assert M.model_id(M.ModelProfile.FAST) == C.slug_for("terra")
-    back = rig.svc.rollback("staging", to_code=False, reason="bad", actor_user_id=rig.c)
+    back = rig.svc.rollback(to_code=False, reason="bad", actor_user_id=rig.c)
     assert back["kind"] == "rollback" and back["version_ref"] == p1
     assert governed.current().version_public_id == p1
     assert M.model_id(M.ModelProfile.FAST) == C.slug_for("luna")
-    rig.svc.rollback("staging", to_code=True, reason="off", actor_user_id=rig.c)
+    rig.svc.rollback(to_code=True, reason="off", actor_user_id=rig.c)
     assert governed.current() is None
     assert M.model_id(M.ModelProfile.FAST) == M.code_model_id(M.ModelProfile.FAST)
     with pytest.raises(AIConflict):
-        rig.svc.rollback("staging", to_code=True, reason="again", actor_user_id=rig.c)
+        rig.svc.rollback(to_code=True, reason="again", actor_user_id=rig.c)
 
 
 def test_rollback_without_earlier_activation_and_retired_target(rig):
     p1 = rig.approved()
-    rig.svc.activate(p1, environment="staging", reason="a", actor_user_id=rig.c)
+    rig.svc.activate(p1, reason="a", actor_user_id=rig.c)
     with pytest.raises(AIConflict):
-        rig.svc.rollback("staging", to_code=False, reason="x", actor_user_id=rig.c)
+        rig.svc.rollback(to_code=False, reason="x", actor_user_id=rig.c)
     p2 = rig.approved(cfg(fast="terra"))
-    rig.svc.activate(p2, environment="staging", reason="b", actor_user_id=rig.c)
+    rig.svc.activate(p2, reason="b", actor_user_id=rig.c)
     rig.svc.retire(p1, reason="old", actor_user_id=rig.a)
     with pytest.raises(AIConflict):
-        rig.svc.rollback("staging", to_code=False, reason="x", actor_user_id=rig.c)
+        rig.svc.rollback(to_code=False, reason="x", actor_user_id=rig.c)
 
 
 def test_retire_rules(rig):
     pid = rig.approved()
-    rig.svc.activate(pid, environment="staging", reason="a", actor_user_id=rig.c)
+    rig.svc.activate(pid, reason="a", actor_user_id=rig.c)
     with pytest.raises(AIConflict):
         rig.svc.retire(pid, reason="x", actor_user_id=rig.a)
-    rig.svc.rollback("staging", to_code=True, reason="off", actor_user_id=rig.c)
+    rig.svc.rollback(to_code=True, reason="off", actor_user_id=rig.c)
     assert rig.svc.retire(pid, reason="done", actor_user_id=rig.a)["state"] == "retired"
     with pytest.raises(AIConflict):
-        rig.svc.activate(pid, environment="staging", reason="a", actor_user_id=rig.c)
+        rig.svc.activate(pid, reason="a", actor_user_id=rig.c)
 
 
-def test_production_environment_resolver_ignores_staging_activation(env):
-    r = Rig(env, environment="production")
-    pid = r.approved(cfg(fast="terra"))
-    r.svc.activate(pid, environment="staging", reason="a", actor_user_id=r.c)
-    assert governed.current() is None                                   # this process is production
-    r.svc.activate(pid, environment="production", reason="p", actor_user_id=r.c)
+def test_production_process_resolves_only_a_production_activation(env):
+    st = Rig(env, environment="staging")
+    pid = st.approved(cfg(fast="terra"))
+    st.svc.activate(pid, reason="a", actor_user_id=st.c)
+    uninstall_resolver()
+    prod = Rig(env, environment="production")
+    assert governed.current() is None                                   # a staging activation never governs a production process
+    prod.svc.activate(pid, reason="p", actor_user_id=prod.c)
     assert governed.current().version_public_id == pid
     uninstall_resolver()
 
@@ -494,9 +581,7 @@ def test_invalid_inputs_and_unknown_ids(rig):
                              base_version_id=None, actor_user_id=rig.a)
     pid = rig.approved()
     with pytest.raises(AIValidationError):
-        rig.svc.activate(pid, environment="dev", reason="x", actor_user_id=rig.c)
-    with pytest.raises(AIValidationError):
-        rig.svc.activate(pid, environment="staging", reason="", actor_user_id=rig.c)
+        rig.svc.activate(pid, reason="", actor_user_id=rig.c)
 
 
 # ---------------- evaluator ------------------------------------------------------------------------------------------------
@@ -562,7 +647,7 @@ def test_governed_activation_does_not_change_interview_slugs_or_candidate_bounda
     from src.application.agent_service import _resolve_profile
     approved_before = dict(constants.APPROVED_MODELS)
     pid = rig.approved(cfg(fast="terra"))
-    rig.svc.activate(pid, environment="staging", reason="a", actor_user_id=rig.c)
+    rig.svc.activate(pid, reason="a", actor_user_id=rig.c)
     assert dict(constants.APPROVED_MODELS) == approved_before
     for p in M.ModelProfile:
         assert M.effective_interview_profile(M.code_model_id(p)) is p
@@ -589,7 +674,7 @@ def test_billing_entitlement_and_integration_tables_untouched_by_activation(rig)
     with sf(rig.env)() as s:
         before = [(x.id, x.plan_version_id) for x in s.scalars(select(Subscription)).all()]
     pid = rig.approved()
-    rig.svc.activate(pid, environment="staging", reason="a", actor_user_id=rig.c)
+    rig.svc.activate(pid, reason="a", actor_user_id=rig.c)
     with sf(rig.env)() as s:
         assert [(x.id, x.plan_version_id) for x in s.scalars(select(Subscription)).all()] == before
 
@@ -606,8 +691,8 @@ def test_every_lifecycle_step_is_audited_with_safe_context(env):
     r.drain()
     ap = env.c.post(f"{API}/admin/ai/configs/{pid}/request-approval", json={"reason": "ok"}, cookies=cb).json()
     assert env.c.post(f"{API}/admin/ai/approvals/{ap['public_id']}/approve", json={"reason": "ok"}, cookies=cc).status_code == 200
-    assert env.c.post(f"{API}/admin/ai/configs/{pid}/activate", json={"environment": "staging", "reason": "go"}, cookies=cc).status_code == 201
-    assert env.c.post(f"{API}/admin/ai/environments/staging/rollback", json={"reason": "off", "to_code": True}, cookies=cc).status_code == 201
+    assert env.c.post(f"{API}/admin/ai/configs/{pid}/activate", json={"reason": "go"}, cookies=cc).status_code == 201
+    assert env.c.post(f"{API}/admin/ai/rollback", json={"reason": "off", "to_code": True}, cookies=cc).status_code == 201
     for ev in (A.ADMIN_AI_CONFIG_CREATED, A.ADMIN_AI_CONFIG_VALIDATED, A.ADMIN_AI_EVALUATION_REQUESTED, A.ADMIN_AI_EVALUATION_COMPLETED,
                A.ADMIN_AI_APPROVAL_REQUESTED, A.ADMIN_AI_APPROVED, A.ADMIN_AI_ACTIVATED, A.ADMIN_AI_ROLLED_BACK):
         rows = env.events(ev)
@@ -668,7 +753,7 @@ def test_api_self_approval_is_403_and_unknown_environment_422(env):
     r.drain()
     ap = env.c.post(f"{API}/admin/ai/configs/{pid}/request-approval", json={"reason": "ok"}, cookies=ca).json()
     assert env.c.post(f"{API}/admin/ai/approvals/{ap['public_id']}/approve", json={"reason": "ok"}, cookies=ca).status_code == 403
-    assert env.c.post(f"{API}/admin/ai/configs/{pid}/activate", json={"environment": "staging", "reason": "go"}, cookies=ca).status_code == 409
+    assert env.c.post(f"{API}/admin/ai/configs/{pid}/activate", json={"reason": "go"}, cookies=ca).status_code == 409
     assert env.c.post(f"{API}/admin/ai/configs/{pid}/activate", json={"environment": "qa", "reason": "go"}, cookies=ca).status_code in (409, 422)
     uninstall_resolver()
 

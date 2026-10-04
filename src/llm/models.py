@@ -41,6 +41,7 @@ __all__ = [
     "recommended_profile",
     "effective_interview_profile",
     "profile_for_model",
+    "known_profile_for_slug",
     "legacy_synonyms",
     "supports_temperature",
     "supports_tools",
@@ -278,6 +279,23 @@ def profile_for_model(model_slug: str | None) -> ModelProfile:
     if "mini" in s:
         return ModelProfile.BALANCED
     return ModelProfile.BALANCED
+
+
+def known_profile_for_slug(model_slug: str | None) -> ModelProfile | None:
+    """The profile a KNOWN slug (code default, current code/env slug or a legacy app slug) stands for, else None.
+
+    Unlike :func:`profile_for_model` there is NO fallback: an arbitrary or unknown provider string never becomes a profile, so it can never be
+    trusted merely because it looks like a model name.
+    """
+    if not model_slug:
+        return None
+    for profile in ModelProfile:
+        if model_slug in (_DEFAULT_SLUG[profile], code_model_id(profile)):
+            return profile
+    for profile, legacy in _LEGACY_PROFILE.items():
+        if model_slug in legacy:
+            return profile
+    return None
 
 
 def legacy_synonyms() -> dict[str, str]:

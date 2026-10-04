@@ -235,7 +235,7 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
     if (path.endsWith("/admin/ai/code-defined")) return json({ operations: [{ operation: "orchestration", capability: "tool_calling", min_capability: "balanced", fallback_floor: "balanced", structured_output: false, requires_tools: true, tunable: true, deterministic: false, realtime: false, code_values: {} },
       { operation: "specialist_evidence_analysis", capability: "none", min_capability: "fast", fallback_floor: "fast", structured_output: false, requires_tools: false, tunable: false, deterministic: true, realtime: false, code_values: {} }], tunable_fields: {}, note: "Code-defined." });
     if (path.endsWith("/admin/ai/runtime")) return json(ai.runtime());
-    if (path.endsWith("/admin/ai/environments")) return json({ note: "With nothing active an environment uses the code-defined registry.", items: ["staging", "production"].map((env) => ({ environment: env, mode: ai.governedIn(env) ? "governed" : "code_defaults",
+    if (path.endsWith("/admin/ai/environments")) return json({ note: "With nothing active an environment uses the code-defined registry.", this_environment: "staging", items: ["staging"].map((env) => ({ environment: env, mode: ai.governedIn(env) ? "governed" : "code_defaults",
       active: ai.governedIn(env) ? { public_id: "f".repeat(32), environment: env, kind: "activate", version_ref: AI_ID, version: 1, content_hash: ai.hash(), activated_by_email: "second@example.com", activated_at: null, deactivated_at: null, reason: "go", open: true } : null,
       version: ai.governedIn(env) ? ai.summary() : null, profiles: ai.runtime().profiles })) });
     if (path.endsWith("/admin/ai/history")) return json({ items: ai.stagingEver ? [{ public_id: "f".repeat(32), environment: "staging", kind: ai.reverted ? "revert_to_code" : "activate", version_ref: ai.reverted ? null : AI_ID, version: ai.reverted ? null : 1, content_hash: null, activated_by_email: "second@example.com", activated_at: null, deactivated_at: null, reason: "go", open: true }] : [], total: 1, page: 1, page_size: 50 });
@@ -245,11 +245,10 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
     if (/\/admin\/ai\/configs\/[^/]+\/evaluate$/.test(path) && method === "POST") { ai.evalQueued = true; return json(ai.detail().evaluations[0], 202); }
     if (/\/admin\/ai\/configs\/[^/]+\/request-approval$/.test(path) && method === "POST") { ai.approvalRequested = true; return json(ai.detail().approvals[0], 201); }
     if (/\/admin\/ai\/configs\/[^/]+\/activate$/.test(path) && method === "POST") {
-      const b = JSON.parse(route.request().postData() ?? "{}");
-      if (b.environment === "staging") { ai.staging = true; ai.stagingEver = true; ai.reverted = false; } else ai.production = true;
-      return json({ public_id: "f".repeat(32), environment: b.environment, kind: "activate", version_ref: AI_ID, version: 1, content_hash: ai.hash(), activated_by_email: "second@example.com", activated_at: null, deactivated_at: null, reason: "go", open: true }, 201);
+      ai.staging = true; ai.stagingEver = true; ai.reverted = false;                                      // the server decides the environment
+      return json({ public_id: "f".repeat(32), environment: "staging", kind: "activate", version_ref: AI_ID, version: 1, content_hash: ai.hash(), activated_by_email: "second@example.com", activated_at: null, deactivated_at: null, reason: "go", open: true }, 201);
     }
-    if (/\/admin\/ai\/environments\/[^/]+\/rollback$/.test(path) && method === "POST") { ai.staging = false; ai.production = false; ai.reverted = true;
+    if (path.endsWith("/admin/ai/rollback") && method === "POST") { ai.staging = false; ai.production = false; ai.reverted = true;
       return json({ public_id: "g".repeat(32), environment: "staging", kind: "revert_to_code", version_ref: null, version: null, content_hash: null, activated_by_email: "second@example.com", activated_at: null, deactivated_at: null, reason: "off", open: true }, 201); }
     if (/\/admin\/ai\/configs\/[^/]+$/.test(path) && method === "PATCH") { const b = JSON.parse(route.request().postData() ?? "{}"); ai.retries = b.settings?.operations?.orchestration?.max_retries ?? ai.retries; return json(ai.detail()); }
     if (/\/admin\/ai\/configs\/[^/]+$/.test(path)) return json(ai.detail());
@@ -712,7 +711,7 @@ test("unauthenticated access to admin is redirected to sign-in", async ({ page }
   await expect(page).toHaveURL(/\/sign-in/);
 });
 
-test("W10.7: AI administration: code defaults, draft, validate, evaluate (worker), no self-approval, second admin approves, staging then production, runtime diagnostic, rollback", async ({ page }) => {
+test("W10.7: AI administration: code defaults, draft, validate, evaluate (worker), no self-approval, second admin approves, this server's environment only, rollback", async ({ page }) => {
   Object.assign(ai, { created: false, state: "draft", retries: 2, evalQueued: false, approvalRequested: false, staging: false, production: false, stagingEver: false, reverted: false });
   currentUid = 1;
   await mockAdmin(page, "platform_admin", ADMIN_PERMS);
@@ -749,7 +748,7 @@ test("W10.7: AI administration: code defaults, draft, validate, evaluate (worker
   await page.getByRole("alertdialog").getByRole("button", { name: "Submit for approval" }).click();
   await expect(page.getByText(/must decide this request/)).toBeVisible();                           // the requester cannot self-approve
   await expect(page.getByRole("button", { name: "Approve" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Activate in staging" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Activate in/ })).toHaveCount(0);
 
   await page.unroute("**/api/v1/**");
   currentUid = 2;                                                                                    // a different qualified administrator
@@ -762,16 +761,12 @@ test("W10.7: AI administration: code defaults, draft, validate, evaluate (worker
   await page.getByRole("alertdialog").getByLabel(/Reason/).fill("Looks right");
   await page.getByRole("alertdialog").getByRole("button", { name: "Approve" }).click();
   await expect(page.getByText(/Approved\. It is not active/)).toBeVisible();
-  await expect(page.getByRole("button", { name: "Activate in production" })).toBeDisabled();         // staging first
+  await expect(page.getByRole("button", { name: /Activate in production/ })).toHaveCount(0);        // this server is staging; the browser cannot target production
+  await expect(page.getByRole("combobox", { name: /environment/i })).toHaveCount(0);
   await page.getByRole("button", { name: "Activate in staging" }).click();
   await page.getByRole("alertdialog").getByLabel(/Reason/).fill("Roll out to staging");
-  await page.getByRole("alertdialog").getByRole("button", { name: "Activate in staging" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Activate", exact: true }).click();
   await expect(page.getByText("Active in staging.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Activate in production" })).toBeEnabled();
-  await page.getByRole("button", { name: "Activate in production" }).click();
-  await page.getByRole("alertdialog").getByLabel(/Reason/).fill("Promote");
-  await page.getByRole("alertdialog").getByRole("button", { name: "Activate in production" }).click();
-  await expect(page.getByText("Active in production.")).toBeVisible();
 
   await page.goto("/admin/ai");
   await expect(page.getByText("Governed configuration", { exact: true }).first()).toBeVisible();

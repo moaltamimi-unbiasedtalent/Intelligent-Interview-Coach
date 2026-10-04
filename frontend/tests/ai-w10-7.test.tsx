@@ -50,7 +50,7 @@ beforeEach(() => {
     { operation: "orchestration", capability: "tool_calling", min_capability: "balanced", fallback_floor: "balanced", structured_output: false, requires_tools: true, tunable: true, deterministic: false, realtime: false, code_values: {} },
     { operation: "specialist_evidence_analysis", capability: "none", min_capability: "fast", fallback_floor: "fast", structured_output: false, requires_tools: false, tunable: false, deterministic: true, realtime: false, code_values: {} },
     { operation: "realtime_voice", capability: "realtime", min_capability: "balanced", fallback_floor: "balanced", structured_output: false, requires_tools: false, tunable: false, deterministic: false, realtime: true, code_values: {} }], tunable_fields: {}, note: "Code-defined." });
-  f.envs.mockResolvedValue({ note: "n", items: [{ environment: "staging", mode: "code_defaults", active: null, version: null, profiles: RUNTIME().profiles }, { environment: "production", mode: "code_defaults", active: null, version: null, profiles: RUNTIME().profiles }] });
+  f.envs.mockResolvedValue({ note: "n", this_environment: "staging", items: [{ environment: "staging", mode: "code_defaults", active: null, version: null, profiles: RUNTIME().profiles }, { environment: "production", mode: "code_defaults", active: null, version: null, profiles: RUNTIME().profiles }] });
   f.hist.mockResolvedValue(page([])); f.apprs.mockResolvedValue(page([])); f.cfgs.mockResolvedValue(page([SUMMARY()])); f.cfg.mockResolvedValue(DETAIL());
   f.create.mockResolvedValue(DETAIL()); f.update.mockResolvedValue(DETAIL()); f.validate.mockResolvedValue(DETAIL({ state: "validated" })); f.evaluate.mockResolvedValue({});
   f.reqAppr.mockResolvedValue({}); f.decide.mockResolvedValue({}); f.activate.mockResolvedValue({}); f.rollback.mockResolvedValue({}); f.retire.mockResolvedValue({});
@@ -82,7 +82,7 @@ describe("Admin AI overview", () => {
 
   it("a read-only role sees no create or rollback controls", async () => {
     mockPerms = ["platform.ai.read"];
-    f.envs.mockResolvedValue({ note: "n", items: [{ environment: "staging", mode: "governed", active: null, version: SUMMARY({ state: "approved" }), profiles: RUNTIME().profiles }] });
+    f.envs.mockResolvedValue({ note: "n", this_environment: "staging", items: [{ environment: "staging", mode: "governed", active: null, version: SUMMARY({ state: "approved" }), profiles: RUNTIME().profiles }] });
     render(<AIView />);
     await screen.findByText("Configuration versions");
     expect(screen.queryByRole("button", { name: "Create draft" })).not.toBeInTheDocument();
@@ -104,7 +104,7 @@ describe("Admin AI overview", () => {
   });
 
   it("rollback requires a reason and revert is explicit", async () => {
-    f.envs.mockResolvedValue({ note: "n", items: [{ environment: "staging", mode: "governed", active: { public_id: "f", environment: "staging", kind: "activate", version_ref: "c".repeat(32), version: 1, content_hash: null, activated_by_email: null, activated_at: null, deactivated_at: null, reason: "", open: true },
+    f.envs.mockResolvedValue({ note: "n", this_environment: "staging", items: [{ environment: "staging", mode: "governed", active: { public_id: "f", environment: "staging", kind: "activate", version_ref: "c".repeat(32), version: 1, content_hash: null, activated_by_email: null, activated_at: null, deactivated_at: null, reason: "", open: true },
       version: SUMMARY({ state: "approved", active_in: ["staging"] }), profiles: RUNTIME().profiles }] });
     render(<AIView />);
     await userEvent.click(await screen.findByRole("button", { name: "Revert staging to code defaults" }));
@@ -114,7 +114,7 @@ describe("Admin AI overview", () => {
     expect(f.rollback).not.toHaveBeenCalled();
     await userEvent.type(within(dlg).getByLabelText(/Reason/), "back");
     await userEvent.click(within(dlg).getByRole("button", { name: "Revert to code defaults" }));
-    await waitFor(() => expect(f.rollback).toHaveBeenCalledWith("staging", true, "back"));
+    await waitFor(() => expect(f.rollback).toHaveBeenCalledWith(true, "back"));
   });
 });
 
@@ -165,12 +165,39 @@ describe("Admin AI configuration detail", () => {
     expect(screen.queryByRole("button", { name: "Approve" })).not.toBeInTheDocument();
   });
 
-  it("activation: only approved configs; production is disabled until staging has run", async () => {
+  it("activation targets only this server's environment; there is no environment chooser", async () => {
     f.cfg.mockResolvedValue(DETAIL({ state: "approved" }));
     render(<AIConfigDetailView id={"c".repeat(32)} />);
-    expect(await screen.findByRole("button", { name: "Activate in staging" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Activate in production" })).toBeDisabled();
-    expect(screen.getByText(/Production needs a prior staging activation/)).toBeInTheDocument();
+    const btn = await screen.findByRole("button", { name: "Activate in staging" });
+    expect(btn).toBeEnabled();
+    expect(screen.queryByRole("button", { name: /Activate in production/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: /environment/i })).not.toBeInTheDocument();
+    await userEvent.click(btn);
+    const dlg = await screen.findByRole("alertdialog");
+    await userEvent.type(within(dlg).getByLabelText(/Reason/), "go");
+    await userEvent.click(within(dlg).getByRole("button", { name: "Activate" }));
+    await waitFor(() => expect(f.activate).toHaveBeenCalledWith("c".repeat(32), "go"));
+  });
+
+  it("production is disabled until the exact version has a staging activation; development does not count", async () => {
+    f.envs.mockResolvedValue({ note: "n", this_environment: "production", items: [] });
+    const dev = { public_id: "f", environment: "development", kind: "activate", config_version_id: "c".repeat(32), version: 1, content_hash: null, activated_by_email: null, activated_at: null, deactivated_at: null, reason: "", open: false };
+    f.cfg.mockResolvedValue(DETAIL({ state: "approved", activations: [dev] }));
+    const { unmount } = render(<AIConfigDetailView id={"c".repeat(32)} />);
+    expect(await screen.findByRole("button", { name: "Activate in production" })).toBeDisabled();
+    expect(screen.getByText(/A development activation does not count/)).toBeInTheDocument();
+    unmount();
+    f.cfg.mockResolvedValue(DETAIL({ state: "approved", activations: [{ ...dev, environment: "staging" }] }));
+    render(<AIConfigDetailView id={"c".repeat(32)} />);
+    await waitFor(() => expect(screen.getByRole("button", { name: "Activate in production" })).toBeEnabled());
+  });
+
+  it("an unrecognised deployment environment disables activation", async () => {
+    f.envs.mockResolvedValue({ note: "n", this_environment: "unsupported", items: [] });
+    f.cfg.mockResolvedValue(DETAIL({ state: "approved" }));
+    render(<AIConfigDetailView id={"c".repeat(32)} />);
+    expect(await screen.findByRole("button", { name: "Activation unavailable" })).toBeDisabled();
+    expect(screen.getByText(/environment is not recognised/)).toBeInTheDocument();
   });
 
   it("an unapproved configuration offers no activation", async () => {

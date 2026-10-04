@@ -582,7 +582,7 @@ export interface AICatalogueEntry {
 export interface AICatalogue { version: string; items: AICatalogueEntry[]; note: string }
 export interface AICodeDefined {
   operations: { operation: string; capability: string; min_capability: string; fallback_floor: string; structured_output: boolean; requires_tools: boolean;
-    tunable: boolean; deterministic: boolean; realtime: boolean; code_values: Record<string, number> }[];
+    tunable: boolean; no_runtime_path?: boolean; deterministic: boolean; realtime: boolean; code_values: Record<string, number> }[];
   tunable_fields: Record<string, { min: number; max: number }>;
   note: string;
 }
@@ -611,6 +611,7 @@ export interface AIVersionDetail extends AIVersionSummary {
   evaluations: AIEvaluation[]; approvals: AIApproval[]; activations: AIActivation[]; latest_evaluation_passed: boolean;
 }
 export interface AIProfileResolution { catalogue_id: string | null; provider_slug: string; source: string }
+export interface AIEnvironments { items: AIEnvironment[]; this_environment: string; note: string }
 export interface AIEnvironment { environment: string; mode: string; active: AIActivation | null; version: AIVersionSummary | null; profiles: Record<string, AIProfileResolution> }
 export interface AIRuntime {
   environment: string; mode: string; active_version: number | null; content_hash: string | null; fallback_reason: string | null;

@@ -42,9 +42,21 @@ def build_structured_producer(
         )
     from src.copilot.llm.openrouter import CopilotConfigError, build_chat_model
 
+    # P10B-W10.7: governed STRUCTURED_GENERATION tunables (only when an active configuration changed them) reach the real chat model.
+    from src.llm.policy import ModelOperation
+    from src.llm.runtime import tunables
+
+    tuned = tunables(ModelOperation.STRUCTURED_GENERATION)
+    extra: dict = {}
+    if "timeout_s" in tuned:
+        extra["timeout_s"] = float(tuned["timeout_s"])
+    if "max_retries" in tuned:
+        extra["max_retries"] = int(tuned["max_retries"])
+    if "max_output_tokens" in tuned:
+        max_tokens = int(tuned["max_output_tokens"])
     try:
         chat_model = build_chat_model(
-            config, model=model, temperature=temperature, max_tokens=max_tokens
+            config, model=model, temperature=temperature, max_tokens=max_tokens, **extra
         )
     except CopilotConfigError as exc:
         raise ToolDependencyError(str(exc)) from exc

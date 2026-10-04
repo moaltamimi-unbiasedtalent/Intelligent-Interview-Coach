@@ -31,7 +31,7 @@ from src.persistence import (
 )
 
 JOB_EVALUATE = "ai_evaluate_config"
-ENVIRONMENTS = ("staging", "production")
+ENVIRONMENTS = ("development", "staging", "production")
 MAX_NAME, MAX_NOTES, MAX_REASON = 80, 300, 300
 EDITABLE = ("draft",)
 
@@ -64,7 +64,13 @@ def _text(value: Any, field: str, limit: int, *, required: bool) -> str:
 
 
 class AIConfigService:
-    def __init__(self, session_factory, *, jobs: Any = None, resolver: Any = None, clock: Callable[[], datetime] = utcnow) -> None:
+    def __init__(self, session_factory, *, jobs: Any = None, resolver: Any = None, environment: str | None = "from_process",
+                 clock: Callable[[], datetime] = utcnow) -> None:
+        # The activation environment is decided by the SERVER (API_ENV), never by a caller. Tests and fixtures may inject it. None = unsupported.
+        if environment == "from_process":
+            from src.ai_admin.resolver import environment_name
+            environment = environment_name()
+        self.environment = environment
         self._sf = session_factory
         self._jobs = jobs
         self._resolver = resolver
@@ -86,10 +92,10 @@ class AIConfigService:
 
         ops = []
         for op, p in OPERATION_POLICY.items():
-            tunable = p.capability not in (ModelCapability.NONE, ModelCapability.REALTIME)
+            tunable = op in K.TUNABLE_OPERATIONS
             ops.append({"operation": op.value, "capability": p.capability.value, "min_capability": p.min_capability.value,
                         "fallback_floor": p.fallback_floor.value, "structured_output": p.structured_output, "requires_tools": p.requires_tools,
-                        "tunable": tunable, "deterministic": p.capability is ModelCapability.NONE,
+                        "tunable": tunable, "no_runtime_path": not tunable and p.capability not in (ModelCapability.NONE, ModelCapability.REALTIME), "deterministic": p.capability is ModelCapability.NONE,
                         "realtime": p.capability is ModelCapability.REALTIME,
                         "code_values": {"max_output_tokens": p.max_output_tokens, "timeout_s": p.timeout_s, "max_retries": p.max_retries}})
         return {"operations": ops,
@@ -372,16 +378,23 @@ class AIConfigService:
             raise AIForbidden("The approval does not satisfy the distinct second approver rule.")
         return a
 
-    def activate(self, public_id: str, *, environment: str, reason, actor_user_id: int, audit: dict | None = None) -> dict:
-        if environment not in ENVIRONMENTS:
-            raise AIValidationError("Choose staging or production.")
+    def _target(self) -> str:
+        """The ONLY environment this process may activate: its own. An unrecognised API_ENV disables governed activation (fail closed)."""
+        if self.environment not in ENVIRONMENTS:
+            raise AIConflict("Governed activation is disabled: this deployment's environment is not recognised (development, staging or production).")
+        return self.environment
+
+    def activate(self, public_id: str, *, reason, actor_user_id: int, audit: dict | None = None) -> dict:
+        environment = self._target()
         reason = _text(reason, "A reason", MAX_REASON, required=True)
         now = self._clock()
         with self._sf() as s:
             v = self._load(s, public_id)
             approval = self._verify_activatable(s, v)
-            if environment == "production" and not s.scalar(select(ACT.id).where(ACT.environment == "staging", ACT.config_version_id == v.id)):
-                raise AIConflict("Activate this exact version in staging first. Production activation requires a prior staging activation.")
+            if environment == "production" and not s.scalar(select(ACT.id).where(ACT.environment == "staging", ACT.config_version_id == v.id,
+                                                                                  ACT.config_hash == v.config_hash)):
+                raise AIConflict("Activate this exact version in staging first. Production activation requires a prior STAGING activation of the same "
+                                 "content hash (a development activation does not count).")
             current = self._open(s, environment)
             if current is not None and current.config_version_id == v.id:
                 raise AIConflict("This version is already active in that environment.")
@@ -413,11 +426,10 @@ class AIConfigService:
         row = self._open(s, environment)
         return self._activation_view(row, s)
 
-    def rollback(self, environment: str, *, to_code: bool, reason, actor_user_id: int, audit: dict | None = None) -> dict:
+    def rollback(self, *, to_code: bool, reason, actor_user_id: int, audit: dict | None = None) -> dict:
         """Return an environment to its previous activated version, or to the code-defined defaults. Needs no new approval: only a version that
         was already approved and activated there can be restored, and it is re-verified like any activation."""
-        if environment not in ENVIRONMENTS:
-            raise AIValidationError("Choose staging or production.")
+        environment = self._target()
         reason = _text(reason, "A reason", MAX_REASON, required=True)
         now = self._clock()
         with self._sf() as s:
@@ -466,7 +478,8 @@ class AIConfigService:
                             "active": self._activation_view(row, s) if row else None,
                             "version": self._version_view(v, s) if v else None,
                             "profiles": resolve_profiles_for(v.config_json if v else None)})
-        return {"items": out, "note": "With nothing active an environment uses the code-defined registry (environment overrides, then code defaults)."}
+        return {"items": out, "this_environment": self.environment or "unsupported",
+                "note": "This server activates only its own environment. With nothing active an environment uses the code-defined registry (environment overrides, then code defaults)."}
 
     def history(self, *, environment: str | None = None, page: int = 1, page_size: int = 25) -> dict:
         page, page_size = _page(page, page_size)
