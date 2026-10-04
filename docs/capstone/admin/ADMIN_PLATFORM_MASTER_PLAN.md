@@ -225,7 +225,7 @@ via jobs, retention state, privacy incident log. No GDPR certification claim.
 DB-backed flags with scopes (global, environment, plan, account, workspace), default, fail-safe value, owner, audit; env flags remain the bootstrap default and a hard override. Pause switches move
 to the same store (durable, shared). No secrets in configuration. Rollout is on/off per scope (percentage rollouts post-Capstone).
 
-## 19. Reporting (W10.12: implemented on `feat/p10b-w10-12-reporting-analytics-ai-economics`; complete when merged; see `W10_12_REPORTING_ANALYTICS_AI_ECONOMICS.md`)
+## 19. Reporting (W10.12: COMPLETE, merged in PR #126, main `18eebed`; see `W10_12_REPORTING_ANALYTICS_AI_ECONOMICS.md`)
 Aggregates only, minimum cohort size, no content. Product (registrations, activation, onboarding, Opportunities, Prepare, Practice, completion, return), Quality (evaluator results, retrieval/abstention,
 feedback, errors), Operations (availability, latency, provider failures, ingestion health, ticket metrics), Commercial (subscriptions, up/downgrades, churn, MRR/ARR), AI economics (tokens, estimated cost per
 user/session/model, expensive workflows). **Instrumentation gaps (verified):** no active-user, registration-trend, error-rate, latency, provider-health, job or cross-user cost counters exist; usage is

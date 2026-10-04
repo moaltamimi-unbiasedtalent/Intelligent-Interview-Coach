@@ -19,7 +19,7 @@ documents are historical evidence and are labelled where they could be mistaken 
 | Opportunities | [capstone/p10/p10b_wave6_opportunity_model.md](capstone/p10/p10b_wave6_opportunity_model.md) |
 | Workspaces, sharing, current admin foundations | [capstone/p6_5_workspaces_platform_admin.md](capstone/p6_5_workspaces_platform_admin.md) |
 | Admin mock billing and payment administration (W10.5, complete) | [capstone/admin/W10_5_BILLING_PAYMENT_ADMINISTRATION.md](capstone/admin/W10_5_BILLING_PAYMENT_ADMINISTRATION.md) |
-| Admin reporting, analytics and AI economics (W10.12, implemented) | [capstone/admin/W10_12_REPORTING_ANALYTICS_AI_ECONOMICS.md](capstone/admin/W10_12_REPORTING_ANALYTICS_AI_ECONOMICS.md) |
+| Admin reporting, analytics and AI economics (W10.12, complete) | [capstone/admin/W10_12_REPORTING_ANALYTICS_AI_ECONOMICS.md](capstone/admin/W10_12_REPORTING_ANALYTICS_AI_ECONOMICS.md) |
 | Admin feature flags and safe platform configuration, durable pause (W10.11, complete) | [capstone/admin/W10_11_FEATURE_FLAGS_SAFE_PLATFORM_CONFIGURATION.md](capstone/admin/W10_11_FEATURE_FLAGS_SAFE_PLATFORM_CONFIGURATION.md) |
 | Admin AI and model administration (W10.7, complete) | [capstone/admin/W10_7_AI_MODEL_ADMINISTRATION.md](capstone/admin/W10_7_AI_MODEL_ADMINISTRATION.md) |
 | Admin privacy and legal administration (W10.10, complete) | [capstone/admin/W10_10_GDPR_PRIVACY_LEGAL_ADMINISTRATION.md](capstone/admin/W10_10_GDPR_PRIVACY_LEGAL_ADMINISTRATION.md) |
