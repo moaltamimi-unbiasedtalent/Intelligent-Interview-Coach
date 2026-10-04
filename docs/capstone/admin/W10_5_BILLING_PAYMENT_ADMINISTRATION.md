@@ -1,6 +1,6 @@
 # P10B-W10.5 - Billing & Payment Administration (MOCK BILLING ONLY)
 
-**Status:** implemented on branch `feat/p10b-w10-5-billing-payment-admin`; **complete when merged to `main`**. **W10.7 is NOT STARTED.**
+**Status:** COMPLETE. Merged in PR #123 (`8e33805`) with green CI. W10.7 (AI and model administration) follows.
 One additive migration (`0021_billing_admin`). No new dependency. 0 paid/live calls.
 
 **MOCK BILLING - NOT LIVE BILLING.** There is no live payment provider, no checkout, no payment-method collection, no card data, no tax engine, no real money movement. Every Admin API, screen and document says so.

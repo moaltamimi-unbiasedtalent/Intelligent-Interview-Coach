@@ -347,6 +347,11 @@ def resolve_policy(
 
     effective, capped = _clamp_up(profile, policy.min_capability)
     fallbacks = _fallback_chain(effective, policy.fallback_floor)
+    # P10B-W10.7: bounded numeric tunables from an ACTIVE governed configuration. Capability, floors, structured-output and tool flags
+    # are code-defined and never read from it; an absent override leaves the code policy untouched.
+    from src.llm import governed
+
+    tuned = governed.operation_override(op.value) or {}
     return ResolvedModelPolicy(
         operation=op,
         capability=policy.capability,
@@ -357,9 +362,9 @@ def resolve_policy(
         structured_output=policy.structured_output,
         requires_tools=policy.requires_tools,
         temperature=policy.temperature,
-        max_output_tokens=policy.max_output_tokens,
-        timeout_s=policy.timeout_s,
-        max_retries=policy.max_retries,
+        max_output_tokens=int(tuned.get("max_output_tokens", policy.max_output_tokens)),
+        timeout_s=float(tuned.get("timeout_s", policy.timeout_s)),
+        max_retries=int(tuned.get("max_retries", policy.max_retries)),
         fallback_profiles=fallbacks,
         fallback_model_ids=[model_id(p) for p in fallbacks],
         capability_capped=capped,

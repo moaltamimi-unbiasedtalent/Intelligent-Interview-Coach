@@ -39,6 +39,8 @@ export const P = {
   legalManage: "platform.legal.manage",
   knowledgeManage: "platform.knowledge.manage",
   knowledgeApprove: "platform.knowledge.approve",
+  aiManage: "platform.ai.manage",
+  aiActivate: "platform.ai.activate",
 } as const;
 
 export interface AdminDestination {
@@ -63,6 +65,7 @@ export const ADMIN_DESTINATIONS: readonly AdminDestination[] = [
   { id: "privacy", label: "Privacy", href: "/admin/privacy", description: "Privacy requests", anyOf: [P.privacyRead] },
   { id: "legal", label: "Legal", href: "/admin/legal", description: "Legal document versions", anyOf: [P.privacyRead] },
   { id: "knowledge", label: "Knowledge", href: "/admin/knowledge", description: "Governed knowledge sources", anyOf: [P.knowledge] },
+  { id: "ai", label: "AI and models", href: "/admin/ai", description: "Governed model configuration", anyOf: [P.ai] },
   { id: "jobs", label: "Jobs", href: "/admin/jobs", description: "Queue and worker diagnostics", anyOf: [P.jobsRead] },
   { id: "integrations", label: "Integrations", href: "/admin/integrations", description: "Connections and credentials", anyOf: [P.integrations] },
   { id: "providers", label: "Provider status", href: "/admin/providers", description: "Configuration status", anyOf: [P.integrations] },

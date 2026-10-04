@@ -446,7 +446,8 @@ def test_registry_is_code_defined_with_no_shell_or_arbitrary_handler():
     assert set(R.REGISTRY) == {"diagnostic_noop", "integration_connection_test",
                                "knowledge_parse", "knowledge_index", "knowledge_remove_index",   # W10.8 adds the knowledge types
                                "privacy_account_delete", "privacy_preparation_backfill", "privacy_preparation_purge",   # W10.10 the privacy types
-                               "billing_process_event", "billing_refund"}   # W10.5 the mock-billing types
+                               "billing_process_event", "billing_refund",   # W10.5 the mock-billing types
+                               "ai_evaluate_config"}   # W10.7 the AI evaluation type
     for d in R.REGISTRY.values():
         assert callable(d.handler) and d.max_attempts >= 1 and d.lease_seconds > 0 and d.idempotency
     src = " ".join((ROOT / "src/jobs" / f).read_text() for f in ("registry.py", "service.py", "worker.py"))

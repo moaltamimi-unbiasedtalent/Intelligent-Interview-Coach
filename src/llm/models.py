@@ -31,6 +31,8 @@ __all__ = [
     "INTERVIEW_SESSION_DEFAULT_PROFILE",
     "INTERVIEW_RECOMMENDED_PROFILE",
     "model_id",
+    "code_model_id",
+    "default_slug",
     "spec",
     "all_specs",
     "selection_mode",
@@ -39,6 +41,7 @@ __all__ = [
     "recommended_profile",
     "effective_interview_profile",
     "profile_for_model",
+    "known_profile_for_slug",
     "legacy_synonyms",
     "supports_temperature",
     "supports_tools",
@@ -114,14 +117,35 @@ class ModelSpec:
     default_reasoning: str
 
 
-def model_id(profile: ModelProfile) -> str:
-    """Resolve a profile to its OpenRouter slug (env override wins, else the default).
+def code_model_id(profile: ModelProfile) -> str:
+    """The code-level baseline slug: environment override, else the code default.
 
-    An empty/whitespace override is ignored (falls back to the default) so a blank
-    env var can never yield an invalid model id.
+    This is what ``model_id`` returned before W10.7 and what it still returns whenever no governed configuration is active.
+    An empty/whitespace override is ignored (falls back to the default) so a blank env var can never yield an invalid model id.
     """
     override = os.environ.get(_ENV_VAR[profile], "").strip()
     return override or _DEFAULT_SLUG[profile]
+
+
+def default_slug(profile: ModelProfile) -> str:
+    """The code default only (no environment, no governed configuration)."""
+    return _DEFAULT_SLUG[profile]
+
+
+def model_id(profile: ModelProfile) -> str:
+    """Resolve a profile to its OpenRouter slug.
+
+    Precedence (P10B-W10.7): an ACTIVE governed configuration (evaluated, second-approved, hash-verified; a catalogue slug) wins; with none
+    active this is exactly the baseline ``code_model_id`` (env override, else default). The governed seam never raises into this path.
+    """
+    from src.llm import governed
+
+    snap = governed.current()
+    if snap is not None:
+        slug = snap.profile_slugs.get(profile.value)
+        if slug:
+            return slug
+    return code_model_id(profile)
 
 
 def spec(profile: ModelProfile) -> ModelSpec:
@@ -240,8 +264,11 @@ def profile_for_model(model_slug: str | None) -> ModelProfile:
     """
     if not model_slug:
         return ModelProfile.BALANCED
+    for profile in ModelProfile:     # code slugs first: a saved session slug keeps its meaning whatever is governed
+        if model_slug in (_DEFAULT_SLUG[profile], code_model_id(profile)):
+            return profile
     for profile in ModelProfile:
-        if model_slug == _DEFAULT_SLUG[profile] or model_slug == model_id(profile):
+        if model_slug == model_id(profile):
             return profile
     for profile, legacy in _LEGACY_PROFILE.items():
         if model_slug in legacy:
@@ -252,6 +279,23 @@ def profile_for_model(model_slug: str | None) -> ModelProfile:
     if "mini" in s:
         return ModelProfile.BALANCED
     return ModelProfile.BALANCED
+
+
+def known_profile_for_slug(model_slug: str | None) -> ModelProfile | None:
+    """The profile a KNOWN slug (code default, current code/env slug or a legacy app slug) stands for, else None.
+
+    Unlike :func:`profile_for_model` there is NO fallback: an arbitrary or unknown provider string never becomes a profile, so it can never be
+    trusted merely because it looks like a model name.
+    """
+    if not model_slug:
+        return None
+    for profile in ModelProfile:
+        if model_slug in (_DEFAULT_SLUG[profile], code_model_id(profile)):
+            return profile
+    for profile, legacy in _LEGACY_PROFILE.items():
+        if model_slug in legacy:
+            return profile
+    return None
 
 
 def legacy_synonyms() -> dict[str, str]:
@@ -272,7 +316,7 @@ def supports_temperature(model_slug: str | None) -> bool:
     if not model_slug:
         return True
     for profile in ModelProfile:
-        if model_slug == model_id(profile) or model_slug == _DEFAULT_SLUG[profile]:
+        if model_slug in (model_id(profile), code_model_id(profile), _DEFAULT_SLUG[profile]):
             return _SUPPORTS_TEMPERATURE[profile]
     return True
 

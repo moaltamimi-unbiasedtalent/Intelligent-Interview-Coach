@@ -100,7 +100,7 @@ def run() -> dict[str, tuple[bool, str]]:
           "preparation-chat deletion and consent history limitations are recorded")
     check("no_competitor_research_declared", "no external or competitor research" in claims.lower(), "declared in the register")
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_")), mig[-1])
+    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_")), mig[-1])
     brand = read("lib/brand.ts", FE)
     check("slogan_invariant", 'Ask More. Be More.' in brand, "BRAND_SLOGAN unchanged")
     return out

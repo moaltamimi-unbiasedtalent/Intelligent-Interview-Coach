@@ -117,7 +117,19 @@ def _default_model_factory(profile: "Any" = None) -> Any:
         raise AgentConfigurationError(
             "The configured agent model does not support tool calling.")
     try:
-        return build_chat_model(load_config(), model=agent_spec.openrouter_id)
+        # P10B-W10.7: governed ORCHESTRATION tunables (only an explicit numeric override; null/absent = inherit the real default) reach the real chat model.
+        from src.llm.policy import ModelOperation
+        from src.llm.runtime import tunables
+
+        tuned = tunables(ModelOperation.ORCHESTRATION)
+        extra: dict = {}
+        if "max_output_tokens" in tuned:
+            extra["max_tokens"] = int(tuned["max_output_tokens"])
+        if "timeout_s" in tuned:
+            extra["timeout_s"] = float(tuned["timeout_s"])
+        if "max_retries" in tuned:
+            extra["max_retries"] = int(tuned["max_retries"])
+        return build_chat_model(load_config(), model=agent_spec.openrouter_id, **extra)
     except AgentConfigurationError:
         raise
     except Exception as exc:  # noqa: BLE001 - map any config/import issue safely

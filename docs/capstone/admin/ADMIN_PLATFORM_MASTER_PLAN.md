@@ -181,7 +181,7 @@ price, trial, entitlements (voice, Career Intelligence, company research, worksp
 `EntitlementService.resolve(user|workspace) -> ResolvedEntitlements` (deterministic: subscription state + plan + admin overrides + flags) replaces the current tier-to-capability map;
 application code asks for a capability or a limit, never `if premium`. Existing `basic`/`premium` map to seeded plans so no behaviour regresses.
 
-## 11. Billing abstraction (W10.5: implemented on `feat/p10b-w10-5-billing-payment-admin`, MOCK BILLING only; complete when merged; see `W10_5_BILLING_PAYMENT_ADMINISTRATION.md`)
+## 11. Billing abstraction (W10.5: COMPLETE, merged in PR #123, main `8e33805`, MOCK BILLING only; see `W10_5_BILLING_PAYMENT_ADMINISTRATION.md`)
 `BillingService -> BillingProvider (interface) -> MockBillingAdapter (Capstone) -> future hosted-checkout adapter`. Provider-owned: card data, tax computation, payment authorisation.
 Ask4Mo stores only provider customer/subscription ids, state, invoice metadata and events. Webhook handling idempotent via the job model. The mock adapter is labelled MOCK BILLING (never LIVE BILLING) in UI, API, documentation and
 reports and can never be enabled in a production environment flagged live; payments, refunds, card processing and invoices are never presented as production-live while mocked (AD-03, FINAL: live provider selection deferred; future adapter such as Stripe or equivalent). Refunds: mock only.
@@ -198,7 +198,7 @@ integrations Admin shows only truthful metadata: configured yes/no, provider, la
 log plaintext, write plaintext into audit events, place secrets in query strings, or expose a full key after save. Configuration tables never hold secrets; rotation requires step-up where writable.
 Local/mock behaviour stays labelled.
 
-## 14. AI / model configuration lifecycle (W10.7)
+## 14. AI / model configuration lifecycle (W10.7: implemented on `feat/p10b-w10-7-ai-model-admin`; complete when merged; see `W10_7_AI_MODEL_ADMINISTRATION.md`)
 Draft -> Validate (schema, allow-list) -> Evaluate (deterministic evaluator suite must pass) -> Approve (second approver) -> Activate (versioned, audited, instantly rollbackable).
 Model profile/policy config is versioned; activation records the evaluator run id; admins cannot bypass evaluation; environment separation (staging activation before production); a raw slug
 from a candidate stays impossible (existing invariant). Builds on `src/llm/models.py` and `policy.py`.

@@ -78,6 +78,8 @@ FLAGS_MANAGE = "platform.flags.manage"
 INTEGRATIONS_READ = "platform.integrations.read"
 AUDIT_READ = "platform.audit.read"
 AI_READ = "platform.ai.read"
+AI_MANAGE = "platform.ai.manage"
+AI_ACTIVATE = "platform.ai.activate"
 KNOWLEDGE_READ = "platform.knowledge.read"
 RELEASES_READ = "platform.releases.read"
 SECURITY_READ = "platform.security.read"
@@ -127,7 +129,7 @@ ROLE_PRESETS: Final[dict[str, frozenset[str]]] = {
         SUPPORT_READ, SUPPORT_REPLY, SUPPORT_MANAGE, SUPPORT_NOTE,
         PLANS_READ, PLANS_MANAGE, INTEGRATIONS_MANAGE,
         PRIVACY_READ, REPORTS_READ, FLAGS_READ, FLAGS_MANAGE, INTEGRATIONS_READ,
-        AUDIT_READ, AI_READ, KNOWLEDGE_READ, RELEASES_READ, SECURITY_READ,
+        AUDIT_READ, AI_READ, AI_MANAGE, AI_ACTIVATE, KNOWLEDGE_READ, RELEASES_READ, SECURITY_READ,
     }),
     ROLE_SUPPORT_OPERATOR: frozenset({
         OVERVIEW_READ, USERS_READ, WORKSPACES_READ,

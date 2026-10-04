@@ -114,6 +114,9 @@ def main() -> None:   # pragma: no cover - process entrypoint
     from src.billing.wiring import build_billing_runtime
 
     services.billing = build_billing_runtime(repo.session_factory, JobService(repo.session_factory))
+    from types import SimpleNamespace
+
+    services.ai_admin = SimpleNamespace(session_factory=repo.session_factory)    # W10.7 evaluation job (no provider, no secret)
     worker = Worker(JobService(repo.session_factory), secret_store=get_secret_store(), poll_seconds=poll_seconds_from_env(),
                     services=services)
     stop = threading.Event()

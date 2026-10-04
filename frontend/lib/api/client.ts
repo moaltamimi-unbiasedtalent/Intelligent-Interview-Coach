@@ -2,6 +2,17 @@ import { config } from "../config";
 import { ApiError, apiErrorFromBody, parseRetryAfter, unreachableError } from "./errors";
 import { runWithRetry } from "./retry";
 import type {
+  AIActivation,
+  AIApproval,
+  AICatalogue,
+  AICodeDefined,
+  AIConfigInput,
+  AIEnvironments,
+  AIEvaluation,
+  AIOverview,
+  AIRuntime,
+  AIVersionDetail,
+  AIVersionSummary,
   AdminAuditEvent,
   AdminCommandCenter,
   AdminPage,
@@ -588,6 +599,33 @@ export const api = {
       request<BillingApproval>("POST", `/admin/billing/payments/${encodeURIComponent(paymentId)}/refunds`, { body: { amount_minor: amountMinor, reason }, ...opts }),
     billingDecideRefund: (id: string, approve: boolean, opts?: RequestOptions) =>
       request<BillingApproval>("POST", `/admin/billing/refunds/${encodeURIComponent(id)}/${approve ? "approve" : "reject"}`, opts),
+    // W10.7 AI and model administration (no provider call, no slug input: catalogue ids only)
+    ai: (opts?: RequestOptions) => request<AIOverview>("GET", "/admin/ai", opts),
+    aiCatalogue: (opts?: RequestOptions) => request<AICatalogue>("GET", "/admin/ai/catalogue", opts),
+    aiCodeDefined: (opts?: RequestOptions) => request<AICodeDefined>("GET", "/admin/ai/code-defined", opts),
+    aiRuntime: (opts?: RequestOptions) => request<AIRuntime>("GET", "/admin/ai/runtime", opts),
+    aiEnvironments: (opts?: RequestOptions) => request<AIEnvironments>("GET", "/admin/ai/environments", opts),
+    aiHistory: (opts?: RequestOptions) => request<AdminPage<AIActivation>>("GET", "/admin/ai/history?page_size=50", opts),
+    aiApprovals: (opts?: RequestOptions) => request<AdminPage<AIApproval>>("GET", "/admin/ai/approvals?page_size=50", opts),
+    aiConfigs: (opts?: RequestOptions) => request<AdminPage<AIVersionSummary>>("GET", "/admin/ai/configs?page_size=50", opts),
+    aiConfig: (id: string, opts?: RequestOptions) => request<AIVersionDetail>("GET", `/admin/ai/configs/${encodeURIComponent(id)}`, opts),
+    aiCreate: (name: string, notes: string, baseVersionId: string | null, config: AIConfigInput | null, opts?: RequestOptions) =>
+      request<AIVersionDetail>("POST", "/admin/ai/configs", { body: { name, notes, base_version_id: baseVersionId, settings: config }, ...opts }),
+    aiUpdate: (id: string, body: { name?: string; notes?: string; settings?: AIConfigInput }, opts?: RequestOptions) =>
+      request<AIVersionDetail>("PATCH", `/admin/ai/configs/${encodeURIComponent(id)}`, { body, ...opts }),
+    aiValidate: (id: string, opts?: RequestOptions) => request<AIVersionDetail>("POST", `/admin/ai/configs/${encodeURIComponent(id)}/validate`, opts),
+    aiEvaluate: (id: string, opts?: RequestOptions) => request<AIEvaluation>("POST", `/admin/ai/configs/${encodeURIComponent(id)}/evaluate`, opts),
+    aiRequestApproval: (id: string, reason: string, opts?: RequestOptions) =>
+      request<AIApproval>("POST", `/admin/ai/configs/${encodeURIComponent(id)}/request-approval`, { body: { reason }, ...opts }),
+    aiDecide: (approvalId: string, approve: boolean, reason: string, opts?: RequestOptions) =>
+      request<AIApproval>("POST", `/admin/ai/approvals/${encodeURIComponent(approvalId)}/${approve ? "approve" : "reject"}`, { body: { reason }, ...opts }),
+    // The target environment is decided by the SERVER (its API_ENV); no request can choose it.
+    aiActivate: (id: string, reason: string, opts?: RequestOptions) =>
+      request<AIActivation>("POST", `/admin/ai/configs/${encodeURIComponent(id)}/activate`, { body: { reason }, ...opts }),
+    aiRollback: (toCode: boolean, reason: string, opts?: RequestOptions) =>
+      request<AIActivation>("POST", "/admin/ai/rollback", { body: { reason, to_code: toCode }, ...opts }),
+    aiRetire: (id: string, reason: string, opts?: RequestOptions) =>
+      request<AIVersionSummary>("POST", `/admin/ai/configs/${encodeURIComponent(id)}/retire`, { body: { reason }, ...opts }),
     // W10.10 privacy and legal
     privacyQueue: (query: PrivacyQuery = {}, opts?: RequestOptions) =>
       request<AdminPage<PrivacyRequestRow>>("GET", `/admin/privacy/requests${qs(query as Record<string, unknown>)}`, opts),

@@ -871,3 +871,236 @@ class BillingPriceChangeRequest(_Strict):
 class BillingRefundRequest(_Strict):
     amount_minor: StrictInt
     reason: str
+
+
+# ---- W10.7 AI and model administration -----------------------------------------------------------------------------------
+class AICatalogueEntry(_Strict):
+    id: str
+    display_name: str
+    tier: str
+    allowed_profiles: list[str]
+    provider_slug: str
+    supports_tools: bool
+    supports_structured_output: bool
+    supports_temperature: bool
+    cost_class: int
+    note: str
+
+
+class AICatalogueView(_Strict):
+    version: str
+    items: list[AICatalogueEntry]
+    note: str
+
+
+class AIOperationCodeView(_Strict):
+    operation: str
+    capability: str
+    min_capability: str
+    fallback_floor: str
+    structured_output: bool
+    requires_tools: bool
+    tunable: bool
+    no_runtime_path: bool = False
+    deterministic: bool
+    realtime: bool
+    code_values: dict[str, float | int]
+
+
+class AITunableBound(_Strict):
+    min: float
+    max: float
+
+
+class AIConsumerDefault(_Strict):
+    consumer: str
+    max_output_tokens: int
+    timeout_s: float
+    max_retries: int
+
+
+class AICodeDefinedView(_Strict):
+    operations: list[AIOperationCodeView]
+    tunable_fields: dict[str, AITunableBound]
+    inherited_defaults: dict[str, list[AIConsumerDefault]]
+    note: str
+
+
+class AIOperationTuning(_Strict):
+    max_output_tokens: StrictInt | None = None
+    timeout_s: float | None = None
+    max_retries: StrictInt | None = None
+
+
+class AIConfigBody(_Strict):
+    profiles: dict[str, str] | None = None
+    operations: dict[str, AIOperationTuning] | None = None
+
+
+class AIDraftCreate(_Strict):
+    name: str
+    notes: str = ""
+    base_version_id: str | None = None
+    settings: AIConfigBody | None = None
+
+
+class AIDraftUpdate(_Strict):
+    name: str | None = None
+    notes: str | None = None
+    settings: AIConfigBody | None = None
+
+
+class AIReasonBody(_Strict):
+    reason: str
+
+
+class AIActivateBody(_Strict):
+    reason: str
+
+
+class AIRollbackBody(_Strict):
+    reason: str
+    to_code: bool = False
+
+
+class AICheckView(_Strict):
+    code: str
+    label: str
+    passed: bool
+    detail: str = ""
+
+
+class AIEvaluationView(_Strict):
+    public_id: str
+    content_hash: str
+    evaluator_version: str
+    status: str
+    checks: list[AICheckView]
+    summary: dict[str, str | int | list[dict[str, str | int | float]]]
+    live_calls: int
+    failure_category: str | None = None
+    created_at: str | None = None
+    finished_at: str | None = None
+
+
+class AIApprovalView(_Strict):
+    public_id: str
+    version_ref: str | None = None
+    content_hash: str
+    status: str
+    requested_by_email: str | None = None
+    requested_at: str | None = None
+    decided_by_email: str | None = None
+    decided_at: str | None = None
+    reason: str = ""
+
+
+class AIApprovalPage(_Strict):
+    items: list[AIApprovalView]
+    total: int
+    page: int
+    page_size: int
+
+
+class AIActivationView(_Strict):
+    public_id: str
+    environment: str
+    kind: str
+    version_ref: str | None = None
+    version: int | None = None
+    content_hash: str | None = None
+    activated_by_email: str | None = None
+    activated_at: str | None = None
+    deactivated_at: str | None = None
+    reason: str = ""
+    open: bool
+
+
+class AIActivationPage(_Strict):
+    items: list[AIActivationView]
+    total: int
+    page: int
+    page_size: int
+
+
+class AIVersionSummary(_Strict):
+    public_id: str
+    version: int
+    name: str
+    notes: str
+    state: str
+    content_hash: str
+    catalogue_version: str
+    created_by_email: str | None = None
+    created_by_user_id: int | None = None
+    created_at: str | None = None
+    validated_at: str | None = None
+    retired_at: str | None = None
+    active_in: list[str]
+
+
+class AIVersionDetail(AIVersionSummary):
+    settings: dict[str, dict[str, str | dict[str, float | int | None]] | int]
+    validation: list[AICheckView]
+    validation_passed: bool
+    changed_from_baseline: list[dict[str, str | int | float]]
+    evaluations: list[AIEvaluationView]
+    approvals: list[AIApprovalView]
+    activations: list[AIActivationView]
+    latest_evaluation_passed: bool
+
+
+class AIVersionPage(_Strict):
+    items: list[AIVersionSummary]
+    total: int
+    page: int
+    page_size: int
+
+
+class AIProfileResolution(_Strict):
+    catalogue_id: str | None = None
+    provider_slug: str
+    source: str
+
+
+class AIEnvironmentView(_Strict):
+    environment: str
+    mode: str
+    active: AIActivationView | None = None
+    version: AIVersionSummary | None = None
+    profiles: dict[str, AIProfileResolution]
+
+
+class AIEnvironmentsView(_Strict):
+    this_environment: str
+    items: list[AIEnvironmentView]
+    note: str
+
+
+class AIRuntimeOperation(_Strict):
+    operation: str
+    capability: str
+    uses_model: bool
+    profile: str | None = None
+    provider_slug: str | None = None
+    max_output_tokens: int | None = None
+    timeout_s: float | None = None
+    max_retries: int | None = None
+
+
+class AIRuntimeView(_Strict):
+    environment: str
+    mode: str
+    active_version: int | None = None
+    content_hash: str | None = None
+    fallback_reason: str | None = None
+    profiles: dict[str, AIProfileResolution]
+    operations: list[AIRuntimeOperation]
+    realtime: dict[str, str | bool | None]
+    note: str
+
+
+class AIOverview(_Strict):
+    stats: dict[str, int | dict[str, int] | dict[str, bool]]
+    runtime: AIRuntimeView
+    catalogue_version: str

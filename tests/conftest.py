@@ -196,3 +196,7 @@ def _reset_runtime_state():
     except Exception:  # noqa: BLE001 - pause module may not be imported in a given test set
         pass
     yield
+    # W10.7: a governed AI configuration activated by one test must never route the model registry in the next.
+    from src.ai_admin.resolver import uninstall_resolver
+
+    uninstall_resolver()

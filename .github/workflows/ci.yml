@@ -108,6 +108,8 @@ jobs:
         run: python scripts/eval_admin_privacy_legal.py
       - name: Admin billing (P10B-W10.5; offline; MOCK BILLING only, production guard, minor-unit money, versioned terms separate from entitlements, second approvers, billing never changes access, idempotent refunds/events)
         run: python scripts/eval_admin_billing.py
+      - name: Admin AI and model administration (P10B-W10.7; offline; code-defined catalogue, hash-bound evaluation, distinct second approver, no bypass, staging before production, fail-closed resolver, no-active-config equals code defaults)
+        run: python scripts/eval_admin_ai_models.py
       - name: Rate-limit evaluation (Capstone P8; offline; auth + cost buckets, window reset, anti-enumeration)
         run: python scripts/eval_rate_limits.py
       - name: Hosting-readiness evaluation (Capstone P8; offline; env/cookies/CORS/headers/pause/malware — does NOT certify EX-12)

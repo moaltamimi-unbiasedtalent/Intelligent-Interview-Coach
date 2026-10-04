@@ -22,6 +22,7 @@ from src.entitlements import PLAN_CODES
 from src.integrations import IntegrationService
 from src.jobs.service import JobService
 from src.knowledge_admin.service import KnowledgeAdminService
+from src.ai_admin.service import AIConfigService
 from src.billing.wiring import build_billing_service
 from src.privacy.requests import PrivacyRequestService
 from src.plans_repository import PlanRepository
@@ -108,6 +109,7 @@ def home(request: Request, principal=Depends(require_permission(perm.OVERVIEW_RE
         knowledge=KnowledgeAdminService(accounts.session_factory, doc_store=None, jobs=None),
         privacy=PrivacyRequestService(accounts.session_factory),
         billing=build_billing_service(accounts.session_factory),
+        ai=AIConfigService(accounts.session_factory),
     )
 
 

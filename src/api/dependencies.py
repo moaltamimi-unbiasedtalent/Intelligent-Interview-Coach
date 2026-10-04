@@ -331,6 +331,16 @@ def get_billing_service(repo=Depends(get_repository)):
     return build_billing_service(repo.session_factory, JobService(repo.session_factory))
 
 
+def get_ai_config_service(repo=Depends(get_repository)):
+    from src.ai_admin.resolver import installed
+    from src.ai_admin.service import AIConfigService
+    from src.jobs.service import JobService
+
+    res = installed()
+    # The activation environment is SERVER-authoritative (API_ENV via the resolver); no request field can choose it.
+    return AIConfigService(repo.session_factory, jobs=JobService(repo.session_factory), resolver=res, environment=res.environment if res else "from_process")
+
+
 def get_privacy_request_service(repo=Depends(get_repository)):
     from src.privacy.requests import PrivacyRequestService
 

@@ -26,6 +26,10 @@ APPROVED_MODELS: dict[str, str] = {
     HIGH_CAPABILITY_MODEL: "Advanced — more detailed evaluation and feedback",
 }
 
+# Every slug a governed AI configuration may resolve a profile to (the code-defined catalogue defaults), so a record naming the model that actually
+# served a request (UsageRecord) still validates when a governed mapping differs from the import-time slugs (P10B-W10.7).
+GOVERNABLE_MODEL_SLUGS: tuple[str, ...] = tuple(_model_registry.default_slug(_p) for _p in _model_registry.ModelProfile)
+
 # Legacy slug → current model id, so a persisted old selection coerces cleanly instead
 # of failing validation (see ApprovedModel in src/models.py).
 MODEL_SYNONYMS: dict[str, str] = _model_registry.legacy_synonyms()
@@ -44,7 +48,7 @@ MAX_TEMPERATURE = 1.0
 MODELS_WITHOUT_TEMPERATURE: set[str] = {
     # The current registry models (gpt-5.x reasoning family) run at the provider
     # default temperature; legacy gpt-5 ids are kept so old sessions still gate.
-    DEFAULT_MODEL, LOW_COST_MODEL, HIGH_CAPABILITY_MODEL,
+    DEFAULT_MODEL, LOW_COST_MODEL, HIGH_CAPABILITY_MODEL, *GOVERNABLE_MODEL_SLUGS,
     "openai/gpt-5", "openai/gpt-5-mini", "openai/gpt-5-nano",
 }
 
