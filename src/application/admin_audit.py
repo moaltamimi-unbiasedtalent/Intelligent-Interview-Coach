@@ -76,6 +76,19 @@ ADMIN_BILLING_REFUND_APPROVED: Final = "admin.billing_refund_approved"
 ADMIN_BILLING_REFUND_REJECTED: Final = "admin.billing_refund_rejected"
 ADMIN_BILLING_REFUND_EXECUTED: Final = "admin.billing_refund_executed"
 ADMIN_BILLING_REFUND_FAILED: Final = "admin.billing_refund_failed"
+# W10.7 (AI and model administration). Payloads: config version/evaluation/approval ids, the config hash, environment and states; never a prompt,
+# a candidate's content or a provider payload.
+ADMIN_AI_CONFIG_CREATED: Final = "admin.ai_config_created"
+ADMIN_AI_CONFIG_UPDATED: Final = "admin.ai_config_updated"
+ADMIN_AI_CONFIG_VALIDATED: Final = "admin.ai_config_validated"
+ADMIN_AI_EVALUATION_REQUESTED: Final = "admin.ai_evaluation_requested"
+ADMIN_AI_EVALUATION_COMPLETED: Final = "admin.ai_evaluation_completed"
+ADMIN_AI_APPROVAL_REQUESTED: Final = "admin.ai_approval_requested"
+ADMIN_AI_APPROVED: Final = "admin.ai_approved"
+ADMIN_AI_REJECTED: Final = "admin.ai_rejected"
+ADMIN_AI_ACTIVATED: Final = "admin.ai_activated"
+ADMIN_AI_ROLLED_BACK: Final = "admin.ai_rolled_back"
+ADMIN_AI_RETIRED: Final = "admin.ai_retired"
 ADMIN_SUPPORT_TICKET_ASSIGNED: Final = "admin.support_ticket_assigned"
 ADMIN_SUPPORT_TICKET_STATUS_CHANGED: Final = "admin.support_ticket_status_changed"
 ADMIN_SUPPORT_TICKET_PRIORITY_CHANGED: Final = "admin.support_ticket_priority_changed"
@@ -101,6 +114,7 @@ ADMIN_EVENT_NAMES: Final[frozenset[str]] = frozenset({
     ADMIN_BILLING_PRICE_CHANGE_REQUESTED, ADMIN_BILLING_PRICE_CHANGE_APPROVED, ADMIN_BILLING_PRICE_CHANGE_REJECTED,
     ADMIN_BILLING_PRICE_ACTIVATED, ADMIN_BILLING_REFUND_REQUESTED, ADMIN_BILLING_REFUND_APPROVED, ADMIN_BILLING_REFUND_REJECTED,
     ADMIN_BILLING_REFUND_EXECUTED, ADMIN_BILLING_REFUND_FAILED,
+    ADMIN_AI_CONFIG_CREATED, ADMIN_AI_CONFIG_UPDATED, ADMIN_AI_CONFIG_VALIDATED, ADMIN_AI_EVALUATION_REQUESTED, ADMIN_AI_EVALUATION_COMPLETED, ADMIN_AI_APPROVAL_REQUESTED, ADMIN_AI_APPROVED, ADMIN_AI_REJECTED, ADMIN_AI_ACTIVATED, ADMIN_AI_ROLLED_BACK, ADMIN_AI_RETIRED,
 })
 
 # Context keys that may never be written (defence in depth against a careless caller).

@@ -188,12 +188,14 @@ def build_registry() -> dict[str, JobTypeDef]:
     ]
     from src.knowledge_admin import jobs as kjobs
 
+    from src.ai_admin import jobs as ajobs
     from src.billing import jobs as bjobs
     from src.privacy import jobs as pjobs
 
     defs += kjobs.job_types()
     defs += pjobs.job_types()
     defs += bjobs.job_types()
+    defs += ajobs.job_types()
     return {d.code: d for d in defs}
 
 

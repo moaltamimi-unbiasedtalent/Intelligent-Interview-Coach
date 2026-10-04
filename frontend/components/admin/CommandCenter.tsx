@@ -91,6 +91,17 @@ function Overview({ home }: { home: Awaited<ReturnType<typeof api.admin.home>> }
         </Panel>
       ) : null}
 
+      {home.ai ? (
+        <Panel title="AI and models">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Stat label="Configuration versions" value={home.ai.versions} />
+            <Stat label="Pending approvals" value={home.ai.pending_approvals} />
+            <Stat label="Staging" value={home.ai.active.staging ? "Governed configuration" : "Code defaults"} />
+            <Stat label="Production" value={home.ai.active.production ? "Governed configuration" : "Code defaults"} />
+          </div>
+          <p className="text-xs text-muted">Counts only. A configuration is never active without a passed evaluation and a second approver.</p>
+        </Panel>
+      ) : null}
       {home.billing ? (
         <Panel title="Billing (MOCK, not live)">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

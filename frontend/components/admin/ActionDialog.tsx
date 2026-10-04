@@ -10,7 +10,7 @@ import { apiMessage, field } from "./ui";
  * the optional reason is audited, a failure is shown inside the dialog and the write is never auto-retried.
  */
 export function ActionDialog({
-  open, title, confirmLabel, children, onConfirm, onClose, askReason = true, testId,
+  open, title, confirmLabel, children, onConfirm, onClose, askReason = true, reasonRequired = false, testId,
 }: {
   open: boolean;
   title: string;
@@ -19,6 +19,8 @@ export function ActionDialog({
   onConfirm: (reason: string) => Promise<void>;
   onClose: () => void;
   askReason?: boolean;
+  /** The reason is mandatory (a governed change that the server also requires a reason for). */
+  reasonRequired?: boolean;
   testId?: string;
 }) {
   const [busy, setBusy] = useState(false);
@@ -30,6 +32,10 @@ export function ActionDialog({
     onClose();
   };
   const confirm = async () => {
+    if (reasonRequired && !reason.trim()) {
+      setError("A reason is required.");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -48,7 +54,7 @@ export function ActionDialog({
       {children}
       {askReason ? (
         <label className="grid gap-1 text-xs text-muted">
-          Reason (optional, recorded in the audit log)
+          {reasonRequired ? "Reason (required, recorded in the audit log)" : "Reason (optional, recorded in the audit log)"}
           <input className={field} value={reason} maxLength={200} onChange={(e) => setReason(e.target.value)} />
         </label>
       ) : null}

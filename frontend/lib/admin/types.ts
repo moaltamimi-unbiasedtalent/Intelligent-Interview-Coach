@@ -25,6 +25,7 @@ export interface AdminCommandCenter {
   integrations?: { total: number; configured: number; runtime_active: number; not_tested: number; unhealthy: number };
   jobs?: JobDiagnostics;
   billing?: { mock: boolean; label: string; open_invoices: number; past_due_invoices: number; failed_payments: number; pending_approvals: number; configured_plan_versions: number };
+  ai?: { versions: number; by_state: Record<string, number>; pending_approvals: number; active: Record<string, boolean> };
   knowledge?: { sources: number; awaiting_review: number; indexing: number; failed: number; indexed_not_active: number; active: number };
   support?: { open: number; unassigned: number; waiting_for_customer: number; high_or_urgent: number; total: number };
   diagnostics_links: { label: string; path: string }[];
@@ -572,3 +573,49 @@ export interface BillingPriceInput {
   visibility: string;
   reason: string;
 }
+
+// ---- W10.7 AI and model administration ------------------------------------------------------------------------------
+export interface AICatalogueEntry {
+  id: string; display_name: string; tier: string; allowed_profiles: string[]; provider_slug: string;
+  supports_tools: boolean; supports_structured_output: boolean; supports_temperature: boolean; cost_class: number; note: string;
+}
+export interface AICatalogue { version: string; items: AICatalogueEntry[]; note: string }
+export interface AICodeDefined {
+  operations: { operation: string; capability: string; min_capability: string; fallback_floor: string; structured_output: boolean; requires_tools: boolean;
+    tunable: boolean; deterministic: boolean; realtime: boolean; code_values: Record<string, number> }[];
+  tunable_fields: Record<string, { min: number; max: number }>;
+  note: string;
+}
+export interface AIOperationTuning { max_output_tokens?: number; timeout_s?: number; max_retries?: number }
+export interface AIConfigInput { profiles?: Record<string, string>; operations?: Record<string, AIOperationTuning> }
+export interface AICheck { code: string; label: string; passed: boolean; detail: string }
+export interface AIEvaluation {
+  public_id: string; content_hash: string; evaluator_version: string; status: string; checks: AICheck[];
+  summary: Record<string, unknown>; live_calls: number; failure_category: string | null; created_at: string | null; finished_at: string | null;
+}
+export interface AIApproval {
+  public_id: string; version_ref: string | null; content_hash: string; status: string; requested_by_email: string | null;
+  requested_at: string | null; decided_by_email: string | null; decided_at: string | null; reason: string;
+}
+export interface AIActivation {
+  public_id: string; environment: string; kind: string; version_ref: string | null; version: number | null; content_hash: string | null;
+  activated_by_email: string | null; activated_at: string | null; deactivated_at: string | null; reason: string; open: boolean;
+}
+export interface AIVersionSummary {
+  public_id: string; version: number; name: string; notes: string; state: string; content_hash: string; catalogue_version: string;
+  created_by_email: string | null; created_by_user_id: number | null; created_at: string | null; validated_at: string | null; retired_at: string | null; active_in: string[];
+}
+export interface AIVersionDetail extends AIVersionSummary {
+  settings: { profiles: Record<string, string>; operations: Record<string, Record<string, number>> };
+  validation: AICheck[]; validation_passed: boolean; changed_from_baseline: { field: string; baseline: string | number; value: string | number }[];
+  evaluations: AIEvaluation[]; approvals: AIApproval[]; activations: AIActivation[]; latest_evaluation_passed: boolean;
+}
+export interface AIProfileResolution { catalogue_id: string | null; provider_slug: string; source: string }
+export interface AIEnvironment { environment: string; mode: string; active: AIActivation | null; version: AIVersionSummary | null; profiles: Record<string, AIProfileResolution> }
+export interface AIRuntime {
+  environment: string; mode: string; active_version: number | null; content_hash: string | null; fallback_reason: string | null;
+  profiles: Record<string, AIProfileResolution>;
+  operations: { operation: string; capability: string; uses_model: boolean; profile: string | null; provider_slug: string | null; max_output_tokens: number; timeout_s: number; max_retries: number }[];
+  realtime: { capability: string; chat_slug: string | null; governed: boolean }; note: string;
+}
+export interface AIOverview { stats: { versions: number; by_state: Record<string, number>; pending_approvals: number; active: Record<string, boolean> }; runtime: AIRuntime; catalogue_version: string }

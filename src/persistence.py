@@ -1795,6 +1795,116 @@ class BillingEvent(Base):
     failure_category: Mapped[str | None] = mapped_column(String(24), nullable=True)
 
 
+AI_CONFIG_STATES = ("draft", "validated", "evaluated", "evaluation_failed", "approved", "rejected", "retired")
+AI_EVAL_STATUSES = ("queued", "running", "passed", "failed", "error")
+AI_APPROVAL_STATUSES = ("pending", "approved", "rejected")
+AI_ENVIRONMENTS = ("staging", "production")
+AI_ACTIVATION_KINDS = ("activate", "rollback", "revert_to_code")
+
+
+class AIConfigVersion(Base):
+    """A governed AI configuration (P10B-W10.7). Content is frozen (hash-pinned) once it leaves ``draft``."""
+
+    __tablename__ = "ai_config_versions"
+    __table_args__ = (
+        CheckConstraint(_in_list("state", AI_CONFIG_STATES), name="ck_aicv_state"),
+        CheckConstraint("length(config_hash) = 64", name="ck_aicv_hash"),
+        Index("ix_aicv_state_created", "state", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    version: Mapped[int] = mapped_column(Integer, unique=True)
+    name: Mapped[str] = mapped_column(String(80))
+    notes: Mapped[str] = mapped_column(String(300), default="")
+    state: Mapped[str] = mapped_column(String(20), default="draft", server_default="draft")
+    config_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    config_hash: Mapped[str] = mapped_column(String(64))
+    catalogue_version: Mapped[str] = mapped_column(String(24))
+    schema_version: Mapped[int] = mapped_column(Integer, default=1)
+    base_version_id: Mapped[int | None] = mapped_column(ForeignKey("ai_config_versions.id", ondelete="SET NULL"), nullable=True)
+    created_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    validated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    validation_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    retired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class AIConfigEvaluation(Base):
+    """One deterministic evaluation of one exact configuration hash. Never makes a provider call (``live_calls`` is pinned to 0)."""
+
+    __tablename__ = "ai_config_evaluations"
+    __table_args__ = (
+        CheckConstraint(_in_list("status", AI_EVAL_STATUSES), name="ck_aice_status"),
+        CheckConstraint("live_calls = 0", name="ck_aice_no_live_calls"),
+        Index("ix_aice_version", "config_version_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    config_version_id: Mapped[int] = mapped_column(ForeignKey("ai_config_versions.id", ondelete="RESTRICT"))
+    config_hash: Mapped[str] = mapped_column(String(64))
+    evaluator_version: Mapped[str] = mapped_column(String(24))
+    status: Mapped[str] = mapped_column(String(10), default="queued", server_default="queued")
+    checks_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    summary_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    live_calls: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    failure_category: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    requested_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class AIConfigApproval(Base):
+    """Second-approver record bound to one evaluated hash. The approver can never be the requester (DB check) nor the author (service)."""
+
+    __tablename__ = "ai_config_approvals"
+    __table_args__ = (
+        CheckConstraint(_in_list("status", AI_APPROVAL_STATUSES), name="ck_aica_status"),
+        CheckConstraint("decided_by_user_id IS NULL OR requested_by_user_id IS NULL OR decided_by_user_id <> requested_by_user_id",
+                        name="ck_aica_no_self_approval"),
+        Index("uq_aica_one_pending", "config_version_id", unique=True,
+              sqlite_where=text("status = 'pending'"), postgresql_where=text("status = 'pending'")),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    config_version_id: Mapped[int] = mapped_column(ForeignKey("ai_config_versions.id", ondelete="RESTRICT"))
+    config_hash: Mapped[str] = mapped_column(String(64))
+    evaluation_id: Mapped[int] = mapped_column(ForeignKey("ai_config_evaluations.id", ondelete="RESTRICT"))
+    status: Mapped[str] = mapped_column(String(10), default="pending", server_default="pending")
+    requested_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    decided_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    reason: Mapped[str] = mapped_column(String(300), default="")
+
+
+class AIConfigActivation(Base):
+    """Append-only activation history per environment. At most one open (not yet deactivated) row per environment."""
+
+    __tablename__ = "ai_config_activations"
+    __table_args__ = (
+        CheckConstraint(_in_list("environment", AI_ENVIRONMENTS), name="ck_aicact_env"),
+        CheckConstraint(_in_list("kind", AI_ACTIVATION_KINDS), name="ck_aicact_kind"),
+        Index("uq_aicact_one_open", "environment", unique=True,
+              sqlite_where=text("deactivated_at IS NULL"), postgresql_where=text("deactivated_at IS NULL")),
+        Index("ix_aicact_env_time", "environment", "activated_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    environment: Mapped[str] = mapped_column(String(12))
+    config_version_id: Mapped[int | None] = mapped_column(ForeignKey("ai_config_versions.id", ondelete="RESTRICT"), nullable=True)
+    config_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    kind: Mapped[str] = mapped_column(String(16))
+    approval_id: Mapped[int | None] = mapped_column(ForeignKey("ai_config_approvals.id", ondelete="RESTRICT"), nullable=True)
+    activated_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    activated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    deactivated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    reason: Mapped[str] = mapped_column(String(300), default="")
+
+
 def make_engine(database_url: str) -> Engine:
     """Create an engine; SQLite needs cross-thread access for Streamlit."""
     connect_args = {}

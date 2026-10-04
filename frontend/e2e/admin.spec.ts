@@ -20,6 +20,7 @@ const ADMIN_PERMS = [
   "platform.knowledge.manage", "platform.knowledge.approve",
   "platform.privacy.read", "platform.privacy.execute", "platform.legal.manage",
   "platform.billing.read", "platform.billing.refund", "platform.plans.price.change",
+  "platform.ai.manage", "platform.ai.activate",
 ];
 
 let currentUid = 1;
@@ -58,6 +59,38 @@ const USER_DETAIL = {
 };
 // Stateful stand-in for the knowledge lifecycle. The test plays the W10.9 worker by calling kb.worker(); the real lifecycle with a
 // real worker is proven by tests/test_knowledge_admin_w10_8.py and the manual QA.
+// Stateful stand-in for the governed AI configuration lifecycle. The test plays the W10.9 worker by calling ai.worker(); the real lifecycle (worker,
+// resolver, hash binding, second approver, rollback) is proven by tests/test_ai_admin_w10_7.py. No live model is involved anywhere.
+const AI_ID = "c".repeat(32);
+const AI_APPROVAL = "e".repeat(32);
+const AI_PROFILES = { fast: "luna", balanced: "terra", advanced: "sol" };
+const ai = {
+  created: false, state: "draft", retries: 2, evalQueued: false, approvalRequested: false, staging: false, production: false, stagingEver: false, reverted: false,
+  worker() { if (this.evalQueued) { this.evalQueued = false; this.state = "evaluated"; } },
+  hash() { return (this.retries === 2 ? "a" : "b").repeat(64); },
+  summary() { return { public_id: AI_ID, version: 1, name: "Lower retries", notes: "", state: this.state, content_hash: this.hash(), catalogue_version: "2026-10-04.1",
+    created_by_email: "first@example.com", created_by_user_id: 1, created_at: null, validated_at: null, retired_at: null,
+    active_in: [this.staging ? "staging" : "", this.production ? "production" : ""].filter(Boolean) }; },
+  detail() {
+    const ops = { orchestration: { max_output_tokens: 1536, timeout_s: 60, max_retries: this.retries }, final_response: { max_output_tokens: 1536, timeout_s: 60, max_retries: 2 } };
+    return { ...this.summary(), settings: { profiles: AI_PROFILES, operations: ops }, validation: this.state === "draft" ? [] : [{ code: "tunable_bounds", label: "Every tunable is inside its code-defined bounds", passed: true, detail: "" }],
+      validation_passed: this.state !== "draft", changed_from_baseline: this.retries === 2 ? [] : [{ field: "operation.orchestration.max_retries", baseline: 2, value: this.retries }],
+      evaluations: this.state === "evaluated" || this.state === "approved" ? [{ public_id: "d".repeat(32), content_hash: this.hash(), evaluator_version: "ai-eval-1", status: "passed",
+        checks: [{ code: "resolution_matrix", label: "All 24 operation x profile resolutions hold their invariants", passed: true, detail: "" }], summary: {}, live_calls: 0, failure_category: null, created_at: null, finished_at: null }]
+        : this.evalQueued ? [{ public_id: "d".repeat(32), content_hash: this.hash(), evaluator_version: "ai-eval-1", status: "queued", checks: [], summary: {}, live_calls: 0, failure_category: null, created_at: null, finished_at: null }] : [],
+      approvals: this.approvalRequested ? [{ public_id: AI_APPROVAL, version_ref: AI_ID, content_hash: this.hash(), status: this.state === "approved" ? "approved" : "pending",
+        requested_by_email: "first@example.com", requested_at: null, decided_by_email: this.state === "approved" ? "second@example.com" : null, decided_at: null, reason: "ready" }] : [],
+      activations: [this.stagingEver ? { public_id: "f".repeat(32), environment: "staging", kind: "activate", version_ref: AI_ID, version: 1, content_hash: this.hash(), activated_by_email: "second@example.com", activated_at: null, deactivated_at: null, reason: "go", open: this.staging } : null].filter(Boolean),
+      latest_evaluation_passed: this.state === "evaluated" || this.state === "approved" };
+  },
+  governedIn(env: string) { return !this.reverted && (env === "staging" ? this.staging : this.production); },
+  runtime() {
+    const gov = this.staging;
+    return { environment: "staging", mode: gov ? "governed" : "code_defaults", active_version: gov ? 1 : null, content_hash: gov ? this.hash() : null, fallback_reason: null,
+      profiles: Object.fromEntries(Object.entries(AI_PROFILES).map(([p, c]) => [p, { catalogue_id: c, provider_slug: `x/${c}`, source: gov ? "governed_configuration" : "code_default" }])),
+      operations: [], realtime: { capability: "realtime", chat_slug: null, governed: false }, note: "Realtime voice, deterministic operations, the three specialists and the Interview session profile are code-defined and unaffected." };
+  },
+};
 // Stateful stand-in for MOCK billing. The test plays the W10.9 worker by calling bill.worker(); the real lifecycle (worker, provider, replay) is proven by
 // tests/test_billing_w10_5.py. Entitlements are untouched by every step (asserted through the candidate-visible plan stub).
 const bill = {
@@ -198,6 +231,31 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
     }
     if (path.endsWith("/admin/home")) return json(HOME);
     const method = route.request().method();
+    if (path.endsWith("/admin/ai/catalogue")) return json({ version: "2026-10-04.1", note: "The approved catalogue is defined in code.", items: ["luna", "terra", "sol"].map((id, i) => ({ id, display_name: `${id[0].toUpperCase()}${id.slice(1)} entry`, tier: ["fast", "balanced", "advanced"][i], allowed_profiles: ["balanced"], provider_slug: `x/${id}`, supports_tools: true, supports_structured_output: true, supports_temperature: false, cost_class: i + 1, note: "" })) });
+    if (path.endsWith("/admin/ai/code-defined")) return json({ operations: [{ operation: "orchestration", capability: "tool_calling", min_capability: "balanced", fallback_floor: "balanced", structured_output: false, requires_tools: true, tunable: true, deterministic: false, realtime: false, code_values: {} },
+      { operation: "specialist_evidence_analysis", capability: "none", min_capability: "fast", fallback_floor: "fast", structured_output: false, requires_tools: false, tunable: false, deterministic: true, realtime: false, code_values: {} }], tunable_fields: {}, note: "Code-defined." });
+    if (path.endsWith("/admin/ai/runtime")) return json(ai.runtime());
+    if (path.endsWith("/admin/ai/environments")) return json({ note: "With nothing active an environment uses the code-defined registry.", items: ["staging", "production"].map((env) => ({ environment: env, mode: ai.governedIn(env) ? "governed" : "code_defaults",
+      active: ai.governedIn(env) ? { public_id: "f".repeat(32), environment: env, kind: "activate", version_ref: AI_ID, version: 1, content_hash: ai.hash(), activated_by_email: "second@example.com", activated_at: null, deactivated_at: null, reason: "go", open: true } : null,
+      version: ai.governedIn(env) ? ai.summary() : null, profiles: ai.runtime().profiles })) });
+    if (path.endsWith("/admin/ai/history")) return json({ items: ai.stagingEver ? [{ public_id: "f".repeat(32), environment: "staging", kind: ai.reverted ? "revert_to_code" : "activate", version_ref: ai.reverted ? null : AI_ID, version: ai.reverted ? null : 1, content_hash: null, activated_by_email: "second@example.com", activated_at: null, deactivated_at: null, reason: "go", open: true }] : [], total: 1, page: 1, page_size: 50 });
+    if (path.endsWith("/admin/ai/approvals")) return json({ items: ai.approvalRequested ? ai.detail().approvals : [], total: ai.approvalRequested ? 1 : 0, page: 1, page_size: 50 });
+    if (/\/admin\/ai\/approvals\/[^/]+\/approve$/.test(path) && method === "POST") { ai.state = "approved"; return json(ai.detail().approvals[0]); }
+    if (/\/admin\/ai\/configs\/[^/]+\/validate$/.test(path) && method === "POST") { ai.state = "validated"; return json(ai.detail()); }
+    if (/\/admin\/ai\/configs\/[^/]+\/evaluate$/.test(path) && method === "POST") { ai.evalQueued = true; return json(ai.detail().evaluations[0], 202); }
+    if (/\/admin\/ai\/configs\/[^/]+\/request-approval$/.test(path) && method === "POST") { ai.approvalRequested = true; return json(ai.detail().approvals[0], 201); }
+    if (/\/admin\/ai\/configs\/[^/]+\/activate$/.test(path) && method === "POST") {
+      const b = JSON.parse(route.request().postData() ?? "{}");
+      if (b.environment === "staging") { ai.staging = true; ai.stagingEver = true; ai.reverted = false; } else ai.production = true;
+      return json({ public_id: "f".repeat(32), environment: b.environment, kind: "activate", version_ref: AI_ID, version: 1, content_hash: ai.hash(), activated_by_email: "second@example.com", activated_at: null, deactivated_at: null, reason: "go", open: true }, 201);
+    }
+    if (/\/admin\/ai\/environments\/[^/]+\/rollback$/.test(path) && method === "POST") { ai.staging = false; ai.production = false; ai.reverted = true;
+      return json({ public_id: "g".repeat(32), environment: "staging", kind: "revert_to_code", version_ref: null, version: null, content_hash: null, activated_by_email: "second@example.com", activated_at: null, deactivated_at: null, reason: "off", open: true }, 201); }
+    if (/\/admin\/ai\/configs\/[^/]+$/.test(path) && method === "PATCH") { const b = JSON.parse(route.request().postData() ?? "{}"); ai.retries = b.settings?.operations?.orchestration?.max_retries ?? ai.retries; return json(ai.detail()); }
+    if (/\/admin\/ai\/configs\/[^/]+$/.test(path)) return json(ai.detail());
+    if (path.endsWith("/admin/ai/configs") && method === "POST") { ai.created = true; return json(ai.detail(), 201); }
+    if (path.endsWith("/admin/ai/configs")) return json({ items: ai.created ? [ai.summary()] : [], total: ai.created ? 1 : 0, page: 1, page_size: 50 });
+    if (path.endsWith("/admin/ai")) return json({ stats: { versions: ai.created ? 1 : 0, by_state: {}, pending_approvals: 0, active: { staging: ai.staging, production: ai.production } }, runtime: ai.runtime(), catalogue_version: "2026-10-04.1" });
     if (path.endsWith("/admin/billing") && method === "GET") return json({ mode: bill.mode, stats: { mock: true, label: bill.mode.label, open_invoices: 0, past_due_invoices: 1, failed_payments: 1, pending_approvals: 0, configured_plan_versions: bill.priceApproved ? 1 : 0 }, terms: bill.terms() });
     if (path.endsWith("/admin/billing/price-changes") && method === "POST") { bill.configured = true; return json(bill.approvals()[0], 201); }
     if (/\/admin\/billing\/price-changes\/[^/]+\/approve$/.test(path) && method === "POST") { bill.priceApproved = true; return json(bill.approvals()[0]); }
@@ -314,7 +372,7 @@ test("platform admin journey: Command Center, build metadata, audit, provider st
   await expect(page.getByText("Up to date")).toBeVisible();
   await expect(page.getByText("Health not tested").first()).toBeVisible();
   const nav = page.getByRole("navigation", { name: "Admin" });
-  for (const label of ["Overview", "Users", "Workspaces", "Review / Diagnostics", "Audit", "Provider status", "Jobs", "Knowledge", "Privacy", "Legal", "Billing"]) {
+  for (const label of ["Overview", "Users", "Workspaces", "Review / Diagnostics", "Audit", "Provider status", "Jobs", "Knowledge", "Privacy", "Legal", "Billing", "AI and models"]) {
     await expect(nav.getByRole("link", { name: new RegExp(label) })).toBeVisible();
   }
   for (const future of ["Subscriptions", "Incidents", "Feature Flags"]) {
@@ -652,4 +710,81 @@ test("unauthenticated access to admin is redirected to sign-in", async ({ page }
   await mockAdmin(page, "user", [], false);
   await page.goto("/admin");
   await expect(page).toHaveURL(/\/sign-in/);
+});
+
+test("W10.7: AI administration: code defaults, draft, validate, evaluate (worker), no self-approval, second admin approves, staging then production, runtime diagnostic, rollback", async ({ page }) => {
+  Object.assign(ai, { created: false, state: "draft", retries: 2, evalQueued: false, approvalRequested: false, staging: false, production: false, stagingEver: false, reverted: false });
+  currentUid = 1;
+  await mockAdmin(page, "platform_admin", ADMIN_PERMS);
+  await page.goto("/admin");
+  await page.getByRole("navigation", { name: "Admin" }).getByRole("link", { name: /^AI and models/ }).click();
+  await expect(page.getByRole("heading", { name: "Governed configuration, no live model calls" })).toBeVisible();
+  await expect(page.getByText("Code defaults").first()).toBeVisible();
+  await expect(page.getByLabel(/model name|provider|slug/i)).toHaveCount(0);                      // no raw provider-name input exists
+  await expect(page.getByText("No (deterministic, no model)")).toBeVisible();                       // deterministic operations are listed as not configurable
+
+  await page.getByLabel("Name").fill("Lower retries");
+  await page.getByRole("button", { name: "Create draft" }).click();
+  await expect(page.getByText(/Draft version 1 created/)).toBeVisible();
+  await page.getByRole("link", { name: "Lower retries" }).click();
+  await expect(page.getByRole("heading", { name: "Edit draft" })).toBeVisible();
+  await page.getByLabel("orchestration Max retries").fill("1");
+  await page.getByRole("button", { name: "Save draft" }).click();
+  await expect(page.getByText("Draft saved.")).toBeVisible();
+  await expect(page.getByText(/operation orchestration max retries/)).toBeVisible();
+
+  await page.getByRole("button", { name: "Validate" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Validate" }).click();
+  await expect(page.getByText("Validation finished.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Settings (frozen)" })).toBeVisible();
+  await page.getByRole("button", { name: "Evaluate" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Queue evaluation" }).click();
+  await expect(page.getByText(/Evaluation queued/)).toBeVisible();
+  ai.worker();                                                                                       // the W10.9 worker evaluates the exact hash
+  await page.getByRole("button", { name: "Refresh" }).click();
+  await expect(page.getByText(/matches this content/)).toBeVisible();
+  await expect(page.getByText(/live calls: 0/)).toBeVisible();
+  await page.getByRole("button", { name: "Submit for approval" }).click();
+  await page.getByRole("alertdialog").getByLabel(/Reason/).fill("Reviewed");
+  await page.getByRole("alertdialog").getByRole("button", { name: "Submit for approval" }).click();
+  await expect(page.getByText(/must decide this request/)).toBeVisible();                           // the requester cannot self-approve
+  await expect(page.getByRole("button", { name: "Approve" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Activate in staging" })).toHaveCount(0);
+
+  await page.unroute("**/api/v1/**");
+  currentUid = 2;                                                                                    // a different qualified administrator
+  await mockAdmin(page, "platform_admin", ADMIN_PERMS);
+  await page.goto(`/admin/ai/${AI_ID}`);
+  await page.getByRole("button", { name: "Approve" }).click();
+  await expect(page.getByRole("alertdialog").getByRole("button", { name: "Cancel" })).toBeFocused();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Approve" }).click();               // a reason is required
+  await expect(page.getByRole("alertdialog").getByText("A reason is required.")).toBeVisible();
+  await page.getByRole("alertdialog").getByLabel(/Reason/).fill("Looks right");
+  await page.getByRole("alertdialog").getByRole("button", { name: "Approve" }).click();
+  await expect(page.getByText(/Approved\. It is not active/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Activate in production" })).toBeDisabled();         // staging first
+  await page.getByRole("button", { name: "Activate in staging" }).click();
+  await page.getByRole("alertdialog").getByLabel(/Reason/).fill("Roll out to staging");
+  await page.getByRole("alertdialog").getByRole("button", { name: "Activate in staging" }).click();
+  await expect(page.getByText("Active in staging.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Activate in production" })).toBeEnabled();
+  await page.getByRole("button", { name: "Activate in production" }).click();
+  await page.getByRole("alertdialog").getByLabel(/Reason/).fill("Promote");
+  await page.getByRole("alertdialog").getByRole("button", { name: "Activate in production" }).click();
+  await expect(page.getByText("Active in production.")).toBeVisible();
+
+  await page.goto("/admin/ai");
+  await expect(page.getByText("Governed configuration", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Version 1").first()).toBeVisible();
+  await page.getByRole("button", { name: "Revert staging to code defaults" }).click();
+  await page.getByRole("alertdialog").getByLabel(/Reason/).fill("Back to code");
+  await page.getByRole("alertdialog").getByRole("button", { name: "Revert to code defaults" }).click();
+  await expect(page.getByText(/staging now uses the code-defined defaults/)).toBeVisible();
+  await expect(page.getByText("Code defaults").first()).toBeVisible();
+
+  await page.unroute("**/api/v1/**");
+  await mockAdmin(page, "operations_admin", ["platform.overview.read", "platform.ai.read"]);        // read-only role: no write controls
+  await page.goto("/admin/ai");
+  await expect(page.getByRole("button", { name: "Create draft" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Roll back|Revert/ })).toHaveCount(0);
 });

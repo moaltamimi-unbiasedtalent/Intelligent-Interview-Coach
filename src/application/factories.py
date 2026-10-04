@@ -123,4 +123,11 @@ def build_repository(config: AppConfig):
     _ensure_sqlite_dir(config.database_url)
     engine = make_engine(config.database_url)
     init_db(engine)
-    return InterviewRepository(make_session_factory(engine))
+    session_factory = make_session_factory(engine)
+    try:                       # P10B-W10.7: route the model registry through the governed configuration (fail-closed, optional)
+        from src.ai_admin.resolver import install_resolver
+
+        install_resolver(session_factory)
+    except Exception:  # noqa: BLE001 - the registry simply keeps its code-defined behaviour
+        pass
+    return InterviewRepository(session_factory)

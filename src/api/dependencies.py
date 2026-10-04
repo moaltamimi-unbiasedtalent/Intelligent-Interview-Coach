@@ -331,6 +331,14 @@ def get_billing_service(repo=Depends(get_repository)):
     return build_billing_service(repo.session_factory, JobService(repo.session_factory))
 
 
+def get_ai_config_service(repo=Depends(get_repository)):
+    from src.ai_admin.resolver import installed
+    from src.ai_admin.service import AIConfigService
+    from src.jobs.service import JobService
+
+    return AIConfigService(repo.session_factory, jobs=JobService(repo.session_factory), resolver=installed())
+
+
 def get_privacy_request_service(repo=Depends(get_repository)):
     from src.privacy.requests import PrivacyRequestService
 

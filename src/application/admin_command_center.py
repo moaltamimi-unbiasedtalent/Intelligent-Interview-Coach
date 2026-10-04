@@ -114,7 +114,7 @@ def pause_state() -> dict[str, Any]:
 
 
 def command_center(*, version: str, session_factory, accounts, workspaces, allowed: frozenset[str],
-                   support=None, plans=None, integrations=None, jobs=None, knowledge=None, privacy=None, billing=None) -> dict[str, Any]:
+                   support=None, plans=None, integrations=None, jobs=None, knowledge=None, privacy=None, billing=None, ai=None) -> dict[str, Any]:
     """Assemble the overview. Sections the caller lacks permission for are omitted, not blanked."""
     out: dict[str, Any] = {
         "build": build_info(version),
@@ -147,6 +147,9 @@ def command_center(*, version: str, session_factory, accounts, workspaces, allow
     if billing is not None and "platform.billing.read" in allowed:
         # MOCK BILLING counts only: no revenue, MRR/ARR, churn or card data.
         out["billing"] = billing.stats()
+    if ai is not None and "platform.ai.read" in allowed:
+        # Counts and activation state only: no prompt, no candidate data, no provider payload.
+        out["ai"] = ai.stats()
     if knowledge is not None and "platform.knowledge.read" in allowed:
         # Counts only: no source text, no candidate data.
         out["knowledge"] = knowledge.stats()
