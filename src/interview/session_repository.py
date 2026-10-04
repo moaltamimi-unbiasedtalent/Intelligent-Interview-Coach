@@ -281,9 +281,11 @@ class DurableInterviewSessionStore:
         # 3. Let the caller mutate via SessionManager, then persist.
         import time as _time
         started = _time.perf_counter()
+        usage_before = len(manager.data.usage_records)
         try:
             yield manager
             self._save(session_id, user_id, manager.data, expected_version=expected_version)
+            self._record_usage_facts(session_id, user_id, manager.data, usage_before, operation)
         except Exception as exc:
             if operation is not None:
                 self._release_lease(session_id, user_id, operation)
@@ -294,6 +296,18 @@ class DurableInterviewSessionStore:
             raise
         self._emit(operation or "mutate", "ok", session_id=session_id,
                    duration_ms=int((_time.perf_counter() - started) * 1000))
+
+    def _record_usage_facts(self, session_id: str, user_id: Any, data: SessionData, before: int, operation: str | None) -> None:
+        """P10B-W10.12: record each NEW canonical UsageRecord of this session ONCE (after the state commit). Best-effort; never raises."""
+        new = list(data.usage_records[before:])
+        if not new:
+            return
+        try:
+            from src.reporting.telemetry import record_practice_usage
+
+            record_practice_usage(self._session_factory, int(user_id), session_id, before, new, operation)
+        except Exception:  # noqa: BLE001
+            pass
 
     def _claim_lease(self, session_id: str, user_id: Any, operation: str) -> None:
         now = utcnow()

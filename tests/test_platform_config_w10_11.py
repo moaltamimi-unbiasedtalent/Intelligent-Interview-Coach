@@ -528,7 +528,7 @@ def test_migration_0023_adds_only_the_two_tables_seeds_nothing_and_changes_no_be
     cfg = Config(str(ROOT / "alembic.ini")); cfg.set_main_option("sqlalchemy.url", url); cfg.set_main_option("script_location", str(ROOT / "migrations"))
     command.upgrade(cfg, "0022_ai_model_admin")
     before = set(inspect(create_engine(url)).get_table_names())
-    command.upgrade(cfg, "head")
+    command.upgrade(cfg, "0023_platform_config")
     eng = create_engine(url)
     after = set(inspect(eng).get_table_names())
     assert after - before == {"platform_pause_states", "feature_flag_overrides"}

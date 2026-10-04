@@ -17,6 +17,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from sqlalchemy import (
+    BigInteger,
     JSON,
     Boolean,
     CheckConstraint,
@@ -1953,6 +1954,81 @@ class FeatureFlagOverride(Base):
     updated_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     reason: Mapped[str] = mapped_column(String(200), default="")
+
+
+OPERATIONAL_EVENT_TYPES = ("request", "provider_call", "retrieval")
+OPERATIONAL_OUTCOMES = ("success", "client_error", "server_error", "unavailable", "hit", "abstained", "error")
+AI_USAGE_WORKFLOWS = ("agent", "practice")
+AI_USAGE_COST_SOURCES = ("reported", "calculated", "unavailable")
+AI_USAGE_COVERAGE = ("complete", "partial", "unknown")
+
+
+class OperationalMetricEvent(Base):
+    """A bounded, first-party OPERATIONAL fact (P10B-W10.12): a request outcome, a provider-call outcome or a retrieval outcome. It stores NO user
+    identity, no path or query (``operation`` is a code-defined label), no body and no exception text. Counted only from the day it was captured."""
+
+    __tablename__ = "operational_metric_events"
+    __table_args__ = (
+        CheckConstraint(_in_list("event_type", OPERATIONAL_EVENT_TYPES), name="ck_ome_type"),
+        CheckConstraint(_in_list("outcome", OPERATIONAL_OUTCOMES), name="ck_ome_outcome"),
+        CheckConstraint("duration_ms IS NULL OR duration_ms >= 0", name="ck_ome_duration"),
+        Index("ix_ome_occurred", "occurred_at"),
+        Index("ix_ome_type_time", "event_type", "occurred_at"),
+        Index("ix_ome_subsystem_time", "subsystem", "occurred_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    event_type: Mapped[str] = mapped_column(String(16))
+    subsystem: Mapped[str] = mapped_column(String(24))
+    operation: Mapped[str] = mapped_column(String(40))
+    outcome: Mapped[str] = mapped_column(String(16))
+    duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    error_category: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    provider: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class AIUsageFact(Base):
+    """One CANONICAL AI usage unit (P10B-W10.12): one Agent run (cumulative, upserted) or one Practice operation. No prompt, answer, query, context or
+    reasoning is ever stored. Unknown tokens/cost are NULL, never 0; cost is integer micro-USD. Deleted with the account (FK CASCADE)."""
+
+    __tablename__ = "ai_usage_facts"
+    __table_args__ = (
+        UniqueConstraint("usage_key", name="uq_aiuf_usage_key"),
+        CheckConstraint(_in_list("workflow", AI_USAGE_WORKFLOWS), name="ck_aiuf_workflow"),
+        CheckConstraint(_in_list("cost_source", AI_USAGE_COST_SOURCES), name="ck_aiuf_cost_source"),
+        CheckConstraint(_in_list("token_coverage", AI_USAGE_COVERAGE), name="ck_aiuf_token_cov"),
+        CheckConstraint(_in_list("cost_coverage", AI_USAGE_COVERAGE), name="ck_aiuf_cost_cov"),
+        CheckConstraint("model_calls >= 0", name="ck_aiuf_calls"),
+        CheckConstraint("(input_tokens IS NULL OR input_tokens >= 0) AND (output_tokens IS NULL OR output_tokens >= 0) "
+                        "AND (total_tokens IS NULL OR total_tokens >= 0)", name="ck_aiuf_tokens"),
+        CheckConstraint("total_tokens IS NULL OR input_tokens IS NULL OR output_tokens IS NULL OR total_tokens = input_tokens + output_tokens",
+                        name="ck_aiuf_total"),
+        CheckConstraint("cost_usd_micros IS NULL OR cost_usd_micros >= 0", name="ck_aiuf_cost"),
+        CheckConstraint("cost_source <> 'unavailable' OR cost_usd_micros IS NULL", name="ck_aiuf_unavailable_is_null"),
+        Index("ix_aiuf_occurred", "occurred_at"),
+        Index("ix_aiuf_workflow_time", "workflow", "occurred_at"),
+        Index("ix_aiuf_model", "model_id"),
+        Index("ix_aiuf_user", "user_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    usage_key: Mapped[str] = mapped_column(String(80))
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    workflow: Mapped[str] = mapped_column(String(12))
+    operation: Mapped[str] = mapped_column(String(32))
+    model_profile: Mapped[str | None] = mapped_column(String(12), nullable=True)
+    model_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    model_calls: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    input_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    output_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    total_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    cost_usd_micros: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    cost_source: Mapped[str] = mapped_column(String(12), default="unavailable", server_default="unavailable")
+    token_coverage: Mapped[str] = mapped_column(String(8), default="unknown", server_default="unknown")
+    cost_coverage: Mapped[str] = mapped_column(String(8), default="unknown", server_default="unknown")
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 def make_engine(database_url: str) -> Engine:

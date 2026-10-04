@@ -28,6 +28,17 @@ from src.copilot.config import CopilotConfig
 from src.core.errors import SafeError
 
 
+
+def _observe_retrieval(outcome: str, operation: str) -> None:
+    """P10B-W10.12: one bounded retrieval outcome (hit / abstained / error). No query, evidence or citation is recorded. Never raises."""
+    try:
+        from src.reporting.telemetry import record_event
+
+        record_event("retrieval", "career", operation, outcome)
+    except Exception:  # noqa: BLE001
+        pass
+
+
 class CareerApplicationService:
     """Callable Career Intelligence operations for any frontend."""
 
@@ -66,7 +77,7 @@ class CareerApplicationService:
             governed_retriever=self._governed_retriever,
         )
         try:
-            return service.answer(
+            answer = service.answer(
                 request.query,
                 job_description=request.job_description,
                 candidate_background=request.candidate_background,
@@ -77,9 +88,14 @@ class CareerApplicationService:
                 conversation_language=request.conversation_language,
                 progress=progress,
             )
+            flag = getattr(answer, "insufficient_evidence", None)
+            if flag is not None:
+                _observe_retrieval("abstained" if flag else "hit", "career_chat")
+            return answer
         except SafeError:
             raise
         except Exception as exc:  # noqa: BLE001 - never leak a raw stack trace
+            _observe_retrieval("error", "career_chat")
             raise UnavailableServiceError(
                 "The career assistant is temporarily unavailable. Please try again."
             ) from exc
@@ -102,15 +118,18 @@ class CareerApplicationService:
             governed_retriever=self._governed_retriever,
         )
         try:
-            return service.retrieve_evidence(
+            result = service.retrieve_evidence(
                 request.query,
                 job_description=request.job_description,
                 candidate_background=request.candidate_background,
                 progress=progress,
             )
+            _observe_retrieval("abstained" if getattr(result, "insufficient_evidence", False) else "hit", "knowledge_search")
+            return result
         except SafeError:
             raise
         except Exception as exc:  # noqa: BLE001 - never leak a raw stack trace
+            _observe_retrieval("error", "knowledge_search")
             raise UnavailableServiceError(
                 "The career assistant is temporarily unavailable. Please try again."
             ) from exc

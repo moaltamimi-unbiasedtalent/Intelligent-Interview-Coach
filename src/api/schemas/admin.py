@@ -1163,3 +1163,70 @@ class FlagChangeRequest(_Strict):
     enabled: bool | None = None
     expected_revision: StrictInt
     reason: str
+
+
+# ---- W10.12 reporting (aggregates only; no candidate content or identifiers) ---------------------------------------------------
+class ReportMetric(_Strict):
+    metric_id: str
+    label: str
+    figure: int | float | str | None = None
+    unit: str
+    state: str
+    coverage: str = ""
+    note: str = ""
+
+
+class ReportCell(_Strict):
+    figure: int | float | str | None = None
+    suppressed: bool
+
+
+class ReportRow(_Strict):
+    label: str
+    cells: list[ReportCell]
+
+
+class ReportTable(_Strict):
+    table_id: str
+    title: str
+    columns: list[str]
+    rows: list[ReportRow]
+    note: str = ""
+
+
+class ReportSection(_Strict):
+    section_id: str
+    title: str
+    coverage: str
+    captured_since: str | None = None
+    note: str = ""
+    metrics: list[ReportMetric]
+    tables: list[ReportTable]
+
+
+class ReportResponse(_Strict):
+    period: str
+    window_start: str | None = None
+    window_end: str
+    generated_at: str
+    utc: bool
+    privacy: str
+    sections: list[ReportSection]
+    mock_billing: bool = False
+    label: str | None = None
+
+
+class ReportMetricDefinition(_Strict):
+    metric_id: str
+    label: str
+    source: str
+    definition: str
+    cohort_policy: str
+    coverage: str
+
+
+class ReportDefinitions(_Strict):
+    min_cohort_policy: str
+    periods: list[str]
+    default_period: str
+    metrics: list[ReportMetricDefinition]

@@ -136,6 +136,9 @@ def build_repository(config: AppConfig):
 
         _pause.install(session_factory)
         _flags.install(session_factory)
+        from src.reporting import telemetry as _telemetry
+
+        _telemetry.install(session_factory)   # P10B-W10.12: bounded operational events
     except Exception:  # noqa: BLE001
         pass
     return InterviewRepository(session_factory)

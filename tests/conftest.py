@@ -195,6 +195,9 @@ def _reset_runtime_state():
 
     _pause.uninstall()
     _flags.uninstall()
+    from src.reporting import telemetry as _telemetry
+
+    _telemetry.uninstall()
     # W10.7: a governed AI configuration activated by one test must never route the model registry in the next.
     from src.ai_admin.resolver import uninstall_resolver
 
