@@ -157,7 +157,10 @@ def command_center(*, version: str, session_factory, accounts, workspaces, allow
         # MOCK BILLING counts only: no revenue, MRR/ARR, churn or card data.
         out["billing"] = billing.stats()
     if flags is not None and "platform.flags.read" in allowed:
-        out["feature_flags"] = flags.stats()
+        try:
+            out["feature_flags"] = flags.stats()
+        except Exception:  # noqa: BLE001 - never present a baseline-derived state as authoritative
+            out["feature_flags"] = {"status": "unavailable", "environment": getattr(flags, "environment", None) or "unsupported"}
     if ai is not None and "platform.ai.read" in allowed:
         # Counts and activation state only: no prompt, no candidate data, no provider payload.
         out["ai"] = ai.stats()

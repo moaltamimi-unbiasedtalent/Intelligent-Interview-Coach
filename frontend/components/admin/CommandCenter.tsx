@@ -76,7 +76,11 @@ function Overview({ home }: { home: Awaited<ReturnType<typeof api.admin.home>> }
           </p>
         ) : null}
         <p className="text-xs text-muted">{pause.note}</p>
-        {home.feature_flags ? <p className="text-xs text-muted">Feature flags: {home.feature_flags.overrides} override(s), {home.feature_flags.disabled_overrides} disabling a feature.</p> : null}
+        {home.feature_flags ? (
+          home.feature_flags.status === "unavailable"
+            ? <p role="alert" className="text-xs">Feature flag state cannot be read right now; restriction flags are treated as off.</p>
+            : <p className="text-xs text-muted">Feature flags: {home.feature_flags.overrides} override(s), {home.feature_flags.disabled_overrides} disabling a feature.</p>
+        ) : null}
       </Panel>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

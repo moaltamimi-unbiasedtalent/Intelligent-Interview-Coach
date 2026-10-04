@@ -148,6 +148,37 @@ def run() -> dict[str, tuple[bool, str]]:
           and "ensure_not_paused" not in read("src/api/routes/admin_config.py") and "require_not_paused" not in read("src/api/routes/admin_config.py"), "privacy and Admin recovery stay available")
     check("no_provider_or_network_in_pause_and_flags", not re.search(r"httpx|requests\.|urllib|socket|openrouter", pause_src + flags_src + routes), "none")
 
+    # --- feature-flag store outage: restriction flags FAIL CLOSED ------------------------------------------------------------------
+    import os
+    from src.platform_config.flags import FeatureFlagStateUnavailable
+
+    def broken():
+        raise RuntimeError("flag store down")
+
+    os.environ["EXTERNAL_RESEARCH_ENABLED"] = "true"
+    F.uninstall()
+    bare_baseline = F.effective("external_research") is True
+    F.install(broken, environment="staging")
+    fail_closed_on = F.effective("external_research") is False and F.effective("company_web_research") is False
+    os.environ["EXTERNAL_RESEARCH_ENABLED"] = "false"
+    fail_closed_off = F.effective("external_research") is False
+    F.uninstall()
+    del os.environ["EXTERNAL_RESEARCH_ENABLED"]
+    check("flag_store_outage_cannot_reenable_a_restriction", fail_closed_on and fail_closed_off, "installed service + unreadable store -> False for both baselines")
+    check("bare_context_keeps_the_environment_baseline", bare_baseline, "no installed service: pre-W10.11 behaviour")
+    from src.copilot.research.service import default_research_service
+    F.install(broken, environment="staging")
+    svc_down = default_research_service()
+    research_disabled = svc_down.health()["enabled"] is False and not any("Company" in type(p).__name__ for p in svc_down._providers)
+    F.uninstall()
+    check("research_service_disabled_before_any_provider_on_flag_outage", research_disabled, "no provider constructed or called")
+    health = read("src/api/routes/health.py")
+    check("capabilities_fails_closed_on_flag_store_failure", "except Exception:" in health.split("def _company_research_available")[1].split("@router")[0] and "return False" in health.split("def _company_research_available")[1].split("@router")[0]
+          and "baseline()" not in health.split("def _company_research_available")[1].split("@router")[0], "research reported unavailable, never the baseline")
+    check("flag_outage_uses_a_bounded_domain_error", issubclass(FeatureFlagStateUnavailable, Exception) and "FeatureFlagStateUnavailable" in read("src/api/exception_handlers.py"), "503 platform_state_unavailable; no raw error")
+    check("admin_flag_read_never_fabricates_a_baseline_state", "except Exception:" in read("src/application/admin_command_center.py") and '"status": "unavailable"' in read("src/application/admin_command_center.py"), "unavailable, not inherited")
+    check("no_new_mutable_flags_added", set(FLAGS) == {"external_research", "company_web_research"}, "still exactly two")
+
     # --- flags: code-defined, restriction-only, no grants ------------------------------------------------------------------------
     check("flag_registry_is_code_defined_and_small", set(FLAGS) == {"external_research", "company_web_research"} and not re.search(r"@router\.(post|delete)\(\"/flags", routes), "2 real flags; no create/delete route")
     check("flags_never_touch_entitlement_billing_ai_or_roles", not re.search(r"subscriptions|EntitlementService|BillingService|AIConfigService|platform_role|ProductEntitlement", flags_src), "module reads none")
@@ -173,7 +204,8 @@ def run() -> dict[str, tuple[bool, str]]:
         "test_restart_durability_a_new_service_instance_reads_the_same_state", "test_two_independent_instances_observe_each_others_changes",
         "test_paused_agent_routes_are_refused_before_the_service_or_model_is_built", "test_store_outage_refuses_the_protected_operation_safely",
         "test_admin_stays_usable_and_can_resume_while_paused", "test_optimistic_concurrency_rejects_a_stale_writer", "test_worker_still_runs_jobs_while_everything_is_paused",
-        "test_privacy_account_legal_and_candidate_reads_remain_available_while_everything_is_paused")), "all ten criteria have tests")
+        "test_privacy_account_legal_and_candidate_reads_remain_available_while_everything_is_paused",
+        "test_installed_service_with_an_unreadable_store_is_off_whatever_the_baseline_or_prior_override")), "all ten criteria have tests; flag outage tested")
     return out
 
 

@@ -25,7 +25,7 @@ export interface AdminCommandCenter {
   integrations?: { total: number; configured: number; runtime_active: number; not_tested: number; unhealthy: number };
   jobs?: JobDiagnostics;
   billing?: { mock: boolean; label: string; open_invoices: number; past_due_invoices: number; failed_payments: number; pending_approvals: number; configured_plan_versions: number };
-  feature_flags?: { environment: string; flags: number; overrides: number; disabled_overrides: number };
+  feature_flags?: { status?: "unavailable"; environment: string; flags?: number; overrides?: number; disabled_overrides?: number };
   ai?: { versions: number; by_state: Record<string, number>; pending_approvals: number; active: Record<string, boolean> };
   knowledge?: { sources: number; awaiting_review: number; indexing: number; failed: number; indexed_not_active: number; active: number };
   support?: { open: number; unassigned: number; waiting_for_customer: number; high_or_urgent: number; total: number };

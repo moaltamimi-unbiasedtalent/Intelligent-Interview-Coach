@@ -27,6 +27,7 @@ from src.application.errors import (
 )
 from src.application.pause import PauseStateUnavailable, PlatformPausedError
 from src.interview.session_codec import SessionCodecError
+from src.platform_config.flags import FeatureFlagStateUnavailable
 from src.session_manager import DuplicateSubmissionError, SessionError
 
 logger = logging.getLogger("api")
@@ -112,6 +113,10 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(PlatformPausedError)
     async def _platform_paused(request: Request, exc: PlatformPausedError):
         return _envelope(503, "platform_paused", PLATFORM_PAUSED_MESSAGE, _request_id(request))
+
+    @app.exception_handler(FeatureFlagStateUnavailable)
+    async def _flag_state_unavailable(request: Request, exc: FeatureFlagStateUnavailable):
+        return _envelope(503, "platform_state_unavailable", PLATFORM_STATE_UNAVAILABLE_MESSAGE, _request_id(request))
 
     @app.exception_handler(PauseStateUnavailable)
     async def _platform_state_unavailable(request: Request, exc: PauseStateUnavailable):

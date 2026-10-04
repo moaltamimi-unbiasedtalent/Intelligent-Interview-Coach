@@ -90,8 +90,12 @@ The reason (required, 200 chars) is Admin metadata: stored on the row and in the
 ## 23. Non-mutable flags and configuration
 `NOT_MUTABLE` classifies the settings above and the Admin Flags page lists them with their owner. Forbidden items (database, API_ENV, secrets, CORS, hosts, cookies, signing keys, provider credentials, billing provider, model catalogue, entitlements, legal retention, malware bypass, audit fail-open, permissions and roles) have no mutable route or schema.
 
-## 24. Flag precedence
-Durable override for this environment > existing environment variable and its default. No override: exactly the pre-W10.11 behaviour (tested with the env variable set both ways).
+## 24. Flag precedence and store failure
+- **Healthy store:** durable override > existing environment variable and its default. No override: exactly the pre-W10.11 behaviour (tested with the variable set both ways).
+- **Authoritative flag-store failure (the durable service is installed, as in every real application process):** a restriction-only feature is OFF. The process-wide resolver returns `False`, `/capabilities` reports research unavailable, the research service is built disabled (the company-web provider is not even constructed; no provider call), and the Admin flag read returns a safe 503 `platform_state_unavailable` (the Command Center shows "unavailable"), never an "Inherited: On" state derived from the baseline. This holds whatever the baseline was and whatever override previously existed, because the durable state is unknown (an explicit disable is never lifted by an outage).
+- **Bare, non-wired context (no durable service ever installed, i.e. an offline unit construction):** the existing environment baseline is kept, intentionally, for compatibility.
+Pause and flags are therefore both fail-closed on an unreadable store.
+
 
 ## 25. Inherit / override semantics
 Tri-state: inherited (no row, or a row whose `enabled` is NULL after a reset), enabled override, disabled override. A reset keeps the row so `revision` stays monotonic (no stale-write ABA after reset and re-set). A `false` baseline and an explicit disable are distinguishable.
@@ -133,7 +137,7 @@ Shows Running / Paused / Unavailable prominently (text, not colour only) and the
 `0023_platform_config` (from `0022_ai_model_admin`): `platform_pause_states` (unique environment+capability, valid environment, revision >= 0) and `feature_flag_overrides` (unique environment+key, valid environment, nullable `enabled`, revision >= 0). Nothing seeded. Flag-key membership is enforced by the service because keys are code-defined.
 
 ## 38. Backend tests
-Backend: 2983 passed, 4 skipped (baseline 2942). Frontend: 736 unit tests. Playwright: 215 passed. All 37 CI evaluators pass.
+Backend: 2998 passed, 4 skipped (baseline 2942). Frontend: 736 unit tests. Playwright: 215 passed. All 37 CI evaluators pass.
 `tests/test_platform_config_w10_11.py` (lifecycle, restart, two-instance, environment, concurrency, outage, gate-before-provider, privacy/Admin/worker availability, authorization matrix, audit and rollback, reason boundary, entitlement/billing/AI separation, flag semantics and baseline compatibility, migration, static guards) plus updated pause tests in the P8, company-intelligence and admin-foundation suites.
 
 ## 39. Frontend tests
@@ -143,13 +147,13 @@ Backend: 2983 passed, 4 skipped (baseline 2942). Frontend: 736 unit tests. Playw
 `e2e/platform-pause.spec.ts`: two independent browser pages share one stateful mock standing for the durable backend (the real database, restart and multi-process behaviour is proven by the backend tests and the manual QA). Pause, blocked-before-provider, privacy page, Admin availability, resume, flag disable, capability projection, reset, and a stale-revision conflict.
 
 ## 41. Evaluator
-`scripts/eval_admin_platform_config.py` (33 checks, in CI): durable authority, no process-local registry, restart and cross-instance state, concurrency, fail-closed admission, gate before the service, privacy/Admin not gated, worker not paused, code-defined restriction-only flags, no editor, environment, permissions, audit, migration, and the SEC-W10-05 closure test inventory.
+`scripts/eval_admin_platform_config.py` (40 checks, in CI): durable authority, no process-local registry, restart and cross-instance state, concurrency, fail-closed admission, gate before the service, privacy/Admin not gated, worker not paused, code-defined restriction-only flags, no editor, environment, permissions, audit, migration, and the SEC-W10-05 closure test inventory.
 
 ## 42. Hosting-readiness evaluator update
 `eval_hosting_readiness.py` now asserts the durable `PauseService` and the absence of the in-memory registry; `eval_admin_foundation.py` and `eval_admin_design.py` were updated to the durable design and the two new destinations. No unrelated hosting check was weakened.
 
 ## 43. Isolation
-Tests and evaluators use temp databases. Dev DB, schema, checkpoint, Chroma and `evaluations/` fingerprints are unchanged. One disclosed exception: an ad-hoc probe I ran OUTSIDE pytest (it reused a test helper whose fake research service writes to the default `data/cache/external`) rewrote and I then removed one fixture-derived cache entry (`be293349...json`, fake "Acme" test data); I regenerated the same entry, so the research cache is functionally identical but that file's `_cached_at` byte differs and the aggregate cache fingerprint no longer equals the earlier baseline. No other store was touched, and no further out-of-pytest runs were made.
+Tests and evaluators use temp databases and the deterministic qualification mutated no store. Disclosed incident: during development an ad-hoc probe I ran OUTSIDE pytest reused a test helper whose fake research service writes to the default `data/cache/external`; it overwrote and I removed, then regenerated, one fixture-derived entry (fake "Acme" data, no customer or production data). The research-cache fingerprint therefore differs from the original pre-wave baseline (only that file's `_cached_at`). Final qualification used the post-incident baseline (`post_incident_qualification_baseline`): dev DB, schema, checkpoint, Chroma, research cache and `evaluations/` were fingerprinted before and after the final deterministic run and ALL SIX are identical. Every store other than that one cache entry was unchanged throughout the wave.
 
 ## 44. Manual QA
 Two real app instances plus a separate worker process on one temp database, no provider key: 28 checks pass (pause visible across instances, blocked with 0 fake-provider constructions, privacy and Admin usable, worker ran a fixture job while paused, restart persistence, stale revision rejected, resume observed, audit present, reason absent from candidate responses, flag lifecycle, cross-instance visibility, backend enforcement, unknown flag and stale revision rejected, no entitlement/billing/AI change, no secret exposure).

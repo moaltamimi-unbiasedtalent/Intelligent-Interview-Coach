@@ -24,7 +24,9 @@ from src.jobs.service import JobService
 from src.jobs.worker import Worker
 from src.persistence import FeatureFlagOverride, PlatformPauseState
 from src.platform_config import flags as F
-from src.platform_config.flags import FLAGS, NOT_MUTABLE, FeatureFlagService, FlagConflict, FlagUnsupportedEnvironment, FlagValidationError
+from src.platform_config.flags import (
+    FLAGS, NOT_MUTABLE, FeatureFlagService, FeatureFlagStateUnavailable, FlagConflict, FlagUnsupportedEnvironment, FlagValidationError,
+)
 from tests.test_admin_foundation_w10_1 import Env
 
 API = "/api/v1"
@@ -574,3 +576,94 @@ def test_no_network_during_pause_checks(env, monkeypatch):
     svc = pause_svc(env)
     pause(svc, "agent", True)
     assert svc.is_paused("agent")
+
+
+# ---------------- feature-flag store outage: restriction flags FAIL CLOSED ------------------------------------------------------------
+
+def _broken_factory():
+    def boom():
+        raise RuntimeError("flag store down")
+    return boom
+
+
+@pytest.mark.parametrize("baseline,expected", [("true", True), ("false", False)])
+def test_healthy_no_override_preserves_the_environment_baseline(env, monkeypatch, baseline, expected):               # A, B
+    monkeypatch.setenv("EXTERNAL_RESEARCH_ENABLED", baseline)
+    F.install(sf(env), environment="development")
+    assert F.effective("external_research") is expected
+
+
+def test_healthy_explicit_disable_and_enable_override_the_baseline(env, monkeypatch):                                  # C, D
+    monkeypatch.setenv("EXTERNAL_RESEARCH_ENABLED", "true")
+    F.install(sf(env), environment="development")
+    svc = flag_svc(env)
+    svc.set_override("external_research", False, expected_revision=0, reason="r", actor_user_id=1)
+    assert F.effective("external_research") is False
+    monkeypatch.setenv("EXTERNAL_RESEARCH_ENABLED", "false")
+    svc.set_override("external_research", True, expected_revision=1, reason="r", actor_user_id=1)
+    assert F.effective("external_research") is True
+
+
+@pytest.mark.parametrize("baseline", ["true", "false"])
+@pytest.mark.parametrize("prior", [None, True, False])
+def test_installed_service_with_an_unreadable_store_is_off_whatever_the_baseline_or_prior_override(env, monkeypatch, baseline, prior):   # E, F, G, H
+    monkeypatch.setenv("EXTERNAL_RESEARCH_ENABLED", baseline)
+    healthy = flag_svc(env)
+    if prior is not None:
+        healthy.set_override("external_research", prior, expected_revision=0, reason="r", actor_user_id=1)
+    F.install(_broken_factory(), environment="development")                                                          # the durable service is installed; its store is down
+    assert F.effective("external_research") is False
+    assert F.effective("company_web_research") is False
+    with pytest.raises(FeatureFlagStateUnavailable):
+        F._installed.effective("external_research")                                                                   # a bounded domain error, no raw exception
+
+
+def test_explicit_disable_survives_an_outage_it_is_never_lifted_to_the_on_baseline(env, monkeypatch):
+    monkeypatch.setenv("EXTERNAL_RESEARCH_ENABLED", "true")
+    flag_svc(env).set_override("external_research", False, expected_revision=0, reason="r", actor_user_id=1)
+    F.install(_broken_factory(), environment="development")
+    assert F.effective("external_research") is False                                                                   # not the ON baseline
+
+
+def test_capabilities_reports_research_unavailable_when_the_flag_store_is_unreadable(env, monkeypatch):               # I
+    assert env.c.get(f"{API}/capabilities").json()["company_research_enabled"] is True
+    monkeypatch.setattr(FeatureFlagService, "effective", lambda self, key: (_ for _ in ()).throw(FeatureFlagStateUnavailable("x")))
+    body = env.c.get(f"{API}/capabilities")
+    assert body.status_code == 200 and body.json()["company_research_enabled"] is False
+    assert "flag store" not in body.text.lower() and "Traceback" not in body.text
+
+
+def test_research_service_is_built_disabled_and_no_provider_is_contacted_on_a_flag_store_outage(env, monkeypatch):    # J
+    from src.copilot.research.service import default_research_service
+    F.install(_broken_factory(), environment="development")
+    def boom(*a, **k):
+        raise AssertionError("network used")
+    monkeypatch.setattr(socket, "socket", boom)
+    svc = default_research_service()
+    assert svc.health()["enabled"] is False
+    assert not any("Company" in type(p).__name__ for p in svc._providers)                                              # the company-web provider is not even constructed
+    from src.copilot.research.models import CurrentMarketResearchRequest, ResearchIntent
+    res = svc.research(CurrentMarketResearchRequest(intent=ResearchIntent.JOB_MARKET, role="Nurse"))
+    assert res.status.value == "unavailable"                                                                           # disabled before any provider call
+
+
+def test_bare_context_without_an_installed_service_keeps_the_existing_baseline(monkeypatch):                          # K
+    F.uninstall()
+    monkeypatch.setenv("EXTERNAL_RESEARCH_ENABLED", "true")
+    assert F.effective("external_research") is True
+    monkeypatch.setenv("EXTERNAL_RESEARCH_ENABLED", "false")
+    assert F.effective("external_research") is False
+
+
+def test_admin_flags_read_reports_unavailable_instead_of_a_baseline_derived_state(env, monkeypatch):
+    _, plat = env.user("platform_admin")
+    monkeypatch.setattr(FeatureFlagService, "states", lambda self: (_ for _ in ()).throw(FeatureFlagStateUnavailable("x")))
+    r = env.c.get(f"{API}/admin/flags", cookies=plat)
+    assert r.status_code == 503 and r.json()["error"]["code"] == "platform_state_unavailable"
+    assert "inherited" not in r.text.lower() and "baseline" not in r.text.lower() and "flag store" not in r.text.lower()
+    home = env.c.get(f"{API}/admin/home", cookies=plat)
+    assert home.status_code == 200 and home.json()["feature_flags"]["status"] == "unavailable"
+
+
+def test_the_mutable_flag_set_is_unchanged_by_the_outage_correction():
+    assert set(FLAGS) == {"external_research", "company_web_research"}

@@ -100,12 +100,12 @@ def _realtime_voice_available(repo) -> bool:
 def _company_research_available(repo) -> bool:
     """Company Intelligence (P10B Wave 5) is available when external research is enabled (the durable W10.11 flag over the existing
     environment baseline, default on) and not operator-paused. Reads booleans only; never implies a provider key is present."""
-    from src.platform_config.flags import FLAGS, FeatureFlagService
+    from src.platform_config.flags import FeatureFlagService
 
-    try:   # request-scoped durable read (shared by every process); a lookup failure keeps the existing environment baseline (a flag is only a restriction)
+    try:   # request-scoped durable read (shared by every process). Control-plane state that cannot be read is UNKNOWN: report the capability unavailable.
         flag_on = FeatureFlagService(repo.session_factory).effective("external_research")
-    except Exception:  # noqa: BLE001
-        flag_on = FLAGS["external_research"].baseline()
+    except Exception:  # noqa: BLE001 - includes repo None (AttributeError) and FeatureFlagStateUnavailable
+        return False
     return flag_on and not _paused_or_unreadable("current_market", repo)
 
 

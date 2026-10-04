@@ -4,8 +4,9 @@ THE INVARIANTS:
 * A flag may only RESTRICT availability. ``available = existing_authorized_capability AND flag``. A flag never grants authorization, an entitlement,
   Premium, a billing change or an AI/model change, and enabling one only removes the flag's own restriction.
 * The flag keys are defined here, in code. Admin cannot create a key; an unknown key is rejected.
-* Precedence: a durable override for THIS environment > the existing environment/code baseline. No override row means INHERIT: behaviour is exactly
-  what it was before W10.11 (including the environment variable and its default).
+* Precedence (healthy store): a durable override for THIS environment > the existing environment/code baseline. No override means INHERIT: behaviour is
+  exactly what it was before W10.11 (including the environment variable and its default).
+* FAILURE (unreadable authoritative store, durable service installed): FAIL CLOSED. The effective value is False and Admin reads report unavailable.
 * State is tri-valued: inherit (no row), enabled override (row enabled=true), disabled override (row enabled=false).
 * Overrides are optimistic-concurrency protected (``revision``) and audited in the same transaction as the change.
 * Only flags with a real, safe, backend-enforced consumer qualify. Deployment capabilities that need credentials, security settings, integrations,
@@ -25,7 +26,7 @@ from sqlalchemy.exc import IntegrityError
 
 from src.persistence import FeatureFlagOverride as FFO, utcnow
 
-__all__ = ["FlagDef", "FLAGS", "NOT_MUTABLE", "FeatureFlagService", "FlagConflict", "FlagValidationError", "FlagUnsupportedEnvironment",
+__all__ = ["FlagDef", "FLAGS", "NOT_MUTABLE", "FeatureFlagService", "FeatureFlagStateUnavailable", "FlagConflict", "FlagValidationError", "FlagUnsupportedEnvironment",
            "install", "uninstall", "effective", "MAX_REASON"]
 
 MAX_REASON = 200
@@ -76,6 +77,11 @@ NOT_MUTABLE: dict[str, str] = {
 }
 
 
+class FeatureFlagStateUnavailable(Exception):
+    """The authoritative feature-flag store could not be read. A restriction flag must then be treated as OFF: the durable override that may exist
+    (for example an explicit disable) is unknown, so the environment baseline is NOT a safe guess."""
+
+
 class FlagConflict(Exception):
     pass
 
@@ -123,14 +129,20 @@ class FeatureFlagService:
                 "consumers": list(d.consumers)}
 
     def states(self) -> list[dict]:
-        with self._sf() as s:
-            rows = {r.flag_key: r for r in s.scalars(select(FFO).where(FFO.environment == (self.environment or "unsupported"))).all()}
+        try:
+            with self._sf() as s:
+                rows = {r.flag_key: r for r in s.scalars(select(FFO).where(FFO.environment == (self.environment or "unsupported"))).all()}
+        except Exception as exc:  # noqa: BLE001 - fixed category only; never surface the cause
+            raise FeatureFlagStateUnavailable("feature flag state unavailable") from exc
         return [self._state(d, rows.get(d.key)) for d in FLAGS.values()]
 
     def effective(self, key: str) -> bool:
         d = self.definition(key)
-        with self._sf() as s:
-            row = self._row(s, key)
+        try:
+            with self._sf() as s:
+                row = self._row(s, key)
+        except Exception as exc:  # noqa: BLE001
+            raise FeatureFlagStateUnavailable("feature flag state unavailable") from exc
         return bool(row.enabled) if row is not None and row.enabled is not None else d.baseline()
 
     def stats(self) -> dict:
@@ -208,13 +220,17 @@ def uninstall() -> None:
 
 
 def effective(key: str) -> bool:
-    """The effective value of a code-defined flag. With no installed service (or an unreadable store) this is the EXISTING environment baseline: a flag
-    is a restriction over existing behaviour, so a lookup failure never makes the product behave differently from before W10.11."""
+    """The effective value of a code-defined flag. Healthy store: durable override > existing environment baseline. No installed service (bare/offline
+    context only): the existing environment baseline. Installed service with an unreadable store: False (fail closed)."""
     d = FeatureFlagService.definition(key)
     svc = _installed
+    # Two DISTINCT cases. (A) No durable service was ever installed: a bare/offline construction (a unit test with no database wiring). It keeps the
+    # existing pre-W10.11 environment baseline for compatibility. (B) Every real application process installs the durable service
+    # (``build_repository``); once installed, an unreadable authoritative store FAILS CLOSED: the effective value is False. We must not guess the
+    # durable state, and a restriction (an explicit disable) must never be silently lifted by an outage.
     if svc is None:
         return d.baseline()
     try:
         return svc.effective(key)
-    except Exception:  # noqa: BLE001
-        return d.baseline()
+    except FeatureFlagStateUnavailable:
+        return False
