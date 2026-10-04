@@ -20,6 +20,9 @@ from src.copilot.service import KnowledgeRetrievalResult, PipelineTrace
 
 class _FakeRepo:
     def __init__(self):
+        from tests._durable_stores import shared_session_factory
+
+        self.session_factory = shared_session_factory()   # W10.11: the durable pause/flag stores are read through the repository
         self._users: dict[str, int] = {}
         self._next = 1
 

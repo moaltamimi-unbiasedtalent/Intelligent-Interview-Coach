@@ -3,6 +3,10 @@ import { ApiError, apiErrorFromBody, parseRetryAfter, unreachableError } from ".
 import { runWithRetry } from "./retry";
 import type {
   AIActivation,
+  FlagsOverview,
+  FlagState,
+  PauseOverview,
+  PauseState,
   AIApproval,
   AICatalogue,
   AICodeDefined,
@@ -176,7 +180,7 @@ async function upload<T>(path: string, form: FormData): Promise<T> {
 }
 
 async function request<T>(
-  method: "GET" | "POST" | "PATCH" | "DELETE",
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
   path: string,
   { body, signal, headers }: { body?: unknown; signal?: AbortSignal; headers?: Record<string, string> } = {},
 ): Promise<T> {
@@ -599,6 +603,13 @@ export const api = {
       request<BillingApproval>("POST", `/admin/billing/payments/${encodeURIComponent(paymentId)}/refunds`, { body: { amount_minor: amountMinor, reason }, ...opts }),
     billingDecideRefund: (id: string, approve: boolean, opts?: RequestOptions) =>
       request<BillingApproval>("POST", `/admin/billing/refunds/${encodeURIComponent(id)}/${approve ? "approve" : "reject"}`, opts),
+    // W10.11 durable pause and feature flags (the environment is the SERVER's own; no request can choose it)
+    pause: (opts?: RequestOptions) => request<PauseOverview>("GET", "/admin/pause", opts),
+    setPause: (capability: string, paused: boolean, expectedRevision: number, reason: string, opts?: RequestOptions) =>
+      request<PauseState>("POST", `/admin/pause/${encodeURIComponent(capability)}`, { body: { paused, expected_revision: expectedRevision, reason }, ...opts }),
+    flags: (opts?: RequestOptions) => request<FlagsOverview>("GET", "/admin/flags", opts),
+    setFlag: (flagId: string, enabled: boolean | null, expectedRevision: number, reason: string, opts?: RequestOptions) =>
+      request<FlagState>("PUT", `/admin/flags/${encodeURIComponent(flagId)}`, { body: { enabled, expected_revision: expectedRevision, reason }, ...opts }),
     // W10.7 AI and model administration (no provider call, no slug input: catalogue ids only)
     ai: (opts?: RequestOptions) => request<AIOverview>("GET", "/admin/ai", opts),
     aiCatalogue: (opts?: RequestOptions) => request<AICatalogue>("GET", "/admin/ai/catalogue", opts),

@@ -25,7 +25,9 @@ from src.application.errors import (
     UnavailableServiceError,
     ValidationError,
 )
+from src.application.pause import PauseStateUnavailable, PlatformPausedError
 from src.interview.session_codec import SessionCodecError
+from src.platform_config.flags import FeatureFlagStateUnavailable
 from src.session_manager import DuplicateSubmissionError, SessionError
 
 logger = logging.getLogger("api")
@@ -37,6 +39,9 @@ def _envelope(status: int, code: str, message: str, request_id: str) -> JSONResp
         content={"error": {"code": code, "message": message, "request_id": request_id}},
     )
 
+
+PLATFORM_PAUSED_MESSAGE = "Ask4Mo is temporarily unavailable for this activity. Your saved data remains available. Please try again later."
+PLATFORM_STATE_UNAVAILABLE_MESSAGE = "Ask4Mo cannot confirm that this activity is available right now. Please try again shortly."
 
 # The single safe message for an otherwise-unhandled server error. Never carries exception
 # detail, SQL, filesystem paths, secrets, provider payloads or private candidate data.
@@ -103,6 +108,19 @@ def register_exception_handlers(app: FastAPI) -> None:
             503, "session_unreadable",
             "This interview session could not be read. Please start a new interview.",
             _request_id(request))
+
+    # Durable operator pause (P10B-W10.11). Stable machine-readable codes with FIXED safe copy: no reason, actor, capability detail or internal state.
+    @app.exception_handler(PlatformPausedError)
+    async def _platform_paused(request: Request, exc: PlatformPausedError):
+        return _envelope(503, "platform_paused", PLATFORM_PAUSED_MESSAGE, _request_id(request))
+
+    @app.exception_handler(FeatureFlagStateUnavailable)
+    async def _flag_state_unavailable(request: Request, exc: FeatureFlagStateUnavailable):
+        return _envelope(503, "platform_state_unavailable", PLATFORM_STATE_UNAVAILABLE_MESSAGE, _request_id(request))
+
+    @app.exception_handler(PauseStateUnavailable)
+    async def _platform_state_unavailable(request: Request, exc: PauseStateUnavailable):
+        return _envelope(503, "platform_state_unavailable", PLATFORM_STATE_UNAVAILABLE_MESSAGE, _request_id(request))
 
     @app.exception_handler(StarletteHTTPException)
     async def _http(request: Request, exc: StarletteHTTPException):

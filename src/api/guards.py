@@ -14,11 +14,10 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 
 from src.api.dependencies import get_current_user_id
 from src.api.rate_limit import enforce, user_key
-from src.application.pause import get_pause_registry
 
 __all__ = ["cost_limit", "require_not_paused", "ensure_not_paused"]
 
@@ -37,19 +36,20 @@ def cost_limit(bucket: str) -> Callable[..., Any]:
     return _dep
 
 
-def ensure_not_paused(capability: str) -> None:
-    """Raise 503 if an operator has paused this capability (truthful, not silent)."""
-    if get_pause_registry().is_paused(capability):
-        raise HTTPException(
-            status_code=503,
-            detail="This feature is temporarily paused by the operator. Please try again later.",
-        )
+def ensure_not_paused(capability: str, service) -> None:
+    """Refuse a protected operation while its capability is paused. The durable store is read on EVERY admission; if it cannot be read the request is
+    refused too (``PauseStateUnavailable``): the platform never reopens on a lookup failure. Raised BEFORE any provider or model is constructed."""
+    from src.application.pause import PlatformPausedError
+
+    if service.is_paused(capability):
+        raise PlatformPausedError()
 
 
 def require_not_paused(capability: str) -> Callable[..., Any]:
-    """Build a dependency that rejects requests while ``capability`` is paused."""
+    """Build a dependency that rejects requests while ``capability`` is paused (durable, cross-process)."""
+    from src.api.dependencies import get_pause_service
 
-    def _dep():
-        ensure_not_paused(capability)
+    def _dep(service=Depends(get_pause_service)):
+        ensure_not_paused(capability, service)
 
     return _dep

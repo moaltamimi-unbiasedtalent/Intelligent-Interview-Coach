@@ -113,6 +113,10 @@ def run() -> dict[str, tuple[bool, str]]:
     check("pause_switch", len(PAUSABLE_CAPABILITIES) >= 3
           and "realtime_voice" in PAUSABLE_CAPABILITIES,
           f"pausable capabilities: {PAUSABLE_CAPABILITIES}")
+    # W10.11: the pause authority is DURABLE (database), never a process-local registry (SEC-W10-05).
+    pause_src = (ROOT / "src/application/pause.py").read_text(encoding="utf-8")
+    check("pause_is_durable_not_process_local", "class PauseService" in pause_src and "platform_pause_states" in pause_src.replace("PlatformPauseState", "platform_pause_states")
+          and "PauseRegistry" not in pause_src and "threading" not in pause_src, "database-backed PauseService; no in-memory registry")
 
     # --- 9) Malware fail-safe ---
     from src.documents.file_security import (

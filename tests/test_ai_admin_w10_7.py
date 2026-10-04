@@ -776,7 +776,7 @@ def test_migration_0022_adds_only_ai_tables_and_seeds_nothing(tmp_path, monkeypa
     cfg_ = Config(str(ROOT / "alembic.ini")); cfg_.set_main_option("sqlalchemy.url", url); cfg_.set_main_option("script_location", str(ROOT / "migrations"))
     command.upgrade(cfg_, "0021_billing_admin")
     before = set(inspect(create_engine(url)).get_table_names())
-    command.upgrade(cfg_, "head")
+    command.upgrade(cfg_, "0022_ai_model_admin")
     eng = create_engine(url)
     after = set(inspect(eng).get_table_names())
     assert after - before == {"ai_config_versions", "ai_config_evaluations", "ai_config_approvals", "ai_config_activations"}

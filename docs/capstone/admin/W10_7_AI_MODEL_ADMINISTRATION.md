@@ -1,6 +1,6 @@
 # P10B-W10.7 - AI and Model Administration
 
-**Status:** implemented on branch `feat/p10b-w10-7-ai-model-admin`; **complete when merged to `main`**. **W10.11 is NOT STARTED.**
+**Status:** COMPLETE. Merged in PR #124 (`43fbf65`) with green CI. W10.11 (feature flags and safe platform configuration) follows.
 One additive migration (`0022_ai_model_admin`). No new dependency. 0 paid/live calls. Permission registry stays at 43.
 
 **The invariant:** an AI configuration is never active without a PASSED evaluation of its exact content (hash) and a DISTINCT second approver. There is no force parameter, no bypass route, no self-approval and no candidate- or admin-supplied provider slug.

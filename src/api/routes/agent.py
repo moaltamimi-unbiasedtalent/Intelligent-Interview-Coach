@@ -87,11 +87,11 @@ def _to_response(result) -> AgentRunResponse:
 def run_agent(
     body: AgentRunRequest,
     request: Request,
-    service=Depends(get_agent_service),
     user_id: int = Depends(get_current_user_id),
+    _pause=Depends(require_not_paused("agent")),   # admission BEFORE the service/model is built
+    service=Depends(get_agent_service),
     request_id: str = Depends(get_request_id),
     _cost=Depends(cost_limit("cost_agent_user")),
-    _pause=Depends(require_not_paused("agent")),
 ) -> AgentRunResponse:
     # Owner-scoped: a candidate may SELECT a stored JD instead of pasting it (P10B Wave 4). The
     # server resolves the document text (never the client); an explicit pasted JD takes priority,
@@ -142,8 +142,9 @@ def get_agent_run(
 def continue_agent_run(
     body: AgentContinueRequest,
     run_id: str = Path(..., min_length=1, max_length=64),
-    service=Depends(get_agent_service),
     user_id: int = Depends(get_current_user_id),
+    _pause=Depends(require_not_paused("agent")),   # admission BEFORE the service/model is built
+    service=Depends(get_agent_service),
     request_id: str = Depends(get_request_id),
 ) -> AgentRunResponse:
     try:
@@ -160,8 +161,9 @@ def continue_agent_run(
 def resume_agent_run(
     body: HumanDecisionRequest,
     run_id: str = Path(..., min_length=1, max_length=64),
-    service=Depends(get_agent_service),
     user_id: int = Depends(get_current_user_id),
+    _pause=Depends(require_not_paused("agent")),   # admission BEFORE the service/model is built
+    service=Depends(get_agent_service),
     request_id: str = Depends(get_request_id),
 ) -> AgentRunResponse:
     decision: dict = {"action_id": body.action_id, "decision": body.decision,

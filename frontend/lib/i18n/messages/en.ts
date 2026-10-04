@@ -41,6 +41,7 @@ export const messages = {
     serviceUnreachable: "Ask4Mo can’t reach the service right now. Please try again shortly.",
     serverError: "Ask4Mo hit a problem while processing that request. Please try again.",
     serviceUnavailable: "Ask4Mo is temporarily unavailable. Please try again shortly.",
+    platformPaused: "Ask4Mo is temporarily unavailable for this activity. Your saved data remains available. Please try again later.",
     rateLimited: "You’ve made too many requests. Please wait a moment and try again.",
     sessionExpired: "Your session has expired. Please sign in again.",
     forbidden: "You don’t have access to that.",

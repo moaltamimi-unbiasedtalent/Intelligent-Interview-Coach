@@ -19,7 +19,8 @@ documents are historical evidence and are labelled where they could be mistaken 
 | Opportunities | [capstone/p10/p10b_wave6_opportunity_model.md](capstone/p10/p10b_wave6_opportunity_model.md) |
 | Workspaces, sharing, current admin foundations | [capstone/p6_5_workspaces_platform_admin.md](capstone/p6_5_workspaces_platform_admin.md) |
 | Admin mock billing and payment administration (W10.5, complete) | [capstone/admin/W10_5_BILLING_PAYMENT_ADMINISTRATION.md](capstone/admin/W10_5_BILLING_PAYMENT_ADMINISTRATION.md) |
-| Admin AI and model administration (W10.7, implemented) | [capstone/admin/W10_7_AI_MODEL_ADMINISTRATION.md](capstone/admin/W10_7_AI_MODEL_ADMINISTRATION.md) |
+| Admin feature flags and safe platform configuration, durable pause (W10.11, implemented) | [capstone/admin/W10_11_FEATURE_FLAGS_SAFE_PLATFORM_CONFIGURATION.md](capstone/admin/W10_11_FEATURE_FLAGS_SAFE_PLATFORM_CONFIGURATION.md) |
+| Admin AI and model administration (W10.7, complete) | [capstone/admin/W10_7_AI_MODEL_ADMINISTRATION.md](capstone/admin/W10_7_AI_MODEL_ADMINISTRATION.md) |
 | Admin privacy and legal administration (W10.10, complete) | [capstone/admin/W10_10_GDPR_PRIVACY_LEGAL_ADMINISTRATION.md](capstone/admin/W10_10_GDPR_PRIVACY_LEGAL_ADMINISTRATION.md) |
 | Admin knowledge base and RAG administration (W10.8, complete) | [capstone/admin/W10_8_KNOWLEDGE_RAG_ADMINISTRATION.md](capstone/admin/W10_8_KNOWLEDGE_RAG_ADMINISTRATION.md) |
 | Admin jobs, queues and operational diagnostics (W10.9, complete) | [capstone/admin/W10_9_JOBS_QUEUES_OPERATIONAL_DIAGNOSTICS.md](capstone/admin/W10_9_JOBS_QUEUES_OPERATIONAL_DIAGNOSTICS.md) |

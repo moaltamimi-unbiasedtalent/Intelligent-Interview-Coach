@@ -15,6 +15,8 @@ export interface AgentError {
   requestId?: string | null;
   /** A bookmarked run that no longer exists / is not owned by the caller. */
   notFound?: boolean;
+  /** An operator pause (stable code platform_paused): the UI shows localized copy, never this message. */
+  paused?: boolean;
 }
 
 export interface UseAgentRun {
@@ -36,6 +38,7 @@ function toError(e: unknown): AgentError {
   const err = e as ApiError;
   const notFound = err?.status === 404;
   return {
+    paused: err?.kind === "paused",
     message: notFound
       ? "This preparation session can no longer be resumed."
       : err?.userMessage ?? "Something went wrong. Please try again.",

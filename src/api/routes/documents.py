@@ -16,6 +16,7 @@ from fastapi.responses import PlainTextResponse, Response
 from src.api.dependencies import (
     get_current_user_id,
     get_documents_service,
+    get_pause_service,
     get_repository,
     get_sharing_service,
     get_stories_service,
@@ -69,13 +70,14 @@ async def upload_document(
     language_hint: str | None = Form(None),
     svc=Depends(get_documents_service),
     user_id: int = Depends(get_current_user_id),
+    pause=Depends(get_pause_service),
 ) -> DocumentDetail:
     # Per-user upload ceiling + OCR pause (§19/§21). OCR runs during upload, so a paused OCR
     # capability blocks new uploads truthfully rather than silently skipping extraction.
     from src.api.guards import ensure_not_paused
     from src.api.rate_limit import enforce, user_key
 
-    ensure_not_paused("ocr")
+    ensure_not_paused("ocr", pause)
     enforce("cost_upload_user", user_key(user_id))
     data = await file.read()
     if len(data) > MAX_FILE_BYTES:
@@ -103,11 +105,12 @@ async def replace_document(
     language_hint: str | None = Form(None),
     svc=Depends(get_documents_service),
     user_id: int = Depends(get_current_user_id),
+    pause=Depends(get_pause_service),
 ) -> DocumentDetail:
     from src.api.guards import ensure_not_paused
     from src.api.rate_limit import enforce, user_key
 
-    ensure_not_paused("ocr")
+    ensure_not_paused("ocr", pause)
     enforce("cost_upload_user", user_key(user_id))
     data = await file.read()
     if len(data) > MAX_FILE_BYTES:
@@ -124,13 +127,14 @@ def reprocess_document(
     document_id: int = Path(...),
     svc=Depends(get_documents_service),
     user_id: int = Depends(get_current_user_id),
+    pause=Depends(get_pause_service),
 ) -> DocumentDetail:
     # Owner-scoped retry of the same governed pipeline on the file we already hold (no new
     # upload). Blocked while OCR is paused (extraction may run) and rate-limited like uploads.
     from src.api.guards import ensure_not_paused
     from src.api.rate_limit import enforce, user_key
 
-    ensure_not_paused("ocr")
+    ensure_not_paused("ocr", pause)
     enforce("cost_upload_user", user_key(user_id))
     detail = svc.reprocess(user_id=user_id, document_id=document_id)
     if detail is None:

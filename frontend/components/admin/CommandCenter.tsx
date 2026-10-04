@@ -66,10 +66,21 @@ function Overview({ home }: { home: Awaited<ReturnType<typeof api.admin.home>> }
             ["Database", health.database],
             ["Provider health", "Health not tested"],
             ["Rate limiting", rl.mode === "in_memory_process_local" ? "In memory, per process (not shared across replicas)" : "Shared store"],
+            ["Platform", pause.status === "unavailable" ? "Pause state unavailable" : paused.length ? "Paused (restricted)" : "Running"],
             ["Paused capabilities", paused.length ? paused.join(", ") : "None"],
           ]}
         />
+        {paused.length || pause.status === "unavailable" ? (
+          <p role="alert" className="rounded border-2 border-border p-2 text-sm font-medium">
+            {pause.status === "unavailable" ? "The authoritative pause state cannot be read right now." : `Candidate activity is restricted: ${paused.join(", ")} paused.`} Manage it under Configuration.
+          </p>
+        ) : null}
         <p className="text-xs text-muted">{pause.note}</p>
+        {home.feature_flags ? (
+          home.feature_flags.status === "unavailable"
+            ? <p role="alert" className="text-xs">Feature flag state cannot be read right now; restriction flags are treated as off.</p>
+            : <p className="text-xs text-muted">Feature flags: {home.feature_flags.overrides} override(s), {home.feature_flags.disabled_overrides} disabling a feature.</p>
+        ) : null}
       </Panel>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

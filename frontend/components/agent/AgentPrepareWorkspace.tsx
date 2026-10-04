@@ -176,7 +176,7 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
 
       {error && !error.notFound ? (
         <p role="alert" className="mt-3 text-sm text-danger">
-          {error.message}
+          {error.paused ? t("states.platformPaused") : error.message}
           {error.requestId ? <span className="block text-xs text-muted">{t("prepare.reference", { id: error.requestId })}</span> : null}
         </p>
       ) : null}

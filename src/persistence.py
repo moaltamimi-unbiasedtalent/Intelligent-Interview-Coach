@@ -1905,6 +1905,56 @@ class AIConfigActivation(Base):
     reason: Mapped[str] = mapped_column(String(300), default="")
 
 
+PLATFORM_ENVIRONMENTS = ("development", "staging", "production")
+
+
+class PlatformPauseState(Base):
+    """DURABLE operator pause state (P10B-W10.11, closes SEC-W10-05). One row per (environment, pausable capability); a row is an EXPLICIT state
+    (paused or resumed) and no row means "inherit the env-seeded baseline" (``PAUSED_CAPABILITIES``). ``revision`` is the optimistic-concurrency
+    token. ``reason`` is INTERNAL admin metadata and is never returned to candidates."""
+
+    __tablename__ = "platform_pause_states"
+    __table_args__ = (
+        UniqueConstraint("environment", "capability", name="uq_pps_env_capability"),
+        CheckConstraint(_in_list("environment", PLATFORM_ENVIRONMENTS), name="ck_pps_env"),
+        CheckConstraint("revision >= 0", name="ck_pps_revision"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    environment: Mapped[str] = mapped_column(String(12))
+    capability: Mapped[str] = mapped_column(String(32))
+    paused: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    revision: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    paused_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    paused_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    resumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    resumed_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    reason: Mapped[str] = mapped_column(String(200), default="")
+
+
+class FeatureFlagOverride(Base):
+    """DURABLE override of a CODE-DEFINED feature flag (P10B-W10.11). A row with enabled true/false is an explicit override; no row, or a row with
+    enabled NULL (after a reset), means INHERIT the code/environment baseline. The flag definition lives in code; this table owns only override state."""
+
+    __tablename__ = "feature_flag_overrides"
+    __table_args__ = (
+        UniqueConstraint("environment", "flag_key", name="uq_ffo_env_key"),
+        CheckConstraint(_in_list("environment", PLATFORM_ENVIRONMENTS), name="ck_ffo_env"),
+        CheckConstraint("revision >= 0", name="ck_ffo_revision"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    environment: Mapped[str] = mapped_column(String(12))
+    flag_key: Mapped[str] = mapped_column(String(48))
+    # NULL = inherit the baseline. The row is KEPT on a reset so ``revision`` stays monotonic (no stale-write ABA after a reset and re-set).
+    enabled: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    revision: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    updated_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    reason: Mapped[str] = mapped_column(String(200), default="")
+
+
 def make_engine(database_url: str) -> Engine:
     """Create an engine; SQLite needs cross-thread access for Streamlit."""
     connect_args = {}

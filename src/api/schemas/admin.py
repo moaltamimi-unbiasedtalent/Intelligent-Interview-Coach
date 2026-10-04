@@ -1104,3 +1104,62 @@ class AIOverview(_Strict):
     stats: dict[str, int | dict[str, int] | dict[str, bool]]
     runtime: AIRuntimeView
     catalogue_version: str
+
+
+# ---- W10.11 durable platform pause and feature flags -----------------------------------------------------------------------
+class PauseStateView(_Strict):
+    capability: str
+    paused: bool
+    source: str
+    baseline_paused: bool
+    revision: int
+    paused_at: str | None = None
+    resumed_at: str | None = None
+    updated_at: str | None = None
+    reason: str = ""
+
+
+class PauseOverview(_Strict):
+    environment: str
+    durable: bool
+    items: list[PauseStateView]
+    protected_scope: list[str]
+    note: str
+
+
+class PauseChangeRequest(_Strict):
+    paused: bool
+    expected_revision: StrictInt
+    reason: str
+
+
+class FlagStateView(_Strict):
+    flag_id: str
+    display_name: str
+    description: str
+    category: str
+    candidate_visible: bool
+    baseline: bool
+    baseline_source: str
+    override: bool | None = None
+    state: str
+    effective: bool
+    revision: int
+    updated_at: str | None = None
+    updated_by_user_id: int | None = None
+    reason: str = ""
+    notes: str = ""
+    consumers: list[str]
+
+
+class FlagsOverview(_Strict):
+    environment: str
+    items: list[FlagStateView]
+    not_mutable: dict[str, str]
+    note: str
+
+
+class FlagChangeRequest(_Strict):
+    enabled: bool | None = None
+    expected_revision: StrictInt
+    reason: str

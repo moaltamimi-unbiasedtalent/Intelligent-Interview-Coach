@@ -504,9 +504,9 @@ def _research_current_market(research_service) -> Handler:
 
         # Operator pause (§21): while current-market research is paused, abstain safely rather
         # than calling an external provider (cost/incident control).
-        from src.application.pause import is_paused
+        from src.application.pause import check_paused
 
-        if is_paused("current_market"):
+        if check_paused("current_market"):
             raise AgentToolError("Current-market research is temporarily paused.",
                                  category=TOOL_FAILURE_EXECUTION_FAILED)
 

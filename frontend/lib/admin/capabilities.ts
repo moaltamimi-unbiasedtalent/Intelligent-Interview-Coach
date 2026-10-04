@@ -39,6 +39,9 @@ export const P = {
   legalManage: "platform.legal.manage",
   knowledgeManage: "platform.knowledge.manage",
   knowledgeApprove: "platform.knowledge.approve",
+  flagsRead: "platform.flags.read",
+  flagsManage: "platform.flags.manage",
+  configManage: "platform.config.manage",
   aiManage: "platform.ai.manage",
   aiActivate: "platform.ai.activate",
 } as const;
@@ -65,6 +68,8 @@ export const ADMIN_DESTINATIONS: readonly AdminDestination[] = [
   { id: "privacy", label: "Privacy", href: "/admin/privacy", description: "Privacy requests", anyOf: [P.privacyRead] },
   { id: "legal", label: "Legal", href: "/admin/legal", description: "Legal document versions", anyOf: [P.privacyRead] },
   { id: "knowledge", label: "Knowledge", href: "/admin/knowledge", description: "Governed knowledge sources", anyOf: [P.knowledge] },
+  { id: "configuration", label: "Configuration", href: "/admin/configuration", description: "Platform pause", anyOf: [P.flagsRead] },
+  { id: "flags", label: "Feature flags", href: "/admin/flags", description: "Governed feature flags", anyOf: [P.flagsRead] },
   { id: "ai", label: "AI and models", href: "/admin/ai", description: "Governed model configuration", anyOf: [P.ai] },
   { id: "jobs", label: "Jobs", href: "/admin/jobs", description: "Queue and worker diagnostics", anyOf: [P.jobsRead] },
   { id: "integrations", label: "Integrations", href: "/admin/integrations", description: "Connections and credentials", anyOf: [P.integrations] },
