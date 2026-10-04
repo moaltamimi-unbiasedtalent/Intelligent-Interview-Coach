@@ -25,10 +25,9 @@ def snapshot_for(canonical: dict, *, version_public_id: str = "evaluation", vers
     return governed.GovernedSnapshot(
         version_public_id=version_public_id, version=version, config_hash=cfg_hash, environment=environment,
         profile_slugs={p: C.slug_for(entry) for p, entry in canonical["profiles"].items()},
-        # Only fields that DIFFER from the code operation policy become runtime overrides: a configuration that leaves a value at the code baseline
-        # changes nothing at the consumers (their real defaults stay), and a changed value is applied absolutely.
-        operation_overrides={name: {f: v for f, v in tun.items() if v != getattr(OPERATION_POLICY[ModelOperation(name)], f)}
-                             for name, tun in canonical["operations"].items()})
+        # A tunable is a runtime override ONLY when it holds an explicit number (even one equal to a code policy number). None = INHERIT: absent from
+        # the snapshot, so the real consumer keeps its own default. There is no equality-with-a-baseline shortcut.
+        operation_overrides={name: {f: v for f, v in tun.items() if v is not None} for name, tun in canonical["operations"].items()})
 
 
 @contextmanager
@@ -82,7 +81,8 @@ def evaluate(canonical: dict) -> dict:
                     if K._TIER_ORDER[fb] < K._TIER_ORDER[policy.fallback_floor] or slug != snap.profile_slugs[fb.value]:
                         failures.append(f"{where}: fallback outside floor or catalogue")
                 tun = canonical["operations"].get(op.value)
-                if tun and policy.capability not in (ModelCapability.NONE, ModelCapability.REALTIME) and (r.max_output_tokens, r.timeout_s, r.max_retries) != (tun["max_output_tokens"], tun["timeout_s"], tun["max_retries"]):
+                if tun and policy.capability not in (ModelCapability.NONE, ModelCapability.REALTIME) and any(
+                        tun[f] is not None and getattr(r, f) != tun[f] for f in ("max_output_tokens", "timeout_s", "max_retries")):
                     failures.append(f"{where}: tunables not applied exactly")
                 if (r.capability, r.structured_output, r.requires_tools, r.temperature) != (policy.capability, policy.structured_output, policy.requires_tools, policy.temperature):
                     failures.append(f"{where}: a code-defined field was altered")

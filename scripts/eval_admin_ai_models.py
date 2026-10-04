@@ -40,6 +40,11 @@ def code_only(rel: str) -> str:
     return ast.unparse(tree)
 
 
+def constants_default_tokens() -> int:
+    from src import constants
+    return constants.DEFAULT_MAX_OUTPUT_TOKENS
+
+
 def run() -> dict[str, tuple[bool, str]]:
     out: dict[str, tuple[bool, str]] = {}
 
@@ -209,6 +214,32 @@ def run() -> dict[str, tuple[bool, str]]:
                  ModelOperation.EVALUATION: "src/interview_service.py"}
     check("every_tunable_operation_has_a_runtime_consumer", set(consumers) == set(K.TUNABLE_OPERATIONS) and all("tunables(" in read(p) and o.name in read(p) for o, p in consumers.items()), "3 operations")
     check("tunable_values_propagate_unchanged_only_when_changed", tuned_ok, "changed field applied; unchanged field absent")
+    # explicit INHERIT vs explicit override at the real Practice evaluation call site (fake client; no provider)
+    from src.evaluation_service import EvaluationService
+    from src.models import ModelSettings as _MS
+    from tests.test_evaluation_service import FakeClient as _FC, _config as _ecfg, _evaluation_json as _ej, _pricing as _pr
+
+    def _observe(over):
+        cfg_ = K.baseline_config()
+        if over is not None:
+            cfg_["operations"]["evaluation"]["max_output_tokens"] = over
+        can_ = K.normalise(cfg_)
+        governed.set_provider(lambda: snapshot_for(can_))
+        fc = _FC([_ej()])
+        EvaluationService(fc, _pr()).evaluate_answer(_ecfg(), "Q?", "A.", _MS(prompt_technique="structured_procedure"))
+        governed.clear()
+        return fc.calls[0]["max_tokens"]
+    old_policy = OPERATION_POLICY[ModelOperation.EVALUATION].max_output_tokens
+    inherit_tokens, explicit_tokens, baseline_tokens = _observe(None), _observe(640), _observe(old_policy)
+    cleared_tokens = _observe(None)
+    check("inherit_leaves_the_real_call_unchanged", inherit_tokens == constants_default_tokens(), f"{inherit_tokens}")
+    check("explicit_value_reaches_the_real_call", explicit_tokens == 640, f"{explicit_tokens}")
+    check("explicit_value_equal_to_old_policy_baseline_is_still_applied", baseline_tokens == old_policy and old_policy != inherit_tokens, f"{baseline_tokens}")
+    check("override_can_be_cleared_back_to_inherit", cleared_tokens == inherit_tokens, "restored")
+    base_c = K.normalise(K.baseline_config()); eq_c = K.baseline_config(); eq_c["operations"]["evaluation"]["max_output_tokens"] = old_policy
+    check("inherit_and_explicit_baseline_number_hash_differently", K.config_hash(K.normalise(eq_c)) != K.config_hash(base_c), "distinct hashes")
+    check("baseline_config_is_literally_inherit", all(v is None for t_ in base_c["operations"].values() for v in t_.values()) and not any(snapshot_for(base_c).operation_overrides.values()), "all None, no override")
+    check("inherited_defaults_are_recorded", set(K.consumer_defaults()) == {o.value for o in K.TUNABLE_OPERATIONS}, "per consumer")
     check("no_cosmetic_tunable", not ({ModelOperation.FINAL_RESPONSE, ModelOperation.SPECIALIST_COACHING, ModelOperation.SPECIALIST_ROLE_ANALYSIS} & set(K.TUNABLE_OPERATIONS)), "consumer-less operations removed")
     check("client_supports_per_call_timeout_and_retries", "timeout_s" in read("src/openrouter_client.py") and "max_retries" in read("src/copilot/llm/openrouter.py"), "both clients")
     check("runtime_tests_exist", all(x in read("tests/test_ai_runtime_w10_7.py") for x in ("test_practice_balanced_session_follows_governed_balanced_mapping_then_rolls_back",

@@ -189,7 +189,7 @@ function Settings({ v }: { v: AIVersionDetail }) {
             {Object.entries(v.settings.operations).map(([op, t]) => (
               <tr key={op} className="border-t border-default">
                 <th scope="row" className="py-1 pr-4 text-left font-medium">{label(op)}</th>
-                {Object.keys(TUNABLE_LABEL).map((k) => <td key={k} className="py-1 pr-4">{t[k]}</td>)}
+                {Object.keys(TUNABLE_LABEL).map((k) => <td key={k} className="py-1 pr-4">{t[k] === null || t[k] === undefined ? "Inherit runtime default" : `Override: ${t[k]}`}</td>)}
               </tr>
             ))}
           </tbody>
@@ -201,16 +201,22 @@ function Settings({ v }: { v: AIVersionDetail }) {
 
 function Editor({ v, catalogue, onSaved }: { v: AIVersionDetail; catalogue: AICatalogue; onSaved: () => void }) {
   const [profiles, setProfiles] = useState<Record<string, string>>(v.settings.profiles);
-  const [ops, setOps] = useState<Record<string, Record<string, string>>>({});
+  const [ops, setOps] = useState<Record<string, Record<string, string | null>>>({});
   const [err, setErr] = useState<string | null>(null);
+  const defaults = useAdminResource(() => api.admin.aiCodeDefined(), []);
+  const inherited = (op: string, k: string) => {
+    if (defaults.state !== "ready") return "";
+    const rows = (defaults.data.inherited_defaults ?? {})[op] ?? [];
+    return rows.map((r) => `${(r as Record<string, unknown>)[k]} (${r.consumer})`).join("; ");
+  };
   useEffect(() => {
     setProfiles(v.settings.profiles);
-    setOps(Object.fromEntries(Object.entries(v.settings.operations).map(([op, t]) => [op, Object.fromEntries(Object.entries(t).map(([k, n]) => [k, String(n)]))])));
+    setOps(Object.fromEntries(Object.entries(v.settings.operations).map(([op, t]) => [op, Object.fromEntries(Object.entries(t).map(([k, n]) => [k, n === null || n === undefined ? null : String(n)]))])));
   }, [v.content_hash, v.settings.profiles, v.settings.operations]);
   const save = async () => {
     setErr(null);
     try {
-      const operations = Object.fromEntries(Object.entries(ops).map(([op, t]) => [op, Object.fromEntries(Object.entries(t).map(([k, s]) => [k, Number(s)]))]));
+      const operations = Object.fromEntries(Object.entries(ops).map(([op, t]) => [op, Object.fromEntries(Object.entries(t).map(([k, s]) => [k, s === null ? null : Number(s)]))]));
       await api.admin.aiUpdate(v.public_id, { settings: { profiles, operations } });
       onSaved();
     } catch (e) {
@@ -219,7 +225,7 @@ function Editor({ v, catalogue, onSaved }: { v: AIVersionDetail; catalogue: AICa
   };
   return (
     <Panel title="Edit draft">
-      <p className="text-xs text-muted">Pick an approved catalogue entry for each profile and set bounded numbers. Provider model names cannot be typed here.</p>
+      <p className="text-xs text-muted">Pick an approved catalogue entry for each profile. For each number choose Inherit (the runtime keeps its own default) or Override (that exact value is forced into every consumer of the operation). Provider model names cannot be typed here.</p>
       <div className="grid gap-2 sm:grid-cols-3">
         {["fast", "balanced", "advanced"].map((p) => (
           <label key={p} className="grid gap-1 text-sm capitalize">{p} profile
@@ -238,9 +244,18 @@ function Editor({ v, catalogue, onSaved }: { v: AIVersionDetail; catalogue: AICa
               <tr key={op} className="border-t border-default">
                 <th scope="row" className="py-1 pr-4 text-left font-medium">{label(op)}</th>
                 {Object.keys(TUNABLE_LABEL).map((k) => (
-                  <td key={k} className="py-1 pr-4">
-                    <input className={`${field} w-24`} inputMode="decimal" aria-label={`${label(op)} ${TUNABLE_LABEL[k]}`} value={t[k] ?? ""}
-                      onChange={(e) => setOps({ ...ops, [op]: { ...t, [k]: e.target.value } })} />
+                  <td key={k} className="py-1 pr-4 align-top">
+                    <label className="flex items-center gap-1 text-xs">
+                      <input type="checkbox" checked={t[k] !== null && t[k] !== undefined} aria-label={`${label(op)} ${TUNABLE_LABEL[k]} override`}
+                        onChange={(e) => setOps({ ...ops, [op]: { ...t, [k]: e.target.checked ? "1" : null } })} />
+                      Override
+                    </label>
+                    {t[k] !== null && t[k] !== undefined ? (
+                      <input className={`${field} w-24`} inputMode="decimal" aria-label={`${label(op)} ${TUNABLE_LABEL[k]}`} value={t[k]}
+                        onChange={(e) => setOps({ ...ops, [op]: { ...t, [k]: e.target.value } })} />
+                    ) : (
+                      <span className="block text-xs text-muted">Inherit runtime default{inherited(op, k) ? `: ${inherited(op, k)}` : ""}</span>
+                    )}
                   </td>
                 ))}
               </tr>

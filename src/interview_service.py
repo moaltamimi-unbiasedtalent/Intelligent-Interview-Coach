@@ -126,7 +126,7 @@ class BaseGenerationService:
 
         The session keeps ONE profile for all its operations (the persisted ``settings.model`` is the profile's compatibility marker, never trusted as
         a slug). With no active governed configuration this is the identity. Otherwise the slug becomes the model the ACTIVE configuration assigns to
-        that profile, and bounded tunables (max output tokens, timeout, retries) that the configuration changed for the matching operation (evaluation
+        that profile, and bounded tunables (max output tokens, timeout, retries) that the configuration EXPLICITLY overrides (a number; null = inherit) for the matching operation (evaluation
         and report -> EVALUATION; strategy, question and branch -> STRUCTURED_GENERATION) are applied. No per-operation model routing happens here.
         """
         from src.llm.policy import ModelOperation

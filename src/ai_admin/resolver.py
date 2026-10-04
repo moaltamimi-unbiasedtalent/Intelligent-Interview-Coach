@@ -158,8 +158,11 @@ def runtime_view(resolver: GovernedResolver | None = None) -> dict:
     ops = []
     for op in ModelOperation:
         r = resolve_policy(op, None)
+        tuned = snap.operation_overrides.get(op.value, {}) if snap else {}
+        # A numeric value is a governed override in force; None means INHERIT (the consumer keeps its own default). The code policy table is advisory.
         ops.append({"operation": op.value, "capability": r.capability.value, "uses_model": r.uses_model, "profile": r.profile.value if r.profile else None,
-                    "provider_slug": r.model_id, "max_output_tokens": r.max_output_tokens, "timeout_s": r.timeout_s, "max_retries": r.max_retries})
+                    "provider_slug": r.model_id, "max_output_tokens": tuned.get("max_output_tokens"), "timeout_s": tuned.get("timeout_s"),
+                    "max_retries": tuned.get("max_retries")})
     from src.voice.realtime import realtime_policy_summary
 
     rt = realtime_policy_summary()

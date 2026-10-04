@@ -785,3 +785,21 @@ def test_migration_0022_adds_only_ai_tables_and_seeds_nothing(tmp_path, monkeypa
             assert c.execute(text(f"SELECT count(*) FROM {t}")).scalar() == 0
     command.downgrade(cfg_, "0021_billing_admin")
     assert set(inspect(create_engine(url)).get_table_names()) == before
+
+
+def test_api_override_can_be_cleared_back_to_inherit_with_an_explicit_null(env):
+    Rig(env)
+    _, plat = env.user("platform_admin")
+    base = env.c.post(f"{API}/admin/ai/configs", json={"name": "inherit"}, cookies=plat).json()
+    assert all(v is None for t in base["settings"]["operations"].values() for v in t.values())          # inherit is stored as null
+    over = env.c.post(f"{API}/admin/ai/configs", json={"name": "o", "settings": {"operations": {"evaluation": {"max_output_tokens": 2048}}}}, cookies=plat).json()
+    assert over["settings"]["operations"]["evaluation"]["max_output_tokens"] == 2048
+    assert over["content_hash"] != base["content_hash"]                                                   # a number equal to the old policy value is not inherit
+    cleared = env.c.patch(f"{API}/admin/ai/configs/{over['public_id']}", json={"settings": {"operations": {"evaluation": {"max_output_tokens": None}}}}, cookies=plat).json()
+    assert cleared["settings"]["operations"]["evaluation"]["max_output_tokens"] is None
+    assert cleared["content_hash"] == base["content_hash"]                                                # inherit -> override -> inherit is the same canonical form
+    again = env.c.patch(f"{API}/admin/ai/configs/{over['public_id']}", json={"settings": {"operations": {"evaluation": {}}}}, cookies=plat).json()
+    assert again["content_hash"] == base["content_hash"]
+    assert any(c["field"] == "operation.evaluation.max_output_tokens" for c in env.c.patch(
+        f"{API}/admin/ai/configs/{over['public_id']}", json={"settings": {"operations": {"evaluation": {"max_output_tokens": 2048}}}}, cookies=plat).json()["changed_from_baseline"])
+    uninstall_resolver()

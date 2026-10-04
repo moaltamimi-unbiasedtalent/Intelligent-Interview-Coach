@@ -40,7 +40,8 @@ def _audit(request: Request, principal, event: str, target_type: str) -> dict:
 
 
 def _config(body):
-    return None if body is None else body.model_dump(exclude_none=True, exclude_unset=True)
+    # exclude_unset (NOT exclude_none): an explicit null is a deliberate "inherit" and must survive.
+    return None if body is None else body.model_dump(exclude_unset=True)
 
 
 @router.get("", response_model=AIOverview, summary="AI administration overview: counts and what this process resolves now")

@@ -35,27 +35,27 @@ Four tables, schema only, nothing seeded (the migration changes no behaviour):
 DRAFT -> VALIDATE (frozen) -> EVALUATE (W10.9 job) -> APPROVE (second administrator) -> ACTIVATE (staging, then production) -> ROLLBACK / REVERT TO CODE / RETIRE. Version states: draft, validated, evaluated, evaluation_failed, approved, rejected, retired.
 
 ## 7. Hash strategy
-SHA-256 over canonical JSON (sorted keys, fully expanded defaults) plus the catalogue version. Key order and number spelling cannot change the hash; a catalogue change can never re-attribute an old hash.
+SHA-256 over canonical JSON (sorted keys, fully expanded) plus the catalogue version. Key order and number spelling cannot change the hash; a catalogue change can never re-attribute an old hash. An INHERIT tunable is stored as JSON `null` and an explicit override as a number, so inherit and any number (even one equal to a code policy value) always hash differently.
 
 ## 8. Immutability
 Only a draft is editable. Validation freezes it. A change is a new version (optionally based on an old one). Evaluations, approvals and activations are never edited; activations are append-only.
 
-## 9. Tunable vs code-defined
-Tunable fields (bounded, per operation): `max_output_tokens` 256..4096, `timeout_s` 10..180, `max_retries` 0..3, with `timeout x (retries + 1) <= 600 s`.
-Only operations with a REAL, distinct runtime consumer are tunable, and every tunable of such an operation is wired end to end (see section 9A). Specialist coaching (no shipped model call path), the role specialist (shares the structured-generation producer) and the final response (produced by the orchestration model) have no separate consumer, so they are NOT configurable: a setting with no effect would be cosmetic.
-Semantics: a value that differs from the code operation policy is applied absolutely at every consumer of that operation; a value left at the code baseline changes nothing (the consumer keeps its real default).
-Code-defined and not configurable: capability, minimum tier, fallback floor, structured-output and tool flags, temperature, deterministic (`NONE`) and realtime operations, the three specialists, the Interview session profile, prompts, secrets. Unknown keys are rejected, never ignored.
+## 9. Tunable vs code-defined (inherit vs override)
+Each retained tunable of a configurable operation is EITHER `null` (INHERIT: the real consumer keeps exactly its pre-W10.7 default) OR an explicit number (OVERRIDE: that exact value is forced into every consumer of the operation). There is no inference from equality with any baseline number.
+Bounds apply only to explicit numbers: `max_output_tokens` 256..4096, `timeout_s` 10..180, `max_retries` 0..3. Time budget: `timeout x (retries + 1) <= 600 s`; an inherited timeout or retry count is evaluated at the LARGEST real default of any consumer of that operation (conservative, never skipped).
+Only operations with a REAL, distinct runtime consumer are tunable: orchestration, structured_generation, evaluation. Specialist coaching (no shipped model call path), the role specialist (shares the structured-generation producer) and the final response (produced by the orchestration model) are NOT configurable.
+Code-defined and not configurable: capability, minimum tier, fallback floor, structured-output and tool flags, temperature, deterministic (`NONE`) and realtime operations, the three specialists, the Interview session profile, prompts, secrets. Unknown keys are rejected.
+`baseline_config()` is literally the code as shipped: every tunable `null`. A baseline governed configuration changes no runtime value (test-proven).
+API/UI: an update sends `settings` with explicit `null` to clear an override back to inherit (the route uses `exclude_unset`, not `exclude_none`, so a deliberate null survives); an absent field is also inherit because `settings` replaces the whole configuration. The UI shows "Inherit runtime default: <real values>" or "Override: N" per field, never a number that is not enforced.
 
-### 9A. Tunable consumer matrix
-| Operation | Runtime caller(s) | Uses governed model? | max tokens | timeout | retries |
+### 9A. Real pre-W10.7 consumer defaults and the code policy table
+| Operation | Consumer | Default tokens | Default timeout | Default retries | Code policy table (advisory only) |
 |---|---|---|---|---|---|
-| orchestration | `application/agent_service._default_model_factory` (Mo's chat model) | yes (profile -> `spec`) | yes | yes | yes |
-| structured_generation | `copilot/tools/structured.build_structured_producer` (JD analysis, question generation, role specialist), Interview strategy/question/branch (`interview_service._generate`) | yes | yes | yes | yes |
-| evaluation | Interview answer evaluation and report (`interview_service._generate`) | yes | yes | yes | yes |
-| final_response, specialist_role_analysis, specialist_coaching | no separate runtime path | not tunable | | | |
-| specialist_evidence_analysis | deterministic, no model | not applicable | | | |
-| realtime_voice | separate realtime registry, no chat slug | not applicable | | | |
-Career chat synthesis (`copilot/rag/responder`) follows the governed profile mapping for its model slug but has no tunable. The interview HTTP client (`OpenRouterClient`) and the LangChain chat model both accept per-call timeout and retries that are supplied only from an active governed configuration.
+| orchestration | Mo agent chat model (`_default_model_factory`) | 1024 | 60 s | 1 | 1536 / 60 s / 2 |
+| structured_generation | Career structured tools (`build_structured_producer`) | 4096 | 60 s | 1 | 1024 / 45 s / 1 |
+| structured_generation | Practice strategy, question, branch (`_generate`) | 3072 | 60 s | 1 | 1024 / 45 s / 1 |
+| evaluation | Practice answer evaluation and report (`_generate`) | 3072 | 60 s | 1 | 2048 / 90 s / 2 |
+Confirmed: the policy table differs from the real runtime defaults for most fields (e.g. orchestration tokens 1024 vs 1536, evaluation retries 1 vs 2). That is exactly why equality with the table cannot mean "inherit"; `OPERATION_POLICY` numbers are advisory and are not what any consumer applies. final_response, specialist_role_analysis, specialist_coaching: no separate runtime path (not tunable). Deterministic and realtime operations: not applicable. Career chat synthesis follows the governed model slug but has no tunable.
 
 ## 10. Validation checks (deterministic)
 catalogue membership, no raw provider slug anywhere, profile allowed for entry, tier monotonic, cost ordering, tunable bounds, time budget, capability support (tools/structured) for every operation and profile, floors preserved, code-defined operations untouched.
@@ -103,7 +103,7 @@ Rollback (this server's environment only) restores the previous activated versio
 Eleven canonical events (`admin.ai_config_created|updated|validated`, `ai_evaluation_requested|completed`, `ai_approval_requested`, `ai_approved|rejected`, `ai_activated`, `ai_rolled_back`, `ai_retired`), written in the same transaction as the change. Payloads: ids, hash, environment, states. Never a prompt or candidate content.
 
 ## 23. Verification evidence (measured)
-Measured on the correction commit: backend 2925 passed, 4 skipped; vitest 721 passed; Playwright 213 passed; all 36 CI evaluators pass (including `eval_admin_ai_models.py`, now with the environment, Practice and tunable-consumer checks); ruff, compileall, tsc, lint, build and the i18n scanner clean; dev DB, schema, checkpoint, Chroma, cache and `evaluations/` fingerprints unchanged; manual QA with a separate worker (22 original checks plus 14 environment, Practice and tunable checks) all pass; 0 paid/live calls. Test files: `tests/test_ai_admin_w10_7.py` (lifecycle, environments, resolver, boundaries, migration), `tests/test_ai_runtime_w10_7.py` (Practice governance, legacy compatibility, tunable propagation to the real call sites), vitest `tests/ai-w10-7.test.tsx`, the Playwright journey in `e2e/admin.spec.ts`, and the CI gate `scripts/eval_admin_ai_models.py`.
+Measured on the latest correction commit: backend 2942 passed, 4 skipped; vitest 722 passed; Playwright 213 passed; all 36 CI evaluators pass (including `eval_admin_ai_models.py`, now with the environment, Practice and tunable-consumer checks); ruff, compileall, tsc, lint, build and the i18n scanner clean; dev DB, schema, checkpoint, Chroma, cache and `evaluations/` fingerprints unchanged; manual QA with a separate worker (22 original checks plus 14 environment, Practice and tunable checks, re-run after the inherit/override change) all pass; 0 paid/live calls. Test files: `tests/test_ai_admin_w10_7.py` (lifecycle, environments, resolver, boundaries, migration), `tests/test_ai_runtime_w10_7.py` (Practice governance, legacy compatibility, tunable propagation to the real call sites), vitest `tests/ai-w10-7.test.tsx`, the Playwright journey in `e2e/admin.spec.ts`, and the CI gate `scripts/eval_admin_ai_models.py`.
 
 ## 24. Known limits
 Cross-process convergence is TTL-based (at most about 5 s), never instant. The catalogue has three entries; adding a model is a code change. Live model quality is not evaluated here. Governed tunables are absolute when changed from the code policy value. Staging-to-production promotion assumes staging and production share the control-plane database (or a staging record exists in the production one). ROLE-W10-01 stays open for W10.14.

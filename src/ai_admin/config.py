@@ -51,18 +51,45 @@ def model_backed_operations() -> list[ModelOperation]:
     return [op for op, p in OPERATION_POLICY.items() if p.capability not in (ModelCapability.NONE, ModelCapability.REALTIME)]
 
 
-def baseline_config() -> dict:
-    """The configuration equivalent to the code as shipped (profiles from the registry defaults, tunables from the code policy)."""
+def consumer_defaults() -> dict[str, list[dict]]:
+    """The REAL pre-W10.7 runtime defaults at each consumer of a tunable operation (read from the constants those consumers use today).
+
+    ``None`` in a configuration means INHERIT: the consumer keeps exactly these values. This table is what the Admin UI shows beside an
+    inherited field; it is never written into a configuration.
+    """
+    from src import constants as app_c
+    from src.copilot import constants as career_c
+
+    app_timeout = float(app_c.READ_TIMEOUT_SECONDS)
+    career_timeout = float(career_c.READ_TIMEOUT_SECONDS)
     return {
-        "schema": SCHEMA_VERSION,
-        "profiles": dict(C.BASELINE_PROFILES),
-        "operations": {op.value: {"max_output_tokens": OPERATION_POLICY[op].max_output_tokens,
-                                  "timeout_s": float(OPERATION_POLICY[op].timeout_s),
-                                  "max_retries": OPERATION_POLICY[op].max_retries} for op in tunable_operations()},
+        ModelOperation.ORCHESTRATION.value: [
+            {"consumer": "Mo (agent chat model)", "max_output_tokens": career_c.DEFAULT_MAX_OUTPUT_TOKENS, "timeout_s": career_timeout, "max_retries": career_c.LLM_MAX_RETRIES}],
+        ModelOperation.STRUCTURED_GENERATION.value: [
+            {"consumer": "Career structured tools (job analysis, questions, role specialist)", "max_output_tokens": career_c.STRUCTURED_MAX_OUTPUT_TOKENS,
+             "timeout_s": career_timeout, "max_retries": career_c.LLM_MAX_RETRIES},
+            {"consumer": "Practice strategy, question and branch", "max_output_tokens": app_c.DEFAULT_MAX_OUTPUT_TOKENS, "timeout_s": app_timeout,
+             "max_retries": app_c.MAX_TRANSIENT_RETRIES}],
+        ModelOperation.EVALUATION.value: [
+            {"consumer": "Practice answer evaluation and report", "max_output_tokens": app_c.DEFAULT_MAX_OUTPUT_TOKENS, "timeout_s": app_timeout,
+             "max_retries": app_c.MAX_TRANSIENT_RETRIES}],
     }
 
 
-def _number(value: Any, field: str, integer: bool) -> int | float:
+def baseline_config() -> dict:
+    """The configuration equivalent to the code as shipped, literally: every tunable is ``None`` (INHERIT), so a baseline configuration changes
+    no runtime value. A number is an explicit override that is forced into every consumer of its operation, even if it equals some other
+    code number. ``None`` and a number can never be confused: they hash differently."""
+    return {
+        "schema": SCHEMA_VERSION,
+        "profiles": dict(C.BASELINE_PROFILES),
+        "operations": {op.value: {f: None for f in TUNABLES} for op in tunable_operations()},
+    }
+
+
+def _number(value: Any, field: str, integer: bool) -> int | float | None:
+    if value is None:
+        return None                                   # inherit
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ConfigError(f"A {field.replace('_', ' ')} value must be a number.")
     if integer:
@@ -104,10 +131,7 @@ def normalise(raw: Any) -> dict:
             raise ConfigError("An operation can only set max output tokens, timeout and retries.")
         for field, value in given.items():
             merged[field] = _number(value, field, TUNABLES[field][2])
-        merged["max_output_tokens"] = int(merged["max_output_tokens"])
-        merged["max_retries"] = int(merged["max_retries"])
-        merged["timeout_s"] = float(merged["timeout_s"])
-        ops[name] = merged
+        ops[name] = {f: (None if merged[f] is None else (int(merged[f]) if TUNABLES[f][2] else float(merged[f]))) for f in TUNABLES}
     return {"schema": SCHEMA_VERSION, "profiles": {p.value: profiles[p.value] for p in ModelProfile}, "operations": ops}
 
 
@@ -118,7 +142,7 @@ def config_hash(canonical: dict, catalogue_version: str = C.CATALOGUE_VERSION) -
 
 
 def diff_from_baseline(canonical: dict) -> list[dict]:
-    """Human-readable list of every field that differs from the code baseline."""
+    """Human-readable list of every field that differs from the code baseline (inherit)."""
     base = baseline_config()
     out: list[dict] = []
     for p in ModelProfile:
@@ -127,7 +151,7 @@ def diff_from_baseline(canonical: dict) -> list[dict]:
     for name, tun in canonical["operations"].items():
         for f, v in tun.items():
             if v != base["operations"][name][f]:
-                out.append({"field": f"operation.{name}.{f}", "baseline": base["operations"][name][f], "value": v})
+                out.append({"field": f"operation.{name}.{f}", "baseline": "inherit", "value": "inherit" if v is None else v})
     return out
 
 
@@ -179,9 +203,13 @@ def validate(canonical: dict) -> list[Check]:
     bounds_ok, budget_ok, detail_b, detail_t = True, True, "", ""
     for name, tun in canonical["operations"].items():
         for field, (lo, hi, _i) in TUNABLES.items():
-            if not lo <= tun[field] <= hi:
+            if tun[field] is not None and not lo <= tun[field] <= hi:        # bounds apply only to an explicit override; inherit is always valid
                 bounds_ok, detail_b = False, f"{name}: {field.replace('_', ' ')} is outside {lo:g} to {hi:g}."
-        if tun["timeout_s"] * (tun["max_retries"] + 1) > MAX_TOTAL_BUDGET_S:
+        # Time budget: an inherited timeout or retry count is evaluated at the LARGEST real default of any consumer of the operation (conservative).
+        defaults = consumer_defaults()[name]
+        t = tun["timeout_s"] if tun["timeout_s"] is not None else max(d["timeout_s"] for d in defaults)
+        r = tun["max_retries"] if tun["max_retries"] is not None else max(d["max_retries"] for d in defaults)
+        if t * (r + 1) > MAX_TOTAL_BUDGET_S:
             budget_ok, detail_t = False, f"{name}: timeout x (retries + 1) exceeds {MAX_TOTAL_BUDGET_S:g} seconds."
     add("tunable_bounds", "Every tunable is inside its code-defined bounds", bounds_ok, detail_b)
     add("time_budget", "No operation can hold a request beyond the total time budget", budget_ok, detail_t)

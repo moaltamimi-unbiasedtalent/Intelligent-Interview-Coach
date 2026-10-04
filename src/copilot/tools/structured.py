@@ -42,7 +42,7 @@ def build_structured_producer(
         )
     from src.copilot.llm.openrouter import CopilotConfigError, build_chat_model
 
-    # P10B-W10.7: governed STRUCTURED_GENERATION tunables (only when an active configuration changed them) reach the real chat model.
+    # P10B-W10.7: governed STRUCTURED_GENERATION tunables (only an explicit numeric override; null/absent = inherit the real default) reach the real chat model.
     from src.llm.policy import ModelOperation
     from src.llm.runtime import tunables
 

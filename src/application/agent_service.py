@@ -117,7 +117,7 @@ def _default_model_factory(profile: "Any" = None) -> Any:
         raise AgentConfigurationError(
             "The configured agent model does not support tool calling.")
     try:
-        # P10B-W10.7: governed ORCHESTRATION tunables (only when an active configuration changed them) reach the real chat model.
+        # P10B-W10.7: governed ORCHESTRATION tunables (only an explicit numeric override; null/absent = inherit the real default) reach the real chat model.
         from src.llm.policy import ModelOperation
         from src.llm.runtime import tunables
 

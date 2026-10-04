@@ -912,9 +912,17 @@ class AITunableBound(_Strict):
     max: float
 
 
+class AIConsumerDefault(_Strict):
+    consumer: str
+    max_output_tokens: int
+    timeout_s: float
+    max_retries: int
+
+
 class AICodeDefinedView(_Strict):
     operations: list[AIOperationCodeView]
     tunable_fields: dict[str, AITunableBound]
+    inherited_defaults: dict[str, list[AIConsumerDefault]]
     note: str
 
 
@@ -1032,7 +1040,7 @@ class AIVersionSummary(_Strict):
 
 
 class AIVersionDetail(AIVersionSummary):
-    settings: dict[str, dict[str, str | dict[str, float | int]] | int]
+    settings: dict[str, dict[str, str | dict[str, float | int | None]] | int]
     validation: list[AICheckView]
     validation_passed: bool
     changed_from_baseline: list[dict[str, str | int | float]]
@@ -1075,9 +1083,9 @@ class AIRuntimeOperation(_Strict):
     uses_model: bool
     profile: str | None = None
     provider_slug: str | None = None
-    max_output_tokens: int
-    timeout_s: float
-    max_retries: int
+    max_output_tokens: int | None = None
+    timeout_s: float | None = None
+    max_retries: int | None = None
 
 
 class AIRuntimeView(_Strict):

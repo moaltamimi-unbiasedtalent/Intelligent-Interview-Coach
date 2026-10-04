@@ -254,3 +254,122 @@ def test_every_tunable_operation_has_a_documented_runtime_consumer():
         assert "tunables(" in text and op.name in text, (op, path)
     for gone in (ModelOperation.FINAL_RESPONSE, ModelOperation.SPECIALIST_COACHING, ModelOperation.SPECIALIST_ROLE_ANALYSIS):
         assert gone not in K.TUNABLE_OPERATIONS
+
+
+# ---------------- explicit INHERIT vs explicit override semantics (no equality-with-a-baseline shortcut) ------------------------
+
+from src.llm.policy import OPERATION_POLICY  # noqa: E402
+
+FIELDS = ("max_output_tokens", "timeout_s", "max_retries")
+KEY = {"max_output_tokens": "max_tokens", "timeout_s": "timeout_s", "max_retries": "max_retries"}
+
+
+def _observe_practice(op):
+    c = FakeClient([_evaluation_json() if op == "evaluation" else _strategy_json()])
+    if op == "evaluation":
+        EvaluationService(c, pricing()).evaluate_answer(_icfg(), "Q?", "A.", balanced_session())
+    else:
+        InterviewService(c, pricing()).generate_strategy(_icfg(), balanced_session())
+    return c.calls[0]
+
+
+def _observe_agent():
+    import src.copilot.llm.openrouter as orr
+    from src.application.agent_service import _default_model_factory
+    cap, orig = Captured(), orr.build_chat_model
+    orr.build_chat_model = cap
+    try:
+        _default_model_factory(M.ModelProfile.BALANCED)
+    finally:
+        orr.build_chat_model = orig
+    return cap.kwargs
+
+
+def _observe_career():
+    import src.copilot.llm.openrouter as orr
+    from src.copilot.config import load_config
+    from src.copilot.tools.schemas import RoleRequirements
+    from src.copilot.tools.structured import build_structured_producer
+    cap, orig = Captured(), orr.build_chat_model
+    orr.build_chat_model = cap
+    try:
+        build_structured_producer(load_config(), RoleRequirements)
+    finally:
+        orr.build_chat_model = orig
+    return cap.kwargs
+
+
+# (operation, consumer name, observer, key in the observed call, the REAL pre-W10.7 default for that key at that consumer)
+CONSUMERS = [
+    ("orchestration", "agent", _observe_agent, {"max_output_tokens": None, "timeout_s": None, "max_retries": None}),
+    ("structured_generation", "career", _observe_career, {"max_output_tokens": copilot_constants.STRUCTURED_MAX_OUTPUT_TOKENS, "timeout_s": None, "max_retries": None}),
+    ("structured_generation", "practice", lambda: _observe_practice("strategy"), {"max_output_tokens": constants.DEFAULT_MAX_OUTPUT_TOKENS, "timeout_s": None, "max_retries": None}),
+    ("evaluation", "practice", lambda: _observe_practice("evaluation"), {"max_output_tokens": constants.DEFAULT_MAX_OUTPUT_TOKENS, "timeout_s": None, "max_retries": None}),
+]
+NON_BASELINE = {"max_output_tokens": 640, "timeout_s": 22.0, "max_retries": 3}
+
+
+def _value(call, field):
+    return call.get(KEY[field])
+
+
+@pytest.mark.parametrize("op,consumer,observe,defaults", CONSUMERS, ids=[f"{o}-{c}" for o, c, _f, _d in CONSUMERS])
+@pytest.mark.parametrize("field", FIELDS)
+def test_inherit_explicit_old_baseline_nonbaseline_and_clear_at_the_real_consumer(op, consumer, observe, defaults, field):
+    # A. INHERIT: the real call keeps its pre-W10.7 default (an absent key means the client's/consumer's own default)
+    install()
+    assert _value(observe(), field) == defaults[field]
+    # B. EXPLICIT non-baseline value: exact
+    install(**{op: {field: NON_BASELINE[field]}})
+    assert _value(observe(), field) == NON_BASELINE[field]
+    # C. EXPLICIT value equal to the OLD policy baseline: STILL applied exactly (never treated as inherit)
+    baseline = getattr(OPERATION_POLICY[ModelOperation(op)], field)
+    install(**{op: {field: baseline}})
+    assert _value(observe(), field) == baseline
+    # D. CLEAR back to inherit: the pre-W10.7 default returns
+    install(**{op: {field: NON_BASELINE[field]}})
+    assert _value(observe(), field) == NON_BASELINE[field]
+    install(**{op: {field: None}})
+    assert _value(observe(), field) == defaults[field]
+
+
+def test_pre_w10_7_defaults_are_recorded_truthfully_and_differ_from_the_policy_table():
+    d = K.consumer_defaults()
+    assert d["orchestration"][0]["max_output_tokens"] == copilot_constants.DEFAULT_MAX_OUTPUT_TOKENS == 1024
+    assert {x["max_output_tokens"] for x in d["structured_generation"]} == {copilot_constants.STRUCTURED_MAX_OUTPUT_TOKENS, constants.DEFAULT_MAX_OUTPUT_TOKENS}
+    assert d["evaluation"][0]["timeout_s"] == constants.READ_TIMEOUT_SECONDS and d["evaluation"][0]["max_retries"] == constants.MAX_TRANSIENT_RETRIES
+    mismatches = [op for op, rows in d.items() for r in rows for f in FIELDS if r[f] != getattr(OPERATION_POLICY[ModelOperation(op)], f)]
+    assert mismatches                                                                  # the code policy table is NOT the runtime default (hence inherit)
+
+
+def test_baseline_is_literally_inherit_and_inherit_hashes_differently_from_a_number():
+    base = K.normalise(K.baseline_config())
+    assert all(v is None for tun in base["operations"].values() for v in tun.values())
+    from src.ai_admin.evaluator import snapshot_for as snap
+    assert all(not s for s in snap(base).operation_overrides.values())                # a baseline config overrides nothing
+    for op in K.TUNABLE_OPERATIONS:
+        for field in FIELDS:
+            explicit = K.baseline_config()
+            explicit["operations"][op.value][field] = getattr(OPERATION_POLICY[op], field)    # a number that equals the old policy value
+            assert K.config_hash(K.normalise(explicit)) != K.config_hash(base)
+
+
+def test_baseline_governed_configuration_preserves_runtime_behaviour():
+    before = {(o, c): obs() for o, c, obs, _d in CONSUMERS}
+    install(profiles={})                                                              # an untouched baseline configuration
+    assert {(o, c): obs() for o, c, obs, _d in CONSUMERS} == before
+
+
+def test_bounds_apply_only_to_explicit_numbers_and_the_time_budget_uses_real_defaults_for_inherit():
+    ok = K.baseline_config()
+    assert K.passed(K.validate(K.normalise(ok)))                                      # inherit everywhere is valid
+    bad = K.baseline_config(); bad["operations"]["evaluation"]["max_output_tokens"] = 10
+    assert not K.passed(K.validate(K.normalise(bad)))
+    big = K.baseline_config(); big["operations"]["evaluation"]["max_retries"] = 3     # timeout inherited (60 s real default): 60 x 4 = 240 s, fine
+    assert K.passed(K.validate(K.normalise(big)))
+    big["operations"]["evaluation"]["timeout_s"] = 180.0                              # 180 x 4 = 720 s > 600 s
+    assert not K.passed(K.validate(K.normalise(big)))
+    only_t = K.baseline_config(); only_t["operations"]["structured_generation"]["timeout_s"] = 180.0   # retries inherited at the real max (1): 360 s
+    assert K.passed(K.validate(K.normalise(only_t)))
+    only_r = K.baseline_config(); only_r["operations"]["structured_generation"]["max_retries"] = 3      # timeout inherited at the real max (60): 240 s
+    assert K.passed(K.validate(K.normalise(only_r)))

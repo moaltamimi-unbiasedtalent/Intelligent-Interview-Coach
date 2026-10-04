@@ -49,7 +49,7 @@ beforeEach(() => {
   f.code.mockResolvedValue({ operations: [
     { operation: "orchestration", capability: "tool_calling", min_capability: "balanced", fallback_floor: "balanced", structured_output: false, requires_tools: true, tunable: true, deterministic: false, realtime: false, code_values: {} },
     { operation: "specialist_evidence_analysis", capability: "none", min_capability: "fast", fallback_floor: "fast", structured_output: false, requires_tools: false, tunable: false, deterministic: true, realtime: false, code_values: {} },
-    { operation: "realtime_voice", capability: "realtime", min_capability: "balanced", fallback_floor: "balanced", structured_output: false, requires_tools: false, tunable: false, deterministic: false, realtime: true, code_values: {} }], tunable_fields: {}, note: "Code-defined." });
+    { operation: "realtime_voice", capability: "realtime", min_capability: "balanced", fallback_floor: "balanced", structured_output: false, requires_tools: false, tunable: false, deterministic: false, realtime: true, code_values: {} }], tunable_fields: {}, inherited_defaults: { orchestration: [{ consumer: "Mo", max_output_tokens: 1024, timeout_s: 60, max_retries: 1 }] }, note: "Code-defined." });
   f.envs.mockResolvedValue({ note: "n", this_environment: "staging", items: [{ environment: "staging", mode: "code_defaults", active: null, version: null, profiles: RUNTIME().profiles }, { environment: "production", mode: "code_defaults", active: null, version: null, profiles: RUNTIME().profiles }] });
   f.hist.mockResolvedValue(page([])); f.apprs.mockResolvedValue(page([])); f.cfgs.mockResolvedValue(page([SUMMARY()])); f.cfg.mockResolvedValue(DETAIL());
   f.create.mockResolvedValue(DETAIL()); f.update.mockResolvedValue(DETAIL()); f.validate.mockResolvedValue(DETAIL({ state: "validated" })); f.evaluate.mockResolvedValue({});
@@ -123,6 +123,10 @@ describe("Admin AI configuration detail", () => {
     render(<AIConfigDetailView id={"c".repeat(32)} />);
     expect(await screen.findByRole("heading", { name: "Edit draft" })).toBeInTheDocument();
     expect(screen.queryByLabelText(/slug|provider/i)).not.toBeInTheDocument();
+    const box = await screen.findByLabelText("orchestration Max retries override");
+    expect(box).toBeChecked();                                                             // the mock holds an explicit number
+    await userEvent.click(screen.getByLabelText("orchestration Timeout (seconds) override"));  // clear one override back to inherit
+    expect(await screen.findAllByText(/Inherit runtime default/)).not.toHaveLength(0);
     const retries = await screen.findByLabelText("orchestration Max retries");
     await userEvent.clear(retries);
     await userEvent.type(retries, "1");
@@ -131,6 +135,17 @@ describe("Admin AI configuration detail", () => {
     const body = f.update.mock.calls[0][1];
     expect(body.settings.profiles).toEqual({ fast: "luna", balanced: "terra", advanced: "sol" });
     expect(body.settings.operations.orchestration.max_retries).toBe(1);
+    expect(body.settings.operations.orchestration.timeout_s).toBeNull();                   // cleared: an explicit null means INHERIT, not "absent"
+    expect(body.settings.operations.orchestration.max_output_tokens).toBe(1536);
+  });
+
+  it("inherit and override are shown distinctly and an inherited field never shows a number as enforced", async () => {
+    f.cfg.mockResolvedValue(DETAIL({ state: "validated", settings: { profiles: { fast: "luna", balanced: "terra", advanced: "sol" },
+      operations: { orchestration: { max_output_tokens: null, timeout_s: 60, max_retries: null } } } }));
+    render(<AIConfigDetailView id={"c".repeat(32)} />);
+    expect(await screen.findByText("Override: 60")).toBeInTheDocument();
+    expect(screen.getAllByText("Inherit runtime default")).toHaveLength(2);
+    expect(screen.queryByText(/Override: 1024|Override: 1536/)).not.toBeInTheDocument();
   });
 
   it("a frozen configuration shows settings read-only", async () => {

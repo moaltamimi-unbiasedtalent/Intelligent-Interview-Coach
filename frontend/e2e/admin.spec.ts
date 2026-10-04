@@ -65,16 +65,16 @@ const AI_ID = "c".repeat(32);
 const AI_APPROVAL = "e".repeat(32);
 const AI_PROFILES = { fast: "luna", balanced: "terra", advanced: "sol" };
 const ai = {
-  created: false, state: "draft", retries: 2, evalQueued: false, approvalRequested: false, staging: false, production: false, stagingEver: false, reverted: false,
+  created: false, state: "draft", retries: null as number | null, evalQueued: false, approvalRequested: false, staging: false, production: false, stagingEver: false, reverted: false,
   worker() { if (this.evalQueued) { this.evalQueued = false; this.state = "evaluated"; } },
-  hash() { return (this.retries === 2 ? "a" : "b").repeat(64); },
+  hash() { return (this.retries === null ? "a" : "b").repeat(64); },
   summary() { return { public_id: AI_ID, version: 1, name: "Lower retries", notes: "", state: this.state, content_hash: this.hash(), catalogue_version: "2026-10-04.1",
     created_by_email: "first@example.com", created_by_user_id: 1, created_at: null, validated_at: null, retired_at: null,
     active_in: [this.staging ? "staging" : "", this.production ? "production" : ""].filter(Boolean) }; },
   detail() {
-    const ops = { orchestration: { max_output_tokens: 1536, timeout_s: 60, max_retries: this.retries }, final_response: { max_output_tokens: 1536, timeout_s: 60, max_retries: 2 } };
+    const ops = { orchestration: { max_output_tokens: null, timeout_s: null, max_retries: this.retries }, evaluation: { max_output_tokens: null, timeout_s: null, max_retries: null } };
     return { ...this.summary(), settings: { profiles: AI_PROFILES, operations: ops }, validation: this.state === "draft" ? [] : [{ code: "tunable_bounds", label: "Every tunable is inside its code-defined bounds", passed: true, detail: "" }],
-      validation_passed: this.state !== "draft", changed_from_baseline: this.retries === 2 ? [] : [{ field: "operation.orchestration.max_retries", baseline: 2, value: this.retries }],
+      validation_passed: this.state !== "draft", changed_from_baseline: this.retries === null ? [] : [{ field: "operation.orchestration.max_retries", baseline: "inherit", value: this.retries }],
       evaluations: this.state === "evaluated" || this.state === "approved" ? [{ public_id: "d".repeat(32), content_hash: this.hash(), evaluator_version: "ai-eval-1", status: "passed",
         checks: [{ code: "resolution_matrix", label: "All 24 operation x profile resolutions hold their invariants", passed: true, detail: "" }], summary: {}, live_calls: 0, failure_category: null, created_at: null, finished_at: null }]
         : this.evalQueued ? [{ public_id: "d".repeat(32), content_hash: this.hash(), evaluator_version: "ai-eval-1", status: "queued", checks: [], summary: {}, live_calls: 0, failure_category: null, created_at: null, finished_at: null }] : [],
@@ -233,7 +233,7 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
     const method = route.request().method();
     if (path.endsWith("/admin/ai/catalogue")) return json({ version: "2026-10-04.1", note: "The approved catalogue is defined in code.", items: ["luna", "terra", "sol"].map((id, i) => ({ id, display_name: `${id[0].toUpperCase()}${id.slice(1)} entry`, tier: ["fast", "balanced", "advanced"][i], allowed_profiles: ["balanced"], provider_slug: `x/${id}`, supports_tools: true, supports_structured_output: true, supports_temperature: false, cost_class: i + 1, note: "" })) });
     if (path.endsWith("/admin/ai/code-defined")) return json({ operations: [{ operation: "orchestration", capability: "tool_calling", min_capability: "balanced", fallback_floor: "balanced", structured_output: false, requires_tools: true, tunable: true, deterministic: false, realtime: false, code_values: {} },
-      { operation: "specialist_evidence_analysis", capability: "none", min_capability: "fast", fallback_floor: "fast", structured_output: false, requires_tools: false, tunable: false, deterministic: true, realtime: false, code_values: {} }], tunable_fields: {}, note: "Code-defined." });
+      { operation: "specialist_evidence_analysis", capability: "none", min_capability: "fast", fallback_floor: "fast", structured_output: false, requires_tools: false, tunable: false, deterministic: true, realtime: false, code_values: {} }], tunable_fields: {}, inherited_defaults: { orchestration: [{ consumer: "Mo", max_output_tokens: 1024, timeout_s: 60, max_retries: 1 }] }, note: "Code-defined." });
     if (path.endsWith("/admin/ai/runtime")) return json(ai.runtime());
     if (path.endsWith("/admin/ai/environments")) return json({ note: "With nothing active an environment uses the code-defined registry.", this_environment: "staging", items: ["staging"].map((env) => ({ environment: env, mode: ai.governedIn(env) ? "governed" : "code_defaults",
       active: ai.governedIn(env) ? { public_id: "f".repeat(32), environment: env, kind: "activate", version_ref: AI_ID, version: 1, content_hash: ai.hash(), activated_by_email: "second@example.com", activated_at: null, deactivated_at: null, reason: "go", open: true } : null,
@@ -712,7 +712,7 @@ test("unauthenticated access to admin is redirected to sign-in", async ({ page }
 });
 
 test("W10.7: AI administration: code defaults, draft, validate, evaluate (worker), no self-approval, second admin approves, this server's environment only, rollback", async ({ page }) => {
-  Object.assign(ai, { created: false, state: "draft", retries: 2, evalQueued: false, approvalRequested: false, staging: false, production: false, stagingEver: false, reverted: false });
+  Object.assign(ai, { created: false, state: "draft", retries: null, evalQueued: false, approvalRequested: false, staging: false, production: false, stagingEver: false, reverted: false });
   currentUid = 1;
   await mockAdmin(page, "platform_admin", ADMIN_PERMS);
   await page.goto("/admin");
@@ -727,7 +727,9 @@ test("W10.7: AI administration: code defaults, draft, validate, evaluate (worker
   await expect(page.getByText(/Draft version 1 created/)).toBeVisible();
   await page.getByRole("link", { name: "Lower retries" }).click();
   await expect(page.getByRole("heading", { name: "Edit draft" })).toBeVisible();
-  await page.getByLabel("orchestration Max retries").fill("1");
+  await expect(page.getByText(/Inherit runtime default/).first()).toBeVisible();
+  await page.getByLabel("orchestration Max retries override").check();
+  await page.getByLabel("orchestration Max retries", { exact: true }).fill("1");
   await page.getByRole("button", { name: "Save draft" }).click();
   await expect(page.getByText("Draft saved.")).toBeVisible();
   await expect(page.getByText(/operation orchestration max retries/)).toBeVisible();

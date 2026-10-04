@@ -584,9 +584,11 @@ export interface AICodeDefined {
   operations: { operation: string; capability: string; min_capability: string; fallback_floor: string; structured_output: boolean; requires_tools: boolean;
     tunable: boolean; no_runtime_path?: boolean; deterministic: boolean; realtime: boolean; code_values: Record<string, number> }[];
   tunable_fields: Record<string, { min: number; max: number }>;
+  inherited_defaults: Record<string, { consumer: string; max_output_tokens: number; timeout_s: number; max_retries: number }[]>;
   note: string;
 }
-export interface AIOperationTuning { max_output_tokens?: number; timeout_s?: number; max_retries?: number }
+/** A number is an explicit override forced into the runtime; null is INHERIT (the runtime keeps its own default). */
+export interface AIOperationTuning { max_output_tokens?: number | null; timeout_s?: number | null; max_retries?: number | null }
 export interface AIConfigInput { profiles?: Record<string, string>; operations?: Record<string, AIOperationTuning> }
 export interface AICheck { code: string; label: string; passed: boolean; detail: string }
 export interface AIEvaluation {
@@ -606,7 +608,7 @@ export interface AIVersionSummary {
   created_by_email: string | null; created_by_user_id: number | null; created_at: string | null; validated_at: string | null; retired_at: string | null; active_in: string[];
 }
 export interface AIVersionDetail extends AIVersionSummary {
-  settings: { profiles: Record<string, string>; operations: Record<string, Record<string, number>> };
+  settings: { profiles: Record<string, string>; operations: Record<string, Record<string, number | null>> };
   validation: AICheck[]; validation_passed: boolean; changed_from_baseline: { field: string; baseline: string | number; value: string | number }[];
   evaluations: AIEvaluation[]; approvals: AIApproval[]; activations: AIActivation[]; latest_evaluation_passed: boolean;
 }
@@ -616,7 +618,7 @@ export interface AIEnvironment { environment: string; mode: string; active: AIAc
 export interface AIRuntime {
   environment: string; mode: string; active_version: number | null; content_hash: string | null; fallback_reason: string | null;
   profiles: Record<string, AIProfileResolution>;
-  operations: { operation: string; capability: string; uses_model: boolean; profile: string | null; provider_slug: string | null; max_output_tokens: number; timeout_s: number; max_retries: number }[];
+  operations: { operation: string; capability: string; uses_model: boolean; profile: string | null; provider_slug: string | null; max_output_tokens: number | null; timeout_s: number | null; max_retries: number | null }[];
   realtime: { capability: string; chat_slug: string | null; governed: boolean }; note: string;
 }
 export interface AIOverview { stats: { versions: number; by_state: Record<string, number>; pending_approvals: number; active: Record<string, boolean> }; runtime: AIRuntime; catalogue_version: string }

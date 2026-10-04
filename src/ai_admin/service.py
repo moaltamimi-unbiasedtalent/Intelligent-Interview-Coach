@@ -97,9 +97,10 @@ class AIConfigService:
                         "fallback_floor": p.fallback_floor.value, "structured_output": p.structured_output, "requires_tools": p.requires_tools,
                         "tunable": tunable, "no_runtime_path": not tunable and p.capability not in (ModelCapability.NONE, ModelCapability.REALTIME), "deterministic": p.capability is ModelCapability.NONE,
                         "realtime": p.capability is ModelCapability.REALTIME,
-                        "code_values": {"max_output_tokens": p.max_output_tokens, "timeout_s": p.timeout_s, "max_retries": p.max_retries}})
+                        "code_values": {}})
         return {"operations": ops,
                 "tunable_fields": {k: {"min": lo, "max": hi} for k, (lo, hi, _i) in K.TUNABLES.items()},
+                "inherited_defaults": K.consumer_defaults(),
                 "note": "Capability, minimum tier, fallback floor, structured-output and tool flags, deterministic and realtime operations, the three "
                         "specialists, the Interview session profile, prompts and secrets are code-defined and not configurable here."}
 
