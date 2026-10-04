@@ -1,6 +1,6 @@
 # P10B-W10.12 - Reporting, Analytics and AI Economics
 
-**Status:** implemented on branch `feat/p10b-w10-12-reporting-analytics-ai-economics`; **complete when merged to `main`**. **W10.13 is NOT STARTED.**
+**Status:** **COMPLETE: merged in PR #126, feature head `e4ae300`, main `18eebed`**; Alembic head `0024_reporting_analytics`. Final qualification: backend 3041 passed / 4 skipped / 0 failed; Vitest 745; Playwright 217; 38/38 CI evaluators; Ruff and compileall clean; isolation fingerprints before == after; 0 paid/live calls. **W10.13 is NOT STARTED.**
 One additive migration (`0024_reporting_analytics`). No new dependency. 0 paid/live calls. Permission registry stays at 43.
 
 ## 1. Starting point
