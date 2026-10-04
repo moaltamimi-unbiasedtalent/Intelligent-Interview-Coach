@@ -1,6 +1,6 @@
 # P10B-W10.11 - Feature Flags and Safe Platform Configuration (durable pause, closes SEC-W10-05)
 
-**Status:** implemented on branch `feat/p10b-w10-11-flags-safe-platform-config`; **complete when merged to `main`**. **W10.12 is NOT STARTED.**
+**Status:** COMPLETE. Merged in PR #125 (`ef339a53`) with green CI. SEC-W10-05 is CLOSED. W10.12 (reporting, analytics and AI economics) is the current wave.
 One additive migration (`0023_platform_config`). No new dependency. 0 paid/live calls. Permission registry stays at 43.
 
 ## 1. Starting point

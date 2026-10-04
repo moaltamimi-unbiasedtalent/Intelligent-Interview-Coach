@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 
 from src import persistence as P
 
@@ -274,6 +274,14 @@ class AccountDeletionService:
             summary.deleted_rows["mock_billing_rows"] = delete_billing_for(s, user_id=user_id) or 0
             if not summary.deleted_rows["mock_billing_rows"]:
                 summary.deleted_rows.pop("mock_billing_rows")
+
+            # 6d) W10.12: the candidate's own AI usage facts are deleted with the account (FK CASCADE plus this explicit delete, so SQLite
+            # without foreign-key enforcement behaves the same). Admin aggregates computed earlier are not individual records.
+            from src.persistence import AIUsageFact
+
+            n_usage = s.execute(delete(AIUsageFact).where(AIUsageFact.user_id == user_id)).rowcount or 0
+            if n_usage:
+                summary.deleted_rows["ai_usage_facts"] = int(n_usage)
 
             # 7) Audit: anonymize (retain for security), do NOT delete.
             res = s.execute(update(P.AuditEvent)

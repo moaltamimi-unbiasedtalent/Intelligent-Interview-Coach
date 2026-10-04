@@ -196,7 +196,7 @@ def run() -> dict[str, tuple[bool, str]]:
     migs = sorted(p.name for p in (ROOT / "migrations" / "versions").glob("0*.py"))
     check("additive_migration",
           mig and "create_table" in mig and "drop_table" not in mig.split("def downgrade")[0]
-          and migs and migs[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_")),
+          and migs and migs[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_")),
           f"0014 is additive; head = {migs[-1] if migs else 'none'}")
 
     # i18n: opportunity namespace in all 7 locales.

@@ -186,6 +186,19 @@ def _category_for_status(status: int) -> str:
 # --- Client ------------------------------------------------------------------
 
 
+
+def _observe_provider(outcome: str, started: float, category: str | None) -> None:
+    try:
+        import time as _t
+
+        from src.reporting.telemetry import record_event
+
+        record_event("provider_call", "practice", "practice_generation", outcome, duration_ms=int((_t.perf_counter() - started) * 1000),
+                     error_category=category, provider="openrouter")
+    except Exception:  # noqa: BLE001
+        pass
+
+
 class OpenRouterClient:
     """Non-streaming client for OpenRouter chat completions."""
 
@@ -341,7 +354,17 @@ class OpenRouterClient:
             # parameters (e.g. strict JSON Schema) instead of degrading silently.
             payload["provider"] = {"require_parameters": True}
 
-        return self._post_chat(payload, model, timeout_s=timeout_s, max_retries=max_retries)
+        # P10B-W10.12: one bounded provider-call outcome (success or a safe category + latency). No prompt, response, key or identity.
+        import time as _t
+
+        started = _t.perf_counter()
+        try:
+            result = self._post_chat(payload, model, timeout_s=timeout_s, max_retries=max_retries)
+        except Exception as exc:  # noqa: BLE001 - re-raised unchanged
+            _observe_provider("error", started, getattr(exc, "category", None) or type(exc).__name__)
+            raise
+        _observe_provider("success", started, None)
+        return result
 
     def _post_chat(self, payload: dict[str, Any], model: str, *, timeout_s: float | None = None, max_retries: int | None = None) -> ChatResult:
         """POST the request, retrying once on a *transient* failure only.

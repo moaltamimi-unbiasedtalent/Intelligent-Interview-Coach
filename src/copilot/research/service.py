@@ -72,9 +72,14 @@ class ExternalResearchService:
             except Exception:  # noqa: BLE001 - a bad cache entry is ignored, never fatal
                 pass
 
+        import time as _t
+
+        started = _t.perf_counter()
         try:
             result = provider.research(request)
+            _observe_provider(provider.provider_name, "success", started, None)
         except Exception:  # noqa: BLE001 - provider failure isolation (§47)
+            _observe_provider(provider.provider_name, "error", started, "provider_failure")
             return CurrentMarketResearchResult(
                 status=ResearchStatus.UNAVAILABLE, intent=request.intent,
                 provider=provider.provider_name,
@@ -86,6 +91,19 @@ class ExternalResearchService:
                              ResearchStatus.INSUFFICIENT_EVIDENCE):
             _cache.write(key, result.model_dump(mode="json"))
         return result
+
+
+def _observe_provider(provider_name: str, outcome: str, started: float, category: str | None) -> None:
+    """P10B-W10.12: one bounded outcome for a REAL research provider call (no query, company or payload). Never raises."""
+    try:
+        import time as _t
+
+        from src.reporting.telemetry import record_event
+
+        record_event("provider_call", "research", "company_research" if "company" in provider_name else "market_research", outcome,
+                     duration_ms=int((_t.perf_counter() - started) * 1000), error_category=category, provider=provider_name)
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def _flag(name: str, default: bool) -> bool:

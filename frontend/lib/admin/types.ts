@@ -636,3 +636,15 @@ export interface FlagState {
   updated_by_user_id: number | null; reason: string; notes: string; consumers: string[];
 }
 export interface FlagsOverview { environment: string; items: FlagState[]; not_mutable: Record<string, string>; note: string }
+
+// ---- W10.12 reporting (aggregates only) ---------------------------------------------------------------------------------
+export interface ReportMetric { metric_id: string; label: string; figure: number | string | null; unit: string; state: string; coverage: string; note: string }
+export interface ReportCell { figure: number | string | null; suppressed: boolean }
+export interface ReportRow { label: string; cells: ReportCell[] }
+export interface ReportTable { table_id: string; title: string; columns: string[]; rows: ReportRow[]; note: string }
+export interface ReportSection { section_id: string; title: string; coverage: string; captured_since: string | null; note: string; metrics: ReportMetric[]; tables: ReportTable[] }
+export interface AdminReport {
+  period: string; window_start: string | null; window_end: string; generated_at: string; utc: boolean; privacy: string; sections: ReportSection[];
+  mock_billing: boolean; label: string | null;
+}
+export type ReportPeriod = "7d" | "30d" | "90d" | "all_time";

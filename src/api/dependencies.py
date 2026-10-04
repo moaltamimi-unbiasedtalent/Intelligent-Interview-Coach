@@ -168,6 +168,7 @@ def get_agent_service(request: Request):
                 evidence_service=evidence_service,
                 database_url=database_url,
                 run_index=PreparationRunIndex(session_factory),
+                usage_session_factory=session_factory,
             )
         except AgentConfigurationError as exc:
             # Fail closed: durable checkpointing configured but unavailable → a safe

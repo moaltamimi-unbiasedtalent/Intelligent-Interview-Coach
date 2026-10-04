@@ -31,6 +31,7 @@ INCLUDED = (
     "the privacy requests you submitted (type, status and result category; not internal handling records)",
     "an index of your preparation-chat runs (identifiers and status only)",
     "simulated (mock) billing records linked to your account, if any (no live payments are processed)",
+    "metadata of your own AI usage (workflow, model, token counts and cost where known; never prompts or answers)",
 )
 NOT_INCLUDED = (
     "the original uploaded files (download them from Documents)",
@@ -117,6 +118,13 @@ def build_candidate_export(*, user_id: int, session_factory, repo, account: Any)
         data["preparation_runs"] = [{"run_id": r.run_id, "state": r.state, "source": r.source, "created_at": _jsonable(r.created_at)}
                                     for r in s2.scalars(select(P.PreparationRun).where(P.PreparationRun.owner_user_id == user_id)
                                                         .order_by(P.PreparationRun.id)).all()]
+    # W10.12: the candidate's OWN canonical AI usage metadata (no prompt, answer or context; unknown tokens/cost stay null). Never Admin aggregates.
+    with session_factory() as s3:
+        data["ai_usage"] = [{"workflow": f.workflow, "operation": f.operation, "model_profile": f.model_profile, "model_id": f.model_id, "model_calls": f.model_calls,
+                             "input_tokens": f.input_tokens, "output_tokens": f.output_tokens, "total_tokens": f.total_tokens,
+                             "cost_usd": None if f.cost_usd_micros is None else f.cost_usd_micros / 1_000_000, "cost_source": f.cost_source,
+                             "occurred_at": _jsonable(f.occurred_at)}
+                            for f in s3.scalars(select(P.AIUsageFact).where(P.AIUsageFact.user_id == user_id).order_by(P.AIUsageFact.id)).all()]
     from src.billing.service import BillingService
 
     data["billing_mock"] = BillingService(session_factory).export_for_user(user_id)

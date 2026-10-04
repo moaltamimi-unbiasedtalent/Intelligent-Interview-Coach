@@ -33,6 +33,7 @@ from src.api.routes import (
     admin_billing,
     admin_config,
     admin_integrations,
+    admin_reports,
     admin_jobs,
     admin_knowledge,
     admin_legal,
@@ -131,6 +132,9 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
     # routes. CatchAllErrorMiddleware converts unhandled exceptions to the safe envelope from
     # INSIDE the stack, so every response — success, expected error, or catastrophic 500 —
     # flows back out through RequestId (X-Request-Id) and CORS (Access-Control-Allow-Origin).
+    from src.reporting.telemetry import OperationalTelemetryMiddleware
+
+    app.add_middleware(OperationalTelemetryMiddleware)   # P10B-W10.12: innermost: bounded operational outcomes only
     app.add_middleware(CatchAllErrorMiddleware, env=settings.env)
     app.add_middleware(RequestIdMiddleware)
     app.add_middleware(SecurityHeadersMiddleware, env=settings.env)
@@ -152,7 +156,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
 
     # Infra liveness alias (unversioned) + versioned API surface.
     app.include_router(health.router, prefix="/api")
-    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, feedback, progress, auth, reviewer, voice, workspaces, admin, admin_ai, admin_billing, admin_config, admin_integrations, admin_jobs, admin_knowledge, admin_legal, admin_privacy, admin_plans, admin_support, company, opportunity, privacy, support):
+    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, feedback, progress, auth, reviewer, voice, workspaces, admin, admin_ai, admin_billing, admin_config, admin_integrations, admin_reports, admin_jobs, admin_knowledge, admin_legal, admin_privacy, admin_plans, admin_support, company, opportunity, privacy, support):
         app.include_router(module.router, prefix=API_PREFIX)
     # Workspaces registers a second router for explicit sharing under the same prefix.
     app.include_router(workspaces.shares_router, prefix=API_PREFIX)

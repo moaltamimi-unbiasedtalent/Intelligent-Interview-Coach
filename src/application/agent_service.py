@@ -158,7 +158,10 @@ class AgentApplicationService:
         database_url: str | None = None,
         observability: Any | None = None,
         run_index: Any | None = None,
+        usage_session_factory: Any | None = None,
     ) -> None:
+        # P10B-W10.12: canonical AI usage capture (one cumulative aggregate per run). None = no capture (tests / offline).
+        self._usage_sf = usage_session_factory
         # PRIV-W9-01: durable ownership index for NEW preparation runs (None keeps the previous behaviour for tests).
         self._run_index = run_index
         if registry is None:
@@ -202,6 +205,17 @@ class AgentApplicationService:
         try:
             self._obs.run_started(run_id=run_id, profile=profile)
         except Exception:  # noqa: BLE001 - telemetry is non-critical, never breaks a run
+            pass
+
+    def _record_usage(self, result: AgentRunResult, user_id: Any) -> None:
+        """Upsert this run's CUMULATIVE usage aggregate once (never per nested tool call). Best-effort: never raises."""
+        if self._usage_sf is None:
+            return
+        try:
+            from src.reporting.telemetry import record_agent_usage
+
+            record_agent_usage(self._usage_sf, user_id, result.run_id, result.usage, result.profile)
+        except Exception:  # noqa: BLE001
             pass
 
     def _emit_completed(self, result: AgentRunResult) -> None:
@@ -349,6 +363,7 @@ class AgentApplicationService:
         result = self._result_from_snapshot(
             run_id, self._snapshot(run_id), request_id, latency_ms=latency_ms)
         self._emit_completed(result)
+        self._record_usage(result, request.user_id)
         return result
 
     def resume(
@@ -386,6 +401,7 @@ class AgentApplicationService:
             result = self._result_from_snapshot(
                 run_id, self._snapshot(run_id), request_id, latency_ms=latency_ms)
             self._emit_completed(result)
+            self._record_usage(result, user_id)
             return result
 
     def continue_run(
@@ -444,6 +460,7 @@ class AgentApplicationService:
             result = self._result_from_snapshot(
                 run_id, self._snapshot(run_id), request_id, latency_ms=latency_ms)
             self._emit_completed(result)
+            self._record_usage(result, user_id)
             return result
 
     def get_run(self, run_id: str, user_id: str | None, *, request_id: str | None = None) -> AgentRunResult:

@@ -70,8 +70,8 @@ never-translated slogan. Local `main` == `origin/main`; GitHub integration is pa
 | W10.8 | Knowledge base and RAG administration (**COMPLETE: merged in PR #121, main `35eee19`**; migration `0019_knowledge_admin`; see `admin/W10_8_KNOWLEDGE_RAG_ADMINISTRATION.md`) | XL | Capstone critical |
 | W10.9 | Jobs, queues and operational diagnostics (**COMPLETE: merged in PR #120, main `f059668`**; migration `0018_jobs`; see `admin/W10_9_JOBS_QUEUES_OPERATIONAL_DIAGNOSTICS.md`) | L | Capstone desirable |
 | W10.10 | GDPR, privacy and legal administration (**COMPLETE: merged in PR #122, main `54ee591`**; migration `0020_privacy_legal_admin`; closes SEC-W10-04, PRIV-W9-01, PRIV-W9-02; see `admin/W10_10_GDPR_PRIVACY_LEGAL_ADMINISTRATION.md`) | L | Capstone critical |
-| W10.11 | Feature flags and safe system configuration (**implemented; complete when merged**; closes SEC-W10-05; migration `0023_platform_config`; see `admin/W10_11_FEATURE_FLAGS_SAFE_PLATFORM_CONFIGURATION.md`) | M | Capstone desirable |
-| W10.12 | Reporting, analytics and AI economics (essential reporting critical; AI economics desirable) | L | Capstone critical / desirable |
+| W10.11 | Feature flags and safe system configuration (**COMPLETE: merged in PR #125, main `ef339a53`**; closes SEC-W10-05; migration `0023_platform_config`; see `admin/W10_11_FEATURE_FLAGS_SAFE_PLATFORM_CONFIGURATION.md`) | M | Capstone desirable |
+| W10.12 | Reporting, analytics and AI economics (**implemented; complete when merged**; migration `0024_reporting_analytics`; see `admin/W10_12_REPORTING_ANALYTICS_AI_ECONOMICS.md`) | L | Capstone critical / desirable |
 | W10.13 | Security, audit and incident management | L | Capstone critical |
 | W10.14 | Admin qualification | L | Capstone critical |
 
