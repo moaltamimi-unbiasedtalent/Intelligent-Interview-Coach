@@ -95,6 +95,9 @@ def _flag(name: str, default: bool) -> bool:
     return raw.strip().lower() in ("1", "true", "yes", "on")
 
 
+from src.platform_config import flags as _flags  # noqa: E402
+
+
 def default_research_service() -> ExternalResearchService:
     """Build the service from environment flags (§79). External research is enabled by default
     (providers degrade gracefully: Adzuna without credentials → unavailable). Company-web
@@ -105,6 +108,8 @@ def default_research_service() -> ExternalResearchService:
     except ValueError:
         ttl = _cache.DEFAULT_TTL_SECONDS
     return ExternalResearchService.default(
-        enabled=_flag("EXTERNAL_RESEARCH_ENABLED", True),
-        company_web_enabled=_flag("COMPANY_WEB_RESEARCH_ENABLED", True),
+        # P10B-W10.11: the durable flag overrides the existing environment baseline (no override = exactly the old behaviour). Flags only RESTRICT:
+        # company-web research can never be effective while external research is off.
+        enabled=_flags.effective("external_research"),
+        company_web_enabled=_flags.effective("external_research") and _flags.effective("company_web_research"),
         cache_ttl_seconds=max(60, min(ttl, 86400)))

@@ -31,9 +31,8 @@ def _row(provider_id: str, label: str, configured: bool, *, enabled: bool | None
     )
 
 
-def build_providers_response() -> ProvidersResponse:
+def build_providers_response(pause_service=None) -> ProvidersResponse:
     from src.application.admin_command_center import rate_limit_mode
-    from src.application.pause import get_pause_registry
     from src.documents.ocr import ocr_runtime_status
     from src.voice.realtime import resolve_realtime_config
 
@@ -72,7 +71,7 @@ def build_providers_response() -> ProvidersResponse:
                                             runtime_available=bool(v.get("runtime_available")))
                        for k, v in (ocr.get("languages") or {}).items()},
             live_quality=str(ocr.get("live_quality", "UNVALIDATED"))),
-        pause=get_pause_registry().snapshot(), pause_durable=False,
+        pause={k: v["paused"] for k, v in pause_service.snapshot().items()} if pause_service is not None else {}, pause_durable=pause_service is not None,
         rate_limit_mode=rl["mode"], rate_limit_distributed=bool(rl["distributed"]),
         note=("Booleans and fixed labels only. Provider configuration is managed outside this console "
               "(deployment environment). Configured does not mean healthy; no provider is contacted here."),

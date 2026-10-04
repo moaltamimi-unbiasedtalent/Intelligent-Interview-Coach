@@ -17,7 +17,7 @@ export interface AdminCommandCenter {
   migrations: AdminMigrationStatus;
   health: { database: string; providers_probed: boolean; note: string };
   rate_limit: { mode: string; distributed: boolean; shared_store_requested: boolean; note: string };
-  pause: { paused: Record<string, boolean>; durable: boolean; note: string };
+  pause: { status?: string; environment?: string; paused: Record<string, boolean>; durable: boolean; note: string };
   privacy_requests: { status: string; note: string; open?: number; submitted?: number; in_progress?: number; waiting_for_user?: number; unassigned_open?: number; completed?: number; total?: number; oldest_open_at?: string | null };
   accounts: Record<string, number>;
   workspaces: Record<string, number>;
@@ -25,6 +25,7 @@ export interface AdminCommandCenter {
   integrations?: { total: number; configured: number; runtime_active: number; not_tested: number; unhealthy: number };
   jobs?: JobDiagnostics;
   billing?: { mock: boolean; label: string; open_invoices: number; past_due_invoices: number; failed_payments: number; pending_approvals: number; configured_plan_versions: number };
+  feature_flags?: { environment: string; flags: number; overrides: number; disabled_overrides: number };
   ai?: { versions: number; by_state: Record<string, number>; pending_approvals: number; active: Record<string, boolean> };
   knowledge?: { sources: number; awaiting_review: number; indexing: number; failed: number; indexed_not_active: number; active: number };
   support?: { open: number; unassigned: number; waiting_for_customer: number; high_or_urgent: number; total: number };
@@ -622,3 +623,16 @@ export interface AIRuntime {
   realtime: { capability: string; chat_slug: string | null; governed: boolean }; note: string;
 }
 export interface AIOverview { stats: { versions: number; by_state: Record<string, number>; pending_approvals: number; active: Record<string, boolean> }; runtime: AIRuntime; catalogue_version: string }
+
+// ---- W10.11 durable platform pause and feature flags ------------------------------------------------------------------
+export interface PauseState {
+  capability: string; paused: boolean; source: string; baseline_paused: boolean; revision: number;
+  paused_at: string | null; resumed_at: string | null; updated_at: string | null; reason: string;
+}
+export interface PauseOverview { environment: string; durable: boolean; items: PauseState[]; protected_scope: string[]; note: string }
+export interface FlagState {
+  flag_id: string; display_name: string; description: string; category: string; candidate_visible: boolean; baseline: boolean; baseline_source: string;
+  override: boolean | null; state: "inherited" | "enabled_override" | "disabled_override"; effective: boolean; revision: number; updated_at: string | null;
+  updated_by_user_id: number | null; reason: string; notes: string; consumers: string[];
+}
+export interface FlagsOverview { environment: string; items: FlagState[]; not_mutable: Record<string, string>; note: string }

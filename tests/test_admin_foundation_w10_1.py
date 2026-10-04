@@ -224,24 +224,27 @@ def test_aud2b_commit_time_audit_failure_rolls_back_plan_and_status(env, monkeyp
     assert acct.status == "active" and acct.tier == "basic"
 
 
-def test_aud3_pause_toggle_is_audit_first_and_fail_closed(env, monkeypatch):
-    from src.application.pause import get_pause_registry
-    from src.auth_repository import AuditRepository
-    _, admin = env.user("platform_admin")
-    reg = get_pause_registry()
-    reg.set("ocr", False)
+def test_aud3_pause_toggle_is_same_transaction_audited_and_fail_closed(env, monkeypatch):
+    """W10.11: pause is durable and its audit row is written in the SAME transaction; an audit failure rolls the pause back."""
+    from src.application.pause import PauseService
+    import src.auth_repository as ar
+    _, admin = env.user("operations_admin")
+    svc = PauseService(env.repo.session_factory, environment="development")
+    real = ar.AuditEvent
 
-    def boom(self, **kw):
-        raise RuntimeError("down")
+    class Bad(real):
+        def __init__(self, **kw):
+            kw["event_type"] = None
+            super().__init__(**kw)
 
-    monkeypatch.setattr(AuditRepository, "record", boom)
-    r = env.c.post("/api/v1/admin/pause/ocr", json={"paused": True}, cookies=admin)
-    assert r.status_code == 503 and not reg.is_paused("ocr")
+    monkeypatch.setattr(ar, "AuditEvent", Bad)
+    r = env.c.post("/api/v1/admin/pause/ocr", json={"paused": True, "expected_revision": 0, "reason": "t"}, cookies=admin)
+    assert r.status_code == 500 and not svc.is_paused("ocr") and svc.snapshot()["ocr"]["revision"] == 0
     monkeypatch.undo()
-    r = env.c.post("/api/v1/admin/pause/ocr", json={"paused": True}, cookies=admin)
-    assert r.status_code == 200 and reg.is_paused("ocr")
-    assert env.events(A.PLATFORM_PAUSE_TOGGLED)[0]["context"]["before"] is False
-    reg.set("ocr", False)
+    r = env.c.post("/api/v1/admin/pause/ocr", json={"paused": True, "expected_revision": 0, "reason": "t"}, cookies=admin)
+    assert r.status_code == 200 and svc.is_paused("ocr")
+    ctx = env.events(A.ADMIN_PLATFORM_PAUSED)[0]["context"]
+    assert ctx["old_state"] == "running" and ctx["new_state"] == "paused" and ctx["revision"] == 1
 
 
 def test_aud4_denied_access_is_audited_with_request_id(env):
@@ -393,7 +396,7 @@ def test_c2_build_metadata_reads_injected_env_and_sanitizes(env, monkeypatch):
 
 def test_c3_repository_head_is_the_real_alembic_head():
     from src.application.admin_command_center import repository_head
-    assert repository_head() == "0022_ai_model_admin"
+    assert repository_head() == "0023_platform_config"
 
 
 def test_c4_migration_state_unknown_match_mismatch(env):
@@ -407,7 +410,7 @@ def test_c4_migration_state_unknown_match_mismatch(env):
     m = migration_status(sf)
     assert m["state"] == "mismatch" and m["warning"] and "never migrates automatically" in m["warning"]
     with sf() as s:
-        s.execute(text("UPDATE alembic_version SET version_num='0022_ai_model_admin'"))
+        s.execute(text("UPDATE alembic_version SET version_num='0023_platform_config'"))
         s.commit()
     assert migration_status(sf)["state"] == "match"
 
@@ -429,9 +432,10 @@ def test_c7_rate_limit_mode_is_truthfully_process_local(env):
     assert r["mode"] == "in_memory_process_local" and r["distributed"] is False
 
 
-def test_c8_pause_is_labelled_non_durable(env):
+def test_c8_pause_is_durable_and_reported_truthfully(env):
+    """SEC-W10-05 is closed in W10.11: the Command Center reports the DURABLE state (running unless a durable row or the baseline pauses)."""
     p = _home(env)["pause"]
-    assert p["durable"] is False and "non-durable" in p["note"]
+    assert p["durable"] is True and p["status"] == "running" and "non-durable" not in p["note"].lower()
 
 
 def test_c9_privacy_queue_is_operational_with_real_counts_after_sec_w10_04(env):

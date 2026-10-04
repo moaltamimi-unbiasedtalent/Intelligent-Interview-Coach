@@ -188,14 +188,13 @@ def _reset_runtime_state():
     from src.api.rate_limit import reset_rate_limiter
 
     reset_rate_limiter()
-    # Fresh pause registry per test (no capability paused by default).
-    try:
-        from src.application.pause import reset_pause_registry
-
-        reset_pause_registry()
-    except Exception:  # noqa: BLE001 - pause module may not be imported in a given test set
-        pass
     yield
+    # W10.11: durable pause/flag accessors installed by one test's repository must never leak into the next.
+    from src.application import pause as _pause
+    from src.platform_config import flags as _flags
+
+    _pause.uninstall()
+    _flags.uninstall()
     # W10.7: a governed AI configuration activated by one test must never route the model registry in the next.
     from src.ai_admin.resolver import uninstall_resolver
 

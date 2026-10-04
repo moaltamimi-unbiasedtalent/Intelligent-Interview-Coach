@@ -47,8 +47,13 @@ def _available_config() -> RealtimeConfig:
     )
 
 
+from src.api.dependencies import get_repository as deps_get_repository  # noqa: E402
+
+
 def _client(*, provider, config=None, limiter=None, user_id=42) -> TestClient:
     app = create_app()
+    from tests._durable_stores import DurableRepo
+    app.dependency_overrides[deps_get_repository] = lambda: DurableRepo()      # W10.11: durable pause store
     cfg = config or _available_config()
     app.dependency_overrides[get_current_principal] = lambda: _principal(user_id)
     app.dependency_overrides[get_realtime_config] = lambda: cfg
@@ -166,22 +171,25 @@ def test_realtime_policy_resolves_to_no_chat_slug():
 # ---- Capability flag ---------------------------------------------------------------------
 
 
+def _caps() -> dict:
+    app = create_app()
+    from tests._durable_stores import DurableRepo
+    app.dependency_overrides[deps_get_repository] = lambda: DurableRepo()
+    return TestClient(app).get("/api/v1/capabilities").json()
+
+
 def test_capability_flag_off_by_default(monkeypatch):
     for var in ("REALTIME_VOICE_ENABLED", "REALTIME_VOICE_API_KEY"):
         monkeypatch.delenv(var, raising=False)
-    from src.api.routes.health import capabilities
-
-    assert capabilities().realtime_voice_enabled is False
+    assert _caps()["realtime_voice_enabled"] is False
 
 
 def test_capability_flag_requires_flag_and_key(monkeypatch):
-    from src.api.routes.health import capabilities
-
     monkeypatch.setenv("REALTIME_VOICE_ENABLED", "true")
     monkeypatch.delenv("REALTIME_VOICE_API_KEY", raising=False)
-    assert capabilities().realtime_voice_enabled is False  # flag on but no key → unavailable
+    assert _caps()["realtime_voice_enabled"] is False  # flag on but no key → unavailable
     monkeypatch.setenv("REALTIME_VOICE_API_KEY", "sk-test-not-real")
-    assert capabilities().realtime_voice_enabled is True
+    assert _caps()["realtime_voice_enabled"] is True
 
 
 # ---- Admin metadata privacy --------------------------------------------------------------

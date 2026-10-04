@@ -37,6 +37,7 @@ const nl: Catalog = {
     serviceUnreachable: "Ask4Mo kan de service op dit moment niet bereiken. Probeer het zo dadelijk opnieuw.",
     serverError: "Ask4Mo liep tegen een probleem aan bij het verwerken van dat verzoek. Probeer het opnieuw.",
     serviceUnavailable: "Ask4Mo is tijdelijk niet beschikbaar. Probeer het zo dadelijk opnieuw.",
+    platformPaused: "Ask4Mo is tijdelijk niet beschikbaar voor deze activiteit. Je opgeslagen gegevens blijven beschikbaar. Probeer het later opnieuw.",
     rateLimited: "Te veel verzoeken. Wacht even en probeer het opnieuw.",
     sessionExpired: "Uw sessie is verlopen. Meld u opnieuw aan.",
     forbidden: "U hebt hier geen toegang toe.",

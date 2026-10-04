@@ -129,6 +129,9 @@ class _FakeRepo:
     """User-scoped fake repository (subject -> id; reports own a user_id)."""
 
     def __init__(self):
+        from tests._durable_stores import shared_session_factory
+
+        self.session_factory = shared_session_factory()   # W10.11: the durable pause/flag stores are read through the repository
         self._users: dict[str, int] = {}
         self._interviews: dict[int, dict] = {}
         self._next_user = 1

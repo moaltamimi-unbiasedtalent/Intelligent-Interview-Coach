@@ -67,29 +67,52 @@ def ready(request: Request) -> dict:
     return body
 
 
-def _realtime_voice_available() -> bool:
+def _repo_or_none(request: Request):
+    """The repository through the app's dependency graph (so test/app overrides apply). None when it cannot be built (reported as unavailable)."""
+    from src.api.dependencies import get_repository
+
+    try:
+        override = request.app.dependency_overrides.get(get_repository)
+        return override() if override is not None else get_repository(request)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _paused_or_unreadable(capability: str, repo) -> bool:
+    """Durable pause check for availability projections. An unreadable authoritative store counts as NOT available (fail closed)."""
+    from src.application.pause import PauseService
+
+    try:
+        return PauseService(repo.session_factory).is_paused(capability)   # repo None -> AttributeError -> fail closed
+    except Exception:  # noqa: BLE001
+        return True
+
+
+def _realtime_voice_available(repo) -> bool:
     """Realtime voice (P7.5) is available only when the deployment flag is on AND a realtime
     provider key is configured AND an operator has not paused it — otherwise the UI falls back
     to P7 turn-based voice. Reads booleans only; never touches or returns the key value."""
-    from src.application.pause import is_paused
     from src.voice.realtime import resolve_realtime_config
 
-    return resolve_realtime_config().available and not is_paused("realtime_voice")
+    return resolve_realtime_config().available and not _paused_or_unreadable("realtime_voice", repo)
 
 
-def _company_research_available() -> bool:
-    """Company Intelligence (P10B Wave 5) is available when external research is enabled (default
-    on) and not operator-paused. Reads booleans only; never implies a provider key is present."""
-    from src.application.pause import is_paused
+def _company_research_available(repo) -> bool:
+    """Company Intelligence (P10B Wave 5) is available when external research is enabled (the durable W10.11 flag over the existing
+    environment baseline, default on) and not operator-paused. Reads booleans only; never implies a provider key is present."""
+    from src.platform_config.flags import FLAGS, FeatureFlagService
 
-    enabled = os.environ.get("EXTERNAL_RESEARCH_ENABLED", "true").strip().lower() in {
-        "1", "true", "yes", "on"}
-    return enabled and not is_paused("current_market")
+    try:   # request-scoped durable read (shared by every process); a lookup failure keeps the existing environment baseline (a flag is only a restriction)
+        flag_on = FeatureFlagService(repo.session_factory).effective("external_research")
+    except Exception:  # noqa: BLE001
+        flag_on = FLAGS["external_research"].baseline()
+    return flag_on and not _paused_or_unreadable("current_market", repo)
 
 
 @router.get("/capabilities", response_model=CapabilitiesResponse,
             summary="Safe feature availability")
-def capabilities() -> CapabilitiesResponse:
+def capabilities(request: Request) -> CapabilitiesResponse:
+    repo = _repo_or_none(request)
     # Agentic RAG (Phase 6), long-term memory (Phase 7) and HITL (Phase 8) are all
     # available. The candidate Agent Coach cutover is a deployment flag (Phase 9).
     return CapabilitiesResponse(
@@ -98,6 +121,6 @@ def capabilities() -> CapabilitiesResponse:
         agent_memory=True,
         human_in_the_loop=True,
         agent_coach_enabled=_flag_enabled("AGENT_COACH_ENABLED"),
-        realtime_voice_enabled=_realtime_voice_available(),
-        company_research_enabled=_company_research_available(),
+        realtime_voice_enabled=_realtime_voice_available(repo),
+        company_research_enabled=_company_research_available(repo),
     )

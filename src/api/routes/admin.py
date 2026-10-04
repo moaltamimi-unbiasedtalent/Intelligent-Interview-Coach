@@ -23,6 +23,8 @@ from src.integrations import IntegrationService
 from src.jobs.service import JobService
 from src.knowledge_admin.service import KnowledgeAdminService
 from src.ai_admin.service import AIConfigService
+from src.application.pause import PauseService
+from src.platform_config.flags import FeatureFlagService
 from src.billing.wiring import build_billing_service
 from src.privacy.requests import PrivacyRequestService
 from src.plans_repository import PlanRepository
@@ -31,6 +33,7 @@ from src.support_repository import SupportRepository
 from src.api.dependencies import (
     get_account_repository,
     get_admin_user_repository,
+    get_pause_service,
     get_plan_repository,
     get_audit_repository,
     get_request_id,
@@ -89,8 +92,6 @@ class MemberRoleRequest(BaseModel):
     role: str = Field(max_length=24)
 
 
-class PauseRequest(BaseModel):
-    paused: bool
 
 
 @router.get("/home", summary="Command Center (operational metadata only)")
@@ -110,6 +111,8 @@ def home(request: Request, principal=Depends(require_permission(perm.OVERVIEW_RE
         privacy=PrivacyRequestService(accounts.session_factory),
         billing=build_billing_service(accounts.session_factory),
         ai=AIConfigService(accounts.session_factory),
+        pause=PauseService(accounts.session_factory),
+        flags=FeatureFlagService(accounts.session_factory),
     )
 
 
@@ -348,39 +351,6 @@ def feedback_overview(_p=Depends(require_permission(perm.REPORTS_READ)),
     }
 
 
-@router.get("/pause", summary="Operator pause switches (process-local, non-durable)")
-def pause_state(_p=Depends(require_permission(perm.FLAGS_READ))) -> dict:
-    """Current pause state (booleans only). A paused capability returns 503 to candidates.
-    State is process-local and non-durable until W10.11 (SEC-W10-05); the response says so."""
-    from src.application.admin_command_center import pause_state as _ps
-    from src.application.pause import PAUSABLE_CAPABILITIES
-
-    return {"pausable": list(PAUSABLE_CAPABILITIES), **_ps()}
-
-
-@router.post("/pause/{capability}", summary="Pause or resume a capability (audit-first, fail-closed)")
-def set_pause(capability: str, body: PauseRequest, request: Request,
-              principal=Depends(require_permission(perm.FLAGS_MANAGE)),
-              audit=Depends(get_audit_repository)) -> dict:
-    from src.application.pause import PAUSABLE_CAPABILITIES, get_pause_registry
-
-    if capability not in PAUSABLE_CAPABILITIES:
-        raise HTTPException(status_code=422, detail="Unknown pausable capability.")
-    registry = get_pause_registry()
-    before = registry.is_paused(capability)
-    # The pause state is in memory (no DB row), so there is no shared transaction. The ordering
-    # guarantee is audit FIRST and fail-closed: if the audit cannot be committed, nothing is applied.
-    spec = A.build_audit(event_type=A.PLATFORM_PAUSE_TOGGLED, actor_user_id=principal.user_id,
-                         request_id=get_request_id(request), target_type="capability",
-                         target_id=capability, before=before, after=body.paused, paused=body.paused)
-    try:
-        audit.record(**spec)
-    except Exception:  # noqa: BLE001
-        raise HTTPException(status_code=503, detail="Audit unavailable; the change was not applied.")
-    registry.set(capability, body.paused)
-    return {"capability": capability, "paused": body.paused}
-
-
 def _realtime_provider_status() -> dict:
     """Safe realtime-voice operational metadata (Capstone P7.5): booleans/labels ONLY, now produced by the
     allowlist provider schema (W10.1). Never a key, an ephemeral secret, audio or any transcript."""
@@ -391,10 +361,10 @@ def _realtime_provider_status() -> dict:
 
 @router.get("/providers", response_model=ProvidersResponse,
             summary="Provider status (allowlist schema; no secrets, no live calls)")
-def providers(_p=Depends(require_permission(perm.INTEGRATIONS_READ))) -> ProvidersResponse:
+def providers(_p=Depends(require_permission(perm.INTEGRATIONS_READ)), pause=Depends(get_pause_service)) -> ProvidersResponse:
     from src.application.admin_providers import build_providers_response
 
-    return build_providers_response()
+    return build_providers_response(pause)
 
 
 @router.get("/audit", summary="Recent audit events (safe metadata)")

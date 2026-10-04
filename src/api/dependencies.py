@@ -331,6 +331,19 @@ def get_billing_service(repo=Depends(get_repository)):
     return build_billing_service(repo.session_factory, JobService(repo.session_factory))
 
 
+def get_pause_service(repo=Depends(get_repository)):
+    """The DURABLE pause authority for this deployment's environment (P10B-W10.11). Built per request over the shared repository: no process state."""
+    from src.application.pause import PauseService
+
+    return PauseService(repo.session_factory)
+
+
+def get_feature_flag_service(repo=Depends(get_repository)):
+    from src.platform_config.flags import FeatureFlagService
+
+    return FeatureFlagService(repo.session_factory)
+
+
 def get_ai_config_service(repo=Depends(get_repository)):
     from src.ai_admin.resolver import installed
     from src.ai_admin.service import AIConfigService

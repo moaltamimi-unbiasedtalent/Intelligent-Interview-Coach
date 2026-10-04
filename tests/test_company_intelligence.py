@@ -42,6 +42,7 @@ def _client(research_service: ExternalResearchService | None = None):
     app.dependency_overrides[deps.get_research_service] = lambda: (research_service or _fake_service())
     c = TestClient(app)
     c.__enter__()
+    c.repo = repo                                  # tests that need the durable pause/flag stores of THIS app
     register(c, "a@example.com", PW)
     register(c, "b@example.com", PW)
     a = login_token(c, "a@example.com", PW)
@@ -189,16 +190,13 @@ def test_endpoint_returns_report_for_authenticated_user():
 
 
 def test_paused_capability_returns_truthful_503():
-    from src.application.pause import get_pause_registry, reset_pause_registry
+    from src.application.pause import PauseService
 
     c, a, _b = _client()
-    get_pause_registry().set("current_market", True)
-    try:
-        res = _post(c, cookies_for(a), company_name="Acme", website="acme.example")
-        assert res.status_code == 503
-        assert "paused" in res.text.lower()          # safe error envelope, no raw provider detail
-    finally:
-        reset_pause_registry()
+    PauseService(c.repo.session_factory, environment="development").set_paused("current_market", True, expected_revision=0, reason="incident", actor_user_id=1)
+    res = _post(c, cookies_for(a), company_name="Acme", website="acme.example")
+    assert res.status_code == 503
+    assert res.json()["error"]["code"] == "platform_paused" and "incident" not in res.text      # stable code, fixed copy, no internal reason
 
 
 def test_capabilities_exposes_company_research_flag():

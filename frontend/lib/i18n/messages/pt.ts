@@ -37,6 +37,7 @@ const pt: Catalog = {
     serviceUnreachable: "O Ask4Mo não consegue aceder ao serviço neste momento. Tente novamente em breve.",
     serverError: "O Ask4Mo encontrou um problema ao processar esse pedido. Tente novamente.",
     serviceUnavailable: "O Ask4Mo está temporariamente indisponível. Tente novamente em breve.",
+    platformPaused: "O Ask4Mo está temporariamente indisponível para esta atividade. Os seus dados guardados continuam disponíveis. Tente novamente mais tarde.",
     rateLimited: "Demasiados pedidos. Aguarde um momento e tente novamente.",
     sessionExpired: "A sua sessão expirou. Inicie sessão novamente.",
     forbidden: "Não tem acesso a isso.",

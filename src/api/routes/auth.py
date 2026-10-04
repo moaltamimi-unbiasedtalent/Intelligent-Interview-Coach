@@ -23,6 +23,7 @@ from src.api.dependencies import (
     get_current_user_id,
     get_document_store,
     get_oidc_provider,
+    get_pause_service,
     get_repository,
     get_request_id,
     require_entitlement,
@@ -89,11 +90,12 @@ def register(
     request: Request,
     service=Depends(get_auth_service),
     request_id: str = Depends(get_request_id),
+    pause=Depends(get_pause_service),
 ) -> MessageResponse:
-    # Operator pause (§21): open registration can be paused without a deploy.
+    # Operator pause (§21): open registration can be paused without a deploy (durable, W10.11).
     from src.api.guards import ensure_not_paused
 
-    ensure_not_paused("public_registration")
+    ensure_not_paused("public_registration", pause)
     # Abuse bound (§18): per-IP + global. No account key here — registration must not reveal
     # whether an email exists, so the limit is IP-scoped only.
     enforce("auth_register_ip", client_ip(request))

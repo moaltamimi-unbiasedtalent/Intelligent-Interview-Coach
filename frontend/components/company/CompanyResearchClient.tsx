@@ -73,7 +73,7 @@ export function CompanyResearchClient() {
       setReport(result);
     } catch (err) {
       // Surface a safe, localized message only (never a raw provider error).
-      const message = err instanceof ApiError ? err.message : t("company.errorBody");
+      const message = err instanceof ApiError ? (err.kind === "paused" ? t("states.platformPaused") : err.message) : t("company.errorBody");
       const requestId = err instanceof ApiError ? err.requestId : null;
       setError({ message: message || t("company.errorBody"), requestId });
     } finally {

@@ -5,7 +5,7 @@
 * Migration status compares the repository's Alembic head (read from the migration scripts) with the
   database revision (``alembic_version``). It never runs a migration.
 * Rate-limit mode is reported as process-local unless a shared store is actually active.
-* Pause state is process-local and non-durable (SEC-W10-05 is fixed in W10.11, not here).
+* Pause state is DURABLE (SEC-W10-05 closed in W10.11).
 * The privacy-request queue is deliberately withheld (SEC-W10-04 belongs to W10.10): no fake zero.
 """
 
@@ -106,22 +106,31 @@ def rate_limit_mode() -> dict[str, Any]:
     }
 
 
-def pause_state() -> dict[str, Any]:
-    from src.application.pause import get_pause_registry
+def pause_state(pause=None) -> dict[str, Any]:
+    """Durable pause summary (SEC-W10-05 closed in W10.11). An unreadable store is reported as unavailable, never as running."""
+    from src.application.pause import PauseStateUnavailable
 
-    return {"paused": get_pause_registry().snapshot(), "durable": False,
-            "note": "Process-local and non-durable: resets on restart and is not shared across replicas."}
+    if pause is None:
+        return {"status": "unavailable", "durable": True, "paused": {}, "note": "Pause state is not wired into this view."}
+    try:
+        snap = pause.snapshot()
+    except PauseStateUnavailable:
+        return {"status": "unavailable", "durable": True, "paused": {}, "environment": pause.environment or "unsupported",
+                "note": "The authoritative pause state cannot be read right now."}
+    paused = {c: v["paused"] for c, v in snap.items()}
+    return {"status": "paused" if any(paused.values()) else "running", "durable": True, "environment": pause.environment or "unsupported", "paused": paused,
+            "note": "Durable and shared by every process; changed at /admin/configuration."}
 
 
 def command_center(*, version: str, session_factory, accounts, workspaces, allowed: frozenset[str],
-                   support=None, plans=None, integrations=None, jobs=None, knowledge=None, privacy=None, billing=None, ai=None) -> dict[str, Any]:
+                   support=None, plans=None, integrations=None, jobs=None, knowledge=None, privacy=None, billing=None, ai=None, pause=None, flags=None) -> dict[str, Any]:
     """Assemble the overview. Sections the caller lacks permission for are omitted, not blanked."""
     out: dict[str, Any] = {
         "build": build_info(version),
         "migrations": migration_status(session_factory),
         "health": health_summary(session_factory),
         "rate_limit": rate_limit_mode(),
-        "pause": pause_state(),
+        "pause": pause_state(pause),
         "privacy_requests": {"status": "restricted", "note": "You do not have access to privacy requests."},
         "accounts": accounts.account_stats(),
         "workspaces": workspaces.workspace_stats(),
@@ -147,6 +156,8 @@ def command_center(*, version: str, session_factory, accounts, workspaces, allow
     if billing is not None and "platform.billing.read" in allowed:
         # MOCK BILLING counts only: no revenue, MRR/ARR, churn or card data.
         out["billing"] = billing.stats()
+    if flags is not None and "platform.flags.read" in allowed:
+        out["feature_flags"] = flags.stats()
     if ai is not None and "platform.ai.read" in allowed:
         # Counts and activation state only: no prompt, no candidate data, no provider payload.
         out["ai"] = ai.stats()

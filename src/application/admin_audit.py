@@ -89,6 +89,13 @@ ADMIN_AI_REJECTED: Final = "admin.ai_rejected"
 ADMIN_AI_ACTIVATED: Final = "admin.ai_activated"
 ADMIN_AI_ROLLED_BACK: Final = "admin.ai_rolled_back"
 ADMIN_AI_RETIRED: Final = "admin.ai_retired"
+# W10.11 (durable platform pause and feature flags). Payloads: environment, capability or flag key, old/new state and effective value, revision. Never a
+# secret or candidate content; the pause reason is internal admin metadata.
+ADMIN_PLATFORM_PAUSED: Final = "admin.platform_paused"
+ADMIN_PLATFORM_RESUMED: Final = "admin.platform_resumed"
+ADMIN_FLAG_OVERRIDE_ENABLED: Final = "admin.flag_override_enabled"
+ADMIN_FLAG_OVERRIDE_DISABLED: Final = "admin.flag_override_disabled"
+ADMIN_FLAG_OVERRIDE_RESET: Final = "admin.flag_override_reset"
 ADMIN_SUPPORT_TICKET_ASSIGNED: Final = "admin.support_ticket_assigned"
 ADMIN_SUPPORT_TICKET_STATUS_CHANGED: Final = "admin.support_ticket_status_changed"
 ADMIN_SUPPORT_TICKET_PRIORITY_CHANGED: Final = "admin.support_ticket_priority_changed"
@@ -114,6 +121,7 @@ ADMIN_EVENT_NAMES: Final[frozenset[str]] = frozenset({
     ADMIN_BILLING_PRICE_CHANGE_REQUESTED, ADMIN_BILLING_PRICE_CHANGE_APPROVED, ADMIN_BILLING_PRICE_CHANGE_REJECTED,
     ADMIN_BILLING_PRICE_ACTIVATED, ADMIN_BILLING_REFUND_REQUESTED, ADMIN_BILLING_REFUND_APPROVED, ADMIN_BILLING_REFUND_REJECTED,
     ADMIN_BILLING_REFUND_EXECUTED, ADMIN_BILLING_REFUND_FAILED,
+    ADMIN_PLATFORM_PAUSED, ADMIN_PLATFORM_RESUMED, ADMIN_FLAG_OVERRIDE_ENABLED, ADMIN_FLAG_OVERRIDE_DISABLED, ADMIN_FLAG_OVERRIDE_RESET,
     ADMIN_AI_CONFIG_CREATED, ADMIN_AI_CONFIG_UPDATED, ADMIN_AI_CONFIG_VALIDATED, ADMIN_AI_EVALUATION_REQUESTED, ADMIN_AI_EVALUATION_COMPLETED, ADMIN_AI_APPROVAL_REQUESTED, ADMIN_AI_APPROVED, ADMIN_AI_REJECTED, ADMIN_AI_ACTIVATED, ADMIN_AI_ROLLED_BACK, ADMIN_AI_RETIRED,
 })
 

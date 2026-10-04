@@ -37,6 +37,7 @@ const es: Catalog = {
     serviceUnreachable: "Ask4Mo no puede acceder al servicio en este momento. Inténtalo de nuevo en breve.",
     serverError: "Ask4Mo tuvo un problema al procesar esa solicitud. Inténtalo de nuevo.",
     serviceUnavailable: "Ask4Mo no está disponible temporalmente. Inténtalo de nuevo en breve.",
+    platformPaused: "Ask4Mo no está disponible temporalmente para esta actividad. Tus datos guardados siguen disponibles. Inténtalo de nuevo más tarde.",
     rateLimited: "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
     sessionExpired: "Tu sesión ha caducado. Inicia sesión de nuevo.",
     forbidden: "No tienes acceso a eso.",

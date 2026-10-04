@@ -123,22 +123,25 @@ def test_security_headers_present():
 # --- Operator pause switch ----------------------------------------------------------------
 
 
-def test_pause_registry_blocks_capability():
-    from fastapi import HTTPException
+def test_durable_pause_blocks_capability_and_others_stay_available(tmp_path):
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
 
     from src.api.guards import ensure_not_paused
-    from src.application.pause import get_pause_registry
+    from src.application.pause import PauseService, PlatformPausedError
+    from src.persistence import Base
 
-    get_pause_registry().pause("agent")
-    with pytest.raises(HTTPException) as exc:
-        ensure_not_paused("agent")
-    assert exc.value.status_code == 503
-    # Other capabilities remain available.
-    ensure_not_paused("ocr")
+    eng = create_engine(f"sqlite:///{tmp_path / 'p.db'}")
+    Base.metadata.create_all(eng)
+    svc = PauseService(sessionmaker(bind=eng), environment="staging")
+    svc.set_paused("agent", True, expected_revision=0, reason="incident", actor_user_id=1)
+    with pytest.raises(PlatformPausedError):
+        ensure_not_paused("agent", svc)
+    ensure_not_paused("ocr", svc)               # other capabilities remain available
 
 
 def test_admin_pause_endpoint_toggles(monkeypatch):
-    from src.persistence import PLATFORM_ROLE_ADMIN, User
+    from src.persistence import User
 
     app, repo, mail = build_auth_app()
     with TestClient(app) as client:
@@ -146,15 +149,15 @@ def test_admin_pause_endpoint_toggles(monkeypatch):
         # Promote to platform admin directly in the DB.
         with repo.session_factory() as s:
             user = s.query(User).filter(User.email == "admin@example.com").one()
-            user.platform_role = PLATFORM_ROLE_ADMIN
+            user.platform_role = "operations_admin"          # the W10.0 owner of the pause switches (platform.config.manage)
             s.commit()
-        r = client.post("/api/v1/admin/pause/agent", json={"paused": True},
+        r = client.post("/api/v1/admin/pause/agent", json={"paused": True, "expected_revision": 0, "reason": "incident"},
                         cookies=cookies_for(token))
         assert r.status_code == 200, r.text
         state = client.get("/api/v1/admin/pause", cookies=cookies_for(token)).json()
-        assert state["paused"]["agent"] is True
+        assert next(i for i in state["items"] if i["capability"] == "agent")["paused"] is True and state["durable"] is True
         # Unknown capability is rejected.
-        assert client.post("/api/v1/admin/pause/nope", json={"paused": True},
+        assert client.post("/api/v1/admin/pause/nope", json={"paused": True, "expected_revision": 0, "reason": "x"},
                            cookies=cookies_for(token)).status_code == 422
 
 

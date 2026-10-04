@@ -35,7 +35,7 @@ import { MoreMenu } from "@/components/layout/MoreMenu";
 
 const ALL = [
   "platform.overview.read", "platform.users.read", "platform.workspaces.read",
-  "platform.audit.read", "platform.integrations.read", "platform.ai.read", "platform.knowledge.read",
+  "platform.audit.read", "platform.integrations.read", "platform.ai.read", "platform.knowledge.read", "platform.flags.read",
 ];
 
 const HOME = {
@@ -43,7 +43,7 @@ const HOME = {
   migrations: { repository_head: "0014_opportunities", database_revision: "0013_x", state: "mismatch", warning: "Database revision differs from the repository migration head." },
   health: { database: "reachable", providers_probed: false, note: "" },
   rate_limit: { mode: "in_memory_process_local", distributed: false, shared_store_requested: false, note: "" },
-  pause: { paused: { ocr: true, agent: false }, durable: false, note: "Process-local and non-durable." },
+  pause: { status: "paused", environment: "staging", paused: { ocr: true, agent: false }, durable: true, note: "Durable and shared by every process; changed at /admin/configuration." },
   privacy_requests: { status: "not_operational", note: "Privacy-request administration is not available yet." },
   accounts: { users_total: 5, platform_admins: 1, premium_accounts: 2 },
   workspaces: { workspaces_total: 3 },
@@ -73,9 +73,9 @@ describe("A1-A3 capability-aware navigation", () => {
   it("A2 a platform admin with these permissions sees the operational destinations, none of the future ones", () => {
     render(<AdminShell><p>body</p></AdminShell>);
     const links = navLinks();
-    expect(links).toHaveLength(9);   // six W10.1 destinations plus Integrations (W10.6), Knowledge (W10.8) and AI and models (W10.7)
+    expect(links).toHaveLength(11);   // six W10.1 destinations plus Integrations (W10.6), Knowledge (W10.8), AI and models (W10.7), Configuration and Feature flags (W10.11)
     const text = links.join("|");
-    for (const ok of ["Overview", "Users", "Workspaces", "Review / Diagnostics", "Audit", "Provider status", "Integrations", "Knowledge", "AI and models"]) expect(text).toContain(ok);
+    for (const ok of ["Overview", "Users", "Workspaces", "Review / Diagnostics", "Audit", "Provider status", "Integrations", "Knowledge", "AI and models", "Configuration", "Feature flags"]) expect(text).toContain(ok);
     for (const future of ["Support", "Billing", "Subscriptions", "Jobs", "Knowledge administration", "Privacy requests", "Incidents", "Feature Flags"]) {
       expect(text).not.toContain(future);
     }
@@ -140,10 +140,12 @@ describe("A5 Command Center is truthful", () => {
     render(<CommandCenter />);
     expect(await screen.findByText("abc1234")).toBeInTheDocument();
     expect(screen.getByText("0014_opportunities")).toBeInTheDocument();
-    expect(screen.getByRole("alert")).toHaveTextContent(/differs from the repository migration head/);
+    expect(screen.getAllByRole("alert")[0]).toHaveTextContent(/differs from the repository migration head/);
+    expect(screen.getByText(/Candidate activity is restricted: ocr paused/)).toBeInTheDocument();         // a pause is prominent and states what is restricted
     expect(screen.getByText("Health not tested")).toBeInTheDocument();
     expect(screen.getByText(/In memory, per process/)).toBeInTheDocument();
-    expect(screen.getByText(/non-durable/i)).toBeInTheDocument();
+    expect(screen.getByText(/Durable and shared by every process/)).toBeInTheDocument();
+    expect(screen.queryByText(/non-durable/i)).not.toBeInTheDocument();
     expect(screen.getByText(/Privacy-request administration is not available yet/)).toBeInTheDocument();   // no stats supplied: no fake count
     expect(screen.queryByText(/open privacy requests/i)).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Knowledge readiness" })).toHaveAttribute("href", "/review/rag");

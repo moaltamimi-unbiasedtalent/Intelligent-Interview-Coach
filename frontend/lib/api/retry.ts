@@ -11,7 +11,7 @@ import { ApiError, type ApiErrorKind } from "./errors";
  * always stops immediately on abort.
  */
 
-export type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE" | "HEAD";
+export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD";
 
 export interface RetryPolicy {
   /** Additional attempts after the first (so total attempts = maxRetries + 1). */

@@ -130,4 +130,12 @@ def build_repository(config: AppConfig):
         install_resolver(session_factory)
     except Exception:  # noqa: BLE001 - the registry simply keeps its code-defined behaviour
         pass
+    try:                       # P10B-W10.11: durable pause + feature-flag access for call sites that have no request (agent tools, research service)
+        from src.application import pause as _pause
+        from src.platform_config import flags as _flags
+
+        _pause.install(session_factory)
+        _flags.install(session_factory)
+    except Exception:  # noqa: BLE001
+        pass
     return InterviewRepository(session_factory)
