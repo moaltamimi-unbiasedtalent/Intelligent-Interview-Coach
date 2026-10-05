@@ -377,6 +377,9 @@ class AuthSession(Base):
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     # Coarse, non-identifying client hint for the account's session list (bounded).
     user_agent: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    # Step-up (P10B-W10.13): password re-authentication of THIS session until ``elevated_until``. Not MFA; never a browser token.
+    elevated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    elevated_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     user: Mapped[User] = relationship(back_populates="sessions")
 
@@ -2059,3 +2062,199 @@ def init_db(engine: Engine, *, force: bool = False) -> None:
         with sessionmaker(bind=engine, expire_on_commit=False, future=True)() as s:
             seed_default_plans(s)
             s.commit()
+
+
+# --- P10B-W10.13: append-only audit/incident history, incidents, alerts, role-change requests ---------------------------------------------
+
+INCIDENT_SEVERITIES = ("low", "medium", "high", "critical")
+INCIDENT_STATUSES = ("open", "investigating", "monitoring", "resolved", "closed")
+INCIDENT_SERVICES = ("authentication", "agent", "practice", "research", "documents", "integrations", "knowledge", "jobs",
+                     "billing", "privacy", "admin", "platform")
+ALERT_CATEGORIES = ("auth_failure_burst", "admin_access_denied_burst", "job_failed")
+ALERT_SEVERITIES = ("low", "medium", "high", "critical")
+ALERT_STATES = ("active", "acknowledged", "resolved")
+ROLE_REQUEST_STATUSES = ("pending", "applied", "rejected", "cancelled", "stale")
+
+
+def append_only_trigger_ddl(table: str, dialect: str) -> list[str]:
+    """DDL for DB-level append-only protection of ``table`` (P10B-W10.13). DELETE is rejected. UPDATE is rejected unless the ONLY change is
+    ``actor_user_id`` going from a value to NULL (the FK ``ON DELETE SET NULL`` account-deletion anonymisation). Not tamper-proof against a
+    database owner/superuser, who can drop the trigger; production DBA privileges remain a deployment responsibility."""
+    cols = ("id", "event_type", "target_type", "target_id", "result", "request_id", "context", "created_at") if table == "audit_events" else None
+    if table == "incident_events":
+        cols = ("id", "incident_id", "action", "prior_status", "new_status", "request_id", "meta", "created_at")
+    assert cols is not None
+    msg = f"{table} is append-only"
+    if dialect == "sqlite":
+        same = " AND ".join(f"NEW.{c} IS OLD.{c}" for c in cols)
+        return [
+            f"CREATE TRIGGER IF NOT EXISTS trg_{table}_no_delete BEFORE DELETE ON {table} BEGIN SELECT RAISE(ABORT, '{msg}'); END",
+            f"CREATE TRIGGER IF NOT EXISTS trg_{table}_no_update BEFORE UPDATE ON {table} "
+            f"WHEN NOT ({same} AND NEW.actor_user_id IS NULL AND OLD.actor_user_id IS NOT NULL) BEGIN SELECT RAISE(ABORT, '{msg}'); END",
+        ]
+    if dialect == "postgresql":
+        # JSON columns have no equality operator in PostgreSQL, so compare their text form.
+        parts = []
+        for c in cols:
+            parts.append(f"NEW.{c}::text IS NOT DISTINCT FROM OLD.{c}::text" if c in ("context", "meta") else f"NEW.{c} IS NOT DISTINCT FROM OLD.{c}")
+        same = " AND ".join(parts)
+        return [
+            f"CREATE OR REPLACE FUNCTION {table}_guard() RETURNS trigger AS $$ BEGIN "
+            f"IF TG_OP = 'DELETE' THEN RAISE EXCEPTION '{msg}'; END IF; "
+            f"IF NOT ({same} AND NEW.actor_user_id IS NULL AND OLD.actor_user_id IS NOT NULL) THEN RAISE EXCEPTION '{msg}'; END IF; "
+            f"RETURN NEW; END; $$ LANGUAGE plpgsql",
+            f"DROP TRIGGER IF EXISTS trg_{table}_guard ON {table}",
+            f"CREATE TRIGGER trg_{table}_guard BEFORE UPDATE OR DELETE ON {table} FOR EACH ROW EXECUTE FUNCTION {table}_guard()",
+        ]
+    return []
+
+
+def append_only_trigger_drop_ddl(table: str, dialect: str) -> list[str]:
+    if dialect == "sqlite":
+        return [f"DROP TRIGGER IF EXISTS trg_{table}_no_delete", f"DROP TRIGGER IF EXISTS trg_{table}_no_update"]
+    if dialect == "postgresql":
+        return [f"DROP TRIGGER IF EXISTS trg_{table}_guard ON {table}", f"DROP FUNCTION IF EXISTS {table}_guard()"]
+    return []
+
+
+class AdminIncident(Base):
+    """An operator-authored incident (P10B-W10.13). INTERNAL operational metadata only: never populated from candidate content; no candidate list."""
+
+    __tablename__ = "admin_incidents"
+    __table_args__ = (
+        CheckConstraint(_in_list("severity", INCIDENT_SEVERITIES), name="ck_incident_severity"),
+        CheckConstraint(_in_list("status", INCIDENT_STATUSES), name="ck_incident_status"),
+        CheckConstraint(_in_list("affected_service", INCIDENT_SERVICES), name="ck_incident_service"),
+        CheckConstraint("affected_user_estimate IS NULL OR affected_user_estimate >= 0", name="ck_incident_estimate"),
+        CheckConstraint("revision >= 0", name="ck_incident_revision"),
+        CheckConstraint("(status IN ('resolved','closed') AND resolved_at IS NOT NULL) OR (status NOT IN ('resolved','closed') AND resolved_at IS NULL)",
+                        name="ck_incident_resolved_at"),
+        Index("ix_incident_status_updated", "status", "updated_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    title: Mapped[str] = mapped_column(String(160))
+    severity: Mapped[str] = mapped_column(String(12))
+    status: Mapped[str] = mapped_column(String(16), default="open", server_default="open")
+    affected_service: Mapped[str] = mapped_column(String(24))
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    owner_admin_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    affected_user_estimate: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    root_cause: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    remediation: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    created_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    revision: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+
+
+class AdminIncidentEvent(Base):
+    """Append-only incident history (P10B-W10.13). One row per mutation; no free text; DB triggers reject UPDATE/DELETE (except actor anonymisation)."""
+
+    __tablename__ = "incident_events"
+    __table_args__ = (Index("ix_incident_events_incident", "incident_id", "id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    incident_id: Mapped[int] = mapped_column(ForeignKey("admin_incidents.id", ondelete="CASCADE"))
+    action: Mapped[str] = mapped_column(String(32))
+    prior_status: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    new_status: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    actor_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    request_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    meta: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class AdminIncidentTicket(Base):
+    """A link from an incident to a support ticket by identifier only (P10B-W10.13). No ticket content is stored or copied."""
+
+    __tablename__ = "incident_tickets"
+    __table_args__ = (UniqueConstraint("incident_id", "ticket_id", name="uq_incident_ticket"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    incident_id: Mapped[int] = mapped_column(ForeignKey("admin_incidents.id", ondelete="CASCADE"), index=True)
+    ticket_id: Mapped[int] = mapped_column(ForeignKey("support_tickets.id", ondelete="CASCADE"), index=True)
+    linked_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    linked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class AdminNotification(Base):
+    """A durable IN-APP Admin alert (P10B-W10.13). Code-defined category and title; no arbitrary payload; deduplicated by a stable key."""
+
+    __tablename__ = "admin_notifications"
+    __table_args__ = (
+        UniqueConstraint("dedupe_key", name="uq_admin_notification_dedupe"),
+        CheckConstraint(_in_list("category", ALERT_CATEGORIES), name="ck_notification_category"),
+        CheckConstraint(_in_list("severity", ALERT_SEVERITIES), name="ck_notification_severity"),
+        CheckConstraint(_in_list("state", ALERT_STATES), name="ck_notification_state"),
+        CheckConstraint("revision >= 0", name="ck_notification_revision"),
+        CheckConstraint("occurrence_count >= 1", name="ck_notification_occurrences"),
+        CheckConstraint("last_seen_at >= first_seen_at", name="ck_notification_seen"),
+        Index("ix_notification_state_seen", "state", "last_seen_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    category: Mapped[str] = mapped_column(String(32))
+    severity: Mapped[str] = mapped_column(String(12))
+    dedupe_key: Mapped[str] = mapped_column(String(80))
+    state: Mapped[str] = mapped_column(String(14), default="active", server_default="active")
+    source_type: Mapped[str] = mapped_column(String(24))
+    source_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    title: Mapped[str] = mapped_column(String(120))
+    occurrence_count: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    acknowledged_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    resolved_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    revision: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+
+
+class AdminRoleChangeRequest(Base):
+    """A governed platform-role change (P10B-W10.13): requested by one Admin, applied only when a DIFFERENT authorised Admin approves. The target
+    may be neither requester nor approver. The role is applied in the same transaction as the approval and its audit row."""
+
+    __tablename__ = "admin_role_change_requests"
+    __table_args__ = (
+        CheckConstraint(_in_list("status", ROLE_REQUEST_STATUSES), name="ck_role_request_status"),
+        CheckConstraint("revision >= 0", name="ck_role_request_revision"),
+        CheckConstraint("approver_user_id IS NULL OR requester_user_id IS NULL OR approver_user_id <> requester_user_id", name="ck_role_request_distinct"),
+        CheckConstraint("requester_user_id IS NULL OR requester_user_id <> target_user_id", name="ck_role_request_not_self"),
+        Index("ix_role_request_status", "status", "requested_at"),
+        Index("uq_role_request_one_pending", "target_user_id", unique=True, sqlite_where=text("status = 'pending'"),
+              postgresql_where=text("status = 'pending'")),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    target_user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    before_role: Mapped[str] = mapped_column(String(32))
+    requested_role: Mapped[str] = mapped_column(String(32))
+    requester_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    approver_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    status: Mapped[str] = mapped_column(String(12), default="pending", server_default="pending")
+    reason: Mapped[str] = mapped_column(String(200))
+    decision_reason: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    applied_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revision: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+
+
+def _install_append_only(table_obj, table_name: str) -> None:
+    """Install the append-only triggers whenever the table is created through ``create_all`` (dev/test); migrations issue the same DDL."""
+    from sqlalchemy import DDL, event
+
+    for dialect in ("sqlite", "postgresql"):
+        for stmt in append_only_trigger_ddl(table_name, dialect):
+            event.listen(table_obj, "after_create", DDL(stmt.replace("%", "%%")).execute_if(dialect=dialect))
+
+
+_install_append_only(AuditEvent.__table__, "audit_events")
+_install_append_only(AdminIncidentEvent.__table__, "incident_events")

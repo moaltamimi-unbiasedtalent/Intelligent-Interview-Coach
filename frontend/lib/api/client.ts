@@ -19,6 +19,7 @@ import type {
   AIVersionDetail,
   AIVersionSummary,
   AdminAuditEvent,
+  AdminAlert, AlertPage, AuditFilters, AuditPage, Incident, IncidentDetail, IncidentPage, RoleChangePage, RoleChangeRequest, SecurityEventPage, SecuritySummary, StepUpState,
   AdminCommandCenter,
   AdminPage,
   AdminAssignee,
@@ -550,8 +551,46 @@ export const api = {
       request<AdminPage<AdminUserSummary>>("GET", `/admin/users${qs(query as Record<string, unknown>)}`, opts),
     userDetail: (userId: number, opts?: RequestOptions) =>
       request<AdminUserDetail>("GET", `/admin/users/${userId}`, opts),
-    setRole: (userId: number, role: string, reason?: string, opts?: RequestOptions) =>
-      request<Record<string, unknown>>("POST", `/admin/users/${userId}/role`, { body: { role, reason }, ...opts }),
+    // W10.13: a role is never changed directly. This creates a REQUEST that a different Admin must approve (both need a recent password confirmation).
+    requestRoleChange: (userId: number, role: string, reason: string, opts?: RequestOptions) =>
+      request<RoleChangeRequest>("POST", "/admin/role-changes", { body: { target_user_id: userId, role, reason }, ...opts }),
+    roleChanges: (opts?: RequestOptions) => request<RoleChangePage>("GET", "/admin/role-changes", opts),
+    approveRoleChange: (id: string, opts?: RequestOptions) => request<RoleChangeRequest>("POST", `/admin/role-changes/${encodeURIComponent(id)}/approve`, opts),
+    rejectRoleChange: (id: string, opts?: RequestOptions) => request<RoleChangeRequest>("POST", `/admin/role-changes/${encodeURIComponent(id)}/reject`, opts),
+    cancelRoleChange: (id: string, opts?: RequestOptions) => request<RoleChangeRequest>("POST", `/admin/role-changes/${encodeURIComponent(id)}/cancel`, opts),
+    stepUpState: (opts?: RequestOptions) => request<StepUpState>("GET", "/admin/step-up", opts),
+    stepUp: (password: string, opts?: RequestOptions) => request<StepUpState>("POST", "/admin/step-up", { body: { password }, ...opts }),
+    // W10.13 security
+    securitySummary: (opts?: RequestOptions) => request<SecuritySummary>("GET", "/admin/security/summary", opts),
+    securityEvents: (q: Record<string, unknown> = {}, opts?: RequestOptions) =>
+      request<SecurityEventPage>("GET", `/admin/security/events${qs(q)}`, opts),
+    auditPage: (f: AuditFilters = {}, opts?: RequestOptions) => request<AuditPage>("GET", `/admin/audit${qs(f as Record<string, unknown>)}`, opts),
+    exportAudit: async (body: Record<string, unknown>): Promise<{ content: string; filename: string; count: number }> => {
+      const res = await fetch(`${config.apiBaseUrl}/admin/audit/export`, {
+        method: "POST", credentials: "include", headers: { "Content-Type": "application/json", ...authHeaders() }, body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const payload = res.headers.get("content-type")?.includes("application/json") ? await res.json().catch(() => undefined) : undefined;
+        throw apiErrorFromBody(res.status, payload, res.headers.get(REQUEST_ID_HEADER), null);
+      }
+      return { content: await res.text(), filename: `audit-export.${body.format === "json" ? "json" : "csv"}`, count: Number(res.headers.get("X-Export-Count") ?? 0) };
+    },
+    alerts: (q: Record<string, unknown> = {}, opts?: RequestOptions) => request<AlertPage>("GET", `/admin/security/alerts${qs(q)}`, opts),
+    acknowledgeAlert: (id: string, expectedRevision: number, opts?: RequestOptions) =>
+      request<AdminAlert>("POST", `/admin/security/alerts/${encodeURIComponent(id)}/acknowledge`, { body: { expected_revision: expectedRevision }, ...opts }),
+    resolveAlert: (id: string, expectedRevision: number, opts?: RequestOptions) =>
+      request<AdminAlert>("POST", `/admin/security/alerts/${encodeURIComponent(id)}/resolve`, { body: { expected_revision: expectedRevision }, ...opts }),
+    incidents: (q: Record<string, unknown> = {}, opts?: RequestOptions) => request<IncidentPage>("GET", `/admin/security/incidents${qs(q)}`, opts),
+    incident: (id: string, opts?: RequestOptions) => request<IncidentDetail>("GET", `/admin/security/incidents/${encodeURIComponent(id)}`, opts),
+    createIncident: (body: Record<string, unknown>, opts?: RequestOptions) => request<Incident>("POST", "/admin/security/incidents", { body, ...opts }),
+    updateIncident: (id: string, body: Record<string, unknown>, opts?: RequestOptions) =>
+      request<Incident>("POST", `/admin/security/incidents/${encodeURIComponent(id)}/update`, { body, ...opts }),
+    incidentStatus: (id: string, status: string, expectedRevision: number, opts?: RequestOptions) =>
+      request<Incident>("POST", `/admin/security/incidents/${encodeURIComponent(id)}/status`, { body: { status, expected_revision: expectedRevision }, ...opts }),
+    linkIncidentTicket: (id: string, ticket: string, expectedRevision: number, opts?: RequestOptions) =>
+      request<Incident>("POST", `/admin/security/incidents/${encodeURIComponent(id)}/tickets/link`, { body: { ticket_public_id: ticket, expected_revision: expectedRevision }, ...opts }),
+    unlinkIncidentTicket: (id: string, ticket: string, expectedRevision: number, opts?: RequestOptions) =>
+      request<Incident>("POST", `/admin/security/incidents/${encodeURIComponent(id)}/tickets/unlink`, { body: { ticket_public_id: ticket, expected_revision: expectedRevision }, ...opts }),
     setUserPlan: (userId: number, planCode: string, opts?: RequestOptions) =>
       request<Record<string, unknown>>("POST", `/admin/users/${userId}/plan`, { body: { plan_code: planCode }, ...opts }),
     setWorkspacePlan: (workspaceId: number, planCode: string, opts?: RequestOptions) =>

@@ -1230,3 +1230,35 @@ class ReportDefinitions(_Strict):
     periods: list[str]
     default_period: str
     metrics: list[ReportMetricDefinition]
+
+
+# --- W10.13 security events: a typed, bounded projection of audit rows. No email, IP, user agent, token, context or content field exists. ---
+class SecurityEventOut(_Strict):
+    id: int
+    event_type: str
+    category: str
+    severity: str
+    actor_user_id: int | None = None
+    target_type: str | None = None
+    target_id: str | None = None
+    result: str
+    request_id: str | None = None
+    created_at: str | None = None
+
+
+class SecurityAnomalyOut(_Strict):
+    rule: str
+    actor_user_id: int
+    count: int
+    window_minutes: int
+    threshold: int
+    since: str
+
+
+class SecurityEventPage(_Strict):
+    items: list[SecurityEventOut]
+    total: int
+    page: int
+    page_size: int
+    anomalies: list[SecurityAnomalyOut]
+    advanced_anomaly_detection: bool = False

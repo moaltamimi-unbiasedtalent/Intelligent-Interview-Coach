@@ -155,9 +155,11 @@ def test_deactivated_admin_loses_admin_access_and_demotion_is_immediate(env):
     assert set_status(env, admin, aid, "deactivated").status_code == 200
     assert env.c.get(f"{API}/admin/home", cookies=ack).status_code in (401, 403)
     bid, _, bck, _ = mk(env, "platform_admin")
+    _, _, admin2, _ = mk(env, "platform_admin")
     assert env.c.get(f"{API}/admin/home", cookies=bck).status_code == 200
-    r = env.c.post(f"{API}/admin/users/{bid}/role", json={"role": "user"}, cookies=admin)
-    assert r.status_code == 200
+    from tests._role_gov import change_role
+    req, r = change_role(env.c, admin, admin2, bid, "user", password=PW)
+    assert req.status_code == 200 and r.status_code == 200
     assert env.c.get(f"{API}/admin/home", cookies=bck).status_code == 403   # same session, instantly demoted
 
 
@@ -167,7 +169,8 @@ def test_self_deactivation_and_self_demotion_blocked_via_api(env):
     aid, _, admin, _ = mk(env, "platform_admin")
     mk(env, "platform_admin")
     assert set_status(env, admin, aid, "deactivated").status_code == 409
-    assert env.c.post(f"{API}/admin/users/{aid}/role", json={"role": "user"}, cookies=admin).status_code == 409
+    from tests._role_gov import request_change
+    assert request_change(env.c, admin, aid, "user", password=PW).status_code == 409     # no Admin may request a change for themselves
     assert env.accounts.get_account(aid).status == "active"
 
 
@@ -205,29 +208,39 @@ def test_inactive_admins_do_not_count_as_other_admins(env):
 # ---------------- role administration ------------------------------------------------------------------
 
 def test_all_six_presets_accepted_and_unknown_or_custom_rejected(env):
+    from tests._role_gov import change_role, request_change
     _, _, admin, _ = mk(env, "platform_admin")
+    _, _, admin2, _ = mk(env, "platform_admin")
     tid, *_ = mk(env)
     for role in perm.ADMIN_ROLES:
-        r = env.c.post(f"{API}/admin/users/{tid}/role", json={"role": role}, cookies=admin)
-        assert r.status_code == 200, role
+        req, r = change_role(env.c, admin, admin2, tid, role, password=PW)
+        assert req.status_code == 200 and r.status_code == 200, role
         assert env.accounts.get_account(tid).platform_role == role
+    from src.api.rate_limit import reset_rate_limiter
+    reset_rate_limiter()
     for bad in ("root", "custom:auditor", "platform_admin ", "PLATFORM_ADMIN", "", "x" * 40):
-        assert env.c.post(f"{API}/admin/users/{tid}/role", json={"role": bad}, cookies=admin).status_code == 422
+        assert request_change(env.c, admin, tid, bad, password=PW).status_code == 422
     assert env.accounts.get_account(tid).platform_role == perm.ADMIN_ROLES[-1]
 
 
 def test_role_change_is_permissioned_audited_and_elevation_is_flagged(env):
     _, _, support, _ = mk(env, "support_operator")
     tid, *_ = mk(env)
-    assert env.c.post(f"{API}/admin/users/{tid}/role", json={"role": "billing_admin"}, cookies=support).status_code == 403
+    assert env.c.post(f"{API}/admin/role-changes", json={"target_user_id": tid, "role": "billing_admin", "reason": "x"}, cookies=support).status_code == 403
     _, _, admin, _ = mk(env, "platform_admin")
-    r = env.c.post(f"{API}/admin/users/{tid}/role", json={"role": "platform_admin", "reason": "covers on-call"}, cookies=admin)
+    _, _, admin2, _ = mk(env, "platform_admin")
+    from tests._role_gov import approve, request_change
+    q = request_change(env.c, admin, tid, "platform_admin", password=PW, reason="covers on-call")
+    assert q.status_code == 200
+    rq = env.events(A.ADMIN_ROLE_CHANGE_REQUESTED)[0]
+    assert rq["context"]["before"] == "user" and rq["context"]["after"] == "platform_admin" and rq["context"]["reason"] == "covers on-call"
+    r = approve(env.c, admin2, q.json()["public_id"], password=PW)
     assert r.status_code == 200
-    ev = env.events(A.ADMIN_PLATFORM_ROLE_CHANGE)[0]
+    ev = env.events(A.ADMIN_ROLE_CHANGE_APPROVED)[0]
     assert ev["request_id"] == r.headers["X-Request-Id"]
-    assert ev["context"]["before"] == "user" and ev["context"]["after"] == "platform_admin"
-    assert ev["context"]["elevation"] is True and ev["context"]["reason"] == "covers on-call"
-    assert ev["target_id"] == str(tid)
+    assert ev["context"]["before_role"] == "user" and ev["context"]["requested_role"] == "platform_admin"
+    assert ev["context"]["elevation"] is True
+    assert ev["context"]["target_user_id"] == tid
 
 
 def test_scoped_presets_cannot_manage_accounts(env):
@@ -235,11 +248,11 @@ def test_scoped_presets_cannot_manage_accounts(env):
     for role in ("billing_admin", "knowledge_admin", "operations_admin", "support_operator"):
         _, _, ck, _ = mk(env, role)
         assert env.c.post(f"{API}/admin/users/{tid}/status", json={"status": "deactivated"}, cookies=ck).status_code == 403, role
-        assert env.c.post(f"{API}/admin/users/{tid}/role", json={"role": "user"}, cookies=ck).status_code == 403, role
+        assert env.c.post(f"{API}/admin/role-changes", json={"target_user_id": tid, "role": "user", "reason": "x"}, cookies=ck).status_code == 403, role
         assert env.c.post(f"{API}/admin/workspaces/1/members", json={"user_id": tid}, cookies=ck).status_code == 403, role
     _, _, sec, _ = mk(env, "security_privacy_admin")
     assert env.c.post(f"{API}/admin/users/{tid}/status", json={"status": "deactivated"}, cookies=sec).status_code == 403
-    assert env.c.post(f"{API}/admin/users/{tid}/role", json={"role": "user"}, cookies=sec).status_code == 403
+    assert env.c.post(f"{API}/admin/role-changes", json={"target_user_id": tid, "role": "user", "reason": "x"}, cookies=sec).status_code == 403
 
 
 def test_plan_change_keeps_the_legacy_tier_in_step(env):

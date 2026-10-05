@@ -60,13 +60,19 @@ def evaluate() -> dict:
         audit = c.get("/api/v1/admin/audit", cookies=cookies_for(admin)).json()["events"]
         m["entitlement_change_audited"] = 1 if any(e["event_type"] == "admin.subscription_assigned" for e in audit) else 0
 
-        # platform_role_change_audited.
-        c.post(f"/api/v1/admin/users/{user_uid}/role", json={"role": "user"}, cookies=cookies_for(admin))
+        # platform_role_change_audited (W10.13: a role change is a TWO-PERSON request/approval; both halves are audited).
+        from tests._role_gov import change_role, request_change
+        register(c, "admin2@x.com", PW)
+        admin2 = login_token(c, "admin2@x.com", PW)
+        admin2_uid = c.get("/api/v1/auth/me", cookies=cookies_for(admin2)).json()["user_id"]
+        account_repo(repo).set_platform_role(admin2_uid, "platform_admin")
+        change_role(c, cookies_for(admin), cookies_for(admin2), user_uid, "support_operator", password=PW)
         audit = c.get("/api/v1/admin/audit", cookies=cookies_for(admin)).json()["events"]
-        m["platform_role_change_audited"] = 1 if any(e["event_type"] == "admin.platform_role_change" for e in audit) else 0
+        kinds = {e["event_type"] for e in audit}
+        m["platform_role_change_audited"] = 1 if {"admin.role_change.requested", "admin.role_change.approved"} <= kinds else 0
 
-        # self-lockout guard (bonus invariant).
-        r = c.post(f"/api/v1/admin/users/{admin_uid}/role", json={"role": "user"}, cookies=cookies_for(admin))
+        # self-lockout guard (bonus invariant): no Admin may request a change for their own account.
+        r = request_change(c, cookies_for(admin), admin_uid, "user", password=PW)
         m["self_lockout_prevented"] = 1 if r.status_code == 409 else 0
 
         # workspace_metadata_boundary — create a workspace as the user, admin sees metadata only.

@@ -571,6 +571,7 @@ def test_openapi_schemas_do_not_expose_secrets():
     auth_input_models = {
         "RegisterRequest", "LoginRequest", "ResetPasswordRequest", "VerifyEmailRequest",
         "TokenRequest",
+        "StepUpBody",   # W10.13: the current password submitted to re-authenticate the session; never returned
     }
     auth_input_fields = {"password", "token"}
     for name, model in components.items():

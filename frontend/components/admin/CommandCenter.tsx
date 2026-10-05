@@ -2,7 +2,8 @@
 
 import Link from "@/components/ui/VerifiedLink";
 import { api } from "@/lib/api/client";
-import { P } from "@/lib/admin/capabilities";
+import { useAuthOptional } from "@/components/auth/AuthProvider";
+import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
 import { KeyValue, Panel, PermissionGate, ResourceState, Stat, StatusLabel, useAdminResource } from "./ui";
 
 export function CommandCenter() {
@@ -13,11 +14,25 @@ export function CommandCenter() {
   );
 }
 
+function SecuritySummary() {
+  const loaded = useAdminResource(() => api.admin.securitySummary());
+  if (loaded.state !== "ready") return null;
+  const { alerts, open_incidents: incidents } = loaded.data;
+  return (
+    <Panel title="Security">
+      <KeyValue rows={[["Active critical alerts", alerts.active_critical], ["Active high alerts", alerts.active_high], ["Acknowledged alerts", alerts.acknowledged], ["Open incidents", incidents]]} />
+      <p><Link href="/admin/security" className="text-sm underline underline-offset-2">Open Security</Link></p>
+    </Panel>
+  );
+}
+
 function CommandCenterBody() {
+  const canSecurity = hasAnyPermission(adminPermissions(useAuthOptional()?.account), [P.securityRead]);
   const loaded = useAdminResource(() => api.admin.home());
   return (
     <ResourceState loaded={loaded}>
       {loaded.state === "ready" ? <Overview home={loaded.data} /> : null}
+      {canSecurity ? <SecuritySummary /> : null}
     </ResourceState>
   );
 }

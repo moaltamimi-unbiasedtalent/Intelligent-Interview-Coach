@@ -646,7 +646,7 @@ def test_migration_0024_adds_only_the_two_tables_and_seeds_nothing(tmp_path, mon
     cfg = Config(str(ROOT / "alembic.ini")); cfg.set_main_option("sqlalchemy.url", url); cfg.set_main_option("script_location", str(ROOT / "migrations"))
     command.upgrade(cfg, "0023_platform_config")
     before = set(inspect(create_engine(url)).get_table_names())
-    command.upgrade(cfg, "head")
+    command.upgrade(cfg, "0024_reporting_analytics")
     eng = create_engine(url)
     after = set(inspect(eng).get_table_names())
     assert after - before == {"operational_metric_events", "ai_usage_facts"}

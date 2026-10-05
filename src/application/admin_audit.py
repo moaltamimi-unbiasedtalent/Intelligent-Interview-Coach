@@ -96,6 +96,23 @@ ADMIN_PLATFORM_RESUMED: Final = "admin.platform_resumed"
 ADMIN_FLAG_OVERRIDE_ENABLED: Final = "admin.flag_override_enabled"
 ADMIN_FLAG_OVERRIDE_DISABLED: Final = "admin.flag_override_disabled"
 ADMIN_FLAG_OVERRIDE_RESET: Final = "admin.flag_override_reset"
+# W10.13 (security, audit, incidents, alerts, role approval, step-up). Payloads: ids, enum before/after, filters, counts, field NAMES changed; never free text
+# of an incident, a password, a candidate's content or an IP/device value.
+ADMIN_ROLE_CHANGE_REQUESTED: Final = "admin.role_change.requested"
+ADMIN_ROLE_CHANGE_APPROVED: Final = "admin.role_change.approved"
+ADMIN_ROLE_CHANGE_REJECTED: Final = "admin.role_change.rejected"
+ADMIN_ROLE_CHANGE_CANCELLED: Final = "admin.role_change.cancelled"
+ADMIN_ROLE_CHANGE_STALE: Final = "admin.role_change.stale"
+ADMIN_STEP_UP_SUCCEEDED: Final = "admin.step_up.succeeded"
+ADMIN_STEP_UP_FAILED: Final = "admin.step_up.failed"
+ADMIN_AUDIT_EXPORTED: Final = "admin.audit.exported"
+SECURITY_INCIDENT_CREATED: Final = "security.incident.created"
+SECURITY_INCIDENT_UPDATED: Final = "security.incident.updated"
+SECURITY_INCIDENT_STATUS_CHANGED: Final = "security.incident.status_changed"
+SECURITY_INCIDENT_TICKET_LINKED: Final = "security.incident.ticket_linked"
+SECURITY_INCIDENT_TICKET_UNLINKED: Final = "security.incident.ticket_unlinked"
+SECURITY_ALERT_ACKNOWLEDGED: Final = "security.alert.acknowledged"
+SECURITY_ALERT_RESOLVED: Final = "security.alert.resolved"
 ADMIN_SUPPORT_TICKET_ASSIGNED: Final = "admin.support_ticket_assigned"
 ADMIN_SUPPORT_TICKET_STATUS_CHANGED: Final = "admin.support_ticket_status_changed"
 ADMIN_SUPPORT_TICKET_PRIORITY_CHANGED: Final = "admin.support_ticket_priority_changed"
@@ -103,6 +120,9 @@ ADMIN_SUPPORT_REPLY_SENT: Final = "admin.support_reply_sent"
 ADMIN_SUPPORT_INTERNAL_NOTE_CREATED: Final = "admin.support_internal_note_created"
 
 ADMIN_EVENT_NAMES: Final[frozenset[str]] = frozenset({
+    ADMIN_ROLE_CHANGE_REQUESTED, ADMIN_ROLE_CHANGE_APPROVED, ADMIN_ROLE_CHANGE_REJECTED, ADMIN_ROLE_CHANGE_CANCELLED, ADMIN_ROLE_CHANGE_STALE,
+    ADMIN_STEP_UP_SUCCEEDED, ADMIN_STEP_UP_FAILED, ADMIN_AUDIT_EXPORTED, SECURITY_INCIDENT_CREATED, SECURITY_INCIDENT_UPDATED,
+    SECURITY_INCIDENT_STATUS_CHANGED, SECURITY_INCIDENT_TICKET_LINKED, SECURITY_INCIDENT_TICKET_UNLINKED, SECURITY_ALERT_ACKNOWLEDGED, SECURITY_ALERT_RESOLVED,
     ADMIN_PLATFORM_ROLE_CHANGE, ADMIN_ENTITLEMENT_CHANGE, ADMIN_ACCOUNT_STATUS_CHANGE,
     PLATFORM_PAUSE_TOGGLED, ADMIN_ACCESS_DENIED, ADMIN_SESSIONS_REVOKED,
     ADMIN_WORKSPACE_MEMBER_ADDED, ADMIN_WORKSPACE_MEMBER_REMOVED, ADMIN_WORKSPACE_MEMBER_ROLE_CHANGED,

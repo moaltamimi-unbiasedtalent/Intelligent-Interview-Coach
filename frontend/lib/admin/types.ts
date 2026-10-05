@@ -55,6 +55,7 @@ export interface AdminProviders {
   note: string;
 }
 export interface AdminAuditEvent {
+  id?: number;
   event_type: string;
   result: string;
   actor_user_id: number | null;
@@ -648,3 +649,40 @@ export interface AdminReport {
   mock_billing: boolean; label: string | null;
 }
 export type ReportPeriod = "7d" | "30d" | "90d" | "all_time";
+
+
+// --- W10.13: security events, audit browsing/export, incidents, alerts, step-up and role-change requests (metadata only) ---
+export interface SecurityEvent {
+  id: number; event_type: string; category: string; severity: string; actor_user_id: number | null; target_type: string | null;
+  target_id: string | null; result: string; request_id: string | null; created_at: string | null;
+}
+export interface SecurityAnomaly { rule: string; actor_user_id: number; count: number; window_minutes: number; threshold: number; since: string }
+export interface SecurityEventPage { items: SecurityEvent[]; total: number; page: number; page_size: number; anomalies: SecurityAnomaly[]; advanced_anomaly_detection: boolean }
+export interface AuditPage { items: AdminAuditEvent[]; total: number; page: number; page_size: number }
+export interface AuditFilters { event_type?: string; area?: string; result?: string; actor_user_id?: number; target_type?: string; request_id?: string; period?: string; page?: number; page_size?: number }
+export interface SecuritySummary {
+  alerts: { active_critical: number; active_high: number; active: number; acknowledged: number };
+  open_incidents: number; pending_role_changes: number; categories: string[]; anomaly_rules: string[]; advanced_anomaly_detection: boolean;
+}
+export interface AdminAlert {
+  public_id: string; category: string; severity: string; state: string; source_type: string; source_id: string | null; title: string;
+  occurrence_count: number; first_seen_at: string | null; last_seen_at: string | null; acknowledged_at: string | null; resolved_at: string | null; revision: number;
+}
+export interface AlertPage { items: AdminAlert[]; total: number; page: number; page_size: number; categories: string[]; not_implemented: string[]; delivery: string }
+export interface Incident {
+  public_id: string; title: string; severity: string; status: string; affected_service: string; started_at: string | null; resolved_at: string | null;
+  owner_admin_user_id: number | null; affected_user_estimate: number | null; root_cause: string | null; remediation: string | null;
+  created_at: string | null; updated_at: string | null; revision: number;
+}
+export interface IncidentPage { items: Incident[]; total: number; page: number; page_size: number; severities: string[]; statuses: string[]; services: string[] }
+export interface IncidentDetail extends Incident {
+  allowed_transitions: string[];
+  tickets: { public_id: string; status: string; category: string; linked_at: string | null }[];
+  history: { id: number; action: string; prior_status: string | null; new_status: string | null; actor_user_id: number | null; request_id: string | null; meta: Record<string, unknown> | null; created_at: string | null }[];
+}
+export interface StepUpState { elevated: boolean; elevated_until: string | null; window_seconds: number; method: string }
+export interface RoleChangeRequest {
+  public_id: string; target_user_id: number; before_role: string; requested_role: string; requester_user_id: number | null; approver_user_id: number | null;
+  status: string; reason: string; requested_at: string | null; decided_at: string | null; applied_at: string | null; revision: number;
+}
+export interface RoleChangePage { items: RoleChangeRequest[]; total: number; page: number; page_size: number; assignable_roles: string[]; viewer_user_id: number }
