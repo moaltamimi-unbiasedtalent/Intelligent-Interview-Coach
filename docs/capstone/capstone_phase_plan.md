@@ -73,7 +73,7 @@ never-translated slogan. Local `main` == `origin/main`; GitHub integration is pa
 | W10.11 | Feature flags and safe system configuration (**COMPLETE: merged in PR #125, main `ef339a53`**; closes SEC-W10-05; migration `0023_platform_config`; see `admin/W10_11_FEATURE_FLAGS_SAFE_PLATFORM_CONFIGURATION.md`) | M | Capstone desirable |
 | W10.12 | Reporting, analytics and AI economics (**COMPLETE: merged in PR #126, feature head `e4ae300`, main `18eebed`**; migration `0024_reporting_analytics`; see `admin/W10_12_REPORTING_ANALYTICS_AI_ECONOMICS.md`) | L | Capstone critical / desirable |
 | W10.13 | Security, audit and incident management (**COMPLETE: merged in PR #128, feature head `44f8a73`, merge `b47a10b`**; migration `0025_security_audit_incidents`; see `admin/W10_13_SECURITY_AUDIT_INCIDENT_MANAGEMENT.md`) | L | Capstone critical |
-| W10.14 | Full Admin qualification (**implemented on its branch; complete only after merge**; migration-free; closes ROLE-W10-01 as least-privilege domain separation; see `admin/W10_14_FULL_ADMIN_QUALIFICATION.md`; W11 integrated candidate + Admin requalification is still required before RC-P10-003) | L | Capstone critical |
+| W10.14 | Full Admin qualification (**COMPLETE: merged in PR #130, merge `ba58086`; ADMIN PLATFORM QUALIFIED**; migration-free; closes ROLE-W10-01 as least-privilege domain separation; see `admin/W10_14_FULL_ADMIN_QUALIFICATION.md`; W11 integrated candidate + Admin requalification is still required before RC-P10-003) | L | Capstone critical |
 
 Complexity is relative (S/M/L/XL); no hour estimates are asserted.
 
