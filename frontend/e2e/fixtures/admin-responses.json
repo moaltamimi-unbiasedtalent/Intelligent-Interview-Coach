@@ -1,0 +1,4933 @@
+{
+ "/admin/ai": {
+  "catalogue_version": "2026-10-04.1",
+  "runtime": {
+   "active_version": null,
+   "content_hash": null,
+   "environment": "development",
+   "fallback_reason": null,
+   "mode": "code_defaults",
+   "note": "Realtime voice, deterministic operations, the three specialists and the Interview session profile are code-defined and unaffected.",
+   "operations": [
+    {
+     "capability": "tool_calling",
+     "max_output_tokens": null,
+     "max_retries": null,
+     "operation": "orchestration",
+     "profile": "balanced",
+     "provider_slug": "openai/gpt-5.6-terra",
+     "timeout_s": null,
+     "uses_model": true
+    },
+    {
+     "capability": "structured",
+     "max_output_tokens": null,
+     "max_retries": null,
+     "operation": "specialist_role_analysis",
+     "profile": "balanced",
+     "provider_slug": "openai/gpt-5.6-terra",
+     "timeout_s": null,
+     "uses_model": true
+    },
+    {
+     "capability": "none",
+     "max_output_tokens": null,
+     "max_retries": null,
+     "operation": "specialist_evidence_analysis",
+     "profile": null,
+     "provider_slug": null,
+     "timeout_s": null,
+     "uses_model": false
+    },
+    {
+     "capability": "structured",
+     "max_output_tokens": null,
+     "max_retries": null,
+     "operation": "specialist_coaching",
+     "profile": "balanced",
+     "provider_slug": "openai/gpt-5.6-terra",
+     "timeout_s": null,
+     "uses_model": true
+    },
+    {
+     "capability": "text",
+     "max_output_tokens": null,
+     "max_retries": null,
+     "operation": "final_response",
+     "profile": "balanced",
+     "provider_slug": "openai/gpt-5.6-terra",
+     "timeout_s": null,
+     "uses_model": true
+    },
+    {
+     "capability": "structured",
+     "max_output_tokens": null,
+     "max_retries": null,
+     "operation": "structured_generation",
+     "profile": "balanced",
+     "provider_slug": "openai/gpt-5.6-terra",
+     "timeout_s": null,
+     "uses_model": true
+    },
+    {
+     "capability": "structured",
+     "max_output_tokens": null,
+     "max_retries": null,
+     "operation": "evaluation",
+     "profile": "advanced",
+     "provider_slug": "openai/gpt-5.6-sol",
+     "timeout_s": null,
+     "uses_model": true
+    },
+    {
+     "capability": "realtime",
+     "max_output_tokens": null,
+     "max_retries": null,
+     "operation": "realtime_voice",
+     "profile": null,
+     "provider_slug": null,
+     "timeout_s": null,
+     "uses_model": true
+    }
+   ],
+   "profiles": {
+    "advanced": {
+     "catalogue_id": "sol",
+     "provider_slug": "openai/gpt-5.6-sol",
+     "source": "code_default"
+    },
+    "balanced": {
+     "catalogue_id": "terra",
+     "provider_slug": "openai/gpt-5.6-terra",
+     "source": "code_default"
+    },
+    "fast": {
+     "catalogue_id": "luna",
+     "provider_slug": "openai/gpt-5.6-luna",
+     "source": "code_default"
+    }
+   },
+   "realtime": {
+    "capability": "realtime",
+    "chat_slug": null,
+    "governed": false
+   }
+  },
+  "stats": {
+   "active": {
+    "development": false,
+    "production": false,
+    "staging": false
+   },
+   "by_state": {},
+   "pending_approvals": 0,
+   "versions": 0
+  }
+ },
+ "/admin/ai/approvals": {
+  "items": [],
+  "page": 1,
+  "page_size": 25,
+  "total": 0
+ },
+ "/admin/ai/catalogue": {
+  "items": [
+   {
+    "allowed_profiles": [
+     "fast",
+     "balanced"
+    ],
+    "cost_class": 1,
+    "display_name": "Luna (Fast tier)",
+    "id": "luna",
+    "note": "Lower-cost bounded tasks; may serve Fast or Balanced.",
+    "provider_slug": "openai/gpt-5.6-luna",
+    "supports_structured_output": true,
+    "supports_temperature": false,
+    "supports_tools": true,
+    "tier": "fast"
+   },
+   {
+    "allowed_profiles": [
+     "fast",
+     "balanced",
+     "advanced"
+    ],
+    "cost_class": 2,
+    "display_name": "Terra (Balanced tier)",
+    "id": "terra",
+    "note": "Default workhorse; may serve any profile.",
+    "provider_slug": "openai/gpt-5.6-terra",
+    "supports_structured_output": true,
+    "supports_temperature": false,
+    "supports_tools": true,
+    "tier": "balanced"
+   },
+   {
+    "allowed_profiles": [
+     "balanced",
+     "advanced"
+    ],
+    "cost_class": 3,
+    "display_name": "Sol (Advanced tier)",
+    "id": "sol",
+    "note": "Highest capability; may serve Balanced or Advanced.",
+    "provider_slug": "openai/gpt-5.6-sol",
+    "supports_structured_output": true,
+    "supports_temperature": false,
+    "supports_tools": true,
+    "tier": "advanced"
+   }
+  ],
+  "note": "The approved catalogue is defined in code. A configuration selects an entry by id; it can never supply a provider model name.",
+  "version": "2026-10-04.1"
+ },
+ "/admin/ai/code-defined": {
+  "inherited_defaults": {
+   "evaluation": [
+    {
+     "consumer": "Practice answer evaluation and report",
+     "max_output_tokens": 3072,
+     "max_retries": 1,
+     "timeout_s": 60.0
+    }
+   ],
+   "orchestration": [
+    {
+     "consumer": "Mo (agent chat model)",
+     "max_output_tokens": 1024,
+     "max_retries": 1,
+     "timeout_s": 60.0
+    }
+   ],
+   "structured_generation": [
+    {
+     "consumer": "Career structured tools (job analysis, questions, role specialist)",
+     "max_output_tokens": 4096,
+     "max_retries": 1,
+     "timeout_s": 60.0
+    },
+    {
+     "consumer": "Practice strategy, question and branch",
+     "max_output_tokens": 3072,
+     "max_retries": 1,
+     "timeout_s": 60.0
+    }
+   ]
+  },
+  "note": "Capability, minimum tier, fallback floor, structured-output and tool flags, deterministic and realtime operations, the three specialists, the Interview session profile, prompts and secrets are code-defined and not configurable here.",
+  "operations": [
+   {
+    "capability": "tool_calling",
+    "code_values": {},
+    "deterministic": false,
+    "fallback_floor": "balanced",
+    "min_capability": "balanced",
+    "no_runtime_path": false,
+    "operation": "orchestration",
+    "realtime": false,
+    "requires_tools": true,
+    "structured_output": false,
+    "tunable": true
+   },
+   {
+    "capability": "structured",
+    "code_values": {},
+    "deterministic": false,
+    "fallback_floor": "fast",
+    "min_capability": "balanced",
+    "no_runtime_path": true,
+    "operation": "specialist_role_analysis",
+    "realtime": false,
+    "requires_tools": false,
+    "structured_output": true,
+    "tunable": false
+   },
+   {
+    "capability": "none",
+    "code_values": {},
+    "deterministic": true,
+    "fallback_floor": "fast",
+    "min_capability": "fast",
+    "no_runtime_path": false,
+    "operation": "specialist_evidence_analysis",
+    "realtime": false,
+    "requires_tools": false,
+    "structured_output": false,
+    "tunable": false
+   },
+   {
+    "capability": "structured",
+    "code_values": {},
+    "deterministic": false,
+    "fallback_floor": "fast",
+    "min_capability": "balanced",
+    "no_runtime_path": true,
+    "operation": "specialist_coaching",
+    "realtime": false,
+    "requires_tools": false,
+    "structured_output": true,
+    "tunable": false
+   },
+   {
+    "capability": "text",
+    "code_values": {},
+    "deterministic": false,
+    "fallback_floor": "balanced",
+    "min_capability": "balanced",
+    "no_runtime_path": true,
+    "operation": "final_response",
+    "realtime": false,
+    "requires_tools": false,
+    "structured_output": false,
+    "tunable": false
+   },
+   {
+    "capability": "structured",
+    "code_values": {},
+    "deterministic": false,
+    "fallback_floor": "fast",
+    "min_capability": "balanced",
+    "no_runtime_path": false,
+    "operation": "structured_generation",
+    "realtime": false,
+    "requires_tools": false,
+    "structured_output": true,
+    "tunable": true
+   },
+   {
+    "capability": "structured",
+    "code_values": {},
+    "deterministic": false,
+    "fallback_floor": "balanced",
+    "min_capability": "advanced",
+    "no_runtime_path": false,
+    "operation": "evaluation",
+    "realtime": false,
+    "requires_tools": false,
+    "structured_output": true,
+    "tunable": true
+   },
+   {
+    "capability": "realtime",
+    "code_values": {},
+    "deterministic": false,
+    "fallback_floor": "balanced",
+    "min_capability": "balanced",
+    "no_runtime_path": false,
+    "operation": "realtime_voice",
+    "realtime": true,
+    "requires_tools": false,
+    "structured_output": false,
+    "tunable": false
+   }
+  ],
+  "tunable_fields": {
+   "max_output_tokens": {
+    "max": 4096.0,
+    "min": 256.0
+   },
+   "max_retries": {
+    "max": 3.0,
+    "min": 0.0
+   },
+   "timeout_s": {
+    "max": 180.0,
+    "min": 10.0
+   }
+  }
+ },
+ "/admin/ai/configs": {
+  "items": [],
+  "page": 1,
+  "page_size": 25,
+  "total": 0
+ },
+ "/admin/ai/environments": {
+  "items": [
+   {
+    "active": null,
+    "environment": "development",
+    "mode": "code_defaults",
+    "profiles": {
+     "advanced": {
+      "catalogue_id": "sol",
+      "provider_slug": "openai/gpt-5.6-sol",
+      "source": "code_default"
+     },
+     "balanced": {
+      "catalogue_id": "terra",
+      "provider_slug": "openai/gpt-5.6-terra",
+      "source": "code_default"
+     },
+     "fast": {
+      "catalogue_id": "luna",
+      "provider_slug": "openai/gpt-5.6-luna",
+      "source": "code_default"
+     }
+    },
+    "version": null
+   },
+   {
+    "active": null,
+    "environment": "staging",
+    "mode": "code_defaults",
+    "profiles": {
+     "advanced": {
+      "catalogue_id": "sol",
+      "provider_slug": "openai/gpt-5.6-sol",
+      "source": "code_default"
+     },
+     "balanced": {
+      "catalogue_id": "terra",
+      "provider_slug": "openai/gpt-5.6-terra",
+      "source": "code_default"
+     },
+     "fast": {
+      "catalogue_id": "luna",
+      "provider_slug": "openai/gpt-5.6-luna",
+      "source": "code_default"
+     }
+    },
+    "version": null
+   },
+   {
+    "active": null,
+    "environment": "production",
+    "mode": "code_defaults",
+    "profiles": {
+     "advanced": {
+      "catalogue_id": "sol",
+      "provider_slug": "openai/gpt-5.6-sol",
+      "source": "code_default"
+     },
+     "balanced": {
+      "catalogue_id": "terra",
+      "provider_slug": "openai/gpt-5.6-terra",
+      "source": "code_default"
+     },
+     "fast": {
+      "catalogue_id": "luna",
+      "provider_slug": "openai/gpt-5.6-luna",
+      "source": "code_default"
+     }
+    },
+    "version": null
+   }
+  ],
+  "note": "This server activates only its own environment. With nothing active an environment uses the code-defined registry (environment overrides, then code defaults).",
+  "this_environment": "development"
+ },
+ "/admin/ai/history": {
+  "items": [],
+  "page": 1,
+  "page_size": 25,
+  "total": 0
+ },
+ "/admin/ai/runtime": {
+  "active_version": null,
+  "content_hash": null,
+  "environment": "development",
+  "fallback_reason": null,
+  "mode": "code_defaults",
+  "note": "Realtime voice, deterministic operations, the three specialists and the Interview session profile are code-defined and unaffected.",
+  "operations": [
+   {
+    "capability": "tool_calling",
+    "max_output_tokens": null,
+    "max_retries": null,
+    "operation": "orchestration",
+    "profile": "balanced",
+    "provider_slug": "openai/gpt-5.6-terra",
+    "timeout_s": null,
+    "uses_model": true
+   },
+   {
+    "capability": "structured",
+    "max_output_tokens": null,
+    "max_retries": null,
+    "operation": "specialist_role_analysis",
+    "profile": "balanced",
+    "provider_slug": "openai/gpt-5.6-terra",
+    "timeout_s": null,
+    "uses_model": true
+   },
+   {
+    "capability": "none",
+    "max_output_tokens": null,
+    "max_retries": null,
+    "operation": "specialist_evidence_analysis",
+    "profile": null,
+    "provider_slug": null,
+    "timeout_s": null,
+    "uses_model": false
+   },
+   {
+    "capability": "structured",
+    "max_output_tokens": null,
+    "max_retries": null,
+    "operation": "specialist_coaching",
+    "profile": "balanced",
+    "provider_slug": "openai/gpt-5.6-terra",
+    "timeout_s": null,
+    "uses_model": true
+   },
+   {
+    "capability": "text",
+    "max_output_tokens": null,
+    "max_retries": null,
+    "operation": "final_response",
+    "profile": "balanced",
+    "provider_slug": "openai/gpt-5.6-terra",
+    "timeout_s": null,
+    "uses_model": true
+   },
+   {
+    "capability": "structured",
+    "max_output_tokens": null,
+    "max_retries": null,
+    "operation": "structured_generation",
+    "profile": "balanced",
+    "provider_slug": "openai/gpt-5.6-terra",
+    "timeout_s": null,
+    "uses_model": true
+   },
+   {
+    "capability": "structured",
+    "max_output_tokens": null,
+    "max_retries": null,
+    "operation": "evaluation",
+    "profile": "advanced",
+    "provider_slug": "openai/gpt-5.6-sol",
+    "timeout_s": null,
+    "uses_model": true
+   },
+   {
+    "capability": "realtime",
+    "max_output_tokens": null,
+    "max_retries": null,
+    "operation": "realtime_voice",
+    "profile": null,
+    "provider_slug": null,
+    "timeout_s": null,
+    "uses_model": true
+   }
+  ],
+  "profiles": {
+   "advanced": {
+    "catalogue_id": "sol",
+    "provider_slug": "openai/gpt-5.6-sol",
+    "source": "code_default"
+   },
+   "balanced": {
+    "catalogue_id": "terra",
+    "provider_slug": "openai/gpt-5.6-terra",
+    "source": "code_default"
+   },
+   "fast": {
+    "catalogue_id": "luna",
+    "provider_slug": "openai/gpt-5.6-luna",
+    "source": "code_default"
+   }
+  },
+  "realtime": {
+   "capability": "realtime",
+   "chat_slug": null,
+   "governed": false
+  }
+ },
+ "/admin/audit": {
+  "events": [
+   {
+    "actor_user_id": 7,
+    "context": {
+     "job_public_id": "9f6d97af59e44ac9aec679d6129c3784",
+     "job_type": "diagnostic_noop"
+    },
+    "created_at": "2026-10-05T22:15:17.823138",
+    "event_type": "admin.job_enqueued",
+    "id": 16,
+    "request_id": "05c1600d6f9042ac867579489a0e01e0",
+    "result": "success",
+    "target_id": "9f6d97af59e44ac9aec679d6129c3784",
+    "target_type": "job"
+   },
+   {
+    "actor_user_id": 6,
+    "context": {
+     "affected_service": "agent",
+     "incident_public_id": "aa2e9b89e61e461c9d0b1e1ce30de1f0",
+     "new_status": "open",
+     "severity": "low"
+    },
+    "created_at": "2026-10-05T22:15:17.816983",
+    "event_type": "security.incident.created",
+    "id": 15,
+    "request_id": "8b79fde5b8004f54a19dd061061159c5",
+    "result": "success",
+    "target_id": null,
+    "target_type": "incident"
+   },
+   {
+    "actor_user_id": 7,
+    "context": null,
+    "created_at": "2026-10-05T22:15:17.654626",
+    "event_type": "account.login",
+    "id": 14,
+    "request_id": "84903104bb324415a84f2e6e077504dd",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 7,
+    "context": null,
+    "created_at": "2026-10-05T22:15:17.487181",
+    "event_type": "account.register",
+    "id": 13,
+    "request_id": "7bdffdb7e0bc4c3dbc9e395141197b9b",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 6,
+    "context": null,
+    "created_at": "2026-10-05T22:15:17.311874",
+    "event_type": "account.login",
+    "id": 12,
+    "request_id": "afccc9c7d2da4236887504e88a0fe641",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 6,
+    "context": null,
+    "created_at": "2026-10-05T22:15:17.145179",
+    "event_type": "account.register",
+    "id": 11,
+    "request_id": "e817ea566fea4eb78d98fdcd198b53df",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 5,
+    "context": null,
+    "created_at": "2026-10-05T22:15:16.968993",
+    "event_type": "account.login",
+    "id": 10,
+    "request_id": "f9f0ab7de1bc42809344f0ad1319cf5f",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 5,
+    "context": null,
+    "created_at": "2026-10-05T22:15:16.791736",
+    "event_type": "account.register",
+    "id": 9,
+    "request_id": "5881435007b249c4a56af1b3b780c5c4",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 4,
+    "context": null,
+    "created_at": "2026-10-05T22:15:16.591248",
+    "event_type": "account.login",
+    "id": 8,
+    "request_id": "2a4c77bd18f34e5fb5a100b4f1c5876c",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 4,
+    "context": null,
+    "created_at": "2026-10-05T22:15:16.403589",
+    "event_type": "account.register",
+    "id": 7,
+    "request_id": "d3cfe783320c44fdaf9979f6d488ba59",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 3,
+    "context": null,
+    "created_at": "2026-10-05T22:15:16.211648",
+    "event_type": "account.login",
+    "id": 6,
+    "request_id": "0ff2dcf987964934a967ecf26df1b7a8",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 3,
+    "context": null,
+    "created_at": "2026-10-05T22:15:16.024593",
+    "event_type": "account.register",
+    "id": 5,
+    "request_id": "08b8fd17641c4180af802202b8779c54",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 2,
+    "context": null,
+    "created_at": "2026-10-05T22:15:15.826097",
+    "event_type": "account.login",
+    "id": 4,
+    "request_id": "33ce9f9edf65488da292750bce1f06a9",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 2,
+    "context": null,
+    "created_at": "2026-10-05T22:15:15.635969",
+    "event_type": "account.register",
+    "id": 3,
+    "request_id": "f18153406f4f4498bc3513c102c254c6",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 1,
+    "context": null,
+    "created_at": "2026-10-05T22:15:15.425237",
+    "event_type": "account.login",
+    "id": 2,
+    "request_id": "016619b43a264203b2f3a26997768047",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 1,
+    "context": null,
+    "created_at": "2026-10-05T22:15:15.226687",
+    "event_type": "account.register",
+    "id": 1,
+    "request_id": "6b2308597b4a4d7793726952523ed801",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   }
+  ],
+  "items": [
+   {
+    "actor_user_id": 7,
+    "context": {
+     "job_public_id": "9f6d97af59e44ac9aec679d6129c3784",
+     "job_type": "diagnostic_noop"
+    },
+    "created_at": "2026-10-05T22:15:17.823138",
+    "event_type": "admin.job_enqueued",
+    "id": 16,
+    "request_id": "05c1600d6f9042ac867579489a0e01e0",
+    "result": "success",
+    "target_id": "9f6d97af59e44ac9aec679d6129c3784",
+    "target_type": "job"
+   },
+   {
+    "actor_user_id": 6,
+    "context": {
+     "affected_service": "agent",
+     "incident_public_id": "aa2e9b89e61e461c9d0b1e1ce30de1f0",
+     "new_status": "open",
+     "severity": "low"
+    },
+    "created_at": "2026-10-05T22:15:17.816983",
+    "event_type": "security.incident.created",
+    "id": 15,
+    "request_id": "8b79fde5b8004f54a19dd061061159c5",
+    "result": "success",
+    "target_id": null,
+    "target_type": "incident"
+   },
+   {
+    "actor_user_id": 7,
+    "context": null,
+    "created_at": "2026-10-05T22:15:17.654626",
+    "event_type": "account.login",
+    "id": 14,
+    "request_id": "84903104bb324415a84f2e6e077504dd",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 7,
+    "context": null,
+    "created_at": "2026-10-05T22:15:17.487181",
+    "event_type": "account.register",
+    "id": 13,
+    "request_id": "7bdffdb7e0bc4c3dbc9e395141197b9b",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 6,
+    "context": null,
+    "created_at": "2026-10-05T22:15:17.311874",
+    "event_type": "account.login",
+    "id": 12,
+    "request_id": "afccc9c7d2da4236887504e88a0fe641",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 6,
+    "context": null,
+    "created_at": "2026-10-05T22:15:17.145179",
+    "event_type": "account.register",
+    "id": 11,
+    "request_id": "e817ea566fea4eb78d98fdcd198b53df",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 5,
+    "context": null,
+    "created_at": "2026-10-05T22:15:16.968993",
+    "event_type": "account.login",
+    "id": 10,
+    "request_id": "f9f0ab7de1bc42809344f0ad1319cf5f",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 5,
+    "context": null,
+    "created_at": "2026-10-05T22:15:16.791736",
+    "event_type": "account.register",
+    "id": 9,
+    "request_id": "5881435007b249c4a56af1b3b780c5c4",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 4,
+    "context": null,
+    "created_at": "2026-10-05T22:15:16.591248",
+    "event_type": "account.login",
+    "id": 8,
+    "request_id": "2a4c77bd18f34e5fb5a100b4f1c5876c",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 4,
+    "context": null,
+    "created_at": "2026-10-05T22:15:16.403589",
+    "event_type": "account.register",
+    "id": 7,
+    "request_id": "d3cfe783320c44fdaf9979f6d488ba59",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 3,
+    "context": null,
+    "created_at": "2026-10-05T22:15:16.211648",
+    "event_type": "account.login",
+    "id": 6,
+    "request_id": "0ff2dcf987964934a967ecf26df1b7a8",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 3,
+    "context": null,
+    "created_at": "2026-10-05T22:15:16.024593",
+    "event_type": "account.register",
+    "id": 5,
+    "request_id": "08b8fd17641c4180af802202b8779c54",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 2,
+    "context": null,
+    "created_at": "2026-10-05T22:15:15.826097",
+    "event_type": "account.login",
+    "id": 4,
+    "request_id": "33ce9f9edf65488da292750bce1f06a9",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 2,
+    "context": null,
+    "created_at": "2026-10-05T22:15:15.635969",
+    "event_type": "account.register",
+    "id": 3,
+    "request_id": "f18153406f4f4498bc3513c102c254c6",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 1,
+    "context": null,
+    "created_at": "2026-10-05T22:15:15.425237",
+    "event_type": "account.login",
+    "id": 2,
+    "request_id": "016619b43a264203b2f3a26997768047",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   },
+   {
+    "actor_user_id": 1,
+    "context": null,
+    "created_at": "2026-10-05T22:15:15.226687",
+    "event_type": "account.register",
+    "id": 1,
+    "request_id": "6b2308597b4a4d7793726952523ed801",
+    "result": "success",
+    "target_id": null,
+    "target_type": null
+   }
+  ],
+  "page": 1,
+  "page_size": 50,
+  "total": 16
+ },
+ "/admin/billing": {
+  "mode": {
+   "checkout": false,
+   "configuration_error": null,
+   "enabled": false,
+   "label": "BILLING DISABLED",
+   "live": false,
+   "mode": "disabled",
+   "note": "No live payments are processed. No checkout, payment method or tax engine exists.",
+   "provider": "none"
+  },
+  "stats": {
+   "configured_plan_versions": 0,
+   "failed_payments": 0,
+   "label": "MOCK BILLING - NOT LIVE BILLING",
+   "mock": true,
+   "open_invoices": 0,
+   "past_due_invoices": 0,
+   "pending_approvals": 0
+  },
+  "terms": {
+   "items": [
+    {
+     "configured": false,
+     "current": null,
+     "history": [],
+     "pending_approval_id": null,
+     "plan_code": "basic",
+     "plan_name": "Basic",
+     "plan_status": "active",
+     "plan_version": 1,
+     "plan_version_id": 1
+    },
+    {
+     "configured": false,
+     "current": null,
+     "history": [],
+     "pending_approval_id": null,
+     "plan_code": "premium",
+     "plan_name": "Premium (preview)",
+     "plan_status": "active",
+     "plan_version": 1,
+     "plan_version_id": 2
+    }
+   ],
+   "note": "No commercial terms means unconfigured, not free. Terms are mock metadata: they charge no one and change no entitlement."
+  }
+ },
+ "/admin/billing/approvals": {
+  "items": [],
+  "page": 1,
+  "page_size": 25,
+  "total": 0
+ },
+ "/admin/billing/customers": {
+  "items": [],
+  "page": 1,
+  "page_size": 25,
+  "total": 0
+ },
+ "/admin/billing/invoices": {
+  "items": [],
+  "page": 1,
+  "page_size": 25,
+  "total": 0
+ },
+ "/admin/billing/payments": {
+  "items": [],
+  "page": 1,
+  "page_size": 25,
+  "total": 0
+ },
+ "/admin/billing/refunds": {
+  "items": [],
+  "page": 1,
+  "page_size": 25,
+  "total": 0
+ },
+ "/admin/billing/terms": {
+  "items": [
+   {
+    "configured": false,
+    "current": null,
+    "history": [],
+    "pending_approval_id": null,
+    "plan_code": "basic",
+    "plan_name": "Basic",
+    "plan_status": "active",
+    "plan_version": 1,
+    "plan_version_id": 1
+   },
+   {
+    "configured": false,
+    "current": null,
+    "history": [],
+    "pending_approval_id": null,
+    "plan_code": "premium",
+    "plan_name": "Premium (preview)",
+    "plan_status": "active",
+    "plan_version": 1,
+    "plan_version_id": 2
+   }
+  ],
+  "note": "No commercial terms means unconfigured, not free. Terms are mock metadata: they charge no one and change no entitlement."
+ },
+ "/admin/feedback": {
+  "counts_by_category": {},
+  "counts_by_rating": {},
+  "improvement_lifecycle": [
+   "proposed",
+   "triaged",
+   "experimenting",
+   "accepted",
+   "rejected",
+   "implemented"
+  ],
+  "note": "Aggregate counts only; raw comments/candidate content are never exposed here.",
+  "taxonomy": [
+   "incorrect",
+   "irrelevant",
+   "too_verbose",
+   "too_brief",
+   "missing_evidence",
+   "poor_source",
+   "tool_choice",
+   "language_quality",
+   "retrieval_problem",
+   "practice_quality",
+   "other"
+  ]
+ },
+ "/admin/flags": {
+  "environment": "development",
+  "items": [
+   {
+    "baseline": true,
+    "baseline_source": "environment variable EXTERNAL_RESEARCH_ENABLED (default on)",
+    "candidate_visible": true,
+    "category": "research",
+    "consumers": [
+     "src/copilot/research/service.py:default_research_service",
+     "src/api/routes/health.py:_company_research_available"
+    ],
+    "description": "Allows the external labour-market and company research providers to run at all.",
+    "display_name": "External market research",
+    "effective": true,
+    "flag_id": "external_research",
+    "notes": "Disabling it turns external research off for candidates. Enabling it cannot bypass authentication, the plan entitlement, rate limits or the operator pause.",
+    "override": null,
+    "reason": "",
+    "revision": 0,
+    "state": "inherited",
+    "updated_at": null,
+    "updated_by_user_id": null
+   },
+   {
+    "baseline": true,
+    "baseline_source": "environment variable COMPANY_WEB_RESEARCH_ENABLED (default on)",
+    "candidate_visible": true,
+    "category": "research",
+    "consumers": [
+     "src/copilot/research/service.py:default_research_service"
+    ],
+    "description": "Allows researching a company's own public website (inside the existing SSRF, robots and size guards).",
+    "display_name": "Company website research",
+    "effective": true,
+    "flag_id": "company_web_research",
+    "notes": "A sub-feature of external research: it is effective only while external research is effective.",
+    "override": null,
+    "reason": "",
+    "revision": 0,
+    "state": "inherited",
+    "updated_at": null,
+    "updated_by_user_id": null
+   }
+  ],
+  "not_mutable": {
+   "AGENT_COACH_ENABLED": "read-only environment capability: a UI cutover for a surface whose API is not flag-gated; an Admin toggle would be frontend-only",
+   "AGENT_EXTERNAL_OBSERVABILITY_ENABLED": "integration configuration (W10.6)",
+   "AUTH_REQUIRED": "security configuration",
+   "BILLING_PROVIDER": "billing configuration (W10.5)",
+   "FEATURE_GOOGLE_LOGIN": "security configuration (authentication provider)",
+   "INTERVIEW_LIVE_ENABLED": "read-only environment capability: experimental Live mode that needs provider credentials",
+   "OPENROUTER_MODEL_*": "AI configuration (W10.7)",
+   "REALTIME_VOICE_ENABLED": "integration/credential configuration (W10.6); runtime availability is controlled by the durable pause",
+   "TRUST_PROXY": "security configuration"
+  },
+  "note": "Only the flags listed here exist. A flag can only restrict availability; it never grants permission, entitlement, billing or AI changes."
+ },
+ "/admin/home": {
+  "accounts": {
+   "deletion_requests_open": 0,
+   "email_verified": 0,
+   "platform_admins": 1,
+   "premium_accounts": 0,
+   "users_total": 7
+  },
+  "ai": {
+   "active": {
+    "development": false,
+    "production": false,
+    "staging": false
+   },
+   "by_state": {},
+   "pending_approvals": 0,
+   "versions": 0
+  },
+  "boundary": "Operational metadata only. No candidate-private content is accessible here.",
+  "build": {
+   "build_time": "unknown",
+   "environment": "development",
+   "git_sha": "unknown",
+   "source": "deployment environment (APP_GIT_SHA / APP_BUILD_TIME); 'unknown' when not injected",
+   "version": "0.1.0"
+  },
+  "diagnostics_links": [
+   {
+    "label": "Knowledge readiness",
+    "path": "/review/rag"
+   },
+   {
+    "label": "Evaluation & agent review",
+    "path": "/review/evaluation"
+   }
+  ],
+  "feature_flags": {
+   "disabled_overrides": 0,
+   "environment": "development",
+   "flags": 2,
+   "overrides": 0
+  },
+  "health": {
+   "database": "reachable",
+   "note": "Internal checks only. Provider health is not tested here.",
+   "providers_probed": false
+  },
+  "integrations": {
+   "configured": 0,
+   "not_tested": 2,
+   "runtime_active": 0,
+   "total": 9,
+   "unhealthy": 0
+  },
+  "knowledge": {
+   "active": 0,
+   "awaiting_review": 0,
+   "failed": 0,
+   "indexed_not_active": 0,
+   "indexing": 0,
+   "sources": 0
+  },
+  "migrations": {
+   "database_revision": null,
+   "repository_head": "0025_security_audit_incidents",
+   "state": "unknown",
+   "warning": "Migration state could not be determined (no Alembic scripts or no alembic_version table)."
+  },
+  "pause": {
+   "durable": true,
+   "environment": "development",
+   "note": "Durable and shared by every process; changed at /admin/configuration.",
+   "paused": {
+    "agent": false,
+    "current_market": false,
+    "ocr": false,
+    "public_registration": false,
+    "realtime_voice": false
+   },
+   "status": "running"
+  },
+  "plans": {
+   "accounts_without_subscription": 0,
+   "by_plan": {
+    "basic": {
+     "users": 7,
+     "workspaces": 0
+    }
+   }
+  },
+  "privacy_requests": {
+   "completed": 0,
+   "in_progress": 0,
+   "note": "Counts of privacy requests. Handling is at /admin/privacy.",
+   "oldest_open_at": null,
+   "open": 0,
+   "status": "operational",
+   "submitted": 0,
+   "total": 0,
+   "unassigned_open": 0,
+   "waiting_for_user": 0
+  },
+  "rate_limit": {
+   "distributed": false,
+   "mode": "in_memory_process_local",
+   "note": "Limits are enforced per process; they are not shared across replicas.",
+   "shared_store_requested": false
+  },
+  "support": {
+   "high_or_urgent": 0,
+   "open": 1,
+   "total": 1,
+   "unassigned": 1,
+   "waiting_for_customer": 0
+  },
+  "workspaces": {
+   "accepted_invitations": 0,
+   "active_shares": 0,
+   "pending_invitations": 0,
+   "workspaces_active": 0,
+   "workspaces_total": 0
+  }
+ },
+ "/admin/integrations": {
+  "items": [
+   {
+    "adapter": "OpenRouter chat API",
+    "category": "ai_model",
+    "category_label": "AI / model",
+    "classification": "supported_unconfigured",
+    "code": "openrouter",
+    "configuration_status": "unconfigured",
+    "description": "Chat model provider for Mo, interview generation and evaluation.",
+    "health": {
+     "category": null,
+     "last_tested_at": null,
+     "latency_ms": null,
+     "status": "not_tested"
+    },
+    "name": "OpenRouter (language models)",
+    "runtime": {
+     "enabled": false,
+     "managed": "environment",
+     "note": "Runtime state is owned by the deployment environment and changes need a deployment or restart.",
+     "toggle_supported": false
+    },
+    "settings": [],
+    "slots": [
+     {
+      "configured": false,
+      "external_name": "OPENROUTER_API_KEY",
+      "label": "API key",
+      "slot": "api_key",
+      "source": "none",
+      "writable": false
+     }
+    ],
+    "store": {
+     "name": "environment",
+     "writable": false
+    },
+    "test": {
+     "note": "Calls OpenRouter's key-information endpoint once. It does not run a model and has no usage cost.",
+     "supported": true
+    },
+    "validation_note": "Healthy only after a successful manual test."
+   },
+   {
+    "adapter": "OpenAI embeddings",
+    "category": "ai_model",
+    "category_label": "AI / model",
+    "classification": "supported_unconfigured",
+    "code": "openai_embeddings",
+    "configuration_status": "unconfigured",
+    "description": "Optional embedding provider for retrieval. The offline local embedder is the default.",
+    "health": {
+     "category": null,
+     "last_tested_at": null,
+     "latency_ms": null,
+     "status": "not_tested"
+    },
+    "name": "OpenAI embeddings (optional)",
+    "runtime": {
+     "enabled": false,
+     "managed": "environment",
+     "note": "Runtime state is owned by the deployment environment and changes need a deployment or restart.",
+     "toggle_supported": false
+    },
+    "settings": [
+     {
+      "code": "provider",
+      "label": "Embedding provider",
+      "selected": null
+     }
+    ],
+    "slots": [
+     {
+      "configured": false,
+      "external_name": "COPILOT_EMBEDDING_API_KEY",
+      "label": "Embedding API key",
+      "slot": "api_key",
+      "source": "none",
+      "writable": false
+     }
+    ],
+    "store": {
+     "name": "environment",
+     "writable": false
+    },
+    "test": {
+     "note": "No safe manual probe exists for this integration.",
+     "supported": false
+    },
+    "validation_note": "Not validated against the live provider."
+   },
+   {
+    "adapter": "OpenAI Realtime",
+    "category": "ai_model",
+    "category_label": "AI / model",
+    "classification": "supported_unconfigured",
+    "code": "realtime_voice",
+    "configuration_status": "unconfigured",
+    "description": "Optional live spoken exchange with Mo. Off by default; live provider validation has not been run.",
+    "health": {
+     "category": null,
+     "last_tested_at": null,
+     "latency_ms": null,
+     "status": "not_tested"
+    },
+    "name": "Realtime voice provider",
+    "runtime": {
+     "enabled": false,
+     "managed": "environment",
+     "note": "Runtime state is owned by the deployment environment and changes need a deployment or restart.",
+     "toggle_supported": false
+    },
+    "settings": [
+     {
+      "code": "provider",
+      "label": "Provider",
+      "selected": null
+     }
+    ],
+    "slots": [
+     {
+      "configured": false,
+      "external_name": "REALTIME_VOICE_API_KEY",
+      "label": "Realtime API key",
+      "slot": "api_key",
+      "source": "none",
+      "writable": false
+     }
+    ],
+    "store": {
+     "name": "environment",
+     "writable": false
+    },
+    "test": {
+     "note": "No safe manual probe exists for this integration.",
+     "supported": false
+    },
+    "validation_note": "Live validation NOT RUN."
+   },
+   {
+    "adapter": "Adzuna API",
+    "category": "career_data",
+    "category_label": "Labour-market data",
+    "classification": "supported_unconfigured",
+    "code": "adzuna",
+    "configuration_status": "unconfigured",
+    "description": "Current-market job data for company and role research.",
+    "health": {
+     "category": null,
+     "last_tested_at": null,
+     "latency_ms": null,
+     "status": "not_tested"
+    },
+    "name": "Adzuna (job market data)",
+    "runtime": {
+     "enabled": false,
+     "managed": "environment",
+     "note": "Runtime state is owned by the deployment environment and changes need a deployment or restart.",
+     "toggle_supported": false
+    },
+    "settings": [],
+    "slots": [
+     {
+      "configured": false,
+      "external_name": "ADZUNA_APP_ID",
+      "label": "Application id",
+      "slot": "app_id",
+      "source": "none",
+      "writable": false
+     },
+     {
+      "configured": false,
+      "external_name": "ADZUNA_APP_KEY",
+      "label": "Application key",
+      "slot": "app_key",
+      "source": "none",
+      "writable": false
+     }
+    ],
+    "store": {
+     "name": "environment",
+     "writable": false
+    },
+    "test": {
+     "note": "No manual probe: calls consume the provider's quota and live validation is cost-gated.",
+     "supported": false
+    },
+    "validation_note": "Live validation is cost-gated and UNVALIDATED."
+   },
+   {
+    "adapter": "Google OpenID Connect",
+    "category": "authentication",
+    "category_label": "Authentication",
+    "classification": "code_present_not_validated",
+    "code": "google_oidc",
+    "configuration_status": "unconfigured",
+    "description": "Backend support for Google sign-in. Off by default; end-to-end sign-in is not validated.",
+    "health": {
+     "category": null,
+     "last_tested_at": null,
+     "latency_ms": null,
+     "status": "not_tested"
+    },
+    "name": "Google sign-in (OIDC)",
+    "runtime": {
+     "enabled": false,
+     "managed": "environment",
+     "note": "Runtime state is owned by the deployment environment and changes need a deployment or restart.",
+     "toggle_supported": false
+    },
+    "settings": [],
+    "slots": [
+     {
+      "configured": false,
+      "external_name": "GOOGLE_CLIENT_ID",
+      "label": "Client id",
+      "slot": "client_id",
+      "source": "none",
+      "writable": false
+     },
+     {
+      "configured": false,
+      "external_name": "GOOGLE_CLIENT_SECRET",
+      "label": "Client secret",
+      "slot": "client_secret",
+      "source": "none",
+      "writable": false
+     }
+    ],
+    "store": {
+     "name": "environment",
+     "writable": false
+    },
+    "test": {
+     "note": "No manual probe: the flow needs an interactive browser sign-in.",
+     "supported": false
+    },
+    "validation_note": "Backend support present; end-to-end sign-in is not validated and is not wired into the candidate sign-in page."
+   },
+   {
+    "adapter": "Brevo email API",
+    "category": "communications",
+    "category_label": "Email / communications",
+    "classification": "supported_unconfigured",
+    "code": "email_brevo",
+    "configuration_status": "unconfigured",
+    "description": "Sends account emails (verification and password reset) when selected. Support notifications are not sent.",
+    "health": {
+     "category": null,
+     "last_tested_at": null,
+     "latency_ms": null,
+     "status": "not_tested"
+    },
+    "name": "Brevo (transactional email)",
+    "runtime": {
+     "enabled": false,
+     "managed": "environment",
+     "note": "Runtime state is owned by the deployment environment and changes need a deployment or restart.",
+     "toggle_supported": false
+    },
+    "settings": [
+     {
+      "code": "provider",
+      "label": "Email provider",
+      "selected": "memory"
+     }
+    ],
+    "slots": [
+     {
+      "configured": false,
+      "external_name": "BREVO_API_KEY",
+      "label": "API key",
+      "slot": "api_key",
+      "source": "none",
+      "writable": false
+     }
+    ],
+    "store": {
+     "name": "environment",
+     "writable": false
+    },
+    "test": {
+     "note": "No manual probe: a real test would send an email.",
+     "supported": false
+    },
+    "validation_note": "Live delivery has not been validated; support ticket replies are never emailed."
+   },
+   {
+    "adapter": "Redis sliding window",
+    "category": "rate_limiting",
+    "category_label": "Rate limiting",
+    "classification": "supported_unconfigured",
+    "code": "redis_rate_limit",
+    "configuration_status": "unconfigured",
+    "description": "Optional shared store for rate limits across replicas. In-memory per-process limiting is the default.",
+    "health": {
+     "category": null,
+     "last_tested_at": null,
+     "latency_ms": null,
+     "status": "not_tested"
+    },
+    "name": "Redis (shared rate limiting)",
+    "runtime": {
+     "enabled": false,
+     "managed": "environment",
+     "note": "Runtime state is owned by the deployment environment and changes need a deployment or restart.",
+     "toggle_supported": false
+    },
+    "settings": [
+     {
+      "code": "backend",
+      "label": "Requested backend",
+      "selected": null
+     }
+    ],
+    "slots": [
+     {
+      "configured": false,
+      "external_name": "REDIS_URL",
+      "label": "Connection URL (contains credentials)",
+      "slot": "url",
+      "source": "none",
+      "writable": false
+     }
+    ],
+    "store": {
+     "name": "environment",
+     "writable": false
+    },
+    "test": {
+     "note": "No safe manual probe exists for this integration.",
+     "supported": false
+    },
+    "validation_note": "Tested against a fake client only: distributed limiting is NOT LIVE."
+   },
+   {
+    "adapter": "Langfuse events",
+    "category": "observability",
+    "category_label": "Observability",
+    "classification": "supported_unconfigured",
+    "code": "langfuse",
+    "configuration_status": "unconfigured",
+    "description": "Optional external observability of sanitised agent events. Off by default.",
+    "health": {
+     "category": null,
+     "last_tested_at": null,
+     "latency_ms": null,
+     "status": "not_tested"
+    },
+    "name": "Langfuse (observability)",
+    "runtime": {
+     "enabled": false,
+     "managed": "environment",
+     "note": "Runtime state is owned by the deployment environment and changes need a deployment or restart.",
+     "toggle_supported": false
+    },
+    "settings": [],
+    "slots": [
+     {
+      "configured": false,
+      "external_name": "LANGFUSE_PUBLIC_KEY",
+      "label": "Public key",
+      "slot": "public_key",
+      "source": "none",
+      "writable": false
+     },
+     {
+      "configured": false,
+      "external_name": "LANGFUSE_SECRET_KEY",
+      "label": "Secret key",
+      "slot": "secret_key",
+      "source": "none",
+      "writable": false
+     }
+    ],
+    "store": {
+     "name": "environment",
+     "writable": false
+    },
+    "test": {
+     "note": "No safe manual probe exists for this integration.",
+     "supported": false
+    },
+    "validation_note": "Not validated against the live provider."
+   },
+   {
+    "adapter": "ClamAV daemon",
+    "category": "file_security",
+    "category_label": "File security",
+    "classification": "supported_unconfigured",
+    "code": "malware_scanner",
+    "configuration_status": "unconfigured",
+    "description": "Optional malware scan of uploaded documents. No credentials are involved.",
+    "health": {
+     "category": null,
+     "last_tested_at": null,
+     "latency_ms": null,
+     "status": "not_tested"
+    },
+    "name": "ClamAV (upload malware scanning)",
+    "runtime": {
+     "enabled": false,
+     "managed": "environment",
+     "note": "Runtime state is owned by the deployment environment and changes need a deployment or restart.",
+     "toggle_supported": false
+    },
+    "settings": [
+     {
+      "code": "provider",
+      "label": "Scanner provider",
+      "selected": null
+     }
+    ],
+    "slots": [],
+    "store": {
+     "name": "environment",
+     "writable": false
+    },
+    "test": {
+     "note": "Checks that the configured scanner daemon answers. No file is scanned.",
+     "supported": true
+    },
+    "validation_note": "Live scanner validation not run."
+   }
+  ]
+ },
+ "/admin/jobs": {
+  "items": [
+   {
+    "attempts": 0,
+    "available_at": "2026-10-05T22:15:17.822317+00:00",
+    "can_cancel": true,
+    "can_retry": false,
+    "created_at": "2026-10-05T22:15:17.822317+00:00",
+    "error_category": null,
+    "error_message": null,
+    "finished_at": null,
+    "job_type": "diagnostic_noop",
+    "lease": {
+     "expires_at": null,
+     "heartbeat_at": null,
+     "held": false,
+     "owner": null,
+     "stale": false
+    },
+    "manual_retries": 0,
+    "max_attempts": 2,
+    "payload_summary": {
+     "label": "Example job"
+    },
+    "priority": "normal",
+    "public_id": "9f6d97af59e44ac9aec679d6129c3784",
+    "started_at": null,
+    "state": "queued",
+    "type_label": "Operational diagnostic (no-op)",
+    "updated_at": "2026-10-05T22:15:17.822317+00:00",
+    "waiting_for_retry": false
+   }
+  ],
+  "page": 1,
+  "page_size": 25,
+  "total": 1
+ },
+ "/admin/jobs/diagnostics": {
+  "by_type": [
+   {
+    "cancelled": 0,
+    "failed": 0,
+    "job_type": "diagnostic_noop",
+    "label": "Operational diagnostic (no-op)",
+    "queued": 1,
+    "running": 0,
+    "succeeded": 0
+   }
+  ],
+  "queue": {
+   "cancelled": 0,
+   "failed": 0,
+   "oldest_ready_age_seconds": 0,
+   "queued": 1,
+   "retry_waiting": 0,
+   "running": 0,
+   "stale_leases": 0,
+   "succeeded": 0
+  },
+  "workers": {
+   "items": [],
+   "last_seen_at": null,
+   "seen_recently": 0,
+   "stale_after_seconds": 60
+  }
+ },
+ "/admin/jobs/types": [
+  {
+   "cancellable_when_queued": true,
+   "idempotency": "No side effect, so replay is trivially safe.",
+   "job_type": "diagnostic_noop",
+   "label": "Operational diagnostic (no-op)",
+   "manual_retry": true,
+   "max_attempts": 2
+  },
+  {
+   "cancellable_when_queued": true,
+   "idempotency": "The test result row is overwritten with the latest outcome; replay leaves one current result.",
+   "job_type": "integration_connection_test",
+   "label": "Integration connection test",
+   "manual_retry": true,
+   "max_attempts": 3
+  },
+  {
+   "cancellable_when_queued": true,
+   "idempotency": "Guarded state check; preview/size are overwritten with checksum-anchored identical values.",
+   "job_type": "knowledge_parse",
+   "label": "Knowledge: scan and parse",
+   "manual_retry": true,
+   "max_attempts": 3
+  },
+  {
+   "cancellable_when_queued": true,
+   "idempotency": "Deterministic chunk ids (version id + chunk text) skipped when present; index record is an upsert.",
+   "job_type": "knowledge_index",
+   "label": "Knowledge: index approved version",
+   "manual_retry": true,
+   "max_attempts": 3
+  },
+  {
+   "cancellable_when_queued": true,
+   "idempotency": "Delete-by-version is idempotent; retrieval never depends on it succeeding.",
+   "job_type": "knowledge_remove_index",
+   "label": "Knowledge: remove retired version from the index",
+   "manual_retry": true,
+   "max_attempts": 5
+  },
+  {
+   "cancellable_when_queued": true,
+   "idempotency": "AccountDeletionService is idempotent; leftover checkpoint runs are tracked in the ownership index until purged; completion is guarded.",
+   "job_type": "privacy_account_delete",
+   "label": "Privacy: delete account (requested)",
+   "manual_retry": true,
+   "max_attempts": 5
+  },
+  {
+   "cancellable_when_queued": true,
+   "idempotency": "Upserts by run id after verifying the checkpoint's recorded owner; bounded batches; never scans the store.",
+   "job_type": "privacy_preparation_backfill",
+   "label": "Privacy: index historical preparation runs",
+   "manual_retry": true,
+   "max_attempts": 3
+  },
+  {
+   "cancellable_when_queued": true,
+   "idempotency": "Delete-thread is idempotent; the index row is removed only after a successful purge.",
+   "job_type": "privacy_preparation_purge",
+   "label": "Privacy: purge a preparation run",
+   "manual_retry": true,
+   "max_attempts": 5
+  },
+  {
+   "cancellable_when_queued": true,
+   "idempotency": "Events are unique per provider event id; every upsert is keyed on provider ids; a processed event is a no-op.",
+   "job_type": "billing_process_event",
+   "label": "Billing: process a normalised event (mock)",
+   "manual_retry": true,
+   "max_attempts": 5
+  },
+  {
+   "cancellable_when_queued": true,
+   "idempotency": "The provider gets a stable idempotency key (same key, same provider refund id); the local update is state-guarded, so a replay after a crash counts once.",
+   "job_type": "billing_refund",
+   "label": "Billing: execute an approved MOCK refund",
+   "manual_retry": true,
+   "max_attempts": 4
+  },
+  {
+   "cancellable_when_queued": true,
+   "idempotency": "A terminal evaluation is a no-op; the result is bound to one config hash and replay re-derives the same verdict.",
+   "job_type": "ai_evaluate_config",
+   "label": "AI configuration: deterministic evaluation",
+   "manual_retry": true,
+   "max_attempts": 3
+  }
+ ],
+ "/admin/knowledge/meta": {
+  "authority_levels": [
+   {
+    "level": 1,
+    "meaning": "Level 1: official or statistical source"
+   },
+   {
+    "level": 2,
+    "meaning": "Level 2: public or professional framework"
+   },
+   {
+    "level": 3,
+    "meaning": "Level 3: reputable public industry research"
+   }
+  ],
+  "languages": [
+   "en",
+   "de",
+   "fr",
+   "es",
+   "it",
+   "pt",
+   "nl"
+  ],
+  "licence_classes": [
+   {
+    "activatable": true,
+    "code": "public_official",
+    "label": "Public / official source"
+   },
+   {
+    "activatable": true,
+    "code": "explicit_permissive",
+    "label": "Explicitly permissive licence"
+   },
+   {
+    "activatable": true,
+    "code": "internal_owned",
+    "label": "Owned by Ask4Mo"
+   },
+   {
+    "activatable": true,
+    "code": "permission_recorded",
+    "label": "Permission recorded"
+   },
+   {
+    "activatable": false,
+    "code": "unclear",
+    "label": "Unclear (cannot be activated)"
+   },
+   {
+    "activatable": false,
+    "code": "restricted",
+    "label": "Restricted (cannot be activated)"
+   }
+  ],
+  "rejection_reasons": [
+   "provenance_insufficient",
+   "licence_not_permitted",
+   "quality_insufficient",
+   "out_of_scope",
+   "unsafe_content",
+   "duplicate",
+   "other"
+  ],
+  "states": [
+   "queued",
+   "processing",
+   "review_required",
+   "approved",
+   "indexing",
+   "indexed",
+   "active",
+   "rejected",
+   "failed",
+   "retired"
+  ],
+  "upload": {
+   "extensions": [
+    "md",
+    "pdf",
+    "txt"
+   ],
+   "max_bytes": 5242880,
+   "preview_chars": 4000
+  }
+ },
+ "/admin/knowledge/sources": {
+  "items": [],
+  "page": 1,
+  "page_size": 25,
+  "total": 0
+ },
+ "/admin/legal": {
+  "active_accounts": 7,
+  "documents": [
+   {
+    "code": "terms",
+    "current": {
+     "acceptances": null,
+     "content_hash": null,
+     "content_ref": "/terms",
+     "created_at": "2026-10-05T22:15:18.013169",
+     "effective_at": null,
+     "id": 1,
+     "is_baseline": true,
+     "published_at": "2026-10-05T22:15:18.013169",
+     "state": "published",
+     "version": "baseline-1"
+    },
+    "current_accepted": 0,
+    "current_not_recorded": 7,
+    "title": "Terms of use",
+    "versions": [
+     {
+      "acceptances": 0,
+      "content_hash": null,
+      "content_ref": "/terms",
+      "created_at": "2026-10-05T22:15:18.013169",
+      "effective_at": null,
+      "id": 1,
+      "is_baseline": true,
+      "published_at": "2026-10-05T22:15:18.013169",
+      "state": "published",
+      "version": "baseline-1"
+     }
+    ]
+   },
+   {
+    "code": "privacy",
+    "current": {
+     "acceptances": null,
+     "content_hash": null,
+     "content_ref": "/privacy",
+     "created_at": "2026-10-05T22:15:18.013169",
+     "effective_at": null,
+     "id": 2,
+     "is_baseline": true,
+     "published_at": "2026-10-05T22:15:18.013169",
+     "state": "published",
+     "version": "baseline-1"
+    },
+    "current_accepted": 0,
+    "current_not_recorded": 7,
+    "title": "Privacy notice",
+    "versions": [
+     {
+      "acceptances": 0,
+      "content_hash": null,
+      "content_ref": "/privacy",
+      "created_at": "2026-10-05T22:15:18.013169",
+      "effective_at": null,
+      "id": 2,
+      "is_baseline": true,
+      "published_at": "2026-10-05T22:15:18.013169",
+      "state": "published",
+      "version": "baseline-1"
+     }
+    ]
+   },
+   {
+    "code": "ai_transparency",
+    "current": {
+     "acceptances": null,
+     "content_hash": null,
+     "content_ref": "/ai-transparency",
+     "created_at": "2026-10-05T22:15:18.013169",
+     "effective_at": null,
+     "id": 3,
+     "is_baseline": true,
+     "published_at": "2026-10-05T22:15:18.013169",
+     "state": "published",
+     "version": "baseline-1"
+    },
+    "current_accepted": 0,
+    "current_not_recorded": 7,
+    "title": "AI transparency",
+    "versions": [
+     {
+      "acceptances": 0,
+      "content_hash": null,
+      "content_ref": "/ai-transparency",
+      "created_at": "2026-10-05T22:15:18.013169",
+      "effective_at": null,
+      "id": 3,
+      "is_baseline": true,
+      "published_at": "2026-10-05T22:15:18.013169",
+      "state": "published",
+      "version": "baseline-1"
+     }
+    ]
+   }
+  ],
+  "note": "Counts reflect RECORDED acceptances only. Accounts that predate acceptance recording have none. This is not a compliance measure."
+ },
+ "/admin/pause": {
+  "durable": true,
+  "environment": "development",
+  "items": [
+   {
+    "baseline_paused": false,
+    "capability": "realtime_voice",
+    "paused": false,
+    "paused_at": null,
+    "reason": "",
+    "resumed_at": null,
+    "revision": 0,
+    "source": "baseline",
+    "updated_at": null
+   },
+   {
+    "baseline_paused": false,
+    "capability": "current_market",
+    "paused": false,
+    "paused_at": null,
+    "reason": "",
+    "resumed_at": null,
+    "revision": 0,
+    "source": "baseline",
+    "updated_at": null
+   },
+   {
+    "baseline_paused": false,
+    "capability": "ocr",
+    "paused": false,
+    "paused_at": null,
+    "reason": "",
+    "resumed_at": null,
+    "revision": 0,
+    "source": "baseline",
+    "updated_at": null
+   },
+   {
+    "baseline_paused": false,
+    "capability": "agent",
+    "paused": false,
+    "paused_at": null,
+    "reason": "",
+    "resumed_at": null,
+    "revision": 0,
+    "source": "baseline",
+    "updated_at": null
+   },
+   {
+    "baseline_paused": false,
+    "capability": "public_registration",
+    "paused": false,
+    "paused_at": null,
+    "reason": "",
+    "resumed_at": null,
+    "revision": 0,
+    "source": "baseline",
+    "updated_at": null
+   }
+  ],
+  "note": "Pausing a capability refuses NEW candidate activity of that kind (a fixed, code-defined list). It does not lock out Admin recovery, privacy and account controls, legal pages or saved data, and it does not stop the background job worker.",
+  "protected_scope": [
+   "realtime_voice",
+   "current_market",
+   "ocr",
+   "agent",
+   "public_registration"
+  ]
+ },
+ "/admin/plans": {
+  "items": [
+   {
+    "activated_at": "2026-10-05T22:15:15.220975",
+    "created_at": "2026-10-05T22:15:15.221178",
+    "display_name": "Basic",
+    "enabled_entitlements": 4,
+    "id": 1,
+    "plan_code": "basic",
+    "retired_at": null,
+    "status": "active",
+    "subscribers": {
+     "users": 7,
+     "workspaces": 0
+    },
+    "total_entitlements": 5,
+    "version": 1
+   },
+   {
+    "activated_at": "2026-10-05T22:15:15.222219",
+    "created_at": "2026-10-05T22:15:15.222346",
+    "display_name": "Premium (preview)",
+    "enabled_entitlements": 5,
+    "id": 2,
+    "plan_code": "premium",
+    "retired_at": null,
+    "status": "active",
+    "subscribers": {
+     "users": 0,
+     "workspaces": 0
+    },
+    "total_entitlements": 5,
+    "version": 1
+   }
+  ]
+ },
+ "/admin/plans/assignable": [
+  {
+   "display_name": "Basic",
+   "plan_code": "basic",
+   "version": 1
+  },
+  {
+   "display_name": "Premium (preview)",
+   "plan_code": "premium",
+   "version": 1
+  }
+ ],
+ "/admin/privacy-requests": {
+  "note": "Durable queue (W10.10). Full handling is at /admin/privacy.",
+  "requests": [],
+  "total": 0
+ },
+ "/admin/privacy/preparation": {
+  "by_source": {},
+  "by_state": {},
+  "coverage_version": 1,
+  "indexed_runs": 0,
+  "note": "Counts indexed runs only. Historical runs with no relational reference cannot be discovered and are not included."
+ },
+ "/admin/privacy/requests": {
+  "items": [],
+  "page": 1,
+  "page_size": 25,
+  "total": 0
+ },
+ "/admin/providers": {
+  "note": "Booleans and fixed labels only. Provider configuration is managed outside this console (deployment environment). Configured does not mean healthy; no provider is contacted here.",
+  "ocr": {
+   "available": true,
+   "engine": "tesseract",
+   "languages": {
+    "de": {
+     "configured": true,
+     "runtime_available": true
+    },
+    "en": {
+     "configured": true,
+     "runtime_available": true
+    },
+    "es": {
+     "configured": true,
+     "runtime_available": true
+    },
+    "fr": {
+     "configured": true,
+     "runtime_available": true
+    },
+    "it": {
+     "configured": true,
+     "runtime_available": true
+    },
+    "nl": {
+     "configured": true,
+     "runtime_available": true
+    },
+    "pt": {
+     "configured": true,
+     "runtime_available": true
+    }
+   },
+   "live_quality": "UNVALIDATED",
+   "pdf_ocr_available": true,
+   "poppler_available": true
+  },
+  "pause": {
+   "agent": false,
+   "current_market": false,
+   "ocr": false,
+   "public_registration": false,
+   "realtime_voice": false
+  },
+  "pause_durable": true,
+  "providers": [
+   {
+    "configured": false,
+    "enabled": false,
+    "externally_managed": true,
+    "health": "Health not tested",
+    "label": "Transactional email",
+    "live_validation": "UNVALIDATED",
+    "mode": "console",
+    "provider_id": "email",
+    "status": "not_configured",
+    "writable": false
+   },
+   {
+    "configured": false,
+    "enabled": false,
+    "externally_managed": true,
+    "health": "Health not tested",
+    "label": "Google sign-in (OIDC)",
+    "live_validation": "UNVALIDATED",
+    "mode": null,
+    "provider_id": "google_oidc",
+    "status": "not_configured",
+    "writable": false
+   },
+   {
+    "configured": false,
+    "enabled": false,
+    "externally_managed": true,
+    "health": "Health not tested",
+    "label": "Language model provider (OpenRouter)",
+    "live_validation": "UNVALIDATED",
+    "mode": null,
+    "provider_id": "openrouter",
+    "status": "not_configured",
+    "writable": false
+   },
+   {
+    "configured": false,
+    "enabled": false,
+    "externally_managed": true,
+    "health": "Health not tested",
+    "label": "Labour-market data (Adzuna)",
+    "live_validation": "UNVALIDATED",
+    "mode": null,
+    "provider_id": "adzuna",
+    "status": "not_configured",
+    "writable": false
+   },
+   {
+    "configured": false,
+    "enabled": false,
+    "externally_managed": true,
+    "health": "Health not tested",
+    "label": "External observability (Langfuse)",
+    "live_validation": "UNVALIDATED",
+    "mode": null,
+    "provider_id": "langfuse",
+    "status": "not_configured",
+    "writable": false
+   }
+  ],
+  "rate_limit_distributed": false,
+  "rate_limit_mode": "in_memory_process_local",
+  "speech": {
+   "architecture": "browser_web_speech",
+   "audio_persisted_by_ask4mo": false,
+   "camera": "never_requested",
+   "input": "browser_web_speech_stt",
+   "live_quality": "UNVALIDATED",
+   "output": "browser_speech_synthesis_tts",
+   "realtime": {
+    "audio_visible_to_admin": false,
+    "available": false,
+    "configured": false,
+    "enabled": false,
+    "live_validation": "NOT_RUN",
+    "max_concurrent_per_user": 1,
+    "max_session_seconds": 300,
+    "transcript_visible_to_admin": false
+   },
+   "voice_trait_inference": "none"
+  }
+ },
+ "/admin/reports/ai-economics": {
+  "generated_at": "2026-10-05T22:15:18.460620+00:00",
+  "label": null,
+  "mock_billing": false,
+  "period": "30d",
+  "privacy": "Aggregates only. Candidate cohorts below the engineering privacy floor are suppressed (this is not an anonymisation guarantee).",
+  "sections": [
+   {
+    "captured_since": null,
+    "coverage": "Captured since W10.12",
+    "metrics": [
+     {
+      "coverage": "Captured since first fact",
+      "figure": null,
+      "label": "AI usage",
+      "metric_id": "ai_usage",
+      "note": "No AI usage has been captured yet.",
+      "state": "not_captured",
+      "unit": "count"
+     }
+    ],
+    "note": "Unknown tokens and unknown cost are never shown as zero.",
+    "section_id": "ai_economics",
+    "tables": [],
+    "title": "AI economics"
+   }
+  ],
+  "utc": true,
+  "window_end": "2026-10-05T22:15:18.460620+00:00",
+  "window_start": "2026-09-05T22:15:18.460620+00:00"
+ },
+ "/admin/reports/commercial": {
+  "generated_at": "2026-10-05T22:15:18.467052+00:00",
+  "label": "MOCK BILLING - NOT LIVE REVENUE",
+  "mock_billing": true,
+  "period": "30d",
+  "privacy": "Aggregates only. Candidate cohorts below the engineering privacy floor are suppressed (this is not an anonymisation guarantee).",
+  "sections": [
+   {
+    "captured_since": null,
+    "coverage": "Historical, from subscriptions",
+    "metrics": [
+     {
+      "coverage": "Historical, from subscriptions",
+      "figure": 7,
+      "label": "Active access-plan assignments (subjects)",
+      "metric_id": "access_active",
+      "note": "Access assignments, not payments. Nothing here is revenue.",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "Historical, from subscriptions",
+      "figure": null,
+      "label": "Access-plan upgrades in the period",
+      "metric_id": "access_upgrades",
+      "note": "Basic to Premium access assignments; not paid conversion.",
+      "state": "suppressed",
+      "unit": "count"
+     },
+     {
+      "coverage": "Historical, from subscriptions",
+      "figure": null,
+      "label": "Access-plan downgrades in the period",
+      "metric_id": "access_downgrades",
+      "note": "",
+      "state": "suppressed",
+      "unit": "count"
+     }
+    ],
+    "note": "Product subscriptions are access assignments, not payments.",
+    "section_id": "access",
+    "tables": [
+     {
+      "columns": [
+       "Subjects"
+      ],
+      "note": "Access assignments, not payments.",
+      "rows": [
+       {
+        "cells": [
+         {
+          "figure": 7,
+          "suppressed": false
+         }
+        ],
+        "label": "basic"
+       }
+      ],
+      "table_id": "access_by_plan",
+      "title": "Active access-plan assignments by plan"
+     },
+     {
+      "columns": [
+       "Subjects"
+      ],
+      "note": "",
+      "rows": [
+       {
+        "cells": [
+         {
+          "figure": 7,
+          "suppressed": false
+         }
+        ],
+        "label": "system_default"
+       }
+      ],
+      "table_id": "access_by_source",
+      "title": "Active assignments by source"
+     }
+    ],
+    "title": "Access-plan assignments"
+   },
+   {
+    "captured_since": null,
+    "coverage": "Mock billing state",
+    "metrics": [
+     {
+      "coverage": "Mock billing state",
+      "figure": null,
+      "label": "Active mock provider subscriptions",
+      "metric_id": "mock_eligible",
+      "note": "MOCK BILLING - NOT LIVE REVENUE",
+      "state": "suppressed",
+      "unit": "count"
+     },
+     {
+      "coverage": "Mock billing state",
+      "figure": null,
+      "label": "Of which priced (configured terms)",
+      "metric_id": "mock_priced",
+      "note": "A subscription without terms is excluded, never valued at zero.",
+      "state": "suppressed",
+      "unit": "count"
+     },
+     {
+      "coverage": "Mock billing state",
+      "figure": 0,
+      "label": "Failed mock payments in the period",
+      "metric_id": "mock_failed_payments",
+      "note": "MOCK BILLING - NOT LIVE REVENUE",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "Mock billing state",
+      "figure": 0,
+      "label": "Past-due mock invoices",
+      "metric_id": "mock_past_due_invoices",
+      "note": "MOCK BILLING - NOT LIVE REVENUE",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "Mock billing state",
+      "figure": null,
+      "label": "Churn rate",
+      "metric_id": "mock_churn_rate",
+      "note": "Churn rate unavailable with current historical evidence: only the CURRENT mock subscription state is stored, not cancellation events.",
+      "state": "unavailable",
+      "unit": "count"
+     },
+     {
+      "coverage": "Mock billing state",
+      "figure": null,
+      "label": "Mock MRR",
+      "metric_id": "mock_mrr",
+      "note": "Unconfigured: no active mock subscription has commercial terms. This is not zero revenue.",
+      "state": "unavailable",
+      "unit": "count"
+     },
+     {
+      "coverage": "Mock billing state",
+      "figure": null,
+      "label": "Mock ARR",
+      "metric_id": "mock_arr",
+      "note": "Unconfigured: no active mock subscription has commercial terms. This is not zero revenue.",
+      "state": "unavailable",
+      "unit": "count"
+     }
+    ],
+    "note": "MOCK BILLING - NOT LIVE REVENUE. No live provider, no collected revenue.",
+    "section_id": "mock_billing",
+    "tables": [
+     {
+      "columns": [
+       "Priced subscriptions",
+       "Mock MRR",
+       "Mock ARR"
+      ],
+      "note": "MOCK BILLING - NOT LIVE REVENUE. Active subscriptions only. Trialing, past due and cancelled are listed separately and excluded.",
+      "rows": [],
+      "table_id": "mock_recurring",
+      "title": "Mock recurring value by currency (major units; never combined across currencies)"
+     },
+     {
+      "columns": [
+       "Subscriptions"
+      ],
+      "note": "MOCK BILLING - NOT LIVE REVENUE",
+      "rows": [],
+      "table_id": "mock_by_state",
+      "title": "Mock provider subscriptions by state"
+     }
+    ],
+    "title": "MOCK BILLING - NOT LIVE REVENUE"
+   }
+  ],
+  "utc": true,
+  "window_end": "2026-10-05T22:15:18.467052+00:00",
+  "window_start": "2026-09-05T22:15:18.467052+00:00"
+ },
+ "/admin/reports/definitions": {
+  "default_period": "30d",
+  "metrics": [
+   {
+    "cohort_policy": "cohort",
+    "coverage": "Historical, from authoritative rows",
+    "definition": "Candidate accounts created in the period.",
+    "label": "Registrations",
+    "metric_id": "registrations",
+    "source": "users.created_at (candidate accounts)"
+   },
+   {
+    "cohort_policy": "cohort",
+    "coverage": "Historical, from authoritative rows",
+    "definition": "Candidate accounts whose onboarding completion timestamp falls in the period.",
+    "label": "Onboarding completed",
+    "metric_id": "onboarding_completed",
+    "source": "users.onboarding_completed_at"
+   },
+   {
+    "cohort_policy": "cohort",
+    "coverage": "Historical, from authoritative rows",
+    "definition": "Share of the period's registrants whose onboarding is completed today (current state; accounts that predate onboarding were back-filled as completed).",
+    "label": "Onboarding completion of period registrants",
+    "metric_id": "onboarding_rate",
+    "source": "users.onboarding_completed_at"
+   },
+   {
+    "cohort_policy": "cohort",
+    "coverage": "Historical, from authoritative rows",
+    "definition": "Opportunity rows created in the period.",
+    "label": "Opportunities created",
+    "metric_id": "opportunities_created",
+    "source": "opportunities.created_at"
+   },
+   {
+    "cohort_policy": "cohort",
+    "coverage": "From the W10.10 index",
+    "definition": "Runs registered in the ownership index in the period (index exists from W10.10; back-filled rows are excluded).",
+    "label": "Prepare runs started",
+    "metric_id": "prepare_started",
+    "source": "preparation_runs (source=created)"
+   },
+   {
+    "cohort_policy": "cohort",
+    "coverage": "From the W10.10 index",
+    "definition": "Share of started runs whose state is ready.",
+    "label": "Prepare runs reaching ready",
+    "metric_id": "prepare_ready_rate",
+    "source": "preparation_runs.state"
+   },
+   {
+    "cohort_policy": "cohort",
+    "coverage": "Lower bound",
+    "definition": "Distinct Practice sessions created in the period (live sessions plus completed history; abandoned sessions pruned by retention are not recoverable).",
+    "label": "Practice sessions started",
+    "metric_id": "practice_started",
+    "source": "interview_sessions + interviews"
+   },
+   {
+    "cohort_policy": "cohort",
+    "coverage": "Historical, from authoritative rows",
+    "definition": "Completed interviews in the period.",
+    "label": "Practice sessions completed",
+    "metric_id": "practice_completed",
+    "source": "interviews.status"
+   },
+   {
+    "cohort_policy": "cohort",
+    "coverage": "Lower bound for Prepare and abandoned Practice",
+    "definition": "A candidate's FIRST substantive product action (Opportunity, Prepare run or Practice session). An analytics definition, not an access or billing state.",
+    "label": "Product activation",
+    "metric_id": "activation",
+    "source": "first of opportunity / prepare run / practice session"
+   },
+   {
+    "cohort_policy": "cohort",
+    "coverage": "Lower bound",
+    "definition": "Candidates with substantive activity on at least two distinct UTC dates inside the period.",
+    "label": "Returning candidates",
+    "metric_id": "returning",
+    "source": "same three domains"
+   },
+   {
+    "cohort_policy": "cohort",
+    "coverage": "Historical, from authoritative rows",
+    "definition": "Helpful / not helpful counts and safe categories. Comment text is never read.",
+    "label": "Candidate feedback",
+    "metric_id": "feedback",
+    "source": "user_feedback (rating, category)"
+   },
+   {
+    "cohort_policy": "cohort",
+    "coverage": "Historical, from authoritative rows",
+    "definition": "Mean of the numeric overall score of evaluated answers; no answer, narrative or report text is read.",
+    "label": "Average answer evaluation score",
+    "metric_id": "evaluation_score",
+    "source": "answers.evaluation overall_score (numeric field only)"
+   },
+   {
+    "cohort_policy": "operational",
+    "coverage": "Captured since first event (W10.12 onward)",
+    "definition": "Evidence found versus abstained, per captured retrieval. No query or evidence is stored.",
+    "label": "Retrieval outcomes",
+    "metric_id": "retrieval_outcomes",
+    "source": "operational_metric_events (retrieval)"
+   },
+   {
+    "cohort_policy": "operational",
+    "coverage": "Captured since first event (W10.12 onward)",
+    "definition": "Success / error counts and p50 / p95 latency for code-defined operations.",
+    "label": "Request outcomes and latency",
+    "metric_id": "request_outcomes",
+    "source": "operational_metric_events (request)"
+   },
+   {
+    "cohort_policy": "operational",
+    "coverage": "Captured since first event (W10.12 onward)",
+    "definition": "Observed real provider calls (success / failure category / latency). Nothing is probed for reporting.",
+    "label": "Provider call outcomes",
+    "metric_id": "provider_calls",
+    "source": "operational_metric_events (provider_call)"
+   },
+   {
+    "cohort_policy": "cohort",
+    "coverage": "Captured since first event (W10.12 onward)",
+    "definition": "Model calls and known tokens with token coverage.",
+    "label": "AI usage",
+    "metric_id": "ai_usage",
+    "source": "ai_usage_facts"
+   },
+   {
+    "cohort_policy": "cohort",
+    "coverage": "Captured since first event (W10.12 onward)",
+    "definition": "Sum of costs that are KNOWN (reported or calculated). Unknown cost is never zero.",
+    "label": "Known AI cost (USD, partial coverage)",
+    "metric_id": "ai_known_cost",
+    "source": "ai_usage_facts.cost_usd_micros"
+   },
+   {
+    "cohort_policy": "cohort",
+    "coverage": "Historical, from authoritative rows",
+    "definition": "Product access assignments by plan. Access assignments are NOT payments.",
+    "label": "Active access-plan assignments",
+    "metric_id": "access_plans",
+    "source": "subscriptions"
+   },
+   {
+    "cohort_policy": "cohort",
+    "coverage": "Mock billing state",
+    "definition": "MOCK. Active mock provider subscriptions with configured terms, normalised to a monthly amount, per currency.",
+    "label": "Mock MRR",
+    "metric_id": "mock_mrr",
+    "source": "billing_provider_subscriptions + commercial terms"
+   },
+   {
+    "cohort_policy": "cohort",
+    "coverage": "Mock billing state",
+    "definition": "MOCK. The same subscriptions normalised to an annual amount, per currency.",
+    "label": "Mock ARR",
+    "metric_id": "mock_arr",
+    "source": "billing_provider_subscriptions + commercial terms"
+   },
+   {
+    "cohort_policy": "operational",
+    "coverage": "Mock billing state",
+    "definition": "MOCK. Failed mock payments in the period.",
+    "label": "Failed mock payments",
+    "metric_id": "mock_failed_payments",
+    "source": "billing_payments"
+   }
+  ],
+  "min_cohort_policy": "suppressed",
+  "periods": [
+   "7d",
+   "30d",
+   "90d",
+   "all_time"
+  ]
+ },
+ "/admin/reports/operations": {
+  "generated_at": "2026-10-05T22:15:18.481592+00:00",
+  "label": null,
+  "mock_billing": false,
+  "period": "30d",
+  "privacy": "Aggregates only. Candidate cohorts below the engineering privacy floor are suppressed (this is not an anonymisation guarantee).",
+  "sections": [
+   {
+    "captured_since": null,
+    "coverage": "Current state (W10.9)",
+    "metrics": [
+     {
+      "coverage": "Current state",
+      "figure": 1,
+      "label": "Queued",
+      "metric_id": "jobs_queued",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "Current state",
+      "figure": 0,
+      "label": "Running",
+      "metric_id": "jobs_running",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "Current state",
+      "figure": 0,
+      "label": "Retry waiting",
+      "metric_id": "jobs_retry_waiting",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "Current state",
+      "figure": 0,
+      "label": "Failed",
+      "metric_id": "jobs_failed",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "Current state",
+      "figure": 0,
+      "label": "Succeeded",
+      "metric_id": "jobs_succeeded",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "Current state",
+      "figure": 0,
+      "label": "Stale leases",
+      "metric_id": "jobs_stale_leases",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "",
+      "figure": 0,
+      "label": "Oldest ready job age (s)",
+      "metric_id": "jobs_oldest_ready_age_s",
+      "note": "",
+      "state": "available",
+      "unit": "seconds"
+     }
+    ],
+    "note": "Reads the queue; never enqueues, retries or cancels.",
+    "section_id": "jobs",
+    "tables": [],
+    "title": "Jobs"
+   },
+   {
+    "captured_since": null,
+    "coverage": "Current state (W10.6)",
+    "metrics": [
+     {
+      "coverage": "",
+      "figure": 9,
+      "label": "Total",
+      "metric_id": "integrations_total",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "",
+      "figure": 0,
+      "label": "Configured",
+      "metric_id": "integrations_configured",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "",
+      "figure": 0,
+      "label": "Runtime active",
+      "metric_id": "integrations_runtime_active",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "",
+      "figure": 2,
+      "label": "Not tested",
+      "metric_id": "integrations_not_tested",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "",
+      "figure": 0,
+      "label": "Unhealthy",
+      "metric_id": "integrations_unhealthy",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     }
+    ],
+    "note": "Health is only what a manual test recorded; no connection is tested for reporting.",
+    "section_id": "integrations",
+    "tables": [],
+    "title": "Integrations"
+   },
+   {
+    "captured_since": null,
+    "coverage": "Current state (W10.8)",
+    "metrics": [
+     {
+      "coverage": "",
+      "figure": 0,
+      "label": "Sources",
+      "metric_id": "knowledge_sources",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "",
+      "figure": 0,
+      "label": "Awaiting review",
+      "metric_id": "knowledge_awaiting_review",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "",
+      "figure": 0,
+      "label": "Indexing",
+      "metric_id": "knowledge_indexing",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "",
+      "figure": 0,
+      "label": "Failed",
+      "metric_id": "knowledge_failed",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "",
+      "figure": 0,
+      "label": "Indexed not active",
+      "metric_id": "knowledge_indexed_not_active",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "",
+      "figure": 0,
+      "label": "Active",
+      "metric_id": "knowledge_active",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     }
+    ],
+    "note": "Counts only; no source text.",
+    "section_id": "knowledge",
+    "tables": [],
+    "title": "Knowledge"
+   },
+   {
+    "captured_since": null,
+    "coverage": "Historical, from ticket timestamps",
+    "metrics": [
+     {
+      "coverage": "Historical",
+      "figure": 0,
+      "label": "Tickets resolved in the period",
+      "metric_id": "support_resolved",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "",
+      "figure": null,
+      "label": "Median resolution time (hours)",
+      "metric_id": "support_resolution_median_h",
+      "note": "No ticket was resolved in the period.",
+      "state": "not_captured",
+      "unit": "hours"
+     }
+    ],
+    "note": "Counts and timings only; no ticket text.",
+    "section_id": "support",
+    "tables": [
+     {
+      "columns": [
+       "Tickets"
+      ],
+      "note": "",
+      "rows": [
+       {
+        "cells": [
+         {
+          "figure": 1,
+          "suppressed": false
+         }
+        ],
+        "label": "new"
+       }
+      ],
+      "table_id": "support_status",
+      "title": "Tickets by status"
+     }
+    ],
+    "title": "Support"
+   },
+   {
+    "captured_since": null,
+    "coverage": "Current state (W10.11)",
+    "metrics": [
+     {
+      "coverage": "",
+      "figure": 0,
+      "label": "Paused capabilities",
+      "metric_id": "runtime_paused",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     },
+     {
+      "coverage": "",
+      "figure": 0,
+      "label": "Feature overrides",
+      "metric_id": "runtime_overrides",
+      "note": "",
+      "state": "available",
+      "unit": "count"
+     }
+    ],
+    "note": "",
+    "section_id": "runtime",
+    "tables": [],
+    "title": "Runtime state"
+   },
+   {
+    "captured_since": null,
+    "coverage": "Captured since W10.12",
+    "metrics": [
+     {
+      "coverage": "Captured since first event",
+      "figure": null,
+      "label": "Retrieval outcomes",
+      "metric_id": "retrieval_outcomes",
+      "note": "No event has been captured yet.",
+      "state": "not_captured",
+      "unit": "count"
+     },
+     {
+      "coverage": "Captured since first event",
+      "figure": null,
+      "label": "Request outcomes",
+      "metric_id": "request_outcomes",
+      "note": "No event has been captured yet.",
+      "state": "not_captured",
+      "unit": "count"
+     },
+     {
+      "coverage": "Captured since first event",
+      "figure": null,
+      "label": "Provider call outcomes",
+      "metric_id": "provider_calls",
+      "note": "No event has been captured yet.",
+      "state": "not_captured",
+      "unit": "count"
+     }
+    ],
+    "note": "Operational telemetry has no candidate identity. Provider calls are real runtime calls only.",
+    "section_id": "telemetry",
+    "tables": [],
+    "title": "Requests, providers and retrieval"
+   }
+  ],
+  "utc": true,
+  "window_end": "2026-10-05T22:15:18.481592+00:00",
+  "window_start": "2026-09-05T22:15:18.481592+00:00"
+ },
+ "/admin/reports/product": {
+  "generated_at": "2026-10-05T22:15:18.547116+00:00",
+  "label": null,
+  "mock_billing": false,
+  "period": "30d",
+  "privacy": "Aggregates only. Candidate cohorts below the engineering privacy floor are suppressed (this is not an anonymisation guarantee).",
+  "sections": [
+   {
+    "captured_since": null,
+    "coverage": "Historical from authoritative rows; Prepare from the W10.10 index; Practice is a lower bound.",
+    "metrics": [
+     {
+      "coverage": "Historical, from authoritative rows",
+      "figure": null,
+      "label": "Registrations",
+      "metric_id": "registrations",
+      "note": "",
+      "state": "suppressed",
+      "unit": "count"
+     },
+     {
+      "coverage": "Historical, from authoritative rows",
+      "figure": null,
+      "label": "Onboarding completed in the period",
+      "metric_id": "onboarding_completed",
+      "note": "Uses the exact completion timestamp. Accounts that predate onboarding were back-filled as completed.",
+      "state": "suppressed",
+      "unit": "count"
+     },
+     {
+      "coverage": "Historical, from authoritative rows",
+      "figure": null,
+      "label": "Onboarding completion of period registrants",
+      "metric_id": "onboarding_rate",
+      "note": "Current completion state of the accounts registered in the period.",
+      "state": "suppressed",
+      "unit": "percent"
+     },
+     {
+      "coverage": "Historical, from authoritative rows",
+      "figure": null,
+      "label": "Opportunities created",
+      "metric_id": "opportunities_created",
+      "note": "",
+      "state": "suppressed",
+      "unit": "count"
+     },
+     {
+      "coverage": "Historical, from authoritative rows",
+      "figure": null,
+      "label": "Opportunities per candidate using them",
+      "metric_id": "opportunities_per_candidate",
+      "note": "",
+      "state": "suppressed",
+      "unit": "ratio"
+     },
+     {
+      "coverage": "From the W10.10 ownership index onward",
+      "figure": null,
+      "label": "Prepare runs started",
+      "metric_id": "prepare_started",
+      "note": "Back-filled index rows are excluded: their creation time is the back-fill time, not the run time.",
+      "state": "suppressed",
+      "unit": "count"
+     },
+     {
+      "coverage": "From the W10.10 ownership index onward",
+      "figure": null,
+      "label": "Prepare runs reaching ready",
+      "metric_id": "prepare_ready_rate",
+      "note": "'Ready' means the run finished without failing; it is not a quality judgement.",
+      "state": "suppressed",
+      "unit": "percent"
+     },
+     {
+      "coverage": "Lower bound",
+      "figure": null,
+      "label": "Practice sessions started",
+      "metric_id": "practice_started",
+      "note": "Live sessions plus completed history. Sessions abandoned and pruned by retention are not recoverable.",
+      "state": "suppressed",
+      "unit": "count"
+     },
+     {
+      "coverage": "Historical, from authoritative rows",
+      "figure": null,
+      "label": "Practice sessions completed",
+      "metric_id": "practice_completed",
+      "note": "",
+      "state": "suppressed",
+      "unit": "count"
+     },
+     {
+      "coverage": "Lower bound",
+      "figure": null,
+      "label": "Practice completion",
+      "metric_id": "practice_completion_rate",
+      "note": "Share of candidates who started Practice and completed at least one interview in the period.",
+      "state": "suppressed",
+      "unit": "percent"
+     },
+     {
+      "coverage": "Lower bound",
+      "figure": null,
+      "label": "Candidates whose first substantive action fell in the period",
+      "metric_id": "activated_candidates",
+      "note": "Product activation = a candidate's first Opportunity, Prepare run or Practice session. It is an analytics definition, not an access or billing state.",
+      "state": "suppressed",
+      "unit": "count"
+     },
+     {
+      "coverage": "Lower bound",
+      "figure": null,
+      "label": "Period registrants with a substantive action",
+      "metric_id": "activation_rate",
+      "note": "Registrants of the period with any Opportunity, Prepare run or Practice session to date.",
+      "state": "suppressed",
+      "unit": "percent"
+     },
+     {
+      "coverage": "Lower bound",
+      "figure": null,
+      "label": "Candidates with substantive activity",
+      "metric_id": "active_candidates",
+      "note": "",
+      "state": "suppressed",
+      "unit": "count"
+     },
+     {
+      "coverage": "Lower bound",
+      "figure": null,
+      "label": "Returning candidates",
+      "metric_id": "returning_candidates",
+      "note": "Substantive activity on at least two distinct UTC dates inside the period.",
+      "state": "suppressed",
+      "unit": "count"
+     },
+     {
+      "coverage": "Lower bound",
+      "figure": null,
+      "label": "Returning share of active candidates",
+      "metric_id": "returning_rate",
+      "note": "",
+      "state": "suppressed",
+      "unit": "percent"
+     }
+    ],
+    "note": "No page-view, click or device tracking exists or is used.",
+    "section_id": "product",
+    "tables": [],
+    "title": "Product"
+   }
+  ],
+  "utc": true,
+  "window_end": "2026-10-05T22:15:18.547116+00:00",
+  "window_start": "2026-09-05T22:15:18.547116+00:00"
+ },
+ "/admin/reports/quality": {
+  "generated_at": "2026-10-05T22:15:18.555353+00:00",
+  "label": null,
+  "mock_billing": false,
+  "period": "30d",
+  "privacy": "Aggregates only. Candidate cohorts below the engineering privacy floor are suppressed (this is not an anonymisation guarantee).",
+  "sections": [
+   {
+    "captured_since": null,
+    "coverage": "Feedback and evaluation scores are historical; retrieval, request and provider outcomes are captured since W10.12.",
+    "metrics": [
+     {
+      "coverage": "Historical, from authoritative rows",
+      "figure": null,
+      "label": "Candidates who gave feedback",
+      "metric_id": "feedback_total",
+      "note": "Counts distinct candidates. Comment text and the rated content are never read.",
+      "state": "suppressed",
+      "unit": "count"
+     },
+     {
+      "coverage": "Historical, from authoritative rows",
+      "figure": null,
+      "label": "Average answer evaluation score",
+      "metric_id": "evaluation_score_avg",
+      "note": "Mean of the stored numeric overall score only. No individual score, answer or narrative is shown.",
+      "state": "suppressed",
+      "unit": "score"
+     },
+     {
+      "coverage": "Historical, from authoritative rows",
+      "figure": null,
+      "label": "Evaluated answers",
+      "metric_id": "evaluation_count",
+      "note": "",
+      "state": "suppressed",
+      "unit": "count"
+     },
+     {
+      "coverage": "Not captured",
+      "figure": null,
+      "label": "Offline evaluator results",
+      "metric_id": "evaluator_runs",
+      "note": "No safe structured store of evaluator runs exists in production; the repository's offline reports are not read by Admin reporting.",
+      "state": "not_captured",
+      "unit": "count"
+     },
+     {
+      "coverage": "Captured since first event",
+      "figure": null,
+      "label": "Retrieval outcomes",
+      "metric_id": "retrieval_outcomes",
+      "note": "No event has been captured yet.",
+      "state": "not_captured",
+      "unit": "count"
+     },
+     {
+      "coverage": "Captured since first event",
+      "figure": null,
+      "label": "Request outcomes",
+      "metric_id": "request_outcomes",
+      "note": "No event has been captured yet.",
+      "state": "not_captured",
+      "unit": "count"
+     },
+     {
+      "coverage": "Captured since first event",
+      "figure": null,
+      "label": "Provider call outcomes",
+      "metric_id": "provider_calls",
+      "note": "No event has been captured yet.",
+      "state": "not_captured",
+      "unit": "count"
+     }
+    ],
+    "note": "",
+    "section_id": "quality",
+    "tables": [
+     {
+      "columns": [
+       "Answers"
+      ],
+      "note": "Buckets below the floor are suppressed; the smallest remaining bucket may be suppressed too.",
+      "rows": [],
+      "table_id": "feedback_rating",
+      "title": "Feedback by rating (answers counted)"
+     },
+     {
+      "columns": [
+       "Answers"
+      ],
+      "note": "Safe, code-defined categories only.",
+      "rows": [],
+      "table_id": "feedback_category",
+      "title": "Feedback by category (answers counted)"
+     }
+    ],
+    "title": "Quality"
+   }
+  ],
+  "utc": true,
+  "window_end": "2026-10-05T22:15:18.555353+00:00",
+  "window_start": "2026-09-05T22:15:18.555353+00:00"
+ },
+ "/admin/role-changes": {
+  "assignable_roles": [
+   "user",
+   "platform_admin",
+   "support_operator",
+   "billing_admin",
+   "knowledge_admin",
+   "security_privacy_admin",
+   "operations_admin"
+  ],
+  "items": [],
+  "page": 1,
+  "page_size": 25,
+  "total": 0,
+  "viewer_user_id": 2
+ },
+ "/admin/security/alerts": {
+  "categories": [
+   "auth_failure_burst",
+   "admin_access_denied_burst",
+   "job_failed"
+  ],
+  "delivery": "in_app_only",
+  "items": [],
+  "not_implemented": [
+   "provider_outage",
+   "error_rate",
+   "failed_payments",
+   "stale_knowledge_source",
+   "indexing_failure",
+   "support_sla_breach",
+   "deletion_deadline",
+   "release_evaluator_failure",
+   "job_backlog"
+  ],
+  "page": 1,
+  "page_size": 25,
+  "total": 0
+ },
+ "/admin/security/events": {
+  "advanced_anomaly_detection": false,
+  "anomalies": [],
+  "items": [],
+  "page": 1,
+  "page_size": 25,
+  "total": 0
+ },
+ "/admin/security/incidents": {
+  "items": [
+   {
+    "affected_service": "agent",
+    "affected_user_estimate": null,
+    "created_at": "2026-10-05T22:15:17.816164",
+    "owner_admin_user_id": null,
+    "public_id": "aa2e9b89e61e461c9d0b1e1ce30de1f0",
+    "remediation": null,
+    "resolved_at": null,
+    "revision": 0,
+    "root_cause": null,
+    "severity": "low",
+    "started_at": "2026-10-05T22:15:17.816164",
+    "status": "open",
+    "title": "Example incident",
+    "updated_at": "2026-10-05T22:15:17.816164"
+   }
+  ],
+  "page": 1,
+  "page_size": 25,
+  "services": [
+   "authentication",
+   "agent",
+   "practice",
+   "research",
+   "documents",
+   "integrations",
+   "knowledge",
+   "jobs",
+   "billing",
+   "privacy",
+   "admin",
+   "platform"
+  ],
+  "severities": [
+   "low",
+   "medium",
+   "high",
+   "critical"
+  ],
+  "statuses": [
+   "open",
+   "investigating",
+   "monitoring",
+   "resolved",
+   "closed"
+  ],
+  "total": 1
+ },
+ "/admin/security/summary": {
+  "advanced_anomaly_detection": false,
+  "alerts": {
+   "acknowledged": 0,
+   "active": 0,
+   "active_critical": 0,
+   "active_high": 0
+  },
+  "anomaly_rules": [
+   "authentication_failure_burst",
+   "admin_access_denied_burst"
+  ],
+  "categories": [
+   "account_status",
+   "audit_export",
+   "authentication",
+   "authorization",
+   "password_reset",
+   "role_change",
+   "session_revocation",
+   "step_up"
+  ],
+  "open_incidents": 1,
+  "pending_role_changes": 0
+ },
+ "/admin/step-up": {
+  "elevated": false,
+  "elevated_until": null,
+  "method": "password_reauthentication",
+  "window_seconds": 300
+ },
+ "/admin/support/assignees": [
+  {
+   "email": "fx1@example.com",
+   "platform_role": "platform_admin",
+   "user_id": 2
+  },
+  {
+   "email": "fx2@example.com",
+   "platform_role": "support_operator",
+   "user_id": 3
+  }
+ ],
+ "/admin/support/tickets": {
+  "items": [
+   {
+    "assigned_user_id": null,
+    "assignee_email": null,
+    "category": "technical",
+    "created_at": "2026-10-05T22:15:17.809848",
+    "id": 1,
+    "message_count": 1,
+    "owner_email": "fx0@example.com",
+    "owner_user_id": 1,
+    "priority": "normal",
+    "public_id": "a32534d863e34a7baed365023cc9347f",
+    "status": "new",
+    "subject": "Example ticket",
+    "updated_at": "2026-10-05T22:15:17.809849"
+   }
+  ],
+  "page": 1,
+  "page_size": 25,
+  "total": 1
+ },
+ "/admin/support/tickets/{id}": {
+  "account": {
+   "active_session_count": 1,
+   "created_at": "2026-10-05T22:15:15.218329",
+   "display_name": null,
+   "email": "fx0@example.com",
+   "email_verified": false,
+   "interface_locale": "en",
+   "onboarding_completed": false,
+   "platform_role": "user",
+   "status": "active",
+   "tier": "basic",
+   "updated_at": "2026-10-05T22:15:15.218343",
+   "user_id": 1,
+   "workspace_count": 0
+  },
+  "internal_notes": [],
+  "messages": [
+   {
+    "author_kind": "candidate",
+    "author_user_id": 1,
+    "body": "Example message",
+    "created_at": "2026-10-05T22:15:17.810307",
+    "id": 1,
+    "request_id": "2691905071c24ec5a8816a3ed686f3b3"
+   }
+  ],
+  "priorities": [
+   "low",
+   "normal",
+   "high",
+   "urgent"
+  ],
+  "statuses": [
+   "new",
+   "triaged",
+   "in_progress",
+   "waiting_for_customer",
+   "resolved",
+   "closed"
+  ],
+  "ticket": {
+   "allowed_statuses": [
+    "triaged",
+    "in_progress",
+    "waiting_for_customer",
+    "resolved",
+    "closed"
+   ],
+   "assigned_user_id": null,
+   "assignee_email": null,
+   "category": "technical",
+   "closed_at": null,
+   "created_at": "2026-10-05T22:15:17.809848",
+   "id": 1,
+   "initial_request_id": "2691905071c24ec5a8816a3ed686f3b3",
+   "message_count": 1,
+   "owner_email": "fx0@example.com",
+   "owner_user_id": 1,
+   "priority": "normal",
+   "public_id": "a32534d863e34a7baed365023cc9347f",
+   "resolved_at": null,
+   "source_environment": "test",
+   "source_route": null,
+   "status": "new",
+   "subject": "Example ticket",
+   "updated_at": "2026-10-05T22:15:17.809849"
+  }
+ },
+ "/admin/users": {
+  "items": [
+   {
+    "active_session_count": 1,
+    "created_at": "2026-10-05T22:15:17.485155",
+    "display_name": null,
+    "email": "fx6@example.com",
+    "email_verified": false,
+    "interface_locale": "en",
+    "onboarding_completed": false,
+    "platform_role": "operations_admin",
+    "status": "active",
+    "tier": "basic",
+    "updated_at": "2026-10-05T22:15:17.660164",
+    "user_id": 7,
+    "workspace_count": 0
+   },
+   {
+    "active_session_count": 1,
+    "created_at": "2026-10-05T22:15:17.143257",
+    "display_name": null,
+    "email": "fx5@example.com",
+    "email_verified": false,
+    "interface_locale": "en",
+    "onboarding_completed": false,
+    "platform_role": "security_privacy_admin",
+    "status": "active",
+    "tier": "basic",
+    "updated_at": "2026-10-05T22:15:17.317537",
+    "user_id": 6,
+    "workspace_count": 0
+   },
+   {
+    "active_session_count": 1,
+    "created_at": "2026-10-05T22:15:16.789054",
+    "display_name": null,
+    "email": "fx4@example.com",
+    "email_verified": false,
+    "interface_locale": "en",
+    "onboarding_completed": false,
+    "platform_role": "knowledge_admin",
+    "status": "active",
+    "tier": "basic",
+    "updated_at": "2026-10-05T22:15:16.974973",
+    "user_id": 5,
+    "workspace_count": 0
+   },
+   {
+    "active_session_count": 1,
+    "created_at": "2026-10-05T22:15:16.401572",
+    "display_name": null,
+    "email": "fx3@example.com",
+    "email_verified": false,
+    "interface_locale": "en",
+    "onboarding_completed": false,
+    "platform_role": "billing_admin",
+    "status": "active",
+    "tier": "basic",
+    "updated_at": "2026-10-05T22:15:16.597497",
+    "user_id": 4,
+    "workspace_count": 0
+   },
+   {
+    "active_session_count": 1,
+    "created_at": "2026-10-05T22:15:16.021662",
+    "display_name": null,
+    "email": "fx2@example.com",
+    "email_verified": false,
+    "interface_locale": "en",
+    "onboarding_completed": false,
+    "platform_role": "support_operator",
+    "status": "active",
+    "tier": "basic",
+    "updated_at": "2026-10-05T22:15:16.218617",
+    "user_id": 3,
+    "workspace_count": 0
+   },
+   {
+    "active_session_count": 1,
+    "created_at": "2026-10-05T22:15:15.633853",
+    "display_name": null,
+    "email": "fx1@example.com",
+    "email_verified": false,
+    "interface_locale": "en",
+    "onboarding_completed": false,
+    "platform_role": "platform_admin",
+    "status": "active",
+    "tier": "basic",
+    "updated_at": "2026-10-05T22:15:15.833702",
+    "user_id": 2,
+    "workspace_count": 0
+   },
+   {
+    "active_session_count": 1,
+    "created_at": "2026-10-05T22:15:15.218329",
+    "display_name": null,
+    "email": "fx0@example.com",
+    "email_verified": false,
+    "interface_locale": "en",
+    "onboarding_completed": false,
+    "platform_role": "user",
+    "status": "active",
+    "tier": "basic",
+    "updated_at": "2026-10-05T22:15:15.218343",
+    "user_id": 1,
+    "workspace_count": 0
+   }
+  ],
+  "page": 1,
+  "page_size": 25,
+  "total": 7,
+  "users": [
+   {
+    "active_session_count": 1,
+    "created_at": "2026-10-05T22:15:17.485155",
+    "display_name": null,
+    "email": "fx6@example.com",
+    "email_verified": false,
+    "interface_locale": "en",
+    "onboarding_completed": false,
+    "platform_role": "operations_admin",
+    "status": "active",
+    "tier": "basic",
+    "updated_at": "2026-10-05T22:15:17.660164",
+    "user_id": 7,
+    "workspace_count": 0
+   },
+   {
+    "active_session_count": 1,
+    "created_at": "2026-10-05T22:15:17.143257",
+    "display_name": null,
+    "email": "fx5@example.com",
+    "email_verified": false,
+    "interface_locale": "en",
+    "onboarding_completed": false,
+    "platform_role": "security_privacy_admin",
+    "status": "active",
+    "tier": "basic",
+    "updated_at": "2026-10-05T22:15:17.317537",
+    "user_id": 6,
+    "workspace_count": 0
+   },
+   {
+    "active_session_count": 1,
+    "created_at": "2026-10-05T22:15:16.789054",
+    "display_name": null,
+    "email": "fx4@example.com",
+    "email_verified": false,
+    "interface_locale": "en",
+    "onboarding_completed": false,
+    "platform_role": "knowledge_admin",
+    "status": "active",
+    "tier": "basic",
+    "updated_at": "2026-10-05T22:15:16.974973",
+    "user_id": 5,
+    "workspace_count": 0
+   },
+   {
+    "active_session_count": 1,
+    "created_at": "2026-10-05T22:15:16.401572",
+    "display_name": null,
+    "email": "fx3@example.com",
+    "email_verified": false,
+    "interface_locale": "en",
+    "onboarding_completed": false,
+    "platform_role": "billing_admin",
+    "status": "active",
+    "tier": "basic",
+    "updated_at": "2026-10-05T22:15:16.597497",
+    "user_id": 4,
+    "workspace_count": 0
+   },
+   {
+    "active_session_count": 1,
+    "created_at": "2026-10-05T22:15:16.021662",
+    "display_name": null,
+    "email": "fx2@example.com",
+    "email_verified": false,
+    "interface_locale": "en",
+    "onboarding_completed": false,
+    "platform_role": "support_operator",
+    "status": "active",
+    "tier": "basic",
+    "updated_at": "2026-10-05T22:15:16.218617",
+    "user_id": 3,
+    "workspace_count": 0
+   },
+   {
+    "active_session_count": 1,
+    "created_at": "2026-10-05T22:15:15.633853",
+    "display_name": null,
+    "email": "fx1@example.com",
+    "email_verified": false,
+    "interface_locale": "en",
+    "onboarding_completed": false,
+    "platform_role": "platform_admin",
+    "status": "active",
+    "tier": "basic",
+    "updated_at": "2026-10-05T22:15:15.833702",
+    "user_id": 2,
+    "workspace_count": 0
+   },
+   {
+    "active_session_count": 1,
+    "created_at": "2026-10-05T22:15:15.218329",
+    "display_name": null,
+    "email": "fx0@example.com",
+    "email_verified": false,
+    "interface_locale": "en",
+    "onboarding_completed": false,
+    "platform_role": "user",
+    "status": "active",
+    "tier": "basic",
+    "updated_at": "2026-10-05T22:15:15.218343",
+    "user_id": 1,
+    "workspace_count": 0
+   }
+  ]
+ },
+ "/admin/users/{id}": {
+  "access": {
+   "assignable_roles": [
+    "user",
+    "platform_admin",
+    "support_operator",
+    "billing_admin",
+    "knowledge_admin",
+    "security_privacy_admin",
+    "operations_admin"
+   ],
+   "capabilities": [],
+   "is_self": false,
+   "platform_role": "user"
+  },
+  "account": {
+   "active_session_count": 1,
+   "created_at": "2026-10-05T22:15:15.218329",
+   "display_name": null,
+   "email": "fx0@example.com",
+   "email_verified": false,
+   "interface_locale": "en",
+   "onboarding_completed": false,
+   "platform_role": "user",
+   "status": "active",
+   "tier": "basic",
+   "updated_at": "2026-10-05T22:15:15.218343",
+   "user_id": 1,
+   "workspace_count": 0
+  },
+  "audit": [],
+  "plan": {
+   "current": {
+    "display_name": "Basic",
+    "ended_at": null,
+    "plan_code": "basic",
+    "source": "system_default",
+    "started_at": "2026-10-05T22:15:15.223333",
+    "status": "active",
+    "version": 1
+   },
+   "history": [
+    {
+     "display_name": "Basic",
+     "ended_at": null,
+     "plan_code": "basic",
+     "source": "system_default",
+     "started_at": "2026-10-05T22:15:15.223333",
+     "status": "active",
+     "version": 1
+    }
+   ]
+  },
+  "sessions": {
+   "active_count": 1,
+   "recent": [
+    {
+     "created_at": "2026-10-05T22:15:15.423803",
+     "expires_at": "2026-10-19T22:15:15.423803",
+     "last_used_at": "2026-10-05T22:15:17.808192"
+    }
+   ]
+  },
+  "workspaces": []
+ },
+ "/admin/workspaces": {
+  "items": [],
+  "page": 1,
+  "page_size": 25,
+  "total": 0,
+  "workspaces": []
+ },
+ "/auth/admin/audit": {
+  "events": [
+   {
+    "created_at": "2026-10-05T22:15:15.826097",
+    "event_type": "account.login",
+    "result": "success",
+    "target_type": null
+   },
+   {
+    "created_at": "2026-10-05T22:15:15.635969",
+    "event_type": "account.register",
+    "result": "success",
+    "target_type": null
+   }
+  ]
+ },
+ "/evaluation/latest": {
+  "available": true,
+  "metrics": {
+   "context_precision": 0.554,
+   "context_recall": 0.1944,
+   "faithfulness": 0.4051,
+   "response_relevancy": 0.1634
+  },
+  "run_config": {
+   "case_count": 35,
+   "context_recall_run": true,
+   "evaluator_base_url": "https://openrouter.ai/api/v1",
+   "evaluator_embedding_model": "openai/text-embedding-3-small",
+   "evaluator_model": "openai/gpt-4o-mini",
+   "expected_score_count": 132,
+   "failed_score_count": 0,
+   "git_commit": "2500320",
+   "metric_names": [
+    "faithfulness",
+    "response_relevancy",
+    "context_precision",
+    "context_recall"
+   ],
+   "ragas_version": "0.2.15",
+   "referenced_case_count": 27,
+   "score_coverage": 1.0,
+   "status": "COMPLETE",
+   "timestamp": "20260902_090140",
+   "valid_score_count": 132
+  }
+ },
+ "/evaluation/ragas/configuration": {
+  "can_run": false,
+  "career_configured": false,
+  "evaluator_configured": false,
+  "missing": [
+   "RAGAS_EVAL_API_KEY",
+   "Career Intelligence chat credential (e.g. COPILOT_API_KEY)"
+  ],
+  "ragas_ready": true
+ },
+ "/evaluation/runs": {
+  "runs": [
+   "20260902_090140",
+   "20260902_084907",
+   "20260902_084501",
+   "20260902_082047",
+   "20260902_080719",
+   "20260902_080247"
+  ]
+ },
+ "/knowledge/diagnostics": {
+  "known_gaps": [
+   "German occupation-specific compensation is aggregate (Eurostat SES); Destatis not yet acquired (\u00a718/\u00a747).",
+   "Router sends some role phrasings ('data scientist role overview', 'what does an electrician do') to the vector lane, so they return general (not occupation-grounded) evidence \u2014 a routing-coverage gap, not a safety gap.",
+   "Credential coverage is fixtures-only (5 records); regulated-profession coverage not yet normalized (\u00a722/\u00a747).",
+   "Emerging AI roles (AI Engineer, LLM Engineer) are not in the official taxonomies yet \u2014 return general/insufficient by design (\u00a747/\u00a752).",
+   "Compensation\u2192canonical-occupation linkage is 825/1913 (official codes only; no fuzzy title matching by design, \u00a716)."
+  ],
+  "retrieval_evaluation": {
+   "cases": 81,
+   "citation_completeness_rate": 1.0,
+   "evidence_coverage_rate": 0.8857,
+   "geography_correctness_rate": 1.0,
+   "no_fabricated_citation_rate": 1.0,
+   "pass_rate": 0.9136,
+   "passed": 74,
+   "safety_pass_rate": 1.0,
+   "unknown_role_safety_rate": 1.0,
+   "unsupported_geography_safety_rate": 1.0
+  },
+  "runtime": {
+   "aliases": 23579,
+   "built_at": "2026-09-12T06:50:02Z",
+   "compensation": 1913,
+   "competencies": 2275,
+   "credentials": 5,
+   "knowledge_areas": 6968,
+   "labour_market": 2398,
+   "normalized_pipeline_version": "7B.1",
+   "occupations": 8035,
+   "runtime_pipeline_version": "7C.1",
+   "skills": 111455,
+   "sources": 31,
+   "tasks": 22383,
+   "work_activities": 20141
+  }
+ },
+ "/reviewer/config-versions": {
+  "knowledge_version": "knowledge-6744849f3ca6",
+  "model_policy_version": "policy-511d7422034c",
+  "prompt_version": "prompt-87245e502de7",
+  "specialist_config_version": "specialists-66588e11bbd8"
+ },
+ "/reviewer/knowledge/coverage": {
+  "disclaimer": "Coverage is bounded and declared. Ask4Mo does NOT claim universal career-market coverage; out-of-coverage queries abstain.",
+  "known_gaps": [
+   "German occupation-specific compensation is aggregate (Eurostat SES); Destatis not yet acquired (\u00a718/\u00a747).",
+   "Router sends some role phrasings ('data scientist role overview', 'what does an electrician do') to the vector lane, so they return general (not occupation-grounded) evidence \u2014 a routing-coverage gap, not a safety gap.",
+   "Credential coverage is fixtures-only (5 records); regulated-profession coverage not yet normalized (\u00a722/\u00a747).",
+   "Emerging AI roles (AI Engineer, LLM Engineer) are not in the official taxonomies yet \u2014 return general/insufficient by design (\u00a747/\u00a752).",
+   "Compensation\u2192canonical-occupation linkage is 825/1913 (official codes only; no fuzzy title matching by design, \u00a716)."
+  ],
+  "rows": [
+   {
+    "authority": "Bundesagentur f\u00fcr Arbeit / Destatis",
+    "domain": "compensation",
+    "jurisdiction": "DE",
+    "language": "de/en",
+    "limitation": "Bounded declared occupation set; engineering-draft figures; not exhaustive.",
+    "readiness": "partial",
+    "requirement": "K1"
+   },
+   {
+    "authority": "Regulators (NMC, IHK/HWK, BRAK, \u2026)",
+    "domain": "credentials",
+    "jurisdiction": "DE/UK",
+    "language": "en/de",
+    "limitation": "Declared profession/jurisdiction matrix only; abstains elsewhere.",
+    "readiness": "partial",
+    "requirement": "K2"
+   },
+   {
+    "authority": "Curated versioned aliases",
+    "domain": "role_aliases",
+    "jurisdiction": "global",
+    "language": "en",
+    "limitation": "Confident exact matches only; does not override existing resolution.",
+    "readiness": "partial",
+    "requirement": "K3"
+   },
+   {
+    "authority": "Adzuna (advertised, self-reported)",
+    "domain": "current_market",
+    "jurisdiction": "multi",
+    "language": "en",
+    "limitation": "Bounded operation spec; live provider calls UNVALIDATED / cost-gated.",
+    "readiness": "spec_only",
+    "requirement": "K4"
+   },
+   {
+    "authority": "ESCO/O*NET/ISCO/DigComp/\u2026",
+    "domain": "occupations/skills/competencies",
+    "jurisdiction": "EU/UK/US",
+    "language": "en",
+    "limitation": "Runtime stores are generated/git-ignored; readiness depends on the build.",
+    "readiness": "generated",
+    "requirement": "C-rag"
+   }
+  ]
+ },
+ "/reviewer/knowledge/language-boundary": {
+  "languages": [
+   {
+    "conversation_supported": true,
+    "dictation_supported": true,
+    "governed_kb_native_content": "full",
+    "language": "en",
+    "live_model_quality_tested": false,
+    "retrieval_tested": "bounded",
+    "ui_supported": true
+   },
+   {
+    "conversation_supported": true,
+    "dictation_supported": true,
+    "governed_kb_native_content": "partial",
+    "language": "de",
+    "live_model_quality_tested": false,
+    "retrieval_tested": "bounded",
+    "ui_supported": true
+   },
+   {
+    "conversation_supported": true,
+    "dictation_supported": true,
+    "governed_kb_native_content": "none",
+    "language": "fr",
+    "live_model_quality_tested": false,
+    "retrieval_tested": "bounded",
+    "ui_supported": true
+   },
+   {
+    "conversation_supported": true,
+    "dictation_supported": true,
+    "governed_kb_native_content": "none",
+    "language": "es",
+    "live_model_quality_tested": false,
+    "retrieval_tested": "bounded",
+    "ui_supported": true
+   },
+   {
+    "conversation_supported": true,
+    "dictation_supported": true,
+    "governed_kb_native_content": "none",
+    "language": "it",
+    "live_model_quality_tested": false,
+    "retrieval_tested": "bounded",
+    "ui_supported": true
+   },
+   {
+    "conversation_supported": true,
+    "dictation_supported": true,
+    "governed_kb_native_content": "none",
+    "language": "pt",
+    "live_model_quality_tested": false,
+    "retrieval_tested": "bounded",
+    "ui_supported": true
+   },
+   {
+    "conversation_supported": true,
+    "dictation_supported": true,
+    "governed_kb_native_content": "none",
+    "language": "nl",
+    "live_model_quality_tested": false,
+    "retrieval_tested": "bounded",
+    "ui_supported": true
+   }
+  ]
+ },
+ "/reviewer/knowledge/manifest": {
+  "build_provenance": {
+   "built_at": "2026-09-12T06:50:02Z",
+   "normalized_pipeline_version": "7B.1",
+   "runtime_counts": {
+    "compensation": 1913,
+    "competencies": 2275,
+    "credentials": 5,
+    "labour_market": {
+     "forecasts": 831,
+     "openings": 831,
+     "shortages": 618,
+     "vacancies": 118
+    },
+    "roles": {
+     "occupation_activities": 20141,
+     "occupation_aliases": 23579,
+     "occupation_attributes": 2971,
+     "occupation_certifications": 0,
+     "occupation_industries": 0,
+     "occupation_knowledge": 6968,
+     "occupation_licences": 0,
+     "occupation_mappings": 3039,
+     "occupation_relationships": 12016,
+     "occupation_skills": 111455,
+     "occupation_tasks": 22383,
+     "occupations": 8035
+    }
+   },
+   "runtime_pipeline_version": "7C.1"
+  },
+  "curated_source_count": 31,
+  "curated_sources": [
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "occupations",
+    "jurisdiction": "US",
+    "language": "en",
+    "licence": "CC BY 4.0",
+    "publication_date": null,
+    "publisher": "O*NET / U.S. Department of Labor",
+    "reference_year": null,
+    "source_id": "onet",
+    "source_type": "occupation_taxonomy",
+    "storage_target": "structured_role",
+    "title": "O*NET Database",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "occupations",
+    "jurisdiction": "EU",
+    "language": "en",
+    "licence": null,
+    "publication_date": null,
+    "publisher": "European Commission",
+    "reference_year": null,
+    "source_id": "esco",
+    "source_type": "occupation_taxonomy",
+    "storage_target": "structured_role",
+    "title": "ESCO \u2014 Occupations & Skills",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "skills",
+    "jurisdiction": "EU",
+    "language": "en",
+    "licence": null,
+    "publication_date": null,
+    "publisher": "European Commission",
+    "reference_year": null,
+    "source_id": "esco_matrix",
+    "source_type": "skills_taxonomy",
+    "storage_target": "structured_role",
+    "title": "ESCO Skills\u2013Occupations Matrix",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "occupations",
+    "jurisdiction": "global",
+    "language": "en",
+    "licence": null,
+    "publication_date": null,
+    "publisher": "International Labour Organization (ILO)",
+    "reference_year": null,
+    "source_id": "isco08",
+    "source_type": "occupation_taxonomy",
+    "storage_target": "structured_role",
+    "title": "ISCO-08 Classification of Occupations",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "occupations",
+    "jurisdiction": "DE",
+    "language": "de",
+    "licence": null,
+    "publication_date": null,
+    "publisher": "Bundesagentur f\u00fcr Arbeit",
+    "reference_year": null,
+    "source_id": "kldb",
+    "source_type": "occupation_taxonomy",
+    "storage_target": "structured_role",
+    "title": "Klassifikation der Berufe (KldB)",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "occupations",
+    "jurisdiction": "DE",
+    "language": "de",
+    "licence": null,
+    "publication_date": null,
+    "publisher": "Bundesagentur f\u00fcr Arbeit",
+    "reference_year": null,
+    "source_id": "berufenet",
+    "source_type": "occupation_taxonomy",
+    "storage_target": "structured_role",
+    "title": "BERUFENET occupation information",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "occupations",
+    "jurisdiction": "US",
+    "language": "en",
+    "licence": "Public domain (U.S. Government work)",
+    "publication_date": null,
+    "publisher": "U.S. Bureau of Labor Statistics",
+    "reference_year": null,
+    "source_id": "bls_ooh",
+    "source_type": "occupation_taxonomy",
+    "storage_target": "structured_role",
+    "title": "Occupational Outlook Handbook (OOH)",
+    "version": "current release"
+   },
+   {
+    "authority": "public_framework",
+    "authority_level": 2,
+    "citation_capable": true,
+    "group": "skills",
+    "jurisdiction": "EU",
+    "language": "en",
+    "licence": null,
+    "publication_date": null,
+    "publisher": "European Commission (JRC)",
+    "reference_year": null,
+    "source_id": "digcomp",
+    "source_type": "competency_framework",
+    "storage_target": "competency",
+    "title": "DigComp \u2014 European Digital Competence Framework",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "skills",
+    "jurisdiction": "DE",
+    "language": "de",
+    "licence": null,
+    "publication_date": null,
+    "publisher": "Bundesagentur f\u00fcr Arbeit",
+    "reference_year": null,
+    "source_id": "ba_kompetenzkatalog",
+    "source_type": "skills_taxonomy",
+    "storage_target": "competency",
+    "title": "BA Kompetenzkatalog",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "specialist",
+    "jurisdiction": "US",
+    "language": "en",
+    "licence": "Public domain (U.S. Government work)",
+    "publication_date": null,
+    "publisher": "NIST / NICE",
+    "reference_year": null,
+    "source_id": "nice_framework",
+    "source_type": "competency_framework",
+    "storage_target": "competency",
+    "title": "NICE Workforce Framework for Cybersecurity",
+    "version": "current release"
+   },
+   {
+    "authority": "public_framework",
+    "authority_level": 2,
+    "citation_capable": true,
+    "group": "skills",
+    "jurisdiction": "EU",
+    "language": "en",
+    "licence": "CEN standard (commercial)",
+    "publication_date": null,
+    "publisher": "CEN",
+    "reference_year": null,
+    "source_id": "ecf",
+    "source_type": "competency_framework",
+    "storage_target": "competency",
+    "title": "European e-Competence Framework (e-CF)",
+    "version": "current release"
+   },
+   {
+    "authority": "public_framework",
+    "authority_level": 2,
+    "citation_capable": true,
+    "group": "job_architecture",
+    "jurisdiction": "EU",
+    "language": "en",
+    "licence": null,
+    "publication_date": null,
+    "publisher": "European Commission",
+    "reference_year": null,
+    "source_id": "eqf",
+    "source_type": "competency_framework",
+    "storage_target": "competency",
+    "title": "European Qualifications Framework (EQF)",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "job_architecture",
+    "jurisdiction": "US",
+    "language": "en",
+    "licence": "Public domain (U.S. Government work)",
+    "publication_date": null,
+    "publisher": "U.S. Office of Personnel Management",
+    "reference_year": null,
+    "source_id": "opm_occupational_groups",
+    "source_type": "competency_framework",
+    "storage_target": "competency",
+    "title": "OPM Handbook of Occupational Groups and Families",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "job_architecture",
+    "jurisdiction": "US",
+    "language": "en",
+    "licence": "Public domain (U.S. Government work)",
+    "publication_date": null,
+    "publisher": "U.S. Office of Personnel Management",
+    "reference_year": null,
+    "source_id": "opm_qualification_standards",
+    "source_type": "competency_framework",
+    "storage_target": "competency",
+    "title": "OPM General Schedule Qualification Standards",
+    "version": "current release"
+   },
+   {
+    "authority": "public_framework",
+    "authority_level": 2,
+    "citation_capable": true,
+    "group": "job_architecture",
+    "jurisdiction": "UK",
+    "language": "en",
+    "licence": "Open Government Licence v3.0",
+    "publication_date": null,
+    "publisher": "UK Civil Service / Cabinet Office",
+    "reference_year": null,
+    "source_id": "uk_civil_service_success_profiles",
+    "source_type": "competency_framework",
+    "storage_target": "competency",
+    "title": "UK Civil Service Success Profiles",
+    "version": "current release"
+   },
+   {
+    "authority": "public_framework",
+    "authority_level": 2,
+    "citation_capable": true,
+    "group": "specialist",
+    "jurisdiction": "UK",
+    "language": "en",
+    "licence": "Open Government Licence v3.0",
+    "publication_date": null,
+    "publisher": "UK Government HR",
+    "reference_year": null,
+    "source_id": "uk_hr_success_profiles",
+    "source_type": "competency_framework",
+    "storage_target": "competency",
+    "title": "UK HR Success Profile Guides",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "compensation",
+    "jurisdiction": "US",
+    "language": "en",
+    "licence": "Public domain (U.S. Government work)",
+    "publication_date": null,
+    "publisher": "U.S. Bureau of Labor Statistics",
+    "reference_year": null,
+    "source_id": "bls_oews",
+    "source_type": "compensation_dataset",
+    "storage_target": "compensation",
+    "title": "Occupational Employment and Wage Statistics (OEWS)",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "compensation",
+    "jurisdiction": "UK",
+    "language": "en",
+    "licence": "Open Government Licence v3.0",
+    "publication_date": null,
+    "publisher": "Office for National Statistics (ONS)",
+    "reference_year": null,
+    "source_id": "ons_ashe",
+    "source_type": "compensation_dataset",
+    "storage_target": "compensation",
+    "title": "Annual Survey of Hours and Earnings (ASHE)",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "compensation",
+    "jurisdiction": "EU",
+    "language": "en",
+    "licence": "CC BY 4.0",
+    "publication_date": null,
+    "publisher": "Eurostat",
+    "reference_year": null,
+    "source_id": "eurostat_earnings",
+    "source_type": "compensation_dataset",
+    "storage_target": "compensation",
+    "title": "Eurostat Earnings (Structure of Earnings Survey)",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "compensation",
+    "jurisdiction": "DE",
+    "language": "de",
+    "licence": null,
+    "publication_date": null,
+    "publisher": "Bundesagentur f\u00fcr Arbeit",
+    "reference_year": null,
+    "source_id": "ba_entgeltatlas",
+    "source_type": "compensation_dataset",
+    "storage_target": "compensation",
+    "title": "Entgeltatlas",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "labour_market",
+    "jurisdiction": "EU",
+    "language": "en",
+    "licence": null,
+    "publication_date": null,
+    "publisher": "Cedefop",
+    "reference_year": null,
+    "source_id": "cedefop_skills_forecast",
+    "source_type": "labour_market_forecast",
+    "storage_target": "labour_market",
+    "title": "Cedefop Skills Forecast",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "labour_market",
+    "jurisdiction": "EU",
+    "language": "en",
+    "licence": null,
+    "publication_date": null,
+    "publisher": "Cedefop",
+    "reference_year": null,
+    "source_id": "cedefop_future_job_openings",
+    "source_type": "labour_market_forecast",
+    "storage_target": "labour_market",
+    "title": "Cedefop Future Job Openings",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "labour_market",
+    "jurisdiction": "EU",
+    "language": "en",
+    "licence": null,
+    "publication_date": null,
+    "publisher": "Cedefop",
+    "reference_year": null,
+    "source_id": "cedefop_shortage_index",
+    "source_type": "labour_market_forecast",
+    "storage_target": "labour_market",
+    "title": "Cedefop Labour & Skills Shortage Index",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "narrative",
+    "jurisdiction": "EU",
+    "language": "en",
+    "licence": null,
+    "publication_date": null,
+    "publisher": "European Commission",
+    "reference_year": null,
+    "source_id": "esco_handbook",
+    "source_type": "methodology",
+    "storage_target": "vector",
+    "title": "ESCO Handbook (methodology)",
+    "version": "current release"
+   },
+   {
+    "authority": "industry",
+    "authority_level": 3,
+    "citation_capable": true,
+    "group": "narrative",
+    "jurisdiction": "global",
+    "language": "en",
+    "licence": null,
+    "publication_date": null,
+    "publisher": "World Economic Forum",
+    "reference_year": null,
+    "source_id": "wef_future_of_jobs",
+    "source_type": "industry_report",
+    "storage_target": "vector",
+    "title": "Future of Jobs Report",
+    "version": "current release"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "labour_market",
+    "jurisdiction": "US",
+    "language": "en",
+    "licence": "Public domain (U.S. Government work)",
+    "publication_date": null,
+    "publisher": "U.S. Bureau of Labor Statistics",
+    "reference_year": null,
+    "source_id": "bls_projections",
+    "source_type": "labour_market_forecast",
+    "storage_target": "structured",
+    "title": "BLS Employment Projections",
+    "version": "2024-2034/2025-2035"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "labour_market",
+    "jurisdiction": "EU",
+    "language": "en",
+    "licence": null,
+    "publication_date": null,
+    "publisher": "Cedefop",
+    "reference_year": null,
+    "source_id": "cedefop_stas",
+    "source_type": "labour_market_forecast",
+    "storage_target": "structured",
+    "title": "Cedefop Short-Term Analytical System (STAS)",
+    "version": "release Jan 2026"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "labour_market",
+    "jurisdiction": "EU",
+    "language": "en",
+    "licence": null,
+    "publication_date": null,
+    "publisher": "Cedefop",
+    "reference_year": null,
+    "source_id": "cedefop_clssi",
+    "source_type": "labour_market_forecast",
+    "storage_target": "structured",
+    "title": "Cedefop Labour & Skills Shortage Index (CLSSI)",
+    "version": "2026"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "labour_market",
+    "jurisdiction": "EU",
+    "language": "en",
+    "licence": "CC BY 4.0",
+    "publication_date": null,
+    "publisher": "Eurostat",
+    "reference_year": null,
+    "source_id": "eurostat_occ_vacancy",
+    "source_type": "labour_market_forecast",
+    "storage_target": "structured",
+    "title": "Eurostat Job Vacancy Statistics (by occupation)",
+    "version": "jvs_a_isco3_r1"
+   },
+   {
+    "authority": "official",
+    "authority_level": 1,
+    "citation_capable": true,
+    "group": "compensation",
+    "jurisdiction": "DE",
+    "language": "en",
+    "licence": null,
+    "publication_date": null,
+    "publisher": "Statistisches Bundesamt (Destatis)",
+    "reference_year": null,
+    "source_id": "destatis",
+    "source_type": "official_statistics",
+    "storage_target": "compensation",
+    "title": "Destatis GENESIS-Online (German official statistics)",
+    "version": "GENESIS 2020"
+   },
+   {
+    "authority": "industry",
+    "authority_level": 3,
+    "citation_capable": true,
+    "group": "compensation",
+    "jurisdiction": "DE",
+    "language": "en",
+    "licence": null,
+    "publication_date": null,
+    "publisher": "Adzuna",
+    "reference_year": null,
+    "source_id": "adzuna",
+    "source_type": "market_api",
+    "storage_target": "compensation",
+    "title": "Adzuna Jobs API (advertised market)",
+    "version": "v1"
+   }
+  ],
+  "governed_datasets": [
+   {
+    "authority": "Bundesagentur f\u00fcr Arbeit \u2014 Entgeltatlas; Statistisches Bundesamt (Destatis)",
+    "authority_level": 1,
+    "citation_capable": true,
+    "dataset_id": "k1_de_compensation",
+    "jurisdiction": "DE",
+    "language": "de",
+    "record_count": 7,
+    "reference_year": 2024,
+    "requirement": "K1",
+    "review_status": "engineering_draft",
+    "title": "Germany occupation compensation (declared, bounded)",
+    "version": "1.0.0"
+   },
+   {
+    "citation_capable": true,
+    "dataset_id": "k2_credentials",
+    "jurisdiction": "DE,UK",
+    "record_count": 6,
+    "requirement": "K2",
+    "review_status": "engineering_draft",
+    "title": "Credentials / regulated professions (declared jurisdiction matrix)",
+    "version": "1.0.0"
+   },
+   {
+    "citation_capable": false,
+    "dataset_id": "k3_role_aliases",
+    "record_count": 9,
+    "requirement": "K3",
+    "review_status": "engineering_draft",
+    "title": "Emerging roles / aliases (versioned)",
+    "version": "1.0.0"
+   },
+   {
+    "citation_capable": false,
+    "dataset_id": "k4_adzuna_capabilities",
+    "provider": "adzuna",
+    "record_count": 4,
+    "requirement": "K4",
+    "review_status": "UNVALIDATED",
+    "title": "Additional Adzuna capabilities (entitled operations as bounded tools)",
+    "version": "1.0.0"
+   }
+  ]
+ },
+ "/reviewer/knowledge/readiness": {
+  "components": [
+   {
+    "checks": {
+     "count": 31,
+     "unique_ids": true
+    },
+    "component": "source_manifest",
+    "detail": "31 sources, unique_ids=True",
+    "state": "ready"
+   },
+   {
+    "checks": {
+     "record_count": 7,
+     "review_status": "engineering_draft"
+    },
+    "component": "governed:K1",
+    "detail": "k1_de_compensation records=7 review=engineering_draft",
+    "state": "ready"
+   },
+   {
+    "checks": {
+     "record_count": 6,
+     "review_status": "engineering_draft"
+    },
+    "component": "governed:K2",
+    "detail": "k2_credentials records=6 review=engineering_draft",
+    "state": "ready"
+   },
+   {
+    "checks": {
+     "record_count": 9,
+     "review_status": "engineering_draft"
+    },
+    "component": "governed:K3",
+    "detail": "k3_role_aliases records=9 review=engineering_draft",
+    "state": "ready"
+   },
+   {
+    "checks": {
+     "record_count": 4,
+     "review_status": "UNVALIDATED"
+    },
+    "component": "governed:K4",
+    "detail": "k4_adzuna_capabilities records=4 review=UNVALIDATED",
+    "state": "ready"
+   },
+   {
+    "checks": {
+     "present": true,
+     "size_bytes": 19427328
+    },
+    "component": "structured_store:roles",
+    "detail": "present=True size_bytes=19427328 has_build_counts=True",
+    "state": "ready"
+   },
+   {
+    "checks": {
+     "present": true,
+     "size_bytes": 196608
+    },
+    "component": "structured_store:compensation",
+    "detail": "present=True size_bytes=196608 has_build_counts=True",
+    "state": "ready"
+   },
+   {
+    "checks": {
+     "present": true,
+     "size_bytes": 233472
+    },
+    "component": "structured_store:competencies",
+    "detail": "present=True size_bytes=233472 has_build_counts=True",
+    "state": "ready"
+   },
+   {
+    "checks": {
+     "present": true,
+     "size_bytes": 253952
+    },
+    "component": "structured_store:labour_market",
+    "detail": "present=True size_bytes=253952 has_build_counts=True",
+    "state": "ready"
+   },
+   {
+    "checks": {
+     "present": true,
+     "size_bytes": 12288
+    },
+    "component": "structured_store:credentials",
+    "detail": "present=True size_bytes=12288 has_build_counts=True",
+    "state": "ready"
+   },
+   {
+    "checks": {
+     "present": true
+    },
+    "component": "vector_index",
+    "detail": "chroma_present=True dir=data/chroma",
+    "state": "ready"
+   },
+   {
+    "checks": {
+     "built_at": "2026-09-12T06:50:02Z"
+    },
+    "component": "build_metadata",
+    "detail": "built_at=2026-09-12T06:50:02Z runtime_pipeline=7C.1",
+    "state": "ready"
+   }
+  ],
+  "overall": "ready",
+  "ready_components": 12,
+  "total_components": 12
+ },
+ "/reviewer/knowledge/source-health": {
+  "sources": [
+   {
+    "configured": true,
+    "last_build": "2026-09-12T06:50:02Z",
+    "present": true,
+    "record_count": {
+     "occupation_activities": 20141,
+     "occupation_aliases": 23579,
+     "occupation_attributes": 2971,
+     "occupation_certifications": 0,
+     "occupation_industries": 0,
+     "occupation_knowledge": 6968,
+     "occupation_licences": 0,
+     "occupation_mappings": 3039,
+     "occupation_relationships": 12016,
+     "occupation_skills": 111455,
+     "occupation_tasks": 22383,
+     "occupations": 8035
+    },
+    "size_bytes": 19427328,
+    "source": "roles",
+    "warnings": []
+   },
+   {
+    "configured": true,
+    "last_build": "2026-09-12T06:50:02Z",
+    "present": true,
+    "record_count": 1913,
+    "size_bytes": 196608,
+    "source": "compensation",
+    "warnings": []
+   },
+   {
+    "configured": true,
+    "last_build": "2026-09-12T06:50:02Z",
+    "present": true,
+    "record_count": 2275,
+    "size_bytes": 233472,
+    "source": "competencies",
+    "warnings": []
+   },
+   {
+    "configured": true,
+    "last_build": "2026-09-12T06:50:02Z",
+    "present": true,
+    "record_count": {
+     "forecasts": 831,
+     "openings": 831,
+     "shortages": 618,
+     "vacancies": 118
+    },
+    "size_bytes": 253952,
+    "source": "labour_market",
+    "warnings": []
+   },
+   {
+    "configured": true,
+    "last_build": "2026-09-12T06:50:02Z",
+    "present": true,
+    "record_count": 5,
+    "size_bytes": 12288,
+    "source": "credentials",
+    "warnings": []
+   },
+   {
+    "configured": true,
+    "note": "governed committed dataset",
+    "present": true,
+    "record_count": 7,
+    "review_status": "engineering_draft",
+    "source": "k1_de_compensation",
+    "warnings": []
+   },
+   {
+    "configured": true,
+    "note": "governed committed dataset",
+    "present": true,
+    "record_count": 6,
+    "review_status": "engineering_draft",
+    "source": "k2_credentials",
+    "warnings": []
+   },
+   {
+    "configured": true,
+    "note": "governed committed dataset",
+    "present": true,
+    "record_count": 9,
+    "review_status": "engineering_draft",
+    "source": "k3_role_aliases",
+    "warnings": []
+   },
+   {
+    "configured": true,
+    "note": "governed committed dataset",
+    "present": true,
+    "record_count": 4,
+    "review_status": "UNVALIDATED",
+    "source": "k4_adzuna_capabilities",
+    "warnings": []
+   }
+  ]
+ },
+ "/reviewer/prompt-lab/experiments": {
+  "experiments": []
+ },
+ "/reviewer/retention/inventory": {
+  "inventory": [
+   {
+    "classification": "operational",
+    "default_retention": "expiry-based (session TTL); configurable",
+    "deletion_path": "session store expiry + logout",
+    "notes": "Expired sessions are cleanup-eligible.",
+    "owner_controlled": false,
+    "resource": "auth sessions (server-side cookie sessions)"
+   },
+   {
+    "classification": "operational",
+    "default_retention": "short expiry (token TTL)",
+    "deletion_path": "token expiry + single-use consumption",
+    "notes": "Expired/used tokens are cleanup-eligible.",
+    "owner_controlled": false,
+    "resource": "email-verification / password-reset tokens"
+   },
+   {
+    "classification": "audit_security",
+    "default_retention": "retained for security review; not user-deletable",
+    "deletion_path": "not routinely deleted (security)",
+    "notes": "Preserved; not cleaned by temp cleanup.",
+    "owner_controlled": false,
+    "resource": "audit events"
+   },
+   {
+    "classification": "user_controlled",
+    "default_retention": "until the user deletes the run",
+    "deletion_path": "DELETE /agent/runs/{id} (saver delete_thread)",
+    "notes": "Bulk age-based checkpoint cleanup remains a gap (no safe bulk list API).",
+    "owner_controlled": true,
+    "resource": "agent runs / LangGraph checkpoints"
+   },
+   {
+    "classification": "operational",
+    "default_retention": "stale window (INTERVIEW_SESSION_RETENTION_DAYS)",
+    "deletion_path": "scripts/cleanup_runtime_data.py (dry-run default)",
+    "notes": "Never touches completed history/memory/checkpoints.",
+    "owner_controlled": true,
+    "resource": "interview_sessions (in-progress)"
+   },
+   {
+    "classification": "user_controlled",
+    "default_retention": "until the user deletes it or account deletion",
+    "deletion_path": "DELETE /feedback + account cascade",
+    "notes": "Stores references + rating, minimal content.",
+    "owner_controlled": true,
+    "resource": "candidate feedback"
+   },
+   {
+    "classification": "operational",
+    "default_retention": "retained as engineering evidence; archivable",
+    "deletion_path": "archive/delete via reviewer tooling (var/prompt_lab)",
+    "notes": "Synthetic/approved data only; no candidate content.",
+    "owner_controlled": false,
+    "resource": "Prompt Lab experiments"
+   },
+   {
+    "classification": "temporary",
+    "default_retention": "regenerable; stale runs cleanup-eligible",
+    "deletion_path": "temp cleanup of generated run dirs",
+    "notes": "Committed baselines (11R, RAGAS deterministic) are PRESERVED.",
+    "owner_controlled": false,
+    "resource": "evaluation artifacts (generated runs)"
+   },
+   {
+    "classification": "temporary",
+    "default_retention": "transient (per request)",
+    "deletion_path": "temp cleanup",
+    "notes": "App-owned scratch only.",
+    "owner_controlled": false,
+    "resource": "temporary upload / OCR working files"
+   },
+   {
+    "classification": "user_controlled",
+    "default_retention": "until user/account deletion",
+    "deletion_path": "document delete + account cascade (private-file purge carried)",
+    "notes": "Never touched by temp cleanup.",
+    "owner_controlled": true,
+    "resource": "private documents / claims / stories"
+   },
+   {
+    "classification": "user_controlled",
+    "default_retention": "leaves app control once downloaded",
+    "deletion_path": "n/a (client-held)",
+    "notes": "Not persisted server-side by default.",
+    "owner_controlled": true,
+    "resource": "report exports (downloaded)"
+   },
+   {
+    "classification": "external_provider_governed",
+    "default_retention": "provider-governed when enabled (OFF by default)",
+    "deletion_path": "provider retention settings",
+    "notes": "Sanitised projections only; no content.",
+    "owner_controlled": false,
+    "resource": "observability traces"
+   },
+   {
+    "classification": "temporary",
+    "default_retention": "regenerable from sources",
+    "deletion_path": "rebuild scripts; temp cleanup of stale builds",
+    "notes": "Git-ignored generated artifacts.",
+    "owner_controlled": false,
+    "resource": "generated knowledge indexes (Chroma / structured DBs)"
+   }
+  ]
+ }
+}

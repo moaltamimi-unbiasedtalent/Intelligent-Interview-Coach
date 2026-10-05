@@ -7,6 +7,8 @@
 
 Merged to `main` in **PR #130** (branch `feat/p10b-w10-14-full-admin-qualification`, feature head `cfc482846cf7cff6b3d01f9b643c194d11aa40c7`, merge commit `ba5808658d11eef9ef3b840e4eda2661e84c7b0e`). Alembic head `0025_security_audit_incidents`. ROLE-W10-01: **CLOSED**. Admin platform qualification only: this is NOT a release candidate and does not qualify the candidate + Admin product as one; **W11 is NOT STARTED** and is mandatory before RC-P10-003.  This wave is qualification and reconciliation, not a product-feature wave: no migration, no new permission, no new dependency, no product behaviour change, 0 paid/live calls.
 
+Completion docs: **PR #131** (docs branch `docs/p10b-w10-14-complete`, head `01d97caef5621c9c2f4e784a718fcacb232f067d`, merge/main `fefb8191f9383d64656ea67a1fce753dc32112e4`).
+
 ## 2. Starting main SHA
 `a077f26305776bcec76cab1c0a408ffc1fd5132f` (W10.13 integrated; Alembic head `0025_security_audit_incidents`).
 

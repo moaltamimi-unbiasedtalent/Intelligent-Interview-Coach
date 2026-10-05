@@ -85,12 +85,12 @@ tools, three specialist tools, two human-action tools).
   is in-memory by default (a shared Redis adapter exists behind `RATE_LIMIT_BACKEND=redis` + `REDIS_URL`
   but is optional, off by default and not validated against a live Redis, so distributed limiting is not
   claimed); production OIDC and live PostgreSQL validation are follow-ups.
-- **Admin today:** a `platform_admin` role gates a bounded, read-mostly operations console
-  (`/admin`: metadata only, pause switches, audit view) plus reviewer/evaluation/knowledge
-  diagnostics. Admins are not a private-data superuser (no view-as-user, no content search).
-  The full Platform Administration, Support & Commercial Operations phase (users and access
-  management, ticketing, plans and billing, provider and KB administration, GDPR
-  operations, reporting, incidents) is **planned (P10B-W10), not implemented**.
+- **Admin today (P10B-W10, qualified in W10.14):** a permission-based Admin control plane (`/admin`): users, access and workspaces,
+  Support ticketing, plans/entitlements, **MOCK** billing, integrations and a read-only SecretStore, governed AI/model configuration,
+  governed knowledge, durable jobs, privacy and legal operations, durable pause and restriction-only feature flags, aggregate reporting,
+  and security/audit/incident management. 43 code-defined permissions and six least-privilege role presets (`platform_admin` is broad
+  but not universal); no break-glass, no impersonation, and Admins are never a private-candidate-data superuser. Not built: Support
+  attachments, Admin workspace deactivation, universal operator search, live billing, a production secret vault and external paging.
 - **Prompt-injection and data-handling rules** are summarised below and in
   [docs/security.md](docs/security.md) and [docs/privacy.md](docs/privacy.md).
 
@@ -167,17 +167,16 @@ clean clone has no local indexes, so this is expected on a fresh checkout).
 
 Genuine present limitations (see also [docs/product/PRODUCT_CLAIMS.md](docs/product/PRODUCT_CLAIMS.md)):
 
-- **Preparation-chat deletion/indexing is incomplete (PRIV-W9-01):** there is no per-user run
-  index, so a candidate cannot list or remove individual preparation chats, and account
-  deletion may leave some preparation-chat working data until it is cleaned up.
-- **Consent/legal acceptance history is not persisted (PRIV-W9-02).**
+- **PRIV-W9-01 and PRIV-W9-02 were closed in W10.10, with stated limits:** preparation runs are indexed per user from W10.10 onward
+  (historical runs only from verified references) and deleted by the same account-deletion service; legal documents are versioned
+  and acceptance is recorded from W10.10 onward (never back-filled; acceptance is not consent). Hosting backups follow the provider's
+  retention and are not claimed instantly erased.
 - **Russian speech is unsupported;** speech is seven languages. Non-English copy, including
   Russian and the legal/privacy text, is an engineering translation pending review; live
   generated-language quality is not yet validated; some European-language marketing copy
   still lacks diacritics; metadata localization and locale/bundle optimisation are pending.
-- **Premium is a preview** (no purchase path, `BILLING_ENABLED=false`). **Support ticketing
-  and the full Admin Platform are not implemented** (planned, P10B-W10); the Help Center is
-  documentation, not a ticketing system.
+- **Premium is a preview** (no purchase path, `BILLING_ENABLED=false`); Admin billing is MOCK and never changes anyone's access.
+  Contact Support creates a ticket (no attachments); the Help Center itself is documentation.
 - **Identity:** production OIDC and live PostgreSQL validation are not done; email
   verification is not required to sign in; rate limiting is per-process unless the optional, unvalidated Redis adapter is configured.
 - The **knowledge base must be provisioned/built** for evidence-backed retrieval and
