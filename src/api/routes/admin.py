@@ -35,7 +35,6 @@ from src.api.dependencies import (
     get_admin_user_repository,
     get_pause_service,
     get_plan_repository,
-    get_audit_repository,
     get_request_id,
     get_workspace_repository,
     require_permission,
@@ -53,7 +52,6 @@ from src.persistence import (
     ACCOUNT_STATUS_ACTIVE,
     ACCOUNT_STATUS_DEACTIVATED,
     ACCOUNT_STATUSES,
-    PLATFORM_ROLE_ADMIN,
     PLATFORM_ROLES,
     PRODUCT_TIERS,
     SUPPORTED_LOCALES,
@@ -63,11 +61,6 @@ from src.persistence import (
 )
 
 router = APIRouter(prefix="/admin", tags=["admin"])
-
-
-class RoleRequest(BaseModel):
-    role: str = Field(max_length=32)
-    reason: str | None = Field(default=None, max_length=200)
 
 
 class PlanAssignRequest(BaseModel):
@@ -165,27 +158,6 @@ def _guard(fn):
         return fn()
     except AdminNotFound as exc:
         raise HTTPException(status_code=404, detail=str(exc))
-
-
-@router.post("/users/{user_id}/role", summary="Set platform role preset (audited, atomic)")
-def set_role(user_id: int, body: RoleRequest, request: Request,
-             principal=Depends(require_permission(perm.USERS_ROLE_ASSIGN)),
-             users=Depends(get_admin_user_repository)) -> dict:
-    if body.role not in PLATFORM_ROLES:  # only the code-defined presets; no custom roles
-        raise HTTPException(status_code=422, detail="Unknown platform role.")
-    # Self-lockout guard: an admin may not demote their own admin role.
-    if user_id == principal.user_id and body.role != PLATFORM_ROLE_ADMIN:
-        raise HTTPException(status_code=409, detail="You cannot remove your own admin role.")
-    d = users.get_user_detail(user_id)
-    if d is None:
-        raise HTTPException(status_code=404, detail="Account not found.")
-    audit = A.build_audit(event_type=A.ADMIN_PLATFORM_ROLE_CHANGE, actor_user_id=principal.user_id,
-                          request_id=get_request_id(request), target_type="user", target_id=user_id,
-                          reason=body.reason, before=d["account"]["platform_role"], after=body.role,
-                          role=body.role)
-    # Role is re-read from the database on every request, so a demotion takes effect immediately.
-    out = _guard(lambda: users.set_platform_role(user_id, body.role, audit=audit))
-    return {"user_id": user_id, "platform_role": body.role, "changed": out["changed"]}
 
 
 @router.post("/users/{user_id}/plan", summary="Move an account to the active version of a plan (audited, atomic)")
@@ -365,11 +337,3 @@ def providers(_p=Depends(require_permission(perm.INTEGRATIONS_READ)), pause=Depe
     from src.application.admin_providers import build_providers_response
 
     return build_providers_response(pause)
-
-
-@router.get("/audit", summary="Recent audit events (safe metadata)")
-def audit_view(event_type: str | None = Query(default=None, max_length=64),
-               limit: int = Query(default=100, ge=1, le=500),
-               _p=Depends(require_permission(perm.AUDIT_READ)),
-               audit=Depends(get_audit_repository)) -> dict:
-    return {"events": audit.recent(limit=limit, event_type=event_type)}

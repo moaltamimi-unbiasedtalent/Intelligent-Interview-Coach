@@ -73,8 +73,9 @@ def test_privileged_changes_are_audited():
 def test_admin_cannot_self_demote():
     c, token, admin_uid, _ = _admin_client()
     try:
-        r = c.post(f"/api/v1/admin/users/{admin_uid}/role", json={"role": "user"}, cookies=cookies_for(token))
-        assert r.status_code == 409
+        from tests._role_gov import request_change
+        r = request_change(c, cookies_for(token), admin_uid, "user", password=PW)
+        assert r.status_code == 409   # no Admin may request a role change for their own account
     finally:
         c.__exit__(None, None, None)
 

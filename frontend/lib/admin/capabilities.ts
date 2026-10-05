@@ -46,6 +46,10 @@ export const P = {
   reportsCommercial: "platform.reports.commercial.read",
   aiManage: "platform.ai.manage",
   aiActivate: "platform.ai.activate",
+  securityRead: "platform.security.read",
+  securityManage: "platform.security.manage",
+  incidentsManage: "platform.incidents.manage",
+  auditExport: "platform.audit.export",
 } as const;
 
 export interface AdminDestination {
@@ -65,6 +69,7 @@ export const ADMIN_DESTINATIONS: readonly AdminDestination[] = [
   { id: "plans", label: "Plans", href: "/admin/plans", description: "Plans and entitlements", anyOf: [P.plansRead] },
   { id: "support", label: "Support", href: "/admin/support", description: "Customer support queue", anyOf: [P.supportRead] },
   { id: "review", label: "Review / Diagnostics", href: "/review", description: "Evaluation and knowledge diagnostics", anyOf: [P.ai, P.knowledge] },
+  { id: "security", label: "Security", href: "/admin/security", description: "Events, incidents, alerts and role approvals", anyOf: [P.securityRead, P.audit, P.roleAssign] },
   { id: "audit", label: "Audit", href: "/admin/audit", description: "Privileged-action log", anyOf: [P.audit] },
   { id: "billing", label: "Billing", href: "/admin/billing", description: "Mock billing (not live)", anyOf: [P.billingRead] },
   { id: "privacy", label: "Privacy", href: "/admin/privacy", description: "Privacy requests", anyOf: [P.privacyRead] },

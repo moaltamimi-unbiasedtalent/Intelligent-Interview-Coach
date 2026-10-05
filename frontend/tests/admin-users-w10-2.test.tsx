@@ -27,7 +27,7 @@ const setMemberRole = vi.fn();
 vi.mock("@/lib/api/client", () => ({
   api: { admin: {
     users: (...a: unknown[]) => users(...a), userDetail: (...a: unknown[]) => detail(...a),
-    setStatus: (...a: unknown[]) => setStatus(...a), setRole: (...a: unknown[]) => setRole(...a),
+    setStatus: (...a: unknown[]) => setStatus(...a), requestRoleChange: (...a: unknown[]) => setRole(...a),
     revokeSessions: (...a: unknown[]) => revoke(...a), workspaces: (...a: unknown[]) => workspaces(...a),
     workspaceDetail: (...a: unknown[]) => wsDetail(...a), addWorkspaceMember: (...a: unknown[]) => addMember(...a),
     removeWorkspaceMember: (...a: unknown[]) => removeMember(...a), setWorkspaceMemberRole: (...a: unknown[]) => setMemberRole(...a),
@@ -169,11 +169,13 @@ describe("User detail", () => {
     const select = await screen.findByLabelText("Role preset");
     expect(within(select).getAllByRole("option").map((o) => o.textContent)).toEqual(["user", "platform_admin", "support_operator"]);
     await user.selectOptions(select, "platform_admin");
-    await user.click(screen.getByRole("button", { name: "Change role" }));
+    await user.click(screen.getByRole("button", { name: "Request role change" }));
     const dialog = screen.getByRole("alertdialog");
     expect(within(dialog).getByText(/Granting an administrator role/)).toBeInTheDocument();
-    await user.click(within(dialog).getByRole("button", { name: "Change role" }));
-    await waitFor(() => expect(setRole).toHaveBeenCalledWith(7, "platform_admin", undefined));
+    await user.type(within(dialog).getByLabelText(/Reason/), "covers on-call");
+    await user.click(within(dialog).getByRole("button", { name: "Request role change" }));
+    await waitFor(() => expect(setRole).toHaveBeenCalledWith(7, "platform_admin", "covers on-call"));
+    expect(await screen.findByText(/a different Admin must approve it/)).toBeInTheDocument();
   });
 
   it("force logout confirms, then reports the truthful count", async () => {

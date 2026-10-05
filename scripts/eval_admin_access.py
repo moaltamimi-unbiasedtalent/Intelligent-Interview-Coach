@@ -67,11 +67,11 @@ def run() -> dict[str, tuple[bool, str]]:
           and "with_for_update" in repo, "deactivation and demotion both check, rows locked")
     check("self_lockout_enforced_server_side",
           "You cannot deactivate your own account." in read("src/api/routes/admin.py")
-          and "You cannot remove your own admin role." in read("src/api/routes/admin.py"), "route-level invariants")
+          and "You cannot request a role change for your own account." in read("src/admin_security/role_changes.py"), "route-level invariants (W10.13: role changes are governed requests; nobody requests or approves one for themselves)")
 
     check("roles_are_code_defined_presets_only",
           set(PLATFORM_ROLES) == {perm.ROLE_CANDIDATE, *perm.ADMIN_ROLES}
-          and "if body.role not in PLATFORM_ROLES" in read("src/api/routes/admin.py"), "no custom roles")
+          and "if requested_role not in PLATFORM_ROLES" in read("src/admin_security/role_changes.py"), "no custom roles")
     persistence = read("src/persistence.py")
     check("no_role_or_permission_tables",
           not re.search(r"class\s+(Role|Permission|RolePermission|UserPermission|CustomRole)\b", persistence), "none")
@@ -101,7 +101,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("admin_ui_uses_verified_navigation", 'from "next/link"' not in ui, "VerifiedLink only")
 
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_")), mig[-1])
+    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_")), mig[-1])
     return out
 
 

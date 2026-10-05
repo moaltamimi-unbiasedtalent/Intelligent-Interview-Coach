@@ -8,6 +8,7 @@ import { useAuthOptional } from "@/components/auth/AuthProvider";
 import type { AdminUserDetail } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
 import { PlanControl } from "./PlanControl";
+import { useStepUp } from "./StepUp";
 import { KeyValue, Panel, PermissionGate, ResourceState, Table, btn, field, useAdminResource } from "./ui";
 
 type Pending = null | "deactivate" | "reactivate" | "logout" | "role";
@@ -36,6 +37,7 @@ function Detail({ d, reload }: { d: AdminUserDetail; reload: () => void }) {
   const [pending, setPending] = useState<Pending>(null);
   const [role, setRole] = useState(a.platform_role);
   const [notice, setNotice] = useState<string | null>(null);
+  const stepUp = useStepUp();
   const done = (msg: string) => {
     setNotice(msg);
     reload();
@@ -76,7 +78,7 @@ function Detail({ d, reload }: { d: AdminUserDetail; reload: () => void }) {
                 {d.access.assignable_roles.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
             </label>
-            <button type="button" className={btn} disabled={role === a.platform_role} onClick={() => setPending("role")}>Change role</button>
+            <button type="button" className={btn} disabled={role === a.platform_role} onClick={() => setPending("role")}>Request role change</button>
           </div>
         ) : null}
       </Panel>
@@ -133,18 +135,19 @@ function Detail({ d, reload }: { d: AdminUserDetail; reload: () => void }) {
         }}>
         <p>Every live session of this account ends now. The account stays active.</p>
       </ActionDialog>
-      <ActionDialog open={pending === "role"} title="Change platform role?"
-        confirmLabel="Change role" onClose={() => setPending(null)}
+      <ActionDialog open={pending === "role"} title="Request a platform role change?"
+        confirmLabel="Request role change" reasonRequired onClose={() => setPending(null)}
         onConfirm={async (reason) => {
-          await api.admin.setRole(a.user_id, role, reason || undefined);
-          done(`Role changed to ${role}.`);
+          await stepUp.run(() => api.admin.requestRoleChange(a.user_id, role, reason));
+          done(`Role change to ${role} requested. Nothing has changed yet: a different Admin must approve it.`);
         }}>
-        <p>Change from {a.platform_role} to {role}. The new permissions apply on the next request.</p>
+        <p>Request a change from {a.platform_role} to {role}. The role does not change until a different Admin approves; you will be asked to confirm your password.</p>
         <p>
-          <strong>Granting an administrator role gives this account access to the admin area; removing one ends it
-          immediately.</strong> Every role change is recorded in the audit log.
+          <strong>Granting an administrator role gives this account access to the admin area.</strong> You cannot request a change for your own
+          account, and the account concerned cannot approve it. Every step is recorded in the audit log.
         </p>
       </ActionDialog>
+      {stepUp.dialog}
     </div>
   );
 }

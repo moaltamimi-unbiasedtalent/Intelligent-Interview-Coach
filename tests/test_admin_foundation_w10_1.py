@@ -153,15 +153,16 @@ def test_p9_deactivated_admin_is_denied(env):
 
 
 def test_p10_role_assign_needs_its_own_permission_and_validates_role(env):
+    from tests._role_gov import change_role, request_change
     _, support = env.user("support_operator")
     target, _ = env.user("user")
-    assert env.c.post(f"/api/v1/admin/users/{target}/role", json={"role": "billing_admin"},
+    assert env.c.post("/api/v1/admin/role-changes", json={"target_user_id": target, "role": "billing_admin", "reason": "x"},
                       cookies=support).status_code == 403
     _, admin = env.user("platform_admin")
-    assert env.c.post(f"/api/v1/admin/users/{target}/role", json={"role": "root"},
-                      cookies=admin).status_code == 422
-    assert env.c.post(f"/api/v1/admin/users/{target}/role", json={"role": "billing_admin"},
-                      cookies=admin).status_code == 200
+    _, admin2 = env.user("platform_admin")
+    assert request_change(env.c, admin, target, "root", password=PW).status_code == 422
+    req, ok = change_role(env.c, admin, admin2, target, "billing_admin", password=PW)
+    assert req.status_code == 200 and ok.status_code == 200
     assert env.accounts.get_account(target).platform_role == "billing_admin"
 
 
@@ -176,30 +177,44 @@ def test_me_exposes_server_resolved_permissions(env):
 # ---------------- audit AUD1-AUD8 --------------------------------------------------------------------
 
 def test_aud1_role_change_audited_with_request_id_and_before_after(env):
+    from tests._role_gov import approve, request_change
     _, admin = env.user("platform_admin")
+    _, admin2 = env.user("platform_admin")
     target, _ = env.user("user")
-    r = env.c.post(f"/api/v1/admin/users/{target}/role", json={"role": "support_operator"}, cookies=admin)
+    q = request_change(env.c, admin, target, "support_operator", password=PW)
+    assert q.status_code == 200
+    rq = env.events(A.ADMIN_ROLE_CHANGE_REQUESTED)[0]
+    assert rq["request_id"] == q.headers["X-Request-Id"]
+    assert rq["context"]["before"] == "user" and rq["context"]["after"] == "support_operator"
+    assert rq["target_id"] == str(target) and rq["result"] == "success"
+    r = approve(env.c, admin2, q.json()["public_id"], password=PW)
     assert r.status_code == 200
-    ev = env.events(A.ADMIN_PLATFORM_ROLE_CHANGE)[0]
+    ev = env.events(A.ADMIN_ROLE_CHANGE_APPROVED)[0]
     assert ev["request_id"] == r.headers["X-Request-Id"]
-    assert ev["context"]["before"] == "user" and ev["context"]["after"] == "support_operator"
-    assert ev["target_id"] == str(target) and ev["result"] == "success"
+    assert ev["context"]["before_role"] == "user" and ev["context"]["requested_role"] == "support_operator"
 
 
 def test_aud2_audit_failure_rolls_back_the_mutation(env, monkeypatch):
+    from tests._role_gov import approve, request_change
     _, admin = env.user("platform_admin")
+    _, admin2 = env.user("platform_admin")
     target, _ = env.user("user")
     from src.auth_repository import AccountRepository
+
+    q = request_change(env.c, admin, target, "support_operator", password=PW)
+    assert q.status_code == 200
 
     def boom(session, audit):
         raise RuntimeError("audit store down")
 
     monkeypatch.setattr(AccountRepository, "_stage_audit", staticmethod(boom))
-    r = env.c.post(f"/api/v1/admin/users/{target}/role", json={"role": "support_operator"}, cookies=admin)
+    r = approve(env.c, admin2, q.json()["public_id"], password=PW)
     assert r.status_code == 500
+    r2 = request_change(env.c, admin, target, "billing_admin", password=PW)
+    assert r2.status_code in (409, 500)
     monkeypatch.undo()
     assert env.accounts.get_account(target).platform_role == "user"
-    assert not env.events(A.ADMIN_PLATFORM_ROLE_CHANGE)
+    assert not env.events(A.ADMIN_ROLE_CHANGE_APPROVED)
 
 
 def test_aud2b_commit_time_audit_failure_rolls_back_plan_and_status(env, monkeypatch):
@@ -291,7 +306,8 @@ def test_aud8_status_and_tier_changes_are_audited_atomically(env):
     t = env.events(A.ADMIN_SUBSCRIPTION_ASSIGNED)[0]["context"]
     assert (s["before"], s["after"]) == ("active", "deactivated")
     assert (t["before"], t["after"]) == ("basic", "premium")
-    assert env.c.post("/api/v1/admin/users/99999/role", json={"role": "user"}, cookies=admin).status_code == 404
+    from tests._role_gov import request_change
+    assert request_change(env.c, admin, 99999, "user", password=PW).status_code == 404
 
 
 # ---------------- providers PR1-PR6 ------------------------------------------------------------------
@@ -396,7 +412,7 @@ def test_c2_build_metadata_reads_injected_env_and_sanitizes(env, monkeypatch):
 
 def test_c3_repository_head_is_the_real_alembic_head():
     from src.application.admin_command_center import repository_head
-    assert repository_head() == "0024_reporting_analytics"
+    assert repository_head() == "0025_security_audit_incidents"
 
 
 def test_c4_migration_state_unknown_match_mismatch(env):
@@ -410,7 +426,7 @@ def test_c4_migration_state_unknown_match_mismatch(env):
     m = migration_status(sf)
     assert m["state"] == "mismatch" and m["warning"] and "never migrates automatically" in m["warning"]
     with sf() as s:
-        s.execute(text("UPDATE alembic_version SET version_num='0024_reporting_analytics'"))
+        s.execute(text("UPDATE alembic_version SET version_num='0025_security_audit_incidents'"))
         s.commit()
     assert migration_status(sf)["state"] == "match"
 

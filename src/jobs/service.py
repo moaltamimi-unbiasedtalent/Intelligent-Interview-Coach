@@ -164,6 +164,11 @@ class JobService:
                     Job.lease_expires_at < now).values(**values))
                 s.commit()
                 reaped += res.rowcount or 0
+                if exhausted and (res.rowcount or 0):
+                    with self._sf() as s2:
+                        pid = s2.scalar(select(Job.public_id).where(Job.id == job_id))
+                        jtype = s2.scalar(select(Job.job_type).where(Job.id == job_id))
+                    self._alert_failed(jtype or "unknown", pid or "")
         return reaped
 
     def claim(self, worker_id: str, *, now: datetime | None = None,
@@ -263,7 +268,15 @@ class JobService:
             s.commit()
         if res.rowcount != 1:
             raise LeaseLost(claim.public_id)
+        if not will_retry:
+            self._alert_failed(claim.job_type, claim.public_id)
         return "retry_scheduled" if will_retry else "failed"
+
+    def _alert_failed(self, job_type: str, public_id: str) -> None:
+        """A terminal job failure raises ONE deduplicated in-app Admin alert per job type (P10B-W10.13). Best-effort; never raises."""
+        from src.admin_security.alerts import observe_job_failed
+
+        observe_job_failed(self._sf, job_type=job_type, job_public_id=public_id)
 
     # ------------------------------------------------------------------ admin actions (state machine)
     def cancel(self, public_id: str, *, audit: dict | None = None) -> dict:

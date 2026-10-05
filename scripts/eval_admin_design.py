@@ -41,7 +41,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("matrix_permissions_defined_in_plan", not undefined, ", ".join(undefined[:4]) or f"{len(perms_used)} permissions all defined")
     check("matrix_has_current_and_planned", {r[2] for r in rows} == {"CURRENT", "PLANNED"}, "both labels used")
 
-    admin_py = read(ROOT / "src/api/routes/admin.py") + read(ROOT / "src/api/routes/admin_config.py")
+    admin_py = read(ROOT / "src/api/routes/admin.py") + read(ROOT / "src/api/routes/admin_config.py") + read(ROOT / "src/api/routes/admin_security.py")   # /audit moved to admin_security.py in W10.13
     current_routes = ["/home", "/users", "/workspaces", "/privacy-requests", "/feedback", "/pause", "/providers", "/audit"]
     missing = [r for r in current_routes if f'"{r}' not in admin_py]
     check("current_admin_routes_exist", not missing, ", ".join(missing) or f"{len(current_routes)} documented routes exist")
@@ -51,7 +51,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("planned_domains_not_built_routes", not forbidden_files, ", ".join(f.name for f in forbidden_files) or "no incident routes yet (support W10.3, plans W10.4, integrations W10.6, legal W10.10, billing W10.5 shipped)")
 
     persistence = read(ROOT / "src/persistence.py").lower()
-    built = [t for t in ("subscription_plan", "background_job", "integration_config", "secret_reference", "incident") if t in persistence]   # feature_flag_overrides shipped in W10.11
+    built = [t for t in ("subscription_plan", "background_job", "integration_config", "secret_reference") if t in persistence]   # feature_flag_overrides shipped in W10.11; incidents in W10.13
     check("planned_entities_not_in_schema", not built, ", ".join(built) or "no W10 entities in persistence.py")
 
     deps = read(ROOT / "src/api/dependencies.py")
@@ -72,7 +72,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("preset_names_final", all(n in plan for n in ("platform_admin", "support_operator", "billing_admin", "knowledge_admin", "security_privacy_admin", "operations_admin")),
           "six role presets named")
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_")), mig[-1])
+    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_")), mig[-1])
     check("referenced_source_paths_exist",
           all((ROOT / p).exists() for p in re.findall(r"`(src/[A-Za-z0-9_/]+\.py)`", plan + adr)),
           "every `src/...py` path named in the plan exists")

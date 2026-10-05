@@ -108,7 +108,14 @@ SUPPORT_POLICIES: dict[str, RateLimitPolicy] = {
     "legal_accept_user": RateLimitPolicy("legal_accept_user", 30, 3600, "user"),
 }
 
-POLICIES: dict[str, RateLimitPolicy] = {**AUTH_POLICIES, **COST_POLICIES, **SUPPORT_POLICIES}
+# --- Security policies (W10.13). Per-Admin ceilings on step-up and role-change actions (per-process unless a shared store is active, like every bucket). ---
+SECURITY_POLICIES: dict[str, RateLimitPolicy] = {
+    "stepup_user": RateLimitPolicy("stepup_user", 5, 300, "user"),
+    "role_request_user": RateLimitPolicy("role_request_user", 20, 3600, "user"),
+    "role_approve_user": RateLimitPolicy("role_approve_user", 30, 3600, "user"),
+}
+
+POLICIES: dict[str, RateLimitPolicy] = {**AUTH_POLICIES, **COST_POLICIES, **SUPPORT_POLICIES, **SECURITY_POLICIES}
 
 
 class RateLimiter(Protocol):

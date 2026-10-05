@@ -558,6 +558,31 @@ class SessionRepository:
             session.commit()
             return row.user_id
 
+    # -- step-up (P10B-W10.13): password re-authentication of THIS server-side session; not MFA --------------------------------
+    def elevate(self, token_hash: str, *, seconds: int) -> datetime | None:
+        """Mark one LIVE session as recently re-authenticated. Returns the expiry, or None when the session is not live."""
+        now = utcnow()
+        with self._session_factory() as session:
+            row = session.get(AuthSession, token_hash)
+            if row is None or row.revoked_at is not None or _aware(row.expires_at) <= now:
+                return None
+            row.elevated_at, row.elevated_until = now, now + timedelta(seconds=int(seconds))
+            session.commit()
+            return row.elevated_until
+
+    def elevated_until(self, token_hash: str) -> datetime | None:
+        """The elevation expiry of a live session whose account is active, else None. A revoked/expired session never authorises anything."""
+        now = utcnow()
+        with self._session_factory() as session:
+            row = session.get(AuthSession, token_hash)
+            if row is None or row.revoked_at is not None or _aware(row.expires_at) <= now or row.elevated_until is None:
+                return None
+            if _aware(row.elevated_until) <= now:
+                return None
+            if session.scalar(select(User.status).where(User.id == row.user_id)) != ACCOUNT_STATUS_ACTIVE:
+                return None
+            return _aware(row.elevated_until)
+
     def revoke(self, token_hash: str) -> bool:
         with self._session_factory() as session:
             row = session.get(AuthSession, token_hash)
@@ -651,6 +676,9 @@ class TokenRepository:
             return len(rows)
 
 
+_OBSERVED_AUDIT_EVENTS = frozenset({"account.login", "admin.access.denied"})
+
+
 class AuditRepository:
     """Bounded security/privacy audit log (append-only in practice)."""
 
@@ -681,6 +709,11 @@ class AuditRepository:
                 )
             )
             session.commit()
+        if event_type in _OBSERVED_AUDIT_EVENTS:
+            # P10B-W10.13: deterministic in-app alert rules. Best-effort; never changes the outcome of the audited operation.
+            from src.admin_security.alerts import observe_audit_event
+
+            observe_audit_event(self._session_factory, event_type=event_type, actor_user_id=actor_user_id, result=result)
 
     def recent_for_actor(self, actor_user_id: int, *, limit: int = 50) -> list[dict]:
         with self._session_factory() as session:

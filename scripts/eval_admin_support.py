@@ -43,7 +43,7 @@ def run() -> dict[str, tuple[bool, str]]:
           all(t in mig for t in ('"support_tickets"', '"support_messages"', '"support_internal_notes"'))
           and 'down_revision = "0014_opportunities"' in mig and "drop_table" in mig, "0015 chains from 0014; reversible")
     heads = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("migration_head_is_support", heads[-1].startswith(("0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_")), heads[-1])
+    check("migration_head_is_support", heads[-1].startswith(("0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_")), heads[-1])
     check("check_constraints_and_unique_public_id",
           all(c in mig for c in ("ck_support_tickets_status", "ck_support_tickets_category", "ck_support_tickets_priority"))
           and "unique=True" in mig, "status/category/priority CHECKs; unique public id")

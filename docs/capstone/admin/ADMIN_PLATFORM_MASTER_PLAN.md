@@ -237,7 +237,7 @@ no secrets, no candidate content. Add DB-level protection (no UPDATE/DELETE gran
 role changed, plan/price/subscription changed, refund, integration enabled, credential rotated, model activated, source approved/disabled, retention changed, deletion initiated, flag changed, break-glass
 (reserved), failed admin access. Standardise event names (`<domain>.<action>`).
 
-## 21. Incidents (W10.13)
+## 21. Incidents (W10.13: implemented on `feat/p10b-w10-13-security-audit-incidents`; complete when merged; see `W10_13_SECURITY_AUDIT_INCIDENT_MANAGEMENT.md`)
 Incident: title, severity, status, affected service, start/end, owner, affected-user estimate, linked tickets, root cause, remediation, audit trail. In-app alerts only (no external paging in Capstone).
 
 ## 22. Release / environment health
