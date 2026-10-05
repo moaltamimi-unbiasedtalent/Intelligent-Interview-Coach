@@ -335,7 +335,7 @@ Critical path: W10.1 -> W10.2 -> W10.4 -> W10.6 -> W10.9 -> W10.8 -> W10.10 -> W
 | W10.11 | Feature flags & safe configuration | M | desirable | 11 |
 | W10.12 | Reporting, analytics & AI economics | L | critical (essential) / desirable (economics) | 12 |
 | W10.13 | Security, audit & incident management | L | critical | 13 |
-| W10.14 | Full Admin qualification (implemented on `feat/p10b-w10-14-full-admin-qualification`; complete only after merge; see `W10_14_FULL_ADMIN_QUALIFICATION.md`) | L | critical | 14 |
+| W10.14 | Full Admin qualification (COMPLETE, merged in PR #130, main `ba58086`; ADMIN PLATFORM QUALIFIED; see `W10_14_FULL_ADMIN_QUALIFICATION.md`) | L | critical | 14 |
 Refinement rationale: W10.9 is moved before W10.8 and W10.10 because both need a job model; audit foundation moves from W10.13 into W10.1 because every sensitive wave needs it; billing (W10.5) follows
 plans and is desirable (mock). Historical numbering is retained.
 
