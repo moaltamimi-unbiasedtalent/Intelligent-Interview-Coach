@@ -220,7 +220,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("migration_chain_and_nothing_seeded", 'down_revision = "0024_reporting_analytics"' in mig and "bulk_insert" not in mig and "INSERT INTO" not in mig and "def downgrade" in mig and "trg_" in mig)
     heads = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
     check("alembic_head_is_0025", heads[-1].startswith("0025_security_audit_incidents"), heads[-1])
-    check("no_w10_14_code", not (ROOT / "docs/capstone/admin/W10_14_FULL_ADMIN_QUALIFICATION.md").exists())
+    check("no_w11_code", not list((ROOT / "docs/capstone").rglob("W11*")))   # W10.14 (qualification only, no feature code) now exists; W11 must not
     check("tests_exist", all(x in read("tests/test_security_w10_13.py") for x in ("test_audit_update_and_delete_are_rejected_by_the_database", "test_role_matrix_14_stale_target_role_is_never_applied",
                                                                              "test_account_deletion_still_succeeds_and_only_anonymises_the_audit_actor", "test_step_up_binds_to_the_exact_session")))
     return out

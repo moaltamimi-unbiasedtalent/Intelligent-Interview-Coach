@@ -9,7 +9,7 @@ One additive migration (`0025_security_audit_incidents`). No new dependency. 0 p
 `4b09022add3db5996354b2bacde7ed82915b8979` (W10.12 complete and integrated; Alembic head `0024_reporting_analytics`).
 
 ## 2. W10.12 PRs / merge
-Feature PR #126 (merge `18eebed64ff027b38546d6c135a7993f191fe2ef`); completion-docs PR #127 (merge `4b09022`). Documentation hygiene in this wave: the Feature flags row of the capability matrix still said "W10.11 NOT STARTED" and now says COMPLETE (PR #125). Nothing else was reworded, including the older W10.2 "complete when merged" text.
+Feature PR #126 (merge `18eebed64ff027b38546d6c135a7993f191fe2ef`); completion-docs PR #127 (merge `4b09022`). W10.13 itself: feature PR #128 (merge `b47a10b37219cfe51c117fa1b8d99c964a18c5ff`) and completion-docs PR #129 (head `0e2102d2be892039b05b8f54389c06823e1eedb1`, merge/main `a077f26305776bcec76cab1c0a408ffc1fd5132f`). Documentation hygiene in this wave: the Feature flags row of the capability matrix still said "W10.11 NOT STARTED" and now says COMPLETE (PR #125). Nothing else was reworded, including the older W10.2 "complete when merged" text.
 
 ## 3. Branch
 `feat/p10b-w10-13-security-audit-incidents`.
@@ -27,7 +27,7 @@ Feature PR #126 (merge `18eebed64ff027b38546d6c135a7993f191fe2ef`); completion-d
 | Audit | `AuditEvent` row; `AuditRepository.record/recent/recent_for_actor`; `GET /admin/audit` already returned **cross-actor** events (not own-actor only) but unpaginated (limit <= 500), filtered by event type only, with no export; actor FK `ON DELETE SET NULL`; no update/delete API; **no DB protection** | `platform.audit.read` | durable | audit.read | no filters/pagination/export/DB guard | upgraded; export; triggers |
 | Incident domain / alerts / `/admin/security` | none existed | - | - | - | all missing | built |
 
-(The owner prompt mentions `/auth/admin/audit`; no such route exists - the only audit endpoint is `GET /admin/audit`.)
+(Correction recorded by W10.14: a foundation route `GET /auth/admin/audit` DOES exist in `src/api/routes/auth.py`. It is gated by `platform.audit.read` and returns only the CALLER's own recent audit rows (`recent_for_actor`, limit 50); it is not a global view, not a mutation path and returns no content. The W10.13 sentence that no such route exists was wrong.)
 
 ## 5. Security-event sources
 A security event is a typed PROJECTION over `audit_events` (there is no second log): failed `account.login`, `account.reset_*`, `admin.access.denied`, the legacy `admin.platform_role_change` history, the new `admin.role_change.*`, `admin.sessions_revoked`, `admin.account_status_change`, `admin.step_up.*`, `admin.audit.exported`. A successful login is not a security event.

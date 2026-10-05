@@ -1,6 +1,6 @@
 # P10B-W10.2 - Users, Access & Workspace Administration
 
-**Status:** implemented on branch `feat/p10b-w10-2-users-access-workspaces`; **complete when merged to `main`**. **W10.3 is NOT STARTED.**
+**Status:** **COMPLETE: merged to `main` in PR #113 (merge commit `2923d5c`)**. **W10.3 is NOT STARTED.**
 Migration-free (Alembic head stays `0014_opportunities`). No new dependency. 0 paid/live calls.
 
 ## 1. Starting point

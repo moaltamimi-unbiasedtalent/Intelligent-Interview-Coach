@@ -21,6 +21,10 @@ ROOT = Path(__file__).resolve().parent.parent
 # add the repo root to sys.path before importing any `src.*` module (imported inside run()).
 sys.path.insert(0, str(ROOT))
 
+# TEST ISOLATION (W10.14): importing the pytest isolation module redirects DATABASE_URL/Chroma to a temp directory, disables .env and makes any non-temp engine FAIL FAST,
+# so this evaluator can never write a developer store.
+import tests.conftest  # noqa: E402,F401
+
 
 def read(rel: str) -> str:
     p = ROOT / rel
