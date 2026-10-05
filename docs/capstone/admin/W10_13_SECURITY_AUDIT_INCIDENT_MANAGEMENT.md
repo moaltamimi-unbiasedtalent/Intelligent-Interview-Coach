@@ -1,6 +1,6 @@
 # P10B-W10.13 - Security, Audit and Incident Management
 
-**Status:** implemented on branch `feat/p10b-w10-13-security-audit-incidents`; **complete when merged to `main`**. **W10.14 is NOT STARTED.**
+**Status:** **W10.13 COMPLETE** - merged to `main` in PR #128 (feature head `44f8a7397c4cadf1df9c8f3b603dbaad7410ff29`, merge commit `b47a10b37219cfe51c117fa1b8d99c964a18c5ff`, 2026-10-05); Alembic head `0025_security_audit_incidents`; qualification used a **disclosed contamination with stable post-incident qualification baseline** (see section 54). ROLE-W10-01 remains deferred to W10.14. **W10.14 is NOT STARTED.**
 One additive migration (`0025_security_audit_incidents`). No new dependency. 0 paid/live calls. Permission registry stays at 43. ROLE-W10-01 stays deferred to W10.14.
 
 > SECURITY ADMINISTRATION IS NOT PRIVATE-CANDIDATE-DATA ACCESS. No break-glass, no impersonation, no CV / answer / chat / memory / document / prompt browsing. Audit history is not silently mutable. A role change never applies from one Admin alone. Step-up is password re-authentication, not MFA. Alerting is in-app only; nothing pages externally; no live security provider is called.
@@ -178,10 +178,34 @@ A small Security panel with active critical/high, acknowledged alert and open-in
 
 **Final qualification (exact tree, before the PR):** backend 3106 passed, 4 skipped (live Adzuna, disposable PostgreSQL, Streamlit context, RAGAS conditional), 0 failed; Vitest 756 passed; Playwright 221 passed; typecheck, lint, production build clean; i18n scanner 0 offenders; Ruff and compileall clean; 147 admin routes, 0 ungated; 43 permissions.
 
-## 54. Isolation (INCIDENT DISCLOSED)
-Qualification runs use temp databases and pytest's own isolation (`tests/conftest.py` refuses any non-temp engine). The six protected stores were fingerprinted at the W10.13 start: dev DB `64d66596...`, checkpoint `b56d0c39...`, Chroma `6357c057...`, research cache `d6708df4...` (the disclosed post-W10.11 incident state), `evaluations/` `67259aba...`.
+## 54. Isolation: qualification environment incident
+Qualification runs use temp databases and pytest's own isolation (`tests/conftest.py` refuses any non-temp engine). The six protected stores were fingerprinted at the W10.13 start: dev DB `64d66596...`, checkpoint `b56d0c39...`, Chroma `6357c057...`, research cache `d6708df4...` (itself the disclosed post-W10.11 incident state), `evaluations/` `67259aba...`.
 
-**Incident:** while the new `scripts/eval_admin_security.py` was being developed it ran as a bare `python` script (not under pytest), inherited the developer `DATABASE_URL`, and its use of the real app routes (`/auth/account/delete`, `/support/tickets`) made the app run `create_all` against `data/interview_studio.db`. Effect: the dev DB gained the EMPTY W10.12/W10.13 tables (dev DB hash `64d66596...` to `8cd20d50...`, schema objects 141 to 224, plus the `incident_events` append-only triggers). Read-only inspection afterwards shows the rows intact (11 users, 9 audit rows, latest 2026-10-03, no evaluator rows, every new table empty); the checkpoint store, Chroma, research cache and `evaluations/` fingerprints are unchanged. Fixed: the evaluator now imports `tests.conftest` first (temp `DATABASE_URL`, `.env` disabled, any non-temp engine fails fast). The dev DB was NOT touched further (no repair, no re-probe). **W10.13 therefore cannot claim "dev DB before == after" against the W10.13 start baseline.** Against the post-incident baseline (`8cd20d50...`, 224 objects) the final full backend run, the 39 CI evaluators and the rest of the qualification left all six stores unchanged. Recovery from a Time Machine local snapshot is possible but would overwrite developer data, so it is an owner decision. Lesson recorded in agent memory: standalone scripts must isolate before importing the app.
+### Qualification environment incident
+During development of `scripts/eval_admin_security.py`, one bare-Python evaluator run occurred before the evaluator isolation bootstrap. It inherited the developer `DATABASE_URL` and invoked ORM `create_all` against `data/interview_studio.db`.
+
+Observed impact:
+- dev DB fingerprint changed from the W10.13-start baseline (`64d66596...` to `8cd20d50...`);
+- schema-object count changed from 141 to 224;
+- only empty W10.12/W10.13 tables and the `incident_events` append-only triggers were added;
+- existing user/audit data was verified read-only (11 users, 9 historical audit rows, no evaluator rows, every new table empty);
+- checkpoint, Chroma, research cache and `evaluations/` were unchanged.
+
+Correction:
+- the evaluator now imports `tests.conftest` first;
+- temp DB and no-dotenv isolation are mandatory;
+- non-temp database engines fail fast.
+
+Qualification interpretation:
+- **the original W10.13-start dev-DB fingerprint was NOT preserved, and the dev-DB isolation gate failed once because of evaluator contamination;** the defect was corrected;
+- the pre-wave dev-DB equality claim (pre-wave dev DB == post-wave dev DB) is NOT made;
+- the current post-incident dev DB (`8cd20d50...`, 224 schema objects) is the disclosed qualification baseline; the owner accepted this baseline;
+- the complete deterministic qualification after the correction (full backend, all 39 CI evaluators) left all six protected stores unchanged against that baseline;
+- migration correctness was proven on isolated fresh/temp databases, NOT on the contaminated dev DB (which was never migrated or modified afterwards);
+- no snapshot restoration was attempted and no claim is made that the dev DB was restored;
+- 0 live/paid calls.
+
+This is not "clean pre/post isolation". It is a disclosed contamination with a stable post-incident qualification baseline. W10.14 starts from the then-current protected-store baseline unless a separately approved environment-recovery operation happens outside qualification.
 
 ## 55. Manual QA
 39 checks on a freshly Alembic-migrated temp database with two real Admin accounts (see the final report for the mapping).

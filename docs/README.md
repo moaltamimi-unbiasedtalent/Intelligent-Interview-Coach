@@ -19,7 +19,7 @@ documents are historical evidence and are labelled where they could be mistaken 
 | Opportunities | [capstone/p10/p10b_wave6_opportunity_model.md](capstone/p10/p10b_wave6_opportunity_model.md) |
 | Workspaces, sharing, current admin foundations | [capstone/p6_5_workspaces_platform_admin.md](capstone/p6_5_workspaces_platform_admin.md) |
 | Admin mock billing and payment administration (W10.5, complete) | [capstone/admin/W10_5_BILLING_PAYMENT_ADMINISTRATION.md](capstone/admin/W10_5_BILLING_PAYMENT_ADMINISTRATION.md) |
-| Admin security, audit and incident management (W10.13, implemented) | [capstone/admin/W10_13_SECURITY_AUDIT_INCIDENT_MANAGEMENT.md](capstone/admin/W10_13_SECURITY_AUDIT_INCIDENT_MANAGEMENT.md) |
+| Admin security, audit and incident management (W10.13, complete) | [capstone/admin/W10_13_SECURITY_AUDIT_INCIDENT_MANAGEMENT.md](capstone/admin/W10_13_SECURITY_AUDIT_INCIDENT_MANAGEMENT.md) |
 | Admin reporting, analytics and AI economics (W10.12, complete) | [capstone/admin/W10_12_REPORTING_ANALYTICS_AI_ECONOMICS.md](capstone/admin/W10_12_REPORTING_ANALYTICS_AI_ECONOMICS.md) |
 | Admin feature flags and safe platform configuration, durable pause (W10.11, complete) | [capstone/admin/W10_11_FEATURE_FLAGS_SAFE_PLATFORM_CONFIGURATION.md](capstone/admin/W10_11_FEATURE_FLAGS_SAFE_PLATFORM_CONFIGURATION.md) |
 | Admin AI and model administration (W10.7, complete) | [capstone/admin/W10_7_AI_MODEL_ADMINISTRATION.md](capstone/admin/W10_7_AI_MODEL_ADMINISTRATION.md) |
