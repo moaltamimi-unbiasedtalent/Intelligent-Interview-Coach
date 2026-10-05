@@ -37,12 +37,16 @@ background-job abstraction (all long operations are synchronous), DB-backed feat
 
 | ID | Finding | Target | Required direction |
 |---|---|---|---|
-| SEC-W10-01 | account deactivation does not revoke active sessions (status checked only at login) | **W10.2** (first task; CLOSED by W10.2 when merged: sessions revoked in the deactivation transaction + request-time active-account check) | required security fix: revoke sessions on deactivation and add admin session revocation |
-| SEC-W10-02 | privileged admin audit writes swallow errors | **W10.1** | a sensitive privileged write must not silently succeed without audit evidence; transaction and failure semantics defined explicitly |
-| SEC-W10-03 | admin audit events lack request ids, failed admin access is not audited, naming is inconsistent | **W10.1** | canonical event names, request/correlation id, failed-authorization events, safe target/action metadata, no content or secrets |
-| SEC-W10-04 | admin privacy-request queue is permanently empty | **W10.10** | do not present a "working" privacy-request queue before the privacy-request domain exists: the W10.1 shell does not link or present it as operational |
+| SEC-W10-01 | account deactivation does not revoke active sessions (status checked only at login) | **W10.2** (first task; CLOSED by W10.2, PR #113: sessions revoked in the deactivation transaction + request-time active-account check) | required security fix: revoke sessions on deactivation and add admin session revocation |
+| SEC-W10-02 | privileged admin audit writes swallow errors | **W10.1 (CLOSED, PR #110)** | a sensitive privileged write must not silently succeed without audit evidence; transaction and failure semantics defined explicitly |
+| SEC-W10-03 | admin audit events lack request ids, failed admin access is not audited, naming is inconsistent | **W10.1 (CLOSED, PR #110)** | canonical event names, request/correlation id, failed-authorization events, safe target/action metadata, no content or secrets |
+| SEC-W10-04 | admin privacy-request queue is permanently empty | **W10.10 (CLOSED, PR #122)** | do not present a "working" privacy-request queue before the privacy-request domain exists: the W10.1 shell does not link or present it as operational |
 | SEC-W10-05 | pause state is process-local, lost on restart/replicas | **W10.11 (CLOSED: PR #125, durable `platform_pause_states`; see `W10_11_FEATURE_FLAGS_SAFE_PLATFORM_CONFIGURATION.md`)** | the Admin UI now reports the durable, shared state |
-| SEC-W10-06 | `/admin/providers` echoes the raw email-provider setting | **W10.1** (early) | admin provider/config responses return safe metadata only (established now, before W10.6 expands them) |
+| SEC-W10-06 | `/admin/providers` echoes the raw email-provider setting | **W10.1 (CLOSED, PR #110)** | admin provider/config responses return safe metadata only (established now, before W10.6 expands them) |
+
+### ROLE-W10-01 - CLOSED (W10.14)
+**Decision:** least-privilege domain separation is authoritative. The W10.0 persona wording (Platform Administrator holding every permission except break-glass) is superseded: `platform_admin` is a broad cross-domain platform operator with an explicit code-defined preset; it is NOT billing, privacy-execution, security/incident-mutation, knowledge-approval, job-operations, configuration, secret-rotation or audit-export authority.
+**Rationale:** it preserves separation of duties, matches the architecture actually built across W10.1-W10.13, keeps permission strings authoritative and role presets code-defined, and needs no migration, no new permission and no private candidate-data access. No permission was added to `platform_admin` to satisfy the stale wording; the guards that prove the decision are `tests/test_admin_qualification_w10_14.py` and `scripts/eval_admin_qualification.py`. The 15 specialist permissions intentionally absent from the preset are listed in `W10_14_FULL_ADMIN_QUALIFICATION.md`.
 
 ## 3. Target architecture
 ```
@@ -59,7 +63,7 @@ in the same transaction; mocks are labelled; no browser-based code deployment.
 ## 4. Personas
 | Persona | Purpose | Maps initially to |
 |---|---|---|
-| Platform Administrator | broad operation, role assignment, flags | `platform_admin` (all non-break-glass permissions) |
+| Platform Administrator | broad cross-domain platform operation, role assignment, flags | `platform_admin` - a broad platform operator with an explicit code-defined **least-privilege** preset (28 of 43 permissions); specialist high-risk permissions remain with their domain roles (ROLE-W10-01, CLOSED by W10.14) |
 | Support Operator | tickets, account troubleshooting (metadata only) | role preset `support_operator` |
 | Billing Administrator | plans, subscriptions, invoices | preset `billing_admin` |
 | Knowledge Administrator | sources, ingestion, indexing, provenance | preset `knowledge_admin` |
@@ -319,7 +323,7 @@ Critical path: W10.1 -> W10.2 -> W10.4 -> W10.6 -> W10.9 -> W10.8 -> W10.10 -> W
 |---|---|---|---|---|
 | W10.0 | Architecture & control-plane design (this) | M | critical | 0 |
 | W10.1 | Admin shell, command center, permission framework, audit foundation, build metadata | L | critical | 1 |
-| W10.2 | Users, access & workspace administration (incl. SEC-W10-01) (implemented on `feat/p10b-w10-2-users-access-workspaces`; complete when merged) | L | critical | 2 |
+| W10.2 | Users, access & workspace administration (incl. SEC-W10-01) (COMPLETE, PR #113) | L | critical | 2 |
 | W10.3 | Customer support & ticketing | XL | critical | 3 |
 | W10.4 | Plans, subscriptions & entitlements | L | critical | 4 |
 | W10.6 | Integrations & API connections (+ SecretStore) | L | critical | 5 |
@@ -331,7 +335,7 @@ Critical path: W10.1 -> W10.2 -> W10.4 -> W10.6 -> W10.9 -> W10.8 -> W10.10 -> W
 | W10.11 | Feature flags & safe configuration | M | desirable | 11 |
 | W10.12 | Reporting, analytics & AI economics | L | critical (essential) / desirable (economics) | 12 |
 | W10.13 | Security, audit & incident management | L | critical | 13 |
-| W10.14 | Full Admin qualification | L | critical | 14 |
+| W10.14 | Full Admin qualification (implemented on `feat/p10b-w10-14-full-admin-qualification`; complete only after merge; see `W10_14_FULL_ADMIN_QUALIFICATION.md`) | L | critical | 14 |
 Refinement rationale: W10.9 is moved before W10.8 and W10.10 because both need a job model; audit foundation moves from W10.13 into W10.1 because every sensitive wave needs it; billing (W10.5) follows
 plans and is desirable (mock). Historical numbering is retained.
 

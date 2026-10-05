@@ -16,6 +16,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+# TEST ISOLATION (W10.14): importing the pytest isolation module redirects DATABASE_URL/Chroma to a temp directory, disables .env and makes any non-temp engine FAIL FAST,
+# so this evaluator can never write a developer store.
+import tests.conftest  # noqa: E402,F401
+
 BROKERS = ("celery", "kombu", "rabbitmq", "pika", "kafka", "apscheduler", "dramatiq", "huey")
 
 

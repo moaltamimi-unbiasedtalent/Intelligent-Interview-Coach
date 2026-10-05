@@ -116,6 +116,8 @@ jobs:
         run: python scripts/eval_admin_reporting.py
       - name: Admin security, audit and incidents (P10B-W10.13; offline; safe security events, append-only audit at the database, bounded export, incidents with append-only history, in-app alerts, two-person role change with step-up, no break-glass)
         run: python scripts/eval_admin_security.py
+      - name: Full Admin qualification (P10B-W10.14; offline; least-privilege role model, 43-permission matrix, every route x persona, no private-data superuser, secret/privacy boundaries, mock-billing truthfulness, no break-glass)
+        run: python scripts/eval_admin_qualification.py
       - name: Rate-limit evaluation (Capstone P8; offline; auth + cost buckets, window reset, anti-enumeration)
         run: python scripts/eval_rate_limits.py
       - name: Hosting-readiness evaluation (Capstone P8; offline; env/cookies/CORS/headers/pause/malware — does NOT certify EX-12)

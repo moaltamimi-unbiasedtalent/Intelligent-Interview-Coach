@@ -1,0 +1,165 @@
+{
+ "permissions_total": 43,
+ "personas": {
+  "billing_admin": {
+   "nav": [
+    "/admin",
+    "/admin/users",
+    "/admin/plans",
+    "/admin/billing",
+    "/admin/reports"
+   ],
+   "permissions": [
+    "platform.billing.read",
+    "platform.billing.refund",
+    "platform.overview.read",
+    "platform.plans.manage",
+    "platform.plans.price.change",
+    "platform.plans.read",
+    "platform.reports.commercial.read",
+    "platform.subscriptions.manage",
+    "platform.subscriptions.read",
+    "platform.users.read"
+   ]
+  },
+  "knowledge_admin": {
+   "nav": [
+    "/admin",
+    "/review",
+    "/admin/knowledge",
+    "/admin/ai",
+    "/admin/jobs"
+   ],
+   "permissions": [
+    "platform.ai.read",
+    "platform.jobs.read",
+    "platform.knowledge.approve",
+    "platform.knowledge.manage",
+    "platform.knowledge.read",
+    "platform.overview.read"
+   ]
+  },
+  "operations_admin": {
+   "nav": [
+    "/admin",
+    "/review",
+    "/admin/reports",
+    "/admin/configuration",
+    "/admin/flags",
+    "/admin/ai",
+    "/admin/jobs",
+    "/admin/integrations",
+    "/admin/providers"
+   ],
+   "permissions": [
+    "platform.ai.read",
+    "platform.config.manage",
+    "platform.flags.manage",
+    "platform.flags.read",
+    "platform.integrations.manage",
+    "platform.integrations.read",
+    "platform.jobs.manage",
+    "platform.jobs.read",
+    "platform.overview.read",
+    "platform.releases.read",
+    "platform.reports.read"
+   ]
+  },
+  "platform_admin": {
+   "nav": [
+    "/admin",
+    "/admin/users",
+    "/admin/workspaces",
+    "/admin/plans",
+    "/admin/support",
+    "/review",
+    "/admin/security",
+    "/admin/audit",
+    "/admin/privacy",
+    "/admin/legal",
+    "/admin/knowledge",
+    "/admin/reports",
+    "/admin/configuration",
+    "/admin/flags",
+    "/admin/ai",
+    "/admin/integrations",
+    "/admin/providers"
+   ],
+   "permissions": [
+    "platform.ai.activate",
+    "platform.ai.manage",
+    "platform.ai.read",
+    "platform.audit.read",
+    "platform.flags.manage",
+    "platform.flags.read",
+    "platform.integrations.manage",
+    "platform.integrations.read",
+    "platform.knowledge.read",
+    "platform.overview.read",
+    "platform.plans.manage",
+    "platform.plans.read",
+    "platform.privacy.read",
+    "platform.releases.read",
+    "platform.reports.read",
+    "platform.security.read",
+    "platform.subscriptions.manage",
+    "platform.subscriptions.read",
+    "platform.support.manage",
+    "platform.support.note",
+    "platform.support.read",
+    "platform.support.reply",
+    "platform.users.manage",
+    "platform.users.read",
+    "platform.users.role.assign",
+    "platform.users.sessions.revoke",
+    "platform.workspaces.manage",
+    "platform.workspaces.read"
+   ]
+  },
+  "security_privacy_admin": {
+   "nav": [
+    "/admin",
+    "/admin/users",
+    "/admin/security",
+    "/admin/audit",
+    "/admin/privacy",
+    "/admin/legal"
+   ],
+   "permissions": [
+    "platform.audit.export",
+    "platform.audit.read",
+    "platform.incidents.manage",
+    "platform.legal.manage",
+    "platform.overview.read",
+    "platform.privacy.execute",
+    "platform.privacy.read",
+    "platform.security.manage",
+    "platform.security.read",
+    "platform.users.read",
+    "platform.users.sessions.revoke"
+   ]
+  },
+  "support_operator": {
+   "nav": [
+    "/admin",
+    "/admin/users",
+    "/admin/workspaces",
+    "/admin/support"
+   ],
+   "permissions": [
+    "platform.overview.read",
+    "platform.support.manage",
+    "platform.support.note",
+    "platform.support.read",
+    "platform.support.reply",
+    "platform.users.read",
+    "platform.workspaces.read"
+   ]
+  },
+  "user": {
+   "nav": [],
+   "permissions": []
+  }
+ },
+ "unknown_role_nav": []
+}

@@ -59,7 +59,7 @@ never-translated slogan. Local `main` == `origin/main`; GitHub integration is pa
 
 | Wave | Title | Cx | Priority |
 |---|---|---|---|
-| W10.0 | Admin architecture and control-plane design (**owner-approved design, AD-01..AD-08 FINAL; complete when merged**; design only - `admin/ADMIN_PLATFORM_MASTER_PLAN.md`, `admin/ADMIN_CAPABILITY_MATRIX.md`, `admin/ADMIN_ARCHITECTURE_DECISIONS.md`) | M | Capstone critical |
+| W10.0 | Admin architecture and control-plane design (**owner-approved design, AD-01..AD-08 FINAL; COMPLETE: merged in PR #109, merge `e13bfc4`**; design only - `admin/ADMIN_PLATFORM_MASTER_PLAN.md`, `admin/ADMIN_CAPABILITY_MATRIX.md`, `admin/ADMIN_ARCHITECTURE_DECISIONS.md`) | M | Capstone critical |
 | W10.1 | Admin Shell, Permission & Audit Foundation, Command Center (**COMPLETE, merged in PR #110 at 301173d**; closes SEC-W10-02/03/06; migration-free; see `admin/W10_1_ADMIN_FOUNDATION_COMMAND_CENTER.md`) | L | Capstone critical |
 | W10.2 | Users, access and workspaces (**COMPLETE: merged in PR #118, main `e47ba76`**; closes SEC-W10-01; migration-free; see `admin/W10_2_USERS_ACCESS_WORKSPACES.md`) | L | Capstone critical |
 | W10.3 | Support and ticketing (**COMPLETE, merged in PR #114 at b80635d**; migration `0015_support_ticketing`; see `admin/W10_3_CUSTOMER_SUPPORT_TICKETING.md`) | XL | Capstone critical |
@@ -73,7 +73,7 @@ never-translated slogan. Local `main` == `origin/main`; GitHub integration is pa
 | W10.11 | Feature flags and safe system configuration (**COMPLETE: merged in PR #125, main `ef339a53`**; closes SEC-W10-05; migration `0023_platform_config`; see `admin/W10_11_FEATURE_FLAGS_SAFE_PLATFORM_CONFIGURATION.md`) | M | Capstone desirable |
 | W10.12 | Reporting, analytics and AI economics (**COMPLETE: merged in PR #126, feature head `e4ae300`, main `18eebed`**; migration `0024_reporting_analytics`; see `admin/W10_12_REPORTING_ANALYTICS_AI_ECONOMICS.md`) | L | Capstone critical / desirable |
 | W10.13 | Security, audit and incident management (**COMPLETE: merged in PR #128, feature head `44f8a73`, merge `b47a10b`**; migration `0025_security_audit_incidents`; see `admin/W10_13_SECURITY_AUDIT_INCIDENT_MANAGEMENT.md`) | L | Capstone critical |
-| W10.14 | Admin qualification | L | Capstone critical |
+| W10.14 | Full Admin qualification (**implemented on its branch; complete only after merge**; migration-free; closes ROLE-W10-01 as least-privilege domain separation; see `admin/W10_14_FULL_ADMIN_QUALIFICATION.md`; W11 integrated candidate + Admin requalification is still required before RC-P10-003) | L | Capstone critical |
 
 Complexity is relative (S/M/L/XL); no hour estimates are asserted.
 

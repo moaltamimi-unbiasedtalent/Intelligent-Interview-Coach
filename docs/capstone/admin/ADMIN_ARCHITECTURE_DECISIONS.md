@@ -20,6 +20,7 @@ Context and detail: [ADMIN_PLATFORM_MASTER_PLAN.md](ADMIN_PLATFORM_MASTER_PLAN.m
 | ADR-12 | Admin **orchestrates** privacy workflows by calling the existing W9.8 services; it does not create a second privacy engine | one source of truth for deletion/export |
 | ADR-13 | Migrations are **grouped per domain wave** (about 12 small, additive, reversible), never one giant migration | rollback and review |
 | ADR-14 | **Integrated candidate + admin requalification is required after W10.14 and before RC-P10-003** | candidate P10B must not regress |
+| ADR-16 | **Least-privilege domain separation is authoritative (ROLE-W10-01, closed by W10.14):** `platform_admin` is a broad but not universal operator; specialist high-risk permissions stay with domain roles; presets stay code-defined; no 44th permission | separation of duties; matches the implemented W10 architecture |
 | ADR-15 | Sequence and numbering of W10.x are retained; execution order is refined (W10.9 before W10.8/W10.10; audit foundation in W10.1) | dependency-driven, history preserved |
 
 ## Owner decisions AD-01..AD-08 (FINAL, approved)
