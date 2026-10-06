@@ -44,6 +44,16 @@ async function mockCandidate(page: Page, ui: string, theme: "light" | "dark", on
   });
 }
 
+// Deterministic readiness (no network-idleness: Next.js prefetch/background navigation can keep the network busy on a fully rendered page).
+// Pure synchronisation: the real validation remains inspect(), whose crash detector still fails a rendered error boundary.
+// `ui` (when given) also waits for the interface locale to be applied (I18nProvider sets <html lang> once the account resolves), so a de/ru
+// page is inspected in its final language, not in the pre-hydration default.
+async function waitForRenderedPage(page: Page, ui?: string) {
+  if (ui) await expect(page.locator("html")).toHaveAttribute("lang", ui, { timeout: 15_000 });
+  await expect(page.locator("#main")).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator("h1").first()).toBeVisible({ timeout: 15_000 });
+}
+
 // Everything evaluated INSIDE the page so the checks are about what a visitor perceives.
 async function inspect(page: Page, ui = "en") {
   // The route error boundary is LOCALIZED: detect it by its translated copy as well as the English text, so a crashed de/ru page can never pass vacuously.
@@ -85,8 +95,8 @@ for (const cfg of CONFIGS) {
     for (const path of CAND_PAGES) {
       await page.unrouteAll({ behavior: "ignoreErrors" });
       await mockCandidate(page, cfg.ui, cfg.theme, path !== "/onboarding");
-      await page.goto(path);
-      await page.waitForLoadState("networkidle");
+      await page.goto(path, { waitUntil: "domcontentloaded" });
+      await waitForRenderedPage(page, cfg.ui);
       const r = await inspect(page, cfg.ui);
       checked += 1;
       const tag = `${path}`;
@@ -145,8 +155,8 @@ for (const cfg of ADMIN_CONFIGS) {
     for (const path of ADMIN_PAGES) {
       await page.unrouteAll({ behavior: "ignoreErrors" });
       await mockAdmin(page, cfg.theme);
-      await page.goto(path);
-      await page.waitForLoadState("networkidle");
+      await page.goto(path, { waitUntil: "domcontentloaded" });
+      await waitForRenderedPage(page);
       const r = await inspect(page);
       // LAYOUT-W11-01 is corrected: neither the document nor the Admin content may overflow at ANY width (including the 768px tablet handoff).
       if (r.overflow > 1) violations.push(`${path}: horizontal overflow ${r.overflow}px`);
@@ -168,8 +178,8 @@ test("W11 Admin: a permission-denied principal sees a safe state and no Admin na
     if (path.endsWith("/capabilities")) return json(route, {});
     return json(route, { error: { code: "forbidden", message: "Administrator access required.", request_id: "r" } }, 403);
   });
-  await page.goto("/admin/security");
-  await page.waitForLoadState("networkidle");
+  await page.goto("/admin/security", { waitUntil: "domcontentloaded" });
+  await waitForRenderedPage(page);
   const r = await inspect(page);
   expect(r.adminLinks).toBe(0);
   expect(r.crashed).toBe(false);
@@ -184,8 +194,8 @@ for (const ui of ["de", "ru"] as const) {
     test(`W11 shared header breakpoint: candidate /app, ${ui}, ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await mockCandidate(page, ui, "light", true);
-      await page.goto("/app");
-      await page.waitForLoadState("networkidle");
+      await page.goto("/app", { waitUntil: "domcontentloaded" });
+      await waitForRenderedPage(page, ui);
       const r = await inspect(page, ui);
       expect(r.overflow, "document horizontal overflow").toBeLessThanOrEqual(1);
       expect(r.mainOverflow, "main content overflow").toBeLessThanOrEqual(1);
@@ -215,8 +225,8 @@ test("W11 shared header breakpoint: an Admin keeps Admin access through More at 
     await page.setViewportSize({ width, height: 900 });
     await page.unrouteAll({ behavior: "ignoreErrors" });
     await mockAdmin(page, "light");
-    await page.goto("/admin");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/admin", { waitUntil: "domcontentloaded" });
+    await waitForRenderedPage(page);
     const r = await inspect(page);
     expect(r.overflow).toBeLessThanOrEqual(1);
     expect(r.mainOverflow).toBeLessThanOrEqual(1);
