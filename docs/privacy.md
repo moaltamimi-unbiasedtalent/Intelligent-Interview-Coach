@@ -87,8 +87,8 @@ Export content is never logged.
   in the backend but disabled by default, not wired into the frontend and not validated live.
 - **Cross-user isolation:** repositories and routes are owner-scoped; a foreign id is `404`.
 - **Admin:** `platform_admin` sees account/workspace/privacy-request/feedback/provider/audit
-  **metadata** only; no view-as-user, no private-content search. A fuller admin control plane
-  and GDPR operations tooling are planned (P10B-W10), not implemented.
+  **metadata** only; no view-as-user, no private-content search. The Admin control plane (P10B-W10, qualified in W10.14) adds
+  privacy-request and legal-document operations without any candidate-content access (no break-glass, no impersonation).
 
 ## Secrets
 

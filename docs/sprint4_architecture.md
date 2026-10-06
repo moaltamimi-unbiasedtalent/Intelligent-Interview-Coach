@@ -64,10 +64,11 @@ frontend and not validated live. Sign-in does not require a verified email (an o
 
 **Admin (current vs planned):** *current* = a `platform_admin` role, a bounded read-mostly `/admin`
 console (metadata only, pause switches, audit view) and admin-gated reviewer/evaluation/knowledge
-diagnostics; admins are not a private-data superuser. *Planned (P10B-W10, not implemented)* = full
-users/access management, support ticketing, plans/entitlements and billing, integrations, KB/RAG
-administration UI, GDPR operations, reporting, incident management. Premium is a preview
-(`BILLING_ENABLED=false`); the Help Center is documentation, not a ticketing system.
+diagnostics; admins are not a private-data superuser. *Superseded by P10B-W10 (qualified in W10.14, see
+`capstone/admin/W10_14_FULL_ADMIN_QUALIFICATION.md`)*: a permission-based Admin control plane (43 permissions, six least-privilege presets)
+covering users/access, support ticketing, plans/entitlements, MOCK billing, integrations, governed AI and knowledge administration, jobs,
+privacy/legal operations, pause/flags, reporting and security/audit/incidents; still no private-data superuser, no break-glass, no impersonation.
+Premium is a preview (`BILLING_ENABLED=false`).
 
 **Language dimensions (distinct):** 8 interface locales and 8 Mo conversation languages
 (`src/locales.py`); dictation, text-to-speech and realtime voice support 7 languages (not Russian);
@@ -75,9 +76,8 @@ document/OCR language, KB language and labour-market geography are separate list
 official ESCO language. Interface language never changes the labour market.
 
 **Privacy controls:** `/account/data` (overview, JSON export, delete individual documents / memories /
-Opportunities / interviews, revoke shares, delete account). Limits: PRIV-W9-01 (preparation chats cannot
-be listed or removed individually; some working data may remain) and PRIV-W9-02 (no consent-version
-history). See [privacy.md](privacy.md).
+Opportunities / interviews, revoke shares, delete account). PRIV-W9-01 (preparation chats) and PRIV-W9-02 (consent history) were closed in W10.10 with
+stated limits (only runs created from W10.10 onward are indexed; acceptance is recorded from W10.10 onward and never back-filled). See [privacy.md](privacy.md).
 
 ## Final submission view (P0–P5 complete)
 

@@ -105,9 +105,9 @@ def run() -> dict[str, tuple[bool, str]]:
           "Auth via Streamlit OIDC" not in privacy and "/account/data" in privacy
           and "PRIV-W9-01" in privacy and "PRIV-W9-02" in privacy and "not legal advice" in norm(privacy),
           "docs/privacy.md reflects W9.8 and keeps both limitations")
-    check("readme_limitations_keep_priv_items", "PRIV-W9-01" in readme and "PRIV-W9-02" in readme, "README")
+    check("readme_limitations_state_priv_items_closed_with_limits", "PRIV-W9-01" in readme and "PRIV-W9-02" in readme and "closed in W10.10" in readme and "never back-filled" in readme, "README (closed in W10.10, stated limits)")
     check("admin_current_vs_planned_documented",
-          "planned (P10B-W10), not implemented" in readme and "Planned (P10B-W10, not implemented)" in arch, "README + architecture")
+          "qualified in W10.14" in readme and "Not built:" in readme and "W10.14" in arch and "Superseded by P10B-W10" in arch, "README + architecture state the Admin control plane as implemented and qualified, with the not-built list")
     check("docs_index_exists", "Documentation map" in read("docs/README.md"), "docs/README.md")
     check("retention_note_scoped_to_streamlit",
           "legacy Streamlit interface" in read("src/constants.py").split("DATA_RETENTION_NOTE")[0][-500:], "constants comment")

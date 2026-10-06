@@ -6,12 +6,12 @@ import { cn } from "@/lib/utils";
 import { useT } from "@/components/i18n/I18nProvider";
 import { PRIMARY_NAV } from "./nav-items";
 
-/** Desktop header navigation (hidden on small screens; mobile uses the bottom bar). */
+/** Desktop header navigation (shown from lg = 1024px; below that, tablet and mobile use the compact bottom bar). */
 export function PrimaryNavigation() {
   const pathname = usePathname();
   const t = useT();
   return (
-    <nav aria-label={t("nav.primary")} className="hidden items-center gap-1 md:flex">
+    <nav aria-label={t("nav.primary")} className="hidden items-center gap-1 lg:flex">
       {PRIMARY_NAV.map((item) => {
         const active = pathname === item.href || pathname.startsWith(item.href + "/");
         return (
