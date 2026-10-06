@@ -16,6 +16,9 @@ from pathlib import Path
 # add the repo root to sys.path before importing any `src.*` module.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+# TEST ISOLATION (hard requirement): before any application import (temp DATABASE_URL, no .env, non-temp engines fail fast, isolated research cache).
+import tests.conftest  # noqa: E402,F401
+
 from src.api import rate_limit as RL  # noqa: E402
 
 

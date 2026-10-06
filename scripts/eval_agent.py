@@ -22,6 +22,9 @@ from pathlib import Path
 # (`python scripts/eval_agent.py`), matching the other scripts/eval_*.py.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+# TEST ISOLATION (hard requirement): before any application import (temp DATABASE_URL, no .env, non-temp engines fail fast, isolated research cache).
+import tests.conftest  # noqa: E402,F401
+
 from src.agent.eval import (  # noqa: E402
     GATES,
     build_eval_career,

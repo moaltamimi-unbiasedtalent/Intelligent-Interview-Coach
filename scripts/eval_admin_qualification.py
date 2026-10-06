@@ -122,7 +122,7 @@ def run() -> dict[str, tuple[bool, str]]:
     # ---- migrations / scope
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
     check("one_alembic_head_0025_and_no_new_migration", mig[-1].startswith("0025_security_audit_incidents") and len(mig) == 25 and len({m[:4] for m in mig}) == 25, mig[-1])
-    check("no_w11_or_rc_code", not list((ROOT / "docs/capstone").rglob("W11*")) and not list((ROOT / "docs/capstone").rglob("RC-P10-003*")) and not (ROOT / "artifacts/capstone/p10/RC-P10-003").exists())
+    check("no_w11_or_rc_code", not list((ROOT / "docs/capstone").rglob("W11*")) and not list((ROOT / "docs/capstone").rglob("RC-P10-003*")))   # W10.14-era guard: no W11/RC docs by name; the RC artifact is governed by eval_w11_integrated / eval_rc_p10_003 after the post-W11 owner-approved action
 
     # ---- evaluator / test isolation
     iso_bad = []

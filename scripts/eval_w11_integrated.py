@@ -9,6 +9,7 @@ W10.13 contamination disclosure, and that W11 itself created no release candidat
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -50,10 +51,24 @@ def run() -> dict[str, tuple[bool, str]]:
     # ---- the gate itself
     check("w10_14_is_complete_and_the_admin_platform_is_qualified", "W10.14 COMPLETE" in w1014 and "ADMIN PLATFORM QUALIFIED" in w1014 and "ROLE-W10-01" in w1014, "W10.14 document")
     check("release_matrix_is_the_integrated_gate", len(rows) >= 98 and "Integrated Release Acceptance Matrix" in matrix and "R-53" in rows and "R-81" in rows and "W9.13" in matrix, f"{len(rows)} rows, W9.13 history preserved")
-    check("w11_document_present_and_states_no_rc", "RC-P10-003" in w11 and ("NOT created" in w11 or "has not been created" in w11 or "NOT been created" in w11), "W11 document")
+    check("w11_document_records_no_rc_creation_by_w11", "RC-P10-003" in w11 and ("NOT created" in w11 or "has not been created" in w11 or "NOT been created" in w11), "W11 document")
     check("w10_13_contamination_disclosure_remains", "disclosed contamination with stable post-incident qualification baseline" in read("docs/capstone/admin/W10_13_SECURITY_AUDIT_INCIDENT_MANAGEMENT.md")
           and "disclosed contamination with stable post-incident qualification baseline" in w11, "permanent disclosure")
-    check("no_rc_p10_003_artifact_branch_or_tag_content", not (ROOT / "artifacts/capstone/p10/RC-P10-003").exists())
+    # Process-aware: W11 itself created no RC. After the separately owner-approved RC action RC-P10-003 may exist, but only as a separate, valid artifact.
+    rc = ROOT / "artifacts/capstone/p10/RC-P10-003"
+    if not rc.exists():
+        check("post_w11_rc_if_present_is_separate_and_valid", True, "RC-P10-003 absent (W11 guard holds)")
+    else:
+        try:
+            man = json.loads(read("artifacts/capstone/p10/RC-P10-003/manifest.json"))
+        except ValueError:
+            man = {}
+        narrative = read("docs/capstone/p10/RC_P10_003_RELEASE_CANDIDATE.md")
+        check("post_w11_rc_if_present_is_separate_and_valid",
+              (rc / "manifest.json").exists() and (rc / "gate_results.md").exists() and man.get("release_candidate_sha") == "54aad500ec937b4828984c32c64b77746534633d"
+              and bool(narrative) and "separate owner-approved" in str(man.get("creation", "")) and "W11 did NOT create" in narrative
+              and ("RC-P10-003 has NOT been created" in w11 or "RC-P10-003 has not been created" in w11 or "NOT created" in w11),
+              "separate owner-approved post-W11 artifact; the W11 document still records that W11 did not create it")
 
     # ---- candidate vs Admin
     check("permissions_43_and_platform_admin_28", len(perm.PERMISSIONS) == 43 and len(perm.ROLE_PRESETS["platform_admin"]) == 28)

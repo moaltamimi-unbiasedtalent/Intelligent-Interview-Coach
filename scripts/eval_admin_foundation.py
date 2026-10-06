@@ -15,6 +15,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+# TEST ISOLATION (hard requirement): before any application import (temp DATABASE_URL, no .env, non-temp engines fail fast, isolated research cache).
+import tests.conftest  # noqa: E402,F401
+
 SECRET_FIELD_TOKENS = {"secret", "token", "password", "key", "apikey", "dsn", "connection", "env", "url", "config", "credential", "credentials"}
 CONTENT_FRAGMENTS = ("cv_text", "document_text", "transcript", "conversation", "memory_summary", "evidence_text", "answer_text",
                      "preparation_chat", "impersonat", "view_as", "break_glass", "breakglass")

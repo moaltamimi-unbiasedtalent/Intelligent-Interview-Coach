@@ -1,0 +1,263 @@
+{
+  "release_candidate": "RC-P10-003",
+  "phase": "P10B post-W11 - Release Candidate created by a separate owner-approved action after W11 COMPLETE AND INTEGRATED",
+  "release_candidate_sha": "54aad500ec937b4828984c32c64b77746534633d",
+  "qualified_runtime_merge_sha": "d27993d7f2757cf7605355e3f76c71dac6f85c10",
+  "runtime_identity_note": "PR #133 is documentation-only, so the runtime/product tree at the candidate SHA is the same qualified runtime as the W11 feature merge.",
+  "w11_feature_head": "654ca47ab603fe96d093e10faaa778f5f5ab2e33",
+  "w11_feature_pr": "#132",
+  "w11_docs_pr": "#133",
+  "w11_docs_head": "98c79c8883607cdc088797e11c4f7b82e83130dd",
+  "w11_status": "COMPLETE AND INTEGRATED",
+  "generated": "2026-10-06",
+  "creation": "W11 did NOT create this RC. RC-P10-003 is created by a separate owner-approved post-W11 action; it is an artifact RC pinned to one merged-main SHA, not a Git tag, version bump, deployment or release.",
+  "activation_rule": "RC-P10-003 is the current candidate only when this artifact directory is present on main.",
+  "supersedes_note": "RC-P10-002 (ab9ff73) remains immutable and untouched; RC-P10-003 is the current candidate after P10B Waves 9-11 and the Admin platform (W10).",
+  "version_identity": {
+    "alembic_head": "0025_security_audit_incidents",
+    "release_matrix": "99 requirements: 88 PASS / 11 ACCEPTED / 0 BLOCKER",
+    "admin_permissions": 43,
+    "platform_admin_permissions": "28 / 43",
+    "interface_locales": 8,
+    "mo_conversation_languages": 8,
+    "speech_document_kb_languages": 7,
+    "tools": {
+      "total": 11,
+      "career": 6,
+      "specialists": 3,
+      "human_action": 2
+    },
+    "specialists": [
+      "role_opportunity",
+      "candidate_evidence",
+      "interview_strategy"
+    ],
+    "evaluation_architecture": "LLM-backed; schema-validated; model-produced scores; no deterministic scoring formula; no Evaluation Specialist",
+    "protected_slogan": "Ask More. Be More.",
+    "application_version": "no repository-defined release version exists; none is invented by this artifact"
+  },
+  "release_matrix": {
+    "total": 99,
+    "PASS": 88,
+    "ACCEPTED": 11,
+    "BLOCKER": 0,
+    "source": "docs/capstone/p10/P10B_RELEASE_ACCEPTANCE_MATRIX.md"
+  },
+  "gate_results": {
+    "backend_main_tree": "3145 passed, 4 skipped, 0 failed, 0 errors",
+    "vitest": "768 passed (89 files)",
+    "playwright": "239 passed",
+    "ci_evaluators": "42 / 42 at W11 close (the RC-P10-003 evaluator is added by this artifact PR)",
+    "w11_evaluator": "27 checks PASS (at W11 close)",
+    "fresh_checkout": {
+      "backend": "3138 passed, 11 skipped, 0 failed",
+      "vitest": 768,
+      "playwright": 239,
+      "evaluators": "42 / 42",
+      "ruff": "clean",
+      "compileall": "clean",
+      "typecheck": "clean",
+      "lint": "clean",
+      "build": "clean",
+      "i18n": "0 offenders"
+    },
+    "static": {
+      "ruff": "clean",
+      "compileall": "clean",
+      "typecheck": "clean",
+      "lint": "clean",
+      "build": "clean",
+      "i18n_scanner_offenders": 0
+    },
+    "migration": {
+      "base_to_0025": "PASS",
+      "downgrade_0025_to_0024": "PASS",
+      "reupgrade_0024_to_0025": "PASS",
+      "single_head": true,
+      "append_only_triggers": "present",
+      "qualification_seed_rows": "none"
+    },
+    "github_w11_feature_pr_132": {
+      "ci": "PASS",
+      "browser_e2e": "PASS"
+    },
+    "github_w11_docs_pr_133": {
+      "ci": "PASS",
+      "browser_e2e": "PASS after one external package-repository installation failure (packages.microsoft.com HTTP 403 during playwright install, before any test ran) was rerun on the SAME commit; no source change"
+    },
+    "normal_tree_skips": [
+      "live Adzuna (opt-in/credentials)",
+      "PostgreSQL W10.9 claim test (needs disposable TEST_POSTGRES_URL)",
+      "Streamlit component test (needs Streamlit context)",
+      "RAGAS adapter (conditional)"
+    ],
+    "fresh_checkout_skips": [
+      "live Adzuna",
+      "PostgreSQL claim test",
+      "RAGAS optional package",
+      "real OCR optional extras",
+      "O*NET dataset",
+      "ESCO dataset",
+      "OOH dataset",
+      "BLS EP dataset",
+      "CLSSI dataset",
+      "Eurostat JVS dataset",
+      "DigComp dataset"
+    ]
+  },
+  "accepted_limitations": [
+    {
+      "matrix_id": "R-33",
+      "title": "Email verification is not required to sign in",
+      "status": "ACCEPTED",
+      "rationale": "POLICY-01: current behaviour is pinned by tests; verification is not enforced at sign-in",
+      "next_validation_or_hardening": "post-RC product/policy decision"
+    },
+    {
+      "matrix_id": "R-38",
+      "title": "Legacy Streamlit is retained",
+      "status": "ACCEPTED",
+      "rationale": "LEGACY-01: the legacy app compiles, is tested and src/auth.py is kept; removal is post-Capstone cleanup, not a release requirement",
+      "next_validation_or_hardening": "post-Capstone cleanup"
+    },
+    {
+      "matrix_id": "R-46",
+      "title": "Distributed Redis rate limiting exists as an adapter but is not live validated",
+      "status": "ACCEPTED",
+      "rationale": "adapter exists; single-process in-memory limiting is the validated mode; not claimed as live",
+      "next_validation_or_hardening": "production-hardening phase / separately authorised live run"
+    },
+    {
+      "matrix_id": "R-49",
+      "title": "Native/legal language review is pending",
+      "status": "ACCEPTED",
+      "rationale": "human review pending; not claimed complete",
+      "next_validation_or_hardening": "native/legal review (owner-supplied reviewers)"
+    },
+    {
+      "matrix_id": "R-50",
+      "title": "Live generated-language validation requires a separately authorised live run",
+      "status": "ACCEPTED",
+      "rationale": "needs a separately authorised live provider run; deterministic checks only so far",
+      "next_validation_or_hardening": "separately authorised live run"
+    },
+    {
+      "matrix_id": "R-51",
+      "title": "Metadata localization / bundle optimization remains post-P10B optimization work",
+      "status": "ACCEPTED",
+      "rationale": "accepted open work; no material bundle regression recorded",
+      "next_validation_or_hardening": "post-P10B optimization"
+    },
+    {
+      "matrix_id": "R-93",
+      "title": "Support attachments are not implemented",
+      "status": "ACCEPTED",
+      "rationale": "partial by design: no secure reusable upload primitive for Support; tickets work without attachments",
+      "next_validation_or_hardening": "post-Capstone"
+    },
+    {
+      "matrix_id": "R-94",
+      "title": "Admin workspace deactivation and universal operator search are not built",
+      "status": "ACCEPTED",
+      "rationale": "post-Capstone conveniences; workspace owners can deactivate their own workspace; operators search by identifier per domain",
+      "next_validation_or_hardening": "post-Capstone"
+    },
+    {
+      "matrix_id": "R-95",
+      "title": "Live billing, production secret vault and external paging are absent",
+      "status": "ACCEPTED",
+      "rationale": "billing is MOCK, secrets are environment-managed and read-only, alerts are in-app only; all labelled in the product",
+      "next_validation_or_hardening": "later production-hardening phase"
+    },
+    {
+      "matrix_id": "R-96",
+      "title": "PostgreSQL-only paths have not been exercised against a disposable/live PostgreSQL qualification environment",
+      "status": "ACCEPTED",
+      "rationale": "SKIP LOCKED claim and audit-trigger DDL are rendered and unit-checked; SQLite paths fully exercised; no disposable TEST_POSTGRES_URL",
+      "next_validation_or_hardening": "separately authorised PostgreSQL qualification run"
+    },
+    {
+      "matrix_id": "R-97",
+      "title": "Google OIDC live behaviour is not validated",
+      "status": "ACCEPTED",
+      "rationale": "code present, not live validated, not claimed; an OIDC-only Admin cannot step up (fails closed)",
+      "next_validation_or_hardening": "separately authorised run with a provider account"
+    }
+  ],
+  "resolved_findings": {
+    "R-52": {
+      "id": "A11Y-W9-13-01",
+      "status": "PASS",
+      "note": "a fully rendered /practice has an h1 in de/ru, desktop/mobile, light/dark; page source unchanged since the pre-W9.13 baseline; the W9.13 report is unchanged"
+    },
+    "R-98": {
+      "id": "LAYOUT-W11-01",
+      "status": "PASS",
+      "note": "found as ~29px shared-header overflow at 768px locally, 42px on GitHub Linux Chromium; first classified P3/ACCEPTED; owner-approved bounded fix moved the navigation handoff from md (768) to lg (1024); threshold not relaxed; 390/768/1024/1280 regression covered"
+    },
+    "R-99": {
+      "id": "CI-W11-01",
+      "status": "PASS",
+      "note": "an invalid YAML step name introduced in W10.11 stopped the main CI workflow from running for W10.11-W10.14 and early W11 (Browser E2E still ran; local/fresh-checkout evidence for those waves remains valid; earlier wording implying every GitHub CI job ran was inaccurate); W11 fixed it and PR #132 proved it executes and passes"
+    }
+  },
+  "freeze_semantics": {
+    "rc_candidate_sha": "54aad500ec937b4828984c32c64b77746534633d",
+    "identity_rule": "The candidate is the merged-main SHA above. Artifact/evidence commits on top are evidence ABOUT the candidate and do not alter its identity.",
+    "rc_p10_002": "remains immutable and traceable to ab9ff73",
+    "pilot_2": "must run against ONE candidate SHA only",
+    "new_candidate_required_for": "any material runtime/backend/frontend/schema/permission/entitlement/billing/security/privacy change after RC-P10-003 (expected next candidate: RC-P10-004)",
+    "documentation_only_correction": "does not silently change the candidate SHA",
+    "gate_rerun_for_favourable_result": false,
+    "git_tag_identity": false,
+    "production_deployment_implied": false
+  },
+  "configuration_assumptions": {
+    "external_providers": "all deterministic fakes/stubs; no live provider calls",
+    "database": "SQLite for local/test; PostgreSQL for hosted (not exercised live, R-96)",
+    "rate_limit_store": "in-memory single-process (distributed adapter not live validated, R-46)",
+    "billing": "mock",
+    "browser": "Chromium fully tested; Firefox/WebKit not tested"
+  },
+  "protected_store_history": {
+    "w10_13": "disclosed contamination with stable post-incident qualification baseline (permanent)",
+    "w11_qualification": "all six protected stores unchanged against the W11-start baseline",
+    "post_w11": "dev DB and research cache drifted from normal interactive developer app use AFTER qualification; no restore performed",
+    "pre_rc_developer_baseline_environmental_only": {
+      "dev_db": "81eef3479704ed91e58abb876926f98108968842",
+      "dev_schema": "224 sqlite_master objects",
+      "checkpoint": "b56d0c39fbba64786495ebb5db59eedecfae5c71",
+      "chroma": "6357c057606273f313b408cc7f144390453a0832",
+      "research_cache": "25264b17b36f7a365ff8dfaca9eec97e997ee710",
+      "evaluations": "67259aba185daa495f8bf8958e1c905fd086b2be",
+      "research_cache_note": "accepted post-incident value (RC-QUAL-ENV-01); previous value a3ad0eea16f2fadd337bba0ce2fd5ea6a88b1dc8"
+    }
+  },
+  "paid_live_calls": 0,
+  "live_provider_validation": "NOT RUN (no paid/live calls authorized)",
+  "human_pilot": "Pilot 2 PAUSED / NOT RUN; resumes only on separate owner authorization",
+  "p10c": "NOT STARTED",
+  "public_launch": "NOT AUTHORIZED",
+  "qualification_environment_incidents": [
+    {
+      "id": "RC-QUAL-ENV-01",
+      "classification": "RC qualification contamination caused by an unisolated legacy evaluator; corrected before RC creation",
+      "summary": "During the targeted RC-P10-003 evaluator run, the legacy scripts/eval_release_candidate.py executed company research for the deterministic fixture company Acme without first loading the test-isolation bootstrap. It wrote one cache entry: data/cache/external/be293349a0419d930134b8c6.json.",
+      "research_cache_fingerprint": {
+        "before": "a3ad0eea16f2fadd337bba0ce2fd5ea6a88b1dc8",
+        "after": "25264b17b36f7a365ff8dfaca9eec97e997ee710"
+      },
+      "other_protected_stores_changed": false,
+      "correction": "scripts/eval_release_candidate.py now imports tests.conftest before any application import; scripts/eval_rc_p10_003.py enforces, with an AST rule, that every scripts/eval_*.py importing application code bootstraps isolation first (19 further evaluators needed the same import and received it).",
+      "cache_entry_deleted": false,
+      "cache_state_restored": false,
+      "stray_file_committed": false,
+      "accepted_baseline": "the post-incident cache fingerprint is the accepted pre-RC baseline",
+      "distinct_from": [
+        "W10.13 permanent dev-DB contamination disclosure",
+        "post-W11 interactive app-use drift"
+      ],
+      "scope_note": "Scope note: the rule covers every CI evaluator (43). Seventeen manual/non-CI evaluators (eval_agent_judge, eval_agent_live, eval_company_intelligence, eval_expanded, eval_external_research, eval_faithfulness_v2, eval_feedback_intelligence, eval_knowledge_retrieval, eval_onboarding_personalisation, eval_opportunity_journey, eval_prepare_practice_integration, eval_quality_v2, eval_rag, eval_ragas, eval_retrieval, eval_retrieval_quality_v2, eval_security) do not bootstrap isolation; they are not run by CI, some are live/opt-in by design, and they are listed as a known follow-up rather than changed here."
+    }
+  ]
+}

@@ -78,7 +78,8 @@ def run() -> dict[str, tuple[bool, str]]:
           and all(k in by_id for k in ("R-53", "R-81", "R-88", "R-90")), "W10.14 + W11 documents and rows")
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
     check("schema_head_matches_the_matrix", mig[-1].startswith("0025_security_audit_incidents") and "0025_security_audit_incidents" in by_id.get("R-39", ["", "", "", "", "", "", ""])[3], mig[-1])
-    check("no_rc_p10_003_created", not (ROOT / "artifacts/capstone/p10/RC-P10-003").exists() and "RC-P10-003" not in "".join(p.name for p in (ROOT / "artifacts/capstone/p10").glob("*")), "W11 does not create the RC")
+    rc_dir = ROOT / "artifacts/capstone/p10/RC-P10-003"
+    check("matrix_does_not_register_the_rc", "R-100" not in by_id and (not rc_dir.exists() or ((rc_dir / "manifest.json").exists() and (rc_dir / "gate_results.md").exists())), "the RC is downstream evidence packaging, not a matrix requirement; if present it is a complete separate artifact")
     return out
 
 

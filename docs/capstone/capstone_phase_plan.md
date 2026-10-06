@@ -35,7 +35,8 @@ conversation only. Russian **speech** (dictation/TTS/realtime) is NOT supported.
 Russian labour market/geography and is **not** an official ESCO language. `Ask More. Be More.` is a protected,
 never-translated slogan. Local `main` == `origin/main`; GitHub integration is part of the Definition of Done.
 
-### Remaining work (nothing below has started; RC-P10-003 does not exist)
+### Delivered/qualified work and remaining work
+W9.x, W10.x and W11 below are DELIVERED / QUALIFIED (see the rows and the W11 document). RC-P10-003 is prepared by a separate owner-approved artifact PR (candidate SHA `54aad500ec937b4828984c32c64b77746534633d`; the artifact becomes current only when merged to main). Pilot 2, P10C and later phases have NOT started.
 
 | Step | Scope | Cx | Priority |
 |---|---|---|---|
@@ -46,8 +47,8 @@ never-translated slogan. Local `main` == `origin/main`; GitHub integration is pa
 | **W9.12** Engineering Quality & Technical Debt Closure (**DELIVERED** - `p10/w9/P10B_W9_12_ENGINEERING_QUALITY.md`) | **TD-W9-01** Tailwind `token/NN` opacity classes (~15: inventory, supported token strategy, light/dark/mobile visual regression); **TD-W9-02** backend test isolation leak (isolated test DB, prove no dev/prod DB writes, defensive guards); metadata localization architecture if deferred; 8-locale bundle/performance review; optional locale-aware font subset only if profiling justifies (TD-W9-03) | M-L | Capstone critical |
 | **W9.13** Full P10B Requalification (**QUALIFIED** - `p10/w9/P10B_W9_13_FULL_REQUALIFICATION.md`, `p10/P10B_RELEASE_ACCEPTANCE_MATRIX.md`; engineering decision only, no RC) | Full-suite requalification of the candidate product. No RC before it is green | L | Capstone critical |
 | **P10B-W10** Platform Administration, Support & Commercial Operations | W10.0-W10.14, see `admin/ADMIN_PLATFORM_MASTER_PLAN.md` and `admin/ADMIN_CAPABILITY_MATRIX.md` | see below | see below |
-| **P10B-W11** Integrated Candidate + Admin Requalification | Joint qualification of candidate product and admin plane | L | Capstone critical |
-| **RC-P10-003** | Release candidate created only after W11 is green | M | Capstone critical |
+| **P10B-W11** Integrated Candidate + Admin Requalification - **COMPLETE / QUALIFIED**, PR #132, merge `d27993d7`; 99 = 88 PASS / 11 ACCEPTED / 0 BLOCKER | Joint qualification of candidate product and admin plane | L | Capstone critical |
+| **RC-P10-003** - candidate SHA `54aad500...`; artifact becomes current when merged to main (`artifacts/capstone/p10/RC-P10-003/`, `p10/RC_P10_003_RELEASE_CANDIDATE.md`); W11 did not create it | Release candidate created only after W11 is green, by a separate owner-approved action | M | Capstone critical |
 | **Pilot 2** (remaining) | Resumes only per the rules below | L | Capstone critical |
 | **P10C** Global Career Intelligence & Compensation Overhaul | Occupation graph, classification versioning, crosswalks, multilingual aliases, ESCO/ISCO/O*NET/NOC/SINCO/CBO/KldB, Europe/North/South America, Compensation V2, data-driven source precedence, licensing/provenance/freshness, global multilingual evaluation. **Separate from W10** | XL | Capstone desirable / post-Capstone acceptable by scope |
 | **P10D** Global KB / multilingual requalification | Requalify the P10C KB and multilingual behaviour | L | follows P10C |
