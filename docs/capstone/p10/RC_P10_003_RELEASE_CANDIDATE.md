@@ -3,6 +3,8 @@
 ## 1. Status / activation rule
 **RC-P10-003 is the current candidate only when the directory `artifacts/capstone/p10/RC-P10-003/` is present on main.** On the pull-request branch it is PREPARED; once merged to main it is CREATED / CURRENT. **W11 did NOT create RC-P10-003** (the W11 document is unchanged and still says so). This separate, owner-approved post-W11 action does. The RC follows the existing repository convention: it is an evidence ARTIFACT pinned to one merged-main SHA. It is not a Git tag, a version bump, a deployment, a production release, permission to resume Pilot 2 or permission to start P10C.
 
+**Current status (post-merge): CREATED / CURRENT.** Artifact PR #134 (head `5d4bcaf28852b69a657c5c4c6b4f50e9851abcbd`, merge `800a10d8b6dee7e251c28dc790812d7242e27c67`; CI and Browser E2E green on the head, no rerun). The artifact merge SHA is evidence packaging, not the candidate identity, which stays `54aad500ec937b4828984c32c64b77746534633d`. Known follow-up (not a blocker): 17 manual/non-CI evaluators still lack the isolation bootstrap (for example `scripts/eval_security.py`); audit and isolate the deterministic ones before they are used in future qualification workflows.
+
 ## 2. Candidate identity
 - `release_candidate_sha`: `54aad500ec937b4828984c32c64b77746534633d` (main after W11 feature + completion docs)
 - `qualified_runtime_merge_sha`: `d27993d7f2757cf7605355e3f76c71dac6f85c10`

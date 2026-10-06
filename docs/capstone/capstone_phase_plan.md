@@ -36,7 +36,7 @@ Russian labour market/geography and is **not** an official ESCO language. `Ask M
 never-translated slogan. Local `main` == `origin/main`; GitHub integration is part of the Definition of Done.
 
 ### Delivered/qualified work and remaining work
-W9.x, W10.x and W11 below are DELIVERED / QUALIFIED (see the rows and the W11 document). RC-P10-003 is prepared by a separate owner-approved artifact PR (candidate SHA `54aad500ec937b4828984c32c64b77746534633d`; the artifact becomes current only when merged to main). Pilot 2, P10C and later phases have NOT started.
+W9.x, W10.x and W11 below are DELIVERED / QUALIFIED (see the rows and the W11 document). RC-P10-003 is CREATED / CURRENT (artifact PR #134, merge `800a10d8`; candidate SHA `54aad500ec937b4828984c32c64b77746534633d`; RC-P10-002 remains historical and immutable). Pilot 2, P10C and later phases have NOT started.
 
 | Step | Scope | Cx | Priority |
 |---|---|---|---|
@@ -48,7 +48,7 @@ W9.x, W10.x and W11 below are DELIVERED / QUALIFIED (see the rows and the W11 do
 | **W9.13** Full P10B Requalification (**QUALIFIED** - `p10/w9/P10B_W9_13_FULL_REQUALIFICATION.md`, `p10/P10B_RELEASE_ACCEPTANCE_MATRIX.md`; engineering decision only, no RC) | Full-suite requalification of the candidate product. No RC before it is green | L | Capstone critical |
 | **P10B-W10** Platform Administration, Support & Commercial Operations | W10.0-W10.14, see `admin/ADMIN_PLATFORM_MASTER_PLAN.md` and `admin/ADMIN_CAPABILITY_MATRIX.md` | see below | see below |
 | **P10B-W11** Integrated Candidate + Admin Requalification - **COMPLETE / QUALIFIED**, PR #132, merge `d27993d7`; 99 = 88 PASS / 11 ACCEPTED / 0 BLOCKER | Joint qualification of candidate product and admin plane | L | Capstone critical |
-| **RC-P10-003** - candidate SHA `54aad500...`; artifact becomes current when merged to main (`artifacts/capstone/p10/RC-P10-003/`, `p10/RC_P10_003_RELEASE_CANDIDATE.md`); W11 did not create it | Release candidate created only after W11 is green, by a separate owner-approved action | M | Capstone critical |
+| **RC-P10-003** - **CREATED / CURRENT** (artifact PR #134, merge `800a10d8`; candidate SHA `54aad500...`; artifact RC, not a Git tag; `artifacts/capstone/p10/RC-P10-003/`, `p10/RC_P10_003_RELEASE_CANDIDATE.md`); RC-P10-002 remains historical and immutable; Pilot 2 paused; P10C not started | Release candidate created only after W11 is green, by a separate owner-approved action | M | Capstone critical (done) |
 | **Pilot 2** (remaining) | Resumes only per the rules below | L | Capstone critical |
 | **P10C** Global Career Intelligence & Compensation Overhaul | Occupation graph, classification versioning, crosswalks, multilingual aliases, ESCO/ISCO/O*NET/NOC/SINCO/CBO/KldB, Europe/North/South America, Compensation V2, data-driven source precedence, licensing/provenance/freshness, global multilingual evaluation. **Separate from W10** | XL | Capstone desirable / post-Capstone acceptable by scope |
 | **P10D** Global KB / multilingual requalification | Requalify the P10C KB and multilingual behaviour | L | follows P10C |
@@ -91,7 +91,7 @@ Capstone must-have vs production-ready mock/adapter-acceptable in the Admin mast
 represented as live.
 
 **Pilot 2 stays PAUSED.** It resumes only when: (1) candidate remediation (W9.8-W9.13) is complete; (2) admin changes
-that affect support/privacy are stable; (3) the full integrated qualification (W11, now COMPLETE) is carried by RC-P10-003. **Next step: RC-P10-003 creation - a separate owner-reviewed action (not yet done).**
+that affect support/privacy are stable; (3) the full integrated qualification (W11, now COMPLETE) is carried by RC-P10-003. RC-P10-003 now exists (CREATED / CURRENT). **Next step: a separate owner decision on resuming Pilot 2 against that single candidate SHA (not started).**
 Future Pilot 2 coverage: Opportunity, Welcome/Tutorial, non-English incl. Russian, error recovery, Privacy/Data
 Center, Trust, support/ticketing where implemented, and Voice separately where supported. RC-P10-002 evidence is
 immutable.
