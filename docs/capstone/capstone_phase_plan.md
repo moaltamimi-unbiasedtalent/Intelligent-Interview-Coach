@@ -49,7 +49,7 @@ W9.x, W10.x and W11 below are DELIVERED / QUALIFIED (see the rows and the W11 do
 | **P10B-W10** Platform Administration, Support & Commercial Operations | W10.0-W10.14, see `admin/ADMIN_PLATFORM_MASTER_PLAN.md` and `admin/ADMIN_CAPABILITY_MATRIX.md` | see below | see below |
 | **P10B-W11** Integrated Candidate + Admin Requalification - **COMPLETE / QUALIFIED**, PR #132, merge `d27993d7`; 99 = 88 PASS / 11 ACCEPTED / 0 BLOCKER | Joint qualification of candidate product and admin plane | L | Capstone critical |
 | **RC-P10-003** - **CREATED / CURRENT** (artifact PR #134, merge `800a10d8`; candidate SHA `54aad500...`; artifact RC, not a Git tag; `artifacts/capstone/p10/RC-P10-003/`, `p10/RC_P10_003_RELEASE_CANDIDATE.md`); RC-P10-002 remains historical and immutable; Pilot 2 paused; P10C not started | Release candidate created only after W11 is green, by a separate owner-approved action | M | Capstone critical (done) |
-| **Pilot 2** (remaining) | Resumes only per the rules below | L | Capstone critical |
+| **Pilot 2** (remaining) - **REACTIVATION PREPARED** against RC-P10-003 (`54aad500...`); no human sessions run; AC-24 NOT RUN / PENDING REAL PARTICIPANTS; sessions start only on explicit owner start (pack: `p10/pilot2/RC_P10_003_PILOT2_REACTIVATION.md`) | Resumes only per the rules below | L | Capstone critical |
 | **P10C** Global Career Intelligence & Compensation Overhaul | Occupation graph, classification versioning, crosswalks, multilingual aliases, ESCO/ISCO/O*NET/NOC/SINCO/CBO/KldB, Europe/North/South America, Compensation V2, data-driven source precedence, licensing/provenance/freshness, global multilingual evaluation. **Separate from W10** | XL | Capstone desirable / post-Capstone acceptable by scope |
 | **P10D** Global KB / multilingual requalification | Requalify the P10C KB and multilingual behaviour | L | follows P10C |
 | **P10E** Live capability validation | Live (paid/provider) validation, separately authorized | L | follows P10D |
@@ -90,7 +90,7 @@ the critical path (can slip without blocking W10). W10.5, W10.7, W10.9, W10.11 a
 Capstone must-have vs production-ready mock/adapter-acceptable in the Admin master plan section 6; a mock is never
 represented as live.
 
-**Pilot 2 stays PAUSED.** It resumes only when: (1) candidate remediation (W9.8-W9.13) is complete; (2) admin changes
+**Pilot 2: REACTIVATION PREPARED (not running).** The reactivation pack for RC-P10-003 is prepared (documentation/templates only); no human session has been run and the owner has not started sessions. It resumes only when: (1) candidate remediation (W9.8-W9.13) is complete; (2) admin changes
 that affect support/privacy are stable; (3) the full integrated qualification (W11, now COMPLETE) is carried by RC-P10-003. RC-P10-003 now exists (CREATED / CURRENT). **Next step: a separate owner decision on resuming Pilot 2 against that single candidate SHA (not started).**
 Future Pilot 2 coverage: Opportunity, Welcome/Tutorial, non-English incl. Russian, error recovery, Privacy/Data
 Center, Trust, support/ticketing where implemented, and Voice separately where supported. RC-P10-002 evidence is
