@@ -105,6 +105,14 @@ def run() -> dict[str, tuple[bool, str]]:
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
     check("one_alembic_head_0025", mig[-1].startswith("0025_security_audit_incidents") and len(mig) == 25, mig[-1])
     ci = read(".github/workflows/ci.yml")
+    try:
+        import yaml
+        wf = yaml.safe_load(read(".github/workflows/ci.yml"))
+        steps = [s.get("run", "") for s in wf["jobs"]["python"]["steps"]]
+        referenced = sorted(set(re.findall(r"scripts/eval_[a-z_0-9]+\.py", "\n".join(steps))))
+        check("ci_workflow_is_valid_yaml_and_its_evaluator_steps_exist", all((ROOT / r).exists() for r in referenced) and len(referenced) >= 40 and "python" in wf["jobs"], f"valid YAML; {len(referenced)} evaluator scripts referenced and present")
+    except Exception as exc:  # noqa: BLE001 - an unparseable workflow is exactly the defect this guards
+        check("ci_workflow_is_valid_yaml_and_its_evaluator_steps_exist", False, f"ci.yml does not parse: {str(exc)[:120]}")
     check("ci_runs_the_w11_evaluators", "scripts/eval_w11_integrated.py" in ci and "scripts/eval_release_matrix.py" in ci and "scripts/eval_admin_qualification.py" in ci)
     shell = read("frontend/components/layout/AppShell.tsx") + read("frontend/components/layout/PrimaryNavigation.tsx") + read("frontend/components/layout/MobileNavigation.tsx")
     check("layout_w11_01_navigation_handoff_is_coherent_at_lg", "lg:flex" in shell and "lg:hidden" in shell and "lg:pb-20" in shell and not re.search(r"\bmd:(flex|hidden|pb-20)\b", shell), "primary nav, mobile nav and main padding all hand off at lg (1024px)")
