@@ -27,6 +27,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+# TEST ISOLATION (hard requirement): before any application import (temp DATABASE_URL, no .env, non-temp engines fail fast, isolated research cache).
+import tests.conftest  # noqa: E402,F401
+
 from src.copilot import constants  # noqa: E402
 from src.copilot.knowledge import manifest as km  # noqa: E402
 from src.copilot.knowledge import status as kstatus  # noqa: E402

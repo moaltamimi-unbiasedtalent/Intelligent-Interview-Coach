@@ -118,8 +118,10 @@ jobs:
         run: python scripts/eval_admin_security.py
       - name: Full Admin qualification (P10B-W10.14; offline; least-privilege role model, 43-permission matrix, every route x persona, no private-data superuser, secret/privacy boundaries, mock-billing truthfulness, no break-glass)
         run: python scripts/eval_admin_qualification.py
-      - name: Integrated candidate + Admin guard (P10B-W11; offline; cross-plane separation, support-content exception, language dimensions, slogan, agent architecture, no RC created)
+      - name: Integrated candidate + Admin guard (P10B-W11; offline; cross-plane separation, support-content exception, language dimensions, slogan, agent architecture, no RC created by W11)
         run: python scripts/eval_w11_integrated.py
+      - name: "RC-P10-003 artifact guard (offline; separate owner-approved RC artifact, pinned SHA, matrix 99/88/11/0, RC-P10-002 immutable)"
+        run: python scripts/eval_rc_p10_003.py
       - name: Rate-limit evaluation (Capstone P8; offline; auth + cost buckets, window reset, anti-enumeration)
         run: python scripts/eval_rate_limits.py
       - name: Hosting-readiness evaluation (Capstone P8; offline; env/cookies/CORS/headers/pause/malware — does NOT certify EX-12)

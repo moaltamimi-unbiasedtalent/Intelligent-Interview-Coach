@@ -17,6 +17,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+# TEST ISOLATION (hard requirement): before any application import (temp DATABASE_URL, no .env, non-temp engines fail fast, isolated research cache).
+import tests.conftest  # noqa: E402,F401
+
 BILLING_WORDS = re.compile(r"stripe|checkout|invoice|payment_method|currency|webhook|billing_provider|price_id|\bprice\b|\bamount\b|credit_card", re.I)
 LOCALES = ("en", "de", "fr", "es", "it", "pt", "nl", "ru")
 

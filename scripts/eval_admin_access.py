@@ -16,6 +16,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+# TEST ISOLATION (hard requirement): before any application import (temp DATABASE_URL, no .env, non-temp engines fail fast, isolated research cache).
+import tests.conftest  # noqa: E402,F401
+
 BANNED_FIELDS = {"resume", "cv_text", "document_content", "document_text", "answer_text", "report_text", "memory_content",
                  "preparation_messages", "chat_messages", "private_evidence", "uploaded_file_bytes", "transcript",
                  "token", "token_hash", "password", "secret", "user_agent", "storage_key", "ip_address"}

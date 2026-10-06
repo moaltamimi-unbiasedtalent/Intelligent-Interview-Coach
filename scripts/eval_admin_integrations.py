@@ -17,6 +17,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+# TEST ISOLATION (hard requirement): before any application import (temp DATABASE_URL, no .env, non-temp engines fail fast, isolated research cache).
+import tests.conftest  # noqa: E402,F401
+
 BANNED_FIELDS = {"api_key", "secret", "client_secret", "password", "authorization", "bearer", "token_value",
                  "credential_value", "private_key", "value", "url", "base_url", "endpoint"}
 LOCALES = ()
