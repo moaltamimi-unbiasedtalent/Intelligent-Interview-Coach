@@ -106,6 +106,8 @@ def run() -> dict[str, tuple[bool, str]]:
     check("one_alembic_head_0025", mig[-1].startswith("0025_security_audit_incidents") and len(mig) == 25, mig[-1])
     ci = read(".github/workflows/ci.yml")
     check("ci_runs_the_w11_evaluators", "scripts/eval_w11_integrated.py" in ci and "scripts/eval_release_matrix.py" in ci and "scripts/eval_admin_qualification.py" in ci)
+    shell = read("frontend/components/layout/AppShell.tsx") + read("frontend/components/layout/PrimaryNavigation.tsx") + read("frontend/components/layout/MobileNavigation.tsx")
+    check("layout_w11_01_navigation_handoff_is_coherent_at_lg", "lg:flex" in shell and "lg:hidden" in shell and "lg:pb-20" in shell and not re.search(r"\bmd:(flex|hidden|pb-20)\b", shell), "primary nav, mobile nav and main padding all hand off at lg (1024px)")
     check("tests_exist", all(x in read("tests/test_integrated_w11.py") for x in ("test_k2_candidate_support_ticket", "test_k3_admin_deactivation", "test_k4_admin_plan_assignment", "test_k5_operations_pause",
                                                                          "test_k6_flag_off", "test_k7_only_approved", "test_k8_only_an_approved", "test_k9_candidate_deletion", "test_k10_workspace",
                                                                          "test_k11_two_person", "test_q_private_sentinels", "test_r_secret_sentinels")))

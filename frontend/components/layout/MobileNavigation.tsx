@@ -8,7 +8,7 @@ import { PRIMARY_NAV } from "./nav-items";
 
 /**
  * Compact bottom navigation for mobile — a deliberate pattern, not a compressed
- * desktop header. Hidden on md+ where the header nav is used. 44px touch targets.
+ * desktop header. Hidden on lg+ (1024px) where the header nav is used; tablet widths keep this bar. 44px touch targets.
  */
 export function MobileNavigation() {
   const pathname = usePathname();
@@ -16,7 +16,7 @@ export function MobileNavigation() {
   return (
     <nav
       aria-label={t("nav.primary")}
-      className="fixed inset-x-0 bottom-0 z-30 grid border-t border-border bg-surface md:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 grid border-t border-border bg-surface lg:hidden"
       style={{ gridTemplateColumns: `repeat(${PRIMARY_NAV.length}, minmax(0, 1fr))` }}
     >
       {PRIMARY_NAV.map((item) => {

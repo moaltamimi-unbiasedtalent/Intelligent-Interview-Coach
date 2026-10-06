@@ -21,7 +21,7 @@ REQUIRED_ACCEPTED = {
     "R-33": "email verification (POLICY-01)", "R-38": "legacy Streamlit (LEGACY-01)", "R-46": "distributed rate limiting not live",
     "R-49": "native/legal language review", "R-50": "live generated-language validation", "R-51": "metadata localization and bundle optimisation",
     "R-93": "support attachments", "R-94": "Admin workspace deactivation / universal search", "R-95": "live billing, secret vault, external paging",
-    "R-96": "PostgreSQL-only paths not exercised live", "R-97": "Google OIDC live behaviour", "R-98": "LAYOUT-W11-01",
+    "R-96": "PostgreSQL-only paths not exercised live", "R-97": "Google OIDC live behaviour"
 }
 # Rows that were ACCEPTED in W9.13 and are now evidence-closed: they must be PASS and say where they were closed.
 CLOSED_SINCE_W913 = {"R-47": "W10.10", "R-48": "W10.10", "R-52": "W11"}
@@ -70,6 +70,8 @@ def run() -> dict[str, tuple[bool, str]]:
     check("priv_w9_findings_not_described_as_open", "Closed in W10.10; historical W9.13 result was ACCEPTED." in by_id.get("R-47", ["", "", "", "", "", "", ""])[6]
           and "Closed in W10.10; historical W9.13 result was ACCEPTED." in by_id.get("R-48", ["", "", "", "", "", "", ""])[6]
           and not re.search(r"PRIV-W9-0[12][^|]*\|[^|]*\|[^|]*\|[^|]*\|\s*ACCEPTED", text))
+    r98 = by_id.get("R-98", ["", "", "", "", "", "", ""])
+    check("layout_w11_01_history_preserved_and_corrected", r98[5] == "PASS" and "LAYOUT-W11-01" in r98[6] and "42px" in r98[6] and "lg" in r98[6], "found in W11, corrected by a bounded owner-approved fix; finding history kept")
     check("distributed_limiting_not_claimed_live", "NOT live" in by_id.get("R-34", ["", "", "", "", "", "", ""])[6] or "NOT live" in text, "matrix states distributed limiting is not live")
     check("historical_w9_13_origin_linked_and_present", "w9/P10B_W9_13_FULL_REQUALIFICATION.md" in text and (ROOT / "docs/capstone/p10/w9/P10B_W9_13_FULL_REQUALIFICATION.md").exists(), "W9.13 history preserved")
     check("w10_14_and_w11_evidence_present", (ROOT / "docs/capstone/admin/W10_14_FULL_ADMIN_QUALIFICATION.md").exists() and (ROOT / "docs/capstone/p10/P10B_W11_INTEGRATED_REQUALIFICATION.md").exists()

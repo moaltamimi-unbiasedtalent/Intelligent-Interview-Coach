@@ -5,7 +5,8 @@ import type { AppLocale } from "../lib/i18n/locales";
 /**
  * P10B-W11 integrated visual + accessibility regression, in real Chromium against the production build (backend mocked at the network layer; no provider call).
  * CANDIDATE: 13 surfaces x {de, ru} x {desktop 1280, mobile 390} x {light, dark} = 104 programmatic page/configuration checks.
- * ADMIN (English-only): every top-level Admin destination + a detail page x {tablet 768, desktop 1280} x {light, dark}.
+ * ADMIN (English-only): every top-level Admin destination + a detail page x {tablet 768, desktop 1280} x {light, dark}. A shared-header breakpoint regression
+ * (LAYOUT-W11-01, found by W11 and corrected: the desktop/mobile navigation handoff moved from md=768px to lg=1024px) covers candidate and Admin chrome at 768 and 1024.
  * Programmatic checks only (no screenshots are asserted); no WCAG certification is claimed. W9.13 recorded A11Y-W9-13-01 (/practice without a page-level h1, ACCEPTED).
  * On the W11 tree a FULLY RENDERED /practice has an h1 in every configuration and the page source has not changed since W9.7, so the finding is not reproducible;
  * this suite now requires an h1 on all 13 surfaces. The crash detector is localized (the route error boundary is detected by its translated copy), so a crashed
@@ -141,26 +142,19 @@ for (const cfg of ADMIN_CONFIGS) {
   test(`W11 Admin visual/a11y: ${ADMIN_PAGES.length} destinations, ${cfg.w}px, ${cfg.theme}`, async ({ page }) => {
     await page.setViewportSize({ width: cfg.w, height: cfg.h });
     const violations: string[] = [];
-    const headerOverflow: number[] = [];
     for (const path of ADMIN_PAGES) {
       await page.unrouteAll({ behavior: "ignoreErrors" });
       await mockAdmin(page, cfg.theme);
       await page.goto(path);
       await page.waitForLoadState("networkidle");
       const r = await inspect(page);
-      // LAYOUT-W11-01 (P3, ACCEPTED): the SHARED app header overflows by ~29px at exactly 768px (candidate and Admin alike). Admin CONTENT must not overflow at any width.
+      // LAYOUT-W11-01 is corrected: neither the document nor the Admin content may overflow at ANY width (including the 768px tablet handoff).
+      if (r.overflow > 1) violations.push(`${path}: horizontal overflow ${r.overflow}px`);
       if (r.mainOverflow > 1) violations.push(`${path}: Admin content overflows the viewport by ${r.mainOverflow}px`);
-      if (cfg.w >= 1024 && r.overflow > 1) violations.push(`${path}: horizontal overflow ${r.overflow}px`);
-      if (cfg.w === 768) headerOverflow.push(r.overflow);
       if (r.h1 < 1) violations.push(`${path}: no semantic page heading (h1)`);
       if (r.unnamed.length) violations.push(`${path}: control(s) without an accessible name ${r.unnamed.join(" | ")}`);
       if (r.noAlt.length) violations.push(`${path}: image(s) without alt`);
       if (r.crashed) violations.push(`${path}: page crashed (mock too thin or a real defect)`);
-    }
-    if (cfg.w === 768) {
-      const worst = Math.max(...headerOverflow);
-      if (worst > 40) violations.push(`LAYOUT-W11-01 grew: shared header overflow ${worst}px at 768px (was ~29px)`);
-      if (worst <= 1) violations.push("LAYOUT-W11-01 appears FIXED (no header overflow at 768px) - retire the ACCEPTED row");
     }
     expect(violations, violations.join("\n")).toEqual([]);
   });
@@ -180,4 +174,56 @@ test("W11 Admin: a permission-denied principal sees a safe state and no Admin na
   expect(r.adminLinks).toBe(0);
   expect(r.crashed).toBe(false);
   await expect(page.getByRole("tab")).toHaveCount(0);
+});
+
+
+// ------------------------------------------------------------------------------------------------------------------ shared header breakpoint (LAYOUT-W11-01)
+// The desktop header navigation appears from lg (1024px); below it (including exactly 768px) the compact bottom bar is the single primary navigation.
+for (const ui of ["de", "ru"] as const) {
+  for (const width of [768, 1024] as const) {
+    test(`W11 shared header breakpoint: candidate /app, ${ui}, ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await mockCandidate(page, ui, "light", true);
+      await page.goto("/app");
+      await page.waitForLoadState("networkidle");
+      const r = await inspect(page, ui);
+      expect(r.overflow, "document horizontal overflow").toBeLessThanOrEqual(1);
+      expect(r.mainOverflow, "main content overflow").toBeLessThanOrEqual(1);
+      expect(r.crashed).toBe(false);
+      expect(r.rawKeys).toEqual([]);
+      expect(r.unnamed, "header controls without an accessible name").toEqual([]);
+      const primary = page.getByRole("navigation", { name: translate(ui as AppLocale, "nav.primary") });
+      await expect(primary).toHaveCount(1);                                              // exactly ONE visible primary landmark (hidden ones are not exposed)
+      const labels = ["nav.opportunities", "nav.prepare", "nav.practice", "nav.progress", "nav.history"].map((k) => translate(ui as AppLocale, k));
+      for (const label of labels) await expect(primary.getByRole("link", { name: label })).toBeVisible();   // all five destinations reachable
+      const bottom = await page.evaluate(() => {
+        const navs = Array.from(document.querySelectorAll("nav")).filter((n) => getComputedStyle(n).display !== "none");
+        const fixedBottom = navs.some((n) => getComputedStyle(n).position === "fixed");
+        const headerNav = navs.some((n) => n.closest("header") !== null);
+        return { fixedBottom, headerNav };
+      });
+      if (width === 768) expect(bottom).toEqual({ fixedBottom: true, headerNav: false });      // compact navigation is the active pattern
+      else expect(bottom).toEqual({ fixedBottom: false, headerNav: true });                      // desktop PrimaryNavigation active, bottom bar hidden
+      for (const control of [translate(ui as AppLocale, "nav.more") ]) await expect(page.getByRole("button", { name: control }).first()).toBeVisible();
+      await expect(page.locator("header").getByRole("button").first()).toBeVisible();          // language, theme and account controls remain in the header
+    });
+  }
+}
+
+test("W11 shared header breakpoint: an Admin keeps Admin access through More at 768px and 1024px", async ({ page }) => {
+  for (const width of [768, 1024]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.unrouteAll({ behavior: "ignoreErrors" });
+    await mockAdmin(page, "light");
+    await page.goto("/admin");
+    await page.waitForLoadState("networkidle");
+    const r = await inspect(page);
+    expect(r.overflow).toBeLessThanOrEqual(1);
+    expect(r.mainOverflow).toBeLessThanOrEqual(1);
+    expect(r.crashed).toBe(false);
+    await page.getByRole("button", { name: /^More/ }).first().click();                       // Admin destinations remain reachable via More
+    await expect(page.getByRole("menuitem").first()).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("button", { name: /^More/ }).first()).toBeFocused();         // keyboard handling intact
+  }
 });

@@ -1,7 +1,7 @@
 # P10B-W11 - Integrated Candidate + Admin Requalification
 
 ## 1. Status
-**Implemented and qualified on branch `release/p10b-w11-integrated-requalification`; COMPLETE only after merge.** This is a QUALIFICATION wave: no product feature, no migration, no new permission, no new dependency, 0 paid/live calls. **RC-P10-003 has NOT been created, Pilot 2 remains paused, P10C has not started.**
+**Implemented and qualified on branch `release/p10b-w11-integrated-requalification`; COMPLETE only after merge.** W11 remained primarily a QUALIFICATION wave: no product feature, no backend product-logic change, no migration, no new permission, no new dependency, no entitlement, billing, security or privacy behaviour change, 0 paid/live calls. **One bounded P3 responsive-layout defect found by W11 (LAYOUT-W11-01) was corrected, with explicit owner approval, in three shared frontend layout files** (see section 14A). **RC-P10-003 has NOT been created, Pilot 2 remains paused, P10C has not started.**
 
 ## 2. Starting main
 `fefb8191f9383d64656ea67a1fce753dc32112e4` (W10.14 integrated; Alembic head `0025_security_audit_incidents`).
@@ -25,7 +25,7 @@ A detached `git worktree` of the committed W11 tree started with NO `.venv`, NO 
 Darwin 27.0.0 (macOS 27.0, Apple silicon); Python 3.11.15; Node v24.15.0 (CI uses Node 20: difference recorded); npm 11.12.1; pytest 8.4.2; SQLAlchemy 2.1.3; Ruff 0.16.10; FastAPI 0.142.2; Alembic 1.20.0; Pydantic 2.13.5; LangGraph 0.3.34; ChromaDB 0.6.3; TypeScript 5.9.3; Vitest 2.1.9; Playwright 1.63.0 (browser binary reused from the machine's Playwright cache); Next.js 15.5.25. Provider and database configuration: the host shell exposed no provider, database or secret variables and the fresh checkout had no `.env`; test isolation (`tests/conftest.py`) neutralises them regardless. No credential value was printed. 0 paid/live provider credentials are required.
 
 ## 9. Integrated acceptance matrix summary
-`docs/capstone/p10/P10B_RELEASE_ACCEPTANCE_MATRIX.md` is now the integrated gate: 98 requirements: 86 PASS, 12 ACCEPTED, 0 BLOCKER. History is preserved (R-01..R-52 originated in W9.13). `scripts/eval_release_matrix.py` recomputes the totals and checks every evidence path.
+`docs/capstone/p10/P10B_RELEASE_ACCEPTANCE_MATRIX.md` is now the integrated gate: 98 requirements: 87 PASS, 11 ACCEPTED, 0 BLOCKER. History is preserved (R-01..R-52 originated in W9.13). `scripts/eval_release_matrix.py` recomputes the totals and checks every evidence path.
 
 ## 10. Candidate matrix requalification
 All 52 W9.13 rows were re-evaluated against the W11 tree (evidence paths exist; the suites that back them ran in the fresh checkout). Stale wording was corrected: R-26/R-28 (PRIV limitations closed), R-35 (isolation bootstrap), R-39 (Alembic head `0025`), R-40..R-45 (W11 evidence). Results changed only where evidence changed (section 11).
@@ -52,12 +52,20 @@ R-53 to R-80 (28 release-significant Admin requirements: candidate/Admin separat
 | R-95 | Live billing, production secret vault, external paging absent | all labelled in the product; nothing is sold or paged; later production-hardening phase | no |
 | R-96 | PostgreSQL-only paths (SKIP LOCKED claim, audit-trigger DDL) not executed live | no disposable `TEST_POSTGRES_URL` in qualification; the SQLite paths are fully exercised and the DDL is rendered and unit-checked | no |
 | R-97 | Google OIDC live behaviour unvalidated | an OIDC-only Admin cannot step up (fails closed); needs a provider account and an authorised run | no |
-| R-98 | LAYOUT-W11-01: the shared header overflows by ~29px at exactly 768px | P3 cosmetic; candidate and Admin alike; no data, security, privacy or entitlement impact; content does not overflow; 800px and wider and 390px are clean | no |
 
 Plus the historical candidate limitations R-33, R-38, R-46, R-49, R-50, R-51. Every ACCEPTED row carries its rationale in the matrix.
 
 ## 14. Blockers
-**None.** 0 BLOCKER rows. Findings raised by W11: LAYOUT-W11-01 (P3, accepted, above). No product code was changed.
+**None.** 0 BLOCKER rows. Findings raised by W11: LAYOUT-W11-01 (P3), corrected in W11 (section 14A and R-98, now PASS).
+
+## 14A. LAYOUT-W11-01 (found and corrected in W11)
+- **Initial local qualification:** about 29px of horizontal overflow of the shared app header at exactly 768px (candidate and Admin alike). Initial classification: P3, ACCEPTED (matrix row R-98).
+- **GitHub PR #132 result:** the Browser E2E job on Linux Chromium reproduced the overflow at **42px** at 768px, in light and dark, and failed the W11 Admin visual/a11y tests (the regression then allowed growth only up to 40px).
+- **Owner decision:** a bounded W11 remediation was approved instead of loosening the threshold; R-52 stays PASS.
+- **Root cause:** the responsive handoff. `PrimaryNavigation` (`md:flex`) showed the full desktop header navigation at Tailwind `md` = 768px, exactly the failing width, while the header also carries the brand, five destinations, More, language, theme and account controls; Linux font metrics need more width than macOS.
+- **Fix (three coupled rules):** the desktop/mobile navigation handoff moved from `md` (768px) to `lg` (1024px): `PrimaryNavigation` `md:flex` to `lg:flex`, `MobileNavigation` `md:hidden` to `lg:hidden`, and the `AppShell` main bottom padding `md:pb-20` to `lg:pb-20`. Nothing was hidden or shortened: branding, More, language, theme and account controls, accessible names and all five destinations are unchanged; no `overflow-x` concealment, no font shrinking, no threshold change.
+- **Regression:** the test no longer tolerates or expects the defect. At 768px every Admin page must have no document overflow and no Admin-content overflow (and so at all widths); a new explicit breakpoint regression covers candidate `/app` at 768 and 1024 in de and ru (no overflow, no crash, no raw keys, accessible header controls, exactly one visible primary landmark, all five destinations reachable, compact bottom navigation at 768 and desktop header navigation at 1024) and an Admin keeps access through More with keyboard handling at 768 and 1024.
+- **Final result:** PASS after deterministic local and fresh-checkout requalification of the corrected tree (sections 32 to 38) and the PR's CI on the corrected head. The finding is recorded, not erased.
 
 ## 15. Candidate core journey
 Exercised deterministically (no provider): `tests/test_integrated_w11.py` registers a candidate, completes onboarding, creates an Opportunity, uploads a CV, saves memory and a completed interview with report content through the real API; the existing candidate Playwright journeys (`journey`, `interview`, `opportunity-practice`, `onboarding`, `data-privacy`, `support`, ...) run unchanged in the full Playwright suite.
@@ -129,10 +137,10 @@ From the fresh checkout: backend **3138 passed, 11 skipped, 0 failed**; Vitest *
 No migration was added in W11. In the fresh checkout, on a NEW isolated database: base to head succeeded; a single head `0025_security_audit_incidents`; 64 tables; the four append-only triggers (`audit_events`, `incident_events`) are installed; the eight W10.x tables checked (incidents, notifications, role requests, incident events, telemetry events, AI usage facts, flag overrides, pause states) have 0 seed rows; downgrade to `0024_reporting_analytics` and re-upgrade succeeded. The developer DB was never migrated or opened by a migration.
 
 ## 38. Visual QA
-Programmatic: 13 candidate surfaces x {de, ru} x {desktop 1280, mobile 390} x {light, dark} = **104 page/configuration checks**, and 20 Admin pages (18 destinations, a user detail and a support detail, recorded real API shapes) x {tablet 768, desktop 1280} x {light, dark} = **80 page checks**, plus a permission-denied state. Checks: no horizontal overflow (Admin content-level at 768px, see LAYOUT-W11-01), no raw translation key, accessible names on links and buttons, image alt, no Admin link for a candidate, slogan invariant, Cyrillic rendered, no crash (detected by the LOCALIZED error-boundary text), and an `h1`. Human sample (11 screenshots inspected by eye): candidate Russian mobile dark Home, German desktop light Practice (re-shot after the first capture used an incomplete capability mock and showed the error boundary), Russian mobile dark Privacy Center, German desktop light Trust; Admin Support, Billing, Security (dark), Reports and Configuration (tablet, which shows the 768px header issue). Not every screenshot was reviewed by eye; the 184 programmatic checks cover the rest.
+Programmatic: 13 candidate surfaces x {de, ru} x {desktop 1280, mobile 390} x {light, dark} = **104 page/configuration checks**; 20 Admin pages (18 destinations, a user detail and a support detail, recorded real API shapes) x {tablet 768, desktop 1280} x {light, dark} = **80 page checks** plus a permission-denied state; and the shared-header breakpoint regression (candidate `/app` x {de, ru} x {768, 1024}, plus an Admin at 768 and 1024). Checks: no document or content horizontal overflow (at every width, including 768px), no raw translation key, accessible names on links and buttons, image alt, no Admin link for a candidate, slogan invariant, Cyrillic rendered, no crash (detected by the LOCALIZED error-boundary text), and an `h1`. Results: **768px candidate shared header PASS; 768px Admin shared header PASS; 1024px desktop transition PASS; 390px mobile PASS; 1280px desktop PASS.** @@SHOTS@@
 
 ## 39. Accessibility
-Deterministic checks only (see section 38 and the W10.14 static/component checks); no WCAG certification is claimed. A11Y-W9-13-01 retired on evidence (section 11). LAYOUT-W11-01 recorded.
+Deterministic checks only (see section 38 and the W10.14 static/component checks); no WCAG certification is claimed. A11Y-W9-13-01 retired on evidence (section 11). LAYOUT-W11-01 was corrected (section 14A): at 768px the compact bottom navigation is the single visible primary landmark; from 1024px the desktop header navigation is, with all five destinations, More, language, theme and account controls reachable at both.
 
 ## 40. Performance
 No material regression. Candidate build: shared first-load JS 103 kB, identical to the W9.13 baseline. Admin fixture (2,000 users, 20,000 audit rows, SQLite, p50 of 5; not an SLA): Admin shell 13 ms, users list 6 ms, jobs list 5 ms, reports overview 9 ms, audit page 6 ms, security events page 18 ms (W10.14: 21/6/4/7/5/14 ms). Backend suite wall time 536 s (W10.14: 508 s) for 18 more tests.
@@ -150,12 +158,12 @@ Inherited verbatim: **disclosed contamination with stable post-incident qualific
 0.
 
 ## 45. Known limitations
-The ACCEPTED rows of the matrix (section 13 and the historical rows); the PostgreSQL job and trigger tests unexecuted live; Google OIDC, Redis limiter, email and live billing unvalidated or not built; engineering translations pending native/legal review; live generated-language quality unvalidated; no advanced anomaly detection; LAYOUT-W11-01.
+The ACCEPTED rows of the matrix (section 13 and the historical rows); the PostgreSQL job and trigger tests unexecuted live; Google OIDC, Redis limiter, email and live billing unvalidated or not built; engineering translations pending native/legal review; live generated-language quality unvalidated; no advanced anomaly detection; none of them is a blocker.
 
 ## 46. W11 engineering verdict
 # P10B INTEGRATED QUALIFIED - RC-P10-003 READY FOR SEPARATE CREATION
 
-Every condition held: 0 BLOCKER rows in the integrated matrix; the full candidate and Admin suites are green; the cross-plane seam tests are green; the complete fresh-checkout qualification (fresh Python venv and `npm ci`) is green; the migration chain is green; the frontend fresh install and build are green; Playwright, the evaluators, the privacy and secret sentinels, localization and route authorization are green; the protected stores are unchanged; 0 paid/live calls; the tree is clean. Two points need the owner's explicit confirmation: the evidence-based retirement of A11Y-W9-13-01 (R-52, section 11) and the acceptance of the new P3 finding LAYOUT-W11-01 (R-98).
+Every condition held: 0 BLOCKER rows in the integrated matrix; the full candidate and Admin suites are green; the cross-plane seam tests are green; the complete fresh-checkout qualification (fresh Python venv and `npm ci`) is green; the migration chain is green; the frontend fresh install and build are green; Playwright, the evaluators, the privacy and secret sentinels, localization and route authorization are green; the protected stores are unchanged; 0 paid/live calls; the tree is clean. The owner has confirmed the evidence-based retirement of A11Y-W9-13-01 (R-52, section 11), and LAYOUT-W11-01 (R-98) was corrected rather than accepted (section 14A).
 
 ## 47. RC-P10-003 readiness decision
 The repository is engineering-ready for a SEPARATE, owner-reviewed RC-P10-003 creation step. **W11 did not create RC-P10-003**: no tag, no branch, no version change, no RC artifact directory. The RC must still carry the ACCEPTED limitations (section 13 and the historical rows) honestly in its own documentation.
