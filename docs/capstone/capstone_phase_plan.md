@@ -73,7 +73,7 @@ never-translated slogan. Local `main` == `origin/main`; GitHub integration is pa
 | W10.11 | Feature flags and safe system configuration (**COMPLETE: merged in PR #125, main `ef339a53`**; closes SEC-W10-05; migration `0023_platform_config`; see `admin/W10_11_FEATURE_FLAGS_SAFE_PLATFORM_CONFIGURATION.md`) | M | Capstone desirable |
 | W10.12 | Reporting, analytics and AI economics (**COMPLETE: merged in PR #126, feature head `e4ae300`, main `18eebed`**; migration `0024_reporting_analytics`; see `admin/W10_12_REPORTING_ANALYTICS_AI_ECONOMICS.md`) | L | Capstone critical / desirable |
 | W10.13 | Security, audit and incident management (**COMPLETE: merged in PR #128, feature head `44f8a73`, merge `b47a10b`**; migration `0025_security_audit_incidents`; see `admin/W10_13_SECURITY_AUDIT_INCIDENT_MANAGEMENT.md`) | L | Capstone critical |
-| W11 | Integrated candidate + Admin requalification (**implemented on its branch; complete only after merge**; primarily qualification, plus one bounded owner-approved P3 shared-header layout correction (LAYOUT-W11-01); migration-free; the release matrix is now the integrated gate; verdict: P10B INTEGRATED QUALIFIED, RC-P10-003 ready for SEPARATE creation; **RC-P10-003 NOT created, Pilot 2 paused, P10C not started**; see `p10/P10B_W11_INTEGRATED_REQUALIFICATION.md`) | L | Capstone critical |
+| W11 | Integrated Candidate + Admin Requalification - **COMPLETE / QUALIFIED, merged PR #132, merge `d27993d7`**; integrated matrix 99 rows: 88 PASS / 11 ACCEPTED / 0 BLOCKER; primarily qualification plus one bounded owner-approved P3 shared-header layout correction (LAYOUT-W11-01) and a CI workflow fix (CI-W11-01); migration-free (Alembic head `0025_security_audit_incidents`); verdict: P10B INTEGRATED QUALIFIED, RC-P10-003 ready for SEPARATE creation; **RC-P10-003 NOT created, Pilot 2 paused, P10C not started**; see `p10/P10B_W11_INTEGRATED_REQUALIFICATION.md`) | L | Capstone critical |
 | W10.14 | Full Admin qualification (**COMPLETE: merged in PR #130, merge `ba58086`; ADMIN PLATFORM QUALIFIED**; migration-free; closes ROLE-W10-01 as least-privilege domain separation; see `admin/W10_14_FULL_ADMIN_QUALIFICATION.md`; W11 integrated candidate + Admin requalification is still required before RC-P10-003) | L | Capstone critical |
 
 Complexity is relative (S/M/L/XL); no hour estimates are asserted.
@@ -81,7 +81,7 @@ Complexity is relative (S/M/L/XL); no hour estimates are asserted.
 **W10 execution order (refined in W10.0; numbering unchanged):** W10.1 (shell, permission framework, audit foundation, build metadata) -> W10.2 (users, sessions, SEC-W10-01) -> W10.3 (support) -> W10.4 (plans/entitlements) -> W10.6 (integrations + SecretStore) -> W10.9 (jobs) -> W10.8 (knowledge administration) -> W10.10 (privacy/legal incl. PRIV-W9-01/02) -> W10.5 (billing, mock) -> W10.7 (model administration) -> W10.11 (flags) -> W10.12 (reporting) -> W10.13 (security/incidents) -> W10.14 (qualification), then integrated candidate + admin requalification -> RC-P10-003.
 
 **Critical path:** W9.8 -> W9.11 / W9.12 -> W9.13 -> W10.0 -> W10.1 -> W10.2 / W10.13 -> W10.4 -> {W10.3, W10.6 -> W10.8,
-W10.10, W10.12} -> W10.14 -> W11 -> RC-P10-003 -> Pilot 2 -> P10C -> P10D -> P10E -> P10F -> P11. W9.9 and W9.10 are off
+W10.10, W10.12} -> W10.14 -> W11 (COMPLETE) -> RC-P10-003 -> Pilot 2 -> P10C -> P10D -> P10E -> P10F -> P11. W9.9 and W9.10 are off
 the critical path (can slip without blocking W10). W10.5, W10.7, W10.9, W10.11 are desirable and may ship reduced
 (mock/adapter) without blocking qualification.
 
@@ -90,7 +90,7 @@ Capstone must-have vs production-ready mock/adapter-acceptable in the Admin mast
 represented as live.
 
 **Pilot 2 stays PAUSED.** It resumes only when: (1) candidate remediation (W9.8-W9.13) is complete; (2) admin changes
-that affect support/privacy are stable; (3) the full integrated qualification (W11) passes against RC-P10-003.
+that affect support/privacy are stable; (3) the full integrated qualification (W11, now COMPLETE) is carried by RC-P10-003. **Next step: RC-P10-003 creation - a separate owner-reviewed action (not yet done).**
 Future Pilot 2 coverage: Opportunity, Welcome/Tutorial, non-English incl. Russian, error recovery, Privacy/Data
 Center, Trust, support/ticketing where implemented, and Voice separately where supported. RC-P10-002 evidence is
 immutable.

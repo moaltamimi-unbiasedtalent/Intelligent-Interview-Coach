@@ -1,7 +1,28 @@
 # P10B-W11 - Integrated Candidate + Admin Requalification
 
 ## 1. Status
-**Implemented and qualified on branch `release/p10b-w11-integrated-requalification`; COMPLETE only after merge.** W11 remained primarily a QUALIFICATION wave: no product feature, no backend product-logic change, no migration, no new permission, no new dependency, no entitlement, billing, security or privacy behaviour change, 0 paid/live calls. **One bounded P3 responsive-layout defect found by W11 (LAYOUT-W11-01) was corrected, with explicit owner approval, in three shared frontend layout files** (see section 14A). **RC-P10-003 has NOT been created, Pilot 2 remains paused, P10C has not started.**
+# W11 COMPLETE AND INTEGRATED
+
+# P10B INTEGRATED QUALIFIED
+
+# RC-P10-003 READY FOR SEPARATE CREATION
+
+| Item | Value |
+|---|---|
+| Feature PR | #132 |
+| Feature branch | `release/p10b-w11-integrated-requalification` |
+| Feature head | `654ca47ab603fe96d093e10faaa778f5f5ab2e33` |
+| Feature merge (main) | `d27993d7f2757cf7605355e3f76c71dac6f85c10` |
+| Alembic head | `0025_security_audit_incidents` |
+| Integrated matrix | 99 requirements: 88 PASS, 11 ACCEPTED, 0 BLOCKER (R-52 PASS, R-98 PASS, R-99 PASS) |
+| Paid/live calls | 0 |
+| Protected stores | unchanged against the W11-start baseline |
+
+PR #132's FINAL head was proven on GitHub with both workflows green: CI = success and Browser E2E = success. W11 is merged. W11 remained primarily a QUALIFICATION wave: no product feature, no backend product-logic change, no migration, no new permission, no new dependency, no entitlement, billing, security or privacy behaviour change, 0 paid/live calls. **One bounded P3 responsive-layout defect found by W11 (LAYOUT-W11-01) was corrected, with explicit owner approval, in three shared frontend layout files** (see section 14A). **RC-P10-003 has NOT been created, Pilot 2 remains paused, P10C has not started.**
+
+**What W11 green means:** engineering-ready for a SEPARATE RC creation action. It does NOT mean RC-P10-003 exists, Pilot 2 has resumed, production readiness is complete, native/legal review is complete, live provider validation is complete, or P10C has started. The ACCEPTED limitations remain accepted, and the W10.13 qualification-environment contamination disclosure remains permanent.
+
+Related: [W9.13 historical qualification](w9/P10B_W9_13_FULL_REQUALIFICATION.md), [W10.14 Admin qualification](../admin/W10_14_FULL_ADMIN_QUALIFICATION.md) and the [integrated acceptance matrix](P10B_RELEASE_ACCEPTANCE_MATRIX.md).
 
 ## 2. Starting main
 `fefb8191f9383d64656ea67a1fce753dc32112e4` (W10.14 integrated; Alembic head `0025_security_audit_incidents`).
@@ -57,6 +78,10 @@ Plus the historical candidate limitations R-33, R-38, R-46, R-49, R-50, R-51. Ev
 
 ## 14. Blockers
 **None.** 0 BLOCKER rows. Findings raised by W11: LAYOUT-W11-01 (P3), corrected in W11 (section 14A and R-98, now PASS); CI-W11-01 (CI workflow invalid YAML since W10.11), corrected in W11 (section 14B and R-99, PASS).
+
+**Historical evidence correction (kept, not erased).** An invalid YAML step name introduced in W10.11 meant GitHub's main CI workflow (`ci.yml`) did not execute for W10.11-W10.14 and the early W11 commits; the separate Browser E2E workflow did execute. Those waves still carry local and fresh-checkout qualification evidence, but earlier wording implying every GitHub CI job executed was incorrect. W11 fixed the workflow and added R-99 (sections 14B). W10.11-W10.14 are not reopened.
+
+**LAYOUT-W11-01 history (kept).** Found as ~29px overflow at 768px locally; GitHub Linux Chromium reproduced 42px; originally classified P3 / ACCEPTED (R-98); the owner approved a bounded remediation moving the desktop/mobile navigation handoff from `md` to `lg`; exact-tree qualification was rerun; R-98 is now PASS; final CI is green (section 14A).
 
 ## 14A. LAYOUT-W11-01 (found and corrected in W11)
 - **Initial local qualification:** about 29px of horizontal overflow of the shared app header at exactly 768px (candidate and Admin alike). Initial classification: P3, ACCEPTED (matrix row R-98).
