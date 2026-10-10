@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { useT } from "@/components/i18n/I18nProvider";
 import { ButtonLink } from "@/components/ui/Button";
 import { MarketingIcon, type IconName } from "@/components/marketing/MarketingIcon";
+import { CandidateStory } from "@/components/marketing/CandidateStory";
 
 // P10B Wave 7: the public story is centred on the Opportunity (Wave 6) - one job, everything
 // together - not a generic interview-question generator. Icons are restrained inline SVGs
@@ -70,6 +71,16 @@ export function MarketingHome() {
             />
           </div>
         </figure>
+      </section>
+
+      {/* v4: static candidate story + workflow entry. Fictional candidate, AI-generated stills, no video, not customer proof. */}
+      <section className="mx-auto max-w-content px-4 py-14" aria-labelledby="home-story-title">
+        <h2 id="home-story-title" className="text-center text-2xl font-bold md:text-3xl">{t("homeStory.title")}</h2>
+        <p className="mx-auto mt-3 max-w-2xl text-center text-muted">{t("homeStory.lead")}</p>
+        <div className="mt-8"><CandidateStory compact /></div>
+        <p className="mt-6 text-center">
+          <Link href="/getting-started" className="text-sm font-semibold text-accent hover:underline">{t("homeStory.cta")} &rarr;</Link>
+        </p>
       </section>
 
       {/* Trust strip */}

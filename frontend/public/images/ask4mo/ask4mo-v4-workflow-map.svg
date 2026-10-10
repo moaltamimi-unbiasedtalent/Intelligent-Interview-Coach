@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Ask4Mo connected interview preparation workflow</title>
+  <desc id="desc">Seven connected stages: Opportunity, company context, approved evidence, prepare with Mo, interview practice, structured feedback and progress.</desc>
+  <rect width="1600" height="900" rx="44" fill="#f7f7f5"/>
+  <path d="M210 452 C350 230 530 230 650 452 S950 675 1090 452 1300 230 1410 450" fill="none" stroke="#1a5e63" stroke-width="8" stroke-linecap="round" stroke-dasharray="12 20"/>
+  <g font-family="Inter, Arial, sans-serif" text-anchor="middle" fill="#16171a">
+    <g transform="translate(180 452)"><circle r="92" fill="#1a5e63"/><text y="-4" fill="white" font-size="27" font-weight="700">Opportunity</text><text y="29" fill="#dceceb" font-size="18">one real job</text></g>
+    <g transform="translate(390 290)"><circle r="78" fill="#fff" stroke="#d8d8d2" stroke-width="3"/><text y="-4" font-size="23" font-weight="700">Company</text><text y="26" fill="#62666d" font-size="17">context</text></g>
+    <g transform="translate(610 452)"><circle r="78" fill="#ded8ea"/><text y="-4" font-size="23" font-weight="700">Approved</text><text y="26" font-size="19">evidence</text></g>
+    <g transform="translate(800 625)"><circle r="88" fill="#d9c7a8"/><text y="-4" font-size="24" font-weight="700">Prepare</text><text y="28" font-size="18">with Mo</text></g>
+    <g transform="translate(1010 452)"><circle r="82" fill="#1a5e63"/><text y="-4" fill="white" font-size="24" font-weight="700">Interview</text><text y="28" fill="#dceceb" font-size="18">practice</text></g>
+    <g transform="translate(1230 290)"><circle r="78" fill="#fff" stroke="#d8d8d2" stroke-width="3"/><text y="-4" font-size="22" font-weight="700">Structured</text><text y="26" fill="#62666d" font-size="17">feedback</text></g>
+    <g transform="translate(1420 452)"><circle r="82" fill="#ded8ea"/><text y="-4" font-size="24" font-weight="700">Progress</text><text y="28" font-size="18">next focus</text></g>
+  </g>
+  <text x="110" y="92" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="3" fill="#1a5e63">ONE CONNECTED OPPORTUNITY</text>
+  <text x="110" y="142" font-family="Inter, Arial, sans-serif" font-size="50" font-weight="750" fill="#16171a">From scattered preparation to one clear next step.</text>
+  <text x="110" y="820" font-family="Inter, Arial, sans-serif" font-size="22" fill="#62666d">Private by default · Sources visible · Candidate evidence stays under candidate control</text>
+</svg>

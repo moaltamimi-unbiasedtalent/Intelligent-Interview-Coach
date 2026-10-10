@@ -16,6 +16,7 @@ import { PrepareResponsive } from "./PrepareResponsive";
 import { PreparationTools, type PrepContextPatch } from "./PreparationTools";
 import { RoleContext } from "./RoleContext";
 import { StageProgress } from "./StageProgress";
+import { JourneyRail } from "@/components/layout/JourneyRail";
 import { StartPracticeButton, type PrepState } from "./StartPracticeButton";
 
 interface Turn {
@@ -215,7 +216,7 @@ export function PrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft
 
   return (
     <section>
-      <div className="mb-4"><StageProgress current="Prepare" /></div>
+      <div className="mb-4 space-y-3"><JourneyRail current="prepare" /><StageProgress current="Prepare" /></div>
       {prep.targetRole ? (
         <div className="mb-5"><RoleContext data={{ role: prep.targetRole, seniority: prep.seniority || undefined }} /></div>
       ) : null}
