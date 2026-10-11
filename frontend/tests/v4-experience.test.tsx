@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { CATALOGS, translate } from "@/lib/i18n/catalog";
 import { SUPPORTED_LOCALE_CODES, type AppLocale } from "@/lib/i18n/locales";
-import { BILLING_ENABLED, AVAILABLE_TODAY, PRICE_BENCHMARK, PRICING_PLANS } from "@/lib/pricing";
+import { PRICE_BENCHMARK, PRICING_PLANS } from "@/lib/pricing";
 import { JOURNEY_STAGES } from "@/lib/journey";
 
 /** Ask4Mo v4 experience: floating marketing navigation, Getting Started, static candidate story, workflow map, plan table truthfulness, journey cues. */
@@ -25,19 +25,23 @@ import { CandidateStory } from "@/components/marketing/CandidateStory";
 import { WorkflowMap } from "@/components/marketing/WorkflowMap";
 import { PricingContent } from "@/components/marketing/PricingContent";
 import { MarketingHome } from "@/components/marketing/MarketingHome";
+import { ProductContent } from "@/components/marketing/ProductContent";
+import { ResearchEvidence } from "@/components/marketing/ResearchEvidence";
 import { JourneyRail } from "@/components/layout/JourneyRail";
 
 const t = (k: string, l: AppLocale = "en") => translate(l, k);
 const wrap = (ui: React.ReactElement, locale: AppLocale = "en") => render(<I18nProvider initialLocale={locale}>{ui}</I18nProvider>);
 
 describe("floating marketing navigation", () => {
-  it("keeps every current route plus How it works, the language control and the sign-in / CTA state", () => {
+  it("keeps one Product destination, the language control and the sign-in / CTA state", () => {
     authState.status = "unauthenticated";
     wrap(<MarketingShell><p>body</p></MarketingShell>);
     const header = screen.getByTestId("marketing-header");
     for (const item of MARKETING_NAV) expect(within(header).getAllByRole("link", { name: t(item.key) }).length).toBeGreaterThan(0);
-    const hrefs = MARKETING_NAV.map((n) => n.href);
-    for (const h of ["/product", "/getting-started", "/pricing", "/trust", "/about", "/help"]) expect(hrefs).toContain(h);
+    const hrefs: string[] = MARKETING_NAV.map((n) => n.href);
+    for (const h of ["/product", "/pricing", "/trust", "/about"]) expect(hrefs).toContain(h);
+    expect(hrefs).not.toContain("/getting-started");
+    expect(hrefs).not.toContain("/help");
     expect(within(header).getByRole("link", { name: t("marketing.getStarted") })).toHaveAttribute("href", "/register");
     expect(within(header).getByRole("link", { name: t("marketing.signIn") })).toHaveAttribute("href", "/sign-in");
   });
@@ -141,19 +145,28 @@ describe("static candidate story", () => {
 });
 
 describe("Getting Started page", () => {
-  it("has the required sections, the six steps, the 15-minute checklist and the Help / Trust / AI links", () => {
+  it("has the required sections, the six steps, the 15-minute checklist and the Trust / AI links", () => {
     const { container } = wrap(<GettingStartedContent />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(t("gettingStarted.title"));
     for (const id of ["story", "workflow", "steps", "first-15"]) expect(container.querySelector(`#${id}`)).not.toBeNull();
     expect(container.querySelectorAll("#steps ol > li")).toHaveLength(6);
     expect(container.querySelectorAll("#first-15 li")).toHaveLength(6);
-    for (const href of ["/help", "/trust", "/ai-transparency"]) expect(container.querySelector(`a[href="${href}"]`)).not.toBeNull();
+    for (const href of ["/trust", "/ai-transparency"]) expect(container.querySelector(`a[href="${href}"]`)).not.toBeNull();
+    expect(container.querySelector('a[href="/help"]')).toBeNull();
     expect(container.querySelector("video")).toBeNull();
   });
 
-  it("is reachable from How it works without removing /product", () => {
-    expect(MARKETING_NAV.find((n) => n.href === "/getting-started")).toBeTruthy();
+  it("combines product features, differentiation and How it works on Product", () => {
+    const { container } = wrap(<ProductContent />);
+    expect(MARKETING_NAV.some((n) => String(n.href) === "/getting-started")).toBe(false);
     expect(MARKETING_NAV.find((n) => n.href === "/product")).toBeTruthy();
+    expect(container.querySelector("#how-it-works")).not.toBeNull();
+    expect(container.textContent).toContain(t("marketing.featureCompanyTitle"));
+    expect(container.textContent).toContain(t("marketing.whyTitle"));
+    expect(container.querySelector('img[src$="ask4mo-about-human-conversation.png"]')).not.toBeNull();
+    expect(container.querySelector('img[src$="ask4mo-v4-candidate-story-practice-v5.png"]')).toBeNull();
+    expect(container.querySelector('img[src$="ask4mo-v4-candidate-story-practice-v4.png"]')).toBeNull();
+    expect(container.querySelector('img[src$="ask4mo-product-connected-system-editorial.png"]')).toBeNull();
   });
 });
 
@@ -197,37 +210,29 @@ describe("workflow map", () => {
 });
 
 describe("pricing truthfulness (v4)", () => {
-  it("keeps billing off, Basic free and Premium an indicative preview with no purchase path", () => {
-    expect(BILLING_ENABLED).toBe(false);
+  it("keeps Basic free and gives Premium a clear online-selection path", () => {
     expect(PRICING_PLANS.find((p) => p.id === "basic")!.priceDisplay).toBe("€0");
     const premium = PRICING_PLANS.find((p) => p.id === "premium")!;
     expect(premium.priceDisplay).toBe("€19.99");
-    expect(premium.ctaKind).toBe("request");
+    expect(premium.ctaKind).toBe("purchase");
+    expect(premium.ctaHref).toBe("/register?plan=premium");
     const { container } = wrap(<PricingContent />);
-    // No purchase control: only the truthful register / preview-request links exist (negated statements in the copy are fine).
-    const controls = [...container.querySelectorAll("a,button")].map((e) => e.textContent ?? "").join(" | ");
-    expect(controls).not.toMatch(/\b(buy|checkout|subscribe now|purchase|pay now|add to cart)\b/i);
+    expect(container.querySelector('a[href="/register?plan=premium"]')).not.toBeNull();
     expect(container.querySelector("input[type=text],input[name*=card i]")).toBeNull();
-    expect(screen.getByTestId("no-billing-note")).toBeInTheDocument();
   });
 
-  it("the Available today table lists exactly the backend entitlement keys and nothing invented", () => {
-    expect(AVAILABLE_TODAY.map((r) => r.key).sort()).toEqual(["current_market_research", "premium_preview", "standard_history", "standard_model_profiles", "standard_progress"]);
-    wrap(<PricingContent />);
-    const table = screen.getByTestId("available-today");
-    const premiumRow = table.querySelector('[data-entitlement="premium_preview"]')!;
-    expect(premiumRow.textContent).toContain(t("pricingV4.previewOnly"));
-    expect(premiumRow.textContent).not.toContain(t("pricingV4.included"));
-    // No limit-based feature is presented as available today.
-    expect(table.textContent).not.toMatch(/1 Opportunity|one Opportunity|three saved|3 sessions|unlimited/i);
-  });
-
-  it("puts the proposed split under a visibly labelled 'under consideration' section, and keeps benchmark honest", () => {
+  it("removes the internal Available today entitlement table from the public page", () => {
     const { container } = wrap(<PricingContent />);
-    const section = screen.getByTestId("under-consideration");
+    expect(container.querySelector('[data-testid="available-today"]')).toBeNull();
+    expect(container.textContent).not.toContain(t("pricingV4.availableTitle"));
+  });
+
+  it("puts the proposed split under a visibly labelled launch-package section, and keeps benchmark honest", () => {
+    const { container } = wrap(<PricingContent />);
+    const section = screen.getByTestId("pricing-plans");
     expect(section.textContent).toContain(t("pricingV4.considerLabel"));
     expect(section.textContent).toContain(t("pricingV4.consider1"));
-    expect(container.querySelector('[data-testid="available-today"]')!.textContent).not.toContain(t("pricingV4.consider1"));
+    expect(container.querySelector('[data-testid="available-today"]')).toBeNull();
     const bench = screen.getByTestId("price-benchmark");
     expect(bench.textContent).toContain(t("pricingV4.benchmarkDate"));
     expect(bench.textContent).toContain(t("pricingV4.benchmarkNoConvert"));
@@ -249,10 +254,10 @@ describe("pricing truthfulness (v4)", () => {
 });
 
 describe("home entry", () => {
-  it("shows the static story after the hero and links to Getting Started", () => {
+  it("shows the static story after the hero and links to the combined Product workflow", () => {
     const { container } = wrap(<MarketingHome />);
     expect(container.querySelector("[data-testid=candidate-story]")).not.toBeNull();
-    expect(container.querySelector('a[href="/getting-started"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/product#how-it-works"]')).not.toBeNull();
     expect(container.querySelector("video")).toBeNull();
     expect(container.textContent).toContain(t("marketing.heroTitle"));
   });
@@ -273,7 +278,7 @@ describe("journey rail", () => {
 });
 
 describe("v4 translations", () => {
-  const NAMESPACES = ["v4nav", "gettingStarted", "homeStory", "pricingV4", "journeyCues", "workflow"];
+  const NAMESPACES = ["v4nav", "gettingStarted", "homeStory", "pricingV4", "journeyCues", "workflow", "researchEvidence"];
   // Tokens that legitimately stay identical across languages.
   const SAME_OK = /^(Ask4Mo|Mo|Basic|Premium|Fast|Example|€|£|\$|\{)/;
 
@@ -314,5 +319,87 @@ describe("v4 translations", () => {
         for (const v of Object.values((CATALOGS[locale] as unknown as Record<string, Record<string, string>>)[ns])) expect(v).not.toMatch(/Ask More\. Be More\./);
       }
     }
+  });
+});
+
+describe("V4.3 refinements", () => {
+  it("adds the founder's requested statement to Home", () => {
+    const { container } = wrap(<MarketingHome />);
+    expect(container.textContent).toContain("I've spent my career helping organisations find the right talent.");
+    expect(container.textContent).toContain("Mo Al-Tamimi, Founder & CEO - Ask4Mo");
+  });
+
+  it("presents independent research as context, links to the original sources and avoids claiming Ask4Mo outcomes", () => {
+    const { container } = wrap(<ResearchEvidence />);
+    expect(container.firstElementChild?.className).toContain("bg-[#e9e2f0]");
+    expect(container.firstElementChild?.className).not.toContain("bg-[#183f42]");
+    expect(container.textContent).toContain("36% → 63%");
+    expect(container.textContent).toContain("358");
+    expect(container.textContent).toContain(t("researchEvidence.caveat"));
+    expect(container.textContent).toContain("not Ask4Mo results");
+    const sources = within(container).getAllByRole("link").map((link) => link.getAttribute("href"));
+    expect(sources).toContain("https://www.gov.uk/government/publications/stem-recharge-programme-evaluation/stem-recharge-programme-evaluation");
+    expect(sources).toContain("https://www.sciencedirect.com/science/article/pii/S0001879123000726");
+  });
+
+  it("restores a richer, controllable product-facts carousel on the homepage", () => {
+    const { container } = wrap(<MarketingHome />);
+    const carousel = screen.getByTestId("proof-carousel");
+    expect(carousel.className).toContain("bg-[#183f42]");
+    expect(carousel.textContent).toContain(t("marketing.systemTitle"));
+    expect(carousel.textContent).toContain(t("marketing.systemLead"));
+    expect(within(carousel).getAllByRole("button", { name: /fact/i })).toHaveLength(4);
+    fireEvent.click(within(carousel).getByRole("button", { name: "Go to fact 3 of 4" }));
+    expect(carousel.textContent).toContain("€0");
+    expect(carousel.textContent).toContain(t("marketing.pricingBasicIncludes"));
+    expect(within(carousel).getByRole("button", { name: t("proofCarousel.resume") })).toBeInTheDocument();
+    expect(container.querySelector('img[src$="ask4mo-v4-candidate-story-practice-v5.png"]')).not.toBeNull();
+  });
+
+  it("workflow map names the stages in the required order and shows the same order as a readable sequence", () => {
+    wrap(<WorkflowMap />);
+    const seq = screen.getByTestId("workflow-sequence");
+    const labels = within(seq).getAllByRole("tab").map((b) => b.getAttribute("aria-label"));
+    expect(labels).toEqual(["Opportunity", "Company research", "Evidence", "Preparation", "Practice", "Feedback", "Progress"]);
+    fireEvent.click(within(seq).getByRole("tab", { name: "Practice" }));
+    expect(screen.getByRole("tab", { name: /Practice/ })).toHaveAttribute("aria-selected", "true");
+    fireEvent.keyDown(screen.getByRole("tablist"), { key: "ArrowRight" });
+    expect(screen.getByRole("tab", { name: /Feedback/ })).toHaveAttribute("aria-selected", "true");
+  });
+});
+
+describe("founder portrait (About)", () => {
+  it("shows the approved local portrait with the exact alt text, replaces the monogram and is never hotlinked", async () => {
+    const { AboutContent } = await import("@/components/marketing/AboutContent");
+    const { container } = wrap(<AboutContent />);
+    const img = container.querySelector('img[src$="mo-al-tamimi-founder-portrait.jpg"]')!;
+    expect(img).not.toBeNull();
+    expect(img.getAttribute("alt")).toBe("Mo Al-Tamimi, founder of Ask4Mo.");
+    expect(img.getAttribute("src")).not.toMatch(/linkedin|licdn/i);
+    expect(container.textContent).not.toMatch(/\bMA\b/);                       // monogram replaced
+    expect(container.querySelector('a[href="https://www.linkedin.com/in/moaltamimi/"]')).not.toBeNull();
+    expect(container.textContent).toContain("Founder & CEO of Ask4Mo, CHRO and Founder & CEO of Unbiased Talent");
+    expect(container.textContent).toContain("Talent is everywhere. Opportunity isn't always.");
+    for (const locale of SUPPORTED_LOCALE_CODES) expect(t("about.founderPortraitAlt", locale).length, locale).toBeGreaterThan(10);
+  });
+
+  it("the portrait appears only on the About page", async () => {
+    const { MarketingHome } = await import("@/components/marketing/MarketingHome");
+    const { GettingStartedContent: GS } = await import("@/components/marketing/GettingStartedContent");
+    for (const C of [MarketingHome, GS, PricingContent]) {
+      const { container, unmount } = wrap(<C />);
+      expect(container.querySelector('img[src*="founder-portrait"]')).toBeNull();
+      unmount();
+    }
+  });
+});
+
+describe("Trust page hierarchy", () => {
+  it("leads with a concise privacy promise and progressively discloses the detailed controls", async () => {
+    const { TrustContent } = await import("@/components/marketing/TrustContent");
+    const { container } = wrap(<TrustContent />);
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toContain(t("trust.privateTerm"));
+    expect(container.querySelectorAll("details")).toHaveLength(4);
+    expect(container.querySelectorAll('details[open]')).toHaveLength(0);
   });
 });

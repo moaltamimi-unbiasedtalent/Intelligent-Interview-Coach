@@ -83,7 +83,7 @@ const en = {
     respLawful: "Use the service lawfully and do not attempt to abuse or overload it.",
     accountsHeading: "Accounts, plans and availability",
     accountsPlans:
-      "Basic is free. Premium is presented as a preview; no online payment is processed by this product.",
+      "Basic is free. Premium is €19.99 per month and is selected online after account creation.",
     accountsProviders:
       "Some features depend on external providers and may be unavailable, rate-limited or paused by the operator.",
     accountsAsIs:
@@ -134,6 +134,22 @@ const en = {
       "This is a Capstone product. Some capabilities (for example live realtime voice and certain knowledge datasets) ship with an honest, clearly-stated validation status rather than overclaiming.",
     seeAlso: "See also",
     imageAlt: "Two people having a thoughtful coaching conversation in a quiet library.",
+    founderEyebrow: "Why Ask4Mo exists",
+    founderName: "Mo Al-Tamimi",
+    founderRole: "Founder & CEO of Ask4Mo, CHRO and Founder & CEO of Unbiased Talent",
+    founderBio:
+      "Mo brings extensive experience in senior People & Culture and talent leadership roles across established organisations, startups, and scale-ups throughout the EMEA, NA and APAC regions.",
+    founderWhy:
+      "Built on this real-world expertise, Ask4Mo helps candidates approach interviews with greater clarity, confidence, and preparation. By connecting the role, company context, and your unique experience, Ask4Mo provides a structured, practical way to prepare and practise for interviews.",
+    founderApproach:
+      "Rather than replacing human recruiters or career coaches, Ask4Mo uses AI as a practical tool to help you communicate your strengths, tell your story, and present your best professional self.",
+    founderQuote:
+      "Talent is everywhere. Opportunity isn't always. I created Ask4Mo because everyone deserves the tools, confidence, and preparation to turn their potential into opportunity.",
+    founderHomeQuote:
+      "I've spent my career helping organisations find the right talent. Now, I want to help talent find the right opportunities. Because everyone deserves the confidence to walk into an interview prepared, the chance to tell their story, and the opportunity to be seen for what they can truly bring.",
+    founderHomeAttribution: "Mo Al-Tamimi, Founder & CEO - Ask4Mo",
+    founderLink: "Connect with Mo on LinkedIn",
+    founderPortraitAlt: "Mo Al-Tamimi, founder of Ask4Mo.",
     contact:
       "Questions or privacy requests? Contact support at the address configured for your deployment (see the Help centre once signed in).",
   },
@@ -300,7 +316,7 @@ const de: LegalFragment = {
       "Nutzen Sie den Dienst rechtmäßig und versuchen Sie nicht, ihn zu missbrauchen oder zu überlasten.",
     accountsHeading: "Konten, Tarife und Verfügbarkeit",
     accountsPlans:
-      "Basic ist kostenlos. Premium wird als Vorschau dargestellt; über dieses Produkt wird keine Online-Zahlung verarbeitet.",
+      "Basic ist kostenlos. Premium kostet €19.99 pro Monat und wird nach der Kontoerstellung online ausgewählt.",
     accountsProviders:
       "Einige Funktionen hängen von externen Anbietern ab und können nicht verfügbar, ratenbegrenzt oder vom Betreiber pausiert sein.",
     accountsAsIs:
@@ -355,6 +371,22 @@ const de: LegalFragment = {
     seeAlso: "Siehe auch",
     imageAlt:
       "Zwei Menschen in einem nachdenklichen Coaching-Gespräch in einer ruhigen Bibliothek.",
+    founderEyebrow: "Warum Ask4Mo existiert",
+    founderName: "Mo Al-Tamimi",
+    founderRole: "Gründer & CEO von Ask4Mo, CHRO und Gründer & CEO von Unbiased Talent",
+    founderBio:
+      "Mo verfügt über umfassende Erfahrung in leitenden People-&-Culture- und Talent-Funktionen in etablierten Organisationen, Start-ups und Scale-ups in den Regionen EMEA, Nordamerika und APAC.",
+    founderWhy:
+      "Auf Grundlage dieser Praxiserfahrung hilft Ask4Mo Kandidatinnen und Kandidaten, Vorstellungsgespräche mit mehr Klarheit, Selbstvertrauen und Vorbereitung anzugehen. Durch die Verbindung von Rolle, Unternehmenskontext und der eigenen Erfahrung bietet Ask4Mo eine strukturierte, praktische Möglichkeit zur Vorbereitung und Übung.",
+    founderApproach:
+      "Anstatt menschliche Recruiter oder Career Coaches zu ersetzen, nutzt Ask4Mo KI als praktisches Werkzeug, um Stärken zu vermitteln, die eigene Geschichte zu erzählen und sich professionell bestmöglich zu präsentieren.",
+    founderQuote:
+      "Talent ist überall. Chancen sind es nicht immer. Ich habe Ask4Mo geschaffen, weil jeder die Werkzeuge, das Selbstvertrauen und die Vorbereitung verdient, um Potenzial in Chancen zu verwandeln.",
+    founderHomeQuote:
+      "Ich habe meine Karriere damit verbracht, Organisationen dabei zu helfen, die richtigen Talente zu finden. Jetzt möchte ich Talenten helfen, die richtigen Chancen zu finden. Denn jeder verdient das Selbstvertrauen, vorbereitet in ein Vorstellungsgespräch zu gehen, die Chance, die eigene Geschichte zu erzählen, und die Möglichkeit, mit dem gesehen zu werden, was er wirklich einbringen kann.",
+    founderHomeAttribution: "Mo Al-Tamimi, Gründer & CEO - Ask4Mo",
+    founderLink: "Mit Mo auf LinkedIn vernetzen",
+    founderPortraitAlt: "Mo Al-Tamimi, Gründer von Ask4Mo.",
     contact:
       "Fragen oder Datenschutzanfragen? Wenden Sie sich an den Support unter der für Ihre Bereitstellung konfigurierten Adresse (siehe das Help-Center nach der Anmeldung).",
   },
@@ -519,7 +551,7 @@ const fr: LegalFragment = {
       "Utilisez le service de manière légale et ne tentez pas d'en abuser ni de le surcharger.",
     accountsHeading: "Comptes, offres et disponibilité",
     accountsPlans:
-      "Basic est gratuit. Premium est présenté comme un aperçu; aucun paiement en ligne n'est traité par ce produit.",
+      "Basic est gratuit. Premium coûte €19.99 par mois et se choisit en ligne après la création du compte.",
     accountsProviders:
       "Certaines fonctions dépendent de fournisseurs externes et peuvent être indisponibles, limitées en débit ou mises en pause par l'exploitant.",
     accountsAsIs:
@@ -576,6 +608,22 @@ const fr: LegalFragment = {
     seeAlso: "Voir aussi",
     imageAlt:
       "Deux personnes ayant une conversation de coaching réfléchie dans une bibliothèque calme.",
+    founderEyebrow: "Pourquoi Ask4Mo existe",
+    founderName: "Mo Al-Tamimi",
+    founderRole: "Fondateur & CEO d'Ask4Mo, CHRO et fondateur & CEO d'Unbiased Talent",
+    founderBio:
+      "Mo possède une vaste expérience de fonctions dirigeantes en People & Culture et en talent au sein d'organisations établies, de start-up et de scale-up dans les régions EMEA, Amérique du Nord et APAC.",
+    founderWhy:
+      "Fort de cette expertise concrète, Ask4Mo aide les candidats à aborder les entretiens avec plus de clarté, de confiance et de préparation. En reliant le poste, le contexte de l'entreprise et votre expérience unique, Ask4Mo offre une méthode structurée et pratique pour se préparer et s'entraîner.",
+    founderApproach:
+      "Plutôt que de remplacer les recruteurs ou les coachs de carrière, Ask4Mo utilise l'IA comme un outil pratique pour vous aider à communiquer vos forces, raconter votre histoire et présenter la meilleure version de votre profil professionnel.",
+    founderQuote:
+      "Le talent est partout. Les opportunités ne le sont pas toujours. J'ai créé Ask4Mo parce que chacun mérite les outils, la confiance et la préparation nécessaires pour transformer son potentiel en opportunité.",
+    founderHomeQuote:
+      "J'ai consacré ma carrière à aider les organisations à trouver les bons talents. Aujourd'hui, je veux aider les talents à trouver les bonnes opportunités. Parce que chacun mérite la confiance nécessaire pour arriver préparé à un entretien, la possibilité de raconter son histoire et l'occasion d'être reconnu pour ce qu'il peut réellement apporter.",
+    founderHomeAttribution: "Mo Al-Tamimi, fondateur & CEO - Ask4Mo",
+    founderLink: "Retrouver Mo sur LinkedIn",
+    founderPortraitAlt: "Mo Al-Tamimi, fondateur d’Ask4Mo.",
     contact:
       "Des questions ou des demandes de confidentialité? Contactez le support à l'adresse configurée pour votre déploiement (voir le Help Center une fois connecté).",
   },
@@ -740,7 +788,7 @@ const es: LegalFragment = {
       "Use el servicio de forma lícita y no intente abusar de él ni sobrecargarlo.",
     accountsHeading: "Cuentas, planes y disponibilidad",
     accountsPlans:
-      "Basic es gratuito. Premium se presenta como una vista previa; este producto no procesa ningún pago en línea.",
+      "Basic es gratuito. Premium cuesta €19.99 al mes y se elige en línea después de crear la cuenta.",
     accountsProviders:
       "Algunas funciones dependen de proveedores externos y pueden no estar disponibles, estar limitadas en frecuencia o pausadas por el operador.",
     accountsAsIs:
@@ -797,6 +845,22 @@ const es: LegalFragment = {
     seeAlso: "Ver también",
     imageAlt:
       "Dos personas manteniendo una conversación de coaching reflexiva en una biblioteca tranquila.",
+    founderEyebrow: "Por qué existe Ask4Mo",
+    founderName: "Mo Al-Tamimi",
+    founderRole: "Fundador & CEO de Ask4Mo, CHRO y fundador & CEO de Unbiased Talent",
+    founderBio:
+      "Mo aporta una amplia experiencia en puestos directivos de People & Culture y talento en organizaciones consolidadas, startups y scale-ups de las regiones EMEA, Norteamérica y APAC.",
+    founderWhy:
+      "Basado en esta experiencia real, Ask4Mo ayuda a los candidatos a afrontar las entrevistas con mayor claridad, confianza y preparación. Al conectar el puesto, el contexto de la empresa y su experiencia única, Ask4Mo ofrece una forma estructurada y práctica de prepararse y practicar.",
+    founderApproach:
+      "En lugar de sustituir a reclutadores o coaches profesionales, Ask4Mo utiliza la IA como una herramienta práctica para ayudarle a comunicar sus fortalezas, contar su historia y presentar su mejor perfil profesional.",
+    founderQuote:
+      "El talento está en todas partes. Las oportunidades no siempre. Creé Ask4Mo porque todos merecen las herramientas, la confianza y la preparación necesarias para convertir su potencial en oportunidad.",
+    founderHomeQuote:
+      "He dedicado mi carrera a ayudar a las organizaciones a encontrar el talento adecuado. Ahora quiero ayudar al talento a encontrar las oportunidades adecuadas. Porque todos merecen la confianza para llegar preparados a una entrevista, la oportunidad de contar su historia y la posibilidad de ser reconocidos por lo que realmente pueden aportar.",
+    founderHomeAttribution: "Mo Al-Tamimi, fundador & CEO - Ask4Mo",
+    founderLink: "Conectar con Mo en LinkedIn",
+    founderPortraitAlt: "Mo Al-Tamimi, fundador de Ask4Mo.",
     contact:
       "¿Preguntas o solicitudes de privacidad? Contacte con el soporte en la dirección configurada para su implementación (consulte el Help Center una vez que inicie sesión).",
   },
@@ -961,7 +1025,7 @@ const it: LegalFragment = {
       "Usa il servizio in modo lecito e non tentare di abusarne o di sovraccaricarlo.",
     accountsHeading: "Account, piani e disponibilità",
     accountsPlans:
-      "Basic è gratuito. Premium è presentato come anteprima; questo prodotto non elabora alcun pagamento online.",
+      "Basic è gratuito. Premium costa €19.99 al mese e si sceglie online dopo la creazione dell'account.",
     accountsProviders:
       "Alcune funzioni dipendono da provider esterni e possono essere non disponibili, limitate nella frequenza o messe in pausa dall'operatore.",
     accountsAsIs:
@@ -1018,6 +1082,22 @@ const it: LegalFragment = {
     seeAlso: "Vedi anche",
     imageAlt:
       "Due persone in una conversazione di coaching riflessiva in una biblioteca tranquilla.",
+    founderEyebrow: "Perché esiste Ask4Mo",
+    founderName: "Mo Al-Tamimi",
+    founderRole: "Fondatore & CEO di Ask4Mo, CHRO e fondatore & CEO di Unbiased Talent",
+    founderBio:
+      "Mo porta una vasta esperienza in ruoli senior di People & Culture e talent in organizzazioni consolidate, startup e scale-up nelle regioni EMEA, Nord America e APAC.",
+    founderWhy:
+      "Basato su questa esperienza concreta, Ask4Mo aiuta i candidati ad affrontare i colloqui con maggiore chiarezza, fiducia e preparazione. Collegando il ruolo, il contesto aziendale e la propria esperienza unica, Ask4Mo offre un modo strutturato e pratico per prepararsi ed esercitarsi.",
+    founderApproach:
+      "Anziché sostituire recruiter o career coach, Ask4Mo usa l'IA come strumento pratico per aiutarti a comunicare i tuoi punti di forza, raccontare la tua storia e presentare al meglio il tuo profilo professionale.",
+    founderQuote:
+      "Il talento è ovunque. Le opportunità non sempre. Ho creato Ask4Mo perché tutti meritano gli strumenti, la fiducia e la preparazione per trasformare il proprio potenziale in opportunità.",
+    founderHomeQuote:
+      "Ho dedicato la mia carriera ad aiutare le organizzazioni a trovare i talenti giusti. Ora voglio aiutare i talenti a trovare le opportunità giuste. Perché tutti meritano la fiducia per presentarsi preparati a un colloquio, la possibilità di raccontare la propria storia e l'opportunità di essere riconosciuti per ciò che possono davvero offrire.",
+    founderHomeAttribution: "Mo Al-Tamimi, fondatore & CEO - Ask4Mo",
+    founderLink: "Connettiti con Mo su LinkedIn",
+    founderPortraitAlt: "Mo Al-Tamimi, fondatore di Ask4Mo.",
     contact:
       "Domande o richieste relative alla privacy? Contatta il supporto all'indirizzo configurato per il tuo deployment (vedi l'Help Center una volta effettuato l'accesso).",
   },
@@ -1182,7 +1262,7 @@ const pt: LegalFragment = {
       "Use o serviço de forma lícita e não tente abusar dele nem sobrecarregá-lo.",
     accountsHeading: "Contas, planos e disponibilidade",
     accountsPlans:
-      "O Basic é gratuito. O Premium é apresentado como uma pré-visualização; este produto não processa qualquer pagamento online.",
+      "O Basic é gratuito. O Premium custa €19.99 por mês e é escolhido online após a criação da conta.",
     accountsProviders:
       "Algumas funcionalidades dependem de fornecedores externos e podem estar indisponíveis, limitadas na frequência ou pausadas pelo operador.",
     accountsAsIs:
@@ -1239,6 +1319,22 @@ const pt: LegalFragment = {
     seeAlso: "Ver também",
     imageAlt:
       "Duas pessoas numa conversa de coaching ponderada numa biblioteca tranquila.",
+    founderEyebrow: "Porque existe o Ask4Mo",
+    founderName: "Mo Al-Tamimi",
+    founderRole: "Fundador & CEO do Ask4Mo, CHRO e fundador & CEO da Unbiased Talent",
+    founderBio:
+      "Mo traz uma vasta experiência em funções seniores de People & Culture e talento em organizações estabelecidas, startups e scale-ups nas regiões EMEA, América do Norte e APAC.",
+    founderWhy:
+      "Com base nesta experiência real, o Ask4Mo ajuda os candidatos a abordar entrevistas com mais clareza, confiança e preparação. Ao ligar a função, o contexto da empresa e a sua experiência única, o Ask4Mo oferece uma forma estruturada e prática de se preparar e praticar.",
+    founderApproach:
+      "Em vez de substituir recrutadores ou coaches de carreira, o Ask4Mo utiliza a IA como uma ferramenta prática para ajudar a comunicar os seus pontos fortes, contar a sua história e apresentar a sua melhor versão profissional.",
+    founderQuote:
+      "O talento está em todo o lado. A oportunidade nem sempre. Criei o Ask4Mo porque todos merecem as ferramentas, a confiança e a preparação para transformar o seu potencial em oportunidade.",
+    founderHomeQuote:
+      "Passei a minha carreira a ajudar organizações a encontrar o talento certo. Agora, quero ajudar o talento a encontrar as oportunidades certas. Porque todos merecem a confiança para entrar numa entrevista preparados, a oportunidade de contar a sua história e a possibilidade de serem reconhecidos pelo que realmente podem oferecer.",
+    founderHomeAttribution: "Mo Al-Tamimi, fundador & CEO - Ask4Mo",
+    founderLink: "Ligar-se a Mo no LinkedIn",
+    founderPortraitAlt: "Mo Al-Tamimi, fundador da Ask4Mo.",
     contact:
       "Dúvidas ou pedidos de privacidade? Contacte o suporte no endereço configurado para a sua implementação (consulte o Help Center depois de iniciar sessão).",
   },
@@ -1403,7 +1499,7 @@ const nl: LegalFragment = {
       "Gebruik de dienst op een wettige manier en probeer deze niet te misbruiken of te overbelasten.",
     accountsHeading: "Accounts, abonnementen en beschikbaarheid",
     accountsPlans:
-      "Basic is gratis. Premium wordt als voorbeeld gepresenteerd; dit product verwerkt geen online betaling.",
+      "Basic is gratis. Premium kost €19.99 per maand en wordt online gekozen nadat het account is aangemaakt.",
     accountsProviders:
       "Sommige functies zijn afhankelijk van externe providers en kunnen onbeschikbaar, in frequentie beperkt of door de operator gepauzeerd zijn.",
     accountsAsIs:
@@ -1460,6 +1556,22 @@ const nl: LegalFragment = {
     seeAlso: "Zie ook",
     imageAlt:
       "Twee mensen in een doordacht coachinggesprek in een rustige bibliotheek.",
+    founderEyebrow: "Waarom Ask4Mo bestaat",
+    founderName: "Mo Al-Tamimi",
+    founderRole: "Oprichter & CEO van Ask4Mo, CHRO en oprichter & CEO van Unbiased Talent",
+    founderBio:
+      "Mo brengt ruime ervaring mee in senior People & Culture- en talentfuncties bij gevestigde organisaties, startups en scale-ups in de regio's EMEA, Noord-Amerika en APAC.",
+    founderWhy:
+      "Ask4Mo bouwt voort op deze praktijkervaring en helpt kandidaten interviews met meer helderheid, vertrouwen en voorbereiding te benaderen. Door de functie, bedrijfscontext en unieke ervaring te verbinden, biedt Ask4Mo een gestructureerde en praktische manier om voor te bereiden en te oefenen.",
+    founderApproach:
+      "Ask4Mo vervangt geen recruiters of loopbaancoaches, maar gebruikt AI als praktisch hulpmiddel om uw sterke punten te communiceren, uw verhaal te vertellen en uw beste professionele zelf te presenteren.",
+    founderQuote:
+      "Talent is overal. Kansen zijn dat niet altijd. Ik heb Ask4Mo gemaakt omdat iedereen de hulpmiddelen, het vertrouwen en de voorbereiding verdient om potentieel in kansen om te zetten.",
+    founderHomeQuote:
+      "Ik heb mijn carrière besteed aan het helpen van organisaties om het juiste talent te vinden. Nu wil ik talent helpen de juiste kansen te vinden. Want iedereen verdient het vertrouwen om voorbereid een sollicitatiegesprek in te gaan, de kans om zijn verhaal te vertellen en de mogelijkheid om gezien te worden voor wat hij werkelijk kan bijdragen.",
+    founderHomeAttribution: "Mo Al-Tamimi, oprichter & CEO - Ask4Mo",
+    founderLink: "Maak verbinding met Mo op LinkedIn",
+    founderPortraitAlt: "Mo Al-Tamimi, oprichter van Ask4Mo.",
     contact:
       "Vragen of privacyverzoeken? Neem contact op met de ondersteuning op het adres dat voor uw implementatie is geconfigureerd (zie het Help Center zodra u bent aangemeld).",
   },

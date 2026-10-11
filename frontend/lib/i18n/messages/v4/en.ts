@@ -3,7 +3,7 @@
 //
 // Truth rules: the candidate story is fictional and its imagery is AI-generated (never a testimonial, never
 // an implied job offer). "Patterns across attempts" and "post-interview reflection" are PRODUCT DIRECTION, not
-// current functionality. Premium is an indicative preview with no purchase path. No em dash. The protected
+// current functionality. No em dash. The protected
 // slogan is not part of this file.
 
 const en = {
@@ -27,17 +27,17 @@ const en = {
     storyDisclosure: "Fictional candidate story. Imagery is AI-generated.",
     storyNotTestimonial: "It does not describe a real person, a real customer or a job offer.",
     sceneRejectionCaption: "After another rejection, the hard part is not knowing what to change.",
-    sceneRejectionAlt: "A candidate sits quietly beside her laptop after receiving another interview rejection.",
+    sceneRejectionAlt: "A candidate stands on a rain-wet city street, looking at her phone with a tired expression after another interview rejection.",
     scenePracticeCaption: "She practises the role she applied for, out loud, with her own notes beside her.",
-    scenePracticeAlt: "A candidate practises an interview answer aloud using role notes beside her laptop.",
+    scenePracticeAlt: "In the evening at home, a candidate practises an interview answer aloud beside a clean open laptop and notebook.",
     sceneReadyCaption: "Ahead of the next interview she knows what to focus on.",
-    sceneReadyAlt: "A candidate prepares calmly for her next interview with notes and a laptop nearby.",
+    sceneReadyAlt: "Before her next interview, a candidate waits calmly on a bench in an office lobby, reading her notes.",
     directionLabel: "Product direction",
     directionNote: "Not available yet. This shows where Ask4Mo may go, and it is not a current feature.",
     scenePatternsCaption: "Recurring themes across your own attempts, only from attempts you choose to keep.",
-    scenePatternsAlt: "A candidate reviews recurring themes across several interview-practice attempts.",
+    scenePatternsAlt: "Diagram of three numbered bars standing for recurring themes across practice attempts. A concept, not a current feature.",
     sceneReflectionCaption: "A private note after a real interview, while it is still fresh.",
-    sceneReflectionAlt: "A candidate records a private voice reflection after an interview while the experience is still fresh.",
+    sceneReflectionAlt: "Diagram of a voice waveform with a small private marker, standing for a private reflection note. A concept, not a current feature.",
     savedHistoryNote: "Your saved history personalises your own experience. It is not used to train a foundation model unless you separately and explicitly agree.",
 
     workflowTitle: "How Ask4Mo works",
@@ -89,7 +89,7 @@ const en = {
     opportunityAsk4mo: "Keeps the job, the company and everything you prepare in one place.",
     opportunityPrivate: "The Opportunity belongs to your account. Nobody else sees it unless you share it.",
     opportunityNext: "Add the job description and the company.",
-    contextTitle: "Context",
+    contextTitle: "Company research",
     contextDo: "Add the job description and the company name.",
     contextAsk4mo: "Gathers company and market context with sources you can check, where research is available.",
     contextPrivate: "Research is requested only when you ask for it.",
@@ -99,7 +99,7 @@ const en = {
     evidenceAsk4mo: "Extracts claims and stories as suggestions for you to review.",
     evidencePrivate: "Your documents stay private to your account and are never shared automatically.",
     evidenceNext: "Open the Story Bank and confirm what is accurate.",
-    prepareTitle: "Prepare",
+    prepareTitle: "Preparation",
     prepareDo: "Ask Mo how to approach the role.",
     prepareAsk4mo: "Answers using your Opportunity and approved evidence, with sources where available.",
     preparePrivate: "Only what you approved is reused. Saved memory needs your approval.",
@@ -121,10 +121,32 @@ const en = {
     progressNext: "Return to the Opportunity and repeat.",
   },
 
+  proofCarousel: {
+    label: "Product facts",
+    detailLabel: "Included in this fact",
+    pause: "Pause automatic rotation",
+    resume: "Resume automatic rotation",
+    goTo: "Go to fact {n} of {total}",
+  },
+
   homeStory: {
     title: "One job, one place, one next step",
     lead: "Follow a fictional candidate from rejection to a calmer preparation routine.",
     cta: "See how it works",
+  },
+
+  researchEvidence: {
+    eyebrow: "Evidence, not promises",
+    title: "Preparation works best when it is structured",
+    lead: "Independent research supports training that helps people organise and improve their answers. These findings provide context, not Ask4Mo outcome claims.",
+    confidenceTitle: "Interview confidence after a return-to-work programme",
+    confidenceBody: "The share who felt confident or very confident about performing well at interviews was 36% at the start (n=96) and 63% after completion (n=47). The evaluation was self-reported and had limited follow-up response.",
+    govSource: "UK government programme evaluation",
+    trainingTitle: "Participants across two video-interview studies",
+    trainingBody: "Short training improved response structure and interview performance. Practice by itself had negligible effects, reinforcing the value of guided, structured reflection.",
+    studySource: "Journal of Vocational Behavior study",
+    caveat: "Research context only. These are not Ask4Mo results and do not predict an interview outcome.",
+    cta: "See the Ask4Mo workflow",
   },
 
   pricingV4: {
@@ -132,7 +154,7 @@ const en = {
     availableLead: "This table mirrors what the plans actually include right now. Today the two plans differ only in the Premium preview.",
     colFeature: "Feature",
     colBasic: "Basic",
-    colPremium: "Premium (preview)",
+    colPremium: "Premium",
     included: "Included",
     notIncluded: "Not included",
     previewOnly: "Preview only, not purchasable",
@@ -144,18 +166,18 @@ const en = {
     tableNote: "Provider availability can limit what you see at any moment. No payment is processed and Premium cannot be bought online.",
 
     considerTitle: "Under consideration",
-    considerLead: "These ideas are not available, not enforced and not a commitment. Nothing below is part of Basic or Premium today.",
-    considerLabel: "Under consideration",
-    consider1: "Limit Basic to one active Opportunity",
-    consider2: "Limit Basic to one company and market brief",
-    consider3: "Keep the latest three saved sessions on Basic",
-    consider4: "Basic uses the Fast model profile",
-    consider5: "Premium: unlimited Opportunities and research under fair use",
-    consider6: "Premium: private documents and Story Bank",
-    consider7: "Premium: complete history and progress",
-    consider8: "Premium: all available model profiles",
-    consider9: "Premium: deeper comparison across attempts",
-    consider10: "Premium: interview pack and richer export",
+    considerLead: "Choose Basic for one active interview or Premium for a broader, ongoing job search.",
+    considerLabel: "What's included",
+    consider1: "1 active Opportunity",
+    consider2: "1 company and market research brief",
+    consider3: "Latest 3 saved practice sessions",
+    consider4: "Fast model profile",
+    consider5: "Unlimited Opportunities and research refreshes under fair use",
+    consider6: "Private documents and Story Bank",
+    consider7: "Complete practice history and progress",
+    consider8: "Fast, Balanced and Advanced model profiles",
+    consider9: "Deeper comparison across attempts",
+    consider10: "Interview pack and richer export",
 
     coachingTitle: "Choose the support that fits the moment",
     coachingLead: "Ask4Mo makes frequent, role-specific practice affordable and available whenever you need it. Human coaching adds live interpersonal judgment. Many candidates may benefit from both at different moments.",
@@ -169,7 +191,7 @@ const en = {
     rowFeedback: "Feedback",
     rowBestUse: "Best use",
     rowLimit: "Important limitation",
-    payAsk4mo: "Free, with an indicative Premium preview of €19.99 per month",
+    payAsk4mo: "Free, or €19.99 per month for Premium",
     payCoach: "Per session or package",
     payCourse: "One-off or subscription",
     availAsk4mo: "On demand",
@@ -210,9 +232,9 @@ const en = {
     railLabel: "Your preparation journey",
     youAreHere: "You are here",
     stageOpportunity: "Opportunity",
-    stageContext: "Context",
+    stageContext: "Company research",
     stageEvidence: "Evidence",
-    stagePrepare: "Prepare",
+    stagePrepare: "Preparation",
     stagePractice: "Practice",
     stageFeedback: "Feedback",
     stageProgress: "Progress",

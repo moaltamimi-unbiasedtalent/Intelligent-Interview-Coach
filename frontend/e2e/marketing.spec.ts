@@ -13,8 +13,7 @@ test("public Home renders the hero and primary CTAs", async ({ page }) => {
   // Get started routes to registration (a real free path).
   const cta = page.getByRole("link", { name: /Get started/i }).first();
   await expect(cta).toBeVisible();
-  // Footer states no billing (truthful).
-  await expect(page.getByText(/No online payments are processed/i)).toBeVisible();
+  await expect(page.getByText(/Premium is €19\.99 per month/i)).toBeVisible();
 });
 
 test("marketing nav reaches Product, Pricing and Trust", async ({ page }) => {
@@ -29,15 +28,18 @@ test("marketing nav reaches Product, Pricing and Trust", async ({ page }) => {
   }
 });
 
-test("Pricing is truthful: plans shown, no billing, no card fields", async ({ page }) => {
+test("the retired How it works route redirects into the combined Product page", async ({ page }) => {
+  await page.goto("/getting-started");
+  await expect(page).toHaveURL(/\/product#how-it-works$/);
+  await expect(page.locator("#how-it-works")).toBeVisible();
+});
+
+test("Pricing shows both plans and Premium starts from account creation", async ({ page }) => {
   await page.goto("/pricing");
   await expect(page.getByTestId("plan-basic")).toContainText("€0");
   await expect(page.getByTestId("plan-premium")).toContainText("€19.99");
-  // Premium is a preview request, never a purchase.
-  await expect(page.getByTestId("plan-note-premium")).toContainText(/cannot be purchased online/i);
-  await expect(page.getByTestId("no-billing-note")).toBeVisible();
-  // No fake checkout: no "Buy now"/"Subscribe now" and no card input anywhere.
-  await expect(page.getByRole("button", { name: /buy now|subscribe now/i })).toHaveCount(0);
+  await expect(page.getByTestId("plan-premium").getByRole("link", { name: /Choose Premium/i })).toHaveAttribute("href", "/register?plan=premium");
+  // Card entry belongs to the payment provider, not the marketing page.
   await expect(page.locator('input[type="number"], input[autocomplete="cc-number"]')).toHaveCount(0);
 });
 
@@ -50,8 +52,8 @@ test("policy pages carry the engineering-draft banner", async ({ page }) => {
 
 test("Trust page lists factual controls", async ({ page }) => {
   await page.goto("/trust");
-  await expect(page.getByText(/Private by default/i).first()).toBeVisible();
-  await expect(page.getByText(/No audio storage/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Your Opportunity is private/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /No audio storage/i })).toBeVisible();
 });
 
 test("Get started routes to register; Sign in routes to sign-in", async ({ page }) => {
@@ -75,14 +77,11 @@ test("locale cookie localizes the marketing interface", async ({ page, baseURL }
 
 test("home tells an Opportunity-centred story (P10B Wave 7)", async ({ page }) => {
   await page.goto("/");
-  // The product is framed as one connected system per job, with the Opportunity journey.
-  await expect(page.getByRole("heading", { name: /one connected system/i })).toBeVisible();
-  await expect(page.getByRole("heading", { name: /create an opportunity/i })).toBeVisible();
-  await expect(page.getByRole("heading", { name: /company intelligence/i }).first()).toBeVisible();
-  // Differentiation is stated factually (W9.10 replaced the comparative "not another generic interview
-  // generator" jab with a neutral heading; the four differentiators beneath it are unchanged).
-  await expect(page.getByRole("heading", { name: /what makes ask4mo different/i })).toBeVisible();
-  await expect(page.getByRole("heading", { name: /built around your job/i })).toBeVisible();
+  // The detailed product features and workflow live together on Product, not as duplicate homepage sections.
+  await expect(page.getByRole("heading", { name: /create an opportunity/i })).toHaveCount(0);
+  await expect(page.locator('a[href="/product#how-it-works"]').first()).toBeVisible();
+  await expect(page.locator('a[href="/product"]').first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: /company intelligence/i })).toHaveCount(0);
 });
 
 test("public home makes no fabricated or unsupported provider claims (P10B Wave 7)", async ({ page }) => {
@@ -99,16 +98,24 @@ test("public home makes no fabricated or unsupported provider claims (P10B Wave 
 
 test("product page explains the Opportunity workflow (P10B Wave 7)", async ({ page }) => {
   await page.goto("/product");
-  await expect(page.getByRole("heading", { name: /one connected system/i })).toBeVisible();
-  await expect(page.getByRole("heading", { name: /understand the company/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /interview preparation, built around your next opportunity/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /company intelligence/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /what makes ask4mo different/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /built around your job/i })).toBeVisible();
+  // V4.3: the workflow is the interactive seven-stage map (Opportunity > Company research > Evidence > Preparation > Practice > Feedback > Progress).
+  await expect(page.getByTestId("workflow-map")).toBeVisible();
+  await expect(page.getByRole("tab")).toHaveCount(7);
+  await expect(page.getByRole("tab", { name: /company research/i })).toBeVisible();
+  await expect(page.getByTestId("workflow-sequence")).toContainText("Opportunity");
   await expect(page.getByRole("link", { name: /Get started/i }).first()).toBeVisible();
 });
 
 test("trust page states Wave 5/6 boundaries (P10B Wave 7)", async ({ page }) => {
   await page.goto("/trust");
-  await expect(page.getByText(/Your Opportunity is private/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Your Opportunity is private/i })).toBeVisible();
+  await page.getByTestId("trust-group-ai").locator("summary").click();
   await expect(page.getByText(/not integrated/i)).toBeVisible();
-  await expect(page.getByText(/AI suggestions are not facts/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: /AI suggestions are not facts/i })).toBeVisible();
 });
 
 test("marketing home renders on mobile", async ({ page }) => {

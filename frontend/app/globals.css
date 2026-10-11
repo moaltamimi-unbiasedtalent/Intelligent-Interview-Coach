@@ -21,6 +21,9 @@
   --success: #2e7d4f;
   --warning: #a66412;
   --danger: #a83246;
+  --brand-lavender: #e9e2f0;
+  --brand-peach: #f4cdb9;
+  --brand-mint: #dbe9e4;
   --shadow: 0 1px 2px rgba(16, 17, 20, 0.04), 0 8px 24px rgba(16, 17, 20, 0.06);
   --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
@@ -43,6 +46,9 @@
     --success: #6fbf8e;
     --warning: #e0a758;
     --danger: #e58794;
+    --brand-lavender: #302a36;
+    --brand-peach: #3b2b27;
+    --brand-mint: #203330;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
   }
 }
@@ -60,6 +66,9 @@
   --success: #6fbf8e;
   --warning: #e0a758;
   --danger: #e58794;
+  --brand-lavender: #302a36;
+  --brand-peach: #3b2b27;
+  --brand-mint: #203330;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
@@ -105,6 +114,13 @@
 }
 .animate-enter {
   animation: fade-in 0.2s ease-out;
+}
+
+.app-shell-surface {
+  background:
+    radial-gradient(circle at 8% 5%, color-mix(in srgb, var(--brand-lavender) 72%, transparent) 0, transparent 24rem),
+    radial-gradient(circle at 92% 18%, color-mix(in srgb, var(--brand-mint) 64%, transparent) 0, transparent 22rem),
+    var(--background);
 }
 
 /* Guided tour: highlight a step's target element (outline only — never blocks it). */

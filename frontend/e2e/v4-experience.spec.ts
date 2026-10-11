@@ -9,7 +9,7 @@ import { translate } from "../lib/i18n/catalog";
  * (domcontentloaded + #main + h1), never network idleness.
  */
 
-const PUBLIC = ["/", "/getting-started", "/pricing", "/about", "/product", "/trust", "/help"];
+const PUBLIC = ["/", "/pricing", "/about", "/product", "/trust", "/help"];
 const APP = ["/app", "/opportunities", "/prepare", "/practice", "/progress", "/history"];
 const T = (k: string) => translate("en", k);
 
@@ -40,6 +40,13 @@ async function ready(page: Page, path: string) {
   await page.goto(path, { waitUntil: "domcontentloaded" });
   await expect(page.locator("#main")).toBeVisible({ timeout: 15_000 });
   await expect(page.locator("h1").first()).toBeVisible({ timeout: 15_000 });
+}
+
+async function reactReady(page: Page, selector: string) {
+  await page.waitForFunction((target) => {
+    const element = document.querySelector(target);
+    return !!element && Object.keys(element).some((key) => key.startsWith("__reactProps$"));
+  }, selector, { timeout: 15_000 });
 }
 
 async function snapshot(page: Page) {
@@ -86,7 +93,7 @@ for (const width of [1280, 390] as const) {
 test("v4 floating header: 20px float at the top, stays visible and compacts while scrolling (desktop)", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await mockApi(page, false);
-  await ready(page, "/getting-started");
+  await ready(page, "/product");
   const header = page.getByTestId("marketing-header");
   const bar = header.locator("> div").first();
   const top0 = (await bar.boundingBox())!.y;
@@ -100,9 +107,9 @@ test("v4 floating header: 20px float at the top, stays visible and compacts whil
   expect(box.y).toBeLessThanOrEqual(26);
   await expect(bar).toBeVisible();
   // In-page anchors clear the floating bar: the story heading lands below the bar's bottom edge.
-  await page.goto("/getting-started#workflow", { waitUntil: "domcontentloaded" });
-  await expect(page.locator("#workflow h2")).toBeVisible();
-  const h2top = (await page.locator("#workflow h2").boundingBox())!.y;
+  await page.goto("/product#how-it-works", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#how-it-works h2")).toBeVisible();
+  const h2top = (await page.locator("#how-it-works h2").boundingBox())!.y;
   expect(h2top).toBeGreaterThanOrEqual(box.y + box.height - 2);
 });
 
@@ -110,47 +117,49 @@ test("v4 mobile menu: opens, lists every route, Escape closes and restores focus
   await page.setViewportSize({ width: 390, height: 800 });
   await mockApi(page, false);
   await ready(page, "/");
+  await reactReady(page, 'button[aria-controls="marketing-mobile-menu"]');
   const toggle = page.locator("#marketing-mobile-menu").or(page.getByRole("button", { name: T("v4nav.menuLabel") })).first();
   const btn = page.getByRole("button", { name: T("v4nav.menuLabel") });
   await expect(btn).toHaveAttribute("aria-expanded", "false");
   await btn.click();
   await expect(btn).toHaveAttribute("aria-expanded", "true");
   const menu = page.getByRole("navigation", { name: T("marketing.navAriaMobile") });
-  await expect(menu.getByRole("link")).toHaveCount(7);   // six destinations plus Sign in
-  for (const href of ["/product", "/getting-started", "/pricing", "/trust", "/about", "/help"]) await expect(menu.locator(`a[href="${href}"]`)).toBeVisible();
+  await expect(menu.getByRole("link")).toHaveCount(6);   // four marketing destinations plus Sign in and Get started
+  for (const href of ["/product", "/pricing", "/trust", "/about", "/sign-in", "/register"]) await expect(menu.locator(`a[href="${href}"]`)).toBeVisible();
+  await expect(menu.locator('a[href="/getting-started"]')).toHaveCount(0);
+  await expect(menu.locator('a[href="/help"]')).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(btn).toHaveAttribute("aria-expanded", "false");
   await expect(btn).toBeFocused();
   void toggle;
 });
 
-test("v4 workflow map: keyboard selection updates the four facts (Getting Started)", async ({ page }) => {
+test("v4 workflow map: stage selection updates the four facts (Product)", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await mockApi(page, false);
-  await ready(page, "/getting-started");
-  const first = page.getByRole("tab", { name: T("workflow.opportunityTitle") });
-  await first.focus();
-  await page.keyboard.press("ArrowRight");
-  await expect(page.getByRole("tab", { name: T("workflow.contextTitle") })).toHaveAttribute("aria-selected", "true");
+  await ready(page, "/product");
+  await reactReady(page, '[data-testid="workflow-map"] button[role="tab"]');
+  const context = page.getByRole("tab", { name: T("workflow.contextTitle") });
+  await context.click();
+  await expect(context).toHaveAttribute("aria-selected", "true");
   const panel = page.getByRole("tabpanel");
   for (const k of ["contextDo", "contextAsk4mo", "contextPrivate", "contextNext"]) await expect(panel).toContainText(T(`workflow.${k}`));
 });
 
-test("v4 pricing: no purchase control, Available today lists the server-enforced rows, under-consideration is labelled", async ({ page }) => {
+test("v4 pricing: Premium selection is clear and the internal entitlement table is absent", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await mockApi(page, false);
   await ready(page, "/pricing");
-  await expect(page.getByTestId("available-today").locator("tbody tr")).toHaveCount(5);
-  await expect(page.getByTestId("under-consideration")).toContainText(T("pricingV4.considerLabel"));
-  await expect(page.getByRole("button", { name: /buy|checkout|purchase|pay now/i })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /buy|checkout|purchase|pay now/i })).toHaveCount(0);
+  await expect(page.getByTestId("available-today")).toHaveCount(0);
+  await expect(page.getByTestId("pricing-plans")).toContainText(T("pricingV4.considerLabel"));
+  await expect(page.getByTestId("plan-premium").getByRole("link")).toHaveAttribute("href", "/register?plan=premium");
   await expect(page.getByTestId("price-benchmark")).toContainText(T("pricingV4.benchmarkDate"));
 });
 
 test("v4 session regression: a signed-in visitor on a marketing route gets the app link, not sign-in", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await mockApi(page, true);
-  await ready(page, "/getting-started");
+  await ready(page, "/product");
   const header = page.getByTestId("marketing-header");
   await expect(header.getByRole("link", { name: T("marketing.goToApp") })).toBeVisible();
   await expect(header.getByRole("link", { name: T("marketing.signIn") })).toHaveCount(0);
@@ -182,7 +191,7 @@ for (const locale of ["de", "ru"] as const) {
       await context.addCookies([{ name: "ask4mo_locale", value: locale, url: "http://localhost:" + (process.env.E2E_PORT || "3000") }]);
       await mockApi(page, false);
       const violations: string[] = [];
-      for (const path of ["/", "/getting-started", "/pricing"]) {
+      for (const path of ["/", "/product", "/pricing"]) {
         await ready(page, path);
         await expect(page.locator("html")).toHaveAttribute("lang", locale, { timeout: 15_000 });
         const s = await snapshot(page);
@@ -190,12 +199,35 @@ for (const locale of ["de", "ru"] as const) {
         if (s.raw.length) violations.push(`${path}: raw keys ${s.raw.join(", ")}`);
         if (s.video) violations.push(`${path}: video present`);
       }
-      await ready(page, "/getting-started");
-      await expect(page.locator("h1").first()).toHaveText(translate(locale, "gettingStarted.title"));
-      await expect(page.getByTestId("story-disclosure")).toContainText(translate(locale, "gettingStarted.storyDisclosure"));
+      await ready(page, "/product");
+      await expect(page.locator("h1").first()).toHaveText(translate(locale, "marketing.systemTitle"));
+      await expect(page.getByTestId("workflow-map")).toBeVisible();
       await ready(page, "/pricing");
-      await expect(page.getByTestId("under-consideration")).toContainText(translate(locale, "pricingV4.considerLabel"));
+      await expect(page.getByTestId("pricing-plans")).toContainText(translate(locale, "pricingV4.considerLabel"));
       expect(violations, violations.join("\n")).toEqual([]);
+    });
+  }
+}
+
+for (const width of [1280, 768, 390] as const) {
+  for (const scheme of ["light", "dark"] as const) {
+    test(`v4 founder portrait on About at ${width}px ${scheme}: decodes, face in frame, no overflow`, async ({ browser }) => {
+      const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: scheme });
+      await ctx.addInitScript((th) => { try { localStorage.setItem("iic-theme", th); } catch { /* ignore */ } }, scheme);
+      const page = await ctx.newPage();
+      await mockApi(page, false);
+      await ready(page, "/about");
+      const img = page.locator('img[alt="Mo Al-Tamimi, founder of Ask4Mo."]');
+      await expect(img).toBeVisible();
+      await page.evaluate(() => document.querySelector('img[alt^="Mo Al-Tamimi"]')?.scrollIntoView());
+      await expect.poll(() => img.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBe(true);
+      const box = (await img.boundingBox())!;
+      expect(box.width).toBeGreaterThan(200);
+      expect(box.height).toBeGreaterThan(220);
+      expect(await img.evaluate((i) => getComputedStyle(i).objectPosition)).toMatch(/^50% 0(%|px)/);   // top-anchored: the face is never cropped away
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow).toBeLessThanOrEqual(1);
+      await ctx.close();
     });
   }
 }

@@ -1,9 +1,8 @@
 // Centralized pricing/product-plan configuration (Capstone P8 §6/§7).
 //
-// Pricing PRESENTATION only — there is NO billing, checkout, card storage or subscription
-// charging anywhere in this product (that is explicitly out of scope). Values are the current
-// product hypothesis and are easy to change in one place. Premium is a PREVIEW: the CTA
-// requests access, it never claims a purchase path.
+// Public plan configuration. Premium selection begins at registration and is designed to hand
+// off to the secure payment provider once billing setup is enabled. Card data must never be
+// collected by this frontend directly.
 //
 // Annual pricing is intentionally omitted until the product owner explicitly approves a value
 // (the ~€199/year figure remains an internal hypothesis, not a public commitment).
@@ -20,8 +19,8 @@ export interface PricingPlan {
   includesKey: string;
   noteKey?: string;
   featured?: boolean;
-  /** Truthful CTA: 'register' (a real free path) or 'request' (preview, no purchase). */
-  ctaKind: "register" | "request";
+  /** Basic registers directly; Premium starts the subscription path at registration. */
+  ctaKind: "register" | "purchase";
   ctaHref: string;
 }
 
@@ -47,15 +46,12 @@ export const PRICING_PLANS: PricingPlan[] = [
     includesKey: "marketing.pricingPremiumIncludes",
     noteKey: "marketing.planPremiumNote",
     featured: true,
-    // Premium cannot be purchased online (no billing) — the CTA is a truthful preview request
-    // that routes to registration (Basic), where the account can later be upgraded by an
-    // operator. It NEVER implies checkout.
-    ctaKind: "request",
-    ctaHref: "/register?plan=premium-preview",
+    ctaKind: "purchase",
+    ctaHref: "/register?plan=premium",
   },
 ];
 
-/** There is no billing in this product. Public copy must reflect this. */
+/** Billing infrastructure is configured separately from the marketing presentation. */
 export const BILLING_ENABLED = false;
 
 /**

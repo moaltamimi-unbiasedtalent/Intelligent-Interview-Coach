@@ -24,7 +24,7 @@ export function Logo({
     <Link
       href={href}
       className={cn(
-        "inline-flex items-center gap-2.5 font-bold tracking-tight text-foreground",
+        "inline-flex items-center gap-3 text-xl font-bold tracking-tight text-foreground",
         className,
       )}
       aria-label={t("common.homeAria")}
@@ -37,9 +37,9 @@ export function Logo({
         src="/brand/ask4mo-mark.svg"
         alt=""
         aria-hidden="true"
-        width={30}
-        height={30}
-        className={cn("h-7 w-7 sm:h-[30px] sm:w-[30px]", markClassName)}
+        width={45}
+        height={45}
+        className={cn("h-10 w-10 sm:h-[45px] sm:w-[45px]", markClassName)}
       />
       <span>Ask4Mo</span>
     </Link>

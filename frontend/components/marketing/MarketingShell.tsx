@@ -14,16 +14,15 @@ import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { ButtonLink } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
 import { LanguageMenu } from "@/components/i18n/LanguageMenu";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { APP_HOME } from "@/lib/auth/routes";
 import { cn } from "@/lib/utils";
 
 export const MARKETING_NAV = [
   { href: "/product", key: "marketing.navProduct" },
-  { href: "/getting-started", key: "v4nav.howItWorks" },
   { href: "/pricing", key: "marketing.navPricing" },
   { href: "/trust", key: "marketing.navTrust" },
   { href: "/about", key: "marketing.navAbout" },
-  { href: "/help", key: "marketing.navHelp" },
 ] as const;
 
 /** Distance of the floating bar from the viewport top; anchors are offset so headings are never covered. */
@@ -111,14 +110,15 @@ function MarketingHeader() {
           <div className="flex items-center gap-2">
             {/* Global language control - anonymous visitors can switch the marketing language. */}
             <LanguageMenu />
+            <ThemeToggle />
             {authed ? (
-              <ButtonLink href={APP_HOME} size="sm">{t("marketing.goToApp")}</ButtonLink>
+              <ButtonLink href={APP_HOME} size="sm" className="hidden sm:inline-flex">{t("marketing.goToApp")}</ButtonLink>
             ) : (
               <>
                 <Link href="/sign-in" className="hidden rounded text-sm font-medium text-foreground hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:inline">
                   {t("marketing.signIn")}
                 </Link>
-                <ButtonLink href="/register" size="sm">{t("marketing.getStarted")}</ButtonLink>
+                <ButtonLink href="/register" size="sm" className="hidden sm:inline-flex">{t("marketing.getStarted")}</ButtonLink>
               </>
             )}
             <button
@@ -148,9 +148,23 @@ function MarketingHeader() {
                   </li>
                 ))}
                 {!authed ? (
+                  <>
+                    <li>
+                      <Link href="/sign-in" onClick={() => close(false)} className="block rounded px-2 py-2 text-sm font-medium text-foreground hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                        {t("marketing.signIn")}
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/register" onClick={() => close(false)} className="block rounded bg-accent px-2 py-2 text-sm font-semibold text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                        {t("marketing.getStarted")}
+                      </Link>
+                    </li>
+                  </>
+                ) : null}
+                {authed ? (
                   <li>
-                    <Link href="/sign-in" onClick={() => close(false)} className="block rounded px-2 py-2 text-sm font-medium text-foreground hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                      {t("marketing.signIn")}
+                    <Link href={APP_HOME} onClick={() => close(false)} className="block rounded bg-accent px-2 py-2 text-sm font-semibold text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                      {t("marketing.goToApp")}
                     </Link>
                   </li>
                 ) : null}
@@ -177,9 +191,7 @@ function MarketingFooter() {
           <p className="text-sm font-semibold">{t("marketing.footerProduct")}</p>
           <ul className="mt-2 space-y-1 text-sm text-muted">
             <li><Link href="/product" className="hover:text-foreground">{t("marketing.navProduct")}</Link></li>
-            <li><Link href="/getting-started" className="hover:text-foreground">{t("v4nav.howItWorks")}</Link></li>
             <li><Link href="/pricing" className="hover:text-foreground">{t("marketing.navPricing")}</Link></li>
-            <li><Link href="/help" className="hover:text-foreground">{t("marketing.navHelp")}</Link></li>
           </ul>
         </div>
         <div>
