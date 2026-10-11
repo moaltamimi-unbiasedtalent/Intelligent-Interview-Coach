@@ -42,7 +42,7 @@ const GROUPS: Array<{ id: string; titleKey: string; controls: Control[]; limits?
     dataLink: true,
     controls: [
       ["trust.isolationTerm", "trust.isolationDesc"],
-      ["trust.privateTerm", "trust.privateDesc"],
+      // "Private by default" is a visible principle card above and is not repeated here (one visible occurrence).
       ["trust.oppPrivateTerm", "trust.oppPrivateDesc"],
       ["trust.workspaceShareTerm", "trust.workspaceShareDesc"],
       ["trust.exportDeleteTerm", "trust.exportDeleteDesc"],
@@ -63,8 +63,9 @@ const GROUP_ICONS: Record<string, IconName> = { ai: "search", control: "check", 
 const PRINCIPLES: Array<[IconName, string, string]> = [
   ["search", "trust.sourcesTerm", "trust.sourcesDesc"],
   ["check", "trust.suggestionsTerm", "trust.suggestionsDesc"],
-  ["shield", "trust.oppPrivateTerm", "trust.privateDesc"],
+  ["shield", "trust.privateTerm", "trust.privateDesc"],
   ["mic", "trust.noAudioTerm", "trust.noAudioDesc"],
+  ["shield", "trust.oppPrivateTerm", "trust.oppPrivateDesc"],
 ];
 
 export function TrustContent() {
@@ -92,7 +93,7 @@ export function TrustContent() {
 
       <section className="mt-8 grid gap-4 md:grid-cols-2" aria-label={t("marketing.trustTitle")}>
         {PRINCIPLES.map(([icon, termKey, descKey], index) => (
-          <article key={termKey} className={index === 0 ? "min-h-64 rounded-[1.75rem] bg-[#183f42] p-7 text-white shadow-sm md:p-9" : index === 1 ? "min-h-64 rounded-[1.75rem] bg-[#e9e2f0] p-7 text-[#173f42] md:p-9" : index === 2 ? "min-h-64 rounded-[1.75rem] bg-[#f4cdb9] p-7 text-[#173f42] md:p-9" : "min-h-64 rounded-[1.75rem] border border-border bg-surface p-7 shadow-sm md:p-9"}>
+          <article key={termKey} className={index === 0 ? "min-h-64 rounded-[1.75rem] bg-[#183f42] p-7 text-white shadow-sm md:p-9" : index === 1 ? "min-h-64 rounded-[1.75rem] bg-[#e9e2f0] p-7 text-[#173f42] md:p-9" : index === 2 ? "min-h-64 rounded-[1.75rem] bg-[#f4cdb9] p-7 text-[#173f42] md:p-9" : "min-h-64 rounded-[1.75rem] border border-border bg-surface p-7 shadow-sm md:p-9" + (index === 4 ? " md:col-span-2 md:min-h-0" : "")}>
             <span className={index === 0 ? "grid h-12 w-12 place-items-center rounded-full bg-white/10 text-[#a9d7cd]" : "grid h-12 w-12 place-items-center rounded-full bg-white/70 text-[#173f42]"}>
               <MarketingIcon name={icon} className="h-5 w-5" />
             </span>
@@ -135,7 +136,7 @@ export function TrustContent() {
             </dl>
             {g.dataLink ? (
               <p className="border-t border-border px-5 py-4 text-sm md:px-7">
-                <Link href="/account/data" className="font-medium text-accent underline">{t("trustUx.yourDataLink")}</Link>
+                <Link href="/account/data" aria-label={t("trustUx.yourDataLink")} className="font-medium text-accent underline">{t("trustUx.yourDataLink")}</Link>
               </p>
             ) : null}
           </details>
