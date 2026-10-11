@@ -18,15 +18,20 @@ const PROHIBITED = /gdpr[- ]compliant|100\s?%\s*(secure|private)|completely priv
 const COMPETITORS = /chatgpt|openai|gemini|copilot|claude|final round|big interview|yoodli|huru|linkedin/i;
 
 describe("public positioning copy", () => {
-  it("home renders the Opportunity-centred story and the corrected claims", () => {
-    const { container } = render(<MarketingHome />);
-    const text = container.textContent ?? "";
-    expect(text).toContain(t("marketing.heroTitle"));
-    expect(text).toContain(t("marketing.whyTitle"));
+  it("home introduces the Opportunity story while Product carries the detailed positioning", () => {
+    const { container: home, unmount } = render(<MarketingHome />);
+    const homeText = home.textContent ?? "";
+    expect(homeText).toContain(t("marketing.heroTitle"));
+    expect(homeText).not.toContain(t("marketing.whyTitle"));
+    unmount();
+
+    const { container: product } = render(<ProductContent />);
+    const productText = product.textContent ?? "";
+    expect(productText).toContain(t("marketing.whyTitle"));
     expect(t("marketing.whyTitle")).toBe("What makes Ask4Mo different");
-    expect(text).toContain(t("marketing.why2Body"));
-    expect(text).toContain(t("marketing.ctaBody"));
-    expect(t("marketing.ctaBody")).not.toMatch(/upgrade/i); // Premium is a preview, not a purchase path
+    expect(productText).toContain(t("marketing.why2Body"));
+    expect(homeText).toContain(t("marketing.ctaBody"));
+    expect(t("marketing.ctaBody")).not.toMatch(/guarantee|discount|save/i);
     expect(t("marketing.featurePrepareBody")).toMatch(/when career evidence is used/);
   });
 

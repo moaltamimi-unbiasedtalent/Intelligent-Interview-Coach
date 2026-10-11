@@ -6,69 +6,75 @@ import type { ReactNode } from "react";
 
 import { useT } from "@/components/i18n/I18nProvider";
 import { ButtonLink } from "@/components/ui/Button";
-import { MarketingIcon, type IconName } from "@/components/marketing/MarketingIcon";
+import { MarketingIcon } from "@/components/marketing/MarketingIcon";
+import { CandidateStory } from "@/components/marketing/CandidateStory";
+import { ProofCarousel } from "@/components/marketing/ProofCarousel";
+import { ResearchEvidence } from "@/components/marketing/ResearchEvidence";
 
 // P10B Wave 7: the public story is centred on the Opportunity (Wave 6) - one job, everything
 // together - not a generic interview-question generator. Icons are restrained inline SVGs
 // (never emoji). All copy is localized; no em dash (guarded).
-
-// One connected system, per Opportunity. Icons are decorative (aria-hidden); text carries meaning.
-const SYSTEM: [string, string, IconName][] = [
-  ["marketing.featureOpportunityTitle", "marketing.featureOpportunityBody", "target"],
-  ["marketing.featureCompanyTitle", "marketing.featureCompanyBody", "search"],
-  ["marketing.featureEvidenceTitle", "marketing.featureEvidenceBody", "shield"],
-  ["marketing.featurePrepareTitle", "marketing.featurePrepareBody", "chat"],
-  ["marketing.featurePracticeTitle", "marketing.featurePracticeBody", "mic"],
-  ["marketing.featureWorkspacesTitle", "marketing.featureWorkspacesBody", "users"],
-];
-
-const STEPS = [
-  ["marketing.howStep1Title", "marketing.howStep1Body"],
-  ["marketing.howStep2Title", "marketing.howStep2Body"],
-  ["marketing.howStep3Title", "marketing.howStep3Body"],
-  ["marketing.howStep4Title", "marketing.howStep4Body"],
-  ["marketing.howStep5Title", "marketing.howStep5Body"],
-  ["marketing.howStep6Title", "marketing.howStep6Body"],
-] as const;
-
-const WHY = [
-  ["marketing.why1Title", "marketing.why1Body"],
-  ["marketing.why2Title", "marketing.why2Body"],
-  ["marketing.why3Title", "marketing.why3Body"],
-  ["marketing.why4Title", "marketing.why4Body"],
-] as const;
 
 export function MarketingHome() {
   const t = useT();
   return (
     <div>
       {/* Hero */}
-      <section className="mx-auto max-w-content px-4 py-16 text-center md:py-24">
-        <p className="text-sm font-semibold uppercase tracking-wide text-accent">{t("common.tagline")}</p>
-        <h1 className="mx-auto mt-3 max-w-3xl text-3xl font-bold tracking-tight md:text-5xl">
-          {t("marketing.heroTitle")}
-        </h1>
-        <p className="mx-auto mt-4 max-w-2xl text-lg text-muted">{t("marketing.heroSubtitle")}</p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <ButtonLink href="/register">{t("marketing.heroPrimary")}</ButtonLink>
-          <Link href="/product" className="text-sm font-medium text-foreground hover:underline">
-            {t("marketing.heroSecondary")} &rarr;
-          </Link>
-        </div>
-        <p className="mt-4 text-xs text-muted">{t("marketing.heroNote")}</p>
-        {/* Wave 8 B0: documentary hero. Full width on desktop (natural 1840x854); a deliberate
-            mobile crop keeps the subject, notes and folio (never the face/hands) via object-position. */}
-        <figure className="mx-auto mt-10 overflow-hidden rounded-lg border border-border">
-          <div className="relative aspect-[3/2] w-full sm:aspect-[1840/854]">
+      <section className="mx-auto max-w-content px-4 py-10 md:py-16">
+        <div className="grid overflow-hidden rounded-[2rem] bg-[#f2ebe4] text-[#173f42] shadow-soft lg:grid-cols-[0.88fr_1.12fr]">
+          <div className="flex flex-col justify-center p-7 text-left md:p-12">
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#6f5687]">{t("common.tagline")}</p>
+            <h1 className="mt-4 max-w-3xl text-4xl font-bold tracking-tight md:text-6xl lg:text-7xl">
+              {t("marketing.heroTitle")}
+            </h1>
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-[#43595a]">{t("marketing.heroSubtitle")}</p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <ButtonLink href="/register">{t("marketing.heroPrimary")}</ButtonLink>
+              <Link href="/product" className="text-sm font-semibold text-[#173f42] hover:underline">
+                {t("marketing.heroSecondary")} &rarr;
+              </Link>
+            </div>
+            <p className="mt-4 text-xs text-[#5f6667]">{t("marketing.heroNote")}</p>
+          </div>
+          {/* Documentary hero. The tighter editorial crop creates a human focal point while keeping
+              enough of the candidate's preparation environment visible. */}
+          <figure className="overflow-hidden">
+            <div className="relative min-h-[26rem] w-full md:min-h-[38rem]">
             <Image
               src="/images/ask4mo/ask4mo-home-hero-documentary.png"
               alt={t("marketing.heroImageAlt")}
               fill
               priority
-              sizes="(max-width: 1024px) 100vw, 1152px"
-              className="object-cover object-[72%_50%] sm:object-center"
+              sizes="(max-width: 1024px) 100vw, 640px"
+              className="object-cover object-[66%_50%]"
             />
+            </div>
+          </figure>
           </div>
+      </section>
+
+      <ProofCarousel />
+
+      <ResearchEvidence />
+
+      {/* v4: static candidate story + workflow entry. Fictional candidate, AI-generated stills, no video, not customer proof. */}
+      <section className="mx-auto max-w-content px-4 py-14" aria-labelledby="home-story-title">
+        <h2 id="home-story-title" className="text-center text-2xl font-bold md:text-3xl">{t("homeStory.title")}</h2>
+        <p className="mx-auto mt-3 max-w-2xl text-center text-muted">{t("homeStory.lead")}</p>
+        <div className="mt-8"><CandidateStory compact /></div>
+        <p className="mt-6 text-center">
+          <Link href="/product#how-it-works" className="text-sm font-semibold text-accent hover:underline">{t("homeStory.cta")} &rarr;</Link>
+        </p>
+      </section>
+
+      <section className="mx-auto max-w-content px-4 py-8" aria-label={t("about.founderName")}>
+        <figure className="rounded-[2rem] bg-[#e9e2f0] px-7 py-10 text-[#173f42] md:px-12 md:py-14">
+          <blockquote className="max-w-5xl text-2xl font-semibold leading-snug tracking-tight md:text-4xl">
+            “{t("about.founderHomeQuote")}”
+          </blockquote>
+          <figcaption className="mt-7 text-sm font-semibold text-[#43595a]">
+            {t("about.founderHomeAttribution")}
+          </figcaption>
         </figure>
       </section>
 
@@ -85,18 +91,18 @@ export function MarketingHome() {
       {/* The candidate problem -> Opportunity resolves it */}
       <section className="mx-auto max-w-content px-4 py-16">
         <div className="grid gap-6 md:grid-cols-2">
-          <div className="rounded-lg border border-border bg-surface p-6">
+          <div className="rounded-[1.5rem] bg-[#f4cdb9] p-7 text-[#173f42]">
             <h2 className="text-xl font-bold">{t("marketing.problemTitle")}</h2>
-            <p className="mt-3 text-muted">{t("marketing.problemBody")}</p>
+            <p className="mt-3 text-[#43595a]">{t("marketing.problemBody")}</p>
           </div>
-          <div className="rounded-lg border border-accent/40 bg-surface p-6">
+          <div className="rounded-[1.5rem] bg-[#183f42] p-7 text-white">
             <h2 className="text-xl font-bold">{t("marketing.problemResolveTitle")}</h2>
-            <p className="mt-3 text-muted">{t("marketing.problemResolveBody")}</p>
+            <p className="mt-3 text-white/70">{t("marketing.problemResolveBody")}</p>
           </div>
         </div>
         {/* Wave 8 B0: overhead still life of scattered materials organised into one folder. Shown in
             full (object-contain, no crop) so both the scattered and organised sides stay visible. */}
-        <figure className="mx-auto mt-8 max-w-[960px] overflow-hidden rounded-lg border border-border">
+        <figure className="mx-auto mt-8 max-w-[960px] overflow-hidden rounded-[1.75rem] border border-border shadow-sm">
           <Image
             src="/images/ask4mo/ask4mo-home-preparation-still-life.png"
             alt={t("marketing.problemImageAlt")}
@@ -108,72 +114,20 @@ export function MarketingHome() {
         </figure>
       </section>
 
-      {/* One connected system, per Opportunity */}
-      <section className="border-t border-border bg-surface-2">
-        <div className="mx-auto max-w-content px-4 py-16">
-          <h2 className="text-center text-2xl font-bold md:text-3xl">{t("marketing.systemTitle")}</h2>
-          <p className="mx-auto mt-3 max-w-2xl text-center text-muted">{t("marketing.systemLead")}</p>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {SYSTEM.map(([title, body, icon]) => (
-              <div key={title} className="rounded-lg border border-border bg-surface p-5">
-                <MarketingIcon name={icon} className="h-6 w-6 text-accent" />
-                <h3 className="mt-3 font-semibold">{t(title)}</h3>
-                <p className="mt-1 text-sm text-muted">{t(body)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How it works - the Opportunity journey */}
-      <section className="mx-auto max-w-content px-4 py-16">
-        <h2 className="text-center text-2xl font-bold md:text-3xl">{t("marketing.howTitle")}</h2>
-        <p className="mx-auto mt-3 max-w-2xl text-center text-muted">{t("marketing.howLead")}</p>
-        <ol className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {STEPS.map(([title, body], i) => (
-            <li key={title} className="rounded-lg border border-border bg-surface p-5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm font-bold text-accent-foreground">
-                {i + 1}
-              </div>
-              <h3 className="mt-3 font-semibold">{t(title)}</h3>
-              <p className="mt-1 text-sm text-muted">{t(body)}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      {/* Why Ask4Mo is different */}
-      <section className="border-t border-border bg-surface-2">
-        <div className="mx-auto max-w-content px-4 py-16">
-          <h2 className="text-center text-2xl font-bold md:text-3xl">{t("marketing.whyTitle")}</h2>
-          <div className="mt-10 grid gap-6 md:grid-cols-2">
-            {WHY.map(([title, body]) => (
-              <div key={title} className="flex gap-3 rounded-lg border border-border bg-surface p-5">
-                <MarketingIcon name="check" className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
-                <div>
-                  <h3 className="font-semibold">{t(title)}</h3>
-                  <p className="mt-1 text-sm text-muted">{t(body)}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Trust + pricing teasers */}
       <section className="mx-auto max-w-content px-4 py-16">
         <div className="grid gap-6 md:grid-cols-2">
-          <div className="rounded-lg border border-border bg-surface p-6">
+          <div className="rounded-[1.5rem] border border-border bg-surface p-7 shadow-sm">
             <h2 className="text-xl font-bold">{t("marketing.trustTitle")}</h2>
             <p className="mt-2 text-muted">{t("marketing.trustSubtitle")}</p>
             <Link href="/trust" className="mt-4 inline-block text-sm font-semibold text-accent hover:underline">
               {t("marketing.navTrust")} &rarr;
             </Link>
           </div>
-          <div className="rounded-lg border border-border bg-surface p-6">
+          <div className="rounded-[1.5rem] bg-[#e9e2f0] p-7 text-[#173f42]">
             <h2 className="text-xl font-bold">{t("marketing.homePricingTitle")}</h2>
-            <p className="mt-2 text-muted">{t("marketing.homePricingBody")}</p>
-            <Link href="/pricing" className="mt-4 inline-block text-sm font-semibold text-accent hover:underline">
+            <p className="mt-2 text-[#43595a]">{t("marketing.homePricingBody")}</p>
+            <Link href="/pricing" className="mt-4 inline-block text-sm font-semibold text-[#173f42] hover:underline">
               {t("marketing.homePricingCta")} &rarr;
             </Link>
           </div>
@@ -181,10 +135,10 @@ export function MarketingHome() {
       </section>
 
       {/* Final CTA */}
-      <section className="border-t border-border bg-surface-2">
-        <div className="mx-auto max-w-content px-4 py-16 text-center">
+      <section className="mx-auto max-w-content px-4 pb-4 pt-10">
+        <div className="rounded-[2rem] bg-[#183f42] px-6 py-16 text-center text-white md:px-12">
           <h2 className="text-2xl font-bold md:text-3xl">{t("marketing.ctaTitle")}</h2>
-          <p className="mx-auto mt-2 max-w-xl text-muted">{t("marketing.ctaBody")}</p>
+          <p className="mx-auto mt-2 max-w-xl text-white/70">{t("marketing.ctaBody")}</p>
           <div className="mt-6">
             <ButtonLink href="/register">{t("marketing.ctaButton")}</ButtonLink>
           </div>

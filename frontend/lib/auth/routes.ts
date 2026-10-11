@@ -16,6 +16,7 @@ export const APP_HOME = "/app";
 export const MARKETING_ROUTES = new Set<string>([
   "/",
   "/product",
+  "/getting-started",
   "/pricing",
   "/trust",
   "/privacy",

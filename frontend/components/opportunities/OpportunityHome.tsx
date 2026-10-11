@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 import { OpportunityStatusBadge } from "@/components/opportunities/OpportunityStatusBadge";
+import { JourneyRail } from "@/components/layout/JourneyRail";
 
 const STATUSES: OpportunityStatus[] = ["active", "interviewing", "offer", "closed"];
 
@@ -93,11 +94,29 @@ export function OpportunityHome({ opportunityId }: { opportunityId: number }) {
   }
 
   const q = `?opportunity=${o.id}`;
+  // Deterministic best next step from EXISTING state only (JD link, interview count). No inference beyond that.
+  const next = !o.job_description_document_id
+    ? { body: t("journeyCues.nextAddJd"), cta: t("journeyCues.nextAddJdCta"), href: "/documents" }
+    : o.interview_count === 0
+      ? { body: t("journeyCues.nextPractice"), cta: t("journeyCues.nextPracticeCta"), href: `/practice${q}` }
+      : { body: t("journeyCues.nextReview"), cta: t("journeyCues.nextReviewCta"), href: "/history" };
 
   return (
     <section className="mx-auto max-w-content space-y-5">
       <PageHeader title={o.title} description={o.target_role}
                   actions={<OpportunityStatusBadge status={o.status} />} />
+
+      <JourneyRail opportunityId={o.id} />
+
+      <Card>
+        <CardBody className="flex flex-wrap items-center justify-between gap-3" data-testid="next-step">
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">{t("journeyCues.nextStepTitle")}</h2>
+            <p className="mt-1 text-sm text-foreground">{next.body}</p>
+          </div>
+          <Link href={next.href} className="text-sm font-semibold text-accent hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2">{next.cta}</Link>
+        </CardBody>
+      </Card>
 
       {/* Overview */}
       <Card>

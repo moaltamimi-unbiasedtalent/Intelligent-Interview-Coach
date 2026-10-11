@@ -12,6 +12,7 @@ import { InterviewAnswerComposer } from "./InterviewAnswerComposer";
 import { InterviewEvaluation } from "./InterviewEvaluation";
 import { InterviewReport } from "./InterviewReport";
 import { InterviewSessionSetup } from "./InterviewSessionSetup";
+import { JourneyRail } from "@/components/layout/JourneyRail";
 import { DeepDivePanel } from "./DeepDivePanel";
 import { useInterview } from "./useInterview";
 import { FeedbackControl } from "@/components/feedback/FeedbackControl";
@@ -46,6 +47,8 @@ export function PracticeClient({ sessionId, opportunityId }: { sessionId?: strin
     const oppId = opportunityId ?? params?.get("opportunity") ?? undefined;
     return (
       <section className="mx-auto max-w-2xl animate-enter">
+        {/* "You are here" cue on the SETUP step only; the active question flow stays distraction-free. */}
+        <div className="mb-4"><JourneyRail current="practice" opportunityId={oppId && /^\d+$/.test(oppId) ? Number(oppId) : null} /></div>
         <InterviewSessionSetup
           opportunityId={oppId && /^\d+$/.test(oppId) ? Number(oppId) : null}
           onCreated={(id) => {

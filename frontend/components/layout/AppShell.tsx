@@ -41,7 +41,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="border-b border-border bg-surface">
           <div className="mx-auto flex max-w-content items-center justify-between gap-4 px-5 py-3">
             <Logo href="/onboarding" />
-            <LanguageMenu />
+            <div className="flex items-center gap-2">
+              <LanguageMenu />
+              <ThemeToggle />
+            </div>
           </div>
         </header>
         <main id="main" tabIndex={-1} className="mx-auto max-w-content px-5 py-8 focus:outline-none">
@@ -53,15 +56,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     );
   }
   return (
-    <div className="min-h-dvh">
+    <div className="app-shell-surface min-h-dvh">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-[8px] focus:bg-surface focus:px-3 focus:py-2 focus:shadow-soft"
       >
         {t("common.skipToContent")}
       </a>
-      <header className="sticky top-0 z-20 border-b border-border bg-surface">
-        <div className="mx-auto flex max-w-content items-center gap-4 px-5 py-3">
+      <header className="sticky top-0 z-20 px-3 pt-3 sm:px-4">
+        <div className="mx-auto flex max-w-content items-center gap-4 rounded-2xl border border-border bg-surface/90 px-5 py-3 shadow-sm backdrop-blur-xl">
           <Brand />
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
             <PrimaryNavigation />
@@ -75,7 +78,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <main id="main" tabIndex={-1} className="mx-auto max-w-content px-5 pb-28 pt-7 focus:outline-none lg:pb-20">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-content px-5 pb-28 pt-8 focus:outline-none lg:pb-20">
         {/* RouteGuard reads the URL (useSearchParams); a Suspense boundary keeps
             static prerender (e.g. /_not-found) from bailing the whole page to CSR. */}
         <Suspense fallback={children}>
