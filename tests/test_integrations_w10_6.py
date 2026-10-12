@@ -150,10 +150,14 @@ def test_integration_permission_matrix(env):
         assert (env.c.post(f"{API}/admin/integrations/openrouter/test", cookies=ck).status_code == 200) is ok, role
     assert env.c.get(f"{API}/admin/integrations", cookies=cand).status_code == 403
     assert env.c.post(f"{API}/admin/integrations/openrouter/test", cookies=cand).status_code == 403
-    # credential replacement needs the distinct, currently unassigned permission
-    assert not any(perm.SECRET_ROTATE in p for p in perm.ROLE_PRESETS.values())
+    # credential replacement needs the distinct rotate permission: since AD-W12-01 ONLY the owner preset holds it (no specialist does)
+    assert [r for r, p in perm.ROLE_PRESETS.items() if perm.SECRET_ROTATE in p] == ["platform_admin"]
+    _, ops = mk(env, "operations_admin")
+    assert env.c.post(f"{API}/admin/integrations/openrouter/credentials/api_key", json={"value": "x" * 20}, cookies=ops).status_code == 403
+    # the owner passes the authorization gate, but the environment store is externally managed and read-only: authorization is not capability
     _, adm = mk(env, "platform_admin")
-    assert env.c.post(f"{API}/admin/integrations/openrouter/credentials/api_key", json={"value": "x" * 20}, cookies=adm).status_code == 403
+    r = env.c.post(f"{API}/admin/integrations/openrouter/credentials/api_key", json={"value": "x" * 20}, cookies=adm)
+    assert r.status_code == 409 and "managed outside Ask4Mo" in r.text
 
 
 def test_read_only_integration_permission_has_no_test_or_credential_access(env, monkeypatch):

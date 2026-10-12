@@ -173,7 +173,7 @@ def test_price_change_requires_a_different_authorised_administrator_and_versions
     b1, c1 = env.user("billing_admin"); b2, c2 = env.user("billing_admin"); _, plat = env.user("platform_admin"); _, sup = env.user("support_operator")
     pv = rig.plan_version("premium")
     body = {"plan_version_id": pv, "amount_minor": 1099, "currency": "EUR", "interval": "month", "trial_days": 14, "visibility": "public", "reason": "Test terms"}
-    for ck in (plat, sup):
+    for ck in (sup,):                                                                                                      # a specialist without the permission
         assert env.c.post(f"{API}/admin/billing/price-changes", json=body, cookies=ck).status_code == 403
     for bad in ({**body, "amount_minor": 10.5}, {**body, "amount_minor": True}, {**body, "currency": "eur"}, {**body, "reason": ""}, {**body, "interval": "day"}):
         assert env.c.post(f"{API}/admin/billing/price-changes", json=bad, cookies=c1).status_code == 422
@@ -182,7 +182,6 @@ def test_price_change_requires_a_different_authorised_administrator_and_versions
     aid = r.json()["public_id"]
     assert env.c.post(f"{API}/admin/billing/price-changes", json=body, cookies=c2).status_code == 409                     # one pending per plan version
     assert env.c.post(f"{API}/admin/billing/price-changes/{aid}/approve", cookies=c1).status_code == 403                  # no self-approval
-    assert env.c.post(f"{API}/admin/billing/price-changes/{aid}/approve", cookies=plat).status_code == 403                # no platform_admin bypass
     assert env.c.get(f"{API}/admin/billing/terms", cookies=c1).json()["items"][-1]["configured"] is False                 # nothing active yet
     ok = env.c.post(f"{API}/admin/billing/price-changes/{aid}/approve", cookies=c2)
     assert ok.status_code == 200 and ok.json()["status"] == "executed" and ok.json()["decided_by_user_id"] == b2
@@ -198,6 +197,12 @@ def test_price_change_requires_a_different_authorised_administrator_and_versions
     a3 = env.c.post(f"{API}/admin/billing/price-changes", json={**body, "amount_minor": 1}, cookies=c1).json()["public_id"]
     assert env.c.post(f"{API}/admin/billing/price-changes/{a3}/reject", cookies=c1).status_code == 403
     assert env.c.post(f"{API}/admin/billing/price-changes/{a3}/reject", cookies=c2).json()["status"] == "rejected"
+    # AD-W12-01: the owner (platform_admin, 43 / 43) MAY request, but holding the permission never lets one actor approve its own request (no owner bypass)
+    own = env.c.post(f"{API}/admin/billing/price-changes", json={**body, "amount_minor": 2}, cookies=plat)
+    assert own.status_code == 201 and own.json()["status"] == "pending"
+    oid = own.json()["public_id"]
+    assert env.c.post(f"{API}/admin/billing/price-changes/{oid}/approve", cookies=plat).status_code == 403
+    assert env.c.post(f"{API}/admin/billing/price-changes/{oid}/approve", cookies=c1).status_code == 200                  # a DIFFERENT authorised administrator completes it
     names = {e["event_type"] for e in env.events()}
     assert {A.ADMIN_BILLING_PRICE_CHANGE_REQUESTED, A.ADMIN_BILLING_PRICE_CHANGE_APPROVED, A.ADMIN_BILLING_PRICE_ACTIVATED,
             A.ADMIN_BILLING_PRICE_CHANGE_REJECTED} <= names
@@ -216,9 +221,9 @@ def test_inactive_approver_and_missing_permission_cannot_approve(env, rig):
         s.commit()
     with pytest.raises(BillingForbidden):
         rig.svc.decide_price_change(a["public_id"], approve=True, actor_user_id=b2)
-    plat_id, _ = env.user("platform_admin")
+    sup_id, _ = env.user("support_operator")                                                  # lacks platform.plans.price.change
     with pytest.raises(BillingForbidden):
-        rig.svc.decide_price_change(a["public_id"], approve=True, actor_user_id=plat_id)
+        rig.svc.decide_price_change(a["public_id"], approve=True, actor_user_id=sup_id)
     with pytest.raises(BillingForbidden):
         rig.svc.decide_price_change(a["public_id"], approve=True, actor_user_id=b1)
 
@@ -351,17 +356,17 @@ def test_event_job_processes_through_the_w109_worker_idempotently(env, rig):
 
 # =========================================================== refunds
 def test_refund_validation_second_approval_execution_and_no_over_refund(env, rig):
-    uid, _ = env.user("user"); b1, c1 = env.user("billing_admin"); b2, c2 = env.user("billing_admin"); _, plat = env.user("platform_admin")
+    uid, _ = env.user("user"); b1, c1 = env.user("billing_admin"); b2, c2 = env.user("billing_admin"); _, plat = env.user("platform_admin"); _, sup = env.user("support_operator")
     pay = rig.paid_invoice(uid, "r1", 2000)
     for bad in (0, -5, 2001, 1.5, True):
         assert env.c.post(f"{API}/admin/billing/payments/{pay}/refunds", json={"amount_minor": bad, "reason": "x"}, cookies=c1).status_code == 422
-    assert env.c.post(f"{API}/admin/billing/payments/{pay}/refunds", json={"amount_minor": 100, "reason": "x"}, cookies=plat).status_code == 403
+    assert env.c.post(f"{API}/admin/billing/payments/{pay}/refunds", json={"amount_minor": 100, "reason": "x"}, cookies=sup).status_code == 403
     assert env.c.post(f"{API}/admin/billing/payments/{'0' * 32}/refunds", json={"amount_minor": 100, "reason": "x"}, cookies=c1).status_code == 404
     req = env.c.post(f"{API}/admin/billing/payments/{pay}/refunds", json={"amount_minor": 1200, "reason": "Duplicate charge"}, cookies=c1)
     assert req.status_code == 201 and req.json()["status"] == "pending" and req.json()["proposed"]["currency"] == "EUR"
     aid = req.json()["public_id"]
     assert env.c.post(f"{API}/admin/billing/refunds/{aid}/approve", cookies=c1).status_code == 403                       # no self-approval
-    assert env.c.post(f"{API}/admin/billing/refunds/{aid}/approve", cookies=plat).status_code == 403
+    assert env.c.post(f"{API}/admin/billing/refunds/{aid}/approve", cookies=sup).status_code == 403                      # no permission
     assert env.c.post(f"{API}/admin/billing/price-changes/{aid}/approve", cookies=c2).status_code == 404                  # wrong action route
     ok = env.c.post(f"{API}/admin/billing/refunds/{aid}/approve", cookies=c2)
     assert ok.status_code == 200 and ok.json()["status"] == "approved"                                                      # queued, NOT yet executed
@@ -379,6 +384,13 @@ def test_refund_validation_second_approval_execution_and_no_over_refund(env, rig
     assert {A.ADMIN_BILLING_REFUND_REQUESTED, A.ADMIN_BILLING_REFUND_APPROVED, A.ADMIN_BILLING_REFUND_EXECUTED, A.ADMIN_BILLING_REFUND_REJECTED} <= {e["event_type"] for e in env.events()}
     blob = " ".join(str(e) for e in env.events() if e["event_type"].startswith("admin.billing_"))
     assert "card" not in blob.lower() and "Duplicate charge" not in blob
+    # AD-W12-01: the owner may request a refund but can never approve its own request
+    uid_o, _ = env.user("user")
+    pay_o = rig.paid_invoice(uid_o, "r1-owner", 1000)
+    own = env.c.post(f"{API}/admin/billing/payments/{pay_o}/refunds", json={"amount_minor": 100, "reason": "Owner request"}, cookies=plat)
+    assert own.status_code == 201
+    assert env.c.post(f"{API}/admin/billing/refunds/{own.json()['public_id']}/approve", cookies=plat).status_code == 403
+    assert env.c.post(f"{API}/admin/billing/refunds/{own.json()['public_id']}/approve", cookies=c1).status_code == 200
 
 
 def test_refund_rejects_failed_payments_currency_mismatch_and_duplicate_pending_requests(env, rig):
@@ -470,10 +482,13 @@ def test_billing_read_api_permissions_filters_and_safe_fields(env, rig):
     uid, _ = env.user("user"); _, bk = env.user("billing_admin")
     rig.paid_invoice(uid, "v1", 1500)
     rig.ev("customer_created", "c2", customer_ref="cus_v2", user_id=env.user("user")[0])
-    for role in ("support_operator", "knowledge_admin", "operations_admin", "security_privacy_admin", "platform_admin", "user"):
+    for role in ("support_operator", "knowledge_admin", "operations_admin", "security_privacy_admin", "user"):
         _, ck = env.user(role)
         for path in ("", "/invoices", "/payments", "/refunds", "/customers", "/terms", "/approvals"):
             assert env.c.get(f"{API}/admin/billing{path}", cookies=ck).status_code == 403, (role, path)
+    _, owner = env.user("platform_admin")                                                                                   # AD-W12-01: the owner holds billing.read (still mock billing)
+    for path in ("", "/invoices", "/payments", "/refunds", "/customers", "/terms", "/approvals"):
+        assert env.c.get(f"{API}/admin/billing{path}", cookies=owner).status_code == 200, path
     inv = env.c.get(f"{API}/admin/billing/invoices?state=paid", cookies=bk).json()
     assert inv["total"] == 1 and inv["items"][0]["mock"] is True and inv["items"][0]["amount_due_minor"] == 1500
     assert env.c.get(f"{API}/admin/billing/invoices?state=bogus", cookies=bk).status_code == 422
@@ -484,9 +499,9 @@ def test_billing_read_api_permissions_filters_and_safe_fields(env, rig):
     for banned in ("card_number", "cvv", "cvc", "expiry", "bank_account", "routing_number", "payment_method", "iban", "tax_id"):
         assert banned not in keys
     assert env.c.get(f"{API}/admin/billing/payments/{'0' * 32}", cookies=bk).status_code == 404
-    assert not any(role in perm.permissions_for_role(r) for r in ("support_operator", "knowledge_admin", "operations_admin", "security_privacy_admin", "platform_admin")
+    assert not any(role in perm.permissions_for_role(r) for r in ("support_operator", "knowledge_admin", "operations_admin", "security_privacy_admin")
                    for role in (perm.BILLING_READ, perm.BILLING_REFUND, perm.PRICE_CHANGE))
-    assert {perm.BILLING_READ, perm.BILLING_REFUND, perm.PRICE_CHANGE} <= perm.permissions_for_role("billing_admin") and len(perm.PERMISSIONS) == 43
+    assert {perm.BILLING_READ, perm.BILLING_REFUND, perm.PRICE_CHANGE} <= perm.permissions_for_role("billing_admin") <= perm.permissions_for_role("platform_admin") and len(perm.PERMISSIONS) == 43
 
 
 def test_command_center_shows_mock_counts_without_revenue(env, rig):

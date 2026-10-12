@@ -61,7 +61,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("security_permissions_mapped_to_existing_presets",
           {perm.SECURITY_READ, perm.SECURITY_MANAGE, perm.INCIDENTS_MANAGE, perm.AUDIT_READ, perm.AUDIT_EXPORT} <= perm.ROLE_PRESETS[perm.ROLE_SECURITY_PRIVACY_ADMIN]
           and perm.USERS_ROLE_ASSIGN in perm.ROLE_PRESETS[perm.ROLE_PLATFORM_ADMIN] and perm.USERS_ROLE_ASSIGN not in perm.ROLE_PRESETS[perm.ROLE_SECURITY_PRIVACY_ADMIN]
-          and perm.AUDIT_EXPORT not in perm.ROLE_PRESETS[perm.ROLE_PLATFORM_ADMIN])
+          and perm.ROLE_PRESETS[perm.ROLE_PLATFORM_ADMIN] == perm.PERMISSION_SET)       # AD-W12-01: the owner holds all 43; the specialist keeps its delegated set
     check("no_break_glass_or_impersonation_permission_or_route",
           not [p for p in perm.PERMISSIONS if any(f in p for f in perm.BANNED_PERMISSION_FRAGMENTS)]
           and not re.search(r"break.?glass|impersonat|view.as", " ".join(re.findall(r'@router\.\w+\(\s*"([^"]+)"', all_routes)), re.I)
@@ -112,6 +112,7 @@ def run() -> dict[str, tuple[bool, str]]:
 
         sec_uid, sec, _ = user("security_privacy_admin")
         pa_uid, pa, _ = user("platform_admin")
+        sup = user("support_operator")[1]                      # a specialist WITHOUT the security/audit mutation permissions (AD-W12-01: the owner holds them)
         pb_uid, pb, _ = user("platform_admin")
         cand_uid, cand, cand_email = user()
 
@@ -133,7 +134,7 @@ def run() -> dict[str, tuple[bool, str]]:
         check("audit_global_read_permissioned", any(e["actor_user_id"] != sec_uid for e in get("/admin/audit", sec).json()["items"])
               and get("/admin/audit", user("billing_admin")[1]).status_code == 403)
         body = {"format": "csv", "period": "7d", "reason": "evaluator export check"}
-        check("audit_export_separate_permission", post("/admin/audit/export", pa, body).status_code == 403 and post("/admin/audit/export", sec, body).status_code == 200)
+        check("audit_export_separate_permission", post("/admin/audit/export", sup, body).status_code == 403 and post("/admin/audit/export", sec, body).status_code == 200 and post("/admin/audit/export", pa, body).status_code == 200)
         check("audit_export_bounded_and_reasoned", post("/admin/audit/export", sec, {**body, "reason": "no"}).status_code == 422
               and post("/admin/audit/export", sec, {**body, "period": "all"}).status_code == 422 and D.EXPORT_MAX_ROWS == 5000)
         check("audit_export_is_audited", bool(sql("SELECT 1 FROM audit_events WHERE event_type=:t", t=A.ADMIN_AUDIT_EXPORTED)))
@@ -156,7 +157,7 @@ def run() -> dict[str, tuple[bool, str]]:
         r = post("/admin/security/incidents", sec, {"title": "Evaluator incident", "severity": "low", "affected_service": "agent"})
         pid = r.json().get("public_id", "")
         check("incident_permission_and_bounded_lifecycle",
-              r.status_code == 200 and post("/admin/security/incidents", pa, {"title": "t", "severity": "low", "affected_service": "agent"}).status_code == 403
+              r.status_code == 200 and post("/admin/security/incidents", sup, {"title": "t", "severity": "low", "affected_service": "agent"}).status_code == 403
               and post("/admin/security/incidents", sec, {"title": "t", "severity": "nope", "affected_service": "agent"}).status_code == 422
               and post("/admin/security/incidents", sec, {"title": "t", "severity": "low", "affected_service": "http://x"}).status_code == 422
               and post(f"/admin/security/incidents/{pid}/status", sec, {"status": "closed", "expected_revision": 0}).status_code == 409
@@ -176,7 +177,7 @@ def run() -> dict[str, tuple[bool, str]]:
         al = [a for a in get("/admin/security/alerts", sec).json()["items"] if a["category"] == "job_failed"]
         check("alert_dedupe_and_categories_bounded", len(al) == 1 and al[0]["occurrence_count"] == 2 and set(D.ALERT_DEFINITIONS) == set(ALERT_CATEGORIES) and not set(D.ALERT_NOT_IMPLEMENTED) & set(ALERT_CATEGORIES))
         a0 = al[0]
-        check("alert_ack_resolve_need_manage_permission", post(f"/admin/security/alerts/{a0['public_id']}/acknowledge", pa, {"expected_revision": a0["revision"]}).status_code == 403
+        check("alert_ack_resolve_need_manage_permission", post(f"/admin/security/alerts/{a0['public_id']}/acknowledge", sup, {"expected_revision": a0["revision"]}).status_code == 403
               and post(f"/admin/security/alerts/{a0['public_id']}/acknowledge", sec, {"expected_revision": a0["revision"] + 9}).status_code == 409
               and post(f"/admin/security/alerts/{a0['public_id']}/acknowledge", sec, {"expected_revision": a0["revision"]}).status_code == 200)
 

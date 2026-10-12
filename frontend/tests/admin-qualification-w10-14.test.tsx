@@ -32,12 +32,19 @@ describe("Admin navigation matrix (permission-derived)", () => {
     }
   });
 
-  it("platform_admin is broad but not universal: it is not shown Billing or Jobs", () => {
-    const nav = fixture.personas.platform_admin.nav;
-    expect(nav).not.toContain("/admin/billing");
-    expect(nav).not.toContain("/admin/jobs");
-    expect(fixture.personas.platform_admin.permissions.length).toBe(28);
+  it("AD-W12-01: platform_admin (the owner / orchestrator) holds all 43 permissions and is shown every Admin destination; specialists stay delegated", () => {
+    const pa = fixture.personas.platform_admin;
+    expect(pa.permissions.length).toBe(43);
     expect(fixture.permissions_total).toBe(43);
+    for (const d of ADMIN_DESTINATIONS) expect(pa.nav).toContain(d.href);                      // derived from permission strings only, no role-name special case
+    expect(pa.nav).toContain("/admin/billing");
+    expect(pa.nav).toContain("/admin/jobs");
+    const delegated = (name: string) => fixture.personas[name as keyof typeof fixture.personas].nav;
+    expect(delegated("support_operator")).not.toContain("/admin/billing");
+    expect(delegated("billing_admin")).not.toContain("/admin/jobs");
+    expect(delegated("knowledge_admin")).not.toContain("/admin/billing");
+    expect(fixture.personas.user.nav).toEqual([]);
+    expect(fixture.unknown_role_nav).toEqual([]);
   });
 
   it("the destination table references only permissions that exist and uses no role name", () => {

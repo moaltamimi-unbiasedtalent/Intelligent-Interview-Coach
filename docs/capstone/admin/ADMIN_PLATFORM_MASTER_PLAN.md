@@ -44,7 +44,9 @@ background-job abstraction (all long operations are synchronous), DB-backed feat
 | SEC-W10-05 | pause state is process-local, lost on restart/replicas | **W10.11 (CLOSED: PR #125, durable `platform_pause_states`; see `W10_11_FEATURE_FLAGS_SAFE_PLATFORM_CONFIGURATION.md`)** | the Admin UI now reports the durable, shared state |
 | SEC-W10-06 | `/admin/providers` echoes the raw email-provider setting | **W10.1 (CLOSED, PR #110)** | admin provider/config responses return safe metadata only (established now, before W10.6 expands them) |
 
-### ROLE-W10-01 - CLOSED (W10.14)
+### ROLE-W10-01 - CLOSED (W10.14); the platform_admin preset was later superseded by AD-W12-01 (W12.1)
+**Update (W12.1, owner decision AD-W12-01):** for the CURRENT runtime `platform_admin` now holds all 43 canonical permissions as the platform owner / orchestrator; the specialist presets stay least-privilege and there is still no candidate-content, break-glass or impersonation permission. The text below is the W10.14 decision and is preserved as the historical record of that point in time.
+
 **Decision:** least-privilege domain separation is authoritative. The W10.0 persona wording (Platform Administrator holding every permission except break-glass) is superseded: `platform_admin` is a broad cross-domain platform operator with an explicit code-defined preset; it is NOT billing, privacy-execution, security/incident-mutation, knowledge-approval, job-operations, configuration, secret-rotation or audit-export authority.
 **Rationale:** it preserves separation of duties, matches the architecture actually built across W10.1-W10.13, keeps permission strings authoritative and role presets code-defined, and needs no migration, no new permission and no private candidate-data access. No permission was added to `platform_admin` to satisfy the stale wording; the guards that prove the decision are `tests/test_admin_qualification_w10_14.py` and `scripts/eval_admin_qualification.py`. The 15 specialist permissions intentionally absent from the preset are listed in `W10_14_FULL_ADMIN_QUALIFICATION.md`.
 
@@ -63,7 +65,7 @@ in the same transaction; mocks are labelled; no browser-based code deployment.
 ## 4. Personas
 | Persona | Purpose | Maps initially to |
 |---|---|---|
-| Platform Administrator | broad cross-domain platform operation, role assignment, flags | `platform_admin` - a broad platform operator with an explicit code-defined **least-privilege** preset (28 of 43 permissions); specialist high-risk permissions remain with their domain roles (ROLE-W10-01, CLOSED by W10.14) |
+| Platform Administrator | broad cross-domain platform operation, role assignment, flags | `platform_admin` - the platform owner / orchestrator with all 43 canonical permissions (AD-W12-01, W12.1; W10.14 historically qualified it at 28 of 43); specialist roles remain least-privilege delegated roles; it is NOT a private-candidate-content superuser |
 | Support Operator | tickets, account troubleshooting (metadata only) | role preset `support_operator` |
 | Billing Administrator | plans, subscriptions, invoices | preset `billing_admin` |
 | Knowledge Administrator | sources, ingestion, indexing, provenance | preset `knowledge_admin` |

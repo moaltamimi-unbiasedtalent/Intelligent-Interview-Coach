@@ -219,13 +219,17 @@ def test_audit_context_is_only_projected_for_admin_events(env):
     assert items and all(e["context"] is None for e in items)
 
 
-def test_export_needs_its_own_permission(env):
-    _, a, _ = env.user("platform_admin")                     # holds audit.read, NOT audit.export
+def test_export_needs_its_own_permission(env, monkeypatch):
+    # No shipped preset holds audit.read WITHOUT audit.export any more (AD-W12-01), so the separation is proven with a test-only read-only preset.
+    monkeypatch.setitem(perm.ROLE_PRESETS, "support_operator", frozenset({perm.OVERVIEW_READ, perm.AUDIT_READ}))
+    _, a, _ = env.user("support_operator")                   # holds audit.read, NOT audit.export
     body = {"format": "csv", "period": "7d", "reason": "quarterly access review"}
     assert get(env, "/admin/audit", a).status_code == 200
     assert post(env, "/admin/audit/export", a, body).status_code == 403
     _, sec, _ = env.user("security_privacy_admin")
     assert post(env, "/admin/audit/export", sec, body).status_code == 200
+    _, owner, _ = env.user("platform_admin")                 # the owner holds it too (still metadata only, reason and period required)
+    assert post(env, "/admin/audit/export", owner, body).status_code == 200
 
 
 def test_export_requires_reason_period_and_known_format(env):
@@ -318,8 +322,9 @@ def test_account_deletion_still_succeeds_and_only_anonymises_the_audit_actor(env
 
 
 # ======================================================================== incidents
-def test_incident_permissions(env):
-    _, a, _ = env.user("platform_admin")                      # security.read only
+def test_incident_permissions(env, monkeypatch):
+    monkeypatch.setitem(perm.ROLE_PRESETS, "support_operator", frozenset({perm.OVERVIEW_READ, perm.SECURITY_READ}))   # test-only read-only preset (AD-W12-01)
+    _, a, _ = env.user("support_operator")                    # security.read only
     _, sec, _ = env.user("security_privacy_admin")
     body = {"title": "t", "severity": "low", "affected_service": "agent"}
     assert post(env, "/admin/security/incidents", a, body).status_code == 403
@@ -493,9 +498,10 @@ def test_alert_stale_revision_conflicts(env):
     assert get(env, "/admin/security/alerts", sec).json()["items"][0]["state"] == "active"
 
 
-def test_alert_read_and_manage_are_separate_permissions(env):
+def test_alert_read_and_manage_are_separate_permissions(env, monkeypatch):
     seed_alert(env)
-    _, a, _ = env.user("platform_admin")                        # security.read only
+    monkeypatch.setitem(perm.ROLE_PRESETS, "support_operator", frozenset({perm.OVERVIEW_READ, perm.SECURITY_READ}))   # test-only read-only preset (AD-W12-01)
+    _, a, _ = env.user("support_operator")                      # security.read only
     _, sec, _ = env.user("security_privacy_admin")              # read + manage
     item = get(env, "/admin/security/alerts", a).json()["items"][0]
     assert post(env, f"/admin/security/alerts/{item['public_id']}/acknowledge", a, {"expected_revision": item["revision"]}).status_code == 403
@@ -845,7 +851,7 @@ def test_permissions_unchanged_no_break_glass_no_impersonation_and_security_pres
     assert {perm.SECURITY_READ, perm.SECURITY_MANAGE, perm.INCIDENTS_MANAGE, perm.AUDIT_READ, perm.AUDIT_EXPORT} <= sec
     assert perm.USERS_ROLE_ASSIGN not in sec                           # second approval is permission-based; the security admin is not an approver
     plat = perm.ROLE_PRESETS[perm.ROLE_PLATFORM_ADMIN]
-    assert perm.USERS_ROLE_ASSIGN in plat and perm.AUDIT_EXPORT not in plat and perm.SECURITY_MANAGE not in plat and perm.INCIDENTS_MANAGE not in plat
+    assert plat == perm.PERMISSION_SET and perm.USERS_ROLE_ASSIGN in plat and perm.AUDIT_EXPORT in plat and perm.SECURITY_MANAGE in plat and perm.INCIDENTS_MANAGE in plat   # AD-W12-01 owner
     routes = " ".join(getattr(r, "path", "") for r in env.app.routes).lower()
     assert not re.search(r"break.?glass|impersonat|view.as|act.as", routes)
 
