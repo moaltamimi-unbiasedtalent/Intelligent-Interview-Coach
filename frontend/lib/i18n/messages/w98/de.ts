@@ -97,7 +97,11 @@ const de: typeof en = {
     sharingTitle: "Teilen und Zugriff",
     sharingIntro:
       "Nichts wird geteilt, es sei denn, Sie teilen es. Das Widerrufen verhindert ab jetzt, dass Mitglieder ein Element ansehen. Es nimmt nichts zurück, was sie bereits gesehen haben.",
-    sharingEmpty: "Sie teilen derzeit nichts.",
+    sharingEmpty: "Derzeit wird nichts geteilt. Ihre Daten sind standardmäßig privat: Die Mitgliedschaft in einem Workspace gibt niemandem Zugriff auf Ihren Lebenslauf, Ihre Berichte, Ihre Story Bank oder andere Vorbereitungsdaten.",
+    manageSharingQuick: "Freigaben & Zugriff verwalten",
+    sharingQuickNote: "Es wird nichts automatisch geteilt. Hier sehen Sie, was geteilt ist, und können es beenden.",
+    manageSharingCard: "Freigaben verwalten",
+    sharingViewOnly: "Geteilte Elemente können die Personen, mit denen Sie sie teilen, nur ansehen.",
     sharingLoadFailed: "Ihre Freigaben konnten nicht geladen werden.",
     sharedReport: "Interviewbericht",
     sharedStory: "Story",

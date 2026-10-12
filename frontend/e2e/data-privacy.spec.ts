@@ -246,3 +246,73 @@ test("mobile 390px (light and dark): no horizontal scroll, dialog fits, actions 
     await page.unrouteAll({ behavior: "ignoreErrors" });
   }
 });
+
+test("P2-01: a candidate who does not know where sharing lives finds it, understands who has access, revokes once and sees the private-by-default state", async ({ page }) => {
+  const state = freshState();
+  await mock(page, "en", state);
+  await page.goto("/account/data");
+
+  // 1-2. The sharing / access entry point is identifiable from the top of the page (before export and deletion controls).
+  const quick = page.getByTestId("dp-quick-sharing");
+  await expect(quick).toBeVisible();
+  await expect(quick).toContainText(T("en", "dataPrivacy.sharingQuickNote"));
+  const manage = quick.getByRole("link", { name: T("en", "dataPrivacy.manageSharingQuick") });
+  await expect(manage).toBeVisible();
+  const quickBox = (await quick.boundingBox())!;
+  const exportBox = (await page.getByTestId("dp-export").boundingBox())!;
+  expect(quickBox.y).toBeLessThan(exportBox.y);
+
+  // The overview card is actionable too, with a contextual accessible name.
+  await expect(page.getByTestId("dp-link-shares")).toHaveAttribute("aria-label", `${T("en", "dataPrivacy.manageSharingCard")}: ${T("en", "dataPrivacy.cardShares")}`);
+
+  // 3. Jump straight to the sharing section.
+  await manage.click();
+  await expect(page).toHaveURL(/\/account\/data#sharing$/);
+  const sharing = page.getByTestId("dp-sharing");
+  await expect(sharing).toBeInViewport();
+  await expect(page.getByRole("heading", { name: T("en", "dataPrivacy.sharingTitle") })).toBeVisible();
+  // The landmark is not hidden behind the sticky header.
+  const headerBottom = (await page.locator("header").first().boundingBox())!.y + (await page.locator("header").first().boundingBox())!.height;
+  expect((await sharing.boundingBox())!.y).toBeGreaterThanOrEqual(headerBottom - 2);
+
+  // 4-5. The active share, what it is and which workspace has access.
+  await expect(sharing).toContainText(T("en", "dataPrivacy.sharedReport"));
+  await expect(sharing).toContainText(T("en", "dataPrivacy.sharedWith", { workspace: "Team Alpha" }));
+  await expect(sharing).toContainText(T("en", "dataPrivacy.sharingViewOnly"));
+
+  // 6-8. Explicit "Revoke access", truthful confirmation, confirm.
+  const revoke = sharing.getByRole("button", { name: new RegExp(`^${T("en", "dataPrivacy.revokeAction")}:`) });
+  await expect(revoke).toHaveText(T("en", "dataPrivacy.revokeAction"));
+  await revoke.click();
+  const confirm = page.getByTestId("dp-confirm");
+  await expect(confirm).toContainText("Team Alpha");
+  await expect(confirm).toContainText(/cannot be taken back/i);
+  await expect(confirm).not.toContainText(/erase|delete from|remove everything/i);
+  expect(state.calls).toEqual([]);                                          // nothing sent before confirmation
+  await confirm.getByRole("button", { name: T("en", "dataPrivacy.confirmRevoke") }).click();
+
+  // 9. The share is gone and the empty state explains private-by-default.
+  await expect(sharing.getByText(T("en", "dataPrivacy.sharingEmpty"))).toBeVisible();
+  await expect(sharing).toContainText(/private by default/i);
+  await expect(sharing).toContainText("Story Bank");
+
+  // Exactly one revoke call, no retry, no unrelated deletion, account still active, no admin route.
+  expect(state.calls).toEqual(["DELETE /shares/40"]);
+  expect(state.deleted).toBe(false);
+  expect(state.opps).toHaveLength(1);
+  expect(state.docs).toHaveLength(1);
+  expect(state.calls.some((c) => c.includes("/admin"))).toBe(false);
+  await page.waitForTimeout(600);                                            // a retry would have landed by now
+  expect(state.calls).toEqual(["DELETE /shares/40"]);
+});
+
+for (const width of [1280, 390] as const) {
+  test(`P2-01: Data & Privacy sharing path has no overflow and the quick action is reachable at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await mock(page);
+    await page.goto("/account/data#sharing");
+    await expect(page.getByTestId("dp-sharing")).toBeVisible();
+    await expect(page.getByTestId("dp-quick-sharing").getByRole("link", { name: T("en", "dataPrivacy.manageSharingQuick") })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+  });
+}

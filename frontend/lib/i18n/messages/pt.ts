@@ -642,6 +642,7 @@ const pt: Catalog = {
     revoke: "Revogar",
     emptyWorkspaces: "Ainda não pertence a nenhum espaço de trabalho.",
     emptyShares: "Ainda nada partilhado.",
+    manageSharingLink: "Gerir a partilha e o acesso",
     fbPrompt: "Qual foi o problema principal? (opcional)",
     fbIncorrect: "Incorreto",
     fbIrrelevant: "Irrelevante",

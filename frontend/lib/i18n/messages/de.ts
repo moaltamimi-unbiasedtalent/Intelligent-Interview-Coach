@@ -642,6 +642,7 @@ const de: Catalog = {
     revoke: "Widerrufen",
     emptyWorkspaces: "Sie sind noch in keinem Arbeitsbereich.",
     emptyShares: "Noch nichts geteilt.",
+    manageSharingLink: "Freigaben & Zugriff verwalten",
     fbPrompt: "Was war das Hauptproblem? (optional)",
     fbIncorrect: "Falsch",
     fbIrrelevant: "Irrelevant",

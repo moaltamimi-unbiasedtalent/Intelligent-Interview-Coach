@@ -77,3 +77,14 @@ test("workspaces does not expose candidate-private content", async ({ page }) =>
   // The workspace surface never renders raw private artefacts (CV text, answers, memory).
   await expect(page.getByText(/curriculum vitae|raw answer|memory summary/i)).toHaveCount(0);
 });
+
+test("P2-01: Workspaces offers a clear route to Manage sharing & access (Data & Privacy sharing section)", async ({ page }) => {
+  await mock(page);
+  await page.goto("/workspaces");
+  const link = page.getByRole("link", { name: "Manage sharing & access" });
+  await expect(link).toBeVisible();
+  await expect(link).toHaveAttribute("href", "/account/data#sharing");
+  await link.click();
+  await expect(page).toHaveURL(/\/account\/data#sharing$/);
+  await expect(page.locator("#sharing")).toHaveCount(1);
+});

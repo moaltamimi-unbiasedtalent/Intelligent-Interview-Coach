@@ -97,7 +97,11 @@ const pt: typeof en = {
     sharingTitle: "Partilha e acesso",
     sharingIntro:
       "Nada é partilhado a menos que o partilhe. Revogar impede os membros de ver um item a partir de agora. Não retira nada do que já viram.",
-    sharingEmpty: "Não está a partilhar nada.",
+    sharingEmpty: "Neste momento não está a ser partilhado nada. Os seus dados são privados por predefinição: pertencer a um espaço de trabalho não dá a ninguém acesso ao seu CV, aos seus relatórios, ao seu Story Bank ou a outros dados de preparação.",
+    manageSharingQuick: "Gerir a partilha e o acesso",
+    sharingQuickNote: "Nada é partilhado automaticamente. Aqui pode ver o que está partilhado e pôr-lhe fim.",
+    manageSharingCard: "Gerir a partilha",
+    sharingViewOnly: "Os itens partilhados são só de leitura para as pessoas com quem os partilha.",
     sharingLoadFailed: "Não foi possível carregar as suas partilhas.",
     sharedReport: "Relatório de entrevista",
     sharedStory: "História",

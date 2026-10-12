@@ -97,7 +97,11 @@ const es: typeof en = {
     sharingTitle: "Uso compartido y acceso",
     sharingIntro:
       "No se comparte nada a menos que tú lo compartas. Revocar impide que los miembros vean un elemento a partir de ahora. No retira nada de lo que ya vieron.",
-    sharingEmpty: "No estás compartiendo nada.",
+    sharingEmpty: "Ahora mismo no se comparte nada. Tus datos son privados por defecto: pertenecer a un espacio de trabajo no da a nadie acceso a tu CV, tus informes, tu Story Bank ni otros datos de preparación.",
+    manageSharingQuick: "Gestionar el uso compartido y el acceso",
+    sharingQuickNote: "No se comparte nada automáticamente. Aquí ves qué está compartido y puedes detenerlo.",
+    manageSharingCard: "Gestionar lo compartido",
+    sharingViewOnly: "Los elementos compartidos son de solo lectura para las personas con las que los compartes.",
     sharingLoadFailed: "No se pudieron cargar tus elementos compartidos.",
     sharedReport: "Informe de entrevista",
     sharedStory: "Historia",

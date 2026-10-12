@@ -97,7 +97,11 @@ const nl: typeof en = {
     sharingTitle: "Delen en toegang",
     sharingIntro:
       "Er wordt niets gedeeld tenzij u het deelt. Intrekken zorgt ervoor dat leden een item vanaf nu niet meer kunnen bekijken. Wat ze al hebben gezien, wordt niet teruggehaald.",
-    sharingEmpty: "U deelt niets.",
+    sharingEmpty: "Er wordt nu niets gedeeld. Uw gegevens zijn standaard privé: lid zijn van een werkruimte geeft niemand toegang tot uw cv, rapporten, Story Bank of andere voorbereidingsgegevens.",
+    manageSharingQuick: "Delen en toegang beheren",
+    sharingQuickNote: "Er wordt niets automatisch gedeeld. Hier ziet u wat er gedeeld is en kunt u dat stoppen.",
+    manageSharingCard: "Delen beheren",
+    sharingViewOnly: "Gedeelde items kunnen de mensen met wie u ze deelt alleen bekijken.",
     sharingLoadFailed: "Uw gedeelde items konden niet worden geladen.",
     sharedReport: "Gesprekrapport",
     sharedStory: "Verhaal",

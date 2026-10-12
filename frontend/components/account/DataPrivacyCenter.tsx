@@ -46,7 +46,7 @@ type Pending =
 
 function Section({ id, title, intro, children }: { id: string; title: string; intro?: string; children: ReactNode }) {
   return (
-    <section aria-labelledby={`${id}-h`} data-testid={`dp-${id}`} className="space-y-3">
+    <section id={id} aria-labelledby={`${id}-h`} data-testid={`dp-${id}`} className="scroll-mt-24 space-y-3">
       <div>
         <h2 id={`${id}-h`} className="text-lg font-semibold text-foreground">{title}</h2>
         {intro ? <p className="mt-1 max-w-reading text-sm text-muted">{intro}</p> : null}
@@ -157,12 +157,12 @@ export function DataPrivacyCenter() {
   const count = (r: ResourceView) => (r.state.data ? r.state.data.length : null);
   const activeOppCount = opps.state.data?.length ?? null;
 
-  const cards: Array<{ id: string; label: string; desc: string; n: number | null; error: boolean }> = [
+  const cards: Array<{ id: string; label: string; desc: string; n: number | null; error: boolean; href?: string; linkLabel?: string }> = [
     { id: "opps", label: t("dataPrivacy.cardOpportunities"), desc: t("dataPrivacy.cardOpportunitiesDesc"), n: activeOppCount, error: opps.state.status === "error" },
     { id: "docs", label: t("dataPrivacy.cardDocuments"), desc: t("dataPrivacy.cardDocumentsDesc"), n: count(docs), error: docs.state.status === "error" },
     { id: "mems", label: t("dataPrivacy.cardMemories"), desc: t("dataPrivacy.cardMemoriesDesc"), n: count(mems), error: mems.state.status === "error" },
     { id: "ints", label: t("dataPrivacy.cardInterviews"), desc: t("dataPrivacy.cardInterviewsDesc"), n: count(ints), error: ints.state.status === "error" },
-    { id: "shares", label: t("dataPrivacy.cardShares"), desc: t("dataPrivacy.cardSharesDesc"), n: count(shares), error: shares.state.status === "error" },
+    { id: "shares", label: t("dataPrivacy.cardShares"), desc: t("dataPrivacy.cardSharesDesc"), n: count(shares), error: shares.state.status === "error", href: "#sharing", linkLabel: t("dataPrivacy.manageSharingCard") },
     { id: "spaces", label: t("dataPrivacy.cardWorkspaces"), desc: t("dataPrivacy.cardWorkspacesDesc"), n: count(spaces), error: spaces.state.status === "error" },
   ];
 
@@ -239,8 +239,13 @@ export function DataPrivacyCenter() {
         <div className="mt-2">
           <PageHeader eyebrow={t("dataPrivacy.eyebrow")} title={t("dataPrivacy.title")} description={t("dataPrivacy.description")} />
         </div>
+        {/* Pilot 2 (P2-01): the sharing and revoke controls are reachable from the top of the page, not only from a section further down. */}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface px-4 py-3" data-testid="dp-quick-sharing">
+          <p className="min-w-0 flex-1 text-sm text-muted">{t("dataPrivacy.sharingQuickNote")}</p>
+          <a href="#sharing" className={linkCls}>{t("dataPrivacy.manageSharingQuick")}</a>
+        </div>
         {notice ? (
-          <p role="status" className="rounded border border-border bg-surface-2 px-3 py-2 text-sm text-foreground">{notice}</p>
+          <p role="status" className="mt-3 rounded border border-border bg-surface-2 px-3 py-2 text-sm text-foreground">{notice}</p>
         ) : null}
       </div>
 
@@ -257,6 +262,12 @@ export function DataPrivacyCenter() {
                     </span>
                   </p>
                   <p className="text-xs text-muted">{c.desc}</p>
+                  {c.href ? (
+                    <a href={c.href} aria-label={`${c.linkLabel}: ${c.label}`} data-testid={`dp-link-${c.id}`}
+                       className="inline-block pt-1 text-sm font-semibold text-accent hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2">
+                      {c.linkLabel}
+                    </a>
+                  ) : null}
                 </CardBody>
               </Card>
             </li>
@@ -364,6 +375,7 @@ export function DataPrivacyCenter() {
       </Section>
 
       <Section id="sharing" title={t("dataPrivacy.sharingTitle")} intro={t("dataPrivacy.sharingIntro")}>
+        <p className="text-xs text-muted">{t("dataPrivacy.sharingViewOnly")}</p>
         {list(shares, (all) => (
           <ul>
             {(all as ShareGrantOut[]).map((s) => {

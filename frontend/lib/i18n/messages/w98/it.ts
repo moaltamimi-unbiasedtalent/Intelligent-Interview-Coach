@@ -97,7 +97,11 @@ const it: typeof en = {
     sharingTitle: "Condivisione e accesso",
     sharingIntro:
       "Nulla viene condiviso se non lo condividi tu. Revocare impedisce ai membri di visualizzare un elemento da ora in poi. Non annulla ciò che hanno già visto.",
-    sharingEmpty: "Non stai condividendo nulla.",
+    sharingEmpty: "Al momento non viene condiviso nulla. I tuoi dati sono privati per impostazione predefinita: far parte di uno spazio di lavoro non dà a nessuno accesso al tuo CV, ai tuoi report, alla tua Story Bank o ad altri dati di preparazione.",
+    manageSharingQuick: "Gestisci condivisione e accesso",
+    sharingQuickNote: "Nulla viene condiviso automaticamente. Qui vedi cosa è condiviso e puoi interromperlo.",
+    manageSharingCard: "Gestisci la condivisione",
+    sharingViewOnly: "Gli elementi condivisi sono di sola lettura per le persone con cui li condividi.",
     sharingLoadFailed: "Non è stato possibile caricare le tue condivisioni.",
     sharedReport: "Report del colloquio",
     sharedStory: "Storia",

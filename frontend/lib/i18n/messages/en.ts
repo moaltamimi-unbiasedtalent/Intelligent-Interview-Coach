@@ -662,6 +662,7 @@ export const messages = {
     revoke: "Revoke",
     emptyWorkspaces: "You are not in any workspace yet.",
     emptyShares: "Nothing shared yet.",
+    manageSharingLink: "Manage sharing & access",
     fbPrompt: "What was the main issue? (optional)",
     fbIncorrect: "Incorrect",
     fbIrrelevant: "Irrelevant",

@@ -10,7 +10,7 @@ None. No data loss, cross-user exposure, authentication failure, broken core Pra
 ## P1 - must fix before the next RC / final validation
 | ID | Item | Why P1 |
 |---|---|---|
-| P2-01 | Make sharing state, sharing controls and revoke controls easy to find | all 3 counted sessions failed the task; privacy-trust journey; HIGH, U2 |
+| P2-01 | Make sharing state, sharing controls and revoke controls easy to find | all 3 counted sessions failed the task; privacy-trust journey; HIGH, U2. **Status: REMEDIATED - PENDING HUMAN REVALIDATION** (implemented and covered by deterministic regression; not closed until a targeted human revalidation; AC-24 remains PARTIAL while P2-02, P2-03 and P2-04 are open) |
 | P2-03 | Explicit "Interview Answer Score" labelling and explanation (per-question vs overall, existing dimensions, next action) | lowest-rated dimension (3.67); 2 of 3 rated 3; no new scoring formula |
 | P2-04 | Provenance states: AI generated / Source-backed / Candidate-provided / Candidate-verified | named the most confusing part; trust-critical; no unsupported verification claim |
 | P2-02 | Safe isolated representative knowledge fixture or reproducible pilot knowledge environment | the source-backed experience was never validated; required before the next human validation; never copy or link the protected developer knowledge base |

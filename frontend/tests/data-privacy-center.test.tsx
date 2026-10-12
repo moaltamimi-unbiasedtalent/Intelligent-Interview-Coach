@@ -279,3 +279,91 @@ describe("Data & Privacy copy across all 8 locales", () => {
     }
   });
 });
+
+/**
+ * Pilot 2 P2-01 - sharing / revocation discoverability. All three evidenced participants failed to find the sharing and revoke
+ * controls. The backend already supports sharing, listing and revocation (unchanged); these tests pin the UX that makes them findable.
+ */
+describe("P2-01: sharing and revoke discoverability", () => {
+  it("offers a manage-sharing action near the top that targets #sharing", async () => {
+    render(<DataPrivacyCenter />);
+    const quick = await screen.findByTestId("dp-quick-sharing");
+    const link = within(quick).getByRole("link", { name: t("dataPrivacy.manageSharingQuick") });
+    expect(link).toHaveAttribute("href", "#sharing");
+    expect(quick.textContent).toContain(t("dataPrivacy.sharingQuickNote"));
+    // it comes BEFORE the export and deletion controls in document order
+    const order = screen.getByTestId("data-privacy-center").innerHTML;
+    expect(order.indexOf('data-testid="dp-quick-sharing"')).toBeLessThan(order.indexOf('data-testid="dp-export"'));
+  });
+
+  it("the overview sharing card is actionable (visible, accessibly named, targets #sharing) and not a passive count", async () => {
+    render(<DataPrivacyCenter />);
+    await waitFor(() => expect(screen.getByTestId("dp-count-shares")).toHaveTextContent("1"));
+    const link = screen.getByTestId("dp-link-shares");
+    expect(link.tagName).toBe("A");
+    expect(link).toHaveAttribute("href", "#sharing");
+    expect(link).toHaveTextContent(t("dataPrivacy.manageSharingCard"));
+    expect(link.getAttribute("aria-label")).toBe(`${t("dataPrivacy.manageSharingCard")}: ${t("dataPrivacy.cardShares")}`);
+    // only the sharing card carries a link; no other overview card became interactive
+    expect(document.querySelectorAll('a[href="#sharing"]')).toHaveLength(2);        // the top quick action and this card, nothing else
+    expect(screen.getAllByTestId(/^dp-link-/)).toHaveLength(1);
+  });
+
+  it("the sharing section is a labelled landmark that explains view-only access and shows the active share clearly", async () => {
+    render(<DataPrivacyCenter />);
+    const section = screen.getByRole("region", { name: t("dataPrivacy.sharingTitle") });
+    expect(section.id).toBe("sharing");                                          // the #sharing anchor resolves to this landmark
+    expect(section.className).toMatch(/scroll-mt-/);
+    expect(await within(section).findByText(t("dataPrivacy.sharedWith", { workspace: "Team Alpha" }))).toBeInTheDocument();
+    expect(section.textContent).toContain(t("dataPrivacy.sharedReport"));        // what is shared
+    expect(section.textContent).toContain(t("dataPrivacy.sharingViewOnly"));     // view-only
+    expect(within(section).getByRole("button", { name: new RegExp(`^${t("dataPrivacy.revokeAction")}:`) })).toHaveTextContent("Revoke access");
+  });
+
+  it("revoke still needs confirmation, calls the existing API exactly once with no retry, removes the share and shows the private-by-default empty state", async () => {
+    const user = userEvent.setup();
+    shareRevoke.mockResolvedValue({ status: "revoked" });
+    render(<DataPrivacyCenter />);
+    await user.click(await screen.findByRole("button", { name: new RegExp(`^${t("dataPrivacy.revokeAction")}:`) }));
+    expect(shareRevoke).not.toHaveBeenCalled();                                   // dialog first
+    const dialog = screen.getByRole("alertdialog");
+    expect(dialog.textContent).toContain("Team Alpha");
+    expect(dialog.textContent).not.toMatch(/erase|delete from|remove everything/i);   // no erasure claim
+    await user.click(within(dialog).getByRole("button", { name: t("dataPrivacy.confirmRevoke") }));
+    await waitFor(() => expect(shareRevoke).toHaveBeenCalledTimes(1));
+    expect(shareRevoke).toHaveBeenCalledWith(40);
+    const empty = await screen.findByText(t("dataPrivacy.sharingEmpty"));
+    expect(empty.textContent).toMatch(/private by default/i);
+    expect(empty.textContent).toMatch(/CV/);
+    expect(empty.textContent).toMatch(/Story Bank/);
+    expect(screen.queryByText(t("dataPrivacy.sharedWith", { workspace: "Team Alpha" }))).toBeNull();
+    expect(shareRevoke).toHaveBeenCalledTimes(1);                                  // no write retry
+    expect(deleteAccount).not.toHaveBeenCalled();                                  // account untouched
+    expect(oppRemove).not.toHaveBeenCalled();
+    expect(docRemove).not.toHaveBeenCalled();
+  });
+
+  it("with zero shares the section explains private-by-default without overclaiming", async () => {
+    sharesMine.mockResolvedValue({ shares: [] });
+    render(<DataPrivacyCenter />);
+    const section = screen.getByRole("region", { name: t("dataPrivacy.sharingTitle") });
+    expect(await within(section).findByText(t("dataPrivacy.sharingEmpty"))).toBeInTheDocument();
+    expect(section.textContent).not.toMatch(/\b(everyone|all data|guarantee)\b/i);
+  });
+
+  it("every new sharing key exists in all eight locales, is translated and has no dash punctuation", () => {
+    for (const k of ["manageSharingQuick", "sharingQuickNote", "manageSharingCard", "sharingViewOnly", "sharingEmpty"]) {
+      for (const locale of SUPPORTED_LOCALE_CODES) {
+        const v = translate(locale, `dataPrivacy.${k}`);
+        expect(v, `${locale}.${k}`).not.toBe(`dataPrivacy.${k}`);
+        expect(v, `${locale}.${k}`).not.toMatch(/[—–]/);
+        if (locale !== "en") expect(v, `${locale}.${k}`).not.toBe(translate("en", `dataPrivacy.${k}`));
+      }
+    }
+    for (const locale of SUPPORTED_LOCALE_CODES) {
+      const v = translate(locale, "workspaces.manageSharingLink");
+      expect(v).not.toBe("workspaces.manageSharingLink");
+      if (locale !== "en") expect(v).not.toBe(translate("en", "workspaces.manageSharingLink"));
+    }
+  });
+});

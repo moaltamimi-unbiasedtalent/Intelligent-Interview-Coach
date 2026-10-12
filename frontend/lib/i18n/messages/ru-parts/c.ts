@@ -24,6 +24,7 @@ const c: Pick<Catalog, "workspaces" | "voice" | "marketing"> = {
     revoke: "Отозвать",
     emptyWorkspaces: "Вы пока не состоите ни в одном рабочем пространстве.",
     emptyShares: "Пока ничем не поделились.",
+    manageSharingLink: "Управление доступом и общим доступом",
     fbPrompt: "В чём была главная проблема? (необязательно)",
     fbIncorrect: "Неверно",
     fbIrrelevant: "Не по теме",
