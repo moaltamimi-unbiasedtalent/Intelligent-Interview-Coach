@@ -1,0 +1,36 @@
+# Pilot 2 issue register (RC-P10-003)
+
+Evidence base: **n=3 counted sessions (P02, P04, P06)**; P01, P03 and P05 had insufficient structured evidence and contribute nothing. Categories follow the Pilot 2 taxonomy; severity is BLOCKER / HIGH / MEDIUM / LOW with usability impact U1 to U4 kept separate from software-defect severity P0 to P3. Findings are observations to triage, not confirmed defects, unless stated.
+
+Totals: **BLOCKER 0, HIGH 1, MEDIUM 5, LOW 0, validation gap 1, enhancement 1, awaiting reproduction 1 (unrated).**
+
+| ID | Title | Evidence (n=3) | Category | Severity / impact | Status |
+|---|---|---|---|---|---|
+| P2-01 | Sharing and revocation discoverability | P02, P04 and P06 all failed to locate the sharing and revoke controls during the privacy journey | PRIVACY-TRUST / PRODUCT-UX | HIGH, U2 | OPEN, P1 |
+| P2-02 | Sources / knowledge not validated in the pilot environment | Sources unavailable in multiple sessions; Mo did not consistently surface knowledge evidence; the debrief noted Sources unavailable | INFRASTRUCTURE / VALIDATION GAP | not rated (validation gap) | OPEN, P1 |
+| P2-03 | Score interpretation / score label unclear | P06 did not understand the score and noted the label did not precede the value; P02 and P06 rated score clarity 3/5 | PRODUCT-UX | MEDIUM, U2 | OPEN, P1 |
+| P2-04 | AI-generated vs sourced vs verified provenance clarity | P02 named it the most confusing part; participants were not always sure what was AI-generated, externally sourced, candidate evidence or verified | PRIVACY-TRUST / PRODUCT-UX | MEDIUM, U2 | OPEN, P1 |
+| P2-05 | Onboarding benefit communication | onboarding should explain why steps matter; request for more visuals, a workflow overview or process map; Help/tutorial could be more discoverable | PRODUCT-UX | MEDIUM, U3 | OPEN, P2 |
+| P2-06 | Marketing / pricing positioning | Free versus Premium unclear; clearer feature comparison and comparison with traditional coaching requested; could look more specialist; "How it works" prominence; founder/About requested | PRODUCT-UX / PRODUCTISATION | MEDIUM, U3 | OPEN, P3 (partly addressed on main by PR #137, see note) |
+| P2-07 | Candidate Progress Intelligence | owner request and participant feedback converge on progress across interviews, recurring strengths and weaknesses, trend, practice counts, Opportunity-linked progress and next-practice suggestions | PRODUCT ENHANCEMENT | high strategic value, not a defect | OPEN, P3 |
+| P2-08 | Mo response naturalness | P06 said responses should sound more human and natural | MODEL-QUALITY | MEDIUM | OPEN, P2 |
+| P2-09 | Opera voice compatibility | voice recording failed in Opera for P06 and worked in Safari | VOICE-TRANSCRIPTION | unrated until reproduced | NEEDS REPRODUCTION, P2 |
+
+## Detail and recommended direction
+**P2-01.** This is a discoverability and comprehension failure, **not** evidence of a data leak. Direction: make sharing state, sharing controls and revoke controls far easier to find in the candidate journey. Evidence ambiguity on the related private-by-default question is recorded in the results document (section 9).
+
+**P2-02.** The pilot ran from an isolated candidate worktree without developer datasets, so this is not automatically a retrieval defect. Conclusion: the source-backed experience is not validated. Direction: a safe, isolated, representative knowledge fixture or a reproducible pilot knowledge environment; never copy or link the protected developer knowledge base.
+
+**P2-03.** Direction: an explicit "Interview Answer Score" label, an explanation of what the number means, a clear per-question versus overall distinction, the existing structured dimensions where available, and a clear next action. No new deterministic scoring formula is introduced.
+
+**P2-04.** Direction: a stronger provenance presentation with four states, AI generated, Source-backed, Candidate-provided and Candidate-verified, and no unsupported verification claim.
+
+**P2-05.** Direction: say why each onboarding step matters, add visual explanation, and make Help and the tutorial easier to find.
+
+**P2-06.** Existing W9.10 positioning rules stay binding: no unsupported competitor-superiority claim. Note: after the pilot candidate was frozen, PR #137 (merged to main as the v4 website work) added a plan comparison, a coaching-format comparison, a founder section and Getting Started content. **That is an unevaluated change on main, not part of RC-P10-003 and not validated by this pilot.** Whether it resolves the observation needs re-evaluation with participants.
+
+**P2-07.** Not implemented here. Any future design must derive only from actual structured interview and evaluation history, must not invent candidate weaknesses, must not use a deterministic scoring formula, and does not commit to a provider or API yet.
+
+**P2-08.** Direction: evaluate output-style changes under controlled regression coverage; do not rewrite prompting globally without an evaluation.
+
+**P2-09.** Reproduce in Opera (version and permission state recorded) before calling it a product defect; Safari worked, and the Web Speech support in Opera may simply differ.

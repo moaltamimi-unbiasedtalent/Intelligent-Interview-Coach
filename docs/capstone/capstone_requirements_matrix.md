@@ -390,7 +390,7 @@ Release candidate **RC-P9-001** (baseline main `eb91125`, P8 merged PR #84; Alem
 | AC-21 regression gate | **PASS** | full gate green; 3 justified skips (live Adzuna / legacy Streamlit / ragas-conditional) |
 | AC-22 agent/retrieval | PARTIAL | policy 1.0; extension pass 0.9136, citation 1.0, no-fabrication 1.0; historical ID P/R 0.6757/0.5161 preserved; live benchmark NOT RUN |
 | AC-23 voice | PARTIAL | EN/DE reference set + deterministic latency; live STT/latency NOT RUN |
-| AC-24 pilot | NOT RUN | P10 |
+| AC-24 pilot | **PARTIAL** | Pilot 2 human usability evidence captured from n=3 complete structured sessions on RC-P10-003 (three further listed participants lacked sufficient structured evidence and were excluded from quantitative analysis); consequential-fix regression closure pending, so not PASS (`capstone/p10/pilot2/RC_P10_003_PILOT2_RESULTS.md`) |
 | AC-25 submission | PARTIAL | matrix/docs truthful; final package P11/P12 |
 | EX-06/08/09/10/11 | PASS (deterministic) | workspace/story/model-policy/cleanup/prompt-lab evals |
 | EX-01/02/03/04/05/07/13/14/15/16 | PARTIAL | deterministic PASS; live/human-review portions NOT RUN |
