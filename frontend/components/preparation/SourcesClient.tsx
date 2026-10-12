@@ -59,6 +59,7 @@ export function SourcesClient() {
         title={t("prepare.careerEvidence")}
         description={t("prepare.sourcesDescription")}
       />
+      <p className="-mt-2 mb-3 text-xs text-muted" data-testid="sources-scope-note">{t("provenance.sourcesPageNote")}</p>
       <p className="-mt-2 mb-4 text-sm">
         <a href="/help#sources" className="font-medium text-accent underline">{t("prepare.howAsk4MoUsesEvidence")}</a>
       </p>

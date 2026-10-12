@@ -110,7 +110,7 @@ describe("source labels: owned by the INTERFACE language; source content verbati
         <AgentSources sources={[{ title: "ESCO", source_url: null } as never, { title: null, source_url: null } as never]} />
       </I18nProvider>,
     );
-    expect(screen.getByText(translate("ru", "prepare.evidenceSourcesOther", { n: 2 }))).toBeInTheDocument();
+    expect(screen.getByText(translate("ru", "provenance.sourcesSummaryOther", { n: 2 }))).toBeInTheDocument();
     expect(screen.getByText("ESCO")).toBeInTheDocument();
     expect(screen.getByText(translate("ru", "prepare.sourceUntitled"))).toBeInTheDocument();
   });

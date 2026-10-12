@@ -107,7 +107,7 @@ the critical path (can slip without blocking W10). W10.5, W10.7, W10.9, W10.11 a
 Capstone must-have vs production-ready mock/adapter-acceptable in the Admin master plan section 6; a mock is never
 represented as live.
 
-**Pilot 2: human evidence captured and triaged (RC-P10-003).** Three complete structured sessions (n=3) produced a CONDITIONAL GO - TARGETED REMEDIATION REQUIRED verdict with no BLOCKER; four P1 items (sharing/revocation discoverability, score interpretation, provenance clarity, a representative isolated knowledge/Sources validation environment) must be fixed and regression-tested before the next RC and final validation. AC-24 is PARTIAL until then. RC-P10-003 and its evidence stay immutable. Future Pilot 2 coverage: Opportunity, Welcome/Tutorial, non-English incl. Russian, error recovery, Privacy/Data
+**Pilot 2: human evidence captured and triaged (RC-P10-003).** Three complete structured sessions (n=3) produced a CONDITIONAL GO - TARGETED REMEDIATION REQUIRED verdict with no BLOCKER; four P1 items (sharing/revocation discoverability, score interpretation, provenance clarity, a representative isolated knowledge/Sources validation environment) are now all REMEDIATED with regression coverage (pending human revalidation); they still need qualification under the next RC (RC-P10-004) and final validation. AC-24 is PARTIAL until the remediated runtime is recorded under that RC. RC-P10-003 and its evidence stay immutable. Future Pilot 2 coverage: Opportunity, Welcome/Tutorial, non-English incl. Russian, error recovery, Privacy/Data
 Center, Trust, support/ticketing where implemented, and Voice separately where supported. RC-P10-002 evidence is
 immutable.
 
