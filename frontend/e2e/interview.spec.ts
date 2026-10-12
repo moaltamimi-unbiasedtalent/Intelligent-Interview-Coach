@@ -175,3 +175,60 @@ test("interview: no fake Record control and no camera claim", async ({ page }) =
   await expect(page.getByRole("button", { name: /^Record$/ })).toHaveCount(0);
   await expect(page.getByText(/No camera/i)).toBeVisible();
 });
+
+test("P2-03: the answer score is labelled, scoped to this answer, shows the seven rubric dimensions and is distinct from Practice Readiness", async ({ page }) => {
+  await mockInterview(page);
+  await page.goto(`/practice?session=${SID}`);
+  await page.getByLabel("Your answer").fill("I prioritised by impact and effort and measured the result.");
+  await page.getByRole("button", { name: "Submit answer" }).click();
+
+  const score = page.getByTestId("answer-score");
+  await expect(score.getByText("Interview Answer Score", { exact: true })).toBeVisible();
+  await expect(score.getByTestId("answer-score-value")).toContainText("74");
+  await expect(score.getByTestId("answer-score-value")).toContainText("/ 100");
+  await expect(score).toContainText(/this answer only/i);
+  await expect(score).toContainText(/separate Practice Readiness score/i);
+  await expect(score).toContainText("Practice feedback only, not a hiring decision.");
+
+  const rubric = page.getByTestId("rubric-scores");
+  for (const label of ["Relevance", "Structure & clarity", "Evidence & examples", "Role knowledge", "Problem-solving", "Communication", "Credibility & consistency"]) {
+    const row = rubric.locator("[data-dimension]").filter({ hasText: label });
+    await expect(row).toContainText("7 / 10");
+  }
+  await expect(rubric.locator("[data-dimension]")).toHaveCount(7);
+  await expect(page.getByTestId("next-step-cue")).toBeVisible();
+  // no formula and no invented bands anywhere in the score panel
+  await expect(page.getByTestId("data-privacy-center")).toHaveCount(0);
+  const panelText = (await page.getByTestId("answer-score").innerText()) + (await rubric.innerText());
+  expect(panelText).not.toMatch(/average|weighted|excellent|poor|formula is/i);
+
+  // Deep Dive uses the same score presentation.
+  await page.getByRole("button", { name: /^Go deeper$/ }).click();
+  await page.getByLabel("Your answer").fill("Because it aligned incentives across teams.");
+  await page.getByRole("button", { name: /Submit deep-dive answer/i }).click();
+  await expect(page.getByText("Deep-dive feedback")).toBeVisible();
+  await expect(page.getByTestId("answer-score").last()).toContainText("Interview Answer Score");
+  await page.getByRole("button", { name: /Return to interview/i }).click();
+
+  // The final report keeps its separate, session-level readiness score.
+  await page.getByRole("button", { name: /Next question/i }).click();
+  await page.getByRole("button", { name: /Generate performance review/i }).click();
+  await expect(page.getByText(/Practice readiness/i)).toBeVisible();
+  await expect(page.getByText("Interview Answer Score")).toHaveCount(0);
+});
+
+for (const locale of ["de", "ru"] as const) {
+  test(`P2-03: the labelled answer score and seven dimensions render in ${locale} without raw keys`, async ({ page, context }) => {
+    const { translate } = await import("../lib/i18n/catalog");
+    await context.addCookies([{ name: "ask4mo_locale", value: locale, url: "http://localhost:" + (process.env.E2E_PORT || "3000") }]);
+    await mockInterview(page);
+    await page.goto(`/practice?session=${SID}`);
+    await expect(page.locator("html")).toHaveAttribute("lang", locale, { timeout: 15_000 });
+    await page.getByLabel(translate(locale, "practice.answerLabel")).fill("Antwort / ответ");
+    await page.getByRole("button", { name: translate(locale, "practice.submitAnswer") }).click();
+    const score = page.getByTestId("answer-score");
+    await expect(score.getByText(translate(locale, "practice.answerScoreLabel"), { exact: true })).toBeVisible();
+    await expect(page.getByTestId("rubric-scores").locator("[data-dimension]")).toHaveCount(7);
+    expect(await page.evaluate(() => document.body.innerText)).not.toMatch(/practice\.\w+/);
+  });
+}
