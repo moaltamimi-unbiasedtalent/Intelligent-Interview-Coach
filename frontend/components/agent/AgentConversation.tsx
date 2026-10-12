@@ -9,6 +9,8 @@ import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { VoicePlaybackControl } from "@/components/ui/VoicePlaybackControl";
 import { isSpeechOutputLocale, toSpeechLocale } from "@/lib/speech/ttsLocales";
 import { useT } from "@/components/i18n/I18nProvider";
+import { ProvenanceBadge, ProvenanceExplainer } from "@/components/trust/ProvenanceBadge";
+import { candidateEvidenceSelected } from "@/lib/provenance";
 
 /** The coaching conversation: safe user/assistant turns, latest evidence, and a
  * live activity line while the agent is working (observable status, not reasoning). */
@@ -72,6 +74,10 @@ export function AgentConversation({
                 }
               >
                 {body}
+                {/* P2-04: Mo's wording is AI-generated. The label sits INSIDE the latest assistant answer so it visibly belongs to it. */}
+                {m.role === "assistant" && i === lastAssistantIndex && m.content.trim() ? (
+                  <div className="mt-2" data-testid="ai-provenance"><ProvenanceBadge kind="ai" explain /></div>
+                ) : null}
                 {/* Listen to the PRIMARY visible answer (brief-first, §6). Assistant turns
                     only; speaks the same text the candidate can read. */}
                 {m.role === "assistant" && m.content.trim() && speechSupported ? (
@@ -90,6 +96,13 @@ export function AgentConversation({
 
       {/* Latest evidence lives under the most recent assistant answer. */}
       {run && !busy && run.sources.length ? <AgentSources sources={run.sources} /> : null}
+      {/* "Your evidence considered" ONLY when the deterministic Candidate Evidence specialist returned a non-empty selection
+          (never inferred from retrieval_used or journey.evidence_used, which mean external career retrieval). */}
+      {run && !busy && candidateEvidenceSelected(run) ? (
+        <div className="mt-2 rounded-lg border border-border bg-surface-2 px-3 py-2" data-testid="candidate-evidence-provenance">
+          <ProvenanceBadge kind="candidate_evidence" explain />
+        </div>
+      ) : null}
 
       {messages.some((m) => m.role === "assistant") ? (
         <p className="text-xs text-muted" data-testid="ai-cue">
@@ -99,6 +112,8 @@ export function AgentConversation({
           </a>
         </p>
       ) : null}
+
+      {messages.some((m) => m.role === "assistant") ? <ProvenanceExplainer /> : null}
 
       {busy ? (
         <div role="status" aria-live="polite" className="flex items-center gap-2 text-sm text-muted">

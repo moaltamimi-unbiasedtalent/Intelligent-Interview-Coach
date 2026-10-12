@@ -9,6 +9,7 @@
  * Documents are private DATA — never public, never analysed for identity/emotion.
  */
 
+import { ProvenanceExplainer } from "@/components/trust/ProvenanceBadge";
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api/client";
 import type { ClaimOut, DocumentDetail, DocumentSummary, StoryOut } from "@/lib/api/types";
@@ -250,6 +251,7 @@ function ClaimReview({ detail, onReviewed, onDrafted }: { detail: DocumentDetail
     <div className="mt-3 border-t border-border pt-3">
       <h3 className="text-sm font-semibold text-foreground">{t("documents.reviewTitle")}</h3>
       <p className="text-xs text-muted">{t("documents.reviewHint")}</p>
+      <ProvenanceExplainer className="mt-2" />
       <ul className="mt-2 space-y-2">
         {detail.claims.map((c) => (
           <li key={c.id} className="rounded-lg border border-border p-2 text-sm">
@@ -273,8 +275,8 @@ function ClaimReview({ detail, onReviewed, onDrafted }: { detail: DocumentDetail
                 ) : (
                   <p className="mt-0.5 break-words text-foreground">{c.display_text}</p>
                 )}
-                <p className="text-xs text-muted">
-                  {t("documents.source")}: {c.source_page ? t("documents.page", { n: c.source_page }) : c.source_section}
+                <p className="text-xs text-muted" data-testid="claim-source">
+                  {t("provenance.claimFromDocument")}: {t("documents.source")}: {c.source_page ? t("documents.page", { n: c.source_page }) : c.source_section}
                 </p>
                 <div className="mt-1 flex gap-3 text-xs">
                   <button onClick={() => act(c, "accept")} className="text-accent hover:underline">{t("documents.accept")}</button>

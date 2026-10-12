@@ -53,7 +53,7 @@ test("agent coach: start shows grounded conversation and evidence", async ({ pag
   await page.getByLabel("What interview are you preparing for?").fill("Prep for a Senior PM interview");
   await page.getByRole("button", { name: "Start preparing" }).click();
   await expect(page.getByText("Here is your grounded guidance.")).toBeVisible();
-  await page.getByText(/Career evidence: 1 source/i).click();
+  await page.getByText(/External sources used: 1/i).click();
   await expect(page.getByRole("link", { name: /O\*NET Product manager/i })).toBeVisible();
 });
 
@@ -247,4 +247,54 @@ test("deterministic fallback: /prepare stays on the Career flow when disabled", 
   // The agent first-message prompt is not shown; the deterministic coach is.
   await expect(page.getByLabel("What interview are you preparing for?")).toHaveCount(0);
   await expect(page.getByLabel("Ask the coach")).toBeVisible();
+});
+
+// Pilot 2 P2-04: provenance clarity. Deterministic network mocks only.
+async function startPrepare(page: Page) {
+  await page.goto("/prepare");
+  await page.getByLabel("What interview are you preparing for?").fill("Prep for a Senior PM interview");
+  await page.getByRole("button", { name: "Start preparing" }).click();
+  await expect(page.getByText("Here is your grounded guidance.")).toBeVisible();
+}
+
+test("P2-04: an answer without retrieval is labelled AI-generated and makes no external-source claim", async ({ page }) => {
+  await mock(page, { onRun: runBody({ retrieval_used: false, sources: [], tools_used: [] }) });
+  await startPrepare(page);
+  const ai = page.getByTestId("ai-provenance");
+  await expect(ai).toContainText("AI-generated");
+  await expect(ai).toContainText("Mo created this response with AI");
+  await expect(page.getByText(/External sources used/i)).toHaveCount(0);
+  await expect(page.getByTestId("candidate-evidence-provenance")).toHaveCount(0);
+});
+
+test("P2-04: an answer with career sources shows AI-generated AND External sources used, with the real source title and no whole-answer claim", async ({ page }) => {
+  await mock(page);
+  await startPrepare(page);
+  await expect(page.getByTestId("ai-provenance")).toContainText("AI-generated");
+  const box = page.getByTestId("external-sources");
+  await expect(box).toContainText("External sources used: 1");
+  await box.locator("summary").click();
+  await expect(box.getByRole("link", { name: /O\*NET Product manager/i })).toBeVisible();
+  await expect(box).toContainText("Mo's response itself is still AI-generated");
+  await expect(box).not.toContainText(/verified|fact[- ]checked|fully sourced/i);
+  await expect(page.getByTestId("candidate-evidence-provenance")).toHaveCount(0);        // sources alone never imply the candidate's own evidence
+});
+
+test("P2-04: 'Your evidence considered' appears only when the Candidate Evidence specialist returned a selection", async ({ page }) => {
+  const evidenceEvent = { event_type: "tool_completed", tool_name: "FindCandidateEvidence", status: "ok", source_count: 3, step: 1 };
+  await mock(page, { onRun: runBody({ tools_used: ["FindCandidateEvidence"], events: [evidenceEvent], retrieval_used: false, sources: [] }) });
+  await startPrepare(page);
+  const mine = page.getByTestId("candidate-evidence-provenance");
+  await expect(mine).toContainText("Your evidence considered");
+  await expect(mine).toContainText("Mo's wording is still AI-generated");
+  await expect(page.getByText(/External sources used/i)).toHaveCount(0);                  // evidence from the candidate's own documents is not an external source
+});
+
+test("P2-04: the label explainer is available and says Reviewed by you is not third-party verification", async ({ page }) => {
+  await mock(page);
+  await startPrepare(page);
+  const ex = page.getByTestId("provenance-explainer");
+  await ex.locator("summary").click();
+  await expect(ex).toContainText("Reviewed by you");
+  await expect(ex).toContainText("does not mean a third party verified it");
 });

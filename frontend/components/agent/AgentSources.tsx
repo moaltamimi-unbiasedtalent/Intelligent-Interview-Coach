@@ -11,12 +11,14 @@ export function AgentSources({ sources }: { sources: AgentSource[] }) {
   const t = useT();
   if (!sources.length) return null;
   return (
-    <details className="mt-2 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm">
+    <details className="mt-2 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm" data-testid="external-sources">
       <summary className="cursor-pointer font-medium">
         {sources.length === 1
-          ? t("prepare.evidenceSourcesOne")
-          : t("prepare.evidenceSourcesOther", { n: sources.length })}
+          ? t("provenance.sourcesSummaryOne")
+          : t("provenance.sourcesSummaryOther", { n: sources.length })}
       </summary>
+      {/* These sources support retrieved career evidence only; Mo's response itself is still AI-generated (no whole-answer verification claim). */}
+      <p className="mt-1 text-xs text-muted">{t("provenance.sourcesExplain")}</p>
       <p className="mt-1 text-xs text-muted">{t("trustUx.sourcesHint")}</p>
       <ol className="mt-2 space-y-2">
         {sources.map((s, i) => (

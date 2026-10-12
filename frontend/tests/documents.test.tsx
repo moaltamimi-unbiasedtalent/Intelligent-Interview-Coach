@@ -91,6 +91,84 @@ describe("DocumentsClient", () => {
     storiesList.mockResolvedValue({ stories: [{ id: 9, title: "Old win", status: "source_backed", evidence_state: "source_revoked", competencies: [], evidence_claim_ids: [] }] });
     render(<DocumentsClient />);
     await waitFor(() => expect(screen.getByText("Old win")).toBeInTheDocument());
-    expect(screen.getByText("Source removed")).toBeInTheDocument();
+    expect(screen.getByText("Supporting source removed")).toBeInTheDocument();
+  });
+});
+
+/**
+ * Pilot 2 P2-04: candidate provenance wording for claim review and the Story Bank. "Reviewed by you" never means third-party verification, and
+ * the backend state "verified" (a source-backed story that still has a live supporting claim) is shown as "Supporting evidence available".
+ */
+describe("P2-04 provenance wording", () => {
+  const withClaims = (states: [string, string | null][]) => ({
+    ...DOC,
+    claims: states.map(([review_state, edited], i) => ({
+      id: 21 + i, document_id: 1, version_id: 1, claim_type: "skill", text: `Claim ${i}`, edited_text: edited, display_text: edited ?? `Claim ${i}`,
+      source_page: i === 0 ? 3 : null, source_section: i === 0 ? null : `block ${i}`, review_state,
+    })),
+  });
+
+  it("claim review states say what the candidate did, and pending is not shown as reviewed", async () => {
+    docsList.mockResolvedValue({ documents: [{ id: 1, category: "cv", title: "cv.txt", status: "review_required", current_version: 1, updated_at: null }] });
+    storiesList.mockResolvedValue({ stories: [] });
+    docsGet.mockResolvedValue(withClaims([["pending", null], ["accepted", null], ["edited", "Edited text"], ["rejected", null]]));
+    render(<DocumentsClient />);
+    await userEvent.click(await screen.findByText("cv.txt"));
+    await waitFor(() => expect(screen.getByText("Review extracted evidence")).toBeInTheDocument());
+    const items = screen.getAllByTestId("claim-source").map((el) => el.closest("li") as HTMLElement);
+    expect(items).toHaveLength(4);
+    expect(within(items[0]).getByText("Not reviewed yet")).toBeInTheDocument();
+    expect(within(items[0]).queryByText("Reviewed by you")).toBeNull();
+    expect(within(items[1]).getByText("Reviewed by you")).toBeInTheDocument();
+    expect(within(items[2]).getByText("Corrected by you")).toBeInTheDocument();
+    expect(within(items[3]).getByText("Rejected by you")).toBeInTheDocument();
+    // the extraction origin stays visible: document location, labelled as extracted from the candidate's own document
+    expect(within(items[0]).getByTestId("claim-source").textContent).toContain("Extracted from your document");
+    expect(within(items[0]).getByTestId("claim-source").textContent).toMatch(/Page 3|page 3/i);
+    // the meaning of "Reviewed by you" is explained, and it does not claim verification
+    const explainer = screen.getByTestId("provenance-explainer");
+    expect(explainer.textContent).toContain("does not mean a third party verified it");
+    expect(document.body.textContent).not.toMatch(/\bverified by\b|independently verified|fact[- ]checked/i);
+    // operational buttons keep their action wording
+    expect(screen.getAllByRole("button", { name: "Accept" }).length).toBeGreaterThan(0);
+  });
+
+  it("Story Bank explains how each story was made and what its supporting evidence state means, without overclaiming", async () => {
+    docsList.mockResolvedValue({ documents: [] });
+    storiesList.mockResolvedValue({ stories: [
+      { id: 1, title: "S1", status: "source_backed", evidence_state: "verified", competencies: [], evidence_claim_ids: [1] },
+      { id: 2, title: "S2", status: "user_created", evidence_state: "none", competencies: [], evidence_claim_ids: [] },
+      { id: 3, title: "S3", status: "user_corrected", evidence_state: "none", competencies: [], evidence_claim_ids: [] },
+      { id: 4, title: "S4", status: "model_suggested", evidence_state: "none", competencies: [], evidence_claim_ids: [] },
+      { id: 5, title: "S5", status: "source_backed", evidence_state: "source_revoked", competencies: [], evidence_claim_ids: [] },
+    ] });
+    render(<DocumentsClient />);
+    await waitFor(() => expect(screen.getByText("S1")).toBeInTheDocument());
+    const row = (title: string) => screen.getByText(title).closest("li") as HTMLElement;
+    expect(within(row("S1")).getByText("Built from your evidence")).toBeInTheDocument();
+    expect(within(row("S1")).getByText("Supporting evidence available")).toBeInTheDocument();
+    expect(within(row("S2")).getByText("Written by you")).toBeInTheDocument();
+    expect(within(row("S3")).getByText("Edited by you")).toBeInTheDocument();
+    expect(within(row("S4")).getByText("AI suggested")).toBeInTheDocument();
+    expect(within(row("S5")).getByText("Supporting source removed")).toBeInTheDocument();
+    expect(within(row("S2")).getByText("No supporting source")).toBeInTheDocument();          // "none" implies no verification
+    expect(within(row("S2")).queryByText(/support(ing)? evidence available/i)).toBeNull();
+    // the misleading label is gone everywhere
+    expect(document.body.textContent).not.toMatch(/Evidence verified|Source-backed/);
+  });
+
+  it("every provenance wording key exists in all eight locales with no verification claim and no dash punctuation", async () => {
+    const { translate } = await import("@/lib/i18n/catalog");
+    const { SUPPORTED_LOCALE_CODES } = await import("@/lib/i18n/locales");
+    const keys = ["documents.pending", "documents.accepted", "documents.edited", "documents.rejected", "documents.stSourceBacked", "documents.stUserCreated",
+      "documents.stUserCorrected", "documents.stModelSuggested", "documents.evVerified", "documents.evRevoked", "documents.evNone"];
+    for (const locale of SUPPORTED_LOCALE_CODES) {
+      for (const k of keys) {
+        const v = translate(locale, k);
+        expect(v, `${locale}.${k}`).not.toBe(k);
+        expect(v, `${locale}.${k}`).not.toMatch(/[—–]/);
+      }
+    }
+    expect(translate("en", "documents.evVerified")).not.toMatch(/verif/i);
   });
 });

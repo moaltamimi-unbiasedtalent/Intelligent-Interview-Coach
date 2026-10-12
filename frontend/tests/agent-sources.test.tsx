@@ -18,7 +18,7 @@ const SOURCE: AgentSource = {
 describe("AgentSources (candidate citation UX)", () => {
   it("renders a linked source with safe provenance only", () => {
     render(<AgentSources sources={[SOURCE]} />);
-    expect(screen.getByText(/Career evidence: 1 source/i)).toBeInTheDocument();
+    expect(screen.getByText(/External sources used: 1/i)).toBeInTheDocument();
     const link = screen.getByRole("link", { name: /O\*NET Database — Registered Nurses — Skills/ });
     expect(link).toHaveAttribute("href", SOURCE.source_url!);
     // Safe metadata is shown…
@@ -28,7 +28,7 @@ describe("AgentSources (candidate citation UX)", () => {
   it("renders NOTHING when there are no sources (no fake Sources section)", () => {
     const { container } = render(<AgentSources sources={[]} />);
     expect(container.firstChild).toBeNull();
-    expect(screen.queryByText(/Career evidence/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/External sources used/i)).not.toBeInTheDocument();
   });
 
   it("shows a plain title (no link) when no public URL exists", () => {

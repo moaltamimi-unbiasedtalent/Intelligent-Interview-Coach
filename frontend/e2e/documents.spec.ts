@@ -50,14 +50,18 @@ test("Documents: review evidence with provenance and draft a story", async ({ pa
   await expect(page.getByText("Review extracted evidence")).toBeVisible();
   // Provenance is shown for a claim.
   await expect(page.getByText(/block 2/)).toBeVisible();
+  await expect(page.getByTestId("claim-source").first()).toContainText("Extracted from your document");
+  await expect(page.getByText("Not reviewed yet").first()).toBeVisible();                   // pending is not shown as reviewed
   // Accept the first claim.
   await page.getByRole("button", { name: "Accept" }).first().click();
   // Select the skill and draft a story.
   await page.getByLabel("Python").check();
   await page.getByRole("button", { name: /Draft a story/ }).click();
-  // The story bank shows the verified, source-backed story.
-  await expect(page.getByText("Source-backed")).toBeVisible();
-  await expect(page.getByText("Evidence verified")).toBeVisible();
+  // The story bank describes how the story was made and what its supporting-evidence state means, without overclaiming.
+  await expect(page.getByText("Built from your evidence")).toBeVisible();
+  await expect(page.getByText("Supporting evidence available")).toBeVisible();
+  await expect(page.getByText("Evidence verified")).toHaveCount(0);
+  await expect(page.getByText("Source-backed")).toHaveCount(0);
 });
 
 test("Documents requires sign-in (protected route)", async ({ page }) => {
