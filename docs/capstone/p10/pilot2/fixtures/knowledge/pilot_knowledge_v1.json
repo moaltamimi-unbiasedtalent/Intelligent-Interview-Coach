@@ -1,0 +1,48 @@
+{
+  "fixture_id": "ask4mo-pilot-knowledge-fixture",
+  "fixture_version": "1.0.0",
+  "synthetic": true,
+  "warning": "SYNTHETIC PILOT TEST DATA. Written only so that source-backed retrieval can be exercised in an isolated Pilot environment. It is not an official, statistical, framework or industry source, contains no real-world statistics and must never be presented as evidence of production knowledge quality.",
+  "publisher": "Ask4Mo Pilot Knowledge Fixture (synthetic test data)",
+  "language": "en",
+  "sources": [
+    {
+      "source_id": "pilot-fixture-star-structure",
+      "title": "Pilot fixture: structuring a behavioural answer with the STAR method",
+      "document_type": "interview_guidance",
+      "chunks": [
+        "[Synthetic pilot test data] A STAR interview answer has four parts: the Situation, the Task, the Action you took and the Result. Open with one sentence of Situation and Task, spend most of the answer on your own Action, and close with a measurable Result and what you learned.",
+        "[Synthetic pilot test data] When you structure a STAR interview answer, name your own contribution with the word I rather than we, keep the Situation under two sentences, and finish with the Result before you stop speaking.",
+        "[Synthetic pilot test data] A common STAR mistake is a long Situation and a missing Result. Rehearse a STAR answer aloud and trim it until the Result arrives within ninety seconds."
+      ]
+    },
+    {
+      "source_id": "pilot-fixture-stakeholder-prep",
+      "title": "Pilot fixture: preparing for a stakeholder interview",
+      "document_type": "interview_guidance",
+      "chunks": [
+        "[Synthetic pilot test data] Stakeholder interview preparation starts with a stakeholder map rehearsal: list who the decision makers, influencers and blockers are, and prepare one question for each group about what success looks like for them.",
+        "[Synthetic pilot test data] In a stakeholder interview, listen for the priorities the stakeholder repeats, restate them in your own words, and tie your answer to the stakeholder priority you heard."
+      ]
+    },
+    {
+      "source_id": "pilot-fixture-evidence-first",
+      "title": "Pilot fixture: evidence-first interview answer preparation",
+      "document_type": "interview_guidance",
+      "chunks": [
+        "[Synthetic pilot test data] Evidence-first preparation means writing your interview answers from your own approved evidence: choose a real project, list what you personally did, and attach the outcome you can truthfully describe.",
+        "[Synthetic pilot test data] An evidence-first answer never claims an achievement you cannot support. If your evidence is thin, say what you did, name what you learned, and keep the claim as small as the evidence.",
+        "[Synthetic pilot test data] Keep a short evidence ledger for each role: the requirement, the story that supports it and the proof you can point to."
+      ]
+    },
+    {
+      "source_id": "pilot-fixture-role-research",
+      "title": "Pilot fixture: building a role-research brief",
+      "document_type": "interview_guidance",
+      "chunks": [
+        "[Synthetic pilot test data] A role-research brief is one page that pairs the job description requirements with what you learned about the team, the product and the way the company describes its own work.",
+        "[Synthetic pilot test data] Build the role-research brief in three passes: read the job description for required skills, read the company's own public pages for context, then write the questions you still need answered before the interview."
+      ]
+    }
+  ]
+}
