@@ -89,7 +89,7 @@ the critical path (can slip without blocking W10). W10.5, W10.7, W10.9, W10.11 a
 ### Forward sequence (owner-approved, supersedes the earlier critical-path tail after Pilot 2)
 1. Pilot 2 human evidence closure and triage (this record).
 2. Pilot 2 targeted candidate remediation (P1 then P2 items from the triage).
-3. Pilot remediation qualification.
+3. Pilot remediation qualification. **P1 integrated qualification COMPLETE** (`p10/pilot2/PILOT2_P1_REMEDIATION_QUALIFICATION.md`): P2-01 to P2-04 qualified together, AC-24 still PARTIAL pending successor RC qualification, no RC created, P10C not started. Next: item 4.
 4. Platform Admin owner / orchestrator change: `platform_admin` = **43 / 43** permissions (AD-W12-01, below).
 5. Admin Owner Walkthrough.
 6. Canonical user-journey documentation: Candidate Journey, Platform Admin Journey, then the delegated specialist Admin journeys.
