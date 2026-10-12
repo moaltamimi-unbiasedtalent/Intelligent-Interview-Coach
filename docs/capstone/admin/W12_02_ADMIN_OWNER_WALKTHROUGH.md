@@ -1,8 +1,8 @@
 # W12.2 Admin Owner Walkthrough
 
-**Status: PREPARED - AWAITING OWNER ACCEPTANCE.**
+**Status: OWNER ACCEPTED WITH FOLLOW-UP ITEMS** (owner decision recorded 2026-10-13; the package was prepared on 2026-10-12 and was marked PREPARED - AWAITING OWNER ACCEPTANCE until then).
 
-Claude's technical verdict: **TECHNICALLY READY FOR OWNER REVIEW** (no blocker found). This document is a preparation package for Mo. It is not owner acceptance, and no owner decision has been recorded anywhere in it. Nothing was changed in the product: every finding below is recorded, not fixed.
+Claude's technical verdict: **TECHNICALLY READY FOR OWNER REVIEW** (no blocker found). This document was prepared as a package for Mo's review; the owner decision is recorded in section 8. Nothing was changed in the product: every finding below is recorded, not fixed, and the acceptance does not resolve any of them.
 
 ## 1. Environment
 - Base: `main` at `9aa3cf55a19814e70b50db5e578845d236f7466e` (W12.1, PR #144, merged). Date: 2026-10-12.
@@ -33,29 +33,29 @@ Claude's technical verdict: **TECHNICALLY READY FOR OWNER REVIEW** (no blocker f
 **Expected governance blocks (not defects).** Two API calls returned 403 during the run: a role-change request before the password step-up, and an approval before the second administrator's step-up. Both are the designed step-up behaviour, and the UI then prompted for the password. The owner who requested a role change saw only "Cancel request" and the second administrator saw "Approve / Reject": a requester cannot approve its own request. A pending role-change request remains in the walkthrough database, unapproved.
 
 ## 4. Destination inventory
-Claude preflight is a technical and UX read only. **Owner decision is PENDING for every row.**
+Claude preflight is a technical and UX read only. **Owner decision: Mo's single decision (section 8, ACCEPT WITH FOLLOW-UP ITEMS) covers the whole Admin owner experience; the per-row column below shows that decision, not a separate per-destination review.**
 
 | Destination | URL | Purpose | Key actions and governance | Technical status | Claude preflight | Owner decision |
 |---|---|---|---|---|---|---|
-| Overview | `/admin` | Command Center: build, migrations, runtime, counts per domain | read only | live; build details show "unknown" in dev; health is "not tested" until a manual test | ACCEPT WITH FOLLOW-UP (F-08, F-07) | PENDING |
-| Users | `/admin/users`, `/admin/users/{id}` | account metadata, role, plan, sessions | deactivate, force logout (confirmation, optional reason, audited); role change request (reason, step-up, a different Admin approves); plan change | live, metadata only | ACCEPT WITH FOLLOW-UP (F-07, F-12, F-14, F-16) | PENDING |
-| Workspaces | `/admin/workspaces`, `/{id}` | workspace and membership metadata | member and plan management | live, metadata only | ACCEPT | PENDING |
-| Plans | `/admin/plans`, `/{id}` | plan versions and entitlements | draft, activate, retire; active versions immutable | live; entitlement, not billing | ACCEPT WITH FOLLOW-UP (F-10) | PENDING |
-| Support | `/admin/support`, `/{ref}` | queue, ticket, reply, internal notes | status, priority, assign, reply (candidate-visible), internal note (staff only) | live; no attachments, SLA or email | ACCEPT | PENDING |
-| Review / Diagnostics | `/review` (+ agent, rag, evaluation) | reviewer diagnostics | read only | live, offline metrics only | REQUIRES CHANGE (F-01, F-02) | PENDING |
-| Security | `/admin/security` | events, audit history and export, incidents, alerts, role approvals | role approvals need a different Admin and a password step-up; incident and alert changes audited | live; in-app alerts only, no external paging | ACCEPT WITH FOLLOW-UP (F-06) | PENDING |
-| Audit | `/admin/audit` | privileged-action log | read only | live, append-only at the database | REQUIRES CHANGE (F-06) | PENDING |
-| Billing | `/admin/billing` | mock invoices, payments, commercial terms, refunds, approvals | refund and price change need a different approver | **MOCK, not live**, unmistakable banner | ACCEPT WITH FOLLOW-UP (F-05, F-11) | PENDING |
-| Privacy | `/admin/privacy`, `/{ref}` | request queue and workflow state | assign, status, deletion through the existing deletion service, index historical runs (confirmation) | live workflow state; no content access; "not a statement of legal compliance" | ACCEPT WITH FOLLOW-UP (F-07) | PENDING |
-| Legal | `/admin/legal` | document versions, publish, acceptance counts | publish (confirmation: immutable, retires the previous version) | live metadata; "not a compliance measure" | ACCEPT WITH FOLLOW-UP (F-07) | PENDING |
-| Knowledge | `/admin/knowledge` | governed sources and version lifecycle | upload, review, approve, index, activate as separate explicit steps | live; nothing retrievable until approved, indexed and activated | ACCEPT | PENDING |
-| Reports | `/admin/reports` | aggregate product, quality, operations, AI economics, mock commercial | read only | live; small cohorts suppressed; unknown is never zero | ACCEPT WITH FOLLOW-UP (F-09) | PENDING |
-| Configuration | `/admin/configuration` | durable platform pause | pause or resume (reason required, expected revision, confirmation) | live; "What this page does not do" is explicit | ACCEPT WITH FOLLOW-UP (F-12) | PENDING |
-| Feature flags | `/admin/flags` | two code-defined flags | override or reset (reason required, expected revision, confirmation) | live; a flag can only restrict | ACCEPT WITH FOLLOW-UP (F-12, F-15) | PENDING |
-| AI and models | `/admin/ai`, `/{id}` | governed model configuration | draft, validate, evaluate, request approval; a different approver activates | deterministic checks only; no live model call; code defaults active | ACCEPT WITH FOLLOW-UP (F-04) | PENDING |
-| Jobs | `/admin/jobs`, `/{id}` | queue and worker diagnostics | queue diagnostic job, retry, cancel queued | live; worker is a separate process and is not running here ("Never" reported) | ACCEPT | PENDING |
-| Integrations | `/admin/integrations`, `/{code}` | nine supported connections: configuration, runtime, health | manual connection test only | credentials externally managed and read-only; health "not tested" | ACCEPT WITH FOLLOW-UP (F-04, F-13, F-17) | PENDING |
-| Provider status | `/admin/providers` | configuration status of five providers and OCR | read only | configuration only, "configured does not mean healthy" | ACCEPT WITH FOLLOW-UP (F-17) | PENDING |
+| Overview | `/admin` | Command Center: build, migrations, runtime, counts per domain | read only | live; build details show "unknown" in dev; health is "not tested" until a manual test | ACCEPT WITH FOLLOW-UP (F-08, F-07) | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
+| Users | `/admin/users`, `/admin/users/{id}` | account metadata, role, plan, sessions | deactivate, force logout (confirmation, optional reason, audited); role change request (reason, step-up, a different Admin approves); plan change | live, metadata only | ACCEPT WITH FOLLOW-UP (F-07, F-12, F-14, F-16) | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
+| Workspaces | `/admin/workspaces`, `/{id}` | workspace and membership metadata | member and plan management | live, metadata only | ACCEPT | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
+| Plans | `/admin/plans`, `/{id}` | plan versions and entitlements | draft, activate, retire; active versions immutable | live; entitlement, not billing | ACCEPT WITH FOLLOW-UP (F-10) | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
+| Support | `/admin/support`, `/{ref}` | queue, ticket, reply, internal notes | status, priority, assign, reply (candidate-visible), internal note (staff only) | live; no attachments, SLA or email | ACCEPT | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
+| Review / Diagnostics | `/review` (+ agent, rag, evaluation) | reviewer diagnostics | read only | live, offline metrics only | REQUIRES CHANGE (F-01, F-02) | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
+| Security | `/admin/security` | events, audit history and export, incidents, alerts, role approvals | role approvals need a different Admin and a password step-up; incident and alert changes audited | live; in-app alerts only, no external paging | ACCEPT WITH FOLLOW-UP (F-06) | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
+| Audit | `/admin/audit` | privileged-action log | read only | live, append-only at the database | REQUIRES CHANGE (F-06) | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
+| Billing | `/admin/billing` | mock invoices, payments, commercial terms, refunds, approvals | refund and price change need a different approver | **MOCK, not live**, unmistakable banner | ACCEPT WITH FOLLOW-UP (F-05, F-11) | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
+| Privacy | `/admin/privacy`, `/{ref}` | request queue and workflow state | assign, status, deletion through the existing deletion service, index historical runs (confirmation) | live workflow state; no content access; "not a statement of legal compliance" | ACCEPT WITH FOLLOW-UP (F-07) | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
+| Legal | `/admin/legal` | document versions, publish, acceptance counts | publish (confirmation: immutable, retires the previous version) | live metadata; "not a compliance measure" | ACCEPT WITH FOLLOW-UP (F-07) | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
+| Knowledge | `/admin/knowledge` | governed sources and version lifecycle | upload, review, approve, index, activate as separate explicit steps | live; nothing retrievable until approved, indexed and activated | ACCEPT | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
+| Reports | `/admin/reports` | aggregate product, quality, operations, AI economics, mock commercial | read only | live; small cohorts suppressed; unknown is never zero | ACCEPT WITH FOLLOW-UP (F-09) | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
+| Configuration | `/admin/configuration` | durable platform pause | pause or resume (reason required, expected revision, confirmation) | live; "What this page does not do" is explicit | ACCEPT WITH FOLLOW-UP (F-12) | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
+| Feature flags | `/admin/flags` | two code-defined flags | override or reset (reason required, expected revision, confirmation) | live; a flag can only restrict | ACCEPT WITH FOLLOW-UP (F-12, F-15) | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
+| AI and models | `/admin/ai`, `/{id}` | governed model configuration | draft, validate, evaluate, request approval; a different approver activates | deterministic checks only; no live model call; code defaults active | ACCEPT WITH FOLLOW-UP (F-04) | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
+| Jobs | `/admin/jobs`, `/{id}` | queue and worker diagnostics | queue diagnostic job, retry, cancel queued | live; worker is a separate process and is not running here ("Never" reported) | ACCEPT | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
+| Integrations | `/admin/integrations`, `/{code}` | nine supported connections: configuration, runtime, health | manual connection test only | credentials externally managed and read-only; health "not tested" | ACCEPT WITH FOLLOW-UP (F-04, F-13, F-17) | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
+| Provider status | `/admin/providers` | configuration status of five providers and OCR | read only | configuration only, "configured does not mean healthy" | ACCEPT WITH FOLLOW-UP (F-17) | ACCEPTED WITH FOLLOW-UP ITEMS (global decision) |
 
 ### What each risk-sensitive area shows
 - **Mock billing.** A banner states "MOCK BILLING - NOT LIVE BILLING" with no checkout, payment-method collection, card data or tax engine; every record is labelled MOCK and refunds say no real money moves; the counts carry no revenue figure. Nothing found that could be mistaken for real money movement.
@@ -66,27 +66,27 @@ Claude preflight is a technical and UX read only. **Owner decision is PENDING fo
 - **AI and models.** Evaluations are described as deterministic checks that do not measure live answer quality; the three environments, code defaults, approval and rollback are explained.
 
 ## 5. Findings
-Severity counts: **BLOCKER 0, HIGH 0, MEDIUM 6, LOW 11. Total 17.** Owner decision is PENDING for each.
+Severity counts: **BLOCKER 0, HIGH 0, MEDIUM 5 (F-01, F-03, F-04, F-05, F-06), LOW 12 (F-02, F-07 to F-17). Total 17.** (The preparation package first stated 6 MEDIUM and 11 LOW; that was a counting error, corrected on 2026-10-13. No finding's severity was changed.) Each finding's owner decision is ACCEPTED FOLLOW-UP: accepted for current progression and still unresolved. None is closed or resolved.
 
 | ID | Surface | Description | Evidence | Severity | Type | Recommended action | Owner decision |
 |---|---|---|---|---|---|---|---|
-| F-01 | Review / Diagnostics | `/review` renders outside the Admin shell: no Admin side navigation and no way back to Admin except the global header menu | `d_review-1280-light.png` | MEDIUM | NAVIGATION | render the three diagnostic pages inside the Admin shell, or add an explicit "Back to Admin" link | PENDING |
-| F-02 | Review / Diagnostics | page copy is developer-facing ("For reviewers & developers", "Slightly more technical, same design system") | same | LOW | COPY | rewrite for an Admin owner | PENDING |
-| F-03 | Admin navigation at 390 px | the 19-item navigation stacks above the content (about 640 px), so the first screen is navigation only | `responsive/r_light_390__admin_*.png`, `walk7.json` (navH 644) | MEDIUM | NAVIGATION | collapse into a menu or select on narrow widths | PENDING |
-| F-04 | Integrations (and AI and models) at 390 px | the integrations table overflows the page by 105 px and clips the Credentials and Health columns; AI and models overflows by 1 px | `r_light_390__admin_integrations.png`, `walk7.json` | MEDIUM | VISUAL | card layout or scroll container for narrow widths | PENDING |
-| F-05 | Billing | "Request mock refund" and "Propose terms" open their forms at the bottom of the page, off screen, and focus stays on the button | measured: form heading not in the viewport after click; `j_billing_refund.png` | MEDIUM | UX | move focus and scroll to the form, or use a dialog like other Admin actions | PENDING |
-| F-06 | Audit | two audit surfaces: `/admin/audit` is a bare list with raw field names (`created_at`, `event_type`, `actor_user_id`), mid-word wrapping ("succe ss") and an empty "change" column, while filters and export live only under Security, Audit | `d_admin_audit-1280-light.png`, `j_security_Audit.png` | MEDIUM | UX | make Audit the single filtered, readable surface or link the two | PENDING |
-| F-07 | Several | raw timestamps with microseconds, snake_case table headers and 32-character references shown in full | billing, privacy, support, users, reports screenshots | LOW | COPY | format dates, humanise headers, truncate references with copy | PENDING |
-| F-08 | Overview | long page (13 panels); the Security panel renders after the boundary footnote; some copy cites raw paths ("changed at /admin/configuration") instead of links | `d_admin-1280-light.png` | LOW | UX | prioritise warnings, order panels, link paths | PENDING |
-| F-09 | Reports | in a small environment all 15 product metrics show the same "Suppressed: small cohort" card | `d_admin_reports-1280-light.png` | LOW | UX | summarise suppressed metrics in one line | PENDING |
-| F-10 | Plans and Billing | Plans says "No prices or payments" while Billing holds mock commercial terms; each is accurate but the relationship is not explained | both screenshots | LOW | TRUST | cross-reference the two pages | PENDING |
-| F-11 | Billing | refund amount is entered in minor units (cents) | `j_billing_refund.png` | LOW | UX | money input with currency formatting | PENDING |
-| F-12 | Users, Configuration, Flags | high-risk buttons (Deactivate, Force logout, Pause, Disable override) look the same as neutral buttons; the confirmation dialogs are clear and truthful | dialog texts in `walk3.json` | LOW | UX | stronger visual treatment for high-risk actions | PENDING |
-| F-13 | Integrations | the owner is authorised for secret rotation but sees no rotation control, because the store is externally managed and read-only | `i_integration_openrouter.png` | LOW | KNOWN LIMITATION | none; explain in the Admin journey document | PENDING |
-| F-14 | Users | a development-only anonymous "Account 11 / Local developer" account appears in the list, and in development the anonymous identity makes the sign-in page redirect to onboarding; production is fail-closed | `d_admin_users-1280-light.png` | LOW | KNOWN LIMITATION | none for production | PENDING |
-| F-15 | Feature flags | the "Not configurable here" list shows raw environment-variable names | `d_admin_flags-1280-light.png` | LOW | COPY | plain-language labels | PENDING |
-| F-16 | Users, Integrations | inline table links are under 24 px high | accessibility scan in this run | LOW | ACCESSIBILITY | larger hit areas | PENDING |
-| F-17 | Integrations and Provider status | the two destinations overlap (Provider status is a subset of Integrations plus OCR) | both screenshots | LOW | NAVIGATION | merge or cross-link | PENDING |
+| F-01 | Review / Diagnostics | `/review` renders outside the Admin shell: no Admin side navigation and no way back to Admin except the global header menu | `d_review-1280-light.png` | MEDIUM | NAVIGATION | render the three diagnostic pages inside the Admin shell, or add an explicit "Back to Admin" link | ACCEPTED FOLLOW-UP (unresolved) |
+| F-02 | Review / Diagnostics | page copy is developer-facing ("For reviewers & developers", "Slightly more technical, same design system") | same | LOW | COPY | rewrite for an Admin owner | ACCEPTED FOLLOW-UP (unresolved) |
+| F-03 | Admin navigation at 390 px | the 19-item navigation stacks above the content (about 640 px), so the first screen is navigation only | `responsive/r_light_390__admin_*.png`, `walk7.json` (navH 644) | MEDIUM | NAVIGATION | collapse into a menu or select on narrow widths | ACCEPTED FOLLOW-UP (unresolved) |
+| F-04 | Integrations (and AI and models) at 390 px | the integrations table overflows the page by 105 px and clips the Credentials and Health columns; AI and models overflows by 1 px | `r_light_390__admin_integrations.png`, `walk7.json` | MEDIUM | VISUAL | card layout or scroll container for narrow widths | ACCEPTED FOLLOW-UP (unresolved) |
+| F-05 | Billing | "Request mock refund" and "Propose terms" open their forms at the bottom of the page, off screen, and focus stays on the button | measured: form heading not in the viewport after click; `j_billing_refund.png` | MEDIUM | UX | move focus and scroll to the form, or use a dialog like other Admin actions | ACCEPTED FOLLOW-UP (unresolved) |
+| F-06 | Audit | two audit surfaces: `/admin/audit` is a bare list with raw field names (`created_at`, `event_type`, `actor_user_id`), mid-word wrapping ("succe ss") and an empty "change" column, while filters and export live only under Security, Audit | `d_admin_audit-1280-light.png`, `j_security_Audit.png` | MEDIUM | UX | make Audit the single filtered, readable surface or link the two | ACCEPTED FOLLOW-UP (unresolved) |
+| F-07 | Several | raw timestamps with microseconds, snake_case table headers and 32-character references shown in full | billing, privacy, support, users, reports screenshots | LOW | COPY | format dates, humanise headers, truncate references with copy | ACCEPTED FOLLOW-UP (unresolved) |
+| F-08 | Overview | long page (13 panels); the Security panel renders after the boundary footnote; some copy cites raw paths ("changed at /admin/configuration") instead of links | `d_admin-1280-light.png` | LOW | UX | prioritise warnings, order panels, link paths | ACCEPTED FOLLOW-UP (unresolved) |
+| F-09 | Reports | in a small environment all 15 product metrics show the same "Suppressed: small cohort" card | `d_admin_reports-1280-light.png` | LOW | UX | summarise suppressed metrics in one line | ACCEPTED FOLLOW-UP (unresolved) |
+| F-10 | Plans and Billing | Plans says "No prices or payments" while Billing holds mock commercial terms; each is accurate but the relationship is not explained | both screenshots | LOW | TRUST | cross-reference the two pages | ACCEPTED FOLLOW-UP (unresolved) |
+| F-11 | Billing | refund amount is entered in minor units (cents) | `j_billing_refund.png` | LOW | UX | money input with currency formatting | ACCEPTED FOLLOW-UP (unresolved) |
+| F-12 | Users, Configuration, Flags | high-risk buttons (Deactivate, Force logout, Pause, Disable override) look the same as neutral buttons; the confirmation dialogs are clear and truthful | dialog texts in `walk3.json` | LOW | UX | stronger visual treatment for high-risk actions | ACCEPTED FOLLOW-UP (unresolved) |
+| F-13 | Integrations | the owner is authorised for secret rotation but sees no rotation control, because the store is externally managed and read-only | `i_integration_openrouter.png` | LOW | KNOWN LIMITATION | none; explain in the Admin journey document | ACCEPTED FOLLOW-UP (unresolved) |
+| F-14 | Users | a development-only anonymous "Account 11 / Local developer" account appears in the list, and in development the anonymous identity makes the sign-in page redirect to onboarding; production is fail-closed | `d_admin_users-1280-light.png` | LOW | KNOWN LIMITATION | none for production | ACCEPTED FOLLOW-UP (unresolved) |
+| F-15 | Feature flags | the "Not configurable here" list shows raw environment-variable names | `d_admin_flags-1280-light.png` | LOW | COPY | plain-language labels | ACCEPTED FOLLOW-UP (unresolved) |
+| F-16 | Users, Integrations | inline table links are under 24 px high | accessibility scan in this run | LOW | ACCESSIBILITY | larger hit areas | ACCEPTED FOLLOW-UP (unresolved) |
+| F-17 | Integrations and Provider status | the two destinations overlap (Provider status is a subset of Integrations plus OCR) | both screenshots | LOW | NAVIGATION | merge or cross-link | ACCEPTED FOLLOW-UP (unresolved) |
 
 Also recorded, not owned by this wave: the candidate header logo and "More" overlap at 390 px is visible on Admin pages too (existing known follow-up; not fixed here).
 
@@ -107,15 +107,26 @@ Also recorded, not owned by this wave: the candidate header logo and "More" over
 - Document OCR live quality is UNVALIDATED; live AI answer quality is not measured by the deterministic evaluations.
 - Other ACCEPTED W11 and RC-P10-003 release-matrix limitations that apply to Admin remain as recorded there.
 
-## 8. Owner acceptance (for Mo to complete)
+## 8. Owner decision
+
+Recorded 2026-10-13 from Mo's supplied decision. Not inferred or altered.
 
 [ ] ACCEPT ADMIN OWNER EXPERIENCE
-[ ] ACCEPT WITH FOLLOW-UP ITEMS
+[x] ACCEPT WITH FOLLOW-UP ITEMS
 [ ] REQUIRES CHANGES BEFORE ACCEPTANCE
 
 Owner notes:
 
-Owner decision date:
+"The Admin owner experience is accepted for progression to journey documentation and integrated requalification. No blocker or high-severity issue was identified. Medium and low UX findings remain tracked and are not considered resolved by this acceptance. Existing mock, adapter and live-validation limitations remain as documented."
+
+Owner decision date: 2026-10-13
+
+### Follow-up prioritisation (planning only; nothing is implemented here)
+- **Pre-RC preferred corrections:** F-01 (Review / Diagnostics outside the Admin shell), F-04 (Integrations mobile overflow and clipping), F-05 (Billing forms off screen, focus not moved).
+- **Tracked UX backlog:** F-03 (mobile Admin navigation height) and F-06 (duplicated Audit surfaces).
+- **Low-severity follow-ups:** F-02 and F-07 to F-17.
+
+This acceptance does not waive any limitation in section 7 (mock billing, read-only SecretStore, provider live-health validation, Google OIDC and Redis live validation, PostgreSQL live trigger execution, Russian native and legal review caveats), does not authorise live-provider capabilities, does not change the historical Pilot 2 verdict (CONDITIONAL GO - TARGETED REMEDIATION REQUIRED) or the P2-01 to P2-04 states (pending human revalidation), and does not create RC-P10-004.
 
 ## 9. State after this wave
-Owner acceptance: not given. Journey documentation, integrated Candidate and Admin requalification, RC-P10-004 and P10C have not started. AC-24 remains PARTIAL. The historical Pilot 2 verdict is unchanged.
+Owner decision: ACCEPT WITH FOLLOW-UP ITEMS. Next step: canonical journey documentation (Candidate Journey, Platform Admin Journey, then specialist Admin journeys), then integrated Candidate and Admin requalification, then RC-P10-004. None of these has started. AC-24 remains PARTIAL until successor-RC qualification satisfies its criterion. P10C has not started.
