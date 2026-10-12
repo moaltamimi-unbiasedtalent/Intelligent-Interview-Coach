@@ -126,16 +126,12 @@ ADMIN_ROLES: Final[tuple[str, ...]] = (
 )
 
 ROLE_PRESETS: Final[dict[str, frozenset[str]]] = {
-    # Everything the pre-W10 platform_admin could legitimately do, mapped to explicit permissions.
-    ROLE_PLATFORM_ADMIN: frozenset({
-        OVERVIEW_READ, USERS_READ, USERS_MANAGE, USERS_ROLE_ASSIGN,
-        WORKSPACES_READ, "platform.workspaces.manage", "platform.users.sessions.revoke",
-        SUBSCRIPTIONS_MANAGE, "platform.subscriptions.read",
-        SUPPORT_READ, SUPPORT_REPLY, SUPPORT_MANAGE, SUPPORT_NOTE,
-        PLANS_READ, PLANS_MANAGE, INTEGRATIONS_MANAGE,
-        PRIVACY_READ, REPORTS_READ, FLAGS_READ, FLAGS_MANAGE, INTEGRATIONS_READ,
-        AUDIT_READ, AI_READ, AI_MANAGE, AI_ACTIVATE, KNOWLEDGE_READ, RELEASES_READ, SECURITY_READ,
-    }),
+    # AD-W12-01 (owner approved): the platform owner / orchestrator holds ALL 43 canonical control-plane
+    # permissions, reused from the registry (never a second hand-maintained list). This is NOT a
+    # private-candidate-content grant: no permission in the registry inspects candidate content, and routes stay
+    # permission-gated (no role-name check anywhere). Secondary controls (step-up, two-person approval, expected
+    # revisions, audit) are enforced by the services, not by the preset. W10.14 historically recorded 28 / 43.
+    ROLE_PLATFORM_ADMIN: PERMISSION_SET,
     ROLE_SUPPORT_OPERATOR: frozenset({
         OVERVIEW_READ, USERS_READ, WORKSPACES_READ,
         "platform.support.read", "platform.support.reply", "platform.support.manage", "platform.support.note",

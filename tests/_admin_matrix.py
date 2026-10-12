@@ -16,8 +16,10 @@ from src.application import admin_permissions as perm
 ROOT = Path(__file__).resolve().parent.parent
 ROLES = ("platform_admin", "support_operator", "billing_admin", "knowledge_admin", "security_privacy_admin", "operations_admin")
 PERSONAS = ("user", *ROLES)                      # candidate + the six Admin presets
-# The specialist high-risk permissions that are INTENTIONALLY absent from platform_admin (ROLE-W10-01 final decision, W10.14).
-PLATFORM_ADMIN_ABSENT = frozenset({
+# HISTORICAL ONLY (W10.14, ROLE-W10-01): the 15 specialist permissions that platform_admin did NOT hold when W10.14 qualified it at 28 / 43. AD-W12-01
+# superseded that for the CURRENT runtime (platform_admin = 43 / 43); this constant is used only to assert the historical record and the 15-permission delta,
+# never to derive current authorization expectations (those come from the presets via ``role_perms``).
+W10_14_PLATFORM_ADMIN_ABSENT = frozenset({
     "platform.audit.export", "platform.billing.read", "platform.billing.refund", "platform.config.manage", "platform.incidents.manage",
     "platform.integrations.secret.rotate", "platform.jobs.manage", "platform.jobs.read", "platform.knowledge.approve", "platform.knowledge.manage",
     "platform.legal.manage", "platform.plans.price.change", "platform.privacy.execute", "platform.reports.commercial.read", "platform.security.manage",
@@ -120,12 +122,12 @@ def nav_for(perms: frozenset[str]) -> list[str]:
 def md_permission_matrix() -> str:
     short = {"user": "user", "platform_admin": "platform", "support_operator": "support", "billing_admin": "billing", "knowledge_admin": "knowledge",
              "security_privacy_admin": "security", "operations_admin": "operations"}
-    head = "| Permission | " + " | ".join(short[p] for p in PERSONAS) + " | owners | W10.14 decision |\n|---|" + "---:|" * len(PERSONAS) + "---|---|\n"
+    head = "| Permission | " + " | ".join(short[p] for p in PERSONAS) + " | owners | AD-W12-01 note |\n|---|" + "---:|" * len(PERSONAS) + "---|---|\n"
     rows = []
     for p, m in permission_matrix().items():
         owners = [r for r in ROLES if m[r]]
-        decision = ("unassigned by design (secret rotation stays externally managed)" if not owners else
-                    "domain-owner only (absent from platform_admin)" if p in PLATFORM_ADMIN_ABSENT else "retained")
+        decision = ("unassigned" if not owners else
+                    "added to platform_admin by AD-W12-01 (specialist roles keep it)" if p in W10_14_PLATFORM_ADMIN_ABSENT else "retained")
         rows.append(f"| `{p}` | " + " | ".join("Y" if m[x] else "-" for x in PERSONAS) + f" | {', '.join(owners) or 'none'} | {decision} |")
     return head + "\n".join(rows)
 

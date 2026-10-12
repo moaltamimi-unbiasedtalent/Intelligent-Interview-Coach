@@ -2,8 +2,9 @@
 """P10B-W10.14 integrated Admin qualification guard (deterministic, offline, 0 paid/live calls).
 
 An INTEGRATED evaluator, not a duplicate implementation test: it reconciles the canonical permission registry, the code-defined role presets, the route dependency graph, the
-frontend destination table and the W10 domain boundaries, and asserts the final least-privilege decision (ROLE-W10-01 closed): platform_admin is a broad but NOT universal
-operator and specialist high-risk permissions stay with their domain roles. ``--markdown`` renders the machine-generated matrices used by the W10.14 document.
+frontend destination table and the W10 domain boundaries. CURRENT runtime (AD-W12-01, owner approved): platform_admin is the owner / orchestrator holding ALL 43 canonical
+control-plane permissions while the specialist presets stay least-privilege delegated roles and no permission inspects candidate content. The W10.14 decision (ROLE-W10-01: 28 / 43)
+is HISTORICAL EVIDENCE: it is asserted only against the W10.14 document, never as current behaviour. ``--markdown`` renders the machine-generated matrices.
 """
 
 from __future__ import annotations
@@ -52,12 +53,17 @@ def run() -> dict[str, tuple[bool, str]]:
     check("permissions_exactly_43", len(perm.PERMISSIONS) == 43 and len(set(perm.PERMISSIONS)) == 43, str(len(perm.PERMISSIONS)))
     check("roles_exactly_user_plus_six_presets", set(perm.ROLE_PRESETS) == set(M.ROLES) and perm.permissions_for_role("user") == frozenset(), ",".join(M.ROLES))
     pa = perm.ROLE_PRESETS["platform_admin"]
-    check("role_w10_01_closed_least_privilege_platform_admin_not_universal",
-          set(perm.PERMISSIONS) - pa == set(M.PLATFORM_ADMIN_ABSENT) and len(pa) == 28 and "platform.integrations.secret.rotate" not in pa,
-          f"{len(pa)} of 43 permissions; {len(set(perm.PERMISSIONS) - pa)} specialist permissions absent by decision")
-    check("specialist_permissions_owned_by_domain_roles",
-          all([r for r in M.ROLES if p in perm.ROLE_PRESETS[r] and r != "platform_admin"] for p in M.PLATFORM_ADMIN_ABSENT - {"platform.integrations.secret.rotate"})
-          and not [r for r in M.ROLES if "platform.integrations.secret.rotate" in perm.ROLE_PRESETS[r]], "secret rotation intentionally unassigned")
+    check("ad_w12_01_platform_admin_owns_all_43_canonical_permissions",
+          pa == perm.PERMISSION_SET and len(pa) == 43 and set(perm.PERMISSIONS) - pa == set() and len(M.W10_14_PLATFORM_ADMIN_ABSENT) == 15 and M.W10_14_PLATFORM_ADMIN_ABSENT <= pa,
+          f"{len(pa)} of 43 permissions (the 15 W10.14-absent permissions added by AD-W12-01)")
+    check("specialist_roles_remain_least_privilege_delegated_subsets",
+          {r: len(perm.ROLE_PRESETS[r]) for r in M.ROLES if r != "platform_admin"} == {"support_operator": 7, "billing_admin": 10, "knowledge_admin": 6, "security_privacy_admin": 11, "operations_admin": 11}
+          and all(perm.ROLE_PRESETS[r] < pa for r in M.ROLES if r != "platform_admin")
+          and [r for r in M.ROLES if "platform.integrations.secret.rotate" in perm.ROLE_PRESETS[r]] == ["platform_admin"], "secret rotation authorized for the owner only; the store is still read-only")
+    ruleset = read("src/application/admin_permissions.py")
+    check("owner_preset_reuses_the_registry_and_no_role_name_authorization",
+          "ROLE_PLATFORM_ADMIN: PERMISSION_SET" in ruleset and not re.search(r"==\s*[\"']platform_admin[\"']|in\s*\(\s*[\"']platform_admin", read("src/api/dependencies.py")))
+    check("no_private_content_permission_even_for_the_owner", not [p for p in pa if re.search(r"break|impersonat|view_as|candidate|content|\bcv\b|memory|answer|conversation|evidence|document", p)])
     check("unknown_missing_candidate_default_deny", all(perm.permissions_for_role(x) == frozenset() for x in (None, "", "ghost", "user", "PLATFORM_ADMIN")))
     check("no_wildcard_or_content_or_break_glass_permission", not [p for p in perm.PERMISSIONS if "*" in p or any(f in p for f in perm.BANNED_PERMISSION_FRAGMENTS)])
     check("permission_matrix_deterministic_two_builds", M.matrix_hash() == M.matrix_hash() and len(M.permission_matrix()) == 43, M.matrix_hash())
@@ -138,9 +144,11 @@ def run() -> dict[str, tuple[bool, str]]:
     plan = read("docs/capstone/admin/ADMIN_PLATFORM_MASTER_PLAN.md")
     doc = read("docs/capstone/admin/W10_14_FULL_ADMIN_QUALIFICATION.md")
     check("master_plan_no_longer_claims_all_permissions", "all non-break-glass permissions" not in plan and "least-privilege" in plan.lower())
-    check("role_w10_01_recorded_closed", "ROLE-W10-01" in doc and "CLOSED" in doc and "ROLE-W10-01" in read("docs/capstone/admin/ADMIN_ARCHITECTURE_DECISIONS.md"))
+    check("w10_14_historical_28_of_43_record_preserved", "ROLE-W10-01" in doc and "CLOSED" in doc and re.search(r"28 ?(of|/) ?43", doc) is not None and "ROLE-W10-01" in read("docs/capstone/admin/ADMIN_ARCHITECTURE_DECISIONS.md"))
+    ad = read("docs/capstone/admin/AD_W12_01_PLATFORM_ADMIN_OWNER_ORCHESTRATOR.md")
+    check("ad_w12_01_recorded_implemented_and_history_preserved", "IMPLEMENTED" in ad and "43 / 43" in ad and re.search(r"28 ?(of|/) ?43", ad) is not None)
     check("w10_13_doc_records_docs_pr_129", "#129" in read("docs/capstone/admin/W10_13_SECURITY_AUDIT_INCIDENT_MANAGEMENT.md") and "disclosed contamination with stable post-incident qualification baseline" in read("docs/capstone/admin/W10_13_SECURITY_AUDIT_INCIDENT_MANAGEMENT.md"))
-    check("tests_exist", all(x in read("tests/test_admin_qualification_w10_14.py") for x in ("test_route_x_persona_matrix_over_http_is_exactly_the_preset_expectation", "test_role_w10_01_platform_admin_is_least_privilege_not_universal",
+    check("tests_exist", all(x in read("tests/test_admin_qualification_w10_14.py") for x in ("test_route_x_persona_matrix_over_http_is_exactly_the_preset_expectation", "test_ad_w12_01_current_runtime_platform_admin_owns_all_43_canonical_permissions", "test_w10_14_historical_record_stays_28_of_43",
                                                                                      "test_privacy_and_secret_sentinels_never_appear_in_any_admin_surface")))
     return out
 
@@ -152,7 +160,7 @@ def main() -> int:
                           ("PAGE INVENTORY", M.md_page_inventory), ("NAV MATRIX", M.md_nav_matrix)):
             print(f"\n<!-- {title} -->\n{fn()}\n")
         return 0
-    print("ASK4MO - P10B-W10.14 FULL ADMIN QUALIFICATION GUARD (least-privilege domain separation is authoritative)\n")
+    print("ASK4MO - P10B-W10.14 FULL ADMIN QUALIFICATION GUARD (AD-W12-01: platform_admin = 43 / 43; specialist roles least-privilege)\n")
     res = run()
     failed = False
     for name in sorted(res):

@@ -135,9 +135,14 @@ def test_ownership_scope_validation_cap_and_permission_matrix(env):
         _, ck = env.user(role)
         assert env.c.get(f"{API}/admin/privacy/requests", cookies=ck).status_code == 403
         assert env.c.get(f"{API}/admin/legal", cookies=ck).status_code == 403
-    assert env.c.get(f"{API}/admin/privacy/requests", cookies=plat).status_code == 200               # platform_admin: read only
-    assert env.c.post(f"{API}/admin/privacy/requests/{pid}/status", json={"status": "acknowledged"}, cookies=plat).status_code == 403
-    assert env.c.post(f"{API}/admin/privacy/requests/{pid}/assign", json={"assignee_user_id": None}, cookies=plat).status_code == 403
+    assert env.c.get(f"{API}/admin/privacy/requests", cookies=plat).status_code == 200               # platform_admin: reads ...
+    _, sup = env.user("support_operator")
+    assert env.c.post(f"{API}/admin/privacy/requests/{pid}/status", json={"status": "acknowledged"}, cookies=sup).status_code == 403
+    assert env.c.post(f"{API}/admin/privacy/requests/{pid}/assign", json={"assignee_user_id": None}, cookies=sup).status_code == 403
+    # AD-W12-01: ... and, as owner, holds privacy.execute: it passes the gate (a request-state change, never a second deletion engine or content access)
+    _, cfresh = env.user("user")
+    pid_o = env.c.post(f"{API}/privacy/requests", json={"request_type": "data_access"}, cookies=cfresh).json()["public_id"]
+    assert env.c.post(f"{API}/admin/privacy/requests/{pid_o}/status", json={"status": "acknowledged"}, cookies=plat).status_code != 403
     assert env.c.get(f"{API}/admin/privacy/requests", cookies=adm).status_code == 200
     assert not (perm.permissions_for_role("support_operator") | perm.permissions_for_role("billing_admin")
                 | perm.permissions_for_role("knowledge_admin") | perm.permissions_for_role("operations_admin")) & {perm.PRIVACY_EXECUTE, perm.LEGAL_MANAGE}
@@ -488,17 +493,19 @@ def test_candidate_legal_api_scoped_rate_limited_route_and_consent_separation(en
 
 
 def test_admin_legal_api_permissions_publish_flow_and_audit(env):
-    _, plat = env.user("platform_admin"); _, adm = env.user("security_privacy_admin")
+    _, plat = env.user("platform_admin"); _, adm = env.user("security_privacy_admin"); _, sup = env.user("support_operator")
     assert env.c.get(f"{API}/admin/legal", cookies=plat).status_code == 200                                      # privacy.read
     body = {"version": "3.0", "content_ref": "/privacy", "content_hash": HASH, "effective_at": "2026-12-01T00:00:00+00:00"}
-    assert env.c.post(f"{API}/admin/legal/privacy/versions", json=body, cookies=plat).status_code == 403          # legal.manage only
+    assert env.c.post(f"{API}/admin/legal/privacy/versions", json=body, cookies=sup).status_code == 403          # legal.manage only
+    own = env.c.post(f"{API}/admin/legal/privacy/versions", json={**body, "version": "2.9"}, cookies=plat)        # AD-W12-01: the owner holds legal.manage ...
+    assert own.status_code == 201 and own.json()["state"] == "draft"                                             # ... but a draft is not publication
     v = env.c.post(f"{API}/admin/legal/privacy/versions", json=body, cookies=adm)
     assert v.status_code == 201 and v.json()["state"] == "draft"
     assert env.c.post(f"{API}/admin/legal/privacy/versions", json=body, cookies=adm).status_code == 409
     assert env.c.post(f"{API}/admin/legal/privacy/versions", json={**body, "version": "x y"}, cookies=adm).status_code == 422
     assert env.c.post(f"{API}/admin/legal/privacy/versions", json={**body, "version": "4", "effective_at": "not a date"}, cookies=adm).status_code == 422
     vid = v.json()["id"]
-    assert env.c.post(f"{API}/admin/legal/versions/{vid}/publish", cookies=plat).status_code == 403
+    assert env.c.post(f"{API}/admin/legal/versions/{vid}/publish", cookies=sup).status_code == 403
     assert env.c.post(f"{API}/admin/legal/versions/{vid}/publish", cookies=adm).json()["state"] == "published"
     assert env.c.patch(f"{API}/admin/legal/versions/{vid}", json={"content_ref": "/privacy"}, cookies=adm).status_code == 409
     names = {e["event_type"] for e in env.events()}

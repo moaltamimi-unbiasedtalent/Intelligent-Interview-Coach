@@ -502,7 +502,8 @@ def mock_subs(env, n, *, state="active", amount=1000, interval="month", currency
 
 def test_commercial_requires_its_own_permission_and_regular_reports_never_contain_commercial_fields(env):
     _, plat = env.user("platform_admin"); _, ops = env.user("operations_admin"); _, bill = env.user("billing_admin"); _, cand = env.user("user")
-    assert env.c.get(f"{API}/admin/reports/commercial", cookies=plat).status_code == 403
+    owner = env.c.get(f"{API}/admin/reports/commercial", cookies=plat)                                   # AD-W12-01: the owner holds the commercial permission ...
+    assert owner.status_code == 200 and "mock" in owner.text.lower()                                     # ... and it is still labelled mock billing, not live revenue
     assert env.c.get(f"{API}/admin/reports/commercial", cookies=ops).status_code == 403
     assert env.c.get(f"{API}/admin/reports/commercial", cookies=cand).status_code == 403
     assert env.c.get(f"{API}/admin/reports/commercial", cookies=bill).status_code == 200

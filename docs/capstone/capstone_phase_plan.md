@@ -90,7 +90,7 @@ the critical path (can slip without blocking W10). W10.5, W10.7, W10.9, W10.11 a
 1. Pilot 2 human evidence closure and triage (this record).
 2. Pilot 2 targeted candidate remediation (P1 then P2 items from the triage).
 3. Pilot remediation qualification. **P1 integrated qualification COMPLETE** (`p10/pilot2/PILOT2_P1_REMEDIATION_QUALIFICATION.md`): P2-01 to P2-04 qualified together, AC-24 still PARTIAL pending successor RC qualification, no RC created, P10C not started. Next: item 4.
-4. Platform Admin owner / orchestrator change: `platform_admin` = **43 / 43** permissions (AD-W12-01, below).
+4. Platform Admin owner / orchestrator change: `platform_admin` = **43 / 43** permissions (AD-W12-01, below). **IMPLEMENTED (W12.1).**
 5. Admin Owner Walkthrough.
 6. Canonical user-journey documentation: Candidate Journey, Platform Admin Journey, then the delegated specialist Admin journeys.
 7. Integrated Candidate + Admin requalification.
@@ -101,7 +101,9 @@ the critical path (can slip without blocking W10). W10.5, W10.7, W10.9, W10.11 a
 12. P10F final targeted human validation.
 13. P11 final Capstone packaging.
 
-**Platform Admin architecture decision AD-W12-01: OWNER APPROVED, NOT IMPLEMENTED.** `platform_admin` will hold all 43 canonical permissions as the platform owner / orchestrator; specialist roles remain least-privilege delegated roles. W10.14 history (28 / 43) is preserved as the truthful record at that point. Constraints that remain: no unrestricted candidate-content browser without an explicit governed capability, no impersonation, no break-glass, step-up and two-person approval where designed, mandatory audit. See `admin/AD_W12_01_PLATFORM_ADMIN_OWNER_ORCHESTRATOR.md`. The Admin Owner Walkthrough follows Pilot 2 remediation and the owner-role change. P10C, P10D, P10E and P10F have not started.
+**Platform Admin architecture decision AD-W12-01: OWNER APPROVED, IMPLEMENTED (W12.1).** `platform_admin` now holds all 43 canonical permissions as the platform owner / orchestrator (a code-defined preset change, no migration); specialist roles remain least-privilege delegated roles. W10.14 history (28 / 43) is preserved as the truthful record at that point. Constraints that remain: no unrestricted candidate-content browser without an explicit governed capability, no impersonation, no break-glass, step-up and two-person approval where designed, mandatory audit. See `admin/AD_W12_01_PLATFORM_ADMIN_OWNER_ORCHESTRATOR.md`. The Admin Owner Walkthrough is the next step. P10C, P10D, P10E and P10F have not started, and RC-P10-004 has not been created.
+
+**Current next sequence (after W12.1 merges):** 1. Admin Owner Walkthrough / UX acceptance. 2. Canonical Candidate + Platform Admin journey documentation. 3. Specialist Admin journey documentation. 4. Integrated requalification of the candidate + Admin authorization change. 5. Successor RC-P10-004. 6. AC-24 final successor-RC closure where the criterion is met (AC-24 stays PARTIAL until then). 7. P10C later. None of these is complete.
 
 **Admin principle.** PLATFORM ADMIN != UNRESTRICTED PRIVATE-CANDIDATE-DATA SUPERUSER. Admin scope is classified as
 Capstone must-have vs production-ready mock/adapter-acceptable in the Admin master plan section 6; a mock is never

@@ -202,7 +202,10 @@ def test_k5_operations_pause_blocks_the_candidate_capability_with_the_bounded_co
         assert w.c.get(f"{API}{path}", cookies=cand["ck"]).status_code == 200, path           # recovery / account / privacy / legal / saved data stay available
     assert w.post("/admin/pause/agent", ops, {"paused": False, "expected_revision": 1, "reason": "resumed"}).status_code == 200
     assert w.post("/agent/run", cand["ck"], body).status_code != 503 and calls.built == 1       # resume restores admission under the existing rules
-    assert denied(w.post("/admin/pause/agent", w.ck("platform_admin"), {"paused": True, "expected_revision": 2, "reason": "x"}))   # platform_admin has no config.manage
+    assert denied(w.post("/admin/pause/agent", w.ck("support_operator"), {"paused": True, "expected_revision": 2, "reason": "x"}))   # support has no config.manage
+    # AD-W12-01: the owner holds config.manage, but a STALE expected revision is still refused (permission does not bypass concurrency control)
+    stale = w.post("/admin/pause/agent", w.ck("platform_admin"), {"paused": True, "expected_revision": 1, "reason": "stale write"})
+    assert stale.status_code in (409, 422) and not denied(stale)
 
 
 # ======================================================================== K6 feature flag <-> candidate behaviour

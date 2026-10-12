@@ -278,11 +278,12 @@ def test_pause_permissions_matrix(env):
     assert env.c.get(f"{API}/admin/pause", cookies=cand).status_code == 403
     assert env.c.post(f"{API}/admin/pause/agent", json=body, cookies=cand).status_code == 403
     assert env.c.get(f"{API}/admin/pause", cookies=plat).status_code == 200                      # read-only access (flags.read)
-    assert env.c.post(f"{API}/admin/pause/agent", json=body, cookies=plat).status_code == 403    # platform_admin lacks platform.config.manage (W10.0 ownership)
     assert env.c.post(f"{API}/admin/pause/agent", json=body, cookies=sup).status_code == 403
     assert env.c.post(f"{API}/admin/pause/agent", json=body, cookies=ops).status_code == 200
-    assert env.c.post(f"{API}/admin/pause/agent", json={**body, "paused": False}, cookies=plat).status_code == 403   # nor can it resume
-    assert not pause_svc(env).snapshot()["agent"]["paused"] is False
+    # AD-W12-01: the owner holds platform.config.manage, but permission never bypasses the expected-revision (concurrency) control
+    assert env.c.post(f"{API}/admin/pause/agent", json={**body, "paused": False}, cookies=plat).status_code == 409       # stale revision 0
+    assert env.c.post(f"{API}/admin/pause/agent", json={**body, "paused": False, "expected_revision": 1}, cookies=plat).status_code == 200
+    assert pause_svc(env).snapshot()["agent"]["paused"] is False
 
 
 def test_pause_api_stale_revision_is_409_and_validation_422(env):

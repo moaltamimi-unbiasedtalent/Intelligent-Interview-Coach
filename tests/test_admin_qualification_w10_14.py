@@ -91,18 +91,32 @@ def test_every_preset_is_a_subset_of_the_registry_and_no_wildcard_or_banned_perm
     assert not [p for p in perm.PERMISSIONS if "*" in p or any(f in p for f in perm.BANNED_PERMISSION_FRAGMENTS)]
 
 
-def test_role_w10_01_platform_admin_is_least_privilege_not_universal():
+def test_ad_w12_01_current_runtime_platform_admin_owns_all_43_canonical_permissions():
+    """CURRENT runtime (AD-W12-01). The W10.14 historical 28 / 43 decision is asserted separately below and never drives current expectations."""
     pa = perm.ROLE_PRESETS["platform_admin"]
-    absent = set(perm.PERMISSIONS) - pa
-    assert absent == set(M.PLATFORM_ADMIN_ABSENT) and len(pa) == 28 and len(absent) == 15
-    for specialist in ("platform.billing.read", "platform.billing.refund", "platform.reports.commercial.read", "platform.plans.price.change", "platform.config.manage",
-                       "platform.integrations.secret.rotate", "platform.jobs.read", "platform.jobs.manage", "platform.knowledge.manage", "platform.knowledge.approve",
-                       "platform.privacy.execute", "platform.legal.manage", "platform.security.manage", "platform.incidents.manage", "platform.audit.export"):
-        assert specialist not in pa, specialist
-    # every absent permission is owned by a domain role, except secret rotation which is intentionally unassigned
-    for p in absent - {"platform.integrations.secret.rotate"}:
-        assert [r for r in M.ROLES if p in perm.ROLE_PRESETS[r] and r != "platform_admin"], p
-    assert not [r for r in M.ROLES if "platform.integrations.secret.rotate" in perm.ROLE_PRESETS[r]]
+    assert len(perm.PERMISSIONS) == 43 and len(pa) == 43 and set(pa) == set(perm.PERMISSIONS) == set(perm.PERMISSION_SET)
+    assert not (set(perm.PERMISSIONS) - pa)
+    # the 15 permissions added by AD-W12-01 are exactly the W10.14 historically-absent set, and the pre-change 28 are still held
+    assert len(M.W10_14_PLATFORM_ADMIN_ABSENT) == 15 and M.W10_14_PLATFORM_ADMIN_ABSENT <= pa
+    assert len(pa - M.W10_14_PLATFORM_ADMIN_ABSENT) == 28
+    # specialists stay least-privilege delegated roles: none gained anything from the owner change
+    assert {r: len(perm.ROLE_PRESETS[r]) for r in M.ROLES if r != "platform_admin"} == {
+        "support_operator": 7, "billing_admin": 10, "knowledge_admin": 6, "security_privacy_admin": 11, "operations_admin": 11}
+    for r in M.ROLES:
+        if r != "platform_admin":
+            assert perm.ROLE_PRESETS[r] < pa, r                                        # strictly delegated subsets of the owner
+    # 43 / 43 is control-plane breadth, never a candidate-content permission, break-glass or impersonation
+    assert not [p for p in pa if any(f in p for f in perm.BANNED_PERMISSION_FRAGMENTS)]
+    assert not [p for p in perm.PERMISSIONS if re.search(r"break|impersonat|view_as|candidate|content|cv|memory|answer|conversation", p)]
+    # secret rotation is now authorized for the owner only; it still is not a writable vault (see the route test below)
+    assert [r for r in M.ROLES if "platform.integrations.secret.rotate" in perm.ROLE_PRESETS[r]] == ["platform_admin"]
+
+
+def test_w10_14_historical_record_stays_28_of_43():
+    """The W10.14 qualification document is HISTORICAL EVIDENCE and must keep recording the 28 / 43 decision truthfully (AD-W12-01 supersedes it for the current runtime only)."""
+    doc = (M.ROOT / "docs/capstone/admin/W10_14_FULL_ADMIN_QUALIFICATION.md").read_text()
+    assert "28 of 43" in doc or "28 / 43" in doc or "28/43" in doc
+    assert "ROLE-W10-01" in doc and "CLOSED" in doc
 
 
 def test_permission_matrix_43_by_7_is_deterministic_and_default_deny_holds():
@@ -390,11 +404,37 @@ def test_no_break_glass_no_impersonation_no_view_as_no_generic_candidate_browser
         assert not re.search(r"candidate.?(search|browser)|search_candidates|/candidates", p.read_text().lower()), p.name
 
 
-def test_secret_rotation_stays_effectively_unreachable():
-    owners = [r for r in M.ROLES if "platform.integrations.secret.rotate" in perm.ROLE_PRESETS[r]]
-    assert owners == []
+def test_secret_rotation_is_authorized_for_the_owner_but_the_store_stays_read_only(world, monkeypatch):
+    """AD-W12-01: authorization may pass for platform_admin (43 / 43) but authorization is not capability. The environment SecretStore is externally managed
+    and read-only, so the route reports that truthfully (409), echoes no value and writes nothing. No other preset holds the permission."""
+    assert [r for r in M.ROLES if "platform.integrations.secret.rotate" in perm.ROLE_PRESETS[r]] == ["platform_admin"]
     routes = [r for r in M.routes() if "platform.integrations.secret.rotate" in r.permissions]
     assert routes and all(r.methods == ("POST",) for r in routes)
+    url = f"{API}/admin/integrations/openrouter/credentials/api_key"
+    secret = "sentinel-credential-value-0123456789"
+    for persona in ("user", "support_operator", "billing_admin", "knowledge_admin", "security_privacy_admin", "operations_admin"):
+        r = world.c.post(url, json={"value": secret}, cookies=world.cookies[persona])
+        assert r.status_code == 403 and secret not in r.text, persona
+    r = world.c.post(url, json={"value": secret}, cookies=world.cookies["platform_admin"])
+    assert r.status_code == 409 and "managed outside Ask4Mo" in r.text and secret not in r.text    # passed the permission gate, refused by the technical capability
+
+
+def test_ad_w12_01_owner_does_not_bypass_step_up_or_two_person_role_approval(world):
+    """43 / 43 is breadth, not a bypass: a fresh owner session still needs a password step-up, the owner can never approve its own role request, and a DIFFERENT active
+    administrator holding the approve permission (with its own step-up) is required. (Stale-target, last-admin and audit rules are covered by test_security_w10_13.)"""
+    from tests import _role_gov as G
+    ck1, _u1 = world.make("platform_admin")
+    ck2, _u2 = world.make("platform_admin")
+    _tck, target = world.make("user")
+    no_step_up = G.request_change(world.c, ck1, target, "support_operator", password=PW, elevate=False)
+    assert no_step_up.status_code != 200                                                  # a fresh session is not elevated: the owner is refused until it steps up
+    created = G.request_change(world.c, ck1, target, "support_operator", password=PW)
+    assert created.status_code == 200
+    pid = created.json()["public_id"]
+    assert G.approve(world.c, ck1, pid, password=PW).status_code != 200                   # requester == approver is refused even for a 43 / 43 owner
+    assert G.approve(world.c, ck2, pid, password=PW).status_code == 200                   # a distinct, step-up-elevated administrator completes it
+    # no direct role mutation route exists for anyone, owner included
+    assert world.c.patch(f"{API}/admin/users/{target}/role", json={"role": "platform_admin"}, cookies=ck1).status_code in (404, 405)
 
 
 # ============================================================ navigation and pages

@@ -697,6 +697,28 @@ test("a limited admin role sees only the destinations the server granted", async
   await expect(nav.getByRole("link", { name: /Support/ })).toHaveCount(0);   // no support.read: no Support entry
 });
 
+test("W12.1 (AD-W12-01): the owner / orchestrator (all 43 permissions) is shown every Admin destination, derived from permission strings only", async ({ page }) => {
+  // The permission list is the generated backend fixture (tests/fixtures/admin-role-permissions.json), not a hand-typed list.
+  const fixture = JSON.parse((await import("node:fs")).readFileSync(`${__dirname}/../tests/fixtures/admin-role-permissions.json`, "utf8"));
+  const perms: string[] = fixture.personas.platform_admin.permissions;
+  expect(perms).toHaveLength(43);
+  await mockAdmin(page, "platform_admin", perms);
+  // The owner now also holds security.read, so the Command Center asks for the security summary (counts only).
+  await page.route("**/api/v1/admin/security/summary", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ alerts: { active_critical: 0, active_high: 0, acknowledged: 0 }, open_incidents: 0 }) }));
+  await page.goto("/admin");
+  const nav = page.getByRole("navigation", { name: "Admin" });
+  const expected: string[] = fixture.personas.platform_admin.nav;
+  expect(expected.length).toBeGreaterThanOrEqual(19);
+  for (const href of expected) await expect(nav.locator(`a[href="${href}"]`)).toHaveCount(1);
+  // Specialist delegated destinations that the owner now also sees
+  for (const name of [/Billing/, /Jobs/, /Knowledge/, /Privacy/, /Security/, /Audit/, /Integrations/, /Reports/]) await expect(nav.getByRole("link", { name }).first()).toBeVisible();
+  // 43 / 43 is control-plane breadth: the Command Center states it is not candidate-content access
+  await expect(page.getByText(/No candidate-private content is accessible here/).first()).toBeVisible();
+  // ... and a specialist still sees only its delegated destinations
+  const billing: string[] = fixture.personas.billing_admin.nav;
+  expect(billing).not.toContain("/admin/jobs");
+});
+
 test("candidate is denied the admin area", async ({ page }) => {
   await mockAdmin(page, "user", []);
   await page.goto("/admin");

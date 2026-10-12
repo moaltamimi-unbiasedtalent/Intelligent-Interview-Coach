@@ -71,7 +71,7 @@ def run() -> dict[str, tuple[bool, str]]:
               "separate owner-approved post-W11 artifact; the W11 document still records that W11 did not create it")
 
     # ---- candidate vs Admin
-    check("permissions_43_and_platform_admin_28", len(perm.PERMISSIONS) == 43 and len(perm.ROLE_PRESETS["platform_admin"]) == 28)
+    check("permissions_43_and_platform_admin_43", len(perm.PERMISSIONS) == 43 and len(perm.ROLE_PRESETS["platform_admin"]) == 43 and perm.ROLE_PRESETS["platform_admin"] == perm.PERMISSION_SET)   # CURRENT runtime (AD-W12-01); W11 itself qualified 28 / 43 (historical)
     routes = M.routes()
     check("no_break_glass_no_impersonation", not re.search(r"break.?glass|impersonat|view.?as|act.?as", " ".join(r.path.lower() for r in routes))
           and not [p for p in perm.PERMISSIONS if any(f in p for f in ("impersonat", "break_glass", "view_as"))])

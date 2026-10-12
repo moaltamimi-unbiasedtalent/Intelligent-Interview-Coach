@@ -509,8 +509,14 @@ def test_api_permission_matrix_default_deny_and_preset_separation(env):
     for ck in (cand, sup, ops):
         assert env.c.get(f"{API}/admin/knowledge/sources", cookies=ck).status_code == 403
         assert env.c.post(f"{API}/admin/knowledge/sources", cookies=ck, **files()).status_code == 403
-    assert env.c.get(f"{API}/admin/knowledge/sources", cookies=plat).status_code == 200            # platform_admin: read only
-    assert env.c.post(f"{API}/admin/knowledge/sources", cookies=plat, **files()).status_code == 403
+    assert env.c.get(f"{API}/admin/knowledge/sources", cookies=plat).status_code == 200            # platform_admin (owner, AD-W12-01) reads ...
+    up = env.c.post(f"{API}/admin/knowledge/sources", cookies=plat, **files(title="Owner upload"))   # ... and may upload, but authorization is not approval
+    assert up.status_code == 201
+    ov = up.json()["version_public_id"]
+    assert env.c.get(f"{API}/admin/knowledge/versions/{ov}", cookies=plat).json()["state"] == "queued"
+    assert env.c.post(f"{API}/admin/knowledge/versions/{ov}/index", cookies=plat).status_code == 409      # unapproved knowledge cannot be indexed ...
+    assert env.c.post(f"{API}/admin/knowledge/versions/{ov}/activate", cookies=plat).status_code == 409   # ... or activated, even by the owner
+    assert env.c.get(f"{API}/admin/knowledge/sources?active=true", cookies=plat).json()["total"] == 0     # nothing is active, so nothing reaches candidate retrieval
     assert env.c.post(f"{API}/admin/knowledge/sources", cookies=kb, **files()).status_code == 201
     assert {perm.KNOWLEDGE_READ, perm.KNOWLEDGE_MANAGE, perm.KNOWLEDGE_APPROVE} <= perm.permissions_for_role("knowledge_admin")
     for role in ("support_operator", "billing_admin", "operations_admin", "security_privacy_admin"):
