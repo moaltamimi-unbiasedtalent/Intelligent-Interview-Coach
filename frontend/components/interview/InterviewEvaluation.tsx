@@ -4,9 +4,22 @@ import type { EvaluationOut } from "@/lib/api/types";
 import { Card, CardBody } from "@/components/ui/Card";
 import { useT } from "@/components/i18n/I18nProvider";
 
+const DIMENSIONS = [
+  ["relevance", "Relevance"],
+  ["structure", "Structure"],
+  ["evidence", "Evidence"],
+  ["role_knowledge", "RoleKnowledge"],
+  ["problem_solving", "ProblemSolving"],
+  ["communication", "Communication"],
+  ["credibility", "Credibility"],
+] as const;
+
 /**
  * Candidate-safe answer feedback. Practice guidance only — never a hiring decision.
- * Renders exactly the fields the backend provides (no invented metrics). The panel
+ * Renders exactly the fields the backend provides (no invented metrics). P2-03: the 0-100 overall_score carries a visible
+ * "Interview Answer Score" label and scope (THIS answer, not the full-interview Practice Readiness), and the seven EXISTING rubric
+ * dimensions (each 1-10) are shown with short descriptions. The overall score is model-produced and is NOT presented as an average,
+ * sum or formula of the dimensions; no score bands are invented. The panel
  * stays visible after evaluation so the candidate can read it before choosing to go
  * deeper or move on. Only the Ask4Mo-owned chrome (headings, section titles,
  * disclaimer) is localized; the evaluation text itself follows the conversation language.
@@ -19,13 +32,40 @@ export function InterviewEvaluation({ evaluation, heading }: {
   return (
     <Card>
       <CardBody>
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-sm font-semibold">{heading ?? t("practice.answerFeedbackHeading")}</h2>
-          <span className="text-sm text-muted" aria-label={t("practice.evalScoreAria", { score: evaluation.overall_score })}>
-            <span className="text-lg font-semibold text-foreground">{evaluation.overall_score}</span>/100
-          </span>
+        <h2 className="text-sm font-semibold">{heading ?? t("practice.answerFeedbackHeading")}</h2>
+
+        <section className="mt-3 rounded-lg border border-border bg-surface-2 p-4" data-testid="answer-score">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">{t("practice.answerScoreLabel")}</p>
+          {/* The accessible name lives on the group (aria-label), so "72 out of 100" is announced once and no duplicate text node is added to the page. */}
+          <p role="group" aria-label={t("practice.evalScoreAria", { score: evaluation.overall_score })} className="mt-1 flex items-baseline gap-1.5" data-testid="answer-score-value">
+            <span className="text-3xl font-bold text-foreground" aria-hidden="true">{evaluation.overall_score}</span>
+            <span className="text-base text-muted" aria-hidden="true">/ 100</span>
+          </p>
+          <p className="mt-2 text-sm text-foreground">{t("practice.answerScoreScope")}</p>
+          <p className="mt-1 text-xs text-muted">{t("practice.evalDisclaimer")}</p>
+        </section>
+
+        <div className="mt-4" data-testid="rubric-scores">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">{t("practice.rubricTitle")}</h3>
+          <dl className="mt-2 grid gap-x-6 gap-y-3 sm:grid-cols-2">
+            {DIMENSIONS.map(([field, key]) => {
+              const label = t(`practice.dim${key}`);
+              const value = evaluation[field];
+              return (
+                <div key={field} data-dimension={field} className="grid grid-cols-[1fr_auto] items-baseline gap-x-3">
+                  <dt className="text-sm font-medium text-foreground">{label}</dt>
+                  <dd className="m-0 text-sm font-semibold tabular-nums text-foreground">
+                    <span aria-hidden="true">{value} / 10</span>
+                    <span className="sr-only">{t("practice.dimAria", { dimension: label, score: value })}</span>
+                  </dd>
+                  <dd className="col-span-2 m-0 mt-0.5 text-xs text-muted">{t(`practice.dim${key}Desc`)}</dd>
+                </div>
+              );
+            })}
+          </dl>
+          <p className="mt-2 text-xs text-muted">{t("practice.rubricNote")}</p>
         </div>
-        <p className="mt-0.5 text-xs text-muted">{t("practice.evalDisclaimer")}</p>
+        <p className="mt-3 text-sm text-foreground" data-testid="next-step-cue">{t("practice.nextStepCue")}</p>
 
         <Section title={t("practice.evalWhatWorked")} items={evaluation.strengths} />
         <Section title={t("practice.evalWhatImprove")} items={evaluation.improvement_areas} />
