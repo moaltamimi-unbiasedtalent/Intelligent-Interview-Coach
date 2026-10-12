@@ -97,7 +97,11 @@ const fr: typeof en = {
     sharingTitle: "Partage et accès",
     sharingIntro:
       "Rien n’est partagé sans que vous le partagiez. Révoquer empêche les membres de voir un élément à partir de maintenant. Cela ne reprend rien de ce qu’ils ont déjà vu.",
-    sharingEmpty: "Vous ne partagez rien.",
+    sharingEmpty: "Rien n’est partagé pour le moment. Vos données sont privées par défaut : appartenir à un espace de travail ne donne à personne accès à votre CV, vos rapports, votre Story Bank ou d’autres données de préparation.",
+    manageSharingQuick: "Gérer le partage et l’accès",
+    sharingQuickNote: "Rien n’est partagé automatiquement. Vous voyez ici ce qui est partagé et pouvez l’arrêter.",
+    manageSharingCard: "Gérer le partage",
+    sharingViewOnly: "Les éléments partagés sont en lecture seule pour les personnes avec qui vous les partagez.",
     sharingLoadFailed: "Vos partages n’ont pas pu être chargés.",
     sharedReport: "Rapport d’entretien",
     sharedStory: "Histoire",

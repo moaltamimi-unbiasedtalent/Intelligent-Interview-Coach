@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useT } from "@/components/i18n/I18nProvider";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -176,7 +177,14 @@ export function WorkspacesPanel() {
       )}
 
       <section className="grid gap-2">
-        <h2 className="text-base font-semibold">{t("workspaces.sharedByMe")}</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-base font-semibold">{t("workspaces.sharedByMe")}</h2>
+          {/* Pilot 2 (P2-01): one obvious route from Workspaces to the canonical sharing-management surface. */}
+          <Link href="/account/data#sharing" data-testid="manage-sharing-link"
+                className="text-sm font-semibold text-accent hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2">
+            {t("workspaces.manageSharingLink")}
+          </Link>
+        </div>
         {sharedByMe.length === 0 && <p className="text-sm text-muted">{t("workspaces.emptyShares")}</p>}
         {sharedByMe.map((s) => (
           <Card key={s.id}>

@@ -642,6 +642,7 @@ const nl: Catalog = {
     revoke: "Intrekken",
     emptyWorkspaces: "U zit nog in geen enkele werkruimte.",
     emptyShares: "Nog niets gedeeld.",
+    manageSharingLink: "Delen en toegang beheren",
     fbPrompt: "Wat was het belangrijkste probleem? (optioneel)",
     fbIncorrect: "Onjuist",
     fbIrrelevant: "Irrelevant",

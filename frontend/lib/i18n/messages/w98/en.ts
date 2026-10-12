@@ -101,7 +101,11 @@ const en = {
     sharingTitle: "Sharing and access",
     sharingIntro:
       "Nothing is shared unless you share it. Revoking stops members from viewing an item from now on. It does not take back anything they already saw.",
-    sharingEmpty: "You are not sharing anything.",
+    sharingEmpty: "Nothing is shared right now. Your data is private by default: belonging to a workspace does not give anyone access to your CV, reports, Story Bank or other preparation data.",
+    manageSharingQuick: "Manage sharing & access",
+    sharingQuickNote: "Nothing is shared automatically. Here you can see what is shared and stop it.",
+    manageSharingCard: "Manage sharing",
+    sharingViewOnly: "Shared items are view-only for the people you share them with.",
     sharingLoadFailed: "Your shares could not be loaded.",
     sharedReport: "Interview report",
     sharedStory: "Story",
