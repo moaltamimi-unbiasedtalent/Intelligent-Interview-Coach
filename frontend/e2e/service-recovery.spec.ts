@@ -111,8 +111,12 @@ test("Progress recovery error/retry renders at mobile width (390px)", async ({ p
   const retry = page.getByRole("button", { name: /try again/i });
   await expect(retry).toBeVisible();
   // The Retry control is reachable and not clipped off-screen at phone width.
-  const box = await retry.boundingBox();
-  expect(box).not.toBeNull();
-  expect(box!.x).toBeGreaterThanOrEqual(0);
-  expect(box!.x + box!.width).toBeLessThanOrEqual(390);
+  // The two Progress resources settle independently (a section error can be replaced by the single page-level error),
+  // so read the CURRENT rectangle from the live locator inside a retrying assertion instead of one point-in-time read.
+  await expect
+    .poll(async () => {
+      const box = await retry.boundingBox();
+      return box !== null && box.x >= 0 && box.x + box.width <= 390;
+    })
+    .toBe(true);
 });
