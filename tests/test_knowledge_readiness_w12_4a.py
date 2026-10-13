@@ -330,6 +330,90 @@ def test_active_inventory_is_bounded_metadata_only(kit):
     assert row["chunk_count"] > 0 and row["collection"] == "governed_knowledge" and row["index_state"] == "built" and row["embedder"] == "LocalHashEmbedder"
 
 
+# =========================================================================== R-1: recovered failures are history, not current state
+def _fail_then_recover(k: "Kit"):
+    """The EXACT operator sequence: a real worker fails the parse with scan_unavailable (no scanner), the failed job row stays in history,
+    the version is reprocessed once a scanner exists, and then it is approved, indexed (real worker) and activated."""
+    from src.documents.file_security import NullScanner
+    from src.persistence import Job
+
+    k.runtime.scanner = NullScanner()                          # the developer environment: no scanner configured
+    v = k.upload()["version_public_id"]
+    for _ in range(6):                                         # the real worker fails it; later attempts wait for the retry clock
+        k.drain()
+        k.clock.now = k.clock.now + timedelta(hours=1)
+    assert k.svc.version_detail(v)["state"] == "failed" and k.svc.version_detail(v)["failure_category"] == "scan_unavailable"
+    with k.sf() as s:
+        assert s.query(Job).filter(Job.state == "failed").count() >= 1            # the failed row is stored history
+    k.runtime.scanner = FakeScanner()                          # a scanner becomes available
+    k.svc.reprocess(v, actor_user_id=1)
+    k.drain()
+    k.svc.approve(v, actor_user_id=1)
+    k.svc.request_index(v, actor_user_id=1)
+    k.drain()
+    k.svc.activate(v, actor_user_id=1)
+    return v
+
+
+def test_r1_root_cause_a_recovered_failure_does_not_degrade_a_healthy_active_corpus(tmp_path):
+    """Pre-fix this failed: readiness counted every failed job ever recorded and read DEGRADED forever after a recovered failure."""
+    k = Kit(tmp_path)
+    _fail_then_recover(k)
+    out = k.readiness.readiness()
+    assert out["failed_job_count"] >= 1                        # history is retained and still reported (informational)
+    assert out["failed_version_count"] == 0 and out["indexed_active_version_count"] == 1
+    assert k.store.count() > 0 and k.test()["result_count"] > 0 and k.test()["sources"][0]["origin"] == "admin_governed"   # retrieval works
+    assert out["status"] == "ready" and out["candidate_retrieval_ready"] is True and out["governed_retrieval_ready"] is True
+
+
+def test_r1_recovered_then_retired_reads_no_active_sources_not_degraded(tmp_path):
+    from src.copilot.models import DocumentChunk
+
+    k = Kit(tmp_path)
+    v = _fail_then_recover(k)
+    k.curated.add_chunks([DocumentChunk(chunk_id="curated-1", doc_id="curated-doc", text="Synthetic curated note about interview preparation.",
+                                        position=0, metadata={"title": "Synthetic curated note"})])
+    k.svc.retire(v, actor_user_id=1)
+    k.drain()                                                  # the real worker removes the vectors
+    out = k.readiness.readiness()
+    assert out["failed_job_count"] >= 1                        # the historical failed job is still there
+    assert out["status"] == "no_active_sources" and out["active_source_count"] == 0
+    assert out["curated_corpus"]["status"] == "available" and out["candidate_retrieval_ready"] is True
+    assert k.test()["result_count"] == 0 or all(src["origin"] != "admin_governed" for src in k.test()["sources"])
+
+
+def test_r1_a_genuinely_unresolved_failure_still_degrades_or_fails(tmp_path):
+    from src.persistence import KnowledgeIndexRecord as R
+    from src.persistence import KnowledgeSourceVersion as V
+
+    # (a) healthy active source + ANOTHER version that is currently failed -> DEGRADED
+    k = Kit(tmp_path)
+    k.lifecycle_to("active")
+    v2 = k.svc.add_version(k.svc.list_sources()["items"][0]["source_public_id"], filename="v2.txt", data=(DOC + " Second version.").encode(), actor_user_id=None, **META)["version_public_id"]
+    with k.sf() as s:
+        s.query(V).filter(V.public_id == v2).update({"state": "failed", "failed_stage": "index", "failure_category": "unavailable"})
+        s.commit()
+    assert k.readiness.readiness()["status"] == "degraded"
+    # (b) a failed index REMOVAL on a retired version is a current unresolved condition -> DEGRADED
+    (tmp_path / "b").mkdir()
+    k2 = Kit(tmp_path / "b")
+    v = k2.lifecycle_to("active")
+    with k2.sf() as s:
+        s.query(R).update({"state": "removal_failed"})
+        s.commit()
+    assert k2.readiness.readiness()["status"] == "degraded" and v
+    # (c) nothing active and a version currently failed -> INDEX_FAILED (unchanged precedence)
+    (tmp_path / "c").mkdir()
+    k3 = Kit(tmp_path / "c")
+    cv = k3.upload()["version_public_id"]
+    k3.drain()
+    k3.svc.approve(cv, actor_user_id=1)
+    with k3.sf() as s:
+        s.query(V).filter(V.public_id == cv).update({"state": "failed", "failed_stage": "index", "failure_category": "unavailable"})
+        s.commit()
+    assert k3.readiness.readiness()["status"] == "index_failed"
+
+
 # =========================================================================== governance invariants through the production boundary
 def _found(kit):
     out = kit.test()
