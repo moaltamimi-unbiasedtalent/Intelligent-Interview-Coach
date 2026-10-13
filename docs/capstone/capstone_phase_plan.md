@@ -105,7 +105,9 @@ the critical path (can slip without blocking W10). W10.5, W10.7, W10.9, W10.11 a
 
 **W12.2 Admin Owner Walkthrough: OWNER ACCEPTED WITH FOLLOW-UP ITEMS** (2026-10-13). Medium and low UX findings remain tracked and unresolved; the acceptance waives no limitation.
 
-**Current next sequence:** 1. Canonical journey documentation: Candidate Journey, then Platform Admin Journey, then the specialist Admin journeys. 2. Integrated Candidate + Admin requalification. 3. Successor RC-P10-004. 4. AC-24 final successor-RC closure where the criterion is met (AC-24 stays PARTIAL until then). 5. P10C later. None of these has started.
+**Candidate Journey (W12.3A): COMPLETE** once its PR merges: `journeys/CANDIDATE_JOURNEY.md` is the canonical current-state document (docs-only; eight documentation findings D-01 to D-08 recorded, none fixed).
+
+**Current next sequence:** 1. Canonical journey documentation: Candidate Journey (complete), then **Platform Admin Journey (next)**, then the specialist Admin journeys. 2. Integrated Candidate + Admin requalification. 3. Successor RC-P10-004. 4. AC-24 final successor-RC closure where the criterion is met (AC-24 stays PARTIAL until then). 5. P10C later. None of these has started.
 
 **Admin principle.** PLATFORM ADMIN != UNRESTRICTED PRIVATE-CANDIDATE-DATA SUPERUSER. Admin scope is classified as
 Capstone must-have vs production-ready mock/adapter-acceptable in the Admin master plan section 6; a mock is never

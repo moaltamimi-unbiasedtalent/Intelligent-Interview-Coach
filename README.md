@@ -42,6 +42,9 @@ Opportunity  →  Prepare  →  Practice  →  Progress / History      (Mo is av
 - **Data & Privacy** (`/account/data`) - see what is stored, download a copy, remove
   individual items, revoke sharing, delete the account (with the limits listed below).
 
+The full, current stage-by-stage description is the canonical
+[Candidate Journey](docs/capstone/journeys/CANDIDATE_JOURNEY.md).
+
 ## Architecture at a glance
 
 Primary product stack: **Next.js + FastAPI**. The authoritative architecture description is
@@ -85,11 +88,13 @@ tools, three specialist tools, two human-action tools).
   is in-memory by default (a shared Redis adapter exists behind `RATE_LIMIT_BACKEND=redis` + `REDIS_URL`
   but is optional, off by default and not validated against a live Redis, so distributed limiting is not
   claimed); production OIDC and live PostgreSQL validation are follow-ups.
-- **Admin today (P10B-W10, qualified in W10.14):** a permission-based Admin control plane (`/admin`): users, access and workspaces,
+- **Admin today (P10B-W10, qualified in W10.14; owner role since W12.1):** a permission-based Admin control plane (`/admin`): users, access and workspaces,
   Support ticketing, plans/entitlements, **MOCK** billing, integrations and a read-only SecretStore, governed AI/model configuration,
   governed knowledge, durable jobs, privacy and legal operations, durable pause and restriction-only feature flags, aggregate reporting,
-  and security/audit/incident management. 43 code-defined permissions and six least-privilege role presets (`platform_admin` is broad
-  but not universal); no break-glass, no impersonation, and Admins are never a private-candidate-data superuser. Not built: Support
+  and security/audit/incident management. 43 code-defined permissions and six role presets: `platform_admin` is the platform owner / orchestrator holding all 43
+  canonical control-plane permissions (AD-W12-01, W12.1; W10.14 historically qualified it at 28 of 43), while the five specialist
+  roles remain least-privilege delegated roles; no break-glass, no impersonation, and Admins are never a private-candidate-data
+  superuser (step-up, two-person approval and audit are not bypassed by the owner). Not built: Support
   attachments, Admin workspace deactivation, universal operator search, live billing, a production secret vault and external paging.
 - **Prompt-injection and data-handling rules** are summarised below and in
   [docs/security.md](docs/security.md) and [docs/privacy.md](docs/privacy.md).

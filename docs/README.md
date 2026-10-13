@@ -6,7 +6,8 @@ documents are historical evidence and are labelled where they could be mistaken 
 
 | Topic | Canonical source |
 |---|---|
-| What the product is, candidate journey, current limitations | [../README.md](../README.md) |
+| What the product is, candidate journey summary, current limitations | [../README.md](../README.md) |
+| Canonical current-state Candidate Journey (stage by stage: Opportunity, Prepare, Practice, Progress and History, sharing, data control) | [capstone/journeys/CANDIDATE_JOURNEY.md](capstone/journeys/CANDIDATE_JOURNEY.md) |
 | Current architecture (layers, agent, specialists, tools, evaluation, identity, admin, languages) | [sprint4_architecture.md](sprint4_architecture.md) - read its "Current-state overview" first |
 | Registered tools (names and count) | `career_tool_registry` in `src/agent/registry.py` (do not hard-code counts elsewhere) |
 | Specialists | `src/agent/specialists/registry.py` (three; there is no Evaluation specialist) |
@@ -24,7 +25,7 @@ documents are historical evidence and are labelled where they could be mistaken 
 | Pilot 2 preparation pack for RC-P10-003 (as prepared BEFORE the sessions: no human sessions had run and AC-24 was NOT RUN; superseded for status by the results row below). Historical RC-P10-002 pilot files (`pilot2_readiness.md`, `pilot2_runbook.md`, `sessions/P01_pilot2_template.md`) are preserved unchanged as immutable evidence | [capstone/p10/pilot2/RC_P10_003_PILOT2_REACTIVATION.md](capstone/p10/pilot2/RC_P10_003_PILOT2_REACTIVATION.md), [readiness](capstone/p10/pilot2/RC_P10_003_PILOT2_READINESS.md), [runbook](capstone/p10/pilot2/RC_P10_003_PILOT2_RUNBOOK.md), [tasks](capstone/p10/pilot2/RC_P10_003_PARTICIPANT_TASKS.md), [session template](capstone/p10/pilot2/sessions/P01_RC_P10_003_TEMPLATE.md), [results template](capstone/p10/pilot2/RC_P10_003_PILOT2_RESULTS_TEMPLATE.md) |
 | Pilot 2 results, issue register and triage for RC-P10-003 (n=3 evidenced sessions; verdict CONDITIONAL GO - TARGETED REMEDIATION REQUIRED; AC-24 PARTIAL; historical readiness pack above is preserved) | [capstone/p10/pilot2/RC_P10_003_PILOT2_RESULTS.md](capstone/p10/pilot2/RC_P10_003_PILOT2_RESULTS.md), [issue register](capstone/p10/pilot2/RC_P10_003_PILOT2_ISSUE_REGISTER.md), [triage](capstone/p10/pilot2/RC_P10_003_PILOT2_TRIAGE.md), [participant summaries](capstone/p10/pilot2/RC_P10_003_PILOT2_PARTICIPANT_SUMMARIES.md) |
 | Pilot remediation P2-02: isolated synthetic knowledge fixture for Sources/RAG validation (REMEDIATED - PENDING HUMAN REVALIDATION) | [capstone/p10/pilot2/P2_02_ISOLATED_KNOWLEDGE_FIXTURE.md](capstone/p10/pilot2/P2_02_ISOLATED_KNOWLEDGE_FIXTURE.md) |
-| Admin decision AD-W12-01: Platform Admin owner / orchestrator, 43 / 43 (decided, not implemented) | [capstone/admin/AD_W12_01_PLATFORM_ADMIN_OWNER_ORCHESTRATOR.md](capstone/admin/AD_W12_01_PLATFORM_ADMIN_OWNER_ORCHESTRATOR.md) |
+| Admin decision AD-W12-01: Platform Admin owner / orchestrator, 43 / 43 (owner approved, implemented in W12.1) | [capstone/admin/AD_W12_01_PLATFORM_ADMIN_OWNER_ORCHESTRATOR.md](capstone/admin/AD_W12_01_PLATFORM_ADMIN_OWNER_ORCHESTRATOR.md) |
 | Admin full qualification, ROLE-W10-01 closed (W10.14, complete) | [capstone/admin/W10_14_FULL_ADMIN_QUALIFICATION.md](capstone/admin/W10_14_FULL_ADMIN_QUALIFICATION.md) |
 | Admin security, audit and incident management (W10.13, complete) | [capstone/admin/W10_13_SECURITY_AUDIT_INCIDENT_MANAGEMENT.md](capstone/admin/W10_13_SECURITY_AUDIT_INCIDENT_MANAGEMENT.md) |
 | Admin reporting, analytics and AI economics (W10.12, complete) | [capstone/admin/W10_12_REPORTING_ANALYTICS_AI_ECONOMICS.md](capstone/admin/W10_12_REPORTING_ANALYTICS_AI_ECONOMICS.md) |
