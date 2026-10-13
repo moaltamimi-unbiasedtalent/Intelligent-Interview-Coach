@@ -6,6 +6,30 @@ them. Namespaced under ``src.copilot`` to coexist with Interview Practice Studio
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
+
+# --- Data root (W12.4A) -----------------------------------------------------
+# Every default store path below is anchored to ONE data root instead of the process working directory. Before W12.4A the defaults were
+# relative ("data/chroma", "data/knowledge/roles.db", ...), so an app, worker or script started from any other directory silently saw
+# an EMPTY knowledge base (and an API and a worker started from different directories used different stores). The root is the
+# repository's `data/` directory, or `COPILOT_DATA_DIR` when set (an explicit override is how an isolated or deployed instance relocates it).
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def resolve_data_root() -> Path:
+    override = os.environ.get("COPILOT_DATA_DIR", "").strip()
+    return (Path(override).expanduser().resolve() if override else REPO_ROOT / "data")
+
+
+DATA_ROOT = resolve_data_root()
+
+
+def data_path(relative: str = "") -> str:
+    """Absolute path under the data root (never relative to the working directory)."""
+    return str(DATA_ROOT / relative) if relative else str(DATA_ROOT)
+
+
 # --- Identity ----------------------------------------------------------------
 
 APP_NAME = "Career Intelligence Copilot"
@@ -79,10 +103,10 @@ LOCAL_EMBEDDING_MODEL = "local-hash-v1"
 
 # --- Knowledge base / vector store paths (used from Phase 2) -----------------
 
-DATA_DIR = "data"
-RAW_DIR = "data/raw"
-PROCESSED_DIR = "data/processed"
-CHROMA_PERSIST_DIR = "data/chroma"
+DATA_DIR = data_path()
+RAW_DIR = data_path("raw")
+PROCESSED_DIR = data_path("processed")
+CHROMA_PERSIST_DIR = data_path("chroma")
 
 # --- Input limits (defensive; untrusted user input) --------------------------
 
@@ -116,8 +140,8 @@ CHUNK_OVERLAP = 150
 ID_HASH_LENGTH = 16
 
 # Where the ingestion CLI writes processed chunks + a manifest (no embeddings).
-PROCESSED_CHUNKS_FILE = "data/processed/chunks.jsonl"
-PROCESSED_MANIFEST_FILE = "data/processed/manifest.json"
+PROCESSED_CHUNKS_FILE = data_path("processed/chunks.jsonl")
+PROCESSED_MANIFEST_FILE = data_path("processed/manifest.json")
 
 # --- Vector store / retrieval ------------------------------------------------
 
@@ -363,16 +387,16 @@ COUNTRY_SOURCE_PRIORITY = {
 }
 
 # Default local stores for the structured knowledge (git-ignored, like data/).
-ROLE_DB_PATH = "data/knowledge/roles.db"
-COMPENSATION_DB_PATH = "data/knowledge/compensation.db"
-COMPETENCY_DB_PATH = "data/knowledge/competencies.db"
-LABOUR_MARKET_DB_PATH = "data/knowledge/labour_market.db"
-CREDENTIAL_DB_PATH = "data/knowledge/credentials.db"
-SOURCE_MANIFEST_PATH = "data/source_manifest.json"
+ROLE_DB_PATH = data_path("knowledge/roles.db")
+COMPENSATION_DB_PATH = data_path("knowledge/compensation.db")
+COMPETENCY_DB_PATH = data_path("knowledge/competencies.db")
+LABOUR_MARKET_DB_PATH = data_path("knowledge/labour_market.db")
+CREDENTIAL_DB_PATH = data_path("knowledge/credentials.db")
+SOURCE_MANIFEST_PATH = data_path("source_manifest.json")
 # Generated runtime lifecycle status (derived; not hand-maintained).
-SOURCE_STATUS_PATH = "data/source_status.json"
+SOURCE_STATUS_PATH = data_path("source_status.json")
 # Per-source data-origin ledger written by the loaders (git-ignored, derived).
-DATA_ORIGINS_PATH = "data/knowledge/data_origins.json"
+DATA_ORIGINS_PATH = data_path("knowledge/data_origins.json")
 
 # --- Data origin -------------------------------------------------------------
 # Where a source's loaded records actually came from. This is the axis that keeps

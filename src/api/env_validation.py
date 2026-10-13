@@ -14,11 +14,12 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
+from src.constants import DEFAULT_DATABASE_URL as _DEFAULT_SQLITE
+
 __all__ = ["EnvReport", "validate_runtime_config", "enforce_runtime_config", "runtime_env"]
 
 _DEV_ENVS = {"development", "dev", "local"}
 _TEST_ENVS = {"test", "testing"}
-_DEFAULT_SQLITE = "sqlite:///data/interview_studio.db"
 
 
 def runtime_env() -> str:

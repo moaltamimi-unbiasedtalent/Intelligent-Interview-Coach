@@ -11,9 +11,12 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from sqlalchemy import select
 
-from src.api.dependencies import get_audit_repository, get_knowledge_admin_service, get_request_id, require_permission
+from src.api.dependencies import (
+    get_audit_repository, get_career_service, get_knowledge_admin_service, get_knowledge_readiness_service, get_request_id, require_permission,
+)
 from src.api.schemas.admin import (
-    KnowledgeList, KnowledgeMeta, KnowledgeMetaUpdate, KnowledgeRejectRequest, KnowledgeSourceDetail, KnowledgeVersionDetail,
+    KnowledgeActiveList, KnowledgeList, KnowledgeMeta, KnowledgeMetaUpdate, KnowledgeReadiness, KnowledgeRejectRequest,
+    KnowledgeRetrievalTestRequest, KnowledgeRetrievalTestResult, KnowledgeSourceDetail, KnowledgeVersionDetail,
 )
 from src.application import admin_audit as A
 from src.application import admin_permissions as perm
@@ -59,6 +62,31 @@ def meta(_p=Depends(require_permission(perm.KNOWLEDGE_READ))) -> KnowledgeMeta:
         licence_classes=[{"code": c, "label": P.LICENCE_LABEL[c], "activatable": c in P.ACTIVATABLE_LICENCES} for c in P.LICENCE_CLASSES],
         states=list(P.STATES), rejection_reasons=list(P.REJECTION_REASONS),
         upload={"max_bytes": P.MAX_UPLOAD_BYTES, "extensions": sorted(P.ALLOWED_EXTENSIONS), "preview_chars": P.PREVIEW_CHARS})
+
+
+@router.get("/readiness", response_model=KnowledgeReadiness,
+            summary="Derived knowledge readiness: lifecycle, worker, store, embedder and candidate-retrieval state (safe metadata only)")
+def readiness(_p=Depends(require_permission(perm.KNOWLEDGE_READ)), svc=Depends(get_knowledge_readiness_service)) -> KnowledgeReadiness:
+    return KnowledgeReadiness(**svc.readiness())
+
+
+@router.get("/active", response_model=KnowledgeActiveList, summary="What governed knowledge is active right now (metadata only, no content)")
+def active(_p=Depends(require_permission(perm.KNOWLEDGE_READ)), svc=Depends(get_knowledge_readiness_service)) -> KnowledgeActiveList:
+    items = svc.active_inventory()
+    return KnowledgeActiveList(items=items, total=len(items))
+
+
+@router.post("/test-retrieval", response_model=KnowledgeRetrievalTestResult,
+             summary="Retrieval-only test through the production retrieval boundary (no model call, no answer, no overrides)")
+def test_retrieval(body: KnowledgeRetrievalTestRequest, _p=Depends(require_permission(perm.KNOWLEDGE_READ)),
+                   career=Depends(get_career_service), svc=Depends(get_knowledge_readiness_service)) -> KnowledgeRetrievalTestResult:
+    from src.application.errors import ApplicationError
+    from src.knowledge_admin.readiness import run_retrieval_test
+
+    try:
+        return KnowledgeRetrievalTestResult(**run_retrieval_test(career, body.query, governed_version_ids=svc.active_version_ids()))
+    except ApplicationError:
+        raise HTTPException(status_code=503, detail="Knowledge retrieval is unavailable right now.")
 
 
 @router.get("/sources", response_model=KnowledgeList, summary="Sources with their current version (server-side filters, pagination)")

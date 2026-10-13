@@ -160,6 +160,7 @@ function VersionDetail({ d, reload }: { d: KnowledgeVersionDetail; reload: () =>
             <ul className="list-disc pl-5">{d.blockers.map((b) => <li key={b}>{b}</li>)}</ul>
           </div>
         ) : null}
+        <WorkerHint state={d.state} />
         <p className="text-sm">
           Related jobs:{" "}
           {d.parse_job_id ? <Link href={`/admin/jobs/${d.parse_job_id}`} className="underline underline-offset-2">Scan and parse job</Link> : "none"}
@@ -190,5 +191,18 @@ function VersionDetail({ d, reload }: { d: KnowledgeVersionDetail; reload: () =>
         )}
       </Panel>
     </div>
+  );
+}
+
+/** W12.4A: when work is queued, say plainly whether anything can progress it (worker presence comes from heartbeats only). */
+function WorkerHint({ state }: { state: string }) {
+  const waiting = state === "queued" || state === "processing" || state === "indexing";
+  const readiness = useAdminResource(() => (waiting ? api.admin.knowledgeReadiness() : Promise.resolve(null)), [waiting]);
+  if (!waiting || readiness.state !== "ready" || !readiness.data) return null;
+  if (readiness.data.worker.status === "available") return <p className="text-xs text-muted" data-testid="worker-hint">A worker is reporting, so this job can progress.</p>;
+  return (
+    <p className="text-sm" role="status" data-testid="worker-hint">
+      This job is queued but cannot progress until a job worker is running. Open Jobs to check worker state.
+    </p>
   );
 }

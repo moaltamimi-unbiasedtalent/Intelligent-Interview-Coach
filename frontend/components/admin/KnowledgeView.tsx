@@ -9,6 +9,7 @@ import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities"
 import type { KnowledgeMeta, KnowledgeQuery } from "@/lib/admin/types";
 import { Pager, Panel, PermissionGate, ResourceState, StatusLabel, apiMessage, btn, field, useAdminResource } from "./ui";
 import { SCAN_LABEL, label, stateText } from "./knowledgeLabels";
+import { KnowledgeReadinessPanels } from "./KnowledgeReadiness";
 
 export function KnowledgeView() {
   return (
@@ -25,6 +26,7 @@ function Body() {
   const [query, setQuery] = useState<KnowledgeQuery>({ page: 1 });
   const meta = useAdminResource(() => api.admin.knowledgeMeta(), []);
   const loaded = useAdminResource(() => api.admin.knowledgeSources({ ...query, page_size: 25 }), [JSON.stringify(query)]);
+  const hasFilter = Object.entries(query).some(([k, v]) => k !== "page" && k !== "page_size" && v !== undefined && v !== "");
   const set = (k: keyof KnowledgeQuery) => (e: { target: { value: string } }) => setDraft({ ...draft, [k]: e.target.value });
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -36,6 +38,7 @@ function Body() {
         This is the platform knowledge base, not candidate data. A source is never used in answers until it has been scanned, parsed,
         reviewed, approved, indexed and explicitly activated.
       </p>
+      <KnowledgeReadinessPanels canTest />
       <ResourceState loaded={meta}>
         {meta.state === "ready" ? (
           <>
@@ -61,7 +64,14 @@ function Body() {
       <ResourceState loaded={loaded}>
         {loaded.state === "ready" ? (
           <Panel title="Sources">
-            {loaded.data.items.length === 0 ? <p className="text-sm text-muted">No sources match.</p> : (
+            {loaded.data.items.length === 0 ? (
+              hasFilter ? <p className="text-sm text-muted">No sources match.</p> : (
+                <div className="grid gap-1 text-sm" data-testid="knowledge-empty">
+                  <p>No governed Knowledge sources are active.</p>
+                  <p className="text-muted">This is not an error. To add knowledge: register a source, review it, approve it, index it, then activate it. Nothing is used in answers before then.</p>
+                </div>
+              )
+            ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <caption className="sr-only">Knowledge sources</caption>

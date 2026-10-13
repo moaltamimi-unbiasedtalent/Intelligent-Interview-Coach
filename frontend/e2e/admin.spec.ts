@@ -57,6 +57,20 @@ const USER_DETAIL = {
   workspaces: [{ workspace_id: 3, name: "Team Alpha", workspace_status: "active", role: "workspace_member", membership_status: "active", joined_at: null }],
   audit: [],
 };
+/** W12.4A: a deterministic readiness projection for the mocked knowledge lifecycle (the real derivation is proven by the Python suites). */
+function kbReadiness(state: string) {
+  const active = state === "active";
+  return {
+    status: active ? "ready" : "no_active_sources",
+    message: active ? "Governed knowledge is active, indexed and present in the store candidate retrieval reads." : "No governed knowledge source is active. Register, review, approve, index and activate a source.",
+    candidate_retrieval_ready: true, governed_retrieval_ready: active, source_count: state === "none" ? 0 : 1, active_source_count: active ? 1 : 0,
+    active_version_count: active ? 1 : 0, indexed_active_version_count: active ? 1 : 0, pending_job_count: 0, failed_job_count: 0, awaiting_review_count: 0,
+    failed_version_count: 0, worker: { status: "available", seen_recently: 1, last_seen_at: "2026-10-13T10:00:00", stale_after_seconds: 60 },
+    collection_status: active ? "ok" : "empty_or_missing", collection: "governed_knowledge", store: { kind: "persistent", chunk_count: active ? 4 : 0, location: "default" },
+    embedding_provider_status: "available", embedder_state: { status: "available", provider: "local", embedder: "LocalHashEmbedder", note: "offline local embedder" },
+    curated_corpus: { status: "available", chunk_count: 100, store_kind: "persistent" }, last_indexed_at: null, last_failure_category: null, last_failure_stage: null,
+  };
+}
 // Stateful stand-in for the knowledge lifecycle. The test plays the W10.9 worker by calling kb.worker(); the real lifecycle with a
 // real worker is proven by tests/test_knowledge_admin_w10_8.py and the manual QA.
 // Stateful stand-in for the governed AI configuration lifecycle. The test plays the W10.9 worker by calling ai.worker(); the real lifecycle (worker,
@@ -280,6 +294,12 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
     if (path.endsWith("/admin/privacy/requests")) return json({ items: [priv.row()], total: 1, page: 1, page_size: 25 });
     if (/\/admin\/legal\/versions\/\d+\/publish$/.test(path) && method === "POST") { priv.legalPublished = true; return json(priv.version(2, "published")); }
     if (path.endsWith("/admin/legal")) return json(priv.legal());
+    if (path.endsWith("/admin/knowledge/readiness")) return json(kbReadiness(kb.state));
+    if (path.endsWith("/admin/knowledge/active")) return json({ items: [], total: 0 });
+    if (path.endsWith("/admin/knowledge/test-retrieval") && method === "POST") return json({ status: "evidence_found", query: "roadmap", retrieval_mode: "hybrid",
+      retrieval_lane: "vector", result_count: 1, source_count: 1, insufficient_evidence: false, latency: "under_250ms",
+      sources: [{ title: "Synthetic roadmap framework", publisher: "Example Framework Body", authority_level: 2, evidence_type: "narrative", geography: null, origin: "admin_governed" }],
+      excerpts: [{ title: "Synthetic roadmap framework", text: "Digital product managers prioritise a roadmap.", origin: "admin_governed" }], note: "Retrieval only: no model or LLM was called." });
     if (path.endsWith("/admin/knowledge/meta")) return json({ languages: ["en", "de", "fr", "es", "it", "pt", "nl"],
       authority_levels: [{ level: 1, meaning: "Level 1: official or statistical source" }, { level: 2, meaning: "Level 2: public or professional framework" }, { level: 3, meaning: "Level 3: reputable public industry research" }],
       licence_classes: [{ code: "public_official", label: "Public / official source", activatable: true }, { code: "unclear", label: "Unclear (cannot be activated)", activatable: false }],
@@ -553,7 +573,8 @@ test("W10.8: upload, scan/parse (worker), preview, approve, index (worker), acti
   await page.goto("/admin");
   await page.getByRole("navigation", { name: "Admin" }).getByRole("link", { name: /Knowledge/ }).click();
   await expect(page.getByRole("heading", { name: "Knowledge", exact: true })).toBeVisible();
-  await expect(page.getByText("No sources match.")).toBeVisible();
+  await expect(page.getByTestId("knowledge-empty")).toContainText("No governed Knowledge sources are active");   // W12.4A: a truthful empty state, not an error
+  await expect(page.getByTestId("knowledge-readiness")).toContainText("No active sources");
   await page.getByLabel("Title", { exact: true }).fill("Product framework");
   await page.getByLabel("Publisher", { exact: true }).fill("Example Body");
   await page.getByLabel(/^File/).setInputFiles({ name: "framework.txt", mimeType: "text/plain", buffer: Buffer.from("Product managers prioritise a roadmap.") });
@@ -717,6 +738,30 @@ test("W12.1 (AD-W12-01): the owner / orchestrator (all 43 permissions) is shown 
   // ... and a specialist still sees only its delegated destinations
   const billing: string[] = fixture.personas.billing_admin.nav;
   expect(billing).not.toContain("/admin/jobs");
+});
+
+test("W12.4A: Knowledge readiness, the worker state and a retrieval-only test are on /admin/knowledge, for the owner and the Knowledge Admin", async ({ page }) => {
+  for (const role of ["platform_admin", "knowledge_admin"]) {
+    kb.state = "none";
+    await page.unrouteAll({ behavior: "ignoreErrors" });
+    await mockAdmin(page, role, role === "platform_admin" ? ADMIN_PERMS : ["platform.overview.read", "platform.knowledge.read", "platform.ai.read", "platform.jobs.read"]);
+    await page.goto("/admin/knowledge");
+    const ready = page.getByTestId("knowledge-readiness");
+    await expect(ready).toContainText("No active sources");
+    await expect(page.getByTestId("candidate-ready")).toContainText("Yes");
+    await expect(page.getByTestId("worker-state")).toContainText("Worker reporting");
+    await expect(page.getByTestId("store-state")).toContainText("governed_knowledge");
+    await expect(page.getByText("This tests the active Knowledge retrieval path. It does not call Mo or an LLM.")).toBeVisible();
+    await page.getByLabel("Test query").fill("roadmap");
+    await page.getByRole("button", { name: "Test retrieval" }).click();
+    const result = page.getByTestId("retrieval-result");
+    await expect(result).toContainText("1 evidence item(s) from 1 source(s)");
+    await expect(result).toContainText("Admin-governed");
+    await expect(result).toContainText("Retrieval only: no model or LLM was called");
+    // no new top-level destination and no raw internals
+    await expect(page.getByRole("navigation", { name: "Admin" }).getByRole("link", { name: /Knowledge/ })).toHaveCount(1);
+    expect(await page.locator("body").innerText()).not.toMatch(/Traceback|\/Users\/|\/tmp\//);
+  }
 });
 
 test("candidate is denied the admin area", async ({ page }) => {

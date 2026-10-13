@@ -78,7 +78,7 @@ def run() -> dict[str, tuple[bool, str]]:
     nocomment = "\n".join(l for l in all_routes_src.splitlines() if not l.lstrip().startswith("#"))
     check("zero_direct_role_name_authorization_in_routes", not re.search(r"require_platform_admin\(|is_platform_admin\(|platform_role\s*(==|!=)\s*[\"']", nocomment), "permission strings are the only authority")
     inv = M.mutation_inventory()
-    check("every_privileged_mutation_audited_in_handler_or_service", [r["path"] for r in inv if not r["audited_in_handler"]] == ["/admin/step-up"], f"{len(inv)} mutating routes")
+    check("every_privileged_mutation_audited_in_handler_or_service", [r["path"] for r in inv if not r["audited_in_handler"]] == ["/admin/knowledge/test-retrieval", "/admin/step-up"], f"{len(inv)} mutating routes (the retrieval test is a read-only POST with no mutation)")
     check("get_routes_do_not_mutate", not [r.path for r in routes if r.methods == ("GET",) and re.search(r"\.(add|delete|commit)\(|\.enqueue\(|build_audit\(", __import__("inspect").getsource(r.route.endpoint))])
     check("no_generic_config_or_role_endpoint", not re.search(r'"/admin/(config|settings|env|roles|permissions)"', all_routes_src) and not [r.path for r in routes if r.path.endswith(("/role",)) and "/members/" not in r.path and r.methods != ("GET",)])
 

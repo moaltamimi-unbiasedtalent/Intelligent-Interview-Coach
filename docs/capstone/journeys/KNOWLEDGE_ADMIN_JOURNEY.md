@@ -7,7 +7,7 @@ This document describes what the **knowledge_admin** role can do **today**, deri
 
 ## 1. Role purpose
 
-Govern the platform knowledge base: register sources, upload and review them, approve them, index them, activate them and retire them, and read AI-configuration and job state. **The Knowledge area has an OWNER-REPORTED OPERATIONAL ISSUE with its ROOT CAUSE NOT YET DIAGNOSED.** Authorization is by permission string only; the role name is never checked by any route. The role is a code-defined preset and cannot be customised. It is a delegated, least-privilege operational role, not a junior Platform Admin.
+Govern the platform knowledge base: register sources, upload and review them, approve them, index them, activate them and retire them, and read AI-configuration and job state. **W12.4A diagnosed and fixed two root causes of the owner-reported Knowledge issue in code (working-directory-relative store paths, and Mo's agent not wired to governed knowledge); the governed part of the knowledge base still needs a source activated and a worker running in the developer environment.** Authorization is by permission string only; the role name is never checked by any route. The role is a code-defined preset and cannot be customised. It is a delegated, least-privilege operational role, not a junior Platform Admin.
 
 ## 2. Permission boundary
 
@@ -21,7 +21,7 @@ Of the 147 Admin API routes this role may call **41**: Knowledge source, version
 
 ## 4. Typical workday / workflow
 
-Sign in -> Overview (knowledge counts: awaiting review, indexing, failed, active) -> Knowledge: **register or upload a source** (title, publisher, https reference that is never fetched, language, authority level, licence class, provenance note) -> **scan and parse** (background jobs) -> review the bounded preview, provenance and authority -> **approve** -> **index** (background job) -> monitor the job on the Jobs page -> **activate** -> inspect Review / Diagnostics. Retire a source or upload a new version when content changes.
+Sign in -> Overview (knowledge counts: awaiting review, indexing, failed, active) -> Knowledge: **register or upload a source** (title, publisher, https reference that is never fetched, language, authority level, licence class, provenance note) -> **scan and parse** (background jobs) -> review the bounded preview, provenance and authority -> **approve** -> **index** (background job) -> monitor the job on the Jobs page -> **activate** -> read **Knowledge readiness** and run **Test retrieval** on the Knowledge page -> inspect Review / Diagnostics. Retire a source or upload a new version when content changes.
 
 ## 5. Key actions
 
@@ -30,6 +30,7 @@ Sign in -> Overview (knowledge counts: awaiting review, indexing, failed, active
 | View sources, versions, preview and metadata | `knowledge.read` | |
 | Register a source, upload a version, edit metadata before approval, reprocess, delete a never-approved version, request indexing, retire | `knowledge.manage` | Upload accepts PDF, TXT or Markdown; licence class "unclear" or "restricted", missing provenance or a failed or missing scan blocks approval |
 | Approve, reject, activate | `knowledge.approve` | Approval and activation are separate explicit steps |
+| See knowledge readiness, the active-knowledge inventory and run a retrieval-only test | `knowledge.read` | W12.4A, CURRENT: the test goes through the production retrieval boundary, calls no model and accepts only a query |
 | Read AI configuration state | `ai.read` | Read only |
 | Read the job queue and worker state | `jobs.read` | Read only |
 
@@ -58,7 +59,7 @@ Uploaded knowledge is **platform** knowledge, not candidate data. Candidate docu
 
 ## 9. Current operational limitations
 
-- **CURRENT - PARTIAL + OWNER-REPORTED OPERATIONAL ISSUE: ROOT CAUSE NOT YET DIAGNOSED.** The owner reports that the Knowledge Base is inaccessible or not functioning as expected in the normal environment. This document does not diagnose or guess the cause. Knowledge must **not** be described as fully production-operational. The issue is scheduled as **W12.4A, Knowledge Base Accessibility & Operations**, the **first** W12.4 implementation sub-wave.
+- **CURRENT - PARTIAL (W12.4A fixed two root causes in code).** The owner-reported accessibility problem was traced to (1) working-directory-relative store paths, which made an app or worker launched from another folder see an empty knowledge base (now anchored to the data root), and (2) Mo's agent not being wired to Admin-governed knowledge. **Residual operator action in the developer environment:** no governed source is registered yet and no job worker is running, so a source still has to be approved, indexed (needs `python -m src.jobs.worker`) and activated before governed knowledge appears. Knowledge is not described as fully production-operational. See `../knowledge/W12_04A_KNOWLEDGE_ACCESSIBILITY_OPERATIONS.md`.
 - No retrieval-test console and no complete snapshot model; parts of the Knowledge capability are classed PARTIAL in the Admin capability matrix.
 - Parse and index **depend on a worker process**; the Knowledge pages show only that work is queued, and the worker-seen warning is on the Jobs page.
 - The role cannot retry a failed knowledge job (finding SJA-02).
@@ -70,7 +71,7 @@ Escalate to **Operations Admin or Platform Admin** for: a worker that is not run
 
 ## 11. Planned W12.4 impact
 
-**PLANNED W12.4A (first)**: reproduce and diagnose the owner-reported problem, verify the whole path (source, scan and parse, approve, index, worker, retrieval store, activation, candidate retrieval), restore an accessible candidate Knowledge path, add Admin readiness and retrieval-test capability and make failures visible. This role, the Operations Admin and the Platform Admin are affected. W12.4F may revisit whether this role needs job-retry visibility. No permission change is made here.
+**W12.4A is implemented** (readiness, active inventory, retrieval-only test, worker hint, the two root-cause fixes). Further W12.4 sub-waves that touch this role: W12.4F may revisit whether this role needs job-retry visibility. No permission change was made.
 
 ## 12. Route reference
 

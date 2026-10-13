@@ -14,8 +14,16 @@ vi.mock("@/components/auth/AuthProvider", () => ({
 
 const meta = vi.fn(); const list = vi.fn(); const source = vi.fn(); const version = vi.fn(); const action = vi.fn();
 const reject = vi.fn(); const del = vi.fn(); const create = vi.fn(); const addVersion = vi.fn();
+// W12.4A added readiness and an active inventory above the sources table; these tests stay about the sources list, so give those two a stable benign answer.
+const READINESS = { status: "no_active_sources", message: "No governed knowledge source is active.", candidate_retrieval_ready: true, governed_retrieval_ready: false,
+  source_count: 0, active_source_count: 0, active_version_count: 0, indexed_active_version_count: 0, pending_job_count: 0, failed_job_count: 0, awaiting_review_count: 0,
+  failed_version_count: 0, worker: { status: "available", seen_recently: 1, last_seen_at: null, stale_after_seconds: 60 }, collection_status: "empty_or_missing",
+  collection: "governed_knowledge", store: { kind: "persistent", chunk_count: 0, location: "default" }, embedding_provider_status: "available",
+  embedder_state: { status: "available", provider: "local", embedder: "LocalHashEmbedder", note: "offline local embedder" },
+  curated_corpus: { status: "available", chunk_count: 1, store_kind: "persistent" }, last_indexed_at: null, last_failure_category: null, last_failure_stage: null };
 vi.mock("@/lib/api/client", () => ({
-  api: { admin: { knowledgeMeta: (...a: unknown[]) => meta(...a), knowledgeSources: (...a: unknown[]) => list(...a),
+  api: { admin: { knowledgeReadiness: () => Promise.resolve(READINESS), knowledgeActive: () => Promise.resolve({ items: [], total: 0 }),
+    knowledgeMeta: (...a: unknown[]) => meta(...a), knowledgeSources: (...a: unknown[]) => list(...a),
     knowledgeSource: (...a: unknown[]) => source(...a), knowledgeVersion: (...a: unknown[]) => version(...a),
     knowledgeAction: (...a: unknown[]) => action(...a), knowledgeReject: (...a: unknown[]) => reject(...a), knowledgeDelete: (...a: unknown[]) => del(...a),
     createKnowledgeSource: (...a: unknown[]) => create(...a), addKnowledgeVersion: (...a: unknown[]) => addVersion(...a) } },

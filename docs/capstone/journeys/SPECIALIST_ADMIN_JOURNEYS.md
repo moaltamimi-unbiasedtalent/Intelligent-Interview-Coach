@@ -79,7 +79,7 @@ Fresh-password step-up (5 minutes, bound to the session, not MFA) is currently r
 | Billing | CURRENT - MOCK | MockBillingAdapter only; no live checkout, cards, tax, webhooks or revenue |
 | Email | CURRENT - ENVIRONMENT MANAGED / UNVALIDATED LIVE | Brevo adapter exists; live delivery not validated; no Admin test email |
 | Integration secrets | CURRENT - ENVIRONMENT MANAGED | Read-only SecretStore; rotation technically unavailable |
-| Knowledge | CURRENT - PARTIAL + OWNER-REPORTED OPERATIONAL ISSUE | Root cause not yet diagnosed (W12.4A) |
+| Knowledge | CURRENT - PARTIAL | W12.4A fixed two root causes in code and added readiness, inventory and a retrieval test; operator action still needed in the developer environment (activate a source, run the worker) |
 | AI configuration | CURRENT - OPERATIONAL WITH LIMITATION | Deterministic evaluations only; not live-quality evidence |
 | Provider status | CURRENT - STATUS / PARTIAL | Configuration only; not health, not live validated |
 | Jobs | CURRENT - OPERATIONAL WITH LIMITATION | Separate worker; no dead-letter state |
@@ -90,14 +90,14 @@ A screen existing is not the same as the capability being fully operational.
 ## 8. Planned W12.4 impact (planning only; nothing below is implemented)
 | W12.4 sub-wave | Affected roles | Expected impact |
 |---|---|---|
-| W12.4A Knowledge Base Accessibility & Operations (**first implementation sub-wave**; owner-reported issue, root cause not diagnosed) | knowledge_admin, operations_admin, platform_admin | Reproduce and diagnose the issue, verify the path from source to candidate retrieval, add readiness and retrieval-test capability, make failures visible |
+| W12.4A Knowledge Base Accessibility & Operations (**implemented**, first sub-wave) | knowledge_admin, operations_admin, platform_admin | Root causes fixed, readiness, active inventory and a retrieval-only test added (permission `knowledge.read`); no role change |
 | W12.4B Secure Provider & Secret Administration | operations_admin, platform_admin | A writable secure secret adapter; Admin configures and rotates supported credentials (write-only, audited, step-up); no generic environment editor |
 | W12.4C Email & Identity Operations | operations_admin, security_privacy_admin where relevant, platform_admin | Operationalise Brevo, sender configuration, test email, diagnostics, verification and reset email |
 | W12.4D Live Billing Provider | billing_admin, operations_admin where provider health is involved, platform_admin | A real provider behind the BillingProvider abstraction; billing stays separate from entitlement |
 | W12.4E Governed Speech Providers | operations_admin, platform_admin, knowledge_admin only if AI or read surfaces overlap | Whisper (STT) and Pocket TTS (TTS) behind Admin configuration; Russian stays excluded; no persistent audio |
 | W12.4F Admin Configuration Completeness | potentially all specialist roles, by domain | Classify every capability and add governed controls only for normal operations; never arbitrary environment variables, commands, paths or secret values |
 
-W12.4A comes first because of the owner-reported Knowledge issue; speech, billing and email are not moved ahead of it. No permission change is made or implied by this table.
+W12.4A came first because of the owner-reported Knowledge issue and is now implemented; W12.4B follows. No permission change is made or implied by this table.
 
 ## 9. Findings (documentation only; none fixed)
 | ID | Class | Finding |

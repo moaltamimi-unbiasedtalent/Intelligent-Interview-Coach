@@ -366,6 +366,65 @@ export interface KnowledgeVersionDetail extends KnowledgeRow {
   can: { edit: boolean; approve: boolean; reject: boolean; index: boolean; activate: boolean; retire: boolean; reprocess: boolean; delete: boolean };
   audit: AdminAuditEntry[];
 }
+/** W12.4A: derived knowledge readiness (safe metadata only: no paths, secrets, raw store contents or provider errors). */
+export type KnowledgeReadinessStatus =
+  | "ready" | "no_active_sources" | "worker_unavailable" | "index_pending" | "index_failed" | "store_unavailable"
+  | "collection_missing" | "embedding_provider_unavailable" | "configuration_error" | "degraded";
+export interface KnowledgeReadiness {
+  status: KnowledgeReadinessStatus;
+  message: string;
+  candidate_retrieval_ready: boolean;
+  governed_retrieval_ready: boolean;
+  source_count: number;
+  active_source_count: number;
+  active_version_count: number;
+  indexed_active_version_count: number;
+  pending_job_count: number;
+  failed_job_count: number;
+  awaiting_review_count: number;
+  failed_version_count: number;
+  worker: { status: "available" | "stale" | "none" | "unknown"; seen_recently: number; last_seen_at: string | null; stale_after_seconds: number | null };
+  collection_status: "ok" | "empty_or_missing" | "unavailable";
+  collection: string;
+  store: { kind: string; chunk_count: number | null; location: string };
+  embedding_provider_status: string;
+  embedder_state: { status: string; provider: string; embedder: string | null; note: string };
+  curated_corpus: { status: "available" | "empty" | "unavailable"; chunk_count: number | null; store_kind?: string | null };
+  last_indexed_at: string | null;
+  last_failure_category: string | null;
+  last_failure_stage: string | null;
+}
+export interface KnowledgeActiveItem {
+  source_public_id: string;
+  title: string;
+  version_public_id: string;
+  version: number;
+  source_type: string;
+  authority_level: number;
+  authority_meaning: string;
+  language: string;
+  geography: string | null;
+  chunk_count: number;
+  embedder: string | null;
+  collection: string | null;
+  index_state: string;
+  activated_at: string | null;
+  built_at: string | null;
+  status: string;
+}
+export interface KnowledgeRetrievalResult {
+  status: "evidence_found" | "insufficient_evidence" | "blocked";
+  query: string;
+  retrieval_mode: string;
+  retrieval_lane: string;
+  result_count: number;
+  source_count: number;
+  insufficient_evidence: boolean;
+  latency: string;
+  sources: { title: string; publisher: string | null; authority_level: number; evidence_type: string; geography: string | null; origin: "admin_governed" | "curated" }[];
+  excerpts: { title: string; text: string; origin: "admin_governed" | "curated" }[];
+  note: string;
+}
 export interface KnowledgeMeta {
   languages: string[];
   authority_levels: { level: number; meaning: string }[];

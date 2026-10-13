@@ -30,8 +30,11 @@ __all__ = [
 
 SUPPORTED_LANGUAGES = ["en", "de", "fr", "es", "it", "pt", "nl"]
 
-_BUILD_METADATA = Path("data/knowledge/build_metadata.json")
-_COVERAGE_REPORT = Path("evaluations/knowledge/coverage_report.json")
+from src.copilot.constants import REPO_ROOT as _REPO_ROOT
+from src.copilot.constants import data_path as _data_path
+
+_BUILD_METADATA = Path(_data_path("knowledge/build_metadata.json"))   # anchored to the data root (W12.4A)
+_COVERAGE_REPORT = _REPO_ROOT / "evaluations/knowledge/coverage_report.json"
 
 _STRUCTURED_STORES = {
     "roles": constants.ROLE_DB_PATH,

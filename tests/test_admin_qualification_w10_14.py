@@ -235,7 +235,8 @@ def test_get_routes_are_read_only_and_every_mutation_is_audited(world):
     inv = M.mutation_inventory()
     assert len(inv) == sum(1 for r in M.routes() if r.methods != ("GET",)) and len(inv) >= 60
     unaudited = [r["path"] for r in inv if not r["audited_in_handler"]]
-    assert unaudited == ["/admin/step-up"], unaudited                                  # step-up audits inside StepUpService (admin.step_up.succeeded/failed)
+    # W12.4A: /admin/knowledge/test-retrieval is a READ-ONLY POST (retrieval only: no mutation, no model call), so it has no audit event by design.
+    assert unaudited == ["/admin/knowledge/test-retrieval", "/admin/step-up"], unaudited                                  # step-up audits inside StepUpService (admin.step_up.succeeded/failed)
     for r in M.routes():
         if r.methods == ("GET",):
             src = inspect.getsource(r.route.endpoint)

@@ -131,7 +131,7 @@ def _structured_counts() -> dict[str, int]:
     return counts
 
 
-def _inventory_files(path: str = "data/source_inventory.json") -> dict[str, dict]:
+def _inventory_files(path: str = constants.data_path("source_inventory.json")) -> dict[str, dict]:
     """Per-source local-file summary from the inventory, if it has been generated.
 
     Returns ``{source_id: {"files": int, "version": str|None, "year": int|None}}``
@@ -157,7 +157,7 @@ def _inventory_files(path: str = "data/source_inventory.json") -> dict[str, dict
     return out
 
 
-def _vector_source_counts(path: str = "data/knowledge/vector_sources.json") -> dict[str, int]:
+def _vector_source_counts(path: str = constants.data_path("knowledge/vector_sources.json")) -> dict[str, int]:
     """Measured per-source vector chunk counts written by narrative ingestion.
 
     Keyed by manifest ``source_id`` so a narrative source that has actually been
@@ -189,7 +189,7 @@ def compute_status(
     vector_counts = _vector_source_counts()
     inventory = _inventory_files()
     ledger = korigins.load_origins()
-    downloads = "data/knowledge/downloads"
+    downloads = constants.data_path("knowledge/downloads")
 
     out: list[SourceStatus] = []
     for e in entries:

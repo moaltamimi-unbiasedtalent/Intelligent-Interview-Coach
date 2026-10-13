@@ -516,7 +516,7 @@ class BuildMetadata(BaseModel):
     record_counts: dict[str, int] = Field(
         default_factory=dict, description="output name -> row count."
     )
-    normalized_dir: str = "data/normalized"
+    normalized_dir: str = Field(default_factory=lambda: __import__("src.copilot.constants", fromlist=["x"]).data_path("normalized"))
 
     def to_json(self, *, indent: int = 2) -> str:
         return self.model_dump_json(indent=indent)

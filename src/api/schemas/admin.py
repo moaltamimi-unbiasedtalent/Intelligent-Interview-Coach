@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, StrictInt
+from pydantic import BaseModel, ConfigDict, Field, StrictInt
 
 
 class _Strict(BaseModel):
@@ -558,6 +558,115 @@ class KnowledgeMetaUpdate(_Strict):
 
 class KnowledgeRejectRequest(_Strict):
     reason: str
+
+
+# ---- W12.4A knowledge readiness: derived, safe operational metadata (no paths, no secrets, no raw store contents, no provider errors) ----
+class KnowledgeWorkerState(_Strict):
+    status: str
+    seen_recently: int
+    last_seen_at: str | None = None
+    stale_after_seconds: int | None = None
+
+
+class KnowledgeStoreState(_Strict):
+    kind: str
+    chunk_count: int | None = None
+    location: str
+
+
+class KnowledgeEmbeddingState(_Strict):
+    status: str
+    provider: str
+    embedder: str | None = None
+    note: str
+
+
+class KnowledgeCuratedState(_Strict):
+    status: str
+    chunk_count: int | None = None
+    store_kind: str | None = None
+
+
+class KnowledgeReadiness(_Strict):
+    status: str
+    message: str
+    candidate_retrieval_ready: bool
+    governed_retrieval_ready: bool
+    source_count: int
+    active_source_count: int
+    active_version_count: int
+    indexed_active_version_count: int
+    pending_job_count: int
+    failed_job_count: int
+    awaiting_review_count: int
+    failed_version_count: int
+    worker: KnowledgeWorkerState
+    collection_status: str
+    collection: str
+    store: KnowledgeStoreState
+    embedding_provider_status: str
+    embedder_state: KnowledgeEmbeddingState
+    curated_corpus: KnowledgeCuratedState
+    last_indexed_at: str | None = None
+    last_failure_category: str | None = None
+    last_failure_stage: str | None = None
+
+
+class KnowledgeActiveItem(_Strict):
+    source_public_id: str
+    title: str
+    version_public_id: str
+    version: int
+    source_type: str
+    authority_level: int
+    authority_meaning: str
+    language: str
+    geography: str | None = None
+    chunk_count: int
+    embedder: str | None = None
+    collection: str | None = None
+    index_state: str
+    activated_at: str | None = None
+    built_at: str | None = None
+    status: str
+
+
+class KnowledgeActiveList(_Strict):
+    items: list[KnowledgeActiveItem]
+    total: int
+
+
+class KnowledgeRetrievalTestRequest(_Strict):
+    query: str = Field(min_length=1, max_length=300)
+
+
+class KnowledgeRetrievalSource(_Strict):
+    title: str
+    publisher: str | None = None
+    authority_level: int
+    evidence_type: str
+    geography: str | None = None
+    origin: str
+
+
+class KnowledgeRetrievalExcerpt(_Strict):
+    title: str
+    text: str
+    origin: str
+
+
+class KnowledgeRetrievalTestResult(_Strict):
+    status: str
+    query: str
+    retrieval_mode: str
+    retrieval_lane: str
+    result_count: int
+    source_count: int
+    insufficient_evidence: bool
+    latency: str
+    sources: list[KnowledgeRetrievalSource]
+    excerpts: list[KnowledgeRetrievalExcerpt]
+    note: str
 
 
 class KnowledgeMeta(_Strict):

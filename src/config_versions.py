@@ -68,7 +68,7 @@ def knowledge_version() -> str:
     """A stable id for the governed knowledge build (from build metadata provenance)."""
     try:
         from pathlib import Path
-        build = json.loads(Path("data/knowledge/build_metadata.json").read_text(encoding="utf-8"))
+        build = json.loads(Path(__import__("src.copilot.constants", fromlist=["x"]).data_path("knowledge/build_metadata.json")).read_text(encoding="utf-8"))
         runtime = build.get("runtime_pipeline_version") or "unbuilt"
         built = build.get("built_at") or "unbuilt"
         return "knowledge-" + _short(f"{runtime}|{built}")
