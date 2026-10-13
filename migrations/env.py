@@ -34,6 +34,29 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
+def _ensure_version_table_width(connection) -> None:
+    """Guarantee a wide-enough ``alembic_version.version_num`` on PostgreSQL.
+
+    Alembic creates ``alembic_version.version_num`` as ``VARCHAR(32)`` by default.
+    Revision ids in this project can exceed that (``0004_completed_interview_source_session``
+    is 39 characters), which is invisible on SQLite (no length enforcement) but fails
+    on PostgreSQL with ``StringDataRightTruncation`` as soon as that revision is applied.
+    Pre-create/upgrade the column so fresh AND already-migrated Postgres databases work.
+    No-op on every other dialect.
+    """
+    if connection.dialect.name != "postgresql":
+        return
+    connection.exec_driver_sql(
+        "CREATE TABLE IF NOT EXISTS alembic_version ("
+        "version_num VARCHAR(255) NOT NULL, "
+        "CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num))"
+    )
+    connection.exec_driver_sql(
+        "ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(255)"
+    )
+    connection.commit()
+
+
 def run_migrations_online() -> None:
     section = config.get_section(config.config_ini_section) or {}
     section["sqlalchemy.url"] = _database_url()
@@ -41,9 +64,7 @@ def run_migrations_online() -> None:
         section, prefix="sqlalchemy.", poolclass=pool.NullPool
     )
     with connectable.connect() as connection:
-        from src.db_migration_support import widen_version_table
-
-        widen_version_table(connection)               # PostgreSQL: revision ids longer than 32 characters need a wide alembic_version column
+        _ensure_version_table_width(connection)
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
             context.run_migrations()

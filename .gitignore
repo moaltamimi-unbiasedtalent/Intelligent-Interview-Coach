@@ -92,3 +92,4 @@ data/feedback_intelligence/
 # Capstone P6: generated Prompt Lab experiment store (reviewer tooling; not committed)
 var/prompt_lab/
 var/
+PROJECT_*.md
