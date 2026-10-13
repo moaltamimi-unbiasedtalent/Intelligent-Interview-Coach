@@ -3,6 +3,8 @@
 **Status: CURRENT / CANONICAL.**
 **Qualified against:** `main` at `c69334ba3a7c74a60ad888914221be3e8ce52e25` (2026-10-13).
 
+For the control-plane / operator side, see [PLATFORM_ADMIN_JOURNEY.md](PLATFORM_ADMIN_JOURNEY.md).
+
 This document describes what the candidate product does today. It was written from the current code (routes, components, services and deterministic tests), not from planning documents. Where code and an older document disagree, the code is followed and the disagreement is listed in section 17. It documents current behaviour only: nothing here is aspirational. Externally meaningful sentences are constrained by [`docs/product/PRODUCT_CLAIMS.md`](../../product/PRODUCT_CLAIMS.md) (claim ids such as CLAIM-003 are cited where they apply). The protected slogan is **Ask More. Be More.** and is never translated or re-punctuated.
 
 ## 1. Who the candidate is

@@ -8,6 +8,7 @@ documents are historical evidence and are labelled where they could be mistaken 
 |---|---|
 | What the product is, candidate journey summary, current limitations | [../README.md](../README.md) |
 | Canonical current-state Candidate Journey (stage by stage: Opportunity, Prepare, Practice, Progress and History, sharing, data control) | [capstone/journeys/CANDIDATE_JOURNEY.md](capstone/journeys/CANDIDATE_JOURNEY.md) |
+| Canonical current-state Platform Admin Journey (owner / orchestrator, 43 / 43 control-plane permissions, current versus PLANNED W12.4); specialist Admin journeys (W12.3C) are planned next | [capstone/journeys/PLATFORM_ADMIN_JOURNEY.md](capstone/journeys/PLATFORM_ADMIN_JOURNEY.md) |
 | Current architecture (layers, agent, specialists, tools, evaluation, identity, admin, languages) | [sprint4_architecture.md](sprint4_architecture.md) - read its "Current-state overview" first |
 | Registered tools (names and count) | `career_tool_registry` in `src/agent/registry.py` (do not hard-code counts elsewhere) |
 | Specialists | `src/agent/specialists/registry.py` (three; there is no Evaluation specialist) |
