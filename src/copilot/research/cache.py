@@ -13,7 +13,9 @@ import json
 import time
 from pathlib import Path
 
-CACHE_DIR = Path("data/cache/external")
+from src.copilot.constants import data_path as _data_path
+
+CACHE_DIR = Path(_data_path("cache/external"))   # anchored to the data root, never the working directory (W12.4A)
 DEFAULT_TTL_SECONDS = 1800  # 30 minutes — bounded; current-market data expires quickly (§21)
 
 

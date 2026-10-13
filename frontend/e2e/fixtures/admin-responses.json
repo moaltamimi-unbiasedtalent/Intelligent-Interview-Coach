@@ -1808,6 +1808,10 @@
    "max_attempts": 3
   }
  ],
+ "/admin/knowledge/active": {
+  "items": [],
+  "total": 0
+ },
  "/admin/knowledge/meta": {
   "authority_levels": [
    {
@@ -1893,6 +1897,48 @@
    ],
    "max_bytes": 5242880,
    "preview_chars": 4000
+  }
+ },
+ "/admin/knowledge/readiness": {
+  "active_source_count": 0,
+  "active_version_count": 0,
+  "awaiting_review_count": 0,
+  "candidate_retrieval_ready": false,
+  "collection": "governed_knowledge",
+  "collection_status": "empty_or_missing",
+  "curated_corpus": {
+   "chunk_count": 0,
+   "status": "empty",
+   "store_kind": "persistent"
+  },
+  "embedder_state": {
+   "embedder": "LocalHashEmbedder",
+   "note": "offline local embedder",
+   "provider": "local",
+   "status": "available"
+  },
+  "embedding_provider_status": "available",
+  "failed_job_count": 0,
+  "failed_version_count": 0,
+  "governed_retrieval_ready": false,
+  "indexed_active_version_count": 0,
+  "last_failure_category": null,
+  "last_failure_stage": null,
+  "last_indexed_at": null,
+  "message": "No governed knowledge source is active. Register, review, approve, index and activate a source.",
+  "pending_job_count": 0,
+  "source_count": 0,
+  "status": "no_active_sources",
+  "store": {
+   "chunk_count": 0,
+   "kind": "persistent",
+   "location": "configured_override"
+  },
+  "worker": {
+   "last_seen_at": null,
+   "seen_recently": 0,
+   "stale_after_seconds": 60,
+   "status": "none"
   }
  },
  "/admin/knowledge/sources": {

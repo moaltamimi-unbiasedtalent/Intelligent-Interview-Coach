@@ -588,12 +588,17 @@ def test_no_raw_vector_browser_or_unbounded_content_routes():
                      ("POST", "/admin/knowledge/versions/{version_id}/approve"), ("POST", "/admin/knowledge/versions/{version_id}/reject"),
                      ("POST", "/admin/knowledge/versions/{version_id}/index"), ("POST", "/admin/knowledge/versions/{version_id}/activate"),
                      ("POST", "/admin/knowledge/versions/{version_id}/retire"), ("POST", "/admin/knowledge/versions/{version_id}/reprocess"),
-                     ("DELETE", "/admin/knowledge/versions/{version_id}")}
+                     ("DELETE", "/admin/knowledge/versions/{version_id}"),
+                     # W12.4A: operational readiness, the active-corpus inventory and a retrieval-ONLY test (safe metadata; no vectors, no chunks, no content browser)
+                     ("GET", "/admin/knowledge/readiness"), ("GET", "/admin/knowledge/active"), ("POST", "/admin/knowledge/test-retrieval")}
     assert all(r.permissions for r in admin_routes() if r.path.startswith("/admin/knowledge"))
     schema = (ROOT / "src/api/schemas/admin.py").read_text()
     block = schema[schema.index("class KnowledgeRow"):]
-    for banned in ("full_text", "chunks", "embedding", "vector", "storage_key"):
+    for banned in ("full_text", "chunks", "vector", "storage_key", "embedding_vector", "embedding_values"):
         assert banned not in block, banned
+    # W12.4A: the schemas may report the embedding PROVIDER / embedder identity (safe state), never embedding CONTENT (a field named embedding(s)).
+    import re
+    assert not re.search(r"\bembeddings?\s*:", block)
 
 
 def test_job_types_registered_and_use_ids_only_and_candidate_retrieval_wiring():

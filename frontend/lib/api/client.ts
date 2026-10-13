@@ -37,7 +37,10 @@ import type {
   PrivacyQuery,
   PrivacyRequestDetail,
   PrivacyRequestRow,
+  KnowledgeActiveItem,
   KnowledgeMeta,
+  KnowledgeReadiness,
+  KnowledgeRetrievalResult,
   KnowledgeQuery,
   KnowledgeRow,
   KnowledgeSourceDetail,
@@ -704,6 +707,11 @@ export const api = {
     audit: (opts?: RequestOptions) => request<{ events: AdminAuditEvent[] }>("GET", "/admin/audit", opts),
     // W10.8 knowledge
     knowledgeMeta: (opts?: RequestOptions) => request<KnowledgeMeta>("GET", "/admin/knowledge/meta", opts),
+    // W12.4A readiness, active inventory and a retrieval-only test (no model call)
+    knowledgeReadiness: (opts?: RequestOptions) => request<KnowledgeReadiness>("GET", "/admin/knowledge/readiness", opts),
+    knowledgeActive: (opts?: RequestOptions) => request<{ items: KnowledgeActiveItem[]; total: number }>("GET", "/admin/knowledge/active", opts),
+    testKnowledgeRetrieval: (query: string, opts?: RequestOptions) =>
+      request<KnowledgeRetrievalResult>("POST", "/admin/knowledge/test-retrieval", { body: { query }, ...opts }),
     knowledgeSources: (query: KnowledgeQuery = {}, opts?: RequestOptions) =>
       request<AdminPage<KnowledgeRow>>("GET", `/admin/knowledge/sources${qs(query as Record<string, unknown>)}`, opts),
     knowledgeSource: (id: string, opts?: RequestOptions) =>

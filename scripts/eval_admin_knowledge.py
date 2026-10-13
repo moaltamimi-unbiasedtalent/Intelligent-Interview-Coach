@@ -59,7 +59,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("no_raw_vector_or_chunk_browser", not re.search(r"\.query\(|all_chunks|get_chunks|/chunks|/vector", route), "no chunk routes")
     schema = read("src/api/schemas/admin.py")
     block = schema[schema.index("class KnowledgeRow"):] if "class KnowledgeRow" in schema else ""
-    check("no_full_text_in_schemas", block != "" and not re.search(r"full_text|chunks:|embedding|storage_key", block), "bounded preview only")
+    check("no_full_text_in_schemas", block != "" and not re.search(r"full_text|chunks:|\bembeddings?\s*:|embedding_vector|embedding_values|storage_key", block), "bounded preview only")
     check("no_candidate_private_access", not re.search(r"CandidateDocument|CandidateStory|PreparationMemory|SupportTicket|InterviewRepository", svc + rt + ret + route), "platform knowledge only")
     check("routes_permissioned", route.count("require_permission(") >= 14 and "KNOWLEDGE_APPROVE" in route and "KNOWLEDGE_MANAGE" in route and "KNOWLEDGE_READ" in route, "14 routes")
     check("uses_existing_permissions", all(f'"{p}"' in read("src/application/admin_permissions.py") for p in ("platform.knowledge.read", "platform.knowledge.manage", "platform.knowledge.approve")), "no new permission")

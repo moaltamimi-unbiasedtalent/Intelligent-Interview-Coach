@@ -29,7 +29,9 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-GOVERNED_DIR = Path("data/knowledge/governed")
+from src.copilot.constants import data_path as _data_path
+
+GOVERNED_DIR = Path(_data_path("knowledge/governed"))   # anchored to the data root (W12.4A)
 
 K1_PATH = GOVERNED_DIR / "k1_de_compensation.json"
 K2_PATH = GOVERNED_DIR / "k2_credentials.json"

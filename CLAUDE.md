@@ -308,6 +308,7 @@ assumptions in core logic, prompts, scoring or examples.
   (`components/live_interviewer/frontend`, unit-tested via `lifecycle.ts`). There
   is **no camera/visual coaching**: the product never requests camera access
   (asserted by an e2e test); delivery coaching is timing/pacing only.
+- **Store paths are anchored (W12.4A).** Every default store path (Chroma, the five structured SQLite stores, manifests, build metadata, the research cache and the default application database URL) derives from one data root, the repository `data/` directory or `COPILOT_DATA_DIR`, and is never relative to the process working directory (a process started elsewhere used to see an empty knowledge base, and an API and a worker could use different stores). Mo's agent shares the same career service and Admin-governed retriever as `/career/chat`. Admin Knowledge has derived readiness, an active inventory and a retrieval-only test (`docs/capstone/knowledge/W12_04A_KNOWLEDGE_ACCESSIBILITY_OPERATIONS.md`).
 - **Retrieval.** Structured stores (SQLite: roles, competency, compensation,
   labour-market, credentials) + a Chroma vector store with a local-hash embedder
   fallback; a deterministic router picks lanes; hybrid (vector + BM25) fusion.

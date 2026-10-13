@@ -163,7 +163,11 @@ def get_agent_service(request: Request):
         try:
             from src.privacy.preparation import PreparationRunIndex
 
+            # W12.4A: Mo's SearchCareerKnowledge MUST read the same retrieval stack as /career/chat: the shared store AND the Admin-governed
+            # retriever. Before this, the agent built its own default CareerApplicationService (no governed retriever, its own store), so
+            # Admin-activated knowledge never reached Mo's retrieval.
             return AgentApplicationService(
+                career_service=get_career_service(request),
                 memory_service=get_memory_service(request),
                 evidence_service=evidence_service,
                 database_url=database_url,
@@ -374,6 +378,20 @@ def get_knowledge_admin_service(repo=Depends(get_repository)):
 
     return KnowledgeAdminService(repo.session_factory, doc_store=build_knowledge_doc_store(),
                                  jobs=JobService(repo.session_factory))
+
+
+def get_knowledge_readiness_service(request: Request, repo=Depends(get_repository)):
+    """W12.4A: derived readiness over the SAME shared governed retriever and curated store the candidate path uses."""
+    from src.jobs.service import JobService
+    from src.knowledge_admin.readiness import KnowledgeReadinessService
+
+    return KnowledgeReadinessService(
+        repo.session_factory,
+        governed_provider=lambda: get_governed_retriever(request),
+        curated_store_provider=lambda: get_vector_store(request),
+        job_service=JobService(repo.session_factory),
+        config=get_copilot_config(request),
+    )
 
 
 def get_support_repository(repo=Depends(get_repository)):
