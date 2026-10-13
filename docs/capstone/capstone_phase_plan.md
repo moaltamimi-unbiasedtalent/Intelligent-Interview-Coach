@@ -92,22 +92,42 @@ the critical path (can slip without blocking W10). W10.5, W10.7, W10.9, W10.11 a
 3. Pilot remediation qualification. **P1 integrated qualification COMPLETE** (`p10/pilot2/PILOT2_P1_REMEDIATION_QUALIFICATION.md`): P2-01 to P2-04 qualified together, AC-24 still PARTIAL pending successor RC qualification, no RC created, P10C not started. Next: item 4.
 4. Platform Admin owner / orchestrator change: `platform_admin` = **43 / 43** permissions (AD-W12-01, below). **IMPLEMENTED (W12.1).**
 5. Admin Owner Walkthrough. **OWNER ACCEPTED WITH FOLLOW-UP ITEMS (W12.2, 2026-10-13)**: `admin/W12_02_ADMIN_OWNER_WALKTHROUGH.md`; 17 UX findings (0 blocker, 0 high, 5 medium, 12 low) stay open and tracked; pre-RC preferred corrections F-01, F-04, F-05.
-6. Canonical user-journey documentation: Candidate Journey, Platform Admin Journey, then the delegated specialist Admin journeys.
-7. Integrated Candidate + Admin requalification.
-8. Create RC-P10-004 if runtime or authorization behaviour changed.
-9. P10C Global Career Intelligence and Compensation V2.
-10. P10D Global KB / multilingual requalification.
-11. P10E live capability validation.
-12. P10F final targeted human validation.
-13. P11 final Capstone packaging.
+6. **Revised forward sequence (owner-approved 2026-10-13; supersedes the earlier items 6 to 13 of this list):**
+   1. W12.3A Candidate Journey: **COMPLETE** (`journeys/CANDIDATE_JOURNEY.md`).
+   2. W12.3B Platform Admin Journey: **CURRENT** (`journeys/PLATFORM_ADMIN_JOURNEY.md`, documentation only).
+   3. W12.3C Specialist Admin Journeys.
+   4. **W12.4 Admin Operability & Production Configuration Closure** (new, owner-approved; sub-waves A to F below).
+   5. W12.5 Preferred Admin UX Corrections.
+   6. Integrated Candidate + Admin + Operations Requalification.
+   7. RC-P10-004.
+   8. AC-24 closure where successor-RC criteria are met (AC-24 remains PARTIAL until then).
+   9. P10C Global Career Intelligence & Compensation V2.
+   10. P10D Global KB / multilingual requalification.
+   11. P10E Live Capability Validation.
+   12. P10F Final Targeted Human Validation.
+   13. P11 Final Capstone Packaging / Release.
 
-**Platform Admin architecture decision AD-W12-01: OWNER APPROVED, IMPLEMENTED (W12.1).** `platform_admin` now holds all 43 canonical permissions as the platform owner / orchestrator (a code-defined preset change, no migration); specialist roles remain least-privilege delegated roles. W10.14 history (28 / 43) is preserved as the truthful record at that point. Constraints that remain: no unrestricted candidate-content browser without an explicit governed capability, no impersonation, no break-glass, step-up and two-person approval where designed, mandatory audit. See `admin/AD_W12_01_PLATFORM_ADMIN_OWNER_ORCHESTRATOR.md`. The Admin Owner Walkthrough is the next step. P10C, P10D, P10E and P10F have not started, and RC-P10-004 has not been created.
+### W12.4 Admin Operability & Production Configuration Closure (PLANNED, owner-approved, NOT STARTED)
+Goal: by the end of W12.4 the Platform Admin works as an actual operator control plane, not a set of status or demo pages. Nothing below is implemented.
+- **W12.4A Knowledge Base Accessibility & Operations.** The owner reports that the Knowledge Base is inaccessible or not functioning as expected in the normal environment (OWNER-REPORTED OPERATIONAL ISSUE, ROOT CAUSE NOT YET DIAGNOSED). Scope: reproduce it; diagnose the real root cause; verify source, scan and parse, approve, index, worker, retrieval store, activation and candidate retrieval end to end; restore an accessible candidate Knowledge path; add Admin knowledge readiness and retrieval-test capability; make failures visible operationally; make the current active knowledge base understandable from Admin.
+- **W12.4B Secure Provider & Secret Administration.** Move from the read-only environment SecretStore toward a production-suitable writable secure secret adapter; Admin can configure and rotate supported provider credentials; secret values stay write-only with no raw retrieval; audit and step-up; **no generic environment editor**.
+- **W12.4C Email & Identity Operations.** Operationalise Brevo transactional email (the adapter exists; live delivery is unvalidated); an Admin-selectable, configurable approved email provider architecture; sender identity and domain configuration; secure credentials; verification and password-reset email; a bounded test email and health check; diagnostics; production readiness; Google OIDC administration and live validation only where separately approved.
+- **W12.4D Live Billing Provider.** Implement a selected real billing provider behind the `BillingProvider` abstraction (checkout, provider customer and subscription mapping, webhooks, invoices, payments, refunds, reconciliation, Admin configuration and status); preserve billing != entitlement; card and payment data stays provider-owned. The provider is not chosen here.
+- **W12.4E Governed Speech Providers.** Owner-selected future providers: speech-to-text **OpenAI Whisper** (https://github.com/openai/whisper) as the primary server-side STT; text-to-speech **Kyutai Pocket TTS** (https://github.com/kyutai-labs/pocket-tts) as the primary server-side TTS. Scope: Admin configuration; the seven-language product boundary preserved unless separately changed; **Russian remains excluded from speech**; governed browser fallback; realtime voice remains separate; transient audio processing; no persistent candidate audio. Not implemented now.
+- **W12.4F Admin Configuration Completeness.** Audit all Admin destinations and supported integrations and classify each capability as operational, configured but unavailable, environment-managed, mock, read-only, partial or not built. For every capability that genuinely belongs to normal platform operations, provide governed Admin control. Do not expose arbitrary environment variables, arbitrary commands, filesystem paths, secret values or unrestricted platform internals.
+
+### W12.5 Preferred Admin UX Corrections (PLANNED)
+Preferred pre-RC findings from W12.2: F-01 (Review / Diagnostics outside the Admin shell), F-04 (Integrations mobile overflow) and F-05 (Billing form focus and off-screen forms). F-03, F-06 and all remaining low findings are reassessed after W12.4 changes. None is fixed yet.
+
+**Platform Admin architecture decision AD-W12-01: OWNER APPROVED, IMPLEMENTED (W12.1).** `platform_admin` now holds all 43 canonical permissions as the platform owner / orchestrator (a code-defined preset change, no migration); specialist roles remain least-privilege delegated roles. W10.14 history (28 / 43) is preserved as the truthful record at that point. Constraints that remain: no unrestricted candidate-content browser without an explicit governed capability, no impersonation, no break-glass, step-up and two-person approval where designed, mandatory audit. See `admin/AD_W12_01_PLATFORM_ADMIN_OWNER_ORCHESTRATOR.md`. The Admin Owner Walkthrough completed with owner acceptance (W12.2). P10C, P10D, P10E and P10F have not started, and RC-P10-004 has not been created.
 
 **W12.2 Admin Owner Walkthrough: OWNER ACCEPTED WITH FOLLOW-UP ITEMS** (2026-10-13). Medium and low UX findings remain tracked and unresolved; the acceptance waives no limitation.
 
-**Candidate Journey (W12.3A): COMPLETE** once its PR merges: `journeys/CANDIDATE_JOURNEY.md` is the canonical current-state document (docs-only; eight documentation findings D-01 to D-08 recorded, none fixed).
+**Candidate Journey (W12.3A): COMPLETE** (merged): `journeys/CANDIDATE_JOURNEY.md` is the canonical current-state Candidate Journey (documentation only; findings D-01 to D-08 recorded, none fixed).
 
-**Current next sequence:** 1. Canonical journey documentation: Candidate Journey (complete), then **Platform Admin Journey (next)**, then the specialist Admin journeys. 2. Integrated Candidate + Admin requalification. 3. Successor RC-P10-004. 4. AC-24 final successor-RC closure where the criterion is met (AC-24 stays PARTIAL until then). 5. P10C later. None of these has started.
+**Platform Admin Journey (W12.3B): CURRENT** (documentation only): `journeys/PLATFORM_ADMIN_JOURNEY.md` is the canonical current-state Platform Admin Journey and records operability findings A-01 to A-10, none fixed. It separates CURRENT behaviour from PLANNED W12.4.
+
+**Current next sequence** is the revised forward sequence in item 6 above: W12.3C Specialist Admin Journeys, W12.4 (A to F), W12.5, integrated Candidate + Admin + Operations requalification, RC-P10-004, AC-24 closure where the criterion is met (AC-24 stays PARTIAL until then), then P10C. None of these has started. RC-P10-004 has not been created and P10C has not started.
 
 **Admin principle.** PLATFORM ADMIN != UNRESTRICTED PRIVATE-CANDIDATE-DATA SUPERUSER. Admin scope is classified as
 Capstone must-have vs production-ready mock/adapter-acceptable in the Admin master plan section 6; a mock is never
