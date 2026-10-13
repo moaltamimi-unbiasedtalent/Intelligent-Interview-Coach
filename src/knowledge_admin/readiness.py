@@ -35,7 +35,7 @@ MESSAGES = {
     "collection_missing": "Active sources exist but the governed collection is empty or missing in the store. Re-index the active sources.",
     "embedding_provider_unavailable": "The configured embedding provider is not usable (no credential is configured for it).",
     "configuration_error": "The store configuration cannot serve governed retrieval (for example a non-persistent store).",
-    "degraded": "Governed knowledge works, but something needs attention (a failed build, a pending job without a worker, or a missing index record).",
+    "degraded": "Governed knowledge works, but something currently needs attention (an unrecovered failed build, a pending job without a worker, a missing index record or a failed removal).",
 }
 
 
@@ -104,8 +104,11 @@ class KnowledgeReadinessService:
             sources_total = s.scalar(select(func.count()).select_from(KnowledgeSource)) or 0
             pending_jobs = s.scalar(select(func.count()).select_from(Job).where(
                 Job.job_type.in_(KNOWLEDGE_JOB_TYPES), Job.state.in_(("queued", "running")))) or 0
+            # HISTORY: every failed knowledge job ever recorded. Informational only (failed_job_count); a recovered failure stays visible here.
             failed_jobs = s.scalar(select(func.count()).select_from(Job).where(
                 Job.job_type.in_(KNOWLEDGE_JOB_TYPES), Job.state == "failed")) or 0
+            # CURRENT: an index whose vector removal failed (retired content may still be physically present; the SQL gate still protects candidates).
+            removal_failed = s.scalar(select(func.count()).select_from(KnowledgeIndexRecord).where(KnowledgeIndexRecord.state == "removal_failed")) or 0
             last_indexed = s.scalar(select(func.max(V.indexed_at)))
             failed_row = s.execute(select(V.failure_category, V.failed_stage).where(V.state == "failed").order_by(V.updated_at.desc()).limit(1)).first()
         active_n = len(active_ids)
@@ -125,7 +128,7 @@ class KnowledgeReadinessService:
         curated = self._curated_status()
         status = self._decide(active_n=active_n, built=built, built_chunks=built_chunks, failed_versions=failed_versions,
                               pending=pending_versions + pending_jobs, worker=worker, retriever=retriever, store_info=store_info,
-                              embedding=embedding, failed_jobs=failed_jobs)
+                              embedding=embedding, removal_failed=removal_failed)
         governed_usable = status in ("ready", "degraded") and built > 0 and bool(store_info and (store_info["chunk_count"] or 0) > 0)
         collection = ("ok" if store_info and (store_info["chunk_count"] or 0) > 0 else ("empty_or_missing" if store_info else "unavailable"))
         return {
@@ -166,7 +169,7 @@ class KnowledgeReadinessService:
         return {"status": "available" if n > 0 else "empty", "chunk_count": n, "store_kind": info["kind"]}
 
     @staticmethod
-    def _decide(*, active_n, built, built_chunks, failed_versions, pending, worker, retriever, store_info, embedding, failed_jobs) -> str:
+    def _decide(*, active_n, built, built_chunks, failed_versions, pending, worker, retriever, store_info, embedding, removal_failed) -> str:
         if embedding["status"] == "unavailable":
             return "embedding_provider_unavailable"
         if retriever is None or store_info is None or store_info["chunk_count"] is None:
@@ -183,7 +186,10 @@ class KnowledgeReadinessService:
             return "collection_missing"
         if built < active_n or store_info["chunk_count"] < built_chunks:
             return "degraded"
-        if failed_versions or failed_jobs or (pending and worker["status"] != "available"):
+        # Readiness describes CURRENT state. A failed job row is history (it stays in the job log and in failed_job_count) and does not by
+        # itself degrade a corpus that has recovered; only CURRENT unresolved conditions do: a version still in a failed state, a failed index
+        # removal, or pending work that no worker can progress.
+        if failed_versions or removal_failed or (pending and worker["status"] != "available"):
             return "degraded"
         return "ready"
 
