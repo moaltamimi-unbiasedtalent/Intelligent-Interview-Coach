@@ -109,7 +109,7 @@ def upgrade() -> None:
         sa.Column("document_id", sa.Integer(), nullable=False),
         sa.Column("version", sa.String(length=32), nullable=False),
         sa.Column("state", sa.String(length=12), server_default="draft", nullable=False),
-        sa.Column("is_baseline", sa.Boolean(), server_default="0", nullable=False),
+        sa.Column("is_baseline", sa.Boolean(), server_default=sa.false(), nullable=False),
         sa.Column("content_ref", sa.String(length=300), nullable=False),
         sa.Column("content_hash", sa.String(length=64), nullable=True),
         _dt("effective_at"), _dt("published_at"),
@@ -123,7 +123,7 @@ def upgrade() -> None:
         sa.CheckConstraint(_in("state", VERSION_STATES), name="ck_ldv_state"),
         sa.CheckConstraint("content_hash IS NULL OR length(content_hash) = 64", name="ck_ldv_hash"),
         sa.CheckConstraint("state = 'draft' OR published_at IS NOT NULL", name="ck_ldv_published_at"),
-        sa.CheckConstraint("state <> 'published' OR is_baseline = 1 OR content_hash IS NOT NULL", name="ck_ldv_published_hash"),
+        sa.CheckConstraint("state <> 'published' OR is_baseline OR content_hash IS NOT NULL", name="ck_ldv_published_hash"),
         sa.UniqueConstraint("document_id", "version", name="uq_ldv_document_version"),
     )
     published = sa.text("state = 'published'")

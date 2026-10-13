@@ -35,7 +35,7 @@ def upgrade() -> None:
     op.create_table(
         "platform_pause_states",
         sa.Column("id", sa.Integer(), nullable=False), sa.Column("environment", sa.String(length=12), nullable=False),
-        sa.Column("capability", sa.String(length=32), nullable=False), sa.Column("paused", sa.Boolean(), nullable=False, server_default="0"),
+        sa.Column("capability", sa.String(length=32), nullable=False), sa.Column("paused", sa.Boolean(), nullable=False, server_default=sa.false()),
         sa.Column("revision", sa.Integer(), nullable=False, server_default="1"), _dt("paused_at"),
         sa.Column("paused_by_user_id", sa.Integer(), nullable=True), _dt("resumed_at"), sa.Column("resumed_by_user_id", sa.Integer(), nullable=True),
         _dt("updated_at", False), sa.Column("reason", sa.String(length=200), nullable=False, server_default=""),
