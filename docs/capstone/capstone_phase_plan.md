@@ -94,8 +94,8 @@ the critical path (can slip without blocking W10). W10.5, W10.7, W10.9, W10.11 a
 5. Admin Owner Walkthrough. **OWNER ACCEPTED WITH FOLLOW-UP ITEMS (W12.2, 2026-10-13)**: `admin/W12_02_ADMIN_OWNER_WALKTHROUGH.md`; 17 UX findings (0 blocker, 0 high, 5 medium, 12 low) stay open and tracked; pre-RC preferred corrections F-01, F-04, F-05.
 6. **Revised forward sequence (owner-approved 2026-10-13; supersedes the earlier items 6 to 13 of this list):**
    1. W12.3A Candidate Journey: **COMPLETE** (`journeys/CANDIDATE_JOURNEY.md`).
-   2. W12.3B Platform Admin Journey: **CURRENT** (`journeys/PLATFORM_ADMIN_JOURNEY.md`, documentation only).
-   3. W12.3C Specialist Admin Journeys.
+   2. W12.3B Platform Admin Journey: **COMPLETE** (`journeys/PLATFORM_ADMIN_JOURNEY.md`, documentation only).
+   3. W12.3C Specialist Admin Journeys: **COMPLETE** (`journeys/SPECIALIST_ADMIN_JOURNEYS.md` and five role journeys, documentation only).
    4. **W12.4 Admin Operability & Production Configuration Closure** (new, owner-approved; sub-waves A to F below).
    5. W12.5 Preferred Admin UX Corrections.
    6. Integrated Candidate + Admin + Operations Requalification.
@@ -125,9 +125,11 @@ Preferred pre-RC findings from W12.2: F-01 (Review / Diagnostics outside the Adm
 
 **Candidate Journey (W12.3A): COMPLETE** (merged): `journeys/CANDIDATE_JOURNEY.md` is the canonical current-state Candidate Journey (documentation only; findings D-01 to D-08 recorded, none fixed).
 
-**Platform Admin Journey (W12.3B): CURRENT** (documentation only): `journeys/PLATFORM_ADMIN_JOURNEY.md` is the canonical current-state Platform Admin Journey and records operability findings A-01 to A-10, none fixed. It separates CURRENT behaviour from PLANNED W12.4.
+**Platform Admin Journey (W12.3B): COMPLETE** (documentation only): `journeys/PLATFORM_ADMIN_JOURNEY.md` is the canonical current-state Platform Admin Journey and records operability findings A-01 to A-10, none fixed. It separates CURRENT behaviour from PLANNED W12.4.
 
-**Current next sequence** is the revised forward sequence in item 6 above: W12.3C Specialist Admin Journeys, W12.4 (A to F), W12.5, integrated Candidate + Admin + Operations requalification, RC-P10-004, AC-24 closure where the criterion is met (AC-24 stays PARTIAL until then), then P10C. None of these has started. RC-P10-004 has not been created and P10C has not started.
+**Specialist Admin Journeys (W12.3C): COMPLETE** once its PR merges (documentation only): `journeys/SPECIALIST_ADMIN_JOURNEYS.md` plus `SUPPORT_OPERATOR_JOURNEY.md`, `BILLING_ADMIN_JOURNEY.md`, `KNOWLEDGE_ADMIN_JOURNEY.md`, `SECURITY_PRIVACY_ADMIN_JOURNEY.md` and `OPERATIONS_ADMIN_JOURNEY.md`. Counts verified against code: support_operator 7, billing_admin 10, knowledge_admin 6, security_privacy_admin 11, operations_admin 11, platform_admin 43, candidate 0; no permission or preset was changed. Role-scope findings SJA-01 to SJA-07 are recorded and not fixed.
+
+**Current next sequence** is the revised forward sequence in item 6 above: **W12.4 Admin Operability & Production Configuration Closure is next, and its FIRST implementation sub-wave is W12.4A Knowledge Base Accessibility & Operations**, because of the owner-reported current Knowledge Base accessibility problem (root cause not yet diagnosed). Then W12.4B Secure Provider & Secret Administration, W12.4C Email & Identity Operations, W12.4D Live Billing Provider, W12.4E Governed Speech Providers and W12.4F Admin Configuration Completeness; speech, billing and email are not moved ahead of W12.4A. After W12.4 come W12.5 Preferred Admin UX Corrections, integrated Candidate + Admin + Operations requalification, RC-P10-004, AC-24 closure where the criterion is met (AC-24 stays PARTIAL until then), P10C, P10D, P10E, P10F and P11. None of these has started. RC-P10-004 has not been created and P10C has not started.
 
 **Admin principle.** PLATFORM ADMIN != UNRESTRICTED PRIVATE-CANDIDATE-DATA SUPERUSER. Admin scope is classified as
 Capstone must-have vs production-ready mock/adapter-acceptable in the Admin master plan section 6; a mock is never

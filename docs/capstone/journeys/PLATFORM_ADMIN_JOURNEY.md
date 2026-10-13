@@ -219,7 +219,7 @@ W12.4 is **owner-approved** and is **not started**. Nothing below is current beh
 43 / 43 means all 43 **control-plane** permissions. It does not mean all candidate data.
 
 ## 29. Delegation to specialist Admin roles
-Five code-defined, least-privilege roles are delegated operational roles and gained nothing from W12.1: **support_operator** (support queue), **billing_admin** (plans, subscriptions, billing, commercial reporting), **knowledge_admin** (governed knowledge, AI read, jobs read), **security_privacy_admin** (privacy, legal, security, incidents, audit) and **operations_admin** (jobs, integrations, configuration and flags, releases, reports, AI read). The Platform Admin can orchestrate across all of these domains; the specialist roles each see only their own. Their full journeys are **W12.3C** and are not documented here.
+Five code-defined, least-privilege roles are delegated operational roles and gained nothing from W12.1: **support_operator** (support queue), **billing_admin** (plans, subscriptions, billing, commercial reporting), **knowledge_admin** (governed knowledge, AI read, jobs read), **security_privacy_admin** (privacy, legal, security, incidents, audit) and **operations_admin** (jobs, integrations, configuration and flags, releases, reports, AI read). The Platform Admin can orchestrate across all of these domains; the specialist roles each see only their own. Their full journeys are documented separately: see the index [SPECIALIST_ADMIN_JOURNEYS.md](SPECIALIST_ADMIN_JOURNEYS.md) and [SUPPORT_OPERATOR_JOURNEY.md](SUPPORT_OPERATOR_JOURNEY.md), [BILLING_ADMIN_JOURNEY.md](BILLING_ADMIN_JOURNEY.md), [KNOWLEDGE_ADMIN_JOURNEY.md](KNOWLEDGE_ADMIN_JOURNEY.md), [SECURITY_PRIVACY_ADMIN_JOURNEY.md](SECURITY_PRIVACY_ADMIN_JOURNEY.md) and [OPERATIONS_ADMIN_JOURNEY.md](OPERATIONS_ADMIN_JOURNEY.md).
 
 ## 30. Canonical route reference
 ### Top-level destinations (19)
@@ -249,8 +249,8 @@ Five code-defined, least-privilege roles are delegated operational roles and gai
 `/admin/users/{id}`, `/admin/workspaces/{id}`, `/admin/support/{ref}`, `/admin/plans/{id}`, `/admin/privacy/{ref}`, `/admin/knowledge/{id}`, `/admin/ai/{id}`, `/admin/jobs/{id}`, `/admin/integrations/{code}`, and the Review / Diagnostics pages `/review/agent`, `/review/rag` and `/review/evaluation`. The Security page's tabs (Security events, Audit, Incidents, Alerts, Role approvals) are views of `/admin/security`. Review / Diagnostics is part of the Admin navigation but renders outside the Admin shell (F-01).
 
 ## 31. Next steps
-1. W12.3C: Specialist Admin journeys (separate documents).
-2. W12.4 (A to F): Admin Operability & Production Configuration Closure.
+1. W12.3C Specialist Admin journeys: **complete** (separate documents, linked in section 29).
+2. W12.4 (A to F): Admin Operability & Production Configuration Closure, **next**, beginning with W12.4A (Knowledge Base Accessibility & Operations).
 3. W12.5: Preferred Admin UX corrections.
 4. Integrated Candidate + Admin + Operations requalification, then RC-P10-004, then AC-24 closure where its criterion is met (AC-24 remains PARTIAL), then P10C.
 
