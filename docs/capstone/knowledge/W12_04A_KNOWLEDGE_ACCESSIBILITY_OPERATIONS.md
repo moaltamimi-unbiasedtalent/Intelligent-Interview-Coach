@@ -1,6 +1,6 @@
 # W12.4A: Knowledge Base Accessibility & Operations (implementation and runbook)
 
-**Outcome: CODE FIX COMPLETE. LOCAL ENVIRONMENT NEEDS OPERATOR ACTION for the Admin-governed part only (nothing governed has been registered yet and no job worker is running).** The curated knowledge base itself is intact and is reachable again from any launch directory.
+**Outcome: CODE FIX COMPLETE; NORMAL ENVIRONMENT OPERATOR ACTION EXECUTED AND VERIFIED (section 11), with one residual defect R-1 (readiness read Degraded after a recovered failed job), now fixed (see the R-1 resolution section). R-1 FIX COMPLETE. OPERATOR CLOSURE PENDING: W12.4A is not marked complete.** The curated knowledge base is intact and reachable from any launch directory.
 
 - Starting point: `main` at `f35d5b356e6174278e9619ed37cdf7bbf6ed4c70`.
 - Paid or live calls: **0**. The retrieval test calls no model. No migration. No new permission (the 43 are unchanged).
@@ -84,6 +84,50 @@ Interpretation: with the fix, an app launched from any directory finds the curat
 
 ## 10. Limitations and residual items
 Governed knowledge still depends on a worker; there is no snapshot or rollback model; the retrieval test has no relevance judgement; Russian is not a knowledge-base language and no corpus scope was expanded (P10C is not started). A deployment that relied on relative `data/` paths with a different working directory must set `COPILOT_DATA_DIR`. The developer database's migration revision lag is unchanged. W12.4B to W12.4F, W12.5, integrated requalification, RC-P10-004 and P10C have not started; AC-24 remains PARTIAL.
+
+## 11. Operator closure (W12.4A-OPS, 2026-10-13)
+**Status: OPERATIONALLY VERIFIED IN THE NORMAL DEVELOPER ENVIRONMENT, WITH ONE RESIDUAL DEFECT (R-1 below). W12.4A is therefore not yet marked COMPLETE.** This section records that operator action was required and what it did. No product code was changed in this wave.
+
+- **Merged identity.** PR #150, feature commit `4cc478588d30b04696d16b6f4b362053d3c482a0`, merge commit `cb0d59df95c03115c48929edb9bb0883a11b8ee7` (`main`).
+- **Old runtimes.** A Next.js dev server on port 3015 and an API on port 8020 were running an older build with `API_ENV=staging`, a throwaway database (`/tmp/ask4mo_walkthrough.db`) and the working directory `/tmp/ask4mo_run`. Only those two Ask4Mo processes were stopped. No job worker was running.
+- **Developer database lineage (the finding that mattered).** The developer database recorded Alembic revision `0014_opportunities` but already held every later table: it had been built by `create_all`, which adds missing tables and never alters existing ones, and `alembic_version` was never advanced. A plain `alembic upgrade head` therefore fails on the first already-existing table (verified on a copy). Comparing it with a fresh head schema showed the only real drift was the two step-up columns on `auth_sessions` (`elevated_at`, `elevated_until`) and the two append-only audit triggers; every other difference was a cosmetic server default. The current runtime reads the `auth_sessions` columns, so it could not have run correctly against this database.
+- **Backup first.** A SQLite online backup was written outside the repository to `~/Downloads/ask4mo-operator-backups/interview_studio.pre-0025.20261013T203118.db` (integrity ok, revision 0014, 224 objects). Source SHA-1 at that point `81eef3479704ed91e58abb876926f98108968842`.
+- **Reconciliation, not recreation.** On a copy first, then on the developer database with no writer running: add the two missing `auth_sessions` columns and install the two append-only triggers using the project's own DDL function, then `alembic stamp head`. Nothing was dropped, recreated or reseeded; row counts were identical before and after (11 users, 46 interviews, 2 opportunities, 5 memories). The result matches a freshly migrated head schema (tables, columns, foreign keys, index names and triggers). Revision is now `0025_security_audit_incidents` (single head), 226 schema objects, integrity ok. This is **not** a plain `alembic upgrade head`, which is impossible for this database; it is recorded here so it is not mistaken for one.
+- **Canonical data root.** From the repository root, `/tmp` and `/private/var` the data root, Chroma directory and database URL resolved identically (`<repo>/data`). The API was started from an unrelated directory with `COPILOT_DATA_DIR` set and created nothing in that directory.
+- **Worker.** `python -m src.jobs.worker` with the same environment registered and reported a current heartbeat; the Admin readiness showed the worker as available.
+- **Admin access.** `/admin/knowledge` loaded for a platform admin with no 403, no 500 and no console error. Readiness read `No active sources` with `candidate retrieval ready: Yes` (curated knowledge base available), exactly as designed.
+- **Curated corpus.** Chroma collection `career_knowledge_base`, **14,087 chunks**, readable; all five structured stores load (the structured role and forecast lanes returned evidence from ESCO, ISCO-08 and BLS Employment Projections for role and outlook queries). Retrieval went through the production boundary with no model call. The vector lane opens and returns neighbours, but the offline local-hash embedder is lexical, so some narrative queries correctly report insufficient evidence (existing behaviour, not a defect of this wave).
+- **Mo.** On the real data root, Mo's career service and the `/career/chat` career service both use the same shared curated store (14,087 chunks) and the same governed retriever.
+- **Governed pipeline, using one clearly labelled synthetic source** (`[Operator validation - synthetic]`, harmless text, `internal_owned`, authority 3, provenance stating it is synthetic and to be retired). Counts before: 0 sources, 0 versions, 0 jobs, 0 workers. Upload, scan and parse, review, approve, index (the real worker, 2 chunks, embedder `LocalHashEmbedder`, collection `governed_knowledge`), activate. While indexed but not active it was **not** retrievable. After activation readiness showed one active, indexed source; the Admin retrieval test and the candidate boundary both returned that source and no other governed source. After retire, the source and its chunks were removed from the store by the worker, the Admin test and the candidate boundary no longer returned it, and readiness returned to `No active sources`. The retired source and its index record remain as lifecycle history, still marked synthetic. No Chroma file or row was edited by hand.
+- **Scanner finding (operator action).** The first parse failed with `scan_unavailable`: in the developer environment `FILE_SCAN_PROVIDER` is unset, so the scanner is the null scanner and governed uploads fail closed by design (no ClamAV is installed). To finish the validation the worker was run once with the **development-only `FILE_SCAN_PROVIDER=fake`** scanner (it flags only the EICAR test string; it is **not** a malware scan) and the failed version was reprocessed. The worker was then restarted **without** it. Real sources need a configured scanner (`FILE_SCAN_PROVIDER=clamav` with a reachable daemon); that belongs with W12.4B and W12.4F.
+- **Temporary account.** A labelled `operator-validation@example.test` platform admin was created to drive the Admin API and was removed afterwards through the normal account-deletion path; the user count is back to 11.
+- **0 paid or live calls.**
+
+### R-1 residual defect (found in the operator wave; fixed by the R-1 resolution below)
+**Symptom.** With the synthetic source active and indexed, a worker reporting and nothing pending, readiness read `Degraded`.
+**Root cause.** `readiness()` counts every failed knowledge job ever recorded (`failed_job_count`) and treats any as `degraded`. The earlier `scan_unavailable` parse job had already been resolved by reprocessing, but a failed job row is history and stays, so a healthy corpus can read Degraded indefinitely.
+**Why W12.4A qualification missed it.** The tests created failures by setting a version's state directly, never by a failed job that was later recovered through reprocess.
+**Proposed bounded fix.** Base the degraded signal on unresolved failures only (versions still in a failed state, or an active version without a built index), keep `failed_job_count` as an informational number, and add a regression test that fails a job, reprocesses it and expects Ready. No migration.
+**Effect today.** Cosmetic and conservative (it never claims Ready when it should not), but the Admin would show a misleading Degraded for a healthy corpus after any recovered failure. It is why closure was held open. The fix is recorded in the R-1 resolution section that follows (W12.4A-R1); closure remains pending its merge, a check of merged main and the final closure documentation.
+
+### Final normal-environment state
+- **Curated knowledge base:** READY. 14,087 chunks, five structured stores, candidate retrieval working, reachable from any launch directory.
+- **Admin-governed pipeline:** OPERATIONAL end to end (verified), with the scanner requirement above. **Active real governed sources: 0** (the synthetic validation source is retired). Readiness truthfully reads `No active sources`, which is not a failure.
+- **Owner Knowledge issue:** resolved for the curated knowledge base and for the governed pipeline's mechanics; the residual readiness wording (R-1) and a real scanner remain.
+- **Runtime left running:** API on 8020 and worker started from an unrelated directory with `COPILOT_DATA_DIR` pointing at the repository `data/`, and the current frontend on 3015 (development mode, anonymous developer identity). Sign in with one of the existing platform-admin accounts in the developer database.
+
+### Protected-store baselines (current)
+All fingerprints are taken **at rest** (API and worker stopped), because a running worker writes heartbeats to the database.
+
+| Store | Before this wave (historical baseline) | New accepted baseline | Why |
+|---|---|---|---|
+| Developer database | `81eef3479704ed91e58abb876926f98108968842`, 224 objects, revision 0014 | `5295ceb94858feb035e141d06e1f6ef7709cac29`, 226 objects, revision `0025_security_audit_incidents` | Intentional W12.4A operator reconciliation from revision 0014 to 0025, then normal operation (a short-lived validation account, a worker heartbeat, a retired synthetic knowledge source) |
+| Chroma | `6357c057606273f313b408cc7f144390453a0832` | `85fc95aafb483a8ea78c4829843560aa75928a31` | The empty `governed_knowledge` collection now exists beside `career_knowledge_base` (14,087 chunks, unchanged), after the synthetic source was activated and retired through the lifecycle (hash after the empty collection was created `4b61255f…`, with the source active `b6571813…`, after retirement `85fc95aa…`) |
+| Checkpoint | `b56d0c39fbba64786495ebb5db59eedecfae5c71` | unchanged | |
+| Research cache | `25264b17b36f7a365ff8dfaca9eec97e997ee710` | unchanged | |
+| `evaluations/` | `67259aba185daa495f8bf8958e1c905fd086b2be` | unchanged | |
+
+Earlier qualification records keep their historical hashes. Future waves compare against the new baseline once the developer database is at rest.
 
 ## R-1 resolution (W12.4A-R1)
 **Status: R-1 FIX COMPLETE. OPERATOR CLOSURE PENDING** (W12.4A is not marked complete by this change; closure waits for this fix to merge, a re-check of merged main in the normal environment, and the operator-closure documentation to be refreshed and merged).
