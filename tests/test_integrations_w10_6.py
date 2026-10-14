@@ -71,7 +71,7 @@ def test_registry_is_code_defined_and_has_no_user_controlled_destination():
     assert "billing" not in " ".join(I.REGISTRY).lower() and "stripe" not in json.dumps([d.name for d in I.REGISTRY.values()]).lower()
     # the only external destination any probe can reach is an adapter constant
     assert I.OPENROUTER_PROBE_URL == "https://openrouter.ai/api/v1/auth/key"
-    assert set(I.PROBES) == {"openrouter", "malware_scanner"}
+    assert set(I.PROBES) == {"openrouter", "malware_scanner", "email_brevo"}
     # no integration setting or credential is an arbitrary endpoint field
     for d in I.REGISTRY.values():
         for s in d.settings:
@@ -211,7 +211,7 @@ def test_a_probe_exception_is_discarded_and_never_leaks_its_text(env, monkeypatc
 
 def test_unsupported_and_unknown_integrations_and_no_url_input(env):
     _, adm = mk(env, "platform_admin")
-    for code in ("adzuna", "google_oidc", "email_brevo", "redis_rate_limit", "langfuse", "realtime_voice", "openai_embeddings"):
+    for code in ("adzuna", "google_oidc", "redis_rate_limit", "langfuse", "realtime_voice", "openai_embeddings"):
         assert env.c.post(f"{API}/admin/integrations/{code}/test", cookies=adm).status_code == 409, code
     assert env.c.post(f"{API}/admin/integrations/nope/test", cookies=adm).status_code == 404
     for hostile in ("http%3A%2F%2Flocalhost%3A8020%2F", "127.0.0.1", "169.254.169.254", "http%3A%2F%2F10.0.0.1"):
@@ -423,7 +423,7 @@ def test_command_center_integration_counts_are_gated_and_never_claim_health(env)
     _, sup = mk(env, "support_operator")
     home = env.c.get(f"{API}/admin/home", cookies=adm).json()
     assert set(home["integrations"]) == {"total", "configured", "runtime_active", "not_tested", "unhealthy"}
-    assert home["integrations"]["total"] == 9 and home["integrations"]["unhealthy"] == 0 and home["integrations"]["not_tested"] == 2
+    assert home["integrations"]["total"] == 9 and home["integrations"]["unhealthy"] == 0 and home["integrations"]["not_tested"] == 3
     assert "integrations" not in env.c.get(f"{API}/admin/home", cookies=sup).json()
     assert '"healthy"' not in json.dumps(home["integrations"])
 
@@ -432,7 +432,7 @@ def test_integration_routes_are_permissioned_and_no_entry_point_creates_integrat
     from src.api.admin_route_invariant import admin_routes, ungated
     routes = admin_routes()
     mine = [r for r in routes if r.path.startswith("/admin/integrations")]
-    assert len(mine) == 5 and ungated(routes) == []
+    assert len(mine) == 7 and ungated(routes) == []
     assert {p for r in mine for p in r.permissions} == {perm.INTEGRATIONS_READ, perm.INTEGRATIONS_MANAGE, perm.SECRET_ROTATE}
     assert not [r for r in mine if r.methods == ("POST",) and r.path == "/admin/integrations"]
     assert len(perm.PERMISSIONS) == 43

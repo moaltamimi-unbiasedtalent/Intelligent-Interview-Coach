@@ -118,7 +118,7 @@ def run() -> dict[str, tuple[bool, str]]:
 
     # ---- schema / scope
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("one_alembic_head_0026", mig[-1].startswith("0026_managed_secrets") and len(mig) == 26, mig[-1])
+    check("one_alembic_head_0027", mig[-1].startswith("0027_email_attempts") and len(mig) == 27, mig[-1])
     ci = read(".github/workflows/ci.yml")
     try:
         import yaml

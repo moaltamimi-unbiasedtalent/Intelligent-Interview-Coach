@@ -16,8 +16,9 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 
 from src.api.dependencies import (
-    _session_cookie_name, get_audit_repository, get_integration_service, get_repository, get_request_id, require_permission)
-from src.api.schemas.admin import IntegrationDetail, IntegrationList, IntegrationTestResult
+    _session_cookie_name, get_email_sender, get_audit_repository, get_integration_service, get_repository, get_request_id, require_permission)
+from src.api.schemas.admin import (
+    EmailDeliveryStatus, EmailTestRequest, EmailTestResult, IntegrationDetail, IntegrationList, IntegrationTestResult)
 from src.application import admin_audit as A
 from src.application import admin_permissions as perm
 from src.integrations import IntegrationNotFound, IntegrationTestUnsupported
@@ -54,6 +55,64 @@ def integration_detail(code: str, _p=Depends(require_permission(perm.INTEGRATION
                    "request_id": e.request_id, "created_at": e.created_at.isoformat() if e.created_at else None,
                    "context": e.context} for e in rows]
     return IntegrationDetail(**d, audit=events)
+
+
+@router.get("/{code}/delivery", response_model=EmailDeliveryStatus,
+            summary="Transactional email readiness and bounded delivery diagnostics (provider accepted is not delivered)")
+def email_delivery(code: str, request: Request, _p=Depends(require_permission(perm.INTEGRATIONS_READ)),
+                   service=Depends(get_integration_service), repo=Depends(get_repository),
+                   sender=Depends(get_email_sender)) -> EmailDeliveryStatus:
+    from src.mail.operations import build_delivery_status
+    from src.mail.service import EmailAttemptRepository
+
+    if code != "email_brevo":
+        raise HTTPException(status_code=404, detail="Integration not found.")
+    integration = _find(lambda: service.get(code))
+    return EmailDeliveryStatus(**build_delivery_status(
+        sender=sender, integration=integration, attempts=EmailAttemptRepository(repo.session_factory).summary(),
+        sender_is_current=service.email_sender_is_current(sender)))
+
+
+@router.post("/{code}/test-email", response_model=EmailTestResult,
+             summary="Send ONE test message to your OWN address through the live provider (explicit external side effect)")
+def send_test_email(code: str, body: EmailTestRequest, request: Request, principal=Depends(require_permission(perm.INTEGRATIONS_MANAGE)),
+                    repo=Depends(get_repository), audit_repo=Depends(get_audit_repository),
+                    sender=Depends(get_email_sender)) -> EmailTestResult:
+    """Bounded by construction: the only recipient is the acting administrator's own account email (there is no recipient field), the
+    message is a fixed harmless template with no link or token, the rate ceiling is 3 per hour, the request is audited BEFORE the send
+    (fail closed) and the outcome after. It is never run by qualification, which uses a recording transport."""
+    from src.api.rate_limit import enforce, user_key
+    from src.auth_repository import AccountRepository
+    from src.mail import EmailMessage
+    from src.mail.operations import adapter_name
+    from src.mail.service import EmailAttemptRepository, EmailService
+    from src.mail.templates import render
+
+    if code != "email_brevo":
+        raise HTTPException(status_code=404, detail="Integration not found.")
+    if body.confirm is not True:
+        raise HTTPException(status_code=422, detail="Confirm that you want to send one real test email to your own address.")
+    enforce("email_test_user", user_key(principal.user_id))
+    account = AccountRepository(repo.session_factory).get_account(principal.user_id)
+    if account is None or not account.email:
+        raise HTTPException(status_code=409, detail="Your account has no email address to send the test to.")
+    rid = get_request_id(request)
+    try:
+        audit_repo.record(**A.build_audit(event_type=A.ADMIN_EMAIL_TEST_REQUESTED, actor_user_id=principal.user_id, request_id=rid,
+                                          target_type="integration", target_id=code))
+    except Exception:  # noqa: BLE001
+        raise HTTPException(status_code=503, detail="Audit unavailable; nothing was sent.")
+    rendered = render("admin_test", locale=account.interface_locale)
+    result = EmailService(sender, EmailAttemptRepository(repo.session_factory)).deliver(
+        EmailMessage(to=account.email, subject=rendered.subject, body=rendered.body, category="admin_test"),
+        locale=rendered.locale, request_id=rid, user_id=principal.user_id)
+    _best_effort(audit_repo, A.ADMIN_EMAIL_TEST_SENT, principal, rid, code, "n/a", result="success" if result.accepted else "failure",
+                 status=result.status, category=result.failure_category or "none")
+    note = ("Submitted to the provider. That is not a delivery confirmation: check your inbox." if result.status == "provider_accepted"
+            else "A development adapter captured the message; nothing was sent to a provider." if result.status == "captured"
+            else "The provider did not accept the message." if result.status in ("failed", "not_configured")
+            else "The outcome is unknown. The message may or may not arrive; do not assume it failed.")
+    return EmailTestResult(status=result.status, failure_category=result.failure_category, adapter=adapter_name(sender), note=note)
 
 
 @router.post("/{code}/test", response_model=IntegrationTestResult,

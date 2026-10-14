@@ -69,6 +69,10 @@ def validate_runtime_config(env: str | None = None) -> EnvReport:
             "DATABASE_URL should be PostgreSQL in hosted operation (SQLite is dev-only).")
     if not _has("APP_BASE_URL"):
         report.critical.append("APP_BASE_URL must be set (used for links, cookies, OIDC redirect).")
+    base = (os.environ.get("APP_BASE_URL", "") or "").strip()
+    if base and not base.lower().startswith("https://") and is_prod:
+        # Verification and recovery links are built from this origin: a hosted production link must not downgrade to plain HTTP.
+        report.critical.append("APP_BASE_URL must be an https:// origin in production (verification and recovery links use it).")
     if not _has("SESSION_SECRET") and is_prod:
         # Sessions are opaque server-side tokens, but a deployment secret is expected for prod.
         report.warnings.append("SESSION_SECRET is not set (recommended for production).")

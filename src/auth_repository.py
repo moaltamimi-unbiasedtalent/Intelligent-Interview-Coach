@@ -18,7 +18,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
@@ -254,6 +254,16 @@ class AccountRepository:
             # Link only on a provider-verified email — never merge on an unverified one.
             if norm and email_verified:
                 user = session.scalar(select(User).where(User.email == norm))
+                if user is not None and not user.email_verified:
+                    # PRE-HIJACK GUARD (W12.4C): this account was created by password registration and its email was NEVER verified,
+                    # so whoever registered it may not control the mailbox. The provider just proved the mailbox owner, so the
+                    # unproven credential, its sessions and its pending links are destroyed before the identity is linked.
+                    session.execute(delete(PasswordCredential).where(PasswordCredential.user_id == user.id))
+                    now = utcnow()
+                    for row in session.scalars(select(AuthSession).where(AuthSession.user_id == user.id, AuthSession.revoked_at.is_(None))).all():
+                        row.revoked_at = now
+                    for row in session.scalars(select(AuthToken).where(AuthToken.user_id == user.id, AuthToken.consumed_at.is_(None))).all():
+                        row.consumed_at = now
 
             if user is None:
                 user = User(
@@ -629,6 +639,10 @@ class TokenRepository:
     ) -> None:
         now = utcnow()
         with self._session_factory() as session:
+            # Only the newest link of a purpose may work: re-sending or re-requesting retires the earlier links (W12.4C).
+            for old in session.scalars(select(AuthToken).where(
+                    AuthToken.user_id == user_id, AuthToken.purpose == purpose, AuthToken.consumed_at.is_(None))).all():
+                old.consumed_at = now
             session.add(
                 AuthToken(
                     token_hash=token_hash,
@@ -641,23 +655,33 @@ class TokenRepository:
             session.commit()
 
     def consume(self, *, token_hash: str, purpose: str) -> int | None:
-        """Atomically consume a valid token, returning its user_id (else None).
+        """Atomically consume a valid token, returning its user_id (else None). See :meth:`consume_detailed`."""
+        return self.consume_detailed(token_hash=token_hash, purpose=purpose)[0]
 
-        Returns None for unknown, wrong-purpose, expired, or already-consumed tokens
-        (token replay is therefore impossible).
+    def consume_detailed(self, *, token_hash: str, purpose: str) -> tuple[int | None, str | None]:
+        """Consume a token with ONE conditional UPDATE, so two concurrent redemptions cannot both succeed.
+
+        Returns ``(user_id, None)`` on success, else ``(None, reason)`` with reason ``invalid`` (unknown or wrong purpose),
+        ``used`` (already consumed) or ``expired``. The reason is only ever shown to the holder of the 256-bit token.
         """
         now = utcnow()
         with self._session_factory() as session:
+            res = session.execute(
+                update(AuthToken)
+                .where(AuthToken.token_hash == token_hash, AuthToken.purpose == purpose,
+                       AuthToken.consumed_at.is_(None), AuthToken.expires_at > now)
+                .values(consumed_at=now))
+            if res.rowcount == 1:
+                row = session.get(AuthToken, token_hash)
+                session.commit()
+                return row.user_id, None
+            session.rollback()
             row = session.get(AuthToken, token_hash)
             if row is None or row.purpose != purpose:
-                return None
+                return None, "invalid"
             if row.consumed_at is not None:
-                return None
-            if _aware(row.expires_at) <= now:
-                return None
-            row.consumed_at = now
-            session.commit()
-            return row.user_id
+                return None, "used"
+            return None, "expired"
 
     def invalidate_for_user(self, *, user_id: int, purpose: str) -> int:
         """Consume all outstanding tokens of a purpose (e.g. after a completed reset)."""

@@ -7,12 +7,12 @@ import { AuthCard, LabelledField } from "./AuthCard";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
-import { useT } from "@/components/i18n/I18nProvider";
+import { useI18n } from "@/components/i18n/I18nProvider";
 
 const MIN_PASSWORD = 10;
 
 export function RegisterForm() {
-  const t = useT();
+  const { t, locale } = useI18n();
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
@@ -33,9 +33,10 @@ export function RegisterForm() {
         email,
         password,
         display_name: displayName.trim() || null,
+        locale, // the recipient's interface language for the verification email
       });
-      // Uniform, non-enumerating message from the backend.
-      setDone(res.message);
+      // Uniform, non-enumerating outcome; the copy is localised here (the server text is only the fallback).
+      setDone(t("auth.registerSent") || res.message);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("auth.registrationFailed"));
     } finally {

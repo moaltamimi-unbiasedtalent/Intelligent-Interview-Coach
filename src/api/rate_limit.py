@@ -80,6 +80,7 @@ AUTH_POLICIES: dict[str, RateLimitPolicy] = {
     "auth_login_account": RateLimitPolicy("auth_login_account", 8, 300, "account"),
     "auth_register_ip": RateLimitPolicy("auth_register_ip", 8, 3600, "ip"),
     "auth_verify_resend": RateLimitPolicy("auth_verify_resend", 5, 3600, "account"),
+    "auth_verify_resend_cooldown": RateLimitPolicy("auth_verify_resend_cooldown", 1, 60, "account"),
     "auth_forgot_ip": RateLimitPolicy("auth_forgot_ip", 6, 3600, "ip"),
     "auth_forgot_account": RateLimitPolicy("auth_forgot_account", 4, 3600, "account"),
     "auth_reset_ip": RateLimitPolicy("auth_reset_ip", 12, 3600, "ip"),
@@ -113,6 +114,8 @@ SECURITY_POLICIES: dict[str, RateLimitPolicy] = {
     "stepup_user": RateLimitPolicy("stepup_user", 5, 300, "user"),
     "role_request_user": RateLimitPolicy("role_request_user", 20, 3600, "user"),
     "role_approve_user": RateLimitPolicy("role_approve_user", 30, 3600, "user"),
+    # W12.4C: a real provider send to the administrator's OWN address; a hard, small ceiling (never bulk mail).
+    "email_test_user": RateLimitPolicy("email_test_user", 3, 3600, "user"),
 }
 
 POLICIES: dict[str, RateLimitPolicy] = {**AUTH_POLICIES, **COST_POLICIES, **SUPPORT_POLICIES, **SECURITY_POLICIES}

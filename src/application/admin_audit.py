@@ -41,6 +41,10 @@ ADMIN_CREDENTIAL_REPLACEMENT_SUCCEEDED: Final = "admin.credential_replacement_su
 ADMIN_CREDENTIAL_REPLACEMENT_FAILED: Final = "admin.credential_replacement_failed"
 # W12.4B: removing an Admin-managed credential (the environment layer is never touched). Same payload rules: code, slot, action, result.
 ADMIN_CREDENTIAL_REMOVED: Final = "admin.credential_removed"
+# W12.4C: an explicit real send of one test message to the acting administrator's OWN address. Payloads: message type and a bounded
+# result category only; never an address, link, token or message content.
+ADMIN_EMAIL_TEST_REQUESTED: Final = "admin.email_test_requested"
+ADMIN_EMAIL_TEST_SENT: Final = "admin.email_test_sent"
 # W10.9 (jobs). Payloads: job public id, job type and old/new state; never a job payload, an error body or a secret.
 ADMIN_JOB_ENQUEUED: Final = "admin.job_enqueued"
 ADMIN_JOB_RETRY_REQUESTED: Final = "admin.job_retry_requested"
@@ -133,7 +137,7 @@ ADMIN_EVENT_NAMES: Final[frozenset[str]] = frozenset({
     ADMIN_PLAN_VERSION_CREATED, ADMIN_PLAN_VERSION_UPDATED, ADMIN_PLAN_VERSION_ACTIVATED,
     ADMIN_PLAN_VERSION_RETIRED, ADMIN_SUBSCRIPTION_ASSIGNED,
     ADMIN_INTEGRATION_TEST_RUN, ADMIN_CREDENTIAL_REPLACEMENT_REQUESTED, ADMIN_CREDENTIAL_REPLACEMENT_SUCCEEDED,
-    ADMIN_CREDENTIAL_REPLACEMENT_FAILED, ADMIN_CREDENTIAL_REMOVED, ADMIN_JOB_ENQUEUED, ADMIN_JOB_RETRY_REQUESTED, ADMIN_JOB_CANCELLED,
+    ADMIN_CREDENTIAL_REPLACEMENT_FAILED, ADMIN_CREDENTIAL_REMOVED, ADMIN_EMAIL_TEST_REQUESTED, ADMIN_EMAIL_TEST_SENT, ADMIN_JOB_ENQUEUED, ADMIN_JOB_RETRY_REQUESTED, ADMIN_JOB_CANCELLED,
     ADMIN_KNOWLEDGE_VERSION_UPLOADED, ADMIN_KNOWLEDGE_VERSION_UPDATED, ADMIN_KNOWLEDGE_VERSION_APPROVED,
     ADMIN_KNOWLEDGE_VERSION_REJECTED, ADMIN_KNOWLEDGE_INDEX_REQUESTED, ADMIN_KNOWLEDGE_VERSION_ACTIVATED,
     ADMIN_KNOWLEDGE_VERSION_RETIRED, ADMIN_KNOWLEDGE_VERSION_DELETED, ADMIN_KNOWLEDGE_REPROCESS_REQUESTED,

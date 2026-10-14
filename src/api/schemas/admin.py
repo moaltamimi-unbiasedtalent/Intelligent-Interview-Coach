@@ -415,6 +415,82 @@ class IntegrationTestResult(_Strict):
     latency_ms: int | None
 
 
+# ---- W12.4C email delivery diagnostics: aggregates and bounded categories only. No recipient, user id, token, link, subject or body field exists. ----
+class EmailAttemptView(_Strict):
+    at: str
+    message_type: str
+    status: str
+    failure_category: str | None
+
+
+class EmailLast24h(_Strict):
+    provider_accepted: int
+    failed: int
+    delivery_unknown: int
+    captured: int
+
+
+class EmailDiagnostics(_Strict):
+    retention_days: int
+    last_attempt: EmailAttemptView | None
+    last_accepted: EmailAttemptView | None
+    last_failure: EmailAttemptView | None
+    last_identity_attempt: EmailAttemptView | None
+    last_24h: EmailLast24h
+    recent: list[EmailAttemptView | None]
+
+
+class EmailProviderAccount(_Strict):
+    configured: bool
+    source_kind: str
+
+
+class EmailConnectionTest(_Strict):
+    state: str
+    last_tested_at: str | None
+    category: str | None
+
+
+class EmailLinkOrigin(_Strict):
+    configured: bool
+    https: bool
+
+
+class EmailPipeline(_Strict):
+    verification: str
+    recovery: str
+
+
+class EmailDeliveryStatus(_Strict):
+    status: str
+    provider_selected: str
+    adapter_in_process: str
+    provider_account: EmailProviderAccount
+    sender_configured: bool
+    sender_verification: str
+    restart_required: bool
+    restart_reason: str | None
+    last_test: EmailConnectionTest
+    delivery_confirmation: str
+    live_delivery: str
+    link_origin: EmailLinkOrigin
+    identity_pipeline: EmailPipeline
+    diagnostics: EmailDiagnostics
+    last_failure_category: str | None
+    note: str
+
+
+class EmailTestRequest(_Strict):
+    confirm: bool
+
+
+class EmailTestResult(_Strict):
+    status: str
+    failure_category: str | None
+    adapter: str
+    note: str
+
+
 # ---- W10.9 jobs: safe projections only. No raw payload field exists; the type-defined summary is the only view. ----
 class JobLease(_Strict):
     held: bool

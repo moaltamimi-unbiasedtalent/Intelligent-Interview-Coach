@@ -43,6 +43,7 @@ from src.api.schemas.auth import (
     ResetPasswordRequest,
     VerifyEmailRequest,
 )
+from src.api.coded_errors import CodedHTTPException
 from src.api.rate_limit import client_ip, email_key, enforce, user_key
 from src.application.admin_permissions import sorted_permissions
 from src.application.authorization import Capability
@@ -54,6 +55,7 @@ _UNIFORM_REGISTER = (
     "If that email can be registered, we've sent a verification link. "
     "Please check your inbox, then sign in."
 )
+_TOKEN_CODES = {"invalid": "token_invalid", "used": "token_used", "expired": "token_expired"}
 _UNIFORM_FORGOT = (
     "If an account exists for that email, we've sent a password-reset link."
 )
@@ -107,6 +109,7 @@ def register(
         password=body.password,
         display_name=body.display_name,
         request_id=request_id,
+        locale=body.locale,
     )
     return MessageResponse(message=_UNIFORM_REGISTER)
 
@@ -164,9 +167,10 @@ def verify_email(
     # Token-validation abuse bound (§18): per-IP. Tokens are 256-bit single-use, but this
     # bounds brute-force attempts regardless.
     enforce("auth_reset_ip", client_ip(request))
-    ok = service.verify_email(token=body.token, request_id=request_id)
+    ok, reason = service.verify_email_detailed(token=body.token, request_id=request_id)
     if not ok:
-        raise HTTPException(status_code=400, detail="This verification link is invalid or has expired.")
+        raise CodedHTTPException(400, _TOKEN_CODES.get(reason or "invalid", "token_invalid"),
+                                 "This verification link is invalid or has expired.")
     return MessageResponse(message="Your email is verified.")
 
 
@@ -196,11 +200,12 @@ def reset_password(
     request_id: str = Depends(get_request_id),
 ) -> MessageResponse:
     enforce("auth_reset_ip", client_ip(request))
-    ok = service.reset_password(
+    ok, reason = service.reset_password_detailed(
         token=body.token, new_password=body.password, request_id=request_id
     )
     if not ok:
-        raise HTTPException(status_code=400, detail="This reset link is invalid or has expired.")
+        raise CodedHTTPException(400, _TOKEN_CODES.get(reason or "invalid", "token_invalid"),
+                                 "This reset link is invalid or has expired.")
     # Reset revokes all sessions; clear any cookie on this device too.
     _clear_session_cookie(request, response)
     return MessageResponse(message="Your password has been reset. Please sign in.")
@@ -339,10 +344,15 @@ def update_preferences(
 def resend_verification(
     service=Depends(get_auth_service),
     user_id: int = Depends(get_current_user_id),
+    request_id: str = Depends(get_request_id),
 ) -> MessageResponse:
-    # Mail-bomb bound (§18): per-account (the authenticated caller).
+    # Mail-bomb bounds (§18): a short per-account cooldown AND an hourly ceiling (the authenticated caller).
+    enforce("auth_verify_resend_cooldown", user_key(user_id))
     enforce("auth_verify_resend", user_key(user_id))
-    service.send_verification(user_id=user_id)
+    result = service.send_verification(user_id=user_id, request_id=request_id)
+    # The caller is signed in and asking about their OWN account, so an honest provider failure leaks nothing.
+    if result is not None and not result.accepted:
+        raise CodedHTTPException(503, "email_unavailable", "We could not send the email right now. Please try again later.")
     return MessageResponse(message="If your email is unverified, we've sent a new link.")
 
 

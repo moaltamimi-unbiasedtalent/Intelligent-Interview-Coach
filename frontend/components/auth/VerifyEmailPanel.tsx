@@ -30,7 +30,11 @@ export function VerifyEmailPanel() {
       })
       .catch((err) => {
         setState("error");
-        setMessage(err instanceof ApiError ? err.message : t("auth.verifyLinkInvalid"));
+        setMessage(
+          err instanceof ApiError && err.code === "token_expired" ? t("auth.verifyLinkExpired")
+            : err instanceof ApiError && err.code === "token_used" ? t("auth.verifyLinkUsed")
+            : t("auth.verifyLinkInvalid"),
+        );
       });
   }, [token, t]);
 

@@ -27,7 +27,9 @@ from src.auth_repository import (
     SessionRepository,
     TokenRepository,
 )
-from src.mail import EmailMessage, EmailSender
+from src.mail import EmailMessage, EmailSender, SendResult
+from src.mail.service import EmailAttemptRepository, EmailService
+from src.mail.templates import normalise_locale, render
 from src.persistence import (
     ACCOUNT_STATUS_ACTIVE,
     TOKEN_PURPOSE_EMAIL_VERIFICATION,
@@ -88,12 +90,16 @@ class AuthenticationService:
         audit: AuditRepository,
         email: EmailSender,
         config: AuthConfig | None = None,
+        email_attempts: EmailAttemptRepository | None = None,
     ) -> None:
         self._accounts = accounts
         self._sessions = sessions
         self._tokens = auth_tokens
         self._audit = audit
         self._email = email
+        # One submission boundary (W12.4C): every message goes through EmailService, which returns what the provider answered and records a
+        # minimal attempt. Identity code never sees HTTP, a credential or a provider response.
+        self._mail = email if isinstance(email, EmailService) else EmailService(email, email_attempts)
         self._config = config or AuthConfig()
 
     @property
@@ -109,6 +115,7 @@ class AuthenticationService:
         password: str,
         display_name: str | None = None,
         request_id: str | None = None,
+        locale: str | None = None,
     ) -> RegisterOutcome:
         """Create a password account and email a verification link.
 
@@ -133,18 +140,10 @@ class AuthenticationService:
                 target_type="email",
                 request_id=request_id,
             )
-            self._email.send(
-                EmailMessage(
-                    to=email_norm,
-                    subject="Your Ask4Mo account",
-                    body=(
-                        "Someone tried to create an Ask4Mo account with this email, "
-                        "but one already exists. If this was you, please sign in or "
-                        "reset your password."
-                    ),
-                    category="email_verification",
-                )
-            )
+            loc = normalise_locale(locale)
+            rendered = render("account_notice", locale=loc)
+            self._deliver(EmailMessage(to=email_norm, subject=rendered.subject, body=rendered.body, category="account_notice"),
+                          locale=loc, request_id=request_id, user_id=None)
             return RegisterOutcome(created=False)
 
         self._audit.record(
@@ -153,7 +152,10 @@ class AuthenticationService:
             actor_user_id=user_id,
             request_id=request_id,
         )
-        self._send_verification(user_id=user_id, email=email_norm)
+        loc = normalise_locale(locale)
+        if locale:
+            self._accounts.set_interface_locale(user_id, loc)      # the recipient's language for every later identity email
+        self._send_verification(user_id=user_id, email=email_norm, locale=loc, request_id=request_id)
         return RegisterOutcome(created=True)
 
     # -- login / logout -------------------------------------------------------
@@ -252,12 +254,14 @@ class AuthenticationService:
 
     # -- email verification ---------------------------------------------------
 
-    def send_verification(self, *, user_id: int) -> None:
+    def send_verification(self, *, user_id: int, request_id: str | None = None) -> SendResult | None:
+        """(Re)send the caller's OWN verification link. Returns the submission result, or None when there is nothing to send."""
         account = self._accounts.get_account(user_id)
         if account and account.email and not account.email_verified:
-            self._send_verification(user_id=user_id, email=account.email)
+            return self._send_verification(user_id=user_id, email=account.email, locale=account.interface_locale, request_id=request_id)
+        return None
 
-    def _send_verification(self, *, user_id: int, email: str) -> None:
+    def _send_verification(self, *, user_id: int, email: str, locale: str | None, request_id: str | None = None) -> SendResult:
         raw = tokens.generate_token(tokens.LINK_TOKEN_BYTES)
         self._tokens.issue(
             token_hash=tokens.hash_token(raw),
@@ -266,28 +270,36 @@ class AuthenticationService:
             ttl_seconds=self._config.verify_ttl_seconds,
         )
         link = f"{self._config.app_base_url}/verify-email?token={quote(raw)}"
-        self._email.send(
-            EmailMessage(
-                to=email,
-                subject="Verify your Ask4Mo email",
-                body=f"Welcome to Ask4Mo. Verify your email:\n{link}\n\nThis link expires in 24 hours.",
-                category="email_verification",
-            )
-        )
+        rendered = render("email_verification", locale=locale, link=link, expires_in_seconds=self._config.verify_ttl_seconds)
+        return self._deliver(EmailMessage(to=email, subject=rendered.subject, body=rendered.body, category="email_verification"),
+                             locale=rendered.locale, request_id=request_id, user_id=user_id)
+
+    def _deliver(self, message: EmailMessage, *, locale: str | None, request_id: str | None, user_id: int | None) -> SendResult:
+        """Submit and, when the provider did not take the message, audit a bounded failure (category only: no recipient, link or token)."""
+        result = self._mail.deliver(message, locale=locale, request_id=request_id, user_id=user_id)
+        if not result.accepted:
+            self._audit.record(event_type="account.email_failed", result="failure", actor_user_id=user_id, request_id=request_id,
+                               context={"message_type": message.category, "category": result.failure_category or "unknown"})
+        return result
 
     def verify_email(self, *, token: str, request_id: str | None = None) -> bool:
         """Consume a verification token (single-use) and mark the email verified."""
+        return self.verify_email_detailed(token=token, request_id=request_id)[0]
+
+    def verify_email_detailed(self, *, token: str, request_id: str | None = None) -> tuple[bool, str | None]:
+        """As :meth:`verify_email`, plus a bounded reason on failure (``invalid`` | ``used`` | ``expired``) for the holder of the link."""
         if not token:
-            return False
-        user_id = self._tokens.consume(
+            return False, "invalid"
+        user_id, reason = self._tokens.consume_detailed(
             token_hash=tokens.hash_token(token),
             purpose=TOKEN_PURPOSE_EMAIL_VERIFICATION,
         )
         if user_id is None:
             self._audit.record(
-                event_type="account.verify_email", result="failure", request_id=request_id
+                event_type="account.verify_email", result="failure", request_id=request_id,
+                context={"reason": reason or "invalid"},
             )
-            return False
+            return False, reason
         self._accounts.mark_email_verified(user_id)
         self._audit.record(
             event_type="account.verify_email",
@@ -295,12 +307,17 @@ class AuthenticationService:
             actor_user_id=user_id,
             request_id=request_id,
         )
-        return True
+        return True, None
 
     # -- password reset -------------------------------------------------------
 
     def request_password_reset(self, *, email: str, request_id: str | None = None) -> None:
-        """Issue a reset link IF the account exists — always returns None (no enumeration)."""
+        """Issue a reset link IF a password account exists — always returns None (no enumeration).
+
+        Only an ACTIVE account that actually has a password credential gets a link: an OIDC-only identity cannot be given a password
+        by this flow without a deliberate product decision, and a suspended or deactivated account is never mailed. The public
+        response is identical in every case; only the audit trail records which branch was taken.
+        """
         try:
             email_norm = _valid_email(email)
         except ValidationError:
@@ -311,6 +328,12 @@ class AuthenticationService:
                 event_type="account.reset_request", result="unknown_email", request_id=request_id
             )
             return
+        if account.status != ACCOUNT_STATUS_ACTIVE or not account.has_password:
+            self._audit.record(
+                event_type="account.reset_request", result="not_eligible", actor_user_id=account.user_id, request_id=request_id,
+                context={"reason": "inactive_account" if account.status != ACCOUNT_STATUS_ACTIVE else "no_password_credential"},
+            )
+            return
         raw = tokens.generate_token(tokens.LINK_TOKEN_BYTES)
         self._tokens.issue(
             token_hash=tokens.hash_token(raw),
@@ -319,17 +342,12 @@ class AuthenticationService:
             ttl_seconds=self._config.reset_ttl_seconds,
         )
         link = f"{self._config.app_base_url}/reset-password?token={quote(raw)}"
-        self._email.send(
-            EmailMessage(
-                to=email_norm,
-                subject="Reset your Ask4Mo password",
-                body=f"Reset your password:\n{link}\n\nThis link expires in 1 hour. If you did not request this, ignore this email.",
-                category="password_reset",
-            )
-        )
+        rendered = render("password_reset", locale=account.interface_locale, link=link, expires_in_seconds=self._config.reset_ttl_seconds)
+        result = self._deliver(EmailMessage(to=email_norm, subject=rendered.subject, body=rendered.body, category="password_reset"),
+                               locale=rendered.locale, request_id=request_id, user_id=account.user_id)
         self._audit.record(
             event_type="account.reset_request",
-            result="success",
+            result="success" if result.accepted else "delivery_failed",
             actor_user_id=account.user_id,
             request_id=request_id,
         )
@@ -338,18 +356,29 @@ class AuthenticationService:
         self, *, token: str, new_password: str, request_id: str | None = None
     ) -> bool:
         """Consume a reset token, set the new password and revoke all sessions."""
+        return self.reset_password_detailed(token=token, new_password=new_password, request_id=request_id)[0]
+
+    def reset_password_detailed(
+        self, *, token: str, new_password: str, request_id: str | None = None
+    ) -> tuple[bool, str | None]:
+        """As :meth:`reset_password`, plus a bounded failure reason (``invalid`` | ``used`` | ``expired``).
+
+        Single use is enforced by one conditional UPDATE. Every session of the account is revoked (the old password may have been
+        compromised); other pending reset links die with it; OIDC identities and other accounts are untouched.
+        """
         _valid_password(new_password)
         if not token:
-            return False
-        user_id = self._tokens.consume(
+            return False, "invalid"
+        user_id, reason = self._tokens.consume_detailed(
             token_hash=tokens.hash_token(token),
             purpose=TOKEN_PURPOSE_PASSWORD_RESET,
         )
         if user_id is None:
             self._audit.record(
-                event_type="account.reset_complete", result="failure", request_id=request_id
+                event_type="account.reset_complete", result="failure", request_id=request_id,
+                context={"reason": reason or "invalid"},
             )
-            return False
+            return False, reason
         self._accounts.set_password(user_id, passwords.hash_password(new_password))
         # Reset invalidates every existing session (defence in depth after takeover).
         self._sessions.revoke_all_for_user(user_id)
@@ -362,7 +391,7 @@ class AuthenticationService:
             actor_user_id=user_id,
             request_id=request_id,
         )
-        return True
+        return True, None
 
     # -- account view ---------------------------------------------------------
 

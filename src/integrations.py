@@ -116,8 +116,11 @@ REGISTRY: dict[str, IntegrationDef] = {d.code: d for d in (
         "Sends account emails (verification and password reset) when selected. Support notifications are not sent.",
         credentials=(CredentialSlot("api_key", "API key", "BREVO_API_KEY"),),
         settings=(SettingDef("provider", "Email provider", "EMAIL_PROVIDER", ("console", "brevo", "memory")),),
-        test_note="No manual probe: a real test would send an email.",
-        validation_note="Live delivery has not been validated; support ticket replies are never emailed."),
+        test_supported=True,
+        test_note="Checks the Brevo credential and that the configured sender is a verified Brevo sender. It sends NO email. A separate, explicit "
+                  "test-email action sends one message to your own address.",
+        validation_note="Provider acceptance is not delivery and no delivery events are collected; live delivery is UNVERIFIED until an operator "
+                        "test inbox confirms it. Support ticket replies are never emailed."),
     IntegrationDef(
         "redis_rate_limit", "Redis (shared rate limiting)", "rate_limiting", "Redis sliding window",
         "Optional shared store for rate limits across replicas. In-memory per-process limiting is the default.",
@@ -257,9 +260,55 @@ def probe_malware_scanner(store: SecretStore) -> ProbeResult:
     return ProbeResult("success" if ok else "failure", "ok" if ok else "unavailable", int((time.monotonic() - started) * 1000))
 
 
+BREVO_ACCOUNT_URL = "https://api.brevo.com/v3/account"      # adapter constants: never user input
+BREVO_SENDERS_URL = "https://api.brevo.com/v3/senders"
+
+
+def probe_brevo(store: SecretStore, *, transport: httpx.BaseTransport | None = None) -> ProbeResult:
+    """Two read-only GETs: the credential authenticates, and the configured sender is an active Brevo sender. NO email is sent."""
+    import os
+
+    key = store.get_for_runtime("BREVO_API_KEY")
+    sender = (os.environ.get("EMAIL_SENDER") or "").strip().lower()
+    if key is None or not sender:
+        return ProbeResult("failure", "configuration_error")
+    headers = {"api-key": key.get_secret_value(), "accept": "application/json"}
+    started = time.monotonic()
+    try:
+        with httpx.Client(timeout=PROBE_TIMEOUT_SECONDS, follow_redirects=False, transport=transport) as client:
+            acct = client.get(BREVO_ACCOUNT_URL, headers=headers)
+            if not (200 <= acct.status_code < 300):
+                return _http_failure(acct.status_code, started)
+            senders = client.get(BREVO_SENDERS_URL, headers=headers)
+            if not (200 <= senders.status_code < 300):
+                return _http_failure(senders.status_code, started)
+            try:
+                active = {str(s.get("email", "")).strip().lower() for s in senders.json().get("senders", []) if s.get("active", True)}
+            except Exception:  # noqa: BLE001
+                return ProbeResult("failure", "unknown")
+    except httpx.TimeoutException:
+        return ProbeResult("failure", "timeout")
+    except httpx.HTTPError:
+        return ProbeResult("failure", "unavailable")
+    ms = int((time.monotonic() - started) * 1000)
+    if sender not in active:
+        return ProbeResult("failure", "configuration_error", ms)      # credential works, but the sender is not a verified Brevo sender
+    return ProbeResult("success", "ok", ms)
+
+
+def _http_failure(code: int, started: float) -> ProbeResult:
+    ms = int((time.monotonic() - started) * 1000)
+    if code in (401, 403):
+        return ProbeResult("failure", "unauthorized", ms)
+    if code == 429:
+        return ProbeResult("failure", "rate_limited", ms)
+    return ProbeResult("failure", "unavailable" if code >= 500 else "unknown", ms)
+
+
 PROBES: dict[str, Callable[[SecretStore], ProbeResult]] = {
     "openrouter": probe_openrouter,
     "malware_scanner": probe_malware_scanner,
+    "email_brevo": probe_brevo,
 }
 
 
@@ -431,6 +480,15 @@ class IntegrationService:
             raise SecretStoreReadOnly("This credential is managed outside Ask4Mo and cannot be changed here.")
         out = self._store.remove(cred.external_name, actor_user_id=actor_user_id, expected_revision=expected_revision, audit=audit)
         return out if isinstance(out, dict) else {"action": "removed"}
+
+    def email_sender_is_current(self, sender) -> bool:
+        """Does the running Brevo client hold the credential that resolves NOW? A comparison inside this module; no value leaves it."""
+        from src.mail.sender import BrevoEmailSender
+
+        if not isinstance(sender, BrevoEmailSender):
+            return False
+        key = self._store.get_for_runtime("BREVO_API_KEY")
+        return sender.credential_matches(key.get_secret_value() if key else None)
 
     def stats(self) -> dict:
         items = self.list()

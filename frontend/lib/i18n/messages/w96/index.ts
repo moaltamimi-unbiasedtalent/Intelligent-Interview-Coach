@@ -30,6 +30,7 @@ import w103 from "../w103"; // P10B-W10.3 — Customer support copy (all 8 local
 import w104 from "../w104"; // P10B-W10.4 — Plan copy (all 8 locales)
 import prov from "../prov"; // Pilot 2 P2-04 provenance vocabulary (all 8 locales)
 import v4 from "../v4"; // Ask4Mo v4 experience: floating nav, Getting Started, story, pricing transparency, journey cues (all 8 locales)
+import w124c from "../w124c"; // W12.4C — identity-email states (all 8 locales)
 import w1010 from "../w1010"; // P10B-W10.10 — Privacy request + legal version copy (all 8 locales)
 // P10B-W9.7: Russian blocks live beside (not inside) the 7-locale fragment files, each typed against
 // its fragment's English shape so missing/extra keys fail `tsc`. `help` carries its own `ru` entry.
@@ -61,6 +62,7 @@ const FRAGMENTS: Array<{ name: string; blocks: Fragment }> = [
   { name: "w103", blocks: w103 as unknown as Fragment },
   { name: "w104", blocks: w104 as unknown as Fragment },
   { name: "w1010", blocks: w1010 as unknown as Fragment },
+  { name: "w124c", blocks: w124c as unknown as Fragment },
   { name: "v4", blocks: v4 as unknown as Fragment },
   { name: "prov", blocks: prov as unknown as Fragment },
 ];

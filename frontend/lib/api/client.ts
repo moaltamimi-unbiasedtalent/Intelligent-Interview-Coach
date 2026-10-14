@@ -52,6 +52,8 @@ import type {
   IntegrationDetail,
   IntegrationRow,
   IntegrationTestResult,
+  EmailDeliveryStatus,
+  EmailTestResult,
   AssignablePlan,
   PlanDetail,
   PlanVersionRow,
@@ -601,6 +603,12 @@ export const api = {
     integrations: (opts?: RequestOptions) => request<{ items: IntegrationRow[] }>("GET", "/admin/integrations", opts),
     integration: (code: string, opts?: RequestOptions) =>
       request<IntegrationDetail>("GET", `/admin/integrations/${encodeURIComponent(code)}`, opts),
+    /** Aggregates and bounded categories only. Provider accepted is NOT delivered. */
+    emailDelivery: (code: string, opts?: RequestOptions) =>
+      request<EmailDeliveryStatus>("GET", `/admin/integrations/${encodeURIComponent(code)}/delivery`, opts),
+    /** A REAL provider send of one fixed test message to the acting administrator's own address (explicit confirmation required). */
+    sendTestEmail: (code: string, opts?: RequestOptions) =>
+      request<EmailTestResult>("POST", `/admin/integrations/${encodeURIComponent(code)}/test-email`, { body: { confirm: true }, ...opts }),
     testIntegration: (code: string, opts?: RequestOptions) =>
       request<IntegrationTestResult>("POST", `/admin/integrations/${encodeURIComponent(code)}/test`, opts),
     /** WRITE-ONLY: the response never contains the value. Needs a fresh password step-up (403 step_up_required otherwise). */

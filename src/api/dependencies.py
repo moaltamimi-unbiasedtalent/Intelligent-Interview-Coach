@@ -640,6 +640,7 @@ def get_auth_service(
     database and an in-memory email capture — no separate per-repo overrides needed.
     """
     from src.application.auth_service import AuthenticationService
+    from src.mail.service import EmailAttemptRepository
     from src.auth_repository import (
         AccountRepository,
         AuditRepository,
@@ -654,6 +655,7 @@ def get_auth_service(
         auth_tokens=TokenRepository(sf),
         audit=AuditRepository(sf),
         email=email,
+        email_attempts=EmailAttemptRepository(sf),
         config=get_auth_config(request),
     )
 
