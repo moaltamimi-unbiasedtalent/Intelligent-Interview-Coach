@@ -8,6 +8,7 @@ documents are historical evidence and are labelled where they could be mistaken 
 |---|---|
 | What the product is, candidate journey summary, current limitations | [../README.md](../README.md) |
 | Canonical current-state Candidate Journey (stage by stage: Opportunity, Prepare, Practice, Progress and History, sharing, data control) | [capstone/journeys/CANDIDATE_JOURNEY.md](capstone/journeys/CANDIDATE_JOURNEY.md) |
+| Live billing provider assessment and selection (W12.4D Phase A: current-state audit, provider comparison, Stripe Managed Payments selected / Paddle fallback, eligibility dependencies, roadmap, owner decisions) | [capstone/billing/W12_04D_PROVIDER_ASSESSMENT.md](capstone/billing/W12_04D_PROVIDER_ASSESSMENT.md) |
 | Email and identity operations (W12.4C: token security, Brevo outcomes, delivery states, Admin diagnostics, operator runbook) | [capstone/admin/W12_04C_EMAIL_IDENTITY_OPERATIONS.md](capstone/admin/W12_04C_EMAIL_IDENTITY_OPERATIONS.md) |
 | Secure provider and secret administration (W12.4B: encrypted SecretStore, step-up, precedence, threat model, inventory) | [capstone/admin/W12_04B_SECURE_PROVIDER_SECRET_ADMINISTRATION.md](capstone/admin/W12_04B_SECURE_PROVIDER_SECRET_ADMINISTRATION.md) |
 | Knowledge Base accessibility, readiness and operations runbook (W12.4A: root cause, data root, readiness states, retrieval test, operator sequence) | [capstone/knowledge/W12_04A_KNOWLEDGE_ACCESSIBILITY_OPERATIONS.md](capstone/knowledge/W12_04A_KNOWLEDGE_ACCESSIBILITY_OPERATIONS.md) |
