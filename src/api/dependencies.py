@@ -617,15 +617,14 @@ def get_oidc_provider(request: Request):
     are present. Tests override this dependency with a fake provider to exercise the
     flow deterministically (no live Google call).
     """
-    import os
-
     from src.application.oidc import GoogleOidcProvider, google_enabled
+    from src.core import secrets as _secrets
 
     if not google_enabled():
         return None
     return GoogleOidcProvider(
-        client_id=os.environ["GOOGLE_CLIENT_ID"],
-        client_secret=os.environ["GOOGLE_CLIENT_SECRET"],
+        client_id=_secrets.read_setting("GOOGLE_CLIENT_ID") or "",
+        client_secret=_secrets.read_setting("GOOGLE_CLIENT_SECRET") or "",
     )
 
 

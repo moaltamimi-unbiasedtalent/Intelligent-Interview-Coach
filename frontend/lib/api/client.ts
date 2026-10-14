@@ -603,10 +603,16 @@ export const api = {
       request<IntegrationDetail>("GET", `/admin/integrations/${encodeURIComponent(code)}`, opts),
     testIntegration: (code: string, opts?: RequestOptions) =>
       request<IntegrationTestResult>("POST", `/admin/integrations/${encodeURIComponent(code)}/test`, opts),
-    /** WRITE-ONLY: the response never contains the value. Only offered when the credential store is writable. */
-    replaceCredential: (code: string, slot: string, value: string, opts?: RequestOptions) =>
-      request<{ integration: string; slot: string; configured: boolean }>(
-        "POST", `/admin/integrations/${encodeURIComponent(code)}/credentials/${encodeURIComponent(slot)}`, { body: { value }, ...opts }),
+    /** WRITE-ONLY: the response never contains the value. Needs a fresh password step-up (403 step_up_required otherwise). */
+    replaceCredential: (code: string, slot: string, value: string, expectedRevision?: number | null, opts?: RequestOptions) =>
+      request<{ integration: string; slot: string; configured: boolean; action: string | null; revision: number | null }>(
+        "POST", `/admin/integrations/${encodeURIComponent(code)}/credentials/${encodeURIComponent(slot)}`,
+        { body: expectedRevision == null ? { value } : { value, expected_revision: expectedRevision }, ...opts }),
+    /** Removes only the Admin-managed credential (the environment layer is untouched). Needs a fresh step-up and explicit confirmation. */
+    removeCredential: (code: string, slot: string, expectedRevision?: number | null, opts?: RequestOptions) =>
+      request<{ integration: string; slot: string; removed: boolean }>(
+        "POST", `/admin/integrations/${encodeURIComponent(code)}/credentials/${encodeURIComponent(slot)}/remove`,
+        { body: expectedRevision == null ? { confirm: true } : { confirm: true, expected_revision: expectedRevision }, ...opts }),
     plans: (opts?: RequestOptions) => request<{ items: PlanVersionRow[] }>("GET", "/admin/plans", opts),
     plan: (versionId: number, opts?: RequestOptions) => request<PlanDetail>("GET", `/admin/plans/${versionId}`, opts),
     assignablePlans: (opts?: RequestOptions) => request<AssignablePlan[]>("GET", "/admin/plans/assignable", opts),

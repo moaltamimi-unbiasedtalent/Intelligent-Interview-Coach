@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import (
     BigInteger,
+    LargeBinary,
     JSON,
     Boolean,
     CheckConstraint,
@@ -1246,6 +1247,31 @@ class IntegrationState(Base):
     last_test_by_user_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class ManagedSecret(Base):
+    """One Admin-managed provider credential (W12.4B), stored ONLY as authenticated ciphertext.
+
+    Holds no plaintext, mask, prefix, suffix, fingerprint or history: rotation replaces the row and the old
+    ciphertext is gone. The encryption key is deployment configuration and is never stored in this database.
+    """
+
+    __tablename__ = "managed_secrets"
+    __table_args__ = (
+        UniqueConstraint("integration_code", "slot", name="uq_managed_secrets_slot"),
+        CheckConstraint("revision >= 1", name="ck_managed_secrets_revision"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    integration_code: Mapped[str] = mapped_column(String(40), nullable=False)
+    slot: Mapped[str] = mapped_column(String(32), nullable=False)
+    ciphertext: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    nonce: Mapped[bytes] = mapped_column(LargeBinary(12), nullable=False)
+    key_id: Mapped[str] = mapped_column(String(16), nullable=False)
+    revision: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
 
 JOB_STATES = ("queued", "running", "succeeded", "failed", "cancelled")

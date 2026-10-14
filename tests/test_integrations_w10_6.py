@@ -19,6 +19,7 @@ from src.application import admin_permissions as perm
 from src.persistence import IntegrationState
 from src.secret_store import EnvironmentSecretStore, InMemorySecretStore, SecretStoreReadOnly
 from tests._auth_factories import cookies_for, login_token, register
+from tests._role_gov import ensure_elevated
 from tests.test_admin_foundation_w10_1 import PW, Env
 
 API = "/api/v1"
@@ -88,7 +89,9 @@ def test_inventory_never_returns_a_secret_value_prefix_suffix_or_mask(env, monke
     items = get_all(env, adm)
     cred = items["openrouter"]["slots"][0]
     assert cred == {"slot": "api_key", "label": "API key", "external_name": "OPENROUTER_API_KEY", "configured": True,
-                    "source": "environment", "writable": False}
+                    "source": "environment", "writable": False, "source_kind": "environment", "managed": False,
+                    "managed_readable": None, "revision": None, "last_rotated_at": None, "environment_fallback": True,
+                    "required": True, "min_length": 8, "max_length": 4096, "applies": "restart"}
 
 
 def test_status_separates_configuration_runtime_and_health_and_classifies_honestly(env, monkeypatch):
@@ -128,7 +131,7 @@ def test_runtime_state_is_environment_owned_with_no_toggle_and_no_rotate_for_env
     _, adm = mk(env, "platform_admin")
     for it in get_all(env, adm).values():
         assert it["runtime"]["toggle_supported"] is False and it["runtime"]["managed"] == "environment"
-        assert it["store"] == {"name": "environment", "writable": False}
+        assert it["store"] == {"name": "environment", "writable": False, "state": "read_only", "reason": None}
         assert all(c["writable"] is False for c in it["slots"])
     from src.api.admin_route_invariant import admin_routes
     paths = [r.path for r in admin_routes() if r.path.startswith("/admin/integrations")]
@@ -156,6 +159,7 @@ def test_integration_permission_matrix(env):
     assert env.c.post(f"{API}/admin/integrations/openrouter/credentials/api_key", json={"value": "x" * 20}, cookies=ops).status_code == 403
     # the owner passes the authorization gate, but the environment store is externally managed and read-only: authorization is not capability
     _, adm = mk(env, "platform_admin")
+    ensure_elevated(env.c, adm, PW)   # W12.4B: a fresh step-up is part of the gate
     r = env.c.post(f"{API}/admin/integrations/openrouter/credentials/api_key", json={"value": "x" * 20}, cookies=adm)
     assert r.status_code == 409 and "managed outside Ask4Mo" in r.text
 
@@ -313,13 +317,14 @@ def test_environment_credentials_cannot_be_replaced_through_the_api(env, monkeyp
     _allow_rotate(monkeypatch)
     monkeypatch.setenv("OPENROUTER_API_KEY", SECRET)
     _, adm = mk(env, "platform_admin")
+    ensure_elevated(env.c, adm, PW)
     new = "brand-new-credential-9999"
     r = env.c.post(f"{API}/admin/integrations/openrouter/credentials/api_key", json={"value": new}, cookies=adm)
     assert r.status_code == 409 and "managed outside Ask4Mo" in r.text and new not in r.text
     import os
     assert os.environ["OPENROUTER_API_KEY"] == SECRET
     kinds = [e["event_type"] for e in env.events()]
-    assert A.ADMIN_CREDENTIAL_REPLACEMENT_REQUESTED in kinds and A.ADMIN_CREDENTIAL_REPLACEMENT_FAILED in kinds
+    assert A.ADMIN_CREDENTIAL_REPLACEMENT_FAILED in kinds
     assert A.ADMIN_CREDENTIAL_REPLACEMENT_SUCCEEDED not in kinds
     assert new not in json.dumps([e["context"] for e in env.events()], default=str)
 
@@ -329,9 +334,10 @@ def test_write_only_replacement_with_a_writable_store_never_returns_or_records_t
     store = InMemorySecretStore()
     env.app.dependency_overrides[deps.get_secret_store] = lambda: store
     _, adm = mk(env, "platform_admin")
+    ensure_elevated(env.c, adm, PW)
     first = "first-credential-value-0001"
     r = env.c.post(f"{API}/admin/integrations/openrouter/credentials/api_key", json={"value": first}, cookies=adm)
-    assert r.status_code == 200 and r.json() == {"integration": "openrouter", "slot": "api_key", "configured": True}
+    assert r.status_code == 200 and r.json() == {"integration": "openrouter", "slot": "api_key", "configured": True, "action": "rotated", "revision": None}
     assert first not in r.text
     d = env.c.get(f"{API}/admin/integrations/openrouter", cookies=adm)
     assert d.json()["slots"][0]["configured"] is True and d.json()["slots"][0]["writable"] is True and first not in d.text
@@ -340,18 +346,19 @@ def test_write_only_replacement_with_a_writable_store_never_returns_or_records_t
     assert store.get_for_runtime("OPENROUTER_API_KEY").get_secret_value() == second       # runtime-only read
     events = env.events()
     kinds = [e["event_type"] for e in events]
-    assert kinds.count(A.ADMIN_CREDENTIAL_REPLACEMENT_REQUESTED) == 2 and kinds.count(A.ADMIN_CREDENTIAL_REPLACEMENT_SUCCEEDED) == 2
+    assert kinds.count(A.ADMIN_CREDENTIAL_REPLACEMENT_SUCCEEDED) == 2
     blob = json.dumps([e["context"] for e in events], default=str) + d.text
     assert first not in blob and second not in blob
     ev = env.events(A.ADMIN_CREDENTIAL_REPLACEMENT_SUCCEEDED)[0]
     assert ev["context"]["slot"] == "api_key" and ev["target_id"] == "openrouter" and ev["request_id"]
 
 
-def test_invalid_credential_input_is_rejected_without_echo_and_audit_failure_blocks_the_write(env, monkeypatch):
+def test_invalid_credential_input_is_rejected_without_echo(env, monkeypatch):
     _allow_rotate(monkeypatch)
     store = InMemorySecretStore()
     env.app.dependency_overrides[deps.get_secret_store] = lambda: store
     _, adm = mk(env, "platform_admin")
+    ensure_elevated(env.c, adm, PW)
     url = f"{API}/admin/integrations/openrouter/credentials/api_key"
     for body in ({"value": "short"}, {"value": "has whitespace in it 123"}, {"value": 12345678901234}, {"value": "a" * 5000},
                  {"value": "x" * 20, "extra": 1}, {}, ["x"]):
@@ -361,21 +368,17 @@ def test_invalid_credential_input_is_rejected_without_echo_and_audit_failure_blo
             assert frag not in r.text, (body, frag)
     assert env.c.post(f"{API}/admin/integrations/openrouter/credentials/nope", json={"value": "x" * 20}, cookies=adm).status_code == 404
     assert not store.is_configured("OPENROUTER_API_KEY")
-    from src.auth_repository import AuditRepository
-    real = AuditRepository.record
-    monkeypatch.setattr(AuditRepository, "record", lambda self, **kw: (_ for _ in ()).throw(RuntimeError("down")))
-    assert env.c.post(url, json={"value": "valid-credential-0003"}, cookies=adm).status_code == 503
-    monkeypatch.setattr(AuditRepository, "record", real)
-    assert not store.is_configured("OPENROUTER_API_KEY")                           # nothing was written without the request audited
+    assert not store.is_configured("OPENROUTER_API_KEY")   # (audit-failure atomicity is proven against the encrypted store in test_secret_admin_w12_4b)
 
 
 def test_store_errors_that_embed_the_value_are_never_surfaced(env, monkeypatch):
     _allow_rotate(monkeypatch)
     class Bad(InMemorySecretStore):
-        def set(self, name, value):
+        def set(self, name, value, **kw):
             raise RuntimeError(f"backend rejected {value}")
     env.app.dependency_overrides[deps.get_secret_store] = lambda: Bad()
     _, adm = mk(env, "platform_admin")
+    ensure_elevated(env.c, adm, PW)
     val = "leaky-credential-value-0004"
     r = env.c.post(f"{API}/admin/integrations/openrouter/credentials/api_key", json={"value": val}, cookies=adm)
     assert r.status_code == 502 and val not in r.text
@@ -429,7 +432,7 @@ def test_integration_routes_are_permissioned_and_no_entry_point_creates_integrat
     from src.api.admin_route_invariant import admin_routes, ungated
     routes = admin_routes()
     mine = [r for r in routes if r.path.startswith("/admin/integrations")]
-    assert len(mine) == 4 and ungated(routes) == []
+    assert len(mine) == 5 and ungated(routes) == []
     assert {p for r in mine for p in r.permissions} == {perm.INTEGRATIONS_READ, perm.INTEGRATIONS_MANAGE, perm.SECRET_ROTATE}
     assert not [r for r in mine if r.methods == ("POST",) and r.path == "/admin/integrations"]
     assert len(perm.PERMISSIONS) == 43

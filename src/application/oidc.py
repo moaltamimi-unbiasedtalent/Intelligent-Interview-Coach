@@ -12,9 +12,9 @@ this module.
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 from typing import Protocol
+from src.core import secrets as _secrets
 
 __all__ = [
     "OidcIdentity",
@@ -74,7 +74,7 @@ def google_enabled() -> bool:
     from src.application.authorization import flag_enabled
 
     return flag_enabled("google_login") and bool(
-        os.environ.get("GOOGLE_CLIENT_ID") and os.environ.get("GOOGLE_CLIENT_SECRET")
+        _secrets.read_setting("GOOGLE_CLIENT_ID") and _secrets.read_setting("GOOGLE_CLIENT_SECRET")
     )
 
 

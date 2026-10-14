@@ -87,6 +87,17 @@ def validate_runtime_config(env: str | None = None) -> EnvReport:
                "public_registration.")
         (report.critical if is_prod else report.warnings).append(msg)
 
+    # --- Secure credential store (W12.4B): selecting it without a valid master key must not boot "healthy" ---
+    backend = (os.environ.get("SECRET_STORE_BACKEND", "environment") or "environment").strip().lower()
+    if backend not in ("environment", "encrypted_database"):
+        report.critical.append("SECRET_STORE_BACKEND must be 'environment' or 'encrypted_database'.")
+    elif backend == "encrypted_database":
+        from src.secret_store import master_key_state
+
+        if master_key_state() is not None:
+            report.critical.append(
+                "SECRET_STORE_BACKEND=encrypted_database requires SECRET_STORE_MASTER_KEY: standard base64 of exactly 32 random bytes.")
+
     # --- Optional providers: warnings only (they disable themselves safely) ---
     if _has("FEATURE_GOOGLE_LOGIN") and not (_has("GOOGLE_CLIENT_ID") and _has("GOOGLE_CLIENT_SECRET")):
         report.warnings.append(

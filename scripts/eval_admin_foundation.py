@@ -111,7 +111,7 @@ def run() -> dict[str, tuple[bool, str]]:
 
     # --- scope guards ------------------------------------------------------------------------------
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_")), mig[-1])
+    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_", "0026_")), mig[-1])
     pyproject = read("pyproject.toml").lower()
     check("no_new_infrastructure_dependency", not any(d in pyproject for d in ("redis", "celery", "stripe", "sentry", "prometheus", "hvac")), "none of redis/celery/stripe/sentry/prometheus/hvac")
     return out

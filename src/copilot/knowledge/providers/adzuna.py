@@ -22,12 +22,12 @@ country failure. Germany connectivity is validated with ``/jobs/de/search/1`` (a
 from __future__ import annotations
 
 import json
-import os
 import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from src.core import secrets as _secrets
 
 API_BASE = "https://api.adzuna.com/v1/api"
 DEFAULT_TIMEOUT = 15
@@ -57,12 +57,12 @@ class AdzunaResult:
 
 
 def credentials_configured() -> bool:
-    return bool(os.environ.get("ADZUNA_APP_ID") and os.environ.get("ADZUNA_APP_KEY"))
+    return bool(_secrets.read_setting("ADZUNA_APP_ID") and _secrets.read_setting("ADZUNA_APP_KEY"))
 
 
 def _creds() -> tuple[str, str]:
-    aid = os.environ.get("ADZUNA_APP_ID")
-    akey = os.environ.get("ADZUNA_APP_KEY")
+    aid = _secrets.read_setting("ADZUNA_APP_ID")
+    akey = _secrets.read_setting("ADZUNA_APP_KEY")
     if not aid or not akey:
         raise AdzunaConfigError("ADZUNA_APP_ID / ADZUNA_APP_KEY are not configured.")
     return aid, akey
@@ -71,7 +71,7 @@ def _creds() -> tuple[str, str]:
 def _redact(text: str) -> str:
     """Remove any credential material from a string before it is surfaced/logged."""
     out = text
-    for val in (os.environ.get("ADZUNA_APP_ID"), os.environ.get("ADZUNA_APP_KEY")):
+    for val in (_secrets.read_setting("ADZUNA_APP_ID"), _secrets.read_setting("ADZUNA_APP_KEY")):
         if val:
             out = out.replace(val, "***")
     # Also scrub app_id/app_key query params generically.

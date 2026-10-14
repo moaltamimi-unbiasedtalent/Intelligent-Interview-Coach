@@ -24,7 +24,8 @@ from sqlalchemy.orm import sessionmaker
 
 from src.admin_repository import _stage
 from src.persistence import INTEGRATION_TEST_CATEGORIES, IntegrationState, utcnow
-from src.secret_store import SecretStore, SecretStoreReadOnly, get_secret_store  # noqa: F401  (re-export)
+from src.secret_store import (  # noqa: F401  (re-export)
+    SecretSlotUnknown, SecretStore, SecretStoreReadOnly, SecretStoreStale, SecretStoreUnavailable, get_secret_store)
 
 PROBE_TIMEOUT_SECONDS = 5.0
 
@@ -33,7 +34,13 @@ PROBE_TIMEOUT_SECONDS = 5.0
 class CredentialSlot:
     slot: str            # stable identifier used by the API
     label: str
-    external_name: str   # the environment variable NAME the operator manages (a name, never a value)
+    external_name: str   # the credential's stable NAME (also the environment variable the deployment may set); never a value
+    required: bool = True
+    min_length: int = 8
+    max_length: int = 4096
+    # When a rotated value reaches the running consumer: "next_use" = the consumer reads it at call time (bounded by the
+    # store cache, 5 s); "restart" = the consumer builds its client once per process, so the API and worker must restart.
+    applies: str = "restart"
 
 
 @dataclass(frozen=True)
@@ -85,22 +92,22 @@ REGISTRY: dict[str, IntegrationDef] = {d.code: d for d in (
     IntegrationDef(
         "realtime_voice", "Realtime voice provider", "ai_model", "OpenAI Realtime",
         "Optional live spoken exchange with Mo. Off by default; live provider validation has not been run.",
-        credentials=(CredentialSlot("api_key", "Realtime API key", "REALTIME_VOICE_API_KEY"),),
+        credentials=(CredentialSlot("api_key", "Realtime API key", "REALTIME_VOICE_API_KEY", applies="next_use"),),
         enabled_flag="REALTIME_VOICE_ENABLED",
         settings=(SettingDef("provider", "Provider", "REALTIME_VOICE_PROVIDER", ("openai_realtime",)),),
         validation_note="Live validation NOT RUN."),
     IntegrationDef(
         "adzuna", "Adzuna (job market data)", "career_data", "Adzuna API",
         "Current-market job data for company and role research.",
-        credentials=(CredentialSlot("app_id", "Application id", "ADZUNA_APP_ID"),
-                     CredentialSlot("app_key", "Application key", "ADZUNA_APP_KEY")),
+        credentials=(CredentialSlot("app_id", "Application id", "ADZUNA_APP_ID", applies="next_use"),
+                     CredentialSlot("app_key", "Application key", "ADZUNA_APP_KEY", applies="next_use")),
         test_note="No manual probe: calls consume the provider's quota and live validation is cost-gated.",
         validation_note="Live validation is cost-gated and UNVALIDATED."),
     IntegrationDef(
         "google_oidc", "Google sign-in (OIDC)", "authentication", "Google OpenID Connect",
         "Backend support for Google sign-in. Off by default; end-to-end sign-in is not validated.",
-        credentials=(CredentialSlot("client_id", "Client id", "GOOGLE_CLIENT_ID"),
-                     CredentialSlot("client_secret", "Client secret", "GOOGLE_CLIENT_SECRET")),
+        credentials=(CredentialSlot("client_id", "Client id", "GOOGLE_CLIENT_ID", applies="next_use"),
+                     CredentialSlot("client_secret", "Client secret", "GOOGLE_CLIENT_SECRET", applies="next_use")),
         enabled_flag="FEATURE_GOOGLE_LOGIN",
         test_note="No manual probe: the flow needs an interactive browser sign-in.",
         validation_note="Backend support present; end-to-end sign-in is not validated and is not wired into the candidate sign-in page."),
@@ -299,10 +306,7 @@ class IntegrationService:
         return s.scalar(select(IntegrationState).where(IntegrationState.integration_code == code))
 
     def describe(self, defn: IntegrationDef, state: IntegrationState | None) -> dict:
-        creds = [{"slot": c.slot, "label": c.label, "external_name": c.external_name,
-                  "configured": self._store.is_configured(c.external_name),
-                  "source": self._store.source(c.external_name), "writable": bool(self._store.supports_write)}
-                 for c in defn.credentials]
+        creds = [self._describe_slot(c) for c in defn.credentials]
         configured = {c["slot"]: c["configured"] for c in creds}
         settings = {s.code: _setting(s) for s in defn.settings}
         enabled, classification = _runtime(defn, configured, settings)
@@ -322,10 +326,33 @@ class IntegrationService:
             "runtime": {"enabled": enabled, "managed": "environment",
                         "toggle_supported": False,
                         "note": "Runtime state is owned by the deployment environment and changes need a deployment or restart."},
-            "store": {"name": self._store.name, "writable": bool(self._store.supports_write)},
+            "store": self._store_view(),
             "health": health,
             "test": {"supported": defn.test_supported, "note": defn.test_note},
             "validation_note": defn.validation_note,
+        }
+
+    def _store_view(self) -> dict:
+        state = self._store.write_state() if hasattr(self._store, "write_state") else {
+            "state": "writable" if self._store.supports_write else "read_only", "reason": None}
+        return {"name": self._store.name, "writable": state["state"] == "writable", "state": state["state"], "reason": state["reason"]}
+
+    def _describe_slot(self, c: CredentialSlot) -> dict:
+        """Metadata only. ``source_kind`` is managed | environment | none; no value, prefix, suffix, mask or fingerprint."""
+        raw = self._store.source(c.external_name)
+        meta = self._store.managed_meta(c.external_name) if hasattr(self._store, "managed_meta") else None
+        env = getattr(self._store, "environment", None)
+        env_set = bool(env.is_configured(c.external_name)) if env is not None else (raw in ("environment", "secrets_file"))
+        write = self._store_view()
+        return {
+            "slot": c.slot, "label": c.label, "external_name": c.external_name,
+            "configured": self._store.is_configured(c.external_name), "source": raw,
+            "source_kind": "managed" if raw == "managed" else ("environment" if raw in ("environment", "secrets_file") else "none"),
+            "writable": write["writable"], "managed": meta is not None,
+            "managed_readable": bool(meta["readable"]) if meta else None,
+            "revision": meta["revision"] if meta else None, "last_rotated_at": _iso(meta["updated_at"]) if meta else None,
+            "environment_fallback": env_set,
+            "required": c.required, "min_length": c.min_length, "max_length": c.max_length, "applies": c.applies,
         }
 
     def list(self) -> list[dict]:
@@ -362,9 +389,10 @@ class IntegrationService:
     # Credential replacement: only when the active store supports writes. The value is validated structurally,
     # passed straight to the store and discarded; it is never returned, logged, audited or persisted here.
     @staticmethod
-    def validate_credential_shape(value: object) -> str:
-        if not isinstance(value, str) or not (8 <= len(value) <= 4096) or any(c.isspace() for c in value):
-            raise ValueError("The credential must be 8 to 4096 characters with no whitespace.")
+    def validate_credential_shape(value: object, slot: CredentialSlot | None = None) -> str:
+        lo, hi = (slot.min_length, slot.max_length) if slot else (8, 4096)
+        if not isinstance(value, str) or not (lo <= len(value) <= hi) or any(c.isspace() for c in value):
+            raise ValueError(f"The credential must be {lo} to {hi} characters with no whitespace.")
         return value
 
     def credential_slot(self, code: str, slot: str) -> CredentialSlot:
@@ -376,11 +404,33 @@ class IntegrationService:
             raise IntegrationNotFound(f"{code}/{slot}")
         return match
 
-    def write_credential(self, code: str, slot: str, value: str) -> None:
+    @property
+    def atomic_audit(self) -> bool:
+        """True when the store writes the audit event in the SAME transaction as the change (the encrypted store)."""
+        return bool(getattr(self._store, "atomic_audit", False))
+
+    def write_credential(self, code: str, slot: str, value: str, *, actor_user_id: int | None = None,
+                         expected_revision: int | None = None, audit: dict | None = None) -> dict:
         cred = self.credential_slot(code, slot)
         if not self._store.supports_write:
+            state = self._store_view()
+            if state["state"] == "unavailable":
+                raise SecretStoreUnavailable(state["reason"] or "store_error")
             raise SecretStoreReadOnly("This credential is managed outside Ask4Mo and cannot be changed here.")
-        self._store.set(cred.external_name, self.validate_credential_shape(value))
+        out = self._store.set(cred.external_name, self.validate_credential_shape(value, cred), actor_user_id=actor_user_id,
+                              expected_revision=expected_revision, audit=audit)
+        return out if isinstance(out, dict) else {"action": "rotated", "revision": None}
+
+    def remove_credential(self, code: str, slot: str, *, actor_user_id: int | None = None, expected_revision: int | None = None,
+                          audit: dict | None = None) -> dict:
+        cred = self.credential_slot(code, slot)
+        if not self._store.supports_write:
+            state = self._store_view()
+            if state["state"] == "unavailable":
+                raise SecretStoreUnavailable(state["reason"] or "store_error")
+            raise SecretStoreReadOnly("This credential is managed outside Ask4Mo and cannot be changed here.")
+        out = self._store.remove(cred.external_name, actor_user_id=actor_user_id, expected_revision=expected_revision, audit=audit)
+        return out if isinstance(out, dict) else {"action": "removed"}
 
     def stats(self) -> dict:
         items = self.list()

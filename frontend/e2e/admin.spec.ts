@@ -200,9 +200,11 @@ const itState = { tested: false };
 const INT_ROW = (tested: boolean) => ({
   code: "openrouter", name: "OpenRouter (language models)", category: "ai_model", category_label: "AI / model", adapter: "OpenRouter chat API",
   description: "Chat model provider.", classification: "runtime_active", configuration_status: "configured",
-  slots: [{ slot: "api_key", label: "API key", external_name: "OPENROUTER_API_KEY", configured: true, source: "environment", writable: false }],
+  slots: [{ slot: "api_key", label: "API key", external_name: "OPENROUTER_API_KEY", configured: true, source: "environment", writable: false,
+    source_kind: "environment", managed: false, managed_readable: null, revision: null, last_rotated_at: null, environment_fallback: true,
+    required: true, min_length: 8, max_length: 4096, applies: "restart" }],
   settings: [], runtime: { enabled: true, managed: "environment", toggle_supported: false, note: "Runtime state is owned by the deployment environment." },
-  store: { name: "environment", writable: false },
+  store: { name: "environment", writable: false, state: "read_only", reason: null },
   health: tested ? { status: "healthy", last_tested_at: "2026-10-03T10:00:00", category: "ok", latency_ms: 11 } : { status: "not_tested", last_tested_at: null, category: null, latency_ms: null },
   test: { supported: true, note: "Calls one key-information endpoint." }, validation_note: "Healthy only after a successful manual test." });
 const INT_GOOGLE = { ...INT_ROW(false), code: "google_oidc", name: "Google sign-in (OIDC)", category: "authentication", category_label: "Authentication",

@@ -863,7 +863,7 @@ def test_security_routes_are_all_gated_and_migrations_have_one_head():
     from alembic.script import ScriptDirectory
     cfg = Config(str(ROOT / "alembic.ini"))
     cfg.set_main_option("script_location", str(ROOT / "migrations"))
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0025_security_audit_incidents"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == ["0026_managed_secrets"]
 
 
 # ======================================================================== migration + PostgreSQL DDL
@@ -887,7 +887,7 @@ def test_migration_0025_upgrade_constraints_triggers_and_downgrade(tmp_path, mon
     assert "audit_events" in before and "admin_incidents" not in before
     with eng.begin() as c:
         c.execute(text("INSERT INTO users (id, subject, provider, platform_role, status, tier, created_at, updated_at) VALUES (1,'s','p','user','active','basic',datetime('now'),datetime('now'))")) if False else None
-    command.upgrade(cfg, "head")
+    command.upgrade(cfg, "0025_security_audit_incidents")                                           # this test owns the 0025 delta (0026 is covered by test_secret_admin_w12_4b)
     eng = create_engine(url)
     after = set(inspect(eng).get_table_names())
     assert after - before == {"admin_incidents", "incident_events", "incident_tickets", "admin_notifications", "admin_role_change_requests"}

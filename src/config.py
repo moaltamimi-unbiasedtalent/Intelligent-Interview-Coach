@@ -131,7 +131,7 @@ def load_config() -> AppConfig:
     priority over the environment. Never raises on a missing key.
     """
     load_dotenv(override=False)
-    raw_key = _read_streamlit_secret() or _read_environment_secret()
+    raw_key = _secrets.read_managed(API_KEY_NAME) or _read_streamlit_secret() or _read_environment_secret()
     api_key = SecretStr(raw_key) if raw_key else None
 
     speech_project = _read_setting(SPEECH_PROJECT_NAME)

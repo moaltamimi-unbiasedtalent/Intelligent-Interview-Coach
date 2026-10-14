@@ -55,7 +55,7 @@ def run() -> dict[str, tuple[bool, str]]:
     from src.api.admin_route_invariant import admin_routes, ungated
     from src.api.schemas import admin as schemas
     from src.application import admin_permissions as perm
-    from src.persistence import IntegrationState
+    from src.persistence import IntegrationState, ManagedSecret
     from src.secret_store import EnvironmentSecretStore, SecretStoreReadOnly
 
     check("registry_is_code_defined", len(I.REGISTRY) == 9 and set(I.CATEGORIES) >= {d.category for d in I.REGISTRY.values()},
@@ -66,8 +66,8 @@ def run() -> dict[str, tuple[bool, str]]:
           not any(re.search(r"url|host|endpoint|base", s.env_name, re.I) for d in I.REGISTRY.values() for s in d.settings), "settings are vocabularies, not endpoints")
     routes = [r for r in admin_routes() if r.path.startswith("/admin/integrations")]
     check("no_route_creates_or_edits_an_integration",
-          len(routes) == 4 and not any(r.path == "/admin/integrations" and "POST" in r.methods for r in routes)
-          and not any(re.search(r"enable|disable|toggle|config", r.path) for r in routes), "list, detail, test, credentials only")
+          len(routes) == 5 and not any(r.path == "/admin/integrations" and "POST" in r.methods for r in routes)
+          and not any(re.search(r"enable|disable|toggle|config", r.path) for r in routes), "list, detail, test, credential write, credential remove only")
     check("integration_routes_permissioned",
           not ungated(admin_routes()) and {p for r in routes for p in r.permissions} == {perm.INTEGRATIONS_READ, perm.INTEGRATIONS_MANAGE, perm.SECRET_ROTATE}
           and len(perm.PERMISSIONS) == 43, "canonical permissions only; registry unchanged at 43")
@@ -117,14 +117,28 @@ def run() -> dict[str, tuple[bool, str]]:
     check("email_truth_is_qualified", "never emailed" in email.validation_note and not email.test_supported, "support replies are not emailed; no probe")
 
     route = read("src/api/routes/admin_integrations.py")
-    req, wr = route.find("ADMIN_CREDENTIAL_REPLACEMENT_REQUESTED"), route.find("service.write_credential(")
-    check("credential_route_audits_request_before_write_and_claims_no_rollback",
-          0 < req < wr and "NOT atomic" in route and "request.json()" in route, "requested -> write -> succeeded/failed")
+    step, wr = route.find("StepUpService("), route.find("service.write_credential(")
+    check("credential_routes_require_step_up_before_any_write_and_audit_atomically",
+          0 < step < wr and "atomic_audit" in route and "await _json_body(request)" in route and "ADMIN_CREDENTIAL_REMOVED" in route
+          and route.count("StepUpService(") == 2, "permission -> fresh step-up -> bounded input -> one transactional write+audit")
+    sstore = read("src/secret_store.py")
+    check("encrypted_store_uses_aesgcm_and_no_custom_cryptography",
+          "AESGCM" in sstore and not re.search(r"\bxor\b|hashlib\.(md5|sha1)|from Crypto(dome)?\b|import rsa|Fernet", code_only(sstore))
+          and "os.urandom(12)" in sstore, "cryptography AESGCM, 12-byte random nonce per write")
+    check("master_key_is_never_stored_or_admin_managed",
+          "MASTER_KEY_ENV" in sstore and "master" not in " ".join(c.name for c in ManagedSecret.__table__.columns)
+          and not any("SECRET_STORE_MASTER_KEY" in read(f) for f in ["src/api/routes/admin_integrations.py", "src/api/schemas/admin.py", "src/integrations.py"]),
+          "deployment configuration only")
+    check("managed_secret_row_has_no_plaintext_mask_or_fingerprint_column",
+          {c.name for c in ManagedSecret.__table__.columns} == {"id", "integration_code", "slot", "ciphertext", "nonce", "key_id", "revision", "created_at", "updated_at", "updated_by_user_id"},
+          "ciphertext, nonce, key id, revision only")
     check("validation_errors_never_echo_input", '"input", "ctx", "url"' in read("src/api/exception_handlers.py"), "422 details drop the submitted value")
     check("audit_payloads_never_carry_a_value",
           not re.search(r"audit\([^)]*value|_stage\([^)]*value", code_only(route + svc)), "codes, slots, outcome and category only")
 
     mig = read("migrations/versions/0017_integrations.py")
+    mig26 = read("migrations/versions/0026_managed_secrets.py")
+    check("managed_secrets_migration_chains_from_0025", 'down_revision = "0025_security_audit_incidents"' in mig26 and "ck_managed_secrets_revision" in mig26, "0026 chains from 0025")
     check("migration_chain_valid", 'down_revision = "0016_plans_entitlements"' in mig and "ck_integration_states_outcome" in mig, "0017 chains from 0016")
     tests = read("tests/test_integrations_w10_6.py")
     check("tests_exist", all(t in tests for t in ("test_inventory_never_returns_a_secret_value_prefix_suffix_or_mask",

@@ -8,7 +8,6 @@ emits only sanitised operational fields (see :mod:`src.observability.base`).
 from __future__ import annotations
 
 import logging
-import os
 
 from src.observability.base import (
     ObservabilitySink,
@@ -20,6 +19,7 @@ from src.observability.base import (
 from src.observability.config import ObservabilityConfig, load_config
 from src.observability.noop import NoOpObservabilitySink
 from src.observability.sanitizer import error_category, safe_metadata
+from src.core import secrets as _secrets
 
 logger = logging.getLogger(__name__)
 
@@ -56,8 +56,8 @@ def build_observability_sink(config: ObservabilityConfig | None = None) -> Obser
         from src.observability.langfuse import LangfuseObservabilitySink
 
         client = Langfuse(
-            public_key=os.environ.get("LANGFUSE_PUBLIC_KEY", "").strip(),
-            secret_key=os.environ.get("LANGFUSE_SECRET_KEY", "").strip(),
+            public_key=(_secrets.read_setting("LANGFUSE_PUBLIC_KEY") or "").strip(),
+            secret_key=(_secrets.read_setting("LANGFUSE_SECRET_KEY") or "").strip(),
             host=cfg.host,
             release=cfg.release,
             environment=cfg.environment,

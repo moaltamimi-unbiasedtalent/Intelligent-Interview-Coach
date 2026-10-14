@@ -239,7 +239,8 @@ def build_rate_limiter() -> RateLimiter:
     """
     global _shared_store_requested, _shared_store_active
     backend = (os.environ.get("RATE_LIMIT_BACKEND", "") or "").strip().lower()
-    url = os.environ.get("REDIS_URL", "").strip()
+    from src.core import secrets as _secrets
+    url = (_secrets.read_setting("REDIS_URL") or "").strip()
     _shared_store_requested = backend in {"redis", "shared"} or bool(url)
     _shared_store_active = False
     if _shared_store_requested and url:

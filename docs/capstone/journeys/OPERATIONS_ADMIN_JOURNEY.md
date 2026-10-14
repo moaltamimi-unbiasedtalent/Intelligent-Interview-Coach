@@ -57,7 +57,7 @@ Never visible to this role (or to any Admin role, including the 43 / 43 Platform
 
 ## 9. Current operational limitations
 
-- **Integrations secrets: CURRENT - ENVIRONMENT MANAGED.** The SecretStore is the read-only environment adapter, so this role can inspect integrations but cannot change a provider credential from Admin. Credential rotation, even where a role is authorised for it (only the Platform Admin holds that permission), is **technically unavailable**.
+- **Integrations secrets: CURRENT (W12.4B) - this role inspects, never rotates.** Provider credentials are now configurable through a writable encrypted SecretStore, but only with `platform.integrations.secret.rotate` (held only by the Platform Admin) and a fresh password step-up. This role holds `integrations.read` and `integrations.manage`, so it sees each credential's source (managed, environment, not configured), when it was last changed and whether a rotation applies on next use or after restart, and may run the permitted manual connection tests, but the Configure, Replace and Remove controls are **not shown** and the routes return 403. No value, prefix, suffix or mask is ever shown to any role. This boundary is a role-scope finding (see SJA findings), not a change: no preset was altered.
 - **Email: CURRENT - ENVIRONMENT MANAGED / UNVALIDATED LIVE.** The Brevo adapter exists; live delivery is unvalidated; Admin has no test email or sender configuration.
 - **Provider status is configuration status only**: not the same as healthy, and not the same as live validated. Only OpenRouter and ClamAV have a manual test.
 - Jobs have no dead-letter state; a queued job does not imply a running worker.

@@ -22,24 +22,32 @@ const CLASS_LABEL: Record<string, string> = {
 };
 const HEALTH_LABEL = { not_tested: "Not tested", healthy: "Last test succeeded", unhealthy: "Last test failed" } as const;
 
+function sourceSummary(sources: string[]): string {
+  const kinds = new Set(sources.filter((s) => s !== "none"));
+  if (kinds.size === 0) return "Not configured";
+  if (kinds.size > 1) return "Managed and environment";
+  return kinds.has("managed") ? "Managed secure store" : "Environment";
+}
+
 function Body() {
   const loaded = useAdminResource(() => api.admin.integrations());
   return (
     <div className="grid gap-4">
       <p className="text-sm text-muted">
         These are the external connections Ask4Mo has code for. Configuration, runtime state and health are separate: supported is not
-        connected, configured is not healthy, and only an explicit manual test can show a successful connection. Credentials are managed
-        outside Ask4Mo and are never shown.
+        connected, configured is not healthy, and only an explicit manual test can show a successful connection. Credentials are either
+        managed here in the encrypted store or set in the deployment environment, and are never shown.
       </p>
       <ResourceState loaded={loaded}>
         {loaded.state === "ready" ? (
           <Panel title="Supported connections">
-            <div className="overflow-x-auto">
+            {/* relative: the status labels contain absolutely positioned screen-reader text; without a positioned scroller it escapes the clip and widens the whole page (walkthrough F-04, dependency-driven fix) */}
+            <div className="relative overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <caption className="sr-only">Integrations</caption>
                 <thead>
                   <tr className="text-xs text-muted">
-                    {["Integration", "Category", "Status", "Credentials", "Health", "Last tested"].map((c) => (
+                    {["Integration", "Category", "Status", "Credentials", "Source", "Health", "Last tested"].map((c) => (
                       <th key={c} scope="col" className="py-1 pr-4 font-medium">{c}</th>
                     ))}
                   </tr>
@@ -59,6 +67,7 @@ function Body() {
                           </StatusLabel>
                         )}
                       </td>
+                      <td className="py-1 pr-4">{i.slots.length === 0 ? "n/a" : sourceSummary(i.slots.map((s) => s.source_kind))}</td>
                       <td className="py-1 pr-4">
                         <StatusLabel tone={i.health.status === "healthy" ? "ok" : i.health.status === "unhealthy" ? "warn" : "neutral"}>
                           {HEALTH_LABEL[i.health.status]}

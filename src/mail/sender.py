@@ -6,6 +6,7 @@ import logging
 import os
 from dataclasses import dataclass
 from typing import Protocol
+from src.core import secrets as _secrets
 
 logger = logging.getLogger("mail")
 
@@ -145,7 +146,7 @@ def build_email_sender() -> EmailSender:
     """
     provider = (os.environ.get("EMAIL_PROVIDER") or "").strip().lower()
     if provider == "brevo":
-        api_key = os.environ.get("BREVO_API_KEY", "").strip()
+        api_key = (_secrets.read_setting("BREVO_API_KEY") or "").strip()
         sender = os.environ.get("EMAIL_SENDER", "").strip()
         if api_key and sender:
             return BrevoEmailSender(api_key=api_key, sender_email=sender)
