@@ -58,12 +58,12 @@ Sixteen stages. Each lists purpose, candidate action, system behaviour, AI invol
 ### Stage 2. Register and sign in
 - **Purpose:** create a private account.
 - **Candidate action:** register with name, email and a password of at least 10 characters; verify the email; sign in; recover a forgotten password.
-- **System behaviour:** `/register`, `/sign-in`, `/verify-email`, `/forgot-password`, `/reset-password`. Sessions are server-side in an HttpOnly cookie. In production, a request without a session is refused (fail-closed); the anonymous developer identity exists only in development and test environments.
+- **System behaviour:** `/register`, `/sign-in`, `/verify-email`, `/forgot-password`, `/reset-password`. Verification and reset emails arrive in the candidate's interface language (eight languages); a link is single-use, a used, expired or invalid link each gets its own message, resend has a one-minute cooldown, and a successful password reset signs the account out everywhere. Registration and recovery answers are identical whether or not an email is known. Sessions are server-side in an HttpOnly cookie. In production, a request without a session is refused (fail-closed); the anonymous developer identity exists only in development and test environments.
 - **AI involvement:** none.
 - **Data created:** account, hashed password, session records, audit events (metadata only).
 - **Privacy / trust boundary:** Admins see account metadata only, never preparation content.
 - **Next action:** onboarding.
-- **Limitations (truthful status):** email and password are implemented. **Google sign-in is not available to candidates:** the backend flow exists but is off by default (it needs a feature flag and provider credentials), there is no Google button in the frontend, and it has not been validated live. Sign-in does not currently require a verified email. Rate limiting is in memory per process; a shared Redis adapter exists but is optional and has not been validated live.
+- **Limitations (truthful status):** email and password are implemented. **Google sign-in is not available to candidates:** the backend flow exists but is off by default (it needs a feature flag and provider credentials), there is no Google button in the frontend, and it has not been validated live. Sign-in does not currently require a verified email. Live email delivery has not been validated (W12.4C). Rate limiting is in memory per process; a shared Redis adapter exists but is optional and has not been validated live.
 
 ### Stage 3. Onboarding
 - **Purpose:** set Mo up around the candidate. A first-run gate sends an account whose onboarding is not complete to `/onboarding`; progress is saved on the server so an interrupted flow resumes.

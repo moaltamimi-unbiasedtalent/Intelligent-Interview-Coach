@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/VerifiedLink"; // soft-navigation loss recovery (see lib/navigation/verified.ts)
 import { api } from "@/lib/api/client";
 import { ApiError, stateKeyForError } from "@/lib/api/errors";
 import { useT } from "@/components/i18n/I18nProvider";

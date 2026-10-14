@@ -24,10 +24,10 @@ class _FakeGoogle:
         )
         self._fail = fail
 
-    def authorization_url(self, *, state: str, redirect_uri: str) -> str:
+    def authorization_url(self, *, state: str, redirect_uri: str, code_challenge: str | None = None) -> str:
         return f"https://accounts.google.com/o/oauth2/v2/auth?state={state}"
 
-    def exchange(self, *, code: str, redirect_uri: str) -> OidcIdentity:
+    def exchange(self, *, code: str, redirect_uri: str, code_verifier: str | None = None) -> OidcIdentity:
         if self._fail:
             raise OidcError("Google sign-in failed.")
         return self._identity

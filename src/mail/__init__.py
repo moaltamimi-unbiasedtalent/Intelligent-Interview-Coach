@@ -12,17 +12,25 @@ to surface it), and nothing here logs a raw token or a reset/verification link b
 from __future__ import annotations
 
 from src.mail.sender import (
+    BrevoEmailSender,
     ConsoleEmailSender,
     EmailMessage,
     EmailSender,
     MemoryEmailSender,
+    NotConfiguredEmailSender,
+    SendResult,
     build_email_sender,
+    send_detailed,
 )
 
 __all__ = [
+    "BrevoEmailSender",
     "EmailMessage",
     "EmailSender",
     "MemoryEmailSender",
     "ConsoleEmailSender",
+    "NotConfiguredEmailSender",
+    "SendResult",
     "build_email_sender",
+    "send_detailed",
 ]

@@ -263,6 +263,33 @@ export interface IntegrationRow {
 export interface IntegrationDetail extends IntegrationRow {
   audit: AdminAuditEntry[];
 }
+// --- W12.4C email delivery diagnostics: aggregates and bounded categories only (no recipient, token, link or content) ---
+export interface EmailAttemptView { at: string; message_type: string; status: string; failure_category: string | null }
+export interface EmailDeliveryStatus {
+  status: "not_configured" | "configured_not_tested" | "last_test_passed" | "provider_accepted" | "delivery_failed" | "delivery_unknown";
+  provider_selected: string;
+  adapter_in_process: string;
+  provider_account: { configured: boolean; source_kind: "managed" | "environment" | "none" };
+  sender_configured: boolean;
+  sender_verification: "unknown" | "verified_by_last_test" | "not_verified_by_last_test";
+  restart_required: boolean;
+  restart_reason: string | null;
+  last_test: { state: "not_tested" | "passed" | "failed"; last_tested_at: string | null; category: string | null };
+  delivery_confirmation: string;
+  live_delivery: string;
+  link_origin: { configured: boolean; https: boolean };
+  identity_pipeline: { verification: string; recovery: string };
+  diagnostics: {
+    retention_days: number;
+    last_attempt: EmailAttemptView | null; last_accepted: EmailAttemptView | null; last_failure: EmailAttemptView | null;
+    last_identity_attempt: EmailAttemptView | null;
+    last_24h: { provider_accepted: number; failed: number; delivery_unknown: number; captured: number };
+    recent: (EmailAttemptView | null)[];
+  };
+  last_failure_category: string | null;
+  note: string;
+}
+export interface EmailTestResult { status: string; failure_category: string | null; adapter: string; note: string }
 export interface IntegrationTestResult {
   integration: string;
   outcome: string;

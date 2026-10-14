@@ -22,7 +22,7 @@ export function ForgotPasswordForm() {
     setBusy(true);
     try {
       const res = await api.auth.forgotPassword(email);
-      setDone(res.message); // uniform message regardless of whether the email exists
+      setDone(t("auth.forgotSent") || res.message); // uniform message regardless of whether the email exists
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("auth.genericError"));
     } finally {

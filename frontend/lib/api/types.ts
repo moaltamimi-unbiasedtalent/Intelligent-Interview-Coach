@@ -930,6 +930,8 @@ export interface RegisterRequest {
   email: string;
   password: string;
   display_name?: string | null;
+  /** Interface language for transactional email (one of the eight product locales). */
+  locale?: string | null;
 }
 
 export interface LoginRequest {

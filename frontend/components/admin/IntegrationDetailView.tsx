@@ -9,6 +9,7 @@ import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities"
 import type { IntegrationDetail } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
 import { useStepUp } from "./StepUp";
+import { EmailDeliveryPanel } from "./EmailDeliveryPanel";
 import { KeyValue, Panel, PermissionGate, ResourceState, StatusLabel, Table, apiMessage, btn, field, useAdminResource } from "./ui";
 
 const SOURCE_LABEL = { managed: "Managed secure store", environment: "Environment", none: "Not configured" } as const;
@@ -162,6 +163,8 @@ function Detail({ d, reload }: { d: IntegrationDetail; reload: () => void }) {
         ) : null}
         {!d.test.supported ? <p className="text-sm text-muted">A manual test is not available for this integration.</p> : null}
       </Panel>
+
+      {d.code === "email_brevo" ? <EmailDeliveryPanel canTest={canTest} onChanged={reload} /> : null}
 
       <Panel title="Recent management events">
         <Table caption="Integration audit" rows={d.audit.map((e) => ({ ...e, detail: e.context ? Object.entries(e.context).map(([k, v]) => `${k}: ${String(v)}`).join(", ") : "" }))}

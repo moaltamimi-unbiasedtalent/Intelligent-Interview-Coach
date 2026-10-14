@@ -1,0 +1,112 @@
+"""Transactional email templates for the eight product locales (W12.4C).
+
+Plain text only, assembled from fixed strings plus ONE server-built link: no candidate-authored text and no HTML are ever
+interpolated, so there is nothing to inject into. The recipient's interface language is used when it is a supported product
+locale, otherwise English. The brand line "Ask More. Be More." is a protected invariant and is never translated. The links
+always end in ``?token=<opaque>``. These are engineering translations pending native review (same status as the interface
+catalogues). Expiry text is derived from the configured token lifetimes, never hard-coded in the copy.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from src.locales import SUPPORTED_LOCALE_CODES
+
+BRAND_LINE = "Ask More. Be More."
+KINDS = ("email_verification", "password_reset", "account_notice", "admin_test")
+
+
+@dataclass(frozen=True)
+class Rendered:
+    subject: str
+    body: str
+    locale: str
+
+
+# {link} {expiry} are the only placeholders. "{expiry}" is a localised duration phrase built by _duration().
+_T: dict[str, dict[str, dict[str, str]]] = {
+    "en": {
+        "email_verification": {"subject": "Verify your Ask4Mo email", "body": "Welcome to Ask4Mo. Verify your email:\n{link}\n\nThis link expires in {expiry}. If you did not create an account, you can ignore this email."},
+        "password_reset": {"subject": "Reset your Ask4Mo password", "body": "Reset your password:\n{link}\n\nThis link expires in {expiry}. If you did not request this, ignore this email; your password stays unchanged."},
+        "account_notice": {"subject": "Your Ask4Mo account", "body": "Someone tried to create an Ask4Mo account with this email, but one already exists. If this was you, please sign in or reset your password."},
+        "admin_test": {"subject": "Ask4Mo email delivery test", "body": "This is a test message requested by an Ask4Mo administrator to check email delivery. No action is needed."},
+    },
+    "de": {
+        "email_verification": {"subject": "Bestätige deine Ask4Mo-E-Mail-Adresse", "body": "Willkommen bei Ask4Mo. Bestätige deine E-Mail-Adresse:\n{link}\n\nDieser Link läuft in {expiry} ab. Wenn du kein Konto erstellt hast, kannst du diese E-Mail ignorieren."},
+        "password_reset": {"subject": "Setze dein Ask4Mo-Passwort zurück", "body": "Setze dein Passwort zurück:\n{link}\n\nDieser Link läuft in {expiry} ab. Wenn du das nicht angefordert hast, ignoriere diese E-Mail; dein Passwort bleibt unverändert."},
+        "account_notice": {"subject": "Dein Ask4Mo-Konto", "body": "Jemand hat versucht, mit dieser E-Mail-Adresse ein Ask4Mo-Konto zu erstellen, aber es existiert bereits eines. Wenn du das warst, melde dich an oder setze dein Passwort zurück."},
+        "admin_test": {"subject": "Ask4Mo-Test der E-Mail-Zustellung", "body": "Dies ist eine Testnachricht, die ein Ask4Mo-Administrator angefordert hat, um die E-Mail-Zustellung zu prüfen. Es ist nichts zu tun."},
+    },
+    "fr": {
+        "email_verification": {"subject": "Vérifiez votre adresse e-mail Ask4Mo", "body": "Bienvenue sur Ask4Mo. Vérifiez votre adresse e-mail :\n{link}\n\nCe lien expire dans {expiry}. Si vous n'avez pas créé de compte, vous pouvez ignorer cet e-mail."},
+        "password_reset": {"subject": "Réinitialisez votre mot de passe Ask4Mo", "body": "Réinitialisez votre mot de passe :\n{link}\n\nCe lien expire dans {expiry}. Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail ; votre mot de passe reste inchangé."},
+        "account_notice": {"subject": "Votre compte Ask4Mo", "body": "Quelqu'un a essayé de créer un compte Ask4Mo avec cette adresse e-mail, mais un compte existe déjà. Si c'était vous, connectez-vous ou réinitialisez votre mot de passe."},
+        "admin_test": {"subject": "Test de distribution des e-mails Ask4Mo", "body": "Ceci est un message de test demandé par un administrateur Ask4Mo pour vérifier la distribution des e-mails. Aucune action n'est nécessaire."},
+    },
+    "es": {
+        "email_verification": {"subject": "Verifica tu correo de Ask4Mo", "body": "Te damos la bienvenida a Ask4Mo. Verifica tu correo electrónico:\n{link}\n\nEste enlace caduca en {expiry}. Si no creaste una cuenta, puedes ignorar este mensaje."},
+        "password_reset": {"subject": "Restablece tu contraseña de Ask4Mo", "body": "Restablece tu contraseña:\n{link}\n\nEste enlace caduca en {expiry}. Si no lo solicitaste, ignora este mensaje; tu contraseña no cambiará."},
+        "account_notice": {"subject": "Tu cuenta de Ask4Mo", "body": "Alguien intentó crear una cuenta de Ask4Mo con este correo, pero ya existe una. Si fuiste tú, inicia sesión o restablece tu contraseña."},
+        "admin_test": {"subject": "Prueba de entrega de correo de Ask4Mo", "body": "Este es un mensaje de prueba solicitado por un administrador de Ask4Mo para comprobar la entrega de correo. No es necesario hacer nada."},
+    },
+    "it": {
+        "email_verification": {"subject": "Verifica la tua email Ask4Mo", "body": "Benvenuto in Ask4Mo. Verifica il tuo indirizzo email:\n{link}\n\nQuesto link scade tra {expiry}. Se non hai creato un account, puoi ignorare questa email."},
+        "password_reset": {"subject": "Reimposta la tua password Ask4Mo", "body": "Reimposta la tua password:\n{link}\n\nQuesto link scade tra {expiry}. Se non l'hai richiesto, ignora questa email; la tua password resta invariata."},
+        "account_notice": {"subject": "Il tuo account Ask4Mo", "body": "Qualcuno ha provato a creare un account Ask4Mo con questa email, ma ne esiste già uno. Se eri tu, accedi o reimposta la password."},
+        "admin_test": {"subject": "Test di consegna email Ask4Mo", "body": "Questo è un messaggio di prova richiesto da un amministratore Ask4Mo per verificare la consegna delle email. Non è necessaria alcuna azione."},
+    },
+    "pt": {
+        "email_verification": {"subject": "Confirme o seu e-mail do Ask4Mo", "body": "Bem-vindo ao Ask4Mo. Confirme o seu e-mail:\n{link}\n\nEste link expira em {expiry}. Se não criou uma conta, pode ignorar este e-mail."},
+        "password_reset": {"subject": "Redefina a sua palavra-passe do Ask4Mo", "body": "Redefina a sua palavra-passe:\n{link}\n\nEste link expira em {expiry}. Se não fez este pedido, ignore este e-mail; a sua palavra-passe não será alterada."},
+        "account_notice": {"subject": "A sua conta Ask4Mo", "body": "Alguém tentou criar uma conta Ask4Mo com este e-mail, mas já existe uma. Se foi você, inicie sessão ou redefina a palavra-passe."},
+        "admin_test": {"subject": "Teste de entrega de e-mail do Ask4Mo", "body": "Esta é uma mensagem de teste pedida por um administrador do Ask4Mo para verificar a entrega de e-mail. Não é necessária nenhuma ação."},
+    },
+    "nl": {
+        "email_verification": {"subject": "Bevestig je Ask4Mo-e-mailadres", "body": "Welkom bij Ask4Mo. Bevestig je e-mailadres:\n{link}\n\nDeze link verloopt over {expiry}. Als je geen account hebt aangemaakt, kun je deze e-mail negeren."},
+        "password_reset": {"subject": "Stel je Ask4Mo-wachtwoord opnieuw in", "body": "Stel je wachtwoord opnieuw in:\n{link}\n\nDeze link verloopt over {expiry}. Als je dit niet hebt aangevraagd, negeer deze e-mail dan; je wachtwoord blijft ongewijzigd."},
+        "account_notice": {"subject": "Je Ask4Mo-account", "body": "Iemand probeerde met dit e-mailadres een Ask4Mo-account aan te maken, maar er bestaat er al een. Was jij het, log dan in of stel je wachtwoord opnieuw in."},
+        "admin_test": {"subject": "Ask4Mo-test van e-mailbezorging", "body": "Dit is een testbericht dat een Ask4Mo-beheerder heeft aangevraagd om de e-mailbezorging te controleren. Er is geen actie nodig."},
+    },
+    "ru": {
+        "email_verification": {"subject": "Подтвердите адрес электронной почты Ask4Mo", "body": "Добро пожаловать в Ask4Mo. Подтвердите адрес электронной почты:\n{link}\n\nСсылка действует {expiry}. Если вы не создавали учётную запись, просто проигнорируйте это письмо."},
+        "password_reset": {"subject": "Сброс пароля Ask4Mo", "body": "Сбросьте пароль:\n{link}\n\nСсылка действует {expiry}. Если вы не запрашивали сброс, проигнорируйте это письмо; пароль не изменится."},
+        "account_notice": {"subject": "Ваша учётная запись Ask4Mo", "body": "Кто-то пытался создать учётную запись Ask4Mo с этим адресом, но она уже существует. Если это были вы, войдите или сбросьте пароль."},
+        "admin_test": {"subject": "Проверка доставки почты Ask4Mo", "body": "Это тестовое сообщение, запрошенное администратором Ask4Mo для проверки доставки почты. Никаких действий не требуется."},
+    },
+}
+
+# Localised duration phrases for the two token lifetimes (hours / minutes). Anything else falls back to hours.
+_HOURS = {
+    "en": lambda n: f"{n} hour" + ("" if n == 1 else "s"), "de": lambda n: f"{n} Stunde" + ("" if n == 1 else "n"),
+    "fr": lambda n: f"{n} heure" + ("" if n == 1 else "s"), "es": lambda n: f"{n} hora" + ("" if n == 1 else "s"),
+    "it": lambda n: f"{n} or" + ("a" if n == 1 else "e"), "pt": lambda n: f"{n} hora" + ("" if n == 1 else "s"),
+    "nl": lambda n: f"{n} uur", "ru": lambda n: f"{n} " + ("час" if n % 10 == 1 and n % 100 != 11 else "часа" if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14 else "часов"),
+}
+_MINUTES = {
+    "en": lambda n: f"{n} minute" + ("" if n == 1 else "s"), "de": lambda n: f"{n} Minute" + ("" if n == 1 else "n"),
+    "fr": lambda n: f"{n} minute" + ("" if n == 1 else "s"), "es": lambda n: f"{n} minuto" + ("" if n == 1 else "s"),
+    "it": lambda n: f"{n} minut" + ("o" if n == 1 else "i"), "pt": lambda n: f"{n} minuto" + ("" if n == 1 else "s"),
+    "nl": lambda n: f"{n} minuut" if n == 1 else f"{n} minuten",
+    "ru": lambda n: f"{n} " + ("минуту" if n % 10 == 1 and n % 100 != 11 else "минуты" if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14 else "минут"),
+}
+
+
+def normalise_locale(locale: str | None) -> str:
+    return locale if locale in SUPPORTED_LOCALE_CODES else "en"
+
+
+def _duration(locale: str, seconds: int) -> str:
+    if seconds % 3600 == 0:
+        return _HOURS[locale](seconds // 3600)
+    return _MINUTES[locale](max(1, seconds // 60))
+
+
+def render(kind: str, *, locale: str | None, link: str | None = None, expires_in_seconds: int = 0) -> Rendered:
+    """Render one transactional message. ``link`` is built by the server from the trusted application origin."""
+    if kind not in KINDS:
+        raise ValueError("unknown message kind")
+    loc = normalise_locale(locale)
+    tpl = _T[loc][kind]
+    body = tpl["body"].format(link=link or "", expiry=_duration(loc, expires_in_seconds) if expires_in_seconds else "")
+    return Rendered(subject=tpl["subject"], body=f"{body}\n\n{BRAND_LINE}", locale=loc)

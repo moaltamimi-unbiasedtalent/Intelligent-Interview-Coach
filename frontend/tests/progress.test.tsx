@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const list = vi.fn();
 const remove = vi.fn();
 const progressGet = vi.fn();
+// VerifiedLink (soft-navigation loss recovery) reads the App Router; there is no mounted router in a unit test.
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }), usePathname: () => "/history" }));
 vi.mock("@/lib/api/client", () => ({
   api: {
     memory: { list: (...a: unknown[]) => list(...a), remove: (...a: unknown[]) => remove(...a) },

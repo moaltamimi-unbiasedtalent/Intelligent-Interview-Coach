@@ -66,8 +66,8 @@ def run() -> dict[str, tuple[bool, str]]:
           not any(re.search(r"url|host|endpoint|base", s.env_name, re.I) for d in I.REGISTRY.values() for s in d.settings), "settings are vocabularies, not endpoints")
     routes = [r for r in admin_routes() if r.path.startswith("/admin/integrations")]
     check("no_route_creates_or_edits_an_integration",
-          len(routes) == 5 and not any(r.path == "/admin/integrations" and "POST" in r.methods for r in routes)
-          and not any(re.search(r"enable|disable|toggle|config", r.path) for r in routes), "list, detail, test, credential write, credential remove only")
+          len(routes) == 7 and not any(r.path == "/admin/integrations" and "POST" in r.methods for r in routes)
+          and not any(re.search(r"enable|disable|toggle|config", r.path) for r in routes), "list, detail, delivery diagnostics, test, test-email, credential write, credential remove only")
     check("integration_routes_permissioned",
           not ungated(admin_routes()) and {p for r in routes for p in r.permissions} == {perm.INTEGRATIONS_READ, perm.INTEGRATIONS_MANAGE, perm.SECRET_ROTATE}
           and len(perm.PERMISSIONS) == 43, "canonical permissions only; registry unchanged at 43")
@@ -114,7 +114,7 @@ def run() -> dict[str, tuple[bool, str]]:
     google, redis, email = I.REGISTRY["google_oidc"], I.REGISTRY["redis_rate_limit"], I.REGISTRY["email_brevo"]
     check("google_oidc_truth_is_qualified", "not validated" in google.validation_note.lower() and not google.test_supported, "not validated; no probe")
     check("redis_truth_is_qualified", "NOT LIVE" in redis.validation_note, "distributed limiting not live")
-    check("email_truth_is_qualified", "never emailed" in email.validation_note and not email.test_supported, "support replies are not emailed; no probe")
+    check("email_truth_is_qualified", "never emailed" in email.validation_note and "not delivery" in email.validation_note and "UNVERIFIED" in email.validation_note and email.test_supported and "sends NO email" in email.test_note, "support replies are not emailed; the probe sends nothing; acceptance is not delivery; live delivery unverified")
 
     route = read("src/api/routes/admin_integrations.py")
     step, wr = route.find("StepUpService("), route.find("service.write_credential(")

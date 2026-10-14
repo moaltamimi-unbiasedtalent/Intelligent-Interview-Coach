@@ -139,7 +139,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(StarletteHTTPException)
     async def _http(request: Request, exc: StarletteHTTPException):
         # Keep the stable envelope for explicit HTTP errors (e.g. 404 not found).
-        code = {404: "not_found", 401: "unauthorized", 403: "forbidden"}.get(
+        code = getattr(exc, "error_code", None) or {404: "not_found", 401: "unauthorized", 403: "forbidden"}.get(
             exc.status_code, "http_error")
         message = exc.detail if isinstance(exc.detail, str) else "Request failed."
         return _envelope(exc.status_code, code, message, _request_id(request))

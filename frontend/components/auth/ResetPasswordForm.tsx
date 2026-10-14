@@ -34,7 +34,12 @@ export function ResetPasswordForm() {
       await api.auth.resetPassword(token, password);
       setDone(true);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : t("auth.couldNotReset"));
+      setError(
+        err instanceof ApiError && err.code === "token_expired" ? t("auth.resetLinkExpired")
+          : err instanceof ApiError && err.code === "token_used" ? t("auth.resetLinkUsed")
+          : err instanceof ApiError && err.code === "token_invalid" ? t("auth.resetLinkInvalid")
+          : err instanceof ApiError ? err.message : t("auth.couldNotReset"),
+      );
     } finally {
       setBusy(false);
     }

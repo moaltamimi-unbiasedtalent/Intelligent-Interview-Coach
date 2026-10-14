@@ -25,10 +25,14 @@ export function AccountPanel() {
   const resend = async () => {
     setError(null);
     try {
-      const res = await api.auth.resendVerification();
-      setNotice(res.message);
+      await api.auth.resendVerification();
+      setNotice(t("auth.resendSent"));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not resend the link.");
+      setError(
+        err instanceof ApiError && err.kind === "rateLimited" ? t("auth.resendCooldown")
+          : err instanceof ApiError && err.code === "email_unavailable" ? t("auth.emailUnavailable")
+          : t("auth.genericError"),
+      );
     }
   };
 

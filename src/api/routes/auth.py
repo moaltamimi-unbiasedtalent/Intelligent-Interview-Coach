@@ -43,6 +43,7 @@ from src.api.schemas.auth import (
     ResetPasswordRequest,
     VerifyEmailRequest,
 )
+from src.api.coded_errors import CodedHTTPException
 from src.api.rate_limit import client_ip, email_key, enforce, user_key
 from src.application.admin_permissions import sorted_permissions
 from src.application.authorization import Capability
@@ -54,6 +55,7 @@ _UNIFORM_REGISTER = (
     "If that email can be registered, we've sent a verification link. "
     "Please check your inbox, then sign in."
 )
+_TOKEN_CODES = {"invalid": "token_invalid", "used": "token_used", "expired": "token_expired"}
 _UNIFORM_FORGOT = (
     "If an account exists for that email, we've sent a password-reset link."
 )
@@ -107,6 +109,7 @@ def register(
         password=body.password,
         display_name=body.display_name,
         request_id=request_id,
+        locale=body.locale,
     )
     return MessageResponse(message=_UNIFORM_REGISTER)
 
@@ -164,9 +167,10 @@ def verify_email(
     # Token-validation abuse bound (§18): per-IP. Tokens are 256-bit single-use, but this
     # bounds brute-force attempts regardless.
     enforce("auth_reset_ip", client_ip(request))
-    ok = service.verify_email(token=body.token, request_id=request_id)
+    ok, reason = service.verify_email_detailed(token=body.token, request_id=request_id)
     if not ok:
-        raise HTTPException(status_code=400, detail="This verification link is invalid or has expired.")
+        raise CodedHTTPException(400, _TOKEN_CODES.get(reason or "invalid", "token_invalid"),
+                                 "This verification link is invalid or has expired.")
     return MessageResponse(message="Your email is verified.")
 
 
@@ -196,11 +200,12 @@ def reset_password(
     request_id: str = Depends(get_request_id),
 ) -> MessageResponse:
     enforce("auth_reset_ip", client_ip(request))
-    ok = service.reset_password(
+    ok, reason = service.reset_password_detailed(
         token=body.token, new_password=body.password, request_id=request_id
     )
     if not ok:
-        raise HTTPException(status_code=400, detail="This reset link is invalid or has expired.")
+        raise CodedHTTPException(400, _TOKEN_CODES.get(reason or "invalid", "token_invalid"),
+                                 "This reset link is invalid or has expired.")
     # Reset revokes all sessions; clear any cookie on this device too.
     _clear_session_cookie(request, response)
     return MessageResponse(message="Your password has been reset. Please sign in.")
@@ -339,10 +344,15 @@ def update_preferences(
 def resend_verification(
     service=Depends(get_auth_service),
     user_id: int = Depends(get_current_user_id),
+    request_id: str = Depends(get_request_id),
 ) -> MessageResponse:
-    # Mail-bomb bound (§18): per-account (the authenticated caller).
+    # Mail-bomb bounds (§18): a short per-account cooldown AND an hourly ceiling (the authenticated caller).
+    enforce("auth_verify_resend_cooldown", user_key(user_id))
     enforce("auth_verify_resend", user_key(user_id))
-    service.send_verification(user_id=user_id)
+    result = service.send_verification(user_id=user_id, request_id=request_id)
+    # The caller is signed in and asking about their OWN account, so an honest provider failure leaks nothing.
+    if result is not None and not result.accepted:
+        raise CodedHTTPException(503, "email_unavailable", "We could not send the email right now. Please try again later.")
     return MessageResponse(message="If your email is unverified, we've sent a new link.")
 
 
@@ -380,14 +390,44 @@ def premium_status(
 
 _OIDC_STATE_COOKIE = "ask4mo_oidc_state"
 _OIDC_NEXT_COOKIE = "ask4mo_oidc_next"
+_OIDC_PKCE_COOKIE = "ask4mo_oidc_pkce"
+_OIDC_COOKIES = (_OIDC_STATE_COOKIE, _OIDC_NEXT_COOKIE, _OIDC_PKCE_COOKIE)
+_OIDC_CALLBACK_PATH = "/api/v1/auth/oidc/google/callback"
 
 
 def _oidc_redirect_uri(request: Request) -> str:
-    return str(request.base_url).rstrip("/") + "/api/v1/auth/oidc/google/callback"
+    """The callback URI sent to Google at start and again at code redemption.
+
+    Hosted environments use ONLY the configured, trusted ``OIDC_REDIRECT_URI`` (an https URL ending in the callback path); the request
+    Host header is never trusted there. In development and test the request origin is used when nothing is configured, so local flows keep
+    working. A hosted environment without a valid configured URI refuses to start the flow (503) instead of guessing.
+    """
+    import os
+    from urllib.parse import urlparse
+
+    configured = (os.environ.get("OIDC_REDIRECT_URI") or "").strip()
+    if configured:
+        u = urlparse(configured)
+        local = u.hostname in ("localhost", "127.0.0.1", "::1")
+        if u.path == _OIDC_CALLBACK_PATH and not u.query and not u.fragment and (u.scheme == "https" or (u.scheme == "http" and local)):
+            return configured
+        raise HTTPException(status_code=503, detail="Google sign-in is not configured.")
+    env = str(getattr(getattr(request.app.state, "settings", None), "env", "development")).lower()
+    if env in DEV_ENVS:
+        return str(request.base_url).rstrip("/") + _OIDC_CALLBACK_PATH
+    raise HTTPException(status_code=503, detail="Google sign-in is not configured.")
+
+
+def _oidc_fail(request: Request, request_id: str, status_code: int, message: str) -> JSONResponse:
+    """A failed callback. Every transaction cookie (state, destination, PKCE verifier) is spent: a callback can be attempted once."""
+    resp = JSONResponse(status_code=status_code, content={"error": {"code": "http_error", "message": message, "request_id": request_id}})
+    for name in _OIDC_COOKIES:
+        resp.delete_cookie(name, path="/")
+    return resp
 
 
 @router.get("/oidc/google/start",
-            summary="Begin Google sign-in (returns the authorization URL; sets CSRF state)")
+            summary="Begin Google sign-in (returns the authorization URL; sets CSRF state and a PKCE verifier)")
 def google_start(
     request: Request,
     response: Response,
@@ -395,25 +435,26 @@ def google_start(
     provider=Depends(get_oidc_provider),
 ) -> dict:
     from src.authsec import tokens
-    from src.application.oidc import is_safe_redirect
+    from src.application.oidc import is_safe_redirect, new_pkce_verifier, pkce_challenge
 
     enforce("auth_oidc_start_ip", client_ip(request))
     if provider is None:
         raise HTTPException(status_code=404, detail="Google sign-in is not available.")
+    redirect_uri = _oidc_redirect_uri(request)
     state = tokens.generate_token(16)
+    verifier = new_pkce_verifier()
     safe_next = next if is_safe_redirect(next) else "/"
     secure = _secure_cookies(request)
-    # Short-lived, HttpOnly CSRF state + post-login destination.
-    response.set_cookie(_OIDC_STATE_COOKIE, state, max_age=600, httponly=True,
-                        secure=secure, samesite="lax", path="/")
-    response.set_cookie(_OIDC_NEXT_COOKIE, safe_next, max_age=600, httponly=True,
-                        secure=secure, samesite="lax", path="/")
+    # Short-lived, HttpOnly transaction cookies: CSRF state, post-login destination and the PKCE verifier (never sent to the browser's JS or to Google
+    # at start; only its S256 challenge is). All three are bound to THIS browser and are cleared when the callback ends, whatever its outcome.
+    for name, value in ((_OIDC_STATE_COOKIE, state), (_OIDC_NEXT_COOKIE, safe_next), (_OIDC_PKCE_COOKIE, verifier)):
+        response.set_cookie(name, value, max_age=600, httponly=True, secure=secure, samesite="lax", path="/")
     return {"authorization_url": provider.authorization_url(
-        state=state, redirect_uri=_oidc_redirect_uri(request))}
+        state=state, redirect_uri=redirect_uri, code_challenge=pkce_challenge(verifier))}
 
 
 @router.get("/oidc/google/callback",
-            summary="Complete Google sign-in (validates state, links/creates the account)")
+            summary="Complete Google sign-in (validates state, PKCE and the ID token; links/creates the account)")
 def google_callback(
     request: Request,
     code: str = Query(default=""),
@@ -427,16 +468,20 @@ def google_callback(
 
     if provider is None:
         raise HTTPException(status_code=404, detail="Google sign-in is not available.")
+    redirect_uri = _oidc_redirect_uri(request)
     cookie_state = request.cookies.get(_OIDC_STATE_COOKIE)
-    # CSRF: the state echoed by the provider must match the one we issued.
+    verifier = request.cookies.get(_OIDC_PKCE_COOKIE)
+    # CSRF: the state echoed by the provider must match the one we issued to THIS browser.
     if not cookie_state or not state or not tokens.tokens_equal(cookie_state, state):
-        raise HTTPException(status_code=400, detail="Sign-in could not be verified. Please try again.")
+        return _oidc_fail(request, request_id, 400, "Sign-in could not be verified. Please try again.")
+    if not verifier:                                                     # no PKCE transaction for this browser: never redeem the code
+        return _oidc_fail(request, request_id, 400, "Sign-in could not be verified. Please try again.")
     if not code:
-        raise HTTPException(status_code=400, detail="Sign-in was cancelled or failed.")
+        return _oidc_fail(request, request_id, 400, "Sign-in was cancelled or failed.")
     try:
-        identity = provider.exchange(code=code, redirect_uri=_oidc_redirect_uri(request))
+        identity = provider.exchange(code=code, redirect_uri=redirect_uri, code_verifier=verifier)
     except OidcError:
-        raise HTTPException(status_code=400, detail="Google sign-in failed. Please try again.")
+        return _oidc_fail(request, request_id, 400, "Google sign-in failed. Please try again.")
 
     result = service.oidc_login(
         identity=identity, user_agent=request.headers.get("user-agent"), request_id=request_id
@@ -446,8 +491,8 @@ def google_callback(
 
     redirect = RedirectResponse(url=safe_next, status_code=303)
     _set_session_cookie(request, redirect, result.session_token)
-    redirect.delete_cookie(_OIDC_STATE_COOKIE, path="/")
-    redirect.delete_cookie(_OIDC_NEXT_COOKIE, path="/")
+    for name in _OIDC_COOKIES:
+        redirect.delete_cookie(name, path="/")
     return redirect
 
 
