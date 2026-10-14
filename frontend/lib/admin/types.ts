@@ -289,6 +289,27 @@ export interface EmailDeliveryStatus {
   last_failure_category: string | null;
   note: string;
 }
+// --- W12.4D-B billing provider readiness (Stripe Managed Payments foundation): booleans, source kinds and fixed states only ---
+export interface BillingProviderReadiness {
+  status: "not_configured" | "configured_not_tested" | "sandbox_access_unverified" | "configuration_error" | "provider_unavailable" | "eligibility_not_confirmed" | "live_disabled";
+  provider_selected: string;
+  environment: string | null;
+  checks: { code: string; passed: boolean }[];
+  configuration_problem: string | null;
+  sandbox: { api: { configured: boolean; source_kind: string }; webhook: { configured: boolean; source_kind: string } };
+  live_slots_populated: boolean;
+  eligibility: string;
+  merchant_of_record: string;
+  sandbox_access: string;
+  live_billing: string;
+  checkout: string;
+  refunds: string;
+  webhooks: string;
+  last_successful_check: string | null;
+  last_failure_category: string | null;
+  api_version: string;
+  managed_payments_required: boolean;
+}
 export interface EmailTestResult { status: string; failure_category: string | null; adapter: string; note: string }
 export interface IntegrationTestResult {
   integration: string;

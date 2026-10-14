@@ -74,6 +74,7 @@ CATEGORIES = {
     "rate_limiting": "Rate limiting",
     "observability": "Observability",
     "file_security": "File security",
+    "payments": "Payments / billing",
 }
 
 REGISTRY: dict[str, IntegrationDef] = {d.code: d for d in (
@@ -134,6 +135,19 @@ REGISTRY: dict[str, IntegrationDef] = {d.code: d for d in (
                      CredentialSlot("secret_key", "Secret key", "LANGFUSE_SECRET_KEY")),
         enabled_flag="AGENT_EXTERNAL_OBSERVABILITY_ENABLED"),
     IntegrationDef(
+        "stripe_managed_payments", "Stripe Managed Payments (billing provider)", "payments", "Stripe Managed Payments (merchant of record)",
+        "Owner-selected billing provider (W12.4D-B FOUNDATION). Credentials and readiness only: there is no checkout, no webhook receiver, no refund "
+        "handling and live billing is disabled. Sandbox and live credentials are separate slots and are never interchangeable.",
+        credentials=(CredentialSlot("sandbox_api_key", "Sandbox secret API key", "STRIPE_SANDBOX_SECRET_KEY", min_length=20),
+                     CredentialSlot("sandbox_webhook_secret", "Sandbox webhook signing secret", "STRIPE_SANDBOX_WEBHOOK_SECRET", min_length=16),
+                     CredentialSlot("live_api_key", "Live secret API key (inert: live billing is disabled)", "STRIPE_LIVE_SECRET_KEY", required=False, min_length=20),
+                     CredentialSlot("live_webhook_secret", "Live webhook signing secret (inert)", "STRIPE_LIVE_WEBHOOK_SECRET", required=False, min_length=16)),
+        settings=(SettingDef("provider", "Billing provider", "BILLING_PROVIDER", ("disabled", "mock", "stripe_managed_payments")),
+                  SettingDef("environment", "Stripe environment", "STRIPE_ENVIRONMENT", ("sandbox", "live"))),
+        test_note="No connection test exists in this wave: nothing contacts Stripe. Sandbox access and Managed Payments eligibility stay unverified until the "
+                  "owner configures a Stripe sandbox and separately authorizes an external test.",
+        validation_note="FOUNDATION ONLY: sandbox access UNVERIFIED, seller eligibility NOT CONFIRMED, live billing DISABLED, no checkout."),
+    IntegrationDef(
         "malware_scanner", "ClamAV (upload malware scanning)", "file_security", "ClamAV daemon",
         "Optional malware scan of uploaded documents. No credentials are involved.",
         settings=(SettingDef("provider", "Scanner provider", "FILE_SCAN_PROVIDER", ("clamav", "fake")),),
@@ -172,6 +186,10 @@ def _runtime(defn: IntegrationDef, configured: dict[str, bool], settings: dict[s
     code = defn.code
     if code == "google_oidc":
         return bool(_flag(defn.enabled_flag) and all_set), "code_present_not_validated"
+    if code == "stripe_managed_payments":
+        # Never "runtime active": there is no operation to run. A selected provider is "code present, not validated".
+        selected = settings.get("provider") == "stripe_managed_payments"
+        return False, "code_present_not_validated" if selected else ("configured_inactive" if any_set else "supported_unconfigured")
     if code == "redis_rate_limit":
         try:
             from src.api.rate_limit import shared_store_active
@@ -357,8 +375,9 @@ class IntegrationService:
     def describe(self, defn: IntegrationDef, state: IntegrationState | None) -> dict:
         creds = [self._describe_slot(c) for c in defn.credentials]
         configured = {c["slot"]: c["configured"] for c in creds}
+        needed = {c.slot: configured[c.slot] for c in defn.credentials if c.required} or configured     # optional slots never block "configured"
         settings = {s.code: _setting(s) for s in defn.settings}
-        enabled, classification = _runtime(defn, configured, settings)
+        enabled, classification = _runtime(defn, needed, settings)
         if state and state.last_test_at:
             health = {"status": "healthy" if state.last_test_outcome == "success" else "unhealthy",
                       "last_tested_at": _iso(state.last_test_at), "category": state.last_test_category,
@@ -369,7 +388,7 @@ class IntegrationService:
             "code": defn.code, "name": defn.name, "category": defn.category,
             "category_label": CATEGORIES[defn.category], "adapter": defn.adapter, "description": defn.description,
             "classification": classification,
-            "configuration_status": _configuration_status(configured, defn, settings),
+            "configuration_status": _configuration_status(needed, defn, settings),
             "slots": creds,
             "settings": [{"code": s.code, "label": s.label, "selected": settings[s.code]} for s in defn.settings],
             "runtime": {"enabled": enabled, "managed": "environment",
@@ -480,6 +499,18 @@ class IntegrationService:
             raise SecretStoreReadOnly("This credential is managed outside Ask4Mo and cannot be changed here.")
         out = self._store.remove(cred.external_name, actor_user_id=actor_user_id, expected_revision=expected_revision, audit=audit)
         return out if isinstance(out, dict) else {"action": "removed"}
+
+    def billing_provider_readiness(self) -> dict:
+        """Bounded readiness of the owner-selected billing provider (W12.4D-B). Booleans, source kinds and fixed states only."""
+        from src.billing.stripe_provider import StripeConfigurationError, readiness, selected_environment
+        from src.core import secrets as rt
+
+        provider = (rt.read_setting("BILLING_PROVIDER") or "disabled").strip().lower()
+        try:
+            environment = selected_environment()
+        except StripeConfigurationError:
+            environment = None
+        return readiness(self._store, provider_selected=provider, environment=environment)
 
     def email_sender_is_current(self, sender) -> bool:
         """Does the running Brevo client hold the credential that resolves NOW? A comparison inside this module; no value leaves it."""

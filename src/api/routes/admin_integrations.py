@@ -18,7 +18,7 @@ from sqlalchemy import select
 from src.api.dependencies import (
     _session_cookie_name, get_email_sender, get_audit_repository, get_integration_service, get_repository, get_request_id, require_permission)
 from src.api.schemas.admin import (
-    EmailDeliveryStatus, EmailTestRequest, EmailTestResult, IntegrationDetail, IntegrationList, IntegrationTestResult)
+    BillingProviderReadiness, EmailDeliveryStatus, EmailTestRequest, EmailTestResult, IntegrationDetail, IntegrationList, IntegrationTestResult)
 from src.application import admin_audit as A
 from src.application import admin_permissions as perm
 from src.integrations import IntegrationNotFound, IntegrationTestUnsupported
@@ -55,6 +55,15 @@ def integration_detail(code: str, _p=Depends(require_permission(perm.INTEGRATION
                    "request_id": e.request_id, "created_at": e.created_at.isoformat() if e.created_at else None,
                    "context": e.context} for e in rows]
     return IntegrationDetail(**d, audit=events)
+
+
+@router.get("/{code}/readiness", response_model=BillingProviderReadiness,
+            summary="Billing provider readiness (Stripe Managed Payments foundation: sandbox access unverified, eligibility not confirmed, live disabled)")
+def billing_readiness(code: str, _p=Depends(require_permission(perm.INTEGRATIONS_READ)),
+                      service=Depends(get_integration_service)) -> BillingProviderReadiness:
+    if code != "stripe_managed_payments":
+        raise HTTPException(status_code=404, detail="Integration not found.")
+    return BillingProviderReadiness(**service.billing_provider_readiness())
 
 
 @router.get("/{code}/delivery", response_model=EmailDeliveryStatus,

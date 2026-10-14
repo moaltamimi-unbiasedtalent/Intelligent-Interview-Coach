@@ -50,7 +50,7 @@ def run() -> dict[str, tuple[bool, str]]:
     from src.billing.provider import MOCK_ALLOWED_ENVS, BillingConfigurationError, MockBillingAdapter, resolve_mode
 
     files = sorted(p.relative_to(ROOT).as_posix() for p in (ROOT / "src/billing").glob("*.py"))
-    code = "\n".join(code_only(f) for f in files) + "\n" + code_only("src/api/routes/admin_billing.py")
+    code = "\n".join(code_only(f) for f in files if not f.endswith("stripe_provider.py")) + "\n" + code_only("src/api/routes/admin_billing.py")
     raw = "\n".join(read(f) for f in files) + read("src/api/routes/admin_billing.py")
     persist = read("src/persistence.py")
     billing_models = persist.split("# --- Mock billing")[1].split("def make_engine")[0] if "# --- Mock billing" in persist else ""
@@ -58,7 +58,7 @@ def run() -> dict[str, tuple[bool, str]]:
     svc = read("src/billing/service.py")
 
     check("provider_interface_and_only_a_mock_adapter", "class BillingProvider(Protocol)" in raw and P.PROVIDERS == ("mock",) and MockBillingAdapter.live is False, "interface + mock")
-    check("no_live_provider_sdk_or_network", not re.search(r"stripe|adyen|paypal|mollie|braintree|requests\.|httpx|urllib\.request|socket", code.lower()), "none")
+    check("no_live_provider_sdk_or_network", not re.search(r"(import|from) stripe\b|stripe\.api_key|adyen|paypal|mollie|braintree|requests\.|httpx|urllib\.request|socket", code.lower()), "none")
     guard_ok = False
     try:
         resolve_mode("production", "mock")

@@ -52,6 +52,7 @@ import type {
   IntegrationDetail,
   IntegrationRow,
   IntegrationTestResult,
+  BillingProviderReadiness,
   EmailDeliveryStatus,
   EmailTestResult,
   AssignablePlan,
@@ -603,6 +604,9 @@ export const api = {
     integrations: (opts?: RequestOptions) => request<{ items: IntegrationRow[] }>("GET", "/admin/integrations", opts),
     integration: (code: string, opts?: RequestOptions) =>
       request<IntegrationDetail>("GET", `/admin/integrations/${encodeURIComponent(code)}`, opts),
+    /** Billing provider readiness (foundation): fixed states only; nothing contacts Stripe. */
+    billingReadiness: (code: string, opts?: RequestOptions) =>
+      request<BillingProviderReadiness>("GET", `/admin/integrations/${encodeURIComponent(code)}/readiness`, opts),
     /** Aggregates and bounded categories only. Provider accepted is NOT delivered. */
     emailDelivery: (code: string, opts?: RequestOptions) =>
       request<EmailDeliveryStatus>("GET", `/admin/integrations/${encodeURIComponent(code)}/delivery`, opts),

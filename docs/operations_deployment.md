@@ -83,6 +83,7 @@ browsers; run it locally (see `e2e/README.md`).
 ## Transactional email (W12.4C)
 
 - Hosted environments need `EMAIL_PROVIDER=brevo`, a Brevo credential (environment or Admin-managed), `EMAIL_SENDER` set to a sender VERIFIED in Brevo, and `APP_BASE_URL` as an `https://` origin (verification and recovery links use it; production refuses `http://`). Without them a hosted environment uses a not-configured sender that prints nothing and reports `not_configured`; the console adapter is development only.
+- Billing (W12.4D-B): `BILLING_PROVIDER` defaults to disabled; `stripe_managed_payments` selects a sandbox FOUNDATION with no checkout and no payments, and live billing is disabled by a code constant (`STRIPE_ENVIRONMENT=live` changes nothing). Store sandbox credentials only in Admin (step-up) or the environment. No migration.
 - Google sign-in (when `FEATURE_GOOGLE_LOGIN` is on) needs `OIDC_REDIRECT_URI` set to the exact registered https callback (`.../api/v1/auth/oidc/google/callback`); production refuses to start without it. The flow uses PKCE S256 and validates the ID token.
 - A rotated Brevo credential takes effect after the API and the worker restart. Provider acceptance is not delivery; no delivery events are collected. Apply migration `0027_email_attempts` with `alembic upgrade head`. See `docs/capstone/admin/W12_04C_EMAIL_IDENTITY_OPERATIONS.md` for the runbook.
 

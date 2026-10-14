@@ -551,9 +551,17 @@ def test_job_types_are_id_only_and_billing_code_has_no_provider_sdk():
     from src.jobs.registry import REGISTRY
     assert set(REGISTRY[P.JOB_REFUND].payload_model.model_fields) == {"refund_id"} and set(REGISTRY[P.JOB_PROCESS_EVENT].payload_model.model_fields) == {"event_id"}
     assert not REGISTRY[P.JOB_REFUND].admin_enqueue
-    src = " ".join(p.read_text() for p in (ROOT / "src/billing").glob("*.py")).lower()
-    for banned in ("import stripe", "adyen", "paypal", "mollie", "braintree", "requests.", "httpx", "urllib.request"):
-        assert banned not in src, banned
+    # W12.4D-B: the ONLY billing module that may touch a provider SDK is stripe_provider.py, and only through a lazy import inside a function.
+    files = {p.name: p.read_text() for p in (ROOT / "src/billing").glob("*.py")}
+    others = " ".join(v for k, v in files.items() if k != "stripe_provider.py").lower()
+    assert not re.search(r"(import|from) stripe\b", others)                              # the SDK is imported nowhere else
+    for banned in ("adyen", "paypal", "mollie", "braintree", "requests.", "httpx", "urllib.request"):
+        assert banned not in others, banned
+    sp = files["stripe_provider.py"]
+    assert not re.search(r"^(import stripe|from stripe)", sp, re.M)                      # never imported at module import time
+    assert "stripe.api_key" not in sp.replace("global ``stripe.api_key``", "").replace("``stripe.api_key``", "")   # never the SDK's global credential
+    for banned in ("httpx", "urllib.request", "requests.", "socket"):
+        assert banned not in sp, banned
 
 
 def test_migration_0021_schema_only_constraints_and_round_trip(tmp_path, monkeypatch):

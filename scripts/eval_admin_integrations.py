@@ -58,16 +58,17 @@ def run() -> dict[str, tuple[bool, str]]:
     from src.persistence import IntegrationState, ManagedSecret
     from src.secret_store import EnvironmentSecretStore, SecretStoreReadOnly
 
-    check("registry_is_code_defined", len(I.REGISTRY) == 9 and set(I.CATEGORIES) >= {d.category for d in I.REGISTRY.values()},
+    check("registry_is_code_defined", len(I.REGISTRY) == 10 and set(I.CATEGORIES) >= {d.category for d in I.REGISTRY.values()},
           f"{len(I.REGISTRY)} integrations, {len(I.CATEGORIES)} categories")
-    check("no_billing_provider_in_registry", not re.search(r"stripe|paypal|billing|payment|checkout", " ".join(
-        f"{d.code} {d.name} {d.adapter}" for d in I.REGISTRY.values()), re.I), "none")
+    check("only_the_owner_selected_billing_provider_is_registered", not re.search(r"stripe|paypal|billing|payment|checkout|paddle|mollie|adyen", " ".join(
+        f"{d.code} {d.name} {d.adapter}" for c, d in I.REGISTRY.items() if c != "stripe_managed_payments"), re.I)
+          and not I.REGISTRY["stripe_managed_payments"].test_supported, "Stripe Managed Payments foundation only; no probe")
     check("no_registry_field_is_an_admin_supplied_endpoint",
           not any(re.search(r"url|host|endpoint|base", s.env_name, re.I) for d in I.REGISTRY.values() for s in d.settings), "settings are vocabularies, not endpoints")
     routes = [r for r in admin_routes() if r.path.startswith("/admin/integrations")]
     check("no_route_creates_or_edits_an_integration",
-          len(routes) == 7 and not any(r.path == "/admin/integrations" and "POST" in r.methods for r in routes)
-          and not any(re.search(r"enable|disable|toggle|config", r.path) for r in routes), "list, detail, delivery diagnostics, test, test-email, credential write, credential remove only")
+          len(routes) == 8 and not any(r.path == "/admin/integrations" and "POST" in r.methods for r in routes)
+          and not any(re.search(r"enable|disable|toggle|config", r.path) for r in routes), "list, detail, billing readiness, delivery diagnostics, test, test-email, credential write, credential remove only")
     check("integration_routes_permissioned",
           not ungated(admin_routes()) and {p for r in routes for p in r.permissions} == {perm.INTEGRATIONS_READ, perm.INTEGRATIONS_MANAGE, perm.SECRET_ROTATE}
           and len(perm.PERMISSIONS) == 43, "canonical permissions only; registry unchanged at 43")
@@ -83,7 +84,7 @@ def run() -> dict[str, tuple[bool, str]]:
     ss = read("src/secret_store.py")
     check("secret_store_has_no_admin_read_path", not re.search(r"get_for_admin|def reveal|def get\(|def mask|\[-\d+:\]|\[:\d+\]", code_only(ss)), "runtime-only read; no reveal/mask/partial")
     users = [str(p.relative_to(ROOT)) for p in (ROOT / "src").rglob("*.py") if "get_for_runtime" in p.read_text(encoding="utf-8")]
-    allowed = {"src/secret_store.py", "src/integrations.py"}
+    allowed = {"src/secret_store.py", "src/integrations.py", "src/billing/stripe_provider.py"}      # the Stripe client factory must read its own credential
     check("runtime_secret_read_is_confined", set(users) <= allowed, ", ".join(sorted(set(users) - allowed)) or "only the secret store and the adapter probe")
     admin_files = ["src/api/routes/admin_integrations.py", "src/api/routes/admin.py", "src/api/schemas/admin.py",
                    "src/application/admin_providers.py", "src/application/admin_command_center.py"]

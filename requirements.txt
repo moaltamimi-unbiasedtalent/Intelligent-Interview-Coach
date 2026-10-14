@@ -40,3 +40,4 @@ bcrypt>=4.1,<6.0
 # OCR is an optional extra (pip install -e ".[ocr]") — not required at runtime.
 python-docx>=1.1,<2.0
 cryptography>=42,<52
+stripe>=16,<17
