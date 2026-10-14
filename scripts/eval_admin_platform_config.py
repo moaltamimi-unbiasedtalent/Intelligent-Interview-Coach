@@ -63,7 +63,8 @@ def run() -> dict[str, tuple[bool, str]]:
     pause_src = code_only("src/application/pause.py")
     flags_src = code_only("src/platform_config/flags.py")
     routes = read("src/api/routes/admin_config.py")
-    schemas = read("src/api/schemas/admin.py").split("# ---- W10.11")[-1]
+    # Only the W10.11 section (pause and flags), up to the next section marker: later, separately authorized schema blocks (reports, email, billing provider readiness) are not the generic config editor.
+    schemas = read("src/api/schemas/admin.py").split("# ---- W10.11")[-1].split("\n# ---- ")[0]
     all_src = "".join(p.read_text(encoding="utf-8") for p in (ROOT / "src").rglob("*.py"))
 
     # --- SEC-W10-05 closure criteria -------------------------------------------------------------------------------------------

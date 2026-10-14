@@ -546,7 +546,10 @@ def test_migration_0023_adds_only_the_two_tables_seeds_nothing_and_changes_no_be
 
 def test_no_generic_config_editor_and_no_forbidden_mutable_settings():
     routes = (ROOT / "src/api/routes/admin_config.py").read_text()
-    schemas = (ROOT / "src/api/schemas/admin.py").read_text().split("# ---- W10.11")[1]
+    # Inspect ONLY the W10.11 section (pause and flags), up to the next section marker. The file continues with unrelated, separately authorized
+    # schemas (W10.12 reports, W12.4C email, W12.4D-B billing provider readiness); scanning them is a false-positive source, not a safeguard.
+    schemas = (ROOT / "src/api/schemas/admin.py").read_text().split("# ---- W10.11")[1].split("\n# ---- ")[0]
+    assert "class FlagsOverview" in schemas and "class PauseOverview" in schemas and "class BillingProviderReadiness" not in schemas   # the slice is the right one
     assert not re.search(r"dict\[str, (Any|object)\]|json_body|raw_json|env_var|dotenv|\.env\b", schemas + routes)
     forbidden = ("DATABASE_URL", "API_ENV", "SECRET", "API_KEY", "password", "CORS", "allowed_hosts", "signing", "cookie", "payment", "model_slug", "retention")
     body = (routes + schemas).lower()
@@ -668,3 +671,73 @@ def test_admin_flags_read_reports_unavailable_instead_of_a_baseline_derived_stat
 
 def test_the_mutable_flag_set_is_unchanged_by_the_outage_correction():
     assert set(FLAGS) == {"external_research", "company_web_research"}
+
+
+# ---------------- W12.4D-B: the generic config editor stays unable to touch payment or provider settings -------------------------------
+
+def _section_models():
+    """The pydantic models that make up the generic configuration editor, found structurally (not by substring)."""
+    from src.api.schemas import admin as S
+    return [getattr(S, n) for n in ("PauseOverview", "PauseStateView", "FlagsOverview", "FlagStateView", "FlagUpdate", "PauseUpdate") if hasattr(S, n)]
+
+
+def test_generic_config_models_have_no_payment_provider_or_secret_fields_structurally():
+    models = _section_models()
+    assert len(models) >= 4
+    banned = re.compile(r"payment|billing|stripe|provider|checkout|webhook|secret|key|token|credential|price|currency", re.I)
+    fields = {f for m in models for f in m.model_fields}
+    assert not [f for f in fields if banned.search(f)], fields
+
+
+def test_the_flag_registry_and_pause_capabilities_can_never_name_billing_or_stripe():
+    assert set(FLAGS) == {"external_research", "company_web_research"}
+    for key, flag in FLAGS.items():
+        assert not re.search(r"billing|stripe|payment|checkout|provider_mode", key + flag.env_var, re.I)
+    assert not [c for c in PAUSABLE_CAPABILITIES if re.search(r"billing|stripe|payment|checkout", c, re.I)]
+
+
+def test_generic_config_routes_cannot_read_or_write_payment_or_stripe_controls(env):
+    _, plat = env.user("platform_admin")
+    body = {"enabled": True, "expected_revision": 0, "reason": "attempt"}
+    for key in ("stripe_environment", "billing_provider", "BILLING_PROVIDER", "stripe_managed_payments", "live_billing", "checkout_enabled"):
+        assert env.c.put(f"{API}/admin/flags/{key}", json=body, cookies=plat).status_code == 404, key          # not a code-defined flag: nothing is created
+    for cap in ("billing", "stripe", "checkout", "payments"):
+        r = env.c.post(f"{API}/admin/pause/{cap}", json={"paused": True, "expected_revision": 0, "reason": "attempt"}, cookies=plat)
+        assert r.status_code in (404, 422), cap
+    flags, pauses = env.c.get(f"{API}/admin/flags", cookies=plat), env.c.get(f"{API}/admin/pause", cookies=plat)
+    assert not re.search(r"sk_test|sk_live|whsec_|stripe", flags.text + pauses.text, re.I)                      # no credential-shaped value, no Stripe control
+    ids = [i["flag_id"] for i in flags.json()["items"]] + [i["capability"] for i in pauses.json()["items"]] if "items" in pauses.json() else []
+    assert not [i for i in ids if re.search(r"billing|stripe|payment|checkout", i, re.I)]                       # identifiers, not descriptive prose
+    from src.api.admin_route_invariant import admin_routes
+    cfg = [r for r in admin_routes() if r.path.startswith(("/admin/flags", "/admin/pause"))]
+    assert cfg and not [r for r in cfg if re.search(r"stripe|billing|payment|checkout|credential|secret", r.path, re.I)]
+
+
+def test_stripe_credentials_remain_only_on_the_protected_integration_path_with_step_up(env):
+    from src import secret_store as SS
+    import base64
+    from src.api import dependencies as deps2
+    store = SS.LayeredSecretStore(SS.EncryptedDatabaseSecretStore(sf(env), base64.b64encode(bytes(range(32))).decode()))
+    env.app.dependency_overrides[deps2.get_secret_store] = lambda: store
+    try:
+        slot = f"{API}/admin/integrations/stripe_managed_payments/credentials/sandbox_api_key"
+        value = "sk_test_W10_11_REGRESSION_VALUE_0001"
+        _, cand = env.user("user"); _, bill = env.user("billing_admin"); _, ops = env.user("operations_admin"); _, plat = env.user("platform_admin")
+        for ck in (cand, bill, ops):
+            assert env.c.post(slot, json={"value": value}, cookies=ck).status_code == 403                  # RBAC: only secret.rotate holders
+        r = env.c.post(slot, json={"value": value}, cookies=plat)
+        assert r.status_code == 403 and r.json()["error"]["code"] == "step_up_required" and value not in r.text     # the owner still needs a fresh step-up
+        assert not [p for p in perm.ROLE_PRESETS if perm.SECRET_ROTATE in perm.ROLE_PRESETS[p] and p != "platform_admin"] and len(perm.PERMISSIONS) == 43
+        # the generic editor has no sibling that accepts a credential: every config route is flags or pause only
+        from src.api.admin_route_invariant import admin_routes
+        paths = {r.path for r in admin_routes() if "config" in r.route.endpoint.__module__ or r.path.startswith(("/admin/flags", "/admin/pause"))}
+        assert paths and all(p.startswith(("/admin/flags", "/admin/pause")) for p in paths), paths
+    finally:
+        env.app.dependency_overrides.pop(deps2.get_secret_store, None)
+
+
+def test_harmless_stripe_schemas_outside_the_config_section_do_not_trip_the_guard():
+    text = (ROOT / "src/api/schemas/admin.py").read_text()
+    assert "class BillingProviderReadiness" in text and "managed_payments_required" in text                 # exists, and is allowed to
+    section = text.split("# ---- W10.11")[1].split("\n# ---- ")[0]
+    assert "payment" not in section.lower() and "stripe" not in section.lower()                              # the guarded section itself stays clean
