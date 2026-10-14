@@ -107,6 +107,13 @@ def validate_runtime_config(env: str | None = None) -> EnvReport:
         report.warnings.append(
             "FEATURE_GOOGLE_LOGIN is on but GOOGLE_CLIENT_ID/SECRET are missing — Google "
             "sign-in will stay disabled.")
+    if _has("FEATURE_GOOGLE_LOGIN"):
+        redirect = (os.environ.get("OIDC_REDIRECT_URI", "") or "").strip()
+        valid = redirect.startswith("https://") and redirect.split("?")[0].split("#")[0].endswith("/api/v1/auth/oidc/google/callback")
+        if not valid:
+            (report.critical if is_prod else report.warnings).append(
+                "FEATURE_GOOGLE_LOGIN is on but OIDC_REDIRECT_URI is not a trusted https URL ending in /api/v1/auth/oidc/google/callback — "
+                "the request Host is never trusted for the Google callback in a hosted environment.")
     if _has("REALTIME_VOICE_ENABLED") and not _has("REALTIME_VOICE_API_KEY"):
         report.warnings.append(
             "REALTIME_VOICE_ENABLED is on but REALTIME_VOICE_API_KEY is missing — realtime "

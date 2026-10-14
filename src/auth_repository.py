@@ -252,7 +252,7 @@ class AccountRepository:
 
             user: User | None = None
             # Link only on a provider-verified email — never merge on an unverified one.
-            if norm and email_verified:
+            if norm and email_verified is True:      # strict: only a real boolean true links (never a truthy string or number)
                 user = session.scalar(select(User).where(User.email == norm))
                 if user is not None and not user.email_verified:
                     # PRE-HIJACK GUARD (W12.4C): this account was created by password registration and its email was NEVER verified,
@@ -290,7 +290,7 @@ class AccountRepository:
                     email_verified=bool(email_verified),
                 )
             )
-            if email_verified and norm and not user.email_verified:
+            if email_verified is True and norm and not user.email_verified:
                 user.email_verified = True
             session.commit()
             return user.id
