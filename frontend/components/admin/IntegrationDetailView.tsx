@@ -8,7 +8,16 @@ import { api } from "@/lib/api/client";
 import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
 import type { IntegrationDetail } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
+import { useStepUp } from "./StepUp";
 import { KeyValue, Panel, PermissionGate, ResourceState, StatusLabel, Table, apiMessage, btn, field, useAdminResource } from "./ui";
+
+const SOURCE_LABEL = { managed: "Managed secure store", environment: "Environment", none: "Not configured" } as const;
+const REASON_COPY: Record<string, string> = {
+  key_missing: "its encryption key is not configured in the deployment",
+  key_malformed: "its encryption key is not valid",
+  store_error: "the store cannot be reached",
+  not_bound: "the store cannot be reached",
+};
 
 export function IntegrationDetailView({ code }: { code: string }) {
   return (
@@ -35,7 +44,11 @@ function Detail({ d, reload }: { d: IntegrationDetail; reload: () => void }) {
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [slot, setSlot] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<string | null>(null);
   const valueRef = useRef<HTMLInputElement>(null);
+  const stepUp = useStepUp();
+  const chosen = d.slots.find((c) => c.slot === slot) ?? null;
+  const chosenRemoval = d.slots.find((c) => c.slot === removing) ?? null;
 
   const runTest = async () => {
     setBusy(true);
@@ -57,9 +70,26 @@ function Detail({ d, reload }: { d: IntegrationDetail; reload: () => void }) {
     if (!slot || !valueRef.current) return;
     const value = valueRef.current.value;
     valueRef.current.value = "";
-    await api.admin.replaceCredential(d.code, slot, value);
-    setNotice("Credential saved. The value cannot be viewed from Ask4Mo.");
-    setSlot(null);
+    // A fresh password step-up is part of the gate: on step_up_required the dialog collects it and the SAME write is retried.
+    // The value is held in this closure only for that retry and is cleared when the attempt ends (success, failure or cancel).
+    let pending: string | null = value;
+    try {
+      const saved = await stepUp.run(() => api.admin.replaceCredential(d.code, slot, pending ?? "", chosen?.revision ?? null));
+      setNotice(`Credential ${saved.action === "created" ? "configured" : "replaced"}. It is saved but not tested, and its value cannot be viewed from Ask4Mo.`);
+      setSlot(null);
+      reload();
+    } finally {
+      pending = null;
+    }
+  };
+
+  const removeManaged = async () => {
+    if (!removing) return;
+    await stepUp.run(() => api.admin.removeCredential(d.code, removing, chosenRemoval?.revision ?? null));
+    setNotice(chosenRemoval?.environment_fallback
+      ? "Managed credential removed. The deployment environment credential is used again."
+      : "Managed credential removed. This credential is now not configured.");
+    setRemoving(null);
     reload();
   };
 
@@ -77,6 +107,11 @@ function Detail({ d, reload }: { d: IntegrationDetail; reload: () => void }) {
       </Panel>
 
       <Panel title="Credentials">
+        <p className="text-sm" data-testid="store-state">
+          {d.store.state === "writable" ? "Secure credential store: writable. Managed credentials are encrypted before they are saved."
+            : d.store.state === "unavailable" ? `Secure writable credential store unavailable: ${REASON_COPY[d.store.reason ?? ""] ?? "it cannot be used right now"}.`
+            : "Credentials are managed in the deployment environment (read-only). The secure credential store is not enabled for this deployment."}
+        </p>
         {d.slots.length === 0 ? <p className="text-sm text-muted">This integration needs no credentials.</p> : (
           <ul className="grid gap-3" aria-label="Credential slots">
             {d.slots.map((c) => (
@@ -85,25 +120,32 @@ function Detail({ d, reload }: { d: IntegrationDetail; reload: () => void }) {
                   {c.label}
                   <StatusLabel tone={c.configured ? "ok" : "neutral"}>{c.configured ? "Configured" : "Not configured"}</StatusLabel>
                 </p>
-                <p className="text-xs text-muted">
-                  Source: {c.source === "none" ? "none" : c.source.replace(/_/g, " ")}
-                  {c.writable ? "" : `. Managed outside Ask4Mo (set ${c.external_name} in the deployment environment); it cannot be viewed or changed here.`}
+                <p className="text-xs text-muted" data-testid={`source-${c.slot}`}>
+                  Source: {SOURCE_LABEL[c.source_kind]}
+                  {c.managed && c.last_rotated_at ? `. Last changed ${c.last_rotated_at}` : ""}
+                  {c.managed && c.managed_readable === false ? ". The managed credential cannot be read with the current encryption key; the environment value (if any) is used" : ""}
+                  {c.source_kind === "environment" && d.store.state !== "writable" ? `. Managed outside Ask4Mo (set ${c.external_name} in the deployment environment); it cannot be viewed or changed here.` : ""}
+                  {c.source_kind === "environment" && d.store.state === "writable" ? `. Configuring a managed credential overrides the environment value (${c.external_name}), which is not changed.` : ""}
                 </p>
+                <p className="text-xs text-muted">{c.applies === "next_use" ? "A new value is used on the next request that needs it." : "A new value is used after the API and worker restart."}</p>
                 {c.writable && canRotate ? (
-                  <button type="button" className={`${btn} mt-2`} onClick={() => setSlot(c.slot)}>{c.configured ? "Replace credential" : "Set credential"}</button>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button type="button" className={btn} onClick={() => setSlot(c.slot)}>{c.managed ? "Replace credential" : "Configure credential"}</button>
+                    {c.managed ? <button type="button" className={btn} onClick={() => setRemoving(c.slot)}>Remove managed credential</button> : null}
+                  </div>
                 ) : null}
               </li>
             ))}
           </ul>
         )}
-        <p className="text-xs text-muted">Ask4Mo never displays a credential, part of one, or a masked form of one. Configured only means a value exists, not that it is valid.</p>
+        <p className="text-xs text-muted">Ask4Mo never displays a credential, part of one, or a masked form of one. Configured only means a value exists, not that it is valid or healthy. Saving a credential does not contact the provider.</p>
       </Panel>
 
       <Panel title="Settings and runtime">
         <KeyValue rows={[
           ...d.settings.map((s): [string, string] => [s.label, s.selected ?? "not set"]),
           ["Runtime state", d.runtime.enabled === null ? "Not applicable" : d.runtime.enabled ? "On" : "Off"],
-          ["Managed by", "Deployment environment (read-only)"],
+          ["Runtime state managed by", "Deployment environment (read-only)"],
         ]} />
         <p className="text-xs text-muted">{d.runtime.note}</p>
       </Panel>
@@ -126,7 +168,7 @@ function Detail({ d, reload }: { d: IntegrationDetail; reload: () => void }) {
           cols={["created_at", "event_type", "result", "actor_user_id", "detail", "request_id"]} />
       </Panel>
 
-      <ActionDialog open={slot !== null} title="Replace this credential?" confirmLabel="Save credential" askReason={false}
+      <ActionDialog open={slot !== null} title={chosen?.managed ? "Replace this credential?" : "Configure this credential?"} confirmLabel="Save credential" askReason={false}
         onClose={() => setSlot(null)}
         onConfirm={async () => {
           try {
@@ -135,12 +177,21 @@ function Detail({ d, reload }: { d: IntegrationDetail; reload: () => void }) {
             if (valueRef.current) valueRef.current.value = "";
           }
         }}>
-        <p>The previous value cannot be viewed from Ask4Mo. The new value is write-only: it is saved once and never shown again.</p>
+        <p>{chosen?.managed ? "The previous value cannot be viewed from Ask4Mo and is discarded." : "This managed value will override any deployment environment value."} The new value is write-only: it is saved once, encrypted, and never shown again.</p>
         <label className="grid gap-1 text-xs text-muted">
-          New credential
-          <input ref={valueRef} type="password" autoComplete="off" spellCheck={false} className={field} />
+          {chosen?.managed ? "New credential" : "Credential"}
+          <input ref={valueRef} type="password" autoComplete="off" spellCheck={false} minLength={chosen?.min_length} maxLength={chosen?.max_length} className={field} />
         </label>
       </ActionDialog>
+
+      <ActionDialog open={removing !== null} title="Remove the managed credential?" confirmLabel="Remove" askReason={false}
+        onClose={() => setRemoving(null)} onConfirm={removeManaged}>
+        <p>
+          This deletes the Admin-managed credential only.{" "}
+          {chosenRemoval?.environment_fallback ? "The deployment environment credential will be used again." : "No environment credential exists, so this credential will be not configured."}
+        </p>
+      </ActionDialog>
+      {stepUp.dialog}
     </div>
   );
 }

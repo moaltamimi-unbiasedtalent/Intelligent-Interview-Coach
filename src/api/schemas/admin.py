@@ -337,6 +337,17 @@ class CredentialStatus(_Strict):
     configured: bool
     source: str
     writable: bool
+    # W12.4B: metadata only. No value, prefix, suffix, mask, ciphertext, nonce or fingerprint exists on this model.
+    source_kind: str          # managed | environment | none
+    managed: bool
+    managed_readable: bool | None
+    revision: int | None
+    last_rotated_at: str | None
+    environment_fallback: bool
+    required: bool
+    min_length: int
+    max_length: int
+    applies: str                    # next_use | restart
 
 
 class SettingView(_Strict):
@@ -355,6 +366,8 @@ class RuntimeView(_Strict):
 class CredentialStoreView(_Strict):
     name: str
     writable: bool
+    state: str                      # writable | read_only | unavailable
+    reason: str | None              # bounded code only (key_missing | key_malformed | store_error | not_bound)
 
 
 class HealthView(_Strict):

@@ -124,6 +124,9 @@ def build_repository(config: AppConfig):
     engine = make_engine(config.database_url)
     init_db(engine)
     session_factory = make_session_factory(engine)
+    from src.secret_store import bind_secret_store
+
+    bind_secret_store(session_factory)   # W12.4B: installs the managed-credential resolver when SECRET_STORE_BACKEND=encrypted_database
     try:                       # P10B-W10.7: route the model registry through the governed configuration (fail-closed, optional)
         from src.ai_admin.resolver import install_resolver
 

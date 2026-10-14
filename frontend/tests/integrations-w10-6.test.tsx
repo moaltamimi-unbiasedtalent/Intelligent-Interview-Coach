@@ -24,19 +24,22 @@ vi.mock("@/lib/api/client", () => ({
 import { IntegrationDetailView } from "@/components/admin/IntegrationDetailView";
 import { IntegrationsView } from "@/components/admin/IntegrationsView";
 
+const SLOT = (o: Record<string, unknown> = {}) => ({ slot: "api_key", label: "API key", external_name: "OPENROUTER_API_KEY", configured: true, source: "environment",
+  writable: false, source_kind: "environment", managed: false, managed_readable: null, revision: null, last_rotated_at: null, environment_fallback: true,
+  required: true, min_length: 8, max_length: 4096, applies: "restart", ...o });
 const ROW = (over: Record<string, unknown> = {}) => ({
   code: "openrouter", name: "OpenRouter (language models)", category: "ai_model", category_label: "AI / model", adapter: "OpenRouter chat API",
   description: "Chat model provider.", classification: "runtime_active", configuration_status: "configured",
-  slots: [{ slot: "api_key", label: "API key", external_name: "OPENROUTER_API_KEY", configured: true, source: "environment", writable: false }],
+  slots: [SLOT()],
   settings: [], runtime: { enabled: true, managed: "environment", toggle_supported: false, note: "Runtime state is owned by the deployment environment." },
-  store: { name: "environment", writable: false },
+  store: { name: "environment", writable: false, state: "read_only", reason: null },
   health: { status: "not_tested", last_tested_at: null, category: null, latency_ms: null },
   test: { supported: true, note: "Calls one key-information endpoint." }, validation_note: "Healthy only after a successful manual test.", ...over });
 const GOOGLE = ROW({ code: "google_oidc", name: "Google sign-in (OIDC)", category: "authentication", category_label: "Authentication",
   classification: "code_present_not_validated", test: { supported: false, note: "No manual probe." },
   validation_note: "Backend support present; end-to-end sign-in is not validated." });
 const ADZUNA = ROW({ code: "adzuna", name: "Adzuna (job market data)", classification: "supported_unconfigured", configuration_status: "unconfigured",
-  slots: [{ slot: "app_key", label: "Application key", external_name: "ADZUNA_APP_KEY", configured: false, source: "none", writable: false }],
+  slots: [SLOT({ slot: "app_key", label: "Application key", external_name: "ADZUNA_APP_KEY", configured: false, source: "none", source_kind: "none", environment_fallback: false })],
   test: { supported: false, note: "No manual probe." } });
 const DETAIL = (over: Record<string, unknown> = {}) => ({ ...ROW(over), audit: [{ event_type: "admin.integration_test_run", result: "success", actor_user_id: 1, request_id: "req-1", created_at: null, context: { category: "ok" } }] });
 
@@ -45,7 +48,7 @@ beforeEach(() => {
   list.mockResolvedValue({ items: [ROW(), GOOGLE, ADZUNA] });
   one.mockResolvedValue(DETAIL());
   test.mockResolvedValue({ integration: "openrouter", outcome: "success", category: "ok", latency_ms: 12 });
-  replace.mockResolvedValue({ integration: "openrouter", slot: "api_key", configured: true });
+  replace.mockResolvedValue({ integration: "openrouter", slot: "api_key", configured: true, action: "rotated", revision: 4 });
 });
 afterEach(() => vi.clearAllMocks());
 
@@ -61,7 +64,7 @@ describe("Integrations inventory", () => {
     expect(within(google).getByText("Code present, not validated")).toBeInTheDocument();
     const adzuna = screen.getByRole("link", { name: "Adzuna (job market data)" }).closest("tr") as HTMLElement;
     expect(within(adzuna).getByText("Supported, not configured")).toBeInTheDocument();
-    expect(within(adzuna).getByText("Not configured")).toBeInTheDocument();
+    expect(within(adzuna).getAllByText("Not configured")).toHaveLength(2);   // credential status and source
     expect(screen.getByText(/supported is not connected, configured is not healthy/)).toBeInTheDocument();
   });
 
@@ -87,7 +90,7 @@ describe("Integration detail", () => {
     const slots = await screen.findByRole("list", { name: "Credential slots" });
     expect(within(slots).getByText("Configured")).toBeInTheDocument();
     expect(within(slots).getByText(/Managed outside Ask4Mo \(set OPENROUTER_API_KEY in the deployment environment\)/)).toBeInTheDocument();
-    for (const name of [/Replace/, /Set credential/, /Rotate/, /Delete/, /Reveal/, /Show/, /View/]) {
+    for (const name of [/Replace/, /Set credential/, /Configure credential/, /Rotate/, /Delete/, /Reveal/, /Show/, /View/]) {
       expect(screen.queryByRole("button", { name })).not.toBeInTheDocument();
     }
     expect(document.querySelector('input[type="password"]')).toBeNull();
@@ -136,7 +139,7 @@ describe("Integration detail", () => {
     render(<IntegrationDetailView code="openrouter" />);
     expect(await screen.findByText("admin.integration_test_run")).toBeInTheDocument();
     expect(screen.getByText("req-1")).toBeInTheDocument();
-    expect(screen.getByText("Deployment environment (read-only)")).toBeInTheDocument();
+    expect(screen.getByText("Deployment environment (read-only)")).toBeInTheDocument();    // runtime state is still environment-owned
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
     expect(document.querySelector('input[type="url"], input[name*="url" i], input[name*="endpoint" i]')).toBeNull();
@@ -144,8 +147,9 @@ describe("Integration detail", () => {
 });
 
 describe("write-only credential form (only for a writable store and secret.rotate)", () => {
-  const WRITABLE = (configured = false) => DETAIL({ store: { name: "in_memory_test", writable: true },
-    slots: [{ slot: "api_key", label: "API key", external_name: "OPENROUTER_API_KEY", configured, source: configured ? "in_memory_test" : "none", writable: true }] });
+  const WRITABLE = (configured = false) => DETAIL({ store: { name: "managed_with_environment_fallback", writable: true, state: "writable", reason: null },
+    slots: [SLOT({ configured, source: configured ? "managed" : "none", source_kind: configured ? "managed" : "none", writable: true, managed: configured,
+      revision: configured ? 3 : null, last_rotated_at: configured ? "2026-10-14T09:00:00" : null, environment_fallback: false })] });
 
   it("clears the input immediately, sends the value once, never shows it back and warns the old value is unviewable", async () => {
     mockPerms = ["platform.integrations.read", "platform.integrations.secret.rotate"];
@@ -158,9 +162,10 @@ describe("write-only credential form (only for a writable store and secret.rotat
     expect(within(dialog).getByRole("button", { name: "Cancel" })).toHaveFocus();
     const input = within(dialog).getByLabelText("New credential") as HTMLInputElement;
     expect(input.type).toBe("password");
+    expect(input.value).toBe("");                                   // never pre-filled
     await user.type(input, "super-secret-credential-123");
     await user.click(within(dialog).getByRole("button", { name: "Save credential" }));
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("openrouter", "api_key", "super-secret-credential-123"));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("openrouter", "api_key", "super-secret-credential-123", 3));
     expect(input.value).toBe("");                                   // cleared immediately, not repopulated
     expect(await screen.findByText(/cannot be viewed from Ask4Mo/)).toBeInTheDocument();
     expect(document.body.textContent).not.toContain("super-secret-credential-123");
@@ -172,9 +177,9 @@ describe("write-only credential form (only for a writable store and secret.rotat
     replace.mockRejectedValue(new Error("The credential could not be saved."));
     const user = userEvent.setup();
     render(<IntegrationDetailView code="openrouter" />);
-    await user.click(await screen.findByRole("button", { name: "Set credential" }));
+    await user.click(await screen.findByRole("button", { name: "Configure credential" }));
     const dialog = screen.getByRole("alertdialog");
-    const input = within(dialog).getByLabelText("New credential") as HTMLInputElement;
+    const input = within(dialog).getByLabelText("Credential") as HTMLInputElement;
     await user.type(input, "another-credential-value-9");
     await user.click(within(dialog).getByRole("button", { name: "Save credential" }));
     expect(await within(dialog).findByRole("alert")).toHaveTextContent(/could not be saved/);

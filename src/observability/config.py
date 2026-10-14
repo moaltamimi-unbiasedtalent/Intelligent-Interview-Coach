@@ -11,6 +11,7 @@ from __future__ import annotations
 import functools
 import os
 from dataclasses import dataclass
+from src.core import secrets as _secrets
 
 __all__ = ["ObservabilityConfig", "load_config", "resolve_release", "resolve_environment"]
 
@@ -110,8 +111,8 @@ def load_config() -> ObservabilityConfig:
     """Read the environment and return a resolved config. Never raises."""
     return ObservabilityConfig(
         enabled=_flag(ENABLED_ENV),
-        public_key_present=bool(os.environ.get("LANGFUSE_PUBLIC_KEY", "").strip()),
-        secret_key_present=bool(os.environ.get("LANGFUSE_SECRET_KEY", "").strip()),
+        public_key_present=bool((_secrets.read_setting("LANGFUSE_PUBLIC_KEY") or "").strip()),
+        secret_key_present=bool((_secrets.read_setting("LANGFUSE_SECRET_KEY") or "").strip()),
         host=(os.environ.get("LANGFUSE_HOST", "").strip() or None),
         environment=resolve_environment(),
         release=resolve_release(),

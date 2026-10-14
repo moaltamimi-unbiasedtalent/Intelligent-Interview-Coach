@@ -21,6 +21,9 @@ __all__ = [
     "read_bool",
     "read_float",
     "read_secret",
+    "read_environment_setting",
+    "set_managed_resolver",
+    "read_managed",
 ]
 
 
@@ -52,9 +55,35 @@ def read_env(name: str) -> str | None:
     return value.strip() if value and value.strip() else None
 
 
-def read_setting(name: str) -> str | None:
-    """Streamlit secrets take precedence over the environment."""
+_managed_resolver = None   # W12.4B: set by the encrypted SecretStore when it is the active backend; None otherwise
+
+
+def set_managed_resolver(resolver) -> None:
+    """Install (or clear) the Admin-managed credential resolver. It receives a setting NAME and returns a
+    plaintext value or None; it only ever answers for code-defined credential slots and never raises."""
+    global _managed_resolver
+    _managed_resolver = resolver
+
+
+def read_managed(name: str) -> str | None:
+    """The Admin-managed credential for ``name`` (W12.4B), or None. Never raises."""
+    resolver = _managed_resolver
+    if resolver is None:
+        return None
+    try:
+        return resolver(name) or None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def read_environment_setting(name: str) -> str | None:
+    """The deployment-managed value only (Streamlit secrets, then environment). This is the FALLBACK layer."""
     return read_streamlit(name) or read_env(name)
+
+
+def read_setting(name: str) -> str | None:
+    """Precedence (W12.4B): Admin-managed encrypted credential, then Streamlit secrets, then the environment."""
+    return read_managed(name) or read_environment_setting(name)
 
 
 def read_bool(name: str, default: bool = False) -> bool:

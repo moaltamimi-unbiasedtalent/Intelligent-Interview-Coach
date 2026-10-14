@@ -231,6 +231,17 @@ export interface CredentialStatus {
   configured: boolean;
   source: string;
   writable: boolean;
+  /** W12.4B metadata only: there is no value, prefix, suffix, mask, ciphertext, nonce or fingerprint field. */
+  source_kind: "managed" | "environment" | "none";
+  managed: boolean;
+  managed_readable: boolean | null;
+  revision: number | null;
+  last_rotated_at: string | null;
+  environment_fallback: boolean;
+  required: boolean;
+  min_length: number;
+  max_length: number;
+  applies: "next_use" | "restart";
 }
 export interface IntegrationRow {
   code: string;
@@ -244,7 +255,7 @@ export interface IntegrationRow {
   slots: CredentialStatus[];
   settings: { code: string; label: string; selected: string | null }[];
   runtime: { enabled: boolean | null; managed: string; toggle_supported: boolean; note: string };
-  store: { name: string; writable: boolean };
+  store: { name: string; writable: boolean; state: "writable" | "read_only" | "unavailable"; reason: string | null };
   health: { status: "not_tested" | "healthy" | "unhealthy"; last_tested_at: string | null; category: string | null; latency_ms: number | null };
   test: { supported: boolean; note: string };
   validation_note: string;

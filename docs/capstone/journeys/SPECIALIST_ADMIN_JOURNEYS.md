@@ -78,7 +78,7 @@ Fresh-password step-up (5 minutes, bound to the session, not MFA) is currently r
 |---|---|---|
 | Billing | CURRENT - MOCK | MockBillingAdapter only; no live checkout, cards, tax, webhooks or revenue |
 | Email | CURRENT - ENVIRONMENT MANAGED / UNVALIDATED LIVE | Brevo adapter exists; live delivery not validated; no Admin test email |
-| Integration secrets | CURRENT - ENVIRONMENT MANAGED | Read-only SecretStore; rotation technically unavailable |
+| Integration secrets | CURRENT (W12.4B): Platform Admin only | Encrypted SecretStore (opt-in); operations_admin inspects but cannot rotate (no `secret.rotate`) |
 | Knowledge | CURRENT - PARTIAL | W12.4A fixed two root causes in code and added readiness, inventory and a retrieval test; operator action still needed in the developer environment (activate a source, run the worker) |
 | AI configuration | CURRENT - OPERATIONAL WITH LIMITATION | Deterministic evaluations only; not live-quality evidence |
 | Provider status | CURRENT - STATUS / PARTIAL | Configuration only; not health, not live validated |
@@ -91,7 +91,7 @@ A screen existing is not the same as the capability being fully operational.
 | W12.4 sub-wave | Affected roles | Expected impact |
 |---|---|---|
 | W12.4A Knowledge Base Accessibility & Operations (**implemented**, first sub-wave) | knowledge_admin, operations_admin, platform_admin | Root causes fixed, readiness, active inventory and a retrieval-only test added (permission `knowledge.read`); no role change |
-| W12.4B Secure Provider & Secret Administration | operations_admin, platform_admin | A writable secure secret adapter; Admin configures and rotates supported credentials (write-only, audited, step-up); no generic environment editor |
+| W12.4B Secure Provider & Secret Administration (COMPLETE) | operations_admin, platform_admin | Delivered: writable encrypted secret store; platform_admin configures, replaces and removes supported credentials (write-only, audited, step-up); operations_admin remains inspect and test only |
 | W12.4C Email & Identity Operations | operations_admin, security_privacy_admin where relevant, platform_admin | Operationalise Brevo, sender configuration, test email, diagnostics, verification and reset email |
 | W12.4D Live Billing Provider | billing_admin, operations_admin where provider health is involved, platform_admin | A real provider behind the BillingProvider abstraction; billing stays separate from entitlement |
 | W12.4E Governed Speech Providers | operations_admin, platform_admin, knowledge_admin only if AI or read surfaces overlap | Whisper (STT) and Pocket TTS (TTS) behind Admin configuration; Russian stays excluded; no persistent audio |

@@ -406,8 +406,9 @@ def test_no_break_glass_no_impersonation_no_view_as_no_generic_candidate_browser
 
 
 def test_secret_rotation_is_authorized_for_the_owner_but_the_store_stays_read_only(world, monkeypatch):
-    """AD-W12-01: authorization may pass for platform_admin (43 / 43) but authorization is not capability. The environment SecretStore is externally managed
-    and read-only, so the route reports that truthfully (409), echoes no value and writes nothing. No other preset holds the permission."""
+    """AD-W12-01 + W12.4B: authorization may pass for platform_admin (43 / 43), but the owner still needs a fresh step-up (403 step_up_required), and authorization is not
+    capability: with the default environment SecretStore (externally managed, read-only) the route reports that truthfully (409), echoes no value and writes nothing.
+    No other preset holds the permission."""
     assert [r for r in M.ROLES if "platform.integrations.secret.rotate" in perm.ROLE_PRESETS[r]] == ["platform_admin"]
     routes = [r for r in M.routes() if "platform.integrations.secret.rotate" in r.permissions]
     assert routes and all(r.methods == ("POST",) for r in routes)
@@ -416,6 +417,10 @@ def test_secret_rotation_is_authorized_for_the_owner_but_the_store_stays_read_on
     for persona in ("user", "support_operator", "billing_admin", "knowledge_admin", "security_privacy_admin", "operations_admin"):
         r = world.c.post(url, json={"value": secret}, cookies=world.cookies[persona])
         assert r.status_code == 403 and secret not in r.text, persona
+    r = world.c.post(url, json={"value": secret}, cookies=world.cookies["platform_admin"])
+    assert r.status_code == 403 and r.json()["error"]["code"] == "step_up_required" and secret not in r.text         # the owner does not bypass step-up
+    from tests import _role_gov as G
+    G.ensure_elevated(world.c, world.cookies["platform_admin"], PW)
     r = world.c.post(url, json={"value": secret}, cookies=world.cookies["platform_admin"])
     assert r.status_code == 409 and "managed outside Ask4Mo" in r.text and secret not in r.text    # passed the permission gate, refused by the technical capability
 

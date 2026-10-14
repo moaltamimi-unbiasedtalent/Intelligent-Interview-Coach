@@ -82,6 +82,16 @@ browsers; run it locally (see `e2e/README.md`).
 
 ## Secrets handling
 
+- **Admin-managed provider credentials (W12.4B, opt-in).** Set `SECRET_STORE_BACKEND=encrypted_database` and
+  `SECRET_STORE_MASTER_KEY` (standard base64 of exactly 32 random bytes, supplied by the deployment, never
+  committed, never in the database). Provider credentials set in Admin are then stored only as AES-256-GCM
+  ciphertext and override the environment value; removing one restores the environment value. The environment
+  is never copied into the database. The master key has no Admin control: rotate it as deployment config.
+  Production and staging refuse to start if the backend is selected without a valid key. OpenRouter,
+  embeddings, Brevo, Redis and Langfuse credentials take effect after the API and worker restart; Adzuna,
+  Google sign-in and realtime voice are read when used. Apply migration `0026_managed_secrets` with the
+  normal `alembic upgrade head`. See `docs/capstone/admin/W12_04B_SECURE_PROVIDER_SECRET_ADMINISTRATION.md`.
+
 - Store provider keys only in `.streamlit/secrets.toml` (gitignored) or the
   environment. Never paste keys into chat, logs, or commits.
 - The permanent Gemini key stays backend-only; the browser receives only a

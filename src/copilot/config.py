@@ -109,8 +109,8 @@ def _read_env(name: str) -> str | None:
 
 
 def _read(name: str) -> str | None:
-    """Streamlit secrets take precedence over environment variables."""
-    return _read_streamlit(name) or _read_env(name)
+    """Admin-managed credential (W12.4B), then Streamlit secrets, then environment variables."""
+    return _secrets.read_managed(name) or _read_streamlit(name) or _read_env(name)
 
 
 def _read_bool(name: str, default: bool = False) -> bool:

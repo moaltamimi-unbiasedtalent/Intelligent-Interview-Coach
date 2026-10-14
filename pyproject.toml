@@ -37,6 +37,8 @@ dependencies = [
     # identity foundation (modern, salted, adaptive KDF). No JWT/OIDC library is a
     # hard dependency — social login uses an optional, lazily-imported provider.
     "bcrypt>=4.1,<6.0",
+    # W12.4B: AES-256-GCM (AESGCM) for the encrypted provider-credential store. No custom cryptography.
+    "cryptography>=42,<52",
     # Capstone P4: private candidate document parsing. pypdf (already present) extracts
     # text PDFs with page provenance; python-docx extracts DOCX with paragraph
     # provenance. Both are pure-Python and CI-safe. OCR is an OPTIONAL extra (see [ocr]).
