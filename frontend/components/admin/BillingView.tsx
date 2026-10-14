@@ -66,8 +66,8 @@ function Body() {
             <h2 id="mock-banner" className="text-lg font-semibold">MOCK BILLING — NOT LIVE BILLING</h2>
             <p className="text-sm">No live payments are processed. There is no checkout, no payment-method collection, no card data and no tax engine. Billing records here are simulated metadata and never change anyone&apos;s access.</p>
             <p className="text-sm">
-              Provider: <strong>{overview.data.mode.provider === "none" ? "none" : "MockBillingAdapter"}</strong> · live: <strong>{overview.data.mode.live ? "yes" : "no"}</strong> ·
-              status: <strong>{overview.data.mode.enabled ? "mock enabled (development or test only)" : "disabled"}</strong>
+              Provider: <strong>{overview.data.mode.provider === "none" ? "none" : overview.data.mode.provider === "mock" ? "MockBillingAdapter" : "Stripe Managed Payments (sandbox foundation: no checkout, no operations)"}</strong> · live: <strong>{overview.data.mode.live ? "yes" : "no"}</strong> ·
+              status: <strong>{overview.data.mode.enabled ? "mock enabled (development or test only)" : overview.data.mode.provider === "stripe_managed_payments" ? "provider foundation only (live billing disabled; the records below are mock data)" : "disabled"}</strong>
             </p>
             {overview.data.mode.configuration_error ? <p role="alert" className="text-sm">{overview.data.mode.configuration_error}</p> : null}
           </section>

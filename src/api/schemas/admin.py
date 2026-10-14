@@ -1460,3 +1460,40 @@ class SecurityEventPage(_Strict):
     page_size: int
     anomalies: list[SecurityAnomalyOut]
     advanced_anomaly_detection: bool = False
+
+
+# ---- W12.4D-B billing provider readiness (Stripe Managed Payments foundation): booleans, source kinds and fixed states only ----
+class BillingReadinessCheck(_Strict):
+    code: str
+    passed: bool
+
+
+class BillingSlotView(_Strict):
+    configured: bool
+    source_kind: str
+
+
+class BillingSandboxView(_Strict):
+    api: BillingSlotView
+    webhook: BillingSlotView
+
+
+class BillingProviderReadiness(_Strict):
+    status: str
+    provider_selected: str
+    environment: str | None
+    checks: list[BillingReadinessCheck]
+    configuration_problem: str | None
+    sandbox: BillingSandboxView
+    live_slots_populated: bool
+    eligibility: str
+    merchant_of_record: str
+    sandbox_access: str
+    live_billing: str
+    checkout: str
+    refunds: str
+    webhooks: str
+    last_successful_check: str | None
+    last_failure_category: str | None
+    api_version: str
+    managed_payments_required: bool

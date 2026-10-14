@@ -107,6 +107,19 @@ def validate_runtime_config(env: str | None = None) -> EnvReport:
         report.warnings.append(
             "FEATURE_GOOGLE_LOGIN is on but GOOGLE_CLIENT_ID/SECRET are missing — Google "
             "sign-in will stay disabled.")
+    # --- Billing provider (W12.4D-B): live billing is disabled by a code constant; configuration may only select the sandbox foundation ---
+    if _has("BILLING_PROVIDER"):
+        provider = os.environ.get("BILLING_PROVIDER", "").strip().lower()
+        if provider not in ("disabled", "none", "mock", "stripe_managed_payments"):
+            report.critical.append("BILLING_PROVIDER must be 'disabled', 'mock' or 'stripe_managed_payments'.")
+        if provider == "stripe_managed_payments":
+            stripe_env = (os.environ.get("STRIPE_ENVIRONMENT", "sandbox") or "sandbox").strip().lower()
+            if stripe_env not in ("sandbox", "live"):
+                report.critical.append("STRIPE_ENVIRONMENT must be 'sandbox' or 'live'.")
+            elif stripe_env == "live":
+                report.warnings.append("STRIPE_ENVIRONMENT=live is selected, but live billing is disabled in this release: no payment can be processed.")
+            elif prod_like:
+                report.warnings.append("The Stripe sandbox foundation is selected in a hosted environment: no payment can be processed (no checkout exists).")
     if _has("FEATURE_GOOGLE_LOGIN"):
         redirect = (os.environ.get("OIDC_REDIRECT_URI", "") or "").strip()
         valid = redirect.startswith("https://") and redirect.split("?")[0].split("#")[0].endswith("/api/v1/auth/oidc/google/callback")

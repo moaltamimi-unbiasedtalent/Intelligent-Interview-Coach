@@ -10,6 +10,7 @@ import type { IntegrationDetail } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
 import { useStepUp } from "./StepUp";
 import { EmailDeliveryPanel } from "./EmailDeliveryPanel";
+import { BillingProviderReadinessPanel } from "./BillingProviderReadinessPanel";
 import { KeyValue, Panel, PermissionGate, ResourceState, StatusLabel, Table, apiMessage, btn, field, useAdminResource } from "./ui";
 
 const SOURCE_LABEL = { managed: "Managed secure store", environment: "Environment", none: "Not configured" } as const;
@@ -165,6 +166,7 @@ function Detail({ d, reload }: { d: IntegrationDetail; reload: () => void }) {
       </Panel>
 
       {d.code === "email_brevo" ? <EmailDeliveryPanel canTest={canTest} onChanged={reload} /> : null}
+      {d.code === "stripe_managed_payments" ? <BillingProviderReadinessPanel /> : null}
 
       <Panel title="Recent management events">
         <Table caption="Integration audit" rows={d.audit.map((e) => ({ ...e, detail: e.context ? Object.entries(e.context).map(([k, v]) => `${k}: ${String(v)}`).join(", ") : "" }))}

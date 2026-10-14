@@ -1,4 +1,4 @@
-"""BillingProvider interface, MockBillingAdapter and the production guard (P10B-W10.5).
+"""BillingProvider interface, MockBillingAdapter, the provider allow-list and the production guard (P10B-W10.5; Stripe foundation W12.4D-B).
 
 MOCK BILLING: NOT LIVE BILLING. The Capstone has exactly one provider: the mock adapter. It performs no network call, moves no money,
 handles no card, calculates no tax and creates no external invoice. A future hosted-checkout adapter would implement the same small
@@ -84,14 +84,16 @@ class MockBillingAdapter:
 
 @dataclass(frozen=True)
 class BillingMode:
-    provider: str | None          # "mock" or None (disabled)
-    enabled: bool
-    live: bool                    # always False: no live provider exists
+    provider: str | None          # "mock", "stripe_managed_payments" or None (disabled)
+    enabled: bool                 # True only for the mock adapter (development/test). The Stripe foundation is never "enabled": it has no operations.
+    live: bool                    # always False: live billing is a code constant that is off
     label: str
     configuration_error: str | None = None
+    environment: str | None = None
 
     def as_dict(self) -> dict:
-        return {"provider": self.provider or "none", "enabled": self.enabled, "live": False, "mode": "mock" if self.enabled else "disabled",
+        mode = "mock" if self.enabled else ("sandbox_foundation" if self.provider == P.PROVIDER_STRIPE_MP else "disabled")
+        return {"provider": self.provider or "none", "enabled": self.enabled, "live": False, "mode": mode,
                 "label": self.label, "configuration_error": self.configuration_error, "checkout": False,
                 "note": "No live payments are processed. No checkout, payment method or tax engine exists."}
 
@@ -102,8 +104,18 @@ def resolve_mode(env: str | None = None, provider_setting: str | None = None) ->
     setting = (provider_setting if provider_setting is not None else os.environ.get(PROVIDER_SETTING) or "disabled").strip().lower()
     if setting in ("", "disabled", "none"):
         return BillingMode(None, False, False, "BILLING DISABLED")
-    if setting != P.PROVIDER_MOCK:
-        raise BillingConfigurationError("Only the mock billing provider exists. No live billing provider is available.")
+    if setting not in P.SELECTABLE_PROVIDERS:
+        raise BillingConfigurationError("Unknown billing provider. Only the code-defined providers can be selected.")
+    if setting == P.PROVIDER_STRIPE_MP:
+        from src.billing.stripe_provider import StripeConfigurationError, selected_environment
+
+        try:
+            stripe_env = selected_environment()
+        except StripeConfigurationError:
+            raise BillingConfigurationError("STRIPE_ENVIRONMENT must be 'sandbox' or 'live'.") from None
+        if stripe_env == "live" and not P.LIVE_BILLING_ENABLED:
+            raise BillingConfigurationError("Live billing is disabled in this release.")
+        return BillingMode(P.PROVIDER_STRIPE_MP, False, False, P.STRIPE_MODE_LABEL, environment=stripe_env)
     if env not in MOCK_ALLOWED_ENVS:
         raise BillingConfigurationError("The mock billing adapter cannot be enabled in a production or live environment.")
     return BillingMode(P.PROVIDER_MOCK, True, False, P.MODE_LABEL)
@@ -117,5 +129,11 @@ def safe_mode(env: str | None = None, provider_setting: str | None = None) -> Bi
         return BillingMode(None, False, False, "BILLING DISABLED", str(exc))
 
 
-def build_provider(mode: BillingMode) -> MockBillingAdapter | None:
-    return MockBillingAdapter() if mode.enabled and mode.provider == P.PROVIDER_MOCK else None
+def build_provider(mode: BillingMode):
+    if mode.enabled and mode.provider == P.PROVIDER_MOCK:
+        return MockBillingAdapter()
+    if mode.provider == P.PROVIDER_STRIPE_MP and mode.environment == "sandbox":
+        from src.billing.stripe_provider import StripeManagedPaymentsProvider
+
+        return StripeManagedPaymentsProvider(environment="sandbox")     # fails closed on every operation beyond reporting its own state
+    return None

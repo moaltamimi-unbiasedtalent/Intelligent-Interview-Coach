@@ -113,7 +113,7 @@ def run() -> dict[str, tuple[bool, str]]:
     billing_src = code_only("\n".join(p.read_text(encoding="utf-8") for p in (ROOT / "src/billing").glob("*.py")))
     check("billing_state_never_writes_entitlements_or_tier", not re.search(r"PlanRepository|EntitlementService|\bSubscription\b|\.assign\(|platform_tier|\btier\s*=", billing_src) and "MOCK" in billing_src.upper(), "billing != entitlement")
     check("billing_and_reports_say_mock_not_live", "MOCK BILLING" in read("frontend/components/admin/BillingView.tsx").upper() and "NOT LIVE REVENUE" in read("frontend/components/admin/ReportsView.tsx").upper()
-          and not re.search(r"stripe|paddle|adyen|checkout\.session", billing_src, re.I))
+          and not re.search(r"paddle|adyen|checkout\.session|stripe\.api_key|stripe\.checkout|\.subscriptions\.create", billing_src, re.I))     # W12.4D-B: the Stripe foundation exists, but it creates no checkout and sets no global key
     check("flags_never_grant_entitlement_or_authorization", not re.search(r"^\s*(from|import)\s+.*(entitlements|admin_permissions|billing)", read("src/platform_config/flags.py"), re.M), "flags only restrict")
     check("ai_governance_intact", all(x in read("src/ai_admin/service.py") for x in ("evaluation", "approver")) and "force" not in re.sub(r"#.*", "", read("src/api/routes/admin_ai.py")).lower().replace("enforce", ""), "no force/bypass; distinct approver + hash-bound evaluation")
     check("knowledge_approval_governed", "KNOWLEDGE_APPROVE" in read("src/api/routes/admin_knowledge.py") and "approve" in read("src/knowledge_admin/service.py"))

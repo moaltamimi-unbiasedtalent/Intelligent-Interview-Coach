@@ -66,9 +66,13 @@ def fake_probes(result):
 
 def test_registry_is_code_defined_and_has_no_user_controlled_destination():
     assert set(I.REGISTRY) == {"openrouter", "openai_embeddings", "realtime_voice", "adzuna", "google_oidc", "email_brevo",
-                               "redis_rate_limit", "langfuse", "malware_scanner"}
+                               "redis_rate_limit", "langfuse", "malware_scanner", "stripe_managed_payments"}
     assert set(d.category for d in I.REGISTRY.values()) <= set(I.CATEGORIES)
-    assert "billing" not in " ".join(I.REGISTRY).lower() and "stripe" not in json.dumps([d.name for d in I.REGISTRY.values()]).lower()
+    # W12.4D-B: exactly ONE billing provider is registered (the owner-selected Stripe Managed Payments foundation); no other provider or payment name appears.
+    others = [d for c, d in I.REGISTRY.items() if c != "stripe_managed_payments"]
+    assert not re.search(r"stripe|paypal|billing|payment|checkout|paddle|mollie|adyen", " ".join(f"{d.code} {d.name} {d.adapter}" for d in others), re.I)
+    stripe = I.REGISTRY["stripe_managed_payments"]
+    assert not stripe.test_supported and "stripe_managed_payments" not in I.PROBES                      # no probe: nothing contacts Stripe in this wave
     # the only external destination any probe can reach is an adapter constant
     assert I.OPENROUTER_PROBE_URL == "https://openrouter.ai/api/v1/auth/key"
     assert set(I.PROBES) == {"openrouter", "malware_scanner", "email_brevo"}
@@ -423,7 +427,7 @@ def test_command_center_integration_counts_are_gated_and_never_claim_health(env)
     _, sup = mk(env, "support_operator")
     home = env.c.get(f"{API}/admin/home", cookies=adm).json()
     assert set(home["integrations"]) == {"total", "configured", "runtime_active", "not_tested", "unhealthy"}
-    assert home["integrations"]["total"] == 9 and home["integrations"]["unhealthy"] == 0 and home["integrations"]["not_tested"] == 3
+    assert home["integrations"]["total"] == 10 and home["integrations"]["unhealthy"] == 0 and home["integrations"]["not_tested"] == 3
     assert "integrations" not in env.c.get(f"{API}/admin/home", cookies=sup).json()
     assert '"healthy"' not in json.dumps(home["integrations"])
 
@@ -432,7 +436,7 @@ def test_integration_routes_are_permissioned_and_no_entry_point_creates_integrat
     from src.api.admin_route_invariant import admin_routes, ungated
     routes = admin_routes()
     mine = [r for r in routes if r.path.startswith("/admin/integrations")]
-    assert len(mine) == 7 and ungated(routes) == []
+    assert len(mine) == 8 and ungated(routes) == []
     assert {p for r in mine for p in r.permissions} == {perm.INTEGRATIONS_READ, perm.INTEGRATIONS_MANAGE, perm.SECRET_ROTATE}
     assert not [r for r in mine if r.methods == ("POST",) and r.path == "/admin/integrations"]
     assert len(perm.PERMISSIONS) == 43

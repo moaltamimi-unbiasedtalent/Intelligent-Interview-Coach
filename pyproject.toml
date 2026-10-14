@@ -39,6 +39,8 @@ dependencies = [
     "bcrypt>=4.1,<6.0",
     # W12.4B: AES-256-GCM (AESGCM) for the encrypted provider-credential store. No custom cryptography.
     "cryptography>=42,<52",
+    # W12.4D-B: Stripe Python SDK (per-client configuration; no network at import). Pinned to a reviewed major: it also pins the Stripe API version.
+    "stripe>=16,<17",
     # Capstone P4: private candidate document parsing. pypdf (already present) extracts
     # text PDFs with page provenance; python-docx extracts DOCX with paragraph
     # provenance. Both are pure-Python and CI-safe. OCR is an OPTIONAL extra (see [ocr]).
