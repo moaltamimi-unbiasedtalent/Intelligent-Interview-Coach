@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/VerifiedLink"; // soft-navigation loss recovery (see lib/navigation/verified.ts)
 import type { ProgressResponse } from "@/lib/api/types";
 import { useT } from "@/components/i18n/I18nProvider";
 import { Card, CardBody } from "@/components/ui/Card";

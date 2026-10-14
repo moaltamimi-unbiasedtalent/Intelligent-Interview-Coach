@@ -5,6 +5,8 @@ import { afterEach, expect, it, vi } from "vitest";
 // P10B-W9.2 - History in-place recovery.
 
 const historyList = vi.fn();
+// VerifiedLink (soft-navigation loss recovery) reads the App Router; there is no mounted router in a unit test.
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }), usePathname: () => "/history" }));
 vi.mock("@/lib/api/client", () => ({
   api: { history: { list: (...a: unknown[]) => historyList(...a) } },
 }));
