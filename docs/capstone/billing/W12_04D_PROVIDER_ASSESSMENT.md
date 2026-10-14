@@ -1,10 +1,79 @@
 # W12.4D Phase A - Live billing provider: architecture audit and provider selection
 
-**Status: ASSESSMENT COMPLETE - AWAITING OWNER PROVIDER SELECTION.** This phase is documentation only. No provider code, account, credential, checkout, subscription, refund or webhook registration was created or contacted, and no payment of any kind was initiated.
+**Status: PROVIDER SELECTED - STRIPE MANAGED PAYMENTS (primary), PADDLE (fallback). Owner-selected technical direction, subject to provider account and product eligibility.** Sections 0A to 0H below are the selection addendum (this supersedes the recommendation in section 8, which is kept as the historical first assessment). This phase is documentation only. No provider code, account, credential, checkout, subscription, refund or webhook registration was created or contacted, and no payment of any kind was initiated.
 
 Starting point: `main` at `719fa9eacd772421cfe03b5120f39ac23b65930d` (W12.4C merged as PR #155), clean tree, Alembic head `0027_email_attempts`. W12.4A, W12.4B and W12.4C are present on main. Branch: `feat/w12-04d-billing-provider-assessment`.
 
 Research note: provider facts below were taken from the providers' own pages during this phase (linked in section 6). Marketing pages are vendor claims, several pages did not state exact current terms, and fee figures and country lists change. Every number is labelled with its uncertainty and **must be re-confirmed on the provider's live page before the owner commits**.
+
+## 0A. Selection addendum (owner decision recorded)
+- **PRIMARY:** Stripe Managed Payments. **FALLBACK:** Paddle. **Selection status:** owner-selected technical direction for development; it is **not** authorization for live financial transactions and it depends on Stripe's eligibility review of the Ask4Mo account and product (section 0E).
+- **Why the decision changed.** The first assessment compared ordinary Stripe Billing (a payment processor, where the merchant keeps VAT registration and filing) against Paddle (a merchant of record), and scored Paddle 83.0 to Stripe 82.0 with a stated flip under a small weight change. It treated Stripe's merchant-of-record product as an unconfirmed side note. The new evidence closes exactly that gap, so **the 83 versus 82 score is no longer decisive**: the like-for-like comparison is now Stripe Managed Payments versus Paddle, both merchants of record.
+- **Historical record preserved.** Sections 1 to 17 below are unchanged analysis; section 7's scores describe "Stripe" as ordinary Stripe Billing + Stripe Tax and must be read that way.
+
+## 0B. Confirmed evidence (official sources fetched for this addendum)
+| Fact | Evidence | Source |
+|---|---|---|
+| Managed Payments is generally available | Stripe's newsroom item dated 30 June 2026 says it is now generally available, Stripe acts as merchant of record, handles local tax and regulatory compliance and payment infrastructure, and it helps German companies reach 195 markets. **The newsroom item itself does not mention SaaS subscriptions**; SaaS and subscriptions are stated on the product page and in the docs below | [Stripe newsroom](https://stripe.com/newsroom/news/stripe-tour-berlin-2026) |
+| Germany is a supported seller location | Managed Payments docs list DE among the supported business locations (North America 2, Europe 33 including DE, Asia-Pacific 4) | [Eligibility](https://docs.stripe.com/payments/managed-payments/eligibility) |
+| SaaS and AI services are eligible product types | Eligible digital categories include software and SaaS; approved tax codes include SaaS (personal and business use), "Artificial Intelligence as a Service - cloud based" (personal and business use), self-study web-based training and on-demand online courses | Eligibility (tax-code table) |
+| Not eligible | physical goods, professional services (consulting, marketing, design, development, technical support) and live or in-person events; **a product that involves human intervention such as live 1:1 coaching is not a supported digital product** | Eligibility |
+| Account conditions | an eligibility review (business type and region); direct integrations only (no Connect platforms, Express or platform-controlled accounts); you sell directly (not via a platform or marketplace); you hold the rights to the product; a low long-term dispute rate and no prior risk issues are required to stay eligible | Eligibility |
+| Stripe's role | merchant of record: calculates, collects, files and remits indirect tax in 80+ countries (some jurisdictions excluded, where the seller stays responsible); fraud prevention; dispute handling including evidence submission; receipts and invoices sent by Link; customer order and subscription management in Link; transaction-level support | [How it works](https://docs.stripe.com/payments/managed-payments/how-it-works), [Managed Payments](https://stripe.com/managed-payments) |
+| Integration | Stripe Checkout or Payment Links, with Billing for subscriptions; enabled per Checkout session with a `managed_payments` parameter (subscription mode shown) | Managed Payments page, how it works |
+| Payment methods | cards, Apple Pay, Google Pay, Link (global, recurring supported); local methods listed are US, Korea, India, Brazil and Belgium (Bancontact, one-time only). **No SEPA Direct Debit, iDEAL or PayPal is listed** | How it works |
+| Refunds and disputes | the seller can refund and update subscriptions in the Dashboard or API; refunds include the tax paid; Stripe may itself refund within 60 days in some cases and may refund without consent if the seller does not answer a product-specific support request within 48 hours; a dispute fee applies; Stripe may enable dispute-prevention tools at the seller's cost | How it works |
+| Customer-facing behaviour | the customer sees **Link as merchant of record** ("Sold through Link"), statement descriptor `LINK.COM* ...`, adaptive pricing on by default (customers can pay in local currency), **custom domains are not supported at checkout**, receipts and subscription emails are Link's (the seller's receipt settings do not apply); customers manage or cancel subscriptions and payment methods in their Link account | How it works |
+| Data subject deletion | a customer's deletion request through Link cancels their Managed Payments subscriptions and **deletes their data from Stripe objects, including objects in the seller's account** (customer, payment method, invoice, payment intent, subscription, charge) | How it works |
+| Restricted customer countries | Ascension Island, China, Cuba, Iran, Kosovo, North Korea, Russia, Syria, Tristan da Cunha | Eligibility |
+| API limitation | for subscriptions created through Managed Payments Checkout, `subscription.default_payment_method` cannot be updated directly through the API (customers use the customer portal) | How it works |
+| Pricing (Germany page) | 3.5% per successful Managed Payments transaction, **on top of** payment processing fees; covers indirect tax in 75+ countries, fraud, disputes, invoicing and support; standard EEA cards 1.5% + EUR 0.25 (premium 2.8% + 0.25), international cards 3.15% + 0.25 (+2% if currency conversion); Billing pay-as-you-go 0.7%; dispute fee EUR 20. The page does not say whether Billing fees stack with the 3.5%, whether the 3.5% applies to the tax-inclusive amount, or whether the fee is returned on refund | [Stripe pricing (DE)](https://stripe.com/de/pricing), [Managed Payments pricing](https://support.stripe.com/questions/managed-payments-pricing) |
+
+## 0C. Updated provider comparison: Stripe Managed Payments versus Paddle
+| Topic | Stripe Managed Payments | Paddle |
+|---|---|---|
+| Germany seller eligibility | DE listed among supported business locations; subject to an eligibility review | a German business is not on the unsupported-seller list; seller account verification applies (details not on the fetched page) |
+| SaaS subscription eligibility | explicit (SaaS, AIaaS, self-study training tax codes); fully automated products only | software businesses supported; the acceptable-use policy needs confirmation (section 0D) |
+| MoR responsibilities | indirect tax calculation, collection, filing and remittance in 80+ countries (not everywhere), fraud, disputes, receipts and invoices, transaction support | tax in 200+ markets, invoicing as seller of record, fraud, chargebacks, buyer support |
+| International coverage | customers in 195+ countries and territories except the restricted list (includes Russia and China) | 200+ countries and territories with sanctioned markets blocked; 30 currencies; payouts in USD, EUR, GBP, AUD, CAD |
+| Checkout | Stripe Checkout (hosted), Link, adaptive pricing; no custom domain | Paddle checkout (overlay or inline) |
+| Subscriptions and portal | Stripe Billing plus Link account for customers; optional own customer portal | built-in subscriptions and customer portal |
+| Payment methods for German buyers | cards and wallets; **no SEPA or PayPal listed** | cards, PayPal and wallets (per earlier research) |
+| Disputes, refunds | Stripe handles disputes (dispute fee); seller can refund; Stripe may refund within 60 days or after 48 hours without a seller reply | Paddle handles chargebacks and buyer support under its terms |
+| Invoices | sent by Link; PDF attached | issued by Paddle as seller |
+| API and SDK maturity | most mature ecosystem; signed webhooks and a test mode (the Managed Payments test-mode behaviour was **not confirmed** in the fetched pages) | good SDKs and a separate sandbox |
+| Product approval | Managed Payments eligibility review (business type and region) on top of ordinary Stripe underwriting; Stripe's general prohibited and restricted business lists were **not reviewed in this phase** | seller verification and product review under the acceptable-use policy |
+| Customer-visible seller | Link ("Sold through Link"), `LINK.COM*` | Paddle |
+
+**Estimated cost on a EUR 19.99 charge (illustration only, not a quote).** Stripe: 3.5% (0.70) + EEA card 1.5% + 0.25 (0.55) = about EUR 1.25 (6.3%), plus Billing 0.7% (0.14) if it applies, so about 1.39 (7.0%); with an international card 3.15% + 0.25 the total is about EUR 1.58 to 1.72 (7.9% to 8.6%). Paddle: 5% + EUR 0.50 = EUR 1.50 (7.5%) all-inclusive (vendor page). **The two are within a percentage point of each other, so fees do not separate them**; the open fee questions above must be answered by Stripe before relying on any number.
+
+## 0D. Paddle acceptable-use relevance to Ask4Mo (not a finding of violation)
+Paddle's acceptable-use summary (last updated 13 April 2026) lists "automated decision-making or categorization of people" as a sub-point under the prohibited category **"Content generation"** (next to deepfakes, face swaps and voice impersonation). It gives no definition or examples, says the list is not exhaustive, and describes no confirmation process. It does not say that AI products in general are prohibited.
+Ask4Mo's relevant behaviour: a candidate practises interviews and receives rubric-based feedback and a readiness score on their **own** answers; the product states these are practice feedback and not a hiring decision, stores no protected characteristics and makes no personality or health diagnosis, and no third party is evaluated or ranked. On that description it does not obviously fall under the cited sub-point, but the wording is undefined, so **this must not be assumed in either direction: Ask4Mo is not claimed to be prohibited, and permission is not claimed.** Because it is the fallback provider, a written Paddle confirmation is needed only if the fallback is ever activated.
+Stripe equivalent: the fetched Managed Payments page states fully automated digital products are required and AIaaS is an eligible category, with no comparable people-categorization wording; Stripe's general prohibited and restricted businesses list and the eligibility review still apply and were not read here.
+
+## 0E. Provider eligibility dependencies (all must be cleared by the owner before live use)
+1. Stripe account in the owner's German business entity, with Managed Payments access confirmed after its eligibility review (business type and region); the account must be a direct integration (no Connect).
+2. Confirmation that Ask4Mo's product maps to an eligible tax code (SaaS personal-use or AI-as-a-service personal-use, and a business-use code if B2B is sold) and counts as a **fully automated** product: Ask4Mo has no live human coaching, and any future human-in-the-loop feature would need re-checking.
+3. Stripe's general prohibited and restricted businesses list reviewed against the product description (not done in this phase).
+4. Acceptance that the customer sees **Link** as the seller, receives Link's receipts and subscription emails, and that checkout cannot use a custom domain.
+5. A decision on payment methods: no SEPA Direct Debit, iDEAL or PayPal is listed for Managed Payments, which matters for German consumers.
+6. Understanding that Stripe may refund within 60 days or after 48 hours without a seller reply, and that a customer's deletion request through Link cancels subscriptions and deletes data from Stripe objects in Ask4Mo's account.
+7. A low dispute rate is a continuing eligibility condition.
+8. Country policy for the restricted customer list (including Russia, although Russian is a supported interface language).
+9. Fee clarification from Stripe: whether Billing fees stack with the 3.5%, the fee base (tax-inclusive or not), and fee treatment on refunds.
+10. Test-mode behaviour for Managed Payments (sandbox availability and webhook parity) confirmed before W12.4D-B relies on it.
+The fallback (Paddle) has its own dependencies: seller verification, product review and the acceptable-use confirmation in section 0D.
+
+## 0F. Commercial model: decisions that stay OPEN
+Premium subscription price; annual price; trial periods; cancellation rules; refund policy; grace period after a failed payment; supported countries; B2B billing; tax-inclusive versus tax-exclusive display. The **EUR 19.99 shown on the frontend is a preview, not an approved live price**, and it is not and must not be seeded as an approved commercial term (`billing_commercial_terms` stays empty, so every plan stays UNCONFIGURED). Managed Payments adds two commercial facts the owner must weigh: adaptive pricing shows local currencies by default, and the buyer sees the tax-inclusive amount Stripe calculates, so the display policy and the EUR price object need an explicit decision.
+
+## 0G. Accepted architecture (unchanged by this selection)
+Preserved: the `BillingProvider` abstraction (extended minimally in W12.4D-B), the existing billing domain and `billing_*` tables, event ingest idempotent on `(provider, provider_event_id)`, the two-person price-change and refund approvals, the 43 Admin permissions, the candidate entitlement boundary (billing is never an authorization source) and the mock provider (kept for tests and development). **No billing code is added in this branch.** Stripe-specific implications recorded for W12.4D-B to D: Checkout Sessions created server-side with Managed Payments enabled in subscription mode; Link-managed receipts mean Ask4Mo's own invoice pages are unnecessary; refund and subscription changes remain available to the seller through the API and flow through the existing dual-control refund job; **provider-initiated refunds, Stripe-initiated dispute outcomes and customer data deletion cancel subscriptions without an Ask4Mo action, so the event model must gain refund, dispute and cancellation events and the entitlement bridge must treat them as proposals**; webhooks use Stripe's signed events (raw body, timestamp tolerance, idempotency, ordering guard) as designed in section 10; credentials (API key and webhook signing secret) through the W12.4B store.
+
+## 0H. Updated roadmap and release dependencies
+- **Approved next wave: W12.4D-B Stripe Managed Payments Foundation** (adapter behind `BillingProvider`, SecretStore slots, sandbox-only mode resolution, readiness in Admin, a recording fake Stripe for tests, no checkout). Then C (Checkout and subscription lifecycle), D (signed webhooks, ordering, reconciliation and the entitlement bridge), E (customer and Billing Admin operations, refund/dispute/cancellation events), F (security qualification and sandbox acceptance). Ordering of the first wave is unchanged from section 12; only the provider and the new dependencies above change.
+- **Release dependencies that stay visible:** W12.4C live Brevo delivery validation is deferred by the owner and remains a tracked release dependency (account email verification and recovery cannot be called production-ready without it); the research-cache evaluator isolation follow-up must be done before integrated requalification; W12.4F cached-provider restart handling is unchanged.
 
 ## 1. Current-state audit (from code)
 | Layer | What exists | State |
@@ -111,14 +180,14 @@ Scores 1 (poor) to 5 (strong) against Ask4Mo's actual needs (EUR-priced B2C digi
 
 **Sensitivity (important):** Stripe and Paddle are a statistical tie. Raising the fee weight to 20 and lowering tax to 10 flips the result (Stripe 82.0, Paddle 77.0). Mollie stays well behind under any reasonable weighting because it provides no tax handling and no portal. The decision therefore turns on one question only the owner can answer: **does the owner want to carry VAT registration and filing (Stripe, lower fees) or hand it to a merchant of record (Paddle, higher fees)?**
 
-## 8. Recommendation
-**Recommend Paddle (merchant of record), with Stripe Billing as the credible alternative.**
+## 8. Original recommendation (SUPERSEDED by sections 0A to 0H; kept as history)
+**The first assessment recommended Paddle** (merchant of record), with Stripe Billing as the credible alternative.**
 - **Why Paddle:** Ask4Mo is a small team selling a EUR 19.99 digital subscription to a global audience. The dominant hidden cost is EU and international VAT registration, filing, invoicing and chargeback handling, which a merchant of record absorbs. Paddle also has a separate sandbox, signed webhooks and hosted checkout and portal, so the integration surface and the compliance workload are the smallest, and it fits the existing `BillingProvider` plus normalised-event design.
 - **Why not Stripe (first):** the best technology, but at this scale the owner would take on VAT registration and filing (Stripe Tax Complete starts at about 80 EUR/month, or Managed Payments whose German availability is unconfirmed) and a larger integration surface. Choose Stripe if lower fees and full control matter more than outsourcing tax.
 - **Why not Mollie:** it would require building the customer portal, plan changes, dunning and the entire tax and invoicing responsibility, and its subscription webhook story is weaker.
 - **What it costs in trade-off:** higher percentage fee; Paddle is the seller of record, so it owns the customer invoice and the payment relationship (data minimisation benefit, but less control and branding); refunds, disputes and tax invoices follow Paddle's rules; payouts are in USD, EUR, GBP, AUD or CAD; Paddle approves sellers and products, which must be checked against Ask4Mo's AI-coaching offering and policies.
 
-**Nothing provider-specific will be implemented until the owner approves a provider.**
+**Superseded:** the owner selected Stripe Managed Payments after updated evidence (section 0A). Nothing provider-specific is implemented in this branch.
 
 ## 9. Security architecture (for the approved provider)
 - **Credentials** only through the W12.4B SecretStore (managed over environment, no backfill, write-only, step-up). Expected slots (names finalised in Phase B): API key, webhook signing secret, and for Paddle a client-side token (public, non-secret). No credential is ever returned by Admin.
@@ -142,7 +211,7 @@ Existing: overview, terms, approvals (dual control), invoices, payments, refunds
 ## 12. Implementation roadmap (after owner approval)
 | Wave | Scope | Notes |
 |---|---|---|
-| W12.4D-B | Provider adapter, SecretStore slots, mode resolution (`BILLING_PROVIDER` gains the approved provider; the mock guard stays), sandbox-only configuration, readiness in Admin | no checkout yet; extends `BillingProvider` with the minimum new methods; tests with a recording fake provider |
+| W12.4D-B (Stripe Managed Payments Foundation) | Provider adapter, SecretStore slots, mode resolution (`BILLING_PROVIDER` gains the approved provider; the mock guard stays), sandbox-only configuration, readiness in Admin | no checkout yet; extends `BillingProvider` with the minimum new methods; tests with a recording fake provider |
 | W12.4D-C | Candidate checkout and subscription lifecycle: server-created checkout session, plan-to-price mapping, return page that polls local state, cancel and portal link | requires owner decisions (section 15) and probably a migration for plan-price mapping and a `billing` subscription source |
 | W12.4D-D | Signed webhook endpoint, ordering guard, reconciliation, the explicit billing-event-to-subscription translation with owner-defined grace and failure policy | the only place billing state may propose an entitlement change |
 | W12.4D-E | Customer-facing billing page (status, invoices via provider), Billing Admin operations for the real provider, provider-initiated refund and dispute events | privacy/legal text updates |
@@ -173,4 +242,4 @@ Tax and legal misconfiguration; selling before commercial terms exist (the mirro
 **Required credentials (names finalised later):** API key, webhook signing secret (and a public client token where the provider uses one). **Non-secret configuration:** provider selector, environment (sandbox or live), return/cancel URLs from the trusted application origin, price/product identifiers.
 
 ## 17. Programme state
-W12.4A COMPLETE; W12.4B COMPLETE; W12.4C ENGINEERING COMPLETE (live Brevo validation deferred, tracked); **W12.4D ASSESSMENT COMPLETE, awaiting owner provider selection**; W12.4E, W12.4F, W12.5 not started; RC-P10-004 not created; AC-24 partial; P10C not started.
+W12.4A COMPLETE; W12.4B COMPLETE; W12.4C ENGINEERING COMPLETE (live Brevo validation deferred, tracked release dependency); **W12.4D provider selected: Stripe Managed Payments (fallback Paddle); next wave W12.4D-B Stripe Managed Payments Foundation, implementation ready after this assessment merges**; W12.4E, W12.4F, W12.5 not started; RC-P10-004 not created; AC-24 partial; P10C not started.
