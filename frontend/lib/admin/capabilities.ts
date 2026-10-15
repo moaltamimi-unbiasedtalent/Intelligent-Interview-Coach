@@ -71,7 +71,7 @@ export const ADMIN_DESTINATIONS: readonly AdminDestination[] = [
   { id: "review", label: "Review / Diagnostics", href: "/review", description: "Evaluation and knowledge diagnostics", anyOf: [P.ai, P.knowledge] },
   { id: "security", label: "Security", href: "/admin/security", description: "Events, incidents, alerts and role approvals", anyOf: [P.securityRead, P.audit, P.roleAssign] },
   { id: "audit", label: "Audit", href: "/admin/audit", description: "Privileged-action log", anyOf: [P.audit] },
-  { id: "billing", label: "Billing", href: "/admin/billing", description: "Mock billing (not live)", anyOf: [P.billingRead] },
+  { id: "billing", label: "Billing", href: "/admin/billing", description: "Billing operations and mock records (not live)", anyOf: [P.billingRead] },
   { id: "privacy", label: "Privacy", href: "/admin/privacy", description: "Privacy requests", anyOf: [P.privacyRead] },
   { id: "legal", label: "Legal", href: "/admin/legal", description: "Legal document versions", anyOf: [P.privacyRead] },
   { id: "knowledge", label: "Knowledge", href: "/admin/knowledge", description: "Governed knowledge sources", anyOf: [P.knowledge] },

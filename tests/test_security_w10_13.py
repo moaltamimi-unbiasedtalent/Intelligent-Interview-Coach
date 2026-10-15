@@ -863,7 +863,7 @@ def test_security_routes_are_all_gated_and_migrations_have_one_head():
     from alembic.script import ScriptDirectory
     cfg = Config(str(ROOT / "alembic.ini"))
     cfg.set_main_option("script_location", str(ROOT / "migrations"))
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0029_provider_webhooks"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == ["0030_billing_recovery"]
 
 
 # ======================================================================== migration + PostgreSQL DDL

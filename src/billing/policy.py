@@ -64,3 +64,9 @@ EVENT_BACKOFF_CAP_SECONDS = 1800
 RECONCILE_SWEEP_BATCH = 25
 RECONCILE_STALE_AFTER_SECONDS = 24 * 3600        # an unrefreshed live link is re-read at most this often (documented cadence, no polling is enabled)
 PENDING_CHECKOUT_RECHECK_SECONDS = 15 * 60
+
+# ---- W12.4D-E: reconciliation scheduling ------------------------------------------------------------------------------------------------------------
+# A code constant like the other gates: production reconciliation scheduling stays DISABLED until the real provider-state reader, credentials, eligibility
+# and operational approval exist. The scheduler additionally refuses to enqueue while the runtime reader is the Null reader.
+RECONCILE_SCHEDULER_ENABLED = False
+RECONCILE_SCHEDULE_BUCKET_SECONDS = 15 * 60       # one sweep per bucket at most, however many scheduler instances run

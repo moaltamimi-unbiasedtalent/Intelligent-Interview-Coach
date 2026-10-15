@@ -52,30 +52,17 @@ export function PremiumSubscriptionPanel() {
   const pending = status?.confirmation === "pending";
   const canceled = status?.checkout === "canceled";
   const expired = status?.checkout === "expired";
-  // Subscription facts come ONLY from the server (reconciled from authenticated provider evidence). "Confirmed" is claimed only when the server also
-  // reports that access was actually changed by billing; otherwise the provider's confirmation is shown without any access claim.
+  // The subscription / payment / access facts are shown by BillingOverview (verified local state). Here a live or ended subscription only decides whether
+  // the purchase button may be offered: never while a subscription is live or confirmation is pending.
   const sub = status?.subscription;
-  const granted = status?.entitlement?.changed_by_billing === true;
-  const subscriptionNotice =
-    sub === "active" || sub === "cancel_scheduled"
-      ? sub === "cancel_scheduled"
-        ? ["cancelScheduledTitle", "cancelScheduledBody"]
-        : granted ? ["confirmedTitle", "confirmedBody"] : ["confirmedNoAccessTitle", "confirmedNoAccessBody"]
-      : sub === "past_due" ? ["pastDueTitle", "pastDueBody"]
-      : sub === "canceled" || sub === "expired" ? ["endedTitle", "endedBody"]
-      : null;
-  const settled = subscriptionNotice !== null;
+  const settled = sub === "active" || sub === "cancel_scheduled" || sub === "past_due";
 
   return (
     <Card>
       <CardBody className="space-y-3" data-testid="checkout-panel">
         <h2 className="text-base font-semibold text-foreground">{t("checkout.title")}</h2>
         {statusFailed ? <Alert tone="warning">{t("checkout.statusUnavailable")}</Alert> : null}
-        {subscriptionNotice ? (
-          <div data-testid="subscription-notice">
-            <Alert tone="info" title={t(`checkout.${subscriptionNotice[0]}`)}>{t(`checkout.${subscriptionNotice[1]}`)}</Alert>
-          </div>
-        ) : pending ? (
+        {pending ? (
           <Alert tone="info" title={t("checkout.pendingTitle")}>{t("checkout.pendingBody")}</Alert>
         ) : canceled ? (
           <Alert tone="info" title={t("checkout.canceledTitle")}>{t("checkout.canceledBody")}</Alert>

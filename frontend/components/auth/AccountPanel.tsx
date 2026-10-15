@@ -7,6 +7,7 @@ import { useAuth } from "./AuthProvider";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { BillingOverview } from "@/components/account/BillingOverview";
 import { PremiumSubscriptionPanel } from "@/components/account/PremiumSubscriptionPanel";
 import { PlanSummary } from "@/components/account/PlanSummary";
 import { Card, CardBody } from "@/components/ui/Card";
@@ -77,6 +78,7 @@ export function AccountPanel() {
       </Card>
 
       <PlanSummary />
+      <BillingOverview />
       <PremiumSubscriptionPanel />
 
       <div className="flex flex-wrap items-center gap-3">

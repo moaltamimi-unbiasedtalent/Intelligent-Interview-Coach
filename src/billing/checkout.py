@@ -24,7 +24,7 @@ from src.billing import policy as P
 from src.billing.entitlement_bridge import provider_grant_exists
 from src.billing.provider import CheckoutRequest, ProviderRejected, ProviderRetryable
 from src.persistence import (
-    BillingCheckoutSession as CS, BillingCommercialTerms as CT, BillingProviderLink as LINK, BillingProviderPrice as PP, PlanVersion, PLAN_STATUS_ACTIVE, PROVIDER_LINK_TERMINAL, utcnow,
+    BillingCheckoutSession as CS, BillingCommercialTerms as CT, BillingEntitlementDecision as ED, BillingProviderLink as LINK, BillingProviderPrice as PP, PlanVersion, PLAN_STATUS_ACTIVE, PROVIDER_LINK_TERMINAL, utcnow,
 )
 
 MAX_PROVIDER_ATTEMPTS = 5
@@ -271,6 +271,39 @@ class CheckoutService:
                 "checkout_id": row.public_id if row else None,
                 "created_at": _iso(row.created_at) if row else None,
                 "expires_at": _iso(row.expires_at) if row and row.status == "open" else None,
+            }
+
+    # ------------------------------------------------------------------ candidate billing summary (W12.4D-E)
+    def summary(self, user_id: int, plan_code: str) -> dict:
+        """The candidate's OWN billing overview, from verified local state only. Management and receipts are Link's (the seller of record): no URL is
+        invented, and no invoice, price or payment is shown unless it is verified locally."""
+        base = self.status(user_id, plan_code)
+        with self._sf() as s:
+            row = s.scalar(select(CS).where(CS.user_id == user_id).order_by(CS.created_at.desc(), CS.id.desc()).limit(1))
+            link = s.scalar(select(LINK).where(LINK.user_id == user_id).order_by(LINK.created_at.desc(), LINK.id.desc()).limit(1))
+            terms = s.get(CT, link.commercial_terms_id) if link else None
+            view = None if link is None else {"provider_state": link.provider_state, "latest_invoice_state": link.latest_invoice_state, "cancel_at_period_end": link.cancel_at_period_end,
+                                              "refund_state": link.refund_state, "dispute_state": link.dispute_state}
+            state = L.overview_state(checkout_status=row.status if row else None, browser_returned=bool(row and row.browser_returned_at), link=view)
+            timeline: list[dict] = []
+            for c in s.scalars(select(CS).where(CS.user_id == user_id).order_by(CS.created_at.desc()).limit(5)).all():
+                timeline.append({"kind": "checkout_started", "at": _iso(c.created_at)})
+            if link is not None:
+                timeline.append({"kind": "subscription_linked", "at": _iso(link.created_at)})
+                for d in s.scalars(select(ED).where(ED.link_id == link.id, ED.applied.is_(True)).order_by(ED.created_at.desc()).limit(10)).all():
+                    timeline.append({"kind": {"grant": "access_granted", "revoke": "access_ended"}.get(d.decision, "access_reviewed"), "at": _iso(d.created_at)})
+            timeline.sort(key=lambda e: e["at"] or "", reverse=True)
+            end = link.current_period_end if link else None
+            return {
+                "state": state, "subscription": base["subscription"], "payment": base["payment"], "entitlement": base["entitlement"], "plan_code": plan_code,
+                "interval": terms.billing_interval if terms else None, "current_period_end": _iso(end),
+                "cancel_at_period_end": bool(link and link.cancel_at_period_end and link.provider_state not in PROVIDER_LINK_TERMINAL),
+                "cancellation_effective_at": _iso(end) if link and link.cancel_at_period_end and link.provider_state not in PROVIDER_LINK_TERMINAL else None,
+                "refund_state": link.refund_state if link else "none", "dispute_state": link.dispute_state if link else "none",
+                "verified_at": _iso(link.observed_at) if link else None,
+                "management": {"where": "link", "url": None, "url_verified": False},
+                "receipts": {"shown_here": False, "where": "link_email"},
+                "timeline": timeline[:15],
             }
 
     # ------------------------------------------------------------------ helpers

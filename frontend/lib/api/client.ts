@@ -53,6 +53,11 @@ import type {
   IntegrationRow,
   IntegrationTestResult,
   BillingProviderReadiness,
+  BillingOpsPage,
+  BillingOpsOverview,
+  BillingOpsReconciliation,
+  BillingOpsEventDetail,
+  BillingRecoveryResult,
   EmailDeliveryStatus,
   EmailTestResult,
   AssignablePlan,
@@ -72,6 +77,7 @@ import type {
   ActiveSessionsResponse,
   PlanResponse,
   CheckoutAvailability,
+  BillingSummaryView,
   CheckoutCreated,
   CheckoutStatusView,
   LegalStatus,
@@ -405,6 +411,7 @@ export const api = {
     recordReturn: (checkoutId: string, outcome: "success" | "cancel", opts?: RequestOptions) =>
       request<CheckoutCreated>("POST", "/billing/checkout-returns", { body: { checkout_id: checkoutId, outcome }, ...opts }),
     status: (opts?: RequestOptions) => request<CheckoutStatusView>("GET", "/billing/checkout/status", opts),
+    summary: (opts?: RequestOptions) => request<BillingSummaryView>("GET", "/billing/summary", opts),
   },
 
   // Accounts, authentication & session (Capstone P1/E1). The session lives in an
@@ -671,6 +678,20 @@ export const api = {
     billingPayments: (page = 1, opts?: RequestOptions) => request<AdminPage<BillingPayment>>("GET", `/admin/billing/payments?page=${page}&page_size=25`, opts),
     billingRefunds: (opts?: RequestOptions) => request<AdminPage<BillingRefund>>("GET", "/admin/billing/refunds?page_size=50", opts),
     billingCustomers: (opts?: RequestOptions) => request<AdminPage<BillingCustomer>>("GET", "/admin/billing/customers?page_size=50", opts),
+    // W12.4D-E billing operations (read-only diagnostics + controlled recovery)
+    billingOps: {
+      overview: (opts?: RequestOptions) => request<BillingOpsOverview>("GET", "/admin/billing/operations/overview", opts),
+      subscriptions: (page = 1, state = "", opts?: RequestOptions) => request<BillingOpsPage>("GET", `/admin/billing/operations/subscriptions${qs({ page, page_size: 25, state })}`, opts),
+      checkouts: (page = 1, status = "", opts?: RequestOptions) => request<BillingOpsPage>("GET", `/admin/billing/operations/checkouts${qs({ page, page_size: 25, status })}`, opts),
+      events: (page = 1, status = "", eventType = "", opts?: RequestOptions) =>
+        request<BillingOpsPage>("GET", `/admin/billing/operations/events${qs({ page, page_size: 25, status, event_type: eventType })}`, opts),
+      event: (reference: string, opts?: RequestOptions) => request<BillingOpsEventDetail>("GET", `/admin/billing/operations/events/${encodeURIComponent(reference)}`, opts),
+      reconciliation: (opts?: RequestOptions) => request<BillingOpsReconciliation>("GET", "/admin/billing/operations/reconciliation", opts),
+      recoveryActions: (page = 1, opts?: RequestOptions) => request<BillingOpsPage>("GET", `/admin/billing/operations/recovery-actions${qs({ page, page_size: 25 })}`, opts),
+      recover: (kind: "retry" | "requeue" | "reconcile", reference: string, reason: string, key: string, opts?: RequestOptions) =>
+        request<BillingRecoveryResult>("POST", `/admin/billing/operations/${kind === "reconcile" ? "subscriptions" : "events"}/${encodeURIComponent(reference)}/${kind}`,
+          { body: { reason }, headers: { "Idempotency-Key": key }, ...opts }),
+    },
     billingRequestPrice: (body: BillingPriceInput, opts?: RequestOptions) => request<BillingApproval>("POST", "/admin/billing/price-changes", { body, ...opts }),
     billingDecidePrice: (id: string, approve: boolean, opts?: RequestOptions) =>
       request<BillingApproval>("POST", `/admin/billing/price-changes/${encodeURIComponent(id)}/${approve ? "approve" : "reject"}`, opts),
