@@ -56,6 +56,12 @@ class Result:
 class ProviderEventService:
     def __init__(self, session_factory, *, environment: str, reader: ProviderStateReader, policy: EntitlementPolicy, audit: Any = None,
                  clock: Callable[[], datetime] = utcnow) -> None:
+        if policy.synthetic:                         # a SYNTHETIC test policy is never an owner decision: refuse it anywhere but development and test
+            import os
+
+            from src.billing.provider import MOCK_ALLOWED_ENVS
+            if (os.environ.get("API_ENV") or "development").strip().lower() not in MOCK_ALLOWED_ENVS:
+                raise ValueError("A synthetic entitlement policy cannot be used outside development and test.")
         self._sf, self._env, self._reader, self._policy, self._audit, self._clock = session_factory, environment, reader, policy, audit, clock
 
     # ------------------------------------------------------------------ acceptance (durable storage; no reconciliation here)

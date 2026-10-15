@@ -1082,6 +1082,10 @@ def test_migration_0029_upgrade_downgrade_and_constraint_widening(tmp_path, monk
         c.execute(text(f"INSERT INTO subscriptions ({cols}) VALUES (1, 1, 'ended', 'provider', '2026-01-01')"))
         with pytest.raises(Exception):
             c.execute(text(f"INSERT INTO subscriptions ({cols}) VALUES (1, 1, 'ended', 'bogus', '2026-01-01')"))
+    with pytest.raises(Exception, match="Refusing to downgrade"):          # the provider row is real data: the downgrade refuses instead of deleting it
+        command.downgrade(cfg, "0028_checkout_sessions")
+    with create_engine(url).begin() as c:
+        c.execute(text("DELETE FROM subscriptions WHERE source = 'provider'"))      # the operator's deliberate, backed-up clean-up (see the runbook)
     command.downgrade(cfg, "0028_checkout_sessions")
     assert "billing_provider_links" not in inspect(create_engine(url)).get_table_names()
     command.upgrade(cfg, "head")
@@ -1155,3 +1159,276 @@ def test_a_job_without_a_configured_runtime_fails_permanently_not_silently(env):
     jobs = JobService(env.sf)
     jobs.enqueue(P.JOB_PROCESS_PROVIDER_EVENT, {"event_id": "0" * 32})
     assert Worker(jobs, services=SimpleNamespace(billing=BillingRuntime(session_factory=env.sf))).run_once() == "failed"
+
+
+# ================================================================ 12. PRE-MERGE QUALIFICATION (migration safety, cancellation scope, call paths) =====
+
+def _alembic(tmp_path, monkeypatch):
+    from alembic.config import Config
+    url = f"sqlite:///{tmp_path / 'q.db'}"
+    monkeypatch.setenv("DATABASE_URL", url)
+    cfg = Config("alembic.ini")
+    cfg.set_main_option("script_location", "migrations")
+    cfg.set_main_option("sqlalchemy.url", url)
+    return cfg, url
+
+
+def _version(url):
+    from sqlalchemy import create_engine, text
+    with create_engine(url).connect() as c:
+        return c.execute(text("SELECT version_num FROM alembic_version")).scalar()
+
+
+def _tables(url):
+    from sqlalchemy import create_engine, inspect
+    return set(inspect(create_engine(url)).get_table_names())
+
+
+def test_migration_fresh_upgrade_and_single_head(tmp_path, monkeypatch):
+    from alembic import command
+    from alembic.script import ScriptDirectory
+    cfg, url = _alembic(tmp_path, monkeypatch)
+    command.upgrade(cfg, "head")
+    assert _version(url) == "0029_provider_webhooks" and ScriptDirectory.from_config(cfg).get_heads() == ["0029_provider_webhooks"]
+
+
+def test_upgrade_from_0028_preserves_existing_subscriptions_and_partial_unique_indexes(tmp_path, monkeypatch):
+    from alembic import command
+    from sqlalchemy import create_engine, text
+    cfg, url = _alembic(tmp_path, monkeypatch)
+    command.upgrade(cfg, "0028_checkout_sessions")
+    sf = make_session_factory(create_engine(url))
+    with sf() as s:
+        u = User(subject="u", provider="local", email="u@x.test")
+        s.add(u)
+        s.flush()
+        pv = s.scalar(select(PlanVersion).where(PlanVersion.plan_code == "basic"))
+        s.add_all([Subscription(user_id=u.id, plan_version_id=pv.id, status="ended", source="migration"),
+                   Subscription(user_id=u.id, plan_version_id=pv.id, status="active", source="admin")])
+        s.commit()
+        uid = u.id
+    command.upgrade(cfg, "head")
+    with create_engine(url).connect() as c:
+        rows = c.execute(text("SELECT status, source FROM subscriptions WHERE user_id = :u ORDER BY id"), {"u": uid}).all()
+    assert rows == [("ended", "migration"), ("active", "admin")]                                  # nothing lost, nothing rewritten
+    with pytest.raises(Exception):                                                                # the partial unique index survived the table rebuild
+        with create_engine(url).begin() as c:
+            c.execute(text(f"INSERT INTO subscriptions (user_id, plan_version_id, status, source, started_at) VALUES ({uid}, 1, 'active', 'provider', '2026-01-01')"))
+
+
+def test_downgrade_on_an_empty_provider_surface_succeeds_and_reupgrades(tmp_path, monkeypatch):
+    from alembic import command
+    cfg, url = _alembic(tmp_path, monkeypatch)
+    command.upgrade(cfg, "head")
+    sf = make_session_factory(__import__("sqlalchemy").create_engine(url))
+    with sf() as s:                                                                               # unrelated rows are untouched by a downgrade
+        s.add(User(subject="keep", provider="local", email="k@x.test"))
+        s.commit()
+    command.downgrade(cfg, "0028_checkout_sessions")
+    assert _version(url) == "0028_checkout_sessions" and "billing_provider_links" not in _tables(url)
+    with sf() as s:
+        assert s.scalar(select(func.count()).select_from(User)) == 1
+    command.upgrade(cfg, "head")
+    assert _version(url) == "0029_provider_webhooks" and "billing_provider_events" in _tables(url)
+
+
+@pytest.mark.parametrize("seed", ["subscription", "event", "link", "decision"])
+def test_downgrade_fails_closed_when_any_provider_record_exists_and_deletes_nothing(tmp_path, monkeypatch, seed):
+    from alembic import command
+    from sqlalchemy import create_engine, text
+    cfg, url = _alembic(tmp_path, monkeypatch)
+    command.upgrade(cfg, "head")
+    now = utcnow()
+    sf = make_session_factory(create_engine(url))
+    with sf() as s:
+        if seed == "subscription":
+            s.add(Subscription(user_id=1, plan_version_id=1, status="active", source="provider"))
+        elif seed == "event":
+            s.add(BillingProviderEvent(public_id="e" * 32, provider=P.PROVIDER_STRIPE_MP, environment="sandbox", provider_event_id="evt_x", event_type="invoice.paid",
+                                       received_at=now, normalized_json={}))
+        elif seed == "link":
+            s.add(BillingProviderLink(public_id="l" * 32, provider=P.PROVIDER_STRIPE_MP, environment="sandbox", provider_subscription_id="sub_x", provider_customer_id="cus_x",
+                                      user_id=1, plan_version_id=1, commercial_terms_id=1, price_mapping_id=1, created_at=now, updated_at=now))
+        else:
+            s.add(BillingEntitlementDecision(link_id=1, decision="grant", reason="r", policy_id="p", provider_state="active", created_at=now))
+        s.commit()
+    with pytest.raises(Exception) as e:
+        command.downgrade(cfg, "0028_checkout_sessions")
+    assert "Refusing to downgrade" in str(e.value) and "backup" in str(e.value)
+    assert _version(url) == "0029_provider_webhooks" and "billing_provider_links" in _tables(url)         # nothing was dropped
+    with create_engine(url).connect() as c:
+        total = sum(c.execute(text(f"SELECT COUNT(*) FROM {t}")).scalar() for t in ("billing_provider_events", "billing_provider_links", "billing_entitlement_decisions"))
+        total += c.execute(text("SELECT COUNT(*) FROM subscriptions WHERE source = 'provider'")).scalar()
+    assert total == 1                                                                                 # the seeded record is intact
+
+
+def test_the_migration_source_never_deletes_provider_data():
+    src = (ROOT / "migrations/versions/0029_provider_webhooks.py").read_text()
+    assert "DELETE FROM" not in src and "FAIL CLOSED" in src and "RuntimeError" in src
+
+
+# ---------------------------------------------------------------- cancellation is scoped to ONE provider subscription id ----------------------------
+
+class _CheckoutProvider:
+    name, live, environment = P.PROVIDER_STRIPE_MP, False, "sandbox"
+
+    def __init__(self):
+        self.n = 0
+
+    def capabilities(self):
+        return {"checkout": True}
+
+    def create_checkout_session(self, req):
+        from src.billing.provider import CheckoutResult
+        self.n += 1
+        return CheckoutResult(provider_session_id=f"cs_test_new{self.n}", url=f"https://checkout.stripe.test/{self.n}")
+
+
+def _checkout_service(env):
+    from src.billing.checkout import CheckoutService
+    mode = SimpleNamespace(provider=P.PROVIDER_STRIPE_MP, environment="sandbox", enabled=False, live=False)
+    return CheckoutService(env.sf, provider=_CheckoutProvider(), mode=mode, app_base_url="https://app.example.test", api_env="production",
+                           readiness=lambda: "sandbox_access_unverified", clock=lambda: env.clock_now[0])
+
+
+def _cancel_first_subscription(env, svc):
+    reader_for(env)
+    accept_and_process(env, svc, checkout_event(ref="REFAAAA0"))
+    env.clock_now[0] += timedelta(seconds=5)
+    env.reader.set_subscription("sub_synth_1", state="canceled")
+    accept_and_process(env, svc, sub_event("customer.subscription.deleted"))
+    assert link_of(env).provider_state == "canceled" and plan_of(env, env.users[0])["plan_code"] == "basic"
+
+
+def test_a_live_subscription_blocks_a_second_purchase_but_a_canceled_one_does_not(env):
+    from src.billing.checkout import CheckoutConflict
+    svc, co = service(env), _checkout_service(env)
+    reader_for(env)
+    accept_and_process(env, svc, checkout_event(ref="REFAAAA0"))
+    with pytest.raises(CheckoutConflict):
+        co.create(env.users[0], "premium", "new-purchase-key-01")                                  # live subscription: no double charge
+    env.clock_now[0] += timedelta(seconds=5)
+    env.reader.set_subscription("sub_synth_1", state="canceled")
+    accept_and_process(env, svc, sub_event("customer.subscription.deleted"))
+    out = co.create(env.users[0], "premium", "new-purchase-key-02")                                # canceled is final for THAT subscription only
+    assert out["status"] == "open" and out["redirect_url"]
+
+
+def test_a_genuinely_new_subscription_after_cancellation_is_reconciled_and_granted(env):
+    svc, co = service(env), _checkout_service(env)
+    _cancel_first_subscription(env, svc)
+    new = co.create(env.users[0], "premium", "new-purchase-key-03")
+    with env.sf() as s:
+        row = s.scalar(select(BillingCheckoutSession).where(BillingCheckoutSession.public_id == new["checkout_id"]))
+        assert row.user_id == env.users[0] and row.provider_session_id == "cs_test_new1"
+        old = s.scalar(select(BillingCheckoutSession).where(BillingCheckoutSession.user_id == env.users[0], BillingCheckoutSession.status == "expired"))
+        assert old is not None and old.checkout_url is None                                        # the consumed checkout can never be reused
+    env.clock_now[0] += timedelta(seconds=5)
+    env.reader.set_subscription("sub_synth_2", customer_id="cus_synth_1")                         # the same candidate's provider customer, a NEW subscription id
+    env.reader.checkouts["cs_test_new1"] = CheckoutAssociation("cs_test_new1", new["checkout_id"], "sub_synth_2", False)
+    out, r = accept_and_process(env, svc, checkout_event(session="cs_test_new1", ref=new["checkout_id"], sub="sub_synth_2"))
+    assert r.status == "processed" and r.decision == "grant"
+    with env.sf() as s:
+        links = s.scalars(select(BillingProviderLink).where(BillingProviderLink.user_id == env.users[0]).order_by(BillingProviderLink.id)).all()
+    assert [(l.provider_subscription_id, l.provider_state) for l in links] == [("sub_synth_1", "canceled"), ("sub_synth_2", "active")]
+    assert plan_of(env, env.users[0])["plan_code"] == "premium"
+
+
+def test_stale_events_for_the_old_subscription_cannot_revoke_or_reactivate_around_the_new_one(env):
+    svc, co = service(env), _checkout_service(env)
+    _cancel_first_subscription(env, svc)
+    new = co.create(env.users[0], "premium", "new-purchase-key-04")
+    env.clock_now[0] += timedelta(seconds=5)
+    env.reader.set_subscription("sub_synth_2", customer_id="cus_synth_1")
+    env.reader.checkouts["cs_test_new1"] = CheckoutAssociation("cs_test_new1", new["checkout_id"], "sub_synth_2", False)
+    accept_and_process(env, svc, checkout_event(session="cs_test_new1", ref=new["checkout_id"], sub="sub_synth_2"))
+    env.clock_now[0] += timedelta(seconds=5)
+    out, r = accept_and_process(env, svc, sub_event("customer.subscription.deleted", sub="sub_synth_1"))        # the OLD subscription's late cancellation again
+    assert plan_of(env, env.users[0])["plan_code"] == "premium"                                    # a later event for the old link never revokes the newer grant
+    env.reader.set_subscription("sub_synth_1", state="active")
+    out, r = accept_and_process(env, svc, sub_event("customer.subscription.updated", sub="sub_synth_1"))
+    assert r.category == "terminal_reactivation_refused"
+    with env.sf() as s:
+        old = s.scalar(select(BillingProviderLink).where(BillingProviderLink.provider_subscription_id == "sub_synth_1"))
+    assert old.provider_state == "canceled"
+
+
+def test_a_new_subscription_cannot_be_assigned_to_another_candidate(env):
+    svc = service(env)
+    _cancel_first_subscription(env, svc)
+    env.reader.set_subscription("sub_synth_3", customer_id="cus_synth_1")                         # candidate 0's provider customer ...
+    env.reader.checkouts["cs_test_c2"] = CheckoutAssociation("cs_test_c2", "REFAAAA1", "sub_synth_3", False)       # ... presented with candidate 1's checkout
+    out, r = accept_and_process(env, svc, checkout_event(session="cs_test_c2", ref="REFAAAA1", sub="sub_synth_3"))
+    assert r.category == "customer_rebind" and link_of(env, env.users[1]) is None and plan_of(env, env.users[1])["plan_code"] == "basic"
+
+
+def test_a_second_live_subscription_is_still_quarantined_if_it_reaches_reconciliation(env):
+    svc = service(env)
+    reader_for(env)
+    accept_and_process(env, svc, checkout_event(ref="REFAAAA0"))
+    env.reader.set_subscription("sub_synth_dup", customer_id="cus_synth_1")
+    env.reader.checkouts["cs_test_c1"] = CheckoutAssociation("cs_test_c1", "REFAAAA0", "sub_synth_dup", False)
+    assert accept_and_process(env, svc, sub_event(sub="sub_synth_dup"))[1].category == "duplicate_subscription"
+
+
+# ---------------------------------------------------------------- real call paths (not source text) ---------------------------------------------
+
+def test_the_bridge_is_reached_only_from_reconciliation_not_from_the_webhook_or_checkout_paths(env, monkeypatch):
+    import src.billing.entitlement_bridge as B
+    import src.billing.reconcile as R
+    from src.billing.checkout import CheckoutService
+    calls = []
+    real = B.evaluate_and_apply
+    monkeypatch.setattr(R, "evaluate_and_apply", lambda *a, **k: calls.append("reconcile") or real(*a, **k))
+    monkeypatch.setattr(B, "evaluate_and_apply", lambda *a, **k: calls.append("direct") or real(*a, **k))
+    reader_for(env)
+    svc = service(env)
+    deliver(env, receiver(env, svc=svc), checkout_event(ref="REFAAAA0"))                          # authenticate + accept
+    with env.sf() as s:
+        public = s.scalar(select(BillingCheckoutSession.public_id).where(BillingCheckoutSession.user_id == env.users[0]))
+    CheckoutService(env.sf, app_base_url="https://a.example").record_return(env.users[0], public, "success")      # browser return
+    assert calls == [] and plan_of(env, env.users[0])["plan_code"] == "basic"
+    svc.sweep()                                                                                   # only the reconciliation path reaches the bridge
+    assert calls == ["reconcile"]
+
+
+def test_only_reconciliation_calls_the_bridge_in_the_source_tree():
+    callers = sorted(p.relative_to(ROOT).as_posix() for p in (ROOT / "src").rglob("*.py") if "evaluate_and_apply(" in p.read_text(encoding="utf-8"))
+    assert callers == ["src/billing/entitlement_bridge.py", "src/billing/reconcile.py"]      # definition + the single call site
+
+
+def test_the_deployed_dependency_graph_is_unauthorized_unapproved_and_unwired(env):
+    from src.api import dependencies as deps
+    store = SimpleNamespace(get_for_runtime=lambda name: SimpleNamespace(get_secret_value=lambda: SECRET))
+    request = SimpleNamespace(app=SimpleNamespace(state=SimpleNamespace(settings=SimpleNamespace(env="production"))))
+    repo = SimpleNamespace(session_factory=env.sf)
+    rcv = deps.get_webhook_receiver(request, repo, store)
+    assert rcv._authorized is False
+    assert rcv._events._policy.approved is False and rcv._events._policy.synthetic is False
+    assert isinstance(rcv._events._reader, NullStateReader)
+    raw = body(checkout_event())
+    with pytest.raises(SE.WebhookError) as e:
+        rcv.handle(raw, sign(raw))                                                                # even a perfectly signed event is refused
+    assert e.value.status == 503 and count(env, BillingProviderEvent) == 0
+    from src.billing.wiring import build_billing_runtime
+    rt = build_billing_runtime(env.sf)
+    assert rt.provider_events._policy.approved is False and isinstance(rt.provider_events._reader, NullStateReader)
+
+
+def test_a_synthetic_policy_cannot_be_used_in_a_hosted_environment(env, monkeypatch):
+    monkeypatch.setenv("API_ENV", "production")
+    with pytest.raises(ValueError):
+        service(env)                                                                              # SYNTHETIC_POLICY
+    monkeypatch.setenv("API_ENV", "staging")
+    with pytest.raises(ValueError):
+        service(env)
+    service(env, policy=UNAPPROVED_POLICY)                                                        # the real runtime policy is always allowed
+    monkeypatch.setenv("API_ENV", "test")
+    service(env)
+
+
+def test_two_person_financial_approvals_are_unchanged():
+    from src.application import admin_permissions as perm
+    from src.persistence import BillingApprovalRequest
+    assert any("ck_bar_no_self_approval" in str(c.name) for c in BillingApprovalRequest.__table__.constraints)
+    assert len(perm.PERMISSIONS) == 43

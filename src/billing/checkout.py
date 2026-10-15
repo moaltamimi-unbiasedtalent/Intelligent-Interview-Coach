@@ -24,7 +24,7 @@ from src.billing import policy as P
 from src.billing.entitlement_bridge import provider_grant_exists
 from src.billing.provider import CheckoutRequest, ProviderRejected, ProviderRetryable
 from src.persistence import (
-    BillingCheckoutSession as CS, BillingCommercialTerms as CT, BillingProviderLink as LINK, BillingProviderPrice as PP, PlanVersion, PLAN_STATUS_ACTIVE, utcnow,
+    BillingCheckoutSession as CS, BillingCommercialTerms as CT, BillingProviderLink as LINK, BillingProviderPrice as PP, PlanVersion, PLAN_STATUS_ACTIVE, PROVIDER_LINK_TERMINAL, utcnow,
 )
 
 MAX_PROVIDER_ATTEMPTS = 5
@@ -155,8 +155,17 @@ class CheckoutService:
                 if row.plan_version_id != p.plan_version.id:
                     raise CheckoutConflict("This Idempotency-Key was used for a different purchase.")
             else:
+                # A candidate with a LIVE provider subscription must not start a second purchase (it would be charged twice and the duplicate quarantined).
+                # A canceled or expired provider subscription is terminal for ITS OWN provider id only: it never blocks a genuinely new purchase.
+                if s.scalar(select(LINK.id).where(LINK.user_id == user_id, LINK.environment == p.mapping.environment,
+                                                  LINK.provider_state.notin_(PROVIDER_LINK_TERMINAL)).limit(1)) is not None:
+                    raise CheckoutConflict("You already have a subscription.")
                 live = s.scalar(select(CS).where(CS.user_id == user_id, CS.plan_version_id == p.plan_version.id,
                                                  CS.status.in_(("pending_creation", "open"))))
+                if live is not None and live.status == "open" and s.scalar(select(LINK.id).where(LINK.checkout_session_id == live.id).limit(1)) is not None:
+                    self._expire(live)                               # that checkout was already consumed by a subscription: its session can never be reused
+                    s.flush()
+                    live = None
                 if live is not None and not (live.status == "open" and live.expires_at and _aware(live.expires_at) <= now):
                     row = live                                       # the same logical purchase is already in flight: join it, never duplicate
                 else:

@@ -1,6 +1,6 @@
 """Verified provider events, provider-managed subscription links and entitlement decision evidence (W12.4D-D).
 
-Additive, plus ONE widened constraint: ``subscriptions.source`` may now also be ``provider`` (written only by the billing entitlement bridge); the
+Additive, plus ONE widened constraint (the downgrade is FAIL-CLOSED and deletes nothing: it refuses while any provider-managed record exists): ``subscriptions.source`` may now also be ``provider`` (written only by the billing entitlement bridge); the
 meaning of ``system_default``, ``migration`` and ``admin`` is unchanged. ``billing_provider_events`` is the durable outbox of authenticated webhook
 events (unique per provider, environment and event id; allow-listed normalised fields only, no raw body or signature), ``billing_provider_links``
 binds ONE provider subscription to ONE candidate through a trusted checkout record, and ``billing_entitlement_decisions`` is the append-only evidence
@@ -126,9 +126,23 @@ def upgrade() -> None:
     op.create_index("ix_bed_link_created", "billing_entitlement_decisions", ["link_id", "created_at"])
 
 
+PROVIDER_TABLES = ("billing_entitlement_decisions", "billing_provider_events", "billing_provider_links")
+
+
 def downgrade() -> None:
-    op.execute("DELETE FROM subscriptions WHERE source = 'provider'")      # provider-managed rows cannot exist under the old constraint
-    op.drop_table("billing_entitlement_decisions")
-    op.drop_table("billing_provider_events")
-    op.drop_table("billing_provider_links")
+    """FAIL CLOSED. This downgrade drops the only record of verified provider events, subscription links and entitlement decisions and the
+    ``provider`` subscription rows that carry paid access; none of that is stored anywhere else. It therefore refuses to run if ANY such row exists and
+    deletes nothing. It runs only on an empty provider surface (for example a database where W12.4D-D was never operationally used)."""
+    bind = op.get_bind()
+    found = {name: bind.execute(sa.text(f"SELECT COUNT(*) FROM {name}")).scalar() or 0 for name in PROVIDER_TABLES}
+    found["subscriptions with source = 'provider'"] = bind.execute(sa.text("SELECT COUNT(*) FROM subscriptions WHERE source = 'provider'")).scalar() or 0
+    if any(found.values()):
+        listing = ", ".join(f"{k}: {v}" for k, v in found.items() if v)
+        raise RuntimeError(
+            "Refusing to downgrade 0029_provider_webhooks: provider-managed billing records exist (" + listing + "). Downgrading would destroy financial and "
+            "entitlement history that is stored nowhere else. Operator procedure: take a verified database backup; export the rows of the four tables above; "
+            "decide with the owner how each provider-managed subscription is to be handled (end it through the entitlement bridge or reassign it deliberately); "
+            "only then, on an empty provider surface, repeat the downgrade. See docs/capstone/billing/W12_04D_D_WEBHOOK_RECONCILIATION_ENTITLEMENTS.md.")
+    for name in PROVIDER_TABLES:
+        op.drop_table(name)
     _swap_source_check(OLD_SOURCES)
