@@ -1108,6 +1108,30 @@ export interface PlanResponse {
   entitlements: Record<string, EntitlementState>;
 }
 
+// --- W12.4D-C candidate checkout (server-controlled; the client sends only a plan code) ---
+export interface CheckoutAvailability {
+  plan: string;
+  available: boolean;
+  reason: "not_enabled" | null;
+}
+export interface CheckoutCreated {
+  checkout_id: string;
+  status: string;
+  redirect_url: string | null;
+  expires_at: string | null;
+  browser_returned: boolean;
+}
+export interface CheckoutStatusView {
+  checkout: "none" | "preparing" | "open" | "canceled" | "expired" | "failed";
+  subscription: string;
+  payment: string;
+  confirmation: "pending" | "not_applicable";
+  entitlement: { plan_code: string; source: string; changed_by_billing: boolean };
+  checkout_id: string | null;
+  created_at: string | null;
+  expires_at: string | null;
+}
+
 // --- W10.10 candidate privacy requests and legal-version truth ---
 export interface PrivacyRequestView {
   public_id: string;

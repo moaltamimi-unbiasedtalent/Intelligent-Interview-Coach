@@ -1837,6 +1837,91 @@ class BillingRefund(Base):
     executed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
+BILLING_PRICE_ENVIRONMENTS = ("sandbox", "live")
+BILLING_PRICE_STATUSES = ("active", "retired")
+CHECKOUT_STATUSES = ("pending_creation", "open", "canceled", "expired", "failed")
+_OPEN_CHECKOUT = "status IN ('pending_creation', 'open')"
+_ACTIVE_PRICE = "status = 'active'"
+
+
+class BillingProviderPrice(Base):
+    """W12.4D-C: the mapping from ONE immutable commercial-terms row to the provider's product and price ids, per provider environment.
+
+    The currency, interval and amount are SNAPSHOTS of the (immutable) terms and are checked against them when a mapping is registered, so a
+    mapping can never describe a different price than the terms the owner approved. A new price is a new terms version and therefore a NEW
+    mapping; an old mapping never becomes the active price by itself (``retired`` on the terms retiring is enforced by the service). Holds no
+    credential.
+    """
+
+    __tablename__ = "billing_provider_prices"
+    __table_args__ = (
+        CheckConstraint(_in_list("provider", ("stripe_managed_payments",)), name="ck_bpp_provider"),
+        CheckConstraint(_in_list("environment", BILLING_PRICE_ENVIRONMENTS), name="ck_bpp_environment"),
+        CheckConstraint(_in_list("status", BILLING_PRICE_STATUSES), name="ck_bpp_status"),
+        CheckConstraint("length(currency) = 3 AND currency = upper(currency)", name="ck_bpp_currency"),
+        CheckConstraint(_in_list("billing_interval", BILLING_INTERVALS), name="ck_bpp_interval"),
+        CheckConstraint("amount_minor >= 0 AND amount_minor <= 100000000", name="ck_bpp_amount"),
+        UniqueConstraint("provider", "environment", "provider_price_id", name="uq_bpp_provider_price"),
+        Index("uq_bpp_one_active", "commercial_terms_id", "provider", "environment", unique=True,
+              sqlite_where=text(_ACTIVE_PRICE), postgresql_where=text(_ACTIVE_PRICE)),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    commercial_terms_id: Mapped[int] = mapped_column(ForeignKey("billing_commercial_terms.id", ondelete="RESTRICT"))
+    provider: Mapped[str] = mapped_column(String(32))
+    environment: Mapped[str] = mapped_column(String(8))
+    provider_product_id: Mapped[str] = mapped_column(String(80))
+    provider_price_id: Mapped[str] = mapped_column(String(80))
+    amount_minor: Mapped[int] = mapped_column(Integer)
+    currency: Mapped[str] = mapped_column(String(3))
+    billing_interval: Mapped[str] = mapped_column(String(8))
+    status: Mapped[str] = mapped_column(String(10), default="active", server_default="active")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    retired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class BillingCheckoutSession(Base):
+    """W12.4D-C: one candidate checkout ATTEMPT. A browser return can set ``browser_returned_at`` but can never set a paid or completed state:
+    only authenticated provider evidence (W12.4D-D) may do that, and such states do not exist in ``CHECKOUT_STATUSES`` yet.
+
+    Idempotent by construction: unique ``(user_id, idempotency_key)`` and at most ONE open attempt per (user, plan version). Stores no card or
+    payment data, no credential and no webhook secret; the hosted-checkout URL is kept only while the attempt is open (it is cleared on
+    cancel, expiring and failure). Deleted with the account.
+    """
+
+    __tablename__ = "billing_checkout_sessions"
+    __table_args__ = (
+        CheckConstraint(_in_list("status", CHECKOUT_STATUSES), name="ck_bcs_status"),
+        CheckConstraint(_in_list("provider", ("stripe_managed_payments",)), name="ck_bcs_provider"),
+        CheckConstraint(_in_list("environment", BILLING_PRICE_ENVIRONMENTS), name="ck_bcs_environment"),
+        UniqueConstraint("user_id", "idempotency_key", name="uq_bcs_user_idempotency"),
+        UniqueConstraint("provider", "provider_session_id", name="uq_bcs_provider_session"),
+        Index("uq_bcs_one_open_per_user_plan", "user_id", "plan_version_id", unique=True,
+              sqlite_where=text(_OPEN_CHECKOUT), postgresql_where=text(_OPEN_CHECKOUT)),
+        Index("ix_bcs_user_created", "user_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    plan_version_id: Mapped[int] = mapped_column(ForeignKey("plan_versions.id", ondelete="RESTRICT"))
+    commercial_terms_id: Mapped[int] = mapped_column(ForeignKey("billing_commercial_terms.id", ondelete="RESTRICT"))
+    price_mapping_id: Mapped[int] = mapped_column(ForeignKey("billing_provider_prices.id", ondelete="RESTRICT"))
+    provider: Mapped[str] = mapped_column(String(32))
+    environment: Mapped[str] = mapped_column(String(8))
+    provider_session_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    status: Mapped[str] = mapped_column(String(16), default="pending_creation", server_default="pending_creation")
+    idempotency_key: Mapped[str] = mapped_column(String(80))
+    checkout_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    provider_attempts: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    failure_category: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    browser_returned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 class BillingEvent(Base):
     """A NORMALISED provider event (no raw body). The unique (provider, provider_event_id) makes ingestion idempotent."""
 

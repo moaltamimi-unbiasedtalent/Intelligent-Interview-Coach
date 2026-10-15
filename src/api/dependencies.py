@@ -336,6 +336,26 @@ def get_billing_service(repo=Depends(get_repository)):
     return build_billing_service(repo.session_factory, JobService(repo.session_factory))
 
 
+def get_checkout_service(request: Request, repo=Depends(get_repository), store=Depends(get_secret_store)):
+    """Candidate checkout service (W12.4D-C). The trusted return origin is configuration (ASK4MO_APP_BASE_URL, else the first configured frontend
+    origin), never the request Host header. Provider selection and environment come from the validated billing mode."""
+    import os
+
+    from src.auth_repository import AuditRepository
+    from src.billing import stripe_provider as SP
+    from src.billing.checkout import CheckoutService
+    from src.billing.provider import build_provider, safe_mode
+
+    settings = getattr(request.app.state, "settings", None)
+    origins = tuple(getattr(settings, "frontend_origins", ()) or ())
+    base = os.getenv("ASK4MO_APP_BASE_URL", "").strip() or (origins[0] if origins else "")
+    mode = safe_mode()
+    return CheckoutService(
+        repo.session_factory, provider=build_provider(mode), mode=mode, app_base_url=base, api_env=str(getattr(settings, "env", "development")),
+        readiness=lambda: SP.readiness(store, provider_selected=mode.provider or "", environment=mode.environment)["status"],
+        audit=AuditRepository(repo.session_factory))
+
+
 def get_pause_service(repo=Depends(get_repository)):
     """The DURABLE pause authority for this deployment's environment (P10B-W10.11). Built per request over the shared repository: no process state."""
     from src.application.pause import PauseService

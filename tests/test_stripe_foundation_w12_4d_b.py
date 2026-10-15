@@ -255,7 +255,12 @@ def test_capabilities_are_truthful_and_every_unbuilt_operation_fails_closed():
     with pytest.raises(ProviderRejected):
         p2.refund(idempotency_key="k", provider_payment_id="pi_1", amount_minor=100, currency="EUR")
     assert not built                                                                              # a refund never reaches a client, and never returns mock success
-    assert not hasattr(p, "create_checkout_session") and not hasattr(p, "subscribe")
+    assert not hasattr(p, "subscribe")
+    # W12.4D-C: checkout exists on the interface but the real adapter still refuses it by configuration and never reaches a client.
+    from src.billing.provider import CheckoutRequest
+    with pytest.raises(ProviderRejected) as refused:
+        SP.StripeManagedPaymentsProvider(client_factory=None).create_checkout_session(CheckoutRequest("k" * 12, "price_x", "https://a/b", "https://a/c", "ref"))
+    assert str(refused.value) == "checkout_not_authorized" and not built
 
 
 def test_checkout_parameters_must_enable_managed_payments_so_ask4mo_is_never_the_merchant_of_record():

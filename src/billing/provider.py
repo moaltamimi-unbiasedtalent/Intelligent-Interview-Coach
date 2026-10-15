@@ -39,13 +39,34 @@ class ProviderRefundResult:
     currency: str
 
 
+@dataclass(frozen=True)
+class CheckoutRequest:
+    """Everything a provider needs to start ONE hosted checkout. Built by the server only: price, URLs and reference are never client input."""
+
+    idempotency_key: str            # stable per local checkout record, so a retry after a timeout cannot create a second session
+    provider_price_id: str
+    success_url: str
+    cancel_url: str
+    client_reference_id: str        # Ask4Mo's internal checkout id (never an email or a name)
+    expires_at: int | None = None   # unix seconds; bounded by the provider
+
+
+@dataclass(frozen=True)
+class CheckoutResult:
+    provider_session_id: str
+    url: str
+    expires_at: int | None = None
+
+
 class BillingProvider(Protocol):
-    """Deliberately small: only what W10.5 needs. No checkout, payment-method collection, tokenisation, tax or portal."""
+    """Deliberately small. W12.4D-C adds ``create_checkout_session`` (hosted checkout only); no payment-method collection, tokenisation, tax or portal."""
 
     name: str
     live: bool
 
     def capabilities(self) -> dict: ...
+
+    def create_checkout_session(self, request: CheckoutRequest) -> CheckoutResult: ...
 
     def refund(self, *, idempotency_key: str, provider_payment_id: str, amount_minor: int, currency: str) -> ProviderRefundResult: ...
 
@@ -67,6 +88,10 @@ class MockBillingAdapter:
     def capabilities(self) -> dict:
         return {"provider": self.name, "live": False, "mode": "mock", "refund": True, "checkout": False, "payment_methods": False,
                 "tax": False, "network": False, "label": P.MODE_LABEL}
+
+    def create_checkout_session(self, request: CheckoutRequest) -> CheckoutResult:
+        # The mock never pretends to run a checkout: users are never redirected to a fake processor. Tests that need a checkout inject their own fake.
+        raise ProviderRejected("capability_unavailable")
 
     def refund(self, *, idempotency_key: str, provider_payment_id: str, amount_minor: int, currency: str) -> ProviderRefundResult:
         self.calls.append(idempotency_key)
