@@ -22,7 +22,7 @@ import logging
 from typing import Any, Callable
 
 from src.billing import policy as P
-from src.billing.provider import ProviderRejected
+from src.billing.provider import CheckoutRequest, CheckoutResult, ProviderRejected, ProviderRetryable
 
 log = logging.getLogger("billing.stripe")
 
@@ -212,6 +212,45 @@ class StripeManagedPaymentsProvider:
         # Refund handling against Stripe is not built or qualified: refuse deterministically and never return mock success. The framework treats
         # ProviderRejected as permanent (no retry), so a queued refund fails visibly instead of pretending.
         raise ProviderRejected("capability_unavailable")
+
+    def create_checkout_session(self, request: CheckoutRequest) -> CheckoutResult:
+        """Create ONE hosted Managed Payments subscription Checkout Session (W12.4D-C). No money moves here: the customer pays on Stripe's page.
+
+        Fails closed unless external checkout is authorized: with ``policy.EXTERNAL_CHECKOUT_AUTHORIZED`` False (the code constant, off in this
+        release) the adapter refuses UNLESS a test explicitly injected a fake ``client_factory``, so a real Stripe client can never be built for a
+        checkout by configuration alone. The parameter set always passes ``require_managed_payments`` (``managed_payments.enabled = true``,
+        ``mode = subscription``) so Ask4Mo is never an ordinary merchant, and a rejected/ambiguous Stripe failure is reduced to a bounded category.
+        """
+        if self._client_factory is None and not P.EXTERNAL_CHECKOUT_AUTHORIZED:
+            raise ProviderRejected("checkout_not_authorized")
+        if self.environment != "sandbox":
+            raise ProviderRejected("live_disabled")
+        params: dict = {
+            "mode": "subscription",
+            "managed_payments": {"enabled": True},
+            "line_items": [{"price": request.provider_price_id, "quantity": 1}],
+            "success_url": request.success_url,
+            "cancel_url": request.cancel_url,
+            "client_reference_id": request.client_reference_id,
+            "metadata": {"ask4mo_checkout": request.client_reference_id},
+        }
+        if request.expires_at:
+            params["expires_at"] = request.expires_at
+        try:
+            require_managed_payments(params)
+            client = self.client()
+            session = client.v1.checkout.sessions.create(params, {"idempotency_key": request.idempotency_key})
+        except StripeConfigurationError as exc:
+            raise ProviderRejected(exc.category) from None
+        except Exception as exc:  # noqa: BLE001 - reduced to a bounded category; the SDK message is discarded
+            category = map_stripe_error(exc)
+            if category in ("provider_timeout", "provider_unavailable", "rate_limited"):
+                raise ProviderRetryable(category) from None
+            raise ProviderRejected(category) from None
+        sid, url = getattr(session, "id", None), getattr(session, "url", None)
+        if not isinstance(sid, str) or not sid or not isinstance(url, str) or not url.startswith("https://"):
+            raise ProviderRejected("unknown")
+        return CheckoutResult(provider_session_id=sid, url=url, expires_at=getattr(session, "expires_at", None))
 
     def client(self):
         """A per-call Stripe client for later waves (explicit credentials, sandbox only). Unused by any code path in this wave."""

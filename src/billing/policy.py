@@ -13,6 +13,12 @@ SELECTABLE_PROVIDERS = (PROVIDER_MOCK, PROVIDER_STRIPE_MP)
 STRIPE_ENVIRONMENTS = ("sandbox", "live")
 # Live billing is a CODE constant, not a setting: it cannot be switched on by configuration, startup or Admin in this release.
 LIVE_BILLING_ENABLED = False
+# W12.4D-C: external (Stripe-facing) checkout is NOT authorized. Like LIVE_BILLING_ENABLED this is a code constant, so no setting, startup or Admin action
+# can turn it on: the adapter refuses to use a real Stripe client for a Checkout Session while it is False. Tests inject a fake client explicitly.
+EXTERNAL_CHECKOUT_AUTHORIZED = False
+CHECKOUT_SESSION_TTL_SECONDS = 30 * 60        # Stripe requires a Checkout Session to live 30 minutes to 24 hours; the shortest is used
+CHECKOUT_IDEMPOTENCY_PATTERN = r"^[A-Za-z0-9_-]{8,64}$"
+PURCHASABLE_PLAN_CODES = ("premium",)          # Basic is free and never purchasable
 STRIPE_MODE_LABEL = "STRIPE MANAGED PAYMENTS - SANDBOX FOUNDATION - NO CHECKOUT - LIVE BILLING DISABLED"
 # Reviewed Stripe contract (W12.4D-B): the SDK pins this API version; Managed Payments needs 2025-03-31.basil or later.
 STRIPE_API_VERSION = "2026-09-30.endive"

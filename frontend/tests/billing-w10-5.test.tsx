@@ -174,7 +174,9 @@ describe("Candidate surfaces stay free of any purchase affordance", () => {
 
   it("no candidate route or component offers checkout, a billing portal, a payment-method form or a buy/subscribe control", () => {
     const routes = walk("app").filter((p) => /page\.tsx$/.test(p) && !p.startsWith(join("app", "admin")));
-    expect(routes.filter((p) => /checkout|billing|payment|portal|invoice/i.test(p))).toEqual([]);
+    // W12.4D-C: exactly ONE billing route is allowed, the provider return page (it only records that the browser came back; it has no purchase control).
+    const RETURN_PAGE = join("app", "billing", "return", "page.tsx");
+    expect(routes.filter((p) => /checkout|billing|payment|portal|invoice/i.test(p) && p !== RETURN_PAGE)).toEqual([]);
     const candidate = walk("components").filter((p) => /\.tsx$/.test(p) && !p.includes(join("components", "admin")));
     for (const f of candidate) {
       const src = readFileSync(f, "utf8");

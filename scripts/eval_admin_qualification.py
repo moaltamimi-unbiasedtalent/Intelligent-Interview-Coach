@@ -113,7 +113,8 @@ def run() -> dict[str, tuple[bool, str]]:
     billing_src = code_only("\n".join(p.read_text(encoding="utf-8") for p in (ROOT / "src/billing").glob("*.py")))
     check("billing_state_never_writes_entitlements_or_tier", not re.search(r"PlanRepository|EntitlementService|\bSubscription\b|\.assign\(|platform_tier|\btier\s*=", billing_src) and "MOCK" in billing_src.upper(), "billing != entitlement")
     check("billing_and_reports_say_mock_not_live", "MOCK BILLING" in read("frontend/components/admin/BillingView.tsx").upper() and "NOT LIVE REVENUE" in read("frontend/components/admin/ReportsView.tsx").upper()
-          and not re.search(r"paddle|adyen|checkout\.session|stripe\.api_key|stripe\.checkout|\.subscriptions\.create", billing_src, re.I))     # W12.4D-B: the Stripe foundation exists, but it creates no checkout and sets no global key
+          and not re.search(r"paddle|adyen|stripe\.api_key|stripe\.checkout|\.subscriptions\.create", billing_src, re.I)
+          and billing_src.count("checkout.sessions.create") == code_only(read("src/billing/stripe_provider.py")).count("checkout.sessions.create") == 1)     # W12.4D-C: the ONLY Checkout Session creation is the fail-closed Stripe adapter call (Managed Payments guard, constant-gated); no global key
     check("flags_never_grant_entitlement_or_authorization", not re.search(r"^\s*(from|import)\s+.*(entitlements|admin_permissions|billing)", read("src/platform_config/flags.py"), re.M), "flags only restrict")
     check("ai_governance_intact", all(x in read("src/ai_admin/service.py") for x in ("evaluation", "approver")) and "force" not in re.sub(r"#.*", "", read("src/api/routes/admin_ai.py")).lower().replace("enforce", ""), "no force/bypass; distinct approver + hash-bound evaluation")
     check("knowledge_approval_governed", "KNOWLEDGE_APPROVE" in read("src/api/routes/admin_knowledge.py") and "approve" in read("src/knowledge_admin/service.py"))
@@ -127,7 +128,7 @@ def run() -> dict[str, tuple[bool, str]]:
 
     # ---- migrations / scope
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("one_alembic_head_0027_after_the_w12_4b_and_w12_4c_migrations", mig[-1].startswith("0027_email_attempts") and len(mig) == 27 and len({m[:4] for m in mig}) == 27, mig[-1])
+    check("one_alembic_head_0028_after_the_w12_4b_w12_4c_and_w12_4d_c_migrations", mig[-1].startswith("0028_checkout_sessions") and len(mig) == 28 and len({m[:4] for m in mig}) == 28, mig[-1])
     check("no_w11_or_rc_code", not list((ROOT / "docs/capstone").rglob("W11*")) and not list((ROOT / "docs/capstone").rglob("RC-P10-003*")))   # W10.14-era guard: no W11/RC docs by name; the RC artifact is governed by eval_w11_integrated / eval_rc_p10_003 after the post-W11 owner-approved action
 
     # ---- evaluator / test isolation

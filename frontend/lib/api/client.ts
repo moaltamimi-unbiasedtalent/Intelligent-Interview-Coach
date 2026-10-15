@@ -71,6 +71,9 @@ import type {
 import type {
   ActiveSessionsResponse,
   PlanResponse,
+  CheckoutAvailability,
+  CheckoutCreated,
+  CheckoutStatusView,
   LegalStatus,
   PrivacyRequestList,
   PrivacyRequestView,
@@ -391,6 +394,17 @@ export const api = {
       const query = targetRole ? `?target_role=${encodeURIComponent(targetRole)}` : "";
       return request<MemoryPreviewResponse>("GET", `/memory/preview${query}`, opts);
     },
+  },
+
+  // Candidate checkout (W12.4D-C). Plan code only; price, currency, provider and return URLs are server decisions.
+  billing: {
+    availability: (plan: string, opts?: RequestOptions) =>
+      request<CheckoutAvailability>("GET", `/billing/checkout/availability?plan=${encodeURIComponent(plan)}`, opts),
+    startCheckout: (plan: string, idempotencyKey: string, opts?: RequestOptions) =>
+      request<CheckoutCreated>("POST", "/billing/checkout-sessions", { body: { plan }, headers: { "Idempotency-Key": idempotencyKey }, ...opts }),
+    recordReturn: (checkoutId: string, outcome: "success" | "cancel", opts?: RequestOptions) =>
+      request<CheckoutCreated>("POST", "/billing/checkout-returns", { body: { checkout_id: checkoutId, outcome }, ...opts }),
+    status: (opts?: RequestOptions) => request<CheckoutStatusView>("GET", "/billing/checkout/status", opts),
   },
 
   // Accounts, authentication & session (Capstone P1/E1). The session lives in an
