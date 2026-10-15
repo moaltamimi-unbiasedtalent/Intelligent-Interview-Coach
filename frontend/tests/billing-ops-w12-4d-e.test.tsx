@@ -53,6 +53,15 @@ describe("candidate billing overview (verified local state only)", () => {
     expect(document.body.textContent).not.toMatch(FORBIDDEN);
   });
 
+  it("F1-08: an account whose Premium plan was assigned by an administrator is never told it is on the free plan", async () => {
+    summary.mockResolvedValue({ ...base, state: "free", plan_code: "premium", entitlement: { plan_code: "premium", source: "entitlement_service", changed_by_billing: false } });
+    wrap(<BillingOverview />);
+    await screen.findByTestId("billing-state-free");
+    expect(screen.getByText(en.billing.accessNotByBilling)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/free plan/i);
+    expect(screen.getByText(en.billing.state_free)).toBeInTheDocument();
+  });
+
   it("free and checkout-pending users see no management block and no timeline claims", async () => {
     summary.mockResolvedValue({ ...base, state: "checkout_pending" });
     wrap(<BillingOverview />);

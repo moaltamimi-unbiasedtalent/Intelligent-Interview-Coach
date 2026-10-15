@@ -29,7 +29,7 @@ from src.persistence import (
 )
 
 _REFUND_RANK = {"none": 0, "partial": 1, "full": 2}
-_FAILURE_CATEGORIES = ("provider_unavailable", "provider_timeout", "rate_limited", "provider_auth_failed", "provider_permission_denied", "invalid_request", "internal_error", "retries_exhausted", "provider_state_invalid", "provider_resource_not_found", "unknown_ownership",
+_FAILURE_CATEGORIES = ("concurrent_update", "provider_unavailable", "provider_timeout", "rate_limited", "provider_auth_failed", "provider_permission_denied", "invalid_request", "internal_error", "retries_exhausted", "provider_state_invalid", "provider_resource_not_found", "unknown_ownership",
                        "ownership_ambiguous", "checkout_mismatch", "customer_rebind", "customer_mismatch", "price_mismatch", "price_unverifiable",
                        "duplicate_subscription", "environment_mismatch", "unknown_provider_state", "terminal_reactivation_refused", "integrity_conflict",
                        "unsupported_event_type", "unsupported_api_version", "unexpected_account_context", "not_subscription_related", "not_enabled")
@@ -39,6 +39,25 @@ class _Quarantine(Exception):
     def __init__(self, category: str, *, review: bool = False) -> None:
         super().__init__(category)
         self.category, self.review = category, review
+
+
+class RecoveryKeyConflict(Exception):
+    """The Idempotency-Key was already used for a different recovery request (another action or another operator)."""
+
+
+class _Retry(Exception):
+    """A benign concurrency loss (another worker committed first): safe to re-run against the new state; never an operator problem."""
+
+    def __init__(self, category: str = "concurrent_update") -> None:
+        super().__init__(category)
+        self.category = category
+
+
+def link_by_subscription_stmt(provider: str, environment: str, subscription_id: str, *, lock: bool = False):
+    """The link lookup. ``lock=True`` adds ``FOR UPDATE`` (PostgreSQL row lock; ignored by SQLite) so two workers reconciling the SAME subscription serialise
+    and a slower, older observation can never commit over a newer one."""
+    stmt = select(LINK).where(LINK.provider == provider, LINK.environment == environment, LINK.provider_subscription_id == subscription_id)
+    return stmt.with_for_update() if lock else stmt
 
 
 def _aware(dt: datetime | None, like: datetime) -> datetime | None:
@@ -145,8 +164,10 @@ class ProviderEventService:
             return self._finish(public_id, "needs_review", "provider_state_invalid", now, corr)
         except _Quarantine as q:
             return self._finish(public_id, "needs_review" if q.review else "quarantined", q.category, now, corr)
+        except _Retry as r:
+            return self._finish(public_id, "retry", r.category, now, corr)
         except IntegrityError:
-            return self._finish(public_id, "quarantined", "integrity_conflict", now, corr)
+            return self._finish(public_id, "retry", "concurrent_update", now, corr)     # a lost race on a unique key is retried (bounded), not quarantined
         except Exception:  # noqa: BLE001 - never surface internals; the category is bounded
             return self._finish(public_id, "retry", "internal_error", now, corr)
         self._record("billing.webhook_processing_succeeded", "success", public_id, corr, link=result.link_public_id, decision=result.decision)
@@ -194,7 +215,7 @@ class ProviderEventService:
             raise _Quarantine("environment_mismatch")
         if snap.state not in PROVIDER_LINK_STATES:
             raise _Quarantine("unknown_provider_state", review=True)
-        link = s.scalar(select(LINK).where(LINK.provider == P.PROVIDER_STRIPE_MP, LINK.environment == env, LINK.provider_subscription_id == sub_id))
+        link = s.scalar(link_by_subscription_stmt(P.PROVIDER_STRIPE_MP, env, sub_id, lock=True))
         created = link is None
         if created:
             link = self._bind_new(s, snap, norm, env, now)
@@ -257,6 +278,8 @@ class ProviderEventService:
             s.flush()
         except IntegrityError:
             s.rollback()
+            if s.scalar(link_by_subscription_stmt(P.PROVIDER_STRIPE_MP, env, snap.subscription_id)) is not None:
+                raise _Retry() from None                                              # the SAME subscription was bound a moment ago by another worker: re-run against it
             raise _Quarantine("duplicate_subscription", review=True) from None        # a second live provider subscription for the same candidate
         return link
 
@@ -367,7 +390,7 @@ class ProviderEventService:
             with self._sf() as s:
                 prior = s.scalar(select(RA).where(RA.idempotency_key == idempotency_key))
                 if prior is None or prior.action != action or prior.actor_user_id != actor_user_id:
-                    raise
+                    raise RecoveryKeyConflict("idempotency key already used") from None
                 return {"public_id": prior.public_id, "action": prior.action, "status": prior.status, "result": prior.result_category, "replayed": True}
         self._record("billing.recovery_requested", "success", target_public_id, None, action=action, actor=actor_user_id)
         status, category, prev, event_id, link_id = "refused", "unknown_error", None, None, None
@@ -406,6 +429,8 @@ class ProviderEventService:
                 return "failed", exc.__class__.__name__.replace("ProviderState", "").lower() or "provider_error", None, None, link_id
             except _Quarantine as q:
                 return "failed", q.category if q.category in _FAILURE_CATEGORIES else "internal_error", None, None, link_id
+            except (_Retry, IntegrityError):
+                return "failed", "concurrent_update", None, None, link_id
             return "completed", "reconciled", None, None, link_id
         with self._sf() as s:
             ev = s.scalar(select(EV).where(EV.public_id == target))

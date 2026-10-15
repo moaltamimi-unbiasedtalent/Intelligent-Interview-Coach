@@ -29,7 +29,10 @@ from tests.test_admin_foundation_w10_1 import Env
 
 API = "/api/v1"
 ROOT = Path(__file__).resolve().parents[1]
-NOW = datetime(2026, 10, 15, 12, 0, tzinfo=timezone.utc)
+# F1-09: this was a FIXED instant (2026-10-15 12:00 UTC) while the telemetry tests record events at REAL time, so every such test failed once the wall clock passed that
+# instant (reproduced identically on an unmodified main). The reporting clock is now one hour AHEAD of the moment the module is imported: real-time events always fall
+# inside it, and the relative windows the tests assert (3 days, 30 days) are unchanged.
+NOW = datetime.now(timezone.utc).replace(microsecond=0) + timedelta(hours=1)
 
 
 @pytest.fixture()

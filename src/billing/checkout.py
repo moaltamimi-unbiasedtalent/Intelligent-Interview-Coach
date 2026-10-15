@@ -207,7 +207,7 @@ class CheckoutService:
             success_url=f"{self._origin}/billing/return?session={row.public_id}&outcome=success",
             cancel_url=f"{self._origin}/billing/return?session={row.public_id}&outcome=cancel",
             client_reference_id=row.public_id,
-            expires_at=int((self._clock() + timedelta(seconds=P.CHECKOUT_SESSION_TTL_SECONDS)).timestamp()))
+            expires_at=int((self._clock() + timedelta(seconds=P.CHECKOUT_SESSION_TTL_SECONDS + P.CHECKOUT_PROVIDER_EXPIRY_MARGIN_SECONDS)).timestamp()))
         try:
             result = self._provider.create_checkout_session(req)
         except ProviderRetryable as exc:

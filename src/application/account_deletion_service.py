@@ -229,6 +229,21 @@ class AccountDeletionService:
             s.execute(update(P.SupportInternalNote).where(P.SupportInternalNote.author_user_id == user_id)
                       .values(author_user_id=None))
 
+            # 4b2) W12.4D provider billing records of THIS candidate: entitlement decisions, subscription links, checkout attempts. PostgreSQL cascades these; SQLite
+            # does not enforce foreign keys, so they are deleted explicitly (child first) and behave the same. Provider EVENTS hold only opaque ids and stay
+            # as financial evidence (their link reference is cleared); the operator recovery trail is ANONYMISED, never deleted. Deleting these records does NOT
+            # cancel a live subscription at the provider: that is an open owner/legal decision (see the W12.4D-F1 register).
+            link_ids = [i for (i,) in s.execute(select(P.BillingProviderLink.id).where(P.BillingProviderLink.user_id == user_id)).all()]
+            if link_ids:
+                s.execute(update(P.BillingProviderEvent).where(P.BillingProviderEvent.link_id.in_(link_ids)).values(link_id=None))
+                s.execute(update(P.BillingRecoveryAction).where(P.BillingRecoveryAction.link_id.in_(link_ids)).values(link_id=None))
+                self._delete_where(s, P.BillingEntitlementDecision, P.BillingEntitlementDecision.link_id.in_(link_ids), summary, "billing_provider_rows")
+                self._delete_where(s, P.BillingProviderLink, P.BillingProviderLink.id.in_(link_ids), summary, "billing_provider_rows")
+            checkout_ids = [i for (i,) in s.execute(select(P.BillingCheckoutSession.id).where(P.BillingCheckoutSession.user_id == user_id)).all()]
+            if checkout_ids:
+                self._delete_where(s, P.BillingCheckoutSession, P.BillingCheckoutSession.id.in_(checkout_ids), summary, "billing_provider_rows")
+            s.execute(update(P.BillingRecoveryAction).where(P.BillingRecoveryAction.actor_user_id == user_id).values(actor_user_id=None))
+
             # 4c) Plan subscriptions (W10.4): the user's own assignment history is deleted with the account.
             # Plan DEFINITIONS (versions, entitlements) are shared product data and stay; a workspace the user
             # merely belonged to keeps its own subscription (workspace deletion follows the workspace rules).

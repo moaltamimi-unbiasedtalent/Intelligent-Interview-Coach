@@ -964,7 +964,8 @@ def test_audit_records_ids_and_bounded_categories_only(env):
         rcv.handle(body(ev), "t=1,v1=00")
     svc.process(svc.accept(ev)["public_id"])
     types = {a["event_type"] for a in seen}
-    assert {"billing.webhook_received", "billing.webhook_event_accepted", "billing.webhook_signature_rejected", "billing.webhook_duplicate_ignored"} <= types
+    assert {"billing.webhook_event_accepted", "billing.webhook_signature_rejected", "billing.webhook_duplicate_ignored"} <= types
+    assert "billing.webhook_received" not in types                       # F1-03: no pre-verification audit row (an unauthenticated caller cannot grow the log)
     blob = json.dumps(seen, default=str)
     assert SECRET not in blob and "whsec_" not in blob and "sk_" not in blob and "t=1,v1" not in blob and "u0@x.test" not in blob
 

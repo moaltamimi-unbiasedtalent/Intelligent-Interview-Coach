@@ -16,7 +16,10 @@ LIVE_BILLING_ENABLED = False
 # W12.4D-C: external (Stripe-facing) checkout is NOT authorized. Like LIVE_BILLING_ENABLED this is a code constant, so no setting, startup or Admin action
 # can turn it on: the adapter refuses to use a real Stripe client for a Checkout Session while it is False. Tests inject a fake client explicitly.
 EXTERNAL_CHECKOUT_AUTHORIZED = False
-CHECKOUT_SESSION_TTL_SECONDS = 30 * 60        # Stripe requires a Checkout Session to live 30 minutes to 24 hours; the shortest is used
+CHECKOUT_SESSION_TTL_SECONDS = 30 * 60        # LOCAL lifetime of an attempt (the URL is cleared when it elapses)
+# Stripe requires a Checkout Session to expire between 30 minutes and 24 hours AFTER ITS CREATION. ``now + 30 min`` computed here is already slightly in the past when
+# Stripe receives the request (latency, clock skew), so the provider-side expiry carries a margin; the local attempt therefore always ends first.
+CHECKOUT_PROVIDER_EXPIRY_MARGIN_SECONDS = 5 * 60
 CHECKOUT_IDEMPOTENCY_PATTERN = r"^[A-Za-z0-9_-]{8,64}$"
 PURCHASABLE_PLAN_CODES = ("premium",)          # Basic is free and never purchasable
 STRIPE_MODE_LABEL = "STRIPE MANAGED PAYMENTS - SANDBOX FOUNDATION - NO CHECKOUT - LIVE BILLING DISABLED"
