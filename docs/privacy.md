@@ -73,6 +73,8 @@ audit records.
 - Original document files are not part of the export; version history of replaced documents is
   kept until the document is deleted.
 
+**Account deletion and provider subscriptions (W12.4D-F1R).** Self-service account deletion is refused (HTTP 409, `subscription_resolution_required`) while a provider-managed subscription is unresolved: a closure request is recorded, the account stays, and deletion completes once the subscription is verifiably ended (Ask4Mo cannot cancel it for you and never claims future charges have stopped without provider evidence). A privacy-request erasure is never postponed by this: all personal and content data is erased and only an anonymised shell with the minimum billing references is retained until the subscription is verifiably ended, then purged. The retention basis and period of those references are open legal decisions; none is claimed.
+
 ## Logging
 
 Generation-failure logs contain safe metadata only (task, schema, model, request id, finish

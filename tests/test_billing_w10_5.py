@@ -506,8 +506,8 @@ def test_billing_read_api_permissions_filters_and_safe_fields(env, rig):
         assert banned not in keys
     assert env.c.get(f"{API}/admin/billing/payments/{'0' * 32}", cookies=bk).status_code == 404
     assert not any(role in perm.permissions_for_role(r) for r in ("support_operator", "knowledge_admin", "operations_admin", "security_privacy_admin")
-                   for role in (perm.BILLING_READ, perm.BILLING_REFUND, perm.PRICE_CHANGE))
-    assert {perm.BILLING_READ, perm.BILLING_REFUND, perm.PRICE_CHANGE} <= perm.permissions_for_role("billing_admin") <= perm.permissions_for_role("platform_admin") and len(perm.PERMISSIONS) == 43
+                   for role in (perm.BILLING_READ, perm.BILLING_REFUND, perm.PRICE_CHANGE, perm.BILLING_RECOVER))
+    assert {perm.BILLING_READ, perm.BILLING_REFUND, perm.PRICE_CHANGE} <= perm.permissions_for_role("billing_admin") <= perm.permissions_for_role("platform_admin") and len(perm.PERMISSIONS) == 44 and perm.BILLING_RECOVER in perm.permissions_for_role("billing_admin")
 
 
 def test_command_center_shows_mock_counts_without_revenue(env, rig):

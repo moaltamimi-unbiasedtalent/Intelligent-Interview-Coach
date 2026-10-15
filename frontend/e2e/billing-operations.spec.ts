@@ -62,6 +62,19 @@ test("payment problem and canceled states", async ({ page }) => {
   await expect(page.getByTestId("billing-state-past_due")).toContainText("Payment problem");
 });
 
+test("account closure with an unresolved subscription: honest status, cancellation guidance, no claim that charges stopped", async ({ page }) => {
+  await candidate(page, SUMMARY({ state: "active", subscription: "active", payment: "succeeded", interval: "month", plan_code: "premium",
+    entitlement: { plan_code: "premium", source: "entitlement_service", changed_by_billing: true },
+    closure: { status: "awaiting_provider", subscription_resolution: "pending_confirmation", provider_cancellation: "guided", erasure_status: "not_requested", review_required: false, requested_at: "2026-10-16T09:00:00+00:00" } }));
+  await page.goto("/account");
+  const box = page.getByTestId("billing-closure");
+  await expect(box).toContainText("Cancellation confirmation is pending");
+  await expect(box).toContainText("We cannot cancel a subscription for you");
+  await expect(box).toContainText("erasure of your personal data separately");
+  expect(await box.innerText()).not.toMatch(/you will not be charged|cancellation succeeded/i);
+  await expect(page.locator('a[href*="link.com"]')).toHaveCount(0);
+});
+
 test("provider/billing unavailable is shown truthfully and retry recovers", async ({ page }) => {
   let down = true;                                   // the client retries a transient GET itself, so the outage must persist until we end it
   await candidate(page, SUMMARY());
@@ -92,6 +105,7 @@ const DETAIL = { ...ROW, operator_retries: 0, correlation_id: "req-1", signature
 
 async function admin(page: Page, perms: string[]) {
   const seen: string[] = [];
+  let elevated = false;                                     // server-owned in reality: the mock only models "recovery is refused until a password step-up happened"
   await page.route("**/api/v1/**", async (route) => {
     const url = new URL(route.request().url());
     const path = url.pathname;
@@ -103,6 +117,8 @@ async function admin(page: Page, perms: string[]) {
     if (path.endsWith("/billing/operations/overview")) return json(OPS_OVERVIEW);
     if (path.endsWith("/billing/operations/events")) return json({ items: url.searchParams.get("status") && url.searchParams.get("status") !== "quarantined" ? [] : [ROW], total: 1, page: 1, page_size: 25 });
     if (/\/billing\/operations\/events\/[a-f0-9]{32}$/.test(path)) return json(DETAIL);
+    if (path.endsWith("/billing/operations/step-up")) { elevated = true; return json({ elevated: true, elevated_until: "2099-01-01T00:00:00", window_seconds: 300, method: "password_reauthentication" }); }
+    if (/\/billing\/operations\/events\/[a-f0-9]{32}\/retry$/.test(path) && !elevated) return json({ error: { code: "step_up_required", message: "Confirm your password to continue." } }, 403);
     if (/\/billing\/operations\/events\/[a-f0-9]{32}\/retry$/.test(path)) return json({ reference: "r".repeat(32), action: "retry_event", status: "refused", result: "reader_unavailable", replayed: false });
     if (path.endsWith("/billing/operations/reconciliation")) return json({ generated_at: "x", provider_state_reader: "not_wired_null_reader", provider_synchronization: "not_performed_no_reader", scheduler: "disabled",
       last_successful: null, last_attempt: null, stale_links: 1, retry_scheduled: 0, problems_by_category: { "quarantined:unknown_ownership": 1 }, needs_attention: [{ ...ROW, classification: DETAIL.classification }], cadence_note: "Once validated, one bounded sweep every 15 to 60 minutes; no polling is enabled." });
@@ -141,13 +157,22 @@ test("admin event filter calls the API with the status and event detail is safe"
   await page.getByRole("button", { name: "Open event …000001" }).click();
   const d = page.getByTestId("event-detail");
   await expect(d).toContainText("only verified events are stored");
-  await expect(d).toContainText("Recovery needs the job-management permission");
+  await expect(d).toContainText("Recovery needs the billing-recovery permission and a fresh password confirmation");
   expect(await d.innerText()).not.toMatch(/whsec|sk_test|payload/i);
   await expect(page.getByRole("button", { name: /Retry through the verified pipeline/ })).toHaveCount(0);
 });
 
-test("recovery needs the job-management permission, a reason, and a refusal is shown as a refusal", async ({ page }) => {
-  const seen = await admin(page, [...READ, "platform.jobs.manage"]);
+test("job-management alone gives no recovery control", async ({ page }) => {
+  await admin(page, [...READ, "platform.jobs.manage"]);
+  await page.goto("/admin/billing");
+  await page.getByTestId("ops-tab-events").click();
+  await page.getByRole("button", { name: "Open event …000001" }).click();
+  await expect(page.getByTestId("event-detail")).toContainText("Recovery needs the billing-recovery permission");
+  await expect(page.getByRole("button", { name: /Retry through the verified pipeline/ })).toHaveCount(0);
+});
+
+test("recovery needs the billing-recovery permission, a reason and a password step-up; a refusal is shown as a refusal", async ({ page }) => {
+  const seen = await admin(page, [...READ, "platform.billing.recover"]);
   await page.goto("/admin/billing");
   await page.getByTestId("ops-tab-events").click();
   await page.getByRole("button", { name: "Open event …000001" }).click();
@@ -157,8 +182,13 @@ test("recovery needs the job-management permission, a reason, and a refusal is s
   await expect(dialog).toContainText("A reason is required.");
   await dialog.getByRole("textbox").fill("ownership evidence arrived");
   await dialog.getByRole("button", { name: "Confirm" }).click();
+  const step = page.getByTestId("step-up-dialog");                      // the server demanded a fresh password confirmation
+  await expect(step).toBeVisible();
+  await step.getByLabel("Current password").fill("a-synthetic-password");
+  await step.getByRole("button", { name: "Confirm" }).click();
   await expect(page.getByTestId("recovery-outcome")).toContainText("Refused: reader unavailable. Nothing was changed.");
-  expect(seen.filter((s) => s.startsWith("POST") && s.endsWith("/retry")).length).toBe(1);
+  expect(seen.some((s) => s.startsWith("POST") && s.endsWith("/step-up"))).toBe(true);
+  expect(seen.filter((s) => s.startsWith("POST") && s.endsWith("/retry")).length).toBe(2);       // refused once for lack of step-up, then accepted by the server once elevated
 });
 
 test("admin reconciliation says no provider synchronization was performed", async ({ page }) => {
@@ -192,7 +222,7 @@ for (const [name, width, height] of [["desktop", 1280, 900], ["tablet", 768, 102
     test(`responsive ${name} ${scheme}: admin events and detail do not overflow`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       await page.emulateMedia({ colorScheme: scheme });
-      await admin(page, [...READ, "platform.jobs.manage"]);
+      await admin(page, [...READ, "platform.billing.recover"]);
       await page.goto("/admin/billing");
       await page.getByTestId("ops-tab-events").click();
       await page.getByRole("button", { name: "Open event …000001" }).click();

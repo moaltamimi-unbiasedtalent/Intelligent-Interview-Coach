@@ -688,6 +688,7 @@ export const api = {
       event: (reference: string, opts?: RequestOptions) => request<BillingOpsEventDetail>("GET", `/admin/billing/operations/events/${encodeURIComponent(reference)}`, opts),
       reconciliation: (opts?: RequestOptions) => request<BillingOpsReconciliation>("GET", "/admin/billing/operations/reconciliation", opts),
       recoveryActions: (page = 1, opts?: RequestOptions) => request<BillingOpsPage>("GET", `/admin/billing/operations/recovery-actions${qs({ page, page_size: 25 })}`, opts),
+      stepUp: (password: string, opts?: RequestOptions) => request<StepUpState>("POST", "/admin/billing/operations/step-up", { body: { password }, ...opts }),
       recover: (kind: "retry" | "requeue" | "reconcile", reference: string, reason: string, key: string, opts?: RequestOptions) =>
         request<BillingRecoveryResult>("POST", `/admin/billing/operations/${kind === "reconcile" ? "subscriptions" : "events"}/${encodeURIComponent(reference)}/${kind}`,
           { body: { reason }, headers: { "Idempotency-Key": key }, ...opts }),

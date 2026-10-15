@@ -270,7 +270,7 @@ def _rows(env):
 
 
 def test_authorization_matrix_candidates_and_every_specialist_are_denied_before_anything_else(env):
-    assert [r for r, p in perm.ROLE_PRESETS.items() if perm.SECRET_ROTATE in p] == ["platform_admin"] and len(perm.PERMISSIONS) == 43
+    assert [r for r, p in perm.ROLE_PRESETS.items() if perm.SECRET_ROTATE in p] == ["platform_admin"] and len(perm.PERMISSIONS) == 44
     _, cand = mk(env)
     assert env.c.post(URL, json={"value": SENTINEL}, cookies=cand).status_code == 403
     for role in ("operations_admin", "knowledge_admin", "billing_admin", "support_operator", "security_privacy_admin"):
@@ -434,7 +434,7 @@ def test_migration_0026_single_head_fresh_and_round_trip(tmp_path, monkeypatch):
 
     url = f"sqlite:///{tmp_path / 'm.db'}"
     monkeypatch.setenv("DATABASE_URL", url)
-    assert ScriptDirectory.from_config(cfg(url)).get_heads() == ["0030_billing_recovery"]
+    assert ScriptDirectory.from_config(cfg(url)).get_heads() == ["0031_account_closure"]
     command.upgrade(cfg(url), "0025_security_audit_incidents")
     assert "managed_secrets" not in inspect(create_engine(url)).get_table_names()
     command.upgrade(cfg(url), "head")

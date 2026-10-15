@@ -85,9 +85,9 @@ def job_types() -> list[JobTypeDef]:
         JobTypeDef(code=P.JOB_PROCESS_PROVIDER_EVENT, label="Billing: reconcile a verified provider event", payload_model=EventPayload, handler=_process_provider_event,
                    summarize=lambda p: {"event": p.event_id}, max_attempts=5, lease_seconds=120, backoff_base_seconds=30, backoff_cap_seconds=900,
                    idempotency="The event row is claimed with a conditional UPDATE under a lease; reconciliation reads the provider's authoritative state, so a replay converges and a processed event is a no-op.",
-                   manual_retry=True, admin_enqueue=False, dependencies=deps),
+                   manual_retry=False, admin_enqueue=False, dependencies=deps),         # W12.4D-F1R: re-driven ONLY through billing recovery (platform.billing.recover + step-up)
         JobTypeDef(code=P.JOB_PROVIDER_RECONCILE, label="Billing: reconcile missed or stale provider state (bounded sweep)", payload_model=SweepPayload, handler=_provider_reconcile,
                    summarize=lambda p: {"batch": p.batch}, max_attempts=2, lease_seconds=300, backoff_base_seconds=120, backoff_cap_seconds=900,
                    idempotency="Each item is re-read from the provider and applied idempotently; a replay changes nothing.",
-                   manual_retry=True, admin_enqueue=False, dependencies=deps),
+                   manual_retry=False, admin_enqueue=False, dependencies=deps),
     ]

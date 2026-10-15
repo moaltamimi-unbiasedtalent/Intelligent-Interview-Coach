@@ -77,7 +77,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("w10_14_and_w11_evidence_present", (ROOT / "docs/capstone/admin/W10_14_FULL_ADMIN_QUALIFICATION.md").exists() and (ROOT / "docs/capstone/p10/P10B_W11_INTEGRATED_REQUALIFICATION.md").exists()
           and all(k in by_id for k in ("R-53", "R-81", "R-88", "R-90")), "W10.14 + W11 documents and rows")
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("schema_head_matches_the_matrix", mig[-1].startswith("0030_billing_recovery") and "0030_billing_recovery" in by_id.get("R-39", ["", "", "", "", "", "", ""])[3], mig[-1])
+    check("schema_head_matches_the_matrix", mig[-1].startswith("0031_account_closure") and "0031_account_closure" in by_id.get("R-39", ["", "", "", "", "", "", ""])[3], mig[-1])
     rc_dir = ROOT / "artifacts/capstone/p10/RC-P10-003"
     check("matrix_does_not_register_the_rc", "R-100" not in by_id and (not rc_dir.exists() or ((rc_dir / "manifest.json").exists() and (rc_dir / "gate_results.md").exists())), "the RC is downstream evidence packaging, not a matrix requirement; if present it is a complete separate artifact")
     return out

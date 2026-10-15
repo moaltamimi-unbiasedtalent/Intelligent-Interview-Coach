@@ -62,6 +62,18 @@ const pt: typeof en = {
     tl_access_granted: "Acesso atualizado pela faturação",
     tl_access_ended: "Acesso pago terminado",
     tl_access_reviewed: "Acesso revisto",
+    closureTitle: "Encerramento da conta",
+    closureStatus_requested: "Encerramento da conta pedido",
+    closureStatus_awaiting_provider: "A confirmação do cancelamento está pendente",
+    closureStatus_resolved: "A tua assinatura terminou. Já podes concluir o encerramento da conta.",
+    closureStatus_needs_review: "É necessária assistência adicional",
+    closureResolution_required: "A assinatura tem de ser resolvida primeiro.",
+    closureResolution_pending_confirmation: "Estamos à espera de que o nosso parceiro de pagamentos confirme o fim da assinatura.",
+    closureResolution_unavailable: "Neste momento não conseguimos confirmar o estado da tua assinatura.",
+    closureResolution_confirmed: "Assinatura terminada e confirmada.",
+    closureCancelNote: "Não podemos cancelar uma assinatura por ti, nem dizer que as cobranças futuras pararam até o nosso parceiro de pagamentos confirmar o fim da assinatura.",
+    closureErasureNote: "Podes pedir separadamente o apagamento dos teus dados pessoais em Dados e privacidade. Algumas referências de faturação só são mantidas até a assinatura ser resolvida.",
+    closureDeleteBlocked: "A tua conta tem uma assinatura que ainda não está resolvida, por isso ainda não pode ser encerrada. Cancela-a na Link; o encerramento pode ser concluído quando o cancelamento for confirmado. O teu pedido fica registado.",
   },
 };
 

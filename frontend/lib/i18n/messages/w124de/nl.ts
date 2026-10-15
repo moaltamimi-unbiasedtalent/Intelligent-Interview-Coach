@@ -62,6 +62,18 @@ const nl: typeof en = {
     tl_access_granted: "Toegang bijgewerkt door facturatie",
     tl_access_ended: "Betaalde toegang beëindigd",
     tl_access_reviewed: "Toegang gecontroleerd",
+    closureTitle: "Account afsluiten",
+    closureStatus_requested: "Accountafsluiting aangevraagd",
+    closureStatus_awaiting_provider: "Bevestiging van de opzegging is nog in behandeling",
+    closureStatus_resolved: "Je abonnement is beëindigd. Je kunt het afsluiten van je account nu voltooien.",
+    closureStatus_needs_review: "Extra hulp is nodig",
+    closureResolution_required: "Het abonnement moet eerst worden afgehandeld.",
+    closureResolution_pending_confirmation: "We wachten tot onze betaalpartner het einde van het abonnement bevestigt.",
+    closureResolution_unavailable: "We kunnen de status van je abonnement nu niet bevestigen.",
+    closureResolution_confirmed: "Abonnement beëindigd en bevestigd.",
+    closureCancelNote: "We kunnen geen abonnement voor je opzeggen en kunnen niet zeggen dat toekomstige afschrijvingen zijn gestopt totdat onze betaalpartner het einde van het abonnement bevestigt.",
+    closureErasureNote: "Je kunt het wissen van je persoonsgegevens apart aanvragen onder Gegevens en privacy. Sommige facturatieverwijzingen worden alleen bewaard totdat het abonnement is afgehandeld.",
+    closureDeleteBlocked: "Je account heeft een abonnement dat nog niet is afgehandeld en kan dus nog niet worden afgesloten. Zeg het op bij Link; afsluiten kan zodra de opzegging is bevestigd. Je verzoek is vastgelegd.",
   },
 };
 

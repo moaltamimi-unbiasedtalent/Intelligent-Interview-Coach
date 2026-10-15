@@ -845,7 +845,7 @@ def test_security_actions_change_no_entitlement_billing_ai_flag_pause_knowledge_
 
 
 def test_permissions_unchanged_no_break_glass_no_impersonation_and_security_presets(env):
-    assert len(perm.PERMISSIONS) == 43
+    assert len(perm.PERMISSIONS) == 44 and len(set(perm.PERMISSIONS) - {"platform.billing.recover"}) == 43
     assert not [p for p in perm.PERMISSIONS if any(f in p for f in perm.BANNED_PERMISSION_FRAGMENTS)]
     sec = perm.ROLE_PRESETS[perm.ROLE_SECURITY_PRIVACY_ADMIN]
     assert {perm.SECURITY_READ, perm.SECURITY_MANAGE, perm.INCIDENTS_MANAGE, perm.AUDIT_READ, perm.AUDIT_EXPORT} <= sec
@@ -863,7 +863,7 @@ def test_security_routes_are_all_gated_and_migrations_have_one_head():
     from alembic.script import ScriptDirectory
     cfg = Config(str(ROOT / "alembic.ini"))
     cfg.set_main_option("script_location", str(ROOT / "migrations"))
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0030_billing_recovery"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == ["0031_account_closure"]
 
 
 # ======================================================================== migration + PostgreSQL DDL

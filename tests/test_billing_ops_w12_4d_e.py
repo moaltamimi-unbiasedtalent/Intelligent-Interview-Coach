@@ -79,6 +79,14 @@ def admin(http, role):
     return http.user(role)
 
 
+def elevate(http, ck):
+    """Fresh password step-up for THIS session through the billing-scoped route (same StepUpService; billing admins do not hold platform.users.role.assign)."""
+    from tests.test_admin_foundation_w10_1 import PW
+    r = http.c.post(f"{OPS}/step-up", json={"password": PW}, cookies=ck)
+    assert r.status_code == 200 and r.json()["elevated"] is True, r.text
+    return ck
+
+
 # ================================================================ 1. AUTHORIZATION (real HTTP, persona matrix) ==================================
 
 @pytest.mark.parametrize("role,allowed", [("platform_admin", True), ("billing_admin", True), ("operations_admin", False), ("support_operator", False),
@@ -97,10 +105,12 @@ def test_unauthenticated_and_invalid_sessions_never_reach_billing_diagnostics(ht
         assert http.c.get(OPS + path, cookies={"ask4mo_session": "bogus"}).status_code == 401
 
 
-@pytest.mark.parametrize("role,allowed", [("platform_admin", True), ("operations_admin", True), ("billing_admin", False), ("support_operator", False), ("user", False)])
-def test_recovery_actions_need_jobs_manage_not_billing_read(http, role, allowed):
+@pytest.mark.parametrize("role,allowed", [("platform_admin", True), ("billing_admin", True), ("operations_admin", False), ("support_operator", False), ("user", False)])
+def test_recovery_actions_need_billing_recover_and_a_fresh_step_up(http, role, allowed):
     _, ck = admin(http, role)
     ref = add_event(http.repo.session_factory)
+    if allowed:
+        elevate(http, ck)
     r = http.c.post(f"{OPS}/events/{ref}/retry", json={"reason": "operator retry"}, headers={"Idempotency-Key": f"key-{role}-0001"}, cookies=ck)
     assert (r.status_code == 200) is allowed, (role, r.status_code, r.text)
     if allowed:
@@ -109,7 +119,8 @@ def test_recovery_actions_need_jobs_manage_not_billing_read(http, role, allowed)
 
 def test_a_recovery_attempt_is_audited_in_the_same_transaction_with_actor_reason_and_outcome(http):
     from src.auth_repository import AuditRepository
-    uid, ck = admin(http, "operations_admin")
+    uid, ck = admin(http, "billing_admin")
+    elevate(http, ck)
     ref = add_event(http.repo.session_factory)
     r = http.c.post(f"{OPS}/events/{ref}/retry", json={"reason": "audit me please"}, headers={"Idempotency-Key": "audit-key-0001"}, cookies=ck)
     assert r.status_code == 200 and r.json()["status"] == "refused"
@@ -129,12 +140,13 @@ def test_billing_admin_cannot_rotate_secrets_or_recover_and_perm_registry_is_unc
     from src.application import admin_permissions as perm
     ba, ops_ = perm.permissions_for_role("billing_admin"), perm.permissions_for_role("operations_admin")
     assert "platform.integrations.secret.rotate" not in ba and "platform.jobs.manage" not in ba and "platform.integrations.secret.rotate" not in ops_
-    assert "platform.billing.read" not in ops_ and len(perm.PERMISSIONS) == 43
+    assert "platform.billing.read" not in ops_ and "platform.billing.recover" in ba and "platform.billing.recover" not in ops_ and len(perm.PERMISSIONS) == 44
     assert perm.permissions_for_role("support_operator").isdisjoint({"platform.billing.read", "platform.jobs.manage"})
 
 
 def test_recovery_request_validation(http):
     _, ck = admin(http, "platform_admin")
+    elevate(http, ck)
     ref = add_event(http.repo.session_factory)
     url = f"{OPS}/events/{ref}/retry"
     assert http.c.post(url, json={"reason": "operator retry"}, cookies=ck).status_code == 422                                   # idempotency key required
@@ -386,7 +398,7 @@ def test_recovery_creates_no_financial_approval_or_refund(env):
 def test_the_recovery_surface_has_no_edit_delete_or_grant_route(http):
     paths = {p: m for p, m in http.app.openapi()["paths"].items() if p.startswith("/api/v1/admin/billing/operations")}
     posts = sorted(p for p, m in paths.items() if "post" in m)
-    assert posts == [f"{OPS}/events/{{reference}}/requeue", f"{OPS}/events/{{reference}}/retry", f"{OPS}/subscriptions/{{reference}}/reconcile"]
+    assert posts == [f"{OPS}/events/{{reference}}/requeue", f"{OPS}/events/{{reference}}/retry", f"{OPS}/step-up", f"{OPS}/subscriptions/{{reference}}/reconcile"]
     assert not [p for p, m in paths.items() if set(m) & {"put", "patch", "delete"}]
 
 
@@ -629,7 +641,7 @@ def test_migration_0030_upgrade_from_0029_downgrade_safety_and_single_head(tmp_p
     with create_engine(url).connect() as c:
         row = c.execute(text("SELECT attempt_count, attempt_limit, operator_retries FROM billing_provider_events")).one()
     assert tuple(row) == (2, 6, 0)                                                                        # history preserved, defaults applied
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0030_billing_recovery"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == ["0031_account_closure"]
     command.downgrade(cfg, "0029_provider_webhooks")                                                      # empty recovery table: allowed
     assert "billing_recovery_actions" not in inspect(create_engine(url)).get_table_names()
     command.upgrade(cfg, "head")

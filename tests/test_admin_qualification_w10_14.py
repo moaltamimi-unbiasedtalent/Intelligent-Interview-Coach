@@ -78,7 +78,7 @@ def _is_denied(resp) -> bool:
 
 # ============================================================ permission model (ROLE-W10-01)
 def test_registry_is_exactly_43_and_roles_are_exactly_the_canonical_seven():
-    assert len(perm.PERMISSIONS) == 43 and len(set(perm.PERMISSIONS)) == 43
+    assert len(perm.PERMISSIONS) == 44 and len(set(perm.PERMISSIONS)) == 44 and len(set(perm.PERMISSIONS) - {"platform.billing.recover"}) == 43   # + ONLY the owner-approved billing.recover
     assert set(perm.ROLE_PRESETS) == set(M.ROLES)                                         # six Admin presets; candidate has none
     from src.persistence import PLATFORM_ROLES
     assert set(PLATFORM_ROLES) == {"user", *M.ROLES}
@@ -94,14 +94,14 @@ def test_every_preset_is_a_subset_of_the_registry_and_no_wildcard_or_banned_perm
 def test_ad_w12_01_current_runtime_platform_admin_owns_all_43_canonical_permissions():
     """CURRENT runtime (AD-W12-01). The W10.14 historical 28 / 43 decision is asserted separately below and never drives current expectations."""
     pa = perm.ROLE_PRESETS["platform_admin"]
-    assert len(perm.PERMISSIONS) == 43 and len(pa) == 43 and set(pa) == set(perm.PERMISSIONS) == set(perm.PERMISSION_SET)
+    assert len(perm.PERMISSIONS) == 44 and len(pa) == 44 and set(pa) == set(perm.PERMISSIONS) == set(perm.PERMISSION_SET)
     assert not (set(perm.PERMISSIONS) - pa)
     # the 15 permissions added by AD-W12-01 are exactly the W10.14 historically-absent set, and the pre-change 28 are still held
     assert len(M.W10_14_PLATFORM_ADMIN_ABSENT) == 15 and M.W10_14_PLATFORM_ADMIN_ABSENT <= pa
-    assert len(pa - M.W10_14_PLATFORM_ADMIN_ABSENT) == 28
+    assert len(pa - M.W10_14_PLATFORM_ADMIN_ABSENT) == 29                    # the historical 28 plus the owner-approved platform.billing.recover (W12.4D-F1R)
     # specialists stay least-privilege delegated roles: none gained anything from the owner change
     assert {r: len(perm.ROLE_PRESETS[r]) for r in M.ROLES if r != "platform_admin"} == {
-        "support_operator": 7, "billing_admin": 10, "knowledge_admin": 6, "security_privacy_admin": 11, "operations_admin": 11}
+        "support_operator": 7, "billing_admin": 11, "knowledge_admin": 6, "security_privacy_admin": 11, "operations_admin": 11}
     for r in M.ROLES:
         if r != "platform_admin":
             assert perm.ROLE_PRESETS[r] < pa, r                                        # strictly delegated subsets of the owner
@@ -121,7 +121,7 @@ def test_w10_14_historical_record_stays_28_of_43():
 
 def test_permission_matrix_43_by_7_is_deterministic_and_default_deny_holds():
     m = M.permission_matrix()
-    assert len(m) == 43 and all(set(v) == set(M.PERSONAS) for v in m.values())
+    assert len(m) == 44 and all(set(v) == set(M.PERSONAS) for v in m.values())
     assert M.matrix_hash() == M.matrix_hash()
     assert all(not v["user"] for v in m.values())                                         # the candidate holds nothing
     for odd in (None, "", "ghost", "PLATFORM_ADMIN", "platform_admin ", "root", "break_glass"):
@@ -236,7 +236,7 @@ def test_get_routes_are_read_only_and_every_mutation_is_audited(world):
     assert len(inv) == sum(1 for r in M.routes() if r.methods != ("GET",)) and len(inv) >= 60
     unaudited = [r["path"] for r in inv if not r["audited_in_handler"]]
     # W12.4A: /admin/knowledge/test-retrieval is a READ-ONLY POST (retrieval only: no mutation, no model call), so it has no audit event by design.
-    assert unaudited == ["/admin/knowledge/test-retrieval", "/admin/step-up"], unaudited                                  # step-up audits inside StepUpService (admin.step_up.succeeded/failed)
+    assert unaudited == ["/admin/billing/operations/step-up", "/admin/knowledge/test-retrieval", "/admin/step-up"], unaudited                                  # step-up audits inside StepUpService (admin.step_up.succeeded/failed)
     for r in M.routes():
         if r.methods == ("GET",):
             src = inspect.getsource(r.route.endpoint)

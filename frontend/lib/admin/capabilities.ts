@@ -32,6 +32,7 @@ export const P = {
   jobsRead: "platform.jobs.read",
   jobsManage: "platform.jobs.manage",
   billingRead: "platform.billing.read",
+  billingRecover: "platform.billing.recover",
   billingRefund: "platform.billing.refund",
   priceChange: "platform.plans.price.change",
   privacyRead: "platform.privacy.read",

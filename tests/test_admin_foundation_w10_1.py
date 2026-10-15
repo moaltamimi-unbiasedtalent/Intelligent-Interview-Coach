@@ -60,7 +60,8 @@ def _routes():
 # ---------------- permission matrix P1-P10 ----------------------------------------------------------
 
 def test_p1_registry_is_the_canonical_43_with_no_break_glass():
-    assert len(perm.PERMISSIONS) == 43 == len(set(perm.PERMISSIONS))
+    assert len(perm.PERMISSIONS) == 44 == len(set(perm.PERMISSIONS))      # the original 43 plus ONLY platform.billing.recover (W12.4D-F1R, owner decision B)
+    assert len(set(perm.PERMISSIONS) - {"platform.billing.recover"}) == 43
     doc = (ROOT / "docs/capstone/admin/ADMIN_PLATFORM_MASTER_PLAN.md").read_text()
     block = re.search(r"```\n(platform\.ai\.activate.*?)```", doc, re.S).group(1).split()
     assert sorted(block) == sorted(perm.PERMISSIONS)
@@ -412,7 +413,7 @@ def test_c2_build_metadata_reads_injected_env_and_sanitizes(env, monkeypatch):
 
 def test_c3_repository_head_is_the_real_alembic_head():
     from src.application.admin_command_center import repository_head
-    assert repository_head() == "0030_billing_recovery"
+    assert repository_head() == "0031_account_closure"
 
 
 def test_c4_migration_state_unknown_match_mismatch(env):
@@ -426,7 +427,7 @@ def test_c4_migration_state_unknown_match_mismatch(env):
     m = migration_status(sf)
     assert m["state"] == "mismatch" and m["warning"] and "never migrates automatically" in m["warning"]
     with sf() as s:
-        s.execute(text("UPDATE alembic_version SET version_num='0030_billing_recovery'"))
+        s.execute(text("UPDATE alembic_version SET version_num='0031_account_closure'"))
         s.commit()
     assert migration_status(sf)["state"] == "match"
 

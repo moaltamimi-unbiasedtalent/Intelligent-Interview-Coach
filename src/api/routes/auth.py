@@ -547,6 +547,19 @@ def delete_account(
     except Exception:  # noqa: BLE001
         agent_service = None
 
+    # W12.4D-F1R: never silently orphan an unresolved provider-managed subscription. The case is recorded durably (idempotent), the candidate gets accurate guidance and
+    # the account stays intact; personal-data ERASURE is a separate path (Data & Privacy request) that is not postponed by the provider.
+    from src.billing.closure import ClosureService
+    from src.billing.wiring import build_provider_events
+
+    closure = ClosureService(repo.session_factory, reader_available=build_provider_events(repo.session_factory).reader_available(), audit=audit).request(user_id)
+    if not closure["proceed"]:
+        exc = HTTPException(status_code=409, detail="Your account has a subscription that is not resolved yet, so it cannot be closed yet. Cancel it with the seller of record "
+                                                    "(Link) and closure can be completed once cancellation is confirmed. Your closure request is recorded. You can request "
+                                                    "erasure of your personal data separately under Data & Privacy.")
+        exc.error_code = "subscription_resolution_required"  # type: ignore[attr-defined]
+        raise exc
+
     from src.privacy.preparation import PreparationRunIndex
 
     service = AccountDeletionService(

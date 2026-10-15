@@ -71,7 +71,7 @@ def run() -> dict[str, tuple[bool, str]]:
               "separate owner-approved post-W11 artifact; the W11 document still records that W11 did not create it")
 
     # ---- candidate vs Admin
-    check("permissions_43_and_platform_admin_43", len(perm.PERMISSIONS) == 43 and len(perm.ROLE_PRESETS["platform_admin"]) == 43 and perm.ROLE_PRESETS["platform_admin"] == perm.PERMISSION_SET)   # CURRENT runtime (AD-W12-01); W11 itself qualified 28 / 43 (historical)
+    check("permissions_43_plus_billing_recover_and_platform_admin_owns_all", len(perm.PERMISSIONS) == 44 and len(set(perm.PERMISSIONS) - {"platform.billing.recover"}) == 43 and len(perm.ROLE_PRESETS["platform_admin"]) == 44 and perm.ROLE_PRESETS["platform_admin"] == perm.PERMISSION_SET)   # CURRENT runtime (AD-W12-01); W11 itself qualified 28 / 43 (historical)
     routes = M.routes()
     check("no_break_glass_no_impersonation", not re.search(r"break.?glass|impersonat|view.?as|act.?as", " ".join(r.path.lower() for r in routes))
           and not [p for p in perm.PERMISSIONS if any(f in p for f in ("impersonat", "break_glass", "view_as"))])
@@ -120,7 +120,7 @@ def run() -> dict[str, tuple[bool, str]]:
 
     # ---- schema / scope
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("one_alembic_head_0030", mig[-1].startswith("0030_billing_recovery") and len(mig) == 30, mig[-1])
+    check("one_alembic_head_0031", mig[-1].startswith("0031_account_closure") and len(mig) == 31, mig[-1])
     ci = read(".github/workflows/ci.yml")
     try:
         import yaml

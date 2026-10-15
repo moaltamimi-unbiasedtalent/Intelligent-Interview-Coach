@@ -203,7 +203,7 @@ class ProviderEventService:
         if sub_id is None:
             return Result("ignored", "not_subscription_related")
         link, info, outcome = self._reconcile_subscription(s, sub_id, ev, norm, now)
-        ev.link_id = link.id
+        ev.link_id = link.id if s.get(LINK, link.id) is not None else None            # a retained-erasure shell may have been purged by this very reconciliation
         ev.reconciliation_json = info
         return Result("processed", None, link.public_id, outcome.decision)
 
@@ -241,6 +241,8 @@ class ProviderEventService:
                 info["conflict"] = "event_superseded_by_provider_state"              # recorded, not hidden: the provider's current state won
         self._merge_facts(link, norm)
         outcome = evaluate_and_apply(s, link, self._policy, event_id=ev.id if ev is not None else None, now=now)
+        from src.billing.closure import refresh as _refresh_closure
+        _refresh_closure(s, link.user_id, reader_available=True, now=now)                  # an account-closure case follows verified provider state
         info["entitlement"] = {"decision": outcome.decision, "reason": outcome.reason, "applied": outcome.applied}
         s.flush()
         return link, info, outcome

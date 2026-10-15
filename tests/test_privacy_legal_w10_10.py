@@ -212,7 +212,7 @@ def test_admin_deletion_runs_the_same_service_clears_the_account_and_completes_o
     env.c.post(f"{API}/admin/privacy/requests/{pid}/status", json={"status": "acknowledged"}, cookies=adm)
     calls = []
     real = AccountDeletionService.delete_account
-    monkeypatch.setattr(AccountDeletionService, "delete_account", lambda self, user_id: (calls.append(user_id), real(self, user_id))[1])
+    monkeypatch.setattr(AccountDeletionService, "delete_account", lambda self, user_id, **kw: (calls.append(user_id), real(self, user_id, **kw))[1])
     r = env.c.post(f"{API}/admin/privacy/requests/{pid}/execute-deletion", cookies=adm)
     assert r.status_code == 200 and r.json()["status"] == "in_progress" and r.json()["related_job_id"]
     jobs, worker = privacy_worker(env, tmp_path, adapter)

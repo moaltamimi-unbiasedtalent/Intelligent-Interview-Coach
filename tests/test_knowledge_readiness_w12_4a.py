@@ -584,7 +584,7 @@ def test_http_responses_carry_no_paths_or_secrets(http):
 
 
 def test_no_new_permission_was_added_and_the_routes_use_the_existing_one():
-    assert len(perm.PERMISSIONS) == 43
+    assert len(perm.PERMISSIONS) == 44 and len(set(perm.PERMISSIONS) - {"platform.billing.recover"}) == 43
     from src.api.admin_route_invariant import admin_routes
     new = {(r.methods[0], r.path): r.permissions for r in admin_routes() if r.path in ("/admin/knowledge/readiness", "/admin/knowledge/active", "/admin/knowledge/test-retrieval")}
     assert len(new) == 3 and all(p == frozenset({perm.KNOWLEDGE_READ}) for p in new.values())

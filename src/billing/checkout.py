@@ -21,6 +21,7 @@ from sqlalchemy.exc import IntegrityError
 
 from src.billing import lifecycle as L
 from src.billing import policy as P
+from src.billing.closure import active_case, view as closure_view
 from src.billing.entitlement_bridge import provider_grant_exists
 from src.billing.provider import CheckoutRequest, ProviderRejected, ProviderRetryable
 from src.persistence import (
@@ -304,6 +305,7 @@ class CheckoutService:
                 "management": {"where": "link", "url": None, "url_verified": False},
                 "receipts": {"shown_here": False, "where": "link_email"},
                 "timeline": timeline[:15],
+                "closure": closure_view(active_case(s, user_id)),
             }
 
     # ------------------------------------------------------------------ helpers

@@ -200,7 +200,7 @@ def run() -> dict[str, tuple[bool, str]]:
 
     # --- governance ------------------------------------------------------------------------------------------------------------------
     check("routes_permissioned_with_w10_0_ownership", "perm.CONFIG_MANAGE" in routes and "perm.FLAGS_MANAGE" in routes and routes.count("require_permission") >= 4, "pause needs config.manage; flags need flags.manage")
-    check("permission_registry_stays_43", len(perm.PERMISSIONS) == 43, "43")
+    check("permission_registry_is_the_original_43_plus_only_the_approved_billing_recover", len(perm.PERMISSIONS) == 44 and len(set(perm.PERMISSIONS) - {"platform.billing.recover"}) == 43, "43 + platform.billing.recover (W12.4D-F1R, owner decision B)")
     check("audit_is_same_transaction", "_stage(" in pause_src and "_stage(" in flags_src and "get_audit_repository" not in routes, "state and audit commit together")
     check("audit_events_registered", all(hasattr(__import__("src.application.admin_audit", fromlist=["x"]), n) for n in ("ADMIN_PLATFORM_PAUSED", "ADMIN_PLATFORM_RESUMED", "ADMIN_FLAG_OVERRIDE_ENABLED", "ADMIN_FLAG_OVERRIDE_DISABLED", "ADMIN_FLAG_OVERRIDE_RESET")), "5 events")
     mig = read("migrations/versions/0023_platform_config.py")

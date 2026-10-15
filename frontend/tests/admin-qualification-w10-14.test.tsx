@@ -32,10 +32,10 @@ describe("Admin navigation matrix (permission-derived)", () => {
     }
   });
 
-  it("AD-W12-01: platform_admin (the owner / orchestrator) holds all 43 permissions and is shown every Admin destination; specialists stay delegated", () => {
+  it("AD-W12-01: platform_admin (the owner / orchestrator) holds all 44 permissions and is shown every Admin destination; specialists stay delegated", () => {
     const pa = fixture.personas.platform_admin;
-    expect(pa.permissions.length).toBe(43);
-    expect(fixture.permissions_total).toBe(43);
+    expect(pa.permissions.length).toBe(44);          // the original 43 plus the owner-approved platform.billing.recover (W12.4D-F1R)
+    expect(fixture.permissions_total).toBe(44);
     for (const d of ADMIN_DESTINATIONS) expect(pa.nav).toContain(d.href);                      // derived from permission strings only, no role-name special case
     expect(pa.nav).toContain("/admin/billing");
     expect(pa.nav).toContain("/admin/jobs");

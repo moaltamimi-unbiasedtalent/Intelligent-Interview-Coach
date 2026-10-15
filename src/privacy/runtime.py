@@ -62,7 +62,11 @@ def run_account_delete(request_public_id: str, ctx) -> None:
     service = AccountDeletionService(rt.session_factory, document_store=rt.doc_store, agent_service=rt.adapter,
                                      audit_repository=rt.audit_repository, preparation_index=index,
                                      retain_privacy_requests=True)
-    summary = service.delete_account(subject)                                # idempotent: a missing user is a no-op
+    # W12.4D-F1R: erasure is never postponed by an unresolved provider subscription. Personal and content data are erased; only the minimum billing reference
+    # needed to finish the provider obligation is retained (recorded with a basis code and flagged for legal review), and purged when every subscription is terminal.
+    from src.billing.closure import ClosureService
+    preserve = ClosureService(rt.session_factory).begin_retained_erasure(subject, request_public_id)
+    summary = service.delete_account(subject, preserve_billing_reference=preserve)       # idempotent: a missing user is a no-op
     pending = index.pending_purge(subject) + [(rid, subject) for rid in summary.purge_failed_run_ids]
     leftover = []
     for run_id, _ in pending:

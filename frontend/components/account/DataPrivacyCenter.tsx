@@ -145,8 +145,9 @@ export function DataPrivacyCenter() {
       await api.auth.deleteAccount();
       await refresh();
       router.replace("/sign-in");
-    } catch {
-      setDialogError(t("dataPrivacy.accountDeleteFailed"));
+    } catch (e) {
+      // W12.4D-F1R: an unresolved provider subscription is not a failure to retry: the closure request is recorded and the account stays.
+      setDialogError(e instanceof ApiError && e.code === "subscription_resolution_required" ? t("billing.closureDeleteBlocked") : t("dataPrivacy.accountDeleteFailed"));
       setBusy(false);
     }
   };

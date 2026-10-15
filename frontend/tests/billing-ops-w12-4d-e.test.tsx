@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ApiError } from "@/lib/api/errors";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 import { translate } from "@/lib/i18n/catalog";
 import { SUPPORTED_LOCALE_CODES } from "@/lib/i18n/locales";
@@ -19,13 +20,14 @@ const overview = vi.fn();
 const events = vi.fn();
 const event = vi.fn();
 const recover = vi.fn();
+const stepUp = vi.fn();
 const reconciliation = vi.fn();
 const subscriptions = vi.fn();
 vi.mock("@/lib/api/client", () => ({
   api: {
     billing: { summary: (...a: unknown[]) => summary(...a) },
     admin: { billingOps: {
-      overview: (...a: unknown[]) => overview(...a), events: (...a: unknown[]) => events(...a), event: (...a: unknown[]) => event(...a), recover: (...a: unknown[]) => recover(...a),
+      overview: (...a: unknown[]) => overview(...a), events: (...a: unknown[]) => events(...a), event: (...a: unknown[]) => event(...a), recover: (...a: unknown[]) => recover(...a), stepUp: (...a: unknown[]) => stepUp(...a),
       reconciliation: (...a: unknown[]) => reconciliation(...a), subscriptions: (...a: unknown[]) => subscriptions(...a), checkouts: vi.fn(), recoveryActions: vi.fn(),
     } },
   },
@@ -101,6 +103,27 @@ describe("candidate billing overview (verified local state only)", () => {
     wrap(<BillingOverview />);
     const tl = await screen.findByTestId("billing-timeline");
     expect(within(tl).getByText(new RegExp(en.billing.tl_access_granted))).toBeInTheDocument();
+  });
+
+  it("F1-07: an unresolved subscription at account closure is explained truthfully: no claim that cancellation or relief from charges happened", async () => {
+    summary.mockResolvedValue({ ...base, state: "active", subscription: "active", payment: "succeeded", interval: "month",
+      closure: { status: "awaiting_provider", subscription_resolution: "pending_confirmation", provider_cancellation: "guided", erasure_status: "not_requested", review_required: false, requested_at: "2026-10-16T09:00:00" } });
+    wrap(<BillingOverview />);
+    const box = await screen.findByTestId("billing-closure");
+    expect(within(box).getByText(en.billing.closureStatus_awaiting_provider)).toBeInTheDocument();
+    expect(within(box).getByText(en.billing.closureResolution_pending_confirmation)).toBeInTheDocument();
+    expect(within(box).getByText(en.billing.closureCancelNote)).toBeInTheDocument();
+    expect(within(box).getByText(en.billing.closureErasureNote)).toBeInTheDocument();
+    expect(box.textContent).not.toMatch(/cancellation succeeded|you will not be charged|has been canceled|charges have stopped\./i);
+    expect(document.querySelector('a[href*="link.com"]')).toBeNull();
+  });
+
+  it("a review-required closure case is shown as needing assistance", async () => {
+    summary.mockResolvedValue({ ...base, state: "active", subscription: "active",
+      closure: { status: "needs_review", subscription_resolution: "unavailable", provider_cancellation: "contract_unverified", erasure_status: "not_requested", review_required: true, requested_at: null } });
+    wrap(<BillingOverview />);
+    expect(await screen.findByText(en.billing.closureStatus_needs_review)).toBeInTheDocument();
+    expect(screen.getByText(en.billing.closureResolution_unavailable)).toBeInTheDocument();
   });
 
   it("an unavailable billing service is shown truthfully (never as free or active) and can be retried", async () => {
@@ -181,14 +204,27 @@ describe("Admin billing operations", () => {
     const d = await screen.findByTestId("event-detail");
     expect(within(d).getByText(/only verified events are stored/)).toBeInTheDocument();
     expect(d.textContent).not.toMatch(/whsec|sk_test|payload|@/);
-    expect(within(d).getByText(/Recovery needs the job-management permission/)).toBeInTheDocument();
+    expect(within(d).getByText(/Recovery needs the billing-recovery permission and a fresh password confirmation/)).toBeInTheDocument();
   });
 
-  it("recovery needs the job-management permission, a reason, and shows a refusal truthfully", async () => {
+  it("job-management alone gives no recovery control (the dedicated billing-recovery permission is required)", async () => {
     perms = ["platform.billing.read", "platform.jobs.manage"];
     events.mockResolvedValue({ items: [EVENT_ROW], total: 1, page: 1, page_size: 25 });
     event.mockResolvedValue(DETAIL);
-    recover.mockResolvedValue({ reference: "r".repeat(32), action: "retry_event", status: "refused", result: "reader_unavailable", replayed: false });
+    await open("events");
+    await userEvent.click(await screen.findByRole("button", { name: /Open event …000001/ }));
+    await screen.findByTestId("event-detail");
+    expect(screen.queryByRole("button", { name: /Retry through the verified pipeline/ })).toBeNull();
+  });
+
+  it("recovery needs the billing-recovery permission, a fresh password step-up, a reason, and shows a refusal truthfully", async () => {
+    perms = ["platform.billing.read", "platform.billing.recover"];
+    events.mockResolvedValue({ items: [EVENT_ROW], total: 1, page: 1, page_size: 25 });
+    event.mockResolvedValue(DETAIL);
+    stepUp.mockResolvedValue({ elevated: true });
+    recover
+      .mockRejectedValueOnce(new ApiError({ kind: "forbidden", status: 403, code: "step_up_required", message: "Confirm your password to continue." }))
+      .mockResolvedValue({ reference: "r".repeat(32), action: "retry_event", status: "refused", result: "reader_unavailable", replayed: false });
     await open("events");
     await userEvent.click(await screen.findByRole("button", { name: /Open event …000001/ }));
     await userEvent.click(await screen.findByRole("button", { name: /Retry through the verified pipeline/ }));
@@ -198,9 +234,13 @@ describe("Admin billing operations", () => {
     expect(recover).not.toHaveBeenCalled();
     await userEvent.type(within(dialog).getByRole("textbox"), "ownership evidence arrived");
     await userEvent.click(within(dialog).getByRole("button", { name: "Confirm" }));
-    await waitFor(() => expect(recover).toHaveBeenCalledTimes(1));
-    expect(recover.mock.calls[0][0]).toBe("retry");
-    expect(recover.mock.calls[0][3]).toMatch(/^[A-Za-z0-9_-]{8,64}$/);
+    const step = await screen.findByTestId("step-up-dialog");                           // the server said step-up is required: the password prompt appears
+    await userEvent.type(within(step).getByLabelText(/Current password/), "correct horse battery");
+    await userEvent.click(within(step).getByRole("button", { name: "Confirm" }));
+    await waitFor(() => expect(stepUp).toHaveBeenCalledWith("correct horse battery"));
+    await waitFor(() => expect(recover).toHaveBeenCalledTimes(2));                      // the SAME request is repeated once elevated
+    expect(recover.mock.calls[0][3]).toBe(recover.mock.calls[1][3]);                    // with the SAME idempotency key
+    expect(recover.mock.calls[1][0]).toBe("retry");
     expect(await screen.findByTestId("recovery-outcome")).toHaveTextContent("Refused: reader unavailable. Nothing was changed.");
     expect(screen.getByTestId("recovery-outcome").textContent).not.toMatch(/completed|success/i);
   });

@@ -63,6 +63,18 @@ const en = {
     tl_access_granted: "Access updated by billing",
     tl_access_ended: "Paid access ended",
     tl_access_reviewed: "Access reviewed",
+    closureTitle: "Account closure",
+    closureStatus_requested: "Account closure requested",
+    closureStatus_awaiting_provider: "Cancellation confirmation is pending",
+    closureStatus_resolved: "Your subscription has ended. You can now complete account closure.",
+    closureStatus_needs_review: "Additional assistance is required",
+    closureResolution_required: "Subscription resolution is required.",
+    closureResolution_pending_confirmation: "Waiting for our payment partner to confirm the end of the subscription.",
+    closureResolution_unavailable: "We cannot confirm the state of your subscription right now.",
+    closureResolution_confirmed: "Subscription ended and confirmed.",
+    closureCancelNote: "We cannot cancel a subscription for you, and we cannot say future charges have stopped until our payment partner confirms the end of the subscription.",
+    closureErasureNote: "You can request erasure of your personal data separately under Data & Privacy. Some billing references may be kept only until the subscription is resolved.",
+    closureDeleteBlocked: "Your account has a subscription that is not resolved yet, so it cannot be closed yet. Cancel it with Link; closure can be completed once cancellation is confirmed. Your request is recorded.",
   },
 };
 

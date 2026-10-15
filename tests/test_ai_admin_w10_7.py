@@ -707,7 +707,7 @@ def test_every_lifecycle_step_is_audited_with_safe_context(env):
 
 def test_permissions_and_route_invariant(env):
     from src.api.admin_route_invariant import admin_routes, ungated
-    assert len(perm.PERMISSIONS) == 43
+    assert len(perm.PERMISSIONS) == 44 and len(set(perm.PERMISSIONS) - {"platform.billing.recover"}) == 43
     assert perm.AI_MANAGE in perm.ROLE_PRESETS[perm.ROLE_PLATFORM_ADMIN] and perm.AI_ACTIVATE in perm.ROLE_PRESETS[perm.ROLE_PLATFORM_ADMIN]
     for role in ("support_operator", "billing_admin", "knowledge_admin", "security_privacy_admin", "operations_admin"):
         assert perm.AI_MANAGE not in perm.permissions_for_role(role) and perm.AI_ACTIVATE not in perm.permissions_for_role(role), role

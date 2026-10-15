@@ -62,6 +62,18 @@ const es: typeof en = {
     tl_access_granted: "Acceso actualizado por la facturación",
     tl_access_ended: "Acceso de pago terminado",
     tl_access_reviewed: "Acceso revisado",
+    closureTitle: "Cierre de cuenta",
+    closureStatus_requested: "Cierre de cuenta solicitado",
+    closureStatus_awaiting_provider: "Falta la confirmación de la cancelación",
+    closureStatus_resolved: "Tu suscripción ha terminado. Ya puedes completar el cierre de la cuenta.",
+    closureStatus_needs_review: "Se necesita asistencia adicional",
+    closureResolution_required: "Primero hay que resolver la suscripción.",
+    closureResolution_pending_confirmation: "Esperamos a que nuestro socio de pagos confirme el fin de la suscripción.",
+    closureResolution_unavailable: "Ahora no podemos confirmar el estado de tu suscripción.",
+    closureResolution_confirmed: "Suscripción terminada y confirmada.",
+    closureCancelNote: "No podemos cancelar una suscripción por ti ni afirmar que los cargos futuros se han detenido hasta que nuestro socio de pagos confirme el fin de la suscripción.",
+    closureErasureNote: "Puedes solicitar por separado la supresión de tus datos personales en Datos y privacidad. Algunas referencias de facturación solo se conservan hasta que se resuelva la suscripción.",
+    closureDeleteBlocked: "Tu cuenta tiene una suscripción que aún no está resuelta, por lo que todavía no se puede cerrar. Cancélala en Link; el cierre podrá completarse cuando se confirme la cancelación. Tu solicitud queda registrada.",
   },
 };
 

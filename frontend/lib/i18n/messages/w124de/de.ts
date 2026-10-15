@@ -62,6 +62,18 @@ const de: typeof en = {
     tl_access_granted: "Zugang durch Abrechnung aktualisiert",
     tl_access_ended: "Bezahlter Zugang beendet",
     tl_access_reviewed: "Zugang geprüft",
+    closureTitle: "Kontoschließung",
+    closureStatus_requested: "Kontoschließung angefragt",
+    closureStatus_awaiting_provider: "Die Bestätigung der Kündigung steht noch aus",
+    closureStatus_resolved: "Dein Abo ist beendet. Du kannst die Kontoschließung jetzt abschließen.",
+    closureStatus_needs_review: "Zusätzliche Unterstützung ist erforderlich",
+    closureResolution_required: "Das Abo muss zuerst geklärt werden.",
+    closureResolution_pending_confirmation: "Wir warten darauf, dass unser Zahlungspartner das Ende des Abos bestätigt.",
+    closureResolution_unavailable: "Wir können den Stand deines Abos gerade nicht bestätigen.",
+    closureResolution_confirmed: "Abo beendet und bestätigt.",
+    closureCancelNote: "Wir können kein Abo für dich kündigen und nicht sagen, dass künftige Zahlungen gestoppt sind, bevor unser Zahlungspartner das Ende des Abos bestätigt.",
+    closureErasureNote: "Die Löschung deiner personenbezogenen Daten kannst du separat unter Daten & Datenschutz beantragen. Einzelne Abrechnungsverweise werden nur so lange aufbewahrt, bis das Abo geklärt ist.",
+    closureDeleteBlocked: "Dein Konto hat ein Abo, das noch nicht geklärt ist, und kann deshalb noch nicht geschlossen werden. Kündige es bei Link; die Schließung kann abgeschlossen werden, sobald die Kündigung bestätigt ist. Deine Anfrage ist gespeichert.",
   },
 };
 

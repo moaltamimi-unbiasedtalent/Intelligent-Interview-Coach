@@ -527,8 +527,11 @@ def test_F1_05_an_idempotency_key_used_by_another_request_is_a_409_not_a_server_
     from tests.test_billing_ops_w12_4d_e import add_event
     ref = add_event(http.repo.session_factory)
     ref2 = add_event(http.repo.session_factory, event_id="evt_f1_000002")
+    from tests.test_billing_ops_w12_4d_e import elevate
     _, ck1 = http.user("platform_admin")
-    _, ck2 = http.user("operations_admin")
+    _, ck2 = http.user("billing_admin")
+    elevate(http, ck1)
+    elevate(http, ck2)
     url = "/api/v1/admin/billing/operations/events/{}/retry"
     assert http.c.post(url.format(ref), json={"reason": "first operator"}, headers={"Idempotency-Key": "shared-key-00001"}, cookies=ck1).status_code == 200
     again = http.c.post(url.format(ref2), json={"reason": "second operator"}, headers={"Idempotency-Key": "shared-key-00001"}, cookies=ck2)
@@ -567,15 +570,15 @@ def test_C23_recovery_authorization_has_no_privilege_escalation_path(http):
     from tests.test_billing_ops_w12_4d_e import add_event
     from src.application import admin_permissions as perm
     ref = add_event(http.repo.session_factory)
-    for role, expected in (("billing_admin", 403), ("support_operator", 403), ("security_privacy_admin", 403), ("knowledge_admin", 403), ("user", 403)):
+    for role in ("operations_admin", "support_operator", "security_privacy_admin", "knowledge_admin", "user"):
         _, ck = http.user(role)
         r = http.c.post(f"/api/v1/admin/billing/operations/events/{ref}/retry", json={"reason": "operator retry"}, headers={"Idempotency-Key": f"escalate-{role}-1"}, cookies=ck)
-        assert r.status_code == expected, role
-    holders = [r for r in perm.ADMIN_ROLES if "platform.jobs.manage" in perm.permissions_for_role(r)]
-    assert sorted(holders) == ["operations_admin", "platform_admin"]
-    billing_holders = [r for r in perm.ADMIN_ROLES if "platform.billing.read" in perm.permissions_for_role(r)]
-    assert sorted(billing_holders) == ["billing_admin", "platform_admin"]
-    assert "platform.billing.recover" not in perm.PERMISSIONS and len(perm.PERMISSIONS) == 43                       # the owner decision is NOT pre-empted
+        assert r.status_code == 403, role
+    holders = [r for r in perm.ADMIN_ROLES if "platform.billing.recover" in perm.permissions_for_role(r)]
+    assert sorted(holders) == ["billing_admin", "platform_admin"]                                                      # owner decision B
+    jobs_holders = [r for r in perm.ADMIN_ROLES if "platform.jobs.manage" in perm.permissions_for_role(r)]
+    assert sorted(jobs_holders) == ["operations_admin", "platform_admin"]                                                # generic job management is unchanged and confers no billing authority
+    assert len(perm.PERMISSIONS) == 44
 
 
 def test_C24_candidate_endpoints_are_owner_scoped_and_never_present_failure_as_free(http):
@@ -673,12 +676,12 @@ def test_C28_billing_schema_constraints_indexes_and_foreign_keys_exist_after_a_f
 def test_C29_reapplying_head_is_a_no_op_and_stepwise_upgrade_from_each_billing_revision_reaches_head(tmp_path, monkeypatch):
     from alembic import command
     cfg, url = _alembic(tmp_path, monkeypatch)
-    for rev in ("0027_email_attempts", "0028_checkout_sessions", "0029_provider_webhooks", "head"):
+    for rev in ("0027_email_attempts", "0028_checkout_sessions", "0029_provider_webhooks", "0030_billing_recovery", "head"):
         command.upgrade(cfg, rev)
     command.upgrade(cfg, "head")                                                                                    # re-application: nothing to do, nothing breaks
     from sqlalchemy import create_engine, text
     with create_engine(url).connect() as c:
-        assert c.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0030_billing_recovery"
+        assert c.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0031_account_closure"
 
 
 def test_C30_a_downgrade_over_financial_history_refuses_and_a_clean_one_reverses(tmp_path, monkeypatch):
@@ -833,10 +836,21 @@ def _seed_full_billing_for_user0(env):
     assert count(env, BillingProviderLink) == 1 and count(env, BillingEntitlementDecision) >= 1
 
 
+def _cancel_provider_subscription(env):
+    svc = service(env)
+    env.clock_now[0] += timedelta(seconds=5)
+    env.reader.set_subscription("sub_synth_1", state="canceled", latest_invoice_state="paid")
+    accept_and_process(env, svc, sub_event("customer.subscription.deleted"))
+    assert link_of(env).provider_state == "canceled"
+    return svc
+
+
 def test_F1_06_account_deletion_removes_the_provider_billing_records_on_every_database(env):
-    """On PostgreSQL the FK cascade removed these; on SQLite (no FK enforcement) they were left orphaned. The explicit delete makes both behave the same."""
+    """On PostgreSQL the FK cascade removed these; on SQLite (no FK enforcement) they were left orphaned. The explicit delete makes both behave the same. With the
+    subscription TERMINAL (W12.4D-F1R) the normal deletion is permitted."""
     from src.application.account_deletion_service import AccountDeletionService
     _seed_full_billing_for_user0(env)
+    _cancel_provider_subscription(env)
     summary = AccountDeletionService(env.sf).delete_account(env.users[0])
     with env.sf() as s:
         assert s.scalar(select(func.count()).select_from(BillingProviderLink).where(BillingProviderLink.user_id == env.users[0])) == 0
@@ -850,20 +864,13 @@ def test_F1_06_account_deletion_removes_the_provider_billing_records_on_every_da
     assert summary.deleted_rows.get("billing_provider_rows", 0) >= 2
 
 
-def test_F1_07_deleting_an_account_with_a_live_provider_subscription_is_a_known_open_finding(env):
-    """HIGH (for activation, not today): the local erasure does not and cannot cancel the provider subscription. With a live subscription at the provider the
-    candidate could keep being billed by the seller of record while Ask4Mo holds no record; later events for it quarantine as ``checkout_mismatch``. This test
-    pins the CURRENT behaviour so the finding stays visible; the remediation (block or require cancellation first, versus provider-side deletion) is an OWNER/LEGAL
-    decision recorded in the F1 register and a gate for F3."""
-    from src.application.account_deletion_service import AccountDeletionService
+def test_F1_07_remediated_deletion_with_a_live_provider_subscription_is_refused_not_silent(env):
+    """F1-07 (W12.4D-F1R, owner decision A): the service refuses to silently orphan an unresolved subscription. Full coverage is in test_account_closure_w12_4d_f1r."""
+    from src.application.account_deletion_service import AccountDeletionService, SubscriptionResolutionRequired
     _seed_full_billing_for_user0(env)
-    svc = service(env)
-    AccountDeletionService(env.sf).delete_account(env.users[0])
-    env.clock_now[0] += timedelta(seconds=5)
-    env.reader.set_subscription("sub_synth_1", state="active", latest_invoice_state="paid")
-    out, r = accept_and_process(env, svc, sub_event())
-    assert r.status in ("quarantined", "needs_review") and r.category in ("checkout_mismatch", "unknown_ownership")      # visible to operators, never silently dropped
-    assert count(env, BillingProviderLink) == 0
+    with pytest.raises(SubscriptionResolutionRequired):
+        AccountDeletionService(env.sf).delete_account(env.users[0])
+    assert count(env, BillingProviderLink) == 1 and plan_of(env, env.users[0])["plan_code"] == "premium"            # nothing was deleted
 
 
 def test_C33_billing_data_stores_inventory_has_no_card_secret_or_content_columns():

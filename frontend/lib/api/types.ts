@@ -1148,6 +1148,7 @@ export interface BillingSummaryView {
   management: { where: string; url: string | null; url_verified: boolean };
   receipts: { shown_here: boolean; where: string };
   timeline: { kind: string; at: string | null }[];
+  closure: null | { status: string; subscription_resolution: string; provider_cancellation: string; erasure_status: string; review_required: boolean; requested_at: string | null };
 }
 
 // --- W10.10 candidate privacy requests and legal-version truth ---

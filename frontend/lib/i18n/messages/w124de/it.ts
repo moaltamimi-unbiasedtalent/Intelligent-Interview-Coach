@@ -62,6 +62,18 @@ const it: typeof en = {
     tl_access_granted: "Accesso aggiornato dalla fatturazione",
     tl_access_ended: "Accesso a pagamento terminato",
     tl_access_reviewed: "Accesso verificato",
+    closureTitle: "Chiusura dell'account",
+    closureStatus_requested: "Chiusura dell'account richiesta",
+    closureStatus_awaiting_provider: "La conferma della cancellazione è in attesa",
+    closureStatus_resolved: "Il tuo abbonamento è terminato. Ora puoi completare la chiusura dell'account.",
+    closureStatus_needs_review: "È necessaria un'assistenza aggiuntiva",
+    closureResolution_required: "L'abbonamento deve prima essere risolto.",
+    closureResolution_pending_confirmation: "Attendiamo che il nostro partner di pagamento confermi la fine dell'abbonamento.",
+    closureResolution_unavailable: "Al momento non possiamo confermare lo stato del tuo abbonamento.",
+    closureResolution_confirmed: "Abbonamento terminato e confermato.",
+    closureCancelNote: "Non possiamo annullare un abbonamento al posto tuo, né dire che gli addebiti futuri sono cessati finché il nostro partner di pagamento non conferma la fine dell'abbonamento.",
+    closureErasureNote: "Puoi richiedere separatamente la cancellazione dei tuoi dati personali in Dati e privacy. Alcuni riferimenti di fatturazione vengono conservati solo finché l'abbonamento non è risolto.",
+    closureDeleteBlocked: "Il tuo account ha un abbonamento non ancora risolto, quindi non può ancora essere chiuso. Annullalo con Link; la chiusura potrà essere completata quando l'annullamento è confermato. La tua richiesta è registrata.",
   },
 };
 

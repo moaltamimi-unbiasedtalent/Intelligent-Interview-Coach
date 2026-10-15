@@ -62,6 +62,18 @@ const fr: typeof en = {
     tl_access_granted: "Accès mis à jour par la facturation",
     tl_access_ended: "Accès payant terminé",
     tl_access_reviewed: "Accès vérifié",
+    closureTitle: "Fermeture du compte",
+    closureStatus_requested: "Fermeture du compte demandée",
+    closureStatus_awaiting_provider: "La confirmation de la résiliation est en attente",
+    closureStatus_resolved: "Ton abonnement est terminé. Tu peux maintenant finaliser la fermeture du compte.",
+    closureStatus_needs_review: "Une assistance supplémentaire est nécessaire",
+    closureResolution_required: "L'abonnement doit d'abord être réglé.",
+    closureResolution_pending_confirmation: "Nous attendons que notre partenaire de paiement confirme la fin de l'abonnement.",
+    closureResolution_unavailable: "Nous ne pouvons pas confirmer l'état de ton abonnement pour le moment.",
+    closureResolution_confirmed: "Abonnement terminé et confirmé.",
+    closureCancelNote: "Nous ne pouvons pas résilier un abonnement à ta place, ni affirmer que les prélèvements futurs sont arrêtés tant que notre partenaire de paiement n'a pas confirmé la fin de l'abonnement.",
+    closureErasureNote: "Tu peux demander séparément l'effacement de tes données personnelles dans Données et confidentialité. Certaines références de facturation ne sont conservées que jusqu'à la résolution de l'abonnement.",
+    closureDeleteBlocked: "Ton compte a un abonnement qui n'est pas encore réglé, il ne peut donc pas encore être fermé. Résilie-le auprès de Link ; la fermeture pourra être finalisée une fois la résiliation confirmée. Ta demande est enregistrée.",
   },
 };
 

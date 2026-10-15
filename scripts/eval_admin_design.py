@@ -67,12 +67,12 @@ def run() -> dict[str, tuple[bool, str]]:
           "no break-glass permission exists in the canonical list or matrix (AD-02)")
     perm_block = re.search(r"Canonical permission list.*?```\n(.*?)```", plan, re.S)
     n_perm = len([l for l in perm_block.group(1).split("\n") if l.startswith("platform.")]) if perm_block else 0
-    check("canonical_permission_count", n_perm == 43, f"{n_perm} canonical permissions")
+    check("canonical_permission_count", n_perm == 44, f"{n_perm} canonical permissions (43 + platform.billing.recover, W12.4D-F1R)")
     check("defect_placement_recorded", all(f"SEC-W10-0{i}" in plan and f"SEC-W10-0{i}" in adr for i in range(1, 7)), "SEC-W10-01..06 placed in plan and ADR")
     check("preset_names_final", all(n in plan for n in ("platform_admin", "support_operator", "billing_admin", "knowledge_admin", "security_privacy_admin", "operations_admin")),
           "six role presets named")
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_", "0026_", "0027_", "0028_", "0029_", "0030_")), mig[-1])
+    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_", "0026_", "0027_", "0028_", "0029_", "0030_", "0031_")), mig[-1])
     check("referenced_source_paths_exist",
           all((ROOT / p).exists() for p in re.findall(r"`(src/[A-Za-z0-9_/]+\.py)`", plan + adr)),
           "every `src/...py` path named in the plan exists")

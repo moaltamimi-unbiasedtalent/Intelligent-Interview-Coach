@@ -614,7 +614,7 @@ def test_api_permissions_validation_and_no_raw_fact_route(env):
     from src.api.admin_route_invariant import admin_routes, ungated
     rep = [r for r in admin_routes() if "/admin/reports" in r.path]
     assert len(rep) == 6 and all(r.methods == ("GET",) and r.permissions for r in rep) and not ungated(admin_routes())
-    assert len(perm.PERMISSIONS) == 43
+    assert len(perm.PERMISSIONS) == 44 and len(set(perm.PERMISSIONS) - {"platform.billing.recover"}) == 43
 
 
 def test_responses_never_contain_identifiers_or_private_fields(env):
