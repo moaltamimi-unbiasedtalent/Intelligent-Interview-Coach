@@ -727,7 +727,7 @@ def test_stripe_credentials_remain_only_on_the_protected_integration_path_with_s
             assert env.c.post(slot, json={"value": value}, cookies=ck).status_code == 403                  # RBAC: only secret.rotate holders
         r = env.c.post(slot, json={"value": value}, cookies=plat)
         assert r.status_code == 403 and r.json()["error"]["code"] == "step_up_required" and value not in r.text     # the owner still needs a fresh step-up
-        assert not [p for p in perm.ROLE_PRESETS if perm.SECRET_ROTATE in perm.ROLE_PRESETS[p] and p != "platform_admin"] and len(perm.PERMISSIONS) == 43
+        assert not [p for p in perm.ROLE_PRESETS if perm.SECRET_ROTATE in perm.ROLE_PRESETS[p] and p != "platform_admin"] and len(perm.PERMISSIONS) == 44 and len(set(perm.PERMISSIONS) - {"platform.billing.recover"}) == 43
         # the generic editor has no sibling that accepts a credential: every config route is flags or pause only
         from src.api.admin_route_invariant import admin_routes
         paths = {r.path for r in admin_routes() if "config" in r.route.endpoint.__module__ or r.path.startswith(("/admin/flags", "/admin/pause"))}

@@ -50,14 +50,14 @@ def run() -> dict[str, tuple[bool, str]]:
     ci = read(".github/workflows/ci.yml")
 
     # ---- role / permission model
-    check("permissions_exactly_43", len(perm.PERMISSIONS) == 43 and len(set(perm.PERMISSIONS)) == 43, str(len(perm.PERMISSIONS)))
+    check("permissions_are_the_original_43_plus_only_billing_recover", len(perm.PERMISSIONS) == 44 and len(set(perm.PERMISSIONS)) == 44 and len(set(perm.PERMISSIONS) - {"platform.billing.recover"}) == 43, str(len(perm.PERMISSIONS)))
     check("roles_exactly_user_plus_six_presets", set(perm.ROLE_PRESETS) == set(M.ROLES) and perm.permissions_for_role("user") == frozenset(), ",".join(M.ROLES))
     pa = perm.ROLE_PRESETS["platform_admin"]
-    check("ad_w12_01_platform_admin_owns_all_43_canonical_permissions",
-          pa == perm.PERMISSION_SET and len(pa) == 43 and set(perm.PERMISSIONS) - pa == set() and len(M.W10_14_PLATFORM_ADMIN_ABSENT) == 15 and M.W10_14_PLATFORM_ADMIN_ABSENT <= pa,
-          f"{len(pa)} of 43 permissions (the 15 W10.14-absent permissions added by AD-W12-01)")
+    check("ad_w12_01_platform_admin_owns_all_canonical_permissions",
+          pa == perm.PERMISSION_SET and len(pa) == 44 and set(perm.PERMISSIONS) - pa == set() and len(M.W10_14_PLATFORM_ADMIN_ABSENT) == 15 and M.W10_14_PLATFORM_ADMIN_ABSENT <= pa,
+          f"{len(pa)} of 44 permissions (the 15 W10.14-absent permissions added by AD-W12-01, plus billing.recover from W12.4D-F1R)")
     check("specialist_roles_remain_least_privilege_delegated_subsets",
-          {r: len(perm.ROLE_PRESETS[r]) for r in M.ROLES if r != "platform_admin"} == {"support_operator": 7, "billing_admin": 10, "knowledge_admin": 6, "security_privacy_admin": 11, "operations_admin": 11}
+          {r: len(perm.ROLE_PRESETS[r]) for r in M.ROLES if r != "platform_admin"} == {"support_operator": 7, "billing_admin": 11, "knowledge_admin": 6, "security_privacy_admin": 11, "operations_admin": 11}
           and all(perm.ROLE_PRESETS[r] < pa for r in M.ROLES if r != "platform_admin")
           and [r for r in M.ROLES if "platform.integrations.secret.rotate" in perm.ROLE_PRESETS[r]] == ["platform_admin"], "secret rotation authorized for the owner only; the store is still read-only")
     ruleset = read("src/application/admin_permissions.py")
@@ -66,7 +66,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("no_private_content_permission_even_for_the_owner", not [p for p in pa if re.search(r"break|impersonat|view_as|candidate|content|\bcv\b|memory|answer|conversation|evidence|document", p)])
     check("unknown_missing_candidate_default_deny", all(perm.permissions_for_role(x) == frozenset() for x in (None, "", "ghost", "user", "PLATFORM_ADMIN")))
     check("no_wildcard_or_content_or_break_glass_permission", not [p for p in perm.PERMISSIONS if "*" in p or any(f in p for f in perm.BANNED_PERMISSION_FRAGMENTS)])
-    check("permission_matrix_deterministic_two_builds", M.matrix_hash() == M.matrix_hash() and len(M.permission_matrix()) == 43, M.matrix_hash())
+    check("permission_matrix_deterministic_two_builds", M.matrix_hash() == M.matrix_hash() and len(M.permission_matrix()) == 44, M.matrix_hash())
 
     # ---- routes
     check("every_privileged_route_permission_gated", ungated() == [] and len(routes) > 0, f"{len(routes)} routes, {len(ungated())} ungated")
@@ -78,7 +78,7 @@ def run() -> dict[str, tuple[bool, str]]:
     nocomment = "\n".join(l for l in all_routes_src.splitlines() if not l.lstrip().startswith("#"))
     check("zero_direct_role_name_authorization_in_routes", not re.search(r"require_platform_admin\(|is_platform_admin\(|platform_role\s*(==|!=)\s*[\"']", nocomment), "permission strings are the only authority")
     inv = M.mutation_inventory()
-    check("every_privileged_mutation_audited_in_handler_or_service", [r["path"] for r in inv if not r["audited_in_handler"]] == ["/admin/knowledge/test-retrieval", "/admin/step-up"], f"{len(inv)} mutating routes (the retrieval test is a read-only POST with no mutation)")
+    check("every_privileged_mutation_audited_in_handler_or_service", [r["path"] for r in inv if not r["audited_in_handler"]] == ["/admin/billing/operations/step-up", "/admin/knowledge/test-retrieval", "/admin/step-up"], f"{len(inv)} mutating routes (the retrieval test is a read-only POST with no mutation)")
     check("get_routes_do_not_mutate", not [r.path for r in routes if r.methods == ("GET",) and re.search(r"\.(add|delete|commit)\(|\.enqueue\(|build_audit\(", __import__("inspect").getsource(r.route.endpoint))])
     check("no_generic_config_or_role_endpoint", not re.search(r'"/admin/(config|settings|env|roles|permissions)"', all_routes_src) and not [r.path for r in routes if r.path.endswith(("/role",)) and "/members/" not in r.path and r.methods != ("GET",)])
 
@@ -131,7 +131,7 @@ def run() -> dict[str, tuple[bool, str]]:
 
     # ---- migrations / scope
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("one_alembic_head_0030_after_the_w12_4b_w12_4c_w12_4d_c_w12_4d_d_and_w12_4d_e_migrations", mig[-1].startswith("0030_billing_recovery") and len(mig) == 30 and len({m[:4] for m in mig}) == 30, mig[-1])
+    check("one_alembic_head_0031_after_the_w12_4b_to_w12_4d_f1r_migrations", mig[-1].startswith("0031_account_closure") and len(mig) == 31 and len({m[:4] for m in mig}) == 31, mig[-1])
     check("no_w11_or_rc_code", not list((ROOT / "docs/capstone").rglob("W11*")) and not list((ROOT / "docs/capstone").rglob("RC-P10-003*")))   # W10.14-era guard: no W11/RC docs by name; the RC artifact is governed by eval_w11_integrated / eval_rc_p10_003 after the post-W11 owner-approved action
 
     # ---- evaluator / test isolation

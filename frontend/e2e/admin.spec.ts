@@ -726,11 +726,11 @@ test("a limited admin role sees only the destinations the server granted", async
   await expect(nav.getByRole("link", { name: /Support/ })).toHaveCount(0);   // no support.read: no Support entry
 });
 
-test("W12.1 (AD-W12-01): the owner / orchestrator (all 43 permissions) is shown every Admin destination, derived from permission strings only", async ({ page }) => {
+test("W12.1 (AD-W12-01): the owner / orchestrator (all 44 permissions) is shown every Admin destination, derived from permission strings only", async ({ page }) => {
   // The permission list is the generated backend fixture (tests/fixtures/admin-role-permissions.json), not a hand-typed list.
   const fixture = JSON.parse((await import("node:fs")).readFileSync(`${__dirname}/../tests/fixtures/admin-role-permissions.json`, "utf8"));
   const perms: string[] = fixture.personas.platform_admin.permissions;
-  expect(perms).toHaveLength(43);
+  expect(perms).toHaveLength(44);                           // the original 43 plus the owner-approved platform.billing.recover (W12.4D-F1R)
   await mockAdmin(page, "platform_admin", perms);
   // The owner now also holds security.read, so the Command Center asks for the security summary (counts only).
   await page.route("**/api/v1/admin/security/summary", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ alerts: { active_critical: 0, active_high: 0, acknowledged: 0 }, open_incidents: 0 }) }));

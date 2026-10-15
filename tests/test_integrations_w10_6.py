@@ -439,7 +439,7 @@ def test_integration_routes_are_permissioned_and_no_entry_point_creates_integrat
     assert len(mine) == 8 and ungated(routes) == []
     assert {p for r in mine for p in r.permissions} == {perm.INTEGRATIONS_READ, perm.INTEGRATIONS_MANAGE, perm.SECRET_ROTATE}
     assert not [r for r in mine if r.methods == ("POST",) and r.path == "/admin/integrations"]
-    assert len(perm.PERMISSIONS) == 43
+    assert len(perm.PERMISSIONS) == 44 and len(set(perm.PERMISSIONS) - {"platform.billing.recover"}) == 43
 
 
 # ---------------- migration -----------------------------------------------------------------------------------------

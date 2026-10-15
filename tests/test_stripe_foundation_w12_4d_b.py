@@ -328,7 +328,7 @@ def test_admin_readiness_is_permissioned_bounded_and_leaks_nothing(env, monkeypa
                        ("knowledge_admin", 403), ("support_operator", 403), ("user", 403)):
         _, ck = mk(env, role)
         assert env.c.get(url, cookies=ck).status_code == code, role
-    assert "platform.integrations.read" not in perm.ROLE_PRESETS["billing_admin"] and len(perm.PERMISSIONS) == 43
+    assert "platform.integrations.read" not in perm.ROLE_PRESETS["billing_admin"] and len(perm.PERMISSIONS) == 44
     _, adm = mk(env, "platform_admin")
     d = env.c.get(url, cookies=adm).json()
     assert d["status"] == "sandbox_access_unverified" and d["eligibility"] == "not_confirmed" and d["live_slots_populated"] is True

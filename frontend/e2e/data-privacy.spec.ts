@@ -43,6 +43,7 @@ function freshState(): State {
     ints: [{ id: 30, target_role: "Nurse", created_at: "2026-09-01T10:00:00Z", questions: 3 }],
     shares: [{ id: 40, owner_user_id: 1, workspace_id: 5, resource_type: "interview_report", resource_id: "30", permission: "view", status: "active", created_at: null, revoked_at: null }],
     deleted: false,
+    blockDelete: false,
     calls: [],
     reqs: [],
     accepted: false,
@@ -65,6 +66,7 @@ async function mock(page: Page, locale = "en", state = freshState()) {
 
     if (path === "/auth/me") return state.deleted ? json({ error: { code: "unauthenticated", message: "x" } }, 401) : json(account(locale));
     if (path === "/capabilities") return json({ agent_coach_enabled: false, realtime_voice_enabled: false, company_research_enabled: false });
+    if (path === "/auth/account/delete" && method === "POST" && state.blockDelete) return json({ error: { code: "subscription_resolution_required", message: "unresolved subscription" } }, 409);
     if (path === "/auth/account/delete" && method === "POST") { state.deleted = true; return json({ message: "deleted" }); }
     if (path === "/privacy/requests" && method === "POST") {
       const body = JSON.parse(req.postData() ?? "{}");
@@ -196,6 +198,20 @@ test("account deletion: cancel keeps the account; confirm deletes and ends the s
   await page.goto("/account/data");
   await expect(page.getByTestId("data-privacy-center")).toHaveCount(0);
 });
+
+for (const locale of ["en", "de"]) {
+  test(`${locale}: closing an account with an unresolved subscription is explained, recorded and keeps the account`, async ({ page }) => {
+    const state = await mock(page, locale);
+    state.blockDelete = true;
+    await page.goto("/account/data");
+    await page.getByTestId("dp-delete-account").click();
+    await page.getByRole("button", { name: T(locale, "dataPrivacy.accountConfirmDelete") }).click();
+    const dialog = page.getByRole("alertdialog");
+    await expect(dialog).toContainText(T(locale, "billing.closureDeleteBlocked"));        // the localized, truthful explanation (not a generic failure)
+    expect(state.deleted).toBe(false);
+    expect(page.url()).toContain("/account/data");                                       // the account and the session stay
+  });
+}
 
 for (const locale of ["de", "ru"]) {
   test(`${locale}: Data & Privacy Center is fully localized (no raw keys, no English title)`, async ({ page }) => {

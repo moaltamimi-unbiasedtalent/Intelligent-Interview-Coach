@@ -250,7 +250,7 @@ def run() -> dict[str, tuple[bool, str]]:
           "test_interview_evaluation_tunables_reach_the_client_call", "test_agent_orchestration_tunables_reach_the_chat_model",
           "test_career_structured_producer_tunables_reach_the_chat_model", "test_openrouter_client_honours_governed_retries_and_timeout")), "present")
     check("routes_permissioned_and_separate", route.count("require_permission") >= 18 and "AI_ACTIVATE" in route and "AI_MANAGE" in route and "AI_READ" in route, "explicit")
-    check("permission_registry_stays_43", len(perm.PERMISSIONS) == 43, "43")
+    check("permission_registry_is_the_original_43_plus_only_the_approved_billing_recover", len(perm.PERMISSIONS) == 44 and len(set(perm.PERMISSIONS) - {"platform.billing.recover"}) == 43, "43 + platform.billing.recover (W12.4D-F1R, owner decision B)")
     check("only_platform_admin_can_manage_or_activate", perm.AI_MANAGE in perm.permissions_for_role("platform_admin") and perm.AI_ACTIVATE in perm.permissions_for_role("platform_admin")
           and not any({perm.AI_MANAGE, perm.AI_ACTIVATE} & perm.permissions_for_role(r) for r in ("support_operator", "billing_admin", "knowledge_admin", "security_privacy_admin", "operations_admin")), "preset")
     check("job_type_registered_id_only", "ai_evaluate_config" in read("src/jobs/registry.py") + read("src/ai_admin/jobs.py") and "evaluation_id" in read("src/ai_admin/jobs.py"), "id only")

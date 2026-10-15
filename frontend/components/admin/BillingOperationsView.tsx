@@ -6,6 +6,7 @@ import { api } from "@/lib/api/client";
 import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
 import type { BillingOpsPage, BillingOpsReadiness } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
+import { useStepUp } from "./StepUp";
 import { Pager, Panel, PermissionGate, ResourceState, Stat, StatusLabel, apiMessage, btn, field, useAdminResource } from "./ui";
 
 // Billing OPERATIONS (W12.4D-E): every value comes from the verified local billing domain. Provider ids are masked, nothing here shows a raw payload, a signature,
@@ -152,7 +153,7 @@ function Checkouts() {
 
 function Events() {
   const auth = useAuthOptional();
-  const canRecover = hasAnyPermission(adminPermissions(auth?.account), [P.jobsManage]);
+  const canRecover = hasAnyPermission(adminPermissions(auth?.account), [P.billingRecover]);       // W12.4D-F1R: the dedicated permission; platform.jobs.manage confers nothing here
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("");
   const [open, setOpen] = useState<string | null>(null);
@@ -199,9 +200,10 @@ function EventDetail({ reference, canRecover, onClose }: { reference: string; ca
   const [action, setAction] = useState<null | "retry" | "requeue">(null);
   const [outcome, setOutcome] = useState<string | null>(null);
   const key = useRef<string>("");
+  const stepUp = useStepUp((password) => api.admin.billingOps.stepUp(password));        // fresh password re-authentication (not MFA), billing-scoped route
   const begin = (a: "retry" | "requeue") => { key.current = `ui-${a}-${Math.random().toString(36).slice(2, 12)}${Date.now().toString(36)}`; setAction(a); };
   const run = async (reason: string) => {
-    const res = await api.admin.billingOps.recover(action as "retry" | "requeue", reference, reason, key.current);
+    const res = await stepUp.run(() => api.admin.billingOps.recover(action as "retry" | "requeue", reference, reason, key.current));
     setOutcome(res.status === "completed" ? `Recovery completed (${label(res.result)}).` : res.status === "refused"
       ? `Refused: ${label(res.result)}. Nothing was changed.` : `Recovery failed: ${label(res.result)}. Nothing was guessed.`);
     d.reload();
@@ -224,7 +226,7 @@ function EventDetail({ reference, canRecover, onClose }: { reference: string; ca
                 <button type="button" className={btn} onClick={() => begin("retry")}>Retry through the verified pipeline</button>
                 {d.data.status === "processing" ? <button type="button" className={btn} onClick={() => begin("requeue")}>Release abandoned lease</button> : null}
               </p>
-            ) : <p className="text-xs text-muted">{d.data.recoverable ? "Recovery needs the job-management permission." : "This event cannot be retried."}</p>}
+            ) : <p className="text-xs text-muted">{d.data.recoverable ? "Recovery needs the billing-recovery permission and a fresh password confirmation." : "This event cannot be retried."}</p>}
           </div>
         ) : null}
       </ResourceState>
@@ -232,6 +234,7 @@ function EventDetail({ reference, canRecover, onClose }: { reference: string; ca
         onConfirm={run} onClose={() => setAction(null)} testId="recovery-dialog">
         <p className="text-sm">This re-drives the existing verified pipeline for this stored event. It cannot create, edit or delete a financial fact, grant access, or run a refund or payment. Without a wired provider-state reader it is refused.</p>
       </ActionDialog>
+      {stepUp.dialog}
     </section>
   );
 }

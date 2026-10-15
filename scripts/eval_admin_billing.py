@@ -103,7 +103,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("candidate_billing_routes_are_exactly_the_four_checkout_routes_plus_the_read_only_summary", routes == ["/checkout-returns", "/checkout-sessions", "/checkout/availability", "/checkout/status", "/summary"] and not re.search(r"portal|payment[-_]method|invoice|webhook|success", "".join(routes)), str(routes))
     check("no_revenue_reporting_or_coupons", not re.search(r"\b(mrr|arr|ltv|churn|gmv|coupon|promo_code|discount)\b", code.lower()), "none")
     check("routes_permissioned", route.count("require_permission(") >= 15 and all(x in route for x in ("BILLING_READ", "BILLING_REFUND", "PRICE_CHANGE")), "explicit")
-    check("permission_registry_stays_43", len(perm.PERMISSIONS) == 43 and "platform.billing.manage" not in perm.PERMISSIONS, "43")
+    check("permission_registry_is_the_original_43_plus_only_the_approved_billing_recover", len(perm.PERMISSIONS) == 44 and len(set(perm.PERMISSIONS) - {"platform.billing.recover"}) == 43 and "platform.billing.manage" not in perm.PERMISSIONS, "43 + platform.billing.recover (W12.4D-F1R, owner decision B)")
     check("presets_billing_only_for_billing_admin", all(p in perm.permissions_for_role("billing_admin") for p in (perm.BILLING_READ, perm.BILLING_REFUND, perm.PRICE_CHANGE))
           and not any({perm.BILLING_REFUND, perm.PRICE_CHANGE} & perm.permissions_for_role(r) for r in ("support_operator", "knowledge_admin", "operations_admin", "security_privacy_admin"))
           and {perm.BILLING_READ, perm.BILLING_REFUND, perm.PRICE_CHANGE} <= perm.permissions_for_role("platform_admin"), "no other SPECIALIST preset (the owner holds all 43, AD-W12-01)")

@@ -82,7 +82,7 @@ in the same transaction; mocks are labelled; no browser-based code deployment.
 | users | `platform.users.read`, `.manage` (suspend/reactivate), `.sessions.revoke`, `.role.assign` (second approver) |
 | workspaces | `platform.workspaces.read`, `.manage` |
 | support | `platform.support.read`, `.reply`, `.manage` (assign/close), `.note` |
-| billing | `platform.plans.read`, `.manage`, `.price.change` (second approver); `platform.subscriptions.read`, `.manage`; `platform.billing.read`, `.refund` (second approver) |
+| billing | `platform.plans.read`, `.manage`, `.price.change` (second approver); `platform.subscriptions.read`, `.manage`; `platform.billing.read`, `.recover` (W12.4D-F1R: human-initiated billing recovery, fresh step-up), `.refund` (second approver) |
 | integrations | `platform.integrations.read`, `.manage`, `.secret.rotate` (step-up) |
 | AI | `platform.ai.read`, `.manage`, `.activate` (second approver, evaluation-gated) |
 | knowledge | `platform.knowledge.read`, `.manage`, `.approve` (distinct from upload) |
@@ -101,6 +101,7 @@ platform.ai.read
 platform.audit.export
 platform.audit.read
 platform.billing.read
+platform.billing.recover
 platform.billing.refund
 platform.config.manage
 platform.flags.manage

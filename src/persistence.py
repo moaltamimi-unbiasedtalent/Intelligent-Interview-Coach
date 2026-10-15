@@ -2042,6 +2042,46 @@ class BillingProviderLink(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
 
+CLOSURE_STATUSES = ("requested", "awaiting_provider", "resolved", "completed", "erased_reference_retained", "withdrawn", "needs_review")
+CLOSURE_ACTIVE = ("requested", "awaiting_provider", "resolved", "erased_reference_retained", "needs_review")
+CLOSURE_RESOLUTION = ("not_required", "required", "pending_confirmation", "confirmed", "unavailable")
+CLOSURE_PROVIDER_CANCELLATION = ("not_requested", "guided", "confirmed", "contract_unverified")
+CLOSURE_ERASURE = ("not_requested", "requested", "fulfilled", "restricted")
+_CLOSURE_ACTIVE_SQL = "status IN ('requested', 'awaiting_provider', 'resolved', 'erased_reference_retained', 'needs_review') AND user_id IS NOT NULL"
+
+
+class BillingAccountClosure(Base):
+    """W12.4D-F1R: ONE durable account-closure case while a provider-managed subscription is unresolved. Separate fields keep the obligations apart: closure
+    requested, subscription resolution, provider cancellation (Ask4Mo never requests it: that mechanism is unverified), and personal-data erasure. Holds NO
+    personal data and no provider identifier: the provider references stay in ``billing_provider_links`` (and are removed with them). After completion the
+    row keeps only states and timestamps (``user_id`` cleared) as closure evidence."""
+
+    __tablename__ = "billing_account_closures"
+    __table_args__ = (
+        CheckConstraint(_in_list("status", CLOSURE_STATUSES), name="ck_bac_status"),
+        CheckConstraint(_in_list("subscription_resolution", CLOSURE_RESOLUTION), name="ck_bac_resolution"),
+        CheckConstraint(_in_list("provider_cancellation", CLOSURE_PROVIDER_CANCELLATION), name="ck_bac_cancellation"),
+        CheckConstraint(_in_list("erasure_status", CLOSURE_ERASURE), name="ck_bac_erasure"),
+        Index("uq_bac_one_active_per_user", "user_id", unique=True, sqlite_where=text(_CLOSURE_ACTIVE_SQL), postgresql_where=text(_CLOSURE_ACTIVE_SQL)),
+        Index("ix_bac_status", "status", "requested_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    status: Mapped[str] = mapped_column(String(28), default="requested", server_default="requested")
+    subscription_resolution: Mapped[str] = mapped_column(String(24), default="required", server_default="required")
+    provider_cancellation: Mapped[str] = mapped_column(String(24), default="guided", server_default="guided")
+    erasure_status: Mapped[str] = mapped_column(String(16), default="not_requested", server_default="not_requested")
+    retention_basis: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    review_required: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("0"))
+    failure_category: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    privacy_request_public_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 RECOVERY_ACTIONS = ("retry_event", "requeue_lease", "reconcile_link")
 RECOVERY_STATUSES = ("requested", "completed", "failed", "refused")
 

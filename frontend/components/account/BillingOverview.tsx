@@ -69,6 +69,16 @@ export function BillingOverview() {
             <p className="text-muted">{t("billing.receiptsBody")}</p>
           </div>
         ) : null}
+        {data.closure ? (
+          <div className="space-y-1 text-sm" data-testid="billing-closure">
+            <h3 className="font-semibold text-foreground">{t("billing.closureTitle")}</h3>
+            <Alert tone={data.closure.review_required ? "warning" : "info"} title={t(`billing.closureStatus_${data.closure.status}`)}>
+              {t(`billing.closureResolution_${data.closure.subscription_resolution}`)}
+            </Alert>
+            <p className="text-muted">{t("billing.closureCancelNote")}</p>
+            <p className="text-muted">{t("billing.closureErasureNote")}</p>
+          </div>
+        ) : null}
         {data.timeline.length ? (
           <div className="space-y-1 text-sm" data-testid="billing-timeline">
             <h3 className="font-semibold text-foreground">{t("billing.timelineTitle")}</h3>

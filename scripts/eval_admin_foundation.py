@@ -44,7 +44,7 @@ def run() -> dict[str, tuple[bool, str]]:
     plan = read("docs/capstone/admin/ADMIN_PLATFORM_MASTER_PLAN.md")
     block = re.search(r"Canonical permission list.*?```\n(.*?)```", plan, re.S)
     doc_perms = sorted(l.strip() for l in block.group(1).splitlines() if l.startswith("platform.")) if block else []
-    check("canonical_count_43", len(perm.PERMISSIONS) == 43 == len(set(perm.PERMISSIONS)), f"{len(perm.PERMISSIONS)} permissions")
+    check("canonical_count_43_plus_the_approved_billing_recover", len(perm.PERMISSIONS) == 44 == len(set(perm.PERMISSIONS)) and len(set(perm.PERMISSIONS) - {"platform.billing.recover"}) == 43, f"{len(perm.PERMISSIONS)} permissions")
     check("registry_equals_design_list", sorted(perm.PERMISSIONS) == doc_perms, "code registry == master-plan canonical list")
     bad = [p for p in perm.PERMISSIONS if re.search(r"break|glass|impersonat|view_as|candidate", p)]
     check("no_break_glass_or_impersonation_permission", not bad, ", ".join(bad) or "none")
@@ -111,7 +111,7 @@ def run() -> dict[str, tuple[bool, str]]:
 
     # --- scope guards ------------------------------------------------------------------------------
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_", "0026_", "0027_", "0028_", "0029_", "0030_")), mig[-1])
+    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_", "0026_", "0027_", "0028_", "0029_", "0030_", "0031_")), mig[-1])
     pyproject = read("pyproject.toml").lower()
     check("no_new_infrastructure_dependency", not any(d in pyproject for d in ("redis", "celery", "sentry", "prometheus", "hvac")) and "stripe>=16,<17" in pyproject, "none of redis/celery/sentry/prometheus/hvac; the only payment SDK is the owner-selected, version-pinned stripe (W12.4D-B)")
     return out

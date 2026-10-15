@@ -1,7 +1,8 @@
 """Admin billing operations (W12.4D-E): diagnostics and CONTROLLED recovery for provider-managed billing. Every route declares an explicit permission.
 
-Reads need ``platform.billing.read``. A recovery action needs ``platform.jobs.manage`` (the existing permission for retrying background work: the
-billing admin can inspect but not re-drive processing; no new permission was added and the registry stays at 43). A recovery action re-drives the
+Reads need ``platform.billing.read``. A recovery action needs the dedicated ``platform.billing.recover`` (W12.4D-F1R, owner decision B: billing admin and platform
+admin) AND a fresh password step-up of the current session; ``platform.jobs.manage`` no longer confers any billing recovery authority (the generic job APIs cannot
+re-drive provider billing jobs either). A recovery action re-drives the
 EXISTING verified pipeline for one of OUR records: it cannot forge a provider event, edit or delete a financial fact, grant access, accept a caller-supplied
 provider id, or run a financial operation. With the runtime Null provider-state reader every action is REFUSED (never reported as success).
 """
@@ -14,8 +15,9 @@ from typing import Any
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from src.api.dependencies import get_audit_repository, get_billing_operations, get_provider_event_service, get_request_id, require_permission
+from src.api.dependencies import get_audit_repository, get_billing_operations, get_provider_event_service, get_repository, get_request_id, require_permission
 from src.api.rate_limit import enforce, user_key
+from src.api.routes.admin_security import StepUpBody          # the SAME request model as the existing step-up (one shape, one allow-listed input field)
 from src.application import admin_audit as A
 from src.application import admin_permissions as perm
 from src.billing.operations import BillingOperations, OpsValidationError
@@ -109,6 +111,29 @@ def recovery_actions(page: int = Query(default=1, ge=1, le=100000), page_size: i
     return Page(**_guard(lambda: ops.recovery_actions(page=page, page_size=page_size)))
 
 
+def _sf(repo=Depends(get_repository)):
+    return repo.session_factory
+
+
+def _cookie_name(request: Request) -> str:
+    from src.api.dependencies import _session_cookie_name
+    return _session_cookie_name(request)
+
+
+@router.get("/step-up", summary="Is THIS session currently elevated for billing recovery? (password re-authentication; not MFA)")
+def step_up_status(request: Request, _p=Depends(require_permission(perm.BILLING_RECOVER)), sf=Depends(_sf)) -> dict[str, Any]:
+    from src.admin_security.stepup import StepUpService
+    return StepUpService(sf).status(request.cookies.get(_cookie_name(request)))
+
+
+@router.post("/step-up", summary="Confirm your password to elevate THIS session for billing recovery (reuses the existing step-up; not MFA)")
+def step_up(body: StepUpBody, request: Request, principal=Depends(require_permission(perm.BILLING_RECOVER)), sf=Depends(_sf)) -> dict[str, Any]:
+    from src.admin_security.stepup import StepUpService
+    enforce("stepup_user", user_key(principal.user_id))
+    return StepUpService(sf).confirm(user_id=principal.user_id, session_token=request.cookies.get(_cookie_name(request)), password=body.password,
+                                     request_id=get_request_id(request))
+
+
 def _record_view(audit_repo, principal, request: Request, reference: str) -> None:
     try:
         audit_repo.record(**A.build_audit(event_type=A.ADMIN_BILLING_EVENT_VIEWED, actor_user_id=principal.user_id, request_id=get_request_id(request),
@@ -122,7 +147,9 @@ def _audit(request: Request, principal, action: str, reference: str, reason: str
                          target_type="billing_provider_link" if action == "reconcile_link" else "billing_provider_event", target_id=reference[:64], reason=reason)
 
 
-def _recover(action: str, reference: str, body: RecoveryRequest, key: str | None, principal, svc, audit: dict) -> RecoveryResult:
+def _recover(action: str, reference: str, body: RecoveryRequest, key: str | None, principal, svc, audit: dict, request: Request, sf) -> RecoveryResult:
+    from src.admin_security.stepup import StepUpService
+    StepUpService(sf).require(request.cookies.get(_cookie_name(request)))        # 403 step_up_required / step_up_unavailable (fail closed, incl. OIDC-only accounts)
     if not key or not _KEY.match(key):
         raise HTTPException(status_code=422, detail="An Idempotency-Key of 8 to 64 letters, digits, underscores or hyphens is required.")
     enforce("billing_recovery_user", user_key(principal.user_id))
@@ -136,17 +163,17 @@ def _recover(action: str, reference: str, body: RecoveryRequest, key: str | None
 
 @router.post("/events/{reference}/retry", response_model=RecoveryResult, summary="Re-drive a failed, quarantined or review-needed event through the verified pipeline")
 def retry_event(reference: str, request: Request, body: RecoveryRequest, idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
-                principal=Depends(require_permission(perm.JOBS_MANAGE)), svc=Depends(get_provider_event_service)) -> RecoveryResult:
-    return _recover("retry_event", reference, body, idempotency_key, principal, svc, audit=_audit(request, principal, "retry_event", reference, body.reason))
+                principal=Depends(require_permission(perm.BILLING_RECOVER)), svc=Depends(get_provider_event_service), sf=Depends(_sf)) -> RecoveryResult:
+    return _recover("retry_event", reference, body, idempotency_key, principal, svc, _audit(request, principal, "retry_event", reference, body.reason), request, sf)
 
 
 @router.post("/events/{reference}/requeue", response_model=RecoveryResult, summary="Release an ABANDONED processing lease (expired) and re-drive the event")
 def requeue_event(reference: str, request: Request, body: RecoveryRequest, idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
-                  principal=Depends(require_permission(perm.JOBS_MANAGE)), svc=Depends(get_provider_event_service)) -> RecoveryResult:
-    return _recover("requeue_lease", reference, body, idempotency_key, principal, svc, audit=_audit(request, principal, "requeue_lease", reference, body.reason))
+                  principal=Depends(require_permission(perm.BILLING_RECOVER)), svc=Depends(get_provider_event_service), sf=Depends(_sf)) -> RecoveryResult:
+    return _recover("requeue_lease", reference, body, idempotency_key, principal, svc, _audit(request, principal, "requeue_lease", reference, body.reason), request, sf)
 
 
 @router.post("/subscriptions/{reference}/reconcile", response_model=RecoveryResult, summary="Re-read one of OUR subscription links from the provider (needs a wired reader)")
 def reconcile_subscription(reference: str, request: Request, body: RecoveryRequest, idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
-                           principal=Depends(require_permission(perm.JOBS_MANAGE)), svc=Depends(get_provider_event_service)) -> RecoveryResult:
-    return _recover("reconcile_link", reference, body, idempotency_key, principal, svc, audit=_audit(request, principal, "reconcile_link", reference, body.reason))
+                           principal=Depends(require_permission(perm.BILLING_RECOVER)), svc=Depends(get_provider_event_service), sf=Depends(_sf)) -> RecoveryResult:
+    return _recover("reconcile_link", reference, body, idempotency_key, principal, svc, _audit(request, principal, "reconcile_link", reference, body.reason), request, sf)

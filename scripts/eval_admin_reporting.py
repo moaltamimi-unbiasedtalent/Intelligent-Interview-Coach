@@ -58,7 +58,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("no_raw_event_or_per_user_route", not any(re.search(r"event|user|fact|export|drill", p) for _m, p in paths), ", ".join(p for _m, p in paths))
     check("commercial_has_its_own_permission", "REPORTS_COMMERCIAL" in routes.split("def commercial")[0].split("@router.get")[-1] + routes.split("def commercial")[1].split("def ")[0][:400]
           and routes.count("REPORTS_READ") >= 4 and "REPORTS_COMMERCIAL" not in routes.split("def commercial")[0].split("def definitions")[0], "reports.read vs reports.commercial.read")
-    check("permission_registry_stays_43", len(perm.PERMISSIONS) == 43, "43")
+    check("permission_registry_is_the_original_43_plus_only_the_approved_billing_recover", len(perm.PERMISSIONS) == 44 and len(set(perm.PERMISSIONS) - {"platform.billing.recover"}) == 43, "43 + platform.billing.recover (W12.4D-F1R, owner decision B)")
     check("periods_are_a_fixed_code_defined_set", set(PERIODS) == {"7d", "30d", "90d", "all_time"} and "Query(default=\"30d\", max_length=12)" in routes, "no client date expression")
 
     # --- private-content boundary ---------------------------------------------------------------------------------------------------

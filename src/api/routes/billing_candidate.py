@@ -118,6 +118,15 @@ class TimelineEntry(BaseModel):
     at: str | None = None
 
 
+class ClosureView(BaseModel):
+    status: str
+    subscription_resolution: str
+    provider_cancellation: str
+    erasure_status: str
+    review_required: bool = False
+    requested_at: str | None = None
+
+
 class BillingSummary(BaseModel):
     state: str
     subscription: str
@@ -134,6 +143,7 @@ class BillingSummary(BaseModel):
     management: BillingManagement
     receipts: BillingReceipts
     timeline: list[TimelineEntry]
+    closure: ClosureView | None = None
 
 
 @router.get("/summary", response_model=BillingSummary, summary="My billing overview from verified local state (own records only)")

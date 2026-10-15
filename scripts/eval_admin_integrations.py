@@ -71,7 +71,7 @@ def run() -> dict[str, tuple[bool, str]]:
           and not any(re.search(r"enable|disable|toggle|config", r.path) for r in routes), "list, detail, billing readiness, delivery diagnostics, test, test-email, credential write, credential remove only")
     check("integration_routes_permissioned",
           not ungated(admin_routes()) and {p for r in routes for p in r.permissions} == {perm.INTEGRATIONS_READ, perm.INTEGRATIONS_MANAGE, perm.SECRET_ROTATE}
-          and len(perm.PERMISSIONS) == 43, "canonical permissions only; registry unchanged at 43")
+          and len(perm.PERMISSIONS) == 44 and len(set(perm.PERMISSIONS) - {"platform.billing.recover"}) == 43, "canonical permissions only; the registry is the original 43 plus the one approved billing.recover")
 
     store = EnvironmentSecretStore()
     check("environment_store_is_read_only", store.supports_write is False, "supports_write = False")

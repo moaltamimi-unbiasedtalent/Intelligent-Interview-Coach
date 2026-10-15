@@ -54,6 +54,15 @@ class DeletionSummary:
         }
 
 
+class SubscriptionResolutionRequired(Exception):
+    """W12.4D-F1R: the account has an unresolved provider-managed subscription (or a checkout that can still be completed). Deleting it would silently orphan a recurring
+    charge, so the service refuses; the caller either records a closure case (self-service) or erases with a retained billing reference (privacy request)."""
+
+    def __init__(self, reasons: list[str]) -> None:
+        super().__init__("subscription_resolution_required")
+        self.reasons = reasons
+
+
 class AccountDeletionService:
     """Orchestrates the full cascade over one shared session factory + external stores."""
 
@@ -125,8 +134,12 @@ class AccountDeletionService:
         if objs:
             summary.deleted_rows[label] = summary.deleted_rows.get(label, 0) + len(objs)
 
-    def delete_account(self, user_id: int) -> DeletionSummary:
-        """Remove/anonymize everything the application controls for ``user_id``. Idempotent."""
+    def delete_account(self, user_id: int, *, preserve_billing_reference: bool = False) -> DeletionSummary:
+        """Remove/anonymize everything the application controls for ``user_id``. Idempotent.
+
+        W12.4D-F1R: with an unresolved provider-managed subscription this REFUSES (``SubscriptionResolutionRequired``) unless ``preserve_billing_reference`` is set. In that
+        mode every personal and content record is erased as usual and ONLY the minimum billing reference is retained: an anonymised ``deletion_requested`` account shell,
+        its subscription links and their checkout attempts (purged by ``closure.refresh`` once every subscription is terminal)."""
         summary = DeletionSummary(user_id=user_id, existed=False)
         storage_keys: list[str] = []
         run_ids: list[str] = []
@@ -136,6 +149,12 @@ class AccountDeletionService:
             if user is None:
                 return summary  # already gone — no-op, idempotent
             summary.existed = True
+            from src.billing.closure import assess as _assess_billing
+
+            unresolved = _assess_billing(s, user_id)
+            if unresolved.blocking and not preserve_billing_reference:
+                raise SubscriptionResolutionRequired(unresolved.reasons)
+            keep_billing = bool(unresolved.blocking and preserve_billing_reference)
 
             storage_keys = self._collect_storage_keys(s, user_id)
             run_ids = self._collect_run_ids(s, user_id)
@@ -234,15 +253,26 @@ class AccountDeletionService:
             # as financial evidence (their link reference is cleared); the operator recovery trail is ANONYMISED, never deleted. Deleting these records does NOT
             # cancel a live subscription at the provider: that is an open owner/legal decision (see the W12.4D-F1 register).
             link_ids = [i for (i,) in s.execute(select(P.BillingProviderLink.id).where(P.BillingProviderLink.user_id == user_id)).all()]
-            if link_ids:
-                s.execute(update(P.BillingProviderEvent).where(P.BillingProviderEvent.link_id.in_(link_ids)).values(link_id=None))
-                s.execute(update(P.BillingRecoveryAction).where(P.BillingRecoveryAction.link_id.in_(link_ids)).values(link_id=None))
-                self._delete_where(s, P.BillingEntitlementDecision, P.BillingEntitlementDecision.link_id.in_(link_ids), summary, "billing_provider_rows")
-                self._delete_where(s, P.BillingProviderLink, P.BillingProviderLink.id.in_(link_ids), summary, "billing_provider_rows")
-            checkout_ids = [i for (i,) in s.execute(select(P.BillingCheckoutSession.id).where(P.BillingCheckoutSession.user_id == user_id)).all()]
-            if checkout_ids:
-                self._delete_where(s, P.BillingCheckoutSession, P.BillingCheckoutSession.id.in_(checkout_ids), summary, "billing_provider_rows")
-            s.execute(update(P.BillingRecoveryAction).where(P.BillingRecoveryAction.actor_user_id == user_id).values(actor_user_id=None))
+            if keep_billing:
+                kept = [i for (i,) in s.execute(select(P.BillingProviderLink.checkout_session_id).where(P.BillingProviderLink.user_id == user_id)).all() if i is not None]
+                checkout_ids = [i for (i,) in s.execute(select(P.BillingCheckoutSession.id).where(P.BillingCheckoutSession.user_id == user_id)).all() if i not in kept]
+                if checkout_ids:                                                  # only attempts that no retained link needs
+                    self._delete_where(s, P.BillingCheckoutSession, P.BillingCheckoutSession.id.in_(checkout_ids), summary, "billing_provider_rows")
+            else:
+                if link_ids:
+                    s.execute(update(P.BillingProviderEvent).where(P.BillingProviderEvent.link_id.in_(link_ids)).values(link_id=None))
+                    s.execute(update(P.BillingRecoveryAction).where(P.BillingRecoveryAction.link_id.in_(link_ids)).values(link_id=None))
+                    self._delete_where(s, P.BillingEntitlementDecision, P.BillingEntitlementDecision.link_id.in_(link_ids), summary, "billing_provider_rows")
+                    self._delete_where(s, P.BillingProviderLink, P.BillingProviderLink.id.in_(link_ids), summary, "billing_provider_rows")
+                checkout_ids = [i for (i,) in s.execute(select(P.BillingCheckoutSession.id).where(P.BillingCheckoutSession.user_id == user_id)).all()]
+                if checkout_ids:
+                    self._delete_where(s, P.BillingCheckoutSession, P.BillingCheckoutSession.id.in_(checkout_ids), summary, "billing_provider_rows")
+                s.execute(update(P.BillingRecoveryAction).where(P.BillingRecoveryAction.actor_user_id == user_id).values(actor_user_id=None))
+                # any closure case of this account ends here (state and timestamps stay as closure evidence; the account reference is cleared in the same transaction)
+                s.execute(update(P.BillingAccountClosure).where(P.BillingAccountClosure.user_id == user_id, P.BillingAccountClosure.status.in_(P.CLOSURE_ACTIVE))
+                          .values(status="completed", completed_at=P.utcnow(), user_id=None, subscription_resolution="confirmed", provider_cancellation="confirmed",
+                                  erasure_status="fulfilled", review_required=False))
+                s.execute(update(P.BillingAccountClosure).where(P.BillingAccountClosure.user_id == user_id).values(user_id=None))
 
             # 4c) Plan subscriptions (W10.4): the user's own assignment history is deleted with the account.
             # Plan DEFINITIONS (versions, entitlements) are shared product data and stay; a workspace the user
@@ -304,8 +334,13 @@ class AccountDeletionService:
                             .values(actor_user_id=None))
             summary.audit_anonymized = int(res.rowcount or 0)
 
-            # 8) The user row last.
-            s.delete(user)
+            # 8) The user row last (or, when a billing reference must be retained, an anonymised shell that cannot sign in).
+            if keep_billing:
+                user.subject, user.provider, user.display_name, user.email = f"closed:{user_id}", "closed", None, None
+                user.email_verified, user.status = False, P.ACCOUNT_STATUS_DELETION_REQUESTED
+                summary.deleted_rows["account_anonymised_billing_reference_retained"] = 1
+            else:
+                s.delete(user)
             s.commit()
 
         # --- external resources (outside the DB txn) ---

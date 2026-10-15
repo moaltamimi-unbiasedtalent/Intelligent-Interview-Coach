@@ -460,7 +460,7 @@ def test_admin_delivery_status_is_truthful_bounded_and_permissioned(monkeypatch,
                            ("billing_admin", 403), ("support_operator", 403), ("user", 403)):
             _, _, ck = world.user(role)
             assert world.c.get(f"{API}/admin/integrations/email_brevo/delivery", cookies=ck).status_code == code, role
-        assert [r for r, p in perm.ROLE_PRESETS.items() if perm.INTEGRATIONS_READ in p and r != "platform_admin"] == ["operations_admin"] and len(perm.PERMISSIONS) == 43
+        assert [r for r, p in perm.ROLE_PRESETS.items() if perm.INTEGRATIONS_READ in p and r != "platform_admin"] == ["operations_admin"] and len(perm.PERMISSIONS) == 44 and len(set(perm.PERMISSIONS) - {"platform.billing.recover"}) == 43
         _, _, adm = world.user("platform_admin")
         d = world.c.get(f"{API}/admin/integrations/email_brevo/delivery", cookies=adm).json()
         assert d["status"] == "provider_accepted"                 # the registration mails above were accepted by the fake provider
@@ -569,7 +569,7 @@ def test_migration_0027_single_head_fresh_and_round_trip(tmp_path, monkeypatch):
 
     url = f"sqlite:///{tmp_path / 'm.db'}"
     monkeypatch.setenv("DATABASE_URL", url)
-    assert ScriptDirectory.from_config(cfg(url)).get_heads() == ["0030_billing_recovery"]
+    assert ScriptDirectory.from_config(cfg(url)).get_heads() == ["0031_account_closure"]
     command.upgrade(cfg(url), "0026_managed_secrets")
     assert "email_attempts" not in inspect(create_engine(url)).get_table_names()
     command.upgrade(cfg(url), "head")

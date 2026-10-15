@@ -12,7 +12,7 @@ import { apiMessage, field } from "./ui";
  * The password lives only in this form's state while the dialog is open; it is cleared on every close and never stored, logged or sent anywhere
  * except the confirmation request. The server owns the elevation (a short window bound to this session); the browser holds no token.
  */
-export function useStepUp(): { run: <T>(action: () => Promise<T>) => Promise<T>; dialog: ReactNode } {
+export function useStepUp(confirmFn?: (password: string) => Promise<unknown>): { run: <T>(action: () => Promise<T>) => Promise<T>; dialog: ReactNode } {
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -31,7 +31,7 @@ export function useStepUp(): { run: <T>(action: () => Promise<T>) => Promise<T>;
     setBusy(true);
     setError(null);
     try {
-      await api.admin.stepUp(password);
+      await (confirmFn ? confirmFn(password) : api.admin.stepUp(password));
       setPassword("");
       setOpen(false);
       waiter.current?.resolve();

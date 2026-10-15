@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Final
 
-# --- canonical registry (43) -----------------------------------------------------------------------
+# --- canonical registry (44: the original 43 plus platform.billing.recover, W12.4D-F1R, owner approved) -----------------------------------------------------------------------
 PERMISSIONS: Final[tuple[str, ...]] = (
     "platform.ai.activate",
     "platform.ai.manage",
@@ -22,6 +22,7 @@ PERMISSIONS: Final[tuple[str, ...]] = (
     "platform.audit.export",
     "platform.audit.read",
     "platform.billing.read",
+    "platform.billing.recover",
     "platform.billing.refund",
     "platform.config.manage",
     "platform.flags.manage",
@@ -93,6 +94,7 @@ SECRET_ROTATE = "platform.integrations.secret.rotate"
 JOBS_READ = "platform.jobs.read"
 JOBS_MANAGE = "platform.jobs.manage"
 BILLING_READ = "platform.billing.read"
+BILLING_RECOVER = "platform.billing.recover"        # W12.4D-F1R (owner decision B): human-initiated billing recovery; needs a fresh step-up; NOT platform.jobs.manage
 BILLING_REFUND = "platform.billing.refund"
 PRICE_CHANGE = "platform.plans.price.change"
 PRIVACY_EXECUTE = "platform.privacy.execute"
@@ -126,7 +128,7 @@ ADMIN_ROLES: Final[tuple[str, ...]] = (
 )
 
 ROLE_PRESETS: Final[dict[str, frozenset[str]]] = {
-    # AD-W12-01 (owner approved): the platform owner / orchestrator holds ALL 43 canonical control-plane
+    # AD-W12-01 (owner approved): the platform owner / orchestrator holds ALL 44 canonical control-plane (43 until W12.4D-F1R added platform.billing.recover)
     # permissions, reused from the registry (never a second hand-maintained list). This is NOT a
     # private-candidate-content grant: no permission in the registry inspects candidate content, and routes stay
     # permission-gated (no role-name check anywhere). Secondary controls (step-up, two-person approval, expected
@@ -140,7 +142,7 @@ ROLE_PRESETS: Final[dict[str, frozenset[str]]] = {
         OVERVIEW_READ, USERS_READ,
         "platform.plans.read", "platform.plans.manage", "platform.plans.price.change",
         "platform.subscriptions.read", SUBSCRIPTIONS_MANAGE,
-        "platform.billing.read", "platform.billing.refund", "platform.reports.commercial.read",
+        "platform.billing.read", "platform.billing.recover", "platform.billing.refund", "platform.reports.commercial.read",
     }),
     ROLE_KNOWLEDGE_ADMIN: frozenset({
         OVERVIEW_READ, KNOWLEDGE_READ, "platform.knowledge.manage", "platform.knowledge.approve",
