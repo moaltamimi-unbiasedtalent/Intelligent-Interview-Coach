@@ -119,6 +119,7 @@ SECURITY_POLICIES: dict[str, RateLimitPolicy] = {
     # W12.4D-C: candidate checkout. Bounded per user and per IP (the availability read is public); nothing here moves money.
     "billing_checkout_user": RateLimitPolicy("billing_checkout_user", 10, 3600, "user"),
     "billing_status_ip": RateLimitPolicy("billing_status_ip", 120, 300, "ip"),
+    "billing_webhook_ip": RateLimitPolicy("billing_webhook_ip", 600, 60, "ip"),
 }
 
 POLICIES: dict[str, RateLimitPolicy] = {**AUTH_POLICIES, **COST_POLICIES, **SUPPORT_POLICIES, **SECURITY_POLICIES}

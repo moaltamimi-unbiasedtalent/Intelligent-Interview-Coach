@@ -355,7 +355,7 @@ def test_migration_0028_is_single_head_and_in_the_model():
     text = (ROOT / "migrations" / "versions" / "0028_checkout_sessions.py").read_text()
     assert 'down_revision = "0027_email_attempts"' in text
     downs = [p.read_text() for p in versions]
-    assert sum('down_revision = "0028_checkout_sessions"' in d for d in downs) == 0
+    assert sum('down_revision = "0028_checkout_sessions"' in d for d in downs) == 1      # W12.4D-D (0029) is the only successor
     assert "create_all" not in text and "stamp" not in text
 
 
@@ -404,4 +404,5 @@ def test_status_is_owner_scoped_and_never_paid(http):
 
 def test_there_is_no_payment_success_endpoint(http):
     billing = {p for p in http.app.openapi()["paths"] if p.startswith("/api/v1/billing")}
-    assert billing == {f"{API}/checkout/availability", f"{API}/checkout-sessions", f"{API}/checkout-returns", f"{API}/checkout/status"}
+    assert billing == {f"{API}/checkout/availability", f"{API}/checkout-sessions", f"{API}/checkout-returns", f"{API}/checkout/status",
+                       f"{API}/webhooks/stripe"}      # W12.4D-D: the signature-authenticated webhook is the one authorized addition; still no payment-success endpoint

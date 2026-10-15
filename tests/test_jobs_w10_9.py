@@ -447,6 +447,7 @@ def test_registry_is_code_defined_with_no_shell_or_arbitrary_handler():
                                "knowledge_parse", "knowledge_index", "knowledge_remove_index",   # W10.8 adds the knowledge types
                                "privacy_account_delete", "privacy_preparation_backfill", "privacy_preparation_purge",   # W10.10 the privacy types
                                "billing_process_event", "billing_refund",   # W10.5 the mock-billing types
+                               "billing_process_provider_event", "billing_provider_reconcile",   # W12.4D-D the provider-event types (not Admin-enqueueable)
                                "ai_evaluate_config"}   # W10.7 the AI evaluation type
     for d in R.REGISTRY.values():
         assert callable(d.handler) and d.max_attempts >= 1 and d.lease_seconds > 0 and d.idempotency

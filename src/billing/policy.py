@@ -43,4 +43,24 @@ EVENT_TYPES = ("customer_created", "subscription_updated", "invoice_opened", "in
 EVENT_STATES = ("received", "processed", "failed")
 JOB_PROCESS_EVENT = "billing_process_event"
 JOB_REFUND = "billing_refund"
+JOB_PROCESS_PROVIDER_EVENT = "billing_process_provider_event"      # W12.4D-D
+JOB_PROVIDER_RECONCILE = "billing_provider_reconcile"            # W12.4D-D
 MAX_REASON = 300
+
+# ---- W12.4D-D: signed webhooks, reconciliation, entitlement bridge -------------------------------------------------------------------------------
+# Like LIVE_BILLING_ENABLED and EXTERNAL_CHECKOUT_AUTHORIZED these are CODE constants: no setting, startup or Admin action can turn them on.
+# STRIPE_WEBHOOK_AUTHORIZED = False keeps the receiving route non-operational (it refuses every request) until a reviewed release enables it.
+STRIPE_WEBHOOK_AUTHORIZED = False
+# PAID_ENTITLEMENT_POLICY_APPROVED = False: the owner has NOT approved trial, grace, refund, cancellation, dispute or price rules, so no paid
+# entitlement is ever granted or revoked at runtime. Offline tests inject a clearly named synthetic policy.
+PAID_ENTITLEMENT_POLICY_APPROVED = False
+STRIPE_WEBHOOK_PATH = "/billing/webhooks/stripe"
+WEBHOOK_MAX_BODY_BYTES = 256 * 1024
+WEBHOOK_TOLERANCE_SECONDS = 300                  # Stripe's documented default; also bounds a FUTURE timestamp (the SDK only checks the past)
+EVENT_PROCESS_MAX_ATTEMPTS = 6
+EVENT_LEASE_SECONDS = 120
+EVENT_BACKOFF_BASE_SECONDS = 30
+EVENT_BACKOFF_CAP_SECONDS = 1800
+RECONCILE_SWEEP_BATCH = 25
+RECONCILE_STALE_AFTER_SECONDS = 24 * 3600        # an unrefreshed live link is re-read at most this often (documented cadence, no polling is enabled)
+PENDING_CHECKOUT_RECHECK_SECONDS = 15 * 60

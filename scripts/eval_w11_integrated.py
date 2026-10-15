@@ -83,7 +83,9 @@ def run() -> dict[str, tuple[bool, str]]:
         check("candidate_cannot_reach_admin", all(c.get("/api/v1" + p, cookies=ck).status_code == 403 for p in sample), f"{len(sample)} representative routes")
 
     # ---- separation of planes
-    billing = re.sub(r'"""(.|\n)*?"""|#.*', "", "\n".join(p.read_text(encoding="utf-8") for p in (ROOT / "src/billing").glob("*.py")))
+    # W12.4D-D: the bridge (src/billing/entitlement_bridge.py) is the one audited place provider-verified state may touch access; it is excluded here and checked
+    # for sole-writer status by eval_admin_billing / eval_admin_qualification. Every other billing module keeps this strict check.
+    billing = re.sub(r'"""(.|\n)*?"""|#.*', "", "\n".join(p.read_text(encoding="utf-8") for p in (ROOT / "src/billing").glob("*.py") if p.name != "entitlement_bridge.py"))
     check("billing_never_writes_entitlements_or_tier", not re.search(r"PlanRepository|EntitlementService|\bSubscription\b|\.assign\(|\btier\s*=", billing))
     flags = read("src/platform_config/flags.py")
     check("flags_never_grant_entitlement_or_authorization", not re.search(r"^\s*(from|import)\s+.*(entitlements|admin_permissions|billing)", flags, re.M))
@@ -118,7 +120,7 @@ def run() -> dict[str, tuple[bool, str]]:
 
     # ---- schema / scope
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("one_alembic_head_0028", mig[-1].startswith("0028_checkout_sessions") and len(mig) == 28, mig[-1])
+    check("one_alembic_head_0029", mig[-1].startswith("0029_provider_webhooks") and len(mig) == 29, mig[-1])
     ci = read(".github/workflows/ci.yml")
     try:
         import yaml

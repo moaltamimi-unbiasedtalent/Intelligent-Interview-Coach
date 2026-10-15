@@ -21,9 +21,10 @@ from sqlalchemy.exc import IntegrityError
 
 from src.billing import lifecycle as L
 from src.billing import policy as P
+from src.billing.entitlement_bridge import provider_grant_exists
 from src.billing.provider import CheckoutRequest, ProviderRejected, ProviderRetryable
 from src.persistence import (
-    BillingCheckoutSession as CS, BillingCommercialTerms as CT, BillingProviderPrice as PP, PlanVersion, PLAN_STATUS_ACTIVE, utcnow,
+    BillingCheckoutSession as CS, BillingCommercialTerms as CT, BillingProviderLink as LINK, BillingProviderPrice as PP, PlanVersion, PLAN_STATUS_ACTIVE, utcnow,
 )
 
 MAX_PROVIDER_ATTEMPTS = 5
@@ -249,7 +250,15 @@ class CheckoutService:
             if row is not None:
                 self._expire_if_due(s, row, self._clock())
                 s.commit()
-            return L.candidate_view(checkout_status=row.status if row else None, browser_returned=bool(row and row.browser_returned_at), plan_code=plan_code) | {
+            link = s.scalar(select(LINK).where(LINK.user_id == user_id).order_by(LINK.created_at.desc(), LINK.id.desc()).limit(1))
+            granted = provider_grant_exists(s, user_id)
+            view = L.candidate_view(checkout_status=row.status if row else None, browser_returned=bool(row and row.browser_returned_at), plan_code=plan_code)
+            if link is not None:                      # AUTHENTICATED provider evidence, reconciled server-side: the only source of subscription and payment words
+                sub, pay = L.from_verified_link(provider_state=link.provider_state, cancel_at_period_end=link.cancel_at_period_end,
+                                                latest_invoice_state=link.latest_invoice_state, refund_state=link.refund_state, dispute_state=link.dispute_state)
+                view.update(subscription=sub, payment=pay, confirmation="not_applicable" if sub not in ("confirmation_pending",) else "pending")
+            view["entitlement"] = {**view["entitlement"], "changed_by_billing": granted}
+            return view | {
                 "checkout_id": row.public_id if row else None,
                 "created_at": _iso(row.created_at) if row else None,
                 "expires_at": _iso(row.expires_at) if row and row.status == "open" else None,

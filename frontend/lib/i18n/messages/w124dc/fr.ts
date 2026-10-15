@@ -23,6 +23,16 @@ const fr: typeof en = {
     returnTitle: "État du paiement",
     backToAccount: "Retour à ton compte",
     stillChecking: "Vérification…",
+    confirmedTitle: "Abonnement Premium confirmé",
+    confirmedBody: "Notre partenaire de paiement a confirmé ton abonnement et ton offre a été mise à jour.",
+    confirmedNoAccessTitle: "Abonnement confirmé par notre partenaire de paiement",
+    confirmedNoAccessBody: "Ton offre n'a pas encore changé. L'accès est mis à jour uniquement lorsque les règles des offres payantes sont en vigueur.",
+    pastDueTitle: "Paiement à vérifier",
+    pastDueBody: "Notre partenaire de paiement n'a pas pu encaisser ton dernier paiement. Tu gères un abonnement payant auprès de ce partenaire.",
+    cancelScheduledTitle: "Résiliation programmée",
+    cancelScheduledBody: "Ton abonnement prendra fin à la fin de la période en cours. Rien n'est encore terminé.",
+    endedTitle: "Abonnement terminé",
+    endedBody: "Ton abonnement payant est terminé. Les fonctionnalités gratuites restent disponibles.",
   },
 };
 

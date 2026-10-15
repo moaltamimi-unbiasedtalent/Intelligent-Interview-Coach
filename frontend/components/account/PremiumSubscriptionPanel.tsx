@@ -52,13 +52,30 @@ export function PremiumSubscriptionPanel() {
   const pending = status?.confirmation === "pending";
   const canceled = status?.checkout === "canceled";
   const expired = status?.checkout === "expired";
+  // Subscription facts come ONLY from the server (reconciled from authenticated provider evidence). "Confirmed" is claimed only when the server also
+  // reports that access was actually changed by billing; otherwise the provider's confirmation is shown without any access claim.
+  const sub = status?.subscription;
+  const granted = status?.entitlement?.changed_by_billing === true;
+  const subscriptionNotice =
+    sub === "active" || sub === "cancel_scheduled"
+      ? sub === "cancel_scheduled"
+        ? ["cancelScheduledTitle", "cancelScheduledBody"]
+        : granted ? ["confirmedTitle", "confirmedBody"] : ["confirmedNoAccessTitle", "confirmedNoAccessBody"]
+      : sub === "past_due" ? ["pastDueTitle", "pastDueBody"]
+      : sub === "canceled" || sub === "expired" ? ["endedTitle", "endedBody"]
+      : null;
+  const settled = subscriptionNotice !== null;
 
   return (
     <Card>
       <CardBody className="space-y-3" data-testid="checkout-panel">
         <h2 className="text-base font-semibold text-foreground">{t("checkout.title")}</h2>
         {statusFailed ? <Alert tone="warning">{t("checkout.statusUnavailable")}</Alert> : null}
-        {pending ? (
+        {subscriptionNotice ? (
+          <div data-testid="subscription-notice">
+            <Alert tone="info" title={t(`checkout.${subscriptionNotice[0]}`)}>{t(`checkout.${subscriptionNotice[1]}`)}</Alert>
+          </div>
+        ) : pending ? (
           <Alert tone="info" title={t("checkout.pendingTitle")}>{t("checkout.pendingBody")}</Alert>
         ) : canceled ? (
           <Alert tone="info" title={t("checkout.canceledTitle")}>{t("checkout.canceledBody")}</Alert>
@@ -66,7 +83,7 @@ export function PremiumSubscriptionPanel() {
           <Alert tone="info">{t("checkout.expired")}</Alert>
         ) : null}
         {phase === "unavailable_provider" ? <Alert tone="warning">{t("checkout.providerUnavailable")}</Alert> : null}
-        {availability?.available && !pending ? (
+        {availability?.available && !pending && !settled ? (
           <>
             <p className="text-sm text-muted">{t("checkout.selectPlan")}</p>
             <Button onClick={start} disabled={phase === "preparing" || phase === "redirecting"} data-testid="checkout-start">
@@ -74,7 +91,7 @@ export function PremiumSubscriptionPanel() {
             </Button>
             <p className="text-xs text-muted">{t("checkout.sellerNote")} {t("checkout.manageNote")}</p>
           </>
-        ) : availability && !pending ? (
+        ) : availability && !pending && !settled ? (
           <p className="text-sm text-muted" data-testid="checkout-unavailable">{t("checkout.unavailable")}</p>
         ) : null}
         <p className="text-xs text-muted">{t("checkout.noInvoices")}</p>

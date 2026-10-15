@@ -12,3 +12,4 @@ class BillingRuntime:
     provider: Any = None          # the MOCK adapter when billing is enabled, else None
     mode: Any = None
     jobs: Any = None
+    provider_events: Any = None   # W12.4D-D: ProviderEventService (Null provider-state reader and the UNAPPROVED entitlement policy at runtime)

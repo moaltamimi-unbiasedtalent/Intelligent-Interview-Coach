@@ -23,6 +23,16 @@ const pt: typeof en = {
     returnTitle: "Estado do pagamento",
     backToAccount: "Voltar à tua conta",
     stillChecking: "A verificar…",
+    confirmedTitle: "Assinatura Premium confirmada",
+    confirmedBody: "O nosso parceiro de pagamentos confirmou a tua assinatura e o teu plano foi atualizado.",
+    confirmedNoAccessTitle: "Assinatura confirmada pelo nosso parceiro de pagamentos",
+    confirmedNoAccessBody: "O teu plano ainda não mudou. O acesso só é atualizado quando as regras dos planos pagos estiverem em vigor.",
+    pastDueTitle: "O pagamento requer atenção",
+    pastDueBody: "O nosso parceiro de pagamentos não conseguiu cobrar o teu último pagamento. Geres uma assinatura paga junto desse parceiro.",
+    cancelScheduledTitle: "Cancelamento agendado",
+    cancelScheduledBody: "A tua assinatura terminará no fim do período atual. Ainda nada terminou.",
+    endedTitle: "Assinatura terminada",
+    endedBody: "A tua assinatura paga terminou. As funcionalidades gratuitas continuam disponíveis.",
   },
 };
 

@@ -24,6 +24,16 @@ const en = {
     returnTitle: "Checkout status",
     backToAccount: "Back to your account",
     stillChecking: "Checking…",
+    confirmedTitle: "Premium subscription confirmed",
+    confirmedBody: "Our payment partner confirmed your subscription and your plan has been updated.",
+    confirmedNoAccessTitle: "Subscription confirmed by our payment partner",
+    confirmedNoAccessBody: "Your plan has not changed yet. Access is updated only when the rules for paid plans are in force.",
+    pastDueTitle: "Payment needs attention",
+    pastDueBody: "Our payment partner could not collect your latest payment. You manage a paid subscription with that partner.",
+    cancelScheduledTitle: "Cancellation scheduled",
+    cancelScheduledBody: "Your subscription is set to end at the end of the current period. Nothing has ended yet.",
+    endedTitle: "Subscription ended",
+    endedBody: "Your paid subscription has ended. Free features remain available.",
   },
 };
 

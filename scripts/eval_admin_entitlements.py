@@ -73,7 +73,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("no_billing_price_or_payment_in_plan_code", not hits, ", ".join(hits) or "none")
     models = code_only("PLAN_STATUS_DRAFT" + read("src/persistence.py").split("PLAN_STATUS_DRAFT", 1)[1].split("# --- Integration state")[0])
     check("no_payment_columns_on_plan_models", not BILLING_WORDS.search(models) and "trial" not in models.lower(), "plan/subscription tables carry no payment data")
-    check("subscription_sources_are_real", "SUBSCRIPTION_SOURCES = (\"system_default\", \"migration\", \"admin\")" in read("src/persistence.py"), "system_default, migration, admin")
+    check("subscription_sources_are_real", "SUBSCRIPTION_SOURCES = (\"system_default\", \"migration\", \"admin\", \"provider\")" in read("src/persistence.py"), "system_default, migration, admin + provider (W12.4D-D, bridge-written only)")
 
     mig = read("migrations/versions/0016_plans_entitlements.py")
     check("subject_integrity_in_db",
@@ -134,7 +134,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("copy_has_no_price_or_purchase_claim", not re.search(r"[€$£]|buy now|upgrade now|per month|checkout", en.replace("or offer checkout", ""), re.I) and "preview" in en.lower(), "Premium is a preview; nothing to buy")
 
     heads = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("migration_chain_valid", heads[-1].startswith(("0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_", "0026_", "0027_", "0028_")) and 'down_revision = "0015_support_ticketing"' in mig, heads[-1])
+    check("migration_chain_valid", heads[-1].startswith(("0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_", "0026_", "0027_", "0028_", "0029_")) and 'down_revision = "0015_support_ticketing"' in mig, heads[-1])
     tests = read("tests/test_plans_entitlements_w10_4.py")
     check("tests_exist", all(t in tests for t in ("test_no_subscription_falls_back_to_basic_never_premium", "test_workspace_scope_is_explicit",
                                                   "test_draft_is_editable_active_and_retired_are_immutable", "test_every_privileged_plan_mutation_rolls_back",

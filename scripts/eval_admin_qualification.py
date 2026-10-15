@@ -110,7 +110,10 @@ def run() -> dict[str, tuple[bool, str]]:
     check("secret_value_read_path_confined_to_store_and_adapters", not [p for p in (ROOT / "src/api").rglob("*.py") if "get_for_runtime" in p.read_text(encoding="utf-8")], "never an admin route/schema")
 
     # ---- domain boundaries (static, with the behavioural proofs in the named tests)
-    billing_src = code_only("\n".join(p.read_text(encoding="utf-8") for p in (ROOT / "src/billing").glob("*.py")))
+    # W12.4D-D: the dedicated bridge is the single audited place provider-verified state may touch access; it is checked on its own (sole writer, no tier, no EntitlementService write).
+    billing_src = code_only("\n".join(p.read_text(encoding="utf-8") for p in (ROOT / "src/billing").glob("*.py") if p.name != "entitlement_bridge.py"))
+    bridge_only = code_only(read("src/billing/entitlement_bridge.py"))
+    check("entitlement_bridge_sole_provider_writer_no_tier_no_plan_repository", len([p for p in (ROOT / "src").rglob("*.py") if re.search(r"source=[\"']provider[\"']", p.read_text(encoding="utf-8"))]) == 1 and not re.search(r"PlanRepository|\.assign\(|platform_tier|\btier\s*=|EntitlementService", bridge_only), "provider access only through the bridge")
     check("billing_state_never_writes_entitlements_or_tier", not re.search(r"PlanRepository|EntitlementService|\bSubscription\b|\.assign\(|platform_tier|\btier\s*=", billing_src) and "MOCK" in billing_src.upper(), "billing != entitlement")
     check("billing_and_reports_say_mock_not_live", "MOCK BILLING" in read("frontend/components/admin/BillingView.tsx").upper() and "NOT LIVE REVENUE" in read("frontend/components/admin/ReportsView.tsx").upper()
           and not re.search(r"paddle|adyen|stripe\.api_key|stripe\.checkout|\.subscriptions\.create", billing_src, re.I)
@@ -128,7 +131,7 @@ def run() -> dict[str, tuple[bool, str]]:
 
     # ---- migrations / scope
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("one_alembic_head_0028_after_the_w12_4b_w12_4c_and_w12_4d_c_migrations", mig[-1].startswith("0028_checkout_sessions") and len(mig) == 28 and len({m[:4] for m in mig}) == 28, mig[-1])
+    check("one_alembic_head_0029_after_the_w12_4b_w12_4c_w12_4d_c_and_w12_4d_d_migrations", mig[-1].startswith("0029_provider_webhooks") and len(mig) == 29 and len({m[:4] for m in mig}) == 29, mig[-1])
     check("no_w11_or_rc_code", not list((ROOT / "docs/capstone").rglob("W11*")) and not list((ROOT / "docs/capstone").rglob("RC-P10-003*")))   # W10.14-era guard: no W11/RC docs by name; the RC artifact is governed by eval_w11_integrated / eval_rc_p10_003 after the post-W11 owner-approved action
 
     # ---- evaluator / test isolation

@@ -57,6 +57,17 @@ def selected_environment() -> str:
     return raw
 
 
+def webhook_signing_secrets(store, environment: str | None) -> list[str]:
+    """The webhook signing secret(s) of the CONFIGURED environment only, resolved through the W12.4B SecretStore (managed value, then environment, then none).
+    There is ONE slot per environment (never the other environment's, never a fallback value); during a Stripe secret roll the signature header carries both
+    signatures, so the one stored secret verifies it. Returns ``[]`` when absent or malformed. The value never leaves the verifier."""
+    if environment not in P.STRIPE_ENVIRONMENTS:
+        return []
+    secret = store.get_for_runtime(SLOT_NAMES[environment]["webhook"])
+    value = secret.get_secret_value() if secret is not None else ""
+    return [value] if value.startswith(WEBHOOK_PREFIX) else []
+
+
 def require_managed_payments(params: dict) -> dict:
     """Safety rail for W12.4D-C: refuse any Checkout Session parameter set that would make Ask4Mo the merchant of record."""
     mp = params.get("managed_payments")
