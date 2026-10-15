@@ -100,7 +100,7 @@ def run() -> dict[str, tuple[bool, str]]:
     routes = sorted(re.findall(r'@router\.(?:get|post|put|patch|delete)\("([^"]*)"', bc))
     wh = read("src/api/routes/billing_webhooks.py")
     check("the_only_unauthenticated_billing_route_is_the_signature_authenticated_webhook", re.findall(r'@router\.(?:get|post|put|patch|delete)\("([^"]*)"', wh) == ["/webhooks/stripe"] and "get_current_user_id" not in wh and "@router.post" in wh, "POST /billing/webhooks/stripe")
-    check("candidate_billing_routes_are_exactly_the_four_checkout_routes", routes == ["/checkout-returns", "/checkout-sessions", "/checkout/availability", "/checkout/status"] and not re.search(r"portal|payment[-_]method|invoice|webhook|success", "".join(routes)), str(routes))
+    check("candidate_billing_routes_are_exactly_the_four_checkout_routes_plus_the_read_only_summary", routes == ["/checkout-returns", "/checkout-sessions", "/checkout/availability", "/checkout/status", "/summary"] and not re.search(r"portal|payment[-_]method|invoice|webhook|success", "".join(routes)), str(routes))
     check("no_revenue_reporting_or_coupons", not re.search(r"\b(mrr|arr|ltv|churn|gmv|coupon|promo_code|discount)\b", code.lower()), "none")
     check("routes_permissioned", route.count("require_permission(") >= 15 and all(x in route for x in ("BILLING_READ", "BILLING_REFUND", "PRICE_CHANGE")), "explicit")
     check("permission_registry_stays_43", len(perm.PERMISSIONS) == 43 and "platform.billing.manage" not in perm.PERMISSIONS, "43")

@@ -131,7 +131,7 @@ def run() -> dict[str, tuple[bool, str]]:
 
     # ---- migrations / scope
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("one_alembic_head_0029_after_the_w12_4b_w12_4c_w12_4d_c_and_w12_4d_d_migrations", mig[-1].startswith("0029_provider_webhooks") and len(mig) == 29 and len({m[:4] for m in mig}) == 29, mig[-1])
+    check("one_alembic_head_0030_after_the_w12_4b_w12_4c_w12_4d_c_w12_4d_d_and_w12_4d_e_migrations", mig[-1].startswith("0030_billing_recovery") and len(mig) == 30 and len({m[:4] for m in mig}) == 30, mig[-1])
     check("no_w11_or_rc_code", not list((ROOT / "docs/capstone").rglob("W11*")) and not list((ROOT / "docs/capstone").rglob("RC-P10-003*")))   # W10.14-era guard: no W11/RC docs by name; the RC artifact is governed by eval_w11_integrated / eval_rc_p10_003 after the post-W11 owner-approved action
 
     # ---- evaluator / test isolation

@@ -470,6 +470,7 @@ test("W10.5: mock billing: MOCK banner, terms request, no self-approval, second 
   await mockAdmin(page, "billing_admin", ADMIN_PERMS);
   await page.goto("/admin");
   await page.getByRole("navigation", { name: "Admin" }).getByRole("link", { name: /^Billing/ }).click();
+  await page.getByTestId("area-mock").click();                       // W12.4D-E: the Billing destination opens on Provider operations; the mock records are one real click away
   await expect(page.getByRole("heading", { name: "MOCK BILLING — NOT LIVE BILLING" })).toBeVisible();
   await expect(page.getByText(/No live payments are processed/).first()).toBeVisible();
   await expect(page.getByText("MOCK inv_1")).toBeVisible();
@@ -489,6 +490,7 @@ test("W10.5: mock billing: MOCK banner, terms request, no self-approval, second 
   currentUid = 2;                                                                                  // a different qualified administrator
   await mockAdmin(page, "billing_admin", ADMIN_PERMS);
   await page.goto("/admin/billing");
+  await page.getByTestId("area-mock").click();
   await page.getByRole("button", { name: "Approve" }).click();
   await expect(page.getByRole("alertdialog").getByRole("button", { name: "Cancel" })).toBeFocused();
   await page.getByRole("alertdialog").getByRole("button", { name: "Approve" }).click();
@@ -499,6 +501,7 @@ test("W10.5: mock billing: MOCK banner, terms request, no self-approval, second 
   currentUid = 1;
   await mockAdmin(page, "billing_admin", ADMIN_PERMS);
   await page.goto("/admin/billing");
+  await page.getByTestId("area-mock").click();
   await page.getByRole("button", { name: /Request a mock refund for pay_1/ }).click();
   await expect(page.getByText(/Mock refund — no real money moves\./).first()).toBeVisible();
   await page.getByLabel(/Refund amount in minor units/).fill("500");
@@ -510,11 +513,13 @@ test("W10.5: mock billing: MOCK banner, terms request, no self-approval, second 
   currentUid = 2;
   await mockAdmin(page, "billing_admin", ADMIN_PERMS);
   await page.goto("/admin/billing");
+  await page.getByTestId("area-mock").click();
   await page.getByRole("button", { name: "Approve" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Approve" }).click();
   await expect(page.getByText(/Mock refund approved and queued/)).toBeVisible();
   bill.worker();                                                                                    // the W10.9 worker executes the approved refund
   await page.reload();
+  await page.getByTestId("area-mock").click();
   await expect(page.getByText(/MOCK refund of 5.00 EUR/)).toBeVisible();
   await expect(page.getByText("Executed").first()).toBeVisible();
   expect(bill.entitlements).toEqual(["standard_history"]);                                         // billing never touched access
@@ -523,6 +528,7 @@ test("W10.5: mock billing: MOCK banner, terms request, no self-approval, second 
   currentUid = 1;
   await mockAdmin(page, "platform_admin", ["platform.overview.read", "platform.billing.read"]);
   await page.goto("/admin/billing");
+  await page.getByTestId("area-mock").click();
   await expect(page.getByRole("heading", { name: "MOCK BILLING — NOT LIVE BILLING" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Propose|refund|Approve|Reject/i })).toHaveCount(0);
 });

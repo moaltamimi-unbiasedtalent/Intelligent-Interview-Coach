@@ -1992,6 +1992,10 @@ class BillingProviderEvent(Base):
     normalized_json: Mapped[dict] = mapped_column(JSON, default=dict)
     reconciliation_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     correlation_id: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    # W12.4D-E: processing attempts allowed before ``needs_review``. Starts at the policy default; an operator retry may raise it by a bounded amount
+    # (``operator_retries`` is capped) WITHOUT erasing ``attempt_count``, which stays the true history.
+    attempt_limit: Mapped[int] = mapped_column(Integer, default=6, server_default="6")
+    operator_retries: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 
 
 class BillingProviderLink(Base):
@@ -2036,6 +2040,37 @@ class BillingProviderLink(Base):
     entitlement_subscription_id: Mapped[int | None] = mapped_column(ForeignKey("subscriptions.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+RECOVERY_ACTIONS = ("retry_event", "requeue_lease", "reconcile_link")
+RECOVERY_STATUSES = ("requested", "completed", "failed", "refused")
+
+
+class BillingRecoveryAction(Base):
+    """W12.4D-E: the append-only record of one OPERATOR recovery action on provider billing records: who, what, why, and the bounded result. Never holds
+    a payload, a provider object or a secret. Unique idempotency key: a replay returns the stored result and runs nothing."""
+
+    __tablename__ = "billing_recovery_actions"
+    __table_args__ = (
+        CheckConstraint(_in_list("action", RECOVERY_ACTIONS), name="ck_bra_action"),
+        CheckConstraint(_in_list("status", RECOVERY_STATUSES), name="ck_bra_status"),
+        UniqueConstraint("idempotency_key", name="uq_bra_idempotency"),
+        Index("ix_bra_created", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    action: Mapped[str] = mapped_column(String(16))
+    event_id: Mapped[int | None] = mapped_column(ForeignKey("billing_provider_events.id", ondelete="SET NULL"), nullable=True)
+    link_id: Mapped[int | None] = mapped_column(ForeignKey("billing_provider_links.id", ondelete="SET NULL"), nullable=True)
+    actor_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    reason: Mapped[str] = mapped_column(String(300))
+    idempotency_key: Mapped[str] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(12), default="requested", server_default="requested")
+    result_category: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    previous_status: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class BillingEntitlementDecision(Base):

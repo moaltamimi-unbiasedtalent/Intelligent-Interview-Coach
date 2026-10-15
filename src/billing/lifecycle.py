@@ -101,3 +101,31 @@ def candidate_view(*, checkout_status: str | None, browser_returned: bool, plan_
     return {"checkout": checkout, "subscription": subscription, "payment": payment,
             "entitlement": {"plan_code": plan_code, "source": "entitlement_service", "changed_by_billing": False},
             "confirmation": "pending" if subscription == "confirmation_pending" else "not_applicable"}
+
+
+OVERVIEW_STATES = ("free", "checkout_pending", "confirmation_pending", "trialing", "active", "past_due", "cancel_at_period_end", "canceled", "expired", "refunded", "disputed")
+
+
+def overview_state(*, checkout_status: str | None, browser_returned: bool, link: dict | None) -> str:
+    """The ONE user-facing label, derived from the same verified facts as the four dimensions (never a second state machine). Priority: a verified dispute or
+    refund fact, then the verified subscription state, then the local checkout attempt, then free. Payment, subscription and entitlement stay separate fields."""
+    if link is not None:
+        if link["dispute_state"] in ("open", "lost"):
+            return "disputed"
+        if link["refund_state"] == "full":
+            return "refunded"
+        state = link["provider_state"]
+        if state == "trialing":
+            return "trialing"
+        if state in ("canceled",):
+            return "canceled"
+        if state == "incomplete_expired":
+            return "expired"
+        if state in ("past_due", "unpaid"):
+            return "past_due"
+        if state == "active" and link["latest_invoice_state"] == "paid":
+            return "cancel_at_period_end" if link["cancel_at_period_end"] else "active"
+        return "confirmation_pending"                      # incomplete, paused, or active without a paid invoice: not payment evidence
+    if checkout_status in ("pending_creation", "open"):
+        return "confirmation_pending" if browser_returned else "checkout_pending"
+    return "free"

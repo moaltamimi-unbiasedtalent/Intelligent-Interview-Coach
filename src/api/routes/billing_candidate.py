@@ -100,3 +100,43 @@ def my_status(user_id: int = Depends(get_current_user_id), checkout=Depends(get_
               ents=Depends(get_entitlement_service)) -> CheckoutStatus:
     plan = ents.plan_summary(user_id)["plan_code"]
     return CheckoutStatus(**checkout.status(user_id, plan))
+
+
+class BillingManagement(BaseModel):
+    where: str
+    url: str | None = None
+    url_verified: bool = False
+
+
+class BillingReceipts(BaseModel):
+    shown_here: bool
+    where: str
+
+
+class TimelineEntry(BaseModel):
+    kind: str
+    at: str | None = None
+
+
+class BillingSummary(BaseModel):
+    state: str
+    subscription: str
+    payment: str
+    plan_code: str
+    entitlement: EntitlementFacet
+    interval: str | None = None
+    current_period_end: str | None = None
+    cancel_at_period_end: bool = False
+    cancellation_effective_at: str | None = None
+    refund_state: str = "none"
+    dispute_state: str = "none"
+    verified_at: str | None = None
+    management: BillingManagement
+    receipts: BillingReceipts
+    timeline: list[TimelineEntry]
+
+
+@router.get("/summary", response_model=BillingSummary, summary="My billing overview from verified local state (own records only)")
+def my_summary(user_id: int = Depends(get_current_user_id), checkout=Depends(get_checkout_service), ents=Depends(get_entitlement_service)) -> BillingSummary:
+    enforce("billing_summary_user", user_key(user_id))
+    return BillingSummary(**checkout.summary(user_id, ents.plan_summary(user_id)["plan_code"]))

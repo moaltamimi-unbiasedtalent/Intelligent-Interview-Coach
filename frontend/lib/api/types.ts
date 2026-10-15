@@ -1132,6 +1132,24 @@ export interface CheckoutStatusView {
   expires_at: string | null;
 }
 
+export interface BillingSummaryView {
+  state: "free" | "checkout_pending" | "confirmation_pending" | "trialing" | "active" | "past_due" | "cancel_at_period_end" | "canceled" | "expired" | "refunded" | "disputed";
+  subscription: string;
+  payment: string;
+  plan_code: string;
+  entitlement: { plan_code: string; source: string; changed_by_billing: boolean };
+  interval: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+  cancellation_effective_at: string | null;
+  refund_state: string;
+  dispute_state: string;
+  verified_at: string | null;
+  management: { where: string; url: string | null; url_verified: boolean };
+  receipts: { shown_here: boolean; where: string };
+  timeline: { kind: string; at: string | null }[];
+}
+
 // --- W10.10 candidate privacy requests and legal-version truth ---
 export interface PrivacyRequestView {
   public_id: string;

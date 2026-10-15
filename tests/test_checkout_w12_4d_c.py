@@ -405,4 +405,4 @@ def test_status_is_owner_scoped_and_never_paid(http):
 def test_there_is_no_payment_success_endpoint(http):
     billing = {p for p in http.app.openapi()["paths"] if p.startswith("/api/v1/billing")}
     assert billing == {f"{API}/checkout/availability", f"{API}/checkout-sessions", f"{API}/checkout-returns", f"{API}/checkout/status",
-                       f"{API}/webhooks/stripe"}      # W12.4D-D: the signature-authenticated webhook is the one authorized addition; still no payment-success endpoint
+                       f"{API}/webhooks/stripe", f"{API}/summary"}      # W12.4D-D: the signature-authenticated webhook; W12.4D-E: the read-only own-billing summary. Still no payment-success endpoint

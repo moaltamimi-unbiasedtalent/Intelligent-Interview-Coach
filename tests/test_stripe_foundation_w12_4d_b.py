@@ -296,7 +296,7 @@ def test_there_is_no_checkout_payment_or_webhook_route_and_billing_code_never_to
     # (Read from the OpenAPI schema: ``app.routes`` holds included routers without a path.)
     paths = [p for p in app.openapi()["paths"] if p.startswith("/api/v1/billing")]
     assert sorted(paths) == ["/api/v1/billing/checkout-returns", "/api/v1/billing/checkout-sessions", "/api/v1/billing/checkout/availability",
-                             "/api/v1/billing/checkout/status", "/api/v1/billing/webhooks/stripe"], paths
+                             "/api/v1/billing/checkout/status", "/api/v1/billing/summary", "/api/v1/billing/webhooks/stripe"], paths
     assert not [p for p in app.openapi()["paths"] if re.search(r"payment-confirm|portal|payment-success", p, re.I)]
     for f in (ROOT / "src/billing").glob("*.py"):
         if f.name == "entitlement_bridge.py":

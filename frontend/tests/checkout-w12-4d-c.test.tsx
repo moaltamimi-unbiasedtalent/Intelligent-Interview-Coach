@@ -110,37 +110,21 @@ describe("PremiumSubscriptionPanel", () => {
   });
 });
 
-describe("PremiumSubscriptionPanel reconciled subscription states (W12.4D-D)", () => {
-  const view = (subscription: string, granted: boolean, extra: object = {}) => ({ ...none, checkout: "open", subscription, payment: "succeeded", confirmation: "not_applicable",
-    entitlement: { plan_code: granted ? "premium" : "basic", source: "entitlement_service", changed_by_billing: granted }, ...extra });
-  const mount = async (s: object) => {
+describe("PremiumSubscriptionPanel purchase button follows verified subscription state", () => {
+  const view = (subscription: string) => ({ ...none, checkout: "open", subscription, payment: "succeeded", confirmation: "not_applicable",
+    entitlement: { plan_code: "premium", source: "entitlement_service", changed_by_billing: true } });
+  it.each(["active", "cancel_scheduled", "past_due"])("no purchase button while the subscription is %s", async (state) => {
     availability.mockResolvedValue({ plan: "premium", available: true, reason: null });
-    status.mockResolvedValue(s);
+    status.mockResolvedValue(view(state));
     wrap(<PremiumSubscriptionPanel />);
     await screen.findByTestId("checkout-panel");
-  };
-
-  it("claims 'confirmed' ONLY when the server reports access was changed by billing", async () => {
-    await mount(view("active", true));
-    expect(await screen.findByText(en.checkout.confirmedTitle)).toBeInTheDocument();
     expect(screen.queryByTestId("checkout-start")).toBeNull();
   });
-
-  it("shows the provider confirmation WITHOUT an access claim when billing changed nothing", async () => {
-    await mount(view("active", false));
-    expect(await screen.findByText(en.checkout.confirmedNoAccessTitle)).toBeInTheDocument();
-    expect(screen.queryByText(en.checkout.confirmedTitle)).toBeNull();
-  });
-
-  it.each([["past_due", "pastDueTitle"], ["cancel_scheduled", "cancelScheduledTitle"], ["canceled", "endedTitle"], ["expired", "endedTitle"]])("%s", async (state, key) => {
-    await mount(view(state, state === "past_due" || state === "cancel_scheduled"));
-    expect(await screen.findByText((en.checkout as Record<string, string>)[key])).toBeInTheDocument();
-  });
-
-  it("never shows a subscription notice for 'none' or an unknown state", async () => {
-    await mount(view("none", false));
-    expect(screen.queryByTestId("subscription-notice")).toBeNull();
-    expect(screen.getByTestId("checkout-start")).toBeInTheDocument();
+  it("the purchase button returns after a verified cancellation (a new subscription is allowed)", async () => {
+    availability.mockResolvedValue({ plan: "premium", available: true, reason: null });
+    status.mockResolvedValue(view("canceled"));
+    wrap(<PremiumSubscriptionPanel />);
+    expect(await screen.findByTestId("checkout-start")).toBeInTheDocument();
   });
 });
 

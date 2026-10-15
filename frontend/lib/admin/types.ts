@@ -804,3 +804,28 @@ export interface RoleChangeRequest {
   status: string; reason: string; requested_at: string | null; decided_at: string | null; applied_at: string | null; revision: number;
 }
 export interface RoleChangePage { items: RoleChangeRequest[]; total: number; page: number; page_size: number; assignable_roles: string[]; viewer_user_id: number }
+
+// --- W12.4D-E billing operations (verified local state only: ids masked, no payload, no secret, no revenue) ---
+export interface BillingOpsPage { items: Record<string, unknown>[]; total: number; page: number; page_size: number }
+export interface BillingOpsReadiness {
+  provider_selected: string; environment: string; provider_configured: boolean; credential_status: string; eligibility: string; sandbox_access: string;
+  checkout: string; webhook: string; provider_state_reader: string; reconciliation_scheduler: string; entitlement_policy: string; live_billing: string;
+  kill_switches: Record<string, boolean>; operational: boolean;
+}
+export interface BillingOpsOverview {
+  generated_at: string; data_origin: string; revenue_reported: boolean;
+  subscriptions: Record<string, number>; checkouts: Record<string, number>;
+  events: { pending: number; failed: number; quarantined: number; needs_review: number; processed: number; ignored: number; awaiting_operator: number; oldest_pending_seconds: number | null };
+  reconciliation: { stale_links: number; last_successful: string | null; last_attempt: string | null; provider_state_reader: string };
+  recovery_actions: number; readiness: BillingOpsReadiness; open_commercial_decisions: string[];
+}
+export interface BillingOpsReconciliation {
+  generated_at: string; provider_state_reader: string; provider_synchronization: string; scheduler: string; last_successful: string | null; last_attempt: string | null;
+  stale_links: number; retry_scheduled: number; problems_by_category: Record<string, number>; needs_attention: Record<string, unknown>[]; cadence_note: string;
+}
+export interface BillingOpsEventDetail {
+  reference: string; provider_event: string | null; event_type: string; environment: string; status: string; attempt_count: number; attempt_limit: number; operator_retries: number;
+  failure_category: string | null; correlation_id: string | null; signature_verified: boolean; classification: string; recoverable: boolean; subscription_reference: string | null;
+  lifecycle: { step: string; at: string | null }[]; reconciliation: Record<string, unknown> | null;
+}
+export interface BillingRecoveryResult { reference: string; action: string; status: string; result: string | null; replayed: boolean }

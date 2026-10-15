@@ -108,7 +108,7 @@ class ProviderEventService:
             and_(EV.status.in_(("received", "failed")), or_(EV.next_attempt_at.is_(None), EV.next_attempt_at <= now)),
             and_(EV.status == "processing", EV.lease_until < now))
         with self._sf() as s:
-            res = s.execute(update(EV).where(EV.public_id == public_id, EV.attempt_count < P.EVENT_PROCESS_MAX_ATTEMPTS, runnable).values(
+            res = s.execute(update(EV).where(EV.public_id == public_id, EV.attempt_count < EV.attempt_limit, runnable).values(
                 status="processing", lease_until=now + timedelta(seconds=P.EVENT_LEASE_SECONDS), attempt_count=EV.attempt_count + 1, last_attempt_at=now))
             s.commit()
             return res.rowcount == 1
@@ -120,7 +120,7 @@ class ProviderEventService:
                 ev = s.scalar(select(EV).where(EV.public_id == public_id))
                 if ev is None:
                     return Result("skipped", "not_found")
-                if ev.attempt_count >= P.EVENT_PROCESS_MAX_ATTEMPTS and ev.status in ("received", "failed", "processing"):
+                if ev.attempt_count >= ev.attempt_limit and ev.status in ("received", "failed", "processing"):
                     ev.status, ev.failure_category, ev.lease_until = "needs_review", "retries_exhausted", None
                     s.commit()
                     self._record("billing.webhook_processing_failed", "failure", public_id, ev.correlation_id, category="retries_exhausted")
@@ -159,7 +159,7 @@ class ProviderEventService:
             category = category if category in _FAILURE_CATEGORIES else "internal_error"
             ev.failure_category, ev.lease_until = category, None
             if status == "retry":
-                if ev.attempt_count >= P.EVENT_PROCESS_MAX_ATTEMPTS:
+                if ev.attempt_count >= ev.attempt_limit:
                     ev.status, ev.failure_category = "needs_review", "retries_exhausted"
                     status = "needs_review"
                 else:
@@ -337,6 +337,102 @@ class ProviderEventService:
             counts["unavailable"] += 1
         except Exception:  # noqa: BLE001 - one bad subscription must not stop the sweep; the next sweep re-reads it
             counts["failed"] += 1
+
+    # ------------------------------------------------------------------ operator recovery (W12.4D-E): bounded, idempotent, audited, fail closed
+    MAX_OPERATOR_RETRIES = 3
+    OPERATOR_EXTRA_ATTEMPTS = 3
+
+    def reader_available(self) -> bool:
+        """False for the runtime Null reader: no recovery action may then pretend to synchronise with a provider."""
+        from src.billing.provider_state import NullStateReader
+        return not isinstance(self._reader, NullStateReader)
+
+    def recover(self, action: str, target_public_id: str, *, actor_user_id: int, reason: str, idempotency_key: str, audit: dict | None = None) -> dict:
+        """Run ONE operator recovery action. Returns ``{"public_id", "action", "status", "result", "replayed"}``. A replay of the same idempotency key returns the stored
+        outcome and runs nothing. Prerequisites that are missing REFUSE the action (recorded, nothing changed). The action only re-drives the existing verified
+        pipeline (claim, provider-state read, ownership and price guards, entitlement policy): it cannot forge an event, edit a financial fact, delete evidence,
+        grant access directly, or accept a caller-supplied provider id as ownership (the target is always one of OUR record ids)."""
+        from src.persistence import BillingRecoveryAction as RA
+
+        if action not in ("retry_event", "requeue_lease", "reconcile_link"):
+            raise ValueError("unknown recovery action")
+        now = self._clock()
+        row = RA(public_id=uuid.uuid4().hex, action=action, actor_user_id=actor_user_id, reason=reason, idempotency_key=idempotency_key, status="requested", created_at=now)
+        try:
+            with self._sf() as s:
+                s.add(row)
+                s.commit()
+                pid = row.public_id
+        except IntegrityError:
+            with self._sf() as s:
+                prior = s.scalar(select(RA).where(RA.idempotency_key == idempotency_key))
+                if prior is None or prior.action != action or prior.actor_user_id != actor_user_id:
+                    raise
+                return {"public_id": prior.public_id, "action": prior.action, "status": prior.status, "result": prior.result_category, "replayed": True}
+        self._record("billing.recovery_requested", "success", target_public_id, None, action=action, actor=actor_user_id)
+        status, category, prev, event_id, link_id = "refused", "unknown_error", None, None, None
+        try:
+            status, category, prev, event_id, link_id = self._do_recover(action, target_public_id, now)
+        except Exception:  # noqa: BLE001 - bounded: the action row records a safe category, never the exception text
+            status, category = "failed", "internal_error"
+        with self._sf() as s:
+            r = s.scalar(select(RA).where(RA.public_id == pid))
+            r.status, r.result_category, r.previous_status, r.event_id, r.link_id, r.completed_at = status, category, prev, event_id, link_id, self._clock()
+            if audit:                                           # the admin audit row commits in the SAME transaction as the recorded outcome
+                from src.admin_repository import _stage
+                _stage(s, {**audit, "result": "success" if status == "completed" else "failure"}, action=action, status=status, category=category)
+            s.commit()
+        self._record({"completed": "billing.recovery_completed", "failed": "billing.recovery_failed"}.get(status, "billing.recovery_refused"),
+                     "success" if status == "completed" else "failure", target_public_id, None, action=action, actor=actor_user_id, category=category)
+        return {"public_id": pid, "action": action, "status": status, "result": category, "replayed": False}
+
+    def _do_recover(self, action: str, target: str, now: datetime):
+        """-> (status, result category, previous event status, event id, link id)"""
+        if not self.reader_available():
+            return "refused", "reader_unavailable", None, None, None                  # fail closed: never report success without a provider-state reader
+        if action == "reconcile_link":
+            with self._sf() as s:
+                link = s.scalar(select(LINK).where(LINK.public_id == target))
+                if link is None or link.environment != self._env or link.provider != P.PROVIDER_STRIPE_MP:
+                    return "refused", "not_found", None, None, None
+                sub_id, link_id = link.provider_subscription_id, link.id
+            try:
+                with self._sf() as s:
+                    self._reconcile_subscription(s, sub_id, None, {}, now)
+                    s.commit()
+            except ProviderStateUnavailable:
+                return "failed", "provider_unavailable", None, None, link_id
+            except ProviderStateError as exc:
+                return "failed", exc.__class__.__name__.replace("ProviderState", "").lower() or "provider_error", None, None, link_id
+            except _Quarantine as q:
+                return "failed", q.category if q.category in _FAILURE_CATEGORIES else "internal_error", None, None, link_id
+            return "completed", "reconciled", None, None, link_id
+        with self._sf() as s:
+            ev = s.scalar(select(EV).where(EV.public_id == target))
+            if ev is None or ev.environment != self._env or ev.provider != P.PROVIDER_STRIPE_MP:
+                return "refused", "not_found", None, None, None
+            prev, event_id = ev.status, ev.id
+            if action == "retry_event":
+                if ev.status not in ("failed", "needs_review", "quarantined"):
+                    return "refused", "event_not_retryable", prev, event_id, None
+                if ev.operator_retries >= self.MAX_OPERATOR_RETRIES:
+                    return "refused", "operator_retry_limit_reached", prev, event_id, None
+                res = s.execute(update(EV).where(EV.id == ev.id, EV.status == prev, EV.operator_retries < self.MAX_OPERATOR_RETRIES).values(
+                    status="failed", next_attempt_at=now, lease_until=None, operator_retries=EV.operator_retries + 1,
+                    attempt_limit=EV.attempt_count + self.OPERATOR_EXTRA_ATTEMPTS).execution_options(synchronize_session=False))
+            else:      # requeue_lease: only an ABANDONED lease (expired) of a processing event
+                lease = _aware(ev.lease_until, now)
+                if ev.status != "processing" or lease is None or lease >= now:
+                    return "refused", "lease_not_abandoned", prev, event_id, None
+                res = s.execute(update(EV).where(EV.id == ev.id, EV.status == "processing", EV.lease_until < now).values(
+                    status="failed", next_attempt_at=now, lease_until=None).execution_options(synchronize_session=False))
+            if res.rowcount != 1:
+                s.rollback()
+                return "refused", "concurrent_change", prev, event_id, None
+            s.commit()
+        result = self.process(target)                                                  # through the SAME claim, reader, guards and policy as any event
+        category = result.category or result.status
+        return ("completed" if result.status in ("processed", "ignored") else "failed"), category, prev, event_id, None
 
     # ------------------------------------------------------------------ audit (ids and bounded categories only; never a payload)
     def _record(self, name: str, result: str, target: str | None, correlation: str | None, **ctx: Any) -> None:

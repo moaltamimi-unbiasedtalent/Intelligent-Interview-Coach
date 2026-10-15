@@ -374,6 +374,27 @@ def get_webhook_receiver(request: Request, repo=Depends(get_repository), store=D
                            provider_selected=mode.provider, audit=AuditRepository(repo.session_factory))
 
 
+def get_provider_event_service(repo=Depends(get_repository)):
+    """Provider-event service as the RUNNING system uses it: Null provider-state reader and the UNAPPROVED entitlement policy (W12.4D-E recovery actions
+    therefore fail closed with ``reader_unavailable``)."""
+    from src.billing.wiring import build_provider_events
+
+    return build_provider_events(repo.session_factory)
+
+
+def get_billing_operations(repo=Depends(get_repository), store=Depends(get_secret_store), events=Depends(get_provider_event_service)):
+    """Admin billing read models (W12.4D-E). Booleans, source kinds and fixed states only; no credential value is ever read into a response."""
+    from src.billing import policy as P
+    from src.billing import stripe_provider as SP
+    from src.billing.operations import BillingOperations
+    from src.billing.provider import safe_mode
+
+    mode = safe_mode()
+    env = mode.environment if mode.provider == P.PROVIDER_STRIPE_MP else None
+    return BillingOperations(repo.session_factory, environment=env, provider_selected=mode.provider, reader_available=events.reader_available(),
+                             readiness=lambda: SP.readiness(store, provider_selected=mode.provider or "", environment=env))
+
+
 def get_pause_service(repo=Depends(get_repository)):
     """The DURABLE pause authority for this deployment's environment (P10B-W10.11). Built per request over the shared repository: no process state."""
     from src.application.pause import PauseService
