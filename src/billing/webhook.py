@@ -39,17 +39,17 @@ class WebhookReceiver:
         return secrets
 
     def handle(self, raw_body: bytes, signature_header: str | None, *, correlation_id: str | None = None) -> dict:
-        self._record("billing.webhook_received", "success", correlation_id)
         try:
-            secrets = self._gate()
+            secrets = self._gate()          # a refusal here (not authorized / not configured) is NOT audited: nothing happened, and an unauthenticated caller must not be able to grow the audit log
             if len(raw_body) > P.WEBHOOK_MAX_BODY_BYTES:
                 raise SE.WebhookError("payload_too_large", 413)
             SE.verify_signature(raw_body, signature_header, secrets, now=self._clock() if self._clock else None)
             event = SE.parse_event(raw_body)
             SE.require_environment(event, self._env)
         except SE.WebhookError as exc:
-            self._record("billing.webhook_signature_rejected" if exc.category.startswith(("signature", "timestamp")) else "billing.webhook_rejected",
-                         "failure", correlation_id, category=exc.category)
+            if exc.category not in ("not_enabled", "live_disabled", "not_configured"):
+                self._record("billing.webhook_signature_rejected" if exc.category.startswith(("signature", "timestamp")) else "billing.webhook_rejected",
+                             "failure", correlation_id, category=exc.category)
             raise
         try:
             accepted = self._events.accept(event, correlation_id=correlation_id)

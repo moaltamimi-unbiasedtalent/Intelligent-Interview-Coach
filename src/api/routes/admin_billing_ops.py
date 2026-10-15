@@ -126,7 +126,11 @@ def _recover(action: str, reference: str, body: RecoveryRequest, key: str | None
     if not key or not _KEY.match(key):
         raise HTTPException(status_code=422, detail="An Idempotency-Key of 8 to 64 letters, digits, underscores or hyphens is required.")
     enforce("billing_recovery_user", user_key(principal.user_id))
-    out = svc.recover(action, reference[:64], actor_user_id=principal.user_id, reason=body.reason, idempotency_key=key, audit=audit)
+    from src.billing.reconcile import RecoveryKeyConflict
+    try:
+        out = svc.recover(action, reference[:64], actor_user_id=principal.user_id, reason=body.reason, idempotency_key=key, audit=audit)
+    except RecoveryKeyConflict:
+        raise HTTPException(status_code=409, detail="That Idempotency-Key was already used for a different request.")
     return RecoveryResult(reference=out["public_id"], action=out["action"], status=out["status"], result=out["result"], replayed=out["replayed"])
 
 

@@ -94,7 +94,8 @@ class BillingOperations:
             scheduled_cancel = s.scalar(select(func.count()).select_from(LINK).where(LINK.cancel_at_period_end.is_(True), LINK.provider_state.notin_(PROVIDER_LINK_TERMINAL))) or 0
             events = dict(s.execute(select(EV.status, func.count()).group_by(EV.status)).all())
             checkouts = dict(s.execute(select(CS.status, func.count()).group_by(CS.status)).all())
-            linked_checkouts = s.scalar(select(func.count(func.distinct(LINK.checkout_session_id)))) or 0
+            pending_checkouts = s.scalar(select(func.count()).select_from(CS).where(CS.status.in_(("pending_creation", "open")),
+                                                                                   ~select(LINK.id).where(LINK.checkout_session_id == CS.id).exists())) or 0
             stale_cut = now - timedelta(seconds=P.RECONCILE_STALE_AFTER_SECONDS)
             stale = s.scalar(select(func.count()).select_from(LINK).where(LINK.provider_state.notin_(PROVIDER_LINK_TERMINAL),
                                                                           (LINK.observed_at.is_(None)) | (LINK.observed_at <= stale_cut))) or 0
@@ -108,7 +109,7 @@ class BillingOperations:
             "subscriptions": {"total": total, "active": links.get("active", 0), "trialing": links.get("trialing", 0), "past_due": links.get("past_due", 0),
                               "unpaid": links.get("unpaid", 0), "canceled": links.get("canceled", 0), "incomplete": links.get("incomplete", 0) + links.get("paused", 0),
                               "cancellation_scheduled": scheduled_cancel},
-            "checkouts": {"pending": checkouts.get("pending_creation", 0) + checkouts.get("open", 0) - min(linked_checkouts, checkouts.get("open", 0)),
+            "checkouts": {"pending": pending_checkouts,
                           "failed": checkouts.get("failed", 0), "canceled": checkouts.get("canceled", 0), "expired": checkouts.get("expired", 0)},
             "events": {"pending": events.get("received", 0) + events.get("processing", 0), "failed": events.get("failed", 0), "quarantined": events.get("quarantined", 0),
                        "needs_review": events.get("needs_review", 0), "processed": events.get("processed", 0), "ignored": events.get("ignored", 0),
