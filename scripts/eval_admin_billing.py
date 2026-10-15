@@ -50,7 +50,11 @@ def run() -> dict[str, tuple[bool, str]]:
     from src.billing.provider import MOCK_ALLOWED_ENVS, BillingConfigurationError, MockBillingAdapter, resolve_mode
 
     files = sorted(p.relative_to(ROOT).as_posix() for p in (ROOT / "src/billing").glob("*.py"))
-    code = "\n".join(code_only(f) for f in files if not f.endswith("stripe_provider.py")) + "\n" + code_only("src/api/routes/admin_billing.py")
+    # W12.4D-D: three modules legitimately hold the Stripe SDK (adapter, webhook contract, provider-state reader) and ONE module is the audited
+    # billing-to-entitlement boundary. They are checked by their OWN checks below; every other billing module keeps the original strict checks.
+    SDK_MODULES = ("stripe_provider.py", "stripe_events.py", "provider_state.py")
+    BRIDGE = "entitlement_bridge.py"
+    code = "\n".join(code_only(f) for f in files if not f.endswith(SDK_MODULES + (BRIDGE,))) + "\n" + code_only("src/api/routes/admin_billing.py")
     raw = "\n".join(read(f) for f in files) + read("src/api/routes/admin_billing.py")
     persist = read("src/persistence.py")
     billing_models = persist.split("# --- Mock billing")[1].split("def make_engine")[0] if "# --- Mock billing" in persist else ""
@@ -79,15 +83,23 @@ def run() -> dict[str, tuple[bool, str]]:
     check("billing_never_touches_entitlements", not re.search(r"Subscription\(|ProductEntitlement|PlanEntitlement|EntitlementService|PlanRepository|\.tier\b", code.replace("BillingProviderSubscription", "BPS").replace("provider_subscription", "ps")), "no access coupling")
     check("refund_idempotent_via_stable_key", "idempotency_key" in svc and "uq_br_idempotency" in billing_models and "state == \"pending\"" in svc.replace("RF.state == 'pending'", 'state == "pending"') or "RF.state == \"pending\"" in svc, "provider key + state guard")
     check("refund_no_over_refund_and_mock_only", "exceeds the amount still refundable" in svc and "Only mock payments" in svc and "Only a succeeded payment" in svc, "validated")
-    check("events_idempotent_normalised_no_raw_body", "uq_be_provider_event" in billing_models and "_EVENT_FIELDS" in svc and not re.search(r"raw_payload|raw_body|request\.body", code), "unique + allowlist")
+    check("events_idempotent_normalised_no_raw_body", "uq_be_provider_event" in billing_models and "_EVENT_FIELDS" in svc and not re.search(r"raw_payload|raw_body|request\.body", code.replace(code_only("src/billing/webhook.py"), "")) and "raw" not in code_only("src/billing/reconcile.py").lower().replace("rank", ""), "unique + allowlist; the raw body only exists transiently in the receiver and is never persisted")
     check("jobs_use_w109_ids_only", "billing_refund" in P.JOB_REFUND and "refund_id" in code and "event_id" in code and "extra=\"forbid\"" in read("src/billing/jobs.py"), "id-only")
+    sdk_users = sorted(Path(f).name for f in files if re.search(r"(import|from) stripe\b", read(f)))
+    check("stripe_sdk_confined_to_the_three_provider_modules", set(sdk_users) <= set(SDK_MODULES) and not [p for p in (ROOT / "src/api").rglob("*.py") if re.search(r"(import|from) stripe\b", p.read_text(encoding="utf-8"))], str(sdk_users))
+    bridge_src = code_only("src/billing/" + BRIDGE)
+    writers = sorted(p.relative_to(ROOT).as_posix() for p in (ROOT / "src").rglob("*.py") if re.search(r"source=[\"']provider[\"']", p.read_text(encoding="utf-8")))
+    check("entitlement_bridge_is_the_only_writer_of_provider_subscriptions", writers == ["src/billing/entitlement_bridge.py"] and "EntitlementService" not in bridge_src and "PlanRepository" not in bridge_src, str(writers))
+    check("provider_event_store_has_no_raw_payload_signature_or_card_column", not [c for c in re.findall(r"^    (\w+): Mapped", persist.split("class BillingProviderEvent")[1].split("class BillingProviderLink")[0], re.M) if re.search(r"raw|payload|signature|card|email|body", c)], "allow-listed normalised fields only (columns)")
     check("no_card_or_instrument_data", not re.search(r"\b(card_number|pan|cvv|cvc|card_expiry|expiry|bank_account|routing_number|payment_method_secret|iban|tax_id)\b", billing_models.lower()), "none")
     check("no_checkout_or_portal_routes", not re.search(r"checkout|billing[-_]portal|payment[-_]method|webhook", code_only("src/api/routes/admin_billing.py").lower()), "none")
-    cand = "".join(p.read_text() for p in (ROOT / "src/api/routes").glob("*.py") if p.name not in ("admin_billing.py", "billing_candidate.py"))
+    cand = "".join(p.read_text() for p in (ROOT / "src/api/routes").glob("*.py") if p.name not in ("admin_billing.py", "billing_candidate.py", "billing_webhooks.py"))
     check("no_candidate_billing_routes", not re.search(r"prefix=\"/(billing|checkout|payments|invoices)", cand) and "billing" not in "".join(re.findall(r'@router\.(?:get|post)\("[^"]*"', cand)).lower().replace("admin", ""), "zero outside the W12.4D-C file")
     # W12.4D-C: the ONLY candidate billing surface is the four-route checkout file; no payment-method, portal, invoice or success endpoint
     bc = read("src/api/routes/billing_candidate.py")
     routes = sorted(re.findall(r'@router\.(?:get|post|put|patch|delete)\("([^"]*)"', bc))
+    wh = read("src/api/routes/billing_webhooks.py")
+    check("the_only_unauthenticated_billing_route_is_the_signature_authenticated_webhook", re.findall(r'@router\.(?:get|post|put|patch|delete)\("([^"]*)"', wh) == ["/webhooks/stripe"] and "get_current_user_id" not in wh and "@router.post" in wh, "POST /billing/webhooks/stripe")
     check("candidate_billing_routes_are_exactly_the_four_checkout_routes", routes == ["/checkout-returns", "/checkout-sessions", "/checkout/availability", "/checkout/status"] and not re.search(r"portal|payment[-_]method|invoice|webhook|success", "".join(routes)), str(routes))
     check("no_revenue_reporting_or_coupons", not re.search(r"\b(mrr|arr|ltv|churn|gmv|coupon|promo_code|discount)\b", code.lower()), "none")
     check("routes_permissioned", route.count("require_permission(") >= 15 and all(x in route for x in ("BILLING_READ", "BILLING_REFUND", "PRICE_CHANGE")), "explicit")
@@ -97,7 +109,7 @@ def run() -> dict[str, tuple[bool, str]]:
           and {perm.BILLING_READ, perm.BILLING_REFUND, perm.PRICE_CHANGE} <= perm.permissions_for_role("platform_admin"), "no other SPECIALIST preset (the owner holds all 43, AD-W12-01)")
     deletion = read("src/application/account_deletion_service.py")
     check("deletion_and_export_integrated", "delete_billing_for" in deletion and "billing_mock" in read("src/application/data_export.py"), "owner-scoped mock records")
-    check("sec_w10_05_untouched", "pause" not in code.lower(), "platform pause not touched")
+    check("sec_w10_05_untouched", not re.search(r"platform_pause|PauseService|pause_state|PlatformPause", code + bridge_src), "platform pause not touched (a Stripe subscription state called 'paused' is unrelated)")
     check("migration_chain_valid", 'down_revision = "0020_privacy_legal_admin"' in mig and "ck_bar_no_self_approval" in mig and "uq_bct_one_active" in mig and "uq_be_provider_event" in mig, "0021 chains from 0020")
     t = read("tests/test_billing_w10_5.py")
     check("tests_exist", all(x in t for x in ("test_billing_never_changes_entitlements_subscriptions_or_tier", "test_refund_crash_window_replay_counts_once",

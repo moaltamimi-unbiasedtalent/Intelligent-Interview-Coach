@@ -356,6 +356,24 @@ def get_checkout_service(request: Request, repo=Depends(get_repository), store=D
         audit=AuditRepository(repo.session_factory))
 
 
+def get_webhook_receiver(request: Request, repo=Depends(get_repository), store=Depends(get_secret_store)):
+    """Stripe webhook receiver (W12.4D-D). Non-operational by construction while ``policy.STRIPE_WEBHOOK_AUTHORIZED`` is False. The signing secret comes
+    ONLY from the W12.4B SecretStore slot of the CONFIGURED environment (never the other environment's, never a fallback value)."""
+    from src.auth_repository import AuditRepository
+    from src.billing import policy as P
+    from src.billing import stripe_provider as SP
+    from src.billing.provider import safe_mode
+    from src.billing.wiring import build_provider_events
+    from src.billing.webhook import WebhookReceiver
+    from src.jobs.service import JobService
+
+    mode = safe_mode()
+    env = mode.environment if mode.provider == P.PROVIDER_STRIPE_MP else None
+
+    return WebhookReceiver(build_provider_events(repo.session_factory, mode), jobs=JobService(repo.session_factory), secrets=lambda: SP.webhook_signing_secrets(store, env), environment=env,
+                           provider_selected=mode.provider, audit=AuditRepository(repo.session_factory))
+
+
 def get_pause_service(repo=Depends(get_repository)):
     """The DURABLE pause authority for this deployment's environment (P10B-W10.11). Built per request over the shared repository: no process state."""
     from src.application.pause import PauseService

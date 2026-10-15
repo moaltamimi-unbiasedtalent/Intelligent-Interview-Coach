@@ -23,6 +23,16 @@ const es: typeof en = {
     returnTitle: "Estado del pago",
     backToAccount: "Volver a tu cuenta",
     stillChecking: "Comprobando…",
+    confirmedTitle: "Suscripción Premium confirmada",
+    confirmedBody: "Nuestro socio de pagos confirmó tu suscripción y tu plan se ha actualizado.",
+    confirmedNoAccessTitle: "Suscripción confirmada por nuestro socio de pagos",
+    confirmedNoAccessBody: "Tu plan aún no ha cambiado. El acceso se actualiza solo cuando las reglas de los planes de pago estén en vigor.",
+    pastDueTitle: "El pago requiere atención",
+    pastDueBody: "Nuestro socio de pagos no pudo cobrar tu último pago. Gestionas una suscripción de pago con ese socio.",
+    cancelScheduledTitle: "Cancelación programada",
+    cancelScheduledBody: "Tu suscripción terminará al final del periodo actual. Todavía no ha terminado nada.",
+    endedTitle: "Suscripción terminada",
+    endedBody: "Tu suscripción de pago ha terminado. Las funciones gratuitas siguen disponibles.",
   },
 };
 

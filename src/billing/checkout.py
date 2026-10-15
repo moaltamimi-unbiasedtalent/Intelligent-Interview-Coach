@@ -21,9 +21,10 @@ from sqlalchemy.exc import IntegrityError
 
 from src.billing import lifecycle as L
 from src.billing import policy as P
+from src.billing.entitlement_bridge import provider_grant_exists
 from src.billing.provider import CheckoutRequest, ProviderRejected, ProviderRetryable
 from src.persistence import (
-    BillingCheckoutSession as CS, BillingCommercialTerms as CT, BillingProviderPrice as PP, PlanVersion, PLAN_STATUS_ACTIVE, utcnow,
+    BillingCheckoutSession as CS, BillingCommercialTerms as CT, BillingProviderLink as LINK, BillingProviderPrice as PP, PlanVersion, PLAN_STATUS_ACTIVE, PROVIDER_LINK_TERMINAL, utcnow,
 )
 
 MAX_PROVIDER_ATTEMPTS = 5
@@ -154,8 +155,17 @@ class CheckoutService:
                 if row.plan_version_id != p.plan_version.id:
                     raise CheckoutConflict("This Idempotency-Key was used for a different purchase.")
             else:
+                # A candidate with a LIVE provider subscription must not start a second purchase (it would be charged twice and the duplicate quarantined).
+                # A canceled or expired provider subscription is terminal for ITS OWN provider id only: it never blocks a genuinely new purchase.
+                if s.scalar(select(LINK.id).where(LINK.user_id == user_id, LINK.environment == p.mapping.environment,
+                                                  LINK.provider_state.notin_(PROVIDER_LINK_TERMINAL)).limit(1)) is not None:
+                    raise CheckoutConflict("You already have a subscription.")
                 live = s.scalar(select(CS).where(CS.user_id == user_id, CS.plan_version_id == p.plan_version.id,
                                                  CS.status.in_(("pending_creation", "open"))))
+                if live is not None and live.status == "open" and s.scalar(select(LINK.id).where(LINK.checkout_session_id == live.id).limit(1)) is not None:
+                    self._expire(live)                               # that checkout was already consumed by a subscription: its session can never be reused
+                    s.flush()
+                    live = None
                 if live is not None and not (live.status == "open" and live.expires_at and _aware(live.expires_at) <= now):
                     row = live                                       # the same logical purchase is already in flight: join it, never duplicate
                 else:
@@ -249,7 +259,15 @@ class CheckoutService:
             if row is not None:
                 self._expire_if_due(s, row, self._clock())
                 s.commit()
-            return L.candidate_view(checkout_status=row.status if row else None, browser_returned=bool(row and row.browser_returned_at), plan_code=plan_code) | {
+            link = s.scalar(select(LINK).where(LINK.user_id == user_id).order_by(LINK.created_at.desc(), LINK.id.desc()).limit(1))
+            granted = provider_grant_exists(s, user_id)
+            view = L.candidate_view(checkout_status=row.status if row else None, browser_returned=bool(row and row.browser_returned_at), plan_code=plan_code)
+            if link is not None:                      # AUTHENTICATED provider evidence, reconciled server-side: the only source of subscription and payment words
+                sub, pay = L.from_verified_link(provider_state=link.provider_state, cancel_at_period_end=link.cancel_at_period_end,
+                                                latest_invoice_state=link.latest_invoice_state, refund_state=link.refund_state, dispute_state=link.dispute_state)
+                view.update(subscription=sub, payment=pay, confirmation="not_applicable" if sub not in ("confirmation_pending",) else "pending")
+            view["entitlement"] = {**view["entitlement"], "changed_by_billing": granted}
+            return view | {
                 "checkout_id": row.public_id if row else None,
                 "created_at": _iso(row.created_at) if row else None,
                 "expires_at": _iso(row.expires_at) if row and row.status == "open" else None,

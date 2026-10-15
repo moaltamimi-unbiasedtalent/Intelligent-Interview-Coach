@@ -66,6 +66,27 @@ def subscription_transition_allowed(old: str, new: str, *, evidence_verified: bo
     return new not in EVIDENCE_REQUIRED_SUBSCRIPTION or evidence_verified is True
 
 
+_SUBSCRIPTION_FROM_PROVIDER = {"active": "active", "trialing": "confirmation_pending", "incomplete": "confirmation_pending", "paused": "confirmation_pending",
+                               "past_due": "past_due", "unpaid": "past_due", "canceled": "canceled", "incomplete_expired": "expired"}
+_PAYMENT_FROM_INVOICE = {"paid": "succeeded", "failed": "failed", "open": "pending", "action_required": "pending", "none": "none"}
+
+
+def from_verified_link(*, provider_state: str, cancel_at_period_end: bool, latest_invoice_state: str, refund_state: str, dispute_state: str) -> tuple[str, str]:
+    """(subscription, payment) as reconciled from AUTHENTICATED provider evidence (a ``BillingProviderLink``). ``active`` is only shown when the latest
+    invoice is paid, and a scheduled cancellation is not a cancellation yet. Refund and dispute facts override the payment word."""
+    sub = _SUBSCRIPTION_FROM_PROVIDER.get(provider_state, "confirmation_pending")
+    if sub == "active" and latest_invoice_state != "paid":
+        sub = "confirmation_pending"
+    if sub == "active" and cancel_at_period_end:
+        sub = "cancel_scheduled"
+    pay = _PAYMENT_FROM_INVOICE.get(latest_invoice_state, "none")
+    if refund_state == "full":
+        pay = "refunded"
+    if dispute_state in ("open", "lost"):
+        pay = "disputed"
+    return sub, pay
+
+
 def candidate_view(*, checkout_status: str | None, browser_returned: bool, plan_code: str, verified_subscription: str | None = None) -> dict:
     """What a candidate may be shown. ``verified_subscription`` is only ever supplied from authenticated provider evidence (none exists yet), so
     today every candidate sees ``none`` or ``confirmation_pending``. The entitlement dimension is the plan the entitlement service resolved."""

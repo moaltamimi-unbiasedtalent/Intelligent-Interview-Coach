@@ -23,6 +23,16 @@ const de: typeof en = {
     returnTitle: "Checkout-Status",
     backToAccount: "Zurück zu deinem Konto",
     stillChecking: "Wird geprüft …",
+    confirmedTitle: "Premium-Abo bestätigt",
+    confirmedBody: "Unser Zahlungspartner hat dein Abo bestätigt und dein Tarif wurde aktualisiert.",
+    confirmedNoAccessTitle: "Abo vom Zahlungspartner bestätigt",
+    confirmedNoAccessBody: "Dein Tarif hat sich noch nicht geändert. Der Zugang wird erst aktualisiert, wenn die Regeln für bezahlte Tarife gelten.",
+    pastDueTitle: "Zahlung erfordert Aufmerksamkeit",
+    pastDueBody: "Unser Zahlungspartner konnte deine letzte Zahlung nicht einziehen. Ein bezahltes Abo verwaltest du bei diesem Partner.",
+    cancelScheduledTitle: "Kündigung vorgemerkt",
+    cancelScheduledBody: "Dein Abo endet zum Ende des laufenden Zeitraums. Noch ist nichts beendet.",
+    endedTitle: "Abo beendet",
+    endedBody: "Dein bezahltes Abo ist beendet. Die kostenlosen Funktionen bleiben verfügbar.",
   },
 };
 

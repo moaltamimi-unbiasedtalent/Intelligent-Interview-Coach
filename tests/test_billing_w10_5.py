@@ -303,7 +303,13 @@ def test_billing_modules_never_touch_subscriptions_entitlements_or_the_tier():
                 node.body = node.body[1:] or [ast.Pass()]
         return ast.unparse(tree)
 
-    src = " ".join(code_only(p) for p in [*(ROOT / "src/billing").glob("*.py"), ROOT / "src/api/routes/admin_billing.py"])
+    # W12.4D-D: entitlement_bridge.py is the ONE audited boundary where provider-verified state may touch access; it is excluded here and held to its own
+    # sole-writer assertions below. Every other billing module keeps the original strict ban.
+    billing_files = [p for p in (ROOT / "src/billing").glob("*.py") if p.name != "entitlement_bridge.py"]
+    src = " ".join(code_only(p) for p in [*billing_files, ROOT / "src/api/routes/admin_billing.py"])
+    bridge = code_only(ROOT / "src/billing/entitlement_bridge.py")
+    for banned in ("EntitlementService", "PlanRepository", "platform_tier", "tier =", ".assign("):
+        assert banned not in bridge, banned
     for banned in ("Subscription(", "ProductEntitlement", "PlanEntitlement", "EntitlementService", "PlanRepository", "tier ", ".tier", "assign("):
         assert banned not in src.replace("BillingProviderSubscription", "BPS").replace("provider_subscription", "ps"), banned
 
@@ -552,8 +558,14 @@ def test_job_types_are_id_only_and_billing_code_has_no_provider_sdk():
     assert set(REGISTRY[P.JOB_REFUND].payload_model.model_fields) == {"refund_id"} and set(REGISTRY[P.JOB_PROCESS_EVENT].payload_model.model_fields) == {"event_id"}
     assert not REGISTRY[P.JOB_REFUND].admin_enqueue
     # W12.4D-B: the ONLY billing module that may touch a provider SDK is stripe_provider.py, and only through a lazy import inside a function.
+    # W12.4D-D: three modules may touch the provider SDK (adapter, webhook contract, provider-state reader), each only through a lazy import inside a function.
     files = {p.name: p.read_text() for p in (ROOT / "src/billing").glob("*.py")}
-    others = " ".join(v for k, v in files.items() if k != "stripe_provider.py").lower()
+    sdk_modules = ("stripe_provider.py", "stripe_events.py", "provider_state.py")
+    others = " ".join(v for k, v in files.items() if k not in sdk_modules).lower()
+    for name in sdk_modules:
+        assert not re.search(r"^(import stripe|from stripe)", files[name], re.M), name
+        for banned in ("httpx", "urllib.request", "requests.", "socket"):
+            assert banned not in files[name], (name, banned)
     assert not re.search(r"(import|from) stripe\b", others)                              # the SDK is imported nowhere else
     for banned in ("adyen", "paypal", "mollie", "braintree", "requests.", "httpx", "urllib.request"):
         assert banned not in others, banned

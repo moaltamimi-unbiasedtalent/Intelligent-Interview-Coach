@@ -23,6 +23,16 @@ const nl: typeof en = {
     returnTitle: "Checkoutstatus",
     backToAccount: "Terug naar je account",
     stillChecking: "Controleren…",
+    confirmedTitle: "Premium-abonnement bevestigd",
+    confirmedBody: "Onze betaalpartner heeft je abonnement bevestigd en je abonnement is bijgewerkt.",
+    confirmedNoAccessTitle: "Abonnement bevestigd door onze betaalpartner",
+    confirmedNoAccessBody: "Je abonnement is nog niet gewijzigd. Toegang wordt pas bijgewerkt wanneer de regels voor betaalde abonnementen gelden.",
+    pastDueTitle: "Betaling vraagt aandacht",
+    pastDueBody: "Onze betaalpartner kon je laatste betaling niet incasseren. Een betaald abonnement beheer je bij die partner.",
+    cancelScheduledTitle: "Opzegging gepland",
+    cancelScheduledBody: "Je abonnement eindigt aan het einde van de huidige periode. Er is nog niets beëindigd.",
+    endedTitle: "Abonnement beëindigd",
+    endedBody: "Je betaalde abonnement is beëindigd. De gratis functies blijven beschikbaar.",
   },
 };
 

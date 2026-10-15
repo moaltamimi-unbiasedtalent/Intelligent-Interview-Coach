@@ -23,6 +23,16 @@ const it: typeof en = {
     returnTitle: "Stato del pagamento",
     backToAccount: "Torna al tuo account",
     stillChecking: "Verifica in corso…",
+    confirmedTitle: "Abbonamento Premium confermato",
+    confirmedBody: "Il nostro partner di pagamento ha confermato il tuo abbonamento e il tuo piano è stato aggiornato.",
+    confirmedNoAccessTitle: "Abbonamento confermato dal nostro partner di pagamento",
+    confirmedNoAccessBody: "Il tuo piano non è ancora cambiato. L'accesso viene aggiornato solo quando le regole dei piani a pagamento sono in vigore.",
+    pastDueTitle: "Il pagamento richiede attenzione",
+    pastDueBody: "Il nostro partner di pagamento non ha potuto incassare l'ultimo pagamento. Gestisci un abbonamento a pagamento con quel partner.",
+    cancelScheduledTitle: "Cancellazione programmata",
+    cancelScheduledBody: "Il tuo abbonamento terminerà alla fine del periodo corrente. Non è ancora terminato nulla.",
+    endedTitle: "Abbonamento terminato",
+    endedBody: "Il tuo abbonamento a pagamento è terminato. Le funzioni gratuite restano disponibili.",
   },
 };
 

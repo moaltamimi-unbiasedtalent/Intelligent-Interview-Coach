@@ -79,12 +79,39 @@ test("account shows the pending state without inventing invoices", async ({ page
   await expect(page.getByText("No invoices or receipts are shown here")).toBeVisible();
 });
 
+const ACTIVE = (granted: boolean) => ({ ...NONE, checkout: "open", subscription: "active", payment: "succeeded", confirmation: "not_applicable",
+  entitlement: { plan_code: granted ? "premium" : "basic", source: "entitlement_service", changed_by_billing: granted } });
+
+test("reconciled active subscription: 'confirmed' only when billing actually changed access (W12.4D-D)", async ({ page }) => {
+  await mock(page, { available: true, status: ACTIVE(true) });
+  await page.goto("/account");
+  await expect(page.getByText("Premium subscription confirmed")).toBeVisible();
+  await expect(page.getByTestId("checkout-start")).toHaveCount(0);
+});
+
+test("reconciled active subscription without an access change makes no access claim", async ({ page }) => {
+  await mock(page, { available: true, status: ACTIVE(false) });
+  await page.goto("/account");
+  await expect(page.getByText("Subscription confirmed by our payment partner")).toBeVisible();
+  await expect(page.getByText("Premium subscription confirmed")).toHaveCount(0);
+  await expect(page.getByText("Your plan has not changed yet.")).toBeVisible();
+});
+
+for (const state of ["past_due", "cancel_scheduled", "canceled"] as const) {
+  test(`reconciled ${state} state is shown truthfully`, async ({ page }) => {
+    await mock(page, { available: true, status: { ...ACTIVE(true), subscription: state } });
+    await page.goto("/account");
+    await expect(page.getByTestId("subscription-notice")).toBeVisible();
+    expect(await page.locator("body").innerText()).not.toMatch(FORBIDDEN);
+  });
+}
+
 for (const [name, width, height] of [["desktop", 1280, 900], ["tablet", 768, 1024], ["mobile", 390, 844]] as const) {
   for (const scheme of ["light", "dark"] as const) {
     test(`responsive ${name} ${scheme}: no horizontal scroll`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       await page.emulateMedia({ colorScheme: scheme });
-      await mock(page, { available: true, status: { ...NONE, checkout: "open", subscription: "confirmation_pending", payment: "pending", confirmation: "pending" } });
+      await mock(page, { available: true, status: scheme === "dark" ? ACTIVE(true) : { ...NONE, checkout: "open", subscription: "confirmation_pending", payment: "pending", confirmation: "pending" } });
       await page.goto("/account");
       await expect(page.getByTestId("checkout-panel")).toBeVisible();
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

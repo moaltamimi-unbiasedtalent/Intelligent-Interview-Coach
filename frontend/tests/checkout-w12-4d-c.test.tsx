@@ -110,6 +110,40 @@ describe("PremiumSubscriptionPanel", () => {
   });
 });
 
+describe("PremiumSubscriptionPanel reconciled subscription states (W12.4D-D)", () => {
+  const view = (subscription: string, granted: boolean, extra: object = {}) => ({ ...none, checkout: "open", subscription, payment: "succeeded", confirmation: "not_applicable",
+    entitlement: { plan_code: granted ? "premium" : "basic", source: "entitlement_service", changed_by_billing: granted }, ...extra });
+  const mount = async (s: object) => {
+    availability.mockResolvedValue({ plan: "premium", available: true, reason: null });
+    status.mockResolvedValue(s);
+    wrap(<PremiumSubscriptionPanel />);
+    await screen.findByTestId("checkout-panel");
+  };
+
+  it("claims 'confirmed' ONLY when the server reports access was changed by billing", async () => {
+    await mount(view("active", true));
+    expect(await screen.findByText(en.checkout.confirmedTitle)).toBeInTheDocument();
+    expect(screen.queryByTestId("checkout-start")).toBeNull();
+  });
+
+  it("shows the provider confirmation WITHOUT an access claim when billing changed nothing", async () => {
+    await mount(view("active", false));
+    expect(await screen.findByText(en.checkout.confirmedNoAccessTitle)).toBeInTheDocument();
+    expect(screen.queryByText(en.checkout.confirmedTitle)).toBeNull();
+  });
+
+  it.each([["past_due", "pastDueTitle"], ["cancel_scheduled", "cancelScheduledTitle"], ["canceled", "endedTitle"], ["expired", "endedTitle"]])("%s", async (state, key) => {
+    await mount(view(state, state === "past_due" || state === "cancel_scheduled"));
+    expect(await screen.findByText((en.checkout as Record<string, string>)[key])).toBeInTheDocument();
+  });
+
+  it("never shows a subscription notice for 'none' or an unknown state", async () => {
+    await mount(view("none", false));
+    expect(screen.queryByTestId("subscription-notice")).toBeNull();
+    expect(screen.getByTestId("checkout-start")).toBeInTheDocument();
+  });
+});
+
 describe("ReturnPanel", () => {
   it("a success-looking return only records the return and says we are waiting", async () => {
     recordReturn.mockResolvedValue({ checkout_id: "c", status: "open", redirect_url: null, expires_at: null, browser_returned: true });

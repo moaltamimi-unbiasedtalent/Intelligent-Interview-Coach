@@ -22,6 +22,28 @@ class RefundPayload(_Strict):
     refund_id: str = Field(min_length=32, max_length=32, pattern=r"^[0-9a-f]{32}$")
 
 
+class SweepPayload(_Strict):
+    batch: int = Field(default=P.RECONCILE_SWEEP_BATCH, ge=1, le=100)
+
+
+def _provider_events(ctx):
+    rt = getattr(ctx.services, "billing", None) if ctx.services is not None else None
+    svc = getattr(rt, "provider_events", None) if rt is not None else None
+    if svc is None:
+        raise PermanentJobError("configuration_error")
+    return svc
+
+
+def _process_provider_event(p: EventPayload, ctx) -> None:
+    result = _provider_events(ctx).process(p.event_id)
+    if result.status == "retry":
+        raise RetryableJobError("unavailable")      # the event row keeps its own bounded back-off; the sweep recovers it if this job runs too early
+
+
+def _provider_reconcile(p: SweepPayload, ctx) -> None:
+    _provider_events(ctx).sweep(limit=p.batch)
+
+
 def _service(ctx) -> BillingService:
     rt = getattr(ctx.services, "billing", None) if ctx.services is not None else None
     if rt is None:
@@ -59,5 +81,13 @@ def job_types() -> list[JobTypeDef]:
         JobTypeDef(code=P.JOB_REFUND, label="Billing: execute an approved MOCK refund", payload_model=RefundPayload, handler=_refund,
                    summarize=lambda p: {"refund": p.refund_id}, max_attempts=4, lease_seconds=120, backoff_base_seconds=60, backoff_cap_seconds=900,
                    idempotency="The provider gets a stable idempotency key (same key, same provider refund id); the local update is state-guarded, so a replay after a crash counts once.",
+                   manual_retry=True, admin_enqueue=False, dependencies=deps),
+        JobTypeDef(code=P.JOB_PROCESS_PROVIDER_EVENT, label="Billing: reconcile a verified provider event", payload_model=EventPayload, handler=_process_provider_event,
+                   summarize=lambda p: {"event": p.event_id}, max_attempts=5, lease_seconds=120, backoff_base_seconds=30, backoff_cap_seconds=900,
+                   idempotency="The event row is claimed with a conditional UPDATE under a lease; reconciliation reads the provider's authoritative state, so a replay converges and a processed event is a no-op.",
+                   manual_retry=True, admin_enqueue=False, dependencies=deps),
+        JobTypeDef(code=P.JOB_PROVIDER_RECONCILE, label="Billing: reconcile missed or stale provider state (bounded sweep)", payload_model=SweepPayload, handler=_provider_reconcile,
+                   summarize=lambda p: {"batch": p.batch}, max_attempts=2, lease_seconds=300, backoff_base_seconds=120, backoff_cap_seconds=900,
+                   idempotency="Each item is re-read from the provider and applied idempotently; a replay changes nothing.",
                    manual_retry=True, admin_enqueue=False, dependencies=deps),
     ]

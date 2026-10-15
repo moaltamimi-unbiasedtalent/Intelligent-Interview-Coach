@@ -292,9 +292,15 @@ def test_there_is_no_checkout_payment_or_webhook_route_and_billing_code_never_to
     from src.api.main import create_app
     from src.api.config import ApiSettings
     app = create_app(ApiSettings(env="test", frontend_origins=("http://localhost:3000",)))
-    paths = [getattr(r, "path", "") for r in app.routes]
-    assert not [p for p in paths if re.search(r"checkout|webhook|payment-confirm|portal|stripe", p, re.I)], paths
+    # W12.4D-C/D: the billing surface is exactly the four checkout routes and the signature-authenticated webhook; nothing named portal, payment-confirm or stripe.
+    # (Read from the OpenAPI schema: ``app.routes`` holds included routers without a path.)
+    paths = [p for p in app.openapi()["paths"] if p.startswith("/api/v1/billing")]
+    assert sorted(paths) == ["/api/v1/billing/checkout-returns", "/api/v1/billing/checkout-sessions", "/api/v1/billing/checkout/availability",
+                             "/api/v1/billing/checkout/status", "/api/v1/billing/webhooks/stripe"], paths
+    assert not [p for p in app.openapi()["paths"] if re.search(r"payment-confirm|portal|payment-success", p, re.I)]
     for f in (ROOT / "src/billing").glob("*.py"):
+        if f.name == "entitlement_bridge.py":
+            continue          # W12.4D-D: the single audited billing-to-entitlement boundary (sole writer of provider subscriptions, checked elsewhere)
         text = f.read_text()
         assert not re.search(r"\b(Subscription|ProductEntitlement|PlanEntitlement)\b", text.replace("BillingProviderSubscription", "")), f.name
 

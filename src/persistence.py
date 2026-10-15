@@ -1147,7 +1147,7 @@ PLAN_STATUSES = (PLAN_STATUS_DRAFT, PLAN_STATUS_ACTIVE, PLAN_STATUS_RETIRED)
 SUBSCRIPTION_STATUS_ACTIVE = "active"
 SUBSCRIPTION_STATUS_ENDED = "ended"
 SUBSCRIPTION_STATUSES = (SUBSCRIPTION_STATUS_ACTIVE, SUBSCRIPTION_STATUS_ENDED)
-SUBSCRIPTION_SOURCES = ("system_default", "migration", "admin")
+SUBSCRIPTION_SOURCES = ("system_default", "migration", "admin", "provider")      # "provider" (W12.4D-D): written ONLY by the billing entitlement bridge
 
 
 class PlanVersion(Base):
@@ -1943,6 +1943,119 @@ class BillingEvent(Base):
     received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     failure_category: Mapped[str | None] = mapped_column(String(24), nullable=True)
+
+
+
+# --- W12.4D-D: verified provider events, provider-managed subscription links, entitlement decisions (migration 0029) ---------------------
+PROVIDER_EVENT_STATUSES = ("received", "processing", "processed", "ignored", "failed", "quarantined", "needs_review")
+PROVIDER_LINK_STATES = ("incomplete", "incomplete_expired", "trialing", "active", "past_due", "unpaid", "paused", "canceled")
+PROVIDER_LINK_TERMINAL = ("canceled", "incomplete_expired")
+PROVIDER_REFUND_STATES = ("none", "partial", "full")
+PROVIDER_DISPUTE_STATES = ("none", "open", "won", "lost")
+PROVIDER_INVOICE_STATES = ("none", "open", "paid", "failed", "action_required")
+ENTITLEMENT_DECISIONS = ("grant", "revoke", "keep", "none", "hold", "policy_unapproved", "skipped_manual_assignment", "refused")
+_LIVE_LINK = "provider_state NOT IN ('canceled', 'incomplete_expired')"
+
+
+class BillingProviderEvent(Base):
+    """A VERIFIED provider event, durably accepted BEFORE the webhook is acknowledged. It is also the outbox: ``status`` and ``lease_until`` make
+    processing recoverable without any in-memory queue. Holds ONLY allow-listed normalised fields (ids, statuses, integer amounts): no raw body, no
+    signature, no card data, no email, no name. Unique per (provider, environment, provider event id)."""
+
+    __tablename__ = "billing_provider_events"
+    __table_args__ = (
+        CheckConstraint(_in_list("provider", ("stripe_managed_payments",)), name="ck_bpe_provider"),
+        CheckConstraint(_in_list("environment", ("sandbox", "live")), name="ck_bpe_environment"),
+        CheckConstraint(_in_list("status", PROVIDER_EVENT_STATUSES), name="ck_bpe_status"),
+        UniqueConstraint("provider", "environment", "provider_event_id", name="uq_bpe_event"),
+        Index("ix_bpe_status_received", "status", "received_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    provider: Mapped[str] = mapped_column(String(32))
+    environment: Mapped[str] = mapped_column(String(8))
+    provider_event_id: Mapped[str] = mapped_column(String(80))
+    event_type: Mapped[str] = mapped_column(String(64))
+    api_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    provider_object_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    provider_created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    status: Mapped[str] = mapped_column(String(16), default="received", server_default="received")
+    attempt_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    failure_category: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    last_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    next_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    link_id: Mapped[int | None] = mapped_column(ForeignKey("billing_provider_links.id", ondelete="SET NULL"), nullable=True)
+    normalized_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    reconciliation_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    correlation_id: Mapped[str | None] = mapped_column(String(40), nullable=True)
+
+
+class BillingProviderLink(Base):
+    """The verified binding of ONE provider subscription to ONE Ask4Mo candidate, plus the last reconciled provider state. Created only from a trusted
+    checkout record (never from an email address). The four state dimensions stay separate columns. Deleted with the account."""
+
+    __tablename__ = "billing_provider_links"
+    __table_args__ = (
+        CheckConstraint(_in_list("provider", ("stripe_managed_payments",)), name="ck_bpl_provider"),
+        CheckConstraint(_in_list("environment", ("sandbox", "live")), name="ck_bpl_environment"),
+        CheckConstraint(_in_list("provider_state", PROVIDER_LINK_STATES), name="ck_bpl_state"),
+        CheckConstraint(_in_list("latest_invoice_state", PROVIDER_INVOICE_STATES), name="ck_bpl_invoice"),
+        CheckConstraint(_in_list("refund_state", PROVIDER_REFUND_STATES), name="ck_bpl_refund"),
+        CheckConstraint(_in_list("dispute_state", PROVIDER_DISPUTE_STATES), name="ck_bpl_dispute"),
+        CheckConstraint(_in_list("entitlement_decision", ENTITLEMENT_DECISIONS), name="ck_bpl_decision"),
+        UniqueConstraint("provider", "environment", "provider_subscription_id", name="uq_bpl_subscription"),
+        Index("uq_bpl_one_live_per_user", "user_id", "environment", unique=True, sqlite_where=text(_LIVE_LINK), postgresql_where=text(_LIVE_LINK)),
+        Index("ix_bpl_customer", "provider", "environment", "provider_customer_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    provider: Mapped[str] = mapped_column(String(32))
+    environment: Mapped[str] = mapped_column(String(8))
+    provider_subscription_id: Mapped[str] = mapped_column(String(80))
+    provider_customer_id: Mapped[str] = mapped_column(String(80))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    checkout_session_id: Mapped[int | None] = mapped_column(ForeignKey("billing_checkout_sessions.id", ondelete="SET NULL"), nullable=True)
+    plan_version_id: Mapped[int] = mapped_column(ForeignKey("plan_versions.id", ondelete="RESTRICT"))
+    commercial_terms_id: Mapped[int] = mapped_column(ForeignKey("billing_commercial_terms.id", ondelete="RESTRICT"))
+    price_mapping_id: Mapped[int] = mapped_column(ForeignKey("billing_provider_prices.id", ondelete="RESTRICT"))
+    provider_state: Mapped[str] = mapped_column(String(20), default="incomplete")
+    cancel_at_period_end: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("0"))
+    current_period_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    latest_invoice_state: Mapped[str] = mapped_column(String(16), default="none", server_default="none")
+    refund_state: Mapped[str] = mapped_column(String(8), default="none", server_default="none")
+    dispute_state: Mapped[str] = mapped_column(String(8), default="none", server_default="none")
+    observed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    reconcile_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    review_category: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    entitlement_decision: Mapped[str] = mapped_column(String(28), default="none", server_default="none")
+    entitlement_subscription_id: Mapped[int | None] = mapped_column(ForeignKey("subscriptions.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class BillingEntitlementDecision(Base):
+    """Append-only evidence trail of every entitlement evaluation for a link: what the verified state and the approved policy led to. No payload."""
+
+    __tablename__ = "billing_entitlement_decisions"
+    __table_args__ = (
+        CheckConstraint(_in_list("decision", ENTITLEMENT_DECISIONS), name="ck_bed_decision"),
+        Index("ix_bed_link_created", "link_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    link_id: Mapped[int] = mapped_column(ForeignKey("billing_provider_links.id", ondelete="CASCADE"))
+    event_id: Mapped[int | None] = mapped_column(ForeignKey("billing_provider_events.id", ondelete="SET NULL"), nullable=True)
+    decision: Mapped[str] = mapped_column(String(28))
+    reason: Mapped[str] = mapped_column(String(60))
+    policy_id: Mapped[str] = mapped_column(String(60))
+    provider_state: Mapped[str] = mapped_column(String(20))
+    applied: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("0"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 AI_CONFIG_STATES = ("draft", "validated", "evaluated", "evaluation_failed", "approved", "rejected", "retired")
