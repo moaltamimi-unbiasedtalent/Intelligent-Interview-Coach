@@ -12,7 +12,7 @@ Errors: invalid input raises ValidationError (route -> 422); a foreign/unknown i
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Callable, Any
 
 from src.application.errors import ValidationError
 from src.opportunity import (
@@ -52,8 +52,9 @@ def _clean_country(value: str | None) -> str | None:
 
 
 class OpportunityApplicationService:
-    def __init__(self, repo: OpportunityRepository) -> None:
+    def __init__(self, repo: OpportunityRepository, *, history_window: "Callable[[int], int | None] | None" = None) -> None:
         self._repo = repo
+        self._history_window = history_window          # W12.4D-P2-B: user_id -> history window (None = unrestricted); supplied by the canonical policy
 
     # -- create / read -----------------------------------------------------
 
@@ -178,7 +179,7 @@ class OpportunityApplicationService:
         if o is None:
             return None
         jd_id = o["job_description_document_id"]
-        interview_ids = self._repo.linked_interview_ids(user_id, opportunity_id)
+        interview_ids = self._repo.linked_interview_ids(user_id, opportunity_id, self._history_window(user_id) if self._history_window else None)
         return {
             **o,
             "jd_available": bool(jd_id) and self._repo.document_is_owned_jd(user_id, jd_id),

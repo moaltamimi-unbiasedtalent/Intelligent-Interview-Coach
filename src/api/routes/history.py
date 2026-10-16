@@ -10,7 +10,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Path
 
 from src.api.dependencies import (
-    get_audit_repository, get_current_user_id, get_repository, get_session_store, get_sharing_service,
+    get_audit_repository, get_current_user_id, get_history_access_policy, get_repository, get_session_store, get_sharing_service,
 )
 from src.api.schemas.history import InterviewDetailResponse, InterviewListResponse
 from src.application import history_service
@@ -23,9 +23,10 @@ router = APIRouter(prefix="/history", tags=["history"])
 def list_interviews(
     repo=Depends(get_repository),
     user_id: int = Depends(get_current_user_id),
+    policy=Depends(get_history_access_policy),
 ) -> InterviewListResponse:
     return InterviewListResponse(
-        interviews=history_service.list_interview_reports(repo, user_id))
+        interviews=history_service.list_interview_reports(repo, user_id, policy.window_for(user_id)))
 
 
 @router.get("/interviews/{report_id}", response_model=InterviewDetailResponse,
@@ -34,8 +35,10 @@ def get_interview(
     report_id: int = Path(..., ge=1),
     repo=Depends(get_repository),
     user_id: int = Depends(get_current_user_id),
+    policy=Depends(get_history_access_policy),
 ) -> InterviewDetailResponse:
-    detail = history_service.get_interview_report(repo, user_id, report_id)
+    # An owned interview outside the caller's window raises HistoryRestricted (403 history_not_available); a foreign or missing id is still a 404.
+    detail = history_service.get_interview_report(repo, user_id, report_id, policy.window_for(user_id))
     if detail is None:
         raise HTTPException(status_code=404, detail="Interview not found.")
     return InterviewDetailResponse(interview=detail)

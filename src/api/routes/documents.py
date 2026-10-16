@@ -16,6 +16,7 @@ from fastapi.responses import PlainTextResponse, Response
 from src.api.dependencies import (
     get_current_user_id,
     get_documents_service,
+    get_history_access_policy,
     get_pause_service,
     get_repository,
     get_sharing_service,
@@ -243,16 +244,17 @@ def delete_story(story_id: int = Path(...), svc=Depends(get_stories_service),
 export_router = APIRouter(prefix="/reports", tags=["documents"])
 
 
-def _owned_report(repo, user_id: int, report_id: int) -> dict:
-    detail = repo.get_interview(user_id, report_id)
+def _owned_report(repo, user_id: int, report_id: int, window: int | None = None) -> dict:
+    detail = repo.get_interview(user_id, report_id, window) if window is not None else repo.get_interview(user_id, report_id)   # raises HistoryRestricted outside the window
     if detail is None:
         raise HTTPException(status_code=404, detail="Report not found.")
     return detail
 
 
 @export_router.get("/{report_id}/export.json", summary="Export an owned report as JSON")
-def export_report_json(report_id: int = Path(...), repo=Depends(get_repository), user_id: int = Depends(get_current_user_id)) -> Response:
-    detail = _owned_report(repo, user_id, report_id)
+def export_report_json(report_id: int = Path(...), repo=Depends(get_repository), user_id: int = Depends(get_current_user_id),
+                       policy=Depends(get_history_access_policy)) -> Response:
+    detail = _owned_report(repo, user_id, report_id, policy.window_for(user_id))
     payload = build_json_export(detail)
     return Response(content=json.dumps(payload, ensure_ascii=False, indent=2), media_type="application/json", headers={
         "Content-Disposition": f'attachment; filename="ask4mo-report-{report_id}.json"',
@@ -260,8 +262,9 @@ def export_report_json(report_id: int = Path(...), repo=Depends(get_repository),
 
 
 @export_router.get("/{report_id}/export.md", response_class=PlainTextResponse, summary="Export an owned report as Markdown")
-def export_report_markdown(report_id: int = Path(...), repo=Depends(get_repository), user_id: int = Depends(get_current_user_id)) -> PlainTextResponse:
-    detail = _owned_report(repo, user_id, report_id)
+def export_report_markdown(report_id: int = Path(...), repo=Depends(get_repository), user_id: int = Depends(get_current_user_id),
+                           policy=Depends(get_history_access_policy)) -> PlainTextResponse:
+    detail = _owned_report(repo, user_id, report_id, policy.window_for(user_id))
     return PlainTextResponse(content=build_markdown_export(detail), headers={
         "Content-Disposition": f'attachment; filename="ask4mo-report-{report_id}.md"',
     })

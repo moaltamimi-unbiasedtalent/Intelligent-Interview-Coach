@@ -43,6 +43,7 @@ export const messages = {
     serviceUnavailable: "Ask4Mo is temporarily unavailable. Please try again shortly.",
     platformPaused: "Ask4Mo is temporarily unavailable for this activity. Your saved data remains available. Please try again later.",
     aiUsageLimit: "You’ve reached a temporary safety limit on AI-generated practice and coaching. Your saved work and history remain available. Please try again in a little while.",
+    historyRestricted: "This interview is outside the history included in your current view. It has not been deleted and is still stored. You can still export or delete your data from your account.",
     rateLimited: "You’ve made too many requests. Please wait a moment and try again.",
     sessionExpired: "Your session has expired. Please sign in again.",
     forbidden: "You don’t have access to that.",

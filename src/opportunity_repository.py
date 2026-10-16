@@ -148,12 +148,19 @@ class OpportunityRepository:
 
     # -- associations (read-only projections) ------------------------------
 
-    def linked_interview_ids(self, user_id: int, opportunity_id: int) -> list[int]:
-        """Completed interviews linked to this Opportunity (owner-scoped). Empty if not owned."""
+    def linked_interview_ids(self, user_id: int, opportunity_id: int, window: int | None = None) -> list[int]:
+        """Completed interviews linked to this Opportunity (owner-scoped). Empty if not owned. With a history ``window`` only interviews inside the caller's
+        eligible completed history are listed (the same selection as the History page; nothing is deleted or altered)."""
         with self._session_factory() as session:
             if self._owned(session, user_id, opportunity_id) is None:
                 return []
             stmt = select(Interview.id).where(
                 Interview.user_id == user_id, Interview.opportunity_id == opportunity_id
-            ).order_by(Interview.id.desc())
+            )
+            if window is not None:
+                eligible = session.scalars(
+                    select(Interview.id).where(Interview.user_id == user_id, Interview.status == "completed")
+                    .order_by(Interview.created_at.desc(), Interview.id.desc()).limit(max(0, int(window)))).all()
+                stmt = stmt.where(Interview.id.in_(eligible or [-1]))
+            stmt = stmt.order_by(Interview.id.desc())
             return [row for row in session.execute(stmt).scalars().all()]

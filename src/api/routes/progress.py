@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 
-from src.api.dependencies import get_current_user_id, get_repository
+from src.api.dependencies import get_current_user_id, get_history_access_policy, get_repository
 from src.api.schemas.progress import ProgressResponse
 from src.application import history_service
 
@@ -21,5 +21,7 @@ router = APIRouter(prefix="/progress", tags=["progress"])
 def progress(
     repo=Depends(get_repository),
     user_id: int = Depends(get_current_user_id),
+    policy=Depends(get_history_access_policy),
 ) -> ProgressResponse:
-    return ProgressResponse(**history_service.practice_progress(repo, user_id))
+    # Same candidate and same window as the history list: one entitlement decision, one selection mechanism.
+    return ProgressResponse(**history_service.practice_progress(repo, user_id, policy.window_for(user_id)))
