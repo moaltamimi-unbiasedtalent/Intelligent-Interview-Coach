@@ -2425,6 +2425,51 @@ class AIOperationEvent(Base):
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
+QUOTA_RESERVATION_STATES = ("reserved", "committed", "released")
+
+
+class UsageQuotaCounter(Base):
+    """Consumed product-quota units for ONE user, feature and UTC period (W12.4D-P4-A). ``used`` is changed only by a conditional UPDATE inside the
+    reservation transaction, so concurrent requests cannot exceed an allowance. Holds no candidate content. Deleted with the account (FK CASCADE)."""
+
+    __tablename__ = "usage_quota_counters"
+    __table_args__ = (
+        UniqueConstraint("user_id", "feature", "period_start", name="uq_quota_counter"),
+        CheckConstraint("used >= 0", name="ck_quota_counter_used"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    feature: Mapped[str] = mapped_column(String(32))
+    period_start: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    used: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    policy_version: Mapped[str] = mapped_column(String(24))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class UsageQuotaReservation(Base):
+    """One LOGICAL operation's claim on a quota unit (W12.4D-P4-A). ``op_key`` is unique, so a duplicate or retried submission never consumes twice.
+    State transitions are reserved -> committed | released only. No candidate content; deleted with the account."""
+
+    __tablename__ = "usage_quota_reservations"
+    __table_args__ = (
+        UniqueConstraint("op_key", name="uq_quota_reservation_key"),
+        CheckConstraint(_in_list("state", QUOTA_RESERVATION_STATES), name="ck_quota_reservation_state"),
+        Index("ix_quota_reservation_state_expiry", "state", "expires_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    op_key: Mapped[str] = mapped_column(String(120))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    feature: Mapped[str] = mapped_column(String(32))
+    period_start: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    state: Mapped[str] = mapped_column(String(10), default="reserved", server_default="reserved")
+    policy_version: Mapped[str] = mapped_column(String(24))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    finalized_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 def make_engine(database_url: str) -> Engine:
     """Create an engine; SQLite needs cross-thread access for Streamlit."""
     connect_args = {}

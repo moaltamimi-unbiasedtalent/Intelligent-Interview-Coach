@@ -21,6 +21,7 @@ export type ApiErrorKind =
   | "conflict" // 409 — concurrent change / operation already running
   | "rateLimited" // 429 — too many requests (honour Retry-After)
   | "aiLimited" // 429 with code ai_usage_limit: a temporary per-user safety limit on AI-generated work (stable code, never English matching)
+  | "quotaExhausted" // 429 with code usage_quota_exhausted: the product allowance for the period is used up (stable code, never English matching)
   | "historyRestricted" // 403 with code history_not_available: an OWNED interview outside the current history window (stored, not deleted; stable code)
   | "modelProfileRestricted" // 403/422 with code model_profile_not_authorized or model_profile_not_available: that AI model profile is not available to this account (stable codes)
   | "paused" // 503 with code platform_paused: an operator pause of this activity (stable code, never English matching)
@@ -79,6 +80,8 @@ export class ApiError extends Error {
         return "You've made too many requests. Please wait a moment and try again.";
       case "aiLimited":
         return "You've reached a temporary safety limit on AI-generated practice and coaching. Your saved work and history remain available. Please try again in a little while.";
+      case "quotaExhausted":
+        return "You have used the AI allowance included for this period. Your saved work and history remain available. It becomes available again when the period resets.";
       case "historyRestricted":
         return "This interview is outside the history included in your current view. It has not been deleted and is still stored. You can still export or delete your data from your account.";
       case "modelProfileRestricted":
@@ -119,6 +122,8 @@ export function stateKeyForError(kind: ApiErrorKind): string {
       return "states.rateLimited";
     case "aiLimited":
       return "states.aiUsageLimit";
+    case "quotaExhausted":
+      return "states.usageQuotaExhausted";
     case "historyRestricted":
       return "states.historyRestricted";
     case "modelProfileRestricted":
@@ -186,7 +191,7 @@ export function apiErrorFromBody(
   // surface arbitrary body text that isn't part of the known safe envelope.
   const message = envelope?.error?.message ?? "Request failed.";
   return new ApiError({
-    kind: code === "platform_paused" ? "paused" : code === "ai_usage_limit" ? "aiLimited" : code === "history_not_available" ? "historyRestricted" : code === "model_profile_not_authorized" || code === "model_profile_not_available" ? "modelProfileRestricted" : kindForStatus(status),
+    kind: code === "platform_paused" ? "paused" : code === "ai_usage_limit" ? "aiLimited" : code === "usage_quota_exhausted" ? "quotaExhausted" : code === "history_not_available" ? "historyRestricted" : code === "model_profile_not_authorized" || code === "model_profile_not_available" ? "modelProfileRestricted" : kindForStatus(status),
     status,
     code,
     message,

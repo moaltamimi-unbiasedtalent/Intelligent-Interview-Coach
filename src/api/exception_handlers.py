@@ -28,6 +28,7 @@ from src.application.errors import (
     ValidationError,
 )
 from src.ai_protection import AiUsageLimitError
+from src.application.usage_quota import QuotaExhausted, QuotaNotConfigured, QuotaUnavailable
 from src.application.history_access import HistoryNotAvailableError
 from src.application.model_profile_access import ModelProfileInvalid, ModelProfileNotAuthorized, ModelProfileNotAvailable
 from src.repository import HistoryRestricted
@@ -50,6 +51,10 @@ def _envelope(status: int, code: str, message: str, request_id: str) -> JSONResp
 PLATFORM_PAUSED_MESSAGE = "Ask4Mo is temporarily unavailable for this activity. Your saved data remains available. Please try again later."
 AI_USAGE_LIMIT_MESSAGE = ("You have reached a temporary safety limit on AI-generated work. Your saved work and history remain available. "
                           "Please try again in a little while.")
+USAGE_QUOTA_MESSAGE = ("You have used the AI allowance included for this period. Your saved work and history remain available. "
+                       "The allowance resets at the time shown.")
+USAGE_QUOTA_UNAVAILABLE_MESSAGE = ("This AI feature is temporarily unavailable. Your saved work and history remain available. "
+                                   "Please try again in a little while.")
 HISTORY_NOT_AVAILABLE_MESSAGE = ("This interview is outside the history included in your current view. It has not been deleted and remains stored. "
                                  "You can still export or delete your data from your account.")
 MODEL_PROFILE_MESSAGE = "That AI model profile is not available for your account. Please choose another profile."
@@ -134,6 +139,20 @@ def register_exception_handlers(app: FastAPI) -> None:
         body = json.loads(response.body)
         body["error"].update({"capability": exc.workflow, "temporary": True, "retry_after_seconds": exc.retry_after})
         return JSONResponse(status_code=429, content=body, headers={"Retry-After": str(exc.retry_after)})
+
+    # W12.4D-P4-A: product usage quota (enforcement mode only). Fixed safe copy plus bounded facts; no plan, price or upgrade wording. A missing policy or an
+    # unreadable store fails closed for the quota-gated operation only (503), never as unlimited use.
+    @app.exception_handler(QuotaExhausted)
+    async def _usage_quota_exhausted(request: Request, exc: QuotaExhausted):
+        response = _envelope(429, "usage_quota_exhausted", USAGE_QUOTA_MESSAGE, _request_id(request))
+        body = json.loads(response.body)
+        body["error"].update({"feature": exc.feature, "period": exc.period, "reset_at": exc.reset_at.isoformat(), "retry_after_seconds": exc.retry_after})
+        return JSONResponse(status_code=429, content=body, headers={"Retry-After": str(exc.retry_after)})
+
+    @app.exception_handler(QuotaNotConfigured)
+    @app.exception_handler(QuotaUnavailable)
+    async def _usage_quota_unavailable(request: Request, exc: Exception):
+        return _envelope(503, "usage_quota_unavailable", USAGE_QUOTA_UNAVAILABLE_MESSAGE, _request_id(request))
 
     # W12.4D-P2-B: the caller OWNS the interview but it lies outside the history window of their entitlement. Fixed safe copy; nothing about the interview.
     @app.exception_handler(HistoryRestricted)

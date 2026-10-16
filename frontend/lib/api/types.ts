@@ -1204,3 +1204,20 @@ export interface LegalDocView {
 export interface LegalStatus {
   documents: LegalDocView[];
 }
+
+/** GET /usage-quotas (W12.4D-P4-A): the caller's own server-computed quota state. Display only; empty while enforcement is disabled. */
+export interface UsageQuotaFeature {
+  feature: string;
+  unit: string;
+  status: "available" | "exhausted" | "not_configured" | "unavailable";
+  period?: "hour" | "day" | "month" | null;
+  allowance?: number | null;
+  used?: number | null;
+  remaining?: number | null;
+  reset_at?: string | null;
+}
+export interface UsageQuotasResponse {
+  enforcement_active: boolean;
+  policy_version?: string | null;
+  features: UsageQuotaFeature[];
+}

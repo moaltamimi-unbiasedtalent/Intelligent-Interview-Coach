@@ -313,7 +313,7 @@ assumptions in core logic, prompts, scoring or examples.
   labour-market, credentials) + a Chroma vector store with a local-hash embedder
   fallback; a deterministic router picks lanes; hybrid (vector + BM25) fusion.
 - **Persistence & auth.** SQLAlchemy ORM over SQLite (dev/tests) or PostgreSQL
-  (production, schema owned by Alembic — single head, currently `0032_ai_operation_events` (see `migrations/versions/`); see
+  (production, schema owned by Alembic — single head, currently `0033_usage_quotas` (see `migrations/versions/`); see
   `docs/operations_deployment.md`); interview history is per-user with strict
   isolation. Identity is server-side accounts and sessions (HttpOnly cookie); production is
   fail-closed; the `X-User-Subject` header and anonymous developer user exist only in

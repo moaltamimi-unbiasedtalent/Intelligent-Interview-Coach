@@ -105,6 +105,7 @@ import type {
   InterviewListResponse,
   InterviewDetailResponse,
   ModelProfilesResponse,
+  UsageQuotasResponse,
   ProgressResponse,
   EvaluationRunResponse,
   InterviewQuestionSet,
@@ -332,6 +333,10 @@ export const api = {
   // Plan-aware model-profile metadata (W12.4D-P2-C). Read-only; `selector_active` is false until a reviewed release enables enforcement.
   modelProfiles: {
     get: (opts?: RequestOptions) => request<ModelProfilesResponse>("GET", "/model-profiles", opts),
+  },
+
+  usageQuotas: {
+    get: (opts?: RequestOptions) => request<UsageQuotasResponse>("GET", "/usage-quotas", opts),
   },
 
   evaluation: {

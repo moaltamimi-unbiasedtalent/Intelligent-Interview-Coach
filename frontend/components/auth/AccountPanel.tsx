@@ -12,6 +12,7 @@ import { PremiumSubscriptionPanel } from "@/components/account/PremiumSubscripti
 import { PlanSummary } from "@/components/account/PlanSummary";
 import { PlanOverview } from "@/components/plan/PlanOverview";
 import { ModelProfilePanel } from "@/components/plan/ModelProfilePanel";
+import { UsageQuotaPanel } from "@/components/plan/UsageQuotaPanel";
 import { Card, CardBody } from "@/components/ui/Card";
 import { LoadingState } from "@/components/ui/States";
 import { useT } from "@/components/i18n/I18nProvider";
@@ -84,6 +85,7 @@ export function AccountPanel() {
       <PremiumSubscriptionPanel />
       <PlanOverview />
       <ModelProfilePanel />
+      <UsageQuotaPanel />
 
       <div className="flex flex-wrap items-center gap-3">
         <a
