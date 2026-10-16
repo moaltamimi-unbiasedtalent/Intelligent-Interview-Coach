@@ -21,7 +21,7 @@ from src.billing import policy as P
 from src.billing import stripe_events as SE
 from src.billing.entitlement_bridge import EntitlementPolicy, evaluate_and_apply
 from src.billing.provider_state import (
-    ProviderStateError, ProviderStateInvalid, ProviderStateNotFound, ProviderStateReader, ProviderStateUnavailable, SubscriptionSnapshot,
+    ProviderStateConfiguration, ProviderStateError, ProviderStateInvalid, ProviderStateNotFound, ProviderStateReader, ProviderStateUnavailable, SubscriptionSnapshot,
 )
 from src.persistence import (
     BillingCheckoutSession as CS, BillingCommercialTerms as CT, BillingProviderEvent as EV, BillingProviderLink as LINK, BillingProviderPrice as PP,
@@ -158,6 +158,9 @@ class ProviderEventService:
                 s.commit()
         except ProviderStateUnavailable as exc:
             return self._finish(public_id, "retry", exc.category, now, corr)
+        except ProviderStateConfiguration as exc:
+            # The provider refused US (credential, permission, API version, account, feature): retrying cannot help, an operator must act. Nothing is granted.
+            return self._finish(public_id, "needs_review", "provider_configuration_" + exc.category, now, corr)
         except ProviderStateNotFound:
             return self._finish(public_id, "quarantined", "provider_resource_not_found", now, corr)
         except ProviderStateInvalid:

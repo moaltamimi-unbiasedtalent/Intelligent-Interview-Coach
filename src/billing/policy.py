@@ -73,3 +73,10 @@ PENDING_CHECKOUT_RECHECK_SECONDS = 15 * 60
 # and operational approval exist. The scheduler additionally refuses to enqueue while the runtime reader is the Null reader.
 RECONCILE_SCHEDULER_ENABLED = False
 RECONCILE_SCHEDULE_BUCKET_SECONDS = 15 * 60       # one sweep per bucket at most, however many scheduler instances run
+
+# ---- W12.4D-F2-A: provider-read authorization boundary --------------------------------------------------------------------------------------------
+# A code constant like the other gates: NO setting, credential, rotation, Admin readiness test, webhook, recovery action or scheduler can turn external
+# provider reads on. While False the runtime reader is the Null reader and ``provider_read_gate`` refuses to build a real one. Reads are SANDBOX ONLY even
+# when a later reviewed release flips this: ``PROVIDER_READ_ENVIRONMENTS`` has no live entry and there is no sandbox-to-live fallback.
+PROVIDER_READS_AUTHORIZED = False
+PROVIDER_READ_ENVIRONMENTS = ("sandbox",)

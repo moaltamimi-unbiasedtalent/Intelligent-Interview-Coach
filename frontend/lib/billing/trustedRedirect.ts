@@ -6,7 +6,7 @@ export function trustedCheckoutUrl(raw: string | null | undefined): string | nul
   if (!raw) return null;
   try {
     const u = new URL(raw);
-    if (u.protocol !== "https:" || u.username || u.password) return null;
+    if (u.protocol !== "https:" || u.username || u.password || u.port) return null;   // default port only
     return ALLOWED_CHECKOUT_HOSTS.includes(u.hostname) ? u.toString() : null;
   } catch {
     return null;
