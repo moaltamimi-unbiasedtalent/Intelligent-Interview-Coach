@@ -183,24 +183,25 @@ def save_completed_interview(
         )
 
 
-def list_interview_reports(repo, user_id: int):
+def list_interview_reports(repo, user_id: int, window: int | None = None):
     """List a user's saved interviews (repository passthrough)."""
-    return repo.list_interviews(user_id)
+    # The window argument is passed ONLY when a restriction applies, so the unrestricted call keeps the original repository signature.
+    return repo.list_interviews(user_id, window) if window is not None else repo.list_interviews(user_id)
 
 
-def practice_progress(repo, user_id: int) -> dict:
+def practice_progress(repo, user_id: int, window: int | None = None) -> dict:
     """Aggregate the user's persisted practice metrics (repository passthrough).
 
     Derived only from the user's own completed interviews — practice guidance, not a
     score or a hiring signal. Empty/None fields when the user has no practice yet.
     """
-    return repo.dashboard_metrics(user_id)
+    return repo.dashboard_metrics(user_id, window) if window is not None else repo.dashboard_metrics(user_id)
 
 
-def get_interview_report(repo, user_id: int, interview_id: int):
+def get_interview_report(repo, user_id: int, interview_id: int, window: int | None = None):
     """Fetch one saved interview's detail, scoped to ``user_id``.
 
     The repository filters by ``user_id``, so one user can never read another
     user's report (returns ``None`` when the id is not theirs).
     """
-    return repo.get_interview(user_id, interview_id)
+    return repo.get_interview(user_id, interview_id, window) if window is not None else repo.get_interview(user_id, interview_id)

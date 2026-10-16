@@ -22,6 +22,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Path, Request
 from src import constants
 from src.ai_protection import ai_operation
 from src.api.dependencies import (
+    get_history_access_policy,
     get_app_config,
     get_current_user_id,
     get_interview_service,
@@ -41,6 +42,7 @@ from src.api.schemas.interview import (
     ReportResponse,
 )
 from src.application import history_service
+from src.application.history_access import HistoryNotAvailableError
 from src.application.errors import (
     ConflictError,
     MissingHandoffConfigError,
@@ -279,6 +281,18 @@ def _load(store: DurableInterviewSessionStore, session_id: str, user_id: int) ->
         raise ValidationError("Unknown interview session.") from None
 
 
+def _guard_completed_history(session: SessionManager, user_id: int, policy, repo) -> None:
+    """W12.4D-P2-B: a COMPLETED, saved session whose history record lies outside the caller's window must not be readable or extendable through the
+    session routes (they would otherwise be a second door to the same restricted content). Draft and active sessions have no saved history record and are
+    never affected: the candidate can always continue their own active interview. No-op while the rollout gate is disabled."""
+    saved = getattr(session.data, "saved_report_id", None)
+    if saved is None:
+        return
+    window = policy.window_for(user_id)
+    if window is not None and repo.is_restricted(user_id, int(saved), window):
+        raise HistoryNotAvailableError()
+
+
 def _translate_store_error(exc: Exception) -> Exception:
     if isinstance(exc, SessionNotFoundError):
         return ValidationError("Unknown interview session.")
@@ -412,8 +426,11 @@ def get_interview(
     session_id: str = Path(...),
     store: DurableInterviewSessionStore = Depends(get_session_store),
     user_id: int = Depends(get_current_user_id),
+    policy=Depends(get_history_access_policy),
+    repo=Depends(get_repository),
 ) -> InterviewStateResponse:
     session = _load(store, session_id, user_id)
+    _guard_completed_history(session, user_id, policy, repo)
     data = session.data
     # On resume, surface the most recent feedback EXCEPT while awaiting a fresh answer
     # (where the prior question's evaluation would be misleading).
@@ -516,9 +533,12 @@ def start_deep_dive(
     store: DurableInterviewSessionStore = Depends(get_session_store),
     user_id: int = Depends(get_current_user_id),
     _ai=Depends(ai_operation("practice", "deep_dive_start")),
+    policy=Depends(get_history_access_policy),
+    repo=Depends(get_repository),
 ) -> InterviewStateResponse:
     try:
         with store.mutate(session_id, user_id, operation="deep_dive") as session:
+            _guard_completed_history(session, user_id, policy, repo)
             svc.start_deep_dive(session, body.mode)
     except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
         raise _translate_store_error(exc) from None
@@ -534,9 +554,12 @@ def submit_deep_dive_answer(
     store: DurableInterviewSessionStore = Depends(get_session_store),
     user_id: int = Depends(get_current_user_id),
     _ai=Depends(ai_operation("practice", "deep_dive_feedback")),
+    policy=Depends(get_history_access_policy),
+    repo=Depends(get_repository),
 ) -> InterviewStateResponse:
     try:
         with store.mutate(session_id, user_id, operation="deep_dive_answer") as session:
+            _guard_completed_history(session, user_id, policy, repo)
             svc.submit_branch_answer(session, body.answer)
     except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
         raise _translate_store_error(exc) from None
@@ -552,9 +575,12 @@ def next_deep_dive(
     store: DurableInterviewSessionStore = Depends(get_session_store),
     user_id: int = Depends(get_current_user_id),
     _ai=Depends(ai_operation("practice", "deep_dive_next")),
+    policy=Depends(get_history_access_policy),
+    repo=Depends(get_repository),
 ) -> InterviewStateResponse:
     try:
         with store.mutate(session_id, user_id, operation="deep_dive_next") as session:
+            _guard_completed_history(session, user_id, policy, repo)
             # Enforce the depth/turn rule using the state machine's own predicate
             # BEFORE any provider call (no wasted paid generation, no duplicated logic).
             if not session.can_go_deeper():
@@ -571,9 +597,12 @@ def return_from_deep_dive(
     session_id: str = Path(...),
     store: DurableInterviewSessionStore = Depends(get_session_store),
     user_id: int = Depends(get_current_user_id),
+    policy=Depends(get_history_access_policy),
+    repo=Depends(get_repository),
 ) -> InterviewStateResponse:
     try:
         with store.mutate(session_id, user_id) as session:
+            _guard_completed_history(session, user_id, policy, repo)
             session.return_to_main_interview()
     except (SessionNotFoundError, SessionConflictError) as exc:
         raise _translate_store_error(exc) from None
@@ -600,6 +629,7 @@ def generate_report(
     config=Depends(get_app_config),
     user_id: int = Depends(get_current_user_id),
     _ai=Depends(ai_operation("practice", "report")),
+    policy=Depends(get_history_access_policy),
 ) -> ReportResponse:
     """Generate the report if absent (never regenerated once it exists), persist the
     completed interview to History exactly once, and return the result.
@@ -613,6 +643,7 @@ def generate_report(
     # A. Generate + durably persist the report (guarded by the operation lease).
     try:
         with store.mutate(session_id, user_id, operation="report") as session:
+            _guard_completed_history(session, user_id, policy, repo)
             if session.data.report is None:
                 svc.generate_report(session)
     except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
@@ -646,8 +677,11 @@ def get_report(
     session_id: str = Path(...),
     store: DurableInterviewSessionStore = Depends(get_session_store),
     user_id: int = Depends(get_current_user_id),
+    policy=Depends(get_history_access_policy),
+    repo=Depends(get_repository),
 ) -> ReportResponse:
     session = _load(store, session_id, user_id)
+    _guard_completed_history(session, user_id, policy, repo)
     if session.data.report is None:
         raise ValidationError("No report has been generated for this interview.")
     data = session.data

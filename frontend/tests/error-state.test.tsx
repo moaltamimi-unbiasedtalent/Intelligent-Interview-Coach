@@ -109,7 +109,7 @@ describe("ErrorState disclosure + retry", () => {
 describe("7/8. ErrorState chrome is localized in all 8 locales (incl. Russian), incl. every error kind", () => {
   const CHROME = ["states.somethingWentWrong", "states.retry", "states.technicalDetails", "states.reference"];
   const KINDS = ["offline", "unreachable", "unauthenticated", "forbidden", "notFound", "validation", "conflict",
-    "rateLimited", "aiLimited", "unavailable", "server", "unknown"] as const;
+    "rateLimited", "aiLimited", "historyRestricted", "unavailable", "server", "unknown"] as const;
 
   for (const locale of SUPPORTED_LOCALE_CODES) {
     it(`${locale}: title, message, Retry, Technical details, Reference render in ${locale}`, () => {

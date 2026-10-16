@@ -305,6 +305,13 @@ def get_entitlement_service(repo=Depends(get_repository)):
     return EntitlementService(repo.session_factory)
 
 
+def get_history_access_policy(repo=Depends(get_repository), entitlements=Depends(get_entitlement_service)):
+    """The canonical completed-history access policy (W12.4D-P2-B). Built per request (nothing cached); disabled by default via a code constant."""
+    from src.application.history_access import HistoryAccessPolicy
+
+    return HistoryAccessPolicy(entitlements)
+
+
 def get_secret_store():
     from src.secret_store import get_secret_store as _get
 
@@ -524,9 +531,22 @@ def get_sharing_service(
         except (ValueError, TypeError):
             return None
 
+    from src.application.history_access import HistoryAccessPolicy
+    from src.entitlements import EntitlementService
+    from src.repository import HistoryRestricted
+
+    history_policy = HistoryAccessPolicy(EntitlementService(repo.session_factory))
+
     def _report_owns(resource_id: str, owner_user_id: int) -> bool:
+        # W12.4D-P2-B: a NEW share can only be created for an interview the OWNER may currently access (a restricted one is refused exactly like a
+        # missing one). Existing grants are deliberately unchanged here: ``_report_load`` below is not window-limited (documented product-policy
+        # ambiguity; the rights of existing external recipients are not silently altered).
         try:
-            return repo.get_interview(owner_user_id, int(resource_id)) is not None
+            window = history_policy.window_for(owner_user_id)
+            found = repo.get_interview(owner_user_id, int(resource_id), window) if window is not None else repo.get_interview(owner_user_id, int(resource_id))
+            return found is not None
+        except HistoryRestricted:
+            return False
         except (ValueError, TypeError):
             return False
 
@@ -622,13 +642,13 @@ def resolve_document_text(request: Request, *, user_id: int, document_id: int,
     return svc.extracted_text(user_id=user_id, document_id=document_id, max_chars=max_chars)
 
 
-def get_opportunity_service(repo=Depends(get_repository)):
+def get_opportunity_service(repo=Depends(get_repository), history_policy=Depends(get_history_access_policy)):
     """Owner-scoped Opportunity service (P10B Wave 6), built over the injected app repository
     (so tests can override the repository/database)."""
     from src.application.opportunity_service import OpportunityApplicationService
     from src.opportunity_repository import OpportunityRepository
 
-    return OpportunityApplicationService(OpportunityRepository(repo.session_factory))
+    return OpportunityApplicationService(OpportunityRepository(repo.session_factory), history_window=history_policy.window_for)
 
 
 def get_research_service(request: Request):

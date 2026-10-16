@@ -13,7 +13,7 @@ from datetime import datetime
 from src.entitlements import ensure_default_subscription
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, selectinload, sessionmaker
 
 from src.feedback import FeedbackItem
 from src.memory import MemoryItem, normalize_role, normalize_summary
@@ -40,6 +40,14 @@ def _parse_dt(value) -> datetime | None:
             return None
     return None
 
+
+
+class HistoryRestricted(Exception):
+    """The interview exists and belongs to the caller, but lies outside the history window of the caller's entitlement (W12.4D-P2-B)."""
+
+    def __init__(self, interview_id: int | None = None) -> None:
+        super().__init__("history_not_available")
+        self.interview_id = interview_id
 
 class InterviewRepository:
     """User-scoped persistence for interviews, answers and reports."""
@@ -173,6 +181,40 @@ class InterviewRepository:
 
     # -- reads (all user-scoped) ---------------------------------------------
 
+    # -- eligible completed history (W12.4D-P2-B) --------------------------------------------------------------------
+    # ONE authoritative selection for every candidate-facing read. ``window`` is the number of most recent COMPLETED interviews the caller may
+    # see (None = the whole retained history). It is an ACCESS limit only: no row is ever deleted, moved or altered by it. "Latest" is
+    # ``created_at`` DESC then ``id`` DESC: ``created_at`` is the server-assigned time the completed row was persisted (after the report is durable),
+    # whereas ``started_at`` / ``ended_at`` come from the client payload and are nullable, and ``id`` is a unique, monotonic tie-breaker.
+    COMPLETED = "completed"
+
+    @staticmethod
+    def _latest_order():
+        return (Interview.created_at.desc(), Interview.id.desc())
+
+    def eligible_ids(self, user_id: int, window: int | None) -> list[int] | None:
+        """The ids the caller may access, newest first (``None`` = unrestricted). One indexed query with LIMIT: never loads the whole history."""
+        if window is None:
+            return None
+        with self._session_factory() as session:
+            return self._eligible_ids(session, user_id, window)
+
+    def _eligible_ids(self, session: Session, user_id: int, window: int | None) -> list[int] | None:
+        if window is None:
+            return None
+        return list(session.scalars(
+            select(Interview.id).where(Interview.user_id == user_id, Interview.status == self.COMPLETED)
+            .order_by(*self._latest_order()).limit(max(0, int(window)))).all())
+
+    def is_restricted(self, user_id: int, interview_id: int, window: int | None) -> bool:
+        """True only when the interview EXISTS, belongs to the caller and lies outside the window. Foreign or missing ids are not 'restricted'."""
+        if window is None:
+            return False
+        with self._session_factory() as session:
+            if self._owned(session, user_id, interview_id) is None:
+                return False
+            return interview_id not in (self._eligible_ids(session, user_id, window) or [])
+
     def _owned(self, session: Session, user_id: int, interview_id: int) -> Interview | None:
         # Ownership is part of the WHERE clause — another user's id yields None.
         return session.scalar(
@@ -181,22 +223,24 @@ class InterviewRepository:
             )
         )
 
-    def list_interviews(self, user_id: int) -> list[dict]:
-        """Return summary rows for a user's interviews, newest first."""
+    def list_interviews(self, user_id: int, window: int | None = None) -> list[dict]:
+        """Return summary rows for a user's interviews, newest first (deterministic: ``created_at`` then ``id``). ``window`` limits ACCESS only."""
         with self._session_factory() as session:
-            rows = session.scalars(
-                select(Interview)
-                .where(Interview.user_id == user_id)
-                .order_by(Interview.created_at.desc())
-            ).all()
+            stmt = select(Interview).options(selectinload(Interview.questions)).where(Interview.user_id == user_id)      # one extra query, not one per row
+            if window is not None:
+                stmt = stmt.where(Interview.id.in_(self._eligible_ids(session, user_id, window) or [-1]))
+            rows = session.scalars(stmt.order_by(*self._latest_order())).all()
             return [self._summary(interview) for interview in rows]
 
-    def get_interview(self, user_id: int, interview_id: int) -> dict | None:
-        """Return one interview in full, or None if not owned by this user."""
+    def get_interview(self, user_id: int, interview_id: int, window: int | None = None) -> dict | None:
+        """Return one interview in full, or None if not owned by this user. With a ``window`` an OWNED interview outside it raises
+        ``HistoryRestricted`` (the caller is the owner, so this discloses nothing about anyone else); a foreign or missing id is still None."""
         with self._session_factory() as session:
             interview = self._owned(session, user_id, interview_id)
             if interview is None:
                 return None
+            if window is not None and interview.id not in (self._eligible_ids(session, user_id, window) or []):
+                raise HistoryRestricted(interview_id)
             return self._detail(interview)
 
     def delete_interview(self, user_id: int, interview_id: int) -> bool:
@@ -244,7 +288,7 @@ class InterviewRepository:
             interviews = session.scalars(
                 select(Interview)
                 .where(Interview.user_id == user_id)
-                .order_by(Interview.created_at.asc())
+                .order_by(Interview.created_at.asc(), Interview.id.asc())
             ).all()
             return {
                 "user": {
@@ -258,14 +302,14 @@ class InterviewRepository:
 
     # -- dashboard ------------------------------------------------------------
 
-    def dashboard_metrics(self, user_id: int) -> dict:
-        """Aggregate practice metrics for a user (practice guidance, not a score)."""
+    def dashboard_metrics(self, user_id: int, window: int | None = None) -> dict:
+        """Aggregate practice metrics for a user (practice guidance, not a score). ``window`` restricts the calculation to the same eligible
+        completed interviews the history uses (the SAME selection, never re-implemented here)."""
         with self._session_factory() as session:
-            interviews = session.scalars(
-                select(Interview)
-                .where(Interview.user_id == user_id)
-                .order_by(Interview.created_at.asc())
-            ).all()
+            stmt = select(Interview).options(selectinload(Interview.questions).selectinload(Question.answer)).where(Interview.user_id == user_id)
+            if window is not None:
+                stmt = stmt.where(Interview.id.in_(self._eligible_ids(session, user_id, window) or [-1]))
+            interviews = session.scalars(stmt.order_by(Interview.created_at.asc(), Interview.id.asc())).all()
             evaluations: list[dict] = []
             durations: list[float] = []
             for interview in interviews:
@@ -302,7 +346,7 @@ class InterviewRepository:
                 "recent_interviews": [
                     self._summary(i)
                     for i in sorted(
-                        interviews, key=lambda x: x.created_at, reverse=True
+                        interviews, key=lambda x: (x.created_at, x.id), reverse=True
                     )[:5]
                 ],
             }

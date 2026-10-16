@@ -28,6 +28,8 @@ from src.application.errors import (
     ValidationError,
 )
 from src.ai_protection import AiUsageLimitError
+from src.application.history_access import HistoryNotAvailableError
+from src.repository import HistoryRestricted
 from src.application.pause import PauseStateUnavailable, PlatformPausedError
 from src.interview.session_codec import SessionCodecError
 from src.platform_config.flags import FeatureFlagStateUnavailable
@@ -47,6 +49,8 @@ def _envelope(status: int, code: str, message: str, request_id: str) -> JSONResp
 PLATFORM_PAUSED_MESSAGE = "Ask4Mo is temporarily unavailable for this activity. Your saved data remains available. Please try again later."
 AI_USAGE_LIMIT_MESSAGE = ("You have reached a temporary safety limit on AI-generated work. Your saved work and history remain available. "
                           "Please try again in a little while.")
+HISTORY_NOT_AVAILABLE_MESSAGE = ("This interview is outside the history included in your current view. It has not been deleted and remains stored. "
+                                 "You can still export or delete your data from your account.")
 PLATFORM_STATE_UNAVAILABLE_MESSAGE = "Ask4Mo cannot confirm that this activity is available right now. Please try again shortly."
 
 # The single safe message for an otherwise-unhandled server error. Never carries exception
@@ -128,6 +132,12 @@ def register_exception_handlers(app: FastAPI) -> None:
         body = json.loads(response.body)
         body["error"].update({"capability": exc.workflow, "temporary": True, "retry_after_seconds": exc.retry_after})
         return JSONResponse(status_code=429, content=body, headers={"Retry-After": str(exc.retry_after)})
+
+    # W12.4D-P2-B: the caller OWNS the interview but it lies outside the history window of their entitlement. Fixed safe copy; nothing about the interview.
+    @app.exception_handler(HistoryRestricted)
+    @app.exception_handler(HistoryNotAvailableError)
+    async def _history_not_available(request: Request, exc: Exception):
+        return _envelope(403, "history_not_available", HISTORY_NOT_AVAILABLE_MESSAGE, _request_id(request))
 
     @app.exception_handler(FeatureFlagStateUnavailable)
     async def _flag_state_unavailable(request: Request, exc: FeatureFlagStateUnavailable):

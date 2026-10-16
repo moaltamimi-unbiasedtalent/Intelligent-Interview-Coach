@@ -39,6 +39,7 @@ const it: Catalog = {
     serviceUnavailable: "Ask4Mo è temporaneamente non disponibile. Riprova a breve.",
     platformPaused: "Ask4Mo non è temporaneamente disponibile per questa attività. I tuoi dati salvati restano disponibili. Riprova più tardi.",
     aiUsageLimit: "Hai raggiunto un limite di sicurezza temporaneo per esercitazione e coaching generati dall’IA. Il tuo lavoro salvato e la cronologia restano disponibili. Riprova tra poco.",
+    historyRestricted: "Questo colloquio è fuori dalla cronologia inclusa nella tua vista attuale. Non è stato eliminato ed è ancora archiviato. Puoi comunque esportare o eliminare i tuoi dati dal tuo account.",
     rateLimited: "Troppe richieste. Attendi un momento e riprova.",
     sessionExpired: "La tua sessione è scaduta. Accedi di nuovo.",
     forbidden: "Non hai accesso a questo.",
