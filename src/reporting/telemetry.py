@@ -185,12 +185,18 @@ def record_practice_usage(session_factory, user_id: int, session_id: str, start_
             from src.llm.models import known_profile_for_slug
 
             prof = known_profile_for_slug(rec.model)
+            # W12.4D-P2-A: a completed provider call always consumes tokens, so 0 prompt and 0 completion tokens means "the provider reported no usage", which is
+            # UNKNOWN and must never be stored as a real zero (nor as a calculated 0.0 cost).
+            usage_unknown = int(rec.prompt_tokens) == 0 and int(rec.completion_tokens) == 0
+            if usage_unknown:
+                micros, source = None, "unavailable"
             with session_factory() as s:
                 s.add(AIUsageFact(usage_key=f"practice:{session_id}:{idx}"[:80], user_id=int(user_id), workflow="practice", operation=op,
                                   model_profile=prof.value if prof else None, model_id=str(rec.model)[:80], model_calls=1,
-                                  input_tokens=int(rec.prompt_tokens), output_tokens=int(rec.completion_tokens), total_tokens=int(rec.prompt_tokens) + int(rec.completion_tokens),
-                                  cost_usd_micros=micros, cost_source=source, token_coverage="complete", cost_coverage="complete" if micros is not None else "unknown",
-                                  occurred_at=utcnow(), updated_at=utcnow()))
+                                  input_tokens=None if usage_unknown else int(rec.prompt_tokens), output_tokens=None if usage_unknown else int(rec.completion_tokens),
+                                  total_tokens=None if usage_unknown else int(rec.prompt_tokens) + int(rec.completion_tokens),
+                                  cost_usd_micros=micros, cost_source=source, token_coverage="unknown" if usage_unknown else "complete",
+                                  cost_coverage="complete" if micros is not None else "unknown", occurred_at=utcnow(), updated_at=utcnow()))
                 try:
                     s.commit()
                     written += 1

@@ -22,12 +22,15 @@ from src.api.schemas.career import (
 from src.application.career_service import CareerApplicationService
 from src.application.models import CareerChatRequest as AppCareerChatRequest
 
+from src.ai_protection import ai_operation
+
 router = APIRouter(prefix="/career", tags=["career"])
 
 
 @router.post("/chat", response_model=CareerChatResponse, summary="Grounded career chat")
 def chat(body: CareerChatRequest,
-         svc: CareerApplicationService = Depends(get_career_service)) -> CareerChatResponse:
+         svc: CareerApplicationService = Depends(get_career_service),
+         _ai=Depends(ai_operation("career", "chat"))) -> CareerChatResponse:
     result = svc.chat(AppCareerChatRequest(
         query=body.question,
         job_description=body.job_description,
@@ -42,7 +45,8 @@ def chat(body: CareerChatRequest,
 @router.post("/job-analysis", response_model=ToolResultResponse,
              summary="Analyse a job description")
 def job_analysis(body: JobAnalysisRequest,
-                 svc: CareerApplicationService = Depends(get_career_service)) -> ToolResultResponse:
+                 svc: CareerApplicationService = Depends(get_career_service),
+         _ai=Depends(ai_operation("career", "job_analysis"))) -> ToolResultResponse:
     return ToolResultResponse.from_tool_call(svc.analyze_job_description(body.job_description))
 
 
@@ -71,6 +75,7 @@ def preparation_plan(body: PreparationPlanRequest,
 @router.post("/questions", response_model=ToolResultResponse,
              summary="Generate interview questions")
 def questions(body: QuestionsRequest,
-              svc: CareerApplicationService = Depends(get_career_service)) -> ToolResultResponse:
+              svc: CareerApplicationService = Depends(get_career_service),
+         _ai=Depends(ai_operation("career", "questions"))) -> ToolResultResponse:
     return ToolResultResponse.from_tool_call(
         svc.generate_questions(body.role, body.requirements, body.focus))

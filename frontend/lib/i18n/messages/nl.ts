@@ -38,6 +38,7 @@ const nl: Catalog = {
     serverError: "Ask4Mo liep tegen een probleem aan bij het verwerken van dat verzoek. Probeer het opnieuw.",
     serviceUnavailable: "Ask4Mo is tijdelijk niet beschikbaar. Probeer het zo dadelijk opnieuw.",
     platformPaused: "Ask4Mo is tijdelijk niet beschikbaar voor deze activiteit. Je opgeslagen gegevens blijven beschikbaar. Probeer het later opnieuw.",
+    aiUsageLimit: "Je hebt een tijdelijke veiligheidslimiet bereikt voor door AI gegenereerde oefening en coaching. Je opgeslagen werk en je geschiedenis blijven beschikbaar. Probeer het over een poosje opnieuw.",
     rateLimited: "Te veel verzoeken. Wacht even en probeer het opnieuw.",
     sessionExpired: "Uw sessie is verlopen. Meld u opnieuw aan.",
     forbidden: "U hebt hier geen toegang toe.",

@@ -9,6 +9,8 @@ private content) is never returned; only a safe message and the request id.
 
 from __future__ import annotations
 
+import json
+
 import logging
 
 from fastapi import FastAPI, Request
@@ -25,6 +27,7 @@ from src.application.errors import (
     UnavailableServiceError,
     ValidationError,
 )
+from src.ai_protection import AiUsageLimitError
 from src.application.pause import PauseStateUnavailable, PlatformPausedError
 from src.interview.session_codec import SessionCodecError
 from src.platform_config.flags import FeatureFlagStateUnavailable
@@ -42,6 +45,8 @@ def _envelope(status: int, code: str, message: str, request_id: str) -> JSONResp
 
 
 PLATFORM_PAUSED_MESSAGE = "Ask4Mo is temporarily unavailable for this activity. Your saved data remains available. Please try again later."
+AI_USAGE_LIMIT_MESSAGE = ("You have reached a temporary safety limit on AI-generated work. Your saved work and history remain available. "
+                          "Please try again in a little while.")
 PLATFORM_STATE_UNAVAILABLE_MESSAGE = "Ask4Mo cannot confirm that this activity is available right now. Please try again shortly."
 
 # The single safe message for an otherwise-unhandled server error. Never carries exception
@@ -114,6 +119,15 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(PlatformPausedError)
     async def _platform_paused(request: Request, exc: PlatformPausedError):
         return _envelope(503, "platform_paused", PLATFORM_PAUSED_MESSAGE, _request_id(request))
+
+    # W12.4D-P2-A: a per-user safety ceiling on AI-generated work (enforcement mode only). Fixed safe copy plus bounded machine-readable facts: the affected
+    # capability, that the limit is temporary and when to retry. No plan, price or upgrade wording: no paid tier is commercially active.
+    @app.exception_handler(AiUsageLimitError)
+    async def _ai_usage_limit(request: Request, exc: AiUsageLimitError):
+        response = _envelope(429, "ai_usage_limit", AI_USAGE_LIMIT_MESSAGE, _request_id(request))
+        body = json.loads(response.body)
+        body["error"].update({"capability": exc.workflow, "temporary": True, "retry_after_seconds": exc.retry_after})
+        return JSONResponse(status_code=429, content=body, headers={"Retry-After": str(exc.retry_after)})
 
     @app.exception_handler(FeatureFlagStateUnavailable)
     async def _flag_state_unavailable(request: Request, exc: FeatureFlagStateUnavailable):

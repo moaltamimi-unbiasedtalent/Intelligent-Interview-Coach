@@ -42,6 +42,7 @@ export const messages = {
     serverError: "Ask4Mo hit a problem while processing that request. Please try again.",
     serviceUnavailable: "Ask4Mo is temporarily unavailable. Please try again shortly.",
     platformPaused: "Ask4Mo is temporarily unavailable for this activity. Your saved data remains available. Please try again later.",
+    aiUsageLimit: "You’ve reached a temporary safety limit on AI-generated practice and coaching. Your saved work and history remain available. Please try again in a little while.",
     rateLimited: "You’ve made too many requests. Please wait a moment and try again.",
     sessionExpired: "Your session has expired. Please sign in again.",
     forbidden: "You don’t have access to that.",

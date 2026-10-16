@@ -38,6 +38,7 @@ const de: Catalog = {
     serverError: "Bei der Verarbeitung ist bei Ask4Mo ein Problem aufgetreten. Bitte versuchen Sie es erneut.",
     serviceUnavailable: "Ask4Mo ist vorübergehend nicht verfügbar. Bitte versuchen Sie es in Kürze erneut.",
     platformPaused: "Ask4Mo ist für diese Aktivität vorübergehend nicht verfügbar. Ihre gespeicherten Daten bleiben verfügbar. Bitte versuchen Sie es später erneut.",
+    aiUsageLimit: "Sie haben ein vorübergehendes Sicherheitslimit für KI-generierte Übungen und Coachings erreicht. Ihre gespeicherten Arbeiten und Ihr Verlauf bleiben verfügbar. Bitte versuchen Sie es in Kürze erneut.",
     rateLimited: "Zu viele Anfragen. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
     sessionExpired: "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
     forbidden: "Sie haben keinen Zugriff darauf.",

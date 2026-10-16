@@ -1094,7 +1094,7 @@ def test_migration_0029_upgrade_downgrade_and_constraint_widening(tmp_path, monk
     assert "billing_provider_links" not in inspect(create_engine(url)).get_table_names()
     command.upgrade(cfg, "head")
     heads = __import__("alembic.script", fromlist=["ScriptDirectory"]).ScriptDirectory.from_config(cfg).get_heads()
-    assert heads == ["0031_account_closure"]
+    assert heads == ["0032_ai_operation_events"]
     text_ = (ROOT / "migrations/versions/0029_provider_webhooks.py").read_text()
     assert "create_all" not in text_ and "stamp" not in text_
 
@@ -1193,7 +1193,7 @@ def test_migration_fresh_upgrade_and_single_head(tmp_path, monkeypatch):
     from alembic.script import ScriptDirectory
     cfg, url = _alembic(tmp_path, monkeypatch)
     command.upgrade(cfg, "head")
-    assert _version(url) == "0031_account_closure" and ScriptDirectory.from_config(cfg).get_heads() == ["0031_account_closure"]
+    assert _version(url) == "0032_ai_operation_events" and ScriptDirectory.from_config(cfg).get_heads() == ["0032_ai_operation_events"]
 
 
 def test_upgrade_from_0028_preserves_existing_subscriptions_and_partial_unique_indexes(tmp_path, monkeypatch):
@@ -1233,7 +1233,7 @@ def test_downgrade_on_an_empty_provider_surface_succeeds_and_reupgrades(tmp_path
     with sf() as s:
         assert s.scalar(select(func.count()).select_from(User)) == 1
     command.upgrade(cfg, "head")
-    assert _version(url) == "0031_account_closure" and "billing_provider_events" in _tables(url)
+    assert _version(url) == "0032_ai_operation_events" and "billing_provider_events" in _tables(url)
 
 
 @pytest.mark.parametrize("seed", ["subscription", "event", "link", "decision"])

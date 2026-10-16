@@ -50,6 +50,8 @@ __all__ = [
     "get_rate_limiter",
     "reset_rate_limiter",
     "enforce",
+    "check",
+    "limiter_status",
     "client_ip",
     "email_key",
     "user_key",
@@ -64,6 +66,11 @@ class RateLimitPolicy:
     limit: int
     window_seconds: int
     scope: str  # "ip" | "account" | "user" | "global" — documentation of the intended key
+    # What a SHARED store does when it cannot be reached (W12.4D-P2-A, explicit policy, never implicit):
+    #   "local" - degrade to a bounded per-process window (never unlimited, never offline; no longer shared, and ``limiter_status`` says so)
+    #   "deny"  - refuse the request (fail closed). Not used by any bucket today; available for a later approved rollout.
+    # The UNIT of every bucket is REQUESTS per window (not tokens, not money, not weighted operations).
+    on_store_failure: str = "local"
 
 
 @dataclass(frozen=True)
@@ -219,9 +226,12 @@ class RedisRateLimiter:
                 now, policy.window_seconds, policy.limit, f"{now}:{uuid.uuid4().hex}")
         except Exception:  # noqa: BLE001 - never let the limiter backend take the product down
             if not self.degraded:
-                logger.warning("rate-limit store unavailable; degrading to per-process limiting")
+                logger.warning("rate-limit store unavailable; applying the per-bucket failure policy")
             self.degraded = True
+            if policy.on_store_failure == "deny":
+                return RateLimitResult(allowed=False, remaining=0, retry_after=5)       # fail closed for this bucket
             return self._fallback.hit(bucket, key, policy)
+        self.degraded = False                                                          # the shared store answered: sharing is restored
         if int(allowed) == 1:
             return RateLimitResult(allowed=True, remaining=max(0, policy.limit - int(count)), retry_after=0)
         retry = max(1, int(policy.window_seconds - (now - float(oldest))))
@@ -307,6 +317,20 @@ def email_key(email: str | None) -> str:
 
 def user_key(user_id: int) -> str:
     return f"user:{user_id}"
+
+
+def limiter_status() -> dict:
+    """Honest, secret-free description of the limiter actually in use right now."""
+    lim = get_rate_limiter()
+    distributed = bool(getattr(lim, "distributed", False))
+    degraded = bool(getattr(lim, "degraded", False))
+    return {"backend": "redis" if distributed else "in_memory", "shared_store_requested": shared_store_requested(),
+            "shared_store_active": shared_store_active(), "degraded": degraded, "effectively_distributed": distributed and not degraded}
+
+
+def check(bucket: str, key: str, *, limiter: RateLimiter | None = None) -> RateLimitResult:
+    """Apply one bucket to one key WITHOUT raising (the caller decides what to do with the answer). Unknown buckets raise KeyError, like ``enforce``."""
+    return (limiter or get_rate_limiter()).hit(bucket, key, POLICIES[bucket])
 
 
 def enforce(bucket: str, key: str, *, limiter: RateLimiter | None = None) -> None:

@@ -2368,6 +2368,63 @@ class AIUsageFact(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+AI_OPERATION_WORKFLOWS = ("practice", "career")
+AI_OPERATION_STATUSES = ("succeeded", "failed")
+AI_ATTEMPT_COVERAGE = ("exact", "calls_only", "none")
+AI_TOKEN_COVERAGE = ("known", "partial", "unknown")
+
+
+class AIOperationEvent(Base):
+    """One LOGICAL candidate AI operation (W12.4D-P2-A), distinct from the provider attempts it needed. ``provider_attempts`` counts every HTTP attempt
+    where evidence exists (``attempt_coverage`` says how exact it is); tokens and cost are KNOWN only when the provider reported them (otherwise NULL,
+    never 0). No prompt, answer, document, transcript, model response, credential or identity beyond the owning user id is stored. Deleted with the account
+    (FK CASCADE). ``op_key`` is unique so a duplicated submission with the same idempotency key adds nothing."""
+
+    __tablename__ = "ai_operation_events"
+    __table_args__ = (
+        UniqueConstraint("op_key", name="uq_aiop_key"),
+        CheckConstraint(_in_list("workflow", AI_OPERATION_WORKFLOWS), name="ck_aiop_workflow"),
+        CheckConstraint(_in_list("status", AI_OPERATION_STATUSES), name="ck_aiop_status"),
+        CheckConstraint(_in_list("attempt_coverage", AI_ATTEMPT_COVERAGE), name="ck_aiop_attempt_cov"),
+        CheckConstraint(_in_list("token_coverage", AI_TOKEN_COVERAGE), name="ck_aiop_token_cov"),
+        CheckConstraint(_in_list("cost_source", AI_USAGE_COST_SOURCES), name="ck_aiop_cost_source"),
+        CheckConstraint("provider_attempts IS NULL OR provider_attempts >= 0", name="ck_aiop_attempts"),
+        CheckConstraint("calls_ok >= 0 AND calls_failed >= 0", name="ck_aiop_calls"),
+        CheckConstraint("(input_tokens IS NULL OR input_tokens >= 0) AND (output_tokens IS NULL OR output_tokens >= 0) "
+                        "AND (total_tokens IS NULL OR total_tokens >= 0)", name="ck_aiop_tokens"),
+        CheckConstraint("cost_usd_micros IS NULL OR cost_usd_micros >= 0", name="ck_aiop_cost"),
+        CheckConstraint("cost_source <> 'unavailable' OR cost_usd_micros IS NULL", name="ck_aiop_unavailable_is_null"),
+        CheckConstraint("latency_ms IS NULL OR latency_ms >= 0", name="ck_aiop_latency"),
+        Index("ix_aiop_user_time", "user_id", "started_at"),
+        Index("ix_aiop_workflow_time", "workflow", "started_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    op_key: Mapped[str] = mapped_column(String(120))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    workflow: Mapped[str] = mapped_column(String(12))
+    operation: Mapped[str] = mapped_column(String(32))
+    provider: Mapped[str] = mapped_column(String(16), default="openrouter", server_default="openrouter")
+    model_profile: Mapped[str | None] = mapped_column(String(12), nullable=True)
+    model_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    status: Mapped[str] = mapped_column(String(12))
+    failure_category: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    provider_attempts: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    attempt_coverage: Mapped[str] = mapped_column(String(10), default="none", server_default="none")
+    calls_ok: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    calls_failed: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    input_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    output_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    total_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    token_coverage: Mapped[str] = mapped_column(String(8), default="unknown", server_default="unknown")
+    cost_usd_micros: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    cost_source: Mapped[str] = mapped_column(String(12), default="unavailable", server_default="unavailable")
+    latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    limit_observed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 def make_engine(database_url: str) -> Engine:
     """Create an engine; SQLite needs cross-thread access for Streamlit."""
     connect_args = {}

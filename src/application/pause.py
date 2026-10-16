@@ -36,6 +36,8 @@ PAUSABLE_CAPABILITIES: tuple[str, ...] = (
     "ocr",                  # document OCR (potentially costly)
     "agent",                # Mo / agent LLM runs
     "public_registration",  # open verified-email registration
+    "practice_ai",          # W12.4D-P2-A: NEW provider-backed Practice operations (setup, questions, feedback, Deep Dive, report); history stays readable
+    "career_ai",            # W12.4D-P2-A: NEW provider-backed Career operations (chat, job analysis, question generation); stored data stays readable
 )
 MAX_REASON = 200
 
