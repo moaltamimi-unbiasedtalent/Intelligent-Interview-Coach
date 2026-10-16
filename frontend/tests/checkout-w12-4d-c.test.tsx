@@ -42,6 +42,12 @@ describe("trusted checkout URL", () => {
     ["https://user:pw@checkout.stripe.com/x", false],
     ["javascript:alert(1)", false],
     ["//checkout.stripe.com/x", false],
+    ["https://checkout.stripe.com:8443/c/pay/cs_test_1", false],
+    ["https://CHECKOUT.stripe.com/c/pay/cs_test_1", true],
+    ["https://checkout.stripe.com./c/pay/cs_test_1", false],
+    ["https://pay.stripe.com/c/pay/cs_test_1", false],
+    ["https://billing.stripe.com/p/session/x", false],
+    ["https://checkout.stripe.com@evil.test/x", false],
     ["", false],
   ])("%s -> %s", (url, ok) => { expect(trustedCheckoutUrl(url) !== null).toBe(ok); });
   it("null and undefined are refused", () => { expect(trustedCheckoutUrl(null)).toBeNull(); expect(trustedCheckoutUrl(undefined)).toBeNull(); });

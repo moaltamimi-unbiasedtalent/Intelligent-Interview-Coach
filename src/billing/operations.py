@@ -76,12 +76,23 @@ class BillingOperations:
             "checkout": "authorized" if P.EXTERNAL_CHECKOUT_AUTHORIZED else "not_authorized",
             "webhook": "authorized" if P.STRIPE_WEBHOOK_AUTHORIZED else "not_authorized",
             "provider_state_reader": "wired" if self._reader else "not_wired_null_reader",
+            # F2-A: each stage is reported separately and none implies the next. Nothing here is evidence of a working connection.
+            "provider_read_stages": {
+                "reader_implemented": True, "reader_selected_at_runtime": bool(self._reader),
+                "credentials_configured": bool((base.get("sandbox") or {}).get("api", {}).get("configured")) if isinstance((base.get("sandbox") or {}).get("api"), dict) else False,
+                "sandbox_authorized": False, "eligibility_verified": False,
+                "external_reads_authorized": P.PROVIDER_READS_AUTHORIZED, "checkout_authorized": P.EXTERNAL_CHECKOUT_AUTHORIZED,
+                "webhook_authorized": P.STRIPE_WEBHOOK_AUTHORIZED, "scheduler_enabled": P.RECONCILE_SCHEDULER_ENABLED,
+                "entitlement_policy_approved": P.PAID_ENTITLEMENT_POLICY_APPROVED, "sandbox_qualification_passed": False, "production_approved": False,
+            },
+            "provider_reads": "authorized" if P.PROVIDER_READS_AUTHORIZED else "not_authorized",
             "reconciliation_scheduler": "enabled" if P.RECONCILE_SCHEDULER_ENABLED else "disabled",
             "entitlement_policy": "approved" if P.PAID_ENTITLEMENT_POLICY_APPROVED else "not_approved",
             "live_billing": "enabled" if P.LIVE_BILLING_ENABLED else "disabled",
             "kill_switches": {"live_billing_enabled": P.LIVE_BILLING_ENABLED, "external_checkout_authorized": P.EXTERNAL_CHECKOUT_AUTHORIZED,
                               "stripe_webhook_authorized": P.STRIPE_WEBHOOK_AUTHORIZED, "reconcile_scheduler_enabled": P.RECONCILE_SCHEDULER_ENABLED,
-                              "paid_entitlement_policy_approved": P.PAID_ENTITLEMENT_POLICY_APPROVED},
+                              "paid_entitlement_policy_approved": P.PAID_ENTITLEMENT_POLICY_APPROVED,
+                              "provider_reads_authorized": P.PROVIDER_READS_AUTHORIZED},
             "operational": False,
         }
 
