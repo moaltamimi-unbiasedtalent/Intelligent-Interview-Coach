@@ -9,11 +9,14 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/Button";
 import { EmptyState, EmptyStateIllustration, ErrorState, LoadingState } from "@/components/ui/States";
+import { HistoryAccessNotice } from "@/components/plan/HistoryAccessNotice";
+import type { HistoryAccess } from "@/lib/api/types";
 
 /** User-scoped interview history from /history/interviews. In-place recoverable (P10B-W9.2). */
 export function HistoryClient() {
   const t = useT();
   const [rows, setRows] = useState<Array<Record<string, unknown>> | null>(null);
+  const [access, setAccess] = useState<HistoryAccess | undefined>(undefined);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState<ApiError | null>(null);
   const [retrying, setRetrying] = useState(false);
@@ -32,6 +35,7 @@ export function HistoryClient() {
       .then((r) => {
         if (ctrl.signal.aborted) return;
         setRows(r.interviews);
+        setAccess(r.access);
         setError(null);
         setStatus("ready");
         setRetrying(false);
@@ -64,6 +68,7 @@ export function HistoryClient() {
           onRetry={() => load(true)}
         />
       ) : null}
+      {status === "ready" ? <HistoryAccessNotice access={access} shown={rows?.length ?? 0} /> : null}
       {status === "ready" ? (
         rows && rows.length ? (
           <div className="grid gap-3">

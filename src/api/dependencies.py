@@ -558,8 +558,14 @@ def get_sharing_service(
             return False
 
     def _report_load(resource_id: str, owner_user_id: int):
+        # W12.4D-P3 bounded correction (owner-recommended policy): a previously created share must not expose an interview that is outside the OWNER'S current
+        # history window. The grant is NOT deleted or altered (access returns if the owner regains entitlement, unless it was revoked or expired); only the read is
+        # refused, exactly like a missing resource. While the rollout gate is disabled the window is None and nothing changes.
         try:
-            detail = repo.get_interview(owner_user_id, int(resource_id))
+            window = history_policy.window_for(owner_user_id)
+            detail = repo.get_interview(owner_user_id, int(resource_id), window) if window is not None else repo.get_interview(owner_user_id, int(resource_id))
+        except HistoryRestricted:
+            return None
         except (ValueError, TypeError):
             return None
         if detail is None:

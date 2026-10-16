@@ -19,9 +19,11 @@ export interface PricingPlan {
   includesKey: string;
   noteKey?: string;
   featured?: boolean;
-  /** Basic registers directly; Premium starts the subscription path at registration. */
-  ctaKind: "register" | "purchase";
-  ctaHref: string;
+  /** Basic registers directly. Premium is NOT purchasable (W12.4D-P3): it has no link and no purchase path; its card states that it is not available yet. */
+  ctaKind: "register" | "unavailable";
+  ctaHref: string | null;
+  /** True only for a plan that can really be bought. No plan is purchasable while billing is disabled and Premium pricing is unapproved. */
+  purchasable: boolean;
 }
 
 export const PRICING_CURRENCY = "EUR";
@@ -36,6 +38,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     includesKey: "marketing.pricingBasicIncludes",
     ctaKind: "register",
     ctaHref: "/register",
+    purchasable: false,
   },
   {
     id: "premium",
@@ -46,8 +49,9 @@ export const PRICING_PLANS: PricingPlan[] = [
     includesKey: "marketing.pricingPremiumIncludes",
     noteKey: "marketing.planPremiumNote",
     featured: true,
-    ctaKind: "purchase",
-    ctaHref: "/register?plan=premium",
+    ctaKind: "unavailable",
+    ctaHref: null,
+    purchasable: false,
   },
 ];
 

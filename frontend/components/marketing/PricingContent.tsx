@@ -3,6 +3,7 @@
 import { useT } from "@/components/i18n/I18nProvider";
 import { ButtonLink } from "@/components/ui/Button";
 import { MarketingIcon } from "@/components/marketing/MarketingIcon";
+import { PlanOverview } from "@/components/plan/PlanOverview";
 import { COACHING_COMPARISON, CONSIDERATION_ROWS, PRICE_BENCHMARK, PRICE_BENCHMARK_REVIEWED, PRICING_PLANS } from "@/lib/pricing";
 
 const PACKAGE_FEATURES = {
@@ -61,10 +62,18 @@ export function PricingContent() {
                   <MarketingIcon name={plan.featured ? "target" : "check"} className="h-5 w-5" />
                 </span>
               </div>
-              <p className="mt-3">
-                <span className="text-5xl font-bold tracking-tight">{plan.priceDisplay}</span>{" "}
-                <span className={plan.featured ? "text-sm text-white/60" : "text-sm text-muted"}>{t(plan.cadenceKey)}</span>
-              </p>
+              {plan.purchasable || plan.ctaKind === "register" ? (
+                <p className="mt-3">
+                  <span className="text-5xl font-bold tracking-tight">{plan.priceDisplay}</span>{" "}
+                  <span className={plan.featured ? "text-sm text-white/60" : "text-sm text-muted"}>{t(plan.cadenceKey)}</span>
+                </p>
+              ) : (
+                // Premium (W12.4D-P3): no approved price and no purchase path. The preview figure is stated as unapproved, never as an offer.
+                <div className="mt-3" data-testid="premium-status">
+                  <p className="text-3xl font-bold tracking-tight md:text-4xl">{t("planUx.pricing_notAvailable")}</p>
+                  <p className={plan.featured ? "mt-2 text-xs text-white/70" : "mt-2 text-xs text-muted"} data-testid="premium-preview-price">{t("planUx.pricing_previewPrice")}</p>
+                </div>
+              )}
               {plan.featured ? <span className="mt-4 inline-flex rounded-full bg-[#f4cdb9] px-3 py-1 text-xs font-semibold text-[#173f42]">{t("pricingV4.colPremium")}</span> : null}
               <p className={plan.featured ? "mt-4 text-sm leading-relaxed text-white/70" : "mt-4 text-sm leading-relaxed text-muted"}>{t(plan.includesKey)}</p>
             </div>
@@ -82,9 +91,14 @@ export function PricingContent() {
 
               <div className="mt-auto pt-7">
               {/* Both plans start with account creation; Premium continues into the secure purchase flow. */}
-              <ButtonLink href={plan.ctaHref} variant={plan.featured ? "primary" : "ghost"} className="w-full justify-center">
-                {t(plan.ctaKey)}
-              </ButtonLink>
+              {plan.ctaHref ? (
+                <ButtonLink href={plan.ctaHref} variant={plan.featured ? "primary" : "ghost"} className="w-full justify-center">
+                  {t(plan.ctaKey)}
+                </ButtonLink>
+              ) : (
+                // Not a button and not a link: nothing can be clicked to start a payment, and the status is plain text.
+                <p className="w-full rounded-lg border border-white/25 px-4 py-2.5 text-center text-sm font-semibold" data-testid={`plan-status-${plan.id}`}>{t(plan.ctaKey)}</p>
+              )}
               {plan.noteKey ? (
                 <p className={plan.featured ? "mt-3 text-xs text-white/55" : "mt-3 text-xs text-muted"} data-testid={`plan-note-${plan.id}`}>
                   {t(plan.noteKey)}
@@ -100,6 +114,11 @@ export function PricingContent() {
       <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-foreground">
         {t("marketing.pricingAlwaysFree")}
       </p>
+      <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-muted" data-testid="pricing-billing-note">{t("marketing.pricingBillingNote")}</p>
+
+      <section className="mx-auto mt-10 max-w-3xl" aria-label={t("planUx.title")}>
+        <PlanOverview />
+      </section>
 
       <section className="mt-16" aria-labelledby="pricing-value-title">
         <div className="mx-auto max-w-3xl text-center">

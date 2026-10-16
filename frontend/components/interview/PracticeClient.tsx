@@ -7,6 +7,7 @@ import { api } from "@/lib/api/client";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { ErrorState, LoadingState } from "@/components/ui/States";
+import { SessionTransitionNotice } from "@/components/plan/SessionTransitionNotice";
 import { InterviewProgress } from "./InterviewProgress";
 import { InterviewAnswerComposer } from "./InterviewAnswerComposer";
 import { InterviewEvaluation } from "./InterviewEvaluation";
@@ -168,6 +169,7 @@ function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; 
           {t("practice.sessionChangedReload")}
         </p>
       ) : null}
+      {ctrl.needsNewSession ? <SessionTransitionNotice /> : null}
       {ctrl.actionError ? (
         <p className="mb-3 text-sm text-danger" role="alert">{ctrl.actionError}</p>
       ) : null}

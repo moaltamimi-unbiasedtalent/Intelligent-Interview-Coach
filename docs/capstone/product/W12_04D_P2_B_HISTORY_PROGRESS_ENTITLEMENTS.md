@@ -107,3 +107,5 @@ Plan-family comparison for Premium (replace with a limit entitlement in P4); exi
 ## 19. Programme dependencies (kept visible)
 
 P2-A cost protection: code implemented, enforcement not activated. Live Redis validation: pending. Model-profile quality validation: P2-C. Premium UX: P3. Usage quota approval: pending. Trends and comparisons: P4. Opportunity Preparation Pack: P5-A. Ask4Mo UG incorporation: pending. Stripe Managed Payments eligibility: pending. Stripe sandbox validation: pending. Live Brevo validation: deferred. Research-cache evaluator isolation: unresolved. Product coverage below gate (insufficient-evidence 94 %, n = 412): unresolved. RC-P10-004: not created. AC-24: partial.
+
+> Superseded in part by W12.4D-P3: shared interview-report reads now apply the owner's current history window (grant preserved, refused like missing, restored on re-entitlement; inert while the gate is off). See `W12_04D_P3_PREMIUM_CANDIDATE_UX.md` section 13.

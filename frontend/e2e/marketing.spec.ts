@@ -13,7 +13,7 @@ test("public Home renders the hero and primary CTAs", async ({ page }) => {
   // Get started routes to registration (a real free path).
   const cta = page.getByRole("link", { name: /Get started/i }).first();
   await expect(cta).toBeVisible();
-  await expect(page.getByText(/Premium is €19\.99 per month/i)).toBeVisible();
+  await expect(page.getByText(/Premium subscriptions are planned and are not available yet/i).first()).toBeVisible();
 });
 
 test("marketing nav reaches Product, Pricing and Trust", async ({ page }) => {
@@ -34,11 +34,15 @@ test("the retired How it works route redirects into the combined Product page", 
   await expect(page.locator("#how-it-works")).toBeVisible();
 });
 
-test("Pricing shows both plans and Premium starts from account creation", async ({ page }) => {
+test("Pricing shows Basic as free and Premium as not available yet, with no purchase path (W12.4D-P3)", async ({ page }) => {
   await page.goto("/pricing");
   await expect(page.getByTestId("plan-basic")).toContainText("€0");
-  await expect(page.getByTestId("plan-premium")).toContainText("€19.99");
-  await expect(page.getByTestId("plan-premium").getByRole("link", { name: /Choose Premium/i })).toHaveAttribute("href", "/register?plan=premium");
+  await expect(page.getByTestId("plan-premium")).toContainText("Not available yet");
+  await expect(page.getByTestId("premium-preview-price")).toContainText("€19.99");
+  await expect(page.getByTestId("premium-preview-price")).toContainText("not been approved");
+  await expect(page.getByTestId("plan-premium").getByRole("link")).toHaveCount(0);            // nothing to click: no purchase path
+  await expect(page.locator('a[href*="plan=premium"], a[href*="checkout"]')).toHaveCount(0);
+  await expect(page.getByTestId("plan-overview")).toBeVisible();
   // Card entry belongs to the payment provider, not the marketing page.
   await expect(page.locator('input[type="number"], input[autocomplete="cc-number"]')).toHaveCount(0);
 });

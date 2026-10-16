@@ -571,9 +571,33 @@ export interface ProgressResponse {
   most_common_improvement_area?: string | null;
   average_answer_seconds?: number | null;
   recent_interviews: InterviewSummary[];
+  access?: ProgressAccess;
+}
+/** The SERVER's decision about this caller's history view (W12.4D-P3). Display only: the client never computes or grants access. */
+export interface HistoryAccess {
+  restricted: boolean;
+  window: number | null;
+  hidden_count: number;
+}
+export interface ProgressAccess {
+  restricted: boolean;
+  window: number | null;
 }
 export interface InterviewListResponse {
   interviews: Array<Record<string, unknown>>;
+  access?: HistoryAccess;
+}
+
+/** GET /model-profiles (W12.4D-P2-C): plan-aware, read-only metadata. Never a provider model id or a price. */
+export interface ModelProfileInfo {
+  id: "fast" | "balanced" | "advanced";
+  authorized: boolean;
+  description: string;
+}
+export interface ModelProfilesResponse {
+  selector_active: boolean;
+  default: string;
+  profiles: ModelProfileInfo[];
 }
 
 /** Full history record from GET /history/interviews/{id} (report already included). */

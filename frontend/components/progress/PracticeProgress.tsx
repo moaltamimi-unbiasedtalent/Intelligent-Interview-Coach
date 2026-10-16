@@ -3,6 +3,7 @@
 import Link from "@/components/ui/VerifiedLink"; // soft-navigation loss recovery (see lib/navigation/verified.ts)
 import type { ProgressResponse } from "@/lib/api/types";
 import { useT } from "@/components/i18n/I18nProvider";
+import { StatusChip } from "@/components/plan/StatusChip";
 import { Card, CardBody } from "@/components/ui/Card";
 
 /**
@@ -38,6 +39,11 @@ export function PracticeProgress({ data }: { data: ProgressResponse | null }) {
       <p className="mb-3 text-xs text-muted">
         {t("progress.practiceSubtitleGuidance")}
       </p>
+      {data.access?.restricted && data.access.window ? (
+        <p className="mb-3 text-xs font-medium text-foreground" data-testid="progress-scope-notice">
+          {t("planUx.progress_scope", { n: String(data.access.window) })}
+        </p>
+      ) : null}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {tiles.map((tile) => (
           <Card key={tile.label}>
@@ -83,6 +89,15 @@ export function PracticeProgress({ data }: { data: ProgressResponse | null }) {
           </div>
         </div>
       ) : null}
+
+      {/* Planned analytics: truthful, no data and no placeholder chart (trends and attempt comparison are P4 work). */}
+      <section className="mt-6 rounded-lg border border-dashed border-border p-4" aria-labelledby="progress-trends-title" data-testid="progress-trends-planned">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 id="progress-trends-title" className="text-sm font-semibold text-foreground">{t("planUx.progress_trendsTitle")}</h3>
+          <StatusChip status="planned" label={t("planUx.status_planned")} />
+        </div>
+        <p className="mt-2 text-sm text-muted">{t("planUx.progress_trendsPlanned")}</p>
+      </section>
     </div>
   );
 }
