@@ -1,68 +1,96 @@
 # W12.4D-P1: Basic and Premium product entitlement audit
 
-Status: **AUDIT AND PRODUCT DEFINITION. OPTION B AND THE FEATURE MATRIX IN SECTION 0 ARE OWNER-APPROVED (W12.4D-P1-A AMENDMENT); NUMERICAL LIMITS, PRICES AND POLICIES REMAIN UNAPPROVED. NOTHING IS IMPLEMENTED OR ENFORCED.** Documentation only: no code, no migration, no Stripe call, no price, no policy change. Nothing here approves a price, a plan or a limit.
+Status: **AUDIT PLUS FINAL OWNER-APPROVED PRODUCT SPECIFICATION (SECTION 0). NUMERICAL LIMITS, PRICES AND POLICIES REMAIN UNAPPROVED. NOTHING IS IMPLEMENTED OR ENFORCED; PREMIUM IS NOT A DIFFERENTIATED OPERATIONAL SUBSCRIPTION.** Documentation only: no code, no migration, no Stripe call, no price, no policy change. Nothing here approves a price, a plan or a limit.
 Method: static inspection of the repository at `main` = `112f9ef8782ca384e477006bc0375ed00b710a25` (PR #165, F2-B1R merged; Alembic head `0031_account_closure`), existing tests re-run read-only (`tests/test_plans_entitlements_w10_4.py`, `tests/test_pricing_truth_v4.py`: 34 passed), and two external price reads (section 16).
 Evidence labels: **VERIFIED** (read in code or test), **OBSERVED** (external page read on 2026-10-16), **ASSUMPTION**, **UNKNOWN**. Where a claim could not be verified it is said so.
 
-## 0. Owner-approved Basic and Premium feature matrix (amendment W12.4D-P1-A)
+## 0. Final owner-approved Basic and Premium specification (amendments W12.4D-P1-A and W12.4D-P1-A final decisions)
 
-The owner reviewed this audit and **approved Option B (value-led Premium)** and the feature allocation below. This is an **approved product requirement, not an implemented capability**: nothing in this table is enforced by the code today (sections 10 to 13 describe the actual state), Premium billing and entitlement enforcement are not activated, no Stripe call was made, and the EUR 19.99 figure remains an unapproved preview. Sections 18 to 21 and 26 below are the original audit proposals; where they differ from this section, **this section governs**.
+The owner approved **Option B (value-led Premium)** and the allocation below, and then made three final decisions (model names, history policy, artifact policy). This section is the **binding product specification** and **supersedes** any earlier conflicting recommendation in this document (sections 18 to 21 and 26 are the original audit proposals and stay for the record; the technical audit findings in sections 1 to 17 and 22 to 29 are unchanged).
+Every row is **owner-approved product requirements, not implemented capabilities.** **Premium is not currently a differentiated operational subscription**: today Premium equals Basic plus a `premium_preview` flag, nothing below is enforced, no billing or entitlement enforcement is activated, no Stripe call was made, and the EUR 19.99 figure remains an unapproved preview.
+
+Status vocabulary used below: **APPROVED** (owner-approved product requirement), **IMPLEMENTED** (exists in code today), **NOT IMPLEMENTED**, **QUALITY VALIDATION REQUIRED**, **COMMERCIAL APPROVAL REQUIRED**, **LEGAL REVIEW REQUIRED**.
 
 ### 0.1 Approved matrix versus what exists today
 
-| # | Feature | Approved Basic | Approved Premium | Exists today (VERIFIED) | Enforced by plan today | Gap |
+| # | Capability | Approved Basic | Approved Premium | Implemented today (VERIFIED) | Enforced by plan today | Gap and gate |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | AI interview practice | included, sustainable usage limits | higher allowances | yes, unbounded; no per-user ceiling on Practice | no | quota entitlements, counters, `require_quota`, Practice ceiling |
-| 2 | Role and job-description personalisation | included | included | yes (role, industry, seniority, JD, approved evidence) | n/a (same on both) | none |
-| 3 | Competency-based questions | included | included | yes (`competency` interview type and per-question competency) | n/a | none |
-| 4 | AI answer feedback | included | included | yes (7-dimension rubric, improved example, follow-up) | n/a | none |
-| 5 | Interview readiness reports | included | included | yes (`FinalInterviewReport`) | n/a | none |
-| 6 | Interview history | latest 3 interviews visible | all eligible retained history visible | yes, complete list for everyone | no (`standard_history` carried in plan data, used by no route) | visibility entitlement and a server-side read cap (see 0.3) |
-| 7 | Progress statistics | basic statistics over the latest 3 interviews | complete historical statistics, trends, improvement comparisons | aggregate counts and average over ALL interviews; no trends or comparisons | no | scope the basic aggregate to the latest 3; build trends and comparisons (new analytics) |
-| 8 | Company research | core access with quality and usage safeguards | higher allowance once qualified | yes (30 per hour rate ceiling; provider live-unvalidated) | entitlement exists but granted to both; no allowance difference | allowance entitlement and counters; qualification of research quality |
-| 9 | Interview-attempt comparison | not included | included | NOT IMPLEMENTED | no | new feature (compare attempts over persisted evaluations) |
-| 10 | Opportunity preparation pack | not included | personalised pack | NOT IMPLEMENTED (only MD and JSON report export exists) | no | new feature (pack builder over the Opportunity, plan, report and approved evidence) |
-| 11 | AI model profile | Fast | "Fast, Medium and Advanced" | three internal profiles exist: `fast`, `balanced`, `advanced` (see 0.4); Mo accepts a candidate `profile`; Practice has none | no (`standard_model_profiles` enforced by no route) | server-side profile allowance per plan, including Practice |
-| 12 | Saved resume and historical work | preserved per retention policy | preserved per retention policy | stored until the candidate deletes them or the account is deleted; no plan-dependent retention; no approved retention policy | n/a | retention policy decision (owner and legal); no deletion on plan change |
-| 13 | Real-time voice | not promised | future capability, NOT part of the initial paid launch commitment | implemented, default OFF, live-unvalidated | rate limit and pause only | out of launch scope; depends on W12.4E and validation |
+| 1 | AI interview practice | included with sustainable limits | higher allowances | yes, unbounded; no per-user ceiling on Practice | no | P2-A ceilings and metering, P4 quota enforcement; numbers COMMERCIAL APPROVAL REQUIRED |
+| 2 | Role and job-description personalisation | included | included | yes | n/a | none |
+| 3 | Competency-based questions | included | included | yes | n/a | none |
+| 4 | AI answer feedback | included | included | yes | n/a | none |
+| 5 | Interview readiness reports | included | included | yes | n/a | none |
+| 6 | Interview history | latest 3 completed interviews | complete eligible retained history | yes, complete list for everyone | no | P2-B (binding requirements in 0.3); retention LEGAL REVIEW REQUIRED |
+| 7 | Progress statistics | basic statistics over the latest 3 completed interviews | complete eligible historical statistics, trends, improvement comparisons | aggregate over ALL interviews; no trends or comparisons | no | P2-B scope; P4 trends and comparisons (NOT IMPLEMENTED) |
+| 8 | Company research | core access with quality and usage safeguards | higher allowances once qualified | yes (30 per hour rate ceiling; provider live-unvalidated) | entitlement granted to both | allowance entitlements (P4); "qualified" bar QUALITY VALIDATION REQUIRED |
+| 9 | Interview attempt comparison | not included | included | NOT IMPLEMENTED | no | P4 |
+| 10 | Opportunity preparation pack | not included | personalised pack | NOT IMPLEMENTED (only MD and JSON report export) | no | P5-A |
+| 11 | AI model profiles | Fast | Fast, Balanced, Advanced | three profiles exist; Mo accepts a candidate `profile`; Practice has none and uses the server default (Balanced) | no | P2-C; runtime change gated, see 0.4 |
+| 12 | Saved resume and historical work | preserved per retention policy | preserved per retention policy | kept until the candidate or an account deletion removes it; no approved retention policy | n/a | retention LEGAL REVIEW REQUIRED |
+| 13 | Real-time voice | not promised | future capability, not part of the initial paid launch commitment | implemented, default OFF, live-unvalidated | rate limit and pause only | out of launch scope (W12.4E, validation) |
 
-### 0.2 Approved requirements (binding on P2 onward)
+### 0.2 Binding principles
 
-A. Basic history limits restrict **visibility, not physical retention**. B. Older interviews are **never deleted** when a user downgrades from Premium to Basic. C. Premium history access remains subject to the approved retention policy (not yet approved). D. Unlimited history access does **not** mean unlimited AI generation; generation stays under its own limits. E. Tier differences are enforced on the **backend**; frontend hiding alone is never sufficient. F. Existing candidate data stays protected across entitlement transitions. G. **Numerical AI usage limits remain unapproved.** H. The **EUR 19.99 price remains an unapproved preview.** I. Premium billing and entitlement enforcement are **not activated** by this amendment. J. Approved requirements are kept distinct from implemented features (0.1 has both columns).
+1. Basic history limits restrict **access**, not physical retention or storage. 2. Older records are **never deleted** because an account downgrades. 3. Premium history access stays subject to the approved retention policy (not yet approved). 4. Unlimited history access is **not** unlimited AI generation. 5. Tier differences are enforced on the **backend**; frontend hiding alone is never sufficient. 6. Existing candidate data stays protected across entitlement transitions. 7. Account ownership checks, privacy rights, export and deletion are never weakened or plan-gated. 8. Numerical AI limits stay unapproved. 9. The EUR 19.99 price stays an unapproved preview. 10. Approved requirements are kept distinct from implemented features.
 
-### 0.3 Premium history access, downgrade and re-upgrade behaviour (requirements)
+### 0.3 History policy: binding P2-B acceptance requirements (APPROVED requirement, NOT IMPLEMENTED)
 
-* **Visibility, not storage.** The Basic read cap ("latest 3") is applied on the server when listing and reading history and when computing basic progress statistics. All rows stay in the database, owner-scoped, whatever the plan.
-* **Which 3.** The 3 most recent completed interviews by completion time; ties and in-progress or resumable sessions are separate (resumable sessions are not history) and must be specified in P2-A. Whether direct access by id to an older interview is refused on Basic, or only hidden from lists, is an **open decision** that must close before P2-A (recommendation: refuse reads of older reports on Basic with a clear "available with Premium" response, because list-only hiding is a frontend-style bypass).
-* **Downgrade (Premium to Basic).** Nothing is deleted or anonymised. Reads beyond the latest 3 become unavailable through the product; the candidate must still be able to **export and delete** all their data (privacy rights are never plan-gated) and to see how many items are hidden. Progress statistics fall back to the latest-3 basic view. Premium-only artefacts already created (for example a saved preparation pack) are retained and not deleted; whether they remain readable on Basic is an open decision.
-* **Re-upgrade (Basic to Premium).** Full eligible history is immediately visible again because it was never removed. Eligibility is bounded by the approved retention policy; if items aged out under that policy while on Basic, they are gone according to the policy, not because of the plan change.
-* **Expiry, refund, dispute, admin change.** All resolve through the existing entitlement service to the Basic fallback (never fail-open to Premium); none of them triggers content deletion.
-* **Generation limits are separate.** History visibility, retention and AI generation allowances are three independent controls.
+* **Policy.** Basic: the latest **three completed** interviews are accessible. Premium: complete eligible retained history. The Basic limit is an **access** restriction. An account with 20 completed interviews that is or becomes Basic keeps all 20 stored (per the applicable retention policy), can access only the latest 3 through the product, and regains access to all eligible history on re-upgrade. Nothing is deleted, anonymised or moved on a plan change.
+* **Surfaces that P2-B must restrict (an interview ID in a direct request must never bypass the entitlement).** Inventory from this audit (to be re-verified by P2-B): history listing (`GET /history/interviews`); direct retrieval and detail (`GET /history/interviews/{id}`, report fetch `GET /interviews/{session_id}/report`); the associated answers and feedback; history export and the self-service data export (privacy export of the candidate's own data stays complete because it is a data right, which is a **LEGAL REVIEW REQUIRED** point to resolve explicitly); MD and JSON report export; progress statistics (`repository.dashboard_metrics` reads all interviews today); workspace sharing of an interview report (a Basic account sharing a restricted interview: policy decision); Opportunity views that list linked interviews; the agent and Mo context that may reference prior interviews; feedback targets that reference an interview. Any other API that exposes a completed interview.
+* **Which interviews count.** Only **completed** interviews occupy the three slots. Draft, in-progress and resumable sessions (stored in `interview_sessions`, not in the completed `interviews` history) must never consume a slot. Completed history rows are saved after the report is durably persisted (existing crash-safe ordering), which gives a clean completed set.
+* **Deterministic ordering, including ties.** Today the list orders by `created_at` descending with no tie-breaker (`repository.list_interviews`). P2-B must define one total order for "latest" (for example completion time, then record id) and use it identically for the list, direct-access eligibility, progress scope and exports; behaviour at ties and for clock skew must be tested. Which timestamp defines "latest" (creation versus completion) is a P2-B design decision.
+* **Direct access rule (recommended).** Refuse reads of interviews outside the entitled set with a distinct "available with Premium" response that reveals no content and no metadata beyond a count; hiding only in lists is not acceptable.
+* **Counts and transparency.** The candidate may see how many records are hidden, never their content.
+* **Tests required.** Direct-ID bypass attempts per surface, tie ordering, draft exclusion, downgrade then re-upgrade restoring access, 20-record account keeps 20 rows, cross-account isolation, export and deletion rights intact.
 
-### 0.4 Model-profile validation requirements
+### 0.4 Model profiles (APPROVED naming and target allocation; runtime change NOT approved)
 
-* The owner wording "Fast, Medium and Advanced" does **not** match the internal vocabulary. The repository has exactly three profiles: `fast`, `balanced`, `advanced` (`ModelProfile` in `src/llm/models.py`). "Medium" appears there only as a reasoning-effort hint for the Advanced tier, not as a profile. **Requirement:** the owner confirms that "Medium" means the existing `balanced` profile (recommended) and the candidate-facing label is chosen (the interface currently says Balanced). No new profile is assumed.
-* Slugs are not assumed. Profiles map to OpenRouter slugs that are environment-overridable and governable through the Admin AI configuration; **operating costs per profile are UNKNOWN** (prices could not be verified in P1). Whether a Basic user on Fast gets acceptable quality is **unvalidated** and must be evaluated before launch.
-* Backend enforcement needed: the Mo `profile` parameter must be clamped by the caller's entitlement (a Basic user sending `balanced` or `advanced` is refused or downgraded to Fast by a documented rule, never silently); Practice currently has **no candidate profile field and uses the server default (Balanced)**, so "Basic gets Fast" means a **behaviour change for Basic Practice** that needs an owner decision and a quality evaluation; "Premium gets Fast, Medium and Advanced" requires adding a Practice profile choice (or a server rule) and an entitlement per profile.
-* The governed AI configuration (W10.7) must stay the only place model mappings change; entitlements choose which profile ids a plan may use, never a slug.
+* **Official customer-facing names: Fast, Balanced, Advanced**, matching the internal identifiers `fast`, `balanced`, `advanced` (`ModelProfile`, `src/llm/models.py`). **There is no "Medium" profile and Balanced must not be renamed Medium.** The word "medium" in the code is only a documented reasoning-effort hint for the Advanced tier (metadata, not sent to the provider) and is not a model profile; this specification does not use it as a tier name.
+* **Target allocation (APPROVED):** Basic: Fast. Premium: Fast, Balanced, Advanced.
+* **Runtime behaviour is NOT approved to change.** Practice currently uses the server default, Balanced, and must **not** be switched to Fast automatically for existing Basic sessions. P2-C must first qualify, and only after qualification may enforcement change behaviour:
+  Fast versus Balanced **question quality** and **feedback quality**; role-specific relevance; consistency of generated questions; model availability; the actual provider model identifiers; cost per operation; latency; failure and retry behaviour. (QUALITY VALIDATION REQUIRED and COMMERCIAL APPROVAL REQUIRED; costs are UNKNOWN, model prices were not verifiable in the P1 audit, and no model ids are assumed here.)
+* **Enforcement needed in P2-C:** clamp the Mo `profile` parameter by entitlement (refuse or downgrade by a documented rule, never silently); add a Practice profile rule and entitlement; entitlements authorise profile ids, never provider slugs; the governed AI configuration (W10.7) remains the only place model mappings change. **Model routing is not modified by this task.**
 
-### 0.5 Remaining numerical and policy decisions (all OPEN)
+### 0.5 Premium artifacts after a downgrade (APPROVED requirement, NOT IMPLEMENTED)
 
-Sustainable usage limit for Basic Practice and the higher Premium allowance (per period, unit, reset window); Basic and Premium allowance for company research and the meaning of "once qualified" (the quality bar); Mo coach allowance; opportunity count limits (the approved matrix does not mention them: decide or leave unlimited); Deep Dive allowance; document and storage caps; whether older interviews are readable by id on Basic and whether Premium artefacts stay readable after a downgrade; history retention period (the retention policy); grandfathering of existing accounts; Medium to Balanced naming; Basic Practice default profile; EUR 19.99 and any annual price; trial, grace, cancellation, refund and dispute policies; currencies and countries; B2B; product classification and tax code; Premium copy approval.
+* **Rule.** Previously generated Premium artifacts remain **readable and downloadable** after a downgrade, subject to ownership and retention (examples: a previously generated Opportunity Preparation Pack, eligible saved Premium reports, other independently stored Premium outputs). Nothing is deleted on downgrade.
 
-### 0.6 Implementation sequence (proposed, not approved as waves)
+| After downgrade | Status |
+| --- | --- |
+| Read existing eligible Premium artifacts | ALLOWED |
+| Download existing eligible Premium artifacts | ALLOWED |
+| Create new Premium-only artifacts | RESTRICTED |
+| Regenerate an existing artifact with Premium AI | RESTRICTED |
+| Run new Premium-only analytics | RESTRICTED |
 
-* **P2-A Cost ceilings and limit foundation (no Premium behaviour yet):** apply per-user ceilings and a pause capability to Practice and Career (the defined `cost_interview_user` and `cost_career_user` buckets are applied by no route today); limit-type entitlement keys; atomic usage counters keyed by user and window with idempotency by operation id; `require_quota`; tests for races, replays and cross-account isolation.
-* **P2-B History and progress visibility entitlements:** server-side latest-3 visibility for Basic over history list, detail and basic progress; full retained history for Premium; no deletion on downgrade; owner-scoped; export and delete unaffected.
-* **P2-C Model-profile enforcement:** entitlement per profile, clamp on Mo, Practice profile selection rule, quality evaluation of Fast for Basic.
-* **P3 Premium UX:** limit and upgrade states in all eight locales driven by server state, honest copy matching the approved matrix, no purchase path until billing is operational.
-* **P4 Usage metering and cost safeguards:** per-user usage across Practice, Mo, research, embeddings, documents, storage; retry accounting; coverage review; Admin cost visibility; shared rate limiter validated.
-* **P5 Premium capabilities and acceptance:** progress trends and attempt comparison; Opportunity preparation pack; research allowance and qualification; integrated acceptance with billing under an approved policy (after F2-B2 and F3); legal and retention review.
-Real-time voice is not in this sequence's launch scope.
+* **Non-bypass rule.** The artifact rule must **not** become a bypass of the three-interview Basic history policy: an artifact read or download endpoint must not expose complete restricted interview histories merely because the artifact is described as Premium. A saved, independently stored preparation pack may stay readable; **previously generated interview feedback and interview reports remain subject to the interview-history access policy (0.3).**
+* **Ambiguities recorded for P2-B resolution (do not silently broaden access):** which stored outputs count as "independently stored Premium artifacts" (a pack is; a saved interview report is governed by the history rule, so "eligible saved Premium reports" needs a precise definition); whether a pack that embeds excerpts of restricted interviews is readable on Basic; whether a Premium-generated comparison snapshot is an artifact or restricted history; whether artifacts shared with a workspace stay shared after downgrade; whether a re-upgrade restores regeneration of old artifacts. These need an artifact classification list and an owner or legal decision before P5-A creates the first artifact type.
 
-### 0.7 Outstanding commercial decisions and current gaps
+### 0.6 Approved development sequence (proposed work packages; each needs its own specification and approval gate; none starts automatically)
 
-Commercial: price (EUR 19.99 unapproved), annual plan, currency, tax display, trial, grace, cancellation, refund, dispute, supported countries, B2B, legal entity (Ask4Mo UG, registration pending), dedicated Stripe account and Managed Payments eligibility, retention policy, support commitment. Gaps (current): no quotas or counters, no Practice or Career cost ceiling, no history or progress visibility entitlement, no model-profile enforcement, no attempt comparison, no preparation pack, no trend analytics, no approved retention policy, homepage and footer copy that describes unenforced benefits. Preserved: all billing gates remain False and no application code, migration, price or plan changed.
+| Package | Scope |
+| --- | --- |
+| **P2-A** | AI cost protection, request safeguards, usage metering and concurrency controls (per-user ceilings and a pause capability on Practice and Career, which today have none; atomic counters; concurrency limits; idempotent operation accounting) |
+| **P2-B** | History visibility, progress access, and downgrade and re-upgrade entitlement enforcement (the binding requirements in 0.3, and the artifact boundary in 0.5) |
+| **P2-C** | Fast, Balanced and Advanced model-profile authorisation and the quality and cost qualification in 0.4 |
+| **P3** | Premium candidate UX, plan messaging and truthful marketing (eight locales; copy matches the enforced matrix) |
+| **P4** | Quota enforcement, cost qualification, progress trends and attempt comparisons |
+| **P5-A** | Opportunity Preparation Pack implementation |
+| **P5-B** | Integrated Basic and Premium acceptance |
+| **Billing** | **F2-B2** controlled Stripe sandbox connection; **F3** end-to-end subscription acceptance (separate approval gates; no Stripe account exists yet) |
+Note: this sequence replaces the earlier P2 to P5 outline in section 26.
+
+### 0.7 Remaining owner decisions (all UNRESOLVED; none is invented here)
+
+Basic Practice numerical allowance; Premium Practice numerical allowance; company research allowances; other AI feature quotas (Mo coach, Deep Dive, documents and storage); quota reset periods; existing-user transition or grandfathering policy; Premium price (EUR 19.99 is an unapproved preview); annual pricing; trial period; failed-payment grace period; cancellation and refund policies; dispute-related access policy; financial-data retention; country and currency coverage; B2B offering; Premium commercial terms. Design-level questions assigned to P2-B and P2-C: the ordering timestamp for "latest", direct-access refusal behaviour, privacy-export scope versus the Basic history limit, artifact classification, and the Basic Practice model profile after qualification.
+
+### 0.8 Legal business structure (recorded owner decision; not an incorporation)
+
+Ask4Mo will be operated by a **separate German company**; planned form **Ask4Mo UG (haftungsbeschränkt)**; **registration is pending**; initial share capital is **not finalized**; the Stripe account must be **separate from Unbiased Talent**. The company is not represented as registered and no Stripe account was created.
+
+### 0.9 Current implementation gaps and preserved safeguards
+
+Gaps: no quotas or counters; no Practice or Career cost ceiling (the defined `cost_interview_user` and `cost_career_user` buckets are applied by no route); no history, progress or model-profile entitlement enforcement; history ordered by `created_at` without a tie-breaker; progress computed over all interviews; no attempt comparison, trends or preparation pack; no approved retention policy; homepage and footer copy describing benefits no entitlement enforces. Billing gates verified False and unchanged: `LIVE_BILLING_ENABLED`, `EXTERNAL_CHECKOUT_AUTHORIZED`, `STRIPE_WEBHOOK_AUTHORIZED`, `RECONCILE_SCHEDULER_ENABLED`, `PROVIDER_READS_AUTHORIZED`, `PAID_ENTITLEMENT_POLICY_APPROVED`. No application code, model routing, migration, price or plan changed.
 
 ## 1. Executive assessment
 
