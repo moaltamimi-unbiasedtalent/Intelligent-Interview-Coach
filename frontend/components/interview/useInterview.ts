@@ -26,6 +26,8 @@ export interface InterviewController {
   loadError: { message: string; requestId?: string | null } | null;
   actionError: string | null;
   conflict: boolean;
+  /** True when a step was refused because the session needs an AI model profile this account can no longer use (W12.4D-P3). Nothing was changed or switched. */
+  needsNewSession: boolean;
   reload: () => Promise<void>;
   submitAnswer: (answer: string) => Promise<boolean>;
   nextQuestion: () => Promise<void>;
@@ -50,6 +52,7 @@ export function useInterview(sessionId?: string): InterviewController {
   const [loadError, setLoadError] = useState<{ message: string; requestId?: string | null } | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [conflict, setConflict] = useState(false);
+  const [needsNewSession, setNeedsNewSession] = useState(false);
   const mounted = useRef(true);
 
   // Set true on every (re)mount, not only at initial ref creation. React StrictMode
@@ -106,6 +109,10 @@ export function useInterview(sessionId?: string): InterviewController {
           await reload();
           return false;
         }
+        if (err.kind === "modelProfileRestricted") {
+          setNeedsNewSession(true);                       // localized explanation, saved work preserved, a NEW authorized session is offered
+          return false;
+        }
         setActionError(err.userMessage ?? "That action could not be completed.");
         return false;
       } finally {
@@ -121,6 +128,7 @@ export function useInterview(sessionId?: string): InterviewController {
     loadError,
     actionError,
     conflict,
+    needsNewSession,
     reload,
     submitAnswer: (answer) => run("submit", () => api.interviews.submitAnswer(sessionId!, answer)),
     nextQuestion: () => run("next", () => api.interviews.nextQuestion(sessionId!)).then(() => undefined),
@@ -146,6 +154,8 @@ export function useInterview(sessionId?: string): InterviewController {
         if (err.status === 409) {
           setConflict(true);
           await reload();
+        } else if (err.kind === "modelProfileRestricted") {
+          setNeedsNewSession(true);
         } else {
           setActionError(err.userMessage ?? "The performance review could not be created.");
         }

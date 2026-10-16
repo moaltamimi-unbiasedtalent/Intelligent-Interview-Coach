@@ -146,13 +146,14 @@ test("v4 workflow map: stage selection updates the four facts (Product)", async 
   for (const k of ["contextDo", "contextAsk4mo", "contextPrivate", "contextNext"]) await expect(panel).toContainText(T(`workflow.${k}`));
 });
 
-test("v4 pricing: Premium selection is clear and the internal entitlement table is absent", async ({ page }) => {
+test("v4 pricing: Premium is presented as not available yet and the internal entitlement table is absent", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await mockApi(page, false);
   await ready(page, "/pricing");
   await expect(page.getByTestId("available-today")).toHaveCount(0);
   await expect(page.getByTestId("pricing-plans")).toContainText(T("pricingV4.considerLabel"));
-  await expect(page.getByTestId("plan-premium").getByRole("link")).toHaveAttribute("href", "/register?plan=premium");
+  await expect(page.getByTestId("plan-premium").getByRole("link")).toHaveCount(0);                    // W12.4D-P3: no purchase path while Premium is not available
+  await expect(page.getByTestId("premium-status")).toContainText(T("planUx.pricing_notAvailable"));
   await expect(page.getByTestId("price-benchmark")).toContainText(T("pricingV4.benchmarkDate"));
 });
 

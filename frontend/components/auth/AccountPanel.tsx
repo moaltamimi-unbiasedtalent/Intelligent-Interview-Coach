@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/Button";
 import { BillingOverview } from "@/components/account/BillingOverview";
 import { PremiumSubscriptionPanel } from "@/components/account/PremiumSubscriptionPanel";
 import { PlanSummary } from "@/components/account/PlanSummary";
+import { PlanOverview } from "@/components/plan/PlanOverview";
+import { ModelProfilePanel } from "@/components/plan/ModelProfilePanel";
 import { Card, CardBody } from "@/components/ui/Card";
 import { LoadingState } from "@/components/ui/States";
 import { useT } from "@/components/i18n/I18nProvider";
@@ -80,6 +82,8 @@ export function AccountPanel() {
       <PlanSummary />
       <BillingOverview />
       <PremiumSubscriptionPanel />
+      <PlanOverview />
+      <ModelProfilePanel />
 
       <div className="flex flex-wrap items-center gap-3">
         <a

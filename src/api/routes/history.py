@@ -25,8 +25,12 @@ def list_interviews(
     user_id: int = Depends(get_current_user_id),
     policy=Depends(get_history_access_policy),
 ) -> InterviewListResponse:
-    return InterviewListResponse(
-        interviews=history_service.list_interview_reports(repo, user_id, policy.window_for(user_id)))
+    window = policy.window_for(user_id)
+    rows = history_service.list_interview_reports(repo, user_id, window)
+    access = {"restricted": False, "window": None, "hidden_count": 0}
+    if window is not None:                                       # only a restricted caller costs the extra count query
+        access = {"restricted": True, "window": window, "hidden_count": max(0, repo.count_completed(user_id) - len(rows))}
+    return InterviewListResponse(interviews=rows, access=access)
 
 
 @router.get("/interviews/{report_id}", response_model=InterviewDetailResponse,

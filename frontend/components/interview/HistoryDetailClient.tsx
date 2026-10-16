@@ -15,7 +15,7 @@ import { useT } from "@/components/i18n/I18nProvider";
 export function HistoryDetailClient({ reportId }: { reportId: string }) {
   const t = useT();
   const [interview, setInterview] = useState<InterviewDetail | null>(null);
-  const [status, setStatus] = useState<"loading" | "ready" | "notfound" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "ready" | "notfound" | "restricted" | "error">("loading");
   const [error, setError] = useState<{ message: string; requestId?: string | null } | null>(null);
   const [retrying, setRetrying] = useState(false);
   const ctrlRef = useRef<AbortController | null>(null);
@@ -43,6 +43,12 @@ export function HistoryDetailClient({ reportId }: { reportId: string }) {
         // A foreign or unknown id returns 404 → safe not-found (never another user's data).
         if (err.status === 404) {
           setStatus("notfound");
+          setRetrying(false);
+          return;
+        }
+        // W12.4D-P3: an interview the caller OWNS but that lies outside their current history view (server decision, 403 history_not_available). Never shown as deleted.
+        if (err.kind === "historyRestricted") {
+          setStatus("restricted");
           setRetrying(false);
           return;
         }
@@ -93,6 +99,15 @@ export function HistoryDetailClient({ reportId }: { reportId: string }) {
           description={t("history.notFoundDescription")}
           action={<ButtonLink href="/history">{t("history.backToHistory")}</ButtonLink>}
         />
+      ) : null}
+      {status === "restricted" ? (
+        <Card>
+          <CardBody className="space-y-2" data-testid="history-restricted">
+            <h2 className="text-base font-semibold text-foreground">{t("states.historyRestricted")}</h2>
+            <p className="text-sm text-muted">{t("planUx.detail_preserved")}</p>
+            <ButtonLink href="/history">{t("planUx.detail_backToHistory")}</ButtonLink>
+          </CardBody>
+        </Card>
       ) : null}
       {status === "ready" ? (
         report ? (

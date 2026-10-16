@@ -19,6 +19,13 @@ class RecentInterview(BaseModel):
     created_at: str | None = None
 
 
+class ProgressAccessOut(BaseModel):
+    """The server's decision about the history scope these statistics were computed from (W12.4D-P3). Display only."""
+
+    restricted: bool = False
+    window: int | None = None
+
+
 class ProgressResponse(BaseModel):
     interviews_completed: int = 0
     answers_evaluated: int = 0
@@ -26,3 +33,4 @@ class ProgressResponse(BaseModel):
     most_common_improvement_area: str | None = None
     average_answer_seconds: float | None = None
     recent_interviews: list[RecentInterview] = Field(default_factory=list)
+    access: ProgressAccessOut = Field(default_factory=ProgressAccessOut)

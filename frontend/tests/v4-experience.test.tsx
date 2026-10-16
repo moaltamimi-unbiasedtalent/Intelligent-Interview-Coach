@@ -210,14 +210,20 @@ describe("workflow map", () => {
 });
 
 describe("pricing truthfulness (v4)", () => {
-  it("keeps Basic free and gives Premium a clear online-selection path", () => {
+  it("keeps Basic free and presents Premium as NOT available (no price offer, no purchase link) (W12.4D-P3)", () => {
     expect(PRICING_PLANS.find((p) => p.id === "basic")!.priceDisplay).toBe("€0");
     const premium = PRICING_PLANS.find((p) => p.id === "premium")!;
-    expect(premium.priceDisplay).toBe("€19.99");
-    expect(premium.ctaKind).toBe("purchase");
-    expect(premium.ctaHref).toBe("/register?plan=premium");
+    expect(premium.priceDisplay).toBe("€19.99");                       // retained as an UNAPPROVED preview figure only
+    expect(premium.ctaKind).toBe("unavailable");
+    expect(premium.ctaHref).toBeNull();
+    expect(premium.purchasable).toBe(false);
     const { container } = wrap(<PricingContent />);
-    expect(container.querySelector('a[href="/register?plan=premium"]')).not.toBeNull();
+    expect(container.querySelector('a[href^="/register?plan=premium"]')).toBeNull();                 // no purchase path
+    expect(container.querySelector('a[href*="checkout"], form[action*="checkout"]')).toBeNull();
+    expect(screen.getByTestId("premium-status").textContent).toContain(t("planUx.pricing_notAvailable"));
+    expect(screen.getByTestId("premium-preview-price").textContent).toContain(t("planUx.pricing_previewPrice"));
+    expect(screen.getByTestId("plan-status-premium").textContent).toContain(t("marketing.planPremiumCta"));
+    expect(screen.getByTestId("plan-note-premium").textContent).toContain(t("marketing.planPremiumNote"));
     expect(container.querySelector("input[type=text],input[name*=card i]")).toBeNull();
   });
 

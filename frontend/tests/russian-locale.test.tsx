@@ -134,6 +134,8 @@ describe("R3 + R4 - Russian catalogue completeness (no raw keys, no silent Engli
     const ALLOWED = new Set([
       "Ask4Mo", BRAND_SLOGAN, "Basic", "Premium", "Agent Inspector", "Knowledge & RAG", "DE", "acme.com",
       "Markdown", "JSON", "v{n}", "name@example.com", "Mo", "€0",
+      // W12.4D-P3: the owner-approved OFFICIAL model-profile names are the same Latin product names in every locale (like Basic and Premium).
+      "Fast", "Balanced", "Advanced",
     ]);
     const offenders: string[] = [];
     for (const ns of Object.keys(ruCat)) {

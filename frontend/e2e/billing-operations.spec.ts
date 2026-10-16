@@ -83,7 +83,7 @@ test("provider/billing unavailable is shown truthfully and retry recovers", asyn
   await expect(page.getByText("We could not load your billing overview right now.")).toBeVisible();
   await expect(page.getByTestId("billing-state-free")).toHaveCount(0);
   down = false;
-  await page.getByRole("button", { name: "Try again" }).click();
+  await page.getByTestId("billing-overview").getByRole("button", { name: "Try again" }).click();
   await expect(page.getByTestId("billing-state-free")).toBeVisible();
 });
 

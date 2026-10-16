@@ -104,6 +104,7 @@ import type {
   HealthResponse,
   InterviewListResponse,
   InterviewDetailResponse,
+  ModelProfilesResponse,
   ProgressResponse,
   EvaluationRunResponse,
   InterviewQuestionSet,
@@ -326,6 +327,11 @@ export const api = {
   progress: {
     get: (opts?: RequestOptions) =>
       request<ProgressResponse>("GET", "/progress", opts),
+  },
+
+  // Plan-aware model-profile metadata (W12.4D-P2-C). Read-only; `selector_active` is false until a reviewed release enables enforcement.
+  modelProfiles: {
+    get: (opts?: RequestOptions) => request<ModelProfilesResponse>("GET", "/model-profiles", opts),
   },
 
   evaluation: {

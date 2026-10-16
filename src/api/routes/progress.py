@@ -24,4 +24,5 @@ def progress(
     policy=Depends(get_history_access_policy),
 ) -> ProgressResponse:
     # Same candidate and same window as the history list: one entitlement decision, one selection mechanism.
-    return ProgressResponse(**history_service.practice_progress(repo, user_id, policy.window_for(user_id)))
+    window = policy.window_for(user_id)
+    return ProgressResponse(**history_service.practice_progress(repo, user_id, window), access={"restricted": window is not None, "window": window})

@@ -206,6 +206,11 @@ class InterviewRepository:
             select(Interview.id).where(Interview.user_id == user_id, Interview.status == self.COMPLETED)
             .order_by(*self._latest_order()).limit(max(0, int(window)))).all())
 
+    def count_completed(self, user_id: int) -> int:
+        """How many completed history records the user holds (a count only, never content). Used to tell a restricted candidate HOW MANY are outside their view."""
+        with self._session_factory() as session:
+            return int(session.scalar(select(func.count()).select_from(Interview).where(Interview.user_id == user_id, Interview.status == self.COMPLETED)) or 0)
+
     def is_restricted(self, user_id: int, interview_id: int, window: int | None) -> bool:
         """True only when the interview EXISTS, belongs to the caller and lies outside the window. Foreign or missing ids are not 'restricted'."""
         if window is None:
