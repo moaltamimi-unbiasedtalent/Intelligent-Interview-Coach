@@ -23,6 +23,7 @@ from src import constants
 from src.ai_protection import ai_operation
 from src.api.dependencies import (
     get_history_access_policy,
+    get_model_profile_policy,
     get_app_config,
     get_current_user_id,
     get_interview_service,
@@ -43,6 +44,8 @@ from src.api.schemas.interview import (
 )
 from src.application import history_service
 from src.application.history_access import HistoryNotAvailableError
+from src.application.model_profile_access import PRACTICE_DEFAULT_PROFILE
+from src.llm.models import model_id
 from src.application.errors import (
     ConflictError,
     MissingHandoffConfigError,
@@ -325,10 +328,13 @@ def _raise_if_setup_failed(session: SessionManager) -> None:
         )
 
 
-def _run_setup(svc: InterviewApplicationService, session: SessionManager, configuration) -> None:
+def _run_setup(svc: InterviewApplicationService, session: SessionManager, configuration, profile=None) -> None:
     from src.models import ModelSettings
 
-    svc.start_interview(session, configuration, ModelSettings())
+    # W12.4D-P2-C: ``profile`` is None unless an AUTHORIZED, non-default profile was chosen, so existing candidates get exactly ``ModelSettings()`` (Balanced).
+    # The slug always comes from the server-side registry through the profile id, never from the client.
+    settings = ModelSettings() if profile is None else ModelSettings(model=model_id(profile))
+    svc.start_interview(session, configuration, settings)
     svc.generate_strategy(session)
     _raise_if_setup_failed(session)
     svc.generate_next_question(session, first=True)
@@ -344,10 +350,16 @@ def create_interview(
     user_id: int = Depends(get_current_user_id),
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     _ai=Depends(ai_operation("practice", "setup")),
+    model_policy=Depends(get_model_profile_policy),
 ) -> InterviewStateResponse:
     """Create an interview. An optional ``Idempotency-Key`` header makes creation safe
     to retry — a repeat (same user + key) returns the SAME session without re-running
     strategy/first-question generation, and now survives a backend restart (durable)."""
+    # W12.4D-P2-C: validate and authorize the profile BEFORE any provider work. With the rollout gate disabled this is a no-op for everyone (the only accepted
+    # values are none or the existing default), so real candidates keep today's Balanced Practice.
+    chosen_profile = model_policy.authorize(user_id, body.model_profile, workflow="practice")
+    if chosen_profile is PRACTICE_DEFAULT_PROFILE and not model_policy.decide(user_id).enforced:
+        chosen_profile = None
     configuration = _build_configuration(body)
     # Owner-scoped governed context: a selected JD document + approved evidence (Wave 4).
     # Resolved lazily — only when the request actually selected document/evidence context.
@@ -384,7 +396,7 @@ def create_interview(
 
     try:
         with store.mutate(session_id, user_id, operation="create") as session:
-            _run_setup(svc, session, configuration)
+            _run_setup(svc, session, configuration, chosen_profile)
     except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
         raise _translate_store_error(exc) from None
     return _state(session_id, session)

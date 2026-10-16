@@ -40,6 +40,7 @@ const fr: Catalog = {
     platformPaused: "Ask4Mo est temporairement indisponible pour cette activité. Vos données enregistrées restent disponibles. Veuillez réessayer plus tard.",
     aiUsageLimit: "Vous avez atteint une limite de sécurité temporaire pour l’entraînement et le coaching générés par l’IA. Votre travail enregistré et votre historique restent disponibles. Veuillez réessayer dans un moment.",
     historyRestricted: "Cet entretien est en dehors de l’historique inclus dans votre vue actuelle. Il n’a pas été supprimé et reste enregistré. Vous pouvez toujours exporter ou supprimer vos données depuis votre compte.",
+    modelProfileNotAvailable: "Ce profil de modèle d’IA n’est pas disponible pour votre compte. Veuillez choisir un autre profil.",
     rateLimited: "Trop de requêtes. Veuillez patienter un moment et réessayer.",
     sessionExpired: "Votre session a expiré. Veuillez vous reconnecter.",
     forbidden: "Vous n’avez pas accès à cela.",

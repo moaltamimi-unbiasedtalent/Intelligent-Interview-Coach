@@ -1,0 +1,151 @@
+{
+  "version": 1,
+  "synthetic": true,
+  "note": "Synthetic roles, job descriptions, candidate backgrounds and answers. No real candidate, employer or private record is used or implied.",
+  "scenarios": [
+    {
+      "id": "MQ-01",
+      "role": "Registered Nurse",
+      "industry": "Healthcare",
+      "career_level": "entry",
+      "interview_type": "behavioural",
+      "difficulty": "easy",
+      "job_description": "Acute ward nurse; patient safety, handover, teamwork.",
+      "candidate_background": "Recent graduate with clinical placements; no formal ward role yet.",
+      "sample_answer": "I stayed calm when a patient's condition changed, escalated to the senior nurse and documented my observations.",
+      "synthetic": true
+    },
+    {
+      "id": "MQ-02",
+      "role": "Backend Software Engineer",
+      "industry": "Software",
+      "career_level": "mid",
+      "interview_type": "technical",
+      "difficulty": "moderate",
+      "job_description": "Own APIs and data pipelines; reliability and code review.",
+      "candidate_background": "Three years building REST services; some on-call experience.",
+      "sample_answer": "I traced a slow query to a missing index, added it and reduced latency, then added a regression check.",
+      "synthetic": true
+    },
+    {
+      "id": "MQ-03",
+      "role": "Financial Analyst",
+      "industry": "Finance",
+      "career_level": "junior",
+      "interview_type": "competency",
+      "difficulty": "moderate",
+      "job_description": "Monthly forecasting, variance analysis, stakeholder reporting.",
+      "candidate_background": "Two years in a controlling team; advanced spreadsheet skills.",
+      "sample_answer": "I rebuilt the variance report so managers could see drivers, and cut preparation time by a third.",
+      "synthetic": true
+    },
+    {
+      "id": "MQ-04",
+      "role": "Electrician",
+      "industry": "Skilled trades",
+      "career_level": "senior",
+      "interview_type": "situational",
+      "difficulty": "hard",
+      "job_description": "Commercial installations; safety compliance and supervision.",
+      "candidate_background": "Twelve years on commercial sites; supervises two apprentices.",
+      "sample_answer": "I stopped the job when I found an unmarked live circuit, isolated it and briefed the team before restarting.",
+      "synthetic": true
+    },
+    {
+      "id": "MQ-05",
+      "role": "Policy Officer",
+      "industry": "Public sector",
+      "career_level": "mid",
+      "interview_type": "panel",
+      "difficulty": "moderate",
+      "job_description": "Draft policy briefs; consult stakeholders; track implementation.",
+      "candidate_background": "Five years in a regional ministry; consultation and briefing experience.",
+      "sample_answer": "I coordinated three departments on a briefing and resolved a disagreement over data sources.",
+      "synthetic": true
+    },
+    {
+      "id": "MQ-06",
+      "role": "Secondary School Teacher",
+      "industry": "Education",
+      "career_level": "entry",
+      "interview_type": "behavioural",
+      "difficulty": "easy",
+      "job_description": "Teach mixed-ability classes; classroom management; parent contact.",
+      "candidate_background": "Teaching degree and one placement year.",
+      "sample_answer": "I adapted a lesson for a pupil who struggled to read and checked progress each week.",
+      "synthetic": true
+    },
+    {
+      "id": "MQ-07",
+      "role": "Retail Store Manager",
+      "industry": "Retail",
+      "career_level": "lead",
+      "interview_type": "leadership",
+      "difficulty": "moderate",
+      "job_description": "Run a store team, stock and sales targets, customer experience.",
+      "candidate_background": "Six years in retail, two as deputy manager.",
+      "sample_answer": "I reorganised rotas after turnover rose and agreed a plan with the team to restore morale.",
+      "synthetic": true
+    },
+    {
+      "id": "MQ-08",
+      "role": "Logistics Coordinator",
+      "industry": "Logistics",
+      "career_level": "junior",
+      "interview_type": "case_study",
+      "difficulty": "hard",
+      "job_description": "Plan routes, manage carrier delays, keep delivery windows.",
+      "candidate_background": "One year in dispatch; comfortable with routing software.",
+      "sample_answer": "When a carrier cancelled, I rerouted shipments across two others and informed customers early.",
+      "synthetic": true
+    },
+    {
+      "id": "MQ-09",
+      "role": "Marketing Manager",
+      "industry": "Marketing",
+      "career_level": "senior",
+      "interview_type": "competency",
+      "difficulty": "hard",
+      "job_description": "Own campaign planning, budgets and measurement.",
+      "candidate_background": "Eight years across agency and in-house teams.",
+      "sample_answer": "I shifted budget to the best performing channel after a mid-campaign review and reported the effect.",
+      "synthetic": true
+    },
+    {
+      "id": "MQ-10",
+      "role": "Hotel Front Office Supervisor",
+      "industry": "Hospitality",
+      "career_level": "mid",
+      "interview_type": "situational",
+      "difficulty": "easy",
+      "job_description": "Guest service, shift supervision, complaint handling.",
+      "candidate_background": "Four years in hotels, one as supervisor.",
+      "sample_answer": "I resolved a double booking by offering an upgrade nearby and following up with the guest.",
+      "synthetic": true
+    },
+    {
+      "id": "MQ-11",
+      "role": "Operations Director",
+      "industry": "Manufacturing",
+      "career_level": "director",
+      "interview_type": "executive_board",
+      "difficulty": "hard",
+      "job_description": "Lead plant operations; margin, safety and workforce planning.",
+      "candidate_background": "Fifteen years in manufacturing operations leadership.",
+      "sample_answer": "I presented a restructuring plan to the board with risks, timelines and measures of success.",
+      "synthetic": true
+    },
+    {
+      "id": "MQ-12",
+      "role": "Paralegal",
+      "industry": "Legal services",
+      "career_level": "entry",
+      "interview_type": "screening",
+      "difficulty": "moderate",
+      "job_description": "Support case preparation, document review, client communication.",
+      "candidate_background": "Law degree and a six-month internship.",
+      "sample_answer": "I organised a disclosure bundle and flagged missing documents before the deadline.",
+      "synthetic": true
+    }
+  ]
+}

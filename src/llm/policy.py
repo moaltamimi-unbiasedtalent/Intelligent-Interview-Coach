@@ -307,7 +307,7 @@ def _fallback_chain(effective: ModelProfile, floor: ModelProfile) -> list[ModelP
 
 
 def resolve_policy(
-    operation: "ModelOperation | str", user_profile: ModelProfile | None
+    operation: "ModelOperation | str", user_profile: ModelProfile | None, *, authorized: "frozenset[ModelProfile] | None" = None
 ) -> ResolvedModelPolicy:
     """Resolve the effective model policy for an operation and a validated user profile.
 
@@ -347,6 +347,14 @@ def resolve_policy(
 
     effective, capped = _clamp_up(profile, policy.min_capability)
     fallbacks = _fallback_chain(effective, policy.fallback_floor)
+    if authorized is not None:
+        # W12.4D-P2-C: when a caller's authorized profile set is supplied, an operation floor can never silently RAISE the caller above it and a fallback can
+        # never leave it: an unauthorized effective profile is a controlled failure, and only authorized lower tiers remain as fallbacks. ``None`` (the default,
+        # and what every current call site uses) leaves the behaviour exactly as before.
+        from src.application.model_profile_access import assert_effective_authorized
+
+        assert_effective_authorized(effective, authorized)
+        fallbacks = [p for p in fallbacks if p in authorized]
     # P10B-W10.7: bounded numeric tunables from an ACTIVE governed configuration. Capability, floors, structured-output and tool flags
     # are code-defined and never read from it; an absent override leaves the code policy untouched.
     from src.llm import governed

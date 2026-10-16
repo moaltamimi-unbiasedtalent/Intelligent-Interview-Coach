@@ -29,6 +29,7 @@ from src.application.errors import (
 )
 from src.ai_protection import AiUsageLimitError
 from src.application.history_access import HistoryNotAvailableError
+from src.application.model_profile_access import ModelProfileInvalid, ModelProfileNotAuthorized, ModelProfileNotAvailable
 from src.repository import HistoryRestricted
 from src.application.pause import PauseStateUnavailable, PlatformPausedError
 from src.interview.session_codec import SessionCodecError
@@ -51,6 +52,7 @@ AI_USAGE_LIMIT_MESSAGE = ("You have reached a temporary safety limit on AI-gener
                           "Please try again in a little while.")
 HISTORY_NOT_AVAILABLE_MESSAGE = ("This interview is outside the history included in your current view. It has not been deleted and remains stored. "
                                  "You can still export or delete your data from your account.")
+MODEL_PROFILE_MESSAGE = "That AI model profile is not available for your account. Please choose another profile."
 PLATFORM_STATE_UNAVAILABLE_MESSAGE = "Ask4Mo cannot confirm that this activity is available right now. Please try again shortly."
 
 # The single safe message for an otherwise-unhandled server error. Never carries exception
@@ -138,6 +140,19 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(HistoryNotAvailableError)
     async def _history_not_available(request: Request, exc: Exception):
         return _envelope(403, "history_not_available", HISTORY_NOT_AVAILABLE_MESSAGE, _request_id(request))
+
+    # W12.4D-P2-C: model-profile authorization. Fixed safe copy: no plan, price or upgrade wording, and the refused profile is not echoed.
+    @app.exception_handler(ModelProfileNotAuthorized)
+    async def _model_profile_not_authorized(request: Request, exc: ModelProfileNotAuthorized):
+        return _envelope(403, "model_profile_not_authorized", MODEL_PROFILE_MESSAGE, _request_id(request))
+
+    @app.exception_handler(ModelProfileNotAvailable)
+    async def _model_profile_not_available(request: Request, exc: ModelProfileNotAvailable):
+        return _envelope(422, "model_profile_not_available", MODEL_PROFILE_MESSAGE, _request_id(request))
+
+    @app.exception_handler(ModelProfileInvalid)
+    async def _model_profile_invalid(request: Request, exc: ModelProfileInvalid):
+        return _envelope(422, "invalid_model_profile", "Unknown model profile.", _request_id(request))
 
     @app.exception_handler(FeatureFlagStateUnavailable)
     async def _flag_state_unavailable(request: Request, exc: FeatureFlagStateUnavailable):

@@ -21,7 +21,7 @@ from src.application.agent_service import (
     RunNotFoundError,
     RunNotResumableError,
 )
-from src.api.dependencies import get_agent_service, get_current_user_id, get_request_id
+from src.api.dependencies import get_agent_service, get_current_user_id, get_model_profile_policy, get_request_id
 from src.api.guards import cost_limit, require_not_paused
 from src.api.schemas.agent import (
     AgentContinueRequest,
@@ -82,6 +82,18 @@ def _to_response(result) -> AgentRunResponse:
     )
 
 
+def _reauthorize_stored_profile(service, model_policy, run_id: str, user_id: int, request_id: str) -> None:
+    """W12.4D-P2-C: a run keeps the profile it was started with, so a continue or resume must re-check it against the caller's CURRENT entitlement (a downgraded
+    account must not keep spending Balanced or Advanced on an old run). No-op, and no extra read, while the rollout gate is disabled."""
+    if not model_policy.decide(user_id).enforced:
+        return
+    try:
+        existing = service.get_run(run_id, str(user_id), request_id=request_id)
+    except RunNotFoundError:
+        raise HTTPException(status_code=404, detail="Run not found.")
+    model_policy.assert_authorized(user_id, existing.profile)
+
+
 @router.post("/run", response_model=AgentRunResponse,
              summary="Run the experimental preparation agent (Sprint 4 preview)")
 def run_agent(
@@ -92,7 +104,11 @@ def run_agent(
     service=Depends(get_agent_service),
     request_id: str = Depends(get_request_id),
     _cost=Depends(cost_limit("cost_agent_user")),
+    model_policy=Depends(get_model_profile_policy),
 ) -> AgentRunResponse:
+    # W12.4D-P2-C: authorize the profile BEFORE the service or any model is touched. While the rollout gate is disabled this returns exactly what the candidate
+    # sent (today's behaviour); when enabled a Basic account can only use Fast.
+    chosen_profile = model_policy.authorize(user_id, body.profile, workflow="agent")
     # Owner-scoped: a candidate may SELECT a stored JD instead of pasting it (P10B Wave 4). The
     # server resolves the document text (never the client); an explicit pasted JD takes priority,
     # and a foreign/missing id resolves to no JD (never another user's data).
@@ -112,7 +128,7 @@ def run_agent(
             job_description=job_description,
             candidate_background=body.candidate_background,
             user_id=str(user_id),
-            profile=body.profile,
+            profile=chosen_profile.value if chosen_profile is not None else None,
             enable_current_market_research=body.enable_current_market_research,
             conversation_language=body.conversation_language,
             coaching_style=body.coaching_style,
@@ -146,7 +162,9 @@ def continue_agent_run(
     _pause=Depends(require_not_paused("agent")),   # admission BEFORE the service/model is built
     service=Depends(get_agent_service),
     request_id: str = Depends(get_request_id),
+    model_policy=Depends(get_model_profile_policy),
 ) -> AgentRunResponse:
+    _reauthorize_stored_profile(service, model_policy, run_id, user_id, request_id)
     try:
         result = service.continue_run(run_id, str(user_id), body.message, request_id=request_id)
     except RunNotFoundError:
@@ -165,7 +183,9 @@ def resume_agent_run(
     _pause=Depends(require_not_paused("agent")),   # admission BEFORE the service/model is built
     service=Depends(get_agent_service),
     request_id: str = Depends(get_request_id),
+    model_policy=Depends(get_model_profile_policy),
 ) -> AgentRunResponse:
+    _reauthorize_stored_profile(service, model_policy, run_id, user_id, request_id)
     decision: dict = {"action_id": body.action_id, "decision": body.decision,
                       "selected_role": body.selected_role}
     # Edit-before-save (APPROVE_MEMORY only): pass the edited memory through for
