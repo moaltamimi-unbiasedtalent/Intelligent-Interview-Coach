@@ -18,7 +18,7 @@ from src.application import model_profile_access as MP
 from src.application.interview_service import InterviewApplicationService
 from src.llm.models import ModelProfile, known_profile_for_slug, model_id
 from src.model_quality import harness as H
-from tests.test_api import _config_body, _FakeClient, _FakeEval, _FakeRepo, _FakeReport, _question, _strategy, _usage
+from tests.test_api import _config_body, _evaluation, _FakeClient, _FakeEval, _FakeRepo, _FakeReport, _question, _strategy, _usage
 
 ROOT = Path(__file__).resolve().parents[1]
 FAST, BALANCED, ADVANCED = ModelProfile.FAST, ModelProfile.BALANCED, ModelProfile.ADVANCED
@@ -335,6 +335,148 @@ def test_practice_idempotent_replay_keeps_the_original_profile(on):
     again = c.post("/api/v1/interviews", json={**_config_body(), "model_profile": "advanced"}, headers=h)
     assert first.status_code == again.status_code == 200 and first.json()["session_id"] == again.json()["session_id"]
     assert len(domain.calls) == 2                                                                  # strategy + first question once; the replay generated nothing
+
+
+# ================================================================ 5b. OWNER DECISION A: DOWNGRADE AND MID-SESSION CONTINUATION ================================
+
+class RecordingEval:
+    def __init__(self):
+        self.calls = []
+
+    def evaluate_answer(self, config, question, answer, settings):
+        self.calls.append(settings.model)
+        return _evaluation(), _usage()
+
+
+def session_client(plans, domain, evaluator):
+    """Like ``practice_client`` but with a recording evaluator and access to the durable store (to prove nothing is lost or switched)."""
+    from tests._interview_factories import make_durable_store
+    app = create_app()
+    repo = _FakeRepo()
+    store = make_durable_store()
+
+    def _interview():
+        return InterviewApplicationService(config=None, services=(domain, evaluator, _FakeReport(), _FakeClient()))
+    app.dependency_overrides[deps.get_career_service] = lambda: None
+    app.dependency_overrides[deps.get_interview_service] = _interview
+    app.dependency_overrides[deps.get_repository] = lambda: repo
+    app.dependency_overrides[deps.get_app_config] = lambda: None
+    app.dependency_overrides[deps.get_session_store] = lambda: store
+
+    def _uid(request: Request) -> int:
+        return int(request.headers["x-test-user"])
+    app.dependency_overrides[deps.get_current_user_id] = _uid
+    app.dependency_overrides[deps.get_entitlement_service] = lambda: plans
+    return TestClient(app, raise_server_exceptions=False), store
+
+
+def hdr(user):
+    return {"x-test-user": str(user)}
+
+
+def stored_model(store, session_id, user):
+    return store.load_state(session_id, user).data.settings.model
+
+
+def test_decision_a_a_former_premium_account_cannot_keep_making_balanced_or_advanced_calls_and_nothing_is_lost_or_switched(on):
+    plans = Plans({2: PREMIUM})
+    domain, ev = RecordingDomain(), RecordingEval()
+    c, store = session_client(plans, domain, ev)
+    made = create(c, 2, model_profile="advanced").json()
+    sid = made["session_id"]
+    assert stored_model(store, sid, 2) == constants.HIGH_CAPABILITY_MODEL
+    before_calls = len(domain.calls)
+    assert c.post(f"/api/v1/interviews/{sid}/answers", json={"answer": "first answer"}, headers=hdr(2)).status_code == 200      # still Premium: continues on Advanced
+    assert ev.calls == [constants.HIGH_CAPABILITY_MODEL]
+    plans.table.pop(2)                                                                                # Premium ends: the account is Basic from the next request
+    for path, body in ((f"/api/v1/interviews/{sid}/next-question", None), (f"/api/v1/interviews/{sid}/answers", {"answer": "second"})):
+        r = c.post(path, json=body, headers=hdr(2)) if body else c.post(path, headers=hdr(2))
+        assert r.status_code == 403 and r.json()["error"]["code"] == "model_profile_not_authorized", path
+        assert "advanced" not in r.text.lower() and "upgrade" not in r.text.lower() and "premium" not in r.text.lower()
+    assert len(domain.calls) == before_calls and ev.calls == [constants.HIGH_CAPABILITY_MODEL]       # no further provider invocation of any profile
+    assert stored_model(store, sid, 2) == constants.HIGH_CAPABILITY_MODEL                              # NOT silently switched to Fast mid-session
+    state = c.get(f"/api/v1/interviews/{sid}", headers=hdr(2))
+    assert state.status_code == 200 and state.json()["session_id"] == sid                              # the stored session and its data stay readable
+    plans.table[2] = PREMIUM                                                                           # re-upgrade restores continuation on the same session
+    assert c.post(f"/api/v1/interviews/{sid}/next-question", headers=hdr(2)).status_code == 200
+    assert stored_model(store, sid, 2) == constants.HIGH_CAPABILITY_MODEL
+
+
+def test_decision_a_an_existing_balanced_session_cannot_continue_under_enforcement_for_basic_and_is_never_silently_switched(monkeypatch):
+    plans = Plans()
+    domain, ev = RecordingDomain(), RecordingEval()
+    c, store = session_client(plans, domain, ev)
+    sid = create(c, 1).json()["session_id"]                                                           # created while the gate is disabled: Balanced, exactly as today
+    assert stored_model(store, sid, 1) == constants.DEFAULT_MODEL
+    assert c.post(f"/api/v1/interviews/{sid}/answers", json={"answer": "a"}, headers=hdr(1)).status_code == 200
+    ev_before, dom_before = len(ev.calls), len(domain.calls)
+    monkeypatch.setattr(MP, "MODEL_PROFILE_ENFORCED", True)                                           # the gate is switched on later
+    r = c.post(f"/api/v1/interviews/{sid}/next-question", headers=hdr(1))
+    assert r.status_code == 403 and r.json()["error"]["code"] == "model_profile_not_authorized"
+    assert (len(ev.calls), len(domain.calls)) == (ev_before, dom_before)
+    assert stored_model(store, sid, 1) == constants.DEFAULT_MODEL                                      # the session was neither switched nor altered
+    assert c.get(f"/api/v1/interviews/{sid}", headers=hdr(1)).status_code == 200                         # and stays readable
+
+
+def test_decision_a_basic_sessions_created_under_enforcement_use_fast_and_continue_normally(on):
+    plans = Plans()
+    domain, ev = RecordingDomain(), RecordingEval()
+    c, store = session_client(plans, domain, ev)
+    sid = create(c, 1).json()["session_id"]
+    assert stored_model(store, sid, 1) == constants.LOW_COST_MODEL
+    assert c.post(f"/api/v1/interviews/{sid}/answers", json={"answer": "a"}, headers=hdr(1)).status_code == 200
+    assert c.post(f"/api/v1/interviews/{sid}/next-question", headers=hdr(1)).status_code == 200
+    assert {m for m in ev.calls} == {constants.LOW_COST_MODEL} and {m for _t, m in domain.calls} == {constants.LOW_COST_MODEL}
+
+
+def test_decision_a_a_premium_account_defaults_to_balanced_and_may_continue_on_it(on):
+    plans = Plans({2: PREMIUM})
+    domain, ev = RecordingDomain(), RecordingEval()
+    c, store = session_client(plans, domain, ev)
+    sid = create(c, 2).json()["session_id"]
+    assert stored_model(store, sid, 2) == constants.DEFAULT_MODEL
+    assert c.post(f"/api/v1/interviews/{sid}/answers", json={"answer": "a"}, headers=hdr(2)).status_code == 200
+
+
+def test_decision_a_every_provider_backed_practice_step_is_guarded_and_an_existing_report_stays_readable():
+    import inspect
+
+    from src.api.routes import interview
+    src = inspect.getsource(interview)
+    for name in ("submit_answer", "next_question", "start_deep_dive", "submit_deep_dive_answer", "next_deep_dive", "generate_report"):
+        body = src[src.index(f"def {name}("):]
+        body = body[:body.index("\n@router") if "\n@router" in body else len(body)]
+        assert "_guard_session_profile(" in body and "get_model_profile_policy" in body, name
+    for read_only in ("get_interview", "get_report", "return_from_deep_dive", "complete_interview", "recover_interview"):
+        body = src[src.index(f"def {read_only}("):]
+        body = body[:body.index("\n@router") if "\n@router" in body else len(body)]
+        assert "_guard_session_profile(" not in body, read_only                                          # stored data and report fetches are never blocked by a profile
+    report = src[src.index("def generate_report("):]
+    assert report.index("if session.data.report is None:") < report.index("_guard_session_profile(")      # guarded only when generation (a provider call) is needed
+
+
+def test_decision_a_while_disabled_no_session_step_is_affected_and_no_extra_work_is_done(monkeypatch):
+    plans = Plans()
+    domain, ev = RecordingDomain(), RecordingEval()
+    c, store = session_client(plans, domain, ev)
+    sid = create(c, 1).json()["session_id"]
+    called = []
+    real = MP.ModelProfileAccessPolicy.assert_authorized
+    monkeypatch.setattr(MP.ModelProfileAccessPolicy, "assert_authorized", lambda self, u, p: called.append(p) or real(self, u, p))
+    assert c.post(f"/api/v1/interviews/{sid}/answers", json={"answer": "a"}, headers=hdr(1)).status_code == 200
+    assert c.post(f"/api/v1/interviews/{sid}/next-question", headers=hdr(1)).status_code == 200
+    assert stored_model(store, sid, 1) == constants.DEFAULT_MODEL and MP.MODEL_PROFILE_ENFORCED is False   # Balanced, exactly as before
+
+
+def test_decision_a_other_users_are_unaffected_by_one_users_downgrade(on):
+    plans = Plans({2: PREMIUM, 3: PREMIUM})
+    domain, ev = RecordingDomain(), RecordingEval()
+    c, store = session_client(plans, domain, ev)
+    s2 = create(c, 2, model_profile="advanced").json()["session_id"]
+    s3 = create(c, 3, model_profile="advanced").json()["session_id"]
+    plans.table.pop(2)
+    assert c.post(f"/api/v1/interviews/{s2}/answers", json={"answer": "a"}, headers=hdr(2)).status_code == 403
+    assert c.post(f"/api/v1/interviews/{s3}/answers", json={"answer": "a"}, headers=hdr(3)).status_code == 200
 
 
 # ================================================================ 6. MO (AGENT) ROUTES ========================================================================
