@@ -174,5 +174,19 @@ def normalise(event: dict) -> Normalised:
     return Normalised(kind=kind, object_id=object_id, subscription_id=sub, fields={k: v for k, v in f.items() if v is not None})
 
 
+# W12.4D-F2-B1R: a validly signed FINANCIAL event delivered under an API version this code does not support is HELD for an operator, never ignored and never
+# interpreted. Only the opaque id of the object the event names is kept, and only when its prefix matches the object type the event type promises; it is an
+# untrusted lookup key for an authoritative provider read, not evidence. No other field of an incompatible payload is read.
+INCOMPATIBLE_REFERENCE_PREFIX = {"subscription": "sub_", "invoice": "in_", "checkout": "cs_", "refund": "ch_", "dispute": "dp_"}
+
+
+def reference_only(event: dict) -> dict:
+    kind = EVENT_KINDS[event["type"]]
+    object_id = _id(event["data"]["object"].get("id"))
+    if object_id is not None and not object_id.startswith(INCOMPATIBLE_REFERENCE_PREFIX[kind]):
+        object_id = None
+    return {"kind": kind, "api_incompatible": True, "object_id": object_id}
+
+
 def created_at(event: dict) -> datetime | None:
     return _created(event)

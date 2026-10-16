@@ -274,13 +274,16 @@ def test_oversized_payload_is_refused_before_verification(env):
 
 
 def test_unknown_event_type_version_and_account_context_are_acknowledged_as_ignored(env):
+    """Irrelevant event types and Connect-style context are ignored (even under an unsupported version); a supported FINANCIAL event under an unsupported version is
+    HELD for an operator (W12.4D-F2-B1R), never ignored."""
     rcv = receiver(env)
-    for ev in (event("some.unknown.event", {"id": "x_1"}), sub_event(api_version="2020-01-01"), sub_event(account="acct_other")):
+    for ev in (event("some.unknown.event", {"id": "x_1"}), event("some.unknown.event", {"id": "x_2"}, api_version="2020-01-01"), sub_event(account="acct_other"),
+               sub_event(api_version="2020-01-01")):
         assert deliver(env, rcv, ev) == {"status": "accepted"}
     with env.sf() as s:
-        rows = s.scalars(select(BillingProviderEvent)).all()
-    assert {r.status for r in rows} == {"ignored"}
-    assert {r.failure_category for r in rows} == {"unsupported_event_type", "unsupported_api_version", "unexpected_account_context"}
+        rows = s.scalars(select(BillingProviderEvent).order_by(BillingProviderEvent.id)).all()
+    assert [r.status for r in rows] == ["ignored", "ignored", "ignored", "needs_review"]
+    assert [r.failure_category for r in rows] == ["unsupported_event_type", "unsupported_event_type", "unexpected_account_context", "unsupported_api_version"]
     assert count(env, BillingProviderLink) == 0
 
 

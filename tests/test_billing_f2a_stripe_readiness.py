@@ -406,7 +406,7 @@ def test_readiness_separates_every_stage_and_never_claims_a_connection(env):
 
 # ================================================================ 7. WEBHOOK API-VERSION / EVENT CONTRACT ====================================
 
-def test_incompatible_api_versions_are_observable_and_never_grant_or_revoke(env):
+def test_incompatible_api_versions_are_held_visible_and_never_grant_or_revoke(env):
     env.reader.set_subscription("sub_synth_1")
     svc = ProviderEventService(env.sf, environment="sandbox", reader=env.reader, policy=SYNTHETIC_POLICY, clock=lambda: env.clock_now[0])
     for v in ("2020-01-01", "2099-01-01.future", "", None):
@@ -416,7 +416,7 @@ def test_incompatible_api_versions_are_observable_and_never_grant_or_revoke(env)
     with env.sf() as s:
         assert s.scalar(select(func.count()).select_from(Subscription).where(Subscription.source == "provider")) == 0
         rows = s.scalars(select(BillingProviderEvent)).all()
-    assert len(rows) == 4 and {x.status for x in rows} == {"ignored"} and {x.failure_category for x in rows} == {"unsupported_api_version"}
+    assert len(rows) == 4 and {x.status for x in rows} == {"needs_review"} and {x.failure_category for x in rows} == {"unsupported_api_version"}   # held, not ignored (B1R)
 
 
 def test_thin_style_payloads_without_a_data_object_are_refused_not_processed():

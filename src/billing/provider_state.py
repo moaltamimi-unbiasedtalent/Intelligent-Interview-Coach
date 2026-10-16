@@ -116,6 +116,8 @@ class ProviderStateReader(Protocol):
     def checkout_session(self, session_id: str) -> CheckoutAssociation: ...
     def checkout_for_subscription(self, subscription_id: str) -> CheckoutAssociation | None: ...
     def subscription_for_payment(self, *, payment_intent: str | None, charge: str | None) -> str | None: ...
+    def get_invoice(self, invoice_id: str) -> "InvoiceSnapshot": ...
+    def get_dispute(self, dispute_id: str) -> "DisputeSnapshot": ...
 
 
 class NullStateReader:
@@ -124,7 +126,7 @@ class NullStateReader:
     def _off(self, *a: Any, **k: Any):
         raise ProviderStateUnavailable("not_enabled")
 
-    get_subscription = checkout_session = checkout_for_subscription = subscription_for_payment = _off
+    get_subscription = checkout_session = checkout_for_subscription = subscription_for_payment = get_invoice = get_dispute = _off
 
 
 _INVOICE = {"paid": "paid", "open": "open", "uncollectible": "failed", "void": "failed", "draft": "open"}

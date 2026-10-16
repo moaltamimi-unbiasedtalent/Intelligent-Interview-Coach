@@ -154,7 +154,7 @@ Findings from the code (`ProviderEventService.accept`, `src/billing/operations.p
 version than the pin, every meaningful financial event (payment, cancellation, refund, dispute) would be silently stored as `ignored`, and with the scheduler disabled nothing would trigger re-reading the provider, so a cancellation or refund
 could leave a stale paid entitlement until an operator reconciles a link by hand. This is a configuration-time risk (the endpoint API version is chosen by the owner) with no alert.
 
-**Bounded remediation (documented only, to be implemented and tested in B2 or a dedicated small wave before any webhook is registered; not done here; webhooks stay disabled):**
+**Remediation status: IMPLEMENTED in W12.4D-F2-B1R** (`W12_04D_F2_B1R_WEBHOOK_FINANCIAL_EVENT_SAFETY.md`): supported financial events under an unsupported version are now held as `needs_review` and reconciled only from authoritative reads. The findings table above describes the behaviour at the time of F2-B1. The original bounded-remediation proposal follows for reference:
 1. Overview and reconciliation views count `ignored:unsupported_api_version` events for SUPPORTED event types separately and include them in `awaiting_operator`; the readiness block shows a warning while any exist.
 2. For a supported event type with an unsupported version, record the event as `needs_review` with the object id taken only from `data.object.id` (no other field trusted), so an operator can run the existing "reconcile one link" recovery, which reads authoritative state and never trusts the event.
 3. Procedure: create the endpoint with the pinned API version (owner checklist), and treat any such event after go-live as a configuration incident.

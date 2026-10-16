@@ -110,6 +110,7 @@ class BillingOperations:
             stale_cut = now - timedelta(seconds=P.RECONCILE_STALE_AFTER_SECONDS)
             stale = s.scalar(select(func.count()).select_from(LINK).where(LINK.provider_state.notin_(PROVIDER_LINK_TERMINAL),
                                                                           (LINK.observed_at.is_(None)) | (LINK.observed_at <= stale_cut))) or 0
+            held_version = s.scalar(select(func.count()).select_from(EV).where(EV.status.in_(("needs_review", "failed")), EV.failure_category == "unsupported_api_version")) or 0
             oldest_pending = s.scalar(select(func.min(EV.received_at)).where(EV.status.in_(("received", "processing", "failed"))))
             last_ok = s.scalar(select(func.max(EV.processed_at)).where(EV.status == "processed"))
             last_attempt = s.scalar(select(func.max(EV.last_attempt_at)))
@@ -125,6 +126,7 @@ class BillingOperations:
             "events": {"pending": events.get("received", 0) + events.get("processing", 0), "failed": events.get("failed", 0), "quarantined": events.get("quarantined", 0),
                        "needs_review": events.get("needs_review", 0), "processed": events.get("processed", 0), "ignored": events.get("ignored", 0),
                        "awaiting_operator": events.get("quarantined", 0) + events.get("needs_review", 0),
+                       "held_unsupported_api_version": held_version,
                        "oldest_pending_seconds": int((now - op).total_seconds()) if op else None},
             "reconciliation": {"stale_links": stale, "last_successful": _iso(last_ok), "last_attempt": _iso(last_attempt), "provider_state_reader": "wired" if self._reader else "not_wired_null_reader"},
             "recovery_actions": recoveries,
@@ -221,6 +223,9 @@ class BillingOperations:
     def _classify(e: EV) -> str:
         if e.status == "quarantined":
             return "Quarantined: the event could not be safely associated or verified; no billing state or access was changed."
+        if e.status == "needs_review" and e.failure_category == "unsupported_api_version":
+            return ("Held: a validly signed financial event arrived under an unsupported API version. Its payload was not interpreted and nothing was granted or revoked. "
+                    "An authorized operator can recover it, which re-reads the provider's authoritative state. Check the webhook endpoint's API version.")
         if e.status == "needs_review":
             return "Needs operator review: retries are exhausted or the provider answer was not trustworthy; no billing state or access was changed."
         if e.status == "ignored":
