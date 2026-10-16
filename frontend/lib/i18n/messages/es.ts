@@ -38,6 +38,7 @@ const es: Catalog = {
     serverError: "Ask4Mo tuvo un problema al procesar esa solicitud. Inténtalo de nuevo.",
     serviceUnavailable: "Ask4Mo no está disponible temporalmente. Inténtalo de nuevo en breve.",
     platformPaused: "Ask4Mo no está disponible temporalmente para esta actividad. Tus datos guardados siguen disponibles. Inténtalo de nuevo más tarde.",
+    aiUsageLimit: "Has alcanzado un límite de seguridad temporal para la práctica y el coaching generados con IA. Tu trabajo guardado y tu historial siguen disponibles. Inténtalo de nuevo dentro de un rato.",
     rateLimited: "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
     sessionExpired: "Tu sesión ha caducado. Inicia sesión de nuevo.",
     forbidden: "No tienes acceso a eso.",

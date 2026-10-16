@@ -199,6 +199,40 @@ def _observe_provider(outcome: str, started: float, category: str | None) -> Non
         pass
 
 
+# W12.4D-P2-A: best-effort reporting into the current AI operation scope (a no-op outside one). Never raises into the provider path and never carries content.
+def _meter_attempt() -> None:
+    try:
+        from src.ai_protection import note_attempt
+
+        note_attempt()
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _meter_ok(result: "ChatResult", started: float) -> None:
+    try:
+        import time as _t
+
+        from src.ai_protection import note_call_ok
+
+        known = bool(result.usage_available)
+        note_call_ok(model=result.model, input_tokens=result.prompt_tokens if known else None, output_tokens=result.completion_tokens if known else None,
+                     cost_usd=result.reported_cost if known else None, latency_ms=int((_t.perf_counter() - started) * 1000))
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _meter_failed(exc: BaseException, started: float) -> None:
+    try:
+        import time as _t
+
+        from src.ai_protection import note_call_failed
+
+        note_call_failed(getattr(exc, "category", None) or type(exc).__name__, int((_t.perf_counter() - started) * 1000))
+    except Exception:  # noqa: BLE001
+        pass
+
+
 class OpenRouterClient:
     """Non-streaming client for OpenRouter chat completions."""
 
@@ -362,8 +396,10 @@ class OpenRouterClient:
             result = self._post_chat(payload, model, timeout_s=timeout_s, max_retries=max_retries)
         except Exception as exc:  # noqa: BLE001 - re-raised unchanged
             _observe_provider("error", started, getattr(exc, "category", None) or type(exc).__name__)
+            _meter_failed(exc, started)
             raise
         _observe_provider("success", started, None)
+        _meter_ok(result, started)
         return result
 
     def _post_chat(self, payload: dict[str, Any], model: str, *, timeout_s: float | None = None, max_retries: int | None = None) -> ChatResult:
@@ -382,6 +418,7 @@ class OpenRouterClient:
         for attempt in range(attempts):
             can_retry = attempt < attempts - 1
             start = time.monotonic()
+            _meter_attempt()
             try:
                 if timeout_s is None:
                     response = self._client().post(url, headers=headers, json=payload)

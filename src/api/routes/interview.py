@@ -20,6 +20,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Header, HTTPException, Path, Request
 
 from src import constants
+from src.ai_protection import ai_operation
 from src.api.dependencies import (
     get_app_config,
     get_current_user_id,
@@ -328,6 +329,7 @@ def create_interview(
     store: DurableInterviewSessionStore = Depends(get_session_store),
     user_id: int = Depends(get_current_user_id),
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+    _ai=Depends(ai_operation("practice", "setup")),
 ) -> InterviewStateResponse:
     """Create an interview. An optional ``Idempotency-Key`` header makes creation safe
     to retry — a repeat (same user + key) returns the SAME session without re-running
@@ -439,6 +441,7 @@ def submit_answer(
     svc: InterviewApplicationService = Depends(get_interview_service),
     store: DurableInterviewSessionStore = Depends(get_session_store),
     user_id: int = Depends(get_current_user_id),
+    _ai=Depends(ai_operation("practice", "answer_feedback")),
 ) -> InterviewStateResponse:
     try:
         with store.mutate(session_id, user_id, operation="submit_answer") as session:
@@ -456,6 +459,7 @@ def next_question(
     svc: InterviewApplicationService = Depends(get_interview_service),
     store: DurableInterviewSessionStore = Depends(get_session_store),
     user_id: int = Depends(get_current_user_id),
+    _ai=Depends(ai_operation("practice", "next_question")),
 ) -> InterviewStateResponse:
     try:
         with store.mutate(session_id, user_id, operation="next_question") as session:
@@ -511,6 +515,7 @@ def start_deep_dive(
     svc: InterviewApplicationService = Depends(get_interview_service),
     store: DurableInterviewSessionStore = Depends(get_session_store),
     user_id: int = Depends(get_current_user_id),
+    _ai=Depends(ai_operation("practice", "deep_dive_start")),
 ) -> InterviewStateResponse:
     try:
         with store.mutate(session_id, user_id, operation="deep_dive") as session:
@@ -528,6 +533,7 @@ def submit_deep_dive_answer(
     svc: InterviewApplicationService = Depends(get_interview_service),
     store: DurableInterviewSessionStore = Depends(get_session_store),
     user_id: int = Depends(get_current_user_id),
+    _ai=Depends(ai_operation("practice", "deep_dive_feedback")),
 ) -> InterviewStateResponse:
     try:
         with store.mutate(session_id, user_id, operation="deep_dive_answer") as session:
@@ -545,6 +551,7 @@ def next_deep_dive(
     svc: InterviewApplicationService = Depends(get_interview_service),
     store: DurableInterviewSessionStore = Depends(get_session_store),
     user_id: int = Depends(get_current_user_id),
+    _ai=Depends(ai_operation("practice", "deep_dive_next")),
 ) -> InterviewStateResponse:
     try:
         with store.mutate(session_id, user_id, operation="deep_dive_next") as session:
@@ -592,6 +599,7 @@ def generate_report(
     repo=Depends(get_repository),
     config=Depends(get_app_config),
     user_id: int = Depends(get_current_user_id),
+    _ai=Depends(ai_operation("practice", "report")),
 ) -> ReportResponse:
     """Generate the report if absent (never regenerated once it exists), persist the
     completed interview to History exactly once, and return the result.

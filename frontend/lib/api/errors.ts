@@ -20,6 +20,7 @@ export type ApiErrorKind =
   | "validation" // 422 / other 4xx — the request/input was rejected
   | "conflict" // 409 — concurrent change / operation already running
   | "rateLimited" // 429 — too many requests (honour Retry-After)
+  | "aiLimited" // 429 with code ai_usage_limit: a temporary per-user safety limit on AI-generated work (stable code, never English matching)
   | "paused" // 503 with code platform_paused: an operator pause of this activity (stable code, never English matching)
   | "unavailable" // 502/503/504 or an intentional service-unavailable response
   | "server" // 5xx received normally — an Ask4Mo server problem
@@ -74,6 +75,8 @@ export class ApiError extends Error {
         return "This is already being processed. Please wait a moment and try again.";
       case "rateLimited":
         return "You've made too many requests. Please wait a moment and try again.";
+      case "aiLimited":
+        return "You've reached a temporary safety limit on AI-generated practice and coaching. Your saved work and history remain available. Please try again in a little while.";
       case "paused":
         return "Ask4Mo is temporarily unavailable for this activity. Your saved data remains available. Please try again later.";
       case "unavailable":
@@ -108,6 +111,8 @@ export function stateKeyForError(kind: ApiErrorKind): string {
       return "states.conflict";
     case "rateLimited":
       return "states.rateLimited";
+    case "aiLimited":
+      return "states.aiUsageLimit";
     case "paused":
       return "states.platformPaused";
     case "unavailable":
@@ -171,7 +176,7 @@ export function apiErrorFromBody(
   // surface arbitrary body text that isn't part of the known safe envelope.
   const message = envelope?.error?.message ?? "Request failed.";
   return new ApiError({
-    kind: code === "platform_paused" ? "paused" : kindForStatus(status),
+    kind: code === "platform_paused" ? "paused" : code === "ai_usage_limit" ? "aiLimited" : kindForStatus(status),
     status,
     code,
     message,

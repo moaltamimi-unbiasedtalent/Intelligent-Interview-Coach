@@ -38,6 +38,7 @@ const fr: Catalog = {
     serverError: "Ask4Mo a rencontré un problème lors du traitement de cette requête. Veuillez réessayer.",
     serviceUnavailable: "Ask4Mo est temporairement indisponible. Veuillez réessayer sous peu.",
     platformPaused: "Ask4Mo est temporairement indisponible pour cette activité. Vos données enregistrées restent disponibles. Veuillez réessayer plus tard.",
+    aiUsageLimit: "Vous avez atteint une limite de sécurité temporaire pour l’entraînement et le coaching générés par l’IA. Votre travail enregistré et votre historique restent disponibles. Veuillez réessayer dans un moment.",
     rateLimited: "Trop de requêtes. Veuillez patienter un moment et réessayer.",
     sessionExpired: "Votre session a expiré. Veuillez vous reconnecter.",
     forbidden: "Vous n’avez pas accès à cela.",

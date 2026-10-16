@@ -13,7 +13,7 @@ import { KeyValue, Panel, PermissionGate, ResourceState, StatusLabel, btn, useAd
 
 const NAMES: Record<string, string> = {
   agent: "Mo (agent) runs", current_market: "External market research", ocr: "Document OCR", realtime_voice: "Realtime voice sessions",
-  public_registration: "Open registration",
+  public_registration: "Open registration", practice_ai: "Practice AI operations", career_ai: "Career AI operations",
 };
 
 export function ConfigurationView() {

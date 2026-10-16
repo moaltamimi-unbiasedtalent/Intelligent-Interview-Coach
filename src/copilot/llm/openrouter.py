@@ -81,6 +81,7 @@ def build_chat_model(
             "environment or Streamlit secrets."
         )
 
+    meter = chat_openai_cls is None          # tests inject a stub class that may not accept ``callbacks``; only the real client is metered
     if chat_openai_cls is None:
         try:  # Lazy import so the module loads without langchain-openai present.
             from langchain_openai import ChatOpenAI as chat_openai_cls  # type: ignore
@@ -93,6 +94,15 @@ def build_chat_model(
     kwargs = default_model_kwargs(
         config, model=model, temperature=temperature, max_tokens=max_tokens, timeout_s=timeout_s, max_retries=max_retries
     )
+    if meter:
+        try:
+            from src.ai_protection import langchain_callback
+
+            cb = langchain_callback()
+            if cb is not None:
+                kwargs["callbacks"] = [cb]       # W12.4D-P2-A: reports into the current AI operation scope (a no-op outside one)
+        except Exception:  # noqa: BLE001
+            pass
     # The key is passed straight to the client and never logged.
     return chat_openai_cls(
         api_key=config.api_key.get_secret_value(),
