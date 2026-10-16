@@ -32,7 +32,7 @@ _REFUND_RANK = {"none": 0, "partial": 1, "full": 2}
 _FAILURE_CATEGORIES = ("concurrent_update", "provider_unavailable", "provider_timeout", "rate_limited", "provider_auth_failed", "provider_permission_denied", "invalid_request", "internal_error", "retries_exhausted", "provider_state_invalid", "provider_resource_not_found", "unknown_ownership",
                        "ownership_ambiguous", "checkout_mismatch", "customer_rebind", "customer_mismatch", "price_mismatch", "price_unverifiable",
                        "duplicate_subscription", "environment_mismatch", "unknown_provider_state", "terminal_reactivation_refused", "integrity_conflict",
-                       "unsupported_event_type", "unsupported_api_version", "unexpected_account_context", "not_subscription_related", "not_enabled")
+                       "unsupported_event_type", "unsupported_api_version", "malformed_financial_event", "unresolvable_reference", "unexpected_account_context", "not_subscription_related", "not_enabled")
 
 
 class _Quarantine(Exception):
@@ -93,10 +93,12 @@ class ProviderEventService:
         status, category, norm = "received", None, {}
         if event.get("account"):
             status, category = "ignored", "unexpected_account_context"           # Connect-style context: Managed Payments does not support it
-        elif event.get("api_version") not in SE.SUPPORTED_API_VERSIONS:
-            status, category = "ignored", "unsupported_api_version"
         elif etype not in SE.EVENT_KINDS:
-            status, category = "ignored", "unsupported_event_type"
+            status, category = "ignored", "unsupported_event_type"            # irrelevant to billing whatever its API version: acknowledged and never reconciled
+        elif event.get("api_version") not in SE.SUPPORTED_API_VERSIONS:
+            # A signed FINANCIAL event we cannot read safely is never discarded: it is held for an operator (needs_review, counted in Admin attention) and is
+            # reconciled only from authoritative provider state after an authorized recovery. Nothing in the incompatible payload is trusted or applied.
+            status, category, norm = "needs_review", "unsupported_api_version", SE.reference_only(event)
         else:
             n = SE.normalise(event)
             norm = {"kind": n.kind, "subscription_id": n.subscription_id, **n.fields}
@@ -117,9 +119,9 @@ class ProviderEventService:
                     raise
                 self._record("billing.webhook_duplicate_ignored", "success", existing.public_id, correlation_id)
                 return {"disposition": "duplicate", "public_id": existing.public_id}
-        self._record("billing.webhook_event_accepted" if status == "received" else "billing.webhook_event_ignored", "success", public_id, correlation_id,
-                     event_type=etype if etype in SE.EVENT_KINDS else "unsupported", category=category)
-        return {"disposition": "ignored" if status == "ignored" else "accepted", "public_id": public_id}
+        self._record({"received": "billing.webhook_event_accepted", "needs_review": "billing.webhook_event_held"}.get(status, "billing.webhook_event_ignored"), "success", public_id,
+                     correlation_id, event_type=etype if etype in SE.EVENT_KINDS else "unsupported", category=category)
+        return {"disposition": {"ignored": "ignored", "needs_review": "held"}.get(status, "accepted"), "public_id": public_id}
 
     # ------------------------------------------------------------------ processing
     def _claim(self, public_id: str, now: datetime) -> bool:
@@ -197,8 +199,12 @@ class ProviderEventService:
 
     def _reconcile_event(self, s, ev: EV, now: datetime) -> Result:
         norm = dict(ev.normalized_json or {})
+        if norm.get("api_incompatible"):
+            return self._reconcile_incompatible(s, ev, norm, now)
         sub_id = norm.get("subscription_id")
         kind = norm.get("kind")
+        if sub_id is None and kind == "subscription":
+            raise _Quarantine("malformed_financial_event", review=True)             # a subscription event without a usable subscription id is malformed, not irrelevant
         if sub_id is None and kind in ("refund", "dispute"):
             sub_id = self._reader.subscription_for_payment(payment_intent=norm.get("payment_intent"), charge=norm.get("charge_id"))
         if sub_id is None and kind == "checkout" and norm.get("checkout_session_id"):
@@ -207,6 +213,33 @@ class ProviderEventService:
             return Result("ignored", "not_subscription_related")
         link, info, outcome = self._reconcile_subscription(s, sub_id, ev, norm, now)
         ev.link_id = link.id if s.get(LINK, link.id) is not None else None            # a retained-erasure shell may have been purged by this very reconciliation
+        ev.reconciliation_json = info
+        return Result("processed", None, link.public_id, outcome.decision)
+
+    def _reconcile_incompatible(self, s, ev: EV, norm: dict, now: datetime) -> Result:
+        """Operator-recovered reconciliation of a held incompatible-version event. The payload is NOT interpreted: only the opaque object id keys an AUTHORITATIVE
+        read (a Null reader raises and nothing changes). Ownership, price, environment, stale and terminal guards are the ordinary ones. Refund and dispute FACTS
+        are not taken from the incompatible payload (``_merge_facts`` receives no facts), so those are recorded only by a compatible event or a validated read."""
+        kind, ref = norm.get("kind"), norm.get("object_id")
+        if ref is None:
+            raise _Quarantine("unresolvable_reference", review=True)
+        if kind == "subscription":
+            sub_id = ref
+        elif kind == "checkout":
+            sub_id = self._reader.checkout_session(ref).subscription_id
+        elif kind == "invoice":
+            sub_id = self._reader.get_invoice(ref).subscription_id
+        elif kind == "refund":
+            sub_id = self._reader.subscription_for_payment(payment_intent=None, charge=ref)
+        else:                                                                       # dispute
+            sub_id = self._reader.subscription_for_payment(payment_intent=None, charge=self._reader.get_dispute(ref).charge)
+        if sub_id is None:
+            raise _Quarantine("unresolvable_reference", review=True)             # never "not subscription related": a held financial event must end in a decision
+        link, info, outcome = self._reconcile_subscription(s, sub_id, ev, {}, now)
+        info["incompatible_payload"] = "not_interpreted"
+        if kind in ("refund", "dispute"):
+            info["facts"] = "refund_dispute_facts_not_applied_from_incompatible_payload"
+        ev.link_id = link.id if s.get(LINK, link.id) is not None else None
         ev.reconciliation_json = info
         return Result("processed", None, link.public_id, outcome.decision)
 
