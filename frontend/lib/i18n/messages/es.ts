@@ -40,6 +40,7 @@ const es: Catalog = {
     platformPaused: "Ask4Mo no está disponible temporalmente para esta actividad. Tus datos guardados siguen disponibles. Inténtalo de nuevo más tarde.",
     aiUsageLimit: "Has alcanzado un límite de seguridad temporal para la práctica y el coaching generados con IA. Tu trabajo guardado y tu historial siguen disponibles. Inténtalo de nuevo dentro de un rato.",
     historyRestricted: "Esta entrevista queda fuera del historial incluido en tu vista actual. No se ha eliminado y sigue almacenada. Aún puedes exportar o eliminar tus datos desde tu cuenta.",
+    modelProfileNotAvailable: "Ese perfil de modelo de IA no está disponible para tu cuenta. Elige otro perfil.",
     rateLimited: "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
     sessionExpired: "Tu sesión ha caducado. Inicia sesión de nuevo.",
     forbidden: "No tienes acceso a eso.",

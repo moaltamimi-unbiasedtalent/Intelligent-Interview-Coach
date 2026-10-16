@@ -86,6 +86,10 @@ class CreateInterviewRequest(BaseModel):
     # Optional organising link to a candidate Opportunity (P10B Wave 6). Ownership is verified
     # server-side; a foreign/unknown id is rejected. Never fabricated for legacy sessions.
     opportunity_id: int | None = Field(default=None, ge=1)
+    # W12.4D-P2-C: OPTIONAL AI model profile (a profile id, never a provider model id). Backward compatible: omitted keeps today's Balanced default. While
+    # the model-profile rollout gate is disabled a value other than the existing default is refused (no working selector); it is authorized server-side before
+    # any provider work. Malformed values (including raw provider ids) fail validation.
+    model_profile: Literal["fast", "balanced", "advanced"] | None = None
 
 
 class QuestionOut(BaseModel):

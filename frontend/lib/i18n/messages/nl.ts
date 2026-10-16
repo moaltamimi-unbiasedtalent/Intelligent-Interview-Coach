@@ -40,6 +40,7 @@ const nl: Catalog = {
     platformPaused: "Ask4Mo is tijdelijk niet beschikbaar voor deze activiteit. Je opgeslagen gegevens blijven beschikbaar. Probeer het later opnieuw.",
     aiUsageLimit: "Je hebt een tijdelijke veiligheidslimiet bereikt voor door AI gegenereerde oefening en coaching. Je opgeslagen werk en je geschiedenis blijven beschikbaar. Probeer het over een poosje opnieuw.",
     historyRestricted: "Dit gesprek valt buiten de geschiedenis die in je huidige weergave is opgenomen. Het is niet verwijderd en nog steeds opgeslagen. Je kunt je gegevens nog steeds exporteren of verwijderen via je account.",
+    modelProfileNotAvailable: "Dat AI-modelprofiel is niet beschikbaar voor je account. Kies een ander profiel.",
     rateLimited: "Te veel verzoeken. Wacht even en probeer het opnieuw.",
     sessionExpired: "Uw sessie is verlopen. Meld u opnieuw aan.",
     forbidden: "U hebt hier geen toegang toe.",

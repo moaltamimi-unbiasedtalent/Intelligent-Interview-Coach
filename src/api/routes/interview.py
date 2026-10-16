@@ -23,6 +23,7 @@ from src import constants
 from src.ai_protection import ai_operation
 from src.api.dependencies import (
     get_history_access_policy,
+    get_model_profile_policy,
     get_app_config,
     get_current_user_id,
     get_interview_service,
@@ -43,6 +44,8 @@ from src.api.schemas.interview import (
 )
 from src.application import history_service
 from src.application.history_access import HistoryNotAvailableError
+from src.application.model_profile_access import PRACTICE_DEFAULT_PROFILE
+from src.llm.models import effective_interview_profile, model_id
 from src.application.errors import (
     ConflictError,
     MissingHandoffConfigError,
@@ -293,6 +296,17 @@ def _guard_completed_history(session: SessionManager, user_id: int, policy, repo
         raise HistoryNotAvailableError()
 
 
+def _guard_session_profile(session: SessionManager, user_id: int, model_policy) -> None:
+    """W12.4D-P2-C (owner decision A): a Practice session keeps the profile it was created with, and a provider-backed step may only run if the caller's CURRENT
+    entitlement still authorizes that profile. A former Premium account therefore cannot keep making Balanced or Advanced calls, and Basic accounts need Fast. The
+    session is never silently switched to another model (that would change quality mid-session without the candidate knowing): the step is refused with a controlled
+    403, nothing is persisted, and stored sessions, answers and history stay intact and readable. No-op while the rollout gate is disabled (existing Balanced behaviour)."""
+    settings = getattr(session.data, "settings", None)
+    if settings is None:
+        return
+    model_policy.assert_authorized(user_id, effective_interview_profile(settings.model).value)
+
+
 def _translate_store_error(exc: Exception) -> Exception:
     if isinstance(exc, SessionNotFoundError):
         return ValidationError("Unknown interview session.")
@@ -325,10 +339,13 @@ def _raise_if_setup_failed(session: SessionManager) -> None:
         )
 
 
-def _run_setup(svc: InterviewApplicationService, session: SessionManager, configuration) -> None:
+def _run_setup(svc: InterviewApplicationService, session: SessionManager, configuration, profile=None) -> None:
     from src.models import ModelSettings
 
-    svc.start_interview(session, configuration, ModelSettings())
+    # W12.4D-P2-C: ``profile`` is None unless an AUTHORIZED, non-default profile was chosen, so existing candidates get exactly ``ModelSettings()`` (Balanced).
+    # The slug always comes from the server-side registry through the profile id, never from the client.
+    settings = ModelSettings() if profile is None else ModelSettings(model=model_id(profile))
+    svc.start_interview(session, configuration, settings)
     svc.generate_strategy(session)
     _raise_if_setup_failed(session)
     svc.generate_next_question(session, first=True)
@@ -344,10 +361,16 @@ def create_interview(
     user_id: int = Depends(get_current_user_id),
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     _ai=Depends(ai_operation("practice", "setup")),
+    model_policy=Depends(get_model_profile_policy),
 ) -> InterviewStateResponse:
     """Create an interview. An optional ``Idempotency-Key`` header makes creation safe
     to retry — a repeat (same user + key) returns the SAME session without re-running
     strategy/first-question generation, and now survives a backend restart (durable)."""
+    # W12.4D-P2-C: validate and authorize the profile BEFORE any provider work. With the rollout gate disabled this is a no-op for everyone (the only accepted
+    # values are none or the existing default), so real candidates keep today's Balanced Practice.
+    chosen_profile = model_policy.authorize(user_id, body.model_profile, workflow="practice")
+    if chosen_profile is PRACTICE_DEFAULT_PROFILE and not model_policy.decide(user_id).enforced:
+        chosen_profile = None
     configuration = _build_configuration(body)
     # Owner-scoped governed context: a selected JD document + approved evidence (Wave 4).
     # Resolved lazily — only when the request actually selected document/evidence context.
@@ -384,7 +407,7 @@ def create_interview(
 
     try:
         with store.mutate(session_id, user_id, operation="create") as session:
-            _run_setup(svc, session, configuration)
+            _run_setup(svc, session, configuration, chosen_profile)
     except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
         raise _translate_store_error(exc) from None
     return _state(session_id, session)
@@ -459,9 +482,11 @@ def submit_answer(
     store: DurableInterviewSessionStore = Depends(get_session_store),
     user_id: int = Depends(get_current_user_id),
     _ai=Depends(ai_operation("practice", "answer_feedback")),
+    model_policy=Depends(get_model_profile_policy),
 ) -> InterviewStateResponse:
     try:
         with store.mutate(session_id, user_id, operation="submit_answer") as session:
+            _guard_session_profile(session, user_id, model_policy)
             svc.submit_answer(session, body.answer)
     except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
         raise _translate_store_error(exc) from None
@@ -477,9 +502,11 @@ def next_question(
     store: DurableInterviewSessionStore = Depends(get_session_store),
     user_id: int = Depends(get_current_user_id),
     _ai=Depends(ai_operation("practice", "next_question")),
+    model_policy=Depends(get_model_profile_policy),
 ) -> InterviewStateResponse:
     try:
         with store.mutate(session_id, user_id, operation="next_question") as session:
+            _guard_session_profile(session, user_id, model_policy)
             svc.advance(session)
     except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
         raise _translate_store_error(exc) from None
@@ -533,12 +560,14 @@ def start_deep_dive(
     store: DurableInterviewSessionStore = Depends(get_session_store),
     user_id: int = Depends(get_current_user_id),
     _ai=Depends(ai_operation("practice", "deep_dive_start")),
+    model_policy=Depends(get_model_profile_policy),
     policy=Depends(get_history_access_policy),
     repo=Depends(get_repository),
 ) -> InterviewStateResponse:
     try:
         with store.mutate(session_id, user_id, operation="deep_dive") as session:
             _guard_completed_history(session, user_id, policy, repo)
+            _guard_session_profile(session, user_id, model_policy)
             svc.start_deep_dive(session, body.mode)
     except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
         raise _translate_store_error(exc) from None
@@ -554,12 +583,14 @@ def submit_deep_dive_answer(
     store: DurableInterviewSessionStore = Depends(get_session_store),
     user_id: int = Depends(get_current_user_id),
     _ai=Depends(ai_operation("practice", "deep_dive_feedback")),
+    model_policy=Depends(get_model_profile_policy),
     policy=Depends(get_history_access_policy),
     repo=Depends(get_repository),
 ) -> InterviewStateResponse:
     try:
         with store.mutate(session_id, user_id, operation="deep_dive_answer") as session:
             _guard_completed_history(session, user_id, policy, repo)
+            _guard_session_profile(session, user_id, model_policy)
             svc.submit_branch_answer(session, body.answer)
     except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
         raise _translate_store_error(exc) from None
@@ -575,12 +606,14 @@ def next_deep_dive(
     store: DurableInterviewSessionStore = Depends(get_session_store),
     user_id: int = Depends(get_current_user_id),
     _ai=Depends(ai_operation("practice", "deep_dive_next")),
+    model_policy=Depends(get_model_profile_policy),
     policy=Depends(get_history_access_policy),
     repo=Depends(get_repository),
 ) -> InterviewStateResponse:
     try:
         with store.mutate(session_id, user_id, operation="deep_dive_next") as session:
             _guard_completed_history(session, user_id, policy, repo)
+            _guard_session_profile(session, user_id, model_policy)
             # Enforce the depth/turn rule using the state machine's own predicate
             # BEFORE any provider call (no wasted paid generation, no duplicated logic).
             if not session.can_go_deeper():
@@ -629,6 +662,7 @@ def generate_report(
     config=Depends(get_app_config),
     user_id: int = Depends(get_current_user_id),
     _ai=Depends(ai_operation("practice", "report")),
+    model_policy=Depends(get_model_profile_policy),
     policy=Depends(get_history_access_policy),
 ) -> ReportResponse:
     """Generate the report if absent (never regenerated once it exists), persist the
@@ -645,6 +679,7 @@ def generate_report(
         with store.mutate(session_id, user_id, operation="report") as session:
             _guard_completed_history(session, user_id, policy, repo)
             if session.data.report is None:
+                _guard_session_profile(session, user_id, model_policy)      # only when a provider call is actually needed; an existing report stays readable
                 svc.generate_report(session)
     except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
         raise _translate_store_error(exc) from None

@@ -312,6 +312,13 @@ def get_history_access_policy(repo=Depends(get_repository), entitlements=Depends
     return HistoryAccessPolicy(entitlements)
 
 
+def get_model_profile_policy(entitlements=Depends(get_entitlement_service)):
+    """The canonical model-profile authorization policy (W12.4D-P2-C). Built per request (nothing cached); disabled by default via a code constant."""
+    from src.application.model_profile_access import ModelProfileAccessPolicy
+
+    return ModelProfileAccessPolicy(entitlements)
+
+
 def get_secret_store():
     from src.secret_store import get_secret_store as _get
 

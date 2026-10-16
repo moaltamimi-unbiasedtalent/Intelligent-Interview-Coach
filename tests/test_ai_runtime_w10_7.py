@@ -126,9 +126,18 @@ def test_unknown_slug_is_rejected_and_never_a_profile():
 
 
 def test_candidate_create_request_ignores_any_model_field():
+    """A candidate can NEVER send a provider model id (a ``model`` field is ignored). W12.4D-P2-C (owner-approved) added ONE optional PROFILE-ID field,
+    ``model_profile``, restricted to fast, balanced or advanced and refused for any non-default value while the model-profile gate is disabled
+    (``MODEL_PROFILE_ENFORCED = False``); a provider id is not an accepted value for it."""
+    import pytest
+    from pydantic import ValidationError
+
     from src.api.schemas.interview import CreateInterviewRequest
-    body = CreateInterviewRequest.model_validate({"configuration": None, "model": "openai/gpt-5.6-sol", "model_profile": "advanced"})
-    assert not hasattr(body, "model") and not hasattr(body, "model_profile")
+    body = CreateInterviewRequest.model_validate({"configuration": None, "model": "openai/gpt-5.6-sol"})
+    assert not hasattr(body, "model") and body.model_profile is None
+    with pytest.raises(ValidationError):
+        CreateInterviewRequest.model_validate({"configuration": None, "model_profile": "openai/gpt-5.6-sol"})
+    assert CreateInterviewRequest.model_validate({"configuration": None, "model_profile": "advanced"}).model_profile == "advanced"
 
 
 def test_governed_slug_is_a_valid_usage_record_model():

@@ -61,13 +61,12 @@ class HistoryAccessPolicy:
         if self._override is not None:
             chosen = self._override(int(user_id))
             return HistoryDecision(None, "override_premium") if chosen == "premium" else HistoryDecision(BASIC_HISTORY_WINDOW, "override_basic")
-        try:
-            plan = self._entitlements.plan_summary(int(user_id))
-        except Exception:  # noqa: BLE001 - an unreadable entitlement is "unresolved": the approved Basic window, never unlimited
-            return HistoryDecision(BASIC_HISTORY_WINDOW, "unresolved")
-        if plan.get("source") == "subscription" and plan.get("plan_code") == "premium":
+        from src.application.plan_state import PREMIUM, UNRESOLVED, resolve_plan_state
+
+        state = resolve_plan_state(self._entitlements, user_id)
+        if state == PREMIUM:
             return HistoryDecision(None, "premium")
-        return HistoryDecision(BASIC_HISTORY_WINDOW, "basic")
+        return HistoryDecision(BASIC_HISTORY_WINDOW, "unresolved" if state == UNRESOLVED else "basic")
 
     def window_for(self, user_id: int) -> int | None:
         return self.decide(user_id).window
