@@ -823,9 +823,12 @@ def test_only_the_source_linked_company_path_can_produce_verified_external_items
     assert all(not i.source_ids for s in c.sections for i in s.items if i.category == PP.Category.ai_guidance)
 
 
-def test_the_model_is_never_given_the_employer_and_cannot_know_company_facts():
+def test_the_model_context_carries_the_employer_name_as_context_only_never_company_facts():
+    """P5-B correction of the P5-A suppression: the employer NAME is opportunity-provided context (so wording can be employer-aware); no retrieved company fact,
+    source or excerpt is ever placed in the model context, and any figure it emits that is not in the candidate's own inputs is rejected."""
     ctx, _, _ = PP.build_context(inputs(company=company_report()))
-    assert ctx.company is None and "Acme" not in ctx.model_dump_json()
+    dump = ctx.model_dump_json()
+    assert ctx.company == "Acme" and "40-bed" not in dump and "acme.example" not in dump and "about page" not in dump
 
 
 @pytest.mark.parametrize("claim", ["Acme was founded in 1987 and is a leader.", "Acme employs 9,000 employees across Europe.", "Their ICU has 40 beds and grew 35% last year.",

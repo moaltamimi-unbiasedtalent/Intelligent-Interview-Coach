@@ -78,8 +78,20 @@ if not _ALLOW_DEV:
 
     _real_create_engine = sqlalchemy.create_engine
 
+    def _is_isolated_pg_test_database(parsed) -> bool:
+        """The ONE sanctioned non-SQLite target (W12.4D-P5-B): a database named ``p5b_*`` on the loopback PostgreSQL server that the test run itself created and
+        announced through ``P5B_PG_ADMIN_URL`` (same host and port). Anything else (a developer or hosted PostgreSQL) is still refused."""
+        admin = os.environ.get("P5B_PG_ADMIN_URL")
+        if not admin:
+            return False
+        a = sqlalchemy.engine.make_url(admin)
+        return (parsed.host in ("127.0.0.1", "localhost", "::1") and a.host == parsed.host and a.port == parsed.port and bool(parsed.database)
+                and str(parsed.database).startswith("p5b_"))
+
     def _check_test_url(url) -> None:
         parsed = sqlalchemy.engine.make_url(url)
+        if parsed.drivername.startswith("postgresql") and _is_isolated_pg_test_database(parsed):
+            return
         if not parsed.drivername.startswith("sqlite"):
             raise RuntimeError(
                 f"Test isolation: refusing non-sqlite database URL ({parsed.drivername}). "

@@ -279,6 +279,13 @@ def ai_operation(workflow: str, operation: str):
         quota, held = await run_in_threadpool(_reserve_quota, repo.session_factory, workflow, operation, int(user_id), scope.op_key)
         token = _current.set(scope)
         status, category = "succeeded", None
+        lease = None
+        if held:
+            from src.application import usage_quota as _uq
+            from src.application.lease import Heartbeat
+
+            lease = Heartbeat(lambda: quota.renew(scope.op_key), _uq.HEARTBEAT_INTERVAL_SECONDS)       # a running operation keeps its reservation alive
+            lease.__enter__()
         try:
             yield scope
         except BaseException as exc:  # noqa: BLE001 - recorded, then re-raised unchanged
@@ -286,6 +293,8 @@ def ai_operation(workflow: str, operation: str):
             raise
         finally:
             _current.reset(token)
+            if lease is not None:
+                lease.__exit__(None, None, None)
             if held:
                 # Product-quota unit: kept when the logical operation succeeded, returned when it failed. Provider consumption stays in the ledger below.
                 await run_in_threadpool(quota.commit if status == "succeeded" else quota.release, scope.op_key)

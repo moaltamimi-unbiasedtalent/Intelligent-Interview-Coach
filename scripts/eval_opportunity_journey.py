@@ -24,6 +24,16 @@ def read(rel: str) -> str:
     return p.read_text(encoding="utf-8") if p.exists() else ""
 
 
+def migration_is_additive(mig_src: str, later_sources: list[str]) -> tuple[bool, str]:
+    """0014 creates the opportunities table without dropping anything on upgrade, and NO later migration drops or renames that table or drops/renames its columns."""
+    up = mig_src.split("def downgrade")[0]
+    own = bool(mig_src) and "create_table" in up and "drop_table" not in up and "drop_column" not in up
+    destructive = [i for i, src in enumerate(later_sources)
+                   if re.search(r"(drop_table|rename_table)\(\s*[\"']opportunities[\"']", src.split("def downgrade")[0])
+                   or re.search(r"(drop_column|alter_column)\(\s*[\"']opportunities[\"']", src.split("def downgrade")[0])]
+    return own and not destructive, f"0014 additive={own}, later destructive migrations={len(destructive)}"
+
+
 def run() -> dict[str, tuple[bool, str]]:
     results: dict[str, tuple[bool, str]] = {}
 
@@ -194,10 +204,9 @@ def run() -> dict[str, tuple[bool, str]]:
     # Migration: additive, single head, no destructive op.
     mig = read("migrations/versions/0014_opportunities.py")
     migs = sorted(p.name for p in (ROOT / "migrations" / "versions").glob("0*.py"))
-    check("additive_migration",
-          mig and "create_table" in mig and "drop_table" not in mig.split("def downgrade")[0]
-          and migs and migs[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_")),
-          f"0014 is additive; head = {migs[-1] if migs else 'none'}")
+    later = [(ROOT / "migrations" / "versions" / n).read_text(encoding="utf-8") for n in migs if n > "0014_opportunities.py"]
+    add_ok, add_detail = migration_is_additive(mig, later)
+    check("additive_migration", add_ok, f"{add_detail}; head = {migs[-1] if migs else 'none'}")
 
     # i18n: opportunity namespace in all 7 locales.
     locales = ["en", "de", "fr", "es", "it", "pt", "nl"]

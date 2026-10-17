@@ -1182,7 +1182,7 @@ class PlanEntitlement(Base):
     __tablename__ = "plan_entitlements"
     __table_args__ = (
         UniqueConstraint("plan_version_id", "entitlement_key", name="uq_plan_entitlements_key"),
-        CheckConstraint("limit_value IS NULL OR (limit_value >= 1 AND enabled = 1)", name="ck_plan_entitlements_limit"),
+        CheckConstraint("limit_value IS NULL OR (limit_value >= 1 AND enabled)", name="ck_plan_entitlements_limit"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -1590,7 +1590,7 @@ class LegalDocumentVersion(Base):
         CheckConstraint(_in_list("state", LEGAL_VERSION_STATES), name="ck_ldv_state"),
         CheckConstraint("content_hash IS NULL OR length(content_hash) = 64", name="ck_ldv_hash"),
         CheckConstraint("state = 'draft' OR published_at IS NOT NULL", name="ck_ldv_published_at"),
-        CheckConstraint("state <> 'published' OR is_baseline = 1 OR content_hash IS NOT NULL", name="ck_ldv_published_hash"),
+        CheckConstraint("state <> 'published' OR is_baseline OR content_hash IS NOT NULL", name="ck_ldv_published_hash"),
         UniqueConstraint("document_id", "version", name="uq_ldv_document_version"),
         # Exactly one CURRENT (published) version per document.
         Index("uq_ldv_one_published", "document_id", unique=True, sqlite_where=text("state = 'published'"),

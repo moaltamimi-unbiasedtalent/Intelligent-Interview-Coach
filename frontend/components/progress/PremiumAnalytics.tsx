@@ -111,7 +111,7 @@ export function PremiumAnalytics({ fallback }: { fallback: ReactNode }) {
               ) : null}
               {s && s.latest_score !== null ? (
                 <dl className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-                  {([["sumFirst", s.first_score], ["sumLatest", s.latest_score], ["sumAverage", s.average_score], ["sumBest", s.best_score]] as const).map(([k, v]) => (
+                  {([[s.first_scope === "window" ? "sumFirstShown" : "sumFirst", s.first_score], ["sumLatest", s.latest_score], ["sumAverage", s.average_score], ["sumBest", s.best_score]] as const).map(([k, v]) => (
                     <div key={k}><dt className="text-xs text-muted">{t(`analyticsUx.${k}`)}</dt><dd className="text-lg font-semibold text-foreground">{num(v)}</dd></div>
                   ))}
                   {s.change !== null ? (
@@ -120,6 +120,7 @@ export function PremiumAnalytics({ fallback }: { fallback: ReactNode }) {
                   ) : null}
                 </dl>
               ) : null}
+              {s && s.change !== null && s.first_scope === "window" ? <p className="text-xs text-muted" data-testid="analytics-window-note">{t("analyticsUx.truncatedChangeNote")}</p> : null}
               {s && s.change !== null ? <p className="text-xs text-muted">{s.comparable_context ? t("analyticsUx.contextSame") : t("analyticsUx.contextDiffers")}</p> : null}
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[320px] text-left text-sm" data-testid="analytics-table">

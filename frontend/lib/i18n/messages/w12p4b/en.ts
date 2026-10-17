@@ -15,6 +15,8 @@ const en = {
     colReport: "Report score",
     lowSample: "Few scored answers",
     sumFirst: "First score",
+    sumFirstShown: "Earliest score shown",
+    truncatedChangeNote: "Change is measured from the earliest score shown, not from your first-ever interview.",
     sumLatest: "Latest score",
     sumChange: "Change",
     sumAverage: "Average",

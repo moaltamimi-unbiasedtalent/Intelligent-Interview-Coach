@@ -15,6 +15,8 @@ const fr: typeof en = {
     colReport: "Score du rapport",
     lowSample: "Peu de réponses notées",
     sumFirst: "Premier score",
+    sumFirstShown: "Premier score affiché",
+    truncatedChangeNote: "L’évolution est mesurée à partir du premier score affiché, pas de votre tout premier entretien.",
     sumLatest: "Dernier score",
     sumChange: "Évolution",
     sumAverage: "Moyenne",

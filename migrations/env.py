@@ -41,6 +41,9 @@ def run_migrations_online() -> None:
         section, prefix="sqlalchemy.", poolclass=pool.NullPool
     )
     with connectable.connect() as connection:
+        from src.db_migration_support import widen_version_table
+
+        widen_version_table(connection)               # PostgreSQL: revision ids longer than 32 characters need a wide alembic_version column
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
             context.run_migrations()

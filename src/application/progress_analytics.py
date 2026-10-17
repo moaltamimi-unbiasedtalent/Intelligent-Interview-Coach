@@ -119,7 +119,10 @@ def overview(rows: list[dict], *, truncated: bool, now: datetime | None = None) 
     pts = [_point(r) for r in rows]
     scored = [p for p in pts if p["practice_score"] is not None]
     state = "no_data" if not pts else ("ready" if len(scored) >= MIN_SCORED_INTERVIEWS_FOR_TREND else "insufficient_data")
-    summary = {"first_score": None, "latest_score": None, "change": None, "direction": None, "comparable_context": None, "average_score": None, "best_score": None}
+    summary = {"first_score": None, "latest_score": None, "change": None, "direction": None, "comparable_context": None, "average_score": None, "best_score": None,
+               # "all": the first score is the candidate's first scored interview. "window": the history was TRUNCATED to the newest interviews, so it is only the
+               # earliest score SHOWN (never described as the first-ever score) and the change is measured from it.
+               "first_scope": "window" if truncated else "all"}
     if scored:
         scores = [p["practice_score"] for p in scored]
         summary.update(first_score=scores[0], latest_score=scores[-1], average_score=_r1(_mean(scores)), best_score=max(scores))

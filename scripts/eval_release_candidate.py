@@ -29,6 +29,13 @@ def read(rel: str) -> str:
     return p.read_text(encoding="utf-8") if p.exists() else ""
 
 
+def premium_is_presentation_only(pricing_ts: str) -> bool:
+    """Premium has no purchase path in the pricing model: billing disabled, ctaKind 'unavailable', not purchasable, no href (the former 'request' preview was replaced in W12.4D-P3)."""
+    m = re.search(r"id:\s*\"premium\".*?\n\s*\},\n", pricing_ts, re.S)
+    block = m.group(0) if m else pricing_ts
+    return "BILLING_ENABLED = false" in pricing_ts and 'ctaKind: "unavailable"' in block and "purchasable: false" in block and "ctaHref: null" in block
+
+
 def run() -> dict[str, tuple[bool, str]]:
     results: dict[str, tuple[bool, str]] = {}
 
@@ -193,8 +200,8 @@ def run() -> dict[str, tuple[bool, str]]:
     # Pricing: preview/presentation only, no billing.
     pricing = read("frontend/lib/pricing.ts")
     check("premium_preview_no_billing",
-          "BILLING_ENABLED = false" in pricing and 'ctaKind: "request"' in pricing,
-          "Premium is preview/presentation only; billing disabled")
+          premium_is_presentation_only(pricing),
+          "Premium is presentation only (not purchasable, no purchase path); billing disabled")
 
     # Public claims discipline (delegated to the marketing evaluator's contract; assert its presence).
     check("marketing_claims_evaluator_present",

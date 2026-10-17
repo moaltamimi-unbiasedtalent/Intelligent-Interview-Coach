@@ -15,6 +15,8 @@ const de: typeof en = {
     colReport: "Berichtspunktzahl",
     lowSample: "Wenige bewertete Antworten",
     sumFirst: "Erste Punktzahl",
+    sumFirstShown: "Frühester angezeigter Wert",
+    truncatedChangeNote: "Die Veränderung wird ab dem frühesten angezeigten Wert gemessen, nicht ab Ihrem allerersten Interview.",
     sumLatest: "Letzte Punktzahl",
     sumChange: "Veränderung",
     sumAverage: "Durchschnitt",

@@ -33,6 +33,7 @@ class AnalyticsSummary(BaseModel):
     comparable_context: bool | None = None
     average_score: float | None = None
     best_score: float | None = None
+    first_scope: str = "all"
 
 
 class RubricDimension(BaseModel):

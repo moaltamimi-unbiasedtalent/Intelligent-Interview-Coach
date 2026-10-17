@@ -15,6 +15,8 @@ const nl: typeof en = {
     colReport: "Rapportscore",
     lowSample: "Weinig beoordeelde antwoorden",
     sumFirst: "Eerste score",
+    sumFirstShown: "Vroegst getoonde score",
+    truncatedChangeNote: "De verandering wordt gemeten vanaf de vroegst getoonde score, niet vanaf je allereerste interview.",
     sumLatest: "Laatste score",
     sumChange: "Verandering",
     sumAverage: "Gemiddelde",
