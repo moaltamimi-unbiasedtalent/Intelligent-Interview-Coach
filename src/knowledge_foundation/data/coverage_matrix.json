@@ -1,0 +1,800 @@
+{
+ "geographies": [
+  {
+   "code": "AT",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Austria",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "BE",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Belgium",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "BG",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Bulgaria",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "HR",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Croatia",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "CY",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Cyprus",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "CZ",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Czechia",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "DK",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Denmark",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "EE",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Estonia",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "FI",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Finland",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "FR",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "France",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "DE",
+   "compensation_level": "source_identified",
+   "crosswalk_level": "targeted",
+   "group": "eu27",
+   "label": "Germany",
+   "limitations": "KldB 2010 is held (no crosswalk to ISCO). The K1 German compensation set is a bounded engineering draft (not reviewed); Entgeltatlas is licence-pending and credential-gated. Not qualified.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "kldb",
+    "ba_entgeltatlas",
+    "eurostat_occ_vacancy"
+   ],
+   "source_languages": [
+    "en",
+    "de"
+   ],
+   "taxonomy_level": "implemented"
+  },
+  {
+   "code": "GR",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Greece",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "HU",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Hungary",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "IE",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Ireland",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "IT",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Italy",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "LV",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Latvia",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "LT",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Lithuania",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "LU",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Luxembourg",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "MT",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Malta",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "NL",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Netherlands",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "PL",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Poland",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "PT",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Portugal",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "RO",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Romania",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "SK",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Slovakia",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "SI",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Slovenia",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "ES",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Spain",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "SE",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eu27",
+   "label": "Sweden",
+   "limitations": "EU-level classifications (ESCO, ISCO-08) are held locally in English only and apply to every member state; there is no national occupation, compensation or outlook source for this country. Eurostat earnings is declared in the manifest but no rows are held. ILOSTAT is only a named future fallback.",
+   "outlook_level": "source_identified",
+   "source_ids": [
+    "esco",
+    "isco08",
+    "eurostat_occ_vacancy",
+    "cedefop_clssi"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "GB",
+   "compensation_level": "data_available",
+   "crosswalk_level": "targeted",
+   "group": "uk",
+   "label": "United Kingdom",
+   "limitations": "ONS ASHE (527 rows, weekly GBP) is held but keyed by UK SOC 2020, which is not acquired and not yet in the approved list; no crosswalk to ESCO, ISCO or O*NET exists. No outlook source.",
+   "outlook_level": "targeted",
+   "source_ids": [
+    "ons_ashe",
+    "isco08"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "source_identified"
+  },
+  {
+   "code": "IS",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eea_non_eu",
+   "label": "Iceland",
+   "limitations": "Only EU-level classifications (ESCO, ISCO-08) are held; no national source is identified or assessed.",
+   "outlook_level": "targeted",
+   "source_ids": [
+    "esco",
+    "isco08"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "LI",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eea_non_eu",
+   "label": "Liechtenstein",
+   "limitations": "Only EU-level classifications (ESCO, ISCO-08) are held; no national source is identified or assessed.",
+   "outlook_level": "targeted",
+   "source_ids": [
+    "esco",
+    "isco08"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "NO",
+   "compensation_level": "targeted",
+   "crosswalk_level": "data_available",
+   "group": "eea_non_eu",
+   "label": "Norway",
+   "limitations": "Only EU-level classifications (ESCO, ISCO-08) are held; no national source is identified or assessed.",
+   "outlook_level": "targeted",
+   "source_ids": [
+    "esco",
+    "isco08"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "CH",
+   "compensation_level": "targeted",
+   "crosswalk_level": "targeted",
+   "group": "switzerland",
+   "label": "Switzerland",
+   "limitations": "Only the global ISCO-08 reference is held; no Swiss national classification or source is identified or assessed.",
+   "outlook_level": "targeted",
+   "source_ids": [
+    "isco08"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "data_available"
+  },
+  {
+   "code": "US",
+   "compensation_level": "data_available",
+   "crosswalk_level": "source_identified",
+   "group": "us",
+   "label": "United States",
+   "limitations": "O*NET (1,016 occupations) and BLS data are held and the strongest coverage. Native SOC and O*NET-SOC codes are not persisted in the runtime store, so compensation and outlook records are not joined to occupations by code (P10C-B). Not qualified.",
+   "outlook_level": "data_available",
+   "source_ids": [
+    "onet",
+    "bls_ooh",
+    "bls_projections",
+    "bls_oews",
+    "opm_occupational_groups"
+   ],
+   "source_languages": [
+    "en"
+   ],
+   "taxonomy_level": "implemented"
+  },
+  {
+   "code": "CA",
+   "compensation_level": "source_identified",
+   "crosswalk_level": "targeted",
+   "group": "canada",
+   "label": "Canada",
+   "limitations": "NOC (Statistics Canada) and the Job Bank wage data were identified in planning only; nothing is acquired, assessed for licence, or held.",
+   "outlook_level": "targeted",
+   "source_ids": [],
+   "source_languages": [],
+   "taxonomy_level": "source_identified"
+  },
+  {
+   "code": "MX",
+   "compensation_level": "targeted",
+   "crosswalk_level": "targeted",
+   "group": "mexico",
+   "label": "Mexico",
+   "limitations": "SINCO (INEGI) was identified in planning only; nothing is acquired or assessed for licence.",
+   "outlook_level": "targeted",
+   "source_ids": [],
+   "source_languages": [],
+   "taxonomy_level": "source_identified"
+  },
+  {
+   "code": "BR",
+   "compensation_level": "targeted",
+   "crosswalk_level": "targeted",
+   "group": "brazil",
+   "label": "Brazil",
+   "limitations": "CBO was identified in planning only; nothing is acquired or assessed for licence.",
+   "outlook_level": "targeted",
+   "source_ids": [],
+   "source_languages": [],
+   "taxonomy_level": "source_identified"
+  },
+  {
+   "code": "AR",
+   "compensation_level": "targeted",
+   "crosswalk_level": "targeted",
+   "group": "south_america_other",
+   "label": "Argentina",
+   "limitations": "No national source is identified. ILOSTAT is only a named future international fallback (not acquired).",
+   "outlook_level": "targeted",
+   "source_ids": [],
+   "source_languages": [],
+   "taxonomy_level": "targeted"
+  },
+  {
+   "code": "BO",
+   "compensation_level": "targeted",
+   "crosswalk_level": "targeted",
+   "group": "south_america_other",
+   "label": "Bolivia",
+   "limitations": "No national source is identified. ILOSTAT is only a named future international fallback (not acquired).",
+   "outlook_level": "targeted",
+   "source_ids": [],
+   "source_languages": [],
+   "taxonomy_level": "targeted"
+  },
+  {
+   "code": "CL",
+   "compensation_level": "source_identified",
+   "crosswalk_level": "targeted",
+   "group": "south_america_other",
+   "label": "Chile",
+   "limitations": "Chile ESI was named in planning as a national broad (C2) example; nothing is acquired or assessed for licence.",
+   "outlook_level": "targeted",
+   "source_ids": [],
+   "source_languages": [],
+   "taxonomy_level": "targeted"
+  },
+  {
+   "code": "CO",
+   "compensation_level": "source_identified",
+   "crosswalk_level": "targeted",
+   "group": "south_america_other",
+   "label": "Colombia",
+   "limitations": "Colombia DANE GEIH was named in planning as a national broad (C2) example; nothing is acquired or assessed for licence.",
+   "outlook_level": "targeted",
+   "source_ids": [],
+   "source_languages": [],
+   "taxonomy_level": "targeted"
+  },
+  {
+   "code": "EC",
+   "compensation_level": "targeted",
+   "crosswalk_level": "targeted",
+   "group": "south_america_other",
+   "label": "Ecuador",
+   "limitations": "No national source is identified. ILOSTAT is only a named future international fallback (not acquired).",
+   "outlook_level": "targeted",
+   "source_ids": [],
+   "source_languages": [],
+   "taxonomy_level": "targeted"
+  },
+  {
+   "code": "GY",
+   "compensation_level": "targeted",
+   "crosswalk_level": "targeted",
+   "group": "south_america_other",
+   "label": "Guyana",
+   "limitations": "No national source is identified. ILOSTAT is only a named future international fallback (not acquired).",
+   "outlook_level": "targeted",
+   "source_ids": [],
+   "source_languages": [],
+   "taxonomy_level": "targeted"
+  },
+  {
+   "code": "PY",
+   "compensation_level": "targeted",
+   "crosswalk_level": "targeted",
+   "group": "south_america_other",
+   "label": "Paraguay",
+   "limitations": "No national source is identified. ILOSTAT is only a named future international fallback (not acquired).",
+   "outlook_level": "targeted",
+   "source_ids": [],
+   "source_languages": [],
+   "taxonomy_level": "targeted"
+  },
+  {
+   "code": "PE",
+   "compensation_level": "targeted",
+   "crosswalk_level": "targeted",
+   "group": "south_america_other",
+   "label": "Peru",
+   "limitations": "No national source is identified. ILOSTAT is only a named future international fallback (not acquired).",
+   "outlook_level": "targeted",
+   "source_ids": [],
+   "source_languages": [],
+   "taxonomy_level": "targeted"
+  },
+  {
+   "code": "SR",
+   "compensation_level": "targeted",
+   "crosswalk_level": "targeted",
+   "group": "south_america_other",
+   "label": "Suriname",
+   "limitations": "No national source is identified. ILOSTAT is only a named future international fallback (not acquired).",
+   "outlook_level": "targeted",
+   "source_ids": [],
+   "source_languages": [],
+   "taxonomy_level": "targeted"
+  },
+  {
+   "code": "UY",
+   "compensation_level": "targeted",
+   "crosswalk_level": "targeted",
+   "group": "south_america_other",
+   "label": "Uruguay",
+   "limitations": "No national source is identified. ILOSTAT is only a named future international fallback (not acquired).",
+   "outlook_level": "targeted",
+   "source_ids": [],
+   "source_languages": [],
+   "taxonomy_level": "targeted"
+  },
+  {
+   "code": "VE",
+   "compensation_level": "targeted",
+   "crosswalk_level": "targeted",
+   "group": "south_america_other",
+   "label": "Venezuela",
+   "limitations": "No national source is identified. ILOSTAT is only a named future international fallback (not acquired).",
+   "outlook_level": "targeted",
+   "source_ids": [],
+   "source_languages": [],
+   "taxonomy_level": "targeted"
+  }
+ ],
+ "levels": [
+  "unsupported",
+  "targeted",
+  "source_identified",
+  "data_available",
+  "implemented",
+  "qualified"
+ ],
+ "schema": "geography_coverage/1"
+}

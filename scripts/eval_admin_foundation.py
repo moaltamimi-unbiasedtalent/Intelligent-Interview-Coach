@@ -111,7 +111,7 @@ def run() -> dict[str, tuple[bool, str]]:
 
     # --- scope guards ------------------------------------------------------------------------------
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_", "0026_", "0027_", "0028_", "0029_", "0030_", "0031_", "0032_", "0033_", "0034_")), mig[-1])
+    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_", "0026_", "0027_", "0028_", "0029_", "0030_", "0031_", "0032_", "0033_", "0034_", "0035_")), mig[-1])
     pyproject = read("pyproject.toml").lower()
     check("no_new_infrastructure_dependency", not any(d in pyproject for d in ("redis", "celery", "sentry", "prometheus", "hvac")) and "stripe>=16,<17" in pyproject, "none of redis/celery/sentry/prometheus/hvac; the only payment SDK is the owner-selected, version-pinned stripe (W12.4D-B)")
     return out
