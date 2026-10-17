@@ -1221,3 +1221,48 @@ export interface UsageQuotasResponse {
   policy_version?: string | null;
   features: UsageQuotaFeature[];
 }
+
+/** GET /progress/analytics and /progress/analytics/compare (W12.4D-P4-B): measurement-only, server-computed. `state` other than ready/insufficient_data carries no data. */
+export type AnalyticsState = "feature_disabled" | "not_entitled" | "no_data" | "insufficient_data" | "ready";
+export interface RubricCell { average: number | null; answers_measured: number }
+export interface AnalyticsPoint {
+  interview_id: number;
+  date: string | null;
+  practice_score: number | null;
+  answers_scored: number;
+  low_sample: boolean;
+  report_score: number | null;
+  target_role: string | null;
+  career_level: string | null;
+  opportunity_id: number | null;
+  question_count: number;
+  rubric: Record<string, RubricCell>;
+}
+export interface AnalyticsOverviewResponse {
+  state: AnalyticsState;
+  truncated: boolean;
+  analyzed_limit: number | null;
+  counts: { completed_interviews: number; scored_interviews: number; unscored_interviews: number } | null;
+  points: AnalyticsPoint[];
+  summary: { first_score: number | null; latest_score: number | null; change: number | null; direction: string | null; comparable_context: boolean | null; average_score: number | null; best_score: number | null } | null;
+  distribution: Record<string, number>;
+  rubric: { dimensions: Array<{ id: string; average: number | null; answers_measured: number }>; strongest: string | null; weakest: string | null } | null;
+  by_question_type: Array<{ type: string; average_score: number | null; answers_scored: number }>;
+  frequency: { last_30_days: number; last_90_days: number; by_month: Array<{ month: string; count: number }> } | null;
+  improvement_areas: Array<{ area: string; count: number; origin: string }>;
+  filters: { roles: string[]; opportunity_ids: number[] } | null;
+  methodology: string[];
+  limitations: string[];
+}
+export interface AnalyticsCompareResponse {
+  state: "feature_disabled" | "not_entitled" | "insufficient_data" | "ready";
+  base: AnalyticsPoint | null;
+  target: AnalyticsPoint | null;
+  score_difference: number | null;
+  direction: string | null;
+  rubric_differences: Array<{ id: string; base: number | null; target: number | null; difference: number | null }>;
+  comparability: "comparable" | "limited" | null;
+  comparability_reasons: string[];
+  limitations: string[];
+  methodology: string[];
+}

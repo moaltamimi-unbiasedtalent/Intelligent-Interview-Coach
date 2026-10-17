@@ -35,6 +35,7 @@ import w124dc from "../w124dc"; // W12.4D-C — checkout states (all 8 locales)
 import w124de from "../w124de"; // W12.4D-E — candidate billing overview (all 8 locales)
 import w12p3 from "../w12p3"; // W12.4D-P3 — candidate Basic/Premium experience (all 8 locales)
 import w12p4a from "../w12p4a"; // W12.4D-P4-A — usage-quota presentation (all 8 locales)
+import w12p4b from "../w12p4b"; // W12.4D-P4-B — Premium progress analytics (all 8 locales)
 import w1010 from "../w1010"; // P10B-W10.10 — Privacy request + legal version copy (all 8 locales)
 // P10B-W9.7: Russian blocks live beside (not inside) the 7-locale fragment files, each typed against
 // its fragment's English shape so missing/extra keys fail `tsc`. `help` carries its own `ru` entry.
@@ -71,6 +72,7 @@ const FRAGMENTS: Array<{ name: string; blocks: Fragment }> = [
   { name: "w124de", blocks: w124de as unknown as Fragment },
   { name: "w12p3", blocks: w12p3 as unknown as Fragment },
   { name: "w12p4a", blocks: w12p4a as unknown as Fragment },
+  { name: "w12p4b", blocks: w12p4b as unknown as Fragment },
   { name: "v4", blocks: v4 as unknown as Fragment },
   { name: "prov", blocks: prov as unknown as Fragment },
 ];
