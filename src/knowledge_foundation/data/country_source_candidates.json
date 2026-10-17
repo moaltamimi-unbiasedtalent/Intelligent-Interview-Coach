@@ -1,0 +1,16 @@
+{
+  "schema": "country_source_candidates/1",
+  "note": "CANDIDATE sources named from planning knowledge only (P10C-0 and the recovered specification). Nothing here is acquired, assessed, approved or verified: publisher and dataset names are labels to be confirmed at acquisition; every fact below that is not a name is UNKNOWN. A candidate is SOURCE IDENTIFIED only; it can be registered as DISCOVERED but never approved by this file. Licence, edition, coverage, definitions, units, reference period, attribution, redistribution and commercial-use terms must be established from the publisher by the owner before any approval (D-04, D-12).",
+  "lifecycle_states": ["SOURCE_IDENTIFIED", "LICENSING_PENDING", "LICENCE_VERIFIED", "APPROVED_FOR_INGESTION", "APPROVED_FOR_RUNTIME_USE", "DATA_IMPORTED", "EVIDENCE_QUALIFIED"],
+  "candidates": [
+    {"candidate_id": "ca_noc", "country": "CA", "kind": "occupation_taxonomy", "taxonomy": "noc", "publisher": "Statistics Canada (candidate)", "dataset": "National Occupational Classification (candidate)"},
+    {"candidate_id": "ca_job_bank_wages", "country": "CA", "kind": "compensation", "taxonomy": "noc", "publisher": "Employment and Social Development Canada, Job Bank (candidate)", "dataset": "Job Bank wage data (candidate)", "precedence_category_if_approved": "national_public_employment_service"},
+    {"candidate_id": "ca_statcan_wages", "country": "CA", "kind": "compensation", "taxonomy": "noc", "publisher": "Statistics Canada (candidate)", "dataset": "Statistics Canada labour-market wage statistics (candidate)", "precedence_category_if_approved": "national_official_occupation_statistics"},
+    {"candidate_id": "mx_sinco", "country": "MX", "kind": "occupation_taxonomy", "taxonomy": "sinco", "publisher": "INEGI (candidate)", "dataset": "Sistema Nacional de Clasificación de Ocupaciones (candidate)"},
+    {"candidate_id": "mx_inegi_earnings", "country": "MX", "kind": "compensation", "taxonomy": "sinco", "publisher": "INEGI (candidate)", "dataset": "INEGI labour-market and earnings statistics (candidate)", "precedence_category_if_approved": "national_official_occupation_statistics"},
+    {"candidate_id": "br_cbo", "country": "BR", "kind": "occupation_taxonomy", "taxonomy": "cbo", "publisher": "Brazilian Ministry of Labour and Employment (candidate)", "dataset": "Classificação Brasileira de Ocupações (candidate)"},
+    {"candidate_id": "br_ibge_survey", "country": "BR", "kind": "compensation", "taxonomy": "cbo", "publisher": "IBGE (candidate)", "dataset": "IBGE household labour-force survey (candidate)", "precedence_category_if_approved": "national_official_occupation_statistics"},
+    {"candidate_id": "br_admin_employment", "country": "BR", "kind": "compensation", "taxonomy": "cbo", "publisher": "Brazilian Ministry of Labour and Employment (candidate)", "dataset": "Administrative formal-employment records (candidate)", "precedence_category_if_approved": "national_official_occupation_statistics"}
+  ],
+  "unknown_fields_for_every_candidate": ["official_url", "taxonomy_edition", "dataset_edition", "publication_date", "reference_period", "licence", "attribution", "redistribution", "commercial_use", "update_frequency", "geographic_resolution", "occupation_granularity", "statistical_measures", "pay_period", "gross_net_basis", "population_coverage"]
+}

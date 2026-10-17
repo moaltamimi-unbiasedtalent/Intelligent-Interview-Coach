@@ -1,0 +1,2377 @@
+{
+ "schema": "country_fixture_corpus/1",
+ "note": "SYNTHETIC STRUCTURAL FIXTURE for Canada, Mexico and Brazil. Every source, taxonomy edition (fx-ed1, fx-ed2), occupation, label and amount is invented test data in synthetic-fixture sources that can never be approved or serve as evidence; no code format, edition or figure is a claim about any real taxonomy or dataset.",
+ "taxonomies": [
+  {
+   "scheme": "noc",
+   "edition": "fx-ed1",
+   "code_pattern": "[0-9]{5}"
+  },
+  {
+   "scheme": "noc",
+   "edition": "fx-ed2",
+   "code_pattern": "[0-9]{5}"
+  },
+  {
+   "scheme": "sinco",
+   "edition": "fx-ed1",
+   "code_pattern": "[0-9]{4}"
+  },
+  {
+   "scheme": "cbo",
+   "edition": "fx-ed1",
+   "code_pattern": "[0-9]{4}-[0-9]{2}"
+  }
+ ],
+ "sources": [
+  {
+   "source_id": "fx_ca_tax",
+   "publisher": "Synthetic publisher fx_ca_tax (fixture)",
+   "dataset_name": "Synthetic dataset fx_ca_tax",
+   "source_url": "https://example.invalid/fx_ca_tax",
+   "precedence_category": "unknown"
+  },
+  {
+   "source_id": "fx_mx_tax",
+   "publisher": "Synthetic publisher fx_mx_tax (fixture)",
+   "dataset_name": "Synthetic dataset fx_mx_tax",
+   "source_url": "https://example.invalid/fx_mx_tax",
+   "precedence_category": "unknown"
+  },
+  {
+   "source_id": "fx_br_tax",
+   "publisher": "Synthetic publisher fx_br_tax (fixture)",
+   "dataset_name": "Synthetic dataset fx_br_tax",
+   "source_url": "https://example.invalid/fx_br_tax",
+   "precedence_category": "unknown"
+  },
+  {
+   "source_id": "fx_xwalk",
+   "publisher": "Synthetic publisher fx_xwalk (fixture)",
+   "dataset_name": "Synthetic dataset fx_xwalk",
+   "source_url": "https://example.invalid/fx_xwalk",
+   "precedence_category": "unknown"
+  },
+  {
+   "source_id": "fx_ca_pes",
+   "publisher": "Synthetic publisher fx_ca_pes (fixture)",
+   "dataset_name": "Synthetic dataset fx_ca_pes",
+   "source_url": "https://example.invalid/fx_ca_pes",
+   "precedence_category": "national_public_employment_service"
+  },
+  {
+   "source_id": "fx_ca_stat",
+   "publisher": "Synthetic publisher fx_ca_stat (fixture)",
+   "dataset_name": "Synthetic dataset fx_ca_stat",
+   "source_url": "https://example.invalid/fx_ca_stat",
+   "precedence_category": "national_official_occupation_statistics"
+  },
+  {
+   "source_id": "fx_ca_unattr",
+   "publisher": null,
+   "dataset_name": null,
+   "source_url": null,
+   "precedence_category": "national_official_occupation_statistics"
+  },
+  {
+   "source_id": "fx_ca_stat2",
+   "publisher": "Synthetic publisher fx_ca_stat2 (fixture)",
+   "dataset_name": "Synthetic dataset fx_ca_stat2",
+   "source_url": "https://example.invalid/fx_ca_stat2",
+   "precedence_category": "national_official_occupation_statistics"
+  },
+  {
+   "source_id": "fx_mx_stat",
+   "publisher": "Synthetic publisher fx_mx_stat (fixture)",
+   "dataset_name": "Synthetic dataset fx_mx_stat",
+   "source_url": "https://example.invalid/fx_mx_stat",
+   "precedence_category": "national_official_occupation_statistics"
+  },
+  {
+   "source_id": "fx_br_admin",
+   "publisher": "Synthetic publisher fx_br_admin (fixture)",
+   "dataset_name": "Synthetic dataset fx_br_admin",
+   "source_url": "https://example.invalid/fx_br_admin",
+   "precedence_category": "national_official_occupation_statistics"
+  },
+  {
+   "source_id": "fx_br_survey",
+   "publisher": "Synthetic publisher fx_br_survey (fixture)",
+   "dataset_name": "Synthetic dataset fx_br_survey",
+   "source_url": "https://example.invalid/fx_br_survey",
+   "precedence_category": "national_official_occupation_statistics"
+  },
+  {
+   "source_id": "fx_intl",
+   "publisher": "Synthetic publisher fx_intl (fixture)",
+   "dataset_name": "Synthetic dataset fx_intl",
+   "source_url": "https://example.invalid/fx_intl",
+   "precedence_category": "eurostat_harmonised"
+  }
+ ],
+ "nodes": [
+  {
+   "scheme": "noc",
+   "edition": "fx-ed1",
+   "source": "fx_ca_tax",
+   "rows": [
+    {
+     "code": "90001",
+     "label": "Synthetic CA analyst [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn ca analyst",
+       "language": "en"
+      },
+      {
+       "text": "syn analyste ca",
+       "language": "fr"
+      },
+      {
+       "text": "syn analista ca",
+       "language": "pt"
+      },
+      {
+       "text": "syn analista ca es",
+       "language": "es"
+      },
+      {
+       "text": "syn ca analyst de",
+       "language": "de"
+      }
+     ]
+    },
+    {
+     "code": "90002",
+     "label": "Synthetic CA clerk A [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn clerk",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "90003",
+     "label": "Synthetic CA clerk B [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn clerk",
+       "language": "fr"
+      }
+     ]
+    },
+    {
+     "code": "90004",
+     "label": "Synthetic CA no data [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn ca nodata",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "90005",
+     "label": "Synthetic CA broad group [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn ca group",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "90006",
+     "label": "Synthetic CA child of group [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn ca child",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "90007",
+     "label": "Synthetic CA multi-parent [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn ca multiparent",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "90008",
+     "label": "Synthetic CA mean and median [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn ca meanmed",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "90009",
+     "label": "Synthetic CA provincial only [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn ca provonly",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "90010",
+     "label": "Synthetic CA edition one [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn ca edcode",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "90011",
+     "label": "Synthetic CA conflicting sources [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn ca confsrc",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "90012",
+     "label": "Synthetic CA currencies [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn ca cur",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "90013",
+     "label": "Synthetic CA gross and net [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn ca basis",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "90014",
+     "label": "Synthetic CA periods [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn ca periods",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "90015",
+     "label": "Synthetic CA years [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn ca years",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "90016",
+     "label": "Synthetic CA unattributed [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn ca unattr",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "90017",
+     "label": "Synthetic CA unlinked [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn ca unlinked",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "90018",
+     "label": "Synthetic CA child of ISCO group [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn ca isco child",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "90019",
+     "label": "Synthetic CA precedence [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn ca precedence",
+       "language": "en"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "scheme": "noc",
+   "edition": "fx-ed2",
+   "source": "fx_ca_tax",
+   "rows": [
+    {
+     "code": "90010",
+     "label": "Synthetic CA edition two [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn ca edcode two",
+       "language": "en"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "scheme": "sinco",
+   "edition": "fx-ed1",
+   "source": "fx_mx_tax",
+   "rows": [
+    {
+     "code": "9301",
+     "label": "Synthetic MX analyst [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn mx analyst",
+       "language": "en"
+      },
+      {
+       "text": "syn analista mx",
+       "language": "es"
+      },
+      {
+       "text": "syn analyst mx de",
+       "language": "de"
+      },
+      {
+       "text": "syn analista mx pt",
+       "language": "pt"
+      }
+     ]
+    },
+    {
+     "code": "9302",
+     "label": "Synthetic MX regional [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn mx regional",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9303",
+     "label": "Synthetic MX concepts [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn mx concepts",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9304",
+     "label": "Synthetic MX populations [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn mx populations",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9305",
+     "label": "Synthetic MX broad group [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn mx group",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9306",
+     "label": "Synthetic MX unlinked child [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn mx unlinked",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9307",
+     "label": "Synthetic MX household only [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn mx household",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9308",
+     "label": "Synthetic MX no data [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn mx nodata",
+       "language": "en"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "scheme": "cbo",
+   "edition": "fx-ed1",
+   "source": "fx_br_tax",
+   "rows": [
+    {
+     "code": "2124-90",
+     "label": "Synthetic BR analyst [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn br analyst",
+       "language": "en"
+      },
+      {
+       "text": "syn analista br",
+       "language": "pt"
+      },
+      {
+       "text": "syn analista br es",
+       "language": "es"
+      }
+     ]
+    },
+    {
+     "code": "2124-91",
+     "label": "Synthetic BR regional [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn br regional",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "2124-92",
+     "label": "Synthetic BR admin only [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn br adminonly",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "2124-93",
+     "label": "Synthetic BR incomplete rows [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn br incomplete",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "2124-94",
+     "label": "Synthetic BR no data [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn br nodata",
+       "language": "en"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "scheme": "isco",
+   "edition": "08",
+   "source": "fx_xwalk",
+   "rows": [
+    {
+     "code": "9801",
+     "label": "Synthetic ISCO group A [synthetic fixture]",
+     "labels": []
+    },
+    {
+     "code": "9802",
+     "label": "Synthetic ISCO group B [synthetic fixture]",
+     "labels": []
+    },
+    {
+     "code": "9803",
+     "label": "Synthetic ISCO group C [synthetic fixture]",
+     "labels": []
+    }
+   ]
+  }
+ ],
+ "crosswalks": [
+  {
+   "source": "fx_xwalk",
+   "from": [
+    "noc",
+    "fx-ed1"
+   ],
+   "to": [
+    "isco",
+    "08"
+   ],
+   "rows": [
+    {
+     "from_code": "90018",
+     "to_code": "9801",
+     "relationship_type": "broader",
+     "mapping_status": "verified"
+    },
+    {
+     "from_code": "90007",
+     "to_code": "9801",
+     "relationship_type": "broader",
+     "mapping_status": "verified"
+    },
+    {
+     "from_code": "90007",
+     "to_code": "9802",
+     "relationship_type": "broader",
+     "mapping_status": "verified"
+    },
+    {
+     "from_code": "90004",
+     "to_code": "9803",
+     "relationship_type": "related",
+     "mapping_status": "partial"
+    },
+    {
+     "from_code": "90003",
+     "to_code": "9801",
+     "relationship_type": "broader",
+     "mapping_status": "ambiguous"
+    },
+    {
+     "from_code": "90002",
+     "to_code": "9802",
+     "relationship_type": "broader",
+     "mapping_status": "unsupported"
+    },
+    {
+     "from_code": "90001",
+     "to_code": "9801",
+     "relationship_type": "equivalent",
+     "mapping_status": "partial"
+    },
+    {
+     "from_code": "99999",
+     "to_code": "9801",
+     "relationship_type": "broader",
+     "mapping_status": "verified"
+    },
+    {
+     "from_code": "90001",
+     "to_code": "9999",
+     "relationship_type": "broader",
+     "mapping_status": "verified"
+    }
+   ],
+   "expect": {
+    "added": 6,
+    "rejections": {
+     "equivalence_requires_a_verified_statement": 1,
+     "from_code_not_in_graph": 1,
+     "to_code_not_in_graph": 1
+    }
+   }
+  },
+  {
+   "source": "fx_xwalk",
+   "from": [
+    "noc",
+    "fx-ed1"
+   ],
+   "to": [
+    "noc",
+    "fx-ed1"
+   ],
+   "rows": [
+    {
+     "from_code": "90006",
+     "to_code": "90005",
+     "relationship_type": "broader",
+     "mapping_status": "verified"
+    }
+   ],
+   "expect": {
+    "added": 1,
+    "rejections": {}
+   }
+  },
+  {
+   "source": "fx_xwalk",
+   "from": [
+    "noc",
+    "unknown"
+   ],
+   "to": [
+    "isco",
+    "08"
+   ],
+   "rows": [
+    {
+     "from_code": "90001",
+     "to_code": "9801",
+     "relationship_type": "broader",
+     "mapping_status": "verified"
+    }
+   ],
+   "expect": {
+    "added": 0,
+    "rejections": {
+     "taxonomy_edition_unknown": 1
+    }
+   }
+  }
+ ],
+ "compensation": [
+  {
+   "adapter": "canada",
+   "source": "fx_ca_pes",
+   "source_edition": "FX-CA-PES-1",
+   "taxonomy_edition": "fx-ed1",
+   "reference_year": 2025,
+   "statistic_map": {
+    "MEDIAN": [
+     "median",
+     0
+    ],
+    "AVG": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "HR": "hourly",
+    "YR": "annual"
+   },
+   "level_by_code_length": {
+    "5": "detailed"
+   },
+   "code_pattern": "[0-9]{5}",
+   "rows": [
+    {
+     "code": "90001",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "38.50",
+     "lower": "30.00",
+     "upper": "52.10"
+    },
+    {
+     "code": "90001",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "41.25",
+     "region": "ON"
+    },
+    {
+     "code": "90005",
+     "statistic": "MEDIAN",
+     "period": "YR",
+     "value": "62000",
+     "level": "broad"
+    },
+    {
+     "code": "90008",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "30"
+    },
+    {
+     "code": "90008",
+     "statistic": "AVG",
+     "period": "HR",
+     "value": "33.4"
+    },
+    {
+     "code": "90009",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "35",
+     "region": "CA-ON"
+    },
+    {
+     "code": "90010",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "28"
+    },
+    {
+     "code": "90002",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "29"
+    },
+    {
+     "code": "90003",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "31"
+    },
+    {
+     "code": "90019",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "40",
+     "basis": "gross"
+    },
+    {
+     "code": "90012",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "25"
+    },
+    {
+     "code": "90013",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "27",
+     "basis": "gross"
+    },
+    {
+     "code": "90013",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "21",
+     "basis": "net"
+    },
+    {
+     "code": "90014",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "30"
+    },
+    {
+     "code": "90014",
+     "statistic": "MEDIAN",
+     "period": "YR",
+     "value": "62400"
+    },
+    {
+     "code": "90015",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "24"
+    },
+    {
+     "code": "90001",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "99",
+     "currency": "USD"
+    },
+    {
+     "code": "90001",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "1",
+     "region": "XX"
+    },
+    {
+     "code": "90001",
+     "statistic": "TRIM",
+     "period": "HR",
+     "value": "1"
+    },
+    {
+     "code": "90001",
+     "statistic": "MEDIAN",
+     "period": "WK",
+     "value": "1"
+    },
+    {
+     "code": "1234",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "1"
+    },
+    {
+     "code": "90001",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "abc"
+    },
+    {
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "1"
+    }
+   ],
+   "expect": {
+    "added": 16,
+    "adapter_rejections": {
+     "currency_mismatch": 1,
+     "region_unrecognised": 1,
+     "unsupported_statistic": 1,
+     "unsupported_period": 1,
+     "invalid_native_code": 1,
+     "malformed_amount": 1,
+     "missing_native_code": 1
+    }
+   }
+  },
+  {
+   "adapter": "canada",
+   "source": "fx_ca_pes",
+   "source_edition": "FX-CA-PES-2",
+   "taxonomy_edition": "fx-ed1",
+   "reference_year": 2024,
+   "statistic_map": {
+    "MEDIAN": [
+     "median",
+     0
+    ],
+    "AVG": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "HR": "hourly",
+    "YR": "annual"
+   },
+   "level_by_code_length": {
+    "5": "detailed"
+   },
+   "code_pattern": "[0-9]{5}",
+   "rows": [
+    {
+     "code": "90015",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "22"
+    }
+   ],
+   "expect": {
+    "added": 1
+   }
+  },
+  {
+   "adapter": "canada",
+   "source": "fx_ca_stat",
+   "source_edition": "FX-CA-STAT-1",
+   "taxonomy_edition": "fx-ed1",
+   "reference_year": 2025,
+   "statistic_map": {
+    "MEDIAN": [
+     "median",
+     0
+    ],
+    "AVG": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "HR": "hourly",
+    "YR": "annual"
+   },
+   "level_by_code_length": {
+    "5": "detailed"
+   },
+   "code_pattern": "[0-9]{5}",
+   "rows": [
+    {
+     "code": "90011",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "44",
+     "basis": "gross"
+    },
+    {
+     "code": "90019",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "42",
+     "basis": "gross"
+    }
+   ],
+   "expect": {
+    "added": 2
+   }
+  },
+  {
+   "adapter": "canada",
+   "source": "fx_ca_stat2",
+   "source_edition": "FX-CA-STAT2-1",
+   "taxonomy_edition": "fx-ed1",
+   "reference_year": 2025,
+   "statistic_map": {
+    "MEDIAN": [
+     "median",
+     0
+    ],
+    "AVG": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "HR": "hourly",
+    "YR": "annual"
+   },
+   "level_by_code_length": {
+    "5": "detailed"
+   },
+   "code_pattern": "[0-9]{5}",
+   "rows": [
+    {
+     "code": "90011",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "43",
+     "basis": "gross"
+    }
+   ],
+   "expect": {
+    "added": 1
+   }
+  },
+  {
+   "adapter": "canada",
+   "source": "fx_ca_unattr",
+   "source_edition": "FX-CA-UN-1",
+   "taxonomy_edition": "fx-ed1",
+   "reference_year": 2025,
+   "statistic_map": {
+    "MEDIAN": [
+     "median",
+     0
+    ],
+    "AVG": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "HR": "hourly",
+    "YR": "annual"
+   },
+   "level_by_code_length": {
+    "5": "detailed"
+   },
+   "code_pattern": "[0-9]{5}",
+   "rows": [
+    {
+     "code": "90016",
+     "statistic": "MEDIAN",
+     "period": "HR",
+     "value": "20"
+    }
+   ],
+   "expect": {
+    "added": 1
+   }
+  },
+  {
+   "adapter": "raw",
+   "source": "fx_ca_stat",
+   "source_edition": "FX-CA-STAT-1",
+   "rows": [
+    {
+     "taxonomy_scheme": "noc",
+     "taxonomy_edition": "fx-ed1",
+     "native_code": "90012",
+     "occupation_level": "detailed",
+     "country": "CA",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "hourly",
+     "pay_basis": "unknown",
+     "measure": "median",
+     "value": "26",
+     "source_ref": "fx_ca_stat",
+     "source_edition": "FX-CA-STAT-1",
+     "reference_year": 2025
+    }
+   ],
+   "expect": {
+    "added": 1
+   }
+  },
+  {
+   "adapter": "raw",
+   "source": "fx_intl",
+   "source_edition": "FX-INTL-1",
+   "rows": [
+    {
+     "taxonomy_scheme": "isco",
+     "taxonomy_edition": "08",
+     "native_code": "9801",
+     "occupation_level": "broad",
+     "country": "CA",
+     "geography_level": "national",
+     "currency": "CAD",
+     "pay_period": "annual",
+     "pay_basis": "unknown",
+     "measure": "median",
+     "value": "52000",
+     "source_ref": "fx_intl",
+     "source_edition": "FX-INTL-1",
+     "reference_year": 2025
+    },
+    {
+     "taxonomy_scheme": "isco",
+     "taxonomy_edition": "08",
+     "native_code": "9802",
+     "occupation_level": "broad",
+     "country": "CA",
+     "geography_level": "national",
+     "currency": "CAD",
+     "pay_period": "annual",
+     "pay_basis": "unknown",
+     "measure": "median",
+     "value": "71000",
+     "source_ref": "fx_intl",
+     "source_edition": "FX-INTL-1",
+     "reference_year": 2025
+    },
+    {
+     "taxonomy_scheme": "isco",
+     "taxonomy_edition": "08",
+     "native_code": "9803",
+     "occupation_level": "broad",
+     "country": "CA",
+     "geography_level": "national",
+     "currency": "CAD",
+     "pay_period": "annual",
+     "pay_basis": "unknown",
+     "measure": "median",
+     "value": "55000",
+     "source_ref": "fx_intl",
+     "source_edition": "FX-INTL-1",
+     "reference_year": 2025
+    }
+   ],
+   "expect": {
+    "added": 3
+   }
+  },
+  {
+   "adapter": "mexico",
+   "source": "fx_mx_stat",
+   "source_edition": "FX-MX-1",
+   "taxonomy_edition": "fx-ed1",
+   "reference_year": 2025,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "ING_IND": "individual_earnings",
+    "ING_HOG": "household_income",
+    "ING_LAB": "employment_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "TODOS": "all_workers",
+    "ASALARIADOS": "employees",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENCUESTA": "survey",
+    "REG": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9301",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "12000",
+     "concept": "ING_IND",
+     "population": "ASALARIADOS",
+     "method": "ENCUESTA"
+    },
+    {
+     "code": "9302",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "11000",
+     "concept": "ING_IND",
+     "population": "ASALARIADOS",
+     "method": "ENCUESTA"
+    },
+    {
+     "code": "9302",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "14000",
+     "concept": "ING_IND",
+     "population": "ASALARIADOS",
+     "method": "ENCUESTA",
+     "region": "JAL"
+    },
+    {
+     "code": "9303",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "12000",
+     "concept": "ING_IND",
+     "population": "ASALARIADOS",
+     "method": "ENCUESTA"
+    },
+    {
+     "code": "9303",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "13500",
+     "concept": "SAL",
+     "population": "ASALARIADOS",
+     "method": "ENCUESTA"
+    },
+    {
+     "code": "9304",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "15000",
+     "concept": "FORMAL",
+     "population": "FORMAL",
+     "method": "REG"
+    },
+    {
+     "code": "9304",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "11000",
+     "concept": "ING_IND",
+     "population": "TODOS",
+     "method": "ENCUESTA"
+    },
+    {
+     "code": "9305",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "10000",
+     "concept": "ING_IND",
+     "population": "ASALARIADOS",
+     "method": "ENCUESTA",
+     "level": "broad"
+    },
+    {
+     "code": "9307",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "30000",
+     "concept": "ING_HOG",
+     "population": "TODOS",
+     "method": "ENCUESTA"
+    },
+    {
+     "code": "9301",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1",
+     "concept": "XYZ",
+     "population": "ASALARIADOS",
+     "method": "ENCUESTA"
+    },
+    {
+     "code": "9301",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1",
+     "population": "TODOS",
+     "method": "ENCUESTA"
+    },
+    {
+     "code": "9301",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1",
+     "concept": "ING_IND",
+     "method": "ENCUESTA"
+    },
+    {
+     "code": "9301",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1",
+     "concept": "ING_IND",
+     "population": "ASALARIADOS",
+     "method": "ENCUESTA",
+     "region": "ZZZ"
+    },
+    {
+     "code": "9301",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1",
+     "concept": "ING_IND",
+     "population": "ASALARIADOS",
+     "method": "ENCUESTA",
+     "currency": "CAD"
+    }
+   ],
+   "expect": {
+    "added": 8,
+    "rejections": {
+     "earnings_concept_not_occupation_compensation": 1
+    },
+    "adapter_rejections": {
+     "concept_unmapped": 1,
+     "concept_missing": 1,
+     "population_missing": 1,
+     "region_unrecognised": 1,
+     "currency_mismatch": 1
+    }
+   }
+  },
+  {
+   "adapter": "brazil",
+   "source": "fx_br_admin",
+   "source_edition": "FX-BR-ADM-1",
+   "taxonomy_edition": "fx-ed1",
+   "reference_year": 2025,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly"
+   },
+   "concept_map": {
+    "REM": "employment_income",
+    "SAL": "wage_statistic"
+   },
+   "population_map": {
+    "FORMAL": "formal_sector",
+    "TODOS": "all_workers"
+   },
+   "method_map": {
+    "ADM": "administrative_records",
+    "PESQ": "survey"
+   },
+   "level_by_code_length": {
+    "7": "detailed"
+   },
+   "code_pattern": "[0-9]{4}-[0-9]{2}",
+   "rows": [
+    {
+     "code": "2124-90",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "8000",
+     "concept": "REM",
+     "population": "FORMAL",
+     "method": "ADM"
+    },
+    {
+     "code": "2124-92",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "9000",
+     "concept": "REM",
+     "population": "FORMAL",
+     "method": "ADM"
+    },
+    {
+     "code": "2124-93",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "7000",
+     "concept": "REM",
+     "population": "FORMAL"
+    },
+    {
+     "code": "2124-93",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "7000",
+     "population": "FORMAL",
+     "method": "ADM"
+    },
+    {
+     "code": "2124-9",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1",
+     "concept": "REM",
+     "population": "FORMAL",
+     "method": "ADM"
+    }
+   ],
+   "expect": {
+    "added": 2,
+    "adapter_rejections": {
+     "method_missing": 1,
+     "concept_missing": 1,
+     "invalid_native_code": 1
+    }
+   }
+  },
+  {
+   "adapter": "brazil",
+   "source": "fx_br_survey",
+   "source_edition": "FX-BR-SRV-1",
+   "taxonomy_edition": "fx-ed1",
+   "reference_year": 2025,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly"
+   },
+   "concept_map": {
+    "REM": "employment_income",
+    "SAL": "wage_statistic"
+   },
+   "population_map": {
+    "FORMAL": "formal_sector",
+    "TODOS": "all_workers"
+   },
+   "method_map": {
+    "ADM": "administrative_records",
+    "PESQ": "survey"
+   },
+   "level_by_code_length": {
+    "7": "detailed"
+   },
+   "code_pattern": "[0-9]{4}-[0-9]{2}",
+   "rows": [
+    {
+     "code": "2124-90",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "7000",
+     "concept": "REM",
+     "population": "TODOS",
+     "method": "PESQ"
+    },
+    {
+     "code": "2124-91",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "6500",
+     "concept": "REM",
+     "population": "TODOS",
+     "method": "PESQ",
+     "region": "SP"
+    },
+    {
+     "code": "2124-91",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "6000",
+     "concept": "REM",
+     "population": "TODOS",
+     "method": "PESQ"
+    }
+   ],
+   "expect": {
+    "added": 3
+   }
+  }
+ ],
+ "cases": [
+  {
+   "id": "ca-national-c1",
+   "category": "canada_national",
+   "request": {
+    "title": "syn ca analyst",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "38.50",
+    "currency": "CAD",
+    "pay_period": "hourly",
+    "geography_level": "national",
+    "citation": true
+   }
+  },
+  {
+   "id": "ca-hourly-not-annual",
+   "category": "canada_national",
+   "request": {
+    "title": "syn ca analyst",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "38.50",
+    "pay_period": "hourly"
+   }
+  },
+  {
+   "id": "ca-provincial-requested",
+   "category": "canada_provincial",
+   "request": {
+    "title": "syn ca analyst",
+    "title_language": "en",
+    "country": "CA",
+    "region": "on"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "41.25",
+    "geography_level": "regional",
+    "region": "CA-ON",
+    "limitation_contains": "REGIONAL"
+   }
+  },
+  {
+   "id": "ca-province-without-data",
+   "category": "canada_provincial",
+   "request": {
+    "title": "syn ca analyst",
+    "title_language": "en",
+    "country": "CA",
+    "region": "QC"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_requested_region"
+   }
+  },
+  {
+   "id": "ca-region-unrecognised",
+   "category": "canada_provincial",
+   "request": {
+    "title": "syn ca analyst",
+    "title_language": "en",
+    "country": "CA",
+    "region": "Ontario"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "insufficient_context",
+    "abstention": "region_unrecognised"
+   }
+  },
+  {
+   "id": "ca-province-only-no-national",
+   "category": "canada_provincial",
+   "request": {
+    "title": "syn ca provonly",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_occupation_in_country"
+   }
+  },
+  {
+   "id": "ca-province-only-when-asked",
+   "category": "canada_provincial",
+   "request": {
+    "title": "syn ca provonly",
+    "title_language": "en",
+    "country": "CA",
+    "region": "ON"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "35",
+    "geography_level": "regional"
+   }
+  },
+  {
+   "id": "ca-broad-c2",
+   "category": "canada_national",
+   "request": {
+    "title": "syn ca group",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C2",
+    "value": "62000",
+    "pay_period": "annual",
+    "limitation_contains": "BROAD"
+   }
+  },
+  {
+   "id": "ca-broader-same-taxonomy",
+   "category": "canada_national",
+   "request": {
+    "title": "syn ca child",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "specificity": "broader_group",
+    "evidence_class": "C2",
+    "value": "62000"
+   }
+  },
+  {
+   "id": "ca-broader-isco-cross-taxonomy",
+   "category": "crosswalk",
+   "request": {
+    "title": "syn ca isco child",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "specificity": "broader_group",
+    "evidence_class": "C3",
+    "value": "52000",
+    "currency": "CAD",
+    "pay_period": "annual",
+    "limitation_contains": "international harmonised"
+   }
+  },
+  {
+   "id": "ca-missing-crosswalk-abstains",
+   "category": "crosswalk",
+   "request": {
+    "title": "syn ca unlinked",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_occupation_in_country"
+   }
+  },
+  {
+   "id": "ca-precedence-orders-comparable",
+   "category": "precedence",
+   "request": {
+    "title": "syn ca precedence",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "42",
+    "corroborating": 1
+   }
+  },
+  {
+   "id": "ca-cross-taxonomy-ambiguity-conflict",
+   "category": "crosswalk",
+   "request": {
+    "title": "syn ca multiparent",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict"
+   }
+  },
+  {
+   "id": "ca-english-french-ambiguity",
+   "category": "canada_language",
+   "request": {
+    "title": "syn clerk",
+    "title_language": null,
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "ambiguous",
+    "no_value": true
+   }
+  },
+  {
+   "id": "ca-english-resolves",
+   "category": "canada_language",
+   "request": {
+    "title": "syn clerk",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "29"
+   }
+  },
+  {
+   "id": "ca-french-resolves",
+   "category": "canada_language",
+   "request": {
+    "title": "syn clerk",
+    "title_language": "fr",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "31"
+   }
+  },
+  {
+   "id": "ca-code-edition-one",
+   "category": "noc_editions",
+   "request": {
+    "title": null,
+    "title_language": "en",
+    "country": "CA",
+    "taxonomy_scheme": "noc",
+    "taxonomy_code": "90010",
+    "taxonomy_edition": "fx-ed1"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "28"
+   }
+  },
+  {
+   "id": "ca-code-edition-two-no-data",
+   "category": "noc_editions",
+   "request": {
+    "title": null,
+    "title_language": "en",
+    "country": "CA",
+    "taxonomy_scheme": "noc",
+    "taxonomy_code": "90010",
+    "taxonomy_edition": "fx-ed2"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_occupation_in_country"
+   }
+  },
+  {
+   "id": "ca-code-edition-unspecified-ambiguous",
+   "category": "noc_editions",
+   "request": {
+    "title": null,
+    "title_language": "en",
+    "country": "CA",
+    "taxonomy_scheme": "noc",
+    "taxonomy_code": "90010"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "ambiguous",
+    "no_value": true,
+    "context_needed": "taxonomy_edition"
+   }
+  },
+  {
+   "id": "ca-code-unknown-edition-never-matches",
+   "category": "noc_editions",
+   "request": {
+    "title": null,
+    "title_language": "en",
+    "country": "CA",
+    "taxonomy_scheme": "noc",
+    "taxonomy_code": "90010",
+    "taxonomy_edition": "unknown"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_found"
+   }
+  },
+  {
+   "id": "ca-mean-median-conflict",
+   "category": "statistical",
+   "request": {
+    "title": "syn ca meanmed",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict"
+   }
+  },
+  {
+   "id": "ca-mean-filter",
+   "category": "statistical",
+   "request": {
+    "title": "syn ca meanmed",
+    "title_language": "en",
+    "country": "CA",
+    "measure": "mean"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "33.4"
+   }
+  },
+  {
+   "id": "ca-conflicting-national-sources",
+   "category": "conflict",
+   "request": {
+    "title": "syn ca confsrc",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict",
+    "abstention": "comparable_sources_of_equal_precedence_disagree"
+   }
+  },
+  {
+   "id": "ca-currency-conflict",
+   "category": "conflict",
+   "request": {
+    "title": "syn ca cur",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict"
+   }
+  },
+  {
+   "id": "ca-gross-net-conflict",
+   "category": "conflict",
+   "request": {
+    "title": "syn ca basis",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict"
+   }
+  },
+  {
+   "id": "ca-periods-conflict",
+   "category": "conflict",
+   "request": {
+    "title": "syn ca periods",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict"
+   }
+  },
+  {
+   "id": "ca-period-filter",
+   "category": "conflict",
+   "request": {
+    "title": "syn ca periods",
+    "title_language": "en",
+    "country": "CA",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "62400"
+   }
+  },
+  {
+   "id": "ca-latest-year",
+   "category": "stale",
+   "request": {
+    "title": "syn ca years",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "24",
+    "reference_year": 2025
+   }
+  },
+  {
+   "id": "ca-requested-year",
+   "category": "stale",
+   "request": {
+    "title": "syn ca years",
+    "title_language": "en",
+    "country": "CA",
+    "reference_year": 2024
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "22",
+    "reference_year": 2024
+   }
+  },
+  {
+   "id": "ca-missing-citation-withheld",
+   "category": "citation",
+   "request": {
+    "title": "syn ca unattr",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "evidence_withheld_citation_incomplete"
+   }
+  },
+  {
+   "id": "ca-no-data-c4",
+   "category": "c4",
+   "request": {
+    "title": "syn ca nodata",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "no_evidence_for_occupation_in_country"
+   }
+  },
+  {
+   "id": "ca-unknown-title",
+   "category": "unsupported_occupation",
+   "request": {
+    "title": "syn ca nothing",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_found"
+   }
+  },
+  {
+   "id": "ca-default-withholds",
+   "category": "approval",
+   "request": {
+    "title": "syn ca analyst",
+    "title_language": "en",
+    "country": "CA"
+   },
+   "internal": false,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "evidence_exists_but_is_not_operational"
+   }
+  },
+  {
+   "id": "mx-sinco-code-title",
+   "category": "mexico",
+   "request": {
+    "title": "syn mx analyst",
+    "title_language": "en",
+    "country": "MX"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "12000",
+    "currency": "MXN",
+    "pay_period": "monthly",
+    "earnings_concept": "individual_earnings",
+    "population_scope": "employees",
+    "evidence_method": "survey"
+   }
+  },
+  {
+   "id": "mx-sinco-code-only",
+   "category": "mexico",
+   "request": {
+    "title": null,
+    "title_language": "en",
+    "country": "MX",
+    "taxonomy_scheme": "sinco",
+    "taxonomy_code": "9301",
+    "taxonomy_edition": "fx-ed1"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "12000"
+   }
+  },
+  {
+   "id": "mx-regional-requested",
+   "category": "mexico_regional",
+   "request": {
+    "title": "syn mx regional",
+    "title_language": "en",
+    "country": "MX",
+    "region": "JAL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "14000",
+    "geography_level": "regional",
+    "region": "MX-JAL"
+   }
+  },
+  {
+   "id": "mx-national-default",
+   "category": "mexico_regional",
+   "request": {
+    "title": "syn mx regional",
+    "title_language": "en",
+    "country": "MX"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "11000",
+    "geography_level": "national"
+   }
+  },
+  {
+   "id": "mx-region-unrecognised",
+   "category": "mexico_regional",
+   "request": {
+    "title": "syn mx regional",
+    "title_language": "en",
+    "country": "MX",
+    "region": "Jalisco"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "insufficient_context"
+   }
+  },
+  {
+   "id": "mx-concepts-conflict",
+   "category": "mexico_concepts",
+   "request": {
+    "title": "syn mx concepts",
+    "title_language": "en",
+    "country": "MX"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict"
+   }
+  },
+  {
+   "id": "mx-concept-filter",
+   "category": "mexico_concepts",
+   "request": {
+    "title": "syn mx concepts",
+    "title_language": "en",
+    "country": "MX",
+    "earnings_concept": "wage_statistic"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "13500",
+    "earnings_concept": "wage_statistic"
+   }
+  },
+  {
+   "id": "mx-populations-conflict",
+   "category": "mexico_concepts",
+   "request": {
+    "title": "syn mx populations",
+    "title_language": "en",
+    "country": "MX"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict"
+   }
+  },
+  {
+   "id": "mx-formal-sector-filter",
+   "category": "mexico_concepts",
+   "request": {
+    "title": "syn mx populations",
+    "title_language": "en",
+    "country": "MX",
+    "population_scope": "formal_sector"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "15000",
+    "evidence_method": "administrative_records"
+   }
+  },
+  {
+   "id": "mx-household-income-never-evidence",
+   "category": "mexico_concepts",
+   "request": {
+    "title": "syn mx household",
+    "title_language": "en",
+    "country": "MX"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_occupation_in_country"
+   }
+  },
+  {
+   "id": "mx-group-not-individual",
+   "category": "mexico",
+   "request": {
+    "title": "syn mx unlinked",
+    "title_language": "en",
+    "country": "MX"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_occupation_in_country"
+   }
+  },
+  {
+   "id": "mx-broad-labelled",
+   "category": "mexico",
+   "request": {
+    "title": "syn mx group",
+    "title_language": "en",
+    "country": "MX"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C2",
+    "limitation_contains": "BROAD"
+   }
+  },
+  {
+   "id": "mx-no-data-c4",
+   "category": "c4",
+   "request": {
+    "title": "syn mx nodata",
+    "title_language": "en",
+    "country": "MX"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4"
+   }
+  },
+  {
+   "id": "br-admin-vs-survey-conflict",
+   "category": "brazil",
+   "request": {
+    "title": "syn br analyst",
+    "title_language": "en",
+    "country": "BR"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict"
+   }
+  },
+  {
+   "id": "br-survey-filter",
+   "category": "brazil",
+   "request": {
+    "title": "syn br analyst",
+    "title_language": "en",
+    "country": "BR",
+    "evidence_method": "survey"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "7000",
+    "currency": "BRL",
+    "pay_period": "monthly",
+    "earnings_concept": "employment_income",
+    "population_scope": "all_workers",
+    "evidence_method": "survey"
+   }
+  },
+  {
+   "id": "br-admin-filter",
+   "category": "brazil",
+   "request": {
+    "title": "syn br analyst",
+    "title_language": "en",
+    "country": "BR",
+    "evidence_method": "administrative_records"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "8000",
+    "population_scope": "formal_sector"
+   }
+  },
+  {
+   "id": "br-cbo-code-hyphen",
+   "category": "brazil",
+   "request": {
+    "title": null,
+    "title_language": "en",
+    "country": "BR",
+    "taxonomy_scheme": "cbo",
+    "taxonomy_code": "2124-92",
+    "taxonomy_edition": "fx-ed1"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "9000",
+    "evidence_method": "administrative_records"
+   }
+  },
+  {
+   "id": "br-regional-requested",
+   "category": "brazil_regional",
+   "request": {
+    "title": "syn br regional",
+    "title_language": "en",
+    "country": "BR",
+    "region": "SP"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "6500",
+    "geography_level": "regional",
+    "region": "BR-SP"
+   }
+  },
+  {
+   "id": "br-regional-national-both",
+   "category": "brazil_regional",
+   "request": {
+    "title": "syn br regional",
+    "title_language": "en",
+    "country": "BR"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "6000",
+    "geography_level": "national"
+   }
+  },
+  {
+   "id": "br-incomplete-rows-rejected-so-no-data",
+   "category": "brazil",
+   "request": {
+    "title": "syn br incomplete",
+    "title_language": "en",
+    "country": "BR"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_occupation_in_country"
+   }
+  },
+  {
+   "id": "br-no-data-c4",
+   "category": "c4",
+   "request": {
+    "title": "syn br nodata",
+    "title_language": "en",
+    "country": "BR"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4"
+   }
+  },
+  {
+   "id": "french-text-canadian-country",
+   "category": "geography_independence",
+   "request": {
+    "title": "syn analyste ca",
+    "title_language": "fr",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "38.50"
+   }
+  },
+  {
+   "id": "german-text-mexican-country",
+   "category": "geography_independence",
+   "request": {
+    "title": "syn analyst mx de",
+    "title_language": "de",
+    "country": "MX"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "12000"
+   }
+  },
+  {
+   "id": "english-text-brazilian-country",
+   "category": "geography_independence",
+   "request": {
+    "title": "syn br analyst",
+    "title_language": "en",
+    "country": "BR"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict"
+   }
+  },
+  {
+   "id": "portuguese-text-canadian-country",
+   "category": "geography_independence",
+   "request": {
+    "title": "syn analista ca",
+    "title_language": "pt",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "38.50"
+   }
+  },
+  {
+   "id": "spanish-text-brazilian-country",
+   "category": "geography_independence",
+   "request": {
+    "title": "syn analista br es",
+    "title_language": "es",
+    "country": "BR"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict"
+   }
+  },
+  {
+   "id": "portuguese-text-brazilian-node-in-mexico",
+   "category": "geography_independence",
+   "request": {
+    "title": "syn analista br",
+    "title_language": "pt",
+    "country": "MX"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_occupation_in_country"
+   }
+  },
+  {
+   "id": "spanish-text-mexican-node-in-canada",
+   "category": "geography_independence",
+   "request": {
+    "title": "syn analista mx",
+    "title_language": "es",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_occupation_in_country"
+   }
+  },
+  {
+   "id": "unsupported-country",
+   "category": "unsupported",
+   "request": {
+    "title": "syn ca analyst",
+    "title_language": "en",
+    "country": "ZZ"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "unsupported"
+   }
+  },
+  {
+   "id": "fx-not-configured",
+   "category": "comparison",
+   "request": {
+    "title": "syn ca analyst",
+    "title_language": "en",
+    "country": "CA",
+    "comparison_mode": "fx_converted"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_configured"
+   }
+  },
+  {
+   "id": "ppp-not-configured",
+   "category": "comparison",
+   "request": {
+    "title": "syn mx analyst",
+    "title_language": "en",
+    "country": "MX",
+    "comparison_mode": "ppp_adjusted"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_configured"
+   }
+  }
+ ]
+}

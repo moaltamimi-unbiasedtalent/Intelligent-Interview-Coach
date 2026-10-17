@@ -78,11 +78,12 @@ class PrecedencePolicy:
 
 
 def classify_evidence(policy: PrecedencePolicy, precedence_category: str | None, occupation_level: str, geography_level: str) -> str | None:
-    """Evidence class from the ACTUAL specificity of the source: C1 national detailed, C2 national broad, C3 international harmonised. A broad statistical source is never classed as
+    """Evidence class from the ACTUAL specificity of the source: C1 national detailed, C2 national broad, C3 international harmonised (a regional figure from a national tier keeps its class and is labelled regional; it is only returned when that region is requested). A broad statistical source is never classed as
     occupation-specific because its country matches. Returns None when no class applies (the importer then rejects the row)."""
     allowed = policy.classes_for(precedence_category)
     if precedence_category in ("national_official_occupation_statistics", "national_public_employment_service"):
-        if geography_level != "national":
+        # Policy p10c-d/1: a subnational figure from a national source is classed by OCCUPATION specificity (the class describes the source) and is labelled regional by the resolver.
+        if geography_level not in ("national", "regional"):
             return None
         cls = {"detailed": "C1", "broad": "C2"}.get(occupation_level)
     elif precedence_category == "eurostat_harmonised":

@@ -19,7 +19,7 @@ from src.knowledge_foundation.occupation_resolver import MultilingualRequest, Oc
 from src.knowledge_foundation.registry import SourceRegistry
 from src.knowledge_foundation.taxonomy import TaxonomyCatalogue
 
-__all__ = ["CORPUS_PATH", "load_corpus", "load_world", "evaluate_cases"]
+__all__ = ["CORPUS_PATH", "load_corpus", "load_world", "evaluate_cases", "check_expectations"]
 
 CORPUS_PATH = Path(__file__).resolve().parent.parent / "data" / "compensation_fixture_corpus.json"
 
@@ -67,33 +67,39 @@ def _request(case: dict[str, Any]) -> CompensationRequest:
     return CompensationRequest(occupation=occ, country=country, require_operational=not case.get("internal", True), **q)
 
 
+def check_expectations(r, e: dict[str, Any]) -> list[str]:
+    """Compare a ``CompensationResponse`` with a corpus expectation; returns the list of problems (empty when it matches)."""
+    problems: list[str] = []
+    if r.outcome.value != e["outcome"]:
+        problems.append(f"outcome {r.outcome.value} != {e['outcome']}")
+    for field_name, got in (("evidence_class", r.evidence_class), ("currency", r.currency), ("pay_period", r.pay_period), ("pay_basis", r.pay_basis), ("reference_year", r.reference_year),
+                            ("specificity", r.occupation_specificity), ("bounds", r.bounds_semantic), ("abstention", r.abstention_reason), ("geography_level", r.geography_level),
+                            ("region", r.region), ("earnings_concept", r.earnings_concept), ("population_scope", r.population_scope), ("evidence_method", r.evidence_method)):
+        if field_name in e and got != e[field_name]:
+            problems.append(f"{field_name} {got} != {e[field_name]}")
+    if "value" in e and (r.value is None or Decimal(r.value) != Decimal(e["value"])):
+        problems.append("value differs")
+    if e.get("citation") and not r.citation:
+        problems.append("citation missing")
+    if e.get("no_value") and r.value is not None:
+        problems.append("a value was returned")
+    if "limitation_contains" in e and not any(e["limitation_contains"].lower() in x.lower() for x in r.coverage_limitations):
+        problems.append("limitation missing")
+    if "corroborating" in e and len(r.corroborating) != e["corroborating"]:
+        problems.append("corroborating differs")
+    if "withheld" in e and not r.withheld.get(e["withheld"]):
+        problems.append("withheld counter missing")
+    if "context_needed" in e and e["context_needed"] not in r.context_needed:
+        problems.append("context missing")
+    return problems
+
+
 def evaluate_cases(world: SimpleNamespace, corpus: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     corpus = corpus or load_corpus()
     out = []
     for c in corpus["cases"]:
         r = world.resolver.resolve(_request(c))
-        e = c["expect"]
-        problems: list[str] = []
-        if r.outcome.value != e["outcome"]:
-            problems.append(f"outcome {r.outcome.value} != {e['outcome']}")
-        for field_name, got in (("evidence_class", r.evidence_class), ("currency", r.currency), ("pay_period", r.pay_period), ("pay_basis", r.pay_basis), ("reference_year", r.reference_year),
-                                ("specificity", r.occupation_specificity), ("bounds", r.bounds_semantic), ("abstention", r.abstention_reason)):
-            if field_name in e and got != e[field_name]:
-                problems.append(f"{field_name} {got} != {e[field_name]}")
-        if "value" in e and (r.value is None or Decimal(r.value) != Decimal(e["value"])):
-            problems.append("value differs")
-        if e.get("citation") and not r.citation:
-            problems.append("citation missing")
-        if e.get("no_value") and r.value is not None:
-            problems.append("a value was returned")
-        if "limitation_contains" in e and not any(e["limitation_contains"].lower() in x.lower() for x in r.coverage_limitations):
-            problems.append("limitation missing")
-        if "corroborating" in e and len(r.corroborating) != e["corroborating"]:
-            problems.append("corroborating differs")
-        if "withheld" in e and not r.withheld.get(e["withheld"]):
-            problems.append("withheld counter missing")
-        if "context_needed" in e and e["context_needed"] not in r.context_needed:
-            problems.append("context missing")
+        problems = check_expectations(r, c["expect"])
         invented = r.outcome.value != "evidence" and (r.value is not None or r.lower_value is not None)
         out.append({"id": c["id"], "category": c["category"], "ok": not problems, "problems": problems, "outcome": r.outcome.value, "invented_value": invented,
                     "presentable": r.candidate_presentable, "operational": r.operational})

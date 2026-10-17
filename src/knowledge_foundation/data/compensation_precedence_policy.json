@@ -1,6 +1,6 @@
 {
   "schema": "compensation_precedence_policy/1",
-  "version": "p10c-c/1",
+  "version": "p10c-d/1",
   "status": "PROPOSED ENGINEERING DESIGN. The six-level order is the RECOVERED HISTORICAL REQUIREMENT (GKB precedence); the class mapping, recency rule and eligibility are proposals pending owner approval (D-01, D-02).",
   "tiers": [
     {"rank": 1, "category": "national_official_occupation_statistics", "evidence_classes": ["C1", "C2"], "note": "National detailed (C1) or broad (C2) official evidence."},
@@ -10,6 +10,7 @@
     {"rank": 5, "category": "authorized_secondary", "evidence_classes": [], "note": "Authorised reputable secondary evidence; qualification criteria are PENDING OWNER DEFINITION, so it never presents as C1-C3."},
     {"rank": 6, "category": "insufficient_evidence", "evidence_classes": [], "note": "C4: abstain."}
   ],
+  "regional_geography": "national tiers classify a subnational figure by occupation level and label it regional; it is returned only when that region is requested and is never presented as national (PROPOSED in P10C-D, owner approval pending)",
   "recency": "latest_reference_year_among_eligible_evidence",
   "required_match": ["occupation", "geography", "reference_period", "pay_basis", "measure", "source_eligibility"],
   "country_overrides": "none: country-specific hard-coded overrides are not permitted in this policy",

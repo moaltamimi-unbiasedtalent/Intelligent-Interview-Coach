@@ -195,7 +195,7 @@ def test_the_database_enforces_the_natural_key_and_restricts_deleting_a_linked_o
 def test_the_precedence_policy_is_the_recovered_six_levels_and_has_no_country_overrides():
     p = PrecedencePolicy.load()
     assert [t["category"] for t in p.tiers] == ["national_official_occupation_statistics", "national_public_employment_service", "eurostat_harmonised", "cedefop_intelligence",
-                                                  "authorized_secondary", "insufficient_evidence"] and p.version == "p10c-c/1"
+                                                  "authorized_secondary", "insufficient_evidence"] and p.version == "p10c-d/1"
     assert p.rank("eurostat_harmonised") == 3 and p.rank("bogus") is None and p.classes_for("eurostat_harmonised") == ("C3",) and p.classes_for("authorized_secondary") == ()
     raw = json.loads(POLICY_PATH.read_text())
     assert raw["country_overrides"].startswith("none") and not any(k.upper() in {"DE", "US", "UK", "GB", "EU"} for k in raw)
@@ -221,7 +221,7 @@ def test_the_policy_validator_rejects_malformed_or_country_specific_policies(tmp
 @pytest.mark.parametrize("cat,level,geo,expected", [
     ("national_official_occupation_statistics", "detailed", "national", "C1"), ("national_official_occupation_statistics", "broad", "national", "C2"),
     ("national_public_employment_service", "detailed", "national", "C1"), ("national_public_employment_service", "broad", "national", "C2"),
-    ("national_official_occupation_statistics", "detailed", "regional", None), ("national_official_occupation_statistics", "unknown", "national", None),
+    ("national_official_occupation_statistics", "detailed", "regional", "C1"), ("national_public_employment_service", "broad", "regional", "C2"), ("national_official_occupation_statistics", "unknown", "national", None),
     ("eurostat_harmonised", "broad", "national", "C3"), ("eurostat_harmonised", "detailed", "eu_aggregate", "C3"), ("eurostat_harmonised", "unknown", "national", None),
     ("cedefop_intelligence", "detailed", "national", None), ("authorized_secondary", "detailed", "national", None), ("insufficient_evidence", "detailed", "national", None), ("unknown", "detailed", "national", None),
 ])
@@ -278,11 +278,11 @@ def test_rows_are_rejected_with_reason_codes_and_nothing_is_repaired(mech):
             rec(region="X"), rec(geography_level="regional"), rec(geography_level="regional", region="Y", native_code="99-0100", country="CA"),
             rec(occupation_level="unknown", native_code="99-0100", country="MX"), {"currency": "USD"}, rec(pay_period="bogus")]
     rep = mech.store.import_records(rows, source_ref="fx", source_edition="E1", mode="fixture")
-    assert rep.rows == 13 and rep.added == 1 and rep.rejected == 12
+    assert rep.rows == 13 and rep.added == 2 and rep.rejected == 11
     assert rep.rejections["occupation_not_in_graph"] == 1 and rep.rejections["source_mismatch"] == 2 and rep.rejections["taxonomy_edition_not_registered"] == 1
-    assert rep.rejections["region_with_national_level"] == 1 and rep.rejections["regional_level_without_region"] == 1 and rep.rejections["evidence_class_undeterminable"] == 2
+    assert rep.rejections["region_with_national_level"] == 1 and rep.rejections["regional_level_without_region"] == 1 and rep.rejections["evidence_class_undeterminable"] == 1
     assert sum(v for k, v in rep.rejections.items() if k.startswith("schema_invalid")) == 4 and any(k.startswith("schema_invalid:currency") for k in rep.rejections)
-    assert mech.store.counts()["records"] == 1                                                                                          # the valid row only
+    assert mech.store.counts()["records"] == 2                                                                                          # the valid national row and the labelled regional row
     with mech.sf() as s:
         summary = s.scalar(select(CompensationImportBatch.rejection_summary))
     assert all(isinstance(v, int) for v in summary.values()) and "99-9999" not in json.dumps(summary)                                  # reason codes and counts only
@@ -493,7 +493,7 @@ def test_the_public_response_carries_no_registry_secret_or_private_metadata(worl
     blob = json.dumps(d, default=str).lower()
     for secret in ("licence", "approval_status", "actor_user_id", "batch", "checksum", "provenance", "secret", "api_key", "record_key", "occupation_id"):
         assert secret not in blob, secret
-    assert d["candidate_presentable"] is False and d["policy_version"] == "p10c-c/1"
+    assert d["candidate_presentable"] is False and d["policy_version"] == "p10c-d/1"
 
 
 def test_language_never_selects_the_country_and_there_is_no_cross_country_fallback(world):
@@ -649,7 +649,7 @@ def test_migration_0037_is_additive_reversible_and_matches_the_orm(tmp_path, mon
     from tests.test_billing_f1_qualification import _alembic
     from src import persistence as P
     cfg, url = _alembic(tmp_path, monkeypatch)
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0037_compensation_v2"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == ["0038_compensation_concepts"]
     new = ("compensation_v2_records", "compensation_import_batches")
     command.upgrade(cfg, "0036_multilingual_aliases")
     assert not set(new) & set(inspect(create_engine(url)).get_table_names())

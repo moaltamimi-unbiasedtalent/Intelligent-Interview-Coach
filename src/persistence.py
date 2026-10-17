@@ -2814,6 +2814,10 @@ COMP_LINK_BASES = ("native_code_exact", "verified_crosswalk", "curated_manual")
 COMP_EVIDENCE_CLASSES = ("C1", "C2", "C3")
 COMP_RECORD_STATUSES = ("current", "superseded")
 COMP_IMPORT_MODES = ("production", "fixture")
+# P10C-D: what a published figure MEASURES and WHO it covers. Concepts are never combined; household income is not an occupation salary and is never stored as evidence.
+COMP_EARNINGS_CONCEPTS = ("unknown", "individual_earnings", "employment_income", "wage_statistic", "household_income", "formal_sector_compensation")
+COMP_POPULATION_SCOPES = ("unknown", "all_workers", "employees", "formal_sector", "full_time_employees")
+COMP_EVIDENCE_METHODS = ("unknown", "survey", "administrative_records", "census", "other_documented")
 
 
 class CompensationRecordV2Row(Base):
@@ -2824,7 +2828,11 @@ class CompensationRecordV2Row(Base):
     __table_args__ = (
         UniqueConstraint("record_key", name="uq_comp_v2_record_key"),
         UniqueConstraint("source_ref", "source_edition", "taxonomy_id", "native_code", "country", "region_key", "reference_year", "pay_period", "currency", "pay_basis", "measure",
-                         "percentile", "data_vintage", name="uq_comp_v2_natural_key"),
+                         "percentile", "data_vintage", "earnings_concept", "population_scope", "evidence_method", name="uq_comp_v2_natural_key"),
+        CheckConstraint(_in_list("earnings_concept", COMP_EARNINGS_CONCEPTS), name="ck_cv2_earnings_concept"),
+        CheckConstraint(_in_list("population_scope", COMP_POPULATION_SCOPES), name="ck_cv2_population_scope"),
+        CheckConstraint(_in_list("evidence_method", COMP_EVIDENCE_METHODS), name="ck_cv2_evidence_method"),
+        CheckConstraint("earnings_concept <> 'household_income'", name="ck_cv2_not_household_income"),
         CheckConstraint("length(currency) = 3", name="ck_cv2_currency"),
         CheckConstraint(_in_list("pay_period", COMP_PAY_PERIODS), name="ck_cv2_pay_period"),
         CheckConstraint(_in_list("pay_basis", COMP_PAY_BASES), name="ck_cv2_pay_basis"),
@@ -2861,6 +2869,9 @@ class CompensationRecordV2Row(Base):
     pay_basis: Mapped[str] = mapped_column(String(10), default="unknown", server_default="unknown")
     measure: Mapped[str] = mapped_column(String(12), default="unknown", server_default="unknown")
     percentile: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    earnings_concept: Mapped[str] = mapped_column(String(28), default="unknown", server_default="unknown")
+    population_scope: Mapped[str] = mapped_column(String(20), default="unknown", server_default="unknown")
+    evidence_method: Mapped[str] = mapped_column(String(24), default="unknown", server_default="unknown")
     value_status: Mapped[str] = mapped_column(String(14), default="reported", server_default="reported")
     amount_scale: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     value_units: Mapped[int | None] = mapped_column(BigInteger, nullable=True)

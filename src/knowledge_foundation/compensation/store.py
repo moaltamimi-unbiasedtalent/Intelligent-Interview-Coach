@@ -187,6 +187,8 @@ class CompensationStoreV2:
             return "occupation_not_in_graph"
         if len(keys) > 1:
             return "ambiguous_occupation_identity"
+        if rec.earnings_concept == "household_income":
+            return "earnings_concept_not_occupation_compensation"
         if rec.geography_level == "national" and rec.region:
             return "region_with_national_level"
         if rec.geography_level == "regional" and not rec.region:
@@ -219,7 +221,8 @@ class CompensationStoreV2:
         s.add(CompensationRecordV2Row(
             record_key=key, occupation_id=link["occupation_id"], taxonomy_id=link["taxonomy_id"], native_code=rec.native_code, occupation_level=rec.occupation_level,
             link_basis="native_code_exact", country=rec.country, region_key=rec.region_key, geography_level=rec.geography_level, currency=rec.currency, pay_period=rec.pay_period,
-            pay_basis=rec.pay_basis, measure=rec.measure, percentile=rec.percentile, value_status=rec.value_status, bounds_semantic=rec.bounds_semantic, source_ref=rec.source_ref,
+            pay_basis=rec.pay_basis, measure=rec.measure, percentile=rec.percentile, earnings_concept=rec.earnings_concept, population_scope=rec.population_scope,
+            evidence_method=rec.evidence_method, value_status=rec.value_status, bounds_semantic=rec.bounds_semantic, source_ref=rec.source_ref,
             source_edition=rec.source_edition, publisher=src.get("publisher"), dataset_name=src.get("dataset_name"), source_url=src.get("source_url"), reference_year=rec.reference_year,
             reference_period=rec.reference_period, publication_date=rec.publication_date, data_vintage=rec.data_vintage, evidence_class=link["evidence_class"],
             precedence_category=src["precedence_category"], qualification_status="unqualified", limitations=rec.limitations, provenance={**rec.provenance, "transformation_batch": batch_id},

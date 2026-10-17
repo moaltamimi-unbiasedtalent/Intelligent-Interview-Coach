@@ -1,0 +1,156 @@
+{
+ "corpora": {
+  "large": {
+   "concurrent_duplicate_import": {
+    "errors": 0,
+    "rows_each": 300,
+    "seconds": 0.63,
+    "threads": 6,
+    "winners": 1
+   },
+   "conflicting_national_sources": {
+    "max_ms": 3.433,
+    "n": 40,
+    "p50_ms": 3.312,
+    "p95_ms": 3.379,
+    "peak_kib": 202,
+    "queries_per_resolution": 9
+   },
+   "idempotent_reimport_seconds": 2.25,
+   "missing_mapping": {
+    "max_ms": 0.605,
+    "n": 100,
+    "p50_ms": 0.532,
+    "p95_ms": 0.575,
+    "peak_kib": 39,
+    "queries_per_resolution": 1
+   },
+   "national_lookup": {
+    "max_ms": 6.956,
+    "n": 100,
+    "p50_ms": 3.628,
+    "p95_ms": 3.952,
+    "peak_kib": 374,
+    "queries_per_resolution": 9
+   },
+   "occupations_per_edition": 2000,
+   "records": 12000,
+   "records_import_seconds": 4.49,
+   "records_per_second": 2675,
+   "regional_filter": {
+    "max_ms": 4.166,
+    "n": 100,
+    "p50_ms": 3.424,
+    "p95_ms": 3.905,
+    "peak_kib": 243,
+    "queries_per_resolution": 9
+   },
+   "regions_per_occupation": 6,
+   "reimport_was_noop": true,
+   "rejected_rows": 0,
+   "repeated_lookup": {
+    "max_ms": 3.995,
+    "n": 200,
+    "p50_ms": 3.334,
+    "p95_ms": 3.457,
+    "peak_kib": 260,
+    "queries_per_resolution": 9
+   },
+   "second_edition_no_evidence": {
+    "max_ms": 2.995,
+    "n": 100,
+    "p50_ms": 2.441,
+    "p95_ms": 2.569,
+    "peak_kib": 234,
+    "queries_per_resolution": 7
+   },
+   "taxonomy_editions": 2,
+   "taxonomy_nodes_import_seconds": 2.08,
+   "unapproved_evidence_default_withheld": {
+    "max_ms": 4.032,
+    "n": 100,
+    "p50_ms": 3.821,
+    "p95_ms": 3.947,
+    "peak_kib": 255,
+    "queries_per_resolution": 11
+   }
+  },
+  "small": {
+   "concurrent_duplicate_import": {
+    "errors": 0,
+    "rows_each": 300,
+    "seconds": 0.59,
+    "threads": 6,
+    "winners": 1
+   },
+   "conflicting_national_sources": {
+    "max_ms": 3.862,
+    "n": 40,
+    "p50_ms": 3.332,
+    "p95_ms": 3.536,
+    "peak_kib": 182,
+    "queries_per_resolution": 9
+   },
+   "idempotent_reimport_seconds": 0.11,
+   "missing_mapping": {
+    "max_ms": 0.605,
+    "n": 100,
+    "p50_ms": 0.509,
+    "p95_ms": 0.544,
+    "peak_kib": 46,
+    "queries_per_resolution": 1
+   },
+   "national_lookup": {
+    "max_ms": 7.183,
+    "n": 100,
+    "p50_ms": 3.387,
+    "p95_ms": 3.915,
+    "peak_kib": 415,
+    "queries_per_resolution": 9
+   },
+   "occupations_per_edition": 100,
+   "records": 600,
+   "records_import_seconds": 0.23,
+   "records_per_second": 2603,
+   "regional_filter": {
+    "max_ms": 3.416,
+    "n": 100,
+    "p50_ms": 3.256,
+    "p95_ms": 3.36,
+    "peak_kib": 249,
+    "queries_per_resolution": 9
+   },
+   "regions_per_occupation": 6,
+   "reimport_was_noop": true,
+   "rejected_rows": 0,
+   "repeated_lookup": {
+    "max_ms": 27.631,
+    "n": 200,
+    "p50_ms": 3.272,
+    "p95_ms": 3.588,
+    "peak_kib": 255,
+    "queries_per_resolution": 9
+   },
+   "second_edition_no_evidence": {
+    "max_ms": 3.238,
+    "n": 100,
+    "p50_ms": 2.434,
+    "p95_ms": 2.69,
+    "peak_kib": 220,
+    "queries_per_resolution": 7
+   },
+   "taxonomy_editions": 2,
+   "taxonomy_nodes_import_seconds": 0.11,
+   "unapproved_evidence_default_withheld": {
+    "max_ms": 4.783,
+    "n": 100,
+    "p50_ms": 3.851,
+    "p95_ms": 4.345,
+    "peak_kib": 247,
+    "queries_per_resolution": 11
+   }
+  }
+ },
+ "note": "Synthetic corpora in a throwaway database; no real data; no protected store touched.",
+ "schema": "country_foundations_benchmark/1"
+}
