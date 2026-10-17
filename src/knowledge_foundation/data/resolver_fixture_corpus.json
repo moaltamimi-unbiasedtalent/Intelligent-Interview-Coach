@@ -1,0 +1,2090 @@
+{
+ "schema": "resolver_fixture_corpus/1",
+ "note": "SYNTHETIC STRUCTURAL FIXTURE. Occupations carry a synthetic label and unmistakably synthetic codes (99xx); aliases are test strings in a synthetic-fixture source and are NOT official terminology; nothing here is salary evidence or an official mapping. The source is a synthetic fixture and can never be approved or serve as evidence.",
+ "taxonomies": [
+  {
+   "scheme": "isco",
+   "edition": "88",
+   "status": "historical",
+   "acquisition_status": "identified_externally",
+   "code_pattern": "[0-9]{1,4}"
+  }
+ ],
+ "sources": [
+  {
+   "source_id": "fx_syn",
+   "origin": "synthetic_fixture"
+  },
+  {
+   "source_id": "fx_legacy",
+   "origin": "synthetic_fixture"
+  }
+ ],
+ "occupations": [
+  {
+   "id": "nurse",
+   "label": "Nurse [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9901"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Nurse",
+     "language": "en",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared",
+     "edition": [
+      "isco",
+      "08"
+     ]
+    },
+    {
+     "text": "Registered nurse",
+     "language": "en",
+     "type": "official_alternative",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Krankenpfleger",
+     "language": "de",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Infirmier",
+     "language": "fr",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Enfermero",
+     "language": "es",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Infermiere",
+     "language": "it",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Enfermeiro",
+     "language": "pt",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Verpleegkundige",
+     "language": "nl",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Медсестра",
+     "language": "ru",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "swdev",
+   "label": "Software developer [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9902"
+    ],
+    [
+     "onet_soc",
+     "31.0",
+     "99-9902.00"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Software developer",
+     "language": "en",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Softwareentwickler",
+     "language": "de",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Développeur logiciel",
+     "language": "fr",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Desarrollador de software",
+     "language": "es",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Sviluppatore software",
+     "language": "it",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Desenvolvedor de software",
+     "language": "pt",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Softwareontwikkelaar",
+     "language": "nl",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Разработчик программного обеспечения",
+     "language": "ru",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Developer",
+     "language": "en",
+     "type": "recognized_title",
+     "source": "fx_syn",
+     "basis": "fixture_declared",
+     "context_terms": [
+      "software",
+      "backend",
+      "embedded"
+     ]
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "webdev",
+   "label": "Web developer [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9903"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Web developer",
+     "language": "en",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Webentwickler",
+     "language": "de",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Developer",
+     "language": "en",
+     "type": "recognized_title",
+     "source": "fx_syn",
+     "basis": "fixture_declared",
+     "context_terms": [
+      "web",
+      "frontend",
+      "website"
+     ]
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "analyst_data",
+   "label": "Data analyst [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9904"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Data analyst",
+     "language": "en",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Analyst",
+     "language": "en",
+     "type": "recognized_title",
+     "source": "fx_syn",
+     "basis": "fixture_declared",
+     "context_terms": [
+      "data",
+      "analytics"
+     ]
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "analyst_fin",
+   "label": "Financial analyst [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9905"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Financial analyst",
+     "language": "en",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Analyst",
+     "language": "en",
+     "type": "recognized_title",
+     "source": "fx_syn",
+     "basis": "fixture_declared",
+     "context_terms": [
+      "banking",
+      "bank",
+      "finance"
+     ]
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "gift_shop",
+   "label": "Gift shop clerk [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9906"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Gift",
+     "language": "en",
+     "type": "source_synonym",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "poison",
+   "label": "Poison control specialist [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9907"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Gift",
+     "language": "de",
+     "type": "source_synonym",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "chef_cook",
+   "label": "Cook [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9908"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Chef",
+     "language": "en",
+     "type": "recognized_title",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    },
+    {
+     "text": "Cuisinier",
+     "language": "fr",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "chef_boss",
+   "label": "Manager (French usage) [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9909"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Chef",
+     "language": "fr",
+     "type": "recognized_title",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "legacy_only",
+   "label": "Legacy-titled occupation [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9910"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Legacy title",
+     "language": null,
+     "type": "legacy_alias",
+     "source": "fx_legacy"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "coord_a",
+   "label": "Coordinator A [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9911"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Coordinator",
+     "language": "en",
+     "type": "recognized_title",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "coord_b",
+   "label": "Coordinator B [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9916"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Coordinator",
+     "language": "en",
+     "type": "recognized_title",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "ed08",
+   "label": "Edition-08 technician [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9912"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Technician",
+     "language": "en",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared",
+     "edition": [
+      "isco",
+      "08"
+     ]
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "ed88",
+   "label": "Edition-88 technician [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "88",
+     "9912"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Technician",
+     "language": "en",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared",
+     "edition": [
+      "isco",
+      "88"
+     ]
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "soc_unk",
+   "label": "Clerk of unknown SOC edition [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "unknown",
+     "99-9901"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Clerk",
+     "language": "en",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared",
+     "edition": [
+      "soc",
+      "unknown"
+     ]
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "armed",
+   "label": "Armed forces officer [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "0110"
+    ]
+   ],
+   "aliases": [],
+   "legacy_keys": [
+    "ask4mo:occ:legacy-110"
+   ]
+  },
+  {
+   "id": "ano_n",
+   "label": "Year-keeper (n tilde) [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9917"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Año",
+     "language": "es",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "ano_plain",
+   "label": "Anus-registrar (plain n) [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9918"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Ano",
+     "language": "es",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "ru_major",
+   "label": "Major (Cyrillic i-breve) [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9919"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Майор",
+     "language": "ru",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "ru_maior",
+   "label": "Maior (Cyrillic plain i) [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9920"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Маиор",
+     "language": "ru",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "ru_mech",
+   "label": "Mechanical engineer [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9921"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Инженер-механик",
+     "language": "ru",
+     "type": "official_preferred",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "cpp",
+   "label": "C++ developer [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9913"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "C++ developer",
+     "language": "en",
+     "type": "recognized_title",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "csharp",
+   "label": "C# developer [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9914"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "C# developer",
+     "language": "en",
+     "type": "recognized_title",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "c_dev",
+   "label": "C developer [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9915"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "C developer",
+     "language": "en",
+     "type": "recognized_title",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "join_a",
+   "label": "Joinable A [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9922"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Joinable",
+     "language": "en",
+     "type": "recognized_title",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "join_b",
+   "label": "Joinable B [synthetic fixture]",
+   "identifiers": [
+    [
+     "onet_soc",
+     "31.0",
+     "99-9922.00"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Joinable",
+     "language": "en",
+     "type": "recognized_title",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "rel_a",
+   "label": "Related A [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9923"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Relatable",
+     "language": "en",
+     "type": "recognized_title",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  },
+  {
+   "id": "rel_b",
+   "label": "Related B [synthetic fixture]",
+   "identifiers": [
+    [
+     "onet_soc",
+     "31.0",
+     "99-9923.00"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "Relatable",
+     "language": "en",
+     "type": "recognized_title",
+     "source": "fx_syn",
+     "basis": "fixture_declared"
+    }
+   ],
+   "legacy_keys": []
+  }
+ ],
+ "relationships": [
+  {
+   "from": "join_a",
+   "to": "join_b",
+   "type": "equivalent",
+   "basis": "source_provided",
+   "status": "verified",
+   "source": "fx_syn",
+   "from_taxonomy": [
+    "isco",
+    "08"
+   ],
+   "to_taxonomy": [
+    "onet_soc",
+    "31.0"
+   ]
+  },
+  {
+   "from": "rel_a",
+   "to": "rel_b",
+   "type": "related",
+   "basis": "source_provided",
+   "status": "verified",
+   "source": "fx_syn",
+   "from_taxonomy": [
+    "isco",
+    "08"
+   ],
+   "to_taxonomy": [
+    "onet_soc",
+    "31.0"
+   ]
+  }
+ ],
+ "cases": [
+  {
+   "id": "code-unique",
+   "category": "official_code",
+   "request": {
+    "taxonomy_scheme": "isco",
+    "taxonomy_code": "9901",
+    "taxonomy_edition": "08"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "nurse"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": "code_exact",
+    "context_needed": []
+   }
+  },
+  {
+   "id": "code-no-edition",
+   "category": "official_code",
+   "request": {
+    "taxonomy_scheme": "isco",
+    "taxonomy_code": "9901"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "nurse"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "code-two-editions",
+   "category": "editions",
+   "request": {
+    "taxonomy_scheme": "isco",
+    "taxonomy_code": "9912"
+   },
+   "expect": {
+    "outcome": "ambiguous",
+    "occupations": [
+     "ed08",
+     "ed88"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": [
+     "taxonomy_edition"
+    ]
+   }
+  },
+  {
+   "id": "code-edition-08",
+   "category": "editions",
+   "request": {
+    "taxonomy_scheme": "isco",
+    "taxonomy_code": "9912",
+    "taxonomy_edition": "08"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "ed08"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "code-edition-88",
+   "category": "editions",
+   "request": {
+    "taxonomy_scheme": "isco",
+    "taxonomy_code": "9912",
+    "taxonomy_edition": "88"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "ed88"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "code-edition-unregistered",
+   "category": "editions",
+   "request": {
+    "taxonomy_scheme": "isco",
+    "taxonomy_code": "9912",
+    "taxonomy_edition": "1999"
+   },
+   "expect": {
+    "outcome": "not_found",
+    "occupations": [],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "code-without-scheme",
+   "category": "abstention",
+   "request": {
+    "taxonomy_code": "9901"
+   },
+   "expect": {
+    "outcome": "insufficient_context",
+    "occupations": [],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": [
+     "taxonomy_scheme"
+    ]
+   }
+  },
+  {
+   "id": "code-unknown",
+   "category": "unknown",
+   "request": {
+    "taxonomy_scheme": "isco",
+    "taxonomy_code": "9999",
+    "taxonomy_edition": "08"
+   },
+   "expect": {
+    "outcome": "not_found",
+    "occupations": [],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "leading-zero-restored",
+   "category": "leading_zero",
+   "request": {
+    "taxonomy_scheme": "isco",
+    "taxonomy_code": "110",
+    "taxonomy_edition": "08"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "armed"
+    ],
+    "warnings": [
+     "isco_zero_padding_restored:110->0110"
+    ],
+    "reasons": [],
+    "grade": "code_zero_padding_restored",
+    "context_needed": []
+   }
+  },
+  {
+   "id": "leading-zero-exact",
+   "category": "leading_zero",
+   "request": {
+    "taxonomy_scheme": "isco",
+    "taxonomy_code": "0110",
+    "taxonomy_edition": "08"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "armed"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": "code_exact",
+    "context_needed": []
+   }
+  },
+  {
+   "id": "leading-zero-absent",
+   "category": "leading_zero",
+   "request": {
+    "taxonomy_scheme": "isco",
+    "taxonomy_code": "410",
+    "taxonomy_edition": "08"
+   },
+   "expect": {
+    "outcome": "not_found",
+    "occupations": [],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "alias-en",
+   "category": "multilingual_alias",
+   "request": {
+    "title": "Nurse",
+    "title_language": "en"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "nurse"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": "alias_exact",
+    "context_needed": []
+   }
+  },
+  {
+   "id": "alias-de",
+   "category": "multilingual_alias",
+   "request": {
+    "title": "krankenpfleger",
+    "title_language": "de"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "nurse"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": "alias_exact",
+    "context_needed": []
+   }
+  },
+  {
+   "id": "alias-fr",
+   "category": "multilingual_alias",
+   "request": {
+    "title": "INFIRMIER",
+    "title_language": "fr"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "nurse"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": "alias_exact",
+    "context_needed": []
+   }
+  },
+  {
+   "id": "alias-es",
+   "category": "multilingual_alias",
+   "request": {
+    "title": "Enfermero",
+    "title_language": "es"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "nurse"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": "alias_exact",
+    "context_needed": []
+   }
+  },
+  {
+   "id": "alias-it",
+   "category": "multilingual_alias",
+   "request": {
+    "title": "infermiere",
+    "title_language": "it"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "nurse"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": "alias_exact",
+    "context_needed": []
+   }
+  },
+  {
+   "id": "alias-pt",
+   "category": "multilingual_alias",
+   "request": {
+    "title": "Enfermeiro",
+    "title_language": "pt"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "nurse"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": "alias_exact",
+    "context_needed": []
+   }
+  },
+  {
+   "id": "alias-nl",
+   "category": "multilingual_alias",
+   "request": {
+    "title": "Verpleegkundige",
+    "title_language": "nl"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "nurse"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": "alias_exact",
+    "context_needed": []
+   }
+  },
+  {
+   "id": "alias-ru",
+   "category": "multilingual_alias",
+   "request": {
+    "title": "медсестра",
+    "title_language": "ru"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "nurse"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": "alias_exact",
+    "context_needed": []
+   }
+  },
+  {
+   "id": "alias-alt-en",
+   "category": "multilingual_alias",
+   "request": {
+    "title": "registered   NURSE",
+    "title_language": "en"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "nurse"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "cross-language-default",
+   "category": "cross_language",
+   "request": {
+    "title": "Krankenpfleger",
+    "title_language": "en"
+   },
+   "expect": {
+    "outcome": "not_found",
+    "occupations": [],
+    "warnings": [],
+    "reasons": [
+     "title_exists_only_in_other_languages"
+    ],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "cross-language-optin",
+   "category": "cross_language",
+   "request": {
+    "title": "Krankenpfleger",
+    "title_language": "en",
+    "allow_cross_language": true
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "nurse"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": "alias_cross_language",
+    "context_needed": []
+   }
+  },
+  {
+   "id": "language-not-given",
+   "category": "missing_language",
+   "request": {
+    "title": "Krankenpfleger"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "nurse"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "false-friend-gift-nolang",
+   "category": "false_friend",
+   "request": {
+    "title": "Gift"
+   },
+   "expect": {
+    "outcome": "ambiguous",
+    "occupations": [
+     "gift_shop",
+     "poison"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": [
+     "title_language"
+    ]
+   }
+  },
+  {
+   "id": "false-friend-gift-en",
+   "category": "false_friend",
+   "request": {
+    "title": "Gift",
+    "title_language": "en"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "gift_shop"
+    ],
+    "warnings": [
+     "same_text_in_other_languages_ignored"
+    ],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "false-friend-gift-de",
+   "category": "false_friend",
+   "request": {
+    "title": "Gift",
+    "title_language": "de"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "poison"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "false-friend-chef-en",
+   "category": "false_friend",
+   "request": {
+    "title": "Chef",
+    "title_language": "en"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "chef_cook"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "false-friend-chef-fr",
+   "category": "false_friend",
+   "request": {
+    "title": "Chef",
+    "title_language": "fr"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "chef_boss"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "false-friend-chef-nolang",
+   "category": "false_friend",
+   "request": {
+    "title": "chef"
+   },
+   "expect": {
+    "outcome": "ambiguous",
+    "occupations": [
+     "chef_cook",
+     "chef_boss"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "shared-alias",
+   "category": "shared_alias",
+   "request": {
+    "title": "Developer",
+    "title_language": "en"
+   },
+   "expect": {
+    "outcome": "ambiguous",
+    "occupations": [
+     "swdev",
+     "webdev"
+    ],
+    "warnings": [],
+    "reasons": [
+     "title_matches_several_distinct_occupations"
+    ],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "shared-alias-context-sw",
+   "category": "shared_alias",
+   "request": {
+    "title": "Developer",
+    "title_language": "en",
+    "role_context": "Backend services"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "swdev"
+    ],
+    "warnings": [],
+    "reasons": [
+     "narrowed_by_curated_context"
+    ],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "shared-alias-context-web",
+   "category": "shared_alias",
+   "request": {
+    "title": "Developer",
+    "title_language": "en",
+    "role_context": "our frontend website"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "webdev"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "shared-alias-context-none-match",
+   "category": "shared_alias",
+   "request": {
+    "title": "Developer",
+    "title_language": "en",
+    "role_context": "gardening"
+   },
+   "expect": {
+    "outcome": "ambiguous",
+    "occupations": [
+     "swdev",
+     "webdev"
+    ],
+    "warnings": [],
+    "reasons": [
+     "context_matched_no_candidate"
+    ],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "industry-banking",
+   "category": "industry",
+   "request": {
+    "title": "Analyst",
+    "title_language": "en",
+    "industry": "Banking"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "analyst_fin"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "industry-data",
+   "category": "industry",
+   "request": {
+    "title": "Analyst",
+    "title_language": "en",
+    "role_context": "product analytics team"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "analyst_data"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "industry-unrelated",
+   "category": "industry",
+   "request": {
+    "title": "Analyst",
+    "title_language": "en",
+    "industry": "Retail"
+   },
+   "expect": {
+    "outcome": "ambiguous",
+    "occupations": [
+     "analyst_data",
+     "analyst_fin"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "duplicate-titles",
+   "category": "duplicate_title",
+   "request": {
+    "title": "Coordinator",
+    "title_language": "en"
+   },
+   "expect": {
+    "outcome": "ambiguous",
+    "occupations": [
+     "coord_a",
+     "coord_b"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "unknown-alias",
+   "category": "unknown",
+   "request": {
+    "title": "Astronaut",
+    "title_language": "en"
+   },
+   "expect": {
+    "outcome": "not_found",
+    "occupations": [],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "abstain-empty",
+   "category": "abstention",
+   "request": {},
+   "expect": {
+    "outcome": "insufficient_context",
+    "occupations": [],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "abstain-blank-title",
+   "category": "abstention",
+   "request": {
+    "title": "  --  "
+   },
+   "expect": {
+    "outcome": "insufficient_context",
+    "occupations": [],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "unverified-language-default",
+   "category": "missing_language_metadata",
+   "request": {
+    "title": "Legacy title",
+    "title_language": "en"
+   },
+   "expect": {
+    "outcome": "insufficient_context",
+    "occupations": [
+     "legacy_only"
+    ],
+    "warnings": [],
+    "reasons": [
+     "alias_language_unverified"
+    ],
+    "grade": null,
+    "context_needed": [
+     "alias_language_metadata"
+    ]
+   }
+  },
+  {
+   "id": "unverified-language-optin",
+   "category": "missing_language_metadata",
+   "request": {
+    "title": "Legacy title",
+    "accept_unverified_language": true
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "legacy_only"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": "alias_language_unverified",
+    "context_needed": []
+   }
+  },
+  {
+   "id": "unsupported-language",
+   "category": "unsupported_language",
+   "request": {
+    "title": "Nurse",
+    "title_language": "pl"
+   },
+   "expect": {
+    "outcome": "unsupported",
+    "occupations": [],
+    "warnings": [],
+    "reasons": [
+     "title_language_not_supported"
+    ],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "malformed-language",
+   "category": "unsupported_language",
+   "request": {
+    "title": "Nurse",
+    "title_language": "not a language!"
+   },
+   "expect": {
+    "outcome": "unsupported",
+    "occupations": [],
+    "warnings": [],
+    "reasons": [
+     "malformed_language_identifier"
+    ],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "unsupported-country",
+   "category": "unsupported_country",
+   "request": {
+    "title": "Nurse",
+    "title_language": "en",
+    "country": "ZZ"
+   },
+   "expect": {
+    "outcome": "unsupported",
+    "occupations": [],
+    "warnings": [],
+    "reasons": [
+     "country_not_supported"
+    ],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "code-beats-conflicting-title",
+   "category": "conflict",
+   "request": {
+    "title": "Nurse",
+    "title_language": "en",
+    "taxonomy_scheme": "isco",
+    "taxonomy_code": "9902",
+    "taxonomy_edition": "08"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "swdev"
+    ],
+    "warnings": [
+     "title_conflicts_with_official_code"
+    ],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "edition-alias-08",
+   "category": "editions",
+   "request": {
+    "title": "Technician",
+    "title_language": "en",
+    "taxonomy_scheme": "isco",
+    "taxonomy_edition": "08"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "ed08"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "edition-alias-88",
+   "category": "editions",
+   "request": {
+    "title": "Technician",
+    "title_language": "en",
+    "taxonomy_scheme": "isco",
+    "taxonomy_edition": "88"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "ed88"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "edition-alias-none",
+   "category": "editions",
+   "request": {
+    "title": "Technician",
+    "title_language": "en"
+   },
+   "expect": {
+    "outcome": "ambiguous",
+    "occupations": [
+     "ed08",
+     "ed88"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "unknown-edition-alias",
+   "category": "editions",
+   "request": {
+    "title": "Clerk",
+    "title_language": "en"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "soc_unk"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "unknown-edition-not-compatible",
+   "category": "editions",
+   "request": {
+    "title": "Clerk",
+    "title_language": "en",
+    "taxonomy_scheme": "soc",
+    "taxonomy_edition": "2018"
+   },
+   "expect": {
+    "outcome": "not_found",
+    "occupations": [],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "diacritic-exact-n-tilde",
+   "category": "normalization",
+   "request": {
+    "title": "AÑO",
+    "title_language": "es"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "ano_n"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "diacritic-exact-plain",
+   "category": "normalization",
+   "request": {
+    "title": "ano",
+    "title_language": "es"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "ano_plain"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "diacritic-fold-collision",
+   "category": "normalization",
+   "request": {
+    "title": "Áno",
+    "title_language": "es"
+   },
+   "expect": {
+    "outcome": "ambiguous",
+    "occupations": [
+     "ano_n",
+     "ano_plain"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "cyrillic-i-breve-not-folded",
+   "category": "normalization",
+   "request": {
+    "title": "МАЙОР",
+    "title_language": "ru"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "ru_major"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "cyrillic-hyphen-whitespace",
+   "category": "normalization",
+   "request": {
+    "title": "инженер   механик",
+    "title_language": "ru"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "ru_mech"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "symbols-cpp",
+   "category": "normalization",
+   "request": {
+    "title": "c++ Developer",
+    "title_language": "en"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "cpp"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "symbols-csharp",
+   "category": "normalization",
+   "request": {
+    "title": "C# DEVELOPER",
+    "title_language": "en"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "csharp"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "symbols-c",
+   "category": "normalization",
+   "request": {
+    "title": "C developer",
+    "title_language": "en"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "c_dev"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "mixed-language-input",
+   "category": "mixed_language",
+   "request": {
+    "title": "Softwareentwickler",
+    "title_language": "en"
+   },
+   "expect": {
+    "outcome": "not_found",
+    "occupations": [],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "legacy-known-key",
+   "category": "legacy",
+   "request": {
+    "known_occupation_keys": [
+     "ask4mo:occ:legacy-110"
+    ]
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "armed"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "verified-equivalence-joins",
+   "category": "crosswalk",
+   "request": {
+    "title": "Joinable",
+    "title_language": "en"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [],
+    "warnings": [],
+    "reasons": [
+     "several_nodes_joined_by_verified_equivalence"
+    ],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "related-never-joins",
+   "category": "crosswalk",
+   "request": {
+    "title": "Relatable",
+    "title_language": "en"
+   },
+   "expect": {
+    "outcome": "ambiguous",
+    "occupations": [
+     "rel_a",
+     "rel_b"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "seniority-ignored",
+   "category": "identity",
+   "request": {
+    "title": "Nurse",
+    "title_language": "en",
+    "seniority": "senior"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "nurse"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "geography-de-CH",
+   "category": "geography_independence",
+   "request": {
+    "title": "Krankenpfleger",
+    "title_language": "de",
+    "country": "CH"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "nurse"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "geography-en-DE",
+   "category": "geography_independence",
+   "request": {
+    "title": "Nurse",
+    "title_language": "en",
+    "country": "DE"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "nurse"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "geography-fr-CA",
+   "category": "geography_independence",
+   "request": {
+    "title": "Infirmier",
+    "title_language": "fr",
+    "country": "CA"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "nurse"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  },
+  {
+   "id": "geography-es-MX",
+   "category": "geography_independence",
+   "request": {
+    "title": "Enfermero",
+    "title_language": "es",
+    "country": "MX"
+   },
+   "expect": {
+    "outcome": "resolved",
+    "occupations": [
+     "nurse"
+    ],
+    "warnings": [],
+    "reasons": [],
+    "grade": null,
+    "context_needed": []
+   }
+  }
+ ]
+}

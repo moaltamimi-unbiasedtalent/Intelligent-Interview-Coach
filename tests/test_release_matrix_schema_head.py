@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CHECK = "schema_head_matches_the_matrix"
-HEAD = "0035_knowledge_foundation"
+HEAD = "0036_multilingual_aliases"
 
 
 def _load():
@@ -61,7 +61,7 @@ def test_a_stale_or_wrong_declaration_in_the_matrix_fails(tmp_path):
 
 def test_an_unexpected_newer_migration_fails_until_the_matrix_is_deliberately_updated(tmp_path):
     assert _run(_tree(tmp_path / "ok")) is True                                # the isolated copy of the real state passes
-    assert _run(_tree(tmp_path / "extra", extra_migration="0036_unreviewed_change.py")) is False
+    assert _run(_tree(tmp_path / "extra", extra_migration="0037_unreviewed_change.py")) is False
 
 
 def test_a_missing_r39_row_fails(tmp_path):

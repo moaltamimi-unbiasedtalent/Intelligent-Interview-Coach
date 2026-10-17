@@ -87,6 +87,15 @@ class OccupationGraph:
                 node = existing
             else:
                 node = s.scalar(select(GraphOccupation).where(GraphOccupation.occupation_key == key))
+                if node is not None and not occupation_key:
+                    # A default key must never silently merge different EDITIONS of one scheme (the established legacy id ignores the edition): when the node that owns the
+                    # derived key already holds this scheme in another edition, this registration gets its own edition-aware identity instead.
+                    t0 = resolved[0][0]
+                    clash = s.scalar(select(GraphOccupationIdentifier.id).join(OccupationTaxonomy, OccupationTaxonomy.id == GraphOccupationIdentifier.taxonomy_id)
+                                     .where(GraphOccupationIdentifier.occupation_id == node.id, OccupationTaxonomy.scheme == t0.scheme, OccupationTaxonomy.edition != t0.edition))
+                    if clash is not None:
+                        key = canonical_occupation_id(source=f"{t0.scheme}@{t0.edition}", source_occupation_id=resolved[0][1]["code"])
+                        node = s.scalar(select(GraphOccupation).where(GraphOccupation.occupation_key == key))
                 if node is None:
                     node = GraphOccupation(occupation_key=key, canonical_label=label[:300], legacy_keys=sorted(set(legacy_keys)))
                     s.add(node)

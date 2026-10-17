@@ -1,0 +1,95 @@
+{
+ "alias_sources": {
+  "esco": 23579
+ },
+ "aliases": 23579,
+ "aliases_equal_to_their_occupation_title": 32,
+ "aliases_whose_occupation_is_missing": 0,
+ "distinct_folded_labels": 22675,
+ "distinct_normalized_labels_n1": 22679,
+ "distinct_raw_labels": 22773,
+ "esco_english_label_plan": {
+  "esco_edition": "1.2.1",
+  "labels_seen": 33518,
+  "language": "en",
+  "mode": "plan (nothing imported)",
+  "occupations_matched": 3039,
+  "rows": 3043,
+  "skipped_unknown_occupation": 0,
+  "source_state": {
+   "can_ingest": false,
+   "esco": "licensing_pending"
+  }
+ },
+ "exact_duplicate_rows": 0,
+ "folded_labels_shared_by_several_occupations": 723,
+ "labels_empty_after_normalization": 0,
+ "language_attribution": {
+  "aliases_attributable_to_a_language": 23579,
+  "aliases_lacking_alias_type_source_edition_and_validity_information": 23579,
+  "aliases_with_insufficient_language_information": 0,
+  "evidence_strength": "language is attributable to the SOURCE FILE the build consumed (a recorded raw input), not to each alias; alias type is not recorded (the legacy table cannot distinguish preferred, alternative and hidden labels)",
+  "method": "language is attributed ONLY where reliable source evidence exists; otherwise it stays UNKNOWN",
+  "per_source": {
+   "esco": {
+    "aliases": 23579,
+    "attributable": "en by source file name (occupations_en.csv)",
+    "evidence_files": [
+     "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/occupations_en.csv"
+    ],
+    "manifest_declared_language": "en"
+   }
+  }
+ },
+ "legacy_tables": {
+  "occupation_aliases": [
+   "occupation_code",
+   "alias",
+   "source_id"
+  ],
+  "occupation_mappings": [
+   "occupation_code",
+   "scheme",
+   "code",
+   "source_id"
+  ],
+  "occupations": [
+   "occupation_code",
+   "title",
+   "description",
+   "isco_code",
+   "occupation_group",
+   "level",
+   "source_id"
+  ]
+ },
+ "max_occupations_sharing_one_label": 5,
+ "metadata_available_per_alias": {
+  "alias_type": false,
+  "language": false,
+  "provenance": "source id only",
+  "relationship": "occupation code (legacy canonical id)",
+  "source_edition": false,
+  "taxonomy_edition": false,
+  "validity_dates": false
+ },
+ "non_ascii_labels": 12,
+ "normalized_labels_shared_by_several_occupations": 722,
+ "note": "Metadata only: counts and verdicts. No alias text. Produced read-only.",
+ "occupation_titles_shared_normalized": 939,
+ "occupations": 8035,
+ "occupations_by_source": {
+  "bls_ooh": 343,
+  "bls_projections": 831,
+  "esco": 3039,
+  "isco08": 613,
+  "kldb": 2193,
+  "onet": 1016
+ },
+ "occupations_sharing_a_normalized_title": 2118,
+ "occupations_with_aliases": 3039,
+ "schema": "gkb3_alias_inventory/1",
+ "script_distribution": {
+  "Latn": 23579
+ }
+}

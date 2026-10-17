@@ -1,0 +1,147 @@
+{
+ "corpora": {
+  "inventory_shape": {
+   "aliases": 23779,
+   "build_seconds": 8.5,
+   "high_ambiguity_generic_title": {
+    "max_ms": 32.574,
+    "n": 20,
+    "p50_ms": 6.103,
+    "p95_ms": 6.247,
+    "peak_kib": 691
+   },
+   "occupations": 8035,
+   "repeated_lookup_same_title": {
+    "max_ms": 0.678,
+    "n": 200,
+    "p50_ms": 0.491,
+    "p95_ms": 0.539,
+    "peak_kib": 60
+   },
+   "unique_exact": {
+    "max_ms": 1.655,
+    "n": 100,
+    "p50_ms": 0.547,
+    "p95_ms": 0.621,
+    "peak_kib": 74
+   },
+   "unique_folded_fallback": {
+    "max_ms": 1.979,
+    "n": 50,
+    "p50_ms": 1.043,
+    "p95_ms": 1.093,
+    "peak_kib": 77
+   },
+   "unknown_alias": {
+    "max_ms": 3.537,
+    "n": 100,
+    "p50_ms": 2.363,
+    "p95_ms": 2.437,
+    "peak_kib": 130
+   },
+   "unknown_identifier": {
+    "max_ms": 1.544,
+    "n": 100,
+    "p50_ms": 0.429,
+    "p95_ms": 0.476,
+    "peak_kib": 81
+   }
+  },
+  "medium": {
+   "aliases": 9050,
+   "build_seconds": 4.5,
+   "high_ambiguity_generic_title": {
+    "max_ms": 3.92,
+    "n": 20,
+    "p50_ms": 2.504,
+    "p95_ms": 2.843,
+    "peak_kib": 217
+   },
+   "occupations": 3000,
+   "repeated_lookup_same_title": {
+    "max_ms": 0.593,
+    "n": 200,
+    "p50_ms": 0.508,
+    "p95_ms": 0.543,
+    "peak_kib": 40
+   },
+   "unique_exact": {
+    "max_ms": 1.695,
+    "n": 100,
+    "p50_ms": 0.54,
+    "p95_ms": 0.623,
+    "peak_kib": 74
+   },
+   "unique_folded_fallback": {
+    "max_ms": 2.03,
+    "n": 50,
+    "p50_ms": 1.038,
+    "p95_ms": 1.09,
+    "peak_kib": 77
+   },
+   "unknown_alias": {
+    "max_ms": 2.387,
+    "n": 100,
+    "p50_ms": 1.85,
+    "p95_ms": 2.032,
+    "peak_kib": 129
+   },
+   "unknown_identifier": {
+    "max_ms": 1.543,
+    "n": 100,
+    "p50_ms": 0.431,
+    "p95_ms": 0.478,
+    "peak_kib": 72
+   }
+  },
+  "small": {
+   "aliases": 1505,
+   "build_seconds": 1.2,
+   "high_ambiguity_generic_title": {
+    "max_ms": 4.583,
+    "n": 20,
+    "p50_ms": 1.848,
+    "p95_ms": 2.746,
+    "peak_kib": 122
+   },
+   "occupations": 500,
+   "repeated_lookup_same_title": {
+    "max_ms": 1.708,
+    "n": 200,
+    "p50_ms": 0.522,
+    "p95_ms": 0.997,
+    "peak_kib": 63
+   },
+   "unique_exact": {
+    "max_ms": 2.016,
+    "n": 100,
+    "p50_ms": 0.562,
+    "p95_ms": 1.095,
+    "peak_kib": 98
+   },
+   "unique_folded_fallback": {
+    "max_ms": 2.897,
+    "n": 50,
+    "p50_ms": 1.06,
+    "p95_ms": 1.551,
+    "peak_kib": 81
+   },
+   "unknown_alias": {
+    "max_ms": 2.885,
+    "n": 100,
+    "p50_ms": 1.577,
+    "p95_ms": 2.342,
+    "peak_kib": 147
+   },
+   "unknown_identifier": {
+    "max_ms": 2.364,
+    "n": 100,
+    "p50_ms": 0.472,
+    "p95_ms": 0.928,
+    "peak_kib": 85
+   }
+  }
+ },
+ "note": "Synthetic corpora in a throwaway database; sizes mirror the legacy inventory; no real content; no protected store touched.",
+ "schema": "resolver_benchmark/1"
+}

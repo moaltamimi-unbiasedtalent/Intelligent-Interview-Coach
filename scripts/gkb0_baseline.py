@@ -12,16 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-PROTECTED = ("data", "evaluations")
-
-
-def output_is_protected(out: str | Path, root: Path) -> bool:
-    """True when ``out`` resolves (symlinks, ``..`` and relative paths followed; the file need not exist) inside a protected directory of ``root``."""
-    base = Path(root).resolve()
-    target = Path(out)
-    resolved = (target if target.is_absolute() else Path.cwd() / target).resolve()
-    rel = (base / target).resolve() if not target.is_absolute() else resolved          # a relative path is also judged against the repository root
-    return any(candidate == (base / d).resolve() or (base / d).resolve() in candidate.parents for candidate in (resolved, rel) for d in PROTECTED)
+from src.knowledge_foundation.pathsafe import output_is_protected  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:
