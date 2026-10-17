@@ -31,6 +31,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     create_engine,
+    false,
     text,
 )
 from sqlalchemy.engine import Engine
@@ -2716,6 +2717,84 @@ class GeographyCoverage(Base):
     compensation_level: Mapped[str] = mapped_column(String(16), default="targeted", server_default="targeted")
     outlook_level: Mapped[str] = mapped_column(String(16), default="targeted", server_default="targeted")
     source_languages: Mapped[list] = mapped_column(JSON, default=list)
+    source_ids: Mapped[list] = mapped_column(JSON, default=list)
+    limitations: Mapped[str | None] = mapped_column(Text, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Multilingual occupation aliases and language coverage (P10C-B). Additive to the P10C-A graph; metadata and structure only. No alias, translation or salary figure is
+# shipped by a migration, and nothing here changes a candidate-facing result.
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+ALIAS_TYPES = ("official_preferred", "official_alternative", "source_synonym", "recognized_title", "legacy_alias", "unknown")
+ALIAS_OFFICIAL_TYPES = ("official_preferred", "official_alternative")
+ALIAS_LANGUAGE_BASES = ("unknown", "source_declared", "source_file", "fixture_declared", "curated_manual")
+ALIAS_STATUSES = ("current", "deprecated", "superseded")
+
+
+class GraphOccupationAlias(Base):
+    """A language-aware label of ONE occupation node. The original text is preserved exactly; ``normalized_text`` (diacritics kept) and ``folded_text`` (diacritics folded for Latin
+    script only) are derived keys under ``normalization_version``. Language ``und`` means UNKNOWN and carries basis ``unknown``; a known language always names its evidence basis.
+    Two occupations may share an alias; the same occupation may hold several aliases in one language. Uniqueness is per (occupation, normalized text, language, type, source,
+    edition), so nothing forces distinct occupations to merge. An official alias type requires a source reference (database CHECK; the service additionally requires a registered
+    source with a known origin)."""
+
+    __tablename__ = "graph_occupation_aliases"
+    __table_args__ = (
+        UniqueConstraint("occupation_id", "normalized_text", "language", "alias_type", "source_ref", "edition_ref", name="uq_graph_alias"),
+        CheckConstraint(_in_list("alias_type", ALIAS_TYPES), name="ck_ga_type"),
+        CheckConstraint(_in_list("language_basis", ALIAS_LANGUAGE_BASES), name="ck_ga_language_basis"),
+        CheckConstraint(_in_list("qualification_status", QUALIFICATION_STATUSES), name="ck_ga_qualification"),
+        CheckConstraint(_in_list("status", ALIAS_STATUSES), name="ck_ga_status"),
+        CheckConstraint("(language = 'und' AND language_basis = 'unknown') OR (language <> 'und' AND language_basis <> 'unknown')", name="ck_ga_language_evidence"),
+        CheckConstraint("alias_type NOT IN ('official_preferred', 'official_alternative') OR source_ref <> ''", name="ck_ga_official_needs_source"),
+        Index("ix_graph_alias_normalized", "normalized_text", "language"),
+        Index("ix_graph_alias_folded", "folded_text"),
+        Index("ix_graph_alias_occupation", "occupation_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    occupation_id: Mapped[int] = mapped_column(ForeignKey("graph_occupations.id", ondelete="CASCADE"))
+    alias_text: Mapped[str] = mapped_column(String(300))
+    normalized_text: Mapped[str] = mapped_column(String(300))
+    folded_text: Mapped[str] = mapped_column(String(300))
+    normalization_version: Mapped[str] = mapped_column(String(16))
+    language: Mapped[str] = mapped_column(String(16), default="und", server_default="und")
+    language_basis: Mapped[str] = mapped_column(String(20), default="unknown", server_default="unknown")
+    script: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    alias_type: Mapped[str] = mapped_column(String(24), default="unknown", server_default="unknown")
+    source_ref: Mapped[str] = mapped_column(String(64), default="", server_default="")
+    taxonomy_id: Mapped[int | None] = mapped_column(ForeignKey("occupation_taxonomies.id", ondelete="RESTRICT"), nullable=True)
+    edition_ref: Mapped[str] = mapped_column(String(64), default="", server_default="")
+    qualification_status: Mapped[str] = mapped_column(String(20), default="unqualified", server_default="unqualified")
+    status: Mapped[str] = mapped_column(String(12), default="current", server_default="current")
+    context_terms: Mapped[list] = mapped_column(JSON, default=list)
+    provenance: Mapped[dict] = mapped_column(JSON, default=dict)
+    valid_from: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    valid_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class LanguageCoverage(Base):
+    """Language coverage, reported SEPARATELY from country coverage. UI support, taxonomy support, alias-data availability, alias qualification and resolver support are
+    independent facts: a UI locale does not establish occupation data, and a language may have aliases without any qualified compensation data (or the reverse)."""
+
+    __tablename__ = "language_coverage"
+    __table_args__ = (
+        UniqueConstraint("language", name="uq_language_coverage_language"),
+        CheckConstraint(_in_list("taxonomy_level", COVERAGE_LEVELS), name="ck_lc_taxonomy"),
+        CheckConstraint(_in_list("alias_data_level", COVERAGE_LEVELS), name="ck_lc_alias_data"),
+        CheckConstraint(_in_list("resolver_level", COVERAGE_LEVELS), name="ck_lc_resolver"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    language: Mapped[str] = mapped_column(String(16))
+    label: Mapped[str] = mapped_column(String(60))
+    ui_supported: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    taxonomy_level: Mapped[str] = mapped_column(String(16), default="targeted", server_default="targeted")
+    alias_data_level: Mapped[str] = mapped_column(String(16), default="targeted", server_default="targeted")
+    alias_qualified: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    resolver_level: Mapped[str] = mapped_column(String(16), default="targeted", server_default="targeted")
     source_ids: Mapped[list] = mapped_column(JSON, default=list)
     limitations: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

@@ -51,7 +51,7 @@ def test_0035_is_head_creates_the_seven_empty_tables_and_the_constraints(pg):
     insp = inspect(pg.engine)
     assert set(NEW) <= set(insp.get_table_names())
     with pg.engine.connect() as c:
-        assert c.execute(text("select version_num from alembic_version")).scalar() == "0035_knowledge_foundation"
+        assert c.execute(text("select version_num from alembic_version")).scalar() == "0036_multilingual_aliases"
         for t in ("global_sources", "occupation_taxonomies", "graph_occupations", "graph_occupation_identifiers", "graph_occupation_relationships", "geography_coverage"):
             assert c.execute(text(f"select count(*) from {t}")).scalar() == 0
         checks = {r[0] for r in c.execute(text("select conname from pg_constraint where contype = 'c' and conrelid::regclass::text like any (array['global_sources','graph_occupation_relationships'])"))}

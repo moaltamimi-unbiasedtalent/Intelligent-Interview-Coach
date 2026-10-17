@@ -723,7 +723,7 @@ def test_all_gates_stay_off_the_head_is_the_migration_and_the_permission_registr
     root = pathlib.Path(__file__).resolve().parents[1]
     cfg = Config(str(root / "alembic.ini"))
     cfg.set_main_option("script_location", str(root / "migrations"))
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0035_knowledge_foundation"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == ["0036_multilingual_aliases"]
 
 
 def test_migration_0034_upgrades_downgrades_and_reupgrades_cleanly(tmp_path, monkeypatch):

@@ -1,0 +1,22 @@
+{
+  "schema": "language_coverage/1",
+  "note": "Language coverage is reported SEPARATELY from country coverage and from UI locale support. 'ui_supported' only says the interface is translated; it establishes no occupation data. Levels: unsupported < targeted < source_identified < data_available < implemented < qualified. Nothing is qualified. 'resolver_level = implemented' means the resolver applies its deterministic normalization to the language and the behaviour is exercised on synthetic fixtures; it is NOT a claim of qualified alias data.",
+  "languages": [
+    {"language": "en", "label": "English", "ui_supported": true, "taxonomy_level": "data_available", "alias_data_level": "data_available", "resolver_level": "implemented",
+     "source_ids": ["esco", "isco08", "onet", "bls_ooh"], "limitations": "23,579 legacy aliases are English by source file evidence (ESCO English occupations file) but are not yet in the graph and are unqualified; 722 normalized labels are shared by several occupations."},
+    {"language": "de", "label": "German", "ui_supported": true, "taxonomy_level": "data_available", "alias_data_level": "source_identified", "resolver_level": "implemented",
+     "source_ids": ["kldb", "berufenet"], "limitations": "KldB 2020 titles are German (source-declared); no German alias set is in the legacy store and no multilingual ESCO release has been acquired. SOURCE LICENSING PENDING."},
+    {"language": "fr", "label": "French", "ui_supported": true, "taxonomy_level": "targeted", "alias_data_level": "targeted", "resolver_level": "implemented",
+     "source_ids": [], "limitations": "Targeted only. A multilingual ESCO release is the candidate source; its availability for this language and its licence are NOT verified."},
+    {"language": "es", "label": "Spanish", "ui_supported": true, "taxonomy_level": "targeted", "alias_data_level": "targeted", "resolver_level": "implemented",
+     "source_ids": [], "limitations": "Targeted only. Latin American national taxonomies (SINCO, CBO) are identified but not acquired. SOURCE LICENSING PENDING."},
+    {"language": "it", "label": "Italian", "ui_supported": true, "taxonomy_level": "targeted", "alias_data_level": "targeted", "resolver_level": "implemented",
+     "source_ids": [], "limitations": "Targeted only. Candidate source not verified."},
+    {"language": "pt", "label": "Portuguese", "ui_supported": true, "taxonomy_level": "targeted", "alias_data_level": "targeted", "resolver_level": "implemented",
+     "source_ids": [], "limitations": "Targeted only. Brazilian CBO is identified but not acquired. SOURCE LICENSING PENDING."},
+    {"language": "nl", "label": "Dutch", "ui_supported": true, "taxonomy_level": "targeted", "alias_data_level": "targeted", "resolver_level": "implemented",
+     "source_ids": [], "limitations": "Targeted only. Candidate source not verified."},
+    {"language": "ru", "label": "Russian", "ui_supported": true, "taxonomy_level": "targeted", "alias_data_level": "targeted", "resolver_level": "implemented",
+     "source_ids": [], "limitations": "UI locale only. No official Russian occupation source is identified and Russian ESCO terminology is NOT assumed to exist. Resolver support is limited to Cyrillic-safe normalization exercised on synthetic fixtures."}
+  ]
+}
