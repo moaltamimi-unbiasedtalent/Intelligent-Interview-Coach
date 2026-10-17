@@ -622,11 +622,47 @@ def test_the_committed_baseline_manifest_is_consistent_with_the_registry_seed():
     assert base["build"]["verified_match"] == base["build"]["recorded_raw_checksums"] == 13 and base["vector_store"]["total_chunks"] == 14087 and base["evaluation_fixtures"]["product_coverage_cases"]["cases"] == 412
 
 
-def test_the_baseline_script_refuses_to_write_inside_data_or_evaluations():
+def _script(*args, cwd):
     import subprocess, sys
-    for target in ("data/x.json", "evaluations/x.json"):
-        r = subprocess.run([sys.executable, str(ROOT / "scripts/gkb0_baseline.py"), "--out", str(ROOT / target)], capture_output=True, text=True, cwd=ROOT)
-        assert r.returncode == 2 and not (ROOT / target).exists()
+    return subprocess.run([sys.executable, str(ROOT / "scripts/gkb0_baseline.py"), *args], capture_output=True, text=True, cwd=cwd)
+
+
+def _snapshot(root):
+    return sorted((str(p.relative_to(root)), p.is_dir() or p.stat().st_size) for p in root.rglob("*"))
+
+
+def test_the_baseline_script_refuses_protected_outputs_on_a_clean_checkout(tmp_path):
+    """A clean checkout has NO local knowledge files: the destination is rejected (exit 2) before any data is read, and nothing is created."""
+    root = tmp_path / "clean"
+    (root / "data").mkdir(parents=True)
+    (root / "evaluations").mkdir()
+    (root / "outside").mkdir()
+    (root / "alias").symlink_to(root / "data", target_is_directory=True)
+    (root / "evalalias").symlink_to(root / "evaluations", target_is_directory=True)
+    assert not (root / "data/knowledge/data_origins.json").exists()
+    before = _snapshot(root)
+    bad = ["data/x.json", "evaluations/x.json", "data/nested/x.json", "evaluations/nested/x.json", "outside/../data/x.json", "outside/../evaluations/y.json", "data/../data/x.json",
+           "alias/x.json", "evalalias/nested/x.json", str(root / "data/abs.json"), str(root / "evaluations/abs.json"), str(root / "outside/../data/abs2.json")]
+    for target in bad:
+        r = _script("--root", str(root), "--out", target, cwd=root)
+        assert r.returncode == 2 and "refusing" in r.stderr and "Traceback" not in r.stderr, (target, r.stderr[-300:])
+    assert _snapshot(root) == before                                                          # no file or directory created anywhere
+
+
+def test_the_baseline_script_with_a_permitted_output_and_missing_data_fails_in_a_controlled_way(tmp_path):
+    root = tmp_path / "clean"
+    (root / "data").mkdir(parents=True)
+    r = _script("--root", str(root), "--out", str(tmp_path / "elsewhere/baseline.json"), cwd=root)
+    assert r.returncode == 3 and "required local knowledge data is missing" in r.stderr and "Traceback" not in r.stderr
+    assert not (tmp_path / "elsewhere").exists() and _snapshot(root) == [("data", True)]     # nothing fabricated, nothing partial written
+
+
+def test_the_baseline_script_still_works_on_a_fixture_with_a_permitted_output(tmp_path):
+    root = _fixture_data_root(tmp_path)
+    out = tmp_path / "out/baseline.json"
+    r = _script("--root", str(root), "--out", str(out), cwd=tmp_path)
+    assert r.returncode == 0, r.stderr[-300:]
+    assert json.loads(out.read_text())["source_manifest"]["count"] == 3
 
 
 # ======================================================================== isolation, gates, migration
