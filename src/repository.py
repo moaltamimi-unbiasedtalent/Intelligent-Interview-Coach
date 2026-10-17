@@ -356,6 +356,42 @@ class InterviewRepository:
                 ],
             }
 
+    def analytics_rows(self, user_id: int, window: int | None = None, *, opportunity_id: int | None = None, limit: int = 500,
+                       only_ids: list[int] | None = None) -> tuple[list[dict], bool]:
+        """Light, deterministic measurement rows for Premium analytics (W12.4D-P4-B): the caller's COMPLETED interviews inside ``window`` (the SAME
+        ``_eligible_ids`` selection every history surface uses), oldest first, at most ``limit`` newest ones (``truncated`` says more exist). Reads only
+        measurement fields (evaluation JSON, question type, timing, report score); never transcripts, and nothing is written or stored."""
+        with self._session_factory() as session:
+            stmt = select(Interview).where(Interview.user_id == user_id, Interview.status == self.COMPLETED)
+            if window is not None:
+                stmt = stmt.where(Interview.id.in_(self._eligible_ids(session, user_id, window) or [-1]))
+            if opportunity_id is not None:
+                stmt = stmt.where(Interview.opportunity_id == opportunity_id)
+            if only_ids is not None:
+                stmt = stmt.where(Interview.id.in_(only_ids or [-1]))
+            interviews = session.scalars(stmt.order_by(*self._latest_order()).limit(limit + 1)).all()
+            truncated = len(interviews) > limit
+            interviews = interviews[:limit]
+            ids = [i.id for i in interviews]
+            answers: dict[int, list[dict]] = {i: [] for i in ids}
+            if ids:
+                q = (select(Question.interview_id, Question.position, Question.question_type, Question.difficulty, Question.is_deep_dive, Answer.evaluation)
+                     .join(Answer, Answer.question_id == Question.id).where(Question.interview_id.in_(ids)).order_by(Question.interview_id, Question.position))
+                for iid, pos, qtype, diff, deep, ev in session.execute(q):
+                    answers[iid].append({"position": pos, "question_type": qtype, "difficulty": diff, "deep_dive": bool(deep), "evaluation": ev})
+            reports = {rid: rep for rid, rep in session.execute(select(Report.interview_id, Report.report).where(Report.interview_id.in_(ids)))} if ids else {}
+            question_counts = {iid: n for iid, n in session.execute(select(Question.interview_id, func.count()).where(Question.interview_id.in_(ids))
+                                                                     .group_by(Question.interview_id))} if ids else {}
+            rows = []
+            for i in reversed(interviews):                                       # chronological: created_at ASC, id ASC
+                config = i.configuration or {}
+                rep = reports.get(i.id)
+                rows.append({"id": i.id, "created_at": i.created_at, "opportunity_id": i.opportunity_id, "mode": i.mode,
+                             "target_role": config.get("target_role"), "career_level": config.get("career_level"), "industry": config.get("industry_or_sector"),
+                             "questions": question_counts.get(i.id, 0), "answers": answers.get(i.id, []),
+                             "report_score": rep.get("overall_readiness_score") if isinstance(rep, dict) else None})
+            return rows, truncated
+
     # -- serialisers ----------------------------------------------------------
 
     @staticmethod

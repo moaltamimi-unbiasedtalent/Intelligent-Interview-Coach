@@ -106,6 +106,8 @@ import type {
   InterviewDetailResponse,
   ModelProfilesResponse,
   UsageQuotasResponse,
+  AnalyticsOverviewResponse,
+  AnalyticsCompareResponse,
   ProgressResponse,
   EvaluationRunResponse,
   InterviewQuestionSet,
@@ -333,6 +335,13 @@ export const api = {
   // Plan-aware model-profile metadata (W12.4D-P2-C). Read-only; `selector_active` is false until a reviewed release enables enforcement.
   modelProfiles: {
     get: (opts?: RequestOptions) => request<ModelProfilesResponse>("GET", "/model-profiles", opts),
+  },
+
+  progressAnalytics: {
+    get: (opportunityId?: number | null, opts?: RequestOptions) =>
+      request<AnalyticsOverviewResponse>("GET", opportunityId ? `/progress/analytics?opportunity_id=${encodeURIComponent(String(opportunityId))}` : "/progress/analytics", opts),
+    compare: (base: number, target: number, opts?: RequestOptions) =>
+      request<AnalyticsCompareResponse>("GET", `/progress/analytics/compare?base=${encodeURIComponent(String(base))}&target=${encodeURIComponent(String(target))}`, opts),
   },
 
   usageQuotas: {
