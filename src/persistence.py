@@ -2506,6 +2506,221 @@ class PreparationPack(Base):
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Global knowledge foundation (W P10C-A): governed source registry, taxonomy editions, canonical occupation graph and the geographic coverage matrix. Metadata and
+# structure only: no occupation row, salary figure or external dataset is shipped by a migration, and nothing here changes a candidate-facing result.
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+KS_APPROVAL_STATES = ("discovered", "licensing_pending", "licensing_verified", "approved_for_ingestion", "approved_for_runtime_use", "restricted", "rejected", "superseded")
+KS_LICENCE_STATUSES = ("unknown", "stated_unverified", "verified", "conflicting")
+KS_TRI_STATES = ("unknown", "yes", "no")
+KS_ORIGINS = ("unknown", "official_local", "official_api", "authorized_api", "authorised_manual", "synthetic_fixture")
+KS_PRECEDENCE = ("unknown", "national_official_occupation_statistics", "national_public_employment_service", "eurostat_harmonised", "cedefop_intelligence",
+                 "authorized_secondary", "insufficient_evidence")
+KS_VALIDATION = ("unknown", "unvalidated", "engineering_draft", "human_reviewed")
+KS_EVIDENCE_CLASSES = ("C1", "C2", "C3")
+TAXONOMY_SCHEMES = ("esco", "isco", "onet_soc", "soc", "uk_soc", "kldb", "noc", "sinco", "cbo")
+TAXONOMY_STATUSES = ("current", "historical", "deprecated", "unknown")
+TAXONOMY_ACQUISITION = ("available_locally", "referenced_indirectly", "identified_externally", "not_acquired", "unverified")
+OCC_STATUSES = ("active", "deprecated", "superseded")
+IDENTIFIER_STATUSES = ("current", "deprecated", "unknown")
+REL_TYPES = ("equivalent", "broader", "narrower", "related")
+REL_BASES = ("source_provided", "curated_manual", "derived_rule")
+MAPPING_STATUSES = ("verified", "partial", "ambiguous", "unsupported", "unknown")
+QUALIFICATION_STATUSES = ("unqualified", "engineering_checked", "qualified")
+COVERAGE_LEVELS = ("unsupported", "targeted", "source_identified", "data_available", "implemented", "qualified")
+COVERAGE_GROUPS = ("eu27", "uk", "eea_non_eu", "switzerland", "us", "canada", "mexico", "brazil", "south_america_other")
+
+
+class GlobalSource(Base):
+    """One governed knowledge source in the registry (P10C-A). Unknown facts are stored as explicit ``unknown`` values or NULL, never guessed. Registry membership does
+    not authorize anything: only ``approval_status`` does, through audited transitions. ``origin = synthetic_fixture`` can never become runtime evidence."""
+
+    __tablename__ = "global_sources"
+    __table_args__ = (
+        UniqueConstraint("source_id", name="uq_global_source_id"),
+        CheckConstraint(_in_list("approval_status", KS_APPROVAL_STATES), name="ck_gs_approval"),
+        CheckConstraint(_in_list("licence_status", KS_LICENCE_STATUSES), name="ck_gs_licence_status"),
+        CheckConstraint(_in_list("attribution_required", KS_TRI_STATES), name="ck_gs_attribution"),
+        CheckConstraint(_in_list("redistribution", KS_TRI_STATES), name="ck_gs_redistribution"),
+        CheckConstraint(_in_list("origin", KS_ORIGINS), name="ck_gs_origin"),
+        CheckConstraint(_in_list("precedence_category", KS_PRECEDENCE), name="ck_gs_precedence"),
+        CheckConstraint(_in_list("validation_status", KS_VALIDATION), name="ck_gs_validation"),
+        CheckConstraint("evidence_class IS NULL OR evidence_class IN ('C1', 'C2', 'C3')", name="ck_gs_evidence_class"),
+        CheckConstraint("origin <> 'synthetic_fixture' OR approval_status NOT IN ('approved_for_ingestion', 'approved_for_runtime_use')", name="ck_gs_synthetic_never_approved"),
+        CheckConstraint("approval_status NOT IN ('approved_for_ingestion', 'approved_for_runtime_use') OR licence_status = 'verified'", name="ck_gs_approval_needs_licence"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    source_id: Mapped[str] = mapped_column(String(64))
+    publisher: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    dataset_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    dataset_version: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    source_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    geographies: Mapped[list] = mapped_column(JSON, default=list)
+    languages: Mapped[list] = mapped_column(JSON, default=list)
+    taxonomy: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    evidence_category: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    publication_date: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    reference_period: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    update_cadence: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    precedence_category: Mapped[str] = mapped_column(String(48), default="unknown", server_default="unknown")
+    evidence_class: Mapped[str | None] = mapped_column(String(2), nullable=True)
+    licence_id: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    licence_status: Mapped[str] = mapped_column(String(20), default="unknown", server_default="unknown")
+    attribution_required: Mapped[str] = mapped_column(String(8), default="unknown", server_default="unknown")
+    redistribution: Mapped[str] = mapped_column(String(8), default="unknown", server_default="unknown")
+    origin: Mapped[str] = mapped_column(String(24), default="unknown", server_default="unknown")
+    approval_status: Mapped[str] = mapped_column(String(32), default="discovered", server_default="discovered")
+    operational_status: Mapped[str] = mapped_column(String(32), default="unknown", server_default="unknown")
+    validation_status: Mapped[str] = mapped_column(String(20), default="unknown", server_default="unknown")
+    retrieved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    checksum_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    provenance: Mapped[dict] = mapped_column(JSON, default=dict)
+    superseded_by: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class GlobalSourceEvent(Base):
+    """An audited approval-lifecycle transition of a source. Append-only by convention; no free text from untrusted sources is stored (the reason is operator-authored)."""
+
+    __tablename__ = "global_source_events"
+    __table_args__ = (CheckConstraint(_in_list("to_status", KS_APPROVAL_STATES), name="ck_gse_to_status"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    source_row_id: Mapped[int] = mapped_column(ForeignKey("global_sources.id", ondelete="CASCADE"), index=True)
+    from_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    to_status: Mapped[str] = mapped_column(String(32))
+    actor_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    reason: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class OccupationTaxonomy(Base):
+    """A taxonomy NAMESPACE plus EDITION. A native code is only meaningful together with both, so identifiers and relationships always reference this row. An edition that
+    is not recorded is stored as ``unknown`` (never invented). ``acquisition_status`` says whether the taxonomy data is actually held locally."""
+
+    __tablename__ = "occupation_taxonomies"
+    __table_args__ = (
+        UniqueConstraint("scheme", "edition", name="uq_occupation_taxonomy"),
+        CheckConstraint(_in_list("scheme", TAXONOMY_SCHEMES), name="ck_ot_scheme"),
+        CheckConstraint(_in_list("status", TAXONOMY_STATUSES), name="ck_ot_status"),
+        CheckConstraint(_in_list("acquisition_status", TAXONOMY_ACQUISITION), name="ck_ot_acquisition"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    scheme: Mapped[str] = mapped_column(String(16))
+    edition: Mapped[str] = mapped_column(String(32), default="unknown", server_default="unknown")
+    label: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    status: Mapped[str] = mapped_column(String(16), default="unknown", server_default="unknown")
+    acquisition_status: Mapped[str] = mapped_column(String(24), default="not_acquired", server_default="not_acquired")
+    code_pattern: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    geographies: Mapped[list] = mapped_column(JSON, default=list)
+    source_row_id: Mapped[int | None] = mapped_column(ForeignKey("global_sources.id", ondelete="SET NULL"), nullable=True)
+    superseded_by_id: Mapped[int | None] = mapped_column(ForeignKey("occupation_taxonomies.id", ondelete="SET NULL"), nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class GraphOccupation(Base):
+    """A node of the canonical occupation graph. ``occupation_key`` is the established ``ask4mo:occ:<hash>`` identity (``canonical_occupation_id``), independent of the
+    display title; ``legacy_keys`` lists earlier keys that must keep resolving (for example identities derived from codes whose leading zero the legacy store lost)."""
+
+    __tablename__ = "graph_occupations"
+    __table_args__ = (
+        UniqueConstraint("occupation_key", name="uq_graph_occupation_key"),
+        CheckConstraint(_in_list("status", OCC_STATUSES), name="ck_go_status"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    occupation_key: Mapped[str] = mapped_column(String(64))
+    canonical_label: Mapped[str] = mapped_column(String(300))
+    status: Mapped[str] = mapped_column(String(16), default="active", server_default="active")
+    legacy_keys: Mapped[list] = mapped_column(JSON, default=list)
+    superseded_by_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class GraphOccupationIdentifier(Base):
+    """A native code of an occupation inside ONE taxonomy edition. ``(taxonomy, native_code)`` is unique, so a code is never globally unique and never collides across
+    namespaces or editions."""
+
+    __tablename__ = "graph_occupation_identifiers"
+    __table_args__ = (
+        UniqueConstraint("taxonomy_id", "native_code", name="uq_graph_identifier"),
+        CheckConstraint(_in_list("status", IDENTIFIER_STATUSES), name="ck_gi_status"),
+        Index("ix_graph_identifier_occupation", "occupation_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    occupation_id: Mapped[int] = mapped_column(ForeignKey("graph_occupations.id", ondelete="CASCADE"))
+    taxonomy_id: Mapped[int] = mapped_column(ForeignKey("occupation_taxonomies.id", ondelete="RESTRICT"))
+    native_code: Mapped[str] = mapped_column(String(64))
+    native_label: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    status: Mapped[str] = mapped_column(String(12), default="current", server_default="current")
+    source_ref: Mapped[str] = mapped_column(String(64), default="", server_default="")
+    provenance: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
+class GraphOccupationRelationship(Base):
+    """A governed relationship between two occupation nodes. The type (equivalent, broader, narrower, related) is distinct from the mapping status (verified, partial,
+    ambiguous, unsupported, unknown): RELATED is never EQUIVALENT, a VERIFIED mapping must name its source, and label similarity is not a permitted basis."""
+
+    __tablename__ = "graph_occupation_relationships"
+    __table_args__ = (
+        UniqueConstraint("from_occupation_id", "to_occupation_id", "relationship_type", "source_ref", name="uq_graph_relationship"),
+        CheckConstraint(_in_list("relationship_type", REL_TYPES), name="ck_gr_type"),
+        CheckConstraint(_in_list("basis", REL_BASES), name="ck_gr_basis"),
+        CheckConstraint(_in_list("mapping_status", MAPPING_STATUSES), name="ck_gr_status"),
+        CheckConstraint(_in_list("qualification_status", QUALIFICATION_STATUSES), name="ck_gr_qualification"),
+        CheckConstraint("from_occupation_id <> to_occupation_id", name="ck_gr_not_self"),
+        CheckConstraint("mapping_status <> 'verified' OR (source_ref <> '' AND basis = 'source_provided')", name="ck_gr_verified_needs_source"),
+        Index("ix_graph_relationship_to", "to_occupation_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    from_occupation_id: Mapped[int] = mapped_column(ForeignKey("graph_occupations.id", ondelete="CASCADE"))
+    to_occupation_id: Mapped[int] = mapped_column(ForeignKey("graph_occupations.id", ondelete="CASCADE"))
+    from_taxonomy_id: Mapped[int] = mapped_column(ForeignKey("occupation_taxonomies.id", ondelete="RESTRICT"))
+    to_taxonomy_id: Mapped[int] = mapped_column(ForeignKey("occupation_taxonomies.id", ondelete="RESTRICT"))
+    relationship_type: Mapped[str] = mapped_column(String(12))
+    basis: Mapped[str] = mapped_column(String(16))
+    mapping_status: Mapped[str] = mapped_column(String(12), default="unknown", server_default="unknown")
+    qualification_status: Mapped[str] = mapped_column(String(20), default="unqualified", server_default="unqualified")
+    source_ref: Mapped[str] = mapped_column(String(64), default="", server_default="")
+    limitations: Mapped[str | None] = mapped_column(Text, nullable=True)
+    superseded: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class GeographyCoverage(Base):
+    """Country-level coverage metadata. Targeted is not operational: every dimension carries one of six levels, and nothing here is QUALIFIED unless a qualification record
+    exists. Language support is the set of languages the AVAILABLE SOURCES provide, independent of the product locales and never used to infer a country."""
+
+    __tablename__ = "geography_coverage"
+    __table_args__ = (
+        UniqueConstraint("geography_code", name="uq_geography_coverage_code"),
+        CheckConstraint(_in_list("coverage_group", COVERAGE_GROUPS), name="ck_gc_group"),
+        CheckConstraint(_in_list("taxonomy_level", COVERAGE_LEVELS), name="ck_gc_taxonomy"),
+        CheckConstraint(_in_list("crosswalk_level", COVERAGE_LEVELS), name="ck_gc_crosswalk"),
+        CheckConstraint(_in_list("compensation_level", COVERAGE_LEVELS), name="ck_gc_compensation"),
+        CheckConstraint(_in_list("outlook_level", COVERAGE_LEVELS), name="ck_gc_outlook"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    geography_code: Mapped[str] = mapped_column(String(8))
+    label: Mapped[str] = mapped_column(String(80))
+    coverage_group: Mapped[str] = mapped_column(String(24))
+    taxonomy_level: Mapped[str] = mapped_column(String(16), default="targeted", server_default="targeted")
+    crosswalk_level: Mapped[str] = mapped_column(String(16), default="targeted", server_default="targeted")
+    compensation_level: Mapped[str] = mapped_column(String(16), default="targeted", server_default="targeted")
+    outlook_level: Mapped[str] = mapped_column(String(16), default="targeted", server_default="targeted")
+    source_languages: Mapped[list] = mapped_column(JSON, default=list)
+    source_ids: Mapped[list] = mapped_column(JSON, default=list)
+    limitations: Mapped[str | None] = mapped_column(Text, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
 def make_engine(database_url: str) -> Engine:
     """Create an engine; SQLite needs cross-thread access for Streamlit."""
     connect_args = {}

@@ -1,0 +1,673 @@
+{
+ "build": {
+  "checksum_verification": [
+   {
+    "match": true,
+    "path": "data/raw/db_31_0_excel/Occupation Data.xlsx",
+    "present": true,
+    "recorded_sha256": "13b2aa4c08e6c9a3708d5e5ac83e13da5cc184e3798313c8942a266d00593ace"
+   },
+   {
+    "match": true,
+    "path": "data/raw/ESCO dataset - v1.2.1 - classification - en - csv/occupations_en.csv",
+    "present": true,
+    "recorded_sha256": "8034348d84b6d1dd24a5bcf9609186ecbba0a85457ee2eacd65bddec33a51b4a"
+   },
+   {
+    "match": true,
+    "path": "data/raw/ISCO-08 EN Structure and definitions.xlsx",
+    "present": true,
+    "recorded_sha256": "df10744491b4216ed3580e8263b6324502e774c16667a1d7ecdbee50e85505e7"
+   },
+   {
+    "match": true,
+    "path": "data/raw/Systematisches-Verzeichnis-KldB-2020.xlsx",
+    "present": true,
+    "recorded_sha256": "f131d44c3997eae2e4c48522dd80cab81439d86d15b619c6b4476785fa437441"
+   },
+   {
+    "match": true,
+    "path": "data/raw/OOH xml-compilation.xml",
+    "present": true,
+    "recorded_sha256": "6d661f1ac13c819b1170b48a18d4b0d4a16cf2687912c6c1ead56d50d414b894"
+   },
+   {
+    "match": true,
+    "path": "data/raw/occupation.xlsx",
+    "present": true,
+    "recorded_sha256": "a7d060f0576f7d4f5b829b9a0bb4a6c11a12766d159ebb0e07aab5bd2e7583c5"
+   },
+   {
+    "match": true,
+    "path": "data/raw/oesm25nat/oesm25nat/national_M2025_dl.xlsx",
+    "present": true,
+    "recorded_sha256": "852250997ceff9b721ff68f63e877d818f9c1ec8b1b69dd367958faedd5282b2"
+   },
+   {
+    "match": true,
+    "path": "data/raw/ashetable142025provisional/PROV - Occupation SOC20 (4) Table 14.1a   Weekly pay - Gross 2025.xlsx",
+    "present": true,
+    "recorded_sha256": "05887713edda5c98e7d663c491a644fcc809d2db91e9767f09e18bfea3bff0ad"
+   },
+   {
+    "match": true,
+    "path": "data/raw/occupation.xlsx",
+    "present": true,
+    "recorded_sha256": "a7d060f0576f7d4f5b829b9a0bb4a6c11a12766d159ebb0e07aab5bd2e7583c5"
+   },
+   {
+    "match": true,
+    "path": "data/raw/2026_cedefop_labour_skills_shortage_index_clssi_dataset.xlsx",
+    "present": true,
+    "recorded_sha256": "79e066fa33631c4e5f641374280729204b1297ec575ff2f609d2f224ebf988a5"
+   },
+   {
+    "match": true,
+    "path": "data/raw/jvs_a_isco3_r1$defaultview_spreadsheet.xlsx",
+    "present": true,
+    "recorded_sha256": "19f7b425ebc184bcef7dc691bb805e933276a59241279715b134dd580c4d3fdb"
+   },
+   {
+    "match": true,
+    "path": "data/raw/NICE Framework Components v2.2.0.xlsx",
+    "present": true,
+    "recorded_sha256": "d33f76d262c039afbfb7b4b861204326a32c1e388b5c7bc9d15a43205125199d"
+   },
+   {
+    "match": true,
+    "path": "data/raw/DigComp 2.2 ESCO Skills Mapping.xlsx",
+    "present": true,
+    "recorded_sha256": "a0a23101cd6925e72528fa2d57305fe3702dc025ec0bbfe0398fd37bf43c3419"
+   }
+  ],
+  "normalized_built_at": "2026-09-12T05:39:00.723360Z",
+  "normalized_git_commit": null,
+  "normalized_pipeline_version": "7B.1",
+  "recorded_raw_checksums": 13,
+  "runtime_built_at": "2026-09-12T06:50:02Z",
+  "runtime_git_commit": "8522dc577e1688b00234a07b83af6dfe75f50426",
+  "runtime_pipeline_version": "7C.1",
+  "source_versions": {
+   "bls_oews": "current release",
+   "bls_ooh": "current release",
+   "bls_projections": "2024-2034/2025-2035",
+   "cedefop_clssi": "2026",
+   "digcomp": "current release",
+   "esco": "current release",
+   "eurostat_occ_vacancy": "jvs_a_isco3_r1",
+   "isco08": "current release",
+   "kldb": "current release",
+   "nice_framework": "current release",
+   "onet": "current release",
+   "ons_ashe": "current release"
+  },
+  "verified_match": 13,
+  "verified_present": 13
+ },
+ "configuration_defaults": {
+  "DEFAULT_CHUNKING_STRATEGY": "baseline",
+  "DEFAULT_EMBEDDING_MODEL": "text-embedding-3-small",
+  "DEFAULT_EMBEDDING_PROVIDER": "auto",
+  "DEFAULT_RETRIEVAL_MODE": "hybrid",
+  "RERANK_TOP_K": 5
+ },
+ "evaluation_fixtures": {
+  "note": "The product-coverage evaluator reads the gitignored runtime stores above; its committed summary predates the 2026-09-12 build.",
+  "product_coverage_cases": {
+   "cases": 412,
+   "sha256": "075eec9f60d4a8d7138572af090ab9b50cf64a84b8ceeee5c76aa5da20e6042a"
+  }
+ },
+ "limitations": [
+  "Runtime stores and raw inputs are gitignored: the baseline records hashes and counts, not content.",
+  "Most sources are unpinned ('current release'): a re-acquisition may yield a different edition.",
+  "Raw checksums are recorded for 13 files covering 12 built sources; supplementary sources are built from governed fixtures or the narrative corpus.",
+  "The vector store changes whenever Admin knowledge operations run; its hash is a point-in-time value."
+ ],
+ "normalized_layer": {
+  "files": {
+   ".gitkeep": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+   },
+   "build_metadata.json": {
+    "bytes": 3742,
+    "sha256": "a034795986f07d9b1c00d26adbcd7aa038481539f60daf03d58eaff8398bf3a4"
+   },
+   "canonical_registry.json": {
+    "bytes": 879986,
+    "sha256": "87127633a53cb8c2bd5395b62e490d30d457d3530051306cac54e27f1146ea94"
+   },
+   "canonicalization_report.json": {
+    "bytes": 4341,
+    "sha256": "0f584ef176da91c8c3f3ead7687a5dfd030495129d2f9b9a70f2fae5cb6d0e5c"
+   },
+   "compensation.parquet": {
+    "bytes": 152164,
+    "sha256": "8d87f72eec74140181e7b6ee397307de43b68bc3bd6014344b5892612d586d7a"
+   },
+   "competencies.parquet": {
+    "bytes": 54731,
+    "sha256": "e2fb40a06b952ac9e74a58a9cfed779420ce82ed58ad44c6997972f46612669c"
+   },
+   "education_training.parquet": {
+    "bytes": 115393,
+    "sha256": "e21574167734f25830dc2b7a7bc99178a9d8a33d3d37d2ae535a044a5d823ed2"
+   },
+   "knowledge_areas.parquet": {
+    "bytes": 201542,
+    "sha256": "f7221346a4188c70d0255442fc10cfc4f1efe0ff570b55a0d5e078b945375d00"
+   },
+   "labour_market.parquet": {
+    "bytes": 164282,
+    "sha256": "c11da35f82176109bc56d177209f0f9d059a5b4a20e31a8a044d65829dea56e0"
+   },
+   "normalization_rejections.json": {
+    "bytes": 66,
+    "sha256": "adac69a8a766f90420a3366bea74e04d4e07c881a8e4cd6ce1adb89d13dc434f"
+   },
+   "occupation_aliases.parquet": {
+    "bytes": 806715,
+    "sha256": "fb790aa3829afcdcce3c2118fca1cf77f479ee083e9f21b6fcd9ec863759e0e2"
+   },
+   "occupation_attributes.parquet": {
+    "bytes": 185381,
+    "sha256": "982b516dfb8180961b8a890ed4cf9206c676b48dcb4e13c31ce2149b81132353"
+   },
+   "occupation_crosswalks.parquet": {
+    "bytes": 149078,
+    "sha256": "0d6dfd9fe6205478653398851c918a226ae3d8a673bd24a127f74ce1c11de327"
+   },
+   "occupation_relationships.parquet": {
+    "bytes": 400233,
+    "sha256": "eedc5d2f566100d1c583512c0d28ecddf5b3b4d5aa496f1475489002292eec74"
+   },
+   "occupation_skills.parquet": {
+    "bytes": 2670456,
+    "sha256": "a293352ff59ce493e38f082059edccb9a21a17572e55dd953a578d8580245be8"
+   },
+   "occupations.parquet": {
+    "bytes": 1500431,
+    "sha256": "e88880cfb137ce9c95eba705a24b7a865ca82dc3d3a34d0c4c7571dc1f96e7cf"
+   },
+   "source_records.parquet": {
+    "bytes": 379031,
+    "sha256": "7e00bdf7e9727af985c0ac15ae4094276c29aebcf32d7f9de3541b3adabb60ef"
+   },
+   "tasks.parquet": {
+    "bytes": 1849434,
+    "sha256": "0156ea9429962037e861bc2b824d7e345e247776d2388d3056291bffc23faf1e"
+   },
+   "technology_skills.parquet": {
+    "bytes": 309839,
+    "sha256": "3d19f75a18f8a34c702946e116512ee7e641ecaee98f11a332e9ba61c29fe3b2"
+   },
+   "work_activities.parquet": {
+    "bytes": 501245,
+    "sha256": "5ddf39bfa2e6e098fe51480b26b8d9950700d09d1d8b786ed4a4028f53078bc3"
+   }
+  },
+  "per_source": {
+   "bls_oews": {
+    "aliases": 0,
+    "compensation": 1393,
+    "crosswalks": 0,
+    "labour_market": 0,
+    "occupations": 0,
+    "relationships": 0
+   },
+   "bls_ooh": {
+    "aliases": 0,
+    "compensation": 0,
+    "crosswalks": 0,
+    "labour_market": 0,
+    "occupations": 343,
+    "relationships": 0
+   },
+   "bls_projections": {
+    "aliases": 0,
+    "compensation": 0,
+    "crosswalks": 0,
+    "labour_market": 0,
+    "occupations": 831,
+    "relationships": 0
+   },
+   "bls_projections_lm": {
+    "aliases": 0,
+    "compensation": 0,
+    "crosswalks": 0,
+    "labour_market": 1662,
+    "occupations": 0,
+    "relationships": 0
+   },
+   "cedefop_clssi": {
+    "aliases": 0,
+    "compensation": 0,
+    "crosswalks": 0,
+    "labour_market": 1178,
+    "occupations": 0,
+    "relationships": 0
+   },
+   "digcomp": {
+    "aliases": 0,
+    "compensation": 0,
+    "crosswalks": 0,
+    "labour_market": 0,
+    "occupations": 0,
+    "relationships": 0
+   },
+   "esco": {
+    "aliases": 23609,
+    "compensation": 0,
+    "crosswalks": 3043,
+    "labour_market": 0,
+    "occupations": 3043,
+    "relationships": 0
+   },
+   "eurostat_occ_vacancy": {
+    "aliases": 0,
+    "compensation": 0,
+    "crosswalks": 0,
+    "labour_market": 126,
+    "occupations": 0,
+    "relationships": 0
+   },
+   "isco08": {
+    "aliases": 0,
+    "compensation": 0,
+    "crosswalks": 0,
+    "labour_market": 0,
+    "occupations": 619,
+    "relationships": 606
+   },
+   "kldb": {
+    "aliases": 0,
+    "compensation": 0,
+    "crosswalks": 0,
+    "labour_market": 0,
+    "occupations": 2193,
+    "relationships": 2183
+   },
+   "nice_framework": {
+    "aliases": 0,
+    "compensation": 0,
+    "crosswalks": 0,
+    "labour_market": 0,
+    "occupations": 0,
+    "relationships": 0
+   },
+   "onet": {
+    "aliases": 0,
+    "compensation": 0,
+    "crosswalks": 0,
+    "labour_market": 0,
+    "occupations": 1016,
+    "relationships": 9230
+   },
+   "ons_ashe": {
+    "aliases": 0,
+    "compensation": 527,
+    "crosswalks": 0,
+    "labour_market": 0,
+    "occupations": 0,
+    "relationships": 0
+   }
+  },
+  "pipeline_version": "7B.1",
+  "record_counts": {
+   "compensation": 1913,
+   "competencies": 2269,
+   "knowledge_areas": 6968,
+   "labour_market": 2398,
+   "occupation_aliases": 23579,
+   "occupation_attributes": 2971,
+   "occupation_crosswalks": 3039,
+   "occupation_relationships": 12016,
+   "occupation_skills": 99883,
+   "occupations": 8035,
+   "source_records": 10304,
+   "tasks": 22383,
+   "technology_skills": 11572,
+   "work_activities": 20141
+  }
+ },
+ "note": "Metadata only: counts, hashes, versions and verdicts. No source content. Produced read-only.",
+ "reproducibility": {
+  "per_source": [
+   {
+    "gaps": [
+     "not built into the normalized layer"
+    ],
+    "source_id": "adzuna",
+    "verdict": "not_reproducible"
+   },
+   {
+    "gaps": [
+     "not built into the normalized layer",
+     "manual acquisition required"
+    ],
+    "source_id": "ba_entgeltatlas",
+    "verdict": "not_reproducible"
+   },
+   {
+    "gaps": [
+     "not built into the normalized layer",
+     "manual acquisition required"
+    ],
+    "source_id": "ba_kompetenzkatalog",
+    "verdict": "not_reproducible"
+   },
+   {
+    "gaps": [
+     "not built into the normalized layer",
+     "manual acquisition required"
+    ],
+    "source_id": "berufenet",
+    "verdict": "not_reproducible"
+   },
+   {
+    "checksummed_inputs": 1,
+    "gaps": [
+     "version is not pinned ('current release'): a re-acquisition may yield a different edition"
+    ],
+    "source_id": "bls_oews",
+    "verdict": "partially_reproducible"
+   },
+   {
+    "checksummed_inputs": 1,
+    "gaps": [
+     "version is not pinned ('current release'): a re-acquisition may yield a different edition"
+    ],
+    "source_id": "bls_ooh",
+    "verdict": "partially_reproducible"
+   },
+   {
+    "checksummed_inputs": 2,
+    "gaps": [],
+    "source_id": "bls_projections",
+    "verdict": "reproducible"
+   },
+   {
+    "checksummed_inputs": 1,
+    "gaps": [],
+    "source_id": "cedefop_clssi",
+    "verdict": "reproducible"
+   },
+   {
+    "gaps": [
+     "not built into the normalized layer",
+     "manual acquisition required"
+    ],
+    "source_id": "cedefop_future_job_openings",
+    "verdict": "not_reproducible"
+   },
+   {
+    "gaps": [
+     "not built into the normalized layer",
+     "manual acquisition required"
+    ],
+    "source_id": "cedefop_shortage_index",
+    "verdict": "not_reproducible"
+   },
+   {
+    "gaps": [
+     "not built into the normalized layer",
+     "manual acquisition required"
+    ],
+    "source_id": "cedefop_skills_forecast",
+    "verdict": "not_reproducible"
+   },
+   {
+    "gaps": [
+     "not built into the normalized layer"
+    ],
+    "source_id": "cedefop_stas",
+    "verdict": "not_reproducible"
+   },
+   {
+    "gaps": [
+     "not built into the normalized layer"
+    ],
+    "source_id": "destatis",
+    "verdict": "not_reproducible"
+   },
+   {
+    "checksummed_inputs": 1,
+    "gaps": [
+     "version is not pinned ('current release'): a re-acquisition may yield a different edition"
+    ],
+    "source_id": "digcomp",
+    "verdict": "partially_reproducible"
+   },
+   {
+    "gaps": [
+     "not built into the normalized layer",
+     "manual acquisition required"
+    ],
+    "source_id": "ecf",
+    "verdict": "not_reproducible"
+   },
+   {
+    "gaps": [
+     "not built into the normalized layer",
+     "manual acquisition required"
+    ],
+    "source_id": "eqf",
+    "verdict": "not_reproducible"
+   },
+   {
+    "checksummed_inputs": 1,
+    "gaps": [
+     "version is not pinned ('current release'): a re-acquisition may yield a different edition"
+    ],
+    "source_id": "esco",
+    "verdict": "partially_reproducible"
+   },
+   {
+    "gaps": [
+     "not built into the normalized layer",
+     "manual acquisition required"
+    ],
+    "source_id": "esco_handbook",
+    "verdict": "not_reproducible"
+   },
+   {
+    "gaps": [
+     "not built into the normalized layer",
+     "manual acquisition required"
+    ],
+    "source_id": "esco_matrix",
+    "verdict": "not_reproducible"
+   },
+   {
+    "gaps": [
+     "not built into the normalized layer"
+    ],
+    "source_id": "eurostat_earnings",
+    "verdict": "not_reproducible"
+   },
+   {
+    "checksummed_inputs": 1,
+    "gaps": [],
+    "source_id": "eurostat_occ_vacancy",
+    "verdict": "reproducible"
+   },
+   {
+    "checksummed_inputs": 1,
+    "gaps": [
+     "version is not pinned ('current release'): a re-acquisition may yield a different edition"
+    ],
+    "source_id": "isco08",
+    "verdict": "partially_reproducible"
+   },
+   {
+    "checksummed_inputs": 1,
+    "gaps": [
+     "version is not pinned ('current release'): a re-acquisition may yield a different edition"
+    ],
+    "source_id": "kldb",
+    "verdict": "partially_reproducible"
+   },
+   {
+    "checksummed_inputs": 1,
+    "gaps": [
+     "version is not pinned ('current release'): a re-acquisition may yield a different edition"
+    ],
+    "source_id": "nice_framework",
+    "verdict": "partially_reproducible"
+   },
+   {
+    "checksummed_inputs": 1,
+    "gaps": [
+     "version is not pinned ('current release'): a re-acquisition may yield a different edition"
+    ],
+    "source_id": "onet",
+    "verdict": "partially_reproducible"
+   },
+   {
+    "checksummed_inputs": 1,
+    "gaps": [
+     "version is not pinned ('current release'): a re-acquisition may yield a different edition"
+    ],
+    "source_id": "ons_ashe",
+    "verdict": "partially_reproducible"
+   },
+   {
+    "gaps": [
+     "not built into the normalized layer"
+    ],
+    "source_id": "opm_occupational_groups",
+    "verdict": "not_reproducible"
+   },
+   {
+    "gaps": [
+     "not built into the normalized layer"
+    ],
+    "source_id": "opm_qualification_standards",
+    "verdict": "not_reproducible"
+   },
+   {
+    "gaps": [
+     "not built into the normalized layer",
+     "manual acquisition required"
+    ],
+    "source_id": "uk_civil_service_success_profiles",
+    "verdict": "not_reproducible"
+   },
+   {
+    "gaps": [
+     "not built into the normalized layer",
+     "manual acquisition required"
+    ],
+    "source_id": "uk_hr_success_profiles",
+    "verdict": "not_reproducible"
+   },
+   {
+    "gaps": [
+     "not built into the normalized layer",
+     "manual acquisition required"
+    ],
+    "source_id": "wef_future_of_jobs",
+    "verdict": "not_reproducible"
+   }
+  ],
+  "rebuild_inputs_available": {
+   "normalized_git_commit_recorded": false,
+   "pipeline_versions_recorded": true,
+   "raw_files_recorded_and_matching": "13/13",
+   "runtime_git_commit_recorded": true
+  },
+  "summary": {
+   "not_reproducible": 19,
+   "partially_reproducible": 9,
+   "reproducible": 3
+  }
+ },
+ "runtime_stores": {
+  "compensation.db": {
+   "bytes": 196608,
+   "sha256": "1558a7a8fa5b1f431a5627ff96c2c5d4070f742e76a7734fb65b0254b5c00bad",
+   "tables": {
+    "compensation_records": 1913
+   }
+  },
+  "competencies.db": {
+   "bytes": 233472,
+   "sha256": "d54d72fd352d3d16a05e1c0563d9c2a53be163a903ba0b2700073e0e369ff10b",
+   "tables": {
+    "competencies": 2275,
+    "competency_levels": 0,
+    "occupation_competencies": 0,
+    "qualification_requirements": 0,
+    "role_behaviours": 0
+   }
+  },
+  "credentials.db": {
+   "bytes": 12288,
+   "sha256": "f2a2d1c57a668118a964734a3092a7e39a031dbb0a73ce0d1c60e9524b8dfb0e",
+   "tables": {
+    "certifications": 3,
+    "occupational_licences": 2
+   }
+  },
+  "labour_market.db": {
+   "bytes": 253952,
+   "sha256": "704e93ef0615f2581e510d071862ca98dc19816af8ece68beebd8d7b9fb8ac60",
+   "tables": {
+    "labour_market_forecasts": 831,
+    "labour_market_openings": 831,
+    "labour_shortages": 618,
+    "labour_vacancies": 118
+   }
+  },
+  "roles.db": {
+   "bytes": 19427328,
+   "sha256": "f5b02dd0ec2527344d6b580aff35440067cb35596d1ae3c0307692894e6d40e0",
+   "tables": {
+    "occupation_activities": 20141,
+    "occupation_aliases": 23579,
+    "occupation_attributes": 2971,
+    "occupation_certifications": 0,
+    "occupation_industries": 0,
+    "occupation_knowledge": 6968,
+    "occupation_licences": 0,
+    "occupation_mappings": 3039,
+    "occupation_relationships": 12016,
+    "occupation_skills": 111455,
+    "occupation_tasks": 22383,
+    "occupations": 8035
+   }
+  }
+ },
+ "schema": "gkb0_baseline/1",
+ "source_manifest": {
+  "by_origin": {
+   "authorised_manual": 7,
+   "official_local": 14,
+   "other": 5,
+   "synthetic_only": 5
+  },
+  "by_type": {
+   "compensation_dataset": 4,
+   "competency_framework": 8,
+   "industry_report": 1,
+   "labour_market_forecast": 7,
+   "market_api": 1,
+   "methodology": 1,
+   "occupation_taxonomy": 6,
+   "official_statistics": 1,
+   "skills_taxonomy": 2
+  },
+  "count": 31,
+  "sha256": "05484ba5bd07e16992f070f0f35c6314b06ffc00563f27f29873e396f62be80a"
+ },
+ "vector_store": {
+  "collections": {
+   "career_knowledge_base": 14087,
+   "governed_knowledge": 0
+  },
+  "note": "Chunk counts read with an immutable read-only connection; the store was not opened through the Chroma client.",
+  "sqlite_sha256": "346a99cbe2477c09734442420d9dacb0543903af8d378b695f0cf146f94d3605",
+  "total_chunks": 14087
+ }
+}

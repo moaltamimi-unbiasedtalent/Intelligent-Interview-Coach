@@ -1,0 +1,15 @@
+{
+  "schema": "taxonomy_catalogue/1",
+  "note": "Statuses and acquisition states are recorded from repository evidence (P10C-0 and P10C-A baseline). An edition that is not recorded is 'unknown'; nothing here acquires data.",
+  "taxonomies": [
+    {"scheme": "esco", "edition": "1.2.1", "label": "ESCO occupations (v1.2.1, English)", "status": "unknown", "acquisition_status": "available_locally", "code_pattern": "http://data\\.europa\\.eu/esco/occupation/[0-9a-f-]{36}", "geographies": ["EU"], "notes": "Edition taken from the local dataset directory name 'ESCO dataset - v1.2.1'. Only English labels are held locally."},
+    {"scheme": "isco", "edition": "08", "label": "ISCO-08", "status": "unknown", "acquisition_status": "available_locally", "code_pattern": "[0-9]{1,4}", "geographies": ["global"], "notes": "The local CSV declares ISCO_version = ISCO-08. Codes are zero-padded strings: the armed-forces unit groups are 0110, 0210 and 0310 (the legacy runtime store lost their leading zero)."},
+    {"scheme": "onet_soc", "edition": "31.0", "label": "O*NET-SOC (O*NET database 31.0)", "status": "unknown", "acquisition_status": "available_locally", "code_pattern": "[0-9]{2}-[0-9]{4}\\.[0-9]{2}", "geographies": ["US"], "notes": "Edition from the detected source version. The native O*NET-SOC code is not persisted in the legacy runtime store."},
+    {"scheme": "soc", "edition": "unknown", "label": "US SOC", "status": "unknown", "acquisition_status": "referenced_indirectly", "code_pattern": "[0-9]{2}-[0-9]{4}", "geographies": ["US"], "notes": "SOC codes appear only inside BLS OEWS rows; the classification itself is not acquired and its edition is not recorded locally."},
+    {"scheme": "uk_soc", "edition": "2020", "label": "UK SOC 2020", "status": "unknown", "acquisition_status": "referenced_indirectly", "code_pattern": "[0-9]{1,4}", "geographies": ["GB"], "notes": "ONS ASHE rows are keyed by UK SOC codes of one to four digits; the classification and any ONS mapping are not acquired (licence pending)."},
+    {"scheme": "kldb", "edition": "2010-rev2020", "label": "KldB 2010 (revision 2020)", "status": "unknown", "acquisition_status": "available_locally", "code_pattern": "[0-9]{1,5}", "geographies": ["DE"], "notes": "Edition from the local file names (KldB 2010, Fassung 2020). No crosswalk to ISCO is held. Licence review required."},
+    {"scheme": "noc", "edition": "unknown", "label": "NOC (Canada)", "status": "unknown", "acquisition_status": "identified_externally", "geographies": ["CA"], "notes": "Identified in planning only; not in the manifest, not acquired, licence not assessed."},
+    {"scheme": "sinco", "edition": "unknown", "label": "SINCO (Mexico)", "status": "unknown", "acquisition_status": "identified_externally", "geographies": ["MX"], "notes": "Identified in planning only; not in the manifest, not acquired, licence not assessed."},
+    {"scheme": "cbo", "edition": "unknown", "label": "CBO (Brazil)", "status": "unknown", "acquisition_status": "identified_externally", "geographies": ["BR"], "notes": "Identified in planning only; not in the manifest, not acquired, licence not assessed."}
+  ]
+}

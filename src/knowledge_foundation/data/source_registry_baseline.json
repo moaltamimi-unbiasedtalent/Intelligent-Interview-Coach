@@ -1,0 +1,1549 @@
+{
+ "derived_from": "data/source_manifest.json, data/source_status.json, data/knowledge/data_origins.json (gitignored local files; metadata only, no source content)",
+ "schema": "source_registry_baseline/1",
+ "sources": [
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "Adzuna Jobs API (advertised market)",
+   "dataset_version": "v1",
+   "evidence_category": "market_api",
+   "evidence_class": null,
+   "geographies": [
+    "DE"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": null,
+   "licence_status": "unknown",
+   "operational_status": "licence review",
+   "origin": "authorized_api",
+   "precedence_category": "authorized_secondary",
+   "provenance": {
+    "authority": "industry",
+    "authority_level": 3,
+    "conflicts": [],
+    "licence_notes": "Authorized API use under Adzuna API terms; advertised-market data only.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": false,
+    "origins": [],
+    "status_snapshot": {
+     "detected_reference_year": null,
+     "detected_version": null,
+     "fixture_only": false,
+     "freshness": "UNKNOWN",
+     "lifecycle": "LICENCE REVIEW",
+     "production_ready": false,
+     "record_count": 0
+    },
+    "storage_target": "compensation"
+   },
+   "publication_date": null,
+   "publisher": "Adzuna",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "adzuna",
+   "source_url": "https://api.adzuna.com/v1/api",
+   "taxonomy": null,
+   "update_cadence": null,
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "Entgeltatlas",
+   "dataset_version": "current release",
+   "evidence_category": "compensation_dataset",
+   "evidence_class": "C1",
+   "geographies": [
+    "DE"
+   ],
+   "languages": [
+    "de"
+   ],
+   "licence_id": null,
+   "licence_status": "unknown",
+   "operational_status": "manual acquisition",
+   "origin": "unknown",
+   "precedence_category": "national_public_employment_service",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "Interactive portal; confirm reuse terms.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": true,
+    "origins": [],
+    "status_snapshot": {
+     "detected_reference_year": null,
+     "detected_version": null,
+     "fixture_only": false,
+     "freshness": "UNKNOWN",
+     "lifecycle": "MANUAL ACQUISITION",
+     "production_ready": false,
+     "record_count": 0
+    },
+    "storage_target": "compensation"
+   },
+   "publication_date": null,
+   "publisher": "Bundesagentur für Arbeit",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "ba_entgeltatlas",
+   "source_url": "https://web.arbeitsagentur.de/entgeltatlas/",
+   "taxonomy": null,
+   "update_cadence": "annual",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "restricted",
+   "attribution_required": "unknown",
+   "dataset_name": "BA Kompetenzkatalog",
+   "dataset_version": "current release",
+   "evidence_category": "skills_taxonomy",
+   "evidence_class": null,
+   "geographies": [
+    "DE"
+   ],
+   "languages": [
+    "de"
+   ],
+   "licence_id": null,
+   "licence_status": "unknown",
+   "operational_status": "available",
+   "origin": "synthetic_fixture",
+   "precedence_category": "unknown",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "Confirm BA reuse terms.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": true,
+    "origins": [
+     "synthetic_fixture"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": null,
+     "detected_version": null,
+     "fixture_only": true,
+     "freshness": "UNKNOWN",
+     "lifecycle": "AVAILABLE",
+     "production_ready": false,
+     "record_count": 3
+    },
+    "storage_target": "competency"
+   },
+   "publication_date": null,
+   "publisher": "Bundesagentur für Arbeit",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "ba_kompetenzkatalog",
+   "source_url": "https://www.arbeitsagentur.de/",
+   "taxonomy": null,
+   "update_cadence": "periodic",
+   "validation_status": "engineering_draft"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "BERUFENET occupation information",
+   "dataset_version": "current release",
+   "evidence_category": "occupation_taxonomy",
+   "evidence_class": null,
+   "geographies": [
+    "DE"
+   ],
+   "languages": [
+    "de"
+   ],
+   "licence_id": null,
+   "licence_status": "unknown",
+   "operational_status": "manual acquisition",
+   "origin": "unknown",
+   "precedence_category": "unknown",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "Do not mass-scrape; use authorised exports only.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": true,
+    "origins": [],
+    "status_snapshot": {
+     "detected_reference_year": null,
+     "detected_version": null,
+     "fixture_only": false,
+     "freshness": "UNKNOWN",
+     "lifecycle": "MANUAL ACQUISITION",
+     "production_ready": false,
+     "record_count": 0
+    },
+    "storage_target": "structured_role"
+   },
+   "publication_date": null,
+   "publisher": "Bundesagentur für Arbeit",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "berufenet",
+   "source_url": "https://berufenet.arbeitsagentur.de/",
+   "taxonomy": null,
+   "update_cadence": "periodic",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "Occupational Employment and Wage Statistics (OEWS)",
+   "dataset_version": "M2025",
+   "evidence_category": "compensation_dataset",
+   "evidence_class": "C1",
+   "geographies": [
+    "US"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": "Public domain (U.S. Government work)",
+   "licence_status": "stated_unverified",
+   "operational_status": "available",
+   "origin": "official_local",
+   "precedence_category": "national_official_occupation_statistics",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "US federal work.",
+    "licence_review_required": false,
+    "manifest": true,
+    "manual_acquisition_required": false,
+    "origins": [
+     "official_local"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": 2025,
+     "detected_version": "M2025",
+     "fixture_only": false,
+     "freshness": "CURRENT",
+     "lifecycle": "AVAILABLE",
+     "production_ready": true,
+     "record_count": 1393
+    },
+    "storage_target": "compensation"
+   },
+   "publication_date": null,
+   "publisher": "U.S. Bureau of Labor Statistics",
+   "redistribution": "yes",
+   "reference_period": null,
+   "source_id": "bls_oews",
+   "source_url": "https://www.bls.gov/oes/",
+   "taxonomy": "soc",
+   "update_cadence": "annual",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "Occupational Outlook Handbook (OOH)",
+   "dataset_version": "2025",
+   "evidence_category": "occupation_taxonomy",
+   "evidence_class": null,
+   "geographies": [
+    "US"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": "Public domain (U.S. Government work)",
+   "licence_status": "stated_unverified",
+   "operational_status": "available",
+   "origin": "official_local",
+   "precedence_category": "national_official_occupation_statistics",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "US federal work.",
+    "licence_review_required": false,
+    "manifest": true,
+    "manual_acquisition_required": false,
+    "origins": [
+     "official_local"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": 2025,
+     "detected_version": "2025",
+     "fixture_only": false,
+     "freshness": "CURRENT",
+     "lifecycle": "AVAILABLE",
+     "production_ready": true,
+     "record_count": 343
+    },
+    "storage_target": "structured_role"
+   },
+   "publication_date": null,
+   "publisher": "U.S. Bureau of Labor Statistics",
+   "redistribution": "yes",
+   "reference_period": null,
+   "source_id": "bls_ooh",
+   "source_url": "https://www.bls.gov/ooh/",
+   "taxonomy": "soc",
+   "update_cadence": "annual",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "BLS Employment Projections",
+   "dataset_version": "2024-2034/2025-2035",
+   "evidence_category": "labour_market_forecast",
+   "evidence_class": null,
+   "geographies": [
+    "US"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": "Public domain (U.S. Government work)",
+   "licence_status": "stated_unverified",
+   "operational_status": "available",
+   "origin": "official_local",
+   "precedence_category": "national_official_occupation_statistics",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "U.S. Government work — public domain.",
+    "licence_review_required": false,
+    "manifest": true,
+    "manual_acquisition_required": false,
+    "origins": [
+     "official_local"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": 2025,
+     "detected_version": "2025-2035",
+     "fixture_only": false,
+     "freshness": "CURRENT",
+     "lifecycle": "AVAILABLE",
+     "production_ready": true,
+     "record_count": 2493
+    },
+    "storage_target": "structured"
+   },
+   "publication_date": null,
+   "publisher": "U.S. Bureau of Labor Statistics",
+   "redistribution": "yes",
+   "reference_period": null,
+   "source_id": "bls_projections",
+   "source_url": "https://www.bls.gov/emp/",
+   "taxonomy": "soc",
+   "update_cadence": "annual",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "Cedefop Labour & Skills Shortage Index (CLSSI)",
+   "dataset_version": "2026",
+   "evidence_category": "labour_market_forecast",
+   "evidence_class": null,
+   "geographies": [
+    "EU"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": null,
+   "licence_status": "unknown",
+   "operational_status": "available",
+   "origin": "official_local",
+   "precedence_category": "cedefop_intelligence",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "Cedefop reuse terms to confirm.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": false,
+    "origins": [
+     "official_local"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": 2026,
+     "detected_version": "2026",
+     "fixture_only": false,
+     "freshness": "CURRENT",
+     "lifecycle": "AVAILABLE",
+     "production_ready": false,
+     "record_count": 1178
+    },
+    "storage_target": "structured"
+   },
+   "publication_date": null,
+   "publisher": "Cedefop",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "cedefop_clssi",
+   "source_url": "https://www.cedefop.europa.eu/en/tools/skills-intelligence",
+   "taxonomy": null,
+   "update_cadence": "annual",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "restricted",
+   "attribution_required": "unknown",
+   "dataset_name": "Cedefop Future Job Openings",
+   "dataset_version": "current release",
+   "evidence_category": "labour_market_forecast",
+   "evidence_class": null,
+   "geographies": [
+    "EU"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": null,
+   "licence_status": "unknown",
+   "operational_status": "available",
+   "origin": "synthetic_fixture",
+   "precedence_category": "cedefop_intelligence",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "Confirm Cedefop reuse terms.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": true,
+    "origins": [
+     "synthetic_fixture"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": null,
+     "detected_version": null,
+     "fixture_only": true,
+     "freshness": "UNKNOWN",
+     "lifecycle": "AVAILABLE",
+     "production_ready": false,
+     "record_count": 2
+    },
+    "storage_target": "labour_market"
+   },
+   "publication_date": null,
+   "publisher": "Cedefop",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "cedefop_future_job_openings",
+   "source_url": "https://www.cedefop.europa.eu/",
+   "taxonomy": null,
+   "update_cadence": "biennial",
+   "validation_status": "engineering_draft"
+  },
+  {
+   "approval_status": "restricted",
+   "attribution_required": "unknown",
+   "dataset_name": "Cedefop Labour & Skills Shortage Index",
+   "dataset_version": "current release",
+   "evidence_category": "labour_market_forecast",
+   "evidence_class": null,
+   "geographies": [
+    "EU"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": null,
+   "licence_status": "unknown",
+   "operational_status": "available",
+   "origin": "synthetic_fixture",
+   "precedence_category": "cedefop_intelligence",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "Confirm Cedefop reuse terms.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": true,
+    "origins": [
+     "synthetic_fixture"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": null,
+     "detected_version": null,
+     "fixture_only": true,
+     "freshness": "UNKNOWN",
+     "lifecycle": "AVAILABLE",
+     "production_ready": false,
+     "record_count": 3
+    },
+    "storage_target": "labour_market"
+   },
+   "publication_date": null,
+   "publisher": "Cedefop",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "cedefop_shortage_index",
+   "source_url": "https://www.cedefop.europa.eu/",
+   "taxonomy": null,
+   "update_cadence": "periodic",
+   "validation_status": "engineering_draft"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "Cedefop Skills Forecast",
+   "dataset_version": "2026",
+   "evidence_category": "labour_market_forecast",
+   "evidence_class": null,
+   "geographies": [
+    "EU"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": null,
+   "licence_status": "unknown",
+   "operational_status": "available",
+   "origin": "authorised_manual",
+   "precedence_category": "cedefop_intelligence",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "Confirm Cedefop reuse terms.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": true,
+    "origins": [
+     "synthetic_fixture",
+     "authorised_manual"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": 2026,
+     "detected_version": "2026",
+     "fixture_only": false,
+     "freshness": "CURRENT",
+     "lifecycle": "AVAILABLE",
+     "production_ready": false,
+     "record_count": 2
+    },
+    "storage_target": "labour_market"
+   },
+   "publication_date": null,
+   "publisher": "Cedefop",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "cedefop_skills_forecast",
+   "source_url": "https://www.cedefop.europa.eu/en/tools/skills-forecast",
+   "taxonomy": null,
+   "update_cadence": "biennial",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "Cedefop Short-Term Analytical System (STAS)",
+   "dataset_version": "release Jan 2026",
+   "evidence_category": "labour_market_forecast",
+   "evidence_class": null,
+   "geographies": [
+    "EU"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": null,
+   "licence_status": "unknown",
+   "operational_status": "local file found",
+   "origin": "unknown",
+   "precedence_category": "cedefop_intelligence",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "Reuse terms unconfirmed; sector-macro (AMECO-based), not occupation-level.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": false,
+    "origins": [],
+    "status_snapshot": {
+     "detected_reference_year": 2026,
+     "detected_version": "Jan 2026",
+     "fixture_only": false,
+     "freshness": "UNKNOWN",
+     "lifecycle": "LOCAL FILE FOUND",
+     "production_ready": false,
+     "record_count": 0
+    },
+    "storage_target": "structured"
+   },
+   "publication_date": null,
+   "publisher": "Cedefop",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "cedefop_stas",
+   "source_url": "https://www.cedefop.europa.eu/en/tools/skills-forecast",
+   "taxonomy": null,
+   "update_cadence": "annual",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "Destatis GENESIS-Online (German official statistics)",
+   "dataset_version": "GENESIS 2020",
+   "evidence_category": "official_statistics",
+   "evidence_class": null,
+   "geographies": [
+    "DE"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": null,
+   "licence_status": "unknown",
+   "operational_status": "licence review",
+   "origin": "official_api",
+   "precedence_category": "national_official_occupation_statistics",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "GENESIS data typically under Datenlizenz Deutschland; confirm per table.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": false,
+    "origins": [],
+    "status_snapshot": {
+     "detected_reference_year": null,
+     "detected_version": null,
+     "fixture_only": false,
+     "freshness": "UNKNOWN",
+     "lifecycle": "LICENCE REVIEW",
+     "production_ready": false,
+     "record_count": 0
+    },
+    "storage_target": "compensation"
+   },
+   "publication_date": null,
+   "publisher": "Statistisches Bundesamt (Destatis)",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "destatis",
+   "source_url": "https://www-genesis.destatis.de/genesis/online",
+   "taxonomy": null,
+   "update_cadence": null,
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "yes",
+   "dataset_name": "DigComp — European Digital Competence Framework",
+   "dataset_version": "2.2",
+   "evidence_category": "competency_framework",
+   "evidence_class": null,
+   "geographies": [
+    "EU"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": null,
+   "licence_status": "unknown",
+   "operational_status": "available",
+   "origin": "official_local",
+   "precedence_category": "unknown",
+   "provenance": {
+    "authority": "public_framework",
+    "authority_level": 2,
+    "conflicts": [],
+    "licence_notes": "EU reuse policy; confirm attribution before redistribution.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": true,
+    "origins": [
+     "official_local",
+     "authorised_manual"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": 2022,
+     "detected_version": "2.2",
+     "fixture_only": false,
+     "freshness": "UNKNOWN",
+     "lifecycle": "AVAILABLE",
+     "production_ready": false,
+     "record_count": 17
+    },
+    "storage_target": "competency"
+   },
+   "publication_date": null,
+   "publisher": "European Commission (JRC)",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "digcomp",
+   "source_url": "https://joint-research-centre.ec.europa.eu/digcomp_en",
+   "taxonomy": null,
+   "update_cadence": "periodic",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "restricted",
+   "attribution_required": "unknown",
+   "dataset_name": "European e-Competence Framework (e-CF)",
+   "dataset_version": "current release",
+   "evidence_category": "competency_framework",
+   "evidence_class": null,
+   "geographies": [
+    "EU"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": "CEN standard (commercial)",
+   "licence_status": "stated_unverified",
+   "operational_status": "available",
+   "origin": "synthetic_fixture",
+   "precedence_category": "unknown",
+   "provenance": {
+    "authority": "public_framework",
+    "authority_level": 2,
+    "conflicts": [],
+    "licence_notes": "Do not redistribute the CEN standard; use public EC/ESCO mappings only.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": true,
+    "origins": [
+     "synthetic_fixture"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": null,
+     "detected_version": null,
+     "fixture_only": true,
+     "freshness": "UNKNOWN",
+     "lifecycle": "AVAILABLE",
+     "production_ready": false,
+     "record_count": 3
+    },
+    "storage_target": "competency"
+   },
+   "publication_date": null,
+   "publisher": "CEN",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "ecf",
+   "source_url": "https://www.ecompetences.eu/",
+   "taxonomy": null,
+   "update_cadence": "rare",
+   "validation_status": "engineering_draft"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "yes",
+   "dataset_name": "European Qualifications Framework (EQF)",
+   "dataset_version": "brochure",
+   "evidence_category": "competency_framework",
+   "evidence_class": null,
+   "geographies": [
+    "EU"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": null,
+   "licence_status": "unknown",
+   "operational_status": "available",
+   "origin": "authorised_manual",
+   "precedence_category": "unknown",
+   "provenance": {
+    "authority": "public_framework",
+    "authority_level": 2,
+    "conflicts": [],
+    "licence_notes": "EU reuse policy; confirm attribution.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": true,
+    "origins": [
+     "authorised_manual"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": null,
+     "detected_version": "brochure",
+     "fixture_only": false,
+     "freshness": "UNKNOWN",
+     "lifecycle": "AVAILABLE",
+     "production_ready": false,
+     "record_count": 0
+    },
+    "storage_target": "competency"
+   },
+   "publication_date": null,
+   "publisher": "European Commission",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "eqf",
+   "source_url": "https://europa.eu/europass/en/description-eight-eqf-levels",
+   "taxonomy": null,
+   "update_cadence": "rare",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "ESCO — Occupations & Skills",
+   "dataset_version": "v1.2.1",
+   "evidence_category": "occupation_taxonomy",
+   "evidence_class": null,
+   "geographies": [
+    "EU"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": null,
+   "licence_status": "unknown",
+   "operational_status": "available",
+   "origin": "official_local",
+   "precedence_category": "unknown",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "Confirm ESCO portal reuse terms before redistribution.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": true,
+    "origins": [
+     "official_local"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": 2022,
+     "detected_version": "v1.2.1",
+     "fixture_only": false,
+     "freshness": "UNKNOWN",
+     "lifecycle": "AVAILABLE",
+     "production_ready": false,
+     "record_count": 3039
+    },
+    "storage_target": "structured_role"
+   },
+   "publication_date": null,
+   "publisher": "European Commission",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "esco",
+   "source_url": "https://esco.ec.europa.eu/",
+   "taxonomy": "esco",
+   "update_cadence": "periodic",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "ESCO Handbook (methodology)",
+   "dataset_version": "Sept 2017",
+   "evidence_category": "methodology",
+   "evidence_class": null,
+   "geographies": [
+    "EU"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": null,
+   "licence_status": "unknown",
+   "operational_status": "available",
+   "origin": "authorised_manual",
+   "precedence_category": "unknown",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "Methodology; not primary evidence for role duties.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": true,
+    "origins": [
+     "authorised_manual"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": 2017,
+     "detected_version": "Sept 2017",
+     "fixture_only": false,
+     "freshness": "UNKNOWN",
+     "lifecycle": "AVAILABLE",
+     "production_ready": false,
+     "record_count": 0
+    },
+    "storage_target": "vector"
+   },
+   "publication_date": null,
+   "publisher": "European Commission",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "esco_handbook",
+   "source_url": "https://esco.ec.europa.eu/",
+   "taxonomy": null,
+   "update_cadence": "rare",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "ESCO Skills–Occupations Matrix",
+   "dataset_version": "v1.2.1",
+   "evidence_category": "skills_taxonomy",
+   "evidence_class": null,
+   "geographies": [
+    "EU"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": null,
+   "licence_status": "unknown",
+   "operational_status": "available",
+   "origin": "authorised_manual",
+   "precedence_category": "unknown",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "Confirm ESCO reuse terms; technical report is narrative.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": true,
+    "origins": [
+     "authorised_manual"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": 2022,
+     "detected_version": "v1.2.1",
+     "fixture_only": false,
+     "freshness": "UNKNOWN",
+     "lifecycle": "AVAILABLE",
+     "production_ready": false,
+     "record_count": 0
+    },
+    "storage_target": "structured_role"
+   },
+   "publication_date": null,
+   "publisher": "European Commission",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "esco_matrix",
+   "source_url": "https://esco.ec.europa.eu/",
+   "taxonomy": null,
+   "update_cadence": "periodic",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "yes",
+   "dataset_name": "Eurostat Earnings (Structure of Earnings Survey)",
+   "dataset_version": "SES 2022",
+   "evidence_category": "compensation_dataset",
+   "evidence_class": null,
+   "geographies": [
+    "EU"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": "CC BY 4.0",
+   "licence_status": "stated_unverified",
+   "operational_status": "available",
+   "origin": "official_local",
+   "precedence_category": "eurostat_harmonised",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "Attribution to Eurostat required.",
+    "licence_review_required": false,
+    "manifest": true,
+    "manual_acquisition_required": false,
+    "origins": [
+     "official_local"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": 2022,
+     "detected_version": "SES 2022",
+     "fixture_only": false,
+     "freshness": "UNKNOWN",
+     "lifecycle": "AVAILABLE",
+     "production_ready": true,
+     "record_count": 0
+    },
+    "storage_target": "compensation"
+   },
+   "publication_date": null,
+   "publisher": "Eurostat",
+   "redistribution": "yes",
+   "reference_period": null,
+   "source_id": "eurostat_earnings",
+   "source_url": "https://ec.europa.eu/eurostat/web/labour-market/earnings",
+   "taxonomy": null,
+   "update_cadence": "periodic",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "Eurostat Job Vacancy Statistics (by occupation)",
+   "dataset_version": "jvs_a_isco3_r1",
+   "evidence_category": "labour_market_forecast",
+   "evidence_class": null,
+   "geographies": [
+    "EU"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": "CC BY 4.0",
+   "licence_status": "stated_unverified",
+   "operational_status": "available",
+   "origin": "official_local",
+   "precedence_category": "eurostat_harmonised",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "Eurostat CC BY 4.0; JVS-by-occupation is experimental.",
+    "licence_review_required": false,
+    "manifest": true,
+    "manual_acquisition_required": false,
+    "origins": [
+     "official_local"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": 2026,
+     "detected_version": "jvs_a_isco3_r1",
+     "fixture_only": false,
+     "freshness": "CURRENT",
+     "lifecycle": "AVAILABLE",
+     "production_ready": true,
+     "record_count": 126
+    },
+    "storage_target": "structured"
+   },
+   "publication_date": null,
+   "publisher": "Eurostat",
+   "redistribution": "yes",
+   "reference_period": null,
+   "source_id": "eurostat_occ_vacancy",
+   "source_url": "https://ec.europa.eu/eurostat/databrowser/product/view/jvs_a_isco3_r1",
+   "taxonomy": null,
+   "update_cadence": "annual",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "ISCO-08 Classification of Occupations",
+   "dataset_version": "ISCO-08",
+   "evidence_category": "occupation_taxonomy",
+   "evidence_class": null,
+   "geographies": [
+    "global"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": null,
+   "licence_status": "unknown",
+   "operational_status": "available",
+   "origin": "official_local",
+   "precedence_category": "unknown",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "ILO reuse terms vary; confirm before redistribution.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": true,
+    "origins": [
+     "official_local"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": 2008,
+     "detected_version": "ISCO-08",
+     "fixture_only": false,
+     "freshness": "UNKNOWN",
+     "lifecycle": "AVAILABLE",
+     "production_ready": false,
+     "record_count": 613
+    },
+    "storage_target": "structured_role"
+   },
+   "publication_date": null,
+   "publisher": "International Labour Organization (ILO)",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "isco08",
+   "source_url": "https://www.ilo.org/public/english/bureau/stat/isco/isco08/",
+   "taxonomy": "isco",
+   "update_cadence": "rare",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "Klassifikation der Berufe (KldB)",
+   "dataset_version": "2010 (Fassung 2020)",
+   "evidence_category": "occupation_taxonomy",
+   "evidence_class": null,
+   "geographies": [
+    "DE"
+   ],
+   "languages": [
+    "de"
+   ],
+   "licence_id": null,
+   "licence_status": "unknown",
+   "operational_status": "available",
+   "origin": "official_local",
+   "precedence_category": "unknown",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "Confirm BA reuse terms; use the current revision.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": true,
+    "origins": [
+     "official_local"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": 2020,
+     "detected_version": "2010 (Fassung 2020)",
+     "fixture_only": false,
+     "freshness": "UNKNOWN",
+     "lifecycle": "AVAILABLE",
+     "production_ready": false,
+     "record_count": 2193
+    },
+    "storage_target": "structured_role"
+   },
+   "publication_date": null,
+   "publisher": "Bundesagentur für Arbeit",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "kldb",
+   "source_url": "https://www.klassifikationsserver.de/",
+   "taxonomy": "kldb",
+   "update_cadence": "rare",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "NICE Workforce Framework for Cybersecurity",
+   "dataset_version": "v2.2.0",
+   "evidence_category": "competency_framework",
+   "evidence_class": null,
+   "geographies": [
+    "US"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": "Public domain (U.S. Government work)",
+   "licence_status": "stated_unverified",
+   "operational_status": "available",
+   "origin": "official_local",
+   "precedence_category": "unknown",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "NIST publication.",
+    "licence_review_required": false,
+    "manifest": true,
+    "manual_acquisition_required": false,
+    "origins": [
+     "official_local"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": 2024,
+     "detected_version": "v2.2.0",
+     "fixture_only": false,
+     "freshness": "UNKNOWN",
+     "lifecycle": "AVAILABLE",
+     "production_ready": true,
+     "record_count": 2252
+    },
+    "storage_target": "competency"
+   },
+   "publication_date": null,
+   "publisher": "NIST / NICE",
+   "redistribution": "yes",
+   "reference_period": null,
+   "source_id": "nice_framework",
+   "source_url": "https://niccs.cisa.gov/workforce-development/nice-framework",
+   "taxonomy": null,
+   "update_cadence": "periodic",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "yes",
+   "dataset_name": "O*NET Database",
+   "dataset_version": "31.0",
+   "evidence_category": "occupation_taxonomy",
+   "evidence_class": null,
+   "geographies": [
+    "US"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": "CC BY 4.0",
+   "licence_status": "stated_unverified",
+   "operational_status": "available",
+   "origin": "official_local",
+   "precedence_category": "unknown",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "Attribution to O*NET required.",
+    "licence_review_required": false,
+    "manifest": true,
+    "manual_acquisition_required": false,
+    "origins": [
+     "official_local"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": 2026,
+     "detected_version": "31.0",
+     "fixture_only": false,
+     "freshness": "CURRENT",
+     "lifecycle": "AVAILABLE",
+     "production_ready": true,
+     "record_count": 1016
+    },
+    "storage_target": "structured_role"
+   },
+   "publication_date": null,
+   "publisher": "O*NET / U.S. Department of Labor",
+   "redistribution": "yes",
+   "reference_period": null,
+   "source_id": "onet",
+   "source_url": "https://www.onetcenter.org/",
+   "taxonomy": "onet_soc",
+   "update_cadence": "annual",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "yes",
+   "dataset_name": "Annual Survey of Hours and Earnings (ASHE)",
+   "dataset_version": "2025 provisional",
+   "evidence_category": "compensation_dataset",
+   "evidence_class": null,
+   "geographies": [
+    "UK"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": "Open Government Licence v3.0",
+   "licence_status": "stated_unverified",
+   "operational_status": "available",
+   "origin": "official_local",
+   "precedence_category": "national_official_occupation_statistics",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "Attribution to ONS required.",
+    "licence_review_required": false,
+    "manifest": true,
+    "manual_acquisition_required": false,
+    "origins": [
+     "official_local"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": 2025,
+     "detected_version": "2025 provisional",
+     "fixture_only": false,
+     "freshness": "CURRENT",
+     "lifecycle": "AVAILABLE",
+     "production_ready": true,
+     "record_count": 527
+    },
+    "storage_target": "compensation"
+   },
+   "publication_date": null,
+   "publisher": "Office for National Statistics (ONS)",
+   "redistribution": "yes",
+   "reference_period": null,
+   "source_id": "ons_ashe",
+   "source_url": "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours",
+   "taxonomy": "uk_soc",
+   "update_cadence": "annual",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "OPM Handbook of Occupational Groups and Families",
+   "dataset_version": "TS-107 1991",
+   "evidence_category": "competency_framework",
+   "evidence_class": null,
+   "geographies": [
+    "US"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": "Public domain (U.S. Government work)",
+   "licence_status": "stated_unverified",
+   "operational_status": "available",
+   "origin": "official_local",
+   "precedence_category": "unknown",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "US federal work.",
+    "licence_review_required": false,
+    "manifest": true,
+    "manual_acquisition_required": false,
+    "origins": [
+     "official_local"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": 1991,
+     "detected_version": "TS-107 1991",
+     "fixture_only": false,
+     "freshness": "UNKNOWN",
+     "lifecycle": "AVAILABLE",
+     "production_ready": true,
+     "record_count": 0
+    },
+    "storage_target": "competency"
+   },
+   "publication_date": null,
+   "publisher": "U.S. Office of Personnel Management",
+   "redistribution": "yes",
+   "reference_period": null,
+   "source_id": "opm_occupational_groups",
+   "source_url": "https://www.opm.gov/policy-data-oversight/classification-qualifications/",
+   "taxonomy": null,
+   "update_cadence": "rare",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "restricted",
+   "attribution_required": "unknown",
+   "dataset_name": "OPM General Schedule Qualification Standards",
+   "dataset_version": "current release",
+   "evidence_category": "competency_framework",
+   "evidence_class": null,
+   "geographies": [
+    "US"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": "Public domain (U.S. Government work)",
+   "licence_status": "stated_unverified",
+   "operational_status": "available",
+   "origin": "synthetic_fixture",
+   "precedence_category": "unknown",
+   "provenance": {
+    "authority": "official",
+    "authority_level": 1,
+    "conflicts": [],
+    "licence_notes": "US federal work; not universal private-sector rules.",
+    "licence_review_required": false,
+    "manifest": true,
+    "manual_acquisition_required": false,
+    "origins": [
+     "synthetic_fixture"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": null,
+     "detected_version": null,
+     "fixture_only": true,
+     "freshness": "UNKNOWN",
+     "lifecycle": "AVAILABLE",
+     "production_ready": false,
+     "record_count": 3
+    },
+    "storage_target": "competency"
+   },
+   "publication_date": null,
+   "publisher": "U.S. Office of Personnel Management",
+   "redistribution": "yes",
+   "reference_period": null,
+   "source_id": "opm_qualification_standards",
+   "source_url": "https://www.opm.gov/policy-data-oversight/classification-qualifications/general-schedule-qualification-standards/",
+   "taxonomy": null,
+   "update_cadence": "rare",
+   "validation_status": "engineering_draft"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "UK Civil Service Success Profiles",
+   "dataset_version": "v0f",
+   "evidence_category": "competency_framework",
+   "evidence_class": null,
+   "geographies": [
+    "UK"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": "Open Government Licence v3.0",
+   "licence_status": "stated_unverified",
+   "operational_status": "available",
+   "origin": "authorised_manual",
+   "precedence_category": "unknown",
+   "provenance": {
+    "authority": "public_framework",
+    "authority_level": 2,
+    "conflicts": [],
+    "licence_notes": "Crown copyright under OGL v3.0; PDF acquisition is manual.",
+    "licence_review_required": false,
+    "manifest": true,
+    "manual_acquisition_required": true,
+    "origins": [
+     "synthetic_fixture",
+     "authorised_manual"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": null,
+     "detected_version": "v0f",
+     "fixture_only": false,
+     "freshness": "UNKNOWN",
+     "lifecycle": "AVAILABLE",
+     "production_ready": true,
+     "record_count": 5
+    },
+    "storage_target": "competency"
+   },
+   "publication_date": null,
+   "publisher": "UK Civil Service / Cabinet Office",
+   "redistribution": "yes",
+   "reference_period": null,
+   "source_id": "uk_civil_service_success_profiles",
+   "source_url": "https://www.gov.uk/government/publications/success-profiles",
+   "taxonomy": null,
+   "update_cadence": "periodic",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "UK HR Success Profile Guides",
+   "dataset_version": "v0e",
+   "evidence_category": "competency_framework",
+   "evidence_class": null,
+   "geographies": [
+    "UK"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": "Open Government Licence v3.0",
+   "licence_status": "stated_unverified",
+   "operational_status": "available",
+   "origin": "authorised_manual",
+   "precedence_category": "unknown",
+   "provenance": {
+    "authority": "public_framework",
+    "authority_level": 2,
+    "conflicts": [],
+    "licence_notes": "Crown copyright under OGL v3.0; PDF acquisition is manual.",
+    "licence_review_required": false,
+    "manifest": true,
+    "manual_acquisition_required": true,
+    "origins": [
+     "authorised_manual"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": null,
+     "detected_version": "v0e",
+     "fixture_only": false,
+     "freshness": "UNKNOWN",
+     "lifecycle": "AVAILABLE",
+     "production_ready": true,
+     "record_count": 0
+    },
+    "storage_target": "competency"
+   },
+   "publication_date": null,
+   "publisher": "UK Government HR",
+   "redistribution": "yes",
+   "reference_period": null,
+   "source_id": "uk_hr_success_profiles",
+   "source_url": "https://www.gov.uk/",
+   "taxonomy": null,
+   "update_cadence": "periodic",
+   "validation_status": "unknown"
+  },
+  {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "Future of Jobs Report",
+   "dataset_version": "2025",
+   "evidence_category": "industry_report",
+   "evidence_class": null,
+   "geographies": [
+    "global"
+   ],
+   "languages": [
+    "en"
+   ],
+   "licence_id": null,
+   "licence_status": "unknown",
+   "operational_status": "available",
+   "origin": "authorised_manual",
+   "precedence_category": "authorized_secondary",
+   "provenance": {
+    "authority": "industry",
+    "authority_level": 3,
+    "conflicts": [],
+    "licence_notes": "© WEF; macro trends only, do not redistribute full report.",
+    "licence_review_required": true,
+    "manifest": true,
+    "manual_acquisition_required": true,
+    "origins": [
+     "authorised_manual"
+    ],
+    "status_snapshot": {
+     "detected_reference_year": 2025,
+     "detected_version": "2025",
+     "fixture_only": false,
+     "freshness": "CURRENT",
+     "lifecycle": "AVAILABLE",
+     "production_ready": false,
+     "record_count": 0
+    },
+    "storage_target": "vector"
+   },
+   "publication_date": null,
+   "publisher": "World Economic Forum",
+   "redistribution": "unknown",
+   "reference_period": null,
+   "source_id": "wef_future_of_jobs",
+   "source_url": "https://www.weforum.org/reports/",
+   "taxonomy": null,
+   "update_cadence": "biennial",
+   "validation_status": "unknown"
+  }
+ ]
+}
