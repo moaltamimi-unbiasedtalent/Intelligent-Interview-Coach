@@ -2800,6 +2800,116 @@ class LanguageCoverage(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
 
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Compensation V2 foundation (P10C-C). A governed, source-referenced evidence store BESIDE the V1 compensation store: nothing here is read by a candidate-facing path and no row is
+# shipped by a migration. Money is stored EXACTLY as scaled integers (no floating point); a missing value is NULL with an explicit status, never zero.
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+COMP_PAY_PERIODS = ("hourly", "daily", "weekly", "monthly", "annual")
+COMP_PAY_BASES = ("gross", "net", "unknown")
+COMP_MEASURES = ("median", "mean", "percentile", "unknown")
+COMP_VALUE_STATUSES = ("reported", "suppressed", "not_available")
+COMP_OCC_LEVELS = ("detailed", "broad", "unknown")
+COMP_GEO_LEVELS = ("national", "regional", "eu_aggregate", "unknown")
+COMP_LINK_BASES = ("native_code_exact", "verified_crosswalk", "curated_manual")
+COMP_EVIDENCE_CLASSES = ("C1", "C2", "C3")
+COMP_RECORD_STATUSES = ("current", "superseded")
+COMP_IMPORT_MODES = ("production", "fixture")
+
+
+class CompensationRecordV2Row(Base):
+    """One source-referenced compensation measurement linked to a canonical occupation (P10C-C). Every constraint that can be a CHECK is one: a reported value is positive and exact, a
+    missing value is NULL with a non-reported status, a percentile is only valid for the percentile measure, and a record always names its source."""
+
+    __tablename__ = "compensation_v2_records"
+    __table_args__ = (
+        UniqueConstraint("record_key", name="uq_comp_v2_record_key"),
+        UniqueConstraint("source_ref", "source_edition", "taxonomy_id", "native_code", "country", "region_key", "reference_year", "pay_period", "currency", "pay_basis", "measure",
+                         "percentile", "data_vintage", name="uq_comp_v2_natural_key"),
+        CheckConstraint("length(currency) = 3", name="ck_cv2_currency"),
+        CheckConstraint(_in_list("pay_period", COMP_PAY_PERIODS), name="ck_cv2_pay_period"),
+        CheckConstraint(_in_list("pay_basis", COMP_PAY_BASES), name="ck_cv2_pay_basis"),
+        CheckConstraint(_in_list("measure", COMP_MEASURES), name="ck_cv2_measure"),
+        CheckConstraint(_in_list("value_status", COMP_VALUE_STATUSES), name="ck_cv2_value_status"),
+        CheckConstraint(_in_list("occupation_level", COMP_OCC_LEVELS), name="ck_cv2_occ_level"),
+        CheckConstraint(_in_list("geography_level", COMP_GEO_LEVELS), name="ck_cv2_geo_level"),
+        CheckConstraint(_in_list("link_basis", COMP_LINK_BASES), name="ck_cv2_link_basis"),
+        CheckConstraint(_in_list("evidence_class", COMP_EVIDENCE_CLASSES), name="ck_cv2_evidence_class"),
+        CheckConstraint(_in_list("qualification_status", QUALIFICATION_STATUSES), name="ck_cv2_qualification"),
+        CheckConstraint(_in_list("status", COMP_RECORD_STATUSES), name="ck_cv2_status"),
+        CheckConstraint("amount_scale >= 0 AND amount_scale <= 6", name="ck_cv2_scale"),
+        CheckConstraint("(value_status = 'reported' AND value_units IS NOT NULL AND value_units > 0) OR (value_status <> 'reported' AND value_units IS NULL)", name="ck_cv2_value_not_zero_or_invented"),
+        CheckConstraint("(lower_units IS NULL AND upper_units IS NULL) OR (lower_units IS NOT NULL AND upper_units IS NOT NULL AND lower_units > 0 AND upper_units >= lower_units)", name="ck_cv2_bounds"),
+        CheckConstraint("(measure = 'percentile' AND percentile > 0 AND percentile < 100) OR (measure <> 'percentile' AND percentile = 0)", name="ck_cv2_percentile"),
+        CheckConstraint("source_ref <> '' AND source_edition <> '' AND native_code <> ''", name="ck_cv2_provenance_present"),
+        CheckConstraint("reference_year >= 1900 AND reference_year <= 2200", name="ck_cv2_reference_year"),
+        Index("ix_comp_v2_lookup", "occupation_id", "country", "reference_year"),
+        Index("ix_comp_v2_source", "source_ref", "source_edition"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    record_key: Mapped[str] = mapped_column(String(64))
+    occupation_id: Mapped[int] = mapped_column(ForeignKey("graph_occupations.id", ondelete="RESTRICT"))
+    taxonomy_id: Mapped[int] = mapped_column(ForeignKey("occupation_taxonomies.id", ondelete="RESTRICT"))
+    native_code: Mapped[str] = mapped_column(String(64))
+    occupation_level: Mapped[str] = mapped_column(String(10), default="unknown", server_default="unknown")
+    link_basis: Mapped[str] = mapped_column(String(24), default="native_code_exact", server_default="native_code_exact")
+    country: Mapped[str] = mapped_column(String(8))
+    region_key: Mapped[str] = mapped_column(String(80), default="", server_default="")
+    geography_level: Mapped[str] = mapped_column(String(14), default="unknown", server_default="unknown")
+    currency: Mapped[str] = mapped_column(String(3))
+    pay_period: Mapped[str] = mapped_column(String(10))
+    pay_basis: Mapped[str] = mapped_column(String(10), default="unknown", server_default="unknown")
+    measure: Mapped[str] = mapped_column(String(12), default="unknown", server_default="unknown")
+    percentile: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    value_status: Mapped[str] = mapped_column(String(14), default="reported", server_default="reported")
+    amount_scale: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    value_units: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    lower_units: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    upper_units: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    bounds_semantic: Mapped[str] = mapped_column(String(24), default="unknown", server_default="unknown")
+    source_ref: Mapped[str] = mapped_column(String(64))
+    source_edition: Mapped[str] = mapped_column(String(64))
+    publisher: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    dataset_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    source_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    reference_year: Mapped[int] = mapped_column(Integer)
+    reference_period: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    publication_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    data_vintage: Mapped[str] = mapped_column(String(32), default="", server_default="")
+    evidence_class: Mapped[str] = mapped_column(String(2))
+    precedence_category: Mapped[str] = mapped_column(String(40))
+    qualification_status: Mapped[str] = mapped_column(String(20), default="unqualified", server_default="unqualified")
+    status: Mapped[str] = mapped_column(String(12), default="current", server_default="current")
+    limitations: Mapped[str | None] = mapped_column(Text, nullable=True)
+    provenance: Mapped[dict] = mapped_column(JSON, default=dict)
+    batch_id: Mapped[int | None] = mapped_column(ForeignKey("compensation_import_batches.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class CompensationImportBatch(Base):
+    """Audit record of one compensation import (P10C-C): which source and edition, in which mode, what was added, what already existed and why rows were rejected (reason codes and
+    counts only: no source row content)."""
+
+    __tablename__ = "compensation_import_batches"
+    __table_args__ = (
+        UniqueConstraint("batch_key", name="uq_comp_import_batch_key"),
+        CheckConstraint(_in_list("mode", COMP_IMPORT_MODES), name="ck_cib_mode"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    batch_key: Mapped[str] = mapped_column(String(64))
+    source_ref: Mapped[str] = mapped_column(String(64))
+    source_edition: Mapped[str] = mapped_column(String(64))
+    mode: Mapped[str] = mapped_column(String(12))
+    records_added: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    records_existing: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    rows_rejected: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    rejection_summary: Mapped[dict] = mapped_column(JSON, default=dict)
+    transformation: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    actor_user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 def make_engine(database_url: str) -> Engine:
     """Create an engine; SQLite needs cross-thread access for Streamlit."""
     connect_args = {}

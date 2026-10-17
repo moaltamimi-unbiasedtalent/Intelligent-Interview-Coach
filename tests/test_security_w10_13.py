@@ -863,7 +863,7 @@ def test_security_routes_are_all_gated_and_migrations_have_one_head():
     from alembic.script import ScriptDirectory
     cfg = Config(str(ROOT / "alembic.ini"))
     cfg.set_main_option("script_location", str(ROOT / "migrations"))
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0036_multilingual_aliases"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == ["0037_compensation_v2"]
 
 
 # ======================================================================== migration + PostgreSQL DDL
