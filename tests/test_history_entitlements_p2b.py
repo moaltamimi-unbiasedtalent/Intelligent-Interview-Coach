@@ -422,10 +422,13 @@ def test_no_candidate_facing_agent_or_career_module_reads_completed_interview_hi
 
 def test_independent_artifacts_do_not_embed_or_expose_restricted_interview_history():
     """Today the only independently stored artifacts are Story Bank items and candidate documents; neither carries interview content, and report exports are
-    derived from the interview and gated above. A preparation pack does not exist yet (P5-A)."""
+    derived from the interview and gated above. W12.4D-P5-A added the Preparation Pack as an independent artifact: it must stay free of any interview reference."""
     from src.persistence import Base
     tables = set(Base.metadata.tables)
-    assert "opportunity_packs" not in tables and "preparation_packs" not in tables
+    assert "opportunity_packs" not in tables and "preparation_packs" in tables                          # P5-A: the Pack exists and is checked below
+    pack = Base.metadata.tables["preparation_packs"]
+    assert not {c.name for c in pack.columns} & {"interview_id", "interview_session_id", "report_id", "source_session_id"}
+    assert not [fk for fk in pack.foreign_keys if fk.column.table.name in ("interviews", "reports", "interview_sessions", "answers", "questions")]
     story_cols = {c.name for c in Base.metadata.tables["stories"].columns} if "stories" in Base.metadata.tables else set()
     assert "interview_id" not in story_cols and "interview_session_id" not in story_cols
 

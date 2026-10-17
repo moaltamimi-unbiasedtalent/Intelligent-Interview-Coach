@@ -106,6 +106,10 @@ import type {
   InterviewDetailResponse,
   ModelProfilesResponse,
   UsageQuotasResponse,
+  PackAvailability,
+  PackDetail,
+  PackGenerationResponse,
+  PackListResponse,
   AnalyticsOverviewResponse,
   AnalyticsCompareResponse,
   ProgressResponse,
@@ -335,6 +339,16 @@ export const api = {
   // Plan-aware model-profile metadata (W12.4D-P2-C). Read-only; `selector_active` is false until a reviewed release enables enforcement.
   modelProfiles: {
     get: (opts?: RequestOptions) => request<ModelProfilesResponse>("GET", "/model-profiles", opts),
+  },
+
+  preparationPacks: {
+    availability: (opportunityId: number, opts?: RequestOptions) => request<PackAvailability>("GET", `/opportunities/${opportunityId}/packs/availability`, opts),
+    list: (opportunityId: number, opts?: RequestOptions) => request<PackListResponse>("GET", `/opportunities/${opportunityId}/packs`, opts),
+    generate: (opportunityId: number, idempotencyKey: string, opts?: RequestOptions) =>
+      request<PackGenerationResponse>("POST", `/opportunities/${opportunityId}/packs`, { headers: { "Idempotency-Key": idempotencyKey }, ...opts }),
+    get: (packId: number, opts?: RequestOptions) => request<PackDetail>("GET", `/preparation-packs/${packId}`, opts),
+    remove: (packId: number, opts?: RequestOptions) => request<{ deleted: boolean }>("DELETE", `/preparation-packs/${packId}`, opts),
+    downloadUrl: (packId: number, format: "json" | "md") => `${config.apiBaseUrl}/preparation-packs/${packId}/download?format=${format}`,
   },
 
   progressAnalytics: {

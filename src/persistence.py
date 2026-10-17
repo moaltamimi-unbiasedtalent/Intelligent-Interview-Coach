@@ -2470,6 +2470,41 @@ class UsageQuotaReservation(Base):
     finalized_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
+PACK_STATUSES = ("generating", "completed", "failed", "insufficient_evidence")
+
+
+class PreparationPack(Base):
+    """One generated Opportunity Preparation Pack revision (W12.4D-P5-A): an independent, candidate-owned ARTIFACT.
+
+    ``content`` is the schema-validated structured Pack (sections with an evidence category per item, source provenance, assumptions); it never holds interview
+    transcripts, feedback, reports, analytics snapshots, raw model output or prompts, so a stored Pack cannot bypass a history entitlement. ``op_key`` is unique
+    (idempotency: a duplicate submission creates nothing). At most ONE ``generating`` row exists per user and opportunity (partial unique index), so a repeated
+    or concurrent request cannot start a second expensive generation. The opportunity reference is SET NULL on delete so the Pack survives; the Pack is deleted
+    with the account. ``failure_category`` is a bounded code, never raw output."""
+
+    __tablename__ = "preparation_packs"
+    __table_args__ = (
+        UniqueConstraint("op_key", name="uq_pack_op_key"),
+        CheckConstraint(_in_list("status", PACK_STATUSES), name="ck_pack_status"),
+        Index("ix_pack_user_opp_created", "user_id", "opportunity_id", "created_at"),
+        Index("uq_pack_one_generating", "user_id", "opportunity_id", unique=True, sqlite_where=text("status = 'generating'"),
+              postgresql_where=text("status = 'generating'")),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    op_key: Mapped[str] = mapped_column(String(120))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    opportunity_id: Mapped[int | None] = mapped_column(ForeignKey("opportunities.id", ondelete="SET NULL"), nullable=True)
+    revision: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    status: Mapped[str] = mapped_column(String(24), default="generating", server_default="generating")
+    schema_version: Mapped[str] = mapped_column(String(16))
+    content: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    generation: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    failure_category: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 def make_engine(database_url: str) -> Engine:
     """Create an engine; SQLite needs cross-thread access for Streamlit."""
     connect_args = {}

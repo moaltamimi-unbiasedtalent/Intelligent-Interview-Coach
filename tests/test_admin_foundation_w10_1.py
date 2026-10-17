@@ -413,7 +413,7 @@ def test_c2_build_metadata_reads_injected_env_and_sanitizes(env, monkeypatch):
 
 def test_c3_repository_head_is_the_real_alembic_head():
     from src.application.admin_command_center import repository_head
-    assert repository_head() == "0033_usage_quotas"
+    assert repository_head() == "0034_preparation_packs"
 
 
 def test_c4_migration_state_unknown_match_mismatch(env):
@@ -427,7 +427,7 @@ def test_c4_migration_state_unknown_match_mismatch(env):
     m = migration_status(sf)
     assert m["state"] == "mismatch" and m["warning"] and "never migrates automatically" in m["warning"]
     with sf() as s:
-        s.execute(text("UPDATE alembic_version SET version_num='0033_usage_quotas'"))
+        s.execute(text("UPDATE alembic_version SET version_num='0034_preparation_packs'"))
         s.commit()
     assert migration_status(sf)["state"] == "match"
 

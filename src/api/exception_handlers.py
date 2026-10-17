@@ -29,6 +29,7 @@ from src.application.errors import (
 )
 from src.ai_protection import AiUsageLimitError
 from src.application.usage_quota import QuotaExhausted, QuotaNotConfigured, QuotaUnavailable
+from src.application.preparation_pack import PackGenerationUnavailable
 from src.application.history_access import HistoryNotAvailableError
 from src.application.model_profile_access import ModelProfileInvalid, ModelProfileNotAuthorized, ModelProfileNotAvailable
 from src.repository import HistoryRestricted
@@ -51,6 +52,7 @@ def _envelope(status: int, code: str, message: str, request_id: str) -> JSONResp
 PLATFORM_PAUSED_MESSAGE = "Ask4Mo is temporarily unavailable for this activity. Your saved data remains available. Please try again later."
 AI_USAGE_LIMIT_MESSAGE = ("You have reached a temporary safety limit on AI-generated work. Your saved work and history remain available. "
                           "Please try again in a little while.")
+PACK_GENERATION_UNAVAILABLE_MESSAGE = ("Preparation Pack generation is not available for your account right now. Packs you already saved remain available to read and download.")
 USAGE_QUOTA_MESSAGE = ("You have used the AI allowance included for this period. Your saved work and history remain available. "
                        "The allowance resets at the time shown.")
 USAGE_QUOTA_UNAVAILABLE_MESSAGE = ("This AI feature is temporarily unavailable. Your saved work and history remain available. "
@@ -139,6 +141,15 @@ def register_exception_handlers(app: FastAPI) -> None:
         body = json.loads(response.body)
         body["error"].update({"capability": exc.workflow, "temporary": True, "retry_after_seconds": exc.retry_after})
         return JSONResponse(status_code=429, content=body, headers={"Retry-After": str(exc.retry_after)})
+
+    # W12.4D-P5-A: Pack GENERATION is unavailable (rollout gate off or not entitled). Fixed safe copy; the bounded reason is machine-readable; no plan, price or
+    # upgrade wording. Saved Packs are never affected.
+    @app.exception_handler(PackGenerationUnavailable)
+    async def _pack_generation_unavailable(request: Request, exc: PackGenerationUnavailable):
+        response = _envelope(403, "preparation_pack_generation_unavailable", PACK_GENERATION_UNAVAILABLE_MESSAGE, _request_id(request))
+        body = json.loads(response.body)
+        body["error"]["reason"] = exc.reason
+        return JSONResponse(status_code=403, content=body)
 
     # W12.4D-P4-A: product usage quota (enforcement mode only). Fixed safe copy plus bounded facts; no plan, price or upgrade wording. A missing policy or an
     # unreadable store fails closed for the quota-gated operation only (503), never as unlimited use.

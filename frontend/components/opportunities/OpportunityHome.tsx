@@ -23,6 +23,7 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 import { OpportunityStatusBadge } from "@/components/opportunities/OpportunityStatusBadge";
 import { JourneyRail } from "@/components/layout/JourneyRail";
+import { PreparationPackSection } from "@/components/opportunities/PreparationPackSection";
 
 const STATUSES: OpportunityStatus[] = ["active", "interviewing", "offer", "closed"];
 
@@ -156,6 +157,9 @@ export function OpportunityHome({ opportunityId }: { opportunityId: number }) {
         <ActionCard title={t("opportunity.sectionEvidence")} body={t("opportunity.sectionEvidenceBody")}
                     href="/documents" cta={t("opportunity.manageEvidence")} />
       </div>
+
+      {/* Preparation Pack (W12.4D-P5-A): saved Packs always readable; generation only when the server says it is available */}
+      <PreparationPackSection opportunityId={o.id} />
 
       {/* Reports / history */}
       <Card>

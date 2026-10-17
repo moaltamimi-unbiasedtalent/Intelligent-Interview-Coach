@@ -92,6 +92,7 @@ def build_candidate_export(*, user_id: int, session_factory, repo, account: Any)
                 for d in docs
             ],
             "stories": [_row(st, ("user_id",)) for st in stories],
+            "preparation_packs": [_row(pk, ("user_id", "op_key")) for pk in mine(P.PreparationPack, P.PreparationPack.id)],
             "memories": [_row(m, ("user_id",)) for m in mine(P.PreparationMemory, P.PreparationMemory.id)],
             "feedback": [_row(f, ("user_id",)) for f in mine(P.UserFeedback, P.UserFeedback.id)],
             "workspace_memberships": [
