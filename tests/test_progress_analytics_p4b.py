@@ -522,4 +522,4 @@ def test_no_migration_was_added_and_the_head_is_unchanged():
     root = pathlib.Path(__file__).resolve().parents[1]
     cfg = Config(str(root / "alembic.ini"))
     cfg.set_main_option("script_location", str(root / "migrations"))
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0033_usage_quotas"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == ["0034_preparation_packs"]

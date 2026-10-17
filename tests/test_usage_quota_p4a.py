@@ -517,13 +517,13 @@ def test_the_permission_registry_is_unchanged():
     assert len(PERMISSIONS) == 44
 
 
-def test_migration_0033_is_the_single_head_upgrades_cleanly_and_downgrades_without_touching_other_tables(tmp_path, monkeypatch):
+def test_migration_0033_upgrades_and_the_chain_has_one_head_upgrades_cleanly_and_downgrades_without_touching_other_tables(tmp_path, monkeypatch):
     from alembic import command
     from alembic.script import ScriptDirectory
     from sqlalchemy import create_engine, inspect
     from tests.test_billing_f1_qualification import _alembic
     cfg, url = _alembic(tmp_path, monkeypatch)
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0033_usage_quotas"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == ["0034_preparation_packs"]
     command.upgrade(cfg, "0032_ai_operation_events")
     assert "usage_quota_counters" not in inspect(create_engine(url)).get_table_names()
     command.upgrade(cfg, "head")

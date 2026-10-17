@@ -224,6 +224,12 @@ class AccountDeletionService:
             self._delete_where(s, P.InterviewSession,
                                P.InterviewSession.user_id == user_id, summary,
                                "interview_sessions")
+            # Preparation Packs (W12.4D-P5-A) are candidate-owned artifacts: deleted with the account, BEFORE the opportunities they reference. The operational
+            # metering and quota records of the candidate (W12.4D-P2-A, P4-A) hold no candidate content but are removed explicitly too (SQLite has no FK cascade).
+            self._delete_where(s, P.PreparationPack, P.PreparationPack.user_id == user_id, summary, "preparation_packs")
+            self._delete_where(s, P.UsageQuotaReservation, P.UsageQuotaReservation.user_id == user_id, summary, "usage_quota_reservations")
+            self._delete_where(s, P.UsageQuotaCounter, P.UsageQuotaCounter.user_id == user_id, summary, "usage_quota_counters")
+            self._delete_where(s, P.AIOperationEvent, P.AIOperationEvent.user_id == user_id, summary, "ai_operation_events")
             # Opportunities (P10B Wave 6) - deleted AFTER interviews/sessions so no SET NULL
             # back-reference remains; the owner's opportunities are removed with the account.
             self._delete_where(s, P.Opportunity, P.Opportunity.user_id == user_id,

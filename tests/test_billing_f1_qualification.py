@@ -681,7 +681,7 @@ def test_C29_reapplying_head_is_a_no_op_and_stepwise_upgrade_from_each_billing_r
     command.upgrade(cfg, "head")                                                                                    # re-application: nothing to do, nothing breaks
     from sqlalchemy import create_engine, text
     with create_engine(url).connect() as c:
-        assert c.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0033_usage_quotas"
+        assert c.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0034_preparation_packs"
 
 
 def test_C30_a_downgrade_over_financial_history_refuses_and_a_clean_one_reverses(tmp_path, monkeypatch):

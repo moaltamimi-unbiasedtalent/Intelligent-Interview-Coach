@@ -1266,3 +1266,26 @@ export interface AnalyticsCompareResponse {
   limitations: string[];
   methodology: string[];
 }
+
+/** Opportunity Preparation Pack (W12.4D-P5-A). The stored artifact is schema-validated server content; the client renders it and decides nothing about access. */
+export type PackStatus = "generating" | "completed" | "failed" | "insufficient_evidence";
+export type PackCategory = "candidate_provided" | "opportunity_provided" | "verified_external" | "knowledge_base" | "ai_guidance" | "unavailable";
+export interface PackSummary {
+  id: number;
+  opportunity_id: number | null;
+  revision: number;
+  status: PackStatus;
+  schema_version: string;
+  failure_category: string | null;
+  created_at: string | null;
+  completed_at: string | null;
+  section_statuses: Record<string, string>;
+}
+export interface PackItem { kind: string; text: string; category: PackCategory; source_ids: string[]; ref_ids: string[]; meta: Record<string, string> }
+export interface PackSection { id: string; status: "available" | "partial" | "insufficient_evidence" | "not_applicable" | "failed"; items: PackItem[]; notes: string[] }
+export interface PackSource { id: string; title: string; url: string | null; category: PackCategory; provider: string | null; retrieved_at: string | null; effective_date: string | null; self_reported: boolean }
+export interface PackContent { schema_version: string; opportunity: Record<string, unknown>; inputs: Record<string, boolean>; sections: PackSection[]; sources: PackSource[]; assumptions: string[]; limitations: string[] }
+export interface PackDetail extends PackSummary { content: PackContent | null }
+export interface PackListResponse { packs: PackSummary[] }
+export interface PackAvailability { generation: "feature_disabled" | "not_entitled" | "available" }
+export interface PackGenerationResponse { outcome: "created" | "duplicate" | "in_progress"; pack: PackSummary }
