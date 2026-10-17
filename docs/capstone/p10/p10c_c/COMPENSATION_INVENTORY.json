@@ -1,0 +1,262 @@
+{
+ "eurostat_note": "the source status records one indexed local document (text chunks) and no normalised records; no structured Eurostat earnings table is present",
+ "eurostat_structured_earnings_available_locally": false,
+ "k1_german_governed_set": {
+  "classification": "engineering draft (self-declared in the dataset module)",
+  "currency": "EUR",
+  "jurisdiction": "DE",
+  "pay_unit": "gross_annual",
+  "records": 7,
+  "reference_year": 2024,
+  "requirement": "K1"
+ },
+ "note": "Metadata only: counts and verdicts. No titles and no salary values. Produced read-only.",
+ "per_source": {
+  "bls_oews": {
+   "codes_in_xx_xxxx_shape": 1386,
+   "countries": [
+    "US"
+   ],
+   "currencies": [
+    "USD"
+   ],
+   "distinct_native_codes": 1386,
+   "duplicate_native_code_rows": 0,
+   "native_code_length_distribution": {
+    "7": 1386
+   },
+   "pay_periods": [
+    "annual"
+   ],
+   "records": 1386,
+   "reference_years": [
+    2025
+   ],
+   "rows_with_bounds": 1386,
+   "rows_with_industry": 0,
+   "rows_with_region": 0,
+   "rows_with_title": 0,
+   "rows_with_value": 1386,
+   "sample_quality": {
+    "final": 1386
+   },
+   "source_urls": [
+    "https://www.bls.gov/oes/"
+   ],
+   "statistics": [
+    "median"
+   ]
+  },
+  "ons_ashe": {
+   "codes_in_xx_xxxx_shape": 0,
+   "countries": [
+    "UK"
+   ],
+   "currencies": [
+    "GBP"
+   ],
+   "distinct_native_codes": 527,
+   "duplicate_native_code_rows": 0,
+   "native_code_length_distribution": {
+    "0": 1,
+    "1": 9,
+    "2": 26,
+    "3": 103,
+    "4": 388
+   },
+   "pay_periods": [
+    "weekly"
+   ],
+   "records": 527,
+   "reference_years": [
+    2025
+   ],
+   "rows_with_bounds": 0,
+   "rows_with_industry": 0,
+   "rows_with_region": 0,
+   "rows_with_title": 0,
+   "rows_with_value": 527,
+   "sample_quality": {
+    "provisional": 527
+   },
+   "source_urls": [
+    "https://www.ons.gov.uk/"
+   ],
+   "statistics": [
+    "median"
+   ]
+  }
+ },
+ "records": 1913,
+ "registry_state_of_relevant_sources": {
+  "adzuna": {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "Adzuna Jobs API (advertised market)",
+   "dataset_version": "v1",
+   "evidence_class": null,
+   "licence_id": null,
+   "licence_status": "unknown",
+   "origin": "authorized_api",
+   "precedence_category": "authorized_secondary",
+   "publisher": "Adzuna",
+   "redistribution": "unknown",
+   "taxonomy": null
+  },
+  "ba_entgeltatlas": {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "Entgeltatlas",
+   "dataset_version": "current release",
+   "evidence_class": "C1",
+   "licence_id": null,
+   "licence_status": "unknown",
+   "origin": "unknown",
+   "precedence_category": "national_public_employment_service",
+   "publisher": "Bundesagentur für Arbeit",
+   "redistribution": "unknown",
+   "taxonomy": null
+  },
+  "bls_oews": {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "Occupational Employment and Wage Statistics (OEWS)",
+   "dataset_version": "M2025",
+   "evidence_class": "C1",
+   "licence_id": "Public domain (U.S. Government work)",
+   "licence_status": "stated_unverified",
+   "origin": "official_local",
+   "precedence_category": "national_official_occupation_statistics",
+   "publisher": "U.S. Bureau of Labor Statistics",
+   "redistribution": "yes",
+   "taxonomy": "soc"
+  },
+  "bls_ooh": {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "Occupational Outlook Handbook (OOH)",
+   "dataset_version": "2025",
+   "evidence_class": null,
+   "licence_id": "Public domain (U.S. Government work)",
+   "licence_status": "stated_unverified",
+   "origin": "official_local",
+   "precedence_category": "national_official_occupation_statistics",
+   "publisher": "U.S. Bureau of Labor Statistics",
+   "redistribution": "yes",
+   "taxonomy": "soc"
+  },
+  "cedefop_skills_forecast": {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "Cedefop Skills Forecast",
+   "dataset_version": "2026",
+   "evidence_class": null,
+   "licence_id": null,
+   "licence_status": "unknown",
+   "origin": "authorised_manual",
+   "precedence_category": "cedefop_intelligence",
+   "publisher": "Cedefop",
+   "redistribution": "unknown",
+   "taxonomy": null
+  },
+  "destatis": {
+   "approval_status": "licensing_pending",
+   "attribution_required": "unknown",
+   "dataset_name": "Destatis GENESIS-Online (German official statistics)",
+   "dataset_version": "GENESIS 2020",
+   "evidence_class": null,
+   "licence_id": null,
+   "licence_status": "unknown",
+   "origin": "official_api",
+   "precedence_category": "national_official_occupation_statistics",
+   "publisher": "Statistisches Bundesamt (Destatis)",
+   "redistribution": "unknown",
+   "taxonomy": null
+  },
+  "eurostat_earnings": {
+   "approval_status": "licensing_pending",
+   "attribution_required": "yes",
+   "dataset_name": "Eurostat Earnings (Structure of Earnings Survey)",
+   "dataset_version": "SES 2022",
+   "evidence_class": null,
+   "licence_id": "CC BY 4.0",
+   "licence_status": "stated_unverified",
+   "origin": "official_local",
+   "precedence_category": "eurostat_harmonised",
+   "publisher": "Eurostat",
+   "redistribution": "yes",
+   "taxonomy": null
+  },
+  "onet": {
+   "approval_status": "licensing_pending",
+   "attribution_required": "yes",
+   "dataset_name": "O*NET Database",
+   "dataset_version": "31.0",
+   "evidence_class": null,
+   "licence_id": "CC BY 4.0",
+   "licence_status": "stated_unverified",
+   "origin": "official_local",
+   "precedence_category": "unknown",
+   "publisher": "O*NET / U.S. Department of Labor",
+   "redistribution": "yes",
+   "taxonomy": "onet_soc"
+  },
+  "ons_ashe": {
+   "approval_status": "licensing_pending",
+   "attribution_required": "yes",
+   "dataset_name": "Annual Survey of Hours and Earnings (ASHE)",
+   "dataset_version": "2025 provisional",
+   "evidence_class": null,
+   "licence_id": "Open Government Licence v3.0",
+   "licence_status": "stated_unverified",
+   "origin": "official_local",
+   "precedence_category": "national_official_occupation_statistics",
+   "publisher": "Office for National Statistics (ONS)",
+   "redistribution": "yes",
+   "taxonomy": "uk_soc"
+  }
+ },
+ "schema": "gkb5_compensation_inventory/1",
+ "v1_columns": [
+  "source_id",
+  "occupation_code",
+  "occupation_title",
+  "geography",
+  "country",
+  "region",
+  "industry",
+  "year",
+  "currency",
+  "pay_period",
+  "statistic_type",
+  "value",
+  "lower_bound",
+  "upper_bound",
+  "sample_quality",
+  "source_url"
+ ],
+ "v1_lacks": [
+  "taxonomy_scheme",
+  "taxonomy_edition",
+  "source_edition",
+  "pay_basis",
+  "publication_date",
+  "reference_period",
+  "evidence_class",
+  "precedence_category",
+  "provenance",
+  "geography_level",
+  "occupation_level",
+  "qualification_status"
+ ],
+ "v1_limitations": [
+  "pay basis (gross/net) is not recorded",
+  "taxonomy namespace and edition are implicit",
+  "source edition and publication date are not recorded",
+  "bounds carry no declared semantics (the reader uses the published 10th and 90th percentiles)",
+  "values are floating-point REAL",
+  "no occupation title is stored",
+  "no evidence class, precedence, qualification or provenance fields",
+  "retrieval filters by country, year, native code or title substring only"
+ ]
+}

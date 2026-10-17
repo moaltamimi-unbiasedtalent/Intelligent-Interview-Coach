@@ -104,7 +104,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("admin_ui_uses_verified_navigation", 'from "next/link"' not in ui, "VerifiedLink only")
 
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_", "0026_", "0027_", "0028_", "0029_", "0030_", "0031_", "0032_", "0033_", "0034_", "0035_", "0036_")), mig[-1])
+    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_", "0026_", "0027_", "0028_", "0029_", "0030_", "0031_", "0032_", "0033_", "0034_", "0035_", "0036_", "0037_")), mig[-1])
     return out
 
 

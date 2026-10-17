@@ -1,0 +1,147 @@
+{
+ "corpora": {
+  "large": {
+   "conflicting_evidence": {
+    "max_ms": 3.091,
+    "n": 40,
+    "p50_ms": 2.899,
+    "p95_ms": 3.005,
+    "peak_kib": 204,
+    "queries_per_resolution": 9
+   },
+   "countries": 8,
+   "editions": 1,
+   "import_seconds": 5.87,
+   "occupations": 2000,
+   "records_per_edition": 16000,
+   "repeated_lookup": {
+    "max_ms": 3.791,
+    "n": 200,
+    "p50_ms": 2.916,
+    "p95_ms": 3.286,
+    "peak_kib": 248,
+    "queries_per_resolution": 9
+   },
+   "unavailable_evidence_unsupported_market": {
+    "max_ms": 2.264,
+    "n": 100,
+    "p50_ms": 2.109,
+    "p95_ms": 2.206,
+    "peak_kib": 237,
+    "queries_per_resolution": 7
+   },
+   "unique_evidence": {
+    "max_ms": 5.931,
+    "n": 100,
+    "p50_ms": 2.902,
+    "p95_ms": 3.109,
+    "peak_kib": 336,
+    "queries_per_resolution": 9
+   },
+   "unresolvable_title_not_found": {
+    "max_ms": 5.002,
+    "n": 100,
+    "p50_ms": 1.849,
+    "p95_ms": 1.978,
+    "peak_kib": 242,
+    "queries_per_resolution": 4
+   }
+  },
+  "multi_edition": {
+   "conflicting_evidence": {
+    "max_ms": 3.02,
+    "n": 40,
+    "p50_ms": 2.907,
+    "p95_ms": 2.967,
+    "peak_kib": 213,
+    "queries_per_resolution": 9
+   },
+   "countries": 8,
+   "editions": 3,
+   "import_seconds": 4.51,
+   "occupations": 500,
+   "records_per_edition": 4000,
+   "repeated_lookup": {
+    "max_ms": 4.397,
+    "n": 200,
+    "p50_ms": 2.914,
+    "p95_ms": 3.309,
+    "peak_kib": 229,
+    "queries_per_resolution": 9
+   },
+   "unavailable_evidence_unsupported_market": {
+    "max_ms": 2.272,
+    "n": 100,
+    "p50_ms": 2.083,
+    "p95_ms": 2.192,
+    "peak_kib": 245,
+    "queries_per_resolution": 7
+   },
+   "unique_evidence": {
+    "max_ms": 6.072,
+    "n": 100,
+    "p50_ms": 2.976,
+    "p95_ms": 3.169,
+    "peak_kib": 338,
+    "queries_per_resolution": 9
+   },
+   "unresolvable_title_not_found": {
+    "max_ms": 4.789,
+    "n": 100,
+    "p50_ms": 1.666,
+    "p95_ms": 1.754,
+    "peak_kib": 248,
+    "queries_per_resolution": 4
+   }
+  },
+  "small": {
+   "conflicting_evidence": {
+    "max_ms": 3.248,
+    "n": 40,
+    "p50_ms": 2.919,
+    "p95_ms": 3.139,
+    "peak_kib": 174,
+    "queries_per_resolution": 9
+   },
+   "countries": 8,
+   "editions": 1,
+   "import_seconds": 0.31,
+   "occupations": 100,
+   "records_per_edition": 800,
+   "repeated_lookup": {
+    "max_ms": 3.879,
+    "n": 200,
+    "p50_ms": 2.912,
+    "p95_ms": 3.34,
+    "peak_kib": 243,
+    "queries_per_resolution": 9
+   },
+   "unavailable_evidence_unsupported_market": {
+    "max_ms": 2.302,
+    "n": 100,
+    "p50_ms": 2.094,
+    "p95_ms": 2.211,
+    "peak_kib": 235,
+    "queries_per_resolution": 7
+   },
+   "unique_evidence": {
+    "max_ms": 6.402,
+    "n": 100,
+    "p50_ms": 2.89,
+    "p95_ms": 3.096,
+    "peak_kib": 377,
+    "queries_per_resolution": 9
+   },
+   "unresolvable_title_not_found": {
+    "max_ms": 27.343,
+    "n": 100,
+    "p50_ms": 1.69,
+    "p95_ms": 1.809,
+    "peak_kib": 297,
+    "queries_per_resolution": 4
+   }
+  }
+ },
+ "note": "Synthetic corpora in a throwaway database; no real data; no protected store touched.",
+ "schema": "compensation_v2_benchmark/1"
+}
