@@ -2,7 +2,7 @@
 
 Additive. ``preparation_packs`` stores one candidate-owned Pack revision per row: schema-validated structured content with evidence categories and source
 provenance, bounded generation metadata and a bounded failure category. It never stores interview transcripts, feedback, reports, analytics snapshots, raw
-model output or prompts. ``op_key`` is unique (idempotency); a partial unique index allows at most one ``generating`` row per user and opportunity. ``user_id``
+model output or prompts. ``op_key`` is unique (idempotency); a partial unique index allows at most one ``generating`` row per user and opportunity, and a unique constraint makes a revision number unique per user and opportunity. ``user_id``
 cascades on account deletion; ``opportunity_id`` is SET NULL so a Pack survives the deletion of its opportunity. With the table empty nothing changes for any
 candidate. Downgrade drops the table. Chains from 0033. Single head.
 
@@ -41,6 +41,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["opportunity_id"], ["opportunities.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("op_key", name="uq_pack_op_key"),
+        sa.UniqueConstraint("user_id", "opportunity_id", "revision", name="uq_pack_revision"),
         sa.CheckConstraint("status IN ('generating', 'completed', 'failed', 'insufficient_evidence')", name="ck_pack_status"),
     )
     op.create_index("ix_preparation_packs_user_id", "preparation_packs", ["user_id"])

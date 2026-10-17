@@ -792,3 +792,177 @@ def test_pack_retrieval_is_a_bounded_number_of_queries_and_fast_even_with_many_r
         assert "content" not in r.json()["packs"][0]                                                          # listing never carries the content
     finally:
         c.__exit__(None, None, None)
+
+
+# ======================================================================== P5-A final qualification: grounding, lease, revision uniqueness, database semantics
+def test_company_statements_are_marked_as_source_excerpts_never_as_independently_verified():
+    c = PP.assemble(inputs(company=company_report()))
+    verified = [i for i in section(c, "company").items if i.category == PP.Category.verified_external]
+    assert verified and all(i.meta["support"] == "source_excerpt" and i.meta["self_reported"] == "true" for i in verified)
+    assert "company_statements_are_source_excerpts_not_independently_verified" in c.limitations
+    assert "company_statements_are_source_excerpts_not_independently_verified" not in PP.assemble(inputs(company=None)).limitations
+
+
+def test_a_source_id_that_merely_resolves_is_not_semantic_verification_and_claims_without_one_never_reach_the_pack():
+    from src.application import company_intelligence_service as CI
+    rep = company_report()
+    rep.business_market.append(CI.Claim(kind=CI.ClaimKind.FACT, text="Completely unrelated sentence about volcanoes.", source_ids=["s1"]))   # resolves, but support is not checked semantically
+    rep.business_market.append(CI.Claim(kind=CI.ClaimKind.FACT, text="Summary fact with no source at all.", source_ids=[]))
+    items = section(PP.assemble(inputs(company=rep)), "company").items
+    texts = {i.text: i for i in items}
+    assert texts["Completely unrelated sentence about volcanoes."].meta["support"] == "source_excerpt"        # labelled as an excerpt, nothing stronger is claimed
+    assert "Summary fact with no source at all." not in texts                                                  # an unsourced statement is never shown
+
+
+def test_only_the_source_linked_company_path_can_produce_verified_external_items():
+    claims = [{"id": 1, "display_text": "Led and mentored a team of junior nurses on the intensive care ward", "claim_type": "experience", "review_state": "accepted"}]
+    story = {"id": 5, "title": "Communication", "situation": "x", "action": "clear communication with stakeholders", "result": None, "competencies": ["communication"], "evidence_state": "none"}
+    g = PP.validate_guidance(Gen().generate(SimpleNamespace(requirements=[{"id": "R1"}], evidence=[{"id": "C1"}])), {"R1"}, {"C1"})
+    c = PP.assemble(inputs(claims=claims, stories=[story], company=None, kb=[{"id": "k", "title": "KB"}]), g)
+    assert not [i for s in c.sections for i in s.items if i.category == PP.Category.verified_external] and not [s for s in c.sources if s.category == PP.Category.verified_external]
+    assert all(not i.source_ids for s in c.sections for i in s.items if i.category == PP.Category.ai_guidance)
+
+
+def test_the_model_is_never_given_the_employer_and_cannot_know_company_facts():
+    ctx, _, _ = PP.build_context(inputs(company=company_report()))
+    assert ctx.company is None and "Acme" not in ctx.model_dump_json()
+
+
+@pytest.mark.parametrize("claim", ["Acme was founded in 1987 and is a leader.", "Acme employs 9,000 employees across Europe.", "Their ICU has 40 beds and grew 35% last year.",
+                                   "Prepare for the 2026 merger announcement.", "The firm serves 3 million customers."])
+def test_guidance_that_asserts_an_external_figure_or_date_is_rejected(claim):
+    raw = {"questions": [], "roadmap": [{"action": "study_company", "text": claim, "requirement_ids": ["R1"], "evidence_ids": []}]}
+    with pytest.raises(PP.PackGenerationError) as e:
+        PP.validate_guidance(raw, {"R1"}, set())
+    assert e.value.category == "unsupported_external_claim"
+
+
+def test_legitimate_requirement_numbers_are_not_rejected_as_external_claims():
+    raw = {"questions": [{"requirement_ids": ["R1"], "kind": "behavioural", "question": "Tell me about 3 situations where you led a team of 5 people.", "evidence_to_prepare": "Two examples", "follow_ups": []}], "roadmap": []}
+    assert PP.validate_guidance(raw, {"R1"}, set()).questions
+
+
+def test_a_generation_that_is_still_running_renews_its_lease_and_is_never_reaped_or_replaced():
+    from datetime import datetime, timedelta, timezone
+    from src.preparation_pack_repository import PreparationPackRepository
+    c, repo, a, *_ = _setup()
+    try:
+        uid = _uid(c, a)
+        oid = seed_opportunity(repo, uid)
+        pr = PreparationPackRepository(repo.session_factory)
+        t0 = datetime.now(timezone.utc) - timedelta(hours=2)
+        outcome, row = pr.start(user_id=uid, opportunity_id=oid, op_key="long", schema_version="x", now=t0)
+        assert outcome == "created"
+        assert pr.touch(row["id"], now=t0 + timedelta(minutes=14)) is True                                     # a stage boundary renews the lease
+        assert pr.reap_stale(older_than_seconds=900, now=t0 + timedelta(minutes=20)) == 0                      # 6 minutes of silence: alive
+        assert pr.start(user_id=uid, opportunity_id=oid, op_key="other", schema_version="x")[0] == "in_progress"       # no concurrent replacement
+        assert pr.reap_stale(older_than_seconds=900, now=t0 + timedelta(minutes=40)) == 1                      # 26 minutes of silence: interrupted
+        assert pr.finish(row["id"], status="completed", content={"late": True}, generation=None) is False       # a late result can never overwrite the recovery
+        with repo.session_factory() as s:
+            p = s.scalar(select(PreparationPack).where(PreparationPack.op_key == "long"))
+            assert p.status == "failed" and p.failure_category == "interrupted" and p.content is None
+        assert pr.start(user_id=uid, opportunity_id=oid, op_key="after", schema_version="x")[0] == "created"
+    finally:
+        c.__exit__(None, None, None)
+
+
+def test_the_service_renews_the_lease_at_every_stage_so_a_slow_generation_survives_a_concurrent_request(on, monkeypatch):
+    from datetime import datetime, timedelta, timezone
+    c, repo, a, *_ = _setup()
+    try:
+        uid = _uid(c, a)
+        premium(repo, uid)
+        oid = seed_opportunity(repo, uid)
+        started, release = threading.Event(), threading.Event()
+
+        class Slow(Gen):
+            def generate(self, ctx):
+                started.set()
+                release.wait(10)
+                return super().generate(ctx)
+        gen = Slow()
+        wire(c, monkeypatch, gen)
+        out = {}
+        t = threading.Thread(target=lambda: out.update(first=post(c, a, oid, key="slow").json()))
+        t.start()
+        assert started.wait(10)
+        with repo.session_factory() as s:                                                  # pretend the row was created long ago: only the lease can keep it alive
+            from sqlalchemy import update as upd
+            s.execute(upd(PreparationPack).where(PreparationPack.op_key.like("%slow")).values(created_at=datetime.now(timezone.utc) - timedelta(hours=3)))
+            s.commit()
+            beat = s.scalar(select(PreparationPack.generation).where(PreparationPack.op_key.like("%slow")))
+        assert beat and beat.get("heartbeat_at")
+        second = post(c, a, oid, key="concurrent").json()
+        assert second["outcome"] == "in_progress" and second["pack"]["status"] == "generating"
+        release.set()
+        t.join(15)
+        assert out["first"]["pack"]["status"] == "completed" and len(gen.calls) == 1
+    finally:
+        c.__exit__(None, None, None)
+
+
+def test_revision_numbers_are_unique_under_concurrent_starts_and_the_constraint_rejects_a_duplicate():
+    from sqlalchemy.exc import IntegrityError
+    from src.preparation_pack_repository import PreparationPackRepository
+    c, repo, a, *_ = _setup()
+    try:
+        uid = _uid(c, a)
+        oid = seed_opportunity(repo, uid)
+        pr = PreparationPackRepository(repo.session_factory)
+        errors, gate = [], threading.Barrier(8)
+
+        def worker(w):
+            gate.wait()
+            for n in range(4):
+                try:
+                    outcome, row = pr.start(user_id=uid, opportunity_id=oid, op_key=f"w{w}-{n}", schema_version="x")
+                    if outcome == "created":
+                        pr.finish(row["id"], status="completed", content={}, generation=None)
+                except Exception as exc:  # noqa: BLE001
+                    errors.append(type(exc).__name__)
+        ts = [threading.Thread(target=worker, args=(w,)) for w in range(8)]
+        [x.start() for x in ts]; [x.join() for x in ts]
+        with repo.session_factory() as s:
+            revs = list(s.scalars(select(PreparationPack.revision).where(PreparationPack.user_id == uid)))
+        assert len(revs) == len(set(revs)) and sorted(revs) == list(range(1, len(revs) + 1)) and not [e for e in errors if e != "OperationalError"]
+        with repo.session_factory() as s:
+            s.add(PreparationPack(op_key="dupe", user_id=uid, opportunity_id=oid, revision=1, status="completed", schema_version="x"))
+            with pytest.raises(IntegrityError):
+                s.commit()
+    finally:
+        c.__exit__(None, None, None)
+
+
+def test_idempotency_keys_are_scoped_to_the_owner_so_another_candidate_cannot_collide_or_read(on, monkeypatch):
+    c, repo, a, b, m, adm, wid = _setup()
+    try:
+        ua, ub = _uid(c, a), _uid(c, b)
+        premium(repo, ua), premium(repo, ub)
+        oa, ob = seed_opportunity(repo, ua), seed_opportunity(repo, ub)
+        wire(c, monkeypatch, Gen())
+        ra, rb = post(c, a, oa, key="shared").json(), post(c, b, ob, key="shared").json()                  # the same client key for two candidates
+        assert ra["outcome"] == "created" and rb["outcome"] == "created" and ra["pack"]["id"] != rb["pack"]["id"]
+        assert c.get(D.format(rb["pack"]["id"]), cookies=cookies_for(a)).status_code == 404
+        assert post(c, b, oa, key="shared").status_code == 404                                              # alice's opportunity is not reachable with bob's key
+    finally:
+        c.__exit__(None, None, None)
+
+
+def test_postgresql_semantics_of_the_partial_unique_index_and_revision_constraint_are_the_intended_ddl(tmp_path, monkeypatch, capsys):
+    """Rendered for the PostgreSQL dialect without any connection: the model and the migration both define the same partial unique index and revision constraint."""
+    from alembic import command
+    from alembic.config import Config
+    from sqlalchemy.dialects import postgresql
+    from sqlalchemy.schema import CreateIndex
+    import pathlib
+    idx = next(i for i in PreparationPack.__table__.indexes if i.name == "uq_pack_one_generating")
+    ddl = str(CreateIndex(idx).compile(dialect=postgresql.dialect()))
+    assert "UNIQUE INDEX uq_pack_one_generating" in ddl and "(user_id, opportunity_id)" in ddl and "WHERE status = 'generating'" in ddl
+    root = pathlib.Path(__file__).resolve().parents[1]
+    cfg = Config(str(root / "alembic.ini"))
+    cfg.set_main_option("script_location", str(root / "migrations"))
+    monkeypatch.setenv("DATABASE_URL", "postgresql+psycopg://nobody:nopass@localhost/none")            # offline: never connected
+    command.upgrade(cfg, "0033_usage_quotas:0034_preparation_packs", sql=True)
+    out = capsys.readouterr().out
+    assert "CREATE UNIQUE INDEX uq_pack_one_generating ON preparation_packs (user_id, opportunity_id) WHERE status = 'generating'" in out
+    assert "CONSTRAINT uq_pack_revision UNIQUE (user_id, opportunity_id, revision)" in out and "ON DELETE SET NULL" in out and "ON DELETE CASCADE" in out

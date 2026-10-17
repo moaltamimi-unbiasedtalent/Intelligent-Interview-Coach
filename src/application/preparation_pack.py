@@ -173,6 +173,8 @@ _BULLET = re.compile(r"^\s*(?:[-*•–·]|\d{1,2}[.)])\s+")
 _SENIORITY = re.compile(r"\b(intern|graduate|junior|entry[- ]level|mid[- ]level|senior|lead|principal|staff|head of|director|vp|executive)\b", re.I)
 _WORK_MODEL = re.compile(r"\b(remote|hybrid|on[- ]?site|in[- ]office)\b", re.I)
 _URL = re.compile(r"https?://|www\.", re.I)
+# An external factual claim the model could only have invented: a year, a headcount/size/percentage figure. Questions and steps never need one.
+_EXTERNAL_FIGURE = re.compile(r"\b(?:1[89]\d{2}|20\d{2})\b|\b\d[\d.,]*\s?(?:%|percent|million|billion|employees|staff|beds|locations|offices|countries|customers|clients|users)\b", re.I)
 _MONEY = re.compile(r"(?:[€$£¥]\s?\d|\d\s?(?:[kK]\b|eur\b|usd\b|gbp\b|chf\b|€|\$|£)|\b(?:salary|salaries|compensation|gehalt|salaire|salario|stipendio|salário|salaris|зарплат|bonus|equity|percentile|median pay)\b)", re.I)
 
 
@@ -294,7 +296,11 @@ def assemble(inputs: PackInputs, guidance: "PackGuidance | None" = None, *, guid
                     dropped += 1                                    # a "fact" without a retained source is not shown as verified
                     continue
                 used.update(ids)
-                comp_items.append(_item(kind, cl.text, Category.verified_external, source_ids=[f"W:{i}" for i in ids]))
+                # The research engine builds each FACT from the cited source's own retrieved excerpt, so the text is source-linked by construction. The Pack
+                # does NOT independently verify that the excerpt is true (a self-reported company statement is still the company's claim): see the
+                # ``support`` marker and the standing limitation below. A source id that merely resolves is never treated as semantic verification.
+                comp_items.append(_item(kind, cl.text, Category.verified_external, source_ids=[f"W:{i}" for i in ids], support="source_excerpt",
+                                        self_reported="true" if any(known[i].self_reported for i in ids) else "false"))
         for i in sorted(used):
             s = known[i]
             sources.append(PackSource(id=f"W:{i}", title=s.title[:200], url=s.url, category=Category.verified_external, provider=s.provider,
@@ -391,6 +397,8 @@ def assemble(inputs: PackInputs, guidance: "PackGuidance | None" = None, *, guid
                    "no_geography_inferred_from_interface_language"]
     limitations = ["ai_guidance_is_not_a_verified_fact", "not_a_hiring_decision_or_guarantee", "not_human_coaching", "compensation_not_included_p10c",
                    "geographic_and_multilingual_knowledge_coverage_not_assumed_p10d"]
+    if any(i.category == Category.verified_external for i in sections["company"].items):
+        limitations.append("company_statements_are_source_excerpts_not_independently_verified")
     if not inputs.kb:
         limitations.append("knowledge_base_evidence_not_connected")
     src_items = [_item("source", s.title, s.category, source_ids=[s.id]) for s in sources] or [_item("missing", "sources", Category.unavailable)]
@@ -449,7 +457,7 @@ def build_context(inputs: PackInputs) -> tuple[GuidanceContext, set[str], set[st
     units = _units(inputs)
     align = _align(requirements, units)
     ctx = GuidanceContext(
-        role=(inputs.opportunity.get("target_role") or inputs.opportunity.get("title")), company=inputs.opportunity.get("company_name"),
+        role=(inputs.opportunity.get("target_role") or inputs.opportunity.get("title")), company=None,       # the model is never given the employer: it cannot assert employer facts
         requirements=[{"id": r["id"], "text": r["text"], "competencies": r["competencies"], "status": align[r["id"]]["status"]} for r in requirements],
         evidence=[{"id": u["id"], "label": (u.get("title") or u["label"])[:80], "tags": u["tags"][:5]} for u in units],
         gaps=[r["id"] for r in requirements if align[r["id"]]["status"] != "supported"])
@@ -482,6 +490,8 @@ def validate_guidance(raw: PackGuidance | dict | str, requirement_ids: set[str],
         raise PackGenerationError("unsupported_compensation_claim")
     if _URL.search(blob):
         raise PackGenerationError("unsupported_citation")
+    if _EXTERNAL_FIGURE.search(blob):
+        raise PackGenerationError("unsupported_external_claim")
     if not g.questions and not g.roadmap:
         raise PackGenerationError("empty_output")
     return g

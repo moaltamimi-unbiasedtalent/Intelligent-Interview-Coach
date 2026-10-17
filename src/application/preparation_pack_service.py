@@ -80,7 +80,9 @@ class PreparationPackService:
             return outcome, row
         pack_id, finished = row["id"], False
         try:
-            inputs = collect()
+            self._repo.touch(pack_id)
+            inputs = collect()                                            # may run company research: bounded by its own timeouts
+            self._repo.touch(pack_id)
             meta: dict[str, Any] = {"method": "rules_plus_model", "ai_stage": "skipped"}
             if _blocked(inputs):
                 finished = self._repo.finish(pack_id, status="failed", content=None, generation={**meta, "ai_stage": "not_run"}, failure_category="input_blocked")
@@ -98,7 +100,9 @@ class PreparationPackService:
                 return "created", {**row, "status": "insufficient_evidence"}
             if self._generator is None:
                 raise PP.PackGenerationError("generator_unavailable")
+            self._repo.touch(pack_id)                                         # the single model call is bounded by the client's timeouts
             guidance = PP.validate_guidance(self._generator.generate(ctx), req_ids, ev_ids)
+            self._repo.touch(pack_id)
             content = PP.assemble(inputs, guidance)
             meta["ai_stage"] = "completed"
             finished = self._repo.finish(pack_id, status="completed", content=content.model_dump(mode="json"),

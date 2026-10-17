@@ -2487,6 +2487,7 @@ class PreparationPack(Base):
         UniqueConstraint("op_key", name="uq_pack_op_key"),
         CheckConstraint(_in_list("status", PACK_STATUSES), name="ck_pack_status"),
         Index("ix_pack_user_opp_created", "user_id", "opportunity_id", "created_at"),
+        UniqueConstraint("user_id", "opportunity_id", "revision", name="uq_pack_revision"),
         Index("uq_pack_one_generating", "user_id", "opportunity_id", unique=True, sqlite_where=text("status = 'generating'"),
               postgresql_where=text("status = 'generating'")),
     )
