@@ -15,6 +15,8 @@ const ru: typeof en = {
     colReport: "Балл отчёта",
     lowSample: "Мало оценённых ответов",
     sumFirst: "Первый балл",
+    sumFirstShown: "Самый ранний показанный балл",
+    truncatedChangeNote: "Изменение измеряется от самого раннего показанного балла, а не от вашего самого первого собеседования.",
     sumLatest: "Последний балл",
     sumChange: "Изменение",
     sumAverage: "Среднее",

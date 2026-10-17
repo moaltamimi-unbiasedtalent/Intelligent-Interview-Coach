@@ -49,7 +49,7 @@ def upgrade() -> None:
     )
     op.add_column(
         "users",
-        sa.Column("email_verified", sa.Boolean(), nullable=False, server_default=sa.text("0")),
+        sa.Column("email_verified", sa.Boolean(), nullable=False, server_default=sa.false()),
     )
 
     # 2) account_identities — one login method per row, linked to the owner.
@@ -60,7 +60,7 @@ def upgrade() -> None:
         sa.Column("provider", sa.String(length=64), nullable=False),
         sa.Column("provider_subject", sa.String(length=320), nullable=False),
         sa.Column("email", sa.String(length=320), nullable=True),
-        sa.Column("email_verified", sa.Boolean(), nullable=False, server_default=sa.text("0")),
+        sa.Column("email_verified", sa.Boolean(), nullable=False, server_default=sa.false()),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),

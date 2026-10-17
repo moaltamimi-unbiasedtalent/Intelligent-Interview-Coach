@@ -68,7 +68,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.ForeignKeyConstraint(["plan_version_id"], ["plan_versions.id"], ondelete="CASCADE"),
         sa.UniqueConstraint("plan_version_id", "entitlement_key", name="uq_plan_entitlements_key"),
-        sa.CheckConstraint("limit_value IS NULL OR (limit_value >= 1 AND enabled = 1)", name="ck_plan_entitlements_limit"),
+        sa.CheckConstraint("limit_value IS NULL OR (limit_value >= 1 AND enabled)", name="ck_plan_entitlements_limit"),
     )
 
     op.create_table(

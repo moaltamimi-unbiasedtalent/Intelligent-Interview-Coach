@@ -40,7 +40,8 @@ log = logging.getLogger("usage.quota")
 # A code constant: nothing but a reviewed, owner-approved release can enable commercial quota enforcement. Tests flip it on an isolated module attribute.
 USAGE_QUOTAS_ENFORCED = False
 POLICY_VERSION_UNCONFIGURED = "p4a-unconfigured"
-RESERVATION_TTL = timedelta(minutes=15)       # an abandoned reservation older than this is recoverable (a provider operation is bounded well below it)
+RESERVATION_TTL = timedelta(minutes=15)       # a reservation with no renewal for this long is recoverable; a RUNNING operation renews it (lease heartbeat)
+HEARTBEAT_INTERVAL_SECONDS = 60.0
 _TEST_ENVS = ("development", "dev", "local", "test", "testing")
 PERIODS = ("hour", "day", "month")
 
@@ -270,6 +271,22 @@ class UsageQuotaService:
                 return True
         except Exception:  # noqa: BLE001
             log.warning("usage quota finalization failed")
+            return False
+
+    def renew(self, op_key: str) -> bool:
+        """Extend the expiry of a reservation whose operation is still running (a lease heartbeat). Only a ``reserved`` row is renewed; a finalized one never is."""
+        if not USAGE_QUOTAS_ENFORCED:
+            return False
+        from src.persistence import UsageQuotaReservation
+
+        now = _utc(self._now())
+        try:
+            with self._sf() as s:
+                n = s.execute(update(UsageQuotaReservation).where(UsageQuotaReservation.op_key == op_key, UsageQuotaReservation.state == "reserved")
+                              .values(expires_at=now + RESERVATION_TTL)).rowcount
+                s.commit()
+                return n == 1
+        except Exception:  # noqa: BLE001
             return False
 
     def reap_expired(self) -> int:

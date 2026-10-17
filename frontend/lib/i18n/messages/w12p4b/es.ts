@@ -15,6 +15,8 @@ const es: typeof en = {
     colReport: "Puntuación del informe",
     lowSample: "Pocas respuestas puntuadas",
     sumFirst: "Primera puntuación",
+    sumFirstShown: "Primera puntuación mostrada",
+    truncatedChangeNote: "El cambio se mide desde la primera puntuación mostrada, no desde tu primera entrevista.",
     sumLatest: "Última puntuación",
     sumChange: "Cambio",
     sumAverage: "Media",

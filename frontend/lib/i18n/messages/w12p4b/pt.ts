@@ -15,6 +15,8 @@ const pt: typeof en = {
     colReport: "Pontuação do relatório",
     lowSample: "Poucas respostas pontuadas",
     sumFirst: "Primeira pontuação",
+    sumFirstShown: "Primeira pontuação mostrada",
+    truncatedChangeNote: "A variação é medida a partir da primeira pontuação mostrada, não da sua primeira entrevista de sempre.",
     sumLatest: "Última pontuação",
     sumChange: "Variação",
     sumAverage: "Média",

@@ -99,6 +99,23 @@ describe("Premium analytics presentation (server measurements only)", () => {
     expect(screen.getByTestId("premium-analytics").textContent).toContain(translate("en", "analyticsUx.contextDiffers"));
   });
 
+  it("when the history was truncated the first score is labelled as the earliest score SHOWN and the change note says so", async () => {
+    getOverview.mockResolvedValue(ready({ truncated: true, summary: { first_score: 60, latest_score: 75, change: 15, direction: "improved", comparable_context: true, average_score: 67.5, best_score: 75, first_scope: "window" } }));
+    wrap();
+    const root = await screen.findByTestId("premium-analytics");
+    expect(root.textContent).toContain(translate("en", "analyticsUx.sumFirstShown"));
+    expect(root.textContent).not.toContain(translate("en", "analyticsUx.sumFirst") + "60");
+    expect(screen.getByTestId("analytics-window-note").textContent).toContain(translate("en", "analyticsUx.truncatedChangeNote"));
+  });
+
+  it("with the full history the first score keeps its plain label and there is no window note", async () => {
+    getOverview.mockResolvedValue(ready());
+    wrap();
+    const root = await screen.findByTestId("premium-analytics");
+    expect(root.textContent).toContain(translate("en", "analyticsUx.sumFirst"));
+    expect(screen.queryByTestId("analytics-window-note")).toBeNull();
+  });
+
   it("compares two chosen interviews using only the server result and shows limitations", async () => {
     getOverview.mockResolvedValue(ready());
     getCompare.mockResolvedValue({ state: "ready", base: point(1, 60), target: point(2, 45), score_difference: -15, direction: "declined", comparability: "limited",

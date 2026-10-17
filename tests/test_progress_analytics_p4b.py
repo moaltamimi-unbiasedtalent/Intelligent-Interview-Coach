@@ -523,3 +523,22 @@ def test_no_migration_was_added_and_the_head_is_unchanged():
     cfg = Config(str(root / "alembic.ini"))
     cfg.set_main_option("script_location", str(root / "migrations"))
     assert ScriptDirectory.from_config(cfg).get_heads() == ["0034_preparation_packs"]
+
+
+def test_a_truncated_history_never_calls_the_earliest_shown_score_the_first_ever_score(on, monkeypatch):
+    """P5-B: beyond the cap the oldest interviews are not analysed, so the 'first' score is only the earliest SHOWN one; the response says so (first_scope)."""
+    monkeypatch.setattr(PA, "MAX_ANALYZED_INTERVIEWS", 3)
+    rows = [row(i, [50 + i * 5] * 3) for i in range(1, 4)]
+    cut = PA.overview(rows, truncated=True)
+    full = PA.overview(rows, truncated=False)
+    assert cut["summary"]["first_scope"] == "window" and full["summary"]["first_scope"] == "all" and cut["truncated"] is True
+    c, repo, a, *_ = _setup()
+    try:
+        uid = _uid(c, a)
+        premium(repo, uid)
+        seed(repo, uid, [{"scores": [40 + i] * 3} for i in range(6)])
+        body = get(c, a).json()
+        assert body["truncated"] is True and body["counts"]["completed_interviews"] == 3 and body["summary"]["first_scope"] == "window"
+        assert body["analyzed_limit"] == 3
+    finally:
+        c.__exit__(None, None, None)

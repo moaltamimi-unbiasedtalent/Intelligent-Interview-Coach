@@ -49,6 +49,30 @@ MARKETING_COMPONENTS = [
 ]
 
 
+_CONTRAST = re.compile(r"\b(not as|rather than|instead of|unlike|not just|not a)\b", re.I)
+_FORBIDDEN_FRONTEND_BILLING = re.compile(r"@stripe/stripe-js|\bloadStripe\b|js\.stripe\.com|\bcc-number\b|autocomplete=[\"']cc-|\bcard[- ]number\b|\bcreateCheckout\b|name=[\"']card", re.I)
+
+
+def why_section_contrasts_with_one_off_preparation(en_src: str) -> bool:
+    """The positioning must contrast the per-job system with disconnected, one-off or generic preparation (any wording), inside the 'why' block (title through why4)."""
+    block = en_src.split("whyTitle", 1)[-1].split("why5Title", 1)[0][:1600]
+    return bool(_CONTRAST.search(block)) and bool(re.search(r"\b(one-off|disconnected|generic)\b", block, re.I))
+
+
+def premium_is_not_purchasable(pricing_ts: str) -> bool:
+    """Premium declares no purchase path: ctaKind 'unavailable', purchasable false, no checkout href, and billing disabled (code constant)."""
+    m = re.search(r"id:\s*\"premium\".*?\n\s*\},\n", pricing_ts, re.S)
+    block = m.group(0) if m else pricing_ts
+    return ('ctaKind: "unavailable"' in block and "purchasable: false" in block and "ctaHref: null" in block
+            and "BILLING_ENABLED = false" in pricing_ts and "checkout" not in block.lower())
+
+
+def frontend_billing_violations(files: dict[str, str]) -> list[str]:
+    """No candidate-facing payment collection in the frontend: no Stripe SDK or script, no card-number field, no client-side checkout creation. Mentions of the provider
+    name in Admin labels and the trusted-redirect allow-list are not payment code; a redirect to a provider-hosted page needs the allow-list module."""
+    return sorted(name for name, text in files.items() if _FORBIDDEN_FRONTEND_BILLING.search(text))
+
+
 def run() -> dict[str, tuple[bool, str]]:
     results: dict[str, tuple[bool, str]] = {}
 
@@ -87,8 +111,8 @@ def run() -> dict[str, tuple[bool, str]]:
           "whyTitle" in en and all(f"why{i}Title" in en for i in range(1, 5)),
           "a grounded differentiation section exists")
     check("home_uses_no_generic_only_framing",
-          "generic" in en.split("whyTitle", 1)[-1][:120].lower(),
-          "positioning explicitly contrasts with a generic interview generator")
+          why_section_contrasts_with_one_off_preparation(en),
+          "positioning explicitly contrasts the per-job system with one-off, disconnected or generic preparation")
 
     # --- PROVIDER CLAIM DISCIPLINE ---
     for prov in ("glassdoor", "kununu"):
@@ -126,23 +150,21 @@ def run() -> dict[str, tuple[bool, str]]:
           '"€0"' in pricing_ts and 'ctaKind: "register"' in pricing_ts,
           "Basic is a real free plan (register)")
     check("pricing_premium_preview",
-          'ctaKind: "request"' in pricing_ts and "BILLING_ENABLED = false" in pricing_ts,
-          "Premium is a preview request; billing is disabled")
+          premium_is_not_purchasable(pricing_ts),
+          "Premium is not purchasable (no purchase path, unapproved preview only); billing is disabled")
     check("premium_claim_softened",
           "higher usage" not in en.lower(),
           "the unenforced 'higher usage' Premium claim is removed")
     # No billing/checkout code in the frontend.
-    billing_hits = []
+    fe_files: dict[str, str] = {}
     for pth in FE.rglob("*.ts*"):
-        s = str(pth)
-        # Skip deps, build output and TEST files (specs legitimately reference card/checkout tokens
-        # only to assert their ABSENCE - counting them would be a false positive).
-        if "node_modules" in s or "/.next/" in s or ".spec.ts" in s or ".test.ts" in s:
+        sp = str(pth)
+        # Skip deps, build output and TEST files (specs legitimately reference card/checkout tokens only to assert their ABSENCE).
+        if "node_modules" in sp or "/.next/" in sp or ".spec.ts" in sp or ".test.ts" in sp:
             continue
-        t = pth.read_text(encoding="utf-8", errors="ignore").lower()
-        if re.search(r"\b(stripe|checkout session|createcheckout|card number|cc-number)\b", t):
-            billing_hits.append(pth.name)
-    check("no_billing_code", not billing_hits, f"no checkout/billing code ({billing_hits or 'none'})")
+        fe_files[pth.name] = pth.read_text(encoding="utf-8", errors="ignore")
+    billing_hits = frontend_billing_violations(fe_files)
+    check("no_billing_code", not billing_hits, f"no candidate payment collection in the frontend ({billing_hits or 'none'})")
 
     # --- TRUST ---
     tl = trust.lower()

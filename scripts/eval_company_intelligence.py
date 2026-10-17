@@ -23,6 +23,34 @@ def read(rel: str) -> str:
     return p.read_text(encoding="utf-8") if p.exists() else ""
 
 
+def endpoint_is_gated(route_src: str) -> tuple[bool, str]:
+    """Structural invariant (AST, not a source string): the company-intelligence endpoint declares, as FastAPI dependencies, (1) an entitlement or capability
+    requirement for CURRENT_MARKET_RESEARCH, (2) the operator pause for ``current_market`` and (3) the per-user cost bucket ``cost_research_user``.
+    Either ``require_entitlement`` (the current guard) or ``require_capability`` (the former one) satisfies (1); the capability argument must be the right one."""
+    import ast
+
+    try:
+        tree = ast.parse(route_src)
+    except SyntaxError:
+        return False, "route does not parse"
+    found = {"capability": False, "pause": False, "cost": False}
+    for fn in [n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == "company_intelligence"]:
+        defaults = list(fn.args.defaults) + [d for d in fn.args.kw_defaults if d is not None]
+        for d in defaults:
+            if not (isinstance(d, ast.Call) and getattr(d.func, "id", "") == "Depends" and d.args and isinstance(d.args[0], ast.Call)):
+                continue
+            inner = d.args[0]
+            name = getattr(inner.func, "id", "")
+            args = [ast.unparse(a) for a in inner.args]
+            if name in ("require_entitlement", "require_capability") and args == ["Capability.CURRENT_MARKET_RESEARCH"]:
+                found["capability"] = True
+            if name == "require_not_paused" and args == ["'current_market'"]:
+                found["pause"] = True
+            if name == "cost_limit" and args == ["'cost_research_user'"]:
+                found["cost"] = True
+    return all(found.values()), f"entitlement/capability={found['capability']}, pause={found['pause']}, cost={found['cost']}"
+
+
 def run() -> dict[str, tuple[bool, str]]:
     results: dict[str, tuple[bool, str]] = {}
 
@@ -150,11 +178,8 @@ def run() -> dict[str, tuple[bool, str]]:
 
     # --- endpoint gating (source-structural) ---
     route = read("src/api/routes/company.py")
-    check("endpoint_gated",
-          "require_capability(Capability.CURRENT_MARKET_RESEARCH)" in route
-          and 'require_not_paused("current_market")' in route
-          and 'cost_limit("cost_research_user")' in route,
-          "the endpoint enforces capability + operator pause + per-user cost")
+    gated_ok, gated_detail = endpoint_is_gated(route)
+    check("endpoint_gated", gated_ok, f"the endpoint enforces capability + operator pause + per-user cost ({gated_detail})")
     check("endpoint_owner_scoped",
           "get_current_user_id" in route and "resolve_document_text" in route,
           "the endpoint resolves the JD owner-scoped by the authenticated user id")

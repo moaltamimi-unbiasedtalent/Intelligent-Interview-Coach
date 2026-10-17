@@ -60,7 +60,8 @@ def run() -> dict[str, tuple[bool, str]]:
     check("only_real_plan_families", E.PLAN_CODES == ("basic", "premium") and "preview" in E.DEFAULT_PLANS["premium"]["display_name"].lower(),
           "basic, premium (preview); no invented product")
     check("limit_representation_has_one_form",
-          'limit_value >= 1 AND enabled = 1' in read("migrations/versions/0016_plans_entitlements.py")
+          # W12.4D-P5-B: the BOOLEAN is tested portably (``enabled``; ``enabled = 1`` is rejected by PostgreSQL). The invariant is unchanged: a limit needs a value >= 1 and an enabled key.
+          all(re.search(r"limit_value IS NULL OR \(limit_value >= 1 AND enabled(?: = 1)?\)", read(f)) for f in ("migrations/versions/0016_plans_entitlements.py", "src/persistence.py"))
           and "ck_plan_entitlements_limit" in read("src/persistence.py"), "0 never means unlimited or disabled")
 
     billing_files = ("src/entitlements.py", "src/plans_repository.py", "src/api/routes/admin_plans.py",

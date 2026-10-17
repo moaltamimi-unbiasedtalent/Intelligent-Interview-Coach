@@ -15,6 +15,8 @@ const it: typeof en = {
     colReport: "Punteggio del report",
     lowSample: "Poche risposte valutate",
     sumFirst: "Primo punteggio",
+    sumFirstShown: "Primo punteggio mostrato",
+    truncatedChangeNote: "La variazione è misurata dal primo punteggio mostrato, non dal tuo primo colloquio in assoluto.",
     sumLatest: "Ultimo punteggio",
     sumChange: "Variazione",
     sumAverage: "Media",

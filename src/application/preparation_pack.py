@@ -32,7 +32,8 @@ from pydantic import BaseModel, ConfigDict, Field
 # A code constant: nothing but a reviewed, owner-approved release can enable Pack generation. Tests flip it on an isolated module attribute.
 PREPARATION_PACK_GENERATION_ENABLED = False
 SCHEMA_VERSION = "pack-1"
-STALE_GENERATION_SECONDS = 15 * 60                  # a ``generating`` row older than this was interrupted and is marked failed
+STALE_GENERATION_SECONDS = 15 * 60                  # a ``generating`` row with NO sign of life (heartbeat) for this long was interrupted and is marked failed
+HEARTBEAT_INTERVAL_SECONDS = 30.0                   # the lease is renewed from a thread at this interval, so only a dead worker can fall silent
 MAX_JD_CHARS = 8000                                 # context budgets: nothing unbounded ever reaches a model
 MAX_REQUIREMENTS = 20
 MAX_EVIDENCE_UNITS = 60
@@ -174,7 +175,7 @@ _SENIORITY = re.compile(r"\b(intern|graduate|junior|entry[- ]level|mid[- ]level|
 _WORK_MODEL = re.compile(r"\b(remote|hybrid|on[- ]?site|in[- ]office)\b", re.I)
 _URL = re.compile(r"https?://|www\.", re.I)
 # An external factual claim the model could only have invented: a year, a headcount/size/percentage figure. Questions and steps never need one.
-_EXTERNAL_FIGURE = re.compile(r"\b(?:1[89]\d{2}|20\d{2})\b|\b\d[\d.,]*\s?(?:%|percent|million|billion|employees|staff|beds|locations|offices|countries|customers|clients|users)\b", re.I)
+_EXTERNAL_FIGURE = re.compile(r"\b(?:1[89]\d{2}|20\d{2})\b|\b\d[\d.,]*\s?(?:%|(?:percent|million|billion|employees|staff|beds|locations|offices|countries|customers|clients|users)\b)", re.I)
 _MONEY = re.compile(r"(?:[€$£¥]\s?\d|\d\s?(?:[kK]\b|eur\b|usd\b|gbp\b|chf\b|€|\$|£)|\b(?:salary|salaries|compensation|gehalt|salaire|salario|stipendio|salário|salaris|зарплат|bonus|equity|percentile|median pay)\b)", re.I)
 
 
@@ -452,20 +453,31 @@ class GuidanceGenerator(Protocol):
     def generate(self, context: GuidanceContext) -> PackGuidance: ...
 
 
+def supported_text(inputs: PackInputs) -> str:
+    """The candidate's OWN inputs (job description, claims, stories): the only text whose figures guidance may legitimately echo."""
+    parts = [inputs.jd_text or ""] + [(c.get("display_text") or c.get("text") or "") for c in inputs.claims]
+    for st in inputs.stories:
+        parts += [st.get(f) or "" for f in ("title", "situation", "task", "action", "result")]
+    return "\n".join(parts)
+
+
 def build_context(inputs: PackInputs) -> tuple[GuidanceContext, set[str], set[str]]:
     requirements = extract_requirements(inputs.jd_text)
     units = _units(inputs)
     align = _align(requirements, units)
     ctx = GuidanceContext(
-        role=(inputs.opportunity.get("target_role") or inputs.opportunity.get("title")), company=None,       # the model is never given the employer: it cannot assert employer facts
+        # The employer NAME is candidate/opportunity-provided context so the wording can be employer-aware. It authorizes no employer FACT: the system rule
+        # forbids stating anything about the employer that is not in the provided requirements, and any year or figure the model emits that is not in the
+        # candidate's own inputs is rejected by ``validate_guidance``.
+        role=(inputs.opportunity.get("target_role") or inputs.opportunity.get("title")), company=(inputs.opportunity.get("company_name") or None),
         requirements=[{"id": r["id"], "text": r["text"], "competencies": r["competencies"], "status": align[r["id"]]["status"]} for r in requirements],
         evidence=[{"id": u["id"], "label": (u.get("title") or u["label"])[:80], "tags": u["tags"][:5]} for u in units],
         gaps=[r["id"] for r in requirements if align[r["id"]]["status"] != "supported"])
     return ctx, {r["id"] for r in requirements}, {u["id"] for u in units}
 
 
-def validate_guidance(raw: PackGuidance | dict | str, requirement_ids: set[str], evidence_ids: set[str]) -> PackGuidance:
-    """Schema AND grounding validation. Raises ``PackGenerationError`` with a bounded category and NEVER carries or logs the output. No repair by invention."""
+def validate_guidance(raw: PackGuidance | dict | str, requirement_ids: set[str], evidence_ids: set[str], supported_text: str = "") -> PackGuidance:
+    """Schema AND grounding validation (``supported_text`` is the candidate's own job description, claims and stories: figures found there may be echoed). Raises ``PackGenerationError`` with a bounded category and NEVER carries or logs the output. No repair by invention."""
     try:
         if isinstance(raw, PackGuidance):
             g = raw
@@ -490,8 +502,10 @@ def validate_guidance(raw: PackGuidance | dict | str, requirement_ids: set[str],
         raise PackGenerationError("unsupported_compensation_claim")
     if _URL.search(blob):
         raise PackGenerationError("unsupported_citation")
-    if _EXTERNAL_FIGURE.search(blob):
-        raise PackGenerationError("unsupported_external_claim")
+    supported = (supported_text or "").lower()
+    for m in _EXTERNAL_FIGURE.finditer(blob):
+        if m.group(0).lower().strip() not in supported:        # a figure that echoes the candidate's OWN inputs is supported; anything else is invented
+            raise PackGenerationError("unsupported_external_claim")
     if not g.questions and not g.roadmap:
         raise PackGenerationError("empty_output")
     return g

@@ -1244,7 +1244,7 @@ export interface AnalyticsOverviewResponse {
   analyzed_limit: number | null;
   counts: { completed_interviews: number; scored_interviews: number; unscored_interviews: number } | null;
   points: AnalyticsPoint[];
-  summary: { first_score: number | null; latest_score: number | null; change: number | null; direction: string | null; comparable_context: boolean | null; average_score: number | null; best_score: number | null } | null;
+  summary: { first_score: number | null; latest_score: number | null; change: number | null; direction: string | null; comparable_context: boolean | null; average_score: number | null; best_score: number | null; first_scope?: "all" | "window" } | null;
   distribution: Record<string, number>;
   rubric: { dimensions: Array<{ id: string; average: number | null; answers_measured: number }>; strongest: string | null; weakest: string | null } | null;
   by_question_type: Array<{ type: string; average_score: number | null; answers_scored: number }>;

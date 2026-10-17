@@ -39,7 +39,7 @@ def upgrade() -> None:
         sa.Column("subscription_resolution", sa.String(length=24), server_default="required", nullable=False),
         sa.Column("provider_cancellation", sa.String(length=24), server_default="guided", nullable=False),
         sa.Column("erasure_status", sa.String(length=16), server_default="not_requested", nullable=False),
-        sa.Column("retention_basis", sa.String(length=40), nullable=True), sa.Column("review_required", sa.Boolean(), server_default=sa.text("0"), nullable=False),
+        sa.Column("retention_basis", sa.String(length=40), nullable=True), sa.Column("review_required", sa.Boolean(), server_default=sa.false(), nullable=False),
         sa.Column("failure_category", sa.String(length=40), nullable=True), sa.Column("privacy_request_public_id", sa.String(length=32), nullable=True),
         sa.Column("requested_at", sa.DateTime(timezone=True), nullable=False), sa.Column("last_checked_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
