@@ -569,7 +569,7 @@ def test_migration_0027_single_head_fresh_and_round_trip(tmp_path, monkeypatch):
 
     url = f"sqlite:///{tmp_path / 'm.db'}"
     monkeypatch.setenv("DATABASE_URL", url)
-    assert ScriptDirectory.from_config(cfg(url)).get_heads() == ["0032_ai_operation_events"]
+    assert ScriptDirectory.from_config(cfg(url)).get_heads() == ["0033_usage_quotas"]
     command.upgrade(cfg(url), "0026_managed_secrets")
     assert "email_attempts" not in inspect(create_engine(url)).get_table_names()
     command.upgrade(cfg(url), "head")

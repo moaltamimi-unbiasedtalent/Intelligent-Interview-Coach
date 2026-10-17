@@ -246,6 +246,18 @@ def admit(workflow: str, user_id: int, *, pause_service: Any | None) -> bool:
     return exceeded
 
 
+def _reserve_quota(session_factory, workflow: str, operation: str, user_id: int, op_key: str):
+    """Layer 2 (product usage quota), after the operational limits and BEFORE any provider work. Returns ``(service, held)``. A complete no-op while
+    ``USAGE_QUOTAS_ENFORCED`` is False (no entitlement read, no table access) and for operations that consume no unit."""
+    from src.application import usage_quota as uq
+
+    feature = uq.feature_for_operation(workflow, operation)
+    if not uq.USAGE_QUOTAS_ENFORCED or feature is None:
+        return None, False
+    svc = uq.UsageQuotaService.from_session_factory(session_factory)
+    return svc, svc.reserve(user_id, feature, op_key)
+
+
 def ai_operation(workflow: str, operation: str):
     """FastAPI dependency factory for a provider-backed route. Async on purpose: it sets the context variable in the request task so the sync endpoint
     (run in a worker thread with a copied context) reports into the same scope object. On exit it records one logical-operation row."""
@@ -264,6 +276,7 @@ def ai_operation(workflow: str, operation: str):
 
         scope.started_at = utcnow()
         scope.limit_observed = await run_in_threadpool(admit, workflow, int(user_id), pause_service=pause)
+        quota, held = await run_in_threadpool(_reserve_quota, repo.session_factory, workflow, operation, int(user_id), scope.op_key)
         token = _current.set(scope)
         status, category = "succeeded", None
         try:
@@ -273,6 +286,9 @@ def ai_operation(workflow: str, operation: str):
             raise
         finally:
             _current.reset(token)
+            if held:
+                # Product-quota unit: kept when the logical operation succeeded, returned when it failed. Provider consumption stays in the ledger below.
+                await run_in_threadpool(quota.commit if status == "succeeded" else quota.release, scope.op_key)
             if scope.touched():
                 await run_in_threadpool(persist_scope, repo.session_factory, scope, status=status, category=category)
 
