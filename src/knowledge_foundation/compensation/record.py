@@ -22,6 +22,9 @@ ValueStatus = Literal["reported", "suppressed", "not_available"]
 OccupationLevel = Literal["detailed", "broad", "unknown"]
 GeographyLevel = Literal["national", "regional", "eu_aggregate", "unknown"]
 EvidenceClass = Literal["C1", "C2", "C3"]
+EarningsConcept = Literal["unknown", "individual_earnings", "employment_income", "wage_statistic", "household_income", "formal_sector_compensation"]
+PopulationScope = Literal["unknown", "all_workers", "employees", "formal_sector", "full_time_employees"]
+EvidenceMethod = Literal["unknown", "survey", "administrative_records", "census", "other_documented"]
 
 
 class CompensationRecordV2(BaseModel):
@@ -42,6 +45,9 @@ class CompensationRecordV2(BaseModel):
     pay_basis: PayBasis = "unknown"
     measure: Measure = "unknown"
     percentile: int = 0
+    earnings_concept: EarningsConcept = "unknown"         # what the figure MEASURES (never combined across concepts)
+    population_scope: PopulationScope = "unknown"         # who it covers
+    evidence_method: EvidenceMethod = "unknown"           # how it was produced
     value_status: ValueStatus = "reported"
     value: Decimal | None = None
     lower_value: Decimal | None = None
@@ -105,13 +111,14 @@ class CompensationRecordV2(BaseModel):
     def comparability_key(self) -> tuple:
         """Two measurements are only comparable when EVERYTHING that defines the quantity matches. An unknown pay basis or measure is never comparable (``None`` marks it)."""
         return (self.country, self.region_key, self.geography_level, self.currency, self.pay_period, self.pay_basis if self.pay_basis != "unknown" else None,
-                (self.measure, self.percentile) if self.measure != "unknown" else None, self.reference_year)
+                (self.measure, self.percentile) if self.measure != "unknown" else None, self.reference_year, self.earnings_concept, self.population_scope, self.evidence_method)
 
 
 def record_key_for(r: CompensationRecordV2, taxonomy_id: int) -> str:
     """Deterministic identity of a measurement: the natural key, never the value (so a re-import with a different value is detected as a conflict, not stored as a new record)."""
     parts = [r.source_ref, r.source_edition, str(taxonomy_id), r.native_code, r.country, r.region_key, str(r.reference_year), r.pay_period, r.currency, r.pay_basis, r.measure,
              str(r.percentile), r.data_vintage]
+    parts += [f"{k}={v}" for k, v in (("c", r.earnings_concept), ("p", r.population_scope), ("m", r.evidence_method)) if v != "unknown"]      # unknown keeps the P10C-C key unchanged
     return "cv2_" + hashlib.sha256("\x1f".join(parts).encode("utf-8")).hexdigest()[:40]
 
 
@@ -124,7 +131,7 @@ def row_values(r: CompensationRecordV2) -> dict[str, Any]:
 def from_row(row) -> dict[str, Any]:
     """A plain dict view of a stored row with exact Decimal amounts (the storage columns are integers)."""
     return {"id": row.id, "record_key": row.record_key, "native_code": row.native_code, "occupation_level": row.occupation_level, "country": row.country, "region": row.region_key or None,
-            "geography_level": row.geography_level, "currency": row.currency, "pay_period": row.pay_period, "pay_basis": row.pay_basis, "measure": row.measure, "percentile": row.percentile,
+            "geography_level": row.geography_level, "currency": row.currency, "pay_period": row.pay_period, "pay_basis": row.pay_basis, "measure": row.measure, "percentile": row.percentile, "earnings_concept": row.earnings_concept, "population_scope": row.population_scope, "evidence_method": row.evidence_method,
             "value_status": row.value_status, "value": from_units(row.value_units, row.amount_scale), "lower_value": from_units(row.lower_units, row.amount_scale),
             "upper_value": from_units(row.upper_units, row.amount_scale), "bounds_semantic": row.bounds_semantic, "source_ref": row.source_ref, "source_edition": row.source_edition,
             "publisher": row.publisher, "dataset_name": row.dataset_name, "source_url": row.source_url, "reference_year": row.reference_year, "reference_period": row.reference_period,

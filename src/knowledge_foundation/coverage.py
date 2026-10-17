@@ -109,9 +109,9 @@ def build_default_matrix() -> dict[str, Any]:
     add("US", "United States", "us", "implemented", "source_identified", "data_available", "data_available", ["en"], ["onet", "bls_ooh", "bls_projections", "bls_oews", "opm_occupational_groups"],
         "O*NET (1,016 occupations) and BLS data are held and the strongest coverage. Native SOC and O*NET-SOC codes are not persisted in the runtime store, so compensation and outlook records are not joined to occupations by code (P10C-B). Not qualified.")
     add("CA", "Canada", "canada", "source_identified", "targeted", "source_identified", "targeted", [], [],
-        "NOC (Statistics Canada) and the Job Bank wage data were identified in planning only; nothing is acquired, assessed for licence, or held.")
-    add("MX", "Mexico", "mexico", "source_identified", "targeted", "targeted", "targeted", [], [], "SINCO (INEGI) was identified in planning only; nothing is acquired or assessed for licence.")
-    add("BR", "Brazil", "brazil", "source_identified", "targeted", "targeted", "targeted", [], [], "CBO was identified in planning only; nothing is acquired or assessed for licence.")
+        "NOC (Statistics Canada) and the Job Bank wage data were identified in planning only; nothing is acquired, assessed for licence, or held. P10C-D added an adapter contract and a province and territory vocabulary (synthetic fixtures only): no occupation node, crosswalk or compensation record exists, so no level is raised and nothing is qualified.")
+    add("MX", "Mexico", "mexico", "source_identified", "targeted", "targeted", "targeted", [], [], "SINCO (INEGI) was identified in planning only; nothing is acquired or assessed for licence. P10C-D added an adapter contract and a state vocabulary (synthetic fixtures only): no occupation node, crosswalk or compensation record exists, so no level is raised and nothing is qualified.")
+    add("BR", "Brazil", "brazil", "source_identified", "targeted", "targeted", "targeted", [], [], "CBO was identified in planning only; nothing is acquired or assessed for licence. P10C-D added an adapter contract and a state vocabulary (synthetic fixtures only): no occupation node, crosswalk or compensation record exists, so no level is raised and nothing is qualified.")
     for code, label in sa.items():
         comp = "source_identified" if code in ("CL", "CO") else "targeted"
         note = {"CL": "Chile ESI was named in planning as a national broad (C2) example; nothing is acquired or assessed for licence.",

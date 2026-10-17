@@ -15,6 +15,7 @@ from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Any
 
+from src.knowledge_foundation.compensation.countries import normalize_region, profile_for
 from src.knowledge_foundation.compensation.policy import PrecedencePolicy, normalize_country
 from src.knowledge_foundation.compensation.store import CompensationStoreV2, build_citation, evidence_status
 from src.knowledge_foundation.graph import OccupationGraph
@@ -61,6 +62,9 @@ class CompensationRequest:
     pay_period: str | None = None
     measure: str | None = None
     percentile: int = 0
+    earnings_concept: str | None = None              # optional filters on what the figure measures, who it covers and how it was produced
+    population_scope: str | None = None
+    evidence_method: str | None = None
     comparison_mode: str = "nominal"
     allow_broader_occupation: bool = True
     require_operational: bool = True
@@ -86,6 +90,11 @@ class CompensationResponse:
     pay_basis: str | None = None
     measure: str | None = None
     percentile: int = 0
+    earnings_concept: str | None = None
+    population_scope: str | None = None
+    evidence_method: str | None = None
+    geography_level: str | None = None
+    region: str | None = None
     reference_year: int | None = None
     data_vintage: str | None = None
     citation: dict[str, Any] | None = None
@@ -127,7 +136,8 @@ class _Sources:
 def _summary(rec: dict[str, Any]) -> dict[str, Any]:
     return {"source_id": rec["source_ref"], "source_edition": rec["source_edition"], "native_code": rec["native_code"], "value": str(rec["value"]) if rec["value"] is not None else None,
             "currency": rec["currency"], "pay_period": rec["pay_period"], "pay_basis": rec["pay_basis"], "measure": rec["measure"], "reference_year": rec["reference_year"],
-            "evidence_class": rec["evidence_class"], "precedence_category": rec["precedence_category"]}
+            "evidence_class": rec["evidence_class"], "precedence_category": rec["precedence_category"], "earnings_concept": rec["earnings_concept"],
+            "population_scope": rec["population_scope"], "evidence_method": rec["evidence_method"], "region": rec["region"]}
 
 
 class CompensationResolver:
@@ -152,6 +162,11 @@ class CompensationResolver:
             row = self._cov.get(country)
             if row is None or row["compensation_level"] == "unsupported":
                 return self._finish(resp, CompensationOutcome.UNSUPPORTED, reason="country_not_supported")
+        if req.region and profile_for(country) is not None:
+            norm = normalize_region(country, req.region)
+            if norm is None:
+                return self._finish(resp, CompensationOutcome.INSUFFICIENT_CONTEXT, reason="region_unrecognised", context=["region"])
+            req = replace(req, region=norm)
         occ = self._occ.resolve(replace(req.occupation, country=country))
         resp.occupation_status = occ.outcome.value
         resp.candidates = [{"occupation_key": c.occupation_key, "canonical_label": c.canonical_label, "grade": c.grade} for c in occ.candidates]
@@ -197,6 +212,12 @@ class CompensationResolver:
                 continue
             if req.pay_period and r["pay_period"] != req.pay_period:
                 continue
+            if r["earnings_concept"] == "household_income":
+                withheld["household_income_is_not_occupation_compensation"] = withheld.get("household_income_is_not_occupation_compensation", 0) + 1
+                continue
+            if (req.earnings_concept and r["earnings_concept"] != req.earnings_concept) or (req.population_scope and r["population_scope"] != req.population_scope) \
+                    or (req.evidence_method and r["evidence_method"] != req.evidence_method):
+                continue
             if req.measure and (r["measure"] != req.measure or (req.measure == "percentile" and r["percentile"] != req.percentile)):
                 continue
             if r["measure"] == "unknown":
@@ -221,7 +242,7 @@ class CompensationResolver:
     def _group_key(r: dict[str, Any]) -> tuple:
         measure = (r["measure"], r["percentile"]) if r["measure"] != "unknown" else None
         basis = r["pay_basis"] if r["pay_basis"] != "unknown" else None
-        key = (r["country"], r["region"] or "", r["geography_level"], r["currency"], r["pay_period"], basis, measure, r["reference_year"])
+        key = (r["country"], r["region"] or "", r["geography_level"], r["currency"], r["pay_period"], basis, measure, r["reference_year"], r["earnings_concept"], r["population_scope"], r["evidence_method"])
         return key + ((r["source_ref"], r["source_edition"], r["id"]),) if (basis is None or measure is None) else key       # an unknown basis or measure is comparable with nothing
 
     def _evidence(self, req: CompensationRequest, resp: CompensationResponse, country: str) -> CompensationResponse:
@@ -241,7 +262,8 @@ class CompensationResolver:
         resp.withheld = withheld
         if not chosen:
             reason = ("evidence_exists_but_is_not_operational" if withheld.get("not_operational") else "source_value_suppressed" if withheld.get("source_value_suppressed")
-                      else "evidence_withheld_citation_incomplete" if withheld.get("citation_incomplete") else "no_evidence_for_occupation_in_country")
+                      else "evidence_withheld_citation_incomplete" if withheld.get("citation_incomplete")
+                      else "no_evidence_for_requested_region" if req.region else "no_evidence_for_occupation_in_country")
             resp.evidence_class = "C4"
             resp.abstention_reason = reason
             if self._cov is not None:
@@ -273,15 +295,17 @@ class CompensationResolver:
         return self._present(resp, best, specificity, by_key, ids, src, req)
 
     def _best(self, group: list[dict[str, Any]]):
-        """Highest-precedence record of a comparable group, then the newest vintage. Returns (best, the rest, tied-records-with-different-values or [])."""
+        """Highest-precedence record of a comparable group. Inside that tier only the newest vintage of each (occupation, source, edition) counts; if the remaining records carry different
+        values (several sources, or several candidate occupations reached through a relationship) the result is a TIE that the caller reports as a conflict. Returns (best, rest, tie)."""
         def rank(r):
             return self.policy.rank(r["precedence_category"]) or 99
         top = min(rank(r) for r in group)
         tier = sorted([r for r in group if rank(r) == top], key=lambda r: (r["data_vintage"] or "", r["publication_date"].isoformat() if r["publication_date"] else "", r["id"]), reverse=True)
-        values = {(r["value"], r["lower_value"], r["upper_value"]) for r in tier if (r["source_ref"], r["source_edition"]) != (tier[0]["source_ref"], tier[0]["source_edition"])}
-        tie = []
-        if any(v != (tier[0]["value"], tier[0]["lower_value"], tier[0]["upper_value"]) for v in values):
-            tie = tier
+        latest: dict[tuple, dict[str, Any]] = {}
+        for r in tier:
+            latest.setdefault((r["occupation_id"], r["source_ref"], r["source_edition"]), r)
+        distinct = {(r["value"], r["lower_value"], r["upper_value"]) for r in latest.values()}
+        tie = list(latest.values()) if len(distinct) > 1 else []
         return tier[0], [r for r in group if r is not tier[0]], tie
 
     def _present(self, resp: CompensationResponse, rec: dict[str, Any], specificity: str, by_key: dict[str, int], ids: dict[int, str], src: _Sources, req: CompensationRequest):
@@ -291,6 +315,8 @@ class CompensationResolver:
         resp.upper_value = str(rec["upper_value"]) if rec["upper_value"] is not None else None
         resp.bounds_semantic = rec["bounds_semantic"] if rec["lower_value"] is not None else None
         resp.currency, resp.pay_period, resp.pay_basis, resp.measure, resp.percentile = rec["currency"], rec["pay_period"], rec["pay_basis"], rec["measure"], rec["percentile"]
+        resp.earnings_concept, resp.population_scope, resp.evidence_method = rec["earnings_concept"], rec["population_scope"], rec["evidence_method"]
+        resp.geography_level, resp.region = rec["geography_level"], rec["region"]
         resp.reference_year, resp.data_vintage = rec["reference_year"], rec["data_vintage"] or None
         resp.citation = build_citation(rec, src)                                          # type: ignore[arg-type]
         resp.evidence_class = rec["evidence_class"]
@@ -303,6 +329,10 @@ class CompensationResolver:
             lim.append("national evidence for a BROAD occupational group, not occupation-specific")
         if rec["evidence_class"] == "C3":
             lim.append("international harmonised evidence, not a national occupation-specific figure")
+        if rec["geography_level"] == "regional":
+            lim.append(f"REGIONAL evidence ({rec['region']}), not a national figure")
+        if rec["earnings_concept"] == "unknown":
+            lim.append("what the figure measures (earnings concept) is not recorded")
         if rec["pay_basis"] == "unknown":
             lim.append("the gross/net pay basis is not recorded by the source adapter")
         if rec["data_vintage"]:

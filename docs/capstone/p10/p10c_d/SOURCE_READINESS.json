@@ -1,0 +1,410 @@
+{
+ "countries": {
+  "BR": {
+   "adapter_without_linkage_is_not_coverage": true,
+   "approved_compensation_v2_sources": 0,
+   "blockers": [
+    {
+     "decision": "D-13",
+     "dependency": "national taxonomy (cbo) structure not acquired: identified_externally",
+     "id": "BR-T1",
+     "kind": "taxonomy_acquisition"
+    },
+    {
+     "decision": "D-12",
+     "dependency": "no taxonomy edition is recorded as known; an unknown edition matches nothing and a production import refuses it",
+     "id": "BR-T2",
+     "kind": "edition"
+    },
+    {
+     "decision": "D-13",
+     "dependency": "no cbo nodes exist in the occupation graph, so no compensation row can link to a canonical occupation",
+     "id": "BR-G1",
+     "kind": "graph"
+    },
+    {
+     "decision": "D-13",
+     "dependency": "no official cbo to ISCO-08 (or ESCO) crosswalk is held; none may be manufactured",
+     "id": "BR-X1",
+     "kind": "crosswalk"
+    },
+    {
+     "decision": "D-04",
+     "dependency": "no source of this country has a verified licence",
+     "id": "BR-L1",
+     "kind": "licensing"
+    },
+    {
+     "decision": "D-04",
+     "dependency": "no source of this country is approved for ingestion or runtime use",
+     "id": "BR-A1",
+     "kind": "approval"
+    },
+    {
+     "decision": "D-04",
+     "dependency": "no compensation source is acquired; candidates are names only (definitions, units, coverage and licence unknown)",
+     "id": "BR-S1",
+     "kind": "source"
+    }
+   ],
+   "candidate_source_ids": [
+    "br_cbo",
+    "br_ibge_survey",
+    "br_admin_employment"
+   ],
+   "compensation_v2_records_linkable_today": 0,
+   "coverage": {
+    "compensation_level": "targeted",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "source_identified"
+   },
+   "crosswalk_held": false,
+   "graph_nodes_for_taxonomy": 0,
+   "local_v1_records": 0,
+   "operational_today": false,
+   "registry_sources": {},
+   "taxonomy_acquisition_status": "identified_externally",
+   "taxonomy_edition_known": false,
+   "taxonomy_scheme": "cbo"
+  },
+  "CA": {
+   "adapter_without_linkage_is_not_coverage": true,
+   "approved_compensation_v2_sources": 0,
+   "blockers": [
+    {
+     "decision": "D-13",
+     "dependency": "national taxonomy (noc) structure not acquired: identified_externally",
+     "id": "CA-T1",
+     "kind": "taxonomy_acquisition"
+    },
+    {
+     "decision": "D-12",
+     "dependency": "no taxonomy edition is recorded as known; an unknown edition matches nothing and a production import refuses it",
+     "id": "CA-T2",
+     "kind": "edition"
+    },
+    {
+     "decision": "D-13",
+     "dependency": "no noc nodes exist in the occupation graph, so no compensation row can link to a canonical occupation",
+     "id": "CA-G1",
+     "kind": "graph"
+    },
+    {
+     "decision": "D-13",
+     "dependency": "no official noc to ISCO-08 (or ESCO) crosswalk is held; none may be manufactured",
+     "id": "CA-X1",
+     "kind": "crosswalk"
+    },
+    {
+     "decision": "D-04",
+     "dependency": "no source of this country has a verified licence",
+     "id": "CA-L1",
+     "kind": "licensing"
+    },
+    {
+     "decision": "D-04",
+     "dependency": "no source of this country is approved for ingestion or runtime use",
+     "id": "CA-A1",
+     "kind": "approval"
+    },
+    {
+     "decision": "D-04",
+     "dependency": "no compensation source is acquired; candidates are names only (definitions, units, coverage and licence unknown)",
+     "id": "CA-S1",
+     "kind": "source"
+    }
+   ],
+   "candidate_source_ids": [
+    "ca_noc",
+    "ca_job_bank_wages",
+    "ca_statcan_wages"
+   ],
+   "compensation_v2_records_linkable_today": 0,
+   "coverage": {
+    "compensation_level": "source_identified",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "source_identified"
+   },
+   "crosswalk_held": false,
+   "graph_nodes_for_taxonomy": 0,
+   "local_v1_records": 0,
+   "operational_today": false,
+   "registry_sources": {},
+   "taxonomy_acquisition_status": "identified_externally",
+   "taxonomy_edition_known": false,
+   "taxonomy_scheme": "noc"
+  },
+  "GB": {
+   "adapter_without_linkage_is_not_coverage": true,
+   "approved_compensation_v2_sources": 0,
+   "blockers": [
+    {
+     "decision": "D-13",
+     "dependency": "national taxonomy (uk_soc) structure not acquired: referenced_indirectly",
+     "id": "GB-T1",
+     "kind": "taxonomy_acquisition"
+    },
+    {
+     "decision": "D-12",
+     "dependency": "no taxonomy edition is recorded as known; an unknown edition matches nothing and a production import refuses it",
+     "id": "GB-T2",
+     "kind": "edition"
+    },
+    {
+     "decision": "D-13",
+     "dependency": "no uk_soc nodes exist in the occupation graph, so no compensation row can link to a canonical occupation",
+     "id": "GB-G1",
+     "kind": "graph"
+    },
+    {
+     "decision": "D-13",
+     "dependency": "no official uk_soc to ISCO-08 (or ESCO) crosswalk is held; none may be manufactured",
+     "id": "GB-X1",
+     "kind": "crosswalk"
+    },
+    {
+     "decision": "D-04",
+     "dependency": "no source of this country has a verified licence",
+     "id": "GB-L1",
+     "kind": "licensing"
+    },
+    {
+     "decision": "D-04",
+     "dependency": "no source of this country is approved for ingestion or runtime use",
+     "id": "GB-A1",
+     "kind": "approval"
+    },
+    {
+     "decision": "D-12",
+     "dependency": "one of 527 ASHE rows has no native code and cannot be linked",
+     "id": "GB-D1",
+     "kind": "data"
+    },
+    {
+     "decision": "D-03",
+     "dependency": "UK SOC 2020 is not adopted as a first-class taxonomy or acquired",
+     "id": "GB-D2",
+     "kind": "taxonomy_acquisition"
+    }
+   ],
+   "candidate_source_ids": [],
+   "compensation_v2_records_linkable_today": 0,
+   "coverage": {
+    "compensation_level": "data_available",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "source_identified"
+   },
+   "crosswalk_held": false,
+   "graph_nodes_for_taxonomy": 0,
+   "local_v1_records": 527,
+   "operational_today": false,
+   "registry_sources": {
+    "ons_ashe": {
+     "approval_status": "licensing_pending",
+     "dataset_version": "2025 provisional",
+     "licence_id": "Open Government Licence v3.0",
+     "licence_status": "stated_unverified",
+     "origin": "official_local"
+    }
+   },
+   "taxonomy_acquisition_status": "referenced_indirectly",
+   "taxonomy_edition_known": false,
+   "taxonomy_scheme": "uk_soc"
+  },
+  "MX": {
+   "adapter_without_linkage_is_not_coverage": true,
+   "approved_compensation_v2_sources": 0,
+   "blockers": [
+    {
+     "decision": "D-13",
+     "dependency": "national taxonomy (sinco) structure not acquired: identified_externally",
+     "id": "MX-T1",
+     "kind": "taxonomy_acquisition"
+    },
+    {
+     "decision": "D-12",
+     "dependency": "no taxonomy edition is recorded as known; an unknown edition matches nothing and a production import refuses it",
+     "id": "MX-T2",
+     "kind": "edition"
+    },
+    {
+     "decision": "D-13",
+     "dependency": "no sinco nodes exist in the occupation graph, so no compensation row can link to a canonical occupation",
+     "id": "MX-G1",
+     "kind": "graph"
+    },
+    {
+     "decision": "D-13",
+     "dependency": "no official sinco to ISCO-08 (or ESCO) crosswalk is held; none may be manufactured",
+     "id": "MX-X1",
+     "kind": "crosswalk"
+    },
+    {
+     "decision": "D-04",
+     "dependency": "no source of this country has a verified licence",
+     "id": "MX-L1",
+     "kind": "licensing"
+    },
+    {
+     "decision": "D-04",
+     "dependency": "no source of this country is approved for ingestion or runtime use",
+     "id": "MX-A1",
+     "kind": "approval"
+    },
+    {
+     "decision": "D-04",
+     "dependency": "no compensation source is acquired; candidates are names only (definitions, units, coverage and licence unknown)",
+     "id": "MX-S1",
+     "kind": "source"
+    }
+   ],
+   "candidate_source_ids": [
+    "mx_sinco",
+    "mx_inegi_earnings"
+   ],
+   "compensation_v2_records_linkable_today": 0,
+   "coverage": {
+    "compensation_level": "targeted",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "source_identified"
+   },
+   "crosswalk_held": false,
+   "graph_nodes_for_taxonomy": 0,
+   "local_v1_records": 0,
+   "operational_today": false,
+   "registry_sources": {},
+   "taxonomy_acquisition_status": "identified_externally",
+   "taxonomy_edition_known": false,
+   "taxonomy_scheme": "sinco"
+  },
+  "US": {
+   "adapter_without_linkage_is_not_coverage": true,
+   "approved_compensation_v2_sources": 0,
+   "blockers": [
+    {
+     "decision": "D-13",
+     "dependency": "national taxonomy (soc) structure not acquired: referenced_indirectly",
+     "id": "US-T1",
+     "kind": "taxonomy_acquisition"
+    },
+    {
+     "decision": "D-12",
+     "dependency": "no taxonomy edition is recorded as known; an unknown edition matches nothing and a production import refuses it",
+     "id": "US-T2",
+     "kind": "edition"
+    },
+    {
+     "decision": "D-13",
+     "dependency": "no soc nodes exist in the occupation graph, so no compensation row can link to a canonical occupation",
+     "id": "US-G1",
+     "kind": "graph"
+    },
+    {
+     "decision": "D-13",
+     "dependency": "no official soc to ISCO-08 (or ESCO) crosswalk is held; none may be manufactured",
+     "id": "US-X1",
+     "kind": "crosswalk"
+    },
+    {
+     "decision": "D-04",
+     "dependency": "no source of this country has a verified licence",
+     "id": "US-L1",
+     "kind": "licensing"
+    },
+    {
+     "decision": "D-04",
+     "dependency": "no source of this country is approved for ingestion or runtime use",
+     "id": "US-A1",
+     "kind": "approval"
+    },
+    {
+     "decision": "D-12",
+     "dependency": "the V1 store does not keep the OEWS occupation level (detailed or broad), so C1 versus C2 requires re-reading the source file",
+     "id": "US-D1",
+     "kind": "data"
+    },
+    {
+     "decision": "D-12",
+     "dependency": "OEWS pay basis (gross or net) and the SOC edition are not recorded",
+     "id": "US-D2",
+     "kind": "data"
+    }
+   ],
+   "candidate_source_ids": [],
+   "compensation_v2_records_linkable_today": 0,
+   "coverage": {
+    "compensation_level": "data_available",
+    "crosswalk_level": "source_identified",
+    "outlook_level": "data_available",
+    "taxonomy_level": "implemented"
+   },
+   "crosswalk_held": false,
+   "graph_nodes_for_taxonomy": 0,
+   "local_v1_records": 1386,
+   "operational_today": false,
+   "registry_sources": {
+    "bls_oews": {
+     "approval_status": "licensing_pending",
+     "dataset_version": "M2025",
+     "licence_id": "Public domain (U.S. Government work)",
+     "licence_status": "stated_unverified",
+     "origin": "official_local"
+    },
+    "onet": {
+     "approval_status": "licensing_pending",
+     "dataset_version": "31.0",
+     "licence_id": "CC BY 4.0",
+     "licence_status": "stated_unverified",
+     "origin": "official_local"
+    }
+   },
+   "taxonomy_acquisition_status": "referenced_indirectly",
+   "taxonomy_edition_known": false,
+   "taxonomy_scheme": "soc"
+  }
+ },
+ "note": "Derived from committed artifacts only. Nothing acquired, assessed or approved. A source adapter without qualified occupation linkage is not completed country coverage.",
+ "remediation_plan": [
+  {
+   "action": "owner verifies the licence and terms of each candidate source and records the source edition",
+   "engineering_possible_now": false,
+   "owner_decision": "D-04, D-12",
+   "step": 1
+  },
+  {
+   "action": "owner authorises acquisition of the national taxonomy structure (SOC, UK SOC 2020, NOC, SINCO, CBO) and of any official crosswalk",
+   "engineering_possible_now": false,
+   "owner_decision": "D-03, D-13",
+   "step": 2
+  },
+  {
+   "action": "register taxonomy editions and import taxonomy nodes through the registry-gated importer (production mode)",
+   "engineering_possible_now": "contract implemented in P10C-D",
+   "owner_decision": "after 1 and 2",
+   "step": 3
+  },
+  {
+   "action": "import the official crosswalk rows through the registry-gated importer; unverified or related rows stay as stated",
+   "engineering_possible_now": "contract implemented in P10C-D",
+   "owner_decision": "after 2",
+   "step": 4
+  },
+  {
+   "action": "re-read source files with the country adapter (level, concept, population, method, edition) and import compensation rows (production mode)",
+   "engineering_possible_now": "contract implemented in P10C-C and P10C-D",
+   "owner_decision": "after 1",
+   "step": 5
+  },
+  {
+   "action": "named human review qualifies measurements; owner approves runtime use per source; only then can a response become operational",
+   "engineering_possible_now": false,
+   "owner_decision": "D-04, D-11",
+   "step": 6
+  }
+ ],
+ "schema": "gkb8_source_readiness/1"
+}
