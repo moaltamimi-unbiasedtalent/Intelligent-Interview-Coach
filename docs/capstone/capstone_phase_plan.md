@@ -215,3 +215,4 @@ evidence, demo script, reviewer guide, final readiness, release/tag. Gate: AC-25
 
 ## Per-phase Definition of Done
 See `capstone_definition_of_done.md` (applies to every implementation phase P1+).
+- **P10C-F1 Global source licensing, provenance and approval readiness (GKB-15): DOCUMENTATION ONLY; OWNER APPROVALS PENDING; NO OFFICIAL DATA INGESTED; NOT MERGED** (`p10/P10C_F1_SOURCE_LICENSING_AND_APPROVAL.md`; 46-entry dossier, seven acquisition packages, every source NOT_APPROVED, unverifiable facts marked NOT VERIFIED, legal review flagged for ESCO, ISCO-08, Chile CC BY-SA, Destatis, Entgeltatlas and ILOSTAT; D-16 open; Compensation V2 not activated; product coverage still BELOW GATE). P10C-F2 onward NOT STARTED.
