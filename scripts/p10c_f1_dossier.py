@@ -73,8 +73,8 @@ def validate(d: dict) -> list[str]:
     for p in pk:
         if set(p["sources"]) - set(ids):
             errs.append(f"package {p['package']} references unknown entries")
-    if [x["id"] for x in d.get("owner_policies", [])] != ["POLICY-A", "POLICY-B", "POLICY-C", "POLICY-D", "POLICY-E", "POLICY-F", "POLICY-G"]:
-        errs.append("owner policies A-G (2026-10-18) must be recorded")
+    if [x["id"] for x in d.get("owner_policies", [])] != ["POLICY-A", "POLICY-B", "POLICY-C", "POLICY-D", "POLICY-E", "POLICY-F", "POLICY-G", "POLICY-H", "POLICY-I", "POLICY-J"]:
+        errs.append("owner policies A-J (2026-10-18) must be recorded")
     pc = d["product_coverage"]
     if len(pc["wiring_class"]["cases"]) != 13 or len(pc["ambiguity_class"]["cases"]) != 13:
         errs.append("product-coverage case split must be 13 + 13")

@@ -240,7 +240,8 @@ class OccupationResolver:
             grade = "alias_exact"
         eligible = bool(self._reg and best.get("source_ref") and self._reg.can_serve_as_evidence(best["source_ref"]))
         evidence = {"language": best["language"], "alias_type": best["alias_type"], "qualification_status": best["qualification_status"], "source_ref": best.get("source_ref", ""),
-                    "source_origin": best.get("source_origin"), "evidence_eligible": eligible, "matched_aliases": len(hs)}
+                    "source_origin": best.get("source_origin"), "evidence_eligible": eligible, "matched_aliases": len(hs),
+                    "alias_relationship": best.get("relationship"), "alias_limitation": best.get("limitation")}
         return MultilingualCandidate(key, hs[0]["canonical_label"], grade, evidence)
 
     def _narrow(self, cands: list[MultilingualCandidate], by_occ: dict[str, list[dict]], req: MultilingualRequest) -> list[MultilingualCandidate] | None:

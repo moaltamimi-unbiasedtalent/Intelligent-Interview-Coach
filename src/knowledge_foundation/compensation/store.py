@@ -83,8 +83,9 @@ def evidence_status(record: Mapping[str, Any], registry: SourceRegistry, policy:
 
 
 class CompensationStoreV2:
-    def __init__(self, session_factory, registry: SourceRegistry, graph: OccupationGraph, policy: PrecedencePolicy | None = None) -> None:
+    def __init__(self, session_factory, registry: SourceRegistry, graph: OccupationGraph, policy: PrecedencePolicy | None = None, *, reviewer_check=None) -> None:
         self._sf, self._reg, self._g = session_factory, registry, graph
+        self._reviewer_check = reviewer_check          # production wiring: a callable that verifies the actor is an active reviewer account (see qualification_review.reviewer_check_for)
         self.policy = policy or PrecedencePolicy.load()
 
     # ------------------------------------------------------------------------------------------------------------------------------- gate
@@ -257,6 +258,8 @@ class CompensationStoreV2:
             src = self._reg.get(r.source_ref) or {}
             if status == "qualified" and (actor_user_id is None or src.get("origin") not in E.EVIDENCE_ORIGINS):
                 raise ValueError("qualification needs a named reviewer and a source of genuine origin")
+            if status == "qualified" and self._reviewer_check is not None and not self._reviewer_check(actor_user_id):
+                raise ValueError("qualification needs an active reviewer account holding the knowledge approval permission")
             hist = list((r.provenance or {}).get("qualification_history", [])) + [{"from": r.qualification_status, "to": status, "actor_user_id": actor_user_id}]
             r.provenance = {**(r.provenance or {}), "qualification_history": hist}
             r.qualification_status = status

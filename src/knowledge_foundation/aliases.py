@@ -38,12 +38,14 @@ def _row(a: GraphOccupationAlias, key: str | None = None, origin: str | None = N
     return {"id": a.id, "alias_text": a.alias_text, "normalized_text": a.normalized_text, "folded_text": a.folded_text, "language": a.language, "language_basis": a.language_basis,
             "script": a.script, "alias_type": a.alias_type, "source_ref": a.source_ref, "edition_ref": a.edition_ref, "qualification_status": a.qualification_status, "status": a.status,
             "context_terms": list(a.context_terms or []), "normalization_version": a.normalization_version, "occupation_key": key, "source_origin": origin,
-            "evidence_eligible_origin": origin in E.EVIDENCE_ORIGINS, "country_applicability": [c for c in (a.provenance or {}).get("country_applicability", [])]}
+            "evidence_eligible_origin": origin in E.EVIDENCE_ORIGINS, "country_applicability": [c for c in (a.provenance or {}).get("country_applicability", [])],
+            "relationship": (a.provenance or {}).get("relationship"), "limitation": (a.provenance or {}).get("limitation")}
 
 
 class AliasStore:
-    def __init__(self, session_factory) -> None:
+    def __init__(self, session_factory, *, reviewer_check=None) -> None:
         self._sf = session_factory
+        self._reviewer_check = reviewer_check          # production wiring: verifies the actor is an active alias reviewer (see qualification_review.reviewer_check_for)
 
     # ------------------------------------------------------------------------------------------------------ writes
     def add_alias(self, occupation_key: str, text: str, *, language: str | None = None, language_basis: str | None = None, alias_type: str = "unknown", source_ref: str = "",
@@ -127,12 +129,38 @@ class AliasStore:
             origin = _source_origin(s, a.source_ref)
             if status == "qualified" and (actor_user_id is None or origin not in E.EVIDENCE_ORIGINS):
                 raise AliasError("qualification needs a named reviewer and a source of known, non-fixture origin")
+            if status == "qualified" and self._reviewer_check is not None and not self._reviewer_check(actor_user_id):
+                raise AliasError("qualification needs an active reviewer account holding the knowledge approval permission")
             hist = list((a.provenance or {}).get("qualification_history", []))
             hist.append({"from": a.qualification_status, "to": status, "actor_user_id": actor_user_id})
             a.provenance = {**(a.provenance or {}), "qualification_history": hist}
             a.qualification_status = status
             s.commit()
             return _row(a, None, origin)
+
+    def add_review_note(self, alias_id: int, note: dict) -> dict[str, Any]:
+        """Append an ENGINEERING review note (never a qualification) to the alias provenance. Idempotent per note version."""
+        with self._sf() as s:
+            a = s.get(GraphOccupationAlias, alias_id)
+            if a is None:
+                raise AliasError("unknown alias")
+            notes = [n for n in (a.provenance or {}).get("engineering_reviews", []) if n.get("version") != note.get("version")] + [note]
+            a.provenance = {**(a.provenance or {}), "engineering_reviews": notes}
+            s.commit()
+            return _row(a, None, _source_origin(s, a.source_ref))
+
+    def annotate_scope(self, alias_id: int, *, relationship: str, limitation: str | None) -> dict[str, Any]:
+        """Engineering annotation of the alias scope (relationship vocabulary and caveat text); never changes the qualification status. The earlier values are kept in the history."""
+        with self._sf() as s:
+            a = s.get(GraphOccupationAlias, alias_id)
+            if a is None:
+                raise AliasError("unknown alias")
+            p = dict(a.provenance or {})
+            if (p.get("relationship"), p.get("limitation")) != (relationship, limitation):
+                hist = list(p.get("scope_history", [])) + [{"relationship": p.get("relationship"), "limitation": p.get("limitation")}]
+                a.provenance = {**p, "relationship": relationship, "limitation": limitation, "scope_history": hist}
+                s.commit()
+            return _row(a, None, _source_origin(s, a.source_ref))
 
     def retire_alias(self, alias_id: int, *, reason: str, actor_user_id: int | None = None) -> dict[str, Any]:
         """Revoke an alias: its status becomes ``deprecated`` so lookups (and so the resolver) stop using it. Nothing is deleted; the decision is kept in the alias provenance history."""

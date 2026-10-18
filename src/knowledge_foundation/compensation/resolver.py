@@ -185,6 +185,9 @@ class CompensationResolver:
                       ResolutionOutcome.UNSUPPORTED: CompensationOutcome.UNSUPPORTED, ResolutionOutcome.NOT_FOUND: CompensationOutcome.NOT_FOUND}[occ.outcome]
             return self._finish(resp, mapped, reason=occ.reasons[0] if occ.reasons else occ.outcome.value, context=resp.context_needed)
         resp.occupation_key = occ.candidates[0].occupation_key
+        limitation = occ.candidates[0].evidence.get("alias_limitation")
+        if limitation:
+            resp.coverage_limitations.append(f"occupation identity rests on a curated title alias: {limitation}")       # a scope caveat of the alias travels with the answer
         return self._evidence(req, resp, country)
 
     # ------------------------------------------------------------------------------------------------------------------------------ evidence

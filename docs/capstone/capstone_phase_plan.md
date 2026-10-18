@@ -220,3 +220,4 @@ See `capstone_definition_of_done.md` (applies to every implementation phase P1+)
 - **P10C-F2A follow-up: OFFICIAL FILES ACQUIRED (isolated staging, hashes recorded); DATA DICTIONARY INSPECTED; NOT INGESTED; NOT QUALIFIED; registry lifecycle not advanced.**
 - **P10C-F2A continuation: US SOC 2018 GRAPH POPULATED and BLS OEWS MAY 2025 EVIDENCE IMPORTED in an isolated non-production database; NOT QUALIFIED; NOT RUNTIME-APPROVED; Compensation V2 disabled.**
 - **P10C-F2A-Q US evidence qualification: REVIEWED; 16,140 records ENGINEERING_CHECKED, 0 QUALIFIED; 5 alias proposals engineering_checked, 0 qualified; broader-group rule implemented; runtime coverage unchanged (386/412); RB-LIC-1 open.**
+- **P10C-F2A-R human qualification readiness: HUMAN APPROVAL PENDING; review package, 12 measurement batches, alias evidence review and 26-case coverage gap analysis prepared; 0 qualified; no reviewer appointed; runtime coverage unchanged (386/412); RB-LIC-1 open.**

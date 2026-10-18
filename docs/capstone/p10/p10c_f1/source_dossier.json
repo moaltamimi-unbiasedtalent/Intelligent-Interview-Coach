@@ -4997,6 +4997,30 @@
    "decision": "No arbitrary universal RSE cutoff; preserve all BLS relative standard errors; statistical uncertainty, source authority, occupation specificity, geographic specificity, completeness and freshness are separate dimensions; where no threshold exists none is fabricated and no unrelated record is blocked.",
    "implementation": "RSE preserved per record and described by its observed distribution; engineering review makes no precision claim; no record needed a new material reliability judgment under these rules.",
    "basis": "Explicit owner instruction in the P10C-F2A-Q specification (chat message, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-H",
+   "date": "2026-10-18",
+   "title": "D-08 alias review and qualification methodology",
+   "decision": "APPROVED: a controlled occupation alias review and qualification methodology. This does not approve any individual alias.",
+   "implementation": "Engineering evidence review of the five proposals (3 approve-recommended, 2 conditional) and two unresolved titles; all recommendations only; 0 aliases qualified.",
+   "basis": "Explicit owner instruction in the P10C-F2A-R specification (chat messages, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-I",
+   "date": "2026-10-18",
+   "title": "Methodology-based measurement qualification",
+   "decision": "APPROVED: methodology-based qualification without an arbitrary universal RSE cutoff; published RSE preserved; a missing RSE is documented but does not by itself invalidate a measurement when the publisher gives no RSE for that statistic.",
+   "implementation": "Median and percentile records carry the explicit statement that BLS publishes no RSE for them and that the claim excludes precision; mean records carry MEAN_PRSE; engineering checks passing does not qualify any record.",
+   "basis": "Explicit owner instruction in the P10C-F2A-R specification (chat messages, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-J",
+   "date": "2026-10-18",
+   "title": "Human reviewer workflow and controlled batch qualification",
+   "decision": "APPROVED: an auditable reviewer appointment and qualification workflow where only a named, authenticated human may exercise reviewer authority; controlled batch qualification where governance permits (defined scope, reproducible validation, exception inventory, explicit reviewer decision, audit timestamp, reviewer identity, per-record traceability, revocation or correction); batches are never approved automatically.",
+   "implementation": "QualificationReviewService (reviewer authority from the existing platform role presets, digest-bound batch decisions, same-transaction audit, per-record history, revocation); no route exposed, no reviewer appointed, no decision made.",
+   "basis": "Explicit owner instruction in the P10C-F2A-R specification (chat messages, 2026-10-18); no signature or external legal approval is claimed."
   }
  ]
 }

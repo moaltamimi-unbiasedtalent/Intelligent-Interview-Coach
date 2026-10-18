@@ -105,6 +105,13 @@ Basis: the explicit owner instruction in the P10C-F2A-Q specification; no signat
 - **POLICY G (reliability):** no universal RSE cutoff; RSE preserved; uncertainty, authority, specificity, completeness and freshness are separate dimensions.
 See [the decision report](P10C_F2A_Q_EVIDENCE_QUALIFICATION_DECISION_REPORT.md).
 
+## M.4 Further owner policy decisions recorded 2026-10-18 (P10C-F2A-R)
+Basis: the explicit owner instruction in the P10C-F2A-R specification; no signature or external legal approval is claimed. Machine-readable: POLICY-H to J.
+- **POLICY H:** D-08 alias review and qualification METHODOLOGY approved (no individual alias approved).
+- **POLICY I:** methodology-based measurement qualification without an arbitrary RSE cutoff; a missing RSE is documented and not by itself invalidating when the publisher gives none for that statistic.
+- **POLICY J:** an auditable reviewer appointment and qualification workflow (only a named, authenticated human); controlled batch qualification where governance permits, never automatic.
+Reviewer appointments are NOT made: see [the human review package](P10C_F2A_HUMAN_REVIEW_AND_APPROVAL.md) and [the coverage gap analysis](P10C_F2A_COVERAGE_GAP_ANALYSIS.md).
+
 ## Package 2 (United Kingdom) safety — unchanged and UNAPPROVED
 - The ASHE correction dated 19 December 2025 suppresses annual pay estimates for occupations 3312, 331 and 33 (UK and some regions; Tables 2, 3, 14, 15, 20). Any future ingestion must keep those cells **missing**; they are never reconstructed or filled. Weekly pay stays weekly.
 - SOC edition: the 2025 bulletin states occupation coding moved from SOC 2010 to SOC 2020 from 2021 and its occupation charts are "defined by SOC 2020" (VERIFIED). The Table 14 page keeps a legacy "soc2010" title/slug and does not state SOC 2020; the 2025 file is `ashetable142025provisional.zip`. The edition must be confirmed from the file's own notes before acquisition.

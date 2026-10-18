@@ -51,3 +51,6 @@ Named measurement-qualification reviewer and an owner-approved reliability rule 
 
 ## Qualification update (P10C-F2A-Q, 2026-10-18)
 Status refined: all 16,140 records are now `engineering_checked` (deterministic review; no precision claim); **0 are `qualified`** (no human reviewer exists). The V1 verdict label QUALIFIED_FOR_V2 used above is superseded by RECONCILABLE_WITH_OFFICIAL_V2 (1,381): reconcilable is not qualified. The broader-group paragraph under "Retrieval" is superseded by the owner rule (abstain; labelled contextual evidence only). Runtime coverage after: 386/412 = 93.7%, unchanged. Full methodology, counts, RSE analysis, alias decisions and blockers: [decision report](P10C_F2A_Q_EVIDENCE_QUALIFICATION_DECISION_REPORT.md).
+
+## Human-review readiness update (P10C-F2A-R, 2026-10-18)
+Status: **HUMAN APPROVAL PENDING; 0 of 16,140 records qualified.** The 16,140 `engineering_checked` records are partitioned into 12 reviewable batches (zero exceptions, single evidence class each, reproducible digests) with a per-record review sheet and the deterministic criteria, reliability methodology and reviewer workflow in [the human review package](P10C_F2A_HUMAN_REVIEW_AND_APPROVAL.md). `engineering_checked` is eligibility for review, not qualification. Coverage by root cause and scenario: [coverage gap analysis](P10C_F2A_COVERAGE_GAP_ANALYSIS.md).
