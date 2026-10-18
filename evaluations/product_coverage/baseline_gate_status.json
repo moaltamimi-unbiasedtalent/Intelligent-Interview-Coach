@@ -1,5 +1,5 @@
 {
- "schema": "p10c-g-product-coverage-baseline/1",
+ "schema": "p10c-g-product-coverage-baseline/2",
  "profiles": {
   "developer_local": {
    "cases": 412,
@@ -32,7 +32,17 @@
     "pc_future_growth_235",
     "pc_short_term_outlook_247",
     "pc_short_term_outlook_255"
-   ]
+   ],
+   "case_ids_sha256": "6e2488fb2d363d1d92170985cb00b258d1192afac02762102eca48803426c482",
+   "recorded_on": "2026-10-18",
+   "environment_stores": {
+    "data/knowledge/roles.db": true,
+    "data/knowledge/compensation.db": true,
+    "data/knowledge/labour_market.db": true,
+    "data/knowledge/competencies.db": true,
+    "data/knowledge/credentials.db": true,
+    "data/chroma/chroma.sqlite3": true
+   }
   },
   "clean_checkout": {
    "cases": 412,
@@ -193,8 +203,20 @@
     "pc_technology_070",
     "pc_technology_071",
     "pc_technology_072"
-   ]
+   ],
+   "case_ids_sha256": "6e2488fb2d363d1d92170985cb00b258d1192afac02762102eca48803426c482",
+   "recorded_on": "2026-10-18",
+   "environment_stores": {
+    "data/knowledge/roles.db": false,
+    "data/knowledge/compensation.db": false,
+    "data/knowledge/labour_market.db": false,
+    "data/knowledge/competencies.db": false,
+    "data/knowledge/credentials.db": false,
+    "data/chroma/chroma.sqlite3": false
+   }
   }
  },
- "note": "Per-environment baselines of the existing 412-case product-coverage evaluator, recorded by scripts/check_product_coverage_baseline.py --update-profile on 2026-10-18. They are regression baselines, NOT passes against the 95% gate (392 of 412 required): both profiles are BELOW_GATE and accepted by the owner as the Capstone engineering baseline."
+ "note": "Per-environment baselines of the existing 412-case product-coverage evaluator, recorded by scripts/check_product_coverage_baseline.py --update-profile on 2026-10-18. They are regression baselines, NOT passes against the 95% gate (392 of 412 required): both profiles are BELOW_GATE and accepted by the owner as the Capstone engineering baseline.",
+ "maintenance_policy": "Baselines are changed only by `scripts/check_product_coverage_baseline.py --update-profile --reason ...` outside CI. An update that weakens a baseline (an added failure, a lower sufficient count or a changed denominator) is refused unless an existing tracked owner-authorization document is named; every change is appended to `history` and is visible in the pull-request diff. Schema 2 (2026-10-18) only ADDED metadata (case-id digest, recorded date, store availability, this policy and the empty history): no count and no case id changed.",
+ "history": []
 }

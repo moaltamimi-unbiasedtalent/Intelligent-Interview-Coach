@@ -1,3 +1,5 @@
+> **HISTORICAL RESULT: NOT THE CURRENT MEASUREMENT.** The original content below was committed on 2026-08-29 (commit `3bcb439`, "chore: complete Career Intelligence production retrieval hardening") and has NOT been regenerated since. The source environment was not recorded; the run used the lexical/offline mode and its figures are consistent with a developer machine holding the git-ignored local knowledge stores (NOT VERIFIED). It is kept unchanged for provenance. Current evidence is produced separately (see `README.md` in this directory and `docs/capstone/p10/P10C_G_GLOBAL_EVALUATION_AND_REGRESSION.md`): on 2026-10-18 the same evaluator gave 386 of 412 sufficient on a developer-local environment and 258 of 412 on a clean checkout, both below the unchanged 95% gate.
+
 # Product Coverage Benchmark
 
 **412 labelled candidate questions** over the production-ready real career-knowledge sources. Deterministic run.

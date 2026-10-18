@@ -159,3 +159,90 @@ def test_ci_runs_the_corpus_and_the_guard_without_secrets_and_without_softening_
     seg = ci[ci.index("Global evaluation corpus"):ci.index("Secret scan")]
     assert "continue-on-error" not in seg and "secrets." not in seg and "|| true" not in seg and "RUNNER_TEMP" in seg and "upload-artifact" in seg
     assert ci.index("scripts/eval_global_corpus.py") < ci.index("Working tree must be clean")
+    guard_step = ci[ci.index("Product coverage regression guard"):ci.index("Upload P10C-G")]
+    assert "ASK4MO_COVERAGE_PROFILE: clean_checkout" in guard_step and "--update-profile" not in ci                       # the clean profile is set explicitly; CI never updates a baseline
+
+
+# ------------------------------------------------------------------------------------------------------------------------ final hardening: reproducibility
+def test_case_identifiers_and_generation_are_stable():
+    import hashlib
+
+    corpus = G.load_corpus()
+    ids = [c["id"] for c in corpus["cases"]]
+    assert len(ids) == len(set(ids)) == 115 and len(corpus["scenarios"]) == 48
+    digest = hashlib.sha256("\n".join(sorted(ids)).encode()).hexdigest()
+    assert digest == "76f264d03a771569ef1fb22b7216590426a6c0f1582e562dd0ed39f50883f603"                                                                         # any added, removed or renamed case is visible in this test's diff
+    assert len(G.REQUIRED_TAGS["negative_regression"]) == 14 and sum(len(v) for v in G.REQUIRED_TAGS.values()) == 83 and len(G.GOVERNANCE) == 12
+
+
+def test_the_suite_does_not_depend_on_the_working_directory_or_local_store_settings(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("COPILOT_DATA_DIR", str(tmp_path / "nonexistent-data"))
+    monkeypatch.setenv("COPILOT_CHROMA_DIR", str(tmp_path / "nonexistent-chroma"))
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path / 'nope' / 'x.db'}")
+    monkeypatch.setenv("REDIS_URL", "redis://127.0.0.1:1/0")
+    r = G.run_all()
+    assert r["ok"] and r["corpus"]["passed"] == 115 and not list(tmp_path.glob("*.db")) and not (tmp_path / "nonexistent-data").exists()
+
+
+def test_no_module_or_fixture_embeds_a_developer_path_or_a_network_address():
+    for rel in ("src/knowledge_foundation/global_eval.py", "src/knowledge_foundation/data/global_evaluation_corpus.json", "scripts/eval_global_corpus.py", "scripts/gen_global_evaluation_corpus.py",
+                "scripts/check_product_coverage_baseline.py"):
+        text = (ROOT / rel).read_text(encoding="utf-8")
+        for token in ("/Users/", "/Volumes/", "C:\\\\", "localhost", "127.0.0.1", "api_key", "sk-or-"):
+            assert token not in text, (rel, token)
+    import ast
+
+    for rel in ("src/knowledge_foundation/global_eval.py", "scripts/eval_global_corpus.py"):
+        mods = {a.name.split(".")[0] for n in ast.walk(ast.parse((ROOT / rel).read_text())) if isinstance(n, ast.Import) for a in n.names}
+        assert not mods & {"requests", "httpx", "urllib", "socket", "stripe", "openai", "redis", "psycopg", "chromadb"}, rel
+
+
+def test_every_gate_stays_false_while_the_suite_runs():
+    from src import ai_protection as AP
+    from src.application import history_access as HA, model_profile_access as MP, preparation_pack as PP, progress_analytics as PA, usage_quota as UQ
+    from src.billing import policy as bp
+    G.run_all()
+    assert not any([AP.AI_COST_LIMITS_ENFORCED, HA.HISTORY_RESTRICTIONS_ENFORCED, MP.MODEL_PROFILE_ENFORCED, UQ.USAGE_QUOTAS_ENFORCED, PA.PREMIUM_ANALYTICS_ENABLED, PP.PREPARATION_PACK_GENERATION_ENABLED])
+    assert [getattr(bp, g) for g in ("LIVE_BILLING_ENABLED", "EXTERNAL_CHECKOUT_AUTHORIZED", "STRIPE_WEBHOOK_AUTHORIZED", "RECONCILE_SCHEDULER_ENABLED", "PROVIDER_READS_AUTHORIZED", "PAID_ENTITLEMENT_POLICY_APPROVED")] == [False] * 6
+
+
+# ----------------------------------------------------------------------------------------------------------------------- historical artifacts and registry semantics
+def test_the_historical_product_coverage_artifacts_are_identified_as_historical_and_preserved():
+    import hashlib
+
+    d = ROOT / "evaluations/product_coverage"
+    readme = (d / "README.md").read_text(encoding="utf-8")
+    for f in ("summary.md", "failures.md"):
+        t = (d / f).read_text(encoding="utf-8")
+        assert t.startswith("> **HISTORICAL RESULT: NOT THE CURRENT MEASUREMENT.**") and "2026-08-29" in t and "NOT VERIFIED" in t
+        body = t.split("\n\n", 1)[1]
+        assert hashlib.sha256(body.encode()).hexdigest() in readme                                                 # the original text beneath the banner is byte-for-byte preserved
+    assert hashlib.sha256((d / "results.csv").read_bytes()).hexdigest() in readme
+    import csv
+
+    rows = list(csv.DictReader((d / "results.csv").open(encoding="utf-8")))
+    assert len(rows) == 412 and sum(r["insufficient_ok"] == "False" for r in rows) == 14                          # the historical 14 are intact, not silently refreshed
+
+
+def test_registry_lifecycle_semantics_match_their_documentation(tmp_path):
+    from src.knowledge_foundation.registry import RegistryError, SourceRegistry
+    from src.persistence import init_db, make_engine, make_session_factory
+
+    e = make_engine(f"sqlite:///{tmp_path / 'r.db'}")
+    init_db(e)
+    reg = SourceRegistry(make_session_factory(e))
+    reg.register("s", origin="official_local", validation_status="unvalidated")
+    reg.transition("s", "licensing_pending")
+    reg.transition("s", "licensing_verified")                                                                     # reachable WITHOUT a verified licence (preserved behaviour)
+    assert reg.get("s")["licence_status"] != "verified" and not reg.can_ingest("s")
+    with pytest.raises(RegistryError):
+        reg.transition("s", "approved_for_ingestion")                                                             # the approval boundary needs the licence evidence
+    reg.set_licence("s", licence_id="OGL", licence_status="verified")
+    reg.transition("s", "approved_for_ingestion")
+    assert reg.can_ingest("s") and not reg.can_serve_as_evidence("s")
+    reg.transition("s", "approved_for_runtime_use")
+    assert reg.can_serve_as_evidence("s")
+    doc = (ROOT / "docs/capstone/p10/P10C_G_GLOBAL_EVALUATION_AND_REGRESSION.md").read_text(encoding="utf-8")
+    assert "What `licensing_verified` means" in doc and "licence_status" in doc and "approved_for_runtime_use" in doc
+    e.dispose()
