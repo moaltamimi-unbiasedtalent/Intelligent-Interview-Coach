@@ -1,18 +1,75 @@
 {
   "schema": "compensation_precedence_policy/1",
-  "version": "p10c-d/1",
+  "version": "p10c-e/1",
   "status": "PROPOSED ENGINEERING DESIGN. The six-level order is the RECOVERED HISTORICAL REQUIREMENT (GKB precedence); the class mapping, recency rule and eligibility are proposals pending owner approval (D-01, D-02).",
   "tiers": [
-    {"rank": 1, "category": "national_official_occupation_statistics", "evidence_classes": ["C1", "C2"], "note": "National detailed (C1) or broad (C2) official evidence."},
-    {"rank": 2, "category": "national_public_employment_service", "evidence_classes": ["C1", "C2"], "note": "National detailed (C1) or broad (C2) public-employment-service evidence."},
-    {"rank": 3, "category": "eurostat_harmonised", "evidence_classes": ["C3"], "note": "International harmonised evidence."},
-    {"rank": 4, "category": "cedefop_intelligence", "evidence_classes": [], "note": "Labour-market intelligence; not a compensation-evidence class in this wave."},
-    {"rank": 5, "category": "authorized_secondary", "evidence_classes": [], "note": "Authorised reputable secondary evidence; qualification criteria are PENDING OWNER DEFINITION, so it never presents as C1-C3."},
-    {"rank": 6, "category": "insufficient_evidence", "evidence_classes": [], "note": "C4: abstain."}
+    {
+      "rank": 1,
+      "category": "national_official_occupation_statistics",
+      "evidence_classes": [
+        "C1",
+        "C2"
+      ],
+      "note": "National detailed (C1) or broad (C2) official evidence."
+    },
+    {
+      "rank": 2,
+      "category": "national_public_employment_service",
+      "evidence_classes": [
+        "C1",
+        "C2"
+      ],
+      "note": "National detailed (C1) or broad (C2) public-employment-service evidence."
+    },
+    {
+      "rank": 3,
+      "category": "eurostat_harmonised",
+      "evidence_classes": [
+        "C3"
+      ],
+      "note": "International harmonised evidence."
+    },
+    {
+      "rank": 4,
+      "category": "cedefop_intelligence",
+      "evidence_classes": [],
+      "note": "Labour-market intelligence; not a compensation-evidence class in this wave."
+    },
+    {
+      "rank": 5,
+      "category": "authorized_secondary",
+      "evidence_classes": [],
+      "note": "Authorised reputable secondary evidence; qualification criteria are PENDING OWNER DEFINITION, so it never presents as C1-C3."
+    },
+    {
+      "rank": 6,
+      "category": "insufficient_evidence",
+      "evidence_classes": [],
+      "note": "C4: abstain."
+    }
   ],
   "regional_geography": "national tiers classify a subnational figure by occupation level and label it regional; it is returned only when that region is requested and is never presented as national (PROPOSED in P10C-D, owner approval pending)",
   "recency": "latest_reference_year_among_eligible_evidence",
-  "required_match": ["occupation", "geography", "reference_period", "pay_basis", "measure", "source_eligibility"],
+  "required_match": [
+    "occupation",
+    "geography",
+    "reference_period",
+    "pay_basis",
+    "measure",
+    "source_eligibility"
+  ],
   "country_overrides": "none: country-specific hard-coded overrides are not permitted in this policy",
-  "comparison_modes": {"nominal": "supported", "fx_converted": "not_configured", "ppp_adjusted": "not_configured"}
+  "comparison_modes": {
+    "nominal": "supported",
+    "fx_converted": "not_configured",
+    "ppp_adjusted": "not_configured"
+  },
+  "international_families": {
+    "ilostat": {
+      "enabled": false,
+      "status": "PENDING_OWNER_DECISION_D-16",
+      "category_when_enabled": "eurostat_harmonised",
+      "note": "The registry vocabulary has no precedence category for an international harmonised source that is not Eurostat. Until the owner decides (D-16) a source marked international_family=ilostat in its registry provenance cannot be imported in production mode and its evidence is never operational; fixtures may exercise the logic and are flagged precedence_pending."
+    }
+  }
 }

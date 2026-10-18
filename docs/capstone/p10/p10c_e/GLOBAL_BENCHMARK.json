@@ -1,0 +1,164 @@
+{
+ "corpora": {
+  "large": {
+   "conflict_evaluation": {
+    "max_ms": 5.003,
+    "n": 40,
+    "p50_ms": 4.698,
+    "p95_ms": 4.911,
+    "peak_kib": 194,
+    "queries_per_resolution": 12
+   },
+   "country_filtered_lookup": {
+    "max_ms": 31.984,
+    "n": 200,
+    "p50_ms": 4.391,
+    "p95_ms": 5.053,
+    "peak_kib": 377,
+    "queries_per_resolution": 11
+   },
+   "cross_country_queries": {
+    "max_ms": 19.081,
+    "n": 25,
+    "p50_ms": 18.241,
+    "p95_ms": 18.696,
+    "peak_kib": 222,
+    "queries_per_resolution": 45
+   },
+   "default_operational_withhold": {
+    "max_ms": 6.166,
+    "n": 100,
+    "p50_ms": 5.282,
+    "p95_ms": 5.966,
+    "peak_kib": 211,
+    "queries_per_resolution": 15
+   },
+   "import_seconds": 5.32,
+   "international_evidence_precedence": {
+    "max_ms": 5.205,
+    "n": 100,
+    "p50_ms": 4.712,
+    "p95_ms": 5.009,
+    "peak_kib": 221,
+    "queries_per_resolution": 12
+   },
+   "market_without_evidence": {
+    "max_ms": 4.127,
+    "n": 100,
+    "p50_ms": 3.734,
+    "p95_ms": 4.006,
+    "peak_kib": 202,
+    "queries_per_resolution": 10
+   },
+   "markets": 11,
+   "occupations": 1000,
+   "records_imported": 12000,
+   "records_per_second": 2256,
+   "repeated_request": {
+    "max_ms": 5.253,
+    "n": 200,
+    "p50_ms": 4.714,
+    "p95_ms": 5.041,
+    "peak_kib": 238,
+    "queries_per_resolution": 12
+   },
+   "title_resolution": {
+    "max_ms": 5.714,
+    "n": 100,
+    "p50_ms": 4.543,
+    "p95_ms": 4.917,
+    "peak_kib": 265,
+    "queries_per_resolution": 11
+   },
+   "unsupported_market": {
+    "max_ms": 0.406,
+    "n": 100,
+    "p50_ms": 0.287,
+    "p95_ms": 0.327,
+    "peak_kib": 31,
+    "queries_per_resolution": 1
+   }
+  },
+  "small": {
+   "conflict_evaluation": {
+    "max_ms": 44.907,
+    "n": 40,
+    "p50_ms": 6.05,
+    "p95_ms": 7.639,
+    "peak_kib": 204,
+    "queries_per_resolution": 12
+   },
+   "country_filtered_lookup": {
+    "max_ms": 15.465,
+    "n": 200,
+    "p50_ms": 4.968,
+    "p95_ms": 7.433,
+    "peak_kib": 406,
+    "queries_per_resolution": 11
+   },
+   "cross_country_queries": {
+    "max_ms": 26.456,
+    "n": 25,
+    "p50_ms": 18.502,
+    "p95_ms": 21.669,
+    "peak_kib": 222,
+    "queries_per_resolution": 45
+   },
+   "default_operational_withhold": {
+    "max_ms": 8.528,
+    "n": 100,
+    "p50_ms": 5.69,
+    "p95_ms": 6.353,
+    "peak_kib": 206,
+    "queries_per_resolution": 15
+   },
+   "import_seconds": 0.37,
+   "international_evidence_precedence": {
+    "max_ms": 11.07,
+    "n": 100,
+    "p50_ms": 5.265,
+    "p95_ms": 8.305,
+    "peak_kib": 233,
+    "queries_per_resolution": 12
+   },
+   "market_without_evidence": {
+    "max_ms": 6.567,
+    "n": 100,
+    "p50_ms": 3.663,
+    "p95_ms": 4.828,
+    "peak_kib": 228,
+    "queries_per_resolution": 10
+   },
+   "markets": 11,
+   "occupations": 60,
+   "records_imported": 720,
+   "records_per_second": 1921,
+   "repeated_request": {
+    "max_ms": 6.726,
+    "n": 200,
+    "p50_ms": 4.599,
+    "p95_ms": 5.438,
+    "peak_kib": 251,
+    "queries_per_resolution": 12
+   },
+   "title_resolution": {
+    "max_ms": 10.761,
+    "n": 100,
+    "p50_ms": 4.924,
+    "p95_ms": 6.729,
+    "peak_kib": 271,
+    "queries_per_resolution": 11
+   },
+   "unsupported_market": {
+    "max_ms": 1.166,
+    "n": 100,
+    "p50_ms": 0.28,
+    "p95_ms": 0.346,
+    "peak_kib": 31,
+    "queries_per_resolution": 1
+   }
+  }
+ },
+ "note": "Synthetic corpora in a throwaway database; no real data; no protected store touched.",
+ "schema": "global_fallback_benchmark/1"
+}

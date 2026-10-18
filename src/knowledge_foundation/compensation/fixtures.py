@@ -91,6 +91,20 @@ def check_expectations(r, e: dict[str, Any]) -> list[str]:
         problems.append("withheld counter missing")
     if "context_needed" in e and e["context_needed"] not in r.context_needed:
         problems.append("context missing")
+    if "state" in e and (r.evidence_assessment or {}).get("state") != e["state"]:
+        problems.append(f"evidence state {(r.evidence_assessment or {}).get('state')} != {e['state']}")
+    for k, v in (e.get("factors") or {}).items():
+        if ((r.evidence_assessment or {}).get("factors") or {}).get(k) != v:
+            problems.append(f"factor {k} differs")
+    for w in e.get("weak_factors", []):
+        if w not in ((r.evidence_assessment or {}).get("weak_factors") or []):
+            problems.append(f"weak factor {w} missing")
+    if "precedence_pending" in e and r.precedence_pending != e["precedence_pending"]:
+        problems.append("precedence_pending differs")
+    if "fallback_stage" in e and (r.fallback_trace or {}).get("selected_stage") != e["fallback_stage"]:
+        problems.append("fallback stage differs")
+    if "freshness_year" in e and (r.freshness or {}).get("reference_year") != e["freshness_year"]:
+        problems.append("freshness year differs")
     return problems
 
 
