@@ -533,8 +533,12 @@ def test_comparison_modes_other_than_nominal_are_not_configured_and_no_rate_exis
 
 def test_broader_fallback_follows_only_verified_broader_relationships_and_is_labelled(world):
     r = world.resolver.resolve(CompensationRequest(occupation=MultilingualRequest(title="syn job child", title_language="en"), country="DE", require_operational=False))
-    assert r.outcome is CompensationOutcome.EVIDENCE and r.occupation_specificity == "broader_group" and r.matched_occupation_key == world.keys["grp"] and r.occupation_key == world.keys["child"]
-    assert any("BROADER" in x for x in r.coverage_limitations)
+    # Owner rule (P10C-F2A-Q): the parent group's statistic is CONTEXT beside an abstention, never the occupation's own value.
+    assert r.outcome is CompensationOutcome.ABSTAIN and r.value is None and r.evidence_class == "C4" and r.abstention_reason == "exact_occupation_measurement_unavailable"
+    assert r.occupation_key == world.keys["child"] and len(r.contextual_evidence) == 1
+    ctx = r.contextual_evidence[0]
+    assert ctx["broader_occupation_key"] == world.keys["grp"] and ctx["broader_occupation_code"] and ctx["broader_occupation_label"] and ctx["evidence_class"] == "C2" and ctx["citation"]
+    assert "NOT the requested occupation" in ctx["warning"] and ctx["measure"] and ctx["reference_year"]
     for slug in ("rel_src", "der_src"):
         r = world.resolver.resolve(CompensationRequest(occupation=MultilingualRequest(title=f"syn job {slug}", title_language="en"), country="DE", require_operational=False))
         assert r.outcome is CompensationOutcome.ABSTAIN and r.value is None, slug

@@ -1,0 +1,587 @@
+{
+ "schema": "p10c-f2a-ingestion-report/1",
+ "run_at": "2026-10-18T14:25:08.371872+00:00",
+ "staged_files": {
+  "us_soc_2018_structure": "OK",
+  "us_soc_2018_definitions": "OK",
+  "us_oews_may2025_national": "OK",
+  "us_oews_may2025_occupation_definitions": "OK"
+ },
+ "database": {
+  "name": "p5b_f2a_us",
+  "host": "loopback isolated cluster",
+  "alembic": {
+   "current": "0038_compensation_concepts",
+   "heads": [
+    "0038_compensation_concepts"
+   ]
+  }
+ },
+ "registry": {
+  "us_soc_2018": {
+   "approval_status": "approved_for_ingestion",
+   "licence_status": "verified",
+   "events": [
+    {
+     "from": null,
+     "to": "discovered",
+     "actor_user_id": null,
+     "reason": "registered"
+    },
+    {
+     "from": "discovered",
+     "to": "licensing_pending",
+     "actor_user_id": null,
+     "reason": "owner authorisation 2026-10-18 (P10C-F2A Package 1; isolated non-production ingestion only)"
+    },
+    {
+     "from": "licensing_pending",
+     "to": "licensing_verified",
+     "actor_user_id": null,
+     "reason": "BLS copyright page read 2026-10-18: public domain; citation requested; emblem prohibited"
+    },
+    {
+     "from": "licensing_verified",
+     "to": "approved_for_ingestion",
+     "actor_user_id": null,
+     "reason": "owner authorisation 2026-10-18 (P10C-F2A Package 1; isolated non-production ingestion only)"
+    }
+   ]
+  },
+  "bls_oews": {
+   "approval_status": "approved_for_ingestion",
+   "licence_status": "verified",
+   "events": [
+    {
+     "from": null,
+     "to": "discovered",
+     "actor_user_id": null,
+     "reason": "registered"
+    },
+    {
+     "from": "discovered",
+     "to": "licensing_pending",
+     "actor_user_id": null,
+     "reason": "owner authorisation 2026-10-18 (P10C-F2A Package 1; isolated non-production ingestion only)"
+    },
+    {
+     "from": "licensing_pending",
+     "to": "licensing_verified",
+     "actor_user_id": null,
+     "reason": "BLS copyright page read 2026-10-18: public domain; citation requested; emblem prohibited"
+    },
+    {
+     "from": "licensing_verified",
+     "to": "approved_for_ingestion",
+     "actor_user_id": null,
+     "reason": "owner authorisation 2026-10-18 (P10C-F2A Package 1; isolated non-production ingestion only)"
+    }
+   ]
+  }
+ },
+ "soc_file_checks": {
+  "codes": 1447,
+  "distinct_codes": 1447,
+  "duplicate_codes": 0,
+  "levels": {
+   "major": 23,
+   "minor": 98,
+   "broad": 459,
+   "detailed": 867
+  },
+  "definition_codes": 1447,
+  "code_sets_equal": true,
+  "level_disagreements": [],
+  "title_disagreements": 0,
+  "parent_prefix_mismatches": [
+   "29-1221",
+   "29-1222",
+   "29-1223",
+   "29-1224",
+   "29-1229"
+  ],
+  "parent_prefix_mismatch_count": 5
+ },
+ "soc_graph_first": {
+  "nodes_total": 1447,
+  "identifiers_total": 1447,
+  "relationships_total": 1424,
+  "nodes_added": 0,
+  "relationships_added": 0
+ },
+ "soc_graph_reimport": {
+  "nodes_total": 1447,
+  "identifiers_total": 1447,
+  "relationships_total": 1424,
+  "nodes_added": 0,
+  "relationships_added": 0
+ },
+ "oews_transform": {
+  "rows": 1401,
+  "total_rows": 1,
+  "quarantined_rows": 5,
+  "quarantined_codes": {
+   "21-1018": {
+    "title": "Substance Abuse, Behavioral Disorder, and Mental Health Counselors",
+    "o_group": "detailed",
+    "row": 314,
+    "reason": "bls_specific_aggregate_not_in_soc_2018"
+   },
+   "25-2052": {
+    "title": "Special Education Teachers, Kindergarten and Elementary School",
+    "o_group": "detailed",
+    "row": 412,
+    "reason": "bls_specific_aggregate_not_in_soc_2018"
+   },
+   "25-9045": {
+    "title": "Teaching Assistants, Except Postsecondary",
+    "o_group": "detailed",
+    "row": 443,
+    "reason": "bls_specific_aggregate_not_in_soc_2018"
+   },
+   "51-2028": {
+    "title": "Electrical, Electronic, and Electromechanical Assemblers, Except Coil Winders, Tapers, and Finishers",
+    "o_group": "detailed",
+    "row": 1154,
+    "reason": "bls_specific_aggregate_not_in_soc_2018"
+   },
+   "53-1047": {
+    "title": "First-Line Supervisors of Transportation and Material Moving Workers, Except Aircraft Cargo Handling Supervisors",
+    "o_group": "detailed",
+    "row": 1316,
+    "reason": "bls_specific_aggregate_not_in_soc_2018"
+   }
+  },
+  "duplicate_presentations": {
+   "13-1020": [
+    "broad",
+    "detailed"
+   ],
+   "13-2020": [
+    "broad",
+    "detailed"
+   ],
+   "29-2010": [
+    "broad",
+    "detailed"
+   ],
+   "31-1120": [
+    "broad",
+    "detailed"
+   ],
+   "39-7010": [
+    "broad",
+    "detailed"
+   ],
+   "47-4090": [
+    "broad",
+    "detailed"
+   ],
+   "51-2090": [
+    "broad",
+    "detailed"
+   ]
+  },
+  "occupations": 1388,
+  "records": 16140,
+  "absent_measurements": {
+   "H_MEAN:not_available": 79,
+   "H_PCT10:not_available": 79,
+   "H_PCT25:not_available": 79,
+   "H_MEDIAN:not_available": 79,
+   "H_PCT75:not_available": 79,
+   "H_PCT90:not_available": 79,
+   "A_MEAN:not_available": 7,
+   "A_PCT10:not_available": 7,
+   "A_PCT25:not_available": 7,
+   "A_MEDIAN:not_available": 7,
+   "A_PCT75:not_available": 7,
+   "A_PCT90:not_available": 7
+  },
+  "absent_by_flag": {
+   "annual_only:hourly": 474,
+   "hourly_only:annual": 42
+  },
+  "special_markers": {},
+  "rejected": {},
+  "level_counts": {
+   "broad": 570,
+   "detailed": 818
+  },
+  "annual_only_occupations": 79,
+  "hourly_only_occupations": 7,
+  "field_dictionary_fields": 32
+ },
+ "oews_import_first": {
+  "batch_key": "cib_fe7f0931ed0c01ba5bd92d3c21bf813acd112ed6",
+  "mode": "production",
+  "source_ref": "bls_oews",
+  "source_edition": "May 2025",
+  "rows": 16140,
+  "added": 0,
+  "existing": 16140,
+  "rejected": 0,
+  "rejections": {},
+  "already_imported": true
+ },
+ "oews_import_reimport": {
+  "batch_key": "cib_fe7f0931ed0c01ba5bd92d3c21bf813acd112ed6",
+  "mode": "production",
+  "source_ref": "bls_oews",
+  "source_edition": "May 2025",
+  "rows": 16140,
+  "added": 0,
+  "existing": 16140,
+  "rejected": 0,
+  "rejections": {},
+  "already_imported": true
+ },
+ "store_counts": {
+  "records": 16140,
+  "batches": 1
+ },
+ "provenance": {
+  "records_checked": 16140,
+  "incomplete_provenance": 0
+ },
+ "classification": {
+  "by_class_level_qualification_status": [
+   {
+    "evidence_class": "C2",
+    "occupation_level": "broad",
+    "qualification_status": "engineering_checked",
+    "status": "current",
+    "records": 6690
+   },
+   {
+    "evidence_class": "C1",
+    "occupation_level": "detailed",
+    "qualification_status": "engineering_checked",
+    "status": "current",
+    "records": 9450
+   }
+  ],
+  "by_measure": [
+   {
+    "pay_period": "hourly",
+    "measure": "percentile",
+    "percentile": 90,
+    "records": 1309
+   },
+   {
+    "pay_period": "hourly",
+    "measure": "median",
+    "percentile": 0,
+    "records": 1309
+   },
+   {
+    "pay_period": "hourly",
+    "measure": "mean",
+    "percentile": 0,
+    "records": 1309
+   },
+   {
+    "pay_period": "annual",
+    "measure": "percentile",
+    "percentile": 90,
+    "records": 1381
+   },
+   {
+    "pay_period": "annual",
+    "measure": "percentile",
+    "percentile": 75,
+    "records": 1381
+   },
+   {
+    "pay_period": "hourly",
+    "measure": "percentile",
+    "percentile": 75,
+    "records": 1309
+   },
+   {
+    "pay_period": "hourly",
+    "measure": "percentile",
+    "percentile": 10,
+    "records": 1309
+   },
+   {
+    "pay_period": "annual",
+    "measure": "median",
+    "percentile": 0,
+    "records": 1381
+   },
+   {
+    "pay_period": "annual",
+    "measure": "mean",
+    "percentile": 0,
+    "records": 1381
+   },
+   {
+    "pay_period": "annual",
+    "measure": "percentile",
+    "percentile": 10,
+    "records": 1381
+   },
+   {
+    "pay_period": "annual",
+    "measure": "percentile",
+    "percentile": 25,
+    "records": 1381
+   },
+   {
+    "pay_period": "hourly",
+    "measure": "percentile",
+    "percentile": 25,
+    "records": 1309
+   }
+  ]
+ },
+ "retrieval": {
+  "exact_detailed_annual_median": {
+   "outcome": "evidence",
+   "specificity": "exact",
+   "evidence_class": "C1",
+   "level": "detailed",
+   "measure": "median",
+   "pay_period": "annual",
+   "abstention_reason": null,
+   "has_value": true,
+   "has_citation": true,
+   "withheld": {}
+  },
+  "exact_detailed_hourly_p25": {
+   "outcome": "evidence",
+   "specificity": "exact",
+   "evidence_class": "C1",
+   "level": "detailed",
+   "measure": "percentile",
+   "pay_period": "hourly",
+   "abstention_reason": null,
+   "has_value": true,
+   "has_citation": true,
+   "withheld": {}
+  },
+  "mean_vs_median_distinct": {
+   "mean": "mean",
+   "median": "median"
+  },
+  "broad_group_median": {
+   "outcome": "evidence",
+   "specificity": "exact",
+   "evidence_class": "C2",
+   "level": "broad",
+   "measure": "median",
+   "pay_period": "annual",
+   "abstention_reason": null,
+   "has_value": true,
+   "has_citation": true,
+   "withheld": {}
+  },
+  "duplicate_presentation_code": {
+   "outcome": "evidence",
+   "specificity": "exact",
+   "evidence_class": "C2",
+   "level": "broad",
+   "measure": "median",
+   "pay_period": "annual",
+   "abstention_reason": null,
+   "has_value": true,
+   "has_citation": true,
+   "withheld": {}
+  },
+  "annual_only_occupation_annual": {
+   "outcome": "evidence",
+   "specificity": "exact",
+   "evidence_class": "C1",
+   "level": "detailed",
+   "measure": "median",
+   "pay_period": "annual",
+   "abstention_reason": null,
+   "has_value": true,
+   "has_citation": true,
+   "withheld": {}
+  },
+  "annual_only_occupation_hourly": {
+   "outcome": "abstain",
+   "specificity": null,
+   "evidence_class": "C4",
+   "level": null,
+   "measure": null,
+   "pay_period": null,
+   "abstention_reason": "exact_occupation_measurement_unavailable",
+   "has_value": false,
+   "has_citation": false,
+   "withheld": {}
+  },
+  "hourly_only_occupation_hourly": {
+   "outcome": "evidence",
+   "specificity": "exact",
+   "evidence_class": "C1",
+   "level": "detailed",
+   "measure": "median",
+   "pay_period": "hourly",
+   "abstention_reason": null,
+   "has_value": true,
+   "has_citation": true,
+   "withheld": {}
+  },
+  "hourly_only_occupation_annual": {
+   "outcome": "abstain",
+   "specificity": null,
+   "evidence_class": "C4",
+   "level": null,
+   "measure": null,
+   "pay_period": null,
+   "abstention_reason": "exact_occupation_measurement_unavailable",
+   "has_value": false,
+   "has_citation": false,
+   "withheld": {}
+  },
+  "noncanonical_bls_aggregate": {
+   "outcome": "not_found",
+   "specificity": null,
+   "evidence_class": null,
+   "level": null,
+   "measure": null,
+   "pay_period": null,
+   "abstention_reason": "identifier_not_in_graph",
+   "has_value": false,
+   "has_citation": false,
+   "withheld": {}
+  },
+  "invalid_soc_code": {
+   "outcome": "not_found",
+   "specificity": null,
+   "evidence_class": null,
+   "level": null,
+   "measure": null,
+   "pay_period": null,
+   "abstention_reason": "identifier_not_in_graph",
+   "has_value": false,
+   "has_citation": false,
+   "withheld": {}
+  },
+  "military_occupation_without_wages": {
+   "outcome": "abstain",
+   "specificity": null,
+   "evidence_class": "C4",
+   "level": null,
+   "measure": null,
+   "pay_period": null,
+   "abstention_reason": "no_evidence_for_occupation_in_country",
+   "has_value": false,
+   "has_citation": false,
+   "withheld": {}
+  },
+  "wrong_taxonomy_edition": {
+   "outcome": "not_found",
+   "abstention_reason": "identifier_not_in_graph"
+  },
+  "operational_mode_unqualified_unapproved": {
+   "outcome": "abstain",
+   "abstention_reason": "evidence_exists_but_is_not_operational",
+   "has_value": false,
+   "operational": false,
+   "candidate_presentable": false
+  },
+  "other_country_never_falls_back": {
+   "outcome": "abstain"
+  }
+ },
+ "performance": {
+  "soc_graph_population_s": 1.92,
+  "soc_graph_reimport_s": 1.9,
+  "oews_import_s": 7.53,
+  "oews_reimport_s": 7.01,
+  "records_per_second_import": 2145,
+  "resolve_p50_ms": 3.9,
+  "resolve_p95_ms": 7.2,
+  "resolve_samples": 200
+ },
+ "us_case_assessment": {
+  "cases": [
+   {
+    "case": "pc_compensation_183",
+    "occupation_title": "Data Analyst",
+    "exact_official_soc_label_matches": 0,
+    "resolver_outcome": "not_found",
+    "evidence_class": null,
+    "occupation_status": "not_found",
+    "reason": "title_not_in_graph"
+   },
+   {
+    "case": "pc_compensation_187",
+    "occupation_title": "Software Developer",
+    "exact_official_soc_label_matches": 0,
+    "resolver_outcome": "evidence",
+    "evidence_class": "C1",
+    "occupation_status": "resolved",
+    "reason": null
+   },
+   {
+    "case": "pc_compensation_191",
+    "occupation_title": "Product Manager",
+    "exact_official_soc_label_matches": 0,
+    "resolver_outcome": "not_found",
+    "evidence_class": null,
+    "occupation_status": "not_found",
+    "reason": "title_not_in_graph"
+   },
+   {
+    "case": "pc_compensation_195",
+    "occupation_title": "Human Resources Manager",
+    "exact_official_soc_label_matches": 0,
+    "resolver_outcome": "evidence",
+    "evidence_class": "C1",
+    "occupation_status": "resolved",
+    "reason": null
+   },
+   {
+    "case": "pc_compensation_199",
+    "occupation_title": "Accountant",
+    "exact_official_soc_label_matches": 0,
+    "resolver_outcome": "evidence",
+    "evidence_class": "C1",
+    "occupation_status": "resolved",
+    "reason": null
+   },
+   {
+    "case": "pc_compensation_203",
+    "occupation_title": "Financial Analyst",
+    "exact_official_soc_label_matches": 0,
+    "resolver_outcome": "evidence",
+    "evidence_class": "C1",
+    "occupation_status": "resolved",
+    "reason": null
+   },
+   {
+    "case": "pc_compensation_207",
+    "occupation_title": "Sales Manager",
+    "exact_official_soc_label_matches": 0,
+    "resolver_outcome": "evidence",
+    "evidence_class": "C1",
+    "occupation_status": "resolved",
+    "reason": null
+   }
+  ],
+  "exact_resolutions": 0,
+  "note": "Structural, internal-mode result on the isolated database. It is NOT candidate runtime coverage and the runtime evaluator is unchanged."
+ },
+ "v1_reconciliation": {
+  "v1_records": 1386,
+  "verdicts": {
+   "RECONCILABLE_WITH_OFFICIAL_V2": 1381,
+   "INCOMPATIBLE": 5
+  },
+  "v1_distinct_codes": 1386,
+  "v1_duplicate_rows": 0,
+  "v1_db_modified": false,
+  "layers": {
+   "reconcilable_with_official_v2": 1381,
+   "same_occupation_identity_verified_exact_soc_code": 1381,
+   "qualified_v2_evidence": 0,
+   "runtime_approved": 0
+  },
+  "note": "RECONCILABLE_WITH_OFFICIAL_V2 means the V1 row matches an ingested official V2 record exactly. It is NOT qualification: no V2 record is `qualified` (no human reviewer exists) and nothing is runtime-approved. No V1 row was changed."
+ }
+}

@@ -1,0 +1,169 @@
+{
+ "schema": "p10c-f2a-source-verification/1",
+ "date": "2026-10-18",
+ "preconditions": [
+  {
+   "id": "A",
+   "requirement": "Governance reconciliation merged",
+   "status": "MET",
+   "evidence": "Content of d9ac4c8 is on origin/main via PR #184 (merge 1645c8c); branch docs/p10c-f1-final-governance-reconciliation is identical to main (empty diff). Commit 3ba011c itself is not an ancestor of main but adds nothing main lacks."
+  },
+  {
+   "id": "B",
+   "requirement": "Owner decisions recorded",
+   "status": "MET",
+   "evidence": "Section M of the Package 1 authorization document and the dossier, dated 2026-10-18."
+  },
+  {
+   "id": "C",
+   "requirement": "Exact source names established",
+   "status": "MET",
+   "evidence": "Four files, see acquisition_manifest.json."
+  },
+  {
+   "id": "D",
+   "requirement": "Source editions verified",
+   "status": "MET",
+   "evidence": "OEWS May 2025 (release 15 May 2026), 2018 SOC (May 2025 technical notes)."
+  },
+  {
+   "id": "E",
+   "requirement": "Official file URLs verified",
+   "status": "MET",
+   "evidence": "All four URLs answered HTTP 200 on 2026-10-18 (HEAD only; nothing downloaded)."
+  },
+  {
+   "id": "F",
+   "requirement": "Licensing requirements verified",
+   "status": "MET",
+   "evidence": "BLS copyright and linking pages read: public domain, citation requested, emblem prohibited."
+  },
+  {
+   "id": "G",
+   "requirement": "Commercial-use and redistribution documented",
+   "status": "MET_WITH_NOTE",
+   "evidence": "Public domain permits redistribution; commercial use is not addressed by the page and follows from the public-domain statement for US use; territorial use outside the US unresolved."
+  },
+  {
+   "id": "H",
+   "requirement": "Attribution documented",
+   "status": "MET",
+   "evidence": "Cite BLS as source (requested); no BLS emblem."
+  },
+  {
+   "id": "I",
+   "requirement": "Acquisition method permitted",
+   "status": "MET",
+   "evidence": "Public direct download links on bls.gov; manual single-file fetch with an identifying User-Agent, no scraping."
+  },
+  {
+   "id": "J",
+   "requirement": "OEWS data dictionary available",
+   "status": "MET",
+   "evidence": "2026-10-18 follow-up: the official oesm25nat.zip bundles a 'Field Descriptions' sheet defining every column; see data_dictionary_validation.json."
+  },
+  {
+   "id": "K",
+   "requirement": "File structure and suppression semantics understood",
+   "status": "MET_WITH_NOTE",
+   "evidence": "Symbols *, **, #, ~, O_GROUP levels, aggregation and the annual-only/hourly-only flags are defined by the bundled sheet and checked against the data. Note: reliability thresholds and the 5 OEWS-specific codes need policy before ingestion."
+  },
+  {
+   "id": "L",
+   "requirement": "Source registry permits the workflow",
+   "status": "MET_WITH_NOTE",
+   "evidence": "Transitions performed ONLY in the isolated database through SourceRegistry (discovered > licensing_pending > licensing_verified > approved_for_ingestion, audited, no actor user). The persistent developer registry and src/knowledge_foundation/data/source_registry_baseline.json are unchanged; durable approval there remains an owner/admin action. approved_for_runtime_use was never requested."
+  },
+  {
+   "id": "M",
+   "requirement": "Isolated ingestion environment available",
+   "status": "MET",
+   "evidence": "Isolated staging created outside the repository: /Volumes/Abu Aaliyah/Claude Projects/Interview Practice Studio/ask4mo-source-staging/p10c-f2a/us (raw, extracted, manifests, validation)."
+  },
+  {
+   "id": "N",
+   "requirement": "No protected stores modified",
+   "status": "MET",
+   "evidence": "Nothing modified."
+  },
+  {
+   "id": "O",
+   "requirement": "Mandatory legal review complete or none remains",
+   "status": "MET",
+   "evidence": "No mandatory legal review for the US core."
+  },
+  {
+   "id": "P",
+   "requirement": "Acquisition scope matches Package 1",
+   "status": "MET",
+   "evidence": "Four files only; components 1c and all other sources excluded."
+  }
+ ],
+ "verified_facts": [
+  {
+   "fact": "OEWS May 2025 news release date 15 May 2026",
+   "url": "https://www.bls.gov/news.release/ocwage.nr0.htm",
+   "status": "VERIFIED"
+  },
+  {
+   "fact": "OEWS May 2025 uses the 2018 SOC, about 830 categories in 22 of 23 major groups (major group 55 excluded)",
+   "url": "https://www.bls.gov/oes/2025/may/oes_tec.htm",
+   "status": "VERIFIED"
+  },
+  {
+   "fact": "Annual wages: where wage-rate data are lacking the annual rate is the hourly wage times a typical 2,080-hour year (BLS derivation)",
+   "url": "https://www.bls.gov/oes/2025/may/oes_tec.htm",
+   "status": "VERIFIED"
+  },
+  {
+   "fact": "Industry scope: 2022 NAICS; most agriculture and private households excluded; federal data cover only USPS and the executive branch; state and local government covered",
+   "url": "https://www.bls.gov/oes/2025/may/oes_tec.htm",
+   "status": "VERIFIED"
+  },
+  {
+   "fact": "Geography: nation, states, DC, Guam, Puerto Rico, US Virgin Islands, about 530 metropolitan and nonmetropolitan areas (national file only is authorised)",
+   "url": "https://www.bls.gov/oes/2025/may/oes_tec.htm",
+   "status": "VERIFIED"
+  },
+  {
+   "fact": "May 2025 estimates use a model-based MB3 method with three years of data; employment is the average of May 2025 and November 2024 QCEW; a funding lapse 1 Oct to 12 Nov 2025 caused delay without methodology change",
+   "url": "https://www.bls.gov/oes/2025/may/oes_tec.htm",
+   "status": "VERIFIED"
+  },
+  {
+   "fact": "Top-coded wage footnote: 'equal to or greater than $115.00 per hour or $239,200 per year'; from May 2025 BLS publishes specific estimates for many percentiles that previously carried the footnote",
+   "url": "https://www.bls.gov/oes/oes_ques.htm",
+   "status": "VERIFIED"
+  },
+  {
+   "fact": "Unreleased estimates carry the footnote 'Estimate not released'",
+   "url": "https://www.bls.gov/oes/oes_ques.htm",
+   "status": "VERIFIED"
+  },
+  {
+   "fact": "Public domain except previously copyrighted photographs and illustrations; citation of BLS requested; unauthorised use of the BLS emblem prohibited; commercial use not addressed",
+   "url": "https://www.bls.gov/opub/copyright-information.htm",
+   "status": "VERIFIED"
+  },
+  {
+   "fact": "2018 SOC structure and definitions XLSX files exist at the SOC 2018 page; the page states no reuse terms and links the BLS copyright page",
+   "url": "https://www.bls.gov/soc/2018/home.htm",
+   "status": "VERIFIED"
+  }
+ ],
+ "unresolved": [
+  "OEWS-specific code treatment",
+  "reliability thresholds for qualification",
+  "commercial use outside the United States",
+  "registry lifecycle transition (precondition L) before any ingestion"
+ ],
+ "follow_up": {
+  "date": "2026-10-18",
+  "files_acquired": 4
+ },
+ "follow_up_2": {
+  "date": "2026-10-18",
+  "isolated_ingestion": "completed",
+  "runtime_approval": "NOT_APPROVED"
+ }
+}

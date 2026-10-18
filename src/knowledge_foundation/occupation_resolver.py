@@ -146,6 +146,8 @@ class OccupationResolver:
         for h in hits:
             if req.taxonomy_edition and h["edition_ref"] and req.taxonomy_scheme and h["edition_ref"] != f"{req.taxonomy_scheme}@{req.taxonomy_edition}":
                 continue                                                                # an edition-specific alias is not valid for another (or an unknown) edition
+            if h.get("country_applicability") and (req.country or "").strip().upper() not in {c.upper() for c in h["country_applicability"]}:
+                continue                                                                # a country-scoped alias is never valid for another (or an unstated) country
             out.append({**h, "_folded": folded})
         return out
 
@@ -238,7 +240,8 @@ class OccupationResolver:
             grade = "alias_exact"
         eligible = bool(self._reg and best.get("source_ref") and self._reg.can_serve_as_evidence(best["source_ref"]))
         evidence = {"language": best["language"], "alias_type": best["alias_type"], "qualification_status": best["qualification_status"], "source_ref": best.get("source_ref", ""),
-                    "source_origin": best.get("source_origin"), "evidence_eligible": eligible, "matched_aliases": len(hs)}
+                    "source_origin": best.get("source_origin"), "evidence_eligible": eligible, "matched_aliases": len(hs),
+                    "alias_relationship": best.get("relationship"), "alias_limitation": best.get("limitation")}
         return MultilingualCandidate(key, hs[0]["canonical_label"], grade, evidence)
 
     def _narrow(self, cands: list[MultilingualCandidate], by_occ: dict[str, list[dict]], req: MultilingualRequest) -> list[MultilingualCandidate] | None:

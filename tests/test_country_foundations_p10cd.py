@@ -324,9 +324,12 @@ def test_household_income_is_stored_nowhere_and_never_presented(world):
 
 def test_candidates_reached_through_several_parents_never_resolve_arbitrarily(world):
     r = _resolve(world, title="syn ca multiparent", country="CA")
-    assert r.outcome is CompensationOutcome.CONFLICT and r.value is None and len(r.conflicts) == 2 and r.abstention_reason == "incompatible_measurements_preserved"
+    # Owner rule (P10C-F2A-Q): an ambiguous hierarchy abstains; each parent's statistic is offered only as separately labelled context, never as the occupation's own value.
+    assert r.outcome is CompensationOutcome.ABSTAIN and r.value is None and len(r.contextual_evidence) == 2 and r.abstention_reason == "exact_occupation_measurement_unavailable"
+    assert len({c["broader_occupation_code"] for c in r.contextual_evidence}) == 2
     child = _resolve(world, title="syn ca isco child", country="CA")
-    assert child.value == "52000" and child.occupation_specificity == "broader_group" and child.evidence_class == "C3"
+    assert child.value is None and child.outcome is CompensationOutcome.ABSTAIN and child.occupation_specificity is None
+    assert [(c["evidence_class"], c["value"]) for c in child.contextual_evidence] == [("C3", "52000")] and "NOT the requested occupation" in child.contextual_evidence[0]["warning"]
 
 
 def test_a_noc_edition_is_never_matched_to_another_or_to_unknown(world):

@@ -1551,10 +1551,12 @@
    },
    "internal": true,
    "expect": {
-    "outcome": "evidence",
-    "specificity": "broader_group",
-    "evidence_class": "C2",
-    "value": "62000"
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "exact_occupation_measurement_unavailable",
+    "no_value": true,
+    "contextual_class": "C2",
+    "contextual_warning_contains": "NOT the requested occupation"
    }
   },
   {
@@ -1567,13 +1569,12 @@
    },
    "internal": true,
    "expect": {
-    "outcome": "evidence",
-    "specificity": "broader_group",
-    "evidence_class": "C3",
-    "value": "52000",
-    "currency": "CAD",
-    "pay_period": "annual",
-    "limitation_contains": "international harmonised"
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "exact_occupation_measurement_unavailable",
+    "no_value": true,
+    "contextual_class": "C3",
+    "contextual_warning_contains": "NOT the requested occupation"
    }
   },
   {
@@ -1616,7 +1617,11 @@
    },
    "internal": true,
    "expect": {
-    "outcome": "conflict"
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "exact_occupation_measurement_unavailable",
+    "no_value": true,
+    "contextual_count": 2
    }
   },
   {

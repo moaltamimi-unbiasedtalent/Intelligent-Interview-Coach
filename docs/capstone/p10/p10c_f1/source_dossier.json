@@ -125,9 +125,9 @@
     "D-13"
    ],
    "package": 1,
-   "acquisition_authorized": false,
+   "acquisition_authorized": true,
    "runtime_authorized": false,
-   "approval_status": "NOT_APPROVED",
+   "approval_status": "ACQUISITION_AUTHORIZED_RUNTIME_NOT_APPROVED",
    "registry_state": {
     "approval_status": "NOT_APPROVED",
     "lifecycle_state": "LICENSING_PENDING"
@@ -226,9 +226,9 @@
     "D-13"
    ],
    "package": 1,
-   "acquisition_authorized": false,
+   "acquisition_authorized": true,
    "runtime_authorized": false,
-   "approval_status": "NOT_APPROVED",
+   "approval_status": "ACQUISITION_AUTHORIZED_RUNTIME_NOT_APPROVED",
    "registry_state": {
     "approval_status": "NOT_APPROVED",
     "lifecycle_state": "SOURCE_IDENTIFIED"
@@ -4251,7 +4251,7 @@
     "Wages are straight-time GROSS pay exclusive of premium pay; included: base rates, cost-of-living allowances, guaranteed pay, hazardous-duty pay, incentive pay, tips; excluded: overtime, severance, shift differentials, nonproduction bonuses, employer-paid benefits (May 2024 notes)."
    ],
    "independently_approvable": true,
-   "approved": false,
+   "approved": true,
    "legal_review_sources": [],
    "ready_for_owner_consideration": true,
    "scope": {
@@ -4266,6 +4266,17 @@
      "BLS OOH and projections (separate entry, not in package 1)",
      "state and metropolitan OEWS files (national file only unless regional use is separately approved)"
     ]
+   },
+   "owner_authorization": {
+    "date": "2026-10-18",
+    "basis": "Explicit owner instruction in the P10C-F2A specification (chat message), section 0 and 3; no signature or external legal approval is claimed.",
+    "components": {
+     "1a": "APPROVED",
+     "1b": "APPROVED",
+     "1c": "DEFERRED"
+    },
+    "scope": "acquisition, isolated non-production ingestion, validation and qualification only",
+    "acquisition_state": "NOT_ACQUIRED"
    }
   },
   {
@@ -4649,7 +4660,13 @@
    "question": "per-source licence verification and approvals (ingestion then runtime)",
    "classification": "blocks_acquisition",
    "note": "Every package.",
-   "owner_decision": null,
+   "owner_decision": {
+    "decision": "APPROVED",
+    "scope": "Acquisition and isolated non-production ingestion of the named Package 1 US sources only; candidate-facing runtime use needs a separate approval.",
+    "date": "2026-10-18",
+    "basis": "Explicit owner instruction in the P10C-F2A specification (chat message), section 0 and 3; no signature or external legal approval is claimed.",
+    "runtime_restriction": "No candidate-facing, production or Compensation V2 activation is authorised."
+   },
    "origin": "existing"
   },
   {
@@ -4689,7 +4706,13 @@
    "question": "five-category relationship qualification",
    "classification": "blocks_acquisition",
    "note": "Blocks crosswalk import.",
-   "owner_decision": null,
+   "owner_decision": {
+    "decision": "DEFERRED",
+    "scope": "Do not operationalise optional international crosswalk relationships.",
+    "date": "2026-10-18",
+    "basis": "Explicit owner instruction in the P10C-F2A specification (chat message), section 0 and 3; no signature or external legal approval is claimed.",
+    "runtime_restriction": "No candidate-facing, production or Compensation V2 activation is authorised."
+   },
    "origin": "existing"
   },
   {
@@ -4713,7 +4736,13 @@
    "question": "official source-edition selection",
    "classification": "blocks_acquisition",
    "note": "Every package.",
-   "owner_decision": null,
+   "owner_decision": {
+    "decision": "APPROVED",
+    "scope": "Editions: US SOC 2018; BLS OEWS May 2025.",
+    "date": "2026-10-18",
+    "basis": "Explicit owner instruction in the P10C-F2A specification (chat message), section 0 and 3; no signature or external legal approval is claimed.",
+    "runtime_restriction": "No candidate-facing, production or Compensation V2 activation is authorised."
+   },
    "origin": "existing"
   },
   {
@@ -4721,7 +4750,13 @@
    "question": "taxonomy acquisition (SOC, UK SOC, national taxonomies, crosswalks)",
    "classification": "blocks_acquisition",
    "note": "Packages 1, 2, 5, 6, 7.",
-   "owner_decision": null,
+   "owner_decision": {
+    "decision": "APPROVED",
+    "scope": "Acquisition restricted to the named US files: soc_structure_2018.xlsx, soc_2018_definitions.xlsx, oesm25nat.zip, the May 2025 OEWS occupation-definitions file.",
+    "date": "2026-10-18",
+    "basis": "Explicit owner instruction in the P10C-F2A specification (chat message), section 0 and 3; no signature or external legal approval is claimed.",
+    "runtime_restriction": "No candidate-facing, production or Compensation V2 activation is authorised."
+   },
    "origin": "existing"
   },
   {
@@ -4737,7 +4772,13 @@
    "question": "earnings concept/population/method vocabularies",
    "classification": "blocks_acquisition",
    "note": "Compensation sources in packages 4, 5, 6.",
-   "owner_decision": null,
+   "owner_decision": {
+    "decision": "APPROVED",
+    "scope": "Controlled vocabularies for earnings concept, employment population, statistical method and evidence collection method; preserve each source's published definitions.",
+    "date": "2026-10-18",
+    "basis": "Explicit owner instruction in the P10C-F2A specification (chat message), section 0 and 3; no signature or external legal approval is claimed.",
+    "runtime_restriction": "No candidate-facing, production or Compensation V2 activation is authorised."
+   },
    "origin": "existing"
   },
   {
@@ -4777,7 +4818,13 @@
    "question": "owner position on the crosswalk gap: no official SOC-to-ISCO-08 or NOC-to-ISCO-08 crosswalk found; accept O*NET/ESCO-linked routes or wait",
    "classification": "blocks_acquisition",
    "note": "Proposed in this wave; affects packages 1 and 5.",
-   "owner_decision": null,
+   "owner_decision": {
+    "decision": "DEFERRED",
+    "scope": "Do not acquire O*NET/ESCO crosswalks; do not infer SOC-to-ISCO equivalence.",
+    "date": "2026-10-18",
+    "basis": "Explicit owner instruction in the P10C-F2A specification (chat message), section 0 and 3; no signature or external legal approval is claimed.",
+    "runtime_restriction": "No candidate-facing, production or Compensation V2 activation is authorised."
+   },
    "origin": "proposed_in_p10c_f1"
   },
   {
@@ -4878,5 +4925,110 @@
    "dependency": "ambiguous titles: they stay insufficient unless the user supplies context; ambiguity is not reclassified as success"
   },
   "gate": "95% unchanged; current 93.7% BELOW GATE"
- }
+ },
+ "owner_authorizations": [
+  {
+   "id": "P10C-F2A/package-1",
+   "date": "2026-10-18",
+   "decisions": [
+    "D-04",
+    "D-09",
+    "D-12",
+    "D-13",
+    "D-15",
+    "D-20"
+   ],
+   "basis": "Explicit owner instruction in the P10C-F2A specification (chat message), section 0 and 3; no signature or external legal approval is claimed."
+  }
+ ],
+ "owner_policies": [
+  {
+   "id": "POLICY-A",
+   "date": "2026-10-18",
+   "title": "BLS-specific aggregates",
+   "decision": "21-1018, 25-2052, 25-9045, 51-2028 and 53-1047 are not canonical SOC 2018 occupations: preserved as source-native aggregates, no canonical SOC nodes, no equivalence mappings, never used for exact SOC matching; stored as evidence only if the schema can represent their non-canonical nature without misrepresentation, otherwise quarantined with the schema limitation recorded.",
+   "implementation": "QUARANTINED: the V2 record and taxonomy vocabulary have no non-canonical code representation (a new taxonomy scheme needs a schema change)",
+   "basis": "Explicit owner instruction in the P10C-F2A continuation specification, section 2 (chat message, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-B",
+   "date": "2026-10-18",
+   "title": "Duplicate presentations",
+   "decision": "Seven occupations appear as both broad and detailed with identical observations: preserve the source classification, do not double count, use stable source record identity, do not delete legitimately distinct records, verify duplication semantics first.",
+   "implementation": "The BLS dictionary states aggregated broad occupations appear twice; all seven pairs were verified identical on every field except O_GROUP and merged to one observation per code with both presentations and source rows kept in provenance.",
+   "basis": "Explicit owner instruction in the P10C-F2A continuation specification, section 2 (chat message, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-C",
+   "date": "2026-10-18",
+   "title": "Reliability",
+   "decision": "Preserve BLS relative standard errors and uncertainty metadata; invent no RSE cutoff; source authority is not proof of precision; follow existing approved reliability rules; propose and do not apply any new qualification threshold.",
+   "implementation": "EMP_PRSE, MEAN_PRSE and TOT_EMP are stored in every record's provenance; every record stays qualification_status=unqualified; no cutoff exists or is proposed as applied.",
+   "basis": "Explicit owner instruction in the P10C-F2A continuation specification, section 2 (chat message, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-D",
+   "date": "2026-10-18",
+   "title": "Commercial licensing",
+   "decision": "Ingestion approval is not commercial deployment permission; commercial runtime use outside the United States is unestablished and is recorded as a runtime blocker.",
+   "implementation": "Recorded as runtime blocker RB-LIC-1 in the F2A acquisition document; no runtime approval was requested.",
+   "basis": "Explicit owner instruction in the P10C-F2A continuation specification, section 2 (chat message, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-E",
+   "date": "2026-10-18",
+   "title": "D-08 curated alias qualification framework",
+   "decision": "The owner approves developing a curated alias qualification framework to improve job-market title resolution without inventing equivalence; reuse the existing resolver; no parallel resolver; aliases carry text, language, country applicability, taxonomy, code, edition, relationship type, evidence source, qualification status, approval provenance and ambiguity handling.",
+   "implementation": "Existing AliasStore and OccupationResolver extended minimally (country applicability filter, alias revocation); proposals come only from the official-SOC-title containment rule; aliases stay engineering_checked at most because no human reviewer exists. D-08 (who curates and reviews) remains open.",
+   "basis": "Explicit owner instruction in the P10C-F2A-Q specification (chat message, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-F",
+   "date": "2026-10-18",
+   "title": "Broader-group rule",
+   "decision": "When a detailed occupation lacks the requested wage measurement, a parent group's wage is never substituted as the occupation's own value; the default is abstention; broader statistics may appear only as clearly labelled contextual evidence.",
+   "implementation": "CompensationResolver now abstains (reason exact_occupation_measurement_unavailable) and returns broader evidence only in contextual_evidence with code, label, class, source, period, measure and a non-equivalence warning. Isolated non-production only; candidate runtime unchanged.",
+   "basis": "Explicit owner instruction in the P10C-F2A-Q specification (chat message, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-G",
+   "date": "2026-10-18",
+   "title": "Reliability direction",
+   "decision": "No arbitrary universal RSE cutoff; preserve all BLS relative standard errors; statistical uncertainty, source authority, occupation specificity, geographic specificity, completeness and freshness are separate dimensions; where no threshold exists none is fabricated and no unrelated record is blocked.",
+   "implementation": "RSE preserved per record and described by its observed distribution; engineering review makes no precision claim; no record needed a new material reliability judgment under these rules.",
+   "basis": "Explicit owner instruction in the P10C-F2A-Q specification (chat message, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-H",
+   "date": "2026-10-18",
+   "title": "D-08 alias review and qualification methodology",
+   "decision": "APPROVED: a controlled occupation alias review and qualification methodology. This does not approve any individual alias.",
+   "implementation": "Engineering evidence review of the five proposals (3 approve-recommended, 2 conditional) and two unresolved titles; all recommendations only; 0 aliases qualified.",
+   "basis": "Explicit owner instruction in the P10C-F2A-R specification (chat messages, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-I",
+   "date": "2026-10-18",
+   "title": "Methodology-based measurement qualification",
+   "decision": "APPROVED: methodology-based qualification without an arbitrary universal RSE cutoff; published RSE preserved; a missing RSE is documented but does not by itself invalidate a measurement when the publisher gives no RSE for that statistic.",
+   "implementation": "Median and percentile records carry the explicit statement that BLS publishes no RSE for them and that the claim excludes precision; mean records carry MEAN_PRSE; engineering checks passing does not qualify any record.",
+   "basis": "Explicit owner instruction in the P10C-F2A-R specification (chat messages, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-J",
+   "date": "2026-10-18",
+   "title": "Human reviewer workflow and controlled batch qualification",
+   "decision": "APPROVED: an auditable reviewer appointment and qualification workflow where only a named, authenticated human may exercise reviewer authority; controlled batch qualification where governance permits (defined scope, reproducible validation, exception inventory, explicit reviewer decision, audit timestamp, reviewer identity, per-record traceability, revocation or correction); batches are never approved automatically.",
+   "implementation": "QualificationReviewService (reviewer authority from the existing platform role presets, digest-bound batch decisions, same-transaction audit, per-record history, revocation); no route exposed, no reviewer appointed, no decision made.",
+   "basis": "Explicit owner instruction in the P10C-F2A-R specification (chat messages, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-K",
+   "date": "2026-10-18",
+   "title": "P10C-F2A capstone engineering closure",
+   "decision": "P10C-F2A is accepted for capstone engineering closure (not production readiness and not approval of operational evidence). Deferred to after the capstone submission: human measurement and alias qualification, reviewer appointment, new privileged reviewer endpoints, persistent-registry promotion, commercial runtime licensing clearance (RB-LIC-1), Compensation V2 activation. Product coverage 386/412 (93.7%) is accepted as the capstone engineering baseline: status BELOW_GATE, disposition ACCEPTED_FOR_CAPSTONE_ENGINEERING_SCOPE, remediation POST_SUBMISSION; the 95% gate is not weakened.",
+   "implementation": "Documentation classification only; no enum or registry state added; backlog in P10C_F2A_POST_SUBMISSION_BACKLOG.md.",
+   "basis": "Explicit owner instruction in the P10C-F2A closure specification (chat message, 2026-10-18); no signature or external legal approval is claimed."
+  }
+ ]
 }

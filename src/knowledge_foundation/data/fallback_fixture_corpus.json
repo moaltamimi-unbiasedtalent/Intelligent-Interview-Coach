@@ -2227,16 +2227,12 @@
    },
    "internal": true,
    "expect": {
-    "outcome": "evidence",
-    "specificity": "broader_group",
-    "evidence_class": "C2",
-    "value": "600",
-    "fallback_stage": "verified_broader_group",
-    "weak_factors": [
-     "occupation_not_exact",
-     "crosswalk_not_independently_reviewed"
-    ],
-    "state": "LIMITED_EVIDENCE"
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "exact_occupation_measurement_unavailable",
+    "no_value": true,
+    "contextual_class": "C2",
+    "contextual_warning_contains": "NOT the requested occupation"
    }
   },
   {

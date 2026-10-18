@@ -1580,10 +1580,12 @@
    },
    "internal": true,
    "expect": {
-    "outcome": "evidence",
-    "specificity": "broader_group",
-    "evidence_class": "C2",
-    "limitation_contains": "BROADER"
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "exact_occupation_measurement_unavailable",
+    "no_value": true,
+    "contextual_class": "C2",
+    "contextual_warning_contains": "NOT the requested occupation"
    }
   },
   {

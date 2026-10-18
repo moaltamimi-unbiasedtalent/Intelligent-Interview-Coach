@@ -1,0 +1,1286 @@
+{
+ "schema": "p10c-f2aq-qualification-report/1",
+ "run_at": "2026-10-18T14:25:31.543651+00:00",
+ "staged_files": {
+  "us_soc_2018_structure": "OK",
+  "us_soc_2018_definitions": "OK",
+  "us_oews_may2025_national": "OK",
+  "us_oews_may2025_occupation_definitions": "OK"
+ },
+ "dry_run": false,
+ "alembic": {
+  "current": "0038_compensation_concepts",
+  "heads": [
+   "0038_compensation_concepts"
+  ]
+ },
+ "registry": {
+  "us_soc_2018": {
+   "approval_status": "approved_for_ingestion",
+   "licence_status": "verified"
+  },
+  "bls_oews": {
+   "approval_status": "approved_for_ingestion",
+   "licence_status": "verified"
+  }
+ },
+ "reconciliation": {
+  "database": {
+   "graph_nodes": 1447,
+   "graph_relationships": 1424,
+   "records": 16140,
+   "distinct_occupations": 1388,
+   "distinct_native_codes": 1388,
+   "by_class": {
+    "C1": 9450,
+    "C2": 6690
+   },
+   "by_level": {
+    "detailed": 9450,
+    "broad": 6690
+   },
+   "by_pay_period": {
+    "annual": 8286,
+    "hourly": 7854
+   }
+  },
+  "source_rows": {
+   "rows": 1401,
+   "by_o_group": {
+    "total": 1,
+    "major": 22,
+    "minor": 94,
+    "broad": 454,
+    "detailed": 830
+   },
+   "total_rows": 1,
+   "quarantined": [
+    "21-1018",
+    "25-2052",
+    "25-9045",
+    "51-2028",
+    "53-1047"
+   ],
+   "duplicate_pairs": [
+    "13-1020",
+    "13-2020",
+    "29-2010",
+    "31-1120",
+    "39-7010",
+    "47-4090",
+    "51-2090"
+   ],
+   "occupations_after_dedup": 1388,
+   "arithmetic": "1401 rows - 1 total - 5 quarantined = 1395 canonical rows; minus 7 duplicate second presentations = 1388 occupations"
+  },
+  "checks": {
+   "graph_nodes": {
+    "database": 1447,
+    "expected_from_files": 1447,
+    "match": true
+   },
+   "graph_relationships": {
+    "database": 1424,
+    "expected_from_files": 1424,
+    "match": true
+   },
+   "records": {
+    "database": 16140,
+    "expected_from_files": 16140,
+    "match": true
+   },
+   "distinct_occupations": {
+    "database": 1388,
+    "expected_from_files": 1388,
+    "match": true
+   },
+   "class_split_matches_levels": {
+    "C1_equals_detailed_records": true,
+    "C2_equals_broad_records": true
+   }
+  },
+  "all_match": true
+ },
+ "annual_only": {
+  "annual_true_rows": 81,
+  "by_o_group": {
+   "detailed": 58,
+   "minor": 4,
+   "broad": 19
+  },
+  "duplicate_presentations_among_them": 0,
+  "canonical_annual_only_occupations": 79,
+  "excluded_rows": [
+   {
+    "source_row": 412,
+    "occ_code": "25-2052",
+    "o_group": "detailed",
+    "in_soc_2018": false,
+    "quarantined_policy_a": true,
+    "counted_as_canonical_annual_only_occupation": false
+   },
+   {
+    "source_row": 443,
+    "occ_code": "25-9045",
+    "o_group": "detailed",
+    "in_soc_2018": false,
+    "quarantined_policy_a": true,
+    "counted_as_canonical_annual_only_occupation": false
+   }
+  ],
+  "rows": [
+   {
+    "source_row": 45,
+    "occ_code": "11-9032",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 350,
+    "occ_code": "25-1000",
+    "o_group": "minor",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 351,
+    "occ_code": "25-1010",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 352,
+    "occ_code": "25-1011",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 353,
+    "occ_code": "25-1020",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 354,
+    "occ_code": "25-1021",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 355,
+    "occ_code": "25-1022",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 356,
+    "occ_code": "25-1030",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 357,
+    "occ_code": "25-1031",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 358,
+    "occ_code": "25-1032",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 359,
+    "occ_code": "25-1040",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 360,
+    "occ_code": "25-1041",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 361,
+    "occ_code": "25-1042",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 362,
+    "occ_code": "25-1043",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 363,
+    "occ_code": "25-1050",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 364,
+    "occ_code": "25-1051",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 365,
+    "occ_code": "25-1052",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 366,
+    "occ_code": "25-1053",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 367,
+    "occ_code": "25-1054",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 368,
+    "occ_code": "25-1060",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 369,
+    "occ_code": "25-1061",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 370,
+    "occ_code": "25-1062",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 371,
+    "occ_code": "25-1063",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 372,
+    "occ_code": "25-1064",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 373,
+    "occ_code": "25-1065",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 374,
+    "occ_code": "25-1066",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 375,
+    "occ_code": "25-1067",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 376,
+    "occ_code": "25-1069",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 377,
+    "occ_code": "25-1070",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 378,
+    "occ_code": "25-1071",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 379,
+    "occ_code": "25-1072",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 380,
+    "occ_code": "25-1080",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 381,
+    "occ_code": "25-1081",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 382,
+    "occ_code": "25-1082",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 383,
+    "occ_code": "25-1110",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 384,
+    "occ_code": "25-1111",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 385,
+    "occ_code": "25-1112",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 386,
+    "occ_code": "25-1113",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 387,
+    "occ_code": "25-1120",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 388,
+    "occ_code": "25-1121",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 389,
+    "occ_code": "25-1122",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 390,
+    "occ_code": "25-1123",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 391,
+    "occ_code": "25-1124",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 392,
+    "occ_code": "25-1125",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 393,
+    "occ_code": "25-1126",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 394,
+    "occ_code": "25-1190",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 395,
+    "occ_code": "25-1192",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 396,
+    "occ_code": "25-1193",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 398,
+    "occ_code": "25-1199",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 399,
+    "occ_code": "25-2000",
+    "o_group": "minor",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 402,
+    "occ_code": "25-2012",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 403,
+    "occ_code": "25-2020",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 404,
+    "occ_code": "25-2021",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 405,
+    "occ_code": "25-2022",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 406,
+    "occ_code": "25-2023",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 407,
+    "occ_code": "25-2030",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 408,
+    "occ_code": "25-2031",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 409,
+    "occ_code": "25-2032",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 410,
+    "occ_code": "25-2050",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 411,
+    "occ_code": "25-2051",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 412,
+    "occ_code": "25-2052",
+    "o_group": "detailed",
+    "in_soc_2018": false,
+    "quarantined_policy_a": true,
+    "counted_as_canonical_annual_only_occupation": false
+   },
+   {
+    "source_row": 413,
+    "occ_code": "25-2057",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 414,
+    "occ_code": "25-2058",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 415,
+    "occ_code": "25-2059",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 425,
+    "occ_code": "25-3090",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 426,
+    "occ_code": "25-3099",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 436,
+    "occ_code": "25-9000",
+    "o_group": "minor",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 441,
+    "occ_code": "25-9040",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 442,
+    "occ_code": "25-9044",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 443,
+    "occ_code": "25-9045",
+    "o_group": "detailed",
+    "in_soc_2018": false,
+    "quarantined_policy_a": true,
+    "counted_as_canonical_annual_only_occupation": false
+   },
+   {
+    "source_row": 467,
+    "occ_code": "27-2020",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 468,
+    "occ_code": "27-2021",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 469,
+    "occ_code": "27-2022",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 470,
+    "occ_code": "27-2023",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 606,
+    "occ_code": "29-9091",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 1317,
+    "occ_code": "53-2000",
+    "o_group": "minor",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 1318,
+    "occ_code": "53-2010",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 1319,
+    "occ_code": "53-2011",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 1320,
+    "occ_code": "53-2012",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 1324,
+    "occ_code": "53-2030",
+    "o_group": "broad",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   },
+   {
+    "source_row": 1325,
+    "occ_code": "53-2031",
+    "o_group": "detailed",
+    "in_soc_2018": true,
+    "quarantined_policy_a": false,
+    "counted_as_canonical_annual_only_occupation": true
+   }
+  ],
+  "explanation": "the earlier acquisition count (81) is source ROWS with ANNUAL=TRUE; the ingestion count (79) is canonical OCCUPATIONS; the difference is exactly the rows of the two quarantined BLS-specific aggregates listed in excluded_rows"
+ },
+ "rse": {
+  "occupations": 1388,
+  "missing_or_nonnumeric": {},
+  "published_for_statistics": [
+   "employment (EMP_PRSE)",
+   "mean wage (MEAN_PRSE)"
+  ],
+  "not_published_for": [
+   "median wage",
+   "wage percentiles"
+  ],
+  "note": "BLS publishes no relative standard error for the median or the percentiles: no precision statement about them is made.",
+  "emp_prse": {
+   "n": 1388,
+   "min": 0.0,
+   "p25": 0.975,
+   "median": 1.8,
+   "p75": 3.7,
+   "p90": 6.4,
+   "p99": 16.926,
+   "max": 35.0,
+   "descriptive_counts_above": {
+    "10%": 53,
+    "25%": 7,
+    "50%": 0
+   }
+  },
+  "mean_prse": {
+   "n": 1388,
+   "min": 0.0,
+   "p25": 0.4,
+   "median": 0.7,
+   "p75": 1.2,
+   "p90": 2.2,
+   "p99": 8.4,
+   "max": 15.9,
+   "descriptive_counts_above": {
+    "10%": 7,
+    "25%": 0,
+    "50%": 0
+   }
+  }
+ },
+ "duplicate_and_idempotency": {
+  "duplicate_presentations": {
+   "13-1020": [
+    "broad",
+    "detailed"
+   ],
+   "13-2020": [
+    "broad",
+    "detailed"
+   ],
+   "29-2010": [
+    "broad",
+    "detailed"
+   ],
+   "31-1120": [
+    "broad",
+    "detailed"
+   ],
+   "39-7010": [
+    "broad",
+    "detailed"
+   ],
+   "47-4090": [
+    "broad",
+    "detailed"
+   ],
+   "51-2090": [
+    "broad",
+    "detailed"
+   ]
+  },
+  "reimport": {
+   "batch_key": "cib_fe7f0931ed0c01ba5bd92d3c21bf813acd112ed6",
+   "mode": "production",
+   "source_ref": "bls_oews",
+   "source_edition": "May 2025",
+   "rows": 16140,
+   "added": 0,
+   "existing": 16140,
+   "rejected": 0,
+   "rejections": {},
+   "already_imported": true
+  },
+  "records_per_duplicate_code_and_measure_max": 1,
+  "records_for_duplicate_codes": 84
+ },
+ "quarantined_aggregates": {
+  "21-1018": {
+   "title": "Substance Abuse, Behavioral Disorder, and Mental Health Counselors",
+   "o_group": "detailed",
+   "row": 314,
+   "reason": "bls_specific_aggregate_not_in_soc_2018"
+  },
+  "25-2052": {
+   "title": "Special Education Teachers, Kindergarten and Elementary School",
+   "o_group": "detailed",
+   "row": 412,
+   "reason": "bls_specific_aggregate_not_in_soc_2018"
+  },
+  "25-9045": {
+   "title": "Teaching Assistants, Except Postsecondary",
+   "o_group": "detailed",
+   "row": 443,
+   "reason": "bls_specific_aggregate_not_in_soc_2018"
+  },
+  "51-2028": {
+   "title": "Electrical, Electronic, and Electromechanical Assemblers, Except Coil Winders, Tapers, and Finishers",
+   "o_group": "detailed",
+   "row": 1154,
+   "reason": "bls_specific_aggregate_not_in_soc_2018"
+  },
+  "53-1047": {
+   "title": "First-Line Supervisors of Transportation and Material Moving Workers, Except Aircraft Cargo Handling Supervisors",
+   "o_group": "detailed",
+   "row": 1316,
+   "reason": "bls_specific_aggregate_not_in_soc_2018"
+  }
+ },
+ "review": {
+  "records_reviewed": 16140,
+  "outcomes": {
+   "ENGINEERING_CHECKED": 16140
+  },
+  "reasons": {
+   "all_engineering_rules_hold": 16140,
+   "mean_rse_preserved_no_precision_claim": 2690,
+   "no_precision_claim_made": 13450
+  },
+  "moved_to_engineering_checked_this_run": 0,
+  "state_counts_after": {
+   "engineering_checked": 16140
+  },
+  "qualified": 0,
+  "apply_seconds": 0.0,
+  "reviewer": "none: no human reviewer identity exists in the isolated environment; `qualified` was not requested and cannot be set without one",
+  "meaning": "ENGINEERING_CHECKED = every deterministic rule holds (identity, definition, provenance, integrity); it makes no precision claim and is not operational evidence"
+ },
+ "aliases": {
+  "proposals": [
+   {
+    "case": "pc_compensation_183",
+    "market_title": "Data Analyst",
+    "language": "en",
+    "country_applicability": [
+     "US"
+    ],
+    "taxonomy": "soc",
+    "taxonomy_edition": "2018",
+    "evidence_source": "us_soc_2018 (official 2018 SOC structure and definitions, hashes in the acquisition manifest)",
+    "rule": "official_detailed_title_contains_all_words",
+    "decision": "NO_AUTHORITATIVE_EVIDENCE",
+    "candidates": [],
+    "approval": "none: abstention preserved",
+    "reviewer_note": "no official SOC 2018 detailed title contains this market title; an alias would need evidence from an approved source (for example a separately approved occupational-title dataset)"
+   },
+   {
+    "case": "pc_compensation_187",
+    "market_title": "Software Developer",
+    "language": "en",
+    "country_applicability": [
+     "US"
+    ],
+    "taxonomy": "soc",
+    "taxonomy_edition": "2018",
+    "evidence_source": "us_soc_2018 (official 2018 SOC structure and definitions, hashes in the acquisition manifest)",
+    "rule": "official_detailed_title_contains_all_words",
+    "decision": "PROPOSED_SINGLE",
+    "target_code": "15-1252",
+    "target_label": "Software Developers",
+    "relationship": "grammatical_number_variant_of_official_title",
+    "definition_excerpt": "Research, design, and develop computer and network software or specialized utility programs. Analyze user needs and develop software solutions, applying principles and techniques of computer science, engineering, and mathematical analysis. ",
+    "limitation": null,
+    "qualification_status_target": "engineering_checked",
+    "approval": "PENDING_HUMAN_REVIEW (no reviewer exists in the isolated environment)"
+   },
+   {
+    "case": "pc_compensation_191",
+    "market_title": "Product Manager",
+    "language": "en",
+    "country_applicability": [
+     "US"
+    ],
+    "taxonomy": "soc",
+    "taxonomy_edition": "2018",
+    "evidence_source": "us_soc_2018 (official 2018 SOC structure and definitions, hashes in the acquisition manifest)",
+    "rule": "official_detailed_title_contains_all_words",
+    "decision": "NO_AUTHORITATIVE_EVIDENCE",
+    "candidates": [],
+    "approval": "none: abstention preserved",
+    "reviewer_note": "no official SOC 2018 detailed title contains this market title; an alias would need evidence from an approved source (for example a separately approved occupational-title dataset)"
+   },
+   {
+    "case": "pc_compensation_195",
+    "market_title": "Human Resources Manager",
+    "language": "en",
+    "country_applicability": [
+     "US"
+    ],
+    "taxonomy": "soc",
+    "taxonomy_edition": "2018",
+    "evidence_source": "us_soc_2018 (official 2018 SOC structure and definitions, hashes in the acquisition manifest)",
+    "rule": "official_detailed_title_contains_all_words",
+    "decision": "PROPOSED_SINGLE",
+    "target_code": "11-3121",
+    "target_label": "Human Resources Managers",
+    "relationship": "grammatical_number_variant_of_official_title",
+    "definition_excerpt": "Plan, direct, or coordinate human resources activities and staff of an organization. Excludes managers who primarily focus on compensation and benefits (11-3111) and training and development (11-3131).",
+    "limitation": null,
+    "qualification_status_target": "engineering_checked",
+    "approval": "PENDING_HUMAN_REVIEW (no reviewer exists in the isolated environment)"
+   },
+   {
+    "case": "pc_compensation_199",
+    "market_title": "Accountant",
+    "language": "en",
+    "country_applicability": [
+     "US"
+    ],
+    "taxonomy": "soc",
+    "taxonomy_edition": "2018",
+    "evidence_source": "us_soc_2018 (official 2018 SOC structure and definitions, hashes in the acquisition manifest)",
+    "rule": "official_detailed_title_contains_all_words",
+    "decision": "PROPOSED_SINGLE",
+    "target_code": "13-2011",
+    "target_label": "Accountants and Auditors",
+    "relationship": "market_title_is_a_component_of_the_official_title",
+    "definition_excerpt": "Examine, analyze, and interpret accounting records to prepare financial statements, give advice, or audit and evaluate statements prepared by others. Install or advise on systems of recording costs or other financial and budgetary data. Exc",
+    "limitation": "the official title is broader than the market title; a reviewer must confirm that the occupation scope is acceptable",
+    "qualification_status_target": "engineering_checked",
+    "approval": "PENDING_HUMAN_REVIEW (no reviewer exists in the isolated environment)"
+   },
+   {
+    "case": "pc_compensation_203",
+    "market_title": "Financial Analyst",
+    "language": "en",
+    "country_applicability": [
+     "US"
+    ],
+    "taxonomy": "soc",
+    "taxonomy_edition": "2018",
+    "evidence_source": "us_soc_2018 (official 2018 SOC structure and definitions, hashes in the acquisition manifest)",
+    "rule": "official_detailed_title_contains_all_words",
+    "decision": "PROPOSED_SINGLE",
+    "target_code": "13-2051",
+    "target_label": "Financial and Investment Analysts",
+    "relationship": "market_title_is_a_component_of_the_official_title",
+    "definition_excerpt": "Conduct quantitative analyses of information involving investment programs or financial data of public or private institutions, including valuation of businesses. Excludes \u201cBudget Analysts\u201d (13-2031), \u201cFinancial Risk Specialists\u201d (13-2054),",
+    "limitation": "the official title is broader than the market title; a reviewer must confirm that the occupation scope is acceptable",
+    "qualification_status_target": "engineering_checked",
+    "approval": "PENDING_HUMAN_REVIEW (no reviewer exists in the isolated environment)"
+   },
+   {
+    "case": "pc_compensation_207",
+    "market_title": "Sales Manager",
+    "language": "en",
+    "country_applicability": [
+     "US"
+    ],
+    "taxonomy": "soc",
+    "taxonomy_edition": "2018",
+    "evidence_source": "us_soc_2018 (official 2018 SOC structure and definitions, hashes in the acquisition manifest)",
+    "rule": "official_detailed_title_contains_all_words",
+    "decision": "PROPOSED_SINGLE",
+    "target_code": "11-2022",
+    "target_label": "Sales Managers",
+    "relationship": "grammatical_number_variant_of_official_title",
+    "definition_excerpt": "Plan, direct, or coordinate the actual distribution or movement of a product or service to the customer. Coordinate sales distribution by establishing sales territories, quotas, and goals and establish training programs for sales representa",
+    "limitation": null,
+    "qualification_status_target": "engineering_checked",
+    "approval": "PENDING_HUMAN_REVIEW (no reviewer exists in the isolated environment)"
+   }
+  ],
+  "loaded": [
+   {
+    "alias_id": 1,
+    "text": "Software Developer",
+    "target": "15-1252"
+   },
+   {
+    "alias_id": 2,
+    "text": "Human Resources Manager",
+    "target": "11-3121"
+   },
+   {
+    "alias_id": 3,
+    "text": "Accountant",
+    "target": "13-2011"
+   },
+   {
+    "alias_id": 4,
+    "text": "Financial Analyst",
+    "target": "13-2051"
+   },
+   {
+    "alias_id": 5,
+    "text": "Sales Manager",
+    "target": "11-2022"
+   }
+  ],
+  "alias_qualification_states": {
+   "engineering_checked": 5
+  },
+  "qualified_aliases": 0,
+  "reviewer": "none: alias qualification (D-08) needs a named human reviewer; every alias stays engineering_checked at most"
+ },
+ "resolution": [
+  {
+   "case": "pc_compensation_183",
+   "title": "Data Analyst",
+   "decision": "NO_AUTHORITATIVE_EVIDENCE",
+   "occupation_status": "not_found",
+   "resolved_code": null,
+   "outcome": "not_found",
+   "evidence_class": null,
+   "abstention_reason": "title_not_in_graph",
+   "operational": false,
+   "candidate_presentable": false,
+   "has_value": false,
+   "reasons_hint": null
+  },
+  {
+   "case": "pc_compensation_187",
+   "title": "Software Developer",
+   "decision": "PROPOSED_SINGLE",
+   "occupation_status": "resolved",
+   "resolved_code": "15-1252",
+   "outcome": "evidence",
+   "evidence_class": "C1",
+   "abstention_reason": null,
+   "operational": false,
+   "candidate_presentable": false,
+   "has_value": true,
+   "reasons_hint": "alias_exact"
+  },
+  {
+   "case": "pc_compensation_191",
+   "title": "Product Manager",
+   "decision": "NO_AUTHORITATIVE_EVIDENCE",
+   "occupation_status": "not_found",
+   "resolved_code": null,
+   "outcome": "not_found",
+   "evidence_class": null,
+   "abstention_reason": "title_not_in_graph",
+   "operational": false,
+   "candidate_presentable": false,
+   "has_value": false,
+   "reasons_hint": null
+  },
+  {
+   "case": "pc_compensation_195",
+   "title": "Human Resources Manager",
+   "decision": "PROPOSED_SINGLE",
+   "occupation_status": "resolved",
+   "resolved_code": "11-3121",
+   "outcome": "evidence",
+   "evidence_class": "C1",
+   "abstention_reason": null,
+   "operational": false,
+   "candidate_presentable": false,
+   "has_value": true,
+   "reasons_hint": "alias_exact"
+  },
+  {
+   "case": "pc_compensation_199",
+   "title": "Accountant",
+   "decision": "PROPOSED_SINGLE",
+   "occupation_status": "resolved",
+   "resolved_code": "13-2011",
+   "outcome": "evidence",
+   "evidence_class": "C1",
+   "abstention_reason": null,
+   "operational": false,
+   "candidate_presentable": false,
+   "has_value": true,
+   "reasons_hint": "alias_exact"
+  },
+  {
+   "case": "pc_compensation_203",
+   "title": "Financial Analyst",
+   "decision": "PROPOSED_SINGLE",
+   "occupation_status": "resolved",
+   "resolved_code": "13-2051",
+   "outcome": "evidence",
+   "evidence_class": "C1",
+   "abstention_reason": null,
+   "operational": false,
+   "candidate_presentable": false,
+   "has_value": true,
+   "reasons_hint": "alias_exact"
+  },
+  {
+   "case": "pc_compensation_207",
+   "title": "Sales Manager",
+   "decision": "PROPOSED_SINGLE",
+   "occupation_status": "resolved",
+   "resolved_code": "11-2022",
+   "outcome": "evidence",
+   "evidence_class": "C1",
+   "abstention_reason": null,
+   "operational": false,
+   "candidate_presentable": false,
+   "has_value": true,
+   "reasons_hint": "alias_exact"
+  }
+ ],
+ "measure_cases": {
+  "annual_only_occupations_tested": 79,
+  "annual_only_hourly_request": {
+   "abstain_with_context": 9,
+   "abstain_no_context": 70
+  },
+  "hourly_only_occupations_tested": 7,
+  "hourly_only_annual_request": {
+   "abstain_with_context": 4,
+   "abstain_no_context": 3
+  },
+  "own_value_ever_substituted": 0,
+  "examples": {
+   "annual_only_abstain_with_context": {
+    "code": "11-9032",
+    "outcome": "abstain",
+    "has_own_value": false,
+    "abstention_reason": "exact_occupation_measurement_unavailable",
+    "evidence_class": "C4",
+    "specificity": null,
+    "contextual": [
+     {
+      "code": "11-9030",
+      "label": "Education and Childcare Administrators",
+      "class": "C2",
+      "measure": "median",
+      "pay_period": "hourly",
+      "has_warning": true
+     }
+    ]
+   },
+   "annual_only_abstain_no_context": {
+    "code": "25-1010",
+    "outcome": "abstain",
+    "has_own_value": false,
+    "abstention_reason": "exact_occupation_measurement_unavailable",
+    "evidence_class": "C4",
+    "specificity": null,
+    "contextual": []
+   },
+   "hourly_only_abstain_with_context": {
+    "code": "27-2011",
+    "outcome": "abstain",
+    "has_own_value": false,
+    "abstention_reason": "exact_occupation_measurement_unavailable",
+    "evidence_class": "C4",
+    "specificity": null,
+    "contextual": [
+     {
+      "code": "27-2010",
+      "label": "Actors, Producers, and Directors",
+      "class": "C2",
+      "measure": "median",
+      "pay_period": "annual",
+      "has_warning": true
+     }
+    ]
+   },
+   "hourly_only_abstain_no_context": {
+    "code": "27-2042",
+    "outcome": "abstain",
+    "has_own_value": false,
+    "abstention_reason": "exact_occupation_measurement_unavailable",
+    "evidence_class": "C4",
+    "specificity": null,
+    "contextual": []
+   }
+  },
+  "no_authorised_fallback_example": {
+   "code": "11-9032",
+   "outcome": "abstain",
+   "has_own_value": false,
+   "abstention_reason": "exact_occupation_measurement_unavailable",
+   "evidence_class": "C4",
+   "specificity": null,
+   "contextual": []
+  }
+ },
+ "v1_reconciliation": {
+  "v1_records": 1386,
+  "verdicts": {
+   "RECONCILABLE_WITH_OFFICIAL_V2": 1381,
+   "INCOMPATIBLE": 5
+  },
+  "v1_distinct_codes": 1386,
+  "v1_duplicate_rows": 0,
+  "v1_db_modified": false,
+  "layers": {
+   "reconcilable_with_official_v2": 1381,
+   "same_occupation_identity_verified_exact_soc_code": 1381,
+   "qualified_v2_evidence": 0,
+   "runtime_approved": 0
+  },
+  "note": "RECONCILABLE_WITH_OFFICIAL_V2 means the V1 row matches an ingested official V2 record exactly. It is NOT qualification: no V2 record is `qualified` (no human reviewer exists) and nothing is runtime-approved. No V1 row was changed."
+ }
+}
