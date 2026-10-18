@@ -1,0 +1,4916 @@
+{
+ "schema": "p10c-g/1",
+ "corpus_version": "1.0.0",
+ "note": "SYNTHETIC global evaluation corpus (P10C-G). Every source, occupation, alias and amount is invented; every source is a synthetic fixture that can never be approved or serve as evidence. Jurisdictions are evaluation jurisdictions, not claims that official data is qualified. No network, no clock, no randomness.",
+ "taxonomies": [
+  {
+   "scheme": "cbo",
+   "edition": "2002",
+   "status": "unknown",
+   "acquisition_status": "not_acquired",
+   "code_pattern": "[0-9]{6}"
+  },
+  {
+   "scheme": "isco",
+   "edition": "08",
+   "status": "unknown",
+   "acquisition_status": "not_acquired",
+   "code_pattern": "[0-9]{4}"
+  },
+  {
+   "scheme": "kldb",
+   "edition": "2010",
+   "status": "unknown",
+   "acquisition_status": "not_acquired",
+   "code_pattern": "[0-9]{5}"
+  },
+  {
+   "scheme": "noc",
+   "edition": "2021",
+   "status": "unknown",
+   "acquisition_status": "not_acquired",
+   "code_pattern": "[0-9]{5}"
+  },
+  {
+   "scheme": "sinco",
+   "edition": "2019",
+   "status": "unknown",
+   "acquisition_status": "not_acquired",
+   "code_pattern": "[0-9]{4}"
+  },
+  {
+   "scheme": "soc",
+   "edition": "2010",
+   "status": "unknown",
+   "acquisition_status": "not_acquired",
+   "code_pattern": "[0-9]{2}-[0-9]{4}"
+  },
+  {
+   "scheme": "soc",
+   "edition": "2018",
+   "status": "unknown",
+   "acquisition_status": "not_acquired",
+   "code_pattern": "[0-9]{2}-[0-9]{4}"
+  },
+  {
+   "scheme": "uk_soc",
+   "edition": "2020",
+   "status": "unknown",
+   "acquisition_status": "not_acquired",
+   "code_pattern": "[0-9]{1,4}"
+  }
+ ],
+ "sources": [
+  {
+   "source_id": "fx_g_us",
+   "publisher": "Synthetic US statistics office (fixture)",
+   "dataset_name": "Synthetic table fx_g_us",
+   "source_url": "https://example.invalid/fx_g_us",
+   "precedence_category": "national_official_occupation_statistics"
+  },
+  {
+   "source_id": "fx_g_us2",
+   "publisher": "Synthetic US second office (fixture)",
+   "dataset_name": "Synthetic table fx_g_us2",
+   "source_url": "https://example.invalid/fx_g_us2",
+   "precedence_category": "national_official_occupation_statistics"
+  },
+  {
+   "source_id": "fx_g_gb",
+   "publisher": "Synthetic UK statistics office (fixture)",
+   "dataset_name": "Synthetic table fx_g_gb",
+   "source_url": "https://example.invalid/fx_g_gb",
+   "precedence_category": "national_official_occupation_statistics"
+  },
+  {
+   "source_id": "fx_g_de",
+   "publisher": "Synthetic German employment service (fixture)",
+   "dataset_name": "Synthetic table fx_g_de",
+   "source_url": "https://example.invalid/fx_g_de",
+   "precedence_category": "national_public_employment_service"
+  },
+  {
+   "source_id": "fx_g_eu",
+   "publisher": "Synthetic EU statistics office (fixture)",
+   "dataset_name": "Synthetic table fx_g_eu",
+   "source_url": "https://example.invalid/fx_g_eu",
+   "precedence_category": "eurostat_harmonised"
+  },
+  {
+   "source_id": "fx_g_ca",
+   "publisher": "Synthetic Canadian statistics office (fixture)",
+   "dataset_name": "Synthetic table fx_g_ca",
+   "source_url": "https://example.invalid/fx_g_ca",
+   "precedence_category": "national_official_occupation_statistics"
+  },
+  {
+   "source_id": "fx_g_mx",
+   "publisher": "Synthetic Mexican statistics office (fixture)",
+   "dataset_name": "Synthetic table fx_g_mx",
+   "source_url": "https://example.invalid/fx_g_mx",
+   "precedence_category": "national_official_occupation_statistics"
+  },
+  {
+   "source_id": "fx_g_br",
+   "publisher": "Synthetic Brazilian statistics office (fixture)",
+   "dataset_name": "Synthetic table fx_g_br",
+   "source_url": "https://example.invalid/fx_g_br",
+   "precedence_category": "national_official_occupation_statistics"
+  },
+  {
+   "source_id": "fx_g_cl",
+   "publisher": "Synthetic Chilean statistics office (fixture)",
+   "dataset_name": "Synthetic table fx_g_cl",
+   "source_url": "https://example.invalid/fx_g_cl",
+   "precedence_category": "national_official_occupation_statistics"
+  },
+  {
+   "source_id": "fx_g_unattrib",
+   "publisher": null,
+   "dataset_name": null,
+   "source_url": null,
+   "precedence_category": "national_official_occupation_statistics"
+  },
+  {
+   "source_id": "fx_occ",
+   "publisher": "Synthetic occupation labels (fixture)",
+   "dataset_name": "Synthetic alias fixture",
+   "source_url": null,
+   "precedence_category": "unknown"
+  }
+ ],
+ "source_editions": {
+  "fx_g_us": "G-US-1",
+  "fx_g_us2": "G-US2-1",
+  "fx_g_gb": "G-GB-1",
+  "fx_g_de": "G-DE-1",
+  "fx_g_eu": "G-EU-1",
+  "fx_g_ca": "G-CA-1",
+  "fx_g_mx": "G-MX-1",
+  "fx_g_br": "G-BR-1",
+  "fx_g_cl": "G-CL-1",
+  "fx_g_unattrib": "G-UN-1"
+ },
+ "scenarios": [
+  {
+   "id": "g_us_detail",
+   "label": "US detailed occupation [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "98-0001"
+    ]
+   ],
+   "aliases": [
+    "syn g us detail"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "98-0001",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "61000.00",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_us_broad",
+   "label": "US broad occupation group [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "98-0002"
+    ]
+   ],
+   "aliases": [
+    "syn g us broad"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "98-0002",
+     "occupation_level": "broad",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "52000.00",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_us_child",
+   "label": "US detailed occupation without its own measurement [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "98-0003"
+    ]
+   ],
+   "aliases": [
+    "syn g us child"
+   ],
+   "records": [],
+   "relationships": [
+    {
+     "to": "g_us_broad",
+     "type": "broader",
+     "basis": "source_provided",
+     "status": "verified",
+     "source": "fx_occ",
+     "from_taxonomy": [
+      "soc",
+      "2018"
+     ],
+     "to_taxonomy": [
+      "soc",
+      "2018"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "g_gb_detail",
+   "label": "GB detailed occupation [synthetic fixture]",
+   "identifiers": [
+    [
+     "uk_soc",
+     "2020",
+     "9001"
+    ]
+   ],
+   "aliases": [
+    "syn g gb detail"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_gb",
+     "source_edition": "G-GB-1",
+     "taxonomy_scheme": "uk_soc",
+     "taxonomy_edition": "2020",
+     "native_code": "9001",
+     "occupation_level": "detailed",
+     "country": "GB",
+     "geography_level": "national",
+     "currency": "GBP",
+     "pay_period": "weekly",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "1100.50",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_gb_broad",
+   "label": "GB broad occupation group [synthetic fixture]",
+   "identifiers": [
+    [
+     "uk_soc",
+     "2020",
+     "9002"
+    ]
+   ],
+   "aliases": [
+    "syn g gb broad"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_gb",
+     "source_edition": "G-GB-1",
+     "taxonomy_scheme": "uk_soc",
+     "taxonomy_edition": "2020",
+     "native_code": "9002",
+     "occupation_level": "broad",
+     "country": "GB",
+     "geography_level": "national",
+     "currency": "GBP",
+     "pay_period": "weekly",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "950.00",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_gb_child",
+   "label": "GB detailed occupation without its own measurement [synthetic fixture]",
+   "identifiers": [
+    [
+     "uk_soc",
+     "2020",
+     "9003"
+    ]
+   ],
+   "aliases": [
+    "syn g gb child"
+   ],
+   "records": [],
+   "relationships": [
+    {
+     "to": "g_gb_broad",
+     "type": "broader",
+     "basis": "source_provided",
+     "status": "verified",
+     "source": "fx_occ",
+     "from_taxonomy": [
+      "uk_soc",
+      "2020"
+     ],
+     "to_taxonomy": [
+      "uk_soc",
+      "2020"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "g_de_detail",
+   "label": "DE detailed occupation [synthetic fixture]",
+   "identifiers": [
+    [
+     "kldb",
+     "2010",
+     "98001"
+    ]
+   ],
+   "aliases": [
+    "syn g de detail"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_de",
+     "source_edition": "G-DE-1",
+     "taxonomy_scheme": "kldb",
+     "taxonomy_edition": "2010",
+     "native_code": "98001",
+     "occupation_level": "detailed",
+     "country": "DE",
+     "geography_level": "national",
+     "currency": "EUR",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "61000.00",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_de_broad",
+   "label": "DE broad occupation group [synthetic fixture]",
+   "identifiers": [
+    [
+     "kldb",
+     "2010",
+     "98002"
+    ]
+   ],
+   "aliases": [
+    "syn g de broad"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_de",
+     "source_edition": "G-DE-1",
+     "taxonomy_scheme": "kldb",
+     "taxonomy_edition": "2010",
+     "native_code": "98002",
+     "occupation_level": "broad",
+     "country": "DE",
+     "geography_level": "national",
+     "currency": "EUR",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "52000.00",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_de_child",
+   "label": "DE detailed occupation without its own measurement [synthetic fixture]",
+   "identifiers": [
+    [
+     "kldb",
+     "2010",
+     "98003"
+    ]
+   ],
+   "aliases": [
+    "syn g de child"
+   ],
+   "records": [],
+   "relationships": [
+    {
+     "to": "g_de_broad",
+     "type": "broader",
+     "basis": "source_provided",
+     "status": "verified",
+     "source": "fx_occ",
+     "from_taxonomy": [
+      "kldb",
+      "2010"
+     ],
+     "to_taxonomy": [
+      "kldb",
+      "2010"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "g_fr_detail",
+   "label": "FR detailed occupation [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9801"
+    ]
+   ],
+   "aliases": [
+    "syn g fr detail"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_eu",
+     "source_edition": "G-EU-1",
+     "taxonomy_scheme": "isco",
+     "taxonomy_edition": "08",
+     "native_code": "9801",
+     "occupation_level": "detailed",
+     "country": "FR",
+     "geography_level": "national",
+     "currency": "EUR",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "61000.00",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_fr_broad",
+   "label": "FR broad occupation group [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9802"
+    ]
+   ],
+   "aliases": [
+    "syn g fr broad"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_eu",
+     "source_edition": "G-EU-1",
+     "taxonomy_scheme": "isco",
+     "taxonomy_edition": "08",
+     "native_code": "9802",
+     "occupation_level": "broad",
+     "country": "FR",
+     "geography_level": "national",
+     "currency": "EUR",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "52000.00",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_fr_child",
+   "label": "FR detailed occupation without its own measurement [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9803"
+    ]
+   ],
+   "aliases": [
+    "syn g fr child"
+   ],
+   "records": [],
+   "relationships": [
+    {
+     "to": "g_fr_broad",
+     "type": "broader",
+     "basis": "source_provided",
+     "status": "verified",
+     "source": "fx_occ",
+     "from_taxonomy": [
+      "isco",
+      "08"
+     ],
+     "to_taxonomy": [
+      "isco",
+      "08"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "g_ca_detail",
+   "label": "CA detailed occupation [synthetic fixture]",
+   "identifiers": [
+    [
+     "noc",
+     "2021",
+     "98001"
+    ]
+   ],
+   "aliases": [
+    "syn g ca detail"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_ca",
+     "source_edition": "G-CA-1",
+     "taxonomy_scheme": "noc",
+     "taxonomy_edition": "2021",
+     "native_code": "98001",
+     "occupation_level": "detailed",
+     "country": "CA",
+     "geography_level": "national",
+     "currency": "CAD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "61000.00",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_ca_broad",
+   "label": "CA broad occupation group [synthetic fixture]",
+   "identifiers": [
+    [
+     "noc",
+     "2021",
+     "98002"
+    ]
+   ],
+   "aliases": [
+    "syn g ca broad"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_ca",
+     "source_edition": "G-CA-1",
+     "taxonomy_scheme": "noc",
+     "taxonomy_edition": "2021",
+     "native_code": "98002",
+     "occupation_level": "broad",
+     "country": "CA",
+     "geography_level": "national",
+     "currency": "CAD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "52000.00",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_ca_child",
+   "label": "CA detailed occupation without its own measurement [synthetic fixture]",
+   "identifiers": [
+    [
+     "noc",
+     "2021",
+     "98003"
+    ]
+   ],
+   "aliases": [
+    "syn g ca child"
+   ],
+   "records": [],
+   "relationships": [
+    {
+     "to": "g_ca_broad",
+     "type": "broader",
+     "basis": "source_provided",
+     "status": "verified",
+     "source": "fx_occ",
+     "from_taxonomy": [
+      "noc",
+      "2021"
+     ],
+     "to_taxonomy": [
+      "noc",
+      "2021"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "g_mx_detail",
+   "label": "MX detailed occupation [synthetic fixture]",
+   "identifiers": [
+    [
+     "sinco",
+     "2019",
+     "9801"
+    ]
+   ],
+   "aliases": [
+    "syn g mx detail"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_mx",
+     "source_edition": "G-MX-1",
+     "taxonomy_scheme": "sinco",
+     "taxonomy_edition": "2019",
+     "native_code": "9801",
+     "occupation_level": "detailed",
+     "country": "MX",
+     "geography_level": "national",
+     "currency": "MXN",
+     "pay_period": "monthly",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "3050.50",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_mx_broad",
+   "label": "MX broad occupation group [synthetic fixture]",
+   "identifiers": [
+    [
+     "sinco",
+     "2019",
+     "9802"
+    ]
+   ],
+   "aliases": [
+    "syn g mx broad"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_mx",
+     "source_edition": "G-MX-1",
+     "taxonomy_scheme": "sinco",
+     "taxonomy_edition": "2019",
+     "native_code": "9802",
+     "occupation_level": "broad",
+     "country": "MX",
+     "geography_level": "national",
+     "currency": "MXN",
+     "pay_period": "monthly",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "2800.00",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_mx_child",
+   "label": "MX detailed occupation without its own measurement [synthetic fixture]",
+   "identifiers": [
+    [
+     "sinco",
+     "2019",
+     "9803"
+    ]
+   ],
+   "aliases": [
+    "syn g mx child"
+   ],
+   "records": [],
+   "relationships": [
+    {
+     "to": "g_mx_broad",
+     "type": "broader",
+     "basis": "source_provided",
+     "status": "verified",
+     "source": "fx_occ",
+     "from_taxonomy": [
+      "sinco",
+      "2019"
+     ],
+     "to_taxonomy": [
+      "sinco",
+      "2019"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "g_br_detail",
+   "label": "BR detailed occupation [synthetic fixture]",
+   "identifiers": [
+    [
+     "cbo",
+     "2002",
+     "980001"
+    ]
+   ],
+   "aliases": [
+    "syn g br detail"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_br",
+     "source_edition": "G-BR-1",
+     "taxonomy_scheme": "cbo",
+     "taxonomy_edition": "2002",
+     "native_code": "980001",
+     "occupation_level": "detailed",
+     "country": "BR",
+     "geography_level": "national",
+     "currency": "BRL",
+     "pay_period": "monthly",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "3050.50",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_br_broad",
+   "label": "BR broad occupation group [synthetic fixture]",
+   "identifiers": [
+    [
+     "cbo",
+     "2002",
+     "980002"
+    ]
+   ],
+   "aliases": [
+    "syn g br broad"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_br",
+     "source_edition": "G-BR-1",
+     "taxonomy_scheme": "cbo",
+     "taxonomy_edition": "2002",
+     "native_code": "980002",
+     "occupation_level": "broad",
+     "country": "BR",
+     "geography_level": "national",
+     "currency": "BRL",
+     "pay_period": "monthly",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "2800.00",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_br_child",
+   "label": "BR detailed occupation without its own measurement [synthetic fixture]",
+   "identifiers": [
+    [
+     "cbo",
+     "2002",
+     "980003"
+    ]
+   ],
+   "aliases": [
+    "syn g br child"
+   ],
+   "records": [],
+   "relationships": [
+    {
+     "to": "g_br_broad",
+     "type": "broader",
+     "basis": "source_provided",
+     "status": "verified",
+     "source": "fx_occ",
+     "from_taxonomy": [
+      "cbo",
+      "2002"
+     ],
+     "to_taxonomy": [
+      "cbo",
+      "2002"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "g_cl_detail",
+   "label": "CL detailed occupation [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9701"
+    ]
+   ],
+   "aliases": [
+    "syn g cl detail"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_cl",
+     "source_edition": "G-CL-1",
+     "taxonomy_scheme": "isco",
+     "taxonomy_edition": "08",
+     "native_code": "9701",
+     "occupation_level": "detailed",
+     "country": "CL",
+     "geography_level": "national",
+     "currency": "CLP",
+     "pay_period": "monthly",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "3050.50",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_cl_broad",
+   "label": "CL broad occupation group [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9702"
+    ]
+   ],
+   "aliases": [
+    "syn g cl broad"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_cl",
+     "source_edition": "G-CL-1",
+     "taxonomy_scheme": "isco",
+     "taxonomy_edition": "08",
+     "native_code": "9702",
+     "occupation_level": "broad",
+     "country": "CL",
+     "geography_level": "national",
+     "currency": "CLP",
+     "pay_period": "monthly",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "2800.00",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_cl_child",
+   "label": "CL detailed occupation without its own measurement [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9703"
+    ]
+   ],
+   "aliases": [
+    "syn g cl child"
+   ],
+   "records": [],
+   "relationships": [
+    {
+     "to": "g_cl_broad",
+     "type": "broader",
+     "basis": "source_provided",
+     "status": "verified",
+     "source": "fx_occ",
+     "from_taxonomy": [
+      "isco",
+      "08"
+     ],
+     "to_taxonomy": [
+      "isco",
+      "08"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "g_x_meas",
+   "label": "measures and pay periods [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "99-0101"
+    ]
+   ],
+   "aliases": [
+    "syn g x meas"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0101",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "60000",
+     "reference_year": 2025,
+     "lower_value": "40000",
+     "upper_value": "90000",
+     "bounds_semantic": "percentile_10_90"
+    },
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0101",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "mean",
+     "value": "64000",
+     "reference_year": 2025
+    },
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0101",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "percentile",
+     "value": "48000",
+     "reference_year": 2025,
+     "percentile": 25
+    },
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0101",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "hourly",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "29.50",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_x_week",
+   "label": "UK-style weekly pay only [synthetic fixture]",
+   "identifiers": [
+    [
+     "uk_soc",
+     "2020",
+     "9101"
+    ]
+   ],
+   "aliases": [
+    "syn g x week"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_gb",
+     "source_edition": "G-GB-1",
+     "taxonomy_scheme": "uk_soc",
+     "taxonomy_edition": "2020",
+     "native_code": "9101",
+     "occupation_level": "detailed",
+     "country": "GB",
+     "geography_level": "national",
+     "currency": "GBP",
+     "pay_period": "weekly",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "812.40",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_x_pop",
+   "label": "full-time versus all-employee populations [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "99-0102"
+    ]
+   ],
+   "aliases": [
+    "syn g x pop"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0102",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "70000",
+     "reference_year": 2025,
+     "population_scope": "full_time_employees"
+    },
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0102",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "62000",
+     "reference_year": 2025,
+     "population_scope": "employees"
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_x_reg",
+   "label": "national and regional evidence [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "99-0103"
+    ]
+   ],
+   "aliases": [
+    "syn g x reg"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0103",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "60000",
+     "reference_year": 2025
+    },
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0103",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "regional",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "66000",
+     "reference_year": 2025,
+     "region": "Texas"
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_x_ed18",
+   "label": "taxonomy edition 2018 [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "99-0201"
+    ]
+   ],
+   "aliases": [
+    "syn g x ed18"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0201",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "61000",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_x_ed10",
+   "label": "taxonomy edition 2010 with the same code [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2010",
+     "99-0201"
+    ]
+   ],
+   "aliases": [
+    "syn g x ed10"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2010",
+     "native_code": "99-0201",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "50000",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_x_periods",
+   "label": "two reference years [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "99-0104"
+    ]
+   ],
+   "aliases": [
+    "syn g x periods"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0104",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "58000",
+     "reference_year": 2023
+    },
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0104",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "60000",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_x_vintage",
+   "label": "provisional then revised vintage [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "99-0105"
+    ]
+   ],
+   "aliases": [
+    "syn g x vintage"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0105",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "59000",
+     "reference_year": 2025,
+     "data_vintage": "2025-provisional"
+    },
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0105",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "60500",
+     "reference_year": 2025,
+     "data_vintage": "2026-revised"
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_x_none",
+   "label": "no measurement [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "99-0106"
+    ]
+   ],
+   "aliases": [
+    "syn g x none"
+   ],
+   "records": [],
+   "relationships": []
+  },
+  {
+   "id": "g_x_supp",
+   "label": "publisher-suppressed measurement [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "99-0107"
+    ]
+   ],
+   "aliases": [
+    "syn g x supp"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0107",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": null,
+     "reference_year": 2025,
+     "value_status": "suppressed"
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_x_tie",
+   "label": "two national sources disagree [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "99-0108"
+    ]
+   ],
+   "aliases": [
+    "syn g x tie"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0108",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "60000",
+     "reference_year": 2025
+    },
+    {
+     "source_ref": "fx_g_us2",
+     "source_edition": "G-US2-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0108",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "63000",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_x_natintl",
+   "label": "national and international evidence for Germany [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9810"
+    ],
+    [
+     "kldb",
+     "2010",
+     "98100"
+    ]
+   ],
+   "aliases": [
+    "syn g x natintl"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_de",
+     "source_edition": "G-DE-1",
+     "taxonomy_scheme": "kldb",
+     "taxonomy_edition": "2010",
+     "native_code": "98100",
+     "occupation_level": "detailed",
+     "country": "DE",
+     "geography_level": "national",
+     "currency": "EUR",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "55000",
+     "reference_year": 2025
+    },
+    {
+     "source_ref": "fx_g_eu",
+     "source_edition": "G-EU-1",
+     "taxonomy_scheme": "isco",
+     "taxonomy_edition": "08",
+     "native_code": "9810",
+     "occupation_level": "detailed",
+     "country": "DE",
+     "geography_level": "national",
+     "currency": "EUR",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "52000",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_x_intl",
+   "label": "authorised international fallback only [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9811"
+    ]
+   ],
+   "aliases": [
+    "syn g x intl"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_eu",
+     "source_edition": "G-EU-1",
+     "taxonomy_scheme": "isco",
+     "taxonomy_edition": "08",
+     "native_code": "9811",
+     "occupation_level": "detailed",
+     "country": "DE",
+     "geography_level": "national",
+     "currency": "EUR",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "52000",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_x_unmapped",
+   "label": "harmonised evidence reached only through an unverified mapping [synthetic fixture]",
+   "identifiers": [
+    [
+     "kldb",
+     "2010",
+     "98200"
+    ]
+   ],
+   "aliases": [
+    "syn g x unmapped"
+   ],
+   "records": [],
+   "relationships": [
+    {
+     "to": "g_x_unmapped_target",
+     "type": "related",
+     "basis": "curated_manual",
+     "status": "partial",
+     "source": "fx_occ",
+     "from_taxonomy": [
+      "kldb",
+      "2010"
+     ],
+     "to_taxonomy": [
+      "isco",
+      "08"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "g_x_unmapped_target",
+   "label": "harmonised target occupation [synthetic fixture]",
+   "identifiers": [
+    [
+     "isco",
+     "08",
+     "9820"
+    ]
+   ],
+   "aliases": [
+    "syn g x unmapped target"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_eu",
+     "source_edition": "G-EU-1",
+     "taxonomy_scheme": "isco",
+     "taxonomy_edition": "08",
+     "native_code": "9820",
+     "occupation_level": "detailed",
+     "country": "DE",
+     "geography_level": "national",
+     "currency": "EUR",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "50000",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_x_cur",
+   "label": "two currencies [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "99-0109"
+    ]
+   ],
+   "aliases": [
+    "syn g x cur"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0109",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "60000",
+     "reference_year": 2025
+    },
+    {
+     "source_ref": "fx_g_us2",
+     "source_edition": "G-US2-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0109",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "EUR",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "55000",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_x_nocite",
+   "label": "source without attribution [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "99-0111"
+    ]
+   ],
+   "aliases": [
+    "syn g x nocite"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_unattrib",
+     "source_edition": "G-UN-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0111",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "60000",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_x_amb_a",
+   "label": "ambiguous title A [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "99-0301"
+    ]
+   ],
+   "aliases": [
+    "syn g shared title"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0301",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "50000",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_x_amb_b",
+   "label": "ambiguous title B [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "99-0302"
+    ]
+   ],
+   "aliases": [
+    "syn g shared title"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0302",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "80000",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_x_alias",
+   "label": "occupation reached through a proposed alias [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "99-0303"
+    ]
+   ],
+   "aliases": [
+    "syn g proposed alias"
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0303",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "61000",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_ml",
+   "label": "multilingual official titles [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "99-0401"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "syn g multi",
+     "language": "en"
+    },
+    {
+     "text": "syn g mehrfach",
+     "language": "de"
+    },
+    {
+     "text": "syn g multiple fr",
+     "language": "fr"
+    },
+    {
+     "text": "syn g multiple es",
+     "language": "es"
+    },
+    {
+     "text": "syn g multiplo",
+     "language": "pt"
+    },
+    {
+     "text": "syn g multiplo it",
+     "language": "it"
+    },
+    {
+     "text": "syn g meervoudig",
+     "language": "nl"
+    },
+    {
+     "text": "синт g мульти",
+     "language": "ru"
+    },
+    {
+     "text": "syn g café",
+     "language": "fr"
+    }
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0401",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "61000",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_ml_fa",
+   "label": "false friend A (English meaning) [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "99-0402"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "syn g pie",
+     "language": "en"
+    }
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0402",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "40000",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_ml_fb",
+   "label": "false friend B (French meaning) [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "99-0403"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "syn g pie",
+     "language": "fr"
+    }
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0403",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "70000",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  },
+  {
+   "id": "g_ml_unk",
+   "label": "alias with unrecorded language [synthetic fixture]",
+   "identifiers": [
+    [
+     "soc",
+     "2018",
+     "99-0404"
+    ]
+   ],
+   "aliases": [
+    {
+     "text": "syn g unknown language",
+     "language": null
+    }
+   ],
+   "records": [
+    {
+     "source_ref": "fx_g_us",
+     "source_edition": "G-US-1",
+     "taxonomy_scheme": "soc",
+     "taxonomy_edition": "2018",
+     "native_code": "99-0404",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "annual",
+     "pay_basis": "gross",
+     "measure": "median",
+     "value": "45000",
+     "reference_year": 2025
+    }
+   ],
+   "relationships": []
+  }
+ ],
+ "cases": [
+  {
+   "id": "us-exact-code",
+   "category": "country",
+   "scenario": "g_us_detail",
+   "request": {
+    "taxonomy_scheme": "soc",
+    "taxonomy_edition": "2018",
+    "taxonomy_code": "98-0001",
+    "country": "US",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "61000",
+    "currency": "USD",
+    "pay_period": "annual",
+    "citation": true,
+    "specificity": "exact"
+   },
+   "tags": [
+    "occupation:exact_code",
+    "jurisdiction:US",
+    "fallback:country_native_detailed"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "us-official-title",
+   "category": "country",
+   "scenario": "g_us_detail",
+   "request": {
+    "title": "syn g us detail",
+    "title_language": "en",
+    "country": "US",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "61000"
+   },
+   "tags": [
+    "occupation:official_title",
+    "jurisdiction:US"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "us-wrong-edition",
+   "category": "country",
+   "scenario": "g_us_detail",
+   "request": {
+    "taxonomy_scheme": "soc",
+    "taxonomy_edition": "1999",
+    "taxonomy_code": "98-0001",
+    "country": "US"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_found",
+    "no_value": true
+   },
+   "tags": [
+    "occupation:wrong_taxonomy_edition",
+    "jurisdiction:US"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "us-broad-evidence",
+   "category": "country",
+   "scenario": "g_us_broad",
+   "request": {
+    "title": "syn g us broad",
+    "title_language": "en",
+    "country": "US",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C2",
+    "limitation_contains": "BROAD"
+   },
+   "tags": [
+    "compensation:detailed_vs_broad",
+    "fallback:country_native_broad",
+    "jurisdiction:US"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "us-child-abstains-with-context",
+   "category": "country",
+   "scenario": "g_us_child",
+   "request": {
+    "title": "syn g us child",
+    "title_language": "en",
+    "country": "US",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "exact_occupation_measurement_unavailable",
+    "no_value": true,
+    "contextual_class": "C2",
+    "contextual_warning_contains": "NOT the requested occupation"
+   },
+   "tags": [
+    "compensation:no_silent_broader_substitution",
+    "fallback:insufficient_occupation_specificity",
+    "jurisdiction:US"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "us-other-country-never-falls-back",
+   "category": "country",
+   "scenario": "g_us_detail",
+   "request": {
+    "title": "syn g us detail",
+    "title_language": "en",
+    "country": "CA",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "no_evidence_for_occupation_in_country",
+    "no_value": true
+   },
+   "tags": [
+    "fallback:unavailable_national_evidence",
+    "compensation:no_cross_country_substitution",
+    "jurisdiction:US"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "us-operational-withheld",
+   "category": "operational",
+   "scenario": "g_us_detail",
+   "request": {
+    "title": "syn g us detail",
+    "title_language": "en",
+    "country": "US",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": false,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "evidence_exists_but_is_not_operational",
+    "no_value": true,
+    "operational": false,
+    "candidate_presentable": false
+   },
+   "tags": [
+    "source:unapproved_never_operational",
+    "source:unqualified_never_operational",
+    "jurisdiction:US"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "SOURCE_QUALIFICATION_PENDING"
+  },
+  {
+   "id": "gb-exact-code",
+   "category": "country",
+   "scenario": "g_gb_detail",
+   "request": {
+    "taxonomy_scheme": "uk_soc",
+    "taxonomy_edition": "2020",
+    "taxonomy_code": "9001",
+    "country": "GB",
+    "pay_period": "weekly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "1100.5",
+    "currency": "GBP",
+    "pay_period": "weekly",
+    "citation": true,
+    "specificity": "exact"
+   },
+   "tags": [
+    "occupation:exact_code",
+    "jurisdiction:GB",
+    "fallback:country_native_detailed"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "gb-official-title",
+   "category": "country",
+   "scenario": "g_gb_detail",
+   "request": {
+    "title": "syn g gb detail",
+    "title_language": "en",
+    "country": "GB",
+    "pay_period": "weekly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "1100.5"
+   },
+   "tags": [
+    "occupation:official_title",
+    "jurisdiction:GB"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "gb-wrong-edition",
+   "category": "country",
+   "scenario": "g_gb_detail",
+   "request": {
+    "taxonomy_scheme": "uk_soc",
+    "taxonomy_edition": "1999",
+    "taxonomy_code": "9001",
+    "country": "GB"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_found",
+    "no_value": true
+   },
+   "tags": [
+    "occupation:wrong_taxonomy_edition",
+    "jurisdiction:GB"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "gb-broad-evidence",
+   "category": "country",
+   "scenario": "g_gb_broad",
+   "request": {
+    "title": "syn g gb broad",
+    "title_language": "en",
+    "country": "GB",
+    "pay_period": "weekly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C2",
+    "limitation_contains": "BROAD"
+   },
+   "tags": [
+    "compensation:detailed_vs_broad",
+    "fallback:country_native_broad",
+    "jurisdiction:GB"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "gb-child-abstains-with-context",
+   "category": "country",
+   "scenario": "g_gb_child",
+   "request": {
+    "title": "syn g gb child",
+    "title_language": "en",
+    "country": "GB",
+    "pay_period": "weekly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "exact_occupation_measurement_unavailable",
+    "no_value": true,
+    "contextual_class": "C2",
+    "contextual_warning_contains": "NOT the requested occupation"
+   },
+   "tags": [
+    "compensation:no_silent_broader_substitution",
+    "fallback:insufficient_occupation_specificity",
+    "jurisdiction:GB"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "gb-other-country-never-falls-back",
+   "category": "country",
+   "scenario": "g_gb_detail",
+   "request": {
+    "title": "syn g gb detail",
+    "title_language": "en",
+    "country": "US",
+    "pay_period": "weekly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "no_evidence_for_occupation_in_country",
+    "no_value": true
+   },
+   "tags": [
+    "fallback:unavailable_national_evidence",
+    "compensation:no_cross_country_substitution",
+    "jurisdiction:GB"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "gb-operational-withheld",
+   "category": "operational",
+   "scenario": "g_gb_detail",
+   "request": {
+    "title": "syn g gb detail",
+    "title_language": "en",
+    "country": "GB",
+    "pay_period": "weekly",
+    "measure": "median"
+   },
+   "internal": false,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "evidence_exists_but_is_not_operational",
+    "no_value": true,
+    "operational": false,
+    "candidate_presentable": false
+   },
+   "tags": [
+    "source:unapproved_never_operational",
+    "source:unqualified_never_operational",
+    "jurisdiction:GB"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "SOURCE_QUALIFICATION_PENDING"
+  },
+  {
+   "id": "de-exact-code",
+   "category": "country",
+   "scenario": "g_de_detail",
+   "request": {
+    "taxonomy_scheme": "kldb",
+    "taxonomy_edition": "2010",
+    "taxonomy_code": "98001",
+    "country": "DE",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "61000",
+    "currency": "EUR",
+    "pay_period": "annual",
+    "citation": true,
+    "specificity": "exact"
+   },
+   "tags": [
+    "occupation:exact_code",
+    "jurisdiction:DE",
+    "fallback:country_native_detailed"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "de-official-title",
+   "category": "country",
+   "scenario": "g_de_detail",
+   "request": {
+    "title": "syn g de detail",
+    "title_language": "en",
+    "country": "DE",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "61000"
+   },
+   "tags": [
+    "occupation:official_title",
+    "jurisdiction:DE"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "de-wrong-edition",
+   "category": "country",
+   "scenario": "g_de_detail",
+   "request": {
+    "taxonomy_scheme": "kldb",
+    "taxonomy_edition": "1999",
+    "taxonomy_code": "98001",
+    "country": "DE"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_found",
+    "no_value": true
+   },
+   "tags": [
+    "occupation:wrong_taxonomy_edition",
+    "jurisdiction:DE"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "de-broad-evidence",
+   "category": "country",
+   "scenario": "g_de_broad",
+   "request": {
+    "title": "syn g de broad",
+    "title_language": "en",
+    "country": "DE",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C2",
+    "limitation_contains": "BROAD"
+   },
+   "tags": [
+    "compensation:detailed_vs_broad",
+    "fallback:country_native_broad",
+    "jurisdiction:DE"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "de-child-abstains-with-context",
+   "category": "country",
+   "scenario": "g_de_child",
+   "request": {
+    "title": "syn g de child",
+    "title_language": "en",
+    "country": "DE",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "exact_occupation_measurement_unavailable",
+    "no_value": true,
+    "contextual_class": "C2",
+    "contextual_warning_contains": "NOT the requested occupation"
+   },
+   "tags": [
+    "compensation:no_silent_broader_substitution",
+    "fallback:insufficient_occupation_specificity",
+    "jurisdiction:DE"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "de-other-country-never-falls-back",
+   "category": "country",
+   "scenario": "g_de_detail",
+   "request": {
+    "title": "syn g de detail",
+    "title_language": "en",
+    "country": "FR",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "no_evidence_for_occupation_in_country",
+    "no_value": true
+   },
+   "tags": [
+    "fallback:unavailable_national_evidence",
+    "compensation:no_cross_country_substitution",
+    "jurisdiction:DE"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "de-operational-withheld",
+   "category": "operational",
+   "scenario": "g_de_detail",
+   "request": {
+    "title": "syn g de detail",
+    "title_language": "en",
+    "country": "DE",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": false,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "evidence_exists_but_is_not_operational",
+    "no_value": true,
+    "operational": false,
+    "candidate_presentable": false
+   },
+   "tags": [
+    "source:unapproved_never_operational",
+    "source:unqualified_never_operational",
+    "jurisdiction:DE"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "SOURCE_QUALIFICATION_PENDING"
+  },
+  {
+   "id": "fr-exact-code",
+   "category": "country",
+   "scenario": "g_fr_detail",
+   "request": {
+    "taxonomy_scheme": "isco",
+    "taxonomy_edition": "08",
+    "taxonomy_code": "9801",
+    "country": "FR",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C3",
+    "value": "61000",
+    "currency": "EUR",
+    "pay_period": "annual",
+    "citation": true,
+    "specificity": "exact"
+   },
+   "tags": [
+    "occupation:exact_code",
+    "jurisdiction:FR",
+    "fallback:international_harmonised"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "fr-official-title",
+   "category": "country",
+   "scenario": "g_fr_detail",
+   "request": {
+    "title": "syn g fr detail",
+    "title_language": "en",
+    "country": "FR",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C3",
+    "value": "61000"
+   },
+   "tags": [
+    "occupation:official_title",
+    "jurisdiction:FR"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "fr-wrong-edition",
+   "category": "country",
+   "scenario": "g_fr_detail",
+   "request": {
+    "taxonomy_scheme": "isco",
+    "taxonomy_edition": "1999",
+    "taxonomy_code": "9801",
+    "country": "FR"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_found",
+    "no_value": true
+   },
+   "tags": [
+    "occupation:wrong_taxonomy_edition",
+    "jurisdiction:FR"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "fr-broad-evidence",
+   "category": "country",
+   "scenario": "g_fr_broad",
+   "request": {
+    "title": "syn g fr broad",
+    "title_language": "en",
+    "country": "FR",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C3",
+    "limitation_contains": "international harmonised"
+   },
+   "tags": [
+    "compensation:detailed_vs_broad",
+    "fallback:international_harmonised",
+    "jurisdiction:FR"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "fr-child-abstains-with-context",
+   "category": "country",
+   "scenario": "g_fr_child",
+   "request": {
+    "title": "syn g fr child",
+    "title_language": "en",
+    "country": "FR",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "exact_occupation_measurement_unavailable",
+    "no_value": true,
+    "contextual_class": "C3",
+    "contextual_warning_contains": "NOT the requested occupation"
+   },
+   "tags": [
+    "compensation:no_silent_broader_substitution",
+    "fallback:insufficient_occupation_specificity",
+    "jurisdiction:FR"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "fr-other-country-never-falls-back",
+   "category": "country",
+   "scenario": "g_fr_detail",
+   "request": {
+    "title": "syn g fr detail",
+    "title_language": "en",
+    "country": "DE",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "no_evidence_for_occupation_in_country",
+    "no_value": true
+   },
+   "tags": [
+    "fallback:unavailable_national_evidence",
+    "compensation:no_cross_country_substitution",
+    "jurisdiction:FR"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "fr-operational-withheld",
+   "category": "operational",
+   "scenario": "g_fr_detail",
+   "request": {
+    "title": "syn g fr detail",
+    "title_language": "en",
+    "country": "FR",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": false,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "evidence_exists_but_is_not_operational",
+    "no_value": true,
+    "operational": false,
+    "candidate_presentable": false
+   },
+   "tags": [
+    "source:unapproved_never_operational",
+    "source:unqualified_never_operational",
+    "jurisdiction:FR"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "SOURCE_QUALIFICATION_PENDING"
+  },
+  {
+   "id": "ca-exact-code",
+   "category": "country",
+   "scenario": "g_ca_detail",
+   "request": {
+    "taxonomy_scheme": "noc",
+    "taxonomy_edition": "2021",
+    "taxonomy_code": "98001",
+    "country": "CA",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "61000",
+    "currency": "CAD",
+    "pay_period": "annual",
+    "citation": true,
+    "specificity": "exact"
+   },
+   "tags": [
+    "occupation:exact_code",
+    "jurisdiction:CA",
+    "fallback:country_native_detailed"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ca-official-title",
+   "category": "country",
+   "scenario": "g_ca_detail",
+   "request": {
+    "title": "syn g ca detail",
+    "title_language": "en",
+    "country": "CA",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "61000"
+   },
+   "tags": [
+    "occupation:official_title",
+    "jurisdiction:CA"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ca-wrong-edition",
+   "category": "country",
+   "scenario": "g_ca_detail",
+   "request": {
+    "taxonomy_scheme": "noc",
+    "taxonomy_edition": "1999",
+    "taxonomy_code": "98001",
+    "country": "CA"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_found",
+    "no_value": true
+   },
+   "tags": [
+    "occupation:wrong_taxonomy_edition",
+    "jurisdiction:CA"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ca-broad-evidence",
+   "category": "country",
+   "scenario": "g_ca_broad",
+   "request": {
+    "title": "syn g ca broad",
+    "title_language": "en",
+    "country": "CA",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C2",
+    "limitation_contains": "BROAD"
+   },
+   "tags": [
+    "compensation:detailed_vs_broad",
+    "fallback:country_native_broad",
+    "jurisdiction:CA"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ca-child-abstains-with-context",
+   "category": "country",
+   "scenario": "g_ca_child",
+   "request": {
+    "title": "syn g ca child",
+    "title_language": "en",
+    "country": "CA",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "exact_occupation_measurement_unavailable",
+    "no_value": true,
+    "contextual_class": "C2",
+    "contextual_warning_contains": "NOT the requested occupation"
+   },
+   "tags": [
+    "compensation:no_silent_broader_substitution",
+    "fallback:insufficient_occupation_specificity",
+    "jurisdiction:CA"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ca-other-country-never-falls-back",
+   "category": "country",
+   "scenario": "g_ca_detail",
+   "request": {
+    "title": "syn g ca detail",
+    "title_language": "en",
+    "country": "US",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "no_evidence_for_occupation_in_country",
+    "no_value": true
+   },
+   "tags": [
+    "fallback:unavailable_national_evidence",
+    "compensation:no_cross_country_substitution",
+    "jurisdiction:CA"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ca-operational-withheld",
+   "category": "operational",
+   "scenario": "g_ca_detail",
+   "request": {
+    "title": "syn g ca detail",
+    "title_language": "en",
+    "country": "CA",
+    "pay_period": "annual",
+    "measure": "median"
+   },
+   "internal": false,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "evidence_exists_but_is_not_operational",
+    "no_value": true,
+    "operational": false,
+    "candidate_presentable": false
+   },
+   "tags": [
+    "source:unapproved_never_operational",
+    "source:unqualified_never_operational",
+    "jurisdiction:CA"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "SOURCE_QUALIFICATION_PENDING"
+  },
+  {
+   "id": "mx-exact-code",
+   "category": "country",
+   "scenario": "g_mx_detail",
+   "request": {
+    "taxonomy_scheme": "sinco",
+    "taxonomy_edition": "2019",
+    "taxonomy_code": "9801",
+    "country": "MX",
+    "pay_period": "monthly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "3050.50",
+    "currency": "MXN",
+    "pay_period": "monthly",
+    "citation": true,
+    "specificity": "exact"
+   },
+   "tags": [
+    "occupation:exact_code",
+    "jurisdiction:MX",
+    "fallback:country_native_detailed"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "mx-official-title",
+   "category": "country",
+   "scenario": "g_mx_detail",
+   "request": {
+    "title": "syn g mx detail",
+    "title_language": "en",
+    "country": "MX",
+    "pay_period": "monthly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "3050.50"
+   },
+   "tags": [
+    "occupation:official_title",
+    "jurisdiction:MX"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "mx-wrong-edition",
+   "category": "country",
+   "scenario": "g_mx_detail",
+   "request": {
+    "taxonomy_scheme": "sinco",
+    "taxonomy_edition": "1999",
+    "taxonomy_code": "9801",
+    "country": "MX"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_found",
+    "no_value": true
+   },
+   "tags": [
+    "occupation:wrong_taxonomy_edition",
+    "jurisdiction:MX"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "mx-broad-evidence",
+   "category": "country",
+   "scenario": "g_mx_broad",
+   "request": {
+    "title": "syn g mx broad",
+    "title_language": "en",
+    "country": "MX",
+    "pay_period": "monthly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C2",
+    "limitation_contains": "BROAD"
+   },
+   "tags": [
+    "compensation:detailed_vs_broad",
+    "fallback:country_native_broad",
+    "jurisdiction:MX"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "mx-child-abstains-with-context",
+   "category": "country",
+   "scenario": "g_mx_child",
+   "request": {
+    "title": "syn g mx child",
+    "title_language": "en",
+    "country": "MX",
+    "pay_period": "monthly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "exact_occupation_measurement_unavailable",
+    "no_value": true,
+    "contextual_class": "C2",
+    "contextual_warning_contains": "NOT the requested occupation"
+   },
+   "tags": [
+    "compensation:no_silent_broader_substitution",
+    "fallback:insufficient_occupation_specificity",
+    "jurisdiction:MX"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "mx-other-country-never-falls-back",
+   "category": "country",
+   "scenario": "g_mx_detail",
+   "request": {
+    "title": "syn g mx detail",
+    "title_language": "en",
+    "country": "US",
+    "pay_period": "monthly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "no_evidence_for_occupation_in_country",
+    "no_value": true
+   },
+   "tags": [
+    "fallback:unavailable_national_evidence",
+    "compensation:no_cross_country_substitution",
+    "jurisdiction:MX"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "mx-operational-withheld",
+   "category": "operational",
+   "scenario": "g_mx_detail",
+   "request": {
+    "title": "syn g mx detail",
+    "title_language": "en",
+    "country": "MX",
+    "pay_period": "monthly",
+    "measure": "median"
+   },
+   "internal": false,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "evidence_exists_but_is_not_operational",
+    "no_value": true,
+    "operational": false,
+    "candidate_presentable": false
+   },
+   "tags": [
+    "source:unapproved_never_operational",
+    "source:unqualified_never_operational",
+    "jurisdiction:MX"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "SOURCE_QUALIFICATION_PENDING"
+  },
+  {
+   "id": "br-exact-code",
+   "category": "country",
+   "scenario": "g_br_detail",
+   "request": {
+    "taxonomy_scheme": "cbo",
+    "taxonomy_edition": "2002",
+    "taxonomy_code": "980001",
+    "country": "BR",
+    "pay_period": "monthly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "3050.50",
+    "currency": "BRL",
+    "pay_period": "monthly",
+    "citation": true,
+    "specificity": "exact"
+   },
+   "tags": [
+    "occupation:exact_code",
+    "jurisdiction:BR",
+    "fallback:country_native_detailed"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "br-official-title",
+   "category": "country",
+   "scenario": "g_br_detail",
+   "request": {
+    "title": "syn g br detail",
+    "title_language": "en",
+    "country": "BR",
+    "pay_period": "monthly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "3050.50"
+   },
+   "tags": [
+    "occupation:official_title",
+    "jurisdiction:BR"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "br-wrong-edition",
+   "category": "country",
+   "scenario": "g_br_detail",
+   "request": {
+    "taxonomy_scheme": "cbo",
+    "taxonomy_edition": "1999",
+    "taxonomy_code": "980001",
+    "country": "BR"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_found",
+    "no_value": true
+   },
+   "tags": [
+    "occupation:wrong_taxonomy_edition",
+    "jurisdiction:BR"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "br-broad-evidence",
+   "category": "country",
+   "scenario": "g_br_broad",
+   "request": {
+    "title": "syn g br broad",
+    "title_language": "en",
+    "country": "BR",
+    "pay_period": "monthly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C2",
+    "limitation_contains": "BROAD"
+   },
+   "tags": [
+    "compensation:detailed_vs_broad",
+    "fallback:country_native_broad",
+    "jurisdiction:BR"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "br-child-abstains-with-context",
+   "category": "country",
+   "scenario": "g_br_child",
+   "request": {
+    "title": "syn g br child",
+    "title_language": "en",
+    "country": "BR",
+    "pay_period": "monthly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "exact_occupation_measurement_unavailable",
+    "no_value": true,
+    "contextual_class": "C2",
+    "contextual_warning_contains": "NOT the requested occupation"
+   },
+   "tags": [
+    "compensation:no_silent_broader_substitution",
+    "fallback:insufficient_occupation_specificity",
+    "jurisdiction:BR"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "br-other-country-never-falls-back",
+   "category": "country",
+   "scenario": "g_br_detail",
+   "request": {
+    "title": "syn g br detail",
+    "title_language": "en",
+    "country": "US",
+    "pay_period": "monthly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "no_evidence_for_occupation_in_country",
+    "no_value": true
+   },
+   "tags": [
+    "fallback:unavailable_national_evidence",
+    "compensation:no_cross_country_substitution",
+    "jurisdiction:BR"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "br-operational-withheld",
+   "category": "operational",
+   "scenario": "g_br_detail",
+   "request": {
+    "title": "syn g br detail",
+    "title_language": "en",
+    "country": "BR",
+    "pay_period": "monthly",
+    "measure": "median"
+   },
+   "internal": false,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "evidence_exists_but_is_not_operational",
+    "no_value": true,
+    "operational": false,
+    "candidate_presentable": false
+   },
+   "tags": [
+    "source:unapproved_never_operational",
+    "source:unqualified_never_operational",
+    "jurisdiction:BR"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "SOURCE_QUALIFICATION_PENDING"
+  },
+  {
+   "id": "cl-exact-code",
+   "category": "country",
+   "scenario": "g_cl_detail",
+   "request": {
+    "taxonomy_scheme": "isco",
+    "taxonomy_edition": "08",
+    "taxonomy_code": "9701",
+    "country": "CL",
+    "pay_period": "monthly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "3050.50",
+    "currency": "CLP",
+    "pay_period": "monthly",
+    "citation": true,
+    "specificity": "exact"
+   },
+   "tags": [
+    "occupation:exact_code",
+    "jurisdiction:CL",
+    "fallback:country_native_detailed"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "cl-official-title",
+   "category": "country",
+   "scenario": "g_cl_detail",
+   "request": {
+    "title": "syn g cl detail",
+    "title_language": "en",
+    "country": "CL",
+    "pay_period": "monthly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "3050.50"
+   },
+   "tags": [
+    "occupation:official_title",
+    "jurisdiction:CL"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "cl-wrong-edition",
+   "category": "country",
+   "scenario": "g_cl_detail",
+   "request": {
+    "taxonomy_scheme": "isco",
+    "taxonomy_edition": "1999",
+    "taxonomy_code": "9701",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_found",
+    "no_value": true
+   },
+   "tags": [
+    "occupation:wrong_taxonomy_edition",
+    "jurisdiction:CL"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "cl-broad-evidence",
+   "category": "country",
+   "scenario": "g_cl_broad",
+   "request": {
+    "title": "syn g cl broad",
+    "title_language": "en",
+    "country": "CL",
+    "pay_period": "monthly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C2",
+    "limitation_contains": "BROAD"
+   },
+   "tags": [
+    "compensation:detailed_vs_broad",
+    "fallback:country_native_broad",
+    "jurisdiction:CL"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "cl-child-abstains-with-context",
+   "category": "country",
+   "scenario": "g_cl_child",
+   "request": {
+    "title": "syn g cl child",
+    "title_language": "en",
+    "country": "CL",
+    "pay_period": "monthly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "exact_occupation_measurement_unavailable",
+    "no_value": true,
+    "contextual_class": "C2",
+    "contextual_warning_contains": "NOT the requested occupation"
+   },
+   "tags": [
+    "compensation:no_silent_broader_substitution",
+    "fallback:insufficient_occupation_specificity",
+    "jurisdiction:CL"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "cl-other-country-never-falls-back",
+   "category": "country",
+   "scenario": "g_cl_detail",
+   "request": {
+    "title": "syn g cl detail",
+    "title_language": "en",
+    "country": "AR",
+    "pay_period": "monthly",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "no_evidence_for_occupation_in_country",
+    "no_value": true
+   },
+   "tags": [
+    "fallback:unavailable_national_evidence",
+    "compensation:no_cross_country_substitution",
+    "jurisdiction:CL"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "cl-operational-withheld",
+   "category": "operational",
+   "scenario": "g_cl_detail",
+   "request": {
+    "title": "syn g cl detail",
+    "title_language": "en",
+    "country": "CL",
+    "pay_period": "monthly",
+    "measure": "median"
+   },
+   "internal": false,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "evidence_exists_but_is_not_operational",
+    "no_value": true,
+    "operational": false,
+    "candidate_presentable": false
+   },
+   "tags": [
+    "source:unapproved_never_operational",
+    "source:unqualified_never_operational",
+    "jurisdiction:CL"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "SOURCE_QUALIFICATION_PENDING"
+  },
+  {
+   "id": "x-default-measures-not-combined",
+   "category": "measurement",
+   "scenario": "g_x_meas",
+   "request": {
+    "title": "syn g x meas",
+    "title_language": "en",
+    "country": "US"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict",
+    "no_value": true
+   },
+   "tags": [
+    "compensation:mean_vs_median",
+    "compensation:hourly_vs_annual",
+    "compensation:unsupported_comparison_rejected"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-median-annual",
+   "category": "measurement",
+   "scenario": "g_x_meas",
+   "request": {
+    "title": "syn g x meas",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "60000",
+    "pay_period": "annual",
+    "bounds": "percentile_10_90"
+   },
+   "tags": [
+    "compensation:exact_measurement",
+    "compensation:mean_vs_median"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-mean-annual",
+   "category": "measurement",
+   "scenario": "g_x_meas",
+   "request": {
+    "title": "syn g x meas",
+    "title_language": "en",
+    "country": "US",
+    "measure": "mean",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "64000"
+   },
+   "tags": [
+    "compensation:mean_vs_median"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-percentile-25",
+   "category": "measurement",
+   "scenario": "g_x_meas",
+   "request": {
+    "title": "syn g x meas",
+    "title_language": "en",
+    "country": "US",
+    "measure": "percentile",
+    "percentile": 25,
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "48000"
+   },
+   "tags": [
+    "compensation:percentile"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-hourly",
+   "category": "measurement",
+   "scenario": "g_x_meas",
+   "request": {
+    "title": "syn g x meas",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "hourly"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "29.50",
+    "pay_period": "hourly"
+   },
+   "tags": [
+    "compensation:hourly_vs_annual"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-unsupported-percentile",
+   "category": "measurement",
+   "scenario": "g_x_meas",
+   "request": {
+    "title": "syn g x meas",
+    "title_language": "en",
+    "country": "US",
+    "measure": "percentile",
+    "percentile": 99,
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "exact_occupation_measurement_unavailable",
+    "no_value": true
+   },
+   "tags": [
+    "compensation:unsupported_measurement"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-weekly-unavailable-no-annualisation",
+   "category": "measurement",
+   "scenario": "g_x_meas",
+   "request": {
+    "title": "syn g x meas",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "weekly"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "no_value": true
+   },
+   "tags": [
+    "compensation:weekly_vs_annual",
+    "compensation:no_hidden_period_conversion"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-weekly-kept-weekly",
+   "category": "measurement",
+   "scenario": "g_x_week",
+   "request": {
+    "title": "syn g x week",
+    "title_language": "en",
+    "country": "GB",
+    "measure": "median",
+    "pay_period": "weekly"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "812.40",
+    "pay_period": "weekly",
+    "currency": "GBP"
+   },
+   "tags": [
+    "compensation:weekly_vs_annual",
+    "compensation:no_hidden_period_conversion"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-annual-never-derived-from-weekly",
+   "category": "measurement",
+   "scenario": "g_x_week",
+   "request": {
+    "title": "syn g x week",
+    "title_language": "en",
+    "country": "GB",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "no_value": true
+   },
+   "tags": [
+    "compensation:weekly_vs_annual",
+    "compensation:no_hidden_period_conversion"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-populations-not-combined",
+   "category": "measurement",
+   "scenario": "g_x_pop",
+   "request": {
+    "title": "syn g x pop",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict",
+    "no_value": true
+   },
+   "tags": [
+    "compensation:full_time_vs_part_time"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-full-time-only",
+   "category": "measurement",
+   "scenario": "g_x_pop",
+   "request": {
+    "title": "syn g x pop",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual",
+    "population_scope": "full_time_employees"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "70000",
+    "population_scope": "full_time_employees"
+   },
+   "tags": [
+    "compensation:full_time_vs_part_time"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-all-employees-only",
+   "category": "measurement",
+   "scenario": "g_x_pop",
+   "request": {
+    "title": "syn g x pop",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual",
+    "population_scope": "employees"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "62000",
+    "population_scope": "employees"
+   },
+   "tags": [
+    "compensation:full_time_vs_part_time"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-national-by-default",
+   "category": "measurement",
+   "scenario": "g_x_reg",
+   "request": {
+    "title": "syn g x reg",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "60000",
+    "geography_level": "national"
+   },
+   "tags": [
+    "compensation:national_vs_regional"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-regional-when-requested",
+   "category": "measurement",
+   "scenario": "g_x_reg",
+   "request": {
+    "title": "syn g x reg",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual",
+    "region": "Texas"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "66000",
+    "geography_level": "regional",
+    "region": "Texas"
+   },
+   "tags": [
+    "compensation:national_vs_regional"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-regional-never-becomes-national",
+   "category": "measurement",
+   "scenario": "g_x_reg",
+   "request": {
+    "title": "syn g x reg",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual",
+    "region": "Ohio"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_requested_region",
+    "no_value": true
+   },
+   "tags": [
+    "compensation:national_vs_regional"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-edition-2018",
+   "category": "classification",
+   "scenario": "g_x_ed18",
+   "request": {
+    "taxonomy_scheme": "soc",
+    "taxonomy_edition": "2018",
+    "taxonomy_code": "99-0201",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "61000"
+   },
+   "tags": [
+    "occupation:taxonomy_edition",
+    "compensation:different_taxonomy_editions"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-edition-2010",
+   "category": "classification",
+   "scenario": "g_x_ed10",
+   "request": {
+    "taxonomy_scheme": "soc",
+    "taxonomy_edition": "2010",
+    "taxonomy_code": "99-0201",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "50000"
+   },
+   "tags": [
+    "occupation:taxonomy_edition",
+    "compensation:different_taxonomy_editions"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-edition-missing-is-ambiguous",
+   "category": "classification",
+   "scenario": "g_x_ed18",
+   "request": {
+    "taxonomy_scheme": "soc",
+    "taxonomy_code": "99-0201",
+    "country": "US"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "ambiguous",
+    "no_value": true
+   },
+   "tags": [
+    "occupation:ambiguous_code_across_editions",
+    "occupation:conflicting_candidates"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-latest-period-by-default",
+   "category": "measurement",
+   "scenario": "g_x_periods",
+   "request": {
+    "title": "syn g x periods",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "60000",
+    "reference_year": 2025
+   },
+   "tags": [
+    "compensation:publication_periods"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-requested-period",
+   "category": "measurement",
+   "scenario": "g_x_periods",
+   "request": {
+    "title": "syn g x periods",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual",
+    "reference_year": 2023
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "58000",
+    "reference_year": 2023
+   },
+   "tags": [
+    "compensation:publication_periods"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-absent-period-abstains",
+   "category": "measurement",
+   "scenario": "g_x_periods",
+   "request": {
+    "title": "syn g x periods",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual",
+    "reference_year": 2024
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_requested_reference_year",
+    "no_value": true
+   },
+   "tags": [
+    "compensation:publication_periods"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-revised-vintage-wins-and-is-labelled",
+   "category": "measurement",
+   "scenario": "g_x_vintage",
+   "request": {
+    "title": "syn g x vintage",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "60500",
+    "limitation_contains": "data vintage: 2026-revised"
+   },
+   "tags": [
+    "compensation:source_revisions"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-missing-measurement-abstains",
+   "category": "measurement",
+   "scenario": "g_x_none",
+   "request": {
+    "title": "syn g x none",
+    "title_language": "en",
+    "country": "US"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "no_evidence_for_occupation_in_country",
+    "no_value": true
+   },
+   "tags": [
+    "compensation:missing_measurements",
+    "fallback:c4_abstains"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-suppressed-never-zero",
+   "category": "measurement",
+   "scenario": "g_x_supp",
+   "request": {
+    "title": "syn g x supp",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "source_value_suppressed",
+    "no_value": true
+   },
+   "tags": [
+    "compensation:suppressed_measurements"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-conflicting-sources-preserved",
+   "category": "conflict",
+   "scenario": "g_x_tie",
+   "request": {
+    "title": "syn g x tie",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict",
+    "abstention": "comparable_sources_of_equal_precedence_disagree",
+    "no_value": true
+   },
+   "tags": [
+    "compensation:conflicting_sources"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-national-outranks-international",
+   "category": "country",
+   "scenario": "g_x_natintl",
+   "request": {
+    "title": "syn g x natintl",
+    "title_language": "en",
+    "country": "DE",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "55000",
+    "corroborating": 1
+   },
+   "tags": [
+    "fallback:conflicting_national_and_international",
+    "fallback:c3_not_promoted_to_c1"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-international-fallback-stays-c3",
+   "category": "country",
+   "scenario": "g_x_intl",
+   "request": {
+    "title": "syn g x intl",
+    "title_language": "en",
+    "country": "DE",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C3",
+    "value": "52000",
+    "limitation_contains": "international harmonised"
+   },
+   "tags": [
+    "fallback:authorised_international",
+    "fallback:c3_not_promoted_to_c1"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-unapproved-harmonised-mapping-carries-nothing",
+   "category": "country",
+   "scenario": "g_x_unmapped",
+   "request": {
+    "title": "syn g x unmapped",
+    "title_language": "en",
+    "country": "DE",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "no_value": true
+   },
+   "tags": [
+    "fallback:unapproved_harmonised_mapping"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-fx-conversion-not-configured",
+   "category": "comparison",
+   "scenario": "g_x_meas",
+   "request": {
+    "title": "syn g x meas",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual",
+    "comparison_mode": "fx_converted"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_configured",
+    "no_value": true
+   },
+   "tags": [
+    "fallback:missing_currency_conversion",
+    "compensation:no_unauthorised_currency_conversion"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-ppp-conversion-not-configured",
+   "category": "comparison",
+   "scenario": "g_x_meas",
+   "request": {
+    "title": "syn g x meas",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual",
+    "comparison_mode": "ppp_adjusted"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_configured",
+    "no_value": true
+   },
+   "tags": [
+    "fallback:missing_ppp_conversion"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-unsupported-geography",
+   "category": "country",
+   "scenario": "g_x_meas",
+   "request": {
+    "title": "syn g x meas",
+    "title_language": "en",
+    "country": "ZZ"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "unsupported",
+    "no_value": true
+   },
+   "tags": [
+    "fallback:unsupported_geography"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-valid-code-unlisted-country",
+   "category": "country",
+   "scenario": "g_x_meas",
+   "request": {
+    "title": "syn g x meas",
+    "title_language": "en",
+    "country": "JP"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "unsupported",
+    "no_value": true
+   },
+   "tags": [
+    "fallback:unsupported_geography"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-currencies-never-combined",
+   "category": "comparison",
+   "scenario": "g_x_cur",
+   "request": {
+    "title": "syn g x cur",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict",
+    "no_value": true
+   },
+   "tags": [
+    "compensation:no_unauthorised_currency_conversion",
+    "compensation:unsupported_comparison_rejected"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "x-incomplete-provenance-withheld",
+   "category": "operational",
+   "scenario": "g_x_nocite",
+   "request": {
+    "title": "syn g x nocite",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "evidence_withheld_citation_incomplete",
+    "no_value": true
+   },
+   "tags": [
+    "source:incomplete_provenance"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "o-ambiguous-title-no-salary",
+   "category": "classification",
+   "scenario": "g_x_amb_a",
+   "request": {
+    "title": "syn g shared title",
+    "title_language": "en",
+    "country": "US"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "ambiguous",
+    "no_value": true
+   },
+   "tags": [
+    "occupation:ambiguous_title",
+    "occupation:conflicting_candidates"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "o-unsupported-title",
+   "category": "classification",
+   "scenario": "g_x_amb_a",
+   "request": {
+    "title": "syn g never heard of it",
+    "title_language": "en",
+    "country": "US"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_found",
+    "no_value": true
+   },
+   "tags": [
+    "occupation:unsupported_title"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "o-missing-classification",
+   "category": "classification",
+   "scenario": "g_x_amb_a",
+   "request": {
+    "country": "US"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "insufficient_context",
+    "no_value": true
+   },
+   "tags": [
+    "occupation:missing_classification"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "o-wrong-country-title",
+   "category": "classification",
+   "scenario": "g_x_amb_a",
+   "request": {
+    "title": "syn g shared title",
+    "title_language": "en",
+    "country": "ZZ"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "unsupported",
+    "no_value": true
+   },
+   "tags": [
+    "occupation:wrong_country"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "o-unqualified-alias-resolves-but-is-never-operational",
+   "category": "classification",
+   "scenario": "g_x_alias",
+   "request": {
+    "title": "syn g proposed alias",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "occupation_status": "resolved",
+    "value": "61000",
+    "operational": false,
+    "candidate_presentable": false
+   },
+   "tags": [
+    "occupation:curated_alias_proposal",
+    "occupation:unqualified_alias"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "o-detailed-vs-broad-identity",
+   "category": "classification",
+   "scenario": "g_us_broad",
+   "request": {
+    "title": "syn g us broad",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C2",
+    "specificity": "exact"
+   },
+   "tags": [
+    "occupation:broad_occupation",
+    "occupation:detailed_occupation"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-title-en",
+   "category": "multilingual",
+   "scenario": "g_ml",
+   "request": {
+    "title": "syn g multi",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "61000"
+   },
+   "tags": [
+    "multilingual:official_title",
+    "multilingual:authorised_alias"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-title-de",
+   "category": "multilingual",
+   "scenario": "g_ml",
+   "request": {
+    "title": "syn g mehrfach",
+    "title_language": "de",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "61000"
+   },
+   "tags": [
+    "multilingual:official_title",
+    "multilingual:authorised_alias"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-title-fr",
+   "category": "multilingual",
+   "scenario": "g_ml",
+   "request": {
+    "title": "syn g multiple fr",
+    "title_language": "fr",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "61000"
+   },
+   "tags": [
+    "multilingual:official_title",
+    "multilingual:authorised_alias"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-title-es",
+   "category": "multilingual",
+   "scenario": "g_ml",
+   "request": {
+    "title": "syn g multiple es",
+    "title_language": "es",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "61000"
+   },
+   "tags": [
+    "multilingual:official_title",
+    "multilingual:authorised_alias"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-title-pt",
+   "category": "multilingual",
+   "scenario": "g_ml",
+   "request": {
+    "title": "syn g multiplo",
+    "title_language": "pt",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "61000"
+   },
+   "tags": [
+    "multilingual:official_title",
+    "multilingual:authorised_alias"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-title-it",
+   "category": "multilingual",
+   "scenario": "g_ml",
+   "request": {
+    "title": "syn g multiplo it",
+    "title_language": "it",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "61000"
+   },
+   "tags": [
+    "multilingual:official_title",
+    "multilingual:authorised_alias"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-title-nl",
+   "category": "multilingual",
+   "scenario": "g_ml",
+   "request": {
+    "title": "syn g meervoudig",
+    "title_language": "nl",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "61000"
+   },
+   "tags": [
+    "multilingual:official_title",
+    "multilingual:authorised_alias"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-title-ru",
+   "category": "multilingual",
+   "scenario": "g_ml",
+   "request": {
+    "title": "синт g мульти",
+    "title_language": "ru",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "61000"
+   },
+   "tags": [
+    "multilingual:official_title",
+    "multilingual:authorised_alias"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-accent-folding",
+   "category": "multilingual",
+   "scenario": "g_ml",
+   "request": {
+    "title": "syn g cafe",
+    "title_language": "fr",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "61000"
+   },
+   "tags": [
+    "multilingual:accent_normalisation"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-title-only-in-other-language-is-not-found",
+   "category": "multilingual",
+   "scenario": "g_ml",
+   "request": {
+    "title": "syn g mehrfach",
+    "title_language": "en",
+    "country": "US"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_found",
+    "no_value": true
+   },
+   "tags": [
+    "multilingual:unsupported_translation",
+    "multilingual:no_lexical_equivalence"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-cross-language-needs-opt-in",
+   "category": "multilingual",
+   "scenario": "g_ml",
+   "request": {
+    "title": "syn g mehrfach",
+    "title_language": "en",
+    "allow_cross_language": true,
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "61000"
+   },
+   "tags": [
+    "multilingual:ambiguous_translation"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-unsupported-language",
+   "category": "multilingual",
+   "scenario": "g_ml",
+   "request": {
+    "title": "syn g multi",
+    "title_language": "zh",
+    "country": "US"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "unsupported",
+    "no_value": true
+   },
+   "tags": [
+    "multilingual:unsupported_translation"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-language-never-selects-the-country",
+   "category": "multilingual",
+   "scenario": "g_ml",
+   "request": {
+    "title": "syn g multiple es",
+    "title_language": "es",
+    "country": "MX",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_occupation_in_country",
+    "no_value": true
+   },
+   "tags": [
+    "multilingual:incorrect_language_country_assumption"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-spanish-title-us-country-keeps-us",
+   "category": "multilingual",
+   "scenario": "g_ml",
+   "request": {
+    "title": "syn g multiple es",
+    "title_language": "es",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "61000",
+    "currency": "USD"
+   },
+   "tags": [
+    "multilingual:incorrect_language_country_assumption"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-false-friend-english",
+   "category": "multilingual",
+   "scenario": "g_ml_fa",
+   "request": {
+    "title": "syn g pie",
+    "title_language": "en",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "40000"
+   },
+   "tags": [
+    "multilingual:cross_language_collision"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-false-friend-french",
+   "category": "multilingual",
+   "scenario": "g_ml_fb",
+   "request": {
+    "title": "syn g pie",
+    "title_language": "fr",
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "70000"
+   },
+   "tags": [
+    "multilingual:cross_language_collision"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-false-friend-without-language-is-ambiguous",
+   "category": "multilingual",
+   "scenario": "g_ml_fa",
+   "request": {
+    "title": "syn g pie",
+    "country": "US"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "ambiguous",
+    "no_value": true
+   },
+   "tags": [
+    "multilingual:cross_language_collision",
+    "multilingual:ambiguous_translation"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-unverified-language-alias-needs-context",
+   "category": "multilingual",
+   "scenario": "g_ml_unk",
+   "request": {
+    "title": "syn g unknown language",
+    "title_language": "en",
+    "country": "US"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "insufficient_context",
+    "no_value": true
+   },
+   "tags": [
+    "multilingual:unqualified_mapping"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  },
+  {
+   "id": "ml-unverified-language-alias-opt-in",
+   "category": "multilingual",
+   "scenario": "g_ml_unk",
+   "request": {
+    "title": "syn g unknown language",
+    "title_language": "en",
+    "accept_unverified_language": true,
+    "country": "US",
+    "measure": "median",
+    "pay_period": "annual"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "45000"
+   },
+   "tags": [
+    "multilingual:unqualified_mapping"
+   ],
+   "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
+   "evidence_origin": "SYNTHETIC",
+   "qualification_state": "NOT_APPLICABLE_SYNTHETIC"
+  }
+ ],
+ "tags": [
+  "compensation:conflicting_sources",
+  "compensation:detailed_vs_broad",
+  "compensation:different_taxonomy_editions",
+  "compensation:exact_measurement",
+  "compensation:full_time_vs_part_time",
+  "compensation:hourly_vs_annual",
+  "compensation:mean_vs_median",
+  "compensation:missing_measurements",
+  "compensation:national_vs_regional",
+  "compensation:no_cross_country_substitution",
+  "compensation:no_hidden_period_conversion",
+  "compensation:no_silent_broader_substitution",
+  "compensation:no_unauthorised_currency_conversion",
+  "compensation:percentile",
+  "compensation:publication_periods",
+  "compensation:source_revisions",
+  "compensation:suppressed_measurements",
+  "compensation:unsupported_comparison_rejected",
+  "compensation:unsupported_measurement",
+  "compensation:weekly_vs_annual",
+  "fallback:authorised_international",
+  "fallback:c3_not_promoted_to_c1",
+  "fallback:c4_abstains",
+  "fallback:conflicting_national_and_international",
+  "fallback:country_native_broad",
+  "fallback:country_native_detailed",
+  "fallback:insufficient_occupation_specificity",
+  "fallback:international_harmonised",
+  "fallback:missing_currency_conversion",
+  "fallback:missing_ppp_conversion",
+  "fallback:unapproved_harmonised_mapping",
+  "fallback:unavailable_national_evidence",
+  "fallback:unsupported_geography",
+  "jurisdiction:BR",
+  "jurisdiction:CA",
+  "jurisdiction:CL",
+  "jurisdiction:DE",
+  "jurisdiction:FR",
+  "jurisdiction:GB",
+  "jurisdiction:MX",
+  "jurisdiction:US",
+  "multilingual:accent_normalisation",
+  "multilingual:ambiguous_translation",
+  "multilingual:authorised_alias",
+  "multilingual:cross_language_collision",
+  "multilingual:incorrect_language_country_assumption",
+  "multilingual:no_lexical_equivalence",
+  "multilingual:official_title",
+  "multilingual:unqualified_mapping",
+  "multilingual:unsupported_translation",
+  "occupation:ambiguous_code_across_editions",
+  "occupation:ambiguous_title",
+  "occupation:broad_occupation",
+  "occupation:conflicting_candidates",
+  "occupation:curated_alias_proposal",
+  "occupation:detailed_occupation",
+  "occupation:exact_code",
+  "occupation:missing_classification",
+  "occupation:official_title",
+  "occupation:taxonomy_edition",
+  "occupation:unqualified_alias",
+  "occupation:unsupported_title",
+  "occupation:wrong_country",
+  "occupation:wrong_taxonomy_edition",
+  "source:incomplete_provenance",
+  "source:unapproved_never_operational",
+  "source:unqualified_never_operational"
+ ]
+}
