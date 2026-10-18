@@ -1,0 +1,163 @@
+{
+ "schema": "p10c-f2a-source-verification/1",
+ "wave": "P10C-F2B",
+ "date": "2026-10-18",
+ "preconditions": [
+  {
+   "id": "A",
+   "requirement": "Governance reconciliation merged",
+   "status": "MET",
+   "evidence": "PR #186 (P10C-F2A) is in origin/main at 690868d, with the F2A closure commit 006337c as an ancestor."
+  },
+  {
+   "id": "B",
+   "requirement": "Package 2 owner authorization recorded",
+   "status": "NOT_MET",
+   "evidence": "Not recorded. The earlier Package 1 authorization does not extend to Package 2; D-03 and D-22 are unanswered."
+  },
+  {
+   "id": "C",
+   "requirement": "Exact source names established",
+   "status": "MET",
+   "evidence": "Three candidate files: UK SOC 2020 Volume 1 Excel, ASHE Table 14 2025 provisional, ASHE guide to tables."
+  },
+  {
+   "id": "D",
+   "requirement": "Source editions verified",
+   "status": "PARTIAL",
+   "evidence": "UK SOC 2020 verified from the ONS page (9/26/104/412) with a file dated 20260827; ASHE 2025 provisional verified; the occupation classification edition of the Table 14 file is NOT confirmed (page and URL say soc2010; the bulletin says SOC 2020 from 2021)."
+  },
+  {
+   "id": "E",
+   "requirement": "Official file URLs verified",
+   "status": "MET",
+   "evidence": "All three URLs answered HTTP 200 on HEAD on 2026-10-18; nothing was downloaded."
+  },
+  {
+   "id": "F",
+   "requirement": "Licensing requirements verified",
+   "status": "MET_WITH_NOTE",
+   "evidence": "OGL v3.0 stated on the dataset and SOC pages ('all content ... except where otherwise stated'); the ONS terms page names third-party photographs, illustrations and videos as outside the OGL; no specific attribution wording is given on ONS pages."
+  },
+  {
+   "id": "G",
+   "requirement": "Commercial-use and redistribution documented",
+   "status": "MET_WITH_NOTE",
+   "evidence": "OGL v3.0 permits commercial use, redistribution and adaptation with attribution (licence terms; the ONS page itself is silent on commercial use). Territorial use outside the UK is not addressed by the ONS pages."
+  },
+  {
+   "id": "H",
+   "requirement": "Attribution documented",
+   "status": "MET",
+   "evidence": "Default OGL attribution statement: 'Contains public sector information licensed under the Open Government Licence v3.0'; the bulletin suggests a citation form."
+  },
+  {
+   "id": "I",
+   "requirement": "Acquisition method permitted",
+   "status": "MET",
+   "evidence": "Public direct download links on ons.gov.uk; single-file manual fetch with an identifying User-Agent; no scraping."
+  },
+  {
+   "id": "J",
+   "requirement": "ASHE data dictionary available",
+   "status": "NOT_MET",
+   "evidence": "The official table and field documentation is the guide-to-tables XLS (component 2c) and the Table 14 file's own notes; neither has been read. The 2018 QMI does not cover symbols or full-time definition."
+  },
+  {
+   "id": "K",
+   "requirement": "File structure and suppression semantics understood",
+   "status": "PARTIAL",
+   "evidence": "The correction notice is verified (codes 33, 331, 3312; Tables 2, 3, 14, 15 and 20; UK, London, South East, East); the exact suppressed cells, the cell symbol and the measures in Table 14 are not."
+  },
+  {
+   "id": "L",
+   "requirement": "Registry permits the workflow",
+   "status": "NOT_MET",
+   "evidence": "No UK source is registered in an approved state; transitions require the owner's Package 2 authorization first."
+  },
+  {
+   "id": "M",
+   "requirement": "Isolated ingestion environment available",
+   "status": "MET_WITH_NOTE",
+   "evidence": "Staging path defined outside the repository and every protected store; not created because nothing is acquired; the isolated PostgreSQL approach from F2A is reusable."
+  },
+  {
+   "id": "N",
+   "requirement": "No protected stores modified",
+   "status": "MET",
+   "evidence": "Nothing was written to any protected store; the V1 store was read-only (size and mtime unchanged)."
+  },
+  {
+   "id": "O",
+   "requirement": "Mandatory legal review complete or none remains",
+   "status": "MET_WITH_NOTE",
+   "evidence": "No mandatory legal review identified for OGL-licensed ONS content; non-UK commercial use is the same open question as RB-LIC-1."
+  },
+  {
+   "id": "P",
+   "requirement": "Acquisition scope matches Package 2",
+   "status": "MET",
+   "evidence": "Three files only; ESCO, ISCO-08, O*NET, ILOSTAT, regional OEWS, other ASHE tables and the 2024 revised release are excluded."
+  }
+ ],
+ "verified_facts": [
+  {
+   "fact": "UK SOC 2020 has 9 major, 26 sub-major, 104 minor and 412 unit groups; SOC 2010 had 9, 25, 90 and 369",
+   "url": "https://www.ons.gov.uk/methodology/classificationsandstandards/standardoccupationalclassificationsoc/soc2020/soc2020volume1structureanddescriptionsofunitgroups",
+   "status": "VERIFIED"
+  },
+  {
+   "fact": "The Volume 1 structure and unit-group descriptions are downloadable as an XLSX (289.1 kB), a PDF and a ZIP; the page states OGL v3.0",
+   "url": "same",
+   "status": "VERIFIED"
+  },
+  {
+   "fact": "ASHE Table 14 (earnings and hours worked, occupation by four-digit SOC): 2025 provisional released 23 October 2025; next release to be announced; annual estimates by sex, full-time and part-time status and four-digit SOC; the page does not state the SOC edition",
+   "url": "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/datasets/occupation4digitsoc2010ashetable14",
+   "status": "VERIFIED"
+  },
+  {
+   "fact": "From 2021 ONS moved ASHE occupation coding from SOC 2010 to SOC 2020; occupation figures in the 2025 bulletin are defined by SOC 2020",
+   "url": "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/bulletins/annualsurveyofhoursandearnings/2025",
+   "status": "VERIFIED"
+  },
+  {
+   "fact": "All 2025 estimates are provisional; 2024 estimates are revised; full-time means more than 30 paid hours a week (25 or more for teaching professions); median gross weekly earnings for full-time employees were 766.60 GBP in April 2025",
+   "url": "same bulletin",
+   "status": "VERIFIED"
+  },
+  {
+   "fact": "Correction of 19 December 2025: annual earnings estimates for occupation 3312 in some local areas were in error; estimates for 3312, 331 and 33 in London, the South East, East and the UK were suppressed in Tables 2, 3, 14, 15 and 20; to be reviewed in the revised 2025 dataset (October or November 2026)",
+   "url": "Table 14 dataset page",
+   "status": "VERIFIED"
+  },
+  {
+   "fact": "The 2018 ASHE QMI (last revised 25 October 2018) describes weekly and hourly analyses as employees on adult rates whose pay was not affected by absence, annual analyses as employees on adult rates in the same job for more than one year, coefficient of variation bands (5%, 10%, 20%), a 1% PAYE sample of about 180,000 jobs; it still says SOC 2010 and gives no symbol legend",
+   "url": "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/methodologies/annualsurveyofhoursandearningslowpayandannualsurveyofhoursandearningspensionresultsqmi",
+   "status": "VERIFIED (dated source)"
+  },
+  {
+   "fact": "Annual pay in the bulletin includes pay affected by absence, so annual figures are not directly comparable with weekly or hourly figures",
+   "url": "bulletin",
+   "status": "VERIFIED"
+  },
+  {
+   "fact": "ONS content is under OGL v3.0 except where otherwise stated; third-party photographs, illustrations and videos are outside it; no specific attribution wording is given",
+   "url": "https://www.ons.gov.uk/help/termsandconditions",
+   "status": "VERIFIED"
+  },
+  {
+   "fact": "Structural indication only: the local V1 UK rows have 9 one-digit, 26 two-digit, 103 three-digit and 388 four-digit codes plus one row without a code. Twenty-six two-digit groups equals the SOC 2020 sub-major count (SOC 2010 had 25). This is an inference about the V1 data, NOT a verification of the Table 14 file's edition",
+   "url": "uk_v1_baseline.json",
+   "status": "INFERENCE"
+  }
+ ],
+ "unresolved": [
+  "SOC edition of the Table 14 file (from its own notes)",
+  "Table 14 sheet layout, measures, symbols and full-time and part-time scope (guide to tables)",
+  "which UK SOC 2020 file version is current (page date 5 May 2026; file name date 20260827)",
+  "the exact suppressed cells",
+  "Package 2 owner authorization, D-03, D-22",
+  "commercial use outside the UK"
+ ]
+}
