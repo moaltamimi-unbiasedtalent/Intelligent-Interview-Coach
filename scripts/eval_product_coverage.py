@@ -42,7 +42,9 @@ from src.copilot.rag.translation import QueryTranslator  # noqa: E402
 DIR = Path("evaluations/product_coverage")  # committed INPUTS (cases.json) live here
 # Results go to a temp directory unless refreshed deliberately with ``--write`` / ASK4MO_EVAL_WRITE=1 (W9.12).
 _WRITE = "--write" in sys.argv or os.environ.get("ASK4MO_EVAL_WRITE") == "1"
-RESULTS = DIR if _WRITE else Path(tempfile.mkdtemp(prefix="ask4mo_eval_pc_"))
+_OUT = os.environ.get("ASK4MO_EVAL_OUT")           # P10C-G: an explicit results directory (the regression guard reads results.csv from it); default stays a fresh temporary directory
+RESULTS = DIR if _WRITE else (Path(_OUT) if _OUT else Path(tempfile.mkdtemp(prefix="ask4mo_eval_pc_")))
+RESULTS.mkdir(parents=True, exist_ok=True)
 GATES = {
     "routing": 0.95, "geo_source": 0.95, "evidence_hit@5": 0.90,
     "citation_validity": 1.00, "salary_context": 1.00, "tool_selection": 0.95,

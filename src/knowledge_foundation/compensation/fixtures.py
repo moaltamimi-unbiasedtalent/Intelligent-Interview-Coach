@@ -45,7 +45,7 @@ def load_world(sf, corpus: dict[str, Any] | None = None) -> SimpleNamespace:
         keys[sc["id"]] = node["occupation_key"]
         for item in sc["aliases"]:
             text, lang = (item, "en") if isinstance(item, str) else (item["text"], item["language"])
-            a.add_alias(node["occupation_key"], text, language=lang, language_basis="fixture_declared", alias_type="source_synonym", source_ref="fx_occ")
+            a.add_alias(node["occupation_key"], text, language=lang, language_basis="fixture_declared" if lang else None, alias_type="source_synonym", source_ref="fx_occ")
     for sc in corpus["scenarios"]:
         for r in sc["relationships"]:
             g.add_relationship(keys[sc["id"]], keys[r["to"]], relationship_type=r["type"], basis=r["basis"], mapping_status=r["status"], from_taxonomy=tuple(r["from_taxonomy"]),
@@ -62,7 +62,9 @@ def load_world(sf, corpus: dict[str, Any] | None = None) -> SimpleNamespace:
 
 def _request(case: dict[str, Any]) -> CompensationRequest:
     q = dict(case["request"])
-    occ = MultilingualRequest(title=q.pop("title", None), title_language=q.pop("title_language", None), taxonomy_code=q.pop("taxonomy_code", None))
+    occ = MultilingualRequest(title=q.pop("title", None), title_language=q.pop("title_language", None), taxonomy_code=q.pop("taxonomy_code", None), taxonomy_scheme=q.pop("taxonomy_scheme", None),
+                              taxonomy_edition=q.pop("taxonomy_edition", None), accept_unverified_language=q.pop("accept_unverified_language", False), allow_cross_language=q.pop("allow_cross_language", False),
+                              role_context=q.pop("role_context", None))
     country = q.pop("country", None)
     return CompensationRequest(occupation=occ, country=country, require_operational=not case.get("internal", True), **q)
 
@@ -85,6 +87,11 @@ def check_expectations(r, e: dict[str, Any]) -> list[str]:
         problems.append("a value was returned")
     if "limitation_contains" in e and not any(e["limitation_contains"].lower() in x.lower() for x in r.coverage_limitations):
         problems.append("limitation missing")
+    if "occupation_status" in e and r.occupation_status != e["occupation_status"]:
+        problems.append(f"occupation status {r.occupation_status} != {e['occupation_status']}")
+    for flag, got in (("operational", r.operational), ("candidate_presentable", r.candidate_presentable)):
+        if flag in e and got is not e[flag]:
+            problems.append(f"{flag} {got} != {e[flag]}")
     if "contextual_class" in e and not any(c["evidence_class"] == e["contextual_class"] and c["broader_occupation_code"] and c["broader_occupation_label"] for c in r.contextual_evidence):
         problems.append("labelled broader-group context missing")
     if "contextual_count" in e and len(r.contextual_evidence) != e["contextual_count"]:
