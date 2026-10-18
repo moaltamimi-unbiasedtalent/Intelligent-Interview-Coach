@@ -28,7 +28,7 @@ REQUIRED_TAGS: dict[str, list[str]] = {
                               "compensation:weekly_vs_annual", "compensation:full_time_vs_part_time", "compensation:national_vs_regional", "compensation:detailed_vs_broad",
                               "compensation:different_taxonomy_editions", "compensation:publication_periods", "compensation:source_revisions", "compensation:missing_measurements",
                               "compensation:suppressed_measurements", "compensation:expired_or_revoked_evidence", "compensation:conflicting_sources", "compensation:unqualified_source",
-                              "compensation:unapproved_source", "compensation:incomplete_provenance", "compensation:no_hidden_annualisation", "compensation:no_unauthorised_currency_conversion",
+                              "compensation:unapproved_source", "compensation:incomplete_provenance", "compensation:no_hidden_period_conversion", "compensation:no_unauthorised_currency_conversion",
                               "compensation:unsupported_comparison_rejected", "compensation:no_silent_broader_substitution", "compensation:no_cross_country_substitution"],
     "fallback_and_abstention": ["fallback:country_native_detailed", "fallback:country_native_broad", "fallback:authorised_international", "fallback:unavailable_national_evidence",
                                 "fallback:insufficient_occupation_specificity", "fallback:conflicting_national_and_international", "fallback:unapproved_harmonised_mapping",
@@ -452,7 +452,7 @@ def coverage_matrix(corpus: dict[str, Any], corpus_results: dict[str, Any], gove
              "negative:silent_broader_substitution": "compensation:no_silent_broader_substitution", "negative:incomplete_provenance": "source:incomplete_provenance",
              "compensation:unapproved_source": "source:unapproved_never_operational", "compensation:unqualified_source": "source:unqualified_never_operational",
              "compensation:incomplete_provenance": "source:incomplete_provenance", "occupation:missing_provenance": "source:incomplete_provenance",
-             "compensation:no_hidden_annualisation": "compensation:weekly_vs_annual"}
+             "compensation:no_hidden_period_conversion": "compensation:weekly_vs_annual"}
     for k, v in alias.items():
         if exercised[k] == 0 and exercised[v] > 0:
             exercised[k], passing[k] = exercised[v], passing[v]

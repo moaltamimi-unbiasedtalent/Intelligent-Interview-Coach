@@ -3606,7 +3606,7 @@
    },
    "tags": [
     "compensation:weekly_vs_annual",
-    "compensation:no_hidden_annualisation"
+    "compensation:no_hidden_period_conversion"
    ],
    "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
    "evidence_origin": "SYNTHETIC",
@@ -3632,7 +3632,7 @@
    },
    "tags": [
     "compensation:weekly_vs_annual",
-    "compensation:no_hidden_annualisation"
+    "compensation:no_hidden_period_conversion"
    ],
    "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
    "evidence_origin": "SYNTHETIC",
@@ -3656,7 +3656,7 @@
    },
    "tags": [
     "compensation:weekly_vs_annual",
-    "compensation:no_hidden_annualisation"
+    "compensation:no_hidden_period_conversion"
    ],
    "source_state": "synthetic_fixture (restricted; can never be approved or serve as evidence)",
    "evidence_origin": "SYNTHETIC",
@@ -4855,7 +4855,7 @@
   "compensation:missing_measurements",
   "compensation:national_vs_regional",
   "compensation:no_cross_country_substitution",
-  "compensation:no_hidden_annualisation",
+  "compensation:no_hidden_period_conversion",
   "compensation:no_silent_broader_substitution",
   "compensation:no_unauthorised_currency_conversion",
   "compensation:percentile",
