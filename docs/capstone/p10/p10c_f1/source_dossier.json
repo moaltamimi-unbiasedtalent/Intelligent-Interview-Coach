@@ -34,7 +34,7 @@
    "publisher": "U.S. Bureau of Labor Statistics",
    "dataset": "Occupational Employment and Wage Statistics (OEWS)",
    "edition": {
-    "value": "May 2025 estimates (the current release per the OEWS tables page, which offers oesm25nat.zip; the page states no release date, only a page last-modified date of 15 May 2026, which is NOT a release date). The locally held V1 file is the May 2025 national file.",
+    "value": "May 2025 estimates, news release 'Occupational Employment and Wages - May 2025' for release Friday 15 May 2026 (bls.gov/news.release/ocwage.nr0.htm). National file oesm25nat.zip (XLSX).",
     "status": "VERIFIED_OFFICIAL_PAGE"
    },
    "reference_period": {
@@ -44,8 +44,11 @@
    "taxonomy": "soc (SOC 2018)",
    "official_urls": {
     "landing": "https://www.bls.gov/oes/",
-    "documentation": "https://www.bls.gov/oes/oes_doc.htm",
-    "licence": "https://www.bls.gov/opub/copyright-information.htm"
+    "documentation": "https://www.bls.gov/oes/2025/may/oes_tec.htm",
+    "licence": "https://www.bls.gov/opub/copyright-information.htm",
+    "news_release": "https://www.bls.gov/news.release/ocwage.nr0.htm",
+    "survey_methods": "https://www.bls.gov/oes/methods_25.pdf",
+    "occupation_definitions": "https://www.bls.gov/oes/occupation_definitions_m2025.xlsx"
    },
    "licence": {
     "name": "U.S. Government work, public domain (BLS copyright information page)",
@@ -73,7 +76,7 @@
     "status": "VERIFIED_OFFICIAL_PAGE"
    },
    "classification": {
-    "value": "2018 SOC (stated in the May 2024 technical notes: about 830 occupational categories in 22 of 23 major groups, military-specific excluded). The May 2025 technical notes were NOT read, so the edition for May 2025 is carried over by inference and must be confirmed from the May 2025 notes.",
+    "value": "2018 SOC, about 830 occupational categories in 22 of 23 major groups (major group 55 military excluded): stated in 'Technical Notes for May 2025 OEWS Estimates' (bls.gov/oes/2025/may/oes_tec.htm). The OEWS tables page and the news release do not state an edition themselves.",
     "status": "VERIFIED_OFFICIAL_PAGE"
    },
    "limitations": [
@@ -81,7 +84,9 @@
     "Annual rates are calculated from hourly rates using a typical 2,080-hour work year for hourly-reported occupations: this derivation is the PUBLISHER's, not a conversion by Ask4Mo, and must be labelled.",
     "Covers employees (full- and part-time); excludes the self-employed, owners and partners of unincorporated firms, household workers and unpaid family workers.",
     "The pages read did not state which statistics (mean, median, percentiles) the files contain or define the O_GROUP field or the suppression symbols: the data dictionary was not read (NOT VERIFIED).",
-    "State and metropolitan rows are subnational (policy p10c-e/1 classes them by occupation level and labels them regional)."
+    "State and metropolitan rows are subnational (policy p10c-e/1 classes them by occupation level and labels them regional).",
+    "May 2025 specifics from the May 2025 technical notes: employment is the average of May 2025 and November 2024 QCEW data; the estimates use 2022 NAICS and a model-based (MB3) method with three years of data; a federal funding lapse (1 Oct to 12 Nov 2025) needed extra processing time with no methodology change. Wage definition and the 2,080-hour derivation were read in the May 2024 notes; confirm they are unchanged in the May 2025 notes (the May 2025 page does not restate them in the summary read).",
+    "OEWS may publish aggregation or residual codes that are not 6-digit SOC detailed codes: check the data dictionary / O_GROUP values on the actual file before import (NOT VERIFIED: the field layout page was not located)."
    ],
    "evidence": [
     "https://www.bls.gov/opub/copyright-information.htm",
@@ -152,18 +157,20 @@
    "official_urls": {
     "landing": "https://www.bls.gov/soc/",
     "documentation": "https://www.bls.gov/soc/2018/home.htm",
-    "licence": "https://www.bls.gov/opub/copyright-information.htm"
+    "licence": "https://www.bls.gov/opub/copyright-information.htm",
+    "structure_xlsx": "https://www.bls.gov/soc/2018/soc_structure_2018.xlsx",
+    "definitions_xlsx": "https://www.bls.gov/soc/2018/soc_2018_definitions.xlsx"
    },
    "licence": {
     "name": "No statement on the SOC pages; the BLS site-wide copyright information (public domain) is linked from them",
-    "statement_found": false,
-    "corroborated_against_publisher": false,
-    "terms_clear": "unclear",
-    "redistribution": "not_verified",
-    "commercial_use": "not_verified",
+    "statement_found": true,
+    "corroborated_against_publisher": true,
+    "terms_clear": "clear",
+    "redistribution": "permitted",
+    "commercial_use": "not_addressed_by_page (follows from the public-domain statement)",
     "attribution": "requested",
     "attribution_text": null,
-    "notes": "The SOC page makes no reuse statement; it links the BLS copyright page. Whether that page covers the SOC structure files is an inference, not a stated fact.",
+    "notes": "The BLS copyright page states everything BLS publishes is public domain except copyrighted photographs and illustrations; the SOC files are hosted and published on bls.gov. Coverage of the SOC files rests on that site-wide statement (the SOC page itself has no reuse statement).",
     "legal_review_needed": false,
     "legal_review_reason": null
    },
@@ -241,7 +248,7 @@
    "publisher": "O*NET Resource Center (U.S. Department of Labor, Employment and Training Administration)",
    "dataset": "O*NET Database",
    "edition": {
-    "value": "O*NET 31.0 Database (the page identifies it as current; whether it is the newest release was not confirmed). The crosswalk file name shows O*NET-SOC 2019.",
+    "value": "O*NET 31.0 (August 2026), stated on the O*NET releases page as the current production release and the newest listed (prior: 30.3, May 2026). The releases page does not state the O*NET-SOC taxonomy version for 31.0; O*NET-SOC 2019 (based on the 2018 SOC) was introduced in release 25.1 (November 2020) and the crosswalk file name carries 2019.",
     "status": "VERIFIED_OFFICIAL_PAGE"
    },
    "reference_period": {
@@ -444,7 +451,8 @@
    "official_urls": {
     "landing": "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/bulletins/annualsurveyofhoursandearnings/latest",
     "documentation": "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/methodologies/annualsurveyofhoursandearningslowpayandannualsurveyofhoursandearningspensionresultsqmi",
-    "licence": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+    "licence": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+    "table14_2025": "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/datasets/occupation4digitsoc2010ashetable14"
    },
    "licence": {
     "name": "Open Government Licence v3.0 (stated on the bulletin and the dataset page: all content under OGL v3.0 except where otherwise stated)",
@@ -472,7 +480,7 @@
     "status": "VERIFIED_OFFICIAL_PAGE"
    },
    "classification": {
-    "value": "The 2025 bulletin states occupations are defined by SOC 2020; the local Table 14.1a file name contains 'SOC20 (4)'. DISCREPANCY: the ASHE methodology (QMI) text and the Table 14 dataset page slug still say SOC 2010 and the page does not mention SOC 2020. The edition of the table file must be confirmed from the file's own notes before any import.",
+    "value": "The ASHE 2025 bulletin states 'From 2021, we moved our occupation coding to Standard Occupation Classification 2020 (SOC 2020), from SOC 2010', and its occupation figures are 'as defined by SOC 2020'. The Table 14 dataset page keeps a legacy slug and title naming SOC 2010 and never states SOC 2020. The ASHE 2025 Table 14 file is ashetable142025provisional.zip; its own notes sheet must still confirm the edition before acquisition.",
     "status": "VERIFIED_OFFICIAL_PAGE"
    },
    "limitations": [
@@ -505,7 +513,9 @@
     "transformations": [
      "ashe_records with uk_soc_edition 2020 only after the table notes confirm it",
      "keep pay weekly and mark the vintage provisional or revised",
-     "reject the row without a native code"
+     "reject the row without a native code",
+     "suppressed annual-pay cells for occupations 3312, 331 and 33 (UK and affected regions, Tables 2, 3, 14, 15, 20) stay MISSING: never reconstructed, estimated or back-filled from other years or neighbouring groups",
+     "weekly pay stays weekly"
     ],
     "runtime_dependencies": [
      "UK SOC 2020 nodes",
@@ -4201,8 +4211,8 @@
    ],
    "capability_unlocked": "Registry-gated import of the listed sources, only after owner approval of ingestion; no runtime use implied.",
    "licensing_status": {
+    "us_soc_2018": "clear",
     "us_bls_oews": "clear",
-    "us_soc_2018": "unclear",
     "us_onet_db": "clear"
    },
    "acquisition_requirements": [
@@ -4243,7 +4253,20 @@
    "independently_approvable": true,
    "approved": false,
    "legal_review_sources": [],
-   "ready_for_owner_consideration": false
+   "ready_for_owner_consideration": true,
+   "scope": {
+    "core": [
+     "us_soc_2018",
+     "us_bls_oews"
+    ],
+    "conditional": [
+     "us_onet_db (only for the O*NET-SOC 2019 to SOC 2018 and ESCO to O*NET-SOC crosswalks, if D-20 adopts the O*NET/ESCO route)"
+    ],
+    "excluded": [
+     "BLS OOH and projections (separate entry, not in package 1)",
+     "state and metropolitan OEWS files (national file only unless regional use is separately approved)"
+    ]
+   }
   },
   {
    "package": 2,
@@ -4259,8 +4282,8 @@
    ],
    "capability_unlocked": "Registry-gated import of the listed sources, only after owner approval of ingestion; no runtime use implied.",
    "licensing_status": {
-    "uk_ons_ashe": "clear",
-    "uk_soc_2020": "clear"
+    "uk_soc_2020": "clear",
+    "uk_ons_ashe": "clear"
    },
    "acquisition_requirements": [
     "owner approval of ingestion for each listed source (D-04)",
