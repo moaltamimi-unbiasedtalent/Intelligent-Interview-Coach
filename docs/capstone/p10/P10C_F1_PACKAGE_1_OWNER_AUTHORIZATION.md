@@ -112,6 +112,9 @@ Basis: the explicit owner instruction in the P10C-F2A-R specification; no signat
 - **POLICY J:** an auditable reviewer appointment and qualification workflow (only a named, authenticated human); controlled batch qualification where governance permits, never automatic.
 Reviewer appointments are NOT made: see [the human review package](P10C_F2A_HUMAN_REVIEW_AND_APPROVAL.md) and [the coverage gap analysis](P10C_F2A_COVERAGE_GAP_ANALYSIS.md).
 
+## M.5 Capstone engineering closure recorded 2026-10-18 (P10C-F2A)
+Basis: the explicit owner instruction; no signature or external legal approval is claimed. **POLICY-K:** P10C-F2A is accepted for capstone engineering closure (not production readiness, not approval of operational evidence); human measurement and alias qualification, reviewer appointment, new privileged endpoints, persistent-registry promotion, RB-LIC-1 clearance and Compensation V2 activation are DEFERRED to after the capstone submission; coverage 386/412 (93.7%) is BELOW_GATE, accepted for capstone engineering scope, remediation post-submission. See [closure](P10C_F2A_CAPSTONE_ENGINEERING_CLOSURE.md) and [backlog](P10C_F2A_POST_SUBMISSION_BACKLOG.md). Package 1 authorization scope is unchanged.
+
 ## Package 2 (United Kingdom) safety — unchanged and UNAPPROVED
 - The ASHE correction dated 19 December 2025 suppresses annual pay estimates for occupations 3312, 331 and 33 (UK and some regions; Tables 2, 3, 14, 15, 20). Any future ingestion must keep those cells **missing**; they are never reconstructed or filled. Weekly pay stays weekly.
 - SOC edition: the 2025 bulletin states occupation coding moved from SOC 2010 to SOC 2020 from 2021 and its occupation charts are "defined by SOC 2020" (VERIFIED). The Table 14 page keeps a legacy "soc2010" title/slug and does not state SOC 2020; the 2025 file is `ashetable142025provisional.zip`. The edition must be confirmed from the file's own notes before acquisition.
