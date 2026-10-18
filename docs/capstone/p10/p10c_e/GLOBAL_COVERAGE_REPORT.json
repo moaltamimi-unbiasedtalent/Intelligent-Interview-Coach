@@ -1,0 +1,537 @@
+{
+ "markets": {
+  "AR": {
+   "adapter": "south_america_records (P10C-E, synthetic fixtures only)",
+   "adapter_is_operational_coverage": false,
+   "candidate_source_ids": [
+    "ar_nso"
+   ],
+   "coverage_levels": {
+    "compensation_level": "targeted",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "targeted"
+   },
+   "isco08_structure_held_locally": true,
+   "local_v1_records": 0,
+   "name": "Argentina",
+   "national_occupation_classification": "UNKNOWN (none identified)",
+   "operational_today": false,
+   "region_vocabulary_recorded": 24,
+   "source_languages_from_evidence": [],
+   "statuses": {
+    "approved_for_ingestion": false,
+    "crosswalk_available": false,
+    "data_imported": 0,
+    "evidence_qualified": false,
+    "licence_verified": false,
+    "occupation_nodes_available": 0,
+    "runtime_use_approved": false,
+    "taxonomy_acquired": false,
+    "taxonomy_edition_known": false
+   },
+   "taxonomy_scheme": "isco"
+  },
+  "BO": {
+   "adapter": "south_america_records (P10C-E, synthetic fixtures only)",
+   "adapter_is_operational_coverage": false,
+   "candidate_source_ids": [
+    "bo_nso"
+   ],
+   "coverage_levels": {
+    "compensation_level": "targeted",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "targeted"
+   },
+   "isco08_structure_held_locally": true,
+   "local_v1_records": 0,
+   "name": "Bolivia",
+   "national_occupation_classification": "UNKNOWN (none identified)",
+   "operational_today": false,
+   "region_vocabulary_recorded": 9,
+   "source_languages_from_evidence": [],
+   "statuses": {
+    "approved_for_ingestion": false,
+    "crosswalk_available": false,
+    "data_imported": 0,
+    "evidence_qualified": false,
+    "licence_verified": false,
+    "occupation_nodes_available": 0,
+    "runtime_use_approved": false,
+    "taxonomy_acquired": false,
+    "taxonomy_edition_known": false
+   },
+   "taxonomy_scheme": "isco"
+  },
+  "BR": {
+   "adapter": "brazil_records (P10C-D)",
+   "adapter_is_operational_coverage": false,
+   "candidate_source_ids": [
+    "br_cbo",
+    "br_ibge_survey",
+    "br_admin_employment"
+   ],
+   "coverage_levels": {
+    "compensation_level": "targeted",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "source_identified"
+   },
+   "local_v1_records": 0,
+   "name": "Brazil",
+   "operational_today": false,
+   "region_vocabulary_recorded": 27,
+   "source_languages_from_evidence": [],
+   "statuses": {
+    "approved_for_ingestion": false,
+    "crosswalk_available": false,
+    "data_imported": 0,
+    "evidence_qualified": false,
+    "licence_verified": false,
+    "occupation_nodes_available": 0,
+    "runtime_use_approved": false,
+    "taxonomy_acquired": false,
+    "taxonomy_edition_known": false
+   },
+   "taxonomy_scheme": "cbo"
+  },
+  "CA": {
+   "adapter": "canada_records (P10C-D)",
+   "adapter_is_operational_coverage": false,
+   "candidate_source_ids": [
+    "ca_noc",
+    "ca_job_bank_wages",
+    "ca_statcan_wages"
+   ],
+   "coverage_levels": {
+    "compensation_level": "source_identified",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "source_identified"
+   },
+   "local_v1_records": 0,
+   "name": "Canada",
+   "operational_today": false,
+   "region_vocabulary_recorded": 13,
+   "source_languages_from_evidence": [],
+   "statuses": {
+    "approved_for_ingestion": false,
+    "crosswalk_available": false,
+    "data_imported": 0,
+    "evidence_qualified": false,
+    "licence_verified": false,
+    "occupation_nodes_available": 0,
+    "runtime_use_approved": false,
+    "taxonomy_acquired": false,
+    "taxonomy_edition_known": false
+   },
+   "taxonomy_scheme": "noc"
+  },
+  "CL": {
+   "adapter": "south_america_records (P10C-E, synthetic fixtures only)",
+   "adapter_is_operational_coverage": false,
+   "candidate_source_ids": [
+    "cl_esi"
+   ],
+   "coverage_levels": {
+    "compensation_level": "source_identified",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "targeted"
+   },
+   "isco08_structure_held_locally": true,
+   "local_v1_records": 0,
+   "name": "Chile",
+   "national_occupation_classification": "UNKNOWN (none identified)",
+   "operational_today": false,
+   "region_vocabulary_recorded": 16,
+   "source_languages_from_evidence": [],
+   "statuses": {
+    "approved_for_ingestion": false,
+    "crosswalk_available": false,
+    "data_imported": 0,
+    "evidence_qualified": false,
+    "licence_verified": false,
+    "occupation_nodes_available": 0,
+    "runtime_use_approved": false,
+    "taxonomy_acquired": false,
+    "taxonomy_edition_known": false
+   },
+   "taxonomy_scheme": "isco"
+  },
+  "CO": {
+   "adapter": "south_america_records (P10C-E, synthetic fixtures only)",
+   "adapter_is_operational_coverage": false,
+   "candidate_source_ids": [
+    "co_geih"
+   ],
+   "coverage_levels": {
+    "compensation_level": "source_identified",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "targeted"
+   },
+   "isco08_structure_held_locally": true,
+   "local_v1_records": 0,
+   "name": "Colombia",
+   "national_occupation_classification": "UNKNOWN (none identified)",
+   "operational_today": false,
+   "region_vocabulary_recorded": 33,
+   "source_languages_from_evidence": [],
+   "statuses": {
+    "approved_for_ingestion": false,
+    "crosswalk_available": false,
+    "data_imported": 0,
+    "evidence_qualified": false,
+    "licence_verified": false,
+    "occupation_nodes_available": 0,
+    "runtime_use_approved": false,
+    "taxonomy_acquired": false,
+    "taxonomy_edition_known": false
+   },
+   "taxonomy_scheme": "isco"
+  },
+  "EC": {
+   "adapter": "south_america_records (P10C-E, synthetic fixtures only)",
+   "adapter_is_operational_coverage": false,
+   "candidate_source_ids": [
+    "ec_nso"
+   ],
+   "coverage_levels": {
+    "compensation_level": "targeted",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "targeted"
+   },
+   "isco08_structure_held_locally": true,
+   "local_v1_records": 0,
+   "name": "Ecuador",
+   "national_occupation_classification": "UNKNOWN (none identified)",
+   "operational_today": false,
+   "region_vocabulary_recorded": 24,
+   "source_languages_from_evidence": [],
+   "statuses": {
+    "approved_for_ingestion": false,
+    "crosswalk_available": false,
+    "data_imported": 0,
+    "evidence_qualified": false,
+    "licence_verified": false,
+    "occupation_nodes_available": 0,
+    "runtime_use_approved": false,
+    "taxonomy_acquired": false,
+    "taxonomy_edition_known": false
+   },
+   "taxonomy_scheme": "isco"
+  },
+  "GB": {
+   "adapter": "ashe_records (P10C-C contract)",
+   "adapter_is_operational_coverage": false,
+   "candidate_source_ids": [],
+   "coverage_levels": {
+    "compensation_level": "data_available",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "source_identified"
+   },
+   "local_v1_records": 527,
+   "name": "United Kingdom",
+   "operational_today": false,
+   "region_vocabulary_recorded": 0,
+   "source_languages_from_evidence": [
+    "en"
+   ],
+   "statuses": {
+    "approved_for_ingestion": false,
+    "crosswalk_available": false,
+    "data_imported": 0,
+    "evidence_qualified": false,
+    "licence_verified": false,
+    "occupation_nodes_available": 0,
+    "runtime_use_approved": false,
+    "taxonomy_acquired": false,
+    "taxonomy_edition_known": false
+   },
+   "taxonomy_scheme": "uk_soc"
+  },
+  "GY": {
+   "adapter": "south_america_records (P10C-E, synthetic fixtures only)",
+   "adapter_is_operational_coverage": false,
+   "candidate_source_ids": [
+    "gy_nso"
+   ],
+   "coverage_levels": {
+    "compensation_level": "targeted",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "targeted"
+   },
+   "isco08_structure_held_locally": true,
+   "local_v1_records": 0,
+   "name": "Guyana",
+   "national_occupation_classification": "UNKNOWN (none identified)",
+   "operational_today": false,
+   "region_vocabulary_recorded": 10,
+   "source_languages_from_evidence": [],
+   "statuses": {
+    "approved_for_ingestion": false,
+    "crosswalk_available": false,
+    "data_imported": 0,
+    "evidence_qualified": false,
+    "licence_verified": false,
+    "occupation_nodes_available": 0,
+    "runtime_use_approved": false,
+    "taxonomy_acquired": false,
+    "taxonomy_edition_known": false
+   },
+   "taxonomy_scheme": "isco"
+  },
+  "INTL": {
+   "adapter": "ilostat_records (P10C-E contract)",
+   "adapter_is_operational_coverage": false,
+   "candidate_source_ids": [
+    "intl_ilostat"
+   ],
+   "name": "International (ILOSTAT-style)",
+   "operational_today": false,
+   "precedence_decision": "PENDING OWNER DECISION D-16",
+   "statuses": {
+    "approved_for_ingestion": false,
+    "crosswalk_available": false,
+    "data_imported": 0,
+    "evidence_qualified": false,
+    "licence_verified": false,
+    "occupation_nodes_available": "ISCO-08 nodes exist only as a P10C-B local import; none is committed",
+    "runtime_use_approved": false,
+    "taxonomy_acquired": true,
+    "taxonomy_edition_known": true
+   },
+   "taxonomy_scheme": "isco"
+  },
+  "MX": {
+   "adapter": "mexico_records (P10C-D)",
+   "adapter_is_operational_coverage": false,
+   "candidate_source_ids": [
+    "mx_sinco",
+    "mx_inegi_earnings"
+   ],
+   "coverage_levels": {
+    "compensation_level": "targeted",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "source_identified"
+   },
+   "local_v1_records": 0,
+   "name": "Mexico",
+   "operational_today": false,
+   "region_vocabulary_recorded": 32,
+   "source_languages_from_evidence": [],
+   "statuses": {
+    "approved_for_ingestion": false,
+    "crosswalk_available": false,
+    "data_imported": 0,
+    "evidence_qualified": false,
+    "licence_verified": false,
+    "occupation_nodes_available": 0,
+    "runtime_use_approved": false,
+    "taxonomy_acquired": false,
+    "taxonomy_edition_known": false
+   },
+   "taxonomy_scheme": "sinco"
+  },
+  "PE": {
+   "adapter": "south_america_records (P10C-E, synthetic fixtures only)",
+   "adapter_is_operational_coverage": false,
+   "candidate_source_ids": [
+    "pe_nso"
+   ],
+   "coverage_levels": {
+    "compensation_level": "targeted",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "targeted"
+   },
+   "isco08_structure_held_locally": true,
+   "local_v1_records": 0,
+   "name": "Peru",
+   "national_occupation_classification": "UNKNOWN (none identified)",
+   "operational_today": false,
+   "region_vocabulary_recorded": 0,
+   "source_languages_from_evidence": [],
+   "statuses": {
+    "approved_for_ingestion": false,
+    "crosswalk_available": false,
+    "data_imported": 0,
+    "evidence_qualified": false,
+    "licence_verified": false,
+    "occupation_nodes_available": 0,
+    "runtime_use_approved": false,
+    "taxonomy_acquired": false,
+    "taxonomy_edition_known": false
+   },
+   "taxonomy_scheme": "isco"
+  },
+  "PY": {
+   "adapter": "south_america_records (P10C-E, synthetic fixtures only)",
+   "adapter_is_operational_coverage": false,
+   "candidate_source_ids": [
+    "py_nso"
+   ],
+   "coverage_levels": {
+    "compensation_level": "targeted",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "targeted"
+   },
+   "isco08_structure_held_locally": true,
+   "local_v1_records": 0,
+   "name": "Paraguay",
+   "national_occupation_classification": "UNKNOWN (none identified)",
+   "operational_today": false,
+   "region_vocabulary_recorded": 0,
+   "source_languages_from_evidence": [],
+   "statuses": {
+    "approved_for_ingestion": false,
+    "crosswalk_available": false,
+    "data_imported": 0,
+    "evidence_qualified": false,
+    "licence_verified": false,
+    "occupation_nodes_available": 0,
+    "runtime_use_approved": false,
+    "taxonomy_acquired": false,
+    "taxonomy_edition_known": false
+   },
+   "taxonomy_scheme": "isco"
+  },
+  "SR": {
+   "adapter": "south_america_records (P10C-E, synthetic fixtures only)",
+   "adapter_is_operational_coverage": false,
+   "candidate_source_ids": [
+    "sr_nso"
+   ],
+   "coverage_levels": {
+    "compensation_level": "targeted",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "targeted"
+   },
+   "isco08_structure_held_locally": true,
+   "local_v1_records": 0,
+   "name": "Suriname",
+   "national_occupation_classification": "UNKNOWN (none identified)",
+   "operational_today": false,
+   "region_vocabulary_recorded": 10,
+   "source_languages_from_evidence": [],
+   "statuses": {
+    "approved_for_ingestion": false,
+    "crosswalk_available": false,
+    "data_imported": 0,
+    "evidence_qualified": false,
+    "licence_verified": false,
+    "occupation_nodes_available": 0,
+    "runtime_use_approved": false,
+    "taxonomy_acquired": false,
+    "taxonomy_edition_known": false
+   },
+   "taxonomy_scheme": "isco"
+  },
+  "US": {
+   "adapter": "oews_records (P10C-C contract)",
+   "adapter_is_operational_coverage": false,
+   "candidate_source_ids": [],
+   "coverage_levels": {
+    "compensation_level": "data_available",
+    "crosswalk_level": "source_identified",
+    "outlook_level": "data_available",
+    "taxonomy_level": "implemented"
+   },
+   "local_v1_records": 1386,
+   "name": "United States",
+   "operational_today": false,
+   "region_vocabulary_recorded": 0,
+   "source_languages_from_evidence": [
+    "en"
+   ],
+   "statuses": {
+    "approved_for_ingestion": false,
+    "crosswalk_available": false,
+    "data_imported": 0,
+    "evidence_qualified": false,
+    "licence_verified": false,
+    "occupation_nodes_available": 0,
+    "runtime_use_approved": false,
+    "taxonomy_acquired": false,
+    "taxonomy_edition_known": false
+   },
+   "taxonomy_scheme": "soc"
+  },
+  "UY": {
+   "adapter": "south_america_records (P10C-E, synthetic fixtures only)",
+   "adapter_is_operational_coverage": false,
+   "candidate_source_ids": [
+    "uy_nso"
+   ],
+   "coverage_levels": {
+    "compensation_level": "targeted",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "targeted"
+   },
+   "isco08_structure_held_locally": true,
+   "local_v1_records": 0,
+   "name": "Uruguay",
+   "national_occupation_classification": "UNKNOWN (none identified)",
+   "operational_today": false,
+   "region_vocabulary_recorded": 19,
+   "source_languages_from_evidence": [],
+   "statuses": {
+    "approved_for_ingestion": false,
+    "crosswalk_available": false,
+    "data_imported": 0,
+    "evidence_qualified": false,
+    "licence_verified": false,
+    "occupation_nodes_available": 0,
+    "runtime_use_approved": false,
+    "taxonomy_acquired": false,
+    "taxonomy_edition_known": false
+   },
+   "taxonomy_scheme": "isco"
+  },
+  "VE": {
+   "adapter": "south_america_records (P10C-E, synthetic fixtures only)",
+   "adapter_is_operational_coverage": false,
+   "candidate_source_ids": [
+    "ve_nso"
+   ],
+   "coverage_levels": {
+    "compensation_level": "targeted",
+    "crosswalk_level": "targeted",
+    "outlook_level": "targeted",
+    "taxonomy_level": "targeted"
+   },
+   "isco08_structure_held_locally": true,
+   "local_v1_records": 0,
+   "name": "Venezuela",
+   "national_occupation_classification": "UNKNOWN (none identified)",
+   "operational_today": false,
+   "region_vocabulary_recorded": 25,
+   "source_languages_from_evidence": [],
+   "statuses": {
+    "approved_for_ingestion": false,
+    "crosswalk_available": false,
+    "data_imported": 0,
+    "evidence_qualified": false,
+    "licence_verified": false,
+    "occupation_nodes_available": 0,
+    "runtime_use_approved": false,
+    "taxonomy_acquired": false,
+    "taxonomy_edition_known": false
+   },
+   "taxonomy_scheme": "isco"
+  }
+ },
+ "note": "Derived from committed artifacts only. Nine statuses are kept separate; an adapter is not operational coverage; no market is qualified and global coverage is not claimed.",
+ "operational_markets": [],
+ "qualified_markets": [],
+ "schema": "p10ce_global_coverage/1"
+}

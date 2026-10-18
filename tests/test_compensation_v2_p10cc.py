@@ -195,7 +195,7 @@ def test_the_database_enforces_the_natural_key_and_restricts_deleting_a_linked_o
 def test_the_precedence_policy_is_the_recovered_six_levels_and_has_no_country_overrides():
     p = PrecedencePolicy.load()
     assert [t["category"] for t in p.tiers] == ["national_official_occupation_statistics", "national_public_employment_service", "eurostat_harmonised", "cedefop_intelligence",
-                                                  "authorized_secondary", "insufficient_evidence"] and p.version == "p10c-d/1"
+                                                  "authorized_secondary", "insufficient_evidence"] and p.version == "p10c-e/1"
     assert p.rank("eurostat_harmonised") == 3 and p.rank("bogus") is None and p.classes_for("eurostat_harmonised") == ("C3",) and p.classes_for("authorized_secondary") == ()
     raw = json.loads(POLICY_PATH.read_text())
     assert raw["country_overrides"].startswith("none") and not any(k.upper() in {"DE", "US", "UK", "GB", "EU"} for k in raw)
@@ -493,7 +493,7 @@ def test_the_public_response_carries_no_registry_secret_or_private_metadata(worl
     blob = json.dumps(d, default=str).lower()
     for secret in ("licence", "approval_status", "actor_user_id", "batch", "checksum", "provenance", "secret", "api_key", "record_key", "occupation_id"):
         assert secret not in blob, secret
-    assert d["candidate_presentable"] is False and d["policy_version"] == "p10c-d/1"
+    assert d["candidate_presentable"] is False and d["policy_version"] == "p10c-e/1"
 
 
 def test_language_never_selects_the_country_and_there_is_no_cross_country_fallback(world):

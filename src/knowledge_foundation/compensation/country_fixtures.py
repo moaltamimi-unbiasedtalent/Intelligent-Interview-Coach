@@ -13,6 +13,8 @@ from typing import Any
 from src.knowledge_foundation.aliases import AliasStore
 from src.knowledge_foundation.compensation import country_adapters as CA
 from src.knowledge_foundation.compensation.country_import import import_crosswalk, import_taxonomy_nodes
+from src.knowledge_foundation.compensation import international as INTL
+from src.knowledge_foundation.compensation.comparison import compare_fx, compare_nominal, compare_ppp
 from src.knowledge_foundation.compensation.fixtures import check_expectations
 from src.knowledge_foundation.compensation.resolver import CompensationRequest, CompensationResolver
 from src.knowledge_foundation.compensation.store import CompensationStoreV2
@@ -23,7 +25,7 @@ from src.knowledge_foundation.occupation_resolver import MultilingualRequest, Oc
 from src.knowledge_foundation.registry import SourceRegistry
 from src.knowledge_foundation.taxonomy import TaxonomyCatalogue
 
-__all__ = ["CORPUS_PATH", "load_corpus", "load_world", "evaluate_cases", "evaluate_blocks"]
+__all__ = ["CORPUS_PATH", "load_corpus", "load_world", "evaluate_cases", "evaluate_blocks", "evaluate_comparisons"]
 
 CORPUS_PATH = Path(__file__).resolve().parent.parent / "data" / "country_fixture_corpus.json"
 _ADAPTERS = {"canada": CA.canada_records, "mexico": CA.mexico_records, "brazil": CA.brazil_records}
@@ -51,7 +53,8 @@ def load_world(sf, corpus: dict[str, Any] | None = None) -> SimpleNamespace:
     cov.seed()
     lc.seed()
     for s in corpus["sources"]:
-        reg.register(s["source_id"], origin="synthetic_fixture", publisher=s["publisher"], dataset_name=s["dataset_name"], source_url=s["source_url"], precedence_category=s["precedence_category"])
+        reg.register(s["source_id"], origin="synthetic_fixture", publisher=s["publisher"], dataset_name=s["dataset_name"], source_url=s["source_url"], precedence_category=s["precedence_category"],
+                     **({"provenance": s["provenance"]} if s.get("provenance") else {}))
     node_reports = [import_taxonomy_nodes(g, a, reg, b["rows"], scheme=b["scheme"], edition=b["edition"], source_ref=b["source"], mode="fixture") for b in corpus["nodes"]]
     xwalk_reports = [import_crosswalk(g, reg, x["rows"], source_ref=x["source"], from_taxonomy=tuple(x["from"]), to_taxonomy=tuple(x["to"]), mode="fixture") for x in corpus["crosswalks"]]
     store = CompensationStoreV2(sf, reg, g)
@@ -59,6 +62,13 @@ def load_world(sf, corpus: dict[str, Any] | None = None) -> SimpleNamespace:
     for b in corpus["compensation"]:
         if b["adapter"] == "raw":
             rows, rej = b["rows"], {}
+        elif b["adapter"] == "south_america":
+            rows, rej = CA.south_america_records(b["country"], b["rows"], source_ref=b["source"], source_edition=b["source_edition"], taxonomy_edition=b["taxonomy_edition"],
+                                                 reference_year=b["reference_year"], **_adapter_kwargs(b))
+        elif b["adapter"] == "ilostat":
+            rows, rej = INTL.ilostat_records(b["rows"], source_ref=b["source"], source_edition=b["source_edition"], indicator_map=b["indicator_map"], currency_by_unit=b["currency_by_unit"],
+                                             classification_map={k: tuple(v) for k, v in b["classification_map"].items()}, currency_by_country=b.get("currency_by_country"),
+                                             local_currency_unit=b.get("local_currency_unit"))
         else:
             rows, rej = _ADAPTERS[b["adapter"]](b["rows"], source_ref=b["source"], source_edition=b["source_edition"], taxonomy_edition=b["taxonomy_edition"], reference_year=b["reference_year"], **_adapter_kwargs(b))
         adapter_rejections.append(dict(rej))
@@ -99,4 +109,26 @@ def evaluate_cases(world: SimpleNamespace, corpus: dict[str, Any] | None = None)
         invented = r.outcome.value != "evidence" and (r.value is not None or r.lower_value is not None)
         out.append({"id": c["id"], "category": c["category"], "ok": not problems, "problems": problems, "outcome": r.outcome.value, "invented_value": invented,
                     "presentable": r.candidate_presentable, "operational": r.operational})
+    return out
+
+
+def evaluate_comparisons(world: SimpleNamespace, corpus: dict[str, Any]) -> list[dict[str, Any]]:
+    """Run the corpus comparisons: two cases are resolved (internal mode) and compared in the stated mode. FX and PPP must be NOT_CONFIGURED for every pair."""
+    cases = {c["id"]: c for c in corpus["cases"]}
+    out = []
+    for cmp in corpus.get("comparisons", []):
+        a, b = world.resolver.resolve(_request(cases[cmp["a"]])), world.resolver.resolve(_request(cases[cmp["b"]]))
+        mode = cmp.get("mode", "nominal")
+        res = {"nominal": compare_nominal, "fx": compare_fx, "ppp": compare_ppp}[mode](a, b)
+        e = cmp["expect"]
+        problems = []
+        if res.status.value != e["status"]:
+            problems.append(f"status {res.status.value} != {e['status']}")
+        problems += [f"reason {r} missing" for r in e.get("reasons_include", []) if r not in res.reasons]
+        problems += [f"caveat {r} missing" for r in e.get("caveats_include", []) if not any(r in c for c in res.caveats)]
+        if "difference" in e and (res.difference is None or str(res.difference) != e["difference"]):
+            problems.append(f"difference {res.difference} != {e['difference']}")
+        if mode != "nominal" and res.difference is not None:
+            problems.append("a converted difference was produced")
+        out.append({"id": cmp["id"], "ok": not problems, "problems": problems, "status": res.status.value})
     return out

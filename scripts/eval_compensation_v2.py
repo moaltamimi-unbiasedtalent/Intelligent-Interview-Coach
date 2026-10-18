@@ -55,7 +55,7 @@ def run() -> tuple[dict[str, tuple[bool, str]], dict]:
     check("ambiguity_never_yields_a_salary", all(x["outcome"] == "ambiguous" for x in results if x["category"] == "ambiguity" and x["id"].startswith("ambiguous")), "AMBIGUOUS carries no value")
     check("fx_and_ppp_are_not_configured", all(x["outcome"] in ("not_configured", "insufficient_context") for x in results if x["category"] == "comparison"), "no rate, no conversion")
     pol = PrecedencePolicy.load()
-    check("policy_is_versioned_and_has_no_country_overrides", pol.version == "p10c-d/1" and pol.raw["country_overrides"].startswith("none") and [t["rank"] for t in pol.tiers] == [1, 2, 3, 4, 5, 6], pol.version)
+    check("policy_is_versioned_and_has_no_country_overrides", pol.version == "p10c-e/1" and pol.raw["country_overrides"].startswith("none") and [t["rank"] for t in pol.tiers] == [1, 2, 3, 4, 5, 6], pol.version)
     # unapproved ingestion is blocked
     blocked = 0
     for sid, mode in (("fx_us_stat", "production"), ("nope", "fixture")):

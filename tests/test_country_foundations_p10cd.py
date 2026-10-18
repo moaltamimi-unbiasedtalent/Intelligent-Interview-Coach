@@ -367,7 +367,7 @@ def test_the_default_withholds_country_evidence_that_is_not_operational(world):
 # ====================================================================================================================================== policy, keys, comparability
 def test_policy_p10c_d_classes_regional_figures_by_occupation_specificity_and_nothing_else_changes():
     p = PrecedencePolicy.load()
-    assert p.version == "p10c-d/1" and "regional_geography" in p.raw and p.raw["country_overrides"].startswith("none")
+    assert p.version == "p10c-e/1" and "regional_geography" in p.raw and p.raw["country_overrides"].startswith("none")
     assert classify_evidence(p, "national_public_employment_service", "detailed", "regional") == "C1" and classify_evidence(p, "national_official_occupation_statistics", "broad", "regional") == "C2"
     assert classify_evidence(p, "national_official_occupation_statistics", "unknown", "regional") is None and classify_evidence(p, "authorized_secondary", "detailed", "regional") is None
     assert classify_evidence(p, "eurostat_harmonised", "broad", "regional") is None                                # a harmonised source is never regionally classed

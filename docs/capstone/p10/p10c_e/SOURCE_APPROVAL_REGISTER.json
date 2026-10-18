@@ -1,0 +1,1193 @@
+{
+ "approved_entries": [],
+ "entries": [
+  {
+   "attribution": "unknown",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "LICENSING_PENDING",
+   "dataset": "Occupational Employment and Wage Statistics (OEWS)",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "verify the licence and approve ingestion, then runtime use"
+    },
+    {
+     "id": "D-12",
+     "question": "select and record the official source edition"
+    }
+   ],
+   "edition": "M2025",
+   "geography": "US",
+   "kind": "compensation_source",
+   "licence": "Public domain (U.S. Government work) (stated_unverified)",
+   "linked_blockers": [
+    "US-T1",
+    "US-T2",
+    "US-G1",
+    "US-X1",
+    "US-L1",
+    "US-A1",
+    "US-D1",
+    "US-D2"
+   ],
+   "proposed_evidence_class": "C1",
+   "proposed_import_method": "manual acquisition of a named extract, then the registry-gated importer (production mode) with the matching adapter; synthetic fixtures never",
+   "proposed_operational_use": "internal Compensation V2 resolver only after runtime approval and measurement qualification; no candidate-facing activation proposed here",
+   "proposed_precedence_category": "national_official_occupation_statistics",
+   "publisher": "U.S. Bureau of Labor Statistics",
+   "redistribution": "yes",
+   "register_id": "reg:bls_oews",
+   "source_id": "bls_oews",
+   "status": "PROPOSED",
+   "taxonomy": "soc"
+  },
+  {
+   "attribution": "yes",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "LICENSING_PENDING",
+   "dataset": "Annual Survey of Hours and Earnings (ASHE)",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "verify the licence and approve ingestion, then runtime use"
+    },
+    {
+     "id": "D-12",
+     "question": "select and record the official source edition"
+    }
+   ],
+   "edition": "2025 provisional",
+   "geography": "GB",
+   "kind": "compensation_source",
+   "licence": "Open Government Licence v3.0 (stated_unverified)",
+   "linked_blockers": [
+    "GB-T1",
+    "GB-T2",
+    "GB-G1",
+    "GB-X1",
+    "GB-L1",
+    "GB-A1",
+    "GB-D1",
+    "GB-D2"
+   ],
+   "proposed_evidence_class": "UNKNOWN",
+   "proposed_import_method": "manual acquisition of a named extract, then the registry-gated importer (production mode) with the matching adapter; synthetic fixtures never",
+   "proposed_operational_use": "internal Compensation V2 resolver only after runtime approval and measurement qualification; no candidate-facing activation proposed here",
+   "proposed_precedence_category": "national_official_occupation_statistics",
+   "publisher": "Office for National Statistics (ONS)",
+   "redistribution": "yes",
+   "register_id": "reg:ons_ashe",
+   "source_id": "ons_ashe",
+   "status": "PROPOSED",
+   "taxonomy": "uk_soc"
+  },
+  {
+   "attribution": "yes",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "LICENSING_PENDING",
+   "dataset": "Eurostat Earnings (Structure of Earnings Survey)",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "verify the licence and approve ingestion, then runtime use"
+    },
+    {
+     "id": "D-12",
+     "question": "select and record the official source edition"
+    }
+   ],
+   "edition": "SES 2022",
+   "geography": "EU",
+   "kind": "compensation_source",
+   "licence": "CC BY 4.0 (stated_unverified)",
+   "linked_blockers": [],
+   "proposed_evidence_class": "UNKNOWN",
+   "proposed_import_method": "manual acquisition of a named extract, then the registry-gated importer (production mode) with the matching adapter; synthetic fixtures never",
+   "proposed_operational_use": "internal Compensation V2 resolver only after runtime approval and measurement qualification; no candidate-facing activation proposed here",
+   "proposed_precedence_category": "eurostat_harmonised",
+   "publisher": "Eurostat",
+   "redistribution": "yes",
+   "register_id": "reg:eurostat_earnings",
+   "source_id": "eurostat_earnings",
+   "status": "PROPOSED",
+   "taxonomy": "isco"
+  },
+  {
+   "attribution": "unknown",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "LICENSING_PENDING",
+   "dataset": "Entgeltatlas",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "verify the licence and approve ingestion, then runtime use"
+    },
+    {
+     "id": "D-12",
+     "question": "select and record the official source edition"
+    }
+   ],
+   "edition": "current release",
+   "geography": "DE",
+   "kind": "compensation_source",
+   "licence": "UNKNOWN (unknown)",
+   "linked_blockers": [],
+   "proposed_evidence_class": "C1",
+   "proposed_import_method": "manual acquisition of a named extract, then the registry-gated importer (production mode) with the matching adapter; synthetic fixtures never",
+   "proposed_operational_use": "internal Compensation V2 resolver only after runtime approval and measurement qualification; no candidate-facing activation proposed here",
+   "proposed_precedence_category": "national_public_employment_service",
+   "publisher": "Bundesagentur für Arbeit",
+   "redistribution": "unknown",
+   "register_id": "reg:ba_entgeltatlas",
+   "source_id": "ba_entgeltatlas",
+   "status": "PROPOSED",
+   "taxonomy": "unknown"
+  },
+  {
+   "attribution": "unknown",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "LICENSING_PENDING",
+   "dataset": "Destatis GENESIS-Online (German official statistics)",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "verify the licence and approve ingestion, then runtime use"
+    },
+    {
+     "id": "D-12",
+     "question": "select and record the official source edition"
+    }
+   ],
+   "edition": "GENESIS 2020",
+   "geography": "DE",
+   "kind": "compensation_source",
+   "licence": "UNKNOWN (unknown)",
+   "linked_blockers": [],
+   "proposed_evidence_class": "UNKNOWN",
+   "proposed_import_method": "manual acquisition of a named extract, then the registry-gated importer (production mode) with the matching adapter; synthetic fixtures never",
+   "proposed_operational_use": "internal Compensation V2 resolver only after runtime approval and measurement qualification; no candidate-facing activation proposed here",
+   "proposed_precedence_category": "national_official_occupation_statistics",
+   "publisher": "Statistisches Bundesamt (Destatis)",
+   "redistribution": "unknown",
+   "register_id": "reg:destatis",
+   "source_id": "destatis",
+   "status": "PROPOSED",
+   "taxonomy": "unknown"
+  },
+  {
+   "attribution": "yes",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "LICENSING_PENDING",
+   "dataset": "O*NET Database",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "verify the licence and approve ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the edition"
+    }
+   ],
+   "edition": "31.0",
+   "geography": "US",
+   "kind": "taxonomy_source",
+   "licence": "CC BY 4.0 (stated_unverified)",
+   "linked_blockers": [],
+   "proposed_evidence_class": "UNKNOWN",
+   "proposed_import_method": "registry-gated taxonomy import (production mode)",
+   "proposed_operational_use": "occupation identity and crosswalk evidence for the internal resolver",
+   "proposed_precedence_category": "UNKNOWN",
+   "publisher": "O*NET / U.S. Department of Labor",
+   "redistribution": "yes",
+   "register_id": "reg:onet",
+   "source_id": "onet",
+   "status": "PROPOSED",
+   "taxonomy": "onet_soc"
+  },
+  {
+   "attribution": "unknown",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "LICENSING_PENDING",
+   "dataset": "ESCO — Occupations & Skills",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "verify the licence and approve ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the edition"
+    }
+   ],
+   "edition": "v1.2.1",
+   "geography": "EU",
+   "kind": "taxonomy_source",
+   "licence": "UNKNOWN (unknown)",
+   "linked_blockers": [],
+   "proposed_evidence_class": "UNKNOWN",
+   "proposed_import_method": "registry-gated taxonomy import (production mode)",
+   "proposed_operational_use": "occupation identity and crosswalk evidence for the internal resolver",
+   "proposed_precedence_category": "UNKNOWN",
+   "publisher": "European Commission",
+   "redistribution": "unknown",
+   "register_id": "reg:esco",
+   "source_id": "esco",
+   "status": "PROPOSED",
+   "taxonomy": "esco"
+  },
+  {
+   "attribution": "unknown",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "LICENSING_PENDING",
+   "dataset": "ISCO-08 Classification of Occupations",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "verify the licence and approve ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the edition"
+    }
+   ],
+   "edition": "ISCO-08",
+   "geography": "global",
+   "kind": "taxonomy_source",
+   "licence": "UNKNOWN (unknown)",
+   "linked_blockers": [],
+   "proposed_evidence_class": "UNKNOWN",
+   "proposed_import_method": "registry-gated taxonomy import (production mode)",
+   "proposed_operational_use": "occupation identity and crosswalk evidence for the internal resolver",
+   "proposed_precedence_category": "UNKNOWN",
+   "publisher": "International Labour Organization (ILO)",
+   "redistribution": "unknown",
+   "register_id": "reg:isco08",
+   "source_id": "isco08",
+   "status": "PROPOSED",
+   "taxonomy": "isco"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "National Occupational Classification (candidate)",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "verify the licence and terms; authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the edition"
+    },
+    {
+     "id": "D-13",
+     "question": "authorise taxonomy acquisition"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "CA",
+   "kind": "taxonomy_structure",
+   "licence": "UNKNOWN",
+   "linked_blockers": [
+    "CA-T1",
+    "CA-T2",
+    "CA-G1",
+    "CA-X1",
+    "CA-L1",
+    "CA-A1",
+    "CA-S1"
+   ],
+   "proposed_evidence_class": "UNKNOWN until the dataset is identified",
+   "proposed_import_method": "manual acquisition of the taxonomy structure, then the registry-gated taxonomy importer",
+   "proposed_operational_use": "canonical occupation nodes for the internal resolver",
+   "proposed_precedence_category": "not applicable (taxonomy)",
+   "publisher": "Statistics Canada (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:ca_noc",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "noc"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "Job Bank wage data (candidate)",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "verify the licence and terms; authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the edition"
+    },
+    {
+     "id": "D-13",
+     "question": "authorise taxonomy acquisition"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "CA",
+   "kind": "compensation_source",
+   "licence": "UNKNOWN",
+   "linked_blockers": [
+    "CA-T1",
+    "CA-T2",
+    "CA-G1",
+    "CA-X1",
+    "CA-L1",
+    "CA-A1",
+    "CA-S1"
+   ],
+   "proposed_evidence_class": "UNKNOWN until the dataset is identified",
+   "proposed_import_method": "manual acquisition of a named extract, then the registry-gated importer (production mode) with the matching adapter; synthetic fixtures never",
+   "proposed_operational_use": "internal resolver only after approval",
+   "proposed_precedence_category": "national_public_employment_service",
+   "publisher": "Employment and Social Development Canada, Job Bank (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:ca_job_bank_wages",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "noc"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "Statistics Canada labour-market wage statistics (candidate)",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "verify the licence and terms; authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the edition"
+    },
+    {
+     "id": "D-13",
+     "question": "authorise taxonomy acquisition"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "CA",
+   "kind": "compensation_source",
+   "licence": "UNKNOWN",
+   "linked_blockers": [
+    "CA-T1",
+    "CA-T2",
+    "CA-G1",
+    "CA-X1",
+    "CA-L1",
+    "CA-A1",
+    "CA-S1"
+   ],
+   "proposed_evidence_class": "UNKNOWN until the dataset is identified",
+   "proposed_import_method": "manual acquisition of a named extract, then the registry-gated importer (production mode) with the matching adapter; synthetic fixtures never",
+   "proposed_operational_use": "internal resolver only after approval",
+   "proposed_precedence_category": "national_official_occupation_statistics",
+   "publisher": "Statistics Canada (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:ca_statcan_wages",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "noc"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "Sistema Nacional de Clasificación de Ocupaciones (candidate)",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "verify the licence and terms; authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the edition"
+    },
+    {
+     "id": "D-13",
+     "question": "authorise taxonomy acquisition"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "MX",
+   "kind": "taxonomy_structure",
+   "licence": "UNKNOWN",
+   "linked_blockers": [
+    "MX-T1",
+    "MX-T2",
+    "MX-G1",
+    "MX-X1",
+    "MX-L1",
+    "MX-A1",
+    "MX-S1"
+   ],
+   "proposed_evidence_class": "UNKNOWN until the dataset is identified",
+   "proposed_import_method": "manual acquisition of the taxonomy structure, then the registry-gated taxonomy importer",
+   "proposed_operational_use": "canonical occupation nodes for the internal resolver",
+   "proposed_precedence_category": "not applicable (taxonomy)",
+   "publisher": "INEGI (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:mx_sinco",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "sinco"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "INEGI labour-market and earnings statistics (candidate)",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "verify the licence and terms; authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the edition"
+    },
+    {
+     "id": "D-13",
+     "question": "authorise taxonomy acquisition"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "MX",
+   "kind": "compensation_source",
+   "licence": "UNKNOWN",
+   "linked_blockers": [
+    "MX-T1",
+    "MX-T2",
+    "MX-G1",
+    "MX-X1",
+    "MX-L1",
+    "MX-A1",
+    "MX-S1"
+   ],
+   "proposed_evidence_class": "UNKNOWN until the dataset is identified",
+   "proposed_import_method": "manual acquisition of a named extract, then the registry-gated importer (production mode) with the matching adapter; synthetic fixtures never",
+   "proposed_operational_use": "internal resolver only after approval",
+   "proposed_precedence_category": "national_official_occupation_statistics",
+   "publisher": "INEGI (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:mx_inegi_earnings",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "sinco"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "Classificação Brasileira de Ocupações (candidate)",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "verify the licence and terms; authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the edition"
+    },
+    {
+     "id": "D-13",
+     "question": "authorise taxonomy acquisition"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "BR",
+   "kind": "taxonomy_structure",
+   "licence": "UNKNOWN",
+   "linked_blockers": [
+    "BR-T1",
+    "BR-T2",
+    "BR-G1",
+    "BR-X1",
+    "BR-L1",
+    "BR-A1",
+    "BR-S1"
+   ],
+   "proposed_evidence_class": "UNKNOWN until the dataset is identified",
+   "proposed_import_method": "manual acquisition of the taxonomy structure, then the registry-gated taxonomy importer",
+   "proposed_operational_use": "canonical occupation nodes for the internal resolver",
+   "proposed_precedence_category": "not applicable (taxonomy)",
+   "publisher": "Brazilian Ministry of Labour and Employment (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:br_cbo",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "cbo"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "IBGE household labour-force survey (candidate)",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "verify the licence and terms; authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the edition"
+    },
+    {
+     "id": "D-13",
+     "question": "authorise taxonomy acquisition"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "BR",
+   "kind": "compensation_source",
+   "licence": "UNKNOWN",
+   "linked_blockers": [
+    "BR-T1",
+    "BR-T2",
+    "BR-G1",
+    "BR-X1",
+    "BR-L1",
+    "BR-A1",
+    "BR-S1"
+   ],
+   "proposed_evidence_class": "UNKNOWN until the dataset is identified",
+   "proposed_import_method": "manual acquisition of a named extract, then the registry-gated importer (production mode) with the matching adapter; synthetic fixtures never",
+   "proposed_operational_use": "internal resolver only after approval",
+   "proposed_precedence_category": "national_official_occupation_statistics",
+   "publisher": "IBGE (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:br_ibge_survey",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "cbo"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "Administrative formal-employment records (candidate)",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "verify the licence and terms; authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the edition"
+    },
+    {
+     "id": "D-13",
+     "question": "authorise taxonomy acquisition"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "BR",
+   "kind": "compensation_source",
+   "licence": "UNKNOWN",
+   "linked_blockers": [
+    "BR-T1",
+    "BR-T2",
+    "BR-G1",
+    "BR-X1",
+    "BR-L1",
+    "BR-A1",
+    "BR-S1"
+   ],
+   "proposed_evidence_class": "UNKNOWN until the dataset is identified",
+   "proposed_import_method": "manual acquisition of a named extract, then the registry-gated importer (production mode) with the matching adapter; synthetic fixtures never",
+   "proposed_operational_use": "internal resolver only after approval",
+   "proposed_precedence_category": "national_official_occupation_statistics",
+   "publisher": "Brazilian Ministry of Labour and Employment (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:br_admin_employment",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "cbo"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "ILOSTAT earnings statistics (candidate; the specific tables are UNKNOWN)",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "identify the dataset, verify the licence, authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the dataset edition and ISCO edition"
+    },
+    {
+     "id": "D-16",
+     "question": "decide the precedence category"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "INTL",
+   "kind": "international_compensation",
+   "licence": "UNKNOWN",
+   "linked_blockers": [],
+   "proposed_evidence_class": "C3",
+   "proposed_import_method": "manual acquisition of a specific named extract, then the registry-gated importer with the ILOSTAT-style international adapter",
+   "proposed_operational_use": "none until D-16 and runtime approval; never operational while the precedence decision is pending",
+   "proposed_precedence_category": "UNDECIDED (D-16): the registry vocabulary has no category for a non-Eurostat international harmonised source",
+   "publisher": "International Labour Organization, ILOSTAT (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:intl_ilostat",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "isco"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "UNKNOWN",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "identify the dataset, verify the licence, authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the dataset edition and ISCO edition"
+    },
+    {
+     "id": "D-13",
+     "question": "identify any national occupation classification"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "AR",
+   "kind": "national_statistics_office",
+   "licence": "UNKNOWN",
+   "linked_blockers": [],
+   "proposed_evidence_class": "UNKNOWN until a dataset is identified",
+   "proposed_import_method": "manual acquisition of a specific named extract, then the registry-gated importer with the wider South America adapter",
+   "proposed_operational_use": "internal resolver only after approval and qualification",
+   "proposed_precedence_category": "national_official_occupation_statistics (if approved)",
+   "publisher": "INDEC (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:ar_nso",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "UNKNOWN (no national classification identified)"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "UNKNOWN",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "identify the dataset, verify the licence, authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the dataset edition and ISCO edition"
+    },
+    {
+     "id": "D-13",
+     "question": "identify any national occupation classification"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "BO",
+   "kind": "national_statistics_office",
+   "licence": "UNKNOWN",
+   "linked_blockers": [],
+   "proposed_evidence_class": "UNKNOWN until a dataset is identified",
+   "proposed_import_method": "manual acquisition of a specific named extract, then the registry-gated importer with the wider South America adapter",
+   "proposed_operational_use": "internal resolver only after approval and qualification",
+   "proposed_precedence_category": "national_official_occupation_statistics (if approved)",
+   "publisher": "Instituto Nacional de Estadística de Bolivia (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:bo_nso",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "UNKNOWN (no national classification identified)"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "Encuesta Suplementaria de Ingresos (candidate; named in planning as a national broad example)",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "identify the dataset, verify the licence, authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the dataset edition and ISCO edition"
+    },
+    {
+     "id": "D-13",
+     "question": "identify any national occupation classification"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "CL",
+   "kind": "national_statistics_office",
+   "licence": "UNKNOWN",
+   "linked_blockers": [],
+   "proposed_evidence_class": "C2 (proposed; depends on occupation granularity)",
+   "proposed_import_method": "manual acquisition of a specific named extract, then the registry-gated importer with the wider South America adapter",
+   "proposed_operational_use": "internal resolver only after approval and qualification",
+   "proposed_precedence_category": "national_official_occupation_statistics (if approved)",
+   "publisher": "Instituto Nacional de Estadísticas de Chile (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:cl_esi",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "UNKNOWN (no national classification identified)"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "Gran Encuesta Integrada de Hogares (candidate; named in planning as a national broad example)",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "identify the dataset, verify the licence, authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the dataset edition and ISCO edition"
+    },
+    {
+     "id": "D-13",
+     "question": "identify any national occupation classification"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "CO",
+   "kind": "national_statistics_office",
+   "licence": "UNKNOWN",
+   "linked_blockers": [],
+   "proposed_evidence_class": "C2 (proposed; depends on occupation granularity)",
+   "proposed_import_method": "manual acquisition of a specific named extract, then the registry-gated importer with the wider South America adapter",
+   "proposed_operational_use": "internal resolver only after approval and qualification",
+   "proposed_precedence_category": "national_official_occupation_statistics (if approved)",
+   "publisher": "DANE (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:co_geih",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "UNKNOWN (no national classification identified)"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "UNKNOWN",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "identify the dataset, verify the licence, authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the dataset edition and ISCO edition"
+    },
+    {
+     "id": "D-13",
+     "question": "identify any national occupation classification"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "EC",
+   "kind": "national_statistics_office",
+   "licence": "UNKNOWN",
+   "linked_blockers": [],
+   "proposed_evidence_class": "UNKNOWN until a dataset is identified",
+   "proposed_import_method": "manual acquisition of a specific named extract, then the registry-gated importer with the wider South America adapter",
+   "proposed_operational_use": "internal resolver only after approval and qualification",
+   "proposed_precedence_category": "national_official_occupation_statistics (if approved)",
+   "publisher": "INEC (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:ec_nso",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "UNKNOWN (no national classification identified)"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "UNKNOWN",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "identify the dataset, verify the licence, authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the dataset edition and ISCO edition"
+    },
+    {
+     "id": "D-13",
+     "question": "identify any national occupation classification"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "GY",
+   "kind": "national_statistics_office",
+   "licence": "UNKNOWN",
+   "linked_blockers": [],
+   "proposed_evidence_class": "UNKNOWN until a dataset is identified",
+   "proposed_import_method": "manual acquisition of a specific named extract, then the registry-gated importer with the wider South America adapter",
+   "proposed_operational_use": "internal resolver only after approval and qualification",
+   "proposed_precedence_category": "national_official_occupation_statistics (if approved)",
+   "publisher": "Guyana Bureau of Statistics (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:gy_nso",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "UNKNOWN (no national classification identified)"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "UNKNOWN",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "identify the dataset, verify the licence, authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the dataset edition and ISCO edition"
+    },
+    {
+     "id": "D-13",
+     "question": "identify any national occupation classification"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "PY",
+   "kind": "national_statistics_office",
+   "licence": "UNKNOWN",
+   "linked_blockers": [],
+   "proposed_evidence_class": "UNKNOWN until a dataset is identified",
+   "proposed_import_method": "manual acquisition of a specific named extract, then the registry-gated importer with the wider South America adapter",
+   "proposed_operational_use": "internal resolver only after approval and qualification",
+   "proposed_precedence_category": "national_official_occupation_statistics (if approved)",
+   "publisher": "Instituto Nacional de Estadística de Paraguay (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:py_nso",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "UNKNOWN (no national classification identified)"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "UNKNOWN",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "identify the dataset, verify the licence, authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the dataset edition and ISCO edition"
+    },
+    {
+     "id": "D-13",
+     "question": "identify any national occupation classification"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "PE",
+   "kind": "national_statistics_office",
+   "licence": "UNKNOWN",
+   "linked_blockers": [],
+   "proposed_evidence_class": "UNKNOWN until a dataset is identified",
+   "proposed_import_method": "manual acquisition of a specific named extract, then the registry-gated importer with the wider South America adapter",
+   "proposed_operational_use": "internal resolver only after approval and qualification",
+   "proposed_precedence_category": "national_official_occupation_statistics (if approved)",
+   "publisher": "INEI (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:pe_nso",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "UNKNOWN (no national classification identified)"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "UNKNOWN",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "identify the dataset, verify the licence, authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the dataset edition and ISCO edition"
+    },
+    {
+     "id": "D-13",
+     "question": "identify any national occupation classification"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "SR",
+   "kind": "national_statistics_office",
+   "licence": "UNKNOWN",
+   "linked_blockers": [],
+   "proposed_evidence_class": "UNKNOWN until a dataset is identified",
+   "proposed_import_method": "manual acquisition of a specific named extract, then the registry-gated importer with the wider South America adapter",
+   "proposed_operational_use": "internal resolver only after approval and qualification",
+   "proposed_precedence_category": "national_official_occupation_statistics (if approved)",
+   "publisher": "General Bureau of Statistics of Suriname (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:sr_nso",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "UNKNOWN (no national classification identified)"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "UNKNOWN",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "identify the dataset, verify the licence, authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the dataset edition and ISCO edition"
+    },
+    {
+     "id": "D-13",
+     "question": "identify any national occupation classification"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "UY",
+   "kind": "national_statistics_office",
+   "licence": "UNKNOWN",
+   "linked_blockers": [],
+   "proposed_evidence_class": "UNKNOWN until a dataset is identified",
+   "proposed_import_method": "manual acquisition of a specific named extract, then the registry-gated importer with the wider South America adapter",
+   "proposed_operational_use": "internal resolver only after approval and qualification",
+   "proposed_precedence_category": "national_official_occupation_statistics (if approved)",
+   "publisher": "Instituto Nacional de Estadística de Uruguay (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:uy_nso",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "UNKNOWN (no national classification identified)"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "UNKNOWN",
+   "decisions_required": [
+    {
+     "id": "D-04",
+     "question": "identify the dataset, verify the licence, authorise acquisition and ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the dataset edition and ISCO edition"
+    },
+    {
+     "id": "D-13",
+     "question": "identify any national occupation classification"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "VE",
+   "kind": "national_statistics_office",
+   "licence": "UNKNOWN",
+   "linked_blockers": [],
+   "proposed_evidence_class": "UNKNOWN until a dataset is identified",
+   "proposed_import_method": "manual acquisition of a specific named extract, then the registry-gated importer with the wider South America adapter",
+   "proposed_operational_use": "internal resolver only after approval and qualification",
+   "proposed_precedence_category": "national_official_occupation_statistics (if approved)",
+   "publisher": "Instituto Nacional de Estadística de Venezuela (candidate)",
+   "redistribution": "UNKNOWN",
+   "register_id": "cand:ve_nso",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "UNKNOWN (no national classification identified)"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "US Standard Occupational Classification structure (candidate)",
+   "decisions_required": [
+    {
+     "id": "D-13",
+     "question": "adopt and authorise acquisition"
+    },
+    {
+     "id": "D-04",
+     "question": "verify licence and approve ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the edition"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "US",
+   "kind": "taxonomy_structure",
+   "licence": "UNKNOWN",
+   "linked_blockers": [
+    "US-T1",
+    "US-T2",
+    "US-G1",
+    "US-D1",
+    "US-D2"
+   ],
+   "proposed_evidence_class": "UNKNOWN",
+   "proposed_import_method": "registry-gated taxonomy import",
+   "proposed_operational_use": "makes existing V1 records linkable to canonical occupations after re-reading the source files",
+   "proposed_precedence_category": "UNKNOWN",
+   "publisher": "UNKNOWN",
+   "redistribution": "UNKNOWN",
+   "register_id": "link:us_soc_structure",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "soc"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "UK Standard Occupational Classification 2020 structure (candidate)",
+   "decisions_required": [
+    {
+     "id": "D-03",
+     "question": "adopt and authorise acquisition"
+    },
+    {
+     "id": "D-04",
+     "question": "verify licence and approve ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the edition"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "GB",
+   "kind": "taxonomy_structure",
+   "licence": "UNKNOWN",
+   "linked_blockers": [
+    "GB-T1",
+    "GB-T2",
+    "GB-G1",
+    "GB-D1",
+    "GB-D2"
+   ],
+   "proposed_evidence_class": "UNKNOWN",
+   "proposed_import_method": "registry-gated taxonomy import",
+   "proposed_operational_use": "makes existing V1 records linkable to canonical occupations after re-reading the source files",
+   "proposed_precedence_category": "UNKNOWN",
+   "publisher": "UNKNOWN",
+   "redistribution": "UNKNOWN",
+   "register_id": "link:uk_soc_2020_structure",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "uk_soc"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "Official SOC to ISCO-08 crosswalk (candidate; existence and provenance UNVERIFIED)",
+   "decisions_required": [
+    {
+     "id": "D-13",
+     "question": "adopt and authorise acquisition"
+    },
+    {
+     "id": "D-04",
+     "question": "verify licence and approve ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the edition"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "US",
+   "kind": "crosswalk",
+   "licence": "UNKNOWN",
+   "linked_blockers": [
+    "US-X1"
+   ],
+   "proposed_evidence_class": "UNKNOWN",
+   "proposed_import_method": "registry-gated crosswalk import (source-provided rows only; nothing manufactured)",
+   "proposed_operational_use": "makes existing V1 records linkable to canonical occupations after re-reading the source files",
+   "proposed_precedence_category": "UNKNOWN",
+   "publisher": "UNKNOWN",
+   "redistribution": "UNKNOWN",
+   "register_id": "link:us_soc_crosswalk",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "soc"
+  },
+  {
+   "attribution": "UNKNOWN",
+   "commercial_use": "UNKNOWN",
+   "current_lifecycle_state": "SOURCE_IDENTIFIED",
+   "dataset": "Official UK SOC 2020 to ISCO-08 crosswalk (candidate; existence and provenance UNVERIFIED)",
+   "decisions_required": [
+    {
+     "id": "D-03",
+     "question": "adopt and authorise acquisition"
+    },
+    {
+     "id": "D-04",
+     "question": "verify licence and approve ingestion"
+    },
+    {
+     "id": "D-12",
+     "question": "record the edition"
+    }
+   ],
+   "edition": "UNKNOWN",
+   "geography": "GB",
+   "kind": "crosswalk",
+   "licence": "UNKNOWN",
+   "linked_blockers": [
+    "GB-X1"
+   ],
+   "proposed_evidence_class": "UNKNOWN",
+   "proposed_import_method": "registry-gated crosswalk import (source-provided rows only; nothing manufactured)",
+   "proposed_operational_use": "makes existing V1 records linkable to canonical occupations after re-reading the source files",
+   "proposed_precedence_category": "UNKNOWN",
+   "publisher": "UNKNOWN",
+   "redistribution": "UNKNOWN",
+   "register_id": "link:uk_soc_crosswalk",
+   "source_id": null,
+   "status": "PROPOSED",
+   "taxonomy": "uk_soc"
+  }
+ ],
+ "note": "PROPOSED entries only. No entry is approved; every entry names the owner decisions required before P10C-F can act. Unknown facts stay UNKNOWN.",
+ "schema": "p10ce_source_approval_register/1"
+}

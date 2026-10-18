@@ -1,0 +1,2892 @@
+{
+ "schema": "fallback_fixture_corpus/1",
+ "note": "SYNTHETIC STRUCTURAL FIXTURE for wider South America and an ILOSTAT-style international source. Every source, occupation, label and amount is invented test data in synthetic-fixture sources that can never be approved or serve as evidence; the ILOSTAT-style indicator codes, units and classification labels are invented and make no claim about any real dataset; the registry precedence category of the ILOSTAT-style fixture is a fixture-only stand-in for owner decision D-16.",
+ "taxonomies": [
+  {
+   "scheme": "isco",
+   "edition": "88",
+   "code_pattern": "[0-9]{1,4}",
+   "status": "historical"
+  }
+ ],
+ "sources": [
+  {
+   "source_id": "fx_sa_tax",
+   "publisher": "Synthetic publisher fx_sa_tax (fixture)",
+   "dataset_name": "Synthetic dataset fx_sa_tax",
+   "source_url": "https://example.invalid/fx_sa_tax",
+   "precedence_category": "unknown"
+  },
+  {
+   "source_id": "fx_xwalk",
+   "publisher": "Synthetic publisher fx_xwalk (fixture)",
+   "dataset_name": "Synthetic dataset fx_xwalk",
+   "source_url": "https://example.invalid/fx_xwalk",
+   "precedence_category": "unknown"
+  },
+  {
+   "source_id": "fx_sa_stat",
+   "publisher": "Synthetic publisher fx_sa_stat (fixture)",
+   "dataset_name": "Synthetic dataset fx_sa_stat",
+   "source_url": "https://example.invalid/fx_sa_stat",
+   "precedence_category": "national_official_occupation_statistics"
+  },
+  {
+   "source_id": "fx_sa_stat2",
+   "publisher": "Synthetic publisher fx_sa_stat2 (fixture)",
+   "dataset_name": "Synthetic dataset fx_sa_stat2",
+   "source_url": "https://example.invalid/fx_sa_stat2",
+   "precedence_category": "national_official_occupation_statistics"
+  },
+  {
+   "source_id": "fx_sa_admin",
+   "publisher": "Synthetic publisher fx_sa_admin (fixture)",
+   "dataset_name": "Synthetic dataset fx_sa_admin",
+   "source_url": "https://example.invalid/fx_sa_admin",
+   "precedence_category": "national_official_occupation_statistics"
+  },
+  {
+   "source_id": "fx_sa_survey",
+   "publisher": "Synthetic publisher fx_sa_survey (fixture)",
+   "dataset_name": "Synthetic dataset fx_sa_survey",
+   "source_url": "https://example.invalid/fx_sa_survey",
+   "precedence_category": "national_official_occupation_statistics"
+  },
+  {
+   "source_id": "fx_ilo",
+   "publisher": "Synthetic publisher fx_ilo (fixture)",
+   "dataset_name": "Synthetic dataset fx_ilo",
+   "source_url": "https://example.invalid/fx_ilo",
+   "precedence_category": "eurostat_harmonised",
+   "provenance": {
+    "international_family": "ilostat"
+   }
+  }
+ ],
+ "nodes": [
+  {
+   "scheme": "isco",
+   "edition": "08",
+   "source": "fx_sa_tax",
+   "rows": [
+    {
+     "code": "9701",
+     "label": "Synthetic SA analyst [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa analyst",
+       "language": "en"
+      },
+      {
+       "text": "syn analista sa",
+       "language": "es"
+      },
+      {
+       "text": "syn analista sa pt",
+       "language": "pt"
+      }
+     ]
+    },
+    {
+     "code": "9702",
+     "label": "Synthetic SA regional [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa regional",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9703",
+     "label": "Synthetic SA broad granularity [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa granularity",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9704",
+     "label": "Synthetic SA concepts [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa concepts",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9705",
+     "label": "Synthetic SA populations [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa populations",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9706",
+     "label": "Synthetic SA survey and administrative [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa surveyadmin",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9707",
+     "label": "Synthetic SA international only [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa intlonly",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9708",
+     "label": "Synthetic SA national beats international [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa precedence",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9709",
+     "label": "Synthetic SA incompatible statistics [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa incompatible",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9710",
+     "label": "Synthetic SA stale [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa stale",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9711",
+     "label": "Synthetic SA historical [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa historical",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9712",
+     "label": "Synthetic SA no data [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa nodata",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9713",
+     "label": "Synthetic SA unlinked [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa unlinked",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9714",
+     "label": "Synthetic SA engineer A [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa engineer",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9715",
+     "label": "Synthetic SA engineer B [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa engineer",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9716",
+     "label": "Synthetic SA conflicting sources [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa confsrc",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9717",
+     "label": "Synthetic SA household only [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa household",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9718",
+     "label": "Synthetic SA indicators only [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa indicators",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9721",
+     "label": "Synthetic SA child [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa child",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9722",
+     "label": "Synthetic SA parent group [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa parent",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9723",
+     "label": "Synthetic US unknown basis [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn us basisunknown",
+       "language": "en"
+      }
+     ]
+    },
+    {
+     "code": "9724",
+     "label": "Synthetic SA currencies [synthetic fixture]",
+     "labels": [
+      {
+       "text": "syn sa currency",
+       "language": "en"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "crosswalks": [
+  {
+   "source": "fx_xwalk",
+   "from": [
+    "isco",
+    "08"
+   ],
+   "to": [
+    "isco",
+    "08"
+   ],
+   "rows": [
+    {
+     "from_code": "9721",
+     "to_code": "9722",
+     "relationship_type": "broader",
+     "mapping_status": "verified"
+    }
+   ],
+   "expect": {
+    "added": 1,
+    "rejections": {}
+   }
+  }
+ ],
+ "compensation": [
+  {
+   "adapter": "south_america",
+   "country": "AR",
+   "source": "fx_sa_stat",
+   "source_edition": "FX-SA-1",
+   "taxonomy_edition": "08",
+   "reference_year": 2023,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "LAB": "employment_income",
+    "IND": "individual_earnings",
+    "HOG": "household_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "ASAL": "employees",
+    "TODOS": "all_workers",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENC": "survey",
+    "ADM": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9701",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1005",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "ARS"
+    },
+    {
+     "code": "9702",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "500",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "ARS",
+     "region": "B"
+    },
+    {
+     "code": "9702",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "510",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "ARS",
+     "region": "Z"
+    }
+   ],
+   "expect": {
+    "added": 3
+   }
+  },
+  {
+   "adapter": "south_america",
+   "country": "BO",
+   "source": "fx_sa_stat",
+   "source_edition": "FX-SA-1",
+   "taxonomy_edition": "08",
+   "reference_year": 2023,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "LAB": "employment_income",
+    "IND": "individual_earnings",
+    "HOG": "household_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "ASAL": "employees",
+    "TODOS": "all_workers",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENC": "survey",
+    "ADM": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9701",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1015",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "BOB",
+     "basis": "gross"
+    }
+   ],
+   "expect": {
+    "added": 1
+   }
+  },
+  {
+   "adapter": "south_america",
+   "country": "CL",
+   "source": "fx_sa_stat",
+   "source_edition": "FX-SA-1",
+   "taxonomy_edition": "08",
+   "reference_year": 2023,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "LAB": "employment_income",
+    "IND": "individual_earnings",
+    "HOG": "household_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "ASAL": "employees",
+    "TODOS": "all_workers",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENC": "survey",
+    "ADM": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9701",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1005",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross"
+    },
+    {
+     "code": "9702",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "700",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross"
+    },
+    {
+     "code": "9702",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "800",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross",
+     "region": "RM"
+    },
+    {
+     "code": "9703",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "650",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross",
+     "level": "broad"
+    },
+    {
+     "code": "9704",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1000",
+     "concept": "IND",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross"
+    },
+    {
+     "code": "9704",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1100",
+     "concept": "SAL",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross"
+    },
+    {
+     "code": "9705",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1200",
+     "concept": "FORMAL",
+     "population": "FORMAL",
+     "method": "ADM",
+     "currency": "CLP",
+     "basis": "gross"
+    },
+    {
+     "code": "9705",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "900",
+     "concept": "LAB",
+     "population": "TODOS",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross"
+    },
+    {
+     "code": "9708",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "900",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross"
+    },
+    {
+     "code": "9709",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "950",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross"
+    },
+    {
+     "code": "9716",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1000",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross"
+    },
+    {
+     "code": "9722",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "600",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross",
+     "level": "broad"
+    },
+    {
+     "code": "9724",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "100",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross"
+    },
+    {
+     "code": "9724",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "USD",
+     "basis": "gross"
+    },
+    {
+     "code": "9717",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "9000",
+     "concept": "HOG",
+     "population": "TODOS",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross"
+    },
+    {
+     "code": "9701",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1",
+     "concept": "XYZ",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross"
+    }
+   ],
+   "expect": {
+    "added": 14,
+    "rejections": {
+     "earnings_concept_not_occupation_compensation": 1
+    },
+    "adapter_rejections": {
+     "concept_unmapped": 1
+    }
+   }
+  },
+  {
+   "adapter": "south_america",
+   "country": "CO",
+   "source": "fx_sa_stat",
+   "source_edition": "FX-SA-1",
+   "taxonomy_edition": "08",
+   "reference_year": 2023,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "LAB": "employment_income",
+    "IND": "individual_earnings",
+    "HOG": "household_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "ASAL": "employees",
+    "TODOS": "all_workers",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENC": "survey",
+    "ADM": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9701",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1035",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "COP",
+     "basis": "gross"
+    }
+   ],
+   "expect": {
+    "added": 1
+   }
+  },
+  {
+   "adapter": "south_america",
+   "country": "EC",
+   "source": "fx_sa_stat",
+   "source_edition": "FX-SA-1",
+   "taxonomy_edition": "08",
+   "reference_year": 2023,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "LAB": "employment_income",
+    "IND": "individual_earnings",
+    "HOG": "household_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "ASAL": "employees",
+    "TODOS": "all_workers",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENC": "survey",
+    "ADM": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9701",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1045",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "USD",
+     "basis": "gross"
+    }
+   ],
+   "expect": {
+    "added": 1
+   }
+  },
+  {
+   "adapter": "south_america",
+   "country": "GY",
+   "source": "fx_sa_stat",
+   "source_edition": "FX-SA-1",
+   "taxonomy_edition": "08",
+   "reference_year": 2023,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "LAB": "employment_income",
+    "IND": "individual_earnings",
+    "HOG": "household_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "ASAL": "employees",
+    "TODOS": "all_workers",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENC": "survey",
+    "ADM": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9701",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1055",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "GYD",
+     "basis": "gross"
+    }
+   ],
+   "expect": {
+    "added": 1
+   }
+  },
+  {
+   "adapter": "south_america",
+   "country": "PY",
+   "source": "fx_sa_stat",
+   "source_edition": "FX-SA-1",
+   "taxonomy_edition": "08",
+   "reference_year": 2023,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "LAB": "employment_income",
+    "IND": "individual_earnings",
+    "HOG": "household_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "ASAL": "employees",
+    "TODOS": "all_workers",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENC": "survey",
+    "ADM": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9701",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1065",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "PYG",
+     "basis": "gross"
+    }
+   ],
+   "expect": {
+    "added": 1
+   }
+  },
+  {
+   "adapter": "south_america",
+   "country": "PE",
+   "source": "fx_sa_stat",
+   "source_edition": "FX-SA-1",
+   "taxonomy_edition": "08",
+   "reference_year": 2023,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "LAB": "employment_income",
+    "IND": "individual_earnings",
+    "HOG": "household_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "ASAL": "employees",
+    "TODOS": "all_workers",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENC": "survey",
+    "ADM": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9701",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1075",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "PEN",
+     "basis": "gross"
+    },
+    {
+     "code": "9702",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "400",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "PEN",
+     "basis": "gross",
+     "region": "LIM"
+    }
+   ],
+   "expect": {
+    "added": 1,
+    "adapter_rejections": {
+     "region_unrecognised": 1
+    }
+   }
+  },
+  {
+   "adapter": "south_america",
+   "country": "SR",
+   "source": "fx_sa_stat",
+   "source_edition": "FX-SA-1",
+   "taxonomy_edition": "08",
+   "reference_year": 2023,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "LAB": "employment_income",
+    "IND": "individual_earnings",
+    "HOG": "household_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "ASAL": "employees",
+    "TODOS": "all_workers",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENC": "survey",
+    "ADM": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9701",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1085",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "SRD",
+     "basis": "gross"
+    }
+   ],
+   "expect": {
+    "added": 1
+   }
+  },
+  {
+   "adapter": "south_america",
+   "country": "UY",
+   "source": "fx_sa_stat",
+   "source_edition": "FX-SA-1",
+   "taxonomy_edition": "08",
+   "reference_year": 2023,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "LAB": "employment_income",
+    "IND": "individual_earnings",
+    "HOG": "household_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "ASAL": "employees",
+    "TODOS": "all_workers",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENC": "survey",
+    "ADM": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9701",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1095",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "UYU",
+     "basis": "gross"
+    }
+   ],
+   "expect": {
+    "added": 1
+   }
+  },
+  {
+   "adapter": "south_america",
+   "country": "VE",
+   "source": "fx_sa_stat",
+   "source_edition": "FX-SA-1",
+   "taxonomy_edition": "08",
+   "reference_year": 2023,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "LAB": "employment_income",
+    "IND": "individual_earnings",
+    "HOG": "household_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "ASAL": "employees",
+    "TODOS": "all_workers",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENC": "survey",
+    "ADM": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9701",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1105",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "VES",
+     "basis": "gross"
+    }
+   ],
+   "expect": {
+    "added": 1
+   }
+  },
+  {
+   "adapter": "south_america",
+   "country": "CL",
+   "source": "fx_sa_stat",
+   "source_edition": "FX-SA-0",
+   "taxonomy_edition": "08",
+   "reference_year": 2019,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "LAB": "employment_income",
+    "IND": "individual_earnings",
+    "HOG": "household_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "ASAL": "employees",
+    "TODOS": "all_workers",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENC": "survey",
+    "ADM": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9710",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "600",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross"
+    }
+   ],
+   "expect": {
+    "added": 1
+   }
+  },
+  {
+   "adapter": "south_america",
+   "country": "CL",
+   "source": "fx_sa_stat",
+   "source_edition": "FX-SA-1B",
+   "taxonomy_edition": "08",
+   "reference_year": 2023,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "LAB": "employment_income",
+    "IND": "individual_earnings",
+    "HOG": "household_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "ASAL": "employees",
+    "TODOS": "all_workers",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENC": "survey",
+    "ADM": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9710",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "800",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross"
+    }
+   ],
+   "expect": {
+    "added": 1
+   }
+  },
+  {
+   "adapter": "south_america",
+   "country": "CL",
+   "source": "fx_sa_stat",
+   "source_edition": "FX-SA-H",
+   "taxonomy_edition": "08",
+   "reference_year": 2015,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "LAB": "employment_income",
+    "IND": "individual_earnings",
+    "HOG": "household_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "ASAL": "employees",
+    "TODOS": "all_workers",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENC": "survey",
+    "ADM": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9711",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "300",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross"
+    }
+   ],
+   "expect": {
+    "added": 1
+   }
+  },
+  {
+   "adapter": "south_america",
+   "country": "CL",
+   "source": "fx_sa_stat2",
+   "source_edition": "FX-SA2-1",
+   "taxonomy_edition": "08",
+   "reference_year": 2023,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "LAB": "employment_income",
+    "IND": "individual_earnings",
+    "HOG": "household_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "ASAL": "employees",
+    "TODOS": "all_workers",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENC": "survey",
+    "ADM": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9716",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1010",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross"
+    }
+   ],
+   "expect": {
+    "added": 1
+   }
+  },
+  {
+   "adapter": "south_america",
+   "country": "CL",
+   "source": "fx_sa_admin",
+   "source_edition": "FX-SA-ADM-1",
+   "taxonomy_edition": "08",
+   "reference_year": 2023,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "LAB": "employment_income",
+    "IND": "individual_earnings",
+    "HOG": "household_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "ASAL": "employees",
+    "TODOS": "all_workers",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENC": "survey",
+    "ADM": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9706",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1500",
+     "concept": "LAB",
+     "population": "FORMAL",
+     "method": "ADM",
+     "currency": "CLP",
+     "basis": "gross"
+    }
+   ],
+   "expect": {
+    "added": 1
+   }
+  },
+  {
+   "adapter": "south_america",
+   "country": "CL",
+   "source": "fx_sa_survey",
+   "source_edition": "FX-SA-SRV-1",
+   "taxonomy_edition": "08",
+   "reference_year": 2023,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "LAB": "employment_income",
+    "IND": "individual_earnings",
+    "HOG": "household_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "ASAL": "employees",
+    "TODOS": "all_workers",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENC": "survey",
+    "ADM": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9706",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "1300",
+     "concept": "LAB",
+     "population": "TODOS",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross"
+    }
+   ],
+   "expect": {
+    "added": 1
+   }
+  },
+  {
+   "adapter": "south_america",
+   "country": "CL",
+   "source": "fx_sa_stat",
+   "source_edition": "FX-SA-UE",
+   "taxonomy_edition": "unknown",
+   "reference_year": 2023,
+   "statistic_map": {
+    "MED": [
+     "median",
+     0
+    ],
+    "PROM": [
+     "mean",
+     0
+    ]
+   },
+   "period_map": {
+    "MES": "monthly",
+    "HR": "hourly"
+   },
+   "concept_map": {
+    "LAB": "employment_income",
+    "IND": "individual_earnings",
+    "HOG": "household_income",
+    "SAL": "wage_statistic",
+    "FORMAL": "formal_sector_compensation"
+   },
+   "population_map": {
+    "ASAL": "employees",
+    "TODOS": "all_workers",
+    "FORMAL": "formal_sector"
+   },
+   "method_map": {
+    "ENC": "survey",
+    "ADM": "administrative_records"
+   },
+   "level_by_code_length": {
+    "4": "detailed"
+   },
+   "code_pattern": "[0-9]{4}",
+   "rows": [
+    {
+     "code": "9701",
+     "statistic": "MED",
+     "period": "MES",
+     "value": "5",
+     "concept": "LAB",
+     "population": "ASAL",
+     "method": "ENC",
+     "currency": "CLP",
+     "basis": "gross"
+    }
+   ],
+   "expect": {
+    "added": 0,
+    "rejections": {
+     "taxonomy_edition_not_registered": 1
+    }
+   }
+  },
+  {
+   "adapter": "ilostat",
+   "source": "fx_ilo",
+   "source_edition": "FX-ILO-1",
+   "indicator_map": {
+    "EAR_MED": {
+     "period": "monthly",
+     "measure": "median",
+     "concept": "employment_income",
+     "population": "employees",
+     "method": "survey",
+     "basis": "gross"
+    },
+    "EAR_MEAN": {
+     "period": "monthly",
+     "measure": "mean",
+     "concept": "employment_income",
+     "population": "employees",
+     "method": "survey",
+     "basis": "gross"
+    }
+   },
+   "currency_by_unit": {
+    "LCU": null,
+    "USD": "USD",
+    "PPP": null
+   },
+   "local_currency_unit": "LCU",
+   "currency_by_country": {
+    "CL": "CLP",
+    "AR": "ARS"
+   },
+   "classification_map": {
+    "ISCO-08": [
+     "isco",
+     "08"
+    ]
+   },
+   "rows": [
+    {
+     "ref_area": "CHL",
+     "classif": "9707",
+     "classification": "ISCO-08",
+     "indicator": "EAR_MEAN",
+     "unit": "LCU",
+     "time": 2023,
+     "value": "1000"
+    },
+    {
+     "ref_area": "CHL",
+     "classif": "9708",
+     "classification": "ISCO-08",
+     "indicator": "EAR_MED",
+     "unit": "LCU",
+     "time": 2023,
+     "value": "880"
+    },
+    {
+     "ref_area": "CHL",
+     "classif": "9709",
+     "classification": "ISCO-08",
+     "indicator": "EAR_MEAN",
+     "unit": "LCU",
+     "time": 2023,
+     "value": "940"
+    },
+    {
+     "ref_area": "ARG",
+     "classif": "9707",
+     "classification": "ISCO-08",
+     "indicator": "EAR_MEAN",
+     "unit": "LCU",
+     "time": 2023,
+     "value": "1100"
+    },
+    {
+     "ref_area": "CHL",
+     "classif": "9707",
+     "classification": "ISCO-08",
+     "indicator": "EMP_RATE",
+     "unit": "LCU",
+     "time": 2023,
+     "value": "62"
+    },
+    {
+     "ref_area": "CHL",
+     "classif": "9707",
+     "classification": "ISCO-08",
+     "indicator": "GDP_PC",
+     "unit": "USD",
+     "time": 2023,
+     "value": "15000"
+    },
+    {
+     "ref_area": "CHL",
+     "classif": "9707",
+     "classification": "ISCO-08",
+     "indicator": "PRODUCTIVITY",
+     "unit": "USD",
+     "time": 2023,
+     "value": "30"
+    },
+    {
+     "ref_area": "CHL",
+     "classif": "9707",
+     "classification": "ISCO-08",
+     "indicator": "EAR_MEAN",
+     "unit": "PPP",
+     "time": 2023,
+     "value": "1200"
+    },
+    {
+     "ref_area": "CHL",
+     "classif": "9707",
+     "classification": "ISCO-88",
+     "indicator": "EAR_MEAN",
+     "unit": "LCU",
+     "time": 2023,
+     "value": "1"
+    },
+    {
+     "ref_area": "XXX",
+     "classif": "9707",
+     "classification": "ISCO-08",
+     "indicator": "EAR_MEAN",
+     "unit": "LCU",
+     "time": 2023,
+     "value": "1"
+    },
+    {
+     "ref_area": "CHL",
+     "classif": "97a",
+     "classification": "ISCO-08",
+     "indicator": "EAR_MEAN",
+     "unit": "LCU",
+     "time": 2023,
+     "value": "1"
+    },
+    {
+     "ref_area": "CHL",
+     "classif": "9707",
+     "classification": "ISCO-08",
+     "indicator": "EAR_MEAN",
+     "unit": "LCU",
+     "time": 2023,
+     "value": "abc"
+    },
+    {
+     "ref_area": "CHL",
+     "classif": "9707",
+     "classification": "ISCO-08",
+     "indicator": "EAR_MEAN",
+     "unit": "JPY",
+     "time": 2023,
+     "value": "5"
+    }
+   ],
+   "expect": {
+    "added": 4,
+    "rejections": {},
+    "adapter_rejections": {
+     "unsupported_statistic": 3,
+     "unit_not_a_currency": 1,
+     "classification_unmapped": 1,
+     "area_unmapped": 1,
+     "invalid_native_code": 1,
+     "malformed_amount": 1,
+     "unsupported_unit": 1
+    }
+   }
+  },
+  {
+   "adapter": "raw",
+   "source": "fx_sa_stat",
+   "source_edition": "FX-SA-US",
+   "rows": [
+    {
+     "taxonomy_scheme": "isco",
+     "taxonomy_edition": "08",
+     "native_code": "9701",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "monthly",
+     "pay_basis": "gross",
+     "measure": "median",
+     "earnings_concept": "employment_income",
+     "population_scope": "employees",
+     "evidence_method": "survey",
+     "value": "1500",
+     "source_ref": "fx_sa_stat",
+     "source_edition": "FX-SA-US",
+     "reference_year": 2023
+    },
+    {
+     "taxonomy_scheme": "isco",
+     "taxonomy_edition": "08",
+     "native_code": "9723",
+     "occupation_level": "detailed",
+     "country": "US",
+     "geography_level": "national",
+     "currency": "USD",
+     "pay_period": "monthly",
+     "pay_basis": "unknown",
+     "measure": "median",
+     "earnings_concept": "employment_income",
+     "population_scope": "employees",
+     "evidence_method": "survey",
+     "value": "1400",
+     "source_ref": "fx_sa_stat",
+     "source_edition": "FX-SA-US",
+     "reference_year": 2023
+    }
+   ],
+   "expect": {
+    "added": 2
+   }
+  }
+ ],
+ "cases": [
+  {
+   "id": "sa-ar-national",
+   "category": "south_america_national",
+   "request": {
+    "title": "syn sa analyst",
+    "title_language": "en",
+    "country": "AR"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "1005",
+    "currency": "ARS",
+    "pay_period": "monthly",
+    "geography_level": "national",
+    "earnings_concept": "employment_income",
+    "population_scope": "employees",
+    "evidence_method": "survey",
+    "citation": true
+   }
+  },
+  {
+   "id": "sa-bo-national",
+   "category": "south_america_national",
+   "request": {
+    "title": "syn sa analyst",
+    "title_language": "en",
+    "country": "BO"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "1015",
+    "currency": "BOB",
+    "pay_period": "monthly",
+    "geography_level": "national",
+    "earnings_concept": "employment_income",
+    "population_scope": "employees",
+    "evidence_method": "survey",
+    "citation": true
+   }
+  },
+  {
+   "id": "sa-cl-national",
+   "category": "south_america_national",
+   "request": {
+    "title": "syn sa analyst",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "1005",
+    "currency": "CLP",
+    "pay_period": "monthly",
+    "geography_level": "national",
+    "earnings_concept": "employment_income",
+    "population_scope": "employees",
+    "evidence_method": "survey",
+    "citation": true
+   }
+  },
+  {
+   "id": "sa-co-national",
+   "category": "south_america_national",
+   "request": {
+    "title": "syn sa analyst",
+    "title_language": "en",
+    "country": "CO"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "1035",
+    "currency": "COP",
+    "pay_period": "monthly",
+    "geography_level": "national",
+    "earnings_concept": "employment_income",
+    "population_scope": "employees",
+    "evidence_method": "survey",
+    "citation": true
+   }
+  },
+  {
+   "id": "sa-ec-national",
+   "category": "south_america_national",
+   "request": {
+    "title": "syn sa analyst",
+    "title_language": "en",
+    "country": "EC"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "1045",
+    "currency": "USD",
+    "pay_period": "monthly",
+    "geography_level": "national",
+    "earnings_concept": "employment_income",
+    "population_scope": "employees",
+    "evidence_method": "survey",
+    "citation": true
+   }
+  },
+  {
+   "id": "sa-gy-national",
+   "category": "south_america_national",
+   "request": {
+    "title": "syn sa analyst",
+    "title_language": "en",
+    "country": "GY"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "1055",
+    "currency": "GYD",
+    "pay_period": "monthly",
+    "geography_level": "national",
+    "earnings_concept": "employment_income",
+    "population_scope": "employees",
+    "evidence_method": "survey",
+    "citation": true
+   }
+  },
+  {
+   "id": "sa-py-national",
+   "category": "south_america_national",
+   "request": {
+    "title": "syn sa analyst",
+    "title_language": "en",
+    "country": "PY"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "1065",
+    "currency": "PYG",
+    "pay_period": "monthly",
+    "geography_level": "national",
+    "earnings_concept": "employment_income",
+    "population_scope": "employees",
+    "evidence_method": "survey",
+    "citation": true
+   }
+  },
+  {
+   "id": "sa-pe-national",
+   "category": "south_america_national",
+   "request": {
+    "title": "syn sa analyst",
+    "title_language": "en",
+    "country": "PE"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "1075",
+    "currency": "PEN",
+    "pay_period": "monthly",
+    "geography_level": "national",
+    "earnings_concept": "employment_income",
+    "population_scope": "employees",
+    "evidence_method": "survey",
+    "citation": true
+   }
+  },
+  {
+   "id": "sa-sr-national",
+   "category": "south_america_national",
+   "request": {
+    "title": "syn sa analyst",
+    "title_language": "en",
+    "country": "SR"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "1085",
+    "currency": "SRD",
+    "pay_period": "monthly",
+    "geography_level": "national",
+    "earnings_concept": "employment_income",
+    "population_scope": "employees",
+    "evidence_method": "survey",
+    "citation": true
+   }
+  },
+  {
+   "id": "sa-uy-national",
+   "category": "south_america_national",
+   "request": {
+    "title": "syn sa analyst",
+    "title_language": "en",
+    "country": "UY"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "1095",
+    "currency": "UYU",
+    "pay_period": "monthly",
+    "geography_level": "national",
+    "earnings_concept": "employment_income",
+    "population_scope": "employees",
+    "evidence_method": "survey",
+    "citation": true
+   }
+  },
+  {
+   "id": "sa-ve-national",
+   "category": "south_america_national",
+   "request": {
+    "title": "syn sa analyst",
+    "title_language": "en",
+    "country": "VE"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "1105",
+    "currency": "VES",
+    "pay_period": "monthly",
+    "geography_level": "national",
+    "earnings_concept": "employment_income",
+    "population_scope": "employees",
+    "evidence_method": "survey",
+    "citation": true
+   }
+  },
+  {
+   "id": "sa-spanish-text-chile",
+   "category": "geography_independence",
+   "request": {
+    "title": "syn analista sa",
+    "title_language": "es",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "1005"
+   }
+  },
+  {
+   "id": "sa-portuguese-text-colombia",
+   "category": "geography_independence",
+   "request": {
+    "title": "syn analista sa pt",
+    "title_language": "pt",
+    "country": "CO"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "1035"
+   }
+  },
+  {
+   "id": "sa-english-text-peru-no-borrowing",
+   "category": "geography_independence",
+   "request": {
+    "title": "syn sa regional",
+    "title_language": "en",
+    "country": "BO"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_occupation_in_country"
+   }
+  },
+  {
+   "id": "sa-no-data-country-abstains",
+   "category": "missing_market",
+   "request": {
+    "title": "syn sa regional",
+    "title_language": "en",
+    "country": "CO"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_occupation_in_country"
+   }
+  },
+  {
+   "id": "sa-regional-requested-chile",
+   "category": "regional",
+   "request": {
+    "title": "syn sa regional",
+    "title_language": "en",
+    "country": "CL",
+    "region": "rm"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "800",
+    "geography_level": "regional",
+    "region": "CL-RM",
+    "limitation_contains": "REGIONAL"
+   }
+  },
+  {
+   "id": "sa-national-default-chile",
+   "category": "regional",
+   "request": {
+    "title": "syn sa regional",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "700",
+    "geography_level": "national"
+   }
+  },
+  {
+   "id": "sa-regional-argentina",
+   "category": "regional",
+   "request": {
+    "title": "syn sa regional",
+    "title_language": "en",
+    "country": "AR",
+    "region": "B"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "500",
+    "region": "AR-B"
+   }
+  },
+  {
+   "id": "sa-argentina-other-region",
+   "category": "regional",
+   "request": {
+    "title": "syn sa regional",
+    "title_language": "en",
+    "country": "AR",
+    "region": "Z"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "510",
+    "region": "AR-Z"
+   }
+  },
+  {
+   "id": "sa-region-vocabulary-not-recorded-peru",
+   "category": "regional",
+   "request": {
+    "title": "syn sa regional",
+    "title_language": "en",
+    "country": "PE",
+    "region": "LIM"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "insufficient_context",
+    "abstention": "region_unrecognised"
+   }
+  },
+  {
+   "id": "sa-region-without-data",
+   "category": "regional",
+   "request": {
+    "title": "syn sa regional",
+    "title_language": "en",
+    "country": "CL",
+    "region": "AN"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_requested_region"
+   }
+  },
+  {
+   "id": "sa-broad-granularity-c2",
+   "category": "granularity",
+   "request": {
+    "title": "syn sa granularity",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C2",
+    "value": "650",
+    "limitation_contains": "BROAD",
+    "weak_factors": [
+     "evidence_class_c2",
+     "occupation_granularity_not_detailed"
+    ]
+   }
+  },
+  {
+   "id": "sa-broader-group-fallback",
+   "category": "granularity",
+   "request": {
+    "title": "syn sa child",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "specificity": "broader_group",
+    "evidence_class": "C2",
+    "value": "600",
+    "fallback_stage": "verified_broader_group",
+    "weak_factors": [
+     "occupation_not_exact",
+     "crosswalk_not_independently_reviewed"
+    ],
+    "state": "LIMITED_EVIDENCE"
+   }
+  },
+  {
+   "id": "sa-concepts-conflict",
+   "category": "concepts",
+   "request": {
+    "title": "syn sa concepts",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict"
+   }
+  },
+  {
+   "id": "sa-concept-filter",
+   "category": "concepts",
+   "request": {
+    "title": "syn sa concepts",
+    "title_language": "en",
+    "country": "CL",
+    "earnings_concept": "wage_statistic"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "1100",
+    "earnings_concept": "wage_statistic"
+   }
+  },
+  {
+   "id": "sa-populations-conflict",
+   "category": "populations",
+   "request": {
+    "title": "syn sa populations",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict"
+   }
+  },
+  {
+   "id": "sa-formal-sector-filter",
+   "category": "populations",
+   "request": {
+    "title": "syn sa populations",
+    "title_language": "en",
+    "country": "CL",
+    "population_scope": "formal_sector"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "1200",
+    "evidence_method": "administrative_records"
+   }
+  },
+  {
+   "id": "sa-survey-vs-admin-conflict",
+   "category": "populations",
+   "request": {
+    "title": "syn sa surveyadmin",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict"
+   }
+  },
+  {
+   "id": "sa-survey-filter",
+   "category": "populations",
+   "request": {
+    "title": "syn sa surveyadmin",
+    "title_language": "en",
+    "country": "CL",
+    "evidence_method": "survey"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "1300"
+   }
+  },
+  {
+   "id": "sa-admin-filter",
+   "category": "populations",
+   "request": {
+    "title": "syn sa surveyadmin",
+    "title_language": "en",
+    "country": "CL",
+    "evidence_method": "administrative_records"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "1500",
+    "population_scope": "formal_sector"
+   }
+  },
+  {
+   "id": "sa-household-income-never-evidence",
+   "category": "concepts",
+   "request": {
+    "title": "syn sa household",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_occupation_in_country"
+   }
+  },
+  {
+   "id": "sa-indicators-not-salary",
+   "category": "international",
+   "request": {
+    "title": "syn sa indicators",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_occupation_in_country"
+   }
+  },
+  {
+   "id": "intl-c3-internal",
+   "category": "international",
+   "request": {
+    "title": "syn sa intlonly",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C3",
+    "value": "1000",
+    "precedence_pending": true,
+    "limitation_contains": "PENDING owner decision D-16",
+    "weak_factors": [
+     "evidence_class_c3",
+     "precedence_decision_pending"
+    ],
+    "state": "LIMITED_EVIDENCE",
+    "fallback_stage": "exact_occupation"
+   }
+  },
+  {
+   "id": "intl-c3-argentina",
+   "category": "international",
+   "request": {
+    "title": "syn sa intlonly",
+    "title_language": "en",
+    "country": "AR"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C3",
+    "value": "1100",
+    "currency": "ARS"
+   }
+  },
+  {
+   "id": "intl-operational-mode-withheld",
+   "category": "international",
+   "request": {
+    "title": "syn sa intlonly",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": false,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "evidence_withheld_precedence_decision_pending",
+    "withheld": "precedence_decision_pending"
+   }
+  },
+  {
+   "id": "intl-no-substitution-for-other-country",
+   "category": "international",
+   "request": {
+    "title": "syn sa intlonly",
+    "title_language": "en",
+    "country": "PE"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_occupation_in_country"
+   }
+  },
+  {
+   "id": "sa-national-beats-international",
+   "category": "precedence",
+   "request": {
+    "title": "syn sa precedence",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "evidence_class": "C1",
+    "value": "900",
+    "corroborating": 1
+   }
+  },
+  {
+   "id": "sa-incompatible-statistics-conflict",
+   "category": "international",
+   "request": {
+    "title": "syn sa incompatible",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict"
+   }
+  },
+  {
+   "id": "sa-statistic-filter-selects-national",
+   "category": "international",
+   "request": {
+    "title": "syn sa incompatible",
+    "title_language": "en",
+    "country": "CL",
+    "measure": "median"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "950",
+    "evidence_class": "C1"
+   }
+  },
+  {
+   "id": "sa-latest-reference-year",
+   "category": "freshness",
+   "request": {
+    "title": "syn sa stale",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "800",
+    "freshness_year": 2023,
+    "factors": {
+     "reference_year_is_latest_available": "yes"
+    }
+   }
+  },
+  {
+   "id": "sa-older-reference-year-flagged",
+   "category": "freshness",
+   "request": {
+    "title": "syn sa stale",
+    "title_language": "en",
+    "country": "CL",
+    "reference_year": 2019
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "600",
+    "freshness_year": 2019,
+    "factors": {
+     "reference_year_is_latest_available": "no"
+    }
+   }
+  },
+  {
+   "id": "sa-historical-period",
+   "category": "freshness",
+   "request": {
+    "title": "syn sa historical",
+    "title_language": "en",
+    "country": "CL",
+    "reference_year": 2015
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "300",
+    "freshness_year": 2015
+   }
+  },
+  {
+   "id": "sa-historical-default-is-its-latest",
+   "category": "freshness",
+   "request": {
+    "title": "syn sa historical",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "300",
+    "freshness_year": 2015
+   }
+  },
+  {
+   "id": "sa-conflicting-national-sources",
+   "category": "conflict",
+   "request": {
+    "title": "syn sa confsrc",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict",
+    "abstention": "comparable_sources_of_equal_precedence_disagree"
+   }
+  },
+  {
+   "id": "sa-unknown-taxonomy-edition-never-matches",
+   "category": "taxonomy",
+   "request": {
+    "title": null,
+    "title_language": "en",
+    "country": "CL",
+    "taxonomy_scheme": "isco",
+    "taxonomy_code": "9701",
+    "taxonomy_edition": "unknown"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_found"
+   }
+  },
+  {
+   "id": "sa-historic-edition-has-no-node",
+   "category": "taxonomy",
+   "request": {
+    "title": null,
+    "title_language": "en",
+    "country": "CL",
+    "taxonomy_scheme": "isco",
+    "taxonomy_code": "9701",
+    "taxonomy_edition": "88"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_found"
+   }
+  },
+  {
+   "id": "sa-code-resolves",
+   "category": "taxonomy",
+   "request": {
+    "title": null,
+    "title_language": "en",
+    "country": "CL",
+    "taxonomy_scheme": "isco",
+    "taxonomy_code": "9701",
+    "taxonomy_edition": "08"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "1005"
+   }
+  },
+  {
+   "id": "sa-missing-mapping-abstains",
+   "category": "missing_mapping",
+   "request": {
+    "title": "syn sa unlinked",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "no_evidence_for_occupation_in_country"
+   }
+  },
+  {
+   "id": "sa-c4-abstention",
+   "category": "c4",
+   "request": {
+    "title": "syn sa nodata",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "abstain",
+    "evidence_class": "C4",
+    "abstention": "no_evidence_for_occupation_in_country",
+    "state": "INSUFFICIENT_EVIDENCE"
+   }
+  },
+  {
+   "id": "sa-ambiguous-title",
+   "category": "ambiguity",
+   "request": {
+    "title": "syn sa engineer",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "ambiguous",
+    "no_value": true,
+    "state": "AMBIGUOUS"
+   }
+  },
+  {
+   "id": "sa-unknown-title",
+   "category": "unsupported_occupation",
+   "request": {
+    "title": "syn sa nothing",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_found",
+    "state": "INSUFFICIENT_EVIDENCE"
+   }
+  },
+  {
+   "id": "sa-row-stated-currencies-conflict",
+   "category": "currency",
+   "request": {
+    "title": "syn sa currency",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "conflict"
+   }
+  },
+  {
+   "id": "sa-unsupported-country",
+   "category": "unsupported",
+   "request": {
+    "title": "syn sa analyst",
+    "title_language": "en",
+    "country": "ZZ"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "unsupported"
+   }
+  },
+  {
+   "id": "sa-default-withholds",
+   "category": "approval",
+   "request": {
+    "title": "syn sa analyst",
+    "title_language": "en",
+    "country": "CL"
+   },
+   "internal": false,
+   "expect": {
+    "outcome": "abstain",
+    "abstention": "evidence_exists_but_is_not_operational"
+   }
+  },
+  {
+   "id": "sa-fx-not-configured",
+   "category": "comparison",
+   "request": {
+    "title": "syn sa analyst",
+    "title_language": "en",
+    "country": "CL",
+    "comparison_mode": "fx_converted"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_configured"
+   }
+  },
+  {
+   "id": "sa-ppp-not-configured",
+   "category": "comparison",
+   "request": {
+    "title": "syn sa analyst",
+    "title_language": "en",
+    "country": "CL",
+    "comparison_mode": "ppp_adjusted"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "not_configured"
+   }
+  },
+  {
+   "id": "us-reference-analyst",
+   "category": "comparison_inputs",
+   "request": {
+    "title": "syn sa analyst",
+    "title_language": "en",
+    "country": "US"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "1500",
+    "currency": "USD"
+   }
+  },
+  {
+   "id": "us-unknown-basis",
+   "category": "comparison_inputs",
+   "request": {
+    "title": "syn us basisunknown",
+    "title_language": "en",
+    "country": "US"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "1400",
+    "pay_basis": "unknown"
+   }
+  },
+  {
+   "id": "ar-analyst-unknown-basis",
+   "category": "comparison_inputs",
+   "request": {
+    "title": "syn sa analyst",
+    "title_language": "en",
+    "country": "AR"
+   },
+   "internal": true,
+   "expect": {
+    "outcome": "evidence",
+    "value": "1005",
+    "pay_basis": "unknown"
+   }
+  }
+ ],
+ "comparisons": [
+  {
+   "id": "cmp-ec-vs-us-comparable",
+   "a": "sa-ec-national",
+   "b": "us-reference-analyst",
+   "expect": {
+    "status": "comparable_nominal",
+    "difference": "455",
+    "caveats_include": [
+     "different_countries",
+     "non_operational_evidence"
+    ]
+   }
+  },
+  {
+   "id": "cmp-cl-vs-ar-currency",
+   "a": "sa-cl-national",
+   "b": "sa-ar-national",
+   "expect": {
+    "status": "not_comparable",
+    "reasons_include": [
+     "currency_differs"
+    ],
+    "caveats_include": [
+     "fx_comparison_not_configured"
+    ]
+   }
+  },
+  {
+   "id": "cmp-unknown-basis-never-comparable",
+   "a": "sa-ec-national",
+   "b": "us-unknown-basis",
+   "expect": {
+    "status": "not_comparable",
+    "reasons_include": [
+     "pay_basis_unknown"
+    ]
+   }
+  },
+  {
+   "id": "cmp-ar-unknown-basis-vs-itself",
+   "a": "sa-ar-national",
+   "b": "ar-analyst-unknown-basis",
+   "expect": {
+    "status": "not_comparable",
+    "reasons_include": [
+     "pay_basis_unknown"
+    ]
+   }
+  },
+  {
+   "id": "cmp-class-differs",
+   "a": "sa-national-beats-international",
+   "b": "intl-c3-internal",
+   "expect": {
+    "status": "not_comparable",
+    "reasons_include": [
+     "evidence_class_differs"
+    ]
+   }
+  },
+  {
+   "id": "cmp-no-evidence-unavailable",
+   "a": "sa-cl-national",
+   "b": "sa-c4-abstention",
+   "expect": {
+    "status": "unavailable",
+    "reasons_include": [
+     "second_has_no_evidence_abstain"
+    ]
+   }
+  },
+  {
+   "id": "cmp-fx-never-configured",
+   "mode": "fx",
+   "a": "sa-ec-national",
+   "b": "us-reference-analyst",
+   "expect": {
+    "status": "not_configured"
+   }
+  },
+  {
+   "id": "cmp-ppp-never-configured",
+   "mode": "ppp",
+   "a": "sa-cl-national",
+   "b": "sa-ar-national",
+   "expect": {
+    "status": "not_configured"
+   }
+  },
+  {
+   "id": "cmp-granularity-differs",
+   "a": "sa-cl-national",
+   "b": "sa-broad-granularity-c2",
+   "expect": {
+    "status": "not_comparable",
+    "reasons_include": [
+     "evidence_class_differs",
+     "occupation_granularity_differs"
+    ]
+   }
+  }
+ ]
+}
