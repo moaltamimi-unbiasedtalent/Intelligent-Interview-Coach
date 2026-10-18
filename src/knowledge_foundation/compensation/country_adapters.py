@@ -16,11 +16,11 @@ from datetime import datetime
 from typing import Any, Iterable, Mapping
 
 from src.knowledge_foundation.compensation.adapters import _amount, _build
-from src.knowledge_foundation.compensation.countries import CountryProfile, PROFILES, normalize_region
+from src.knowledge_foundation.compensation.countries import CountryProfile, PROFILES, WIDER_SA_PROFILES, normalize_region
 from src.knowledge_foundation.compensation.record import CompensationRecordV2
 from src.persistence import COMP_EARNINGS_CONCEPTS, COMP_EVIDENCE_METHODS, COMP_PAY_PERIODS, COMP_POPULATION_SCOPES
 
-__all__ = ["country_records", "canada_records", "mexico_records", "brazil_records"]
+__all__ = ["country_records", "canada_records", "mexico_records", "brazil_records", "south_america_records"]
 
 
 def _check_map(name: str, mapping: Mapping[str, Any] | None, allowed: Iterable[str]) -> None:
@@ -49,9 +49,16 @@ def country_records(profile: CountryProfile, rows: Iterable[Mapping[str, Any]], 
         if pattern is not None and not pattern.fullmatch(code):
             rej["invalid_native_code"] += 1
             continue
-        if row.get("currency") not in (None, "", profile.currency):
-            rej["currency_mismatch"] += 1
-            continue
+        currency = profile.currency
+        if profile.enforce_currency:
+            if row.get("currency") not in (None, "", profile.currency):
+                rej["currency_mismatch"] += 1
+                continue
+        else:                                                              # wider South America: the SOURCE row states its currency (no assumption, no default)
+            currency = str(row.get("currency") or "").strip()
+            if not currency:
+                rej["currency_missing"] += 1
+                continue
         region_in = row.get("region")
         region = None
         if region_in not in (None, ""):
@@ -97,7 +104,7 @@ def country_records(profile: CountryProfile, rows: Iterable[Mapping[str, Any]], 
         bounds_ok = state == "reported" and ls == "reported" and us == "reported" and lower <= upper
         basis = row.get("basis") if row.get("basis") in ("gross", "net") else pay_basis
         rec = _build(rej, taxonomy_scheme=profile.taxonomy_scheme, taxonomy_edition=taxonomy_edition, native_code=code, occupation_level=level, country=profile.country,
-                     region=region, geography_level="regional" if region else "national", currency=profile.currency, pay_period=period, pay_basis=basis, measure=stat[0],
+                     region=region, geography_level="regional" if region else "national", currency=currency, pay_period=period, pay_basis=basis, measure=stat[0],
                      percentile=stat[1], value_status="reported" if state == "reported" else "suppressed", value=value, lower_value=lower if bounds_ok else None,
                      upper_value=upper if bounds_ok else None, bounds_semantic=bounds_semantic if bounds_ok else "unknown", source_ref=source_ref, source_edition=source_edition,
                      reference_year=reference_year, publication_date=publication_date,
@@ -128,3 +135,16 @@ def brazil_records(rows: Iterable[Mapping[str, Any]], **kw) -> tuple[list[Compen
     kw.setdefault("require_concept", True)
     kw.setdefault("require_population", True)
     return country_records(PROFILES["BR"], rows, **kw)
+
+
+def south_america_records(country: str, rows: Iterable[Mapping[str, Any]], **kw) -> tuple[list[CompensationRecordV2], Counter]:
+    """GKB-11: one reusable source-family adapter for the wider South American markets (Argentina, Bolivia, Chile, Colombia, Ecuador, Guyana, Paraguay, Peru, Suriname, Uruguay, Venezuela;
+    Brazil keeps ``brazil_records``). Structural contract only: the earnings concept, population and method are REQUIRED (household surveys, administrative payroll, formal-sector figures and
+    occupation wages are different quantities), the currency must be stated by the source row, regions are validated against the ISO 3166-2 vocabulary where one is recorded, and nothing about
+    any real dataset is assumed. The taxonomy namespace is ISCO (no national classification is identified); the edition comes from the caller."""
+    profile = WIDER_SA_PROFILES.get((country or "").strip().upper())
+    if profile is None:
+        raise ValueError("not a wider South America profile (Brazil uses brazil_records)")
+    kw.setdefault("require_concept", True)
+    kw.setdefault("require_population", True)
+    return country_records(profile, rows, **kw)

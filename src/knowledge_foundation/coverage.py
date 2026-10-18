@@ -117,5 +117,7 @@ def build_default_matrix() -> dict[str, Any]:
         note = {"CL": "Chile ESI was named in planning as a national broad (C2) example; nothing is acquired or assessed for licence.",
                 "CO": "Colombia DANE GEIH was named in planning as a national broad (C2) example; nothing is acquired or assessed for licence."}.get(
             code, "No national source is identified. ILOSTAT is only a named future international fallback (not acquired).")
+        note += (" P10C-E added a source-readiness profile and a reusable adapter contract (synthetic fixtures only), plus the ILOSTAT-style international contract: no occupation node, crosswalk,"
+                 " source or compensation record exists, so no level is raised and nothing is qualified.")
         add(code, label, "south_america_other", "targeted", "targeted", comp, "targeted", [], [], note)
     return {"schema": "geography_coverage/1", "levels": list(E.COVERAGE_LEVELS_), "geographies": rows}

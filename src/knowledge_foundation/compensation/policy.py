@@ -60,6 +60,22 @@ class PrecedencePolicy:
             raise PolicyError("country-specific overrides are not permitted")
         if "overrides" in self.raw or any(k.upper() in {"DE", "US", "UK", "GB", "EU"} for k in self.raw):
             raise PolicyError("country-specific keys are not permitted")
+        for fam, cfg in (self.raw.get("international_families") or {}).items():
+            if not isinstance(cfg.get("enabled"), bool) or cfg.get("category_when_enabled") not in E.PRECEDENCE or cfg.get("category_when_enabled") == "unknown":
+                raise PolicyError("an international family needs a boolean enabled flag and a known category_when_enabled")
+
+    def international_family(self, source: dict | None) -> str | None:
+        """The international-source family a registry source declares in its provenance (for example ``ilostat``), or None."""
+        fam = ((source or {}).get("provenance") or {}).get("international_family")
+        return fam if isinstance(fam, str) and fam else None
+
+    def family_enabled(self, family: str) -> bool:
+        return self.raw.get("international_families", {}).get(family, {}).get("enabled") is True
+
+    def precedence_pending(self, source: dict | None) -> bool:
+        """True for a source of an international family whose precedence category is not yet decided by the owner (D-16): such evidence is never operational."""
+        fam = self.international_family(source)
+        return bool(fam) and not self.family_enabled(fam)
 
     def rank(self, category: str | None) -> int | None:
         for t in self.tiers:

@@ -15,6 +15,7 @@ from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Any
 
+from src.knowledge_foundation.compensation.confidence import assess_evidence_state
 from src.knowledge_foundation.compensation.countries import normalize_region, profile_for
 from src.knowledge_foundation.compensation.policy import PrecedencePolicy, normalize_country
 from src.knowledge_foundation.compensation.store import CompensationStoreV2, build_citation, evidence_status
@@ -103,6 +104,13 @@ class CompensationResponse:
     conflicts: list[dict[str, Any]] = field(default_factory=list)
     corroborating: list[dict[str, Any]] = field(default_factory=list)
     withheld: dict[str, int] = field(default_factory=dict)
+    precedence_category: str | None = None
+    occupation_level: str | None = None
+    precedence_pending: bool = False
+    freshness: dict[str, Any] | None = None
+    fallback_trace: dict[str, Any] | None = None
+    fallback: dict[str, Any] | None = None
+    evidence_assessment: dict[str, Any] | None = None
     comparison_mode: str = "nominal"
     comparison_mode_status: str = "supported"
     policy_version: str | None = None
@@ -179,10 +187,10 @@ class CompensationResolver:
         return self._evidence(req, resp, country)
 
     # ------------------------------------------------------------------------------------------------------------------------------ evidence
-    def _evidence_nodes(self, key: str, req: CompensationRequest) -> tuple[list[str], list[str]]:
+    def _evidence_nodes(self, key: str, req: CompensationRequest) -> tuple[list[str], list[str], dict[str, dict[str, Any]]]:
         """(exact node keys, broader node keys). Exact = the node itself plus VERIFIED equivalents; broader = VERIFIED ``broader`` targets (one hop). RELATED, NARROWER, unverified and
         derived-rule relationships never carry evidence. In operational mode a relationship must also be official-source-provided."""
-        exact, broader = [key], []
+        exact, broader, info = [key], [], {}
         rels = self._g.relationships(key) + self._g.relationships(key, direction="in")
         for r in rels:
             if r["mapping_status"] != "verified" or r["superseded"]:
@@ -190,11 +198,14 @@ class CompensationResolver:
             if req.require_operational and not qualify_relationship(r, self._reg)["official_source_provided"]:
                 continue
             other = r["to_key"] if r["from_key"] == key else r["from_key"]
+            q = qualify_relationship(r, self._reg)["highest_level"]
             if r["relationship_type"] == "equivalent" and other not in exact:
                 exact.append(other)
+                info[other] = {"relationship_type": "equivalent", "mapping_status": r["mapping_status"], "qualification": q}
             elif r["relationship_type"] == "broader" and r["from_key"] == key and other not in broader:
                 broader.append(other)
-        return exact, broader
+                info[other] = {"relationship_type": "broader", "mapping_status": r["mapping_status"], "qualification": q}
+        return exact, broader, info
 
     def _ids(self, keys: list[str]) -> dict[int, str]:
         from sqlalchemy import select
@@ -229,6 +240,9 @@ class CompensationResolver:
             if not self.policy.presentable(r["precedence_category"], r["evidence_class"]):
                 withheld["class_not_presentable_under_policy"] = withheld.get("class_not_presentable_under_policy", 0) + 1
                 continue
+            if self.policy.precedence_pending(src.get(r["source_ref"])) and req.require_operational:
+                withheld["precedence_decision_pending"] = withheld.get("precedence_decision_pending", 0) + 1       # no operational result may rest on an unapproved precedence choice (D-16)
+                continue
             if build_citation(r, src) is None:                                       # type: ignore[arg-type]
                 withheld["citation_incomplete"] = withheld.get("citation_incomplete", 0) + 1
                 continue
@@ -248,7 +262,7 @@ class CompensationResolver:
     def _evidence(self, req: CompensationRequest, resp: CompensationResponse, country: str) -> CompensationResponse:
         src = _Sources(self._reg)
         withheld: dict[str, int] = {}
-        exact_keys, broader_keys = self._evidence_nodes(resp.occupation_key, req)
+        exact_keys, broader_keys, rel_info = self._evidence_nodes(resp.occupation_key, req)
         ids = self._ids(exact_keys + broader_keys)
         by_key = {k: i for i, k in ids.items()}
         chosen: list[dict[str, Any]] = []
@@ -259,9 +273,12 @@ class CompensationResolver:
             recs = self._store.records_for([by_key[k] for k in broader_keys if k in by_key], country)
             chosen = self._eligible(recs, req, src, withheld)
             specificity = "broader_group"
+        resp.fallback_trace = {"order": ["exact_occupation", "verified_broader_group"], "selected_stage": {"exact": "exact_occupation", "broader_group": "verified_broader_group"}[specificity] if chosen else None, "broader_group_attempted": bool(broader_keys) and req.allow_broader_occupation,
+                               "eligible_records_by_class_at_selected_stage": {c: sum(1 for r in chosen if r["evidence_class"] == c) for c in ("C1", "C2", "C3")}, "other_country_evidence_used": False}
         resp.withheld = withheld
         if not chosen:
-            reason = ("evidence_exists_but_is_not_operational" if withheld.get("not_operational") else "source_value_suppressed" if withheld.get("source_value_suppressed")
+            reason = ("evidence_exists_but_is_not_operational" if withheld.get("not_operational") else "evidence_withheld_precedence_decision_pending" if withheld.get("precedence_decision_pending")
+                      else "source_value_suppressed" if withheld.get("source_value_suppressed")
                       else "evidence_withheld_citation_incomplete" if withheld.get("citation_incomplete")
                       else "no_evidence_for_requested_region" if req.region else "no_evidence_for_occupation_in_country")
             resp.evidence_class = "C4"
@@ -271,6 +288,7 @@ class CompensationResolver:
                 if row is not None:
                     resp.coverage_limitations.append(f"country coverage for compensation: {row['compensation_level']}")
             return self._finish(resp, CompensationOutcome.ABSTAIN, reason=reason)
+        all_years = {r["reference_year"] for r in chosen}                                 # reference years among ELIGIBLE evidence (before any year filter)
         if req.reference_year is not None:
             chosen = [r for r in chosen if r["reference_year"] == req.reference_year]
             if not chosen:
@@ -279,6 +297,7 @@ class CompensationResolver:
         else:
             latest = max(r["reference_year"] for r in chosen)                           # policy recency: newest reference year among ELIGIBLE evidence
             chosen = [r for r in chosen if r["reference_year"] == latest]
+        latest_available = chosen[0]["reference_year"] == max(all_years)
         groups: dict[tuple, list[dict[str, Any]]] = {}
         for r in chosen:
             groups.setdefault(self._group_key(r), []).append(r)
@@ -292,7 +311,7 @@ class CompensationResolver:
             resp.conflicts = [{"comparable": True, "same_precedence_tier": True, "best": _summary(r)} for r in tie]
             return self._finish(resp, CompensationOutcome.CONFLICT, reason="comparable_sources_of_equal_precedence_disagree")
         resp.corroborating = [{**_summary(r), "agrees": r["value"] == best["value"]} for r in rest]
-        return self._present(resp, best, specificity, by_key, ids, src, req)
+        return self._present(resp, best, specificity, by_key, ids, src, req, rel_info, latest_available)
 
     def _best(self, group: list[dict[str, Any]]):
         """Highest-precedence record of a comparable group. Inside that tier only the newest vintage of each (occupation, source, edition) counts; if the remaining records carry different
@@ -308,7 +327,8 @@ class CompensationResolver:
         tie = list(latest.values()) if len(distinct) > 1 else []
         return tier[0], [r for r in group if r is not tier[0]], tie
 
-    def _present(self, resp: CompensationResponse, rec: dict[str, Any], specificity: str, by_key: dict[str, int], ids: dict[int, str], src: _Sources, req: CompensationRequest):
+    def _present(self, resp: CompensationResponse, rec: dict[str, Any], specificity: str, by_key: dict[str, int], ids: dict[int, str], src: _Sources, req: CompensationRequest,
+                 rel_info: dict[str, dict[str, Any]] | None = None, latest_available: bool | None = None):
         status = evidence_status(rec, src, self.policy)                                  # type: ignore[arg-type]
         resp.value = str(rec["value"])
         resp.lower_value = str(rec["lower_value"]) if rec["lower_value"] is not None else None
@@ -339,6 +359,19 @@ class CompensationResolver:
             lim.append(f"data vintage: {rec['data_vintage']}")
         if rec["limitations"]:
             lim.append(rec["limitations"])
+        resp.precedence_category, resp.occupation_level = rec["precedence_category"], rec["occupation_level"]
+        resp.precedence_pending = self.policy.precedence_pending(src.get(rec["source_ref"]))
+        if resp.precedence_pending:
+            lim.append("the precedence category of this international source is PENDING owner decision D-16; the figure is never operational")
+        if specificity == "broader_group" and rel_info:
+            resp.fallback = dict(rel_info.get(resp.matched_occupation_key) or {})
+        source = src.get(rec["source_ref"]) or {}
+        retrieved = source.get("retrieved_at")
+        resp.freshness = {"reference_year": rec["reference_year"], "reference_period": rec["reference_period"], "publication_date": rec["publication_date"].isoformat() if rec["publication_date"] else None,
+                          "data_vintage": rec["data_vintage"] or None, "source_edition": rec["source_edition"], "source_retrieved_at": retrieved.isoformat() if retrieved else None,
+                          "describes_current_market_pay": False}
+        resp.outcome = CompensationOutcome.EVIDENCE
+        resp.evidence_assessment = assess_evidence_state(resp, record_level=rec["occupation_level"], latest_available=latest_available)
         resp.operational = status["operational"]
         resp.candidate_presentable = bool(status["operational"] and req.require_operational)
         return self._finish(resp, CompensationOutcome.EVIDENCE, reason="evidence_selected")
@@ -354,4 +387,6 @@ class CompensationResolver:
         if outcome is not CompensationOutcome.EVIDENCE:
             resp.value = None
             resp.candidate_presentable = False
+        if resp.evidence_assessment is None:
+            resp.evidence_assessment = assess_evidence_state(resp)
         return resp

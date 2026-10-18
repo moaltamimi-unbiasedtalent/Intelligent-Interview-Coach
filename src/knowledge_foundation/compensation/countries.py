@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-__all__ = ["CountryProfile", "PROFILES", "normalize_region", "profile_for"]
+__all__ = ["CountryProfile", "PROFILES", "WIDER_SA_PROFILES", "normalize_region", "profile_for"]
 
 
 @dataclass(frozen=True)
@@ -18,6 +18,8 @@ class CountryProfile:
     currency: str
     region_kind: str
     regions: frozenset[str]          # ISO 3166-2 subdivision codes WITHOUT the country prefix
+    enforce_currency: bool = True    # False: ``currency`` is only the ISO expectation and the SOURCE ROW must state its own currency (P10C-E wider South America)
+    note: str = ""
 
 
 _CA = "AB BC MB NB NL NS NT NU ON PE QC SK YT"
@@ -31,8 +33,32 @@ PROFILES: dict[str, CountryProfile] = {
 }
 
 
+# Wider South America (GKB-11, P10C-E). National occupation classifications of these countries are NOT identified (their ISCO-08 based variants, if any, are unverified), so the only
+# taxonomy namespace usable today is ISCO (international): the scheme is ``isco`` and the edition must still come from the source. The currency is only the ISO 4217 expectation; each source
+# row must state its own (dollarised or multi-currency economies make a fixed expectation unsafe). The subdivision vocabularies are ISO 3166-2 reference lists to VALIDATE a region value.
+# Paraguay and Peru are left EMPTY on purpose (vocabulary not yet recorded): a regional row for them is rejected until it is, never guessed.
+_WIDER_SA = {
+    "AR": ("Argentina", "ARS", "province_or_federal_district", "A B C D E F G H J K L M N P Q R S T U V W X Y Z"),
+    "BO": ("Bolivia", "BOB", "department", "B C H L N O P S T"),
+    "CL": ("Chile", "CLP", "region", "AI AN AP AR AT BI CO LI LL LR MA ML NB RM TA VS"),
+    "CO": ("Colombia", "COP", "department_or_capital_district", "AMA ANT ARA ATL BOL BOY CAL CAQ CAS CAU CES CHO COR CUN DC GUA GUV HUI LAG MAG MET NAR NSA PUT QUI RIS SAP SAN SUC TOL VAC VAU VID"),
+    "EC": ("Ecuador", "USD", "province", "A B C D E F G H I L M N O P R S SD SE T U W X Y Z"),
+    "GY": ("Guyana", "GYD", "region", "BA CU DE EB ES MA PM PT UD UT"),
+    "PY": ("Paraguay", "PYG", "department", ""),
+    "PE": ("Peru", "PEN", "region", ""),
+    "SR": ("Suriname", "SRD", "district", "BR CM CR MA NI PM PR SA SI WA"),
+    "UY": ("Uruguay", "UYU", "department", "AR CA CL CO DU FD FS LA MA MO PA RN RO RV SA SJ SO TA TT"),
+    "VE": ("Venezuela", "VES", "state_or_capital_district", "A B C D E F G H I J K L M N O P R S T U V W X Y Z"),
+}
+WIDER_SA_PROFILES: dict[str, CountryProfile] = {
+    c: CountryProfile(c, name, "isco", cur, kind, frozenset(regs.split()), enforce_currency=False,
+                      note="no national occupation classification identified: ISCO namespace only; edition, source, currency and region vocabulary must come from evidence" + ("; region vocabulary not yet recorded" if not regs else ""))
+    for c, (name, cur, kind, regs) in _WIDER_SA.items()}
+
+
 def profile_for(country: str | None) -> CountryProfile | None:
-    return PROFILES.get((country or "").strip().upper())
+    c = (country or "").strip().upper()
+    return PROFILES.get(c) or WIDER_SA_PROFILES.get(c)
 
 
 def normalize_region(country: str | None, value: str | None) -> str | None:

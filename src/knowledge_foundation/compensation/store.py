@@ -76,7 +76,8 @@ def evidence_status(record: Mapping[str, Any], registry: SourceRegistry, policy:
         "measurement_qualified": record.get("qualification_status") == "qualified",
         "citation_available": build_citation(record, registry) is not None,
     }
-    flags["operational"] = bool(flags["runtime_approved"] and flags["measurement_qualified"] and flags["citation_available"] and flags["occupation_linked"]
+    flags["precedence_decided"] = not policy.precedence_pending(src)
+    flags["operational"] = bool(flags["precedence_decided"] and flags["runtime_approved"] and flags["measurement_qualified"] and flags["citation_available"] and flags["occupation_linked"]
                                 and record.get("value_status") == "reported" and policy.presentable(record.get("precedence_category"), record.get("evidence_class")))
     return flags
 
@@ -107,6 +108,8 @@ class CompensationStoreV2:
             raise CompensationSourceNotApproved("unknown import mode")
         if src.get("precedence_category") in (None, "unknown"):
             raise CompensationSourceNotApproved("the source has no precedence category")
+        if mode == "production" and self.policy.precedence_pending(src):
+            raise CompensationSourceNotApproved("the international source family has no approved precedence category (owner decision D-16 pending)")
         return src
 
     # ------------------------------------------------------------------------------------------------------------------------------ import
