@@ -1,5 +1,5 @@
 {
- "schema": "p10c-f2a-acquisition-manifest/2",
+ "schema": "p10c-f2a-acquisition-manifest/3",
  "wave": "P10C-F2A",
  "package": 1,
  "owner_authorization_ref": "P10C-F1 Package 1 authorization, section M, recorded 2026-10-18",
@@ -21,8 +21,8 @@
    "availability_checked": "2026-10-18",
    "licence_reference": "https://www.bls.gov/opub/copyright-information.htm",
    "taxonomy_edition": "2018 SOC",
-   "transformation_version": null,
-   "import_batch_id": null,
+   "transformation_version": "p10c-f2a-soc-1",
+   "import_batch_id": "soc-graph:p5b_f2a_us (1,447 nodes, 1,424 relationships)",
    "qualification_status": "NOT_QUALIFIED",
    "state": "ACQUIRED",
    "acquired_at": "2026-10-18T11:34:07Z",
@@ -32,8 +32,9 @@
    "acquisition_state": "ACQUIRED",
    "http_status": 200,
    "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-   "ingestion_state": "NOT_INGESTED",
-   "runtime_approval": "NOT_APPROVED"
+   "ingestion_state": "INGESTED_ISOLATED_NON_PRODUCTION",
+   "runtime_approval": "NOT_APPROVED",
+   "validation_state": "VALIDATED_STRUCTURE_HASH_AND_DICTIONARY"
   },
   {
    "file_id": "us_soc_2018_definitions",
@@ -51,8 +52,8 @@
    "availability_checked": "2026-10-18",
    "licence_reference": "https://www.bls.gov/opub/copyright-information.htm",
    "taxonomy_edition": "2018 SOC",
-   "transformation_version": null,
-   "import_batch_id": null,
+   "transformation_version": "p10c-f2a-soc-1",
+   "import_batch_id": "soc-graph:p5b_f2a_us (1,447 nodes, 1,424 relationships)",
    "qualification_status": "NOT_QUALIFIED",
    "state": "ACQUIRED",
    "acquired_at": "2026-10-18T11:34:10Z",
@@ -62,8 +63,9 @@
    "acquisition_state": "ACQUIRED",
    "http_status": 200,
    "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-   "ingestion_state": "NOT_INGESTED",
-   "runtime_approval": "NOT_APPROVED"
+   "ingestion_state": "INGESTED_ISOLATED_NON_PRODUCTION",
+   "runtime_approval": "NOT_APPROVED",
+   "validation_state": "VALIDATED_STRUCTURE_HASH_AND_DICTIONARY"
   },
   {
    "file_id": "us_oews_may2025_national",
@@ -81,8 +83,8 @@
    "availability_checked": "2026-10-18",
    "licence_reference": "https://www.bls.gov/opub/copyright-information.htm",
    "taxonomy_edition": "2018 SOC (stated in the May 2025 technical notes)",
-   "transformation_version": null,
-   "import_batch_id": null,
+   "transformation_version": "p10c-f2a-oews-national-1",
+   "import_batch_id": "cib_fe7f0931ed0c01ba5bd92d3c21bf813acd112ed6",
    "qualification_status": "NOT_QUALIFIED",
    "state": "ACQUIRED",
    "acquired_at": "2026-10-18T11:34:14Z",
@@ -92,8 +94,9 @@
    "acquisition_state": "ACQUIRED",
    "http_status": 200,
    "content_type": "application/x-zip-compressed",
-   "ingestion_state": "NOT_INGESTED",
-   "runtime_approval": "NOT_APPROVED"
+   "ingestion_state": "INGESTED_ISOLATED_NON_PRODUCTION",
+   "runtime_approval": "NOT_APPROVED",
+   "validation_state": "VALIDATED_STRUCTURE_HASH_AND_DICTIONARY"
   },
   {
    "file_id": "us_oews_may2025_occupation_definitions",
@@ -123,7 +126,9 @@
    "http_status": 200,
    "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
    "ingestion_state": "NOT_INGESTED",
-   "runtime_approval": "NOT_APPROVED"
+   "runtime_approval": "NOT_APPROVED",
+   "validation_state": "VALIDATED_STRUCTURE_HASH_AND_DICTIONARY",
+   "note": "Inspected only: 832 official OEWS occupation definitions were checked against the national file; their text is not stored by this wave."
   }
  ],
  "staging_root": "/Volumes/Abu Aaliyah/Claude Projects/Interview Practice Studio/ask4mo-source-staging/p10c-f2a/us",
@@ -140,5 +145,11 @@
     ]
    }
   ]
+ },
+ "isolated_environment": {
+  "database": "p5b_f2a_us",
+  "engine": "PostgreSQL 16 isolated loopback cluster created in the staging directory (port 55433)",
+  "alembic_head": "0038_compensation_concepts",
+  "protected_stores_touched": false
  }
 }

@@ -71,8 +71,8 @@
   {
    "id": "L",
    "requirement": "Source registry permits the workflow",
-   "status": "NOT_MET",
-   "evidence": "Registry lifecycle for us_soc_2018 and us_bls_oews has not been advanced: no transition to approved_for_ingestion has been made, and the licence state in the registry is still unverified. The transition belongs to the registry's own approval mechanism and is performed at acquisition."
+   "status": "MET_WITH_NOTE",
+   "evidence": "Transitions performed ONLY in the isolated database through SourceRegistry (discovered > licensing_pending > licensing_verified > approved_for_ingestion, audited, no actor user). The persistent developer registry and src/knowledge_foundation/data/source_registry_baseline.json are unchanged; durable approval there remains an owner/admin action. approved_for_runtime_use was never requested."
   },
   {
    "id": "M",
@@ -160,5 +160,10 @@
  "follow_up": {
   "date": "2026-10-18",
   "files_acquired": 4
+ },
+ "follow_up_2": {
+  "date": "2026-10-18",
+  "isolated_ingestion": "completed",
+  "runtime_approval": "NOT_APPROVED"
  }
 }

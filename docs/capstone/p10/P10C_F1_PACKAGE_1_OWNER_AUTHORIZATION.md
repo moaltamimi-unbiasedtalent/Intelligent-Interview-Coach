@@ -91,6 +91,13 @@ Explicitly excluded (unchanged, NOT_APPROVED): O*NET, O*NET/ESCO and SOC-to-ISCO
 
 **Execution state at recording:** acquisition NOT PERFORMED. See `P10C_F2A_US_SOURCE_ACQUISITION.md` for the precondition check and the blocker.
 
+## M.2 Owner policy decisions recorded 2026-10-18 (P10C-F2A continuation)
+Basis: the explicit owner instruction in the continuation specification (section 2); no signature or external legal approval is claimed. Machine-readable: `owner_policies` in the dossier.
+- **POLICY A, BLS-specific aggregates.** 21-1018, 25-2052, 25-9045, 51-2028 and 53-1047 are not canonical SOC 2018 occupations; no SOC node, no mapping, no exact matching. **Implemented as QUARANTINE** (schema limitation: neither `CompensationRecordV2` nor the taxonomy scheme vocabulary can carry a non-canonical code without misrepresenting it; adding a scheme needs a migration).
+- **POLICY B, duplicate presentations.** The seven broad occupations OEWS lists as broad and detailed (13-1020, 13-2020, 29-2010, 31-1120, 39-7010, 47-4090, 51-2090) were verified identical on every field except O_GROUP and are one observation each; both source presentations are kept in provenance.
+- **POLICY C, reliability.** BLS RSE and employment preserved per record; no cutoff invented or applied; every record stays unqualified.
+- **POLICY D, commercial licensing.** Ingestion approval is not deployment permission; commercial runtime use outside the US is an unresolved runtime blocker (RB-LIC-1).
+
 ## Package 2 (United Kingdom) safety — unchanged and UNAPPROVED
 - The ASHE correction dated 19 December 2025 suppresses annual pay estimates for occupations 3312, 331 and 33 (UK and some regions; Tables 2, 3, 14, 15, 20). Any future ingestion must keep those cells **missing**; they are never reconstructed or filled. Weekly pay stays weekly.
 - SOC edition: the 2025 bulletin states occupation coding moved from SOC 2010 to SOC 2020 from 2021 and its occupation charts are "defined by SOC 2020" (VERIFIED). The Table 14 page keeps a legacy "soc2010" title/slug and does not state SOC 2020; the 2025 file is `ashetable142025provisional.zip`. The edition must be confirmed from the file's own notes before acquisition.

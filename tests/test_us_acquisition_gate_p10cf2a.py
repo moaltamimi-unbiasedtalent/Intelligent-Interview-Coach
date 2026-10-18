@@ -14,10 +14,11 @@ def test_records_consistent():
     assert errs == []
 
 
-def test_ingestion_blocked_until_registry_lifecycle_and_every_precondition_met():
+def test_all_preconditions_recorded_and_runtime_stays_closed():
     _, allowed, blockers = gate.evaluate()
-    assert not allowed and any(b.startswith("L:") for b in blockers)
-    assert not any(b.startswith(("J:", "K:", "M:")) for b in blockers)
+    assert allowed and blockers == []
+    m = json.loads((gate.DIR / "acquisition_manifest.json").read_text())
+    assert all(f["runtime_approval"] == "NOT_APPROVED" and f["qualification_status"] == "NOT_QUALIFIED" for f in m["files"])
 
 
 def test_acquired_files_have_real_hashes_and_stay_unqualified():
@@ -25,7 +26,7 @@ def test_acquired_files_have_real_hashes_and_stay_unqualified():
     assert {f["original_filename"] for f in m["files"]} == gate.AUTHORISED_FILES
     for f in m["files"]:
         assert f["state"] == "ACQUIRED" and len(f["sha256"]) == 64 and f["http_status"] == 200
-        assert f["ingestion_state"] == "NOT_INGESTED" and f["qualification_status"] == "NOT_QUALIFIED" and f["runtime_approval"] == "NOT_APPROVED"
+        assert f["ingestion_state"] in ("NOT_INGESTED", "INGESTED_ISOLATED_NON_PRODUCTION") and f["qualification_status"] == "NOT_QUALIFIED" and f["runtime_approval"] == "NOT_APPROVED"
         assert gate.REPO not in Path(f["storage_location"]).parents
 
 

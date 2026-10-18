@@ -4940,5 +4940,39 @@
    ],
    "basis": "Explicit owner instruction in the P10C-F2A specification (chat message), section 0 and 3; no signature or external legal approval is claimed."
   }
+ ],
+ "owner_policies": [
+  {
+   "id": "POLICY-A",
+   "date": "2026-10-18",
+   "title": "BLS-specific aggregates",
+   "decision": "21-1018, 25-2052, 25-9045, 51-2028 and 53-1047 are not canonical SOC 2018 occupations: preserved as source-native aggregates, no canonical SOC nodes, no equivalence mappings, never used for exact SOC matching; stored as evidence only if the schema can represent their non-canonical nature without misrepresentation, otherwise quarantined with the schema limitation recorded.",
+   "implementation": "QUARANTINED: the V2 record and taxonomy vocabulary have no non-canonical code representation (a new taxonomy scheme needs a schema change)",
+   "basis": "Explicit owner instruction in the P10C-F2A continuation specification, section 2 (chat message, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-B",
+   "date": "2026-10-18",
+   "title": "Duplicate presentations",
+   "decision": "Seven occupations appear as both broad and detailed with identical observations: preserve the source classification, do not double count, use stable source record identity, do not delete legitimately distinct records, verify duplication semantics first.",
+   "implementation": "The BLS dictionary states aggregated broad occupations appear twice; all seven pairs were verified identical on every field except O_GROUP and merged to one observation per code with both presentations and source rows kept in provenance.",
+   "basis": "Explicit owner instruction in the P10C-F2A continuation specification, section 2 (chat message, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-C",
+   "date": "2026-10-18",
+   "title": "Reliability",
+   "decision": "Preserve BLS relative standard errors and uncertainty metadata; invent no RSE cutoff; source authority is not proof of precision; follow existing approved reliability rules; propose and do not apply any new qualification threshold.",
+   "implementation": "EMP_PRSE, MEAN_PRSE and TOT_EMP are stored in every record's provenance; every record stays qualification_status=unqualified; no cutoff exists or is proposed as applied.",
+   "basis": "Explicit owner instruction in the P10C-F2A continuation specification, section 2 (chat message, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-D",
+   "date": "2026-10-18",
+   "title": "Commercial licensing",
+   "decision": "Ingestion approval is not commercial deployment permission; commercial runtime use outside the United States is unestablished and is recorded as a runtime blocker.",
+   "implementation": "Recorded as runtime blocker RB-LIC-1 in the F2A acquisition document; no runtime approval was requested.",
+   "basis": "Explicit owner instruction in the P10C-F2A continuation specification, section 2 (chat message, 2026-10-18); no signature or external legal approval is claimed."
+  }
  ]
 }

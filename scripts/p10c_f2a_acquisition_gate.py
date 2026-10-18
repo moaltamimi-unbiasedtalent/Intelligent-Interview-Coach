@@ -3,7 +3,7 @@
     python scripts/p10c_f2a_acquisition_gate.py --check
 
 Validates the acquisition manifest and the recorded preconditions, and reports whether the authorised acquisition may proceed.
-Exit 0 means the records are internally consistent. ``--verify-hashes`` re-hashes the staged raw files when present. Ingestion is allowed only when
+Exit 0 means the records are internally consistent. ``--verify-hashes`` re-hashes the staged raw files when present. Isolated ingestion is allowed only when
 every precondition (including registry lifecycle, L) is MET or MET_WITH_NOTE.
 """
 from __future__ import annotations
@@ -38,8 +38,10 @@ def evaluate() -> tuple[list[str], bool, list[str]]:
             loc = Path(f["storage_location"] or "")
             if REPO in loc.parents or not loc.is_absolute():
                 errs.append(f"{f['file_id']}: raw file must be stored outside the repository")
-            if f.get("ingestion_state") != "NOT_INGESTED" or f.get("runtime_approval") != "NOT_APPROVED" or f["qualification_status"] != "NOT_QUALIFIED":
-                errs.append(f"{f['file_id']}: acquisition must not advance ingestion, qualification or runtime approval")
+            if f.get("ingestion_state") not in ("NOT_INGESTED", "INGESTED_ISOLATED_NON_PRODUCTION") or f.get("runtime_approval") != "NOT_APPROVED" or f["qualification_status"] != "NOT_QUALIFIED":
+                errs.append(f"{f['file_id']}: only isolated non-production ingestion is recorded; qualification and runtime approval must stay open")
+            if f.get("ingestion_state") == "INGESTED_ISOLATED_NON_PRODUCTION" and not (f.get("import_batch_id") and f.get("transformation_version")):
+                errs.append(f"{f['file_id']}: ingested without an import batch and transformation version")
         else:
             errs.append(f"{f['file_id']}: unknown state")
         if f["qualification_status"] != "NOT_QUALIFIED" and f["state"] != "ACQUIRED":
