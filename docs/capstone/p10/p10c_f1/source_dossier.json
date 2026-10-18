@@ -34,7 +34,7 @@
    "publisher": "U.S. Bureau of Labor Statistics",
    "dataset": "Occupational Employment and Wage Statistics (OEWS)",
    "edition": {
-    "value": "May 2025 estimates (the current release; the OEWS home page lists publication 15 May 2026). The locally held V1 file is the May 2025 national file, consistent with this.",
+    "value": "May 2025 estimates (the current release per the OEWS tables page, which offers oesm25nat.zip; the page states no release date, only a page last-modified date of 15 May 2026, which is NOT a release date). The locally held V1 file is the May 2025 national file.",
     "status": "VERIFIED_OFFICIAL_PAGE"
    },
    "reference_period": {
@@ -53,8 +53,8 @@
     "corroborated_against_publisher": true,
     "terms_clear": "clear",
     "redistribution": "permitted",
-    "commercial_use": "permitted",
-    "attribution": "unknown",
+    "commercial_use": "not_addressed_by_page (follows from the public-domain statement; confirm for non-US use)",
+    "attribution": "requested",
     "attribution_text": "The page asks users to cite BLS as the source (a request, not stated as a condition).",
     "notes": "The BLS states its publications are in the public domain except previously copyrighted photographs and illustrations; no permission is needed; the BLS emblem is a registered trademark and its unauthorised use is prohibited. Commercial use is not addressed explicitly: it follows from the public-domain statement (not assessed for use outside the United States).",
     "legal_review_needed": false,
@@ -161,7 +161,7 @@
     "terms_clear": "unclear",
     "redistribution": "not_verified",
     "commercial_use": "not_verified",
-    "attribution": "unknown",
+    "attribution": "requested",
     "attribution_text": null,
     "notes": "The SOC page makes no reuse statement; it links the BLS copyright page. Whether that page covers the SOC structure files is an inference, not a stated fact.",
     "legal_review_needed": false,
@@ -359,8 +359,8 @@
     "corroborated_against_publisher": true,
     "terms_clear": "clear",
     "redistribution": "permitted",
-    "commercial_use": "permitted",
-    "attribution": "unknown",
+    "commercial_use": "not_addressed_by_page (follows from the public-domain statement)",
+    "attribution": "requested",
     "attribution_text": null,
     "notes": "Same BLS statement as OEWS; the OOH and projections pages themselves were not read.",
     "legal_review_needed": false,
@@ -481,7 +481,8 @@
     "The pay elements included in 'gross' were NOT stated on the pages read (the QMI says hourly earnings exclude overtime): the gross definition is NOT VERIFIED beyond the word gross.",
     "Cells based on fewer than three individuals are suppressed; a dominance rule applies; the coefficient of variation is colour-coded (5%, 10%, 20% thresholds).",
     "ASHE is a 1% sample of PAYE employee jobs; it excludes the self-employed and armed forces; seasonal work is not fully captured.",
-    "Weekly pay is published weekly and must stay weekly: no annualisation (decision D-22)."
+    "Weekly pay is published weekly and must stay weekly: no annualisation (decision D-22).",
+    "Data correction dated 19 December 2025: annual pay estimates for occupation 3312 (Police officers, sergeant and below) and parent groups 331 and 33 were suppressed in Tables 2, 3, 14, 15 and 20 for UK and some regions; they will be reviewed for the revised 2025 dataset (expected October or November 2026). An import must preserve these as missing, never fill them. The next release date is stated as 'to be announced'."
    ],
    "evidence": [
     "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/bulletins/annualsurveyofhoursandearnings/latest",

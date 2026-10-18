@@ -50,3 +50,6 @@ Run: `python scripts/p10c_f1_dossier.py --check`, `pytest tests/test_source_qual
 
 ## 11. P10C-F2 prerequisites (not started)
 Owner decisions D-04, D-12, D-13 and the relevant per-package decisions; legal review for ESCO/ISCO/ShareAlike sources; confirmation of SOC edition for May 2025 OEWS and ASHE 2025; written approval of at least one package.
+
+## 12. Owner decision appendix
+See [P10C_F1_OWNER_DECISION_APPENDIX.md](P10C_F1_OWNER_DECISION_APPENDIX.md): exact wording and proposed answers for the acquisition-blocking decisions, legal-review list, Package 1 and 2 checklists, open edition questions and P10C-F2 boundaries.
