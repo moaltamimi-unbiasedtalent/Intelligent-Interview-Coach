@@ -4,7 +4,7 @@ Deterministic and offline by default: it forces the local embedder and the
 heuristic query translator so results are reproducible and free. Run with an LLM
 translator / OpenAI embeddings to refine the semantic numbers.
 
-Outputs:
+Outputs (a TEMPORARY directory by default; ``--write`` refreshes the committed copies under evaluations/):
   evaluations/retrieval_results.csv
   evaluations/tool_selection_results.csv
   evaluations/rag_evaluation.md
@@ -17,7 +17,9 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -41,7 +43,10 @@ from src.copilot.vectorstore import build_vector_store  # noqa: E402
 CORPUS = "evaluations/corpus"
 DATASET = "evaluations/rag_dataset.json"
 TOOL_CASES = "evaluations/tool_selection_cases.json"
-OUT_DIR = "evaluations"
+# P10D evaluation-history protection: a plain run writes to a TEMPORARY directory so it can never overwrite the committed (historical,
+# environment-specific) results; ``--write`` (or ASK4MO_EVAL_WRITE=1) deliberately refreshes the committed copy.
+_WRITE = "--write" in sys.argv or os.environ.get("ASK4MO_EVAL_WRITE") == "1"
+OUT_DIR = "evaluations" if _WRITE else tempfile.mkdtemp(prefix="ask4mo_eval_rag_")
 
 
 def _build_store(config):

@@ -18,7 +18,7 @@ import unicodedata
 from src.core.security.normalize import ZERO_WIDTH as _ZERO_WIDTH
 from src.core.security.normalize import count_control_chars, strip_control
 
-__all__ = ["normalize_for_storage", "normalize_for_detection", "count_control_chars"]
+__all__ = ["normalize_for_storage", "normalize_for_detection", "normalize_for_unicode_detection", "count_control_chars"]
 
 # Low-level primitives (zero-width table, control stripping, control-char count)
 # are shared from src.core.security; the domain-specific normalisation below is
@@ -44,3 +44,15 @@ def normalize_for_detection(text: str) -> str:
     text = _PUNCT_RE.sub(" ", text)
     text = re.sub(r"\s+", " ", text)
     return text.strip()
+
+
+def normalize_for_unicode_detection(text: str) -> str:
+    """P10D: the detection form for NON-ASCII scripts. ``normalize_for_detection`` turns every character outside ``[a-z0-9]`` into a space, which
+    erased accented Latin letters, Cyrillic and Arabic entirely, so no non-English pattern could ever match. This variant keeps every Unicode letter
+    and digit, case-folds, and removes combining marks (so "précédentes" matches "precedentes"); punctuation still becomes a space."""
+    text = normalize_for_storage(text).casefold()
+    text = unicodedata.normalize("NFKD", text)
+    text = "".join(ch for ch in text if not unicodedata.combining(ch))
+    text = re.sub(r"(?<=\b\w)[\s._\-]+(?=\w\b)", "", text)
+    text = re.sub(r"[^\w\s]|_", " ", text)
+    return re.sub(r"\s+", " ", text).strip()

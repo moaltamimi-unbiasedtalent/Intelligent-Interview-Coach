@@ -89,6 +89,11 @@ class BaseVectorStore(ABC):
 
     embedder: BaseEmbedder
 
+    def _touch(self) -> None:
+        """Record an in-process mutation (P10D). ``KeywordRetriever.from_store`` keys its cached BM25 index on (count, revision), so a store that changed without a change of
+        size (delete then add the same number, or a reset) never serves a stale lexical index."""
+        self._revision = getattr(self, "_revision", 0) + 1
+
     @abstractmethod
     def add_chunks(self, chunks: Sequence[DocumentChunk]) -> IndexResult:
         ...
@@ -132,6 +137,7 @@ class InMemoryVectorStore(BaseVectorStore):
         new = [c for c in chunks if c.chunk_id not in self._items]
         skipped = len(chunks) - len(new)
         if new:
+            self._touch()
             vectors = self.embedder.embed_documents([c.text for c in new])
             for chunk, vector in zip(new, vectors):
                 self._items[chunk.chunk_id] = {
@@ -171,9 +177,11 @@ class InMemoryVectorStore(BaseVectorStore):
         doomed = [cid for cid, item in self._items.items() if filters and _matches(item["metadata"], filters)]
         for cid in doomed:
             del self._items[cid]
+        self._touch()
         return len(doomed)
 
     def reset(self) -> None:
+        self._touch()
         self._items.clear()
 
     def all_chunks(self) -> list[DocumentChunk]:
@@ -235,6 +243,8 @@ class ChromaStore(BaseVectorStore):
         new = [c for c in chunks if c.chunk_id not in existing]
         skipped = len(chunks) - len(new)
         added = 0
+        if new:
+            self._touch()
         # Embed + add in batches to bound memory and request size.
         batch = constants.EMBED_BATCH_SIZE
         for start in range(0, len(new), batch):
@@ -302,9 +312,11 @@ class ChromaStore(BaseVectorStore):
         ids = got.get("ids", [])
         if ids:
             self._collection.delete(ids=ids)
+        self._touch()
         return len(ids)
 
     def reset(self) -> None:
+        self._touch()
         self._client.delete_collection(self.collection_name)
         self._collection = self._client.get_or_create_collection(
             name=self.collection_name,

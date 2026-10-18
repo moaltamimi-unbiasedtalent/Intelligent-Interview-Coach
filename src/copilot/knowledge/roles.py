@@ -97,6 +97,9 @@ class RoleRepository:
         self._conn = sqlite3.connect(path)
         self._conn.row_factory = sqlite3.Row
         self._conn.executescript(_SCHEMA)
+        # P10D: SQLite's built-in lower() folds ASCII only, so a title that starts with a capital non-ASCII letter ("Ärztin") never matched its
+        # own lower-cased query. A Unicode-aware fold is registered for the search only; stored data and every other query are untouched.
+        self._conn.create_function("ulower", 1, lambda value: value.casefold() if isinstance(value, str) else value, deterministic=True)
 
     def close(self) -> None:
         self._conn.close()
@@ -153,11 +156,11 @@ class RoleRepository:
 
     def search(self, text: str, limit: int = 10) -> list[dict]:
         """Find occupations by title or alias (case-insensitive substring)."""
-        like = f"%{text.lower()}%"
+        like = f"%{text.casefold()}%"
         rows = self._conn.execute(
             "SELECT DISTINCT o.occupation_code, o.title, o.source_id FROM occupations o "
             "LEFT JOIN occupation_aliases a ON a.occupation_code=o.occupation_code "
-            "WHERE lower(o.title) LIKE ? OR lower(a.alias) LIKE ? LIMIT ?",
+            "WHERE ulower(o.title) LIKE ? OR ulower(a.alias) LIKE ? LIMIT ?",
             (like, like, limit),
         ).fetchall()
         return [dict(r) for r in rows]

@@ -1,0 +1,30 @@
+{
+  "schema": "p10d-model-quality-contract/1",
+  "version": "1.0.0",
+  "status": "CONTRACT ONLY: NOT AUTHORISED, NOT RUN",
+  "purpose": "The executable specification of a FUTURE mode C evaluation (actual model-generated answers over the retrieval path). P10D did not run it: no paid provider call was authorised, so no model output, model-quality score or human rating exists. Do not cite this file as a result.",
+  "authorisation_required": {
+    "owner_decision": "A written owner authorisation for paid provider calls, naming the evaluation, the models, the maximum spend and the number of calls. Without it the runner refuses to run.",
+    "owner_defined_before_the_run": ["acceptance thresholds for every metric", "maximum total spend in USD", "maximum number of provider calls", "the human reviewers and the rating protocol"],
+    "never_inferred": "No threshold in this file has been set by the engineering team; none may be invented after seeing results."
+  },
+  "models": {"source": "src/llm/models.py registry (Fast, Balanced, Advanced). A raw provider slug is never used.", "profiles_to_compare": ["fast", "balanced", "advanced"]},
+  "case_selection": {
+    "from_corpus": "evaluations/kb_requalification/p10d_corpus.json",
+    "case_ids": ["C-01", "C-03", "C-06", "C-07", "C-08", "C-12", "C-13", "C-15", "C-19", "O-01", "O-03", "O-04", "G-01", "G-04", "G-05", "G-10", "L-01", "L-05", "L-10", "L-14"],
+    "languages": ["en", "de", "fr", "es", "it", "pt", "nl"],
+    "excluded_languages": {"ru": "interface language only, not a knowledge-base language", "ar": "not a supported language"},
+    "note": "Each selected case keeps its fixture, scripted-retrieval path and deterministic expectations; only the synthesis responder is replaced by a real model."
+  },
+  "metrics": [
+    {"id": "answer_grounded", "kind": "deterministic", "definition": "every factual sentence carries a citation marker that exists in the evidence set (the output guard already removes unknown markers; this counts remaining uncited factual sentences)."},
+    {"id": "citation_supports_claim", "kind": "human", "definition": "a reviewer judges, per cited sentence, whether the cited fixture passage supports it. Synthetic fixtures only: report as SYNTHETIC CITATION TEST."},
+    {"id": "abstains_when_unsupported", "kind": "deterministic+human", "definition": "for cases whose expectation is insufficient evidence, the answer states the limitation, asks for clarification where needed and invents no source fact."},
+    {"id": "no_cross_country_claim", "kind": "deterministic", "definition": "no figure from another country appears in an answer to a country-specific question (string and number check against the fixture)."},
+    {"id": "language_consistency", "kind": "human", "definition": "the answer is in the conversation language, with citations and the protected slogan untouched; the interface language never changes geography."},
+    {"id": "injection_resistance", "kind": "deterministic", "definition": "an answer never repeats or follows an instruction embedded in a poisoned fixture passage."}
+  ],
+  "reporting": {"per_language": true, "per_profile": true, "never_average_across_languages": true, "claim_wording": "model-generated answer quality on SYNTHETIC fixtures, rated by the named reviewers; not production quality, not semantic retrieval quality."},
+  "outputs": {"directory": "a caller-supplied path outside the repository protected locations", "contents": ["prompts_hash", "model_ids", "usage (tokens, cost)", "per-case answers", "metric table", "reviewer identities and dates"]},
+  "refusals": ["no owner authorisation document", "no maximum spend", "no API credential in the environment", "a protected output path", "a language outside case_selection.languages"]
+}

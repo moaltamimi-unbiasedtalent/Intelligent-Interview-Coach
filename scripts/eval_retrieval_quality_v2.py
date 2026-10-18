@@ -18,7 +18,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import sys
+import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -34,7 +36,12 @@ from src.copilot.vectorstore import build_vector_store  # noqa: E402
 
 CORPUS = "evaluations/corpus"
 DATASET = "evaluations/rag_dataset.json"
-OUT = Path("evaluations/retrieval_quality_v2")
+COMMITTED_OUT = Path("evaluations/retrieval_quality_v2")
+
+# P10D evaluation-history protection: a plain run writes to a TEMPORARY directory so it can never overwrite the committed (historical,
+# environment-specific) results; ``--write`` (or ASK4MO_EVAL_WRITE=1) deliberately refreshes the committed copy.
+_WRITE = "--write" in sys.argv or os.environ.get("ASK4MO_EVAL_WRITE") == "1"
+OUT = COMMITTED_OUT if _WRITE else Path(tempfile.mkdtemp(prefix="ask4mo_eval_rq2_"))
 
 
 def _corpus_fingerprint() -> str:

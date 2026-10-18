@@ -6,7 +6,7 @@ source id + URL (provenance), compensation evidence must carry full salary
 context, and a citation built from evidence must map to real evidence (precision).
 Insufficient-evidence correctness is checked for known-gap cases.
 
-Writes only under evaluations/faithfulness_v2/. Never touches 11R/11R-A/KB-2.
+Writes to a temporary directory by default; ``--write`` refreshes evaluations/faithfulness_v2/ deliberately. Never touches 11R/11R-A/KB-2.
 
 Usage:  python scripts/eval_faithfulness_v2.py
 """
@@ -15,7 +15,9 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -23,7 +25,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.copilot.knowledge.retrieval import build_default_coordinator  # noqa: E402
 from src.copilot.knowledge.router import route_question  # noqa: E402
 
-DIR = Path("evaluations/faithfulness_v2")
+COMMITTED_DIR = Path("evaluations/faithfulness_v2")
+
+# P10D evaluation-history protection: a plain run writes to a TEMPORARY directory so it can never overwrite the committed (historical,
+# environment-specific) results; ``--write`` (or ASK4MO_EVAL_WRITE=1) deliberately refreshes the committed copy.
+_WRITE = "--write" in sys.argv or os.environ.get("ASK4MO_EVAL_WRITE") == "1"
+DIR = COMMITTED_DIR if _WRITE else Path(tempfile.mkdtemp(prefix="ask4mo_eval_faith_"))
 
 CASES = [
     ("What does a Data Analyst do?", {"expect_evidence": True}),

@@ -4,7 +4,7 @@ Runs a HELD-OUT set (evaluations/quality_v2/held_out_relevance.json) authored
 after the system was built and never used to tune it. All checks are deterministic
 and offline (local lexical embedder); nothing here makes a paid/live call. An
 optional LLM-judge is described but reported as NOT RUN unless a credential is
-configured. Writes only under evaluations/quality_v2/ — never touches 11R / 11R-A
+configured. Writes to a temporary directory by default (``--write`` refreshes evaluations/quality_v2/ deliberately) — never touches 11R / 11R-A
 or product-coverage artifacts.
 
 Usage:  python scripts/eval_quality_v2.py
@@ -13,7 +13,9 @@ Usage:  python scripts/eval_quality_v2.py
 from __future__ import annotations
 
 import json
+import os
 import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -34,6 +36,10 @@ CORPUS = "evaluations/corpus"
 DATASET = Path("evaluations/quality_v2/held_out_relevance.json")
 OUT = Path("evaluations/quality_v2")
 
+# P10D evaluation-history protection: a plain run writes to a TEMPORARY directory so it can never overwrite the committed (historical,
+# environment-specific) results; ``--write`` (or ASK4MO_EVAL_WRITE=1) deliberately refreshes the committed copy.
+_WRITE = "--write" in sys.argv or os.environ.get("ASK4MO_EVAL_WRITE") == "1"
+
 
 def _cases(rows: list[dict]) -> list[RagCase]:
     return [RagCase(id=r["id"], question=r["question"], category="held_out",
@@ -53,8 +59,9 @@ def main(argv: list[str] | None = None, *, out_dir: Path | None = None) -> int:
         parser.add_argument("--output-dir", default=None,
                             help="directory for results.json/summary.md (default: "
                                  "evaluations/quality_v2)")
+        parser.add_argument("--write", action="store_true", help="refresh the committed results under evaluations/quality_v2 (default: a temporary directory)")
         args = parser.parse_args(argv)
-        out = Path(args.output_dir or OUT)
+        out = Path(args.output_dir) if args.output_dir else (OUT if (args.write or _WRITE) else Path(tempfile.mkdtemp(prefix="ask4mo_eval_q2_")))
 
     config = load_config()
     data = json.loads(DATASET.read_text(encoding="utf-8"))

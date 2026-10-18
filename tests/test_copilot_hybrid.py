@@ -131,7 +131,10 @@ class TestHybrid:
 
     def test_score_fusion_ranks_agreed_chunk_first(self, store) -> None:
         # A chunk surfaced highly by both channels should win under RRF.
-        detail = self._hybrid(store).search("SQL databases", top_k=5)
+        # P10D: chunks with no similarity at all are no longer padded into the results, so the query must overlap at least two chunks for the
+        # ordering to be observable ("python" overlaps the Python chunk, "SQL databases" overlaps the SQL chunk in BOTH channels).
+        detail = self._hybrid(store).search("SQL databases and Python", top_k=5)
+        assert len(detail.fused) >= 2
         assert _ids(detail.fused)[0] == "sql"
         assert detail.fused[0].score > detail.fused[-1].score
 

@@ -54,7 +54,10 @@ class VectorRetriever:
         if not query:
             return []
         hits = self.store.query(query, top_k=top_k, filters=filters)
-        return [_hit_to_result(hit) for hit in hits]
+        # P10D: a similarity of zero (or below) means NO similarity: a query with no usable token for the embedder (for example Arabic or Cyrillic
+        # text under the offline hash embedder) or no overlap at all. Such a chunk is arbitrary nearest-neighbour padding, not evidence, and used to be
+        # returned (and cited) anyway. This is the most conservative possible floor: a semantic embedder never scores a related passage at <= 0.
+        return [_hit_to_result(hit) for hit in hits if hit.score > 0.0]
 
 
 def retrieve(
