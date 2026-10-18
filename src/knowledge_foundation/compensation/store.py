@@ -193,6 +193,9 @@ class CompensationStoreV2:
             return "ambiguous_occupation_identity"
         if rec.earnings_concept == "household_income":
             return "earnings_concept_not_occupation_compensation"
+        from src.knowledge_foundation.ashe_suppression import violates as _suppressed
+        if _suppressed(rec):
+            return "publisher_suppressed_measurement_must_stay_missing"         # ONS ASHE correction of 19 December 2025: never restored
         if rec.geography_level == "national" and rec.region:
             return "region_with_national_level"
         if rec.geography_level == "regional" and not rec.region:

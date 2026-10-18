@@ -1,0 +1,46 @@
+{
+ "schema": "p10c_f2b_uk_v1_baseline/1",
+ "note": "Metadata only: counts and verdicts. No titles and no pay values. Produced read-only.",
+ "records": 527,
+ "rows_without_occupation_code": 1,
+ "distinct_codes": 526,
+ "duplicate_code_rows": 0,
+ "code_length_distribution": {
+  "1": 9,
+  "2": 26,
+  "3": 103,
+  "4": 388
+ },
+ "codes_all_digits": true,
+ "countries": [
+  "UK"
+ ],
+ "currencies": [
+  "GBP"
+ ],
+ "pay_periods": [
+  "weekly"
+ ],
+ "statistics": [
+  "median"
+ ],
+ "reference_years": [
+  2025
+ ],
+ "sample_quality": {
+  "provisional": 527
+ },
+ "rows_with_region": 0,
+ "rows_with_industry": 0,
+ "rows_with_title": 0,
+ "source_urls": [
+  "https://www.ons.gov.uk/"
+ ],
+ "v1_lacks": [
+  "classification edition (SOC 2010 or 2020)",
+  "dataset table and edition (Table 14.1a, provisional or revised)",
+  "population (full-time) and pay basis",
+  "provenance and file hash"
+ ],
+ "store_modified_by_this_run": false
+}

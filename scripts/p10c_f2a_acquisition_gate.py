@@ -19,16 +19,24 @@ AUTHORISED_FILES = {"soc_structure_2018.xlsx", "soc_2018_definitions.xlsx", "oes
 OK = {"MET", "MET_WITH_NOTE"}
 
 
-def evaluate() -> tuple[list[str], bool, list[str]]:
+def evaluate(directory: Path | None = None) -> tuple[list[str], bool, list[str]]:
+    """Validate one package directory (default: the P10C-F2A US package). A manifest may declare ``authorised_files`` (else the F2A set), ``official_url_prefixes`` and a
+    ``package_authorization`` block; a package whose authorization is not APPROVED may not contain any acquired file."""
+    base = Path(directory) if directory else DIR
     errs: list[str] = []
-    m = json.loads((DIR / "acquisition_manifest.json").read_text())
-    v = json.loads((DIR / "source_verification.json").read_text())
+    m = json.loads((base / "acquisition_manifest.json").read_text())
+    v = json.loads((base / "source_verification.json").read_text())
+    authorised = set(m.get("authorised_files", AUTHORISED_FILES))
+    prefixes = tuple(m.get("official_url_prefixes", ["https://www.bls.gov/"]))
+    auth = m.get("package_authorization", {"status": "APPROVED"})
     names = {f["original_filename"] for f in m["files"]}
-    if names != AUTHORISED_FILES:
-        errs.append(f"manifest files differ from the authorised set: {sorted(names ^ AUTHORISED_FILES)}")
+    if names != authorised:
+        errs.append(f"manifest files differ from the declared set: {sorted(names ^ authorised)}")
+    if auth.get("status") != "APPROVED" and any(f["state"] != "NOT_ACQUIRED" for f in m["files"]):
+        errs.append("a file is marked acquired although the package authorization is not APPROVED")
     for f in m["files"]:
-        if not f["official_url"].startswith("https://www.bls.gov/"):
-            errs.append(f"{f['file_id']}: not an official bls.gov URL")
+        if not f["official_url"].startswith(prefixes):
+            errs.append(f"{f['file_id']}: not an official publisher URL for this package")
         if f["state"] == "NOT_ACQUIRED":
             if f["sha256"] or f["acquired_at"] or f["storage_location"] or f["size_bytes"]:
                 errs.append(f"{f['file_id']}: acquisition metadata present on a NOT_ACQUIRED file")
@@ -53,11 +61,13 @@ def evaluate() -> tuple[list[str], bool, list[str]]:
     return errs, not blockers, blockers
 
 
-def verify_hashes() -> list[str]:
+def verify_hashes(directory: Path | None = None) -> list[str]:
     import hashlib
 
     errs = []
-    for f in json.loads((DIR / "acquisition_manifest.json").read_text())["files"]:
+    for f in json.loads(((Path(directory) if directory else DIR) / "acquisition_manifest.json").read_text())["files"]:
+        if f["state"] != "ACQUIRED":
+            continue
         p = Path(f["storage_location"] or "")
         if not p.exists():
             errs.append(f"{f['file_id']}: staged file not found")
@@ -67,10 +77,12 @@ def verify_hashes() -> list[str]:
 
 
 def main() -> int:
-    errs, allowed, blockers = evaluate()
+    directory = Path(sys.argv[sys.argv.index("--dir") + 1]) if "--dir" in sys.argv else None
+    errs, allowed, blockers = evaluate(directory)
+    wave = json.loads(((directory or DIR) / "acquisition_manifest.json").read_text()).get("wave", "P10C-F2A")
     if "--verify-hashes" in sys.argv:
-        errs += verify_hashes()
-    print("P10C-F2A GATE RECORDS:", "OK" if not errs else "FAIL")
+        errs += verify_hashes(directory)
+    print(f"{wave} GATE RECORDS:", "OK" if not errs else "FAIL")
     for e in errs:
         print(" -", e)
     print("preconditions_all_met (ingestion gate):", allowed)

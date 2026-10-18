@@ -1,0 +1,22 @@
+{
+ "schema": "p10c-f2b-ashe-suppression/1",
+ "dataset": "ONS Annual Survey of Hours and Earnings (ASHE) 2025 provisional",
+ "publisher": "Office for National Statistics",
+ "correction_date": "2025-12-19",
+ "source_url": "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/datasets/occupation4digitsoc2010ashetable14",
+ "verification_status": "PARTIALLY_VERIFIED",
+ "statement": "An error affected annual earnings estimates for occupation 3312 (Police officers, sergeant and below) in some local areas in the ASHE 2025 provisional data. The affected estimates for occupations 3312, 331 and 33 in London, the South East, East and the UK were suppressed in Tables 2, 3, 14, 15 and 20 and will be reviewed for the revised 2025 dataset (expected October or November 2026).",
+ "occupation_codes": ["33", "331", "3312"],
+ "tables": ["2", "3", "14", "15", "20"],
+ "geographies": ["UK", "London", "South East", "East"],
+ "measure_kinds": ["annual_pay", "annual_pay_incentive"],
+ "pay_periods_affected": ["annual"],
+ "pay_periods_not_affected_by_this_notice": ["weekly", "hourly"],
+ "treatment": "missing: never reconstructed, interpolated, inferred from weekly pay, or filled from a broader occupation or another year",
+ "unverified": [
+  "the exact suppressed cells, which must be read from the acquired Table 14 file and its notes",
+  "whether 'annual pay incentive' is a column of Table 14 in the acquired file (one reading of the page named it, another named only annual earnings)",
+  "whether other regions or measures carry suppressions not named in the notice",
+  "the exact symbol the file uses for a suppressed cell"
+ ]
+}
