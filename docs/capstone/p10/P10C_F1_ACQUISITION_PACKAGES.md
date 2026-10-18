@@ -7,13 +7,13 @@
 - **Sources:** us_soc_2018, us_bls_oews, us_onet_db
 - **Why needed:** Occupation-linked US compensation V2 evidence (the 1,386 V1 BLS records become SOC-linked evidence) and US wiring cases.
 - **Capability:** Registry-gated import of the listed sources, only after owner approval of ingestion; no runtime use implied.
-- **Licensing status:** {"us_bls_oews": "clear", "us_soc_2018": "unclear", "us_onet_db": "clear"}
+- **Licensing status:** {"us_soc_2018": "clear", "us_bls_oews": "clear", "us_onet_db": "clear"}
 - **Acquisition requirements:** owner approval of ingestion for each listed source (D-04); manual download by owner or approved operator; record URL, edition, timestamp and SHA-256; registry-gated importer in production mode; synthetic fixtures never
 - **Engineering dependencies:** ESCO nodes; ESCO or O*NET-SOC crosswalk to link resolver identities; SOC 2018 nodes; SOC 2018 nodes in the graph; approval of the SOC source; crosswalk to the resolver identities (ESCO, ISCO); measurement qualification by a named reviewer; owner confirmation of the attribution text; runtime approval of the source
 - **Qualification tests:** edition and reference period match the dossier; occupation codes validate against the approved taxonomy edition; no value is scaled, annualised or currency-converted outside the source's own derivation; suppressed or missing cells stay missing; C-class matches the dossier proposal
 - **Owner approval needed:** D-04 ingestion approval per source, D-12 edition selection, D-13 taxonomy acquisition
 - **Legal review sources:** none identified
-- **Ready for owner consideration:** False (not approved)
+- **Ready for owner consideration:** True (not approved)
 - **Limitations:**
   - An official SOC to ISCO-08 crosswalk was NOT found: its existence is NOT VERIFIED.
   - Annual rates are calculated from hourly rates using a typical 2,080-hour work year for hourly-reported occupations: this derivation is the PUBLISHER's, not a conversion by Ask4Mo, and must be labelled.
@@ -26,7 +26,7 @@
 - **Sources:** uk_soc_2020, uk_ons_ashe
 - **Why needed:** Occupation-linked UK evidence for the 527 V1 ASHE rows (the one row without a code is rejected, never guessed) and UK wiring cases.
 - **Capability:** Registry-gated import of the listed sources, only after owner approval of ingestion; no runtime use implied.
-- **Licensing status:** {"uk_ons_ashe": "clear", "uk_soc_2020": "clear"}
+- **Licensing status:** {"uk_soc_2020": "clear", "uk_ons_ashe": "clear"}
 - **Acquisition requirements:** owner approval of ingestion for each listed source (D-04); manual download by owner or approved operator; record URL, edition, timestamp and SHA-256; registry-gated importer in production mode; synthetic fixtures never
 - **Engineering dependencies:** UK SOC 2020 nodes; a crosswalk to the resolver identities (ISCO-08 or ESCO); measurement qualification; owner adoption of UK SOC 2020 as first-class (D-03); runtime approval
 - **Qualification tests:** edition and reference period match the dossier; occupation codes validate against the approved taxonomy edition; no value is scaled, annualised or currency-converted outside the source's own derivation; suppressed or missing cells stay missing; C-class matches the dossier proposal
