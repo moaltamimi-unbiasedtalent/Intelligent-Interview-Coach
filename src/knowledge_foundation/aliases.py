@@ -38,7 +38,7 @@ def _row(a: GraphOccupationAlias, key: str | None = None, origin: str | None = N
     return {"id": a.id, "alias_text": a.alias_text, "normalized_text": a.normalized_text, "folded_text": a.folded_text, "language": a.language, "language_basis": a.language_basis,
             "script": a.script, "alias_type": a.alias_type, "source_ref": a.source_ref, "edition_ref": a.edition_ref, "qualification_status": a.qualification_status, "status": a.status,
             "context_terms": list(a.context_terms or []), "normalization_version": a.normalization_version, "occupation_key": key, "source_origin": origin,
-            "evidence_eligible_origin": origin in E.EVIDENCE_ORIGINS}
+            "evidence_eligible_origin": origin in E.EVIDENCE_ORIGINS, "country_applicability": [c for c in (a.provenance or {}).get("country_applicability", [])]}
 
 
 class AliasStore:
@@ -133,6 +133,21 @@ class AliasStore:
             a.qualification_status = status
             s.commit()
             return _row(a, None, origin)
+
+    def retire_alias(self, alias_id: int, *, reason: str, actor_user_id: int | None = None) -> dict[str, Any]:
+        """Revoke an alias: its status becomes ``deprecated`` so lookups (and so the resolver) stop using it. Nothing is deleted; the decision is kept in the alias provenance history."""
+        if not (reason or "").strip():
+            raise AliasError("a revocation needs a reason")
+        with self._sf() as s:
+            a = s.get(GraphOccupationAlias, alias_id)
+            if a is None:
+                raise AliasError("unknown alias")
+            hist = list((a.provenance or {}).get("status_history", []))
+            hist.append({"from": a.status, "to": "deprecated", "actor_user_id": actor_user_id, "reason": reason[:300]})
+            a.provenance = {**(a.provenance or {}), "status_history": hist}
+            a.status = "deprecated"
+            s.commit()
+            return _row(a, None, _source_origin(s, a.source_ref))
 
     # ------------------------------------------------------------------------------------------------------ reads
     def lookup(self, text: str, *, folded: bool = False, include_inactive: bool = False) -> list[dict[str, Any]]:

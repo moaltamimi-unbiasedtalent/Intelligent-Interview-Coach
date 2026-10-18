@@ -111,6 +111,7 @@ class CompensationResponse:
     fallback_trace: dict[str, Any] | None = None
     fallback: dict[str, Any] | None = None
     evidence_assessment: dict[str, Any] | None = None
+    contextual_evidence: list[dict[str, Any]] = field(default_factory=list)      # broader-group statistics offered ONLY as labelled context, never as the occupation's own value
     comparison_mode: str = "nominal"
     comparison_mode_status: str = "supported"
     policy_version: str | None = None
@@ -269,18 +270,24 @@ class CompensationResolver:
         specificity = "exact"
         recs = self._store.records_for([by_key[k] for k in exact_keys if k in by_key], country)
         chosen = self._eligible(recs, req, src, withheld)
+        contextual: list[dict[str, Any]] = []
         if not chosen and req.allow_broader_occupation and broader_keys:
-            recs = self._store.records_for([by_key[k] for k in broader_keys if k in by_key], country)
-            chosen = self._eligible(recs, req, src, withheld)
-            specificity = "broader_group"
-        resp.fallback_trace = {"order": ["exact_occupation", "verified_broader_group"], "selected_stage": {"exact": "exact_occupation", "broader_group": "verified_broader_group"}[specificity] if chosen else None, "broader_group_attempted": bool(broader_keys) and req.allow_broader_occupation,
+            # Owner rule (P10C-F2A-Q): a parent group's statistic is never the occupation's own value. It is returned only as clearly labelled CONTEXT beside an abstention.
+            brecs = self._eligible(self._store.records_for([by_key[k] for k in broader_keys if k in by_key], country), req, src, withheld)
+            contextual = self._contextual(brecs, ids, src, req, resp)
+        resp.fallback_trace = {"order": ["exact_occupation", "verified_broader_group_as_context_only"], "selected_stage": "exact_occupation" if chosen else None,
+                               "broader_group_attempted": bool(broader_keys and req.allow_broader_occupation), "broader_context_records": len(contextual),
                                "eligible_records_by_class_at_selected_stage": {c: sum(1 for r in chosen if r["evidence_class"] == c) for c in ("C1", "C2", "C3")}, "other_country_evidence_used": False}
+        resp.contextual_evidence = contextual
         resp.withheld = withheld
         if not chosen:
             reason = ("evidence_exists_but_is_not_operational" if withheld.get("not_operational") else "evidence_withheld_precedence_decision_pending" if withheld.get("precedence_decision_pending")
                       else "source_value_suppressed" if withheld.get("source_value_suppressed")
                       else "evidence_withheld_citation_incomplete" if withheld.get("citation_incomplete")
                       else "no_evidence_for_requested_region" if req.region else "no_evidence_for_occupation_in_country")
+            exact_in_geography = any((r["region"] or "").lower() == (req.region or "").lower() for r in recs)
+            if (contextual or exact_in_geography) and reason == ("no_evidence_for_requested_region" if req.region else "no_evidence_for_occupation_in_country"):
+                reason = "exact_occupation_measurement_unavailable"          # the exact occupation has evidence in the country, but not for the requested measure (or the only candidate is broader context)
             resp.evidence_class = "C4"
             resp.abstention_reason = reason
             if self._cov is not None:
@@ -312,6 +319,31 @@ class CompensationResolver:
             return self._finish(resp, CompensationOutcome.CONFLICT, reason="comparable_sources_of_equal_precedence_disagree")
         resp.corroborating = [{**_summary(r), "agrees": r["value"] == best["value"]} for r in rest]
         return self._present(resp, best, specificity, by_key, ids, src, req, rel_info, latest_available)
+
+    def _contextual(self, recs: list[dict[str, Any]], ids: dict[int, str], src: "_Sources", req: CompensationRequest, resp: CompensationResponse) -> list[dict[str, Any]]:
+        """One labelled context entry per comparable group of broader-group records (newest reference year only). Carries the broader occupation identity, class, source, period, measure and
+        an explicit non-equivalence warning. It never fills the response's own value."""
+        if not recs:
+            return []
+        latest = max(r["reference_year"] for r in recs)
+        groups: dict[tuple, list[dict[str, Any]]] = {}
+        for r in recs:
+            if r["reference_year"] == latest:
+                groups.setdefault((r["occupation_id"],) + self._group_key(r), []).append(r)
+        out = []
+        for g in groups.values():
+            best, _, tie = self._best(g)
+            if tie:
+                continue                                                                 # a disagreeing broader group is not offered even as context
+            cit = build_citation(best, src)                                              # type: ignore[arg-type]
+            key = ids.get(best["occupation_id"])
+            node = self._g.get(key) if key else None
+            out.append({"broader_occupation_key": key, "broader_occupation_code": best["native_code"], "broader_occupation_label": (node or {}).get("canonical_label"),
+                        "evidence_class": best["evidence_class"], "occupation_level": best["occupation_level"], "source_id": best["source_ref"], "citation": cit,
+                        "reference_year": best["reference_year"], "reference_period": best["reference_period"], "measure": best["measure"], "percentile": best["percentile"],
+                        "pay_period": best["pay_period"], "pay_basis": best["pay_basis"], "currency": best["currency"], "value": str(best["value"]),
+                        "warning": "BROADER OCCUPATIONAL GROUP statistic shown as context only: it is NOT the requested occupation's own value and must not be presented as occupation-specific pay"})
+        return out
 
     def _best(self, group: list[dict[str, Any]]):
         """Highest-precedence record of a comparable group. Inside that tier only the newest vintage of each (occupation, source, edition) counts; if the remaining records carry different

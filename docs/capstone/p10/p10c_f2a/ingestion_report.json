@@ -1,6 +1,6 @@
 {
  "schema": "p10c-f2a-ingestion-report/1",
- "run_at": "2026-10-18T13:17:41.147335+00:00",
+ "run_at": "2026-10-18T14:25:08.371872+00:00",
  "staged_files": {
   "us_soc_2018_structure": "OK",
   "us_soc_2018_definitions": "OK",
@@ -247,18 +247,18 @@
  "classification": {
   "by_class_level_qualification_status": [
    {
-    "evidence_class": "C1",
-    "occupation_level": "detailed",
-    "qualification_status": "unqualified",
-    "status": "current",
-    "records": 9450
-   },
-   {
     "evidence_class": "C2",
     "occupation_level": "broad",
-    "qualification_status": "unqualified",
+    "qualification_status": "engineering_checked",
     "status": "current",
     "records": 6690
+   },
+   {
+    "evidence_class": "C1",
+    "occupation_level": "detailed",
+    "qualification_status": "engineering_checked",
+    "status": "current",
+    "records": 9450
    }
   ],
   "by_measure": [
@@ -402,15 +402,15 @@
    "withheld": {}
   },
   "annual_only_occupation_hourly": {
-   "outcome": "evidence",
-   "specificity": "broader_group",
-   "evidence_class": "C2",
-   "level": "broad",
-   "measure": "median",
-   "pay_period": "hourly",
-   "abstention_reason": null,
-   "has_value": true,
-   "has_citation": true,
+   "outcome": "abstain",
+   "specificity": null,
+   "evidence_class": "C4",
+   "level": null,
+   "measure": null,
+   "pay_period": null,
+   "abstention_reason": "exact_occupation_measurement_unavailable",
+   "has_value": false,
+   "has_citation": false,
    "withheld": {}
   },
   "hourly_only_occupation_hourly": {
@@ -426,15 +426,15 @@
    "withheld": {}
   },
   "hourly_only_occupation_annual": {
-   "outcome": "evidence",
-   "specificity": "broader_group",
-   "evidence_class": "C2",
-   "level": "broad",
-   "measure": "median",
-   "pay_period": "annual",
-   "abstention_reason": null,
-   "has_value": true,
-   "has_citation": true,
+   "outcome": "abstain",
+   "specificity": null,
+   "evidence_class": "C4",
+   "level": null,
+   "measure": null,
+   "pay_period": null,
+   "abstention_reason": "exact_occupation_measurement_unavailable",
+   "has_value": false,
+   "has_citation": false,
    "withheld": {}
   },
   "noncanonical_bls_aggregate": {
@@ -490,12 +490,12 @@
  },
  "performance": {
   "soc_graph_population_s": 1.92,
-  "soc_graph_reimport_s": 2.02,
-  "oews_import_s": 7.73,
-  "oews_reimport_s": 7.03,
-  "records_per_second_import": 2088,
-  "resolve_p50_ms": 3.3,
-  "resolve_p95_ms": 6.9,
+  "soc_graph_reimport_s": 1.9,
+  "oews_import_s": 7.53,
+  "oews_reimport_s": 7.01,
+  "records_per_second_import": 2145,
+  "resolve_p50_ms": 3.9,
+  "resolve_p95_ms": 7.2,
   "resolve_samples": 200
  },
  "us_case_assessment": {
@@ -513,10 +513,10 @@
     "case": "pc_compensation_187",
     "occupation_title": "Software Developer",
     "exact_official_soc_label_matches": 0,
-    "resolver_outcome": "not_found",
-    "evidence_class": null,
-    "occupation_status": "not_found",
-    "reason": "title_not_in_graph"
+    "resolver_outcome": "evidence",
+    "evidence_class": "C1",
+    "occupation_status": "resolved",
+    "reason": null
    },
    {
     "case": "pc_compensation_191",
@@ -531,37 +531,37 @@
     "case": "pc_compensation_195",
     "occupation_title": "Human Resources Manager",
     "exact_official_soc_label_matches": 0,
-    "resolver_outcome": "not_found",
-    "evidence_class": null,
-    "occupation_status": "not_found",
-    "reason": "title_not_in_graph"
+    "resolver_outcome": "evidence",
+    "evidence_class": "C1",
+    "occupation_status": "resolved",
+    "reason": null
    },
    {
     "case": "pc_compensation_199",
     "occupation_title": "Accountant",
     "exact_official_soc_label_matches": 0,
-    "resolver_outcome": "not_found",
-    "evidence_class": null,
-    "occupation_status": "not_found",
-    "reason": "title_not_in_graph"
+    "resolver_outcome": "evidence",
+    "evidence_class": "C1",
+    "occupation_status": "resolved",
+    "reason": null
    },
    {
     "case": "pc_compensation_203",
     "occupation_title": "Financial Analyst",
     "exact_official_soc_label_matches": 0,
-    "resolver_outcome": "not_found",
-    "evidence_class": null,
-    "occupation_status": "not_found",
-    "reason": "title_not_in_graph"
+    "resolver_outcome": "evidence",
+    "evidence_class": "C1",
+    "occupation_status": "resolved",
+    "reason": null
    },
    {
     "case": "pc_compensation_207",
     "occupation_title": "Sales Manager",
     "exact_official_soc_label_matches": 0,
-    "resolver_outcome": "not_found",
-    "evidence_class": null,
-    "occupation_status": "not_found",
-    "reason": "title_not_in_graph"
+    "resolver_outcome": "evidence",
+    "evidence_class": "C1",
+    "occupation_status": "resolved",
+    "reason": null
    }
   ],
   "exact_resolutions": 0,
@@ -570,12 +570,18 @@
  "v1_reconciliation": {
   "v1_records": 1386,
   "verdicts": {
-   "QUALIFIED_FOR_V2": 1381,
+   "RECONCILABLE_WITH_OFFICIAL_V2": 1381,
    "INCOMPATIBLE": 5
   },
   "v1_distinct_codes": 1386,
   "v1_duplicate_rows": 0,
   "v1_db_modified": false,
-  "note": "QUALIFIED_FOR_V2 means the V1 row matches an ingested official V2 record exactly; it does not set any V2 qualification_status (no reviewer exists). No V1 row was changed."
+  "layers": {
+   "reconcilable_with_official_v2": 1381,
+   "same_occupation_identity_verified_exact_soc_code": 1381,
+   "qualified_v2_evidence": 0,
+   "runtime_approved": 0
+  },
+  "note": "RECONCILABLE_WITH_OFFICIAL_V2 means the V1 row matches an ingested official V2 record exactly. It is NOT qualification: no V2 record is `qualified` (no human reviewer exists) and nothing is runtime-approved. No V1 row was changed."
  }
 }

@@ -299,7 +299,8 @@ def test_the_fallback_trace_names_the_stage_and_never_uses_another_country(world
     exact = resolve(world, title="syn sa analyst", country="CL").fallback_trace
     broader = resolve(world, title="syn sa child", country="CL")
     assert exact["selected_stage"] == "exact_occupation" and exact["other_country_evidence_used"] is False and exact["eligible_records_by_class_at_selected_stage"]["C1"] == 1
-    assert broader.fallback_trace["selected_stage"] == "verified_broader_group" and broader.fallback["relationship_type"] == "broader" and broader.fallback["mapping_status"] == "verified"
+    assert broader.fallback_trace["selected_stage"] is None and broader.fallback_trace["broader_context_records"] == 1 and broader.value is None and broader.outcome.value == "abstain"
+    assert broader.contextual_evidence[0]["evidence_class"] == "C2" and broader.contextual_evidence[0]["broader_occupation_code"]
     none = resolve(world, title="syn sa nodata", country="CL").fallback_trace
     assert none["selected_stage"] is None and none["eligible_records_by_class_at_selected_stage"] == {"C1": 0, "C2": 0, "C3": 0}
     c3 = resolve(world, title="syn sa intlonly", country="CL")

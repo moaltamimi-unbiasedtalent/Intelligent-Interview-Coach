@@ -98,6 +98,13 @@ Basis: the explicit owner instruction in the continuation specification (section
 - **POLICY C, reliability.** BLS RSE and employment preserved per record; no cutoff invented or applied; every record stays unqualified.
 - **POLICY D, commercial licensing.** Ingestion approval is not deployment permission; commercial runtime use outside the US is an unresolved runtime blocker (RB-LIC-1).
 
+## M.3 Further owner policy decisions recorded 2026-10-18 (P10C-F2A-Q)
+Basis: the explicit owner instruction in the P10C-F2A-Q specification; no signature or external legal approval is claimed. Machine-readable: `owner_policies` POLICY-E to G in the dossier.
+- **POLICY E (D-08 framework):** a curated alias qualification framework is approved for development; D-08 (who curates and reviews) stays open; no alias is `qualified`.
+- **POLICY F (broader group):** a parent group's wage is never an occupation's own value; abstain by default; broader statistics only as labelled contextual evidence; isolated validation only.
+- **POLICY G (reliability):** no universal RSE cutoff; RSE preserved; uncertainty, authority, specificity, completeness and freshness are separate dimensions.
+See [the decision report](P10C_F2A_Q_EVIDENCE_QUALIFICATION_DECISION_REPORT.md).
+
 ## Package 2 (United Kingdom) safety — unchanged and UNAPPROVED
 - The ASHE correction dated 19 December 2025 suppresses annual pay estimates for occupations 3312, 331 and 33 (UK and some regions; Tables 2, 3, 14, 15, 20). Any future ingestion must keep those cells **missing**; they are never reconstructed or filled. Weekly pay stays weekly.
 - SOC edition: the 2025 bulletin states occupation coding moved from SOC 2010 to SOC 2020 from 2021 and its occupation charts are "defined by SOC 2020" (VERIFIED). The Table 14 page keeps a legacy "soc2010" title/slug and does not state SOC 2020; the 2025 file is `ashetable142025provisional.zip`. The edition must be confirmed from the file's own notes before acquisition.

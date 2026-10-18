@@ -146,6 +146,8 @@ class OccupationResolver:
         for h in hits:
             if req.taxonomy_edition and h["edition_ref"] and req.taxonomy_scheme and h["edition_ref"] != f"{req.taxonomy_scheme}@{req.taxonomy_edition}":
                 continue                                                                # an edition-specific alias is not valid for another (or an unknown) edition
+            if h.get("country_applicability") and (req.country or "").strip().upper() not in {c.upper() for c in h["country_applicability"]}:
+                continue                                                                # a country-scoped alias is never valid for another (or an unstated) country
             out.append({**h, "_folded": folded})
         return out
 

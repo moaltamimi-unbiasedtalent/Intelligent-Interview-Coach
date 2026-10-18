@@ -23,3 +23,6 @@ Exact SOC code in edition 2018 only; another edition (for example 2010) resolves
 
 ## Hierarchy and broader fallback
 Because verified `broader` links now exist, the existing resolver may offer a labelled broader-group result (specificity `broader_group`, class C2) for a detailed occupation that lacks the requested measurement, as the P10C-C policy defines. See the evidence document for the observed behaviour and the open policy question.
+
+## Curated aliases and broader fallback (P10C-F2A-Q update)
+The graph is unchanged (1,447 nodes, 1,424 relationships). Five curated alias proposals (Software Developer, Human Resources Manager, Sales Manager, Accountant, Financial Analyst) were loaded in the isolated database from the official-title containment rule and are `engineering_checked`, none `qualified`; Data Analyst and Product Manager have no authoritative evidence and still abstain. The earlier statement that verified `broader` links may serve a labelled broader-group result as the primary evidence is **superseded**: under the owner rule a parent group's statistic appears only as `contextual_evidence` beside an abstention. Details: [decision report](P10C_F2A_Q_EVIDENCE_QUALIFICATION_DECISION_REPORT.md).

@@ -85,6 +85,12 @@ def check_expectations(r, e: dict[str, Any]) -> list[str]:
         problems.append("a value was returned")
     if "limitation_contains" in e and not any(e["limitation_contains"].lower() in x.lower() for x in r.coverage_limitations):
         problems.append("limitation missing")
+    if "contextual_class" in e and not any(c["evidence_class"] == e["contextual_class"] and c["broader_occupation_code"] and c["broader_occupation_label"] for c in r.contextual_evidence):
+        problems.append("labelled broader-group context missing")
+    if "contextual_count" in e and len(r.contextual_evidence) != e["contextual_count"]:
+        problems.append("contextual evidence count differs")
+    if "contextual_warning_contains" in e and not any(e["contextual_warning_contains"].lower() in c["warning"].lower() for c in r.contextual_evidence):
+        problems.append("non-equivalence warning missing")
     if "corroborating" in e and len(r.corroborating) != e["corroborating"]:
         problems.append("corroborating differs")
     if "withheld" in e and not r.withheld.get(e["withheld"]):

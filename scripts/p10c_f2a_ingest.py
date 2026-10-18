@@ -201,13 +201,15 @@ def v1_reconciliation(v1_db: Path, records, quarantined: dict, out_dir: Path) ->
             r = v2[code]
             same = (year == 2025 and cur == "USD" and period == "annual" and stat_t == "median" and country == "US" and val is not None and Decimal(repr(float(val))) == r.value
                     and ((lo is None and r.lower_value is None) or (lo is not None and r.lower_value is not None and Decimal(repr(float(lo))) == r.lower_value and Decimal(repr(float(hi))) == r.upper_value)))
-            v, why = ("QUALIFIED_FOR_V2", "year, statistic and exact values equal the official V2 record") if same else ("REQUIRES_ADDITIONAL_EVIDENCE", "linked code but value, bounds or metadata differ from the official record")
+            v, why = ("RECONCILABLE_WITH_OFFICIAL_V2", "year, statistic and exact values equal the official V2 record") if same else ("REQUIRES_ADDITIONAL_EVIDENCE", "linked code but value, bounds or metadata differ from the official record")
         verdicts[v] += 1
         per.append({"native_code": code, "verdict": v, "reason": why})
     (out_dir / "v1_reconciliation_per_record.json").write_text(json.dumps(per, indent=0), encoding="utf-8")
     after = v1_db.stat()
     return {"v1_records": len(v1), "verdicts": dict(verdicts), "v1_distinct_codes": len(seen), "v1_duplicate_rows": sum(n - 1 for n in seen.values()), "v1_db_modified": (after.st_mtime_ns, after.st_size) != (stat.st_mtime_ns, stat.st_size),
-            "note": "QUALIFIED_FOR_V2 means the V1 row matches an ingested official V2 record exactly; it does not set any V2 qualification_status (no reviewer exists). No V1 row was changed."}
+            "layers": {"reconcilable_with_official_v2": verdicts.get("RECONCILABLE_WITH_OFFICIAL_V2", 0), "same_occupation_identity_verified_exact_soc_code": verdicts.get("RECONCILABLE_WITH_OFFICIAL_V2", 0),
+                       "qualified_v2_evidence": 0, "runtime_approved": 0},
+            "note": "RECONCILABLE_WITH_OFFICIAL_V2 means the V1 row matches an ingested official V2 record exactly. It is NOT qualification: no V2 record is `qualified` (no human reviewer exists) and nothing is runtime-approved. No V1 row was changed."}
 
 
 def main(argv: list[str] | None = None) -> int:

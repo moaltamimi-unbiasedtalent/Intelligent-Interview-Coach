@@ -85,3 +85,6 @@ POLICY A (BLS-specific aggregates), B (duplicate presentations), C (reliability)
 **Runtime blocker RB-LIC-1 (POLICY D):** commercial runtime use outside the United States is not established. No ingestion result changes that.
 
 Counts, measurement handling, V1 reconciliation, retrieval and coverage are in [the graph document](P10C_F2A_OCCUPATION_GRAPH_QUALIFICATION.md) and [the evidence document](P10C_F2A_COMPENSATION_EVIDENCE_QUALIFICATION.md). Machine-readable results: `p10c_f2a/ingestion_report.json` (counts only; no salary values).
+
+## 11. Qualification wave P10C-F2A-Q (2026-10-18)
+Reviewed in [the decision report](P10C_F2A_Q_EVIDENCE_QUALIFICATION_DECISION_REPORT.md): all counts reconciled by query; the 81-versus-79 annual-only difference is exactly the two quarantined aggregates 25-2052 (row 412) and 25-9045 (row 443); 16,140 records engineering-checked, 0 qualified; five curated alias proposals (engineering_checked, 0 qualified); owner broader-group rule implemented; V1 layers separated; runtime coverage unchanged at 386/412. Branch `feat/p10c-f2a-us-source-qualification` was merged with `origin/main` (PR #185 content) before this wave. RB-LIC-1 remains open.

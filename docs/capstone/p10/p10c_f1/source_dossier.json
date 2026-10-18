@@ -4973,6 +4973,30 @@
    "decision": "Ingestion approval is not commercial deployment permission; commercial runtime use outside the United States is unestablished and is recorded as a runtime blocker.",
    "implementation": "Recorded as runtime blocker RB-LIC-1 in the F2A acquisition document; no runtime approval was requested.",
    "basis": "Explicit owner instruction in the P10C-F2A continuation specification, section 2 (chat message, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-E",
+   "date": "2026-10-18",
+   "title": "D-08 curated alias qualification framework",
+   "decision": "The owner approves developing a curated alias qualification framework to improve job-market title resolution without inventing equivalence; reuse the existing resolver; no parallel resolver; aliases carry text, language, country applicability, taxonomy, code, edition, relationship type, evidence source, qualification status, approval provenance and ambiguity handling.",
+   "implementation": "Existing AliasStore and OccupationResolver extended minimally (country applicability filter, alias revocation); proposals come only from the official-SOC-title containment rule; aliases stay engineering_checked at most because no human reviewer exists. D-08 (who curates and reviews) remains open.",
+   "basis": "Explicit owner instruction in the P10C-F2A-Q specification (chat message, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-F",
+   "date": "2026-10-18",
+   "title": "Broader-group rule",
+   "decision": "When a detailed occupation lacks the requested wage measurement, a parent group's wage is never substituted as the occupation's own value; the default is abstention; broader statistics may appear only as clearly labelled contextual evidence.",
+   "implementation": "CompensationResolver now abstains (reason exact_occupation_measurement_unavailable) and returns broader evidence only in contextual_evidence with code, label, class, source, period, measure and a non-equivalence warning. Isolated non-production only; candidate runtime unchanged.",
+   "basis": "Explicit owner instruction in the P10C-F2A-Q specification (chat message, 2026-10-18); no signature or external legal approval is claimed."
+  },
+  {
+   "id": "POLICY-G",
+   "date": "2026-10-18",
+   "title": "Reliability direction",
+   "decision": "No arbitrary universal RSE cutoff; preserve all BLS relative standard errors; statistical uncertainty, source authority, occupation specificity, geographic specificity, completeness and freshness are separate dimensions; where no threshold exists none is fabricated and no unrelated record is blocked.",
+   "implementation": "RSE preserved per record and described by its observed distribution; engineering review makes no precision claim; no record needed a new material reliability judgment under these rules.",
+   "basis": "Explicit owner instruction in the P10C-F2A-Q specification (chat message, 2026-10-18); no signature or external legal approval is claimed."
   }
  ]
 }
