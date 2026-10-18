@@ -59,14 +59,14 @@
   {
    "id": "J",
    "requirement": "OEWS data dictionary available",
-   "status": "NOT_MET",
-   "evidence": "No standalone official field specification was found on the BLS pages read (tables, documentation, technical notes, data overview, FAQ first 100,000 characters, time-series oe.txt). Partial official facts exist (top-coded footnote 'equal to or greater than $115.00 per hour or $239,200 per year'; 'Estimate not released' footnote; a 'group' field to avoid double counting). The full field list is expected inside the owner-authorised zip but that cannot be verified without downloading it."
+   "status": "MET",
+   "evidence": "2026-10-18 follow-up: the official oesm25nat.zip bundles a 'Field Descriptions' sheet defining every column; see data_dictionary_validation.json."
   },
   {
    "id": "K",
    "requirement": "File structure and suppression semantics understood",
-   "status": "NOT_MET",
-   "evidence": "Symbols for suppressed/not-released values, O_GROUP values, aggregation codes and percentile-field semantics are not verified from official documentation."
+   "status": "MET_WITH_NOTE",
+   "evidence": "Symbols *, **, #, ~, O_GROUP levels, aggregation and the annual-only/hourly-only flags are defined by the bundled sheet and checked against the data. Note: reliability thresholds and the 5 OEWS-specific codes need policy before ingestion."
   },
   {
    "id": "L",
@@ -77,8 +77,8 @@
   {
    "id": "M",
    "requirement": "Isolated ingestion environment available",
-   "status": "NOT_VERIFIED",
-   "evidence": "No dedicated isolated staging location has been created; tests use isolated SQLite test databases."
+   "status": "MET",
+   "evidence": "Isolated staging created outside the repository: /Volumes/Abu Aaliyah/Claude Projects/Interview Practice Studio/ask4mo-source-staging/p10c-f2a/us (raw, extracted, manifests, validation)."
   },
   {
    "id": "N",
@@ -152,9 +152,13 @@
   }
  ],
  "unresolved": [
-  "OEWS field list, O_GROUP values, aggregation codes and the symbols for suppressed or not-released values (likely bundled inside oesm25nat.zip)",
-  "statistic columns actually present in the national file (mean, median, percentiles, relative standard errors)",
+  "OEWS-specific code treatment",
+  "reliability thresholds for qualification",
   "commercial use outside the United States",
-  "isolated staging location for raw files"
- ]
+  "registry lifecycle transition (precondition L) before any ingestion"
+ ],
+ "follow_up": {
+  "date": "2026-10-18",
+  "files_acquired": 4
+ }
 }

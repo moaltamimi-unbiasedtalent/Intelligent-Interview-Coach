@@ -1,9 +1,9 @@
 {
- "schema": "p10c-f2a-acquisition-manifest/1",
+ "schema": "p10c-f2a-acquisition-manifest/2",
  "wave": "P10C-F2A",
  "package": 1,
  "owner_authorization_ref": "P10C-F1 Package 1 authorization, section M, recorded 2026-10-18",
- "note": "Files are listed as NOT_ACQUIRED until a download succeeds and a SHA-256 is computed. HTTP header values are what the publisher's server reported on a HEAD request on 2026-10-18; they are not file-content hashes. No raw file is committed.",
+ "note": "State fields are separate: acquisition_state (this manifest), ingestion_state, qualification_status and runtime_approval. Acquisition does not advance any of the others. Raw files live outside the repository in the isolated staging location and are never committed.",
  "files": [
   {
    "file_id": "us_soc_2018_structure",
@@ -24,11 +24,16 @@
    "transformation_version": null,
    "import_batch_id": null,
    "qualification_status": "NOT_QUALIFIED",
-   "state": "NOT_ACQUIRED",
-   "acquired_at": null,
-   "size_bytes": null,
-   "sha256": null,
-   "storage_location": null
+   "state": "ACQUIRED",
+   "acquired_at": "2026-10-18T11:34:07Z",
+   "size_bytes": 51367,
+   "sha256": "ade08af40923266f3a854842e888ca3e93c15b26a147c20a2b12a61f4c4f4077",
+   "storage_location": "/Volumes/Abu Aaliyah/Claude Projects/Interview Practice Studio/ask4mo-source-staging/p10c-f2a/us/raw/soc_structure_2018.xlsx",
+   "acquisition_state": "ACQUIRED",
+   "http_status": 200,
+   "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+   "ingestion_state": "NOT_INGESTED",
+   "runtime_approval": "NOT_APPROVED"
   },
   {
    "file_id": "us_soc_2018_definitions",
@@ -49,11 +54,16 @@
    "transformation_version": null,
    "import_batch_id": null,
    "qualification_status": "NOT_QUALIFIED",
-   "state": "NOT_ACQUIRED",
-   "acquired_at": null,
-   "size_bytes": null,
-   "sha256": null,
-   "storage_location": null
+   "state": "ACQUIRED",
+   "acquired_at": "2026-10-18T11:34:10Z",
+   "size_bytes": 143843,
+   "sha256": "f8b9ca7cccea78e30abfc9b96ab8a9dd2632cc8c8b57ee9b38a9b871e8fe2a89",
+   "storage_location": "/Volumes/Abu Aaliyah/Claude Projects/Interview Practice Studio/ask4mo-source-staging/p10c-f2a/us/raw/soc_2018_definitions.xlsx",
+   "acquisition_state": "ACQUIRED",
+   "http_status": 200,
+   "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+   "ingestion_state": "NOT_INGESTED",
+   "runtime_approval": "NOT_APPROVED"
   },
   {
    "file_id": "us_oews_may2025_national",
@@ -74,11 +84,16 @@
    "transformation_version": null,
    "import_batch_id": null,
    "qualification_status": "NOT_QUALIFIED",
-   "state": "NOT_ACQUIRED",
-   "acquired_at": null,
-   "size_bytes": null,
-   "sha256": null,
-   "storage_location": null
+   "state": "ACQUIRED",
+   "acquired_at": "2026-10-18T11:34:14Z",
+   "size_bytes": 279525,
+   "sha256": "b5855a37f3e03e779f6fbf173d3bbc94aeeff33426aef32fa95ce6d025bab1af",
+   "storage_location": "/Volumes/Abu Aaliyah/Claude Projects/Interview Practice Studio/ask4mo-source-staging/p10c-f2a/us/raw/oesm25nat.zip",
+   "acquisition_state": "ACQUIRED",
+   "http_status": 200,
+   "content_type": "application/x-zip-compressed",
+   "ingestion_state": "NOT_INGESTED",
+   "runtime_approval": "NOT_APPROVED"
   },
   {
    "file_id": "us_oews_may2025_occupation_definitions",
@@ -99,11 +114,31 @@
    "transformation_version": null,
    "import_batch_id": null,
    "qualification_status": "NOT_QUALIFIED",
-   "state": "NOT_ACQUIRED",
-   "acquired_at": null,
-   "size_bytes": null,
-   "sha256": null,
-   "storage_location": null
+   "state": "ACQUIRED",
+   "acquired_at": "2026-10-18T11:34:17Z",
+   "size_bytes": 93634,
+   "sha256": "d927416c1165e2043e8626f380f3bcaaa2f98377bfa5ef5c08209e573d95bb24",
+   "storage_location": "/Volumes/Abu Aaliyah/Claude Projects/Interview Practice Studio/ask4mo-source-staging/p10c-f2a/us/raw/occupation_definitions_m2025.xlsx",
+   "acquisition_state": "ACQUIRED",
+   "http_status": 200,
+   "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+   "ingestion_state": "NOT_INGESTED",
+   "runtime_approval": "NOT_APPROVED"
   }
- ]
+ ],
+ "staging_root": "/Volumes/Abu Aaliyah/Claude Projects/Interview Practice Studio/ask4mo-source-staging/p10c-f2a/us",
+ "archive_contents": {
+  "oesm25nat.zip": [
+   {
+    "name": "oesm25nat/national_M2025_dl.xlsx",
+    "uncompressed_bytes": 289615,
+    "sheets": [
+     "national_M2025_dl (1,401 data rows, 32 columns)",
+     "Field Descriptions",
+     "UpdateTime",
+     "Filler"
+    ]
+   }
+  ]
+ }
 }

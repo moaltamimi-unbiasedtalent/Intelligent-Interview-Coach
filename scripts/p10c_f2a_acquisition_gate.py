@@ -3,8 +3,8 @@
     python scripts/p10c_f2a_acquisition_gate.py --check
 
 Validates the acquisition manifest and the recorded preconditions, and reports whether the authorised acquisition may proceed.
-Exit 0 means the records are internally consistent (not that acquisition is allowed); acquisition is allowed only when
-``acquisition_allowed`` is True, which requires every precondition to be MET or MET_WITH_NOTE.
+Exit 0 means the records are internally consistent. ``--verify-hashes`` re-hashes the staged raw files when present. Ingestion is allowed only when
+every precondition (including registry lifecycle, L) is MET or MET_WITH_NOTE.
 """
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ import re
 import sys
 from pathlib import Path
 
+REPO = Path(__file__).resolve().parents[1]
 DIR = Path(__file__).resolve().parents[1] / "docs/capstone/p10/p10c_f2a"
 AUTHORISED_FILES = {"soc_structure_2018.xlsx", "soc_2018_definitions.xlsx", "oesm25nat.zip", "occupation_definitions_m2025.xlsx"}
 OK = {"MET", "MET_WITH_NOTE"}
@@ -32,8 +33,13 @@ def evaluate() -> tuple[list[str], bool, list[str]]:
             if f["sha256"] or f["acquired_at"] or f["storage_location"] or f["size_bytes"]:
                 errs.append(f"{f['file_id']}: acquisition metadata present on a NOT_ACQUIRED file")
         elif f["state"] == "ACQUIRED":
-            if not (f["sha256"] and re.fullmatch(r"[0-9a-f]{64}", f["sha256"]) and f["acquired_at"] and f["size_bytes"]):
-                errs.append(f"{f['file_id']}: ACQUIRED without a valid SHA-256, timestamp and size")
+            if not (f["sha256"] and re.fullmatch(r"[0-9a-f]{64}", f["sha256"]) and f["acquired_at"] and f["size_bytes"] and f.get("http_status") == 200):
+                errs.append(f"{f['file_id']}: ACQUIRED without a valid SHA-256, timestamp, size and HTTP 200")
+            loc = Path(f["storage_location"] or "")
+            if REPO in loc.parents or not loc.is_absolute():
+                errs.append(f"{f['file_id']}: raw file must be stored outside the repository")
+            if f.get("ingestion_state") != "NOT_INGESTED" or f.get("runtime_approval") != "NOT_APPROVED" or f["qualification_status"] != "NOT_QUALIFIED":
+                errs.append(f"{f['file_id']}: acquisition must not advance ingestion, qualification or runtime approval")
         else:
             errs.append(f"{f['file_id']}: unknown state")
         if f["qualification_status"] != "NOT_QUALIFIED" and f["state"] != "ACQUIRED":
@@ -45,12 +51,27 @@ def evaluate() -> tuple[list[str], bool, list[str]]:
     return errs, not blockers, blockers
 
 
+def verify_hashes() -> list[str]:
+    import hashlib
+
+    errs = []
+    for f in json.loads((DIR / "acquisition_manifest.json").read_text())["files"]:
+        p = Path(f["storage_location"] or "")
+        if not p.exists():
+            errs.append(f"{f['file_id']}: staged file not found")
+        elif hashlib.sha256(p.read_bytes()).hexdigest() != f["sha256"] or p.stat().st_size != f["size_bytes"]:
+            errs.append(f"{f['file_id']}: hash or size mismatch")
+    return errs
+
+
 def main() -> int:
     errs, allowed, blockers = evaluate()
+    if "--verify-hashes" in sys.argv:
+        errs += verify_hashes()
     print("P10C-F2A GATE RECORDS:", "OK" if not errs else "FAIL")
     for e in errs:
         print(" -", e)
-    print("acquisition_allowed:", allowed)
+    print("preconditions_all_met (ingestion gate):", allowed)
     for b in blockers:
         print(" blocker -", b)
     return 1 if errs else 0

@@ -1,0 +1,267 @@
+{
+ "schema": "p10c-f2a-data-dictionary-validation/1",
+ "date": "2026-10-18",
+ "dictionary_source": "the 'Field Descriptions' sheet bundled inside the official oesm25nat.zip (national_M2025_dl.xlsx), published by BLS; read directly, not inferred from column names",
+ "fields": [
+  {
+   "field": "AREA/AREA_TITLE/AREA_TYPE/PRIM_STATE",
+   "status": "VERIFIED",
+   "official_definition": "area code 99 = U.S.; area type 1 = U.S.; prim_state US for national",
+   "note": "file: AREA=99, AREA_TYPE=1, PRIM_STATE=US on all 1,401 rows"
+  },
+  {
+   "field": "NAICS/NAICS_TITLE/I_GROUP",
+   "status": "VERIFIED",
+   "official_definition": "NAICS code and industry level",
+   "note": "file: NAICS=000000 and I_GROUP=cross-industry on all rows; the sheet explains I_GROUP but not the 000000 code, which is read from the data"
+  },
+  {
+   "field": "OWN_CODE",
+   "status": "VERIFIED",
+   "official_definition": "ownership type; 1235 = Federal, State and Local Government and Private Sector",
+   "note": "file: 1235 on all rows"
+  },
+  {
+   "field": "OCC_CODE",
+   "status": "VERIFIED",
+   "official_definition": "6-digit SOC code or OEWS-specific code",
+   "note": "file: all 1,401 values match xx-xxxx; 5 codes are not in the 2018 SOC structure (OEWS-specific), see aggregation rules"
+  },
+  {
+   "field": "OCC_TITLE",
+   "status": "VERIFIED",
+   "official_definition": "SOC title or OEWS-specific title for the occupation",
+   "note": "one title differs from the SOC structure only by apostrophe character (33-3051)"
+  },
+  {
+   "field": "O_GROUP",
+   "status": "VERIFIED",
+   "official_definition": "SOC occupation level: major, minor, broad, detailed, and total; 'detailed' may be the most detailed OEWS publishes (a SOC broad occupation or an OEWS-specific combination); occupations aggregated to broad appear twice, once as broad and once as detailed",
+   "note": "file: total 1, major 22, minor 94, broad 454, detailed 830; 7 broad codes appear twice (broad and detailed) with identical values"
+  },
+  {
+   "field": "TOT_EMP",
+   "status": "VERIFIED",
+   "official_definition": "estimated total employment rounded to the nearest 10 (excludes self-employed)",
+   "note": "file: all integers, minimum 220"
+  },
+  {
+   "field": "EMP_PRSE",
+   "status": "VERIFIED",
+   "official_definition": "percent relative standard error of the employment estimate (model error)",
+   "note": "file: numeric on all rows"
+  },
+  {
+   "field": "H_MEAN, A_MEAN",
+   "status": "VERIFIED",
+   "official_definition": "mean hourly wage; mean annual wage",
+   "note": "annual values are published by BLS (see annual derivation); not recomputed"
+  },
+  {
+   "field": "MEAN_PRSE",
+   "status": "VERIFIED",
+   "official_definition": "percent relative standard error of the mean wage estimate",
+   "note": "numeric on all rows"
+  },
+  {
+   "field": "H_PCT10, H_PCT25, H_MEDIAN, H_PCT75, H_PCT90",
+   "status": "VERIFIED",
+   "official_definition": "hourly 10th/25th/50th/75th/90th percentile wages",
+   "note": ""
+  },
+  {
+   "field": "A_PCT10, A_PCT25, A_MEDIAN, A_PCT75, A_PCT90",
+   "status": "VERIFIED",
+   "official_definition": "annual percentile wages",
+   "note": "file: annual percentiles are monotone on every row that has all five"
+  },
+  {
+   "field": "ANNUAL",
+   "status": "VERIFIED",
+   "official_definition": "TRUE if only annual wages are released (occupations typically under 2,080 hours per year but paid annually, such as teachers, pilots, athletes)",
+   "note": "file: TRUE on 81 rows; exactly those rows carry * in every hourly wage column"
+  },
+  {
+   "field": "HOURLY",
+   "status": "VERIFIED",
+   "official_definition": "TRUE if only hourly wages are released (such as actors, dancers, musicians)",
+   "note": "file: TRUE on 7 rows; exactly those rows carry * in every annual wage column"
+  },
+  {
+   "field": "JOBS_1000, LOC_QUOTIENT, PCT_TOTAL, PCT_RPT",
+   "status": "VERIFIED",
+   "official_definition": "available only for state/MSA or national industry estimates; blank otherwise",
+   "note": "file: blank on all national rows (header is LOC_QUOTIENT; the sheet spells 'loc quotient')"
+  },
+  {
+   "field": "Reference period",
+   "status": "PARTIALLY_VERIFIED",
+   "official_definition": "sheet title 'May 2025 OEWS Estimates'",
+   "note": "exact survey mechanics (six panels, MB3, QCEW averaging) come from the technical notes, not the file; an 'UpdateTime' sheet holds a 2021 timestamp ('09MAR2021') that is template metadata and is NOT a reference date"
+  },
+  {
+   "field": "SOC edition",
+   "status": "PARTIALLY_VERIFIED",
+   "official_definition": "the sheet says only '6-digit SOC code or OEWS-specific code'",
+   "note": "2018 SOC is verified from the May 2025 technical notes and consistent with the file: 825 of 830 detailed codes and every major/minor/broad code match the 2018 structure; the file itself does not name the edition"
+  },
+  {
+   "field": "Geographic scope",
+   "status": "VERIFIED",
+   "official_definition": "national (area 99)",
+   "note": "national only"
+  },
+  {
+   "field": "Industry scope",
+   "status": "VERIFIED",
+   "official_definition": "cross-industry, ownership 1235",
+   "note": "exclusions (agriculture, private households) are from the technical notes"
+  }
+ ],
+ "symbols": [
+  {
+   "symbol": "*",
+   "official_meaning": "a wage estimate is not available",
+   "present_in_file": true,
+   "rows": "81 hourly columns (annual-only occupations), 7 annual columns (hourly-only occupations)",
+   "handling": "store as missing; never fill or derive"
+  },
+  {
+   "symbol": "**",
+   "official_meaning": "an employment estimate is not available",
+   "present_in_file": false,
+   "rows": "0 in TOT_EMP",
+   "handling": "reject/mark missing if ever present"
+  },
+  {
+   "symbol": "#",
+   "official_meaning": "a wage equal to or greater than $115.00 per hour or $239,200 per year",
+   "present_in_file": false,
+   "rows": "0",
+   "handling": "no # marker appears; 72 rows have an hourly 90th percentile and 77 an annual 90th percentile at or above the thresholds as plain numbers (BLS states that from May 2025 it publishes specific estimates for many percentiles previously footnoted). Treat the numbers as published; if # ever appears keep a lower-bound flag and never an exact value"
+  },
+  {
+   "symbol": "~",
+   "official_meaning": "percent of establishments reporting is below 0.5%",
+   "present_in_file": false,
+   "rows": "PCT_RPT blank on national file",
+   "handling": "not applicable"
+  }
+ ],
+ "aggregation_rules": {
+  "o_group_counts": {
+   "total": 1,
+   "major": 22,
+   "minor": 94,
+   "broad": 454,
+   "detailed": 830
+  },
+  "rows": 1401,
+  "distinct_occ_codes": 1394,
+  "duplicate_codes": {
+   "count": 7,
+   "codes": [
+    "13-1020",
+    "13-2020",
+    "29-2010",
+    "31-1120",
+    "39-7010",
+    "47-4090",
+    "51-2090"
+   ],
+   "rule": "a SOC broad occupation OEWS publishes only at broad level appears twice (O_GROUP broad and detailed) with identical values; they are ONE measurement and must not be double counted"
+  },
+  "oews_specific_codes_not_in_2018_soc_structure": [
+   "21-1018",
+   "25-2052",
+   "25-9045",
+   "51-2028",
+   "53-1047"
+  ],
+  "oews_specific_rule": "labelled detailed by BLS but not 2018 SOC detailed codes: they must not become canonical SOC nodes and must be recorded as OEWS-specific combinations; linkage to SOC requires the official occupation-definitions file",
+  "sum_caution": "totals may include occupations not published separately; never sum levels"
+ },
+ "source_file_checks": {
+  "soc_structure_levels": {
+   "major": 23,
+   "minor": 98,
+   "broad": 459,
+   "detailed": 867
+  },
+  "soc_structure_nrows": 1455,
+  "soc_definition_codes": 0,
+  "def_cols": 4,
+  "occdef_rows": 832,
+  "occdef_codes_shape_ok": 832,
+  "oews_codes_missing_in_soc_structure": [
+   "21-1018",
+   "25-2052",
+   "25-9045",
+   "51-2028",
+   "53-1047"
+  ],
+  "oews_codes_missing_in_occdef": [
+   "00-0000",
+   "11-0000",
+   "11-1000",
+   "11-1010",
+   "11-1020",
+   "11-2000",
+   "11-2010",
+   "11-2020",
+   "11-2030",
+   "11-3000",
+   "11-3010",
+   "11-3020",
+   "11-3030",
+   "11-3050",
+   "11-3060",
+   "11-3070",
+   "11-3110",
+   "11-3120",
+   "11-3130",
+   "11-9000"
+  ],
+  "occdef_codes_not_in_oews": [
+   "11-1031",
+   "45-3031"
+  ],
+  "level_mismatch_vs_structure": [],
+  "level_mismatch_n": 0,
+  "title_differs_from_structure_n": 1,
+  "title_differs_sample": [
+   "33-3051"
+  ],
+  "h_pct90_ge_115": 72,
+  "a_pct90_ge_239200": 77,
+  "max_h_any": 349.35,
+  "max_a_any": 742310,
+  "employment_star_count": 0,
+  "annual_percentiles_non_monotone": 0,
+  "annual_vs_hourly_x2080_max_abs_diff": 15.200000000004366,
+  "rows_with_both": 1313,
+  "annual_flag_rows_star_in_hourly": 81,
+  "hourly_flag_rows_star_in_annual": 7,
+  "rows_without_median_either": 0,
+  "total_row": [
+   "00-0000"
+  ],
+  "min_tot_emp": 220,
+  "soc_definition_levels": {
+   "Major": 23,
+   "Minor": 98,
+   "Broad": 459,
+   "Detailed": 867
+  },
+  "soc_structure_and_definitions_code_sets_equal": true
+ },
+ "soc_edition": {
+  "status": "VERIFIED",
+  "evidence": "May 2025 technical notes (2018 SOC); structure and definitions files agree: 23 major, 98 minor, 459 broad, 867 detailed (1,447 codes; both files share the identical code set)"
+ },
+ "unresolved": [
+  "gross/straight-time pay basis is a methodology fact from the technical notes, not a field in the file",
+  "treatment of the 5 OEWS-specific codes in the canonical graph needs an owner/engineering decision (no SOC node, no ISCO link)",
+  "exact semantics of the PRSE-based reliability thresholds for evidence qualification are not defined by BLS and must come from the Ask4Mo qualification policy"
+ ]
+}

@@ -14,12 +14,29 @@ def test_records_consistent():
     assert errs == []
 
 
-def test_acquisition_blocked_while_dictionary_unverified():
+def test_ingestion_blocked_until_registry_lifecycle_and_every_precondition_met():
     _, allowed, blockers = gate.evaluate()
-    assert not allowed and any(b.startswith("J:") for b in blockers) and any(b.startswith("K:") for b in blockers)
+    assert not allowed and any(b.startswith("L:") for b in blockers)
+    assert not any(b.startswith(("J:", "K:", "M:")) for b in blockers)
 
 
-def test_no_hash_is_fabricated():
+def test_acquired_files_have_real_hashes_and_stay_unqualified():
     m = json.loads((gate.DIR / "acquisition_manifest.json").read_text())
-    assert all(f["state"] == "NOT_ACQUIRED" and f["sha256"] is None for f in m["files"])
     assert {f["original_filename"] for f in m["files"]} == gate.AUTHORISED_FILES
+    for f in m["files"]:
+        assert f["state"] == "ACQUIRED" and len(f["sha256"]) == 64 and f["http_status"] == 200
+        assert f["ingestion_state"] == "NOT_INGESTED" and f["qualification_status"] == "NOT_QUALIFIED" and f["runtime_approval"] == "NOT_APPROVED"
+        assert gate.REPO not in Path(f["storage_location"]).parents
+
+
+def test_hashes_match_staged_files_when_present():
+    m = json.loads((gate.DIR / "acquisition_manifest.json").read_text())
+    if all(Path(f["storage_location"]).exists() for f in m["files"]):
+        assert gate.verify_hashes() == []
+
+
+def test_data_dictionary_has_no_unknown_field_and_no_top_code_marker_claim():
+    d = json.loads((gate.DIR / "data_dictionary_validation.json").read_text())
+    assert all(f["status"] in {"VERIFIED", "PARTIALLY_VERIFIED", "NOT_VERIFIED"} for f in d["fields"])
+    assert {s["symbol"] for s in d["symbols"]} == {"*", "**", "#", "~"}
+    assert d["aggregation_rules"]["o_group_counts"]["detailed"] == 830 and d["aggregation_rules"]["duplicate_codes"]["count"] == 7

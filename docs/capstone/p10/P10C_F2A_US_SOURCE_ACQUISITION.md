@@ -1,6 +1,6 @@
 # P10C-F2A — US Official Source Acquisition (Package 1)
 
-**Status: P10C-F2A PREPARATION COMPLETE — ACQUISITION BLOCKED — REMAINING GOVERNANCE OR SOURCE EVIDENCE REQUIRED.** No file was downloaded, nothing was ingested, no source is qualified, Compensation V2 is not activated and all 12 gates are False.
+**Status (updated 2026-10-18 after the owner authorised download for documentation inspection): P10C-F2A OFFICIAL FILES ACQUIRED — DATA DICTIONARY INSPECTED — SOURCE PROVENANCE RECORDED — INGESTION READINESS ASSESSED — COMPENSATION V2 DISABLED.** Four files were downloaded to isolated staging; nothing was ingested, no source is qualified, the registry lifecycle was not advanced, and all 12 gates are False. Sections 1–7 below record the earlier preparation state and are superseded where section 8 says so.
 
 ## 1. Owner authorization (recorded, not self-granted)
 Recorded 2026-10-18 from the explicit owner instruction in the P10C-F2A specification; see section M of [the Package 1 authorization](P10C_F1_PACKAGE_1_OWNER_AUTHORIZATION.md) and `owner_decisions` in `p10c_f1/source_dossier.json`. D-04, D-12, D-13, D-15 APPROVED (acquisition and isolated non-production ingestion only; US SOC 2018 and OEWS May 2025; the four named files); D-09, D-20 and Component 1c DEFERRED. No signature or external legal approval is claimed. The source registry lifecycle was **not** advanced: that transition remains the registry's own mechanism and is performed only when acquisition proceeds. Nothing here grants runtime use.
@@ -41,3 +41,33 @@ Under the specification's stop conditions, **no file was downloaded and nothing 
 2. Name the isolated raw-file location (outside runtime paths) for M.
 3. Registry transition for `us_soc_2018` and `us_bls_oews` through the registry mechanism (L).
 After that, F2A continues with the steps in the two companion documents.
+
+## 8. Acquisition and data-dictionary follow-up (2026-10-18)
+**Authorization:** the owner authorised downloading only the four approved files for isolated documentation inspection; scope unchanged.
+**Staging (outside the repository and every protected store):** `/Volumes/Abu Aaliyah/Claude Projects/Interview Practice Studio/ask4mo-source-staging/p10c-f2a/us/` with `raw/`, `extracted/`, `manifests/`, `validation/`. Raw files are not committed.
+
+| File | Official URL | Acquired (UTC) | Bytes | SHA-256 |
+|---|---|---|---|---|
+| soc_structure_2018.xlsx | https://www.bls.gov/soc/2018/soc_structure_2018.xlsx | 2026-10-18T11:34:07Z | 51,367 | `ade08af40923266f3a854842e888ca3e93c15b26a147c20a2b12a61f4c4f4077` |
+| soc_2018_definitions.xlsx | https://www.bls.gov/soc/2018/soc_2018_definitions.xlsx | 2026-10-18T11:34:10Z | 143,843 | `f8b9ca7cccea78e30abfc9b96ab8a9dd2632cc8c8b57ee9b38a9b871e8fe2a89` |
+| oesm25nat.zip | https://www.bls.gov/oes/special-requests/oesm25nat.zip | 2026-10-18T11:34:14Z | 279,525 | `b5855a37f3e03e779f6fbf173d3bbc94aeeff33426aef32fa95ce6d025bab1af` |
+| occupation_definitions_m2025.xlsx | https://www.bls.gov/oes/occupation_definitions_m2025.xlsx | 2026-10-18T11:34:17Z | 93,634 | `d927416c1165e2043e8626f380f3bcaaa2f98377bfa5ef5c08209e573d95bb24` |
+
+All four returned HTTP 200 with sizes equal to the earlier HEAD values. One request per file, identifying User-Agent, 3-second spacing.
+
+**Archive contents:** `oesm25nat.zip` holds `oesm25nat/national_M2025_dl.xlsx` (289,615 bytes) with sheets `national_M2025_dl` (1,401 data rows, 32 columns), **`Field Descriptions`**, `UpdateTime`, `Filler`. This closes preconditions J and K: the official dictionary ships inside the authorised file.
+
+**Findings (details: `p10c_f2a/data_dictionary_validation.json`):**
+- Every column is defined by BLS in the bundled sheet (VERIFIED); reference period and SOC edition are PARTIALLY_VERIFIED from the file (the file does not name the edition; 2018 SOC is verified from the May 2025 technical notes and is consistent with the data: 825 of 830 detailed codes and all major, minor and broad codes match the 2018 structure).
+- Scope in the file: national only (area 99), cross-industry (NAICS 000000), ownership 1235.
+- O_GROUP counts: total 1, major 22, minor 94, broad 454, detailed 830 (1,401 rows, 1,394 distinct codes). **Seven broad codes appear twice** (broad and detailed) with identical values, as the dictionary describes: one measurement, never double counted.
+- **Five OEWS-specific codes are not in the 2018 SOC structure** (21-1018, 25-2052, 25-9045, 51-2028, 53-1047): BLS labels them detailed; they must not become canonical SOC nodes.
+- Missing-value semantics: `*` = wage not available (81 rows in every hourly column, exactly the ANNUAL=TRUE occupations; 7 rows in every annual column, exactly the HOURLY=TRUE occupations); `**` (employment not available) and `~` do not occur; **`#` (top-code) does not occur**: 72 rows have an hourly 90th percentile and 77 an annual 90th percentile at or above the $115.00 / $239,200 thresholds as plain published numbers, consistent with BLS's statement that from May 2025 it publishes specific percentile estimates previously footnoted. Annual percentiles are monotone on every complete row. Annual medians differ from hourly times 2,080 by up to $15.20 (BLS's own rounding and derivation): BLS values are kept as published, never recomputed.
+- SOC files: structure and definitions agree exactly (23 major, 98 minor, 459 broad, 867 detailed = 1,447 codes, identical code sets), which verifies the earlier SOC counts. The May 2025 occupation-definitions file has 832 code rows; two (11-1031, 45-3031) are not in the national file; the national file's higher-level codes (total, major, minor, broad) are not in it by design.
+- Licensing unchanged: BLS public domain, credit BLS, no emblem, commercial use not addressed, territorial use outside the US unresolved.
+
+**Manifest:** updated to schema `p10c-f2a-acquisition-manifest/2`: `state` ACQUIRED with real hashes, plus separate `ingestion_state` NOT_INGESTED, `qualification_status` NOT_QUALIFIED and `runtime_approval` NOT_APPROVED. `scripts/p10c_f2a_acquisition_gate.py --check --verify-hashes` re-hashes the staged files (passes).
+
+**Registry state:** unchanged. No lifecycle transition was made; precondition L (registry lifecycle for `us_soc_2018` and `us_bls_oews`) remains the one open gate before ingestion.
+
+**Remaining ingestion blockers:** (1) registry lifecycle transition through the registry's own mechanism (L); (2) treatment of the five OEWS-specific codes (owner or engineering decision); (3) Ask4Mo reliability thresholds for PRSE-based qualification (BLS defines PRSE but no threshold); (4) commercial use outside the US. Ingestion into CompensationRecordV2 has not started and is not authorised by this follow-up.
