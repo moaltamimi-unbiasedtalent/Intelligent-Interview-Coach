@@ -1,0 +1,4858 @@
+{
+ "schema": "p10c-f1/1",
+ "wave": "P10C-F1",
+ "status": "PROPOSED_ONLY",
+ "note": "Evidence-based dossier. Nothing here approves, acquires or activates any source. Every fact carries a verification status; NOT_VERIFIED means the research could not confirm it.",
+ "verification_vocabulary": {
+  "VERIFIED_OFFICIAL_PAGE": "read on the publisher's official page in this wave",
+  "CORROBORATED_SECONDARY": "found only via a search summary or secondary source",
+  "NOT_VERIFIED": "could not be confirmed"
+ },
+ "licence_vocabulary": [
+  "statement_found",
+  "corroborated_against_publisher",
+  "terms_clear",
+  "redistribution",
+  "commercial_use",
+  "attribution",
+  "legal_review_needed",
+  "acquisition_authorized",
+  "runtime_authorized"
+ ],
+ "entries": [
+  {
+   "id": "us_bls_oews",
+   "group": "A",
+   "kind": "compensation_dataset",
+   "title": "BLS Occupational Employment and Wage Statistics (OEWS)",
+   "registry_ids": [
+    "bls_oews"
+   ],
+   "register_ids": [
+    "reg:bls_oews"
+   ],
+   "publisher": "U.S. Bureau of Labor Statistics",
+   "dataset": "Occupational Employment and Wage Statistics (OEWS)",
+   "edition": {
+    "value": "May 2025 estimates (the current release; the OEWS home page lists publication 15 May 2026). The locally held V1 file is the May 2025 national file, consistent with this.",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "reference_period": {
+    "value": "May 2025 (a six-panel semiannual sample; the May 2024 notes list panels May 2024 back to November 2021, the May 2025 notes were not read)",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "taxonomy": "soc (SOC 2018)",
+   "official_urls": {
+    "landing": "https://www.bls.gov/oes/",
+    "documentation": "https://www.bls.gov/oes/oes_doc.htm",
+    "licence": "https://www.bls.gov/opub/copyright-information.htm"
+   },
+   "licence": {
+    "name": "U.S. Government work, public domain (BLS copyright information page)",
+    "statement_found": true,
+    "corroborated_against_publisher": true,
+    "terms_clear": "clear",
+    "redistribution": "permitted",
+    "commercial_use": "permitted",
+    "attribution": "unknown",
+    "attribution_text": "The page asks users to cite BLS as the source (a request, not stated as a condition).",
+    "notes": "The BLS states its publications are in the public domain except previously copyrighted photographs and illustrations; no permission is needed; the BLS emblem is a registered trademark and its unauthorised use is prohibited. Commercial use is not addressed explicitly: it follows from the public-domain statement (not assessed for use outside the United States).",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "Manual download of public XLSX ZIP archives (for example oesm25nat.zip for the national file) and TXT time series; no API key is mentioned on the pages read",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "update_frequency": {
+    "value": "Annual (May reference period, published the following spring)",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "geography": {
+    "value": "National, state, metropolitan and nonmetropolitan areas, national industry-specific estimates",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "classification": {
+    "value": "2018 SOC (stated in the May 2024 technical notes: about 830 occupational categories in 22 of 23 major groups, military-specific excluded). The May 2025 technical notes were NOT read, so the edition for May 2025 is carried over by inference and must be confirmed from the May 2025 notes.",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "limitations": [
+    "Wages are straight-time GROSS pay exclusive of premium pay; included: base rates, cost-of-living allowances, guaranteed pay, hazardous-duty pay, incentive pay, tips; excluded: overtime, severance, shift differentials, nonproduction bonuses, employer-paid benefits (May 2024 notes).",
+    "Annual rates are calculated from hourly rates using a typical 2,080-hour work year for hourly-reported occupations: this derivation is the PUBLISHER's, not a conversion by Ask4Mo, and must be labelled.",
+    "Covers employees (full- and part-time); excludes the self-employed, owners and partners of unincorporated firms, household workers and unpaid family workers.",
+    "The pages read did not state which statistics (mean, median, percentiles) the files contain or define the O_GROUP field or the suppression symbols: the data dictionary was not read (NOT VERIFIED).",
+    "State and metropolitan rows are subnational (policy p10c-e/1 classes them by occupation level and labels them regional)."
+   ],
+   "evidence": [
+    "https://www.bls.gov/opub/copyright-information.htm",
+    "https://www.bls.gov/oes/",
+    "https://www.bls.gov/oes/oes_doc.htm",
+    "https://www.bls.gov/oes/current/oes_tec.htm",
+    "https://www.bls.gov/oes/tables.htm"
+   ],
+   "proposal": {
+    "evidence_class": "C1 (detailed occupations) and C2 (broad groups), by the published occupation group; C1 is not assigned merely because BLS is national",
+    "class_rationale": "national official establishment survey with detailed SOC occupations; the level comes from the O_GROUP value, which must be re-read from the source file",
+    "precedence_category": "national_official_occupation_statistics",
+    "occupation_granularity": "SOC 2018 detailed, broad, minor and major groups (O_GROUP, to be verified in the data dictionary)",
+    "geographic_granularity": "national (C1/C2); state and metropolitan are regional",
+    "methodology": "establishment survey (OEWS), six-panel pooled",
+    "population": "employees of non-farm establishments (self-employed excluded)",
+    "compensation_concept": "wage_statistic (straight-time gross wage); pay basis gross per the notes"
+   },
+   "acquisition": {
+    "method": "manual download of the official national XLSX ZIP (and state/metro files only if regional use is approved) by the owner or an approved operator; record the SHA-256 and the download URL; import through the registry-gated importer after approval",
+    "transformations": [
+     "re-read the national file with the OEWS adapter to capture O_GROUP, percentiles and suppression markers",
+     "set soc_edition to 2018 and pay_basis to gross only after the May 2025 technical notes are read",
+     "keep annual values as published with the 2,080-hour derivation noted"
+    ],
+    "runtime_dependencies": [
+     "SOC 2018 nodes in the graph",
+     "ESCO or O*NET-SOC crosswalk to link resolver identities",
+     "measurement qualification by a named reviewer",
+     "runtime approval of the source"
+    ]
+   },
+   "decisions": [
+    "D-04",
+    "D-12",
+    "D-13"
+   ],
+   "package": 1,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "us_soc_2018",
+   "group": "A",
+   "kind": "taxonomy",
+   "title": "US Standard Occupational Classification 2018",
+   "registry_ids": [],
+   "register_ids": [
+    "link:us_soc_structure",
+    "link:us_soc_crosswalk"
+   ],
+   "publisher": "U.S. Bureau of Labor Statistics (SOC Policy Committee)",
+   "dataset": "2018 Standard Occupational Classification",
+   "edition": {
+    "value": "2018 SOC (the current edition; a 2028 SOC revision is listed on the SOC page, its status is not stated there)",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "soc (2018)",
+   "official_urls": {
+    "landing": "https://www.bls.gov/soc/",
+    "documentation": "https://www.bls.gov/soc/2018/home.htm",
+    "licence": "https://www.bls.gov/opub/copyright-information.htm"
+   },
+   "licence": {
+    "name": "No statement on the SOC pages; the BLS site-wide copyright information (public domain) is linked from them",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "unclear",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "The SOC page makes no reuse statement; it links the BLS copyright page. Whether that page covers the SOC structure files is an inference, not a stated fact.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "Manual download of public XLSX and PDF files (structure: /soc/2018/soc_structure_2018.xlsx; definitions: /soc/2018/soc_2018_definitions.xlsx; both on bls.gov)",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "update_frequency": {
+    "value": "Periodic revision (2000, 2010, 2018; a 2028 revision is announced)",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "geography": {
+    "value": "United States",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "classification": {
+    "value": "867 detailed occupations, 459 broad occupations, 98 minor groups, 23 major groups (four structure levels); detailed code format xx-xxxx",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "limitations": [
+    "Published crosswalks on the page read: 2010 SOC to 2018 SOC (BLS XLSX with an explanatory note) and a CIP to 2018 SOC link (NCES). No crosswalk to ISCO-08 or O*NET-SOC is published on the pages read.",
+    "An official SOC to ISCO-08 crosswalk was NOT found: its existence is NOT VERIFIED."
+   ],
+   "evidence": [
+    "https://www.bls.gov/soc/",
+    "https://www.bls.gov/soc/2018/home.htm",
+    "https://www.bls.gov/soc/2018/crosswalks_used_by_agencies.htm"
+   ],
+   "proposal": {
+    "evidence_class": "NOT_APPLICABLE (taxonomy)",
+    "class_rationale": "a classification structure, not a measurement",
+    "precedence_category": "NOT_APPLICABLE",
+    "occupation_granularity": "detailed to major group",
+    "geographic_granularity": "national",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "manual download of the structure and definitions XLSX; import SOC 2018 nodes through the registry-gated taxonomy importer (production mode) after approval",
+    "transformations": [
+     "register taxonomy soc edition 2018 with code pattern xx-xxxx",
+     "import nodes with the published level (detailed, broad, minor, major)"
+    ],
+    "runtime_dependencies": [
+     "approval of the SOC source",
+     "crosswalk to the resolver identities (ESCO, ISCO)"
+    ]
+   },
+   "decisions": [
+    "D-04",
+    "D-12",
+    "D-13"
+   ],
+   "package": 1,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "SOURCE_IDENTIFIED"
+   }
+  },
+  {
+   "id": "us_onet_db",
+   "group": "A",
+   "kind": "taxonomy_and_attributes",
+   "title": "O*NET Database 31.0 and the O*NET-SOC taxonomy",
+   "registry_ids": [
+    "onet"
+   ],
+   "register_ids": [
+    "reg:onet"
+   ],
+   "publisher": "O*NET Resource Center (U.S. Department of Labor, Employment and Training Administration)",
+   "dataset": "O*NET Database",
+   "edition": {
+    "value": "O*NET 31.0 Database (the page identifies it as current; whether it is the newest release was not confirmed). The crosswalk file name shows O*NET-SOC 2019.",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "onet_soc",
+   "official_urls": {
+    "landing": "https://www.onetcenter.org/license_db.html",
+    "documentation": "https://www.onetcenter.org/crosswalks.html",
+    "licence": "https://www.onetcenter.org/license_db.html"
+   },
+   "licence": {
+    "name": "Creative Commons Attribution 4.0 International (CC BY 4.0), with exceptions (career exploration tools and other site content are separately licensed)",
+    "statement_found": true,
+    "corroborated_against_publisher": true,
+    "terms_clear": "clear",
+    "redistribution": "permitted",
+    "commercial_use": "unclear",
+    "attribution": "required",
+    "attribution_text": "This page includes information from the O*NET 31.0 Database; Used under the CC BY 4.0 license; O*NET is a trademark of USDOL/ETA; link the licence; state changes (and that USDOL/ETA has not approved or endorsed the modified information).",
+    "notes": "The licence covers only the downloadable database files. Commercial use is not stated on the page; CC BY 4.0 itself permits it, but the page's own wording was not quoted on that point.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "Manual download of public database files",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "update_frequency": {
+    "value": "Periodic releases (31.0 current at the time read)",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "geography": {
+    "value": "United States",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "classification": {
+    "value": "O*NET-SOC 2019 taxonomy; O*NET publishes an XLSX crosswalk of O*NET-SOC 2019 occupations to 2018 SOC occupations (file 2019_to_SOC_Crosswalk.xlsx) and an ESCO to O*NET-SOC crosswalk (ESCO_to_ONET-SOC.xlsx, version not stated). No ISCO-08 crosswalk is listed.",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "limitations": [
+    "The ESCO-to-O*NET-SOC file does not state which ESCO edition it maps; mapping quality (exact, approximate, one-to-many) must be read from the file itself after acquisition (NOT VERIFIED)."
+   ],
+   "evidence": [
+    "https://www.onetcenter.org/license_db.html",
+    "https://www.onetcenter.org/crosswalks.html"
+   ],
+   "proposal": {
+    "evidence_class": "NOT_APPLICABLE (taxonomy and occupation attributes, not compensation)",
+    "class_rationale": "taxonomy, descriptions and crosswalks; no compensation measure",
+    "precedence_category": "NOT_APPLICABLE",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "manual download of the database ZIP and the two crosswalk XLSX files; registry-gated taxonomy and crosswalk import after approval",
+    "transformations": [
+     "import O*NET-SOC 2019 nodes (code xx-xxxx.yy)",
+     "import the O*NET-SOC 2019 to SOC 2018 relationships as source-provided rows with the status the file states",
+     "import ESCO to O*NET-SOC rows only after reading the file's mapping semantics"
+    ],
+    "runtime_dependencies": [
+     "SOC 2018 nodes",
+     "ESCO nodes",
+     "owner confirmation of the attribution text"
+    ]
+   },
+   "decisions": [
+    "D-04",
+    "D-12",
+    "D-13"
+   ],
+   "package": 1,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "us_bls_ooh_projections",
+   "group": "A",
+   "kind": "labour_market_dataset",
+   "title": "BLS Occupational Outlook Handbook and Employment Projections",
+   "registry_ids": [
+    "bls_ooh",
+    "bls_projections"
+   ],
+   "register_ids": [],
+   "publisher": "U.S. Bureau of Labor Statistics",
+   "dataset": "Occupational Outlook Handbook; Employment Projections",
+   "edition": {
+    "value": "UNKNOWN: the registry records OOH 2025 and projections 2024-2034/2025-2035 from the local files; the official release pages were not read in this wave",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "soc",
+   "official_urls": {
+    "landing": "https://www.bls.gov/opub/copyright-information.htm",
+    "documentation": null,
+    "licence": "https://www.bls.gov/opub/copyright-information.htm"
+   },
+   "licence": {
+    "name": "U.S. Government work, public domain (BLS copyright information page; the same site-wide statement)",
+    "statement_found": true,
+    "corroborated_against_publisher": true,
+    "terms_clear": "clear",
+    "redistribution": "permitted",
+    "commercial_use": "permitted",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Same BLS statement as OEWS; the OOH and projections pages themselves were not read.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "SOC occupations (edition per product NOT VERIFIED)",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Needed by 3 of the 13 wiring-class product-coverage cases (education_083, future_growth_235, annual_openings_299); not compensation evidence."
+   ],
+   "evidence": [
+    "https://www.bls.gov/opub/copyright-information.htm"
+   ],
+   "proposal": {
+    "evidence_class": "NOT_APPLICABLE (education and outlook, not compensation)",
+    "class_rationale": "outlook attributes are not compensation measurements",
+    "precedence_category": "national_official_occupation_statistics",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN until the release pages are read",
+    "transformations": [],
+    "runtime_dependencies": [
+     "SOC 2018 nodes",
+     "title-to-code wiring"
+    ]
+   },
+   "decisions": [
+    "D-04",
+    "D-12"
+   ],
+   "package": 1,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "uk_ons_ashe",
+   "group": "B",
+   "kind": "compensation_dataset",
+   "title": "ONS Annual Survey of Hours and Earnings (ASHE)",
+   "registry_ids": [
+    "ons_ashe"
+   ],
+   "register_ids": [
+    "reg:ons_ashe"
+   ],
+   "publisher": "Office for National Statistics (UK)",
+   "dataset": "Annual Survey of Hours and Earnings (ASHE), Table 14 (occupation, four-digit SOC)",
+   "edition": {
+    "value": "Employee earnings in the UK: 2025, released 23 October 2025; the 2025 estimates are PROVISIONAL and 2024 estimates are revised. A revised 2025 Table 14 dataset is expected October or November 2026 (the Table 14 page records a correction dated 19 December 2025).",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "reference_period": {
+    "value": "April 2025 (the pay period including 30 April 2025)",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "taxonomy": "uk_soc (SOC 2020)",
+   "official_urls": {
+    "landing": "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/bulletins/annualsurveyofhoursandearnings/latest",
+    "documentation": "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/methodologies/annualsurveyofhoursandearningslowpayandannualsurveyofhoursandearningspensionresultsqmi",
+    "licence": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+   },
+   "licence": {
+    "name": "Open Government Licence v3.0 (stated on the bulletin and the dataset page: all content under OGL v3.0 except where otherwise stated)",
+    "statement_found": true,
+    "corroborated_against_publisher": true,
+    "terms_clear": "clear",
+    "redistribution": "permitted",
+    "commercial_use": "permitted",
+    "attribution": "required",
+    "attribution_text": "Contains public sector information licensed under the Open Government Licence v3.0 (the licence's default statement when the provider gives none); the bulletin suggests the citation 'Office for National Statistics (ONS), released 23 October 2025, ONS website, statistical bulletin, Employee earnings in the UK: 2025'.",
+    "notes": "OGL v3.0 permits commercial and non-commercial use, redistribution and adaptation with attribution; it excludes personal data, third-party rights and logos; the right ends automatically on a breach of the attribution condition. Summary of the licence page, not legal advice.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "Manual download of public XLSX tables from ons.gov.uk dataset pages (the registry records the local Table 14.1a file)",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "update_frequency": {
+    "value": "Annual (October); provisional then revised the following year",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "geography": {
+    "value": "United Kingdom (local-authority data for Great Britain in the bulletin)",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "classification": {
+    "value": "The 2025 bulletin states occupations are defined by SOC 2020; the local Table 14.1a file name contains 'SOC20 (4)'. DISCREPANCY: the ASHE methodology (QMI) text and the Table 14 dataset page slug still say SOC 2010 and the page does not mention SOC 2020. The edition of the table file must be confirmed from the file's own notes before any import.",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "limitations": [
+    "Medians are the preferred measure; the headline weekly measure is gross weekly earnings for full-time employees (above 30 paid hours; 25 or more for teaching).",
+    "Weekly and hourly figures cover employees whose pay for the survey period was not affected by absence; annual figures cover adult-rate employees in the same job for more than one year.",
+    "The pay elements included in 'gross' were NOT stated on the pages read (the QMI says hourly earnings exclude overtime): the gross definition is NOT VERIFIED beyond the word gross.",
+    "Cells based on fewer than three individuals are suppressed; a dominance rule applies; the coefficient of variation is colour-coded (5%, 10%, 20% thresholds).",
+    "ASHE is a 1% sample of PAYE employee jobs; it excludes the self-employed and armed forces; seasonal work is not fully captured.",
+    "Weekly pay is published weekly and must stay weekly: no annualisation (decision D-22)."
+   ],
+   "evidence": [
+    "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/bulletins/annualsurveyofhoursandearnings/latest",
+    "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/methodologies/annualsurveyofhoursandearningslowpayandannualsurveyofhoursandearningspensionresultsqmi",
+    "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/datasets/occupation4digitsoc2010ashetable14",
+    "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+   ],
+   "proposal": {
+    "evidence_class": "C1 (four-digit unit groups) and C2 (one to three digit groups) by the published code length",
+    "class_rationale": "national official earnings survey with unit-group detail; the level follows the published code hierarchy, not the publisher's nationality",
+    "precedence_category": "national_official_occupation_statistics",
+    "occupation_granularity": "SOC 2020 unit group (four digits) and broader groups (one to three digits)",
+    "geographic_granularity": "national (UK)",
+    "methodology": "1% employer sample from PAYE records, April reference",
+    "population": "employees on adult rates, pay unaffected by absence (weekly)",
+    "compensation_concept": "wage_statistic (gross weekly pay, median); pay basis gross"
+   },
+   "acquisition": {
+    "method": "manual download of the Table 14.1a XLSX (preferably the revised 2025 edition once published) by the owner or an approved operator; record SHA-256, URL and the table's own notes; import through the registry-gated importer after approval",
+    "transformations": [
+     "ashe_records with uk_soc_edition 2020 only after the table notes confirm it",
+     "keep pay weekly and mark the vintage provisional or revised",
+     "reject the row without a native code"
+    ],
+    "runtime_dependencies": [
+     "UK SOC 2020 nodes",
+     "a crosswalk to the resolver identities (ISCO-08 or ESCO)",
+     "measurement qualification",
+     "runtime approval"
+    ]
+   },
+   "decisions": [
+    "D-03",
+    "D-04",
+    "D-12",
+    "D-22"
+   ],
+   "package": 2,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "uk_soc_2020",
+   "group": "B",
+   "kind": "taxonomy",
+   "title": "UK Standard Occupational Classification 2020",
+   "registry_ids": [],
+   "register_ids": [
+    "link:uk_soc_2020_structure",
+    "link:uk_soc_crosswalk"
+   ],
+   "publisher": "Office for National Statistics (UK)",
+   "dataset": "SOC 2020 (Volumes 1 to 3 and the coding index)",
+   "edition": {
+    "value": "SOC 2020 (three volumes: structure and descriptions of unit groups, the coding index, and NS-SEC rebased on SOC 2020)",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "uk_soc (2020)",
+   "official_urls": {
+    "landing": "https://www.ons.gov.uk/methodology/classificationsandstandards/standardoccupationalclassificationsoc/soc2020",
+    "documentation": "https://www.ons.gov.uk/methodology/classificationsandstandards/standardoccupationalclassificationsoc/soc2020/soc2020volume1structureanddescriptionsofunitgroups",
+    "licence": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+   },
+   "licence": {
+    "name": "Open Government Licence v3.0 (stated on the SOC 2020 page: all content under OGL v3.0 except where otherwise stated)",
+    "statement_found": true,
+    "corroborated_against_publisher": true,
+    "terms_clear": "clear",
+    "redistribution": "permitted",
+    "commercial_use": "permitted",
+    "attribution": "required",
+    "attribution_text": "Contains public sector information licensed under the Open Government Licence v3.0.",
+    "notes": "As for ASHE.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "Manual download of public volumes and the coding index (Excel) from ons.gov.uk",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "United Kingdom",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "classification": {
+    "value": "The structure levels and digit counts were NOT stated on the page read (they are in Volume 1, not read); the local ASHE file shows codes of one to four digits.",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "ONS publishes a page on classifying SOC 2020 to ISCO-08 and states the full coding index of about 30,000 job titles was recoded to ISCO-08 with the CASCOT tool; the index (Excel) includes ISCO-08 codes and an ISCO-08 structure worksheet (search summary of official pages). A mapping derived from a TITLE index is many-to-many and is not a unit-group equivalence: it would be PARTIAL or AMBIGUOUS, never VERIFIED equivalent.",
+    "A separate older ONS dataset maps ISCO-08 to UK SOC 2000 and 2010 (not SOC 2020).",
+    "The page links SOC 2010 to SOC 2020 relationship material."
+   ],
+   "evidence": [
+    "https://www.ons.gov.uk/methodology/classificationsandstandards/standardoccupationalclassificationsoc/soc2020",
+    "https://www.ons.gov.uk/methodology/classificationsandstandards/standardoccupationalclassificationsoc/soc2020/classifyingthestandardoccupationalclassification2020soc2020totheinternationalstandardclassificationofoccupationsisco08",
+    "https://www.ons.gov.uk/economy/environmentalaccounts/datasets/truncatedproportionalconversionbetweenisco08anduksocclassifications"
+   ],
+   "proposal": {
+    "evidence_class": "NOT_APPLICABLE (taxonomy)",
+    "class_rationale": "a classification structure",
+    "precedence_category": "NOT_APPLICABLE",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "manual download of Volume 1 structure and the coding index; registry-gated taxonomy import; import the ISCO-08 relationships only from a source-provided mapping with the status the source supports",
+    "transformations": [
+     "register taxonomy uk_soc edition 2020",
+     "import unit groups with their published level",
+     "derive no ISCO relationship from title similarity"
+    ],
+    "runtime_dependencies": [
+     "owner adoption of UK SOC 2020 as first-class (D-03)"
+    ]
+   },
+   "decisions": [
+    "D-03",
+    "D-04",
+    "D-12",
+    "D-13"
+   ],
+   "package": 2,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "SOURCE_IDENTIFIED"
+   }
+  },
+  {
+   "id": "eu_esco",
+   "group": "C",
+   "kind": "taxonomy",
+   "title": "ESCO classification (occupations, skills, qualifications)",
+   "registry_ids": [
+    "esco",
+    "esco_matrix",
+    "esco_handbook"
+   ],
+   "register_ids": [
+    "reg:esco"
+   ],
+   "publisher": "European Commission (ESCO)",
+   "dataset": "ESCO dataset v1.2.1",
+   "edition": {
+    "value": "ESCO v1.2.1 (last update 10/12/2025), release v6.0.0; earlier versions v1.2.0 (May 2024) down to v1.0.3 are listed. The locally held file is ESCO v1.2.1 English.",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "esco (1.2.1)",
+   "official_urls": {
+    "landing": "https://esco.ec.europa.eu/en/use-esco/download",
+    "documentation": "https://esco.ec.europa.eu/en/use-esco/other-crosswalks",
+    "licence": "https://esco.ec.europa.eu/en/copyright-notice-esco-skills-competences"
+   },
+   "licence": {
+    "name": "European Commission reuse policy (Decision 2011/833/EU) and CC BY 4.0 for content owned by the EU on the Europa site 'unless otherwise indicated'; the ESCO copyright notice names no licence for the ESCO data itself",
+    "statement_found": true,
+    "corroborated_against_publisher": false,
+    "terms_clear": "unclear",
+    "redistribution": "permitted",
+    "commercial_use": "permitted",
+    "attribution": "required",
+    "attribution_text": "No attribution wording is given for ESCO on the pages read; the FAQ advises not changing preferred terms and descriptions.",
+    "notes": "A search summary of official pages states the classification may be downloaded, used, reproduced and reused for any purpose, free of charge, under Decision 2011/833/EU (CORROBORATED, not read verbatim). The copyright notice lists third-party components with their own licences (O*NET under CC BY 4.0; Bertelsmann Stiftung competence maps under CC BY-SA 4.0; others with no licence stated): those components, mainly in the skills pillar, must not be assumed covered.",
+    "legal_review_needed": true,
+    "legal_review_reason": "the data licence itself is not named on the download or copyright pages; confirm the exact reuse basis and attribution wording for ESCO occupation data and the treatment of third-party components"
+   },
+   "machine_access": {
+    "value": "Manual download after reading and accepting a statement and entering an email address (a download-access condition: an automated bulk fetch must not bypass it); formats RDF, TTL, ODS, CSV, XML, JSON-LD; a local API package exists",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "update_frequency": {
+    "value": "Versioned releases (v1.2.0 May 2024; v1.2.1 last updated 10/12/2025)",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "geography": {
+    "value": "EU (28 ESCO languages)",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "classification": {
+    "value": "ESCO occupations (URI identifiers) with an ISCO-08 group attribute in the local file (3,043 occupations with iscoGroup); the download page does not state the ISCO link; the page links crosswalks: ESCO to O*NET (CSV, version not stated) and ESCO to NACE Rev. 2.1 (XLSX)",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "limitations": [
+    "The download page states the dataset is available in all 28 ESCO languages: multilingual availability is VERIFIED, but acquisition per language is not approved (D-07).",
+    "Russian is not stated among languages on the pages read; the language list was summarised as 'Bulgarian through Norwegian Bokmål and Ukrainian' (full list at the ESCO languages page, not read): Russian availability is NOT VERIFIED."
+   ],
+   "evidence": [
+    "https://esco.ec.europa.eu/en/use-esco/download",
+    "https://esco.ec.europa.eu/en/copyright-notice-esco-skills-competences",
+    "https://esco.ec.europa.eu/en/use-esco/other-crosswalks"
+   ],
+   "proposal": {
+    "evidence_class": "NOT_APPLICABLE (taxonomy and labels)",
+    "class_rationale": "occupation structure and multilingual labels, not compensation",
+    "precedence_category": "NOT_APPLICABLE",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "manual download by the owner after accepting the ESCO statement; one language per approved package; registry-gated label import (production mode) after approval",
+    "transformations": [
+     "import occupation nodes and official labels with explicit language and edition",
+     "do not import skills-pillar third-party components"
+    ],
+    "runtime_dependencies": [
+     "legal confirmation of the reuse basis",
+     "language approval (D-07)"
+    ]
+   },
+   "decisions": [
+    "D-04",
+    "D-07",
+    "D-12"
+   ],
+   "package": 3,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "intl_isco08",
+   "group": "C",
+   "kind": "taxonomy",
+   "title": "ISCO-08 (ILO)",
+   "registry_ids": [
+    "isco08"
+   ],
+   "register_ids": [
+    "reg:isco08"
+   ],
+   "publisher": "International Labour Organization",
+   "dataset": "International Standard Classification of Occupations: ISCO-08, Volume I (2012)",
+   "edition": {
+    "value": "ISCO-08 (Volume I published 2012). An ISCO revision process started in June 2021 (a successor edition may supersede ISCO-08).",
+    "status": "CORROBORATED_SECONDARY"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "isco (08)",
+   "official_urls": {
+    "landing": "https://webapps.ilo.org/public/english/bureau/stat/isco/isco08/",
+    "documentation": null,
+    "licence": "https://www.ilo.org/node/9321"
+   },
+   "licence": {
+    "name": "ILO rights: ILO material free to download and consult; short excerpts may be reproduced without authorization with the complete source indicated; permission for other reproduction (commercial or non-commercial) is requested from rights@ilo.org (ILO catalogue entry for Volume I)",
+    "statement_found": true,
+    "corroborated_against_publisher": false,
+    "terms_clear": "unclear",
+    "redistribution": "restricted",
+    "commercial_use": "unclear",
+    "attribution": "required",
+    "attribution_text": "ILO as the source; the ILO name and emblem may not be used without written permission.",
+    "notes": "The ILO's 2023 companion guide is CC BY 4.0 and ILO databases and datasets from 3 May 2023 are CC BY 4.0, but the 2012 Volume I catalogue entry states a permission requirement beyond short excerpts. Whether the classification structure (codes and titles) may be stored and redistributed in a commercial service is NOT established.",
+    "legal_review_needed": true,
+    "legal_review_reason": "reproduction of the ISCO-08 structure beyond short excerpts needs ILO permission per the catalogue entry; ISCO codes also appear inside ESCO (a separate EU licence)"
+   },
+   "machine_access": {
+    "value": "Public download of the structure documents; the ILO landing page redirected and its content was not read in this wave",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "Global reference classification",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "classification": {
+    "value": "Four-digit unit groups (the local file holds 619 ISCO-08 codes); zero-padded strings (0110, 0210, 0310)",
+    "status": "CORROBORATED_SECONDARY"
+   },
+   "limitations": [
+    "The ILO landing page content was NOT read (redirect not followed); the licence finding rests on the ILO catalogue entry and the ILO rights page found by search."
+   ],
+   "evidence": [
+    "https://researchrepository.ilo.org/esploro/outputs/book/International-Standard-Classification-of-Occupations-ISCO-08/995673746502676",
+    "https://www.ilo.org/node/9321"
+   ],
+   "proposal": {
+    "evidence_class": "NOT_APPLICABLE (taxonomy)",
+    "class_rationale": "a classification structure",
+    "precedence_category": "NOT_APPLICABLE",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "the local ISCO-08 CSV already exists (official_local origin, licensing pending); no new acquisition is proposed before the legal review",
+    "transformations": [
+     "keep codes as zero-padded strings"
+    ],
+    "runtime_dependencies": [
+     "ILO permission or legal confirmation"
+    ]
+   },
+   "decisions": [
+    "D-04",
+    "D-05",
+    "D-12"
+   ],
+   "package": 3,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "eu_eurostat_ses",
+   "group": "C",
+   "kind": "compensation_dataset",
+   "title": "Eurostat Structure of Earnings Survey (SES)",
+   "registry_ids": [
+    "eurostat_earnings"
+   ],
+   "register_ids": [
+    "reg:eurostat_earnings"
+   ],
+   "publisher": "Eurostat",
+   "dataset": "Structure of earnings survey (SES) 2022: earn_ses_hourly, earn_ses_annual and related tables",
+   "edition": {
+    "value": "SES 2022 (reference year 2022; metadata last updated 4 December 2025; no fixed release calendar: data are sent to Eurostat 18 months and disseminated about 20 months after the reference period)",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "reference_period": {
+    "value": "2022 (reference month October for most countries)",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "taxonomy": "isco (08)",
+   "official_urls": {
+    "landing": "https://ec.europa.eu/eurostat/cache/metadata/en/earn_ses2022_esms.htm",
+    "documentation": "https://ec.europa.eu/eurostat/cache/metadata/en/earn_ses2022_esms.htm",
+    "licence": "https://ec.europa.eu/eurostat/help/copyright-notice"
+   },
+   "licence": {
+    "name": "Eurostat copyright notice: statistical data, metadata and publications may be reused commercially or non-commercially provided the source is acknowledged; no written licence needed (policy based on the Commission decision of 12 December 2011)",
+    "statement_found": true,
+    "corroborated_against_publisher": true,
+    "terms_clear": "clear",
+    "redistribution": "permitted",
+    "commercial_use": "permitted",
+    "attribution": "required",
+    "attribution_text": "Acknowledge the source; state clearly any translation or modification of data or text and include a disclaimer of Eurostat's responsibility.",
+    "notes": "Exceptions: third-party material; logos and trademarks; non-commercial only for data from sources other than Eurostat, co-owned publications, data for countries outside the EU, EFTA and official candidate or acceding countries, and certain Swiss, Liechtenstein and Austrian trade data (not SES). Individual documents may add conditions. An older Statistics Explained copyright page is more restrictive: the current notice governs but the dataset's own notice must be checked.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "Eurobase tables and a dissemination API (not used; no bulk fetch in this wave)",
+    "status": "CORROBORATED_SECONDARY"
+   },
+   "update_frequency": {
+    "value": "Quadrennial survey; this edition 2022",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "geography": {
+    "value": "EU member states, EFTA (Iceland, Norway, Switzerland) and Albania, Bosnia and Herzegovina, Serbia; aggregates EU27_2020, EA20, EA19",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "classification": {
+    "value": "ISCO-08 collected at 2-digit (3-digit if possible) and PUBLISHED at 1-digit (major group) level; NACE Rev. 2 at 1-digit; NUTS 2021 at NUTS-1 and country",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "limitations": [
+    "Occupation is published only at the ISCO-08 MAJOR GROUP: Eurostat does NOT provide occupation-specific compensation at unit-group level for any EU country in the online tables; any EU-wide or country-wide coverage claim for occupation-level pay is unsupported.",
+    "Measures: means (annual, monthly, hourly gross earnings); hourly earnings include overtime and paid non-working time; medians and deciles are not mentioned on the page read; units EUR, PPS, percentages and persons.",
+    "Population: enterprises or local units with at least 10 employees in NACE B to S excluding O; smaller enterprises and section O optional.",
+    "Confidentiality: minimum frequency and dominance rules; regional detail restricted.",
+    "The locally held 'eurostat_earnings' content is an indexed publication PDF, not a table: no structured Eurostat earnings data is held."
+   ],
+   "evidence": [
+    "https://ec.europa.eu/eurostat/cache/metadata/en/earn_ses2022_esms.htm",
+    "https://ec.europa.eu/eurostat/help/copyright-notice",
+    "https://ec.europa.eu/eurostat/databrowser/view/earn_ses_hourly/default/table?lang=en"
+   ],
+   "proposal": {
+    "evidence_class": "C3 (international harmonised) at ISCO major-group (broad) granularity only",
+    "class_rationale": "harmonised, but published only at 1-digit occupation; it cannot support a detailed or national-occupation claim",
+    "precedence_category": "eurostat_harmonised",
+    "occupation_granularity": "ISCO-08 major group",
+    "geographic_granularity": "national and EU aggregate",
+    "methodology": "harmonised employer survey (SES)",
+    "population": "employees of enterprises with 10 or more employees (NACE B-S excl. O)",
+    "compensation_concept": "wage_statistic (mean gross earnings, hourly or annual or monthly)"
+   },
+   "acquisition": {
+    "method": "manual extraction of a named Eurobase table (for example earn_ses_hourly by ISCO-08 major group) by the owner; record the extraction URL, filters and SHA-256; registry-gated import after approval",
+    "transformations": [
+     "eurostat_ses_records with an explicit indicator map and unit rules",
+     "PPS values are not currency and are rejected",
+     "keep the measure as mean"
+    ],
+    "runtime_dependencies": [
+     "ISCO-08 nodes (and the ISCO legal review)",
+     "measurement qualification",
+     "runtime approval"
+    ]
+   },
+   "decisions": [
+    "D-04",
+    "D-12",
+    "D-02"
+   ],
+   "package": 4,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "de_ba_entgeltatlas",
+   "group": "C",
+   "kind": "compensation_dataset",
+   "title": "Bundesagentur für Arbeit Entgeltatlas",
+   "registry_ids": [
+    "ba_entgeltatlas"
+   ],
+   "register_ids": [
+    "reg:ba_entgeltatlas"
+   ],
+   "publisher": "Bundesagentur für Arbeit",
+   "dataset": "Entgeltatlas",
+   "edition": {
+    "value": "UNKNOWN (an earlier version showed averages for 2014; the current version shows medians; no edition identified from an official page)",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN (occupation classification not verified; KldB 2010 is plausible but unverified)",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: no BA terms of use or data licence was found",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Secondary press describes a free web tool needing no registration; that is not a data licence.",
+    "legal_review_needed": true,
+    "legal_review_reason": "no reuse terms found; the BA must be asked for the terms and any data-extract provisions"
+   },
+   "machine_access": {
+    "value": "A web tool; no bulk or API access identified (registry: manual acquisition required)",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "Germany (regional and sex and age filters per secondary sources)",
+    "status": "CORROBORATED_SECONDARY"
+   },
+   "classification": {
+    "value": "More than 4,000 occupations (secondary source); classification NOT VERIFIED",
+    "status": "CORROBORATED_SECONDARY"
+   },
+   "limitations": [
+    "Secondary sources describe median monthly gross pay of full-time employees from pension-insurance contribution notifications; NOT confirmed from an official BA page.",
+    "The German K1 governed set (7 occupations, EUR gross annual, 2024) is a self-declared ENGINEERING DRAFT and is not Entgeltatlas data."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "C1 is the recovered planning example only; NOT defensible until the BA terms, method and classification are verified",
+    "class_rationale": "unverified",
+    "precedence_category": "national_public_employment_service",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "not possible until the BA terms are obtained",
+    "transformations": [],
+    "runtime_dependencies": [
+     "BA permission or published terms"
+    ]
+   },
+   "decisions": [
+    "D-04",
+    "D-12"
+   ],
+   "package": 4,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "de_destatis_genesis",
+   "group": "C",
+   "kind": "compensation_dataset",
+   "title": "Destatis GENESIS-Online earnings by occupation",
+   "registry_ids": [
+    "destatis"
+   ],
+   "register_ids": [
+    "reg:destatis"
+   ],
+   "publisher": "Statistisches Bundesamt (Destatis)",
+   "dataset": "GENESIS-Online (for example table 62361-0030, gross hourly and monthly earnings by occupation)",
+   "edition": {
+    "value": "UNKNOWN; the registry records 'GENESIS 2020'; the Destatis topic page says the new earnings survey's index series are in tables 62361-0010 to -0017 and that content is being expanded step by step",
+    "status": "CORROBORATED_SECONDARY"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": "https://www.destatis.de/DE/Themen/Arbeit/Verdienste/Verdienste-Branche-Berufe/_inhalt.html",
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "Datenlizenz Deutschland Namensnennung 2.0 (by-2-0), per a third-party geodata catalogue record for table 62361-0030; NOT read on a Destatis page",
+    "statement_found": true,
+    "corroborated_against_publisher": false,
+    "terms_clear": "unclear",
+    "redistribution": "permitted",
+    "commercial_use": "permitted",
+    "attribution": "required",
+    "attribution_text": "(c) Statistisches Bundesamt, Wiesbaden 2025, Genesis-Online; Datenlizenz by-2-0 (catalogue record wording).",
+    "notes": "Older Destatis PDFs allow reproduction with a source credit. The current GENESIS terms were NOT checked on the publisher's site.",
+    "legal_review_needed": true,
+    "legal_review_reason": "licence taken from a third-party catalogue; confirm on the Destatis terms; GENESIS access requires credentials (registry)"
+   },
+   "machine_access": {
+    "value": "GENESIS-Online web service requiring credentials (registry); not accessed",
+    "status": "CORROBORATED_SECONDARY"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "Germany",
+    "status": "CORROBORATED_SECONDARY"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Which table, occupation classification and population would serve compensation was not established."
+   ],
+   "evidence": [
+    "https://www.destatis.de/DE/Themen/Arbeit/Verdienste/Verdienste-Branche-Berufe/_inhalt.html"
+   ],
+   "proposal": {
+    "evidence_class": "UNKNOWN (C1 or C2 only after table, classification and granularity are verified)",
+    "class_rationale": "table not yet identified from an official page",
+    "precedence_category": "national_official_occupation_statistics",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "manual extraction of a named table by an authorised account holder after approval",
+    "transformations": [],
+    "runtime_dependencies": [
+     "table identification",
+     "classification and crosswalk"
+    ]
+   },
+   "decisions": [
+    "D-04",
+    "D-12"
+   ],
+   "package": 4,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "ca_noc_2021",
+   "group": "D",
+   "kind": "taxonomy",
+   "title": "National Occupational Classification (NOC) 2021 v1.0 / 2021 v1.3",
+   "registry_ids": [],
+   "register_ids": [
+    "cand:ca_noc"
+   ],
+   "publisher": "Statistics Canada / ESDC",
+   "dataset": "NOC 2021",
+   "edition": {
+    "value": "NOC 2021 (version level 1.0 vs 1.3 not confirmed from an official page in this wave)",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "noc (2021)",
+   "official_urls": {
+    "landing": "https://www.statcan.gc.ca/en/subjects/standard/noc/2021/introductionV1.0",
+    "documentation": null,
+    "licence": "https://open.canada.ca/en/open-government-licence-canada"
+   },
+   "licence": {
+    "name": "Open Government Licence - Canada (stated for Government of Canada open data; applicability to the NOC structure files was not read on the NOC page itself)",
+    "statement_found": true,
+    "corroborated_against_publisher": false,
+    "terms_clear": "unclear",
+    "redistribution": "permitted",
+    "commercial_use": "permitted",
+    "attribution": "required",
+    "attribution_text": "Contains information licensed under the Open Government Licence - Canada.",
+    "notes": "Licence terms verified on the OGL-Canada page; coverage of NOC files by that licence is an inference.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "Public download of the structure files",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "Canada",
+    "status": "VERIFIED_OFFICIAL_PAGE"
+   },
+   "classification": {
+    "value": "Five-digit codes with TEER categories (NOC 2021)",
+    "status": "CORROBORATED_SECONDARY"
+   },
+   "limitations": [
+    "StatCan states a NOC to ISCO-08 concordance is planned but NOT published: no official NOC-ISCO crosswalk exists to import; none may be derived from titles."
+   ],
+   "evidence": [
+    "https://open.canada.ca/en/open-government-licence-canada"
+   ],
+   "proposal": {
+    "evidence_class": "NOT_APPLICABLE (taxonomy)",
+    "class_rationale": "classification structure",
+    "precedence_category": "NOT_APPLICABLE",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "manual download of the official structure file after approval",
+    "transformations": [
+     "register taxonomy noc edition 2021"
+    ],
+    "runtime_dependencies": [
+     "crosswalk to the resolver identities (none published)"
+    ]
+   },
+   "decisions": [
+    "D-04",
+    "D-12",
+    "D-13"
+   ],
+   "package": 5,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "SOURCE_IDENTIFIED"
+   }
+  },
+  {
+   "id": "ca_jobbank_statcan",
+   "group": "D",
+   "kind": "compensation_dataset",
+   "title": "Job Bank wage reports and Statistics Canada earnings tables",
+   "registry_ids": [],
+   "register_ids": [
+    "cand:ca_job_bank_wages",
+    "cand:ca_statcan_wages"
+   ],
+   "publisher": "ESDC Job Bank; Statistics Canada",
+   "dataset": "Job Bank wages by NOC; StatCan Labour Force Survey wages / Census earnings",
+   "edition": {
+    "value": "UNKNOWN: current Job Bank wage data edition and StatCan table identifiers were not confirmed from official pages",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "noc (2021)",
+   "official_urls": {
+    "landing": "https://www.jobbank.gc.ca/",
+    "documentation": null,
+    "licence": "https://open.canada.ca/en/open-government-licence-canada"
+   },
+   "licence": {
+    "name": "Open Government Licence - Canada is the expected basis for Job Bank open data and StatCan open data; the exact licence per dataset was NOT read",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Per-dataset licence and any Job Bank terms of use must be read before approval.",
+    "legal_review_needed": true,
+    "legal_review_reason": "dataset-level terms not verified"
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "Canada, provinces and regions (per dataset; not verified)",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Job Bank wages are derived from the Labour Force Survey (concept: hourly wage of employees) per secondary knowledge; NOT confirmed from an official page in this wave.",
+    "Wage statistics at NOC unit-group level may be suppressed for small cells."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN (C1/C2 plausible only after dataset, concept and method are verified)",
+    "class_rationale": "not verified",
+    "precedence_category": "national_official_occupation_statistics",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN until the dataset is identified",
+    "transformations": [],
+    "runtime_dependencies": [
+     "NOC nodes",
+     "dataset identification"
+    ]
+   },
+   "decisions": [
+    "D-04",
+    "D-12",
+    "D-15"
+   ],
+   "package": 5,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "SOURCE_IDENTIFIED"
+   }
+  },
+  {
+   "id": "mx_sinco_inegi",
+   "group": "E",
+   "kind": "taxonomy_and_compensation",
+   "title": "SINCO and INEGI ENOE",
+   "registry_ids": [],
+   "register_ids": [
+    "cand:mx_sinco",
+    "cand:mx_inegi_earnings"
+   ],
+   "publisher": "INEGI",
+   "dataset": "Sistema Nacional de Clasificacion de Ocupaciones (SINCO) and Encuesta Nacional de Ocupacion y Empleo (ENOE)",
+   "edition": {
+    "value": "UNKNOWN: SINCO edition and the current ENOE release were not confirmed from official pages",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "sinco",
+   "official_urls": {
+    "landing": "https://www.inegi.org.mx/",
+    "documentation": null,
+    "licence": "https://www.inegi.org.mx/inegi/terminos.html"
+   },
+   "licence": {
+    "name": "INEGI Terminos de Libre Uso (Libre Uso): commercial use allowed, attribution to INEGI as source, no alteration of metadata",
+    "statement_found": true,
+    "corroborated_against_publisher": true,
+    "terms_clear": "clear",
+    "redistribution": "permitted",
+    "commercial_use": "permitted",
+    "attribution": "required",
+    "attribution_text": "Fuente: INEGI (attribution required; do not imply INEGI endorsement of altered data).",
+    "notes": "Verified from the INEGI terms page in this wave. Per-dataset exceptions were not enumerated.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "Mexico, states",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "ENOE is a household labour survey: household or total income must NEVER be recorded as occupational compensation; only an earnings variable defined for employed persons by occupation, if published, can qualify.",
+    "No official SINCO to ISCO-08 crosswalk was identified (NOT VERIFIED)."
+   ],
+   "evidence": [
+    "https://www.inegi.org.mx/inegi/terminos.html"
+   ],
+   "proposal": {
+    "evidence_class": "UNKNOWN (survey-based household source; at most C2 after concept qualification)",
+    "class_rationale": "concept and granularity not verified; household income is not compensation",
+    "precedence_category": "national_official_occupation_statistics",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN until tables and variables are identified",
+    "transformations": [],
+    "runtime_dependencies": [
+     "SINCO nodes",
+     "earnings-concept qualification",
+     "country adapter for MX"
+    ]
+   },
+   "decisions": [
+    "D-04",
+    "D-12",
+    "D-13",
+    "D-15"
+   ],
+   "package": 6,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "SOURCE_IDENTIFIED"
+   }
+  },
+  {
+   "id": "br_cbo_ibge",
+   "group": "F",
+   "kind": "taxonomy_and_compensation",
+   "title": "CBO (Classificacao Brasileira de Ocupacoes) and IBGE PNAD Continua",
+   "registry_ids": [],
+   "register_ids": [
+    "cand:br_cbo",
+    "cand:br_ibge_survey",
+    "cand:br_admin_employment"
+   ],
+   "publisher": "Ministerio do Trabalho e Emprego; IBGE",
+   "dataset": "CBO 2002; PNAD Continua earnings",
+   "edition": {
+    "value": "UNKNOWN: CBO edition and PNAD release not confirmed from official pages (IBGE/CONCLA pages returned errors)",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "cbo",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: IBGE and MTE reuse terms could not be read in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "IBGE/CONCLA page access failed; no licence statement obtained.",
+    "legal_review_needed": true,
+    "legal_review_reason": "terms not read"
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "Brazil",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "PNAD Continua is a household SURVEY; RAIS/eSocial administrative records are a different evidence type: survey evidence must not be labelled administrative.",
+    "Household income is not occupational compensation."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not verified",
+    "precedence_category": "national_official_occupation_statistics",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": [
+     "CBO nodes",
+     "concept qualification",
+     "BR adapter"
+    ]
+   },
+   "decisions": [
+    "D-04",
+    "D-12",
+    "D-13",
+    "D-15"
+   ],
+   "package": 6,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "SOURCE_IDENTIFIED"
+   }
+  },
+  {
+   "id": "sa_ar",
+   "group": "G",
+   "kind": "taxonomy_and_compensation",
+   "title": "Argentina: national occupation classification and household/earnings statistics (INDEC)",
+   "registry_ids": [],
+   "register_ids": [
+    "cand:ar_nso"
+   ],
+   "publisher": "INDEC",
+   "dataset": "UNKNOWN",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN (national occupation classification per market not verified, D-19)",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: no reuse terms read for this publisher",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "No official licence page was obtained.",
+    "legal_review_needed": true,
+    "legal_review_reason": "terms not verified"
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Occupational classification and earnings concept not verified from official pages.",
+    "Household survey income must not be treated as compensation."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04",
+    "D-18",
+    "D-19",
+    "D-15"
+   ],
+   "package": 7,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "SOURCE_IDENTIFIED"
+   }
+  },
+  {
+   "id": "sa_bo",
+   "group": "G",
+   "kind": "taxonomy_and_compensation",
+   "title": "Bolivia: national occupation classification and household/earnings statistics (INE Bolivia)",
+   "registry_ids": [],
+   "register_ids": [
+    "cand:bo_nso"
+   ],
+   "publisher": "INE Bolivia",
+   "dataset": "UNKNOWN",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN (national occupation classification per market not verified, D-19)",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: no reuse terms read for this publisher",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "No official licence page was obtained.",
+    "legal_review_needed": true,
+    "legal_review_reason": "terms not verified"
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Occupational classification and earnings concept not verified from official pages.",
+    "Household survey income must not be treated as compensation."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04",
+    "D-18",
+    "D-19",
+    "D-15"
+   ],
+   "package": 7,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "SOURCE_IDENTIFIED"
+   }
+  },
+  {
+   "id": "sa_cl",
+   "group": "G",
+   "kind": "taxonomy_and_compensation",
+   "title": "Chile: national occupation classification and household/earnings statistics (INE Chile)",
+   "registry_ids": [],
+   "register_ids": [
+    "cand:cl_esi"
+   ],
+   "publisher": "INE Chile",
+   "dataset": "UNKNOWN",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN (national occupation classification per market not verified, D-19)",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": "https://www.ine.gob.cl/terminos-de-uso-y-licencia-de-datos-abiertos"
+   },
+   "licence": {
+    "name": "INE Chile terms of use and licence for open data: Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0)",
+    "statement_found": true,
+    "corroborated_against_publisher": true,
+    "terms_clear": "clear",
+    "redistribution": "permitted_with_sharealike",
+    "commercial_use": "permitted",
+    "attribution": "required",
+    "attribution_text": "Attribute INE Chile.",
+    "notes": "ShareAlike would bind derivative datasets: must be reviewed before any redistribution or combined dataset.",
+    "legal_review_needed": true,
+    "legal_review_reason": "ShareAlike obligations on derivatives"
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Occupational classification and earnings concept not verified from official pages.",
+    "Household survey income must not be treated as compensation."
+   ],
+   "evidence": [
+    "https://www.ine.gob.cl/terminos-de-uso-y-licencia-de-datos-abiertos"
+   ],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04",
+    "D-18",
+    "D-19",
+    "D-15"
+   ],
+   "package": 7,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "SOURCE_IDENTIFIED"
+   }
+  },
+  {
+   "id": "sa_co",
+   "group": "G",
+   "kind": "taxonomy_and_compensation",
+   "title": "Colombia: national occupation classification and household/earnings statistics (DANE)",
+   "registry_ids": [],
+   "register_ids": [
+    "cand:co_geih"
+   ],
+   "publisher": "DANE",
+   "dataset": "UNKNOWN",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN (national occupation classification per market not verified, D-19)",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: no reuse terms read for this publisher",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "No official licence page was obtained.",
+    "legal_review_needed": true,
+    "legal_review_reason": "terms not verified"
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Occupational classification and earnings concept not verified from official pages.",
+    "Household survey income must not be treated as compensation.",
+    "DANE pages returned errors in this wave: terms not read."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04",
+    "D-18",
+    "D-19",
+    "D-15"
+   ],
+   "package": 7,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "SOURCE_IDENTIFIED"
+   }
+  },
+  {
+   "id": "sa_ec",
+   "group": "G",
+   "kind": "taxonomy_and_compensation",
+   "title": "Ecuador: national occupation classification and household/earnings statistics (INEC)",
+   "registry_ids": [],
+   "register_ids": [
+    "cand:ec_nso"
+   ],
+   "publisher": "INEC",
+   "dataset": "UNKNOWN",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN (national occupation classification per market not verified, D-19)",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: no reuse terms read for this publisher",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "No official licence page was obtained.",
+    "legal_review_needed": true,
+    "legal_review_reason": "terms not verified"
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Occupational classification and earnings concept not verified from official pages.",
+    "Household survey income must not be treated as compensation."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04",
+    "D-18",
+    "D-19",
+    "D-15"
+   ],
+   "package": 7,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "SOURCE_IDENTIFIED"
+   }
+  },
+  {
+   "id": "sa_gy",
+   "group": "G",
+   "kind": "taxonomy_and_compensation",
+   "title": "Guyana: national occupation classification and household/earnings statistics (Bureau of Statistics Guyana)",
+   "registry_ids": [],
+   "register_ids": [
+    "cand:gy_nso"
+   ],
+   "publisher": "Bureau of Statistics Guyana",
+   "dataset": "UNKNOWN",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN (national occupation classification per market not verified, D-19)",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: no reuse terms read for this publisher",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "No official licence page was obtained.",
+    "legal_review_needed": true,
+    "legal_review_reason": "terms not verified"
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Occupational classification and earnings concept not verified from official pages.",
+    "Household survey income must not be treated as compensation."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04",
+    "D-18",
+    "D-19",
+    "D-15"
+   ],
+   "package": 7,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "SOURCE_IDENTIFIED"
+   }
+  },
+  {
+   "id": "sa_py",
+   "group": "G",
+   "kind": "taxonomy_and_compensation",
+   "title": "Paraguay: national occupation classification and household/earnings statistics (INE Paraguay)",
+   "registry_ids": [],
+   "register_ids": [
+    "cand:py_nso"
+   ],
+   "publisher": "INE Paraguay",
+   "dataset": "UNKNOWN",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN (national occupation classification per market not verified, D-19)",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: no reuse terms read for this publisher",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "No official licence page was obtained.",
+    "legal_review_needed": true,
+    "legal_review_reason": "terms not verified"
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Occupational classification and earnings concept not verified from official pages.",
+    "Household survey income must not be treated as compensation."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04",
+    "D-18",
+    "D-19",
+    "D-15"
+   ],
+   "package": 7,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "SOURCE_IDENTIFIED"
+   }
+  },
+  {
+   "id": "sa_pe",
+   "group": "G",
+   "kind": "taxonomy_and_compensation",
+   "title": "Peru: national occupation classification and household/earnings statistics (INEI)",
+   "registry_ids": [],
+   "register_ids": [
+    "cand:pe_nso"
+   ],
+   "publisher": "INEI",
+   "dataset": "UNKNOWN",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN (national occupation classification per market not verified, D-19)",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: no reuse terms read for this publisher",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "No official licence page was obtained.",
+    "legal_review_needed": true,
+    "legal_review_reason": "terms not verified"
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Occupational classification and earnings concept not verified from official pages.",
+    "Household survey income must not be treated as compensation."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04",
+    "D-18",
+    "D-19",
+    "D-15"
+   ],
+   "package": 7,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "SOURCE_IDENTIFIED"
+   }
+  },
+  {
+   "id": "sa_sr",
+   "group": "G",
+   "kind": "taxonomy_and_compensation",
+   "title": "Suriname: national occupation classification and household/earnings statistics (ABS Suriname)",
+   "registry_ids": [],
+   "register_ids": [
+    "cand:sr_nso"
+   ],
+   "publisher": "ABS Suriname",
+   "dataset": "UNKNOWN",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN (national occupation classification per market not verified, D-19)",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: no reuse terms read for this publisher",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "No official licence page was obtained.",
+    "legal_review_needed": true,
+    "legal_review_reason": "terms not verified"
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Occupational classification and earnings concept not verified from official pages.",
+    "Household survey income must not be treated as compensation."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04",
+    "D-18",
+    "D-19",
+    "D-15"
+   ],
+   "package": 7,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "SOURCE_IDENTIFIED"
+   }
+  },
+  {
+   "id": "sa_uy",
+   "group": "G",
+   "kind": "taxonomy_and_compensation",
+   "title": "Uruguay: national occupation classification and household/earnings statistics (INE Uruguay)",
+   "registry_ids": [],
+   "register_ids": [
+    "cand:uy_nso"
+   ],
+   "publisher": "INE Uruguay",
+   "dataset": "UNKNOWN",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN (national occupation classification per market not verified, D-19)",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: no reuse terms read for this publisher",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "No official licence page was obtained.",
+    "legal_review_needed": true,
+    "legal_review_reason": "terms not verified"
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Occupational classification and earnings concept not verified from official pages.",
+    "Household survey income must not be treated as compensation."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04",
+    "D-18",
+    "D-19",
+    "D-15"
+   ],
+   "package": 7,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "SOURCE_IDENTIFIED"
+   }
+  },
+  {
+   "id": "sa_ve",
+   "group": "G",
+   "kind": "taxonomy_and_compensation",
+   "title": "Venezuela: national occupation classification and household/earnings statistics (INE Venezuela)",
+   "registry_ids": [],
+   "register_ids": [
+    "cand:ve_nso"
+   ],
+   "publisher": "INE Venezuela",
+   "dataset": "UNKNOWN",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN (national occupation classification per market not verified, D-19)",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: no reuse terms read for this publisher",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "No official licence page was obtained.",
+    "legal_review_needed": true,
+    "legal_review_reason": "terms not verified"
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Occupational classification and earnings concept not verified from official pages.",
+    "Household survey income must not be treated as compensation."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04",
+    "D-18",
+    "D-19",
+    "D-15"
+   ],
+   "package": 7,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "SOURCE_IDENTIFIED"
+   }
+  },
+  {
+   "id": "intl_ilostat",
+   "group": "G",
+   "kind": "compensation_dataset",
+   "title": "ILOSTAT earnings by occupation",
+   "registry_ids": [],
+   "register_ids": [
+    "cand:intl_ilostat"
+   ],
+   "publisher": "International Labour Organization",
+   "dataset": "ILOSTAT database (earnings by occupation indicators)",
+   "edition": {
+    "value": "UNKNOWN: indicator tables not selected",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "isco (08) and national",
+   "official_urls": {
+    "landing": "https://ilostat.ilo.org/",
+    "documentation": null,
+    "licence": "https://www.ilo.org/node/9321"
+   },
+   "licence": {
+    "name": "CC BY 4.0 for ILOSTAT datasets released from 3 May 2023 (ILO); earlier releases and the ILOSTAT site terms were not read (the ILOSTAT page returned 403)",
+    "statement_found": true,
+    "corroborated_against_publisher": false,
+    "terms_clear": "unclear",
+    "redistribution": "permitted",
+    "commercial_use": "permitted",
+    "attribution": "required",
+    "attribution_text": "ILO as the source; do not use the ILO name or emblem without permission.",
+    "notes": "The ILO rights page and a search summary support CC BY 4.0 from 2023; per-indicator licensing and country-contributor conditions not verified.",
+    "legal_review_needed": true,
+    "legal_review_reason": "site terms unread; per-indicator contributor terms"
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Values are harmonised by the ILO from national sources; concepts and populations vary by country and year.",
+    "Precedence category for non-Eurostat international harmonised sources is an OPEN owner decision (D-16): C3 must NOT be auto-assigned."
+   ],
+   "evidence": [
+    "https://www.ilo.org/node/9321"
+   ],
+   "proposal": {
+    "evidence_class": "UNKNOWN (C3 only if D-16 adopts it)",
+    "class_rationale": "D-16 unresolved",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "manual indicator extraction after approval and D-16",
+    "transformations": [],
+    "runtime_dependencies": [
+     "D-16",
+     "ISCO nodes"
+    ]
+   },
+   "decisions": [
+    "D-04",
+    "D-16",
+    "D-12"
+   ],
+   "package": 7,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "SOURCE_IDENTIFIED"
+   }
+  },
+  {
+   "id": "other_adzuna",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "Adzuna",
+   "registry_ids": [
+    "adzuna"
+   ],
+   "register_ids": [],
+   "publisher": "Adzuna",
+   "dataset": "Adzuna Jobs API (advertised market)",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: unknown.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "other_ba_kompetenzkatalog",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "BA Kompetenzkatalog",
+   "registry_ids": [
+    "ba_kompetenzkatalog"
+   ],
+   "register_ids": [],
+   "publisher": "Bundesagentur für Arbeit",
+   "dataset": "BA Kompetenzkatalog",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: unknown.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "other_berufenet",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "BERUFENET",
+   "registry_ids": [
+    "berufenet"
+   ],
+   "register_ids": [],
+   "publisher": "Bundesagentur für Arbeit",
+   "dataset": "BERUFENET occupation information",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: unknown.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "other_cedefop_clssi",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "Cedefop CLSSI",
+   "registry_ids": [
+    "cedefop_clssi"
+   ],
+   "register_ids": [],
+   "publisher": "Cedefop",
+   "dataset": "Cedefop Labour & Skills Shortage Index (CLSSI)",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: unknown.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "other_cedefop_future_job_openings",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "Cedefop future job openings",
+   "registry_ids": [
+    "cedefop_future_job_openings"
+   ],
+   "register_ids": [],
+   "publisher": "Cedefop",
+   "dataset": "Cedefop Future Job Openings",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: unknown.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "other_cedefop_shortage_index",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "Cedefop shortage index",
+   "registry_ids": [
+    "cedefop_shortage_index"
+   ],
+   "register_ids": [],
+   "publisher": "Cedefop",
+   "dataset": "Cedefop Labour & Skills Shortage Index",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: unknown.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "other_cedefop_skills_forecast",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "Cedefop skills forecast",
+   "registry_ids": [
+    "cedefop_skills_forecast"
+   ],
+   "register_ids": [],
+   "publisher": "Cedefop",
+   "dataset": "Cedefop Skills Forecast",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: unknown.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "other_cedefop_stas",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "Cedefop STAS",
+   "registry_ids": [
+    "cedefop_stas"
+   ],
+   "register_ids": [],
+   "publisher": "Cedefop",
+   "dataset": "Cedefop Short-Term Analytical System (STAS)",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: unknown.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "other_digcomp",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "DigComp",
+   "registry_ids": [
+    "digcomp"
+   ],
+   "register_ids": [],
+   "publisher": "European Commission (JRC)",
+   "dataset": "DigComp — European Digital Competence Framework",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: unknown.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "other_ecf",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "European e-Competence Framework",
+   "registry_ids": [
+    "ecf"
+   ],
+   "register_ids": [],
+   "publisher": "CEN",
+   "dataset": "European e-Competence Framework (e-CF)",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: stated_unverified.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "other_eqf",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "European Qualifications Framework",
+   "registry_ids": [
+    "eqf"
+   ],
+   "register_ids": [],
+   "publisher": "European Commission",
+   "dataset": "European Qualifications Framework (EQF)",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: unknown.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "other_eurostat_occ_vacancy",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "Eurostat job vacancies by occupation",
+   "registry_ids": [
+    "eurostat_occ_vacancy"
+   ],
+   "register_ids": [],
+   "publisher": "Eurostat",
+   "dataset": "Eurostat Job Vacancy Statistics (by occupation)",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: stated_unverified.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "other_kldb",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "KldB 2010",
+   "registry_ids": [
+    "kldb"
+   ],
+   "register_ids": [],
+   "publisher": "Bundesagentur für Arbeit",
+   "dataset": "Klassifikation der Berufe (KldB)",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "kldb",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: unknown.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "other_nice_framework",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "NIST NICE Framework",
+   "registry_ids": [
+    "nice_framework"
+   ],
+   "register_ids": [],
+   "publisher": "NIST / NICE",
+   "dataset": "NICE Workforce Framework for Cybersecurity",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: stated_unverified.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "other_opm_occupational_groups",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "OPM occupational groups",
+   "registry_ids": [
+    "opm_occupational_groups"
+   ],
+   "register_ids": [],
+   "publisher": "U.S. Office of Personnel Management",
+   "dataset": "OPM Handbook of Occupational Groups and Families",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: stated_unverified.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "other_opm_qualification_standards",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "OPM qualification standards",
+   "registry_ids": [
+    "opm_qualification_standards"
+   ],
+   "register_ids": [],
+   "publisher": "U.S. Office of Personnel Management",
+   "dataset": "OPM General Schedule Qualification Standards",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: stated_unverified.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "other_uk_civil_service_success_profiles",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "UK Civil Service Success Profiles",
+   "registry_ids": [
+    "uk_civil_service_success_profiles"
+   ],
+   "register_ids": [],
+   "publisher": "UK Civil Service / Cabinet Office",
+   "dataset": "UK Civil Service Success Profiles",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: stated_unverified.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "other_uk_hr_success_profiles",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "UK Government HR Success Profiles",
+   "registry_ids": [
+    "uk_hr_success_profiles"
+   ],
+   "register_ids": [],
+   "publisher": "UK Government HR",
+   "dataset": "UK HR Success Profile Guides",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: stated_unverified.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  },
+  {
+   "id": "other_wef_future_of_jobs",
+   "group": "H",
+   "kind": "registry_source_outside_priority_groups",
+   "title": "WEF Future of Jobs",
+   "registry_ids": [
+    "wef_future_of_jobs"
+   ],
+   "register_ids": [],
+   "publisher": "World Economic Forum",
+   "dataset": "Future of Jobs Report",
+   "edition": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "reference_period": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "taxonomy": "UNKNOWN",
+   "official_urls": {
+    "landing": null,
+    "documentation": null,
+    "licence": null
+   },
+   "licence": {
+    "name": "NOT VERIFIED: outside the priority groups; no licence research was performed in this wave",
+    "statement_found": false,
+    "corroborated_against_publisher": false,
+    "terms_clear": "not_verified",
+    "redistribution": "not_verified",
+    "commercial_use": "not_verified",
+    "attribution": "unknown",
+    "attribution_text": null,
+    "notes": "Registry licence state: unknown.",
+    "legal_review_needed": false,
+    "legal_review_reason": null
+   },
+   "machine_access": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "update_frequency": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "geography": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "classification": {
+    "value": "UNKNOWN",
+    "status": "NOT_VERIFIED"
+   },
+   "limitations": [
+    "Not researched in P10C-F1 (not a compensation or occupation-graph priority). Licence, edition and use remain NOT VERIFIED and the source stays licensing-pending."
+   ],
+   "evidence": [],
+   "proposal": {
+    "evidence_class": "UNKNOWN",
+    "class_rationale": "not defensible from the evidence gathered in this wave",
+    "precedence_category": "UNKNOWN",
+    "occupation_granularity": "UNKNOWN",
+    "geographic_granularity": "UNKNOWN",
+    "methodology": "UNKNOWN",
+    "population": "UNKNOWN",
+    "compensation_concept": "UNKNOWN"
+   },
+   "acquisition": {
+    "method": "UNKNOWN",
+    "transformations": [],
+    "runtime_dependencies": []
+   },
+   "decisions": [
+    "D-04"
+   ],
+   "package": 0,
+   "acquisition_authorized": false,
+   "runtime_authorized": false,
+   "approval_status": "NOT_APPROVED",
+   "registry_state": {
+    "approval_status": "NOT_APPROVED",
+    "lifecycle_state": "LICENSING_PENDING"
+   }
+  }
+ ],
+ "acquisition_packages": [
+  {
+   "package": 1,
+   "title": "US: SOC 2018 + OEWS + mappings",
+   "sources": [
+    "us_soc_2018",
+    "us_bls_oews",
+    "us_onet_db"
+   ],
+   "why_needed": "Occupation-linked US compensation V2 evidence (the 1,386 V1 BLS records become SOC-linked evidence) and US wiring cases.",
+   "linked_blockers_unverified_ids": [
+    "US-T1",
+    "US-G1",
+    "US-D1"
+   ],
+   "capability_unlocked": "Registry-gated import of the listed sources, only after owner approval of ingestion; no runtime use implied.",
+   "licensing_status": {
+    "us_bls_oews": "clear",
+    "us_soc_2018": "unclear",
+    "us_onet_db": "clear"
+   },
+   "acquisition_requirements": [
+    "owner approval of ingestion for each listed source (D-04)",
+    "manual download by owner or approved operator; record URL, edition, timestamp and SHA-256",
+    "registry-gated importer in production mode; synthetic fixtures never"
+   ],
+   "engineering_dependencies": [
+    "ESCO nodes",
+    "ESCO or O*NET-SOC crosswalk to link resolver identities",
+    "SOC 2018 nodes",
+    "SOC 2018 nodes in the graph",
+    "approval of the SOC source",
+    "crosswalk to the resolver identities (ESCO, ISCO)",
+    "measurement qualification by a named reviewer",
+    "owner confirmation of the attribution text",
+    "runtime approval of the source"
+   ],
+   "qualification_tests": [
+    "edition and reference period match the dossier",
+    "occupation codes validate against the approved taxonomy edition",
+    "no value is scaled, annualised or currency-converted outside the source's own derivation",
+    "suppressed or missing cells stay missing",
+    "C-class matches the dossier proposal"
+   ],
+   "owner_approval_needed": [
+    "D-04 ingestion approval per source",
+    "D-12 edition selection",
+    "D-13 taxonomy acquisition"
+   ],
+   "limitations": [
+    "An official SOC to ISCO-08 crosswalk was NOT found: its existence is NOT VERIFIED.",
+    "Annual rates are calculated from hourly rates using a typical 2,080-hour work year for hourly-reported occupations: this derivation is the PUBLISHER's, not a conversion by Ask4Mo, and must be labelled.",
+    "Published crosswalks on the page read: 2010 SOC to 2018 SOC (BLS XLSX with an explanatory note) and a CIP to 2018 SOC link (NCES). No crosswalk to ISCO-08 or O*NET-SOC is published on the pages read.",
+    "The ESCO-to-O*NET-SOC file does not state which ESCO edition it maps; mapping quality (exact, approximate, one-to-many) must be read from the file itself after acquisition (NOT VERIFIED).",
+    "Wages are straight-time GROSS pay exclusive of premium pay; included: base rates, cost-of-living allowances, guaranteed pay, hazardous-duty pay, incentive pay, tips; excluded: overtime, severance, shift differentials, nonproduction bonuses, employer-paid benefits (May 2024 notes)."
+   ],
+   "independently_approvable": true,
+   "approved": false,
+   "legal_review_sources": [],
+   "ready_for_owner_consideration": false
+  },
+  {
+   "package": 2,
+   "title": "UK: SOC 2020 + ASHE + mappings",
+   "sources": [
+    "uk_soc_2020",
+    "uk_ons_ashe"
+   ],
+   "why_needed": "Occupation-linked UK evidence for the 527 V1 ASHE rows (the one row without a code is rejected, never guessed) and UK wiring cases.",
+   "linked_blockers_unverified_ids": [
+    "GB-T1",
+    "GB-D1"
+   ],
+   "capability_unlocked": "Registry-gated import of the listed sources, only after owner approval of ingestion; no runtime use implied.",
+   "licensing_status": {
+    "uk_ons_ashe": "clear",
+    "uk_soc_2020": "clear"
+   },
+   "acquisition_requirements": [
+    "owner approval of ingestion for each listed source (D-04)",
+    "manual download by owner or approved operator; record URL, edition, timestamp and SHA-256",
+    "registry-gated importer in production mode; synthetic fixtures never"
+   ],
+   "engineering_dependencies": [
+    "UK SOC 2020 nodes",
+    "a crosswalk to the resolver identities (ISCO-08 or ESCO)",
+    "measurement qualification",
+    "owner adoption of UK SOC 2020 as first-class (D-03)",
+    "runtime approval"
+   ],
+   "qualification_tests": [
+    "edition and reference period match the dossier",
+    "occupation codes validate against the approved taxonomy edition",
+    "no value is scaled, annualised or currency-converted outside the source's own derivation",
+    "suppressed or missing cells stay missing",
+    "C-class matches the dossier proposal"
+   ],
+   "owner_approval_needed": [
+    "D-04 ingestion approval per source",
+    "D-12 edition selection",
+    "D-13 taxonomy acquisition",
+    "D-03"
+   ],
+   "limitations": [
+    "A separate older ONS dataset maps ISCO-08 to UK SOC 2000 and 2010 (not SOC 2020).",
+    "Medians are the preferred measure; the headline weekly measure is gross weekly earnings for full-time employees (above 30 paid hours; 25 or more for teaching).",
+    "ONS publishes a page on classifying SOC 2020 to ISCO-08 and states the full coding index of about 30,000 job titles was recoded to ISCO-08 with the CASCOT tool; the index (Excel) includes ISCO-08 codes and an ISCO-08 structure worksheet (search summary of official pages). A mapping derived from a TITLE index is many-to-many and is not a unit-group equivalence: it would be PARTIAL or AMBIGUOUS, never VERIFIED equivalent.",
+    "Weekly and hourly figures cover employees whose pay for the survey period was not affected by absence; annual figures cover adult-rate employees in the same job for more than one year."
+   ],
+   "independently_approvable": true,
+   "approved": false,
+   "legal_review_sources": [],
+   "ready_for_owner_consideration": true
+  },
+  {
+   "package": 3,
+   "title": "ESCO / ISCO / multilingual labels",
+   "sources": [
+    "eu_esco",
+    "intl_isco08"
+   ],
+   "why_needed": "Multilingual alias and identity base and the ISCO bridge for resolver identities.",
+   "linked_blockers_unverified_ids": [
+    "EU-T1"
+   ],
+   "capability_unlocked": "Registry-gated import of the listed sources, only after owner approval of ingestion; no runtime use implied.",
+   "licensing_status": {
+    "eu_esco": "unclear",
+    "intl_isco08": "unclear"
+   },
+   "acquisition_requirements": [
+    "owner approval of ingestion for each listed source (D-04)",
+    "manual download by owner or approved operator; record URL, edition, timestamp and SHA-256",
+    "registry-gated importer in production mode; synthetic fixtures never"
+   ],
+   "engineering_dependencies": [
+    "ILO permission or legal confirmation",
+    "language approval (D-07)",
+    "legal confirmation of the reuse basis"
+   ],
+   "qualification_tests": [
+    "edition and reference period match the dossier",
+    "occupation codes validate against the approved taxonomy edition",
+    "no value is scaled, annualised or currency-converted outside the source's own derivation",
+    "suppressed or missing cells stay missing",
+    "C-class matches the dossier proposal"
+   ],
+   "owner_approval_needed": [
+    "D-04 ingestion approval per source",
+    "D-12 edition selection",
+    "D-13 taxonomy acquisition",
+    "D-07"
+   ],
+   "limitations": [
+    "Russian is not stated among languages on the pages read; the language list was summarised as 'Bulgarian through Norwegian Bokmål and Ukrainian' (full list at the ESCO languages page, not read): Russian availability is NOT VERIFIED.",
+    "The ILO landing page content was NOT read (redirect not followed); the licence finding rests on the ILO catalogue entry and the ILO rights page found by search.",
+    "The download page states the dataset is available in all 28 ESCO languages: multilingual availability is VERIFIED, but acquisition per language is not approved (D-07)."
+   ],
+   "independently_approvable": true,
+   "approved": false,
+   "legal_review_sources": [
+    "eu_esco",
+    "intl_isco08"
+   ],
+   "ready_for_owner_consideration": false
+  },
+  {
+   "package": 4,
+   "title": "Germany / Eurostat",
+   "sources": [
+    "eu_eurostat_ses",
+    "de_ba_entgeltatlas",
+    "de_destatis_genesis"
+   ],
+   "why_needed": "Harmonised major-group earnings and German national evidence.",
+   "linked_blockers_unverified_ids": [
+    "DE-D1"
+   ],
+   "capability_unlocked": "Registry-gated import of the listed sources, only after owner approval of ingestion; no runtime use implied.",
+   "licensing_status": {
+    "eu_eurostat_ses": "clear",
+    "de_ba_entgeltatlas": "not_verified",
+    "de_destatis_genesis": "unclear"
+   },
+   "acquisition_requirements": [
+    "owner approval of ingestion for each listed source (D-04)",
+    "manual download by owner or approved operator; record URL, edition, timestamp and SHA-256",
+    "registry-gated importer in production mode; synthetic fixtures never"
+   ],
+   "engineering_dependencies": [
+    "BA permission or published terms",
+    "ISCO-08 nodes (and the ISCO legal review)",
+    "classification and crosswalk",
+    "measurement qualification",
+    "runtime approval",
+    "table identification"
+   ],
+   "qualification_tests": [
+    "edition and reference period match the dossier",
+    "occupation codes validate against the approved taxonomy edition",
+    "no value is scaled, annualised or currency-converted outside the source's own derivation",
+    "suppressed or missing cells stay missing",
+    "C-class matches the dossier proposal"
+   ],
+   "owner_approval_needed": [
+    "D-04 ingestion approval per source",
+    "D-12 edition selection",
+    "D-13 taxonomy acquisition"
+   ],
+   "limitations": [
+    "Measures: means (annual, monthly, hourly gross earnings); hourly earnings include overtime and paid non-working time; medians and deciles are not mentioned on the page read; units EUR, PPS, percentages and persons.",
+    "Occupation is published only at the ISCO-08 MAJOR GROUP: Eurostat does NOT provide occupation-specific compensation at unit-group level for any EU country in the online tables; any EU-wide or country-wide coverage claim for occupation-level pay is unsupported.",
+    "Secondary sources describe median monthly gross pay of full-time employees from pension-insurance contribution notifications; NOT confirmed from an official BA page.",
+    "The German K1 governed set (7 occupations, EUR gross annual, 2024) is a self-declared ENGINEERING DRAFT and is not Entgeltatlas data.",
+    "Which table, occupation classification and population would serve compensation was not established."
+   ],
+   "independently_approvable": true,
+   "approved": false,
+   "legal_review_sources": [
+    "de_ba_entgeltatlas",
+    "de_destatis_genesis"
+   ],
+   "ready_for_owner_consideration": false
+  },
+  {
+   "package": 5,
+   "title": "Canada",
+   "sources": [
+    "ca_noc_2021",
+    "ca_jobbank_statcan"
+   ],
+   "why_needed": "Canadian taxonomy and wage evidence.",
+   "linked_blockers_unverified_ids": [
+    "CA-T1"
+   ],
+   "capability_unlocked": "Registry-gated import of the listed sources, only after owner approval of ingestion; no runtime use implied.",
+   "licensing_status": {
+    "ca_noc_2021": "unclear",
+    "ca_jobbank_statcan": "not_verified"
+   },
+   "acquisition_requirements": [
+    "owner approval of ingestion for each listed source (D-04)",
+    "manual download by owner or approved operator; record URL, edition, timestamp and SHA-256",
+    "registry-gated importer in production mode; synthetic fixtures never"
+   ],
+   "engineering_dependencies": [
+    "NOC nodes",
+    "crosswalk to the resolver identities (none published)",
+    "dataset identification"
+   ],
+   "qualification_tests": [
+    "edition and reference period match the dossier",
+    "occupation codes validate against the approved taxonomy edition",
+    "no value is scaled, annualised or currency-converted outside the source's own derivation",
+    "suppressed or missing cells stay missing",
+    "C-class matches the dossier proposal"
+   ],
+   "owner_approval_needed": [
+    "D-04 ingestion approval per source",
+    "D-12 edition selection",
+    "D-13 taxonomy acquisition"
+   ],
+   "limitations": [
+    "Job Bank wages are derived from the Labour Force Survey (concept: hourly wage of employees) per secondary knowledge; NOT confirmed from an official page in this wave.",
+    "StatCan states a NOC to ISCO-08 concordance is planned but NOT published: no official NOC-ISCO crosswalk exists to import; none may be derived from titles.",
+    "Wage statistics at NOC unit-group level may be suppressed for small cells."
+   ],
+   "independently_approvable": true,
+   "approved": false,
+   "legal_review_sources": [
+    "ca_jobbank_statcan"
+   ],
+   "ready_for_owner_consideration": false
+  },
+  {
+   "package": 6,
+   "title": "Mexico + Brazil",
+   "sources": [
+    "mx_sinco_inegi",
+    "br_cbo_ibge"
+   ],
+   "why_needed": "Mexican and Brazilian taxonomies and qualified earnings evidence.",
+   "linked_blockers_unverified_ids": [
+    "MX-T1",
+    "BR-T1"
+   ],
+   "capability_unlocked": "Registry-gated import of the listed sources, only after owner approval of ingestion; no runtime use implied.",
+   "licensing_status": {
+    "mx_sinco_inegi": "clear",
+    "br_cbo_ibge": "not_verified"
+   },
+   "acquisition_requirements": [
+    "owner approval of ingestion for each listed source (D-04)",
+    "manual download by owner or approved operator; record URL, edition, timestamp and SHA-256",
+    "registry-gated importer in production mode; synthetic fixtures never"
+   ],
+   "engineering_dependencies": [
+    "BR adapter",
+    "CBO nodes",
+    "SINCO nodes",
+    "concept qualification",
+    "country adapter for MX",
+    "earnings-concept qualification"
+   ],
+   "qualification_tests": [
+    "edition and reference period match the dossier",
+    "occupation codes validate against the approved taxonomy edition",
+    "no value is scaled, annualised or currency-converted outside the source's own derivation",
+    "suppressed or missing cells stay missing",
+    "C-class matches the dossier proposal"
+   ],
+   "owner_approval_needed": [
+    "D-04 ingestion approval per source",
+    "D-12 edition selection",
+    "D-13 taxonomy acquisition"
+   ],
+   "limitations": [
+    "ENOE is a household labour survey: household or total income must NEVER be recorded as occupational compensation; only an earnings variable defined for employed persons by occupation, if published, can qualify.",
+    "Household income is not occupational compensation.",
+    "No official SINCO to ISCO-08 crosswalk was identified (NOT VERIFIED).",
+    "PNAD Continua is a household SURVEY; RAIS/eSocial administrative records are a different evidence type: survey evidence must not be labelled administrative."
+   ],
+   "independently_approvable": true,
+   "approved": false,
+   "legal_review_sources": [
+    "br_cbo_ibge"
+   ],
+   "ready_for_owner_consideration": false
+  },
+  {
+   "package": 7,
+   "title": "Wider South America + ILOSTAT",
+   "sources": [
+    "sa_ar",
+    "sa_bo",
+    "sa_cl",
+    "sa_co",
+    "sa_ec",
+    "sa_gy",
+    "sa_py",
+    "sa_pe",
+    "sa_sr",
+    "sa_uy",
+    "sa_ve",
+    "intl_ilostat"
+   ],
+   "why_needed": "Wider South American markets and the harmonised international contract.",
+   "linked_blockers_unverified_ids": [
+    "SA-T1"
+   ],
+   "capability_unlocked": "Registry-gated import of the listed sources, only after owner approval of ingestion; no runtime use implied.",
+   "licensing_status": {
+    "sa_ar": "not_verified",
+    "sa_bo": "not_verified",
+    "sa_cl": "clear",
+    "sa_co": "not_verified",
+    "sa_ec": "not_verified",
+    "sa_gy": "not_verified",
+    "sa_py": "not_verified",
+    "sa_pe": "not_verified",
+    "sa_sr": "not_verified",
+    "sa_uy": "not_verified",
+    "sa_ve": "not_verified",
+    "intl_ilostat": "unclear"
+   },
+   "acquisition_requirements": [
+    "owner approval of ingestion for each listed source (D-04)",
+    "manual download by owner or approved operator; record URL, edition, timestamp and SHA-256",
+    "registry-gated importer in production mode; synthetic fixtures never"
+   ],
+   "engineering_dependencies": [
+    "D-16",
+    "ISCO nodes"
+   ],
+   "qualification_tests": [
+    "edition and reference period match the dossier",
+    "occupation codes validate against the approved taxonomy edition",
+    "no value is scaled, annualised or currency-converted outside the source's own derivation",
+    "suppressed or missing cells stay missing",
+    "C-class matches the dossier proposal"
+   ],
+   "owner_approval_needed": [
+    "D-04 ingestion approval per source",
+    "D-12 edition selection",
+    "D-13 taxonomy acquisition",
+    "D-16"
+   ],
+   "limitations": [
+    "Household survey income must not be treated as compensation.",
+    "Occupational classification and earnings concept not verified from official pages.",
+    "Precedence category for non-Eurostat international harmonised sources is an OPEN owner decision (D-16): C3 must NOT be auto-assigned.",
+    "Values are harmonised by the ILO from national sources; concepts and populations vary by country and year."
+   ],
+   "independently_approvable": true,
+   "approved": false,
+   "legal_review_sources": [
+    "sa_ar",
+    "sa_bo",
+    "sa_cl",
+    "sa_co",
+    "sa_ec",
+    "sa_gy",
+    "sa_py",
+    "sa_pe",
+    "sa_sr",
+    "sa_uy",
+    "sa_ve",
+    "intl_ilostat"
+   ],
+   "ready_for_owner_consideration": false
+  }
+ ],
+ "owner_decisions": [
+  {
+   "id": "D-01",
+   "question": "adopt the recovered GKB/C1-C4 specification",
+   "classification": "deferrable",
+   "note": "No source acquisition depends on it beyond the proposals here.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-02",
+   "question": "ambiguity policy (and recency/eligibility rules)",
+   "classification": "deferrable",
+   "note": "Runtime activation only.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-03",
+   "question": "UK SOC 2020 first-class and acquisition",
+   "classification": "blocks_acquisition",
+   "note": "Blocks package 2.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-04",
+   "question": "per-source licence verification and approvals (ingestion then runtime)",
+   "classification": "blocks_acquisition",
+   "note": "Every package.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-05",
+   "question": "padded ISCO identity (21 legacy rows)",
+   "classification": "blocks_acquisition",
+   "note": "Blocks ISCO import in package 3.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-06",
+   "question": "baseline freeze",
+   "classification": "deferrable",
+   "note": "Governance.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-07",
+   "question": "ESCO language releases and non-English sources",
+   "classification": "blocks_acquisition",
+   "note": "Blocks package 3 beyond English.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-08",
+   "question": "who curates context_terms and alias qualification review",
+   "classification": "deferrable",
+   "note": "Runtime activation.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-09",
+   "question": "five-category relationship qualification",
+   "classification": "blocks_acquisition",
+   "note": "Blocks crosswalk import.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-10",
+   "question": "FX/PPP sources and methodology",
+   "classification": "deferrable",
+   "note": "Cross-country comparison only.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-11",
+   "question": "secondary-data qualification",
+   "classification": "deferrable",
+   "note": "Secondary sources are outside these packages.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-12",
+   "question": "official source-edition selection",
+   "classification": "blocks_acquisition",
+   "note": "Every package.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-13",
+   "question": "taxonomy acquisition (SOC, UK SOC, national taxonomies, crosswalks)",
+   "classification": "blocks_acquisition",
+   "note": "Packages 1, 2, 5, 6, 7.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-14",
+   "question": "regional-geography classification rule",
+   "classification": "deferrable",
+   "note": "Regional rows only.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-15",
+   "question": "earnings concept/population/method vocabularies",
+   "classification": "blocks_acquisition",
+   "note": "Compensation sources in packages 4, 5, 6.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-16",
+   "question": "precedence category for non-Eurostat international harmonised sources (ILOSTAT)",
+   "classification": "blocks_acquisition",
+   "note": "Blocks ILOSTAT in package 7; C3 not auto-assigned.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-17",
+   "question": "evidence-state vocabulary",
+   "classification": "deferrable",
+   "note": "Runtime reporting.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-18",
+   "question": "region vocabularies for Paraguay/Peru and wider approval",
+   "classification": "blocks_acquisition",
+   "note": "Blocks package 7 for PY and PE.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-19",
+   "question": "national occupation classification per wider South America market",
+   "classification": "blocks_acquisition",
+   "note": "Blocks package 7.",
+   "owner_decision": null,
+   "origin": "existing"
+  },
+  {
+   "id": "D-20",
+   "question": "owner position on the crosswalk gap: no official SOC-to-ISCO-08 or NOC-to-ISCO-08 crosswalk found; accept O*NET/ESCO-linked routes or wait",
+   "classification": "blocks_acquisition",
+   "note": "Proposed in this wave; affects packages 1 and 5.",
+   "owner_decision": null,
+   "origin": "proposed_in_p10c_f1"
+  },
+  {
+   "id": "D-21",
+   "question": "legal review owner for ISCO-08 reuse, ESCO third-party components and ShareAlike (CC BY-SA 4.0) sources",
+   "classification": "blocks_acquisition",
+   "note": "Proposed in this wave; affects packages 3 and 7.",
+   "owner_decision": null,
+   "origin": "proposed_in_p10c_f1"
+  },
+  {
+   "id": "D-22",
+   "question": "ASHE weekly pay stays weekly: confirm no annualisation and that the SOC 2020 edition is confirmed from the table notes",
+   "classification": "blocks_acquisition",
+   "note": "Proposed in this wave; package 2.",
+   "owner_decision": null,
+   "origin": "proposed_in_p10c_f1"
+  }
+ ],
+ "provenance_record_requirements": [
+  "publisher",
+  "dataset",
+  "edition",
+  "acquisition_timestamp",
+  "source_url",
+  "licence_evidence",
+  "raw_file_sha256 (computed at acquisition; never fabricated)",
+  "transformation_version",
+  "taxonomy",
+  "reference_period",
+  "qualification",
+  "import_batch",
+  "attribution",
+  "runtime_eligibility"
+ ],
+ "freshness_policy": {
+  "fields": [
+   "publication_date",
+   "reference_year",
+   "edition",
+   "acquisition_date",
+   "last_verification_date",
+   "supersession_state",
+   "review_due"
+  ],
+  "rule": "review_due is set by the owner per source; no refresh deadline is invented here. Provisional vintages (ASHE 2025) must be flagged and superseded when the revision is published."
+ },
+ "retention_and_rebuild": {
+  "raw_files": "keep raw files and hashes outside the repository in owner-controlled storage so imports can be rebuilt; the repository keeps only derived, licence-permitted rows",
+  "rebuild": "deterministic given raw hash + transformation version",
+  "derived_rows": "redistributable only per the source licence state",
+  "note": "No raw file exists in this wave and none is claimed."
+ },
+ "ci_fixture_design": {
+  "evaluator": "412-case product-coverage evaluator (386 sufficient, 26 insufficient, 93.7%, 95% gate)",
+  "principle": "fixtures contain synthetic or licence-clear structural data only; never unapproved source contents; the gate is not lowered",
+  "manifest": "each fixture row declares origin=synthetic, licence=none, and is marked non-approvable",
+  "dependency": "approved-source content enters CI only through acquisition packages after owner approval"
+ },
+ "product_coverage": {
+  "insufficient_cases": 26,
+  "wiring_class": {
+   "count": 13,
+   "cases": [
+    "compensation_187",
+    "compensation_199",
+    "compensation_203",
+    "compensation_195",
+    "compensation_207",
+    "compensation_188",
+    "compensation_200",
+    "compensation_204",
+    "compensation_196",
+    "compensation_208",
+    "education_083",
+    "future_growth_235",
+    "annual_openings_299"
+   ],
+   "dependency": "occupation-code wiring: US cases need package 1, UK cases need package 2; education_083, future_growth_235 and annual_openings_299 need the OOH/projections edition (us_bls_ooh_projections)"
+  },
+  "ambiguity_class": {
+   "count": 13,
+   "cases": [
+    "compensation_183",
+    "compensation_184",
+    "compensation_191",
+    "compensation_192",
+    "education_073",
+    "education_075",
+    "education_084",
+    "future_growth_215",
+    "future_growth_223",
+    "short_term_outlook_247",
+    "short_term_outlook_255",
+    "annual_openings_279",
+    "annual_openings_287"
+   ],
+   "dependency": "ambiguous titles: they stay insufficient unless the user supplies context; ambiguity is not reclassified as success"
+  },
+  "gate": "95% unchanged; current 93.7% BELOW GATE"
+ }
+}
