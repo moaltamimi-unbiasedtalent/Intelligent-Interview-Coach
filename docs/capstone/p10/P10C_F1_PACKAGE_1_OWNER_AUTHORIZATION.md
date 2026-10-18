@@ -1,6 +1,6 @@
 # P10C-F1 Package 1 (United States) — Owner Authorization Readiness
 
-**Overall state: OWNER_APPROVAL_PENDING.** Nothing in this document is an approval. No source, package or decision is APPROVED; no raw dataset was downloaded; Compensation V2 and all 12 product and billing gates are disabled. State vocabulary used below: **VERIFIED** (read on the publisher's official page in this wave), **RECOMMENDED** (my proposal), **LEGAL_REVIEW_REQUIRED**, **OWNER_APPROVAL_PENDING**, **BLOCKED**, **APPROVED** (appears only once an owner authorization is actually recorded in section M; currently none). Supporting data: `docs/capstone/p10/p10c_f1/source_dossier.json`; context: [dossier](P10C_F1_SOURCE_LICENSING_AND_APPROVAL.md), [packages](P10C_F1_ACQUISITION_PACKAGES.md), [appendix](P10C_F1_OWNER_DECISION_APPENDIX.md).
+**Overall state: OWNER AUTHORIZATION RECORDED 2026-10-18 for Components 1a and 1b (see section M); acquisition has not been performed.** (Sections A–L below are the pre-authorization readiness analysis and keep their original wording.) Nothing in this document is an approval. No source, package or decision is APPROVED; no raw dataset was downloaded; Compensation V2 and all 12 product and billing gates are disabled. State vocabulary used below: **VERIFIED** (read on the publisher's official page in this wave), **RECOMMENDED** (my proposal), **LEGAL_REVIEW_REQUIRED**, **OWNER_APPROVAL_PENDING**, **BLOCKED**, **APPROVED** (appears only once an owner authorization is actually recorded in section M; currently none). Supporting data: `docs/capstone/p10/p10c_f1/source_dossier.json`; context: [dossier](P10C_F1_SOURCE_LICENSING_AND_APPROVAL.md), [packages](P10C_F1_ACQUISITION_PACKAGES.md), [appendix](P10C_F1_OWNER_DECISION_APPENDIX.md).
 
 ## A. Exact proposed acquisition scope — RECOMMENDED
 | Component | Scope | State |
@@ -72,15 +72,24 @@ Signed section M; all of section H items 1–3 closed (4 if 1c); named operator;
 ## L. Runtime activation restrictions
 Acquisition for ingestion is not runtime approval. Runtime use needs a separate owner decision after measurement qualification by a named reviewer. Compensation V2, the internal resolver and all 12 gates stay off. Existing V1 candidate results and the 1,386 V1 BLS records are unchanged. P10C-G, RC-P10-004 and P11 are not authorised.
 
-## M. Owner sign-off (BLANK — nothing is APPROVED until completed)
-| Item | Decision (APPROVE / REJECT / DEFER) | Owner | Date |
-|---|---|---|---|
-| Component 1a SOC 2018 | | | |
-| Component 1b OEWS May 2025 national | | | |
-| Component 1c O*NET crosswalks | | | |
-| D-04, D-12, D-13, D-15 | | | |
-| D-09, D-20 (if 1c) | | | |
-| Optional legal confirmation (E) | | | |
+## M. Owner authorization — RECORDED 2026-10-18 (P10C-F2A)
+**Basis:** the explicit owner instruction in the P10C-F2A specification (chat message of 2026-10-18, sections 0 and 3). No handwritten signature and no external legal approval is claimed or fabricated. The date is the actual date of that instruction (not backdated). Recording an owner decision is not a source-registry lifecycle transition: the source registry stays the authoritative approval mechanism and no parallel authority is created. Machine-readable copy: `owner_decisions[].owner_decision` and `owner_authorizations` in `docs/capstone/p10/p10c_f1/source_dossier.json`.
+
+| Item | Decision | Date | Scope and conditions | Runtime restriction |
+|---|---|---|---|---|
+| Component 1a: SOC 2018 structure and definitions | **APPROVED** | 2026-10-18 | `soc_structure_2018.xlsx`, `soc_2018_definitions.xlsx`; acquisition and isolated non-production ingestion, validation and qualification only | none granted |
+| Component 1b: OEWS May 2025 national | **APPROVED** | 2026-10-18 | `oesm25nat.zip` and the official May 2025 occupation-definitions file (verified at the source: `/oes/occupation_definitions_m2025.xlsx`) | none granted |
+| Component 1c: O*NET crosswalks | **DEFERRED** | 2026-10-18 | not authorised; excluded | n/a |
+| D-04 | **APPROVED** | 2026-10-18 | acquisition and isolated non-production ingestion of the named sources only | candidate-facing use needs separate approval |
+| D-12 | **APPROVED** | 2026-10-18 | US SOC 2018; BLS OEWS May 2025 | none |
+| D-13 | **APPROVED** | 2026-10-18 | only the named files | none |
+| D-15 | **APPROVED** | 2026-10-18 | controlled vocabularies for earnings concept, employment population, statistical method, evidence collection method; original definitions preserved | none |
+| D-09 | **DEFERRED** | 2026-10-18 | no operationalisation of optional international crosswalk relationships | n/a |
+| D-20 | **DEFERRED** | 2026-10-18 | no O*NET/ESCO crosswalk acquisition; no SOC-to-ISCO equivalence inferred | n/a |
+
+Explicitly excluded (unchanged, NOT_APPROVED): O*NET, O*NET/ESCO and SOC-to-ISCO crosswalks, ONS/ASHE, Canadian, Mexican, Brazilian, ESCO, ILOSTAT, Eurostat, regional OEWS, OOH, projections, commercial or unverified data. No other decision (including D-03, D-05, D-07, D-16, D-18 to D-22) is approved by this record. Not authorised: candidate-facing activation, production deployment or ingestion, Compensation V2 rollout, source-precedence changes, billing, paid LLM use, Stripe, additional acquisition.
+
+**Execution state at recording:** acquisition NOT PERFORMED. See `P10C_F2A_US_SOURCE_ACQUISITION.md` for the precondition check and the blocker.
 
 ## Package 2 (United Kingdom) safety — unchanged and UNAPPROVED
 - The ASHE correction dated 19 December 2025 suppresses annual pay estimates for occupations 3312, 331 and 33 (UK and some regions; Tables 2, 3, 14, 15, 20). Any future ingestion must keep those cells **missing**; they are never reconstructed or filled. Weekly pay stays weekly.

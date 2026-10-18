@@ -1,6 +1,6 @@
 # P10C-F1 Acquisition Packages
 
-*Generated from the dossier. Seven independently approvable packages; none is approved and no data has been downloaded.*
+*Generated from the dossier. Seven independently approvable packages; only Package 1 (US core) has a recorded owner authorisation, for acquisition and isolated non-production ingestion; no data has been downloaded.*
 
 ## Package 1: US: SOC 2018 + OEWS + mappings
 
@@ -13,7 +13,7 @@
 - **Qualification tests:** edition and reference period match the dossier; occupation codes validate against the approved taxonomy edition; no value is scaled, annualised or currency-converted outside the source's own derivation; suppressed or missing cells stay missing; C-class matches the dossier proposal
 - **Owner approval needed:** D-04 ingestion approval per source, D-12 edition selection, D-13 taxonomy acquisition
 - **Legal review sources:** none identified
-- **Ready for owner consideration:** True (not approved)
+- **Ready for owner consideration:** True (owner-authorised for acquisition, 2026-10-18)
 - **Limitations:**
   - An official SOC to ISCO-08 crosswalk was NOT found: its existence is NOT VERIFIED.
   - Annual rates are calculated from hourly rates using a typical 2,080-hour work year for hourly-reported occupations: this derivation is the PUBLISHER's, not a conversion by Ask4Mo, and must be labelled.

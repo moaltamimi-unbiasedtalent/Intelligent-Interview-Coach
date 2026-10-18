@@ -15,11 +15,12 @@ def test_dossier_valid_and_docs_match():
     assert mod.DOCS["packages"].read_text() == mod.render_packages(d)
 
 
-def test_nothing_approved():
+def test_only_package_1_core_is_authorised_and_nothing_is_runtime_approved():
     d = mod.load()
-    assert all(e["approval_status"] == "NOT_APPROVED" and not e["runtime_authorized"] and not e["acquisition_authorized"] for e in d["entries"])
-    assert not any(p["approved"] for p in d["acquisition_packages"])
-    assert all(x["owner_decision"] is None for x in d["owner_decisions"])
+    assert not any(e["runtime_authorized"] for e in d["entries"])
+    assert {e["id"] for e in d["entries"] if e["acquisition_authorized"]} == {"us_soc_2018", "us_bls_oews"}
+    assert [p["approved"] for p in d["acquisition_packages"]] == [True] + [False] * 6
+    assert {x["id"] for x in d["owner_decisions"] if x["owner_decision"]} == set(mod.RECORDED_DECISIONS)
 
 
 def test_ilostat_not_auto_c3():

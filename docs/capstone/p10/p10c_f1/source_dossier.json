@@ -125,9 +125,9 @@
     "D-13"
    ],
    "package": 1,
-   "acquisition_authorized": false,
+   "acquisition_authorized": true,
    "runtime_authorized": false,
-   "approval_status": "NOT_APPROVED",
+   "approval_status": "ACQUISITION_AUTHORIZED_RUNTIME_NOT_APPROVED",
    "registry_state": {
     "approval_status": "NOT_APPROVED",
     "lifecycle_state": "LICENSING_PENDING"
@@ -226,9 +226,9 @@
     "D-13"
    ],
    "package": 1,
-   "acquisition_authorized": false,
+   "acquisition_authorized": true,
    "runtime_authorized": false,
-   "approval_status": "NOT_APPROVED",
+   "approval_status": "ACQUISITION_AUTHORIZED_RUNTIME_NOT_APPROVED",
    "registry_state": {
     "approval_status": "NOT_APPROVED",
     "lifecycle_state": "SOURCE_IDENTIFIED"
@@ -4251,7 +4251,7 @@
     "Wages are straight-time GROSS pay exclusive of premium pay; included: base rates, cost-of-living allowances, guaranteed pay, hazardous-duty pay, incentive pay, tips; excluded: overtime, severance, shift differentials, nonproduction bonuses, employer-paid benefits (May 2024 notes)."
    ],
    "independently_approvable": true,
-   "approved": false,
+   "approved": true,
    "legal_review_sources": [],
    "ready_for_owner_consideration": true,
    "scope": {
@@ -4266,6 +4266,17 @@
      "BLS OOH and projections (separate entry, not in package 1)",
      "state and metropolitan OEWS files (national file only unless regional use is separately approved)"
     ]
+   },
+   "owner_authorization": {
+    "date": "2026-10-18",
+    "basis": "Explicit owner instruction in the P10C-F2A specification (chat message), section 0 and 3; no signature or external legal approval is claimed.",
+    "components": {
+     "1a": "APPROVED",
+     "1b": "APPROVED",
+     "1c": "DEFERRED"
+    },
+    "scope": "acquisition, isolated non-production ingestion, validation and qualification only",
+    "acquisition_state": "NOT_ACQUIRED"
    }
   },
   {
@@ -4649,7 +4660,13 @@
    "question": "per-source licence verification and approvals (ingestion then runtime)",
    "classification": "blocks_acquisition",
    "note": "Every package.",
-   "owner_decision": null,
+   "owner_decision": {
+    "decision": "APPROVED",
+    "scope": "Acquisition and isolated non-production ingestion of the named Package 1 US sources only; candidate-facing runtime use needs a separate approval.",
+    "date": "2026-10-18",
+    "basis": "Explicit owner instruction in the P10C-F2A specification (chat message), section 0 and 3; no signature or external legal approval is claimed.",
+    "runtime_restriction": "No candidate-facing, production or Compensation V2 activation is authorised."
+   },
    "origin": "existing"
   },
   {
@@ -4689,7 +4706,13 @@
    "question": "five-category relationship qualification",
    "classification": "blocks_acquisition",
    "note": "Blocks crosswalk import.",
-   "owner_decision": null,
+   "owner_decision": {
+    "decision": "DEFERRED",
+    "scope": "Do not operationalise optional international crosswalk relationships.",
+    "date": "2026-10-18",
+    "basis": "Explicit owner instruction in the P10C-F2A specification (chat message), section 0 and 3; no signature or external legal approval is claimed.",
+    "runtime_restriction": "No candidate-facing, production or Compensation V2 activation is authorised."
+   },
    "origin": "existing"
   },
   {
@@ -4713,7 +4736,13 @@
    "question": "official source-edition selection",
    "classification": "blocks_acquisition",
    "note": "Every package.",
-   "owner_decision": null,
+   "owner_decision": {
+    "decision": "APPROVED",
+    "scope": "Editions: US SOC 2018; BLS OEWS May 2025.",
+    "date": "2026-10-18",
+    "basis": "Explicit owner instruction in the P10C-F2A specification (chat message), section 0 and 3; no signature or external legal approval is claimed.",
+    "runtime_restriction": "No candidate-facing, production or Compensation V2 activation is authorised."
+   },
    "origin": "existing"
   },
   {
@@ -4721,7 +4750,13 @@
    "question": "taxonomy acquisition (SOC, UK SOC, national taxonomies, crosswalks)",
    "classification": "blocks_acquisition",
    "note": "Packages 1, 2, 5, 6, 7.",
-   "owner_decision": null,
+   "owner_decision": {
+    "decision": "APPROVED",
+    "scope": "Acquisition restricted to the named US files: soc_structure_2018.xlsx, soc_2018_definitions.xlsx, oesm25nat.zip, the May 2025 OEWS occupation-definitions file.",
+    "date": "2026-10-18",
+    "basis": "Explicit owner instruction in the P10C-F2A specification (chat message), section 0 and 3; no signature or external legal approval is claimed.",
+    "runtime_restriction": "No candidate-facing, production or Compensation V2 activation is authorised."
+   },
    "origin": "existing"
   },
   {
@@ -4737,7 +4772,13 @@
    "question": "earnings concept/population/method vocabularies",
    "classification": "blocks_acquisition",
    "note": "Compensation sources in packages 4, 5, 6.",
-   "owner_decision": null,
+   "owner_decision": {
+    "decision": "APPROVED",
+    "scope": "Controlled vocabularies for earnings concept, employment population, statistical method and evidence collection method; preserve each source's published definitions.",
+    "date": "2026-10-18",
+    "basis": "Explicit owner instruction in the P10C-F2A specification (chat message), section 0 and 3; no signature or external legal approval is claimed.",
+    "runtime_restriction": "No candidate-facing, production or Compensation V2 activation is authorised."
+   },
    "origin": "existing"
   },
   {
@@ -4777,7 +4818,13 @@
    "question": "owner position on the crosswalk gap: no official SOC-to-ISCO-08 or NOC-to-ISCO-08 crosswalk found; accept O*NET/ESCO-linked routes or wait",
    "classification": "blocks_acquisition",
    "note": "Proposed in this wave; affects packages 1 and 5.",
-   "owner_decision": null,
+   "owner_decision": {
+    "decision": "DEFERRED",
+    "scope": "Do not acquire O*NET/ESCO crosswalks; do not infer SOC-to-ISCO equivalence.",
+    "date": "2026-10-18",
+    "basis": "Explicit owner instruction in the P10C-F2A specification (chat message), section 0 and 3; no signature or external legal approval is claimed.",
+    "runtime_restriction": "No candidate-facing, production or Compensation V2 activation is authorised."
+   },
    "origin": "proposed_in_p10c_f1"
   },
   {
@@ -4878,5 +4925,20 @@
    "dependency": "ambiguous titles: they stay insufficient unless the user supplies context; ambiguity is not reclassified as success"
   },
   "gate": "95% unchanged; current 93.7% BELOW GATE"
- }
+ },
+ "owner_authorizations": [
+  {
+   "id": "P10C-F2A/package-1",
+   "date": "2026-10-18",
+   "decisions": [
+    "D-04",
+    "D-09",
+    "D-12",
+    "D-13",
+    "D-15",
+    "D-20"
+   ],
+   "basis": "Explicit owner instruction in the P10C-F2A specification (chat message), section 0 and 3; no signature or external legal approval is claimed."
+  }
+ ]
 }
