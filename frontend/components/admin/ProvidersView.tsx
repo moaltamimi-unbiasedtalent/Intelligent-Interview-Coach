@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "@/components/ui/VerifiedLink";
 import { api } from "@/lib/api/client";
 import { P } from "@/lib/admin/capabilities";
-import { KeyValue, Panel, PermissionGate, ResourceState, StatusLabel, useAdminResource } from "./ui";
+import { KeyValue, Panel, PermissionGate, ResourceState, StatusLabel, useAdminResource, ScrollRegion } from "./ui";
 
 export function ProvidersView() {
   return (
@@ -19,7 +20,7 @@ function Body() {
       {loaded.state === "ready" ? (
         <div className="grid gap-4">
           <Panel title="Providers">
-            <div className="overflow-x-auto">
+            <ScrollRegion label="Provider configuration status (scrollable table)">
               <table className="w-full text-left text-sm">
                 <caption className="sr-only">Provider configuration status</caption>
                 <thead>
@@ -42,8 +43,9 @@ function Body() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </ScrollRegion>
             <p className="text-xs text-muted">{loaded.data.note}</p>
+            <p className="text-xs text-muted">Credentials, runtime state, health and manual tests for each connection are on <Link href="/admin/integrations" className="underline underline-offset-2">Integrations</Link>. This page is the configuration-only summary and does not show health.</p>
           </Panel>
           <Panel title="Document OCR">
             <KeyValue

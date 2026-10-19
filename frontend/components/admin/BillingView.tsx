@@ -7,7 +7,7 @@ import { api } from "@/lib/api/client";
 import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
 import type { BillingApproval, BillingPayment, BillingPlanTerms } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
-import { Pager, Panel, PermissionGate, ResourceState, Stat, StatusLabel, apiMessage, btn, field, useAdminResource } from "./ui";
+import { ActiveFormPanel, Pager, Panel, PermissionGate, ResourceState, Stat, StatusLabel, apiMessage, btn, field, useAdminResource, useRestoreFocus, ScrollRegion } from "./ui";
 
 // MOCK BILLING: NOT LIVE BILLING. Operational metadata only: no card, payment-method, bank, tax or provider-payload data, and nothing here
 // changes anyone's access (entitlements stay with the plans and subscriptions). Controls are permission-driven, never role-name-driven.
@@ -47,6 +47,7 @@ function Body() {
   const [refundFor, setRefundFor] = useState<BillingPayment | null>(null);
   const [decision, setDecision] = useState<null | { a: BillingApproval; approve: boolean }>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const restore = useRestoreFocus();                    // F-05: return keyboard focus to the opener when a form is dismissed
   const reloadAll = () => { overview.reload(); approvals.reload(); payments.reload(); refunds.reload(); invoices.reload(); };
 
   const decide = async () => {
@@ -87,7 +88,7 @@ function Body() {
             </Panel>
             <Panel title="Commercial terms (mock)">
               <p className="text-xs text-muted">Changing mock commercial terms does not charge users and does not change entitlements. A plan version with no terms is unconfigured, which is not the same as free. &quot;Public&quot; means catalogue visibility only; nothing is purchasable.</p>
-              <div className="overflow-x-auto">
+              <ScrollRegion label="Commercial terms per plan version (scrollable table)">
                 <table className="w-full text-left text-sm">
                   <caption className="sr-only">Commercial terms per plan version</caption>
                   <thead><tr className="text-xs text-muted">{["Plan version", "Status", "Current terms", "Trial", "Visibility", "Versions", ""].map((c, i) => <th key={i} scope="col" className="py-1 pr-4 font-medium">{c}</th>)}</tr></thead>
@@ -102,14 +103,14 @@ function Body() {
                         <td className="py-1 pr-4">{t.history.length}{t.pending_approval_id ? " (change pending)" : ""}</td>
                         <td className="py-1 pr-4">
                           {canPrice && t.plan_status !== "retired" && !t.pending_approval_id ? (
-                            <button type="button" className={btn} onClick={() => setPriceFor(t)} aria-label={`Propose mock terms for ${t.plan_name} version ${t.plan_version}`}>Propose terms</button>
+                            <button type="button" className={btn} onClick={(e) => { restore.capture(e.currentTarget); setPriceFor(t); }} aria-label={`Propose mock terms for ${t.plan_name} version ${t.plan_version}`}>Propose terms</button>
                           ) : null}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </ScrollRegion>
             </Panel>
           </>
         ) : null}
@@ -118,7 +119,7 @@ function Body() {
         {approvals.state === "ready" ? (
           <Panel title="Approval requests">
             {approvals.data.items.length === 0 ? <p className="text-sm text-muted">No approval requests.</p> : (
-              <div className="overflow-x-auto">
+              <ScrollRegion label="Billing approval requests (scrollable table)">
                 <table className="w-full text-left text-sm">
                   <caption className="sr-only">Billing approval requests</caption>
                   <thead><tr className="text-xs text-muted">{["Request", "Action", "Proposal", "Requested by", "Status", ""].map((c, i) => <th key={i} scope="col" className="py-1 pr-4 font-medium">{c}</th>)}</tr></thead>
@@ -146,7 +147,7 @@ function Body() {
                     })}
                   </tbody>
                 </table>
-              </div>
+              </ScrollRegion>
             )}
           </Panel>
         ) : null}
@@ -155,7 +156,7 @@ function Body() {
         {invoices.state === "ready" ? (
           <Panel title="Mock invoices">
             {invoices.data.items.length === 0 ? <p className="text-sm text-muted">No mock invoices.</p> : (
-              <div className="overflow-x-auto">
+              <ScrollRegion label="Mock invoices (scrollable table)">
                 <table className="w-full text-left text-sm">
                   <caption className="sr-only">Mock invoices</caption>
                   <thead><tr className="text-xs text-muted">{["Invoice", "Account", "State", "Due", "Paid", "Created"].map((c) => <th key={c} scope="col" className="py-1 pr-4 font-medium">{c}</th>)}</tr></thead>
@@ -172,7 +173,7 @@ function Body() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </ScrollRegion>
             )}
             <Pager page={invoices.data.page} pageSize={invoices.data.page_size} total={invoices.data.total} onPage={setInvPage} />
           </Panel>
@@ -182,7 +183,7 @@ function Body() {
         {payments.state === "ready" ? (
           <Panel title="Mock payments">
             {payments.data.items.length === 0 ? <p className="text-sm text-muted">No mock payments.</p> : (
-              <div className="overflow-x-auto">
+              <ScrollRegion label="Mock payments (scrollable table)">
                 <table className="w-full text-left text-sm">
                   <caption className="sr-only">Mock payments</caption>
                   <thead><tr className="text-xs text-muted">{["Payment", "Status", "Amount", "Refunded", "Refundable", "Problem", ""].map((c, i) => <th key={i} scope="col" className="py-1 pr-4 font-medium">{c}</th>)}</tr></thead>
@@ -197,14 +198,14 @@ function Body() {
                         <td className="py-1 pr-4">{p.failure_category ? label(p.failure_category) : "None"}</td>
                         <td className="py-1 pr-4">
                           {canRefund && p.status === "succeeded" && p.refundable_minor > 0 ? (
-                            <button type="button" className={btn} onClick={() => setRefundFor(p)} aria-label={`Request a mock refund for ${p.provider_payment_id}`}>Request mock refund</button>
+                            <button type="button" className={btn} onClick={(e) => { restore.capture(e.currentTarget); setRefundFor(p); }} aria-label={`Request a mock refund for ${p.provider_payment_id}`}>Request mock refund</button>
                           ) : null}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </ScrollRegion>
             )}
             <Pager page={payments.data.page} pageSize={payments.data.page_size} total={payments.data.total} onPage={setPayPage} />
           </Panel>
@@ -238,8 +239,8 @@ function Body() {
           </Panel>
         ) : null}
       </ResourceState>
-      {priceFor ? <PriceDialog plan={priceFor} onClose={() => setPriceFor(null)} onDone={() => { setNotice("Request recorded. A different administrator must approve it."); reloadAll(); }} /> : null}
-      {refundFor ? <RefundDialog payment={refundFor} onClose={() => setRefundFor(null)} onDone={() => { setNotice("Request recorded. A different administrator must approve it."); reloadAll(); }} /> : null}
+      {priceFor ? <PriceDialog plan={priceFor} onClose={() => { setPriceFor(null); restore.restore(); }} onDone={() => { setNotice("Request recorded. A different administrator must approve it."); reloadAll(); }} /> : null}
+      {refundFor ? <RefundDialog payment={refundFor} onClose={() => { setRefundFor(null); restore.restore(); }} onDone={() => { setNotice("Request recorded. A different administrator must approve it."); reloadAll(); }} /> : null}
       <ActionDialog open={decision !== null} title={decision ? `${decision.approve ? "Approve" : "Reject"} this ${decision.a.action_type === "refund" ? "mock refund" : "terms change"}?` : ""}
         confirmLabel={decision?.approve ? "Approve" : "Reject"} askReason={false} onConfirm={decide} onClose={() => setDecision(null)}>
         <p className="text-sm">{decision?.a.action_type === "refund" ? "Mock refund — no real money moves, and nobody's access changes." : "This creates a new immutable version of the mock terms. It does not charge users and does not change entitlements."}</p>
@@ -271,10 +272,11 @@ function PriceDialog({ plan, onClose, onDone }: { plan: BillingPlanTerms; onClos
     }
   };
   return (
-    <Panel title={`Propose mock terms: ${plan.plan_name} (version ${plan.plan_version})`}>
+    <ActiveFormPanel title={`Propose mock terms: ${plan.plan_name} (version ${plan.plan_version})`} onClose={onClose}>
       <form onSubmit={submit} className="grid gap-3 sm:grid-cols-2" aria-label="Propose mock commercial terms">
         <label className="grid gap-1 text-xs text-muted">Amount in minor units
-          <input className={field} inputMode="numeric" value={v.amount} onChange={set("amount")} required />
+          <input className={field} inputMode="numeric" value={v.amount} onChange={set("amount")} required aria-describedby="terms-amount-preview" />
+          <span id="terms-amount-preview" className="text-xs">{/^\d{1,9}$/.test(v.amount) ? `Shown to administrators as ${money(Number(v.amount), v.currency.trim().toUpperCase() || "EUR")}` : "Whole minor units, for example 1099 means 10.99"}</span>
         </label>
         <label className="grid gap-1 text-xs text-muted">Currency (three letters, metadata only)
           <input className={field} value={v.currency} onChange={set("currency")} maxLength={3} required />
@@ -297,7 +299,7 @@ function PriceDialog({ plan, onClose, onDone }: { plan: BillingPlanTerms; onClos
           <div className="flex gap-3"><button type="submit" className={btn} disabled={busy}>Request approval</button><button type="button" className={btn} onClick={onClose}>Cancel</button></div>
         </div>
       </form>
-    </Panel>
+    </ActiveFormPanel>
   );
 }
 
@@ -323,11 +325,12 @@ function RefundDialog({ payment, onClose, onDone }: { payment: BillingPayment; o
     }
   };
   return (
-    <Panel title={`Request a mock refund for ${payment.provider_payment_id}`}>
+    <ActiveFormPanel title={`Request a mock refund for ${payment.provider_payment_id}`} onClose={onClose}>
       <form onSubmit={submit} className="grid gap-3 sm:grid-cols-2" aria-label="Request a mock refund">
         <p className="sm:col-span-2 text-sm">Original amount {money(payment.amount_minor, payment.currency)}; refundable {money(payment.refundable_minor, payment.currency)}. Mock refund — no real money moves.</p>
         <label className="grid gap-1 text-xs text-muted">Refund amount in minor units ({payment.currency})
-          <input className={field} inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value)} required />
+          <input className={field} inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value)} required aria-describedby="refund-amount-preview" />
+          <span id="refund-amount-preview" className="text-xs">{/^\d{1,9}$/.test(amount) ? `Equals ${money(Number(amount), payment.currency)}` : "Whole minor units, for example 1099 means 10.99"}</span>
         </label>
         <label className="grid gap-1 text-xs text-muted">Reason
           <input className={field} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} required />
@@ -337,6 +340,6 @@ function RefundDialog({ payment, onClose, onDone }: { payment: BillingPayment; o
           <div className="flex gap-3"><button type="submit" className={btn} disabled={busy}>Request approval</button><button type="button" className={btn} onClick={onClose}>Cancel</button></div>
         </div>
       </form>
-    </Panel>
+    </ActiveFormPanel>
   );
 }

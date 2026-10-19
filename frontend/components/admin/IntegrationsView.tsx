@@ -3,7 +3,7 @@
 import Link from "@/components/ui/VerifiedLink";
 import { api } from "@/lib/api/client";
 import { P } from "@/lib/admin/capabilities";
-import { Panel, PermissionGate, ResourceState, StatusLabel, useAdminResource } from "./ui";
+import { Panel, PermissionGate, ResourceState, ScrollRegion, StatusLabel, formatCell, useAdminResource } from "./ui";
 
 export function IntegrationsView() {
   return (
@@ -41,44 +41,49 @@ function Body() {
       <ResourceState loaded={loaded}>
         {loaded.state === "ready" ? (
           <Panel title="Supported connections">
-            {/* relative: the status labels contain absolutely positioned screen-reader text; without a positioned scroller it escapes the clip and widens the whole page (walkthrough F-04, dependency-driven fix) */}
-            <div className="relative overflow-x-auto">
-              <table className="w-full text-left text-sm">
+            <p className="text-xs text-muted">Related: <Link href="/admin/providers" className="underline underline-offset-2">Provider status</Link> shows the same providers as a configuration-only summary with document OCR.</p>
+            {/* W12.5 (F-04): below md each row is a labelled card (no column is dropped or clipped); from md up it is a normal table inside a keyboard-scrollable region. Explicit
+                roles keep the table semantics when the rows are displayed as blocks. */}
+            <ScrollRegion label="Integrations (scrollable table)">
+              <table role="table" className="w-full text-left text-sm max-md:block">
                 <caption className="sr-only">Integrations</caption>
-                <thead>
-                  <tr className="text-xs text-muted">
+                <thead role="rowgroup" className="max-md:sr-only">
+                  <tr role="row" className="text-xs text-muted">
                     {["Integration", "Category", "Status", "Credentials", "Source", "Health", "Last tested"].map((c) => (
-                      <th key={c} scope="col" className="py-1 pr-4 font-medium">{c}</th>
+                      <th key={c} role="columnheader" scope="col" className="py-1 pr-4 font-medium">{c}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody>
-                  {loaded.data.items.map((i) => (
-                    <tr key={i.code} className="border-t border-default">
-                      <th scope="row" className="py-1 pr-4 text-left font-medium">
-                        <Link href={`/admin/integrations/${i.code}`} className="underline underline-offset-2">{i.name}</Link>
-                      </th>
-                      <td className="py-1 pr-4">{i.category_label}</td>
-                      <td className="py-1 pr-4">{CLASS_LABEL[i.classification] ?? i.classification}</td>
-                      <td className="py-1 pr-4">
-                        {i.slots.length === 0 ? "None needed" : (
-                          <StatusLabel tone={i.configuration_status === "configured" ? "ok" : "neutral"}>
-                            {i.configuration_status === "configured" ? "Configured" : i.configuration_status === "partially_configured" ? "Partly configured" : "Not configured"}
+                <tbody role="rowgroup" className="max-md:grid max-md:gap-3">
+                  {loaded.data.items.map((i) => {
+                    const cell = "py-1 pr-4 max-md:flex max-md:justify-between max-md:gap-3 max-md:py-1.5 max-md:pr-0 max-md:before:shrink-0 max-md:before:text-xs max-md:before:text-muted max-md:before:content-[attr(data-label)]";
+                    return (
+                      <tr key={i.code} role="row" className="border-t border-default max-md:block max-md:rounded-lg max-md:border max-md:border-border max-md:px-3 max-md:py-2">
+                        <th role="rowheader" scope="row" className="py-1 pr-4 text-left font-medium max-md:block max-md:pr-0">
+                          <Link href={`/admin/integrations/${i.code}`} className="inline-flex min-h-[44px] items-center underline underline-offset-2">{i.name}</Link>
+                        </th>
+                        <td role="cell" data-label="Category" className={cell}><span className="max-md:text-right">{i.category_label}</span></td>
+                        <td role="cell" data-label="Status" className={cell}><span className="max-md:text-right">{CLASS_LABEL[i.classification] ?? i.classification}</span></td>
+                        <td role="cell" data-label="Credentials" className={cell}>
+                          {i.slots.length === 0 ? "None needed" : (
+                            <StatusLabel tone={i.configuration_status === "configured" ? "ok" : "neutral"}>
+                              {i.configuration_status === "configured" ? "Configured" : i.configuration_status === "partially_configured" ? "Partly configured" : "Not configured"}
+                            </StatusLabel>
+                          )}
+                        </td>
+                        <td role="cell" data-label="Source" className={cell}><span className="max-md:text-right">{i.slots.length === 0 ? "n/a" : sourceSummary(i.slots.map((s) => s.source_kind))}</span></td>
+                        <td role="cell" data-label="Health" className={cell}>
+                          <StatusLabel tone={i.health.status === "healthy" ? "ok" : i.health.status === "unhealthy" ? "warn" : "neutral"}>
+                            {HEALTH_LABEL[i.health.status]}
                           </StatusLabel>
-                        )}
-                      </td>
-                      <td className="py-1 pr-4">{i.slots.length === 0 ? "n/a" : sourceSummary(i.slots.map((s) => s.source_kind))}</td>
-                      <td className="py-1 pr-4">
-                        <StatusLabel tone={i.health.status === "healthy" ? "ok" : i.health.status === "unhealthy" ? "warn" : "neutral"}>
-                          {HEALTH_LABEL[i.health.status]}
-                        </StatusLabel>
-                      </td>
-                      <td className="py-1 pr-4">{i.health.last_tested_at ?? "never"}</td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td role="cell" data-label="Last tested" className={cell}><span className="max-md:text-right">{i.health.last_tested_at ? formatCell(i.health.last_tested_at) : "never"}</span></td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
-            </div>
+            </ScrollRegion>
           </Panel>
         ) : null}
       </ResourceState>

@@ -44,7 +44,8 @@ test("BASIC candidate: no Review nav item, and direct /review is access-denied",
   // Direct navigation is safely denied - NOT the reviewer index.
   await page.goto("/review");
   await expect(page.getByText(/access denied/i)).toBeVisible();
-  await expect(page.getByText(/For reviewers & developers/i)).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Review & Diagnostics" })).toHaveCount(0);   // W12.5: the old eyebrow text no longer exists, so assert the real content is absent
+  await expect(page.getByRole("navigation", { name: "Admin" })).toHaveCount(0);                  // and a candidate never receives the Admin navigation
 
   // Child engineering routes are denied too (no diagnostic experience leaks).
   await page.goto("/review/rag");
@@ -67,7 +68,8 @@ test("platform admin: Review nav item present and the surfaces open", async ({ p
   await expect(page.getByRole("menu").getByRole("menuitem", { name: /Review & Diagnostics/ })).toHaveAttribute("href", "/review");
 
   await page.goto("/review");
-  await expect(page.getByText(/For reviewers & developers/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Review & Diagnostics" })).toBeVisible();   // W12.5 F-02: the developer-facing eyebrow was rewritten; the page itself is unchanged
+  await expect(page.getByRole("navigation", { name: "Admin" })).toBeVisible();                // W12.5 F-01: Review sits inside the Admin navigation for an administrator
   await expect(page.getByText(/access denied/i)).toHaveCount(0);
   // The child engineering surfaces are reachable for an admin (rendering of their content is
   // covered by product-surfaces.spec and navigation.spec Flow 4).

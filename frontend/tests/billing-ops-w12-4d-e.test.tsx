@@ -254,6 +254,14 @@ describe("Admin billing operations", () => {
     expect(screen.getByText(/quarantined:unknown ownership|quarantined unknown_ownership|quarantined:unknown_ownership/i)).toBeTruthy();
   });
 
+  it("W12.5 correction: a list's scroll region is named after its real caption, never the literal word 'caption'", async () => {
+    perms = ["platform.billing.read"];
+    subscriptions.mockResolvedValue({ items: [{ reference: "sub_1", state: "active" }], total: 1, page: 1, page_size: 25 });
+    await open("subscriptions");
+    expect(await screen.findByRole("region", { name: "Provider-managed subscriptions (scrollable table)" })).toHaveAttribute("tabindex", "0");
+    expect(screen.queryByRole("region", { name: "caption (scrollable table)" })).toBeNull();
+  });
+
   it("the subscriptions list requests the selected lifecycle state", async () => {
     perms = ["platform.billing.read"];
     subscriptions.mockResolvedValue({ items: [], total: 0, page: 1, page_size: 25 });

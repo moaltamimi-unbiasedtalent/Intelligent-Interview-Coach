@@ -149,6 +149,37 @@ describe("Admin Billing (MOCK)", () => {
     await waitFor(() => expect(reqRefund).toHaveBeenCalledWith("q".repeat(32), 700, "Duplicate"));
   });
 
+  it("W12.5 F-05: opening the refund form moves focus into it, announces it, keeps validation, and Escape returns focus to the opener", async () => {
+    const user = userEvent.setup();
+    render(<BillingView />);
+    const opener = await screen.findByRole("button", { name: /Request a mock refund for pay_1/ });
+    await user.click(opener);
+    const region = screen.getByRole("region", { name: /Request a mock refund for pay_1/ });
+    const amount = within(region).getByLabelText(/Refund amount in minor units/);
+    expect(amount).toHaveFocus();                                                            // focus moved to the first field of the active form
+    expect(within(region).getByRole("status")).toHaveTextContent(/Form opened: Request a mock refund for pay_1\. Press Escape to cancel\./);
+    await user.type(amount, "9999");
+    expect(within(region).getByText("Equals 99.99 EUR")).toBeInTheDocument();                 // F-11: money preview, submitted value is still minor units
+    await user.type(within(region).getByLabelText("Reason"), "Duplicate");
+    await user.click(within(region).getByRole("button", { name: "Request approval" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(/cannot exceed the refundable amount/);   // validation is preserved
+    expect(reqRefund).not.toHaveBeenCalled();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("region", { name: /Request a mock refund for pay_1/ })).toBeNull();
+    await waitFor(() => expect(opener).toHaveFocus());                                        // focus restored to the control that opened the form
+  });
+
+  it("W12.5 F-05: the terms form is an active labelled region with focus inside and Cancel restores focus", async () => {
+    const user = userEvent.setup();
+    render(<BillingView />);
+    const opener = await screen.findByRole("button", { name: /Propose mock terms for Premium/ });
+    await user.click(opener);
+    const region = screen.getByRole("region", { name: /Propose mock terms: Premium/ });
+    expect(within(region).getByLabelText(/Amount in minor units/)).toHaveFocus();
+    await user.click(within(region).getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(opener).toHaveFocus());
+  });
+
   it("controls follow permissions only: read-only sees no propose/refund/approve", async () => {
     mockPerms = ["platform.billing.read"];
     render(<BillingView />);

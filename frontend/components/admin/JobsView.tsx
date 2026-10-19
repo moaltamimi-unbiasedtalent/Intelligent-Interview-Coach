@@ -8,7 +8,7 @@ import { api } from "@/lib/api/client";
 import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
 import type { JobQuery } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
-import { Pager, Panel, PermissionGate, ResourceState, Stat, StatusLabel, btn, field, useAdminResource } from "./ui";
+import { Pager, Panel, PermissionGate, ResourceState, Stat, StatusLabel, btn, field, useAdminResource, ScrollRegion } from "./ui";
 import { ERROR_LABEL, STATE_LABEL, label, stateText } from "./jobStatus";
 
 const STATES = Object.keys(STATE_LABEL);
@@ -100,7 +100,7 @@ function Body() {
         {loaded.state === "ready" ? (
           <Panel title="Job list">
             {loaded.data.items.length === 0 ? <p className="text-sm text-muted">No jobs match.</p> : (
-              <div className="overflow-x-auto">
+              <ScrollRegion label="Jobs (scrollable table)">
                 <table className="w-full text-left text-sm">
                   <caption className="sr-only">Jobs</caption>
                   <thead>
@@ -128,7 +128,7 @@ function Body() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </ScrollRegion>
             )}
             <Pager page={loaded.data.page} pageSize={loaded.data.page_size} total={loaded.data.total}
               onPage={(p) => setQuery({ ...query, page: p })} />

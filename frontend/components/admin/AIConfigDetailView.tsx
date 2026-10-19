@@ -7,7 +7,7 @@ import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities"
 import type { AICatalogue, AIVersionDetail } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
 import { KIND_LABEL, STATE_LABEL, TUNABLE_LABEL, label, shortHash } from "./aiLabels";
-import { KeyValue, Panel, PermissionGate, ResourceState, StatusLabel, apiMessage, btn, field, useAdminResource } from "./ui";
+import { KeyValue, Panel, PermissionGate, ResourceState, StatusLabel, apiMessage, btn, field, useAdminResource, ScrollRegion } from "./ui";
 
 export function AIConfigDetailView({ id }: { id: string }) {
   return (
@@ -181,7 +181,7 @@ function Settings({ v }: { v: AIVersionDetail }) {
   return (
     <div className="grid gap-3">
       <KeyValue rows={Object.entries(v.settings.profiles).map(([p, c]) => [`${p[0].toUpperCase()}${p.slice(1)} profile`, c] as [string, string])} />
-      <div className="overflow-x-auto">
+      <ScrollRegion label="Operation settings (scrollable table)">
         <table className="w-full text-left text-sm">
           <caption className="sr-only">Operation settings</caption>
           <thead><tr className="text-xs text-muted">{["Operation", ...Object.values(TUNABLE_LABEL)].map((c) => <th key={c} scope="col" className="py-1 pr-4 font-medium">{c}</th>)}</tr></thead>
@@ -194,7 +194,7 @@ function Settings({ v }: { v: AIVersionDetail }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </ScrollRegion>
     </div>
   );
 }
@@ -235,7 +235,7 @@ function Editor({ v, catalogue, onSaved }: { v: AIVersionDetail; catalogue: AICa
           </label>
         ))}
       </div>
-      <div className="overflow-x-auto">
+      <ScrollRegion label="Operation settings (scrollable table)">
         <table className="w-full text-left text-sm">
           <caption className="sr-only">Operation settings</caption>
           <thead><tr className="text-xs text-muted"><th scope="col" className="py-1 pr-4 font-medium">Operation</th>{Object.values(TUNABLE_LABEL).map((c) => <th key={c} scope="col" className="py-1 pr-4 font-medium">{c}</th>)}</tr></thead>
@@ -262,7 +262,7 @@ function Editor({ v, catalogue, onSaved }: { v: AIVersionDetail; catalogue: AICa
             ))}
           </tbody>
         </table>
-      </div>
+      </ScrollRegion>
       {err ? <p role="alert" className="text-sm">{err}</p> : null}
       <div><button type="button" className={btn} onClick={save}>Save draft</button></div>
     </Panel>

@@ -9,7 +9,7 @@ import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities"
 import type { AIEnvironment } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
 import { KIND_LABEL, SOURCE_LABEL, STATE_LABEL, label, shortHash } from "./aiLabels";
-import { Panel, PermissionGate, ResourceState, Stat, StatusLabel, apiMessage, btn, field, useAdminResource } from "./ui";
+import { Panel, PermissionGate, ResourceState, Stat, StatusLabel, apiMessage, btn, field, useAdminResource, ScrollRegion } from "./ui";
 
 // AI and model administration. An AI configuration changes which APPROVED catalogue model each profile uses and a few bounded numbers. It is never
 // active without a passed evaluation and a different second approver. There is no provider-name input anywhere on this page. No live model is called.
@@ -73,7 +73,7 @@ function Body() {
               <Stat label="Pending approvals" value={overview.data.stats.pending_approvals} />
             </div>
             {overview.data.runtime.fallback_reason ? <p role="alert" className="text-sm">An active configuration was refused and code defaults are in use (reason: {label(overview.data.runtime.fallback_reason)}).</p> : null}
-            <div className="overflow-x-auto">
+            <ScrollRegion label="Resolved model per profile (scrollable table)">
               <table className="w-full text-left text-sm">
                 <caption className="sr-only">Resolved model per profile</caption>
                 <thead><tr className="text-xs text-muted">{["Profile", "Catalogue entry", "Source"].map((c) => <th key={c} scope="col" className="py-1 pr-4 font-medium">{c}</th>)}</tr></thead>
@@ -87,7 +87,7 @@ function Body() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </ScrollRegion>
             <p className="text-xs text-muted">{overview.data.runtime.note}</p>
           </Panel>
         ) : null}
@@ -121,7 +121,7 @@ function Body() {
         {configs.state === "ready" ? (
           <Panel title="Configuration versions">
             {configs.data.items.length === 0 ? <p className="text-sm text-muted">No configuration has been created. The code-defined registry is in use.</p> : (
-              <div className="overflow-x-auto">
+              <ScrollRegion label="AI configuration versions (scrollable table)">
                 <table className="w-full text-left text-sm">
                   <caption className="sr-only">AI configuration versions</caption>
                   <thead><tr className="text-xs text-muted">{["Version", "Name", "State", "Hash", "Active in", "Author"].map((c) => <th key={c} scope="col" className="py-1 pr-4 font-medium">{c}</th>)}</tr></thead>
@@ -138,7 +138,7 @@ function Body() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </ScrollRegion>
             )}
           </Panel>
         ) : null}
@@ -169,7 +169,7 @@ function Body() {
         {approvals.state === "ready" ? (
           <Panel title="Approval requests">
             {approvals.data.items.length === 0 ? <p className="text-sm text-muted">No approval requests.</p> : (
-              <div className="overflow-x-auto">
+              <ScrollRegion label="AI configuration approval requests (scrollable table)">
                 <table className="w-full text-left text-sm">
                   <caption className="sr-only">AI configuration approval requests</caption>
                   <thead><tr className="text-xs text-muted">{["Configuration", "Hash", "Requested by", "Status", "Decided by"].map((c) => <th key={c} scope="col" className="py-1 pr-4 font-medium">{c}</th>)}</tr></thead>
@@ -185,7 +185,7 @@ function Body() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </ScrollRegion>
             )}
           </Panel>
         ) : null}
@@ -195,7 +195,7 @@ function Body() {
         {history.state === "ready" ? (
           <Panel title="Activation history">
             {history.data.items.length === 0 ? <p className="text-sm text-muted">Nothing has been activated yet.</p> : (
-              <div className="overflow-x-auto">
+              <ScrollRegion label="Append-only activation history (scrollable table)">
                 <table className="w-full text-left text-sm">
                   <caption className="sr-only">Append-only activation history</caption>
                   <thead><tr className="text-xs text-muted">{["When", "Environment", "Event", "Version", "By", "Reason"].map((c) => <th key={c} scope="col" className="py-1 pr-4 font-medium">{c}</th>)}</tr></thead>
@@ -212,7 +212,7 @@ function Body() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </ScrollRegion>
             )}
           </Panel>
         ) : null}
@@ -222,7 +222,7 @@ function Body() {
         {catalogue.state === "ready" ? (
           <Panel title={`Approved model catalogue (${catalogue.data.version})`}>
             <p className="text-xs text-muted">{catalogue.data.note}</p>
-            <div className="overflow-x-auto">
+            <ScrollRegion label="Approved model catalogue (scrollable table)">
               <table className="w-full text-left text-sm">
                 <caption className="sr-only">Approved model catalogue</caption>
                 <thead><tr className="text-xs text-muted">{["Entry", "Provider model (read-only)", "Tier", "May serve", "Tools", "Structured output", "Relative cost"].map((c) => <th key={c} scope="col" className="py-1 pr-4 font-medium">{c}</th>)}</tr></thead>
@@ -240,7 +240,7 @@ function Body() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </ScrollRegion>
           </Panel>
         ) : null}
       </ResourceState>
@@ -249,7 +249,7 @@ function Body() {
         {codeDefined.state === "ready" ? (
           <Panel title="Code-defined behaviour (not configurable)">
             <p className="text-xs text-muted">{codeDefined.data.note}</p>
-            <div className="overflow-x-auto">
+            <ScrollRegion label="Operations and what is configurable (scrollable table)">
               <table className="w-full text-left text-sm">
                 <caption className="sr-only">Operations and what is configurable</caption>
                 <thead><tr className="text-xs text-muted">{["Operation", "Capability", "Minimum tier", "Fallback floor", "Configurable"].map((c) => <th key={c} scope="col" className="py-1 pr-4 font-medium">{c}</th>)}</tr></thead>
@@ -265,7 +265,7 @@ function Body() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </ScrollRegion>
           </Panel>
         ) : null}
       </ResourceState>

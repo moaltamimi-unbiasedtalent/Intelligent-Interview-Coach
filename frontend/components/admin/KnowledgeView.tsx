@@ -7,7 +7,7 @@ import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/api/client";
 import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
 import type { KnowledgeMeta, KnowledgeQuery } from "@/lib/admin/types";
-import { Pager, Panel, PermissionGate, ResourceState, StatusLabel, apiMessage, btn, field, useAdminResource } from "./ui";
+import { Pager, Panel, PermissionGate, ResourceState, StatusLabel, apiMessage, btn, field, useAdminResource, ScrollRegion } from "./ui";
 import { SCAN_LABEL, label, stateText } from "./knowledgeLabels";
 import { KnowledgeReadinessPanels } from "./KnowledgeReadiness";
 
@@ -72,7 +72,7 @@ function Body() {
                 </div>
               )
             ) : (
-              <div className="overflow-x-auto">
+              <ScrollRegion label="Knowledge sources (scrollable table)">
                 <table className="w-full text-left text-sm">
                   <caption className="sr-only">Knowledge sources</caption>
                   <thead>
@@ -103,7 +103,7 @@ function Body() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </ScrollRegion>
             )}
             <Pager page={loaded.data.page} pageSize={loaded.data.page_size} total={loaded.data.total}
               onPage={(p) => setQuery({ ...query, page: p })} />

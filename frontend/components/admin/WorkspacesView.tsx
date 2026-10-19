@@ -5,7 +5,7 @@ import type { FormEvent } from "react";
 import Link from "@/components/ui/VerifiedLink";
 import { api } from "@/lib/api/client";
 import { P } from "@/lib/admin/capabilities";
-import { Pager, Panel, PermissionGate, ResourceState, btn, field, useAdminResource } from "./ui";
+import { Pager, Panel, PermissionGate, ResourceState, btn, field, useAdminResource, ScrollRegion } from "./ui";
 
 export function WorkspacesView() {
   return (
@@ -47,7 +47,7 @@ function Body() {
         {loaded.state === "ready" ? (
           <Panel title="Workspaces (metadata only)">
             {loaded.data.items.length === 0 ? <p className="text-sm text-muted">No workspaces match.</p> : (
-              <div className="overflow-x-auto">
+              <ScrollRegion label="Workspaces (scrollable table)">
                 <table className="w-full text-left text-sm">
                   <caption className="sr-only">Workspaces</caption>
                   <thead>
@@ -69,7 +69,7 @@ function Body() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </ScrollRegion>
             )}
             <Pager page={loaded.data.page} pageSize={loaded.data.page_size} total={loaded.data.total}
               onPage={(p) => setQuery({ ...query, page: p })} />

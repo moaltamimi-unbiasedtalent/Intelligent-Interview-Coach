@@ -191,8 +191,18 @@ describe("A7 accessibility", () => {
     const current = within(nav).getAllByRole("link").filter((a) => a.getAttribute("aria-current") === "page");
     expect(current).toHaveLength(1);
     expect(current[0]).toHaveTextContent("Users");
+    // W12.5 (F-03): the first tab stop is the mobile "Admin menu" disclosure button (hidden from `lg` up by CSS); the links follow it and none is removed from tab order.
+    await userEvent.tab();
+    const toggle = within(nav).getByRole("button", { name: /Admin menu: Users/ });
+    expect(toggle).toHaveFocus();
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await userEvent.keyboard("{Enter}");
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
     await userEvent.tab();
     expect(within(nav).getAllByRole("link")[0]).toHaveFocus();
+    await userEvent.keyboard("{Escape}");
+    expect(toggle).toHaveFocus();                                                   // Escape closes the menu and returns focus to the button
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
     expect(within(nav).getAllByRole("link").every((a) => a.getAttribute("tabindex") !== "-1")).toBe(true);
   });
 

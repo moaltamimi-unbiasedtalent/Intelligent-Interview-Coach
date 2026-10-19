@@ -8,7 +8,7 @@ import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities"
 import type { KnowledgeVersionDetail } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
 import { UploadForm } from "./KnowledgeView";
-import { KeyValue, Panel, PermissionGate, ResourceState, StatusLabel, btn, field, useAdminResource } from "./ui";
+import { KeyValue, Panel, PermissionGate, ResourceState, StatusLabel, btn, field, useAdminResource, ScrollRegion } from "./ui";
 import { FAILURE_LABEL, REASON_LABEL, SCAN_LABEL, label, stateText } from "./knowledgeLabels";
 
 export function KnowledgeDetailView({ id }: { id: string }) {
@@ -42,7 +42,7 @@ function Body({ id }: { id: string }) {
             <KeyValue rows={[["Title", src.data.title], ["Reference", src.data.source_public_id], ["Created", src.data.created_at ?? ""]]} />
           </Panel>
           <Panel title="Versions">
-            <div className="overflow-x-auto">
+            <ScrollRegion label="Versions of this source (scrollable table)">
               <table className="w-full text-left text-sm">
                 <caption className="sr-only">Versions of this source</caption>
                 <thead><tr className="text-xs text-muted">{["Version", "State", "Authority", "Updated", ""].map((c, i) => <th key={i} scope="col" className="py-1 pr-4 font-medium">{c}</th>)}</tr></thead>
@@ -60,7 +60,7 @@ function Body({ id }: { id: string }) {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </ScrollRegion>
           </Panel>
           <VersionPanel key={selected ?? src.data.versions[0].version_public_id} versionId={selected ?? src.data.versions[0].version_public_id} reloadSource={src.reload} />
           {meta.state === "ready" ? <WriteGate><UploadForm meta={meta.data} sourceId={id} onDone={src.reload} /></WriteGate> : null}

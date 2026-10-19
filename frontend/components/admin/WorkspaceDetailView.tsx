@@ -9,7 +9,7 @@ import { useAuthOptional } from "@/components/auth/AuthProvider";
 import type { AdminWorkspaceDetail } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
 import { PlanControl } from "./PlanControl";
-import { KeyValue, Panel, PermissionGate, ResourceState, apiMessage, btn, field, useAdminResource } from "./ui";
+import { KeyValue, Panel, PermissionGate, ResourceState, apiMessage, btn, field, useAdminResource, ScrollRegion } from "./ui";
 
 type Pending = null | { kind: "remove"; userId: number; email: string | null } | { kind: "role"; userId: number; email: string | null; role: string };
 
@@ -67,7 +67,7 @@ function Detail({ d, reload }: { d: AdminWorkspaceDetail; reload: () => void }) 
       <PlanControl plan={d.plan} subject={{ kind: "workspace", id: w.id }} onChanged={(m) => { setNotice(m); reload(); }} />
 
       <Panel title="Members">
-        <div className="overflow-x-auto">
+        <ScrollRegion label="Workspace members (scrollable table)">
           <table className="w-full text-left text-sm">
             <caption className="sr-only">Workspace members</caption>
             <thead>
@@ -104,7 +104,7 @@ function Detail({ d, reload }: { d: AdminWorkspaceDetail; reload: () => void }) 
               ))}
             </tbody>
           </table>
-        </div>
+        </ScrollRegion>
         {canManage ? (
           <form onSubmit={add} className="flex flex-wrap items-end gap-3" aria-label="Add member">
             <label className="grid gap-1 text-xs text-muted">

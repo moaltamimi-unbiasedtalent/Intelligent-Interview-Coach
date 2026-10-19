@@ -121,7 +121,7 @@ describe("User detail", () => {
     expect(text).not.toMatch(/resume|curriculum vitae|interview answer|memories|conversation|token/i);
     // session display carries only the three stored timestamps
     const sessionTable = screen.getByRole("table", { name: "Active sessions" });
-    expect(within(sessionTable).getAllByRole("columnheader").map((c) => c.textContent)).toEqual(["created_at", "last_used_at", "expires_at"]);
+    expect(within(sessionTable).getAllByRole("columnheader").map((c) => c.textContent)).toEqual(["Created at", "Last used at", "Expires at"]);   // W12.5: headers are humanized for display; the columns and data are unchanged
   });
 
   it("hides every write control for a read-only role", async () => {

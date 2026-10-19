@@ -5,7 +5,7 @@ import Link from "@/components/ui/VerifiedLink";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/api/client";
 import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
-import { Panel, PermissionGate, ResourceState, apiMessage, btn, useAdminResource } from "./ui";
+import { Panel, PermissionGate, ResourceState, apiMessage, btn, useAdminResource, ScrollRegion } from "./ui";
 
 export function PlansView() {
   return (
@@ -34,14 +34,14 @@ function Body() {
     <div className="grid gap-4">
       <p className="text-sm text-muted">
         Plans are versioned. A draft can be edited; an active version is immutable and assignable; a retired version keeps its
-        existing subscribers. Plans decide product access only: there are no prices, payments or invoices.
+        existing subscribers. Plans decide product access only: there are no prices, payments or invoices. Simulated commercial terms for these plans are kept separately on the Billing page (mock, never live).
       </p>
       {notice ? <p role="status" className="rounded border border-border px-3 py-2 text-sm">{notice}</p> : null}
       {error ? <p role="alert" className="text-sm">{error}</p> : null}
       <ResourceState loaded={loaded}>
         {loaded.state === "ready" ? (
           <Panel title="Plan versions">
-            <div className="overflow-x-auto">
+            <ScrollRegion label="Plan versions (scrollable table)">
               <table className="w-full text-left text-sm">
                 <caption className="sr-only">Plan versions</caption>
                 <thead>
@@ -67,7 +67,7 @@ function Body() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </ScrollRegion>
             {canManage ? (
               <div className="flex flex-wrap gap-2">
                 {Array.from(new Set(loaded.data.items.map((v) => v.plan_code))).map((code) => (

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "@/components/ui/VerifiedLink";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/api/client";
 import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
@@ -34,6 +35,12 @@ function Body() {
   const granted = adminPermissions(useAuthOptional()?.account);
   const tabs = TABS.filter((t) => hasAnyPermission(granted, [t.perm]));
   const [tab, setTab] = useState<Tab>(tabs[0]?.id ?? "events");
+  // W12.5 (F-06): a link such as /admin/security#audit opens that tab (only when the caller may see it).
+  useEffect(() => {
+    const wanted = window.location.hash.replace(/^#/, "") as Tab;
+    if (wanted && tabs.some((t) => t.id === wanted)) setTab(wanted);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
     <div className="grid gap-4">
       <p className="text-sm">Operational metadata only. Security administration never shows candidate content, email addresses, IP addresses or session tokens. Alerts are shown here in the app; nothing is sent to an external pager.</p>
@@ -114,6 +121,7 @@ function Audit() {
   const loaded = useAdminResource(() => api.admin.auditPage({ area, result, request_id: requestId, period, page, page_size: 50 }), [area, result, requestId, period, page]);
   return (
     <Panel title="Audit history">
+      <p className="text-xs text-muted">This is the primary audit view: filters, pagination and the audited export. The shorter list at <Link href="/admin/audit" className="underline underline-offset-2">Audit</Link> shows only the most recent events.</p>
       <div className="flex flex-wrap items-end gap-3">
         <label className="grid gap-1 text-sm">Area
           <select className={field} value={area} onChange={(e) => { setArea(e.target.value); setPage(1); }}>

@@ -21,9 +21,9 @@ export default function ReviewPage() {
     <RequirePlatformAdmin anyOf={[P.ai, P.knowledge]}>
     <section>
       <PageHeader
-        eyebrow="For reviewers & developers"
+        eyebrow="Platform operations"
         title="Review & Diagnostics"
-        description="Technical surfaces kept out of the candidate flow. Slightly more technical, same design system."
+        description="Read-only diagnostics for administrators: agent run traces, knowledge readiness and offline evaluation metrics. Nothing here changes candidate data."
       />
       <div className="grid gap-4 sm:grid-cols-3">
         {AREAS.map((a) => (

@@ -6,7 +6,7 @@ import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/api/client";
 import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
 import { ActionDialog } from "./ActionDialog";
-import { Panel, PermissionGate, ResourceState, Stat, StatusLabel, apiMessage, btn, field, useAdminResource } from "./ui";
+import { Panel, PermissionGate, ResourceState, Stat, StatusLabel, apiMessage, btn, field, useAdminResource, ScrollRegion } from "./ui";
 
 export function LegalView() {
   return (
@@ -49,7 +49,7 @@ function Body() {
                   <Stat label="No acceptance recorded" value={doc.current_not_recorded} />
                 </div>
                 {doc.current?.is_baseline ? <p className="text-xs text-muted">The current version is a baseline created when versioning was introduced. Its effective date was not recorded.</p> : null}
-                <div className="overflow-x-auto">
+                <ScrollRegion label="{doc.title} versions (scrollable table)">
                   <table className="w-full text-left text-sm">
                     <caption className="sr-only">{doc.title} versions</caption>
                     <thead><tr className="text-xs text-muted">{["Version", "State", "Effective", "Published", "Reference", "Content hash", "Acceptances", ""].map((c, i) => <th key={i} scope="col" className="py-1 pr-4 font-medium">{c}</th>)}</tr></thead>
@@ -72,7 +72,7 @@ function Body() {
                       ))}
                     </tbody>
                   </table>
-                </div>
+                </ScrollRegion>
                 {canManage ? <DraftForm code={doc.code} title={doc.title} onDone={loaded.reload} /> : null}
               </Panel>
             ))}
