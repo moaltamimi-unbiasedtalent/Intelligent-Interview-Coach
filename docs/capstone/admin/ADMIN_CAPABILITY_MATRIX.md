@@ -15,7 +15,7 @@ Permissions are the target namespace of the master plan (section 5); deny by def
 
 | Capability | Description | Current/Planned | Admin persona | Permission | Private-data sensitivity | Candidate dependency | Audit required | Migration required | External integration | Mock acceptable | Capstone priority | Target wave | Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Admin role check | Role presets resolve to explicit permissions; every admin/reviewer/evaluation/diagnostic route declares `require_permission` (W10.1) | CURRENT | Platform Administrator | platform.overview.read | None | none | No | No | No | n/a | Critical | W10.1 | COMPLETE (W10.1) |
+| Admin role check | Role presets resolve to explicit permissions; every admin/reviewer/evaluation/diagnostic route declares `require_permission` (W10.1) | CURRENT | Platform Administrator | platform.overview.read (rows gated by their domain read permission) | None | none | No | No | No | n/a | Critical | W10.1 | COMPLETE (W10.1) |
 | Permission framework | Code-defined permissions + role presets; `require_permission` on every admin route; default deny | CURRENT | Platform Administrator | platform.users.role.assign | None | none | Yes | No | No | n/a | Critical | W10.1 | COMPLETE (W10.1) |
 | Admin shell & navigation | Capability-gated `/admin` shell replacing the single page | CURRENT | All | platform.overview.read | None | none | No | No | No | n/a | Critical | W10.1 | COMPLETE (W10.1) |
 | Command Center | Health, alerts, recent changes, release info, provider health | CURRENT | Operations Administrator | platform.overview.read | None | none | No | No | No | n/a | Critical | W10.1 | COMPLETE (W10.1) |
