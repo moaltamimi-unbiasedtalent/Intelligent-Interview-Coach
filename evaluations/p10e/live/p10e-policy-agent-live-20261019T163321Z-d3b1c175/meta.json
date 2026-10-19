@@ -1,0 +1,16 @@
+{
+ "area": "policy-agent-live",
+ "authorization_version": 3,
+ "checkout": "clean",
+ "commit": "afb3ecf815e617d1ccef66bbd92e7e07df9bbec7",
+ "dataset_version": "4 cases",
+ "environment_id": "p10e-designated-host-owner-macos",
+ "execution_flag": true,
+ "ledger_genesis_id": "ff65d28571644fdc9546c922dfe24ca5",
+ "ledger_session_id": "9dddc0f0afc84e9e92faf1a358dae34c",
+ "model": "openai/gpt-5.4",
+ "profile": "balanced",
+ "provider": "OpenRouter",
+ "run_id": "p10e-policy-agent-live-20261019T163321Z-d3b1c175",
+ "started_at": "2026-10-19T16:33:21.302834+00:00"
+}

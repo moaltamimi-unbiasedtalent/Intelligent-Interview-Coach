@@ -1,0 +1,201 @@
+{
+ "reviewer": null,
+ "cases": [
+  {
+   "case": "ml-en-unsupported-country",
+   "language": "en",
+   "query": "What does a Data Analyst earn in Canada?",
+   "model_answer": "**Evidence (from sources):** \nThe knowledge base does not contain enough evidence to answer what a Data Analyst earns in Canada.[2] \nThe provided coverage note also says there is **no official occupation-specific compensation for “Data Analyst” in Canada** in the available material. \n\n**Tool results (calculated):** \nNo tool results were provided. \n\n**Recommendation:** \nI can’t give a grounded salary figure from the material you supplied. If you want, I can help you find reliable Canada-specific salary sources by narrowing this to:\n- province or city,\n- seniority level,\n- industry,\n- and whether you mean “Data Analyst,” “BI Analyst,” or “Analytics Analyst.”\n\nIf you share those, I can help you build a better evidence-based compensation search plan.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-de-unsupported-country",
+   "language": "de",
+   "query": "Was verdient ein Data Analyst in Kanada?",
+   "model_answer": "Belege (aus Quellen):\nDie Wissensbasis enthält nicht genügend Belege, um das zu beantworten. Die vorhandenen Quellen behandeln vor allem typische Fähigkeiten für Data Analysts wie SQL, Statistik, Visualisierungstools und Python, aber keine Gehaltsdaten für Kanada.[1]\n\nWerkzeugergebnisse (berechnet):\nKeine.\n\nEmpfehlung:\nIch kann dir ohne belastbare Quelle keine Gehaltsspanne nennen. Wenn du möchtest, helfe ich dir stattdessen dabei, verlässliche Gehaltsquellen für Kanada zu prüfen, zum Beispiel nach:\n- Provinz oder Stadt, z. B. Toronto, Vancouver, Montreal\n- Senioritätslevel, z. B. Junior, Mid-Level, Senior\n- Branche, z. B. Tech, Finance, Healthcare\n- Quelle, z. B. staatliche Arbeitsmarktdaten oder aktuelle Jobplattformen\n\nWenn du mir Provinz/Stadt und Erfahrungsniveau nennst, kann ich dir eine saubere Suchstrategie oder eine Einordnung der Einflussfaktoren geben.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-fr-unsupported-country",
+   "language": "fr",
+   "query": "Combien gagne un Data Analyst au Canada ?",
+   "model_answer": "Preuves (issues des sources):\nLa base de connaissances ne contient pas assez de preuves pour y répondre. Les passages fournis parlent de compétences de Data Analyst [1], de CV, de préparation d’entretien et de négociation salariale de façon générale, mais ne donnent aucun chiffre de rémunération pour un Data Analyst au Canada. [1]\n\nRésultats des outils (calculés):\nAucun.\n\nRecommandation:\nJe ne peux pas donner de fourchette salariale fiable sans source vérifiée.\n\nSi vous voulez, je peux vous aider de 3 façons:\n1. identifier des sources fiables pour le Canada;\n2. comparer selon la ville, l’expérience et le secteur;\n3. préparer une stratégie de négociation salariale.\n\n- la province ou la ville au Canada;\n- le niveau d’expérience (junior, intermédiaire, senior);\n- le type d’employeur (startup, grande entreprise, conseil, public);\n- la rémunération visée: salaire de base seulement ou package total.\n\nJe ne peux pas donner ici un chiffre de salaire vérifié. Pour trouver des données fiables, indiquez-moi le pays, le niveau d’expérience et le métier, et je vous aiderai à trouver des sources salariales dignes de confiance et à juger leur comparabilité.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-es-unsupported-country",
+   "language": "es",
+   "query": "¿Cuánto gana un Data Analyst en Canadá?",
+   "model_answer": "Evidencia (de las fuentes):\nLa base de conocimiento no contiene evidencia suficiente para responder a cuánto gana un Data Analyst en Canadá. Las fuentes recuperadas hablan de habilidades de data analysts y de preparación de CV/entrevistas, pero no incluyen datos salariales ni información específica de Canadá.[2]\n\nResultados de herramientas (calculados):\nNo hay resultados de herramientas disponibles sobre salario.\n\nRecomendación:\nNo puedo darte una cifra salarial fiable sin evidencia verificada. Si quieres, puedo ayudarte a buscar fuentes confiables para Canadá, por ejemplo:\n- Job Bank Canada\n- Statistics Canada\n- Glassdoor o Indeed, usándolos solo como referencia secundaria\n\nSi me indicas además ciudad/provincia, años de experiencia y si el puesto es junior, mid o senior, puedo ayudarte a acotar mejor la búsqueda.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-it-unsupported-country",
+   "language": "it",
+   "query": "Quanto guadagna un Data Analyst in Canada?",
+   "model_answer": "Evidenze (dalle fonti):\nLa base di conoscenza non contiene prove sufficienti per rispondere. Le fonti disponibili parlano di competenze del Data Analyst, CV e preparazione al colloquio, ma non riportano dati salariali per il Canada.[1]\n\nRisultati degli strumenti (calcolati):\nNessun risultato disponibile.\n\nRaccomandazione:\nNon posso fornire una stima salariale senza fonti verificate. Se vuoi, posso aiutarti a cercare fonti affidabili per il Canada, ad esempio distinguendo per città, seniority e tipo di azienda, oppure aiutarti a confrontare dati da portali ufficiali e job board.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-pt-unsupported-country",
+   "language": "pt",
+   "query": "Quanto ganha um Data Analyst no Canadá?",
+   "model_answer": "Evidências (das fontes):\nA base de conhecimento não contém evidências suficientes para responder a isso. As passagens recuperadas falam sobre competências de Data Analyst, uma nota de agendamento, funções de enfermagem e preparação para entrevistas, mas não trazem dados de salário para Data Analyst no Canadá.[1]\n\nResultados das ferramentas (calculados):\nNenhum resultado de ferramenta foi fornecido.\n\nRecomendação:\nNão posso dar uma faixa salarial sem fonte confiável. Se quiser, eu posso ajudar de duas formas:\n1. indicar onde verificar salários confiáveis no Canadá para “Data Analyst”;\n2.\n\nNão posso dar aqui um valor salarial verificado. Para encontrar dados fiáveis, indica-me o país, o nível de experiência e a profissão, e ajudo-te a localizar fontes salariais de confiança e a avaliar se são comparáveis.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-nl-unsupported-country",
+   "language": "nl",
+   "query": "Wat verdient een Data Analyst in Canada?",
+   "model_answer": "Bewijs (uit bronnen):\nDe kennisbank bevat onvoldoende bewijs om dat te beantwoorden. De beschikbare bronnen gaan over vaardigheden voor data-analisten en sollicitatievoorbereiding, maar bevatten geen salarisinformatie over Data Analysts in Canada.[1]\n\nToolresultaten (berekend):\nGeen.\n\nAanbeveling:\nIk kan geen onderbouwde salarisinschatting geven zonder betrouwbare bron voor Canada. Als je wilt, kan ik je wel helpen met:\n- een zoekstrategie voor betrouwbare Canadese salarisbronnen;\n- het vergelijken van salaris per stad, senioriteit en sector;\n- het interpreteren van een concrete bron die je deelt.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  }
+ ]
+}
