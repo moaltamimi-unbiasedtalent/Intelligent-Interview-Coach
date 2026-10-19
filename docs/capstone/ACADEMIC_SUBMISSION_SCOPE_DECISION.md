@@ -94,28 +94,16 @@ Three decisions are different and must not be merged:
 
 All 12 rollout and billing gates False; Compensation V2, Premium, Stripe commercial use and speech activation disabled; no production deployment; no source-registry promotion; no international ingestion; no real candidate data sent to providers; no protected-store change; no real customer email. The P10E ledger is untouched (285 of 300 calls, about USD 2.112 committed, 15 calls and about USD 7.888 remaining). No paid call was made and none is needed for this documentation wave.
 
-## 7. Official course requirements: OFFICIAL RUBRIC — NOT VERIFIED
+## 7. Official course requirements: BRIEF FOUND (updated 2026-10-19)
 
-A search of the repository, `~/Downloads/outputs`, its experience package and the neighbouring project folders found **no official Turing College material** (class A = 0): no capstone brief, rubric, submission instructions, deployment requirement, presentation requirement or expert-review process. What exists is project-authored planning (class B) and four Claude-authored secondary references (class C; the runbook says it is "based on the supplied Capstone brief", which is not present). Second-hand statements, unverified: deadline 2026-10-20; a 10-minute presentation plus 5 minutes of Q&A; six presentation topics (problem, solution, data, evaluation, challenges, what's next) with SCR or SMART; assessment dimensions Outcome Quality, Learning Application, Ethical Considerations and Presentation (no descriptors, weights or pass marks); an optional showcase; deployment "mentioned" but unresolved. The Sprint 4 requirements in the repository are the project's own paraphrase. **No assessment criterion is invented here.**
+The first search (this repository, `~/Downloads/outputs` and neighbouring folders) found no official material. The official capstone brief then turned out to ship with the course's submission repository: `AE.CAP_afa.md` in the Turing College submission repository (`TuringCollegeSubmissions/maltam-AE.CAP.AFA.1.1`, initial commit `150882c`). What it establishes: the four assessment dimensions plus an optional showcase, the case descriptions (Case 2 and Case 1), the README requirement, and the presentation format (optional; 10 minutes plus 5 minutes of questions; problem, solution, data, evaluation, challenges, what's next; SCR or SMART). It does **not** state a deadline, a hosting requirement, weights, pass marks or the review procedure. Rows below that depended on "OFFICIAL RUBRIC NOT VERIFIED" should be read with this update; the rubric descriptors (beyond the four headings and their bullets) are still not available.
 
-**Deployment question (unanswered, no assumption made):** does the course require a public or hosted application, or is a locally demonstrated application acceptable? Nothing was deployed and no production feature was enabled to resolve it. The consequence differs sharply: hosted operation (EX-12) is NOT RUN and its checklist is open in the register (`EX-12.1` to `EX-12.15`).
-
-**Missing-information checklist for the Product Owner:**
-1. The official capstone brief (full text) and learning objectives.
-2. The official rubric: dimensions, descriptors per level, weights, pass threshold (confirm the four named dimensions are exact and complete).
-3. Submission instructions: artifacts, format, where and how, **exact deadline date and time zone** (is it 2026-10-20?), late policy.
-4. Deployment requirement: public hosted URL or local and recorded demonstration acceptable, in writing from the course lead.
-5. Presentation requirements: length, mandatory structure, slides versus live demo, recording allowed, language, attendees.
-6. Expert-review process: who, when, format, what the reviewer sees, outcome, whether separate from the presentation.
-7. Showcase submission: optional or required.
-8. The official Sprint 4 "Building Applications with AI" requirements and whether Sprint 4 is graded again.
-9. Required evidence artifacts and whether internal gates such as the 95% coverage gate have any course relevance.
-10. Rules on third-party data and APIs, paid services and AI-use disclosure.
+**Still open (owner or STL):** the exact deadline and time zone; whether a local demonstration satisfies "develop and deploy prototypes" (the evaluation criteria do not require a hosted application); how the review is booked and run; whether to publish the optional showcase entry; the Sprint 4 question is moot for the capstone brief. The earlier ten-item checklist reduces to these.
 
 ## 8. Decisions requested
 
 1. Confirm the deadline and time zone (section 7, item 3).
-2. Answer the deployment question and supply the brief and rubric.
+2. Confirm the deployment wording with the course lead (the brief is now available).
 3. Decide how to handle the failed coverage gate (section 3) and AC-24 (section 4).
 4. Approve or amend this scope as the basis for P11, and approve `CAPSTONE_ACCEPTANCE_LEDGER_CURRENT.md` as the single current acceptance record.
 5. Separately decide whether to create RC-P10-004 (see its entry decision; recommendation there is NO-GO until the questions above are answered).

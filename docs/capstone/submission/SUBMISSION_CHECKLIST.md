@@ -4,18 +4,19 @@
 
 ## 1. Phase 1: course requirements record (what is verified and what is not)
 
+**Update:** the official capstone brief IS available: it ships with the course's submission repository as `AE.CAP_afa.md` in the Turing College submission repository (`TuringCollegeSubmissions/maltam-AE.CAP.AFA.1.1`, initial commit `150882c`), read on 2026-10-19 after the first draft of this package. It supersedes the earlier statement in this package that no official material was found (that search covered this repository, the Downloads outputs and neighbouring project folders, not the submission repository). The brief is merged into this repository's history as `AE.CAP_afa.md`.
+
 | Item | Source | Status |
 |---|---|---|
-| Assessment dimensions: Outcome Quality, Learning Application, Ethical Considerations, Presentation | stated by the Product Owner in the P11 instruction | OWNER-STATED; descriptors, weights and pass marks are **not** in the repository |
-| Primary project case: Case 2, AI agent for task automation; supporting capability: Case 1, RAG-powered knowledge assistance | stated by the Product Owner | OWNER-STATED; the official case text is not in the repository |
-| Historical Sprint 4 requirements are not the capstone requirements | stated by the Product Owner | applied: the submission material is organised by the four dimensions and the two cases, not by the Sprint 4 requirement list |
-| **Deadline, time zone** | planning documents say 2026-10-20 (second-hand); the date today is 2026-10-19 | **NOT VERIFIED: owner must confirm the exact date, time and time zone** |
-| **Submission mechanism** (what, where, how) | none in the repository | **NOT VERIFIED: owner to supply** |
-| **Review requirements** (who reviews, format, presentation length) | planning documents assume 10 minutes plus 5 minutes of Q&A | **NOT VERIFIED (timing ASSUMED in the presentation)** |
-| **Deployment requirement** (hosted or local demonstration) | none | **NOT VERIFIED: owner to ask the course lead** |
-| Official brief and rubric as files | searched the repository, the Downloads outputs and neighbouring project folders: none found | OFFICIAL RUBRIC: NOT VERIFIED |
+| Assessment dimensions: Outcome Quality, Learning Application, Ethical Considerations, Presentation (plus an optional, recommended Showcase submission worth a small part of the score) | official brief, "Evaluation criteria for all cases" | **VERIFIED** (no weights or pass marks in the brief) |
+| Case 2, AI agent for task automation (agent design, tool integration, agent execution with memory or multi-step reasoning, interactive prototype, evaluation through user testing, documentation including ethical considerations); Case 1 RAG assistant as supporting capability; "alternative ideas are also valid" | official brief | **VERIFIED**; the owner chose Case 2 as primary |
+| README must concisely explain the goal, the problem solved and how it works; showcase link near the top if uploaded | official brief | **VERIFIED**; satisfied by the README (the showcase entry has not been published: optional) |
+| Presentation | official brief: optional but recommended; **10 minutes plus 5 minutes of questions**; six points: problem, solution, data, evaluation, challenges, what's next; SCR or SMART is part of the Presentation criterion | **VERIFIED** (format); slides not built |
+| Deployment | the brief's Objective says "develop and deploy prototypes"; the evaluation criteria do not require a hosted application; no deployment rule is stated | **NOT SETTLED: owner or the course lead to confirm whether a local demonstration is enough** |
+| Deadline, time zone, submission mechanism beyond pushing to the submission repository, how the review is booked and run | not in the brief (it mentions "booking the review") | **NOT VERIFIED: owner to confirm**; the earlier 2026-10-20 deadline is second-hand |
+| Sprint 4 requirements | not part of the capstone brief | not applicable (applied: the package is organised by the four dimensions) |
 
-No deadline or format was invented. Everything marked ASSUMED in the submission documents (timing, slide count) must be reconciled with the owner's answers.
+No deadline or review procedure was invented. Timing and slide-count statements in the other documents are now **verified** for the 10 plus 5 format and the six points; everything else marked ASSUMED stays so.
 
 ## 2. Phase 2: repository readiness
 
@@ -59,8 +60,8 @@ No deadline or format was invented. Everything marked ASSUMED in the submission 
 ## 5. Owner checklist (nothing here was done on the owner's behalf)
 
 1. Confirm the deadline, time zone and submission mechanism.
-2. Supply the brief and rubric, or confirm which planning documents are authoritative; confirm the presentation length and format.
-3. Answer the deployment question (hosted or local demonstration).
+2. Confirm the review booking and presentation slot with your STL (the brief makes the presentation optional).
+3. Ask whether a local demonstration satisfies the deployment wording; decide whether to publish the optional showcase entry and add its link near the top of the README.
 4. Decide how the failed internal coverage gate is stated in the submission (the documents state it plainly) and whether AC-24 may close without P10F.
 5. Build the slides from `TECHNICAL_PRESENTATION.md`; record a screen capture of a working demonstration if a video fallback is wanted.
 6. Rehearse once against the real timing.
@@ -70,4 +71,4 @@ No deadline or format was invented. Everything marked ASSUMED in the submission 
 
 ## 6. Final submission GO / NO-GO
 
-**CONDITIONAL GO to submit the repository as it stands under the disclosed limited scope**, conditional on items 1 to 4 above. **NO-GO if** the course requires a hosted application, requires internal gates to pass, or has a deadline earlier than the owner can meet. The failed coverage gate, AC-24 PARTIAL and the absence of human review are disclosed in every artifact; none is hidden.
+**CONDITIONAL GO to submit the repository as it stands under the disclosed limited scope**, conditional on items 1 to 4 above. **NO-GO if** the course lead says a hosted application is required, or the deadline is earlier than the owner can meet. The brief does not make internal quality gates part of the grading; the failed gate is disclosed anyway. The failed coverage gate, AC-24 PARTIAL and the absence of human review are disclosed in every artifact; none is hidden.

@@ -1,6 +1,15 @@
 # Technical Presentation and Presenter Notes
 
-**Timing is ASSUMED** (10 minutes plus 5 minutes of questions, as recorded in the project's own planning documents). The official presentation requirements are not verified in the repository; adjust the slide count to the real rule once the owner confirms it. Structure follows the six topics the planning documents name (problem, solution, data, evaluation, challenges, what's next) and covers the four assessment dimensions the owner stated: Outcome Quality, Learning Application, Ethical Considerations, Presentation.
+**Format (verified in the official brief, `AE.CAP_afa.md` in the Turing College submission repository (`TuringCollegeSubmissions/maltam-AE.CAP.AFA.1.1`, initial commit `150882c`)):** the presentation is optional but recommended; 10 minutes to present plus 5 minutes of questions; structure it around six points: **(1) the problem, (2) your solution, (3) the data, (4) evaluation, (5) challenges, (6) what's next**, and use SCR or SMART (part of the Presentation criterion). The per-slide minutes below are this outline's own allocation. The four assessment dimensions are Outcome Quality, Learning Application, Ethical Considerations and Presentation.
+
+| Official point | Slides |
+|---|---|
+| 1 The problem | 1 |
+| 2 Your solution (architecture, models, key tools) | 2, 3, 4, 5, 6, 7, 8 |
+| 3 The data (what data, how prepared or handled) | 5 (knowledge sources, synthetic fixtures, how evidence is built and abstained on) and 8 (synthetic demo data) |
+| 4 Evaluation (metrics and results) | 9 |
+| 5 Challenges | 6 (routing defect) and 9 to 10 (the harness defect, citation versus evidence) |
+| 6 What's next | 10 |
 
 | # | Slide | Assumed time | Dimension served |
 |---|---|---|---|

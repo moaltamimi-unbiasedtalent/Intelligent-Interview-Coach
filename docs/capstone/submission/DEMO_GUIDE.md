@@ -1,6 +1,6 @@
 # Demonstration Guide
 
-One end-to-end **synthetic** candidate journey: **Opportunity -> Preparation -> Knowledge retrieval -> Interview practice -> Feedback.** No real personal data, no provider required, no paid call. Timings are **assumed** (the official presentation format is not verified; see the checklist).
+One end-to-end **synthetic** candidate journey: **Opportunity -> Preparation -> Knowledge retrieval -> Interview practice -> Feedback.** No real personal data, no provider required, no paid call. The official presentation format is 10 minutes plus 5 minutes of questions (verified in the brief); the minutes inside this guide are its own allocation.
 
 ## 1. What is live, offline, mocked or disabled
 
