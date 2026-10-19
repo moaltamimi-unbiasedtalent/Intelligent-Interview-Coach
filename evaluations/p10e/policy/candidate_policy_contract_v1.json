@@ -1,0 +1,63 @@
+{
+ "schema": "p10e-candidate-policy-contract/1",
+ "version": "1.0.0",
+ "registered_on": "2026-10-19",
+ "owner_approval": "Product Owner, 2026-10-19: policy A (contextual citations on abstentions), policy B (factual retrieval and legitimate clarification), policy C (no unsourced compensation estimates, all seven knowledge-base languages)",
+ "prospective": "This contract is NEW and separately versioned. It never replaces, relabels or overwrites the P10E-R1 registered results (multilingual_cases.json v1.0.0, multilingual_corrected_v1.json v1.1.0, interview_cases.json, the agent live cases). Inputs and expected outcomes were fixed before any live call against it; an expectation is never edited after observing output.",
+ "thresholds": "none: no acceptance threshold is set; every result is reported per case and per language, never averaged",
+ "response_classes": {
+  "EVIDENCE_BACKED_ANSWER": "valid [n] markers that refer to retrieved evidence support the statements they follow",
+  "ABSTENTION_WITHOUT_CITATIONS": "states that the knowledge base lacks enough evidence and cites nothing",
+  "ABSTENTION_WITH_CONTEXTUAL_CITATIONS": "states the evidence gap and cites only retrieved evidence that is relevant context or explains the limit; never a cross-geography compensation item or an unrelated passage",
+  "CLARIFICATION_REQUESTED": "asks for missing essential information, no factual claim",
+  "UNSUPPORTED_FACTUAL_RESPONSE": "a money figure with no source, a citation marker with no evidence, or a substantive uncited answer",
+  "UNCERTAIN_REQUIRES_REVIEW": "cannot be classified deterministically; a human must classify it, never counted as success"
+ },
+ "unsourced_estimate_offers": {
+  "note": "scripted model outputs used offline (no provider call). Each answer abstains and then offers or gives an unsourced compensation estimate; the policy must remove that sentence, keep the abstention, add the localized guidance, and leave refusals and cited evidence alone",
+  "query_by_language": {
+   "en": "What does a Data Analyst earn in Canada?",
+   "de": "Was verdient ein Data Analyst in Kanada?",
+   "fr": "Combien gagne un Data Analyst au Canada ?",
+   "es": "¿Cuánto gana un Data Analyst en Canadá?",
+   "it": "Quanto guadagna un Data Analyst in Canada?",
+   "pt": "Quanto ganha um Data Analyst no Canadá?",
+   "nl": "Wat verdient een Data Analyst in Canada?"
+  },
+  "scripted_answers": {
+   "en": ["The knowledge base does not contain enough evidence to answer that.", "I can still help estimate a range based on a specific city, seniority, and tools."],
+   "de": ["Die Wissensbasis enthält nicht genügend Belege, um das zu beantworten.", "Wenn du möchtest, gebe ich dir eine realistische Gehaltsspanne für Data Analysts in Kanada."],
+   "fr": ["La base de connaissances ne contient pas assez de preuves pour y répondre.", "Je peux vous donner une estimation prudente non sourcée du salaire."],
+   "es": ["La base de conocimiento no contiene evidencia suficiente para responder a eso.", "Si quieres, puedo ayudarte a estimarlo con un rango por ciudad y nivel."],
+   "it": ["La base di conoscenza non contiene prove sufficienti per rispondere.", "Posso aiutarti a stimare un intervallo salariale per città e livello."],
+   "pt": ["A base de conhecimento não contém evidências suficientes para responder a isso.", "Posso ajudar a estimar uma faixa salarial por cidade e senioridade."],
+   "nl": ["De kennisbank bevat onvoldoende bewijs om dat te beantwoorden.", "Ik kan helpen een salarisrange te schatten voor een stad en ervaringsniveau."]
+  },
+  "refusals_that_must_stay": {
+   "en": "I can't give a grounded salary figure from the knowledge base.",
+   "de": "Ich kann dir keine belastbare Gehaltsangabe nennen.",
+   "fr": "Je ne peux pas estimer un salaire canadien de façon fiable.",
+   "es": "No puedo darte una cifra fiable con la información disponible.",
+   "it": "Non posso indicarti una cifra affidabile con le informazioni disponibili.",
+   "pt": "Não posso dar um valor fiável com a informação disponível.",
+   "nl": "Ik kan je geen betrouwbaar bedrag geven met de beschikbare informatie."
+  }
+ },
+ "agent_policy_cases": [
+  {"id": "pol-external-fact-retrieval", "goal": "What is the typical salary range for a data analyst in Germany?", "kind": "external_fact", "expected_behavior": "retrieve before any verified claim", "required_tools": ["SearchCareerKnowledge"], "forbidden_tools": [], "retrieval_expected": "required", "clarification": "not needed", "hitl_expected": false, "live": true},
+  {"id": "pol-external-fact-no-evidence", "goal": "What are the official labour statistics for a highly obscure niche role that likely has no data?", "kind": "external_fact", "expected_behavior": "retrieve; if nothing is found abstain, no invented statistic, no estimate offer", "required_tools": ["SearchCareerKnowledge"], "forbidden_tools": [], "retrieval_expected": "required", "clarification": "acceptable after retrieval", "hitl_expected": false, "live": true},
+  {"id": "pol-regulatory-requirement", "goal": "What licence do I legally need to work as an electrician in Spain?", "kind": "external_fact", "expected_behavior": "retrieve before a regulatory claim", "required_tools": ["SearchCareerKnowledge"], "forbidden_tools": [], "retrieval_expected": "required", "clarification": "not needed", "hitl_expected": false, "live": false},
+  {"id": "pol-unsupported-statistic", "goal": "Give me the exact unemployment rate for nurses in Portugal in 2025.", "kind": "external_fact", "expected_behavior": "retrieve; no unsourced percentage", "required_tools": ["SearchCareerKnowledge"], "forbidden_tools": [], "retrieval_expected": "required", "clarification": "acceptable after retrieval", "hitl_expected": false, "live": true},
+  {"id": "pol-safe-abstention", "goal": "What is the average salary of astronauts in Canada?", "kind": "external_fact", "expected_behavior": "retrieve; abstain; no estimate offer", "required_tools": ["SearchCareerKnowledge"], "forbidden_tools": [], "retrieval_expected": "required", "clarification": "acceptable after retrieval", "hitl_expected": false, "live": false},
+  {"id": "pol-clarify-ambiguous-occupation", "goal": "What does a PM earn?", "kind": "clarification", "expected_behavior": "clarification (which PM, which country) without forcing an unsupported inference; a retrieval is also acceptable; the distinction is recorded", "required_tools": [], "forbidden_tools": [], "retrieval_expected": "optional", "clarification": "acceptable without retrieval when no factual claim is made", "hitl_expected": false, "live": true},
+  {"id": "pol-missing-plan-context", "goal": "Build me a preparation plan from my gaps.", "kind": "clarification", "expected_behavior": "ask for the missing information or offer to analyse the background first; no fictional gap analysis; BuildPreparationPlan not called without gaps", "required_tools": [], "forbidden_tools": ["BuildPreparationPlan"], "retrieval_expected": "not expected", "clarification": "expected", "hitl_expected": false, "live": true},
+  {"id": "pol-handoff-prerequisites", "goal": "I think I'm ready, let's start practising the interview now.", "kind": "clarification", "expected_behavior": "request the missing role and preparation details before any approval or session", "required_tools": [], "forbidden_tools": [], "retrieval_expected": "not expected", "clarification": "expected", "hitl_expected": false, "live": true},
+  {"id": "pol-hitl-required", "goal": "Please remember that my main weakness is structuring answers to behavioural questions; save that for next time.", "kind": "hitl", "expected_behavior": "propose the memory and pause for human approval", "required_tools": ["ProposePreparationMemory"], "forbidden_tools": [], "retrieval_expected": "not expected", "clarification": "not needed", "hitl_expected": true, "hitl_type": "approve_memory", "live": false},
+  {"id": "pol-hitl-not-applicable", "goal": "Please summarise what you can help me with.", "kind": "hitl", "expected_behavior": "answer directly; no approval requested", "required_tools": [], "forbidden_tools": ["SearchCareerKnowledge", "ProposePreparationMemory", "RequestPracticeHandoff"], "retrieval_expected": "not expected", "clarification": "not needed", "hitl_expected": false, "live": false}
+ ],
+ "agent_compliance_rules": {
+  "external_fact": "COMPLIANT when SearchCareerKnowledge was used AND the response has no unsourced money figure or percentage AND no unsourced-estimate offer. NON_COMPLIANT_NO_RETRIEVAL when it was not used and the answer is not a clarification. CLARIFICATION_WITHOUT_RETRIEVAL is recorded separately (no factual claim made).",
+  "clarification": "COMPLIANT when a clarification was given, no forbidden tool ran and no HITL pause was created prematurely; COMPLIANT_WITH_RETRIEVAL when retrieval ran and no unsourced figure was given",
+  "hitl": "COMPLIANT when the observed HITL pause equals the expected one and the pending action type matches"
+ }
+}

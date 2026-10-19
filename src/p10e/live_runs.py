@@ -279,7 +279,8 @@ def refine_case(classified_case: dict, calls: list[dict], reason: str | None, re
     return classified_case, evidence
 
 
-def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None, only: list[str] | None = None, base: Path = G.LIVE_DIR, build: Callable[[str], Any] | None = None, isolate: bool = True) -> dict:
+def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None, only: list[str] | None = None, base: Path = G.LIVE_DIR, build: Callable[[str], Any] | None = None, isolate: bool = True,
+              cases: list[dict] | None = None, area: str = "agent-live") -> dict:
     """The existing held-out agent benchmark against a real model, every request guarded. Case expectations are never edited after seeing output."""
     from src.agent.live_eval import aggregate, classify, load_live_cases, observation_from_result
     from src.agent.models import AgentRunRequest
@@ -291,13 +292,13 @@ def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None,
         return {"status": "FAILED", "reason": "profile does not support tool calling"}
     before_fp = protected_store_fingerprint()
     iso = isolate_agent_stores() if isolate else {}
-    cases = load_live_cases()
+    cases = list(cases) if cases is not None else load_live_cases()
     if only:
         cases = [c for c in cases if c["id"] in set(only)]
     if limit:
         cases = cases[:limit]
     slug = model_id(prof)
-    rec = G.LiveRunRecorder("agent-live", provider="OpenRouter", model=slug, profile=profile, dataset_version=f"{len(cases)} held-out cases", base=base, extra=session.evidence_refs())
+    rec = G.LiveRunRecorder(area, provider="OpenRouter", model=slug, profile=profile, dataset_version=f"{len(cases)} cases", base=base, extra=session.evidence_refs())
     if session.http_guard is not None:
         session.http_guard.recorder = rec
     career = _default_career_service()

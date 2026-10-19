@@ -39,6 +39,7 @@ from src.copilot.retrieval.hybrid import HybridRetriever
 from src.copilot.retrieval.keyword import KeywordRetriever
 from src.copilot.retrieval.vector import VectorRetriever
 from src.copilot.security import guard_output, scan_text, screen_results, validate_input
+from src.copilot.security.grounding_policy import EvidenceView, enforce as enforce_grounding_policy
 from src.copilot.tools import ToolInvoker, build_tool_registry
 
 _REFUSAL_MESSAGE = (
@@ -109,6 +110,8 @@ class PipelineTrace:
     blocked: bool = False
     excluded_chunks: int = 0
     output_findings: list[str] = field(default_factory=list)
+    # Owner policy A/B/C: the approved response class of the final answer ("" when no model answer was produced).
+    response_class: str = ""
 
 
 @dataclass
@@ -399,6 +402,18 @@ class CareerIntelligenceService:
         if guarded.findings:
             trace.output_findings = guarded.findings
             trace.notes.extend(guarded.findings)
+
+        # Owner-approved grounding policies A and C (2026-10-19): one deterministic layer; local edits only, never a rewrite of evidence-backed text.
+        views = [EvidenceView(marker=f"[{i}]", text=e.text, evidence_type=e.evidence_type, country=e.country) for i, e in enumerate(evidence, start=1)]
+        policy = enforce_grounding_policy(
+            answer_text, evidence=views, query=bundle.cleaned_query, resolved_country=trace.detected_country, language=conversation_language,
+            allowed_text=" ".join(list(tool_summaries or []) + [bundle.job_description or "", bundle.candidate_background or ""]),
+        )
+        answer_text = policy.answer
+        trace.response_class = policy.response_class
+        if policy.findings:
+            trace.output_findings = list(trace.output_findings or []) + policy.findings
+            trace.notes.extend(policy.findings)
 
         # 10) Citations map to referenced, real evidence (structured or narrative).
         referenced = {f"[{n}]" for n in _MARKER_RE.findall(answer_text)}

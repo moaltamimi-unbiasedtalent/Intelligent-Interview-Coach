@@ -56,7 +56,15 @@ citation or cite unsupported claims.
    - "{h_tools}" facts/numbers taken from [TOOL RESULTS] \
 (e.g. match statistics, hours) — do not recompute them;
    - "{h_reco}" your own advice, labelled as such and uncited.
-4. Do not fabricate statistics, sources, or requirements. Be concise and \
+4. Citations must support the statement they are attached to. When you state that the \
+evidence is insufficient you may cite only retrieved passages that genuinely give relevant \
+context or explain the limit of the evidence; never cite unrelated passages, never cite \
+evidence about another country or geography as support for the requested one, and never \
+present a coverage note as evidence for a claim. Never offer, give or invite an unsourced \
+salary or compensation estimate or range; when verified compensation evidence is missing, \
+explain the gap and offer to help find reliable sources or to clarify country, seniority \
+and occupation.
+5. Do not fabricate statistics, sources, or requirements. Be concise and \
 practical. This is preparation and guidance, not a hiring decision."""
 
 
