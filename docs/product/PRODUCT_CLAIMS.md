@@ -43,8 +43,8 @@ Class: C1 = implemented and verified, C2 = implemented with a material limitatio
 | NO-02 | "100% secure", "completely private", "enterprise-grade security" | not demonstrable; privacy is strong but not absolute |
 | NO-03 | "bias-free", "fully unbiased" | models and data can be biased |
 | NO-04 | "all answers verified", "all advice is evidence-based", "fact checked" | AI can be wrong; evidence is shown only when used |
-| NO-05 | "delete everything Ask4Mo knows about you", "all data can be deleted", "all preparation-chat data is deleted" | PRIV-W9-01 open |
-| NO-06 | A history of accepted Terms/Privacy versions | PRIV-W9-02: not stored |
+| NO-05 | "delete everything Ask4Mo knows about you", "all data can be deleted", "all preparation-chat data is deleted" | PRIV-W9-01 was closed in W10.10 for account deletion (checkpoint runs are purged and the deletion job completes only when every run is purged), but selective preparation-chat deletion, bulk memory deletion and per-version document deletion do not exist; an absolute claim stays unsupported (register DI-F items) |
+| NO-06 | A history of accepted Terms/Privacy versions | PRIV-W9-02 was closed in W10.10 for new acceptances (records carry version, time and source; historical users are not back-filled; no re-acceptance is enforced and no history view exists), so a complete history is still not claimed |
 | NO-07 | "human reviewed", "lawyer reviewed", "native-speaker reviewed" | translations/legal copy are engineering drafts |
 | NO-08 | "employer approved", "used by hiring managers", testimonials, customer counts, ratings | none exist |
 | NO-09 | "guarantees interview success", "improves hiring probability by X%", any outcome statistic | no evidence |
@@ -54,7 +54,7 @@ Class: C1 = implemented and verified, C2 = implemented with a material limitatio
 | NO-13 | Glassdoor, Kununu, Google or LinkedIn as integrated sources | not integrated |
 | NO-14 | "real-time company intelligence", "browses the whole web" | bounded research only |
 | NO-15 | Purchasable Premium, prices beyond `lib/pricing.ts`, discounts, savings, ROI | billing not live; W10 owns plans |
-| NO-16 | Customer support ticketing / SLA | not built (W10.3) |
+| NO-16 | Customer support ticketing with an SLA, email notification or attachments | in-app ticketing exists (W10.3); SLA, email and attachments do not |
 | NO-17 | "WCAG compliant" or accessibility certification | not audited |
 | NO-18 | Recruiter/ATS/HR/hiring-automation positioning | not the product |
 | NO-19 | Voice-based emotion, confidence or personality assessment | explicitly never done |

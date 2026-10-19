@@ -36,7 +36,6 @@ INCLUDED = (
 NOT_INCLUDED = (
     "the original uploaded files (download them from Documents)",
     "security and audit records kept by the platform",
-    "legal-acceptance history (Ask4Mo does not record it yet)",
     "other people's data, including content shared with you",
     "internal prompts, model reasoning and provider secrets",
     "internal notes written by support staff (they are operational records, not part of your visible conversation)",
@@ -141,7 +140,8 @@ def build_candidate_export(*, user_id: int, session_factory, repo, account: Any)
             "status": getattr(account, "status", None),
             "email_verified": bool(getattr(account, "email_verified", False)),
         },
-        "legal_acceptance": {"recorded": False},
+        # Derived from the real records listed under "legal_acceptances" (a user with none still reads recorded: False); never a hard-coded claim.
+        "legal_acceptance": {"recorded": bool(data.get("legal_acceptances"))},
         **data,
         "interviews": history.get("interviews", []),
         # Back-compat with the pre-W9.8 shape consumers may have saved.
