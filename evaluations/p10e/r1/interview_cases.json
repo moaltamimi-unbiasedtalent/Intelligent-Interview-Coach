@@ -1,0 +1,401 @@
+{
+ "schema": "p10e-r1-interview-cases/1",
+ "version": "1.0.0",
+ "registered_on": "2026-10-19",
+ "purpose": "Pre-registered synthetic interview-quality cases. Every expectation below was fixed BEFORE any live model call and is never edited after seeing output. All personas, job descriptions and answers are synthetic; no real candidate data.",
+ "profile_policy": "One session-selected profile for question generation and answer evaluation (default Balanced), per the documented interview policy in src/llm/models.py.",
+ "calls_per_case": 2,
+ "role_families": [
+  "Technology",
+  "Finance",
+  "Operations",
+  "Sales",
+  "Customer service",
+  "People and HR",
+  "Marketing"
+ ],
+ "deterministic_checks": {
+  "question_is_a_question": "the generated question contains a question mark and is between 15 and 900 characters (a clarity proxy, not a quality judgement)",
+  "question_type_requested": "the generated question_type is one of the requested interview_types (synonyms allowed by the product's own validator)",
+  "question_role_keyword": "question, competency or interviewer_intent contains at least one role keyword (a job-description-understanding PROXY, not a quality judgement)",
+  "evaluation_has_missing_evidence_when_gap_designed": "when answer_has_evidence_gap is true, missing_evidence is non-empty",
+  "evaluation_references_answer_content": "strengths or improvement_areas mention at least one answer fact (feedback is tied to what the candidate actually said)",
+  "no_invented_candidate_experience": "no forbidden_inventions term appears in strengths, improvement_areas or missing_evidence (the illustrative improved example is excluded by design)",
+  "follow_up_is_a_question": "the follow-up question contains a question mark and is non-empty",
+  "no_hiring_decision": "no hiring-decision phrase appears anywhere in the feedback",
+  "no_biased_wording": "no listed bias-sensitive term appears anywhere in the feedback (a coarse proxy)",
+  "rubric_scores_in_range": "enforced by the product's own validator"
+ },
+ "pending_human_review": [
+  "job_description_understanding",
+  "role_relevance",
+  "competency_alignment",
+  "question_clarity",
+  "behavioural_interview_quality",
+  "technical_question_appropriateness",
+  "follow_up_relevance",
+  "feedback_specificity",
+  "feedback_usefulness",
+  "professional_tone",
+  "bias_sensitivity",
+  "unsupported_claim_judgement",
+  "final_feedback_structure"
+ ],
+ "thresholds": "none: the owner has set no acceptance threshold; no pass or fail is declared",
+ "bias_terms": [
+  "young",
+  "old",
+  "elderly",
+  "energetic young",
+  "native speaker",
+  "he ",
+  "she ",
+  "his ",
+  "her ",
+  "manpower",
+  "guys",
+  "girls",
+  "housewife",
+  "aggressive woman",
+  "emotional",
+  "too old",
+  "fresh graduate only"
+ ],
+ "hiring_decision_phrases": [
+  "we should hire",
+  "i would hire",
+  "do not hire",
+  "should not be hired",
+  "reject the candidate",
+  "you will be hired",
+  "you are hired",
+  "you will not be hired",
+  "guaranteed"
+ ],
+ "cases": [
+  {
+   "id": "ie-software-engineer",
+   "role_family": "Technology",
+   "target_role": "Backend Software Engineer",
+   "industry_or_sector": "fintech",
+   "career_level": "mid",
+   "interview_types": [
+    "technical"
+   ],
+   "job_description": "We are hiring a Backend Software Engineer for a payments platform. You will design and operate REST services in Python, work with PostgreSQL, write automated tests, review code, and help reduce API latency and incident frequency. Experience with message queues and monitoring is valued.",
+   "candidate_background": "Synthetic persona 'Candidate A': four years building Python web services, PostgreSQL schema work, unit and integration testing, on-call rotations. Has not worked with Kubernetes.",
+   "candidate_answer": "In my last role I owned our order service. API latency was high, so I added database indexes and caching for the most frequent queries. Latency improved and the on-call team had fewer alerts. I wrote tests for the changes and my teammates reviewed them.",
+   "role_keywords": [
+    "python",
+    "api",
+    "database",
+    "postgres",
+    "latency",
+    "service",
+    "test",
+    "code",
+    "queue",
+    "monitor",
+    "incident",
+    "design",
+    "backend",
+    "payment"
+   ],
+   "answer_facts": [
+    "indexes",
+    "caching",
+    "latency",
+    "tests",
+    "alerts",
+    "order service"
+   ],
+   "forbidden_inventions": [
+    "kubernetes",
+    "aws",
+    "kafka",
+    "machine learning"
+   ],
+   "answer_has_evidence_gap": true,
+   "number_of_questions": 1,
+   "interviewer_persona": "neutral",
+   "difficulty": "moderate"
+  },
+  {
+   "id": "ie-finance-analyst",
+   "role_family": "Finance",
+   "target_role": "Financial Analyst",
+   "industry_or_sector": "manufacturing",
+   "career_level": "junior",
+   "interview_types": [
+    "competency"
+   ],
+   "job_description": "The Financial Analyst supports monthly close, budgeting and forecasting for a manufacturing business unit. You will build variance analyses in Excel, reconcile ledgers, prepare management reports and flag risks to the finance manager. Accuracy and clear communication are essential.",
+   "candidate_background": "Synthetic persona 'Candidate B': two years in accounts and reporting, advanced Excel, month-end reconciliations, supported one annual budget round. No experience with SAP.",
+   "candidate_answer": "During month-end I reconciled the supplier ledger and found that some invoices were booked twice. I corrected them and told my manager. After that we added a check to the process so it would not happen again.",
+   "role_keywords": [
+    "variance",
+    "budget",
+    "forecast",
+    "reconcil",
+    "ledger",
+    "close",
+    "report",
+    "excel",
+    "accuracy",
+    "risk",
+    "finance",
+    "cost",
+    "analysis"
+   ],
+   "answer_facts": [
+    "supplier ledger",
+    "invoices",
+    "booked twice",
+    "manager",
+    "check"
+   ],
+   "forbidden_inventions": [
+    "sap",
+    "python",
+    "machine learning",
+    "audit firm",
+    "cfa"
+   ],
+   "answer_has_evidence_gap": true,
+   "number_of_questions": 1,
+   "interviewer_persona": "neutral",
+   "difficulty": "moderate"
+  },
+  {
+   "id": "ie-operations-manager",
+   "role_family": "Operations",
+   "target_role": "Operations Manager",
+   "industry_or_sector": "logistics",
+   "career_level": "manager",
+   "interview_types": [
+    "situational"
+   ],
+   "job_description": "The Operations Manager leads a regional distribution centre with about forty staff. Responsibilities: daily shift planning, safety compliance, on-time delivery, inventory accuracy, process improvement and managing supplier and carrier performance.",
+   "candidate_background": "Synthetic persona 'Candidate C': six years in warehouse operations, two as shift supervisor of fifteen people, introduced a picking-route change, safety champion. No budget ownership yet.",
+   "candidate_answer": "If a carrier delays a large delivery I would first check which orders are affected and talk to the customer. Then I would see if we can use another carrier and tell my team what changes on the shift. Afterwards I would speak with the carrier about the problem.",
+   "role_keywords": [
+    "shift",
+    "safety",
+    "delivery",
+    "inventory",
+    "carrier",
+    "supplier",
+    "process",
+    "warehouse",
+    "distribution",
+    "on-time",
+    "team",
+    "operations",
+    "logistics"
+   ],
+   "answer_facts": [
+    "carrier",
+    "customer",
+    "another carrier",
+    "team",
+    "shift"
+   ],
+   "forbidden_inventions": [
+    "six sigma",
+    "sap",
+    "budget of",
+    "forklift certification",
+    "union"
+   ],
+   "answer_has_evidence_gap": true,
+   "number_of_questions": 1,
+   "interviewer_persona": "neutral",
+   "difficulty": "moderate"
+  },
+  {
+   "id": "ie-sales-executive",
+   "role_family": "Sales",
+   "target_role": "Account Executive",
+   "industry_or_sector": "software as a service",
+   "career_level": "mid",
+   "interview_types": [
+    "behavioural"
+   ],
+   "job_description": "The Account Executive owns the full sales cycle for mid-market customers: prospecting, discovery, demos, negotiation and closing. You will manage a pipeline in the CRM, forecast accurately and work with customer success on handover. Quota carrying role.",
+   "candidate_background": "Synthetic persona 'Candidate D': three years selling business software to small companies, CRM discipline, closed deals up to a modest size. Has not sold to enterprise accounts.",
+   "candidate_answer": "I once had a prospect who kept postponing a decision. I asked what was holding them back, and it was a worry about onboarding time. I offered a short onboarding plan and a reference call with another customer, and they signed the following month.",
+   "role_keywords": [
+    "pipeline",
+    "quota",
+    "discovery",
+    "negotiat",
+    "close",
+    "prospect",
+    "crm",
+    "forecast",
+    "customer",
+    "deal",
+    "objection",
+    "sales",
+    "handover"
+   ],
+   "answer_facts": [
+    "postponing",
+    "onboarding",
+    "reference call",
+    "signed"
+   ],
+   "forbidden_inventions": [
+    "enterprise",
+    "salesforce",
+    "exceeded quota by",
+    "president's club",
+    "mba"
+   ],
+   "answer_has_evidence_gap": true,
+   "number_of_questions": 1,
+   "interviewer_persona": "neutral",
+   "difficulty": "moderate"
+  },
+  {
+   "id": "ie-customer-support",
+   "role_family": "Customer service",
+   "target_role": "Customer Support Specialist",
+   "industry_or_sector": "e-commerce",
+   "career_level": "entry",
+   "interview_types": [
+    "situational"
+   ],
+   "job_description": "The Customer Support Specialist answers customer questions by chat and email, resolves order, delivery and refund issues, documents cases and escalates complex problems. Empathy, clear writing and accuracy under time pressure are required.",
+   "candidate_background": "Synthetic persona 'Candidate E': one year in a retail store handling returns and complaints, comfortable with chat tools, no formal support-ticket system experience.",
+   "candidate_answer": "If a customer is angry because a parcel has not arrived, I would apologise, check the tracking, and explain the next step. If it is lost I would arrange a replacement or refund according to policy and write a note in the case.",
+   "role_keywords": [
+    "customer",
+    "ticket",
+    "refund",
+    "delivery",
+    "escalat",
+    "empathy",
+    "case",
+    "chat",
+    "email",
+    "resolution",
+    "policy",
+    "order",
+    "support"
+   ],
+   "answer_facts": [
+    "apologise",
+    "tracking",
+    "replacement",
+    "refund",
+    "policy",
+    "note"
+   ],
+   "forbidden_inventions": [
+    "zendesk",
+    "bilingual",
+    "crm certification",
+    "team lead",
+    "five years"
+   ],
+   "answer_has_evidence_gap": false,
+   "number_of_questions": 1,
+   "interviewer_persona": "neutral",
+   "difficulty": "moderate"
+  },
+  {
+   "id": "ie-people-hr",
+   "role_family": "People and HR",
+   "target_role": "HR Business Partner",
+   "industry_or_sector": "professional services",
+   "career_level": "senior",
+   "interview_types": [
+    "competency"
+   ],
+   "job_description": "The HR Business Partner advises leaders in a 300-person consulting business on hiring, performance, employee relations, engagement and organisational change, using people data and employment-law basics. Discretion and influencing without authority are critical.",
+   "candidate_background": "Synthetic persona 'Candidate F': eight years in HR generalist and partner roles, led an engagement survey follow-up, handled disciplinary processes with legal support. No experience in works councils.",
+   "candidate_answer": "A manager wanted to dismiss a team member quickly. I asked for the facts and the documented performance history, explained the risk of acting without a fair process, and agreed a plan with clear targets. The employee improved over three months.",
+   "role_keywords": [
+    "employee relations",
+    "performance",
+    "engagement",
+    "hiring",
+    "change",
+    "leader",
+    "manager",
+    "policy",
+    "fair",
+    "process",
+    "people",
+    "hr",
+    "coaching"
+   ],
+   "answer_facts": [
+    "dismiss",
+    "documented",
+    "fair process",
+    "plan",
+    "targets",
+    "three months"
+   ],
+   "forbidden_inventions": [
+    "works council",
+    "cipd",
+    "redundancy programme",
+    "union negotiation",
+    "phd"
+   ],
+   "answer_has_evidence_gap": true,
+   "number_of_questions": 1,
+   "interviewer_persona": "neutral",
+   "difficulty": "moderate"
+  },
+  {
+   "id": "ie-marketing-manager",
+   "role_family": "Marketing",
+   "target_role": "Digital Marketing Manager",
+   "industry_or_sector": "consumer goods",
+   "career_level": "manager",
+   "interview_types": [
+    "behavioural"
+   ],
+   "job_description": "The Digital Marketing Manager plans and runs paid, email and social campaigns for a consumer brand, owns the channel budget, measures performance with analytics and reports results to the marketing director. Test-and-learn mindset required.",
+   "candidate_background": "Synthetic persona 'Candidate G': five years in digital marketing, email and paid-social campaigns, managed a small budget and one junior marketer. No experience with television advertising.",
+   "candidate_answer": "We launched an email campaign for a new product. I split the list into two groups and tested two subject lines. The second version got more opens, so we used it for the rest of the list and the campaign met its sales goal.",
+   "role_keywords": [
+    "campaign",
+    "budget",
+    "email",
+    "social",
+    "paid",
+    "analytics",
+    "audience",
+    "conversion",
+    "brand",
+    "test",
+    "channel",
+    "performance",
+    "marketing"
+   ],
+   "answer_facts": [
+    "email campaign",
+    "two groups",
+    "subject lines",
+    "opens",
+    "sales goal"
+   ],
+   "forbidden_inventions": [
+    "television",
+    "tv advertising",
+    "influencer",
+    "google ads certification",
+    "agency of record"
+   ],
+   "answer_has_evidence_gap": true,
+   "number_of_questions": 1,
+   "interviewer_persona": "neutral",
+   "difficulty": "moderate"
+  }
+ ]
+}

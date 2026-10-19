@@ -1,0 +1,298 @@
+{
+ "schema": "p10e-r1-multilingual-cases/1",
+ "version": "1.0.0",
+ "registered_on": "2026-10-19",
+ "purpose": "Pre-registered synthetic multilingual knowledge-base cases. Expectations were fixed BEFORE any live model call and are never edited after seeing output. Fixtures only; no official international source is acquired or promoted; no geographic evidence is invented.",
+ "languages": [
+  "en",
+  "de",
+  "fr",
+  "es",
+  "it",
+  "pt",
+  "nl"
+ ],
+ "excluded_languages": {
+  "ru": "interface language only; not a supported Knowledge Base language"
+ },
+ "priority_languages": [
+  "es",
+  "it",
+  "pt",
+  "nl"
+ ],
+ "controls": [
+  "en",
+  "de",
+  "fr"
+ ],
+ "design_note": "The supported-occupation live query puts the English job title in parentheses after the native title (common in real job titles). It therefore tests answer language, citation preservation and grounding when evidence is retrievable; it does NOT by itself test pure cross-language retrieval, which is measured separately and offline with the native phrasing.",
+ "deterministic_checks": {
+  "answer_language": "a stopword-profile heuristic validated offline on fixed sentences (a proxy; not native-speaker validation)",
+  "citation_markers_valid": "every [n] marker in the answer refers to an evidence item that exists",
+  "no_salary_figure_invented": "for the unsupported-country cases, no currency amount or figure of four or more digits appears in the answer",
+  "no_citation_for_unsupported": "for the unsupported-country cases, no citation is present",
+  "offline_retrieval_hit": "native phrasing retrieves the fixture role document (no model call)"
+ },
+ "pending_human_review": [
+  "answer_language_quality",
+  "native_speaker_fluency",
+  "question_understanding",
+  "tone"
+ ],
+ "thresholds": "none: no acceptance threshold is set; languages are reported separately and never averaged",
+ "cases": [
+  {
+   "id": "ml-en-supported",
+   "language": "en",
+   "language_name": "English",
+   "kind": "supported_occupation_definition",
+   "control": true,
+   "query_native": "What does a Data Analyst do?",
+   "query_live": "What does a Data Analyst do?",
+   "geography": "none stated (occupation definition)",
+   "evidence_availability": "present: the fixture role document fx_roles describes the Data Analyst occupation (in English)",
+   "expected_behaviour": "answer in the question's language; if evidence is retrieved, cite it with valid [n] markers and no more markers than evidence items; no country-specific claim",
+   "acceptable_outcomes": {
+    "answered_with_citation": "the intended behaviour",
+    "abstained_or_clarified": "acceptable but recorded as a cross-language retrieval gap (L-XLANG-1); never counted as an answer"
+   },
+   "citation_boundary": "citations must come from the fixture corpus only (fixtures.invalid sources); a citation marker without a matching evidence item is a failure of grounding",
+   "offline_retrieval_expectation": "measured offline for the native phrasing, report only (no expectation of a hit for the non-English native titles)"
+  },
+  {
+   "id": "ml-en-unsupported-country",
+   "language": "en",
+   "language_name": "English",
+   "kind": "unsupported_country_compensation",
+   "control": true,
+   "query_native": "What does a Data Analyst earn in Canada?",
+   "query_live": "What does a Data Analyst earn in Canada?",
+   "geography": "Canada (no Canadian compensation evidence exists in the fixture corpus)",
+   "evidence_availability": "absent: only a United States compensation fixture exists",
+   "expected_behaviour": "state in the question's language that no supporting evidence is available; do not give a salary figure; do not present United States figures as Canadian",
+   "acceptable_outcomes": {
+    "abstained": "the intended behaviour: no citation and no salary figure",
+    "clarified": "asking which country or data is acceptable"
+   },
+   "citation_boundary": "no citation is expected; a citation to the United States compensation fixture in an answer about Canada is a cross-country claim",
+   "offline_retrieval_expectation": "no compensation evidence is retrievable for Canada"
+  },
+  {
+   "id": "ml-de-supported",
+   "language": "de",
+   "language_name": "German",
+   "kind": "supported_occupation_definition",
+   "control": true,
+   "query_native": "Was macht ein Datenanalyst?",
+   "query_live": "Was macht ein Datenanalyst (Data Analyst)?",
+   "geography": "none stated (occupation definition)",
+   "evidence_availability": "present: the fixture role document fx_roles describes the Data Analyst occupation (in English)",
+   "expected_behaviour": "answer in the question's language; if evidence is retrieved, cite it with valid [n] markers and no more markers than evidence items; no country-specific claim",
+   "acceptable_outcomes": {
+    "answered_with_citation": "the intended behaviour",
+    "abstained_or_clarified": "acceptable but recorded as a cross-language retrieval gap (L-XLANG-1); never counted as an answer"
+   },
+   "citation_boundary": "citations must come from the fixture corpus only (fixtures.invalid sources); a citation marker without a matching evidence item is a failure of grounding",
+   "offline_retrieval_expectation": "measured offline for the native phrasing, report only (no expectation of a hit for the non-English native titles)"
+  },
+  {
+   "id": "ml-de-unsupported-country",
+   "language": "de",
+   "language_name": "German",
+   "kind": "unsupported_country_compensation",
+   "control": true,
+   "query_native": "Was verdient ein Data Analyst in Kanada?",
+   "query_live": "Was verdient ein Data Analyst in Kanada?",
+   "geography": "Canada (no Canadian compensation evidence exists in the fixture corpus)",
+   "evidence_availability": "absent: only a United States compensation fixture exists",
+   "expected_behaviour": "state in the question's language that no supporting evidence is available; do not give a salary figure; do not present United States figures as Canadian",
+   "acceptable_outcomes": {
+    "abstained": "the intended behaviour: no citation and no salary figure",
+    "clarified": "asking which country or data is acceptable"
+   },
+   "citation_boundary": "no citation is expected; a citation to the United States compensation fixture in an answer about Canada is a cross-country claim",
+   "offline_retrieval_expectation": "no compensation evidence is retrievable for Canada"
+  },
+  {
+   "id": "ml-fr-supported",
+   "language": "fr",
+   "language_name": "French",
+   "kind": "supported_occupation_definition",
+   "control": true,
+   "query_native": "Que fait un analyste de données ?",
+   "query_live": "Que fait un analyste de données (Data Analyst) ?",
+   "geography": "none stated (occupation definition)",
+   "evidence_availability": "present: the fixture role document fx_roles describes the Data Analyst occupation (in English)",
+   "expected_behaviour": "answer in the question's language; if evidence is retrieved, cite it with valid [n] markers and no more markers than evidence items; no country-specific claim",
+   "acceptable_outcomes": {
+    "answered_with_citation": "the intended behaviour",
+    "abstained_or_clarified": "acceptable but recorded as a cross-language retrieval gap (L-XLANG-1); never counted as an answer"
+   },
+   "citation_boundary": "citations must come from the fixture corpus only (fixtures.invalid sources); a citation marker without a matching evidence item is a failure of grounding",
+   "offline_retrieval_expectation": "measured offline for the native phrasing, report only (no expectation of a hit for the non-English native titles)"
+  },
+  {
+   "id": "ml-fr-unsupported-country",
+   "language": "fr",
+   "language_name": "French",
+   "kind": "unsupported_country_compensation",
+   "control": true,
+   "query_native": "Combien gagne un Data Analyst au Canada ?",
+   "query_live": "Combien gagne un Data Analyst au Canada ?",
+   "geography": "Canada (no Canadian compensation evidence exists in the fixture corpus)",
+   "evidence_availability": "absent: only a United States compensation fixture exists",
+   "expected_behaviour": "state in the question's language that no supporting evidence is available; do not give a salary figure; do not present United States figures as Canadian",
+   "acceptable_outcomes": {
+    "abstained": "the intended behaviour: no citation and no salary figure",
+    "clarified": "asking which country or data is acceptable"
+   },
+   "citation_boundary": "no citation is expected; a citation to the United States compensation fixture in an answer about Canada is a cross-country claim",
+   "offline_retrieval_expectation": "no compensation evidence is retrievable for Canada"
+  },
+  {
+   "id": "ml-es-supported",
+   "language": "es",
+   "language_name": "Spanish",
+   "kind": "supported_occupation_definition",
+   "control": false,
+   "query_native": "¿Qué hace un analista de datos?",
+   "query_live": "¿Qué hace un analista de datos (Data Analyst)?",
+   "geography": "none stated (occupation definition)",
+   "evidence_availability": "present: the fixture role document fx_roles describes the Data Analyst occupation (in English)",
+   "expected_behaviour": "answer in the question's language; if evidence is retrieved, cite it with valid [n] markers and no more markers than evidence items; no country-specific claim",
+   "acceptable_outcomes": {
+    "answered_with_citation": "the intended behaviour",
+    "abstained_or_clarified": "acceptable but recorded as a cross-language retrieval gap (L-XLANG-1); never counted as an answer"
+   },
+   "citation_boundary": "citations must come from the fixture corpus only (fixtures.invalid sources); a citation marker without a matching evidence item is a failure of grounding",
+   "offline_retrieval_expectation": "measured offline for the native phrasing, report only (no expectation of a hit for the non-English native titles)"
+  },
+  {
+   "id": "ml-es-unsupported-country",
+   "language": "es",
+   "language_name": "Spanish",
+   "kind": "unsupported_country_compensation",
+   "control": false,
+   "query_native": "¿Cuánto gana un Data Analyst en Canadá?",
+   "query_live": "¿Cuánto gana un Data Analyst en Canadá?",
+   "geography": "Canada (no Canadian compensation evidence exists in the fixture corpus)",
+   "evidence_availability": "absent: only a United States compensation fixture exists",
+   "expected_behaviour": "state in the question's language that no supporting evidence is available; do not give a salary figure; do not present United States figures as Canadian",
+   "acceptable_outcomes": {
+    "abstained": "the intended behaviour: no citation and no salary figure",
+    "clarified": "asking which country or data is acceptable"
+   },
+   "citation_boundary": "no citation is expected; a citation to the United States compensation fixture in an answer about Canada is a cross-country claim",
+   "offline_retrieval_expectation": "no compensation evidence is retrievable for Canada"
+  },
+  {
+   "id": "ml-it-supported",
+   "language": "it",
+   "language_name": "Italian",
+   "kind": "supported_occupation_definition",
+   "control": false,
+   "query_native": "Cosa fa un analista di dati?",
+   "query_live": "Cosa fa un analista di dati (Data Analyst)?",
+   "geography": "none stated (occupation definition)",
+   "evidence_availability": "present: the fixture role document fx_roles describes the Data Analyst occupation (in English)",
+   "expected_behaviour": "answer in the question's language; if evidence is retrieved, cite it with valid [n] markers and no more markers than evidence items; no country-specific claim",
+   "acceptable_outcomes": {
+    "answered_with_citation": "the intended behaviour",
+    "abstained_or_clarified": "acceptable but recorded as a cross-language retrieval gap (L-XLANG-1); never counted as an answer"
+   },
+   "citation_boundary": "citations must come from the fixture corpus only (fixtures.invalid sources); a citation marker without a matching evidence item is a failure of grounding",
+   "offline_retrieval_expectation": "measured offline for the native phrasing, report only (no expectation of a hit for the non-English native titles)"
+  },
+  {
+   "id": "ml-it-unsupported-country",
+   "language": "it",
+   "language_name": "Italian",
+   "kind": "unsupported_country_compensation",
+   "control": false,
+   "query_native": "Quanto guadagna un Data Analyst in Canada?",
+   "query_live": "Quanto guadagna un Data Analyst in Canada?",
+   "geography": "Canada (no Canadian compensation evidence exists in the fixture corpus)",
+   "evidence_availability": "absent: only a United States compensation fixture exists",
+   "expected_behaviour": "state in the question's language that no supporting evidence is available; do not give a salary figure; do not present United States figures as Canadian",
+   "acceptable_outcomes": {
+    "abstained": "the intended behaviour: no citation and no salary figure",
+    "clarified": "asking which country or data is acceptable"
+   },
+   "citation_boundary": "no citation is expected; a citation to the United States compensation fixture in an answer about Canada is a cross-country claim",
+   "offline_retrieval_expectation": "no compensation evidence is retrievable for Canada"
+  },
+  {
+   "id": "ml-pt-supported",
+   "language": "pt",
+   "language_name": "Portuguese",
+   "kind": "supported_occupation_definition",
+   "control": false,
+   "query_native": "O que faz um analista de dados?",
+   "query_live": "O que faz um analista de dados (Data Analyst)?",
+   "geography": "none stated (occupation definition)",
+   "evidence_availability": "present: the fixture role document fx_roles describes the Data Analyst occupation (in English)",
+   "expected_behaviour": "answer in the question's language; if evidence is retrieved, cite it with valid [n] markers and no more markers than evidence items; no country-specific claim",
+   "acceptable_outcomes": {
+    "answered_with_citation": "the intended behaviour",
+    "abstained_or_clarified": "acceptable but recorded as a cross-language retrieval gap (L-XLANG-1); never counted as an answer"
+   },
+   "citation_boundary": "citations must come from the fixture corpus only (fixtures.invalid sources); a citation marker without a matching evidence item is a failure of grounding",
+   "offline_retrieval_expectation": "measured offline for the native phrasing, report only (no expectation of a hit for the non-English native titles)"
+  },
+  {
+   "id": "ml-pt-unsupported-country",
+   "language": "pt",
+   "language_name": "Portuguese",
+   "kind": "unsupported_country_compensation",
+   "control": false,
+   "query_native": "Quanto ganha um Data Analyst no Canadá?",
+   "query_live": "Quanto ganha um Data Analyst no Canadá?",
+   "geography": "Canada (no Canadian compensation evidence exists in the fixture corpus)",
+   "evidence_availability": "absent: only a United States compensation fixture exists",
+   "expected_behaviour": "state in the question's language that no supporting evidence is available; do not give a salary figure; do not present United States figures as Canadian",
+   "acceptable_outcomes": {
+    "abstained": "the intended behaviour: no citation and no salary figure",
+    "clarified": "asking which country or data is acceptable"
+   },
+   "citation_boundary": "no citation is expected; a citation to the United States compensation fixture in an answer about Canada is a cross-country claim",
+   "offline_retrieval_expectation": "no compensation evidence is retrievable for Canada"
+  },
+  {
+   "id": "ml-nl-supported",
+   "language": "nl",
+   "language_name": "Dutch",
+   "kind": "supported_occupation_definition",
+   "control": false,
+   "query_native": "Wat doet een data-analist?",
+   "query_live": "Wat doet een data-analist (Data Analyst)?",
+   "geography": "none stated (occupation definition)",
+   "evidence_availability": "present: the fixture role document fx_roles describes the Data Analyst occupation (in English)",
+   "expected_behaviour": "answer in the question's language; if evidence is retrieved, cite it with valid [n] markers and no more markers than evidence items; no country-specific claim",
+   "acceptable_outcomes": {
+    "answered_with_citation": "the intended behaviour",
+    "abstained_or_clarified": "acceptable but recorded as a cross-language retrieval gap (L-XLANG-1); never counted as an answer"
+   },
+   "citation_boundary": "citations must come from the fixture corpus only (fixtures.invalid sources); a citation marker without a matching evidence item is a failure of grounding",
+   "offline_retrieval_expectation": "measured offline for the native phrasing, report only (no expectation of a hit for the non-English native titles)"
+  },
+  {
+   "id": "ml-nl-unsupported-country",
+   "language": "nl",
+   "language_name": "Dutch",
+   "kind": "unsupported_country_compensation",
+   "control": false,
+   "query_native": "Wat verdient een Data Analyst in Canada?",
+   "query_live": "Wat verdient een Data Analyst in Canada?",
+   "geography": "Canada (no Canadian compensation evidence exists in the fixture corpus)",
+   "evidence_availability": "absent: only a United States compensation fixture exists",
+   "expected_behaviour": "state in the question's language that no supporting evidence is available; do not give a salary figure; do not present United States figures as Canadian",
+   "acceptable_outcomes": {
+    "abstained": "the intended behaviour: no citation and no salary figure",
+    "clarified": "asking which country or data is acceptable"
+   },
+   "citation_boundary": "no citation is expected; a citation to the United States compensation fixture in an answer about Canada is a cross-country claim",
+   "offline_retrieval_expectation": "no compensation evidence is retrievable for Canada"
+  }
+ ]
+}
