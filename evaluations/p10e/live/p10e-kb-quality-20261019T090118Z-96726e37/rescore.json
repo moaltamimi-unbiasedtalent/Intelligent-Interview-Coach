@@ -1,0 +1,92 @@
+{
+ "run_id": "p10e-kb-quality-20261019T090118Z-96726e37",
+ "model": "openai/gpt-5.4-mini",
+ "profile": "fast",
+ "rescored_offline": true,
+ "per_case": [
+  {
+   "case": "C-01",
+   "design": "designed_supported",
+   "observation": {
+    "answer_grounded_structural": true,
+    "citations": 2
+   }
+  },
+  {
+   "case": "C-03",
+   "design": "designed_supported",
+   "observation": {
+    "answer_grounded_structural": true,
+    "citations": 1
+   }
+  },
+  {
+   "case": "C-06",
+   "design": "designed_unsupported",
+   "observation": {
+    "no_citation_invented": true
+   }
+  },
+  {
+   "case": "C-07",
+   "design": "designed_unsupported",
+   "observation": {
+    "no_citation_invented": true
+   }
+  },
+  {
+   "case": "C-08",
+   "design": "unclassified",
+   "observation": {
+    "citations": 2
+   }
+  },
+  {
+   "case": "C-12",
+   "design": "unclassified",
+   "observation": {
+    "citations": 3
+   }
+  },
+  {
+   "case": "C-13",
+   "design": "unclassified",
+   "observation": {
+    "citations": 1
+   }
+  },
+  {
+   "case": "C-15",
+   "design": "unclassified",
+   "observation": {
+    "citations": 2
+   }
+  },
+  {
+   "case": "C-19",
+   "design": "designed_unsupported",
+   "observation": {
+    "no_citation_invented": true
+   }
+  }
+ ],
+ "tally": {
+  "designed_supported": {
+   "cases": 2,
+   "structurally_grounded": 2
+  },
+  "designed_unsupported": {
+   "cases": 3,
+   "no_citation_invented": 3
+  },
+  "unclassified": {
+   "cases": 4
+  }
+ },
+ "pending_human_review": [
+  "citation_supports_claim",
+  "language_consistency",
+  "abstains_when_unsupported"
+ ],
+ "thresholds": "none: no pass or fail is declared"
+}

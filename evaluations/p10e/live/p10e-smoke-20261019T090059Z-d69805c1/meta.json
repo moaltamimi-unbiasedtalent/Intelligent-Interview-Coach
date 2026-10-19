@@ -1,0 +1,16 @@
+{
+ "area": "smoke",
+ "authorization_version": 2,
+ "checkout": "clean",
+ "commit": "f5c5e6feb451df03c0a0cd3b82c4d27b4133c0f3",
+ "dataset_version": null,
+ "environment_id": "p10e-designated-host-owner-macos",
+ "execution_flag": true,
+ "ledger_genesis_id": "ff65d28571644fdc9546c922dfe24ca5",
+ "ledger_session_id": "0d813d1486b344368910f813105d415a",
+ "model": "(resolved below)",
+ "profile": "advanced",
+ "provider": "OpenRouter",
+ "run_id": "p10e-smoke-20261019T090059Z-d69805c1",
+ "started_at": "2026-10-19T09:00:59.039337+00:00"
+}

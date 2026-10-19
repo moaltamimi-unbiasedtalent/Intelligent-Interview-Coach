@@ -1,0 +1,148 @@
+{
+ "rubric": "see model_quality_contract.json metrics; ratings must name the reviewer, date and explanation",
+ "reviewer": null,
+ "cases": [
+  {
+   "case": "C-01",
+   "query": "What does a Data Analyst do?",
+   "evidence_titles": [
+    null,
+    null
+   ],
+   "citations": [
+    "fx_roles",
+    "fx_roles"
+   ],
+   "model_answer": "**Evidence (from sources):**  \nA Data Analyst typically cleans and prepares data, builds dashboards, and communicates findings to stakeholders.[1]  \nCommon skills for the role include SQL and statistics.[2]\n\n**Tool results (calculated):**  \nNo tool results were provided.\n\n**Recommendation:**  \nIn practice, a Data Analyst turns raw data into useful insights for decision-making. If you\u2019re exploring this career, focus first on learning SQL, basic statistics, data cleaning, and how to present insights clearly through dashboards or reports.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-03",
+   "query": "What does a Data Analyst earn in the US?",
+   "evidence_titles": [
+    null
+   ],
+   "citations": [
+    "fx_pay_us"
+   ],
+   "model_answer": "Evidence (from sources):\n- In the US, a Data Analyst has a median annual pay of 100,000 USD, with a reported range of 70,000 to 140,000 USD for 2025. [1]\n\nTool results (calculated):\n- None.\n\nRecommendation:\n- If you want, I can also break this down by experience level, location, or compare it with related roles like Business Analyst or Data Scientist.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-06",
+   "query": "What does an interplanetary cartographer do?",
+   "evidence_titles": [],
+   "citations": [],
+   "model_answer": "Evidence (from sources):\n- No evidence was retrieved for \u201cinterplanetary cartographer,\u201d and no structured occupation match was found in the knowledge base.\n\nTool results (calculated):\n- None.\n\nRecommendation:\n- The knowledge base does not contain enough evidence to answer that.\n- If you want, I can still help in one of these ways:\n  1. infer the likely meaning of the role from the job title alone,\n  2. compare it to adjacent fields like cartography, planetary science, GIS, and astrogeology,\n  3. outline what skills such a role would probably require,\n  4. help you research it with a targeted search plan.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-07",
+   "query": "What does a Data Analyst earn in Canada?",
+   "evidence_titles": [],
+   "citations": [],
+   "model_answer": "Evidence (from sources):\n- No retrieved evidence was provided, and the coverage notes state there is no official occupation-specific compensation available for \u201cData Analyst\u201d in Canada.\n\nTool results (calculated):\n- None.\n\nRecommendation:\n- The knowledge base does not contain enough evidence to answer that.\n- If you want, I can still help by:\n  1. suggesting reliable Canadian salary sources to check,\n  2. estimating a reasonable range based on your province, seniority, and tools used,\n  3. comparing Data Analyst pay with related roles like BI Analyst or Data Scientist.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-08",
+   "query": "What does a Data Analyst do?",
+   "evidence_titles": [
+    null,
+    null
+   ],
+   "citations": [
+    "fx_roles",
+    "fx_roles"
+   ],
+   "model_answer": "Evidence (from sources):\n- A Data Analyst typically cleans and prepares data, builds dashboards, and communicates findings to stakeholders or teammates. [1]\n- Core skills mentioned for a Data Analyst include SQL and statistics. [2]\n\nTool results (calculated):\n- No tool results were provided.\n\nRecommendation:\n- In simple terms, a Data Analyst turns raw data into useful information by organizing it, analyzing it, and presenting insights clearly.\n- If you want, I can also explain:\n  - a typical day in the role,\n  - common tools used,\n  - how it differs from Data Scientist or Business Analyst,\n  - or how to prepare for a Data Analyst interview.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-12",
+   "query": "interview tips arrive early dress well",
+   "evidence_titles": [
+    null,
+    null,
+    null
+   ],
+   "citations": [
+    "fx_doc_star_en",
+    "fx_doc_behav_en",
+    "fx_doc_prep_es"
+   ],
+   "model_answer": "**Evidence (from sources):**  \n- A useful interview technique is the STAR method: structure answers as Situation, Task, Action, and Result, and end with a measurable outcome when possible.[1]  \n- For behavioural interviews, it helps to prepare past examples in advance, especially stories about teamwork, conflict, and failure, and practise telling each in about two minutes.[2]  \n- Interview preparation should include researching the company, practising common questions, and preparing your own questions to ask.[3]  \n\n**Tool results (calculated):**  \n- No tool results were provided.\n\n**Recommendation:**  \nYes \u2014 arriving early and dressing professionally are good interview basics.  \nAlso focus on these high-impact tips:\n- Prepare 3\u20135 STAR stories.\n- Practise concise answers out loud.\n- Research the company and role.\n- Bring 2\u20133 thoughtful questions.\n- Aim to be calm, polite, and specific in your examples.\n\nIf you want, I can turn this into a short interview checklist.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-13",
+   "query": "Bewerbungstipps p\u00fcnktlich sein",
+   "evidence_titles": [
+    null
+   ],
+   "citations": [
+    "fx_doc_cv_fr"
+   ],
+   "model_answer": "**Evidence (from sources):**  \n- Ein guter Lebenslauf hebt messbare Erfolge hervor und bleibt kurz, idealerweise auf ein bis zwei Seiten.[1]\n\n**Tool results (calculated):**  \n- Keine Tool-Ergebnisse vorhanden.\n\n**Recommendation:**  \n- Wenn du mit \u201ep\u00fcnktlich sein\u201c das Einreichen der Bewerbung meinst: Reiche die Unterlagen m\u00f6glichst einige Tage vor der Frist ein. Das wirkt organisiert und reduziert Stress.  \n- Plane genug Zeit f\u00fcr Lebenslauf, Anschreiben und Korrektur ein.  \n- Halte deinen Lebenslauf kurz und fokussiere dich auf konkrete, messbare Ergebnisse.  \n- Wenn du \u201ep\u00fcnktlich sein\u201c im Vorstellungsgespr\u00e4ch meinst: Plane, 10\u201315 Minuten fr\u00fcher vor Ort bzw. 5 Minuten fr\u00fcher im Video-Call bereit zu sein.  \n- Lege Kleidung, Unterlagen und Route am Vorabend fest, damit nichts schiefgeht.  \n- Wenn du m\u00f6chtest, kann ich dir auch eine **kurze Checkliste f\u00fcr p\u00fcnktliche und professionelle Bewerbungen** auf Deutsch erstellen.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-15",
+   "query": "What does a Data Analyst do?",
+   "evidence_titles": [
+    null,
+    null
+   ],
+   "citations": [
+    "fx_roles",
+    "fx_roles"
+   ],
+   "model_answer": "**Evidence (from sources):**\n- A Data Analyst typically cleans and prepares data, builds dashboards, and communicates findings to others.[1]\n- Core skills mentioned for a Data Analyst include SQL and statistics.[2]\n\n**Tool results (calculated):**\n- No tool results were provided.\n\n**Recommendation:**\n- In simple terms, a Data Analyst turns raw data into useful insights.\n- Day to day, that usually means organizing messy data, analyzing it, creating reports or dashboards, and explaining what the results mean for business decisions.\n- If you want, I can also give you:\n  1. a day-in-the-life example,\n  2. the difference between a Data Analyst and Data Scientist, or\n  3. the top skills to learn for this role.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-19",
+   "query": "What does an interplanetary cartographer do?",
+   "evidence_titles": [],
+   "citations": [],
+   "model_answer": "Evidence (from sources):\n- No evidence was retrieved, and no structured occupation matched \u201cinterplanetary cartographer.\u201d\n\nTool results (calculated):\n- None.\n\nRecommendation:\nThe knowledge base does not contain enough evidence to answer that.\n\nIf helpful, I can still give you:\n- a plain-language, best-effort explanation clearly marked as general knowledge, or\n- help find the closest real occupations, such as cartographer/GIS specialist, planetary scientist, remote sensing scientist, or astrogeologist.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  }
+ ]
+}

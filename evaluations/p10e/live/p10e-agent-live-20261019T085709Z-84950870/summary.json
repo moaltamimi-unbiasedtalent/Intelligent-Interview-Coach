@@ -1,0 +1,72 @@
+{
+ "area": "agent-live",
+ "authorization_version": 2,
+ "budget": {
+  "call_limit": 300,
+  "ceiling_usd": "10",
+  "cost_basis": "calculated from the published price snapshot (or the larger provider-reported figure); the provider's billing dashboard may differ",
+  "cumulative": {
+   "approved_total_usd": "10",
+   "call_cap": 300,
+   "calls": 53,
+   "committed_usd": "0.3965765",
+   "entries_known": 53,
+   "entries_rejected": 0,
+   "entries_unknown": 0,
+   "environment_id": "p10e-designated-host-owner-macos",
+   "genesis_id": "ff65d28571644fdc9546c922dfe24ca5",
+   "pending": 0,
+   "remaining_calls": 247,
+   "remaining_usd": "9.6034235",
+   "session_id": "fc3dd7102dab4ae58ca0816b2272062c"
+  },
+  "latency_ms_max": 3443,
+  "latency_ms_p50": 3443,
+  "refusals": [],
+  "run_calls_admitted": 2,
+  "run_calls_completed": 2,
+  "run_calls_failed_or_unknown": 0,
+  "run_calls_rejected_by_provider": 0,
+  "run_calls_with_unknown_usage": 0,
+  "run_cost_known_usd_estimate": "0.0150975",
+  "run_input_tokens_known": 5019,
+  "run_output_tokens_known": 170,
+  "run_provider_reported_cost_calls": 2,
+  "run_provider_reported_cost_usd": "0.0081855",
+  "run_total_tokens_known": 5189
+ },
+ "checkout": "dirty",
+ "commit": "13a565f15335ba942bdc003dded4c8fb6bdb998f",
+ "dataset_version": "1 held-out cases",
+ "environment_id": "p10e-designated-host-owner-macos",
+ "execution_flag": true,
+ "finished_at": "2026-10-19T08:57:15.411477+00:00",
+ "ledger_genesis_id": "ff65d28571644fdc9546c922dfe24ca5",
+ "ledger_session_id": "fc3dd7102dab4ae58ca0816b2272062c",
+ "model": "openai/gpt-5.4",
+ "profile": "balanced",
+ "provider": "OpenRouter",
+ "results": {
+  "cases_completed": 0,
+  "cases_planned": 1,
+  "cases_refused": [
+   "jd_explicit_analysis"
+  ],
+  "guard_refusal_reasons": {
+   "jd_explicit_analysis": [
+    "output_cap_exceeds_limit"
+   ]
+  },
+  "metrics": {},
+  "model": "openai/gpt-5.4",
+  "note": "Complete over the planned cases. Metrics measure the model's decisions on a bounded held-out sample; not an accuracy score.",
+  "per_case_latency_ms": {
+   "jd_explicit_analysis": 5792
+  },
+  "profile": "balanced",
+  "protected_stores_unchanged": true,
+  "stopped_by_guard": null
+ },
+ "run_id": "p10e-agent-live-20261019T085709Z-84950870",
+ "started_at": "2026-10-19T08:57:09.564779+00:00"
+}

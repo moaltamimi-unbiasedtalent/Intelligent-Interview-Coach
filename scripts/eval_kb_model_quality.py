@@ -8,6 +8,11 @@ refusal reasons are reported.
 
     python scripts/eval_kb_model_quality.py            # validate + dry-run + "NOT AUTHORISED" (exit 3)
     python scripts/eval_kb_model_quality.py --validate # validate only (exit 0 when sound)
+
+P10E (owner authorization of 2026-10-19, recorded in evaluations/p10e/authorization.json, separate from and not rewriting the P10D status above):
+    P10E_LIVE=1 python scripts/eval_kb_model_quality.py --live --profile balanced
+runs the 9 selected ANSWER cases with a real model through the budget guard (src/p10e/guard.py). It refuses (exit 3) unless the owner has approved finite spending and call limits.
+The 11 selected evidence cases and every human-rated metric are NOT RUN / PENDING_HUMAN_REVIEW; no threshold exists and none is invented.
 """
 
 from __future__ import annotations
@@ -65,6 +70,8 @@ def dry_run(contract: dict, corpus: dict) -> dict:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--validate", action="store_true")
+    ap.add_argument("--live", action="store_true", help="P10E guarded live run (needs owner-approved limits and P10E_LIVE=1)")
+    ap.add_argument("--profile", choices=["fast", "balanced", "advanced"], default="balanced")
     a = ap.parse_args(argv)
     contract = json.loads(CONTRACT.read_text(encoding="utf-8"))
     corpus = Q.load_corpus()
@@ -74,6 +81,22 @@ def main(argv=None) -> int:
         return 1
     print(f"contract v{contract['version']} is sound against corpus v{corpus['version']} ({len(contract['case_selection']['case_ids'])} cases selected).")
     if a.validate:
+        return 0
+    if a.live:
+        from src.p10e import guard as G
+        from src.p10e import live_runs as R
+
+        def creds() -> bool:
+            from src.copilot.config import load_config
+            return bool(load_config().is_configured)
+
+        try:
+            with G.live_session("kb-quality", "synthetic_fixture_corpus", credential_check=creds) as session:
+                out = R.run_kb_quality(session, a.profile)
+        except G.LiveRunRefused as exc:
+            print(f"REFUSED ({exc.reason}): {exc}")
+            return 3
+        print(json.dumps({"run_dir": out["run_dir"], "budget": out["budget"], "not_run": out["not_run"]}, indent=1, default=str))
         return 0
     d = dry_run(contract, corpus)
     print(f"dry run: {d['cases']} cases, about {d['approx_input_tokens_per_pass']} input tokens per pass and profile (no call made).")

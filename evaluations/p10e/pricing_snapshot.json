@@ -1,0 +1,97 @@
+{
+ "schema": "p10e-pricing-snapshot/1",
+ "retrieved_on": "2026-10-19",
+ "source": "https://openrouter.ai/api/v1/models (public catalogue; no credential, no inference, no cost)",
+ "note": "PROVIDER METADATA AT ONE POINT IN TIME. Prices are USD per token as published by the provider and may change; they are inputs to a worst-case ceiling check and are NOT billed amounts. Reasoning tokens are billed as completion tokens, so the output side is an upper-bound input to the estimate. The long-prompt override applies above 272,000 prompt tokens and no P10E request approaches that. Added 2026-10-19: the models the designated environment actually resolves for Fast, Balanced and Advanced (the owner's OPENROUTER_MODEL_* settings).",
+ "models": {
+  "openai/gpt-5.6-luna": {
+   "profile": "fast",
+   "available": true,
+   "context_length": 1050000,
+   "max_completion_tokens": 128000,
+   "supports_tools": true,
+   "supports_structured_output": true,
+   "usd_per_input_token": "0.0000002",
+   "usd_per_output_token": "0.0000012",
+   "usd_per_million_input": "0.2",
+   "usd_per_million_output": "1.2",
+   "long_prompt_override_min_tokens": 272000,
+   "profile_source": "registry default in src/llm/models.py _DEFAULT_SLUG (NOT the effective model when OPENROUTER_MODEL_* overrides are set)"
+  },
+  "openai/gpt-5.6-terra": {
+   "profile": "balanced",
+   "available": true,
+   "context_length": 1050000,
+   "max_completion_tokens": 128000,
+   "supports_tools": true,
+   "supports_structured_output": true,
+   "usd_per_input_token": "0.000002",
+   "usd_per_output_token": "0.000012",
+   "usd_per_million_input": "2.0",
+   "usd_per_million_output": "12.0",
+   "long_prompt_override_min_tokens": 272000,
+   "profile_source": "registry default in src/llm/models.py _DEFAULT_SLUG (NOT the effective model when OPENROUTER_MODEL_* overrides are set)"
+  },
+  "openai/gpt-5.6-sol": {
+   "profile": "advanced",
+   "available": true,
+   "context_length": 1050000,
+   "max_completion_tokens": 128000,
+   "supports_tools": true,
+   "supports_structured_output": true,
+   "usd_per_input_token": "0.000004",
+   "usd_per_output_token": "0.00002",
+   "usd_per_million_input": "4.0",
+   "usd_per_million_output": "20.0",
+   "long_prompt_override_min_tokens": 272000,
+   "profile_source": "registry default in src/llm/models.py _DEFAULT_SLUG (NOT the effective model when OPENROUTER_MODEL_* overrides are set)"
+  },
+  "openai/gpt-5.4-mini": {
+   "profile": "fast",
+   "profile_source": "effective in the designated environment (OPENROUTER_MODEL_* overrides in the developer .env; also the code default of src/llm/models.py code_model_id)",
+   "available": true,
+   "context_length": 400000,
+   "max_completion_tokens": 128000,
+   "supports_tools": true,
+   "supports_structured_output": true,
+   "usd_per_input_token": "0.00000075",
+   "usd_per_output_token": "0.0000045",
+   "usd_per_million_input": "0.75",
+   "usd_per_million_output": "4.5",
+   "long_prompt_override_min_tokens": null
+  },
+  "openai/gpt-5.4": {
+   "profile": "balanced",
+   "profile_source": "effective in the designated environment (OPENROUTER_MODEL_* overrides in the developer .env; also the code default of src/llm/models.py code_model_id)",
+   "available": true,
+   "context_length": 1050000,
+   "max_completion_tokens": 128000,
+   "supports_tools": true,
+   "supports_structured_output": true,
+   "usd_per_input_token": "0.0000025",
+   "usd_per_output_token": "0.000015",
+   "usd_per_million_input": "2.5",
+   "usd_per_million_output": "15.0",
+   "long_prompt_override_min_tokens": 272000
+  },
+  "openai/gpt-5.5": {
+   "profile": "advanced",
+   "profile_source": "effective in the designated environment (OPENROUTER_MODEL_* overrides in the developer .env; also the code default of src/llm/models.py code_model_id)",
+   "available": true,
+   "context_length": 1050000,
+   "max_completion_tokens": 128000,
+   "supports_tools": true,
+   "supports_structured_output": true,
+   "usd_per_input_token": "0.000005",
+   "usd_per_output_token": "0.00003",
+   "usd_per_million_input": "5.0",
+   "usd_per_million_output": "30.0",
+   "long_prompt_override_min_tokens": 272000
+  }
+ },
+ "effective_profiles_designated_environment": {
+  "fast": "openai/gpt-5.4-mini",
+  "balanced": "openai/gpt-5.4",
+  "advanced": "openai/gpt-5.5"
+ }
+}

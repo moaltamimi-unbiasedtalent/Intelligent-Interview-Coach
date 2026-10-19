@@ -10,6 +10,10 @@ offline with ``--evaluate-recorded`` (no provider calls).
     python scripts/eval_agent_live.py --allow-paid --profile balanced --record
     python scripts/eval_agent_live.py --evaluate-recorded  # offline re-scoring
 
+P10E: a paid run ALSO needs the owner-approved finite limits in evaluations/p10e/authorization.json and the opt-in P10E_LIVE=1 (src/p10e/guard.py): every model call,
+including the nested calls an agent makes, is admitted against a spending ceiling and a call limit, and the run is recorded under evaluations/p10e/live/. Without approved
+limits this exits 3 and makes no call.
+
 This is separate from the deterministic scripted regression
 (`python scripts/eval_agent.py`). It measures the actual model's decisions on a
 bounded held-out sample; it is not an "LLM accuracy" score.
@@ -20,7 +24,6 @@ from __future__ import annotations
 import argparse
 import os
 import sys
-import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -30,8 +33,6 @@ from src.agent.live_eval import (  # noqa: E402
     classify,
     load_live_cases,
     load_traces,
-    observation_from_result,
-    save_trace,
 )
 
 PROFILES = {"fast": "FAST", "balanced": "BALANCED", "advanced": "ADVANCED"}
@@ -49,35 +50,26 @@ def _print_metrics(title: str, metrics: dict) -> None:
     print("=" * 60)
 
 
-def _run_live(profile: str, cases: list[dict], record: bool, limit: int | None):
-    from src.agent.models import AgentRunRequest
-    from src.application.agent_service import AgentApplicationService, _default_career_service
-    from src.copilot.config import load_config
-    from src.copilot.llm.openrouter import build_chat_model
-    from src.llm.models import ModelProfile, model_id, spec
+def _run_live(profile: str, limit: int | None):
+    """P10E guarded live run (see src/p10e): needs the execution flag, owner-approved limits, the designated ledger, the exclusive lock and P10E_LIVE=1."""
+    from src.p10e import guard as G
+    from src.p10e import live_runs as R
 
-    prof = ModelProfile[PROFILES[profile]]
-    if not spec(prof).supports_tools:
-        print(f"Profile {profile} does not support tool calling; aborting.")
-        return 2
-    slug = model_id(prof)
-    career = _default_career_service()
+    def creds() -> bool:
+        from src.copilot.config import load_config
+        return bool(load_config().is_configured)
 
-    results = []
-    if limit:
-        cases = cases[:limit]
-    for case in cases:
-        svc = AgentApplicationService(
-            model_factory=lambda: build_chat_model(load_config(), model=slug),
-            career_service=career)
-        t0 = time.perf_counter()
-        res = svc.run(AgentRunRequest(goal=case["goal"], user_id="live-eval", profile=prof.value))
-        latency = int((time.perf_counter() - t0) * 1000)
-        obs = observation_from_result(case["id"], profile, res, latency)
-        if record:
-            save_trace(obs)
-        results.append(classify(case, obs))
-    _print_metrics(f"LIVE MODEL EVALUATION (profile={profile}, cases={len(results)})", aggregate(results))
+    try:
+        with G.live_session("agent-live", "synthetic_held_out_agent_cases", credential_check=creds) as session:
+            out = R.run_agent(session, profile, limit=limit)
+    except G.LiveRunRefused as exc:
+        print(f"REFUSED ({exc.reason}): {exc}")
+        return 3
+    res = out["results"]
+    _print_metrics(f"LIVE MODEL EVALUATION (profile={profile}, cases={res['cases_completed']}/{res['cases_planned']})", res["metrics"])
+    b = out["budget"]
+    print(f"budget: cumulative committed {b['cumulative'].get('committed_usd')} of {b['ceiling_usd']} USD, {b['cumulative'].get('calls')} of {b['call_limit']} calls; evidence: {out['run_dir']}")
+    print(res["note"])
     return 0
 
 
@@ -111,7 +103,7 @@ def main(argv=None) -> int:
         print(f"Configuration OK: {len(cases)} cases, profile={args.profile}.")
         print("Re-run with --allow-paid to execute, or --evaluate-recorded to score saved traces.")
         return 0
-    return _run_live(args.profile, cases, args.record, args.limit)
+    return _run_live(args.profile, args.limit)
 
 
 if __name__ == "__main__":
