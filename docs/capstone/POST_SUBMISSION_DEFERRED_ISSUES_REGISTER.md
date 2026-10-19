@@ -1,6 +1,6 @@
 # Post-Submission Deferred Issues Register
 
-**Status:** CONSOLIDATED REGISTER, generated 2026-10-19 during the integrated Candidate/Admin/Operations requalification (main `fb2d264`: 387 issues, 336 active, 51 closed) and **updated in the final acceptance reconciliation (main `4043429`)**: three issues added (`IR-AC03-TESTS`, `IR-AC18-RUNLIST`, `IR-DEADLINE`), `IR-P12` closed on the owner's direction, and several remaining-work notes refreshed; no issue was deleted or reclassified to ease acceptance. This is a **supporting document under the canonical roadmap** (`capstone_phase_plan.md` stays canonical for scope and sequence). It is **not** a competing roadmap and it replaces none of its source registers, which are preserved unchanged.
+**Status:** CONSOLIDATED REGISTER, generated 2026-10-19 during the integrated Candidate/Admin/Operations requalification (main `fb2d264`: 387 issues, 336 active, 51 closed) and **updated in the final acceptance reconciliation (main `4043429`; 390 issues, 338 active, 52 closed) and in P11 (main `3d1af6f`: two issues added, `IR-DEMO-KEY` and `IR-REHEARSAL-CALL`; 392, 340, 52)**:  three issues added (`IR-AC03-TESTS`, `IR-AC18-RUNLIST`, `IR-DEADLINE`), `IR-P12` closed on the owner's direction, and several remaining-work notes refreshed; no issue was deleted or reclassified to ease acceptance. This is a **supporting document under the canonical roadmap** (`capstone_phase_plan.md` stays canonical for scope and sequence). It is **not** a competing roadmap and it replaces none of its source registers, which are preserved unchanged.
 
 **Rules this register follows.** Deferring an item is a scheduling decision only: it is never completion and never a waiver. It does not authorize removing a mandatory gate, passing a failed evaluation, ignoring a vulnerability, using unlicensed data, exposing private candidate data, enabling production services, treating a mock as live, claiming human qualification or waiving a Turing College requirement. An item that affects the safety or validity of the current capstone is `OPEN — PRE-SUBMISSION QUALIFICATION`; one that blocks only commercial deployment is `OPEN — PRODUCTION RELEASE BLOCKER`. One canonical `DI-` identifier is kept per issue even when an issue appears in several readiness views. Owners and dates are never invented (`UNKNOWN` where not recorded; most first-recorded dates are UNKNOWN because git history was not mined).
 
@@ -8,14 +8,14 @@
 
 ## 1. Totals
 
-390 issues recorded: **338 active** and 52 CLOSED — VERIFIED (kept for reconciliation only).
+392 issues recorded: **340 active** and 52 CLOSED — VERIFIED (kept for reconciliation only).
 
 | Status | Count |
 |---|---|
 | OPEN — PRE-SUBMISSION QUALIFICATION | 3 |
 | OPEN — PRODUCTION RELEASE BLOCKER | 16 |
-| PENDING OWNER DECISION | 70 |
-| PARTIALLY REMEDIATED | 48 |
+| PENDING OWNER DECISION | 71 |
+| PARTIALLY REMEDIATED | 49 |
 | NOT RUN | 39 |
 | NOT VERIFIED | 26 |
 | PENDING HUMAN REVIEW | 22 |
@@ -36,8 +36,8 @@
 | J | External integrations | 17 | 0 |
 | K | Legal and governance | 16 | 1 |
 | L | Human validation | 13 | 0 |
-| M | Technical debt and documentation consistency | 24 | 15 |
-| N | Candidate journey and submission consistency | 11 | 3 |
+| M | Technical debt and documentation consistency | 25 | 15 |
+| N | Candidate journey and submission consistency | 12 | 3 |
 
 Categories A to M follow the owner's minimum inventory of 2026-10-19; N (candidate journey and submission consistency) was added for journey findings and requalification findings that fit none of them.
 
@@ -300,6 +300,7 @@ Categories A to M follow the owner's minimum inventory of 2026-10-19; N (candida
 | DI-M-013 | SJA-02 | Knowledge Admin cannot retry/cancel failed jobs | Possible future permission review; none made |
 | DI-M-014 | SJA-03 | Billing/Security-Privacy admins cannot see queue state | Possible future permission review; none made |
 | DI-M-015 | SJA-05 | Knowledge approval has no distinct-actor rule or step-up | REQUIRED: whether knowledge approval and activation need a distinct-actor rule and/or fresh-password step-up (related A-04). Source qualification itself is unaffected: unapproved knowledge still neve… |
+| DI-M-016 | IR-REHEARSAL-CALL | One unplanned live agent run during the P11 rehearsal (outside the P10E ledger) | REQUIRED: acknowledge the unplanned call |
 | DI-M-018 | M-LEDGER | Mo and company-research cost-ledger gap | Whether Mo/company research must enter ledger before launch |
 | DI-M-027 | M-POLICY02 | Evaluation score consistency (POLICY-02) | Decision |
 | DI-M-028 | M-LEGACY01 | Legacy Streamlit UI retained (LEGACY-01) | Retirement task |
@@ -3359,7 +3360,7 @@ Each block lists: original reference and source, latest verified status, severit
 - **Dependencies:** P10F, reviewers · **Owner decisions:** None recorded
 - **Required for closure:** Not closed
 
-### Category M: Technical debt and documentation consistency (24 active)
+### Category M: Technical debt and documentation consistency (25 active)
 
 #### DI-M-003: Locale-aware font/subset loading
 - **Original:** `TD-W9-03` · **Source:** P10B_W9_IMPLEMENTATION_PLAN.md TD-W9-03; R-51 · **First recorded:** UNKNOWN
@@ -3420,6 +3421,15 @@ Each block lists: original reference and source, latest verified status, severit
 - **Candidate impact:** None directly · **Security/privacy:** None identified · **Release impact:** None recorded
 - **Dependencies:** None recorded · **Owner decisions:** None recorded
 - **Required for closure:** W12_4F section 6
+
+#### DI-M-016: One unplanned live agent run during the P11 rehearsal (outside the P10E ledger)
+- **Original:** `IR-REHEARSAL-CALL` · **Source:** docs/capstone/submission/REHEARSAL_AND_FREEZE_LOG.md · **First recorded:** 2026-10-19
+- **Status:** PENDING OWNER DECISION · **Severity:** LOW · **Priority:** P3 · **Blocks submission:** NO · **Blocks production:** NO
+- **Description:** During the UI rehearsal a single POST /agent/run reached the live provider because the working copy's .env key was loaded (see IR-DEMO-KEY). The P10E ledger was not used and is unchanged (285 of 300 calls). A read-only account snapshot afterwards showed usage +USD 0.0207 since the previous snapshot (may include other use of the shared key); the per-request cost was not captured.
+- **Remains:** Acknowledge the unplanned spend; no further action possible on the spend itself. The shared-key reconciliation caveat (DI-M M-RECON) applies.
+- **Candidate impact:** none directly · **Security/privacy:** spend outside the hard budget guard · **Release impact:** demonstration safety and spend control
+- **Dependencies:** none · **Owner decisions:** REQUIRED: acknowledge the unplanned call
+- **Required for closure:** Owner acknowledgement recorded; snapshot kept (evaluations/p10e/live/provider_snapshots/...p11-rehearsal-incident.json)
 
 #### DI-M-017: Step-up only for role changes (journey finding)
 - **Original:** `A-04` · **Source:** docs/capstone/journeys/PLATFORM_ADMIN_JOURNEY.md A-04 · **First recorded:** UNKNOWN
@@ -3601,7 +3611,7 @@ Each block lists: original reference and source, latest verified status, severit
 - **Dependencies:** None recorded · **Owner decisions:** None recorded
 - **Required for closure:** See H-RESCACHE
 
-### Category N: Candidate journey and submission consistency (11 active)
+### Category N: Candidate journey and submission consistency (12 active)
 
 #### DI-N-001: No candidate control to invite members or share a report or story
 - **Original:** `CJ-D-01` · **Source:** docs/capstone/journeys/CANDIDATE_JOURNEY.md D-01 · **First recorded:** 2026-10-19
@@ -3701,6 +3711,15 @@ Each block lists: original reference and source, latest verified status, severit
 - **Candidate impact:** none directly · **Security/privacy:** none identified · **Release impact:** acceptance record
 - **Dependencies:** none · **Owner decisions:** REQUIRED: confirm the deadline and time zone
 - **Required for closure:** Owner confirmation recorded in the P11 plan
+
+#### DI-N-015: A working copy with .env or .streamlit/secrets.toml makes the local backend contact the provider even with PYTHON_DOTENV_DISABLED or an emp…
+- **Original:** `IR-DEMO-KEY` · **Source:** docs/capstone/submission/REHEARSAL_AND_FREEZE_LOG.md · **First recorded:** 2026-10-19
+- **Status:** PARTIALLY REMEDIATED · **Severity:** MEDIUM · **Priority:** P1 · **Blocks submission:** NO · **Blocks production:** NO
+- **Description:** Found in the P11 rehearsal: the backend started from the working copy loaded the OpenRouter key (also available through Streamlit secrets) and answered /agent/run with a real model reply. Neither PYTHON_DOTENV_DISABLED=1 nor an empty OPENROUTER_API_KEY prevents it.
+- **Remains:** Documented workaround (start the backend from a fresh checkout, verified: no key, safe not-configured answer; README warning and demo guide). No code change: a real switch to disable key discovery for demonstrations (for example an explicit offline flag honoured by load_config and the Streamlit secrets reader) does not exist.
+- **Candidate impact:** none directly · **Security/privacy:** a developer demonstration can spend on the owner's key without intending to · **Release impact:** demonstration safety and spend control
+- **Dependencies:** none · **Owner decisions:** OWNER: whether to add an explicit offline switch in a later wave
+- **Required for closure:** An explicit offline switch with a test that proves no provider key is read when it is set
 
 ## 6. Reconciliation: issues verified CLOSED
 

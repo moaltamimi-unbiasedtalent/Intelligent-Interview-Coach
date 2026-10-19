@@ -1,8 +1,8 @@
 {
  "generated": "2026-10-19",
- "base_main_sha": "4043429",
- "previous_main_sha": "fb2d264",
- "count": 390,
+ "base_main_sha": "3d1af6f",
+ "previous_main_sha": "4043429",
+ "count": 392,
  "issues": [
   {
    "original_id": "BL-2",
@@ -8556,6 +8556,30 @@
    "id": "DI-M-016"
   },
   {
+   "id": "DI-M-016",
+   "original_id": "IR-REHEARSAL-CALL",
+   "category": "M",
+   "title": "One unplanned live agent run during the P11 rehearsal (outside the P10E ledger)",
+   "description": "During the UI rehearsal a single POST /agent/run reached the live provider because the working copy's .env key was loaded (see IR-DEMO-KEY). The P10E ledger was not used and is unchanged (285 of 300 calls). A read-only account snapshot afterwards showed usage +USD 0.0207 since the previous snapshot (may include other use of the shared key); the per-request cost was not captured.",
+   "source": "docs/capstone/submission/REHEARSAL_AND_FREEZE_LOG.md",
+   "first_recorded": "2026-10-19",
+   "status": "PENDING OWNER DECISION",
+   "status_label": "PENDING OWNER DECISION",
+   "partially_addressed": "",
+   "remaining": "Acknowledge the unplanned spend; no further action possible on the spend itself. The shared-key reconciliation caveat (DI-M M-RECON) applies.",
+   "severity": "LOW",
+   "candidate_impact": "none directly",
+   "security_privacy": "spend outside the hard budget guard",
+   "release_impact": "demonstration safety and spend control",
+   "dependencies": "none",
+   "owner_decisions": "REQUIRED: acknowledge the unplanned call",
+   "closure_evidence": "Owner acknowledgement recorded; snapshot kept (evaluations/p10e/live/provider_snapshots/...p11-rehearsal-incident.json)",
+   "priority": "P3",
+   "blocks_submission": "NO",
+   "blocks_production": "NO",
+   "aliases": []
+  },
+  {
    "original_id": "A-04",
    "category": "M",
    "title": "Step-up only for role changes (journey finding)",
@@ -9448,6 +9472,30 @@
    "closure_evidence": "Owner confirmation recorded in the P11 plan",
    "priority": "P0",
    "blocks_submission": "YES",
+   "blocks_production": "NO",
+   "aliases": []
+  },
+  {
+   "id": "DI-N-015",
+   "original_id": "IR-DEMO-KEY",
+   "category": "N",
+   "title": "A working copy with .env or .streamlit/secrets.toml makes the local backend contact the provider even with PYTHON_DOTENV_DISABLED or an empty key",
+   "description": "Found in the P11 rehearsal: the backend started from the working copy loaded the OpenRouter key (also available through Streamlit secrets) and answered /agent/run with a real model reply. Neither PYTHON_DOTENV_DISABLED=1 nor an empty OPENROUTER_API_KEY prevents it.",
+   "source": "docs/capstone/submission/REHEARSAL_AND_FREEZE_LOG.md",
+   "first_recorded": "2026-10-19",
+   "status": "PARTIALLY REMEDIATED",
+   "status_label": "PARTIALLY REMEDIATED",
+   "partially_addressed": "",
+   "remaining": "Documented workaround (start the backend from a fresh checkout, verified: no key, safe not-configured answer; README warning and demo guide). No code change: a real switch to disable key discovery for demonstrations (for example an explicit offline flag honoured by load_config and the Streamlit secrets reader) does not exist.",
+   "severity": "MEDIUM",
+   "candidate_impact": "none directly",
+   "security_privacy": "a developer demonstration can spend on the owner's key without intending to",
+   "release_impact": "demonstration safety and spend control",
+   "dependencies": "none",
+   "owner_decisions": "OWNER: whether to add an explicit offline switch in a later wave",
+   "closure_evidence": "An explicit offline switch with a test that proves no provider key is read when it is set",
+   "priority": "P1",
+   "blocks_submission": "NO",
    "blocks_production": "NO",
    "aliases": []
   }
