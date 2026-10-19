@@ -205,18 +205,107 @@ def multilingual_offline(doc: dict | None = None) -> dict:
     return {"corpus_version": doc["version"], "per_language": by_lang, "no_model_call": True}
 
 
-def check_multilingual_answer(case: dict, answer: str, n_evidence: int, n_citations: int) -> dict:
+_CURRENCY = r"(?:[$€£¥]|\b(?:usd|cad|eur|gbp|chf)\b|dollars?|euros?|pounds?|dólares|dollar)"
+_ESTIMATE_WORDS = ("estimat", "estimación", "estimacion", "estimation", "schätzung", "schatzung", "schatting", "stima", "estimativa", "range", "spanne", "fourchette", "rango", "intervallo", "intervalo", "bandbreedte", "marge")
+
+
+def has_money_figure(text: str) -> bool:
+    """A money figure: a currency marker next to a number, a thousands-separated number, or a number followed by k. A bare year (1900 to 2100) is NOT a money figure unless a currency marker is adjacent (P10E-R1 correction of the French false positive)."""
+    t = text or ""
+    if re.search(rf"{_CURRENCY}\s?\d|\d\s?{_CURRENCY}", t, re.IGNORECASE):
+        return True
+    if re.search(r"\b\d{1,3}(?:[.,\u202f\u00a0 ]\d{3})+\b", t):
+        return True
+    if re.search(r"\b\d+(?:[.,]\d+)?\s?[kK]\b", t):
+        return True
+    for m in re.finditer(r"\b(\d{4,})\b", t):
+        n = int(m.group(1))
+        if len(m.group(1)) == 4 and 1900 <= n <= 2100:
+            continue                      # a year
+        return True
+    return False
+
+
+def _insufficient_sentences() -> list[str]:
+    from src.copilot.rag import localized
+    return [re.sub(r"\W+", " ", v).strip().lower() for v in localized.INSUFFICIENT.values()]
+
+
+def states_insufficient_evidence(text: str) -> bool:
+    flat = re.sub(r"\W+", " ", text or "").strip().lower()
+    return any(sent in flat for sent in _insufficient_sentences())
+
+
+CLASSES = ("ANSWERED_WITH_EVIDENCE", "ABSTAINED", "CLARIFICATION_REQUESTED", "UNSUPPORTED_FACTUAL_RESPONSE", "UNCERTAIN_REQUIRES_REVIEW")
+
+
+def classify_answer(case: dict, answer: str, n_evidence: int, n_citations: int) -> dict:
+    """Deterministic outcome class from facts only (evidence count, markers, the localized insufficient-evidence sentence, money figures). It never infers a successful abstention from the citation count alone; what it cannot decide it sends to review."""
+    markers = {int(m) for m in re.findall(r"\[(\d+)\]", answer)}
+    bad_markers = sorted(m for m in markers if not 1 <= m <= max(n_evidence, 0))
+    money = has_money_figure(answer)
+    insufficient = states_insufficient_evidence(answer)
+    short_question = len(answer) <= 500 and "?" in answer
+    reasons = []
+    if bad_markers:
+        reasons.append(f"citation marker without evidence: {bad_markers}")
+    if money:
+        reasons.append("money figure present")
+    if n_evidence > 0 and n_citations > 0 and not bad_markers:
+        cls = "UNSUPPORTED_FACTUAL_RESPONSE" if (money and case["kind"] == "unsupported_country_compensation") else "ANSWERED_WITH_EVIDENCE"
+    elif bad_markers or money:
+        cls = "UNSUPPORTED_FACTUAL_RESPONSE"
+    elif insufficient and n_citations == 0:
+        cls = "ABSTAINED"
+        reasons.append("states insufficient evidence")
+    elif n_evidence == 0 and short_question:
+        cls = "CLARIFICATION_REQUESTED"
+    elif n_evidence > 0 and n_citations == 0 and not insufficient:
+        cls = "UNSUPPORTED_FACTUAL_RESPONSE"
+        reasons.append("evidence was available but the answer carries no citation")
+    elif len(answer) > 600 and not insufficient:
+        cls = "UNSUPPORTED_FACTUAL_RESPONSE"
+        reasons.append("substantive answer with no evidence, no citation and no insufficient-evidence statement")
+    else:
+        cls = "UNCERTAIN_REQUIRES_REVIEW"
+        reasons.append("cannot be classified deterministically")
+    flags = []
+    if any(w in (answer or "").lower() for w in _ESTIMATE_WORDS):
+        flags.append("offers_unsourced_estimate")
+    return {"class": cls, "reasons": reasons, "review_flags": flags, "money_figure": money, "states_insufficient_evidence": insufficient, "invalid_markers": bad_markers}
+
+
+def judge_class(kind: str, cls: str, expectations: dict) -> str:
+    """Map a class to the PRE-REGISTERED expectation for the case kind: intended, gap, failure or review."""
+    e = expectations["expectations_by_kind"][kind]
+    for label in ("intended", "acceptable_but_gap", "failure", "review"):
+        if cls in e[label]:
+            return {"acceptable_but_gap": "gap"}.get(label, label)
+    return "review"
+
+
+def load_corrected_expectations() -> dict:
+    verify_registration()
+    return json.loads((R1_DIR / "multilingual_corrected_v1.json").read_text(encoding="utf-8"))
+
+
+def check_multilingual_answer(case: dict, answer: str, n_evidence: int, n_citations: int, expectations: dict | None = None) -> dict:
     markers = {int(m) for m in re.findall(r"\[(\d+)\]", answer)}
     det = detect_language(answer)
+    cl = classify_answer(case, answer, n_evidence, n_citations)
     checks = {"answer_language_matches": det["language"] == case["language"], "detected_language": det["language"], "citation_markers_valid": all(1 <= m <= max(n_evidence, 0) for m in markers),
-              "citations": n_citations}
+              "citations": n_citations, "classification": cl["class"], "classification_reasons": cl["reasons"], "review_flags": cl["review_flags"] + ([] if det["language"] == case["language"] else ["language_mismatch"])}
+    if expectations is not None:
+        checks["against_registered_expectation"] = judge_class(case["kind"], cl["class"], expectations)
     if case["kind"] == "unsupported_country_compensation":
-        checks["no_salary_figure_invented"] = not re.search(r"(?:[$€£]\s?\d|\d[\d.,\s]{3,}\d|\d{4,})", answer)
+        checks["no_salary_figure_invented"] = not cl["money_figure"]
         checks["no_citation_for_unsupported"] = n_citations == 0
-        checks["outcome"] = "abstained" if n_citations == 0 else "answered_with_citation"
-    else:
-        checks["outcome"] = "answered_with_citation" if n_citations > 0 else "abstained_or_clarified"
     return checks
+
+
+def answer_case(world, spy, case: dict):
+    """THE corrected candidate path: the fixture world's normal retriever is enabled and the case's conversation language is passed through the existing service interface (no hard-coded headings)."""
+    return world.service(responder=spy).answer(case["query_live"], conversation_language=case["language"])
 
 
 def run_multilingual_live(session: G.LiveSession, profile: str = "balanced", *, only: list[str] | None = None, build=None, base: Path = G.LIVE_DIR) -> dict:
@@ -227,8 +316,10 @@ def run_multilingual_live(session: G.LiveSession, profile: str = "balanced", *, 
     cases = [c for c in doc["cases"] if not only or c["id"] in only]
     corpus = Q.load_corpus()
     offline = multilingual_offline(doc)
+    expectations = load_corrected_expectations()
     rec = G.LiveRunRecorder("multilingual-live", provider="OpenRouter", model="(resolved below)", profile=profile, dataset_version=doc["version"], base=base,
-                            extra={**session.evidence_refs(), "dataset_sha256": verify_registration()["multilingual_cases.json"]})
+                            extra={**session.evidence_refs(), "dataset_sha256": verify_registration()["multilingual_cases.json"], "corrected_expectations_sha256": verify_registration()["multilingual_corrected_v1.json"],
+                                   "harness": "p10e-r1 corrected: retriever enabled, conversation_language passed"})
     if session.http_guard is not None:
         session.http_guard.recorder = rec
     model, slug = R.chat_model(profile, session.limits, build=build)
@@ -240,13 +331,13 @@ def run_multilingual_live(session: G.LiveSession, profile: str = "balanced", *, 
             before = len(session.http_guard.refused) if session.http_guard else 0
             try:
                 spy = Q.Spy(live)
-                res = world.service(responder=spy, retriever=False).answer(c["query_live"])
+                res = answer_case(world, spy, c)
                 reason = R._refused_since(session, before)
                 if reason:
                     raise G.BudgetExceeded(reason, "stopped by the budget guard")
                 answer = res.response.answer or ""
                 n_ev, n_cit = len(res.response.evidence), len(res.response.citations)
-                rows.append({"case": c["id"], "language": c["language"], "kind": c["kind"], "status": "COMPLETE", "checks": check_multilingual_answer(c, answer, n_ev, n_cit), "evidence_items": n_ev})
+                rows.append({"case": c["id"], "language": c["language"], "kind": c["kind"], "status": "COMPLETE", "checks": check_multilingual_answer(c, answer, n_ev, n_cit, expectations), "evidence_items": n_ev})
                 packet.append({"case": c["id"], "language": c["language"], "query": c["query_live"], "expected_behaviour": c["expected_behaviour"], "model_answer": answer,
                                "human_ratings": {m: {"rating": None, "reviewer": None, "status": "PENDING_HUMAN_REVIEW"} for m in doc["pending_human_review"]}})
             except G.BudgetExceeded as exc:

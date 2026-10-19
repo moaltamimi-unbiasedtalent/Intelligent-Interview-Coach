@@ -257,6 +257,28 @@ def isolate_agent_stores() -> dict:
     return {"tmp": str(tmp)}
 
 
+def _calls_since(rec: Any, already: int) -> list[dict]:
+    """The sanitized request records written for the current run after the first ``already`` lines (status, tokens, cost; never content)."""
+    try:
+        lines = (rec.dir / "calls.jsonl").read_text(encoding="utf-8").splitlines()
+    except FileNotFoundError:
+        return []
+    return [json.loads(x) for x in lines[already:]]
+
+
+def refine_case(classified_case: dict, calls: list[dict], reason: str | None, reasons: list[str]) -> tuple[dict, dict]:
+    """Refine the terminal status from facts the runner owns and build the sanitized per-case evidence: a guard refusal or a provider failure is never reported as a normal agent outcome."""
+    provider_failures = [c for c in calls if c.get("error") or (c.get("status") not in (None, 200))]
+    if reason:
+        classified_case["terminal_status"], classified_case["completed"] = "GUARD_REFUSED", False
+    elif provider_failures and classified_case["terminal_status"] != "COMPLETED":
+        classified_case["terminal_status"], classified_case["completed"] = "PROVIDER_ERROR", False
+    reported = [c["provider_cost_usd"] for c in calls if c.get("provider_cost_usd") is not None]
+    evidence = {**classified_case, "provider_calls": len(calls), "provider_failures": len(provider_failures), "guard_refusal_reasons": sorted(set(reasons)),
+                "provider_reported_cost_usd": str(sum((Decimal(str(x)) for x in reported), Decimal(0))) if reported else None}
+    return classified_case, evidence
+
+
 def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None, only: list[str] | None = None, base: Path = G.LIVE_DIR, build: Callable[[str], Any] | None = None, isolate: bool = True) -> dict:
     """The existing held-out agent benchmark against a real model, every request guarded. Case expectations are never edited after seeing output."""
     from src.agent.live_eval import aggregate, classify, load_live_cases, observation_from_result
@@ -280,6 +302,7 @@ def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None,
         session.http_guard.recorder = rec
     career = _default_career_service()
     results, stopped = [], None
+    calls_before = 0
     for case in cases:
         before = len(session.http_guard.refused) if session.http_guard else 0
         before_n = before
@@ -290,7 +313,10 @@ def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None,
         latency = int((time.perf_counter() - t0) * 1000)
         reason = _refused_since(session, before)
         reasons = list(session.http_guard.refused[before_n:]) if session.http_guard else []
-        results.append({"classified": classify(case, observation_from_result(case["id"], profile, res, latency)), "guard_refusal": reason, "guard_refusal_reasons": reasons, "case": case["id"], "latency_ms": latency})
+        calls = _calls_since(rec, calls_before)
+        calls_before += len(calls)
+        classified_case, evidence = refine_case(classify(case, observation_from_result(case["id"], profile, res, latency)), calls, reason, reasons)
+        results.append({"classified": classified_case, "evidence": evidence, "guard_refusal": reason, "guard_refusal_reasons": reasons, "case": case["id"], "latency_ms": latency})
         if reason in ("spend_ceiling", "call_limit"):
             stopped = reason
             break
@@ -298,7 +324,7 @@ def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None,
     classified = [r["classified"] for r in results if not r["guard_refusal"]]
     metrics = aggregate(classified) if classified else {}
     out = {"profile": profile, "model": slug, "cases_planned": len(cases), "cases_completed": len(classified), "cases_refused": [r["case"] for r in results if r["guard_refusal"]], "guard_refusal_reasons": {r["case"]: sorted(set(r["guard_refusal_reasons"])) for r in results if r["guard_refusal"]}, "stopped_by_guard": stopped,
-           "metrics": metrics, "per_case_latency_ms": {r["case"]: r["latency_ms"] for r in results}, "protected_stores_unchanged": before_fp == after_fp,
+           "metrics": metrics, "per_case": [r["evidence"] for r in results], "per_case_evidence_version": "2 (P10E-R1 correction: sanitized per-case classification; strict completion)", "per_case_latency_ms": {r["case"]: r["latency_ms"] for r in results}, "protected_stores_unchanged": before_fp == after_fp,
            "models_requested": models_requested(session), "expected_model": slug,
            "unexpected_models": sorted(m for m in models_requested(session) if m != slug), "cases_attempted": len(results),
            "note": "PARTIAL: the guard stopped the run; metrics cover only the completed cases" if stopped else "Complete over the planned cases. Metrics measure the model's decisions on a bounded held-out sample; not an accuracy score."}

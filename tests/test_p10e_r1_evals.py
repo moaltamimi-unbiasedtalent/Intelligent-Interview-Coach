@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 # ============================================================================================================================ pre-registration
 def test_the_datasets_are_hash_locked_and_an_edited_expectation_is_refused(tmp_path, monkeypatch):
-    assert set(E.verify_registration()) == {"interview_cases.json", "multilingual_cases.json"}
+    assert set(E.verify_registration()) == {"interview_cases.json", "multilingual_cases.json", "multilingual_corrected_v1.json"}
     copy = tmp_path / "r1"
     shutil.copytree(E.R1_DIR, copy)
     monkeypatch.setattr(E, "R1_DIR", copy)
@@ -151,11 +151,11 @@ def test_the_deterministic_answer_checks_flag_figures_citations_and_wrong_langua
     doc = E.load_multilingual_cases()
     unsupported = next(c for c in doc["cases"] if c["id"] == "ml-es-unsupported-country")
     ok = E.check_multilingual_answer(unsupported, SENTENCES["es"], 0, 0)
-    assert ok["answer_language_matches"] and ok["no_salary_figure_invented"] and ok["no_citation_for_unsupported"] and ok["outcome"] == "abstained"
+    assert ok["answer_language_matches"] and ok["no_salary_figure_invented"] and ok["no_citation_for_unsupported"] and ok["classification"] == "UNCERTAIN_REQUIRES_REVIEW"       # a fluent Spanish sentence that does not state insufficiency is NOT counted as an abstention
     bad = E.check_multilingual_answer(unsupported, "El salario es de $85,000 al año [1].", 1, 1)
     assert not bad["no_salary_figure_invented"] and not bad["no_citation_for_unsupported"]
     assert not E.check_multilingual_answer(unsupported, SENTENCES["de"], 0, 0)["answer_language_matches"]                       # a German answer to a Spanish question is flagged
-    assert bad["outcome"] == "answered_with_citation"
+    assert bad["classification"] == "UNSUPPORTED_FACTUAL_RESPONSE"
     supported = next(c for c in doc["cases"] if c["id"] == "ml-de-supported")
     c2 = E.check_multilingual_answer(supported, SENTENCES["de"] + " [3]", 2, 1)
     assert not c2["citation_markers_valid"]                                                              # marker [3] with only two evidence items is invalid grounding
@@ -184,3 +184,117 @@ def test_the_live_multilingual_runner_reports_each_language_separately_and_never
     assert r["per_language"]["nl"]["supported_occupation_definition"]["answer_language_matches"] is False                 # a Spanish answer to a Dutch question is reported as such, per language
     packet = json.loads((Path(out["run_dir"]) / "review_packet.json").read_text())
     assert packet["reviewer"] is None and all(v["status"] == "PENDING_HUMAN_REVIEW" for c in packet["cases"] for v in c["human_ratings"].values())
+
+
+# ============================================================================================================================ P10E-R1 correction (measurement defects)
+from src.copilot.rag import localized  # noqa: E402
+
+LANGS = ["en", "de", "fr", "es", "it", "pt", "nl"]
+
+
+def _case(lang, kind):
+    return next(c for c in E.load_multilingual_cases()["cases"] if c["language"] == lang and c["kind"] == kind)
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Salaire médian Data Analyst Canada 2026", False),                       # a year is not a salary (the French false positive)
+    ("Gehalt 2025 in Kanada", False), ("Veja os dados de 1999 a 2024", False),
+    ("Le salaire est de 85 000 CAD", True), ("Salary is $85,000", True), ("about 85k a year", True), ("CAD 90000", True), ("90000 euros", True), ("2026 USD", True), ("€2026", True),
+    ("Il stipendio è 85.000", True), ("no figure here at all", False), ("Section 3 and 12 steps", False), ("5000 per month", True),
+])
+def test_the_money_figure_proxy_ignores_years_but_keeps_real_amounts(text, expected):
+    assert E.has_money_figure(text) is expected
+
+
+@pytest.mark.parametrize("lang", LANGS)
+def test_a_true_localized_abstention_is_classified_abstained_in_every_supported_language(lang):
+    answer = localized.insufficient_message(lang)
+    c = _case(lang, "supported_occupation_definition")
+    r = E.classify_answer(c, answer, 0, 0)
+    assert r["class"] == "ABSTAINED" and r["states_insufficient_evidence"]
+    assert E.classify_answer(c, answer, 3, 0)["class"] == "ABSTAINED"           # evidence existed but the model still stated insufficiency and cited nothing
+
+
+def test_an_uncited_substantive_answer_is_never_counted_as_an_abstention():
+    c = _case("es", "supported_occupation_definition")
+    long_answer = "Un analista de datos limpia y analiza datos, crea paneles y comunica hallazgos a negocio. " * 8
+    r = E.classify_answer(c, long_answer, 0, 0)
+    assert r["class"] == "UNSUPPORTED_FACTUAL_RESPONSE" and "no citation" in " ".join(r["reasons"])
+    assert E.classify_answer(c, "Un analista trabaja con datos.", 3, 0)["class"] == "UNSUPPORTED_FACTUAL_RESPONSE"   # evidence available, answer uncited, no abstention
+    assert E.classify_answer(c, "Hmm.", 0, 0)["class"] == "UNCERTAIN_REQUIRES_REVIEW"                                   # not decidable: goes to review, never to success
+
+
+def test_cited_answers_clarifications_and_invalid_markers_are_distinguished():
+    sup, uns = _case("de", "supported_occupation_definition"), _case("de", "unsupported_country_compensation")
+    assert E.classify_answer(sup, "Ein Data Analyst wertet Daten aus [1][2].", 2, 2)["class"] == "ANSWERED_WITH_EVIDENCE"
+    assert E.classify_answer(sup, "Ein Data Analyst wertet Daten aus [3].", 2, 1)["class"] == "UNSUPPORTED_FACTUAL_RESPONSE"      # a citation with no evidence behind it
+    assert E.classify_answer(sup, "In welchem Land und auf welcher Ebene meinst du das?", 0, 0)["class"] == "CLARIFICATION_REQUESTED"
+    assert E.classify_answer(uns, "Das Gehalt liegt bei 85.000 CAD [1].", 1, 1)["class"] == "UNSUPPORTED_FACTUAL_RESPONSE"
+    assert E.classify_answer(uns, "Das liegt typischerweise bei 85.000 CAD.", 0, 0)["class"] == "UNSUPPORTED_FACTUAL_RESPONSE"
+
+
+def test_the_registered_expectations_decide_intended_gap_failure_or_review():
+    ex = E.load_corrected_expectations()
+    s, u = "supported_occupation_definition", "unsupported_country_compensation"
+    assert E.judge_class(s, "ANSWERED_WITH_EVIDENCE", ex) == "intended" and E.judge_class(s, "ABSTAINED", ex) == "gap" and E.judge_class(s, "UNSUPPORTED_FACTUAL_RESPONSE", ex) == "failure"
+    assert E.judge_class(u, "ABSTAINED", ex) == "intended" and E.judge_class(u, "ANSWERED_WITH_EVIDENCE", ex) == "failure" and E.judge_class(u, "UNCERTAIN_REQUIRES_REVIEW", ex) == "review"
+    assert ex["thresholds"].startswith("none")
+
+
+def test_the_original_registered_corpus_is_untouched_by_the_correction():
+    assert E.verify_registration()["multilingual_cases.json"] == "2aaddbcd0622b93be18be1691c0532b36ea0edb73c8fe7be1bdf493e5d6e2074"
+    assert E.verify_registration()["interview_cases.json"] == "385625092b2d91574af6b396def752625edfa6fe22772652695735d14368d0e1"
+
+
+def test_the_estimate_offer_stays_visible_for_review_in_the_unsupported_case():
+    fr = _case("fr", "unsupported_country_compensation")
+    answer = "Je ne peux pas donner un chiffre fiable. Je peux vous donner une estimation prudente non sourcée. Salaire médian Data Analyst Canada 2026"
+    r = E.check_multilingual_answer(fr, answer, 0, 0)
+    assert r["no_salary_figure_invented"] is True and "offers_unsourced_estimate" in r["review_flags"]       # the year no longer fails the proxy; the offer is still surfaced
+
+
+def test_answer_case_uses_the_corrected_candidate_path(monkeypatch):
+    """The retriever stays enabled and the case's conversation language reaches the existing service interface."""
+    seen = {}
+
+    class Svc:
+        def answer(self, query, **kw):
+            seen["query"], seen["kw"] = query, kw
+            return "ok"
+
+    class World:
+        def service(self, responder=None, *, retriever=True):
+            seen["retriever"] = retriever
+            return Svc()
+
+    c = _case("nl", "supported_occupation_definition")
+    assert E.answer_case(World(), object(), c) == "ok"
+    assert seen["retriever"] is True and seen["kw"] == {"conversation_language": "nl"} and seen["query"] == c["query_live"]
+
+
+@pytest.mark.parametrize("lang", LANGS)
+def test_the_corrected_path_localizes_the_synthesis_instructions_and_retrieves_evidence(lang):
+    from src.copilot.knowledge import requalification as Q
+
+    c = _case(lang, "supported_occupation_definition")
+    with Q.temp_world(Q.load_corpus()) as world:
+        spy = Q.Spy(None)
+        res = E.answer_case(world, spy, c)
+        heads = localized.section_headings(lang)
+        assert all(h in spy.prompt for h in heads) and localized.insufficient_message(lang) in spy.prompt      # the existing localization layer supplied the language, not the harness
+        assert len(res.response.evidence) > 0
+        legacy = Q.Spy(None)
+        old = world.service(responder=legacy, retriever=False).answer(c["query_live"])                       # the ORIGINAL harness configuration
+        if lang != "en":
+            assert len(old.response.evidence) == 0 and localized.section_headings("en")[0] in legacy.prompt  # explains the original zero-evidence and English-scaffold observations
+
+
+def test_default_language_prompt_is_unchanged_and_russian_stays_outside_the_knowledge_base_language_set():
+    from src.copilot.knowledge import requalification as Q
+
+    with Q.temp_world(Q.load_corpus()) as world:
+        a, b = Q.Spy(None), Q.Spy(None)
+        world.service(responder=a).answer("What does a Data Analyst do?")
+        world.service(responder=b).answer("What does a Data Analyst do?", conversation_language="en")
+        assert a.prompt == b.prompt
+    assert "ru" not in E.load_multilingual_cases()["languages"]

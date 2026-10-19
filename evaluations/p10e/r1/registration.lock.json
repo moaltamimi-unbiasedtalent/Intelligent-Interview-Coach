@@ -3,7 +3,14 @@
  "registered_on": "2026-10-19",
  "files": {
   "interview_cases.json": "385625092b2d91574af6b396def752625edfa6fe22772652695735d14368d0e1",
-  "multilingual_cases.json": "2aaddbcd0622b93be18be1691c0532b36ea0edb73c8fe7be1bdf493e5d6e2074"
+  "multilingual_cases.json": "2aaddbcd0622b93be18be1691c0532b36ea0edb73c8fe7be1bdf493e5d6e2074",
+  "multilingual_corrected_v1.json": "f827d9bc0be8a3727a7377d56250fb0c7187c7710e984842f1acc719290977b0"
  },
- "note": "The expectations in these files were registered (hash recorded) before any live model call for them. A test fails if a file's hash no longer matches; changing an expectation requires a new version and a new lock, never an edit after observing output."
+ "note": "The expectations in these files were registered (hash recorded) before any live model call for them. A test fails if a file's hash no longer matches; changing an expectation requires a new version and a new lock, never an edit after observing output.",
+ "history": [
+  {
+   "added": "multilingual_corrected_v1.json",
+   "reason": "P10E-R1 correction: corrected configuration and outcome classes registered before any further live call; original entries unchanged"
+  }
+ ]
 }
