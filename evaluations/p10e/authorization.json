@@ -1,0 +1,37 @@
+{
+ "schema": "p10e-authorization/1",
+ "workstream": "P10E Authorized Live Capability Validation",
+ "owner_decision_date": "2026-10-19",
+ "owner_decision": "The product owner explicitly authorizes real AI-provider calls and API calls necessary for the approved P10E evaluation: paid AI-model inference, semantic embeddings, RAG evaluation, model-quality benchmarking and bounded external API integration testing. This supersedes the P10D restriction against paid evaluation for P10E only.",
+ "granted": {
+  "paid_provider_use_for_p10e": true
+ },
+ "not_granted": {
+  "unlimited_spending": true,
+  "production_activation": true,
+  "processing_of_real_candidate_data": true,
+  "human_reviewer_appointments": true,
+  "acceptance_thresholds": true,
+  "stripe_or_commercial_transactions": true,
+  "speech_provider_execution_or_model_downloads": true,
+  "live_email_to_third_parties": true,
+  "note": "Only the first permission (use of paid providers for P10E) was granted, and it carried no monetary ceiling and no call-count limit. Engineering did not invent either."
+ },
+ "limits": null,
+ "limits_required_before_any_paid_call": [
+  "max_spend_usd",
+  "max_provider_calls",
+  "max_input_tokens_per_request",
+  "max_output_tokens_per_request",
+  "request_timeout_s",
+  "max_retries",
+  "max_concurrency"
+ ],
+ "limits_approval": {
+  "approved_by": null,
+  "approval_date": null,
+  "reference": null,
+  "how_to_approve": "Replace `limits` with an object holding every field named in limits_required_before_any_paid_call, and fill approved_by, approval_date and reference, in a reviewed commit. The guard refuses to run while any of these is missing, invalid or unlimited."
+ },
+ "paid_execution_enabled": false
+}
