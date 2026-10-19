@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CHECK = "schema_head_matches_the_matrix"
-HEAD = "0038_compensation_concepts"
+HEAD = "0039_speech_governance"
 
 
 def _load():

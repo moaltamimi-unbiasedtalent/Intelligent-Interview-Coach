@@ -18,6 +18,7 @@
 import { useId, useRef } from "react";
 import type { SpeechRecognitionAdapter, DictationErrorKind } from "@/lib/speech/types";
 import { appendTranscript, useDictation } from "@/lib/speech/useDictation";
+import { useSpeechPolicy } from "@/lib/speech/useSpeechPolicy";
 import { useT } from "@/components/i18n/I18nProvider";
 import { APP_LOCALES, toSupportedLocale } from "@/lib/i18n/locales";
 
@@ -85,12 +86,22 @@ export function DictationControl({
   const langSelectId = useId();
 
   const selectedLang = lang ?? DICTATION_LANGUAGES[0].code;
+  const { browserSttAllowed } = useSpeechPolicy();
 
   const { supported, status, interim, error, start, stop } = useDictation({
     adapter,
     lang: selectedLang,
     onCommitFinal: (chunk) => onChange(appendTranscript(valueRef.current, chunk)),
   });
+
+  // An Admin-disabled setting is never bypassed (W12.4E): typing stays the guaranteed path, with a short, honest note.
+  if (!browserSttAllowed) {
+    return (
+      <p className={className} role="note" data-testid="dictation-disabled-by-policy" style={{ fontSize: "0.8rem" }}>
+        <span className="text-muted">{t("dictation.disabledByPolicy")}</span>
+      </p>
+    );
+  }
 
   // Unsupported → do NOT go silent (P10B Wave 1): typing stays the guaranteed path, but show a
   // small, accessible note so the candidate knows dictation exists and why it's absent here.
@@ -156,6 +167,10 @@ export function DictationControl({
           preview only — it is NOT part of the editable field until finalised. */}
       <p role="status" aria-live="polite" className="mt-1 min-h-[1rem] text-xs text-muted">
         {listening ? (interim ? t("dictation.heard", { text: interim }) : t("dictation.listening")) : errorText}
+      </p>
+      {/* Point-of-use disclosure (W12.4E): the browser engine may send the voice to the browser vendor; Ask4Mo stores no audio. */}
+      <p className="mt-0.5 text-xs text-muted" data-testid="dictation-browser-notice">
+        {t("dictation.browserNotice")}
       </p>
     </div>
   );

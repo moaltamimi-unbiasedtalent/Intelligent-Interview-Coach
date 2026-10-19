@@ -150,6 +150,8 @@ jobs:
         run: python scripts/check_product_coverage_baseline.py --json "$RUNNER_TEMP/product_coverage_status.json" --report-md "$RUNNER_TEMP/product_coverage_status.md"
       - name: Knowledge-base requalification (P10D; offline; synthetic fixture; deterministic; scripted responder, no model; fails on any regression)
         run: python scripts/eval_kb_requalification.py --repeat 2 --json "$RUNNER_TEMP/p10d_results.json" --md "$RUNNER_TEMP/p10d_results.md"
+      - name: Governed speech providers (W12.4E; offline contract evaluation; fixture engines only; no model, no network; genuine provider execution NOT VERIFIED)
+        run: python scripts/eval_speech_providers.py --json "$RUNNER_TEMP/w12_4e_speech.json"
       - name: Upload P10C-G and P10D machine-readable results
         if: always()
         uses: actions/upload-artifact@v4
@@ -161,6 +163,7 @@ jobs:
             ${{ runner.temp }}/product_coverage_status.md
             ${{ runner.temp }}/p10d_results.json
             ${{ runner.temp }}/p10d_results.md
+            ${{ runner.temp }}/w12_4e_speech.json
           if-no-files-found: warn
       - name: Secret scan (fail on real-looking secrets in source)
         run: |

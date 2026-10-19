@@ -186,6 +186,8 @@ const es: Catalog = {
     noSpeech: "No lo he captado - inténtalo de nuevo o escribe.",
     network: "El dictado no está disponible temporalmente. Aún puedes escribir.",
     error: "El dictado se detuvo inesperadamente. Aún puedes escribir.",
+    disabledByPolicy: "El dictado está desactivado para tu cuenta. Puedes escribir en su lugar.",
+    browserNotice: "El dictado usa el servicio de voz de tu navegador, que puede enviar tu voz a su proveedor. Ask4Mo no guarda tu audio.",
   },
   help: {
     title: "Centro de ayuda",

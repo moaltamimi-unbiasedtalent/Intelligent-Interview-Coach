@@ -190,6 +190,8 @@ export const messages = {
     noSpeech: "I didn’t catch that - try again, or type.",
     network: "Dictation is temporarily unavailable. You can still type.",
     error: "Dictation stopped unexpectedly. You can still type.",
+    disabledByPolicy: "Dictation is switched off for your account. You can type instead.",
+    browserNotice: "Dictation uses your browser’s speech service, which may send your voice to its provider. Ask4Mo does not store your audio.",
   },
   help: {
     title: "Help Center",

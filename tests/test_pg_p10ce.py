@@ -67,7 +67,7 @@ def test_the_schema_is_unchanged_and_the_south_america_adapter_stores_exact_deci
     from src.knowledge_foundation.compensation import country_adapters as CA
     from src.persistence import GraphOccupation
     with pg.engine.connect() as c:
-        assert c.execute(text("select version_num from alembic_version")).scalar() == "0038_compensation_concepts"
+        assert c.execute(text("select version_num from alembic_version")).scalar() == "0039_speech_governance"
     sf, reg, g, a, store = _world(pg)
     recs, rej = CA.south_america_records("CL", [{"code": "9701", "statistic": "MED", "period": "MES", "value": "1234567.50", "concept": "LAB", "population": "ASAL", "method": "ENC", "currency": "CLP", "basis": "gross"},
                                                 {"code": "9701", "statistic": "MED", "period": "MES", "value": "1300000", "concept": "SAL", "population": "ASAL", "method": "ENC", "currency": "CLP", "basis": "gross"},

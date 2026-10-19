@@ -103,6 +103,9 @@ COST_POLICIES: dict[str, RateLimitPolicy] = {
     "cost_research_user": RateLimitPolicy("cost_research_user", 30, 3600, "user"),
     "cost_upload_user": RateLimitPolicy("cost_upload_user", 40, 3600, "user"),
     "cost_realtime_user": RateLimitPolicy("cost_realtime_user", 12, 3600, "user"),
+    # W12.4E: server-side speech (a hard per-user ceiling; the providers are not authorized in this wave).
+    "cost_speech_stt_user": RateLimitPolicy("cost_speech_stt_user", 60, 3600, "user"),
+    "cost_speech_tts_user": RateLimitPolicy("cost_speech_tts_user", 120, 3600, "user"),
     "cost_global": RateLimitPolicy("cost_global", 5000, 3600, "global"),
 }
 

@@ -2294,6 +2294,43 @@ class FeatureFlagOverride(Base):
     reason: Mapped[str] = mapped_column(String(200), default="")
 
 
+SPEECH_STT_PROVIDERS = ("openai_whisper",)
+SPEECH_TTS_PROVIDERS = ("kyutai_pocket_tts",)
+
+
+class SpeechGovernance(Base):
+    """DURABLE, Admin-governed configuration of the SERVER-SIDE speech providers (W12.4E): one row per environment. It holds SELECTION and POLICY only (which provider, whether it is enabled, which of the
+    seven product speech languages are eligible, whether the browser fallback is allowed, bounded timeouts). It never holds a secret, a path, a command or an endpoint. A row (or its absence) never makes
+    a provider operational: operation needs the code authorization constants in ``src.speech.policy``. The language set is validated in code against the seven-language product boundary (Russian is refused)."""
+
+    __tablename__ = "speech_governance"
+    __table_args__ = (
+        UniqueConstraint("environment", name="uq_speech_governance_env"),
+        CheckConstraint(_in_list("environment", PLATFORM_ENVIRONMENTS), name="ck_sg_env"),
+        CheckConstraint(_in_list("stt_provider", SPEECH_STT_PROVIDERS), name="ck_sg_stt_provider"),
+        CheckConstraint(_in_list("tts_provider", SPEECH_TTS_PROVIDERS), name="ck_sg_tts_provider"),
+        CheckConstraint("stt_timeout_seconds BETWEEN 5 AND 120", name="ck_sg_stt_timeout"),
+        CheckConstraint("tts_timeout_seconds BETWEEN 5 AND 60", name="ck_sg_tts_timeout"),
+        CheckConstraint("revision >= 1", name="ck_sg_revision"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    environment: Mapped[str] = mapped_column(String(12))
+    stt_provider: Mapped[str] = mapped_column(String(24), default="openai_whisper")
+    tts_provider: Mapped[str] = mapped_column(String(24), default="kyutai_pocket_tts")
+    stt_enabled: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    tts_enabled: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    languages: Mapped[list] = mapped_column(JSON, default=list)
+    browser_stt_allowed: Mapped[bool] = mapped_column(Boolean, default=True, server_default="1")
+    browser_tts_allowed: Mapped[bool] = mapped_column(Boolean, default=True, server_default="1")
+    stt_timeout_seconds: Mapped[int] = mapped_column(Integer, default=30, server_default="30")
+    tts_timeout_seconds: Mapped[int] = mapped_column(Integer, default=30, server_default="30")
+    revision: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    updated_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    reason: Mapped[str] = mapped_column(String(200), default="")
+
+
 OPERATIONAL_EVENT_TYPES = ("request", "provider_call", "retrieval")
 OPERATIONAL_OUTCOMES = ("success", "client_error", "server_error", "unavailable", "hit", "abstained", "error")
 AI_USAGE_WORKFLOWS = ("agent", "practice")

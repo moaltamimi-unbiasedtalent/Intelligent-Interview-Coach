@@ -422,6 +422,21 @@ def get_feature_flag_service(repo=Depends(get_repository)):
     return FeatureFlagService(repo.session_factory)
 
 
+def get_speech_governance_service(repo=Depends(get_repository)):
+    from src.speech.governance import SpeechGovernanceService
+
+    return SpeechGovernanceService(repo.session_factory)
+
+
+def get_speech_runtime(request: Request, repo=Depends(get_repository)):
+    """The governed speech runtime. Built per request over the durable configuration (shared by every process); engines are process-shared and never download anything."""
+    from src.speech.governance import SpeechGovernanceService
+    from src.speech.runtime import SpeechRuntime
+
+    engines = _shared(request, "speech_engines", lambda: SpeechRuntime(None))
+    return SpeechRuntime(SpeechGovernanceService(repo.session_factory), stt_engine=engines.stt_engine, tts_engine=engines.tts_engine)
+
+
 def get_ai_config_service(repo=Depends(get_repository)):
     from src.ai_admin.resolver import installed
     from src.ai_admin.service import AIConfigService

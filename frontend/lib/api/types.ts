@@ -1289,3 +1289,16 @@ export interface PackDetail extends PackSummary { content: PackContent | null }
 export interface PackListResponse { packs: PackSummary[] }
 export interface PackAvailability { generation: "feature_disabled" | "not_entitled" | "available" }
 export interface PackGenerationResponse { outcome: "created" | "duplicate" | "in_progress"; pack: PackSummary }
+
+// --- Speech (W12.4E): what the frontend may rely on; no secrets, no provider internals. ---
+export interface SpeechCapabilitiesResponse {
+  server_stt_languages: string[];
+  server_tts_languages: string[];
+  /** Admin-governed permissions for the BROWSER speech paths (dictation and speech output). */
+  browser_stt_allowed: boolean;
+  browser_tts_allowed: boolean;
+  product_languages: string[];
+  excluded_languages: string[];
+  audio_persisted: boolean;
+  browser_disclosure: string;
+}

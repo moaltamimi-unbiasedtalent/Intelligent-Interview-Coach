@@ -186,6 +186,8 @@ const de: Catalog = {
     noSpeech: "Nicht verstanden - bitte erneut versuchen oder tippen.",
     network: "Diktat ist vorübergehend nicht verfügbar. Sie können weiterhin tippen.",
     error: "Diktat unerwartet beendet. Sie können weiterhin tippen.",
+    disabledByPolicy: "Das Diktat ist für Ihr Konto ausgeschaltet. Sie können stattdessen tippen.",
+    browserNotice: "Das Diktat nutzt den Sprachdienst Ihres Browsers, der Ihre Stimme an seinen Anbieter senden kann. Ask4Mo speichert Ihr Audio nicht.",
   },
   help: {
     title: "Hilfe-Center",
