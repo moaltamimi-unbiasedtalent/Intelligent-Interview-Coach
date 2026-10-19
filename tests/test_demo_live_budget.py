@@ -351,7 +351,31 @@ def test_the_demo_ledger_is_separate_from_the_p10e_ledger():
     assert "p10e" not in src.replace("P10E ledger", "").lower().replace("p10e evaluation ledger", "")
 
 
-def test_ragas_evaluator_requests_are_bounded_only_in_a_provider_mode(monkeypatch):
+def test_evaluator_bounds_apply_only_in_a_provider_mode(monkeypatch):
+    """Runs everywhere (imports no optional package)."""
+    from src.copilot.evaluation.ragas_adapter import _evaluator_bounds
+
+    assert _evaluator_bounds() == ({}, {})
+    monkeypatch.setenv("ASK4MO_PROVIDER_MODE", "live")
+    chat_b, emb_b = _evaluator_bounds()
+    assert chat_b == {"max_tokens": 2048, "timeout": 60, "max_retries": 1} and emb_b["check_embedding_ctx_length"] is False and emb_b["max_retries"] == 1
+
+
+def test_a_missing_ragas_fails_safely_when_a_live_evaluation_is_requested(monkeypatch):
+    import src.copilot.evaluation.ragas_adapter as ra
+
+    import importlib.util
+
+    monkeypatch.setattr(importlib.util, "find_spec", lambda name, *a, **k: None)
+    assert ra.ragas_available() is False
+    with pytest.raises(ra.RagasNotInstalled):
+        ra.run_ragas([], config=ra.EvaluatorConfig(api_key="sk-or-FAKE-TEST-ONLY", base_url=URL, model="m", embedding_model="e"))
+
+
+def test_ragas_evaluator_is_built_with_the_bounds_when_the_evaluation_extras_are_installed(monkeypatch):
+    """Needs the optional evaluation extras (the dedicated CI job installs them); skipped, never failed, in a base install."""
+    pytest.importorskip("ragas")
+    pytest.importorskip("langchain_openai")
     from src.copilot.evaluation.ragas_adapter import EvaluatorConfig, _build_evaluator
 
     cfg = EvaluatorConfig(api_key="sk-or-FAKE-TEST-ONLY", base_url=URL, model="openai/gpt-4o-mini", embedding_model="openai/text-embedding-3-small")
