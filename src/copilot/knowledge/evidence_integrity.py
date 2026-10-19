@@ -70,17 +70,24 @@ someone anyone everyone people person persons worker workers employee employees 
 # Plural group words are not a single title ("people operations professionals", "data roles"). "manager(s)" is deliberately in the list ONLY in the plural form below: a title such as
 # "operations manager" must stay a title.
 _PLURAL_ONLY = frozenset({"managers", "leaders", "workers", "employees", "candidates", "professionals", "people", "persons"})
+_INTENT_TAIL = frozenset("duties responsibilities responsibility tasks task skills skill salary salaries pay wage wages earnings earn outlook demand forecast growth openings role roles job jobs requirements".split())
+_TOPIC_SINGLES = frozenset("data ai cloud digital software tech technology engineering security finance marketing sales health healthcare management".split())
 _TITLE_STOPWORDS = frozenset(_GENERIC_TERMS - {"manager", "leader", "worker", "employee", "candidate", "professional", "person"})
 
 
-def looks_like_occupation_title(phrase: str | None) -> bool:
+def looks_like_occupation_title(phrase: str | None, *, allow_topic_single: bool = False) -> bool:
     """True when ``phrase`` could be a single occupation title (so an unmatched one is a genuinely UNSUPPORTED named occupation and an ambiguous one deserves a clarification).
 
     Deterministic and conservative in the direction of ANSWERING: a phrase with a topic, trend, credential or plural-group word, a single-letter token, or more than four words is not
     treated as a named occupation, so general career guidance stays available. It maps nothing and claims no semantic understanding."""
     tokens = re.findall(r"[^\W\d_]+(?:[-'][^\W\d_]+)*", (phrase or "").casefold())
+    # The resolver phrase often still carries the INTENT noun the question asked about ("chief vibes officer duties", "HRBP responsibilities"): that is not part of the title.
+    while tokens and tokens[-1] in _INTENT_TAIL:
+        tokens.pop()
     if not tokens or len(tokens) > 4:
         return False
+    if len(tokens) == 1 and tokens[0] in _TOPIC_SINGLES and not allow_topic_single:
+        return False                                  # a bare topic ("data roles" -> "data") is not a role title
     if any(len(t) == 1 for t in tokens):
         return False
     if any(t in _TITLE_STOPWORDS or t in _PLURAL_ONLY for t in tokens):

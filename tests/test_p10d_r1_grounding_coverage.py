@@ -345,3 +345,13 @@ def test_all_twelve_gates_stay_false_and_the_model_quality_contract_is_preserved
     c = json.loads((ROOT / "evaluations/kb_requalification/model_quality_contract.json").read_text())
     assert "NOT AUTHORISED" in c["status"] and (ROOT / "scripts/eval_kb_model_quality.py").exists()
     assert hashlib.sha256((ROOT / "evaluations/product_coverage/cases.json").read_bytes()).hexdigest()                 # the 412 cases file is still present (ids pinned by the guard tests)
+
+
+def test_a_tag_written_as_a_country_name_is_the_same_nation_as_its_code():
+    from src.copilot.knowledge.countries import tag_matches_country as m
+    assert m("Germany", "DE") and m("United Kingdom", "UK") and m("Deutschland", "DE") and not m("Germany", "UK") and not m("Canada", "US")
+
+
+def test_a_bare_ambiguous_word_still_asks_for_clarification_but_a_topic_phrase_does_not():
+    assert looks_like_occupation_title("data", allow_topic_single=True) and not looks_like_occupation_title("data")
+    assert not looks_like_occupation_title("AI demand and", allow_topic_single=True)

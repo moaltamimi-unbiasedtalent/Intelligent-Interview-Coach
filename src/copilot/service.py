@@ -664,7 +664,8 @@ class CareerIntelligenceService:
 
         phrase = (trace.resolved_occupation or "").strip()
         titled = looks_like_occupation_title(phrase)
-        if clarify_msg and not titled:
+        # A genuine AMBIGUITY (the resolver found several different occupations for the phrase) is kept even for a bare word such as "data"; only a topic or junk phrase is not.
+        if clarify_msg and not looks_like_occupation_title(phrase, allow_topic_single=True):
             clarify_msg = None                          # an "ambiguity" in a phrase that is not an occupation title is not a role clarification
         if clarify_msg:
             trace.occupation_grounding = "ambiguous"

@@ -403,11 +403,13 @@ def test_synthetic_fixture_origin_evidence_is_labelled_not_presented_as_official
     cred = CredentialRepository(":memory:")
     cred.add_certification(Certification(source_id="careeronestop", certification_id="c1", name="Project Management Professional (PMP)", occupation_title="Project Manager"))
     plain = StructuredRetrievalCoordinator(role_repo=role, credential_repo=cred, comp_repo=CompensationRepository(":memory:"), manifest_entries=[])
-    labelled = StructuredRetrievalCoordinator(role_repo=role, credential_repo=cred, comp_repo=CompensationRepository(":memory:"), manifest_entries=[], fixture_sources={"careeronestop"})
+    labelled = StructuredRetrievalCoordinator(role_repo=role, credential_repo=cred, comp_repo=CompensationRepository(":memory:"), manifest_entries=[], fixture_sources={"careeronestop"}, demonstration_mode=True)
+    withheld = StructuredRetrievalCoordinator(role_repo=role, credential_repo=cred, comp_repo=CompensationRepository(":memory:"), manifest_entries=[], fixture_sources={"careeronestop"})
     q = "What certifications help a Project Manager?"
     a, b = _ask(plain, q).evidence, _ask(labelled, q).evidence
-    assert len(a) == len(b) == 1                                                                 # coverage is unchanged: the evidence is still returned
-    assert "SYNTHETIC SAMPLE" not in a[0].text and "SYNTHETIC SAMPLE DATA" in b[0].text         # ... but a fixture row is no longer shown as official data
+    assert len(a) == len(b) == 1                                                                 # a demonstration still returns the row
+    assert _ask(withheld, q).evidence == []                                                      # P10D-R1: the default is to WITHHOLD synthetic sample data from candidates
+    assert "SYNTHETIC SAMPLE" not in a[0].text and "SYNTHETIC SAMPLE DATA" in b[0].text         # ... and a demonstration labels it, never presenting it as official data
     assert "(synthetic sample)" in b[0].to_citation("[1]").title and b[0].metadata["data_origin"] == "synthetic_fixture"
 
 

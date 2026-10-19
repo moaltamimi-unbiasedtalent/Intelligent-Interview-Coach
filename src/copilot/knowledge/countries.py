@@ -88,6 +88,10 @@ def tag_matches_country(tag, country: str) -> bool:
         t = t[:2]                                 # a sub-national jurisdiction ("US-CA") belongs to its nation
     if t.startswith(("EUROPEAN UNION", "EURO AREA")):
         t = "EU"                                  # the Eurostat store labels its aggregate rows by name ("European Union - 27 countries (from 2020)")
+    if t and t not in GLOBAL_TAGS and t not in EU_FAMILY_TAGS and len(t) > 3:
+        named = detect_country_code(str(tag))     # a tag written as a country NAME ("Germany") is the same nation as its code ("DE")
+        if named:
+            t = named
     if t in GLOBAL_TAGS:
         return True
     if t in EU_FAMILY_TAGS:
