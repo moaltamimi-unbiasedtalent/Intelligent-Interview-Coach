@@ -1,0 +1,19 @@
+{
+ "schema": "ask4mo-demo-live-authorization/1",
+ "version": 1,
+ "approved_by": "Product Owner",
+ "approval_reference": "Owner message approving a maximum of EUR 10.00 for the capstone live demonstration (2026-10-19, for the 2026-10-20 Turing College review)",
+ "purpose": "Controlled academic demonstration, not a production launch. Synthetic candidate data only.",
+ "currency": "EUR",
+ "cap_eur": "10.00",
+ "normal_operating_stop_eur": "8.00",
+ "usd_to_eur_rate_applied": "1.00",
+ "usd_to_eur_note": "Every USD amount is counted one-to-one as EUR. While one EUR is worth more than one USD this OVER-counts the spend, which is the conservative direction.",
+ "category_caps_eur": {"agent": "2.00", "interview": "2.00", "ragas": "3.00", "troubleshooting": "1.00"},
+ "safety_reserve_eur": "2.00",
+ "safety_reserve_note": "Never available to normal operation. Usable only after an explicit operator 'release-reserve' action, and then still never above the cap.",
+ "limits": {"max_requests_total": 300, "max_input_tokens_per_request": 20000, "max_output_tokens_per_request": 4096, "request_timeout_s": 60, "max_retries": 1, "max_concurrency": 2},
+ "allowed_provider_hosts": ["openrouter.ai"],
+ "allowed_priced_endpoints": ["/chat/completions", "/embeddings"],
+ "does_not_authorize": ["reuse or reset of the P10E evaluation ledger", "commercial or production features", "real candidate data", "any rollout or billing gate", "spending above the cap"]
+}

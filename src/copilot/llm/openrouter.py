@@ -59,6 +59,12 @@ def default_model_kwargs(
     return kwargs
 
 
+def _demo_operation_headers(operation: str) -> dict:
+    from src.demo_live.guard import operation_headers
+
+    return operation_headers(operation)
+
+
 def build_chat_model(
     config: CopilotConfig,
     *,
@@ -109,6 +115,7 @@ def build_chat_model(
         default_headers={
             "HTTP-Referer": config.app_referer,
             "X-Title": config.app_title,
+            **_demo_operation_headers("agent"),
         },
         **kwargs,
     )
