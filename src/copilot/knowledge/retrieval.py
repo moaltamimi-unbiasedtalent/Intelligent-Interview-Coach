@@ -65,10 +65,20 @@ def _geography_allowed(geography, country: str) -> bool:
 
 class StructuredRetrievalCoordinator:
     def __init__(self, *, role_repo=None, comp_repo=None, competency_repo=None,
-                 labour_repo=None, credential_repo=None, manifest_entries=None, fixture_sources=None) -> None:
+                 labour_repo=None, credential_repo=None, manifest_entries=None, fixture_sources=None, source_origins=None,
+                 demonstration_mode: bool = False) -> None:
+        # P10D-R1: evidence from a source whose ONLY recorded origin is a synthetic test fixture is WITHHELD from candidate results (abstention is better than presenting a hand-authored
+        # sample as official data). ``demonstration_mode=True`` (an explicit test or demonstration) returns it, labelled "[SYNTHETIC SAMPLE DATA, not official data]".
+        self.demonstration_mode = demonstration_mode
         # P10D: sources whose recorded data origin is ONLY a synthetic test fixture (hand-authored sample rows). Their evidence is still returned (coverage is
         # unchanged) but is labelled, so a synthetic row is never presented to a candidate under a real publisher's name as if it were official data.
-        self.fixture_sources = frozenset(fixture_sources or ())
+        # P10D-R1: ``source_origins`` = {source_id: [recorded data origins]} (the origin ledger). When given (production), every evidence item carries separate provenance facts and
+        # an unknown or mixed origin is never treated as verified. When absent (unit-test fixtures) no origin claim is made. ``fixture_sources`` is kept for earlier callers.
+        origins = {k: list(v) for k, v in (source_origins or {}).items()}
+        for sid in (fixture_sources or ()):
+            origins.setdefault(sid, ["synthetic_fixture"])
+        self._origins = origins if (source_origins is not None or fixture_sources) else None
+        self.fixture_sources = frozenset(sid for sid, o in origins.items() if o and all(x == "synthetic_fixture" for x in o))
         self.role_repo = role_repo
         self.comp_repo = comp_repo
         self.competency_repo = competency_repo
@@ -81,6 +91,14 @@ class StructuredRetrievalCoordinator:
             except Exception:  # pragma: no cover - manifest optional
                 entries = []
         self._meta = {e.source_id: e for e in entries}
+
+    def origin_class_of(self, source_id: str) -> str:
+        """Origin class of a source (verified real, synthetic, mixed or unknown). ``None``-tracking coordinators (unit fixtures) report unknown: no claim of verification."""
+        from src.copilot.knowledge.evidence_integrity import ORIGIN_UNKNOWN, origin_class
+
+        if self._origins is None:
+            return ORIGIN_UNKNOWN
+        return origin_class(self._origins.get((source_id or "").split(":", 1)[0]))
 
     # -- source metadata ---------------------------------------------------
 
@@ -97,6 +115,10 @@ class StructuredRetrievalCoordinator:
                   metadata=None) -> KnowledgeEvidence:
         m = self._src(source_id)
         synthetic = bool(self.fixture_sources) and source_id.split(":", 1)[0] in self.fixture_sources
+        if self._origins is not None:
+            from src.copilot.knowledge.evidence_integrity import evidence_integrity_fields
+
+            metadata = {**(metadata or {}), **evidence_integrity_fields(self.origin_class_of(source_id), country or m["country"], geography or m["region"], year, version, source_id)}
         if synthetic:
             text = "[SYNTHETIC SAMPLE DATA, not official data] " + text
             m = {**m, "title": f"{m['title']} (synthetic sample)"}
@@ -151,6 +173,24 @@ class StructuredRetrievalCoordinator:
             # VECTOR: nothing structured; the service runs the vector lane.
         except Exception as exc:  # noqa: BLE001 - structured retrieval never crashes the turn
             out.notes.append(f"Structured retrieval degraded: {type(exc).__name__}")
+        if out.country and out.evidence:
+            # P10D-R1: a COUNTRY-BOUND item (statistic, projection, licence, the entry-education or outlook attribute of a national handbook) tagged to another nation is never returned
+            # for a question that names a country: the education and outlook lanes returned the US handbook for UK, German and EU questions. Definitions are not country-bound.
+            from src.copilot.knowledge.evidence_integrity import COUNTRY_BOUND_EVIDENCE_TYPES
+
+            keep = [e for e in out.evidence if e.evidence_type not in COUNTRY_BOUND_EVIDENCE_TYPES or tag_matches_country(e.country or e.geography or "", out.country)]
+            if len(keep) != len(out.evidence):
+                foreign = sorted({(e.country or e.geography or "?") for e in out.evidence if e not in keep})
+                out.notes.append(f"Withheld country-bound evidence tagged to {', '.join(foreign)}: the question asks about {out.country}, and another nation's statistics are not used as local evidence.")
+                out.evidence = keep
+                out.insufficient = out.insufficient or not keep
+        if self.fixture_sources and not self.demonstration_mode:
+            kept = [e for e in out.evidence if (e.source_id or "").split(":", 1)[0] not in self.fixture_sources]
+            if len(kept) != len(out.evidence):
+                dropped = sorted({(e.source_id or "").split(":", 1)[0] for e in out.evidence if e not in kept})
+                out.notes.append("Evidence from synthetic sample data was withheld (" + ", ".join(dropped) + "): it is not official data and is not used as candidate guidance.")
+                out.evidence = kept
+                out.insufficient = out.insufficient or not kept
         return out
 
     # -- lane producers ----------------------------------------------------
@@ -588,11 +628,10 @@ def build_default_coordinator(config=None) -> StructuredRetrievalCoordinator:
     def _open(path, cls):
         return cls(path) if os.path.isfile(path) else None
 
-    from src.copilot.knowledge.origins import is_fixture_only, load_origins
+    from src.copilot.knowledge.origins import load_origins
 
-    fixture_sources = {sid for sid, origins in load_origins().items() if is_fixture_only(origins)}
     return StructuredRetrievalCoordinator(
-        fixture_sources=fixture_sources,
+        source_origins=load_origins(),
         role_repo=_open(constants.ROLE_DB_PATH, RoleRepository),
         comp_repo=_open(constants.COMPENSATION_DB_PATH, CompensationRepository),
         competency_repo=_open(constants.COMPETENCY_DB_PATH, CompetencyRepository),

@@ -1,6 +1,6 @@
 {
  "schema": "p10d/1",
- "version": "1.0.0",
+ "version": "1.1.0",
  "synthetic": true,
  "warning": "SYNTHETIC TEST DATA. Not a real source, statistic, citation or document. Relevance judgments are author-defined by construction and are not independent human ratings. Metrics computed over this corpus are SYNTHETIC RELEVANCE JUDGMENTS measured with the offline lexical embedder; they say nothing about semantic retrieval quality or model-generated answers.",
  "judgment_policy": "A retrieval case is JUDGED only when it lists the relevant fixture document ids and a rationale. Unjudged cases never enter a metric. No label is invented to raise a score.",
@@ -876,6 +876,8 @@
    "grounding:prompt_injected_source_text",
    "grounding:misleading_context_withheld",
    "grounding:trust_separated_blocks",
+   "grounding:general_guidance_stays_answerable",
+   "occupation:ambiguous_clarifies_in_chat",
    "grounding:conflicting_or_outdated_evidence_visible",
    "grounding:no_invented_source_facts"
   ],
@@ -919,7 +921,7 @@
   "L-ALIAS-1": "Alias resolution is exact-substring: a German near-synonym that is not a stored alias is not mapped to an occupation (correct: no equivalence is invented).",
   "L-CODE-1": "The runtime resolver matches titles and aliases only; an official occupation code in the question does not resolve an occupation.",
   "L-REL-1": "There is no relevance floor: a query with no real match (out of scope, or an existing occupation without role data) still receives the nearest narrative chunks, which are cited as evidence. The only floor is similarity <= 0 (added in P10D); with the offline hash embedder shared function words create small positive similarity. A calibrated floor needs a semantic embedder run (not authorised).",
-  "L-ANSWER-GUARD": "The occupation-grounding guard (a named occupation that matched nothing withholds narrative evidence) exists in the retrieval-only path (retrieve_evidence, used by the Mo agent) but NOT in answer() (the deterministic /career/chat path), which remains as before.",
+  "L-ANSWER-GUARD": "RESOLVED in P10D-R1 (owner decision A): the occupation-grounding decision is now one shared step used by both answer() and retrieve_evidence(). Kept for history; no case references it.",
   "L-STALE-1": "The narrative lane has no publication-date or staleness handling: a conflicting older document is returned beside the current one (the year is carried as metadata only).",
   "L-INGEST-SIZE": "The operator-run legacy ingestion loaders impose no per-file size limit (the governed Admin pipeline does). Operator trust boundary; not candidate-reachable.",
   "L-META-1": "A sidecar .meta.json written by the operator can override provenance metadata (title, source_url). Operator trust boundary; not candidate-reachable."
@@ -2847,13 +2849,66 @@
    "query": "What does an interplanetary cartographer do?",
    "responder": "echo_prompt",
    "expect": {
+    "citations_max": 0,
+    "prompt_contains": [
+     "(none retrieved)"
+    ]
+   },
+   "needs_retriever": true
+  },
+  {
+   "id": "C-20",
+   "family": "grounding",
+   "kind": "answer",
+   "mode": "B",
+   "tags": [
+    "grounding:general_guidance_stays_answerable"
+   ],
+   "query": "How should I structure an interview answer with the STAR method?",
+   "responder": "cite_first",
+   "expect": {
+    "citations_min": 1,
+    "citation_sources": [
+     "fx_doc_star_en"
+    ]
+   },
+   "needs_retriever": true
+  },
+  {
+   "id": "C-21",
+   "family": "grounding",
+   "kind": "answer",
+   "mode": "B",
+   "tags": [
+    "grounding:general_guidance_stays_answerable",
+    "grounding:topic_phrase_is_not_a_named_occupation"
+   ],
+   "query": "What do surveys say about remote work trends across professions?",
+   "responder": "echo_prompt",
+   "expect": {
     "citations_min": 1
    },
-   "needs_retriever": true,
-   "desired": {
+   "needs_retriever": true
+  },
+  {
+   "id": "C-22",
+   "family": "grounding",
+   "kind": "answer",
+   "mode": "B",
+   "tags": [
+    "grounding:ambiguous_occupation",
+    "occupation:ambiguous_clarifies_in_chat"
+   ],
+   "query": "What does an analyst do?",
+   "responder": "cite_first",
+   "expect": {
+    "responder_called": false,
+    "answer_contains": [
+     "Which one did you mean"
+    ],
     "citations_max": 0
    },
-   "limitation": "L-ANSWER-GUARD"
+   "needs_retriever": true
   },
   {
    "id": "T-01",

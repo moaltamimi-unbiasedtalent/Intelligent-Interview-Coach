@@ -76,6 +76,10 @@ class PipelineTrace:
     detected_country: str | None = None
     resolved_occupation: str = ""
     occupation_candidates: list[str] = field(default_factory=list)
+    # P10D-R1: the ONE occupation-grounding decision shared by answer() and retrieve_evidence(): known | ambiguous | unsupported | general ("" before it runs).
+    occupation_grounding: str = ""
+    occupation_candidate_codes: list[str] = field(default_factory=list)
+    narrative_withheld: int = 0
     sources_considered: list[str] = field(default_factory=list)
     source_precedence: list[str] = field(default_factory=list)
     structured_queries: list[str] = field(default_factory=list)
@@ -341,7 +345,7 @@ class CareerIntelligenceService:
         # If the occupation is genuinely ambiguous, ask to clarify rather than
         # guessing — but only for a pure structured question (no vector evidence,
         # no tools planned) so we never suppress an otherwise-answerable turn.
-        if bundle.clarify and not bundle.results and not bundle.route.tools:
+        if bundle.clarify and not bundle.route.tools:
             return self._plain_result(bundle.clarify, trace)
 
         # 6) Tool requirement + 7) tool execution (controlled) — answer() ONLY.
@@ -454,16 +458,9 @@ class CareerIntelligenceService:
             # Validation failure (e.g. empty query) — safe, no evidence.
             return KnowledgeRetrievalResult(insufficient_evidence=True, trace=trace)
 
-        # Phase 7C §39/§40 — occupation-grounding guard.
-        # A query "names" an occupation when the resolver extracted a phrase; it is
-        # "grounded" only when that phrase matched at least one KNOWN occupation
-        # (occupation_candidates). Structured evidence is inherently occupation-grounded.
-        named = bool((trace.resolved_occupation or "").strip())
-        # Ambiguous resolution (§9): the query matched several materially-different
-        # occupations. Ask the user to clarify — never present occupation-specific evidence
-        # for a guessed single interpretation.
-        if bundle.clarify:
-            trace.notes.append("Ambiguous occupation — clarification requested; evidence withheld.")
+        # Phase 7C §39/§40 occupation grounding, now the SAME decision answer() applies (P10D-R1): see ``_apply_occupation_grounding``.
+        grounding = trace.occupation_grounding
+        if grounding == "ambiguous":
             return KnowledgeRetrievalResult(
                 evidence=[], citations=[], resolved_occupation=trace.resolved_occupation,
                 resolved_geography=trace.detected_country, retrieval_lane=trace.retrieval_lane,
@@ -471,30 +468,18 @@ class CareerIntelligenceService:
                 insufficient_evidence=True, occupation_grounded=False,
                 general_evidence=False, clarify=bundle.clarify, trace=trace,
             )
-        # Grounded ONLY when the resolver matched at least one KNOWN occupation. Structured
-        # evidence exists only in that case, so this single signal is authoritative; a
-        # narrative chunk that merely looks similar never counts as grounding (§39).
-        grounded = bool(trace.occupation_candidates)
+        if grounding == "unsupported":
+            return KnowledgeRetrievalResult(
+                evidence=[], citations=[], resolved_occupation=trace.resolved_occupation,
+                resolved_geography=trace.detected_country, retrieval_lane=trace.retrieval_lane,
+                retrieval_strategy=trace.retrieval_strategy, source_count=0,
+                insufficient_evidence=True, occupation_grounded=False,
+                general_evidence=False, clarify=bundle.clarify, trace=trace,
+            )
+        grounded = grounding == "known"
         evidence = list(bundle.evidence)
-        general_evidence = False
-        if named and not grounded and evidence:
-            # Occupation named but not in the KB: do NOT present similar narrative chunks
-            # as role evidence. Suppress it and report insufficient (never fabricate grounding).
-            note = (f'No supported occupation matched "{trace.resolved_occupation}"; '
-                    "narrative-only matches were withheld to avoid implying occupation-"
-                    "specific evidence.")
-            trace.notes.append(note)
-            return KnowledgeRetrievalResult(
-                evidence=[], citations=[], resolved_occupation=trace.resolved_occupation,
-                resolved_geography=trace.detected_country, retrieval_lane=trace.retrieval_lane,
-                retrieval_strategy=trace.retrieval_strategy, source_count=0,
-                insufficient_evidence=True, occupation_grounded=False,
-                general_evidence=False, clarify=bundle.clarify, trace=trace,
-            )
-        if evidence and not grounded:
-            # No specific occupation named; only general narrative found — return it, but
-            # flag it so the candidate layer labels it as general (not role-specific) guidance.
-            general_evidence = True
+        # No specific occupation named (or a topic phrase); only general narrative found: return it, flagged so the candidate layer labels it general guidance.
+        general_evidence = bool(evidence) and not grounded
 
         return KnowledgeRetrievalResult(
             evidence=evidence,
@@ -648,6 +633,10 @@ class CareerIntelligenceService:
 
         clarify_msg = getattr(self, "_clarify_message", None)
         self._clarify_message = None
+        # P10D-R1: the shared occupation-grounding decision (one place, both candidate paths).
+        results, clarify_msg = self._apply_occupation_grounding(results, trace, clarify_msg)
+        bundle.results = results
+        trace.context_count = len(results)
         bundle.clarify = clarify_msg
 
         # 8) Assemble unified, numbered evidence (structured first, then narrative)
@@ -658,6 +647,51 @@ class CareerIntelligenceService:
         bundle.sections = sections
         bundle.citations = citations
         return bundle
+
+    @staticmethod
+    def _apply_occupation_grounding(results, trace, clarify_msg):
+        """The single occupation-grounding decision used by BOTH ``answer()`` (/career/chat) and ``retrieve_evidence()`` (Mo's agent). Returns ``(results, clarify_message)``.
+
+        * KNOWN (the resolver matched a known occupation): narrative chunks that are explicitly about a DIFFERENT occupation are withheld (they are not evidence for this question);
+          untagged, same-occupation and general chunks stay.
+        * AMBIGUOUS (several materially different occupations): ask which was meant; every narrative chunk is withheld (no guessing the role).
+        * UNSUPPORTED (a phrase that looks like a role title matched nothing): narrative nearest neighbours are withheld so they are never presented as role-specific fact.
+        * GENERAL (no named occupation, or a phrase that is a topic, not a title): nothing is withheld; the guidance is labelled general by the retrieval-only result.
+
+        Deterministic: it uses the resolver outcome and chunk metadata only, no similarity threshold, no new occupation mapping, no P10C resolver.
+        """
+        from src.copilot.knowledge.evidence_integrity import looks_like_occupation_title
+
+        phrase = (trace.resolved_occupation or "").strip()
+        titled = looks_like_occupation_title(phrase)
+        if clarify_msg and not titled:
+            clarify_msg = None                          # an "ambiguity" in a phrase that is not an occupation title is not a role clarification
+        if clarify_msg:
+            trace.occupation_grounding = "ambiguous"
+            trace.narrative_withheld = len(results)
+            trace.notes.append("Ambiguous occupation: clarification requested; evidence withheld.")
+            return [], clarify_msg
+        if trace.occupation_candidates:
+            trace.occupation_grounding = "known"
+            codes = set(trace.occupation_candidate_codes)
+            titles = {re.sub(r"s$", "", t.casefold()) for t in trace.occupation_candidates}
+            kept = []
+            for r in results:
+                meta = r.metadata or {}
+                cid = meta.get("canonical_occupation_id") or ""
+                if not cid or cid in codes or re.sub(r"s$", "", str(meta.get("title") or "").casefold()) in titles:
+                    kept.append(r)
+            if len(kept) != len(results):
+                trace.narrative_withheld = len(results) - len(kept)
+                trace.notes.append(f"Withheld {trace.narrative_withheld} narrative passage(s) that describe a different occupation than the one asked about.")
+            return kept, None
+        if phrase and titled:
+            trace.occupation_grounding = "unsupported"
+            trace.narrative_withheld = len(results)
+            trace.notes.append(f'No supported occupation matched "{phrase}"; narrative-only matches were withheld to avoid implying occupation-specific evidence.')
+            return [], None
+        trace.occupation_grounding = "general"
+        return results, None
 
     # Narrative document types that carry COUNTRY-BOUND statistics or surveys. Occupation descriptions, tasks, skills and guidance (O*NET, ESCO, ISCO) are
     # definitions that apply across countries by design and are never filtered by country.
@@ -1027,6 +1061,7 @@ class CareerIntelligenceService:
         if outcome.resolved:
             trace.resolved_occupation = outcome.resolved.phrase
             trace.occupation_candidates = [c.title for c in outcome.resolved.candidates]
+            trace.occupation_candidate_codes = [getattr(c, "occupation_code", "") for c in outcome.resolved.candidates]
 
         if outcome.clarify and outcome.resolved:
             names = ", ".join(c.title for c in outcome.resolved.candidates[:4])
@@ -1058,8 +1093,22 @@ class CareerIntelligenceService:
         budget. Returns ``(evidence, sections, citations)`` with markers [1..N].
         """
         combined: list[KnowledgeEvidence] = list(structured_evidence)
+        coord = self.knowledge_coordinator
         for i, r in enumerate(results):
-            combined.append(KnowledgeEvidence.from_retrieval_result(r, index=i))
+            ev = KnowledgeEvidence.from_retrieval_result(r, index=i)
+            if coord is not None and getattr(coord, "_origins", None) is not None:
+                if (not getattr(coord, "demonstration_mode", False)) and coord.origin_class_of(ev.source_id) == "synthetic_fixture":
+                    continue                                     # synthetic sample narrative is never candidate guidance (P10D-R1)
+                # P10D-R1: narrative evidence carries the same separate provenance facts as structured evidence, and an occupation-tagged chunk is marked occupation_specific.
+                from src.copilot.knowledge.evidence_integrity import ORIGIN_SYNTHETIC, evidence_integrity_fields
+
+                origin = coord.origin_class_of(ev.source_id)
+                ev.metadata.update(evidence_integrity_fields(origin, ev.country, ev.geography, ev.reference_year, ev.version, ev.source_id))
+                ev.metadata["evidence_class"] = "occupation_specific" if (r.metadata or {}).get("canonical_occupation_id") else "general_guidance"
+                if origin == ORIGIN_SYNTHETIC:
+                    ev.text = "[SYNTHETIC SAMPLE DATA, not official data] " + ev.text
+                    ev.source_title = f"{ev.source_title or ev.source_id} (synthetic sample)"
+            combined.append(ev)
 
         # Rank: structured before narrative, then by score; narrative keeps order.
         def _key(item):

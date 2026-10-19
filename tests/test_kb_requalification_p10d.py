@@ -44,7 +44,7 @@ def test_the_corpus_is_sound_synthetic_and_never_mode_c():
     text = json.dumps(c).lower()
     assert "api.openai" not in text and "openrouter.ai" not in text
     assert all(m["source_id"].startswith("fx_") and m["source_url"].startswith("https://fixtures.invalid/") for m in c["fixture"]["manifest"])
-    assert len({x["id"] for x in c["cases"]}) == len(c["cases"]) == 154
+    assert len({x["id"] for x in c["cases"]}) == len(c["cases"]) == 157
 
 
 def test_every_judged_case_states_a_rationale_and_unjudged_cases_never_enter_a_metric(result):
@@ -63,8 +63,8 @@ def test_every_judged_case_states_a_rationale_and_unjudged_cases_never_enter_a_m
 def test_the_run_passes_and_exercises_every_required_tag(result):
     failed = [(r["id"], [k for k, v in r["checks"].items() if not v], r["error"]) for r in result["cases"] if not r["ok"]]
     assert result["ok"], failed
-    assert result["passed"] == result["total"] == 154
-    assert result["tags"]["missing_tags"] == [] and result["tags"]["failing_tags"] == [] and result["tags"]["required_tags"] == result["tags"]["exercised"] == 88
+    assert result["passed"] == result["total"] == 157
+    assert result["tags"]["missing_tags"] == [] and result["tags"]["failing_tags"] == [] and result["tags"]["required_tags"] == result["tags"]["exercised"] == 90
     assert result["claims"] == {"mode_c_model_quality_measured": False, "human_rated": False, "semantic_retrieval_measured": False, "real_world_citations_verified": False, "production_ready": False,
                                 "product_coverage_gate_passed": False}
 

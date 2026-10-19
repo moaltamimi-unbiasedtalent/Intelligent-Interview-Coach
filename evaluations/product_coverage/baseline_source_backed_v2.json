@@ -1,0 +1,262 @@
+{
+ "schema": "p10d-r1-source-backed-coverage-baseline/1",
+ "metric": "SOURCE-BACKED PRODUCT COVERAGE (V2). A different measurement from the legacy count in baseline_gate_status.json; never merged with it, and the legacy baseline is never rewritten by it.",
+ "definition": "A case is sufficient when (a) the product returned at least one ELIGIBLE evidence item, or (b) it returned NO evidence and the case file accepts an insufficiency (an accepted abstention), or (c) it asked a clarification. Returning only ineligible evidence is neither evidence-backed coverage nor an abstention.",
+ "eligible_evidence": "real origin (verified_real_source: every recorded origin of the source is a real origin), provenance-complete (a source id, and a URL when the case requires a citation) and, for COUNTRY-BOUND types (compensation, forecast, openings, shortage, vacancy, licence, education, training, outlook), applicable to the country the case names (same nation, a global tag, or an EU-family tag for a European country). Synthetic, mixed-origin, unknown-origin and wrong-country evidence is ineligible. Occupation definitions are cross-country by design and are not country-filtered.",
+ "separate_facts": "source identity, country, publication year, edition, origin class, qualification state (always not_qualified: no legacy source is human-qualified) and runtime eligibility are carried separately; a real source is not human-qualified and engineering validation is not runtime authorisation.",
+ "threshold": "unchanged: 95 percent of the 412 cases, 392 sufficient. A regression PASS is never a pass of the gate.",
+ "difference_from_the_earlier_code": {
+  "checkout": "2e9386d (P10D, merged)",
+  "legacy_sufficient": 386,
+  "source_backed_sufficient_under_these_rules": 374,
+  "note": "On that code 12 of the 386 legacy-sufficient cases were counted only because the product returned ineligible evidence: 3 synthetic-fixture rows and 9 US handbook (BLS OOH and projections) rows returned for UK, German and EU questions. P10D-R1 withholds that evidence at runtime, so the product now abstains on them (an accepted abstention under the unchanged case file) and the legacy count is UNCHANGED at 386. This is a behavioural safety correction, not a regression, and no baseline was weakened.",
+  "cases": [
+   {
+    "id": "pc_certifications_110",
+    "geography": null,
+    "sources": [
+     "careeronestop"
+    ],
+    "ineligible": {
+     "synthetic_fixture": 1
+    }
+   },
+   {
+    "id": "pc_certifications_120",
+    "geography": null,
+    "sources": [
+     "careeronestop"
+    ],
+    "ineligible": {
+     "synthetic_fixture": 1
+    }
+   },
+   {
+    "id": "pc_licences_130",
+    "geography": null,
+    "sources": [
+     "careeronestop"
+    ],
+    "ineligible": {
+     "synthetic_fixture": 1
+    }
+   },
+   {
+    "id": "pc_short_term_outlook_254",
+    "geography": "EU",
+    "sources": [
+     "bls_ooh",
+     "bls_projections"
+    ],
+    "ineligible": {
+     "wrong_country": 2
+    }
+   },
+   {
+    "id": "pc_short_term_outlook_260",
+    "geography": "UK",
+    "sources": [
+     "bls_ooh",
+     "bls_projections"
+    ],
+    "ineligible": {
+     "wrong_country": 2
+    }
+   },
+   {
+    "id": "pc_short_term_outlook_261",
+    "geography": "DE",
+    "sources": [
+     "bls_ooh",
+     "bls_projections"
+    ],
+    "ineligible": {
+     "wrong_country": 2
+    }
+   },
+   {
+    "id": "pc_short_term_outlook_262",
+    "geography": "EU",
+    "sources": [
+     "bls_ooh",
+     "bls_projections"
+    ],
+    "ineligible": {
+     "wrong_country": 2
+    }
+   },
+   {
+    "id": "pc_short_term_outlook_266",
+    "geography": "EU",
+    "sources": [
+     "bls_ooh",
+     "bls_projections"
+    ],
+    "ineligible": {
+     "wrong_country": 2
+    }
+   },
+   {
+    "id": "pc_short_term_outlook_268",
+    "geography": "UK",
+    "sources": [
+     "bls_ooh"
+    ],
+    "ineligible": {
+     "wrong_country": 1
+    }
+   },
+   {
+    "id": "pc_short_term_outlook_269",
+    "geography": "DE",
+    "sources": [
+     "bls_ooh"
+    ],
+    "ineligible": {
+     "wrong_country": 1
+    }
+   },
+   {
+    "id": "pc_short_term_outlook_270",
+    "geography": "EU",
+    "sources": [
+     "bls_ooh"
+    ],
+    "ineligible": {
+     "wrong_country": 1
+    }
+   },
+   {
+    "id": "pc_short_term_outlook_274",
+    "geography": "EU",
+    "sources": [
+     "bls_ooh",
+     "bls_projections"
+    ],
+    "ineligible": {
+     "wrong_country": 2
+    }
+   }
+  ]
+ },
+ "history": [
+  {
+   "recorded_on": "2026-10-19",
+   "profile": "developer_local",
+   "reason": "P10D-R1: initial source-backed (V2) baseline for the developer_local profile; a new versioned measurement, not a change to the legacy baseline",
+   "previous_sufficient": null,
+   "new_sufficient": 386,
+   "previous_insufficient_case_ids": [],
+   "new_insufficient_case_ids": [
+    "pc_annual_openings_279",
+    "pc_annual_openings_287",
+    "pc_annual_openings_299",
+    "pc_compensation_183",
+    "pc_compensation_184",
+    "pc_compensation_187",
+    "pc_compensation_188",
+    "pc_compensation_191",
+    "pc_compensation_192",
+    "pc_compensation_195",
+    "pc_compensation_196",
+    "pc_compensation_199",
+    "pc_compensation_200",
+    "pc_compensation_203",
+    "pc_compensation_204",
+    "pc_compensation_207",
+    "pc_compensation_208",
+    "pc_education_073",
+    "pc_education_075",
+    "pc_education_083",
+    "pc_education_084",
+    "pc_future_growth_215",
+    "pc_future_growth_223",
+    "pc_future_growth_235",
+    "pc_short_term_outlook_247",
+    "pc_short_term_outlook_255"
+   ],
+   "added_failures": [
+    "pc_annual_openings_279",
+    "pc_annual_openings_287",
+    "pc_annual_openings_299",
+    "pc_compensation_183",
+    "pc_compensation_184",
+    "pc_compensation_187",
+    "pc_compensation_188",
+    "pc_compensation_191",
+    "pc_compensation_192",
+    "pc_compensation_195",
+    "pc_compensation_196",
+    "pc_compensation_199",
+    "pc_compensation_200",
+    "pc_compensation_203",
+    "pc_compensation_204",
+    "pc_compensation_207",
+    "pc_compensation_208",
+    "pc_education_073",
+    "pc_education_075",
+    "pc_education_083",
+    "pc_education_084",
+    "pc_future_growth_215",
+    "pc_future_growth_223",
+    "pc_future_growth_235",
+    "pc_short_term_outlook_247",
+    "pc_short_term_outlook_255"
+   ],
+   "resolved_failures": [],
+   "weakens_baseline": false,
+   "owner_authorization": null
+  }
+ ],
+ "profiles": {
+  "developer_local": {
+   "cases": 412,
+   "sufficient": 386,
+   "insufficient": 26,
+   "insufficient_case_ids": [
+    "pc_annual_openings_279",
+    "pc_annual_openings_287",
+    "pc_annual_openings_299",
+    "pc_compensation_183",
+    "pc_compensation_184",
+    "pc_compensation_187",
+    "pc_compensation_188",
+    "pc_compensation_191",
+    "pc_compensation_192",
+    "pc_compensation_195",
+    "pc_compensation_196",
+    "pc_compensation_199",
+    "pc_compensation_200",
+    "pc_compensation_203",
+    "pc_compensation_204",
+    "pc_compensation_207",
+    "pc_compensation_208",
+    "pc_education_073",
+    "pc_education_075",
+    "pc_education_083",
+    "pc_education_084",
+    "pc_future_growth_215",
+    "pc_future_growth_223",
+    "pc_future_growth_235",
+    "pc_short_term_outlook_247",
+    "pc_short_term_outlook_255"
+   ],
+   "case_ids_sha256": "6e2488fb2d363d1d92170985cb00b258d1192afac02762102eca48803426c482",
+   "basis": {
+    "accepted_abstention": 197,
+    "clarification": 69,
+    "none": 26,
+    "source_backed_evidence": 120
+   },
+   "recorded_on": "2026-10-19",
+   "environment_stores": {
+    "data/knowledge/roles.db": true,
+    "data/knowledge/compensation.db": true,
+    "data/knowledge/labour_market.db": true,
+    "data/knowledge/competencies.db": true,
+    "data/knowledge/credentials.db": true,
+    "data/chroma/chroma.sqlite3": true
+   }
+  }
+ }
+}

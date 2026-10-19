@@ -84,6 +84,10 @@ def tag_matches_country(tag, country: str) -> bool:
     unspecified tag, or an EU-family tag when the asked-for country is European."""
     t = str(tag or "").strip().upper()
     c = (country or "").strip().upper()
+    if len(t) == 5 and t[2] == "-" and t[:2].isalpha():
+        t = t[:2]                                 # a sub-national jurisdiction ("US-CA") belongs to its nation
+    if t.startswith(("EUROPEAN UNION", "EURO AREA")):
+        t = "EU"                                  # the Eurostat store labels its aggregate rows by name ("European Union - 27 countries (from 2020)")
     if t in GLOBAL_TAGS:
         return True
     if t in EU_FAMILY_TAGS:
