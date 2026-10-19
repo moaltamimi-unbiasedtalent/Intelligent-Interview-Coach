@@ -38,9 +38,17 @@ def status() -> dict:
         limits_state = "VALID"
     except G.LiveRunRefused as exc:
         limits_state = f"{exc.reason}"
-    return {"owner_decision_date": auth.owner_decision_date, "paid_use_granted": auth.paid_use_granted, "limits": limits_state, "limits_approved": bool(auth.approved_by and auth.approval_date and auth.reference),
-            "in_ci": G.in_ci(), "credentials_present": _credentials_present(), "paid_execution_possible": False if limits_state != "VALID" else "see require_live",
-            "missing_owner_decision": [] if limits_state == "VALID" else ["max_spend_usd", "max_provider_calls", "per-request token limits, timeout, retries, concurrency", "approved_by / approval_date / reference"]}
+    raw = auth.limits_raw if isinstance(auth.limits_raw, dict) else {}
+    unapproved = [k for k in G.REQUIRED_LIMITS if k not in auth.approves]
+    unset = [k for k in G.REQUIRED_LIMITS if raw.get(k) is None]
+    sa = auth.spend_authority or {}
+    return {"owner_decision_date": auth.owner_decision_date, "paid_use_granted": auth.paid_use_granted, "limits": limits_state,
+            "approval_recorded": {"approved_by": auth.approved_by, "approval_date": auth.approval_date, "reference": auth.reference},
+            "approved_limits": [k for k in G.REQUIRED_LIMITS if k in auth.approves], "unapproved_limits": unapproved, "unset_limits": unset,
+            "approved_total_spend_usd": sa.get("approved_total_usd"), "potential_ceiling_not_approved_usd": sa.get("potential_ceiling_not_approved_usd"),
+            "prior_runs_committed_usd": str(G.prior_committed_usd()),
+            "in_ci": G.in_ci(), "credentials_present": _credentials_present(), "paid_execution_possible": False if (unapproved or unset or limits_state != "VALID") else "see require_live",
+            "missing_owner_decision": sorted(set(unapproved) | set(unset))}
 
 
 def main(argv=None) -> int:

@@ -17,7 +17,15 @@
   "live_email_to_third_parties": true,
   "note": "Only the first permission (use of paid providers for P10E) was granted, and it carried no monetary ceiling and no call-count limit. Engineering did not invent either."
  },
- "limits": null,
+ "limits": {
+  "max_spend_usd": 10,
+  "max_provider_calls": null,
+  "max_input_tokens_per_request": null,
+  "max_output_tokens_per_request": null,
+  "request_timeout_s": null,
+  "max_retries": null,
+  "max_concurrency": null
+ },
  "limits_required_before_any_paid_call": [
   "max_spend_usd",
   "max_provider_calls",
@@ -28,10 +36,24 @@
   "max_concurrency"
  ],
  "limits_approval": {
-  "approved_by": null,
-  "approval_date": null,
-  "reference": null,
-  "how_to_approve": "Replace `limits` with an object holding every field named in limits_required_before_any_paid_call, and fill approved_by, approval_date and reference, in a reviewed commit. The guard refuses to run while any of these is missing, invalid or unlimited."
+  "approved_by": "Product Owner",
+  "approval_date": "2026-10-19",
+  "reference": "Owner budget decision in ChatGPT, 2026-10-19",
+  "approves": [
+   "max_spend_usd"
+  ],
+  "scope": "This approval covers max_spend_usd only. max_provider_calls, the per-request token limits, request_timeout_s, max_retries and max_concurrency are NOT approved yet and remain null; the guard refuses every paid call until each is present, valid and listed in `approves` by the owner.",
+  "how_to_approve": "Set each remaining limit, add its name to `approves`, and keep approved_by, approval_date and reference, in a reviewed commit. The guard refuses while any limit is missing, invalid, unlisted, unlimited, or a spend limit above spend_authority.approved_total_usd."
  },
- "paid_execution_enabled": false
+ "paid_execution_enabled": false,
+ "spend_authority": {
+  "approved_total_usd": 10,
+  "potential_ceiling_not_approved_usd": 15,
+  "decision": "The owner approved an initial P10E live-testing budget of USD 10 TOTAL (cumulative across every live run, not per run). USD 15 is the absolute potential ceiling and is NOT the approved spending limit.",
+  "rules": [
+   "The limit is never increased automatically.",
+   "Spending above USD 10 requires a separate, explicit owner approval recorded here.",
+   "A run's committed upper bound (including worst-case reservations for unknown usage) counts against the total; earlier runs' committed amounts are subtracted before any new call."
+  ]
+ }
 }

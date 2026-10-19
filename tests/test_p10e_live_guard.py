@@ -35,21 +35,74 @@ def auth_file(tmp_path, **o):
 
 
 APPROVED = {"limits": {"max_spend_usd": 5, "max_provider_calls": 50, "max_input_tokens_per_request": 20000, "max_output_tokens_per_request": 2000, "request_timeout_s": 60, "max_retries": 1, "max_concurrency": 2},
-            "limits_approval": {"approved_by": "owner", "approval_date": "2026-10-20", "reference": "test fixture, not a real approval"}}
+            "spend_authority": {"approved_total_usd": 10, "potential_ceiling_not_approved_usd": 15},
+            "limits_approval": {"approved_by": "owner", "approval_date": "2026-10-20", "reference": "test fixture, not a real approval", "approves": list(G.REQUIRED_LIMITS)}}
 
 
 # ------------------------------------------------------------------------------------------------------------------------------------- the owner authorization record
-def test_the_authorization_record_grants_paid_use_but_no_ceiling_and_nothing_is_invented():
+def test_the_authorization_record_approves_ten_usd_total_and_nothing_else():
     a = G.load_authorization()
     assert a.owner_decision_date == "2026-10-19" and a.paid_use_granted is True
-    assert a.limits_raw is None and not (a.approved_by or a.approval_date or a.reference)               # engineering did not invent a ceiling or an approval
+    assert (a.approved_by, a.approval_date, a.reference) == ("Product Owner", "2026-10-19", "Owner budget decision in ChatGPT, 2026-10-19")
+    assert a.limits_raw["max_spend_usd"] == 10 and a.spend_authority["approved_total_usd"] == 10 and a.spend_authority["potential_ceiling_not_approved_usd"] == 15
+    assert a.approves == ("max_spend_usd",)                                                              # ONLY the spend is approved
+    others = [k for k in G.REQUIRED_LIMITS if k != "max_spend_usd"]
+    assert all(a.limits_raw[k] is None for k in others)                                                  # engineering did not invent any other limit
+    assert "NOT the approved" in a.spend_authority["decision"] or "NOT the approved spending limit" in a.spend_authority["decision"]
+    assert any("separate, explicit owner approval" in r for r in a.spend_authority["rules"])
     ng = a.raw["not_granted"]
     assert all(ng[k] is True for k in ("unlimited_spending", "production_activation", "processing_of_real_candidate_data", "human_reviewer_appointments", "acceptance_thresholds",
                                        "stripe_or_commercial_transactions", "speech_provider_execution_or_model_downloads", "live_email_to_third_parties"))
     assert a.raw["paid_execution_enabled"] is False
     with pytest.raises(G.LiveRunRefused) as e:
         G.LiveLimits.parse(a.limits_raw)
-    assert e.value.reason == "limits_missing"
+    assert e.value.reason == "limits_incomplete"                                                         # the USD 10 alone does not enable anything
+    with pytest.raises(G.LiveRunRefused) as e:
+        G.require_live(a, env={"P10E_LIVE": "1"})
+    assert e.value.reason == "limits_not_approved" and "max_provider_calls" in str(e.value) and "max_spend_usd" not in str(e.value).split("yet:")[1]
+
+
+def test_a_limit_must_be_listed_as_approved_and_spend_cannot_exceed_the_approved_total(tmp_path):
+    env = {"P10E_LIVE": "1"}
+    full = {**APPROVED, "limits_approval": {**APPROVED["limits_approval"], "approves": ["max_spend_usd"]}}
+    with pytest.raises(G.LiveRunRefused) as e:                                                         # values present but not approved by the owner
+        G.require_live(auth_file(tmp_path, **full), env=env)
+    assert e.value.reason == "limits_not_approved"
+    over = {**APPROVED, "limits": {**APPROVED["limits"], "max_spend_usd": 15}}
+    with pytest.raises(G.LiveRunRefused) as e:                                                         # the USD 15 potential ceiling is NOT approved
+        G.require_live(auth_file(tmp_path, **over), env=env)
+    assert e.value.reason == "spend_above_approval"
+    ten = {**APPROVED, "limits": {**APPROVED["limits"], "max_spend_usd": 10}}
+    assert G.require_live(auth_file(tmp_path, **ten), env=env).max_spend_usd == Decimal(10)
+    for broken in ({"spend_authority": {}}, {"spend_authority": {"approved_total_usd": 0}}, {"spend_authority": {"approved_total_usd": "NaN"}}):
+        with pytest.raises(G.LiveRunRefused) as e:
+            G.require_live(auth_file(tmp_path, **{**APPROVED, **broken}), env=env)
+        assert e.value.reason == "spend_authority_missing"
+
+
+def test_the_approved_total_is_cumulative_across_runs(tmp_path):
+    def finished_run(committed, prior="0"):
+        d = tmp_path / f"p10e-x-{committed}"
+        d.mkdir()
+        (d / "summary.json").write_text(json.dumps({"budget": {"committed_usd_upper_bound": committed, "prior_runs_committed_usd": prior}}))
+    assert G.prior_committed_usd(tmp_path) == 0
+    finished_run("3.5")
+    finished_run("6.0", prior="3.5")                                                                     # a later run's total includes its prior: only its OWN spend (2.5) is added
+    assert G.prior_committed_usd(tmp_path) == Decimal("3.5") + Decimal("2.5")
+    b = G.new_budget(limits(max_spend_usd="10"), PRICES, tmp_path)
+    assert b.prior_committed == Decimal("6.0") and Decimal(b.summary()["prior_runs_committed_usd"]) == Decimal("6.0")
+    # worst case for 3000 in / 2000 out on a test price = 3000*2e-6 + 2000*12e-6 = 0.03: fine; but a ceiling already consumed refuses
+    spent = G.LiveBudget(limits(max_spend_usd="10"), PRICES, prior_committed=Decimal("9.999"))
+    with pytest.raises(G.BudgetExceeded) as e:
+        spent.admit(SLUG["balanced"], 3000, 2000)
+    assert e.value.reason == "spend_ceiling"
+
+
+def test_an_unreadable_earlier_run_record_makes_the_guard_stricter_not_looser(tmp_path):
+    d = tmp_path / "p10e-broken"
+    d.mkdir()
+    (d / "summary.json").write_text("{not json")
+    assert G.prior_committed_usd(tmp_path) >= Decimal(10)                                                # counted as the full approved total
 
 
 def test_require_live_refuses_for_every_missing_precondition(tmp_path):
@@ -280,7 +333,9 @@ def test_paid_commands_refuse_while_no_limits_are_approved(monkeypatch, capsys):
     assert cli.main(["smoke"]) == 3 and cli.main(["kb-quality"]) == 3
     assert "limits_not_approved" in capsys.readouterr().out
     st = cli.status()
-    assert st["paid_execution_possible"] is False and st["limits"] == "limits_missing" and "max_spend_usd" in st["missing_owner_decision"]
+    assert st["paid_execution_possible"] is False and st["limits"] == "limits_incomplete" and st["approved_limits"] == ["max_spend_usd"]
+    assert "max_spend_usd" not in st["missing_owner_decision"] and set(st["missing_owner_decision"]) == set(G.REQUIRED_LIMITS) - {"max_spend_usd"}      # the exact remaining blockers
+    assert st["approved_total_spend_usd"] == 10 and st["potential_ceiling_not_approved_usd"] == 15
     spec = importlib.util.spec_from_file_location("eval_agent_live_cli", ROOT / "scripts/eval_agent_live.py")
     ag = importlib.util.module_from_spec(spec); spec.loader.exec_module(ag)
     assert ag.main(["--allow-paid"]) == 3 and ag.main([]) == 0                                              # offline behaviour is unchanged

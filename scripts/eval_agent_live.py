@@ -71,7 +71,7 @@ def _run_live(profile: str, cases: list[dict], record: bool, limit: int | None, 
     results = []
     if limit:
         cases = cases[:limit]
-    budget = G.LiveBudget(limits, G.load_prices())
+    budget = G.new_budget(limits)
     rec = G.LiveRunRecorder("agent-live", provider="OpenRouter", model=slug, profile=profile, dataset_version=f"{len(cases)} held-out cases")
     for case in cases:
         svc = AgentApplicationService(

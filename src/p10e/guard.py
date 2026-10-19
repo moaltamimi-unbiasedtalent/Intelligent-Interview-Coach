@@ -90,6 +90,8 @@ class Authorization:
     approved_by: str | None
     approval_date: str | None
     reference: str | None
+    approves: tuple = ()
+    spend_authority: dict = field(default_factory=dict)
     raw: dict = field(default_factory=dict)
 
 
@@ -100,7 +102,8 @@ def load_authorization(path: Path = AUTH_PATH) -> Authorization:
         raise LiveRunRefused("authorization_missing", "The P10E authorization record is missing or unreadable.") from exc
     appr = raw.get("limits_approval") or {}
     return Authorization(owner_decision_date=str(raw.get("owner_decision_date", "")), paid_use_granted=bool((raw.get("granted") or {}).get("paid_provider_use_for_p10e")),
-                         limits_raw=raw.get("limits"), approved_by=appr.get("approved_by"), approval_date=appr.get("approval_date"), reference=appr.get("reference"), raw=raw)
+                         limits_raw=raw.get("limits"), approved_by=appr.get("approved_by"), approval_date=appr.get("approval_date"), reference=appr.get("reference"),
+                         approves=tuple(appr.get("approves") or ()), spend_authority=dict(raw.get("spend_authority") or {}), raw=raw)
 
 
 def in_ci(env: dict | None = None) -> bool:
@@ -120,7 +123,18 @@ def require_live(auth: Authorization | None = None, *, env: dict | None = None, 
         raise LiveRunRefused("not_authorized", "The owner authorization for paid P10E provider use is not recorded.")
     if not (auth.approved_by and auth.approval_date and auth.reference):
         raise LiveRunRefused("limits_not_approved", "The spending and call limits have no recorded owner approval (approved_by, approval_date, reference).")
+    unapproved = [k for k in REQUIRED_LIMITS if k not in auth.approves]
+    if unapproved:
+        raise LiveRunRefused("limits_not_approved", f"The owner has not approved these limits yet: {', '.join(unapproved)}.")
     limits = LiveLimits.parse(auth.limits_raw)
+    try:
+        total = Decimal(str(auth.spend_authority.get("approved_total_usd")))
+    except Exception:  # noqa: BLE001
+        raise LiveRunRefused("spend_authority_missing", "No approved total spend is recorded (spend_authority.approved_total_usd).") from None
+    if not total.is_finite() or total <= 0:
+        raise LiveRunRefused("spend_authority_missing", "The approved total spend is not a finite amount above zero.")
+    if limits.max_spend_usd > total:
+        raise LiveRunRefused("spend_above_approval", f"max_spend_usd ({limits.max_spend_usd}) is above the owner-approved total ({total}). Spending above it needs a separate owner approval.")
     absent = [n for n in credential_names if not str(e.get(n, "")).strip()]
     if absent:
         raise LiveRunRefused("credential_missing", f"Required credential(s) not configured: {', '.join(absent)}.")
@@ -143,8 +157,9 @@ def estimate_input_tokens(text: str) -> int:
 class LiveBudget:
     """Thread-safe admission control and accounting. Costs are Decimal USD estimates from the published price snapshot, not billed amounts."""
 
-    def __init__(self, limits: LiveLimits, prices: dict[str, tuple[Decimal, Decimal]]) -> None:
+    def __init__(self, limits: LiveLimits, prices: dict[str, tuple[Decimal, Decimal]], prior_committed: Decimal = Decimal(0)) -> None:
         self.limits, self.prices = limits, prices
+        self.prior_committed = Decimal(prior_committed)       # committed upper bound of EARLIER live runs: the approved total is cumulative
         self._lock = threading.Lock()
         self.calls_admitted = 0
         self.calls_completed = 0
@@ -165,7 +180,7 @@ class LiveBudget:
         return (pi * input_tokens + po * max_output) * (1 + self.limits.max_retries)
 
     def committed(self) -> Decimal:
-        return self.spent_known + self.reserved_unknown + self.in_flight
+        return self.prior_committed + self.spent_known + self.reserved_unknown + self.in_flight
 
     def admit(self, model: str, input_tokens: int, max_output_tokens: int | None = None) -> Decimal:
         out_cap = self.limits.max_output_tokens_per_request if max_output_tokens is None else max_output_tokens
@@ -215,7 +230,7 @@ class LiveBudget:
                 "calls_with_unknown_usage": self.calls_with_unknown_usage, "input_tokens_known": self.input_tokens_known, "output_tokens_known": self.output_tokens_known,
                 "total_tokens_known": self.input_tokens_known + self.output_tokens_known,
                 "cost_known_usd_estimate": str(self.spent_known), "cost_unknown_assumed_worst_case_usd": str(self.reserved_unknown),
-                "committed_usd_upper_bound": str(self.committed()), "ceiling_usd": str(self.limits.max_spend_usd), "remaining_usd_upper_bound": str(self.limits.max_spend_usd - self.committed()),
+                "prior_runs_committed_usd": str(self.prior_committed), "committed_usd_upper_bound": str(self.committed()), "ceiling_usd": str(self.limits.max_spend_usd), "remaining_usd_upper_bound": str(self.limits.max_spend_usd - self.committed()),
                 "cost_basis": "calculated from the published price snapshot; the provider's billing dashboard may differ", "refusals": list(self.refusals),
                 "latency_ms_p50": lat[len(lat) // 2] if lat else None, "latency_ms_max": lat[-1] if lat else None}
 
@@ -271,6 +286,30 @@ def make_guard_callback(budget: LiveBudget, model: str, recorder: "LiveRunRecord
                 recorder.call(model=model, ok=False, input_tokens=None, output_tokens=None, latency_ms=ms, error=type(error).__name__)
 
     return GuardCallback()
+
+
+def prior_committed_usd(base: Path | None = None) -> Decimal:
+    """Sum of the committed upper bound (the run's own total, which already includes worst-case reservations for unknown usage) over EVERY earlier live run's summary.
+    An unreadable or incomplete summary counts as the full approved total, so a corrupted record can only make the guard stricter, never looser."""
+    base = LIVE_DIR if base is None else base
+    total = Decimal(0)
+    if not base.exists():
+        return total
+    for d in sorted(p for p in base.iterdir() if p.is_dir()):
+        try:
+            b = json.loads((d / "summary.json").read_text(encoding="utf-8"))["budget"]
+            total += Decimal(b["committed_usd_upper_bound"]) - Decimal(b.get("prior_runs_committed_usd", "0"))
+        except Exception:  # noqa: BLE001
+            try:
+                total += Decimal(str(load_authorization().spend_authority.get("approved_total_usd", 0)))
+            except Exception:  # noqa: BLE001
+                total += Decimal("Infinity")
+    return total
+
+
+def new_budget(limits: LiveLimits, prices: dict | None = None, base: Path | None = None) -> LiveBudget:
+    """The ONLY way runners create a budget: it starts from what earlier runs already committed."""
+    return LiveBudget(limits, prices or load_prices(), prior_committed_usd(base))
 
 
 def git_state() -> dict:

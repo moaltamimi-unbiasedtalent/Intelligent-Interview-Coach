@@ -35,7 +35,7 @@ def guarded_model(profile: str, limits: G.LiveLimits, budget: G.LiveBudget, reco
 
 def run_smoke(profiles: list[str], limits: G.LiveLimits, *, prices: dict | None = None, build: Callable[[str], Any] | None = None, base: Path = G.LIVE_DIR) -> dict:
     """One tiny request per profile. Verifies authentication, schema, usage and latency reporting and that the answering model is the requested one. NOT a quality result."""
-    budget = G.LiveBudget(limits, prices or G.load_prices())
+    budget = G.new_budget(limits, prices, base)
     out = {}
     for profile in profiles:
         rec = G.LiveRunRecorder("smoke", provider="OpenRouter", model="(resolved below)", profile=profile, base=base)
@@ -92,7 +92,7 @@ def run_kb_quality(profile: str, limits: G.LiveLimits, *, prices: dict | None = 
     by_id = {c["id"]: c for c in corpus["cases"]}
     selected = [by_id[i] for i in contract["case_selection"]["case_ids"]]
     answer_cases = [c for c in selected if c["kind"] == "answer"]
-    budget = G.LiveBudget(limits, prices or G.load_prices())
+    budget = G.new_budget(limits, prices, base)
     rec = G.LiveRunRecorder("kb-quality", provider="OpenRouter", model="(resolved below)", profile=profile, dataset_version=corpus["version"], base=base)
     model, slug = guarded_model(profile, limits, budget, rec, build=build)
     rec.meta["model"] = slug

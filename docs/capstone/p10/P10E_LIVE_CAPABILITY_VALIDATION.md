@@ -1,22 +1,24 @@
 # P10E: Authorized Live Capability Validation
 
-**Status: PREPARED, GUARDED AND TESTED OFFLINE. LIVE PAID EXECUTION: NOT RUN (BLOCKED ON ONE OWNER DECISION).** No inference call, embedding call, RAG-judge call or other paid call was made, so there is **no live model result of any kind** in this document. Spending: **USD 0.00**; provider inference calls: **0**. The one external request made was a read-only fetch of OpenRouter's public model catalogue (no credential, no inference, no cost) to confirm model availability and published prices.
+**Status: PREPARED, GUARDED AND TESTED OFFLINE. LIVE PAID EXECUTION: NOT RUN (USD 10 TOTAL SPEND APPROVED; SIX OPERATIONAL LIMITS STILL UNAPPROVED).** No inference call, embedding call, RAG-judge call or other paid call was made, so there is **no live model result of any kind** in this document. Spending: **USD 0.00**; provider inference calls: **0**. The one external request made was a read-only fetch of OpenRouter's public model catalogue (no credential, no inference, no cost) to confirm model availability and published prices.
 
 Not production ready, not human reviewed, no source qualified, not a pass against the unchanged 95% coverage gate. All 12 rollout and billing gates are False; Compensation V2, Premium and speech activation stay disabled; P10C-F, P10F and the remaining W12.4E activation work stay deferred.
 
 - Branch `feat/p10e-authorized-live-capability-validation`, from `main` `e798b8d` (W12.5, PR #200, verified merged).
 
 ## 1. Owner authorization, exactly as recorded
-`evaluations/p10e/authorization.json` (owner decision 2026-10-19). **Granted:** paid provider use for P10E (paid inference, semantic embeddings, RAG evaluation, quality benchmarking, bounded API integration tests), superseding the P10D no-paid-evaluation restriction for P10E only. **Not granted** (recorded as such): unlimited spending, production activation, processing of real candidate data, human reviewer appointments, acceptance thresholds, Stripe or commercial transactions, speech execution or model downloads, live email to third parties. The authorization carried **no monetary ceiling and no call count**; engineering did not invent either. `limits` is `null` and `paid_execution_enabled` is `false`. The historical P10D contract status ("CONTRACT ONLY: NOT AUTHORISED, NOT RUN") and the P10D refusal evidence are untouched; the P10E authorization is a separate record.
+`evaluations/p10e/authorization.json` (owner decision 2026-10-19). **Granted:** paid provider use for P10E (paid inference, semantic embeddings, RAG evaluation, quality benchmarking, bounded API integration tests), superseding the P10D no-paid-evaluation restriction for P10E only. **Not granted** (recorded as such): unlimited spending, production activation, processing of real candidate data, human reviewer appointments, acceptance thresholds, Stripe or commercial transactions, speech execution or model downloads, live email to third parties. The original authorization carried no monetary ceiling and no call count. **Update, owner decision 2026-10-19 (approved_by Product Owner, reference "Owner budget decision in ChatGPT, 2026-10-19"): an initial P10E live-testing budget of USD 10 TOTAL, cumulative across every live run.** USD 15 is the absolute potential ceiling and is **not** the approved limit; the limit is never increased automatically and spending above USD 10 needs a separate explicit owner approval. The approval lists exactly what it covers (`limits_approval.approves = [max_spend_usd]`); every other limit is still `null` and unapproved, and `paid_execution_enabled` stays `false`. The guard enforces this: a limit not listed as approved is refused, `max_spend_usd` above `spend_authority.approved_total_usd` is refused, and each run's committed upper bound (including worst-case reservations for unknown usage) is subtracted from the USD 10 before any new call (an unreadable earlier run record counts as the full total, so it can only make the guard stricter). The historical P10D contract status ("CONTRACT ONLY: NOT AUTHORISED, NOT RUN") and the P10D refusal evidence are untouched; the P10E authorization is a separate record.
 
-## 2. The exact decision that blocks paid execution
-A paid call needs these recorded in `evaluations/p10e/authorization.json` in a reviewed commit, with `approved_by`, `approval_date` and `reference`:
-1. `max_spend_usd` (finite, above zero)
-2. `max_provider_calls`
-3. `max_input_tokens_per_request` and `max_output_tokens_per_request`
-4. `request_timeout_s`, `max_retries` (hard cap 2), `max_concurrency` (hard cap 4)
+## 2. The exact decisions that still block paid execution
+`max_spend_usd` is approved (USD 10 total). A paid call additionally needs these set and listed in `limits_approval.approves` in `evaluations/p10e/authorization.json`, in a reviewed commit:
+1. `max_provider_calls`
+2. `max_input_tokens_per_request`
+3. `max_output_tokens_per_request`
+4. `request_timeout_s`
+5. `max_retries` (hard cap 2)
+6. `max_concurrency` (hard cap 4)
 
-Engineering **proposal only, not an approval**: the plan below estimates the core scope at 120 to 230 calls and USD 1.31 to 8.04, and all rows including the optional Fast and Advanced agent comparisons at up to 600 calls and USD 2.62 to 19.83 (estimates, section 5). A ceiling of USD 25, 800 calls, 20,000 input and 2,000 output tokens per request, 60 s, 1 retry and concurrency 2 would cover everything with margin; the owner may choose any other values. The guard stops rather than overspends, and may stop early if the ceiling is tight.
+Engineering **proposal only, not an approval**, fitted to the approved USD 10: the plan below estimates the core scope at 120 to 230 calls and USD 1.31 to 8.04 (estimates, section 5), so even its HIGH estimate is below USD 10 but leaves a thin margin once reasoning-token variance and the guard's worst-case admission are considered; the optional Fast and Advanced agent comparisons (up to USD 19.83 for all rows) do **not** fit and would need the Balanced-only scope or a separate approval. A reasonable set for the core scope is 300 calls, 20,000 input and 2,000 output tokens per request, 60 s, 1 retry and concurrency 2; the owner may choose any other values. The guard uses a worst-case cost per call, so against USD 10 it may stop a run early, and it never exceeds the approved total.
 
 Further inputs also missing (each blocks only its own area): an **embedding provider, model and credential** (none selected or configured; `COPILOT_EMBEDDING_API_KEY` is absent) and a **RAGAS evaluator credential** (`RAGAS_EVAL_API_KEY` is absent). The OpenRouter credential used by the app is present in the developer environment (presence checked by name only, never printed or used).
 
