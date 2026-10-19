@@ -64,7 +64,7 @@ def test_valid_marker_syntax_is_not_claim_support_a_marker_without_evidence_is_u
 # ----------------------------------------------------------------------------------------------------------------------------------------- policy C and figures
 def test_an_unsupported_salary_figure_is_removed_but_a_figure_present_in_the_evidence_is_kept():
     r = GP.enforce("Data Analysts in Canada earn about CAD 90,000 per year.\nThe sources describe the role [1].", evidence=[SKILLS], query=Q_CA, resolved_country="CA")
-    assert "90,000" not in r.answer and "[1]" in r.answer and any("money figure" in f for f in r.findings)
+    assert "90,000" not in r.answer and "[1]" in r.answer and any("figure that no eligible" in f for f in r.findings)
     keep = GP.enforce("The median wage is 85000 USD in the United States [2].", evidence=[US_SALARY], query="What does a Data Analyst earn in the United States?", resolved_country="US")
     assert "85000" in keep.answer and keep.findings == []
     assert "85k" not in GP.enforce("They earn 85k.", evidence=[], query=Q_CA).answer
@@ -122,9 +122,10 @@ def test_the_agent_prompt_requires_retrieval_for_external_facts_and_allows_clari
     assert "Never offer, give or invite an unsourced" in SYNTHESIS_SYSTEM_PROMPT and "never cite evidence about another country" in SYNTHESIS_SYSTEM_PROMPT
 
 
-def _agent(answer, *, query, retrieval_used=False, citations=None, evidence=None, completed=True, allowed_text=""):
-    return AG.apply_candidate_policy(answer, citations=citations, evidence=evidence, query=query, resolved_geography=None, retrieval_used=retrieval_used, language="en", completed=completed,
-                                     allowed_text=allowed_text)
+def _agent(answer, *, query, retrieval_used=False, citations=None, evidence=None, completed=True, allowed_text="", language="en"):
+    o = AG.apply_candidate_policy(answer, citations=citations, evidence=evidence, query=query, resolved_geography=None, retrieval_used=retrieval_used, language=language, completed=completed,
+                                  allowed_text=allowed_text)
+    return o.answer, o.warnings, o.response_class, o.flags
 
 
 def test_a_general_answer_to_an_external_factual_question_without_retrieval_is_labelled_not_source_backed():
@@ -156,8 +157,8 @@ def test_an_abstention_without_a_factual_claim_is_not_labelled():
 
 def test_the_agent_estimate_offer_after_an_insufficient_retrieval_is_replaced_by_safe_guidance():
     ans = "I could not find verified salary data for astronauts in Canada.\nI can help estimate a range based on city and seniority."
-    text, warns, cls, flags = AG.apply_candidate_policy(ans, citations=[], evidence=[], query="What is the average salary of astronauts in Canada?", resolved_geography="CA", retrieval_used=True,
-                                                         language="en")
+    text, warns, cls, flags, _ = AG.apply_candidate_policy(ans, citations=[], evidence=[], query="What is the average salary of astronauts in Canada?", resolved_geography="CA", retrieval_used=True,
+                                                            language="en")
     assert "estimate a range" not in text and localized.compensation_guidance("en") in text and warns
 
 
@@ -293,3 +294,117 @@ def test_the_agent_result_applies_the_policy_and_exposes_the_class_internally_on
     assert any("labelled as not source-backed" in w for w in res.warnings)
     assert res.conversation[-1]["content"] == res.response
     assert "response_class" not in __import__("src.api.schemas.agent", fromlist=["AgentRunResponse"]).AgentRunResponse.model_fields
+
+
+# ============================================================================================================================ PR #203 enforcement corrections
+def test_a_us_salary_figure_does_not_authorise_a_canadian_salary_assertion_even_after_its_citation_is_removed():
+    ans = "A Data Analyst in Canada earns USD 85,000 per year [2]."
+    r = GP.enforce(ans, evidence=[US_SALARY], query=Q_CA, resolved_country="CA", language="en")
+    assert "85,000" not in r.answer and "85000" not in r.answer and "[2]" not in r.answer
+    assert GP.states_insufficient(r.answer) and localized.compensation_guidance("en") in r.answer
+    assert any("figure that no eligible" in f for f in r.findings) and r.removed_markers == ["[2]"]
+
+
+def test_a_contextual_statement_about_why_us_evidence_does_not_establish_canadian_pay_is_preserved():
+    ans = "The only compensation evidence available is for the United States (USD 85,000 [2]), which does not establish Canadian pay."
+    r = GP.enforce(ans, evidence=[US_SALARY], query=Q_CA, resolved_country="CA")
+    assert "85,000" in r.answer and "does not establish Canadian pay" in r.answer and "[2]" not in r.answer      # quoted as a limitation, not as Canadian pay, and never cited as support
+    r2 = GP.enforce("Data Analysts in Canada typically earn USD 85,000, as shown for the United States.", evidence=[US_SALARY], query=Q_CA, resolved_country="CA")
+    assert "85,000" not in r2.answer                                                                              # a mention of the US without a stated limit is not an excuse
+
+
+def test_a_matching_scope_figure_and_a_sourced_range_are_preserved():
+    ans = "The median wage is 85000 USD in the United States [2]. The source gives an estimated range around that figure [2]."
+    r = GP.enforce(ans, evidence=[US_SALARY], query="What does a Data Analyst earn in the United States?", resolved_country="US")
+    assert r.answer == ans and r.response_class == GP.EVIDENCE_BACKED_ANSWER and not r.findings
+
+
+def test_a_candidate_provided_figure_may_be_repeated_but_is_never_cited_as_market_data():
+    r = GP.enforce("You mentioned an offer of CAD 90,000, so compare it with verified salary sources for Canada.", evidence=[SKILLS], query="My offer is CAD 90,000 for a Data Analyst in Canada, is that fair?",
+                   resolved_country="CA")
+    assert "CAD 90,000" in r.answer and "[" not in r.answer
+
+
+def test_a_citation_marker_does_not_authorise_an_unsourced_estimate_offer():
+    r = GP.enforce("I can estimate a salary range [1].", evidence=[SKILLS], query=Q_CA, resolved_country="CA", language="en")
+    assert "estimate" not in r.answer.lower().replace("estimates", "") or "unsourced" in r.answer.lower()
+    assert not any(GP.offers_unsourced_estimate(s) for _, s in GP._units(r.answer))
+    assert GP.states_insufficient(r.answer) and localized.compensation_guidance("en") in r.answer
+
+
+@pytest.mark.parametrize("lang", LANGS)
+def test_a_cited_estimate_offer_is_removed_in_every_supported_language(lang):
+    c = PE.load_contract()["unsourced_estimate_offers"]
+    offer = c["scripted_answers"][lang][1] + " [1]"
+    r = GP.enforce(offer, evidence=[SKILLS], query=c["query_by_language"][lang], resolved_country="CA", language=lang)
+    assert not any(GP.offers_unsourced_estimate(s) for _, s in GP._units(r.answer))
+    assert localized.compensation_guidance(lang) in r.answer and GP.states_insufficient(r.answer)
+
+
+def test_an_unsupported_statistic_without_retrieval_is_not_returned_as_an_answer():
+    text, warns, cls, flags = _agent("The unemployment rate is 6.4%.", query="What is the official unemployment rate?")
+    assert "6.4" not in text and text == localized.unretrieved_limitation("en") and "external_statistic_removed_without_retrieval" in flags and warns
+
+
+def test_general_guidance_is_kept_when_only_the_unverified_figure_is_removed():
+    ans = "Official statistics are usually grouped into broad occupational classes.\nThe unemployment rate is 6.4%."
+    text, _, _, flags = _agent(ans, query="What is the official unemployment rate?")
+    assert "grouped into broad occupational classes" in text and "6.4" not in text and localized.unretrieved_limitation("en") in text
+
+
+def test_an_external_fact_with_valid_retrieval_keeps_its_supported_figure():
+    text, warns, _, flags = _agent("The unemployment rate is 6.4% [1].", query="What is the official unemployment rate?", retrieval_used=True, citations=[{"marker": "[1]"}],
+                                   evidence=[{"evidence_type": "labour_market", "geography": "US"}], allowed_text="tool result: unemployment rate 6.4%")
+    assert "6.4%" in text and "[1]" in text and not warns
+    unsupported, w2, _, _ = _agent("The unemployment rate is 7.9% [1].", query="What is the official unemployment rate?", retrieval_used=True, citations=[{"marker": "[1]"}],
+                                   evidence=[{"evidence_type": "labour_market", "geography": "US"}], allowed_text="tool result: unemployment rate 6.4%")
+    assert "7.9" not in unsupported and w2                                                                          # retrieval ran, but this figure appears in no result
+
+
+@pytest.mark.parametrize("lang", LANGS + ["ru"])
+def test_the_unretrieved_limitation_exists_in_every_locale_and_is_never_an_estimate_offer(lang):
+    msg = localized.unretrieved_limitation(lang)
+    assert msg and not GP.offers_unsourced_estimate(msg) and not GP.statistic_figures(msg)
+
+
+@pytest.mark.parametrize("query,answer", [
+    ("What does a PM earn?", "Which PM do you mean, and in which country?"),
+    ("Build me a preparation plan from my gaps.", "I do not see identified gaps yet. Share your background and I will analyse it first, in 2 steps."),
+    ("Let's start practising now.", "Before we begin I need your target role. Which role should we practise for?"),
+    ("What is the official unemployment rate?", "Which country do you mean?"),
+])
+def test_clarifications_are_never_touched_and_no_tool_is_forced(query, answer):
+    text, warns, cls, flags = _agent(answer, query=query)
+    assert text == answer and warns == []
+
+
+def test_agent_response_metadata_drops_a_citation_the_policy_removed_and_keeps_the_contextual_one():
+    from langchain_core.messages import AIMessage, HumanMessage
+
+    from src.application.agent_service import _to_result
+
+    state = {"messages": [HumanMessage(content="What does a Data Analyst earn in Canada?"),
+                          AIMessage(content="The knowledge base does not contain enough evidence to answer that. Only United States pay data was found [1], and the role itself is described [2].")],
+             "tool_history": [{"tool": "SearchCareerKnowledge", "status": "ok"}], "retrieval_used": True, "resolved_geography": "CA", "response_language": "en", "status": "completed",
+             "evidence": [{"title": "US wage table", "evidence_type": "compensation", "geography": "US"}, {"title": "Data Analyst role", "evidence_type": "narrative", "geography": None}],
+             "citations": [{"marker": "[1]", "title": "US wage table"}, {"marker": "[2]", "title": "Data Analyst role"}]}
+    res = _to_result("run-2", state, None)
+    assert "[1]" not in res.response and "[2]" in res.response
+    assert [c["marker"] for c in res.citations] == ["[2]"] and [s["title"] for s in res.sources] == ["Data Analyst role"]
+    assert res.conversation[-1]["content"] == res.response
+
+
+def test_career_chat_response_keeps_markers_citations_and_sources_consistent():
+    from src.copilot.knowledge import requalification as Q
+
+    def reply(messages):
+        from src.copilot.rag.responder import ModelReply
+
+        return ModelReply(content=localized.insufficient_message("en") + " The passages cover resumes [1] and the Data Analyst role [2][3].")
+
+    with Q.temp_world(Q.load_corpus()) as world:
+        res = world.service(responder=reply).answer("What does a Data Analyst earn in Canada?", conversation_language="en")
+    final_markers = {f"[{n}]" for n in __import__("re").findall(r"\[(\d+)\]", res.response.answer)}
+    assert {c.marker for c in res.response.citations} == final_markers
+    assert len(res.response.evidence) >= len(res.response.citations)
+    assert res.trace.response_class in GP.CLASSES

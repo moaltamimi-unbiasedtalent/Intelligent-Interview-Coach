@@ -411,6 +411,10 @@ class CareerIntelligenceService:
         )
         answer_text = policy.answer
         trace.response_class = policy.response_class
+        if policy.removed_markers:
+            # Keep markers, citations and displayed sources consistent: evidence whose citation the policy removed (another country's compensation, unrelated passage) is not shown as support.
+            gone = set(policy.removed_markers)
+            evidence = [e for i, e in enumerate(evidence, start=1) if f"[{i}]" not in gone]
         if policy.findings:
             trace.output_findings = list(trace.output_findings or []) + policy.findings
             trace.notes.extend(policy.findings)

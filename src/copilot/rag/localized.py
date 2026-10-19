@@ -18,7 +18,7 @@ from src.locales import LANGUAGE_NAMES, SUPPORTED_LOCALE_CODES
 
 __all__ = ["resolve_language", "section_headings", "insufficient_message", "fallback_strings",
            "language_directive", "SECTION_HEADINGS", "INSUFFICIENT", "FALLBACK", "compensation_guidance", "unverified_general_notice",
-           "COMPENSATION_GUIDANCE", "UNVERIFIED_GENERAL"]
+           "COMPENSATION_GUIDANCE", "UNVERIFIED_GENERAL", "UNRETRIEVED_LIMITATION", "unretrieved_limitation"]
 
 # (evidence heading, tool-results heading, recommendation heading)
 SECTION_HEADINGS: dict[str, tuple[str, str, str]] = {
@@ -89,7 +89,19 @@ UNVERIFIED_GENERAL: dict[str, str] = {
     "ru": "Примечание: это общая информация, она не проверялась по базе знаний и поэтому не имеет источников.",
 }
 
-assert set(SECTION_HEADINGS) == set(INSUFFICIENT) == set(FALLBACK) == set(COMPENSATION_GUIDANCE) == set(UNVERIFIED_GENERAL) == set(SUPPORTED_LOCALE_CODES), (
+# Owner policy B: an external statistic or figure was asked for but nothing was retrieved, so the figure is NOT stated. Offers retrieval; never an estimate.
+UNRETRIEVED_LIMITATION: dict[str, str] = {
+    "en": "I have not retrieved verified evidence for this question, so I cannot state a specific figure. Tell me the country and the occupation and I can search the knowledge base for it.",
+    "de": "Ich habe für diese Frage keine belegten Quellen abgerufen und kann daher keine konkrete Zahl nennen. Nenne mir das Land und den Beruf, dann durchsuche ich die Wissensbasis danach.",
+    "fr": "Je n’ai pas récupéré de sources vérifiées pour cette question et ne peux donc pas donner de chiffre précis. Indiquez-moi le pays et le métier et je chercherai dans la base de connaissances.",
+    "es": "No he recuperado fuentes verificadas para esta pregunta, así que no puedo indicar una cifra concreta. Dime el país y la ocupación y la busco en la base de conocimiento.",
+    "it": "Non ho recuperato fonti verificate per questa domanda, quindi non posso indicare una cifra precisa. Dimmi il paese e la professione e la cerco nella base di conoscenza.",
+    "pt": "Não recuperei fontes verificadas para esta pergunta, por isso não posso indicar um valor concreto. Diz-me o país e a profissão e procuro na base de conhecimento.",
+    "nl": "Ik heb voor deze vraag geen geverifieerde bronnen opgehaald en kan daarom geen concreet cijfer noemen. Geef me het land en het beroep, dan zoek ik het op in de kennisbank.",
+    "ru": "Я не получил проверенных источников по этому вопросу, поэтому не могу назвать конкретную цифру. Укажите страну и профессию, и я поищу в базе знаний.",
+}
+
+assert set(SECTION_HEADINGS) == set(INSUFFICIENT) == set(FALLBACK) == set(UNRETRIEVED_LIMITATION) == set(COMPENSATION_GUIDANCE) == set(UNVERIFIED_GENERAL) == set(SUPPORTED_LOCALE_CODES), (
     "localized Career-chat text must cover exactly the supported locales")
 
 
@@ -109,6 +121,10 @@ def insufficient_message(code: str | None) -> str:
 
 def compensation_guidance(code: str | None) -> str:
     return COMPENSATION_GUIDANCE[resolve_language(code)]
+
+
+def unretrieved_limitation(code: str | None) -> str:
+    return UNRETRIEVED_LIMITATION[resolve_language(code)]
 
 
 def unverified_general_notice(code: str | None) -> str:

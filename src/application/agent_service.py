@@ -592,6 +592,7 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
     citations = list(state.get("citations", []) or [])
     retrieval_used = bool(state.get("retrieval_used", False))
     response_class, policy_flags = None, []
+    result_sources = list(state.get("evidence", []) or [])
     if response:
         from src.agent.grounding import guard_agent_answer
 
@@ -603,11 +604,19 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
 
         human = [str(getattr(m, "content", "") or "") for m in messages if getattr(m, "type", "") == "human"]
         tool_text = " ".join(str(getattr(m, "content", "") or "") for m in messages if getattr(m, "type", "") == "tool")
-        response, policy_warnings, response_class, policy_flags = apply_candidate_policy(
+        outcome = apply_candidate_policy(
             response, citations=citations, evidence=list(state.get("evidence", []) or []), query=human[-1] if human else "",
             resolved_geography=state.get("resolved_geography"), retrieval_used=retrieval_used, language=state.get("response_language"),
             allowed_text=" ".join(human + [tool_text]), completed=(status == STATUS_COMPLETED),
         )
+        response, policy_warnings, response_class, policy_flags = outcome.answer, outcome.warnings, outcome.response_class, outcome.flags
+        if outcome.removed_markers:
+            # Keep inline markers, citation metadata and displayed sources consistent: a citation the policy removed from the answer must not survive as a supporting reference.
+            gone = set(outcome.removed_markers)
+            aligned = len(state.get("evidence", []) or []) == len(citations)
+            if aligned:
+                result_sources = [e for e, c in zip(list(state.get("evidence", []) or []), citations) if str(c.get("marker")) not in gone]
+            citations = [c for c in citations if str(c.get("marker")) not in gone]
         warnings.extend(policy_warnings)
         # Keep the candidate-visible conversation consistent with the grounded answer.
         if conversation and conversation[-1].get("role") == "assistant":
@@ -619,7 +628,7 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
         events=list(state.get("events", []) or []),
         tool_calls=tool_history,
         tools_used=tools_used,
-        sources=list(state.get("evidence", []) or []),
+        sources=result_sources,
         citations=citations,
         retrieval_used=retrieval_used,
         resolved_occupation=state.get("resolved_occupation"),

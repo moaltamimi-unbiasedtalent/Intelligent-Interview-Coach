@@ -76,3 +76,45 @@ All 12 rollout/billing gates False (test-verified); Compensation V2, Premium and
 ## 10. Readiness
 
 The three policies are implemented, tested offline and sampled live, and become explicit candidate acceptance criteria for the integrated requalification. R2 does not start it, does not create RC-P10-004 and does not begin P11. Pending: owner review, GitHub CI, and the remaining human review.
+
+## 11. PR #203 enforcement review: confirmed defects and corrections (added after independent code review; sections 1 to 10 are unchanged evidence of the first delivery)
+
+Starting head `0be2ce4`. Owner decision: the three policies were already approved; this corrects their implementation. No authorization, budget, ledger or host change; no live call was made.
+
+### 11.1 Findings verified against the code
+
+| # | Finding | Verified |
+|---|---|---|
+| 1 | The numeric allowance was built from ALL evidence text, including compensation evidence about another country. A Canadian salary of USD 85,000 backed only by US evidence lost its citation but kept the figure | Confirmed in `grounding_policy.enforce` (`corpus` included every `e.text`; the cross-geography marker was removed first, so the figure then looked supported). Reproduced by a new test before the fix |
+| 2 | The estimate-offer guard skipped any sentence containing a citation marker (`not _MARKER_RE.search(sent)`), so "I can estimate a salary range [1]." survived | Confirmed |
+| 3 | An unsupported external statistic answered without retrieval was only labelled ("not source-backed"); the statistic itself stayed in the answer | Confirmed in `apply_candidate_policy` |
+| 4 | Metadata consistency: the agent kept `citations` and `sources` for markers the policy removed, and Career chat listed the removed evidence in `sources` | Confirmed (`_to_result` and `answer()` used the unfiltered lists; the API serialises `sources` from `response.evidence`) |
+
+### 11.2 Exact corrections
+
+1. **Scope-aware figures.** Compensation evidence about a different country than the resolved one is out of scope. Only in-scope evidence, tool results and the candidate's own words authorise a figure (money and, new, percentages). A foreign figure survives only inside a sentence that names its own country and states a limit ("the only compensation evidence is for the United States (USD 85,000), which does not establish Canadian pay"); a bare mention is not an excuse. The classification uses the same scope. When the answer is a compensation answer with no in-scope evidence, the evidence gap is always stated first and the localized guidance follows.
+2. **A citation never authorises an estimate offer.** The marker exemption is removed. A sourced range for the correct country is untouched because in-scope compensation evidence disables the offer rule entirely.
+3. **Conservative runtime safeguard for external facts without retrieval** (`src/agent/grounding.py`). For a recognised external-fact question answered without retrieval, a sentence that states a statistic (money, percentage, decimal, or number of three or more digits; years and list numbers are not figures) is removed and a localized, accurate evidence limitation is given ("I have not retrieved verified evidence ... tell me the country and the occupation and I can search"); general guidance without a figure is kept; it runs before the shared layer so the limitation is the true one (nothing was retrieved) rather than "the knowledge base lacks evidence". Clarifications, abstentions and no-tool turns are never touched and no tool call is forced. The percentage rule also applies after retrieval: a percentage that appears in no tool result is removed.
+4. **One source of truth for citations.** `apply_candidate_policy` now returns the removed markers (`PolicyOutcome`). The agent drops those citations and their aligned sources from the result; the Career-chat response drops the evidence whose citation was removed, so inline markers, citation metadata and displayed sources agree. Retained contextual sources are untouched.
+
+New localized text: `UNRETRIEVED_LIMITATION` (8 locales, engineering translations pending native review).
+
+### 11.3 New regression cases (`tests/test_candidate_grounding_policy.py`, +29 tests)
+
+Wrong-country figure without citation; contextual US-evidence limitation preserved and the bare-mention counter-case; matching-scope figure and sourced range preserved; candidate-provided figure repeated but never cited; cited estimate offer removed (English) and in all seven supported languages; unsupported statistic without retrieval removed; general guidance kept with only the figure removed; valid retrieval keeps its supported figure and a retrieved-but-unsupported figure is removed; unretrieved limitation in all eight locales and never an offer; four clarifications untouched; agent metadata consistency (citations and sources); Career-chat marker, citation and evidence consistency. The first delivery's 48 tests and the replay of the recorded real model answers still pass unchanged. No paid call; httpx is patched to fail in the no-network test.
+
+### 11.4 Results
+
+Full backend 5,036 passed, 34 skipped, 0 failed (5,007 before). Ruff and `git diff --check` clean. 22 evaluators, P10C-G, P10D (repeat 2) and the coverage guard pass. One evaluator (`eval_product_coverage`) failed once in the batch run immediately after the full suite and passed on five consecutive reruns (with and without these changes, exit code 0); the cause of the single failure was not captured and is recorded as an unexplained transient, not as a pass. Frontend and E2E: no frontend file or API schema changed, so the PR's fresh CI is relied on. Historical evidence unchanged: R1 files, run directories and the policy contract hash untouched. Ledger unchanged: 285 of 300 calls, USD 2.112 committed, 15 calls and USD 7.888 remaining. All 12 gates False; Compensation V2, Premium and speech disabled; coverage 386/412 developer-local BELOW GATE, 258/412 clean-checkout, 0/412 human-qualified; AC-24 PARTIAL; human-reviewed quality NOT VERIFIED.
+
+### 11.5 Remaining limitations
+
+1. The live sample in section 6 was taken BEFORE these corrections; no live call was made after them, so live behaviour of the corrected layer is covered by deterministic tests and the replay of recorded answers only.
+2. Statistic detection is numeric and lexical: an unsupported external claim stated without any figure ("unemployment is low") is labelled, not removed.
+3. The context-limitation exception depends on a small country-name table (US, CA, GB, DE, FR, ES, IT, PT, NL in the seven languages) and a limit-word list; an unlisted country or phrasing is treated as a plain foreign figure and removed, which errs on the safe side.
+4. Agent figure verification is still limited to tool results and candidate text because the agent's retrieval observation carries metadata only (section 8, item 3).
+5. Sources removed from the Career-chat `sources` are the ones whose citation the policy removed; other retrieved-but-uncited evidence is still listed as before.
+
+### 11.6 Policy acceptance assessment
+
+The three policies now hold at the figure, offer and metadata level, not only at the citation level. Pending: GitHub CI on the new head, owner review, human review of the localized text, and a live re-sample if the owner wants one (15 calls remain). Integrated requalification has not been started.

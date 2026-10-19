@@ -143,6 +143,73 @@ def _numbers_in(text: str) -> set[int]:
     return out
 
 
+_PERCENT_RE = re.compile(r"\d+(?:[.,]\d+)?\s?%")
+_COUNTRY_NAMES = {
+    "US": ("us", "usa", "u.s.", "united states", "vereinigte staaten", "états-unis", "etats-unis", "estados unidos", "stati uniti", "verenigde staten"),
+    "CA": ("canada", "kanada", "canadá", "canadese"),
+    "GB": ("uk", "united kingdom", "vereinigtes königreich", "royaume-uni", "reino unido", "regno unito", "verenigd koninkrijk"),
+    "DE": ("germany", "deutschland", "allemagne", "alemania", "germania", "alemanha", "duitsland"),
+    "FR": ("france", "frankreich", "francia", "frankrijk"),
+    "ES": ("spain", "spanien", "espagne", "españa", "spagna", "espanha", "spanje"),
+    "IT": ("italy", "italien", "italie", "italia", "itália", "italië"),
+    "PT": ("portugal",),
+    "NL": ("netherlands", "niederlande", "pays-bas", "países bajos", "paesi bassi", "países baixos", "nederland"),
+}
+_LIMIT_WORDS = {"only", "nur", "seulement", "uniquement", "solo", "solamente", "apenas", "somente", "alleen", "enkel", "different", "andere", "autre", "otro", "altro", "outro", "ander", "other"}
+
+
+def _decimals_in(text: str) -> set:
+    from decimal import Decimal, InvalidOperation
+
+    out = set()
+    for m in re.finditer(r"\d+(?:[.,]\d+)?", text or ""):
+        try:
+            out.add(Decimal(m.group(0).replace(",", ".")))
+        except InvalidOperation:
+            continue
+    return out
+
+
+def percent_figures(text: str) -> list[str]:
+    return [m.group(0) for m in _PERCENT_RE.finditer(text or "")]
+
+
+def statistic_figures(text: str) -> list[str]:
+    """Figures that read as an external statistic: money, percentages, decimals and non-year numbers of three or more digits (list numbering and years are not figures)."""
+    found = list(money_figures(text)) + percent_figures(text)
+    found += [m.group(0) for m in re.finditer(r"(?<![\w.])\d+[.,]\d+(?![\w])", text or "")]
+    found += [m.group(0) for m in re.finditer(r"\b\d{3,}\b", text or "") if not (len(m.group(0)) == 4 and 1900 <= int(m.group(0)) <= 2100)]
+    return found
+
+
+def _mentions_country(sentence: str, code: str | None) -> bool:
+    flat = " " + _flat(sentence) + " "
+    names = _COUNTRY_NAMES.get((code or "").upper(), ((code or "").lower(),) if code else ())
+    return any(f" {n}" in flat for n in names if n)
+
+
+def is_context_limitation(sentence: str, foreign_countries: set[str]) -> bool:
+    """A sentence that names the evidence's own (other) country AND states a limit ("only for the US", "does not establish Canadian pay"). Such a sentence may quote that foreign figure as context; it never states it as the requested country's pay."""
+    tokens = set(_WORD_RE.findall(sentence.lower().replace("’", "'")))
+    limited = bool(tokens & _NEGATORS) or bool(tokens & _LIMIT_WORDS) or "n't" in sentence.lower()
+    return limited and any(_mentions_country(sentence, c) for c in foreign_countries)
+
+
+def unsupported_percent_figures(answer: str, allowed_text: str) -> list[str]:
+    from decimal import Decimal, InvalidOperation
+
+    allowed = _decimals_in(allowed_text)
+    bad = []
+    for fig in percent_figures(answer):
+        try:
+            v = Decimal(re.sub(r"[^\d.,]", "", fig).replace(",", "."))
+        except InvalidOperation:
+            continue
+        if v not in allowed:
+            bad.append(fig)
+    return bad
+
+
 def unsupported_money_figures(answer: str, allowed_text: str) -> list[str]:
     """Money figures in the answer whose numeric value appears in NO allowed text (evidence, tool results, the candidate's own words)."""
     allowed = _numbers_in(allowed_text)
@@ -211,7 +278,7 @@ class PolicyResult:
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------------- classification
-def classify_response(answer: str, evidence: list[EvidenceView], *, query: str = "") -> tuple[str, list[str]]:
+def classify_response(answer: str, evidence: list[EvidenceView], *, query: str = "", resolved_country: str | None = None) -> tuple[str, list[str]]:
     """The six approved response classes. Never infers success from citation syntax alone."""
     text = answer or ""
     markers = {int(m) for m in _MARKER_RE.findall(text)}
@@ -224,7 +291,7 @@ def classify_response(answer: str, evidence: list[EvidenceView], *, query: str =
         flags.append("money figure present")
     short_question = len(text) <= 500 and "?" in text
     abst = states_insufficient(text, opening_only=True)
-    if bad or (money_figures(text) and not _figures_supported(text, evidence)):
+    if bad or (money_figures(text) and not _figures_supported(text, evidence, resolved_country)):
         return UNSUPPORTED_FACTUAL_RESPONSE, flags
     if abst:
         return (ABSTENTION_WITH_CONTEXTUAL_CITATIONS if markers else ABSTENTION_WITHOUT_CITATIONS), flags
@@ -238,8 +305,13 @@ def classify_response(answer: str, evidence: list[EvidenceView], *, query: str =
     return UNCERTAIN_REQUIRES_REVIEW, flags
 
 
-def _figures_supported(answer: str, evidence: list[EvidenceView]) -> bool:
-    return not unsupported_money_figures(answer, " ".join(e.text for e in evidence))
+def _figures_supported(answer: str, evidence: list[EvidenceView], resolved_country: str | None = None) -> bool:
+    return not unsupported_money_figures(answer, " ".join(e.text for e in evidence if not _out_of_scope(e, resolved_country)))
+
+
+def _out_of_scope(e: EvidenceView, resolved_country: str | None) -> bool:
+    """Compensation evidence about a different country than the one requested may not authorise a figure for the requested one."""
+    return bool(e.evidence_type == "compensation" and resolved_country and e.country and e.country != resolved_country)
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------------- enforcement
@@ -252,15 +324,15 @@ def enforce(answer: str, *, evidence: list[EvidenceView] | None = None, query: s
     removed_markers: list[str] = []
     removed = 0
     comp_ctx = is_compensation_query(query)
-    in_scope_comp = [e for e in evidence if e.evidence_type == "compensation" and (not resolved_country or not e.country or e.country == resolved_country)]
-    corpus = " ".join([allowed_text, query] + [e.text for e in evidence])
+    in_scope_comp = [e for e in evidence if e.evidence_type == "compensation" and not _out_of_scope(e, resolved_country)]
+    foreign = [e for e in evidence if _out_of_scope(e, resolved_country)]
+    foreign_countries = {e.country for e in foreign if e.country}
+    # ONLY eligible, in-scope evidence (plus tool results and the candidate's own words) may authorise a figure. Another country's compensation evidence never does.
+    corpus = " ".join([allowed_text, query] + [e.text for e in evidence if not _out_of_scope(e, resolved_country)])
+    foreign_numbers = _numbers_in(" ".join(e.text for e in foreign))
 
     # A. citations that must not stay: compensation evidence about another geography, and (on an abstention) evidence unrelated to the question.
-    drop: set[str] = set()
-    if resolved_country:
-        for e in evidence:
-            if e.evidence_type == "compensation" and e.country and e.country != resolved_country:
-                drop.add(e.marker)
+    drop: set[str] = {e.marker for e in foreign}
     if states_insufficient(text, opening_only=True) or (comp_ctx and not in_scope_comp):
         q = _content_tokens(query)
         for e in evidence:
@@ -275,17 +347,20 @@ def enforce(answer: str, *, evidence: list[EvidenceView] | None = None, query: s
         removed_markers = sorted(drop)
         findings.append(f"Removed citation(s) {removed_markers}: evidence about another geography or unrelated to the question must not be cited as support.")
 
-    # C + fabricated figures: remove offending sentences only.
-    bad_figs = set(unsupported_money_figures(text, corpus))
+    # C + fabricated figures: remove offending sentences only. A citation marker never authorises an estimate offer or a figure.
+    bad_figs = set(unsupported_money_figures(text, corpus)) | set(unsupported_percent_figures(text, corpus))
     lines = text.split("\n")
     out_lines: dict[int, list[str]] = {}
     offer_removed = fig_removed = 0
     for li, sent in _units(text):
-        is_offer = comp_ctx and not in_scope_comp and not _MARKER_RE.search(sent) and offers_unsourced_estimate(sent)
-        has_bad_fig = any(f in sent for f in bad_figs)
-        if is_offer or has_bad_fig:
+        is_offer = comp_ctx and not in_scope_comp and offers_unsourced_estimate(sent)
+        sent_bad = [f for f in bad_figs if f in sent]
+        # A foreign figure may be quoted only as an explicit limitation about its own country ("the available US evidence does not establish Canadian pay").
+        if sent_bad and foreign_numbers and is_context_limitation(sent, foreign_countries):
+            sent_bad = [f for f in sent_bad if (_to_number(re.sub(rf"{_MONEY_CURRENCY}", "", f, flags=re.IGNORECASE).strip()) not in foreign_numbers)]
+        if is_offer or sent_bad:
             offer_removed += int(is_offer)
-            fig_removed += int(has_bad_fig and not is_offer)
+            fig_removed += int(bool(sent_bad) and not is_offer)
             removed += 1
             continue
         out_lines.setdefault(li, []).append(sent)
@@ -298,16 +373,18 @@ def enforce(answer: str, *, evidence: list[EvidenceView] | None = None, query: s
             rebuilt.append(" ".join(kept) if len(kept) > 1 or kept[0].strip() else kept[0])
         text = "\n".join(rebuilt)
         text = re.sub(r"\n{3,}", "\n\n", text).strip("\n")
-        if not text.strip():                 # nothing verifiable was left: never return a blank answer
+        if comp_ctx and not in_scope_comp and not states_insufficient(text):
+            text = (localized.insufficient_message(language) + ("\n\n" + text if text.strip() else "")).strip()      # the evidence gap is always stated
+        elif not text.strip():
             text = localized.insufficient_message(language)
-            if comp_ctx:
-                text += "\n\n" + localized.compensation_guidance(language)
         if offer_removed:
             findings.append("Removed an offer of an unsourced compensation estimate (no verified compensation evidence for this scope).")
             if localized.compensation_guidance(language) not in text:
                 text = text.rstrip() + "\n\n" + localized.compensation_guidance(language)
+        elif comp_ctx and not in_scope_comp and localized.compensation_guidance(language) not in text:
+            text = text.rstrip() + "\n\n" + localized.compensation_guidance(language)
         if fig_removed:
-            findings.append("Removed a money figure that appears in no evidence, tool result or user text.")
+            findings.append("Removed a figure that no eligible in-scope evidence, tool result or user text supports.")
 
-    cls, flags = classify_response(text, evidence, query=query)
+    cls, flags = classify_response(text, evidence, query=query, resolved_country=resolved_country)
     return PolicyResult(answer=text, response_class=cls, findings=findings, flags=flags, removed_sentences=removed, removed_markers=removed_markers)
