@@ -36,6 +36,13 @@ def chat_model(profile: str, limits: G.LiveLimits, *, build: Callable[[str], Any
     return build_chat_model(load_config(), model=slug, max_tokens=limits.max_output_tokens_per_request, timeout_s=limits.request_timeout_s, max_retries=limits.max_retries), slug
 
 
+def models_requested(session: G.LiveSession, run_id: str | None = None) -> dict[str, int]:
+    """The models this session's requests actually asked for, straight from the durable ledger (so nested helper calls are included)."""
+    rid = run_id or session.run_id
+    with session.ledger._mutex:
+        return dict(session.ledger.conn.execute("SELECT model, COUNT(*) FROM entries WHERE run_id=? GROUP BY model", (rid,)).fetchall())
+
+
 def _refused_since(session: G.LiveSession, before: int) -> str | None:
     g = session.http_guard
     return g.refused[-1] if g is not None and len(g.refused) > before else None
@@ -276,7 +283,8 @@ def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None,
     for case in cases:
         before = len(session.http_guard.refused) if session.http_guard else 0
         before_n = before
-        svc = AgentApplicationService(model_factory=lambda: chat_model(profile, session.limits, build=build)[0], career_service=career)
+        # The PRODUCT's own default model factory (profile resolved through the canonical registry, governed tunables) is used unless a test injects one: this is the real path.
+        svc = AgentApplicationService(model_factory=(lambda p=None: build(slug)) if build is not None else None, career_service=career)
         t0 = time.perf_counter()
         res = svc.run(AgentRunRequest(goal=case["goal"], user_id="p10e-live-eval", profile=prof.value))
         latency = int((time.perf_counter() - t0) * 1000)
@@ -291,6 +299,8 @@ def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None,
     metrics = aggregate(classified) if classified else {}
     out = {"profile": profile, "model": slug, "cases_planned": len(cases), "cases_completed": len(classified), "cases_refused": [r["case"] for r in results if r["guard_refusal"]], "guard_refusal_reasons": {r["case"]: sorted(set(r["guard_refusal_reasons"])) for r in results if r["guard_refusal"]}, "stopped_by_guard": stopped,
            "metrics": metrics, "per_case_latency_ms": {r["case"]: r["latency_ms"] for r in results}, "protected_stores_unchanged": before_fp == after_fp,
+           "models_requested": models_requested(session), "expected_model": slug,
+           "unexpected_models": sorted(m for m in models_requested(session) if m != slug), "cases_attempted": len(results),
            "note": "PARTIAL: the guard stopped the run; metrics cover only the completed cases" if stopped else "Complete over the planned cases. Metrics measure the model's decisions on a bounded held-out sample; not an accuracy score."}
     d = rec.finish(session.budget.summary(), out)
     if session.http_guard is not None:

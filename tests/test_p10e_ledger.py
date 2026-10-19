@@ -407,7 +407,7 @@ def test_requests_that_break_an_approved_limit_never_reach_the_transport(tmp_pat
         guard = s.http_guard
         for label, kwargs, reason in (
             ("no output cap", {"max_tokens": None}, "output_cap_missing"),
-            ("cap above the limit", {"max_tokens": 3000}, "output_cap_exceeds_limit"),
+            ("cap above the limit", {"max_tokens": 4097}, "output_cap_exceeds_limit"),
             ("unpriced model", {"model": "openai/gpt-4o"}, "model_not_recognized"),
             ("another provider host", {"base_url": "https://api.openai.com/v1"}, "host_not_allowed"),
             ("streaming", {"streaming": True}, "streaming_not_supported"),
@@ -650,3 +650,49 @@ def test_the_auth_failure_probe_releases_the_dollars_but_counts_the_call(tmp_pat
     assert res["outcome"] == "REJECTED_OR_FAILED" and res["ledger_state"] == "rejected" and res["http_status"] == 401
     assert Decimal(res["committed_usd_for_the_call"]) == 0 and res["calls_counted"] == 1 and Decimal(res["usd_added"]) == 0
     assert "invalid-p10e-probe-key" not in json.dumps(res)
+
+
+# =================================================================================================================================== P10E-R1: the approved 4096 output cap
+def test_a_4096_token_request_passes_and_is_reserved_at_the_4096_worst_case_while_4097_is_refused(tmp_path):
+    d, g = make_ledger(tmp_path)
+    t = Transport()
+    with session(tmp_path, d, g) as s:
+        assert s.limits.max_output_tokens_per_request == 4096
+        chat(t, max_tokens=4096).invoke([("human", "hi")])
+        rows = s.ledger.conn.execute("SELECT reserved_usd, committed_usd FROM entries").fetchall()
+        with pytest.raises(Exception):
+            chat(t, max_tokens=4097).invoke([("human", "hi")])
+        assert s.http_guard.refused[-1] == "output_cap_exceeds_limit"
+    pi, po = PRICES[MODEL]
+    est_in = G.estimate_input_tokens(json.dumps({"messages": json.loads(t.requests[0].content)["messages"], "tools": None, "response_format": None}, ensure_ascii=False, default=str))
+    assert Decimal(rows[0][0]) == pi * est_in + po * 4096                                                                       # reserved at the 4096-token maximum output cost, not the old 2000
+    assert len(t.requests) == 1 and json.loads(t.requests[0].content)["max_completion_tokens"] == 4096
+
+
+def test_the_global_ceilings_still_hold_with_the_larger_output_cap(tmp_path):
+    d, g = make_ledger(tmp_path)
+    led = open_led(d, g)
+    reserve(led, "9.96"); led.close(backup=False)                                                                                # 9.96 of 10 already committed; 0.04 left
+    t = Transport()
+    with session(tmp_path, d, g) as s:
+        with pytest.raises(Exception):
+            chat(t, max_tokens=4096).invoke([("human", "hi")])                                                                    # worst case 4096*12e-6 = 0.0492 > the 0.04 left
+        assert s.http_guard.refused[-1] == "spend_ceiling"
+    assert t.requests == []
+
+
+def test_a_new_authorization_version_never_resets_or_replaces_the_ledger(tmp_path):
+    d, g = make_ledger(tmp_path)
+    led = open_led(d, g)
+    led.settle(reserve(led, "3"), state="settled_known", committed_usd=Decimal("3"), input_tokens=1, output_tokens=1)
+    led.close(backup=False)
+    v3 = auth_for(tmp_path, g, max_output_tokens_per_request=4096)                                                                # a later authorization version with a different limit
+    v2 = auth_for(tmp_path, g, max_output_tokens_per_request=2000)
+    for auth in (v2, v3):
+        with G.live_session("t", SYNTH, env=ENV, auth=auth, ledger_dir=d, prices=PRICES) as s:
+            snap = s.ledger.snapshot()
+            assert snap["committed_usd"] == "3" and snap["calls"] == 1 and snap["genesis_id"] == g                                # the same ledger, the same history, no new allowance
+    other, g2 = make_ledger(tmp_path, "other")
+    with pytest.raises(G.LiveRunRefused) as e:
+        with G.live_session("t", SYNTH, env=ENV, auth=v3, ledger_dir=other, prices=PRICES): pass
+    assert e.value.reason == "ledger_identity_mismatch"                                                                          # a version change cannot adopt a different ledger
