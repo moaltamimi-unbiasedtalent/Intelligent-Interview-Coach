@@ -1,0 +1,16 @@
+{
+ "area": "kb-quality",
+ "authorization_version": 2,
+ "checkout": "dirty",
+ "commit": "13a565f15335ba942bdc003dded4c8fb6bdb998f",
+ "dataset_version": "1.1.0",
+ "environment_id": "p10e-designated-host-owner-macos",
+ "execution_flag": true,
+ "ledger_genesis_id": "ff65d28571644fdc9546c922dfe24ca5",
+ "ledger_session_id": "e92cec55643243b5bf83991a80e92fe9",
+ "model": "(resolved below)",
+ "profile": "balanced",
+ "provider": "OpenRouter",
+ "run_id": "p10e-kb-quality-20261019T085902Z-11b3d40e",
+ "started_at": "2026-10-19T08:59:02.843289+00:00"
+}

@@ -1,0 +1,16 @@
+{
+ "area": "agent-live",
+ "authorization_version": 2,
+ "checkout": "clean",
+ "commit": "13a565f15335ba942bdc003dded4c8fb6bdb998f",
+ "dataset_version": "22 held-out cases",
+ "environment_id": "p10e-designated-host-owner-macos",
+ "execution_flag": true,
+ "ledger_genesis_id": "ff65d28571644fdc9546c922dfe24ca5",
+ "ledger_session_id": "662ebbf961994927ae1de86bf3281859",
+ "model": "openai/gpt-5.4",
+ "profile": "balanced",
+ "provider": "OpenRouter",
+ "run_id": "p10e-agent-live-20261019T085359Z-bf413d8f",
+ "started_at": "2026-10-19T08:53:59.405667+00:00"
+}

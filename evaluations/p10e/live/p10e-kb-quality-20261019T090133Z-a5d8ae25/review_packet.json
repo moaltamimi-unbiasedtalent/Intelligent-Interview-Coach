@@ -1,0 +1,148 @@
+{
+ "rubric": "see model_quality_contract.json metrics; ratings must name the reviewer, date and explanation",
+ "reviewer": null,
+ "cases": [
+  {
+   "case": "C-01",
+   "query": "What does a Data Analyst do?",
+   "evidence_titles": [
+    null,
+    null
+   ],
+   "citations": [
+    "fx_roles",
+    "fx_roles"
+   ],
+   "model_answer": "## Evidence (from sources):\n- A Data Analyst typically cleans and prepares data, builds dashboards, and communicates findings to stakeholders [1].\n- Key skills for a Data Analyst include SQL and statistics [2].\n\n## Tool results (calculated):\n- No tool results were provided.\n\n## Recommendation:\nA Data Analyst helps organizations make better decisions by turning raw data into usable insights. In practice, this often means collecting or cleaning datasets, querying data with SQL, analyzing trends or patterns, creating dashboards or reports, and explaining what the results mean in clear business terms.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-03",
+   "query": "What does a Data Analyst earn in the US?",
+   "evidence_titles": [
+    null
+   ],
+   "citations": [
+    "fx_pay_us"
+   ],
+   "model_answer": "## Evidence (from sources):\nA Data Analyst in the US earns a median annual pay of **$100,000 USD**, with a reported range of **$70,000\u2013$140,000 USD** for 2025. [1]\n\n## Tool results (calculated):\nNo tool-calculated results were provided.\n\n## Recommendation:\nUse **$100,000** as a reasonable US market midpoint. For salary negotiation, a target range around **$100,000\u2013$120,000** may be appropriate if you have strong technical skills, domain experience, or experience with tools like SQL, Python, BI dashboards, and stakeholder-facing analytics.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-06",
+   "query": "What does an interplanetary cartographer do?",
+   "evidence_titles": [],
+   "citations": [],
+   "model_answer": "## Evidence (from sources):\nThe knowledge base does not contain enough evidence to answer that. No structured occupation matched \u201cinterplanetary cartographer.\u201d\n\n## Tool results (calculated):\nNo tool results were provided.\n\n## Recommendation:\nIf you mean the term literally, an \u201cinterplanetary cartographer\u201d would most likely refer to someone who maps planetary bodies or routes/locations beyond Earth\u2014but I can\u2019t verify duties, qualifications, or career path from the provided knowledge base.  \n\nIf you have a job posting or course description using this title, share it and I can break down the likely responsibilities, required skills, and how it maps to real occupations such as GIS specialist, planetary scientist, remote sensing analyst, or aerospace mission planner.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-07",
+   "query": "What does a Data Analyst earn in Canada?",
+   "evidence_titles": [],
+   "citations": [],
+   "model_answer": "Evidence (from sources):\n- The knowledge base does not contain enough evidence to answer that. No retrieved evidence was provided for official occupation-specific compensation for \u201cData Analyst\u201d in Canada.\n\nTool results (calculated):\n- None provided.\n\nRecommendation:\n- I can\u2019t give a sourced salary figure from the provided knowledge base. For a reliable answer, check Canadian sources such as Job Bank, Statistics Canada, or current postings on LinkedIn/Indeed/Glassdoor, using titles like \u201cData Analyst,\u201d \u201cBusiness Intelligence Analyst,\u201d and \u201cReporting Analyst,\u201d and filter by province/city and experience level.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-08",
+   "query": "What does a Data Analyst do?",
+   "evidence_titles": [
+    null,
+    null
+   ],
+   "citations": [
+    "fx_roles",
+    "fx_roles"
+   ],
+   "model_answer": "## Evidence (from sources):\nA Data Analyst typically cleans and prepares data, builds dashboards, and communicates findings to help others understand what the data shows. [1]  \nKey skills for a Data Analyst include SQL and statistics. [2]\n\n## Tool results (calculated):\nNo tool results were provided.\n\n## Recommendation:\nIn practical terms, a Data Analyst turns raw data into useful insights. They often:\n- collect or access data from databases,\n- clean messy or incomplete data,\n- analyze patterns and trends,\n- create dashboards or reports,\n- explain findings to business or technical teams.\n\nIf you are preparing for a Data Analyst role, focus on SQL, basic statistics, data cleaning, dashboarding, and clearly explaining insights to non-technical audiences.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-12",
+   "query": "interview tips arrive early dress well",
+   "evidence_titles": [
+    null,
+    null,
+    null
+   ],
+   "citations": [
+    "fx_doc_star_en",
+    "fx_doc_behav_en",
+    "fx_doc_prep_es"
+   ],
+   "model_answer": "## Evidence (from sources):\n- Use the STAR method for interview answers: briefly explain the Situation, Task, Action you personally took, and the Result, ideally with a measurable outcome. [1]\n- Prepare for behavioural questions by practising short examples about teamwork, conflict, and failure. [2]\n- Before the interview, research the company, practise common questions, and prepare your own questions to ask. [3]\n\n## Tool results (calculated):\n- No tool results were provided.\n\n## Recommendation:\n- Arrive 10\u201315 minutes early, not too early.\n- Dress slightly more formal than the company\u2019s usual dress code.\n- Bring copies of your CV/resume, a notebook, and a pen.\n- Greet people politely, make eye contact, and thank the interviewer at the end.\n- Prepare 3\u20135 STAR stories you can adapt to different questions.\n- Have 2\u20133 thoughtful questions ready, such as:\n  - \u201cWhat does success look like in this role after 6 months?\u201d\n  - \u201cWhat are the team\u2019s current priorities?\u201d\n  - \u201cHow would you describe the company culture?\u201d",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-13",
+   "query": "Bewerbungstipps p\u00fcnktlich sein",
+   "evidence_titles": [
+    null
+   ],
+   "citations": [
+    "fx_doc_cv_fr"
+   ],
+   "model_answer": "## Evidence (from sources):\n- Die Wissensbasis enth\u00e4lt nur einen allgemeinen Hinweis zum Lebenslauf: Ein guter CV hebt messbare Erfolge hervor und bleibt kurz, idealerweise ein bis zwei Seiten. [1]\n- Die Wissensbasis enth\u00e4lt nicht genug Evidenz, um konkrete Aussagen zum Thema \u201eP\u00fcnktlichkeit bei Bewerbungsgespr\u00e4chen\u201c zu belegen.\n\n## Tool results (calculated):\n- Keine Tool-Ergebnisse vorhanden.\n\n## Recommendation:\nF\u00fcr Bewerbungsgespr\u00e4che gilt praktisch:\n\n- **Plane so, dass du 10\u201315 Minuten fr\u00fcher da bist** \u2013 nicht erst exakt zur vereinbarten Uhrzeit.\n- **Bei Online-Interviews:** Technik, Kamera, Mikrofon und Internet mindestens 15 Minuten vorher testen.\n- **Route vorher pr\u00fcfen:** Anfahrt, Parkm\u00f6glichkeiten, \u00d6PNV-Verbindungen und m\u00f6gliche Versp\u00e4tungen einplanen.\n- **Nicht zu fr\u00fch auftreten:** Wenn du 30+ Minuten vorher da bist, warte lieber in der N\u00e4he und melde dich erst ca. 10 Minuten vor Termin.\n- **Bei Versp\u00e4tung sofort informieren:** Kurz anrufen oder schreiben, ehrlich erkl\u00e4ren, neue Ankunftszeit nennen und sich entschuldigen.\n- **P\u00fcnktlichkeit signalisiert Zuverl\u00e4ssigkeit:** Sie ist ein einfacher Weg, direkt einen professionellen ersten Eindruck zu machen.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-15",
+   "query": "What does a Data Analyst do?",
+   "evidence_titles": [
+    null,
+    null
+   ],
+   "citations": [
+    "fx_roles",
+    "fx_roles"
+   ],
+   "model_answer": "## Evidence (from sources):\nA Data Analyst typically cleans and prepares data so it can be used for analysis. [1]  \nThey build dashboards to help teams monitor metrics and understand trends. [1]  \nThey communicate findings to stakeholders so data can support business decisions. [1]  \nKey skills for the role include SQL and statistics. [2]\n\n## Tool results (calculated):\nNo tool results were provided.\n\n## Recommendation:\nThink of a Data Analyst as someone who turns raw data into useful insights. In practice, the job often combines technical work\u2014like querying databases and preparing datasets\u2014with communication work, such as explaining what the numbers mean and recommending next steps.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-19",
+   "query": "What does an interplanetary cartographer do?",
+   "evidence_titles": [],
+   "citations": [],
+   "model_answer": "Evidence (from sources):\n- The knowledge base does not contain enough evidence to answer that. No structured occupation matched \u201cinterplanetary cartographer.\u201d\n\nTool results (calculated):\n- None provided.\n\nRecommendation:\n- \u201cInterplanetary cartographer\u201d is not a standard occupation in the provided knowledge base. In plain terms, it would likely refer to someone who maps planetary surfaces, moons, asteroids, or other celestial bodies using spacecraft imagery, remote sensing data, and geospatial analysis.\n- Related real-world fields to explore include planetary science, GIS/remote sensing, cartography, geodesy, astronomy, aerospace engineering, and space mission data analysis.\n- If you are exploring this as a career path, search for roles with titles such as \u201cplanetary cartographer,\u201d \u201cremote sensing scientist,\u201d \u201cGIS analyst,\u201d \u201cplanetary geologist,\u201d or \u201cspace mission data analyst.\u201d",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  }
+ ]
+}

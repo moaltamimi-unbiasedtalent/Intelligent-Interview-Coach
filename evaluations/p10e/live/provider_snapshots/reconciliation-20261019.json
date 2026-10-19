@@ -1,0 +1,51 @@
+{
+ "before": {
+  "fields": {
+   "is_free_tier": false,
+   "limit": 35,
+   "limit_remaining": 29.70076871,
+   "limit_reset": null,
+   "usage": 5.29923129,
+   "usage_daily": 0,
+   "usage_monthly": 0.7175849,
+   "usage_weekly": 0
+  },
+  "key_has_provider_side_spending_limit": true,
+  "note": "account-level figures for the credential; may include usage by other applications",
+  "provider": "OpenRouter",
+  "status": "OK",
+  "taken_at": "2026-10-19T08:51:28.053027+00:00"
+ },
+ "after": {
+  "fields": {
+   "is_free_tier": false,
+   "limit": 35,
+   "limit_remaining": 28.90976306,
+   "limit_reset": null,
+   "usage": 6.09023694,
+   "usage_daily": 0.79100565,
+   "usage_monthly": 1.50859055,
+   "usage_weekly": 0.79100565
+  },
+  "key_has_provider_side_spending_limit": true,
+  "note": "account-level figures for the credential; may include usage by other applications",
+  "provider": "OpenRouter",
+  "status": "OK",
+  "taken_at": "2026-10-19T09:07:19.343567+00:00"
+ },
+ "comparison": {
+  "provider_reported_consumption_usd": "0.79100565",
+  "ledger_committed_usd_upper_bound": "1.21810825",
+  "ledger_known_estimate_usd": "1.21810825",
+  "difference_provider_minus_ledger_committed_usd": "-0.42710260",
+  "interpretation": "provider figure is account-level (other applications may share the key); the ledger committed figure is a worst-case upper bound, not a bill",
+  "ledger_sum_of_per_request_provider_reported_costs_usd": "0.83443465",
+  "calls": 152,
+  "entries": {
+   "entries_known": 151,
+   "entries_unknown": 0,
+   "entries_rejected": 1,
+   "pending": 0
+  }
+ }
+}

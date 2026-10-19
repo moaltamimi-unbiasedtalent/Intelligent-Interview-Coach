@@ -1,0 +1,58 @@
+{
+ "area": "smoke",
+ "authorization_version": 2,
+ "budget": {
+  "call_limit": 300,
+  "ceiling_usd": "10",
+  "cost_basis": "calculated from the published price snapshot (or the larger provider-reported figure); the provider's billing dashboard may differ",
+  "cumulative": {
+   "approved_total_usd": "10",
+   "call_cap": 300,
+   "calls": 0,
+   "committed_usd": "0",
+   "entries_known": 0,
+   "entries_rejected": 0,
+   "entries_unknown": 0,
+   "environment_id": "p10e-designated-host-owner-macos",
+   "genesis_id": "ff65d28571644fdc9546c922dfe24ca5",
+   "pending": 0,
+   "remaining_calls": 300,
+   "remaining_usd": "10",
+   "session_id": "0fbc1d10cfa34faf822a688570fb77d3"
+  },
+  "latency_ms_max": null,
+  "latency_ms_p50": null,
+  "refusals": [],
+  "run_calls_admitted": 0,
+  "run_calls_completed": 0,
+  "run_calls_failed_or_unknown": 0,
+  "run_calls_rejected_by_provider": 0,
+  "run_calls_with_unknown_usage": 0,
+  "run_cost_known_usd_estimate": "0",
+  "run_input_tokens_known": 0,
+  "run_output_tokens_known": 0,
+  "run_provider_reported_cost_calls": 0,
+  "run_provider_reported_cost_usd": "UNKNOWN",
+  "run_total_tokens_known": 0
+ },
+ "checkout": "clean",
+ "commit": "4e5c777a93513ab7b14cd4909a3a014ad28b130d",
+ "dataset_version": null,
+ "environment_id": "p10e-designated-host-owner-macos",
+ "execution_flag": true,
+ "finished_at": "2026-10-19T08:51:35.971386+00:00",
+ "ledger_genesis_id": "ff65d28571644fdc9546c922dfe24ca5",
+ "ledger_session_id": "0fbc1d10cfa34faf822a688570fb77d3",
+ "model": "openai/gpt-5.4",
+ "profile": "balanced",
+ "provider": "OpenRouter",
+ "results": {
+  "note": "A successful smoke test is not quality qualification.",
+  "smoke": {
+   "reason": "model_not_recognized",
+   "status": "REFUSED"
+  }
+ },
+ "run_id": "p10e-smoke-20261019T085135Z-c9a8483b",
+ "started_at": "2026-10-19T08:51:35.041016+00:00"
+}

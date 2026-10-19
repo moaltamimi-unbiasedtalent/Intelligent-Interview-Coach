@@ -1,0 +1,148 @@
+{
+ "rubric": "see model_quality_contract.json metrics; ratings must name the reviewer, date and explanation",
+ "reviewer": null,
+ "cases": [
+  {
+   "case": "C-01",
+   "query": "What does a Data Analyst do?",
+   "evidence_titles": [
+    null,
+    null
+   ],
+   "citations": [
+    "fx_roles",
+    "fx_roles"
+   ],
+   "model_answer": "**Evidence (from sources):**\n- A Data Analyst typically cleans and prepares data, builds dashboards, and communicates findings. [1]\n- Key skills for the role include SQL and statistics. [2]\n\n**Recommendation:**\nA Data Analyst turns raw data into useful insights for decision-making. In practice, that often means collecting messy data, cleaning it, analyzing it, creating charts or dashboards, and explaining the results clearly to others. If you want, I can also break this down into a \u201cday in the life,\u201d typical tools, or how it differs from a Data Scientist.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-03",
+   "query": "What does a Data Analyst earn in the US?",
+   "evidence_titles": [
+    null
+   ],
+   "citations": [
+    "fx_pay_us"
+   ],
+   "model_answer": "**Evidence (from sources):**  \n- In the US, the median annual pay for a Data Analyst is **$100,000**, with a range of **$70,000 to $140,000** in **2025**. [1]\n\n**Recommendation:**  \n- A reasonable answer to \u201cwhat does a Data Analyst earn in the US?\u201d is **about $100k median annual salary**, with pay varying widely by experience, industry, and location.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-06",
+   "query": "What does an interplanetary cartographer do?",
+   "evidence_titles": [],
+   "citations": [],
+   "model_answer": "Evidence (from sources):\n- The knowledge base does not contain enough evidence to answer that.\n\nTool results (calculated):\n- No tool results were provided.\n\nRecommendation:\nAn interplanetary cartographer would generally be someone who maps, models, or maintains spatial data for planetary bodies, routes, terrain, and navigation across different planets or moons. If you want, I can also help define the role in a sci-fi context or compare it to real-world jobs like planetary geologist, GIS analyst, or space mission navigator.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-07",
+   "query": "What does a Data Analyst earn in Canada?",
+   "evidence_titles": [],
+   "citations": [],
+   "model_answer": "Evidence (from sources):\n- The knowledge base does not contain enough evidence to answer that. \n- There is no official occupation-specific compensation data for \u201cData Analyst\u201d in Canada in the retrieved evidence. \n\nRecommendation:\n- If you want, I can help you estimate Canadian Data Analyst pay using nearby occupations, recent job postings, or public salary surveys.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-08",
+   "query": "What does a Data Analyst do?",
+   "evidence_titles": [
+    null,
+    null
+   ],
+   "citations": [
+    "fx_roles",
+    "fx_roles"
+   ],
+   "model_answer": "Evidence (from sources):\n- A Data Analyst typically cleans and prepares data, builds dashboards, and communicates findings. [1]\n- Common key skills for a Data Analyst include SQL and statistics. [2]\n\nRecommendation:\nA Data Analyst turns raw data into useful insights for decision-making. In practice, that usually means cleaning messy data, analyzing it, creating dashboards or reports, and explaining the results clearly to others.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-12",
+   "query": "interview tips arrive early dress well",
+   "evidence_titles": [
+    null,
+    null,
+    null
+   ],
+   "citations": [
+    "fx_doc_star_en",
+    "fx_doc_behav_en",
+    "fx_doc_prep_es"
+   ],
+   "model_answer": "**Evidence (from sources):**\n- The evidence says to prepare for behavioural interview questions by having three stories ready about teamwork, conflict, and failure, and to practise telling each story in about two minutes. [2]\n- The evidence also recommends researching the company, practising common interview questions, and preparing your own questions for the interviewer. [3]\n- The evidence explains the STAR method: Situation, Task, Action, Result, with a brief situation, your task, the action you took, and a measurable result. [1]\n\n**Tool results (calculated):**\n- No tool results were provided.\n\n**Recommendation:**\n- Arrive early so you are calm, settled, and not rushed.\n- Dress neatly and appropriately for the role and company.\n- Combine that with the prep above: research the company, rehearse a few strong examples, and have questions ready.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-13",
+   "query": "Bewerbungstipps p\u00fcnktlich sein",
+   "evidence_titles": [
+    null
+   ],
+   "citations": [
+    "fx_doc_cv_fr"
+   ],
+   "model_answer": "**Evidence (from sources):**  \n- The knowledge base does not contain enough evidence to answer that.  \n- The only retrieved evidence says that a good CV highlights measurable achievements and stays concise, at one or two pages. [1]\n\n**Recommendation:**  \nF\u00fcr \u201ep\u00fcnktlich sein\u201c in der Bewerbung w\u00fcrde ich es so angehen:\n\n- **Sei im Prozess selbst p\u00fcnktlich:** Bewerbungsfristen genau pr\u00fcfen und fr\u00fch einreichen.  \n- **Im Gespr\u00e4ch auf Zuverl\u00e4ssigkeit achten:** Beispiele nennen, in denen du Termine eingehalten oder Abl\u00e4ufe zuverl\u00e4ssig koordiniert hast.  \n- **Kurz und klar formulieren:** Wenn du P\u00fcnktlichkeit als St\u00e4rke erw\u00e4hnst, belege sie mit einem konkreten Beispiel statt nur mit einer Behauptung.  \n- **Falls du zu Versp\u00e4tungen neigst:** lieber ehrlich, aber l\u00f6sungsorientiert formulieren, z. B. wie du besser planst oder Puffer einbaust.  \n\nWenn du m\u00f6chtest, kann ich dir auch einen **kurzen Bewerbungssatz zu \u201eP\u00fcnktlichkeit\u201c** auf Deutsch formulieren.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-15",
+   "query": "What does a Data Analyst do?",
+   "evidence_titles": [
+    null,
+    null
+   ],
+   "citations": [
+    "fx_roles",
+    "fx_roles"
+   ],
+   "model_answer": "**Evidence (from sources):**  \nA Data Analyst typically cleans and prepares data, builds dashboards, and communicates findings. [1]  \nThe key skills listed for the role are SQL and statistics. [2]\n\n**Recommendation:**  \nIn practical terms, a Data Analyst turns raw data into useful insights that help teams make decisions. If you want, I can also explain what a Data Analyst does day to day, the tools they use, or how the role differs from a Data Scientist.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "C-19",
+   "query": "What does an interplanetary cartographer do?",
+   "evidence_titles": [],
+   "citations": [],
+   "model_answer": "**Evidence (from sources):**  \nThe knowledge base does not contain enough evidence to answer that.  \n\n**Recommendation:**  \nIn general, an interplanetary cartographer would likely be someone who maps planets, moons, and other celestial terrain for navigation, science, exploration, or mission planning. If you want, I can also give you a plain-English breakdown of the role, likely skills, and related careers.",
+   "human_ratings": {
+    "citation_supports_claim": "PENDING_HUMAN_REVIEW",
+    "language_consistency": "PENDING_HUMAN_REVIEW",
+    "abstains_when_unsupported": "PENDING_HUMAN_REVIEW"
+   }
+  }
+ ]
+}

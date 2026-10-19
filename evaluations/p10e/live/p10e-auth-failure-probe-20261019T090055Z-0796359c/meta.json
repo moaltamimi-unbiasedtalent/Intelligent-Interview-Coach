@@ -1,0 +1,16 @@
+{
+ "area": "auth-failure-probe",
+ "authorization_version": 2,
+ "checkout": "clean",
+ "commit": "f5c5e6feb451df03c0a0cd3b82c4d27b4133c0f3",
+ "dataset_version": null,
+ "environment_id": "p10e-designated-host-owner-macos",
+ "execution_flag": true,
+ "ledger_genesis_id": "ff65d28571644fdc9546c922dfe24ca5",
+ "ledger_session_id": "a25f58ed0d684031b642dcd9c3f0e933",
+ "model": "openai/gpt-5.4-mini",
+ "profile": "fast",
+ "provider": "OpenRouter",
+ "run_id": "p10e-auth-failure-probe-20261019T090055Z-0796359c",
+ "started_at": "2026-10-19T09:00:55.935951+00:00"
+}
