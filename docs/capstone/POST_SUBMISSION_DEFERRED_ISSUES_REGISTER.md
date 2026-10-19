@@ -1,6 +1,6 @@
 # Post-Submission Deferred Issues Register
 
-**Status:** CONSOLIDATED REGISTER, generated 2026-10-19 during the integrated Candidate/Admin/Operations requalification (main `fb2d264`). This is a **supporting document under the canonical roadmap** (`capstone_phase_plan.md` stays canonical for scope and sequence). It is **not** a competing roadmap and it replaces none of its source registers, which are preserved unchanged.
+**Status:** CONSOLIDATED REGISTER, generated 2026-10-19 during the integrated Candidate/Admin/Operations requalification (main `fb2d264`: 387 issues, 336 active, 51 closed) and **updated in the final acceptance reconciliation (main `4043429`)**: three issues added (`IR-AC03-TESTS`, `IR-AC18-RUNLIST`, `IR-DEADLINE`), `IR-P12` closed on the owner's direction, and several remaining-work notes refreshed; no issue was deleted or reclassified to ease acceptance. This is a **supporting document under the canonical roadmap** (`capstone_phase_plan.md` stays canonical for scope and sequence). It is **not** a competing roadmap and it replaces none of its source registers, which are preserved unchanged.
 
 **Rules this register follows.** Deferring an item is a scheduling decision only: it is never completion and never a waiver. It does not authorize removing a mandatory gate, passing a failed evaluation, ignoring a vulnerability, using unlicensed data, exposing private candidate data, enabling production services, treating a mock as live, claiming human qualification or waiving a Turing College requirement. An item that affects the safety or validity of the current capstone is `OPEN — PRE-SUBMISSION QUALIFICATION`; one that blocks only commercial deployment is `OPEN — PRODUCTION RELEASE BLOCKER`. One canonical `DI-` identifier is kept per issue even when an issue appears in several readiness views. Owners and dates are never invented (`UNKNOWN` where not recorded; most first-recorded dates are UNKNOWN because git history was not mined).
 
@@ -8,19 +8,19 @@
 
 ## 1. Totals
 
-387 issues recorded: **336 active** and 51 CLOSED — VERIFIED (kept for reconciliation only).
+390 issues recorded: **338 active** and 52 CLOSED — VERIFIED (kept for reconciliation only).
 
 | Status | Count |
 |---|---|
 | OPEN — PRE-SUBMISSION QUALIFICATION | 3 |
 | OPEN — PRODUCTION RELEASE BLOCKER | 16 |
 | PENDING OWNER DECISION | 70 |
-| PARTIALLY REMEDIATED | 46 |
+| PARTIALLY REMEDIATED | 48 |
 | NOT RUN | 39 |
 | NOT VERIFIED | 26 |
 | PENDING HUMAN REVIEW | 22 |
 | DEFERRED — POST SUBMISSION | 114 |
-| CLOSED — VERIFIED | 51 |
+| CLOSED — VERIFIED | 52 |
 
 | Category | Name | Active | Closed |
 |---|---|---|---|
@@ -37,7 +37,7 @@
 | K | Legal and governance | 16 | 1 |
 | L | Human validation | 13 | 0 |
 | M | Technical debt and documentation consistency | 24 | 15 |
-| N | Candidate journey and submission consistency | 9 | 2 |
+| N | Candidate journey and submission consistency | 11 | 3 |
 
 Categories A to M follow the owner's minimum inventory of 2026-10-19; N (candidate journey and submission consistency) was added for journey findings and requalification findings that fit none of them.
 
@@ -55,9 +55,11 @@ Categories A to M follow the owner's minimum inventory of 2026-10-19; N (candida
 | DI-L-005 | P2-04 | Human revalidation: AI-generated vs sourced vs verified provenance clarity | PENDING HUMAN REVIEW | UNKNOWN | None recorded |
 | DI-L-008 | L-AC24 | AC-24 Pilot and lessons remains PARTIAL | OPEN — PRE-SUBMISSION QUALIFICATION | UNKNOWN | REQUIRED: separate approval to create RC-P10-004; decision on AC-24 closure without P10F. |
 | DI-L-013 | L-PRODQ | Production-quality human evaluation overall | PENDING HUMAN REVIEW | UNKNOWN | None recorded |
-| DI-N-008 | IR-AC-LEDGER | Acceptance criteria dispositions are P9-era and spread over three documents | OPEN — PRE-SUBMISSION QUALIFICATION | YES | REQUIRED: confirm a single current acceptance ledger before P11 |
-| DI-N-010 | IR-P12 | A P12 (final rehearsal and freeze) exists in the reference runbook but not in the phase p… | PENDING OWNER DECISION | UNKNOWN | REQUIRED: fold P12 duties into P11 or add them |
+| DI-N-008 | IR-AC-LEDGER | Acceptance criteria dispositions are P9-era and spread over three documents | OPEN — PRE-SUBMISSION QUALIFICATION | YES | REQUIRED: approve CAPSTONE_ACCEPTANCE_LEDGER_CURRENT.md as the single current acceptance record |
 | DI-N-011 | IR-RC004-SPEC | No dedicated RC-P10-004 entry-criteria specification existed | PENDING OWNER DECISION | YES | REQUIRED: approve or amend the recorded entry conditions; separate approval to create RC-P10-004 |
+| DI-N-012 | IR-AC03-TESTS | AC-03 has no test for two-opportunity context selection, restart persistence or legacy-ro… | PARTIALLY REMEDIATED | UNKNOWN | REQUIRED: accept PARTIAL with the disclosed gap or fund a small test wave |
+| DI-N-013 | IR-AC18-RUNLIST | AC-18: no owner-scoped list of recent agent runs; selected-run retrieval evidence not sho… | PARTIALLY REMEDIATED | UNKNOWN | REQUIRED: accept PARTIAL with the disclosed gap or schedule a small feature wave |
+| DI-N-014 | IR-DEADLINE | Course deadline and time zone are unconfirmed (planning documents say 2026-10-20) | PENDING OWNER DECISION | YES | REQUIRED: confirm the deadline and time zone |
 
 `UNKNOWN` means the record does not establish it and an owner or course-lead answer is needed; it is never read as NO.
 
@@ -301,8 +303,8 @@ Categories A to M follow the owner's minimum inventory of 2026-10-19; N (candida
 | DI-M-018 | M-LEDGER | Mo and company-research cost-ledger gap | Whether Mo/company research must enter ledger before launch |
 | DI-M-027 | M-POLICY02 | Evaluation score consistency (POLICY-02) | Decision |
 | DI-M-028 | M-LEGACY01 | Legacy Streamlit UI retained (LEGACY-01) | Retirement task |
-| DI-N-010 | IR-P12 | A P12 (final rehearsal and freeze) exists in the reference runbook but not in t… | REQUIRED: fold P12 duties into P11 or add them |
 | DI-N-011 | IR-RC004-SPEC | No dedicated RC-P10-004 entry-criteria specification existed | REQUIRED: approve or amend the recorded entry conditions; separate approval to create RC-P10-004 |
+| DI-N-014 | IR-DEADLINE | Course deadline and time zone are unconfirmed (planning documents say 2026-10-2… | REQUIRED: confirm the deadline and time zone |
 
 ## 5. Active issues by category
 
@@ -2146,7 +2148,7 @@ Each block lists: original reference and source, latest verified status, severit
 - **Status:** NOT VERIFIED · **Severity:** LOW · **Priority:** P3 · **Blocks submission:** NO · **Blocks production:** NO
 - **Description:** Partial review surfaces (NBL); AC-18 PARTIAL.
 - **Partly addressed:** None recorded
-- **Remains:** No later closure found
+- **Remains:** No later closure found Verified in the final reconciliation: A6 (owner-scoped recent-run list) is NOT closed: no GET /agent/runs route and no UI list; the Inspector takes a run id (src/api/routes/agent.py, AgentInspector.tsx).
 - **Candidate impact:** None directly · **Security/privacy:** None identified · **Release impact:** None recorded
 - **Dependencies:** None recorded · **Owner decisions:** None recorded
 - **Required for closure:** None
@@ -2546,7 +2548,7 @@ Each block lists: original reference and source, latest verified status, severit
 - **Original:** `IR-DEPLOY-EXPECT` · **Source:** docs/capstone/INTEGRATED_CANDIDATE_ADMIN_OPERATIONS_REQUALIFICATION.md section 11 · **First recorded:** 2026-10-19
 - **Status:** PENDING OWNER DECISION · **Severity:** HIGH · **Priority:** P0 · **Blocks submission:** UNKNOWN · **Blocks production:** YES
 - **Description:** EX-12 (hosted operation) is BLOCKED/NOT RUN; whether the brief requires a hosted deployment is unresolved.
-- **Remains:** EX-12 (hosted operation) is BLOCKED/NOT RUN; whether the brief requires a hosted deployment is unresolved.
+- **Remains:** Unanswered; no deployment was made to resolve it. Listed as checklist item 4 of the missing-information checklist.
 - **Candidate impact:** none directly · **Security/privacy:** none identified · **Release impact:** see status
 - **Dependencies:** none · **Owner decisions:** REQUIRED: ask the course lead; decide hosted versus local demonstration
 - **Required for closure:** Written answer recorded in the P11 handoff
@@ -3220,7 +3222,7 @@ Each block lists: original reference and source, latest verified status, severit
 - **Original:** `IR-TURING-RUBRIC` · **Source:** docs/capstone/INTEGRATED_CANDIDATE_ADMIN_OPERATIONS_REQUALIFICATION.md section 18 · **First recorded:** 2026-10-19
 - **Status:** PENDING OWNER DECISION · **Severity:** HIGH · **Priority:** P0 · **Blocks submission:** UNKNOWN · **Blocks production:** NO
 - **Description:** All rubric references are second-hand (planning documents). Assessment criteria must not be invented.
-- **Remains:** All rubric references are second-hand (planning documents). Assessment criteria must not be invented.
+- **Remains:** Search repeated (repository, Downloads, neighbouring folders): NO OFFICIAL COURSE MATERIAL FOUND (class A = 0). Missing-information checklist for the owner is in ACADEMIC_SUBMISSION_SCOPE_DECISION.md section 7.
 - **Candidate impact:** none · **Security/privacy:** none identified · **Release impact:** academic submission
 - **Dependencies:** none · **Owner decisions:** REQUIRED: supply the official brief and rubric (or confirm which planning documents are authoritative)
 - **Required for closure:** Rubric file or owner confirmation added to the P11 requirements traceability matrix
@@ -3302,7 +3304,7 @@ Each block lists: original reference and source, latest verified status, severit
 - **Status:** OPEN — PRE-SUBMISSION QUALIFICATION · **Severity:** HIGH · **Priority:** P1 · **Blocks submission:** UNKNOWN · **Blocks production:** YES
 - **Description:** Pilot 2 (n=3 evidenced of 6 listed) verdict CONDITIONAL GO; P1 fixes regression-tested but no successor RC or human revalidation; whether AC-24 can pass without P10F is an open owner decision.
 - **Partly addressed:** Human evidence captured; P1 remediation qualified
-- **Remains:** AC-24 stays PARTIAL: RC-P10-004 does not exist (no successor RC, release gate not run on the changed runtime); P10F human revalidation deferred; whether AC-24 may close without P10F is an open owner decision.
+- **Remains:** AC-24 stays PARTIAL: RC-P10-004 does not exist (no successor RC, release gate not run on the changed runtime); P10F human revalidation deferred; whether AC-24 may close without P10F is an open owner decision. Individual criteria: 6 of 8 met (see ACADEMIC_SUBMISSION_SCOPE_DECISION.md section 4).
 - **Candidate impact:** None while Compensation V2 and candidate-facing use stay disabled · **Security/privacy:** None identified · **Release impact:** Blocks any release needing this item
 - **Dependencies:** RC-P10-004 (not created), P10F · **Owner decisions:** REQUIRED: separate approval to create RC-P10-004; decision on AC-24 closure without P10F.
 - **Required for closure:** Not closed
@@ -3599,7 +3601,7 @@ Each block lists: original reference and source, latest verified status, severit
 - **Dependencies:** None recorded · **Owner decisions:** None recorded
 - **Required for closure:** See H-RESCACHE
 
-### Category N: Candidate journey and submission consistency (9 active)
+### Category N: Candidate journey and submission consistency (11 active)
 
 #### DI-N-001: No candidate control to invite members or share a report or story
 - **Original:** `CJ-D-01` · **Source:** docs/capstone/journeys/CANDIDATE_JOURNEY.md D-01 · **First recorded:** 2026-10-19
@@ -3659,28 +3661,46 @@ Each block lists: original reference and source, latest verified status, severit
 - **Original:** `IR-AC-LEDGER` · **Source:** docs/capstone/INTEGRATED_CANDIDATE_ADMIN_OPERATIONS_REQUALIFICATION.md section 6 · **First recorded:** 2026-10-19
 - **Status:** OPEN — PRE-SUBMISSION QUALIFICATION · **Severity:** MEDIUM · **Priority:** P0 · **Blocks submission:** YES · **Blocks production:** NO
 - **Description:** The P9 ledger, the requirements matrix and the roadmap disagree (AC-03 PARTIAL vs PASS; AC-24 NOT RUN vs PARTIAL; totals stale) and later live evidence (P10E, W12.4E) was never folded back; AC-03 and AC-18 may have been closed by later waves but are not re-dispositioned.
-- **Remains:** The P9 ledger, the requirements matrix and the roadmap disagree (AC-03 PARTIAL vs PASS; AC-24 NOT RUN vs PARTIAL; totals stale) and later live evidence (P10E, W12.4E) was never folded back; AC-03 and AC-18 may have been closed by later waves but are not re-dispositioned.
+- **Remains:** Proposed single current ledger written (CAPSTONE_ACCEPTANCE_LEDGER_CURRENT.md, 17 PASS / 8 PARTIAL; AC-03 and AC-18 investigated and kept PARTIAL). Owner approval of the ledger as the single record is still outstanding.
 - **Candidate impact:** none · **Security/privacy:** none identified · **Release impact:** AC-25 submission consistency
-- **Dependencies:** owner confirmation of the reconciled dispositions · **Owner decisions:** REQUIRED: confirm a single current acceptance ledger before P11
+- **Dependencies:** owner confirmation of the reconciled dispositions · **Owner decisions:** REQUIRED: approve CAPSTONE_ACCEPTANCE_LEDGER_CURRENT.md as the single current acceptance record
 - **Required for closure:** One current dispositions table agreed by the owner; documents consistent (eval_doc_consistency)
-
-#### DI-N-010: A P12 (final rehearsal and freeze) exists in the reference runbook but not in the phase plan
-- **Original:** `IR-P12` · **Source:** docs/capstone/INTEGRATED_CANDIDATE_ADMIN_OPERATIONS_REQUALIFICATION.md section 18 · **First recorded:** 2026-10-19
-- **Status:** PENDING OWNER DECISION · **Severity:** MEDIUM · **Priority:** P1 · **Blocks submission:** UNKNOWN · **Blocks production:** NO
-- **Description:** The repository plan has only P11; it is unclear whether rehearsal and freeze duties fold into P11.
-- **Remains:** The repository plan has only P11; it is unclear whether rehearsal and freeze duties fold into P11.
-- **Candidate impact:** none directly · **Security/privacy:** none identified · **Release impact:** see status
-- **Dependencies:** none · **Owner decisions:** REQUIRED: fold P12 duties into P11 or add them
-- **Required for closure:** see description
 
 #### DI-N-011: No dedicated RC-P10-004 entry-criteria specification existed
 - **Original:** `IR-RC004-SPEC` · **Source:** docs/capstone/INTEGRATED_CANDIDATE_ADMIN_OPERATIONS_REQUALIFICATION.md section 17 · **First recorded:** 2026-10-19
 - **Status:** PENDING OWNER DECISION · **Severity:** MEDIUM · **Priority:** P0 · **Blocks submission:** YES · **Blocks production:** NO
 - **Description:** Conditions were scattered across documents. This requalification records the entry conditions (section 17 of its report); creation still needs a separate owner approval.
-- **Remains:** Conditions were scattered across documents. This requalification records the entry conditions (section 17 of its report); creation still needs a separate owner approval.
+- **Remains:** Entry criteria reconstructed in RC_P10_004_ENTRY_DECISION.md (E1 to E16); recommendation NO-GO now; E13 (recording a failed internal gate) and E14 (are live or human items mandatory) are undefined; separate owner approval to create the RC is outstanding.
 - **Candidate impact:** none directly · **Security/privacy:** none identified · **Release impact:** see status
 - **Dependencies:** none · **Owner decisions:** REQUIRED: approve or amend the recorded entry conditions; separate approval to create RC-P10-004
 - **Required for closure:** see description
+
+#### DI-N-012: AC-03 has no test for two-opportunity context selection, restart persistence or legacy-row non-adoption
+- **Original:** `IR-AC03-TESTS` · **Source:** docs/capstone/CAPSTONE_ACCEPTANCE_LEDGER_CURRENT.md · **First recorded:** 2026-10-19
+- **Status:** PARTIALLY REMEDIATED · **Severity:** MEDIUM · **Priority:** P1 · **Blocks submission:** UNKNOWN · **Blocks production:** NO
+- **Description:** The original AC-03 clauses (two opportunities, persistence after restart, correct chosen context, old anonymous records not silently reassigned) are only partly evidenced; the composite durable profile has no single restart test.
+- **Remains:** One offline pytest on a file database (app built twice): two opportunities for one user persist, each context endpoint returns its own data and 404 for another user, a launched session carries only its opportunity and an explicit field overrides it; plus a NULL-owner legacy row that a new user neither sees nor owns.
+- **Candidate impact:** none directly · **Security/privacy:** none identified · **Release impact:** acceptance record
+- **Dependencies:** none · **Owner decisions:** REQUIRED: accept PARTIAL with the disclosed gap or fund a small test wave
+- **Required for closure:** The test file passing and the ledger row re-dispositioned by the owner
+
+#### DI-N-013: AC-18: no owner-scoped list of recent agent runs; selected-run retrieval evidence not shown to be bounded
+- **Original:** `IR-AC18-RUNLIST` · **Source:** docs/capstone/CAPSTONE_ACCEPTANCE_LEDGER_CURRENT.md · **First recorded:** 2026-10-19
+- **Status:** PARTIALLY REMEDIATED · **Severity:** MEDIUM · **Priority:** P1 · **Blocks submission:** UNKNOWN · **Blocks production:** NO
+- **Description:** No GET /agent/runs route or UI list exists (matrix A6 ABSENT, confirmed in code); the Inspector needs a pasted run id; selected-run retrieval evidence is a summary (A8); W9.3 made review surfaces admin-only; the empty evaluation-artifact state is untested.
+- **Remains:** Owner-scoped, paginated, capped run-list endpoint and Inspector list with tests (user A sees only own runs, Admin sees none of A's), plus a test of capped selected-run evidence and the empty artifact state. A feature change, not done in the documentation wave.
+- **Candidate impact:** none directly · **Security/privacy:** none identified · **Release impact:** acceptance record
+- **Dependencies:** none · **Owner decisions:** REQUIRED: accept PARTIAL with the disclosed gap or schedule a small feature wave
+- **Required for closure:** Endpoint, UI and tests; owner re-disposition
+
+#### DI-N-014: Course deadline and time zone are unconfirmed (planning documents say 2026-10-20)
+- **Original:** `IR-DEADLINE` · **Source:** docs/capstone/CAPSTONE_ACCEPTANCE_LEDGER_CURRENT.md · **First recorded:** 2026-10-19
+- **Status:** PENDING OWNER DECISION · **Severity:** HIGH · **Priority:** P0 · **Blocks submission:** YES · **Blocks production:** NO
+- **Description:** All deadline statements are second-hand (the project's runbook); the date of this register is 2026-10-19; no official source is in the repository.
+- **Remains:** Confirm the exact deadline and time zone before sizing P11.
+- **Candidate impact:** none directly · **Security/privacy:** none identified · **Release impact:** acceptance record
+- **Dependencies:** none · **Owner decisions:** REQUIRED: confirm the deadline and time zone
+- **Required for closure:** Owner confirmation recorded in the P11 plan
 
 ## 6. Reconciliation: issues verified CLOSED
 
@@ -3739,6 +3759,7 @@ Listed so earlier findings are not reopened or lost. Each cites its evidence; a 
 | DI-M-039 | M-LATENT-RES | Evaluation corrections preserve historical evidence | P10E_R1 section 16 |
 | DI-N-003 | CJ-D-04 | PRODUCT_CLAIMS.md contains stale entries | Reasons updated in docs/product/PRODUCT_CLAIMS.md in the integrated requalification; the claims themselves stay NOT permitted. |
 | DI-N-009 | IR-ROADMAP-STALE | Roadmap and phase plan described merged PRs as pending | Status rows reconciled in the integrated requalification (roadmap and phase plan). |
+| DI-N-010 | IR-P12 | A P12 (final rehearsal and freeze) exists in the reference runbook but not in the phase p… | Owner direction 2026-10-19 (final capstone acceptance reconciliation prompt): fold the rehearsal, final validation and submission-freeze duties into P11; no top-level P12 unless authoritative course requirements require it. Recorded in P11_SUBMISSION_READINES… |
 
 ## 7. Method and limits
 
