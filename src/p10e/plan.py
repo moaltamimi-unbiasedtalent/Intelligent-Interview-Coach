@@ -11,7 +11,15 @@ from decimal import Decimal
 
 from src.p10e.guard import load_prices
 
-PROFILE_SLUG = {"fast": "openai/gpt-5.6-luna", "balanced": "openai/gpt-5.6-terra", "advanced": "openai/gpt-5.6-sol"}
+def _effective_slugs() -> dict[str, str]:
+    """The model each profile resolves to in the designated environment (recorded in the price snapshot with its published price)."""
+    import json
+
+    from src.p10e.guard import PRICING_PATH
+    return dict(json.loads(PRICING_PATH.read_text(encoding="utf-8"))["effective_profiles_designated_environment"])
+
+
+PROFILE_SLUG = _effective_slugs()
 
 
 def _cost(prices: dict, profile: str, calls: int, tin: int, tout: int) -> Decimal:

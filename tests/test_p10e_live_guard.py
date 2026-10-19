@@ -252,9 +252,12 @@ def test_the_plan_is_offline_uses_registry_slugs_and_never_reports_unknown_as_ze
     p = build_plan()
     assert p["no_provider_call_made"] is True
     from src.llm.models import ModelProfile, model_id
-    assert {k: model_id(ModelProfile(k)) for k in ("fast", "balanced", "advanced")} == PROFILE_SLUG == SLUG
     snap = json.loads((ROOT / "evaluations/p10e/pricing_snapshot.json").read_text())
-    assert set(snap["models"]) == set(SLUG.values()) and all(m["available"] for m in snap["models"].values())
+    # the registry code defaults (resolved here without the developer .env) AND the models the designated environment really resolves are both priced and available; the plan uses the latter
+    assert {k: model_id(ModelProfile(k)) for k in ("fast", "balanced", "advanced")} == SLUG
+    assert set(SLUG.values()) <= set(snap["models"]) and set(PROFILE_SLUG.values()) <= set(snap["models"]) and set(PROFILE_SLUG) == {"fast", "balanced", "advanced"}
+    assert all(snap["models"][s]["available"] for s in list(SLUG.values()) + list(PROFILE_SLUG.values()))
+    assert PROFILE_SLUG == snap["effective_profiles_designated_environment"]
     assert {u["area"] for u in p["areas_with_unknown_cost"]} == {"ragas_judge", "semantic_retrieval_calibration", "multilingual_live"}
     assert all("cost_usd" not in u for u in p["areas_with_unknown_cost"])
     assert (ROOT / "evaluations/p10e/execution_plan.json").exists()
