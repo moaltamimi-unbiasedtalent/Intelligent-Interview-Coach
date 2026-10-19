@@ -5,6 +5,10 @@ import type {
   AIActivation,
   AdminReport,
   FlagsOverview,
+  CapabilityReadiness,
+  SpeechConfig,
+  SpeechConfigPatch,
+  SpeechOverview,
   FlagState,
   PauseOverview,
   PauseState,
@@ -745,6 +749,11 @@ export const api = {
     setPause: (capability: string, paused: boolean, expectedRevision: number, reason: string, opts?: RequestOptions) =>
       request<PauseState>("POST", `/admin/pause/${encodeURIComponent(capability)}`, { body: { paused, expected_revision: expectedRevision, reason }, ...opts }),
     flags: (opts?: RequestOptions) => request<FlagsOverview>("GET", "/admin/flags", opts),
+    // W12.4F: derived readiness (read-only) and governed speech selection/policy (W12.4E). No provider is contacted by either.
+    readiness: (opts?: RequestOptions) => request<CapabilityReadiness>("GET", "/admin/readiness", opts),
+    speech: (opts?: RequestOptions) => request<SpeechOverview>("GET", "/admin/speech", opts),
+    setSpeech: (patch: SpeechConfigPatch, expectedRevision: number, reason: string, opts?: RequestOptions) =>
+      request<SpeechConfig>("PUT", "/admin/speech", { body: { ...patch, expected_revision: expectedRevision, reason }, ...opts }),
     setFlag: (flagId: string, enabled: boolean | null, expectedRevision: number, reason: string, opts?: RequestOptions) =>
       request<FlagState>("PUT", `/admin/flags/${encodeURIComponent(flagId)}`, { body: { enabled, expected_revision: expectedRevision, reason }, ...opts }),
     // W10.7 AI and model administration (no provider call, no slug input: catalogue ids only)

@@ -61,3 +61,14 @@ def test_token_generation_and_hash():
 def test_tokens_are_unique():
     seen = {tokens.generate_token() for _ in range(200)}
     assert len(seen) == 200
+
+
+def test_production_default_bcrypt_cost_is_unchanged_by_the_test_configuration(monkeypatch):
+    """The test run lowers the cost only through BCRYPT_ROUNDS (CI performance); the product default without the variable is 12 and the floor is 10."""
+    monkeypatch.delenv("BCRYPT_ROUNDS", raising=False)
+    assert passwords._default_rounds() == 12
+    monkeypatch.setenv("BCRYPT_ROUNDS", "4")
+    assert passwords._default_rounds() == 10                       # a weaker setting is floored, never honoured
+    monkeypatch.setenv("BCRYPT_ROUNDS", "10")
+    assert passwords.hash_password("a-long-enough-password").split("$")[2] == "10"
+    assert passwords.verify_password("a-long-enough-password", passwords.hash_password("a-long-enough-password"))

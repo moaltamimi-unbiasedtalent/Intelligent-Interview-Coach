@@ -125,7 +125,7 @@ def run() -> dict[str, tuple[bool, str]]:
     try:
         import yaml
         wf = yaml.safe_load(read(".github/workflows/ci.yml"))
-        steps = [s.get("run", "") for s in wf["jobs"]["python"]["steps"]]
+        steps = [s.get("run", "") for j in ("static-guards", "python-tests", "python-evaluators", "python") for s in wf["jobs"][j]["steps"]]   # W12.4F CI hotfix: the former single job is four jobs
         referenced = sorted(set(re.findall(r"scripts/eval_[a-z_0-9]+\.py", "\n".join(steps))))
         check("ci_workflow_is_valid_yaml_and_its_evaluator_steps_exist", all((ROOT / r).exists() for r in referenced) and len(referenced) >= 40 and "python" in wf["jobs"], f"valid YAML; {len(referenced)} evaluator scripts referenced and present")
     except Exception as exc:  # noqa: BLE001 - an unparseable workflow is exactly the defect this guards

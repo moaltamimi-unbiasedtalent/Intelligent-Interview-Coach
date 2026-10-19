@@ -242,7 +242,7 @@ class TestHandoffRoundTrip:
 
 
 class TestChatHandoffStreamlitSmoke:
-    def test_chat_handoff_card_renders_with_seeded_prep(self, monkeypatch) -> None:
+    def test_chat_handoff_card_renders_with_seeded_prep(self, monkeypatch, tmp_path) -> None:
         import pathlib
 
         from pydantic import SecretStr
@@ -250,7 +250,7 @@ class TestChatHandoffStreamlitSmoke:
 
         # Configure so the chat page does not early-return on a missing key.
         monkeypatch.setattr(career_ui, "_config",
-                            lambda: CopilotConfig(api_key=SecretStr("sk-test")))
+                            lambda: CopilotConfig(api_key=SecretStr("sk-test"), chroma_persist_dir=str(tmp_path / "chroma")))
         app_path = str(pathlib.Path(__file__).resolve().parent.parent / "app.py")
         at = AppTest.from_file(app_path, default_timeout=30)
         at.session_state["os_nav"] = "Career Intelligence"
@@ -268,14 +268,14 @@ class TestChatHandoffStreamlitSmoke:
         markdown_blob = " ".join(m.value for m in at.markdown)
         assert "Ready to practise this role?" in markdown_blob
 
-    def test_chat_handoff_missing_role_points_to_context_field(self, monkeypatch) -> None:
+    def test_chat_handoff_missing_role_points_to_context_field(self, monkeypatch, tmp_path) -> None:
         import pathlib
 
         from pydantic import SecretStr
         from streamlit.testing.v1 import AppTest
 
         monkeypatch.setattr(career_ui, "_config",
-                            lambda: CopilotConfig(api_key=SecretStr("sk-test")))
+                            lambda: CopilotConfig(api_key=SecretStr("sk-test"), chroma_persist_dir=str(tmp_path / "chroma")))
         app_path = str(pathlib.Path(__file__).resolve().parent.parent / "app.py")
         at = AppTest.from_file(app_path, default_timeout=30)
         at.session_state["os_nav"] = "Career Intelligence"

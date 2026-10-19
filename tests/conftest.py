@@ -45,6 +45,10 @@ if not _ALLOW_DEV:
     os.environ["PYTHON_DOTENV_DISABLED"] = "1"
     os.environ["DATABASE_URL"] = f"sqlite:///{_TMP_ROOT / 'ask4mo_test.db'}"
     os.environ["EMAIL_PROVIDER"] = "memory"
+    # CI performance (W12.4F hotfix): measured, bcrypt at the product default of 12 rounds costs ~0.16 s per hash or verify locally (about 0.4 s on a CI runner) and the
+    # suite registers and signs in thousands of users. 10 is the lowest value the product accepts (``src.authsec.passwords._default_rounds`` floors at 10), through the
+    # product's own BCRYPT_ROUNDS setting; the algorithm, salting and verification are unchanged. The production default stays 12 (asserted in tests/test_auth_primitives.py).
+    os.environ.setdefault("BCRYPT_ROUNDS", "10")
     # The default vector-store directory is ``data/chroma`` (relative to the cwd). On a fresh clone (CI) opening it CREATES
     # ``data/chroma/chroma.sqlite3``; locally the pre-built store hid that write. Point it at the temp dir.
     os.environ["COPILOT_CHROMA_DIR"] = str(_TMP_ROOT / "chroma")

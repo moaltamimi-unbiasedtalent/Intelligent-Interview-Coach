@@ -33,3 +33,31 @@ Other open obligations kept visible (not new): Package 2 (UK) and every other so
 | 19 | **P10F targeted human validation** | P10E | participants and protocol; AC-24 stays PARTIAL until its criteria, including P10F, are met |
 
 **Preserved and unchanged:** F1 governance, F2A US engineering (isolated, 0 qualified, 0 runtime-approved), F2B preparation (nothing acquired), manifests and provenance, the occupation graph and V2 implementation, evidence-qualification reports, human-review packets and this backlog; every country package stays in the registry as unapproved. **Remaining risks:** coverage BELOW the 95% gate (386 of 412); unqualified evidence must never become candidate-facing; Capstone engineering acceptance is not production readiness. **Release restrictions:** any release requiring the 95% gate, human qualification, licensing clearance or P10F validation stays blocked until those are actually met. **Revised pre-submission order:** P10C-G, P10D, W12.4E, W12.4F, W12.5, P10E, Integrated Candidate/Admin/Operations Requalification, RC-P10-004, AC-24, P11. Automated regression, security, functional and integration testing and the Turing College expert-review and submission requirements are retained regardless of the P10F deferral.
+
+
+## W12.4E remaining activation work (deferred by the product owner, 2026-10-19)
+
+Scheduling decision only: it changes WHEN, not the safety requirements. The completed W12.4E offline engineering (adapters, governance, migration `0039_speech_governance`, tests) is preserved. Commercial authorization remains outstanding, live-provider testing remains outstanding, and capstone submission does not constitute production deployment approval. None of these items is complete; none authorizes production speech.
+
+| # | Deferred item | Depends on | Safety restriction that still applies |
+|---|---|---|---|
+| 1 | Whisper self-hosted versus hosted decision | owner decision | no hosted transport (`WHISPER_API_TRANSPORT_AUTHORIZED` stays False) until decided |
+| 2 | Hosted Whisper third-party data-processing review | 1 | candidate audio must not leave the platform before review |
+| 3 | Speech hosting architecture | 1 | no persistent candidate audio |
+| 4 | Model weights and resource placement | 3 | no automatic downloads (`MODEL_DOWNLOADS_AUTHORIZED` stays False) |
+| 5 | CPU/GPU and memory sizing | 3, 4 | measured, not assumed |
+| 6 | Genuine Whisper execution validation | 4, 5, owner authorization | consented non-candidate audio only |
+| 7 | Genuine Kyutai execution validation | 4, 5, 8, owner authorization | no live quality claim before human review |
+| 8 | Kyutai gated model-weight approval | owner decision | gated cc-by-4.0 terms |
+| 9 | Kyutai licence and attribution verification | 8 | attribution recorded before use |
+| 10 | Per-voice licence verification | 8 | built-in voices only; cloning stays prohibited |
+| 11 | Dutch server-side TTS qualification | 7 | Dutch stays UNVERIFIED and uses the browser path |
+| 12 | Server-side browser recording client | 3, 6 | transient audio only; not built in W12.4E or W12.4F |
+| 13 | Human speech-quality validation | 6, 7 | no quality claim without it |
+| 14 | Provider authorization flag activation | 1 to 13, owner approval | code change after review; Admin cannot flip it |
+| 15 | Production speech operational qualification | 14 | not operational until proven |
+| 16 | Browser disclosure legal/privacy review | legal | disclosure wording is an engineering translation today |
+| 17 | Response-origin authorization hardening | none | synthesis authorizes by text, not by reference (known limitation) |
+| 18 | Engine timeout and cancellation hardening | none | a timeout releases the slot but cannot kill a running engine thread (known limitation) |
+
+Russian speech stays EXCLUDED and the seven-language policy is unchanged. P10E excludes this work from its mandatory pre-submission scope; its other activities keep their own authorization requirements.

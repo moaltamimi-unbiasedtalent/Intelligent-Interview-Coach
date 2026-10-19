@@ -107,7 +107,7 @@ def run() -> dict[str, tuple[bool, str]]:
     check("admin_ui_has_no_candidate_content_fields", not hits, ", ".join(hits) or "none")
     nav = caps[caps.find("ADMIN_DESTINATIONS"):]
     future = [w for w in ("Subscriptions", "Knowledge administration", "Privacy requests", "Incidents", "Feature Flags") if f'label: "{w}' in nav]
-    check("only_operational_destinations_listed", not future and len(re.findall(r'\bid: "', nav)) == 19, "nineteen operational destinations (Support W10.3, Plans W10.4, Integrations W10.6, Jobs W10.9, Knowledge W10.8, Privacy and Legal W10.10, Billing W10.5, AI W10.7, Configuration and Feature flags W10.11, Reports W10.12, Security W10.13), none planned")
+    check("only_operational_destinations_listed", not future and len(re.findall(r'\bid: "', nav)) == 20, "twenty operational destinations (Support W10.3, Plans W10.4, Integrations W10.6, Jobs W10.9, Knowledge W10.8, Privacy and Legal W10.10, Billing W10.5, AI W10.7, Configuration and Feature flags W10.11, Reports W10.12, Security W10.13, Speech W12.4F), none planned")
 
     # --- scope guards ------------------------------------------------------------------------------
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))

@@ -28,7 +28,7 @@ W10_14_PLATFORM_ADMIN_ABSENT = frozenset({
 UNROUTED_PERMISSIONS = frozenset({"platform.releases.read", "platform.subscriptions.read"})
 
 DOMAINS: tuple[tuple[str, tuple[str, ...]], ...] = (
-    ("overview / releases", ("/admin/home",)),
+    ("overview / releases", ("/admin/home", "/admin/readiness")),
     ("users", ("/admin/users",)),
     ("workspaces", ("/admin/workspaces",)),
     ("support", ("/admin/support",)),
