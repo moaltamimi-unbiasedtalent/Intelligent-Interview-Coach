@@ -1,0 +1,17 @@
+{
+ "area": "multilingual-live",
+ "authorization_version": 3,
+ "checkout": "clean",
+ "commit": "be2bbb237f6c18bbe8d1d7f657c99d0e28d9666d",
+ "dataset_sha256": "2aaddbcd0622b93be18be1691c0532b36ea0edb73c8fe7be1bdf493e5d6e2074",
+ "dataset_version": "1.0.0",
+ "environment_id": "p10e-designated-host-owner-macos",
+ "execution_flag": true,
+ "ledger_genesis_id": "ff65d28571644fdc9546c922dfe24ca5",
+ "ledger_session_id": "d4a5ab5888274589b0e7e1bbfc9dae8b",
+ "model": "(resolved below)",
+ "profile": "balanced",
+ "provider": "OpenRouter",
+ "run_id": "p10e-multilingual-live-20261019T095324Z-fe88dfdc",
+ "started_at": "2026-10-19T09:53:24.926955+00:00"
+}

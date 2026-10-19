@@ -1,0 +1,352 @@
+{
+ "area": "multilingual-live",
+ "authorization_version": 3,
+ "budget": {
+  "call_limit": 300,
+  "ceiling_usd": "10",
+  "cost_basis": "calculated from the published price snapshot (or the larger provider-reported figure); the provider's billing dashboard may differ",
+  "cumulative": {
+   "approved_total_usd": "10",
+   "call_cap": 300,
+   "calls": 242,
+   "committed_usd": "1.86290325",
+   "entries_known": 241,
+   "entries_rejected": 1,
+   "entries_unknown": 0,
+   "environment_id": "p10e-designated-host-owner-macos",
+   "genesis_id": "ff65d28571644fdc9546c922dfe24ca5",
+   "pending": 0,
+   "remaining_calls": 58,
+   "remaining_usd": "8.13709675",
+   "session_id": "d4a5ab5888274589b0e7e1bbfc9dae8b"
+  },
+  "latency_ms_max": 5532,
+  "latency_ms_p50": 4310,
+  "refusals": [],
+  "run_calls_admitted": 14,
+  "run_calls_completed": 14,
+  "run_calls_failed_or_unknown": 0,
+  "run_calls_rejected_by_provider": 0,
+  "run_calls_with_unknown_usage": 0,
+  "run_cost_known_usd_estimate": "0.0521075",
+  "run_input_tokens_known": 4835,
+  "run_output_tokens_known": 2668,
+  "run_provider_reported_cost_calls": 14,
+  "run_provider_reported_cost_usd": "0.0521075",
+  "run_total_tokens_known": 7503
+ },
+ "checkout": "clean",
+ "commit": "be2bbb237f6c18bbe8d1d7f657c99d0e28d9666d",
+ "dataset_sha256": "2aaddbcd0622b93be18be1691c0532b36ea0edb73c8fe7be1bdf493e5d6e2074",
+ "dataset_version": "1.0.0",
+ "environment_id": "p10e-designated-host-owner-macos",
+ "execution_flag": true,
+ "finished_at": "2026-10-19T09:54:24.378486+00:00",
+ "ledger_genesis_id": "ff65d28571644fdc9546c922dfe24ca5",
+ "ledger_session_id": "d4a5ab5888274589b0e7e1bbfc9dae8b",
+ "model": "openai/gpt-5.4",
+ "profile": "balanced",
+ "provider": "OpenRouter",
+ "results": {
+  "cases_completed": 14,
+  "cases_planned": 14,
+  "dataset_version": "1.0.0",
+  "model": "openai/gpt-5.4",
+  "note": "Languages are reported separately and never averaged. The language detector is a stopword proxy, not native-speaker validation; no native reviewer has rated anything.",
+  "offline_retrieval_native_phrasing": {
+   "de": {
+    "supported_occupation_definition": {
+     "clarify": false,
+     "insufficient": true,
+     "n_evidence": 0,
+     "resolved_country": null,
+     "retrieved_compensation_for_canada": false,
+     "retrieved_role_document": false
+    },
+    "unsupported_country_compensation": {
+     "clarify": false,
+     "insufficient": false,
+     "n_evidence": 3,
+     "resolved_country": "CA",
+     "retrieved_compensation_for_canada": false,
+     "retrieved_role_document": false
+    }
+   },
+   "en": {
+    "supported_occupation_definition": {
+     "clarify": false,
+     "insufficient": false,
+     "n_evidence": 7,
+     "resolved_country": null,
+     "retrieved_compensation_for_canada": false,
+     "retrieved_role_document": true
+    },
+    "unsupported_country_compensation": {
+     "clarify": false,
+     "insufficient": false,
+     "n_evidence": 4,
+     "resolved_country": "CA",
+     "retrieved_compensation_for_canada": false,
+     "retrieved_role_document": false
+    }
+   },
+   "es": {
+    "supported_occupation_definition": {
+     "clarify": false,
+     "insufficient": false,
+     "n_evidence": 5,
+     "resolved_country": null,
+     "retrieved_compensation_for_canada": false,
+     "retrieved_role_document": false
+    },
+    "unsupported_country_compensation": {
+     "clarify": false,
+     "insufficient": false,
+     "n_evidence": 5,
+     "resolved_country": "CA",
+     "retrieved_compensation_for_canada": false,
+     "retrieved_role_document": false
+    }
+   },
+   "fr": {
+    "supported_occupation_definition": {
+     "clarify": false,
+     "insufficient": false,
+     "n_evidence": 5,
+     "resolved_country": null,
+     "retrieved_compensation_for_canada": false,
+     "retrieved_role_document": false
+    },
+    "unsupported_country_compensation": {
+     "clarify": false,
+     "insufficient": false,
+     "n_evidence": 5,
+     "resolved_country": "CA",
+     "retrieved_compensation_for_canada": false,
+     "retrieved_role_document": false
+    }
+   },
+   "it": {
+    "supported_occupation_definition": {
+     "clarify": false,
+     "insufficient": false,
+     "n_evidence": 4,
+     "resolved_country": null,
+     "retrieved_compensation_for_canada": false,
+     "retrieved_role_document": false
+    },
+    "unsupported_country_compensation": {
+     "clarify": false,
+     "insufficient": false,
+     "n_evidence": 4,
+     "resolved_country": "CA",
+     "retrieved_compensation_for_canada": false,
+     "retrieved_role_document": false
+    }
+   },
+   "nl": {
+    "supported_occupation_definition": {
+     "clarify": false,
+     "insufficient": false,
+     "n_evidence": 5,
+     "resolved_country": null,
+     "retrieved_compensation_for_canada": false,
+     "retrieved_role_document": false
+    },
+    "unsupported_country_compensation": {
+     "clarify": false,
+     "insufficient": false,
+     "n_evidence": 4,
+     "resolved_country": "CA",
+     "retrieved_compensation_for_canada": false,
+     "retrieved_role_document": false
+    }
+   },
+   "pt": {
+    "supported_occupation_definition": {
+     "clarify": false,
+     "insufficient": false,
+     "n_evidence": 3,
+     "resolved_country": null,
+     "retrieved_compensation_for_canada": false,
+     "retrieved_role_document": false
+    },
+    "unsupported_country_compensation": {
+     "clarify": false,
+     "insufficient": false,
+     "n_evidence": 4,
+     "resolved_country": "CA",
+     "retrieved_compensation_for_canada": false,
+     "retrieved_role_document": false
+    }
+   }
+  },
+  "pending_human_review": [
+   "answer_language_quality",
+   "native_speaker_fluency",
+   "question_understanding",
+   "tone"
+  ],
+  "per_language": {
+   "de": {
+    "supported_occupation_definition": {
+     "answer_language_matches": true,
+     "citation_markers_valid": true,
+     "citations": 0,
+     "detected_language": "de",
+     "evidence_items": 0,
+     "outcome": "abstained_or_clarified",
+     "status": "COMPLETE"
+    },
+    "unsupported_country_compensation": {
+     "answer_language_matches": false,
+     "citation_markers_valid": true,
+     "citations": 0,
+     "detected_language": "en",
+     "evidence_items": 0,
+     "no_citation_for_unsupported": true,
+     "no_salary_figure_invented": true,
+     "outcome": "abstained",
+     "status": "COMPLETE"
+    }
+   },
+   "en": {
+    "supported_occupation_definition": {
+     "answer_language_matches": true,
+     "citation_markers_valid": true,
+     "citations": 2,
+     "detected_language": "en",
+     "evidence_items": 2,
+     "outcome": "answered_with_citation",
+     "status": "COMPLETE"
+    },
+    "unsupported_country_compensation": {
+     "answer_language_matches": true,
+     "citation_markers_valid": true,
+     "citations": 0,
+     "detected_language": "en",
+     "evidence_items": 0,
+     "no_citation_for_unsupported": true,
+     "no_salary_figure_invented": true,
+     "outcome": "abstained",
+     "status": "COMPLETE"
+    }
+   },
+   "es": {
+    "supported_occupation_definition": {
+     "answer_language_matches": true,
+     "citation_markers_valid": true,
+     "citations": 0,
+     "detected_language": "es",
+     "evidence_items": 0,
+     "outcome": "abstained_or_clarified",
+     "status": "COMPLETE"
+    },
+    "unsupported_country_compensation": {
+     "answer_language_matches": true,
+     "citation_markers_valid": true,
+     "citations": 0,
+     "detected_language": "es",
+     "evidence_items": 0,
+     "no_citation_for_unsupported": true,
+     "no_salary_figure_invented": true,
+     "outcome": "abstained",
+     "status": "COMPLETE"
+    }
+   },
+   "fr": {
+    "supported_occupation_definition": {
+     "answer_language_matches": true,
+     "citation_markers_valid": true,
+     "citations": 0,
+     "detected_language": "fr",
+     "evidence_items": 0,
+     "outcome": "abstained_or_clarified",
+     "status": "COMPLETE"
+    },
+    "unsupported_country_compensation": {
+     "answer_language_matches": true,
+     "citation_markers_valid": true,
+     "citations": 0,
+     "detected_language": "fr",
+     "evidence_items": 0,
+     "no_citation_for_unsupported": true,
+     "no_salary_figure_invented": false,
+     "outcome": "abstained",
+     "status": "COMPLETE"
+    }
+   },
+   "it": {
+    "supported_occupation_definition": {
+     "answer_language_matches": true,
+     "citation_markers_valid": true,
+     "citations": 0,
+     "detected_language": "it",
+     "evidence_items": 0,
+     "outcome": "abstained_or_clarified",
+     "status": "COMPLETE"
+    },
+    "unsupported_country_compensation": {
+     "answer_language_matches": true,
+     "citation_markers_valid": true,
+     "citations": 0,
+     "detected_language": "it",
+     "evidence_items": 0,
+     "no_citation_for_unsupported": true,
+     "no_salary_figure_invented": true,
+     "outcome": "abstained",
+     "status": "COMPLETE"
+    }
+   },
+   "nl": {
+    "supported_occupation_definition": {
+     "answer_language_matches": true,
+     "citation_markers_valid": true,
+     "citations": 0,
+     "detected_language": "nl",
+     "evidence_items": 0,
+     "outcome": "abstained_or_clarified",
+     "status": "COMPLETE"
+    },
+    "unsupported_country_compensation": {
+     "answer_language_matches": true,
+     "citation_markers_valid": true,
+     "citations": 0,
+     "detected_language": "nl",
+     "evidence_items": 0,
+     "no_citation_for_unsupported": true,
+     "no_salary_figure_invented": true,
+     "outcome": "abstained",
+     "status": "COMPLETE"
+    }
+   },
+   "pt": {
+    "supported_occupation_definition": {
+     "answer_language_matches": true,
+     "citation_markers_valid": true,
+     "citations": 0,
+     "detected_language": "pt",
+     "evidence_items": 0,
+     "outcome": "abstained_or_clarified",
+     "status": "COMPLETE"
+    },
+    "unsupported_country_compensation": {
+     "answer_language_matches": true,
+     "citation_markers_valid": true,
+     "citations": 0,
+     "detected_language": "pt",
+     "evidence_items": 0,
+     "no_citation_for_unsupported": true,
+     "no_salary_figure_invented": true,
+     "outcome": "abstained",
+     "status": "COMPLETE"
+    }
+   }
+  },
+  "profile": "balanced",
+  "stopped_by_guard": null,
+  "thresholds": "none: no acceptance threshold is set; languages are reported separately and never averaged"
+ },
+ "run_id": "p10e-multilingual-live-20261019T095324Z-fe88dfdc",
+ "started_at": "2026-10-19T09:53:24.926955+00:00"
+}

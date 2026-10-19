@@ -1,0 +1,18 @@
+{
+ "area": "interview-quality",
+ "authorization_version": 3,
+ "calls_per_case_planned": 2,
+ "checkout": "clean",
+ "commit": "be2bbb237f6c18bbe8d1d7f657c99d0e28d9666d",
+ "dataset_sha256": "385625092b2d91574af6b396def752625edfa6fe22772652695735d14368d0e1",
+ "dataset_version": "1.0.0",
+ "environment_id": "p10e-designated-host-owner-macos",
+ "execution_flag": true,
+ "ledger_genesis_id": "ff65d28571644fdc9546c922dfe24ca5",
+ "ledger_session_id": "e708cc28a7b14ff38fff94a0552b84d1",
+ "model": "openai/gpt-5.4",
+ "profile": "balanced",
+ "provider": "OpenRouter",
+ "run_id": "p10e-interview-quality-20261019T095118Z-dc326e60",
+ "started_at": "2026-10-19T09:51:18.101416+00:00"
+}
