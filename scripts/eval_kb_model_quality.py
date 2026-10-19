@@ -84,13 +84,18 @@ def main(argv=None) -> int:
         return 0
     if a.live:
         from src.p10e import guard as G
+        from src.p10e import live_runs as R
+
+        def creds() -> bool:
+            from src.copilot.config import load_config
+            return bool(load_config().is_configured)
+
         try:
-            limits = G.require_live()
+            with G.live_session("kb-quality", "synthetic_fixture_corpus", credential_check=creds) as session:
+                out = R.run_kb_quality(session, a.profile)
         except G.LiveRunRefused as exc:
             print(f"REFUSED ({exc.reason}): {exc}")
             return 3
-        from src.p10e import live_runs as L
-        out = L.run_kb_quality(a.profile, limits)
         print(json.dumps({"run_dir": out["run_dir"], "budget": out["budget"], "not_run": out["not_run"]}, indent=1, default=str))
         return 0
     d = dry_run(contract, corpus)

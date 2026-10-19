@@ -24,7 +24,6 @@ from __future__ import annotations
 import argparse
 import os
 import sys
-import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -34,8 +33,6 @@ from src.agent.live_eval import (  # noqa: E402
     classify,
     load_live_cases,
     load_traces,
-    observation_from_result,
-    save_trace,
 )
 
 PROFILES = {"fast": "FAST", "balanced": "BALANCED", "advanced": "ADVANCED"}
@@ -53,44 +50,26 @@ def _print_metrics(title: str, metrics: dict) -> None:
     print("=" * 60)
 
 
-def _run_live(profile: str, cases: list[dict], record: bool, limit: int | None, limits):
-    from src.agent.models import AgentRunRequest
-    from src.application.agent_service import AgentApplicationService, _default_career_service
-    from src.llm.models import ModelProfile, model_id, spec
-
+def _run_live(profile: str, limit: int | None):
+    """P10E guarded live run (see src/p10e): needs the execution flag, owner-approved limits, the designated ledger, the exclusive lock and P10E_LIVE=1."""
     from src.p10e import guard as G
-    from src.p10e import live_runs as L
+    from src.p10e import live_runs as R
 
-    prof = ModelProfile[PROFILES[profile]]
-    if not spec(prof).supports_tools:
-        print(f"Profile {profile} does not support tool calling; aborting.")
-        return 2
-    slug = model_id(prof)
-    career = _default_career_service()
+    def creds() -> bool:
+        from src.copilot.config import load_config
+        return bool(load_config().is_configured)
 
-    results = []
-    if limit:
-        cases = cases[:limit]
-    budget = G.new_budget(limits)
-    rec = G.LiveRunRecorder("agent-live", provider="OpenRouter", model=slug, profile=profile, dataset_version=f"{len(cases)} held-out cases")
-    for case in cases:
-        svc = AgentApplicationService(
-            model_factory=lambda: L.guarded_model(profile, limits, budget, rec)[0],
-            career_service=career)
-        t0 = time.perf_counter()
-        res = svc.run(AgentRunRequest(goal=case["goal"], user_id="live-eval", profile=prof.value))
-        latency = int((time.perf_counter() - t0) * 1000)
-        obs = observation_from_result(case["id"], profile, res, latency)
-        if record:
-            save_trace(obs)
-        results.append(classify(case, obs))
-    metrics = aggregate(results)
-    _print_metrics(f"LIVE MODEL EVALUATION (profile={profile}, cases={len(results)})", metrics)
-    summary = budget.summary()
-    run_dir = rec.finish(summary, {"metrics": metrics, "cases": len(results), "stopped_by_guard": bool(summary["refusals"])})
-    print(f"budget: {summary['calls_admitted']} calls, committed upper bound {summary['committed_usd_upper_bound']} of {summary['ceiling_usd']} USD; evidence: {run_dir}")
-    if summary["refusals"]:
-        print(f"STOPPED BY THE BUDGET GUARD ({', '.join(sorted(set(summary['refusals'])))}): the results above are PARTIAL and must not be read as a full benchmark.")
+    try:
+        with G.live_session("agent-live", "synthetic_held_out_agent_cases", credential_check=creds) as session:
+            out = R.run_agent(session, profile, limit=limit)
+    except G.LiveRunRefused as exc:
+        print(f"REFUSED ({exc.reason}): {exc}")
+        return 3
+    res = out["results"]
+    _print_metrics(f"LIVE MODEL EVALUATION (profile={profile}, cases={res['cases_completed']}/{res['cases_planned']})", res["metrics"])
+    b = out["budget"]
+    print(f"budget: cumulative committed {b['cumulative'].get('committed_usd')} of {b['ceiling_usd']} USD, {b['cumulative'].get('calls')} of {b['call_limit']} calls; evidence: {out['run_dir']}")
+    print(res["note"])
     return 0
 
 
@@ -124,14 +103,7 @@ def main(argv=None) -> int:
         print(f"Configuration OK: {len(cases)} cases, profile={args.profile}.")
         print("Re-run with --allow-paid to execute, or --evaluate-recorded to score saved traces.")
         return 0
-    from src.p10e import guard as G
-
-    try:
-        limits = G.require_live()
-    except G.LiveRunRefused as exc:
-        print(f"REFUSED ({exc.reason}): {exc}")
-        return 3
-    return _run_live(args.profile, cases, args.record, args.limit, limits)
+    return _run_live(args.profile, args.limit)
 
 
 if __name__ == "__main__":

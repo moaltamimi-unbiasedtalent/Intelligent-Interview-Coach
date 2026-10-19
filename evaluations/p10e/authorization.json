@@ -19,12 +19,12 @@
  },
  "limits": {
   "max_spend_usd": 10,
-  "max_provider_calls": null,
-  "max_input_tokens_per_request": null,
-  "max_output_tokens_per_request": null,
-  "request_timeout_s": null,
-  "max_retries": null,
-  "max_concurrency": null
+  "max_provider_calls": 300,
+  "max_input_tokens_per_request": 20000,
+  "max_output_tokens_per_request": 2000,
+  "request_timeout_s": 60,
+  "max_retries": 1,
+  "max_concurrency": 2
  },
  "limits_required_before_any_paid_call": [
   "max_spend_usd",
@@ -38,22 +38,63 @@
  "limits_approval": {
   "approved_by": "Product Owner",
   "approval_date": "2026-10-19",
-  "reference": "Owner budget decision in ChatGPT, 2026-10-19",
+  "reference": "Product Owner's explicit budget, operational-limit and manual live-execution approvals in ChatGPT dated 2026-10-19.",
   "approves": [
-   "max_spend_usd"
+   "max_spend_usd",
+   "max_provider_calls",
+   "max_input_tokens_per_request",
+   "max_output_tokens_per_request",
+   "request_timeout_s",
+   "max_retries",
+   "max_concurrency"
   ],
-  "scope": "This approval covers max_spend_usd only. max_provider_calls, the per-request token limits, request_timeout_s, max_retries and max_concurrency are NOT approved yet and remain null; the guard refuses every paid call until each is present, valid and listed in `approves` by the owner.",
-  "how_to_approve": "Set each remaining limit, add its name to `approves`, and keep approved_by, approval_date and reference, in a reviewed commit. The guard refuses while any limit is missing, invalid, unlisted, unlimited, or a spend limit above spend_authority.approved_total_usd."
+  "scope": "All seven limits are owner-approved. USD 10 and 300 provider calls are CUMULATIVE across every P10E live execution; the 300-call allowance is a ceiling, not a spending target. USD 15 is a potential future ceiling and is NOT approved.",
+  "how_to_change": "Any increase needs a separate explicit owner approval recorded here in a reviewed commit. The guard refuses a spend limit above spend_authority.approved_total_usd."
  },
- "paid_execution_enabled": false,
+ "paid_execution_enabled": true,
  "spend_authority": {
   "approved_total_usd": 10,
   "potential_ceiling_not_approved_usd": 15,
-  "decision": "The owner approved an initial P10E live-testing budget of USD 10 TOTAL (cumulative across every live run, not per run). USD 15 is the absolute potential ceiling and is NOT the approved spending limit.",
+  "decision": "The owner approved a P10E live-testing budget of USD 10 TOTAL (cumulative across every live run, not per run). USD 15 is the absolute potential ceiling and is NOT the approved spending limit.",
   "rules": [
    "The limit is never increased automatically.",
    "Spending above USD 10 requires a separate, explicit owner approval recorded here.",
-   "A run's committed upper bound (including worst-case reservations for unknown usage) counts against the total; earlier runs' committed amounts are subtracted before any new call."
+   "The cumulative ledger (outside the checkout) counts every request's committed upper bound, including worst-case reservations for unknown usage and every retry; nothing is refunded, reset or deleted.",
+   "The 300-call limit is global across all sessions, models, checkouts and terminals."
   ]
- }
+ },
+ "authorization_version": 2,
+ "execution_environment": {
+  "environment_id": "p10e-designated-host-owner-macos",
+  "designated_on": "2026-10-19",
+  "host_fingerprint_sha256": "71a9af4b493afefd5841853e880e9e70",
+  "ledger_dir_env": "P10E_LEDGER_DIR",
+  "ledger_location_note": "A directory outside every Git checkout, mode 0700, owned by the execution user (designated: $HOME/.ask4mo/p10e-ledger). The location is configured explicitly per run; there is no default.",
+  "ledger_genesis_id": "ff65d28571644fdc9546c922dfe24ca5",
+  "permitted_runner": "the owner's macOS user account on the designated host (the ledger records the numeric uid and the guard refuses a different owner or a directory open to group or others)",
+  "persistence": "SQLite, synchronous=FULL, append-only triggers, hash-chained reservations with a recorded head",
+  "locking": "exclusive non-blocking operating-system flock held for the whole session; released by the OS if the process dies (no stale lock is ever broken)",
+  "recovery": "A session that did not close cleanly is reconciled under the lock: every reservation it left open is kept at its FULL worst case. A missing, corrupted, mismatched-genesis or wrong-host ledger STOPS execution; it is never re-initialized and a second ledger cannot be created once a genesis id is recorded.",
+  "backup": "A consistent backup copy is written beside the ledger at every clean session close; the owner should also back the directory up with the host's normal backup. Restoring a backup older than the last session would understate spending and must be reconciled against the per-run evidence and the provider snapshots before any further call."
+ },
+ "allowed_data_classes": [
+  "synthetic_fixture_corpus",
+  "synthetic_held_out_agent_cases"
+ ],
+ "allowed_provider_hosts": [
+  "openrouter.ai"
+ ],
+ "paid_execution_activation": "The owner authorized setting this flag to true ONLY after the execution-flag enforcement, the persistent ledger, all limits, the security tests, the safe ledger initialization, the designated environment and the provider verification are in place. It is for MANUAL P10E evaluation only (P10E_LIVE=1 remains mandatory per run); never for CI, background or automatic runs, production or commercial activation.",
+ "paid_execution_activated_on": "2026-10-19",
+ "paid_execution_activation_conditions_verified": [
+  "execution-flag enforcement (only the boolean true enables; 10 refusal cases tested)",
+  "persistent ledger outside the checkout, initialized once, genesis recorded",
+  "all seven limits approved and valid",
+  "exclusive session lock (in-process and cross-process tested)",
+  "durable reservation before every request (HTTP chokepoint)",
+  "retry, call-count and spend accounting across runs (tested)",
+  "timeout, output cap, input limit, retry and concurrency enforced on the real request path (tested with the real SDK on a mock transport)",
+  "host allowlist: openrouter.ai only",
+  "full offline regression green (4,919 tests; 26 evaluators)"
+ ]
 }
