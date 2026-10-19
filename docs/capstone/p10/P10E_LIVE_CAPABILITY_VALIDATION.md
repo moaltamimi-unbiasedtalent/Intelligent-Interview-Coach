@@ -56,3 +56,9 @@ Whether to approve a higher `max_output_tokens_per_request` (at least 4,096) to 
 
 ## 12. Integrated requalification handoff
 P10E is classified **LIVE VALIDATION PARTIALLY COMPLETED**, not completed: acceptance conditions 11 to 14 are met only for smoke, agent and KB answer cases, and the interview, embedding, RAGAS and multilingual areas are NOT RUN. Remaining budget: USD 8.78 and 148 calls, usable only under the same guard; the budget was deliberately not spent merely to consume it. Integrated Candidate/Admin/Operations requalification may proceed after the owner accepts or amends P10E's scope; it was not started.
+
+## 13. Corrective wave P10E-R1 (added 2026-10-19; the evidence above is historical and unchanged)
+
+R1 (branch `fix/p10e-r1-core-live-qualification`, not merged) closes the two P10E blockers and runs the core live scope within the same cumulative ledger: the output cap is 4,096 (owner decision), the model-routing root cause (import-time default frozen before `.env` loading) is fixed with 0 of 90 R1 requests on an unexpected model, all 22 agent cases completed, a pre-registered 7-role interview harness and a pre-registered 14-case multilingual corpus were run live (results per language, all subjective metrics `PENDING_HUMAN_REVIEW`). Ledger after R1: 242 calls, USD 1.8629 committed upper bound, 58 calls and USD 8.1371 remaining. Semantic live calibration, RAGAS live and human review remain NOT RUN / NOT VERIFIED. Detail: `p10/P10E_R1_CORE_LIVE_QUALIFICATION.md`.
+
+P10E-R1 audited correction (2026-10-19): the multilingual findings first reported in R1 were measured with a defective harness and are corrected in `p10/P10E_R1_CORE_LIVE_QUALIFICATION.md` section 16; ledger 270 of 300 calls, USD 2.0249 committed.

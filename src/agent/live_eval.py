@@ -61,6 +61,17 @@ def load_live_cases(path: Path = CASES_PATH) -> list[dict]:
     return json.loads(path.read_text(encoding="utf-8"))["cases"]
 
 
+TERMINAL_STATUSES = ("COMPLETED", "AWAITING_HUMAN_INPUT", "STEP_LIMIT_REACHED", "FAILED", "GUARD_REFUSED", "PROVIDER_ERROR")
+
+
+def terminal_status(raw: str | None) -> str:
+    """Map the agent's recorded status to ONE explicit terminal class. An unknown status is never silently counted as success."""
+    r = (raw or "").strip().lower()
+    mapping = {"completed": "COMPLETED", "awaiting_human_input": "AWAITING_HUMAN_INPUT", "step_limit_reached": "STEP_LIMIT_REACHED",
+               "failed": "FAILED", "error": "FAILED", "guard_refused": "GUARD_REFUSED", "provider_error": "PROVIDER_ERROR"}
+    return mapping.get(r, f"OTHER:{r or 'unknown'}")
+
+
 def classify(case: dict, obs: Observation) -> dict:
     """Classify one observation against a case's expectations (pure/no provider)."""
     required = set(case.get("required_tools", []) or [])
@@ -85,10 +96,27 @@ def classify(case: dict, obs: Observation) -> dict:
     hitl_ok = (hitl_fired == hitl_expected) and (
         not hitl_expected or hitl_type is None or obs.pending_action_type == hitl_type)
 
-    completed = obs.status in ("completed", "awaiting_human_input", "step_limit_reached")
+    terminal = terminal_status(obs.status)
+    # STRICT completion (P10E-R1 correction): only a run that finished its task counts. A HITL pause and a step-limit stop are different outcomes and are
+    # reported separately; a run that was recorded before this correction keeps its original (looser) metric in its committed summary.
+    completed = terminal == "COMPLETED"
+    hitl_paused = terminal == "AWAITING_HUMAN_INPUT"
 
     return {
         "case_id": case["id"],
+        "terminal_status": terminal,
+        "raw_status": obs.status,
+        "hitl_pause_observed": hitl_paused,
+        "hitl_pause_expected": hitl_expected,
+        "expected_tools": sorted(required),
+        "forbidden_tool_list": sorted(forbidden),
+        "tools_used": list(obs.tools_used or []),
+        "missing_required_tools": sorted(required - used),
+        "retrieval_expected": retrieval_expected,
+        "retrieval_used": bool(obs.retrieval_used),
+        "pending_action_type": obs.pending_action_type,
+        "input_tokens": obs.input_tokens,
+        "output_tokens": obs.output_tokens,
         "tool_selection_ok": tool_selection_ok,
         "required_tool_recall_ok": required_ok,
         "forbidden_tools_used": forbidden_used,
@@ -106,6 +134,13 @@ def classify(case: dict, obs: Observation) -> dict:
 
 def _rate(hits: int, total: int) -> float:
     return round(hits / total, 3) if total else 0.0
+
+
+def _counts(values: list[str]) -> dict:
+    out: dict[str, int] = {}
+    for v in values:
+        out[v] = out.get(v, 0) + 1
+    return dict(sorted(out.items()))
 
 
 def _avg(values: list) -> float | None:
@@ -126,6 +161,11 @@ def aggregate(results: list[dict]) -> dict:
         "unnecessary_retrieval_rate": _rate(sum(r["unnecessary_retrieval"] for r in results), n),
         "hitl_decision_accuracy": _rate(sum(r["hitl_ok"] for r in results), n),
         "completion_rate": _rate(sum(r["completed"] for r in results), n),
+        "hitl_pause_rate": _rate(sum(1 for r in results if r["terminal_status"] == "AWAITING_HUMAN_INPUT"), n),
+        "expected_hitl_pause_rate": _rate(sum(1 for r in results if r["hitl_pause_expected"] and r["hitl_pause_observed"]), sum(1 for r in results if r["hitl_pause_expected"])),
+        "step_limit_rate": _rate(sum(1 for r in results if r["terminal_status"] == "STEP_LIMIT_REACHED"), n),
+        "failure_rate": _rate(sum(1 for r in results if r["terminal_status"] in ("FAILED", "PROVIDER_ERROR", "GUARD_REFUSED") or r["terminal_status"].startswith("OTHER:")), n),
+        "terminal_status_counts": _counts([r["terminal_status"] for r in results]),
         "average_tool_calls": _avg([r["tool_calls"] for r in results]),
         "average_latency_ms": _avg([r["latency_ms"] for r in results]),
         "average_total_tokens": _avg([r["total_tokens"] for r in results]),

@@ -143,8 +143,12 @@ def load_config() -> AppConfig:
     gemini_api_key = SecretStr(raw_gemini) if raw_gemini else None
     gemini_model = _read_setting(GEMINI_MODEL_NAME) or constants.LIVE_INTERVIEW_MODEL
 
+    from src.llm import models as _model_registry
+
     return AppConfig(
         api_key=api_key,
+        # P10E-R1: resolved at call time (after .env is loaded), not from the import-time constant, so OPENROUTER_MODEL_BALANCED is honoured.
+        model=_model_registry.model_id(_model_registry.ModelProfile.BALANCED),
         google_speech_project_id=speech_project,
         google_speech_location=speech_location,
         gemini_api_key=gemini_api_key,

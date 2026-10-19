@@ -76,7 +76,10 @@ def main(argv=None) -> int:
     p = sub.add_parser("provider-snapshot"); p.add_argument("--label", required=True)
     p = sub.add_parser("smoke"); p.add_argument("--profile", action="append", choices=["fast", "balanced", "advanced"])
     p = sub.add_parser("kb-quality"); p.add_argument("--profile", choices=["fast", "balanced", "advanced"], default="balanced")
-    sub.add_parser("auth-probe"); p = sub.add_parser("rescore-kb"); p.add_argument("run_dir")
+    sub.add_parser("auth-probe"); sub.add_parser("multilingual-offline"); sub.add_parser("multilingual-reclassify").add_argument("run_dir")
+    p = sub.add_parser("interview"); p.add_argument("--profile", choices=["fast", "balanced", "advanced"], default="balanced"); p.add_argument("--cases", default=None)
+    p = sub.add_parser("multilingual"); p.add_argument("--profile", choices=["fast", "balanced", "advanced"], default="balanced"); p.add_argument("--cases", default=None)
+    p = sub.add_parser("rescore-kb"); p.add_argument("run_dir")
     p = sub.add_parser("agent"); p.add_argument("--profile", choices=["fast", "balanced", "advanced"], default="balanced"); p.add_argument("--limit", type=int, default=None); p.add_argument("--cases", default=None, help="comma-separated case ids")
     a = ap.parse_args(argv)
     if a.cmd == "status":
@@ -108,6 +111,12 @@ def main(argv=None) -> int:
             print("REFUSED (credential_missing)"); return 3
         snap = R.snapshot(cfg.api_key.get_secret_value()); path = R.save(snap, a.label)
         print(json.dumps({"saved": str(path.relative_to(ROOT)), **{k: v for k, v in snap.items() if k != "fields"}, "fields": snap.get("fields")}, indent=1)); return 0
+    if a.cmd == "multilingual-reclassify":
+        from src.p10e import r1_evals as E
+        print(json.dumps(E.reclassify_run_post_hoc(Path(a.run_dir)), indent=1, ensure_ascii=False)); return 0
+    if a.cmd == "multilingual-offline":
+        from src.p10e import r1_evals as E
+        print(json.dumps(E.multilingual_offline(), indent=1, ensure_ascii=False)); return 0
     if a.cmd == "rescore-kb":
         from src.p10e import live_runs as R
         print(json.dumps(R.rescore_kb_run(Path(a.run_dir)), indent=1)); return 0
@@ -116,6 +125,14 @@ def main(argv=None) -> int:
             with _session("auth-failure-probe", "synthetic_fixture_corpus") as s:
                 from src.p10e import live_runs as R
                 out = R.run_auth_failure_probe(s)
+        elif a.cmd == "interview":
+            with _session("interview-quality", "synthetic_fixture_corpus") as s:
+                from src.p10e import r1_evals as E
+                out = E.run_interview_quality(s, a.profile, only=a.cases.split(",") if a.cases else None)
+        elif a.cmd == "multilingual":
+            with _session("multilingual-live", "synthetic_fixture_corpus") as s:
+                from src.p10e import r1_evals as E
+                out = E.run_multilingual_live(s, a.profile, only=a.cases.split(",") if a.cases else None)
         elif a.cmd == "smoke":
             with _session("smoke", "synthetic_fixture_corpus") as s:
                 from src.p10e import live_runs as R

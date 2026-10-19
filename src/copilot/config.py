@@ -14,6 +14,7 @@ from pydantic import BaseModel, SecretStr
 
 from src.copilot import constants
 from src.core import secrets as _secrets
+from src.llm import models as _model_registry
 
 __all__ = ["CopilotConfig", "load_config"]
 
@@ -171,7 +172,9 @@ def load_config() -> CopilotConfig:
     return CopilotConfig(
         api_key=SecretStr(raw_key) if raw_key else None,
         base_url=_read(BASE_URL_NAME) or constants.OPENROUTER_BASE_URL,
-        default_model=_read(MODEL_NAME) or constants.DEFAULT_MODEL,
+        # P10E-R1: resolved HERE, at call time, through the canonical registry. ``constants.DEFAULT_MODEL`` is computed once at import, before ``load_dotenv`` has applied
+        # OPENROUTER_MODEL_* overrides, so using it froze the code default (openai/gpt-5.6-terra) into every helper that builds a model from ``config.default_model``.
+        default_model=_read(MODEL_NAME) or _model_registry.model_id(_model_registry.ModelProfile.BALANCED),
         embedding_model=_read(EMBEDDING_MODEL_NAME)
         or constants.DEFAULT_EMBEDDING_MODEL,
         embedding_base_url=_read(EMBEDDING_BASE_URL_NAME)

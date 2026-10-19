@@ -21,7 +21,7 @@
   "max_spend_usd": 10,
   "max_provider_calls": 300,
   "max_input_tokens_per_request": 20000,
-  "max_output_tokens_per_request": 2000,
+  "max_output_tokens_per_request": 4096,
   "request_timeout_s": 60,
   "max_retries": 1,
   "max_concurrency": 2
@@ -49,7 +49,19 @@
    "max_concurrency"
   ],
   "scope": "All seven limits are owner-approved. USD 10 and 300 provider calls are CUMULATIVE across every P10E live execution; the 300-call allowance is a ceiling, not a spending target. USD 15 is a potential future ceiling and is NOT approved.",
-  "how_to_change": "Any increase needs a separate explicit owner approval recorded here in a reviewed commit. The guard refuses a spend limit above spend_authority.approved_total_usd."
+  "how_to_change": "Any increase needs a separate explicit owner approval recorded here in a reviewed commit. The guard refuses a spend limit above spend_authority.approved_total_usd.",
+  "changes": [
+   {
+    "authorization_version": 3,
+    "field": "max_output_tokens_per_request",
+    "from": 2000,
+    "to": 4096,
+    "approved_by": "Product Owner",
+    "approval_date": "2026-10-19",
+    "reference": "Product Owner's explicit approval in ChatGPT dated 2026-10-19 to increase the P10E evaluation output cap from 2000 to 4096.",
+    "purpose": "Permit the legitimate structured agent-tool requests that the product sets at 4,096 output tokens. It is a ceiling, not a target. No other limit changed: USD 10 total, 300 calls, 20,000 input tokens, 60 s, 1 retry, concurrency 2. The total spend, the call ceiling, the ledger genesis and the designated host are unchanged."
+   }
+  ]
  },
  "paid_execution_enabled": true,
  "spend_authority": {
@@ -63,7 +75,7 @@
    "The 300-call limit is global across all sessions, models, checkouts and terminals."
   ]
  },
- "authorization_version": 2,
+ "authorization_version": 3,
  "execution_environment": {
   "environment_id": "p10e-designated-host-owner-macos",
   "designated_on": "2026-10-19",
@@ -96,5 +108,21 @@
   "timeout, output cap, input limit, retry and concurrency enforced on the real request path (tested with the real SDK on a mock transport)",
   "host allowlist: openrouter.ai only",
   "full offline regression green (4,919 tests; 26 evaluators)"
+ ],
+ "limits_history": [
+  {
+   "authorization_version": 2,
+   "recorded": "2026-10-19",
+   "limits": {
+    "max_spend_usd": 10,
+    "max_provider_calls": 300,
+    "max_input_tokens_per_request": 20000,
+    "max_output_tokens_per_request": 2000,
+    "request_timeout_s": 60,
+    "max_retries": 1,
+    "max_concurrency": 2
+   },
+   "note": "P10E original approval (PR #201). Preserved for history; superseded only in max_output_tokens_per_request."
+  }
  ]
 }

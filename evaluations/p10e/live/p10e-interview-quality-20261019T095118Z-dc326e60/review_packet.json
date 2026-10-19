@@ -1,0 +1,1133 @@
+{
+ "rubric": [
+  "job_description_understanding",
+  "role_relevance",
+  "competency_alignment",
+  "question_clarity",
+  "behavioural_interview_quality",
+  "technical_question_appropriateness",
+  "follow_up_relevance",
+  "feedback_specificity",
+  "feedback_usefulness",
+  "professional_tone",
+  "bias_sensitivity",
+  "unsupported_claim_judgement",
+  "final_feedback_structure"
+ ],
+ "reviewer": null,
+ "cases": [
+  {
+   "case": "ie-software-engineer",
+   "role_family": "Technology",
+   "scenario": {
+    "target_role": "Backend Software Engineer",
+    "industry_or_sector": "fintech",
+    "career_level": "mid",
+    "job_description": "We are hiring a Backend Software Engineer for a payments platform. You will design and operate REST services in Python, work with PostgreSQL, write automated tests, review code, and help reduce API latency and incident frequency. Experience with message queues and monitoring is valued.",
+    "candidate_background": "Synthetic persona 'Candidate A': four years building Python web services, PostgreSQL schema work, unit and integration testing, on-call rotations. Has not worked with Kubernetes.",
+    "interview_types": [
+     "technical"
+    ]
+   },
+   "generated_question": {
+    "question_id": 1,
+    "question": "You\u2019re working on a Python REST API for a payments platform, and one endpoint is showing high latency in production while also causing occasional incidents under peak load. How would you investigate the problem and decide what changes to make across the application, database, testing, and monitoring layers?",
+    "question_type": "technical",
+    "competency": "performance troubleshooting",
+    "difficulty": "moderate",
+    "interviewer_intent": "A strong answer should show a structured approach to diagnosing backend performance issues, using evidence to isolate bottlenecks and proposing pragmatic improvements that reduce both latency and operational risk.",
+    "expected_answer_elements": [
+     "Start with measurable symptoms such as latency, error rates, throughput, and recent changes",
+     "Use monitoring, logs, traces, or profiling to identify whether the bottleneck is in application code, database queries, or external dependencies",
+     "Consider PostgreSQL investigation steps such as query plans, indexing, schema or query inefficiencies, and connection behavior",
+     "Discuss safe application-level improvements in Python REST services such as caching, batching, async/background processing where appropriate, or reducing unnecessary work",
+     "Address incident reduction through testing, rollout strategy, alerting, and runbook or on-call readiness",
+     "Mention validating the fix with automated tests, load or integration testing, and post-change measurement against baseline metrics"
+    ]
+   },
+   "synthetic_candidate_answer": "In my last role I owned our order service. API latency was high, so I added database indexes and caching for the most frequent queries. Latency improved and the on-call team had fewer alerts. I wrote tests for the changes and my teammates reviewed them.",
+   "evaluation": {
+    "overall_score": 59,
+    "relevance": 7,
+    "structure": 6,
+    "evidence": 5,
+    "role_knowledge": 6,
+    "problem_solving": 5,
+    "communication": 7,
+    "credibility": 7,
+    "strengths": [
+     "Stays on topic by addressing API latency with concrete levers like indexing and caching.",
+     "Gives a real past example from owning an order service, which adds practical credibility.",
+     "Mentions testing and code review, showing awareness of safe change management.",
+     "Links the work to operational impact by noting fewer alerts."
+    ],
+    "improvement_areas": [
+     "Answer the full scope of the question across application, database, testing, and monitoring layers rather than focusing mostly on database and caching.",
+     "Explain the investigation process first: how you would confirm symptoms, use logs/metrics/traces, and isolate whether the bottleneck is in code, queries, or infrastructure.",
+     "Show decision-making under peak load, including how you would evaluate trade-offs, risks, and rollout steps.",
+     "Add more depth on incident reduction, such as resilience measures, rate limiting, queueing, retries, or timeout handling where appropriate.",
+     "Be more specific about testing: what unit, integration, performance, or regression tests you would add before release."
+    ],
+    "missing_evidence": [
+     "No description of how the latency issue was diagnosed in production.",
+     "No mention of PostgreSQL query analysis, execution plans, or identifying slow queries.",
+     "No monitoring details such as dashboards, alerts, tracing, or SLO/error-rate review.",
+     "No discussion of peak-load behavior, concurrency limits, or load/performance testing.",
+     "No explanation of how changes would be prioritised or validated after deployment.",
+     "No detail on application-layer changes beyond caching."
+    ],
+    "stronger_answer_structure": "Use a clear 4-part structure: 1) Investigate and baseline the issue with production metrics, traces, logs, and slow-query data; 2) Isolate likely causes across application code, database access patterns, and traffic/load characteristics; 3) Propose changes by layer\u2014application, database, testing, and monitoring\u2014with trade-offs and rollout plan; 4) Explain how you would validate success using latency, error rate, and incident frequency after deployment.",
+    "improved_example_answer": "Example only \u2014 personalise with your own real experience: \"I\u2019d start by quantifying the problem in production: which endpoint, which requests, what p95/p99 latency looks like, and whether incidents correlate with traffic spikes, specific queries, or downstream calls. Then I\u2019d use logs, tracing, and database metrics to isolate the bottleneck\u2014for example, checking for repeated queries, missing indexes, lock contention, or inefficient Python code paths. On the application side, I\u2019d reduce unnecessary work in the request path, consider safe caching for high-read patterns, and review timeouts, retries, and concurrency limits so peak load does not turn into incidents. On the database side, I\u2019d inspect query plans, add or adjust indexes only where the access pattern supports them, and look for schema or query changes that reduce load. Before release, I\u2019d add unit and integration tests plus load or regression tests for the endpoint. I\u2019d roll changes out gradually and monitor latency, error rate, and alert volume to confirm the fix actually improves both performance and stability.\"",
+    "follow_up_question": "How would you determine whether the main cause was Python application logic, a PostgreSQL query problem, or a downstream dependency under peak load?"
+   },
+   "human_ratings": {
+    "job_description_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "role_relevance": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "competency_alignment": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_clarity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "behavioural_interview_quality": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "technical_question_appropriateness": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "follow_up_relevance": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "feedback_specificity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "feedback_usefulness": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "professional_tone": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "bias_sensitivity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "unsupported_claim_judgement": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "final_feedback_structure": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ie-finance-analyst",
+   "role_family": "Finance",
+   "scenario": {
+    "target_role": "Financial Analyst",
+    "industry_or_sector": "manufacturing",
+    "career_level": "junior",
+    "job_description": "The Financial Analyst supports monthly close, budgeting and forecasting for a manufacturing business unit. You will build variance analyses in Excel, reconcile ledgers, prepare management reports and flag risks to the finance manager. Accuracy and clear communication are essential.",
+    "candidate_background": "Synthetic persona 'Candidate B': two years in accounts and reporting, advanced Excel, month-end reconciliations, supported one annual budget round. No experience with SAP.",
+    "interview_types": [
+     "competency"
+    ]
+   },
+   "generated_question": {
+    "question_id": 1,
+    "question": "Tell me about a time you found and resolved a discrepancy during a month-end reconciliation or reporting process. What steps did you take, how did you communicate the issue, and what was the outcome?",
+    "question_type": "competency",
+    "competency": "attention to detail",
+    "difficulty": "moderate",
+    "interviewer_intent": "A strong answer should show a structured approach to identifying the issue, checking evidence, resolving it accurately, and communicating clearly with relevant stakeholders.",
+    "expected_answer_elements": [
+     "Brief context and the specific discrepancy identified",
+     "Methodical steps taken to investigate and verify the cause",
+     "Use of relevant tools or data analysis, such as Excel or ledger checks",
+     "Clear communication with manager or team about risk, timing, or impact",
+     "Accurate resolution and any control or process improvement made afterward"
+    ]
+   },
+   "synthetic_candidate_answer": "During month-end I reconciled the supplier ledger and found that some invoices were booked twice. I corrected them and told my manager. After that we added a check to the process so it would not happen again.",
+   "evaluation": {
+    "overall_score": 54,
+    "relevance": 8,
+    "structure": 5,
+    "evidence": 3,
+    "role_knowledge": 6,
+    "problem_solving": 5,
+    "communication": 5,
+    "credibility": 7,
+    "strengths": [
+     "Directly answers the question with a relevant month-end reconciliation example.",
+     "Shows ownership by identifying a discrepancy and taking corrective action.",
+     "Mentions communication with the manager and a process improvement to prevent recurrence.",
+     "Context fits the target role's focus on reconciliations and accuracy."
+    ],
+    "improvement_areas": [
+     "Use a clearer STAR structure so the situation, actions and outcome are easier to follow.",
+     "Add specific steps taken to investigate the duplicate invoices and confirm the root cause.",
+     "Explain how the correction was made in the ledger or reporting process.",
+     "Describe how the issue was communicated beyond 'told my manager,' including timing and key message.",
+     "Include the business outcome, such as impact on close accuracy, reporting, or prevention of future errors."
+    ],
+    "missing_evidence": [
+     "How the duplicate invoices were detected during the reconciliation.",
+     "What checks were performed to verify the discrepancy was real and complete.",
+     "Whether any entries, reversals, or approvals were required to correct the issue.",
+     "What the added process check was and how it reduced recurrence risk.",
+     "Any detail on scale, urgency, or effect on month-end reporting accuracy or timelines."
+    ],
+    "stronger_answer_structure": "Use STAR: Situation \u2014 briefly describe the month-end reconciliation context and what looked wrong. Task \u2014 explain your responsibility for ensuring the ledger was accurate before close. Action \u2014 walk through how you investigated, verified duplicate invoices, corrected them, and escalated the issue clearly to your manager. Result \u2014 state the outcome for the close/reporting process and the control added to prevent repeat errors.",
+    "improved_example_answer": "Example only \u2014 personalise with your real experience: \"During a month-end supplier ledger reconciliation, I noticed that a small group of invoices did not match my expected balance. I was responsible for making sure the ledger was accurate before close, so I reviewed the invoice listings and traced the entries back to the supporting records to confirm that some had been posted twice. Once I verified the issue, I corrected the duplicate postings through the normal process and let my manager know what I had found, the likely cause, and any impact on the month-end numbers. After the correction, I helped add an extra review check for duplicate invoice numbers during reconciliation so the issue would be caught earlier in future closes. The result was a cleaner reconciliation and a stronger control in the process.\"",
+    "follow_up_question": "How did you verify that all duplicate invoices had been identified and that the correction did not create any further reporting issues?"
+   },
+   "human_ratings": {
+    "job_description_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "role_relevance": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "competency_alignment": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_clarity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "behavioural_interview_quality": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "technical_question_appropriateness": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "follow_up_relevance": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "feedback_specificity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "feedback_usefulness": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "professional_tone": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "bias_sensitivity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "unsupported_claim_judgement": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "final_feedback_structure": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ie-operations-manager",
+   "role_family": "Operations",
+   "scenario": {
+    "target_role": "Operations Manager",
+    "industry_or_sector": "logistics",
+    "career_level": "manager",
+    "job_description": "The Operations Manager leads a regional distribution centre with about forty staff. Responsibilities: daily shift planning, safety compliance, on-time delivery, inventory accuracy, process improvement and managing supplier and carrier performance.",
+    "candidate_background": "Synthetic persona 'Candidate C': six years in warehouse operations, two as shift supervisor of fifteen people, introduced a picking-route change, safety champion. No budget ownership yet.",
+    "interview_types": [
+     "situational"
+    ]
+   },
+   "generated_question": {
+    "question_id": 1,
+    "question": "Imagine you start as Operations Manager and, within your first month, on-time delivery in the distribution centre drops while inventory discrepancies also increase during a busy period. How would you assess the situation, prioritise actions, and stabilise performance without compromising safety?",
+    "question_type": "situational",
+    "competency": "Operational prioritisation",
+    "difficulty": "moderate",
+    "interviewer_intent": "A strong answer should show a structured approach to diagnosing operational issues, balancing service, accuracy and safety, and coordinating people and process changes in a warehouse or distribution setting.",
+    "expected_answer_elements": [
+     "Clarifies immediate facts and scope of the problem using key operational data",
+     "Prioritises safety and business-critical risks before broader process changes",
+     "Outlines a practical short-term stabilisation plan for shifts, workflow and communication",
+     "Describes root-cause analysis across staffing, process, inventory and carrier factors",
+     "Explains how to involve team leads, staff, suppliers or carriers appropriately",
+     "Defines how success would be measured through specific operational indicators",
+     "Shows calm decision-making and follow-up to prevent recurrence"
+    ]
+   },
+   "synthetic_candidate_answer": "If a carrier delays a large delivery I would first check which orders are affected and talk to the customer. Then I would see if we can use another carrier and tell my team what changes on the shift. Afterwards I would speak with the carrier about the problem.",
+   "evaluation": {
+    "overall_score": 38,
+    "relevance": 4,
+    "structure": 5,
+    "evidence": 2,
+    "role_knowledge": 4,
+    "problem_solving": 3,
+    "communication": 6,
+    "credibility": 5,
+    "strengths": [
+     "Addresses an operational disruption with immediate actions.",
+     "Shows awareness of customer communication.",
+     "Mentions adjusting shift activity and exploring an alternative carrier.",
+     "Includes follow-up with the carrier after the incident."
+    ],
+    "improvement_areas": [
+     "Answer only addresses a carrier delay, but the scenario also involves falling on-time delivery and rising inventory discrepancies across the site.",
+     "Use a clearer assess-prioritise-stabilise structure to answer the full question.",
+     "Explain how you would diagnose root causes inside the distribution centre, not just external transport issues.",
+     "State how safety would be protected during the busy period while performance is being recovered.",
+     "Add specific short-term control actions for inventory accuracy, shift planning and process discipline.",
+     "Show how you would prioritise competing issues and decide what to tackle first."
+    ],
+    "missing_evidence": [
+     "How the candidate would assess site data such as late-order patterns, error hotspots, staffing levels or backlog.",
+     "How inventory discrepancies would be investigated and contained.",
+     "Any safety actions such as reinforcing safe pace, checks, supervision or stopping unsafe workarounds.",
+     "Any coordination with supervisors, warehouse, inventory control, suppliers and carriers.",
+     "Any plan for stabilising operations over the first days and weeks.",
+     "Any success measures or checkpoints to confirm recovery."
+    ],
+    "stronger_answer_structure": "Use a 4-part situational structure: 1) Assess quickly: review on-time delivery trends, discrepancy reports, staffing, backlog, inbound/outbound flow and any recent process changes; speak with shift leads and observe the floor. 2) Prioritise: protect safety first, then stabilise customer service on critical orders, then contain inventory errors so they do not spread. 3) Act: rebalance labour, tighten receiving/picking/dispatch checks, isolate high-risk SKUs or zones, escalate carrier or supplier issues, and communicate clear shift priorities. 4) Monitor: track daily service, inventory accuracy and safety indicators, review root causes, and implement corrective actions once stable.",
+    "improved_example_answer": "Example only \u2014 personalise this with your real experience: \"In that situation, my first priority would be safety and getting a clear picture of what is driving both issues. In the first few days, I would review late-order patterns, inventory discrepancy reports, staffing levels, backlog, and any recent process or volume changes, and I would speak with shift supervisors and observe the floor. I would then prioritise critical customer orders while making sure the team does not rush or bypass safe procedures. To stabilise performance, I would rebalance labour to the biggest bottlenecks, increase accuracy checks at receiving, picking and dispatch, and contain any inventory issues to the affected products or zones until we understand the cause. If carrier or supplier performance is contributing, I would escalate quickly and look at contingency options. I would communicate a simple daily plan to the team and track on-time delivery, inventory accuracy and safety closely until performance recovers.\"",
+    "follow_up_question": "What specific checks or controls would you put in place to improve inventory accuracy during that busy period without slowing the operation too much?"
+   },
+   "human_ratings": {
+    "job_description_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "role_relevance": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "competency_alignment": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_clarity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "behavioural_interview_quality": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "technical_question_appropriateness": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "follow_up_relevance": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "feedback_specificity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "feedback_usefulness": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "professional_tone": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "bias_sensitivity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "unsupported_claim_judgement": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "final_feedback_structure": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ie-sales-executive",
+   "role_family": "Sales",
+   "scenario": {
+    "target_role": "Account Executive",
+    "industry_or_sector": "software as a service",
+    "career_level": "mid",
+    "job_description": "The Account Executive owns the full sales cycle for mid-market customers: prospecting, discovery, demos, negotiation and closing. You will manage a pipeline in the CRM, forecast accurately and work with customer success on handover. Quota carrying role.",
+    "candidate_background": "Synthetic persona 'Candidate D': three years selling business software to small companies, CRM discipline, closed deals up to a modest size. Has not sold to enterprise accounts.",
+    "interview_types": [
+     "behavioural"
+    ]
+   },
+   "generated_question": {
+    "question_id": 1,
+    "question": "Tell me about a time you managed a full sales cycle from initial outreach through close for a business software deal. What was your approach at each stage, how did you keep your CRM and forecast up to date, and what did you learn from the outcome?",
+    "question_type": "behavioural",
+    "competency": "sales process management",
+    "difficulty": "moderate",
+    "interviewer_intent": "A strong answer should show structured ownership of the sales cycle, disciplined pipeline management, sound judgement in forecasting, and reflection on lessons learned.",
+    "expected_answer_elements": [
+     "Clear situation, prospect context and goal",
+     "Specific actions across prospecting, discovery, demo, negotiation and close",
+     "How the candidate qualified the opportunity and advanced the deal",
+     "Concrete use of CRM to track stages, next steps and deal health",
+     "How forecast updates were made and what signals informed confidence level",
+     "Outcome of the deal and what the candidate learned for future opportunities"
+    ]
+   },
+   "synthetic_candidate_answer": "I once had a prospect who kept postponing a decision. I asked what was holding them back, and it was a worry about onboarding time. I offered a short onboarding plan and a reference call with another customer, and they signed the following month.",
+   "evaluation": {
+    "overall_score": 49,
+    "relevance": 6,
+    "structure": 5,
+    "evidence": 4,
+    "role_knowledge": 5,
+    "problem_solving": 6,
+    "communication": 7,
+    "credibility": 7,
+    "strengths": [
+     "Addresses a real sales scenario with a clear obstacle before close",
+     "Shows basic discovery by asking what was blocking the decision",
+     "Takes a practical action to reduce risk with an onboarding plan and customer reference",
+     "Gives a concise outcome that the deal signed"
+    ],
+    "improvement_areas": [
+     "Cover the full sales cycle, not just the late-stage objection and close",
+     "Explain the approach at each stage: outreach, discovery, demo, negotiation and close",
+     "Include how the CRM was updated and how the forecast changed during the deal",
+     "Add more concrete detail about the customer context, stakeholders and decision process",
+     "State what was learned from the outcome and how that changed future selling behavior"
+    ],
+    "missing_evidence": [
+     "How the prospect was sourced or initially engaged",
+     "What discovery questions were asked beyond the final objection",
+     "How the product demo was tailored to the prospect's needs",
+     "Any negotiation details such as pricing, terms or approvals",
+     "Specific CRM hygiene actions such as next steps, stage updates or close date changes",
+     "How the candidate assessed forecast confidence or deal risk",
+     "What the candidate learned and applied afterward",
+     "Any measurable detail such as deal size, sales cycle length or number of stakeholders"
+    ],
+    "stronger_answer_structure": "Use a STAR-style sales version: Situation (customer type, problem, stake in the deal), Task (your sales objective and where the deal stood), Actions by stage (outreach, discovery, demo, objection handling, negotiation, close, plus CRM and forecast updates throughout), Result (closed/lost, timing, business impact), Learning (what you would repeat or change next time).",
+    "improved_example_answer": "Example only \u2014 personalise with your real experience: \"I managed a business software opportunity where a prospect engaged after initial outreach and moved into discovery, but the deal slowed late in the cycle because they were worried implementation would take too long. In discovery, I confirmed their decision criteria and timeline, and after the demo I kept detailed CRM notes on stakeholders, next steps and close risk. When the deal stalled, I asked directly what was blocking a decision. Once they raised onboarding concerns, I worked on a simple onboarding plan and arranged a reference call with an existing customer to reduce perceived risk. I updated the opportunity stage and forecast based on that conversation and set a clear follow-up plan. The customer signed the next month. My main learning was that implementation risk should be surfaced earlier in discovery so I can address it before the deal slips.\"",
+    "follow_up_question": "How did you track that opportunity in your CRM and decide whether it belonged in your forecast while the prospect was delaying?"
+   },
+   "human_ratings": {
+    "job_description_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "role_relevance": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "competency_alignment": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_clarity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "behavioural_interview_quality": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "technical_question_appropriateness": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "follow_up_relevance": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "feedback_specificity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "feedback_usefulness": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "professional_tone": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "bias_sensitivity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "unsupported_claim_judgement": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "final_feedback_structure": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ie-customer-support",
+   "role_family": "Customer service",
+   "scenario": {
+    "target_role": "Customer Support Specialist",
+    "industry_or_sector": "e-commerce",
+    "career_level": "entry",
+    "job_description": "The Customer Support Specialist answers customer questions by chat and email, resolves order, delivery and refund issues, documents cases and escalates complex problems. Empathy, clear writing and accuracy under time pressure are required.",
+    "candidate_background": "Synthetic persona 'Candidate E': one year in a retail store handling returns and complaints, comfortable with chat tools, no formal support-ticket system experience.",
+    "interview_types": [
+     "situational"
+    ]
+   },
+   "generated_question": {
+    "question_id": 1,
+    "question": "Imagine you are handling two customer chats at once during a busy period. One customer is upset that their order has not arrived, and the other wants a refund for an item they say was damaged. How would you manage both conversations while staying accurate, empathetic and efficient?",
+    "question_type": "situational",
+    "competency": "Customer communication and prioritisation",
+    "difficulty": "moderate",
+    "interviewer_intent": "A strong answer should show calm prioritisation, empathy in written communication, accurate information gathering, clear next steps, and awareness of when to escalate or document each case.",
+    "expected_answer_elements": [
+     "A brief method for prioritising and managing multiple conversations",
+     "Empathetic, professional tone tailored to upset customers",
+     "Steps to gather key order or refund details before acting",
+     "Focus on accuracy and avoiding rushed or incorrect promises",
+     "Clear explanation of next steps and expected timelines",
+     "Documentation of each case for continuity",
+     "Recognition of when a case should be escalated"
+    ]
+   },
+   "synthetic_candidate_answer": "If a customer is angry because a parcel has not arrived, I would apologise, check the tracking, and explain the next step. If it is lost I would arrange a replacement or refund according to policy and write a note in the case.",
+   "evaluation": {
+    "overall_score": 49,
+    "relevance": 6,
+    "structure": 6,
+    "evidence": 3,
+    "role_knowledge": 5,
+    "problem_solving": 4,
+    "communication": 6,
+    "credibility": 7,
+    "strengths": [
+     "Addresses a core part of the scenario by apologising, checking tracking and explaining next steps.",
+     "Shows awareness of policy-based resolution through replacement or refund.",
+     "Mentions documentation by noting the case.",
+     "Tone is customer-focused and reasonably empathetic."
+    ],
+    "improvement_areas": [
+     "Answer both parts of the scenario, not just the delayed-order customer.",
+     "Explain how you would manage two chats at once, including prioritisation and keeping responses accurate.",
+     "Include how you would handle the damaged-item refund request specifically.",
+     "Show a clearer step-by-step process for balancing empathy, speed and accuracy.",
+     "Add more detail on when you would escalate a complex issue."
+    ],
+    "missing_evidence": [
+     "No response to the second customer asking for a refund for a damaged item.",
+     "No explanation of how the candidate would juggle two simultaneous chats during a busy period.",
+     "No mention of setting expectations, using concise updates or managing response times.",
+     "No concrete example of verifying order details before taking action.",
+     "No detail on documenting both cases clearly or escalating if policy exceptions arise."
+    ],
+    "stronger_answer_structure": "Use a simple situational structure: 1) acknowledge both customers quickly so neither feels ignored, 2) prioritise immediate actions and verify details for each case, 3) explain the specific resolution path for the late order and the damaged-item refund, 4) mention documentation and escalation, and 5) close by showing how you stay empathetic, accurate and efficient while handling both chats.",
+    "improved_example_answer": "Example only \u2014 personalise this with your real experience: \"If I were handling both chats at once, I would first acknowledge both customers quickly so they know I am helping them. For the delayed order, I would apologise, confirm the order details, check tracking and explain the next step based on what I find. If the parcel appears lost, I would follow policy for a replacement or refund and document the case clearly. For the damaged item, I would apologise, confirm the order and the issue, review what is needed under the refund policy, and guide the customer through the refund or replacement process. Throughout both chats, I would keep messages short and clear, double-check details before taking action, and escalate if something falls outside standard policy.\"",
+    "follow_up_question": "How would you decide which of the two customers to prioritise first if both are demanding an immediate answer?"
+   },
+   "human_ratings": {
+    "job_description_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "role_relevance": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "competency_alignment": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_clarity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "behavioural_interview_quality": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "technical_question_appropriateness": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "follow_up_relevance": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "feedback_specificity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "feedback_usefulness": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "professional_tone": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "bias_sensitivity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "unsupported_claim_judgement": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "final_feedback_structure": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ie-people-hr",
+   "role_family": "People and HR",
+   "scenario": {
+    "target_role": "HR Business Partner",
+    "industry_or_sector": "professional services",
+    "career_level": "senior",
+    "job_description": "The HR Business Partner advises leaders in a 300-person consulting business on hiring, performance, employee relations, engagement and organisational change, using people data and employment-law basics. Discretion and influencing without authority are critical.",
+    "candidate_background": "Synthetic persona 'Candidate F': eight years in HR generalist and partner roles, led an engagement survey follow-up, handled disciplinary processes with legal support. No experience in works councils.",
+    "interview_types": [
+     "competency"
+    ]
+   },
+   "generated_question": {
+    "question_id": 1,
+    "question": "Tell me about a time you had to influence a senior leader to change their approach to a people issue when you did not have direct authority. What was the situation, how did you make your case, and what was the outcome?",
+    "question_type": "competency",
+    "competency": "influencing_without_authority",
+    "difficulty": "moderate",
+    "interviewer_intent": "A strong answer should show credible stakeholder management, sound HR judgement, appropriate use of data and policy, and a balanced approach to achieving a business-aligned people outcome.",
+    "expected_answer_elements": [
+     "Clear context involving a leader and a meaningful people issue",
+     "Specific actions used to influence rather than instruct",
+     "Use of relevant evidence such as people data, policy, risk or employee impact",
+     "How competing business and people priorities were balanced",
+     "How discretion and confidentiality were handled",
+     "Outcome achieved and what the candidate learned"
+    ]
+   },
+   "synthetic_candidate_answer": "A manager wanted to dismiss a team member quickly. I asked for the facts and the documented performance history, explained the risk of acting without a fair process, and agreed a plan with clear targets. The employee improved over three months.",
+   "evaluation": {
+    "overall_score": 61,
+    "relevance": 8,
+    "structure": 6,
+    "evidence": 5,
+    "role_knowledge": 7,
+    "problem_solving": 7,
+    "communication": 7,
+    "credibility": 8,
+    "strengths": [
+     "Directly addresses influencing a manager without formal authority on a people issue.",
+     "Shows sound HR judgement by asking for facts and documented performance history.",
+     "Identifies process risk and fairness before dismissal.",
+     "Includes a clear outcome: a performance plan was agreed and the employee improved."
+    ],
+    "improvement_areas": [
+     "Use a fuller STAR-style structure so the situation, stakes, actions and outcome are clearer.",
+     "Explain how you influenced the senior leader specifically, not just what advice you gave.",
+     "Add more detail on the performance-management plan, your reasoning and how buy-in was secured.",
+     "Show stronger use of data, policy or employment-law basics, since these are relevant to the role.",
+     "Quantify or qualify the business impact beyond the employee improving."
+    ],
+    "missing_evidence": [
+     "The seniority of the leader and why they were resistant to changing approach.",
+     "What facts, evidence or people data were reviewed.",
+     "What specific risks were explained, for example employee relations, legal, fairness or team impact.",
+     "How the candidate balanced challenge with partnership and discretion.",
+     "What clear targets, support measures or review cadence were included in the plan.",
+     "What the broader outcome was for the team, manager or business."
+    ],
+    "stronger_answer_structure": "Use a concise STAR structure: Situation \u2014 who the leader was, what they wanted to do and why it mattered; Task \u2014 your responsibility as HR partner and the risk to manage; Action \u2014 how you gathered evidence, framed the risk, used policy/data, and influenced the leader without authority; Result \u2014 what changed, what the employee and manager did next, and the business outcome; Reflection \u2014 what this shows about your approach as an HR Business Partner.",
+    "improved_example_answer": "Example only \u2014 personalise with your own real experience: \"In one case, a manager wanted to move quickly to dismiss an employee over performance concerns. As the HR partner, I needed to protect the business, ensure a fair process and help the manager take a more effective approach, even though I did not have direct authority. I first asked for the documented performance history and specific examples, then I talked the manager through the risks of acting without a fair process, including employee relations and legal risk. Rather than just saying no, I proposed a practical alternative: a structured performance plan with clear expectations, review points and manager support. Framing it around both fairness and business risk helped me gain their agreement. Over the next three months, the employee improved against the agreed targets, and the manager adopted a more disciplined approach to performance management.\"",
+    "follow_up_question": "How did you tailor your message to persuade the manager, and what did you do when they initially wanted to move straight to dismissal?"
+   },
+   "human_ratings": {
+    "job_description_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "role_relevance": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "competency_alignment": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_clarity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "behavioural_interview_quality": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "technical_question_appropriateness": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "follow_up_relevance": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "feedback_specificity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "feedback_usefulness": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "professional_tone": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "bias_sensitivity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "unsupported_claim_judgement": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "final_feedback_structure": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ie-marketing-manager",
+   "role_family": "Marketing",
+   "scenario": {
+    "target_role": "Digital Marketing Manager",
+    "industry_or_sector": "consumer goods",
+    "career_level": "manager",
+    "job_description": "The Digital Marketing Manager plans and runs paid, email and social campaigns for a consumer brand, owns the channel budget, measures performance with analytics and reports results to the marketing director. Test-and-learn mindset required.",
+    "candidate_background": "Synthetic persona 'Candidate G': five years in digital marketing, email and paid-social campaigns, managed a small budget and one junior marketer. No experience with television advertising.",
+    "interview_types": [
+     "behavioural"
+    ]
+   },
+   "generated_question": {
+    "question_id": 1,
+    "question": "Tell me about a time you managed a digital campaign budget across channels and had to adjust your plan based on performance data. What was the situation, how did you decide what to change, and what was the outcome?",
+    "question_type": "behavioural",
+    "competency": "data-driven decision making",
+    "difficulty": "moderate",
+    "interviewer_intent": "A strong answer should show structured ownership of channel spend, use of performance metrics to make trade-offs, and a test-and-learn approach tied to business results.",
+    "expected_answer_elements": [
+     "Clear campaign context, goals and channels involved",
+     "Specific budget responsibility and scope of decision-making",
+     "Performance metrics used to evaluate results",
+     "What data or insights triggered a change in plan",
+     "Actions taken to reallocate budget, pause, test or optimise",
+     "Reasoning behind the decision and trade-offs considered",
+     "Outcome achieved, with evidence if available",
+     "Reflection on what was learned and how it informed future campaigns"
+    ]
+   },
+   "synthetic_candidate_answer": "We launched an email campaign for a new product. I split the list into two groups and tested two subject lines. The second version got more opens, so we used it for the rest of the list and the campaign met its sales goal.",
+   "evaluation": {
+    "overall_score": 46,
+    "relevance": 5,
+    "structure": 6,
+    "evidence": 3,
+    "role_knowledge": 4,
+    "problem_solving": 4,
+    "communication": 7,
+    "credibility": 6,
+    "strengths": [
+     "Answers with a clear campaign example rather than speaking only in generalities.",
+     "Shows awareness of testing and using performance data to make a change.",
+     "Mentions an outcome tied to the campaign meeting its sales goal.",
+     "Response is concise and easy to follow."
+    ],
+    "improvement_areas": [
+     "Address the full question by explaining the budget across channels, not just an email test.",
+     "Use a fuller STAR-style structure: situation, task, actions, reasoning, and outcome.",
+     "Explain how performance data was evaluated beyond open rates, especially metrics linked to sales.",
+     "Describe the decision-making process for reallocating spend or changing the plan.",
+     "Show more ownership and leadership, especially relevant for a manager role.",
+     "Add specific scale and context, such as budget size, channels involved, timeline, and constraints."
+    ],
+    "missing_evidence": [
+     "Any cross-channel budget management example.",
+     "Specific budget amounts, allocations, or reallocation decisions.",
+     "Performance metrics beyond opens, such as click-through, conversion, CPA, ROAS, or revenue impact.",
+     "Why the original plan needed adjusting and what alternatives were considered.",
+     "How the candidate decided the subject-line result was strong enough to roll out.",
+     "Any involvement of paid or social channels, which are central to the role.",
+     "Evidence of reporting results or influencing stakeholders.",
+     "Concrete details on the sales goal or the final business impact."
+    ],
+    "stronger_answer_structure": "Start with the campaign objective, channels, budget, and your role. Then explain the early performance data you reviewed, what it showed, and what decision you made to adjust budget or tactics across channels. Briefly cover why you chose that change over other options. End with measurable results and what you learned for future campaigns.",
+    "improved_example_answer": "Example only \u2014 personalise with your real experience: \"In one campaign, I was responsible for a launch budget split across email and paid channels. After the first phase, I reviewed the early data and saw one element was outperforming the others against our goal. I compared the key metrics, identified where we were getting stronger engagement and downstream conversion signals, and adjusted the plan by shifting emphasis toward the better-performing approach while stopping the weaker version. I also communicated the change and the rationale to stakeholders. As a result, we improved campaign efficiency and still met the sales target. Looking back, the main lesson was to set clear decision thresholds early so we could reallocate budget faster.\"",
+    "follow_up_question": "Can you give me a more detailed example where you managed budget across multiple digital channels and explain exactly which metrics led you to reallocate spend?"
+   },
+   "human_ratings": {
+    "job_description_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "role_relevance": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "competency_alignment": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_clarity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "behavioural_interview_quality": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "technical_question_appropriateness": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "follow_up_relevance": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "feedback_specificity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "feedback_usefulness": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "professional_tone": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "bias_sensitivity": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "unsupported_claim_judgement": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "final_feedback_structure": {
+     "rating": null,
+     "reviewer": null,
+     "date": null,
+     "comment": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,237 @@
+{
+ "area": "interview-quality",
+ "authorization_version": 3,
+ "budget": {
+  "call_limit": 300,
+  "ceiling_usd": "10",
+  "cost_basis": "calculated from the published price snapshot (or the larger provider-reported figure); the provider's billing dashboard may differ",
+  "cumulative": {
+   "approved_total_usd": "10",
+   "call_cap": 300,
+   "calls": 228,
+   "committed_usd": "1.81079575",
+   "entries_known": 227,
+   "entries_rejected": 1,
+   "entries_unknown": 0,
+   "environment_id": "p10e-designated-host-owner-macos",
+   "genesis_id": "ff65d28571644fdc9546c922dfe24ca5",
+   "pending": 0,
+   "remaining_calls": 72,
+   "remaining_usd": "8.18920425",
+   "session_id": "e708cc28a7b14ff38fff94a0552b84d1"
+  },
+  "latency_ms_max": 13207,
+  "latency_ms_p50": 9029,
+  "refusals": [],
+  "run_calls_admitted": 14,
+  "run_calls_completed": 14,
+  "run_calls_failed_or_unknown": 0,
+  "run_calls_rejected_by_provider": 0,
+  "run_calls_with_unknown_usage": 0,
+  "run_cost_known_usd_estimate": "0.1340825",
+  "run_input_tokens_known": 19493,
+  "run_output_tokens_known": 5690,
+  "run_provider_reported_cost_calls": 14,
+  "run_provider_reported_cost_usd": "0.1340825",
+  "run_total_tokens_known": 25183
+ },
+ "calls_per_case_planned": 2,
+ "checkout": "clean",
+ "commit": "be2bbb237f6c18bbe8d1d7f657c99d0e28d9666d",
+ "dataset_sha256": "385625092b2d91574af6b396def752625edfa6fe22772652695735d14368d0e1",
+ "dataset_version": "1.0.0",
+ "environment_id": "p10e-designated-host-owner-macos",
+ "execution_flag": true,
+ "finished_at": "2026-10-19T09:53:04.212209+00:00",
+ "ledger_genesis_id": "ff65d28571644fdc9546c922dfe24ca5",
+ "ledger_session_id": "e708cc28a7b14ff38fff94a0552b84d1",
+ "model": "openai/gpt-5.4",
+ "profile": "balanced",
+ "provider": "OpenRouter",
+ "results": {
+  "cases_completed": 7,
+  "cases_not_completed": [],
+  "cases_planned": 7,
+  "dataset_version": "1.0.0",
+  "deterministic_summary": {
+   "checks": {
+    "evaluation_has_missing_evidence_when_gap_designed": {
+     "of": 7,
+     "passed": 7
+    },
+    "evaluation_references_answer_content": {
+     "of": 7,
+     "passed": 7
+    },
+    "follow_up_is_a_question": {
+     "of": 7,
+     "passed": 7
+    },
+    "no_biased_wording": {
+     "of": 7,
+     "passed": 7
+    },
+    "no_hiring_decision": {
+     "of": 7,
+     "passed": 7
+    },
+    "no_invented_candidate_experience": {
+     "of": 7,
+     "passed": 7
+    },
+    "question_is_a_question": {
+     "of": 7,
+     "passed": 7
+    },
+    "question_role_keyword": {
+     "of": 7,
+     "passed": 7
+    },
+    "question_type_requested": {
+     "of": 7,
+     "passed": 7
+    }
+   },
+   "failed_cases_by_check": {}
+  },
+  "model": "openai/gpt-5.4",
+  "models_requested": {
+   "openai/gpt-5.4": 14
+  },
+  "note": "Deterministic checks are proxies, not quality judgements; every subjective metric is PENDING_HUMAN_REVIEW and no human or AI judge has rated anything.",
+  "pending_human_review": [
+   "job_description_understanding",
+   "role_relevance",
+   "competency_alignment",
+   "question_clarity",
+   "behavioural_interview_quality",
+   "technical_question_appropriateness",
+   "follow_up_relevance",
+   "feedback_specificity",
+   "feedback_usefulness",
+   "professional_tone",
+   "bias_sensitivity",
+   "unsupported_claim_judgement",
+   "final_feedback_structure"
+  ],
+  "per_case": [
+   {
+    "case": "ie-software-engineer",
+    "checks": {
+     "evaluation_has_missing_evidence_when_gap_designed": true,
+     "evaluation_references_answer_content": true,
+     "follow_up_is_a_question": true,
+     "no_biased_wording": true,
+     "no_hiring_decision": true,
+     "no_invented_candidate_experience": true,
+     "question_is_a_question": true,
+     "question_role_keyword": true,
+     "question_type_requested": true
+    },
+    "role_family": "Technology",
+    "status": "COMPLETE"
+   },
+   {
+    "case": "ie-finance-analyst",
+    "checks": {
+     "evaluation_has_missing_evidence_when_gap_designed": true,
+     "evaluation_references_answer_content": true,
+     "follow_up_is_a_question": true,
+     "no_biased_wording": true,
+     "no_hiring_decision": true,
+     "no_invented_candidate_experience": true,
+     "question_is_a_question": true,
+     "question_role_keyword": true,
+     "question_type_requested": true
+    },
+    "role_family": "Finance",
+    "status": "COMPLETE"
+   },
+   {
+    "case": "ie-operations-manager",
+    "checks": {
+     "evaluation_has_missing_evidence_when_gap_designed": true,
+     "evaluation_references_answer_content": true,
+     "follow_up_is_a_question": true,
+     "no_biased_wording": true,
+     "no_hiring_decision": true,
+     "no_invented_candidate_experience": true,
+     "question_is_a_question": true,
+     "question_role_keyword": true,
+     "question_type_requested": true
+    },
+    "role_family": "Operations",
+    "status": "COMPLETE"
+   },
+   {
+    "case": "ie-sales-executive",
+    "checks": {
+     "evaluation_has_missing_evidence_when_gap_designed": true,
+     "evaluation_references_answer_content": true,
+     "follow_up_is_a_question": true,
+     "no_biased_wording": true,
+     "no_hiring_decision": true,
+     "no_invented_candidate_experience": true,
+     "question_is_a_question": true,
+     "question_role_keyword": true,
+     "question_type_requested": true
+    },
+    "role_family": "Sales",
+    "status": "COMPLETE"
+   },
+   {
+    "case": "ie-customer-support",
+    "checks": {
+     "evaluation_has_missing_evidence_when_gap_designed": true,
+     "evaluation_references_answer_content": true,
+     "follow_up_is_a_question": true,
+     "no_biased_wording": true,
+     "no_hiring_decision": true,
+     "no_invented_candidate_experience": true,
+     "question_is_a_question": true,
+     "question_role_keyword": true,
+     "question_type_requested": true
+    },
+    "role_family": "Customer service",
+    "status": "COMPLETE"
+   },
+   {
+    "case": "ie-people-hr",
+    "checks": {
+     "evaluation_has_missing_evidence_when_gap_designed": true,
+     "evaluation_references_answer_content": true,
+     "follow_up_is_a_question": true,
+     "no_biased_wording": true,
+     "no_hiring_decision": true,
+     "no_invented_candidate_experience": true,
+     "question_is_a_question": true,
+     "question_role_keyword": true,
+     "question_type_requested": true
+    },
+    "role_family": "People and HR",
+    "status": "COMPLETE"
+   },
+   {
+    "case": "ie-marketing-manager",
+    "checks": {
+     "evaluation_has_missing_evidence_when_gap_designed": true,
+     "evaluation_references_answer_content": true,
+     "follow_up_is_a_question": true,
+     "no_biased_wording": true,
+     "no_hiring_decision": true,
+     "no_invented_candidate_experience": true,
+     "question_is_a_question": true,
+     "question_role_keyword": true,
+     "question_type_requested": true
+    },
+    "role_family": "Marketing",
+    "status": "COMPLETE"
+   }
+  ],
+  "profile": "balanced",
+  "stopped_by_guard": null,
+  "thresholds": "none: the owner has set no acceptance threshold; no pass or fail is declared"
+ },
+ "run_id": "p10e-interview-quality-20261019T095118Z-dc326e60",
+ "started_at": "2026-10-19T09:51:18.101416+00:00"
+}

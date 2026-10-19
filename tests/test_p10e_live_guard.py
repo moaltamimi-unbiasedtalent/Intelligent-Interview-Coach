@@ -18,7 +18,7 @@ from src.p10e.plan import PROFILE_SLUG, build_plan
 ROOT = Path(__file__).resolve().parents[1]
 SLUG = {"fast": "openai/gpt-5.6-luna", "balanced": "openai/gpt-5.6-terra", "advanced": "openai/gpt-5.6-sol"}
 PRICES = {s: (Decimal("0.000002"), Decimal("0.000012")) for s in SLUG.values()}      # test prices only
-OWNER_LIMITS = {"max_spend_usd": 10, "max_provider_calls": 300, "max_input_tokens_per_request": 20000, "max_output_tokens_per_request": 2000, "request_timeout_s": 60, "max_retries": 1, "max_concurrency": 2}
+OWNER_LIMITS = {"max_spend_usd": 10, "max_provider_calls": 300, "max_input_tokens_per_request": 20000, "max_output_tokens_per_request": 4096, "request_timeout_s": 60, "max_retries": 1, "max_concurrency": 2}
 
 
 def limits(**o):
@@ -44,6 +44,20 @@ ENV = {"P10E_LIVE": "1"}
 
 
 # ------------------------------------------------------------------------------------------------------------------------------------- the real owner record
+def test_the_output_cap_change_is_recorded_as_a_versioned_owner_approval_that_changes_nothing_else():
+    a = G.load_authorization()
+    assert a.raw["authorization_version"] == 3 and a.limits_raw["max_output_tokens_per_request"] == 4096
+    hist = a.raw["limits_history"][0]
+    assert hist["authorization_version"] == 2 and hist["limits"]["max_output_tokens_per_request"] == 2000                  # the original approval is preserved, not overwritten
+    change = a.raw["limits_approval"]["changes"][0]
+    assert (change["field"], change["from"], change["to"], change["approved_by"], change["approval_date"]) == ("max_output_tokens_per_request", 2000, 4096, "Product Owner", "2026-10-19")
+    assert "2000 to 4096" in change["reference"]
+    unchanged = ("max_spend_usd", "max_provider_calls", "max_input_tokens_per_request", "request_timeout_s", "max_retries", "max_concurrency")
+    assert all(a.limits_raw[k] == hist["limits"][k] for k in unchanged)                                                       # only the output cap moved
+    assert a.spend_authority["approved_total_usd"] == 10 and a.spend_authority["potential_ceiling_not_approved_usd"] == 15 and a.execution_flag is True
+    assert a.execution_environment["ledger_genesis_id"] == "ff65d28571644fdc9546c922dfe24ca5"                                # the ledger identity and the host are unchanged
+
+
 def test_the_real_authorization_record_carries_exactly_the_owner_approved_limits():
     a = G.load_authorization()
     assert (a.approved_by, a.approval_date) == ("Product Owner", "2026-10-19") and "ChatGPT" in a.reference and "2026-10-19" in a.reference

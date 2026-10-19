@@ -155,8 +155,12 @@ def _make_enum_type(
     allowed: tuple[str, ...],
     label: str,
     synonyms: dict[str, str] | None = None,
+    runtime_allowed=None,
 ):
     """Build an ``Annotated[str, ...]`` type restricted to ``allowed``.
+
+    ``runtime_allowed`` (optional) is a zero-argument callable returning additional slugs that are valid RIGHT NOW (P10E-R1): the model registry's current effective slugs. It is
+    evaluated at validation time because the static tuple is frozen at import, before ``.env`` overrides apply; it can only ever add slugs the canonical registry resolves.
 
     Matching is tolerant but closed: the incoming value is normalised (case,
     whitespace and hyphens) and matched against the allowed set, then against
@@ -178,6 +182,10 @@ def _make_enum_type(
             return canonical[key]
         if key in synonym_keys:
             return synonym_keys[key]
+        if runtime_allowed is not None:
+            for extra in runtime_allowed():
+                if _normalise_enum_key(extra) == key:
+                    return extra
         raise ValueError(
             f"{label} must be one of {list(allowed)}; got {value!r}"
         )
@@ -287,6 +295,13 @@ _QUESTION_TYPE_SYNONYMS = {
     "stakeholder_management": "stakeholder",
 }
 
+def _effective_registry_slugs() -> tuple[str, ...]:
+    """The slugs the canonical registry resolves for Fast, Balanced and Advanced RIGHT NOW (env overrides, governed configuration), never an arbitrary caller string."""
+    from src.llm import models as _registry
+
+    return tuple(_registry.model_id(p) for p in _registry.ModelProfile)
+
+
 # Enum-like scalar types for validated INPUT (strict — an unknown value is
 # rejected). These guard user- and programmatically-supplied configuration.
 CareerLevel = _make_enum_type(constants.CAREER_LEVELS, "career_level")
@@ -299,7 +314,8 @@ ResponseDetail = _make_enum_type(constants.RESPONSE_DETAIL_LEVELS, "response_det
 PromptTechnique = _make_enum_type(constants.PROMPT_TECHNIQUES, "prompt_technique")
 CostSource = _make_enum_type(constants.COST_SOURCES, "cost_source")
 ApprovedModel = _make_enum_type(
-    tuple(dict.fromkeys((*constants.APPROVED_MODELS, *constants.GOVERNABLE_MODEL_SLUGS))), "model", constants.MODEL_SYNONYMS)
+    tuple(dict.fromkeys((*constants.APPROVED_MODELS, *constants.GOVERNABLE_MODEL_SLUGS))), "model", constants.MODEL_SYNONYMS,
+    runtime_allowed=lambda: _effective_registry_slugs())
 
 # Classification fields the MODEL fills in freely in its output. These are
 # lenient: a value that cannot be mapped to the vocabulary is recorded as the

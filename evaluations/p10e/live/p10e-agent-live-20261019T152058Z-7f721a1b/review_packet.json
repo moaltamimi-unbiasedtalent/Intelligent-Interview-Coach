@@ -1,0 +1,39 @@
+{
+ "reviewer": null,
+ "note": "synthetic held-out goals only; excerpts are the model's own text for human review",
+ "cases": [
+  {
+   "case": "insufficient_evidence",
+   "goal": "What are the official labour statistics for a highly obscure niche role that likely has no data?",
+   "terminal_status": "COMPLETED",
+   "tools_used": [],
+   "response_excerpt": "Hi — I’m Mo.\n\nUsually, there may be no official labour statistics for a very obscure niche role under its exact job title.\n\nWhy:\n- Official labour statistics are typically grouped into broader occupational categories.\n- Niche titles often get absorbed into a larger family of related jobs.\n- If the sample size is too small, agencies may suppress or omit the data.\n- New, emerging, or company-specific titles often appear in job ads before they appear in official datasets.\n\nWhat you can do instead:\n- Map the niche role to the closest standard occupation category.\n- Use broader labour statistics for that category:\n  - employment levels\n  - median/percentile pay\n  - projected growth\n  - common qua",
+   "human_review": {
+    "response_appropriate_without_retrieval": "PENDING_HUMAN_REVIEW",
+    "unsupported_claim": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "ambiguous_role_hitl",
+   "goal": "What's expected of a 'PM' — I mean the ambiguous kind, could be several roles?",
+   "terminal_status": "COMPLETED",
+   "tools_used": [],
+   "response_excerpt": "Hi — I’m Mo. “PM” is genuinely ambiguous, so the expectations depend on which PM you mean.\n\nCommon meanings:\n- Product Manager\n- Project Manager\n- Program Manager\n- Product Marketing Manager\n- Partner Manager / Partnership Manager\n- Portfolio Manager\n- People Manager\n\nQuick differences:\n- Product Manager: decides what to build and why; customer, roadmap, prioritization, metrics.\n- Project Manager: ensures delivery on time/scope/budget; plans, risks, dependencies, coordination.\n- Program Manager: coordinates multiple related projects/workstreams to achieve a broader outcome.\n- Product Marketing Manager: positioning, messaging, launch, market adoption.\n- Partner Manager: manages strategic rela",
+   "human_review": {
+    "response_appropriate_without_retrieval": "PENDING_HUMAN_REVIEW",
+    "unsupported_claim": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "practice_handoff_hitl",
+   "goal": "I think I'm ready — let's move on to practising the interview now.",
+   "terminal_status": "COMPLETED",
+   "tools_used": [],
+   "response_excerpt": "I’m almost ready to hand you over to practice, but I’m missing two things first:\n\n1. your target role  \n2. a preparation plan\n\nSend me either:\n- the job description, or\n- just the role title and a short summary of your background\n\nand I’ll quickly set that up so we can move straight into interview practice.",
+   "human_review": {
+    "response_appropriate_without_retrieval": "PENDING_HUMAN_REVIEW",
+    "unsupported_claim": "PENDING_HUMAN_REVIEW"
+   }
+  }
+ ]
+}

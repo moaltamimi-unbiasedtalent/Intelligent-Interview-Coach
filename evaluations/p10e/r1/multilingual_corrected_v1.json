@@ -1,0 +1,38 @@
+{
+ "schema": "p10e-r1-multilingual-correction/1",
+ "version": "1.1.0",
+ "registered_on": "2026-10-19",
+ "supersedes_nothing": "The original corpus multilingual_cases.json v1.0.0 and its recorded live run are preserved unchanged. This file records the corrected measurement configuration and the corrected outcome classes BEFORE any further live call; a corrected result is a new evaluation result, never a rewrite.",
+ "corrected_configuration": {
+  "retrieval": "the synthetic fixture world's normal narrative retriever is ENABLED (the original live run passed retriever=False, which disabled it; the offline retrieval measurement had it enabled)",
+  "conversation_language": "each case's language code is passed to CareerIntelligenceService.answer(conversation_language=...) so the existing localization layer supplies the section headings, the insufficient-evidence sentence and the language directive (the original live run passed none, so the English defaults were used)",
+  "unchanged": ["locked corpus and queries", "the fixture corpus only (no protected store, no official data)", "Russian excluded", "no hard-coded language headings in the harness", "balanced profile", "citation and geography protections of the product"]
+ },
+ "outcome_classes": {
+  "ANSWERED_WITH_EVIDENCE": "evidence items were retrieved, at least one valid [n] citation marker is present, and no marker refers to a missing evidence item",
+  "ABSTAINED": "the answer states, using the insufficient-evidence sentence of any supported language, that the knowledge base lacks enough evidence, and contains no cited marker and no money figure",
+  "CLARIFICATION_REQUESTED": "no evidence, no insufficient-evidence sentence, no money figure, no marker, the text is short and is a question",
+  "UNSUPPORTED_FACTUAL_RESPONSE": "a money figure, a citation marker with no matching evidence item, or a substantive uncited answer with no insufficient-evidence statement. General advice is not prohibited, but a substantive answer that is neither cited nor clearly an abstention cannot be shown to be source-backed and is flagged",
+  "UNCERTAIN_REQUIRES_REVIEW": "none of the above can be established deterministically; a human must classify it. Never counted as a success"
+ },
+ "review_flags": {
+  "offers_unsourced_estimate": "the answer mentions an estimate or range in the question's language, or offers one; shown for human review, never a failure by itself",
+  "language_mismatch": "the stopword proxy does not detect the question's language (a proxy, not native-speaker validation)"
+ },
+ "expectations_by_kind": {
+  "supported_occupation_definition": {
+   "intended": ["ANSWERED_WITH_EVIDENCE"],
+   "acceptable_but_gap": ["ABSTAINED", "CLARIFICATION_REQUESTED"],
+   "failure": ["UNSUPPORTED_FACTUAL_RESPONSE"],
+   "review": ["UNCERTAIN_REQUIRES_REVIEW"]
+  },
+  "unsupported_country_compensation": {
+   "intended": ["ABSTAINED", "CLARIFICATION_REQUESTED"],
+   "acceptable_but_gap": [],
+   "failure": ["UNSUPPORTED_FACTUAL_RESPONSE", "ANSWERED_WITH_EVIDENCE"],
+   "review": ["UNCERTAIN_REQUIRES_REVIEW"]
+  }
+ },
+ "salary_figure_proxy": "a currency symbol or code next to a number, a number with a thousands separator, or a number followed by k/K is a money figure; a bare four-digit number between 1900 and 2100 is a YEAR and is not a money figure unless a currency marker is adjacent",
+ "thresholds": "none: no acceptance threshold is set; languages are reported separately and never averaged"
+}

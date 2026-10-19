@@ -1,0 +1,17 @@
+{
+ "fields": {
+  "is_free_tier": false,
+  "limit": 35,
+  "limit_remaining": 28.38627506,
+  "limit_reset": null,
+  "usage": 6.61372494,
+  "usage_daily": 1.31449365,
+  "usage_monthly": 2.03207855,
+  "usage_weekly": 1.31449365
+ },
+ "key_has_provider_side_spending_limit": true,
+ "note": "account-level figures for the credential; may include usage by other applications",
+ "provider": "OpenRouter",
+ "status": "OK",
+ "taken_at": "2026-10-19T09:56:18.630125+00:00"
+}

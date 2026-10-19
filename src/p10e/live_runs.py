@@ -36,6 +36,13 @@ def chat_model(profile: str, limits: G.LiveLimits, *, build: Callable[[str], Any
     return build_chat_model(load_config(), model=slug, max_tokens=limits.max_output_tokens_per_request, timeout_s=limits.request_timeout_s, max_retries=limits.max_retries), slug
 
 
+def models_requested(session: G.LiveSession, run_id: str | None = None) -> dict[str, int]:
+    """The models this session's requests actually asked for, straight from the durable ledger (so nested helper calls are included)."""
+    rid = run_id or session.run_id
+    with session.ledger._mutex:
+        return dict(session.ledger.conn.execute("SELECT model, COUNT(*) FROM entries WHERE run_id=? GROUP BY model", (rid,)).fetchall())
+
+
 def _refused_since(session: G.LiveSession, before: int) -> str | None:
     g = session.http_guard
     return g.refused[-1] if g is not None and len(g.refused) > before else None
@@ -250,6 +257,28 @@ def isolate_agent_stores() -> dict:
     return {"tmp": str(tmp)}
 
 
+def _calls_since(rec: Any, already: int) -> list[dict]:
+    """The sanitized request records written for the current run after the first ``already`` lines (status, tokens, cost; never content)."""
+    try:
+        lines = (rec.dir / "calls.jsonl").read_text(encoding="utf-8").splitlines()
+    except FileNotFoundError:
+        return []
+    return [json.loads(x) for x in lines[already:]]
+
+
+def refine_case(classified_case: dict, calls: list[dict], reason: str | None, reasons: list[str]) -> tuple[dict, dict]:
+    """Refine the terminal status from facts the runner owns and build the sanitized per-case evidence: a guard refusal or a provider failure is never reported as a normal agent outcome."""
+    provider_failures = [c for c in calls if c.get("error") or (c.get("status") not in (None, 200))]
+    if reason:
+        classified_case["terminal_status"], classified_case["completed"] = "GUARD_REFUSED", False
+    elif provider_failures and classified_case["terminal_status"] != "COMPLETED":
+        classified_case["terminal_status"], classified_case["completed"] = "PROVIDER_ERROR", False
+    reported = [c["provider_cost_usd"] for c in calls if c.get("provider_cost_usd") is not None]
+    evidence = {**classified_case, "provider_calls": len(calls), "provider_failures": len(provider_failures), "guard_refusal_reasons": sorted(set(reasons)),
+                "provider_reported_cost_usd": str(sum((Decimal(str(x)) for x in reported), Decimal(0))) if reported else None}
+    return classified_case, evidence
+
+
 def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None, only: list[str] | None = None, base: Path = G.LIVE_DIR, build: Callable[[str], Any] | None = None, isolate: bool = True) -> dict:
     """The existing held-out agent benchmark against a real model, every request guarded. Case expectations are never edited after seeing output."""
     from src.agent.live_eval import aggregate, classify, load_live_cases, observation_from_result
@@ -272,17 +301,28 @@ def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None,
     if session.http_guard is not None:
         session.http_guard.recorder = rec
     career = _default_career_service()
-    results, stopped = [], None
+    results, stopped, packet = [], None, []
+    calls_before = 0
     for case in cases:
         before = len(session.http_guard.refused) if session.http_guard else 0
         before_n = before
-        svc = AgentApplicationService(model_factory=lambda: chat_model(profile, session.limits, build=build)[0], career_service=career)
+        # The PRODUCT's own default model factory (profile resolved through the canonical registry, governed tunables) is used unless a test injects one: this is the real path.
+        svc = AgentApplicationService(model_factory=(lambda p=None: build(slug)) if build is not None else None, career_service=career)
         t0 = time.perf_counter()
         res = svc.run(AgentRunRequest(goal=case["goal"], user_id="p10e-live-eval", profile=prof.value))
         latency = int((time.perf_counter() - t0) * 1000)
         reason = _refused_since(session, before)
         reasons = list(session.http_guard.refused[before_n:]) if session.http_guard else []
-        results.append({"classified": classify(case, observation_from_result(case["id"], profile, res, latency)), "guard_refusal": reason, "guard_refusal_reasons": reasons, "case": case["id"], "latency_ms": latency})
+        calls = _calls_since(rec, calls_before)
+        calls_before += len(calls)
+        obs = observation_from_result(case["id"], profile, res, latency)
+        classified_case, evidence = refine_case(classify(case, obs), calls, reason, reasons)
+        from src.p10e import r1_evals as _E          # deterministic, content-free response flags (synthetic held-out goals only)
+        text = obs.response_text or ""
+        evidence["response_flags"] = {"chars": len(text), "money_figure": _E.has_money_figure(text), "states_insufficient_evidence": _E.states_insufficient_evidence(text), "has_citation_marker": bool(re.search(r"\[\d+\]", text))}
+        packet.append({"case": case["id"], "goal": case["goal"], "terminal_status": classified_case["terminal_status"], "tools_used": classified_case["tools_used"], "response_excerpt": text[:700],
+                       "human_review": {"response_appropriate_without_retrieval": "PENDING_HUMAN_REVIEW", "unsupported_claim": "PENDING_HUMAN_REVIEW"}})
+        results.append({"classified": classified_case, "evidence": evidence, "guard_refusal": reason, "guard_refusal_reasons": reasons, "case": case["id"], "latency_ms": latency})
         if reason in ("spend_ceiling", "call_limit"):
             stopped = reason
             break
@@ -290,9 +330,12 @@ def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None,
     classified = [r["classified"] for r in results if not r["guard_refusal"]]
     metrics = aggregate(classified) if classified else {}
     out = {"profile": profile, "model": slug, "cases_planned": len(cases), "cases_completed": len(classified), "cases_refused": [r["case"] for r in results if r["guard_refusal"]], "guard_refusal_reasons": {r["case"]: sorted(set(r["guard_refusal_reasons"])) for r in results if r["guard_refusal"]}, "stopped_by_guard": stopped,
-           "metrics": metrics, "per_case_latency_ms": {r["case"]: r["latency_ms"] for r in results}, "protected_stores_unchanged": before_fp == after_fp,
+           "metrics": metrics, "per_case": [r["evidence"] for r in results], "per_case_evidence_version": "2 (P10E-R1 correction: sanitized per-case classification; strict completion)", "per_case_latency_ms": {r["case"]: r["latency_ms"] for r in results}, "protected_stores_unchanged": before_fp == after_fp,
+           "models_requested": models_requested(session), "expected_model": slug,
+           "unexpected_models": sorted(m for m in models_requested(session) if m != slug), "cases_attempted": len(results),
            "note": "PARTIAL: the guard stopped the run; metrics cover only the completed cases" if stopped else "Complete over the planned cases. Metrics measure the model's decisions on a bounded held-out sample; not an accuracy score."}
     d = rec.finish(session.budget.summary(), out)
+    (d / "review_packet.json").write_text(json.dumps({"reviewer": None, "note": "synthetic held-out goals only; excerpts are the model's own text for human review", "cases": packet}, indent=1, ensure_ascii=False), encoding="utf-8")
     if session.http_guard is not None:
         session.http_guard.recorder = None
     if iso.get("tmp"):
