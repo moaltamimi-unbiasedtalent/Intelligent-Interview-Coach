@@ -2,7 +2,7 @@
 
 **Intelligent Interview Coach.** *Ask More. Be More.*
 
-Ask4Mo helps a candidate understand what a specific job requires, prepare with evidence, practise realistic interviews and improve through structured feedback. **Mo**, the AI coach, is a bounded **LangGraph agent** that chooses controlled tools, retrieves career evidence only when it is useful, pauses for human approval where it matters, and hands the approved preparation into a durable **Interview Practice** session. Capstone framing: **Case 2 (AI agent for task automation)** with **Case 1 (RAG-powered knowledge assistance)** as the supporting capability. Submission material: [`docs/capstone/submission/`](docs/capstone/submission/).
+Ask4Mo helps a candidate understand what a specific job requires, prepare with evidence, practise realistic interviews and improve through structured feedback. **Mo**, the AI coach, is a bounded **LangGraph agent** that chooses controlled tools, retrieves career evidence only when it is useful, pauses for human approval where it matters, and hands the approved preparation into a durable **Interview Practice** session. Capstone framing: **Case 2 (AI agent for task automation)** with **Case 1 (RAG-powered knowledge assistance)** as the supporting capability. Submission material: [`docs/capstone/submission/`](docs/capstone/submission/). Capstone showcase entry (optional): not published; its link will be added here if it is.
 
 ## Problem and solution
 

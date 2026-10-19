@@ -14,8 +14,8 @@
 |---|---|
 | OPEN — PRE-SUBMISSION QUALIFICATION | 3 |
 | OPEN — PRODUCTION RELEASE BLOCKER | 16 |
-| PENDING OWNER DECISION | 71 |
-| PARTIALLY REMEDIATED | 49 |
+| PENDING OWNER DECISION | 70 |
+| PARTIALLY REMEDIATED | 50 |
 | NOT RUN | 39 |
 | NOT VERIFIED | 26 |
 | PENDING HUMAN REVIEW | 22 |
@@ -47,7 +47,6 @@ Categories A to M follow the owner's minimum inventory of 2026-10-19; N (candida
 |---|---|---|---|---|---|
 | DI-A-015 | BL-11 | Satisfy the 95% product-coverage gate (392 of 412) | OPEN — PRE-SUBMISSION QUALIFICATION | UNKNOWN | REQUIRED: whether the academic submission may proceed with the 95% product-coverage gate BELOW_GATE (the gate is not passed and no exception is granted by engi… |
 | DI-H-045 | IR-DEPLOY-EXPECT | Does local execution satisfy the course deployment expectation? | PENDING OWNER DECISION | UNKNOWN | REQUIRED: ask the course lead; decide hosted versus local demonstration |
-| DI-K-017 | IR-TURING-RUBRIC | The Turing College capstone brief and rubric are not in the repository | PENDING OWNER DECISION | UNKNOWN | REQUIRED: supply the official brief and rubric (or confirm which planning documents are authoritative) |
 | DI-L-001 | BL-19 | P10F targeted human validation | DEFERRED — POST SUBMISSION | UNKNOWN | Open owner decision on AC-24 scope |
 | DI-L-002 | P2-01 | Human revalidation: Sharing and revocation discoverability | PENDING HUMAN REVIEW | UNKNOWN | None recorded |
 | DI-L-003 | P2-02 | Human revalidation: Source-backed experience in a representative knowledge environment | PENDING HUMAN REVIEW | UNKNOWN | None recorded |
@@ -295,7 +294,6 @@ Categories A to M follow the owner's minimum inventory of 2026-10-19; N (candida
 | DI-K-008 | K-ATTR | Attribution wording decisions | None recorded |
 | DI-K-010 | K-LEGALACC | Legal acceptance of owner policy decisions | None recorded |
 | DI-K-015 | K-PROVIDER | Third-party model provider data handling for real candidate data | None recorded |
-| DI-K-017 | IR-TURING-RUBRIC | The Turing College capstone brief and rubric are not in the repository | REQUIRED: supply the official brief and rubric (or confirm which planning documents are authoritative) |
 | DI-M-012 | SJA-01 | AI config: second approver must be a second Platform Admin | Possible future permission review; none made |
 | DI-M-013 | SJA-02 | Knowledge Admin cannot retry/cancel failed jobs | Possible future permission review; none made |
 | DI-M-014 | SJA-03 | Billing/Security-Privacy admins cannot see queue state | Possible future permission review; none made |
@@ -2549,7 +2547,7 @@ Each block lists: original reference and source, latest verified status, severit
 - **Original:** `IR-DEPLOY-EXPECT` · **Source:** docs/capstone/INTEGRATED_CANDIDATE_ADMIN_OPERATIONS_REQUALIFICATION.md section 11 · **First recorded:** 2026-10-19
 - **Status:** PENDING OWNER DECISION · **Severity:** HIGH · **Priority:** P0 · **Blocks submission:** UNKNOWN · **Blocks production:** YES
 - **Description:** EX-12 (hosted operation) is BLOCKED/NOT RUN; whether the brief requires a hosted deployment is unresolved.
-- **Remains:** Unanswered; no deployment was made to resolve it. Listed as checklist item 4 of the missing-information checklist.
+- **Remains:** Unanswered; no deployment was made to resolve it. Listed as checklist item 4 of the missing-information checklist. The brief says 'develop and deploy prototypes' in its Objective but does not make a hosted application an evaluation criterion; unconfirmed.
 - **Candidate impact:** none directly · **Security/privacy:** none identified · **Release impact:** see status
 - **Dependencies:** none · **Owner decisions:** REQUIRED: ask the course lead; decide hosted versus local demonstration
 - **Required for closure:** Written answer recorded in the P11 handoff
@@ -3221,11 +3219,11 @@ Each block lists: original reference and source, latest verified status, severit
 
 #### DI-K-017: The Turing College capstone brief and rubric are not in the repository
 - **Original:** `IR-TURING-RUBRIC` · **Source:** docs/capstone/INTEGRATED_CANDIDATE_ADMIN_OPERATIONS_REQUALIFICATION.md section 18 · **First recorded:** 2026-10-19
-- **Status:** PENDING OWNER DECISION · **Severity:** HIGH · **Priority:** P0 · **Blocks submission:** UNKNOWN · **Blocks production:** NO
+- **Status:** PARTIALLY REMEDIATED · **Severity:** HIGH · **Priority:** P0 · **Blocks submission:** NO · **Blocks production:** NO
 - **Description:** All rubric references are second-hand (planning documents). Assessment criteria must not be invented.
-- **Remains:** Search repeated (repository, Downloads, neighbouring folders): NO OFFICIAL COURSE MATERIAL FOUND (class A = 0). Missing-information checklist for the owner is in ACADEMIC_SUBMISSION_SCOPE_DECISION.md section 7.
+- **Remains:** The official brief was found in the submission repository (AE.CAP_afa.md): four criteria, cases, README rule, presentation format. Not in the brief: weights, pass marks, deadline, hosting rule, review procedure.
 - **Candidate impact:** none · **Security/privacy:** none identified · **Release impact:** academic submission
-- **Dependencies:** none · **Owner decisions:** REQUIRED: supply the official brief and rubric (or confirm which planning documents are authoritative)
+- **Dependencies:** none · **Owner decisions:** REQUIRED: confirm the remaining items with the STL
 - **Required for closure:** Rubric file or owner confirmation added to the P11 requirements traceability matrix
 
 ### Category L: Human validation (13 active)
@@ -3707,7 +3705,7 @@ Each block lists: original reference and source, latest verified status, severit
 - **Original:** `IR-DEADLINE` · **Source:** docs/capstone/CAPSTONE_ACCEPTANCE_LEDGER_CURRENT.md · **First recorded:** 2026-10-19
 - **Status:** PENDING OWNER DECISION · **Severity:** HIGH · **Priority:** P0 · **Blocks submission:** YES · **Blocks production:** NO
 - **Description:** All deadline statements are second-hand (the project's runbook); the date of this register is 2026-10-19; no official source is in the repository.
-- **Remains:** Confirm the exact deadline and time zone before sizing P11.
+- **Remains:** Not in the official brief; still unconfirmed (planning documents say 2026-10-20, second-hand).
 - **Candidate impact:** none directly · **Security/privacy:** none identified · **Release impact:** acceptance record
 - **Dependencies:** none · **Owner decisions:** REQUIRED: confirm the deadline and time zone
 - **Required for closure:** Owner confirmation recorded in the P11 plan
