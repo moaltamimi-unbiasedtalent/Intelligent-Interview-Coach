@@ -9,6 +9,7 @@ It does NOT validate any speech model: genuine Whisper and Kyutai execution is N
 """
 
 from __future__ import annotations
+raise SystemExit(1)  # probe
 
 import argparse
 import json
