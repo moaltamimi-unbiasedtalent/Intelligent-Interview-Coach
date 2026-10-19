@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { toSpeechText } from "@/lib/speech/speechText";
 import type { SpeechOutputAdapter } from "@/lib/speech/ttsTypes";
 import { useSpeechOutput } from "@/lib/speech/useSpeechOutput";
+import { useSpeechPolicy } from "@/lib/speech/useSpeechPolicy";
 
 export function VoicePlaybackControl({
   text,
@@ -41,9 +42,12 @@ export function VoicePlaybackControl({
 }) {
   const t = useT();
   const { supported, speaking, status, error, speak, stop } = useSpeechOutput({ adapter, lang });
+  const { browserTtsAllowed } = useSpeechPolicy();
 
   // Unsupported → render nothing; the text is already visible on screen (§23 fallback).
   if (!supported) return null;
+  // Admin-disabled speech output (W12.4E): render nothing; the visible text is the path.
+  if (!browserTtsAllowed) return null;
 
   const listenLabel = label ?? t("voice.listen");
   const onClick = () => {

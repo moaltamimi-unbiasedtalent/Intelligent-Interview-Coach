@@ -186,6 +186,8 @@ const it: Catalog = {
     noSpeech: "Non ho capito - riprova o digita.",
     network: "Dettatura temporaneamente non disponibile. Puoi comunque digitare.",
     error: "La dettatura si è interrotta inaspettatamente. Puoi comunque digitare.",
+    disabledByPolicy: "La dettatura è disattivata per il tuo account. Puoi digitare invece.",
+    browserNotice: "La dettatura usa il servizio vocale del tuo browser, che può inviare la tua voce al suo fornitore. Ask4Mo non conserva il tuo audio.",
   },
   help: {
     title: "Centro assistenza",

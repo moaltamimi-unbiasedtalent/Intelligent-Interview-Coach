@@ -186,6 +186,8 @@ const nl: Catalog = {
     noSpeech: "Niet verstaan - probeer opnieuw of typ.",
     network: "Dicteren is tijdelijk niet beschikbaar. U kunt nog steeds typen.",
     error: "Dicteren is onverwacht gestopt. U kunt nog steeds typen.",
+    disabledByPolicy: "Dicteren staat uit voor uw account. U kunt in plaats daarvan typen.",
+    browserNotice: "Dicteren gebruikt de spraakservice van uw browser, die uw stem naar de aanbieder kan sturen. Ask4Mo slaat uw audio niet op.",
   },
   help: {
     title: "Helpcentrum",

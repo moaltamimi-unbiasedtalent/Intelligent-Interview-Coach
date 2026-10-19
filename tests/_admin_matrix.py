@@ -39,7 +39,7 @@ DOMAINS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("knowledge", ("/admin/knowledge", "/knowledge/diagnostics", "/reviewer/knowledge", "/reviewer/config-versions", "/reviewer/prompt-lab", "/reviewer/retention")),
     ("jobs", ("/admin/jobs",)),
     ("privacy / legal", ("/admin/privacy", "/admin/privacy-requests", "/admin/legal")),
-    ("flags / configuration / pause", ("/admin/flags", "/admin/pause")),
+    ("flags / configuration / pause", ("/admin/flags", "/admin/pause", "/admin/speech")),
     ("reports", ("/admin/reports", "/admin/feedback")),
     ("security / incidents / alerts", ("/admin/security",)),
     ("audit", ("/admin/audit", "/auth/admin/audit")),

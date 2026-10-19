@@ -523,7 +523,7 @@ def test_migration_0033_upgrades_and_the_chain_has_one_head_upgrades_cleanly_and
     from sqlalchemy import create_engine, inspect
     from tests.test_billing_f1_qualification import _alembic
     cfg, url = _alembic(tmp_path, monkeypatch)
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0038_compensation_concepts"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == ["0039_speech_governance"]
     command.upgrade(cfg, "0032_ai_operation_events")
     assert "usage_quota_counters" not in inspect(create_engine(url)).get_table_names()
     command.upgrade(cfg, "head")

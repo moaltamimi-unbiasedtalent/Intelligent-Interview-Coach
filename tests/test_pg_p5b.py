@@ -84,10 +84,10 @@ def test_the_full_migration_chain_upgrades_downgrades_one_step_and_reupgrades_on
     tables = set(insp.get_table_names())
     assert {"preparation_packs", "usage_quota_counters", "usage_quota_reservations", "ai_operation_events", "opportunities"} <= tables
     with pg.engine.connect() as c:
-        assert c.execute(text("select version_num from alembic_version")).scalar() == "0038_compensation_concepts"
+        assert c.execute(text("select version_num from alembic_version")).scalar() == "0039_speech_governance"
         defs = {r[0]: r[1] for r in c.execute(text("select indexname, indexdef from pg_indexes where tablename = 'preparation_packs'"))}
     assert "WHERE ((status)::text = 'generating'::text)" in defs["uq_pack_one_generating"] and "UNIQUE" in defs["uq_pack_one_generating"]
-    REPORT["migration_head"] = "0038_compensation_concepts"
+    REPORT["migration_head"] = "0039_speech_governance"
     REPORT["pack_partial_index_def"] = defs["uq_pack_one_generating"]
     for target in ("0033_usage_quotas", "head"):
         out = subprocess.run([sys.executable, "-m", "alembic", "downgrade" if target != "head" else "upgrade", target], cwd=ROOT, env=pg.env, capture_output=True, text=True, timeout=300)

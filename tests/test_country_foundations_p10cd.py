@@ -506,7 +506,7 @@ def test_migration_0038_adds_the_definition_columns_keeps_rows_and_checks_and_is
     from tests.test_billing_f1_qualification import _alembic
     from src import persistence as P
     cfg, url = _alembic(tmp_path, monkeypatch)
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0038_compensation_concepts"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == ["0039_speech_governance"]
     command.upgrade(cfg, "0037_compensation_v2")
     eng = create_engine(url)
     assert "earnings_concept" not in {c["name"] for c in inspect(eng).get_columns("compensation_v2_records")}

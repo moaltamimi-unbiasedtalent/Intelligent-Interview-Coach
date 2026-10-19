@@ -88,6 +88,7 @@ import type {
   SupportTicketList,
   SupportTicketSummary,
   CapabilitiesResponse,
+  SpeechCapabilitiesResponse,
   CompanyIntelligenceRequest,
   CompanyIntelligenceReport,
   Opportunity,
@@ -267,6 +268,8 @@ export const api = {
   health: (opts?: RequestOptions) => request<HealthResponse>("GET", "/health", opts),
   capabilities: (opts?: RequestOptions) =>
     request<CapabilitiesResponse>("GET", "/capabilities", opts),
+  speechCapabilities: (opts?: RequestOptions) =>
+    request<SpeechCapabilitiesResponse>("GET", "/speech/capabilities", opts),
 
   career: {
     chat: (body: CareerChatRequest, opts?: RequestOptions) =>

@@ -186,6 +186,8 @@ const fr: Catalog = {
     noSpeech: "Je n’ai pas compris - réessayez ou tapez.",
     network: "La dictée est temporairement indisponible. Vous pouvez toujours taper.",
     error: "La dictée s’est arrêtée de façon inattendue. Vous pouvez toujours taper.",
+    disabledByPolicy: "La dictée est désactivée pour votre compte. Vous pouvez taper à la place.",
+    browserNotice: "La dictée utilise le service vocal de votre navigateur, qui peut envoyer votre voix à son fournisseur. Ask4Mo ne stocke pas votre audio.",
   },
   help: {
     title: "Centre d’aide",

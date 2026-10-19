@@ -434,7 +434,7 @@ def test_migration_0026_single_head_fresh_and_round_trip(tmp_path, monkeypatch):
 
     url = f"sqlite:///{tmp_path / 'm.db'}"
     monkeypatch.setenv("DATABASE_URL", url)
-    assert ScriptDirectory.from_config(cfg(url)).get_heads() == ["0038_compensation_concepts"]
+    assert ScriptDirectory.from_config(cfg(url)).get_heads() == ["0039_speech_governance"]
     command.upgrade(cfg(url), "0025_security_audit_incidents")
     assert "managed_secrets" not in inspect(create_engine(url)).get_table_names()
     command.upgrade(cfg(url), "head")
