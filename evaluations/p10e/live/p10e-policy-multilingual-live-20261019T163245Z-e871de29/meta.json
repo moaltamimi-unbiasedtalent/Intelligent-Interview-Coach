@@ -1,0 +1,18 @@
+{
+ "area": "policy-multilingual-live",
+ "authorization_version": 3,
+ "checkout": "clean",
+ "commit": "afb3ecf815e617d1ccef66bbd92e7e07df9bbec7",
+ "dataset_version": "1.0.0",
+ "environment_id": "p10e-designated-host-owner-macos",
+ "execution_flag": true,
+ "ledger_genesis_id": "ff65d28571644fdc9546c922dfe24ca5",
+ "ledger_session_id": "6b054fc0ccc5400090900ea7febb0c89",
+ "model": "(resolved below)",
+ "policy_contract_sha256": "b0fcb937b80999bc1e710f8604e85e45c4b9966b049bc8839bd4f54afa8b18c6",
+ "profile": "balanced",
+ "provider": "OpenRouter",
+ "r1_corpus_sha256": "2aaddbcd0622b93be18be1691c0532b36ea0edb73c8fe7be1bdf493e5d6e2074",
+ "run_id": "p10e-policy-multilingual-live-20261019T163245Z-e871de29",
+ "started_at": "2026-10-19T16:32:45.340322+00:00"
+}

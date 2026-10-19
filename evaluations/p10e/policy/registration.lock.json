@@ -1,0 +1,8 @@
+{
+ "schema": "p10e-policy-registration-lock/1",
+ "registered_on": "2026-10-19",
+ "files": {
+  "candidate_policy_contract_v1.json": "b0fcb937b80999bc1e710f8604e85e45c4b9966b049bc8839bd4f54afa8b18c6"
+ },
+ "note": "The contract was registered (hash recorded) before any live call against it. A test fails if the hash changes; a changed expectation needs a new version and a new lock."
+}

@@ -1,0 +1,54 @@
+{
+ "reviewer": null,
+ "note": "synthetic held-out goals only; excerpts are the model's own text for human review",
+ "cases": [
+  {
+   "case": "pol-external-fact-retrieval",
+   "goal": "What is the typical salary range for a data analyst in Germany?",
+   "terminal_status": "COMPLETED",
+   "tools_used": [
+    "SearchCareerKnowledge"
+   ],
+   "response_excerpt": "Hi, I’m Mo.\n\nTo give you a reliable answer, I’d need a bit more detail, because salary varies a lot by:\n- seniority: junior / mid / senior\n- city: Berlin, Munich, Hamburg, etc.\n- sector: tech, finance, automotive, consulting\n- scope: BI/reporting vs product analytics vs SQL/Python-heavy analytics\n\nIf you want, send me any of these:\n- your seniority level\n- a city in Germany\n- whether you want base salary only or total compensation\n\nThen I can narrow the query. If you prefer, I can also help with a practical, non-numeric benchmark approach for evaluating offers in Germany.\n\nI cannot give a verified salary figure here. To find reliable figures, tell me the country, the seniority and the occupa",
+   "human_review": {
+    "response_appropriate_without_retrieval": "PENDING_HUMAN_REVIEW",
+    "unsupported_claim": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "pol-external-fact-no-evidence",
+   "goal": "What are the official labour statistics for a highly obscure niche role that likely has no data?",
+   "terminal_status": "COMPLETED",
+   "tools_used": [
+    "SearchCareerKnowledge"
+   ],
+   "response_excerpt": "Hi, I’m Mo.\n\nI can’t verify official labour statistics for an unspecified obscure niche role from the evidence I have here.\n\nIn general, official labour statistics are usually published for broader occupational classifications rather than very specific niche job titles. So for a highly obscure role, exact official data often may not exist as a standalone category. When that happens, the safest approach is to map the niche title to:\n- a broader occupation group,\n- a related industry,\n- and a country’s official labour-statistics framework.\n\nBecause my retrieval returned insufficient evidence, I shouldn’t make a stronger factual claim than that.\n\nIf you want, give me:\n- the exact role title,\n- ",
+   "human_review": {
+    "response_appropriate_without_retrieval": "PENDING_HUMAN_REVIEW",
+    "unsupported_claim": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "pol-clarify-ambiguous-occupation",
+   "goal": "What does a PM earn?",
+   "terminal_status": "COMPLETED",
+   "tools_used": [],
+   "response_excerpt": "Hi — I’m Mo. Do you mean **Product Manager**, **Project Manager**, or another **PM**?\n\nPay varies a lot by:\n- **PM meaning**\n- **country**\n- sometimes **level** (junior / mid / senior)\n\nIf you tell me:\n1. what **PM** stands for, and  \n2. which **country** (and optionally city),\n\nI can give you a properly grounded answer.",
+   "human_review": {
+    "response_appropriate_without_retrieval": "PENDING_HUMAN_REVIEW",
+    "unsupported_claim": "PENDING_HUMAN_REVIEW"
+   }
+  },
+  {
+   "case": "pol-missing-plan-context",
+   "goal": "Build me a preparation plan from my gaps.",
+   "terminal_status": "COMPLETED",
+   "tools_used": [],
+   "response_excerpt": "Hi, I’m Mo. I can do that, but I need the gap analysis first.\n\nIf we already identified your gaps earlier, tell me:\n- how many days until the interview\n- how many hours per week you can prepare\n\nIf we haven’t identified your gaps yet, send me either:\n- the job description + a short summary of your background, or\n- the priority gaps you already know\n\nThen I’ll turn that into a preparation plan.",
+   "human_review": {
+    "response_appropriate_without_retrieval": "PENDING_HUMAN_REVIEW",
+    "unsupported_claim": "PENDING_HUMAN_REVIEW"
+   }
+  }
+ ]
+}

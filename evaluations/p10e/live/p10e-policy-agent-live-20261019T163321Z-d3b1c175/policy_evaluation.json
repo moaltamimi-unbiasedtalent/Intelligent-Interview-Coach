@@ -1,0 +1,69 @@
+{
+ "source_run": "p10e-policy-agent-live-20261019T163321Z-d3b1c175",
+ "contract_version": "1.0.0",
+ "rows": [
+  {
+   "case": "pol-external-fact-retrieval",
+   "expected_behavior": "retrieve before any verified claim",
+   "required_tools": [
+    "SearchCareerKnowledge"
+   ],
+   "tools_used": [
+    "SearchCareerKnowledge"
+   ],
+   "clarification_status": "none",
+   "retrieval_decision": "retrieved",
+   "evidence_sufficiency": "not_applicable",
+   "factual_claim_status": "no_unsourced_claim_detected",
+   "hitl_decision": "no_pause",
+   "terminal_status": "COMPLETED",
+   "policy_compliance": "COMPLIANT"
+  },
+  {
+   "case": "pol-external-fact-no-evidence",
+   "expected_behavior": "retrieve; if nothing is found abstain, no invented statistic, no estimate offer",
+   "required_tools": [
+    "SearchCareerKnowledge"
+   ],
+   "tools_used": [
+    "SearchCareerKnowledge"
+   ],
+   "clarification_status": "none",
+   "retrieval_decision": "retrieved",
+   "evidence_sufficiency": "not_applicable",
+   "factual_claim_status": "no_unsourced_claim_detected",
+   "hitl_decision": "no_pause",
+   "terminal_status": "COMPLETED",
+   "policy_compliance": "COMPLIANT"
+  },
+  {
+   "case": "pol-clarify-ambiguous-occupation",
+   "expected_behavior": "clarification (which PM, which country) without forcing an unsupported inference; a retrieval is also acceptable; the distinction is recorded",
+   "required_tools": [],
+   "tools_used": [],
+   "clarification_status": "clarification",
+   "retrieval_decision": "not_retrieved",
+   "evidence_sufficiency": "not_applicable",
+   "factual_claim_status": "no_unsourced_claim_detected",
+   "hitl_decision": "no_pause",
+   "terminal_status": "COMPLETED",
+   "policy_compliance": "COMPLIANT"
+  },
+  {
+   "case": "pol-missing-plan-context",
+   "expected_behavior": "ask for the missing information or offer to analyse the background first; no fictional gap analysis; BuildPreparationPlan not called without gaps",
+   "required_tools": [],
+   "tools_used": [],
+   "clarification_status": "none",
+   "retrieval_decision": "not_retrieved",
+   "evidence_sufficiency": "not_applicable",
+   "factual_claim_status": "no_unsourced_claim_detected",
+   "hitl_decision": "no_pause",
+   "terminal_status": "COMPLETED",
+   "policy_compliance": "REVIEW"
+  }
+ ],
+ "thresholds": "none: no acceptance threshold is set; every result is reported per case and per language, never averaged",
+ "human_review": "PENDING_HUMAN_REVIEW",
+ "rescored_offline": true
+}

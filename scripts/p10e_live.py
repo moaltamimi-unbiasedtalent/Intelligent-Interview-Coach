@@ -80,6 +80,9 @@ def main(argv=None) -> int:
     p = sub.add_parser("interview"); p.add_argument("--profile", choices=["fast", "balanced", "advanced"], default="balanced"); p.add_argument("--cases", default=None)
     p = sub.add_parser("multilingual"); p.add_argument("--profile", choices=["fast", "balanced", "advanced"], default="balanced"); p.add_argument("--cases", default=None)
     p = sub.add_parser("rescore-kb"); p.add_argument("run_dir")
+    sub.add_parser("policy-scripted"); sub.add_parser("policy-evaluate-agent").add_argument("run_dir")
+    p = sub.add_parser("policy-agent"); p.add_argument("--profile", choices=["fast", "balanced", "advanced"], default="balanced"); p.add_argument("--cases", default=None)
+    p = sub.add_parser("policy-multilingual"); p.add_argument("--profile", choices=["fast", "balanced", "advanced"], default="balanced"); p.add_argument("--cases", default=None)
     p = sub.add_parser("agent"); p.add_argument("--profile", choices=["fast", "balanced", "advanced"], default="balanced"); p.add_argument("--limit", type=int, default=None); p.add_argument("--cases", default=None, help="comma-separated case ids")
     a = ap.parse_args(argv)
     if a.cmd == "status":
@@ -117,6 +120,12 @@ def main(argv=None) -> int:
     if a.cmd == "multilingual-offline":
         from src.p10e import r1_evals as E
         print(json.dumps(E.multilingual_offline(), indent=1, ensure_ascii=False)); return 0
+    if a.cmd == "policy-scripted":
+        from src.p10e import policy_evals as PE
+        print(json.dumps(PE.scripted_multilingual(), indent=1, ensure_ascii=False)); return 0
+    if a.cmd == "policy-evaluate-agent":
+        from src.p10e import policy_evals as PE
+        print(json.dumps(PE.evaluate_agent_run(Path(a.run_dir)), indent=1, ensure_ascii=False)); return 0
     if a.cmd == "rescore-kb":
         from src.p10e import live_runs as R
         print(json.dumps(R.rescore_kb_run(Path(a.run_dir)), indent=1)); return 0
@@ -133,6 +142,14 @@ def main(argv=None) -> int:
             with _session("multilingual-live", "synthetic_fixture_corpus") as s:
                 from src.p10e import r1_evals as E
                 out = E.run_multilingual_live(s, a.profile, only=a.cases.split(",") if a.cases else None)
+        elif a.cmd == "policy-agent":
+            with _session("policy-agent-live", "synthetic_held_out_agent_cases") as s:
+                from src.p10e import policy_evals as PE
+                out = PE.run_policy_agent_live(s, a.profile, only=a.cases.split(",") if a.cases else None)
+        elif a.cmd == "policy-multilingual":
+            with _session("policy-multilingual-live", "synthetic_fixture_corpus") as s:
+                from src.p10e import policy_evals as PE
+                out = PE.run_policy_multilingual_live(s, a.profile, only=a.cases.split(",") if a.cases else None)
         elif a.cmd == "smoke":
             with _session("smoke", "synthetic_fixture_corpus") as s:
                 from src.p10e import live_runs as R

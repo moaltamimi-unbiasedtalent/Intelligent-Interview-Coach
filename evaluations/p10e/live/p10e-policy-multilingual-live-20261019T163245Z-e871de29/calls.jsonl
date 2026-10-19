@@ -1,0 +1,7 @@
+{"answered_by": "openai/gpt-5.4", "input_tokens": 598, "latency_ms": 3256, "model": "openai/gpt-5.4", "output_tokens": 169, "provider_cost_usd": "0.00403", "seq": 271, "status": 200, "t": "2026-10-19T16:32:49.415232+00:00"}
+{"answered_by": "openai/gpt-5.4", "input_tokens": 642, "latency_ms": 4778, "model": "openai/gpt-5.4", "output_tokens": 214, "provider_cost_usd": "0.004815", "seq": 272, "status": 200, "t": "2026-10-19T16:32:54.216070+00:00"}
+{"answered_by": "openai/gpt-5.4", "input_tokens": 714, "latency_ms": 4605, "model": "openai/gpt-5.4", "output_tokens": 239, "provider_cost_usd": "0.00537", "seq": 273, "status": 200, "t": "2026-10-19T16:32:58.832184+00:00"}
+{"answered_by": "openai/gpt-5.4", "input_tokens": 707, "latency_ms": 3338, "model": "openai/gpt-5.4", "output_tokens": 177, "provider_cost_usd": "0.0044225", "seq": 274, "status": 200, "t": "2026-10-19T16:33:02.183172+00:00"}
+{"answered_by": "openai/gpt-5.4", "input_tokens": 689, "latency_ms": 3274, "model": "openai/gpt-5.4", "output_tokens": 154, "provider_cost_usd": "0.0040325", "seq": 275, "status": 200, "t": "2026-10-19T16:33:05.468492+00:00"}
+{"answered_by": "openai/gpt-5.4", "input_tokens": 673, "latency_ms": 3421, "model": "openai/gpt-5.4", "output_tokens": 163, "provider_cost_usd": "0.0041275", "seq": 276, "status": 200, "t": "2026-10-19T16:33:08.898646+00:00"}
+{"answered_by": "openai/gpt-5.4", "input_tokens": 665, "latency_ms": 3465, "model": "openai/gpt-5.4", "output_tokens": 137, "provider_cost_usd": "0.0037175", "seq": 277, "status": 200, "t": "2026-10-19T16:33:12.374828+00:00"}

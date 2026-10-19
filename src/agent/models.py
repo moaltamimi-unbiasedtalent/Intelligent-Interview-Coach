@@ -84,6 +84,9 @@ class AgentRunResult:
     journey: dict[str, Any] = field(default_factory=dict)
     # Safe explanation of what/where/why the Practice handoff carries — else None (P4).
     handoff_summary: dict[str, Any] | None = None
+    # Owner grounding policy A/B/C (2026-10-19): the approved class of the final answer and any review flags (internal/diagnostic; not part of the API schema).
+    response_class: str | None = None
+    policy_flags: list[str] = field(default_factory=list)
     # Bounded specialist outputs (Capstone P5): safe structured projections from the
     # specialists Mo invoked this run (role brief / owner-scoped evidence selection /
     # coaching plan) plus which specialists ran — for the reviewer diagnostic. Never
