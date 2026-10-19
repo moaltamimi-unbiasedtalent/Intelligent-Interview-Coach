@@ -52,6 +52,7 @@ dependencies = [
 dev = [
     "pytest>=8.3,<9.0",
     "pytest-mock>=3.14,<4.0",
+    "pytest-xdist>=3.5,<4.0",   # CI runs each backend shard with 2 file-distributed workers (W12.4F CI hotfix)
     "fpdf2>=2.7,<3.0",
     "ruff>=0.6,<1.0",
 ]

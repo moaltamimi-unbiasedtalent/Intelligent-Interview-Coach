@@ -154,9 +154,11 @@ def test_the_committed_product_baselines_are_honest():
 
 # --------------------------------------------------------------------------------------------------------------------------------------------- CI wiring
 def test_ci_runs_the_corpus_and_the_guard_without_secrets_and_without_softening_failures():
-    ci = (ROOT / ".github/workflows/ci.yml").read_text()
+    full = (ROOT / ".github/workflows/ci.yml").read_text()
+    # W12.4F CI hotfix: the evaluators run in their own job (the cheap static guards, including the secret scan, moved to an earlier job); the same assertions apply to that job.
+    ci = full[full.index("  python-evaluators:\n"):full.index("\n  python:\n")]
     assert "scripts/eval_global_corpus.py" in ci and "scripts/check_product_coverage_baseline.py" in ci
-    seg = ci[ci.index("Global evaluation corpus"):ci.index("Secret scan")]
+    seg = ci[ci.index("Global evaluation corpus"):ci.index("Working tree must be clean")]
     assert "continue-on-error" not in seg and "secrets." not in seg and "|| true" not in seg and "RUNNER_TEMP" in seg and "upload-artifact" in seg
     assert ci.index("scripts/eval_global_corpus.py") < ci.index("Working tree must be clean")
     guard_step = ci[ci.index("Product coverage regression guard"):ci.index("Upload P10C-G")]
