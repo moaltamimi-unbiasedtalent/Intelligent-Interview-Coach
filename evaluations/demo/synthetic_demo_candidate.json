@@ -1,0 +1,19 @@
+{
+ "schema": "ask4mo-demo-data/1",
+ "version": "1.0.0",
+ "note": "Entirely SYNTHETIC. No real person, employer, document or credential. The company is fictional, the email uses the reserved .invalid domain and the answers were written for the demonstration. Used only by scripts/demo_offline_journey.py.",
+ "candidate": {"display_name": "Synthetic Candidate A", "email": "demo.candidate@example.invalid"},
+ "opportunity": {"target_role": "Data Analyst", "company_name": "Northwind Analytics (fictional)", "notes": "Synthetic demonstration opportunity."},
+ "job_description": "Data Analyst (junior to mid). You will query company databases with SQL, interpret results with basic statistics, build weekly dashboards and explain findings to non-technical stakeholders. Python is a plus.",
+ "candidate_background": "Two years in operations reporting. Builds weekly spreadsheet dashboards, comfortable with Excel, has written simple SQL queries, presents results to the operations manager. No Python experience yet.",
+ "preparation": {"days_until_interview": 14, "hours_per_week": 6},
+ "knowledge_questions": {
+  "supported": "What does a Data Analyst do?",
+  "unsupported_geography": "What does a Data Analyst earn in Canada?"
+ },
+ "interview": {
+  "target_role": "Data Analyst", "industry_or_sector": "technology", "career_level": "junior", "interview_types": ["behavioural"],
+  "scripted_question": "Tell me about a time you had to explain data findings to a stakeholder who was not technical.",
+  "synthetic_answer": "In my reporting job the operations manager did not trust a weekly backlog dashboard. I rebuilt the chart so each bar showed the same three categories he used in meetings, walked him through two examples and agreed a monthly review. He started using the dashboard in his Monday planning."
+ }
+}
