@@ -80,23 +80,14 @@ _TRAINING = re.compile(r"\b(training|apprenticeship|on[- ]the[- ]job|work experi
 _CURRENT_VACANCY = re.compile(r"\b(right now|currently hiring|current (?:demand|vacanc)|hiring now|job postings?|in demand right now|demand like)\b", re.I)
 _SHORT_OUTLOOK = re.compile(r"\b(short[- ]term outlook|short[- ]term demand|near[- ]term|next (?:year|few years))\b", re.I)
 
-# Country detection for geographic source precedence.
-_COUNTRY_PATTERNS = {
-    "DE": re.compile(r"\b(germany|german|deutschland|berlin|munich|kldb|berufenet)\b", re.I),
-    "UK": re.compile(r"\b(uk|united kingdom|britain|british|england|scotland|wales|ashe|civil service)\b", re.I),
-    "US": re.compile(r"\b(us|u\.s\.|usa|united states|america|american|federal)\b", re.I),
-    "EU": re.compile(r"\b(eu|europe|european|eurozone|esco|cedefop|eurostat)\b", re.I),
-}
+# Country detection for geographic source precedence. The names live in ``countries`` (P10D): any EXPLICITLY named country is detected, in the
+# supported product languages, so the structured lanes can abstain instead of substituting another country's statistics. A language never implies one.
+from src.copilot.knowledge.countries import detect_country_code
 
 
 def detect_country(query: str) -> str | None:
-    """Best-effort country/region code from the question, or None if unspecified."""
-    text = query or ""
-    # Prefer the most specific national signals before the broader EU signal.
-    for code in ("DE", "UK", "US", "EU"):
-        if _COUNTRY_PATTERNS[code].search(text):
-            return code
-    return None
+    """Best-effort country/region code from the question, or None if unspecified (never inferred from the language)."""
+    return detect_country_code(query)
 
 
 def source_priority(country: str | None) -> list[str]:

@@ -47,9 +47,28 @@ class StructuredOutcome:
     clarify: bool = False
 
 
+# Geographies that are not a single nation (a supra-national aggregate such as Cedefop's EU figures, global or unspecified material) may be shown as
+# clearly labelled broader context for a country question; another NATION's statistics may not (same policy as the compensation lane).
+from src.copilot.knowledge.countries import tag_matches_country  # noqa: E402
+
+
+def _same_country(geography, country: str) -> bool:
+    from src.copilot.knowledge.countries import SUPRANATIONAL_TAGS
+
+    g = str(geography or "").strip().upper()
+    return bool(g) and g not in SUPRANATIONAL_TAGS and tag_matches_country(g, country)
+
+
+def _geography_allowed(geography, country: str) -> bool:
+    return tag_matches_country(geography, country)
+
+
 class StructuredRetrievalCoordinator:
     def __init__(self, *, role_repo=None, comp_repo=None, competency_repo=None,
-                 labour_repo=None, credential_repo=None, manifest_entries=None) -> None:
+                 labour_repo=None, credential_repo=None, manifest_entries=None, fixture_sources=None) -> None:
+        # P10D: sources whose recorded data origin is ONLY a synthetic test fixture (hand-authored sample rows). Their evidence is still returned (coverage is
+        # unchanged) but is labelled, so a synthetic row is never presented to a candidate under a real publisher's name as if it were official data.
+        self.fixture_sources = frozenset(fixture_sources or ())
         self.role_repo = role_repo
         self.comp_repo = comp_repo
         self.competency_repo = competency_repo
@@ -77,6 +96,11 @@ class StructuredRetrievalCoordinator:
                   country=None, year=None, version=None, score=1.0, geography=None,
                   metadata=None) -> KnowledgeEvidence:
         m = self._src(source_id)
+        synthetic = bool(self.fixture_sources) and source_id.split(":", 1)[0] in self.fixture_sources
+        if synthetic:
+            text = "[SYNTHETIC SAMPLE DATA, not official data] " + text
+            m = {**m, "title": f"{m['title']} (synthetic sample)"}
+            metadata = {**(metadata or {}), "data_origin": "synthetic_fixture"}
         return KnowledgeEvidence(
             evidence_id=eid, text=text, source_id=source_id, source_title=m["title"],
             source_url=m["url"], publisher=m["publisher"], evidence_type=etype,
@@ -235,7 +259,7 @@ class StructuredRetrievalCoordinator:
             out.notes.append(
                 f"No official occupation-specific compensation for '{phrase}' in {country}.")
             rows = [r for r in _filter(None)
-                    if not (r.country or "").strip()  # supra-national / unspecified only
+                    if (not (r.country or "").strip() and tag_matches_country(r.geography, country))  # supra-national / unspecified, and an EU aggregate only for a European country (P10D)
                     or (r.country or "").upper() == country]
             out.structured_queries.append("compensation.filter [supra-national context only]")
         # De-duplicate equivalent records surfaced by multiple title variants.
@@ -344,11 +368,15 @@ class StructuredRetrievalCoordinator:
             elif kind == "openings":
                 rows.extend(self.labour_repo.openings_for(v))
                 lane = RetrievalLane.OPENINGS
+                if country:  # P10D: a country-specific question never receives another nation's openings (only same-country or supra-national records)
+                    rows = [r for r in rows if _geography_allowed(r.get("geography"), country)]
             else:
                 rows.extend(self.labour_repo.shortages_for(v, country))
                 lane = RetrievalLane.SHORTAGE
         etype = kind
         out.structured_queries.append(f"labour.{kind}_for(~{variants}, country={country!r})")
+        if kind == "openings" and country and rows and not any(_same_country(r.get("geography"), country) for r in rows):
+            out.notes.append(f"No openings record for '{phrase}' in {country}; the supra-national figures shown are broader context, not {country} statistics.")
         if not rows:
             out.insufficient = True
             out.notes.append(f"No structured {kind} record for '{phrase}'"
@@ -478,11 +506,17 @@ class StructuredRetrievalCoordinator:
             out.notes.append("No vacancy source is loaded.")
             return
         country = out.country
-        rate_country = {"DE": "germany", "UK": "united kingdom", "US": "united states",
-                        "EU": "european union"}.get(country)
-        rows = self.labour_repo.vacancies_for(country=rate_country) if rate_country else []
-        if not rows:
-            rows = self.labour_repo.vacancies_for()  # fall back to all countries
+        # P10D: the Eurostat store keys national rows by ISO code ("DE", "FR", ...), the EU aggregate by name and regions by their own names. The previous mapping
+        # looked for "germany", never matched, and then dumped the first rows of EVERY country (a German question was answered with Madeira, Cyprus and Latvia, and
+        # the coverage evaluator counted it as sufficient). A named country now matches ONLY its own national rows; a country with no row abstains.
+        rate_country = country
+        if country:
+            code = country.upper()
+            names = {"DE": {"de", "germany"}, "UK": {"uk", "gb", "united kingdom"}, "US": {"us", "united states"}}.get(code, {code.lower()})
+            rows = [r for r in self.labour_repo.vacancies_for()
+                    if (str(r.get("country") or "").strip().lower().startswith("european union") if code == "EU" else str(r.get("country") or "").strip().lower() in names)]
+        else:
+            rows = self.labour_repo.vacancies_for()  # no country asked: all countries, each labelled
         out.structured_queries.append(f"labour.vacancies_for(country={rate_country!r})")
         # Prefer the vacancy-rate (%) indicator.
         rates = [r for r in rows if (r.get("indicator") or "").lower() == "job vacancy rate"
@@ -554,7 +588,11 @@ def build_default_coordinator(config=None) -> StructuredRetrievalCoordinator:
     def _open(path, cls):
         return cls(path) if os.path.isfile(path) else None
 
+    from src.copilot.knowledge.origins import is_fixture_only, load_origins
+
+    fixture_sources = {sid for sid, origins in load_origins().items() if is_fixture_only(origins)}
     return StructuredRetrievalCoordinator(
+        fixture_sources=fixture_sources,
         role_repo=_open(constants.ROLE_DB_PATH, RoleRepository),
         comp_repo=_open(constants.COMPENSATION_DB_PATH, CompensationRepository),
         competency_repo=_open(constants.COMPETENCY_DB_PATH, CompetencyRepository),

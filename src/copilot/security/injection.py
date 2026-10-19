@@ -12,9 +12,9 @@ import re
 from dataclasses import dataclass, field
 
 from src.copilot import constants
-from src.copilot.security.normalize import normalize_for_detection
+from src.copilot.security.normalize import normalize_for_detection, normalize_for_unicode_detection
 
-__all__ = ["InjectionScan", "scan_text", "INDICATORS"]
+__all__ = ["InjectionScan", "scan_text", "INDICATORS", "UNICODE_INDICATORS"]
 
 # (label, weight, compiled pattern). High weight (3.0) = a single hit blocks;
 # medium (2.0) = a single hit warns, two combine to a block.
@@ -75,6 +75,37 @@ INDICATORS: list[tuple[str, float, re.Pattern]] = [
     (label, weight, re.compile(pattern)) for label, weight, pattern in _RAW_INDICATORS
 ]
 
+# P10D: the two highest-impact attack classes (override earlier instructions, reveal the hidden prompt) in the other supported product languages
+# (de, fr, es, it, pt, nl, ru) plus Arabic. Matched on the accent-folded Unicode form (``normalize_for_unicode_detection``) because the ASCII
+# detection form erases non-ASCII letters. Like the English rules this is best effort, not a guarantee: the PRIMARY control stays structural
+# (retrieved text is only ever placed in labelled data blocks, never followed as instructions).
+_W = r"\w*"
+_UNICODE_RAW_INDICATORS: list[tuple[str, float, str]] = [
+    ("ignore_previous_instructions", 3.0, r"\b(ignorier\w*|vergiss\w*|missachte\w*|ubergeh\w*|uberschreib\w*)\b.{0,30}\b(vorherig\w*|fruher\w*|obig\w*|alle\w*|samtliche\w*)\b.{0,30}\b(anweisung\w*|instruktion\w*|regeln|befehle\w*|vorgaben)\b"),
+    ("ignore_previous_instructions", 3.0, r"\b(ignor\w+|oubli\w+|neglig\w+)\b.{0,30}\b(precedent\w*|anterieur\w*|toutes?|tous)\b.{0,30}\b(instruction\w*|consigne\w*|regle\w*|directive\w*)\b"),
+    ("ignore_previous_instructions", 3.0, r"\b(ignor\w+|olvid\w+|omit\w+|desestim\w+)\b.{0,30}\b(anterior\w*|previa\w*|todas?)\b.{0,30}\b(instruccion\w*|reglas|indicacion\w*|directrices)\b"),
+    ("ignore_previous_instructions", 3.0, r"\b(ignor\w+|dimentic\w+)\b.{0,30}\b(preceden\w*|tutte|tutti|prime)\b.{0,30}\b(istruzion\w*|regole|direttive)\b"),
+    ("ignore_previous_instructions", 3.0, r"\b(ignor\w+|esquec\w+)\b.{0,30}\b(anterior\w*|previa\w*|todas?|todos)\b.{0,30}\b(instruc\w*|regras|diretriz\w*)\b"),
+    ("ignore_previous_instructions", 3.0, r"\b(negeer\w*|vergeet\w*|vergeten)\b.{0,30}\b(vorige|eerdere|alle)\b.{0,30}\b(instructies|regels|opdrachten)\b"),
+    ("ignore_previous_instructions", 3.0, r"\b(игнорир\w*|забудь\w*|забыть|пренебреги\w*)\b.{0,30}\b(предыдущ\w*|прежн\w*|все|всe|любые)\b.{0,30}\b(инструкци\w*|правила|указани\w*|команд\w*)\b"),
+    ("ignore_previous_instructions", 3.0, r"(تجاهل|انس|تجاوز)\w*.{0,30}(التعليمات|الاوامر|القواعد)"),
+    ("reveal_system_prompt", 3.0, r"\b(zeig\w*|verrat\w*|gib\w*|nenn\w*|offenbar\w*|wiederhol\w*|ausgeb\w*)\b.{0,30}\b(system\w*|ursprunglich\w*|versteckt\w*|geheim\w*)\b.{0,15}\b(prompt|anweisung\w*|nachricht|instruktion\w*)\b"),
+    ("reveal_system_prompt", 3.0, r"\b(zeig\w*|verrat\w*|gib\w*|nenn\w*|offenbar\w*|wiederhol\w*|ausgeb\w*)\b.{0,30}\b(dein\w*|ihr\w*)?\s*systemprompt\b"),
+    ("reveal_system_prompt", 3.0, r"\b(revel\w+|montr\w+|affich\w+|donn\w+|repet\w+|devoil\w+)\b.{0,30}\b(prompt|instructions?)\b.{0,20}\b(systeme|initial\w*|cache\w*|origin\w*)\b"),
+    ("reveal_system_prompt", 3.0, r"\b(revel\w+|montr\w+|affich\w+|donn\w+|repet\w+|devoil\w+)\b.{0,30}\b(systeme|initial\w*|cache\w*|origin\w*)\b.{0,15}\b(prompt|instructions?)\b"),
+    ("reveal_system_prompt", 3.0, r"\b(revela\w*|muestra\w*|imprime\w*|repite\w*|dame|ensena\w*)\b.{0,30}\b(prompt|instrucciones)\b.{0,20}\b(sistema|inicial\w*|oculto\w*|original\w*)\b"),
+    ("reveal_system_prompt", 3.0, r"\b(revela\w*|muestra\w*|imprime\w*|repite\w*|dame|ensena\w*)\b.{0,30}\b(sistema|inicial\w*|oculto\w*|original\w*)\b.{0,15}\b(prompt|instrucciones)\b"),
+    ("reveal_system_prompt", 3.0, r"\b(rivela\w*|mostra\w*|stampa\w*|ripeti\w*)\b.{0,30}\b(prompt|istruzioni)\b.{0,20}\b(di sistema|sistema|iniziali|nascost\w*)\b"),
+    ("reveal_system_prompt", 3.0, r"\b(rivela\w*|mostra\w*|stampa\w*|ripeti\w*)\b.{0,30}\b(sistema|iniziali|nascost\w*)\b.{0,15}\b(prompt|istruzioni)\b"),
+    ("reveal_system_prompt", 3.0, r"\b(revele\w*|mostre\w*|imprima\w*|repita\w*)\b.{0,30}\b(prompt|instruc\w*)\b.{0,20}\b(sistema|inicia\w*|oculto\w*|original\w*)\b"),
+    ("reveal_system_prompt", 3.0, r"\b(revele\w*|mostre\w*|imprima\w*|repita\w*)\b.{0,30}\b(sistema|inicia\w*|oculto\w*|original\w*)\b.{0,15}\b(prompt|instruc\w*)\b"),
+    ("reveal_system_prompt", 3.0, r"\b(onthul\w*|toon\w*|geef\w*|herhaal\w*)\b.{0,30}\b(systeem\w*|oorspronkelijke|verborgen)\b.{0,15}\b(prompt|instructies|bericht)\b"),
+    ("reveal_system_prompt", 3.0, r"\b(onthul\w*|toon\w*|geef\w*|herhaal\w*)\b.{0,30}\bsysteemprompt\b"),
+    ("reveal_system_prompt", 3.0, r"\b(покаж\w*|раскро\w*|выведи\w*|повтори\w*|назови\w*)\b.{0,30}\b(системн\w*|исходн\w*|скрыт\w*)\b.{0,15}\b(промпт\w*|инструкци\w*|сообщени\w*)\b"),
+    ("reveal_system_prompt", 3.0, r"(اكشف|اظهر|اعرض|كرر)\w*.{0,30}(موجه النظام|تعليمات النظام|النظام)"),
+]
+UNICODE_INDICATORS: list[tuple[str, float, re.Pattern]] = [(label, weight, re.compile(pattern)) for label, weight, pattern in _UNICODE_RAW_INDICATORS]
+
 # Substring indicators checked against the whitespace-removed text, to catch
 # heavy obfuscation (e.g. "i g n o r e   a l l   p r e v i o u s ...").
 _COLLAPSED_INDICATORS: list[tuple[str, float, tuple[str, ...]]] = [
@@ -111,6 +142,15 @@ def scan_text(text: str) -> InjectionScan:
     score = 0.0
     for label, weight, pattern in INDICATORS:
         if pattern.search(normalized):
+            matched.append(label)
+            score += weight
+
+    # P10D: multilingual rules on the accent-folded Unicode form (each label counts once, so an English hit plus its translation never double-counts).
+    unicode_form = normalize_for_unicode_detection(text)
+    for label, weight, pattern in UNICODE_INDICATORS:
+        if label in matched:
+            continue
+        if pattern.search(unicode_form):
             matched.append(label)
             score += weight
 

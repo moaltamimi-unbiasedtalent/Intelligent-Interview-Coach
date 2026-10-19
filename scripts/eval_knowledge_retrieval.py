@@ -167,6 +167,16 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", default=None, help="Write the full report JSON to this path.")
     args = ap.parse_args(argv)
 
+    # P10D: a DEVELOPER-LOCAL evaluator (it reads the generated knowledge stores). In a clean checkout those stores do not exist, every case would be
+    # insufficient and the gate would FAIL for a reason that says nothing about the code; report NOT RUN (exit 2) and create nothing.
+    from src.copilot import constants
+
+    missing = [Path(x).name for x in (constants.ROLE_DB_PATH, constants.COMPENSATION_DB_PATH, constants.LABOUR_MARKET_DB_PATH, constants.COMPETENCY_DB_PATH, constants.CREDENTIAL_DB_PATH)
+               if not Path(x).is_file()] + ([] if (Path(CopilotConfig().chroma_persist_dir) / "chroma.sqlite3").exists() else ["chroma.sqlite3"])
+    if missing:
+        print(f"NOT RUN: developer-local evaluator; the generated knowledge stores are absent in this environment ({', '.join(missing)}). Nothing was created.")
+        return 2
+
     cases = json.loads(Path(args.cases).read_text(encoding="utf-8"))
     report = evaluate(cases)
     s = report["summary"]

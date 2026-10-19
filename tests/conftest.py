@@ -167,15 +167,19 @@ def pytest_sessionfinish(session, exitstatus):
         session.exitstatus = 1
 
 
-@pytest.fixture(scope="session", autouse=True)
-def _isolate_research_cache():
-    """The external-research cache defaults to ``data/cache/external`` (relative to the cwd), which made one test
-    write - and potentially READ stale entries from - the developer's cache. Default it to the temp directory."""
+def install_research_cache_isolation() -> None:
+    """Redirect the external-research cache (``data/cache/external`` by default) to a per-process temp directory.
+
+    Idempotent. It runs when this module is IMPORTED (so a standalone evaluator that does ``import tests.conftest`` is isolated exactly like a
+    pytest run: before P10D only the pytest fixture below did it, so an evaluator that exercised the research service read stale entries from, and
+    wrote new ones into, the developer's cache) and again from the session fixture. The production cache code and default path are untouched.
+    """
     if _ALLOW_DEV:
-        yield
         return
     from src.copilot.research import cache
 
+    if getattr(cache, "_ask4mo_isolated", False):
+        return
     orig_read, orig_write = cache.read, cache.write
     directory = _TMP_ROOT / "research_cache"
 
@@ -188,10 +192,20 @@ def _isolate_research_cache():
         return orig_write(key, payload, **kwargs)
 
     cache.read, cache.write = read, write
-    try:
-        yield
-    finally:
-        cache.read, cache.write = orig_read, orig_write
+    cache._ask4mo_isolated = True
+    cache._ask4mo_originals = (orig_read, orig_write)
+
+
+if not _ALLOW_DEV:
+    install_research_cache_isolation()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _isolate_research_cache():
+    """The external-research cache defaults to ``data/cache/external``, which made one test write - and potentially READ stale entries from - the
+    developer's cache. It is redirected to the temp directory when this module is imported (see ``install_research_cache_isolation``)."""
+    install_research_cache_isolation()
+    yield
 
 
 @pytest.fixture(autouse=True)

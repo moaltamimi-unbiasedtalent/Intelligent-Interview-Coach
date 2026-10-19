@@ -10,23 +10,32 @@ same chunks as the vector store and preserves their metadata, returning the same
 from __future__ import annotations
 
 import re
+import unicodedata
 
 from src.copilot import constants
 from src.copilot.models import DocumentChunk, RetrievalResult
 
 __all__ = ["KeywordRetriever", "tokenize"]
 
-_TOKEN_RE = re.compile(r"[a-z0-9]+")
+# P10D: Unicode-aware tokens. The previous ``[a-z0-9]+`` split every word at an accented or non-Latin letter ("für" became "f", "r"; "développeur"
+# became "d", "veloppeur"; Arabic and Cyrillic text produced no tokens at all), so the lexical channel could not match a word typed without its
+# accents and matched on meaningless single letters. Tokens are now whole words, case-folded and accent-folded, so "Gespräch" and "Gesprach" agree.
+# Pure-ASCII text tokenises exactly as before. (The offline ``LocalHashEmbedder`` keeps its ASCII tokeniser on purpose: changing it would change
+# every stored embedding and require a re-index.)
+_TOKEN_RE = re.compile(r"[^\W_]+")
 
 
 def tokenize(text: str) -> list[str]:
-    """Lower-case alphanumeric tokenisation shared by index and query.
+    """Lower-case, accent-folded whole-word tokenisation shared by index and query.
 
-    ``"ISO 27001"`` -> ``["iso", "27001"]``; ``"SQL"`` -> ``["sql"]``. Using the
-    same tokeniser for documents and queries is what makes exact-term matching
-    reliable.
+    ``"ISO 27001"`` -> ``["iso", "27001"]``; ``"SQL"`` -> ``["sql"]``;
+    ``"Vorstellungsgespräch für"`` -> ``["vorstellungsgesprach", "fur"]``. Using
+    the same tokeniser for documents and queries is what makes exact-term
+    matching reliable.
     """
-    return _TOKEN_RE.findall(text.lower())
+    folded = unicodedata.normalize("NFKD", (text or "").casefold())
+    folded = "".join(ch for ch in folded if not unicodedata.combining(ch))
+    return _TOKEN_RE.findall(folded)
 
 
 def _matches(metadata: dict, filters: dict | None) -> bool:
@@ -56,8 +65,24 @@ class KeywordRetriever:
 
     @classmethod
     def from_store(cls, store) -> "KeywordRetriever":
-        """Build a BM25 index from the same chunks held by a vector store."""
-        return cls(store.all_chunks())
+        """Build a BM25 index from the same chunks held by a vector store.
+
+        P10D: the index is cached on the (process-shared) store, keyed by its size and its in-process mutation revision. The API built the career service, and with it this index
+        over every stored chunk, for EVERY request (measured about 0.65 s for 14,087 chunks, several times the retrieval itself). A store that gained or lost chunks, in this
+        process (revision) or another (size), rebuilds the index; nothing else changes, so results are identical."""
+        try:
+            key = (store.count(), getattr(store, "_revision", 0))
+        except Exception:  # noqa: BLE001 - an uncountable store is simply not cached
+            return cls(store.all_chunks())
+        cached = getattr(store, "_keyword_index_cache", None)
+        if cached is not None and cached[0] == key:
+            return cached[1]
+        retriever = cls(store.all_chunks())
+        try:
+            store._keyword_index_cache = (key, retriever)
+        except Exception:  # noqa: BLE001 - e.g. a store with __slots__
+            pass
+        return retriever
 
     def count(self) -> int:
         return len(self._chunks)

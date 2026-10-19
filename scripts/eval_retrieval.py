@@ -37,6 +37,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     config = load_config()
+    # P10D: a DEVELOPER-LOCAL evaluator. In a clean checkout the generated vector store does not exist, and opening it would CREATE an empty
+    # store (which also makes the product-coverage guard see an ambiguous environment). Report NOT RUN instead and create nothing.
+    if not (Path(config.chroma_persist_dir) / "chroma.sqlite3").exists():
+        print("NOT RUN: developer-local evaluator; the generated vector store is absent in this environment (clean checkout). Nothing was created.")
+        return 0
     store = build_vector_store(config)
     if store.count() == 0:
         print(

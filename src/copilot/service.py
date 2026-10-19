@@ -623,6 +623,9 @@ class CareerIntelligenceService:
                 trace.notes.append(screen.summary())
                 trace.excluded_chunks = screen.excluded_count
             results = screen.kept
+            # P10D: a question that names a country never receives narrative chunks tagged to ANOTHER nation (chunks carry a country tag; untagged,
+            # EU and global chunks are broader context and stay). Dropped chunks are not replaced: fewer results, never wrong-country ones.
+            results = self._exclude_other_country_narrative(results, trace)
             if not results and trace.rag_used:
                 trace.rag_used = False
             # 5a) Optional reranking (OPT-1B): RRF candidates → reranker → top-k.
@@ -655,6 +658,28 @@ class CareerIntelligenceService:
         bundle.sections = sections
         bundle.citations = citations
         return bundle
+
+    # Narrative document types that carry COUNTRY-BOUND statistics or surveys. Occupation descriptions, tasks, skills and guidance (O*NET, ESCO, ISCO) are
+    # definitions that apply across countries by design and are never filtered by country.
+    _COUNTRY_BOUND_NARRATIVE = frozenset({"labour_market", "industry_report"})
+
+    @classmethod
+    def _exclude_other_country_narrative(cls, results, trace):
+        """Drop country-bound narrative results (labour-market notes, industry surveys) tagged to a country the question does not ask about.
+
+        A no-op when no country is named, and for every document type that is not country-bound. A US survey is not offered for a German question; the EU family is
+        offered only for a European country. Dropped results are not replaced (fewer, never wrong-country, results)."""
+        country = trace.detected_country
+        if not country or not results:
+            return results
+        from src.copilot.knowledge.countries import tag_matches_country
+
+        kept = [r for r in results
+                if (r.metadata or {}).get("document_type") not in cls._COUNTRY_BOUND_NARRATIVE or tag_matches_country((r.metadata or {}).get("country"), country)]
+        dropped = len(results) - len(kept)
+        if dropped:
+            trace.notes.append(f"Excluded {dropped} country-bound narrative passage(s) tagged to a different country than the one asked about ({country}).")
+        return kept
 
     # -- dry-run planning (OPT-5) ------------------------------------------
 
