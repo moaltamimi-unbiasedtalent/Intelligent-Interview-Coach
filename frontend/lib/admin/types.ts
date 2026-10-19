@@ -46,7 +46,7 @@ export interface AdminProviderRow {
 }
 export interface AdminProviders {
   providers: AdminProviderRow[];
-  speech: Record<string, unknown>;
+  speech: Record<string, unknown> & { server_side?: ServerSpeechStatus | null };
   ocr: { engine: string; available: boolean; pdf_ocr_available: boolean; poppler_available: boolean; live_quality: string };
   pause: Record<string, boolean>;
   pause_durable: boolean;
@@ -829,3 +829,31 @@ export interface BillingOpsEventDetail {
   lifecycle: { step: string; at: string | null }[]; reconciliation: Record<string, unknown> | null;
 }
 export interface BillingRecoveryResult { reference: string; action: string; status: string; result: string | null; replayed: boolean }
+
+// --- W12.4F: derived capability readiness and governed speech (W12.4E backend) ---
+export interface ServerSpeechStatus {
+  stt_provider: string; tts_provider: string; stt_configured: boolean; tts_configured: boolean; stt_operational: boolean; tts_operational: boolean;
+  authorization_state: string; genuine_model_validation: Record<string, string>; note: string;
+}
+export interface CapabilityReadinessRow {
+  id: string; label: string; admin_path: string | null; status: string; qualifiers: string[]; ownership: string; basis: "runtime" | "code"; evidence: string; limitations: string[];
+}
+export interface CapabilityReadiness {
+  capabilities: CapabilityReadinessRow[]; summary: Record<string, number>; vocabulary: { statuses: string[]; qualifiers: string[] }; boundary: string;
+}
+export interface SpeechConfig {
+  stt_provider: string; tts_provider: string; stt_enabled: boolean; tts_enabled: boolean; languages: string[]; browser_stt_allowed: boolean; browser_tts_allowed: boolean;
+  stt_timeout_seconds: number; tts_timeout_seconds: number; revision: number; persisted: boolean; updated_at?: string | null; updated_by_user_id?: number | null; reason?: string;
+}
+export interface SpeechProviderReadiness {
+  provider: string; configured: boolean; dependency_available: boolean; model_available: boolean; ready_for_offline_execution: boolean; validated_with_fixture: boolean;
+  validated_with_genuine_model: string; live_authorized: boolean; operational: boolean; deployment: string; blockers: string[]; note: string;
+}
+export interface SpeechLanguageRow {
+  product_authorized: boolean; stt_provider_supports: boolean; tts_provider_supports: boolean; tts_provider_unverified: boolean; admin_selected: boolean; effective_stt: boolean; effective_tts: boolean; note?: string;
+}
+export interface SpeechOverview {
+  environment: string; config: SpeechConfig; stt: SpeechProviderReadiness; tts: SpeechProviderReadiness; language_matrix: Record<string, SpeechLanguageRow>;
+  provider_facts: Record<string, Record<string, unknown>>; authorization: Record<string, boolean>; note: string;
+}
+export type SpeechConfigPatch = Partial<Pick<SpeechConfig, "stt_enabled" | "tts_enabled" | "languages" | "browser_stt_allowed" | "browser_tts_allowed" | "stt_timeout_seconds" | "tts_timeout_seconds">>;

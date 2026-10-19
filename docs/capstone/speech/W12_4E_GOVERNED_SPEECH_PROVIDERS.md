@@ -95,3 +95,7 @@ Before the integrated Candidate/Admin/Operations requalification, the candidate 
 
 ## 17. W12.4F entry readiness
 Ready: governance patterns (durable config, expected revision, audit, RBAC) are reusable; no blocker from W12.4E. W12.4F was not started.
+
+
+## 18. Owner decision of 2026-10-19: remaining activation work deferred (recorded by W12.4F)
+W12.4E is accepted as CODE QUALIFIED OFFLINE and merged (PR #192). Every item in sections 14 and 15 that concerns deployment, licensing, genuine model validation or activation is DEFERRED UNTIL AFTER CAPSTONE SUBMISSION and recorded as 18 items in `docs/capstone/p10/P10C_F2A_POST_SUBMISSION_BACKLOG.md`. Nothing above is marked complete by this deferral; the engineering recorded in this document is preserved unchanged; production speech stays NOT ACTIVATED; genuine Whisper and Kyutai execution stays NOT VERIFIED; a deferral is not production authorization. W12.4F added an Admin Speech page and derived readiness reporting over this implementation without changing any speech behaviour or authorization.

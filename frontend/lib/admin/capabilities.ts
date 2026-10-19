@@ -78,6 +78,7 @@ export const ADMIN_DESTINATIONS: readonly AdminDestination[] = [
   { id: "knowledge", label: "Knowledge", href: "/admin/knowledge", description: "Governed knowledge sources", anyOf: [P.knowledge] },
   { id: "reports", label: "Reports", href: "/admin/reports", description: "Aggregate reporting", anyOf: [P.reportsRead, P.reportsCommercial] },
   { id: "configuration", label: "Configuration", href: "/admin/configuration", description: "Platform pause", anyOf: [P.flagsRead] },
+  { id: "speech", label: "Speech", href: "/admin/speech", description: "Governed speech (not active)", anyOf: [P.flagsRead] },
   { id: "flags", label: "Feature flags", href: "/admin/flags", description: "Governed feature flags", anyOf: [P.flagsRead] },
   { id: "ai", label: "AI and models", href: "/admin/ai", description: "Governed model configuration", anyOf: [P.ai] },
   { id: "jobs", label: "Jobs", href: "/admin/jobs", description: "Queue and worker diagnostics", anyOf: [P.jobsRead] },

@@ -57,6 +57,19 @@ class RealtimeStatus(_Strict):
     transcript_visible_to_admin: bool = False
 
 
+class ServerSpeechStatus(_Strict):
+    """W12.4F: the governed server-side speech state (W12.4E) in the provider panel. Fixed labels only; nothing here implies a provider is running."""
+    stt_provider: str
+    tts_provider: str
+    stt_configured: bool
+    tts_configured: bool
+    stt_operational: bool
+    tts_operational: bool
+    authorization_state: str
+    genuine_model_validation: dict[str, str]
+    note: str
+
+
 class SpeechStatus(_Strict):
     architecture: str
     input: str
@@ -66,6 +79,7 @@ class SpeechStatus(_Strict):
     voice_trait_inference: str
     live_quality: str
     realtime: RealtimeStatus
+    server_side: ServerSpeechStatus | None = None
 
 
 class ProvidersResponse(_Strict):

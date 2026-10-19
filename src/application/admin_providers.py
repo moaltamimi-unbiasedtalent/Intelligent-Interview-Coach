@@ -10,7 +10,7 @@ from __future__ import annotations
 import os
 
 from src.api.schemas.admin import (
-    OcrLanguageStatus, OcrStatus, ProviderRow, ProvidersResponse, RealtimeStatus, SpeechStatus,
+    OcrLanguageStatus, OcrStatus, ProviderRow, ProvidersResponse, RealtimeStatus, ServerSpeechStatus, SpeechStatus,
 )
 
 
@@ -31,7 +31,23 @@ def _row(provider_id: str, label: str, configured: bool, *, enabled: bool | None
     )
 
 
-def build_providers_response(pause_service=None) -> ProvidersResponse:
+def _server_speech(runtime):
+    """Governed server-side speech state (W12.4E), or None when the runtime is not wired into this view or its state cannot be read (never reported as healthy)."""
+    if runtime is None:
+        return None
+    try:
+        from src.speech import policy
+
+        r = runtime.readiness()
+        return ServerSpeechStatus(stt_provider=r["stt"]["provider"], tts_provider=r["tts"]["provider"], stt_configured=bool(r["stt"]["configured"]), tts_configured=bool(r["tts"]["configured"]),
+                                  stt_operational=bool(r["stt"]["operational"]), tts_operational=bool(r["tts"]["operational"]),
+                                  authorization_state="authorized" if policy.SERVER_SPEECH_PROVIDERS_AUTHORIZED else "not_authorized", genuine_model_validation=dict(policy.GENUINE_MODEL_VALIDATION),
+                                  note="Server speech is governed at /admin/speech. Browser speech remains the active path; configured is not operational.")
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def build_providers_response(pause_service=None, speech_runtime=None) -> ProvidersResponse:
     from src.application.admin_command_center import rate_limit_mode
     from src.documents.ocr import ocr_runtime_status
     from src.voice.realtime import resolve_realtime_config
@@ -50,12 +66,13 @@ def build_providers_response(pause_service=None) -> ProvidersResponse:
     ocr = ocr_runtime_status()
     rt = resolve_realtime_config().safe_dict()
     rl = rate_limit_mode()
+    server_side = _server_speech(speech_runtime)
     return ProvidersResponse(
         providers=rows,
         speech=SpeechStatus(
             architecture="browser_web_speech", input="browser_web_speech_stt",
             output="browser_speech_synthesis_tts", camera="never_requested",
-            audio_persisted_by_ask4mo=False, voice_trait_inference="none", live_quality="UNVALIDATED",
+            audio_persisted_by_ask4mo=False, voice_trait_inference="none", live_quality="UNVALIDATED", server_side=server_side,
             realtime=RealtimeStatus(
                 enabled=bool(rt.get("enabled")), configured=bool(rt.get("configured")),
                 available=bool(rt.get("available")),

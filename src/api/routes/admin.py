@@ -33,12 +33,19 @@ from src.support_repository import SupportRepository
 from src.api.dependencies import (
     get_account_repository,
     get_admin_user_repository,
+    get_ai_config_service,
+    get_billing_operations,
+    get_feature_flag_service,
+    get_integration_service,
+    get_knowledge_admin_service,
     get_pause_service,
     get_plan_repository,
     get_request_id,
+    get_speech_runtime,
     get_workspace_repository,
     require_permission,
 )
+from src.api.dependencies import get_secret_store as get_secret_store_dependency
 from src.api.schemas.admin import (
     AdminUserDetail,
     AdminUserList,
@@ -107,6 +114,16 @@ def home(request: Request, principal=Depends(require_permission(perm.OVERVIEW_RE
         pause=PauseService(accounts.session_factory),
         flags=FeatureFlagService(accounts.session_factory),
     )
+
+
+@router.get("/readiness", summary="Derived capability readiness (statuses from existing sources; no provider is contacted; rows follow the caller's domain permissions)")
+def readiness(principal=Depends(require_permission(perm.OVERVIEW_READ)), speech=Depends(get_speech_runtime), integrations=Depends(get_integration_service),
+              secret_store=Depends(get_secret_store_dependency), billing_ops=Depends(get_billing_operations), ai=Depends(get_ai_config_service),
+              knowledge=Depends(get_knowledge_admin_service), pause=Depends(get_pause_service), flags=Depends(get_feature_flag_service)) -> dict:
+    from src.application.admin_readiness import capability_readiness
+
+    return capability_readiness(allowed=perm.permissions_for_role(principal.platform_role), speech_runtime=speech, integrations=integrations, secret_store=secret_store,
+                                billing_ops=billing_ops, ai=ai, knowledge=knowledge, pause=pause, flags=flags)
 
 
 @router.get("/users", response_model=AdminUserList,
@@ -333,7 +350,7 @@ def _realtime_provider_status() -> dict:
 
 @router.get("/providers", response_model=ProvidersResponse,
             summary="Provider status (allowlist schema; no secrets, no live calls)")
-def providers(_p=Depends(require_permission(perm.INTEGRATIONS_READ)), pause=Depends(get_pause_service)) -> ProvidersResponse:
+def providers(_p=Depends(require_permission(perm.INTEGRATIONS_READ)), pause=Depends(get_pause_service), speech=Depends(get_speech_runtime)) -> ProvidersResponse:
     from src.application.admin_providers import build_providers_response
 
-    return build_providers_response(pause)
+    return build_providers_response(pause, speech)
