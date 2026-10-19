@@ -115,6 +115,39 @@ describe("Capability readiness panel", () => {
     }
   });
 
+  it("W12.5 correction: structurally malformed NON-EMPTY rows give the unavailable state, never a crash or an invented status", async () => {
+    const good = { id: "billing", label: "Billing", admin_path: "/admin/billing", status: "MOCK", qualifiers: ["OFFLINE_VALIDATED"], ownership: "Owner", basis: "runtime", evidence: "e", limitations: [] };
+    const bad: unknown[] = [
+      [{ id: "x" }],                                              // required fields missing
+      [{ ...good, qualifiers: null }],                            // qualifiers not an array (used to throw on .length / .map)
+      [{ ...good, limitations: "none" }],                         // limitations not an array
+      [{ ...good, status: "SHINY_NEW_STATUS" }],                  // unknown status is not shown as if it were known
+      [{ ...good, status: "toString" }],                          // not a prototype key either
+      [{ ...good, evidence: 5 }],
+      [{ ...good, label: "" }],
+      [null],
+      [good, { ...good, id: "second", qualifiers: undefined }],   // one bad row among good rows invalidates the response
+      ["not an object"],
+    ];
+    for (const rows of bad) {
+      readiness.mockResolvedValue({ summary: {}, vocabulary: { statuses: [], qualifiers: [] }, boundary: "b", capabilities: rows });
+      const { unmount } = render(<CapabilityReadiness />);
+      expect(await screen.findByRole("status")).toHaveTextContent(/unavailable right now/);
+      expect(screen.queryByRole("table")).toBeNull();
+      expect(screen.queryByText("Billing")).toBeNull();           // no row text leaks through
+      unmount();
+    }
+  });
+
+  it("W12.5 correction: a fully valid response still renders every row", async () => {
+    const good = (id: string, status: string) => ({ id, label: `Cap ${id}`, admin_path: null, status, qualifiers: [], ownership: "Owner", basis: "code", evidence: "e", limitations: ["l"] });
+    readiness.mockResolvedValue({ summary: {}, vocabulary: { statuses: [], qualifiers: [] }, boundary: "b", capabilities: [good("a", "OPERATIONAL"), good("b", "READ_ONLY")] });
+    render(<CapabilityReadiness />);
+    expect(await screen.findByText("Cap a")).toBeInTheDocument();
+    expect(screen.getByText("Cap b")).toBeInTheDocument();
+    expect(screen.getByText("Read-only")).toBeInTheDocument();
+  });
+
   it("shows the unavailable state when the endpoint fails (never a fabricated healthy state)", async () => {
     readiness.mockRejectedValue(new Error("down"));
     render(<CapabilityReadiness />);

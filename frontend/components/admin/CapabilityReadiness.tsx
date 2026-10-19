@@ -2,6 +2,7 @@
 
 import Link from "@/components/ui/VerifiedLink";
 import { api } from "@/lib/api/client";
+import type { CapabilityReadinessRow } from "@/lib/admin/types";
 import { Panel, StatusLabel, useAdminResource, ScrollRegion } from "./ui";
 
 // Derived capability readiness (W12.4F). Read-only: every row is computed by the server from existing sources. A status here never means "production ready".
@@ -12,6 +13,17 @@ const LABEL: Record<string, string> = {
 };
 const QUALIFIER: Record<string, string> = { OFFLINE_VALIDATED: "Offline validated", LIVE_UNVERIFIED: "Live unverified", DEFERRED: "Deferred", UNAVAILABLE: "Unavailable", DISABLED: "Disabled" };
 
+const strings = (v: unknown): v is string[] => Array.isArray(v) && v.every((x) => typeof x === "string");
+
+/** A readiness row is rendered only when every field the table reads is present with the right type and a known status; anything else is treated as an unavailable response. */
+export function isValidCapabilityRow(r: unknown): r is CapabilityReadinessRow {
+  if (!r || typeof r !== "object") return false;
+  const c = r as Record<string, unknown>;
+  return typeof c.id === "string" && c.id !== "" && typeof c.label === "string" && c.label !== "" && typeof c.status === "string" && Object.hasOwn(LABEL, c.status)
+    && strings(c.qualifiers) && typeof c.ownership === "string" && typeof c.evidence === "string" && strings(c.limitations)
+    && (c.admin_path === null || typeof c.admin_path === "string");
+}
+
 export function CapabilityReadiness() {
   const loaded = useAdminResource(() => Promise.resolve().then(() => api.admin.readiness()), []);
   if (loaded.state === "loading") return null;
@@ -19,7 +31,7 @@ export function CapabilityReadiness() {
   const capabilities = data?.capabilities;
   const boundary = data?.boundary;
   // W12.5: a failed, malformed or empty response is an explicit, accessible unavailable state. No readiness data is ever invented, and the Command Center never crashes.
-  if (!Array.isArray(capabilities) || capabilities.length === 0) {
+  if (!Array.isArray(capabilities) || capabilities.length === 0 || !capabilities.every(isValidCapabilityRow)) {
     return (
       <Panel title="Capability readiness">
         <p role="status" className="text-sm">Capability readiness is unavailable right now. No status is shown rather than guessing one. Reload the page to try again; the individual pages for each area are still available from the navigation.</p>

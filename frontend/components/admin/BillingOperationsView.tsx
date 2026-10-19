@@ -91,7 +91,7 @@ function Overview() {
 function List({ page, cols, caption }: { page: BillingOpsPage; cols: [string, string][]; caption: string }) {
   if (!page?.items || page.items.length === 0) return <p className="text-sm text-muted">Nothing to show.</p>;
   return (
-    <ScrollRegion label={`caption (scrollable table)`}>
+    <ScrollRegion label={`${caption} (scrollable table)`}>
       <table className="w-full text-left text-sm">
         <caption className="sr-only">{caption}</caption>
         <thead><tr className="text-xs text-muted">{cols.map(([, h]) => <th key={h} scope="col" className="py-1 pr-4 font-medium">{h}</th>)}</tr></thead>
