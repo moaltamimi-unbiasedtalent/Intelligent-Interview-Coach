@@ -44,7 +44,7 @@ def test_the_corpus_is_sound_synthetic_and_never_mode_c():
     text = json.dumps(c).lower()
     assert "api.openai" not in text and "openrouter.ai" not in text
     assert all(m["source_id"].startswith("fx_") and m["source_url"].startswith("https://fixtures.invalid/") for m in c["fixture"]["manifest"])
-    assert len({x["id"] for x in c["cases"]}) == len(c["cases"]) == 154
+    assert len({x["id"] for x in c["cases"]}) == len(c["cases"]) == 157
 
 
 def test_every_judged_case_states_a_rationale_and_unjudged_cases_never_enter_a_metric(result):
@@ -63,8 +63,8 @@ def test_every_judged_case_states_a_rationale_and_unjudged_cases_never_enter_a_m
 def test_the_run_passes_and_exercises_every_required_tag(result):
     failed = [(r["id"], [k for k, v in r["checks"].items() if not v], r["error"]) for r in result["cases"] if not r["ok"]]
     assert result["ok"], failed
-    assert result["passed"] == result["total"] == 154
-    assert result["tags"]["missing_tags"] == [] and result["tags"]["failing_tags"] == [] and result["tags"]["required_tags"] == result["tags"]["exercised"] == 88
+    assert result["passed"] == result["total"] == 157
+    assert result["tags"]["missing_tags"] == [] and result["tags"]["failing_tags"] == [] and result["tags"]["required_tags"] == result["tags"]["exercised"] == 90
     assert result["claims"] == {"mode_c_model_quality_measured": False, "human_rated": False, "semantic_retrieval_measured": False, "real_world_citations_verified": False, "production_ready": False,
                                 "product_coverage_gate_passed": False}
 
@@ -403,11 +403,13 @@ def test_synthetic_fixture_origin_evidence_is_labelled_not_presented_as_official
     cred = CredentialRepository(":memory:")
     cred.add_certification(Certification(source_id="careeronestop", certification_id="c1", name="Project Management Professional (PMP)", occupation_title="Project Manager"))
     plain = StructuredRetrievalCoordinator(role_repo=role, credential_repo=cred, comp_repo=CompensationRepository(":memory:"), manifest_entries=[])
-    labelled = StructuredRetrievalCoordinator(role_repo=role, credential_repo=cred, comp_repo=CompensationRepository(":memory:"), manifest_entries=[], fixture_sources={"careeronestop"})
+    labelled = StructuredRetrievalCoordinator(role_repo=role, credential_repo=cred, comp_repo=CompensationRepository(":memory:"), manifest_entries=[], fixture_sources={"careeronestop"}, demonstration_mode=True)
+    withheld = StructuredRetrievalCoordinator(role_repo=role, credential_repo=cred, comp_repo=CompensationRepository(":memory:"), manifest_entries=[], fixture_sources={"careeronestop"})
     q = "What certifications help a Project Manager?"
     a, b = _ask(plain, q).evidence, _ask(labelled, q).evidence
-    assert len(a) == len(b) == 1                                                                 # coverage is unchanged: the evidence is still returned
-    assert "SYNTHETIC SAMPLE" not in a[0].text and "SYNTHETIC SAMPLE DATA" in b[0].text         # ... but a fixture row is no longer shown as official data
+    assert len(a) == len(b) == 1                                                                 # a demonstration still returns the row
+    assert _ask(withheld, q).evidence == []                                                      # P10D-R1: the default is to WITHHOLD synthetic sample data from candidates
+    assert "SYNTHETIC SAMPLE" not in a[0].text and "SYNTHETIC SAMPLE DATA" in b[0].text         # ... and a demonstration labels it, never presenting it as official data
     assert "(synthetic sample)" in b[0].to_citation("[1]").title and b[0].metadata["data_origin"] == "synthetic_fixture"
 
 

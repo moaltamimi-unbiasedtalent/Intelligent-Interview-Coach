@@ -21,7 +21,8 @@ CLEAN = {s: False for s in guard.STORES}
 
 
 def rows(bad):
-    return [{"id": i, "insufficient_ok": "False" if i in bad else "True"} for i in IDS]
+    # P10D-R1: the evaluator also emits the source-backed columns; for these synthetic rows the two measurements are identical (the V2 checks are tested in test_p10d_r1_grounding_coverage.py).
+    return [{"id": i, "insufficient_ok": "False" if i in bad else "True", "source_backed_ok": "False" if i in bad else "True", "coverage_basis": "none"} for i in IDS]
 
 
 def summary(bad):
@@ -111,6 +112,9 @@ def test_10_a_normal_run_cannot_modify_baselines_and_ci_cannot_update(tmp_path, 
     shutil.copy(BASE_FILE, copy)
     before = copy.read_bytes()
     monkeypatch.setattr(guard, "BASELINE", copy)
+    v2copy = tmp_path / "v2.json"
+    shutil.copy(guard.BASELINE_V2, v2copy)
+    monkeypatch.setattr(guard, "BASELINE_V2", v2copy)
     monkeypatch.setattr(guard, "store_report", lambda root=guard.ROOT: CLEAN)
     cl = json.loads(copy.read_text())["profiles"]["clean_checkout"]
     monkeypatch.setattr(guard, "run_evaluator", lambda: rows(set(cl["insufficient_case_ids"])))

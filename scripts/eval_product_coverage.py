@@ -38,6 +38,7 @@ from src.copilot.knowledge.retrieval import build_default_coordinator  # noqa: E
 from src.copilot.knowledge.router import detect_country, route_question  # noqa: E402
 from src.copilot.rag.routing import route_for_intent  # noqa: E402
 from src.copilot.rag.translation import QueryTranslator  # noqa: E402
+from src.copilot.knowledge.evidence_integrity import source_backed_assessment  # noqa: E402
 
 DIR = Path("evaluations/product_coverage")  # committed INPUTS (cases.json) live here
 # Results go to a temp directory unless refreshed deliberately with ``--write`` / ASK4MO_EVAL_WRITE=1 (W9.12).
@@ -137,6 +138,15 @@ def run() -> dict:
 
         insuff_ok = handled
 
+        # --- V2 (P10D-R1): SOURCE-BACKED coverage. The legacy ``insufficient_ok`` above is UNCHANGED (it counts any returned evidence). Source-backed counts only evidence that is real-origin,
+        # country-applicable and provenance-complete; synthetic, mixed, unknown-origin and wrong-country evidence does not count as factual coverage. Abstention accepted by the case
+        # (``insufficient_ok`` in the case file) or a clarification still counts, exactly as in the legacy rule.
+        asm = source_backed_assessment(ev, c["geography"], coord.origin_class_of, citation_required=bool(c["citation_required"]))
+        # An acceptable gap counts only when the product actually ABSTAINED: returning evidence that is not eligible is not an abstention and is not factual coverage.
+        source_backed_ok = bool(asm["eligible"]) or (not ev and bool(c["insufficient_ok"])) or clarified
+        reasons_s = "|".join(sorted(asm["reasons"]))
+        basis = ("source_backed_evidence" if asm["eligible"] else "clarification" if (clarified and not ev) else "accepted_abstention" if (not ev and c["insufficient_ok"]) else "none")
+
         unsupported_ok = None
         if c["question_family"] == "unsupported":
             unsupported_ok = (len(ev) == 0)  # never fabricates structured evidence
@@ -151,6 +161,8 @@ def run() -> dict:
             "salary_ok": salary_ok, "year_ok": year_ok, "tool_ok": tool_ok,
             "insufficient_ok": insuff_ok, "unsupported_ok": unsupported_ok,
             "latency_ms": latency_ms,
+            "source_backed_ok": source_backed_ok, "coverage_basis": basis, "eligible_evidence": asm["eligible"], "ineligible_reasons": reasons_s,
+            "synthetic_only": asm["synthetic_only"], "human_qualified_ok": asm["human_qualified"],
         })
     return {"rows": rows, "mode": mode, "count": len(cases)}
 
@@ -305,6 +317,17 @@ def main() -> int:
         gate = GATES.get(k)
         flag = "" if (rate is None or gate is None) else (" OK" if rate >= gate else " BELOW GATE")
         print(f"  {k:22} {rate:.0%} (n={n}){flag}" if rate is not None else f"  {k:22} n/a")
+    # Four DISTINCT coverage measurements (never merged into one score). Threshold unchanged: 95% of 412 = 392.
+    total = len(rows)
+    a = sum(1 for r in rows if r["insufficient_ok"])
+    b = sum(1 for r in rows if r["source_backed_ok"])
+    c_ = sum(1 for r in rows if r["human_qualified_ok"])
+    d = sum(1 for r in rows if r["synthetic_only"] and r["insufficient_ok"])
+    print(f"  A legacy coverage          {a}/{total} ({a / total:.1%})")
+    print(f"  B source-backed coverage   {b}/{total} ({b / total:.1%})  = {sum(1 for r in rows if r['coverage_basis'] == 'source_backed_evidence')} backed by eligible evidence + "
+          f"{sum(1 for r in rows if r['coverage_basis'] == 'accepted_abstention')} accepted abstentions + {sum(1 for r in rows if r['coverage_basis'] == 'clarification')} clarifications")
+    print(f"  C human-qualified coverage {c_}/{total} ({c_ / total:.1%})")
+    print(f"  D synthetic-only (counted by A, not by B): {d} case(s)")
     return 0
 
 

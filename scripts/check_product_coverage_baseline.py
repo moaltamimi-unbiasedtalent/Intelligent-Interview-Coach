@@ -38,6 +38,9 @@ sys.path.insert(0, str(ROOT))
 from src.knowledge_foundation.pathsafe import output_is_protected  # noqa: E402
 
 BASELINE = ROOT / "evaluations/product_coverage/baseline_gate_status.json"
+# P10D-R1: the SOURCE-BACKED coverage baseline (a different, versioned measurement). The legacy baseline above keeps its historical meaning and is never rewritten by it.
+BASELINE_V2 = ROOT / "evaluations/product_coverage/baseline_source_backed_v2.json"
+V2_SCHEMA = "p10d-r1-source-backed-coverage-baseline/1"
 CASES = ROOT / "evaluations/product_coverage/cases.json"
 GATE_PERCENT, TOTAL = 95, 412
 PROFILES = ("developer_local", "clean_checkout")
@@ -92,6 +95,19 @@ def parse_results(rows: list[dict], expected_ids: list[str]) -> dict:
         raise GuardError("the evaluated case identifiers differ from cases.json")
     bad = sorted(r["id"] for r in rows if r["insufficient_ok"] == "False")
     return {"cases": len(rows), "sufficient": len(rows) - len(bad), "insufficient": len(bad), "insufficient_case_ids": bad, "case_ids_sha256": ids_digest(ids)}
+
+
+def parse_results_v2(rows: list[dict], expected_ids: list[str]) -> dict:
+    """The V2 (source-backed) summary of the SAME evaluator rows. A row without a True/False ``source_backed_ok`` is malformed output (fail safe, never a skipped check)."""
+    for r in rows:
+        if r.get("source_backed_ok") not in ("True", "False") or r.get("coverage_basis") is None:
+            raise GuardError("malformed evaluator output: a row lacks the V2 source-backed columns (source_backed_ok, coverage_basis)")
+    legacy = parse_results(rows, expected_ids)               # also validates ids, uniqueness and the denominator
+    bad = sorted(r["id"] for r in rows if r["source_backed_ok"] == "False")
+    basis: dict[str, int] = {}
+    for r in rows:
+        basis[r["coverage_basis"]] = basis.get(r["coverage_basis"], 0) + 1
+    return {"cases": len(rows), "sufficient": len(rows) - len(bad), "insufficient": len(bad), "insufficient_case_ids": bad, "case_ids_sha256": legacy["case_ids_sha256"], "basis": dict(sorted(basis.items()))}
 
 
 def run_evaluator() -> list[dict]:
@@ -205,6 +221,7 @@ def main(argv=None) -> int:
     ap.add_argument("--report-md", default=None)
     ap.add_argument("--profile", default=os.environ.get("ASK4MO_COVERAGE_PROFILE") or "auto")
     ap.add_argument("--update-profile", action="store_true")
+    ap.add_argument("--metric", choices=("legacy", "source_backed"), default="legacy", help="which baseline --update-profile maintains (the two metrics are separate and never merged)")
     ap.add_argument("--reason", default=None)
     ap.add_argument("--owner-authorization", default=None)
     a = ap.parse_args(argv)
@@ -216,8 +233,18 @@ def main(argv=None) -> int:
         stores = store_report()
         profile = resolve_profile(a.profile, stores)
         data = json.loads(BASELINE.read_text(encoding="utf-8")) if BASELINE.exists() else {"schema": "p10c-g-product-coverage-baseline/2", "profiles": {}, "history": []}
-        current = parse_results(run_evaluator(), case_ids())
+        eval_rows = run_evaluator()
+        current = parse_results(eval_rows, case_ids())
+        data_v2 = json.loads(BASELINE_V2.read_text(encoding="utf-8")) if BASELINE_V2.exists() else {"schema": V2_SCHEMA, "profiles": {}, "history": []}
         if a.update_profile:
+            if a.metric == "source_backed":
+                cur2 = parse_results_v2(eval_rows, case_ids())
+                rec = plan_update(profile, cur2, data_v2, a.reason, a.owner_authorization)
+                data_v2["profiles"][profile] = {**cur2, "recorded_on": rec["recorded_on"], "environment_stores": stores}
+                data_v2.setdefault("history", []).append(rec)
+                BASELINE_V2.write_text(json.dumps(data_v2, indent=1) + "\n", encoding="utf-8")
+                print(f"SOURCE-BACKED baseline for profile {profile} updated: {cur2['sufficient']}/{cur2['cases']} (weakens: {rec['weakens_baseline']}); review the diff")
+                return 0
             rec = plan_update(profile, current, data, a.reason, a.owner_authorization)
             data["profiles"][profile] = {**current, "recorded_on": rec["recorded_on"], "environment_stores": stores}
             data.setdefault("history", []).append(rec)
@@ -225,10 +252,15 @@ def main(argv=None) -> int:
             print(f"baseline for profile {profile} updated: {current['sufficient']}/{current['cases']} (weakens: {rec['weakens_baseline']}); review the diff")
             return 0
         res = compare(current, data.get("profiles", {}).get(profile))
+        cur2 = parse_results_v2(eval_rows, case_ids())
+        res2 = compare(cur2, data_v2.get("profiles", {}).get(profile))               # independent regression checks for the source-backed measurement
     except GuardError as exc:
         print("GUARD FAILURE (fail safe):", exc)
         return 1
     rep = report(profile, stores, current, res)
+    rep["source_backed"] = {"baseline_file": "evaluations/product_coverage/baseline_source_backed_v2.json", "sufficient": cur2["sufficient"], "insufficient": cur2["insufficient"], "basis": cur2["basis"],
+                            **{k: res2[k] for k in ("regressions", "improvements", "regression_status", "product_coverage_gate", "failures", "baseline_present", "denominator_changed", "case_ids_changed")},
+                            "note": "A different measurement from the legacy count: it counts only real-origin, country-applicable, provenance-complete evidence (or an accepted abstention). Never merged with the legacy figure."}
     if a.json:
         Path(a.json).write_text(json.dumps(rep, indent=1), encoding="utf-8")
     if a.report_md:
@@ -239,7 +271,13 @@ def main(argv=None) -> int:
         print("FAIL:", f)
     if res["regressions"]:
         print("REGRESSED CASES:", ", ".join(res["regressions"][:20]))
-    return 0 if res["ok"] else 1
+    print(f"source-backed coverage [{profile}]: {cur2['sufficient']}/{cur2['cases']} sufficient ({100 * cur2['sufficient'] / cur2['cases']:.1f}%) basis {cur2['basis']} | gate {GATE_PERCENT}% needs {res2['required_sufficient_for_gate']} | "
+          f"REGRESSION STATUS {res2['regression_status']} | PRODUCT COVERAGE GATE {res2['product_coverage_gate']} | regressions {len(res2['regressions'])} | improvements {len(res2['improvements'])}")
+    for f in res2["failures"]:
+        print("FAIL (source-backed):", f)
+    if res2["regressions"]:
+        print("REGRESSED CASES (source-backed):", ", ".join(res2["regressions"][:20]))
+    return 0 if (res["ok"] and res2["ok"]) else 1
 
 
 if __name__ == "__main__":
