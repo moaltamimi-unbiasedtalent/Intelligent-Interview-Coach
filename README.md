@@ -57,6 +57,9 @@ cd frontend && npm run dev
 
 ## Demonstration (no provider, no network)
 
+For a review-day environment with the curated knowledge base and governed sources (isolated copy, keyless), see [docs/capstone/submission/REVIEW_DAY_READINESS.md](docs/capstone/submission/REVIEW_DAY_READINESS.md) and `scripts/review/review_env.sh`.
+
+
 ```bash
 python scripts/demo_offline_journey.py        # synthetic candidate: Opportunity -> Preparation -> Retrieval -> Practice -> Feedback
 ```

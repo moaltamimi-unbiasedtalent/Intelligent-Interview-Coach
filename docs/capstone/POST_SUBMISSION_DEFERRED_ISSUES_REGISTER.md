@@ -1,6 +1,6 @@
 # Post-Submission Deferred Issues Register
 
-**Status:** CONSOLIDATED REGISTER, generated 2026-10-19 during the integrated Candidate/Admin/Operations requalification (main `fb2d264`: 387 issues, 336 active, 51 closed) and **updated in the final acceptance reconciliation (main `4043429`; 390 issues, 338 active, 52 closed) and in P11 (main `3d1af6f`: two issues added, `IR-DEMO-KEY` and `IR-REHEARSAL-CALL`; 392, 340, 52)**:  three issues added (`IR-AC03-TESTS`, `IR-AC18-RUNLIST`, `IR-DEADLINE`), `IR-P12` closed on the owner's direction, and several remaining-work notes refreshed; no issue was deleted or reclassified to ease acceptance. This is a **supporting document under the canonical roadmap** (`capstone_phase_plan.md` stays canonical for scope and sequence). It is **not** a competing roadmap and it replaces none of its source registers, which are preserved unchanged.
+**Status:** CONSOLIDATED REGISTER, generated 2026-10-19 during the integrated Candidate/Admin/Operations requalification (main `fb2d264`: 387 issues, 336 active, 51 closed) and **updated in the final acceptance reconciliation (main `4043429`; 390 issues, 338 active, 52 closed) and in P11 (main `3d1af6f`: two issues added, `IR-DEMO-KEY` and `IR-REHEARSAL-CALL`; 392, 340, 52) and in the review-day readiness work (two more added, `IR-DEVDB-STALE` and `IR-RAGAS-LIVE-APPROVAL`; **394, 342, 52**)**:  three issues added (`IR-AC03-TESTS`, `IR-AC18-RUNLIST`, `IR-DEADLINE`), `IR-P12` closed on the owner's direction, and several remaining-work notes refreshed; no issue was deleted or reclassified to ease acceptance. This is a **supporting document under the canonical roadmap** (`capstone_phase_plan.md` stays canonical for scope and sequence). It is **not** a competing roadmap and it replaces none of its source registers, which are preserved unchanged.
 
 **Rules this register follows.** Deferring an item is a scheduling decision only: it is never completion and never a waiver. It does not authorize removing a mandatory gate, passing a failed evaluation, ignoring a vulnerability, using unlicensed data, exposing private candidate data, enabling production services, treating a mock as live, claiming human qualification or waiving a Turing College requirement. An item that affects the safety or validity of the current capstone is `OPEN — PRE-SUBMISSION QUALIFICATION`; one that blocks only commercial deployment is `OPEN — PRODUCTION RELEASE BLOCKER`. One canonical `DI-` identifier is kept per issue even when an issue appears in several readiness views. Owners and dates are never invented (`UNKNOWN` where not recorded; most first-recorded dates are UNKNOWN because git history was not mined).
 
@@ -8,13 +8,13 @@
 
 ## 1. Totals
 
-392 issues recorded: **340 active** and 52 CLOSED — VERIFIED (kept for reconciliation only).
+394 issues recorded: **342 active** and 52 CLOSED — VERIFIED (kept for reconciliation only).
 
 | Status | Count |
 |---|---|
 | OPEN — PRE-SUBMISSION QUALIFICATION | 3 |
 | OPEN — PRODUCTION RELEASE BLOCKER | 16 |
-| PENDING OWNER DECISION | 70 |
+| PENDING OWNER DECISION | 72 |
 | PARTIALLY REMEDIATED | 50 |
 | NOT RUN | 39 |
 | NOT VERIFIED | 26 |
@@ -25,7 +25,7 @@
 | Category | Name | Active | Closed |
 |---|---|---|---|
 | A | Global knowledge and compensation evidence | 54 | 6 |
-| B | Retrieval and RAG | 26 | 4 |
+| B | Retrieval and RAG | 27 | 4 |
 | C | AI quality evaluation | 19 | 2 |
 | D | Candidate AI grounding policies | 16 | 5 |
 | E | Speech and voice | 26 | 0 |
@@ -37,7 +37,7 @@
 | K | Legal and governance | 16 | 1 |
 | L | Human validation | 13 | 0 |
 | M | Technical debt and documentation consistency | 25 | 15 |
-| N | Candidate journey and submission consistency | 12 | 3 |
+| N | Candidate journey and submission consistency | 13 | 3 |
 
 Categories A to M follow the owner's minimum inventory of 2026-10-19; N (candidate journey and submission consistency) was added for journey findings and requalification findings that fit none of them.
 
@@ -249,6 +249,7 @@ Categories A to M follow the owner's minimum inventory of 2026-10-19; N (candida
 | DI-A-047 | A-AGG | Five BLS-specific aggregates quarantined | Later policy review |
 | DI-B-002 | B-COVEVAL | Decision whether to change coverage evaluator to check data origin/country (F-C… | Owner decision (c) in P10D s12 |
 | DI-B-017 | B-EMBED-SEL | Embedding provider and model selection | Choose embedding provider/model |
+| DI-B-017 | IR-RAGAS-LIVE-APPROVAL | Live RAGAS evaluation awaits the owner's spending approval and three prerequisi… | REQUIRED: approve the ceiling, the new ledger and the code change; provide the key |
 | DI-C-005 | C-PROTO | Reviewer protocols and rating rubric for AI quality | Reviewer appointments, rating protocol |
 | DI-C-006 | C-THRESH | Owner thresholds for AI quality | Owner sets thresholds and spend cap before final evaluation (evaluation-plan rule) |
 | DI-C-014 | C-USD15 | USD 15 extra ceiling not approved; 15 calls remain | Owner approval to raise limits |
@@ -304,6 +305,7 @@ Categories A to M follow the owner's minimum inventory of 2026-10-19; N (candida
 | DI-M-028 | M-LEGACY01 | Legacy Streamlit UI retained (LEGACY-01) | Retirement task |
 | DI-N-011 | IR-RC004-SPEC | No dedicated RC-P10-004 entry-criteria specification existed | REQUIRED: approve or amend the recorded entry conditions; separate approval to create RC-P10-004 |
 | DI-N-014 | IR-DEADLINE | Course deadline and time zone are unconfirmed (planning documents say 2026-10-2… | REQUIRED: confirm the deadline and time zone |
+| DI-N-016 | IR-DEVDB-STALE | The developer database is 12 Alembic revisions behind the code head | REQUIRED: migrate the developer database or leave it |
 
 ## 5. Active issues by category
 
@@ -851,7 +853,7 @@ Each block lists: original reference and source, latest verified status, severit
 - **Dependencies:** UNKNOWN · **Owner decisions:** None recorded
 - **Required for closure:** Not closed
 
-### Category B: Retrieval and RAG (26 active)
+### Category B: Retrieval and RAG (27 active)
 
 #### DI-B-001: Synthetic vs real source gaps in coverage
 - **Original:** `A-COV-SYN` · **Source:** docs/capstone/p10/P10D_R1_CANDIDATE_GROUNDING_AND_COVERAGE.md s4, s7 · **First recorded:** 2026-10-19
@@ -1012,6 +1014,15 @@ Each block lists: original reference and source, latest verified status, severit
 - **Candidate impact:** None while Compensation V2 and candidate-facing use stay disabled · **Security/privacy:** None identified · **Release impact:** No release effect until activated
 - **Dependencies:** UNKNOWN · **Owner decisions:** Choose embedding provider/model
 - **Required for closure:** Not closed
+
+#### DI-B-017: Live RAGAS evaluation awaits the owner's spending approval and three prerequisites
+- **Original:** `IR-RAGAS-LIVE-APPROVAL` · **Source:** docs/capstone/submission/REVIEW_DAY_READINESS.md · **First recorded:** 2026-10-19
+- **Status:** PENDING OWNER DECISION · **Severity:** MEDIUM · **Priority:** P1 · **Blocks submission:** NO · **Blocks production:** NO
+- **Description:** Prepared, not run: dedicated evaluator key, a NEW ledger with its own ceiling, and admission and pricing of the embeddings endpoint and evaluator model in the guard.
+- **Remains:** See RAGAS_LIVE_EVALUATION_PROPOSAL.md.
+- **Candidate impact:** a developer running the current code against it would fail or see stale state · **Security/privacy:** none identified · **Release impact:** local development and demonstration
+- **Dependencies:** backup first · **Owner decisions:** REQUIRED: approve the ceiling, the new ledger and the code change; provide the key
+- **Required for closure:** A bounded two-case run with the stated abort conditions and saved results
 
 #### DI-B-018: Embedding credential and guard coverage absent
 - **Original:** `B-EMBED-CRED` · **Source:** docs/capstone/p10/P10E_LIVE_CAPABILITY_VALIDATION.md s2, s5 · **First recorded:** 2026-10-19
@@ -3609,7 +3620,7 @@ Each block lists: original reference and source, latest verified status, severit
 - **Dependencies:** None recorded · **Owner decisions:** None recorded
 - **Required for closure:** See H-RESCACHE
 
-### Category N: Candidate journey and submission consistency (12 active)
+### Category N: Candidate journey and submission consistency (13 active)
 
 #### DI-N-001: No candidate control to invite members or share a report or story
 - **Original:** `CJ-D-01` · **Source:** docs/capstone/journeys/CANDIDATE_JOURNEY.md D-01 · **First recorded:** 2026-10-19
@@ -3718,6 +3729,15 @@ Each block lists: original reference and source, latest verified status, severit
 - **Candidate impact:** none directly · **Security/privacy:** a developer demonstration can spend on the owner's key without intending to · **Release impact:** demonstration safety and spend control
 - **Dependencies:** none · **Owner decisions:** OWNER: whether to add an explicit offline switch in a later wave
 - **Required for closure:** An explicit offline switch with a test that proves no provider key is read when it is set
+
+#### DI-N-016: The developer database is 12 Alembic revisions behind the code head
+- **Original:** `IR-DEVDB-STALE` · **Source:** docs/capstone/submission/REVIEW_DAY_READINESS.md · **First recorded:** 2026-10-19
+- **Status:** PENDING OWNER DECISION · **Severity:** MEDIUM · **Priority:** P1 · **Blocks submission:** NO · **Blocks production:** NO
+- **Description:** data/interview_studio.db is at 0027_email_attempts while the code head is 0039_speech_governance; it has 1 retired governed source and no active one. Found while diagnosing the empty Admin Sources page; not modified.
+- **Remains:** Back up and migrate (alembic upgrade head) or keep using the isolated review environment.
+- **Candidate impact:** a developer running the current code against it would fail or see stale state · **Security/privacy:** none identified · **Release impact:** local development and demonstration
+- **Dependencies:** backup first · **Owner decisions:** REQUIRED: migrate the developer database or leave it
+- **Required for closure:** Backup taken, migration run, Admin readiness verified
 
 ## 6. Reconciliation: issues verified CLOSED
 

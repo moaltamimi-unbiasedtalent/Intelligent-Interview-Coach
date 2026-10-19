@@ -56,7 +56,7 @@ Private by default and owner-scoped; candidate documents are untrusted data and 
 
 ## 13. Limitations (the honest summary)
 
-The internal **product-coverage gate fails** (386 of 412 developer-local against 392 required; 258 of 412 on a clean checkout; 0 human-qualified); acceptance criterion AC-24 is PARTIAL and the human revalidation (P10F) is deferred; interview and feedback quality has not been rated by humans; translations other than English are engineering translations; production speech, live billing, hosted operation and international source qualification are not delivered; live evidence is small-sample. The full, tracked list is the deferred-issues register (392 issues).
+The internal **product-coverage gate fails** (386 of 412 developer-local against 392 required; 258 of 412 on a clean checkout; 0 human-qualified); acceptance criterion AC-24 is PARTIAL and the human revalidation (P10F) is deferred; interview and feedback quality has not been rated by humans; translations other than English are engineering translations; production speech, live billing, hosted operation and international source qualification are not delivered; live evidence is small-sample. The full, tracked list is the deferred-issues register (394 issues).
 
 ## 14. Future development
 
