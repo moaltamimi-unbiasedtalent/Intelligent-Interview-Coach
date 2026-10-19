@@ -696,3 +696,29 @@ def test_a_new_authorization_version_never_resets_or_replaces_the_ledger(tmp_pat
     with pytest.raises(G.LiveRunRefused) as e:
         with G.live_session("t", SYNTH, env=ENV, auth=v3, ledger_dir=other, prices=PRICES): pass
     assert e.value.reason == "ledger_identity_mismatch"                                                                          # a version change cannot adopt a different ledger
+
+
+# =================================================================================================================================== P10E-R1 correction: agent per-case evidence
+def test_the_agent_runner_persists_sanitized_per_case_evidence_and_a_review_packet(tmp_path, monkeypatch):
+    from types import SimpleNamespace as NS
+    from src.application import agent_service as AS
+    from src.p10e import live_runs as R
+
+    class FakeSvc:
+        def __init__(self, **kw): ...
+        def run(self, req):
+            return NS(tools_used=[], retrieval_used=False, awaiting_human_input=False, pending_action=None, step_count=1, status="completed", latency_ms=7, usage={"input_tokens": 3, "output_tokens": 2, "total_tokens": 5},
+                      sources=[], response="Here is a plain reply with 2026 and no figure.", profile="balanced")
+
+    monkeypatch.setattr(AS, "AgentApplicationService", FakeSvc)
+    monkeypatch.setattr(AS, "_default_career_service", lambda: object())
+    d, g = make_ledger(tmp_path)
+    ev = tmp_path / "evidence"; ev.mkdir()
+    with session(tmp_path, d, g) as s:
+        out = R.run_agent(s, "balanced", only=["smalltalk_hello", "insufficient_evidence"], base=ev, isolate=False)
+    r = out["results"]
+    assert r["cases_completed"] == 2 and [c["case_id"] for c in r["per_case"]] == ["smalltalk_hello", "insufficient_evidence"]
+    miss = r["per_case"][1]
+    assert miss["tool_selection_ok"] is False and miss["missing_required_tools"] == ["SearchCareerKnowledge"] and miss["terminal_status"] == "COMPLETED" and miss["response_flags"]["money_figure"] is False
+    packet = json.loads((Path(out["run_dir"]) / "review_packet.json").read_text())
+    assert packet["reviewer"] is None and len(packet["cases"]) == 2 and packet["cases"][1]["human_review"]["unsupported_claim"] == "PENDING_HUMAN_REVIEW"

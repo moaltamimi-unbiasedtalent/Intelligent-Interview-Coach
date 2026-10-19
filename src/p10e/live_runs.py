@@ -301,7 +301,7 @@ def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None,
     if session.http_guard is not None:
         session.http_guard.recorder = rec
     career = _default_career_service()
-    results, stopped = [], None
+    results, stopped, packet = [], None, []
     calls_before = 0
     for case in cases:
         before = len(session.http_guard.refused) if session.http_guard else 0
@@ -315,7 +315,13 @@ def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None,
         reasons = list(session.http_guard.refused[before_n:]) if session.http_guard else []
         calls = _calls_since(rec, calls_before)
         calls_before += len(calls)
-        classified_case, evidence = refine_case(classify(case, observation_from_result(case["id"], profile, res, latency)), calls, reason, reasons)
+        obs = observation_from_result(case["id"], profile, res, latency)
+        classified_case, evidence = refine_case(classify(case, obs), calls, reason, reasons)
+        from src.p10e import r1_evals as _E          # deterministic, content-free response flags (synthetic held-out goals only)
+        text = obs.response_text or ""
+        evidence["response_flags"] = {"chars": len(text), "money_figure": _E.has_money_figure(text), "states_insufficient_evidence": _E.states_insufficient_evidence(text), "has_citation_marker": bool(re.search(r"\[\d+\]", text))}
+        packet.append({"case": case["id"], "goal": case["goal"], "terminal_status": classified_case["terminal_status"], "tools_used": classified_case["tools_used"], "response_excerpt": text[:700],
+                       "human_review": {"response_appropriate_without_retrieval": "PENDING_HUMAN_REVIEW", "unsupported_claim": "PENDING_HUMAN_REVIEW"}})
         results.append({"classified": classified_case, "evidence": evidence, "guard_refusal": reason, "guard_refusal_reasons": reasons, "case": case["id"], "latency_ms": latency})
         if reason in ("spend_ceiling", "call_limit"):
             stopped = reason
@@ -329,6 +335,7 @@ def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None,
            "unexpected_models": sorted(m for m in models_requested(session) if m != slug), "cases_attempted": len(results),
            "note": "PARTIAL: the guard stopped the run; metrics cover only the completed cases" if stopped else "Complete over the planned cases. Metrics measure the model's decisions on a bounded held-out sample; not an accuracy score."}
     d = rec.finish(session.budget.summary(), out)
+    (d / "review_packet.json").write_text(json.dumps({"reviewer": None, "note": "synthetic held-out goals only; excerpts are the model's own text for human review", "cases": packet}, indent=1, ensure_ascii=False), encoding="utf-8")
     if session.http_guard is not None:
         session.http_guard.recorder = None
     if iso.get("tmp"):
