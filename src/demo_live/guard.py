@@ -12,6 +12,7 @@ Any other value, or an installation problem, raises: the process does not start 
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import threading
@@ -175,9 +176,14 @@ class ProviderControl:
         else:
             self.budget.settle(seq, outcome="unknown", status_code=sc, note="provider error: potentially billable, worst case kept")
 
-    def _wrap(self, request: httpx.Request, kind: str, kw: dict):
-        model, cat, worst, op = self._prepare(request, kind, kw)
-        if not self._sem.acquire(timeout=self.auth.limits.request_timeout_s):
+    def _wrap(self, request: httpx.Request, kind: str, kw: dict, preacquired: bool = False):
+        try:
+            model, cat, worst, op = self._prepare(request, kind, kw)
+        except BaseException:
+            if preacquired:
+                self._sem.release()
+            raise
+        if not preacquired and not self._sem.acquire(timeout=self.auth.limits.request_timeout_s):
             self._refuse("concurrency_limit", "The approved concurrency limit is saturated.")
         try:
             seq = self.budget.reserve(category=cat, operation=op or cat, model=model, endpoint=kind, worst_case=worst)
@@ -218,7 +224,12 @@ class ProviderControl:
             if self.budget.killed():
                 self._refuse("kill_switch", "The demonstration kill switch is engaged.")
             return await orig(client, request, **kw)
-        model, seq = self._wrap(request, kind, kw)
+        # The concurrency limit is a threading semaphore shared with sync callers; waiting on it must never block the event loop (a blocked loop cannot finish the in-flight
+        # requests that hold the slots, which deadlocked the first live RAGAS run), so the wait happens in a worker thread.
+        got = await asyncio.get_running_loop().run_in_executor(None, lambda: self._sem.acquire(timeout=self.auth.limits.request_timeout_s))
+        if not got:
+            self._refuse("concurrency_limit", "The approved concurrency limit is saturated.")
+        model, seq = self._wrap(request, kind, kw, preacquired=True)
         try:
             try:
                 response = await orig(client, request, **kw)

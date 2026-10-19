@@ -360,3 +360,24 @@ def test_ragas_evaluator_requests_are_bounded_only_in_a_provider_mode(monkeypatc
     monkeypatch.setenv("ASK4MO_PROVIDER_MODE", "live")
     llm, emb = _build_evaluator(cfg)
     assert llm.langchain_llm.max_tokens == 2048 and llm.langchain_llm.max_retries == 1 and emb.embeddings.check_embedding_ctx_length is False
+
+
+def test_async_requests_do_not_deadlock_the_event_loop_and_respect_the_concurrency_limit(live):
+    import asyncio
+
+    seen = {"max": 0, "now": 0}
+
+    async def slow(request):
+        seen["now"] += 1
+        seen["max"] = max(seen["max"], seen["now"])
+        await asyncio.sleep(0.05)
+        seen["now"] -= 1
+        return httpx.Response(200, json=ok_body())
+
+    async def run():
+        async with httpx.AsyncClient(transport=httpx.MockTransport(slow)) as c:
+            body = {"model": "openai/gpt-5.4", "messages": [{"role": "user", "content": "hi"}], "max_completion_tokens": 50}
+            return await asyncio.wait_for(asyncio.gather(*[c.post(f"{URL}/chat/completions", json=body, headers={"x-ask4mo-operation": "ragas"}) for _ in range(8)]), timeout=20)
+
+    results = asyncio.run(run())
+    assert [r.status_code for r in results] == [200] * 8 and seen["max"] <= 2 and live.budget.summary()["requests"] == 8
