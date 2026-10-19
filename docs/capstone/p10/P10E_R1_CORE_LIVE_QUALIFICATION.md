@@ -77,6 +77,8 @@ Cost USD 0.1341 (estimate equals provider-reported), 19,493 input and 5,690 outp
 
 ## 9. Multilingual corpus and results
 
+> Interpretation corrected in section 16: the findings below were measured with a defective harness (retriever disabled, no conversation language). The original measurements are preserved unchanged; do not read them as product behaviour.
+
 Corpus `evaluations/p10e/r1/multilingual_cases.json` v1.0.0, sha256 `2aaddbcd0622b93be18be1691c0532b36ea0edb73c8fe7be1bdf493e5d6e2074`, locked before any live call. 14 cases: es, it, pt, nl prioritized; en, de, fr as controls; Russian excluded. Each language has a supported-occupation definition case and an unsupported-country compensation case with fixed expectations (language, geography, evidence, abstention, citation boundary). Per-language reporting only; nothing is averaged.
 
 Offline (free, deterministic) first: country resolution was correct in all 7 languages, and cross-language retrieval gaps were measured (finding L-XLANG-1).
@@ -134,3 +136,84 @@ Product coverage stays 386/412 developer-local (93.7%), BELOW the 95% gate (need
 ## 15. Handoff
 
 R1 stops here. Not merged; integrated requalification not begun; RC-P10-004 not created; P11 not begun. 58 calls and USD 8.14 remain in the single cumulative ledger. Owner decisions pending: accept or amend R1, whether to fix the localized-scaffold and retrieval gaps before requalification, and reviewer appointments for the human-review packets.
+
+## 16. Audited correction of the evaluation defects (added after independent review; sections 1 to 15 are unchanged)
+
+Starting SHA `cccea78` (PR #202 head). Principle: correct the measurement before the product; preserve historical evidence; no authorization, budget or ledger change.
+
+### 16.1 Harness defects found (verified in code)
+
+| Defect | Original | Effect |
+|---|---|---|
+| A. Retriever disabled | `world.service(responder=spy, retriever=False).answer(...)`; the offline measurement used the retriever | 0 narrative evidence for all six non-English supported cases; the model could only abstain |
+| B. No conversation language | `answer()` called without `conversation_language`, although the service supports it | English scaffold headings and English insufficient-evidence sentence in German and French answers |
+| C. Abstention by citation count | zero citations was recorded as `abstained_or_clarified` | an uncited factual answer would have been counted as an abstention |
+| D. Money-figure proxy | any 4-digit number counted | the year 2026 flagged a correct French abstention |
+| E. Agent completion | `step_limit_reached` and a HITL pause counted as completed | inflated completion; misses not diagnosable |
+| F. No per-case agent evidence | aggregates only | the 5 misses behind 0.773 cannot be identified |
+
+Offline proof (no model call) for A and B, per language: with the original configuration all six non-English cases retrieved 0 evidence and the prompt carried English headings; with the corrected configuration every case retrieved 2 to 7 evidence items and the prompt carried that language's headings and insufficient-evidence sentence (tests `test_the_corrected_path_localizes_the_synthesis_instructions_and_retrieves_evidence`, 7 languages). The default (no language) prompt is byte-identical to the English one.
+
+### 16.2 Corrections (commits `6a85a64`, `137c11b` and the final commit)
+
+- Harness: `answer_case` enables the existing retriever and passes the case language through `conversation_language`; no heading is hard-coded in the harness.
+- Outcome classes (`classify_answer`): ANSWERED_WITH_EVIDENCE, ABSTAINED, CLARIFICATION_REQUESTED, UNSUPPORTED_FACTUAL_RESPONSE, UNCERTAIN_REQUIRES_REVIEW. A citation count alone never establishes an abstention; what cannot be decided deterministically goes to review. Definitions, expectations per case kind and the corrected configuration were registered in `evaluations/p10e/r1/multilingual_corrected_v1.json` and hash-locked in `registration.lock.json` BEFORE any new live call (the original corpus and lock entries are unchanged and verified by test). General advice is not prohibited; it is flagged when substantive, uncited and not an abstention.
+- Money-figure proxy (`has_money_figure`): a bare year 1900 to 2100 is not a figure; currency-adjacent numbers, thousands-separated numbers and `k` amounts still are. The offer of an unsourced estimate is a separate review flag (`offers_unsourced_estimate`), surfaced in every unsupported-country case.
+- Agent (`src/agent/live_eval.py`): explicit `terminal_status` (COMPLETED, AWAITING_HUMAN_INPUT, STEP_LIMIT_REACHED, FAILED, GUARD_REFUSED, PROVIDER_ERROR, OTHER:x; an unknown status is never success). `completion_rate` is now strict (COMPLETED only); new `hitl_pause_rate`, `expected_hitl_pause_rate`, `step_limit_rate`, `failure_rate`, `terminal_status_counts`. The historical committed metrics are not rewritten (they used the looser definition).
+- Per-case agent evidence (`live_runs.refine_case`, summary `per_case`): case id, expected and used tools, missing required and forbidden tools, retrieval and HITL expectation and outcome, terminal status, provider calls and failures, guard refusal reasons, latency, tokens, provider-reported cost, and content-free response flags; a separate `review_packet.json` holds a 700-character excerpt of the model's own text for synthetic held-out goals only, marked PENDING_HUMAN_REVIEW. No chain-of-thought, prompt or raw provider payload is stored. The historical misses are not reconstructed.
+- Post-hoc reading (`reclassify_run_post_hoc`, CLI `multilingual-reclassify`, offline, writes `reclassification.json` exclusively): labelled POST-HOC, defined after observing; never replaces the registered result.
+
+### 16.3 Offline regression before any paid call
+
+Tests added or updated: 43 new/changed tests across `tests/test_p10e_r1_evals.py`, `tests/test_agent_live_eval.py`, `tests/test_p10e_ledger.py`: money proxy (14 inputs including the French year), localized abstention in all 7 languages, uncited factual and uncertain answers, invalid markers, registered expectation mapping, locked original corpus, estimate flag, candidate-path call, corrected retrieval and headings in 7 languages, Russian excluded, terminal status, strict completion, per-case evidence, guard refusal and provider error, runner packet. Expectations were fixed before the live run.
+
+### 16.4 Targeted live revalidation (existing ledger; no new budget)
+
+Ledger verified against the authoritative file first: 242 calls, USD 1.86290325, 58 remaining, genesis `ff65d285…`, unchanged. Executed 28 calls (all `openai/gpt-5.4`, 0 unexpected model, 0 refusals, 0 provider failures): 14 multilingual, 10 agent (6 cases), 4 agent (3 cases repeated).
+
+**Corrected multilingual run (`…T151740Z-c896ab9b`, clean checkout at `6a85a64`, 14 of 14 completed).** Per language, registered classification:
+
+| Lang | Supported definition | Unsupported-country compensation |
+|---|---|---|
+| en | ANSWERED_WITH_EVIDENCE (7 evidence, 3 citations), intended | ANSWERED_WITH_EVIDENCE by the registered rule (1 citation), registered FAILURE; read: states insufficient evidence, cites the coverage note, no figure |
+| de | ANSWERED_WITH_EVIDENCE (2, 1), intended | ABSTAINED, intended |
+| fr | ANSWERED_WITH_EVIDENCE (5, 1), intended | ANSWERED_WITH_EVIDENCE by the registered rule (4 citations), registered FAILURE; read: states insufficient evidence, no figure |
+| es | ANSWERED_WITH_EVIDENCE (5, 1), intended (a caveat at the end says the evidence is not enough for a complete description) | ANSWERED_WITH_EVIDENCE by the registered rule (5 citations on the abstention sentence), registered FAILURE; read: states insufficient evidence, no figure |
+| it | ANSWERED_WITH_EVIDENCE (5, 1), intended | ABSTAINED, intended |
+| nl | ANSWERED_WITH_EVIDENCE (5, 1), intended | ABSTAINED, intended |
+| pt | ANSWERED_WITH_EVIDENCE (4, 1), intended | ABSTAINED, intended |
+
+Result: answer language matched the question in all 14 cases, including German and French; the localized headings appear; no salary figure was invented (the French year no longer fails); no United States compensation was presented as Canadian; no citation marker referred to a missing evidence item. The three registered failures (en, fr, es unsupported-country) are all abstentions that attach valid citation markers to the abstention sentence. A post-hoc offline reading (`reclassification.json`, a looser opening-statement match, labelled post-hoc) classifies exactly those three as ABSTAINED_WITH_CITED_CONTEXT; the registered result stays as recorded. Whether sources should be shown under an abstention is a presentation decision for the owner, not changed here. All 14 estimate-offer flags (offers_unsourced_estimate) fire in the seven unsupported cases and remain for human review.
+
+Comparison with the original run: original (defective harness) 1 of 7 supported cases evidence-backed, German and French language mismatch/mixed; corrected: 7 of 7 evidence-backed, 14 of 14 language matches. These are different configurations, not a regression or improvement of the product.
+
+**Agent targeted run (`…T151928Z-0dbb5a45`, 6 cases, 10 requests) and repeat (`…T152058Z-7f721a1b`, 3 cases, 4 requests).** Per-case evidence now identifies the misses:
+
+| Case | Expected | Observed (both runs unless stated) |
+|---|---|---|
+| jd_plus_candidate_gap | AnalyzeJobDescription + AnalyzeCandidateGaps | both used, COMPLETED (hit; 4 calls) |
+| memory_approval_hitl | HITL approve_memory | ProposePreparationMemory, AWAITING_HUMAN_INPUT, type matched (hit) |
+| prep_plan_request | BuildPreparationPlan | no tool, COMPLETED (miss; the goal says "from my gaps" with no gaps in state) |
+| insufficient_evidence | SearchCareerKnowledge | no retrieval, COMPLETED, no figure, no citation, hedged general explanation (miss; repeated) |
+| ambiguous_role_hitl | SearchCareerKnowledge + confirm_role pause | no retrieval, no pause, listed the possible meanings itself (miss; repeated) |
+| practice_handoff_hitl | approve_practice_handoff pause | no pause; asked for the missing role and plan first (miss; repeated) |
+
+The misses are stable across a repeat for the three re-run cases. Reading the excerpts, none contains an invented statistic, citation or country claim; they are conservative or clarifying answers that do not follow the registered tool expectation. That is a measured disagreement with the registered expectations, not evidence of an unsafe answer; whether the agent should retrieve for general labour-market questions is an owner decision. Human appropriateness review is PENDING_HUMAN_REVIEW. The full 22-case benchmark was not re-run (about 45 calls would not fit with the multilingual run in the 58-call allowance); the historical 0.773 stays as recorded, and 3 of the 5 misses behind it are plausibly among the cases above but that is NOT established.
+
+### 16.5 Product defects
+
+- Confirmed: none that demands a product change in this wave. The "non-English retrieval gap" and "mixed-language German and French answers" reported in section 14 were harness artifacts (A and B) and are withdrawn as product findings. The pure cross-language retrieval observation (native-phrasing queries) remains a separate offline measurement (L-XLANG-1) and was not affected.
+- Open observations for the owner (not defects proven, no change made): citations attached to an abstention sentence (3 of 7 unsupported cases); the agent does not retrieve for some general factual questions; the unsourced-estimate offer in abstentions.
+- Protected: geographic grounding, citation integrity and source-integrity behaviour were exercised and held; no occupation mapping, no geography inference from language, no synthetic promotion, no re-index.
+
+### 16.6 Cost, ledger and reconciliation (this correction)
+
+28 calls, provider-reported USD 0.1239, ledger committed USD 0.1620 (calculated estimate, an upper bound). Account usage rose from USD 6.61372494 to USD 6.73766144 = USD 0.1239365, which equals the sum of the per-request reported costs exactly (the 9% gap seen after the first R1 batch did not recur). Ledger now: 270 of 300 calls, USD 2.02485575 committed, 30 calls and USD 7.97514425 remaining, 0 unknown or pending entries. The ledger was not reset or recreated; USD 15 and any extra allowance were not used.
+
+### 16.7 Regression and status
+
+Backend 4,959 passed, 34 skipped, 0 failed (was 4,917 before the correction; +42 tests); Ruff and `git diff --check` clean; 19 evaluators plus P10C-G, P10D (repeat 2) and the coverage guard pass; the 12-gate test passes; no tracked file modified by tests; frontend and browser tests not run (no frontend change). Product coverage unchanged: 386/412 developer-local (BELOW GATE), 258/412 clean-checkout, 0/412 human-qualified; AC-24 PARTIAL. Human-reviewed quality: NOT VERIFIED (all review packets pending). Semantic live calibration NOT RUN; RAGAS live NOT RUN.
+
+### 16.8 Readiness
+
+With the corrected measurement, the core multilingual and interview paths show no defect that blocks requalification; the remaining items are owner decisions (section 16.5) and human review. 30 calls and USD 7.98 remain. Integrated requalification has not been started.

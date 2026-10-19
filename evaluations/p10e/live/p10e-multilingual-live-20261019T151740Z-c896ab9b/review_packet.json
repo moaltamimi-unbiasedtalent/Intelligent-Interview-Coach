@@ -1,0 +1,411 @@
+{
+ "reviewer": null,
+ "cases": [
+  {
+   "case": "ml-en-supported",
+   "language": "en",
+   "query": "What does a Data Analyst do?",
+   "expected_behaviour": "answer in the question's language; if evidence is retrieved, cite it with valid [n] markers and no more markers than evidence items; no country-specific claim",
+   "model_answer": "**Evidence (from sources):**  \nA Data Analyst typically cleans and prepares data, builds dashboards, and communicates findings to others. [1]  \nThe role commonly requires SQL and statistics skills. [2]  \nMore specifically, SQL is used to query databases, statistics is used to interpret results, and visualisation tools are used to create dashboards. [3]  \nPython is also commonly used for cleaning data. [3]  \n\n**Tool results (calculated):**  \nNo tool results were provided.\n\n**Recommendation:**  \nIn simple terms, a Data Analyst turns raw data into useful insights for decision-making.  \nIf you want, I can also explain:\n- a typical day in the role,\n- required skills for beginners,\n- or how Data Analyst differs from Data Scientist.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-en-unsupported-country",
+   "language": "en",
+   "query": "What does a Data Analyst earn in Canada?",
+   "expected_behaviour": "state in the question's language that no supporting evidence is available; do not give a salary figure; do not present United States figures as Canadian",
+   "model_answer": "Evidence (from sources):\n- The knowledge base does not contain enough evidence to answer what a Data Analyst earns in Canada. The coverage notes explicitly say there is no official occupation-specific compensation for “Data Analyst” in Canada in the provided evidence. [1]\n\nTool results (calculated):\n- None.\n\nRecommendation:\n- I can’t give a grounded salary figure from the provided knowledge base.\n- If you want, I can still help in one of these ways:\n  1. suggest reliable Canadian salary sources to check,\n  2. help estimate a range based on a specific city, seniority, and tools,\n  3. compare Data Analyst pay with related roles like BI Analyst or Analytics Specialist.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-de-supported",
+   "language": "de",
+   "query": "Was macht ein Datenanalyst (Data Analyst)?",
+   "expected_behaviour": "answer in the question's language; if evidence is retrieved, cite it with valid [n] markers and no more markers than evidence items; no country-specific claim",
+   "model_answer": "Belege (aus Quellen):\n- Ein Datenanalyst arbeitet mit Datenbanken und benötigt SQL, um Daten abzufragen.[1]\n- Zur Auswertung von Daten braucht ein Datenanalyst Statistik, um Ergebnisse zu interpretieren.[1]\n- Ein Datenanalyst nutzt Visualisierungstools, um Dashboards zu erstellen und Ergebnisse darzustellen.[1]\n- Python wird häufig verwendet, um Daten zu bereinigen.[1]\n\nWerkzeugergebnisse (berechnet):\n- Keine Werkzeugergebnisse vorhanden.\n\nEmpfehlung:\n- Kurz gesagt: Ein Data Analyst sammelt, bereinigt, analysiert und visualisiert Daten, damit Unternehmen bessere Entscheidungen treffen können.\n- Typische Aufgaben sind Reports bauen, Trends erkennen, Kennzahlen prüfen und Ergebnisse verständlich an Fachbereiche kommunizieren.\n- Wenn du willst, kann ich dir als Nächstes auch erklären:\n  - den Unterschied zwischen Data Analyst, Data Scientist und BI Analyst,\n  - typische Aufgaben im Arbeitsalltag,\n  - oder welche Skills du für den Einstieg brauchst.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-de-unsupported-country",
+   "language": "de",
+   "query": "Was verdient ein Data Analyst in Kanada?",
+   "expected_behaviour": "state in the question's language that no supporting evidence is available; do not give a salary figure; do not present United States figures as Canadian",
+   "model_answer": "Belege (aus Quellen):\nDie Wissensbasis enthält nicht genügend Belege, um das zu beantworten.\n\nWerkzeugergebnisse (berechnet):\nKeine.\n\nEmpfehlung:\nIch habe in den bereitgestellten Quellen keine Gehaltsdaten zu Data Analysts in Kanada. Wenn du willst, kann ich dir stattdessen helfen mit:\n- einer realistischen Gehaltsrecherche-Strategie für Kanada,\n- typischen Einflussfaktoren auf das Gehalt von Data Analysts,\n- oder einer Einschätzung deines Marktwerts anhand deines Profils.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-fr-supported",
+   "language": "fr",
+   "query": "Que fait un analyste de données (Data Analyst) ?",
+   "expected_behaviour": "answer in the question's language; if evidence is retrieved, cite it with valid [n] markers and no more markers than evidence items; no country-specific claim",
+   "model_answer": "Preuves (issues des sources):\n- Un analyste de données utilise SQL pour interroger des bases de données, les statistiques pour interpréter des résultats, et des outils de visualisation pour créer des tableaux de bord.[2]\n- Python est couramment utilisé par les analystes de données pour le nettoyage des données.[2]\n\nRésultats des outils (calculés):\n- Aucun résultat d’outil fourni.\n\nRecommandation:\n- En pratique, un Data Analyst collecte, nettoie, analyse et présente des données pour aider à la prise de décision.\n- Si vous voulez, je peux aussi vous donner :\n  - une définition simple en 30 secondes,\n  - les missions typiques au quotidien,\n  - les compétences à apprendre,\n  - ou la différence entre Data Analyst, Data Scientist et Business Analyst.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-fr-unsupported-country",
+   "language": "fr",
+   "query": "Combien gagne un Data Analyst au Canada ?",
+   "expected_behaviour": "state in the question's language that no supporting evidence is available; do not give a salary figure; do not present United States figures as Canadian",
+   "model_answer": "Preuves (issues des sources):\nLa base de connaissances ne contient pas assez de preuves pour répondre au niveau de salaire d’un Data Analyst au Canada. Les éléments fournis parlent surtout de compétences de Data Analyst, de CV, de préparation d’entretien et de négociation salariale, mais ne donnent aucun chiffre de rémunération au Canada [1][2][4][5].\n\nRésultats des outils (calculés):\nAucun résultat d’outil n’a été fourni.\n\nRecommandation:\nJe ne peux pas estimer un salaire canadien de façon fiable avec les sources actuelles.\n\nSi vous voulez, je peux quand même vous aider de 3 façons :\n- vous donner une méthode rapide pour estimer la fourchette salariale au Canada ;\n- vous aider à rechercher le salaire par ville/province ;\n- vous préparer une réponse de négociation salariale pour un poste de Data Analyst.\n\nPour une estimation utile, dites-moi :\n- la ville ou province au Canada ;\n- le niveau d’expérience ;\n- le type d’entreprise ;\n- les outils maîtrisés (SQL, Python, Power BI, Tableau, etc.).",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-es-supported",
+   "language": "es",
+   "query": "¿Qué hace un analista de datos (Data Analyst)?",
+   "expected_behaviour": "answer in the question's language; if evidence is retrieved, cite it with valid [n] markers and no more markers than evidence items; no country-specific claim",
+   "model_answer": "Evidencia (de las fuentes):\n- Un analista de datos necesita SQL para consultar bases de datos, conocimientos de estadística para interpretar resultados y herramientas de visualización para crear dashboards. [2]\n- Python es común en el trabajo de un analista de datos para la limpieza de datos. [2]\n\nResultados de herramientas (calculados):\n- No hay resultados de herramientas disponibles.\n\nRecomendación:\n- Con la evidencia disponible, se puede inferir que un analista de datos trabaja con datos para extraer información útil: consulta bases de datos, limpia datos, interpreta resultados y presenta hallazgos en dashboards.\n- La base de conocimiento no contiene evidencia suficiente para dar una descripción completa del puesto, por ejemplo sobre responsabilidades diarias, sectores, nivel de negocio o interacción con stakeholders.\n- Si quieres, puedo darte una explicación práctica y breve del rol, o compararlo con Business Analyst, Data Scientist o BI Analyst.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-es-unsupported-country",
+   "language": "es",
+   "query": "¿Cuánto gana un Data Analyst en Canadá?",
+   "expected_behaviour": "state in the question's language that no supporting evidence is available; do not give a salary figure; do not present United States figures as Canadian",
+   "model_answer": "Evidencia (de las fuentes):\nLa base de conocimiento no contiene evidencia suficiente para responder a cuánto gana un Data Analyst en Canadá. [1][2][3][4][5]\n\nResultados de herramientas (calculados):\nNo hay resultados de herramientas disponibles sobre salario.\n\nRecomendación:\nNo puedo darte una cifra fiable con la información disponible. Si quieres, puedo ayudarte a estimarlo usando una fuente salarial concreta de Canadá o darte una guía práctica de rangos por ciudad, seniority y stack si me compartes esa fuente o habilitas datos adicionales.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-it-supported",
+   "language": "it",
+   "query": "Cosa fa un analista di dati (Data Analyst)?",
+   "expected_behaviour": "answer in the question's language; if evidence is retrieved, cite it with valid [n] markers and no more markers than evidence items; no country-specific claim",
+   "model_answer": "Evidenze (dalle fonti):\nUn analista di dati usa SQL per interrogare i database, la statistica per interpretare i risultati e strumenti di visualizzazione per creare dashboard.[3]  \nPython è comunemente usato da un analista di dati per la pulizia dei dati.[3]\n\nRisultati degli strumenti (calcolati):\nNessun risultato di strumenti disponibile.\n\nRaccomandazione:\nIn pratica, un Data Analyst raccoglie, pulisce, analizza e presenta dati per aiutare un’azienda a prendere decisioni. Le attività tipiche includono:\n- estrarre dati da database;\n- controllare qualità e coerenza dei dati;\n- analizzare trend, anomalie e performance;\n- creare report e dashboard;\n- spiegare i risultati a stakeholder non tecnici.\n\nSe vuoi, posso anche dirti:\n- cosa fa giorno per giorno,\n- quali competenze servono per iniziare,\n- oppure la differenza tra Data Analyst, Data Scientist e Business Analyst.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-it-unsupported-country",
+   "language": "it",
+   "query": "Quanto guadagna un Data Analyst in Canada?",
+   "expected_behaviour": "state in the question's language that no supporting evidence is available; do not give a salary figure; do not present United States figures as Canadian",
+   "model_answer": "Evidenze (dalle fonti):\nLa base di conoscenza non contiene prove sufficienti per rispondere.\n\nRisultati degli strumenti (calcolati):\nNessun risultato di strumenti è stato fornito.\n\nRaccomandazione:\nNon ho dati salariali affidabili nelle fonti fornite, quindi non posso stimare quanto guadagna un Data Analyst in Canada senza inventare informazioni.\n\nSe vuoi, posso aiutarti in uno di questi modi:\n- dirti dove verificare stipendi aggiornati in Canada;\n- confrontare stipendi per città come Toronto, Vancouver o Montréal;\n- stimare una fascia salariale in base a seniority, settore e competenze, se mi fornisci una fonte o autorizzi una ricerca.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-pt-supported",
+   "language": "pt",
+   "query": "O que faz um analista de dados (Data Analyst)?",
+   "expected_behaviour": "answer in the question's language; if evidence is retrieved, cite it with valid [n] markers and no more markers than evidence items; no country-specific claim",
+   "model_answer": "Evidências (das fontes):\n- Um analista de dados normalmente precisa de SQL para consultar bases de dados, estatística para interpretar resultados e ferramentas de visualização para criar dashboards.[2]\n- Python é comum no trabalho de limpeza e preparação de dados.[2]\n\nResultados das ferramentas (calculados):\n- Nenhum resultado de ferramenta foi fornecido.\n\nRecomendação:\n- Com base nas evidências disponíveis, um analista de dados trabalha principalmente com extração, tratamento, análise e apresentação de dados para apoiar decisões.\n- Na prática, eu resumiria a função assim:\n  - consultar dados em bases usando SQL;\n  - limpar e organizar dados, muitas vezes com Python;\n  - interpretar padrões e resultados com estatística;\n  - comunicar conclusões em dashboards e visualizações.\n- Se quiser, eu também posso explicar:\n  - o dia a dia da função;\n  - diferenças entre Data Analyst, Data Scientist e BI Analyst;\n  - competências necessárias para conseguir a primeira vaga.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-pt-unsupported-country",
+   "language": "pt",
+   "query": "Quanto ganha um Data Analyst no Canadá?",
+   "expected_behaviour": "state in the question's language that no supporting evidence is available; do not give a salary figure; do not present United States figures as Canadian",
+   "model_answer": "Evidências (das fontes):\nA base de conhecimento não contém evidências suficientes para responder a isso.\n\nResultados das ferramentas (calculados):\nNenhum resultado de ferramenta foi fornecido.\n\nRecomendação:\nNão tenho dados salariais confiáveis nas fontes fornecidas para dizer quanto ganha um Data Analyst no Canadá.\n\nSe quiser, eu posso ajudar de duas formas:\n- montar uma estimativa salarial por nível (junior, pleno, sênior) e cidade com base em fontes que você trouxer;\n- ou te dizer como pesquisar isso de forma confiável em fontes como Job Bank, Glassdoor, Indeed e Levels.fyi.\n\nSe você me enviar evidências salariais ou autorizar uma busca em fontes atualizadas, eu organizo a resposta de forma objetiva.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-nl-supported",
+   "language": "nl",
+   "query": "Wat doet een data-analist (Data Analyst)?",
+   "expected_behaviour": "answer in the question's language; if evidence is retrieved, cite it with valid [n] markers and no more markers than evidence items; no country-specific claim",
+   "model_answer": "**Bewijs (uit bronnen):**  \nEen data-analist werkt met data om inzichten te halen uit databases, waarbij SQL nodig is om gegevens op te vragen. [1]  \nVoor het interpreteren van resultaten gebruikt een data-analist statistiek. [1]  \nEen data-analist gebruikt ook visualisatietools om dashboards te maken. [1]  \nPython wordt vaak gebruikt voor het opschonen van data. [1]  \n\n**Toolresultaten (berekend):**  \nGeen toolresultaten beschikbaar.\n\n**Aanbeveling:**  \nKort gezegd: een data-analist verzamelt, bewerkt, analyseert en visualiseert data zodat een organisatie betere beslissingen kan nemen.  \nAls je wilt, kan ik hierna ook uitleggen:\n- welke taken een data-analist dagelijks doet,\n- welke vaardigheden en tools belangrijk zijn,\n- of hoe dit beroep verschilt van een data scientist.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  },
+  {
+   "case": "ml-nl-unsupported-country",
+   "language": "nl",
+   "query": "Wat verdient een Data Analyst in Canada?",
+   "expected_behaviour": "state in the question's language that no supporting evidence is available; do not give a salary figure; do not present United States figures as Canadian",
+   "model_answer": "Bewijs (uit bronnen):\nDe kennisbank bevat onvoldoende bewijs om dat te beantwoorden.\n\nToolresultaten (berekend):\nGeen toolresultaten beschikbaar.\n\nAanbeveling:\nIk kan op basis van de meegegeven kennisbank geen salaris voor een Data Analyst in Canada onderbouwen.\n\nAls je wilt, kan ik je wel helpen met een van deze opties:\n- een realistische salarisinschatting op basis van senioriteit, provincie en sector;\n- een lijst met betrouwbare Canadese salarisbronnen om te checken;\n- een vergelijking van Data Analyst salarissen met Data Scientist of BI Analyst in Canada.",
+   "human_ratings": {
+    "answer_language_quality": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "native_speaker_fluency": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "question_understanding": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    },
+    "tone": {
+     "rating": null,
+     "reviewer": null,
+     "status": "PENDING_HUMAN_REVIEW"
+    }
+   }
+  }
+ ]
+}

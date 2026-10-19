@@ -275,6 +275,45 @@ def classify_answer(case: dict, answer: str, n_evidence: int, n_citations: int) 
     return {"class": cls, "reasons": reasons, "review_flags": flags, "money_figure": money, "states_insufficient_evidence": insufficient, "invalid_markers": bad_markers}
 
 
+POST_HOC_NOTE = ("POST-HOC (defined AFTER observing the corrected run; it never replaces the registered classification): ABSTAINED_WITH_CITED_CONTEXT = the answer states insufficient evidence, "
+                 "carries only valid [n] markers that refer to retrieved evidence, and contains no money figure. Whether citations attached to an abstention are acceptable is a product-presentation question for the owner.")
+
+
+def _states_insufficient_loosely(text: str) -> bool:
+    """POST-HOC only: the model often paraphrases the tail of the insufficient-evidence sentence ("... to answer what a Data Analyst earns"), so the first six words of any supported language's sentence are matched. The statement must
+    OPEN the answer (within its first 400 characters, i.e. the Evidence section): a caveat at the end of an otherwise evidence-backed answer is a partial limitation, not an abstention."""
+    flat = re.sub(r"\W+", " ", (text or "")[:400]).strip().lower()
+    return any(" ".join(sent.split()[:6]) in flat for sent in _insufficient_sentences())
+
+
+def reclassify_post_hoc(case: dict, answer: str, n_evidence: int, n_citations: int) -> dict:
+    """An additional, clearly post-hoc reading of an answer the registered rules classed as ANSWERED_WITH_EVIDENCE although it states insufficient evidence."""
+    registered = classify_answer(case, answer, n_evidence, n_citations)
+    markers = {int(m) for m in re.findall(r"\[(\d+)\]", answer)}
+    valid = all(1 <= m <= max(n_evidence, 0) for m in markers)
+    if registered["class"] == "ANSWERED_WITH_EVIDENCE" and _states_insufficient_loosely(answer) and valid and not registered["money_figure"]:
+        return {"registered_class": registered["class"], "post_hoc_class": "ABSTAINED_WITH_CITED_CONTEXT", "post_hoc": True}
+    return {"registered_class": registered["class"], "post_hoc_class": registered["class"], "post_hoc": False}
+
+
+def reclassify_run_post_hoc(run_dir: Path) -> dict:
+    """Offline (no provider call): apply the post-hoc reading to a recorded multilingual run. Writes ``reclassification.json`` exclusively; the original files are never touched."""
+    run_dir = Path(run_dir)
+    summary = json.loads((run_dir / "summary.json").read_text(encoding="utf-8"))
+    packet = json.loads((run_dir / "review_packet.json").read_text(encoding="utf-8"))
+    cases = {c["id"]: c for c in load_multilingual_cases()["cases"]}
+    ev = {(lang, kind): v for lang, kinds in summary["results"]["per_language"].items() for kind, v in kinds.items()}
+    rows = []
+    for item in packet["cases"]:
+        c = cases[item["case"]]
+        v = ev[(c["language"], c["kind"])]
+        rows.append({"case": c["id"], "language": c["language"], "kind": c["kind"], **reclassify_post_hoc(c, item["model_answer"], int(v.get("evidence_items") or 0), int(v.get("citations") or 0))})
+    out = {"source_run": run_dir.name, "note": POST_HOC_NOTE, "rescored_offline": True, "rows": rows}
+    with open(run_dir / "reclassification.json", "x", encoding="utf-8") as f:
+        json.dump(out, f, indent=1, ensure_ascii=False)
+    return out
+
+
 def judge_class(kind: str, cls: str, expectations: dict) -> str:
     """Map a class to the PRE-REGISTERED expectation for the case kind: intended, gap, failure or review."""
     e = expectations["expectations_by_kind"][kind]

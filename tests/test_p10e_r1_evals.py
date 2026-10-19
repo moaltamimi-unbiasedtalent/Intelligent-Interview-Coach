@@ -298,3 +298,24 @@ def test_default_language_prompt_is_unchanged_and_russian_stays_outside_the_know
         world.service(responder=b).answer("What does a Data Analyst do?", conversation_language="en")
         assert a.prompt == b.prompt
     assert "ru" not in E.load_multilingual_cases()["languages"]
+
+
+def test_post_hoc_reclassification_is_additive_offline_and_never_replaces_the_registered_result(tmp_path):
+    c = _case("es", "unsupported_country_compensation")
+    abst = localized.insufficient_message("es") + " [1][2]"
+    r = E.reclassify_post_hoc(c, abst, 2, 2)
+    assert r == {"registered_class": "ANSWERED_WITH_EVIDENCE", "post_hoc_class": "ABSTAINED_WITH_CITED_CONTEXT", "post_hoc": True}
+    assert E.classify_answer(c, abst, 2, 2)["class"] == "ANSWERED_WITH_EVIDENCE"                         # the registered rule itself is unchanged
+    paraphrase = "La base de conocimiento no contiene evidencia suficiente para responder a cuánto gana un analista en Canadá. [1][2]"
+    assert E.states_insufficient_evidence(paraphrase) is False and E.reclassify_post_hoc(c, paraphrase, 2, 2)["post_hoc"] is True      # strict registered detection unchanged; the post-hoc reading is looser
+    caveat = "Un analista de datos consulta bases de datos y limpia datos [1]. " * 8 + "La base de conocimiento no contiene evidencia suficiente para dar una descripción completa."
+    assert E.reclassify_post_hoc(c, caveat, 2, 1)["post_hoc"] is False                                   # a caveat at the end of an evidence-backed answer is not an abstention
+    assert E.reclassify_post_hoc(c, abst + " Gana 85.000 CAD", 2, 2)["post_hoc"] is False               # a figure is never excused
+    assert E.reclassify_post_hoc(c, localized.insufficient_message("es") + " [7]", 2, 1)["post_hoc"] is False   # an invalid marker is never excused
+    run = tmp_path / "run"; run.mkdir()
+    (run / "summary.json").write_text(json.dumps({"results": {"per_language": {"es": {"unsupported_country_compensation": {"evidence_items": 2, "citations": 2}}}}}))
+    (run / "review_packet.json").write_text(json.dumps({"cases": [{"case": "ml-es-unsupported-country", "model_answer": abst}]}))
+    out = E.reclassify_run_post_hoc(run)
+    assert out["rows"][0]["post_hoc_class"] == "ABSTAINED_WITH_CITED_CONTEXT" and out["rescored_offline"] and "POST-HOC" in out["note"]
+    with pytest.raises(FileExistsError):
+        E.reclassify_run_post_hoc(run)                                                                   # an earlier result is never overwritten

@@ -1,0 +1,119 @@
+{
+ "source_run": "p10e-multilingual-live-20261019T151740Z-c896ab9b",
+ "note": "POST-HOC (defined AFTER observing the corrected run; it never replaces the registered classification): ABSTAINED_WITH_CITED_CONTEXT = the answer states insufficient evidence, carries only valid [n] markers that refer to retrieved evidence, and contains no money figure. Whether citations attached to an abstention are acceptable is a product-presentation question for the owner.",
+ "rescored_offline": true,
+ "rows": [
+  {
+   "case": "ml-en-supported",
+   "language": "en",
+   "kind": "supported_occupation_definition",
+   "registered_class": "ANSWERED_WITH_EVIDENCE",
+   "post_hoc_class": "ANSWERED_WITH_EVIDENCE",
+   "post_hoc": false
+  },
+  {
+   "case": "ml-en-unsupported-country",
+   "language": "en",
+   "kind": "unsupported_country_compensation",
+   "registered_class": "ANSWERED_WITH_EVIDENCE",
+   "post_hoc_class": "ABSTAINED_WITH_CITED_CONTEXT",
+   "post_hoc": true
+  },
+  {
+   "case": "ml-de-supported",
+   "language": "de",
+   "kind": "supported_occupation_definition",
+   "registered_class": "ANSWERED_WITH_EVIDENCE",
+   "post_hoc_class": "ANSWERED_WITH_EVIDENCE",
+   "post_hoc": false
+  },
+  {
+   "case": "ml-de-unsupported-country",
+   "language": "de",
+   "kind": "unsupported_country_compensation",
+   "registered_class": "ABSTAINED",
+   "post_hoc_class": "ABSTAINED",
+   "post_hoc": false
+  },
+  {
+   "case": "ml-fr-supported",
+   "language": "fr",
+   "kind": "supported_occupation_definition",
+   "registered_class": "ANSWERED_WITH_EVIDENCE",
+   "post_hoc_class": "ANSWERED_WITH_EVIDENCE",
+   "post_hoc": false
+  },
+  {
+   "case": "ml-fr-unsupported-country",
+   "language": "fr",
+   "kind": "unsupported_country_compensation",
+   "registered_class": "ANSWERED_WITH_EVIDENCE",
+   "post_hoc_class": "ABSTAINED_WITH_CITED_CONTEXT",
+   "post_hoc": true
+  },
+  {
+   "case": "ml-es-supported",
+   "language": "es",
+   "kind": "supported_occupation_definition",
+   "registered_class": "ANSWERED_WITH_EVIDENCE",
+   "post_hoc_class": "ANSWERED_WITH_EVIDENCE",
+   "post_hoc": false
+  },
+  {
+   "case": "ml-es-unsupported-country",
+   "language": "es",
+   "kind": "unsupported_country_compensation",
+   "registered_class": "ANSWERED_WITH_EVIDENCE",
+   "post_hoc_class": "ABSTAINED_WITH_CITED_CONTEXT",
+   "post_hoc": true
+  },
+  {
+   "case": "ml-it-supported",
+   "language": "it",
+   "kind": "supported_occupation_definition",
+   "registered_class": "ANSWERED_WITH_EVIDENCE",
+   "post_hoc_class": "ANSWERED_WITH_EVIDENCE",
+   "post_hoc": false
+  },
+  {
+   "case": "ml-it-unsupported-country",
+   "language": "it",
+   "kind": "unsupported_country_compensation",
+   "registered_class": "ABSTAINED",
+   "post_hoc_class": "ABSTAINED",
+   "post_hoc": false
+  },
+  {
+   "case": "ml-pt-supported",
+   "language": "pt",
+   "kind": "supported_occupation_definition",
+   "registered_class": "ANSWERED_WITH_EVIDENCE",
+   "post_hoc_class": "ANSWERED_WITH_EVIDENCE",
+   "post_hoc": false
+  },
+  {
+   "case": "ml-pt-unsupported-country",
+   "language": "pt",
+   "kind": "unsupported_country_compensation",
+   "registered_class": "ABSTAINED",
+   "post_hoc_class": "ABSTAINED",
+   "post_hoc": false
+  },
+  {
+   "case": "ml-nl-supported",
+   "language": "nl",
+   "kind": "supported_occupation_definition",
+   "registered_class": "ANSWERED_WITH_EVIDENCE",
+   "post_hoc_class": "ANSWERED_WITH_EVIDENCE",
+   "post_hoc": false
+  },
+  {
+   "case": "ml-nl-unsupported-country",
+   "language": "nl",
+   "kind": "unsupported_country_compensation",
+   "registered_class": "ABSTAINED",
+   "post_hoc_class": "ABSTAINED",
+   "post_hoc": false
+  }
+ ]
+}
