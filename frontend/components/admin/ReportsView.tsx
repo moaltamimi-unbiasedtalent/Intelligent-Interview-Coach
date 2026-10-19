@@ -5,7 +5,7 @@ import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/api/client";
 import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
 import type { ReportMetric, ReportPeriod, AdminReport, ReportSection } from "@/lib/admin/types";
-import { Panel, PermissionGate, ResourceState, StatusLabel, btn, field, useAdminResource } from "./ui";
+import { Panel, PermissionGate, ResourceState, StatusLabel, btn, field, useAdminResource, ScrollRegion } from "./ui";
 
 // Admin reporting. Aggregates only; small candidate cohorts are suppressed by the server (value null, never a count). A missing value is
 // "Not captured" or "Unavailable", never 0. Commercial figures are MOCK BILLING and live behind a separate permission.
@@ -58,7 +58,8 @@ function Section({ s }: { s: ReportSection }) {
         {s.note ? <p className="text-sm">{s.note}</p> : null}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{s.metrics.map((m) => <Metric key={m.metric_id} m={m} />)}</div>
         {s.tables.map((t) => (
-          <div key={t.table_id} className="overflow-x-auto">
+          <div key={t.table_id}>
+            <ScrollRegion label={`${t.title} (scrollable table)`}>
             <table className="w-full text-left text-sm">
               <caption className="py-1 text-left text-sm font-medium">{t.title}</caption>
               <thead><tr className="text-xs text-muted"><th scope="col" className="py-1 pr-4 font-medium">Group</th>{t.columns.map((c) => <th key={c} scope="col" className="py-1 pr-4 font-medium">{c}</th>)}</tr></thead>
@@ -71,6 +72,7 @@ function Section({ s }: { s: ReportSection }) {
                 ))}
               </tbody>
             </table>
+            </ScrollRegion>
             {t.note ? <p className="text-xs text-muted">{t.note}</p> : null}
           </div>
         ))}

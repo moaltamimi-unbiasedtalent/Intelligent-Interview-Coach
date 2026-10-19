@@ -6,7 +6,7 @@ import Link from "@/components/ui/VerifiedLink";
 import { api } from "@/lib/api/client";
 import { P } from "@/lib/admin/capabilities";
 import type { AdminUserQuery } from "@/lib/admin/types";
-import { Pager, Panel, PermissionGate, ResourceState, btn, field, useAdminResource } from "./ui";
+import { Pager, Panel, PermissionGate, ResourceState, btn, field, useAdminResource, ScrollRegion } from "./ui";
 
 const STATUSES = ["active", "deactivated", "deletion_requested"];
 const ROLES = ["user", "platform_admin", "support_operator", "billing_admin", "knowledge_admin", "security_privacy_admin", "operations_admin"];
@@ -51,7 +51,7 @@ function Body() {
             {loaded.data.items.length === 0 ? (
               <p className="text-sm text-muted">No accounts match.</p>
             ) : (
-              <div className="overflow-x-auto">
+              <ScrollRegion label="Accounts (scrollable table)">
                 <table className="w-full text-left text-sm">
                   <caption className="sr-only">Accounts</caption>
                   <thead>
@@ -79,7 +79,7 @@ function Body() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </ScrollRegion>
             )}
             <Pager page={loaded.data.page} pageSize={loaded.data.page_size} total={loaded.data.total}
               onPage={(p) => setQuery({ ...query, page: p })} />

@@ -7,7 +7,7 @@ import { api } from "@/lib/api/client";
 import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
 import type { PlanDetail } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
-import { KeyValue, Panel, PermissionGate, ResourceState, apiMessage, btn, field, useAdminResource } from "./ui";
+import { KeyValue, Panel, PermissionGate, ResourceState, apiMessage, btn, field, useAdminResource, ScrollRegion } from "./ui";
 
 export function PlanDetailView({ versionId }: { versionId: number }) {
   return (
@@ -70,7 +70,7 @@ function Detail({ d, reload }: { d: PlanDetail; reload: () => void }) {
       </Panel>
 
       <Panel title="Entitlements">
-        <div className="overflow-x-auto">
+        <ScrollRegion label="Entitlements of this plan version (scrollable table)">
           <table className="w-full text-left text-sm">
             <caption className="sr-only">Entitlements of this plan version</caption>
             <thead>
@@ -113,7 +113,7 @@ function Detail({ d, reload }: { d: PlanDetail; reload: () => void }) {
               })}
             </tbody>
           </table>
-        </div>
+        </ScrollRegion>
         {error ? <p role="alert" className="text-sm">{error}</p> : null}
         {d.editable && canManage ? (
           <div className="flex flex-wrap gap-3">

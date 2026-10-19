@@ -6,7 +6,7 @@ import Link from "@/components/ui/VerifiedLink";
 import { api } from "@/lib/api/client";
 import { P } from "@/lib/admin/capabilities";
 import type { AdminTicketQuery } from "@/lib/admin/types";
-import { Pager, Panel, PermissionGate, ResourceState, btn, field, useAdminResource } from "./ui";
+import { Pager, Panel, PermissionGate, ResourceState, btn, field, useAdminResource, ScrollRegion } from "./ui";
 
 const STATUSES = ["new", "triaged", "in_progress", "waiting_for_customer", "resolved", "closed"];
 const CATEGORIES = ["account_login", "opportunity", "prepare", "practice_interview", "documents", "ai_response",
@@ -51,7 +51,7 @@ function Body() {
         {loaded.state === "ready" ? (
           <Panel title="Tickets">
             {loaded.data.items.length === 0 ? <p className="text-sm text-muted">No tickets match.</p> : (
-              <div className="overflow-x-auto">
+              <ScrollRegion label="Support tickets (scrollable table)">
                 <table className="w-full text-left text-sm">
                   <caption className="sr-only">Support tickets</caption>
                   <thead>
@@ -77,7 +77,7 @@ function Body() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </ScrollRegion>
             )}
             <Pager page={loaded.data.page} pageSize={loaded.data.page_size} total={loaded.data.total}
               onPage={(p) => setQuery({ ...query, page: p })} />

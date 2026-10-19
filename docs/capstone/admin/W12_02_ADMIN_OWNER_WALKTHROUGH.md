@@ -130,3 +130,6 @@ This acceptance does not waive any limitation in section 7 (mock billing, read-o
 
 ## 9. State after this wave
 Owner decision: ACCEPT WITH FOLLOW-UP ITEMS. Next step: canonical journey documentation (Candidate Journey, Platform Admin Journey, then specialist Admin journeys), then integrated Candidate and Admin requalification, then RC-P10-004. None of these has started. AC-24 remains PARTIAL until successor-RC qualification satisfies its criterion. P10C has not started.
+
+## 10. Follow-up register after W12.5 (added 2026-10-19; the findings above are kept unchanged as historical evidence)
+Detail, reproduction and evidence: `W12_5_ADMIN_UX_CORRECTIONS.md`. FIXED: F-01, F-03, F-04, F-05, F-17 (cross-linked, kept separate), F-02 (index copy), F-10 (Plans side). DISPOSITIONED: F-06 (two surfaces kept by design, primary audit view named and linked). PARTIALLY FIXED: F-07, F-11, F-16. STILL OPEN: F-08, F-09, F-12, F-15. NO LONGER REPRODUCIBLE: F-13 (W12.4B). OUT OF SCOPE: F-14. Candidate header overlap at 390 px: STILL OPEN (not Admin-owned). Nothing here changes a limitation in section 7 or any owner decision.

@@ -5,7 +5,7 @@ import type { FormEvent } from "react";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import type { KnowledgeReadiness, KnowledgeReadinessStatus, KnowledgeRetrievalResult } from "@/lib/admin/types";
-import { Panel, ResourceState, Stat, StatusLabel, apiMessage, btn, field, useAdminResource } from "./ui";
+import { Panel, ResourceState, Stat, StatusLabel, apiMessage, btn, field, useAdminResource, ScrollRegion } from "./ui";
 
 /**
  * W12.4A. Knowledge readiness, the active corpus and a retrieval-ONLY test, on /admin/knowledge (no new destination).
@@ -51,7 +51,7 @@ export function KnowledgeReadinessPanels({ canTest }: { canTest: boolean }) {
             active.data.items.length === 0 ? (
               <p className="text-sm text-muted">No governed knowledge is active. Candidates are served only by the curated knowledge base until a source is activated.</p>
             ) : (
-              <div className="overflow-x-auto">
+              <ScrollRegion label="Active governed knowledge (scrollable table)">
                 <table className="w-full text-left text-sm">
                   <caption className="sr-only">Active governed knowledge</caption>
                   <thead>
@@ -77,7 +77,7 @@ export function KnowledgeReadinessPanels({ canTest }: { canTest: boolean }) {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </ScrollRegion>
             )
           ) : null}
         </ResourceState>

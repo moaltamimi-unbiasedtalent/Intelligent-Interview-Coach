@@ -6,7 +6,7 @@ import { api } from "@/lib/api/client";
 import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
 import type { SpeechConfig, SpeechConfigPatch, SpeechOverview, SpeechProviderReadiness } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
-import { KeyValue, Panel, PermissionGate, ResourceState, StatusLabel, btn, field, useAdminResource } from "./ui";
+import { KeyValue, Panel, PermissionGate, ResourceState, StatusLabel, btn, field, useAdminResource, ScrollRegion } from "./ui";
 
 // Governed speech (W12.4E backend, W12.4F Admin surface). This page records SELECTION and POLICY only: saving a setting never starts a provider, downloads a model or contacts a service.
 // There is no path, command, endpoint, secret or model-loading control here by design.
@@ -83,8 +83,8 @@ function Body() {
               <ProviderPanel title="Text to speech: Kyutai Pocket TTS" r={o.tts} />
               <Panel title="Language matrix">
                 <p className="text-xs text-muted">Effective = product-authorized AND verified provider capability AND selected below. Russian is an interface language only and is excluded from speech. Dutch server TTS is unverified.</p>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
+                <ScrollRegion label="Speech language matrix (scrollable table)">
+                  <table className="w-full min-w-[34rem] text-left text-sm">
                     <caption className="sr-only">Speech language matrix</caption>
                     <thead><tr className="text-xs text-muted">{["Language", "Product-authorized", "STT provider", "TTS provider", "Selected", "Effective STT", "Effective TTS"].map((c) => <th key={c} scope="col" className="py-1 pr-4 font-medium">{c}</th>)}</tr></thead>
                     <tbody>
@@ -101,7 +101,7 @@ function Body() {
                       ))}
                     </tbody>
                   </table>
-                </div>
+                </ScrollRegion>
               </Panel>
               <Panel title="Policy (selection only)">
                 <p className="text-xs text-muted">Revision {o.config.revision}{o.config.persisted ? "" : " (defaults, never saved)"}. Enabling a provider records a decision; it does not start anything.</p>

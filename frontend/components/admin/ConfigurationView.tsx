@@ -6,7 +6,7 @@ import { api } from "@/lib/api/client";
 import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
 import type { PauseState } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
-import { KeyValue, Panel, PermissionGate, ResourceState, StatusLabel, btn, useAdminResource } from "./ui";
+import { KeyValue, Panel, PermissionGate, ResourceState, StatusLabel, btn, useAdminResource, ScrollRegion } from "./ui";
 
 // Durable platform pause (SEC-W10-05 closed in W10.11). The state lives in the database and is shared by every process. The server decides the
 // environment; nothing here can name one. This page is NOT an environment-variable, secret or JSON editor.
@@ -45,7 +45,7 @@ function Body() {
             {notice ? <p role="status" className="text-sm">{notice}</p> : null}
             <Panel title="Pause switches">
               <p className="text-xs text-muted">Pausing refuses NEW candidate activity of that kind. Admin, privacy and account controls, legal pages and saved data stay available, and the job worker keeps running.</p>
-              <div className="overflow-x-auto">
+              <ScrollRegion label="Pause switches (scrollable table)">
                 <table className="w-full text-left text-sm">
                   <caption className="sr-only">Pause switches</caption>
                   <thead><tr className="text-xs text-muted">{["Capability", "State", "Source", "Revision", "Last change", "Internal reason", ""].map((c, i) => <th key={i} scope="col" className="py-1 pr-4 font-medium">{c}</th>)}</tr></thead>
@@ -67,7 +67,7 @@ function Body() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </ScrollRegion>
               {!canManage ? <p className="text-xs text-muted">Your role can view the pause state but cannot change it.</p> : null}
             </Panel>
             <Panel title="What this page does not do">

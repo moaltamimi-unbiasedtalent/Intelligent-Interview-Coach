@@ -7,7 +7,7 @@ import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities"
 import type { BillingOpsPage, BillingOpsReadiness } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
 import { useStepUp } from "./StepUp";
-import { Pager, Panel, PermissionGate, ResourceState, Stat, StatusLabel, apiMessage, btn, field, useAdminResource } from "./ui";
+import { Pager, Panel, PermissionGate, ResourceState, Stat, StatusLabel, apiMessage, btn, field, useAdminResource, ScrollRegion } from "./ui";
 
 // Billing OPERATIONS (W12.4D-E): every value comes from the verified local billing domain. Provider ids are masked, nothing here shows a raw payload, a signature,
 // a secret or a card detail, and nothing reports revenue. Recovery actions only re-drive the existing verified pipeline for one of OUR records; with the runtime
@@ -91,7 +91,7 @@ function Overview() {
 function List({ page, cols, caption }: { page: BillingOpsPage; cols: [string, string][]; caption: string }) {
   if (!page?.items || page.items.length === 0) return <p className="text-sm text-muted">Nothing to show.</p>;
   return (
-    <div className="relative overflow-x-auto">
+    <ScrollRegion label={`caption (scrollable table)`}>
       <table className="w-full text-left text-sm">
         <caption className="sr-only">{caption}</caption>
         <thead><tr className="text-xs text-muted">{cols.map(([, h]) => <th key={h} scope="col" className="py-1 pr-4 font-medium">{h}</th>)}</tr></thead>
@@ -107,7 +107,7 @@ function List({ page, cols, caption }: { page: BillingOpsPage; cols: [string, st
           ))}
         </tbody>
       </table>
-    </div>
+    </ScrollRegion>
   );
 }
 
@@ -166,7 +166,7 @@ function Events() {
       <ResourceState loaded={r}>
         {r.state === "ready" ? (<>
           {!r.data?.items || r.data.items.length === 0 ? <p className="text-sm text-muted">Nothing to show.</p> : (
-            <div className="relative overflow-x-auto">
+            <ScrollRegion label="Webhook events (scrollable table)">
               <table className="w-full text-left text-sm">
                 <caption className="sr-only">Webhook events</caption>
                 <thead><tr className="text-xs text-muted">{["Event", "Received", "Status", "Attempts", "Failure", ""].map((h, i) => <th key={i} scope="col" className="py-1 pr-3 font-medium">{h}</th>)}</tr></thead>
@@ -185,7 +185,7 @@ function Events() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </ScrollRegion>
           )}
           <Pager page={page} pageSize={25} total={r.data.total} onPage={setPage} />
         </>) : null}

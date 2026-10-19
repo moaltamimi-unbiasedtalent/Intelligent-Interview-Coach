@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "@/components/ui/VerifiedLink";
 import { api } from "@/lib/api/client";
 import { P } from "@/lib/admin/capabilities";
 import { Panel, PermissionGate, ResourceState, Table, useAdminResource } from "./ui";
@@ -18,6 +19,7 @@ function Body() {
     <ResourceState loaded={loaded}>
       {loaded.state === "ready" ? (
         <Panel title="Recent events">
+          <p className="text-xs text-muted">The 100 most recent privileged-action events. For filters, pagination and the audited export, use <Link href="/admin/security#audit" className="underline underline-offset-2">Security, Audit</Link> (the primary audit view).</p>
           <Table
             caption="Recent audit events"
             rows={loaded.data.events.slice(0, 100).map((e) => ({

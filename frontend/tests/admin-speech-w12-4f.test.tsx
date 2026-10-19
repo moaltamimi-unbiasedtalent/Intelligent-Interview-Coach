@@ -105,20 +105,20 @@ describe("Capability readiness panel", () => {
     expect(screen.getByText(/not a statement that the platform is production ready/)).toBeInTheDocument();
   });
 
-  it("renders nothing for a malformed or empty response instead of crashing", async () => {
+  it("shows an accessible unavailable state for a malformed or empty response instead of crashing or inventing statuses", async () => {
     for (const bad of [{}, { capabilities: [] }, { capabilities: null }]) {
       readiness.mockResolvedValue(bad);
-      const { container, unmount } = render(<CapabilityReadiness />);
-      await waitFor(() => expect(readiness).toHaveBeenCalled());
-      expect(container.textContent).toBe("");
+      const { unmount } = render(<CapabilityReadiness />);
+      expect(await screen.findByRole("status")).toHaveTextContent(/unavailable right now/);
+      expect(screen.queryByRole("table")).toBeNull();                              // no fabricated readiness rows
       unmount();
     }
   });
 
-  it("renders nothing when the endpoint is unavailable (never a fabricated healthy state)", async () => {
+  it("shows the unavailable state when the endpoint fails (never a fabricated healthy state)", async () => {
     readiness.mockRejectedValue(new Error("down"));
-    const { container } = render(<CapabilityReadiness />);
-    await waitFor(() => expect(readiness).toHaveBeenCalled());
-    expect(container.textContent).toBe("");
+    render(<CapabilityReadiness />);
+    expect(await screen.findByRole("status")).toHaveTextContent(/unavailable right now/);
+    expect(screen.queryByRole("table")).toBeNull();
   });
 });
