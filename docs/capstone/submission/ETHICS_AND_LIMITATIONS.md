@@ -45,4 +45,4 @@ When live mode is enabled, prompts (including the candidate text the user typed 
 
 ## 5. Where the full list lives
 
-The deferred-issues register (`docs/capstone/POST_SUBMISSION_DEFERRED_ISSUES_REGISTER.md`, 392 issues: 340 active, 52 closed) and the acceptance ledger (`CAPSTONE_ACCEPTANCE_LEDGER_CURRENT.md`). Deferral is scheduling only: nothing deferred is complete or waived.
+The deferred-issues register (`docs/capstone/POST_SUBMISSION_DEFERRED_ISSUES_REGISTER.md`, 394 issues: 342 active, 52 closed) and the acceptance ledger (`CAPSTONE_ACCEPTANCE_LEDGER_CURRENT.md`). Deferral is scheduling only: nothing deferred is complete or waived.
