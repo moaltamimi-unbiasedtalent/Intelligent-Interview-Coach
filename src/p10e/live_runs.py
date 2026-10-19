@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from decimal import Decimal
 import shutil
 import tempfile
 import time
@@ -162,6 +163,74 @@ def run_kb_quality(session: G.LiveSession, profile: str, *, build: Callable[[str
     return {"run_dir": str(d), "results": results, "budget": session.budget.summary(), "not_run": not_run}
 
 
+def classify_kb_case(case: dict) -> str:
+    """Classify a corpus case from ITS OWN pinned tags and expectations (never from the model output): a case designed so that no supporting evidence exists (the correct behaviour is to
+    abstain), one designed with supporting evidence (a citation is expected), or neither."""
+    tags = case.get("tags") or []
+    e = case.get("expect") or {}
+    if any(t.startswith(("grounding:unsupported", "citation:unavailable_evidence")) for t in tags) or e.get("citations_max") == 0:
+        return "designed_unsupported"
+    if e.get("citations_min", 0) >= 1 or e.get("citation_sources"):
+        return "designed_supported"
+    return "unclassified"
+
+
+def rescore_kb_run(run_dir: Path) -> dict:
+    """Offline re-score of a saved KB run (no provider call): add each case's design class and the deterministic observation that is meaningful for it. A designed-unsupported case with
+    NO citation is an appropriate abstention at the structural level (still PENDING_HUMAN_REVIEW for whether the wording is right); the structural ``answer_grounded`` proxy is only
+    meaningful for designed-supported cases. No threshold is applied and no human rating is implied."""
+    from src.copilot.knowledge import requalification as Q
+
+    run_dir = Path(run_dir)
+    summary = json.loads((run_dir / "summary.json").read_text(encoding="utf-8"))
+    by_id = {c["id"]: c for c in Q.load_corpus()["cases"]}
+    rows = []
+    for c in summary["results"]["cases"]:
+        if c["status"] != "COMPLETE":
+            rows.append({"case": c["case"], "status": c["status"]})
+            continue
+        kind = classify_kb_case(by_id[c["case"]])
+        obs = {"designed_unsupported": {"no_citation_invented": c["citations"] == 0}, "designed_supported": {"answer_grounded_structural": c["answer_grounded"], "citations": c["citations"]}}.get(kind, {"citations": c["citations"]})
+        rows.append({"case": c["case"], "design": kind, "observation": obs})
+    tally = {k: {"cases": sum(1 for r in rows if r.get("design") == k)} for k in ("designed_supported", "designed_unsupported", "unclassified")}
+    tally["designed_supported"]["structurally_grounded"] = sum(1 for r in rows if r.get("design") == "designed_supported" and r["observation"]["answer_grounded_structural"])
+    tally["designed_unsupported"]["no_citation_invented"] = sum(1 for r in rows if r.get("design") == "designed_unsupported" and r["observation"]["no_citation_invented"])
+    out = {"run_id": summary["run_id"], "model": summary["results"]["model"], "profile": summary["results"]["profile"], "rescored_offline": True, "per_case": rows, "tally": tally,
+           "pending_human_review": list(PENDING_HUMAN), "thresholds": "none: no pass or fail is declared"}
+    with open(run_dir / "rescore.json", "x", encoding="utf-8") as f:
+        json.dump(out, f, indent=1)
+    return out
+
+
+def run_auth_failure_probe(session: G.LiveSession, *, base: Path = G.LIVE_DIR, build: Callable[[str], Any] | None = None) -> dict:
+    """ONE request with a deliberately invalid credential to a priced model: observes the provider's real rejection and the ledger's rule (dollars released, the call still counted).
+    The invalid key is a fixed dummy, never a real credential."""
+    from langchain_openai import ChatOpenAI
+
+    from src.llm.models import ModelProfile, model_id
+
+    slug = model_id(ModelProfile.FAST)
+    rec = G.LiveRunRecorder("auth-failure-probe", provider="OpenRouter", model=slug, profile="fast", base=base, extra=session.evidence_refs())
+    if session.http_guard is not None:
+        session.http_guard.recorder = rec
+    model = build(slug) if build else ChatOpenAI(model=slug, api_key="invalid-p10e-probe-key", base_url="https://openrouter.ai/api/v1", max_tokens=50, timeout=session.limits.request_timeout_s, max_retries=0)
+    before = session.ledger.snapshot()
+    err = None
+    try:
+        model.invoke([("human", SMOKE_PROMPT)])
+        outcome = "UNEXPECTED_SUCCESS"
+    except Exception as exc:  # noqa: BLE001
+        err, outcome = type(exc).__name__, "REJECTED_OR_FAILED"
+    after = session.ledger.snapshot()
+    row = session.ledger.conn.execute("SELECT state, status_code, committed_usd FROM entries ORDER BY seq DESC LIMIT 1").fetchone()
+    res = {"outcome": outcome, "error_category": err, "ledger_state": row[0], "http_status": row[1], "committed_usd_for_the_call": row[2],
+           "calls_counted": after["calls"] - before["calls"], "usd_added": str(Decimal(after["committed_usd"]) - Decimal(before["committed_usd"]))}
+    rec.finish(session.budget.summary(), res)
+    if session.http_guard is not None:
+        session.http_guard.recorder = None
+    return res
+
+
 def isolate_agent_stores() -> dict:
     """Redirect everything the agent path could write to disposable storage: a COPY of the knowledge vector store, the research cache and the database settings. The protected
     developer stores are only fingerprinted (before and after), never opened by the run."""
@@ -181,7 +250,7 @@ def isolate_agent_stores() -> dict:
     return {"tmp": str(tmp)}
 
 
-def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None, base: Path = G.LIVE_DIR, build: Callable[[str], Any] | None = None, isolate: bool = True) -> dict:
+def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None, only: list[str] | None = None, base: Path = G.LIVE_DIR, build: Callable[[str], Any] | None = None, isolate: bool = True) -> dict:
     """The existing held-out agent benchmark against a real model, every request guarded. Case expectations are never edited after seeing output."""
     from src.agent.live_eval import aggregate, classify, load_live_cases, observation_from_result
     from src.agent.models import AgentRunRequest
@@ -194,6 +263,8 @@ def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None,
     before_fp = protected_store_fingerprint()
     iso = isolate_agent_stores() if isolate else {}
     cases = load_live_cases()
+    if only:
+        cases = [c for c in cases if c["id"] in set(only)]
     if limit:
         cases = cases[:limit]
     slug = model_id(prof)
@@ -204,19 +275,21 @@ def run_agent(session: G.LiveSession, profile: str, *, limit: int | None = None,
     results, stopped = [], None
     for case in cases:
         before = len(session.http_guard.refused) if session.http_guard else 0
+        before_n = before
         svc = AgentApplicationService(model_factory=lambda: chat_model(profile, session.limits, build=build)[0], career_service=career)
         t0 = time.perf_counter()
         res = svc.run(AgentRunRequest(goal=case["goal"], user_id="p10e-live-eval", profile=prof.value))
         latency = int((time.perf_counter() - t0) * 1000)
         reason = _refused_since(session, before)
-        results.append({"classified": classify(case, observation_from_result(case["id"], profile, res, latency)), "guard_refusal": reason, "case": case["id"], "latency_ms": latency})
+        reasons = list(session.http_guard.refused[before_n:]) if session.http_guard else []
+        results.append({"classified": classify(case, observation_from_result(case["id"], profile, res, latency)), "guard_refusal": reason, "guard_refusal_reasons": reasons, "case": case["id"], "latency_ms": latency})
         if reason in ("spend_ceiling", "call_limit"):
             stopped = reason
             break
     after_fp = protected_store_fingerprint()
     classified = [r["classified"] for r in results if not r["guard_refusal"]]
     metrics = aggregate(classified) if classified else {}
-    out = {"profile": profile, "model": slug, "cases_planned": len(cases), "cases_completed": len(classified), "cases_refused": [r["case"] for r in results if r["guard_refusal"]], "stopped_by_guard": stopped,
+    out = {"profile": profile, "model": slug, "cases_planned": len(cases), "cases_completed": len(classified), "cases_refused": [r["case"] for r in results if r["guard_refusal"]], "guard_refusal_reasons": {r["case"]: sorted(set(r["guard_refusal_reasons"])) for r in results if r["guard_refusal"]}, "stopped_by_guard": stopped,
            "metrics": metrics, "per_case_latency_ms": {r["case"]: r["latency_ms"] for r in results}, "protected_stores_unchanged": before_fp == after_fp,
            "note": "PARTIAL: the guard stopped the run; metrics cover only the completed cases" if stopped else "Complete over the planned cases. Metrics measure the model's decisions on a bounded held-out sample; not an accuracy score."}
     d = rec.finish(session.budget.summary(), out)

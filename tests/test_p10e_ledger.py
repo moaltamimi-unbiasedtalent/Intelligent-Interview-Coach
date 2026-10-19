@@ -610,3 +610,43 @@ def test_no_test_touches_the_real_ledger_or_live_evidence(tmp_path):
     open_led(d, g).close(backup=False)
     assert (sorted(p.name for p in live.iterdir()) if live.exists() else []) == before
     assert not str(d).startswith(str(ROOT))
+
+
+# =================================================================================================================================== classification, offline re-scoring, the auth probe
+def test_kb_cases_are_classified_from_their_own_pinned_design_never_from_model_output():
+    from src.p10e import live_runs as R
+    assert R.classify_kb_case({"tags": ["grounding:unsupported_occupation"], "expect": {}}) == "designed_unsupported"
+    assert R.classify_kb_case({"tags": ["citation:unavailable_evidence"], "expect": {}}) == "designed_unsupported"
+    assert R.classify_kb_case({"tags": [], "expect": {"citations_max": 0}}) == "designed_unsupported"
+    assert R.classify_kb_case({"tags": ["citation:correct_source"], "expect": {"citations_min": 1}}) == "designed_supported"
+    assert R.classify_kb_case({"tags": [], "expect": {"citation_sources": ["fx_roles"]}}) == "designed_supported"
+    assert R.classify_kb_case({"tags": ["x"], "expect": {}}) == "unclassified"
+
+
+def test_an_abstention_on_a_designed_unsupported_case_is_not_scored_as_ungrounded_and_rescoring_is_offline_and_append_only(tmp_path):
+    from src.p10e import live_runs as R
+    d, g = make_ledger(tmp_path)
+    ev = tmp_path / "evidence"; ev.mkdir()
+    t = Transport(lambda req, n: httpx.Response(200, json={**_ok_body(), "choices": [{"index": 0, "message": {"role": "assistant", "content": "No evidence was retrieved, so I cannot say."}, "finish_reason": "stop"}]}))
+    with session(tmp_path, d, g) as s:
+        out = R.run_kb_quality(s, "balanced", build=lambda slug: chat(t, model=slug), base=ev)
+    calls_before = len(t.requests)
+    r = R.rescore_kb_run(Path(out["run_dir"]))
+    assert len(t.requests) == calls_before and r["rescored_offline"] is True                              # re-scoring made no provider call
+    unsupported = [x for x in r["per_case"] if x.get("design") == "designed_unsupported"]
+    assert unsupported and all(x["observation"] == {"no_citation_invented": True} for x in unsupported)       # a correct abstention, not a failure
+    assert r["tally"]["designed_unsupported"]["no_citation_invented"] == len(unsupported) and r["thresholds"].startswith("none")
+    with pytest.raises(FileExistsError):
+        R.rescore_kb_run(Path(out["run_dir"]))                                                              # an earlier result is never overwritten
+
+
+def test_the_auth_failure_probe_releases_the_dollars_but_counts_the_call(tmp_path):
+    from src.p10e import live_runs as R
+    d, g = make_ledger(tmp_path)
+    ev = tmp_path / "evidence"; ev.mkdir()
+    t = Transport(lambda req, n: httpx.Response(401, json={"error": {"message": "invalid key", "code": 401}}))
+    with session(tmp_path, d, g) as s:
+        res = R.run_auth_failure_probe(s, base=ev, build=lambda slug: chat(t, model=slug, max_tokens=50))
+    assert res["outcome"] == "REJECTED_OR_FAILED" and res["ledger_state"] == "rejected" and res["http_status"] == 401
+    assert Decimal(res["committed_usd_for_the_call"]) == 0 and res["calls_counted"] == 1 and Decimal(res["usd_added"]) == 0
+    assert "invalid-p10e-probe-key" not in json.dumps(res)

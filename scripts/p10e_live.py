@@ -76,7 +76,8 @@ def main(argv=None) -> int:
     p = sub.add_parser("provider-snapshot"); p.add_argument("--label", required=True)
     p = sub.add_parser("smoke"); p.add_argument("--profile", action="append", choices=["fast", "balanced", "advanced"])
     p = sub.add_parser("kb-quality"); p.add_argument("--profile", choices=["fast", "balanced", "advanced"], default="balanced")
-    p = sub.add_parser("agent"); p.add_argument("--profile", choices=["fast", "balanced", "advanced"], default="balanced"); p.add_argument("--limit", type=int, default=None)
+    sub.add_parser("auth-probe"); p = sub.add_parser("rescore-kb"); p.add_argument("run_dir")
+    p = sub.add_parser("agent"); p.add_argument("--profile", choices=["fast", "balanced", "advanced"], default="balanced"); p.add_argument("--limit", type=int, default=None); p.add_argument("--cases", default=None, help="comma-separated case ids")
     a = ap.parse_args(argv)
     if a.cmd == "status":
         print(json.dumps(status(), indent=1, default=str)); return 0
@@ -107,8 +108,15 @@ def main(argv=None) -> int:
             print("REFUSED (credential_missing)"); return 3
         snap = R.snapshot(cfg.api_key.get_secret_value()); path = R.save(snap, a.label)
         print(json.dumps({"saved": str(path.relative_to(ROOT)), **{k: v for k, v in snap.items() if k != "fields"}, "fields": snap.get("fields")}, indent=1)); return 0
+    if a.cmd == "rescore-kb":
+        from src.p10e import live_runs as R
+        print(json.dumps(R.rescore_kb_run(Path(a.run_dir)), indent=1)); return 0
     try:
-        if a.cmd == "smoke":
+        if a.cmd == "auth-probe":
+            with _session("auth-failure-probe", "synthetic_fixture_corpus") as s:
+                from src.p10e import live_runs as R
+                out = R.run_auth_failure_probe(s)
+        elif a.cmd == "smoke":
             with _session("smoke", "synthetic_fixture_corpus") as s:
                 from src.p10e import live_runs as R
                 out = R.run_smoke(s, a.profile or ["balanced"])
@@ -119,7 +127,7 @@ def main(argv=None) -> int:
         else:
             with _session("agent-live", "synthetic_held_out_agent_cases") as s:
                 from src.p10e import live_runs as R
-                out = R.run_agent(s, a.profile, limit=a.limit)
+                out = R.run_agent(s, a.profile, limit=a.limit, only=a.cases.split(",") if a.cases else None)
     except G.LiveRunRefused as exc:
         print(f"REFUSED ({exc.reason}): {exc}"); return 3
     print(json.dumps(out, indent=1, default=str)); return 0
