@@ -349,3 +349,14 @@ def test_the_demo_ledger_is_separate_from_the_p10e_ledger():
     assert "ledger.db" not in getattr(p10e_ledger, "LEDGER_FILE", "") and B.AUTH_PATH.parent.name == "demo_live"
     src = open(B.__file__, encoding="utf-8").read()
     assert "p10e" not in src.replace("P10E ledger", "").lower().replace("p10e evaluation ledger", "")
+
+
+def test_ragas_evaluator_requests_are_bounded_only_in_a_provider_mode(monkeypatch):
+    from src.copilot.evaluation.ragas_adapter import EvaluatorConfig, _build_evaluator
+
+    cfg = EvaluatorConfig(api_key="sk-or-FAKE-TEST-ONLY", base_url=URL, model="openai/gpt-4o-mini", embedding_model="openai/text-embedding-3-small")
+    llm, emb = _build_evaluator(cfg)
+    assert llm.langchain_llm.max_tokens is None
+    monkeypatch.setenv("ASK4MO_PROVIDER_MODE", "live")
+    llm, emb = _build_evaluator(cfg)
+    assert llm.langchain_llm.max_tokens == 2048 and llm.langchain_llm.max_retries == 1 and emb.embeddings.check_embedding_ctx_length is False

@@ -248,10 +248,17 @@ def _build_evaluator(config: EvaluatorConfig):
     from ragas.embeddings import LangchainEmbeddingsWrapper
     from ragas.llms import LangchainLLMWrapper
 
+    chat_bounds: dict = {}
+    emb_bounds: dict = {}
+    if os.environ.get("ASK4MO_PROVIDER_MODE"):
+        # Capstone live demonstration: every request must carry an output cap, a timeout and at most one retry so the EUR ledger can reserve its worst case; embeddings are
+        # sent as plain strings (no client-side tokenisation) so the ledger can price them.
+        chat_bounds = {"max_tokens": 2048, "timeout": 60, "max_retries": 1}
+        emb_bounds = {"timeout": 60, "max_retries": 1, "check_embedding_ctx_length": False}
     chat = ChatOpenAI(model=config.model, api_key=config.api_key,
-                      base_url=config.base_url, temperature=0.0)
+                      base_url=config.base_url, temperature=0.0, **chat_bounds)
     emb = OpenAIEmbeddings(model=config.embedding_model, api_key=config.api_key,
-                           base_url=config.base_url)
+                           base_url=config.base_url, **emb_bounds)
     return LangchainLLMWrapper(chat), LangchainEmbeddingsWrapper(emb)
 
 
