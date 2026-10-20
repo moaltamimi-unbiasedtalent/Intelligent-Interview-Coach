@@ -103,6 +103,9 @@ def main() -> None:   # pragma: no cover - process entrypoint
     from src.secret_store import get_secret_store
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
+    from src.demo_live.guard import install_from_env
+
+    install_from_env()      # the same provider control as the API (no-op unless ASK4MO_PROVIDER_MODE is set)
     repo = build_repository(load_config())
     from src.copilot.config import load_config as load_copilot_config
     from src.knowledge_admin.wiring import build_worker_services

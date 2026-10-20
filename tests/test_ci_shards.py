@@ -62,12 +62,14 @@ def test_the_workflow_cannot_mask_a_failure_and_keeps_the_required_check_name():
     wf = yaml.safe_load(text)
     jobs = wf["jobs"]
     assert jobs["python"]["name"] == "Python tests & checks"                       # the stable required-check name
-    assert set(jobs["python"]["needs"]) == {"static-guards", "python-tests", "python-evaluators"}
+    assert set(jobs["python"]["needs"]) == {"static-guards", "python-tests", "python-evaluators", "python-evaluation-extras"}
     assert jobs["python"]["if"] == "${{ always() }}"
     assert jobs["python-tests"]["needs"] == "static-guards" and jobs["python-evaluators"]["needs"] == "static-guards"
+    assert jobs["python-evaluation-extras"]["needs"] == "static-guards"        # the optional-extras job is part of the required aggregate
     assert {"frontend", "legacy-live-component"} <= set(jobs)
     steps = " ".join(str(s.get("run", "")) for s in jobs["python"]["steps"])
     assert "needs.python-tests.result" in steps and "needs.static-guards.result" in steps and "needs.python-evaluators.result" in steps
+    assert "needs.python-evaluation-extras.result" in steps
 
 
 def test_every_evaluator_step_of_the_original_workflow_is_still_present():

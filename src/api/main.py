@@ -115,6 +115,10 @@ async def lifespan(app: FastAPI):
 
 def create_app(settings: ApiSettings | None = None) -> FastAPI:
     settings = settings or ApiSettings.from_env()
+    # Capstone live-demonstration provider control: a no-op unless ASK4MO_PROVIDER_MODE is set; any problem raises so the process does not start (fail closed).
+    from src.demo_live.guard import install_from_env
+
+    install_from_env()
     app = FastAPI(
         title="Ask4Mo — Intelligent Interview Coach API",
         version=settings.version,

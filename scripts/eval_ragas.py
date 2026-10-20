@@ -143,6 +143,9 @@ def _estimate_judge(subset_ids: list[str], all_cases: int) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    from src.demo_live.guard import install_from_env
+
+    install_from_env()      # capstone demonstration provider control (no-op unless ASK4MO_PROVIDER_MODE is set); evaluator requests then count against the ragas allocation
     parser = argparse.ArgumentParser(description="Optional RAGAS generation-quality evaluation.")
     parser.add_argument("--mode", choices=["deterministic", "judge"], default=None,
                         help="deterministic (free, default) or judge (LLM, opt-in/paid)")

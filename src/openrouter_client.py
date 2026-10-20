@@ -233,6 +233,12 @@ def _meter_failed(exc: BaseException, started: float) -> None:
         pass
 
 
+def _demo_operation_headers(operation: str) -> dict:
+    from src.demo_live.guard import operation_headers
+
+    return operation_headers(operation)
+
+
 class OpenRouterClient:
     """Non-streaming client for OpenRouter chat completions."""
 
@@ -290,6 +296,7 @@ class OpenRouterClient:
             "Content-Type": "application/json",
             "HTTP-Referer": self._config.app_referer,
             "X-Title": self._config.app_title,
+            **_demo_operation_headers("interview"),
         }
 
     # -- logging (safe only) --------------------------------------------------
