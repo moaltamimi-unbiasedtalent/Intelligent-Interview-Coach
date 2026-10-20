@@ -319,6 +319,7 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
     if (/\/admin\/knowledge\/versions\/[^/]+$/.test(path)) return json(kb.view());
     if (/\/admin\/knowledge\/sources\/[^/]+$/.test(path)) return json({ source_public_id: "s".repeat(32), title: "Product framework", created_at: null, versions: [kb.view()] });
     if (path.endsWith("/admin/knowledge/sources")) return json({ items: kb.state === "none" ? [] : [kb.view()], total: kb.state === "none" ? 0 : 1, page: 1, page_size: 25 });
+    if (path.endsWith("/knowledge/sources") && !path.includes("/admin/")) return json({ sources: [{ source_id: "onet", title: "O*NET Database", group: "occupations", source_type: "occupation_taxonomy", source_url: "https://www.onetcenter.org/", provider: "official", country: "US", reference_year: null }] });   // the read-only curated corpus manifest
     if (path.endsWith("/admin/jobs/diagnostics")) return json({ queue: { queued: 1, running: 0, failed: 1, succeeded: 4, cancelled: 0, retry_waiting: 0, stale_leases: 0, oldest_ready_age_seconds: 12 },
       by_type: [], workers: { seen_recently: 1, last_seen_at: "2026-10-03T10:00:00+00:00", stale_after_seconds: 60, items: [] } });
     if (path.endsWith("/admin/jobs/types")) return json([{ job_type: "diagnostic_noop", label: "Operational diagnostic (no-op)", max_attempts: 2, manual_retry: true, cancellable_when_queued: true, idempotency: "x" }]);
@@ -756,6 +757,7 @@ test("W12.4A: Knowledge readiness, the worker state and a retrieval-only test ar
     await page.goto("/admin/knowledge");
     const ready = page.getByTestId("knowledge-readiness");
     await expect(ready).toContainText("No active sources");
+    await expect(page.getByTestId("curated-corpus")).toContainText("O*NET Database");   // the built-in corpus is listed read-only, separate from the (empty) governed sources
     await expect(page.getByTestId("candidate-ready")).toContainText("Yes");
     await expect(page.getByTestId("worker-state")).toContainText("Worker reporting");
     await expect(page.getByTestId("store-state")).toContainText("governed_knowledge");

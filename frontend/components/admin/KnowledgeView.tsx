@@ -120,7 +120,7 @@ function CuratedCorpusPanel() {
   const curated = useAdminResource(() => api.knowledge.sources(), []);
   return (
     <ResourceState loaded={curated}>
-      {curated.state === "ready" ? (
+      {curated.state === "ready" && Array.isArray(curated.data?.sources) ? (
         <Panel title={`Curated corpus (${curated.data.sources.length} built-in sources, read-only)`}>
           <p className="mb-2 text-xs text-muted">
             The built-in corpus that candidate retrieval already reads. These sources were loaded by the build process, are not governed records and have no approval
