@@ -39,6 +39,7 @@ function Body() {
         reviewed, approved, indexed and explicitly activated.
       </p>
       <KnowledgeReadinessPanels canTest />
+      <CuratedCorpusPanel />
       <ResourceState loaded={meta}>
         {meta.state === "ready" ? (
           <>
@@ -111,6 +112,49 @@ function Body() {
         ) : null}
       </ResourceState>
     </div>
+  );
+}
+
+/** Read-only list of the built-in curated corpus (the source manifest). These are NOT governed records: they have no approval lifecycle here and are not editable. */
+function CuratedCorpusPanel() {
+  const curated = useAdminResource(() => api.knowledge.sources(), []);
+  return (
+    <ResourceState loaded={curated}>
+      {curated.state === "ready" && Array.isArray(curated.data?.sources) ? (
+        <Panel title={`Curated corpus (${curated.data.sources.length} built-in sources, read-only)`}>
+          <p className="mb-2 text-xs text-muted">
+            The built-in corpus that candidate retrieval already reads. These sources were loaded by the build process, are not governed records and have no approval
+            steps here; the governed sources above are the ones managed in this console.
+          </p>
+          <ScrollRegion label="Curated corpus sources (scrollable table)">
+            <table className="w-full text-left text-sm" data-testid="curated-corpus">
+              <caption className="sr-only">Curated corpus sources</caption>
+              <thead>
+                <tr className="text-xs text-muted">
+                  {["Source", "Group", "Type", "Provider", "Country"].map((c) => (
+                    <th key={c} scope="col" className="py-1 pr-4 font-medium">{c}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {curated.data.sources.map((r) => (
+                  <tr key={r.source_id} className="border-t border-default">
+                    <th scope="row" className="py-1 pr-4 text-left font-medium [overflow-wrap:anywhere]">
+                      {r.title}
+                      {r.source_url ? <span className="block text-xs font-normal text-muted">{r.source_url}</span> : null}
+                    </th>
+                    <td className="py-1 pr-4">{r.group}</td>
+                    <td className="py-1 pr-4">{r.source_type}</td>
+                    <td className="py-1 pr-4">{r.provider}</td>
+                    <td className="py-1 pr-4">{r.country ?? ""}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </ScrollRegion>
+        </Panel>
+      ) : null}
+    </ResourceState>
   );
 }
 

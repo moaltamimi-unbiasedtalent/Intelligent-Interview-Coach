@@ -18,7 +18,7 @@ const test = vi.fn();
 const sources = vi.fn();
 const meta = vi.fn();
 vi.mock("@/lib/api/client", () => ({
-  api: { admin: {
+  api: { knowledge: { sources: () => Promise.resolve({ sources: [{ source_id: "onet", title: "O*NET Database", group: "occupations", source_type: "occupation_taxonomy", source_url: "https://www.onetcenter.org/", provider: "official", country: "US" }] }) }, admin: {
     knowledgeReadiness: (...a: unknown[]) => readiness(...a), knowledgeActive: (...a: unknown[]) => active(...a),
     testKnowledgeRetrieval: (...a: unknown[]) => test(...a), knowledgeSources: (...a: unknown[]) => sources(...a),
     knowledgeMeta: (...a: unknown[]) => meta(...a),

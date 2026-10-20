@@ -22,7 +22,7 @@ const READINESS = { status: "no_active_sources", message: "No governed knowledge
   embedder_state: { status: "available", provider: "local", embedder: "LocalHashEmbedder", note: "offline local embedder" },
   curated_corpus: { status: "available", chunk_count: 1, store_kind: "persistent" }, last_indexed_at: null, last_failure_category: null, last_failure_stage: null };
 vi.mock("@/lib/api/client", () => ({
-  api: { admin: { knowledgeReadiness: () => Promise.resolve(READINESS), knowledgeActive: () => Promise.resolve({ items: [], total: 0 }),
+  api: { knowledge: { sources: () => Promise.resolve({ sources: [{ source_id: "onet", title: "O*NET Database", group: "occupations", source_type: "occupation_taxonomy", source_url: "https://www.onetcenter.org/", provider: "official", country: "US" }] }) }, admin: { knowledgeReadiness: () => Promise.resolve(READINESS), knowledgeActive: () => Promise.resolve({ items: [], total: 0 }),
     knowledgeMeta: (...a: unknown[]) => meta(...a), knowledgeSources: (...a: unknown[]) => list(...a),
     knowledgeSource: (...a: unknown[]) => source(...a), knowledgeVersion: (...a: unknown[]) => version(...a),
     knowledgeAction: (...a: unknown[]) => action(...a), knowledgeReject: (...a: unknown[]) => reject(...a), knowledgeDelete: (...a: unknown[]) => del(...a),
@@ -193,5 +193,17 @@ describe("Knowledge detail", () => {
       expect(screen.queryByRole("button", { name: n })).not.toBeInTheDocument();
     }
     expect(screen.queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
+  });
+});
+
+describe("curated corpus panel (read-only)", () => {
+  it("lists the built-in curated sources separately from governed records", async () => {
+    mockPerms = ["platform.knowledge.read"];
+    meta.mockResolvedValue(META);
+    list.mockResolvedValue({ items: [], total: 0, page: 1, page_size: 25 });
+    render(<KnowledgeView />);
+    const table = await screen.findByTestId("curated-corpus");
+    expect(within(table).getByText("O*NET Database")).toBeTruthy();
+    expect(screen.getByText(/not governed records/i)).toBeTruthy();
   });
 });
