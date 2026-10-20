@@ -1,14 +1,18 @@
 # Multilingual Release Qualification (Roadmap V2.2)
 
-**Status:** PROPOSED for owner review, 2026-10-21. No language is production-qualified. Nothing in this document enables a feature, calls a provider, or changes a historical evaluation or coverage record (coverage stays 386/412 against 392, FAIL; AC-24 stays PARTIAL).
+**Status:** corrected 2026-10-21 against the owner's authoritative requirements. No language is production-qualified. Nothing in this document enables a feature, calls a provider, or changes a historical evaluation or coverage record (coverage stays 386/412 against 392, FAIL; AC-24 stays PARTIAL).
 
-## 1. Owner language decision (as given)
+## 1. Owner language decisions (confirmed)
 
-- **R1.0 (30 November 2026) includes all seven existing candidate languages:** English, German, Spanish, Italian, Portuguese, French, Dutch. R1.0 is not reduced to English-only.
-- **Proposed primary markets (PROPOSED until owner approval and source qualification):** English to Ireland, German to Germany, Spanish to Spain, Italian to Italy, Portuguese to Portugal, French to France, Dutch to Netherlands. The interface language never selects or infers the labour-market country.
-- **Russian is excluded from R1.0.** Existing code is preserved where safe. Russian must not be offered as an active beta locale. Note: Russian is exposed as an eighth locale in the product today, so excluding it is a code change that has **not** been made (REQ-LANG-14, OD-LANG-05).
-- **R1.3:** Mandarin, Hindi and Arabic. Each needs new language-specific engineering and human qualification (REQ-LANG-15, OD-LANG-06).
-- **Platform Admin stays English-only for R1.0.**
+Source: `OWNER_REQUIREMENTS_SOURCE_OF_TRUTH_V2_2.md` sections 1 and 9.
+
+- **[DECISION]** R1.0 (30 November 2026, free invitation-only private beta) targets all seven existing Candidate languages: English, German, Spanish, Italian, Portuguese, French, Dutch. All seven are intended for the initial beta, **each subject to individual qualification**.
+- **[DECISION]** Language selection must never silently select or change labour-market geography.
+- **[PROPOSED]** Primary market mappings: English to Ireland, German to Germany, Spanish to Spain, Italian to Italy, Portuguese to Portugal, French to France, Dutch to Netherlands. They are **not individually approved country qualifications** (`[AWAITING]`, OD-LANG-02, REQ-LANG-16); each needs owner approval and source qualification before use.
+- **[DECISION]** Russian is excluded from R1.0: existing code is kept where safe and Russian is removed from active Candidate language selection (REQ-LANG-14). Russian is an exposed eighth locale today, so this change has **not** been made. Any later activation is a separate future decision (OD-RU-FUTURE), not an automatic R2.0 commitment.
+- **[DECISION]** Mandarin, Hindi and Arabic are assigned to R1.3 and each needs separate implementation and language-specific qualification (new locale, prompt, safety, retrieval, accessibility, legal and native review; RTL for Arabic).
+- **[DECISION]** Platform Admin stays English-only for the initial release.
+- **[DECISION]** Each language independently passes LG-01 to LG-14 and is reported per language; a failed mandatory gate prevents activation for real users in that locale; no claim that all seven are qualified before the evidence exists.
 
 ## 2. The rule that governs every claim
 
@@ -47,27 +51,27 @@ Source: `PRODUCTION_ACCEPTANCE_MATRIX.md` section 2 (generated). Summary: all se
 | French | France | 0 of 14 | NOT QUALIFIED |
 | Dutch | Netherlands | 0 of 14 | NOT QUALIFIED |
 
-English is listed with an Ireland market only because the owner proposed it; the existing English knowledge content is largely US-sourced, so the Ireland mapping needs its own source qualification.
+English is listed with an Ireland market only because it was proposed; the existing English knowledge content is largely US-sourced, so the Ireland mapping needs its own source qualification.
 
 ## 5. Work packages (WP-08 Multilingual programme)
 
 | Package | Scope | Gates | Depends on |
 |---|---|---|---|
 | WP-08A Audit | REQ-LANG-01 inventory and baseline numbers per language | LG-01, LG-02 | none |
-| WP-08B Boundaries | REQ-LANG-14 hide Russian; REQ-LANG-12 Admin English-only check; REQ-LANG-07 language/geography tests | LG-07, LG-14 | OD-LANG-05 |
+| WP-08B Boundaries | REQ-LANG-14 remove Russian from active selection; REQ-LANG-12 Admin English-only check; REQ-LANG-07 language/geography tests | LG-07, LG-14 | none (owner decision made) |
 | WP-08C Journeys | REQ-LANG-02 candidate journeys in seven languages; REQ-LANG-05 Story Bank and Workspaces | LG-03, LG-09, LG-12 | WP-08A |
 | WP-08D AI behaviour | REQ-LANG-03 prompts and policies; REQ-LANG-04 interview questions, scoring, feedback | LG-04, LG-05 | WP-08A |
 | WP-08E Retrieval | REQ-LANG-06 multilingual RAG and cross-language attribution; REQ-LANG-16 market and source qualification | LG-06, LG-07 | OD-LANG-02, WP-06 |
 | WP-08F Security and privacy | REQ-LANG-08 per-language injection, security and privacy suites | LG-08 | WP-08A |
 | WP-08G Human and legal | REQ-LANG-09 native review; REQ-LANG-10 legal/privacy translation qualification | LG-10, LG-11 | OD-LANG-03, OD-LANG-04 (long lead) |
 | WP-08H Tracking | REQ-LANG-11 per-language status; REQ-LANG-13 no early claim | LG-13 | all |
-| WP-08I Future languages | REQ-LANG-15 Mandarin, Hindi, Arabic plans (R1.3) | future | OD-LANG-06 |
+| WP-08I Future languages | REQ-LANG-15 Mandarin, Hindi, Arabic plans (R1.3) | future | R1.0 complete |
 
 Existing register issues that belong to this programme are tagged `language_programme: true` with their gates in `PRODUCTION_ISSUE_RECONCILIATION.json`.
 
 ## 6. Release rule for a language that misses its gates
 
-Recommended (owner decision OD-LANG-01): a language that has not passed every gate by the freeze date is **not offered for real-user access** at R1.0 and is shown to be unavailable, rather than being offered with a quality caveat. This keeps the all-seven-languages target as the objective without a false qualification claim. The owner may instead choose to move the release date.
+Owner decision: a failed mandatory locale gate prevents activation for real users in that locale. A language that has not passed every gate by the freeze date is therefore not offered to beta users at R1.0 and is shown to be unavailable, rather than being offered with a quality caveat. This keeps all seven as the target without a false qualification claim. Whether to delay the release instead is part of OD-SCOPE-01.
 
 ## 7. Preserved records
 

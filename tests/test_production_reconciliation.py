@@ -78,7 +78,8 @@ def test_language_scope_decisions_are_recorded():
     doc = committed()
     ids = {r["id"]: r for r in doc["items"]}
     assert all(f"REQ-LANG-{n:02d}" in ids for n in range(1, 17))
-    assert ids["REQ-LANG-14"]["wp"] == "WP-08" and "Russian" in ids["REQ-LANG-14"]["title"]
+    assert ids["REQ-LANG-14"]["wp"] == "WP-08" and "Russian" in ids["REQ-LANG-14"]["title"] and ids["REQ-LANG-14"]["provenance"] == "EXPLICIT_OWNER_DECISION"
+    assert ids["REQ-LANG-16"]["provenance"] == "AWAITING_APPROVAL"      # the market mappings are NOT individually approved
     assert ids["REQ-LANG-15"]["release"] == "R1.3" and ids["REQ-LANG-15"]["disposition"] == "DEFER TO NAMED RELEASE"
     assert ids["REQ-LANG-07"]["disposition"] == "FIX BEFORE R1.0" and "country" in ids["REQ-LANG-07"]["title"].lower()
     text = (ROOT / "docs/production/MULTILINGUAL_RELEASE_QUALIFICATION.md").read_text(encoding="utf-8")
@@ -86,3 +87,68 @@ def test_language_scope_decisions_are_recorded():
         assert lang in text
     for gate in range(1, 15):
         assert f"LG-{gate:02d}" in text
+
+
+def test_the_five_actual_reviewer_findings_replace_the_demo_findings_which_stay_separate():
+    ids = {r["id"]: r for r in committed()["items"]}
+    assert not any(i.startswith("RF-") for i in ids)
+    for n in range(1, 6):
+        rv = ids[f"REVIEW-0{n}"]
+        assert rv["origin_class"] == "TURING-REVIEW" and rv["provenance"] == "REVIEWER_FINDING" and rv["disposition"] == "FIX BEFORE R1.0" and len(rv["requirements_list"]) >= 6
+        assert ids[f"DEMO-0{n}"]["origin_class"] == "DEMO-OBSERVED"       # engineering-observed, never presented as reviewer findings
+    assert len(ids["REVIEW-01"]["requirements_list"]) == 6 and "held-out" in " ".join(ids["REVIEW-01"]["requirements_list"]).lower()
+    assert ids["REVIEW-05"]["wp"] == "WP-17" and ids["REVIEW-04"]["priority"] == "P0"
+
+
+def test_owner_capabilities_are_specified_testable_r1_0_requirements_not_placeholders():
+    ids = {r["id"]: r for r in committed()["items"]}
+    for n in range(1, 9):
+        o = ids[f"REQ-OWN-0{n}"]
+        assert o["disposition"] == "FIX BEFORE R1.0" and o["release"] == "R1.0" and o["origin_class"] == "OWNER-REQUIREMENT"
+        assert len(o["requirements_list"]) >= 5 and o["required_tests"].strip() and "not in repository" not in o["current_status"].lower()
+    assert any("restart" in c.lower() for c in ids["REQ-OWN-06"]["requirements_list"])           # Story Bank acceptance journey
+    assert any("revokes" in c.lower() or "revoke" in c.lower() for c in ids["REQ-OWN-07"]["requirements_list"])
+    assert len(ids["REQ-OWN-05"]["requirements_list"]) == 9 and any("restore" in c.lower() for c in ids["REQ-OWN-05"]["requirements_list"])
+
+
+def test_the_agreed_release_train_is_complete_and_russian_is_not_an_automatic_r2_0_commitment():
+    doc = committed()
+    assert doc["releases"] == ["R1.0", "R1.1", "R1.2", "R1.3", "R1.4", "R1.5", "R1.6", "R1.7", "R2.0"] and set(doc["release_themes"]) == set(doc["releases"])
+    for rel in doc["releases"]:
+        assert any(r["release"] == rel for r in doc["items"]), rel
+    russian = [r for r in doc["items"] if r["rule_id"].startswith("U-RU")]
+    assert russian and all(r["disposition"] == "OWNER DECISION" and r["release"] == "UNSCHEDULED" for r in russian)
+    assert not any(r["release"] == "R2.0" and "russian" in r["title"].lower() for r in doc["items"])
+    assert all(r["release"] != "R1.0" for r in doc["items"] if r["rule_id"] in ("D-COM", "D-SPEECH", "D-INTL", "D-FL"))
+
+
+def test_academic_only_tasks_are_reclassified_and_not_counted_as_production_work():
+    doc = committed()
+    ac = [r for r in doc["items"] if r["scope_class"] == "ACADEMIC_ONLY"]
+    assert {r["id"] for r in ac} == set(R.ACADEMIC_ONLY) and len(ac) == 6
+    assert all(r["disposition"] == "OWNER DECISION" and r["release"] == "UNSCHEDULED" and r["current_status"] == r["historical"]["status"] for r in ac)   # status never rewritten
+    assert doc["summary"]["academic_only_items"] == 6
+
+
+def test_every_item_has_the_required_traceability_fields_and_corrected_deltas_are_explained():
+    doc = committed()
+    for r in doc["items"]:
+        for k in ("id", "origin_class", "description", "wp", "release", "priority", "dependencies", "acceptance_criteria", "test_evidence", "current_status", "owner_role"):
+            assert str(r.get(k) or "").strip(), (r["id"], k)
+    s = doc["summary"]
+    assert s["delta_vs_previous"]["items"] == len(doc["items"]) - s["previous_baseline"]["items"]
+    dash = (ROOT / "docs/production/RELEASE_BLOCKER_DASHBOARD.md").read_text(encoding="utf-8")
+    assert "Why the numbers moved" in dash and "REQ-OWN-01 to 08" in dash
+
+
+def test_the_source_of_truth_document_and_fifteen_production_gates_exist():
+    src = (ROOT / "docs/production/OWNER_REQUIREMENTS_SOURCE_OF_TRUTH_V2_2.md").read_text(encoding="utf-8")
+    for tag in ("[DECISION]", "[CAPABILITY]", "[REVIEWER]", "[PROPOSED]", "[AWAITING]"):
+        assert tag in src
+    for n in range(1, 6):
+        assert f"REVIEW-0{n}" in src
+    matrix = (ROOT / "docs/production/PRODUCTION_ACCEPTANCE_MATRIX.md").read_text(encoding="utf-8")
+    for n in range(1, 16):
+        assert f"PG-{n:02d}" in matrix
+    assert "386 of 412" in matrix and "FAIL" in matrix                    # the historical coverage gate is preserved
+    assert "accepted limitation" in matrix                                # mandatory gates cannot be waived that way
