@@ -18,7 +18,7 @@
 | **R1.0 must-fix** | **88** |
 | **R1.0 must-verify** | **74** |
 | Items with an OWNER DECISION disposition | 95 (of which unscheduled 15, academic-only 6) |
-| Genuinely open owner decisions in the register | 18 new, plus the 72 historical |
+| Genuinely open owner decisions in the register | 20 new, plus the 72 historical |
 | Deferred | R1.1: 88, R1.2: 18, R1.3: 3, R1.4: 23, R1.5: 7, R1.6: 2, R1.7: 1, R2.0: 1 |
 | Unmapped issues | **0** |
 
