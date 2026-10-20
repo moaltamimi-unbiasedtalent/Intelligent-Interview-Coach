@@ -278,19 +278,40 @@ jobs:
           fi
 
 
+  python-evaluation-extras:
+    name: Python evaluation extras (RAGAS adapter)
+    needs: static-guards
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install (dev + db + evaluation extras, the versions pinned in pyproject.toml)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,db,evaluation]"
+      - name: The optional packages must really be importable here (otherwise the extras test would silently skip)
+        run: python -c "import ragas, langchain_openai; print('ragas', ragas.__version__)"
+      - name: RAGAS adapter, evaluator request bounds and live-budget guard tests (offline; no provider is contacted)
+        run: python -m pytest -p no:cacheprovider -q tests/test_ragas_adapter.py tests/test_ragas_ui_runner.py tests/test_demo_live_budget.py -rs
+
   python:
     name: Python tests & checks
-    needs: [static-guards, python-tests, python-evaluators]
+    needs: [static-guards, python-tests, python-evaluators, python-evaluation-extras]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Every Python job must have succeeded
         run: |
-          echo "static-guards=${{ needs.static-guards.result }} python-tests=${{ needs.python-tests.result }} python-evaluators=${{ needs.python-evaluators.result }}"
+          echo "static-guards=${{ needs.static-guards.result }} python-tests=${{ needs.python-tests.result }} python-evaluators=${{ needs.python-evaluators.result }} python-evaluation-extras=${{ needs.python-evaluation-extras.result }}"
           test "${{ needs.static-guards.result }}" = "success"
           test "${{ needs.python-tests.result }}" = "success"
           test "${{ needs.python-evaluators.result }}" = "success"
+          test "${{ needs.python-evaluation-extras.result }}" = "success"
       - name: Download shard results and the test inventory
         uses: actions/download-artifact@v4
         with:

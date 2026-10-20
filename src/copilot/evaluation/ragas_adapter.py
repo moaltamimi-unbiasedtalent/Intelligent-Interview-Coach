@@ -242,19 +242,22 @@ def load_cases(path: str) -> list[RagasEvalCase]:
 # --- Live run (lazy RAGAS import) -------------------------------------------
 
 
+def _evaluator_bounds() -> tuple[dict, dict]:
+    """Request bounds for the evaluator LLM and embeddings; empty unless a provider-control mode is set. Pure (imports no optional package) so CI can test it without RAGAS."""
+    if not os.environ.get("ASK4MO_PROVIDER_MODE"):
+        return {}, {}
+    # Capstone live demonstration: every request must carry an output cap, a timeout and at most one retry so the EUR ledger can reserve its worst case; embeddings are
+    # sent as plain strings (no client-side tokenisation) so the ledger can price them.
+    return {"max_tokens": 2048, "timeout": 60, "max_retries": 1}, {"timeout": 60, "max_retries": 1, "check_embedding_ctx_length": False}
+
+
 def _build_evaluator(config: EvaluatorConfig):
     """Build LangChain-wrapped evaluator LLM + embeddings for RAGAS."""
     from langchain_openai import ChatOpenAI, OpenAIEmbeddings
     from ragas.embeddings import LangchainEmbeddingsWrapper
     from ragas.llms import LangchainLLMWrapper
 
-    chat_bounds: dict = {}
-    emb_bounds: dict = {}
-    if os.environ.get("ASK4MO_PROVIDER_MODE"):
-        # Capstone live demonstration: every request must carry an output cap, a timeout and at most one retry so the EUR ledger can reserve its worst case; embeddings are
-        # sent as plain strings (no client-side tokenisation) so the ledger can price them.
-        chat_bounds = {"max_tokens": 2048, "timeout": 60, "max_retries": 1}
-        emb_bounds = {"timeout": 60, "max_retries": 1, "check_embedding_ctx_length": False}
+    chat_bounds, emb_bounds = _evaluator_bounds()
     chat = ChatOpenAI(model=config.model, api_key=config.api_key,
                       base_url=config.base_url, temperature=0.0, **chat_bounds)
     emb = OpenAIEmbeddings(model=config.embedding_model, api_key=config.api_key,
