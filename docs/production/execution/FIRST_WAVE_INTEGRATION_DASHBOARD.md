@@ -1,6 +1,6 @@
 # First-Wave Integration Dashboard
 
-Updated 2026-10-21. Base: `main` @ `38eabbc`. **No pull request exists for any package: the owner must open them (no `gh` and no token in this environment). GitHub CI has therefore not run for any branch. Local results below are not CI.**
+Superseded on 2026-10-22: PRs #213 to #221 are merged (see `WAVE2_EXECUTION_DASHBOARD.md`). The table below is the historical pre-PR dashboard and is kept unchanged; the live state is the wave 2 dashboard and the tracker. 01A is the only first-wave branch still unmerged.
 
 | Package | Branch | Head SHA (verified on origin) | PR | CI | Review | Local result | Open items |
 |---|---|---|---|---|---|---|---|
