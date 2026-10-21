@@ -71,7 +71,7 @@ Existing register issues that belong to this programme are tagged `language_prog
 
 ## 6. Release rule for a language that misses its gates
 
-Owner decision: a failed mandatory locale gate prevents activation for real users in that locale. A language that has not passed every gate by the freeze date is therefore not offered to beta users at R1.0 and is shown to be unavailable, rather than being offered with a quality caveat. This keeps all seven as the target without a false qualification claim. Whether to delay the release instead is part of OD-SCOPE-01.
+Owner decision: a failed mandatory locale gate prevents activation for real users in that locale. A language that has not passed every gate by the freeze date is therefore not offered to beta users and is shown to be unavailable, rather than being offered with a quality caveat. The owner has rejected cutting scope to meet the date (OD-SCOPE-01: S1), so a language that misses its gates moves the release date for that language (or the whole release if the owner prefers) rather than being waived.
 
 ## 7. Preserved records
 

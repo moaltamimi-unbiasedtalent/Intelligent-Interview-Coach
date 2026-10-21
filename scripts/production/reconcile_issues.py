@@ -104,6 +104,35 @@ ACADEMIC_ONLY = {  # historical capstone-submission tasks that are not productio
     "IR-RC004-SPEC": "RC-P10-004 entry specification for the capstone release-candidate convention",
     "G-WALK-ENV": "the capstone Admin walkthrough used a development server and seeded data",
 }
+
+# Phase 00 review: proposed R1.0 scope reclassification (PROPOSED ONLY, NOT APPLIED: item dispositions above stay as generated until the owner confirms).
+# An item is proposed only if the capability it concerns is provably inaccessible in the R1.0 Candidate API and UI. Evidence keys are verified by
+# tests/test_r1_scope_exclusions.py. Two of the twelve candidates failed the proof and are withdrawn.
+EVIDENCE = {
+    "E-IMPORT": "no module under src/ outside src/knowledge_foundation imports it (AST scan): the Compensation V2 and US occupational foundation code is unreachable from any API, application, agent or retrieval path",
+    "E-ROUTES": "the OpenAPI path table (266 paths, 114 non-admin) has no compensation, foundation, qualification, alias or recording route",
+    "E-UI": "no frontend source (app, components, lib) references Compensation V2, the knowledge foundation, US SOC or BLS OEWS alias review",
+    "E-READY": "knowledge_foundation.readiness.assess reports operational_today False, 0 linkable Compensation V2 records and 0 approved Compensation V2 sources",
+    "E-REGISTER": "the register's own candidate-impact text records no Candidate effect while Compensation V2 and candidate-facing use stay disabled",
+    "E-SPEECH": "the frontend never calls /speech/transcriptions or /speech/synthesis (only /speech/capabilities), the backend answers 503 speech_unavailable by default, and the server speech gate constants are False",
+}
+RECLASSIFICATION_PROPOSAL = {
+    "BL-5": ("R1.6", "12 batches of Compensation V2 records awaiting reviewer decisions: Compensation Intelligence V2 work", ["E-IMPORT", "E-ROUTES", "E-UI", "E-READY", "E-REGISTER"]),
+    "BL-6": ("R1.5", "Five US occupational alias proposals: qualified occupational sources for additional countries", ["E-IMPORT", "E-ROUTES", "E-UI", "E-READY", "E-REGISTER"]),
+    "BL-6.1": ("R1.5", "US alias decision Software Developer to 15-1252", ["E-IMPORT", "E-ROUTES", "E-UI", "E-REGISTER"]),
+    "BL-6.2": ("R1.5", "US alias decision Human Resources Manager to 11-3121", ["E-IMPORT", "E-ROUTES", "E-UI", "E-REGISTER"]),
+    "BL-6.3": ("R1.5", "US alias decision Sales Manager to 11-2022", ["E-IMPORT", "E-ROUTES", "E-UI", "E-REGISTER"]),
+    "BL-6.4": ("R1.5", "US alias decision Accountant to 13-2011", ["E-IMPORT", "E-ROUTES", "E-UI", "E-REGISTER"]),
+    "BL-6.5": ("R1.5", "US alias decision Financial Analyst to 13-2051", ["E-IMPORT", "E-ROUTES", "E-UI", "E-REGISTER"]),
+    "BL-9": ("R1.5", "Promotion of us_soc_2018 and bls_oews into the persistent source registry", ["E-IMPORT", "E-ROUTES", "E-READY", "E-REGISTER"]),
+    "BL-12": ("R1.6", "Runtime authorisation and deployment review for Compensation V2", ["E-IMPORT", "E-ROUTES", "E-UI", "E-READY", "E-REGISTER"]),
+    "W12.4E-12": ("R1.4", "Server-side browser recording client (server speech)", ["E-SPEECH"]),
+}
+RECLASSIFICATION_WITHDRAWN = {
+    "BL-6.6": "Data Analyst and Product Manager remain unresolved: the register states it affects 13 of the 26 insufficient coverage cases (ambiguous titles), i.e. the enabled role-resolution and abstention behaviour Candidates use today; the proof fails, so it stays in R1.0 (package 02E)",
+    "BL-7": "Resolve the Data Analyst and Product Manager evidence gaps: needed for any legitimate coverage close and concerns enabled role resolution; the proof fails, so it stays in R1.0 (package 02E)",
+}
+
 MARKETS = ["Ireland", "Germany", "Spain", "Italy", "Portugal", "France", "Netherlands"]
 SEVEN_MARKET_RE = re.compile(r"\b(ireland|irish|germany|german|deutschland|spain|spanish|italy|italian|portugal|portuguese|france|french|netherlands|dutch|eu\b|europe|esco|eurostat)", re.I)
 OTHER_MARKET_RE = re.compile(r"\b(united kingdom|\buk\b|canada|australia|india|china|japan|brazil|mexico|singapore|uae|gulf|saudi|africa|latin america)\b", re.I)
@@ -574,6 +603,9 @@ def build() -> dict:
         disclaimer="All dispositions, releases, owners and work packages are PROPOSED by documented rules for owner review. No historical status, gate or closure evidence was changed.",
         dispositions=list(DISPOSITIONS), releases=list(RELEASES), release_themes=RELEASE_THEMES, work_packages={k: dict(name=v[0], owner_role=v[1]) for k, v in WORK_PACKAGES.items()},
         gate_constants=GATE_NAMES, summary=summary, cross_check=xrows, items=allitems,
+        owner_scope_decision=OWNER_SCOPE_DECISION, resolved_decisions=[d[0] for d in RESOLVED_DECISIONS], open_decisions=[d[0] for d in NEW_DECISIONS],
+        scope_proposals=dict(applied=False, evidence=EVIDENCE, reclassification={k: dict(proposed_release=v[0], capability=v[1], evidence=v[2]) for k, v in RECLASSIFICATION_PROPOSAL.items()},
+                             withdrawn=RECLASSIFICATION_WITHDRAWN),
     )
 
 
@@ -602,10 +634,13 @@ def summarise(register, items, newreq, xrows) -> dict:
         unmapped_issues=0,
         new_reviewer_findings=sum(1 for e in newreq if e["id"].startswith("REVIEW-")), new_release_scope_rows=sum(1 for e in newreq if e["id"].startswith("REL-R")), new_other_requirements=sum(1 for e in newreq if e["id"].startswith(("REQ-BETA", "REQ-CAND", "REQ-COV", "REQ-DEFER", "REQ-SCOPE"))),
         academic_only_items=sum(1 for r in allitems if r["scope_class"] == "ACADEMIC_ONLY"), unscheduled_owner_decisions=sum(1 for r in allitems if r["release"] == UNSCHEDULED),
-        genuine_new_owner_decisions=sum(1 for r in newreq if r["disposition"] == "OWNER DECISION"), decision_register_entries=len(NEW_DECISIONS),
+        genuine_new_owner_decisions=sum(1 for r in newreq if r["disposition"] == "OWNER DECISION"), decision_register_entries=len(NEW_DECISIONS), owner_approved_decisions=len(RESOLVED_DECISIONS),
         r1_0_total_work=sum(1 for r in allitems if r["disposition"] in ("FIX BEFORE R1.0", "VERIFY BEFORE R1.0")),
         by_release_total={rel: sum(1 for r in allitems if r["release"] == rel) for rel in list(RELEASES) + [UNSCHEDULED, "n/a"]},
         provenance_counts=dict(Counter(r["provenance"] for r in allitems)), origin_class_counts=dict(Counter(r["origin_class"] for r in allitems)),
+        proposed_reclassification=dict(items=len(RECLASSIFICATION_PROPOSAL), withdrawn=len(RECLASSIFICATION_WITHDRAWN), applied=False,
+                                       r1_0_fix_if_applied=sum(1 for r in allitems if r["disposition"] == "FIX BEFORE R1.0") - len(RECLASSIFICATION_PROPOSAL),
+                                       r1_0_total_if_applied=sum(1 for r in allitems if r["disposition"] in ("FIX BEFORE R1.0", "VERIFY BEFORE R1.0")) - len(RECLASSIFICATION_PROPOSAL)),
         previous_baseline=PREV_BASELINE,
         delta_vs_previous=dict(items=len(allitems) - PREV_BASELINE["items"],
                                r1_0_must_fix=sum(1 for r in allitems if r["disposition"] == "FIX BEFORE R1.0") - PREV_BASELINE["r1_0_must_fix"],
@@ -684,6 +719,29 @@ def validate(doc: dict) -> list[str]:
             errs.append(f"REQ-OWN-0{n}: not a specified, testable R1.0 requirement")
     if list(doc.get("releases", [])) != list(RELEASES) or set(doc.get("release_themes", {})) != set(RELEASES):
         errs.append("the agreed release train R1.0 to R2.0 is not fully present")
+    osd = doc.get("owner_scope_decision") or {}
+    if osd.get("selected") != "S1" or osd.get("status") != "OWNER-APPROVED" or set(osd.get("rejected", [])) != {"S2", "S3"} or osd.get("gates_override_deadline") is not True:
+        errs.append("OD-SCOPE-01 must be recorded as owner-approved S1 with S2 and S3 rejected and gates overriding the deadline")
+    if "OD-SCOPE-01" in (doc.get("open_decisions") or []) or "OD-SCOPE-01" not in (doc.get("resolved_decisions") or []):
+        errs.append("OD-SCOPE-01 must be resolved, not open")
+    for must in ("OD-RESOURCE", "OD-RECLASS", "OD-US-CONTENT", "OD-GATE-THRESHOLDS", "OD-HOSTED", "OD-BUDGET"):
+        if must not in (doc.get("open_decisions") or []):
+            errs.append(f"{must} is genuinely unresolved and must stay open")
+    sp = doc.get("scope_proposals") or {}
+    if sp.get("applied") is not False:
+        errs.append("the scope reclassification is a proposal and must be marked not applied")
+    for k, v in (sp.get("reclassification") or {}).items():
+        r = byid.get(k)
+        if r is None or r["origin"] != "REGISTER":
+            errs.append(f"proposed reclassification of unknown register item {k}")
+            continue
+        if r["disposition"] != "FIX BEFORE R1.0" or r["release"] != "R1.0":
+            errs.append(f"{k}: the proposal must not be applied (disposition changed)")
+        if v["proposed_release"] not in RELEASES[1:] or not v["evidence"] or any(e not in EVIDENCE for e in v["evidence"]):
+            errs.append(f"{k}: proposal lacks a later release or valid evidence")
+    for k in (sp.get("withdrawn") or {}):
+        if byid.get(k) is None or byid[k]["release"] != "R1.0" or k in (sp.get("reclassification") or {}):
+            errs.append(f"{k}: withdrawn item must stay in R1.0 and out of the proposal")
     for rel in RELEASES[1:]:
         if not any(r["release"] == rel for r in items):
             errs.append(f"release {rel} has no traced requirement")
@@ -770,6 +828,8 @@ def render_dashboard(doc: dict) -> str:
           "- Russian items moved from a deferral to OWNER DECISION (UNSCHEDULED), because the owner made later activation a separate future decision, not an automatic R2.0 commitment.",
           "- Six historical capstone-submission tasks were reclassified ACADEMIC_ONLY and moved to OWNER DECISION (UNSCHEDULED) pending confirmation of retirement; they no longer count as production work.",
           "- Deferrals were re-routed from the earlier invented R1.1 to R2.0 themes onto the agreed train: commercial to R1.1, speech to R1.4, additional-country evidence to R1.5, compensation to R1.6, with items that fit no agreed theme placed in R1.1 (R1.2 for Admin) as a proposal.", ""]
+    pr = s["proposed_reclassification"]
+    L += ["## Proposed R1.0 scope reclassification (PROPOSED, NOT APPLIED)", "", f"{pr['items']} of 12 candidates pass the proof that their capability is inaccessible in the R1.0 Candidate API and UI; {pr['withdrawn']} fail it and stay in R1.0. If the owner confirms, R1.0 must-fix would be {pr['r1_0_fix_if_applied']} and fix plus verify {pr['r1_0_total_if_applied']}. Evidence and per-item detail: `execution/R1_SCOPE_RECLASSIFICATION_PROPOSAL.md`. Nothing is applied: the owner retains every R1.0 obligation until an item-level disposition is explicitly approved (OD-RECLASS).", ""]
     L += ["## Totals by release (all dispositions)", "", "| Release | Items | Theme |", "|---|---|---|"] + [f"| {rel} | {s['by_release_total'].get(rel, 0)} | {RELEASE_THEMES[rel][:110]} |" for rel in RELEASES] + [f"| {UNSCHEDULED} | {s['by_release_total'].get(UNSCHEDULED, 0)} | owner decisions with no release yet |", f"| n/a (closed) | {s['by_release_total'].get('n/a', 0)} | closure evidence preserved |", ""]
     L += ["## R1.0 work by priority", "", "| Priority | Items |", "|---|---|"] + [f"| {k} | {v} |" for k, v in sorted(s["priority_of_r1_0_work"].items())] + [""]
     L += ["## R1.0 work by work package", "", "| WP | Fix | Verify | Owner decisions |", "|---|---|---|---|"]
@@ -778,7 +838,7 @@ def render_dashboard(doc: dict) -> str:
         ve = sum(1 for r in items if r["wp"] == k and r["disposition"] == "VERIFY BEFORE R1.0")
         o = sum(1 for r in items if r["wp"] == k and r["disposition"] == "OWNER DECISION")
         L.append(f"| {k} {v['name']} | {f} | {ve} | {o} |")
-    L += ["", "## Capacity warning", "", f"{len(r10)} items must be fixed or verified before R1.0 on 30 November 2026. The date is the owner's target; safety, privacy, licensing and operational gates are not waived to meet it. Many items need people not yet named (reviewers, native reviewers, legal qualifiers) or an authorised hosted environment. OD-SCOPE-01 asks the owner what happens if a mandatory gate is not met: delay, remove the feature from scope, or keep it disabled.", "",
+    L += ["", "## Capacity warning", "", f"{len(r10)} items must be fixed or verified before R1.0 on 30 November 2026. The date is the owner's target; safety, privacy, licensing and operational gates are not waived to meet it. Many items need people not yet named (reviewers, native reviewers, legal qualifiers) or an authorised hosted environment. The owner selected S1, the full scope (OD-SCOPE-01 resolved) and decided that the deadline never overrides a mandatory gate, so the date follows the gates: see `execution/STAFFING_AND_CRITICAL_PATH_PLAN.md` for the staffing and critical-path plan.", "",
           "## R1.0 P0 items", "", "| ID | Title | Origin | Disposition | WP |", "|---|---|---|---|---|"]
     for r in sorted((r for r in r10 if r["priority"] == "P0"), key=lambda x: x["id"]):
         L.append(f"| {r['id']} | {r['title'].replace('|', '/')[:90]} | {r['origin_class']} | {r['disposition']} | {r['wp']} |")
@@ -786,26 +846,40 @@ def render_dashboard(doc: dict) -> str:
     return "\n".join(L)
 
 
-NEW_DECISIONS = [  # (id, decision, detail, proposed release, type)
-    ("OD-SCOPE-01", "What happens if a mandatory R1.0 gate is not met by 30 November 2026", "The date is the owner's target and safety, privacy, licensing and operational gates are not waived. If a gate is not met: delay R1.0, remove the affected feature from scope, or keep it disabled. The reconciled R1.0 fix/verify list is large and depends on people not yet named.", "R1.0", "AWAITING"),
-    ("OD-LANG-02", "Approve each proposed primary market individually", "Ireland, Germany, Spain, Italy, Portugal, France, Netherlands are proposals only; none is an approved country qualification. Each needs owner approval and source qualification (licence, authority, coverage).", "R1.0", "AWAITING"),
-    ("OD-LANG-03", "Name the native-language reviewer for each of the seven languages", "No reviewer is named; needed before LG-11.", "R1.0", "AWAITING"),
-    ("OD-LANG-04", "Name the legal and privacy translation qualifier(s)", "Needed before real-user access in each language (LG-10).", "R1.0", "AWAITING"),
-    ("OD-RU-FUTURE", "Whether and when Russian is ever activated", "Russian is excluded from R1.0; any later activation is a separate decision, not an automatic R2.0 commitment.", "UNSCHEDULED", "AWAITING (future)"),
-    ("OD-HOSTED", "Authorise and choose the hosted environment", "Secure hosting is R1.0 scope; the provider, region and approval to create a hosted staging and production environment are not decided (EX-12).", "R1.0", "AWAITING"),
-    ("OD-BUDGET", "Approve a bounded live-evaluation and live-provider budget for qualification", "Native-review samples, live multilingual Mo checks, semantic embedding builds and a larger RAGAS run need an explicit budget; the EUR 10 capstone demonstration budget is not reusable.", "R1.0", "AWAITING"),
-    ("OD-GATE-THRESHOLDS", "Approve numeric thresholds for the quality and safety gates", "Injection detection and false-positive rates (REVIEW-01), retrieval quality (REVIEW-04), latency and availability targets and human-rating thresholds need owner-approved numbers before the corpora are frozen. Proposals will be made, not assumed.", "R1.0", "AWAITING"),
-    ("OD-PLAN-ENFORCE", "Which entitlements are enforced during the free beta", "Basic and Premium are both free beta tiers. Decide whether the history window and model-profile gating (currently disabled by code constants) stay disabled or are enforced for the beta; enabling either changes a gate constant that the reconciliation checks.", "R1.0", "AWAITING"),
-    ("OD-ADMIN-NAV", "Confirm the Admin navigation groups", "The owner suggested Command Center; Customers and Workspaces; Products and Commercial; AI and Knowledge; Insights and Operations; Governance and Settings.", "R1.0", "AWAITING"),
-    ("OD-BULK-ACTIONS", "Which restricted bulk user actions are permitted", "The owner asked for carefully restricted bulk actions; the permitted set is not defined.", "R1.0", "AWAITING"),
-    ("OD-REPORT-EXPORT", "Which export formats the reports support", "The owner asked for export in supported formats; the set is not defined.", "R1.0", "AWAITING"),
-    ("OD-WS-TRANSFER", "Workspace ownership transfer rules", "Safe transfer is required; the acceptance procedure and constraints are not defined.", "R1.0", "AWAITING"),
-    ("OD-INVITE", "Invitation mechanism for the private beta", "Invitation-only registration is decided; whether it uses invitation codes, an email allow-list or another mechanism is not.", "R1.0", "AWAITING"),
-    ("OD-MALWARE", "Select the real malware-scanning provider for user uploads", "Genuine fail-closed scanning is required (the fake scanner is development-only); the product choice and hosting are not decided.", "R1.0", "AWAITING"),
-    ("OD-COVERAGE", "Approve the separate frozen R1.0 beta-scope coverage measure", "The historical 95% gate (386 of 412 against 392, FAIL) is preserved unchanged; a separate measure for the enabled beta scope and licensed markets needs approval.", "R1.0", "AWAITING"),
-    ("OD-ACADEMIC-01", "Confirm retirement of the academic-only capstone-submission tasks", "Six historical items concern the capstone submission only (see traceability); they are not production dependencies. They are retired only on the owner's confirmation; none is silently closed.", "UNSCHEDULED", "AWAITING"),
-    ("OD-DEFER-PLACEMENT", "Confirm placement of items that fit no agreed release theme", "Items that are neither blockers nor part of an agreed release theme are placed in R1.1 (or R1.2 for Admin) as a proposal.", "R1.1", "AWAITING"),
+NEW_DECISIONS = [  # genuinely OPEN decisions (id, decision, detail, proposed release, type)
+    ('OD-RESOURCE', 'Allocate the additional time and engineering resources the owner is prepared to provide', 'The owner has said additional time and engineering resources can be allocated; none is yet allocated, named or budgeted. Needed: who is the technical integration lead, which engineers, QA and DevOps staff or Claude Code sessions, the review capacity, the external reviewers (seven native reviewers, legal counsel, independent evaluators, licensing reviewer), the budget and the start dates. The staffing and critical-path plan (execution/STAFFING_AND_CRITICAL_PATH_PLAN.md) states what the full scope needs; nothing is assumed hired.', 'R1.0', 'AWAITING'),
+    ('OD-LANG-02', 'Approve each proposed primary market individually', 'Ireland, Germany, Spain, Italy, Portugal, France, Netherlands are proposals only; none is an approved country qualification. Each needs owner approval and source qualification (licence, authority, coverage).', 'R1.0', 'AWAITING'),
+    ('OD-LANG-03', 'Name the native-language reviewer for each of the seven languages', 'No reviewer is named; needed before LG-11.', 'R1.0', 'AWAITING'),
+    ('OD-LANG-04', 'Name the legal and privacy translation qualifier(s)', 'Needed before real-user access in each language (LG-10).', 'R1.0', 'AWAITING'),
+    ('OD-RU-FUTURE', 'Whether and when Russian is ever activated', 'Russian is excluded from R1.0; any later activation is a separate decision, not an automatic R2.0 commitment.', 'UNSCHEDULED', 'AWAITING (future)'),
+    ('OD-HOSTED', 'Authorise and choose the hosted environment', 'Secure hosting is R1.0 scope; the provider, region and approval to create a hosted staging and production environment are not decided (EX-12).', 'R1.0', 'AWAITING'),
+    ('OD-BUDGET', 'Approve a bounded live-evaluation and live-provider budget for qualification', 'Native-review samples, live multilingual Mo checks, semantic embedding builds and a larger RAGAS run need an explicit budget; the EUR 10 capstone demonstration budget is not reusable.', 'R1.0', 'AWAITING'),
+    ('OD-GATE-THRESHOLDS', 'Approve numeric thresholds for the quality and safety gates', 'Injection detection and false-positive rates (REVIEW-01), retrieval quality (REVIEW-04), latency and availability targets and human-rating thresholds need owner-approved numbers before the corpora are frozen. Proposals will be made, not assumed.', 'R1.0', 'AWAITING'),
+    ('OD-BULK-ACTIONS', 'Which restricted bulk user actions are permitted', 'The owner asked for carefully restricted bulk actions; the permitted set is not defined.', 'R1.0', 'AWAITING'),
+    ('OD-REPORT-EXPORT', 'Which export formats the reports support', 'The owner asked for export in supported formats; the set is not defined.', 'R1.0', 'AWAITING'),
+    ('OD-WS-TRANSFER', 'Workspace ownership transfer rules', 'Safe transfer is required; the acceptance procedure and constraints are not defined.', 'R1.0', 'AWAITING'),
+    ('OD-COVERAGE', 'Approve the separate frozen R1.0 beta-scope coverage measure', 'The historical 95% gate (386 of 412 against 392, FAIL) is preserved unchanged; a separate measure for the enabled beta scope and licensed markets needs approval.', 'R1.0', 'AWAITING'),
+    ('OD-ACADEMIC-01', 'Confirm retirement of the academic-only capstone-submission tasks', "Six historical items concern the capstone submission only (see traceability); they are not production dependencies. They are retired only on the owner's confirmation; none is silently closed.", 'UNSCHEDULED', 'AWAITING'),
+    ('OD-EMBED', 'Choose the production embedding provider and model', 'Phase 00 options: OpenAI embeddings directly, an EU-hosted OpenAI-compatible endpoint, or a self-hosted multilingual model; the choice needs a frozen seven-language retrieval comparison, a data-processing review and a budget. Production must refuse the lexical hash embedder (REVIEW-04).', 'R1.0', 'AWAITING'),
+    ('OD-DEFER-PLACEMENT', 'Confirm placement of items that fit no agreed release theme', 'Items that are neither blockers nor part of an agreed release theme are placed in R1.1 (or R1.2 for Admin) as a proposal.', 'R1.1', 'AWAITING'),
+    ('OD-PLAN-LIMITS', 'Which limits and allowances Basic and Premium carry during the free beta', 'Server-enforced entitlements are approved in direction. Open: the concrete values (history window, model profile access, usage allowances) for each free beta tier and whether any is enforced from day one; enabling an enforcement flips a gate constant that the reconciliation checks.', 'R1.0', 'AWAITING'),
+    ('OD-US-CONTENT', 'May US-sourced content appear at all, as clearly labelled non-EU general information?', 'The owner approved that no unqualified US content is used as factual EU labour-market evidence. Open: whether US sources (O*NET, BLS) stay available only as clearly labelled non-EU general information, or are removed from Candidate retrieval entirely in the beta. Implemented by package 02D and REQ-COV-02.', 'R1.0', 'AWAITING'),
+    ('OD-RECLASS', 'Item-level disposition of the ten proposed reclassifications', 'The owner retains every R1.0 fix and verify obligation until an item-level disposition is explicitly approved; the ten-item proposal (BL-5, BL-6, BL-6.1 to BL-6.5, BL-9, BL-12, W12.4E-12) is NOT applied. Each approval must distinguish a genuine later-release dependency from an R1.0 product cut (R1_SCOPE_RECLASSIFICATION_PROPOSAL.md).', 'R1.0', 'AWAITING'),
 ]
+
+RESOLVED_DECISIONS = [  # owner-approved at the Phase 00 sign-off, 2026-10-21 (id, decision, resolution)
+    ("OD-SCOPE-01", "Which R1.0 scope strategy", "S1, the FULL originally agreed R1.0 scope, is selected. S2 (restricted free private beta) and S3 (minimum safe beta) are rejected as November release plans. No R1.0 product requirement is removed, downgraded or postponed to meet a delivery target. The 30 November 2026 date is the owner's target and does not override mandatory security, privacy, licensing, AI quality, source qualification or operational gates: if a gate is unmet the date moves, features are not cut."),
+    ("OD-RESOURCE-DIRECTION", "Resourcing direction", "The owner is prepared to allocate additional time and engineering resources. This is a direction, not an allocation: nothing is assumed hired or assigned (the allocation itself is open as OD-RESOURCE)."),
+    ("OD-ADMIN-NAV", "Admin navigation groups", "Six grouped Admin menu sections are approved (Command Center; Customers and Workspaces; Products and Commercial; AI and Knowledge; Insights and Operations; Governance and Settings)."),
+    ("OD-INVITE", "Beta invitation mechanism", "Secure single-use beta invitations are approved; token design details (for example email-bound, hashed, expiring) are settled in package 04E."),
+    ("OD-MALWARE", "Upload malware scanning", "Real fail-closed ClamAV scanning is approved; deployment details are settled in package 02C."),
+    ("OD-PLAN-ENFORCE-DIRECTION", "Entitlement enforcement", "Strong server-enforced entitlements are approved in direction; concrete limits and allowances remain open as OD-PLAN-LIMITS."),
+    ("OD-US-DIRECTION", "US content as EU evidence", "No unqualified US content is used as factual EU labour-market evidence (approved); the residual choice is open as OD-US-CONTENT."),
+    ("OD-REPORTING-SCOPE", "Reporting scope", "The complete reporting scope (prebuilt and custom reports) is approved; export formats remain open as OD-REPORT-EXPORT."),
+    ("OD-PRINCIPLES", "Standing principles confirmed", "Strict user and Workspace isolation; no live billing for R1.0; no production launch with failed gates; no unapproved reclassification of R1.0 obligations; the 394 historical issues, closure evidence and failed historical gates stay intact."),
+]
+OWNER_SCOPE_DECISION = dict(selected="S1", rejected=["S2", "S3"], date="2026-10-21", status="OWNER-APPROVED", gates_override_deadline=True,
+                            statement="The full originally agreed R1.0 scope is retained; the deadline does not override mandatory gates")
 
 LANG_NAMES = [("en", "English", "Ireland"), ("de", "German", "Germany"), ("es", "Spanish", "Spain"), ("it", "Italian", "Italy"), ("pt", "Portuguese", "Portugal"), ("fr", "French", "France"), ("nl", "Dutch", "Netherlands")]
 GATES = [
@@ -846,8 +920,8 @@ PRODUCTION_GATES = [  # (id, name, measurable requirement, evidence, state)
 
 def render_owner_decisions(doc: dict) -> str:
     items = doc["items"]
-    L = ["# Owner Decision Register (Production Roadmap V2.2, corrected)", "", "**Status:** corrected 2026-10-21 against the owner's authoritative requirements (`OWNER_REQUIREMENTS_SOURCE_OF_TRUTH_V2_2.md`). Only decisions that are genuinely still awaiting the owner are listed as open. Decisions the owner has already made (languages, Russian exclusion, R1.3 languages, release train, free invitation-only beta, English-only Admin, Basic/Premium as free beta tiers, the owner-requested capabilities and the five reviewer findings) are **requirements**, not open decisions, and are no longer listed here. Earlier open items that were resolved by the recovered text: OD-LANG-01, OD-LANG-05, OD-LANG-06, OD-REQ-TEXT, OD-REVIEW-FINDINGS, OD-RELEASE-TRAIN.", "",
-         "## Genuinely open decisions", "", "| ID | Decision | Detail | Release | Type |", "|---|---|---|---|---|"]
+    L = ["# Owner Decision Register (Production Roadmap V2.2, corrected)", "", "**Status:** updated 2026-10-21 at the Phase 00 sign-off. **OD-SCOPE-01 is resolved: S1, the full originally agreed R1.0 scope, is OWNER-APPROVED.** Only decisions that are genuinely still awaiting the owner are listed as open. Decisions the owner has already made (languages, Russian exclusion, R1.3 languages, release train, free invitation-only beta, English-only Admin, Basic/Premium as free beta tiers, the owner-requested capabilities and the five reviewer findings) are **requirements**, not open decisions, and are no longer listed here. Earlier open items that were resolved by the recovered text: OD-LANG-01, OD-LANG-05, OD-LANG-06, OD-REQ-TEXT, OD-REVIEW-FINDINGS, OD-RELEASE-TRAIN.", "",
+         "## Owner-approved decisions (Phase 00 sign-off, 2026-10-21)", "", "| ID | Decision | Resolution |", "|---|---|---|"] + [f"| {i} | {t} | {r.replace('|', '/')} |" for i, t, r in RESOLVED_DECISIONS] + ["", "## Genuinely open decisions", "", "| ID | Decision | Detail | Release | Type |", "|---|---|---|---|---|"]
     for id_, t, d, rel, typ in NEW_DECISIONS:
         L.append(f"| {id_} | {t} | {d.replace('|', '/')} | {rel} | {typ} |")
     hist = [r for r in items if r["origin"] == "REGISTER" and r["current_status"] == "PENDING OWNER DECISION"]

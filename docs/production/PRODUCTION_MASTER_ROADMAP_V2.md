@@ -85,4 +85,4 @@ Platform Admin is not a candidate-data superuser. Unapproved knowledge never rea
 
 ## 9. Critical path
 
-See `RELEASE_TRAIN_AND_DEPENDENCIES.md` section 3. The R1.0 list is large and several steps depend on people and environments the owner has not yet named or authorised; the safe reading is that the owner decides OD-SCOPE-01 early rather than assuming the date holds.
+The owner selected S1, the full scope, and decided that the deadline does not override a mandatory gate (OD-SCOPE-01 resolved, 2026-10-21). The recalculated critical path, the staffing plan and the resource-constrained dates are in `execution/STAFFING_AND_CRITICAL_PATH_PLAN.md`: 30 November holds only as the low-estimate, unlimited-staffing bound; realistic completion of the gate-complete full scope is early to mid December and depends on the people the owner allocates (OD-RESOURCE).

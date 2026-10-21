@@ -41,6 +41,10 @@ Why the numbers moved, not forced to match the old totals:
 - Six historical capstone-submission tasks were reclassified ACADEMIC_ONLY and moved to OWNER DECISION (UNSCHEDULED) pending confirmation of retirement; they no longer count as production work.
 - Deferrals were re-routed from the earlier invented R1.1 to R2.0 themes onto the agreed train: commercial to R1.1, speech to R1.4, additional-country evidence to R1.5, compensation to R1.6, with items that fit no agreed theme placed in R1.1 (R1.2 for Admin) as a proposal.
 
+## Proposed R1.0 scope reclassification (PROPOSED, NOT APPLIED)
+
+10 of 12 candidates pass the proof that their capability is inaccessible in the R1.0 Candidate API and UI; 2 fail it and stay in R1.0. If the owner confirms, R1.0 must-fix would be 78 and fix plus verify 152. Evidence and per-item detail: `execution/R1_SCOPE_RECLASSIFICATION_PROPOSAL.md`. Nothing is applied: the owner retains every R1.0 obligation until an item-level disposition is explicitly approved (OD-RECLASS).
+
 ## Totals by release (all dispositions)
 
 | Release | Items | Theme |
@@ -90,7 +94,7 @@ Why the numbers moved, not forced to match the old totals:
 
 ## Capacity warning
 
-162 items must be fixed or verified before R1.0 on 30 November 2026. The date is the owner's target; safety, privacy, licensing and operational gates are not waived to meet it. Many items need people not yet named (reviewers, native reviewers, legal qualifiers) or an authorised hosted environment. OD-SCOPE-01 asks the owner what happens if a mandatory gate is not met: delay, remove the feature from scope, or keep it disabled.
+162 items must be fixed or verified before R1.0 on 30 November 2026. The date is the owner's target; safety, privacy, licensing and operational gates are not waived to meet it. Many items need people not yet named (reviewers, native reviewers, legal qualifiers) or an authorised hosted environment. The owner selected S1, the full scope (OD-SCOPE-01 resolved) and decided that the deadline never overrides a mandatory gate, so the date follows the gates: see `execution/STAFFING_AND_CRITICAL_PATH_PLAN.md` for the staffing and critical-path plan.
 
 ## R1.0 P0 items
 

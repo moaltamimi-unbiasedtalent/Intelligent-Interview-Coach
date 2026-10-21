@@ -219,6 +219,7 @@
   "unscheduled_owner_decisions": 15,
   "genuine_new_owner_decisions": 12,
   "decision_register_entries": 18,
+  "owner_approved_decisions": 9,
   "r1_0_total_work": 162,
   "by_release_total": {
    "R1.0": 197,
@@ -250,6 +251,13 @@
    "OWNER-REQUIREMENT": 22,
    "LANGUAGE-DECISION": 16,
    "CROSS-CHECK": 10
+  },
+  "proposed_reclassification": {
+   "items": 10,
+   "withdrawn": 2,
+   "applied": false,
+   "r1_0_fix_if_applied": 78,
+   "r1_0_total_if_applied": 152
   },
   "previous_baseline": {
    "commit": "4084eb9",
@@ -26268,5 +26276,164 @@
    "proposed_implementation": "",
    "release_basis": "AGREED_RELEASE_TRAIN"
   }
- ]
+ ],
+ "owner_scope_decision": {
+  "selected": "S1",
+  "rejected": [
+   "S2",
+   "S3"
+  ],
+  "date": "2026-10-21",
+  "status": "OWNER-APPROVED",
+  "gates_override_deadline": true,
+  "statement": "The full originally agreed R1.0 scope is retained; the deadline does not override mandatory gates"
+ },
+ "resolved_decisions": [
+  "OD-SCOPE-01",
+  "OD-RESOURCE-DIRECTION",
+  "OD-ADMIN-NAV",
+  "OD-INVITE",
+  "OD-MALWARE",
+  "OD-PLAN-ENFORCE-DIRECTION",
+  "OD-US-DIRECTION",
+  "OD-REPORTING-SCOPE",
+  "OD-PRINCIPLES"
+ ],
+ "open_decisions": [
+  "OD-RESOURCE",
+  "OD-LANG-02",
+  "OD-LANG-03",
+  "OD-LANG-04",
+  "OD-RU-FUTURE",
+  "OD-HOSTED",
+  "OD-BUDGET",
+  "OD-GATE-THRESHOLDS",
+  "OD-BULK-ACTIONS",
+  "OD-REPORT-EXPORT",
+  "OD-WS-TRANSFER",
+  "OD-COVERAGE",
+  "OD-ACADEMIC-01",
+  "OD-EMBED",
+  "OD-DEFER-PLACEMENT",
+  "OD-PLAN-LIMITS",
+  "OD-US-CONTENT",
+  "OD-RECLASS"
+ ],
+ "scope_proposals": {
+  "applied": false,
+  "evidence": {
+   "E-IMPORT": "no module under src/ outside src/knowledge_foundation imports it (AST scan): the Compensation V2 and US occupational foundation code is unreachable from any API, application, agent or retrieval path",
+   "E-ROUTES": "the OpenAPI path table (266 paths, 114 non-admin) has no compensation, foundation, qualification, alias or recording route",
+   "E-UI": "no frontend source (app, components, lib) references Compensation V2, the knowledge foundation, US SOC or BLS OEWS alias review",
+   "E-READY": "knowledge_foundation.readiness.assess reports operational_today False, 0 linkable Compensation V2 records and 0 approved Compensation V2 sources",
+   "E-REGISTER": "the register's own candidate-impact text records no Candidate effect while Compensation V2 and candidate-facing use stay disabled",
+   "E-SPEECH": "the frontend never calls /speech/transcriptions or /speech/synthesis (only /speech/capabilities), the backend answers 503 speech_unavailable by default, and the server speech gate constants are False"
+  },
+  "reclassification": {
+   "BL-5": {
+    "proposed_release": "R1.6",
+    "capability": "12 batches of Compensation V2 records awaiting reviewer decisions: Compensation Intelligence V2 work",
+    "evidence": [
+     "E-IMPORT",
+     "E-ROUTES",
+     "E-UI",
+     "E-READY",
+     "E-REGISTER"
+    ]
+   },
+   "BL-6": {
+    "proposed_release": "R1.5",
+    "capability": "Five US occupational alias proposals: qualified occupational sources for additional countries",
+    "evidence": [
+     "E-IMPORT",
+     "E-ROUTES",
+     "E-UI",
+     "E-READY",
+     "E-REGISTER"
+    ]
+   },
+   "BL-6.1": {
+    "proposed_release": "R1.5",
+    "capability": "US alias decision Software Developer to 15-1252",
+    "evidence": [
+     "E-IMPORT",
+     "E-ROUTES",
+     "E-UI",
+     "E-REGISTER"
+    ]
+   },
+   "BL-6.2": {
+    "proposed_release": "R1.5",
+    "capability": "US alias decision Human Resources Manager to 11-3121",
+    "evidence": [
+     "E-IMPORT",
+     "E-ROUTES",
+     "E-UI",
+     "E-REGISTER"
+    ]
+   },
+   "BL-6.3": {
+    "proposed_release": "R1.5",
+    "capability": "US alias decision Sales Manager to 11-2022",
+    "evidence": [
+     "E-IMPORT",
+     "E-ROUTES",
+     "E-UI",
+     "E-REGISTER"
+    ]
+   },
+   "BL-6.4": {
+    "proposed_release": "R1.5",
+    "capability": "US alias decision Accountant to 13-2011",
+    "evidence": [
+     "E-IMPORT",
+     "E-ROUTES",
+     "E-UI",
+     "E-REGISTER"
+    ]
+   },
+   "BL-6.5": {
+    "proposed_release": "R1.5",
+    "capability": "US alias decision Financial Analyst to 13-2051",
+    "evidence": [
+     "E-IMPORT",
+     "E-ROUTES",
+     "E-UI",
+     "E-REGISTER"
+    ]
+   },
+   "BL-9": {
+    "proposed_release": "R1.5",
+    "capability": "Promotion of us_soc_2018 and bls_oews into the persistent source registry",
+    "evidence": [
+     "E-IMPORT",
+     "E-ROUTES",
+     "E-READY",
+     "E-REGISTER"
+    ]
+   },
+   "BL-12": {
+    "proposed_release": "R1.6",
+    "capability": "Runtime authorisation and deployment review for Compensation V2",
+    "evidence": [
+     "E-IMPORT",
+     "E-ROUTES",
+     "E-UI",
+     "E-READY",
+     "E-REGISTER"
+    ]
+   },
+   "W12.4E-12": {
+    "proposed_release": "R1.4",
+    "capability": "Server-side browser recording client (server speech)",
+    "evidence": [
+     "E-SPEECH"
+    ]
+   }
+  },
+  "withdrawn": {
+   "BL-6.6": "Data Analyst and Product Manager remain unresolved: the register states it affects 13 of the 26 insufficient coverage cases (ambiguous titles), i.e. the enabled role-resolution and abstention behaviour Candidates use today; the proof fails, so it stays in R1.0 (package 02E)",
+   "BL-7": "Resolve the Data Analyst and Product Manager evidence gaps: needed for any legitimate coverage close and concerns enabled role resolution; the proof fails, so it stays in R1.0 (package 02E)"
+  }
+ }
 }
