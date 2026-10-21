@@ -60,7 +60,7 @@ async function inspect(page: Page) {
   });
 }
 
-for (const ui of ["en", "de", "ru"]) {
+for (const ui of ["en", "de", "fr"]) {
   for (const [w, h] of [[1280, 800], [768, 1024], [390, 844]] as const) {
     for (const theme of ["light", "dark"]) {
       test(`P4-B analytics ready ${ui} ${w}px ${theme}`, async ({ page }) => {

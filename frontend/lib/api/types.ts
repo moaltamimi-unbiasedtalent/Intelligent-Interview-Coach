@@ -30,6 +30,9 @@ export interface CapabilitiesResponse {
   // Company Intelligence (P10B Wave 5) — the directable company-research surface is on
   // (external research enabled and not operator-paused). Never implies a provider key.
   company_research_enabled: boolean;
+  // 06A: the server-defined (code-only) locales a Candidate may select; excludes Russian. Optional for older servers.
+  active_candidate_locales?: string[];
+  default_locale?: string;
 }
 
 // --- Opportunities (P10B Wave 6) ---------------------------------------------

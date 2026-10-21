@@ -131,6 +131,17 @@ def validate_runtime_config(env: str | None = None) -> EnvReport:
         report.warnings.append(
             "REALTIME_VOICE_ENABLED is on but REALTIME_VOICE_API_KEY is missing — realtime "
             "voice will fall back to turn-based.")
+    # --- Malware scanner (05A): the in-memory fake scanner approves everything and must never run in a hosted environment ---
+    scan_provider = (os.environ.get("FILE_SCAN_PROVIDER", "") or "").strip().lower()
+    if scan_provider == "fake":
+        report.critical.append(
+            "FILE_SCAN_PROVIDER=fake is a test double and is refused in hosted environments (use clamav).")
+    elif prod_like and scan_provider != "clamav":
+        report.warnings.append(
+            "FILE_SCAN_PROVIDER is not 'clamav' — uploads are not malware-scanned (set FILE_SCAN_PROVIDER=clamav and MALWARE_SCAN_REQUIRED=true).")
+    if prod_like and not _has("COPILOT_DATA_DIR"):
+        report.warnings.append(
+            "COPILOT_DATA_DIR is not set — the API and worker must share ONE explicit knowledge/index data root on a persistent volume.")
     if prod_like and not _has("DOCUMENT_STORAGE_DIR"):
         report.warnings.append(
             "DOCUMENT_STORAGE_DIR is not set — private uploads will use a temp directory "

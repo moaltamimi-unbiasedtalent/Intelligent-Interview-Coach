@@ -23,7 +23,7 @@ STATUSES = (
     "ready", "no_active_sources", "worker_unavailable", "index_pending", "index_failed", "store_unavailable",
     "collection_missing", "embedding_provider_unavailable", "configuration_error", "degraded",
 )
-KNOWLEDGE_JOB_TYPES = (P.JOB_PARSE, P.JOB_INDEX, P.JOB_REMOVE)
+KNOWLEDGE_JOB_TYPES = (P.JOB_PARSE, P.JOB_INDEX, P.JOB_REINDEX, P.JOB_REMOVE)
 # Human, truthful one-liners for the Admin UI (never claims health that was not established).
 MESSAGES = {
     "ready": "Governed knowledge is active, indexed and present in the store candidate retrieval reads.",
@@ -60,12 +60,13 @@ class KnowledgeReadinessService:
     ``curated_store_provider`` returns the shared curated corpus store (or None)."""
 
     def __init__(self, session_factory: sessionmaker, *, governed_provider: Callable[[], Any], curated_store_provider: Callable[[], Any],
-                 job_service: Any, config: Any) -> None:
+                 job_service: Any, config: Any, guard: Any = None) -> None:
         self._sf = session_factory
         self._governed = governed_provider
         self._curated = curated_store_provider
         self._jobs = job_service
         self._config = config
+        self._guard = guard          # 02A: KnowledgeServingGuard (optional so existing constructions keep working)
 
     # ------------------------------------------------------------------ workers
     def _worker(self) -> dict:
@@ -131,8 +132,25 @@ class KnowledgeReadinessService:
                               embedding=embedding, removal_failed=removal_failed)
         governed_usable = status in ("ready", "degraded") and built > 0 and bool(store_info and (store_info["chunk_count"] or 0) > 0)
         collection = ("ok" if store_info and (store_info["chunk_count"] or 0) > 0 else ("empty_or_missing" if store_info else "unavailable"))
+        message = MESSAGES[status]
+        environment = None
+        if self._guard is not None:
+            from src.knowledge_admin.environment import environment_diagnostics
+
+            try:
+                environment = environment_diagnostics(self._sf, self._guard, governed_store=store, curated_store=self._safe_curated(), job_service=self._jobs)
+                report = self._guard.check()
+                if report.enforced and report.blocking:
+                    # 02A: the environment guard refuses governed retrieval in a hosted deployment; readiness must say so, never "ready".
+                    governed_usable = False
+                    if status in ("ready", "degraded", "no_active_sources", "index_pending", "worker_unavailable"):
+                        status = "configuration_error"
+                    message = "The knowledge environment guard is refusing governed retrieval: " + " ".join(f.message for f in report.blocking)
+            except Exception:  # noqa: BLE001 - diagnostics are additive; their failure never breaks readiness and never reports health
+                environment = None
+        views = self._views(status, active_n, built_chunks, store_info, curated)
         return {
-            "status": status, "message": MESSAGES[status],
+            "status": status, "message": message,
             "candidate_retrieval_ready": bool(governed_usable or curated["status"] == "available"),
             "governed_retrieval_ready": bool(governed_usable),
             "source_count": sources_total, "active_source_count": active_n, "active_version_count": active_n, "indexed_active_version_count": built,
@@ -147,6 +165,27 @@ class KnowledgeReadinessService:
             "last_indexed_at": _iso(last_indexed),
             "last_failure_category": (failed_row[0] if failed_row else None),
             "last_failure_stage": (failed_row[1] if failed_row else None),
+            "environment": environment, "views": views,
+        }
+
+    def _safe_curated(self):
+        try:
+            return self._curated()
+        except Exception:  # noqa: BLE001
+            return None
+
+    @staticmethod
+    def _views(status: str, active_n: int, built_chunks: int, store_info: dict | None, curated: dict) -> dict:
+        """Two clearly separated, labelled views (02A, builds on the curated panel). CURATED = the committed corpus shipped with the product
+        (read-only, not Admin-managed). GOVERNED = Admin-managed sources (the only content an Admin controls). Counts are never merged."""
+        return {
+            "curated": {"label": "Curated knowledge base", "origin": "committed_corpus", "admin_managed": False,
+                        "description": "The committed corpus that ships with the product. It is read-only here and is not Admin-managed.",
+                        "status": curated["status"], "chunk_count": curated.get("chunk_count")},
+            "governed": {"label": "Admin-governed knowledge", "origin": "admin_governed", "admin_managed": True,
+                         "description": "Sources an administrator registered, reviewed, approved, indexed and activated. Only active sources reach candidates.",
+                         "status": status, "chunk_count": (store_info["chunk_count"] if store_info else None), "active_source_count": active_n,
+                         "recorded_built_chunk_count": built_chunks},
         }
 
     @staticmethod

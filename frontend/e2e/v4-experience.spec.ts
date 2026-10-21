@@ -185,7 +185,7 @@ for (const width of [1280, 390] as const) {
   });
 }
 
-for (const locale of ["de", "ru"] as const) {
+for (const locale of ["de", "fr"] as const) {
   for (const width of [1280, 390] as const) {
     test(`v4 new surfaces in ${locale} at ${width}px: translated, no overflow, no raw keys, floating header intact`, async ({ page, context }) => {
       await page.setViewportSize({ width, height: 900 });

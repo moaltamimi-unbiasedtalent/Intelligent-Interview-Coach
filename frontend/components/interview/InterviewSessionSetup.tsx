@@ -9,7 +9,7 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Field";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
-import { toSupportedLocale, type AppLocale, DEFAULT_APP_LOCALE } from "@/lib/i18n/locales";
+import { toActiveLocale, type AppLocale, DEFAULT_APP_LOCALE } from "@/lib/i18n/locales";
 import { DocumentPicker } from "@/components/documents/DocumentPicker";
 import { ConversationLanguageField } from "@/components/i18n/ConversationLanguageField";
 
@@ -39,7 +39,7 @@ export function InterviewSessionSetup({ onCreated, opportunityId = null }: {
   const [jdDocId, setJdDocId] = useState<number | null>(null);
   const [useEvidence, setUseEvidence] = useState(false);
   const [conversationLanguage, setConversationLanguage] = useState<AppLocale>(
-    toSupportedLocale(account?.conversation_language ?? null) ?? DEFAULT_APP_LOCALE,
+    toActiveLocale(account?.conversation_language ?? null) ?? DEFAULT_APP_LOCALE,
   );
   // Optional customisation (backend-owned taxonomies; empty = backend default).
   const [showCustomise, setShowCustomise] = useState(false);
@@ -50,7 +50,7 @@ export function InterviewSessionSetup({ onCreated, opportunityId = null }: {
 
   // Keep the language default in sync once the account preference loads.
   useEffect(() => {
-    const pref = toSupportedLocale(account?.conversation_language ?? null);
+    const pref = toActiveLocale(account?.conversation_language ?? null);
     if (pref) setConversationLanguage(pref);
   }, [account?.conversation_language]);
 

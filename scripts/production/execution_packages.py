@@ -189,6 +189,12 @@ PACKAGES = [
     P("06F", "Native review and legal translation qualification", "F", 6, 2, 5, (2, 4), ["REQ-LANG-09", "REQ-LANG-10", "K-TRANS-LEGAL", "C-NATIVE"], depends=[], decisions=["OD-LANG-03", "OD-LANG-04"], scope="Coordinate native-speaker review and qualified legal translation per language; record sign-offs. Reviewer and counsel engagement starts immediately (it does not wait for the audit); each language is reviewed as its catalogue is frozen.", components="review protocol documents; version registry", backend="none", frontend="Text corrections", security="Legal accuracy", acceptance="LG-10, LG-11", tests="signed records", pr="Correction PRs", dod="Signed record per language", human="Seven native reviewers and legal qualifiers (calendar-bound)"),
     P("06G", "Independent human AI evaluation", "F", 6, 4, 5, (3, 5), ["C-CITE", "C-INT-HUMAN", "C-KB-HUMAN", "L-PRODQ", "BL-19", "L-AC24", "P2-01", "P2-02", "P2-03", "P2-04"], depends=["06C", "00A"], decisions=["OD-BUDGET", "OD-GATE-THRESHOLDS"], scope="Blinded human rating of interview questions, feedback and Mo answers per language; targeted human validation; pilot revalidation of sharing, provenance and score interpretation.",
       components="docs/capstone/p10/pilot2; src/model_quality harness; rating protocol", backend="Harness support only", frontend="none", security="Synthetic or consented data only", acceptance="PG-07", tests="rating records with sample size", pr="Protocol and harness PRs", dod="Ratings recorded with reviewers named", human="Independent reviewers and participants (calendar-bound)"),
+    P("06H", "Language activation control: fail-closed enforcement of LG-01 to LG-14 before real-user activation", "F", 6, 2, 3, (4, 6), [], depends=["06A"], decisions=["OD-LANG-03", "OD-LANG-04"],
+      scope="Server-side enforcement that a locale is offered to real users only when it has a COMPLETE, APPROVED qualification record: all fourteen gates PASS, each with an evidence artefact reference, a named human approver, an approval date and the release SHA, and no gate stale. In production a locale without such a record is neither offered nor accepted for new sessions (fail closed, including when no locale qualifies); staging and development keep the seven languages selectable but visibly labelled UNQUALIFIED for synthetic testing. The mechanism is code-defined (it cannot be flipped from Admin or the environment alone) and is testable now with synthetic readiness fixtures. REQ-LANG-13 is assigned to 06A; 06H completes its enforcement.",
+      components="src/locales.py (ACTIVE_CANDIDATE_LOCALES, effective_locale: 06A); docs/production/execution/language_readiness.json (06A readiness record); GET /api/v1/capabilities; registration, onboarding, preferences, career chat, agent run and interview creation (the places 06A made reject a non-active locale); frontend language selectors and onboarding; scripts/eval_marketing_product_trust.py (claims gate)",
+      backend="A pure activation resolver (reads a validated qualification record, never the network), the environment mode (enforced in production, labelled elsewhere; fails closed on an unknown or missing record), capabilities exposing the real-user locales and the activation mode, the same refusal at every entry point 06A guards, and a read-only per-language readiness view for Admin (metadata only)", frontend="Selectors offer only the capabilities' real-user locales in production and label unqualified locales in staging; a clear unavailable state when no locale is qualified",
+      security="Fails closed; no Admin or environment toggle can activate a locale; qualification records need a named approver and evidence; no private data involved", acceptance="LG-13 enforcement: tests with synthetic fixtures prove a locale is enabled only with a complete approved record; production offers nothing for a locale with any gate not PASS, missing evidence, missing approver, stale evidence or SHA mismatch; an empty qualified set blocks real-user registration with a clear message instead of silently falling back; the claims gate rejects any production-qualified claim without the record; release acceptance PG-04 and PG-13 reference it",
+      tests="resolver unit tests over synthetic readiness fixtures (complete, each single missing gate, NOT RUN, ENGINEERING DRAFT, no evidence, no approver, stale, SHA mismatch, unknown locale, empty set); API tests at each guarded entry point in production and staging modes; capabilities contract test; frontend vitest and Playwright for the labelled and unavailable states; claims-gate test; the 06A language boundary tests unchanged", pr="One PR stacked on 06A", dod="Production fails closed for every language today (none has an approved record); the synthetic complete record enables exactly its locale; no path activates a locale without the record", human="Named approvers (native reviewer and legal qualifier sign-offs feed the records)"),
     # ---------------- Phase 07 / 08
     P("07A", "Deferral inaccessibility and engineering hygiene", "E", 7, 5, 5, (5, 8), ["REQ-DEFER-01", "DEMO-04", "DEMO-05"], depends=["05A", "03A"], scope="Consolidated UI plus API tests proving each deferred feature is unreachable; audit async blocking and optional-dependency tests.", components="gate constants; routes; frontend entry points; CI", backend="Tests", frontend="Tests", security="Core safety rule 10", acceptance="PG-10", tests="inaccessibility suite per gated family", pr="One PR", dod="Suite in CI"),
     P("07B", "Live grounding and agent-policy validation", "A", 7, 4, 4, (4, 6), ["D-NOT-LIVE", "D-MISS-AMB", "D-MISS-INS", "D-MISS-PRAC", "D-MISS-PREP", "D-MISS-5TH", "D-POLB", "D-SRC-LIST", "D-CITE-PROXY", "DEMO-03"], depends=["01B", "01D"], decisions=["OD-BUDGET"],
@@ -197,14 +203,14 @@ PACKAGES = [
     P("08A0", "Release evidence pipeline (continuous integration of evidence)", "E", 8, 1, 1, (3, 5), [], decisions=[],
       scope="Automate the collection of gate evidence from the first merged package onward: per-package acceptance results, CI links, SHA, the readiness tracker rows (PG-01 to PG-15, LG-01 to LG-14) and the reconciliation check, so the freeze assembles evidence that already exists instead of creating it at the end.",
       components="docs/production/execution/RELEASE_READINESS_TRACKER.md; scripts/production/; CI", backend="Evidence collector and tracker generator", frontend="none", security="No claims without evidence; PASS only with an artefact link", acceptance="Tracker rows update from CI artefacts; stale evidence is flagged", tests="tracker generator tests; reconciliation check", pr="One PR", dod="Evidence for a merged package appears in the tracker without manual copying"),
-    P("08A", "Freeze and owner go/no-go", "E", 8, 5, 5, (2, 3), [], depends=["08A0", "07B", "07C", "04F", "00B", "07A", "06G", "05B", "05C", "05D", "05E", "03A", "03B", "03C", "03D2", "03E2", "04C", "04D", "04E", "02C", "02D", "02E", "06B", "06D", "06E", "06F"], decisions=["OD-RESOURCE"],
+    P("08A", "Freeze and owner go/no-go", "E", 8, 5, 5, (2, 3), [], depends=["08A0", "07B", "07C", "04F", "00B", "07A", "06H", "06G", "05B", "05C", "05D", "05E", "03A", "03B", "03C", "03D2", "03E2", "04C", "04D", "04E", "02C", "02D", "02E", "06B", "06D", "06E", "06F"], decisions=["OD-RESOURCE"],
       scope="Freeze at one SHA, assemble the evidence for PG-01 to PG-15 and LG-01 to LG-14, run the reconciliation check, owner go/no-go.", components="docs/production; CI", backend="none", frontend="none", security="No bypass of mandatory gates", acceptance="PG-15", tests="full CI, reconciliation check, release rehearsal", pr="Release evidence PR", dod="Owner go/no-go recorded", human="Owner"),
 ]
 BYID = {p["id"]: p for p in PACKAGES}
 
 TIER_NAMES = {0: "Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates)", 1: "Reviewer corrections and operator safety", 2: "Owner core capabilities (candidate journeys, Story Bank, Workspaces, quality evidence)",
               3: "Admin 2.0 expansion beyond the existing Admin", 4: "Verification extras and proposals"}
-TIERS = {"00A": 0, "01A": 0, "01D": 0, "02A": 0, "02B": 0, "02C": 0, "02D": 0, "04E": 0, "05A": 0, "05B": 0, "05C": 0, "05D": 0, "05E": 0, "06A": 0, "06E": 0, "06F": 0, "07A": 0, "08A": 0,
+TIERS = {"00A": 0, "01A": 0, "01D": 0, "02A": 0, "02B": 0, "02C": 0, "02D": 0, "04E": 0, "05A": 0, "05B": 0, "05C": 0, "05D": 0, "05E": 0, "06A": 0, "06E": 0, "06F": 0, "06H": 0, "07A": 0, "08A": 0,
          "01B": 1, "01C": 1, "04C": 1, "03A": 1,
          "04A": 2, "04B": 2, "04D": 2, "06B": 2, "06C": 2, "06D": 2, "03C": 2, "02E": 2, "06G": 2,
          "01B0": 1, "08A0": 0, "03B": 3, "03K": 3, "03D1": 3, "03D2": 3, "03E1": 3, "03E2": 3, "02K": 0,
@@ -225,6 +231,12 @@ BRIEFS = {
         "Negative tests: retrieved text instructing a side-effecting tool cannot cause it to run; user A's run cannot read user B's evidence through any tool; invalid argument shapes are refused before side effects.", "Assert the tool set is unchanged."],
         pr2=[], files="src/agent/registry.py; src/agent/nodes.py; src/agent/state.py; tests/test_tool_authorization_*.py (new)", out_of_scope="No new tools; no prompt wording change", risks="Over-blocking legitimate tool calls (mitigated by the 56 deterministic tool-selection cases)",
         verification="negative tests; existing eval_agent and tool-selection cases green; closes REVIEW-01 together with 01A; must merge after 01B and before 01C"),
+    "06H": dict(title="Language activation control (LG-01 to LG-14, fail closed)", pr1=["Define the qualification record schema (per locale: fourteen gates, each PASS with an evidence artefact reference, named human approver, approval date, release SHA; stale-evidence rule) and validate the existing docs/production/execution/language_readiness.json against it (today every locale is incomplete).",
+        "Add the pure activation resolver and environment mode in src/locales.py (or a small src/language_activation.py): enforced in staging-as-production and production (a locale without a complete approved record is not offered and is refused for new sessions, including when the qualified set is empty), labelled-unqualified in staging for synthetic testing, development unchanged; code-defined, no Admin or environment toggle can override it.",
+        "Wire it into capabilities and every entry point 06A guards (registration, preferences, onboarding, career chat, agent run, interview create); frontend selectors offer the real-user locales and show a clear unavailable state when none is qualified.", "Tests with synthetic readiness fixtures only (never mark a real language PASS): complete record enables exactly its locale; each single defect disables it; unknown locale and empty set fail closed; claims gate rejects an unsupported qualified claim."],
+        pr2=[], files="src/locales.py or src/language_activation.py (new); src/api (capabilities and the guarded entry points); docs/production/execution/language_readiness.json (schema only, no gate marked PASS); frontend language selectors and tests; tests/test_language_activation_06h.py (new)",
+        out_of_scope="No language is qualified or activated by this package; no change to the seven selectable target languages; no weakening of 06A", risks="An empty qualified set blocks real-user registration in production until the first locale is qualified (intended: the owner decided a failed gate prevents activation)",
+        verification="synthetic-fixture tests under both venvs; 06A tests unchanged; production mode refuses all seven languages today"),
     "01B": dict(title="Externalized prompt versions (REVIEW-02)", pr1=["Audit current prompts and their consumers: src/agent/policies.py SYSTEM_PROMPT, src/prompts.py technique prompts (src/prompt_registry.py PromptTechniqueSpec), src/copilot/rag/prompts.py, and how src/config_versions.py computes prompt_version today (hash based).",
         "Create the prompt asset directory (names are examples; confirm compatibility with each consumer before fixing them): prompts/agent/system.<version>.md, prompts/interview/<technique>.<version>.md, prompts/rag/system.<version>.md, each with front matter (id, semantic version, variables, compatible_with).",
         "Add src/prompt_loader.py: validated loading (front matter schema, variable checks, SHA-256 integrity), declared semantic version independent of the hash, clear errors for missing versions; keep current Python literals as the default until parity tests pass, then switch the consumers to the loader.",
@@ -253,6 +265,24 @@ BRIEFS = {
         pr2=[], files="frontend/components/admin/AdminShell.tsx; frontend/lib/admin/capabilities.ts; frontend/components/layout/nav-items.ts; frontend/app/admin/*; frontend/app/review/*; frontend/tests/admin-shell-w10-1.test.tsx; frontend/e2e/admin*.spec.ts",
         out_of_scope="No new Admin features, permissions or routes beyond the relocation and redirects; backend authorization unchanged", risks="Broken deep links (mitigated by redirects); role-visibility regressions", verification="vitest for grouping and visibility per role; Playwright for expand/collapse, keyboard, breadcrumbs, responsive and redirects; backend 403 tests for diagnostics remain green; accessibility checks"),
 }
+
+# ---------------------------------------------------------------- measured status and throughput (first engineering wave; updated by hand as evidence arrives)
+PACKAGE_STATUS = {   # id: (state, branch, head SHA, verification evidence). GitHub CI is reported separately in the integration dashboard; "no PR" means no CI could run
+    "05A": ("BRANCH PUSHED, VERIFIED OFFLINE", "feat/05a-staging-topology", "0a7d6fb", "114 passed/1 skipped under both venvs; ruff; hosting readiness PASS; nothing deployed"),
+    "01A": ("BRANCH PUSHED, VERIFIED OFFLINE", "feat/01a-injection-corpus", "6b2dbc2", "293 passed under both venvs; eval_agent PASS; held-out detection 54.5% (report only)"),
+    "02K": ("BRANCH PUSHED, VERIFIED OFFLINE", "feat/02k-knowledge-contract", "f5eb3dc", "125 passed under both venvs after 1 rework round"),
+    "01B0": ("BRANCH PUSHED, VERIFIED OFFLINE", "feat/01b0-prompt-contract", "6f6d383", "462 passed under both venvs"),
+    "03K": ("BRANCH PUSHED, VERIFIED OFFLINE", "feat/03k-admin-metric-contract", "8afe350", "183 passed under both venvs; tsc, lint, vitest 28"),
+    "03A": ("BRANCH PUSHED, VERIFIED OFFLINE", "feat/03a-admin-navigation", "7a6f484", "vitest 1114, Playwright 89, pytest 107, tsc, lint, ruff"),
+    "06A": ("BRANCH PUSHED, CORRECTIONS IN PROGRESS", "feat/06a-locale-boundaries", "f7b2e03", "full Python suite 5172 passed on the repo venv and 5170 on the fresh venv; vitest 1087; affected Playwright; documentation corrections pending"),
+    "01B": ("IN PROGRESS (stacked on 01B0)", "feat/01b-versioned-prompts", "", "not yet reported"),
+    "02A": ("IN PROGRESS (stacked on 02K)", "feat/02a-knowledge-persistence", "", "not yet reported"),
+}
+THROUGHPUT = [   # (package, estimate low-high days, authoring wall-clock minutes, rework rounds, review latency, CI duration)
+    ("05A", "8-12", 11, 0, "no PR yet", "no PR yet"), ("01A", "5-8", 24, 0, "no PR yet", "no PR yet"), ("02K", "2-3", 32, 1, "no PR yet", "no PR yet"), ("01B0", "2-3", 24, 0, "no PR yet", "no PR yet"),
+    ("03K", "2-3", 34, 0, "no PR yet", "no PR yet"), ("03A", "5-7", 29, 0, "no PR yet", "no PR yet"), ("06A", "4-6", 43, 0, "no PR yet", "no PR yet"),
+]
+
 
 # ---------------------------------------------------------------- resource-constrained schedule (the weeks of each package are COMPUTED, not hand-assigned)
 
@@ -287,10 +317,10 @@ def _rank() -> dict[str, float]:
     return {p["id"]: r(p["id"]) for p in PACKAGES}
 
 
-def simulate(profile: list[int], which: int = 1) -> dict[str, tuple[float, float, int]]:
+def simulate(profile: list[int], which: int = 1, scale: float = 1.0) -> dict[str, tuple[float, float, int]]:
     """List-schedule every package onto the available streams. A stream delivers UTILISATION productive days per working day; a package of 10 or more days may use two streams."""
     rank = _rank()
-    pk = {p["id"]: dict(rem=float(p["effort"][which]), start=None, fin=None, streams=0, floor=ELAPSED_FLOOR.get(p["id"], 0)) for p in PACKAGES}
+    pk = {p["id"]: dict(rem=float(p["effort"][which]) * scale, start=None, fin=None, streams=0, floor=ELAPSED_FLOOR.get(p["id"], 0)) for p in PACKAGES}
     for k in FIXED_WEEKS:
         pk.pop(k)
     order = sorted(pk, key=lambda i: ((FIRST_WAVE.index(i) if i in FIRST_WAVE else 99), -rank[i], i))
@@ -330,8 +360,8 @@ def date_of(working_day: float) -> str:
     return d.strftime("%a %d %b %Y")
 
 
-def completion(profile: list[int], which: int = 1) -> float:
-    return max(f for _, f, _ in simulate(profile, which).values())
+def completion(profile: list[int], which: int = 1, scale: float = 1.0) -> float:
+    return max(f for _, f, _ in simulate(profile, which, scale).values())
 
 
 def recommended_profile() -> tuple[str, list[int]]:
@@ -390,7 +420,7 @@ ROLE_SPLIT = {
     "03C": {"BE": .5, "FE": .5}, "03D1": {"BE": 1}, "03D2": {"FE": 1}, "03E1": {"BE": 1}, "03E2": {"FE": 1}, "04A": {"BE": .5, "FE": .5}, "04B": {"BE": .5, "FE": .5}, "04C": {"BE": .5, "FE": .3, "QA": .2},
     "04D": {"QA": .7, "FE": .3}, "04E": {"BE": .7, "FE": .3}, "04F": {"FE": 1}, "05A": {"DEVOPS": 1}, "05B": {"DEVOPS": 1}, "05C": {"DEVOPS": .5, "BE": .5}, "05D": {"DEVOPS": .5, "BE": .5},
     "05E": {"BE": 1}, "06A": {"LOC": .6, "FE": .4}, "06B": {"QA": .5, "LOC": .5}, "06C": {"AIE": .5, "LOC": .5}, "06D": {"AIE": .6, "QA": .4}, "06E": {"AIE": .6, "QA": .4}, "06F": {"LOC": 1},
-    "06G": {"QA": 1}, "07A": {"QA": 1}, "07B": {"AIE": 1}, "07C": {"QA": 1}, "08A0": {"TIL": .5, "QA": .5}, "08A": {"TIL": 1},
+    "06G": {"QA": 1}, "06H": {"BE": .5, "FE": .2, "QA": .3}, "07A": {"QA": 1}, "07B": {"AIE": 1}, "07C": {"QA": 1}, "08A0": {"TIL": .5, "QA": .5}, "08A": {"TIL": 1},
 }
 EXTERNAL = [
     ("Native-language reviewers (one per language, seven)", "Interface text, Mo samples, interview questions and feedback, legal text", "LG-11", "unnamed (OD-LANG-03)", f"{ELAPSED_FLOOR['06F']} working days elapsed (assumed)"),
@@ -562,7 +592,8 @@ def render_register() -> str:
     L += ["", "Scope tiers: " + "; ".join(f"T{k} = {v}" for k, v in TIER_NAMES.items()) + ". Early-parallel packages (deployment topology and Knowledge persistence, highest staffing priority, start in the first implementation wave): " + ", ".join(EARLY_PARALLEL) + ".", "",
           f"Total effort: {t['min_days']} to {t['max_days']} engineering days. Critical path (longest dependency chain): {t['cp_min'][1]:.0f} to {t['cp_max'][1]:.0f} days (see `DEPENDENCY_GRAPH.md`).", "", "## Package detail", ""]
     for p in PACKAGES:
-        L += [f"### {p['id']} {p['name']}", "", f"- **Scope tier:** T{TIERS[p['id']]} ({TIER_NAMES[TIERS[p['id']]]})" + ("; **early parallel workstream**" if p["id"] in EARLY_PARALLEL else ""), f"- **Track / phase / weeks:** {p['track']} ({TRACKS[p['track']]}) / {p['phase']} / {WEEKS[p['start']]} to {WEEKS[p['end']]}", f"- **Scope:** {p['scope']}", f"- **Dependencies:** {', '.join(p['depends']) or 'none'}; **owner decisions:** {', '.join(p['decisions']) or 'none'}",
+        st = PACKAGE_STATUS.get(p["id"])
+        L += [f"### {p['id']} {p['name']}", "", f"- **Status:** {st[0]} ({st[1]} {st[2] or 'no SHA yet'}; {st[3]})" if st else "- **Status:** NOT STARTED", f"- **Scope tier:** T{TIERS[p['id']]} ({TIER_NAMES[TIERS[p['id']]]})" + ("; **early parallel workstream**" if p["id"] in EARLY_PARALLEL else ""), f"- **Track / phase / weeks:** {p['track']} ({TRACKS[p['track']]}) / {p['phase']} / {WEEKS[p['start']]} to {WEEKS[p['end']]}", f"- **Scope:** {p['scope']}", f"- **Dependencies:** {', '.join(p['depends']) or 'none'}; **owner decisions:** {', '.join(p['decisions']) or 'none'}",
               f"- **Existing components affected:** {p['components']}", f"- **Expected backend changes:** {p['backend']}", f"- **Expected frontend changes:** {p['frontend']}", f"- **Security and privacy:** {p['security']}",
               f"- **Acceptance criteria:** {p['acceptance']}", f"- **Required tests:** {p['tests']}", f"- **Estimated effort:** {p['effort'][0]} to {p['effort'][1]} engineering days" + (f"; calendar-bound: {p['human']}" if p["human"] else ""),
               f"- **PR boundary:** {p['pr']}", f"- **Definition of Done:** {p['dod']}", f"- **R1.0 items ({len(p['items'])}):** {', '.join(p['items']) or 'none'}"]
@@ -632,8 +663,24 @@ def render_schedule() -> str:
         L.append(f"| {n} | {cap:.0f} | {'yes' if cap >= t['min_days'] else 'no'} | {'yes' if cap >= t['max_days'] else 'no'} |")
     L += ["", "## Early parallel workstream: deployment topology and Knowledge persistence", "", "02A (Knowledge persistence, environment identity, restore), 05A (hosted topology) and 05E (privacy and legal readiness, calendar-bound) are long poles: they need an owner decision, a topology fix, repeatable drills and human lead time, and nothing else can be proven on a hosted stack without them. They start in W1 alongside Track A with the highest staffing priority and are tracked as a separate early workstream. **The existing `deploy/docker-compose.staging.yml` must not be deployed as it stands** (it has no worker, no knowledge or index volume and no ClamAV service); the first 05A PR completes the topology as code without deploying it.", ""]
     L += tier_section()
-    L += ["", "See `PHASE_00_EXIT_REPORT.md` for the November feasibility assessment and scope options.", ""]
+    L += measured_section()
+    L += ["", "See `PHASE_00_EXIT_REPORT.md` for the Phase 00 assessment and `STAFFING_AND_CRITICAL_PATH_PLAN.md` for the S1 staffing plan.", ""]
     return "\n".join(L)
+
+
+def measured_section() -> list[str]:
+    rec = recommended_profile()
+    L = ["", "## Measured first-wave throughput and what it does and does not say", "", "| Package | Estimate (days) | Authoring wall-clock (minutes) | Rework rounds | Review latency | GitHub CI duration |", "|---|---|---|---|---|---|"]
+    for pk, est, mins, rw, rev, ci in THROUGHPUT:
+        L.append(f"| {pk} | {est} | {mins} | {rw} | {rev} | {ci} |")
+    tot = sum(m for _, _, m, _, _, _ in THROUGHPUT)
+    L += ["", f"Seven first-wave packages were authored in {tot} agent-minutes in total (each agent ran in parallel; roughly 10 to 45 minutes per package, including about 15 minutes lost to the shared interpreter fault), against estimates of 2 to 12 engineering days each. **This measures authoring of contract, scaffolding and test-writing work only.** It excludes human review, GitHub CI (no PR exists, so none ran), integration, live validation, rework after review, native and legal review and every calendar-bound step, and the first wave was deliberately the smallest, best-bounded packages. It is NOT evidence about the heavier packages (02A, 02B, 03D1, 03E1, 04A to 04D, 05B to 05D) and no estimate has been changed because of it.", "",
+          "Sensitivity of the full-scope completion date to the true effort (profile '" + rec[0] + "', high estimate scaled; a sensitivity table, not a forecast):", "", "| Effort relative to the estimate | Completes | Binding constraint |", "|---|---|---|"]
+    for scale in (1.0, 0.5, 0.25, 0.1):
+        c = completion(rec[1], 1, scale)
+        L.append(f"| {int(scale * 100)}% | day {c:.0f}, {date_of(c)} | {'engineering chain' if scale >= 0.5 else 'calendar-bound human and legal lead times (assumed), then review capacity'} |")
+    L += ["", "If engineering effort proves much smaller than estimated, the date stops being engineering-bound and becomes bound by the assumed human lead times (native review, legal qualification, licensing, independent evaluation) and by review capacity for roughly 60 pull requests. That is why the first-wave PRs need real reviewers and real CI evidence before the forecast is changed.", ""]
+    return L
 
 
 def tier_totals() -> list[tuple[int, int, int, int, int]]:

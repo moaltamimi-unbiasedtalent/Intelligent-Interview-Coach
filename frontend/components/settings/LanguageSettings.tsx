@@ -14,7 +14,7 @@ import { useId, useState } from "react";
 import { api } from "@/lib/api/client";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { useI18n } from "@/components/i18n/I18nProvider";
-import { APP_LOCALES, type AppLocale, toSupportedLocale } from "@/lib/i18n/locales";
+import { SELECTABLE_LOCALES, type AppLocale, toActiveLocale } from "@/lib/i18n/locales";
 import { DICTATION_LANGUAGES, dictationLanguageName } from "@/components/ui/DictationControl";
 import { useDictationLanguage } from "@/lib/speech/useDictationLanguage";
 
@@ -48,7 +48,7 @@ export function LanguageSettings() {
   const auth = useAuthOptional();
   const [dictationLang, setDictationLang] = useDictationLanguage();
   const [conversation, setConversation] = useState<AppLocale>(
-    toSupportedLocale(auth?.account?.conversation_language ?? null) ?? "en",
+    toActiveLocale(auth?.account?.conversation_language ?? null) ?? "en",
   );
   const ifaceId = useId();
   const convId = useId();
@@ -80,7 +80,7 @@ export function LanguageSettings() {
           value={locale}
           onChange={(e) => setLocale(e.target.value as AppLocale)}
         >
-          {APP_LOCALES.map((l) => (
+          {SELECTABLE_LOCALES.map((l) => (
             <option key={l.code} value={l.code}>
               {l.nativeLabel}
             </option>
@@ -95,7 +95,7 @@ export function LanguageSettings() {
           value={conversation}
           onChange={(e) => changeConversation(e.target.value as AppLocale)}
         >
-          {APP_LOCALES.map((l) => (
+          {SELECTABLE_LOCALES.map((l) => (
             <option key={l.code} value={l.code}>
               {l.nativeLabel}
             </option>

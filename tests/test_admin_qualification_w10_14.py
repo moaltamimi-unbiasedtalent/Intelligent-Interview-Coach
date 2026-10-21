@@ -465,7 +465,8 @@ def test_every_admin_page_has_a_destination_or_is_a_child_and_every_destination_
     hrefs = {d["href"] for d in M.destinations()}
     assert {h for h in hrefs if h.startswith("/admin")} <= pages, {h for h in hrefs if h.startswith("/admin")} - pages
     top = {p for p in pages if "[" not in p}
-    orphans = top - hrefs
+    # 03A: a static child page (for example /admin/review/rag under /admin/review) belongs to its parent destination.
+    orphans = {p for p in top - hrefs if not any(h != "/admin" and p.startswith(h + "/") for h in hrefs)}
     assert orphans == set(), orphans
     # each page's data calls are gated on the server: every api.admin method path maps to a gated route
     client = (ROOT / "frontend/lib/api/client.ts").read_text()

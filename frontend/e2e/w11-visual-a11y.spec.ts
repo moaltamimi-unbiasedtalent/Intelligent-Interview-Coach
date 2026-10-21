@@ -84,8 +84,8 @@ async function inspect(page: Page, ui = "en") {
   }, crashNeedles);
 }
 
-const CONFIGS: { ui: "de" | "ru"; w: number; h: number; theme: "light" | "dark" }[] = [];
-for (const ui of ["de", "ru"] as const) for (const [w, h] of [[1280, 800], [390, 844]] as const) for (const theme of ["light", "dark"] as const) CONFIGS.push({ ui, w, h, theme });
+const CONFIGS: { ui: "de" | "fr"; w: number; h: number; theme: "light" | "dark" }[] = [];
+for (const ui of ["de", "fr"] as const) for (const [w, h] of [[1280, 800], [390, 844]] as const) for (const theme of ["light", "dark"] as const) CONFIGS.push({ ui, w, h, theme });
 
 for (const cfg of CONFIGS) {
   test(`W11 candidate visual/a11y: 13 surfaces, ${cfg.ui}, ${cfg.w}px, ${cfg.theme}`, async ({ page }) => {
@@ -108,7 +108,6 @@ for (const cfg of CONFIGS) {
       if (r.sloganVariants.length) violations.push(`${tag}: slogan variant ${r.sloganVariants.join(", ")}`);
       if (r.crashed) violations.push(`${tag}: page crashed`);
       if (r.h1 < 1) violations.push(`${tag}: no page-level h1`);
-      if (cfg.ui === "ru" && r.length > 80 && !r.cyrillic) violations.push(`${tag}: no Cyrillic text rendered`);
     }
     expect(checked).toBe(13);
     expect(violations, violations.join("\n")).toEqual([]);
@@ -189,7 +188,7 @@ test("W11 Admin: a permission-denied principal sees a safe state and no Admin na
 
 // ------------------------------------------------------------------------------------------------------------------ shared header breakpoint (LAYOUT-W11-01)
 // The desktop header navigation appears from lg (1024px); below it (including exactly 768px) the compact bottom bar is the single primary navigation.
-for (const ui of ["de", "ru"] as const) {
+for (const ui of ["de", "fr"] as const) {
   for (const width of [768, 1024] as const) {
     test(`W11 shared header breakpoint: candidate /app, ${ui}, ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });

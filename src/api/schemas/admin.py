@@ -690,6 +690,106 @@ class KnowledgeCuratedState(_Strict):
     store_kind: str | None = None
 
 
+class KnowledgeGuardFinding(_Strict):
+    code: str
+    severity: str
+    message: str
+    fields: list[str] = []
+
+
+class KnowledgeGuardState(_Strict):
+    environment: str
+    enforced: bool
+    mode: str
+    serving_allowed: bool
+    checked_at: str
+    findings: list[KnowledgeGuardFinding]
+
+
+class KnowledgeIdentityDatabase(_Strict):
+    kind: str | None = None
+    fingerprint: str | None = None
+
+
+class KnowledgeIdentityRoot(_Strict):
+    label: str
+    short_hash: str | None = None
+
+
+class KnowledgePrivateFiles(_Strict):
+    label: str
+    explicit: bool
+    inside_data_root: bool
+
+
+class KnowledgeCollectionState(_Strict):
+    collection_id: str
+    role: str
+    chunk_count: int | None = None
+    persistent: bool
+
+
+class KnowledgeManifestSummary(_Strict):
+    collection_id: str | None = None
+    checksum: str | None = None
+    source_version_count: int
+    built_at: str | None = None
+    embedder_label: str | None = None
+    compatibility_hash: str | None = None
+    embedding_fields_known: bool
+
+
+class KnowledgeEmbedderIdentity(_Strict):
+    provider: str | None = None
+    model: str | None = None
+    dimensions: int | None = None
+    degraded: bool = False
+    degradation_reason: str | None = None
+
+
+class KnowledgeWorkerIdentity(_Strict):
+    status: str
+    mismatched_fields: list[str]
+    workers_checked: int
+
+
+class KnowledgeLastIndexing(_Strict):
+    result: str
+    at: str | None = None
+    failure_category: str | None = None
+
+
+class KnowledgeEnvironment(_Strict):
+    """02A: safe environment identity. Kinds, short fingerprints, labels and collection ids only: never a URL, credential or path."""
+    environment: str
+    hosted: bool
+    database: KnowledgeIdentityDatabase
+    data_root: KnowledgeIdentityRoot
+    private_files: KnowledgePrivateFiles
+    collections: list[KnowledgeCollectionState]
+    manifest: KnowledgeManifestSummary
+    embedder_identity: KnowledgeEmbedderIdentity
+    worker_identity: KnowledgeWorkerIdentity
+    guard: KnowledgeGuardState
+    last_indexing: KnowledgeLastIndexing
+
+
+class KnowledgeView(_Strict):
+    label: str
+    origin: str
+    admin_managed: bool
+    description: str
+    status: str
+    chunk_count: int | None = None
+    active_source_count: int | None = None
+    recorded_built_chunk_count: int | None = None
+
+
+class KnowledgeViews(_Strict):
+    curated: KnowledgeView
+    governed: KnowledgeView
+
+
 class KnowledgeReadiness(_Strict):
     status: str
     message: str
@@ -713,6 +813,8 @@ class KnowledgeReadiness(_Strict):
     last_indexed_at: str | None = None
     last_failure_category: str | None = None
     last_failure_stage: str | None = None
+    environment: KnowledgeEnvironment | None = None     # 02A, additive: absent when diagnostics could not be computed
+    views: KnowledgeViews | None = None
 
 
 class KnowledgeActiveItem(_Strict):

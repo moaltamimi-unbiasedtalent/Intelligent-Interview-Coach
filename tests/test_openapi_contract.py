@@ -21,7 +21,7 @@ EXPECTED = {
     "CapabilitiesResponse": {
         "career_intelligence", "interview_practice", "knowledge_base", "evaluation",
         "live_interview_enabled", "agentic_rag", "agent_memory", "human_in_the_loop",
-        "agent_coach_enabled",
+        "agent_coach_enabled", "active_candidate_locales", "default_locale",
     },
     "CareerChatRequest": {
         "question", "job_description", "candidate_background",

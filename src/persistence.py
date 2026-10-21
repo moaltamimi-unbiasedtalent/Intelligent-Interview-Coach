@@ -2994,7 +2994,9 @@ INCIDENT_SEVERITIES = ("low", "medium", "high", "critical")
 INCIDENT_STATUSES = ("open", "investigating", "monitoring", "resolved", "closed")
 INCIDENT_SERVICES = ("authentication", "agent", "practice", "research", "documents", "integrations", "knowledge", "jobs",
                      "billing", "privacy", "admin", "platform")
-ALERT_CATEGORIES = ("auth_failure_burst", "admin_access_denied_burst", "job_failed")
+ALERT_CATEGORIES = ("auth_failure_burst", "admin_access_denied_burst", "job_failed",
+                    # 02A (migration 0040): knowledge health, derived from the environment guard (src/knowledge_admin/alerts.py)
+                    "knowledge_collection_lost", "knowledge_source_files_missing", "knowledge_identity_mismatch", "knowledge_embedding_mismatch")
 ALERT_SEVERITIES = ("low", "medium", "high", "critical")
 ALERT_STATES = ("active", "acknowledged", "resolved")
 ROLE_REQUEST_STATUSES = ("pending", "applied", "rejected", "cancelled", "stale")

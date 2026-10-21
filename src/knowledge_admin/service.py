@@ -63,11 +63,12 @@ def _iso(dt: datetime | None) -> str | None:
 
 class KnowledgeAdminService:
     def __init__(self, session_factory: sessionmaker, *, doc_store: Any, jobs: Any,
-                 clock: Callable[[], datetime] = utcnow) -> None:
+                 clock: Callable[[], datetime] = utcnow, guard: Any = None) -> None:
         self._sf = session_factory
         self._store = doc_store
         self._jobs = jobs
         self._clock = clock
+        self._guard = guard          # 02A: KnowledgeServingGuard; governed UPLOADS are refused when it blocks (hosted environments)
 
     # ------------------------------------------------------------------ validation
     @staticmethod
@@ -133,6 +134,8 @@ class KnowledgeAdminService:
     def _add_version(self, source_public_id: str | None, m: dict, filename: str, data: bytes,
                      actor: int | None, audit: dict | None) -> dict:
         ext, media, safe_name = self.validate_upload(filename, data)
+        if self._guard is not None:
+            self._guard.require_serving()     # raises KnowledgeServingRefused: never accept a file into an environment the worker cannot see
         checksum = hashlib.sha256(data).hexdigest()
         key, now, vpid = new_storage_key(), self._clock(), uuid.uuid4().hex
         with self._sf() as s:
@@ -317,12 +320,53 @@ class KnowledgeAdminService:
             self._enqueue_remove(retired_pid, actor_user_id)
         return self.version_detail(public_id)
 
+    def replace(self, public_id: str, *, actor_user_id: int, audit: dict | None = None) -> dict:
+        """The NEW version ``public_id`` supersedes the source's currently active version (02A lifecycle). Same guarded, atomic switch as
+        ``activate`` (the predecessor is retired in the same transaction, its vectors are removed by a job), but it is refused when there is
+        nothing to replace and it is idempotent: replacing with the version that is already active is a no-op that returns it."""
+        with self._sf() as s:
+            v = self._version(s, public_id)
+            if v.state == "active":
+                return self.version_detail(public_id)          # replay: already the active version, nothing changes
+            if v.state != "indexed":
+                raise KnowledgeConflict("Only an approved, fully indexed version can replace the active version.")
+            prior = s.scalar(select(V.id).where(V.source_id == v.source_id, V.state == "active", V.id != v.id))
+            if prior is None:
+                raise KnowledgeConflict("This source has no active version to replace; activate the version instead.")
+            if v.version <= (s.scalar(select(V.version).where(V.id == prior)) or 0):
+                raise KnowledgeConflict("A replacement must be a newer version than the active one.")
+        return self.activate(public_id, actor_user_id=actor_user_id, audit=audit)
+
+    def request_reindex(self, public_id: str, *, actor_user_id: int, audit: dict | None = None) -> dict:
+        """Queue a rebuild of an ACTIVE or INDEXED version's chunks from its private file (a W10.9 job; id-only payload). The version's
+        state does not change and nothing is deleted first: chunk ids are deterministic, so only missing chunks are added and a replay
+        leaves exactly one copy of each. This is the repair for a lost or partially lost collection."""
+        with self._sf() as s:
+            v = self._version(s, public_id)
+            if v.state not in ("active", "indexed"):
+                raise KnowledgeConflict("Only an active or indexed version can be re-indexed.")
+            rec = s.get(KnowledgeIndexRecord, v.id)
+            marker = (rec.built_at.isoformat() if rec is not None and rec.built_at else "none")
+            _stage(s, {**audit, "target_id": public_id} if audit else None, version_public_id=public_id, state=v.state)
+            s.commit()
+        # The idempotency key pins one outstanding request per build: a repeat before completion deduplicates, a request after the
+        # rebuild finished (built_at moved) is a new job.
+        self._jobs.enqueue(P.JOB_REINDEX, {"version_id": public_id}, actor_user_id=actor_user_id, idempotency_key=f"reindex:{public_id}:{marker}")
+        return self.version_detail(public_id)
+
     def retire(self, public_id: str, *, actor_user_id: int, audit: dict | None = None) -> dict:
         """Retire from candidate retrieval IMMEDIATELY (control-plane state); physical vector removal follows by job."""
         now = self._clock()
         with self._sf() as s:
             v = self._version(s, public_id)
             old = v.state
+            if old == "retired":                  # idempotent replay: nothing changes; re-queue the removal ONLY if it has not completed
+                rec = s.get(KnowledgeIndexRecord, v.id)
+                pending_removal = rec is not None and rec.state != "removed"
+                s.rollback()
+                if pending_removal:
+                    self._enqueue_remove(public_id, actor_user_id)
+                return self.version_detail(public_id)
             if old not in ("active", "indexed"):
                 raise KnowledgeConflict("Only an active or indexed version can be retired.")
             self._move(s, v, ("active", "indexed"), "retired", retired_at=now, retired_by_user_id=actor_user_id)

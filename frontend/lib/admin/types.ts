@@ -429,6 +429,25 @@ export interface KnowledgeVersionDetail extends KnowledgeRow {
 export type KnowledgeReadinessStatus =
   | "ready" | "no_active_sources" | "worker_unavailable" | "index_pending" | "index_failed" | "store_unavailable"
   | "collection_missing" | "embedding_provider_unavailable" | "configuration_error" | "degraded";
+/** 02A: safe environment identity (kinds, short fingerprints, labels, collection ids; never a URL, credential or path). */
+export interface KnowledgeGuardFinding { code: string; severity: "block" | "warn"; message: string; fields: string[] }
+export interface KnowledgeEnvironment {
+  environment: string;
+  hosted: boolean;
+  database: { kind: string | null; fingerprint: string | null };
+  data_root: { label: string; short_hash: string | null };
+  private_files: { label: string; explicit: boolean; inside_data_root: boolean };
+  collections: { collection_id: string; role: "curated" | "governed"; chunk_count: number | null; persistent: boolean }[];
+  manifest: { collection_id: string | null; checksum: string | null; source_version_count: number; built_at: string | null; embedder_label: string | null; compatibility_hash: string | null; embedding_fields_known: boolean };
+  embedder_identity: { provider: string | null; model: string | null; dimensions: number | null; degraded: boolean; degradation_reason: string | null };
+  worker_identity: { status: "match" | "mismatch" | "unrecorded" | "no_worker" | "unknown"; mismatched_fields: string[]; workers_checked: number };
+  guard: { environment: string; enforced: boolean; mode: "enforced" | "development_warning"; serving_allowed: boolean; checked_at: string; findings: KnowledgeGuardFinding[] };
+  last_indexing: { result: string; at: string | null; failure_category: string | null };
+}
+export interface KnowledgeViewSummary {
+  label: string; origin: string; admin_managed: boolean; description: string; status: string; chunk_count: number | null;
+  active_source_count?: number | null; recorded_built_chunk_count?: number | null;
+}
 export interface KnowledgeReadiness {
   status: KnowledgeReadinessStatus;
   message: string;
@@ -452,6 +471,8 @@ export interface KnowledgeReadiness {
   last_indexed_at: string | null;
   last_failure_category: string | null;
   last_failure_stage: string | null;
+  environment?: KnowledgeEnvironment | null;
+  views?: { curated: KnowledgeViewSummary; governed: KnowledgeViewSummary } | null;
 }
 export interface KnowledgeActiveItem {
   source_public_id: string;

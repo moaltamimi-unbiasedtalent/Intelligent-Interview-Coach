@@ -184,6 +184,34 @@ def run_index(vpid: str, ctx) -> None:
         raise PermanentJobError("internal_error")
 
 
+# ------------------------------------------------------------------ reindex (02A)
+def run_reindex(vpid: str, ctx) -> None:
+    """Rebuild the chunks of an ACTIVE or INDEXED version from its checksum-verified private file. The version state never changes (an active
+    version stays retrievable throughout). Chunk ids are deterministic and the store skips ids already present, so this ADDS only what is
+    missing and a replay leaves exactly one copy of each chunk. A retired, rejected or unknown version is a no-op."""
+    rt = _runtime(ctx)
+    info = _load(rt, vpid)
+    if info is None or info["state"] not in ("active", "indexed"):
+        return
+    data = _read_verified(rt, info)
+    chunks = build_chunks(info, data, vpid)
+    if not chunks:
+        raise PermanentJobError("unsupported")
+    try:
+        rt.vector_store_factory().add_chunks(chunks)
+    except Exception:  # noqa: BLE001 - provider or store trouble is transient; text is never recorded
+        raise RetryableJobError("unavailable")
+    now = rt.clock()
+    with rt.session_factory() as s:
+        rec = s.get(KnowledgeIndexRecord, info["id"])
+        if rec is None:
+            s.add(KnowledgeIndexRecord(version_id=info["id"], collection=P.COLLECTION, embedder=type(rt.vector_store_factory().embedder).__name__[:64],
+                                       chunk_count=len(chunks), state="built", built_at=now, updated_at=now))
+        else:
+            rec.chunk_count, rec.state, rec.built_at, rec.removed_at, rec.updated_at = len(chunks), "built", now, None, now
+        s.commit()
+
+
 # ------------------------------------------------------------------ removal
 def run_remove(vpid: str, ctx) -> None:
     rt = _runtime(ctx)

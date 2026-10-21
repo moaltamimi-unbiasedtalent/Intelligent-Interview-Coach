@@ -70,6 +70,25 @@ Secrets are provided at **runtime** (env or mounted file) — never in the image
 `data/`, tests and node_modules). The Live frontend component is not built into
 the image by default (Live falls back); build and mount it to enable Live.
 
+## Staging topology (package 05A, code only: DEPLOYMENT FREEZE)
+
+`deploy/docker-compose.staging.yml` defines `db`, `migrate`, `api`, `worker`, `web`, `caddy` and `clamav`
+(details and the validation status in `deploy/README-staging.md`). The topology is **not deployed and has
+never been started**; it must not be deployed until the owner answers OD-HOSTED and authorises it.
+
+- **Worker:** `python -m src.jobs.worker` from the API image, single replica, after `migrate` and a healthy `db`;
+  same `DATABASE_URL`, `COPILOT_DATA_DIR` and `documents` volume as the api. Healthcheck:
+  `python -m src.jobs.healthcheck 180`.
+- **Data root:** the `knowledge-data` volume is mounted at `/data/knowledge` in both api and worker and
+  `COPILOT_DATA_DIR=/data/knowledge` is pinned in both (W12.4A anchoring).
+- **Scanner:** the `clamav` service is internal-only (TCP 3310 never published); api and worker use
+  `FILE_SCAN_PROVIDER=clamav`. Staging and production refuse `FILE_SCAN_PROVIDER=fake` at boot.
+- **Readiness:** the api healthcheck calls `GET /api/v1/ready`; in hosted environments it also reports data-root
+  writability (gating) and worker heartbeat and scanner reachability (reported), with no secrets.
+- **Backup:** `deploy/scripts/backup.sh` archives the database (`pg_dump`), `documents` and the knowledge data
+  root (`COPILOT_DATA_DIR`); `restore.sh` restores all three (`DB_DUMP`, `DOCS_TAR`, `KNOWLEDGE_TAR`).
+- **Embeddings:** production must not rely on the hash/local embedder (REVIEW-04 decides the provider).
+
 ## CI
 
 `.github/workflows/ci.yml` runs on push/PR:

@@ -58,7 +58,7 @@
     "/admin/workspaces",
     "/admin/plans",
     "/admin/support",
-    "/review",
+    "/admin/review",
     "/admin/security",
     "/admin/audit",
     "/admin/billing",
@@ -125,7 +125,7 @@
    ],
    "nav": [
     "/admin",
-    "/review",
+    "/admin/review",
     "/admin/knowledge",
     "/admin/ai",
     "/admin/jobs"
@@ -170,7 +170,7 @@
    ],
    "nav": [
     "/admin",
-    "/review",
+    "/admin/review",
     "/admin/reports",
     "/admin/configuration",
     "/admin/speech",

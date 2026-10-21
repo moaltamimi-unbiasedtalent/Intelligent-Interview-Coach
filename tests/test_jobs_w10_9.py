@@ -444,7 +444,7 @@ def test_integration_test_job_uses_fake_probes_and_maps_categories(sf, monkeypat
 
 def test_registry_is_code_defined_with_no_shell_or_arbitrary_handler():
     assert set(R.REGISTRY) == {"diagnostic_noop", "integration_connection_test",
-                               "knowledge_parse", "knowledge_index", "knowledge_remove_index",   # W10.8 adds the knowledge types
+                               "knowledge_parse", "knowledge_index", "knowledge_reindex", "knowledge_remove_index",   # W10.8 adds the knowledge types
                                "privacy_account_delete", "privacy_preparation_backfill", "privacy_preparation_purge",   # W10.10 the privacy types
                                "billing_process_event", "billing_refund",   # W10.5 the mock-billing types
                                "billing_process_provider_event", "billing_provider_reconcile",   # W12.4D-D the provider-event types (not Admin-enqueueable)

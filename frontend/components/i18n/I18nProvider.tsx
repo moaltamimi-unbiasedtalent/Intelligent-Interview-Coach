@@ -20,7 +20,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from "react";
 import { api } from "@/lib/api/client";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
-import { type AppLocale, DEFAULT_APP_LOCALE, toSupportedLocale } from "@/lib/i18n/locales";
+import { type AppLocale, DEFAULT_APP_LOCALE, toActiveLocale } from "@/lib/i18n/locales";
 import { translate, type MessageKey } from "@/lib/i18n/catalog";
 import { browserLocale, readLocaleCookie, writeLocaleCookie } from "@/lib/i18n/cookie";
 
@@ -42,7 +42,7 @@ export function I18nProvider({
   children: ReactNode;
 }) {
   const auth = useAuthOptional();
-  const accountLocale = toSupportedLocale(auth?.account?.interface_locale ?? null);
+  const accountLocale = toActiveLocale(auth?.account?.interface_locale ?? null);
   const [locale, setLocaleState] = useState<AppLocale>(initialLocale ?? DEFAULT_APP_LOCALE);
 
   // First-use resolution (cookie → browser) before/without an account.

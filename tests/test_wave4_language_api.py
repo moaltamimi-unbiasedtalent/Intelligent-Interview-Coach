@@ -68,15 +68,15 @@ def store(tmp_path):
     return DurableInterviewSessionStore(make_session_factory(engine))
 
 
-@pytest.mark.parametrize("lang", ["en", "de", "fr", "es", "it", "pt", "nl", "ru"])
-def test_all_eight_conversation_languages_accepted(store, lang):
+@pytest.mark.parametrize("lang", ["en", "de", "fr", "es", "it", "pt", "nl"])
+def test_all_seven_active_conversation_languages_accepted(store, lang):
     with _client(store, _FakeRepo()) as c:
         r = c.post("/api/v1/interviews", json=_cfg(lang), headers=ALICE)
         assert r.status_code == 200, r.text
         assert r.json()["state"] == "AWAITING_ANSWER"
 
 
-@pytest.mark.parametrize("bad", ["xx", "de-DE", "klingon", "en_US", "", "123"])
+@pytest.mark.parametrize("bad", ["ru", "xx", "de-DE", "klingon", "en_US", "", "123"])
 def test_invalid_conversation_language_rejected_422(store, bad):
     with _client(store, _FakeRepo()) as c:
         r = c.post("/api/v1/interviews", json=_cfg(bad), headers=ALICE)

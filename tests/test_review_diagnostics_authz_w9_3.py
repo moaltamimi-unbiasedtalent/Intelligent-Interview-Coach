@@ -125,3 +125,54 @@ def test_platform_admin_does_not_bypass_owner_scoping_for_agent_runs():
         token = _make_admin(c, repo, "admin2@example.com")
         r = c.get("/api/v1/agent/runs/not-a-real-owned-run", cookies=cookies_for(token))
         assert r.status_code == 404, f"expected owner-scoped 404, got {r.status_code}"
+
+
+# --- 03A (REQ-OWN-08): moving Review and Diagnostics under /admin is UX only; the server decides -------------------------------------
+# An Admin who lacks the specific read permission gets 403 on the same endpoints, whatever the navigation shows.
+
+REVIEWER_ENDPOINTS_BY_PERMISSION = {
+    "platform.knowledge.read": ["/api/v1/knowledge/diagnostics", "/api/v1/reviewer/knowledge/readiness", "/api/v1/reviewer/knowledge/coverage"],
+    "platform.ai.read": ["/api/v1/evaluation/latest", "/api/v1/evaluation/runs", "/api/v1/reviewer/config-versions", "/api/v1/reviewer/prompt-lab/experiments"],
+    "platform.privacy.read": ["/api/v1/reviewer/retention/inventory"],
+}
+
+
+def _make_role(c: TestClient, repo, email: str, role: str) -> str:
+    register(c, email, PW)
+    token = login_token(c, email, PW)
+    uid = c.get("/api/v1/auth/me", cookies=cookies_for(token)).json()["user_id"]
+    account_repo(repo).set_platform_role(uid, role)
+    return token
+
+
+def test_admin_without_the_permission_gets_403_on_diagnostics_and_reviewer_routes():
+    from src.application.admin_permissions import permissions_for_role
+
+    app, repo, _ = build_auth_app()
+    with TestClient(app) as c:
+        for role in ("billing_admin", "support_operator"):
+            ck = cookies_for(_make_role(c, repo, f"{role}@example.com", role))
+            held = permissions_for_role(role)
+            for permission, paths in REVIEWER_ENDPOINTS_BY_PERMISSION.items():
+                assert permission not in held, (role, permission)         # the fixture roles genuinely lack it
+                for path in paths:
+                    assert c.get(path, cookies=ck).status_code == 403, (role, path)
+
+
+def test_a_specialist_role_reaches_only_the_routes_its_permission_covers():
+    app, repo, _ = build_auth_app()
+    with TestClient(app) as c:
+        ck = cookies_for(_make_role(c, repo, "knowledge@example.com", "knowledge_admin"))       # holds knowledge.read and ai.read, not privacy.read
+        assert c.get("/api/v1/knowledge/diagnostics", cookies=ck).status_code == 200
+        assert c.get("/api/v1/evaluation/latest", cookies=ck).status_code == 200
+        assert c.get("/api/v1/reviewer/retention/inventory", cookies=ck).status_code == 403
+
+
+def test_candidate_gets_403_on_every_reviewer_and_diagnostics_route():
+    app, repo, _ = build_auth_app()
+    with TestClient(app) as c:
+        register(c, "plain@example.com", PW)
+        ck = cookies_for(login_token(c, "plain@example.com", PW))
+        for paths in REVIEWER_ENDPOINTS_BY_PERMISSION.values():
+            for path in paths:
+                assert c.get(path, cookies=ck).status_code == 403, path

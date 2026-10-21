@@ -25,7 +25,7 @@ from src.api.schemas.documents import Locale as DocumentLocale
 from src.api.schemas.interview import ConversationLanguage, CreateInterviewRequest
 from src.copilot.knowledge import governance
 from src.documents.ocr import TESSERACT_LANGS
-from src.locales import DOCUMENT_LANGUAGE_CODES, SUPPORTED_LOCALE_CODES, AppLocale
+from src.locales import ACTIVE_CANDIDATE_LOCALES, DOCUMENT_LANGUAGE_CODES, SUPPORTED_LOCALE_CODES, AppLocale
 from src.models import InterviewConfiguration
 from src.persistence import SUPPORTED_LOCALES
 from src.voice.realtime import SUPPORTED_REALTIME_LOCALES, RealtimeSessionRequest
@@ -33,18 +33,20 @@ from tests._auth_factories import build_auth_app, cookies_for, login_token, regi
 
 PW = "correcthorsebattery"
 EIGHT = ("en", "de", "fr", "es", "it", "pt", "nl", "ru")
+SEVEN = EIGHT[:7]  # 06A: ru is PRESERVED in the catalogue but EXCLUDED from active Candidate selection
 
 
 # ---- 1/2/9: canonical source, bounded typing, no stale tuple --------------------------------------
 def test_ru_is_the_eighth_canonical_locale():
-    assert SUPPORTED_LOCALE_CODES == EIGHT
-    assert typing.get_args(AppLocale) == EIGHT  # Literal derived/kept in lock-step with the tuple
+    assert SUPPORTED_LOCALE_CODES == EIGHT  # catalogue/stored-value allow-list keeps ru (preserved)
+    assert ACTIVE_CANDIDATE_LOCALES == SEVEN  # 06A: not selectable, not accepted for new work
+    assert typing.get_args(AppLocale) == SEVEN  # NEW-work Literal tracks the ACTIVE tuple
 
 
 def test_app_locale_is_a_bounded_literal_not_str():
     ta = TypeAdapter(AppLocale)
-    assert ta.validate_python("ru") == "ru"
-    for bad in ("xx", "ru-RU", "RU", "russian", "", "ua", "'; DROP TABLE users; --"):
+    assert ta.validate_python("de") == "de"
+    for bad in ("ru", "xx", "ru-RU", "RU", "russian", "", "ua", "'; DROP TABLE users; --"):
         with pytest.raises(ValidationError):
             ta.validate_python(bad)
 
@@ -58,34 +60,25 @@ def test_persistence_reexports_the_canonical_tuple_and_name_maps_cover_it():
 
 
 # ---- 3: account preferences ------------------------------------------------------------------------
-def test_preferences_schema_accepts_ru_and_rejects_invalid():
-    assert PreferencesRequest(interface_locale="ru", conversation_language="ru").interface_locale == "ru"
-    with pytest.raises(ValidationError):
-        PreferencesRequest(interface_locale="uk")
+def test_preferences_schema_rejects_excluded_ru_and_invalid():
+    assert PreferencesRequest(interface_locale="de", conversation_language="fr").interface_locale == "de"
+    for bad in ("ru", "uk"):
+        with pytest.raises(ValidationError):
+            PreferencesRequest(interface_locale=bad)
 
 
-def test_ru_persists_via_preferences_and_is_independent_of_conversation_and_geography():
+def test_ru_is_not_selectable_and_geography_is_untouched_by_language_changes():
     app, _, _ = build_auth_app()
     with TestClient(app) as c:
         register(c, "a@example.com", PW)
-        tok = login_token(c, "a@example.com", PW)
-        ck = cookies_for(tok)
-        # Scenario A: interface ru / conversation en, geography set explicitly.
+        ck = cookies_for(login_token(c, "a@example.com", PW))
         r = c.patch("/api/v1/auth/preferences",
-                    json={"interface_locale": "ru", "conversation_language": "en", "career_geography": "de"}, cookies=ck)
+                    json={"interface_locale": "de", "conversation_language": "en", "career_geography": "de"}, cookies=ck)
         assert r.status_code == 200, r.text
-        me = c.get("/api/v1/auth/me", cookies=cookies_for(login_token(c, "a@example.com", PW))).json()
-        assert me["interface_locale"] == "ru" and me["conversation_language"] == "en"
-        assert me["career_geography"] == "de"  # language never moves the labour market
-        # Scenario B: interface en / conversation ru.
-        c.patch("/api/v1/auth/preferences", json={"interface_locale": "en", "conversation_language": "ru"}, cookies=ck)
+        for body in ({"interface_locale": "ru"}, {"conversation_language": "ru"}):
+            assert c.patch("/api/v1/auth/preferences", json=body, cookies=ck).status_code == 422
         me = c.get("/api/v1/auth/me", cookies=ck).json()
-        assert me["interface_locale"] == "en" and me["conversation_language"] == "ru"
-        assert me["career_geography"] == "de"
-        # Scenario C: both ru - geography still unchanged.
-        c.patch("/api/v1/auth/preferences", json={"interface_locale": "ru", "conversation_language": "ru"}, cookies=ck)
-        me = c.get("/api/v1/auth/me", cookies=ck).json()
-        assert me["interface_locale"] == "ru" and me["conversation_language"] == "ru"
+        assert me["interface_locale"] == "de" and me["conversation_language"] == "en"
         assert me["career_geography"] == "de"
 
 
@@ -107,12 +100,15 @@ def test_unsupported_interface_locale_still_rejected_over_http():
 
 
 # ---- 4/5: Interview + agent conversation language -------------------------------------------------
-def test_interview_and_agent_schemas_accept_russian():
-    assert TypeAdapter(ConversationLanguage).validate_python("ru") == "ru"
-    req = CreateInterviewRequest(
-        preparation_context={"target_role": "Product Manager"}, conversation_language="ru")
-    assert req.conversation_language == "ru"
-    assert AgentRunRequest(goal="Prepare me", conversation_language="ru").conversation_language == "ru"
+def test_interview_and_agent_schemas_reject_new_russian_work():
+    assert TypeAdapter(ConversationLanguage).validate_python("es") == "es"
+    with pytest.raises(ValidationError):
+        TypeAdapter(ConversationLanguage).validate_python("ru")
+    with pytest.raises(ValidationError):
+        CreateInterviewRequest(preparation_context={"target_role": "Product Manager"}, conversation_language="ru")
+    assert AgentRunRequest(goal="Prepare me", conversation_language="es").conversation_language == "es"
+    with pytest.raises(ValidationError):
+        AgentRunRequest(goal="Prepare me", conversation_language="ru")
     with pytest.raises(ValidationError):
         AgentRunRequest(goal="x", conversation_language="uk")
 

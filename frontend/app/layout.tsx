@@ -6,7 +6,7 @@ import { ThemeScript } from "@/components/layout/ThemeScript";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 import { LOCALE_COOKIE } from "@/lib/i18n/cookie";
-import { DEFAULT_APP_LOCALE, toSupportedLocale } from "@/lib/i18n/locales";
+import { DEFAULT_APP_LOCALE, toActiveLocale } from "@/lib/i18n/locales";
 import "./globals.css";
 
 // P10B-W9.7A: the SAME Inter family now also loads its `cyrillic` subset so Russian copy renders in Inter
@@ -50,7 +50,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // loaded, becomes authoritative client-side). Never trusts an unsupported value.
   const cookieStore = await cookies();
   const initialLocale =
-    toSupportedLocale(cookieStore.get(LOCALE_COOKIE)?.value) ?? DEFAULT_APP_LOCALE;
+    toActiveLocale(cookieStore.get(LOCALE_COOKIE)?.value) ?? DEFAULT_APP_LOCALE;
   return (
     <html lang={initialLocale} className={inter.variable} suppressHydrationWarning>
       <head>

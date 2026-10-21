@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // audit cross-navigation (F-06), Providers/Integrations cross-links (F-17). APIs are mocked; no provider is contacted.
 
 let mockPerms: string[] = [];
-let mockPath = "/review";
+let mockPath = "/admin/review";
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: () => {}, replace: () => {} }), usePathname: () => mockPath }));
 vi.mock("next/link", () => ({ default: ({ href, children, onClick, ...r }: any) => <a href={href} onClick={onClick} {...r}>{children}</a> }));
 vi.mock("@/components/auth/AuthProvider", () => ({
@@ -32,7 +32,7 @@ const ITEM = (code: string, o: Record<string, unknown> = {}) => ({ code, name: `
 
 beforeEach(() => {
   mockPerms = ["platform.overview.read", "platform.ai.read", "platform.knowledge.read", "platform.integrations.read", "platform.audit.read", "platform.security.read"];
-  mockPath = "/review";
+  mockPath = "/admin/review";
   integrations.mockResolvedValue({ items: [ITEM("openrouter"), ITEM("clamav", { slots: [], classification: "supported_unconfigured", health: { status: "healthy", last_tested_at: "2026-10-13T09:00:12.123456" } })] });
   providers.mockResolvedValue({ providers: [], speech: {}, ocr: { engine: "x", available: false, pdf_ocr_available: false, live_quality: "UNVALIDATED" }, note: "n" });
   audit.mockResolvedValue({ events: [{ created_at: "2026-10-13T09:00:12.123456", event_type: "admin.x", result: "success", actor_user_id: 1, target_type: "user", target_id: "2", request_id: "r", context: null }] });
