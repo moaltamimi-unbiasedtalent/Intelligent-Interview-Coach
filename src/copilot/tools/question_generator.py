@@ -10,24 +10,22 @@ from __future__ import annotations
 
 from src.copilot import constants
 from src.copilot.config import CopilotConfig
+from src.prompt_assets import render, template
 from src.copilot.tools.schemas import InterviewQuestionSet, QuestionGeneratorArgs
 from src.copilot.tools.structured import StructuredProducer, build_structured_producer
 
 __all__ = ["generate_questions", "SYSTEM_PROMPT"]
 
-SYSTEM_PROMPT = """You generate likely interview questions to help a candidate \
-prepare. Rules:
-- Ground questions in the supplied role, requirements, findings and evidence. Do \
-not fabricate facts about the employer or candidate.
-- Produce questions grouped by category. Use the requested focus categories if \
-given; otherwise choose the most relevant from: {categories}.
-- Generate about {per_category} questions per category.
-- Questions only — do not answer them, and do not include chain-of-thought."""
+# Versioned asset (prompts/career/question_generation, package 01B); the constant keeps the
+# unrendered template (placeholders intact).
+_CONSUMER = "career.tools"
+SYSTEM_PROMPT = template("career/question_generation", _CONSUMER)
 
 
 def _messages(args: QuestionGeneratorArgs) -> list[dict]:
     categories = args.focus or list(constants.QUESTION_CATEGORIES)
-    system = SYSTEM_PROMPT.format(
+    system = render(
+        "career/question_generation", _CONSUMER,
         categories=", ".join(constants.QUESTION_CATEGORIES),
         per_category=args.per_category,
     )

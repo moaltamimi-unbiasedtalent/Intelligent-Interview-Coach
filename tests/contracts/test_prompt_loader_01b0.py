@@ -238,11 +238,19 @@ def test_declared_versions_with_hash_shape(loader):
         assert len(entry["sha256"]) == 64
 
 
-def test_production_versions_not_wired():
+def test_production_versions_wired_by_01b_keeps_the_original_keys():
+    """01B0 asserted production_versions() was NOT wired. 01B wires it: the four original keys stay,
+    and version plus hash per family are added (parity with the loader)."""
     from src.config_versions import production_versions
 
-    assert set(production_versions()) == {
-        "prompt_version", "model_policy_version", "specialist_config_version", "knowledge_version"}
+    versions = production_versions()
+    assert {"prompt_version", "model_policy_version", "specialist_config_version",
+            "knowledge_version"} <= set(versions)
+    assert set(versions) - {"prompt_version", "model_policy_version", "specialist_config_version",
+                            "knowledge_version"} == {"prompt_assets", "prompt_set_version"}
+    from src.prompt_assets import get_loader
+
+    assert versions["prompt_assets"] == get_loader().declared_versions_with_hash()
 
 
 def test_no_network_or_provider_use(tree, monkeypatch):

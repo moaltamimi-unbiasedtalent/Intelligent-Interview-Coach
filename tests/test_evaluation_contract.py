@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from src import constants, prompts
+from src import constants
 from src.models import AnswerEvaluation
 
 DIMS = ("relevance", "structure", "evidence", "role_knowledge", "problem_solving", "communication", "credibility")
@@ -63,6 +63,7 @@ def test_overall_and_criteria_are_independent_in_the_contract_by_design():
     # No formula is promised, so a high overall with low criteria is NOT rejected here (qualitative guidance only).
     ev = AnswerEvaluation(**_valid(overall_score=90, **{d: 2 for d in DIMS}))
     assert ev.overall_score == 90
-    import inspect
+    # qualitative, not a formula (the prompt text is a versioned asset since 01B, so check the rendered method block)
+    from src.prompt_assets import render
 
-    assert "consistent with the criterion scores" in inspect.getsource(prompts)  # qualitative, not a formula
+    assert "consistent with the criterion scores" in render("interview/method_rubric_json", "interview.prompts")

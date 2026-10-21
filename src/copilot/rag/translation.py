@@ -25,34 +25,19 @@ from src.copilot import constants
 from src.copilot.config import CopilotConfig
 from src.copilot.models import TranslatedQuery
 from src.copilot.rag.responder import Responder, build_openrouter_responder
+from src.prompt_assets import render, template
 
 __all__ = ["QueryTranslator", "sanitize_filters", "heuristic_translation"]
 
 _MAX_EXPLANATION_CHARS = 240
 
-_SYSTEM_PROMPT = """You are the query-understanding stage of a career knowledge \
-assistant. Analyse the user's query and return STRICT JSON only — no prose, no \
-markdown, no code fences.
-
-Return an object with exactly these keys:
-- "intent": one of {intents}
-- "retrieval_required": boolean (false only for greetings/small talk or requests \
-that need no knowledge base)
-- "rewritten_query": a single clearer retrieval query that preserves the user's \
-intent. Do NOT add facts, numbers or claims the user did not imply.
-- "alternate_queries": an array of 0 to {max_alt} additional retrieval queries \
-covering different phrasings/angles for broad questions; use fewer (or none) for \
-narrow questions. Do not repeat the rewritten query.
-- "metadata_filters": an object using ONLY these fields when clearly implied: \
-{filter_fields}. Use exact allowed values only; otherwise return an empty object.
-- "explanation": one short, user-safe sentence describing what you changed. No \
-step-by-step reasoning.
-
-Allowed document_type values: {doc_types}."""
+# System and user prompts are versioned assets (prompts/rag/query_understanding_*, package 01B).
+_CONSUMER = "rag.translation"
+_SYSTEM_PROMPT = template("rag/query_understanding_system", _CONSUMER)
 
 
 def _user_prompt(query: str) -> str:
-    return f'User query: "{query}"\n\nReturn the JSON object now.'
+    return render("rag/query_understanding_user", _CONSUMER, query=query)
 
 
 def sanitize_filters(raw: object) -> dict:
@@ -187,7 +172,8 @@ class QueryTranslator:
         self.model = model
 
     def _system_prompt(self) -> str:
-        return _SYSTEM_PROMPT.format(
+        return render(
+            "rag/query_understanding_system", _CONSUMER,
             intents=", ".join(constants.QUERY_INTENTS),
             max_alt=self.max_alternates,
             filter_fields=", ".join(constants.ALLOWED_FILTER_FIELDS),
