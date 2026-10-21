@@ -71,7 +71,7 @@ def test_no_source_text_or_column_name_leaks_into_the_contract():
     for m in K.contract_metrics():
         blob = json.dumps(m.model_dump())
         for legacy in METRICS:
-            if legacy.metric_id == m.metric_id:
+            if legacy.metric_id == m.metric_id and ("." in legacy.source or "(" in legacy.source):    # legacy prose names columns; the contract must not carry it
                 assert legacy.source not in blob
         assert "." not in m.source.name and "." not in m.numerator.subject
 

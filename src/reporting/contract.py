@@ -137,8 +137,8 @@ class MetricDefinition(_Strict):
     numerator: Quantity
     denominator: Quantity | None = None
     unit: Unit
-    period_kinds: tuple[PeriodKind, ...] = Field(min_length=1)
-    dimensions_allowed: tuple[Slug, ...] = ()
+    period_kinds: list[PeriodKind] = Field(min_length=1)
+    dimensions_allowed: list[Slug] = Field(default_factory=list)
     coverage: CoverageRule
     missing_behaviour: MissingBehaviour
     suppression: SuppressionPolicy
@@ -158,7 +158,7 @@ class MetricDefinition(_Strict):
 
 
 class DateRangeRule(_Strict):
-    allowed_periods: tuple[PeriodKind, ...] = Field(min_length=1)
+    allowed_periods: list[PeriodKind] = Field(min_length=1)
     default_period: PeriodKind
     allow_custom_range: bool = False       # today no client-supplied date is accepted; enabling it requires a bound
     max_custom_days: int | None = Field(default=None, ge=1, le=3660)
@@ -175,7 +175,7 @@ class DateRangeRule(_Strict):
 class ChartSpec(_Strict):
     chart_id: Slug
     kind: ChartKind
-    metric_ids: tuple[Slug, ...] = Field(min_length=1)
+    metric_ids: list[Slug] = Field(min_length=1)
     dimension_id: Slug | None = None
     title: Text
 
@@ -184,11 +184,11 @@ class ReportDefinition(_Strict):
     report_id: Slug
     title: Text
     description: Text
-    metric_ids: tuple[Slug, ...] = Field(min_length=1)       # ordered
-    allowed_filters: tuple[Slug, ...] = ()
+    metric_ids: list[Slug] = Field(min_length=1)       # ordered
+    allowed_filters: list[Slug] = Field(default_factory=list)
     date_range: DateRangeRule
-    comparison_modes: tuple[ComparisonMode, ...] = ("none",)
-    charts: tuple[ChartSpec, ...] = ()
+    comparison_modes: list[ComparisonMode] = Field(default_factory=lambda: ["none"])
+    charts: list[ChartSpec] = Field(default_factory=list)
     permission_required: str
 
     @model_validator(mode="after")
@@ -390,7 +390,7 @@ def _adapt(m: MetricDef) -> MetricDefinition:
     return MetricDefinition(
         metric_id=m.metric_id, label=m.label, description=m.definition, source=SourceRef(kind=kind, name=name),
         numerator=Quantity(aggregation=num[0], subject=num[1]), denominator=Quantity(aggregation=den[0], subject=den[1]) if den else None, unit=unit,
-        period_kinds=_ALL, dimensions_allowed=dims, coverage=CoverageRule(kind=cov, note=m.coverage), missing_behaviour="unavailable",
+        period_kinds=list(_ALL), dimensions_allowed=list(dims), coverage=CoverageRule(kind=cov, note=m.coverage), missing_behaviour="unavailable",
         suppression=SuppressionPolicy(kind="operational") if operational else SuppressionPolicy(kind="cohort", min_cohort=REPORTING_MIN_COHORT),
         permission_required=_COMMERCIAL if m.metric_id in _COMMERCIAL_IDS else _C)
 
@@ -402,7 +402,7 @@ def contract_metrics() -> tuple[MetricDefinition, ...]:
 
 def contract_reports() -> tuple[ReportDefinition, ...]:
     """The existing report endpoints described in the contract (metric ids only from ``METRICS``; no new metric, no chart)."""
-    rng = DateRangeRule(allowed_periods=_ALL, default_period=DEFAULT_PERIOD)
+    rng = DateRangeRule(allowed_periods=list(_ALL), default_period=DEFAULT_PERIOD)
     spec = {
         "product": ("Product usage", ("registrations", "onboarding_completed", "onboarding_rate", "opportunities_created", "prepare_started", "prepare_ready_rate",
                                       "practice_started", "practice_completed", "activation", "returning"), _C),
@@ -410,7 +410,7 @@ def contract_reports() -> tuple[ReportDefinition, ...]:
         "ai_economics": ("AI economics", ("ai_usage", "ai_known_cost"), _C),
         "commercial": ("Commercial (mock billing, not live revenue)", ("access_plans", "mock_mrr", "mock_arr", "mock_failed_payments"), _COMMERCIAL),
     }
-    return tuple(ReportDefinition(report_id=k, title=t, description=f"Existing {k.replace('_', ' ')} report, aggregates only.", metric_ids=ids, date_range=rng,
+    return tuple(ReportDefinition(report_id=k, title=t, description=f"Existing {k.replace('_', ' ')} report, aggregates only.", metric_ids=list(ids), date_range=rng,
                                   permission_required=p) for k, (t, ids, p) in spec.items())
 
 

@@ -183,7 +183,6 @@
         "type": "string"
       },
       "dimensions_allowed": {
-        "default": [],
         "items": {
           "pattern": "^[a-z][a-z0-9_]{0,63}$",
           "type": "string"
@@ -487,7 +486,6 @@
     "additionalProperties": false,
     "properties": {
       "allowed_filters": {
-        "default": [],
         "items": {
           "pattern": "^[a-z][a-z0-9_]{0,63}$",
           "type": "string"
@@ -496,7 +494,6 @@
         "type": "array"
       },
       "charts": {
-        "default": [],
         "items": {
           "$ref": "#/$defs/ChartSpec"
         },
@@ -504,9 +501,6 @@
         "type": "array"
       },
       "comparison_modes": {
-        "default": [
-          "none"
-        ],
         "items": {
           "enum": [
             "none",
