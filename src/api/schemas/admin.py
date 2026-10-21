@@ -683,7 +683,7 @@ class KnowledgeIndexManifestFields(_Strict):
     model: str | None = None
     version: str | None = None
     dimensions: int | None = None
-    vector_metric: str | None = None
+    metric: str | None = None
     compatibility_hash: str | None = None
     checksum: str | None = None
     built_at: str | None = None

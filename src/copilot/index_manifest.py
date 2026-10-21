@@ -86,7 +86,7 @@ class IndexStatus:
         return {"collection_id": self.collection_id, "state": self.state, "compatible": self.compatible, "refused": self.refuse,
                 "differing_fields": list(self.fields), "chunk_count": self.chunk_count, "message": self.message,
                 "manifest": None if m is None else {"provider": m.provider, "model": m.model, "version": m.version, "dimensions": m.dimensions,
-                                                      "vector_metric": m.vector_metric, "compatibility_hash": m.compatibility_hash,
+                                                      "metric": m.vector_metric, "compatibility_hash": m.compatibility_hash,
                                                       "checksum": m.checksum, "built_at": m.built_at, "degraded": m.degraded,
                                                       "degradation_reason": m.degradation_reason},
                 "live_embedder": None if self.live is None else self.live.to_dict()}
