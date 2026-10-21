@@ -1,0 +1,21 @@
+{
+  "case_count": 165,
+  "corpus_file": "corpus.jsonl",
+  "corpus_sha256": "58d331dad98e1b2ffdef1c66cb0b070ddf8c528f31b7d03fd0d011c78ed53cf0",
+  "counts": {
+    "dev": {
+      "attack": 82,
+      "benign": 40
+    },
+    "heldout": {
+      "attack": 22,
+      "benign": 21
+    }
+  },
+  "heldout_percent": 30,
+  "heldout_sha256": "48842f0cff912caea4049c973ac5855d8ef024ac3b192712bac8f6ac1f93b78f",
+  "schema_version": 1,
+  "split_rule": "sha256(case id) mod 100 < 30 -> heldout, else dev",
+  "synthetic_only": true,
+  "tuning_rule": "Detectors may be tuned on the dev split only. The held-out split is measured, never tuned against."
+}
