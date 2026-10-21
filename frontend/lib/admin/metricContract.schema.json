@@ -1,0 +1,565 @@
+{
+  "DimensionDefinition": {
+    "additionalProperties": false,
+    "properties": {
+      "description": {
+        "maxLength": 400,
+        "minLength": 1,
+        "title": "Description",
+        "type": "string"
+      },
+      "dimension_id": {
+        "pattern": "^[a-z][a-z0-9_]{0,63}$",
+        "title": "Dimension Id",
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "time",
+          "category"
+        ],
+        "title": "Kind",
+        "type": "string"
+      },
+      "label": {
+        "maxLength": 400,
+        "minLength": 1,
+        "title": "Label",
+        "type": "string"
+      },
+      "max_buckets": {
+        "default": 50,
+        "maximum": 500,
+        "minimum": 1,
+        "title": "Max Buckets",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "dimension_id",
+      "label",
+      "description",
+      "kind"
+    ],
+    "title": "DimensionDefinition",
+    "type": "object"
+  },
+  "MetricDefinition": {
+    "$defs": {
+      "CoverageRule": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "historical",
+              "since_first_event",
+              "lower_bound",
+              "from_index",
+              "current_state",
+              "mock_state"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "note": {
+            "maxLength": 400,
+            "minLength": 1,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "note"
+        ],
+        "title": "CoverageRule",
+        "type": "object"
+      },
+      "Quantity": {
+        "additionalProperties": false,
+        "description": "One side of a metric: a closed aggregation over a slug subject (e.g. count_distinct of ``candidate_accounts``). Never a column or expression.",
+        "properties": {
+          "aggregation": {
+            "enum": [
+              "count",
+              "count_distinct",
+              "sum",
+              "mean",
+              "p50",
+              "p95",
+              "ratio"
+            ],
+            "title": "Aggregation",
+            "type": "string"
+          },
+          "subject": {
+            "pattern": "^[a-z][a-z0-9_]{0,63}$",
+            "title": "Subject",
+            "type": "string"
+          }
+        },
+        "required": [
+          "aggregation",
+          "subject"
+        ],
+        "title": "Quantity",
+        "type": "object"
+      },
+      "SourceRef": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "named_query",
+              "fact_table"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "pattern": "^[a-z][a-z0-9_]{0,63}$",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "name"
+        ],
+        "title": "SourceRef",
+        "type": "object"
+      },
+      "SuppressionPolicy": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "cohort",
+              "operational"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "min_cohort": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Min Cohort"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "SuppressionPolicy",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "coverage": {
+        "$ref": "#/$defs/CoverageRule"
+      },
+      "denominator": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Quantity"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "description": {
+        "maxLength": 400,
+        "minLength": 1,
+        "title": "Description",
+        "type": "string"
+      },
+      "dimensions_allowed": {
+        "default": [],
+        "items": {
+          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+          "type": "string"
+        },
+        "title": "Dimensions Allowed",
+        "type": "array"
+      },
+      "label": {
+        "maxLength": 400,
+        "minLength": 1,
+        "title": "Label",
+        "type": "string"
+      },
+      "metric_id": {
+        "pattern": "^[a-z][a-z0-9_]{0,63}$",
+        "title": "Metric Id",
+        "type": "string"
+      },
+      "missing_behaviour": {
+        "enum": [
+          "unavailable",
+          "not_captured"
+        ],
+        "title": "Missing Behaviour",
+        "type": "string"
+      },
+      "numerator": {
+        "$ref": "#/$defs/Quantity"
+      },
+      "period_kinds": {
+        "items": {
+          "enum": [
+            "7d",
+            "30d",
+            "90d",
+            "all_time"
+          ],
+          "type": "string"
+        },
+        "minItems": 1,
+        "title": "Period Kinds",
+        "type": "array"
+      },
+      "permission_required": {
+        "title": "Permission Required",
+        "type": "string"
+      },
+      "source": {
+        "$ref": "#/$defs/SourceRef"
+      },
+      "suppression": {
+        "$ref": "#/$defs/SuppressionPolicy"
+      },
+      "unit": {
+        "enum": [
+          "count",
+          "percent",
+          "ratio",
+          "score",
+          "seconds",
+          "hours",
+          "milliseconds",
+          "tokens",
+          "usd"
+        ],
+        "title": "Unit",
+        "type": "string"
+      }
+    },
+    "required": [
+      "metric_id",
+      "label",
+      "description",
+      "source",
+      "numerator",
+      "unit",
+      "period_kinds",
+      "coverage",
+      "missing_behaviour",
+      "suppression",
+      "permission_required"
+    ],
+    "title": "MetricDefinition",
+    "type": "object"
+  },
+  "MetricResult": {
+    "additionalProperties": false,
+    "description": "What an implementation returns for one metric. Missing data is a STATE with ``value = None``, never a bare zero.",
+    "properties": {
+      "coverage": {
+        "default": "",
+        "title": "Coverage",
+        "type": "string"
+      },
+      "denominator": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Denominator"
+      },
+      "metric_id": {
+        "pattern": "^[a-z][a-z0-9_]{0,63}$",
+        "title": "Metric Id",
+        "type": "string"
+      },
+      "note": {
+        "default": "",
+        "title": "Note",
+        "type": "string"
+      },
+      "numerator": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Numerator"
+      },
+      "partial": {
+        "default": false,
+        "title": "Partial",
+        "type": "boolean"
+      },
+      "period": {
+        "enum": [
+          "7d",
+          "30d",
+          "90d",
+          "all_time"
+        ],
+        "title": "Period",
+        "type": "string"
+      },
+      "state": {
+        "enum": [
+          "ok",
+          "suppressed",
+          "unavailable",
+          "not_captured"
+        ],
+        "title": "State",
+        "type": "string"
+      },
+      "value": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Value"
+      }
+    },
+    "required": [
+      "metric_id",
+      "period",
+      "state"
+    ],
+    "title": "MetricResult",
+    "type": "object"
+  },
+  "ReportDefinition": {
+    "$defs": {
+      "ChartSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "chart_id": {
+            "pattern": "^[a-z][a-z0-9_]{0,63}$",
+            "title": "Chart Id",
+            "type": "string"
+          },
+          "dimension_id": {
+            "anyOf": [
+              {
+                "pattern": "^[a-z][a-z0-9_]{0,63}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Dimension Id"
+          },
+          "kind": {
+            "enum": [
+              "trend",
+              "funnel",
+              "share_of_whole",
+              "distribution",
+              "table"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "metric_ids": {
+            "items": {
+              "pattern": "^[a-z][a-z0-9_]{0,63}$",
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Metric Ids",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 400,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "chart_id",
+          "kind",
+          "metric_ids",
+          "title"
+        ],
+        "title": "ChartSpec",
+        "type": "object"
+      },
+      "DateRangeRule": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_custom_range": {
+            "default": false,
+            "title": "Allow Custom Range",
+            "type": "boolean"
+          },
+          "allowed_periods": {
+            "items": {
+              "enum": [
+                "7d",
+                "30d",
+                "90d",
+                "all_time"
+              ],
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Allowed Periods",
+            "type": "array"
+          },
+          "default_period": {
+            "enum": [
+              "7d",
+              "30d",
+              "90d",
+              "all_time"
+            ],
+            "title": "Default Period",
+            "type": "string"
+          },
+          "max_custom_days": {
+            "anyOf": [
+              {
+                "maximum": 3660,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Custom Days"
+          }
+        },
+        "required": [
+          "allowed_periods",
+          "default_period"
+        ],
+        "title": "DateRangeRule",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "allowed_filters": {
+        "default": [],
+        "items": {
+          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+          "type": "string"
+        },
+        "title": "Allowed Filters",
+        "type": "array"
+      },
+      "charts": {
+        "default": [],
+        "items": {
+          "$ref": "#/$defs/ChartSpec"
+        },
+        "title": "Charts",
+        "type": "array"
+      },
+      "comparison_modes": {
+        "default": [
+          "none"
+        ],
+        "items": {
+          "enum": [
+            "none",
+            "previous_period"
+          ],
+          "type": "string"
+        },
+        "title": "Comparison Modes",
+        "type": "array"
+      },
+      "date_range": {
+        "$ref": "#/$defs/DateRangeRule"
+      },
+      "description": {
+        "maxLength": 400,
+        "minLength": 1,
+        "title": "Description",
+        "type": "string"
+      },
+      "metric_ids": {
+        "items": {
+          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+          "type": "string"
+        },
+        "minItems": 1,
+        "title": "Metric Ids",
+        "type": "array"
+      },
+      "permission_required": {
+        "title": "Permission Required",
+        "type": "string"
+      },
+      "report_id": {
+        "pattern": "^[a-z][a-z0-9_]{0,63}$",
+        "title": "Report Id",
+        "type": "string"
+      },
+      "title": {
+        "maxLength": 400,
+        "minLength": 1,
+        "title": "Title",
+        "type": "string"
+      }
+    },
+    "required": [
+      "report_id",
+      "title",
+      "description",
+      "metric_ids",
+      "date_range",
+      "permission_required"
+    ],
+    "title": "ReportDefinition",
+    "type": "object"
+  }
+}
