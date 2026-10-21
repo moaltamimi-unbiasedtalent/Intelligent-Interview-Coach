@@ -99,8 +99,15 @@ def run() -> dict[str, tuple[bool, str]]:
     check("priv_limitations_visible", "PRIV-W9-01" in doc and "PRIV-W9-02" in doc and "NO-05" in claims and "NO-06" in claims,
           "preparation-chat deletion and consent history limitations are recorded")
     check("no_competitor_research_declared", "no external or competitor research" in claims.lower(), "declared in the register")
-    mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_", "0026_", "0027_", "0028_", "0029_", "0030_", "0031_", "0032_", "0033_", "0034_", "0035_", "0036_", "0037_", "0038_", "0039_", "0040_")), mig[-1])
+    import sys, importlib.util as _iu  # dependency-free load: this guard runs in the static job where importing the ``tests`` package (starlette) is not possible
+    _spec = _iu.spec_from_file_location("tests._alembic_head", ROOT / "tests" / "_alembic_head.py")
+    _h = sys.modules.get("tests._alembic_head") or _iu.module_from_spec(_spec)
+    sys.modules["tests._alembic_head"] = _h
+    if not hasattr(_h, "chain_ok"):
+        _spec.loader.exec_module(_h)
+    chain_ok = _h.chain_ok
+    _ok, _detail = chain_ok(min_head=14)          # one head, linear contiguous chain from 0001, every down_revision resolves; head not older than the registered baseline
+    check("no_migration_added", _ok, _detail)
     brand = read("lib/brand.ts", FE)
     check("slogan_invariant", 'Ask More. Be More.' in brand, "BRAND_SLOGAN unchanged")
     return out

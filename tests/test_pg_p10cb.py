@@ -3,6 +3,7 @@ run creates and drops its own ``p5b_*`` database); skipped without it. Synthetic
 
 from __future__ import annotations
 
+from tests._alembic_head import repository_head
 import os
 import subprocess
 import sys
@@ -62,7 +63,7 @@ def test_0036_is_head_with_empty_tables_indexes_and_constraints(pg):
     insp = inspect(pg.engine)
     assert set(NEW) <= set(insp.get_table_names())
     with pg.engine.connect() as c:
-        assert c.execute(text("select version_num from alembic_version")).scalar() == "0040_knowledge_alert_categories"
+        assert c.execute(text("select version_num from alembic_version")).scalar() == repository_head()
         for t in NEW:
             assert c.execute(text(f"select count(*) from {t}")).scalar() == 0
         checks = {r[0] for r in c.execute(text("select conname from pg_constraint where contype = 'c' and conrelid = 'graph_occupation_aliases'::regclass"))}

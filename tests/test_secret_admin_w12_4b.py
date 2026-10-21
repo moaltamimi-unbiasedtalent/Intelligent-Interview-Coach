@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from tests._alembic_head import repository_head
 import base64
 import logging
 import os
@@ -434,7 +435,7 @@ def test_migration_0026_single_head_fresh_and_round_trip(tmp_path, monkeypatch):
 
     url = f"sqlite:///{tmp_path / 'm.db'}"
     monkeypatch.setenv("DATABASE_URL", url)
-    assert ScriptDirectory.from_config(cfg(url)).get_heads() == ["0040_knowledge_alert_categories"]
+    assert ScriptDirectory.from_config(cfg(url)).get_heads() == [repository_head()]
     command.upgrade(cfg(url), "0025_security_audit_incidents")
     assert "managed_secrets" not in inspect(create_engine(url)).get_table_names()
     command.upgrade(cfg(url), "head")

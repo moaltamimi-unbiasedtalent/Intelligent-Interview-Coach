@@ -12,6 +12,7 @@ from sqlalchemy import create_engine, text
 
 import tests.conftest  # noqa: F401  (isolation first)
 from src.persistence import Base
+from tests._alembic_head import assert_chain
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("eval_privacy_controls", ROOT / "scripts/eval_privacy_controls.py")
@@ -72,7 +73,7 @@ def test_migration_0040_changes_only_the_notification_category_constraint(tmp_pa
 
     cfg, url = _alembic(tmp_path, monkeypatch)
     script = ScriptDirectory.from_config(cfg)
-    assert script.get_heads() == ["0040_knowledge_alert_categories"]
+    assert script.get_heads() == [assert_chain(require=("0040_knowledge_alert_categories",))]       # one head; 0040 is in the chain
     assert script.get_revision("0040_knowledge_alert_categories").down_revision == "0039_speech_governance"
     command.upgrade(cfg, "0039_speech_governance")
     eng = create_engine(url)
@@ -92,7 +93,7 @@ def test_migration_0040_changes_only_the_notification_category_constraint(tmp_pa
     before = schema()
     privacy_rows_before = {t: rows(t) for t in sorted(EV.PRIVACY_TABLES & set(before))}
     notifications_before = rows("admin_notifications")
-    command.upgrade(cfg, "head")
+    command.upgrade(cfg, "0040_knowledge_alert_categories")                    # exactly the revision under test, whatever is stacked above it
     after = schema()
     changed = {n for n in set(before) | set(after) if before.get(n) != after.get(n)}
     assert changed == {"admin_notifications"}, changed                           # nothing else in the schema changed, privacy tables included

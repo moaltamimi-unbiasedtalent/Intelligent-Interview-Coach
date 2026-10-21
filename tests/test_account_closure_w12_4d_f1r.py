@@ -4,6 +4,7 @@ provider state, no Stripe call of any kind, isolated databases, every non-loopba
 
 from __future__ import annotations
 
+from tests._alembic_head import repository_head
 import threading
 from datetime import timedelta
 from pathlib import Path
@@ -478,7 +479,7 @@ def test_migration_0031_upgrade_preserves_history_constraints_and_downgrade_fail
         c.execute(text("INSERT INTO billing_recovery_actions (public_id, action, reason, idempotency_key, status, created_at) VALUES ('" + "d" * 32 + "', 'retry_event', 'r', 'f1r-mig-1', 'completed', '2026-01-01')"))
     command.upgrade(cfg, "head")
     insp = inspect(create_engine(url))
-    assert "billing_account_closures" in insp.get_table_names() and ScriptDirectory.from_config(cfg).get_heads() == ["0040_knowledge_alert_categories"]
+    assert "billing_account_closures" in insp.get_table_names() and ScriptDirectory.from_config(cfg).get_heads() == [repository_head()]
     assert {i["name"]: i for i in insp.get_indexes("billing_account_closures")}["uq_bac_one_active_per_user"]["unique"] == 1
     with create_engine(url).connect() as c:
         assert c.execute(text("SELECT COUNT(*) FROM billing_recovery_actions")).scalar() == 1           # existing financial history untouched

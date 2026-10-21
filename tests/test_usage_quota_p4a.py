@@ -4,6 +4,7 @@ module attribute only. Nothing here is Stripe evidence, a price, or a real allow
 
 from __future__ import annotations
 
+from tests._alembic_head import repository_head
 import subprocess
 import sys
 import textwrap
@@ -523,7 +524,7 @@ def test_migration_0033_upgrades_and_the_chain_has_one_head_upgrades_cleanly_and
     from sqlalchemy import create_engine, inspect
     from tests.test_billing_f1_qualification import _alembic
     cfg, url = _alembic(tmp_path, monkeypatch)
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0040_knowledge_alert_categories"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == [repository_head()]
     command.upgrade(cfg, "0032_ai_operation_events")
     assert "usage_quota_counters" not in inspect(create_engine(url)).get_table_names()
     command.upgrade(cfg, "head")

@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 
 from src.knowledge_foundation import global_reports as GR
+from tests._alembic_head import assert_chain
 from src.knowledge_foundation.compensation import country_adapters as CA
 from src.knowledge_foundation.compensation import international as INTL
 from src.knowledge_foundation.compensation.comparison import ComparisonStatus, compare_fx, compare_nominal, compare_ppp
@@ -470,8 +471,7 @@ def test_nothing_new_is_imported_by_a_runtime_or_candidate_path_and_no_migration
                 if any(m and m.startswith("src.knowledge_foundation") for m in mods):
                     offenders.append(str(f.relative_to(ROOT)))
     assert offenders == []
-    versions = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    assert versions[-1].startswith(("0038_", "0039_", "0040_")) and len(versions) in (38, 39, 40)                                              # P10C-E needs no schema change
+    assert_chain(require=("0038_compensation_concepts",))                                              # P10C-E needs no schema change
     for rel in ("src/copilot/knowledge/compensation.py", "src/copilot/knowledge/retrieval.py", "src/copilot/knowledge/router.py"):
         assert "knowledge_foundation" not in (ROOT / rel).read_text(), rel
 

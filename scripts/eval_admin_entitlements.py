@@ -134,8 +134,9 @@ def run() -> dict[str, tuple[bool, str]]:
     # W10.5: the candidate notice may SAY there is no checkout ("or offer checkout"); it must still contain no purchase claim.
     check("copy_has_no_price_or_purchase_claim", not re.search(r"[€$£]|buy now|upgrade now|per month|checkout", en.replace("or offer checkout", ""), re.I) and "preview" in en.lower(), "Premium is a preview; nothing to buy")
 
-    heads = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("migration_chain_valid", int(heads[-1].split("_", 1)[0]) >= 16 and 'down_revision = "0015_support_ticketing"' in mig, heads[-1])
+    from tests._alembic_head import chain_ok
+    _ok, _detail = chain_ok(require=("0015_support_ticketing", "0016_plans_entitlements"), min_head=16)
+    check("migration_chain_valid", _ok and 'down_revision = "0015_support_ticketing"' in mig, _detail)
     tests = read("tests/test_plans_entitlements_w10_4.py")
     check("tests_exist", all(t in tests for t in ("test_no_subscription_falls_back_to_basic_never_premium", "test_workspace_scope_is_explicit",
                                                   "test_draft_is_editable_active_and_retired_are_immutable", "test_every_privileged_plan_mutation_rolls_back",

@@ -120,8 +120,9 @@ def run() -> dict[str, tuple[bool, str]]:
     from src.persistence import KNOWLEDGE_LANGUAGES
 
     vi = m.get("version_identity", {})
-    mig = sorted(p_.name for p_ in (ROOT / "migrations/versions").glob("0*.py"))
-    check("alembic_head_0038_single_and_the_immutable_manifest_still_records_0025", mig[-1].startswith("0040_knowledge_alert_categories") and len({x[:4] for x in mig}) == len(mig) and vi.get("alembic_head") == "0025_security_audit_incidents")
+    from tests._alembic_head import chain_ok
+    _ok, _detail = chain_ok(require=("0025_security_audit_incidents",))
+    check("alembic_head_single_and_the_immutable_manifest_still_records_0025", _ok and vi.get("alembic_head") == "0025_security_audit_incidents", _detail)
     check("admin_permissions_are_the_immutable_rc_43_plus_only_the_approved_billing_recover", len(perm.PERMISSIONS) == 44 and vi.get("admin_permissions") == 43 and len(set(perm.PERMISSIONS) - {"platform.billing.recover"}) == 43)
     # RC-P10-003 is an IMMUTABLE historical artifact: its manifest records platform_admin = 28 / 43 and must keep doing so. The CURRENT runtime is intentionally different since
     # AD-W12-01 (43 / 43), so the current preset is NOT compared with the historical value; it is only required to be a superset of it (the owner change adds permissions, never removes).

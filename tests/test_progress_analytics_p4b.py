@@ -4,6 +4,7 @@ on isolated module attributes only. Analytics are descriptive and deterministic:
 
 from __future__ import annotations
 
+from tests._alembic_head import repository_head
 import time
 from datetime import datetime, timedelta, timezone
 
@@ -522,7 +523,7 @@ def test_no_migration_was_added_and_the_head_is_unchanged():
     root = pathlib.Path(__file__).resolve().parents[1]
     cfg = Config(str(root / "alembic.ini"))
     cfg.set_main_option("script_location", str(root / "migrations"))
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0040_knowledge_alert_categories"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == [repository_head()]
 
 
 def test_a_truncated_history_never_calls_the_earliest_shown_score_the_first_ever_score(on, monkeypatch):

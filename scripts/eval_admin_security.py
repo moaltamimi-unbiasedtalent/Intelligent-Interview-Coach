@@ -219,8 +219,9 @@ def run() -> dict[str, tuple[bool, str]]:
     # ---- structure
     mig = read("migrations/versions/0025_security_audit_incidents.py")
     check("migration_chain_and_nothing_seeded", 'down_revision = "0024_reporting_analytics"' in mig and "bulk_insert" not in mig and "INSERT INTO" not in mig and "def downgrade" in mig and "trg_" in mig)
-    heads = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("alembic_head_is_0038_and_0025_is_in_the_chain", heads[-1].startswith("0040_knowledge_alert_categories") and any(h.startswith("0025_security_audit_incidents") for h in heads), heads[-1])
+    from tests._alembic_head import chain_ok
+    _ok, _detail = chain_ok(require=("0025_security_audit_incidents",))
+    check("alembic_head_is_single_and_0025_is_in_the_chain", _ok, _detail)
     check("no_w11_code", not list((ROOT / "docs/capstone").rglob("W11*")))   # W10.14 (qualification only, no feature code) now exists; W11 must not
     check("tests_exist", all(x in read("tests/test_security_w10_13.py") for x in ("test_audit_update_and_delete_are_rejected_by_the_database", "test_role_matrix_14_stale_target_role_is_never_applied",
                                                                              "test_account_deletion_still_succeeds_and_only_anonymises_the_audit_actor", "test_step_up_binds_to_the_exact_session")))

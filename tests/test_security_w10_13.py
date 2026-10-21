@@ -4,6 +4,7 @@ Drives the real FastAPI app over a temp SQLite database (no provider, no network
 
 from __future__ import annotations
 
+from tests._alembic_head import repository_head
 import json
 import re
 from pathlib import Path
@@ -863,7 +864,7 @@ def test_security_routes_are_all_gated_and_migrations_have_one_head():
     from alembic.script import ScriptDirectory
     cfg = Config(str(ROOT / "alembic.ini"))
     cfg.set_main_option("script_location", str(ROOT / "migrations"))
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0040_knowledge_alert_categories"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == [repository_head()]
 
 
 # ======================================================================== migration + PostgreSQL DDL
