@@ -58,20 +58,23 @@ D-NONNUM, D-SENT, D-EST-FLAG, D-COUNTRY and D-AGENT-TXT are grounding-policy lim
 
 ## Tests and commands
 
-Status at the time this file was last edited: **the test suites were not run under either venv after the final code was written**, because the shared Homebrew interpreter was overwritten by a runaway wrapper script during this session and the coordinator ordered all venv Python use to stop. The only execution performed was one run of `scripts/eval_injection_corpus.py` under `/tmp/ci_venv/bin/python` (the source of the numbers above; exit 0, report only). The sections below are to be completed once the interpreter is repaired.
+Run after the shared interpreter was repaired (2026-10-21 about 18:24 to 18:25 UTC). Both interpreters: repo `.venv` (reached through a symlink path, Python 3.11) and `/tmp/ci_venv` (latest dependencies). The metrics above come from the first evaluator run; re-runs under both venvs reproduced them exactly.
 
-| Command | .venv result | /tmp/ci_venv result |
+| Command | .venv | /tmp/ci_venv |
 |---|---|---|
-| `pytest tests/test_injection_corpus_01a.py` | PENDING | PENDING |
-| `pytest tests/test_copilot_security.py tests/test_security*.py tests/test_prompt_injection*.py` | PENDING | PENDING |
-| grounding suites and `scripts/eval_agent.py` | PENDING | PENDING |
-| `pytest tests/test_ci_shards.py` and `scripts/ci_test_shards.py verify` | PENDING | PENDING |
-| `ruff check .` | PENDING | PENDING |
-| `scripts/eval_injection_corpus.py` | not run | exit 0, numbers above |
+| `pytest tests/test_injection_corpus_01a.py` (33 tests) | pass | pass |
+| combined: 01A + `test_copilot_security`, `test_security`, `test_security_hardening`, `test_security_ph6`, `test_security_phase11`, `test_agent_grounding`, `test_candidate_grounding_policy`, `test_p10d_r1_grounding_coverage`, `test_ci_shards` | 293 passed | 293 passed |
+| `python scripts/ci_test_shards.py verify --shards 4` | OK, 266 files in exactly one shard | OK, 266 files in exactly one shard |
+| `python scripts/eval_agent.py` | GATE STATUS: PASS | GATE STATUS: PASS |
+| `ruff check .` | All checks passed | All checks passed |
+| `python scripts/eval_injection_corpus.py` | exit 0, numbers above | exit 0, numbers above |
+| `python scripts/eval_injection_corpus.py --enforce` | not run | exit 3: fails closed, no thresholds file |
+
+The full suite was not run locally (CI runs it). The working tree stayed clean after the evaluators (they write to a temp dir).
 
 ## Regression evidence
 
-Pending (see above). The behavioural equivalence argument: the default threshold excludes exactly the chunks whose scanner score is at least the block threshold (scores are multiples of 1.0 over 3.0, so `score/3 > 0.9` is `score >= 3`), and a unit test asserts quarantine equals the block verdict for four representative texts.
+The existing security, grounding and agent-orchestration suites above pass unchanged. The default threshold excludes exactly the chunks whose scanner score is at least the block threshold (`score/3 > 0.9` is `score >= 3` for the scanner's weights), and a unit test asserts quarantine equals the block verdict for four representative texts. The old test `test_injected_retrieved_chunk_is_excluded` (excluded_chunks >= 1) still passes.
 
 ## Remaining risks
 
