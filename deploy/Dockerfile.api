@@ -62,6 +62,9 @@ RUN pip install --upgrade pip \
 COPY alembic.ini ./
 COPY migrations ./migrations
 COPY scripts ./scripts
+# Versioned prompt assets (package 01B). src/prompt_assets.py resolves them at /app/prompts (next to
+# src/) and fails closed at import if the tree is missing or invalid, so they MUST ship with the image.
+COPY prompts ./prompts
 
 # Private document storage mount point. The real durable volume is mounted here at
 # run time (DOCUMENT_STORAGE_DIR=/data/documents). NEVER a public bucket, and never

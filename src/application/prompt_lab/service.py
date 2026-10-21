@@ -15,6 +15,8 @@ Storage is a simple JSON file store under a configurable base dir (default a git
 
 from __future__ import annotations
 
+import hashlib
+import json
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -35,6 +37,22 @@ from src.application.prompt_lab.models import (
 __all__ = ["PromptLabError", "PromptLabService", "EVALUATORS"]
 
 DEFAULT_BASE_DIR = Path("var/prompt_lab")
+
+
+def _config_sha256(config: dict) -> str:
+    """Canonical hash of a variant's bounded parameter config (attribution; never secrets or prompt text)."""
+    canon = json.dumps(config, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(canon.encode("utf-8")).hexdigest()
+
+
+def _effective_model_profiles() -> dict[str, str]:
+    """Effective model id per Fast/Balanced/Advanced profile (registry read; no provider call)."""
+    try:
+        from src.llm.models import ModelProfile, model_id
+
+        return {p.value: model_id(p) for p in ModelProfile}
+    except Exception:  # noqa: BLE001 - attribution is best-effort, never fails a run
+        return {}
 
 
 class PromptLabError(Exception):
@@ -184,7 +202,12 @@ class PromptLabService:
         evaluator = EVALUATORS.get(exp.evaluation_set.evaluator)
         if evaluator is None:
             raise PromptLabError("Unknown evaluator.")
-        versions = production_versions()
+        full_versions = production_versions()
+        # ``production_versions`` stays a flat string map; the nested per-family prompt record is
+        # stored in its own typed field (01B R7).
+        versions = {k: v for k, v in full_versions.items() if isinstance(v, str)}
+        prompt_assets = full_versions.get("prompt_assets") or {}
+        model_profiles = _effective_model_profiles()
         exp.status = ExperimentStatus.RUNNING
         for variant in exp.variants:
             run = ExperimentRun(
@@ -192,6 +215,8 @@ class PromptLabService:
                 evaluation_set_id=exp.evaluation_set.evaluation_set_id,
                 evaluation_set_version=exp.evaluation_set.version,
                 started_at=_now(), production_versions=versions,
+                prompt_assets=prompt_assets, model_profiles=model_profiles,
+                configuration_sha256=_config_sha256(variant.config),
             )
             try:
                 run.metrics = list(evaluator(variant.config, exp.evaluation_set.cases))
