@@ -60,3 +60,6 @@ Commands: `pytest tests/test_knowledge_persistence_02a_identity.py tests/test_kn
 
 ## Throughput record
 Start 2026-10-21 18:34 UTC. End: see final report. Estimate 10-15 engineering days; actual wall-clock about 1.5 hours of agent time. Rework rounds (fix commits after first push): 0 at time of writing. CI duration: pending (CI runs only once a PR exists).
+
+## Addendum: integration fix (evaluator head literals)
+Four more evaluators still asserted head 0039 (`eval_w11_integrated`, `eval_rc_p10_003`, `eval_admin_security`, `eval_admin_qualification`); bumped to 0040 (count 39 to 40), historical artifacts and RC manifests untouched. All four PASS under both venvs. Full backend suite re-run SEQUENTIALLY: .venv 5217 passed, 41 skipped; /tmp/ci_venv 5215 passed, 43 skipped. The earlier `test_global_eval_p10cg` failure did not recur, confirming it was a concurrent-run artefact. Rework rounds after first push: 1.
