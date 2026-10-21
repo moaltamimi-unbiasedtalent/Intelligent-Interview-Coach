@@ -12,7 +12,7 @@ Updated 2026-10-21. Base: `main` @ `38eabbc`. **No pull request exists for any p
 | 03A | feat/03a-admin-navigation | 7a6f484 | not opened | not run | none | vitest 1114, Playwright 89, pytest 107 | full backend and standalone build not run by author |
 | 06A | feat/06a-locale-boundaries | 5dbe48f (corrections b29b860) | not opened | not run | none | 5172 passed full suite before corrections; 133 affected tests passed after, both venvs | Task 3 corrections delivered; full suite and full Playwright not re-run after the doc commit |
 | 01B | feat/01b-versioned-prompts | 7c2b879 | not opened | not run | none | 5286 passed, 0 failed | stacked on 01B0 |
-| 02A | not pushed | in progress | n/a | n/a | n/a | n/a | stacked on 02K |
+| 02A | feat/02a-knowledge-persistence | a898505 (fix of 9b3f6a0) | not opened | not run | none | 5217 passed, 0 failed (repo venv); 5215 (fresh venv) | stacked on 02K; migration 0040; offline proof only |
 
 Compare URLs and PR descriptions: `docs/production/execution/pr_bodies/PR_<ID>.md`.
 
@@ -20,6 +20,8 @@ Compare URLs and PR descriptions: `docs/production/execution/pr_bodies/PR_<ID>.m
 - Dry-run merge of the seven first-wave branches onto main in order 02K, 01B0, 03K, 05A, 01A, 03A, 06A: **no conflicts** (106 files). `tests/contracts/__init__.py` is an identical empty file on three branches and merges cleanly.
 - Integrated tree, local only: ruff clean, shard plan OK (273 files), tsc 0, lint 0, vitest 113 files / 1131 tests passed. Integrated backend run was in progress (about 48%) when this was written; it is not CI.
 - Re-run on 2026-10-21 with corrected 06A (5dbe48f) and 01B (7c2b879) included: all eight branches merge cleanly in order, no conflicts (188 files, local only).
+- Third dry-run with all nine branches (02A a898505 included): no conflicts (257 files, local only). It found and fixed two integration defects: 02A's migration 0040 broke four evaluators asserting head 0039 (fixed in a898505); and a Phase 00 test asserted the staging compose still lacks the worker, which fails once 05A merges (fixed in docs commit dc90ac6, merge with or before 05A). The integrated evaluators eval_w11_integrated, eval_rc_p10_003, eval_admin_security, eval_admin_qualification and eval_doc_consistency pass.
+- 02A owns the only new migration (0040) this wave: no other package may add a revision until it merges.
 - 01B touches `src/agent/policies.py` and `deploy/Dockerfile.api`; the second dry-run included it.
 
 ## 06A disposition
@@ -39,7 +41,7 @@ The independent contract and scaffold PRs (02K, 01B0, 03K, 05A, 01A, 03A, 06A) c
 ## Blockers
 1. Owner must open the PRs (compare URLs in the PR body files); CI evidence cannot exist until then.
 2. No review has happened; reviews of about 58 PRs are the binding constraint.
-3. 02A in progress (not yet pushed).
+3. 02A delivered; hosted persistence proof needs 05A/05B drills and OD-HOSTED.
 4. Outstanding owner decisions: OD-HOSTED (staging deployment), OD-GATE-THRESHOLDS (injection thresholds), OD-LANG-02/03/04 (market mapping, native reviewers, legal translation), plus the 18 open decisions in the Owner Decision Register.
 
 ## Measured throughput (authoring only)
