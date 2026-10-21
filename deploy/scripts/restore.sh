@@ -4,6 +4,7 @@
 # Restores:
 #   1. a pg_dump archive (custom format) into TARGET_DATABASE_URL
 #   2. a documents tar.gz into DOCUMENT_STORAGE_DIR
+#   3. a knowledge/index tar.gz (KNOWLEDGE_TAR) into COPILOT_DATA_DIR
 #
 # SAFETY GUARD: refuses to run unless the TARGET database name contains "staging"
 # or "restore" — this prevents accidentally clobbering production. Override only
@@ -16,6 +17,8 @@
 #   DB_DUMP=/backups/ask4mo-db-<ts>.dump \
 #   DOCS_TAR=/backups/ask4mo-documents-<ts>.tar.gz \
 #   DOCUMENT_STORAGE_DIR=/data/documents_restore \
+#   KNOWLEDGE_TAR=/backups/ask4mo-knowledge-<ts>.tar.gz \
+#   COPILOT_DATA_DIR=/data/knowledge_restore \
 #   bash deploy/scripts/restore.sh
 set -euo pipefail
 
@@ -66,9 +69,24 @@ else
   echo "==> [restore] DOCS_TAR not set — skipping documents restore."
 fi
 
+# Knowledge/index restore is optional (only if a tar + target dir are provided).
+if [[ -n "${KNOWLEDGE_TAR:-}" ]]; then
+  : "${COPILOT_DATA_DIR:?set COPILOT_DATA_DIR to restore the knowledge/index data into}"
+  if [[ ! -f "${KNOWLEDGE_TAR}" ]]; then
+    echo "ERROR: KNOWLEDGE_TAR '${KNOWLEDGE_TAR}' not found." >&2
+    exit 1
+  fi
+  echo "==> [restore] restoring knowledge/index data from ${KNOWLEDGE_TAR} into ${COPILOT_DATA_DIR}"
+  mkdir -p "${COPILOT_DATA_DIR}"
+  tar -xzf "${KNOWLEDGE_TAR}" -C "$(dirname "${COPILOT_DATA_DIR}")"
+else
+  echo "==> [restore] KNOWLEDGE_TAR not set — skipping knowledge restore (knowledge base will be EMPTY)."
+fi
+
 echo
 echo "==> [restore] done. Verify:"
 echo "    Tables : psql \"${target_url}\" -c '\\dt' | head"
 echo "    Row spot-check : psql \"${target_url}\" -c 'SELECT count(*) FROM accounts;'"
 echo "    App readiness against the restored DB : curl -fsS <api>/api/v1/ready"
+echo "    Knowledge : ls -la \"${COPILOT_DATA_DIR:-<not restored>}\" | head"
 echo "    Documents : ls -la \"${DOCUMENT_STORAGE_DIR:-<not restored>}\" | head"
