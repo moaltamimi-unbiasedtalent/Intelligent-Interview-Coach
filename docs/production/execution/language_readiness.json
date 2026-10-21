@@ -1,0 +1,452 @@
+{
+  "schema": "ask4mo.language_readiness.v1",
+  "package": "06A",
+  "note": "Per-language, per-gate readiness. NOTHING is PASS without a real evidence reference. Initial truth: no language has passed every gate and none is production-qualified. Changing a state needs evidence at a named SHA.",
+  "states": [
+    "NOT STARTED",
+    "NOT RUN",
+    "ENGINEERING DRAFT",
+    "PASS"
+  ],
+  "excluded": {
+    "ru": {
+      "state": "EXCLUDED from R1.0 Candidate selection (owner decision); code, catalogue and tests preserved; no gate records"
+    }
+  },
+  "languages": {
+    "en": {
+      "production_qualified": false,
+      "offered_to_real_users": false,
+      "gates": {
+        "LG-01": {
+          "state": "PASS",
+          "evidence": "docs/production/execution/evidence/06A_LOCALE_AUDIT.md; scripts/eval_locale_inventory.py (generated per-language inventory; the 06A evidence file records the SHA)"
+        },
+        "LG-02": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "scripts/eval_i18n_l10n.py, frontend/scripts/scan-i18n.mjs (0 unexplained literals), frontend/tests/i18n.test.tsx: key parity proven; translations unreviewed; no per-language Playwright English-leak run; native review pending (LG-11)"
+        },
+        "LG-03": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-04": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-05": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-06": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-07": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "tests/test_language_geography_separation_06a.py proves language never changes stored geography in account, onboarding, Opportunity, interview creation and agent run; owner decision on market suggestions and per-market source qualification NOT done, so not PASS"
+        },
+        "LG-08": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-09": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-10": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-11": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-12": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "tests/test_w97a_career_language.py and frontend/tests/career-answer-language.test.tsx cover ownership for the localized templates; not extended per language through live output"
+        },
+        "LG-13": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "docs/production/execution/language_readiness.json plus tests/test_language_readiness_06a.py (claims discipline); no language has passed all gates, so no aggregate claim is made"
+        },
+        "LG-14": {
+          "state": "PASS",
+          "evidence": "tests/test_language_boundaries_06a.py: Admin English-only, ru not offered, no zh/hi/ar registered, speech languages unchanged, ACTIVE_CANDIDATE_LOCALES parity with the frontend and capabilities"
+        }
+      }
+    },
+    "de": {
+      "production_qualified": false,
+      "offered_to_real_users": false,
+      "gates": {
+        "LG-01": {
+          "state": "PASS",
+          "evidence": "docs/production/execution/evidence/06A_LOCALE_AUDIT.md; scripts/eval_locale_inventory.py (generated per-language inventory; the 06A evidence file records the SHA)"
+        },
+        "LG-02": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "scripts/eval_i18n_l10n.py, frontend/scripts/scan-i18n.mjs (0 unexplained literals), frontend/tests/i18n.test.tsx: key parity proven; translations unreviewed; no per-language Playwright English-leak run; native review pending (LG-11)"
+        },
+        "LG-03": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-04": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-05": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-06": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-07": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "tests/test_language_geography_separation_06a.py proves language never changes stored geography in account, onboarding, Opportunity, interview creation and agent run; owner decision on market suggestions and per-market source qualification NOT done, so not PASS"
+        },
+        "LG-08": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-09": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-10": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-11": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-12": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "tests/test_w97a_career_language.py and frontend/tests/career-answer-language.test.tsx cover ownership for the localized templates; not extended per language through live output"
+        },
+        "LG-13": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "docs/production/execution/language_readiness.json plus tests/test_language_readiness_06a.py (claims discipline); no language has passed all gates, so no aggregate claim is made"
+        },
+        "LG-14": {
+          "state": "PASS",
+          "evidence": "tests/test_language_boundaries_06a.py: Admin English-only, ru not offered, no zh/hi/ar registered, speech languages unchanged, ACTIVE_CANDIDATE_LOCALES parity with the frontend and capabilities"
+        }
+      }
+    },
+    "es": {
+      "production_qualified": false,
+      "offered_to_real_users": false,
+      "gates": {
+        "LG-01": {
+          "state": "PASS",
+          "evidence": "docs/production/execution/evidence/06A_LOCALE_AUDIT.md; scripts/eval_locale_inventory.py (generated per-language inventory; the 06A evidence file records the SHA)"
+        },
+        "LG-02": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "scripts/eval_i18n_l10n.py, frontend/scripts/scan-i18n.mjs (0 unexplained literals), frontend/tests/i18n.test.tsx: key parity proven; translations unreviewed; no per-language Playwright English-leak run; native review pending (LG-11)"
+        },
+        "LG-03": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-04": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-05": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-06": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-07": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "tests/test_language_geography_separation_06a.py proves language never changes stored geography in account, onboarding, Opportunity, interview creation and agent run; owner decision on market suggestions and per-market source qualification NOT done, so not PASS"
+        },
+        "LG-08": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-09": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-10": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-11": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-12": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "tests/test_w97a_career_language.py and frontend/tests/career-answer-language.test.tsx cover ownership for the localized templates; not extended per language through live output"
+        },
+        "LG-13": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "docs/production/execution/language_readiness.json plus tests/test_language_readiness_06a.py (claims discipline); no language has passed all gates, so no aggregate claim is made"
+        },
+        "LG-14": {
+          "state": "PASS",
+          "evidence": "tests/test_language_boundaries_06a.py: Admin English-only, ru not offered, no zh/hi/ar registered, speech languages unchanged, ACTIVE_CANDIDATE_LOCALES parity with the frontend and capabilities"
+        }
+      }
+    },
+    "it": {
+      "production_qualified": false,
+      "offered_to_real_users": false,
+      "gates": {
+        "LG-01": {
+          "state": "PASS",
+          "evidence": "docs/production/execution/evidence/06A_LOCALE_AUDIT.md; scripts/eval_locale_inventory.py (generated per-language inventory; the 06A evidence file records the SHA)"
+        },
+        "LG-02": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "scripts/eval_i18n_l10n.py, frontend/scripts/scan-i18n.mjs (0 unexplained literals), frontend/tests/i18n.test.tsx: key parity proven; translations unreviewed; no per-language Playwright English-leak run; native review pending (LG-11)"
+        },
+        "LG-03": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-04": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-05": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-06": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-07": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "tests/test_language_geography_separation_06a.py proves language never changes stored geography in account, onboarding, Opportunity, interview creation and agent run; owner decision on market suggestions and per-market source qualification NOT done, so not PASS"
+        },
+        "LG-08": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-09": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-10": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-11": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-12": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "tests/test_w97a_career_language.py and frontend/tests/career-answer-language.test.tsx cover ownership for the localized templates; not extended per language through live output"
+        },
+        "LG-13": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "docs/production/execution/language_readiness.json plus tests/test_language_readiness_06a.py (claims discipline); no language has passed all gates, so no aggregate claim is made"
+        },
+        "LG-14": {
+          "state": "PASS",
+          "evidence": "tests/test_language_boundaries_06a.py: Admin English-only, ru not offered, no zh/hi/ar registered, speech languages unchanged, ACTIVE_CANDIDATE_LOCALES parity with the frontend and capabilities"
+        }
+      }
+    },
+    "pt": {
+      "production_qualified": false,
+      "offered_to_real_users": false,
+      "gates": {
+        "LG-01": {
+          "state": "PASS",
+          "evidence": "docs/production/execution/evidence/06A_LOCALE_AUDIT.md; scripts/eval_locale_inventory.py (generated per-language inventory; the 06A evidence file records the SHA)"
+        },
+        "LG-02": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "scripts/eval_i18n_l10n.py, frontend/scripts/scan-i18n.mjs (0 unexplained literals), frontend/tests/i18n.test.tsx: key parity proven; translations unreviewed; no per-language Playwright English-leak run; native review pending (LG-11)"
+        },
+        "LG-03": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-04": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-05": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-06": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-07": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "tests/test_language_geography_separation_06a.py proves language never changes stored geography in account, onboarding, Opportunity, interview creation and agent run; owner decision on market suggestions and per-market source qualification NOT done, so not PASS"
+        },
+        "LG-08": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-09": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-10": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-11": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-12": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "tests/test_w97a_career_language.py and frontend/tests/career-answer-language.test.tsx cover ownership for the localized templates; not extended per language through live output"
+        },
+        "LG-13": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "docs/production/execution/language_readiness.json plus tests/test_language_readiness_06a.py (claims discipline); no language has passed all gates, so no aggregate claim is made"
+        },
+        "LG-14": {
+          "state": "PASS",
+          "evidence": "tests/test_language_boundaries_06a.py: Admin English-only, ru not offered, no zh/hi/ar registered, speech languages unchanged, ACTIVE_CANDIDATE_LOCALES parity with the frontend and capabilities"
+        }
+      }
+    },
+    "fr": {
+      "production_qualified": false,
+      "offered_to_real_users": false,
+      "gates": {
+        "LG-01": {
+          "state": "PASS",
+          "evidence": "docs/production/execution/evidence/06A_LOCALE_AUDIT.md; scripts/eval_locale_inventory.py (generated per-language inventory; the 06A evidence file records the SHA)"
+        },
+        "LG-02": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "scripts/eval_i18n_l10n.py, frontend/scripts/scan-i18n.mjs (0 unexplained literals), frontend/tests/i18n.test.tsx: key parity proven; translations unreviewed; no per-language Playwright English-leak run; native review pending (LG-11)"
+        },
+        "LG-03": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-04": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-05": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-06": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-07": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "tests/test_language_geography_separation_06a.py proves language never changes stored geography in account, onboarding, Opportunity, interview creation and agent run; owner decision on market suggestions and per-market source qualification NOT done, so not PASS"
+        },
+        "LG-08": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-09": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-10": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-11": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-12": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "tests/test_w97a_career_language.py and frontend/tests/career-answer-language.test.tsx cover ownership for the localized templates; not extended per language through live output"
+        },
+        "LG-13": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "docs/production/execution/language_readiness.json plus tests/test_language_readiness_06a.py (claims discipline); no language has passed all gates, so no aggregate claim is made"
+        },
+        "LG-14": {
+          "state": "PASS",
+          "evidence": "tests/test_language_boundaries_06a.py: Admin English-only, ru not offered, no zh/hi/ar registered, speech languages unchanged, ACTIVE_CANDIDATE_LOCALES parity with the frontend and capabilities"
+        }
+      }
+    },
+    "nl": {
+      "production_qualified": false,
+      "offered_to_real_users": false,
+      "gates": {
+        "LG-01": {
+          "state": "PASS",
+          "evidence": "docs/production/execution/evidence/06A_LOCALE_AUDIT.md; scripts/eval_locale_inventory.py (generated per-language inventory; the 06A evidence file records the SHA)"
+        },
+        "LG-02": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "scripts/eval_i18n_l10n.py, frontend/scripts/scan-i18n.mjs (0 unexplained literals), frontend/tests/i18n.test.tsx: key parity proven; translations unreviewed; no per-language Playwright English-leak run; native review pending (LG-11)"
+        },
+        "LG-03": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-04": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-05": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-06": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-07": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "tests/test_language_geography_separation_06a.py proves language never changes stored geography in account, onboarding, Opportunity, interview creation and agent run; owner decision on market suggestions and per-market source qualification NOT done, so not PASS"
+        },
+        "LG-08": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-09": {
+          "state": "NOT RUN",
+          "evidence": ""
+        },
+        "LG-10": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-11": {
+          "state": "NOT STARTED",
+          "evidence": ""
+        },
+        "LG-12": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "tests/test_w97a_career_language.py and frontend/tests/career-answer-language.test.tsx cover ownership for the localized templates; not extended per language through live output"
+        },
+        "LG-13": {
+          "state": "ENGINEERING DRAFT",
+          "evidence": "docs/production/execution/language_readiness.json plus tests/test_language_readiness_06a.py (claims discipline); no language has passed all gates, so no aggregate claim is made"
+        },
+        "LG-14": {
+          "state": "PASS",
+          "evidence": "tests/test_language_boundaries_06a.py: Admin English-only, ru not offered, no zh/hi/ar registered, speech languages unchanged, ACTIVE_CANDIDATE_LOCALES parity with the frontend and capabilities"
+        }
+      }
+    }
+  }
+}

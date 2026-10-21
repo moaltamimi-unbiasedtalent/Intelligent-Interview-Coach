@@ -73,6 +73,23 @@ def frontend_billing_violations(files: dict[str, str]) -> list[str]:
     return sorted(name for name, text in files.items() if _FORBIDDEN_FRONTEND_BILLING.search(text))
 
 
+# 06A (REQ-LANG-13, LG-13): no page or document may call a language production-qualified, natively reviewed or "multilingual ready"
+# while its gates are unpassed. A line may only mention such a phrase inside an explicit negation, condition or requirement.
+_LANG_CLAIM = re.compile(
+    r"production[- ]qualified|fully[- ]qualified|natively[- ]reviewed|native[- ]reviewed|multilingual[- ]ready|"
+    r"all (?:seven|7|eight|8) (?:languages|locales) (?:are |is )?(?:fully )?(?:supported|qualified|ready|production)|"
+    r"(?:is|are) qualified for (?:production|real users)", re.I)
+_LANG_NEGATION = re.compile(
+    r"\b(not|no|never|until|unless|only|before|without|must|cannot|neither|pending|required|requires|require|if|when|whether|"
+    r"gate|gates|criteria|means|each|per language|may not|do not|does not|none|nothing|forbid|prevent|disallow|reject|fail|"
+    r"claim discipline|no aggregate)\b", re.I)
+
+
+def language_qualification_claims(text: str) -> list[str]:
+    """Lines that assert a language qualification without a negation or condition on the same line (empty = clean)."""
+    return [ln.strip()[:160] for ln in text.splitlines() if _LANG_CLAIM.search(ln) and not _LANG_NEGATION.search(ln)]
+
+
 def run() -> dict[str, tuple[bool, str]]:
     results: dict[str, tuple[bool, str]] = {}
 
@@ -223,10 +240,18 @@ def run() -> dict[str, tuple[bool, str]]:
           "ask4mo-mark.svg" in layout and "icons" in layout,
           "favicon/app icons derive from the canonical mark")
 
+    claim_files = {rel: read(rel) for rel in MARKETING_COMPONENTS + ["lib/pricing.ts"]}
+    claim_files.update({f"messages/{loc}": locale_source(loc) for loc in LOCALES})
+    claim_files["messages/w96/legal.ts"] = read("lib/i18n/messages/w96/legal.ts")
+    offenders = {k: language_qualification_claims(v) for k, v in claim_files.items()}
+    check("no_language_qualification_claim", not any(offenders.values()),
+          "no public page or catalogue calls a language production-qualified before its gates pass (LG-13)")
+
     return results
 
 
 SAFETY = {
+    "no_language_qualification_claim",
     "no_glassdoor_integration_claim", "no_kununu_integration_claim", "no_review_aggregation_claim",
     "no_unrestricted_browsing_claim", "no_fabricated_social_proof", "no_unsupported_absolutes",
     "no_billing_code", "premium_claim_softened", "trust_ai_not_facts", "opportunity_workspace_distinct",

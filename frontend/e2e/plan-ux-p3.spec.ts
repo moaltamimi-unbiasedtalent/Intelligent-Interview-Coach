@@ -56,7 +56,7 @@ const SURFACES: { path: string; testid: string }[] = [
   { path: "/progress", testid: "progress-trends-planned" },
 ];
 
-for (const ui of ["en", "de", "ru"]) {
+for (const ui of ["en", "de", "fr"]) {
   for (const [w, h] of [[1280, 800], [768, 1024], [390, 844]] as const) {
     for (const theme of ["light", "dark"]) {
       test(`P3 plan UX surfaces ${ui} ${w}px ${theme}`, async ({ page }) => {

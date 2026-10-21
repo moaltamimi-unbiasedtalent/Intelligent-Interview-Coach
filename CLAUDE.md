@@ -382,7 +382,7 @@ assumptions in core logic, prompts, scoring or examples.
   Deterministic gate `scripts/eval_voice_experience.py` (26 invariants incl. the human-trait
   prohibition scanned as code identifiers) + `tests/test_voice_experience_p7.py`; unit
   `tests/voice-output.test.tsx`; Playwright `e2e/voice.spec.ts` (fake speech engines). i18n
-  `voice` namespace across the 7 locales then supported (8 now; speech remains 7 languages). No migration (Alembic head `0011_workspaces_shares`); 0
+  `voice` namespace across the 7 locales then supported (speech is 7 languages; Russian preserved but excluded from selection since 06A). No migration (Alembic head `0011_workspaces_shares`); 0
   paid/speech-provider calls; live human voice quality UNVALIDATED. See
   `docs/capstone/p7_voice_architecture_audit.md` + `p7_e5_voice_experience.md`.
 - **Teams/Workspaces + Platform Admin (Capstone P6.5).** Bounded collaboration + a bounded
@@ -410,7 +410,7 @@ assumptions in core logic, prompts, scoring or examples.
   repos stay owner-scoped. Teams access is a **separate dimension from BASIC/PREMIUM**; no
   billing at that phase (billing/payment administration is now planned under P10B-W10; enterprise SSO remains out of scope). Admin reuses the P6 reviewer APIs (no second backend;
   no-auto-promotion preserved). Candidate `FeedbackControl` gains an optional bounded category
-  (P6 taxonomy), i18n across the locales then supported (7; 8 now). Routes: `/api/v1/workspaces/*`, `/api/v1/shares/*`,
+  (P6 taxonomy), i18n across the locales then supported (7 selectable; Russian preserved but excluded since 06A). Routes: `/api/v1/workspaces/*`, `/api/v1/shares/*`,
   `/api/v1/admin/*`; frontend `/workspaces` (candidate, i18n) + `/admin` (English ops).
   New CI gates: `eval_workspace_security`, `eval_platform_admin`. See
   `docs/capstone/p6_5_workspace_admin_design.md` + `p6_5_workspaces_platform_admin.md`.
@@ -506,14 +506,21 @@ assumptions in core logic, prompts, scoring or examples.
 - **Internationalization coding standard (Capstone P3.5+).** New candidate-facing,
   user-visible strings MUST use the i18n system: add a key to the English source
   catalogue (`frontend/lib/i18n/messages/en.ts`) and every locale catalogue (de/fr/es/
-  it/pt/nl/ru), and render via `useT()` / `translate()`. Interface language, Mo conversation
+  it/pt/nl, plus the preserved ru catalogue, which must keep parity), and render via `useT()` / `translate()`. Interface language, Mo conversation
   language and dictation locale are **independent** settings, and a language choice never
   changes labour-market geography. Do not hard-code new English strings in candidate UI;
   reviewer/diagnostic-only text is exempt. See `docs/capstone/p3_5_i18n_l10n.md`.
   **P10B-W9.6/W9.7 — full localization, Russian, protected slogan (durable rules):** the product has
-  **eight** interface/conversation locales (en/de/fr/es/it/pt/nl/**ru**), declared ONCE in
-  `src/locales.py` (`SUPPORTED_LOCALE_CODES`, `AppLocale`) and `frontend/lib/i18n/locales.ts`
-  (`APP_LOCALES`, Russian label "Русский"). Adding an app locale NEVER enables other dimensions: speech
+  **seven selectable Candidate languages** (en/de/fr/es/it/pt/nl), the code-defined `ACTIVE_CANDIDATE_LOCALES` in
+  `src/locales.py` (also served by `GET /capabilities`; `AppLocale` is that seven and rejects anything else for NEW work;
+  mirrored by `ACTIVE_CANDIDATE_LOCALES`/`SELECTABLE_LOCALES` in `frontend/lib/i18n/locales.ts`; every selector renders
+  `SELECTABLE_LOCALES`). **Russian (`ru`, W9.7) is PRESERVED but EXCLUDED from R1.0 (REQ-LANG-14):** its catalogue,
+  prompts, directives, email templates and code stay (`SUPPORTED_LOCALE_CODES` and `APP_LOCALES` still list eight so stored
+  values and catalogue lookups resolve), it is not offered, a stored/cookie/browser `ru` falls back to English for display
+  (`effective_locale`, `toActiveLocale`; no rewrite, no migration, geography untouched) and the Russian live-UI Playwright
+  specs are dormant (`docs/production/execution/evidence/06A_RUSSIAN_TESTS_EXCLUDED.md`). A language is activated for real
+  users only when LG-01 to LG-14 pass for it (`docs/production/execution/language_readiness.json`); none is qualified yet
+  and the per-gate activation enforcement is package 06H, not 06A. Admin is English-only. Adding an app locale NEVER enables other dimensions: speech
   (dictation `DICTATION_LANGUAGES`, TTS `ttsLocales`, realtime `SUPPORTED_REALTIME_LOCALES`), document/OCR
   language (`DOCUMENT_LANGUAGE_CODES`), KB/taxonomy languages (`governance.SUPPORTED_LANGUAGES`; Russian is
   NOT an ESCO language) and labour-market geography (`CAREER_GEOGRAPHIES`; Russia is not a market) are

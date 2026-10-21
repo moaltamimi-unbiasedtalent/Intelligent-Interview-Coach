@@ -2,14 +2,14 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { translate } from "../lib/i18n/catalog";
 import { BRAND_SLOGAN } from "../lib/brand";
-import { SUPPORTED_LOCALE_CODES, type AppLocale } from "../lib/i18n/locales";
+import { ACTIVE_CANDIDATE_LOCALES, type AppLocale } from "../lib/i18n/locales";
 
 /**
  * P10B-W9.7A - experience closure, in real Chromium against the production build (backend mocked at the
- * network layer; no model/provider call). Covers: Home feature blocks in German/Russian/all 8 locales,
+ * network layer; no model/provider call). Covers: Home feature blocks in German/French/all 8 locales,
  * the Opportunity action (never a blank rectangle; bounded loading; auth-failure state; contrast, focus,
  * keyboard, themes, mobile), Mo-vs-interface language ownership in the response presentation, the error
- * card hierarchy (compact, collapsed details, request id, retry, focus, themes, Russian), Cyrillic font.
+ * card hierarchy (compact, collapsed details, request id, retry, focus, themes, French), Cyrillic font.
  */
 
 const tr = (l: string, k: string, v?: Record<string, string | number>) => translate(l as AppLocale, k, v);
@@ -92,7 +92,7 @@ async function contrast(page: Page, selector: string): Promise<number> {
 }
 
 // ─── Home feature blocks ───
-for (const ui of ["de", "ru"] as const) {
+for (const ui of ["de", "fr"] as const) {
   test(`Home ${ui}: original English feature strings absent, ${ui} present, Opportunity action labelled + keyboard-operable`, async ({ page }) => {
     await mock(page, { ui });
     await page.goto("/app");
@@ -114,7 +114,7 @@ for (const ui of ["de", "ru"] as const) {
 
 test("Home: all 8 locales render localized feature headings, a labelled CTA and the exact slogan", async ({ page }) => {
   await mock(page, { ui: "en" });
-  for (const ui of SUPPORTED_LOCALE_CODES) {
+  for (const ui of ACTIVE_CANDIDATE_LOCALES) {
     await page.unroute("**/api/v1/**");
     await mock(page, { ui });
     await page.goto("/app");
@@ -156,10 +156,10 @@ for (const theme of ["light", "dark"] as const) {
   for (const vp of [{ w: 1280, h: 800, n: "desktop" }, { w: 390, h: 780, n: "390px" }]) {
     test(`Opportunity action (${theme}, ${vp.n}): visible text, AA contrast, visible keyboard focus, no overflow`, async ({ page }) => {
       await page.setViewportSize({ width: vp.w, height: vp.h });
-      await mock(page, { ui: "ru", theme });
+      await mock(page, { ui: "fr", theme });
       await page.goto("/app");
       await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
-      const label = tr("ru", "home.opportunityCreate");
+      const label = tr("fr", "home.opportunityCreate");
       const cta = page.getByRole("link", { name: label });
       await expect(cta).toBeVisible();
       expect(await contrast(page, `a:has-text("${label}")`)).toBeGreaterThanOrEqual(4.5);
@@ -177,6 +177,7 @@ for (const theme of ["light", "dark"] as const) {
 
 // ─── Cyrillic typography ───
 test("Russian text renders in the existing Inter family (webfont), with the Cyrillic file preloaded", async ({ page }) => {
+  test.skip(true, "Russian excluded from R1.0 (REQ-LANG-14)");
   await mock(page, { ui: "ru" });
   await page.goto("/app");
   await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
@@ -204,7 +205,7 @@ const CHAT_NO_EVIDENCE = {
   tools: [], input_flagged: false, has_evidence: false, preparation_available: false,
 };
 
-const OWNERSHIP: Array<[string, string]> = [["de", "en"], ["en", "de"], ["ru", "ru"], ["en", "ru"], ["ru", "en"]];
+const OWNERSHIP: Array<[string, string]> = [["de", "en"], ["en", "de"], ["fr", "fr"], ["en", "fr"], ["fr", "en"]];
 for (const [ui, conv] of OWNERSHIP) {
   test(`response presentation: interface=${ui} conversation=${conv}: UI labels follow ${ui}, Mo note follows ${conv}`, async ({ page }) => {
     const chatBodies: unknown[] = [];
@@ -231,10 +232,10 @@ for (const [ui, conv] of OWNERSHIP) {
 // ─── Error card hierarchy + recovery ───
 for (const theme of ["dark", "light"] as const) {
   for (const vp of [{ w: 1280, h: 800, n: "desktop", maxH: 230 }, { w: 390, h: 780, n: "390px", maxH: 340 }]) {
-    test(`error card (${theme}, ${vp.n}, Russian): proportional, localized, collapsed details, keyboard disclosure, retry restores`, async ({ page }) => {
+    test(`error card (${theme}, ${vp.n}, French): proportional, localized, collapsed details, keyboard disclosure, retry restores`, async ({ page }) => {
       await page.setViewportSize({ width: vp.w, height: vp.h });
       const failHistory = { on: true };
-      await mock(page, { ui: "ru", theme, failHistory });
+      await mock(page, { ui: "fr", theme, failHistory });
       await page.goto("/history");
       const card = page.locator('[data-error-variant="page"]');
       await expect(card).toBeVisible();
@@ -244,9 +245,9 @@ for (const theme of ["dark", "light"] as const) {
       expect(box!.height).toBeLessThan(vp.h * 0.45);
       expect(box!.width).toBeLessThanOrEqual(vp.w);
       // Localized chrome (Russian), no English application chrome.
-      await expect(card.getByRole("heading", { name: tr("ru", "states.somethingWentWrong") })).toBeVisible();
-      await expect(card.getByText(tr("ru", "states.serverError"))).toBeVisible();
-      const retry = card.getByRole("button", { name: tr("ru", "states.retry") });
+      await expect(card.getByRole("heading", { name: tr("fr", "states.somethingWentWrong") })).toBeVisible();
+      await expect(card.getByText(tr("fr", "states.serverError"))).toBeVisible();
+      const retry = card.getByRole("button", { name: tr("fr", "states.retry") });
       await expect(retry).toBeVisible();
       await expect(card.getByText("Something went wrong")).toHaveCount(0);
       expect(await contrast(page, '[data-error-variant="page"] button')).toBeGreaterThanOrEqual(4.5);
@@ -271,7 +272,7 @@ for (const theme of ["dark", "light"] as const) {
 }
 
 test("error chrome renders localized in every locale (English never leaks into a non-English error card)", async ({ page }) => {
-  for (const ui of SUPPORTED_LOCALE_CODES) {
+  for (const ui of ACTIVE_CANDIDATE_LOCALES) {
     await page.unroute("**/api/v1/**");
     await mock(page, { ui, failHistory: { on: true } });
     await page.goto("/history");
@@ -306,6 +307,7 @@ test("section errors stay compact and the rest of the page stays usable (Progres
 // ─── Cyrillic visual QA across the main Russian surfaces (font, overflow, mobile, tutorial, error) ───
 for (const vp of [{ w: 1280, h: 800, n: "desktop" }, { w: 390, h: 780, n: "390px" }]) {
   test(`Russian surfaces (${vp.n}): Inter webfont for every text node, no horizontal overflow, controls not clipped`, async ({ page }) => {
+    test.skip(true, "Russian excluded from R1.0 (REQ-LANG-14)");
     await page.setViewportSize({ width: vp.w, height: vp.h });
     const failHistory = { on: false };
     await mock(page, { ui: "ru", failHistory });

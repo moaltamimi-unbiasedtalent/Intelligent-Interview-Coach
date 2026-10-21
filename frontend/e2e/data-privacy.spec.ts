@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { translate } from "../lib/i18n/catalog";
-import { SUPPORTED_LOCALE_CODES } from "../lib/i18n/locales";
+import { ACTIVE_CANDIDATE_LOCALES } from "../lib/i18n/locales";
 
 /**
  * P10B-W9.8 - Data & Privacy Center, end to end. Stateful network mock (no backend, no model, no paid or
@@ -213,7 +213,7 @@ for (const locale of ["en", "de"]) {
   });
 }
 
-for (const locale of ["de", "ru"]) {
+for (const locale of ["de", "fr"]) {
   test(`${locale}: Data & Privacy Center is fully localized (no raw keys, no English title)`, async ({ page }) => {
     await mock(page, locale);
     await page.goto("/account/data");
@@ -228,7 +228,7 @@ for (const locale of ["de", "ru"]) {
 }
 
 test("8-locale smoke: stable heading and primary sections render in every locale", async ({ page }) => {
-  for (const locale of SUPPORTED_LOCALE_CODES) {
+  for (const locale of ACTIVE_CANDIDATE_LOCALES) {
     await mock(page, locale);
     await page.goto("/account/data");
     await expect(page.getByRole("heading", { level: 1, name: T(locale, "dataPrivacy.title") })).toBeVisible();
@@ -242,7 +242,7 @@ test("8-locale smoke: stable heading and primary sections render in every locale
 
 test("mobile 390px (light and dark): no horizontal scroll, dialog fits, actions reachable", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
-  for (const locale of ["ru", "de"]) {
+  for (const locale of ["fr", "de"]) {
     await mock(page, locale);
     for (const scheme of ["light", "dark"] as const) {
       await page.emulateMedia({ colorScheme: scheme });

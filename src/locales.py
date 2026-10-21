@@ -1,4 +1,4 @@
-"""Canonical Ask4Mo PRODUCT locale allow-list (P10B-W9.6, extended to eight locales in W9.7).
+"""Canonical Ask4Mo PRODUCT locale allow-list (P10B-W9.6; eight catalogue locales since W9.7; 06A: seven ACTIVE Candidate locales, Russian preserved but excluded).
 
 One source of truth for the supported INTERFACE / Mo-conversation language codes. Pydantic request
 schemas import ``AppLocale``; ``src.persistence`` re-exports ``SUPPORTED_LOCALE_CODES`` as
@@ -26,8 +26,29 @@ from typing import Literal
 # The 8 supported product (interface + Mo-conversation) locales.
 SUPPORTED_LOCALE_CODES: tuple[str, ...] = ("en", "de", "fr", "es", "it", "pt", "nl", "ru")
 
-# Typed allow-list for request schemas (validated; an out-of-list value is rejected 422).
-AppLocale = Literal["en", "de", "fr", "es", "it", "pt", "nl", "ru"]
+# ACTIVE CANDIDATE LOCALES (06A, REQ-LANG-14 / LG-14). The only locales a Candidate may SELECT or start a NEW
+# session/conversation in. Code-defined on purpose: it cannot be changed from Admin or the environment, only by
+# a code change that cites per-language gate evidence (docs/production/execution/language_readiness.json).
+# ``ru`` is EXCLUDED from R1.0 (owner decision): its catalogue, prompts and tests are preserved, but it is not
+# offered and not accepted for new work. Being listed here is NOT a qualification claim: every language must still
+# pass LG-01..LG-14 before real users are admitted (see the readiness record); the list is the SELECTABLE set.
+ACTIVE_CANDIDATE_LOCALES: tuple[str, ...] = ("en", "de", "fr", "es", "it", "pt", "nl")
+DEFAULT_ACTIVE_LOCALE = "en"
+
+# Typed allow-list for NEW-work request schemas (validated; an out-of-list value, incl. an excluded locale,
+# is rejected 422 with the standard validation error shape).
+AppLocale = Literal["en", "de", "fr", "es", "it", "pt", "nl"]
+
+
+def is_active_locale(code: object) -> bool:
+    return isinstance(code, str) and code in ACTIVE_CANDIDATE_LOCALES
+
+
+def effective_locale(code: str | None) -> str:
+    """Display/default fallback for a STORED preference: a stored non-active locale (e.g. a legacy ``ru``)
+    falls back to the default interface language. Read-time only: it never rewrites the stored value and
+    never touches career geography (language is not geography)."""
+    return code if is_active_locale(code) else DEFAULT_ACTIVE_LOCALE
 
 # English display names, used ONLY to build trusted "write in <language>" directives. The model only ever
 # sees a name from this allow-list (never the raw code). Single copy: `src/prompts.py` (Practice) and
@@ -43,4 +64,4 @@ LANGUAGE_NAMES: dict[str, str] = {
 DOCUMENT_LANGUAGE_CODES: tuple[str, ...] = ("en", "de", "fr", "es", "it", "pt", "nl")
 DocumentLanguage = Literal["en", "de", "fr", "es", "it", "pt", "nl"]
 
-__all__ = ["SUPPORTED_LOCALE_CODES", "AppLocale", "LANGUAGE_NAMES", "DOCUMENT_LANGUAGE_CODES", "DocumentLanguage"]
+__all__ = ["SUPPORTED_LOCALE_CODES", "ACTIVE_CANDIDATE_LOCALES", "DEFAULT_ACTIVE_LOCALE", "is_active_locale", "effective_locale", "AppLocale", "LANGUAGE_NAMES", "DOCUMENT_LANGUAGE_CODES", "DocumentLanguage"]

@@ -67,9 +67,9 @@ def run() -> dict[str, tuple[bool, str]]:
           "ru" not in SUPPORTED_REALTIME_LOCALES and "ru" not in tts_codes and "ru" not in dict_codes, "ru excluded")
     readme = read("README.md")
     check("readme_states_locale_vs_speech",
-          all(code in readme for code in SUPPORTED_LOCALE_CODES) and re.search(r"Eight\s+\*\*interface locales\*\*", readme)
+          all(code in readme for code in SUPPORTED_LOCALE_CODES) and re.search(r"Seven selectable Candidate languages", readme) and "excluded from R1.0" in readme
           and re.search(r"seven\s+languages", readme) and "not an official ESCO language" in readme,
-          "README distinguishes 8 interface locales from 7 speech languages")
+          "README states 7 selectable Candidate languages (ru preserved, excluded) and 7 speech languages")
 
     # 3. Specialists: exactly three, no evaluation specialist, documented by name.
     from src.agent.specialists.registry import SpecialistName

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/components/i18n/I18nProvider";
-import { APP_LOCALES, type AppLocale } from "@/lib/i18n/locales";
+import { SELECTABLE_LOCALES, type AppLocale } from "@/lib/i18n/locales";
 
 /**
  * Global interface-language control (P10B Wave 1). Discoverable in BOTH the public marketing
@@ -95,7 +95,7 @@ export function LanguageMenu({ className }: { className?: string }) {
           onKeyDown={onMenuKeyDown}
           className="absolute right-0 z-40 mt-1 w-44 overflow-hidden rounded-[10px] border border-border bg-surface shadow-soft"
         >
-          {APP_LOCALES.map((l) => (
+          {SELECTABLE_LOCALES.map((l) => (
             <button
               key={l.code}
               type="button"

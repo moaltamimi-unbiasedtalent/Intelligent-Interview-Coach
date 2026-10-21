@@ -24,6 +24,7 @@ from sqlalchemy.orm import sessionmaker
 
 from src.coaching_style import COACHING_STYLES, DEFAULT_COACHING_STYLE
 from src.entitlements import ensure_default_subscription
+from src.locales import ACTIVE_CANDIDATE_LOCALES, effective_locale
 from src.persistence import (
     ACCOUNT_STATUS_ACTIVE,
     ACCOUNT_STATUS_DELETION_REQUESTED,
@@ -34,7 +35,6 @@ from src.persistence import (
     PLATFORM_ROLE_USER,
     RESPONSE_DETAIL_BRIEF,
     RESPONSE_DETAIL_VALUES,
-    SUPPORTED_LOCALES,
     TIER_BASIC,
     TIER_PREMIUM,
     AccountIdentity,
@@ -134,8 +134,8 @@ class AccountRepository:
             has_password=cred is not None,
             providers=tuple(sorted({i.provider for i in idents})),
             response_detail=pref.response_detail if pref else RESPONSE_DETAIL_BRIEF,
-            interface_locale=pref.interface_locale if pref else DEFAULT_LOCALE,
-            conversation_language=pref.conversation_language if pref else DEFAULT_LOCALE,
+            interface_locale=effective_locale(pref.interface_locale) if pref else DEFAULT_LOCALE,
+            conversation_language=effective_locale(pref.conversation_language) if pref else DEFAULT_LOCALE,
             coaching_style=pref.coaching_style if pref else DEFAULT_COACHING_STYLE,
             career_geography=pref.career_geography if pref else DEFAULT_CAREER_GEOGRAPHY,
             target_role=pref.target_role if pref else "",
@@ -437,14 +437,14 @@ class AccountRepository:
         return self._upsert_preference(user_id, response_detail=value)
 
     def set_interface_locale(self, user_id: int, value: str) -> bool:
-        """Set the UI language (validated against the supported allow-list)."""
-        if value not in SUPPORTED_LOCALES:
+        """Set the UI language (validated against the ACTIVE Candidate locales; an excluded locale is refused)."""
+        if value not in ACTIVE_CANDIDATE_LOCALES:
             return False
         return self._upsert_preference(user_id, interface_locale=value)
 
     def set_conversation_language(self, user_id: int, value: str) -> bool:
-        """Set Mo's conversation language (validated against the supported allow-list)."""
-        if value not in SUPPORTED_LOCALES:
+        """Set Mo's conversation language (validated against the ACTIVE Candidate locales)."""
+        if value not in ACTIVE_CANDIDATE_LOCALES:
             return False
         return self._upsert_preference(user_id, conversation_language=value)
 
