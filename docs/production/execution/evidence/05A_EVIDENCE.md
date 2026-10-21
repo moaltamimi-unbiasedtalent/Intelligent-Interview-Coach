@@ -31,18 +31,17 @@ All run offline, no docker, no network, no provider.
 
 | Command | Result |
 |---|---|
-| `pytest tests/test_staging_topology_05a.py` (main venv) | 29 passed |
-| `pytest tests/test_staging_topology_05a.py` (/tmp/ci_venv) | run completed but the pass count was NOT captured (output cut off): UNVERIFIED, must be re-run |
-| `pytest test_p8_hardening, test_service_resilience_w9_1, test_integrations_w10_6, test_jobs_w10_9, test_health` (main venv) | completed, summary line not captured: UNVERIFIED, must be re-run |
-| `ruff check .` | All checks passed |
-| `scripts/eval_hosting_readiness.py` | 15 PASS, 1 FAIL `migration_single_head`: environment artifact, the evaluator's subprocess replaces PYTHONPATH so alembic is not importable under my ad hoc interpreter invocation. `alembic heads` run separately shows the single head `0039_speech_governance`. Must be re-run under a healthy interpreter. |
+| `pytest` topology + test_p8_hardening, test_service_resilience_w9_1, test_integrations_w10_6, test_jobs_w10_9, test_health, repo `.venv` | 114 passed, 1 skipped (29 are the new 05A tests) |
+| same selection, `/tmp/ci_venv` (fresh-install canary) | 114 passed, 1 skipped |
+| `ruff check .` (both venvs) | All checks passed |
+| `scripts/eval_hosting_readiness.py` (both venvs, after the interpreter repair) | RESULT: PASS (the earlier `migration_single_head` FAIL was an artefact of the clobbered interpreter) |
 | `bash -n` backup.sh, restore.sh, migrate.sh | OK (also a pytest) |
 
-Environment fault: the Homebrew python3.11 was overwritten mid-task by a self-re-executing wrapper (file dated 20:06 local). I ran the tests through the framework `Python.app` binary with the venv `site-packages` on PYTHONPATH, and I issued one `pkill -f` against my own looping pytest process before the coordinator's instruction. All results above must be re-run once the interpreter is repaired.
+Environment fault: the Homebrew python3.11 was overwritten mid-task by a self-re-executing wrapper (file dated 20:06 local). I ran the tests through the framework `Python.app` binary with the venv `site-packages` on PYTHONPATH, and I issued one `pkill -f` against my own looping pytest process before the coordinator's instruction. The interpreter was then repaired by the owner and every result in the table above was re-run on the repaired interpreters.
 
 ## SHA and CI
 
-See the final report (filled after push); CI only runs once a PR exists.
+Implementation commit 250027c on `feat/05a-staging-topology`. CI: no PR exists, so the check-runs API returns total_count 0 (CI only runs on a PR). Compare URL: https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/new/feat/05a-staging-topology. CI result: NOT AVAILABLE.
 
 ## Remaining risks
 
@@ -52,5 +51,5 @@ Never started: compose syntax is parsed by tests but not by `docker compose conf
 
 - Start: 2026-10-21T18:03:23Z. End of authoring: 2026-10-21T18:14:35Z (before push).
 - Estimate: 8-12 engineering days (register). Actual wall-clock: about 11 minutes of agent time (excludes owner review, CI and the unverified live validation, so not comparable).
-- Rework rounds (fix commits after first push): 0 at the time of writing.
-- CI duration: not available until a PR exists.
+- Rework rounds (fix commits after first push): 0 code fix commits; one follow-up evidence-only commit (test results after the interpreter repair).
+- CI duration: not available until a PR exists. Verification was delayed by a machine-wide interpreter fault (about the time between the first test attempt and the repair), which is not engineering effort.
