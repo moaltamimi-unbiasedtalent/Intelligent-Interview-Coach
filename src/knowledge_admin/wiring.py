@@ -26,12 +26,12 @@ def build_governed_store(config, *, embedder=None, in_memory: bool = False):
 
     embedder = embedder or build_embedder(config)
     if in_memory or not _chroma_available():
-        return InMemoryVectorStore(embedder)
+        return InMemoryVectorStore(embedder, collection_name=P.COLLECTION)
     return ChromaStore(embedder, persist_dir=config.chroma_persist_dir, collection_name=P.COLLECTION)
 
 
 def build_serving_guard(session_factory, app_config, copilot_config, *, store_provider, doc_store=None, job_service=None, on_report=None,
-                        ttl_seconds: float = 15.0):
+                        ttl_seconds: float = 15.0, curated_store_provider=None):
     """The environment guard over the ONE runtime configuration (shared by the API and, for its identity record, the worker)."""
     from src.knowledge_admin.config import resolve_knowledge_runtime_config
     from src.knowledge_admin.environment import KnowledgeServingGuard
@@ -42,7 +42,8 @@ def build_serving_guard(session_factory, app_config, copilot_config, *, store_pr
         on_report = lambda report: observe_guard_report(session_factory, report)  # noqa: E731
     runtime = resolve_knowledge_runtime_config(app_config, copilot_config, session_factory=session_factory)
     return KnowledgeServingGuard(session_factory, runtime, store_provider=store_provider, doc_store=doc_store or build_knowledge_doc_store(runtime),
-                                 job_service=job_service, copilot_config=copilot_config, ttl_seconds=ttl_seconds, on_report=on_report)
+                                 job_service=job_service, copilot_config=copilot_config, ttl_seconds=ttl_seconds, on_report=on_report,
+                                 curated_store_provider=curated_store_provider)
 
 
 def build_worker_services(session_factory, config):
