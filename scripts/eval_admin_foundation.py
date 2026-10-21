@@ -28,6 +28,47 @@ def read(rel: str) -> str:
     return p.read_text(encoding="utf-8") if p.exists() else ""
 
 
+def _array_block(source: str, name: str) -> str:
+    """The text of the exported array literal ``name`` only (up to its closing bracket), never the remainder of the file."""
+    start = source.find(f"export const {name}")
+    if start < 0:
+        return ""
+    open_at = source.find("= [", start)
+    end = source.find("\n]", open_at)
+    return source[open_at:end] if open_at >= 0 and end >= 0 else ""
+
+
+def destinations_block(caps: str) -> str:
+    return _array_block(caps, "ADMIN_DESTINATIONS")
+
+
+def destination_ids(caps: str) -> list[str]:
+    return re.findall(r'\bid: "([^"]+)"', destinations_block(caps))
+
+
+def navigation_group_problems(caps: str) -> list[str]:
+    """03A (REQ-OWN-08): six approved groups, each destination in exactly one, group ids are a separate namespace and never counted as destinations, no permission logic inside a group."""
+    block = _array_block(caps, "ADMIN_GROUPS")
+    group_ids = re.findall(r'\bid: "([^"]+)"', block)
+    placed = [i for ids in re.findall(r"destinationIds: \[([^\]]*)\]", block) for i in re.findall(r'"([^"]+)"', ids)]
+    dest = destination_ids(caps)
+    problems: list[str] = []
+    if len(group_ids) != 6 or len(set(group_ids)) != 6:
+        problems.append(f"expected exactly 6 distinct groups, found {len(group_ids)}")
+    if "ADMIN_GROUPS" in destinations_block(caps) or any(g in re.findall(r'href: "([^"]+)"', block) for g in group_ids):
+        problems.append("group definitions leaked into the destination list or carry a link")      # group ids live in their own namespace and are never counted as destinations
+    if sorted(placed) != sorted(set(placed)):
+        problems.append("a destination is placed in more than one group")
+    if set(placed) != set(dest):
+        problems.append(f"placement does not match destinations (missing {sorted(set(dest) - set(placed))}, unknown {sorted(set(placed) - set(dest))})")
+    if re.search(r"anyOf|permission", block):
+        problems.append("a group carries permission logic")
+    grouped_fn = caps[caps.find("export function groupedDestinations"):]
+    if "visibleDestinations(granted)" not in grouped_fn.split("\n}\n", 1)[0]:
+        problems.append("grouping does not start from the permission-filtered destinations")
+    return problems
+
+
 def run() -> dict[str, tuple[bool, str]]:
     out: dict[str, tuple[bool, str]] = {}
 
@@ -105,9 +146,11 @@ def run() -> dict[str, tuple[bool, str]]:
     ui = "".join(read(str(p.relative_to(ROOT))) for p in (ROOT / "frontend/components/admin").glob("*.tsx")) + caps
     hits = sorted(f for f in CONTENT_FRAGMENTS if f in ui.lower())
     check("admin_ui_has_no_candidate_content_fields", not hits, ", ".join(hits) or "none")
-    nav = caps[caps.find("ADMIN_DESTINATIONS"):]
-    future = [w for w in ("Subscriptions", "Knowledge administration", "Privacy requests", "Incidents", "Feature Flags") if f'label: "{w}' in nav]
-    check("only_operational_destinations_listed", not future and len(re.findall(r'\bid: "', nav)) == 20, "twenty operational destinations (Support W10.3, Plans W10.4, Integrations W10.6, Jobs W10.9, Knowledge W10.8, Privacy and Legal W10.10, Billing W10.5, AI W10.7, Configuration and Feature flags W10.11, Reports W10.12, Security W10.13, Speech W12.4F), none planned")
+    dests = destinations_block(caps)
+    future = [w for w in ("Subscriptions", "Knowledge administration", "Privacy requests", "Incidents", "Feature Flags") if f'label: "{w}' in dests]
+    check("only_operational_destinations_listed", not future and len(destination_ids(caps)) == 20, "twenty operational destinations (Support W10.3, Plans W10.4, Integrations W10.6, Jobs W10.9, Knowledge W10.8, Privacy and Legal W10.10, Billing W10.5, AI W10.7, Configuration and Feature flags W10.11, Reports W10.12, Security W10.13, Speech W12.4F), none planned")
+    problems = navigation_group_problems(caps)
+    check("navigation_groups_are_six_and_place_each_destination_once", not problems, "; ".join(problems) or "six approved groups; every destination in exactly one; group ids are never counted as destinations; groups carry no permission logic")
 
     # --- scope guards ------------------------------------------------------------------------------
     mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
