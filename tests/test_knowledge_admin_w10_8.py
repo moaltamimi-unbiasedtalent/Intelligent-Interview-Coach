@@ -588,6 +588,7 @@ def test_no_raw_vector_browser_or_unbounded_content_routes():
                      ("POST", "/admin/knowledge/versions/{version_id}/approve"), ("POST", "/admin/knowledge/versions/{version_id}/reject"),
                      ("POST", "/admin/knowledge/versions/{version_id}/index"), ("POST", "/admin/knowledge/versions/{version_id}/activate"),
                      ("POST", "/admin/knowledge/versions/{version_id}/retire"), ("POST", "/admin/knowledge/versions/{version_id}/reprocess"),
+                     ("POST", "/admin/knowledge/versions/{version_id}/replace"), ("POST", "/admin/knowledge/versions/{version_id}/reindex"),   # 02A lifecycle
                      ("DELETE", "/admin/knowledge/versions/{version_id}"),
                      # W12.4A: operational readiness, the active-corpus inventory and a retrieval-ONLY test (safe metadata; no vectors, no chunks, no content browser)
                      ("GET", "/admin/knowledge/readiness"), ("GET", "/admin/knowledge/active"), ("POST", "/admin/knowledge/test-retrieval")}
@@ -603,7 +604,7 @@ def test_no_raw_vector_browser_or_unbounded_content_routes():
 
 def test_job_types_registered_and_use_ids_only_and_candidate_retrieval_wiring():
     from src.jobs.registry import REGISTRY
-    for code in (P.JOB_PARSE, P.JOB_INDEX, P.JOB_REMOVE):
+    for code in (P.JOB_PARSE, P.JOB_INDEX, P.JOB_REINDEX, P.JOB_REMOVE):
         d = REGISTRY[code]
         assert not d.admin_enqueue and set(d.payload_model.model_fields) == {"version_id"}
     svc_src = (ROOT / "src/copilot/service.py").read_text()

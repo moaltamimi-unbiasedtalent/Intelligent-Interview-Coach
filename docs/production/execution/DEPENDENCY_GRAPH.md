@@ -45,6 +45,7 @@ graph LR
   P06E["06E Per-language injection, security a"]
   P06F["06F Native review and legal translatio"]
   P06G["06G Independent human AI evaluation"]
+  P06H["06H Language activation control: fail-"]
   P07A["07A Deferral inaccessibility and engin"]
   P07B["07B Live grounding and agent-policy va"]
   P07C["07C Residual live verifications"]
@@ -82,6 +83,7 @@ graph LR
   P06A --> P06E
   P06C --> P06G
   P00A --> P06G
+  P06A --> P06H
   P05A --> P07A
   P03A --> P07A
   P01B --> P07B
@@ -92,6 +94,7 @@ graph LR
   P04F --> P08A
   P00B --> P08A
   P07A --> P08A
+  P06H --> P08A
   P06G --> P08A
   P05B --> P08A
   P05C --> P08A
@@ -116,7 +119,7 @@ graph LR
 
 ## Dependency order (topological)
 
-00A, 00B, 01A, 01B0, 01B, 01D, 01C, 02K, 02A, 02B, 02C, 02D, 02E, 03A, 03B, 03C, 03K, 03D1, 03D2, 03E1, 03E2, 04A, 04B, 04C, 05A, 04D, 04E, 04F, 05B, 05C, 05D, 05E, 06A, 06B, 06C, 06D, 06E, 06F, 06G, 07A, 07B, 07C, 08A0, 08A
+00A, 00B, 01A, 01B0, 01B, 01D, 01C, 02K, 02A, 02B, 02C, 02D, 02E, 03A, 03B, 03C, 03K, 03D1, 03D2, 03E1, 03E2, 04A, 04B, 04C, 05A, 04D, 04E, 04F, 05B, 05C, 05D, 05E, 06A, 06B, 06C, 06D, 06E, 06F, 06G, 06H, 07A, 07B, 07C, 08A0, 08A
 
 ## Critical path
 

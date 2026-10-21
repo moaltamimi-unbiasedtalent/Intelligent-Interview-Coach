@@ -5,6 +5,11 @@
 #           never per-replica auto-migrate)
 #   api     FastAPI/uvicorn :8000  (after migrate completes + db healthy;
 #           mounts the private documents volume at /data/documents)
+#   worker  background job worker `python -m src.jobs.worker` from the API image
+#           (single replica; after migrate completes + db healthy; shares the
+#           api's COPILOT_DATA_DIR volume and the private documents volume)
+#   clamav  ClamAV daemon, TCP 3310 on the internal network ONLY (never
+#           published to the host); signatures persisted in a named volume
 #   web     Next.js 15 :3000       (after api)
 #   caddy   edge reverse proxy — terminates TLS, adds HSTS, routes / -> web
 #           and /api -> api
@@ -14,6 +19,10 @@
 #
 #   cp deploy/.env.staging.example deploy/.env.staging   # then edit
 #   docker compose -f deploy/docker-compose.staging.yml up -d --build
+#
+# DEPLOYMENT FREEZE: this topology is code only. It must NOT be deployed until the
+# owner answers OD-HOSTED and explicitly authorises a deployment. It has never been
+# started (`docker compose up` has not been run); see deploy/README-staging.md.
 #
 # Build context is the repo ROOT (..) so src/, migrations/, frontend/ are visible.
 
@@ -72,20 +81,92 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      clamav:
+        condition: service_healthy
     env_file:
       - .env.staging
+    # The knowledge/index data root and scanner wiring are pinned HERE (they override
+    # env_file) so the api and the worker can never disagree about them.
+    environment:
+      COPILOT_DATA_DIR: /data/knowledge
+      FILE_SCAN_PROVIDER: clamav
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: "3310"
     # Private document storage — a mounted named volume, NEVER a public bucket
     # and never under the frontend public assets. Matches DOCUMENT_STORAGE_DIR.
+    # knowledge-data is the SINGLE authoritative knowledge/index root shared with
+    # the worker (an API and a worker with different roots would see different,
+    # possibly empty, knowledge bases).
     volumes:
       - documents:/data/documents
+      - knowledge-data:/data/knowledge
     expose:
       - "8000"
+    # Readiness (DB + config + data-root writability; reports worker heartbeat and
+    # scanner reachability without secrets). 503 until the DB and data root work.
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/api/health || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/api/v1/ready || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 20s
+
+  # --------------------------------------------------------------------------
+  # Background job worker. Same image, DATABASE_URL, COPILOT_DATA_DIR and
+  # documents volume as the api. SINGLE replica: do not scale this service until a
+  # multi-worker drill has been run (claiming is DB-based, but it is unvalidated live).
+  worker:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    restart: unless-stopped
+    command: ["python", "-m", "src.jobs.worker"]
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      clamav:
+        condition: service_healthy
+    env_file:
+      - .env.staging
+    environment:
+      COPILOT_DATA_DIR: /data/knowledge
+      FILE_SCAN_PROVIDER: clamav
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: "3310"
+    volumes:
+      - documents:/data/documents
+      - knowledge-data:/data/knowledge
+    # Heartbeat: the worker writes a presence row each poll cycle; unhealthy when no
+    # running heartbeat is fresher than 180 s (more lenient than the admin 60 s view).
+    healthcheck:
+      test: ["CMD", "python", "-m", "src.jobs.healthcheck", "180"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 40s
+    stop_grace_period: 30s
+
+  # --------------------------------------------------------------------------
+  # ClamAV (official image). clamd listens on 3310 INSIDE the compose network only:
+  # there is deliberately NO `ports:` mapping, so the scanner is never reachable from
+  # the host or the internet. Signature database persisted in clamav-signatures
+  # (first start downloads signatures: allow several minutes; needs outbound access to
+  # the ClamAV mirrors).
+  clamav:
+    image: clamav/clamav:1.4
+    restart: unless-stopped
+    volumes:
+      - clamav-signatures:/var/lib/clamav
+    expose:
+      - "3310"
+    healthcheck:
+      test: ["CMD-SHELL", "clamdcheck.sh || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
 
   # --------------------------------------------------------------------------
   web:
@@ -136,8 +217,13 @@ services:
     env_file:
       - .env.staging
 
+# Persistent named volumes. BACKED UP: db-data (pg_dump), documents (tar),
+# knowledge-data (tar). NOT backed up (re-creatable): clamav-signatures (re-downloaded),
+# caddy-data/caddy-config (certificates are re-issued by ACME).
 volumes:
   db-data:
   documents:
+  knowledge-data:
+  clamav-signatures:
   caddy-data:
   caddy-config:

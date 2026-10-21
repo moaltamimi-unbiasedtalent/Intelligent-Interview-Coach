@@ -590,7 +590,7 @@ def test_migration_0032_is_the_single_head_upgrades_cleanly_and_downgrades_witho
     from sqlalchemy import create_engine, inspect
     from tests.test_billing_f1_qualification import _alembic
     cfg, url = _alembic(tmp_path, monkeypatch)
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0039_speech_governance"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == ["0040_knowledge_alert_categories"]
     command.upgrade(cfg, "0031_account_closure")
     assert "ai_operation_events" not in inspect(create_engine(url)).get_table_names()
     command.upgrade(cfg, "head")

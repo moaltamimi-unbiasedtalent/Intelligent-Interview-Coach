@@ -51,6 +51,11 @@ ALERT_DEFINITIONS: Final[dict[str, dict]] = {
     "auth_failure_burst": {"severity": "high", "source_type": "account", "title": "Repeated failed sign-ins for one account"},
     "admin_access_denied_burst": {"severity": "medium", "source_type": "account", "title": "Repeated denied Admin access by one account"},
     "job_failed": {"severity": "medium", "source_type": "job", "title": "A background job failed terminally"},
+    # 02A: knowledge health (derived from the environment guard; see src/knowledge_admin/alerts.py)
+    "knowledge_collection_lost": {"severity": "high", "source_type": "knowledge", "title": "The governed knowledge collection is empty, missing or incomplete"},
+    "knowledge_source_files_missing": {"severity": "high", "source_type": "knowledge", "title": "Private knowledge source files are missing"},
+    "knowledge_identity_mismatch": {"severity": "high", "source_type": "knowledge", "title": "The API and the worker use different knowledge environments"},
+    "knowledge_embedding_mismatch": {"severity": "medium", "source_type": "knowledge", "title": "The embedder does not match the knowledge index"},
 }
 ALERT_NOT_IMPLEMENTED: Final[tuple[str, ...]] = (
     "provider_outage", "error_rate", "failed_payments", "stale_knowledge_source", "indexing_failure", "support_sla_breach",

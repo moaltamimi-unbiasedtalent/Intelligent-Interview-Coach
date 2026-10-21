@@ -73,6 +73,14 @@ class ExperimentRun(BaseModel):
     metrics: list[MetricResult] = Field(default_factory=list)
     # A safe snapshot of the production config versions AT RUN TIME (attribution, §16).
     production_versions: dict[str, str] = Field(default_factory=dict)
+    # Exact attribution (01B R7): the declared version and body hash of every production prompt
+    # family in effect at run time (identifiers and hashes, never prompt text), the effective
+    # model id per profile from the registry, and a hash of THIS variant's bounded configuration,
+    # so a result is attributable to prompt version + model + configuration. Defaults keep
+    # experiments stored before 01B loadable.
+    prompt_assets: dict[str, dict[str, str]] = Field(default_factory=dict)
+    model_profiles: dict[str, str] = Field(default_factory=dict)
+    configuration_sha256: str = ""
     error: str | None = None
 
 

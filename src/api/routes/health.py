@@ -55,6 +55,19 @@ def ready(request: Request) -> dict:
     except Exception:  # noqa: BLE001
         checks["config"] = True
 
+    # 3) Hosted topology (05A): data-root writability GATES readiness in staging/production; worker heartbeat and scanner reachability
+    #    are REPORTED (status words only, no paths/hosts/secrets) so an operator sees them without a worker outage taking the API out of rotation.
+    dependencies: dict[str, str] = {}
+    from src.application import hosted_readiness as hr
+
+    if hr.is_hosted():
+        checks["data_root_writable"] = hr.data_root_writable()
+        if checks["database"]:
+            dependencies["worker_heartbeat"] = hr.worker_status(repo.session_factory)
+        else:
+            dependencies["worker_heartbeat"] = "unknown"
+        dependencies["scanner"] = hr.scanner_status()
+
     ready_ok = all(checks.values())
     body = {
         "status": "ready" if ready_ok else "not_ready",
@@ -62,6 +75,8 @@ def ready(request: Request) -> dict:
         "version": request.app.state.settings.version,
         "checks": checks,
     }
+    if dependencies:
+        body["dependencies"] = dependencies
     if not ready_ok:
         raise HTTPException(status_code=503, detail=body)
     return body

@@ -655,6 +655,7 @@ def test_migration_0039_creates_the_table_and_its_downgrade_is_fail_closed(tmp_p
         assert c.execute(text("select count(*) from speech_governance")).scalar() == 0                      # nothing is seeded: the defaults are code
         c.execute(text("insert into speech_governance (environment, stt_provider, tts_provider, languages, stt_timeout_seconds, tts_timeout_seconds, revision, updated_at, reason) "
                        "values ('development', 'openai_whisper', 'kyutai_pocket_tts', '[]', 30, 30, 1, '2026-01-01', 'x')"))
+    command.downgrade(cfg, "0039_speech_governance")                                                        # 0040 (knowledge alert categories) is above it and downgrades cleanly
     with pytest.raises(RuntimeError, match="Refusing to downgrade 0039_speech_governance"):
         command.downgrade(cfg, "0038_compensation_concepts")
     with eng.connect() as c:

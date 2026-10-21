@@ -1,0 +1,178 @@
+{
+  "agent/judge": {
+    "version": "1.0.0",
+    "sha256": "0d230bbc2e4aaf669aae3074b3c002f143b8ef35883f448460dfb92982b7ac94"
+  },
+  "agent/judge_user": {
+    "version": "1.0.0",
+    "sha256": "248125333f71bf27656ad59bc590641f95e42acc5a9dd337c5e6d751dc498e5b"
+  },
+  "agent/response_language": {
+    "version": "1.0.0",
+    "sha256": "7a5cb3b609b707d6d83006563776e35577c569b3224f6dd9ca5616c382133db5"
+  },
+  "agent/system": {
+    "version": "1.0.0",
+    "sha256": "72f03d8133c345f22e873418b8fb84718967625f539782cecf0df9b953c95a6e"
+  },
+  "career/job_analysis": {
+    "version": "1.0.0",
+    "sha256": "4cc3da88efd5355614bae244b86bc55c28f368afb5fbe258a084c182eb4be837"
+  },
+  "career/job_analysis_focus": {
+    "version": "1.0.0",
+    "sha256": "dc724e77b9d060742603c4311adfa1efd47453b2a7312e93b4fe6250e478cfed"
+  },
+  "career/question_generation": {
+    "version": "1.0.0",
+    "sha256": "8dbf2c040195f057d862397f52146b596bec2b3804d905d865823bc521f472e4"
+  },
+  "coaching/directives": {
+    "version": "1.0.0",
+    "sha256": "ea711c77bb8975e13c659e3bbb094f9c6fd8e7a2789a729cf0e8e26da9a490dd"
+  },
+  "coaching/wrapper": {
+    "version": "1.0.0",
+    "sha256": "310dbf3b4388eb118918b5bc34231c97949673e0be4a7ef0a557c98416dfd7cb"
+  },
+  "interview/closing_branch": {
+    "version": "1.0.0",
+    "sha256": "385d34f1f2ef3372ab4c11c8737a56d1f777c8988eb1e0624cf790c971d43516"
+  },
+  "interview/closing_evaluation": {
+    "version": "1.0.0",
+    "sha256": "ad2daedc416ef2315e69fd7a4936a38bc607f80e4235a08a916b4596b31d2057"
+  },
+  "interview/closing_question": {
+    "version": "1.0.0",
+    "sha256": "f344ab5b596273f6b175d0f65ab7327357f21b63118ebeadc5c7001797ad38e7"
+  },
+  "interview/closing_report": {
+    "version": "1.0.0",
+    "sha256": "90be44137a11d078346263abf962d4d61bed400347f2a3b6d6e8a780c4bff705"
+  },
+  "interview/closing_strategy": {
+    "version": "1.0.0",
+    "sha256": "6b6a175afdcfcb7f365b742dc68362870e768a6143b0905e4a48c08ce868fd1e"
+  },
+  "interview/difficulty_rigour": {
+    "version": "1.0.0",
+    "sha256": "182600c1be7a231a58b967d5037c88774ea859aeacdd1b06c03f7af8595fcff6"
+  },
+  "interview/few_shot_example": {
+    "version": "1.0.0",
+    "sha256": "965dcff004fd2c2516243e776619ecb9abf6ff2d411fb4289631c605b16b75de"
+  },
+  "interview/guardrails": {
+    "version": "1.0.0",
+    "sha256": "77b1a223f41e0d7afc351f592b560d76f92bba39b93780704706780f97d1da1e"
+  },
+  "interview/language_directive": {
+    "version": "1.0.0",
+    "sha256": "f14915ac89b3a37566fa27f80b2ce4338e3dc1a73e0f5cf2efa42535991922c4"
+  },
+  "interview/method_few_shot": {
+    "version": "1.0.0",
+    "sha256": "2f1d7e2da197ed96e539a3c6a668b2408455fbd8b1344210a0d4c0b8a81d79ac"
+  },
+  "interview/method_role_persona": {
+    "version": "1.0.0",
+    "sha256": "99e75ee3f69f34a57cdfb72e320684d54b8502267744149856faebd10b5971ac"
+  },
+  "interview/method_rubric_json": {
+    "version": "1.0.0",
+    "sha256": "72610ec4fefb08e9e13f17d4302e8e22d6f3ef07ecd21064e00680138b1db8fc"
+  },
+  "interview/method_structured_procedure": {
+    "version": "1.0.0",
+    "sha256": "f01319cda34e50c6ffc2c4721c6d1707ff6b65c536daa1e53b0ba57ff2a72ae1"
+  },
+  "interview/method_zero_shot": {
+    "version": "1.0.0",
+    "sha256": "f31309dba15d7903e95aba29eb9c1ff87a5f5c2609dc988bf18f75e5a66815b7"
+  },
+  "interview/mission": {
+    "version": "1.0.0",
+    "sha256": "a6a399740edef4d84eaa58943de2846b58abd18cc9b27f229358bb3b0c094a52"
+  },
+  "interview/output_contract_evaluation": {
+    "version": "1.0.0",
+    "sha256": "367712a6fb72ace661d0075f754517c4a83cd6e496e949485e0865f01f61679e"
+  },
+  "interview/output_contract_generic": {
+    "version": "1.0.0",
+    "sha256": "f0d7ebec9b0ebbd8cbc070018236b2f2d7481db0a12d0f97ea531257c3b30aa5"
+  },
+  "interview/persona_tone": {
+    "version": "1.0.0",
+    "sha256": "3da91e9faae64d202816f27c7eaa36bca60a249c471ed37b97612ff695d21e59"
+  },
+  "interview/response_detail_length": {
+    "version": "1.0.0",
+    "sha256": "ea3813992ea0a3210d42168e8cc8de5285ed603ea105052e4244414b4ddc390a"
+  },
+  "interview/session_parameters": {
+    "version": "1.0.0",
+    "sha256": "96b937214a0c44c9737c3fa6ff103d3d2720b9f08add46c48eb61c88598b54d1"
+  },
+  "interview/task_branch": {
+    "version": "1.0.0",
+    "sha256": "953ddbbd6adc44691b96f8f86e3549a1f9f2951fa4328476dcb35d788f5fb8b8"
+  },
+  "interview/task_evaluation": {
+    "version": "1.0.0",
+    "sha256": "c4272a26476c35ec6570aa72add824604704daeb7286d1500130b26eb992f849"
+  },
+  "interview/task_method": {
+    "version": "1.0.0",
+    "sha256": "ecaa92659a53ed9d56c2ba34ebf419a76295ffdcfbf70a491ae639f00e6df63f"
+  },
+  "interview/task_question": {
+    "version": "1.0.0",
+    "sha256": "cb6c4da186eb587e23603d9c9c0e92e85a0caa047a94ec2ac96ac8ddd4406350"
+  },
+  "interview/task_report": {
+    "version": "1.0.0",
+    "sha256": "de1df57b2c536d415d0f48fb66c92ec0b47cc9095151169fd4a4ded15e494f95"
+  },
+  "interview/task_strategy": {
+    "version": "1.0.0",
+    "sha256": "5d5b5ffd6800380f0871f24f75b1324dbf54ec9d4fb17864db348a5b771abd9b"
+  },
+  "interview/technique_directives": {
+    "version": "1.0.0",
+    "sha256": "c818c99e2598e8c59953e40e37356e5fb3fb00c75aa5918d786e43896535d511"
+  },
+  "interview/user_frame_evaluation": {
+    "version": "1.0.0",
+    "sha256": "10c6a7fbcafce92cab4b7832ad81696b0a94e654781bfa4dcf164b73582269d5"
+  },
+  "interview/user_frame_task": {
+    "version": "1.0.0",
+    "sha256": "6dda7d49fa9f8ae7bf79b687b8600bd3ac44d7256574a4c5906489fac74d5401"
+  },
+  "rag/baseline_system": {
+    "version": "1.0.0",
+    "sha256": "538911972b66ecaf395079d91ff23ff31681251b8117d78f8653f64b34f1d27e"
+  },
+  "rag/baseline_user_context": {
+    "version": "1.0.0",
+    "sha256": "52e66b81e7204b582fcf302428ffe014d19fd74d97e5d32dff7b2d65663ef940"
+  },
+  "rag/baseline_user_no_context": {
+    "version": "1.0.0",
+    "sha256": "90bae7035d82947534ee91eb63d904e5a06a79dcaf852e166dd2c96eecca08c8"
+  },
+  "rag/query_understanding_system": {
+    "version": "1.0.0",
+    "sha256": "9a2a3a35148d2f14d60db1676a999f68e9244f1bdd8324cc5e828131261c5f92"
+  },
+  "rag/query_understanding_user": {
+    "version": "1.0.0",
+    "sha256": "1f37bab3b43873663cfd3f75ff8d1f833d204241d3fb5c0c51d7ddca2f784e0b"
+  },
+  "rag/synthesis_system": {
+    "version": "1.0.0",
+    "sha256": "1de2487c2457486342f241412625b79983a871f81c0d7eae2a4c68625ae88b53"
+  }
+}

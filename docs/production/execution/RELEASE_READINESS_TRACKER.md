@@ -8,7 +8,7 @@ State vocabulary: NOT STARTED, IN PROGRESS, READY FOR REVIEW, PASS, FAIL, BLOCKE
 
 | Gate | Name | Packages | Owner role (person not yet named) | State | Evidence | Blocked by / next action |
 |---|---|---|---|---|---|---|
-| PG-01 | Secure hosted deployment | 05A | Platform and operations lead | BLOCKED | none | OD-HOSTED; add worker, knowledge volume and ClamAV to the topology |
+| PG-01 | Secure hosted deployment | 05A | Platform and operations lead | BLOCKED | none | OD-HOSTED; topology as code delivered on branch feat/05a-staging-topology @ 0a7d6fb (no PR, no CI, not deployed) |
 | PG-02 | Identity and account lifecycle | 04E, 05D | Security lead | NOT STARTED | none | OD-INVITE; live email and OIDC need the hosted environment |
 | PG-03 | Injection defence and tool safety | 01A, 06E, 07B | AI safety lead | NOT STARTED | none | OD-GATE-THRESHOLDS; start corpus build (01A) |
 | PG-04 | Privacy, legal and data rights | 05E, 06F | Privacy and legal lead | NOT STARTED | none | Name legal qualifiers (OD-LANG-04); counsel engagement |
@@ -17,7 +17,7 @@ State vocabulary: NOT STARTED, IN PROGRESS, READY FOR REVIEW, PASS, FAIL, BLOCKE
 | PG-07 | Independent human AI evaluation | 06G | Quality and human-review lead | BLOCKED | none | No reviewers named (00A) |
 | PG-08 | Admin 2.0 functionality | 03A, 03B, 03C, 03D1, 03D2 | Product lead (operations) | NOT STARTED | none | OD-ADMIN-NAV, OD-PLAN-ENFORCE, OD-BULK-ACTIONS |
 | PG-09 | Observability, resilience, backup, restore, rollback | 05B, 05C | Platform and operations lead | NOT STARTED | none | Needs staging (05A) |
-| PG-10 | Deferred and paid features disabled | 07A, 06A | Engineering lead | IN PROGRESS | Gate constants checked False by `reconcile_issues.py check` | UI plus API inaccessibility suite not written; Russian still selectable |
+| PG-10 | Deferred and paid features disabled | 07A, 06A | Engineering lead | IN PROGRESS | Gate constants checked False by `reconcile_issues.py check` | UI plus API inaccessibility suite not written; Russian exclusion delivered on branch feat/06a-locale-boundaries (no PR, no CI, corrections pending) |
 | PG-11 | Complete issue reconciliation | all | Product Owner | PASS (machine-checked) | `reconcile_issues.py check`; `tests/test_production_reconciliation.py` | Re-run on every change |
 | PG-12 | Prompt versioning, provenance, registry parity | 01B0, 01B, 01D, 01C | AI platform lead | NOT STARTED | none | Phase 01 approval |
 | PG-13 | Story Bank and Workspaces | 04A, 04B, 06B | Product lead (collaboration) | NOT STARTED | none | OD-WS-TRANSFER |
@@ -37,7 +37,7 @@ All 98 language-gate cells are NOT STARTED or NOT RUN; none has passed. Per-lang
 | Portuguese | Portugal | 0 of 14 | NOT ACTIVE | Same |
 | French | France | 0 of 14 | NOT ACTIVE | Same |
 | Dutch | Netherlands | 0 of 14 | NOT ACTIVE | Same |
-| Russian | none | not applicable | EXCLUDED from R1.0 | Still selectable in the product until 06A |
+| Russian | none | not applicable | EXCLUDED from R1.0 | Still selectable on main; removed from active selection on branch feat/06a-locale-boundaries pending PR, CI and review |
 
 ## 3. Reviewer findings and owner requirements
 
@@ -71,3 +71,7 @@ All 98 language-gate cells are NOT STARTED or NOT RUN; none has passed. Per-lang
 ## 6. Historical gates preserved
 
 The historical 95% coverage gate (386 of 412 against 392) remains FAIL; AC-24 remains PARTIAL; human-qualified coverage remains 0 of 412. A separate frozen beta-scope coverage measure (02E, OD-COVERAGE) is reported beside, never instead of, these.
+
+## 7. First-wave integration status (2026-10-21)
+
+Branches exist for 02K, 01B0, 03K, 05A, 01A, 03A, 06A and 01B; 02A is in progress. No pull request has been opened, so no GitHub CI result exists and no gate is PASS on this wave's evidence. See `FIRST_WAVE_INTEGRATION_DASHBOARD.md` for SHAs, merge order, the conflict dry-run (none) and blockers. Language activation enforcement (LG-01..LG-14, fail closed) is tracked as package 06H. No language is production-qualified.
