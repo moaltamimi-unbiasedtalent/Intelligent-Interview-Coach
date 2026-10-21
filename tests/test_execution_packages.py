@@ -94,7 +94,9 @@ def test_topology_and_knowledge_persistence_are_an_early_parallel_workstream_and
     assert set(E.EARLY_PARALLEL) == {"02A", "05A", "05E"} and all(E.BYID[k]["start"] <= 1 for k in E.EARLY_PARALLEL)
     assert "DEPLOYMENT FREEZE" in E.BYID["05A"]["note"] and "must NOT be deployed" in E.BYID["05A"]["note"]
     compose = (ROOT / "deploy/docker-compose.staging.yml").read_text(encoding="utf-8")
-    assert "worker" not in compose and "clamav" not in compose.lower().replace("clamav_host", "")      # the gap the freeze protects against is real until 05A fixes it
+    lowered = compose.lower().replace("clamav_host", "")
+    if "worker" in compose or "clamav" in lowered:      # 05A has merged: the topology must then be complete, not partial
+        assert "worker" in compose and "clamav" in lowered and "knowledge-data" in compose
     schedule = (E.OUT / "DELIVERY_SCHEDULE.md").read_text(encoding="utf-8")
     assert "Early parallel workstream" in schedule and "must not be deployed" in schedule
 
