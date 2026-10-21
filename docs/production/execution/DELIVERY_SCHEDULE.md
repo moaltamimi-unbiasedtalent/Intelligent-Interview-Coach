@@ -32,7 +32,7 @@
 | 04C Agent streaming and cancellation (REVIEW-05) |  |  |  | # | # |  |
 | 04D Candidate journey reliability (REQ-CAND-01) |  |  |  | # | # | # |
 | 04E Invitation-only registration (REQ-BETA-01) |  |  |  |  | # | # |
-| 04F Browser dictation disclosure and verification |  |  |  |  | # | # |
+| 04F Browser dictation disclosure and verification |  |  |  |  |  | # |
 | 05A Hosted topology and platform hardening |  | # | # |  |  |  |
 | 05B Persistence, backup, restore and rollback dril |  |  |  | # | # | # |
 | 05C Observability, alerting and provider resilienc |  |  |  | # | # | # |
@@ -45,6 +45,7 @@
 | 06E Per-language injection, security and privacy s |  |  |  |  | # | # |
 | 06F Native review and legal translation qualificat |  |  | # | # | # | # |
 | 06G Independent human AI evaluation |  |  |  | # | # | # |
+| 06H Language activation control: fail-closed enfor |  |  |  |  | # | # |
 | 07A Deferral inaccessibility and engineering hygie |  |  |  |  | # | # |
 | 07B Live grounding and agent-policy validation |  |  |  |  | # | # |
 | 07C Residual live verifications |  |  |  |  |  | # |
@@ -63,7 +64,7 @@ Weeks: W0 = 21-25 Oct; W1 = 26 Oct-1 Nov; W2 = 2-8 Nov; W3 = 9-15 Nov; W4 = 16-2
 | 03 | Track C: Admin 2.0 navigation, plans, users, Command Center, reports | 03A, 03B, 03C, 03K, 03D1, 03D2, 03E1, 03E2 | W1-W6 |
 | 04 | Track D: Story Bank, Workspaces, streaming, journey reliability, invitations | 04A, 04B, 04C, 04D, 04E, 04F | W2-W6 |
 | 05 | Track E: hosted topology, restore drills, observability, identity, privacy/legal readiness | 05A, 05B, 05C, 05D, 05E | W1-W6 |
-| 06 | Track F: seven-language programme and human qualification | 06A, 06B, 06C, 06D, 06E, 06F, 06G | W1-W6 |
+| 06 | Track F: seven-language programme and human qualification | 06A, 06B, 06C, 06D, 06E, 06F, 06G, 06H | W1-W6 |
 | 07 | Integration and hardening: deferral inaccessibility, live validation | 07A, 07B, 07C | W4-W6 |
 | 08 | Freeze, release evidence and beta readiness | 08A0, 08A | W2-W7 |
 
@@ -90,9 +91,9 @@ Phases are groupings for sequencing and review, not strict serial stages: Phases
 
 ## Capacity and feasibility (computed)
 
-- Package effort total: **205 to 319 ideal engineering days** across 44 packages.
+- Package effort total: **209 to 325 ideal engineering days** across 45 packages.
 - Window: W1 to W5 = 25 working days. With 70% utilisation (review, CI waits, rework: an assumption) one stream delivers about 17.5 productive days.
-- Parallel streams needed to fit the total in the window: **11.7 to 18.2** (one stream = one engineer or one focused agent session; the owner's real capacity is not recorded anywhere and is an input needed for OD-SCOPE-01).
+- Parallel streams needed to fit the total in the window: **11.9 to 18.6** (one stream = one engineer or one focused agent session; the owner's real capacity is not recorded anywhere and is an input needed for OD-SCOPE-01).
 - Critical path lower bound: 18 to 27 days of strictly sequential effort inside a 25-working-day window, before any human review lead time.
 
 | Parallel streams | Productive days available | Covers minimum estimate | Covers maximum estimate |
@@ -114,13 +115,13 @@ Phases are groupings for sequencing and review, not strict serial stages: Phases
 
 | Tier | Meaning | Packages | Effort (days) | Cumulative effort (days) | Streams for the cumulative total |
 |---|---|---|---|---|---|
-| T0 | Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates) | 20 | 91-145 | 91-145 | 5.2-8.3 |
-| T1 | Reviewer corrections and operator safety | 5 | 23-35 | 114-180 | 6.5-10.3 |
-| T2 | Owner core capabilities (candidate journeys, Story Bank, Workspaces, quality evidence) | 9 | 55-83 | 169-263 | 9.7-15.0 |
-| T3 | Admin 2.0 expansion beyond the existing Admin | 6 | 27-42 | 196-305 | 11.2-17.4 |
-| T4 | Verification extras and proposals | 4 | 9-14 | 205-319 | 11.7-18.2 |
+| T0 | Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates) | 21 | 95-151 | 95-151 | 5.4-8.6 |
+| T1 | Reviewer corrections and operator safety | 5 | 23-35 | 118-186 | 6.7-10.6 |
+| T2 | Owner core capabilities (candidate journeys, Story Bank, Workspaces, quality evidence) | 9 | 55-83 | 173-269 | 9.9-15.4 |
+| T3 | Admin 2.0 expansion beyond the existing Admin | 6 | 27-42 | 200-311 | 11.4-17.8 |
+| T4 | Verification extras and proposals | 4 | 9-14 | 209-325 | 11.9-18.6 |
 
-**Rejected alternative S2 (restricted free private beta), kept for information:** deliver tiers T0 to T2 (169 to 263 days, 9.7 to 15.0 streams) and defer tier T3 (Admin 2.0 expansion) to R1.2 and tier T4 (verification extras) to follow-up, with these restrictions, every one an owner decision still to be made:
+**Rejected alternative S2 (restricted free private beta), kept for information:** deliver tiers T0 to T2 (173 to 269 days, 9.9 to 15.4 streams) and defer tier T3 (Admin 2.0 expansion) to R1.2 and tier T4 (verification extras) to follow-up, with these restrictions, every one an owner decision still to be made:
 
 1. A small invitation-only cohort capped by the owner (size is an owner decision), limiting support, abuse and AI-cost exposure.
 2. Languages and markets are activated only where their gates pass at the freeze; expect fewer than seven languages and one or two qualified EU markets at launch (a failed mandatory gate prevents activation, as the owner decided). The others stay hidden and documented.
@@ -149,11 +150,37 @@ Which cumulative tiers fit a given number of parallel streams in the W1 to W5 wi
 
 | Strategy | Content | Effort (days) | Streams needed | Packages | Critical path (days) |
 |---|---|---|---|---|---|
-| S1 Full R1.0 scope (OWNER-SELECTED) | Every package (tiers T0 to T4) | 205-319 | 11.7-18.2 | 44 | 18-27 via 02A > 05B > 08A |
-| S2 Restricted free private beta (REJECTED) | Tiers T0 to T2; Admin 2.0 expansion (03B, 03D, 03E) to R1.2; verification extras (07B, 07C, 04F, 00B) as follow-ups | 169-263 | 9.7-15.0 | 34 | 18-27 via 02A > 05B > 08A |
-| S3 Minimum safe beta (REJECTED) | Tiers T0 and T1 plus candidate journey reliability (04D); Story Bank and Workspaces completion (04A, 04B), Admin user management (03C), retrieval calibration (02E), per-language AI and journey work beyond the activation gates (06B, 06C, 06D) and independent human evaluation (06G) are limited to what the activation gates strictly require or move to R1.2; this moves owner-requested R1.0 items out of R1.0 and needs explicit owner approval | 120-189 | 6.9-10.8 | 26 | 18-27 via 02A > 05B > 08A |
+| S1 Full R1.0 scope (OWNER-SELECTED) | Every package (tiers T0 to T4) | 209-325 | 11.9-18.6 | 45 | 18-27 via 02A > 05B > 08A |
+| S2 Restricted free private beta (REJECTED) | Tiers T0 to T2; Admin 2.0 expansion (03B, 03D, 03E) to R1.2; verification extras (07B, 07C, 04F, 00B) as follow-ups | 173-269 | 9.9-15.4 | 35 | 18-27 via 02A > 05B > 08A |
+| S3 Minimum safe beta (REJECTED) | Tiers T0 and T1 plus candidate journey reliability (04D); Story Bank and Workspaces completion (04A, 04B), Admin user management (03C), retrieval calibration (02E), per-language AI and journey work beyond the activation gates (06B, 06C, 06D) and independent human evaluation (06G) are limited to what the activation gates strictly require or move to R1.2; this moves owner-requested R1.0 items out of R1.0 and needs explicit owner approval | 124-195 | 7.1-11.1 | 27 | 18-27 via 02A > 05B > 08A |
 
 Reading: with 3 to 5 streams not even the non-negotiable tier T0 fits at its maximum estimate, so a real-user beta by 30 November needs a larger effort or a later date regardless of what else is cut. The tiers define the order in which scope is added as capacity allows.
 
 
-See `PHASE_00_EXIT_REPORT.md` for the November feasibility assessment and scope options.
+## Measured first-wave throughput and what it does and does not say
+
+| Package | Estimate (days) | Authoring wall-clock (minutes) | Rework rounds | Review latency | GitHub CI duration |
+|---|---|---|---|---|---|
+| 05A | 8-12 | 11 | 0 | no PR yet | no PR yet |
+| 01A | 5-8 | 24 | 0 | no PR yet | no PR yet |
+| 02K | 2-3 | 32 | 1 | no PR yet | no PR yet |
+| 01B0 | 2-3 | 24 | 0 | no PR yet | no PR yet |
+| 03K | 2-3 | 34 | 0 | no PR yet | no PR yet |
+| 03A | 5-7 | 29 | 0 | no PR yet | no PR yet |
+| 06A | 4-6 | 43 | 0 | no PR yet | no PR yet |
+
+Seven first-wave packages were authored in 197 agent-minutes in total (each agent ran in parallel; roughly 10 to 45 minutes per package, including about 15 minutes lost to the shared interpreter fault), against estimates of 2 to 12 engineering days each. **This measures authoring of contract, scaffolding and test-writing work only.** It excludes human review, GitHub CI (no PR exists, so none ran), integration, live validation, rework after review, native and legal review and every calendar-bound step, and the first wave was deliberately the smallest, best-bounded packages. It is NOT evidence about the heavier packages (02A, 02B, 03D1, 03E1, 04A to 04D, 05B to 05D) and no estimate has been changed because of it.
+
+Sensitivity of the full-scope completion date to the true effort (profile 'D ramp 12, 18, 24', high estimate scaled; a sensitivity table, not a forecast):
+
+| Effort relative to the estimate | Completes | Binding constraint |
+|---|---|---|
+| 100% | day 33, Wed 09 Dec 2026 | engineering chain |
+| 50% | day 26, Mon 30 Nov 2026 | engineering chain |
+| 25% | day 23, Thu 26 Nov 2026 | calendar-bound human and legal lead times (assumed), then review capacity |
+| 10% | day 21, Tue 24 Nov 2026 | calendar-bound human and legal lead times (assumed), then review capacity |
+
+If engineering effort proves much smaller than estimated, the date stops being engineering-bound and becomes bound by the assumed human lead times (native review, legal qualification, licensing, independent evaluation) and by review capacity for roughly 60 pull requests. That is why the first-wave PRs need real reviewers and real CI evidence before the forecast is changed.
+
+
+See `PHASE_00_EXIT_REPORT.md` for the Phase 00 assessment and `STAFFING_AND_CRITICAL_PATH_PLAN.md` for the S1 staffing plan.
