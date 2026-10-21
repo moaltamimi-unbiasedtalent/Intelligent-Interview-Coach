@@ -123,7 +123,36 @@ Changed: `src/agent/policies.py`, `src/agent/models.py`, `src/agent/judge.py`, `
 
 ## 7. Tests and commands
 
-RESULTS_PLACEHOLDER
+Interpreters: repo `.venv` (Python 3.11.15) and the fresh-install canary `/tmp/ci_venv` (Python 3.11.15). The `python` stub issue seen in
+01B0 did not recur. All commands run from the worktree; CI shards use `-n 2 --dist loadfile`, local runs used `-n 6 --dist loadfile`.
+
+| Command | Interpreter | Result |
+|---|---|---|
+| `pytest tests/test_prompt_byte_identity_01b.py tests/test_prompt_assets_01b.py` (new: 99 byte-identity + 23 asset/attribution tests) | repo `.venv` | all passed |
+| `pytest tests -n 6 --dist loadfile` (FULL backend suite) | repo `.venv` | 5286 passed, 41 skipped, 0 failed (2m53s) |
+| `pytest tests -n 6 --dist loadfile` (FULL backend suite) | `/tmp/ci_venv` | 5284 passed, 43 skipped, 0 failed (4m03s) |
+| `ruff check .` | repo `.venv` | All checks passed |
+| `python scripts/ci_test_shards.py verify --shards 4` | repo `.venv` | OK, 268 test files, each in exactly one shard |
+| `scripts/eval_agent.py` (deterministic orchestration gate) | repo `.venv` and `/tmp/ci_venv` | GATE STATUS: PASS |
+| `scripts/eval_i18n_l10n.py` | repo `.venv` and `/tmp/ci_venv` | PASS (reads the directive asset now) |
+| `scripts/eval_prompt_lab.py` | repo `.venv` | GATE STATUS: PASS |
+| `scripts/eval_prepare_practice_integration.py`, `scripts/eval_onboarding_personalisation.py` | repo `.venv` | PASS (0 paid, 0 live calls) |
+
+Between the two full runs the venvs differ by 2 skips (environment-conditional tests); no failure in either.
+
+Regression evidence (existing suites, all inside the full runs above): `tests/test_prompts.py`, `test_prompt_lab_p6.py`,
+`test_prompt_comparison.py`, `test_wave2_coaching_style.py`, `test_wave4_practice_language.py`, `test_w97_russian_locale.py`,
+`test_conversation_language.py`, `test_w97a_career_language.py`, `test_candidate_grounding_policy.py`, `test_agent_identity.py`,
+`test_agent_judge.py`, `test_agent_tool_selection.py`, `test_reviewer_api_p6.py`, `test_copilot_rag.py`, `test_security_ph6.py`,
+`test_model_profile_entitlements_p2c.py`, `test_platform_config_w10_11.py`, `test_ai_admin_w10_7.py`, `test_reporting_w10_12.py`.
+
+A first full run (before the test fixes) found exactly two failures, both tests that asserted the PRE-migration state, and both were
+corrected in the same branch before the first push: `tests/contracts/test_prompt_loader_01b0.py::test_production_versions_not_wired`
+(01B0 deliberately asserted the wiring was absent) and `tests/test_evaluation_contract.py::test_overall_and_criteria_are_independent_...`
+(grepped the prompt text out of `src/prompts.py` source; it now checks the rendered method block). No test was weakened: each now asserts
+the same property against the new location.
+
+SHA and CI: see the final report (branch tip) and the throughput record below.
 
 ## 8. Remaining risks
 
@@ -142,4 +171,8 @@ RESULTS_PLACEHOLDER
 
 ## 9. Throughput record
 
-THROUGHPUT_PLACEHOLDER
+- Start 2026-10-21T18:28Z (`date -u` at first command); implementation and verification complete 2026-10-21T18:57Z.
+- Estimate 5 to 8 engineering days (register); actual agent wall-clock about 30 minutes, including two full-suite runs per interpreter
+  budget (one aborted run, one with two real failures, one clean run per venv). The estimate covers human review and integration time.
+- Rework rounds (fix commits after first push): 0 (the first push is the verified tree; the two test corrections preceded it).
+- CI duration: not available (CI runs only once a PR exists; none was opened by this agent).
