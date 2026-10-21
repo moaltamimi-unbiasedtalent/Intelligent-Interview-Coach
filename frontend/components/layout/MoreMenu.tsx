@@ -140,7 +140,7 @@ export function MoreMenu() {
                     onClick={() => close()}
                     className="flex min-h-[44px] flex-col justify-center gap-0.5 px-3.5 py-2 text-sm text-foreground transition-colors hover:bg-surface-2 focus:bg-surface-2 focus:outline-none"
                   >
-                    <span className="font-medium">{"labelKey" in item ? t(item.labelKey) : item.label}</span>
+                    <span className="font-medium">{item.label}</span>
                     {item.description ? <span className="text-xs text-muted">{item.description}</span> : null}
                   </Link>
                 );

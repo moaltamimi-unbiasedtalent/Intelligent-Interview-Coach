@@ -29,7 +29,7 @@ const SHELL = [
   "components/support/SupportHome.tsx",
   "components/support/SupportTicketView.tsx",
   "components/help/HelpPageContent.tsx",
-  "app/review/page.tsx",
+  "app/admin/review/page.tsx",
 ];
 
 describe("navigation reliability invariant", () => {
