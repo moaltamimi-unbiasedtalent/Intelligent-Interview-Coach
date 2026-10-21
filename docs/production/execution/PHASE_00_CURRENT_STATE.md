@@ -41,6 +41,14 @@
 
 No hosted environment, domain, managed PostgreSQL, object or vector storage decision, embedding credential, malware scanner deployment, monitoring or alerting service, external email (Brevo) or OIDC live verification, production AI budget, named reviewers, native reviewers or legal qualifiers exist or are decided. See `TECHNICAL_DECISIONS.md` and `docs/production/OWNER_DECISION_REGISTER.md`.
 
-## 5. What was not done in Phase 00
+## 5. CI finding on PR #212 (dependency drift, not an authorization defect)
+
+PR #212 was red in the four Python test shards and in "Python evaluators and guards". Root cause, reproduced locally with a fresh install of the latest allowed dependencies (starlette 1.9.0, fastapi 0.156.8, against the starlette 1.3.1 and fastapi 0.141.1 of the earlier green runs):
+
+- **Not a real authorization defect.** With separate clients per user (like two browsers) the identity evaluator's checks return 404, 404, 200 on the new dependencies as well. The same code on `main` passes with the old dependencies and fails with the new ones, so the Phase 00 documents did not cause it.
+- **A test-harness session-isolation artefact.** The evaluator, and about sixty tests, log several users in through one `TestClient` and pass `cookies={"ask4mo_session": token}` per request to act as one user. httpx sends the jar cookie and the per-request cookie in one `Cookie` header; a minimal Starlette app with no Ask4Mo code shows the order flipped between starlette 1.3 (`jar; per-request`) and 1.9 (`per-request; jar`), and the server keeps the last value, so on a fresh install the most recent login silently overrode the intended user and the cross-user checks measured the wrong identity (0 of 3).
+- **Fix without weakening anything:** a harness wrapper in `tests/_client_compat.py` (installed on import of the `tests` package) makes the per-request cookie authoritative on every version, with regression tests (`tests/test_testclient_cookie_precedence.py`). The evaluator and the application are unchanged, the three assertions (404, 404, 200) are unchanged, and the evaluator passes with both the old and the new dependency sets.
+
+## 6. What was not done in Phase 00
 
 No application code, no migration, no provider call, no deployment, no payment activation, no rewriting of historical evidence, no provisioning of any paid service.

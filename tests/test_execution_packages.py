@@ -12,7 +12,7 @@ E = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(E)
 
 DELIVERABLES = ["PHASE_00_CURRENT_STATE.md", "IMPLEMENTATION_PACKAGE_REGISTER.md", "DEPENDENCY_GRAPH.md", "DELIVERY_SCHEDULE.md", "TECHNICAL_DECISIONS.md", "ADMIN_V2_EXECUTION_SPEC.md",
-                "CANDIDATE_EXECUTION_SPEC.md", "MULTILINGUAL_EXECUTION_PLAN.md", "RELEASE_READINESS_TRACKER.md", "PHASE_00_EXIT_REPORT.md"]
+                "CANDIDATE_EXECUTION_SPEC.md", "MULTILINGUAL_EXECUTION_PLAN.md", "RELEASE_READINESS_TRACKER.md", "PHASE_00_EXIT_REPORT.md", "R1_SCOPE_RECLASSIFICATION_PROPOSAL.md"]
 
 
 def test_the_plan_validates_and_the_generated_documents_are_fresh():
@@ -44,7 +44,7 @@ def test_removing_or_duplicating_an_item_fails_the_check(monkeypatch):
 def test_a_dependency_cycle_or_an_impossible_schedule_is_rejected(monkeypatch):
     pk = copy.deepcopy(E.PACKAGES)
     by = {p["id"]: p for p in pk}
-    by["01A"]["depends"] = ["01C"]                          # 01C already depends on 01A: a cycle
+    by["01B"]["depends"] = ["01C"]                          # 01C already depends on 01B: a cycle
     monkeypatch.setattr(E, "PACKAGES", pk)
     monkeypatch.setattr(E, "BYID", by)
     assert any("cycle" in e for e in E.validate())
@@ -79,4 +79,39 @@ def test_the_feasibility_figures_are_computed_and_the_critical_path_is_a_real_ch
     chain, days = t["cp_max"]
     assert days <= t["max_days"] and all(chain[i] in E.BYID[chain[i + 1]]["depends"] for i in range(len(chain) - 1))
     report = (E.OUT / "PHASE_00_EXIT_REPORT.md").read_text(encoding="utf-8")
-    assert "NOT feasible" in report and "OD-SCOPE-01" in report and "PENDING" in report            # no false claim of readiness
+    assert "not feasible" in report and "OD-SCOPE-01" in report and "PENDING" in report            # no false claim of readiness
+
+
+def test_the_agent_policy_shared_file_order_is_01b_then_01d_then_01c_and_01a_is_independent():
+    assert "01B" in E.BYID["01D"]["depends"] and "01B" in E.BYID["01C"]["depends"] and "01D" in E.BYID["01C"]["depends"]
+    assert E.BYID["01A"]["depends"] == [] and E.BYID["01B"]["depends"] == []                       # 01A touches none of the overlapping files
+    assert E.BYID["01B"]["end"] <= E.BYID["01D"]["start"] and E.BYID["01D"]["end"] <= E.BYID["01C"]["start"]
+    assert "registry.py" not in E.BRIEFS["01A"]["files"] and "policies.py" not in E.BRIEFS["01A"]["files"] and E.BRIEFS["01D"]["files"].startswith("src/agent/registry.py")
+    assert "REVIEW-01" in E.BYID["01A"]["items"] and E.BYID["01D"]["items"] == []                 # closed together, assigned once
+
+
+def test_topology_and_knowledge_persistence_are_an_early_parallel_workstream_and_the_staging_file_is_frozen():
+    assert set(E.EARLY_PARALLEL) == {"02A", "05A", "05E"} and all(E.BYID[k]["start"] <= 1 for k in E.EARLY_PARALLEL)
+    assert "DEPLOYMENT FREEZE" in E.BYID["05A"]["note"] and "must NOT be deployed" in E.BYID["05A"]["note"]
+    compose = (ROOT / "deploy/docker-compose.staging.yml").read_text(encoding="utf-8")
+    assert "worker" not in compose and "clamav" not in compose.lower().replace("clamav_host", "")      # the gap the freeze protects against is real until 05A fixes it
+    schedule = (E.OUT / "DELIVERY_SCHEDULE.md").read_text(encoding="utf-8")
+    assert "Early parallel workstream" in schedule and "must not be deployed" in schedule
+
+
+def test_scope_strategies_are_proposals_with_computed_effort_and_every_package_has_a_tier():
+    assert set(E.TIERS) == set(E.BYID) and set(E.TIERS.values()) <= set(E.TIER_NAMES)
+    s = E.strategy_sets()
+    full = sum(E.BYID[i]["effort"][1] for i in s["S1 Full R1.0 scope"][1])
+    s2 = sum(E.BYID[i]["effort"][1] for i in s["S2 Restricted free private beta (proposed)"][1])
+    s3 = sum(E.BYID[i]["effort"][1] for i in s["S3 Minimum safe beta (capacity-based alternative)"][1])
+    assert s3 < s2 < full and {"03B", "03D", "03E"}.isdisjoint(s["S2 Restricted free private beta (proposed)"][1])
+    report = (E.OUT / "PHASE_00_EXIT_REPORT.md").read_text(encoding="utf-8")
+    decisions = (ROOT / "docs/production/OWNER_DECISION_REGISTER.md").read_text(encoding="utf-8")
+    assert "NOT owner-approved" in report and "Phase 00 PROPOSES" in decisions and "OD-SCOPE-01" in decisions
+
+
+def test_the_exit_report_records_the_exact_ci_root_cause_and_the_e8_e10_evidence():
+    report = (E.OUT / "PHASE_00_EXIT_REPORT.md").read_text(encoding="utf-8")
+    for needle in ("dependency drift", "starlette 1.9.0", "cross_user_isolation", "not an authorization defect", "E8", "E10", "R1_SCOPE_RECLASSIFICATION_PROPOSAL", "01D"):
+        assert needle in report, needle

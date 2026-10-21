@@ -41,6 +41,10 @@ Why the numbers moved, not forced to match the old totals:
 - Six historical capstone-submission tasks were reclassified ACADEMIC_ONLY and moved to OWNER DECISION (UNSCHEDULED) pending confirmation of retirement; they no longer count as production work.
 - Deferrals were re-routed from the earlier invented R1.1 to R2.0 themes onto the agreed train: commercial to R1.1, speech to R1.4, additional-country evidence to R1.5, compensation to R1.6, with items that fit no agreed theme placed in R1.1 (R1.2 for Admin) as a proposal.
 
+## Proposed R1.0 scope reclassification (PROPOSED, NOT APPLIED)
+
+10 of 12 candidates pass the proof that their capability is inaccessible in the R1.0 Candidate API and UI; 2 fail it and stay in R1.0. If the owner confirms, R1.0 must-fix would be 78 and fix plus verify 152. Evidence and per-item detail: `execution/R1_SCOPE_RECLASSIFICATION_PROPOSAL.md`. Nothing is applied until the owner confirms (OD-US-CONTENT).
+
 ## Totals by release (all dispositions)
 
 | Release | Items | Theme |

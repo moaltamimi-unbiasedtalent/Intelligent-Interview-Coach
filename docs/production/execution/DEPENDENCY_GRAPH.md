@@ -8,7 +8,8 @@
 graph LR
   P00A["00A Governance, reviewers and owner de"]
   P00B["00B Scope reconciliation delta (docume"]
-  P01A["01A Prompt-injection security and tool"]
+  P01A["01A Prompt-injection corpus, risk scor"]
+  P01D["01D Tool-call authorization layer (REV"]
   P01B["01B Externalized, versioned prompts (R"]
   P01C["01C Tool registry parity (REVIEW-03)"]
   P02A["02A Permanent Knowledge reliability: p"]
@@ -43,8 +44,10 @@ graph LR
   P07B["07B Live grounding and agent-policy va"]
   P07C["07C Residual live verifications"]
   P08A["08A Freeze, release evidence and beta "]
-  P01A --> P01C
+  P01A --> P01D
+  P01B --> P01D
   P01B --> P01C
+  P01D --> P01C
   P02A --> P02B
   P02A --> P02C
   P00A --> P02D
@@ -95,7 +98,7 @@ graph LR
 
 ## Dependency order (topological)
 
-00A, 00B, 01A, 01B, 01C, 02A, 02B, 02C, 02D, 02E, 03A, 03B, 03C, 03D, 03E, 04A, 04B, 04C, 05A, 04D, 04E, 04F, 05B, 05C, 05D, 05E, 06A, 06B, 06C, 06D, 06E, 06F, 06G, 07A, 07B, 07C, 08A
+00A, 00B, 01A, 01B, 01D, 01C, 02A, 02B, 02C, 02D, 02E, 03A, 03B, 03C, 03D, 03E, 04A, 04B, 04C, 05A, 04D, 04E, 04F, 05B, 05C, 05D, 05E, 06A, 06B, 06C, 06D, 06E, 06F, 06G, 07A, 07B, 07C, 08A
 
 ## Critical path
 
@@ -105,7 +108,7 @@ Lowest-effort chain: 03A -> 03D -> 03E -> 08A = 26 days. Highest-effort chain: 0
 
 | Shared module | Packages that edit it | Safe order |
 |---|---|---|
-| src/agent/policies.py and the tool-execution path (registry.py, nodes.py) | 01A, 01B, 01C, 04C | 01B, then 01A, then 01C; 04C after 01A |
+| src/agent/policies.py and the tool-execution path (registry.py, nodes.py) | 01B, 01D, 01C (01A touches none of them; 04C reads events) | 01B, then 01D (tool-call authorization, the overlapping part of REVIEW-01), then 01C; 01A is independent and runs first |
 | src/prompts.py, src/prompt_registry.py, src/config_versions.py | 01B, 06C | 01B before 06C |
 | src/copilot/security/ and src/copilot/models.py (RetrievalResult) | 01A, 02B, 06D, 06E | 01A first |
 | src/knowledge_admin/ and src/copilot/embeddings.py, retrieval/ | 02A, 02B, 02C, 02D, 02E | 02A, then 02B and 02C, then 02D and 02E |

@@ -57,6 +57,17 @@ All 98 language-gate cells are NOT STARTED or NOT RUN; none has passed. Per-lang
 | REQ-OWN-07 Workspaces | 04B | NOT STARTED (backend exists) |
 | REQ-OWN-08 Admin navigation | 03A | NOT STARTED |
 
-## 4. Historical gates preserved
+## 4. Phase 00 exit-gate evidence
+
+| Gate | State | Evidence needed to close | Where it will be recorded |
+|---|---|---|---|
+| E8 documentation, reconciliation and static checks pass and CI is green on PR #212 | IN PROGRESS | Green GitHub CI on the corrected head SHA (all required jobs: four shards, evaluators and guards, evaluation extras, static guards, frontend, Playwright, Streamlit smoke, legacy live component, aggregate check); `reconcile_issues.py check`, `execution_packages.py check`, the reconciliation, package, scope-exclusion and cookie-precedence tests, `ruff`, shard plan verification | PR #212 checks; exit report section 8 |
+| E10 owner approval to start Phase 01 | PENDING (owner) | Written owner approval; an answer to OD-SCOPE-01 (which strategy: S1 full, S2 restricted, S3 minimum safe, or a later date) and the real capacity; confirmation or rejection of the 10-item reclassification; answers to the Phase 01 blockers OD-GATE-THRESHOLDS and OD-ADMIN-NAV | Owner decision register; this tracker |
+
+## 5. Early parallel workstream (deployment topology and Knowledge persistence)
+
+02A, 05A and 05E start in the first implementation wave with the highest staffing priority. **The existing `deploy/docker-compose.staging.yml` must not be deployed** until the first 05A PR adds the worker, knowledge and index volumes and ClamAV and OD-HOSTED is answered. State: NOT STARTED, BLOCKED on OD-HOSTED for deployment (the topology fix as code is not blocked).
+
+## 6. Historical gates preserved
 
 The historical 95% coverage gate (386 of 412 against 392) remains FAIL; AC-24 remains PARTIAL; human-qualified coverage remains 0 of 412. A separate frozen beta-scope coverage measure (02E, OD-COVERAGE) is reported beside, never instead of, these.

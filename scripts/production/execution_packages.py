@@ -52,27 +52,33 @@ PACKAGES = [
       components="docs/production/OWNER_DECISION_REGISTER.md; Admin role-change approval flow (existing); audit log", backend="none (uses existing role-change approvals for appointments)", frontend="none",
       security="Appointments are privileged role changes: two-person approval with step-up, audited", acceptance="Appointment table filled; three reviewer accounts verified; audit evidence of the role changes; decision register has an owner answer for every Phase 01 to 03 blocker",
       tests="audit-log evidence; role-change approval tests already exist", pr="Documentation PR recording decisions and appointments (no code)", dod="Named people recorded; decisions recorded; evidence linked", human="Owner and named reviewers"),
-    P("00B", "Scope reconciliation delta (documentation only)", "B", 0, 1, 1, (1, 2), ["BL-5", "BL-6", "BL-6.1", "BL-6.2", "BL-6.3", "BL-6.4", "BL-6.5", "BL-6.6", "BL-7", "BL-9", "BL-12", "W12.4E-12"], decisions=["OD-US-CONTENT"],
-      scope="Phase 00 found items classified R1.0 whose feature stays disabled or whose evidence is outside the selected EU markets (US occupational measurement and alias reviews, Compensation V2 authorisation, server-side recording client). Propose their reclassification (R1.5, R1.6 or R1.4) for owner confirmation; apply only after the owner confirms.",
+    P("00B", "Scope reconciliation delta (documentation only)", "B", 0, 1, 1, (1, 2), ["BL-5", "BL-6", "BL-6.1", "BL-6.2", "BL-6.3", "BL-6.4", "BL-6.5", "BL-9", "BL-12", "W12.4E-12"], decisions=["OD-US-CONTENT"],
+      scope="Ten items classified R1.0 concern capabilities proven inaccessible to Candidates (Compensation V2 and US occupational foundation work, server-side recording client). Propose their reclassification (R1.5, R1.6 or R1.4) for owner confirmation; apply only after the owner confirms. Evidence and the two items that fail the proof (BL-6.6, BL-7) are in R1_SCOPE_RECLASSIFICATION_PROPOSAL.md.",
       components="docs/production/PRODUCTION_ISSUE_RECONCILIATION.json and scripts/production/reconcile_issues.py (regenerated, historical register untouched)", backend="none", frontend="none",
       security="Reclassification must keep REQ-DEFER-01 satisfied: the affected features stay inaccessible", acceptance="Owner confirms or rejects each proposed move; the reconciliation is regenerated with explained deltas and zero unmapped",
       tests="scripts/production/reconcile_issues.py check; tests/test_production_reconciliation.py", pr="Docs-only PR: reconciliation delta", dod="Reconciliation regenerated, counts explained, owner decision recorded", human="Owner"),
     # ---------------- Phase 01 Track A
-    P("01A", "Prompt-injection security and tool authorization (REVIEW-01)", "A", 1, 1, 2, (8, 12), ["REVIEW-01", "D-LEX", "D-AGENT-TXT", "D-NONNUM", "D-SENT", "D-EST-FLAG", "D-COUNTRY"], decisions=["OD-GATE-THRESHOLDS"],
-      scope="Labelled regression corpus from evaluations/jailbreak_test_results.csv (direct, indirect, multilingual, encoded, retrieved-document); detection and false-positive measurement; CI gate on a frozen held-out set; injection-risk score on RetrievalResult; quarantine of high-risk chunks before context; server-side revalidation of model-requested tool calls before side effects; output guard retained.",
+    P("01A", "Prompt-injection corpus, risk score and quarantine (REVIEW-01 part 1)", "A", 1, 1, 2, (5, 8), ["REVIEW-01", "D-LEX", "D-AGENT-TXT", "D-NONNUM", "D-SENT", "D-EST-FLAG", "D-COUNTRY"], decisions=["OD-GATE-THRESHOLDS"],
+      scope="Labelled regression corpus from evaluations/jailbreak_test_results.csv (direct, indirect, multilingual, encoded, retrieved-document); detection and false-positive measurement; CI gate on a frozen held-out set; injection-risk score on RetrievalResult; quarantine of high-risk chunks before context; output guard retained. Touches no agent-policy or tool-execution file, so it does not overlap 01B. REVIEW-01 requirements R4 and R5 (tool-call authorization) are delivered by 01D, which closes REVIEW-01.",
       components="src/security.py (detect_injection); src/copilot/security/ (injection, rag_guard, output_guard, grounding_policy); src/copilot/models.py (RetrievalResult); src/copilot/service.py answer(); src/agent/nodes.py and registry.py validate_and_run; evaluations/",
-      backend="Add risk score field to RetrievalResult; extend rag_guard.screen_results to quarantine by score; add an authorization layer in the tool-execution path (goal, user permission, tool permission, allowed arguments) before handler execution; corpus loader and evaluator script", frontend="none (no user-visible change; optional safe 'content withheld' note reuses existing insufficient-evidence copy)",
-      security="Core safety work: no cross-user disclosure, no unauthorized tool side effects, no sole reliance on the prompt; evaluator uses only public/synthetic data", acceptance="REVIEW-01 R1 to R6; detection and false-positive rates reported per language and above owner-approved thresholds on the frozen held-out set; negative tests for tool calls and cross-user disclosure pass",
-      tests="held-out corpus evaluator in CI (new scripts/eval_injection_corpus.py); tool-authorization negative tests; cross-user retrieval tests; output-guard regression; existing eval_agent and grounding suites unchanged", pr="Two PRs: (1) corpus, evaluator, risk score and quarantine; (2) tool-call authorization layer", dod="CI gate green on held-out set; thresholds recorded; no regression in existing security suites; documentation of residual risk"),
+      backend="Add risk score field to RetrievalResult; extend rag_guard.screen_results to quarantine by score; corpus loader and evaluator script", frontend="none (no user-visible change; optional safe 'content withheld' note reuses existing insufficient-evidence copy)",
+      security="Core safety work: no cross-user disclosure, no unauthorized tool side effects, no sole reliance on the prompt; evaluator uses only public/synthetic data", acceptance="REVIEW-01 R1, R2, R3 and R6 (R4 and R5 close in 01D); detection and false-positive rates reported per language and above owner-approved thresholds on the frozen held-out set; cross-user retrieval negative tests pass",
+      tests="held-out corpus evaluator in CI (new scripts/eval_injection_corpus.py); cross-user retrieval tests; output-guard regression; existing eval_agent and grounding suites unchanged", pr="One PR: corpus, evaluator, risk score and quarantine", dod="CI gate green on held-out set once thresholds are approved; no regression in existing security suites; documentation of residual risk"),
+    P("01D", "Tool-call authorization layer (REVIEW-01 part 2)", "A", 1, 3, 3, (3, 5), [], depends=["01A", "01B"], decisions=[],
+      scope="Server-side revalidation of every model-requested tool call against the authenticated user's actual goal, authorization, tool permissions and allowed arguments before any side effect; negative tests that malicious retrieved content cannot trigger an unauthorized tool call. Overlaps the agent-policy and tool-execution path, so it is sequenced after 01B (versioned prompts) and before 01C (registry parity).",
+      components="src/agent/registry.py (ToolRegistry.validate_and_run); src/agent/nodes.py (tool node); src/agent/policies.py (read only after 01B); src/agent/state.py (declared goal and consent state)", backend="Authorization step inside validate_and_run: authenticated user, declared run goal, tool permission, argument allow-list; safe refusal event and audit; no new tools", frontend="none",
+      security="Decisive authorization before execution or side effects; never relies on the model obeying an instruction", acceptance="REVIEW-01 R4 and R5; with 01A, REVIEW-01 R1 to R6 are complete",
+      tests="tool-authorization negative tests (retrieved text instructing a side-effecting tool; cross-user evidence access through tools; invalid argument shapes before side effects); existing eval_agent and tool-selection cases unchanged", pr="One PR", dod="REVIEW-01 can be marked complete; no tool-set change",
+      note="Closes REVIEW-01 together with 01A; REVIEW-01 itself is assigned to 01A."),
     P("01B", "Externalized, versioned prompts (REVIEW-02)", "A", 1, 1, 2, (5, 8), ["REVIEW-02"], scope="Move agent, interview technique and RAG prompts to versioned assets with a validated loader, semantic versions plus SHA, run attribution and rollback without code.",
       components="src/agent/policies.py (SYSTEM_PROMPT); src/prompts.py (733 lines); src/prompt_registry.py; src/copilot/rag/prompts.py; src/config_versions.py (production_versions); src/agent/models.py (AgentRunResult); Prompt Lab (src/application/prompt_lab/)",
       backend="Prompt asset directory and loader with variable validation; declared versions; production_versions() reports version plus hash; AgentRunResult and evaluation results record effective prompt versions; rollback selection via the existing governed-configuration mechanism", frontend="none (Admin AI operations later surfaces versions: 03D)",
       security="Prompts remain code-reviewed assets; no Admin free-text editing of system instructions; integrity hash verified at load", acceptance="REVIEW-02 R1 to R7", tests="loader unit tests; compatibility, missing-version and rollback tests; production_versions parity test; Prompt Lab attribution test; byte-identical prompt output regression for current defaults",
       pr="One PR per prompt family if large: agent; interview; RAG", dod="Defaults produce byte-identical prompts; versions visible in run results; rollback tested"),
-    P("01C", "Tool registry parity (REVIEW-03)", "A", 1, 3, 3, (3, 5), ["REVIEW-03"], depends=["01A", "01B"], scope="Registry as the single catalogue: generated model-visible descriptions, Pydantic-derived argument contracts, duplicate rejection, parity tests, no widened tool set.",
+    P("01C", "Tool registry parity (REVIEW-03)", "A", 1, 4, 4, (3, 5), ["REVIEW-03"], depends=["01B", "01D"], scope="Registry as the single catalogue: generated model-visible descriptions, Pydantic-derived argument contracts, duplicate rejection, parity tests, no widened tool set.",
       components="src/agent/registry.py; src/agent/policies.py; src/agent/tools.py; src/agent/specialist_tools.py; src/agent/nodes.py (bindings)", backend="Descriptions generated from ToolSpec metadata; parity test across registry, bindings and authorization policy; remove duplicated text after regression", frontend="none",
       security="The tool set must be unchanged (asserted); authorization policy derived from the same catalogue", acceptance="REVIEW-03 R1 to R6", tests="registry parity, duplicate-registration, binding/policy parity, unchanged-tool-set assertion; existing eval_agent and tool-selection cases unchanged", pr="One PR", dod="No manual duplicate descriptions remain; parity test in CI",
-      note="Sequenced after 01A and 01B because all three edit src/agent/policies.py or the tool-execution path."),
+      note="Sequenced after 01B (versioned prompts) and 01D (tool-call authorization) because all three edit src/agent/policies.py or the tool-execution path: 01B, then 01D, then 01C."),
     # ---------------- Phase 02 Track B
     P("02A", "Permanent Knowledge reliability: persistence, environment identity, restore (REQ-OWN-05)", "B", 2, 1, 2, (10, 15), ["REQ-OWN-05", "DEMO-01", "H-WORKER", "H-KB-INGEST"], decisions=["OD-HOSTED"],
       scope="Persistence and environment architecture for governed and curated knowledge: durable registry, private file storage, persistent indexes, safe environment/database/index identity diagnostics, one authoritative configuration shared by API and worker, lifecycle including replace, retire and reindex, backup and restore, alerts, restart/redeploy/restore tests.",
@@ -92,8 +98,8 @@ PACKAGES = [
     P("02D", "Market source qualification and licensing (selected EU markets)", "B", 2, 2, 4, (6, 10), ["A-K1", "BL-4", "BL-8", "K-HUMANSRC", "K-LIC-ESCO", "K-LIC-ISCO", "K-LIC-OGL", "K-LIC-DE", "BL-14", "BL-15", "D-08", "REQ-COV-02"], depends=["00A"], decisions=["OD-LANG-02", "OD-US-CONTENT"],
       scope="For each approved market: licence, authority and coverage qualification of the sources actually enabled; exclusion of unsupported or unlicensed evidence from enabled features; decision on US-sourced content (O*NET, BLS) in an EU beta; alias curation ownership.",
       components="docs/capstone/p10/P10C_F1_SOURCE_APPROVAL_REGISTER.md; src/knowledge_admin (approval); src/copilot/knowledge/governance.py; data/knowledge manifests; retrieval approval filtering", backend="Approval filter so only qualified, licensed sources reach candidate retrieval for the enabled markets; per-market enable switch tied to an approved register entry", frontend="Admin shows which markets are enabled and why",
-      security="Licence integrity; no unlicensed content served; provenance preserved", acceptance="Signed approval entry per enabled market; a candidate cannot retrieve an unqualified source (test); US content decision recorded", tests="retrieval-approval tests; market-enable tests; licence register consistency check", pr="Engineering PR for the approval filter; documentation PRs for the register", dod="Every enabled market has a recorded qualification; unqualified markets are not offered", human="Legal/licensing reviewer and owner (long lead)"),
-    P("02E", "Retrieval quality and the frozen beta-scope coverage measure", "B", 2, 4, 4, (6, 9), ["BL-11", "M-DOC-COVERAGE", "L-REL-1", "L-ROUTE-1", "B-SEMCAL", "J-SEMANTIC"], depends=["02B"], decisions=["OD-COVERAGE", "OD-BUDGET"],
+      security="Licence integrity; no unlicensed content served; provenance preserved", acceptance="Signed approval entry per enabled market; a candidate cannot retrieve an unqualified source (test); US content decision recorded. Phase 00 evidence: curated US sources (bls_ooh narratives, bls_oews and ons_ashe compensation records only; no EU compensation records exist) are reachable by Candidates, for example a bls_ooh passage for a UK nurse question, so excluding unqualified US claims needs this package's approval filter or the OD-US-CONTENT decision; it is NOT achieved by the 00B reclassification", tests="retrieval-approval tests; market-enable tests; licence register consistency check", pr="Engineering PR for the approval filter; documentation PRs for the register", dod="Every enabled market has a recorded qualification; unqualified markets are not offered", human="Legal/licensing reviewer and owner (long lead)"),
+    P("02E", "Retrieval quality and the frozen beta-scope coverage measure", "B", 2, 4, 4, (6, 9), ["BL-11", "BL-6.6", "BL-7", "M-DOC-COVERAGE", "L-REL-1", "L-ROUTE-1", "B-SEMCAL", "J-SEMANTIC"], depends=["02B"], decisions=["OD-COVERAGE", "OD-BUDGET"],
       scope="Calibrated relevance floor, language-aware routing, semantic calibration, and a separate frozen R1.0 beta-scope coverage measure reported beside the preserved historical gate (386 of 412, FAIL).",
       components="src/copilot/retrieval/ (adaptive, reranker, fusion); src/copilot/router; scripts/check_product_coverage_baseline.py; evaluations/product_coverage/; docs/capstone coverage records (read-only)", backend="Relevance-floor calibration; routing keyword tables per language; beta-scope coverage evaluator over a frozen case set", frontend="none",
       security="Historical gate results never rewritten; the new measure is never labelled as the original gate", acceptance="Beta-scope measure approved and reported; relevance floor calibrated with evidence; routing verified per language", tests="coverage evaluators on the frozen set; routing tests per language; consistency check that both measures are reported", pr="One PR plus documentation", dod="Both measures reported side by side"),
@@ -141,7 +147,7 @@ PACKAGES = [
     P("05A", "Hosted topology and platform hardening", "E", 5, 1, 2, (8, 12), ["EX-12.1", "EX-12.2", "EX-12.3", "EX-12.4", "EX-12.5", "EX-12.6", "EX-12.14", "EX-12.15", "H-ENV", "H-CSRF", "H-MFA"], decisions=["OD-HOSTED"],
       scope="Create staging and production topology: TLS and HSTS with automatic certificates, same-site cookies, CORS allowlist, readiness gating, single migration step, CSP, documented single-replica limits, environment separation, a worker service and knowledge volumes (missing from the current staging compose), CSRF and step-up posture review.",
       components="deploy/Caddyfile, Dockerfile.api, Dockerfile.web, docker-compose.staging.yml (db, migrate, api, web, caddy only), deploy/scripts; src/api/main.py; docs/operations_deployment.md", backend="Config guards; worker entrypoint; env separation checks", frontend="CSP and cookie behaviour verification",
-      security="Production fail-closed settings; secrets only in the managed store", acceptance="PG-01", tests="scripts/eval_hosting_readiness.py; hosted rehearsal checklist EX-12 #1 to #6, #14, #15", pr="Infrastructure PRs (compose/worker/volumes) plus a runbook PR", dod="Staging reachable over TLS from a clean checkout; checklist evidence recorded", note="Needs OD-HOSTED before Phase 05 can begin."),
+      security="Production fail-closed settings; secrets only in the managed store", acceptance="PG-01", tests="scripts/eval_hosting_readiness.py; hosted rehearsal checklist EX-12 #1 to #6, #14, #15", pr="Infrastructure PRs (compose/worker/volumes) plus a runbook PR", dod="Staging reachable over TLS from a clean checkout; checklist evidence recorded", note="DEPLOYMENT FREEZE: deploy/docker-compose.staging.yml must NOT be deployed as it stands (no worker, no knowledge or index volume, no ClamAV service). The first 05A PR completes the topology as code without deploying; deployment waits for OD-HOSTED and for that PR plus 02A."),
     P("05B", "Persistence, backup, restore and rollback drills", "E", 5, 3, 3, (6, 9), ["EX-12.7", "EX-12.8", "EX-12.9", "EX-12.10", "H-BACKUP", "PRIV-BACKUP", "H-PG-MULTI", "H-PG-QUERY", "H-PG-SECRETS", "R-96a", "R-96b"], depends=["05A", "02A"],
       scope="PostgreSQL in the hosted environment, backups that restore (database, private files, indexes), a restore drill into a separate database, rollback rehearsal, erasure from backups after account deletion, PostgreSQL-only paths exercised live (job claim, audit triggers, secrets).",
       components="deploy/scripts/backup.sh, restore.sh, migrate.sh; migrations; src/jobs; audit triggers", backend="Backup and restore scripts extended to files and indexes; backup erasure procedure", frontend="none", security="Backups encrypted and access-controlled; deletion honoured in backups within the stated window",
@@ -176,17 +182,29 @@ PACKAGES = [
 ]
 BYID = {p["id"]: p for p in PACKAGES}
 
+TIER_NAMES = {0: "Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates)", 1: "Reviewer corrections and operator safety", 2: "Owner core capabilities (candidate journeys, Story Bank, Workspaces, quality evidence)",
+              3: "Admin 2.0 expansion beyond the existing Admin", 4: "Verification extras and proposals"}
+TIERS = {"00A": 0, "01A": 0, "01D": 0, "02A": 0, "02B": 0, "02C": 0, "02D": 0, "04E": 0, "05A": 0, "05B": 0, "05C": 0, "05D": 0, "05E": 0, "06A": 0, "06E": 0, "06F": 0, "07A": 0, "08A": 0,
+         "01B": 1, "01C": 1, "04C": 1, "03A": 1,
+         "04A": 2, "04B": 2, "04D": 2, "06B": 2, "06C": 2, "06D": 2, "03C": 2, "02E": 2, "06G": 2,
+         "03B": 3, "03D": 3, "03E": 3,
+         "07B": 4, "07C": 4, "04F": 4, "00B": 4}
+# Early parallel workstream (owner correction): deployment topology and Knowledge persistence are long poles that need a decision, a topology fix and drills,
+# so they start in the first implementation wave alongside Track A, with the highest staffing priority.
+EARLY_PARALLEL = ["02A", "05A", "05E"]
+
 BRIEFS = {
-    "01A": dict(title="Prompt-injection security (REVIEW-01)", pr1=["Add evaluations/injection/ with a labelled corpus built from evaluations/jailbreak_test_results.csv (30 rows: categories, expected outcome, location); extend with indirect, multilingual, encoded and retrieved-document cases; freeze a held-out split with a recorded hash.",
-        "Add scripts/eval_injection_corpus.py: runs detect_injection and the RAG screen over the corpus, reports detection and benign false-positive rates overall and per language/category, writes only to a temp directory unless --write, and exits non-zero below the thresholds from OD-GATE-THRESHOLDS (placeholder thresholds are NOT assumed: until approved the script reports and does not gate).",
+    "01A": dict(title="Prompt-injection corpus, risk score and quarantine (REVIEW-01 part 1)", pr1=["Add evaluations/injection/ with a labelled corpus built from evaluations/jailbreak_test_results.csv (30 rows: categories, expected outcome, location); extend with indirect, multilingual, encoded and retrieved-document cases; freeze a held-out split with a recorded hash.",
+        "Add scripts/eval_injection_corpus.py: runs detect_injection and the RAG screen over the corpus, reports detection and benign false-positive rates overall and per language/category, writes only to a temp directory unless --write, and exits non-zero below the thresholds from OD-GATE-THRESHOLDS (no threshold is assumed: until approved the script reports and does not gate).",
         "Add an injection_risk field (float 0 to 1 plus indicator names) to RetrievalResult (src/copilot/models.py); compute it in src/copilot/security/rag_guard.py screen_results using the existing indicator weights; quarantine or exclude chunks above the threshold before context construction in src/copilot/service.py and the agent retrieval tool.",
-        "Wire the CI step into .github/workflows/ci.yml (evaluator job) and the shard plan."],
-        pr2=["Introduce an authorization layer inside ToolRegistry.validate_and_run (src/agent/registry.py): before the handler runs, verify the authenticated user, the run's declared goal and consent state, the tool's permission, and an argument allow-list; refuse and record a safe event otherwise.",
-             "Negative tests: retrieved text instructing a tool call cannot cause a side-effecting tool to run; user A's run cannot read user B's evidence through any tool; invalid argument shapes are refused before side effects.",
-             "Retain inspect_output and the output guard in CopilotService.answer(); add a regression asserting both still run."],
-        files="src/security.py; src/copilot/security/{injection,rag_guard,output_guard}.py; src/copilot/models.py; src/copilot/service.py; src/agent/registry.py; src/agent/nodes.py; evaluations/injection/ (new); scripts/eval_injection_corpus.py (new); tests/test_injection_*.py (new)",
-        out_of_scope="No new tools; no change to grounding policy semantics; no live model calls (the corpus run is offline); no threshold invented", risks="False positives on legitimate job descriptions; multilingual evasion; thresholds undecided",
-        verification="eval script report committed as evidence; CI gate once thresholds approved; existing eval_agent, grounding and prompt-injection suites unchanged and green"),
+        "Retain inspect_output and the output guard in CopilotService.answer(); add a regression asserting both still run.", "Wire the CI step into .github/workflows/ci.yml (evaluator job) and the shard plan."],
+        pr2=[], files="src/security.py; src/copilot/security/{injection,rag_guard,output_guard}.py; src/copilot/models.py; src/copilot/service.py; evaluations/injection/ (new); scripts/eval_injection_corpus.py (new); tests/test_injection_*.py (new)",
+        out_of_scope="No change to src/agent/policies.py, registry.py or nodes.py (the tool-call authorization is package 01D, sequenced after 01B); no new tools; no change to grounding policy semantics; no live model calls (the corpus run is offline); no threshold invented", risks="False positives on legitimate job descriptions; multilingual evasion; thresholds undecided",
+        verification="eval script report committed as evidence; CI gate once thresholds are approved; existing eval_agent, grounding and prompt-injection suites unchanged and green; REVIEW-01 R1, R2, R3, R6"),
+    "01D": dict(title="Tool-call authorization layer (REVIEW-01 part 2)", pr1=["After 01B has merged, add an authorization step inside ToolRegistry.validate_and_run (src/agent/registry.py): verify the authenticated user, the run's declared goal and consent state, the tool's permission, and an argument allow-list; refuse and record a safe event otherwise.",
+        "Negative tests: retrieved text instructing a side-effecting tool cannot cause it to run; user A's run cannot read user B's evidence through any tool; invalid argument shapes are refused before side effects.", "Assert the tool set is unchanged."],
+        pr2=[], files="src/agent/registry.py; src/agent/nodes.py; src/agent/state.py; tests/test_tool_authorization_*.py (new)", out_of_scope="No new tools; no prompt wording change", risks="Over-blocking legitimate tool calls (mitigated by the 56 deterministic tool-selection cases)",
+        verification="negative tests; existing eval_agent and tool-selection cases green; closes REVIEW-01 together with 01A; must merge after 01B and before 01C"),
     "01B": dict(title="Externalized prompt versions (REVIEW-02)", pr1=["Audit current prompts and their consumers: src/agent/policies.py SYSTEM_PROMPT, src/prompts.py technique prompts (src/prompt_registry.py PromptTechniqueSpec), src/copilot/rag/prompts.py, and how src/config_versions.py computes prompt_version today (hash based).",
         "Create the prompt asset directory (names are examples; confirm compatibility with each consumer before fixing them): prompts/agent/system.<version>.md, prompts/interview/<technique>.<version>.md, prompts/rag/system.<version>.md, each with front matter (id, semantic version, variables, compatible_with).",
         "Add src/prompt_loader.py: validated loading (front matter schema, variable checks, SHA-256 integrity), declared semantic version independent of the hash, clear errors for missing versions; keep current Python literals as the default until parity tests pass, then switch the consumers to the loader.",
@@ -258,6 +276,17 @@ def critical_path(which: int) -> tuple[list[str], float]:
     return max(best.values(), key=lambda t: t[0])[1], max(v[0] for v in best.values())
 
 
+def critical_path_subset(ids: set[str], which: int) -> tuple[list[str], float]:
+    """Longest dependency chain by effort inside a subset of packages (a dependency outside the subset is treated as already satisfied)."""
+    best: dict[str, tuple[float, list[str]]] = {}
+    for n in topo_order():
+        if n not in ids:
+            continue
+        prev = max((best[d] for d in BYID[n]["depends"] if d in best), default=(0.0, []), key=lambda t: t[0])
+        best[n] = (prev[0] + BYID[n]["effort"][which], prev[1] + [n])
+    return max(best.values(), key=lambda t: t[0])[1], max(v[0] for v in best.values())
+
+
 def totals() -> dict:
     lo = sum(p["effort"][0] for p in PACKAGES)
     hi = sum(p["effort"][1] for p in PACKAGES)
@@ -310,6 +339,18 @@ def validate() -> list[str]:
         topo_order()
     except ValueError as exc:
         errs.append(str(exc))
+    for p in PACKAGES:
+        if p["id"] not in TIERS:
+            errs.append(f"{p['id']}: no scope tier")
+    for k in TIERS:
+        if k not in BYID:
+            errs.append(f"tier entry for unknown package {k}")
+    for k in EARLY_PARALLEL:
+        if k not in BYID or BYID[k]["start"] > 1:
+            errs.append(f"early-parallel package {k} must start in W1 or earlier")
+    # shared-file order for the agent policy and tool-execution path: 01B before 01D, 01D before 01C
+    if not ("01B" in BYID["01D"]["depends"] and "01B" in BYID["01C"]["depends"] and "01D" in BYID["01C"]["depends"]):
+        errs.append("agent-policy shared-file order must be 01B, then 01D, then 01C")
     for b in BRIEFS:
         if b not in BYID:
             errs.append(f"brief for unknown package {b}")
@@ -327,12 +368,13 @@ def render_register() -> str:
     t = totals()
     L = ["# Implementation Package Register (Phase 00)", "", "**Status:** GENERATED by `scripts/production/execution_packages.py` (single source of truth for package scope, dependencies, effort and schedule). Item dispositions come from `PRODUCTION_ISSUE_RECONCILIATION.json` and are not copied here beyond IDs. Do not edit by hand. No package is started; Phase 01 needs owner approval.", "",
          f"{t['packages']} packages cover all {len(r10_items(items))} R1.0 fix/verify items, each assigned to exactly one package (machine-checked). Effort is in ideal engineering days (low to high) for one engineer or one focused agent session; it excludes calendar-bound human and legal review, shown as `human`.", "",
-         "## Packages", "", "| ID | Package | Track | Phase | Weeks | Effort (days) | Depends on | Open decisions | R1.0 items | Human/calendar-bound |", "|---|---|---|---|---|---|---|---|---|---|"]
+         "## Packages", "", "| ID | Package | Track | Phase | Tier | Weeks | Effort (days) | Depends on | Open decisions | R1.0 items | Human/calendar-bound |", "|---|---|---|---|---|---|---|---|---|---|---|"]
     for p in PACKAGES:
-        L.append(f"| {p['id']} | {p['name']} | {p['track']} | {p['phase']} | {WEEKS[p['start']].split(' ')[0]}-{WEEKS[p['end']].split(' ')[0]} | {p['effort'][0]}-{p['effort'][1]} | {', '.join(p['depends']) or 'none'} | {', '.join(p['decisions']) or 'none'} | {len(p['items'])} | {p['human'] or 'no'} |")
-    L += ["", f"Total effort: {t['min_days']} to {t['max_days']} engineering days. Critical path (longest dependency chain): {t['cp_min'][1]:.0f} to {t['cp_max'][1]:.0f} days (see `DEPENDENCY_GRAPH.md`).", "", "## Package detail", ""]
+        L.append(f"| {p['id']} | {p['name']}{' (early parallel)' if p['id'] in EARLY_PARALLEL else ''} | {p['track']} | {p['phase']} | T{TIERS[p['id']]} | {WEEKS[p['start']].split(' ')[0]}-{WEEKS[p['end']].split(' ')[0]} | {p['effort'][0]}-{p['effort'][1]} | {', '.join(p['depends']) or 'none'} | {', '.join(p['decisions']) or 'none'} | {len(p['items'])} | {p['human'] or 'no'} |")
+    L += ["", "Scope tiers: " + "; ".join(f"T{k} = {v}" for k, v in TIER_NAMES.items()) + ". Early-parallel packages (deployment topology and Knowledge persistence, highest staffing priority, start in the first implementation wave): " + ", ".join(EARLY_PARALLEL) + ".", "",
+          f"Total effort: {t['min_days']} to {t['max_days']} engineering days. Critical path (longest dependency chain): {t['cp_min'][1]:.0f} to {t['cp_max'][1]:.0f} days (see `DEPENDENCY_GRAPH.md`).", "", "## Package detail", ""]
     for p in PACKAGES:
-        L += [f"### {p['id']} {p['name']}", "", f"- **Track / phase / weeks:** {p['track']} ({TRACKS[p['track']]}) / {p['phase']} / {WEEKS[p['start']]} to {WEEKS[p['end']]}", f"- **Scope:** {p['scope']}", f"- **Dependencies:** {', '.join(p['depends']) or 'none'}; **owner decisions:** {', '.join(p['decisions']) or 'none'}",
+        L += [f"### {p['id']} {p['name']}", "", f"- **Scope tier:** T{TIERS[p['id']]} ({TIER_NAMES[TIERS[p['id']]]})" + ("; **early parallel workstream**" if p["id"] in EARLY_PARALLEL else ""), f"- **Track / phase / weeks:** {p['track']} ({TRACKS[p['track']]}) / {p['phase']} / {WEEKS[p['start']]} to {WEEKS[p['end']]}", f"- **Scope:** {p['scope']}", f"- **Dependencies:** {', '.join(p['depends']) or 'none'}; **owner decisions:** {', '.join(p['decisions']) or 'none'}",
               f"- **Existing components affected:** {p['components']}", f"- **Expected backend changes:** {p['backend']}", f"- **Expected frontend changes:** {p['frontend']}", f"- **Security and privacy:** {p['security']}",
               f"- **Acceptance criteria:** {p['acceptance']}", f"- **Required tests:** {p['tests']}", f"- **Estimated effort:** {p['effort'][0]} to {p['effort'][1]} engineering days" + (f"; calendar-bound: {p['human']}" if p["human"] else ""),
               f"- **PR boundary:** {p['pr']}", f"- **Definition of Done:** {p['dod']}", f"- **R1.0 items ({len(p['items'])}):** {', '.join(p['items']) or 'none'}"]
@@ -361,7 +403,7 @@ def render_graph() -> str:
     L += ["```", "", "## Dependency order (topological)", "", ", ".join(order), "", "## Critical path", "",
           f"Lowest-effort chain: {' -> '.join(t['cp_min'][0])} = {t['cp_min'][1]:.0f} days. Highest-effort chain: {' -> '.join(t['cp_max'][0])} = {t['cp_max'][1]:.0f} days. These are lower bounds on elapsed effort no matter how many people work in parallel; they exclude calendar-bound human and legal review.", "",
           "## Shared modules and safe integration order", "", "| Shared module | Packages that edit it | Safe order |", "|---|---|---|",
-          "| src/agent/policies.py and the tool-execution path (registry.py, nodes.py) | 01A, 01B, 01C, 04C | 01B, then 01A, then 01C; 04C after 01A |", "| src/prompts.py, src/prompt_registry.py, src/config_versions.py | 01B, 06C | 01B before 06C |",
+          "| src/agent/policies.py and the tool-execution path (registry.py, nodes.py) | 01B, 01D, 01C (01A touches none of them; 04C reads events) | 01B, then 01D (tool-call authorization, the overlapping part of REVIEW-01), then 01C; 01A is independent and runs first |", "| src/prompts.py, src/prompt_registry.py, src/config_versions.py | 01B, 06C | 01B before 06C |",
           "| src/copilot/security/ and src/copilot/models.py (RetrievalResult) | 01A, 02B, 06D, 06E | 01A first |", "| src/knowledge_admin/ and src/copilot/embeddings.py, retrieval/ | 02A, 02B, 02C, 02D, 02E | 02A, then 02B and 02C, then 02D and 02E |",
           "| frontend/components/admin/AdminShell.tsx and frontend/lib/admin/capabilities.ts | 03A, 03B, 03C, 03D, 03E | 03A first; the rest rebase on it |", "| frontend/components/layout/nav-items.ts | 03A only | single owner |", "| tests/_admin_matrix.py and the admin role fixture | 03A to 03E | regenerate only when a permission or route changes |",
           "| deploy/docker-compose.staging.yml, Dockerfiles, deploy/scripts | 02A (worker, volumes), 02C (clamd), 05A, 05B | 05A owns the file; 02A and 02C supply fragments |", "| Alembic migrations (head 0039_speech_governance) | 03E, 04A, 04B, 04E (new tables) | one migration per PR, sequential heads, never two heads |",
@@ -400,8 +442,62 @@ def render_schedule() -> str:
     for n in (1, 2, 3, 4, 6, 8, 10, 12):
         cap = n * t["per_stream_productive_days"]
         L.append(f"| {n} | {cap:.0f} | {'yes' if cap >= t['min_days'] else 'no'} | {'yes' if cap >= t['max_days'] else 'no'} |")
+    L += ["", "## Early parallel workstream: deployment topology and Knowledge persistence", "", "02A (Knowledge persistence, environment identity, restore), 05A (hosted topology) and 05E (privacy and legal readiness, calendar-bound) are long poles: they need an owner decision, a topology fix, repeatable drills and human lead time, and nothing else can be proven on a hosted stack without them. They start in W1 alongside Track A with the highest staffing priority and are tracked as a separate early workstream. **The existing `deploy/docker-compose.staging.yml` must not be deployed as it stands** (it has no worker, no knowledge or index volume and no ClamAV service); the first 05A PR completes the topology as code without deploying it.", ""]
+    L += tier_section()
     L += ["", "See `PHASE_00_EXIT_REPORT.md` for the November feasibility assessment and scope options.", ""]
     return "\n".join(L)
+
+
+def tier_totals() -> list[tuple[int, int, int, int, int]]:
+    out, lo, hi = [], 0, 0
+    for k in sorted(TIER_NAMES):
+        ps = [p for p in PACKAGES if TIERS[p["id"]] == k]
+        lo += sum(p["effort"][0] for p in ps)
+        hi += sum(p["effort"][1] for p in ps)
+        out.append((k, len(ps), sum(p["effort"][0] for p in ps), sum(p["effort"][1] for p in ps), lo, hi))
+    return out
+
+
+def strategy_sets() -> dict[str, tuple[str, set[str]]]:
+    allp = {p["id"] for p in PACKAGES}
+    t0, t1, t2 = ({k for k, v in TIERS.items() if v == n} for n in (0, 1, 2))
+    return {
+        "S1 Full R1.0 scope": ("Every package (tiers T0 to T4)", allp),
+        "S2 Restricted free private beta (proposed)": ("Tiers T0 to T2; Admin 2.0 expansion (03B, 03D, 03E) to R1.2; verification extras (07B, 07C, 04F, 00B) as follow-ups", t0 | t1 | t2),
+        "S3 Minimum safe beta (capacity-based alternative)": ("Tiers T0 and T1 plus candidate journey reliability (04D); Story Bank and Workspaces completion (04A, 04B), Admin user management (03C), retrieval calibration (02E), per-language AI and journey work beyond the activation gates (06B, 06C, 06D) and independent human evaluation (06G) are limited to what the activation gates strictly require or move to R1.2; this moves owner-requested R1.0 items out of R1.0 and needs explicit owner approval", t0 | t1 | {"04D"}),
+    }
+
+
+def tier_section() -> list[str]:
+    t = totals()
+    per = t["per_stream_productive_days"]
+    L = ["## Scope tiers and the proposed restricted free private beta (OD-SCOPE-01; PROPOSED, NOT OWNER-APPROVED)", "",
+         "| Tier | Meaning | Packages | Effort (days) | Cumulative effort (days) | Streams for the cumulative total |", "|---|---|---|---|---|---|"]
+    for k, n, lo, hi, clo, chi in tier_totals():
+        L.append(f"| T{k} | {TIER_NAMES[k]} | {n} | {lo}-{hi} | {clo}-{chi} | {clo / per:.1f}-{chi / per:.1f} |")
+    t012 = [r for r in tier_totals() if r[0] == 2][0]
+    L += ["", f"**Proposed restricted free private beta:** deliver tiers T0 to T2 ({t012[4]} to {t012[5]} days, {t012[4] / per:.1f} to {t012[5] / per:.1f} streams) and defer tier T3 (Admin 2.0 expansion) to R1.2 and tier T4 (verification extras) to follow-up, with these restrictions, every one an owner decision still to be made:", "",
+          "1. A small invitation-only cohort capped by the owner (size is an owner decision), limiting support, abuse and AI-cost exposure.",
+          "2. Languages and markets are activated only where their gates pass at the freeze; expect fewer than seven languages and one or two qualified EU markets at launch (a failed mandatory gate prevents activation, as the owner decided). The others stay hidden and documented.",
+          "3. Candidate core only: Mo, Practice, Story Bank, Workspaces with VIEW-only sharing, History, Progress, privacy controls.",
+          "4. Safety, privacy, hosting, knowledge and identity gates are unchanged (tier T0); reviewer corrections REVIEW-01 to REVIEW-05 stay in scope (T0 and T1).",
+          "5. Admin: owner-operated with the new navigation and user management; the existing Command Center, plan assignment and six aggregate reports stay as built; dashboards, the plan editor, comparison and preview, and the report builder move to R1.2.",
+          "6. No live billing; Basic and Premium as free beta tiers.", "7. Live re-validation extras (07B, 07C) and the dictation review (04F) are follow-ups; the deterministic evaluators still run.", "",
+          "This is a proposal for owner decision, not an approved scope.", "", "## Capacity-based alternative to the full scope", "", "Which cumulative tiers fit a given number of parallel streams in the W1 to W5 window (one stream = one engineer or one focused agent session at 70% utilisation, an assumption; the real capacity is not recorded):", "",
+          "| Parallel streams | Productive days | Tiers that fit the MAXIMUM estimate | Tiers that fit the MINIMUM estimate |", "|---|---|---|---|"]
+    for n in (3, 5, 8, 11, 14, 17):
+        cap = n * per
+        fit_hi = max([r[0] for r in tier_totals() if r[5] <= cap], default=None)
+        fit_lo = max([r[0] for r in tier_totals() if r[4] <= cap], default=None)
+        L.append(f"| {n} | {cap:.0f} | {('T0 to T' + str(fit_hi)) if fit_hi is not None else 'not even T0'} | {('T0 to T' + str(fit_lo)) if fit_lo is not None else 'not even T0'} |")
+    L += ["", "### Strategy comparison (S1 and S3 are alternatives to the proposal S2; none is approved)", "", "| Strategy | Content | Effort (days) | Streams needed | Packages | Critical path (days) |", "|---|---|---|---|---|---|"]
+    for name, (desc, ids) in strategy_sets().items():
+        lo = sum(BYID[i]["effort"][0] for i in ids)
+        hi = sum(BYID[i]["effort"][1] for i in ids)
+        c0, c1 = critical_path_subset(ids, 0), critical_path_subset(ids, 1)
+        L.append(f"| {name} | {desc} | {lo}-{hi} | {lo / per:.1f}-{hi / per:.1f} | {len(ids)} | {c0[1]:.0f}-{c1[1]:.0f} via {' > '.join(c1[0])} |")
+    L += ["", "Reading: with 3 to 5 streams not even the non-negotiable tier T0 fits at its maximum estimate, so a real-user beta by 30 November needs a larger effort or a later date regardless of what else is cut. The tiers define the order in which scope is added as capacity allows.", ""]
+    return L
 
 
 def main(argv: list[str]) -> int:

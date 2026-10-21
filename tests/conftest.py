@@ -232,3 +232,7 @@ def _reset_runtime_state():
     from src.ai_admin.resolver import uninstall_resolver
 
     uninstall_resolver()
+
+
+# The test-client cookie-precedence compatibility fix lives in tests/_client_compat.py and is installed when the ``tests`` package is imported (pytest and the
+# evaluators that import tests.* helpers alike). See that module and tests/test_testclient_cookie_precedence.py.

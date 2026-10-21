@@ -41,10 +41,18 @@ def env(monkeypatch):
 
 
 def mk(env, role="user"):
+    # This test creates more accounts than the per-IP registration limit allows in one hour (8). The limit is not what is under test, so each account starts from
+    # fresh counters. Without this, the ninth registration was refused (429), its login returned no token and ``cookies={"ask4mo_session": None}`` made the request
+    # fall back to whichever user the shared cookie jar last held: the test passed by accident on older test-client versions and failed once the per-request cookie
+    # became authoritative. The assertion below makes any future harness failure loud instead of silent.
+    from src.api.rate_limit import reset_rate_limiter
+
+    reset_rate_limiter()
     env.n += 1
     email = f"i{env.n}@x.com"
-    register(env.c, email, PW)
+    assert register(env.c, email, PW).status_code == 201, "harness: account creation failed"
     tok = login_token(env.c, email, PW)
+    assert tok, "harness: login produced no session token"
     uid = env.c.get(f"{API}/auth/me", cookies=cookies_for(tok)).json()["user_id"]
     if role != "user":
         env.accounts.set_platform_role(uid, role)

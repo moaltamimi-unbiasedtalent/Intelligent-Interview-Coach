@@ -104,6 +104,35 @@ ACADEMIC_ONLY = {  # historical capstone-submission tasks that are not productio
     "IR-RC004-SPEC": "RC-P10-004 entry specification for the capstone release-candidate convention",
     "G-WALK-ENV": "the capstone Admin walkthrough used a development server and seeded data",
 }
+
+# Phase 00 review: proposed R1.0 scope reclassification (PROPOSED ONLY, NOT APPLIED: item dispositions above stay as generated until the owner confirms).
+# An item is proposed only if the capability it concerns is provably inaccessible in the R1.0 Candidate API and UI. Evidence keys are verified by
+# tests/test_r1_scope_exclusions.py. Two of the twelve candidates failed the proof and are withdrawn.
+EVIDENCE = {
+    "E-IMPORT": "no module under src/ outside src/knowledge_foundation imports it (AST scan): the Compensation V2 and US occupational foundation code is unreachable from any API, application, agent or retrieval path",
+    "E-ROUTES": "the OpenAPI path table (266 paths, 114 non-admin) has no compensation, foundation, qualification, alias or recording route",
+    "E-UI": "no frontend source (app, components, lib) references Compensation V2, the knowledge foundation, US SOC or BLS OEWS alias review",
+    "E-READY": "knowledge_foundation.readiness.assess reports operational_today False, 0 linkable Compensation V2 records and 0 approved Compensation V2 sources",
+    "E-REGISTER": "the register's own candidate-impact text records no Candidate effect while Compensation V2 and candidate-facing use stay disabled",
+    "E-SPEECH": "the frontend never calls /speech/transcriptions or /speech/synthesis (only /speech/capabilities), the backend answers 503 speech_unavailable by default, and the server speech gate constants are False",
+}
+RECLASSIFICATION_PROPOSAL = {
+    "BL-5": ("R1.6", "12 batches of Compensation V2 records awaiting reviewer decisions: Compensation Intelligence V2 work", ["E-IMPORT", "E-ROUTES", "E-UI", "E-READY", "E-REGISTER"]),
+    "BL-6": ("R1.5", "Five US occupational alias proposals: qualified occupational sources for additional countries", ["E-IMPORT", "E-ROUTES", "E-UI", "E-READY", "E-REGISTER"]),
+    "BL-6.1": ("R1.5", "US alias decision Software Developer to 15-1252", ["E-IMPORT", "E-ROUTES", "E-UI", "E-REGISTER"]),
+    "BL-6.2": ("R1.5", "US alias decision Human Resources Manager to 11-3121", ["E-IMPORT", "E-ROUTES", "E-UI", "E-REGISTER"]),
+    "BL-6.3": ("R1.5", "US alias decision Sales Manager to 11-2022", ["E-IMPORT", "E-ROUTES", "E-UI", "E-REGISTER"]),
+    "BL-6.4": ("R1.5", "US alias decision Accountant to 13-2011", ["E-IMPORT", "E-ROUTES", "E-UI", "E-REGISTER"]),
+    "BL-6.5": ("R1.5", "US alias decision Financial Analyst to 13-2051", ["E-IMPORT", "E-ROUTES", "E-UI", "E-REGISTER"]),
+    "BL-9": ("R1.5", "Promotion of us_soc_2018 and bls_oews into the persistent source registry", ["E-IMPORT", "E-ROUTES", "E-READY", "E-REGISTER"]),
+    "BL-12": ("R1.6", "Runtime authorisation and deployment review for Compensation V2", ["E-IMPORT", "E-ROUTES", "E-UI", "E-READY", "E-REGISTER"]),
+    "W12.4E-12": ("R1.4", "Server-side browser recording client (server speech)", ["E-SPEECH"]),
+}
+RECLASSIFICATION_WITHDRAWN = {
+    "BL-6.6": "Data Analyst and Product Manager remain unresolved: the register states it affects 13 of the 26 insufficient coverage cases (ambiguous titles), i.e. the enabled role-resolution and abstention behaviour Candidates use today; the proof fails, so it stays in R1.0 (package 02E)",
+    "BL-7": "Resolve the Data Analyst and Product Manager evidence gaps: needed for any legitimate coverage close and concerns enabled role resolution; the proof fails, so it stays in R1.0 (package 02E)",
+}
+
 MARKETS = ["Ireland", "Germany", "Spain", "Italy", "Portugal", "France", "Netherlands"]
 SEVEN_MARKET_RE = re.compile(r"\b(ireland|irish|germany|german|deutschland|spain|spanish|italy|italian|portugal|portuguese|france|french|netherlands|dutch|eu\b|europe|esco|eurostat)", re.I)
 OTHER_MARKET_RE = re.compile(r"\b(united kingdom|\buk\b|canada|australia|india|china|japan|brazil|mexico|singapore|uae|gulf|saudi|africa|latin america)\b", re.I)
@@ -574,6 +603,8 @@ def build() -> dict:
         disclaimer="All dispositions, releases, owners and work packages are PROPOSED by documented rules for owner review. No historical status, gate or closure evidence was changed.",
         dispositions=list(DISPOSITIONS), releases=list(RELEASES), release_themes=RELEASE_THEMES, work_packages={k: dict(name=v[0], owner_role=v[1]) for k, v in WORK_PACKAGES.items()},
         gate_constants=GATE_NAMES, summary=summary, cross_check=xrows, items=allitems,
+        scope_proposals=dict(applied=False, evidence=EVIDENCE, reclassification={k: dict(proposed_release=v[0], capability=v[1], evidence=v[2]) for k, v in RECLASSIFICATION_PROPOSAL.items()},
+                             withdrawn=RECLASSIFICATION_WITHDRAWN),
     )
 
 
@@ -606,6 +637,9 @@ def summarise(register, items, newreq, xrows) -> dict:
         r1_0_total_work=sum(1 for r in allitems if r["disposition"] in ("FIX BEFORE R1.0", "VERIFY BEFORE R1.0")),
         by_release_total={rel: sum(1 for r in allitems if r["release"] == rel) for rel in list(RELEASES) + [UNSCHEDULED, "n/a"]},
         provenance_counts=dict(Counter(r["provenance"] for r in allitems)), origin_class_counts=dict(Counter(r["origin_class"] for r in allitems)),
+        proposed_reclassification=dict(items=len(RECLASSIFICATION_PROPOSAL), withdrawn=len(RECLASSIFICATION_WITHDRAWN), applied=False,
+                                       r1_0_fix_if_applied=sum(1 for r in allitems if r["disposition"] == "FIX BEFORE R1.0") - len(RECLASSIFICATION_PROPOSAL),
+                                       r1_0_total_if_applied=sum(1 for r in allitems if r["disposition"] in ("FIX BEFORE R1.0", "VERIFY BEFORE R1.0")) - len(RECLASSIFICATION_PROPOSAL)),
         previous_baseline=PREV_BASELINE,
         delta_vs_previous=dict(items=len(allitems) - PREV_BASELINE["items"],
                                r1_0_must_fix=sum(1 for r in allitems if r["disposition"] == "FIX BEFORE R1.0") - PREV_BASELINE["r1_0_must_fix"],
@@ -684,6 +718,21 @@ def validate(doc: dict) -> list[str]:
             errs.append(f"REQ-OWN-0{n}: not a specified, testable R1.0 requirement")
     if list(doc.get("releases", [])) != list(RELEASES) or set(doc.get("release_themes", {})) != set(RELEASES):
         errs.append("the agreed release train R1.0 to R2.0 is not fully present")
+    sp = doc.get("scope_proposals") or {}
+    if sp.get("applied") is not False:
+        errs.append("the scope reclassification is a proposal and must be marked not applied")
+    for k, v in (sp.get("reclassification") or {}).items():
+        r = byid.get(k)
+        if r is None or r["origin"] != "REGISTER":
+            errs.append(f"proposed reclassification of unknown register item {k}")
+            continue
+        if r["disposition"] != "FIX BEFORE R1.0" or r["release"] != "R1.0":
+            errs.append(f"{k}: the proposal must not be applied (disposition changed)")
+        if v["proposed_release"] not in RELEASES[1:] or not v["evidence"] or any(e not in EVIDENCE for e in v["evidence"]):
+            errs.append(f"{k}: proposal lacks a later release or valid evidence")
+    for k in (sp.get("withdrawn") or {}):
+        if byid.get(k) is None or byid[k]["release"] != "R1.0" or k in (sp.get("reclassification") or {}):
+            errs.append(f"{k}: withdrawn item must stay in R1.0 and out of the proposal")
     for rel in RELEASES[1:]:
         if not any(r["release"] == rel for r in items):
             errs.append(f"release {rel} has no traced requirement")
@@ -770,6 +819,8 @@ def render_dashboard(doc: dict) -> str:
           "- Russian items moved from a deferral to OWNER DECISION (UNSCHEDULED), because the owner made later activation a separate future decision, not an automatic R2.0 commitment.",
           "- Six historical capstone-submission tasks were reclassified ACADEMIC_ONLY and moved to OWNER DECISION (UNSCHEDULED) pending confirmation of retirement; they no longer count as production work.",
           "- Deferrals were re-routed from the earlier invented R1.1 to R2.0 themes onto the agreed train: commercial to R1.1, speech to R1.4, additional-country evidence to R1.5, compensation to R1.6, with items that fit no agreed theme placed in R1.1 (R1.2 for Admin) as a proposal.", ""]
+    pr = s["proposed_reclassification"]
+    L += ["## Proposed R1.0 scope reclassification (PROPOSED, NOT APPLIED)", "", f"{pr['items']} of 12 candidates pass the proof that their capability is inaccessible in the R1.0 Candidate API and UI; {pr['withdrawn']} fail it and stay in R1.0. If the owner confirms, R1.0 must-fix would be {pr['r1_0_fix_if_applied']} and fix plus verify {pr['r1_0_total_if_applied']}. Evidence and per-item detail: `execution/R1_SCOPE_RECLASSIFICATION_PROPOSAL.md`. Nothing is applied until the owner confirms (OD-US-CONTENT).", ""]
     L += ["## Totals by release (all dispositions)", "", "| Release | Items | Theme |", "|---|---|---|"] + [f"| {rel} | {s['by_release_total'].get(rel, 0)} | {RELEASE_THEMES[rel][:110]} |" for rel in RELEASES] + [f"| {UNSCHEDULED} | {s['by_release_total'].get(UNSCHEDULED, 0)} | owner decisions with no release yet |", f"| n/a (closed) | {s['by_release_total'].get('n/a', 0)} | closure evidence preserved |", ""]
     L += ["## R1.0 work by priority", "", "| Priority | Items |", "|---|---|"] + [f"| {k} | {v} |" for k, v in sorted(s["priority_of_r1_0_work"].items())] + [""]
     L += ["## R1.0 work by work package", "", "| WP | Fix | Verify | Owner decisions |", "|---|---|---|---|"]
@@ -787,7 +838,7 @@ def render_dashboard(doc: dict) -> str:
 
 
 NEW_DECISIONS = [  # (id, decision, detail, proposed release, type)
-    ("OD-SCOPE-01", "What happens if a mandatory R1.0 gate is not met by 30 November 2026", "The date is the owner's target and safety, privacy, licensing and operational gates are not waived. If a gate is not met: delay R1.0, remove the affected feature from scope, or keep it disabled. The reconciled R1.0 fix/verify list is large and depends on people not yet named.", "R1.0", "AWAITING"),
+    ("OD-SCOPE-01", "What happens if a mandatory R1.0 gate is not met by 30 November 2026", "The date is the owner's target and safety, privacy, licensing and operational gates are not waived. If a gate is not met: delay R1.0, remove the affected feature from scope, or keep it disabled. Phase 00 PROPOSES (not approved) a restricted free private beta of scope tiers T0 to T2 (small capped invitation-only cohort, languages and markets activated only where gates pass, Admin dashboards, plan editor and report builder moved to R1.2) and a capacity-based minimum safe beta (T0, T1 and journey reliability) as an alternative; the computed effort needs roughly 9 to 15 and 6 to 10 parallel streams respectively. See execution/DELIVERY_SCHEDULE.md and execution/PHASE_00_EXIT_REPORT.md. The owner supplies the real capacity.", "R1.0", "AWAITING"),
     ("OD-LANG-02", "Approve each proposed primary market individually", "Ireland, Germany, Spain, Italy, Portugal, France, Netherlands are proposals only; none is an approved country qualification. Each needs owner approval and source qualification (licence, authority, coverage).", "R1.0", "AWAITING"),
     ("OD-LANG-03", "Name the native-language reviewer for each of the seven languages", "No reviewer is named; needed before LG-11.", "R1.0", "AWAITING"),
     ("OD-LANG-04", "Name the legal and privacy translation qualifier(s)", "Needed before real-user access in each language (LG-10).", "R1.0", "AWAITING"),
