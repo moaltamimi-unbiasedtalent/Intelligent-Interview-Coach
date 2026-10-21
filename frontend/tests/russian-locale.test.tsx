@@ -154,23 +154,28 @@ describe("R1 + R2 + R13 - selector, switching and <html lang>", () => {
     expect(SUPPORTED_LOCALE_CODES).toContain("ru");
   });
 
-  it("R1/R2/R13: the language menu offers Русский; selecting it switches chrome and sets <html lang=ru>", async () => {
+  it("R1/R2/R13 (06A): the language menu offers exactly seven languages and NOT Русский; the preserved ru catalogue still renders when forced", async () => {
     function Probe() {
       const t = useT();
       return <span data-testid="probe">{t("nav.prepare")}</span>;
     }
-    render(
+    const { unmount } = render(
       <I18nProvider initialLocale="en">
         <LanguageMenu />
         <Probe />
       </I18nProvider>,
     );
-    expect(screen.getByTestId("probe")).toHaveTextContent(en("nav.prepare"));
     await userEvent.click(screen.getByTestId("language-menu-button"));
-    await userEvent.click(screen.getByRole("menuitemradio", { name: /Русский/ }));
-    await waitFor(() => expect(screen.getByTestId("probe")).toHaveTextContent(ru("nav.prepare")));
+    expect(screen.getAllByRole("menuitemradio")).toHaveLength(7);
+    expect(screen.queryByRole("menuitemradio", { name: /Русский/ })).toBeNull();
+    unmount();
+    render(
+      <I18nProvider initialLocale="ru">
+        <Probe />
+      </I18nProvider>,
+    );
+    expect(screen.getByTestId("probe")).toHaveTextContent(ru("nav.prepare")); // catalogue preserved
     expect(ru("nav.prepare")).toMatch(CYR);
-    expect(document.documentElement.lang).toBe("ru");
   });
 });
 
@@ -272,7 +277,7 @@ describe("R5-R12 - representative surfaces render Russian", () => {
 
 // ---------------------------------------------------------------------------------------------
 describe("R14 - interface, conversation and dictation stay independent", () => {
-  it("Russian interface + English conversation: chrome is Russian, conversation stays en, dictation unaffected", async () => {
+  it("06A: a stored legacy ru interface preference falls back to English for display; no selector offers Russian; dictation unaffected; geography untouched", async () => {
     me.mockResolvedValue(ACCOUNT({ interface_locale: "ru", conversation_language: "en" }));
     render(
       <AuthProvider>
@@ -281,23 +286,24 @@ describe("R14 - interface, conversation and dictation stay independent", () => {
         </I18nProvider>
       </AuthProvider>,
     );
-    await waitFor(() => expect(screen.getByText(ru("settings.interfaceLanguage"))).toBeInTheDocument());
-    expect((screen.getByLabelText(ru("settings.interfaceLanguage")) as HTMLSelectElement).value).toBe("ru");
-    const conv = screen.getByLabelText(ru("settings.conversationLanguage")) as HTMLSelectElement;
+    await waitFor(() => expect(screen.getByText("Interface language")).toBeInTheDocument());
+    const iface = screen.getByLabelText("Interface language") as HTMLSelectElement;
+    expect(iface.value).toBe("en");
+    const conv = screen.getByLabelText("Mo conversation language") as HTMLSelectElement;
     expect(conv.value).toBe("en");
-    // Both interface and conversation selectors offer Русский (8 options); the dictation selector does NOT.
-    const interfaceOpts = Array.from((screen.getByLabelText(ru("settings.interfaceLanguage")) as HTMLSelectElement).options);
-    expect(interfaceOpts.map((o) => o.value)).toContain("ru");
-    expect(Array.from(conv.options).map((o) => o.value)).toContain("ru");
-    const dict = screen.getByLabelText(ru("settings.dictationLanguage")) as HTMLSelectElement;
+    expect(Array.from(iface.options).map((o) => o.value)).toEqual(["en", "de", "fr", "es", "it", "pt", "nl"]);
+    expect(Array.from(conv.options).map((o) => o.value)).toEqual(["en", "de", "fr", "es", "it", "pt", "nl"]);
+    const dict = screen.getByLabelText("Dictation language") as HTMLSelectElement;
     expect(Array.from(dict.options).some((o) => o.value.startsWith("ru"))).toBe(false);
     expect(Array.from(dict.options)).toHaveLength(7);
-    expect(dict.value).toMatch(/^en-US$/); // never silently selects a fake Russian dictation locale
+    expect(dict.value).toMatch(/^en-US$/);
+    expect(document.documentElement.lang).toBe("en");
+    expect(updatePreferences).not.toHaveBeenCalled(); // display fallback never rewrites the stored preference
   });
 
-  it("English interface + Russian conversation: choosing Russian conversation sends ONLY conversation_language", async () => {
+  it("English interface + Spanish conversation: choosing a conversation language sends ONLY conversation_language", async () => {
     me.mockResolvedValue(ACCOUNT({ interface_locale: "en", conversation_language: "en" }));
-    updatePreferences.mockResolvedValue(ACCOUNT({ interface_locale: "en", conversation_language: "ru" }));
+    updatePreferences.mockResolvedValue(ACCOUNT({ interface_locale: "en", conversation_language: "es" }));
     render(
       <AuthProvider>
         <I18nProvider>
@@ -306,10 +312,10 @@ describe("R14 - interface, conversation and dictation stay independent", () => {
       </AuthProvider>,
     );
     await waitFor(() => expect(screen.getByText("Mo conversation language")).toBeInTheDocument());
-    await userEvent.selectOptions(screen.getByLabelText("Mo conversation language"), "ru");
-    await waitFor(() => expect(updatePreferences).toHaveBeenCalledWith({ conversation_language: "ru" }));
+    await userEvent.selectOptions(screen.getByLabelText("Mo conversation language"), "es");
+    await waitFor(() => expect(updatePreferences).toHaveBeenCalledWith({ conversation_language: "es" }));
     expect(updatePreferences).not.toHaveBeenCalledWith(expect.objectContaining({ interface_locale: expect.anything() }));
-    expect(document.documentElement.lang).toBe("en"); // chrome remains English
+    expect(document.documentElement.lang).toBe("en");
   });
 });
 

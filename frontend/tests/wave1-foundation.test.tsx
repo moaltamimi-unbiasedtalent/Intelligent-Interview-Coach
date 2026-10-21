@@ -39,14 +39,16 @@ describe("Wave 1 — canonical brand", () => {
 });
 
 describe("Wave 1 — global language menu", () => {
-  it("offers all eight locales and switches on select", async () => {
+  it("offers exactly the seven active locales (no Russian) and switches on select", async () => {
     wrap(<LanguageMenu />);
     const button = screen.getByTestId("language-menu-button");
     await userEvent.click(button);
-    // Native labels for the eight supported locales (Russian added in W9.7).
-    for (const label of ["English", "Deutsch", "Français", "Español", "Italiano", "Português", "Nederlands", "Русский"]) {
+    // Native labels for the seven ACTIVE Candidate locales (06A: Russian is excluded from selection, catalogue preserved).
+    for (const label of ["English", "Deutsch", "Français", "Español", "Italiano", "Português", "Nederlands"]) {
       expect(screen.getByRole("menuitemradio", { name: new RegExp(label) })).toBeInTheDocument();
     }
+    expect(screen.getAllByRole("menuitemradio")).toHaveLength(7);
+    expect(screen.queryByRole("menuitemradio", { name: /Русский/ })).toBeNull();
     // Selecting German switches the current locale indicator.
     await userEvent.click(screen.getByRole("menuitemradio", { name: /Deutsch/ }));
     expect(screen.getByTestId("language-menu-button")).toHaveTextContent(/de/i);

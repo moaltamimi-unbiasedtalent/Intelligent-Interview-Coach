@@ -8,7 +8,7 @@
  * for immediate switching; it carries no security value).
  */
 
-import { type AppLocale, toSupportedLocale } from "./locales";
+import { type AppLocale, toActiveLocale } from "./locales";
 
 export const LOCALE_COOKIE = "ask4mo_locale";
 const MAX_AGE = 60 * 60 * 24 * 365; // 1 year
@@ -19,7 +19,7 @@ export function readLocaleCookie(): AppLocale | null {
     const match = document.cookie
       .split("; ")
       .find((c) => c.startsWith(`${LOCALE_COOKIE}=`));
-    return match ? toSupportedLocale(decodeURIComponent(match.split("=")[1])) : null;
+    return match ? toActiveLocale(decodeURIComponent(match.split("=")[1])) : null;
   } catch {
     return null;
   }
@@ -36,5 +36,5 @@ export function writeLocaleCookie(locale: AppLocale): void {
 
 export function browserLocale(): AppLocale | null {
   if (typeof navigator === "undefined") return null;
-  return toSupportedLocale(navigator.language);
+  return toActiveLocale(navigator.language);
 }

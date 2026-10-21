@@ -11,7 +11,7 @@
  */
 
 import { useId } from "react";
-import { APP_LOCALES, type AppLocale } from "@/lib/i18n/locales";
+import { SELECTABLE_LOCALES, type AppLocale } from "@/lib/i18n/locales";
 import { useI18n } from "@/components/i18n/I18nProvider";
 
 export function ConversationLanguageField({
@@ -38,7 +38,7 @@ export function ConversationLanguageField({
         onChange={(e) => onChange(e.target.value as AppLocale)}
         className="min-h-[44px] w-full max-w-xs rounded-lg border border-border bg-surface px-2 text-sm"
       >
-        {APP_LOCALES.map((l) => (
+        {SELECTABLE_LOCALES.map((l) => (
           <option key={l.code} value={l.code}>{l.nativeLabel}</option>
         ))}
       </select>

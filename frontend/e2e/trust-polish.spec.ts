@@ -68,7 +68,7 @@ test("Home composer button never wraps and aligns with the cards", async ({ page
   expect(box!.height).toBeLessThan(60); // single line (it wrapped to ~2 lines before)
 });
 
-for (const locale of ["de", "ru"]) {
+for (const locale of ["de", "fr"]) {
   test(`${locale}: polished surfaces have no horizontal overflow at 390px in light and dark`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await mock(page, locale);

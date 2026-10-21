@@ -217,7 +217,7 @@ test("P2-03: the answer score is labelled, scoped to this answer, shows the seve
   await expect(page.getByText("Interview Answer Score")).toHaveCount(0);
 });
 
-for (const locale of ["de", "ru"] as const) {
+for (const locale of ["de", "fr"] as const) {
   test(`P2-03: the labelled answer score and seven dimensions render in ${locale} without raw keys`, async ({ page, context }) => {
     const { translate } = await import("../lib/i18n/catalog");
     await context.addCookies([{ name: "ask4mo_locale", value: locale, url: "http://localhost:" + (process.env.E2E_PORT || "3000") }]);

@@ -79,6 +79,14 @@ async function mockPractice(page: Page, conversation: string) {
   });
 }
 
+
+// 06A: Russian is EXCLUDED from R1.0 Candidate selection and from the active interface (a stored or cookie `ru`
+// falls back to English). This suite exercises the PRESERVED Russian catalogue through the live UI, so it is dormant
+// until Russian is re-activated by an owner decision (flip RUSSIAN_ACTIVE with the evidence). The catalogue itself is
+// still verified by tests/russian-locale.test.tsx, and the exclusion by e2e/language-selection-06a.spec.ts.
+const RUSSIAN_ACTIVE = false;
+test.skip(!RUSSIAN_ACTIVE, "Russian excluded from active Candidate selection (06A); catalogue preserved");
+
 test("Russian conversation: Practice offers NO Listen and NO live voice; Russian chrome and dictation intact", async ({ page }) => {
   await installFakeVoice(page);
   await mockPractice(page, "ru");
