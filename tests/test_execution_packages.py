@@ -6,6 +6,8 @@ import copy
 import importlib.util
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("execution_packages", ROOT / "scripts/production/execution_packages.py")
 E = importlib.util.module_from_spec(spec)
@@ -90,13 +92,40 @@ def test_the_agent_policy_shared_file_order_is_01b_then_01d_then_01c_and_01a_is_
     assert "REVIEW-01" in E.BYID["01A"]["items"] and E.BYID["01D"]["items"] == []                 # closed together, assigned once
 
 
+
+def _volume_targets(service, volume):
+    return [v.split(":")[1] for v in service.get("volumes", []) if v.split(":")[0] == volume]
+
+
+def _assert_staging_topology_is_complete_and_frozen(compose, text):
+    """Package 05A closed the Phase 00 gap (no worker, no ClamAV, no knowledge volume); the freeze still holds until OD-HOSTED."""
+    services = compose["services"]
+    assert {"api", "worker", "clamav"} <= set(services)
+    assert services["worker"]["command"] == ["python", "-m", "src.jobs.worker"]               # the job worker entry point
+    clam = services["clamav"]
+    assert "ports" not in clam and [str(p) for p in clam["expose"]] == ["3310"]               # internal only, never published
+    assert [n for n, s in services.items() if "ports" in s] == ["caddy"]                      # only the edge proxy is exposed
+    volumes = compose["volumes"]
+    assert "knowledge-data" in volumes and "clamav-signatures" in volumes                     # persistent named volumes
+    api_dir = _env_of(services["api"])["COPILOT_DATA_DIR"]
+    assert api_dir == _env_of(services["worker"])["COPILOT_DATA_DIR"]                         # one authoritative data root
+    assert _volume_targets(services["api"], "knowledge-data") == _volume_targets(services["worker"], "knowledge-data") == [api_dir]
+    assert "DEPLOYMENT FREEZE" in text and "OD-HOSTED" in text                                # authorization is still required to deploy
+    assert "OD-HOSTED" in E.BYID["05A"]["decisions"]
+
+
+def _env_of(service):
+    env = service.get("environment") or {}
+    if isinstance(env, list):
+        env = dict(item.split("=", 1) for item in env)
+    return {k: str(v) for k, v in env.items()}
+
+
 def test_topology_and_knowledge_persistence_are_an_early_parallel_workstream_and_the_staging_file_is_frozen():
     assert set(E.EARLY_PARALLEL) == {"02A", "05A", "05E"} and all(E.BYID[k]["start"] <= 1 for k in E.EARLY_PARALLEL)
     assert "DEPLOYMENT FREEZE" in E.BYID["05A"]["note"] and "must NOT be deployed" in E.BYID["05A"]["note"]
-    compose = (ROOT / "deploy/docker-compose.staging.yml").read_text(encoding="utf-8")
-    lowered = compose.lower().replace("clamav_host", "")
-    if "worker" in compose or "clamav" in lowered:      # 05A has merged: the topology must then be complete, not partial
-        assert "worker" in compose and "clamav" in lowered and "knowledge-data" in compose
+    compose_text = (ROOT / "deploy/docker-compose.staging.yml").read_text(encoding="utf-8")
+    _assert_staging_topology_is_complete_and_frozen(yaml.safe_load(compose_text), compose_text)
     schedule = (E.OUT / "DELIVERY_SCHEDULE.md").read_text(encoding="utf-8")
     assert "Early parallel workstream" in schedule and "must not be deployed" in schedule
 
