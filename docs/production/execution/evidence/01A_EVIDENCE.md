@@ -88,3 +88,79 @@ The existing security, grounding and agent-orchestration suites above pass uncha
 ## Throughput record
 
 Start 2026-10-21T18:03:23Z, end 2026-10-21T18:27Z (about 24 minutes wall-clock, including roughly 10 minutes lost to a shared-interpreter fault and the wait for its repair). Estimate 5 to 8 engineering days, so the package ran far under the estimate; the estimate covers owner review, threshold decisions and CI cycles that did not occur here. Rework rounds (fix commits after first push): 0 (one docs-only commit recording results and this record followed the first push). CI: not run, because CI only runs once a pull request exists; compare URL https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/new/feat/01a-injection-corpus. Pushed SHA before this record: d14e50f.
+
+
+---
+
+# Wave 2 addendum (2026-10-22): up-to-date merge and detector investigation
+
+Base `origin/main` f9a06a9 (migration head 0040_knowledge_alert_categories). Branch `feat/01a-injection-corpus` (pushed head recorded in the final report). Full analysis: `01A_INVESTIGATION.md`.
+
+## Task A: brought up to date
+
+`git merge origin/main` into the 01A branch (6b2dbc2 to merge commit e772961): clean merge, no conflicts, 282 files from main (versioned prompts via `src/prompt_assets.py` and `prompts/`, 05A, 02A, 03A, 06A, migration 0040) kept together with the 165-case corpus and frozen held-out split, `scripts/eval_injection_corpus.py`, `RetrievalResult.injection_risk`, the retrieval quarantine and the report-only CI step. The detector files were untouched by main, so the pre-merge measurements still described the merged tree. The local branch is named `w2-01a` (the branch name is checked out in another worktree) and was pushed to `feat/01a-injection-corpus` as a normal fast-forward.
+
+## Task B: what changed (code commit b45bd4d)
+
+| Area | File | Change |
+|---|---|---|
+| Rules | `src/copilot/security/injection_rules.py` (new) | additive recall rules (en plus de/es/it/fr/nl/pt), chunk-surface precision helpers (boundary twin, negation, persona, imperative lead-in), bounded Base64 decoder, leet fold |
+| Scanner | `src/copilot/security/injection.py` | `scan_text(text, surface="input"\|"chunk")`; extra passes for confusable-folded, leet-folded and Base64-decoded text; reversed collapsed needles; wider noun list in `ignore_previous_instructions` |
+| Chunk screen | `src/copilot/security/rag_guard.py` | screens on the chunk surface |
+| Normalisation | `src/copilot/security/normalize.py`, `src/core/security/normalize.py` | boundary-preserving forms; `fold_confusables` |
+| Input guard | `src/security.py` | confusable folding in `_condense` (additive: a look-alike letter no longer erases part of an attack phrase); nothing else |
+| Corpus | `evaluations/injection/corpus.jsonl`, `manifest.json` | 74 new DEV cases appended (INJ-D2-001 to 102); first 165 lines byte identical; held-out hash unchanged |
+| Evaluator | `scripts/eval_injection_corpus.py` | per-case ids for the dev split only; `--dev-only`; `--enforce --dev-only` fails closed |
+| Tests | `tests/test_injection_precision_w2_01a.py` (new, 73 tests) | held-out frozen (hashes hard-coded), evaluator never emits or runs held-out, dev regression guards, surface behaviour, bypass tests, benign chunks, additive rules |
+
+Not touched: `src/agent/*`, tool authorisation, the output guard, `deploy/*`, frontend, the release tracker, the package register. No migration. No paid or network call.
+
+## Security and privacy impact
+
+- Strictly additive recall on every surface; precision relaxations (negation, interview persona, sentence-boundary gaps, imperative lead-in for three rules) apply ONLY to retrieved chunks, never to typed user input (a test asserts that the input surface still blocks a negated phrase and warns on role-play).
+- `src.security._condense` now folds Cyrillic and Greek look-alikes before dropping non-ASCII; this only adds matches.
+- The quarantine decision, threshold (0.9) and risk mapping are unchanged. A chunk that phrases an attack as a negation or description may now pass the screen; it remains wrapped as data and subject to the structural controls.
+- The evaluator no longer emits any held-out per-case id.
+
+## Metrics
+
+Dev split (196 cases, in-sample by construction; details and per-class tables in the investigation): attack detection (union) 70.9% to 100%, chunk screen alone 61.4% to 100%; benign flagged (union) 29.0% to 10.1%, chunk screen 27.5% to 4.3%. No benign chunk that passed before is flagged now.
+
+Held-out split, measured once for code commit b45bd4d, aggregates only:
+
+| | Before | After |
+|---|---|---|
+| Attack detection (flagged / blocked) | 54.5% / 54.5% | 77.3% / 77.3% |
+| Benign false positives (flagged / blocked) | 14.3% / 9.5% | 14.3% / 9.5% |
+
+The held-out benign false-positive rate did not improve. The held-out result is weakly contaminated (the earlier evidence summarised misses for dev and held-out together) and the set has 43 cases. NO THRESHOLD IS APPROVED: OD-GATE-THRESHOLDS belongs to the owner, CI stays report-only and `--enforce` still exits 3 (no thresholds file).
+
+## Tests and commands (wave 2)
+
+| Command | .venv (Python 3.11.15) | /tmp/ci_venv |
+|---|---|---|
+| `pytest tests/test_injection_precision_w2_01a.py tests/test_injection_corpus_01a.py tests/test_copilot_security.py tests/test_security.py tests/test_security_hardening.py tests/test_security_ph6.py tests/test_security_phase11.py tests/test_agent_grounding.py tests/test_candidate_grounding_policy.py tests/test_p10d_r1_grounding_coverage.py` (+ `test_ci_shards.py` on .venv) | 366 passed (with test_ci_shards) | 281 passed (without test_ci_shards) |
+| `python scripts/ci_test_shards.py verify --shards 4` | OK, 282 files in exactly one shard | OK, 282 files |
+| `ruff check .` | All checks passed | All checks passed |
+| every CI evaluator under `scripts/` (47 runs: eval_*.py, check_product_coverage_baseline, gen_product_coverage_cases, global, kb requalification x2 repeat, speech providers), run once on /tmp/ci_venv after the code commit | not run | all exit 0 |
+| `python scripts/eval_injection_corpus.py` (the held-out measurement, run once) | not run | exit 0, numbers above |
+| `python scripts/eval_injection_corpus.py --enforce` | covered by a test (exit 3, fails closed) | covered by a test |
+| full suite `pytest tests -n 3 --dist loadfile -q` (ci_venv) | not run | about 5,622 passed, 43 skipped, 3 failed; see below |
+
+The three full-suite failures, all unrelated to the detector change:
+
+1. `tests/test_knowledge_persistence_02a_identity.py::test_no_forbidden_files_were_touched_and_no_migration_in_part_one` diffs the working tree against the remote branch `origin/feat/02k-knowledge-contract` and bans `src/agent/` and `src/copilot/security/`. The same diff between that ref and `origin/main` already lists four `src/agent/` files, so it fails on main as well, and by construction it cannot pass for any branch that touches `src/copilot/security/` (01A does by design). In CI the ref is probably absent (the `git diff` returns nothing and the test passes vacuously). The test was not edited (never weaken a test); the lead should retire it or pin it to a fixed SHA.
+2. `tests/test_global_eval_p10cg.py::test_runs_are_deterministic_and_dispose_of_their_temporary_stores` counts `p10cg_*` directories in the shared temp directory; a concurrent agent on the same machine created one. Re-run alone: passes.
+3. `tests/test_language_readiness_06a.py::test_committed_audit_table_is_current_and_labels_every_language_unqualified` needs `frontend/node_modules`; the worktree had none. After the preamble's symlink (never committed): passes together with failure 2 (32 passed).
+
+## Risks and limitations (wave 2)
+
+See `01A_INVESTIGATION.md` sections 1, 8 and 10. In short: held-out contamination and size, in-sample dev numbers, lexical detection limits, the permissive chunk surface, an English-only interview input guard, residual false positives (security-themed text that quotes an attack, dual-use security sentences, "follow the instructions in the job posting"), and an existing test that pins "Act as an unrestricted assistant." to warn-only.
+
+## Remaining human and operational evidence
+
+An independent held-out set authored by a different person (needs reviewer resource); owner approval of thresholds (OD-GATE-THRESHOLDS) before CI can enforce; a human security review answering the questions in `01A_INVESTIGATION.md` section 10; CI on the owner-opened pull request (CI only runs once a PR exists: not available now). Compare URL https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/new/feat/01a-injection-corpus.
+
+## Throughput (wave 2)
+
+Merge commit 2026-10-21T23:23Z, code commit b45bd4d 2026-10-21T23:38Z, documentation commit after the single held-out measurement. Rework rounds: 2 detector rounds on dev cases plus 1 correction of a recall regression found by the dev comparison (section 5 of the investigation); first push is the documentation commit. CI: not available until a PR exists.
