@@ -107,7 +107,6 @@ def run_benchmark(embedder: BaseEmbedder, *, dataset: dict | None = None, ks: tu
 
     doc_vecs = dict(zip((p["id"] for p in passages), embedder.embed_documents([p["text"] for p in passages])))
     q_vecs = {q["id"]: embedder.embed_query(q["text"]) for q in queries}
-    topic_by_passage = {p["id"]: p["topic"] for p in passages}
     keyword_cache: dict[tuple[str, str], KeywordRetriever] = {}
 
     rows: dict[str, dict[str, list[dict]]] = {m: {s: [] for s in SLICES} for m in MODES}

@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from src.copilot import index_manifest as IM
-from src.copilot.embeddings import BaseEmbedder, LocalHashEmbedder
+from src.copilot.embeddings import LocalHashEmbedder
 from src.copilot.index_manifest import IndexIncompatibleError
 from src.copilot.models import DocumentChunk
 from src.copilot.retrieval.hybrid import HybridRetriever
