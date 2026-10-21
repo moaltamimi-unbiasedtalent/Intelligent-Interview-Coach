@@ -152,3 +152,23 @@ def test_the_source_of_truth_document_and_fifteen_production_gates_exist():
         assert f"PG-{n:02d}" in matrix
     assert "386 of 412" in matrix and "FAIL" in matrix                    # the historical coverage gate is preserved
     assert "accepted limitation" in matrix                                # mandatory gates cannot be waived that way
+
+
+def test_the_owner_scope_decision_s1_is_recorded_and_genuinely_open_decisions_are_retained():
+    doc = committed()
+    osd = doc["owner_scope_decision"]
+    assert osd["selected"] == "S1" and osd["status"] == "OWNER-APPROVED" and set(osd["rejected"]) == {"S2", "S3"} and osd["gates_override_deadline"] is True
+    assert "OD-SCOPE-01" in doc["resolved_decisions"] and "OD-SCOPE-01" not in doc["open_decisions"]
+    for still_open in ("OD-RESOURCE", "OD-HOSTED", "OD-BUDGET", "OD-GATE-THRESHOLDS", "OD-EMBED", "OD-RECLASS", "OD-US-CONTENT", "OD-PLAN-LIMITS", "OD-LANG-02", "OD-LANG-03", "OD-LANG-04"):
+        assert still_open in doc["open_decisions"], still_open
+    for resolved in ("OD-ADMIN-NAV", "OD-INVITE", "OD-MALWARE"):
+        assert resolved in doc["resolved_decisions"] and resolved not in doc["open_decisions"], resolved
+    register = (ROOT / "docs/production/OWNER_DECISION_REGISTER.md").read_text(encoding="utf-8")
+    assert "OWNER-APPROVED" in register and "S2 (restricted free private beta) and S3 (minimum safe beta) are rejected" in register
+
+
+def test_the_reclassification_proposal_stays_unapplied_after_the_sign_off():
+    doc = committed()
+    assert doc["scope_proposals"]["applied"] is False and doc["summary"]["proposed_reclassification"]["applied"] is False
+    by = {r["id"]: r for r in doc["items"]}
+    assert all(by[k]["disposition"] == "FIX BEFORE R1.0" and by[k]["release"] == "R1.0" for k in doc["scope_proposals"]["reclassification"])

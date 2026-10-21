@@ -10,8 +10,10 @@ graph LR
   P00B["00B Scope reconciliation delta (docume"]
   P01A["01A Prompt-injection corpus, risk scor"]
   P01D["01D Tool-call authorization layer (REV"]
+  P01B0["01B0 Prompt asset format and loader con"]
   P01B["01B Externalized, versioned prompts (R"]
   P01C["01C Tool registry parity (REVIEW-03)"]
+  P02K["02K Knowledge runtime and manifest con"]
   P02A["02A Permanent Knowledge reliability: p"]
   P02B["02B Embedding integrity and index mani"]
   P02C["02C Real malware scanning for uploads"]
@@ -20,8 +22,11 @@ graph LR
   P03A["03A Admin navigation foundation (REQ-O"]
   P03B["03B Admin Plans: Basic/Premium managem"]
   P03C["03C Admin Users: complete user managem"]
-  P03D["03D Command Center and AI operations ("]
-  P03E["03E Reports and governed custom report"]
+  P03K["03K Admin metric and report contract ("]
+  P03D1["03D1 Command Center metrics and AI oper"]
+  P03D2["03D2 Command Center and AI operations v"]
+  P03E1["03E1 Reports registry, governed builder"]
+  P03E2["03E2 Reports catalogue, builder and exp"]
   P04A["04A Story Bank completion (REQ-OWN-06)"]
   P04B["04B Workspaces completion (REQ-OWN-07)"]
   P04C["04C Agent streaming and cancellation ("]
@@ -43,47 +48,60 @@ graph LR
   P07A["07A Deferral inaccessibility and engin"]
   P07B["07B Live grounding and agent-policy va"]
   P07C["07C Residual live verifications"]
-  P08A["08A Freeze, release evidence and beta "]
+  P08A0["08A0 Release evidence pipeline (continu"]
+  P08A["08A Freeze and owner go/no-go"]
   P01A --> P01D
   P01B --> P01D
+  P01B0 --> P01B
   P01B --> P01C
   P01D --> P01C
-  P02A --> P02B
-  P02A --> P02C
+  P02K --> P02B
+  P02K --> P02C
   P00A --> P02D
   P02B --> P02E
-  P03A --> P03B
-  P03A --> P03C
-  P03A --> P03D
-  P03D --> P03E
+  P03K --> P03D1
+  P03D1 --> P03D2
+  P03A --> P03D2
+  P03K --> P03E1
+  P03E1 --> P03E2
+  P03A --> P03E2
   P01A --> P04C
   P05A --> P04D
   P05A --> P05B
   P02A --> P05B
+  P02K --> P05B
   P05A --> P05C
   P05A --> P05D
   P04A --> P06B
   P04B --> P06B
   P06A --> P06B
-  P01B --> P06C
+  P01B0 --> P06C
   P06A --> P06C
   P02B --> P06D
   P01A --> P06E
   P06A --> P06E
-  P06A --> P06F
   P06C --> P06G
   P00A --> P06G
   P05A --> P07A
   P03A --> P07A
   P01B --> P07B
-  P01C --> P07B
+  P01D --> P07B
+  P08A0 --> P08A
+  P07B --> P08A
+  P07C --> P08A
+  P04F --> P08A
+  P00B --> P08A
   P07A --> P08A
   P06G --> P08A
   P05B --> P08A
   P05C --> P08A
   P05D --> P08A
   P05E --> P08A
-  P03E --> P08A
+  P03A --> P08A
+  P03B --> P08A
+  P03C --> P08A
+  P03D2 --> P08A
+  P03E2 --> P08A
   P04C --> P08A
   P04D --> P08A
   P04E --> P08A
@@ -98,11 +116,11 @@ graph LR
 
 ## Dependency order (topological)
 
-00A, 00B, 01A, 01B, 01D, 01C, 02A, 02B, 02C, 02D, 02E, 03A, 03B, 03C, 03D, 03E, 04A, 04B, 04C, 05A, 04D, 04E, 04F, 05B, 05C, 05D, 05E, 06A, 06B, 06C, 06D, 06E, 06F, 06G, 07A, 07B, 07C, 08A
+00A, 00B, 01A, 01B0, 01B, 01D, 01C, 02K, 02A, 02B, 02C, 02D, 02E, 03A, 03B, 03C, 03K, 03D1, 03D2, 03E1, 03E2, 04A, 04B, 04C, 05A, 04D, 04E, 04F, 05B, 05C, 05D, 05E, 06A, 06B, 06C, 06D, 06E, 06F, 06G, 07A, 07B, 07C, 08A0, 08A
 
 ## Critical path
 
-Lowest-effort chain: 03A -> 03D -> 03E -> 08A = 26 days. Highest-effort chain: 03A -> 03D -> 03E -> 08A = 39 days. These are lower bounds on elapsed effort no matter how many people work in parallel; they exclude calendar-bound human and legal review.
+Lowest-effort chain: 02A -> 05B -> 08A = 18 days. Highest-effort chain: 02A -> 05B -> 08A = 27 days. These are lower bounds on elapsed effort no matter how many people work in parallel; they exclude calendar-bound human and legal review.
 
 ## Shared modules and safe integration order
 
@@ -122,5 +140,5 @@ Lowest-effort chain: 03A -> 03D -> 03E -> 08A = 26 days. Highest-effort chain: 0
 
 ## External gates (not engineering dependencies)
 
-- Owner decisions: OD-SCOPE-01, OD-HOSTED, OD-BUDGET, OD-GATE-THRESHOLDS, OD-INVITE, OD-MALWARE, OD-PLAN-ENFORCE, OD-ADMIN-NAV, OD-BULK-ACTIONS, OD-REPORT-EXPORT, OD-WS-TRANSFER, OD-LANG-02, OD-LANG-03, OD-LANG-04, OD-COVERAGE, OD-EMBED, OD-US-CONTENT.
+- Owner decisions still open: OD-RESOURCE, OD-HOSTED, OD-BUDGET, OD-GATE-THRESHOLDS, OD-EMBED, OD-PLAN-LIMITS, OD-BULK-ACTIONS, OD-REPORT-EXPORT, OD-WS-TRANSFER, OD-LANG-02, OD-LANG-03, OD-LANG-04, OD-COVERAGE, OD-US-CONTENT, OD-RECLASS (resolved at the Phase 00 sign-off: OD-SCOPE-01 = S1, OD-ADMIN-NAV, OD-INVITE, OD-MALWARE).
 - Human and legal: named reviewers (00A), native review and legal translation (06F), independent human evaluation (06G), counsel review (05E), licence review (02D).

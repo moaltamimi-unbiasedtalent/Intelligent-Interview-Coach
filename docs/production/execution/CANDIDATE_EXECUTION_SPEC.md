@@ -10,7 +10,7 @@
 | 04B Workspaces | REQ-OWN-07 | none | 2 |
 | 04C Streaming and cancellation | REVIEW-05 | 01A | 2 |
 | 04D Journey reliability | REQ-CAND-01, DEMO-02 | 05A (staging) | 2 |
-| 04E Invitation-only registration | REQ-BETA-01 | none (OD-INVITE) | 1 |
+| 04E Invitation-only registration | REQ-BETA-01 | none | 1 |
 | 04F Browser dictation verification | W12.4E-16, AC-13/AC-23-A | none | small |
 
 ## 2. 04A Story Bank
@@ -38,7 +38,7 @@ A staging-only Playwright journey per language covers registration (with invitat
 
 ## 6. 04E Invitation-only registration
 
-Registration requires a valid invitation: hashed single-use expiring tokens, issued and revoked by Admin and audited, refused server-side otherwise, with no payment path. The mechanism (codes versus email allow-list) is OD-INVITE; the proposal is single-use invitation tokens bound to an email address because the platform already has hashed single-use token patterns.
+Registration requires a valid invitation: hashed single-use expiring tokens, issued and revoked by Admin and audited, refused server-side otherwise, with no payment path. The owner approved secure single-use beta invitations at the Phase 00 sign-off; the design (proposal: tokens bound to an email address, following the platform's existing hashed single-use token patterns) is settled in the 04E PR.
 
 ## 7. Exit gates (PG-06, PG-13)
 

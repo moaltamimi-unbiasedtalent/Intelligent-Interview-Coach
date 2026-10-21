@@ -18,12 +18,13 @@
 | Package | Scope | PRs | Depends on |
 |---|---|---|---|
 | 03A Navigation foundation | Grouped sidebar, breadcrumbs, quick navigation, relocation of Review and Diagnostics under `/admin`, Candidate nav cleanup | 1 (frontend plus redirects) | none |
-| 03B Plans | Feature and limit editing on drafts, clone, compare, preview, assignment and rollback UX; backend preview and comparison | 2 (backend, frontend) | 03A |
-| 03C Users | Search, sort, pagination, membership view, restricted bulk actions, communications, support and audit panels | 2 | 03A |
-| 03D Command Center and AI operations | Metric catalogue, dashboards, AI operations view | 2 (metrics backend, views) | 03A (01B for prompt versions: soft) |
-| 03E Reports and builder | Prebuilt reports, governed builder, saved configurations, exports | 2 | 03D (metric catalogue) |
+| 03B Plans | Feature and limit editing on drafts, clone, compare, preview, assignment and rollback UX; backend preview and comparison | 2 (backend, frontend) | none (backend first; the shell from 03A is adopted when it merges) |
+| 03C Users | Search, sort, pagination, membership view, restricted bulk actions, communications, support and audit panels | 2 | none (backend first; shell adopted when 03A merges) |
+| 03K Admin metric and report contract | Typed metric, dimension and report definitions and API types with a conformance suite | 1 small | none |
+| 03D1 / 03D2 Command Center and AI operations | Metric implementations and AI operations read model (03D1); dashboards and AI operations views (03D2) | 2 | 03D1 after 03K; 03D2 after 03D1 and 03A (01B for prompt versions: soft) |
+| 03E1 / 03E2 Reports and builder | Registry, governed builder, saved configurations and exports (03E1); catalogue, builder and export views (03E2) | 2 | 03E1 after 03K; 03E2 after 03E1 and 03A |
 
-### 03A navigation: proposed grouping (OD-ADMIN-NAV confirms)
+### 03A navigation: grouping (six sections approved by the owner at the Phase 00 sign-off; the placement of individual destinations below is the engineering mapping)
 
 | Group | Destinations (ids from `ADMIN_DESTINATIONS`) |
 |---|---|
@@ -34,7 +35,7 @@
 | Insights and Operations | reports, jobs, integrations |
 | Governance and Settings | security, audit, legal, configuration, flags |
 
-All 20 destinations are placed once. Route compatibility: existing `/admin/*` URLs stay; `/review` redirects to `/admin/review` for Admin users; `/review/agent` (owner-scoped run details) stays reachable for Candidates. A destination remains visible only when the caller holds its `anyOf` permission, and a group with no visible destination is hidden. Quick navigation is a filter over the visible destinations (no new data). Accessibility: disclosure pattern with `aria-expanded`, roving focus, visible focus, breadcrumb landmark, mobile drawer.
+All 20 destinations are placed once. Route compatibility: existing `/admin/*` URLs stay; `/review` redirects to `/admin/review` for Admin users; `/review/agent` (owner-scoped run details) stays reachable for Candidates. A destination remains visible only when the caller holds its `anyOf` permission, and a group with no visible destination is hidden. Quick navigation is a filter over the visible destinations (no new data). The shell contract (the destination list and its permission gates) is the only thing 03B to 03E touch in `AdminShell.tsx`, so they can merge in any order after 03A. Accessibility: disclosure pattern with `aria-expanded`, roving focus, visible focus, breadcrumb landmark, mobile drawer.
 
 Tests: extend `frontend/tests/admin-shell-w10-1.test.tsx` (grouping, visibility per role fixture, no empty groups) and Playwright for expand/collapse, keyboard, breadcrumbs, responsive and redirects; backend 403 checks for diagnostic APIs stay as they are; `tests/_admin_matrix.py` and the role fixture are regenerated only if a route or permission changes.
 

@@ -18,7 +18,7 @@
 | **R1.0 must-fix** | **88** |
 | **R1.0 must-verify** | **74** |
 | Items with an OWNER DECISION disposition | 95 (of which unscheduled 15, academic-only 6) |
-| Genuinely open owner decisions in the register | 20 new, plus the 72 historical |
+| Genuinely open owner decisions in the register | 18 new, plus the 72 historical |
 | Deferred | R1.1: 88, R1.2: 18, R1.3: 3, R1.4: 23, R1.5: 7, R1.6: 2, R1.7: 1, R2.0: 1 |
 | Unmapped issues | **0** |
 
@@ -43,7 +43,7 @@ Why the numbers moved, not forced to match the old totals:
 
 ## Proposed R1.0 scope reclassification (PROPOSED, NOT APPLIED)
 
-10 of 12 candidates pass the proof that their capability is inaccessible in the R1.0 Candidate API and UI; 2 fail it and stay in R1.0. If the owner confirms, R1.0 must-fix would be 78 and fix plus verify 152. Evidence and per-item detail: `execution/R1_SCOPE_RECLASSIFICATION_PROPOSAL.md`. Nothing is applied until the owner confirms (OD-US-CONTENT).
+10 of 12 candidates pass the proof that their capability is inaccessible in the R1.0 Candidate API and UI; 2 fail it and stay in R1.0. If the owner confirms, R1.0 must-fix would be 78 and fix plus verify 152. Evidence and per-item detail: `execution/R1_SCOPE_RECLASSIFICATION_PROPOSAL.md`. Nothing is applied: the owner retains every R1.0 obligation until an item-level disposition is explicitly approved (OD-RECLASS).
 
 ## Totals by release (all dispositions)
 
@@ -94,7 +94,7 @@ Why the numbers moved, not forced to match the old totals:
 
 ## Capacity warning
 
-162 items must be fixed or verified before R1.0 on 30 November 2026. The date is the owner's target; safety, privacy, licensing and operational gates are not waived to meet it. Many items need people not yet named (reviewers, native reviewers, legal qualifiers) or an authorised hosted environment. OD-SCOPE-01 asks the owner what happens if a mandatory gate is not met: delay, remove the feature from scope, or keep it disabled.
+162 items must be fixed or verified before R1.0 on 30 November 2026. The date is the owner's target; safety, privacy, licensing and operational gates are not waived to meet it. Many items need people not yet named (reviewers, native reviewers, legal qualifiers) or an authorised hosted environment. The owner selected S1, the full scope (OD-SCOPE-01 resolved) and decided that the deadline never overrides a mandatory gate, so the date follows the gates: see `execution/STAFFING_AND_CRITICAL_PATH_PLAN.md` for the staffing and critical-path plan.
 
 ## R1.0 P0 items
 

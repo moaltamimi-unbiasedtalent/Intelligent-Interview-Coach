@@ -22,7 +22,7 @@ R1.1 holds the agreed paid-beta content plus items that fit no agreed theme (pla
 ## 2. Dependency graph (R1.0)
 
 ```
-Owner decisions: OD-SCOPE-01, OD-HOSTED, OD-BUDGET, OD-GATE-THRESHOLDS, OD-INVITE, OD-MALWARE, OD-PLAN-ENFORCE,
+Owner decisions still open: OD-RESOURCE, OD-HOSTED, OD-BUDGET, OD-GATE-THRESHOLDS, OD-PLAN-LIMITS,
                  OD-LANG-02..04 (markets, native reviewers, legal qualifiers), OD-COVERAGE
    |
    |-- hosted environment (PG-01) ---------------------------------------------+
@@ -46,14 +46,14 @@ Owner decisions: OD-SCOPE-01, OD-HOSTED, OD-BUDGET, OD-GATE-THRESHOLDS, OD-INVIT
 
 | Window | Critical activity | Blocking dependency |
 |---|---|---|
-| 21-25 Oct | Owner reviews this baseline; decides OD-SCOPE-01, OD-HOSTED, OD-BUDGET, OD-GATE-THRESHOLDS, OD-INVITE, OD-MALWARE, OD-PLAN-ENFORCE; names reviewers, native reviewers and legal qualifiers. Production implementation starts only after the baseline is reviewed | Owner |
+| 21-25 Oct | Owner merges the planning PRs; OD-SCOPE-01 is resolved (S1 full scope); decides OD-RESOURCE, OD-HOSTED, OD-BUDGET, OD-GATE-THRESHOLDS; names reviewers, native reviewers and legal qualifiers. Production implementation starts only after the baseline is reviewed | Owner |
 | 26 Oct-1 Nov | Hosted environment stand-up; invitation-only registration; REVIEW-01 corpus build and detector baseline; REVIEW-04 embedding provider and manifest design; locale audit and removal of Russian from selection; Admin navigation design | OD-HOSTED, OD-INVITE |
 | 2-15 Nov | Knowledge persistence and restore drills; REVIEW-02/03 loader and parity; REVIEW-05 SSE; Story Bank and Workspace completion; Admin plans, users, Command Center, reports; per-language journey and policy suites | Reviewer availability; budget for semantic embedding builds |
 | 16-22 Nov | Held-out injection gate in CI; human AI evaluation per language; native review; legal translation qualification; hosted rehearsal including restore and rollback; fix findings | Human reviewers and legal qualifiers (the longest lead, not compressible by engineering) |
 | 23-27 Nov | Freeze at one SHA; release evidence; reconciliation check; owner go/no-go | All mandatory gates |
 | 30 Nov | Invite beta users, only in languages whose gates passed and with only qualified markets | Owner approval |
 
-This is not a feasibility statement: the R1.0 list is large and the human steps cannot be compressed. If a mandatory gate is not met the owner chooses among delaying R1.0, removing the affected feature from scope, or keeping it disabled (OD-SCOPE-01); an accepted limitation never replaces a mandatory safety, privacy, licensing or operational gate.
+**Owner decision (Phase 00 sign-off): S1, the full scope, is selected and the deadline never overrides a mandatory gate; the date follows the gates.** The recalculated, resource-constrained plan is in `execution/STAFFING_AND_CRITICAL_PATH_PLAN.md`: with the critical path shortened by interface contracts and parallel boundaries, the full scope finishes no earlier than 26 November on the low estimate with unlimited staffing and no earlier than 4 December on the high estimate; a realistic ramp to 24 streams gives 2 to 9 December. The weekly table above is therefore the earliest-possible sequence, not a promise of 30 November; the owner should treat mid December as the planning date until the first wave re-baselines the estimates. No feature is cut to meet the date, and an accepted limitation never replaces a mandatory safety, privacy, licensing or operational gate.
 
 ## 4. Cross-release dependencies
 

@@ -51,7 +51,7 @@ The current default silently falls back to a lexical hash embedder; REVIEW-04 re
 
 The jobs system is a database-backed queue with a separate worker and lease-based idempotent handlers; no Celery, Redis or broker. **PROPOSED:** keep it for R1.0 (proven, tested, PostgreSQL SKIP LOCKED path to verify in 05B), run the worker as its own Compose service with health and heartbeat alerts (gap G1), single replica. Adding a broker is rejected for R1.0 (new failure modes, no need at beta scale). Redis remains only for the optional shared rate-limit store, whose live validation is J-REDIS (05D).
 
-## D6 Malware scanning (OD-MALWARE)
+## D6 Malware scanning (decided by the owner: real fail-closed ClamAV)
 
 | Option | For | Against |
 |---|---|---|
@@ -59,7 +59,7 @@ The jobs system is a database-backed queue with a separate worker and lease-base
 | B. Managed scanning API | Less operating work | Uploads leave the platform: a privacy and DPA problem for candidate documents |
 | C. No scanning | none | Rejected: fail-closed scanning is an owner requirement |
 
-**PROPOSED:** A. Fail closed when the daemon or signatures are unavailable; refuse the fake scanner outside development; EICAR test in a dedicated CI job.
+**OWNER-APPROVED direction (Phase 00 sign-off): A, real fail-closed ClamAV scanning.** Fail closed when the daemon or signatures are unavailable; refuse the fake scanner outside development; EICAR test in a dedicated CI job.
 
 ## D7 Monitoring and alerting
 
@@ -79,4 +79,4 @@ The capstone built a separate EUR 10 ledger with atomic reservation, per-categor
 
 ## Decisions required before Phase 01 starts
 
-OD-SCOPE-01, OD-HOSTED (D1, D2, D3), OD-BUDGET (D8 and any paid embedding evaluation), OD-GATE-THRESHOLDS (for 01A), OD-INVITE and OD-MALWARE (D6) before their packages, OD-EMBED (D4) before 02B. Phase 01 packages 01A, 01B and 01C need no infrastructure decision and can start as soon as the owner approves Phase 00.
+OD-HOSTED (D1, D2, D3), OD-BUDGET (D8 and any paid embedding evaluation), OD-GATE-THRESHOLDS (for 01A) and OD-RESOURCE (who works on it) before their packages, OD-EMBED (D4) before 02B. Already resolved by the owner: OD-SCOPE-01 (S1), OD-MALWARE (ClamAV), OD-INVITE (single-use invitations), OD-ADMIN-NAV (six groups). Phase 01 packages 01A, 01B and 01C need no infrastructure decision and can start as soon as the owner approves Phase 00.

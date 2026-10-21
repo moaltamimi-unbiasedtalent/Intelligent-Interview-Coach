@@ -12,17 +12,17 @@ State vocabulary: NOT STARTED, IN PROGRESS, READY FOR REVIEW, PASS, FAIL, BLOCKE
 | PG-02 | Identity and account lifecycle | 04E, 05D | Security lead | NOT STARTED | none | OD-INVITE; live email and OIDC need the hosted environment |
 | PG-03 | Injection defence and tool safety | 01A, 06E, 07B | AI safety lead | NOT STARTED | none | OD-GATE-THRESHOLDS; start corpus build (01A) |
 | PG-04 | Privacy, legal and data rights | 05E, 06F | Privacy and legal lead | NOT STARTED | none | Name legal qualifiers (OD-LANG-04); counsel engagement |
-| PG-05 | Knowledge Sources and embedding/index integrity | 02A, 02B, 02C, 02D, 02E | Knowledge and data lead | NOT STARTED | none | OD-EMBED, OD-MALWARE, OD-LANG-02, OD-US-CONTENT |
+| PG-05 | Knowledge Sources and embedding/index integrity | 02K, 02A, 02B, 02C, 02D, 02E | Knowledge and data lead | NOT STARTED | none | OD-EMBED, OD-MALWARE, OD-LANG-02, OD-US-CONTENT |
 | PG-06 | Candidate end-to-end reliability | 04C, 04D | Product lead (candidate) | NOT STARTED | none | Needs staging (05A) |
 | PG-07 | Independent human AI evaluation | 06G | Quality and human-review lead | BLOCKED | none | No reviewers named (00A) |
-| PG-08 | Admin 2.0 functionality | 03A to 03D | Product lead (operations) | NOT STARTED | none | OD-ADMIN-NAV, OD-PLAN-ENFORCE, OD-BULK-ACTIONS |
+| PG-08 | Admin 2.0 functionality | 03A, 03B, 03C, 03D1, 03D2 | Product lead (operations) | NOT STARTED | none | OD-ADMIN-NAV, OD-PLAN-ENFORCE, OD-BULK-ACTIONS |
 | PG-09 | Observability, resilience, backup, restore, rollback | 05B, 05C | Platform and operations lead | NOT STARTED | none | Needs staging (05A) |
 | PG-10 | Deferred and paid features disabled | 07A, 06A | Engineering lead | IN PROGRESS | Gate constants checked False by `reconcile_issues.py check` | UI plus API inaccessibility suite not written; Russian still selectable |
 | PG-11 | Complete issue reconciliation | all | Product Owner | PASS (machine-checked) | `reconcile_issues.py check`; `tests/test_production_reconciliation.py` | Re-run on every change |
-| PG-12 | Prompt versioning, provenance, registry parity | 01B, 01C | AI platform lead | NOT STARTED | none | Phase 01 approval |
+| PG-12 | Prompt versioning, provenance, registry parity | 01B0, 01B, 01D, 01C | AI platform lead | NOT STARTED | none | Phase 01 approval |
 | PG-13 | Story Bank and Workspaces | 04A, 04B, 06B | Product lead (collaboration) | NOT STARTED | none | OD-WS-TRANSFER |
-| PG-14 | Reports and safe analytics | 03D, 03E | Product lead (operations) | NOT STARTED | none | OD-REPORT-EXPORT |
-| PG-15 | Free beta operational acceptance | 08A | Product Owner | NOT STARTED | none | All of the above |
+| PG-14 | Reports and safe analytics | 03K, 03D1, 03E1, 03E2 | Product lead (operations) | NOT STARTED | none | OD-REPORT-EXPORT |
+| PG-15 | Free beta operational acceptance | 08A0, 08A | Product Owner | NOT STARTED | none | All of the above |
 
 ## 2. Per-language gates (LG-01 to LG-14 for each language)
 
@@ -48,10 +48,10 @@ All 98 language-gate cells are NOT STARTED or NOT RUN; none has passed. Per-lang
 | REVIEW-03 Tool catalogue parity | 01C | NOT STARTED |
 | REVIEW-04 Embedding degradation | 02B | NOT STARTED |
 | REVIEW-05 Streaming and cancellation | 04C | NOT STARTED |
-| REQ-OWN-01 Command Center and AI operations | 03D | NOT STARTED (foundations exist) |
+| REQ-OWN-01 Command Center and AI operations | 03D1 and 03D2 (contract 03K) | NOT STARTED (foundations exist) |
 | REQ-OWN-02 Plans | 03B | NOT STARTED (foundations exist) |
 | REQ-OWN-03 Users | 03C | NOT STARTED (foundations exist) |
-| REQ-OWN-04 Reports and builder | 03E | NOT STARTED (foundations exist) |
+| REQ-OWN-04 Reports and builder | 03E1 and 03E2 (contract 03K) | NOT STARTED (foundations exist) |
 | REQ-OWN-05 Knowledge Sources | 02A and 02C | NOT STARTED (foundations exist; staging topology gap found) |
 | REQ-OWN-06 Story Bank | 04A | NOT STARTED (foundations exist) |
 | REQ-OWN-07 Workspaces | 04B | NOT STARTED (backend exists) |
@@ -61,8 +61,8 @@ All 98 language-gate cells are NOT STARTED or NOT RUN; none has passed. Per-lang
 
 | Gate | State | Evidence needed to close | Where it will be recorded |
 |---|---|---|---|
-| E8 documentation, reconciliation and static checks pass and CI is green on PR #212 | IN PROGRESS | Green GitHub CI on the corrected head SHA (all required jobs: four shards, evaluators and guards, evaluation extras, static guards, frontend, Playwright, Streamlit smoke, legacy live component, aggregate check); `reconcile_issues.py check`, `execution_packages.py check`, the reconciliation, package, scope-exclusion and cookie-precedence tests, `ruff`, shard plan verification | PR #212 checks; exit report section 8 |
-| E10 owner approval to start Phase 01 | PENDING (owner) | Written owner approval; an answer to OD-SCOPE-01 (which strategy: S1 full, S2 restricted, S3 minimum safe, or a later date) and the real capacity; confirmation or rejection of the 10-item reclassification; answers to the Phase 01 blockers OD-GATE-THRESHOLDS and OD-ADMIN-NAV | Owner decision register; this tracker |
+| E8 documentation, reconciliation and static checks pass and CI is green on PR #212 | PASS at 4ad22be; the closeout head's checks are shown on the PR | Green GitHub CI on the corrected head SHA (all required jobs: four shards, evaluators and guards, evaluation extras, static guards, frontend, Playwright, Streamlit smoke, legacy live component, aggregate check); `reconcile_issues.py check`, `execution_packages.py check`, the reconciliation, package, scope-exclusion and cookie-precedence tests, `ruff`, shard plan verification | PR #212 checks; exit report section 8 |
+| E10 owner approval to start Phase 01 | GRANTED (owner message 2026-10-21), effective on the owner's merge of PR #212 | Written owner approval (recorded in the decision register): S1 full scope selected; resourcing direction; direction approvals; reclassification not applied | Owner decision register; this tracker |
 
 ## 5. Early parallel workstream (deployment topology and Knowledge persistence)
 

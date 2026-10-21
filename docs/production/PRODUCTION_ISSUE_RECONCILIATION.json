@@ -218,7 +218,8 @@
   "academic_only_items": 6,
   "unscheduled_owner_decisions": 15,
   "genuine_new_owner_decisions": 12,
-  "decision_register_entries": 20,
+  "decision_register_entries": 18,
+  "owner_approved_decisions": 9,
   "r1_0_total_work": 162,
   "by_release_total": {
    "R1.0": 197,
@@ -26275,6 +26276,48 @@
    "proposed_implementation": "",
    "release_basis": "AGREED_RELEASE_TRAIN"
   }
+ ],
+ "owner_scope_decision": {
+  "selected": "S1",
+  "rejected": [
+   "S2",
+   "S3"
+  ],
+  "date": "2026-10-21",
+  "status": "OWNER-APPROVED",
+  "gates_override_deadline": true,
+  "statement": "The full originally agreed R1.0 scope is retained; the deadline does not override mandatory gates"
+ },
+ "resolved_decisions": [
+  "OD-SCOPE-01",
+  "OD-RESOURCE-DIRECTION",
+  "OD-ADMIN-NAV",
+  "OD-INVITE",
+  "OD-MALWARE",
+  "OD-PLAN-ENFORCE-DIRECTION",
+  "OD-US-DIRECTION",
+  "OD-REPORTING-SCOPE",
+  "OD-PRINCIPLES"
+ ],
+ "open_decisions": [
+  "OD-RESOURCE",
+  "OD-LANG-02",
+  "OD-LANG-03",
+  "OD-LANG-04",
+  "OD-RU-FUTURE",
+  "OD-HOSTED",
+  "OD-BUDGET",
+  "OD-GATE-THRESHOLDS",
+  "OD-BULK-ACTIONS",
+  "OD-REPORT-EXPORT",
+  "OD-WS-TRANSFER",
+  "OD-COVERAGE",
+  "OD-ACADEMIC-01",
+  "OD-EMBED",
+  "OD-DEFER-PLACEMENT",
+  "OD-PLAN-LIMITS",
+  "OD-US-CONTENT",
+  "OD-RECLASS"
  ],
  "scope_proposals": {
   "applied": false,
