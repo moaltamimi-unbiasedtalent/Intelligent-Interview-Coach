@@ -30,9 +30,8 @@ export const SECONDARY_NAV = [
  * gated here.
  */
 export const INTERNAL_NAV = [
+  // 03A: platform-wide Review and Diagnostics now lives inside Admin (/admin/review, "AI and Knowledge" section), so it is no longer a global "More" entry.
   // `anyOf`: visible when the server-resolved admin permissions include ANY of these (W10.1; UX only).
-  { href: "/review", label: "Review & Diagnostics", labelKey: "nav.review", description: "Technical inspection",
-    anyOf: ["platform.ai.read", "platform.knowledge.read"] },
   // Admin uses an English label by design (internal operations surface, §14) — no labelKey.
   { href: "/admin", label: "Admin", description: "Platform operations", anyOf: ["platform.overview.read"] },
 ] as const;

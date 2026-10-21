@@ -15,8 +15,8 @@ import hashlib
 import json
 
 __all__ = [
-    "prompt_version", "model_policy_version", "specialist_config_version",
-    "knowledge_version", "production_versions",
+    "prompt_version", "prompt_asset_versions", "prompt_set_version", "model_policy_version",
+    "specialist_config_version", "knowledge_version", "production_versions",
 ]
 
 
@@ -31,6 +31,29 @@ def prompt_version() -> str:
         return "prompt-" + _short(SYSTEM_PROMPT)
     except Exception:  # noqa: BLE001
         return "prompt-unknown"
+
+
+def prompt_asset_versions() -> dict:
+    """Declared semantic version plus body hash of every production prompt family (01B R5).
+
+    ``{family: {"version": "1.0.0", "sha256": "<64 hex>"}}`` for the CURRENT approved asset of each
+    family under ``prompts/``. Identifiers and hashes only, never prompt text. Empty when the
+    assets cannot be loaded (the application itself fails closed on that at import).
+    """
+    try:
+        from src.prompt_assets import effective_versions
+        return effective_versions()
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def prompt_set_version() -> str:
+    """One short id for the whole set of effective prompt versions (flat string, comparable)."""
+    versions = prompt_asset_versions()
+    if not versions:
+        return "promptset-unknown"
+    from src.prompt_assets import prompt_set_version as _set_version
+    return _set_version(versions)
 
 
 def model_policy_version() -> str:
@@ -77,9 +100,17 @@ def knowledge_version() -> str:
 
 
 def production_versions() -> dict:
-    """All production configuration versions — safe metadata for attribution / diagnostics."""
+    """All production configuration versions — safe metadata for attribution / diagnostics.
+
+    The four original keys keep their exact meaning (``prompt_version`` is still the content hash
+    of Mo's system prompt, unchanged by the 01B asset migration). 01B adds ``prompt_assets``
+    (declared version and hash per prompt family) and ``prompt_set_version`` (one flat id for the
+    whole set, so a record that stores only strings still pins every prompt version).
+    """
     return {
         "prompt_version": prompt_version(),
+        "prompt_assets": prompt_asset_versions(),
+        "prompt_set_version": prompt_set_version(),
         "model_policy_version": model_policy_version(),
         "specialist_config_version": specialist_config_version(),
         "knowledge_version": knowledge_version(),

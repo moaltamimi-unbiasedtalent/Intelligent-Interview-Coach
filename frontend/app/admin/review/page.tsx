@@ -9,8 +9,8 @@ export const metadata: Metadata = { title: "Review & Diagnostics", robots: { ind
 
 const AREAS = [
   { href: "/review/agent", name: "Agent Inspector", note: "Safe action traces for a run — open from a Coach run's “View run details”, or paste a run ID.", status: "Available" },
-  { href: "/review/rag", name: "Knowledge & RAG", note: "Governed knowledge counts + offline retrieval-quality metrics.", status: "Available" },
-  { href: "/review/evaluation", name: "Evaluation", note: "Offline RAGAS metrics (read-only; never a paid run).", status: "Available" },
+  { href: "/admin/review/rag", name: "Knowledge & RAG", note: "Governed knowledge counts + offline retrieval-quality metrics.", status: "Available" },
+  { href: "/admin/review/evaluation", name: "Evaluation", note: "Offline RAGAS metrics (read-only; never a paid run).", status: "Available" },
 ];
 
 // P10B-W9.3: the Review & Diagnostics index lists internal engineering surfaces (RAG + evaluation),

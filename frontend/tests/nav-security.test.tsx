@@ -39,10 +39,10 @@ it("BASIC candidate: More menu shows Sources but NOT Review & Diagnostics or Adm
   expect(within(menu).queryByRole("menuitem", { name: /Admin/ })).not.toBeInTheDocument();
 });
 
-it("platform admin: More menu shows Review & Diagnostics and Admin", async () => {
+it("platform admin: More menu shows Admin and no longer lists Review & Diagnostics (03A: it lives under Admin)", async () => {
   mockAccount = { platform_role: "platform_admin", admin_permissions: ["platform.overview.read", "platform.ai.read", "platform.knowledge.read"] };
   const menu = await openMore();
-  expect(within(menu).getByRole("menuitem", { name: /Review & Diagnostics/ })).toHaveAttribute("href", "/review");
+  expect(within(menu).queryByRole("menuitem", { name: /Review/ })).not.toBeInTheDocument();
   expect(within(menu).getByRole("menuitem", { name: /Admin/ })).toHaveAttribute("href", "/admin");
   expect(within(menu).getByRole("menuitem", { name: /Sources/ })).toBeInTheDocument(); // candidate items remain
 });

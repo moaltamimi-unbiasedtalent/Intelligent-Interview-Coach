@@ -61,3 +61,4 @@ COLLECTION = "governed_knowledge"      # the ONLY collection Admin-managed knowl
 JOB_PARSE = "knowledge_parse"
 JOB_INDEX = "knowledge_index"
 JOB_REMOVE = "knowledge_remove_index"
+JOB_REINDEX = "knowledge_reindex"

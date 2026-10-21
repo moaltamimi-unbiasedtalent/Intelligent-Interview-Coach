@@ -471,7 +471,7 @@ def test_nothing_new_is_imported_by_a_runtime_or_candidate_path_and_no_migration
                     offenders.append(str(f.relative_to(ROOT)))
     assert offenders == []
     versions = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    assert versions[-1].startswith(("0038_", "0039_")) and len(versions) in (38, 39)                                              # P10C-E needs no schema change
+    assert versions[-1].startswith(("0038_", "0039_", "0040_")) and len(versions) in (38, 39, 40)                                              # P10C-E needs no schema change
     for rel in ("src/copilot/knowledge/compensation.py", "src/copilot/knowledge/retrieval.py", "src/copilot/knowledge/router.py"):
         assert "knowledge_foundation" not in (ROOT / rel).read_text(), rel
 

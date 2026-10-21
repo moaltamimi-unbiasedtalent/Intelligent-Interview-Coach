@@ -114,11 +114,19 @@ def run_case(case: dict, career_service: Any) -> dict:
         "retrieval_used": res.retrieval_used,
         "source_count": len(res.sources),
         "citation_count": len(res.citations),
+        "prompt_versions": res.prompt_versions,
     }
 
 
 def _ratio(hits: int, total: int) -> float:
     return round(hits / total, 3) if total else 0.0
+
+
+def _merge_prompt_versions(results: list[dict]) -> dict:
+    merged: dict[str, dict[str, str]] = {}
+    for r in results:
+        merged.update(r.get("prompt_versions") or {})
+    return dict(sorted(merged.items()))
 
 
 def evaluate(cases: list[dict], career_service: Any) -> dict:
@@ -176,6 +184,9 @@ def evaluate(cases: list[dict], career_service: Any) -> dict:
         "unnecessary_retrieval_rate": _ratio(retr_unnecessary, retr_not_expected),
         "citation_validity": _ratio(citation_valid, cited_cases) if cited_cases else 1.0,
         "retrieval_sequence_validity": _ratio(seq_valid, n),
+        # Effective prompt asset versions (declared version + body hash) the evaluated runs used (01B R6):
+        # attribution for the run, never prompt text.
+        "prompt_versions": _merge_prompt_versions(results),
         "results": results,
     }
 

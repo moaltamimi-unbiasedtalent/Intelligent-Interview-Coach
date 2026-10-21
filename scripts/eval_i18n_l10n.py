@@ -89,7 +89,8 @@ def run() -> dict[str, tuple[bool, str]]:
     geo_stable = detect_country("salary in Germany") == "DE" and detect_country("salary in the UK") == "UK"
     # detect_country takes only the query; the agent directive explicitly says not to
     # change geography, and it never reaches detect_country.
-    directive = read("src/agent/policies.py", ROOT)
+    # The directive text lives in a versioned prompt asset since 01B (the policy module only renders it).
+    directive = read("src/agent/policies.py", ROOT) + read("prompts/agent/response_language.v1.0.0.md", ROOT)
     check("language_geography_separation", geo_stable and "do not change the labour market or geography" in directive.lower(),
           "geography = f(query text); language never changes it")
 

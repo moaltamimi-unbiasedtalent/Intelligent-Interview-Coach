@@ -112,7 +112,7 @@ describe("A1-A3 capability-aware navigation", () => {
     await userEvent.click(screen.getByRole("button", { name: /nav.more/ }));
     const menu = screen.getByRole("menu");
     expect(within(menu).getByRole("menuitem", { name: /Admin/ })).toHaveAttribute("href", "/admin");
-    expect(within(menu).getByRole("menuitem", { name: /nav.review/ })).toBeInTheDocument();
+    expect(within(menu).queryByRole("menuitem", { name: /nav.review/ })).not.toBeInTheDocument();   // 03A: Review lives under Admin, not in the global menu
   });
 });
 
@@ -199,7 +199,9 @@ describe("A7 accessibility", () => {
     await userEvent.keyboard("{Enter}");
     expect(toggle).toHaveAttribute("aria-expanded", "true");
     await userEvent.tab();
-    expect(within(nav).getAllByRole("link")[0]).toHaveFocus();
+    expect(within(nav).getByRole("searchbox", { name: "Find a section" })).toHaveFocus();      // 03A: the quick-navigation filter follows the menu button
+    await userEvent.tab();
+    expect(within(nav).getAllByRole("button", { expanded: true }).find((b) => b !== toggle)).toHaveFocus();   // then the first section disclosure
     await userEvent.keyboard("{Escape}");
     expect(toggle).toHaveFocus();                                                   // Escape closes the menu and returns focus to the button
     expect(toggle).toHaveAttribute("aria-expanded", "false");

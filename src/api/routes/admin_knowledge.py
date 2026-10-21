@@ -21,6 +21,7 @@ from src.api.schemas.admin import (
 from src.application import admin_audit as A
 from src.application import admin_permissions as perm
 from src.knowledge_admin import policy as P
+from src.knowledge_admin.environment import KnowledgeServingRefused
 from src.knowledge_admin.service import (
     KnowledgeBlocked, KnowledgeConflict, KnowledgeDuplicate, KnowledgeNotFound, KnowledgeValidationError,
 )
@@ -32,6 +33,9 @@ router = APIRouter(prefix="/admin/knowledge", tags=["admin-knowledge"])
 def _guard(fn):
     try:
         return fn()
+    except KnowledgeServingRefused as exc:        # 02A: the environment guard refuses governed uploads; codes are safe, fixed vocabulary
+        raise HTTPException(status_code=503, detail="Governed knowledge is unavailable in this environment: " + ", ".join(exc.codes)
+                            + ". See the environment panel on this page.")
     except KnowledgeNotFound:
         raise HTTPException(status_code=404, detail="Not found.")
     except KnowledgeValidationError as exc:
@@ -183,6 +187,20 @@ def index(version_id: str, request: Request, principal=Depends(require_permissio
 def activate(version_id: str, request: Request, principal=Depends(require_permission(perm.KNOWLEDGE_APPROVE)),
              svc=Depends(get_knowledge_admin_service)):
     return _act(version_id, request, principal, A.ADMIN_KNOWLEDGE_VERSION_ACTIVATED, svc.activate)
+
+
+@router.post("/versions/{version_id}/replace", response_model=KnowledgeVersionDetail,
+             summary="Make this newer, fully indexed version replace the source's active version (idempotent; the predecessor is retired)")
+def replace(version_id: str, request: Request, principal=Depends(require_permission(perm.KNOWLEDGE_APPROVE)),
+            svc=Depends(get_knowledge_admin_service)):
+    return _act(version_id, request, principal, A.ADMIN_KNOWLEDGE_VERSION_REPLACED, svc.replace)
+
+
+@router.post("/versions/{version_id}/reindex", response_model=KnowledgeVersionDetail,
+             summary="Queue a rebuild of missing chunks for an ACTIVE or INDEXED version (a W10.9 job; no state change, idempotent)")
+def reindex(version_id: str, request: Request, principal=Depends(require_permission(perm.KNOWLEDGE_MANAGE)),
+            svc=Depends(get_knowledge_admin_service)):
+    return _act(version_id, request, principal, A.ADMIN_KNOWLEDGE_REINDEX_REQUESTED, svc.request_reindex)
 
 
 @router.post("/versions/{version_id}/retire", response_model=KnowledgeVersionDetail,

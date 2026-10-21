@@ -15,7 +15,8 @@ from dataclasses import dataclass
 
 from src import constants
 from src.models import InterviewConfiguration
-from src.prompts import SYSTEM_PROMPT_BUILDERS, TARGET_SCHEMA_NAME
+from src.prompt_assets import effective_versions
+from src.prompts import SYSTEM_PROMPT_BUILDERS, TARGET_SCHEMA_NAME, prompt_families
 
 __all__ = [
     "PromptTechniqueSpec",
@@ -25,6 +26,7 @@ __all__ = [
     "get_technique",
     "selector_options",
     "format_option",
+    "technique_prompt_versions",
 ]
 
 
@@ -174,3 +176,15 @@ def selector_options() -> list[tuple[str, str]]:
 def format_option(technique_id: str) -> str:
     """Return the display label for a technique ID (for ``format_func``)."""
     return get_technique(technique_id).name
+
+
+def technique_prompt_versions(
+    technique_id: str, config: InterviewConfiguration | None = None, task: str | None = None
+) -> dict[str, dict[str, str]]:
+    """Declared version and body hash of every prompt asset behind a technique (01B attribution).
+
+    ``{family: {"version", "sha256"}}``; identifiers and hashes only, never prompt text. Unsupported
+    IDs raise :class:`UnknownPromptTechniqueError` like :func:`get_technique`.
+    """
+    get_technique(technique_id)
+    return effective_versions(prompt_families(technique_id, config, task))

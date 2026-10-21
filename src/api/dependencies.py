@@ -240,11 +240,27 @@ def get_governed_retriever(request: Request):
             from src.knowledge_admin.retriever import GovernedKnowledgeRetriever
             from src.knowledge_admin.wiring import build_governed_store
 
-            return GovernedKnowledgeRetriever(build_governed_store(get_copilot_config(request)), get_repository(request).session_factory)
+            return GovernedKnowledgeRetriever(build_governed_store(get_copilot_config(request)), get_repository(request).session_factory,
+                                              guard=get_knowledge_guard(request))
         except Exception:  # noqa: BLE001 - governed knowledge is additive
             return None
 
     return _shared(request, "governed_retriever", _build)
+
+
+def get_knowledge_guard(request: Request):
+    """02A: the knowledge environment guard (identity vs the worker, registry vs index, private files). One per app; the store provider is
+    lazy so the retriever and the guard never construct each other."""
+    def _build():
+        from src.jobs.service import JobService
+        from src.knowledge_admin.wiring import build_serving_guard
+
+        repo = get_repository(request)
+        return build_serving_guard(repo.session_factory, get_app_config(request), get_copilot_config(request),
+                                   store_provider=lambda: getattr(get_governed_retriever(request), "store", None),
+                                   job_service=JobService(repo.session_factory))
+
+    return _shared(request, "knowledge_guard", _build)
 
 
 def get_career_service(request: Request) -> CareerApplicationService:
@@ -459,13 +475,14 @@ def get_legal_service(repo=Depends(get_repository)):
     return LegalService(repo.session_factory)
 
 
-def get_knowledge_admin_service(repo=Depends(get_repository)):
+def get_knowledge_admin_service(request: Request, repo=Depends(get_repository)):
     from src.jobs.service import JobService
     from src.knowledge_admin.service import KnowledgeAdminService
     from src.knowledge_admin.wiring import build_knowledge_doc_store
 
-    return KnowledgeAdminService(repo.session_factory, doc_store=build_knowledge_doc_store(),
-                                 jobs=JobService(repo.session_factory))
+    guard = get_knowledge_guard(request)
+    return KnowledgeAdminService(repo.session_factory, doc_store=build_knowledge_doc_store(guard.runtime),
+                                 jobs=JobService(repo.session_factory), guard=guard)
 
 
 def get_knowledge_readiness_service(request: Request, repo=Depends(get_repository)):
@@ -479,6 +496,7 @@ def get_knowledge_readiness_service(request: Request, repo=Depends(get_repositor
         curated_store_provider=lambda: get_vector_store(request),
         job_service=JobService(repo.session_factory),
         config=get_copilot_config(request),
+        guard=get_knowledge_guard(request),
     )
 
 
