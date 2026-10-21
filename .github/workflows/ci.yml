@@ -66,6 +66,16 @@ jobs:
           python-version: "3.11"
           cache: pip
           cache-dependency-path: pyproject.toml
+      # The locale-audit test (tests/test_language_readiness_06a.py) bundles the i18n catalogue with esbuild through frontend/scripts/dump-catalog-stats.mjs, so every
+      # shard installs the frontend dependencies itself: it must not rely on the frontend job, and it stays correct if that test moves between shards.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies (reproducible, from the lockfile)
+        working-directory: frontend
+        run: npm ci
       - name: Install (dev + db + speech + live extras)
         run: |
           python -m pip install --upgrade pip
