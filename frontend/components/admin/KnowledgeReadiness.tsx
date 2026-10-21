@@ -11,6 +11,9 @@ import { Panel, ResourceState, Stat, StatusLabel, apiMessage, btn, field, useAdm
  * W12.4A. Knowledge readiness, the active corpus and a retrieval-ONLY test, on /admin/knowledge (no new destination).
  * Wording is truthful: only `ready` is shown as ok; configuration alone, an existing source or a queued job is never presented as healthy.
  */
+// Which knowledge layer a collection belongs to (a collection kind, not a user role).
+const COLLECTION_LAYER_LABEL: Record<string, string> = { curated: "Curated", governed: "Governed" };
+
 export const READINESS_TEXT: Record<KnowledgeReadinessStatus, string> = {
   ready: "Ready",
   no_active_sources: "No active sources",
@@ -172,7 +175,7 @@ function EnvironmentIdentity({ env }: { env: KnowledgeEnvironment }) {
               {env.collections.map((c) => (
                 <tr key={c.collection_id} className="border-t border-default">
                   <th scope="row" className="py-1 pr-4 text-left font-medium">{c.collection_id}</th>
-                  <td className="py-1 pr-4">{c.role === "curated" ? "Curated" : "Governed"}</td>
+                  <td className="py-1 pr-4">{COLLECTION_LAYER_LABEL[c.role] ?? "Governed"}</td>
                   <td className="py-1 pr-4">{c.chunk_count ?? "unreadable"}</td>
                   <td className="py-1 pr-4">{c.persistent ? "Yes" : "No"}</td>
                 </tr>
