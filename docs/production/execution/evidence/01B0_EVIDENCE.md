@@ -68,13 +68,17 @@ Not touched: policies.py, registry.py, nodes.py, prompts.py, rag/prompts.py, con
 
 ## 5. Tests and commands
 
-- `/tmp/ci_venv/bin/python -m pytest tests/contracts -q`: 42 passed (run at 18:07Z, before the environment fault below).
-- System `/usr/bin/python3` 3.9.6 (stdlib-only loader; `--noconftest`): `pytest tests/contracts` 42 passed; `ruff check .` (0.16.10) All checks passed; `python scripts/ci_test_shards.py verify --shards 4` OK (266 test files, each in exactly one shard).
-- Main venv and `/tmp/ci_venv` re-run after the fault, and the existing prompt tests (`tests/test_prompts.py`, `tests/test_prompt_lab_p6.py`, `tests/test_prompt_comparison.py`): NOT RUN / NOT VERIFIED (no existing file was edited, so regression risk is nil by construction; CI runs the full suite). At about 18:06Z the Homebrew interpreter stub
-  `/opt/homebrew/Cellar/python@3.11/3.11.15_4/Frameworks/Python.framework/Versions/3.11/bin/python3.11` was overwritten with a 128-byte
-  `exec .../.venv/bin/python` wrapper (written through a shared scratchpad symlink; the same content as a `mainpy.sh` helper), which makes every
-  venv python (main and ci_venv) loop forever. The repair (replace it with a symlink to `../Resources/Python.app/Contents/MacOS/Python`, or
-  `brew reinstall python@3.11`) was blocked by the permission classifier, so it needs the owner. No source file was affected.
+Interpreter fault (Homebrew stub overwritten by a shell wrapper at about 18:06Z, repaired by the coordinator) delayed the first full run; no source was affected.
+
+| Command | Interpreter | Result |
+|---|---|---|
+| `pytest tests/contracts tests/test_prompts.py tests/test_prompt_lab_p6.py tests/test_prompt_comparison.py` plus the config-version tests (`test_model_profile_entitlements_p2c`, `test_platform_config_w10_11`, `test_ai_admin_w10_7`, `test_reporting_w10_12`) | repo `.venv` | 462 passed |
+| same | `/tmp/ci_venv` (fresh-install canary) | 462 passed |
+| `pytest tests/contracts --noconftest` (42 contract tests) | system `/usr/bin/python3` 3.9.6 | 42 passed |
+| `ruff check .` | repo `.venv` | All checks passed |
+| `python scripts/ci_test_shards.py verify --shards 4` | `/tmp/ci_venv` | OK, 266 test files, each in one of 4 shards |
+
+The full backend suite was not run locally; CI runs it once a PR exists.
 
 ## 6. Remaining risks
 
@@ -86,6 +90,7 @@ Not touched: policies.py, registry.py, nodes.py, prompts.py, rag/prompts.py, con
 
 ## 7. Throughput record
 
-- Start 2026-10-21T18:03Z; last work 18:13Z (about 10 minutes wall-clock of agent time; excludes the blocked environment repair).
-- Estimate 2-3 engineering days; actual agent wall-clock about 0.2 hour for authoring (the estimate covers human review and integration).
-- Rework rounds (fix commits after first push): 0 (nothing pushed yet). CI duration: not available (no PR / not pushed).
+- Start 2026-10-21T18:03Z; verification complete about 18:25Z (about 22 minutes agent wall-clock, including the environment fault).
+- Estimate 2-3 engineering days (covers human review and integration); actual agent authoring and verification well under one hour.
+- Rework rounds (fix commits after first push): 0 code fixes; one evidence-only update commit after verification.
+- CI duration: not available (no PR opened by this agent; CI runs only once a PR exists).
