@@ -68,7 +68,7 @@ test("at 1280px the Admin navigation is the full visible list and the menu butto
 test("Review and Diagnostics render inside the Admin navigation with a way back", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await mock(page);
-  await page.goto("/review");
+  await page.goto("/admin/review");
   const nav = page.getByRole("navigation", { name: "Admin" });
   await expect(nav.getByRole("link", { name: /Review \/ Diagnostics/ })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("heading", { name: "Review & Diagnostics" })).toBeVisible();

@@ -14,12 +14,25 @@ function account(role: string) {
   };
 }
 
+const HOME = {
+  build: { version: "0.1.0", git_sha: "abc1234", build_time: "2026-10-02T10:00:00Z", environment: "staging", source: "x" },
+  migrations: { repository_head: "0039_speech_governance", database_revision: "0039_speech_governance", state: "match", warning: null },
+  health: { database: "reachable", providers_probed: false, note: "" },
+  rate_limit: { mode: "in_memory_process_local", distributed: false, shared_store_requested: false, note: "" },
+  pause: { status: "running", paused: {}, durable: true, note: "" },
+  privacy_requests: { status: "restricted", note: "" },
+  accounts: { users_total: 5, platform_admins: 1, premium_accounts: 2 }, workspaces: { workspaces_total: 3 },
+  diagnostics_links: [], boundary: "Operational metadata only.",
+};
+
 async function mock(page: Page, role = "user") {
   await page.route("**/api/v1/**", async (route) => {
     const url = route.request().url();
     const json = (body: unknown, status = 200) =>
       route.fulfill({ status, contentType: "application/json", headers: { "x-request-id": "req_e2e" }, body: JSON.stringify(body) });
     if (url.includes("/auth/me")) return json(account(role));
+    if (url.includes("/admin/home")) return json(HOME);
+    if (url.includes("/admin/readiness")) return json({ capabilities: [], summary: {}, vocabulary: { statuses: [], qualifiers: [] }, boundary: "" });
     if (url.includes("/capabilities")) return json({
       career_intelligence: true, interview_practice: true, knowledge_base: true,
       evaluation: true, live_interview_enabled: false, agentic_rag: true,
@@ -56,12 +69,15 @@ test("Flow 3: candidate does NOT see internal Review & Diagnostics in More (W9.3
   await expect(page.getByRole("menuitem", { name: /Review & Diagnostics/ })).toHaveCount(0);
 });
 
-test("Flow 4: platform admin — More → Review hub → Agent Inspector", async ({ page }) => {
+test("Flow 4: platform admin - More -> Admin -> Review / Diagnostics -> Agent Inspector (03A)", async ({ page }) => {
   await mock(page, "platform_admin");
   await page.goto("/prepare");
   await page.getByRole("button", { name: /More/ }).click();
-  await page.getByRole("menuitem", { name: /Review & Diagnostics/ }).click();
-  await expect(page).toHaveURL(/\/review$/);
+  await expect(page.getByRole("menuitem", { name: /Review & Diagnostics/ })).toHaveCount(0);
+  await page.getByRole("menuitem", { name: /Admin/ }).click();
+  await expect(page).toHaveURL(/\/admin$/);
+  await page.getByRole("navigation", { name: "Admin" }).getByRole("link", { name: "Review / Diagnostics" }).click();
+  await expect(page).toHaveURL(/\/admin\/review$/);
   await page.getByRole("link", { name: /Agent Inspector/ }).click();
   await expect(page).toHaveURL(/\/review\/agent$/);
 });
