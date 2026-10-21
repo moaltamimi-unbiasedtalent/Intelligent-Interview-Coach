@@ -4,7 +4,7 @@
 
 ## 1. Basis and assumptions (all stated, none measured yet)
 
-- **Effort:** 44 packages, **205 to 319 ideal engineering days** (the Phase 00 figure was 196 to 304; the extra days are the interface-contract and continuous-evidence packages added below, accepted as the cost of parallelism). These are my estimates and have not been validated against real throughput.
+- **Effort:** 45 packages, **209 to 325 ideal engineering days** (the Phase 00 figure was 196 to 304; the extra days are the interface-contract and continuous-evidence packages added below, accepted as the cost of parallelism). These are my estimates and have not been validated against real throughput.
 - **Productive time:** a stream delivers 70% of a working day as productive effort (review, CI waits, rework; assumption). A second stream on the same package delivers 85% of a first (merge and coordination overhead; assumption).
 - **Calendar-bound human and legal lead times** engineering cannot compress (assumed working days of elapsed time, to be replaced by real quotes): 02D 15, 05E 15, 06F 20, 06G 10, 04F 5.
 - Working days are Monday to Friday from Monday 26 October 2026, with no public holidays modelled (late December will reduce capacity). The owner-authorised first wave starts when PR #212 is merged; the plan assumes that is on or about 26 October.
@@ -22,7 +22,7 @@ A **stream** is one unit of parallel engineering: one human engineer or one Clau
 | Native-language review, legal qualification, independent human AI evaluation, licensing review | yes, external specialists | no: these are human by definition and cannot be replaced |
 | Throughput on this codebase | unknown | unknown until measured: the first wave measures it (section 7) |
 
-**Review is the binding constraint for Claude Code streams:** every package becomes pull requests that a human must review and the technical integration lead must sequence. The plan counts **about 58 pull requests**; at an assumed 0.5 reviewer-day each (1.0 for security- or privacy-sensitive ones) that is roughly 29 to 44 reviewer-days before rework, which is why a dedicated integration lead and at least two further reviewers are required whatever mix of humans and sessions the owner chooses.
+**Review is the binding constraint for Claude Code streams:** every package becomes pull requests that a human must review and the technical integration lead must sequence. The plan counts **about 59 pull requests**; at an assumed 0.5 reviewer-day each (1.0 for security- or privacy-sensitive ones) that is roughly 30 to 44 reviewer-days before rework, which is why a dedicated integration lead and at least two further reviewers are required whatever mix of humans and sessions the owner chooses.
 
 ## 3. Roles needed (all unfilled)
 
@@ -30,10 +30,10 @@ A **stream** is one unit of parallel engineering: one human engineer or one Clau
 |---|---|---|---|
 | TIL | Technical integration lead (owns interface contracts, merge order, CI health, integration branches; reviews every cross-track PR) | 4-8 | 0.3 |
 | AIE | AI and security engineer (injection defence, prompts, tool authorization, retrieval and embeddings quality) | 36-58 | 2.5 |
-| BE | Backend and data engineer (APIs, persistence, knowledge lifecycle, reporting, migrations) | 63-98 | 4.3 |
-| FE | Frontend engineer (Admin and Candidate UI, accessibility, i18n) | 37-56 | 2.5 |
+| BE | Backend and data engineer (APIs, persistence, knowledge lifecycle, reporting, migrations) | 65-102 | 4.4 |
+| FE | Frontend engineer (Admin and Candidate UI, accessibility, i18n) | 38-57 | 2.5 |
 | DEVOPS | DevOps and reliability engineer (topology, hosting, backup and restore, monitoring, scanner deployment) | 24-37 | 1.6 |
-| QA | QA and test-automation engineer (journeys, contract and integration tests, evidence) | 27-42 | 1.8 |
+| QA | QA and test-automation engineer (journeys, contract and integration tests, evidence) | 28-44 | 1.9 |
 | LOC | Localisation engineer (seven-language audit, per-language fixes, reviewer coordination) | 10-16 | 0.7 |
 | PO | Product Owner (decisions, approvals, merge authority) | 2-4 | 0.2 |
 
@@ -73,7 +73,7 @@ Streams available in week 1, week 2, week 3 and after. Week 1 always starts the 
 
 | Profile (streams) | Peak streams used | Completes, low estimate | Completes, high estimate | Meets 30 November? |
 |---|---|---|---|---|
-| A constant 12 | 12 | day 33, Thu 10 Dec 2026 | day 47, Wed 30 Dec 2026 | no |
+| A constant 12 | 12 | day 33, Thu 10 Dec 2026 | day 48, Wed 30 Dec 2026 | no |
 | B ramp 12, 12, 16 | 16 | day 30, Fri 04 Dec 2026 | day 43, Wed 23 Dec 2026 | no |
 | C ramp 12, 16, 20 | 20 | day 27, Wed 02 Dec 2026 | day 37, Tue 15 Dec 2026 | no |
 | D ramp 12, 18, 24 | 24 | day 27, Wed 02 Dec 2026 | day 33, Wed 09 Dec 2026 | no |

@@ -14,6 +14,8 @@ confidence thresholds or any security boundary. A "challenging" style must not s
 
 from __future__ import annotations
 
+from src.prompt_assets import render, table
+
 __all__ = [
     "COACHING_STYLE_SUPPORTIVE", "COACHING_STYLE_BALANCED", "COACHING_STYLE_DIRECT",
     "COACHING_STYLE_CHALLENGING", "COACHING_STYLES", "DEFAULT_COACHING_STYLE",
@@ -37,21 +39,11 @@ DEFAULT_COACHING_STYLE = COACHING_STYLE_BALANCED
 # Trusted, repository-authored directives. The text is fixed here — never composed from user input.
 # Each states explicitly that only tone changes, not scoring/evidence — a defence-in-depth reminder
 # to the model that reinforces the boundary the code already enforces.
-_DIRECTIVES: dict[str, str] = {
-    COACHING_STYLE_SUPPORTIVE: (
-        "Use an encouraging, constructive coaching tone: lead with what worked, then name gaps "
-        "kindly and specifically."
-    ),
-    COACHING_STYLE_DIRECT: (
-        "Use concise, candid coaching language: state the key gaps plainly and briefly, while "
-        "remaining respectful."
-    ),
-    COACHING_STYLE_CHALLENGING: (
-        "Use a stretching coaching tone: probe harder, raise the bar and push the candidate to go "
-        "deeper, while remaining respectful and fair."
-    ),
-    # Balanced is the neutral default and needs no directive.
-}
+# The directive texts and the wrapper sentence are versioned assets (package 01B):
+# prompts/coaching/directives (key: text per allow-listed style; balanced has none) and
+# prompts/coaching/wrapper. Balanced is the neutral default and needs no directive.
+_CONSUMER = "coaching.style"
+_DIRECTIVES: dict[str, str] = table("coaching/directives", _CONSUMER)
 
 
 def coaching_style_directive(code: str | None) -> str | None:
@@ -64,9 +56,4 @@ def coaching_style_directive(code: str | None) -> str | None:
     directive = _DIRECTIVES.get((code or "").strip().lower())
     if not directive:
         return None
-    return (
-        "COACHING STYLE (trusted, chosen from fixed options)\n"
-        f"{directive} This changes ONLY how feedback is worded: keep the same rubric, scores, "
-        "evidence requirements, grounding and safety - never make feedback harsher or more lenient "
-        "because of the tone, and never invent achievements, metrics or outcomes."
-    )
+    return render("coaching/wrapper", _CONSUMER, directive=directive)

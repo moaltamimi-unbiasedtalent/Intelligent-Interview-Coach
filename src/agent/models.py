@@ -92,3 +92,7 @@ class AgentRunResult:
     # coaching plan) plus which specialists ran — for the reviewer diagnostic. Never
     # raw documents, secrets or chain-of-thought.
     specialist_outputs: dict[str, Any] = field(default_factory=dict)
+    # Effective prompt assets for the run (01B R6): {family: {"version", "sha256"}} for Mo's system
+    # prompt, the response-language directive when one was added, and the prompts of the tools the
+    # run executed. Identifiers and body hashes only, never prompt text; not part of the API schema.
+    prompt_versions: dict[str, dict[str, str]] = field(default_factory=dict)

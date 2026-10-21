@@ -659,6 +659,20 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
         specialist_outputs=_derive_specialist_outputs(state),
         response_class=response_class,
         policy_flags=policy_flags,
+        prompt_versions=_run_prompt_versions(state, tools_used),
+    )
+
+
+def _run_prompt_versions(state: dict, tools_used: list[str]) -> dict:
+    """Effective prompt asset versions (declared version + body hash) for the run (01B R6).
+
+    Metadata only, never prompt text. The prompt tree was validated at import (the application
+    fails closed otherwise), so this read cannot fail on a running process.
+    """
+    from src.agent.policies import run_prompt_versions
+
+    return run_prompt_versions(
+        state.get("response_language"), tools_used, state.get("coaching_style")
     )
 
 
