@@ -156,7 +156,9 @@ def _embedding_state(config: Any) -> EmbeddingState:
 def _worker_summary(job_stats: Any) -> WorkerHeartbeatSummary:
     try:
         stats = job_stats() if callable(job_stats) else job_stats
-        w = (stats or {}).get("workers") or {}
+        w = (stats or {}).get("workers")
+        if not isinstance(w, Mapping):
+            return WorkerHeartbeatSummary()          # no heartbeat information supplied: unknown, not "none"
         seen = int(w.get("seen_recently", 0))
         status = "available" if seen > 0 else ("stale" if w.get("items") else "none")
         return WorkerHeartbeatSummary(status, seen, w.get("last_seen_at"), w.get("stale_after_seconds"))
@@ -418,9 +420,10 @@ class LegacyScannerAdapter:
 
 
 def scan_accepted(outcome: ScanOutcome, *, required: bool) -> bool:
-    """The FAIL-CLOSED rule (mirrors ``enforce_scan``): infected never passes; when scanning is required only a clean verdict from a REAL
-    scanner passes; when not required, a non-infected outcome passes only as 'not scanned' (callers never display it as virus-free)."""
-    if outcome.verdict is ScanVerdict.INFECTED:
+    """The FAIL-CLOSED rule (mirrors ``enforce_scan``): infected and unavailable never pass (a scanner that cannot scan raises in the
+    legacy path even when scanning is optional); when scanning is required only a clean verdict from a REAL scanner passes; when not
+    required, a clean no-op (null) result passes only as 'not scanned' (callers never display it as virus-free)."""
+    if outcome.verdict is not ScanVerdict.CLEAN:
         return False
     if required:
         return outcome.verdict is ScanVerdict.CLEAN and outcome.real_scan

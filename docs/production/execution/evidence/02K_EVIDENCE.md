@@ -23,28 +23,27 @@ No secret, URL, credential, absolute path or vector appears in any serialised id
 ## Tests and commands
 | Check | Result |
 |---|---|
-| `py_compile` of both new modules (system python3) | pass |
+| `py_compile` of both new modules | pass |
 | `scripts/ci_test_shards.py verify --shards 4` | OK, 266 test files each in exactly one shard |
-| `pytest tests/contracts` under repo `.venv` | NOT RUN (see below) |
-| `pytest tests/contracts` under `/tmp/ci_venv` | NOT RUN (see below) |
-| `ruff check .` | NOT RUN |
-| existing knowledge tests | NOT RUN |
+| First run of `tests/contracts` (/tmp/ci_venv) | 3 failed (see rework) |
+| After fix, repo `.venv`: `tests/contracts` + `test_knowledge_admin_w10_8` + `test_knowledge_readiness_w12_4a` + `test_p8_hardening` + `test_security_hardening` + `test_company_upload_limits` | 125 passed |
+| Same set under `/tmp/ci_venv` | 125 passed |
+| `ruff check .` (both venvs) | All checks passed |
 
-The coordinator froze all venv Python use mid-task (the shared Homebrew interpreter was overwritten and venv Python loops forever), so the suite was written but not executed. It must be run under both venvs once the interpreter is repaired; any fix goes in a follow-up commit and counts as rework.
+Rework round 1 (found by the first execution): (a) the worker summary reported `none` instead of `unknown` when no job stats were supplied; fixed. (b) `scan_accepted(required=False)` accepted an UNAVAILABLE outcome, but `enforce_scan` calls the scanner even when optional and a scanner that cannot scan raises, so it fails closed; the rule is now "only a CLEAN verdict can pass" (plus a real scan when required), and the test double that wrongly asserted was fixed. No public names or signatures changed; the two behaviours above are documented in the docstrings.
 
 ## Regression evidence
 No existing file was modified (additions only), so existing tests cannot be affected except through discovery, which the shard verification covers.
 
 ## Remaining risks
-- Suite unexecuted (above); first real run may need small fixes.
 - `database_fingerprint` hashes a low-entropy string; it is non-reversible in practice for URLs but a host/name guess can be confirmed. Never expose it publicly.
 - The index record never stored provider/model/dimensions, so records built before 02B stay "unknown" and incompatible until re-indexed; this is intended.
 - Embedding "version" has no existing source, so live embedders report unknown until 02B defines it.
 - The degradation rule (auto/openai configured but local resolved) is a contract decision 02B may refine.
 
 ## Throughput record
-- Start: 2026-10-21 18:03 UTC. End (this commit): about 18:20 UTC.
-- Estimate 2-3 engineering days; actual wall-clock about 0.3 hours of agent time, tests unrun.
-- Rework rounds (fix commits after first push): 0 so far.
+- Start: 2026-10-21 18:03 UTC. End: about 18:40 UTC, including an interpreter outage that blocked test runs for roughly 15 minutes.
+- Estimate 2-3 engineering days; actual wall-clock about 0.6 hours.
+- Rework rounds (fix commits after first push): 1 (this commit).
 - CI duration: pending (CI runs only once a PR exists).
 - SHA and CI result: see the final report.

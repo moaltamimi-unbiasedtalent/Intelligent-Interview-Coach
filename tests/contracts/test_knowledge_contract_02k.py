@@ -228,7 +228,7 @@ def test_adapter_conforms_to_protocol_and_maps_verdicts():
 class _Down:
     name = "down"
     def available(self): return False
-    def scan(self, data, filename): raise AssertionError("must not scan when unavailable")
+    def scan(self, data, filename): raise FileScanUnavailable("down")
 
 
 class _Raises:
@@ -257,6 +257,7 @@ def test_fail_closed_rule_matches_enforce_scan(legacy, data, required):
 
 def test_fail_closed_rule_direct():
     assert not scan_accepted(ScanOutcome(ScanVerdict.UNAVAILABLE, "x"), required=True)
+    assert not scan_accepted(ScanOutcome(ScanVerdict.UNAVAILABLE, "x"), required=False)
     assert not scan_accepted(ScanOutcome(ScanVerdict.CLEAN, "null", real_scan=False), required=True)
     assert not scan_accepted(ScanOutcome(ScanVerdict.INFECTED, "x", real_scan=True), required=False)
     assert scan_accepted(ScanOutcome(ScanVerdict.CLEAN, "clamav", real_scan=True), required=True)
