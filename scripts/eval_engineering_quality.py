@@ -73,7 +73,8 @@ def run() -> dict[str, tuple[bool, str]]:
 
     ci = read(".github/workflows/ci.yml")
     check("ci_enforces_clean_tree", "git status --porcelain" in ci, "CI fails if tests/evaluators dirty tracked files")
-    check("no_new_migration", sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_", "0026_", "0027_", "0028_", "0029_", "0030_", "0031_", "0032_", "0033_", "0034_", "0035_", "0036_", "0037_", "0038_", "0039_")), "head is a registered revision")
+    numbers = sorted(int(p.name.split("_", 1)[0]) for p in (ROOT / "migrations/versions").glob("0*.py"))
+    check("migration_chain_contiguous_from_registered_baseline", numbers[-1] >= 14 and numbers == list(range(numbers[0], numbers[-1] + 1)), "migration numbering is contiguous and not older than the registered baseline")
     return out
 
 

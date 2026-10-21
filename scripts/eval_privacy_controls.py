@@ -3,7 +3,7 @@
 
 Invariants: export_scope_truthful, export_no_secrets_or_storage_keys, delete_routes_owner_scoped,
 writes_never_retried, destructive_default_focus_is_cancel, no_window_confirm, no_invented_retention_periods,
-no_fabricated_legal_history, no_admin_privacy_surface, no_migration_added, slogan_not_in_privacy_copy.
+no_fabricated_legal_history, no_admin_privacy_surface, no_unreviewed_privacy_schema_change, slogan_not_in_privacy_copy.
 """
 
 from __future__ import annotations
@@ -25,6 +25,46 @@ from src import persistence as P  # noqa: E402
 from src.application.data_export import build_candidate_export  # noqa: E402
 from src.persistence import Base, make_session_factory  # noqa: E402
 from src.repository import InterviewRepository  # noqa: E402
+
+
+# Migrations up to and including this revision were reviewed under the earlier "no migration added" rule (W9.8) and are historical. Every LATER migration, whatever its
+# number, may not touch a table that holds candidate privacy, export, deletion or ownership data.
+PRIVACY_BASELINE_REVISION = 39
+PRIVACY_TABLES = frozenset({
+    "users", "auth_sessions", "auth_tokens", "account_identities", "password_credentials", "user_preferences", "user_feedback", "legal_acceptances",
+    "candidate_documents", "document_versions", "document_claims", "candidate_stories", "story_evidence", "opportunities",
+    "interviews", "interview_sessions", "questions", "answers", "reports", "preparation_runs", "preparation_packs", "preparation_memories",
+    "privacy_requests", "billing_account_closures", "share_grants", "workspaces", "workspace_memberships", "workspace_invitations",
+})
+
+
+def migration_tables_touched(source: str, known_tables: set[str]) -> set[str]:
+    """Known table names referenced by a migration's CODE (string literals only; the docstring and comments are ignored)."""
+    import ast
+
+    tree = ast.parse(source)
+    if tree.body and isinstance(tree.body[0], ast.Expr) and isinstance(getattr(tree.body[0], "value", None), ast.Constant):
+        tree.body = tree.body[1:]                                                    # drop the module docstring
+    literals = [n.value for n in ast.walk(tree) if isinstance(n, ast.Constant) and isinstance(n.value, str)]
+    touched: set[str] = set()
+    for text in literals:
+        for table in known_tables:
+            if text == table or re.search(rf"\b{re.escape(table)}\b", text):
+                touched.add(table)
+    return touched
+
+
+def post_baseline_privacy_touches(versions_dir: Path, known_tables: set[str], baseline: int = PRIVACY_BASELINE_REVISION, privacy_tables: frozenset[str] = PRIVACY_TABLES) -> dict[str, list[str]]:
+    """Migrations after the baseline that touch a privacy table: {file name: [tables]} (empty means the invariant holds)."""
+    offenders: dict[str, list[str]] = {}
+    for path in sorted(versions_dir.glob("0*.py")):
+        number = int(path.name.split("_", 1)[0])
+        if number <= baseline:
+            continue
+        hit = migration_tables_touched(path.read_text(encoding="utf-8"), known_tables) & privacy_tables
+        if hit:
+            offenders[path.name] = sorted(hit)
+    return offenders
 
 
 def _read(rel: str) -> str:
@@ -104,8 +144,9 @@ def run() -> dict[str, tuple[bool, str]]:
     check("no_admin_privacy_surface", "/privacy/data" not in admin and "export_candidate" not in admin,
           "W10 owns admin privacy operations")
 
-    mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_", "0026_", "0027_", "0028_", "0029_", "0030_", "0031_", "0032_", "0033_", "0034_", "0035_", "0036_", "0037_", "0038_", "0039_")), f"head file {mig[-1]}")
+    offenders = post_baseline_privacy_touches(ROOT / "migrations/versions", set(Base.metadata.tables))
+    check("no_unreviewed_privacy_schema_change", not offenders,
+          "no migration after the W9.8 baseline touches a candidate privacy, export, deletion or ownership table" if not offenders else f"privacy tables touched: {offenders}")
     return out
 
 

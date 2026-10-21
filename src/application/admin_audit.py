@@ -60,6 +60,8 @@ ADMIN_KNOWLEDGE_VERSION_ACTIVATED: Final = "admin.knowledge_version_activated"
 ADMIN_KNOWLEDGE_VERSION_RETIRED: Final = "admin.knowledge_version_retired"
 ADMIN_KNOWLEDGE_VERSION_DELETED: Final = "admin.knowledge_version_deleted"
 ADMIN_KNOWLEDGE_REPROCESS_REQUESTED: Final = "admin.knowledge_reprocess_requested"
+ADMIN_KNOWLEDGE_VERSION_REPLACED: Final = "admin.knowledge_version_replaced"       # 02A: a newer indexed version superseded the active one
+ADMIN_KNOWLEDGE_REINDEX_REQUESTED: Final = "admin.knowledge_reindex_requested"     # 02A: rebuild missing chunks of an active/indexed version
 # W10.10 (privacy/legal). Payloads: request/document/version ids, old/new state, result category; never exported data, request
 # text, a candidate's content, an IP or a device identifier.
 ADMIN_PRIVACY_REQUEST_RECORDED: Final = "admin.privacy_request_recorded"
@@ -153,6 +155,7 @@ ADMIN_EVENT_NAMES: Final[frozenset[str]] = frozenset({
     ADMIN_KNOWLEDGE_VERSION_UPLOADED, ADMIN_KNOWLEDGE_VERSION_UPDATED, ADMIN_KNOWLEDGE_VERSION_APPROVED,
     ADMIN_KNOWLEDGE_VERSION_REJECTED, ADMIN_KNOWLEDGE_INDEX_REQUESTED, ADMIN_KNOWLEDGE_VERSION_ACTIVATED,
     ADMIN_KNOWLEDGE_VERSION_RETIRED, ADMIN_KNOWLEDGE_VERSION_DELETED, ADMIN_KNOWLEDGE_REPROCESS_REQUESTED,
+    ADMIN_KNOWLEDGE_VERSION_REPLACED, ADMIN_KNOWLEDGE_REINDEX_REQUESTED,
     ADMIN_PRIVACY_REQUEST_RECORDED, ADMIN_PRIVACY_REQUEST_ASSIGNED, ADMIN_PRIVACY_REQUEST_STATUS_CHANGED,
     ADMIN_PRIVACY_DELETION_INITIATED, ADMIN_PRIVACY_DELETION_COMPLETED, ADMIN_PRIVACY_BACKFILL_REQUESTED,
     ADMIN_LEGAL_VERSION_CREATED, ADMIN_LEGAL_VERSION_UPDATED, ADMIN_LEGAL_VERSION_PUBLISHED,

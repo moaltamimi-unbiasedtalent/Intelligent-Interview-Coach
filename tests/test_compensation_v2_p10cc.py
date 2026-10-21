@@ -653,7 +653,7 @@ def test_migration_0037_is_additive_reversible_and_matches_the_orm(tmp_path, mon
     from tests.test_billing_f1_qualification import _alembic
     from src import persistence as P
     cfg, url = _alembic(tmp_path, monkeypatch)
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0039_speech_governance"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == ["0040_knowledge_alert_categories"]
     new = ("compensation_v2_records", "compensation_import_batches")
     command.upgrade(cfg, "0036_multilingual_aliases")
     assert not set(new) & set(inspect(create_engine(url)).get_table_names())
