@@ -86,7 +86,7 @@ def run() -> tuple[dict[str, tuple[bool, str]], dict]:
     v1 = (ROOT / "src/copilot/knowledge/compensation.py").read_text(encoding="utf-8")
     check("compensation_v1_untouched", "knowledge_foundation" not in v1 and "class CompensationRepository" in v1, "V1 module unchanged and not coupled to V2")
     versions = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_schema_change", versions[-1].startswith(("0038_", "0039_")) and len(versions) in (38, 39), versions[-1])
+    check("no_schema_change", versions[-1].startswith(("0038_", "0039_", "0040_")) and len(versions) in (38, 39, 40), versions[-1])
     meta = {"cases": len(results), "passed": ok_n, "outcomes": dict(sorted(outcomes.items())), "invented_values": sum(1 for x in results if x["invented_value"]), "blocks": len(blocks), "comparisons": len(comps)}
     return res, meta
 

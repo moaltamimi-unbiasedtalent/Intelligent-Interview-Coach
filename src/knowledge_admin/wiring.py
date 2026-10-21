@@ -36,6 +36,10 @@ def build_serving_guard(session_factory, app_config, copilot_config, *, store_pr
     from src.knowledge_admin.config import resolve_knowledge_runtime_config
     from src.knowledge_admin.environment import KnowledgeServingGuard
 
+    from src.knowledge_admin.alerts import observe_guard_report
+
+    if on_report is None:                    # each evaluation also derives the in-app knowledge health alerts (never raises, never pages anyone)
+        on_report = lambda report: observe_guard_report(session_factory, report)  # noqa: E731
     runtime = resolve_knowledge_runtime_config(app_config, copilot_config, session_factory=session_factory)
     return KnowledgeServingGuard(session_factory, runtime, store_provider=store_provider, doc_store=doc_store or build_knowledge_doc_store(runtime),
                                  job_service=job_service, copilot_config=copilot_config, ttl_seconds=ttl_seconds, on_report=on_report)

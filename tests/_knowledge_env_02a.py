@@ -17,6 +17,7 @@ from src.documents.storage import LocalDocumentStore
 from src.jobs.service import JobService
 from src.jobs.worker import Worker
 from src.knowledge_admin import policy as P
+from src.knowledge_admin.alerts import observe_guard_report
 from src.knowledge_admin.config import KnowledgeRuntimeConfig
 from src.knowledge_admin.environment import KnowledgeServingGuard, build_identity, worker_id_for
 from src.knowledge_admin.readiness import KnowledgeReadinessService
@@ -51,9 +52,12 @@ class PersistentLikeStore(InMemoryVectorStore):
         self.collection_name = P.COLLECTION
 
 
-def runtime_config(root: Path, *, environment="development", data_root: Path | None = None, explicit_files=False) -> KnowledgeRuntimeConfig:
+PG_URL = "postgresql+psycopg://knowledge:not-a-real-password@db.internal:5432/ask4mo"     # only ever fingerprinted by the guard, never connected
+
+
+def runtime_config(root: Path, *, environment="development", data_root: Path | None = None, explicit_files=False, database_url=None) -> KnowledgeRuntimeConfig:
     dr = Path(data_root or root)
-    return KnowledgeRuntimeConfig(database_url=f"sqlite:///{root / 'kb.db'}", data_root=str(dr), chroma_dir=str(root / "chroma"),
+    return KnowledgeRuntimeConfig(database_url=database_url or f"sqlite:///{root / 'kb.db'}", data_root=str(dr), chroma_dir=str(root / "chroma"),
                                   private_files_dir=str(root / "private"), environment=environment, private_files_explicit=explicit_files)
 
 
@@ -61,7 +65,7 @@ class Process:
     """One simulated API+worker process over ``root``. ``store`` may be injected (a deliberately different or empty one)."""
 
     def __init__(self, root: Path, *, environment="development", data_root: Path | None = None, store=None, clock=None, embedding="local",
-                 worker_environment=None, worker_data_root: Path | None = None, with_guard=True, ttl=0):
+                 worker_environment=None, worker_data_root: Path | None = None, with_guard=True, ttl=0, alerts=False, hosted_sqlite=False):
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
         self.engine = make_engine(f"sqlite:///{self.root / 'kb.db'}")
@@ -72,9 +76,11 @@ class Process:
         self.docs = LocalDocumentStore(str(self.root / "private"))
         self.config = CopilotConfig(embedding_provider=embedding, chroma_persist_dir=str(self.root / "chroma"), api_key=None, embedding_api_key=None)
         self.store = store or ChromaStore(LocalHashEmbedder(), persist_dir=str(self.root / "chroma"), collection_name=P.COLLECTION)
-        self.runtime_cfg = runtime_config(self.root, environment=environment, data_root=data_root)
+        self.runtime_cfg = runtime_config(self.root, environment=environment, data_root=data_root,
+                                          database_url=PG_URL if environment != "development" and not hosted_sqlite else None)
         self.guard = (KnowledgeServingGuard(self.sf, self.runtime_cfg, store_provider=lambda: self.store, doc_store=self.docs, job_service=self.jobs,
-                                            copilot_config=self.config, ttl_seconds=ttl) if with_guard else None)
+                                            copilot_config=self.config, ttl_seconds=ttl,
+                                            on_report=(lambda r: observe_guard_report(self.sf, r)) if alerts else None) if with_guard else None)
         self.svc = KnowledgeAdminService(self.sf, doc_store=self.docs, jobs=self.jobs, clock=self.clock, guard=self.guard)
         self.krt = KnowledgeRuntime(session_factory=self.sf, doc_store=self.docs, scanner=FakeScanner(), vector_store_factory=lambda: self.store,
                                     clock=self.clock)

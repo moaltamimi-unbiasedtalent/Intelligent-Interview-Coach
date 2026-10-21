@@ -124,13 +124,14 @@ MESSAGES = {
     "private_files_in_temp_directory": "Private source files are configured inside a temporary directory and will be lost.",
     "index_in_temp_directory": "The persistent index is inside a temporary directory and will be lost.",
     "data_root_in_temp_directory": "The data root is inside a temporary directory and will be lost.",
-    "database_is_sqlite": "The registry database is SQLite (acceptable for development, not for a hosted deployment).",
+    "database_is_sqlite": "The registry database is SQLite, a local demonstration database; a hosted environment must use PostgreSQL (it would otherwise present an empty or demonstration registry as real).",
     "worker_identity_unrecorded": "A worker is running but has not recorded a knowledge environment identity.",
     "worker_not_seen": "No worker has reported recently, so the worker's environment cannot be compared.",
     "registry_unreadable": "The governed registry could not be read.",
 }
 _BLOCKING = frozenset({"identity_mismatch", "governed_collection_empty", "private_files_all_missing", "store_not_persistent", "store_unreadable",
-                       "private_files_in_temp_directory", "index_in_temp_directory", "data_root_in_temp_directory", "registry_unreadable"})
+                       "private_files_in_temp_directory", "index_in_temp_directory", "data_root_in_temp_directory", "registry_unreadable",
+                       "database_is_sqlite"})        # K9: a hosted UI must never silently sit on a local demonstration database
 
 
 @dataclass(frozen=True)

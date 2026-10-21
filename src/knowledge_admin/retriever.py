@@ -24,10 +24,11 @@ class GovernedKnowledgeRetriever:
         query = (query or "").strip()
         if not query or top_k <= 0:
             return []
-        if self._guard is not None:
+        guard = getattr(self, "_guard", None)      # tolerant of objects built without __init__ (test doubles)
+        if guard is not None:
             # Raises KnowledgeServingRefused (caught by the career service, which records the governed channel as DEGRADED): an environment
             # that cannot serve governed knowledge never silently looks like "no matching evidence".
-            self._guard.require_serving()
+            guard.require_serving()
         active = self._active.active_version_ids()
         if not active or self.store.count() == 0:
             return []

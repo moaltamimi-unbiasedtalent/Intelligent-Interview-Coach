@@ -714,7 +714,7 @@ def test_migration_0035_is_additive_reversible_and_matches_the_orm(tmp_path, mon
     from tests.test_billing_f1_qualification import _alembic
     from src import persistence as P
     cfg, url = _alembic(tmp_path, monkeypatch)
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0039_speech_governance"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == ["0040_knowledge_alert_categories"]
     new = ("global_sources", "global_source_events", "occupation_taxonomies", "graph_occupations", "graph_occupation_identifiers", "graph_occupation_relationships", "geography_coverage")
     command.upgrade(cfg, "0034_preparation_packs")
     assert not set(new) & set(inspect(create_engine(url)).get_table_names())

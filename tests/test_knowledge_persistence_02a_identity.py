@@ -138,10 +138,31 @@ def test_matching_worker_hosted_serves_normally(tmp_path, monkeypatch):
         r = p.to_active()
         report = p.guard.check(fresh=True)
         assert report.worker_identity == "match" and report.serving_allowed, report.to_dict()
-        assert [f.code for f in report.findings] == ["database_is_sqlite"]    # a labelled warning only (CI uses SQLite; hosted uses PostgreSQL)
+        assert report.findings == ()                                       # hosted, PostgreSQL identity, matching worker: nothing to report
         assert p.evidence() and all(e["knowledge_version_id"] == r["version_public_id"] for e in p.evidence())
     finally:
         p.close()
+
+
+def test_hosted_sqlite_demonstration_database_is_refused_but_development_is_not(tmp_path, monkeypatch):
+    """K9: a hosted UI must never silently sit on a local demonstration database (an empty one would look like 'no sources')."""
+    hosted_temp(monkeypatch)
+    p = Process(tmp_path / "env", environment="production", hosted_sqlite=True)
+    try:
+        p.worker.run_once()
+        report = p.guard.check(fresh=True)
+        assert [f.code for f in report.blocking] == ["database_is_sqlite"] and not report.serving_allowed
+        with pytest.raises(KnowledgeServingRefused):
+            p.retriever.retrieve(QUERY)
+        r = p.readiness.readiness()
+        assert r["status"] == "configuration_error" and r["governed_retrieval_ready"] is False and r["source_count"] == 0   # counts are the registry's, never invented
+    finally:
+        p.close()
+    d = Process(tmp_path / "dev", environment="development")
+    try:
+        assert "database_is_sqlite" not in [f.code for f in d.guard.check(fresh=True).findings]
+    finally:
+        d.close()
 
 
 def test_hosted_without_any_worker_is_reported_but_not_a_block_by_itself(tmp_path, monkeypatch):
@@ -243,7 +264,7 @@ def test_readiness_environment_block_is_safe_and_backward_compatible(tmp_path, m
         for legacy in ("status", "message", "candidate_retrieval_ready", "governed_retrieval_ready", "store", "curated_corpus", "worker", "collection"):
             assert legacy in r                                                   # every pre-02A field is still present
         env = r["environment"]
-        assert env["environment"] == "staging" and env["database"]["kind"] == "sqlite" and len(env["database"]["fingerprint"]) == 64
+        assert env["environment"] == "staging" and env["database"]["kind"] == "postgresql" and len(env["database"]["fingerprint"]) == 64
         assert env["data_root"]["label"] == "knowledge-data-root" and len(env["data_root"]["short_hash"]) == 12
         cols = {c["collection_id"]: c for c in env["collections"]}
         assert cols[P.COLLECTION]["role"] == "governed" and cols[P.COLLECTION]["chunk_count"] > 0 and cols[P.COLLECTION]["persistent"]
