@@ -1,4 +1,4 @@
-"""Canonical Ask4Mo PRODUCT locale allow-list (P10B-W9.6, extended to eight locales in W9.7).
+"""Canonical Ask4Mo PRODUCT locale allow-list (P10B-W9.6; eight catalogue locales since W9.7; 06A: seven ACTIVE Candidate locales, Russian preserved but excluded).
 
 One source of truth for the supported INTERFACE / Mo-conversation language codes. Pydantic request
 schemas import ``AppLocale``; ``src.persistence`` re-exports ``SUPPORTED_LOCALE_CODES`` as

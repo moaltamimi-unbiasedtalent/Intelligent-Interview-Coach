@@ -1,7 +1,7 @@
 /**
  * Centralized, typed locale identifiers (Capstone P3.5 — internationalization).
  *
- * Single source of truth for the eight candidate-product UI languages (Russian added in W9.7). It deliberately
+ * Single source of truth for the CATALOGUE locales (eight, Russian added in W9.7 and preserved) and, below, the seven ACTIVE Candidate languages (06A). It deliberately
  * keeps FOUR DISTINCT concepts apart so they are never conflated:
  *
  *   1. Application locale (UI language)      — this file (`AppLocale`).

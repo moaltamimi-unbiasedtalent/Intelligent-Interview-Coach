@@ -85,7 +85,7 @@ async function mockPractice(page: Page, conversation: string) {
 // until Russian is re-activated by an owner decision (flip RUSSIAN_ACTIVE with the evidence). The catalogue itself is
 // still verified by tests/russian-locale.test.tsx, and the exclusion by e2e/language-selection-06a.spec.ts.
 const RUSSIAN_ACTIVE = false;
-test.skip(!RUSSIAN_ACTIVE, "Russian excluded from active Candidate selection (06A); catalogue preserved");
+test.skip(!RUSSIAN_ACTIVE, "Russian excluded from R1.0 (REQ-LANG-14)");
 
 test("Russian conversation: Practice offers NO Listen and NO live voice; Russian chrome and dictation intact", async ({ page }) => {
   await installFakeVoice(page);

@@ -115,7 +115,7 @@ const ROUTES: Array<{ path: string; key: string; role?: "heading" }> = [
 // until Russian is re-activated by an owner decision (flip RUSSIAN_ACTIVE with the evidence). The catalogue itself is
 // still verified by tests/russian-locale.test.tsx, and the exclusion by e2e/language-selection-06a.spec.ts.
 const RUSSIAN_ACTIVE = false;
-test.skip(!RUSSIAN_ACTIVE, "Russian excluded from active Candidate selection (06A); catalogue preserved");
+test.skip(!RUSSIAN_ACTIVE, "Russian excluded from R1.0 (REQ-LANG-14)");
 
 test("AB: Russian interface across the core journey (stable chrome Russian, <html lang=ru>)", async ({ page }) => {
   await mock(page);

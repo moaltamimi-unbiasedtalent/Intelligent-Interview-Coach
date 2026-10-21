@@ -1,6 +1,14 @@
 # 06A Evidence: locale audit, language boundaries and removal of Russian from active Candidate selection
 
-Branch `feat/06a-locale-boundaries`, based on `origin/main` 38eabbc. No language is production-qualified by this package; it records the truth and enforces the boundaries.
+Branch `feat/06a-locale-boundaries`, based on `origin/main` 38eabbc. ## 0. Position, stated plainly
+
+- **Seven selectable target languages:** en, de, fr, es, it, pt, nl (`ACTIVE_CANDIDATE_LOCALES`). Russian is preserved in code and catalogue but excluded from R1.0 and from active selection.
+- **ZERO production-qualified languages.** `docs/production/execution/language_readiness.json` records `production_qualified: false` for all seven; no language has passed all fourteen gates.
+- **Fourteen gates (LG-01..LG-14) are required per enabled locale before real-user activation. None of that enforcement is in 06A; it is package 06H.** `ACTIVE_CANDIDATE_LOCALES` only defines the selectable set and is not a qualification or activation claim.
+- **No qualified translations yet:** every non-English string (interface, Mo templates, emails, legal and trust text) is an unreviewed engineering translation. No native review (LG-11) or legal translation qualification (LG-10) has started.
+- **Russian tests are excluded from passing coverage** (section 4a, `06A_RUSSIAN_TESTS_EXCLUDED.md`).
+
+Branch `feat/06a-locale-boundaries`, based on `origin/main` 38eabbc. This package records the truth and enforces the boundaries; it qualifies nothing.
 
 ## 1. Requirements and gates
 
@@ -48,18 +56,30 @@ Language never selects geography (tests across account, onboarding, Opportunity,
 
 The full Playwright suite was not run (affected specs only); the full vitest and Python suites were.
 
+### 4a. Counts, with Russian-excluded tests reported separately
+
+| Suite | Passed | Skipped (other) | Russian-excluded skipped | Failed |
+|---|---|---|---|---|
+| Playwright (affected specs, 3 batches combined, 06A follow-up rerun of 3 specs: 20 passed, 14 skipped) | 49 + 103 (earlier batches) | 0 | 14 | 0 |
+| Vitest | 1087 | 0 | 0 | 0 |
+| Python, `/tmp/ci_venv`, full suite (before the doc follow-up) | 5170 | 43 (pre-existing) | 0 | 0 |
+| Python, repo `.venv`, full suite (before the doc follow-up) | 5172 | 41 (pre-existing) | 0 | 0 |
+| Python, both venvs, affected subset after the follow-up (language, w97, wave4, openapi, doc-consistency, positioning, baseline evaluators) | 133 each | 0 | 0 | 0 |
+
+The 14 Russian-excluded Playwright tests are named in `docs/production/execution/evidence/06A_RUSSIAN_TESTS_EXCLUDED.md`; they are skipped with the reason "Russian excluded from R1.0 (REQ-LANG-14)" and are NOT in any passed total above. The 49 Playwright passes in the first batch were obtained with those 14 skipped.
+
 ## 5. Regression evidence
 
 Full Python and vitest suites pass under both interpreters; speech languages (7), document/OCR languages (7), KB languages (7) and geography lists are unchanged (asserted).
 
 ## 6. SHA and CI
 
-Recorded in the delivery report and PR: CI runs only once a pull request exists (compare URL `https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/new/feat/06a-locale-boundaries`).
+Code SHA of the first push: f7b2e03 (on 82ef098). Follow-up commits (owner review corrections: stale-doc fixes, Russian-test visibility, this evidence) are listed in the delivery report with the final SHA. CI runs only once a pull request exists; none existed when this was written (compare URL `https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/new/feat/06a-locale-boundaries`). CI result: NOT AVAILABLE.
 
 ## 7. Remaining risks: what is NOT qualified
 
-No language has passed all gates. LG-01 and LG-14 are PASS; LG-02, LG-07, LG-12, LG-13 are ENGINEERING DRAFT; LG-03, LG-04, LG-09 NOT RUN; LG-05, LG-06, LG-08, LG-10, LG-11 NOT STARTED. All non-English text is engineering translation with no native or legal review. `ACTIVE_CANDIDATE_LOCALES` defines the selectable set only; the plan's rule that a locale is activated only when all fourteen gates pass is NOT yet enforced by code (it cannot be: no language passes), so the seven stay selectable as in the pre-06A product. Adding that enforcement (gate-driven activation) and the plan's "active locales have every gate PASS" test belong to the activation step after 06B to 06G evidence. The market mapping is not approved and not implemented. The Russian live-UI Playwright coverage is dormant, not run.
+No language has passed all gates. LG-01 and LG-14 are PASS; LG-02, LG-07, LG-12, LG-13 are ENGINEERING DRAFT; LG-03, LG-04, LG-09 NOT RUN; LG-05, LG-06, LG-08, LG-10, LG-11 NOT STARTED. All non-English text is engineering translation with no native or legal review. `ACTIVE_CANDIDATE_LOCALES` defines the selectable set only; the plan's rule that a locale is activated only when all fourteen gates pass is NOT yet enforced by code (it cannot be: no language passes), so the seven stay selectable as in the pre-06A product. Gate-driven activation (and a test that every enabled locale has all fourteen gates PASS) is package 06H. The market mapping is not approved and not implemented. The Russian live-UI Playwright coverage is dormant, not run.
 
 ## 8. Throughput record
 
-Start 2026-10-21 18:03 UTC (`date -u`); end of implementation 2026-10-21 18:46 UTC before push (wall clock as reported by the sandbox, including a long pause while the shared Python interpreter was repaired). Estimate 4 to 6 engineering days. Rework rounds (fix commits after first push): 0 at the time of writing. CI duration: see report.
+Start 2026-10-21 18:03 UTC (`date -u`); first push 2026-10-21 18:46 UTC (wall clock as reported by the sandbox, including a pause while the shared Python interpreter was repaired). Estimate 4 to 6 engineering days versus roughly 45 minutes of wall-clock for the first push. Rework rounds (commits after first push): 2 follow-ups, both owner-review corrections (documentation, Russian-test visibility and evidence), not defects in the first push; no CI-driven fix. CI duration: not available (no PR).

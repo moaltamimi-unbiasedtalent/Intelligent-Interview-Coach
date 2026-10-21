@@ -176,7 +176,8 @@ for (const theme of ["light", "dark"] as const) {
 }
 
 // ─── Cyrillic typography ───
-test.skip("Russian text renders in the existing Inter family (webfont), with the Cyrillic file preloaded", async ({ page }) => {
+test("Russian text renders in the existing Inter family (webfont), with the Cyrillic file preloaded", async ({ page }) => {
+  test.skip(true, "Russian excluded from R1.0 (REQ-LANG-14)");
   await mock(page, { ui: "ru" });
   await page.goto("/app");
   await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
@@ -305,7 +306,8 @@ test("section errors stay compact and the rest of the page stays usable (Progres
 
 // ─── Cyrillic visual QA across the main Russian surfaces (font, overflow, mobile, tutorial, error) ───
 for (const vp of [{ w: 1280, h: 800, n: "desktop" }, { w: 390, h: 780, n: "390px" }]) {
-  test.skip(`Russian surfaces (${vp.n}): Inter webfont for every text node, no horizontal overflow, controls not clipped`, async ({ page }) => {
+  test(`Russian surfaces (${vp.n}): Inter webfont for every text node, no horizontal overflow, controls not clipped`, async ({ page }) => {
+    test.skip(true, "Russian excluded from R1.0 (REQ-LANG-14)");
     await page.setViewportSize({ width: vp.w, height: vp.h });
     const failHistory = { on: false };
     await mock(page, { ui: "ru", failHistory });
