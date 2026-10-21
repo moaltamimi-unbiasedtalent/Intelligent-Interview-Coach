@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
-import type { KnowledgeReadiness, KnowledgeReadinessStatus, KnowledgeRetrievalResult } from "@/lib/admin/types";
+import type { KnowledgeEnvironment, KnowledgeReadiness, KnowledgeReadinessStatus, KnowledgeRetrievalResult } from "@/lib/admin/types";
 import { Panel, ResourceState, Stat, StatusLabel, apiMessage, btn, field, useAdminResource, ScrollRegion } from "./ui";
 
 /**
@@ -37,6 +37,17 @@ const FAILURE_TEXT: Record<string, string> = {
   no_text: "No text could be extracted",
 };
 
+const WORKER_IDENTITY_TEXT: Record<string, string> = {
+  match: "Matches the API (same data root, database and embedding settings)",
+  mismatch: "Does NOT match the API",
+  unrecorded: "A worker is running but has not recorded its environment",
+  no_worker: "No worker has reported, so it cannot be compared",
+  unknown: "Unknown",
+};
+const FIELD_TEXT: Record<string, string> = {
+  "data_root.short_hash": "data root", "database.fingerprint": "database", embedding: "embedding settings",
+};
+
 export function KnowledgeReadinessPanels({ canTest }: { canTest: boolean }) {
   const readiness = useAdminResource(() => api.admin.knowledgeReadiness(), []);
   const active = useAdminResource(() => api.admin.knowledgeActive(), []);
@@ -45,6 +56,8 @@ export function KnowledgeReadinessPanels({ canTest }: { canTest: boolean }) {
       <Panel title="Knowledge readiness">
         <ResourceState loaded={readiness}>{readiness.state === "ready" ? <ReadinessBody r={readiness.data} /> : null}</ResourceState>
       </Panel>
+      {readiness.state === "ready" && readiness.data.views ? <KnowledgeViews r={readiness.data} /> : null}
+      {readiness.state === "ready" && readiness.data.environment ? <EnvironmentIdentity env={readiness.data.environment} /> : null}
       <Panel title="Active knowledge">
         <ResourceState loaded={active}>
           {active.state === "ready" ? (
@@ -84,6 +97,92 @@ export function KnowledgeReadinessPanels({ canTest }: { canTest: boolean }) {
       </Panel>
       {canTest ? <RetrievalTest /> : null}
     </>
+  );
+}
+
+/** 02A: CURATED and GOVERNED knowledge are different things with different owners; they are never merged into one count. */
+function KnowledgeViews({ r }: { r: KnowledgeReadiness }) {
+  const v = r.views;
+  if (!v) return null;
+  return (
+    <div className="grid gap-3 md:grid-cols-2" data-testid="knowledge-views">
+      <Panel title="Curated knowledge base (read-only)">
+        <div className="grid gap-1 text-sm" data-testid="curated-view">
+          <p className="text-muted">{v.curated.description}</p>
+          <p>Status: <strong>{CURATED_TEXT[v.curated.status] ?? v.curated.status}</strong>{v.curated.chunk_count !== null ? `, ${v.curated.chunk_count} chunks` : ""}</p>
+          <p className="text-xs text-muted">Not managed from this page. Counts here are never added to the governed counts.</p>
+        </div>
+      </Panel>
+      <Panel title="Admin-governed knowledge">
+        <div className="grid gap-1 text-sm" data-testid="governed-view">
+          <p className="text-muted">{v.governed.description}</p>
+          <p>Status: <strong>{READINESS_TEXT[v.governed.status as KnowledgeReadinessStatus] ?? v.governed.status}</strong>; {v.governed.active_source_count ?? 0} active source(s){v.governed.chunk_count !== null ? `; ${v.governed.chunk_count} chunks in the store` : ""}</p>
+          <p className="text-xs text-muted">Managed on this page. Only active, indexed sources reach candidates.</p>
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
+function EnvironmentIdentity({ env }: { env: KnowledgeEnvironment }) {
+  const g = env.guard;
+  const wi = env.worker_identity;
+  return (
+    <Panel title="Environment identity">
+      <div className="grid gap-3" data-testid="env-identity">
+        <p className="flex flex-wrap items-center gap-2 text-sm" data-testid="env-guard">
+          <StatusLabel tone={g.serving_allowed && g.findings.every((f) => f.severity === "warn") ? "ok" : "warn"}>
+            {g.mode === "enforced" ? (g.serving_allowed ? "Serving allowed" : "Serving refused") : "Development: warnings only"}
+          </StatusLabel>
+          <span>{g.serving_allowed ? "The environment guard allows governed retrieval and uploads." : "The environment guard is refusing governed retrieval and uploads in this environment."}</span>
+        </p>
+        {g.findings.length ? (
+          <ul className="grid gap-1 text-sm" data-testid="env-findings">
+            {g.findings.map((f) => (
+              <li key={f.code} data-testid={`finding-${f.code}`}>
+                <StatusLabel tone="warn">{f.severity === "block" ? (g.enforced ? "Blocking" : "Would block when hosted") : "Warning"}</StatusLabel>{" "}
+                {f.message}{f.fields.length ? ` Differs: ${f.fields.map((x) => FIELD_TEXT[x] ?? x).join(", ")}.` : ""}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <dl className="grid gap-1 text-sm sm:grid-cols-[14rem_1fr]">
+          <dt className="text-muted">Environment</dt>
+          <dd data-testid="env-name">{env.environment}{env.hosted ? " (hosted: fails closed)" : " (development)"}</dd>
+          <dt className="text-muted">Registry database</dt>
+          <dd data-testid="env-db">{env.database.kind ?? "unknown"}, fingerprint {env.database.fingerprint ? env.database.fingerprint.slice(0, 12) : "unknown"}</dd>
+          <dt className="text-muted">Data root</dt>
+          <dd data-testid="env-root">{env.data_root.label}, id {env.data_root.short_hash ?? "unknown"}; private files {env.private_files.inside_data_root ? "inside the data root" : "outside the data root"}</dd>
+          <dt className="text-muted">Worker identity</dt>
+          <dd data-testid="env-worker">{WORKER_IDENTITY_TEXT[wi.status] ?? wi.status}{wi.mismatched_fields.length ? ` (${wi.mismatched_fields.map((x) => FIELD_TEXT[x] ?? x).join(", ")})` : ""}</dd>
+          <dt className="text-muted">Embedder</dt>
+          <dd data-testid="env-embedder">{env.embedder_identity.provider ?? "unknown"} / {env.embedder_identity.model ?? "unknown"}{env.embedder_identity.degraded ? " (degraded: fallback in use)" : ""}</dd>
+          <dt className="text-muted">Index manifest</dt>
+          <dd data-testid="env-manifest">{env.manifest.source_version_count} indexed version(s){env.manifest.checksum ? `, checksum ${env.manifest.checksum.slice(0, 12)}` : ""}{env.manifest.embedding_fields_known ? "" : "; embedding model fields not recorded"}</dd>
+          <dt className="text-muted">Last indexing</dt>
+          <dd data-testid="env-last-indexing">{env.last_indexing.result === "none" ? "No indexing job has run" : `${env.last_indexing.result}${env.last_indexing.at ? ` at ${env.last_indexing.at}` : ""}${env.last_indexing.failure_category ? ` (${env.last_indexing.failure_category.replace(/_/g, " ")})` : ""}`}</dd>
+        </dl>
+        <ScrollRegion label="Collections (scrollable table)">
+          <table className="w-full text-left text-sm" data-testid="env-collections">
+            <caption className="sr-only">Collections and chunk counts</caption>
+            <thead>
+              <tr className="text-xs text-muted">{["Collection", "View", "Chunks", "Persistent"].map((c) => <th key={c} scope="col" className="py-1 pr-4 font-medium">{c}</th>)}</tr>
+            </thead>
+            <tbody>
+              {env.collections.map((c) => (
+                <tr key={c.collection_id} className="border-t border-default">
+                  <th scope="row" className="py-1 pr-4 text-left font-medium">{c.collection_id}</th>
+                  <td className="py-1 pr-4">{c.role === "curated" ? "Curated" : "Governed"}</td>
+                  <td className="py-1 pr-4">{c.chunk_count ?? "unreadable"}</td>
+                  <td className="py-1 pr-4">{c.persistent ? "Yes" : "No"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </ScrollRegion>
+        <p className="text-xs text-muted">Identity shows kinds, short fingerprints and labels only. No connection string, credential or file path is ever shown.</p>
+      </div>
+    </Panel>
   );
 }
 

@@ -15,14 +15,19 @@ OVERFETCH = 4
 
 
 class GovernedKnowledgeRetriever:
-    def __init__(self, store, session_factory) -> None:
+    def __init__(self, store, session_factory, guard=None) -> None:
         self.store = store
         self._active = KnowledgeAdminService(session_factory, doc_store=None, jobs=None)
+        self._guard = guard          # 02A: KnowledgeServingGuard; in a hosted environment a blocking finding REFUSES instead of returning []
 
     def retrieve(self, query: str, top_k: int = 5, filters: dict | None = None) -> list[RetrievalResult]:
         query = (query or "").strip()
         if not query or top_k <= 0:
             return []
+        if self._guard is not None:
+            # Raises KnowledgeServingRefused (caught by the career service, which records the governed channel as DEGRADED): an environment
+            # that cannot serve governed knowledge never silently looks like "no matching evidence".
+            self._guard.require_serving()
         active = self._active.active_version_ids()
         if not active or self.store.count() == 0:
             return []

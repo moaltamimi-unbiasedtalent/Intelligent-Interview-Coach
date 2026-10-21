@@ -120,8 +120,15 @@ def main() -> None:   # pragma: no cover - process entrypoint
     from types import SimpleNamespace
 
     services.ai_admin = SimpleNamespace(session_factory=repo.session_factory)    # W10.7 evaluation job (no provider, no secret)
+    # 02A: the worker's knowledge environment identity is recorded through its heartbeat id (three short non-secret fingerprints), so the
+    # API can detect a worker pointed at a different data root, database or embedding configuration. No schema is involved.
+    from src.knowledge_admin.config import resolve_knowledge_runtime_config
+    from src.knowledge_admin.environment import build_identity, worker_id_for
+
+    copilot_config = load_copilot_config()
+    runtime = resolve_knowledge_runtime_config(load_config(), copilot_config, session_factory=repo.session_factory)
     worker = Worker(JobService(repo.session_factory), secret_store=get_secret_store(), poll_seconds=poll_seconds_from_env(),
-                    services=services)
+                    services=services, worker_id=worker_id_for(build_identity(runtime, copilot_config)))
     stop = threading.Event()
     for sig in (signal.SIGTERM, signal.SIGINT):
         signal.signal(sig, lambda *_: stop.set())

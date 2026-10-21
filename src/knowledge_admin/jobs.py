@@ -29,6 +29,10 @@ def _remove(p: VersionPayload, ctx: JobContext) -> None:
     R.run_remove(p.version_id, ctx)
 
 
+def _reindex(p: VersionPayload, ctx: JobContext) -> None:
+    R.run_reindex(p.version_id, ctx)
+
+
 def job_types() -> list[JobTypeDef]:
     common = dict(payload_model=VersionPayload, summarize=_summary, admin_enqueue=False, manual_retry=True,
                   dependencies=("knowledge", "vector_store"))
@@ -39,6 +43,10 @@ def job_types() -> list[JobTypeDef]:
         JobTypeDef(code=P.JOB_INDEX, label="Knowledge: index approved version", handler=_index, max_attempts=3, lease_seconds=300,
                    backoff_base_seconds=60, backoff_cap_seconds=600,
                    idempotency="Deterministic chunk ids (version id + chunk text) skipped when present; index record is an upsert.", **common),
+        JobTypeDef(code=P.JOB_REINDEX, label="Knowledge: rebuild missing chunks of an active or indexed version", handler=_reindex, max_attempts=3,
+                   lease_seconds=300, backoff_base_seconds=60, backoff_cap_seconds=600,
+                   idempotency="Deterministic chunk ids (version id + chunk text) skipped when present; the index record is an upsert; no state change.",
+                   **common),
         JobTypeDef(code=P.JOB_REMOVE, label="Knowledge: remove retired version from the index", handler=_remove, max_attempts=5,
                    lease_seconds=120, backoff_base_seconds=60, backoff_cap_seconds=900,
                    idempotency="Delete-by-version is idempotent; retrieval never depends on it succeeding.", **common),
