@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from src.locales import ACTIVE_CANDIDATE_LOCALES, DEFAULT_ACTIVE_LOCALE
+
 
 class HealthResponse(BaseModel):
     status: str = Field(examples=["ok"])
@@ -37,6 +39,10 @@ class CapabilitiesResponse(BaseModel):
     # present (the company-web path works from a user-supplied website; market data degrades
     # honestly without credentials).
     company_research_enabled: bool = False
+    # 06A (REQ-LANG-14): the server-defined, code-only list of locales a Candidate may select or start NEW work in.
+    # Backward compatible (additive). Excludes ru (preserved, not offered). NOT a per-language qualification claim.
+    active_candidate_locales: list[str] = Field(default_factory=lambda: list(ACTIVE_CANDIDATE_LOCALES))
+    default_locale: str = DEFAULT_ACTIVE_LOCALE
 
 
 class ErrorBody(BaseModel):

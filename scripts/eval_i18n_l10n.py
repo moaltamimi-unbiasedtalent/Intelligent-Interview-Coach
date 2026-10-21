@@ -10,6 +10,7 @@ invariants that can be checked from Python. Exits non-zero on any failure.
 from __future__ import annotations
 
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -119,9 +120,10 @@ def run() -> dict[str, tuple[bool, str]]:
         persist = me_a["interface_locale"] == "de" and me_a["conversation_language"] == "fr"
         isolate = me_b["interface_locale"] == "en" and me_b["conversation_language"] == "en"
         bad = c.patch("/api/v1/auth/preferences", json={"interface_locale": "zz"}, cookies=cookies_for(a)).status_code
+        ru_new = c.patch("/api/v1/auth/preferences", json={"conversation_language": "ru"}, cookies=cookies_for(a)).status_code
     check("preference_persistence", persist, "interface + conversation locale persist server-side")
     check("cross_user_locale_isolation", isolate, "one user's locale never affects another")
-    check("unsupported_locale_rejected_api", bad == 422, "unsupported locale rejected at the API (422)")
+    check("unsupported_locale_rejected_api", bad == 422 and ru_new == 422, "unsupported and excluded (ru) locales rejected for new selections at the API (422)")
 
     # 11) candidate-facing hardcoded-English guard (P10B-W9.6): the bounded frontend scanner must
     # report zero unexplained candidate-facing literals. Degrades to a soft pass only if node is
@@ -145,10 +147,18 @@ def run() -> dict[str, tuple[bool, str]]:
     # capability; adding an app locale must never enable them.
     from src.copilot.knowledge import governance
     from src.documents.ocr import TESSERACT_LANGS
-    from src.locales import DOCUMENT_LANGUAGE_CODES, SUPPORTED_LOCALE_CODES
+    from src.locales import ACTIVE_CANDIDATE_LOCALES, DOCUMENT_LANGUAGE_CODES, SUPPORTED_LOCALE_CODES
     from src.voice.realtime import SUPPORTED_REALTIME_LOCALES
-    app_ok = "ru" in SUPPORTED_LOCALE_CODES and len(SUPPORTED_LOCALE_CODES) == 8 and '"ru"' in locales_ts
-    check("russian_is_eighth_app_locale", app_ok, "ru in the canonical backend + frontend locale registries (8 locales)")
+    # 06A (REQ-LANG-14): Russian is EXCLUDED from active Candidate selection but PRESERVED (catalogue, tests, stored values).
+    fe_active = re.search(r"ACTIVE_CANDIDATE_LOCALES: readonly AppLocale\[\] = \[([^\]]*)\]", locales_ts)
+    fe_codes = tuple(re.findall(r'"(\w+)"', fe_active.group(1))) if fe_active else ()
+    preserved = "ru" in SUPPORTED_LOCALE_CODES and len(SUPPORTED_LOCALE_CODES) == 8 and '"ru"' in locales_ts
+    excluded = "ru" not in ACTIVE_CANDIDATE_LOCALES and len(ACTIVE_CANDIDATE_LOCALES) == 7 and "ru" not in fe_codes
+    parity = fe_codes == tuple(ACTIVE_CANDIDATE_LOCALES)
+    selectors = all("SELECTABLE_LOCALES.map" in read(f) for f in (
+        "components/i18n/LanguageMenu.tsx", "components/i18n/ConversationLanguageField.tsx", "components/settings/LanguageSettings.tsx"))
+    check("russian_excluded_and_preserved", preserved and excluded, "ru preserved in catalogue (8 stored/catalogue locales) and EXCLUDED from the 7 active Candidate locales")
+    check("active_locales_frontend_backend_parity", parity and selectors, "frontend ACTIVE_CANDIDATE_LOCALES == backend; every selector renders SELECTABLE_LOCALES only")
     dict_src = read("components/ui/DictationControl.tsx")
     tts_src = read("lib/speech/ttsLocales.ts")
     speech_ok = (
@@ -210,6 +220,8 @@ def run() -> dict[str, tuple[bool, str]]:
 
 
 SAFETY = {
+    "russian_excluded_and_preserved",
+    "active_locales_frontend_backend_parity",
     "language_geography_separation",
     "conversation_directive_injection_safe",
     "cross_user_locale_isolation",

@@ -110,7 +110,7 @@ def test_application_layer_passes_only_the_conversation_language():
 
 def test_api_schema_is_bounded_and_optional():
     assert ApiChatRequest(question="x").conversation_language is None
-    assert ApiChatRequest(question="x", conversation_language="ru").conversation_language == "ru"
-    for bad in ("xx", "ru-RU", "Klingon", "'; DROP --"):
+    assert ApiChatRequest(question="x", conversation_language="es").conversation_language == "es"
+    for bad in ("ru", "xx", "ru-RU", "Klingon", "'; DROP --"):
         with pytest.raises(ValidationError):
             ApiChatRequest(question="x", conversation_language=bad)
