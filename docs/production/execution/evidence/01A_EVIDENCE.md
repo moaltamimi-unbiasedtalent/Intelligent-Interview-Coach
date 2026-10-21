@@ -87,4 +87,4 @@ The existing security, grounding and agent-orchestration suites above pass uncha
 
 ## Throughput record
 
-Start: 2026-10-21T18:03:23Z. End: PENDING. Estimate 5 to 8 engineering days. Rework rounds (fix commits after first push): 0 so far (nothing pushed yet). CI duration: PENDING. Elapsed time was dominated by an environment fault (see incident note in the hand-off).
+Start 2026-10-21T18:03:23Z, end 2026-10-21T18:27Z (about 24 minutes wall-clock, including roughly 10 minutes lost to a shared-interpreter fault and the wait for its repair). Estimate 5 to 8 engineering days, so the package ran far under the estimate; the estimate covers owner review, threshold decisions and CI cycles that did not occur here. Rework rounds (fix commits after first push): 0 (one docs-only commit recording results and this record followed the first push). CI: not run, because CI only runs once a pull request exists; compare URL https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/new/feat/01a-injection-corpus. Pushed SHA before this record: d14e50f.
