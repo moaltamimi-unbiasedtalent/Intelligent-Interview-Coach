@@ -755,7 +755,7 @@ class KnowledgeGuardState(_Strict):
     serving_allowed: bool
     checked_at: str
     findings: list[KnowledgeGuardFinding]
-    embedding: KnowledgeGuardEmbedding | None = None      # 02B
+    embedding_check: KnowledgeGuardEmbedding | None = None      # 02B
 
 
 class KnowledgeIdentityDatabase(_Strict):

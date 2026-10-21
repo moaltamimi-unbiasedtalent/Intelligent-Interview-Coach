@@ -173,7 +173,7 @@ class GuardReport:
         return {"environment": self.environment, "enforced": self.enforced,
                 "mode": "enforced" if self.enforced else "development_warning", "serving_allowed": self.serving_allowed,
                 "checked_at": self.checked_at, "findings": [f.to_dict() for f in self.findings],
-                "embedding": {"checked": self.embedding_checked, "differing_fields": list(self.embedding_fields)}}
+                "embedding_check": {"checked": self.embedding_checked, "differing_fields": list(self.embedding_fields)}}
 
 
 def _finding(code: str, fields: tuple[str, ...] = ()) -> Finding:
