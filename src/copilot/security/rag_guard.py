@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 
 from src.copilot import constants
 from src.copilot.models import RetrievalResult
-from src.copilot.security.injection import InjectionScan, scan_text
+from src.copilot.security.injection import SURFACE_CHUNK, InjectionScan, scan_text
 
 __all__ = ["ScreenResult", "screen_results", "injection_risk_from_scan"]
 
@@ -69,7 +69,7 @@ def screen_results(results: list[RetrievalResult], *, quarantine_risk: float | N
     threshold = constants.INJECTION_QUARANTINE_RISK if quarantine_risk is None else quarantine_risk
     screen = ScreenResult()
     for result in results:
-        scan = scan_text(result.chunk.text)
+        scan = scan_text(result.chunk.text, surface=SURFACE_CHUNK)
         risk = injection_risk_from_scan(scan)
         scored = result.model_copy(update={"injection_risk": risk, "injection_indicators": list(scan.indicators)})
         if risk > threshold:

@@ -131,8 +131,9 @@ def summarize(rows: list[dict]) -> dict:
     return out
 
 
-def build_report(cases: list[dict]) -> dict:
-    rows = evaluate(cases)
+def build_report(cases: list[dict], *, dev_only: bool = False) -> dict:
+    """``dev_only`` evaluates the development split alone: the held-out cases are never run through a detector (used while designing detector changes)."""
+    rows = evaluate([c for c in cases if c["split"] == "dev"] if dev_only else cases)
     groups: dict[str, dict] = {}
     for key in ("category", "language", "surface", "split"):
         buckets: dict[str, list[dict]] = defaultdict(list)
@@ -142,8 +143,9 @@ def build_report(cases: list[dict]) -> dict:
     heldout = [r for r in rows if r["split"] == "heldout"]
     dev = [r for r in rows if r["split"] == "dev"]
     manifest = manifest_for(cases)
-    misses = sorted(r["id"] for r in rows if r["label"] == ATTACK and not r["any_flagged"])
-    false_positives = sorted(r["id"] for r in rows if r["label"] == BENIGN and r["any_flagged"])
+    # Per-case ids are emitted for the DEVELOPMENT split only: held-out misses and false positives are never listed (strict held-out discipline).
+    misses = sorted(r["id"] for r in dev if r["label"] == ATTACK and not r["any_flagged"])
+    false_positives = sorted(r["id"] for r in dev if r["label"] == BENIGN and r["any_flagged"])
     return {
         "schema_version": SCHEMA_VERSION,
         "thresholds_status": THRESHOLDS_NOT_APPROVED,
@@ -151,6 +153,8 @@ def build_report(cases: list[dict]) -> dict:
         "corpus_sha256": manifest["corpus_sha256"],
         "heldout_sha256": manifest["heldout_sha256"],
         "case_count": len(rows),
+        "dev_only_run": dev_only,
+        "error_analysis_scope": "dev split only (held-out per-case results are never emitted)",
         "detectors": {"input": "src.security.detect_injection", "chunk": "src.copilot.security.rag_guard.screen_results"},
         "definitions": {
             "flagged": "warn or block (input) / warned or quarantined (chunk)",
@@ -236,11 +240,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--write", action="store_true", help="write evaluations/injection/last_report.json (default: temp dir only)")
     parser.add_argument("--json", metavar="PATH", help="also write the JSON report here")
     parser.add_argument("--enforce", action="store_true", help="fail on owner-approved thresholds; fails closed when none exist")
+    parser.add_argument("--dev-only", action="store_true", help="run the development split only; the held-out split is not evaluated at all")
     parser.add_argument("--thresholds", metavar="PATH", default=str(THRESHOLDS_PATH))
     args = parser.parse_args(argv)
 
     cases = load_corpus()
-    report = build_report(cases)
+    report = build_report(cases, dev_only=args.dev_only)
     print(render(report))
 
     if args.write:
@@ -252,6 +257,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         Path(args.json).write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
+    if args.enforce and args.dev_only:
+        print("ENFORCE FAILED CLOSED: --enforce needs the held-out split; do not combine it with --dev-only.")
+        return 3
     if not args.enforce:
         print(f"{THRESHOLDS_NOT_APPROVED}: REPORT ONLY (exit 0). Owner-approved thresholds are pending (OD-GATE-THRESHOLDS).")
         return 0

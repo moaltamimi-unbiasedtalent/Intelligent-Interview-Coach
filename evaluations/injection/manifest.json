@@ -1,19 +1,29 @@
 {
-  "case_count": 165,
+  "case_count": 239,
   "corpus_file": "corpus.jsonl",
-  "corpus_sha256": "58d331dad98e1b2ffdef1c66cb0b070ddf8c528f31b7d03fd0d011c78ed53cf0",
+  "corpus_sha256": "6d391941dd23afcea826524548d8b47ae8daedb9ff878a5e972c4a728be7b4f8",
   "counts": {
     "dev": {
-      "attack": 82,
-      "benign": 40
+      "attack": 127,
+      "benign": 69
     },
     "heldout": {
       "attack": 22,
       "benign": 21
     }
   },
+  "dev_extension": {
+    "added_attacks": 45,
+    "added_benign": 29,
+    "added_cases": 74,
+    "ids": "INJ-D2-*",
+    "note": "Dev-split only (every id was checked against the split rule before adding). The held-out membership hash is unchanged from the original manifest.",
+    "wave": "W2-01A"
+  },
   "heldout_percent": 30,
   "heldout_sha256": "48842f0cff912caea4049c973ac5855d8ef024ac3b192712bac8f6ac1f93b78f",
+  "original_case_count": 165,
+  "original_corpus_sha256": "58d331dad98e1b2ffdef1c66cb0b070ddf8c528f31b7d03fd0d011c78ed53cf0",
   "schema_version": 1,
   "split_rule": "sha256(case id) mod 100 < 30 -> heldout, else dev",
   "synthetic_only": true,
