@@ -74,7 +74,7 @@ Full Python and vitest suites pass under both interpreters; speech languages (7)
 
 ## 6. SHA and CI
 
-Code SHA of the first push: f7b2e03 (on 82ef098). Follow-up commits (owner review corrections: stale-doc fixes, Russian-test visibility, this evidence) are listed in the delivery report with the final SHA. CI runs only once a pull request exists; none existed when this was written (compare URL `https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/new/feat/06a-locale-boundaries`). CI result: NOT AVAILABLE.
+Code SHA of the first push: f7b2e03 (on 82ef098); owner-review corrections commit: b29b860. Follow-up commits (owner review corrections: stale-doc fixes, Russian-test visibility, this evidence) are listed in the delivery report with the final SHA. CI runs only once a pull request exists; none existed when this was written (compare URL `https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/new/feat/06a-locale-boundaries`). CI result: NOT AVAILABLE.
 
 ## 7. Remaining risks: what is NOT qualified
 
