@@ -171,8 +171,8 @@ SHA and CI: see the final report (branch tip) and the throughput record below.
 
 ## 9. Throughput record
 
-- Start 2026-10-21T18:28Z (`date -u` at first command); implementation and verification complete 2026-10-21T18:57Z.
-- Estimate 5 to 8 engineering days (register); actual agent wall-clock about 30 minutes, including two full-suite runs per interpreter
+- Start 2026-10-21T18:28Z (`date -u` at first command); implementation and verification complete 2026-10-21T18:54Z (first push 18:53Z).
+- Estimate 5 to 8 engineering days (register); actual agent wall-clock about 26 minutes, including two full-suite runs per interpreter
   budget (one aborted run, one with two real failures, one clean run per venv). The estimate covers human review and integration time.
-- Rework rounds (fix commits after first push): 0 (the first push is the verified tree; the two test corrections preceded it).
+- Rework rounds (fix commits after first push): 0 code fixes; one evidence-only timestamp correction commit (the two test corrections preceded the first push).
 - CI duration: not available (CI runs only once a PR exists; none was opened by this agent).
