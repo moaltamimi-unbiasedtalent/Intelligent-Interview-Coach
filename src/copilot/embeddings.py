@@ -73,6 +73,9 @@ class EmbeddingProviderError(Exception):
     """A semantic provider call failed or returned unusable vectors. The provider's own message is NEVER carried (it can contain request
     details); callers see only a fixed code. There is no fallback to another embedder."""
 
+    #: For ``budget_refused``: the governor's own stable, secret-free reason code (else ``None``).
+    reason: str | None = None
+
     def __init__(self, code: str = "provider_error") -> None:
         super().__init__(f"embedding provider error: {code}")
         self.code = code
@@ -143,12 +146,12 @@ def resolve_embedding_plan(config: CopilotConfig, *, environment: str | None = N
     env = current_environment(environment)
     hosted = env != "development"
     configured = (getattr(config, "embedding_provider", None) or "auto").lower()
-    known = configured in ("auto", "openai", "local")
+    known = configured in ("auto", "openai", "local", "openrouter")
     dedicated = _has_key(getattr(config, "embedding_api_key", None))
     any_key = _has_key(getattr(config, "embedding_key", None))
     if configured == "local":
         semantic = False
-    elif configured == "openai":
+    elif configured in ("openai", "openrouter"):
         semantic = True
     else:                                    # auto (or an unrecognised value, treated as auto in development): semantic only with a DEDICATED key
         semantic = dedicated
@@ -164,7 +167,23 @@ def resolve_embedding_plan(config: CopilotConfig, *, environment: str | None = N
 
     if not known and hosted:
         problem("embedding_provider_unknown", "provider")
-    if semantic:
+    if semantic and configured == "openrouter":
+        # 02B OpenRouter adapter: the model id comes from configuration ONLY (an OpenRouter id is "vendor/model"; the OpenAI-style default is not one),
+        # the key is the OpenRouter key, the host must be the governed OpenRouter host and the dimensions must be provable. Hard errors in EVERY environment.
+        from src.copilot.openrouter_embeddings import base_url_problem, plan_dimensions
+
+        provider, model = "openrouter", str(getattr(config, "embedding_model", None) or "")
+        version = getattr(config, "embedding_version", None) or constants.OPENROUTER_EMBEDDING_VERSION
+        if "/" not in model:
+            problem("embedding_model_not_configured", "model")
+        if not _has_key(getattr(config, "api_key", None)):
+            problem("semantic_credentials_missing", "credentials")
+        if base_url_problem(getattr(config, "base_url", None)):
+            problem("embedding_base_url_invalid", "base_url")
+        dims, _send, dim_problem = plan_dimensions(model, getattr(config, "embedding_dimensions", None))
+        if dim_problem:
+            problem(dim_problem, "dimensions")
+    elif semantic:
         provider, model = "openai", getattr(config, "embedding_model", None) or constants.DEFAULT_EMBEDDING_MODEL
         version = getattr(config, "embedding_version", None) or constants.OPENAI_EMBEDDING_VERSION
         dims = getattr(config, "embedding_dimensions", None) or constants.KNOWN_EMBEDDING_DIMENSIONS.get(str(model))
@@ -352,7 +371,7 @@ def embedding_status(config: CopilotConfig, *, environment: str | None = None) -
         "provider": plan.provider,
         "configured_provider": plan.configured_provider,
         "model": plan.model if plan.semantic else "local-hash-v1",
-        "base_url": config.embedding_base_url if plan.semantic else None,
+        "base_url": (config.base_url if plan.provider == "openrouter" else config.embedding_base_url) if plan.semantic else None,
         "quality_mode": plan.quality_mode,
         "version": plan.version,
         "dimensions": plan.dimensions,
@@ -374,6 +393,8 @@ def build_embedder(
 
     - ``"local"``: the offline hashing embedder (development only; refused when hosted).
     - ``"openai"``: the OpenAI-compatible embedder (raises if no key).
+    - ``"openrouter"``: OpenRouter's embeddings endpoint (``COPILOT_EMBEDDING_MODEL`` is a required ``vendor/model`` id, the key is
+      ``OPENROUTER_API_KEY``); every request goes through the 05C governor chokepoint and is refused without an open governor.
     - ``"auto"`` (default): OpenAI only when a DEDICATED embedding key
       (``COPILOT_EMBEDDING_API_KEY``) is set, otherwise the local embedder in
       development. The chat ``OPENROUTER_API_KEY`` is NOT used as an embedding
@@ -385,6 +406,10 @@ def build_embedder(
     plan = resolve_embedding_plan(config, environment=environment)
     if plan.problems:
         raise EmbeddingConfigurationError(list(plan.problems), environment=plan.environment, fields=plan.problem_fields)
+    if plan.provider == "openrouter":
+        from src.copilot.openrouter_embeddings import OpenRouterEmbedder
+
+        return OpenRouterEmbedder(config)
     if plan.semantic:
         return OpenAIEmbedder(config, embeddings_cls=embeddings_cls)
     return LocalHashEmbedder()
