@@ -187,10 +187,13 @@ STORY_EVIDENCE_NONE = "none"
 
 # --- Teams / Workspaces & explicit sharing (Capstone P6.5) --------------------
 # Workspace role lives on the MEMBERSHIP, never on the User (orthogonal to platform
-# role and to product entitlement). Bounded to two roles by design.
+# role and to product entitlement). Bounded to three roles by design (04B): owner (full control, one
+# primary owner), admin (invite and remove plain members, rename; never delete, transfer or change roles)
+# and member (read what was explicitly shared). Stored as a plain string, so no schema change.
 WORKSPACE_ROLE_OWNER = "workspace_owner"
+WORKSPACE_ROLE_ADMIN = "workspace_admin"
 WORKSPACE_ROLE_MEMBER = "workspace_member"
-WORKSPACE_ROLES = (WORKSPACE_ROLE_OWNER, WORKSPACE_ROLE_MEMBER)
+WORKSPACE_ROLES = (WORKSPACE_ROLE_OWNER, WORKSPACE_ROLE_ADMIN, WORKSPACE_ROLE_MEMBER)
 # Workspace lifecycle.
 WORKSPACE_STATUS_ACTIVE = "active"
 WORKSPACE_STATUS_DEACTIVATED = "deactivated"

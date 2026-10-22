@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from src.locales import SUPPORTED_LOCALE_CODES
 
 BRAND_LINE = "Ask More. Be More."
-KINDS = ("email_verification", "password_reset", "account_notice", "admin_test")
+KINDS = ("email_verification", "password_reset", "account_notice", "admin_test", "workspace_invitation")
 
 
 @dataclass(frozen=True)
@@ -75,6 +75,22 @@ _T: dict[str, dict[str, dict[str, str]]] = {
         "admin_test": {"subject": "Проверка доставки почты Ask4Mo", "body": "Это тестовое сообщение, запрошенное администратором Ask4Mo для проверки доставки почты. Никаких действий не требуется."},
     },
 }
+
+# 04B: the workspace invitation. Deliberately generic: it never interpolates the workspace name or the inviter's name (both are
+# user-authored text, so they could carry a phishing message); the invited person sees the workspace name only after signing in
+# with the invited address. {link} and {expiry} are the only placeholders.
+_WORKSPACE_INVITATION: dict[str, dict[str, str]] = {
+    "en": {"subject": "You have been invited to an Ask4Mo workspace", "body": "You have been invited to join a workspace on Ask4Mo. Joining shares nothing: only items you explicitly choose to share are ever visible to other members.\n\nReview the invitation:\n{link}\n\nThis invitation can be used once and expires in {expiry}. Sign in with this email address to accept or decline. If you did not expect it, ignore this email."},
+    "de": {"subject": "Du wurdest zu einem Ask4Mo-Arbeitsbereich eingeladen", "body": "Du wurdest eingeladen, einem Arbeitsbereich bei Ask4Mo beizutreten. Der Beitritt teilt nichts: Andere Mitglieder sehen nur Inhalte, die du ausdrücklich teilst.\n\nEinladung ansehen:\n{link}\n\nDie Einladung kann einmal verwendet werden und läuft in {expiry} ab. Melde dich mit dieser E-Mail-Adresse an, um sie anzunehmen oder abzulehnen. Wenn du sie nicht erwartet hast, ignoriere diese E-Mail."},
+    "fr": {"subject": "Vous avez été invité à un espace de travail Ask4Mo", "body": "Vous avez été invité à rejoindre un espace de travail sur Ask4Mo. Rejoindre ne partage rien : les autres membres ne voient que les éléments que vous choisissez explicitement de partager.\n\nConsulter l'invitation :\n{link}\n\nCette invitation n'est utilisable qu'une fois et expire dans {expiry}. Connectez-vous avec cette adresse e-mail pour l'accepter ou la refuser. Si vous ne l'attendiez pas, ignorez cet e-mail."},
+    "es": {"subject": "Te han invitado a un espacio de trabajo de Ask4Mo", "body": "Te han invitado a unirte a un espacio de trabajo en Ask4Mo. Unirte no comparte nada: los demás miembros solo ven los elementos que decidas compartir de forma explícita.\n\nRevisa la invitación:\n{link}\n\nLa invitación se puede usar una vez y caduca en {expiry}. Inicia sesión con este correo para aceptarla o rechazarla. Si no la esperabas, ignora este mensaje."},
+    "it": {"subject": "Sei stato invitato a uno spazio di lavoro Ask4Mo", "body": "Sei stato invitato a unirti a uno spazio di lavoro su Ask4Mo. Unirti non condivide nulla: gli altri membri vedono solo gli elementi che scegli esplicitamente di condividere.\n\nConsulta l'invito:\n{link}\n\nL'invito può essere usato una sola volta e scade tra {expiry}. Accedi con questo indirizzo email per accettarlo o rifiutarlo. Se non te lo aspettavi, ignora questa email."},
+    "pt": {"subject": "Foi convidado para um espaço de trabalho do Ask4Mo", "body": "Foi convidado para se juntar a um espaço de trabalho no Ask4Mo. Juntar-se não partilha nada: os outros membros só veem os itens que escolher partilhar explicitamente.\n\nVeja o convite:\n{link}\n\nO convite pode ser usado uma vez e expira em {expiry}. Inicie sessão com este e-mail para aceitar ou recusar. Se não o esperava, ignore este e-mail."},
+    "nl": {"subject": "Je bent uitgenodigd voor een Ask4Mo-werkruimte", "body": "Je bent uitgenodigd om lid te worden van een werkruimte op Ask4Mo. Lid worden deelt niets: andere leden zien alleen items die jij uitdrukkelijk kiest te delen.\n\nBekijk de uitnodiging:\n{link}\n\nDe uitnodiging kan één keer worden gebruikt en verloopt over {expiry}. Log in met dit e-mailadres om te accepteren of te weigeren. Als je dit niet verwachtte, negeer deze e-mail dan."},
+    "ru": {"subject": "Вас пригласили в рабочее пространство Ask4Mo", "body": "Вас пригласили присоединиться к рабочему пространству в Ask4Mo. Присоединение ничего не раскрывает: другие участники видят только то, чем вы решили поделиться явно.\n\nПосмотреть приглашение:\n{link}\n\nПриглашение можно использовать один раз, оно действует {expiry}. Войдите с этим адресом электронной почты, чтобы принять или отклонить его. Если вы его не ждали, проигнорируйте это письмо."},
+}
+for _loc, _texts in _WORKSPACE_INVITATION.items():
+    _T[_loc]["workspace_invitation"] = _texts
 
 # Localised duration phrases for the two token lifetimes (hours / minutes). Anything else falls back to hours.
 _HOURS = {

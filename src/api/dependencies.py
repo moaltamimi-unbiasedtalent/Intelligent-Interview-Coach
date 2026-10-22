@@ -567,9 +567,14 @@ def get_sharing_service(
 
     def _story_load(resource_id: str, owner_user_id: int):
         try:
-            return story_repo.get(user_id=owner_user_id, story_id=int(resource_id))
+            story = story_repo.get(user_id=owner_user_id, story_id=int(resource_id))
         except (ValueError, TypeError):
             return None
+        if story is None:
+            return None
+        # 04B: a fixed allow-list VIEW projection. Internal evidence links (claim ids) and everything else stay with the owner.
+        keys = ("id", "title", "situation", "task", "action", "result", "competencies", "status", "updated_at")
+        return {k: story.get(k) for k in keys}
 
     from src.application.history_access import HistoryAccessPolicy
     from src.entitlements import EntitlementService

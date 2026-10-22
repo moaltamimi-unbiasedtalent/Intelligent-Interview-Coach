@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, func, select, update
 
 from src import persistence as P
 
@@ -100,31 +100,33 @@ class AccountDeletionService:
             select(P.Workspace).where(P.Workspace.owner_user_id == user_id)
         ).scalars().all()
         for ws in owned:
-            successor = s.execute(
+            # Successor preference (04B): an active workspace ADMIN first (they already hold management trust), then the oldest
+            # other active member. Never an arbitrary account, never an inactive membership.
+            candidates = s.execute(
                 select(P.WorkspaceMembership)
                 .where(P.WorkspaceMembership.workspace_id == ws.id,
                        P.WorkspaceMembership.user_id != user_id,
                        P.WorkspaceMembership.status == P.MEMBERSHIP_STATUS_ACTIVE)
-                .order_by(P.WorkspaceMembership.created_at.asc())
-            ).scalars().first()
+                .order_by(P.WorkspaceMembership.created_at.asc(), P.WorkspaceMembership.id.asc())
+            ).scalars().all()
+            successor = next((m for m in candidates if m.role == P.WORKSPACE_ROLE_ADMIN), None) \
+                or (candidates[0] if candidates else None)
             if successor is not None:
                 ws.owner_user_id = successor.user_id
                 successor.role = P.WORKSPACE_ROLE_OWNER
                 summary.workspaces_transferred += 1
+                if self._audit is not None:
+                    try:
+                        self._audit.record(event_type="workspace.ownership_transferred", actor_user_id=None,
+                                           target_type="workspace", target_id=str(ws.id),
+                                           context={"new_owner": str(successor.user_id), "reason": "account_deleted"})
+                    except Exception:  # noqa: BLE001 - audit is best effort here; deletion must not stall
+                        pass
             else:
-                # No successor → delete the workspace and its dependents (explicit for SQLite).
-                for model, col in (
-                    (P.ShareGrant, P.ShareGrant.workspace_id),
-                    (P.WorkspaceInvitation, P.WorkspaceInvitation.workspace_id),
-                    (P.WorkspaceMembership, P.WorkspaceMembership.workspace_id),
-                    (P.Subscription, P.Subscription.workspace_id),   # W10.4: the workspace's own plan assignments
-                ):
-                    for obj in s.execute(select(model).where(col == ws.id)).scalars().all():
-                        s.delete(obj)
-                from src.billing.service import delete_billing_for
+                # No successor: the workspace and every dependent row go (shared helper: one deletion path for owner and account).
+                from src.workspace_repository import purge_workspace
 
-                delete_billing_for(s, workspace_id=ws.id)         # W10.5: the workspace's MOCK billing mirrors
-                s.delete(ws)
+                purge_workspace(s, ws.id)
                 summary.workspaces_deleted += 1
 
     def _delete_where(self, s, model, condition, summary: DeletionSummary, label: str) -> None:
@@ -179,6 +181,13 @@ class AccountDeletionService:
             self._delete_where(s, P.WorkspaceInvitation,
                                P.WorkspaceInvitation.inviter_user_id == user_id,
                                summary, "invitations_sent")
+            # Invitations still addressed to the deleted account's e-mail address would keep that address (PII) and could be
+            # answered by whoever later registers it: remove them (04B).
+            deleted_email = s.execute(select(P.User.email).where(P.User.id == user_id)).scalar()
+            if deleted_email:
+                self._delete_where(s, P.WorkspaceInvitation,
+                                   func.lower(P.WorkspaceInvitation.email) == deleted_email.strip().lower(),
+                                   summary, "invitations_received")
             # Invitations the user ACCEPTED: anonymize the accepted_user_id (SET NULL semantics).
             s.execute(update(P.WorkspaceInvitation)
                       .where(P.WorkspaceInvitation.accepted_user_id == user_id)
