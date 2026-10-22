@@ -1,5 +1,9 @@
 import { config } from "../config";
 import { ApiError, apiErrorFromBody, parseRetryAfter, unreachableError } from "./errors";
+import {
+  isAdminReport, isReportRegistry, isPreviewResult, isSavedList, isSavedReport, isValidateResult, definitionQuery,
+  type BuilderDefinition, type ExportFormat, type PreviewResult, type ReportFamily, type ReportRegistry, type SavedList, type SavedReport, type ValidateResult,
+} from "@/lib/admin/reportBuilder";
 import { runWithRetry } from "./retry";
 import type {
   AIActivation,
@@ -282,6 +286,66 @@ function qs(params: Record<string, unknown>): string {
   }
   const text = sp.toString();
   return text ? `?${text}` : "";
+}
+
+
+/** A successful response with the wrong shape is an explicit error, never a crash and never a silent empty success (the Admin error state renders it). */
+function malformed(what: string): ApiError {
+  return new ApiError({ kind: "unknown", status: null, code: "malformed_response", message: `The ${what} response was not in the expected form.` });
+}
+
+async function checked<T>(what: string, p: Promise<unknown>, guard: (v: unknown) => v is T): Promise<T> {
+  const v = await p;
+  if (!guard(v)) throw malformed(what);
+  return v;
+}
+
+/** A binary download (report export). POST, never retried. A non-2xx response never yields a file; a 2xx without the expected content type is refused too. */
+async function download(path: string, body: unknown, expectedType: string): Promise<{ blob: Blob; filename: string | null; rows: number | null }> {
+  let res: Response;
+  try {
+    res = await fetch(`${config.apiBaseUrl}${path}`, {
+      method: "POST", credentials: "include",
+      headers: { Accept: expectedType, "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify(body),
+    });
+  } catch (cause) {
+    if (cause instanceof DOMException && cause.name === "AbortError") throw cause;
+    throw unreachableError(browserIsOnline());
+  }
+  if (!res.ok) {
+    const isJson = res.headers.get("content-type")?.includes("application/json");
+    const payload = isJson ? await res.json().catch(() => undefined) : undefined;
+    throw apiErrorFromBody(res.status, payload, res.headers.get(REQUEST_ID_HEADER), parseRetryAfter(res.headers.get(RETRY_AFTER_HEADER)));
+  }
+  if (!(res.headers.get("content-type") ?? "").toLowerCase().startsWith(expectedType)) throw malformed("export");
+  const blob = await res.blob();
+  const disp = res.headers.get("content-disposition") ?? "";
+  const m = /filename="([A-Za-z0-9._-]{1,120})"/.exec(disp);
+  const rows = Number(res.headers.get("x-export-rows"));
+  return { blob, filename: m ? m[1] : null, rows: Number.isInteger(rows) && res.headers.get("x-export-rows") !== null ? rows : null };
+}
+
+const EXPORT_TYPES: Record<ExportFormat, string> = { csv: "text/csv", json: "application/json", pdf: "application/pdf" };
+
+/** 03E2: the governed report builder, one family per existing read permission (standard, commercial). */
+function reportBuilder(family: ReportFamily) {
+  const base = family === "commercial" ? "/admin/report-builder/commercial" : "/admin/report-builder";
+  return {
+    registry: (opts?: RequestOptions) => checked<ReportRegistry>("report registry", request<unknown>("GET", `${base}/registry`, opts), isReportRegistry),
+    validate: (d: BuilderDefinition, opts?: RequestOptions) => checked<ValidateResult>("validation", request<unknown>("GET", `${base}/validate${definitionQuery(d)}`, opts), isValidateResult),
+    preview: (d: BuilderDefinition, opts?: RequestOptions) => checked<PreviewResult>("preview", request<unknown>("GET", `${base}/preview${definitionQuery(d)}`, opts), isPreviewResult),
+    saved: (opts?: RequestOptions) => checked<SavedList>("saved reports", request<unknown>("GET", `${base}/saved`, opts), isSavedList),
+    savedPreview: (id: number, opts?: RequestOptions) => checked<PreviewResult>("preview", request<unknown>("GET", `${base}/saved/${id}/preview`, opts), isPreviewResult),
+    create: (body: { name: string; definition: BuilderDefinition; shared: boolean }, opts?: RequestOptions) =>
+      checked<SavedReport>("saved report", request<unknown>("POST", `${base}/saved`, { body, ...opts }), isSavedReport),
+    update: (id: number, body: { name: string; definition: BuilderDefinition; shared: boolean; expected_revision: number }, opts?: RequestOptions) =>
+      checked<SavedReport>("saved report", request<unknown>("PUT", `${base}/saved/${id}`, { body, ...opts }), isSavedReport),
+    remove: (id: number, expectedRevision: number, opts?: RequestOptions) =>
+      request<void>("DELETE", `${base}/saved/${id}?expected_revision=${expectedRevision}`, opts),
+    /** The file is returned only on a 2xx. A refused export or a 503 (audit could not be written) throws and yields no file. */
+    exportReport: (format: ExportFormat, definition: BuilderDefinition) => download(`${base}/export`, { format, definition }, EXPORT_TYPES[format]),
+  };
 }
 
 /** Typed FastAPI client. Add new typed methods here rather than calling fetch ad hoc. */
@@ -832,7 +896,8 @@ export const api = {
       request<BillingApproval>("POST", `/admin/billing/refunds/${encodeURIComponent(id)}/${approve ? "approve" : "reject"}`, opts),
     // W10.12 reporting (GET only; aggregates; the period is one of a fixed set)
     report: (kind: "product" | "quality" | "operations" | "ai-economics" | "commercial", period: string, opts?: RequestOptions) =>
-      request<AdminReport>("GET", `/admin/reports/${kind}?period=${encodeURIComponent(period)}`, opts),
+      checked<AdminReport>("report", request<unknown>("GET", `/admin/reports/${kind}?period=${encodeURIComponent(period)}`, opts), isAdminReport),
+    reportBuilder: { standard: reportBuilder("standard"), commercial: reportBuilder("commercial") },
     // W10.11 durable pause and feature flags (the environment is the SERVER's own; no request can choose it)
     pause: (opts?: RequestOptions) => request<PauseOverview>("GET", "/admin/pause", opts),
     setPause: (capability: string, paused: boolean, expectedRevision: number, reason: string, opts?: RequestOptions) =>
