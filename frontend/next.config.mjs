@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // 04D: the real-stack journey builds with a different NEXT_PUBLIC_API_BASE_URL into its OWN directory so it never overwrites the default build the mocked suite uses.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   // The frontend is a pure client of the FastAPI backend; no server secrets here.
   env: {},
   // 03A: platform-wide Review and Diagnostics moved under /admin. The old URLs keep working (bookmarks, the Command Center's server-provided links).
