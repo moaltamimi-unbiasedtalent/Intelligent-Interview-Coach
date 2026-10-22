@@ -9,7 +9,7 @@ Recorded 2026-10-22 by the Technical Programme Lead after the Wave 2 reconciliat
 - Alembic: one head, `0043_story_bank_completion`; chain 0040, 0041 (03E1), 0042 (04E), 0043 (04A), verified with the repository head helper.
 - Validators on `main`: `reconcile_issues.py check` passes (452 items, 0 unmapped, history preserved); `execution_packages.py check` passes (45 packages, every R1.0 fix/verify item in exactly one package, acyclic).
 - Key merged files were confirmed present (prompt assets, knowledge identity and manifests, clamd client, language activation, command-center, report builder, plans admin, user guards, invitations, stories routes).
-- CI on the `main` push for `e4aed13` was still running when this was written (4 of 9 check runs complete and green, the rest in progress); it is re-read before the owner approves this plan, and the last PR head with 12 of 12 successful checks remains the stronger evidence.
+- CI on the `main` push for `e4aed13` (re-read 2026-10-22): all 10 check runs completed with success (four Python shards, Python tests & checks, evaluators and guards, evaluation extras, static guards, frontend tests and build, legacy live component). A push run lists fewer checks than a PR run (no Playwright or Streamlit smoke entry), so the final PR heads with 12 of 12 successful checks remain the stronger evidence for those two.
 - Known issue, unchanged: `test_knowledge_persistence_02a_identity::test_no_forbidden_files_were_touched_and_no_migration_in_part_one` is a branch-relative test that fails on any local tree containing later merges and passes in CI; a follow-up task to make it merge-safe is open.
 
 ## 2. Reconciliation of the 45 packages
