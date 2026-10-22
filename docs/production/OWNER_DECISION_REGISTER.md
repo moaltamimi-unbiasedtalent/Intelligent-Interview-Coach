@@ -1,6 +1,6 @@
 # Owner Decision Register (Production Roadmap V2.2, corrected)
 
-**Status:** updated 2026-10-21 at the Phase 00 sign-off. **OD-SCOPE-01 is resolved: S1, the full originally agreed R1.0 scope, is OWNER-APPROVED.** Only decisions that are genuinely still awaiting the owner are listed as open. Decisions the owner has already made (languages, Russian exclusion, R1.3 languages, release train, free invitation-only beta, English-only Admin, Basic/Premium as free beta tiers, the owner-requested capabilities and the five reviewer findings) are **requirements**, not open decisions, and are no longer listed here. Earlier open items that were resolved by the recovered text: OD-LANG-01, OD-LANG-05, OD-LANG-06, OD-REQ-TEXT, OD-REVIEW-FINDINGS, OD-RELEASE-TRAIN.
+**Status:** updated 2026-10-22 after Wave 2 (new decisions raised while building are in their own table below); first written 2026-10-21 at the Phase 00 sign-off. **OD-SCOPE-01 is resolved: S1, the full originally agreed R1.0 scope, is OWNER-APPROVED.** Only decisions that are genuinely still awaiting the owner are listed as open. Decisions the owner has already made (languages, Russian exclusion, R1.3 languages, release train, free invitation-only beta, English-only Admin, Basic/Premium as free beta tiers, the owner-requested capabilities and the five reviewer findings) are **requirements**, not open decisions, and are no longer listed here. Earlier open items that were resolved by the recovered text: OD-LANG-01, OD-LANG-05, OD-LANG-06, OD-REQ-TEXT, OD-REVIEW-FINDINGS, OD-RELEASE-TRAIN.
 
 ## Owner-approved decisions (Phase 00 sign-off, 2026-10-21)
 
@@ -38,6 +38,29 @@
 | OD-PLAN-LIMITS | Which limits and allowances Basic and Premium carry during the free beta | Server-enforced entitlements are approved in direction. Open: the concrete values (history window, model profile access, usage allowances) for each free beta tier and whether any is enforced from day one; enabling an enforcement flips a gate constant that the reconciliation checks. | R1.0 | AWAITING |
 | OD-US-CONTENT | May US-sourced content appear at all, as clearly labelled non-EU general information? | The owner approved that no unqualified US content is used as factual EU labour-market evidence. Open: whether US sources (O*NET, BLS) stay available only as clearly labelled non-EU general information, or are removed from Candidate retrieval entirely in the beta. Implemented by package 02D and REQ-COV-02. | R1.0 | AWAITING |
 | OD-RECLASS | Item-level disposition of the ten proposed reclassifications | The owner retains every R1.0 fix and verify obligation until an item-level disposition is explicitly approved; the ten-item proposal (BL-5, BL-6, BL-6.1 to BL-6.5, BL-9, BL-12, W12.4E-12) is NOT applied. Each approval must distinguish a genuine later-release dependency from an R1.0 product cut (R1_SCOPE_RECLASSIFICATION_PROPOSAL.md). | R1.0 | AWAITING |
+
+## Decisions raised while building Waves 1 and 2 (2026-10-22; all awaiting the owner)
+
+| ID | Decision | Detail | Release | Type |
+|---|---|---|---|---|
+| OD-INVITE-EMAIL | Send invitation emails? | 04E delivers copy-the-link only. An email needs eight locale templates, the guarded email service and a provider decision. | R1.0 | AWAITING |
+| OD-INVITE-ISSUERS | Who may issue and revoke invitations | Only the `platform_admin` preset holds the permission (`platform.users.manage`); a delegated role needs a deliberate decision, not a new permission by default. | R1.0 | AWAITING |
+| OD-PLAN-ACTIVATION-APPROVAL | Second approver for plan activation and bulk assignment | No existing rule requires one (two-person approval exists for price changes, refunds and role changes). | R1.0 | AWAITING |
+| OD-STAGING-LANGUAGES | How to test a hosted stack while no language is qualified | 06H fails closed: staging and production accept no registration, chat or interview until a language has a complete approved record. Options: use a development-class API environment for synthetic testing, or qualify one language first. | R1.0 | AWAITING |
+| OD-APPROVED-UNTIL | Is `approved_until` mandatory, and must the release SHA descend from the deployed build | 06H leaves both optional; 08A must compare the record's SHA with the real release SHA. | R1.0 | AWAITING |
+| OD-SCANNER-ALERT | Own alert category for a scanner outage | The outage alert reuses `job_failed`, so its title reads "A background job failed terminally". A correct title needs a new category and a migration. | R1.0 | AWAITING |
+| OD-FAKE-SCANNER-GUARD | Make fake-scanner records a blocking serving-guard finding in hosted environments | Detected and reported in readiness and approval is blocked; making serving blocking needs the 02A hosted test fixtures updated. | R1.0 | AWAITING |
+| OD-WS-ADMIN-ENROL | Platform Admin enrolling an ordinary account into a Workspace | Staff accounts can no longer be enrolled; an operator can still enrol an ordinary account, which then reads what members share. Remove admin enrolment or require the owner's consent. | R1.0 | AWAITING |
+| OD-STORY-PREPARE-CONSENT | Per-story picker and per-run consent in Prepare | Mo's Candidate Evidence specialist still reads usable stories under the existing opt-in; a per-run choice changes the agent request contract and belongs with the 01D and 01C order. | R1.0 | AWAITING |
+| OD-HELDOUT-AUTHOR | Who authors the independent injection held-out set | A different author, several hundred cases with per-language quotas, frozen by hash; needed before thresholds can be approved. | R1.0 | AWAITING |
+| OD-INPUT-GUARD-LANGUAGES | Multilingual rules for the interview input guard | The input guard is English-only; the corpus work found no non-English rule there. | R1.0 | AWAITING |
+| OD-LEGACY-ROUTES | Retire the legacy Admin user status, plan and revoke routes | They remain because many tests pin them; a client calling them directly skips the mandatory reason. | R1.0 | AWAITING |
+| OD-LOCAL-TEST-ENV | Rebuild the local fresh-dependency venv and Playwright browser cache | Both were deleted by something outside the work; rebuilding them needs downloads. Until then GitHub CI is the verification for fresh dependencies and browsers. | R1.0 | AWAITING |
+| OD-STALE-02A-TEST | Retire or rebase the branch-relative 02A forbidden-files test | Fails on any local tree with later merges, passes in CI; a follow-up task is open. | R1.0 | AWAITING |
+
+## Start-now schedule (planning model: assumed calendar floors, no holidays; see `execution/WAVE3_EXECUTION_PLAN.md` section 7)
+
+Native reviewers and legal qualifiers named and engaged by Tue 27 Oct for a freeze finished by Fri 27 Nov; OD-EMBED and OD-REPORT-EXPORT by Mon 26 Oct; OD-HOSTED, OD-BUDGET, OD-COVERAGE, OD-BULK-ACTIONS, OD-PLAN-LIMITS and OD-WS-TRANSFER by Mon 2 Nov; licensing reviewer and counsel by Fri 6 Nov at the latest (earlier is better); independent evaluators by Fri 13 Nov. Each working day of delay moves the full-scope date by a working day; no scope is cut and no gate is waived.
 
 ## Historical pending owner decisions (72, preserved with their register IDs)
 

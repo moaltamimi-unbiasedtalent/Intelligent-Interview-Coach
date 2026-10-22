@@ -196,3 +196,14 @@ def test_the_staffing_plan_distinguishes_humans_from_claude_code_sessions_and_na
                    "QA and test-automation engineer", "DevOps and reliability engineer", "Measuring actual throughput", "S1, the full originally agreed R1.0 scope"):
         assert needle in text, needle
     assert set(E.ROLES) >= {"TIL", "AIE", "BE", "FE", "DEVOPS", "QA", "LOC", "PO"} and all(abs(sum(v.values()) - 1) < 1e-9 for v in E.ROLE_SPLIT.values())
+
+
+def test_the_wave3_five_layer_matrix_covers_every_package_and_is_fresh():
+    import subprocess
+    import sys
+
+    out = subprocess.run([sys.executable, str(ROOT / "scripts/production/wave_matrix.py")], capture_output=True, text=True, cwd=ROOT)
+    assert out.returncode == 0, out.stdout + out.stderr
+    plan = (ROOT / "docs/production/execution/WAVE3_EXECUTION_PLAN.md").read_text(encoding="utf-8")
+    assert all(f"| {p['id']} |" in plan for p in E.PACKAGES)                 # no package is missing from the matrix
+    assert "no production gate is PASS" in plan                                  # merged code is never reported as a passed gate
