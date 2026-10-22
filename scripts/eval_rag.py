@@ -51,6 +51,11 @@ OUT_DIR = "evaluations" if _WRITE else tempfile.mkdtemp(prefix="ask4mo_eval_rag_
 
 def _build_store(config):
     embedder = build_embedder(config)
+    from src.llm.budget.script_guard import guard_embedder_script      # 05C: a paid embedder needs the governed budget; the free local embedder needs nothing
+
+    refused = guard_embedder_script("eval_rag", embedder)
+    if refused is not None:
+        raise SystemExit(refused)
     store = build_vector_store(config, embedder=embedder, in_memory=True)
     chunks, report = indexer.ingest_directory(CORPUS)
     store.add_chunks(chunks)

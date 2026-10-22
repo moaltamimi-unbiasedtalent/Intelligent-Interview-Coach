@@ -106,6 +106,11 @@ def main(argv: list[str] | None = None) -> int:
 
     config = load_config()
     embedder = build_embedder(config)
+    from src.llm.budget.script_guard import guard_embedder_script      # 05C: a paid embedder needs the governed budget; the free local embedder needs nothing
+
+    refused = guard_embedder_script("load_sample_knowledge", embedder)
+    if refused is not None:
+        return refused
     store = build_vector_store(config, embedder=embedder)
     store.add_chunks(chunks)
     print(f"Persisted {len(chunks)} demo chunk(s) to the vector store "

@@ -3284,3 +3284,57 @@ def _install_append_only(table_obj, table_name: str) -> None:
 
 _install_append_only(AuditEvent.__table__, "audit_events")
 _install_append_only(AdminIncidentEvent.__table__, "incident_events")
+
+
+# --- 05C: production AI budget governor (migration 0044_ai_budget_ledger) ---------------------------------------------------------------
+AI_BUDGET_ENTRY_STATES = ("reserved", "settled", "rejected", "unknown")
+
+
+class AiBudgetControl(Base):
+    """One atomic counter row of the AI budget governor (``src/llm/budget``). ``scope_key`` is ``global`` (the kill switch), ``class:<budget class>`` or
+    ``cat:<budget class>:<category>``. ``held_micro_usd`` is settled actual cost + open reservations at their WORST case + unknown outcomes at their worst case, in integer
+    micro-USD; it is advanced ONLY by one conditional UPDATE (``held + worst <= stop``), which is what makes admission multi-process safe on PostgreSQL and SQLite."""
+
+    __tablename__ = "ai_budget_controls"
+    __table_args__ = (CheckConstraint("held_micro_usd >= 0", name="ck_aibc_held"), CheckConstraint("requests >= 0", name="ck_aibc_requests"))
+
+    scope_key: Mapped[str] = mapped_column(String(96), primary_key=True)
+    held_micro_usd: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    requests: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    killed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    kill_reason: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class AiBudgetEntry(Base):
+    """One provider call recorded by the governor. Holds NO prompt, response text, key, user identifier or provider message: only the budget class and category, the model id,
+    a content-free request fingerprint (SHA-256), money in integer micro-USD and tokens/latency. Unknown tokens and costs stay NULL, never 0."""
+
+    __tablename__ = "ai_budget_entries"
+    __table_args__ = (
+        CheckConstraint("state IN ('reserved','settled','rejected','unknown')", name="ck_aibe_state"),
+        CheckConstraint("reserved_micro_usd >= 0", name="ck_aibe_reserved"),
+        Index("ix_aibe_class_state", "budget_class", "state"),
+        Index("ix_aibe_fingerprint", "fingerprint", "created_ts"),
+        Index("uq_aibe_inflight_fingerprint", "fingerprint", unique=True, sqlite_where=text("state = 'reserved'"), postgresql_where=text("state = 'reserved'")),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    created_ts: Mapped[float] = mapped_column(Float)
+    settled_ts: Mapped[float | None] = mapped_column(Float, nullable=True)
+    budget_class: Mapped[str] = mapped_column(String(24))
+    category: Mapped[str] = mapped_column(String(24))
+    operation: Mapped[str] = mapped_column(String(48))
+    model: Mapped[str] = mapped_column(String(160))
+    endpoint: Mapped[str] = mapped_column(String(24))
+    fingerprint: Mapped[str] = mapped_column(String(64))
+    state: Mapped[str] = mapped_column(String(12), default="reserved")
+    reserved_micro_usd: Mapped[int] = mapped_column(BigInteger)
+    committed_micro_usd: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    input_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    output_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    est_cost_micro_usd: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    provider_cost_micro_usd: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    status_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    error_category: Mapped[str | None] = mapped_column(String(32), nullable=True)
