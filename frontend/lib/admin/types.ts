@@ -188,9 +188,18 @@ export interface PlanVersionRow {
   enabled_entitlements: number;
   total_entitlements: number;
   subscribers: { users: number; workspaces: number };
+  /** 03B: derived expected-revision tokens; a stale one is refused with 409. */
+  revision: string;
+  family_revision: string;
   created_at: string | null;
   activated_at: string | null;
   retired_at: string | null;
+}
+export interface EntitlementBounds {
+  kind: string;
+  min_limit: number | null;
+  max_limit: number | null;
+  premium_only: boolean;
 }
 export interface EntitlementRow {
   code: string;
@@ -199,6 +208,7 @@ export interface EntitlementRow {
   type: string;
   enabled: boolean;
   limit: number | null;
+  bounds: EntitlementBounds;
 }
 export interface PlanDetail extends Omit<PlanVersionRow, "enabled_entitlements" | "total_entitlements"> {
   editable: boolean;
@@ -221,6 +231,62 @@ export interface SubscriptionEntry {
 export interface SubjectPlan {
   current: SubscriptionEntry | null;
   history: SubscriptionEntry[];
+}
+
+// --- 03B plan administration (counts, plan codes, versions, subject ids and entitlement keys only; no price, no candidate content) ---
+export interface PlanEntitlementValue {
+  enabled: boolean;
+  limit: number | null;
+}
+export interface PlanMatrix {
+  entitlements: { code: string; label: string; description: string; type: string; bounds: EntitlementBounds }[];
+  versions: { id: number; plan_code: string; version: number; display_name: string; status: string; revision: string; values: Record<string, PlanEntitlementValue> }[];
+}
+export interface PlanComparison {
+  left: { id: number; plan_code: string; version: number; display_name: string; status: string; subscribers: { users: number; workspaces: number } };
+  right: { id: number; plan_code: string; version: number; display_name: string; status: string; subscribers: { users: number; workspaces: number } };
+  rows: { code: string; label: string; left: PlanEntitlementValue; right: PlanEntitlementValue; differs: boolean }[];
+  changed: number;
+  note: string;
+}
+export interface PlanSubjectState {
+  subject_type: string;
+  subject_id: number;
+  current: SubscriptionEntry | null;
+  history: SubscriptionEntry[];
+  revision: string;
+}
+export interface PlanVersionAssignments {
+  plan_code: string;
+  version: number;
+  total: number;
+  page: number;
+  page_size: number;
+  items: { subject_type: string; subject_id: number; status: string; source: string; started_at: string | null; ended_at: string | null }[];
+}
+export interface PlanExplanation {
+  subject_type: string;
+  subject_id: number;
+  plan_code: string;
+  plan_version: number | null;
+  plan_version_status: string | null;
+  source: string;
+  items: { code: string; label: string; allowed: boolean; limit: number | null; unlimited: boolean; reason: string }[];
+  layers: { layer: string; evaluated_here: boolean; note: string }[];
+  note: string;
+}
+export interface PlanAssignmentPreview {
+  plan_code: string;
+  target_version: number;
+  subject_type: string;
+  requested: number;
+  found: number;
+  missing: number;
+  unchanged: number;
+  would_change: number;
+  by_current_plan: { basic: number; premium: number; none: number };
+  entitlement_effect: { code: string; label: string; gain: number; lose: number; limit_changed: number }[];
+  preview_revision: string;
 }
 
 // --- W10.6 integrations (metadata only: no secret value, prefix, suffix, mask, URL or upstream response) ---

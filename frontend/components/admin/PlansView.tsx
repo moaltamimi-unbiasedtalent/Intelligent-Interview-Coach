@@ -5,6 +5,9 @@ import Link from "@/components/ui/VerifiedLink";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/api/client";
 import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
+import { PlanAssignPanel } from "./PlanAssignPanel";
+import { PlanExplainPanel } from "./PlanExplainPanel";
+import { PlanMatrixPanel } from "./PlanMatrixPanel";
 import { Panel, PermissionGate, ResourceState, apiMessage, btn, useAdminResource, ScrollRegion } from "./ui";
 
 export function PlansView() {
@@ -20,10 +23,10 @@ function Body() {
   const loaded = useAdminResource(() => api.admin.plans());
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const create = async (code: string) => {
+  const create = async (code: string, familyRevision: string) => {
     setError(null);
     try {
-      const out = await api.admin.createPlanDraft(code);
+      const out = await api.admin.createPlanDraft(code, familyRevision);
       setNotice(`Draft version ${out.version} of ${code} created. Open it to edit.`);
       loaded.reload();
     } catch (e) {
@@ -71,7 +74,8 @@ function Body() {
             {canManage ? (
               <div className="flex flex-wrap gap-2">
                 {Array.from(new Set(loaded.data.items.map((v) => v.plan_code))).map((code) => (
-                  <button key={code} type="button" className={btn} onClick={() => create(code)}
+                  <button key={code} type="button" className={btn}
+                    onClick={() => create(code, loaded.data.items.find((v) => v.plan_code === code)!.family_revision)}
                     disabled={loaded.data.items.some((v) => v.plan_code === code && v.status === "draft")}>
                     {`Create next draft of ${code}`}
                   </button>
@@ -81,6 +85,9 @@ function Body() {
           </Panel>
         ) : null}
       </ResourceState>
+      <PlanMatrixPanel />
+      <PlanAssignPanel />
+      <PlanExplainPanel />
     </div>
   );
 }
