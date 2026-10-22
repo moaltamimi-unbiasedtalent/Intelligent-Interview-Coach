@@ -39,7 +39,7 @@ BLOCKING_ATTRS = {
 # Any attribute call with one of these names (pathlib / file-like blocking IO and lock/semaphore waits) unless it is awaited.
 BLOCKING_ANY_OWNER = {"read_text", "write_text", "read_bytes", "write_bytes", "acquire", "__exit__", "__enter__", "commit", "executescript"}
 # Plain names of blocking project seams (database reads, rate limiter, malware scan, recorders, store/runtime work).
-BLOCKING_NAMES = {"open", "enforce", "ensure_not_paused", "enforce_scan", "_scan_or_reject", "_admit_upload", "record_event", "admit", "sleep"}
+BLOCKING_NAMES = {"open", "enforce", "ensure_not_paused", "enforce_scan", "_scan_or_reject", "record_event", "admit", "sleep"}
 # Objects whose methods are synchronous service, repository, store or engine calls in this codebase.
 BLOCKING_OWNER_OBJECTS = {"svc", "service", "runtime", "repo", "repository", "receiver", "store", "pause", "limiter", "ops", "audit_repo", "stepup", "step_up", "session_factory", "sf",
                           "engine", "provider"}
@@ -255,10 +255,12 @@ def test_document_upload_scan_and_processing_do_not_block_the_event_loop(aw, mon
 
 
 def test_document_upload_pause_and_limiter_do_not_block_the_event_loop(aw, monkeypatch):
-    import src.api.routes.documents as docs
+    import src.api.guards as guards
 
-    monkeypatch.setattr(docs, "_admit_upload", _slow(exc=RuntimeError("stop")))
+    monkeypatch.setattr(guards, "ensure_not_paused", _slow(exc=RuntimeError("stop")))      # the durable pause read (database) the upload admission performs
     r, stall = stall_of(aw, "POST", "/documents", files={"file": ("cv.txt", b"hello", "text/plain")}, data={"category": "other"})
+    assert stall < STALL_LIMIT, (r.status_code, stall)
+    r, stall = stall_of(aw, "POST", "/documents/1/replace", files={"file": ("cv.txt", b"hello", "text/plain")})
     assert stall < STALL_LIMIT, (r.status_code, stall)
 
 

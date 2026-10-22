@@ -33,15 +33,6 @@ from src.documents.validation import MAX_FILE_BYTES
 router = APIRouter(prefix="/documents", tags=["documents"])
 
 
-def _admit_upload(pause, user_id: int) -> None:
-    """OCR pause (durable database read) and the per-user upload ceiling: both synchronous, so callers in async handlers run this in the worker pool."""
-    from src.api.guards import ensure_not_paused
-    from src.api.rate_limit import enforce, user_key
-
-    ensure_not_paused("ocr", pause)
-    enforce("cost_upload_user", user_key(user_id))
-
-
 def _scan_or_reject(data: bytes, filename: str, session_factory=None) -> None:
     """Malware-scan policy (§16/§17), fail closed: a scanner outage is 503 (retryable, never an infection verdict), a flagged file is 422, a file
     over the scan limit is 413; none of them is stored. A file is accepted only after a real scanner passed it when scanning is required."""
@@ -97,7 +88,14 @@ async def upload_document(
     # capability blocks new uploads truthfully rather than silently skipping extraction.
     # 07A: async only to await the upload body. The pause read (database), the limiter, the malware scan (a network call to the scanner), the parse/OCR and the storage are all
     # blocking, so each runs in the worker pool and can never stall the event loop (a scan or OCR of a large file used to freeze every other request).
-    await run_in_threadpool(_admit_upload, pause, user_id)
+    from src.api.guards import ensure_not_paused
+    from src.api.rate_limit import enforce, user_key
+
+    def _admit() -> None:
+        ensure_not_paused("ocr", pause)
+        enforce("cost_upload_user", user_key(user_id))
+
+    await run_in_threadpool(_admit)
     data = await file.read()
     if len(data) > MAX_FILE_BYTES:
         raise HTTPException(status_code=413, detail="The file is too large (max 10 MB).")
@@ -125,7 +123,14 @@ async def replace_document(
     pause=Depends(get_pause_service),
     repo=Depends(get_repository),
 ) -> DocumentDetail:
-    await run_in_threadpool(_admit_upload, pause, user_id)         # 07A: blocking work stays off the event loop (see upload_document)
+    from src.api.guards import ensure_not_paused
+    from src.api.rate_limit import enforce, user_key
+
+    def _admit() -> None:        # 07A: blocking work stays off the event loop (see upload_document)
+        ensure_not_paused("ocr", pause)
+        enforce("cost_upload_user", user_key(user_id))
+
+    await run_in_threadpool(_admit)
     data = await file.read()
     if len(data) > MAX_FILE_BYTES:
         raise HTTPException(status_code=413, detail="The file is too large (max 10 MB).")
