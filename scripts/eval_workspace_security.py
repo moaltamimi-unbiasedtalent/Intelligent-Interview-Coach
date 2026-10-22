@@ -406,7 +406,6 @@ def _evaluate_04b() -> dict:
         and repo.member_role(w2, 3) is None) else 0
         # ---- 04B completion: two-step ownership transfer ------------------------------------------------------------------
     import json
-    import re as _re
     from sqlalchemy import select as _select
     from src.persistence import AuditEvent, WorkspaceOwnershipTransfer as _T
 

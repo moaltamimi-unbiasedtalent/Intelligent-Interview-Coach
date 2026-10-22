@@ -22,6 +22,8 @@ from src.api.dependencies import (
     get_workspace_repository,
 )
 from src.api.rate_limit import enforce, user_key
+from src.api.routes.workspaces import TokenRequest            # the SAME request model as the invitation token (one shape, one allow-listed input field)
+from src.api.routes.admin_security import StepUpBody          # the SAME request model as the existing step-up (one shape, one allow-listed input field)
 from src.application.errors import ConflictError, ValidationError
 from src.application.ownership_transfer_service import OwnershipTransferService
 from src.application.workspace_service import WorkspaceNotFoundError, WorkspacePermissionError
@@ -59,14 +61,6 @@ class ProposeRequest(_Strict):
     confirm_name: str = Field(default="", max_length=200)
     # What the current owner keeps after a successful transfer.
     former_owner_role: str = Field(default="workspace_member", max_length=24)
-
-
-class TokenRequest(_Strict):
-    token: str = Field(min_length=1, max_length=512)
-
-
-class StepUpBody(_Strict):
-    password: str = Field(min_length=1, max_length=256)
 
 
 def _step_up():

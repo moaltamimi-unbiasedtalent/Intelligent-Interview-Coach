@@ -18,7 +18,6 @@ import pytest
 from sqlalchemy import event, func, select, text
 
 from src import persistence as P
-from src.application.account_deletion_service import AccountDeletionService
 from src.ownership_transfer_repository import AUDIT_EVENTS, OwnershipTransferRepository, hash_token, transfer_email_hash
 from src.workspace_repository import WorkspaceRepository
 from tests._auth_factories import account_repo
