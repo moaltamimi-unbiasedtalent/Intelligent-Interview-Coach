@@ -315,6 +315,11 @@ MAX_UPLOAD_CHARS = 50_000
 INJECTION_WARN_THRESHOLD = 2.0
 INJECTION_BLOCK_THRESHOLD = 3.0
 
+# 01A (REVIEW-01 R6): a retrieved chunk whose injection risk is ABOVE this value is quarantined (excluded from the model context). The risk is the scanner
+# score divided by INJECTION_BLOCK_THRESHOLD, capped at 1.0, so 0.9 keeps the pre-existing behaviour (block-level chunks excluded, warn-level 0.67 kept and
+# flagged). Lowering it also quarantines warn-level chunks; it is a heuristic setting, not an owner-approved gate threshold (OD-GATE-THRESHOLDS).
+INJECTION_QUARANTINE_RISK = 0.9
+
 # Verdicts.
 VERDICT_ALLOW = "allow"
 VERDICT_WARN = "allow_with_warning"

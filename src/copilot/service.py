@@ -109,6 +109,10 @@ class PipelineTrace:
     input_indicators: list[str] = field(default_factory=list)
     blocked: bool = False
     excluded_chunks: int = 0
+    # 01A: retrieved-chunk injection screen, counts only (never chunk text): chunks quarantined before context, chunks kept but flagged, highest risk 0.0-1.0.
+    quarantined_chunks: int = 0
+    flagged_chunks: int = 0
+    max_chunk_injection_risk: float = 0.0
     output_findings: list[str] = field(default_factory=list)
     # Owner policy A/B/C: the approved response class of the final answer ("" when no model answer was produced).
     response_class: str = ""
@@ -623,6 +627,9 @@ class CareerIntelligenceService:
             _step("Combining results")
             # RAG guard: retrieved chunks are untrusted; drop injected ones.
             screen = screen_results(results)
+            trace.quarantined_chunks = screen.quarantined_count
+            trace.flagged_chunks = len(screen.warned)
+            trace.max_chunk_injection_risk = screen.max_risk
             if screen.excluded or screen.warned:
                 trace.notes.append(screen.summary())
                 trace.excluded_chunks = screen.excluded_count
