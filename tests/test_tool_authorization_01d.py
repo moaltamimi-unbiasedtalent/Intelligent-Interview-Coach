@@ -261,6 +261,20 @@ def test_identity_comes_from_the_run_never_from_arguments():
     assert calls.log == [] and evidence.reads == []
 
 
+def test_a_harmless_undeclared_scalar_is_ignored_as_before_but_identity_like_or_structured_extras_are_refused():
+    calls = _Calls()
+    reg = _spy_registry(calls)
+    # A model that invents a field name (`role` instead of `target_role`): the tool ignores it, exactly as before 01D.
+    assert _decide(reg, "GenerateInterviewQuestions", {"role": "Nurse"}).allowed
+    assert set(calls.log[-1][1] if calls.log else {}) <= set(reg._tools["GenerateInterviewQuestions"].args_model.model_fields)
+    for extras in ({"user_id": "8"}, {"ownerId": "8"}, {"workspace": "w"}, {"x": {"a": 1}}, {"x": [1]},
+                   {f"k{i}": "v" for i in range(ta.MAX_UNKNOWN_ARGUMENTS + 1)}):
+        d = _decide(reg, "GenerateInterviewQuestions", extras)
+        assert not d.allowed and d.reason is Reason.UNKNOWN_ARGUMENT, extras
+    reg.validate_and_run("GenerateInterviewQuestions", {"role": "Nurse"}, _ctx(), run=_run_ctx())
+    assert calls.log[-1][1].get("target_role") is None and "role" not in calls.log[-1][1]
+
+
 def test_cross_user_ids_in_arguments_return_nothing_and_cause_no_read_or_write():
     evidence = _Evidence()
     calls = _Calls()
@@ -630,12 +644,16 @@ def test_model_visible_denial_is_generic_and_leaks_nothing():
     for content in _messages(values):
         payload = json.loads(content)
         assert sentinel not in content
+        if "error" not in payload:  # the benign third call ran; its (spy) result does not echo the undeclared field
+            assert payload == {"ok": True}
+            continue
         assert payload["error"] in allowed_messages or payload["error"].startswith("Invalid arguments for tool")
     forbidden_words = ("policy", "permission", "owner", "untrusted", "injection", "quarantine", "goal", "tainted")
     for reason in Reason:
         text = json.dumps(public_denial(reason)).lower()
         assert not any(w in text for w in forbidden_words), reason
-    assert calls.log == []
+    assert [n for n, _ in calls.log] == ["BuildPreparationPlan"]
+    assert "note" not in calls.log[0][1]
 
 
 def test_every_decision_is_audited_once_with_identifiers_only(caplog):
@@ -773,7 +791,10 @@ def test_fuzz_adversarial_tool_calls_are_decided_on_the_server_and_never_crash()
         assert isinstance(name, str) and reg.has(name) and isinstance(raw, (dict, type(None)))
         executed = raw or {}
         fields = set(reg._tools[name].args_model.model_fields)
-        assert set(executed) <= fields
+        # Undeclared keys that were tolerated are harmless scalars that are never identity-like (the tool ignores them).
+        for extra in set(executed) - fields:
+            assert not ta._identity_like(extra) and ta._is_scalar(executed[extra]), extra
+        assert len(calls.log[-1][1]) == len(reg._tools[name].args_model.model_fields)  # handler saw declared fields only
         assert not any(isinstance(v, bool) and not isinstance(getattr(reg._tools[name].args_model(**executed), k), bool)
                        for k, v in executed.items())
         assert len(json.dumps(executed, ensure_ascii=False, default=str)) <= ta.MAX_ARGS_JSON_CHARS

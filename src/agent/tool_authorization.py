@@ -233,6 +233,24 @@ def _covers(intent: str | None, user_text_norm: str) -> bool:
     return any((" " + t) in padded for t in _INTENT_TERMS.get(intent, ()))
 
 
+_IDENTITY_TOKENS = frozenset({
+    "id", "ids", "uid", "uuid", "user", "users", "owner", "owners", "account", "accounts", "email", "tenant", "workspace",
+    "session", "token", "subject", "sub", "userid", "ownerid", "accountid", "documentid", "storyid", "memoryid",
+    "interviewid", "opportunityid", "sessionid", "runid", "threadid", "tenantid", "workspaceid", "claimid"})
+MAX_UNKNOWN_ARGUMENTS = 5
+
+
+def _identity_like(key: str) -> bool:
+    """True for an undeclared argument name that looks like an identity or resource reference (user_id, ownerId, ...)."""
+    spaced = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", str(key)).lower()
+    tokens = [t for t in re.split(r"[^a-z0-9]+", spaced) if t]
+    return any(t in _IDENTITY_TOKENS for t in tokens) or "".join(tokens) in _IDENTITY_TOKENS
+
+
+def _is_scalar(value: Any) -> bool:
+    return value is None or isinstance(value, (str, int, float, bool))
+
+
 def _value_strings(value: Any, depth: int = 0) -> list[str]:
     """All string leaves of an argument value (bounded; arguments are already size-checked)."""
     if isinstance(value, str):
@@ -475,8 +493,12 @@ class ToolAuthorizer:
             return decision(False, Reason.PERMISSION_DENIED)
         # 8. argument fields: unknown fields refused, types and bounds from the tool's own Pydantic model
         fields = set(spec.args_model.model_fields)
-        if any(k not in fields for k in args):
+        unknown = [k for k in args if k not in fields]
+        if unknown and (len(unknown) > MAX_UNKNOWN_ARGUMENTS or any(
+                _identity_like(k) or not _is_scalar(args[k]) for k in unknown)):
             return decision(False, Reason.UNKNOWN_ARGUMENT)
+        # A harmless undeclared scalar (a model that invents a field name) cannot influence execution: the tool's own
+        # model ignores it, exactly as before this layer. Identity-like keys, structures and floods are refused above.
         try:
             validated = spec.args_model(**dict(args))
         except (ValidationError, TypeError, ValueError):
@@ -510,7 +532,8 @@ class ToolAuthorizer:
         if side_effecting and not user_norm:
             return decision(False, Reason.NO_USER_GOAL)
         tainted = run.quarantined_chunks > 0 or run.max_injection_risk >= _UNTRUSTED_RISK_WARN
-        derived, destination = _derived_from_untrusted(_value_strings(args), trusted_norm, untrusted_norm)
+        derived, destination = _derived_from_untrusted(
+            _value_strings({k: v for k, v in args.items() if k in fields}), trusted_norm, untrusted_norm)
         if derived and destination and side_effecting:
             return decision(False, Reason.UNTRUSTED_DESTINATION, tainted)
         covered = _covers(policy.intent, user_norm)
