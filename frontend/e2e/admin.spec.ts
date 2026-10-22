@@ -50,6 +50,7 @@ const USER_ROW = { user_id: 2, email: "jane@example.com", display_name: null, st
   onboarding_completed: true, interface_locale: "en", email_verified: false, created_at: null, updated_at: null,
   workspace_count: 1, active_session_count: 1 };
 const USER_DETAIL = {
+  revision: "0123456789abcdef",
   plan: { current: { plan_code: "basic", version: 1, display_name: "Basic", status: "active", source: "system_default", started_at: "2026-10-01", ended_at: null }, history: [] },
   account: USER_ROW,
   access: { platform_role: "user", capabilities: [], assignable_roles: ["user", "support_operator"], is_self: false },
@@ -359,6 +360,12 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
       const items = [TICKET_ROW].filter((t) => !q.get("status") || t.status === q.get("status"));
       return json({ items, total: items.length, page: 1, page_size: 25 });
     }
+    // 03C: strict account actions (the server requires a reason and the account revision; the mock checks both)
+    if (/\/admin\/users\/\d+\/actions\/[a-z-]+$/.test(path) && method === "POST") {
+      const body = JSON.parse(route.request().postData() ?? "{}");
+      if (!body.reason || body.expected_revision !== "0123456789abcdef") return json({ error: { code: "validation_error", message: "reason and revision required" } }, 422);
+      return json({ user_id: 2, action: path.split("/").pop(), changed: true, sessions_revoked: 1, plan_code: body.plan_code ?? null, revision: "fedcba9876543210" });
+    }
     if (/\/admin\/users\/\d+\/status$/.test(path) && method === "POST") return json({ user_id: 2, status: "deactivated", changed: true, sessions_revoked: 1 });
     if (/\/admin\/users\/\d+\/sessions\/revoke$/.test(path) && method === "POST") return json({ user_id: 2, sessions_revoked: 1 });
     if (/\/admin\/users\/\d+$/.test(path)) return json(USER_DETAIL);
@@ -431,6 +438,7 @@ test("W10.2: users search, safe detail, governed action with confirmation, works
   await page.getByRole("button", { name: "Deactivate account" }).click();
   const dialog = page.getByRole("alertdialog");
   await expect(dialog.getByRole("button", { name: "Cancel" })).toBeFocused();
+  await dialog.getByLabel(/Reason/).fill("abuse report");
   await dialog.getByRole("button", { name: "Deactivate" }).click();
   await expect(page.getByText(/Account deactivated/)).toBeVisible();
   await page.getByRole("link", { name: "Team Alpha" }).click();
@@ -674,6 +682,7 @@ test("W10.4: plan catalogue, draft version, user plan assignment, candidate plan
   await expect(page.getByText("Basic (version 1)")).toBeVisible();
   await page.getByLabel("Change plan").selectOption("premium");
   await page.getByRole("button", { name: "Change plan" }).click();
+  await page.getByRole("alertdialog").getByLabel(/Reason/).fill("pilot upgrade");
   await page.getByRole("alertdialog").getByRole("button", { name: "Change plan" }).click();
   await expect(page.getByText(/Plan changed to Premium \(preview\)/)).toBeVisible();
 });

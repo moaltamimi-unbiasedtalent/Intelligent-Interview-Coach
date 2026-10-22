@@ -73,6 +73,9 @@ import type {
   AdminTicketSummary,
   AdminUserDetail,
   AdminUserQuery,
+  AdminUserActionBody,
+  AdminUserActionName,
+  AdminUserActionResult,
   AdminUserSummary,
   AdminWorkspaceDetail,
   AdminWorkspaceSummary,
@@ -619,6 +622,9 @@ export const api = {
       request<AdminPage<AdminUserSummary>>("GET", `/admin/users${qs(query as Record<string, unknown>)}`, opts),
     userDetail: (userId: number, opts?: RequestOptions) =>
       request<AdminUserDetail>("GET", `/admin/users/${userId}`, opts),
+    // 03C: strict account actions (reason and the account revision are mandatory; the server enforces self, hierarchy and stale-state protection).
+    userAction: (userId: number, action: AdminUserActionName, body: AdminUserActionBody, opts?: RequestOptions) =>
+      request<AdminUserActionResult>("POST", `/admin/users/${userId}/actions/${action}`, { body, ...opts }),
     // W10.13: a role is never changed directly. This creates a REQUEST that a different Admin must approve (both need a recent password confirmation).
     requestRoleChange: (userId: number, role: string, reason: string, opts?: RequestOptions) =>
       request<RoleChangeRequest>("POST", "/admin/role-changes", { body: { target_user_id: userId, role, reason }, ...opts }),

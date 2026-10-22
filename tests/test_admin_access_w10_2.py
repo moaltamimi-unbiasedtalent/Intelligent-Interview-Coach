@@ -294,7 +294,8 @@ def test_user_detail_is_safe_and_complete(env):
     _, _, admin, _ = mk(env, "platform_admin")
     uid, email, *_ = mk(env)
     d = env.c.get(f"{API}/admin/users/{uid}", cookies=admin).json()
-    assert set(d) == {"account", "access", "sessions", "workspaces", "audit", "plan"}
+    # 03C extended the allowlist (still an exact set): revision, auth methods, activity bucket, case counts, membership summary.
+    assert set(d) == {"account", "access", "sessions", "workspaces", "audit", "plan", "revision", "auth", "activity", "cases", "membership"}
     assert d["account"]["email"] == email and d["account"]["active_session_count"] == 1
     assert d["access"]["capabilities"] == []
     assert set(d["access"]["assignable_roles"]) == {"user", *perm.ADMIN_ROLES}

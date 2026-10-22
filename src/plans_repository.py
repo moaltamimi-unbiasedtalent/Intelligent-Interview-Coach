@@ -215,7 +215,7 @@ class PlanRepository:
     # -- subscriptions ----------------------------------------------------------------------------------
 
     def assign(self, plan_code: str, *, user_id: int | None = None, workspace_id: int | None = None,
-               source: str = "admin", audit: dict | None = None) -> dict:
+               source: str = "admin", audit: dict | None = None, precondition=None) -> dict:
         """Move ONE subject to the ACTIVE version of ``plan_code``: end the old subscription, add the new one,
         keep the legacy tier column in step (user subjects), and write the audit row, all in one transaction."""
         if (user_id is None) == (workspace_id is None):
@@ -227,8 +227,11 @@ class PlanRepository:
             if target is None:
                 raise ConflictError("That plan has no active version to assign.")
             if user_id is not None:
-                if s.get(User, user_id) is None:
+                target_user = s.get(User, user_id, with_for_update=True)
+                if target_user is None:
                     raise AdminNotFound("Account not found.")
+                if precondition:
+                    precondition(s, target_user)   # stale-revision / self guard inside the same transaction
                 cond, subject = Subscription.user_id == user_id, ("user", user_id)
             else:
                 if s.get(Workspace, workspace_id) is None:
