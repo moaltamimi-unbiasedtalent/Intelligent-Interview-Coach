@@ -52,6 +52,15 @@ def _fail_version(rt: KnowledgeRuntime, vpid: str, stage: str, category: str, ex
         s.commit()
 
 
+def _observe_scanner(rt: KnowledgeRuntime, *, available: bool) -> None:
+    """Raise (or clear) the in-app scanner alert. Best effort: never changes the outcome of the job."""
+    try:
+        from src.knowledge_admin.alerts import observe_scanner
+        observe_scanner(rt.session_factory, available=available)
+    except Exception:  # noqa: BLE001
+        log.warning("scanner alert could not be recorded")
+
+
 def _load(rt: KnowledgeRuntime, vpid: str) -> dict | None:
     with rt.session_factory() as s:
         v = s.scalar(select(V).where(V.public_id == vpid))
@@ -97,11 +106,16 @@ def run_parse(vpid: str, ctx) -> None:
         try:
             result = enforce_scan(data, info["name"], scanner=scanner, required=True)
         except FileRejected:
+            # infected, or too large to scan: never parsed, indexed or served
             _fail_version(rt, vpid, "parse", "scan_failed", ("processing",), scan_status="scan_failed")
+            _observe_scanner(rt, available=True)
             raise PermanentJobError("unsupported")
         except FileScanUnavailable:
+            # outage, timeout or scanner error: held (failed, retryable by an operator), never parsed; raises the in-app alert
             _fail_version(rt, vpid, "parse", "scan_unavailable", ("processing",), scan_status="scan_unavailable")
+            _observe_scanner(rt, available=False)
             raise PermanentJobError("configuration_error")
+        _observe_scanner(rt, available=True)
         try:
             units, full = _units(data, info["ext"])
         except ParseError:

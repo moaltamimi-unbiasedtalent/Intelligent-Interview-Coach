@@ -382,3 +382,16 @@ def environment_diagnostics(session_factory: Any, guard: KnowledgeServingGuard, 
 def count_registry(session_factory: Any) -> int:
     with session_factory() as s:
         return int(s.scalar(select(func.count()).select_from(KnowledgeSource)) or 0)
+
+
+def count_untrusted_scan_records(session_factory: Any) -> int:
+    """K9 residual (02C): live-lifecycle versions (review_required, approved, indexed, active) whose scan result is not a PASSED result from a recorded
+    scanner, or whose scanner is a development simulation (fake/null). In a hosted environment these are not trusted evidence of a scan (approval and
+    activation are blocked for them by ``KnowledgeAdminService.blockers``); this count lets readiness report them. Returns 0 when unreadable."""
+    try:
+        with session_factory() as s:
+            return int(s.scalar(select(func.count()).select_from(V).where(
+                V.state.in_(("review_required", "approved", "indexed", "active")),
+                (V.scanner_name.in_(("fake", "null"))) | (V.scanner_name.is_(None)) | (V.scan_status != "scan_passed"))) or 0)
+    except Exception:  # noqa: BLE001
+        return 0

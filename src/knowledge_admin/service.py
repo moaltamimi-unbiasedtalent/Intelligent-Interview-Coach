@@ -24,6 +24,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
 from src.admin_repository import _stage
+from src.documents.file_security import fake_scanner_forbidden
 from src.documents.storage import new_storage_key
 from src.documents.validation import _sniff, sanitise_filename
 from src.knowledge_admin import policy as P
@@ -206,6 +207,10 @@ class KnowledgeAdminService:
         out = []
         if v.scan_status != "scan_passed":
             out.append("The file has not passed a malware scan (" + v.scan_status.replace("_", " ") + ").")
+        elif fake_scanner_forbidden(v.scanner_name or "null") or (v.scanner_name or "").strip().lower() == "null":
+            # only a passed result from a REAL scanner may be approved; a development-simulation result is never trusted in a hosted
+            # environment and a record without a recorded scanner is not evidence of a scan
+            out.append("The malware scan result was not produced by a real scanner in this environment.")
         if not (v.publisher or "").strip():
             out.append("The publisher is not recorded.")
         if not (v.provenance_note or "").strip():
