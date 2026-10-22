@@ -267,33 +267,43 @@ BRIEFS = {
 }
 
 # ---------------------------------------------------------------- measured status and throughput (first engineering wave; updated by hand as evidence arrives)
-PACKAGE_STATUS = {   # id: (state, branch, head SHA, verification evidence). "MERGED" means the code PR merged after green GitHub CI; it does NOT mean a production gate passed (see RELEASE_READINESS_TRACKER)
-    "02K": ("MERGED (PR #215, merge 657e456); CI green", "feat/02k-knowledge-contract", "f5eb3dc", "125 passed under both venvs; 12/12 GitHub checks; contract frozen for 02A/02B/02C"),
+PACKAGE_STATUS = {   # id: (state, branch, head SHA, verification evidence). "MERGED" means the code PR merged after green GitHub CI; it does NOT mean a production gate passed (see RELEASE_READINESS_TRACKER and WAVE3_EXECUTION_PLAN section 3)
+    "00A": ("PARTIAL: Phase 00 sign-off recorded (PRs #211, #212, #213); reviewers, budget, hosting and the open decisions are still awaiting the owner", "docs/production-phase-00", "", "OD-SCOPE-01 resolved (S1); OD-RESOURCE, OD-LANG-03/04, OD-HOSTED, OD-BUDGET, OD-EMBED and others open"),
+    "00B": ("DELIVERED as a proposal (PRs #211, #212); owner disposition of the ten reclassifications still awaiting (OD-RECLASS); nothing applied", "docs/production-phase-00", "", "reconcile_issues.py check: 452 items, 0 unmapped"),
+    "PREP": ("MERGED (PR #222, merge f4c7136); CI green", "chore/migration-head-agnostic", "ec14963", "lead prep, not a roadmap package: head checks are version independent"),
+    "02K": ("MERGED (PR #215, merge 657e456); CI green", "feat/02k-knowledge-contract", "f5eb3dc", "125 passed under both venvs; 12/12 GitHub checks; contract frozen"),
     "01B0": ("MERGED (PR #217, merge 0d75acd); CI green", "feat/01b0-prompt-contract", "6f6d383", "462 passed under both venvs; 12/12 GitHub checks"),
-    "03K": ("MERGED (PR #219, merge 20241f4); CI green", "feat/03k-admin-metric-contract", "8afe350", "183 passed; vitest 28; 12/12 GitHub checks; contract frozen for 03D1/03E1"),
+    "03K": ("MERGED (PR #219, merge 20241f4); CI green", "feat/03k-admin-metric-contract", "8afe350", "183 passed; vitest 28; 12/12 GitHub checks; contract frozen"),
     "01B": ("MERGED (PR #220, merge 335d303); CI green", "feat/01b-versioned-prompts", "7c2b879", "5286 passed, 0 failed; 99 byte-identity tests; 12/12 GitHub checks"),
-    "05A": ("MERGED (PR #218, merge 9b6b109); CI green; NOT DEPLOYED", "feat/05a-staging-topology", "776d7dd", "114 passed/1 skipped; hosting readiness PASS; 2 CI rework rounds (obsolete Phase 00 assertion; merge conflict); live staging blocked on OD-HOSTED"),
-    "02A": ("MERGED (PR #221, merge 191cbc5); CI green; offline proof only", "feat/02a-knowledge-persistence", "5ffef55", "5217 passed, 0 failed; migration 0040; 2 CI rework rounds (stale head allowlists); hosted persistence proof needs 05A/05B drills and OD-HOSTED"),
-    "03A": ("MERGED (PR #216, merge f921892); CI green", "feat/03a-admin-navigation", "c652b2b", "vitest 1131, Playwright 89, pytest; 1 CI rework round (evaluator counted group ids as destinations)"),
-    "06A": ("MERGED (PR #214, merge f9a06a9); CI green; no language qualified", "feat/06a-locale-boundaries", "a7559a9", "audit 2382 keys x 7, 0 missing; 1 CI rework round (esbuild/npm ci in Python shards); 14 Russian Playwright tests skipped and excluded"),
-    "01A": ("BRANCH UPDATED (merged main), NOT MERGED, NO PR; investigation delivered; needs human security review", "feat/01a-injection-corpus", "b3acd4b", "dev detection 100% in-sample; held-out 54.5% to 77.3% measured once (weakly contaminated); benign FP held-out 14.3%; 73 new tests; no thresholds approved"),
-    "06H": ("BRANCH PUSHED, NO PR; verified offline", "feat/06h-language-activation", "a0d01c8", "211 language tests pass under both venvs; full suite 5615 passed/1 stale test; zero languages qualified; hosted fail-closed"),
-    "02B": ("BRANCH PUSHED, NO PR; verified offline; production embedder benchmark NOT RUN (OD-BUDGET)", "feat/02b-embedding-integrity", "135070c", "91 new tests; full suite 5609 passed/1 stale test; no migration; PG-05 retrieval quality NOT MET"),
-    "02C": ("BRANCH PUSHED, NO PR; fake-clamd verified only; NO real clamd run (OD-HOSTED)", "feat/02c-clamav-scanning", "164d839", "54 new tests; 282 targeted passed under both venvs; no migration"),
-    "03D1": ("BRANCH PUSHED, NO PR; backend only", "feat/03d1-command-center-metrics", "89f6e66", "46 new tests; 269 related passed; 8 GET routes; registry stays 44; no migration"),
-    "PREP-HEAD": ("BRANCH PUSHED, NO PR (lead prep, not a roadmap package)", "chore/migration-head-agnostic", "ec14963", "44 proof tests; 1123 affected passed with a throwaway 0041; 46 evaluators green; no src or migration change"),
-    "03B": ("BRANCH PUSHED, NO PR; stacked on PREP-HEAD", "feat/03b-admin-plans", "72bb7fd", "33 new tests; full suite 5589 passed/1 stale test; 9 routes; no migration; billing stays mock"),
-    "03C": ("BRANCH PUSHED, NO PR; stacked on PREP-HEAD", "feat/03c-admin-users", "5fd21d6", "18 new tests; 7 action routes; no migration; bulk actions not built (OD-BULK-ACTIONS)"),
-    "03E1": ("BRANCH PUSHED, NO PR; stacked on PREP-HEAD; migration 0041", "feat/03e1-reports-builder", "0c3638b", "107 new tests; 20 routes; migration 0041_report_configurations; edited the privacy evaluator (review)"),
-    "04E": ("BRANCH PUSHED, NO PR; stacked on PREP-HEAD; migration 0041", "feat/04e-invitation-only", "54c4bf0", "90 new tests; hosted invitation-required fail-closed; migration 0041_registration_invitations"),
-    "04A": ("BRANCH PUSHED, NO PR; stacked on PREP-HEAD; migration 0041", "feat/04a-story-bank", "a7b0713", "31 backend + 47 frontend tests; migration 0041_story_bank_completion; touches src/agent evidence specialist (one line)"),
-    "04B": ("BRANCH PUSHED, NO PR; stacked on PREP-HEAD; no migration", "feat/04b-workspaces", "0d3d9ed", "52 backend + 34 frontend tests; evaluator 29 gates; security fix: invitation acceptance needs a verified email"),
+    "05A": ("MERGED (PR #218, merge 9b6b109); CI green; NOT DEPLOYED", "feat/05a-staging-topology", "776d7dd", "114 passed/1 skipped; hosting readiness PASS; 2 CI rework rounds; live staging blocked on OD-HOSTED"),
+    "02A": ("MERGED (PR #221, merge 191cbc5); CI green; offline proof only", "feat/02a-knowledge-persistence", "5ffef55", "5217 passed, 0 failed; migration 0040; 2 CI rework rounds; hosted persistence proof needs 05B drills and OD-HOSTED"),
+    "03A": ("MERGED (PR #216, merge f921892); CI green", "feat/03a-admin-navigation", "c652b2b", "vitest 1131, Playwright 89; 1 CI rework round"),
+    "06A": ("MERGED (PR #214, merge f9a06a9); CI green; no language qualified", "feat/06a-locale-boundaries", "a7559a9", "audit 2382 keys x 7, 0 missing; 1 CI rework round; 14 Russian Playwright tests skipped and excluded"),
+    "01A": ("MERGED (PR #223, merge 7549973); CI green; held-out detection 77.3% (weakly contaminated), no thresholds, security review pending", "feat/01a-injection-corpus", "b3acd4b", "73 new tests; held-out frozen (hash pinned), measured once; benign FP held-out 14.3%; report-only CI step"),
+    "02B": ("MERGED (PR #227, merge 6acdbc1); CI green; production-embedder benchmark NOT RUN (OD-BUDGET, OD-EMBED)", "feat/02b-embedding-integrity", "135070c", "91 new tests; hosted fail-closed embedder and manifests; no migration; PG-05 not met"),
+    "02C": ("MERGED (PR #226, merge 568b8f3); CI green; fake clamd only, NO real clamd run (OD-HOSTED)", "feat/02c-clamav-scanning", "164d839", "54 new tests against a protocol-level fake; fail-closed on both upload paths; no migration"),
+    "06H": ("MERGED (PR #229, merge 5d588a1); CI green; zero languages qualified", "feat/06h-language-activation", "a0d01c8", "211 language tests; hosted fails closed until a complete approved record exists"),
+    "03D1": ("MERGED (PR #224, merge ac029ad); CI green; backend only", "feat/03d1-command-center-metrics", "89f6e66", "46 new tests; 8 GET routes; registry stays 44; no migration"),
+    "03B": ("MERGED (PR #230, merge a4f540d); CI green", "feat/03b-admin-plans", "01da216", "33 new tests; 9 routes; billing stays mock; 1 conflict-resolution round"),
+    "03C": ("MERGED (PR #231, merge 6bcfbf5); CI green; bulk actions not built (OD-BULK-ACTIONS)", "feat/03c-admin-users", "94b76b7", "18 new tests; 7 strict action routes; two concurrency schemes reconciled with 03B"),
+    "03E1": ("MERGED (PR #232, merge 0d84e7e); CI green; migration 0041", "feat/03e1-reports-builder", "0c3638b", "107 new tests; 20 routes; export formats limited to CSV and JSON (OD-REPORT-EXPORT)"),
+    "04E": ("MERGED (PR #228, merge a763fdf); CI green; migration 0042", "feat/04e-invitation-only", "9d390df", "90 new tests; hosted invitation-required fail-closed; Playwright crash fixed by response validation; no invitation email (OD-INVITE-EMAIL)"),
+    "04A": ("MERGED (PR #234, merge 4d7e57a); CI green; migration 0043", "feat/04a-story-bank", "e32010a", "31 backend and 47 frontend new tests; Prepare per-story consent not built; 2 CI rework rounds"),
+    "04B": ("MERGED (PR #233, merge e4aed13); CI green; no migration", "feat/04b-workspaces", "c73a728", "52 backend and 34 frontend tests; verified-email invitations; consent-gated sharing; OD-WS-TRANSFER open"),
 }
 THROUGHPUT = [   # (package, estimate low-high days, authoring wall-clock minutes, CI/integration rework rounds after the PR opened, PR open to merge, note). PR timestamps are GitHub UTC on 2026-10-21
     ("02K", "2-3", 32, 0, "0h41m", "merged with a green PR #215"), ("01B0", "2-3", 24, 0, "0h41m", "PR #217"), ("03K", "2-3", 34, 0, "0h41m", "PR #219"),
     ("01B", "5-8", 26, 0, "0h49m", "PR #220; byte-identity oracle"), ("05A", "8-12", 11, 2, "1h35m", "PR #218; obsolete Phase 00 assertion then merge conflict"),
     ("02A", "10-15", 58, 2, "2h22m", "PR #221; stale migration-head allowlists in 5 evaluators (hidden behind the first failure)"),
     ("03A", "5-7", 29, 1, "3h15m", "PR #216; evaluator counted group ids"), ("06A", "4-6", 43, 1, "3h51m", "PR #214; esbuild missing from Python shards"),
+    # Wave 2 (PR timestamps UTC 2026-10-22; authoring minutes are the agents' own start-to-first-push records)
+    ("PREP", "n/a", 66, 0, "1h06m", "PR #222"), ("01A", "5-8", 70, 0, "1h07m", "PR #223; investigation plus rule work, held-out measured once"),
+    ("03D1", "5-8", 31, 0, "1h09m", "PR #224"), ("02C", "5-8", 38, 0, "1h07m", "PR #226"), ("02B", "6-10", 35, 0, "1h08m", "PR #227"),
+    ("06H", "4-6", 67, 0, "0h52m", "PR #229"), ("03E1", "6-9", 48, 0, "0h41m", "PR #232"), ("04E", "3-5", 28, 1, "1h43m", "PR #228; unmocked invitation listing crashed Admin Users; migration renumbered"),
+    ("04A", "8-12", 73, 2, "1h47m", "PR #234; migration renumber and merge; a test raced the Story Bank loading state"),
+    ("03B", "6-9", 41, 1, "2h47m", "PR #230; merge conflict and a branch-relative test"),
+    ("03C", "7-10", 63, 1, "3h15m", "PR #231; two concurrency schemes reconciled with 03B"),
+    ("04B", "8-12", 63, 1, "3h28m", "PR #233; consent and verified-invitation rules reconciled with 04A"),
 ]
 
 
@@ -687,7 +697,7 @@ def measured_section() -> list[str]:
     for pk, est, mins, rw, rev, ci in THROUGHPUT:
         L.append(f"| {pk} | {est} | {mins} | {rw} | {rev} | {ci} |")
     tot = sum(m for _, _, m, _, _, _ in THROUGHPUT)
-    L += ["", f"Eight first-wave packages were authored in {tot} agent-minutes in total (agents ran in parallel), against estimates of 2 to 15 engineering days each; the estimates include review, CI and integration, which the authoring time does not. All eight merged after green GitHub CI, between 41 minutes and 3 hours 51 minutes after their PR opened (the owner reviewed and merged quickly); five needed 1 to 2 CI or integration rework rounds after the PR opened, caused by stale head-literal assertions and cross-branch tests that no local run had exposed because CI stops at the first failing evaluator. That is evidence about CI hygiene, not a verified effort ratio: these packages were interface contracts, scaffolds and a documented additive migration, and no first-wave package needed a human qualifier, a licence, a native reviewer or live staging. The forecast therefore keeps the engineering estimates as planning inputs and treats the calendar-bound human and legal lead times as the binding constraint for the date.", "",
+    L += ["", f"Twenty packages (waves 1 and 2, plus the lead's prep branch) were authored in {tot} agent-minutes in total (agents ran in parallel), against engineering estimates of 2 to 15 days each; the estimates include review, CI and integration, which the authoring time does not. All of them merged after green GitHub CI, between 41 minutes and 3 hours 51 minutes after their PR opened (the owner reviewed and merged quickly). Nine of the twenty needed 1 to 2 CI or integration rework rounds after the PR opened (12 rounds in total), caused by hard-coded migration heads, branch-relative tests, an unmocked Admin route that crashed a page, a test racing a loading state, and two packages that each added a different concurrency or consent rule to the same code. That is evidence about integration hygiene, not a verified effort ratio: these packages were contracts, backends and scaffolds, and none needed a human qualifier, a licence, a native reviewer or live staging in its path. The forecast therefore treats engineering as short and cheap to re-plan, and the calendar-bound human, legal and live-environment steps as the binding constraint for the date.", "",
           "Sensitivity of the full-scope completion date to the true effort (profile '" + rec[0] + "', high estimate scaled; a sensitivity table, not a forecast):", "", "| Effort relative to the estimate | Completes | Binding constraint |", "|---|---|---|"]
     for scale in (1.0, 0.5, 0.25, 0.1):
         c = completion(rec[1], 1, scale)

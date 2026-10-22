@@ -169,8 +169,20 @@ Reading: with 3 to 5 streams not even the non-negotiable tier T0 fits at its max
 | 02A | 10-15 | 58 | 2 | 2h22m | PR #221; stale migration-head allowlists in 5 evaluators (hidden behind the first failure) |
 | 03A | 5-7 | 29 | 1 | 3h15m | PR #216; evaluator counted group ids |
 | 06A | 4-6 | 43 | 1 | 3h51m | PR #214; esbuild missing from Python shards |
+| PREP | n/a | 66 | 0 | 1h06m | PR #222 |
+| 01A | 5-8 | 70 | 0 | 1h07m | PR #223; investigation plus rule work, held-out measured once |
+| 03D1 | 5-8 | 31 | 0 | 1h09m | PR #224 |
+| 02C | 5-8 | 38 | 0 | 1h07m | PR #226 |
+| 02B | 6-10 | 35 | 0 | 1h08m | PR #227 |
+| 06H | 4-6 | 67 | 0 | 0h52m | PR #229 |
+| 03E1 | 6-9 | 48 | 0 | 0h41m | PR #232 |
+| 04E | 3-5 | 28 | 1 | 1h43m | PR #228; unmocked invitation listing crashed Admin Users; migration renumbered |
+| 04A | 8-12 | 73 | 2 | 1h47m | PR #234; migration renumber and merge; a test raced the Story Bank loading state |
+| 03B | 6-9 | 41 | 1 | 2h47m | PR #230; merge conflict and a branch-relative test |
+| 03C | 7-10 | 63 | 1 | 3h15m | PR #231; two concurrency schemes reconciled with 03B |
+| 04B | 8-12 | 63 | 1 | 3h28m | PR #233; consent and verified-invitation rules reconciled with 04A |
 
-Eight first-wave packages were authored in 257 agent-minutes in total (agents ran in parallel), against estimates of 2 to 15 engineering days each; the estimates include review, CI and integration, which the authoring time does not. All eight merged after green GitHub CI, between 41 minutes and 3 hours 51 minutes after their PR opened (the owner reviewed and merged quickly); five needed 1 to 2 CI or integration rework rounds after the PR opened, caused by stale head-literal assertions and cross-branch tests that no local run had exposed because CI stops at the first failing evaluator. That is evidence about CI hygiene, not a verified effort ratio: these packages were interface contracts, scaffolds and a documented additive migration, and no first-wave package needed a human qualifier, a licence, a native reviewer or live staging. The forecast therefore keeps the engineering estimates as planning inputs and treats the calendar-bound human and legal lead times as the binding constraint for the date.
+Twenty packages (waves 1 and 2, plus the lead's prep branch) were authored in 880 agent-minutes in total (agents ran in parallel), against engineering estimates of 2 to 15 days each; the estimates include review, CI and integration, which the authoring time does not. All of them merged after green GitHub CI, between 41 minutes and 3 hours 51 minutes after their PR opened (the owner reviewed and merged quickly). Nine of the twenty needed 1 to 2 CI or integration rework rounds after the PR opened (12 rounds in total), caused by hard-coded migration heads, branch-relative tests, an unmocked Admin route that crashed a page, a test racing a loading state, and two packages that each added a different concurrency or consent rule to the same code. That is evidence about integration hygiene, not a verified effort ratio: these packages were contracts, backends and scaffolds, and none needed a human qualifier, a licence, a native reviewer or live staging in its path. The forecast therefore treats engineering as short and cheap to re-plan, and the calendar-bound human, legal and live-environment steps as the binding constraint for the date.
 
 Sensitivity of the full-scope completion date to the true effort (profile 'D ramp 12, 18, 24', high estimate scaled; a sensitivity table, not a forecast):
 
