@@ -83,3 +83,6 @@ CI: not available until a PR exists. Rework rounds: 2 (test fixtures/allowlists;
 - Resend: audit precedes the email side effect (see design); delivery not confirmed.
 - Hierarchy rule is permission-subset based; because `platform_admin` holds all 44, only it can act on another `platform_admin`.
 - Base: depends on `chore/migration-head-agnostic` (unmerged). No migration; 0045 left unused.
+
+## Delivery
+Branch feat/03c-admin-users; code head e9211d2 (this note is a following docs-only commit). First push: 03:00 CEST approx. PR: owner opens https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/new/feat/03c-admin-users (base on chore/migration-head-agnostic until that merges).
