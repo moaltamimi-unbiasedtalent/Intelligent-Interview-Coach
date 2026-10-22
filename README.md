@@ -21,7 +21,7 @@ Next.js 15 / React 19 / TypeScript frontend  (candidate UI, public site, English
       -> Mo: bounded LangGraph agent (allow-listed tools, three bounded specialists, agentic RAG, approved memory, human-in-the-loop)
       -> Interview Practice (durable sessions; LLM-backed question and evaluation services)
       -> Documents and evidence, Opportunities, Workspaces, Account lifecycle
-    -> SQLAlchemy + Alembic (single head 0040_knowledge_alert_categories) · knowledge stores + Chroma vector index
+    -> SQLAlchemy + Alembic (single head, verified by `tests/_alembic_head.py`) · knowledge stores + Chroma vector index
     -> Provider adapters (LLM via OpenRouter, email, speech, research): optional, never contacted by tests
 ```
 

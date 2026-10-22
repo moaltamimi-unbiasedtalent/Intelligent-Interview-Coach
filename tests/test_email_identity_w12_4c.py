@@ -3,6 +3,7 @@ a temporary SQLite file and every secret below is a test value that must appear 
 
 from __future__ import annotations
 
+from tests._alembic_head import repository_head
 import json
 import logging
 import re
@@ -569,7 +570,7 @@ def test_migration_0027_single_head_fresh_and_round_trip(tmp_path, monkeypatch):
 
     url = f"sqlite:///{tmp_path / 'm.db'}"
     monkeypatch.setenv("DATABASE_URL", url)
-    assert ScriptDirectory.from_config(cfg(url)).get_heads() == ["0040_knowledge_alert_categories"]
+    assert ScriptDirectory.from_config(cfg(url)).get_heads() == [repository_head()]
     command.upgrade(cfg(url), "0026_managed_secrets")
     assert "email_attempts" not in inspect(create_engine(url)).get_table_names()
     command.upgrade(cfg(url), "head")

@@ -4,6 +4,7 @@ secret, every non-loopback socket fails the test. ``SYNTHETIC_POLICY`` is not an
 
 from __future__ import annotations
 
+from tests._alembic_head import repository_head
 import json
 import threading
 from datetime import timedelta
@@ -641,7 +642,7 @@ def test_migration_0030_upgrade_from_0029_downgrade_safety_and_single_head(tmp_p
     with create_engine(url).connect() as c:
         row = c.execute(text("SELECT attempt_count, attempt_limit, operator_retries FROM billing_provider_events")).one()
     assert tuple(row) == (2, 6, 0)                                                                        # history preserved, defaults applied
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0040_knowledge_alert_categories"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == [repository_head()]
     command.downgrade(cfg, "0029_provider_webhooks")                                                      # empty recovery table: allowed
     assert "billing_recovery_actions" not in inspect(create_engine(url)).get_table_names()
     command.upgrade(cfg, "head")

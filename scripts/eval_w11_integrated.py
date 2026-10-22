@@ -119,8 +119,9 @@ def run() -> dict[str, tuple[bool, str]]:
           and not re.search(r"overall_score\s*=\s*(sum|round|int|mean|statistics)", ev) and (ROOT / "tests/test_evaluation_contract.py").exists(), "no deterministic scoring formula")
 
     # ---- schema / scope
-    mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("one_alembic_head_0038", mig[-1].startswith("0040_knowledge_alert_categories") and len(mig) == 40, mig[-1])
+    from tests._alembic_head import chain_ok
+    _ok, _detail = chain_ok(min_head=38)
+    check("one_alembic_head", _ok, _detail)
     ci = read(".github/workflows/ci.yml")
     try:
         import yaml

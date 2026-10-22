@@ -103,8 +103,9 @@ def run() -> dict[str, tuple[bool, str]]:
           not re.search(r'platform_role\s*===|===\s*"platform_admin"|role\s*===\s*"', ui), "no role-name checks in admin components")
     check("admin_ui_uses_verified_navigation", 'from "next/link"' not in ui, "VerifiedLink only")
 
-    mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_", "0026_", "0027_", "0028_", "0029_", "0030_", "0031_", "0032_", "0033_", "0034_", "0035_", "0036_", "0037_", "0038_", "0039_", "0040_")), mig[-1])
+    from tests._alembic_head import chain_ok
+    _ok, _detail = chain_ok(min_head=14)          # one head, linear contiguous chain from 0001, every down_revision resolves; head not older than the registered baseline
+    check("no_migration_added", _ok, _detail)
     return out
 
 

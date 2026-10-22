@@ -71,8 +71,15 @@ def run() -> dict[str, tuple[bool, str]]:
     check("defect_placement_recorded", all(f"SEC-W10-0{i}" in plan and f"SEC-W10-0{i}" in adr for i in range(1, 7)), "SEC-W10-01..06 placed in plan and ADR")
     check("preset_names_final", all(n in plan for n in ("platform_admin", "support_operator", "billing_admin", "knowledge_admin", "security_privacy_admin", "operations_admin")),
           "six role presets named")
-    mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("no_migration_added", mig[-1].startswith(("0014_", "0015_", "0016_", "0017_", "0018_", "0019_", "0020_", "0021_", "0022_", "0023_", "0024_", "0025_", "0026_", "0027_", "0028_", "0029_", "0030_", "0031_", "0032_", "0033_", "0034_", "0035_", "0036_", "0037_", "0038_", "0039_", "0040_")), mig[-1])
+    import sys, importlib.util as _iu  # dependency-free load: this guard runs in the static job where importing the ``tests`` package (starlette) is not possible
+    _spec = _iu.spec_from_file_location("tests._alembic_head", ROOT / "tests" / "_alembic_head.py")
+    _h = sys.modules.get("tests._alembic_head") or _iu.module_from_spec(_spec)
+    sys.modules["tests._alembic_head"] = _h
+    if not hasattr(_h, "chain_ok"):
+        _spec.loader.exec_module(_h)
+    chain_ok = _h.chain_ok
+    _ok, _detail = chain_ok(min_head=14)          # one head, linear contiguous chain from 0001, every down_revision resolves; head not older than the registered baseline
+    check("no_migration_added", _ok, _detail)
     check("referenced_source_paths_exist",
           all((ROOT / p).exists() for p in re.findall(r"`(src/[A-Za-z0-9_/]+\.py)`", plan + adr)),
           "every `src/...py` path named in the plan exists")

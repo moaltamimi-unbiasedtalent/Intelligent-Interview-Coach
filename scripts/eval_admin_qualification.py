@@ -130,8 +130,9 @@ def run() -> dict[str, tuple[bool, str]]:
     check("no_external_paging", not re.search(r"(^\s*(import|from)\s+(smtplib|requests|httpx|urllib|boto3)\b)|\b(slack|pagerduty|twilio|webhook|sendgrid)\b", pkg, re.I | re.M))
 
     # ---- migrations / scope
-    mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("one_alembic_head_0038_after_the_w12_4b_to_w12_4d_p5a_migrations", mig[-1].startswith("0040_knowledge_alert_categories") and len(mig) == 40 and len({m[:4] for m in mig}) == 40, mig[-1])
+    from tests._alembic_head import chain_ok
+    _ok, _detail = chain_ok(require=("0038_compensation_concepts", "0040_knowledge_alert_categories"))     # version-independent: later revisions may sit above
+    check("one_alembic_head_after_the_w12_4b_to_w12_4d_p5a_migrations", _ok, _detail)
     check("no_w11_or_rc_code", not list((ROOT / "docs/capstone").rglob("W11*")) and not list((ROOT / "docs/capstone").rglob("RC-P10-003*")))   # W10.14-era guard: no W11/RC docs by name; the RC artifact is governed by eval_w11_integrated / eval_rc_p10_003 after the post-W11 owner-approved action
 
     # ---- evaluator / test isolation

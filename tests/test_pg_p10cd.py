@@ -3,6 +3,7 @@ run creates and drops its own ``p5b_*`` database); skipped without it. Synthetic
 
 from __future__ import annotations
 
+from tests._alembic_head import repository_head
 import os
 import subprocess
 import sys
@@ -78,7 +79,7 @@ KW = dict(concept_map={"IND": "individual_earnings", "HOG": "household_income", 
 def test_0038_is_head_with_the_new_columns_checks_and_natural_key(pg):
     from sqlalchemy import inspect, text
     with pg.engine.connect() as c:
-        assert c.execute(text("select version_num from alembic_version")).scalar() == "0040_knowledge_alert_categories"
+        assert c.execute(text("select version_num from alembic_version")).scalar() == repository_head()
         checks = {r[0] for r in c.execute(text("select conname from pg_constraint where contype = 'c' and conrelid = 'compensation_v2_records'::regclass"))}
         uq = c.execute(text("select pg_get_constraintdef(oid) from pg_constraint where conname = 'uq_comp_v2_natural_key'")).scalar()
     assert {"ck_cv2_earnings_concept", "ck_cv2_population_scope", "ck_cv2_evidence_method", "ck_cv2_not_household_income", "ck_cv2_value_not_zero_or_invented", "ck_cv2_bounds"} <= checks
@@ -158,7 +159,7 @@ def test_downgrade_refuses_when_definition_distinct_rows_exist_then_preserves_ro
     out = subprocess.run([sys.executable, "-m", "alembic", "downgrade", "0037_compensation_v2"], cwd=ROOT, env=pg.env, capture_output=True, text=True, timeout=300)
     assert out.returncode != 0 and "downgrade refused" in out.stderr
     with pg.engine.connect() as c:
-        assert c.execute(text("select version_num from alembic_version")).scalar() == "0040_knowledge_alert_categories"                 # nothing changed
+        assert c.execute(text("select version_num from alembic_version")).scalar() == repository_head()                 # nothing changed
         assert c.execute(text("select count(*) from compensation_v2_records")).scalar() >= 6
     with pg.engine.begin() as c:                                                                                               # the operator archives the definition-distinct rows
         c.execute(text("delete from compensation_v2_records where source_ref in ('pg_c_a', 'pg_c_b')"))

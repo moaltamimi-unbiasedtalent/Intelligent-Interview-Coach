@@ -12,6 +12,7 @@ from src.admin_security.alerts import AlertService
 from src.knowledge_admin import alerts as KA
 from src.knowledge_admin import policy as P
 from src.persistence import ALERT_CATEGORIES, AdminNotification, Job, KnowledgeSourceVersion
+from tests._alembic_head import assert_chain
 from tests._knowledge_env_02a import Process, hosted_temp
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -162,8 +163,8 @@ def test_migration_0040_accepts_the_new_categories_keeps_the_old_and_is_the_sing
     from sqlalchemy.exc import IntegrityError
 
     cfg, url = _alembic(tmp_path, monkeypatch)
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["0040_knowledge_alert_categories"]
-    command.upgrade(cfg, "head")
+    assert ScriptDirectory.from_config(cfg).get_heads() == [assert_chain(require=("0040_knowledge_alert_categories",))]   # one head, 0040 in the chain (later revisions may sit above it)
+    command.upgrade(cfg, "0040_knowledge_alert_categories")
     eng = create_engine(url)
     ins = ("insert into admin_notifications (public_id, category, severity, dedupe_key, state, source_type, title, occurrence_count, first_seen_at, last_seen_at, created_at, updated_at, revision) "
            "values (:p, :c, 'high', :k, 'active', 'knowledge', 't', 1, '2026-01-01', '2026-01-01', '2026-01-01', '2026-01-01', 0)")
@@ -175,12 +176,15 @@ def test_migration_0040_accepts_the_new_categories_keeps_the_old_and_is_the_sing
             c.execute(text(ins), {"p": "px", "c": "not_a_category", "k": "kx"})
 
 
+REV_0040 = "0040_knowledge_alert_categories"
+
+
 def test_migration_0040_downgrade_is_fail_closed_and_data_preserving(tmp_path, monkeypatch):
     from alembic import command
     from sqlalchemy import create_engine
 
     cfg, url = _alembic(tmp_path, monkeypatch)
-    command.upgrade(cfg, "head")
+    command.upgrade(cfg, "0040_knowledge_alert_categories")
     eng = create_engine(url)
     ins = ("insert into admin_notifications (public_id, category, severity, dedupe_key, state, source_type, title, occurrence_count, first_seen_at, last_seen_at, created_at, updated_at, revision) "
            "values ('p1', :c, 'high', 'k1', 'active', 'knowledge', 't', 1, '2026-01-01', '2026-01-01', '2026-01-01', '2026-01-01', 0)")
@@ -190,13 +194,13 @@ def test_migration_0040_downgrade_is_fail_closed_and_data_preserving(tmp_path, m
         command.downgrade(cfg, "0039_speech_governance")
     with eng.connect() as c:
         assert c.execute(text("select count(*) from admin_notifications")).scalar() == 1            # nothing was deleted
-        assert c.execute(text("select version_num from alembic_version")).scalar() == "0040_knowledge_alert_categories"
+        assert c.execute(text("select version_num from alembic_version")).scalar() == REV_0040       # the fixed historical revision under test, not the head
     with eng.begin() as c:
         c.execute(text("delete from admin_notifications"))
     command.downgrade(cfg, "0039_speech_governance")
     with eng.connect() as c:
         assert c.execute(text("select version_num from alembic_version")).scalar() == "0039_speech_governance"
-    command.upgrade(cfg, "head")                                                                   # and it re-applies
+    command.upgrade(cfg, "0040_knowledge_alert_categories")                                           # and it re-applies
 
 
 # ===================================================================== Admin permission matrix unchanged

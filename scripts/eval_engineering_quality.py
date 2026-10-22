@@ -73,8 +73,9 @@ def run() -> dict[str, tuple[bool, str]]:
 
     ci = read(".github/workflows/ci.yml")
     check("ci_enforces_clean_tree", "git status --porcelain" in ci, "CI fails if tests/evaluators dirty tracked files")
-    numbers = sorted(int(p.name.split("_", 1)[0]) for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("migration_chain_contiguous_from_registered_baseline", numbers[-1] >= 14 and numbers == list(range(numbers[0], numbers[-1] + 1)), "migration numbering is contiguous and not older than the registered baseline")
+    from tests._alembic_head import chain_ok
+    _ok, _detail = chain_ok(min_head=14)
+    check("migration_chain_contiguous_from_registered_baseline", _ok, "migration numbering is contiguous from 0001 and not older than the registered baseline" if _ok else _detail)
     return out
 
 

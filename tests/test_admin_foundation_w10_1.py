@@ -413,11 +413,13 @@ def test_c2_build_metadata_reads_injected_env_and_sanitizes(env, monkeypatch):
 
 def test_c3_repository_head_is_the_real_alembic_head():
     from src.application.admin_command_center import repository_head
-    assert repository_head() == "0040_knowledge_alert_categories"
+    from tests._alembic_head import repository_head as independent_head
+    assert repository_head() == independent_head()      # the application's Alembic-derived head equals the independently parsed single head
 
 
 def test_c4_migration_state_unknown_match_mismatch(env):
     from src.application.admin_command_center import migration_status
+    from tests._alembic_head import repository_head
     sf = env.repo.session_factory
     assert migration_status(sf)["state"] == "unknown"           # test DB built by create_all
     with sf() as s:
@@ -427,7 +429,7 @@ def test_c4_migration_state_unknown_match_mismatch(env):
     m = migration_status(sf)
     assert m["state"] == "mismatch" and m["warning"] and "never migrates automatically" in m["warning"]
     with sf() as s:
-        s.execute(text("UPDATE alembic_version SET version_num='0040_knowledge_alert_categories'"))
+        s.execute(text("UPDATE alembic_version SET version_num=:v"), {"v": repository_head()})
         s.commit()
     assert migration_status(sf)["state"] == "match"
 

@@ -76,8 +76,17 @@ def run() -> dict[str, tuple[bool, str]]:
     check("historical_w9_13_origin_linked_and_present", "w9/P10B_W9_13_FULL_REQUALIFICATION.md" in text and (ROOT / "docs/capstone/p10/w9/P10B_W9_13_FULL_REQUALIFICATION.md").exists(), "W9.13 history preserved")
     check("w10_14_and_w11_evidence_present", (ROOT / "docs/capstone/admin/W10_14_FULL_ADMIN_QUALIFICATION.md").exists() and (ROOT / "docs/capstone/p10/P10B_W11_INTEGRATED_REQUALIFICATION.md").exists()
           and all(k in by_id for k in ("R-53", "R-81", "R-88", "R-90")), "W10.14 + W11 documents and rows")
-    mig = sorted(p.name for p in (ROOT / "migrations/versions").glob("0*.py"))
-    check("schema_head_matches_the_matrix", mig[-1].startswith("0040_knowledge_alert_categories") and "0040_knowledge_alert_categories" in by_id.get("R-39", ["", "", "", "", "", "", ""])[3], mig[-1])
+    import importlib.util as _iu          # dependency-free load: this guard runs in the static job where importing the ``tests`` package (starlette) is not possible
+    _spec = _iu.spec_from_file_location("tests._alembic_head", ROOT / "tests" / "_alembic_head.py")
+    _h = sys.modules.get("tests._alembic_head") or _iu.module_from_spec(_spec)
+    sys.modules["tests._alembic_head"] = _h
+    if not hasattr(_h, "chain_ok"):
+        _spec.loader.exec_module(_h)
+    chain_ok = _h.chain_ok
+    _ok, _detail = chain_ok(require=("0025_security_audit_incidents",))   # ONE head, linear, contiguous, every down_revision resolves: read from the real script directory
+    _row = by_id.get("R-39", ["", "", "", "", "", "", ""])[3]
+    # the row declares 'single Alembic head' and names this evaluator as the verifier; it pins no revision, so adding a migration never edits it
+    check("schema_head_matches_the_matrix", _ok and "single Alembic head" in _row and "verified dynamically by `scripts/eval_release_matrix.py`" in _row, _detail)
     rc_dir = ROOT / "artifacts/capstone/p10/RC-P10-003"
     check("matrix_does_not_register_the_rc", "R-100" not in by_id and (not rc_dir.exists() or ((rc_dir / "manifest.json").exists() and (rc_dir / "gate_results.md").exists())), "the RC is downstream evidence packaging, not a matrix requirement; if present it is a complete separate artifact")
     return out
