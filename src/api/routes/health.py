@@ -67,6 +67,24 @@ def ready(request: Request) -> dict:
         else:
             dependencies["worker_heartbeat"] = "unknown"
         dependencies["scanner"] = hr.scanner_status()
+        try:     # K9 residual: a hosted registry holding fake-scanner (or unrecorded) scan results is reported, only when present
+            from src.knowledge_admin.environment import count_untrusted_scan_records
+
+            if checks["database"] and count_untrusted_scan_records(repo.session_factory):
+                dependencies["scan_records"] = "untrusted"
+        except Exception:  # noqa: BLE001
+            pass
+        sig = None
+        if dependencies["scanner"] == "reachable":      # reported only for a reachable scanner (an unreachable one has no signature facts)
+            sig = dependencies["scanner_signatures"] = hr.scanner_signature_status()
+        try:     # a scanner outage raises the in-app alert (reuses the existing alert mechanism); a reachable scanner resolves it
+            from src.knowledge_admin.alerts import observe_scanner
+
+            if dependencies["scanner"] in ("reachable", "unreachable"):
+                observe_scanner(repo.session_factory, available=dependencies["scanner"] == "reachable",
+                                signatures_stale=None if sig is None else sig == "stale")
+        except Exception:  # noqa: BLE001
+            pass
 
     ready_ok = all(checks.values())
     body = {

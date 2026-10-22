@@ -118,3 +118,36 @@ def observe_failed_jobs(session_factory: Any) -> list[str]:
     except Exception:  # noqa: BLE001
         log.warning("failed-job alert observation failed")
     return seen
+
+
+# ------------------------------------------------------------------ scanner outage (02C)
+SCANNER_ALERT_KEY = "scanner_unavailable"      # one alert row for the malware scanner condition (reuses the existing ``job_failed`` category)
+
+
+SIGNATURE_ALERT_KEY = "scanner_signatures_stale"
+
+
+def observe_scanner(session_factory: Any, *, available: bool, signatures_stale: bool | None = None) -> None:
+    """The malware scanner could not scan (``available=False``: raise the in-app alert) or just completed a scan (``True``: resolve it). Reuses the
+    existing ``job_failed`` category with its own dedupe key, so no category and no migration is added. Never raises; the row holds only the
+    code-defined title, the category and the short source id ``malware_scanner``."""
+    try:
+        _set(session_factory, SCANNER_ALERT_KEY, active=not available)
+        if signatures_stale is not None:
+            _set(session_factory, SIGNATURE_ALERT_KEY, active=bool(signatures_stale))
+    except Exception:  # noqa: BLE001 - alerting must never break the observed operation
+        log.warning("scanner alert could not be recorded")
+
+
+def _set(session_factory: Any, key: str, *, active: bool) -> None:
+    if active:
+        _raise(session_factory, "job_failed", "malware_scanner", key=key)
+        return
+    with session_factory() as s:
+        row = s.scalar(select(AdminNotification).where(AdminNotification.dedupe_key == key))
+        if row is None or row.state not in ("active", "acknowledged"):
+            return
+        now = utcnow()
+        row.state, row.resolved_at, row.resolved_by_user_id, row.updated_at = "resolved", now, None, now
+        row.revision += 1
+        s.commit()
