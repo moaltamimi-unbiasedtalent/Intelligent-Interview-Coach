@@ -14,6 +14,7 @@ from src.admin_users.guards import AdminForbidden
 from src.api.dependencies import get_repository, get_request_id, require_permission
 from src.api.rate_limit import enforce, user_key
 from src.api.schemas.admin_users_bulk import BulkExecuteBody, BulkPreview, BulkResult
+from src.application import admin_audit as A
 from src.application import pause
 
 router = APIRouter(prefix="/admin/users/bulk", tags=["admin-users-bulk"])
@@ -68,7 +69,8 @@ def _make_preview(action: str):
             return BulkResult(**done)
         enforce("admin_bulk_user_actions", user_key(principal.user_id))
         return BulkResult(**_guard(lambda: svc.execute(action, body.account_ids, preview_revision=body.preview_revision, reason=body.reason,
-                                                       actor_user_id=principal.user_id, idempotency_key=idempotency_key, request_id=get_request_id(request))))
+                                                       actor_user_id=principal.user_id, idempotency_key=idempotency_key, request_id=get_request_id(request),
+                                                       batch_event=A.ADMIN_USER_BULK_ACTION)))
 
     preview.__name__, execute.__name__ = f"preview_{action.replace('-', '_')}", f"execute_{action.replace('-', '_')}"
     router.add_api_route(f"/{action}/preview", preview, methods=["GET"], response_model=BulkPreview,

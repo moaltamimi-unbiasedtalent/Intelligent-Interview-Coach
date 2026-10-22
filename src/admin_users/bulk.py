@@ -197,7 +197,7 @@ class BulkUserActions:
 
     # ------------------------------------------------------------------ execute
     def execute(self, action_code: str, ids: list[int], *, preview_revision: str, reason: str, actor_user_id: int, idempotency_key: str,
-                request_id: str | None) -> dict:
+                request_id: str | None, batch_event: str = A.ADMIN_USER_BULK_ACTION) -> dict:
         action = ACTIONS[action_code]
         clean = clean_ids(ids)
         reason = reason.strip()
@@ -240,7 +240,7 @@ class BulkUserActions:
                 counts = {"action": action.code, "batch_id": batch_id, "requested": len(ids), "unique": len(clean), "applied": applied,
                           "skipped": sum(skipped.values()), "skipped_by_reason": skipped, "failed": sum(failed.values()), "failed_by_reason": failed}
                 self._audit(s, A.build_audit(
-                    event_type=A.ADMIN_USER_BULK_ACTION, actor_user_id=actor_user_id, request_id=request_id, target_type="user_bulk", target_id=idem,
+                    event_type=batch_event, actor_user_id=actor_user_id, request_id=request_id, target_type="user_bulk", target_id=idem,
                     reason=reason, request_hash=req_hash, **counts))
                 try:
                     s.commit()
