@@ -82,6 +82,17 @@ test("03E2: catalogue, builder, preview with suppression, chart with data table,
   expect(seen.some((s) => s.path.includes("commercial"))).toBe(false);
 });
 
+test("03E2: PDF export downloads an application/pdf file and shows the audited notice", async ({ page }) => {
+  await mock(page, STD);
+  await page.route("**/api/v1/admin/report-builder/export", async (route) => route.fulfill({ status: 200, contentType: "application/pdf",
+    headers: { "access-control-expose-headers": "Content-Disposition, X-Export-Rows", "content-disposition": 'attachment; filename="ask4mo-product-30d-20261022.pdf"', "x-export-rows": "1" }, body: "%PDF-1.4\n%%EOF\n" }));
+  await openBuilder(page);
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export PDF" }).click();
+  expect((await download).suggestedFilename()).toBe("ask4mo-product-30d-20261022.pdf");
+  await expect(page.getByText(/Downloaded ask4mo-product-30d-20261022\.pdf/)).toBeVisible();
+});
+
 test("03E2: grouped preview offers its bucket labels as the only filter choices", async ({ page }) => {
   await mock(page, STD);
   await openBuilder(page);

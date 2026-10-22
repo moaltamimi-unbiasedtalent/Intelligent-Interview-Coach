@@ -8,7 +8,7 @@ Two route families, one per EXISTING read permission (no permission is added; th
 Each family offers: ``GET registry`` (the code-defined report types, metrics, dimensions, windows and chart kinds the caller may use), ``GET validate`` and
 ``GET preview`` (a definition arrives as query parameters, so a read stays a GET; both are read-only and unaudited like every other report read),
 ``GET/POST/PUT/DELETE saved`` (the Admin's saved DEFINITIONS: owner-scoped, expected-revision protected, bounded, audited in the same transaction),
-``GET saved/{id}/preview`` and ``POST export`` (CSV or JSON of ALREADY-SUPPRESSED aggregates only, bounded rows, formula-injection-safe, audited BEFORE any byte is sent;
+``GET saved/{id}/preview`` and ``POST export`` (CSV, JSON or PDF of ALREADY-SUPPRESSED aggregates only, bounded rows, formula-injection-safe, audited BEFORE any byte is sent;
 if the audit cannot be written nothing is exported). A definition naming anything the caller may not read is 403; an invalid one is 422 with stable problem codes
 and no echoed input. Nothing here writes candidate data, enqueues a job, calls a provider or model, or reads candidate content. The cohort rule is documented in
 ``src/reporting/report_builder.py``.
@@ -30,6 +30,7 @@ from src.application import admin_audit as A
 from src.application import admin_permissions as perm
 from src.persistence import utcnow
 from src.reporting import report_builder as RB
+from src.reporting import report_pdf as PDF
 from src.reporting.report_configs import (
     MAX_CONFIGS_PER_OWNER, ConfigConflict, ConfigForbidden, ConfigNotFound, ReportConfigService,
 )
@@ -202,15 +203,18 @@ def _build_router(prefix: str, required: str, tag: str) -> APIRouter:
         return PreviewResponse(**run_preview(plan_for(stored_definition(svc, principal, config_id), principal), b))
 
     # ------------------------------------------------------------------ export (POST on purpose, like the audit export: it records an audit event)
-    @router.post("/export", summary="Export the already-suppressed aggregates of a definition as CSV or JSON (bounded rows, audited before sending)")
+    @router.post("/export", summary="Export the already-suppressed aggregates of a definition as CSV, JSON or PDF (bounded rows, audited before sending)")
     def export(body: ExportRequest, request: Request, principal=Depends(gate), svc: ReportConfigService = Depends(cfg_svc), b: RB.ReportBuilder = Depends(builder),
                audit_repo=Depends(get_audit_repository)) -> Response:
         defn = body.definition if body.definition is not None else stored_definition(svc, principal, body.saved_id)
         plan = plan_for(defn, principal)
         result = run_preview(plan, b)
         rows = RB.export_rows(result)
+        pdf_bytes: bytes | None = None
         try:
             RB.check_export_size(rows)
+            if body.format == "pdf":                                          # rendered (and bounded) BEFORE the audit: a refusal or render failure audits and sends nothing
+                pdf_bytes = PDF.render_pdf(result, rows)
         except RB.ReportInvalid as exc:
             raise _http(exc)
         now = utcnow()
@@ -223,6 +227,8 @@ def _build_router(prefix: str, required: str, tag: str) -> APIRouter:
         except Exception:                                                     # noqa: BLE001 - the cause is never surfaced
             raise HTTPException(status_code=503, detail="The export could not be audited, so nothing was exported.")
         headers = {"Content-Disposition": f'attachment; filename="{filename}"', "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff", "X-Export-Rows": str(len(rows))}
+        if pdf_bytes is not None:
+            return Response(content=pdf_bytes, media_type="application/pdf", headers={**headers, "Content-Security-Policy": "default-src 'none'; sandbox"})
         if body.format == "csv":
             return StreamingResponse(RB.render_csv(rows), media_type="text/csv; charset=utf-8", headers=headers)
         return Response(content=RB.render_json(result, rows), media_type="application/json", headers=headers)

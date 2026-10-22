@@ -261,14 +261,14 @@ function BuilderBody({ family, registry }: { family: ReportFamily; registry: Rep
         <div className="flex flex-wrap items-center gap-2">
           <button type="button" className={btn} disabled={!valid || previewState === "loading"} onClick={runPreview}>{previewState === "loading" ? "Running..." : "Run preview"}</button>
           <span className="text-sm text-muted">Export:</span>
-          {(["csv", "json"] as ExportFormat[]).map((f) => (
+          {(["csv", "json", "pdf"] as ExportFormat[]).map((f) => (
             <button key={f} type="button" className={btn} disabled={!valid || exportBusy !== null} onClick={() => doExport(f)} aria-label={`Export ${f.toUpperCase()}`}>
               {exportBusy === f ? "Exporting..." : f.toUpperCase()}
             </button>
           ))}
         </div>
         {exportNote ? <p role={exportNote.ok ? "status" : "alert"} className="rounded border border-border p-2 text-sm">{exportNote.text}</p> : null}
-        <p className="text-xs text-muted">Exports contain the already-suppressed aggregates only, at most {registry.limits.max_export_rows} rows. Every export is audited before it is sent; if the audit cannot be written nothing is exported.</p>
+        <p className="text-xs text-muted">Exports (CSV, JSON and PDF) contain the already-suppressed aggregates only, at most {registry.limits.max_export_rows} rows (a PDF holds fewer; the server says so if it is too large). Every export is audited before it is sent; if the audit cannot be written nothing is exported.</p>
         {previewError ? (
           <div role="alert" className="rounded border border-border p-2 text-sm">
             <p>{previewError.message}</p>

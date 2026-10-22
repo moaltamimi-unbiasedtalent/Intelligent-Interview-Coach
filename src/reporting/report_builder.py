@@ -499,7 +499,7 @@ def render_json(preview: dict, rows: list[dict]) -> str:
 
 def export_filename(report_id: str, window: str, fmt: str, now: datetime) -> str:
     """Built only from registry slugs, a closed window and the format: never from a saved name or any request text."""
-    if not re.fullmatch(r"[a-z][a-z0-9_]{0,63}", report_id) or window not in PERIODS or fmt not in ("csv", "json"):
+    if not re.fullmatch(r"[a-z][a-z0-9_]{0,63}", report_id) or window not in PERIODS or fmt not in ("csv", "json", "pdf"):
         raise ValueError("unsafe filename part")
     return f"ask4mo-{report_id}-{window}-{now.strftime('%Y%m%d')}.{fmt}"
 
