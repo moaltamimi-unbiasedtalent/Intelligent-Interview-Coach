@@ -84,6 +84,7 @@ import type {
   AdminUserQuery,
   AdminUserActionBody,
   AdminUserActionName,
+  BulkUserActionName,
   AdminUserActionResult,
   AdminUserSummary,
   AdminWorkspaceDetail,
@@ -686,6 +687,11 @@ export const api = {
     // 03C: strict account actions (reason and the account revision are mandatory; the server enforces self, hierarchy and stale-state protection).
     userAction: (userId: number, action: AdminUserActionName, body: AdminUserActionBody, opts?: RequestOptions) =>
       request<AdminUserActionResult>("POST", `/admin/users/${userId}/actions/${action}`, { body, ...opts }),
+    /** 03C bulk: preview is counts only; execute needs the preview revision, a reason and an Idempotency-Key. Responses are shape-checked by the caller. */
+    bulkUserPreview: (action: BulkUserActionName, ids: number[], opts?: RequestOptions) =>
+      request<unknown>("GET", `/admin/users/bulk/${action}/preview${qs({ ids: ids.join(",") })}`, opts),
+    bulkUserExecute: (action: BulkUserActionName, body: { account_ids: number[]; preview_revision: string; reason: string }, idempotencyKey: string, opts?: RequestOptions) =>
+      request<unknown>("POST", `/admin/users/bulk/${action}/execute`, { body, headers: { "Idempotency-Key": idempotencyKey }, ...opts }),
     // W10.13: a role is never changed directly. This creates a REQUEST that a different Admin must approve (both need a recent password confirmation).
     requestRoleChange: (userId: number, role: string, reason: string, opts?: RequestOptions) =>
       request<RoleChangeRequest>("POST", "/admin/role-changes", { body: { target_user_id: userId, role, reason }, ...opts }),

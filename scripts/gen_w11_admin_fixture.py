@@ -55,7 +55,20 @@ def main() -> int:
             r = c.get(API + path, cookies=cks[role])
             if r.status_code == 200:
                 out[re.sub(r"/[0-9a-f]{32}$|/\d+$", "/{id}", path)] = r.json()
+        # 03C bulk previews take query parameters, so the parameterless sweep above cannot record them: record each with one real, content-free account id.
+        for action in ("force-signout", "expire-verification"):
+            r = c.get(f"{API}/admin/users/bulk/{action}/preview", params={"ids": str(ids["user"])}, cookies=cks["platform_admin"])
+            if r.status_code == 200:
+                out[f"/admin/users/bulk/{action}/preview"] = r.json()
     dest = ROOT / "frontend/e2e/fixtures/admin-responses.json"
+    if "--merge-prefix" in sys.argv:     # keep every existing recording byte-for-byte; add ONLY the missing keys that start with the given prefix
+        prefix = sys.argv[sys.argv.index("--merge-prefix") + 1]
+        existing = json.loads(dest.read_text(encoding="utf-8"))
+        added = [k for k in sorted(out) if k.startswith(prefix) and k not in existing]
+        existing.update({k: out[k] for k in added})
+        dest.write_text(json.dumps(existing, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+        print(f"merged {len(added)} new responses ({', '.join(added) or 'none'}) -> {dest.relative_to(ROOT)}")
+        return 0
     dest.write_text(json.dumps(out, indent=1, sort_keys=True) + "\n", encoding="utf-8")
     print(f"recorded {len(out)} responses -> {dest.relative_to(ROOT)}")
     return 0

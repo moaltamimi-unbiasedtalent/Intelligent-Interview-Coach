@@ -3876,6 +3876,38 @@
    }
   ]
  },
+ "/admin/users/bulk/expire-verification/preview": {
+  "action": "expire-verification",
+  "eligible": 1,
+  "excluded": 0,
+  "excluded_by_reason": {
+   "higher_authority": 0,
+   "last_active_platform_admin": 0,
+   "no_pending_verification": 0,
+   "not_found": 0,
+   "self": 0
+  },
+  "max_batch": 100,
+  "preview_revision": "6afc815ab330d986",
+  "requested": 1,
+  "unique": 1
+ },
+ "/admin/users/bulk/force-signout/preview": {
+  "action": "force-signout",
+  "eligible": 1,
+  "excluded": 0,
+  "excluded_by_reason": {
+   "higher_authority": 0,
+   "last_active_platform_admin": 0,
+   "no_live_sessions": 0,
+   "not_found": 0,
+   "self": 0
+  },
+  "max_batch": 100,
+  "preview_revision": "427fbb7f49ca172d",
+  "requested": 1,
+  "unique": 1
+ },
  "/admin/users/{id}": {
   "access": {
    "assignable_roles": [
