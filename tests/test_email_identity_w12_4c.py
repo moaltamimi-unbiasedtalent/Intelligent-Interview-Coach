@@ -551,7 +551,8 @@ def test_attempt_rows_are_purged_by_age_and_hold_no_recipient_after_account_dele
     EmailService(MemoryEmailSender(), repo).deliver(__import__("src.mail", fromlist=["EmailMessage"]).EmailMessage("a@b.co", "s", "b", "admin_test"))
     assert all(a.created_at.replace(tzinfo=None) > (utcnow() - timedelta(days=RETENTION_DAYS)).replace(tzinfo=None) for a in w.attempts())
     cols = {c.name for c in EmailAttempt.__table__.columns}
-    assert cols == {"id", "message_type", "provider", "status", "failure_category", "provider_message_ref", "locale", "request_id", "user_id", "created_at"}
+    assert cols == {"id", "message_type", "provider", "status", "failure_category", "provider_message_ref", "locale", "request_id", "user_id", "created_at",
+                    "delivery_state", "delivery_event_at", "delivery_event_digest"}          # the last three: 05D verified delivery evidence (migration 0044), still no recipient or content
     summary = repo.summary()
     assert "user_id" not in json.dumps(summary) and email not in json.dumps(summary)
 
@@ -575,7 +576,7 @@ def test_migration_0027_single_head_fresh_and_round_trip(tmp_path, monkeypatch):
     assert "email_attempts" not in inspect(create_engine(url)).get_table_names()
     command.upgrade(cfg(url), "head")
     assert {c["name"] for c in inspect(create_engine(url)).get_columns("email_attempts")} == {"id", "message_type", "provider", "status", "failure_category",
-        "provider_message_ref", "locale", "request_id", "user_id", "created_at"}
+        "provider_message_ref", "locale", "request_id", "user_id", "created_at", "delivery_state", "delivery_event_at", "delivery_event_digest"}      # + 05D (0044)
     command.downgrade(cfg(url), "0026_managed_secrets")
     assert "email_attempts" not in inspect(create_engine(url)).get_table_names()
     command.upgrade(cfg(url), "head")
