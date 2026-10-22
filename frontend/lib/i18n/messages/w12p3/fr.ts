@@ -74,18 +74,14 @@ const fr: typeof en = {
     transition_newSession: "Démarrer une nouvelle session d’entraînement",
     transition_history: "Vos entretiens terminés et vos rapports restent disponibles selon votre vue de l’historique.",
     pricing_notAvailable: "Pas encore disponible",
-    pricing_previewPrice: "Prix indicatif à l’étude : 19,99 € par mois. Ce prix n’a pas été approuvé.",
     pricing_statusLabel: "Statut de Premium",
   },
   marketing: {
-    homePricingBody: "Basic est gratuit. Les abonnements Premium sont prévus et pas encore disponibles.",
     ctaBody: "Commencez gratuitement avec Basic dès aujourd’hui. Premium n’est pas encore disponible.",
     pricingSubtitle: "Commencez gratuitement avec Basic. Les abonnements Premium sont prévus et pas encore disponibles.",
-    pricingBillingNote: "Premium ne peut pas encore être acheté. Rien sur cette page ne déclenche de paiement.",
     planPremiumCta: "Premium n’est pas encore disponible",
     planPremiumNote: "Les abonnements Premium sont prévus. Rien n’est facturé et aucun paiement n’est lancé ici.",
     pricingPremiumIncludes: "Prévu pour une recherche d’emploi active sur plusieurs postes : tout Basic plus les fonctionnalités Premium prévues ci-dessous. Aucune n’est encore en vente.",
-    footerNoBilling: "Basic est gratuit. Les abonnements Premium ne sont pas encore disponibles.",
   },
 };
 

@@ -22,6 +22,22 @@ def _flag(name: str) -> bool:
     return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _openrouter_configured() -> bool:
+    """Whether a credential is configured by any layer; False under the offline switch (nothing is read). Falls back to the environment answer if the layers cannot be read."""
+    from src.application.provider_mode import provider_credential_configured
+
+    try:
+        return provider_credential_configured()
+    except Exception:  # noqa: BLE001
+        return _set("OPENROUTER_API_KEY")
+
+
+def _openrouter_mode() -> str:
+    from src.application.provider_mode import resolve_provider_mode
+
+    return resolve_provider_mode()
+
+
 def _row(provider_id: str, label: str, configured: bool, *, enabled: bool | None = None,
          mode: str | None = None) -> ProviderRow:
     return ProviderRow(
@@ -57,7 +73,8 @@ def build_providers_response(pause_service=None, speech_runtime=None) -> Provide
     rows = [
         _row("email", "Transactional email", brevo, mode="brevo" if brevo else "console"),
         _row("google_oidc", "Google sign-in (OIDC)", _set("GOOGLE_OIDC_CLIENT_ID", "GOOGLE_CLIENT_ID")),
-        _row("openrouter", "Language model provider (OpenRouter)", _set("OPENROUTER_API_KEY")),
+        # 04D (DEMO-02): the AI provider MODE (live / offline / not_configured / unknown) so a keyless or offline stack cannot be mistaken for live. Configuration, not health.
+        _row("openrouter", "Language model provider (OpenRouter)", _openrouter_configured(), mode=_openrouter_mode()),
         _row("adzuna", "Labour-market data (Adzuna)", _set("ADZUNA_APP_ID") and _set("ADZUNA_APP_KEY")),
         _row("langfuse", "External observability (Langfuse)",
              _set("LANGFUSE_PUBLIC_KEY") and _set("LANGFUSE_SECRET_KEY"),

@@ -25,7 +25,8 @@ Pointing the journey at a hosted staging stack (NOT RUN in this wave: OD-HOSTED 
   2. cd frontend && JOURNEY_MODE=real BASE_URL=https://<staging web origin> JOURNEY_API_URL=https://<staging api origin>/api/v1 \
         JOURNEY_INVITATIONS_FILE=/path/to/codes.json JOURNEY_LANGUAGES=en,de \
         npx playwright test --config playwright.journey-real.config.ts
-  Notes: the stack must serve the offline fixture provider or a governed live budget; this suite makes no budget decision. Registration is rate limited per IP
+  Add JOURNEY_EXPECT_AI_MODE=live only for a stack with a governed live budget (the default expects the offline mode). This suite makes no budget decision.
+  Notes: the stack must serve the offline fixture provider or a governed live budget. Registration is rate limited per IP
   (8 per hour), so run at most seven languages plus the one uninvited-refusal probe per hour per IP. Provider mode is read from /capabilities and recorded.
 """
 
@@ -51,6 +52,7 @@ FORBIDDEN_PORTS = {3000, 3015, 8020, 8030}
 DEFAULT_API_PORT = 8142
 DEFAULT_WEB_PORT = 3142
 ALL_LANGUAGES = ("en", "de", "fr", "es", "it", "pt", "nl")
+KEY_CANARY = "sk-or-v1-0123456789abcdef0123456789abcdef0123456789abcdef04D0CANARYWEB"      # a test value, never a credential (same value as frontend/e2e/journey/canary.ts)
 
 
 def _check_ports(*ports: int) -> None:
@@ -183,7 +185,8 @@ def run(args: argparse.Namespace) -> int:
                                 "--web-port", str(args.web_port), "--invitations", str(len(langs) + 1)],
                                cwd=str(ROOT), env=api_env, stdout=(state / "api.log").open("w"), stderr=subprocess.STDOUT)
         _wait(f"http://127.0.0.1:{args.api_port}/api/v1/health", 90, "API")
-        web_env = dict(os.environ, NEXT_PUBLIC_API_BASE_URL=f"http://localhost:{args.api_port}/api/v1", NEXT_DIST_DIR=".next-journey", NEXT_TELEMETRY_DISABLED="1")
+        web_env = dict(os.environ, NEXT_PUBLIC_API_BASE_URL=f"http://localhost:{args.api_port}/api/v1", NEXT_DIST_DIR=".next-journey", NEXT_TELEMETRY_DISABLED="1",
+                       OPENROUTER_API_KEY=KEY_CANARY)      # a canary the key-hazard guard (e2e/key-hazard-04d.spec.ts) must NOT find in the browser output
         if not args.skip_build:
             subprocess.run(["npm", "run", "build"], cwd=str(frontend), env=web_env, check=True, stdout=(state / "web-build.log").open("w"), stderr=subprocess.STDOUT)
         web = subprocess.Popen(["npx", "next", "start", "-p", str(args.web_port)], cwd=str(frontend), env=web_env, stdout=(state / "web.log").open("w"), stderr=subprocess.STDOUT)

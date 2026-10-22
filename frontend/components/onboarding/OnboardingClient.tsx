@@ -13,7 +13,7 @@
  * language; nothing sensitive/protected is collected; values are DATA, never placed in a prompt here.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { api } from "@/lib/api/client";
@@ -46,6 +46,9 @@ export function OnboardingClient() {
   const [geography, setGeography] = useState<CareerGeography>("");
   const [coaching, setCoaching] = useState<CoachingStyle>("balanced");
   const [hydrated, setHydrated] = useState(false);
+  // 04D: set the moment the candidate moves a step. The resume below must never move them BACK to the saved step if they acted before the account finished loading (found by the real-browser
+  // journey: a fast click-through in some languages was reset to step 1 when /auth/me resolved late).
+  const interacted = useRef(false);
   // P10B-W9.5: after completion the candidate stays on /onboarding and sees an intentional Welcome
   // (not dumped into /app). Onboarding is already durably marked complete before this renders.
   const [completedLocal, setCompletedLocal] = useState(false);
@@ -53,6 +56,7 @@ export function OnboardingClient() {
   // Resume from the persisted account state exactly once (never clobber in-flight edits).
   useEffect(() => {
     if (hydrated || !account) return;
+    if (interacted.current) { setHydrated(true); return; }
     setName(account.display_name ?? "");
     setTargetRole(account.target_role ?? "");
     setGeography((account.career_geography ?? "") as CareerGeography);
@@ -70,6 +74,7 @@ export function OnboardingClient() {
   }, [step, name, targetRole, geography, coaching]);
 
   const goNext = useCallback(async () => {
+    interacted.current = true;
     setBusy(true);
     setError(null);
     try {
@@ -82,7 +87,7 @@ export function OnboardingClient() {
     }
   }, [saveCurrentStep, step]);
 
-  const goBack = useCallback(() => { setError(null); setStep((s) => Math.max(0, s - 1)); }, []);
+  const goBack = useCallback(() => { interacted.current = true; setError(null); setStep((s) => Math.max(0, s - 1)); }, []);
 
   const finish = useCallback(async () => {
     // Guard against a duplicate completion while one is already in flight.

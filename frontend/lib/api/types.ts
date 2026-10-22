@@ -39,7 +39,15 @@ export interface CapabilitiesResponse {
   qualified_locales?: string[];
   unqualified_locales?: string[];
   no_language_available?: boolean;
+  // 04D (DEMO-02): the AI provider MODE of this stack (fixed vocabulary). live = a credential is configured (health is NOT tested); offline = test doubles only;
+  // not_configured = AI features cannot run; unknown = could not be read. Optional for older servers (treated as unknown, never as live).
+  ai_provider_mode?: AiProviderMode;
 }
+
+export type AiProviderMode = "live" | "offline" | "not_configured" | "unknown";
+
+/** Stable cause codes of a provider-backed step that could not run (src/constants.py AI_FAILURE_CODES). */
+export type AiFailureCode = "ai_not_configured" | "ai_provider_unavailable";
 
 // --- Opportunities (P10B Wave 6) ---------------------------------------------
 // A candidate's private preparation context for one job. Distinct from a Workspace
@@ -483,6 +491,8 @@ export interface InterviewStateResponse {
   deep_dive?: DeepDiveStateOut | null;
   error?: string | null;
   error_recoverable?: boolean;
+  /** Stable cause code when the error is a provider failure; render localized copy from it (never from `error`). */
+  error_code?: AiFailureCode | string | null;
   cumulative_cost_usd?: number | null;
 }
 
@@ -850,6 +860,8 @@ export interface AgentRunResponse {
   run_id: string;
   status: AgentStatus | string;
   response: string;
+  /** Stable cause code of a FAILED run (04D); render localized copy from it. */
+  failure_code?: AiFailureCode | string | null;
   tools_used: string[];
   retrieval_used: boolean;
   sources: AgentSource[];
@@ -1406,4 +1418,18 @@ export interface SpeechCapabilitiesResponse {
   excluded_languages: string[];
   audio_persisted: boolean;
   browser_disclosure: string;
+}
+
+// --- Recent Mo preparation runs (04D, AC-18) --------------------------------
+// GET /agent/runs: the caller's OWN runs, newest first. Ids, lifecycle state and dates only: never chat content. Mirrors src/api/routes/agent_runs.py.
+export interface RecentRun {
+  run_id: string;
+  state: "started" | "ready" | "failed";
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface RecentRunsResponse {
+  runs: RecentRun[];
+  limit: number;
 }

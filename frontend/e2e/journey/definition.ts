@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { translate } from "../../lib/i18n/catalog";
-import { FIXTURES, type JourneyEnv } from "./env";
+import { EXPECTED_AI_MODE, FIXTURES, type JourneyEnv } from "./env";
 
 /**
  * THE Candidate journey (04D, REQ-CAND-01): ONE definition, run by the spec in two modes (mocked network, real stack) and once per language.
@@ -85,7 +85,12 @@ export async function startInterviewFromOpportunity(page: Page, env: JourneyEnv,
 }
 
 /** Runs the whole journey. Returns what a caller may want to assert on afterwards. */
-export async function runJourney(page: Page, env: JourneyEnv, baseURL: string): Promise<JourneyResult> {
+export interface JourneyOptions {
+  /** Stop after the Opportunity has been created and its persistence checked (the provider-failure specs continue from there with their own steps). */
+  stopAfter?: "opportunity";
+}
+
+export async function runJourney(page: Page, env: JourneyEnv, baseURL: string, options: JourneyOptions = {}): Promise<JourneyResult> {
   const L = env.locale;
   const { pageErrors, posts } = watchPage(page);
   const records: JourneyRecord[] = [];
@@ -120,9 +125,15 @@ export async function runJourney(page: Page, env: JourneyEnv, baseURL: string): 
 
   await step("onboarding completes and offers the Welcome handoff", async () => {
     await hydrated(page, "main button, #main button");
-    await page.getByRole("button", { name: T(L, "onboarding.getStarted") }).click();
-    for (let i = 0; i < 5; i++) await page.getByRole("button", { name: T(L, "onboarding.next"), exact: true }).click();
-    await page.getByRole("button", { name: T(L, "onboarding.finish") }).click();
+    // Walk forward until the last step is showing (never a fixed number of clicks: a late account load or a remount may legitimately put the candidate on a different step, and the saved
+    // step is what counts). Bounded, so a page that never advances still fails.
+    const finish = page.getByRole("button", { name: T(L, "onboarding.finish") });
+    const forward = page.getByRole("button", { name: T(L, "onboarding.getStarted") }).or(page.getByRole("button", { name: T(L, "onboarding.next"), exact: true }));
+    for (let i = 0; i < 40 && !(await finish.isVisible()); i++) {
+      await forward.first().click({ timeout: 3_000 }).catch(() => undefined);
+    }
+    await expect(finish).toBeVisible();
+    await finish.click();
     await expect(page.getByRole("heading", { name: T(L, "onboarding.completeTitle") })).toBeVisible();
   });
 
@@ -153,12 +164,28 @@ export async function runJourney(page: Page, env: JourneyEnv, baseURL: string): 
     await expect(page.getByText(title).first()).toBeVisible();
   });
 
+  if (options.stopAfter === "opportunity") {
+    expect(pageErrors, "uncaught page errors during the journey").toEqual([]);
+    return { opportunityId, sessionId, interviewStartRequests: posts.filter((p) => p === "/interviews").length, records };
+  }
+
   await step("Prepare with Mo returns an answer", async () => {
     await page.goto(`/prepare?opportunity=${opportunityId}`);
     await hydrated(page, "#agent-goal");
     await page.locator("#agent-goal").fill(FIXTURES.mo.goal);
     await page.getByRole("button", { name: T(L, "prepare.startPreparing") }).click();
     await expect(page.getByText(FIXTURES.mo.reply)).toBeVisible();
+  });
+
+  await step("the AI mode is shown and the run list holds only this candidate's own run", async () => {
+    await page.goto("/prepare");
+    await hydrated(page, "#agent-goal");
+    // Both modes use offline fixtures unless the stack says otherwise: the stack must SAY so (a keyless or offline stack can never look live).
+    await expect(page.getByTestId("ai-provider-mode")).toHaveAttribute("data-mode", EXPECTED_AI_MODE);
+    await expect(page.getByTestId("ai-provider-mode")).toContainText(T(L, EXPECTED_AI_MODE === "live" ? "providerMode.live" : "providerMode.offline"));
+    // Each language is a different candidate on the same stack: only the run just made may be listed (owner scoping, seen through the real UI).
+    await expect(page.getByTestId("recent-run")).toHaveCount(1);
+    await expect(page.getByTestId("recent-run").first()).toContainText(T(L, "recentRuns.stateReady"));
   });
 
   await step("START INTERVIEW creates exactly one session and shows the first question", async () => {

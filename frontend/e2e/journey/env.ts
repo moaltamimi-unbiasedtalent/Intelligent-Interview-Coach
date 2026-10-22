@@ -20,6 +20,8 @@ export const FIXTURES = fixtures;
 
 export const MODE: JourneyMode = process.env.JOURNEY_MODE === "real" ? "real" : "mocked";
 export const VARIANT: JourneyVariant = (["healthy", "provider_down", "keyless"] as const).find((v) => v === process.env.JOURNEY_VARIANT) ?? "healthy";
+/** The AI mode the stack under test is EXPECTED to report (default offline: fixtures answer). A hosted stack with a governed live budget sets JOURNEY_EXPECT_AI_MODE=live; this suite never decides a budget. */
+export const EXPECTED_AI_MODE: "live" | "offline" = process.env.JOURNEY_EXPECT_AI_MODE === "live" ? "live" : "offline";
 export const MODE_LABEL = MODE === "real" ? "REAL STACK (offline fixtures unless the stack says otherwise)" : "MOCKED NETWORK";
 
 /** Languages to run: all seven by default; JOURNEY_LANGUAGES=en,de narrows (hosted runs are rate limited per IP: see scripts/e2e/journey_stack.py). */

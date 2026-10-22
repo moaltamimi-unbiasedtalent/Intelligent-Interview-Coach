@@ -11,7 +11,7 @@ if (!BASE_URL) throw new Error("BASE_URL is required for the real-stack journey"
 
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: /candidate-(journey|provider)-04d\.spec\.ts/,
+  testMatch: /(candidate-(journey|provider)|key-hazard)-04d\.spec\.ts/,
   timeout: 180_000,
   expect: { timeout: 15_000 },
   workers: 1,

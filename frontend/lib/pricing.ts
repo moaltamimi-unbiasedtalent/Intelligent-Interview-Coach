@@ -11,10 +11,8 @@ export type PlanId = "basic" | "premium";
 
 export interface PricingPlan {
   id: PlanId;
-  /** i18n keys (rendered via useT) — never hard-coded display strings. */
+  /** i18n keys (rendered via useT) — never hard-coded display strings. 04D: there is NO price field. Ask4Mo is a free, invitation-only private beta; no candidate surface states a price. */
   nameKey: string;
-  priceDisplay: string; // a currency figure is data, not translated copy
-  cadenceKey: string;
   ctaKey: string;
   includesKey: string;
   noteKey?: string;
@@ -26,14 +24,10 @@ export interface PricingPlan {
   purchasable: boolean;
 }
 
-export const PRICING_CURRENCY = "EUR";
-
 export const PRICING_PLANS: PricingPlan[] = [
   {
     id: "basic",
     nameKey: "marketing.planBasicName",
-    priceDisplay: "€0",
-    cadenceKey: "marketing.planBasicCadence",
     ctaKey: "marketing.planBasicCta",
     includesKey: "marketing.pricingBasicIncludes",
     ctaKind: "register",
@@ -43,8 +37,6 @@ export const PRICING_PLANS: PricingPlan[] = [
   {
     id: "premium",
     nameKey: "marketing.planPremiumName",
-    priceDisplay: "€19.99",
-    cadenceKey: "marketing.planPremiumCadence",
     ctaKey: "marketing.planPremiumCta",
     includesKey: "marketing.pricingPremiumIncludes",
     noteKey: "marketing.planPremiumNote",

@@ -112,6 +112,8 @@ class AgentRunResponse(BaseModel):
     # grounded answer for progressive disclosure — {answer, details, has_details,
     # next_step}. Purely presentational; the model output is unchanged.
     presentation: dict | None = None
+    # 04D: stable cause code (ai_not_configured | ai_provider_unavailable) of a FAILED run; the client renders localized copy from it. None otherwise.
+    failure_code: str | None = None
 
 
 class AgentRunDeleteResponse(BaseModel):

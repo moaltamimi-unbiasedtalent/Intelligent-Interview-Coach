@@ -17,6 +17,8 @@ export interface AgentError {
   notFound?: boolean;
   /** An operator pause (stable code platform_paused): the UI shows localized copy, never this message. */
   paused?: boolean;
+  /** An accurate, localizable cause (04D): the i18n key to show INSTEAD of `message`, set for "AI not configured" and "AI service unavailable" (stable codes, never English matching). */
+  stateKey?: string;
 }
 
 export interface UseAgentRun {
@@ -39,6 +41,7 @@ function toError(e: unknown): AgentError {
   const notFound = err?.status === 404;
   return {
     paused: err?.kind === "paused",
+    stateKey: err?.kind === "aiNotConfigured" ? "states.aiNotConfigured" : err?.kind === "aiUnavailable" ? "states.aiProviderUnavailable" : err?.kind === "unavailable" ? "states.serviceUnavailable" : undefined,
     message: notFound
       ? "This preparation session can no longer be resumed."
       : err?.userMessage ?? "Something went wrong. Please try again.",

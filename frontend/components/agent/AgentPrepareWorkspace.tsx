@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
+import { RecentRuns } from "./RecentRuns";
 import type { HumanDecisionRequest } from "@/lib/api/types";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -126,16 +127,25 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
           initialGoal={goalDraft}
           openContextField={openContextField}
         />
+        <RecentRuns />
       </section>
     );
   }
+
+  const failureKey = run.status === "failed"
+    ? (run.failure_code === "ai_not_configured" ? "states.aiNotConfigured" : run.failure_code === "ai_provider_unavailable" ? "states.aiProviderUnavailable" : null)
+    : null;
 
   const coach = (
     <div>
       <JourneyChrome journey={run.journey} />
       <PreparationChecklist journey={run.journey} />
       <MemoryLoadedCue run={run} />
-      <AgentConversation run={run} busy={busy} messages={run.conversation} />
+      <AgentConversation run={run} busy={busy} messages={failureKey ? run.conversation.filter((m, i, all) => !(i === all.length - 1 && m.role === "assistant")) : run.conversation} />
+      {failureKey ? (
+        // 04D: an accurate, localized cause for a FAILED run (AI not configured vs the AI service failed this time). The server's English fallback message is not shown.
+        <p role="alert" className="mt-3 text-sm text-danger" data-testid="mo-ai-failure">{t(failureKey)}</p>
+      ) : null}
 
       {run.awaiting_human_input && run.pending_action ? (
         <div className="mt-4">
@@ -176,7 +186,7 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
 
       {error && !error.notFound ? (
         <p role="alert" className="mt-3 text-sm text-danger">
-          {error.paused ? t("states.platformPaused") : error.message}
+          {error.paused ? t("states.platformPaused") : error.stateKey ? t(error.stateKey) : error.message}
           {error.requestId ? <span className="block text-xs text-muted">{t("prepare.reference", { id: error.requestId })}</span> : null}
         </p>
       ) : null}
@@ -255,7 +265,7 @@ function FirstMessageForm({
 }: {
   onStart: (req: { goal: string; target_role?: string; job_description?: string; candidate_background?: string; job_description_document_id?: number; profile?: AgentProfile; enable_current_market_research?: boolean }) => void;
   busy: boolean;
-  error: { message: string; requestId?: string | null; notFound?: boolean } | null;
+  error: { message: string; requestId?: string | null; notFound?: boolean; stateKey?: string } | null;
   onDismissError: () => void;
   /** Prefill the goal from a Home handoff so it is never re-typed (§11/§12). */
   initialGoal?: string;
@@ -429,7 +439,7 @@ function FirstMessageForm({
 
         {error && !error.notFound ? (
           <p role="alert" className="text-sm text-danger">
-            {error.message}
+            {error.stateKey ? t(error.stateKey) : error.message}
             {error.requestId ? <span className="block text-xs text-muted">{t("prepare.reference", { id: error.requestId })}</span> : null}
           </p>
         ) : null}

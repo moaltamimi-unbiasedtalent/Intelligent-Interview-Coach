@@ -160,6 +160,12 @@ def install_offline_interview_services(app, variant: str = "healthy", fixtures: 
     pricing = PricingService(models_fetcher=models_fetcher)
     app.dependency_overrides[deps.get_pricing] = lambda: pricing
     if variant == "keyless":
+        # get_interview_service resolves pricing by a direct call, so the Depends override alone would not reach it. The service is rebuilt with the offline pricing and NO fake
+        # client: the real client then raises its own "no API key" error, the original defect's path, and nothing tries the network.
+        def keyless_service(request: Request):
+            return InterviewApplicationService(deps.get_app_config(request), pricing=pricing)
+
+        app.dependency_overrides[deps.get_interview_service] = keyless_service
         return None
     client = FixtureChatClient(variant, fixtures, capture_prompts=capture_prompts)
     services = (InterviewService(client, pricing), EvaluationService(client, pricing), ReportService(client, pricing), client)

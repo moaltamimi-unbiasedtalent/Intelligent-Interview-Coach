@@ -10,6 +10,18 @@ hard-code model names or limits.
 APP_NAME = "Interview Practice Studio"
 APP_TAGLINE = "Prepare for any role. Practise realistically. Improve every answer."
 
+# --- Provider-failure codes (04D, DEMO-02) ------------------------------------
+# A provider-backed step that could not run carries ONE of these stable, bounded codes to the client, which renders localized copy from the code (never from the message).
+# "not configured" (this stack has no usable AI credential: nothing will work until it is configured) and "unavailable" (the provider failed this time: trying again may work)
+# are different facts and must never share one generic message. The English message is a fixed fallback with no provider name, URL, key hint or provider text.
+AI_NOT_CONFIGURED = "ai_not_configured"
+AI_PROVIDER_UNAVAILABLE = "ai_provider_unavailable"
+AI_FAILURE_CODES = (AI_NOT_CONFIGURED, AI_PROVIDER_UNAVAILABLE)
+AI_FAILURE_MESSAGES = {
+    AI_NOT_CONFIGURED: "AI features are not configured on this Ask4Mo environment, so nothing was started.",
+    AI_PROVIDER_UNAVAILABLE: "The AI service could not complete this request right now. Nothing was lost; you can try again.",
+}
+
 # --- Approved OpenRouter model identifiers ----------------------------------
 # Model identifiers resolve from the central registry (src/llm/models.py) — the single
 # source of truth for OpenRouter slugs and their env overrides. These names are kept as

@@ -33,7 +33,7 @@ from src.models import (
     ModelSettings,
     UsageRecord,
 )
-from src.openrouter_client import ChatResult, OpenRouterClient, OpenRouterError
+from src.openrouter_client import ChatResult, MissingAPIKeyError, OpenRouterClient, OpenRouterError
 from src.pricing_service import PricingService
 from src.response_parser import ResponseParseError, parse_structured_output
 from src.structured_output import build_structured_response_format
@@ -58,9 +58,11 @@ _CALL_EXTRA: contextvars.ContextVar[dict] = contextvars.ContextVar("interview_ca
 class ServiceError(Exception):
     """Base class for controlled service errors (safe to show to a user)."""
 
-    def __init__(self, message: str) -> None:
+    def __init__(self, message: str, *, code: str | None = None) -> None:
         super().__init__(message)
         self.message = message
+        # 04D: a stable bounded code (constants.AI_FAILURE_CODES) when the cause is "no usable AI credential" or "the provider failed"; None for every other cause.
+        self.code = code
 
 
 class ServiceInputError(ServiceError):
@@ -387,8 +389,10 @@ class BaseGenerationService:
                 exc.status_code,
                 exc.category,
             )
-            # Convert transport/API errors into a controlled domain error.
-            raise ModelResponseError(exc.message) from exc
+            # Convert transport/API errors into a controlled domain error with a stable code and FIXED copy: the provider's own text can carry the provider name, an
+            # account or credit detail or a key hint, none of which belongs in a candidate-facing message.
+            code = constants.AI_NOT_CONFIGURED if isinstance(exc, MissingAPIKeyError) else constants.AI_PROVIDER_UNAVAILABLE
+            raise ModelResponseError(constants.AI_FAILURE_MESSAGES[code], code=code) from exc
 
     def _guard_output(self, content: str) -> None:
         assessment = security.inspect_output(content, expect_json=False)

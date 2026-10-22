@@ -185,7 +185,7 @@ const nl: typeof en = {
     rowFeedback: "Feedback",
     rowBestUse: "Beste gebruik",
     rowLimit: "Belangrijke beperking",
-    payAsk4mo: "Gratis of €19.99 per maand voor Premium",
+    payAsk4mo: "Gratis tijdens de privébèta; er kan niets worden gekocht",
     payCoach: "Per sessie of pakket",
     payCourse: "Eenmalig of abonnement",
     availAsk4mo: "Op aanvraag",

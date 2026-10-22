@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+import { configuredKeyValue } from "./e2e/journey/canary";
+
 /**
  * Next.js browser smoke suite. Starts the production build locally (reused if
  * already running). No paid provider calls; the backend is not required for these
@@ -30,6 +32,8 @@ export default defineConfig({
   },
   webServer: {
     command: `npm run build && npm run start -- --port ${E2E_PORT}`,
+    // 04D key-hazard guard: the server environment holds a (canary) provider key while the app is built and served, so e2e/key-hazard-04d.spec.ts can prove it never reaches the browser.
+    env: { ...(process.env as Record<string, string>), OPENROUTER_API_KEY: configuredKeyValue() },
     url: E2E_URL,
     // §35: CI must NOT reuse an existing server — a stale process could mask a bad
     // build. `!process.env.CI` is false in CI, so Playwright starts (and owns) a

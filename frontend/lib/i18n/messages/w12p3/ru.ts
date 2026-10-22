@@ -74,18 +74,14 @@ const ru: typeof en = {
     transition_newSession: "Начать новую сессию практики",
     transition_history: "Завершённые собеседования и отчёты остаются доступными в соответствии с вашим просмотром истории.",
     pricing_notAvailable: "Пока недоступно",
-    pricing_previewPrice: "Ориентировочная цена на рассмотрении: 19,99 € в месяц. Эта цена не утверждена.",
     pricing_statusLabel: "Статус Premium",
   },
   marketing: {
-    homePricingBody: "Basic бесплатен. Подписки Premium запланированы и пока недоступны.",
     ctaBody: "Начните бесплатно с Basic уже сегодня. Premium пока недоступен.",
     pricingSubtitle: "Начните бесплатно с Basic. Подписки Premium запланированы и пока недоступны.",
-    pricingBillingNote: "Premium пока нельзя купить. Ничто на этой странице не запускает платёж.",
     planPremiumCta: "Premium пока недоступен",
     planPremiumNote: "Подписки Premium запланированы. Ничего не списывается, и платёж здесь не начинается.",
     pricingPremiumIncludes: "Планируется для активного поиска работы по нескольким ролям: всё из Basic плюс запланированные возможности Premium ниже. Ни одна из них пока не продаётся.",
-    footerNoBilling: "Basic бесплатен. Подписки Premium пока недоступны.",
   },
 };
 

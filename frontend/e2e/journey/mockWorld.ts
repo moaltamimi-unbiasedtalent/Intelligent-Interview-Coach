@@ -33,6 +33,10 @@ export class MockWorld {
   readonly consumedInvitations = new Set<string>();
   /** Mutation switch for the suite's own self-check: when true, creating an interview fails like the original Start Interview defect (a bare 503). */
   failInterviewCreate = false;
+  /** The AI provider state of this mocked stack. "ok" = offline fixtures answer (mode offline); "down" = a configured provider that fails this time; "not_configured" = a keyless stack. */
+  provider: "ok" | "down" | "not_configured" = "ok";
+  /** The Idempotency-Key header of every POST /interviews, in order (a retry after a failure must re-send the SAME key). */
+  readonly interviewCreateKeys: Array<string | undefined> = [];
   private users = new Map<string, Account>();
   private signedIn: string | null = null;
   private nextUserId = 1;
@@ -150,6 +154,17 @@ export class MockWorld {
     // ---- Mo (agent)
     if (path === "/agent/run" && method === "POST") {
       const runId = `run_journey_${this.runs.size + 1}`;
+      if (this.provider !== "ok") {
+        // The real server answers a failed run with 200, status failed, a stable failure_code and an English fallback message that the UI must NOT show.
+        const failed: Json = { run_id: runId, status: "failed", response: "The assistant isn't configured in this environment.", failure_code: this.provider === "down" ? "ai_provider_unavailable" : "ai_not_configured",
+          tools_used: [], retrieval_used: false, sources: [], citations: [], memory_used: false, memory_count: 0, memory_loaded: [], awaiting_human_input: false, pending_action: null,
+          handoff_approved: false, events: [], tool_calls: [], warnings: ["The run did not complete successfully."], step_count: 1, turn_step_count: 1,
+          conversation: [{ role: "user", content: String(body.goal ?? "") }, { role: "assistant", content: "The assistant isn't configured in this environment." }],
+          preparation_context: null, usage: null, profile: "balanced", latency_ms: 5, cache_hits: 0, cache_misses: 0,
+          journey: { understand: { status: "not_started" }, prepare: { status: "not_started" }, practise: { status: "not_started" } }, handoff_summary: null };
+        this.runs.set(runId, failed);
+        return json(failed);
+      }
       const run: Json = {
         run_id: runId, status: "completed", response: FIXTURES.mo.reply, tools_used: [], retrieval_used: false, sources: [], citations: [], resolved_occupation: null, resolved_geography: null,
         memory_used: false, memory_count: 0, memory_loaded: [], awaiting_human_input: false, pending_action: null, handoff_approved: false, events: [], tool_calls: [], warnings: [],
@@ -162,6 +177,8 @@ export class MockWorld {
       this.runs.set(runId, run);
       return json(run);
     }
+    if (path === "/agent/runs" && method === "GET")
+      return json({ runs: [...this.runs.values()].reverse().map((r) => ({ run_id: r.run_id, state: r.status === "failed" ? "failed" : "ready", created_at: "2026-01-01T00:00:00", updated_at: "2026-01-01T00:00:00" })), limit: 10 });
     const runGet = path.match(/^\/agent\/runs\/([^/]+)$/);
     if (runGet && method === "GET") { const r = this.runs.get(runGet[1]); return r ? json(r) : json(MockWorld.err("not_found", "Run not found."), 404); }
 
@@ -170,6 +187,9 @@ export class MockWorld {
       return json({ career_levels: ["internship", "entry", "junior", "mid", "senior", "lead", "principal", "manager", "director", "executive"],
         interview_types: ["screening", "behavioural", "technical"], difficulty_levels: ["easy", "moderate", "hard"], deep_dive_modes: ["deepen_reasoning", "challenge_assumptions"] });
     if (path === "/interviews" && method === "POST") {
+      this.interviewCreateKeys.push(req.headers()["idempotency-key"]);
+      if (this.provider === "not_configured") return json(MockWorld.err("ai_not_configured", "AI features are not configured on this Ask4Mo environment, so nothing was started."), 503);
+      if (this.provider === "down") return json(MockWorld.err("ai_provider_unavailable", "The AI service could not complete this request right now. Nothing was lost; you can try again."), 503);
       if (this.failInterviewCreate) return json(MockWorld.err("service_unavailable", "No OpenRouter API key is configured."), 503);
       return this.createInterview(body, json);
     }
@@ -230,8 +250,10 @@ export class MockWorld {
     return json({});
   }
 
-  /** Extra /capabilities fields (provider mode in PR 2). */
-  protected capabilityExtras(): Json { return {}; }
+  /** The AI provider mode this stack reports: a configured provider that is down is still "live" (configuration, not health); fixtures are "offline". */
+  protected capabilityExtras(): Json {
+    return { ai_provider_mode: this.provider === "not_configured" ? "not_configured" : this.provider === "down" ? "live" : "offline" };
+  }
 
   private createInterview(body: Json, json: (d: unknown, s?: number) => Promise<void>): Promise<void> {
     const cfg = (body.configuration ?? {}) as Json;
