@@ -195,6 +195,7 @@ export const messages = {
     noMicrophone: "No microphone was found. You can still type.",
     noSpeech: "I didn’t catch that - try again, or type.",
     network: "Dictation is temporarily unavailable. You can still type.",
+    languageNotSupported: "Your browser can’t recognise speech in the selected dictation language. Choose another dictation language, or type.",
     error: "Dictation stopped unexpectedly. You can still type.",
     disabledByPolicy: "Dictation is switched off for your account. You can type instead.",
     browserNotice: "Dictation uses your browser’s speech service, which may send your voice to its provider. Ask4Mo does not store your audio.",

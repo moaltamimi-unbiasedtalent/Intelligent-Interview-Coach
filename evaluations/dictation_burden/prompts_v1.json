@@ -1,0 +1,56 @@
+{
+  "version": "prompts_v1",
+  "synthetic": true,
+  "note": "Fixed, invented practice sentences for the 04F correction-burden protocol. They contain no personal data, no real employer and no real candidate content. They are neutral interview-style statements of 14 to 20 words with numbers, a proper-noun-like word and a hyphenated word so that recognition has something to get wrong. The same ordinal prompts are used for every language (translations are engineering drafts, NOT native-reviewed: a native speaker must confirm each sentence reads naturally before a session).",
+  "languages": {
+    "en-US": [
+      "In my last project I led a team of six engineers and we shipped the new booking tool two weeks early.",
+      "I would start by asking the interviewer which three customer problems matter most for the first year.",
+      "Last spring I reduced our monthly reporting time from nine hours to about ninety minutes by automating the spreadsheet.",
+      "My biggest weakness is saying yes too quickly, so now I check my calendar before I agree to anything.",
+      "When two colleagues disagreed about the timeline, I arranged a short meeting and we chose a compromise in Berlin."
+    ],
+    "de-DE": [
+      "In meinem letzten Projekt habe ich ein Team von sechs Entwicklern geleitet und wir haben das neue Buchungswerkzeug zwei Wochen früher fertiggestellt.",
+      "Ich würde zuerst die Interviewerin fragen, welche drei Kundenprobleme im ersten Jahr am wichtigsten sind.",
+      "Im letzten Frühjahr habe ich unsere monatliche Berichtszeit von neun Stunden auf etwa neunzig Minuten gesenkt, indem ich die Tabelle automatisiert habe.",
+      "Meine größte Schwäche ist, dass ich zu schnell zusage, deshalb prüfe ich jetzt meinen Kalender, bevor ich etwas zusage.",
+      "Als zwei Kollegen über den Zeitplan stritten, habe ich ein kurzes Treffen organisiert und wir haben in Berlin einen Kompromiss gefunden."
+    ],
+    "fr-FR": [
+      "Dans mon dernier projet, j'ai dirigé une équipe de six ingénieurs et nous avons livré le nouvel outil de réservation avec deux semaines d'avance.",
+      "Je commencerais par demander à l'intervieweur quels sont les trois problèmes clients les plus importants pour la première année.",
+      "Au printemps dernier, j'ai réduit notre temps de reporting mensuel de neuf heures à environ quatre-vingt-dix minutes en automatisant le tableur.",
+      "Ma plus grande faiblesse est de dire oui trop vite, alors je vérifie maintenant mon agenda avant d'accepter quoi que ce soit.",
+      "Quand deux collègues étaient en désaccord sur le calendrier, j'ai organisé une courte réunion et nous avons trouvé un compromis à Berlin."
+    ],
+    "es-ES": [
+      "En mi último proyecto dirigí un equipo de seis ingenieros y entregamos la nueva herramienta de reservas con dos semanas de antelación.",
+      "Empezaría preguntando al entrevistador cuáles son los tres problemas de clientes más importantes durante el primer año.",
+      "La primavera pasada reduje nuestro tiempo de informes mensuales de nueve horas a unos noventa minutos automatizando la hoja de cálculo.",
+      "Mi mayor debilidad es decir que sí demasiado rápido, así que ahora reviso mi calendario antes de aceptar cualquier cosa.",
+      "Cuando dos compañeros no estaban de acuerdo con el calendario, organicé una reunión breve y acordamos una solución intermedia en Berlín."
+    ],
+    "it-IT": [
+      "Nel mio ultimo progetto ho guidato un team di sei ingegneri e abbiamo consegnato il nuovo strumento di prenotazione con due settimane di anticipo.",
+      "Comincerei chiedendo all'intervistatore quali sono i tre problemi dei clienti più importanti per il primo anno.",
+      "La scorsa primavera ho ridotto il tempo dei nostri report mensili da nove ore a circa novanta minuti automatizzando il foglio di calcolo.",
+      "Il mio difetto più grande è dire di sì troppo in fretta, quindi ora controllo il calendario prima di accettare qualsiasi cosa.",
+      "Quando due colleghi non erano d'accordo sulla tempistica, ho organizzato una breve riunione e abbiamo trovato un compromesso a Berlino."
+    ],
+    "pt-PT": [
+      "No meu último projeto liderei uma equipa de seis engenheiros e entregámos a nova ferramenta de reservas duas semanas mais cedo.",
+      "Começaria por perguntar ao entrevistador quais são os três problemas de clientes mais importantes no primeiro ano.",
+      "Na primavera passada reduzi o nosso tempo de relatórios mensais de nove horas para cerca de noventa minutos ao automatizar a folha de cálculo.",
+      "A minha maior fraqueza é dizer que sim depressa demais, por isso agora consulto o calendário antes de aceitar seja o que for.",
+      "Quando dois colegas discordaram sobre o prazo, organizei uma reunião curta e chegámos a um compromisso em Berlim."
+    ],
+    "nl-NL": [
+      "In mijn laatste project leidde ik een team van zes ingenieurs en leverden we het nieuwe boekingsprogramma twee weken eerder op.",
+      "Ik zou beginnen met de interviewer te vragen welke drie klantproblemen het belangrijkst zijn in het eerste jaar.",
+      "Afgelopen voorjaar heb ik onze maandelijkse rapportagetijd van negen uur teruggebracht tot ongeveer negentig minuten door de spreadsheet te automatiseren.",
+      "Mijn grootste zwakte is te snel ja zeggen, dus controleer ik nu mijn agenda voordat ik ergens mee instem.",
+      "Toen twee collega's het oneens waren over de planning, organiseerde ik een korte bijeenkomst en kozen we een compromis in Berlijn."
+    ]
+  }
+}

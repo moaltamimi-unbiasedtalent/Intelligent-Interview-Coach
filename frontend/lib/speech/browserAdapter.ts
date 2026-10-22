@@ -42,7 +42,7 @@ function getCtor(): (new () => SpeechRecognitionLike) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-function mapError(code: string | undefined): DictationErrorKind {
+export function mapError(code: string | undefined): DictationErrorKind {
   switch (code) {
     case "not-allowed":
     case "service-not-allowed":
@@ -53,6 +53,8 @@ function mapError(code: string | undefined): DictationErrorKind {
       return "no-speech";
     case "network":
       return "network";
+    case "language-not-supported":
+      return "language-not-supported";
     case "aborted":
       return "aborted";
     default:
