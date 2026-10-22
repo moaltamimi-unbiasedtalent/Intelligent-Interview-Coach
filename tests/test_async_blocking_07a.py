@@ -6,8 +6,8 @@ Two independent proofs, both offline and deterministic:
    nested function, a lambda or a callable passed as an argument is not a direct call, so offloaded work is not flagged). There is NO allow-list: a new offender fails the suite
    and must be fixed, never suppressed. The scanner is itself tested on source that reproduces each pre-fix pattern.
 2. BEHAVIOURAL: for every offender 07A found and fixed, the real route (or middleware) is driven through the real ASGI app while the blocking dependency is replaced by a
-   deliberate 0.4 s ``time.sleep``; a monitor coroutine measures the longest event-loop stall. Offloaded work leaves the loop free (stall well under 0.3 s); the pre-fix code stalls
-   for the full 0.4 s.
+   recording stub that notes WHICH THREAD it ran on. Offloaded work runs in a worker thread; the pre-fix code ran it on the event-loop thread. The proof is the thread identity,
+   not a timing threshold, so it is deterministic under any machine load.
 """
 
 from __future__ import annotations
@@ -25,8 +25,7 @@ import pytest
 from tests.test_admin_foundation_w10_1 import PW, Env  # noqa: F401  (PW re-exported for readers)
 
 ROOT = Path(__file__).resolve().parents[1]
-BLOCK_SECONDS = 0.4
-STALL_LIMIT = 0.3
+BLOCK_SECONDS = 0.05      # the stub still blocks briefly so a regression would also be visible as a stall in a trace; correctness is decided by the thread, never by time
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------- the scanner
 # (owner module, attribute) pairs that block: matched on the call's owner name and attribute, so `str.join` or `dict.get` never match.
@@ -148,32 +147,32 @@ def test_the_scanner_accepts_offloaded_and_awaited_work(source):
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------- behavioural proof
-async def _measure(request_coro):
-    """Run ``request_coro`` while a monitor coroutine records the longest event-loop stall (gap above its own 10 ms tick)."""
-    gaps: list[float] = []
-    done = False
+LOOP_THREAD: list[int] = []       # the event-loop thread of the current probe
+BLOCKED_ON: list[int] = []        # the thread each recording stub ran on
 
-    async def monitor():
-        last = time.perf_counter()
-        while not done:
-            await asyncio.sleep(0.01)
-            now = time.perf_counter()
-            gaps.append(now - last - 0.01)
-            last = now
 
-    task = asyncio.create_task(monitor())
-    await asyncio.sleep(0.03)                                  # let the monitor start ticking before the work under test begins
-    try:
-        result = await request_coro
-    finally:
-        done = True
-        await task
-    return result, max(gaps or [0.0])
+@pytest.fixture(autouse=True)
+def _reset_probe():
+    LOOP_THREAD.clear()
+    BLOCKED_ON.clear()
+    yield
+
+
+async def _run(request_coro):
+    """Run ``request_coro`` on a fresh event loop and note that loop's thread."""
+    LOOP_THREAD.append(threading.get_ident())
+    return await request_coro
+
+
+def offloaded() -> bool:
+    """True when the recording stub ran at least once and NEVER on the event-loop thread."""
+    return bool(BLOCKED_ON) and bool(LOOP_THREAD) and all(t != LOOP_THREAD[0] for t in BLOCKED_ON)
 
 
 def _slow(result=None, exc: Exception | None = None):
-    """A blocking callable (what the offender used to call on the loop): holds its thread for BLOCK_SECONDS, then returns or raises."""
+    """A blocking callable (what the offender used to call on the loop): records its thread, holds it briefly, then returns or raises."""
     def run(*a, **k):
+        BLOCKED_ON.append(threading.get_ident())
         time.sleep(BLOCK_SECONDS)
         if exc is not None:
             raise exc
@@ -214,8 +213,12 @@ def _fresh_limiter():
     rl.reset_rate_limiter(rl.InMemoryRateLimiter())
 
 
-def stall_of(aw: AsyncWorld, method: str, path: str, **kw) -> tuple[httpx.Response, float]:
-    return asyncio.run(_measure(aw.request(method, path, **kw)))
+def stall_of(aw: AsyncWorld, method: str, path: str, **kw) -> tuple[httpx.Response, bool]:
+    """Drive the real route; returns (response, offloaded) where ``offloaded`` is the thread-identity verdict above."""
+    BLOCKED_ON.clear()
+    LOOP_THREAD.clear()
+    r = asyncio.run(_run(aw.request(method, path, **kw)))
+    return r, offloaded()
 
 
 def test_speech_transcription_does_not_block_the_event_loop(aw, monkeypatch):
@@ -223,24 +226,24 @@ def test_speech_transcription_does_not_block_the_event_loop(aw, monkeypatch):
     from src.speech_service import SpeechError
 
     monkeypatch.setattr(SpeechRuntime, "transcribe", _slow(exc=SpeechError("off", category="unavailable")))
-    r, stall = stall_of(aw, "POST", "/speech/transcriptions", files={"audio": ("a.wav", b"RIFF", "audio/wav")}, data={"language": "en"})
-    assert r.status_code == 503 and stall < STALL_LIMIT, (r.status_code, stall)
+    r, offloaded_ok = stall_of(aw, "POST", "/speech/transcriptions", files={"audio": ("a.wav", b"RIFF", "audio/wav")}, data={"language": "en"})
+    assert r.status_code == 503 and offloaded_ok, (r.status_code, offloaded_ok)
 
 
 def test_speech_limiter_does_not_block_the_event_loop(aw, monkeypatch):
     import src.api.routes.speech as speech
 
     monkeypatch.setattr(speech, "enforce", _slow())
-    r, stall = stall_of(aw, "POST", "/speech/transcriptions", files={"audio": ("a.wav", b"RIFF", "audio/wav")}, data={"language": "en"})
-    assert r.status_code == 503 and stall < STALL_LIMIT, (r.status_code, stall)
+    r, offloaded_ok = stall_of(aw, "POST", "/speech/transcriptions", files={"audio": ("a.wav", b"RIFF", "audio/wav")}, data={"language": "en"})
+    assert r.status_code == 503 and offloaded_ok, (r.status_code, offloaded_ok)
 
 
 def test_stripe_webhook_limiter_does_not_block_the_event_loop(aw, monkeypatch):
     import src.api.routes.billing_webhooks as hooks
 
     monkeypatch.setattr(hooks, "enforce", _slow())
-    r, stall = stall_of(aw, "POST", "/billing/webhooks/stripe", content=b"{}", headers={"stripe-signature": "t=1,v1=ab"})
-    assert r.status_code == 503 and stall < STALL_LIMIT, (r.status_code, stall)
+    r, offloaded_ok = stall_of(aw, "POST", "/billing/webhooks/stripe", content=b"{}", headers={"stripe-signature": "t=1,v1=ab"})
+    assert r.status_code == 503 and offloaded_ok, (r.status_code, offloaded_ok)
 
 
 def test_document_upload_scan_and_processing_do_not_block_the_event_loop(aw, monkeypatch):
@@ -249,8 +252,8 @@ def test_document_upload_scan_and_processing_do_not_block_the_event_loop(aw, mon
 
     monkeypatch.setattr(docs, "_scan_or_reject", _slow())
     monkeypatch.setattr(DocumentsApplicationService, "upload", _slow(exc=RuntimeError("stop after the blocking call")))
-    r, stall = stall_of(aw, "POST", "/documents", files={"file": ("cv.txt", b"hello", "text/plain")}, data={"category": "other"})
-    assert stall < STALL_LIMIT, (r.status_code, stall)
+    r, offloaded_ok = stall_of(aw, "POST", "/documents", files={"file": ("cv.txt", b"hello", "text/plain")}, data={"category": "other"})
+    assert offloaded_ok, (r.status_code, offloaded_ok)
     assert r.status_code in (500, 503)                                                          # the fake service raised: the point is the loop stayed free
 
 
@@ -258,10 +261,10 @@ def test_document_upload_pause_and_limiter_do_not_block_the_event_loop(aw, monke
     import src.api.guards as guards
 
     monkeypatch.setattr(guards, "ensure_not_paused", _slow(exc=RuntimeError("stop")))      # the durable pause read (database) the upload admission performs
-    r, stall = stall_of(aw, "POST", "/documents", files={"file": ("cv.txt", b"hello", "text/plain")}, data={"category": "other"})
-    assert stall < STALL_LIMIT, (r.status_code, stall)
-    r, stall = stall_of(aw, "POST", "/documents/1/replace", files={"file": ("cv.txt", b"hello", "text/plain")})
-    assert stall < STALL_LIMIT, (r.status_code, stall)
+    r, offloaded_ok = stall_of(aw, "POST", "/documents", files={"file": ("cv.txt", b"hello", "text/plain")}, data={"category": "other"})
+    assert offloaded_ok, (r.status_code, offloaded_ok)
+    r, offloaded_ok = stall_of(aw, "POST", "/documents/1/replace", files={"file": ("cv.txt", b"hello", "text/plain")})
+    assert offloaded_ok, (r.status_code, offloaded_ok)
 
 
 def test_document_replace_does_not_block_the_event_loop(aw, monkeypatch):
@@ -270,8 +273,8 @@ def test_document_replace_does_not_block_the_event_loop(aw, monkeypatch):
 
     monkeypatch.setattr(docs, "_scan_or_reject", _slow())
     monkeypatch.setattr(DocumentsApplicationService, "replace", _slow(exc=RuntimeError("stop after the blocking call")))
-    r, stall = stall_of(aw, "POST", "/documents/1/replace", files={"file": ("cv.txt", b"hello", "text/plain")})
-    assert stall < STALL_LIMIT, (r.status_code, stall)
+    r, offloaded_ok = stall_of(aw, "POST", "/documents/1/replace", files={"file": ("cv.txt", b"hello", "text/plain")})
+    assert offloaded_ok, (r.status_code, offloaded_ok)
 
 
 def test_admin_knowledge_upload_does_not_block_the_event_loop(aw, monkeypatch):
@@ -280,10 +283,10 @@ def test_admin_knowledge_upload_does_not_block_the_event_loop(aw, monkeypatch):
     monkeypatch.setattr(KnowledgeAdminService, "create_source", _slow(result={"ok": True}))
     monkeypatch.setattr(KnowledgeAdminService, "add_version", _slow(result={"ok": True}))
     form = {"language": "en", "authority_level": "1", "title": "t"}
-    r, stall = stall_of(aw, "POST", "/admin/knowledge/sources", role="knowledge_admin", files={"file": ("a.txt", b"x", "text/plain")}, data=form)
-    assert r.status_code == 201 and stall < STALL_LIMIT, (r.status_code, r.text[:200], stall)
-    r, stall = stall_of(aw, "POST", "/admin/knowledge/sources/abc/versions", role="knowledge_admin", files={"file": ("a.txt", b"x", "text/plain")}, data=form)
-    assert r.status_code == 201 and stall < STALL_LIMIT, (r.status_code, r.text[:200], stall)
+    r, offloaded_ok = stall_of(aw, "POST", "/admin/knowledge/sources", role="knowledge_admin", files={"file": ("a.txt", b"x", "text/plain")}, data=form)
+    assert r.status_code == 201 and offloaded_ok, (r.status_code, r.text[:200], offloaded_ok)
+    r, offloaded_ok = stall_of(aw, "POST", "/admin/knowledge/sources/abc/versions", role="knowledge_admin", files={"file": ("a.txt", b"x", "text/plain")}, data=form)
+    assert r.status_code == 201 and offloaded_ok, (r.status_code, r.text[:200], offloaded_ok)
 
 
 @pytest.mark.parametrize("path,body", [("/admin/integrations/openrouter/credentials/api_key", {"value": "x" * 12}),
@@ -293,8 +296,8 @@ def test_admin_credential_handlers_do_not_block_the_event_loop(aw, monkeypatch, 
     from src.admin_security.stepup import StepUpService
 
     monkeypatch.setattr(StepUpService, "require", _slow(exc=StepUpRequired("Confirm your password to continue.")))
-    r, stall = stall_of(aw, "POST", path, role="platform_admin", json=body)
-    assert r.status_code == 403 and r.json()["error"]["code"] == "step_up_required" and stall < STALL_LIMIT, (r.status_code, r.text[:200], stall)
+    r, offloaded_ok = stall_of(aw, "POST", path, role="platform_admin", json=body)
+    assert r.status_code == 403 and r.json()["error"]["code"] == "step_up_required" and offloaded_ok, (r.status_code, r.text[:200], offloaded_ok)
 
 
 def test_operational_telemetry_middleware_does_not_block_the_event_loop(aw, monkeypatch):
@@ -303,10 +306,10 @@ def test_operational_telemetry_middleware_does_not_block_the_event_loop(aw, monk
     telemetry.install(aw.env.repo.session_factory)
     try:
         monkeypatch.setattr(telemetry, "record_event", _slow(result=True))
-        r, stall = stall_of(aw, "POST", "/voice/realtime/session", json={"locale": "en", "surface": "practice"})
+        r, offloaded_ok = stall_of(aw, "POST", "/voice/realtime/session", json={"locale": "en", "surface": "practice"})
     finally:
         telemetry.uninstall()
-    assert r.status_code == 503 and stall < STALL_LIMIT, (r.status_code, stall)
+    assert r.status_code == 503 and offloaded_ok, (r.status_code, offloaded_ok)
 
 
 def test_the_governed_lease_release_does_not_block_the_event_loop(monkeypatch):
@@ -316,7 +319,8 @@ def test_the_governed_lease_release_does_not_block_the_event_loop(monkeypatch):
     from src.application.lease import Heartbeat
 
     exits: list[str] = []
-    monkeypatch.setattr(Heartbeat, "__exit__", lambda self, *a: (time.sleep(BLOCK_SECONDS), exits.append("exit"))[1])
+    slow_exit = _slow()
+    monkeypatch.setattr(Heartbeat, "__exit__", lambda self, *a: (slow_exit(), exits.append("exit"))[1])
     quota = SimpleNamespace(renew=lambda key: None, commit=lambda key: None, release=lambda key: None)
     monkeypatch.setattr(ai_protection, "admit", lambda *a, **k: False)
     monkeypatch.setattr(ai_protection, "_reserve_quota", lambda *a, **k: (quota, True))
@@ -329,8 +333,8 @@ def test_the_governed_lease_release_does_not_block_the_event_loop(monkeypatch):
         await gen.__anext__()
         await gen.aclose()                                     # the finally block (lease release) runs here
 
-    _r, stall = asyncio.run(_measure(exercise()))
-    assert exits == ["exit"] and stall < STALL_LIMIT, (exits, stall)
+    asyncio.run(_run(exercise()))
+    assert exits == ["exit"] and offloaded(), (exits, BLOCKED_ON, LOOP_THREAD)
 
 
 def test_p10e_http_guard_waits_for_a_concurrency_slot_off_the_event_loop():
@@ -339,8 +343,18 @@ def test_p10e_http_guard_waits_for_a_concurrency_slot_off_the_event_loop():
     from src.p10e.httpguard import HttpGuard
 
     guard = HttpGuard.__new__(HttpGuard)
-    guard._sem = threading.BoundedSemaphore(1)
-    guard._sem.acquire()                                       # the only slot is held, as by an in-flight sync caller
+    class HeldSemaphore:
+        """The only slot is held (as by an in-flight sync caller): ``acquire`` waits, records its thread, then reports the slot unavailable."""
+
+        def acquire(self, timeout=None):
+            BLOCKED_ON.append(threading.get_ident())
+            time.sleep(min(timeout or BLOCK_SECONDS, BLOCK_SECONDS))
+            return False
+
+        def release(self):
+            raise AssertionError("a slot that was never acquired must not be released")
+
+    guard._sem = HeldSemaphore()
     guard.limits = SimpleNamespace(request_timeout_s=BLOCK_SECONDS)
     guard._classify = lambda request: "inference"
     guard._prepare = lambda request, kw: ("model", 1, 1)
@@ -356,5 +370,5 @@ def test_p10e_http_guard_waits_for_a_concurrency_slot_off_the_event_loop():
             await guard._send_async(None, None, request, {})
         return exc.value
 
-    refused, stall = asyncio.run(_measure(go()))
-    assert "concurrency limit is saturated" in str(refused) and stall < STALL_LIMIT, (refused.args, stall)
+    refused = asyncio.run(_run(go()))
+    assert "concurrency limit is saturated" in str(refused) and offloaded(), (refused.args, BLOCKED_ON, LOOP_THREAD)
