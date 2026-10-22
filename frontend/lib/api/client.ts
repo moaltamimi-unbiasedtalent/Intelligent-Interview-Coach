@@ -1,6 +1,9 @@
 import { config } from "../config";
 import { ApiError, apiErrorFromBody, parseRetryAfter, unreachableError } from "./errors";
 import { runWithRetry } from "./retry";
+import {
+  checked as checkedShape, isStatusOf, isStepUpStateLike, isTransfer, isTransferList, isTransferPreview, isTransferState, isWorkspaceRef, malformedResponse,
+} from "../workspaces/transferGuard";
 import type {
   AIActivation,
   AdminReport,
@@ -608,9 +611,31 @@ export const api = {
     setMemberRole: (id: number, targetUserId: number, role: string, opts?: RequestOptions) =>
       request<{ user_id: number; role: string; changed: boolean }>(
         "POST", `/workspaces/${id}/members/${targetUserId}/role`, { body: { role }, ...opts }),
-    transfer: (id: number, newOwnerUserId: number, confirmName: string, opts?: RequestOptions) =>
-      request<WorkspaceSummary>("POST", `/workspaces/${id}/transfer`,
-        { body: { new_owner_user_id: newOwnerUserId, confirm_name: confirmName }, ...opts }),
+    // Ownership transfer (04B completion): TWO steps. The owner proposes (after a fresh password confirmation); the bound, verified recipient accepts with the
+    // one-time token from the notice. Every response is shape-checked at this boundary (a malformed 200 is an explicit error, never an empty "no transfer").
+    transferStepUp: async (password: string, opts?: RequestOptions) =>
+      checkedShape(await request<unknown>("POST", "/workspaces/transfers/step-up", { body: { password }, ...opts }), isStepUpStateLike),
+    transferState: async (id: number, opts?: RequestOptions) =>
+      checkedShape(await request<unknown>("GET", `/workspaces/${id}/transfer`, opts), isTransferState),
+    proposeTransfer: async (id: number, newOwnerUserId: number, confirmName: string, formerOwnerRole: "workspace_admin" | "workspace_member", opts?: RequestOptions) =>
+      checkedShape(await request<unknown>("POST", `/workspaces/${id}/transfer`,
+        { body: { new_owner_user_id: newOwnerUserId, confirm_name: confirmName, former_owner_role: formerOwnerRole }, ...opts }), isTransfer),
+    cancelTransfer: async (id: number, opts?: RequestOptions) => {
+      const r = await request<unknown>("POST", `/workspaces/${id}/transfer/cancel`, opts);
+      if (!isStatusOf(r, "cancelled")) throw malformedResponse();
+      return { status: "cancelled" as const };
+    },
+    transfersMine: async (opts?: RequestOptions) =>
+      checkedShape(await request<unknown>("GET", "/workspaces/transfers/mine", opts), isTransferList),
+    previewTransfer: async (token: string, opts?: RequestOptions) =>
+      checkedShape(await request<unknown>("POST", "/workspaces/transfers/preview", { body: { token }, ...opts }), isTransferPreview),
+    acceptTransfer: async (token: string, opts?: RequestOptions) =>
+      checkedShape(await request<unknown>("POST", "/workspaces/transfers/accept", { body: { token }, ...opts }), isWorkspaceRef),
+    declineTransfer: async (transferId: number, opts?: RequestOptions) => {
+      const r = await request<unknown>("POST", `/workspaces/transfers/${transferId}/decline`, opts);
+      if (!isStatusOf(r, "declined")) throw malformedResponse();
+      return { status: "declined" as const };
+    },
     archive: (id: number, opts?: RequestOptions) =>
       request<WorkspaceSummary>("POST", `/workspaces/${id}/archive`, opts),
     restore: (id: number, opts?: RequestOptions) =>

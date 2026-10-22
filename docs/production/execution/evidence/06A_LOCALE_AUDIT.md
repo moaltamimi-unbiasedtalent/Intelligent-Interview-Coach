@@ -10,13 +10,13 @@ Active Candidate locales (code-defined in `src/locales.py`, served by `GET /api/
 
 | Language | Interface keys | Missing vs en | Extra vs en | Blank | Placeholder mismatches | Identical to English (possible leak or brand/token) | Legal/trust keys | Mo templates | Directives | Email templates | Translation review status |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| en | 2611 | 0 | 0 | 0 | 0 | 0 | 283 | 6/6 | 3/3 | 5/5 | source language (no translation) |
-| de | 2611 | 0 | 0 | 0 | 0 | 57 | 283 | 6/6 | 3/3 | 5/5 | engineering translation, NOT natively reviewed |
-| es | 2611 | 0 | 0 | 0 | 0 | 34 | 283 | 6/6 | 3/3 | 5/5 | engineering translation, NOT natively reviewed |
-| it | 2611 | 0 | 0 | 0 | 0 | 44 | 283 | 6/6 | 3/3 | 5/5 | engineering translation, NOT natively reviewed |
-| pt | 2611 | 0 | 0 | 0 | 0 | 31 | 283 | 6/6 | 3/3 | 5/5 | engineering translation, NOT natively reviewed |
-| fr | 2611 | 0 | 0 | 0 | 0 | 71 | 283 | 6/6 | 3/3 | 5/5 | engineering translation, NOT natively reviewed |
-| nl | 2611 | 0 | 0 | 0 | 0 | 63 | 283 | 6/6 | 3/3 | 5/5 | engineering translation, NOT natively reviewed |
+| en | 2664 | 0 | 0 | 0 | 0 | 0 | 283 | 6/6 | 3/3 | 6/6 | source language (no translation) |
+| de | 2664 | 0 | 0 | 0 | 0 | 57 | 283 | 6/6 | 3/3 | 6/6 | engineering translation, NOT natively reviewed |
+| es | 2664 | 0 | 0 | 0 | 0 | 34 | 283 | 6/6 | 3/3 | 6/6 | engineering translation, NOT natively reviewed |
+| it | 2664 | 0 | 0 | 0 | 0 | 44 | 283 | 6/6 | 3/3 | 6/6 | engineering translation, NOT natively reviewed |
+| pt | 2664 | 0 | 0 | 0 | 0 | 31 | 283 | 6/6 | 3/3 | 6/6 | engineering translation, NOT natively reviewed |
+| fr | 2664 | 0 | 0 | 0 | 0 | 71 | 283 | 6/6 | 3/3 | 6/6 | engineering translation, NOT natively reviewed |
+| nl | 2664 | 0 | 0 | 0 | 0 | 63 | 283 | 6/6 | 3/3 | 6/6 | engineering translation, NOT natively reviewed |
 
 Flagged as unreviewed engineering translations: every non-English interface key (all languages above except `en`), every Mo localized template, every email template and every legal/trust string. No native-reviewer or legal-qualification record exists yet (gates LG-10 and LG-11 are NOT STARTED).
 
@@ -24,7 +24,7 @@ Flagged as unreviewed engineering translations: every non-English interface key 
 
 | Language | Interface keys | Missing vs en | Mo templates | Directives | Email templates | State |
 |---|---|---|---|---|---|---|
-| ru | 2611 | 0 | 6/6 | 3/3 | 5/5 | EXCLUDED from R1.0 Candidate selection; code, catalogue and tests PRESERVED; not part of any qualification claim |
+| ru | 2664 | 0 | 6/6 | 3/3 | 6/6 | EXCLUDED from R1.0 Candidate selection; code, catalogue and tests PRESERVED; not part of any qualification claim |
 
 ## 3. Interview and report language directives
 
