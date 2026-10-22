@@ -1,11 +1,11 @@
 {
-  "case_count": 239,
+  "case_count": 506,
   "corpus_file": "corpus.jsonl",
-  "corpus_sha256": "6d391941dd23afcea826524548d8b47ae8daedb9ff878a5e972c4a728be7b4f8",
+  "corpus_sha256": "e467e68e5bbbd2954e39e798a13abb85c660aa1598e9e40d10649d93d5298afc",
   "counts": {
     "dev": {
-      "attack": 127,
-      "benign": 69
+      "attack": 265,
+      "benign": 198
     },
     "heldout": {
       "attack": 22,
@@ -19,6 +19,19 @@
     "ids": "INJ-D2-*",
     "note": "Dev-split only (every id was checked against the split rule before adding). The held-out membership hash is unchanged from the original manifest.",
     "wave": "W2-01A"
+  },
+  "dev_extension_06e": {
+    "added_attacks": 138,
+    "added_benign": 129,
+    "added_cases": 267,
+    "ids": "INJ-L6-* and INJ-L6P-*",
+    "native_reviewed": false,
+    "note": "Engineering-authored per-language text (en, de, fr, es, it, pt, nl, mixed language/script), NOT native-reviewed. Dev-split only: every id was checked against the split rule (ids only) before adding; the held-out membership hash is unchanged.",
+    "sources": {
+      "authored-06e-dev": "first round (used to design the 06E rules)",
+      "authored-06e-dev-probe": "written after the first round was frozen (generalisation probe; second-round rules were then tuned on it)"
+    },
+    "wave": "W3b-06E"
   },
   "heldout_percent": 30,
   "heldout_sha256": "48842f0cff912caea4049c973ac5855d8ef024ac3b192712bac8f6ac1f93b78f",
