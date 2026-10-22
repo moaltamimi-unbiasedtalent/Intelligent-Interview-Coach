@@ -68,7 +68,7 @@
    ]
   },
   "01D": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED, NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -248,7 +248,7 @@
    ]
   },
   "02D": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED (2 PRs), NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -269,7 +269,7 @@
    "acceptance_artefacts": []
   },
   "02E": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED, NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -405,7 +405,7 @@
    ]
   },
   "03D2": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED, NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -449,7 +449,7 @@
    ]
   },
   "03E2": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED (2 PRs), NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -537,7 +537,7 @@
    "acceptance_artefacts": []
   },
   "04D": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED (2 PRs), NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -581,7 +581,7 @@
    ]
   },
   "04F": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED, NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -625,7 +625,7 @@
    ]
   },
   "05B": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED, NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -646,7 +646,7 @@
    "acceptance_artefacts": []
   },
   "05C": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED (2 PRs), NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -667,7 +667,7 @@
    "acceptance_artefacts": []
   },
   "05D": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED, NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -688,7 +688,7 @@
    "acceptance_artefacts": []
   },
   "05E": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED (2 PRs), NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -732,7 +732,7 @@
    ]
   },
   "06B": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED, NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -753,7 +753,7 @@
    "acceptance_artefacts": []
   },
   "06C": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED, NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -774,7 +774,7 @@
    "acceptance_artefacts": []
   },
   "06D": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED, NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -795,7 +795,7 @@
    "acceptance_artefacts": []
   },
   "06E": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED, NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -816,7 +816,7 @@
    "acceptance_artefacts": []
   },
   "06F": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED, NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -837,7 +837,7 @@
    "acceptance_artefacts": []
   },
   "06G": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED, NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -881,7 +881,7 @@
    ]
   },
   "07A": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED, NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -944,7 +944,7 @@
    "acceptance_artefacts": []
   },
   "08A0": {
-   "engineering": "NOT STARTED",
+   "engineering": "BRANCH PUSHED, NO PR",
    "ci": "no PR yet",
    "live_staging": {
     "state": "NOT IN LEDGER",
