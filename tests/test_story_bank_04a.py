@@ -644,6 +644,32 @@ def test_privacy_schema_exception_is_exact(tmp_path):
     assert offenders("0099_something_else.py", ok) == {"0099_something_else.py": ["candidate_stories"]}   # no other migration is exempt
 
 
+# --- Prepare (Mo's Candidate Evidence specialist) attributes how a story is supported and never sees archived or unconfirmed ones -----------------------
+
+def test_prepare_evidence_specialist_attributes_support_and_excludes_archived_and_unconfirmed():
+    from src.agent.specialists.evidence_specialist import run_evidence_specialist
+    from src.agent.specialists.schemas import EvidenceRequest
+    from src.application.evidence_access_service import EvidenceAccessService
+    from src.documents.repository import DocumentRepository
+
+    e = Env()
+    confirmed = e.story(title="Leadership confirmed", competencies=["Leadership"])
+    e.c.post(f"{S}/{confirmed['id']}/confirm", cookies=e.ck_a)
+    plain = e.story(title="Leadership plain", competencies=["Leadership"])
+    archived = e.story(title="Leadership archived", competencies=["Leadership"])
+    e.c.post(f"{S}/{archived['id']}/archive", cookies=e.ck_a)
+    e.story(title="Leadership suggestion", competencies=["Leadership"], status="model_suggested")
+    other = e.story(ck=e.ck_b, title="Leadership of B", competencies=["Leadership"])
+    sf = e.repo.session_factory
+    svc = EvidenceAccessService(documents=DocumentRepository(sf), stories=StoryRepository(sf))
+    sel = run_evidence_specialist(EvidenceRequest(need="leadership", competencies=["Leadership"]), user_id=e.uid_a, evidence_service=svc)
+    stories = {i.id: i for i in sel.items if i.kind == "story"}
+    assert set(stories) == {confirmed["id"], plain["id"]}                                       # no archived, no unconfirmed suggestion, nothing of B's
+    assert other["id"] not in stories
+    assert stories[confirmed["id"]].provenance == "story:user_created/self_confirmed"           # attributed: the candidate's own confirmation, not evidence
+    assert stories[plain["id"]].provenance == "story:user_created/unverified"
+
+
 # --- answer evidence sources never widen the history window -----------------------------------------------------------------------------------------
 
 def test_answer_sources_list_question_text_only_owner_only_and_respect_the_history_window():
