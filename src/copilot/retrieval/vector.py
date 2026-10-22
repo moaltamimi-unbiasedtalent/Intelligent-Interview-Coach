@@ -11,6 +11,7 @@ from __future__ import annotations
 from src.copilot import constants
 from src.copilot.config import CopilotConfig
 from src.copilot.models import DocumentChunk, RetrievalResult
+from src.copilot.retrieval_quality.floor import RelevanceFloor, apply_floor, resolve_floor
 from src.copilot.vectorstore import BaseVectorStore, VectorHit, build_vector_store
 
 __all__ = ["VectorRetriever", "retrieve"]
@@ -36,8 +37,14 @@ def _hit_to_result(hit: VectorHit) -> RetrievalResult:
 class VectorRetriever:
     """Retrieve chunks from a vector store as ranked ``RetrievalResult``s."""
 
-    def __init__(self, store: BaseVectorStore) -> None:
+    def __init__(self, store: BaseVectorStore, floor: RelevanceFloor | None = None) -> None:
         self.store = store
+        # 02E: the floor is configurable (environment override > approved calibrated entry for this exact embedder > the strict default 0.0). An
+        # invalid override raises at construction rather than silently loosening. The default reproduces the P10D behaviour exactly (score > 0).
+        if floor is None:
+            ident = self.store._live_identity() if hasattr(self.store, "_live_identity") else None
+            floor = resolve_floor((ident.provider, ident.model, ident.version, ident.dimensions) if ident is not None else None)
+        self.floor = floor
 
     def retrieve(
         self,
@@ -57,7 +64,7 @@ class VectorRetriever:
         # P10D: a similarity of zero (or below) means NO similarity: a query with no usable token for the embedder (for example Arabic or Cyrillic
         # text under the offline hash embedder) or no overlap at all. Such a chunk is arbitrary nearest-neighbour padding, not evidence, and used to be
         # returned (and cited) anyway. This is the most conservative possible floor: a semantic embedder never scores a related passage at <= 0.
-        return [_hit_to_result(hit) for hit in hits if hit.score > 0.0]
+        return [_hit_to_result(hit) for hit in apply_floor(hits, self.floor)]
 
 
 def retrieve(
