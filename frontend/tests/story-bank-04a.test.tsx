@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const m = {
   list: vi.fn(), search: vi.fn(), tags: vi.fn(), create: vi.fn(), update: vi.fn(), remove: vi.fn(), archive: vi.fn(), restore: vi.fn(),
   confirm: vi.fn(), unconfirm: vi.fn(), attach: vi.fn(), detach: vi.fn(), suggest: vi.fn(), answers: vi.fn(),
-  docs: vi.fn(), docGet: vi.fn(), opps: vi.fn(),
+  docs: vi.fn(), docGet: vi.fn(), opps: vi.fn(), wsList: vi.fn(), sharesMine: vi.fn(), shareCreate: vi.fn(), shareRevoke: vi.fn(),
 };
 
 vi.mock("@/lib/api/client", () => ({
@@ -24,6 +24,8 @@ vi.mock("@/lib/api/client", () => ({
     },
     documents: { list: (...a: unknown[]) => m.docs(...a), get: (...a: unknown[]) => m.docGet(...a) },
     opportunities: { list: (...a: unknown[]) => m.opps(...a) },
+    workspaces: { list: (...a: unknown[]) => m.wsList(...a) },
+    shares: { mine: (...a: unknown[]) => m.sharesMine(...a), create: (...a: unknown[]) => m.shareCreate(...a), revoke: (...a: unknown[]) => m.shareRevoke(...a) },
   },
 }));
 vi.mock("@/lib/api/errors", () => ({ ApiError: class extends Error { userMessage = "server said no"; } }));
@@ -318,6 +320,46 @@ describe("StoryPicker (Practice reuse with consent)", () => {
     m.list.mockResolvedValue({ stories: [] });
     render(<Harness />);
     expect(await screen.findByText(/You have no stories yet/)).toBeInTheDocument();
+  });
+});
+
+describe("StoryBank: sharing is an explicit, view-only, revocable grant", () => {
+  it("explains what a member can see, shares only on the click, and stops sharing on request", async () => {
+    m.list.mockResolvedValue({ stories: [story({ id: 1, title: "Shareable" })] });
+    let grants: unknown[] = [];
+    m.wsList.mockResolvedValue({ workspaces: [{ id: 4, name: "Alpha", status: "active", owner_user_id: 1, member_count: 2, created_at: null }], invited: [] });
+    m.sharesMine.mockImplementation(async () => ({ shares: grants }));
+    m.shareCreate.mockImplementation(async () => { grants = [{ id: 40, owner_user_id: 1, workspace_id: 4, resource_type: "story", resource_id: "1", permission: "view", status: "active", created_at: null, revoked_at: null }]; return { share_id: 40, status: "active" }; });
+    m.shareRevoke.mockImplementation(async () => { grants = []; return { status: "revoked" }; });
+    render(<StoryBank />);
+    await userEvent.click(await screen.findByRole("button", { name: "Share", expanded: false }));
+    expect(await screen.findByText(/view-only access to this story/)).toBeInTheDocument();
+    expect(screen.getByText(/never see your documents, your practice answers or your Opportunities/)).toBeInTheDocument();
+    expect(m.shareCreate).not.toHaveBeenCalled();                                         // opening the panel shares nothing
+    expect(screen.getByRole("button", { name: "Share view-only" })).toBeDisabled();
+    await userEvent.selectOptions(screen.getByLabelText("Workspace"), "4");
+    await userEvent.click(screen.getByRole("button", { name: "Share view-only" }));
+    await waitFor(() => expect(m.shareCreate).toHaveBeenCalledWith(4, "story", "1"));
+    expect(await screen.findByText("Shared with Alpha")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Stop sharing" }));
+    await waitFor(() => expect(m.shareRevoke).toHaveBeenCalledWith(40));
+    expect(await screen.findByText("Not shared with anyone.")).toBeInTheDocument();
+  });
+
+  it("offers no share control for an archived story and says so when there is no Workspace", async () => {
+    m.list.mockResolvedValue({ stories: [story({ id: 2, title: "Plain" })] });
+    m.wsList.mockResolvedValue({ workspaces: [], invited: [] });
+    m.sharesMine.mockResolvedValue({ shares: [] });
+    const { unmount } = render(<StoryBank />);
+    await userEvent.click(await screen.findByRole("button", { name: "Share", expanded: false }));
+    expect(await screen.findByText(/not in a Workspace yet/)).toBeInTheDocument();
+    unmount();
+    m.list.mockResolvedValue({ stories: [story({ id: 3, title: "Gone", archived_at: "2026-10-01T00:00:00Z" })] });
+    m.search.mockResolvedValue({ stories: [story({ id: 3, title: "Gone", archived_at: "2026-10-01T00:00:00Z" })] });
+    render(<StoryBank />);
+    await userEvent.selectOptions(await screen.findByLabelText("Show"), "archived");
+    await screen.findByText("Gone");
+    expect(screen.queryByRole("button", { name: "Share" })).toBeNull();
   });
 });
 
