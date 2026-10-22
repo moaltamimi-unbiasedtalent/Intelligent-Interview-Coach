@@ -1,0 +1,134 @@
+{
+  "about": "Per-language, per-document digest of the exact current text (key and value, in page order). A change to any legal string changes its digest; regenerate with scripts/legal_review_pack.py --write.",
+  "date_shown": {
+    "ai_transparency": "2026-09-26",
+    "privacy": "2026-09-26",
+    "terms": "2026-09-26"
+  },
+  "locales": {
+    "de": {
+      "ai_transparency": {
+        "sha256": "5a9a17f5e586d74bb76e3d1818042c0ac64f0cfa654cea8a364e3c1bac78813a",
+        "strings": 21
+      },
+      "privacy": {
+        "sha256": "44d1e6fc3e2f6cf86c5b06f2cda9b0f5d60cf49b28f4ec4b911a3cb99c857f55",
+        "strings": 37
+      },
+      "terms": {
+        "sha256": "c0a9be8d566bfc0a284d993460f28d730273d791f8d6d9557ffc87ef1a71e70c",
+        "strings": 19
+      }
+    },
+    "en": {
+      "ai_transparency": {
+        "sha256": "0641ff7a48f334b31ff15ef09f59f33f037d1a9fd5482a25c12ed727edaa792c",
+        "strings": 21
+      },
+      "privacy": {
+        "sha256": "433e62a2cb72ccd0558e3fab1f32f7a1cd35a351cc1e8ed0641af6444587e091",
+        "strings": 37
+      },
+      "terms": {
+        "sha256": "9273dea9dd703d52b072d46e049a229e0847fd412b467813785ed4406186eacd",
+        "strings": 19
+      }
+    },
+    "es": {
+      "ai_transparency": {
+        "sha256": "310e9eb04586a02ba7342cb922ecc7f735589eb32e0c709adc4b9d98e0f84e6e",
+        "strings": 21
+      },
+      "privacy": {
+        "sha256": "a261953ae056ce40b29523f83ab9e500efd589f5b18d7ec0edb3238ddc114df1",
+        "strings": 37
+      },
+      "terms": {
+        "sha256": "e63221e9a6d54f4fc68b3bce9cdc8d1b709f0579496b989568a889dc4735b17e",
+        "strings": 19
+      }
+    },
+    "fr": {
+      "ai_transparency": {
+        "sha256": "f4b51a9b06558532e0b929c61cf6cecbd4224ce1b32dbb23e3070469ebd6584f",
+        "strings": 21
+      },
+      "privacy": {
+        "sha256": "8e47297a0bb2810f6dd6b76fa292d57b4e27f7f495f12e597c6c4da71c978445",
+        "strings": 37
+      },
+      "terms": {
+        "sha256": "6f4492f03bb6e1b64a32081b1cb15ab21947d4c2e15d64f1069c6809eb693a4b",
+        "strings": 19
+      }
+    },
+    "it": {
+      "ai_transparency": {
+        "sha256": "93d4b5dc3527867309efe84ff4dedc58ab41c021142b436b3d68a42dd91512dc",
+        "strings": 21
+      },
+      "privacy": {
+        "sha256": "bcc87c55d5990a18945d3dc99162fa2abcbb1c989d858c4740e40c44ad5eda25",
+        "strings": 37
+      },
+      "terms": {
+        "sha256": "cea7473e27ddf9b45b4f2ce3db08d54df8ef297d2e229415143377e3d2d3f3b1",
+        "strings": 19
+      }
+    },
+    "nl": {
+      "ai_transparency": {
+        "sha256": "fd6ac98838313e25e7e979cfc5e8a42f6c2941a1da64befe060a7d8b40a5ffa1",
+        "strings": 21
+      },
+      "privacy": {
+        "sha256": "a6a5998334270e2a6139fd12e70bb8bb2ef4b955c3eb4f7f1caaa99dd257444a",
+        "strings": 37
+      },
+      "terms": {
+        "sha256": "4767d56b7eb8301b2f9e0726a92e230934f8e82c0dffd7120a0352aa2854fef9",
+        "strings": 19
+      }
+    },
+    "pt": {
+      "ai_transparency": {
+        "sha256": "e353c6d6c67fcbafc3910fbafe6b5404fcfabdcd0cf38862616f7bd9b9727d9a",
+        "strings": 21
+      },
+      "privacy": {
+        "sha256": "2b97ba6671e00b5dc6260eb22ae963b2d63f75c1c0aa7c933f2333c670aa22fb",
+        "strings": 37
+      },
+      "terms": {
+        "sha256": "ab504a67363bbef822dc7bdc94d0c78e84a33b33c4177f2e83629ca04e8aeab9",
+        "strings": 19
+      }
+    },
+    "ru": {
+      "ai_transparency": {
+        "sha256": "202d50e38f1544c7822c58b444c6dd8ad05f3e577c35bdd2e1752c83d239fa9a",
+        "strings": 21
+      },
+      "privacy": {
+        "sha256": "2fbc3139ac5f00674937b60498ef37b7c348312506119fae959280ea61e107ef",
+        "strings": 37
+      },
+      "terms": {
+        "sha256": "1c42fb904aefabfb3be41085e064e559540bd28a907e435edc3350c67ff92cee",
+        "strings": 19
+      }
+    }
+  },
+  "offered": [
+    "en",
+    "de",
+    "fr",
+    "es",
+    "it",
+    "pt",
+    "nl"
+  ],
+  "preserved_excluded": [
+    "ru"
+  ]
+}
