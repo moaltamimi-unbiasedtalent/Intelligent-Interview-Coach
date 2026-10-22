@@ -104,6 +104,24 @@ DESCRIPTION = (
 )
 
 
+def _start_api_monitor():
+    """05C: the API-side monitor loop (so a dead worker is still noticed). ON for hosted environments unless ``OPS_MONITOR_ENABLED=false``; OFF in development and tests. Never blocks startup."""
+    try:
+        from src.ops.monitor import ApiMonitorLoop, api_monitor_enabled
+
+        if not api_monitor_enabled():
+            return None
+        from src.application.factories import build_repository
+        from src.config import load_config
+
+        loop = ApiMonitorLoop(build_repository(load_config()).session_factory)
+        loop.start()
+        return loop
+    except Exception:  # noqa: BLE001
+        logger.warning("API monitor could not be started")
+        return None
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # App-lifetime state. Expensive resources (vector store, repository, …) are
@@ -116,7 +134,10 @@ async def lifespan(app: FastAPI):
     app.state.resources_lock = threading.RLock()
     app.state.session_store = InMemorySessionStore()
     logger.info("API started (env=%s)", app.state.settings.env)
+    monitor = _start_api_monitor()
     yield
+    if monitor is not None:
+        monitor.stop()
     app.state.resources.clear()
 
 

@@ -3061,7 +3061,9 @@ INCIDENT_SERVICES = ("authentication", "agent", "practice", "research", "documen
                      "billing", "privacy", "admin", "platform")
 ALERT_CATEGORIES = ("auth_failure_burst", "admin_access_denied_burst", "job_failed",
                     # 02A (migration 0040): knowledge health, derived from the environment guard (src/knowledge_admin/alerts.py)
-                    "knowledge_collection_lost", "knowledge_source_files_missing", "knowledge_identity_mismatch", "knowledge_embedding_mismatch")
+                    "knowledge_collection_lost", "knowledge_source_files_missing", "knowledge_identity_mismatch", "knowledge_embedding_mismatch",
+                   # 05C (migration 0045): operational health derived by src/ops (API, worker, queue, indexing, provider, quota reaper, AI budget)
+                   "api_error_rate_high", "worker_unhealthy", "job_queue_backlog", "indexing_stalled", "provider_unhealthy", "quota_reaper_stale", "ai_budget_attention")
 ALERT_SEVERITIES = ("low", "medium", "high", "critical")
 ALERT_STATES = ("active", "acknowledged", "resolved")
 ROLE_REQUEST_STATUSES = ("pending", "applied", "rejected", "cancelled", "stale")

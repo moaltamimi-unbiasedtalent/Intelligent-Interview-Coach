@@ -339,7 +339,7 @@ def test_pr1_no_env_value_or_secret_in_response(env, monkeypatch):
 def test_pr2_response_is_the_allowlist_schema(env, monkeypatch):
     j = _providers(env, monkeypatch).json()
     assert set(j) == {"providers", "speech", "ocr", "pause", "pause_durable", "rate_limit_mode",
-                      "rate_limit_distributed", "note"}
+                      "rate_limit_distributed", "monitoring", "note"}      # 05C added the allow-listed `monitoring` block (counts, fixed codes, headroom; no secret)
     for row in j["providers"]:
         assert set(row) == {"provider_id", "label", "configured", "enabled", "externally_managed", "writable",
                             "status", "health", "live_validation", "mode"}
