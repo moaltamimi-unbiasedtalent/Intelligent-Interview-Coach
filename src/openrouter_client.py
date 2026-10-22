@@ -25,6 +25,7 @@ import httpx
 
 from src import constants
 from src.config import AppConfig
+from src.llm.budget.errors import BudgetError
 
 __all__ = [
     "OpenRouterError",
@@ -39,6 +40,7 @@ __all__ = [
     "InvalidResponseError",
     "EmptyContentError",
     "ProviderError",
+    "BudgetRefusedError",
     "UnsupportedParameterError",
     "ChatResult",
     "RequestDebugInfo",
@@ -119,6 +121,10 @@ class EmptyContentError(InvalidResponseError):
 
 class ProviderError(OpenRouterError):
     """The upstream provider reported an error inside an otherwise-2xx response."""
+
+
+class BudgetRefusedError(OpenRouterError):
+    """The AI budget governor (05C) refused the request before it was sent (kill switch, ceiling, closed governor, duplicate). Nothing reached the provider."""
 
 
 class UnsupportedParameterError(OpenRouterError):
@@ -422,6 +428,7 @@ class OpenRouterClient:
         url = self._config.chat_completions_url
         attempts = 1 + (constants.MAX_TRANSIENT_RETRIES if max_retries is None else int(max_retries))
 
+        prior: OpenRouterError | None = None      # the truthful error of the previous attempt, kept when the governor refuses a retry
         for attempt in range(attempts):
             can_retry = attempt < attempts - 1
             start = time.monotonic()
@@ -431,7 +438,13 @@ class OpenRouterClient:
                     response = self._client().post(url, headers=headers, json=payload)
                 else:
                     response = self._client().post(url, headers=headers, json=payload, timeout=float(timeout_s))
+            except BudgetError as exc:
+                # 05C: the governor never retries an unknown outcome or exceeds a bound. Surface the earlier real failure when this was a retry, else a safe typed refusal.
+                if prior is not None:
+                    raise prior from exc
+                raise BudgetRefusedError("AI usage is currently unavailable (a budget or safety limit applies). Please try again later.", category="budget_refused") from exc
             except httpx.TimeoutException as exc:
+                prior = RequestTimeoutError("The request to OpenRouter timed out. Please try again.", category="timeout")
                 if can_retry:
                     self._backoff(None)
                     continue
@@ -440,6 +453,7 @@ class OpenRouterClient:
                     category="timeout",
                 ) from exc
             except httpx.RequestError as exc:
+                prior = NetworkError("Could not reach OpenRouter due to a network error.", category="network_error")
                 if can_retry:
                     self._backoff(None)
                     continue
@@ -453,6 +467,7 @@ class OpenRouterClient:
                 response.status_code in constants.TRANSIENT_RETRY_STATUSES
                 and can_retry
             ):
+                prior = (RateLimitError if response.status_code == 429 else ServerError)("OpenRouter had a temporary problem. Please try again.", status_code=response.status_code, category=_category_for_status(response.status_code))
                 self._backoff(response.headers.get("retry-after"))
                 continue
 
