@@ -4,6 +4,7 @@ cost are never zero, no double counting of AI usage, mock billing is never reven
 
 from __future__ import annotations
 
+import itertools
 import json
 import re
 import socket
@@ -50,12 +51,16 @@ def svc(env):
     return ReportingService(sf(env), clock=lambda: NOW)
 
 
+_IDENTITY_SEQ = itertools.count(1)     # one number per users() call: unique for the life of the process, never derived from a memory address (CPython reuses freed addresses)
+
+
 def users(env, n, *, created=None, onboarded=True, prefix="c"):
     out = []
+    call = next(_IDENTITY_SEQ)
     with sf(env)() as s:
         for i in range(n):
             t = created or NOW - timedelta(days=3)
-            u = User(subject=f"{prefix}{len(out)}{i}-{id(out)}", provider="test", email=f"{prefix}{i}-{id(out)}@example.test", platform_role="user", status="active",
+            u = User(subject=f"{prefix}{len(out)}{i}-{call}", provider="test", email=f"{prefix}{i}-{call}@example.test", platform_role="user", status="active",
                      created_at=t, updated_at=t, onboarding_completed_at=t if onboarded else None)
             s.add(u)
             s.flush()
@@ -663,3 +668,18 @@ def test_migration_0024_adds_only_the_two_tables_and_seeds_nothing(tmp_path, mon
 def test_no_live_pricing_or_provider_import_in_reporting():
     code = "".join(p.read_text() for p in (ROOT / "src/reporting").glob("*.py")) + (ROOT / "src/api/routes/admin_reports.py").read_text()
     assert not re.search(r"httpx|requests\.|urllib|openrouter\.ai|PricingService|build_chat_model|get_model_pricing|fetch_pricing|\.fetch\(", code)
+
+
+def test_test_identities_never_collide_even_when_the_allocator_reuses_a_freed_list_address(env, monkeypatch):
+    """Regression for the CI failure `UNIQUE constraint failed: users.provider, users.subject`: ``users()`` used to put ``id(out)`` (the memory address of a local list, which CPython
+    reuses as soon as the list is freed) into the subject and email, so two calls with the same prefix collided depending on heap state, i.e. on test order and the xdist worker.
+    The address is now never part of an identity; this pins the failing condition by forcing every address to the same value."""
+    import sys
+    monkeypatch.setattr(sys.modules[__name__], "id", lambda _o: 4242, raising=False)      # shadows the builtin ONLY inside this module (the helper reads it from here)
+    first = users(env, 2)
+    second = users(env, 2)                    # same default prefix: collided on (provider, subject) before the fix
+    third = users(env, 1, prefix="c")
+    assert len(set(first + second + third)) == 5
+    with sf(env)() as s:
+        subjects = [r[0] for r in s.execute(text("SELECT subject FROM users WHERE provider = 'test'"))]
+    assert len(subjects) == len(set(subjects)) == 5                      # the (provider, subject) uniqueness constraint itself is untouched
