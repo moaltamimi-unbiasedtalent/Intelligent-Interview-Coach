@@ -46,6 +46,8 @@ class EntitlementDef:
     type: EntitlementType
     label: str          # English operator label (Admin UI); candidate wording is localized in the frontend
     description: str
+    max_limit: int | None = None   # code-defined upper bound for a LIMIT key (None: no bound; no limit key exists today)
+    premium_only: bool = False     # never enabled in the default (least-privilege) plan
 
 
 # Keys mirror the pre-W10.4 ``Capability`` identifiers (stable strings; never renamed).
@@ -59,7 +61,7 @@ REGISTRY: dict[str, EntitlementDef] = {d.key: d for d in (
     EntitlementDef("standard_model_profiles", EntitlementType.BOOLEAN, "Standard model profiles",
                    "Fast, Balanced and Advanced model profiles (currently free for everyone)."),
     EntitlementDef("premium_preview", EntitlementType.BOOLEAN, "Premium preview features",
-                   "Non-destructive Premium preview endpoint (preview only; not purchasable)."),
+                   "Non-destructive Premium preview endpoint (preview only; not purchasable).", premium_only=True),
 )}
 
 # The real, existing plan families. No other plan code can be created. Premium is a PREVIEW (not purchasable).
@@ -70,6 +72,19 @@ DEFAULT_PLANS: dict[str, dict] = {
     "basic": {"display_name": "Basic", "enabled": BASIC_KEYS},
     "premium": {"display_name": "Premium (preview)", "enabled": BASIC_KEYS | {"premium_preview"}},
 }
+
+
+def check_plan_bounds(plan_code: str, key: str, enabled: bool, registry: dict[str, EntitlementDef] | None = None) -> None:
+    """Code-defined plan bound: the default (least-privilege) plan can never carry a Premium-only entitlement."""
+    d = (registry if registry is not None else REGISTRY).get(key)
+    if d is not None and d.premium_only and enabled and plan_code == DEFAULT_PLAN_CODE:
+        raise EntitlementError(f"{key} is a Premium-only entitlement and cannot be enabled in the default plan.")
+
+
+def bounds_of(d: EntitlementDef) -> dict:
+    """Operator-facing description of what values the code allows for one key (read-only)."""
+    return {"kind": d.type.value, "min_limit": 1 if d.type is EntitlementType.LIMIT else None,
+            "max_limit": d.max_limit, "premium_only": d.premium_only}
 
 
 class DefaultPlanUnavailable(RuntimeError):
@@ -96,6 +111,8 @@ def validate_value(key: str, enabled: object, limit: object, registry: dict[str,
         raise EntitlementError(f"{key}: the limit must be a whole number.")
     if limit < 1:
         raise EntitlementError(f"{key}: the limit must be at least 1 (use 'disabled' to turn it off).")
+    if d.max_limit is not None and limit > d.max_limit:
+        raise EntitlementError(f"{key}: the limit cannot exceed {d.max_limit}.")
     if not enabled:
         raise EntitlementError(f"{key}: a disabled entitlement cannot carry a limit.")
     return enabled, limit
