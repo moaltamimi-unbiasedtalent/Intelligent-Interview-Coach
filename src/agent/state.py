@@ -49,6 +49,16 @@ class AgentState(TypedDict, total=False):
     # the model cannot re-enable it. Persisted so resume/continue keep the choice.
     disabled_tools: list[str]
 
+    # Tool-call authorization (01D). `tool_authorization` is the bounded audit trail of decisions (identifiers
+    # and reason codes only; never arguments or user text); `tool_call_fps` are call digests for the loop guard;
+    # `untrusted_context` summarises the injection risk of retrieved content seen this run (counts and the
+    # highest 0.0-1.0 risk); `cancelled` and `deadline_epoch` are run-control facts the SERVER sets.
+    tool_authorization: list[dict[str, Any]]
+    tool_call_fps: list[str]
+    untrusted_context: dict[str, Any]
+    cancelled: bool
+    deadline_epoch: float | None
+
     # Structured tool outputs carried between steps (short-term; safe dicts).
     requirements: dict[str, Any] | None  # from job-description analysis
     gaps: dict[str, Any] | None  # from candidate gap analysis
