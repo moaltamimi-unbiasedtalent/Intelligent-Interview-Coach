@@ -82,4 +82,4 @@ Not run: PostgreSQL execution of the batch (SAVEPOINT, row locks); a real multi-
 - Live-staging verification, a PostgreSQL run and CI: NOT AVAILABLE (CI only runs on a PR; no deployment).
 
 ## Throughput
-Start 2026-10-22 14:42 CEST. First push: FIRSTPUSH. Rework rounds: SQLite savepoint commit bug and lock-upgrade race (found by tests, fixed before first push), one evaluator guard (`eval_admin_qualification` audited-in-handler heuristic) fixed before first push. SHA: SHAPLACEHOLDER.
+Start 2026-10-22 14:42 CEST. First push: 2026-10-22 15:29 CEST (commit 8dbd0f6). Rework rounds: SQLite savepoint commit bug and lock-upgrade race (found by tests, fixed before first push), one evaluator guard (`eval_admin_qualification` audited-in-handler heuristic) fixed before first push. SHA: the final head is the tip of `origin/feat/03c-bulk-user-actions` (a file cannot contain its own commit id). CI: not available until a PR exists.
