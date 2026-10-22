@@ -117,7 +117,8 @@ def run() -> dict[str, tuple[bool, str]]:
     routes = admin_routes()
     plan_routes = [r for r in routes if r.path.startswith("/admin/plans") or r.path.endswith("/plan")]
     used = {p for r in plan_routes for p in r.permissions}
-    check("plan_routes_permissioned", len(plan_routes) == 9 and not ungated(routes) and used <= {perm.PLANS_READ, perm.PLANS_MANAGE, perm.SUBSCRIPTIONS_MANAGE},
+    # 9 original routes + the 9 added by 03B (tests/test_admin_plans_03b.py pins them by path and permission); same permission set, still no ungated route.
+    check("plan_routes_permissioned", len(plan_routes) == 9 + 9 and not ungated(routes) and used <= {perm.PLANS_READ, perm.PLANS_MANAGE, perm.SUBSCRIPTIONS_MANAGE},
           f"{len(plan_routes)} routes; {len(routes)} privileged routes all covered")
     cand = read("src/api/routes/auth.py")
     plan_get = cand.split('@router.get("/plan"')[1].split("@router")[0] if '@router.get("/plan"' in cand else ""
