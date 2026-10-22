@@ -1018,6 +1018,3658 @@
   ],
   "note": "No commercial terms means unconfigured, not free. Terms are mock metadata: they charge no one and change no entitlement."
  },
+ "/admin/command-center/ai-operations": {
+  "captured_since": null,
+  "components": [
+   {
+    "component_id": "model_configuration",
+    "evidence": "current_state",
+    "label": "Model configuration",
+    "note": "No governed configuration is active; the code defaults are in force.",
+    "status": "ok"
+   },
+   {
+    "component_id": "ai_request_ceilings",
+    "evidence": "current_state",
+    "label": "AI request ceilings",
+    "note": "Observe mode: ceilings are recorded, nothing is refused.",
+    "status": "info"
+   },
+   {
+    "component_id": "usage_quotas",
+    "evidence": "current_state",
+    "label": "Usage quotas",
+    "note": "Not enforced. No allowance policy is configured.",
+    "status": "info"
+   },
+   {
+    "component_id": "pause_agent",
+    "evidence": "current_state",
+    "label": "Pause: agent",
+    "note": "Running.",
+    "status": "ok"
+   },
+   {
+    "component_id": "pause_career_ai",
+    "evidence": "current_state",
+    "label": "Pause: career ai",
+    "note": "Running.",
+    "status": "ok"
+   },
+   {
+    "component_id": "pause_current_market",
+    "evidence": "current_state",
+    "label": "Pause: current market",
+    "note": "Running.",
+    "status": "ok"
+   },
+   {
+    "component_id": "pause_ocr",
+    "evidence": "current_state",
+    "label": "Pause: ocr",
+    "note": "Running.",
+    "status": "ok"
+   },
+   {
+    "component_id": "pause_practice_ai",
+    "evidence": "current_state",
+    "label": "Pause: practice ai",
+    "note": "Running.",
+    "status": "ok"
+   },
+   {
+    "component_id": "pause_public_registration",
+    "evidence": "current_state",
+    "label": "Pause: public registration",
+    "note": "Running.",
+    "status": "ok"
+   },
+   {
+    "component_id": "pause_realtime_voice",
+    "evidence": "current_state",
+    "label": "Pause: realtime voice",
+    "note": "Running.",
+    "status": "ok"
+   }
+  ],
+  "generated_at": "2026-10-22T05:23:53.719023+00:00",
+  "metrics": [
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first AI usage fact (W10.12 onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [
+     "workflow",
+     "model_profile",
+     "operation",
+     "model"
+    ],
+    "evidence": "not_captured",
+    "evidence_source": "fact_table:ai_usage_facts",
+    "label": "AI usage units",
+    "metric_id": "ai_op_usage_units",
+    "note": "No AI usage has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "cohort",
+    "unit": "count",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first AI usage fact (W10.12 onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [
+     "workflow",
+     "model_profile",
+     "operation",
+     "model"
+    ],
+    "evidence": "not_captured",
+    "evidence_source": "fact_table:ai_usage_facts",
+    "label": "Model calls",
+    "metric_id": "ai_op_model_calls",
+    "note": "No AI usage has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "cohort",
+    "unit": "count",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first AI usage fact (W10.12 onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [
+     "workflow",
+     "model_profile",
+     "operation",
+     "model"
+    ],
+    "evidence": "not_captured",
+    "evidence_source": "fact_table:ai_usage_facts",
+    "label": "Known tokens (partial coverage)",
+    "metric_id": "ai_op_known_tokens",
+    "note": "No AI usage has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "cohort",
+    "unit": "tokens",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first AI usage fact (W10.12 onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "not_captured",
+    "evidence_source": "fact_table:ai_usage_facts",
+    "label": "Token coverage",
+    "metric_id": "ai_op_token_coverage",
+    "note": "No AI usage has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "cohort",
+    "unit": "percent",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first AI usage fact (W10.12 onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [
+     "workflow",
+     "model_profile",
+     "operation",
+     "model"
+    ],
+    "evidence": "not_captured",
+    "evidence_source": "fact_table:ai_usage_facts",
+    "label": "Known cost (USD, partial coverage)",
+    "metric_id": "ai_op_known_cost",
+    "note": "No AI usage has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "cohort",
+    "unit": "usd",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first AI usage fact (W10.12 onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "not_captured",
+    "evidence_source": "fact_table:ai_usage_facts",
+    "label": "Cost coverage",
+    "metric_id": "ai_op_cost_coverage",
+    "note": "No AI usage has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "cohort",
+    "unit": "percent",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first AI operation event (W12.4D-P2-A onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [
+     "workflow",
+     "operation"
+    ],
+    "evidence": "not_captured",
+    "evidence_source": "named_query:ai_operation_events",
+    "label": "AI operations",
+    "metric_id": "ai_op_operations",
+    "note": "No AI operation has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "cohort",
+    "unit": "count",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first AI operation event (W12.4D-P2-A onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [
+     "workflow",
+     "operation",
+     "failure_category"
+    ],
+    "evidence": "not_captured",
+    "evidence_source": "named_query:ai_operation_events",
+    "label": "Failed AI operations",
+    "metric_id": "ai_op_failed_operations",
+    "note": "No AI operation has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "cohort",
+    "unit": "count",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first AI operation event (W12.4D-P2-A onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [
+     "workflow",
+     "operation"
+    ],
+    "evidence": "not_captured",
+    "evidence_source": "named_query:ai_operation_events",
+    "label": "AI operation failure rate",
+    "metric_id": "ai_op_failure_rate",
+    "note": "No AI operation has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "cohort",
+    "unit": "percent",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first AI operation event (W12.4D-P2-A onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [
+     "workflow",
+     "operation"
+    ],
+    "evidence": "not_captured",
+    "evidence_source": "named_query:ai_operation_events",
+    "label": "Provider retry attempts",
+    "metric_id": "ai_op_retry_attempts",
+    "note": "No AI operation has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "cohort",
+    "unit": "count",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first AI operation event (W12.4D-P2-A onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [
+     "workflow"
+    ],
+    "evidence": "not_captured",
+    "evidence_source": "named_query:ai_operation_events",
+    "label": "AI operation latency p50",
+    "metric_id": "ai_op_latency_p50_ms",
+    "note": "No AI operation has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "cohort",
+    "unit": "milliseconds",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first AI operation event (W12.4D-P2-A onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [
+     "workflow"
+    ],
+    "evidence": "not_captured",
+    "evidence_source": "named_query:ai_operation_events",
+    "label": "AI operation latency p95",
+    "metric_id": "ai_op_latency_p95_ms",
+    "note": "No AI operation has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "cohort",
+    "unit": "milliseconds",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first AI operation event (W12.4D-P2-A onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [
+     "workflow"
+    ],
+    "evidence": "not_captured",
+    "evidence_source": "named_query:ai_operation_events",
+    "label": "Would-be limit refusals (observe mode)",
+    "metric_id": "ai_op_limit_observed",
+    "note": "No AI operation has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "cohort",
+    "unit": "count",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "No fallback event is captured.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "not_captured",
+    "evidence_source": "named_query:model_fallback_events",
+    "label": "Model fallbacks",
+    "metric_id": "ai_op_model_fallbacks",
+    "note": "No event records a fallback to a lower model tier, so none is reported (this is not zero).",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "operational",
+    "unit": "count",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first operational event (W10.12 onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [
+     "operation",
+     "provider",
+     "outcome"
+    ],
+    "evidence": "not_captured",
+    "evidence_source": "fact_table:operational_metric_events",
+    "label": "Provider calls",
+    "metric_id": "ai_op_provider_calls",
+    "note": "No provider call has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "operational",
+    "unit": "count",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first operational event (W10.12 onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [
+     "operation",
+     "provider"
+    ],
+    "evidence": "not_captured",
+    "evidence_source": "fact_table:operational_metric_events",
+    "label": "Provider call failure rate",
+    "metric_id": "ai_op_provider_failure_rate",
+    "note": "No provider call has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "operational",
+    "unit": "percent",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first operational event (W10.12 onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "not_captured",
+    "evidence_source": "fact_table:operational_metric_events",
+    "label": "Provider call latency p95",
+    "metric_id": "ai_op_provider_latency_p95_ms",
+    "note": "No provider call has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "operational",
+    "unit": "milliseconds",
+    "value": null
+   }
+  ],
+  "period": "30d",
+  "privacy": "Aggregates only. Candidate cohorts below the engineering privacy floor are suppressed (this is not an anonymisation guarantee). No candidate content, identifier, e-mail, address or credential is returned.",
+  "section_id": "ai_operations",
+  "title": "AI operations",
+  "utc": true,
+  "window_end": "2026-10-22T05:23:53.719023+00:00",
+  "window_start": "2026-09-22T05:23:53.719023+00:00"
+ },
+ "/admin/command-center/alerts": {
+  "captured_since": null,
+  "components": [],
+  "generated_at": "2026-10-22T05:23:53.725723+00:00",
+  "metrics": [
+   {
+    "breakdowns": [
+     {
+      "buckets": [],
+      "dimension_id": "alert_category",
+      "label": "Alert category"
+     },
+     {
+      "buckets": [],
+      "dimension_id": "severity",
+      "label": "Severity"
+     }
+    ],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [
+     "alert_category",
+     "severity"
+    ],
+    "evidence": "current_state",
+    "evidence_source": "named_query:admin_alerts",
+    "label": "Unresolved alerts",
+    "metric_id": "alerts_unresolved",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "current_state",
+    "evidence_source": "named_query:admin_alerts",
+    "label": "Active high or critical alerts",
+    "metric_id": "alerts_active_high",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [
+     {
+      "buckets": [],
+      "dimension_id": "alert_category",
+      "label": "Alert category"
+     },
+     {
+      "buckets": [],
+      "dimension_id": "severity",
+      "label": "Severity"
+     }
+    ],
+    "cost_micro_usd": null,
+    "coverage": "Historical, from authoritative rows in the period.",
+    "denominator": null,
+    "dimensions": [
+     "alert_category",
+     "severity"
+    ],
+    "evidence": "captured",
+    "evidence_source": "named_query:admin_alerts",
+    "label": "Alerts first seen in the period",
+    "metric_id": "alerts_opened",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Historical, from authoritative rows in the period.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "captured",
+    "evidence_source": "named_query:admin_alerts",
+    "label": "Alerts resolved in the period",
+    "metric_id": "alerts_resolved",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   }
+  ],
+  "period": "30d",
+  "privacy": "Aggregates only. Candidate cohorts below the engineering privacy floor are suppressed (this is not an anonymisation guarantee). No candidate content, identifier, e-mail, address or credential is returned.",
+  "section_id": "alerts",
+  "title": "Alerts",
+  "utc": true,
+  "window_end": "2026-10-22T05:23:53.725723+00:00",
+  "window_start": "2026-09-22T05:23:53.725723+00:00"
+ },
+ "/admin/command-center/candidate-activity": {
+  "captured_since": null,
+  "components": [],
+  "generated_at": "2026-10-22T05:23:53.730726+00:00",
+  "metrics": [
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Historical, from authoritative rows",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "suppressed",
+    "evidence_source": "fact_table:users",
+    "label": "Registrations",
+    "metric_id": "registrations",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "suppressed",
+    "suppression": "cohort",
+    "unit": "count",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Historical, from authoritative rows",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "suppressed",
+    "evidence_source": "fact_table:users",
+    "label": "Onboarding completed",
+    "metric_id": "onboarding_completed",
+    "note": "Uses the exact completion timestamp. Accounts that predate onboarding were back-filled as completed.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "suppressed",
+    "suppression": "cohort",
+    "unit": "count",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Historical, from authoritative rows",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "suppressed",
+    "evidence_source": "fact_table:users",
+    "label": "Onboarding completion of period registrants",
+    "metric_id": "onboarding_rate",
+    "note": "Current completion state of the accounts registered in the period.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "suppressed",
+    "suppression": "cohort",
+    "unit": "percent",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Historical, from authoritative rows",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "suppressed",
+    "evidence_source": "fact_table:opportunities",
+    "label": "Opportunities created",
+    "metric_id": "opportunities_created",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "suppressed",
+    "suppression": "cohort",
+    "unit": "count",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "From the W10.10 ownership index onward",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "suppressed",
+    "evidence_source": "fact_table:preparation_runs",
+    "label": "Prepare runs started",
+    "metric_id": "prepare_started",
+    "note": "Back-filled index rows are excluded: their creation time is the back-fill time, not the run time.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "suppressed",
+    "suppression": "cohort",
+    "unit": "count",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "From the W10.10 ownership index onward",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "suppressed",
+    "evidence_source": "fact_table:preparation_runs",
+    "label": "Prepare runs reaching ready",
+    "metric_id": "prepare_ready_rate",
+    "note": "'Ready' means the run finished without failing; it is not a quality judgement.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "suppressed",
+    "suppression": "cohort",
+    "unit": "percent",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Lower bound",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "suppressed",
+    "evidence_source": "fact_table:interview_sessions",
+    "label": "Practice sessions started",
+    "metric_id": "practice_started",
+    "note": "Live sessions plus completed history. Sessions abandoned and pruned by retention are not recoverable.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "suppressed",
+    "suppression": "cohort",
+    "unit": "count",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Historical, from authoritative rows",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "suppressed",
+    "evidence_source": "fact_table:interviews",
+    "label": "Practice sessions completed",
+    "metric_id": "practice_completed",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "suppressed",
+    "suppression": "cohort",
+    "unit": "count",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Lower bound",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "suppressed",
+    "evidence_source": "named_query:first_substantive_action",
+    "label": "Product activation",
+    "metric_id": "activation",
+    "note": "Product activation = a candidate's first Opportunity, Prepare run or Practice session. It is an analytics definition, not an access or billing state.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "suppressed",
+    "suppression": "cohort",
+    "unit": "count",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Lower bound",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "suppressed",
+    "evidence_source": "named_query:returning_candidates",
+    "label": "Returning candidates",
+    "metric_id": "returning",
+    "note": "Substantive activity on at least two distinct UTC dates inside the period.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "suppressed",
+    "suppression": "cohort",
+    "unit": "count",
+    "value": null
+   }
+  ],
+  "period": "30d",
+  "privacy": "Aggregates only. Candidate cohorts below the engineering privacy floor are suppressed (this is not an anonymisation guarantee). No candidate content, identifier, e-mail, address or credential is returned.",
+  "section_id": "candidate_activity",
+  "title": "Candidate activity",
+  "utc": true,
+  "window_end": "2026-10-22T05:23:53.730726+00:00",
+  "window_start": "2026-09-22T05:23:53.730726+00:00"
+ },
+ "/admin/command-center/definitions": {
+  "default_period": "30d",
+  "dimensions": [
+   {
+    "description": "Approved AI model identifiers.",
+    "dimension_id": "model",
+    "kind": "category",
+    "label": "Approved model",
+    "max_buckets": 50
+   },
+   {
+    "description": "Code-defined AI workflows.",
+    "dimension_id": "workflow",
+    "kind": "category",
+    "label": "Workflow",
+    "max_buckets": 20
+   },
+   {
+    "description": "Code-defined operations.",
+    "dimension_id": "operation",
+    "kind": "category",
+    "label": "Operation",
+    "max_buckets": 50
+   },
+   {
+    "description": "Fast, Balanced or Advanced; never a provider slug.",
+    "dimension_id": "model_profile",
+    "kind": "category",
+    "label": "Model profile",
+    "max_buckets": 10
+   },
+   {
+    "description": "Bounded, code-defined failure categories; never an error text.",
+    "dimension_id": "failure_category",
+    "kind": "category",
+    "label": "Failure category",
+    "max_buckets": 40
+   },
+   {
+    "description": "Code-defined provider labels.",
+    "dimension_id": "provider",
+    "kind": "category",
+    "label": "Provider",
+    "max_buckets": 20
+   },
+   {
+    "description": "Code-defined outcome vocabulary.",
+    "dimension_id": "outcome",
+    "kind": "category",
+    "label": "Outcome",
+    "max_buckets": 20
+   },
+   {
+    "description": "Code-defined background job types.",
+    "dimension_id": "job_type",
+    "kind": "category",
+    "label": "Job type",
+    "max_buckets": 60
+   },
+   {
+    "description": "Code-defined job lifecycle states.",
+    "dimension_id": "job_state",
+    "kind": "category",
+    "label": "Job state",
+    "max_buckets": 10
+   },
+   {
+    "description": "Code-defined governed knowledge states.",
+    "dimension_id": "knowledge_state",
+    "kind": "category",
+    "label": "Knowledge version state",
+    "max_buckets": 12
+   },
+   {
+    "description": "Code-defined index record states.",
+    "dimension_id": "index_state",
+    "kind": "category",
+    "label": "Index record state",
+    "max_buckets": 6
+   },
+   {
+    "description": "Code-defined alert categories.",
+    "dimension_id": "alert_category",
+    "kind": "category",
+    "label": "Alert category",
+    "max_buckets": 20
+   },
+   {
+    "description": "Code-defined severities.",
+    "dimension_id": "severity",
+    "kind": "category",
+    "label": "Severity",
+    "max_buckets": 6
+   },
+   {
+    "description": "Code-defined security event categories.",
+    "dimension_id": "security_category",
+    "kind": "category",
+    "label": "Security event category",
+    "max_buckets": 20
+   }
+  ],
+  "metrics": [
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Workers whose heartbeat is recent. Queue depth never implies a healthy worker.",
+    "dimensions_allowed": [],
+    "label": "Background workers seen recently",
+    "metric_id": "platform_workers_active",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count_distinct",
+     "subject": "workers"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.overview.read",
+    "source": {
+     "kind": "named_query",
+     "name": "job_worker_heartbeats"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Capabilities an operator has paused (durable state).",
+    "dimensions_allowed": [],
+    "label": "Paused capabilities",
+    "metric_id": "platform_paused_capabilities",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "paused_capabilities"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.overview.read",
+    "source": {
+     "kind": "named_query",
+     "name": "platform_pause_state"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first operational event (W10.12 onward); nothing is back-filled."
+    },
+    "denominator": {
+     "aggregation": "count",
+     "subject": "requests"
+    },
+    "description": "Share of captured requests that ended in a server error or unavailable outcome.",
+    "dimensions_allowed": [],
+    "label": "Request failure rate",
+    "metric_id": "platform_request_failure_rate",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "failed_requests"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.overview.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "operational_metric_events"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "percent"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first operational event (W10.12 onward); nothing is back-filled."
+    },
+    "denominator": null,
+    "description": "95th percentile (nearest rank) of captured request durations.",
+    "dimensions_allowed": [],
+    "label": "Request latency p95",
+    "metric_id": "platform_request_latency_p95_ms",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "p95",
+     "subject": "request_duration"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.overview.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "operational_metric_events"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "milliseconds"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first AI usage fact (W10.12 onward); nothing is back-filled."
+    },
+    "denominator": null,
+    "description": "Canonical usage units: one per Agent run or Practice operation.",
+    "dimensions_allowed": [
+     "workflow",
+     "model_profile",
+     "operation",
+     "model"
+    ],
+    "label": "AI usage units",
+    "metric_id": "ai_op_usage_units",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "usage_units"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.ai.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "ai_usage_facts"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first AI usage fact (W10.12 onward); nothing is back-filled."
+    },
+    "denominator": null,
+    "description": "Model invocations captured in usage units.",
+    "dimensions_allowed": [
+     "workflow",
+     "model_profile",
+     "operation",
+     "model"
+    ],
+    "label": "Model calls",
+    "metric_id": "ai_op_model_calls",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "sum",
+     "subject": "model_calls"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.ai.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "ai_usage_facts"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first AI usage fact (W10.12 onward); nothing is back-filled."
+    },
+    "denominator": null,
+    "description": "Sum of KNOWN total tokens; units without token data are excluded, never counted as zero.",
+    "dimensions_allowed": [
+     "workflow",
+     "model_profile",
+     "operation",
+     "model"
+    ],
+    "label": "Known tokens (partial coverage)",
+    "metric_id": "ai_op_known_tokens",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "sum",
+     "subject": "known_tokens"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.ai.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "ai_usage_facts"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "tokens"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first AI usage fact (W10.12 onward); nothing is back-filled."
+    },
+    "denominator": {
+     "aggregation": "count",
+     "subject": "usage_units"
+    },
+    "description": "Share of usage units that carry token data.",
+    "dimensions_allowed": [],
+    "label": "Token coverage",
+    "metric_id": "ai_op_token_coverage",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "units_with_tokens"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.ai.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "ai_usage_facts"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "percent"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first AI usage fact (W10.12 onward); nothing is back-filled."
+    },
+    "denominator": null,
+    "description": "Sum of KNOWN cost (reported or calculated); unknown cost is excluded and never zero. Exact integer micro-USD is carried in cost_micro_usd.",
+    "dimensions_allowed": [
+     "workflow",
+     "model_profile",
+     "operation",
+     "model"
+    ],
+    "label": "Known cost (USD, partial coverage)",
+    "metric_id": "ai_op_known_cost",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "sum",
+     "subject": "known_cost_usd"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.ai.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "ai_usage_facts"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "usd"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first AI usage fact (W10.12 onward); nothing is back-filled."
+    },
+    "denominator": {
+     "aggregation": "count",
+     "subject": "usage_units"
+    },
+    "description": "Share of usage units with a known cost.",
+    "dimensions_allowed": [],
+    "label": "Cost coverage",
+    "metric_id": "ai_op_cost_coverage",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "units_with_cost"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.ai.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "ai_usage_facts"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "percent"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first AI operation event (W12.4D-P2-A onward); nothing is back-filled."
+    },
+    "denominator": null,
+    "description": "Logical candidate AI operations (one per operation, not per provider attempt).",
+    "dimensions_allowed": [
+     "workflow",
+     "operation"
+    ],
+    "label": "AI operations",
+    "metric_id": "ai_op_operations",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "operations"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.ai.read",
+    "source": {
+     "kind": "named_query",
+     "name": "ai_operation_events"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first AI operation event (W12.4D-P2-A onward); nothing is back-filled."
+    },
+    "denominator": null,
+    "description": "Operations that ended in failure (the degradation count).",
+    "dimensions_allowed": [
+     "workflow",
+     "operation",
+     "failure_category"
+    ],
+    "label": "Failed AI operations",
+    "metric_id": "ai_op_failed_operations",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "failed_operations"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.ai.read",
+    "source": {
+     "kind": "named_query",
+     "name": "ai_operation_events"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first AI operation event (W12.4D-P2-A onward); nothing is back-filled."
+    },
+    "denominator": {
+     "aggregation": "count",
+     "subject": "operations"
+    },
+    "description": "Share of logical AI operations that failed.",
+    "dimensions_allowed": [
+     "workflow",
+     "operation"
+    ],
+    "label": "AI operation failure rate",
+    "metric_id": "ai_op_failure_rate",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "failed_operations"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.ai.read",
+    "source": {
+     "kind": "named_query",
+     "name": "ai_operation_events"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "percent"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first AI operation event (W12.4D-P2-A onward); nothing is back-filled."
+    },
+    "denominator": null,
+    "description": "Provider attempts beyond completed calls, from operations with exact attempt evidence only.",
+    "dimensions_allowed": [
+     "workflow",
+     "operation"
+    ],
+    "label": "Provider retry attempts",
+    "metric_id": "ai_op_retry_attempts",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "sum",
+     "subject": "retry_attempts"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.ai.read",
+    "source": {
+     "kind": "named_query",
+     "name": "ai_operation_events"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first AI operation event (W12.4D-P2-A onward); nothing is back-filled."
+    },
+    "denominator": null,
+    "description": "Median (nearest rank) of operation call latency where it was captured.",
+    "dimensions_allowed": [
+     "workflow"
+    ],
+    "label": "AI operation latency p50",
+    "metric_id": "ai_op_latency_p50_ms",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "p50",
+     "subject": "operation_latency"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.ai.read",
+    "source": {
+     "kind": "named_query",
+     "name": "ai_operation_events"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "milliseconds"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first AI operation event (W12.4D-P2-A onward); nothing is back-filled."
+    },
+    "denominator": null,
+    "description": "95th percentile (nearest rank) of operation call latency where it was captured.",
+    "dimensions_allowed": [
+     "workflow"
+    ],
+    "label": "AI operation latency p95",
+    "metric_id": "ai_op_latency_p95_ms",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "p95",
+     "subject": "operation_latency"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.ai.read",
+    "source": {
+     "kind": "named_query",
+     "name": "ai_operation_events"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "milliseconds"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first AI operation event (W12.4D-P2-A onward); nothing is back-filled."
+    },
+    "denominator": null,
+    "description": "Operations that exceeded a request ceiling while limits are observed, not enforced.",
+    "dimensions_allowed": [
+     "workflow"
+    ],
+    "label": "Would-be limit refusals (observe mode)",
+    "metric_id": "ai_op_limit_observed",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "limit_observed_operations"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.ai.read",
+    "source": {
+     "kind": "named_query",
+     "name": "ai_operation_events"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "No fallback event is captured."
+    },
+    "denominator": null,
+    "description": "Fallbacks to a lower model tier. No event records one today, so this is never reported as zero.",
+    "dimensions_allowed": [],
+    "label": "Model fallbacks",
+    "metric_id": "ai_op_model_fallbacks",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "fallback_events"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.ai.read",
+    "source": {
+     "kind": "named_query",
+     "name": "model_fallback_events"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first operational event (W10.12 onward); nothing is back-filled."
+    },
+    "denominator": null,
+    "description": "Observed real provider calls (no identity).",
+    "dimensions_allowed": [
+     "operation",
+     "provider",
+     "outcome"
+    ],
+    "label": "Provider calls",
+    "metric_id": "ai_op_provider_calls",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "provider_call_events"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.ai.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "operational_metric_events"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first operational event (W10.12 onward); nothing is back-filled."
+    },
+    "denominator": {
+     "aggregation": "count",
+     "subject": "provider_call_events"
+    },
+    "description": "Share of observed provider calls that were not a success.",
+    "dimensions_allowed": [
+     "operation",
+     "provider"
+    ],
+    "label": "Provider call failure rate",
+    "metric_id": "ai_op_provider_failure_rate",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "failed_provider_calls"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.ai.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "operational_metric_events"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "percent"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first operational event (W10.12 onward); nothing is back-filled."
+    },
+    "denominator": null,
+    "description": "95th percentile (nearest rank) of provider call durations.",
+    "dimensions_allowed": [],
+    "label": "Provider call latency p95",
+    "metric_id": "ai_op_provider_latency_p95_ms",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "p95",
+     "subject": "provider_call_duration"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.ai.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "operational_metric_events"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "milliseconds"
+   },
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Jobs waiting to be claimed.",
+    "dimensions_allowed": [
+     "job_type"
+    ],
+    "label": "Queued jobs",
+    "metric_id": "jobs_queued",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "queued_jobs"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.jobs.read",
+    "source": {
+     "kind": "named_query",
+     "name": "job_queue"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Jobs currently leased by a worker.",
+    "dimensions_allowed": [
+     "job_type"
+    ],
+    "label": "Running jobs",
+    "metric_id": "jobs_running",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "running_jobs"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.jobs.read",
+    "source": {
+     "kind": "named_query",
+     "name": "job_queue"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Queued jobs that already failed an attempt and wait for the next one.",
+    "dimensions_allowed": [],
+    "label": "Jobs waiting to retry",
+    "metric_id": "jobs_retry_waiting",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "retry_waiting_jobs"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.jobs.read",
+    "source": {
+     "kind": "named_query",
+     "name": "job_queue"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Running jobs whose lease expired.",
+    "dimensions_allowed": [],
+    "label": "Stale leases",
+    "metric_id": "jobs_stale_leases",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "stale_leases"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.jobs.read",
+    "source": {
+     "kind": "named_query",
+     "name": "job_queue"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Jobs currently in the failed state.",
+    "dimensions_allowed": [
+     "job_type"
+    ],
+    "label": "Failed jobs",
+    "metric_id": "jobs_failed_current",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "failed_jobs"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.jobs.read",
+    "source": {
+     "kind": "named_query",
+     "name": "job_queue"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Age of the oldest queued job that is ready to run.",
+    "dimensions_allowed": [],
+    "label": "Oldest ready job age",
+    "metric_id": "jobs_oldest_ready_age_s",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "p95",
+     "subject": "ready_age"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.jobs.read",
+    "source": {
+     "kind": "named_query",
+     "name": "job_queue"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "seconds"
+   },
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Workers whose heartbeat is recent.",
+    "dimensions_allowed": [],
+    "label": "Workers seen recently",
+    "metric_id": "jobs_workers_active",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count_distinct",
+     "subject": "workers"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.jobs.read",
+    "source": {
+     "kind": "named_query",
+     "name": "job_worker_heartbeats"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "historical",
+     "note": "Historical, from authoritative rows in the period."
+    },
+    "denominator": null,
+    "description": "Jobs that succeeded or failed with a finish time in the period.",
+    "dimensions_allowed": [
+     "job_type",
+     "job_state"
+    ],
+    "label": "Jobs finished in the period",
+    "metric_id": "jobs_finished",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "finished_jobs"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.jobs.read",
+    "source": {
+     "kind": "named_query",
+     "name": "job_queue"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "historical",
+     "note": "Historical, from authoritative rows in the period."
+    },
+    "denominator": {
+     "aggregation": "count",
+     "subject": "finished_jobs"
+    },
+    "description": "Share of jobs finished in the period that failed.",
+    "dimensions_allowed": [
+     "job_type"
+    ],
+    "label": "Job failure rate",
+    "metric_id": "jobs_failure_rate",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "failed_finished_jobs"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.jobs.read",
+    "source": {
+     "kind": "named_query",
+     "name": "job_queue"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "percent"
+   },
+   {
+    "coverage": {
+     "kind": "historical",
+     "note": "Historical, from authoritative rows in the period."
+    },
+    "denominator": null,
+    "description": "95th percentile (nearest rank) of run time of jobs finished in the period.",
+    "dimensions_allowed": [],
+    "label": "Job duration p95",
+    "metric_id": "jobs_duration_p95_s",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "p95",
+     "subject": "job_duration"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.jobs.read",
+    "source": {
+     "kind": "named_query",
+     "name": "job_queue"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "seconds"
+   },
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Versions in the governed registry by lifecycle state.",
+    "dimensions_allowed": [
+     "knowledge_state"
+    ],
+    "label": "Governed knowledge versions",
+    "metric_id": "knowledge_versions",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "knowledge_versions"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.knowledge.read",
+    "source": {
+     "kind": "named_query",
+     "name": "knowledge_registry"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Versions currently serving governed retrieval.",
+    "dimensions_allowed": [],
+    "label": "Active knowledge versions",
+    "metric_id": "knowledge_active_versions",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "active_versions"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.knowledge.read",
+    "source": {
+     "kind": "named_query",
+     "name": "knowledge_registry"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Versions parsed and waiting for a human decision.",
+    "dimensions_allowed": [],
+    "label": "Versions awaiting review",
+    "metric_id": "knowledge_awaiting_review",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "review_required_versions"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.knowledge.read",
+    "source": {
+     "kind": "named_query",
+     "name": "knowledge_registry"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Versions whose parsing or indexing failed.",
+    "dimensions_allowed": [],
+    "label": "Failed versions",
+    "metric_id": "knowledge_failed_versions",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "failed_versions"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.knowledge.read",
+    "source": {
+     "kind": "named_query",
+     "name": "knowledge_registry"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Index records by state (built, removed, removal failed).",
+    "dimensions_allowed": [
+     "index_state"
+    ],
+    "label": "Index records",
+    "metric_id": "knowledge_index_records",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "index_records"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.knowledge.read",
+    "source": {
+     "kind": "named_query",
+     "name": "knowledge_index"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Knowledge health alerts that are not resolved.",
+    "dimensions_allowed": [
+     "alert_category",
+     "severity"
+    ],
+    "label": "Open knowledge alerts",
+    "metric_id": "knowledge_open_alerts",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "open_knowledge_alerts"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.knowledge.read",
+    "source": {
+     "kind": "named_query",
+     "name": "admin_alerts"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first operational event (W10.12 onward); nothing is back-filled."
+    },
+    "denominator": null,
+    "description": "Captured retrievals by outcome (evidence found, abstained, error). No query or evidence is stored.",
+    "dimensions_allowed": [
+     "operation",
+     "outcome"
+    ],
+    "label": "Retrieval outcomes",
+    "metric_id": "knowledge_retrieval_outcomes",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "retrieval_events"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.knowledge.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "operational_metric_events"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "since_first_event",
+     "note": "Captured since the first operational event (W10.12 onward); nothing is back-filled."
+    },
+    "denominator": {
+     "aggregation": "count",
+     "subject": "retrieval_events"
+    },
+    "description": "Share of captured retrievals that ended in an error.",
+    "dimensions_allowed": [],
+    "label": "Retrieval error rate",
+    "metric_id": "knowledge_retrieval_error_rate",
+    "missing_behaviour": "not_captured",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "retrieval_errors"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.knowledge.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "operational_metric_events"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "percent"
+   },
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Active and acknowledged alerts.",
+    "dimensions_allowed": [
+     "alert_category",
+     "severity"
+    ],
+    "label": "Unresolved alerts",
+    "metric_id": "alerts_unresolved",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "unresolved_alerts"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.security.read",
+    "source": {
+     "kind": "named_query",
+     "name": "admin_alerts"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Active alerts of severity high or critical.",
+    "dimensions_allowed": [],
+    "label": "Active high or critical alerts",
+    "metric_id": "alerts_active_high",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "active_high_alerts"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.security.read",
+    "source": {
+     "kind": "named_query",
+     "name": "admin_alerts"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "historical",
+     "note": "Historical, from authoritative rows in the period."
+    },
+    "denominator": null,
+    "description": "Alerts whose first occurrence falls in the period.",
+    "dimensions_allowed": [
+     "alert_category",
+     "severity"
+    ],
+    "label": "Alerts first seen in the period",
+    "metric_id": "alerts_opened",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "opened_alerts"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.security.read",
+    "source": {
+     "kind": "named_query",
+     "name": "admin_alerts"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "historical",
+     "note": "Historical, from authoritative rows in the period."
+    },
+    "denominator": null,
+    "description": "Alerts resolved in the period.",
+    "dimensions_allowed": [],
+    "label": "Alerts resolved in the period",
+    "metric_id": "alerts_resolved",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "resolved_alerts"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.security.read",
+    "source": {
+     "kind": "named_query",
+     "name": "admin_alerts"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "historical",
+     "note": "Historical, from authoritative rows in the period."
+    },
+    "denominator": null,
+    "description": "Security-relevant audit events in the period (successful sign-ins are not security events).",
+    "dimensions_allowed": [
+     "security_category",
+     "severity"
+    ],
+    "label": "Security events",
+    "metric_id": "security_events",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "security_events"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.security.read",
+    "source": {
+     "kind": "named_query",
+     "name": "security_event_projection"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "historical",
+     "note": "Historical, from authoritative rows in the period."
+    },
+    "denominator": null,
+    "description": "Failed sign-in attempts recorded for a known account.",
+    "dimensions_allowed": [],
+    "label": "Failed sign-ins",
+    "metric_id": "security_failed_logins",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "failed_logins"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.security.read",
+    "source": {
+     "kind": "named_query",
+     "name": "security_event_projection"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "historical",
+     "note": "Historical, from authoritative rows in the period."
+    },
+    "denominator": null,
+    "description": "Admin requests refused for a missing permission.",
+    "dimensions_allowed": [],
+    "label": "Denied Admin access",
+    "metric_id": "security_access_denied",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "access_denied"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.security.read",
+    "source": {
+     "kind": "named_query",
+     "name": "security_event_projection"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "historical",
+     "note": "Historical, from authoritative rows in the period."
+    },
+    "denominator": null,
+    "description": "Failed step-up re-authentication attempts.",
+    "dimensions_allowed": [],
+    "label": "Failed step-up attempts",
+    "metric_id": "security_step_up_failures",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "step_up_failures"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.security.read",
+    "source": {
+     "kind": "named_query",
+     "name": "security_event_projection"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "historical",
+     "note": "Historical, from authoritative rows in the period."
+    },
+    "denominator": null,
+    "description": "Role-change requests, approvals, rejections and cancellations.",
+    "dimensions_allowed": [],
+    "label": "Role-change events",
+    "metric_id": "security_role_change_events",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "role_change_events"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.security.read",
+    "source": {
+     "kind": "named_query",
+     "name": "security_event_projection"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Incidents that are open, investigating or monitoring.",
+    "dimensions_allowed": [],
+    "label": "Open incidents",
+    "metric_id": "security_open_incidents",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "open_incidents"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.security.read",
+    "source": {
+     "kind": "named_query",
+     "name": "incident_register"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "current_state",
+     "note": "Current state at read time; not a historical figure."
+    },
+    "denominator": null,
+    "description": "Deterministic burst rules currently exceeding their threshold for a known account.",
+    "dimensions_allowed": [],
+    "label": "Anomaly rules firing now",
+    "metric_id": "security_anomaly_rules_firing",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "firing_rules"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.security.read",
+    "source": {
+     "kind": "named_query",
+     "name": "security_event_projection"
+    },
+    "suppression": {
+     "kind": "operational",
+     "min_cohort": null
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "historical",
+     "note": "Historical, from authoritative rows"
+    },
+    "denominator": null,
+    "description": "Candidate accounts created in the period.",
+    "dimensions_allowed": [],
+    "label": "Registrations",
+    "metric_id": "registrations",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count_distinct",
+     "subject": "candidate_accounts"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.reports.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "users"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "historical",
+     "note": "Historical, from authoritative rows"
+    },
+    "denominator": null,
+    "description": "Candidate accounts whose onboarding completion timestamp falls in the period.",
+    "dimensions_allowed": [],
+    "label": "Onboarding completed",
+    "metric_id": "onboarding_completed",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count_distinct",
+     "subject": "onboarded_accounts"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.reports.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "users"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "historical",
+     "note": "Historical, from authoritative rows"
+    },
+    "denominator": {
+     "aggregation": "count_distinct",
+     "subject": "candidate_accounts"
+    },
+    "description": "Share of the period's registrants whose onboarding is completed today (current state; accounts that predate onboarding were back-filled as completed).",
+    "dimensions_allowed": [],
+    "label": "Onboarding completion of period registrants",
+    "metric_id": "onboarding_rate",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count_distinct",
+     "subject": "onboarded_accounts"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.reports.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "users"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "percent"
+   },
+   {
+    "coverage": {
+     "kind": "historical",
+     "note": "Historical, from authoritative rows"
+    },
+    "denominator": null,
+    "description": "Opportunity rows created in the period.",
+    "dimensions_allowed": [],
+    "label": "Opportunities created",
+    "metric_id": "opportunities_created",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "opportunities"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.reports.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "opportunities"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "from_index",
+     "note": "From the W10.10 index"
+    },
+    "denominator": null,
+    "description": "Runs registered in the ownership index in the period (index exists from W10.10; back-filled rows are excluded).",
+    "dimensions_allowed": [],
+    "label": "Prepare runs started",
+    "metric_id": "prepare_started",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "preparation_runs"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.reports.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "preparation_runs"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "from_index",
+     "note": "From the W10.10 index"
+    },
+    "denominator": {
+     "aggregation": "count",
+     "subject": "preparation_runs"
+    },
+    "description": "Share of started runs whose state is ready.",
+    "dimensions_allowed": [],
+    "label": "Prepare runs reaching ready",
+    "metric_id": "prepare_ready_rate",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "ready_runs"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.reports.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "preparation_runs"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "percent"
+   },
+   {
+    "coverage": {
+     "kind": "lower_bound",
+     "note": "Lower bound"
+    },
+    "denominator": null,
+    "description": "Distinct Practice sessions created in the period (live sessions plus completed history; abandoned sessions pruned by retention are not recoverable).",
+    "dimensions_allowed": [],
+    "label": "Practice sessions started",
+    "metric_id": "practice_started",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count_distinct",
+     "subject": "practice_sessions"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.reports.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "interview_sessions"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "historical",
+     "note": "Historical, from authoritative rows"
+    },
+    "denominator": null,
+    "description": "Completed interviews in the period.",
+    "dimensions_allowed": [],
+    "label": "Practice sessions completed",
+    "metric_id": "practice_completed",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count",
+     "subject": "completed_interviews"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.reports.read",
+    "source": {
+     "kind": "fact_table",
+     "name": "interviews"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "lower_bound",
+     "note": "Lower bound for Prepare and abandoned Practice"
+    },
+    "denominator": null,
+    "description": "A candidate's FIRST substantive product action (Opportunity, Prepare run or Practice session). An analytics definition, not an access or billing state.",
+    "dimensions_allowed": [],
+    "label": "Product activation",
+    "metric_id": "activation",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count_distinct",
+     "subject": "activated_candidates"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.reports.read",
+    "source": {
+     "kind": "named_query",
+     "name": "first_substantive_action"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "count"
+   },
+   {
+    "coverage": {
+     "kind": "lower_bound",
+     "note": "Lower bound"
+    },
+    "denominator": null,
+    "description": "Candidates with substantive activity on at least two distinct UTC dates inside the period.",
+    "dimensions_allowed": [],
+    "label": "Returning candidates",
+    "metric_id": "returning",
+    "missing_behaviour": "unavailable",
+    "numerator": {
+     "aggregation": "count_distinct",
+     "subject": "returning_candidates"
+    },
+    "period_kinds": [
+     "7d",
+     "30d",
+     "90d",
+     "all_time"
+    ],
+    "permission_required": "platform.reports.read",
+    "source": {
+     "kind": "named_query",
+     "name": "returning_candidates"
+    },
+    "suppression": {
+     "kind": "cohort",
+     "min_cohort": 5
+    },
+    "unit": "count"
+   }
+  ],
+  "periods": [
+   "7d",
+   "30d",
+   "90d",
+   "all_time"
+  ]
+ },
+ "/admin/command-center/health": {
+  "captured_since": null,
+  "components": [
+   {
+    "component_id": "database",
+    "evidence": "current_state",
+    "label": "Database",
+    "note": "Reachable (a cheap internal check).",
+    "status": "ok"
+   },
+   {
+    "component_id": "migrations",
+    "evidence": "unavailable",
+    "label": "Database migrations",
+    "note": "Migration state could not be determined.",
+    "status": "unavailable"
+   },
+   {
+    "component_id": "pause",
+    "evidence": "current_state",
+    "label": "Operator pause",
+    "note": "Nothing is paused.",
+    "status": "ok"
+   },
+   {
+    "component_id": "rate_limit",
+    "evidence": "current_state",
+    "label": "Rate limiting",
+    "note": "Limits are enforced per process, not shared across replicas.",
+    "status": "info"
+   },
+   {
+    "component_id": "providers",
+    "evidence": "current_state",
+    "label": "Provider health",
+    "note": "Providers are not probed here; provider-call outcomes are shown only from observed real calls.",
+    "status": "info"
+   }
+  ],
+  "generated_at": "2026-10-22T05:23:53.744172+00:00",
+  "metrics": [
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "current_state",
+    "evidence_source": "named_query:job_worker_heartbeats",
+    "label": "Background workers seen recently",
+    "metric_id": "platform_workers_active",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "current_state",
+    "evidence_source": "named_query:platform_pause_state",
+    "label": "Paused capabilities",
+    "metric_id": "platform_paused_capabilities",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first operational event (W10.12 onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "not_captured",
+    "evidence_source": "fact_table:operational_metric_events",
+    "label": "Request failure rate",
+    "metric_id": "platform_request_failure_rate",
+    "note": "No request has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "operational",
+    "unit": "percent",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first operational event (W10.12 onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "not_captured",
+    "evidence_source": "fact_table:operational_metric_events",
+    "label": "Request latency p95",
+    "metric_id": "platform_request_latency_p95_ms",
+    "note": "No request has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "operational",
+    "unit": "milliseconds",
+    "value": null
+   }
+  ],
+  "period": "30d",
+  "privacy": "Aggregates only. Candidate cohorts below the engineering privacy floor are suppressed (this is not an anonymisation guarantee). No candidate content, identifier, e-mail, address or credential is returned.",
+  "section_id": "health",
+  "title": "Platform health",
+  "utc": true,
+  "window_end": "2026-10-22T05:23:53.744172+00:00",
+  "window_start": "2026-09-22T05:23:53.744172+00:00"
+ },
+ "/admin/command-center/jobs": {
+  "captured_since": null,
+  "components": [],
+  "generated_at": "2026-10-22T05:23:53.864452+00:00",
+  "metrics": [
+   {
+    "breakdowns": [
+     {
+      "buckets": [
+       {
+        "key": "diagnostic_noop",
+        "label": "diagnostic_noop",
+        "partial": false,
+        "state": "ok",
+        "value": 1
+       }
+      ],
+      "dimension_id": "job_type",
+      "label": "Job type"
+     }
+    ],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [
+     "job_type"
+    ],
+    "evidence": "current_state",
+    "evidence_source": "named_query:job_queue",
+    "label": "Queued jobs",
+    "metric_id": "jobs_queued",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 1
+   },
+   {
+    "breakdowns": [
+     {
+      "buckets": [],
+      "dimension_id": "job_type",
+      "label": "Job type"
+     }
+    ],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [
+     "job_type"
+    ],
+    "evidence": "current_state",
+    "evidence_source": "named_query:job_queue",
+    "label": "Running jobs",
+    "metric_id": "jobs_running",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "current_state",
+    "evidence_source": "named_query:job_queue",
+    "label": "Jobs waiting to retry",
+    "metric_id": "jobs_retry_waiting",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "current_state",
+    "evidence_source": "named_query:job_queue",
+    "label": "Stale leases",
+    "metric_id": "jobs_stale_leases",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [
+     {
+      "buckets": [],
+      "dimension_id": "job_type",
+      "label": "Job type"
+     }
+    ],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [
+     "job_type"
+    ],
+    "evidence": "current_state",
+    "evidence_source": "named_query:job_queue",
+    "label": "Failed jobs",
+    "metric_id": "jobs_failed_current",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "current_state",
+    "evidence_source": "named_query:job_queue",
+    "label": "Oldest ready job age",
+    "metric_id": "jobs_oldest_ready_age_s",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "seconds",
+    "value": 0
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "current_state",
+    "evidence_source": "named_query:job_worker_heartbeats",
+    "label": "Workers seen recently",
+    "metric_id": "jobs_workers_active",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Historical, from authoritative rows in the period.",
+    "denominator": null,
+    "dimensions": [
+     "job_type",
+     "job_state"
+    ],
+    "evidence": "unavailable",
+    "evidence_source": "named_query:job_queue",
+    "label": "Jobs finished in the period",
+    "metric_id": "jobs_finished",
+    "note": "No job finished in this period.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "unavailable",
+    "suppression": "operational",
+    "unit": "count",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Historical, from authoritative rows in the period.",
+    "denominator": null,
+    "dimensions": [
+     "job_type"
+    ],
+    "evidence": "unavailable",
+    "evidence_source": "named_query:job_queue",
+    "label": "Job failure rate",
+    "metric_id": "jobs_failure_rate",
+    "note": "No job finished in this period.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "unavailable",
+    "suppression": "operational",
+    "unit": "percent",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Historical, from authoritative rows in the period.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "unavailable",
+    "evidence_source": "named_query:job_queue",
+    "label": "Job duration p95",
+    "metric_id": "jobs_duration_p95_s",
+    "note": "No job finished in this period.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "unavailable",
+    "suppression": "operational",
+    "unit": "seconds",
+    "value": null
+   }
+  ],
+  "period": "30d",
+  "privacy": "Aggregates only. Candidate cohorts below the engineering privacy floor are suppressed (this is not an anonymisation guarantee). No candidate content, identifier, e-mail, address or credential is returned.",
+  "section_id": "jobs",
+  "title": "Job queue health",
+  "utc": true,
+  "window_end": "2026-10-22T05:23:53.864452+00:00",
+  "window_start": "2026-09-22T05:23:53.864452+00:00"
+ },
+ "/admin/command-center/knowledge": {
+  "captured_since": null,
+  "components": [
+   {
+    "component_id": "governed_set",
+    "evidence": "current_state",
+    "label": "Governed knowledge set",
+    "note": "No governed version is active, so governed retrieval contributes nothing.",
+    "status": "attention"
+   },
+   {
+    "component_id": "knowledge_alerts",
+    "evidence": "current_state",
+    "label": "Knowledge health alerts",
+    "note": "No knowledge health alert is unresolved.",
+    "status": "ok"
+   }
+  ],
+  "generated_at": "2026-10-22T05:23:53.870031+00:00",
+  "metrics": [
+   {
+    "breakdowns": [
+     {
+      "buckets": [],
+      "dimension_id": "knowledge_state",
+      "label": "Knowledge version state"
+     }
+    ],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [
+     "knowledge_state"
+    ],
+    "evidence": "current_state",
+    "evidence_source": "named_query:knowledge_registry",
+    "label": "Governed knowledge versions",
+    "metric_id": "knowledge_versions",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "current_state",
+    "evidence_source": "named_query:knowledge_registry",
+    "label": "Active knowledge versions",
+    "metric_id": "knowledge_active_versions",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "current_state",
+    "evidence_source": "named_query:knowledge_registry",
+    "label": "Versions awaiting review",
+    "metric_id": "knowledge_awaiting_review",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "current_state",
+    "evidence_source": "named_query:knowledge_registry",
+    "label": "Failed versions",
+    "metric_id": "knowledge_failed_versions",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [
+     {
+      "buckets": [],
+      "dimension_id": "index_state",
+      "label": "Index record state"
+     }
+    ],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [
+     "index_state"
+    ],
+    "evidence": "current_state",
+    "evidence_source": "named_query:knowledge_index",
+    "label": "Index records",
+    "metric_id": "knowledge_index_records",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [
+     {
+      "buckets": [],
+      "dimension_id": "alert_category",
+      "label": "Alert category"
+     },
+     {
+      "buckets": [],
+      "dimension_id": "severity",
+      "label": "Severity"
+     }
+    ],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [
+     "alert_category",
+     "severity"
+    ],
+    "evidence": "current_state",
+    "evidence_source": "named_query:admin_alerts",
+    "label": "Open knowledge alerts",
+    "metric_id": "knowledge_open_alerts",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first operational event (W10.12 onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [
+     "operation",
+     "outcome"
+    ],
+    "evidence": "not_captured",
+    "evidence_source": "fact_table:operational_metric_events",
+    "label": "Retrieval outcomes",
+    "metric_id": "knowledge_retrieval_outcomes",
+    "note": "No retrieval has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "operational",
+    "unit": "count",
+    "value": null
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Captured since the first operational event (W10.12 onward); nothing is back-filled.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "not_captured",
+    "evidence_source": "fact_table:operational_metric_events",
+    "label": "Retrieval error rate",
+    "metric_id": "knowledge_retrieval_error_rate",
+    "note": "No retrieval has been captured yet.",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "not_captured",
+    "suppression": "operational",
+    "unit": "percent",
+    "value": null
+   }
+  ],
+  "period": "30d",
+  "privacy": "Aggregates only. Candidate cohorts below the engineering privacy floor are suppressed (this is not an anonymisation guarantee). No candidate content, identifier, e-mail, address or credential is returned.",
+  "section_id": "knowledge",
+  "title": "Knowledge readiness",
+  "utc": true,
+  "window_end": "2026-10-22T05:23:53.870031+00:00",
+  "window_start": "2026-09-22T05:23:53.870031+00:00"
+ },
+ "/admin/command-center/security-signals": {
+  "captured_since": null,
+  "components": [],
+  "generated_at": "2026-10-22T05:23:53.875984+00:00",
+  "metrics": [
+   {
+    "breakdowns": [
+     {
+      "buckets": [],
+      "dimension_id": "security_category",
+      "label": "Security event category"
+     },
+     {
+      "buckets": [],
+      "dimension_id": "severity",
+      "label": "Severity"
+     }
+    ],
+    "cost_micro_usd": null,
+    "coverage": "Historical, from authoritative rows in the period.",
+    "denominator": null,
+    "dimensions": [
+     "security_category",
+     "severity"
+    ],
+    "evidence": "captured",
+    "evidence_source": "named_query:security_event_projection",
+    "label": "Security events",
+    "metric_id": "security_events",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Historical, from authoritative rows in the period.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "captured",
+    "evidence_source": "named_query:security_event_projection",
+    "label": "Failed sign-ins",
+    "metric_id": "security_failed_logins",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Historical, from authoritative rows in the period.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "captured",
+    "evidence_source": "named_query:security_event_projection",
+    "label": "Denied Admin access",
+    "metric_id": "security_access_denied",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Historical, from authoritative rows in the period.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "captured",
+    "evidence_source": "named_query:security_event_projection",
+    "label": "Failed step-up attempts",
+    "metric_id": "security_step_up_failures",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Historical, from authoritative rows in the period.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "captured",
+    "evidence_source": "named_query:security_event_projection",
+    "label": "Role-change events",
+    "metric_id": "security_role_change_events",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "current_state",
+    "evidence_source": "named_query:incident_register",
+    "label": "Open incidents",
+    "metric_id": "security_open_incidents",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 1
+   },
+   {
+    "breakdowns": [],
+    "cost_micro_usd": null,
+    "coverage": "Current state at read time; not a historical figure.",
+    "denominator": null,
+    "dimensions": [],
+    "evidence": "current_state",
+    "evidence_source": "named_query:security_event_projection",
+    "label": "Anomaly rules firing now",
+    "metric_id": "security_anomaly_rules_firing",
+    "note": "",
+    "numerator": null,
+    "partial": false,
+    "period": "30d",
+    "state": "ok",
+    "suppression": "operational",
+    "unit": "count",
+    "value": 0
+   }
+  ],
+  "period": "30d",
+  "privacy": "Aggregates only. Candidate cohorts below the engineering privacy floor are suppressed (this is not an anonymisation guarantee). No candidate content, identifier, e-mail, address or credential is returned.",
+  "section_id": "security",
+  "title": "Auth and security signals",
+  "utc": true,
+  "window_end": "2026-10-22T05:23:53.875984+00:00",
+  "window_start": "2026-09-22T05:23:53.875984+00:00"
+ },
  "/admin/feedback": {
   "counts_by_category": {},
   "counts_by_rating": {},

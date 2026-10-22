@@ -1,6 +1,8 @@
 import { config } from "../config";
 import { ApiError, apiErrorFromBody, parseRetryAfter, unreachableError } from "./errors";
 import { runWithRetry } from "./retry";
+import { assertCcDefinitions, assertCcSection } from "../admin/commandCenterGuard";
+import type { CommandCenterSectionPath } from "../admin/commandCenterSections";
 import type {
   AIActivation,
   AdminReport,
@@ -672,6 +674,10 @@ export const api = {
   // Platform Admin operations (Capstone P6.5). PLATFORM_ADMIN only; metadata only.
   admin: {
     home: (opts?: RequestOptions) => request<AdminCommandCenter>("GET", "/admin/home", opts),
+    // 03D2 Command Center read model (GET only, aggregates). Every response is shape-checked HERE, at the client boundary: a malformed 200 throws and the view shows the explicit Admin error state.
+    commandCenterDefinitions: async (opts?: RequestOptions) => assertCcDefinitions(await request<unknown>("GET", "/admin/command-center/definitions", opts)),
+    commandCenterSection: async (section: CommandCenterSectionPath, period: string, opts?: RequestOptions) =>
+      assertCcSection(await request<unknown>("GET", `/admin/command-center/${section}?period=${encodeURIComponent(period)}`, opts)),
     // 04E private-beta invitations. The plaintext code and link are in the issue response only.
     invitations: (q: { state?: string; limit?: number; offset?: number } = {}, opts?: RequestOptions) =>
       request<AdminInvitationPage>("GET", `/admin/invitations${qs(q as Record<string, unknown>)}`, opts),
