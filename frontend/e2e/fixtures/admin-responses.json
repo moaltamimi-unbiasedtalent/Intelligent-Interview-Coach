@@ -1652,6 +1652,16 @@
    }
   ]
  },
+ "/admin/invitations": {
+  "counts": {
+   "expired": 0,
+   "pending": 0,
+   "redeemed": 0,
+   "revoked": 0
+  },
+  "items": [],
+  "total": 0
+ },
  "/admin/jobs": {
   "items": [
    {

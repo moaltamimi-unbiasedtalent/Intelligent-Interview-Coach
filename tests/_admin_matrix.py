@@ -30,7 +30,7 @@ UNROUTED_PERMISSIONS = frozenset({"platform.releases.read", "platform.subscripti
 DOMAINS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("overview / releases", ("/admin/home", "/admin/readiness")),
     ("command center metrics", ("/admin/command-center",)),
-    ("users", ("/admin/users",)),
+    ("users", ("/admin/users", "/admin/invitations")),
     ("workspaces", ("/admin/workspaces",)),
     ("support", ("/admin/support",)),
     ("plans / subscriptions", ("/admin/plans",)),

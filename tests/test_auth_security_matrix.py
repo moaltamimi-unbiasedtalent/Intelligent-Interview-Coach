@@ -91,9 +91,12 @@ def test_dev_header_rejected_in_production():
 
 def test_valid_session_cookie_cannot_be_overridden_by_dev_header():
     # In production a valid session wins; a spoofed dev header cannot change identity.
-    app, _, _ = build_auth_app(env="production")
+    app, repo, _ = build_auth_app(env="production")
+    # 04E: production registration needs an invitation (fail-closed), so the existing account is created the way an operator would (no registration route involved).
+    from src.authsec import passwords
+
+    account_repo(repo).create_password_account(email="carol@example.com", password_hash=passwords.hash_password(PW), display_name=None)
     with TestClient(app) as c:
-        register(c, "carol@example.com", PW)
         token = login_token(c, "carol@example.com", PW)
         r = c.get(
             "/api/v1/auth/me",
