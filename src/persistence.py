@@ -3284,3 +3284,9 @@ def _install_append_only(table_obj, table_name: str) -> None:
 
 _install_append_only(AuditEvent.__table__, "audit_events")
 _install_append_only(AdminIncidentEvent.__table__, "incident_events")
+
+
+# 05E: allow-list enforcement for audit and incident context (one choke point for every write path).
+from src import audit_allowlist as _audit_allowlist  # noqa: E402
+
+_audit_allowlist.install(AuditEvent, AdminIncidentEvent)
