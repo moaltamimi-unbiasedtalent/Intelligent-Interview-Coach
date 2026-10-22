@@ -412,6 +412,25 @@ def get_webhook_receiver(request: Request, repo=Depends(get_repository), store=D
                            provider_selected=mode.provider, audit=AuditRepository(repo.session_factory))
 
 
+def get_mail_webhook_receiver(repo=Depends(get_repository)):
+    """Brevo delivery-event receiver (05D). Non-operational by construction while ``src.mail.webhook.DELIVERY_EVENTS_AUTHORIZED`` is False.
+    The shared secret comes ONLY from the secret store / environment (``BREVO_WEBHOOK_SECRET`` and, for rotation, ``BREVO_WEBHOOK_SECRET_PREVIOUS``)."""
+    import os
+
+    from src.auth_repository import AuditRepository
+    from src.core import secrets as _secrets
+    from src.mail.service import EmailAttemptRepository
+    from src.mail.webhook import DeliveryEventReceiver
+
+    def _secret_values() -> list[str]:
+        return [v for v in ((_secrets.read_setting("BREVO_WEBHOOK_SECRET") or "").strip(),
+                            (_secrets.read_setting("BREVO_WEBHOOK_SECRET_PREVIOUS") or "").strip()) if v]
+
+    mode = (os.environ.get("BREVO_WEBHOOK_AUTH") or "hmac").strip().lower()
+    return DeliveryEventReceiver(EmailAttemptRepository(repo.session_factory), secrets=_secret_values, auth_mode=mode,
+                                 audit=AuditRepository(repo.session_factory))
+
+
 def get_provider_event_service(repo=Depends(get_repository)):
     """Provider-event service as the RUNNING system uses it: Null provider-state reader and the UNAPPROVED entitlement policy (W12.4D-E recovery actions
     therefore fail closed with ``reader_unavailable``)."""
