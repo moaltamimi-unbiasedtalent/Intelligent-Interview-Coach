@@ -3340,3 +3340,9 @@ class AiBudgetEntry(Base):
     status_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
     latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     error_category: Mapped[str | None] = mapped_column(String(32), nullable=True)
+
+
+# 05E: allow-list enforcement for audit and incident context (one choke point for every write path).
+from src import audit_allowlist as _audit_allowlist  # noqa: E402
+
+_audit_allowlist.install(AuditEvent, AdminIncidentEvent)

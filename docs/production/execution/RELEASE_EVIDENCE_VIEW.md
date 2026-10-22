@@ -61,7 +61,7 @@ Evidence validity (stated policy): production gates 30 days, package layers 30 d
 | 00A | PARTIAL: Phase 00 sign-off recorded (PRs #211, #212, #213) | documentation PRs #211 to #213 merged, CI green | NOT IN LEDGER: n/a | NOT IN LEDGER: Owner names reviewers, counsel and legal qualifiers (OPEN) | NOT IN LEDGER: PG-07 BLOCKED until reviewers are named | none |
 | 00B | DELIVERED as a proposal (PRs #211, #212) | documentation PRs #211 to #213 merged, CI green | NOT IN LEDGER: n/a | NOT IN LEDGER: Owner disposition of the ten reclassifications (OPEN) | NOT IN LEDGER: PG-11 PASS (machine-checked); no reclassification applied | none |
 | 01A | MERGED (PR #223, merge 7549973) | PR #223 CI success (12/12) | NOT RUN: NOT RUN (injection screen on hosted stack) | OPEN: Human security review (9 questions); independent held-out author (OPEN) | NOT ACCEPTED: PG-03 IN PROGRESS; thresholds unapproved (OD-GATE-THRESHOLDS) | [01A_EVIDENCE.md](docs/production/execution/evidence/01A_EVIDENCE.md) |
-| 01D | NOT STARTED | no PR yet | NOT IN LEDGER: n/a | NOT IN LEDGER: Security review of tool authorization | NOT IN LEDGER: PG-03 (REVIEW-01 R4/R5) | none |
+| 01D | BRANCH PUSHED, NO PR | no PR yet | NOT IN LEDGER: n/a | NOT IN LEDGER: Security review of tool authorization | NOT IN LEDGER: PG-03 (REVIEW-01 R4/R5) | none |
 | 01B0 | MERGED (PR #217, merge 0d75acd) | PR #217 CI success (12/12) | N/A: n/a | NONE REQUIRED: none | NOT ACCEPTED: PG-12 IN PROGRESS | [01B0_EVIDENCE.md](docs/production/execution/evidence/01B0_EVIDENCE.md) |
 | 01B | MERGED (PR #220, merge 335d303) | PR #220 CI success (12/12) | NOT RUN: NOT RUN (Docker image with prompts/ not built) | NONE REQUIRED: none | NOT ACCEPTED: PG-12 IN PROGRESS (01D, 01C outstanding) | [01B_EVIDENCE.md](docs/production/execution/evidence/01B_EVIDENCE.md) |
 | 01C | NOT STARTED | no PR yet | NOT IN LEDGER: n/a | NOT IN LEDGER: none | NOT IN LEDGER: PG-12 (REVIEW-03) | none |
@@ -69,39 +69,39 @@ Evidence validity (stated policy): production gates 30 days, package layers 30 d
 | 02A | MERGED (PR #221, merge 191cbc5) | PR #221 CI success | NOT RUN: NOT RUN (hosted volumes, PostgreSQL, multi-worker; OD-HOSTED) | NONE REQUIRED: none | NOT ACCEPTED: PG-05 IN PROGRESS | [02A_EVIDENCE.md](docs/production/execution/evidence/02A_EVIDENCE.md) |
 | 02B | MERGED (PR #227, merge 6acdbc1) | PR #227 CI success (12/12) | NOT RUN: NOT RUN (production embedder, hosted refusal; OD-HOSTED, OD-EMBED) | OPEN: Embedder choice and benchmark approval (OD-EMBED, OD-BUDGET) | NOT ACCEPTED: PG-05 NOT MET (retrieval quality unmeasured) | [02B_EVIDENCE.md](docs/production/execution/evidence/02B_EVIDENCE.md) |
 | 02C | MERGED (PR #226, merge 568b8f3) | PR #226 CI success (12/12) | NOT RUN: NOT RUN (real clamd, EICAR, outage drill; OD-HOSTED) | NONE REQUIRED: none | NOT ACCEPTED: PG-05 IN PROGRESS | [02C_EVIDENCE.md](docs/production/execution/evidence/02C_EVIDENCE.md) |
-| 02D | NOT STARTED | no PR yet | NOT IN LEDGER: n/a | NOT IN LEDGER: Licensing reviewer and owner; per-market signed approval (OPEN, long lead) | NOT IN LEDGER: PG-05 (licence and market qualification) | none |
-| 02E | NOT STARTED | no PR yet | NOT IN LEDGER: NOT RUN | NOT IN LEDGER: Frozen coverage measure approval (OD-COVERAGE); independent datasets | NOT IN LEDGER: PG-05 (retrieval quality, coverage) | none |
+| 02D | BRANCH PUSHED (2 PRs), NO PR | no PR yet | NOT IN LEDGER: n/a | NOT IN LEDGER: Licensing reviewer and owner; per-market signed approval (OPEN, long lead) | NOT IN LEDGER: PG-05 (licence and market qualification) | none |
+| 02E | BRANCH PUSHED, NO PR | no PR yet | NOT IN LEDGER: NOT RUN | NOT IN LEDGER: Frozen coverage measure approval (OD-COVERAGE); independent datasets | NOT IN LEDGER: PG-05 (retrieval quality, coverage) | none |
 | 03A | MERGED (PR #216, merge f921892) | PR #216 CI success | NOT RUN: NOT RUN (live Admin walkthrough) | NONE REQUIRED: none | NOT ACCEPTED: PG-08 IN PROGRESS | [03A_EVIDENCE.md](docs/production/execution/evidence/03A_EVIDENCE.md) |
 | 03B | MERGED (PR #230, merge a4f540d) | PR #230 CI success (12/12) | NOT RUN: NOT RUN (live Admin walkthrough) | OPEN: Plan limit values (OD-PLAN-LIMITS) | NOT ACCEPTED: PG-08 IN PROGRESS | [03B_EVIDENCE.md](docs/production/execution/evidence/03B_EVIDENCE.md) |
 | 03C | MERGED (PR #231, merge 6bcfbf5) | PR #231 CI success (12/12) | NOT RUN: NOT RUN (live Admin walkthrough) | OPEN: Bulk-action policy (OD-BULK-ACTIONS) | NOT ACCEPTED: PG-08 IN PROGRESS | [03C_EVIDENCE.md](docs/production/execution/evidence/03C_EVIDENCE.md) |
 | 03K | MERGED (PR #219, merge 20241f4) | PR #219 CI success (12/12) | N/A: n/a | NONE REQUIRED: none | NOT ACCEPTED: PG-14 IN PROGRESS (contract) | [03K_EVIDENCE.md](docs/production/execution/evidence/03K_EVIDENCE.md) |
 | 03D1 | MERGED (PR #224, merge ac029ad) | PR #224 CI success (12/12) | NOT RUN: NOT RUN (live data) | NONE REQUIRED: none | NOT ACCEPTED: PG-08 IN PROGRESS (03D2 outstanding) | [03D1_EVIDENCE.md](docs/production/execution/evidence/03D1_EVIDENCE.md) |
-| 03D2 | NOT STARTED | no PR yet | NOT IN LEDGER: NOT RUN | NOT IN LEDGER: none | NOT IN LEDGER: PG-08 | none |
+| 03D2 | BRANCH PUSHED, NO PR | no PR yet | NOT IN LEDGER: NOT RUN | NOT IN LEDGER: none | NOT IN LEDGER: PG-08 | none |
 | 03E1 | MERGED (PR #232, merge 0d84e7e) | PR #232 CI success (12/12) | NOT RUN: NOT RUN (live data) | OPEN: Export formats (OD-REPORT-EXPORT) | NOT ACCEPTED: PG-14 IN PROGRESS (03E2 outstanding) | [03E1_EVIDENCE.md](docs/production/execution/evidence/03E1_EVIDENCE.md) |
-| 03E2 | NOT STARTED | no PR yet | NOT IN LEDGER: NOT RUN | NOT IN LEDGER: Export formats (OD-REPORT-EXPORT) | NOT IN LEDGER: PG-14 | none |
+| 03E2 | BRANCH PUSHED (2 PRs), NO PR | no PR yet | NOT IN LEDGER: NOT RUN | NOT IN LEDGER: Export formats (OD-REPORT-EXPORT) | NOT IN LEDGER: PG-14 | none |
 | 04A | MERGED (PR #234, merge 4d7e57a) | PR #234 CI success (12/12) | NOT RUN: NOT RUN (restart on staging) | OPEN: Native review of 116 strings (LG-10/11) | NOT ACCEPTED: PG-13 IN PROGRESS (06B outstanding) | [04A_EVIDENCE.md](docs/production/execution/evidence/04A_EVIDENCE.md) |
 | 04B | MERGED (PR #233, merge e4aed13) | PR #233 CI success (12/12) | NOT RUN: NOT RUN (PostgreSQL invitation race and row locks) | OPEN: Transfer rules (OD-WS-TRANSFER); native review | NOT ACCEPTED: PG-13 IN PROGRESS (06B outstanding) | [04B_EVIDENCE.md](docs/production/execution/evidence/04B_EVIDENCE.md) |
 | 04C | NOT STARTED | no PR yet | NOT IN LEDGER: NOT RUN (streaming on staging) | NOT IN LEDGER: none | NOT IN LEDGER: PG-06 | none |
-| 04D | NOT STARTED | no PR yet | NOT IN LEDGER: NOT RUN (journeys on a staging stack) | NOT IN LEDGER: none | NOT IN LEDGER: PG-06 | none |
+| 04D | BRANCH PUSHED (2 PRs), NO PR | no PR yet | NOT IN LEDGER: NOT RUN (journeys on a staging stack) | NOT IN LEDGER: none | NOT IN LEDGER: PG-06 | none |
 | 04E | MERGED (PR #228, merge a763fdf) | PR #228 CI success (12/12) | NOT RUN: NOT RUN (first-admin bootstrap, live Google) | OPEN: Invitation email and issuer decisions (OPEN) | NOT ACCEPTED: PG-02 IN PROGRESS (05D outstanding) | [04E_EVIDENCE.md](docs/production/execution/evidence/04E_EVIDENCE.md) |
-| 04F | NOT STARTED | no PR yet | NOT IN LEDGER: NOT RUN (browser dictation check) | NOT IN LEDGER: Legal reviewer and test participants | NOT IN LEDGER: PG-04 | none |
+| 04F | BRANCH PUSHED, NO PR | no PR yet | NOT IN LEDGER: NOT RUN (browser dictation check) | NOT IN LEDGER: Legal reviewer and test participants | NOT IN LEDGER: PG-04 | none |
 | 05A | MERGED (PR #218, merge 9b6b109) | PR #218 CI success | NOT RUN: NOT RUN (nothing deployed; OD-HOSTED) | OPEN: Hosting authorisation (OPEN) | NOT ACCEPTED: PG-01 BLOCKED | [05A_EVIDENCE.md](docs/production/execution/evidence/05A_EVIDENCE.md) |
-| 05B | NOT STARTED | no PR yet | NOT IN LEDGER: NOT RUN (restore drill, PostgreSQL paths; OD-HOSTED) | NOT IN LEDGER: none | NOT IN LEDGER: PG-09 | none |
-| 05C | NOT STARTED | no PR yet | NOT IN LEDGER: NOT RUN (synthetic outage on staging; OD-HOSTED) | NOT IN LEDGER: AI budget (OD-BUDGET) | NOT IN LEDGER: PG-09 | none |
-| 05D | NOT STARTED | no PR yet | NOT IN LEDGER: NOT RUN (live Brevo, Google, Redis; OD-HOSTED) | NOT IN LEDGER: none | NOT IN LEDGER: PG-02 | none |
-| 05E | NOT STARTED | no PR yet | NOT IN LEDGER: n/a | NOT IN LEDGER: Legal counsel sign-off per offered language (long lead) | NOT IN LEDGER: PG-04 | none |
+| 05B | BRANCH PUSHED, NO PR | no PR yet | NOT IN LEDGER: NOT RUN (restore drill, PostgreSQL paths; OD-HOSTED) | NOT IN LEDGER: none | NOT IN LEDGER: PG-09 | none |
+| 05C | BRANCH PUSHED (2 PRs), NO PR | no PR yet | NOT IN LEDGER: NOT RUN (synthetic outage on staging; OD-HOSTED) | NOT IN LEDGER: AI budget (OD-BUDGET) | NOT IN LEDGER: PG-09 | none |
+| 05D | BRANCH PUSHED, NO PR | no PR yet | NOT IN LEDGER: NOT RUN (live Brevo, Google, Redis; OD-HOSTED) | NOT IN LEDGER: none | NOT IN LEDGER: PG-02 | none |
+| 05E | BRANCH PUSHED (2 PRs), NO PR | no PR yet | NOT IN LEDGER: n/a | NOT IN LEDGER: Legal counsel sign-off per offered language (long lead) | NOT IN LEDGER: PG-04 | none |
 | 06A | MERGED (PR #214, merge f9a06a9) | PR #214 CI success | N/A: n/a | OPEN: Native review of the audit baseline | NOT ACCEPTED: PG-10 IN PROGRESS; LG-01 and LG-14 evidence exists, none approved by a named human | [06A_EVIDENCE.md](docs/production/execution/evidence/06A_EVIDENCE.md) |
-| 06B | NOT STARTED | no PR yet | NOT IN LEDGER: NOT RUN (journeys per language) | NOT IN LEDGER: Native-speaker review | NOT IN LEDGER: LG-03, LG-09 per language; PG-13 | none |
-| 06C | NOT STARTED | no PR yet | NOT IN LEDGER: NOT RUN (live Mo quality) | NOT IN LEDGER: Blinded native-reader rating (OD-BUDGET) | NOT IN LEDGER: LG-04, LG-05 per language | none |
-| 06D | NOT STARTED | no PR yet | NOT IN LEDGER: NOT RUN (production embedder; OD-EMBED) | NOT IN LEDGER: Sample review | NOT IN LEDGER: LG-06 per language | none |
-| 06E | NOT STARTED | no PR yet | NOT IN LEDGER: NOT RUN | NOT IN LEDGER: none | NOT IN LEDGER: LG-08 per language; PG-03 | none |
-| 06F | NOT STARTED | no PR yet | NOT IN LEDGER: n/a | NOT IN LEDGER: Seven native reviewers and legal qualifiers (calendar-bound, OPEN) | NOT IN LEDGER: LG-10, LG-11 per language; PG-04 | none |
-| 06G | NOT STARTED | no PR yet | NOT IN LEDGER: NOT RUN (live Mo outputs) | NOT IN LEDGER: Independent reviewers and participants (OD-BUDGET, OD-GATE-THRESHOLDS) | NOT IN LEDGER: PG-07 BLOCKED | none |
+| 06B | BRANCH PUSHED, NO PR | no PR yet | NOT IN LEDGER: NOT RUN (journeys per language) | NOT IN LEDGER: Native-speaker review | NOT IN LEDGER: LG-03, LG-09 per language; PG-13 | none |
+| 06C | BRANCH PUSHED, NO PR | no PR yet | NOT IN LEDGER: NOT RUN (live Mo quality) | NOT IN LEDGER: Blinded native-reader rating (OD-BUDGET) | NOT IN LEDGER: LG-04, LG-05 per language | none |
+| 06D | BRANCH PUSHED, NO PR | no PR yet | NOT IN LEDGER: NOT RUN (production embedder; OD-EMBED) | NOT IN LEDGER: Sample review | NOT IN LEDGER: LG-06 per language | none |
+| 06E | BRANCH PUSHED, NO PR | no PR yet | NOT IN LEDGER: NOT RUN | NOT IN LEDGER: none | NOT IN LEDGER: LG-08 per language; PG-03 | none |
+| 06F | BRANCH PUSHED, NO PR | no PR yet | NOT IN LEDGER: n/a | NOT IN LEDGER: Seven native reviewers and legal qualifiers (calendar-bound, OPEN) | NOT IN LEDGER: LG-10, LG-11 per language; PG-04 | none |
+| 06G | BRANCH PUSHED, NO PR | no PR yet | NOT IN LEDGER: NOT RUN (live Mo outputs) | NOT IN LEDGER: Independent reviewers and participants (OD-BUDGET, OD-GATE-THRESHOLDS) | NOT IN LEDGER: PG-07 BLOCKED | none |
 | 06H | MERGED (PR #229, merge 5d588a1) | PR #229 CI success (12/12) | NOT RUN: NOT RUN (hosted fail-closed behaviour) | OPEN: Approvers named for each gate (OD-LANG-03/04) | NOT ACCEPTED: PG-10 IN PROGRESS; LG-13/LG-14 enforcement merged, zero languages qualified | [06H_EVIDENCE.md](docs/production/execution/evidence/06H_EVIDENCE.md) |
-| 07A | NOT STARTED | no PR yet | NOT IN LEDGER: n/a | NOT IN LEDGER: none | NOT IN LEDGER: PG-10 | none |
+| 07A | BRANCH PUSHED, NO PR | no PR yet | NOT IN LEDGER: n/a | NOT IN LEDGER: none | NOT IN LEDGER: PG-10 | none |
 | 07B | NOT STARTED | no PR yet | NOT IN LEDGER: NOT RUN (live grounding; OD-BUDGET) | NOT IN LEDGER: none | NOT IN LEDGER: PG-03 | none |
 | 07C | NOT STARTED | no PR yet | NOT IN LEDGER: NOT RUN (live OCR sample; OD-BUDGET) | NOT IN LEDGER: none | NOT IN LEDGER: residual live verification | none |
-| 08A0 | NOT STARTED | no PR yet | NOT IN LEDGER: n/a | NOT IN LEDGER: none | NOT IN LEDGER: PG-15 (evidence pipeline) | none |
+| 08A0 | BRANCH PUSHED, NO PR | no PR yet | NOT IN LEDGER: n/a | NOT IN LEDGER: none | NOT IN LEDGER: PG-15 (evidence pipeline) | none |
 | 08A | NOT STARTED | no PR yet | NOT IN LEDGER: NOT RUN | NOT IN LEDGER: Owner go/no-go | NOT IN LEDGER: PG-15 | none |
 
 ## 4. Language gates LG-01 to LG-14 (per language)

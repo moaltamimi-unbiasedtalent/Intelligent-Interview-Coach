@@ -33,6 +33,10 @@ _ALLOW_DEV = os.environ.get("ASK4MO_TEST_ALLOW_DEV_PERSISTENCE") == "1"
 _TMP_ROOT = Path(tempfile.mkdtemp(prefix="ask4mo_pytest_")).resolve()
 _SYSTEM_TMP = Path(tempfile.gettempdir()).resolve()
 
+# 05E: audit and incident context is allow-list enforced (src/audit_allowlist.py). In tests and evaluators an unlisted key RAISES at the call site (so a new free-text key
+# fails the suite); outside them the offending entry is dropped and never stored.
+os.environ["AUDIT_CONTEXT_STRICT"] = "1"
+
 _SCRUB_PREFIXES = (
     "OPENROUTER_", "ADZUNA_", "GOOGLE_", "BREVO_", "LANGFUSE_", "GEMINI_", "FEATURE_GOOGLE_LOGIN",
     "AGENT_CHECKPOINT_DATABASE_URL", "AGENT_EXTERNAL_OBSERVABILITY", "EMAIL_", "REDIS_", "RATE_LIMIT_BACKEND",
