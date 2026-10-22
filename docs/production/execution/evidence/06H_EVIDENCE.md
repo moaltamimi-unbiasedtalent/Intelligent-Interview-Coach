@@ -80,8 +80,8 @@ All fourteen gates for all seven languages need evidence at a named SHA with a n
 
 | Command | Result |
 |---|---|
-| `tests/test_language_activation_06h.py` (.venv) | see section 9 |
-| Targeted language, openapi and 06A suites (.venv and /tmp/ci_venv) | see section 9 |
+| `tests/test_language_activation_06h.py` plus the 06A language suites, `test_wave4_language_api`, Russian suites, `test_openapi_contract` (8 files, both venvs) | 211 passed under .venv and 211 under /tmp/ci_venv |
+| Full `pytest tests -n 3 --dist loadfile` (/tmp/ci_venv, final code) | 5615 passed, 43 skipped, 1 failed (the pre-existing failure below) |
 | `ruff check .` | All checks passed |
 | `scripts/ci_test_shards.py verify --shards 4` | OK: 281 test files, each in exactly one of 4 shards (before the final count) |
 | All 46 `scripts/eval_*.py` named in CI (/tmp/ci_venv) | 46 of 46 exit 0 |
@@ -95,6 +95,6 @@ Pre-existing failure, not caused by this package: `tests/test_knowledge_persiste
 
 ## 9. Final counts, SHA, throughput
 
-(Filled in after the final full run; see the delivery report.)
+Code commit dd3d574 on f9a06a9 (the final head SHA is in the delivery report, verified against the remote). Start 2026-10-21 23:23 UTC; first push right after the final full suite (about 11 minutes for the suite itself). Rework rounds before the first push: 3 (hosted-startup validation forced the HTTP tests to switch environment after app start; the 06A selector assertions and `eval_i18n_l10n` needed the new selector chain; the audit table count was regenerated). CI: not available until a PR exists. The full suite ran once, under /tmp/ci_venv only; the repo .venv ran the 211 targeted tests.
 
 CI: not available until a PR exists. Compare URL: `https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/new/feat/06h-language-activation`.
