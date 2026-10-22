@@ -12,10 +12,11 @@ from __future__ import annotations
 
 from typing import Callable
 
-from src.application.errors import ValidationError
+from src.application.errors import ConflictError, ValidationError
 from src.persistence import (
     SHARE_PERMISSION_VIEW,
     SHAREABLE_RESOURCE_TYPES,
+    WORKSPACE_STATUS_ACTIVE,
 )
 
 __all__ = ["SharingService", "SharingPermissionError", "SharingNotFoundError"]
@@ -54,8 +55,14 @@ class SharingService:
             pass
 
     def share(self, *, user_id: int, workspace_id: int, resource_type: str,
-              resource_id: str) -> dict:
-        """Create a VIEW share of an OWNED, allow-listed resource into a member workspace."""
+              resource_id: str, consent: bool = False) -> dict:
+        """Create a VIEW share of an OWNED, allow-listed resource into a member workspace.
+
+        ``consent`` is the explicit acknowledgement that EVERY current and future active member of that workspace can read this one
+        item until the owner revokes it; without it nothing is created (fail closed). The consent moment is the grant's
+        ``created_at`` plus the audit event (no content, no member list)."""
+        if consent is not True:
+            raise ValidationError("Confirm that all members of the workspace will be able to view this item.")
         if resource_type not in SHAREABLE_RESOURCE_TYPES:
             raise ValidationError("This resource type cannot be shared.")
         rid = (resource_id or "").strip()
@@ -64,6 +71,9 @@ class SharingService:
         # The caller must be an ACTIVE member of the target workspace.
         if self._ws.member_role(workspace_id, user_id) is None:
             raise SharingPermissionError("You are not a member of this workspace.")
+        ws = self._ws.get_workspace(workspace_id)
+        if ws is None or ws["status"] != WORKSPACE_STATUS_ACTIVE:
+            raise ConflictError("This workspace is archived. Restore it before sharing.")
         # The caller must OWN the resource (owner-verified; deny if unverifiable).
         verifier = self._verifiers.get(resource_type)
         if verifier is None or not _safe_bool(verifier, rid, user_id):
@@ -71,8 +81,10 @@ class SharingService:
         share_id = self._ws.create_share(
             owner_user_id=user_id, workspace_id=workspace_id, resource_type=resource_type,
             resource_id=rid, permission=SHARE_PERMISSION_VIEW)
+        if share_id is None:                     # the workspace or the membership changed under us
+            raise ConflictError("This workspace is no longer available for sharing.")
         self._audit_event("share.created", user_id, workspace_id,
-                         resource_type=resource_type)
+                         resource_type=resource_type, consent=True, visible_to_members=ws["member_count"])
         return {"share_id": share_id, "status": "active", "permission": SHARE_PERMISSION_VIEW}
 
     def revoke(self, *, user_id: int, share_id: int) -> dict:
@@ -84,6 +96,17 @@ class SharingService:
         self._audit_event("share.revoked", user_id, grant["workspace_id"],
                          resource_type=grant["resource_type"])
         return {"status": "revoked"}
+
+    def list_workspace_shares(self, *, user_id: int, workspace_id: int) -> list[dict]:
+        """What is shared INTO one workspace and by whom (metadata only; never the content). Active members only; anyone else
+        gets not-found, exactly like the workspace itself."""
+        if self._ws.member_role(workspace_id, user_id) is None:
+            raise SharingNotFoundError("Workspace not found.")
+        rows = self._ws.list_shares_for_workspace(workspace_id)
+        for r in rows:
+            r["mine"] = r["owner_user_id"] == user_id
+            r.pop("owner_user_id", None)         # the sharer is identified by a safe label, never an account id
+        return rows
 
     def list_shared_by_me(self, *, user_id: int) -> list[dict]:
         return self._ws.list_shares_by_owner(user_id)

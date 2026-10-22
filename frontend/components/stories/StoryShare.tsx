@@ -20,6 +20,7 @@ export function StoryShare({ storyId }: { storyId: number }) {
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[] | null>(null);
   const [grants, setGrants] = useState<ShareGrantOut[]>([]);
   const [choice, setChoice] = useState("");
+  const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,7 +78,11 @@ export function StoryShare({ storyId }: { storyId: number }) {
             <option value="">{t("storyBank.linkChoose")}</option>
             {open.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
           </select>
-          <Button type="button" size="sm" disabled={busy || !choice} onClick={() => void run(async () => { await api.shares.create(Number(choice), "story", String(storyId)); setChoice(""); })}>
+          <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" className="mt-1" checked={consent} disabled={busy} onChange={(e) => setConsent(e.target.checked)} />
+            <span>{t("wsMgmt.shareConsent")}</span>
+          </label>
+          <Button type="button" size="sm" disabled={busy || !choice || !consent} onClick={() => void run(async () => { await api.shares.create(Number(choice), "story", String(storyId), consent); setChoice(""); setConsent(false); })}>
             {t("storyBank.shareAction")}
           </Button>
         </div>

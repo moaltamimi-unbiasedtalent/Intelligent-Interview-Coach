@@ -19,7 +19,7 @@ from sqlalchemy import text
 from src.application import admin_audit as A
 from src.entitlements import EntitlementService
 from tests import _admin_matrix as M
-from tests._auth_factories import account_repo, build_auth_app, cookies_for, login_token, register, reset_token
+from tests._auth_factories import account_repo, build_auth_app, cookies_for, login_token, register, reset_token, verify_email
 from tests._role_gov import approve, change_role, request_change, step_up
 
 API = "/api/v1"
@@ -47,6 +47,7 @@ class W:
         self.n += 1
         email = email or f"w11u{self.n}@x.com"
         register(self.c, email, PW)
+        verify_email(self.repo, email)          # 04B: invitations are answerable only by a verified address
         token = login_token(self.c, email, PW)
         ck = cookies_for(token)
         uid = self.c.get(f"{API}/auth/me", cookies=ck).json()["user_id"]
@@ -391,11 +392,11 @@ def test_k10_workspace_membership_shares_and_admin_metadata_stay_scoped(w):
     assert w.post("/workspaces/invitations/accept", b["ck"], {"token": _invite_token(w.mail)}).status_code in (200, 201)
     assert w.get(f"/workspaces/{wid}", c3[1]).status_code in (403, 404)                       # a non-member cannot read the workspace (IDOR)
     assert w.post(f"/workspaces/{wid}/members/{a['uid']}/remove", b["ck"]).status_code == 403   # a member cannot remove the owner
-    sh = w.post("/shares", b["ck"], {"workspace_id": wid, "resource_type": "interview_report", "resource_id": str(b["iid"])})
+    sh = w.post("/shares", b["ck"], {"workspace_id": wid, "consent": True, "resource_type": "interview_report", "resource_id": str(b["iid"])})
     assert sh.status_code in (200, 201), sh.text
     assert w.get(f"/shares/resource/interview_report/{b['iid']}", a["ck"]).status_code == 200  # the owner may view what the member shared
     assert w.get(f"/shares/resource/interview_report/{b['iid']}", c3[1]).status_code in (403, 404)
-    assert w.post("/shares", c3[1], {"workspace_id": wid, "resource_type": "interview_report", "resource_id": str(a["iid"])}).status_code in (403, 404)
+    assert w.post("/shares", c3[1], {"workspace_id": wid, "consent": True, "resource_type": "interview_report", "resource_id": str(a["iid"])}).status_code in (403, 404)
     for role in ("platform_admin", "support_operator"):                                        # Admin workspace metadata is not content access
         det = w.get(f"/admin/workspaces/{wid}", w.ck(role))
         assert det.status_code == 200 and not [x for x in SENT.values() if x in det.text], role
@@ -544,7 +545,7 @@ def test_ah_cross_user_and_cross_plane_identifier_misuse_leaks_and_mutates_nothi
     assert w.get(f"/documents/{b['doc']}", a["ck"]).status_code in (403, 404)
     assert w.c.delete(f"{API}/documents/{b['doc']}", cookies=a["ck"]).status_code in (403, 404)
     assert w.c.delete(f"{API}/memory/{b['mem']}", cookies=a["ck"]).status_code in (403, 404)
-    assert w.post("/shares", a["ck"], {"workspace_id": 1, "resource_type": "interview_report", "resource_id": str(b["iid"])}).status_code in (400, 403, 404, 422)
+    assert w.post("/shares", a["ck"], {"workspace_id": 1, "consent": True, "resource_type": "interview_report", "resource_id": str(b["iid"])}).status_code in (400, 403, 404, 422)
     assert w.get(f"/opportunities/{b['opp']}", b["ck"]).json() == before["opp"] and w.get(f"/documents/{b['doc']}", b["ck"]).status_code == 200   # B's data intact
     # Admin personas: lacking permission, or holding only metadata permission
     assert denied(w.get("/admin/support/tickets", w.ck("billing_admin"))) and denied(w.get("/admin/privacy/requests", w.ck("support_operator")))

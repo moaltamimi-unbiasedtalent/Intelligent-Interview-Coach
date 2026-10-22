@@ -90,3 +90,12 @@ def reset_token(mail: MemoryEmailSender) -> str | None:
         if msg.category == "password_reset" and "token=" in msg.body:
             return msg.body.split("token=")[1].split()[0]
     return None
+
+
+def verify_email(repo: InterviewRepository, *emails: str) -> None:
+    """Mark the given accounts' e-mail addresses verified (04B: a workspace invitation can only be answered by a VERIFIED address)."""
+    accounts = account_repo(repo)
+    for email in emails:
+        acct = accounts.find_by_email(email)
+        assert acct is not None, email
+        accounts.mark_email_verified(acct.user_id)

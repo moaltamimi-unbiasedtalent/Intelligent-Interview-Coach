@@ -909,35 +909,64 @@ export interface FeedbackResponse {
 
 // --- Teams / Workspaces & sharing (Capstone P6.5) ----------------------------
 
+export type WorkspaceRole = "workspace_owner" | "workspace_admin" | "workspace_member";
+
+/** What the CALLER may do in a workspace, derived server side from the role (the UI only reflects it). */
+export interface WorkspaceCapabilities {
+  can_rename: boolean;
+  can_invite: boolean;
+  can_invite_admin: boolean;
+  can_remove_members: boolean;
+  can_change_roles: boolean;
+  can_transfer: boolean;
+  can_archive: boolean;
+  can_restore: boolean;
+  can_delete: boolean;
+  can_leave: boolean;
+  can_share: boolean;
+}
+
 export interface WorkspaceSummary {
   id: number;
   name: string;
+  /** "active" or "deactivated" (shown to people as Archived). */
   status: string;
   owner_user_id: number;
   member_count: number;
   created_at: string | null;
-  my_role?: string;
+  my_role?: WorkspaceRole | string;
+  capabilities?: WorkspaceCapabilities;
 }
 
 export interface WorkspaceMember {
   user_id: number;
-  role: string;
+  role: WorkspaceRole | string;
   status: string;
   joined_at: string | null;
+  /** Display name, or a masked address. Never another member's full address for a plain member. */
+  label: string;
+  is_me: boolean;
+  /** Present only for owners and admins (who invited them) and for yourself. */
+  email?: string | null;
 }
 
 export interface WorkspaceInvite {
   id: number;
   workspace_id: number;
-  role: string;
+  role: WorkspaceRole | string;
+  /** pending | expired (a pending invitation past its expiry is reported as expired). */
   status: string;
   expires_at: string | null;
   workspace_name?: string | null;
+  /** Owners and admins only. */
+  email?: string;
 }
 
 export interface WorkspaceDetail extends WorkspaceSummary {
   members: WorkspaceMember[];
+  /** Owners and admins only. */
   pending_invitations?: WorkspaceInvite[];
+  limits?: { max_members: number; max_pending_invitations: number; invitation_ttl_hours: number };
 }
 
 export interface MyWorkspaces {
@@ -945,9 +974,16 @@ export interface MyWorkspaces {
   invited: WorkspaceInvite[];
 }
 
+export interface InvitationPreview {
+  invitation_id: number;
+  workspace_name: string;
+  role: WorkspaceRole | string;
+  expires_at: string | null;
+}
+
 export interface ShareGrantOut {
   id: number;
-  owner_user_id: number;
+  owner_user_id?: number;
   workspace_id: number;
   resource_type: string;
   resource_id: string;
@@ -955,6 +991,19 @@ export interface ShareGrantOut {
   status: string;
   created_at: string | null;
   revoked_at: string | null;
+  /** Safe label of the sharer (display name or masked address). */
+  shared_by?: string;
+  workspace_name?: string | null;
+  /** On a workspace's share list: true when you shared it. */
+  mine?: boolean;
+}
+
+/** GET /shares/resource/{type}/{id}: the bounded VIEW projection of one explicitly shared item. */
+export interface SharedResourceView {
+  resource_type: string;
+  resource_id: string;
+  shared_by_owner: boolean;
+  resource: Record<string, unknown>;
 }
 
 // --- Authentication & account (Capstone P1/E1) -------------------------------

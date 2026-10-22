@@ -11,7 +11,7 @@ import sys
 
 from fastapi.testclient import TestClient
 
-from tests._auth_factories import build_auth_app, cookies_for, login_token, register
+from tests._auth_factories import build_auth_app, cookies_for, login_token, register, verify_email
 
 PW = "correcthorsebattery"
 
@@ -28,6 +28,7 @@ def test_create_invite_accept_flow():
     app, repo, mail = build_auth_app()
     with TestClient(app) as c:
         register(c, "a@x.com", PW); register(c, "b@x.com", PW)
+        verify_email(repo, 'a@x.com', 'b@x.com')
         a = login_token(c, "a@x.com", PW); b = login_token(c, "b@x.com", PW)
         wid = c.post("/api/v1/workspaces", json={"name": "Alpha"}, cookies=cookies_for(a)).json()["id"]
         assert c.post(f"/api/v1/workspaces/{wid}/invite", json={"email": "b@x.com"},
@@ -44,6 +45,7 @@ def test_private_by_default_and_nonmember_cannot_view():
     app, repo, mail = build_auth_app()
     with TestClient(app) as c:
         register(c, "a@x.com", PW); register(c, "m@x.com", PW)
+        verify_email(repo, 'a@x.com', 'm@x.com')
         a = login_token(c, "a@x.com", PW); m = login_token(c, "m@x.com", PW)
         wid = c.post("/api/v1/workspaces", json={"name": "Alpha"}, cookies=cookies_for(a)).json()["id"]
         # non-member gets 404 (existence not probeable)
@@ -54,6 +56,7 @@ def test_member_cannot_invite_or_remove():
     app, repo, mail = build_auth_app()
     with TestClient(app) as c:
         register(c, "a@x.com", PW); register(c, "b@x.com", PW)
+        verify_email(repo, 'a@x.com', 'b@x.com')
         a = login_token(c, "a@x.com", PW); b = login_token(c, "b@x.com", PW)
         wid = c.post("/api/v1/workspaces", json={"name": "Alpha"}, cookies=cookies_for(a)).json()["id"]
         c.post(f"/api/v1/workspaces/{wid}/invite", json={"email": "b@x.com"}, cookies=cookies_for(a))
@@ -70,6 +73,7 @@ def test_foreign_invite_acceptance_rejected():
     app, repo, mail = build_auth_app()
     with TestClient(app) as c:
         register(c, "a@x.com", PW); register(c, "b@x.com", PW); register(c, "m@x.com", PW)
+        verify_email(repo, 'a@x.com', 'b@x.com', 'm@x.com')
         a = login_token(c, "a@x.com", PW); m = login_token(c, "m@x.com", PW)
         wid = c.post("/api/v1/workspaces", json={"name": "Alpha"}, cookies=cookies_for(a)).json()["id"]
         c.post(f"/api/v1/workspaces/{wid}/invite", json={"email": "b@x.com"}, cookies=cookies_for(a))
@@ -83,6 +87,7 @@ def test_last_owner_cannot_leave():
     app, repo, mail = build_auth_app()
     with TestClient(app) as c:
         register(c, "a@x.com", PW)
+        verify_email(repo, 'a@x.com')
         a = login_token(c, "a@x.com", PW)
         wid = c.post("/api/v1/workspaces", json={"name": "Alpha"}, cookies=cookies_for(a)).json()["id"]
         assert c.post(f"/api/v1/workspaces/{wid}/leave", cookies=cookies_for(a)).status_code == 409

@@ -17,7 +17,7 @@ from sqlalchemy import select
 from src import persistence as P
 from src.api import dependencies as deps
 from src.documents.repository import STORY_BLOCK_CLOSE, STORY_BLOCK_OPEN, StoryRepository, quality_prompts, strip_story_blocks
-from tests._auth_factories import build_auth_app, cookies_for, login_token, register
+from tests._auth_factories import build_auth_app, cookies_for, login_token, register, verify_email
 
 PW = "correcthorsebattery"
 SENTINEL = "SENTINEL-STORY-TEXT-8f3a"
@@ -80,11 +80,12 @@ class Env:
         wid = self.c.post("/api/v1/workspaces", json={"name": "Alpha"}, cookies=self.ck_a).json()["id"]
         self.c.post(f"/api/v1/workspaces/{wid}/invite", json={"email": "b@example.com"}, cookies=self.ck_a)
         tok = self.mail.sent[-1].body.split("token=")[1].split()[0]
+        verify_email(self.repo, "b@example.com")                     # 04B: only a VERIFIED address may answer a workspace invitation
         assert self.c.post("/api/v1/workspaces/invitations/accept", json={"token": tok}, cookies=self.ck_b).status_code in (200, 201)
         return wid
 
     def share(self, wid, sid):
-        r = self.c.post("/api/v1/shares", json={"workspace_id": wid, "resource_type": "story", "resource_id": str(sid)}, cookies=self.ck_a)
+        r = self.c.post("/api/v1/shares", json={"workspace_id": wid, "resource_type": "story", "resource_id": str(sid), "consent": True}, cookies=self.ck_a)
         return r
 
     def repo_stories(self):
@@ -409,7 +410,7 @@ def test_share_requires_explicit_grant_projection_is_bounded_and_archive_revokes
     doc = e.doc()
     st = e.c.post(f"{S}/draft", json={"title": "Shared win", "claim_ids": [doc["claims"][0]["id"]], "opportunity_id": e.opportunity()}, cookies=e.ck_a).json()
     assert e.c.get(f"/api/v1/shares/resource/story/{st['id']}", cookies=e.ck_b).status_code == 404       # a workspace member sees nothing until shared
-    assert e.c.post("/api/v1/shares", json={"workspace_id": wid, "resource_type": "story", "resource_id": str(st["id"])}, cookies=e.ck_b).status_code == 403
+    assert e.c.post("/api/v1/shares", json={"workspace_id": wid, "resource_type": "story", "resource_id": str(st["id"]), "consent": True}, cookies=e.ck_b).status_code == 403
     assert e.share(wid, st["id"]).status_code == 200
     seen = e.c.get(f"/api/v1/shares/resource/story/{st['id']}", cookies=e.ck_b)
     assert seen.status_code == 200

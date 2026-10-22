@@ -146,8 +146,10 @@ import type {
   FeedbackCreateRequest,
   FeedbackResponse,
   FeedbackSurface,
+  InvitationPreview,
   MyWorkspaces,
   ShareGrantOut,
+  SharedResourceView,
   WorkspaceDetail,
   WorkspaceSummary,
   KnowledgeSnapshotResponse,
@@ -582,29 +584,55 @@ export const api = {
     create: (name: string, opts?: RequestOptions) =>
       request<WorkspaceSummary>("POST", "/workspaces", { body: { name }, ...opts }),
     get: (id: number, opts?: RequestOptions) => request<WorkspaceDetail>("GET", `/workspaces/${id}`, opts),
+    rename: (id: number, name: string, opts?: RequestOptions) =>
+      request<WorkspaceSummary>("PATCH", `/workspaces/${id}`, { body: { name }, ...opts }),
     invite: (id: number, email: string, role = "workspace_member", opts?: RequestOptions) =>
-      request<{ invitation_id: number; status: string }>("POST", `/workspaces/${id}/invite`, { body: { email, role }, ...opts }),
+      request<{ invitation_id: number; status: string; expires_at: string; email_delivery: "submitted" | "not_submitted" }>(
+        "POST", `/workspaces/${id}/invite`, { body: { email, role }, ...opts }),
+    revokeInvitation: (id: number, invitationId: number, opts?: RequestOptions) =>
+      request<{ status: string }>("POST", `/workspaces/${id}/invitations/${invitationId}/revoke`, opts),
+    previewInvitation: (token: string, opts?: RequestOptions) =>
+      request<InvitationPreview>("POST", "/workspaces/invitations/preview", { body: { token }, ...opts }),
     accept: (token: string, opts?: RequestOptions) =>
       request<WorkspaceSummary>("POST", "/workspaces/invitations/accept", { body: { token }, ...opts }),
     decline: (token: string, opts?: RequestOptions) =>
       request<{ status: string }>("POST", "/workspaces/invitations/decline", { body: { token }, ...opts }),
+    acceptById: (invitationId: number, opts?: RequestOptions) =>
+      request<WorkspaceSummary>("POST", `/workspaces/invitations/${invitationId}/accept`, opts),
+    declineById: (invitationId: number, opts?: RequestOptions) =>
+      request<{ status: string }>("POST", `/workspaces/invitations/${invitationId}/decline`, opts),
     leave: (id: number, opts?: RequestOptions) =>
       request<{ status: string }>("POST", `/workspaces/${id}/leave`, opts),
     removeMember: (id: number, targetUserId: number, opts?: RequestOptions) =>
       request<{ status: string }>("POST", `/workspaces/${id}/members/${targetUserId}/remove`, opts),
-    transfer: (id: number, newOwnerUserId: number, opts?: RequestOptions) =>
-      request<WorkspaceSummary>("POST", `/workspaces/${id}/transfer`, { body: { new_owner_user_id: newOwnerUserId }, ...opts }),
-    deactivate: (id: number, opts?: RequestOptions) =>
-      request<WorkspaceSummary>("POST", `/workspaces/${id}/deactivate`, opts),
+    setMemberRole: (id: number, targetUserId: number, role: string, opts?: RequestOptions) =>
+      request<{ user_id: number; role: string; changed: boolean }>(
+        "POST", `/workspaces/${id}/members/${targetUserId}/role`, { body: { role }, ...opts }),
+    transfer: (id: number, newOwnerUserId: number, confirmName: string, opts?: RequestOptions) =>
+      request<WorkspaceSummary>("POST", `/workspaces/${id}/transfer`,
+        { body: { new_owner_user_id: newOwnerUserId, confirm_name: confirmName }, ...opts }),
+    archive: (id: number, opts?: RequestOptions) =>
+      request<WorkspaceSummary>("POST", `/workspaces/${id}/archive`, opts),
+    restore: (id: number, opts?: RequestOptions) =>
+      request<WorkspaceSummary>("POST", `/workspaces/${id}/restore`, opts),
+    remove: (id: number, confirmName: string, opts?: RequestOptions) =>
+      request<{ status: string }>("POST", `/workspaces/${id}/delete`, { body: { confirm_name: confirmName }, ...opts }),
+    shares: (id: number, opts?: RequestOptions) =>
+      request<{ shares: ShareGrantOut[] }>("GET", `/workspaces/${id}/shares`, opts),
   },
 
   shares: {
     mine: (opts?: RequestOptions) => request<{ shares: ShareGrantOut[] }>("GET", "/shares/mine", opts),
     withMe: (opts?: RequestOptions) => request<{ shares: ShareGrantOut[] }>("GET", "/shares/with-me", opts),
-    create: (workspaceId: number, resourceType: string, resourceId: string, opts?: RequestOptions) =>
-      request<{ share_id: number; status: string }>("POST", "/shares", { body: { workspace_id: workspaceId, resource_type: resourceType, resource_id: resourceId }, ...opts }),
+    // `consent: true` is the explicit acknowledgement that every member of the workspace can view the item.
+    create: (workspaceId: number, resourceType: string, resourceId: string, consent: boolean, opts?: RequestOptions) =>
+      request<{ share_id: number; status: string }>("POST", "/shares", {
+        body: { workspace_id: workspaceId, resource_type: resourceType, resource_id: resourceId, consent }, ...opts }),
     revoke: (shareId: number, opts?: RequestOptions) =>
       request<{ status: string }>("DELETE", `/shares/${shareId}`, opts),
+    view: (resourceType: string, resourceId: string, opts?: RequestOptions) =>
+      request<SharedResourceView>("GET",
+        `/shares/resource/${encodeURIComponent(resourceType)}/${encodeURIComponent(resourceId)}`, opts),
   },
 
   // Realtime voice (Capstone P7.5, C1). Mints a short-lived, user-scoped session

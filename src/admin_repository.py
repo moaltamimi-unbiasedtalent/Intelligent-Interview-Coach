@@ -23,6 +23,7 @@ from src.application.errors import ConflictError
 from src.auth_repository import AccountRepository
 from src.persistence import (
     ACCOUNT_STATUS_ACTIVE,
+    PLATFORM_ROLE_USER,
     DEFAULT_LOCALE,
     MEMBERSHIP_STATUS_ACTIVE,
     MEMBERSHIP_STATUS_REMOVED,
@@ -403,6 +404,10 @@ class AdminUserRepository:
                 raise AdminNotFound("Account not found.")
             if user.status != ACCOUNT_STATUS_ACTIVE:
                 raise ConflictError("Only an active account can be added to a workspace.")
+            if (user.platform_role or PLATFORM_ROLE_USER) != PLATFORM_ROLE_USER:
+                # 04B: membership is the ONLY thing that lets an account read what members shared. A platform-staff account must never be
+                # enrolled by an operator (including the acting administrator): Platform Admin sees metadata, not shared content.
+                raise ConflictError("A platform staff account cannot be added to a workspace.")
             m = self._membership(s, workspace_id, user_id)
             if m is not None and m.status == MEMBERSHIP_STATUS_ACTIVE:
                 raise ConflictError("That account is already a member of this workspace.")

@@ -56,6 +56,7 @@ async function mockServer(page: Page, opts: { failList?: boolean } = {}) {
     if (path === "/shares/mine") return json({ shares: db.grants.map((g) => ({ id: g.id, owner_user_id: 1, workspace_id: g.workspace_id, resource_type: "story", resource_id: g.resource_id, permission: "view", status: "active", created_at: null, revoked_at: null })) });
     if (path === "/shares" && method === "POST") {
       const b = body();
+      if (b.consent !== true) return route.fulfill({ status: 422, contentType: "application/json", body: JSON.stringify({ detail: "consent required" }) });   // 04B: the server refuses without explicit consent
       const g = { id: 40, workspace_id: Number(b.workspace_id), resource_id: String(b.resource_id) };
       db.grants.push(g);
       return json({ share_id: 40, status: "active", permission: "view" });
@@ -187,6 +188,8 @@ test("Story Bank journey: create, evidence, confirm, use in Practice, share, sto
   await expect(first).toContainText("view-only access");
   expect(db.grants).toHaveLength(0);                                                      // opening the panel shared nothing
   await first.getByLabel("Workspace", { exact: true }).selectOption("4");
+  await expect(first.getByRole("button", { name: "Share view-only" })).toBeDisabled();   // a workspace alone is not consent (04B)
+  await first.getByRole("checkbox", { name: /I understand that every current and future member of this workspace can view this item/ }).check();
   await first.getByRole("button", { name: "Share view-only" }).click();
   await expect(first).toContainText("Shared with Alpha");
   expect(db.grants).toHaveLength(1);

@@ -356,14 +356,14 @@ def test_a_basic_owner_cannot_create_a_new_share_for_a_restricted_interview_but_
     ids = seed(env, uid, 5)
     set_plan(env, uid, "premium")
     wid = env.c.post("/api/v1/workspaces", json={"name": "W"}, cookies=ck).json()["id"]
-    first = env.c.post("/api/v1/shares", json={"workspace_id": wid, "resource_type": "interview_report", "resource_id": str(ids[0])}, cookies=ck)
+    first = env.c.post("/api/v1/shares", json={"workspace_id": wid, "consent": True, "resource_type": "interview_report", "resource_id": str(ids[0])}, cookies=ck)
     assert first.status_code in (200, 201), first.text                                                # while Premium the old report can be shared
     set_plan(env, uid, "basic")
-    refused = env.c.post("/api/v1/shares", json={"workspace_id": wid, "resource_type": "interview_report", "resource_id": str(ids[1])}, cookies=ck)
-    missing = env.c.post("/api/v1/shares", json={"workspace_id": wid, "resource_type": "interview_report", "resource_id": "999999"}, cookies=ck)
+    refused = env.c.post("/api/v1/shares", json={"workspace_id": wid, "consent": True, "resource_type": "interview_report", "resource_id": str(ids[1])}, cookies=ck)
+    missing = env.c.post("/api/v1/shares", json={"workspace_id": wid, "consent": True, "resource_type": "interview_report", "resource_id": "999999"}, cookies=ck)
     assert refused.status_code == missing.status_code and refused.status_code >= 400                  # restricted: refused exactly like a missing resource
     assert {k: v for k, v in refused.json()["error"].items() if k != "request_id"} == {k: v for k, v in missing.json()["error"].items() if k != "request_id"}
-    allowed = env.c.post("/api/v1/shares", json={"workspace_id": wid, "resource_type": "interview_report", "resource_id": str(ids[-1])}, cookies=ck)
+    allowed = env.c.post("/api/v1/shares", json={"workspace_id": wid, "consent": True, "resource_type": "interview_report", "resource_id": str(ids[-1])}, cookies=ck)
     assert allowed.status_code in (200, 201), allowed.text
     # Documented ambiguity: the grant created while Premium keeps working for its recipients (their rights are not silently altered).
     assert env.c.get(f"/api/v1/shares/resource/interview_report/{ids[0]}", cookies=ck).status_code in (200, 404)

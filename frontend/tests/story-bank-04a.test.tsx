@@ -338,8 +338,10 @@ describe("StoryBank: sharing is an explicit, view-only, revocable grant", () => 
     expect(m.shareCreate).not.toHaveBeenCalled();                                         // opening the panel shares nothing
     expect(screen.getByRole("button", { name: "Share view-only" })).toBeDisabled();
     await userEvent.selectOptions(screen.getByLabelText("Workspace"), "4");
+    expect(screen.getByRole("button", { name: "Share view-only" })).toBeDisabled();       // a workspace alone is not consent (04B)
+    await userEvent.click(screen.getByRole("checkbox", { name: /I understand that every current and future member of this workspace can view this item/ }));
     await userEvent.click(screen.getByRole("button", { name: "Share view-only" }));
-    await waitFor(() => expect(m.shareCreate).toHaveBeenCalledWith(4, "story", "1"));
+    await waitFor(() => expect(m.shareCreate).toHaveBeenCalledWith(4, "story", "1", true));
     expect(await screen.findByText("Shared with Alpha")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Stop sharing" }));
     await waitFor(() => expect(m.shareRevoke).toHaveBeenCalledWith(40));

@@ -95,7 +95,7 @@ def test_a_share_never_exposes_an_interview_outside_the_owners_current_window_an
         old, newest = ids[0], ids[-1]
         set_plan(repo, owner, "premium")
         monkeypatch.setattr(HA, "HISTORY_RESTRICTIONS_ENFORCED", True)
-        share = {"workspace_id": wid, "resource_type": "interview_report"}
+        share = {"workspace_id": wid, "consent": True, "resource_type": "interview_report"}
         assert c.post("/api/v1/shares", json={**share, "resource_id": str(old)}, cookies=cookies_for(a)).status_code == 200      # shared while Premium
         assert c.post("/api/v1/shares", json={**share, "resource_id": str(newest)}, cookies=cookies_for(a)).status_code == 200
         read = lambda rid, who=b: c.get(f"/api/v1/shares/resource/interview_report/{rid}", cookies=cookies_for(who)).status_code  # noqa: E731
@@ -121,7 +121,7 @@ def test_revocation_still_removes_access_whatever_the_window(on):
     try:
         owner = _uid(c, a)
         newest = seed(repo, owner, 2)[-1]
-        r = c.post("/api/v1/shares", json={"workspace_id": wid, "resource_type": "interview_report", "resource_id": str(newest)}, cookies=cookies_for(a))
+        r = c.post("/api/v1/shares", json={"workspace_id": wid, "consent": True, "resource_type": "interview_report", "resource_id": str(newest)}, cookies=cookies_for(a))
         assert r.status_code == 200
         assert c.delete(f"/api/v1/shares/{r.json()['share_id']}", cookies=cookies_for(a)).status_code == 200
         assert c.get(f"/api/v1/shares/resource/interview_report/{newest}", cookies=cookies_for(b)).status_code == 404

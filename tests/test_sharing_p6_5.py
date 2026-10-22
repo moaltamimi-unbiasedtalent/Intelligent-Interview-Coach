@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
-from tests._auth_factories import account_repo, build_auth_app, cookies_for, login_token, register
+from tests._auth_factories import account_repo, build_auth_app, cookies_for, login_token, register, verify_email
 
 PW = "correcthorsebattery"
 
@@ -50,6 +50,7 @@ def _setup(mail_capable=True):
     c.__enter__()
     for e in ("alice@x.com", "bob@x.com", "mallory@x.com", "admin@x.com"):
         register(c, e, PW)
+    verify_email(repo, "alice@x.com", "bob@x.com", "mallory@x.com", "admin@x.com")
     a = login_token(c, "alice@x.com", PW)
     b = login_token(c, "bob@x.com", PW)
     m = login_token(c, "mallory@x.com", PW)
@@ -74,11 +75,11 @@ def _run_matrix(kind: str):
         base = "/api/v1/shares"
 
         # non-owner cannot share the resource (bob doesn't own alice's resource).
-        assert c.post(base, json={"workspace_id": wid, "resource_type": kind, "resource_id": rid},
+        assert c.post(base, json={"workspace_id": wid, "consent": True, "resource_type": kind, "resource_id": rid},
                       cookies=cookies_for(b)).status_code == 403
 
         # owner shares into the workspace.
-        r = c.post(base, json={"workspace_id": wid, "resource_type": kind, "resource_id": rid},
+        r = c.post(base, json={"workspace_id": wid, "consent": True, "resource_type": kind, "resource_id": rid},
                    cookies=cookies_for(a))
         assert r.status_code == 200, r.text
         share_id = r.json()["share_id"]
@@ -98,7 +99,7 @@ def _run_matrix(kind: str):
         assert c.get(f"{base}/resource/{kind}/{rid}", cookies=cookies_for(b)).status_code == 404
 
         # ownership remains with alice: she can still read her own resource by re-sharing.
-        c.post(base, json={"workspace_id": wid, "resource_type": kind, "resource_id": rid}, cookies=cookies_for(a))
+        c.post(base, json={"workspace_id": wid, "consent": True, "resource_type": kind, "resource_id": rid}, cookies=cookies_for(a))
         assert c.get(f"{base}/resource/{kind}/{rid}", cookies=cookies_for(b)).status_code == 200
 
         # source deletion removes access (no resurrection from a stale grant).
@@ -125,7 +126,7 @@ def test_cross_workspace_share_cannot_be_read_from_another_workspace():
     try:
         # mallory creates her OWN workspace; bob is only in alice's workspace.
         rid = _seed_report(repo, _uid(c, a))
-        c.post("/api/v1/shares", json={"workspace_id": wid, "resource_type": "interview_report", "resource_id": rid},
+        c.post("/api/v1/shares", json={"workspace_id": wid, "consent": True, "resource_type": "interview_report", "resource_id": rid},
                cookies=cookies_for(a))
         # mallory (member of a different, own workspace) still cannot read alice's shared report.
         c.post("/api/v1/workspaces", json={"name": "Mallory WS"}, cookies=cookies_for(m))
@@ -138,7 +139,7 @@ def test_preparation_summary_is_not_operationally_shareable():
     c, repo, a, b, m, adm, wid = _setup()
     try:
         r = c.post("/api/v1/shares",
-                   json={"workspace_id": wid, "resource_type": "preparation_summary", "resource_id": "1"},
+                   json={"workspace_id": wid, "consent": True, "resource_type": "preparation_summary", "resource_id": "1"},
                    cookies=cookies_for(a))
         assert r.status_code == 422  # not in the operational allowlist
     finally:

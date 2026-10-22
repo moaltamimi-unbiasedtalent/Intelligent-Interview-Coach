@@ -23,7 +23,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from src import persistence as P
-from tests._auth_factories import build_auth_app, cookies_for, login_token, register
+from tests._auth_factories import build_auth_app, cookies_for, login_token, register, verify_email
 
 PW = "correcthorsebattery"
 ROOT = Path(__file__).resolve().parent.parent
@@ -59,6 +59,7 @@ def _setup():
     _OPEN.append(c)
     register(c, "a@example.com", PW)
     register(c, "b@example.com", PW)
+    verify_email(repo, "a@example.com", "b@example.com")
     a = login_token(c, "a@example.com", PW)
     b = login_token(c, "b@example.com", PW)
     ida = c.get("/api/v1/auth/me", cookies=cookies_for(a)).json()["user_id"]
@@ -166,7 +167,7 @@ def test_deleting_a_shared_interview_revokes_its_grant():
     c, repo, mail, a, b, ida, _idb = _setup()
     wid = _workspace_with_member(c, mail, a, b)
     iid = repo.save_interview(ida, _payload())
-    sh = c.post("/api/v1/shares", json={"workspace_id": wid, "resource_type": "interview_report",
+    sh = c.post("/api/v1/shares", json={"workspace_id": wid, "consent": True, "resource_type": "interview_report",
                                          "resource_id": str(iid)}, cookies=cookies_for(a))
     assert sh.status_code in (200, 201), sh.text
     assert len(c.get("/api/v1/shares/mine", cookies=cookies_for(a)).json()["shares"]) == 1
@@ -179,7 +180,7 @@ def test_revoke_share_removes_member_access_and_foreign_revoke_fails():
     c, repo, mail, a, b, ida, _idb = _setup()
     wid = _workspace_with_member(c, mail, a, b)
     iid = repo.save_interview(ida, _payload())
-    assert c.post("/api/v1/shares", json={"workspace_id": wid, "resource_type": "interview_report",
+    assert c.post("/api/v1/shares", json={"workspace_id": wid, "consent": True, "resource_type": "interview_report",
                                            "resource_id": str(iid)}, cookies=cookies_for(a)).status_code in (200, 201)
     sid = c.get("/api/v1/shares/mine", cookies=cookies_for(a)).json()["shares"][0]["id"]
     assert c.get(f"/api/v1/shares/resource/interview_report/{iid}", cookies=cookies_for(b)).status_code == 200
@@ -230,7 +231,7 @@ def test_story_delete_revokes_shared_grants():
                 cookies=cookies_for(a))
     assert st.status_code == 201, st.text
     sid = st.json()["id"]
-    assert c.post("/api/v1/shares", json={"workspace_id": wid, "resource_type": "story",
+    assert c.post("/api/v1/shares", json={"workspace_id": wid, "consent": True, "resource_type": "story",
                                            "resource_id": str(sid)}, cookies=cookies_for(a)).status_code in (200, 201)
     assert c.delete(f"/api/v1/stories/{sid}", cookies=cookies_for(a)).status_code == 200
     assert c.get("/api/v1/shares/mine", cookies=cookies_for(a)).json()["shares"] == []
