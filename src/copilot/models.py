@@ -294,7 +294,9 @@ class KnowledgeEvidence(_Base):
             reference_year=ref_year,
             version=meta.get("source_version") or None,
             metadata={"page": result.page, "document_type": meta.get("document_type"),
-                      "domain": meta.get("domain")},
+                      "domain": meta.get("domain"),
+                      # 02D: the approval filter's label travels with the evidence (present only when set; absent keys keep the metadata unchanged).
+                      **{k: meta[k] for k in ("source_qualification", "source_qualification_label") if k in meta}},
             score=result.score,
         )
 
