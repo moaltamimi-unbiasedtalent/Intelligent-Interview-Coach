@@ -7,7 +7,8 @@ import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities"
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import type { AdminUserDetail } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
-import { PlanControl } from "./PlanControl";
+import { UsersPlanPanel } from "./UsersPlanPanel";
+import { UsersCasesPanel, UsersSignInPanel } from "./UsersAccountPanels";
 import { useStepUp } from "./StepUp";
 import { KeyValue, Panel, PermissionGate, ResourceState, Table, btn, field, useAdminResource } from "./ui";
 
@@ -38,6 +39,16 @@ function Detail({ d, reload }: { d: AdminUserDetail; reload: () => void }) {
   const [role, setRole] = useState(a.platform_role);
   const [notice, setNotice] = useState<string | null>(null);
   const stepUp = useStepUp();
+  // Strict account action: the reason and the account revision this screen was loaded with are sent; a stale screen is refused by the server (409), so reload.
+  const strict = async (action: "deactivate" | "reactivate" | "force-signout", reason: string) => {
+    if (!d.revision) throw new Error("This account view is out of date. Reload and try again.");
+    try {
+      return await api.admin.userAction(a.user_id, action, { expected_revision: d.revision, reason });
+    } catch (e) {
+      reload();
+      throw e;
+    }
+  };
   const done = (msg: string) => {
     setNotice(msg);
     reload();
@@ -57,7 +68,7 @@ function Detail({ d, reload }: { d: AdminUserDetail; reload: () => void }) {
         {can(P.usersManage) ? (
           <div className="flex flex-wrap items-center gap-3">
             {a.status === "active" ? (
-              <button type="button" className={btn} disabled={d.access.is_self} onClick={() => setPending("deactivate")}>
+              <button type="button" className={btn} disabled={d.access.is_self || !d.revision} onClick={() => setPending("deactivate")}>
                 Deactivate account
               </button>
             ) : (
@@ -83,13 +94,19 @@ function Detail({ d, reload }: { d: AdminUserDetail; reload: () => void }) {
         ) : null}
       </Panel>
 
-      <PlanControl plan={d.plan} subject={{ kind: "user", id: a.user_id }} onChanged={done} />
+      <UsersPlanPanel plan={d.plan} userId={a.user_id} revision={d.revision} isSelf={d.access.is_self} onChanged={done} />
+
+      <UsersSignInPanel d={d} onDone={done} />
+      <UsersCasesPanel d={d} onDone={done} />
 
       <Panel title="Sessions">
         <KeyValue rows={[["Active sessions", d.sessions.active_count]]} />
         <Table caption="Active sessions" rows={d.sessions.recent} cols={["created_at", "last_used_at", "expires_at"]} />
         {can(P.sessionsRevoke) ? (
-          <div><button type="button" className={btn} onClick={() => setPending("logout")}>Force logout (revoke all sessions)</button></div>
+          <div className="flex flex-wrap items-center gap-3">
+            <button type="button" className={btn} disabled={d.access.is_self || !d.revision} onClick={() => setPending("logout")}>Force logout (revoke all sessions)</button>
+            {d.access.is_self ? <span className="text-xs text-muted">You cannot sign out your own sessions from Admin.</span> : null}
+          </div>
         ) : null}
       </Panel>
 
@@ -113,24 +130,27 @@ function Detail({ d, reload }: { d: AdminUserDetail; reload: () => void }) {
 
       <ActionDialog open={pending === "deactivate"} title="Deactivate this account?" confirmLabel="Deactivate"
         onClose={() => setPending(null)}
+        reasonRequired
         onConfirm={async (reason) => {
-          const r = await api.admin.setStatus(a.user_id, "deactivated", reason || undefined);
+          const r = await strict("deactivate", reason);
           done(`Account deactivated. ${String(r.sessions_revoked ?? 0)} session(s) ended.`);
         }}>
         <p>The person is signed out immediately and cannot sign in until the account is reactivated.</p>
       </ActionDialog>
       <ActionDialog open={pending === "reactivate"} title="Reactivate this account?" confirmLabel="Reactivate"
         onClose={() => setPending(null)}
+        reasonRequired
         onConfirm={async (reason) => {
-          await api.admin.setStatus(a.user_id, "active", reason || undefined);
+          await strict("reactivate", reason);
           done("Account reactivated. Earlier sessions stay ended; the person must sign in again.");
         }}>
         <p>The person will be able to sign in again. Old sessions are not restored.</p>
       </ActionDialog>
       <ActionDialog open={pending === "logout"} title="Force logout?" confirmLabel="Revoke sessions"
         onClose={() => setPending(null)}
+        reasonRequired
         onConfirm={async (reason) => {
-          const r = await api.admin.revokeSessions(a.user_id, reason || undefined);
+          const r = await strict("force-signout", reason);
           done(`${r.sessions_revoked} session(s) revoked.`);
         }}>
         <p>Every live session of this account ends now. The account stays active.</p>

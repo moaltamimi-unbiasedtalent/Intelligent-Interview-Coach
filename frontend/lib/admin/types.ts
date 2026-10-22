@@ -81,6 +81,7 @@ export interface AdminUserSummary {
   updated_at: string | null;
   workspace_count: number;
   active_session_count: number;
+  last_activity?: "24h" | "7d" | "30d" | "older" | "never";
 }
 export interface AdminPage<T> {
   items: T[];
@@ -95,6 +96,29 @@ export interface AdminUserDetail {
   workspaces: { workspace_id: number; name: string; workspace_status: string; role: string; membership_status: string; joined_at: string | null }[];
   audit: AdminAuditEntry[];
   plan?: SubjectPlan | null;
+  // 03C: counts, buckets and states only (never content, secrets or provider subjects)
+  revision?: string;
+  auth?: { methods: { method: "password" | "google" | "sso"; email_verified: boolean; linked_at: string | null }[]; local_sign_in: boolean; email_verified: boolean; pending_verification_links: number };
+  activity?: { last_active: "24h" | "7d" | "30d" | "older" | "never" };
+  cases?: { support_open: number; support_total: number; privacy_open: number; privacy_total: number; pending_role_change: boolean; open_deletion_request_id: string | null; open_deletion_status: string | null };
+  membership?: { active: number; total: number; owner_of_active: number };
+}
+export type AdminUserActionName = "deactivate" | "reactivate" | "force-signout" | "assign-plan" | "resend-verification" | "expire-verification" | "request-deletion";
+export interface AdminUserActionBody {
+  expected_revision: string;
+  reason: string;
+  plan_code?: string;
+}
+export interface AdminUserActionResult {
+  user_id: number;
+  action: string;
+  changed: boolean;
+  sessions_revoked?: number | null;
+  plan_code?: string | null;
+  links_expired?: number | null;
+  request_id?: string | null;
+  mail_accepted?: boolean | null;
+  revision: string;
 }
 export interface AdminAuditEntry {
   event_type: string;
@@ -128,6 +152,12 @@ export interface AdminUserQuery {
   tier?: string;
   onboarding?: string;
   email_verified?: string;
+  sort?: string;
+  direction?: string;
+  last_active?: string;
+  auth_method?: string;
+  open_case?: string;
+  has_workspace?: string;
   page?: number;
   page_size?: number;
 }

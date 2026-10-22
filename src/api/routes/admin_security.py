@@ -236,6 +236,7 @@ class RoleChangeCreate(BaseModel):
     target_user_id: int = Field(ge=1)
     role: str = Field(max_length=32)
     reason: str = Field(min_length=1, max_length=200)
+    expected_revision: str | None = Field(default=None, max_length=32)   # 03C: the Users screen sends the account revision it loaded
 
 
 class RoleChangeDecision(BaseModel):
@@ -261,7 +262,8 @@ def request_role_change(body: RoleChangeCreate, request: Request, principal=Depe
     audit = _audit(request, principal, A.ADMIN_ROLE_CHANGE_REQUESTED, "user", body.target_user_id, reason=body.reason,
                    before=d["account"]["platform_role"], after=body.role)
     return RoleChangeService(sf).request(target_user_id=body.target_user_id, requested_role=body.role, reason=body.reason,
-                                         requester_user_id=principal.user_id, request_id=get_request_id(request), audit=audit)
+                                         requester_user_id=principal.user_id, request_id=get_request_id(request), audit=audit,
+                                         expected_revision=body.expected_revision)
 
 
 @router.post("/role-changes/{public_id}/approve", summary="Approve and apply a role change (a DIFFERENT Admin; requires step-up; atomic with its audit)")

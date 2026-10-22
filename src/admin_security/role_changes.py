@@ -59,7 +59,8 @@ class RoleChangeService:
         with self._sf() as s:
             return int(s.scalar(select(func.count()).select_from(AdminRoleChangeRequest).where(AdminRoleChangeRequest.status == "pending")) or 0)
 
-    def request(self, *, target_user_id: int, requested_role: str, reason: str, requester_user_id: int, request_id: str | None, audit: dict) -> dict:
+    def request(self, *, target_user_id: int, requested_role: str, reason: str, requester_user_id: int, request_id: str | None, audit: dict,
+                expected_revision: str | None = None) -> dict:
         reason = (reason or "").strip()
         if not reason:
             raise ValidationError("A reason is required.")
@@ -76,6 +77,14 @@ class RoleChangeService:
             target = s.get(User, target_user_id)
             if target is None:
                 raise AdminNotFound("Account not found.")
+            if not permissions_for_role(requested_role) <= permissions_for_role(requester.platform_role):
+                raise ConflictError("You cannot grant a role with more authority than your own.")   # no escalation beyond the actor's own permissions
+            if expected_revision is not None:   # 03C: a stale Users screen cannot request a change against a newer account state
+                from src.admin_users.guards import STALE_MESSAGE
+                from src.admin_users.revision import account_revision
+
+                if account_revision(s, target) != expected_revision:
+                    raise ConflictError(STALE_MESSAGE)
             if target.platform_role == requested_role:
                 raise ConflictError("The account already has that role.")
             req = AdminRoleChangeRequest(public_id=uuid.uuid4().hex, target_user_id=target_user_id, before_role=target.platform_role,
@@ -110,6 +119,8 @@ class RoleChangeService:
             approver = s.get(User, approver_user_id)
             if not _may_assign(approver):
                 raise ConflictError("The approver is not an active Admin who may assign roles.")
+            if not permissions_for_role(r.requested_role) <= permissions_for_role(approver.platform_role):
+                raise ConflictError("You cannot approve a role with more authority than your own.")
             requester = s.get(User, r.requester_user_id) if r.requester_user_id else None
             target = s.get(User, r.target_user_id)
             reason = None

@@ -18,6 +18,8 @@ from pydantic import BaseModel, Field
 from fastapi import Request
 
 from src.admin_repository import AdminNotFound
+from src.admin_users.actions import UserActions
+from src.admin_users.guards import AdminForbidden, make_precondition
 from src.entitlements import PLAN_CODES
 from src.integrations import IntegrationService
 from src.jobs.service import JobService
@@ -72,16 +74,18 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 class PlanAssignRequest(BaseModel):
     plan_code: str = Field(max_length=32)
-    expected_revision: str | None = Field(default=None, max_length=64)   # 03B: enforced when supplied (the Admin UI always sends it)
+    expected_revision: str | None = Field(default=None, max_length=64)   # 03B/03C: enforced when supplied; the Admin plan UI sends the 03B subject-plan revision (the strict /actions/* routes use the 03C account revision)
 
 
 class StatusRequest(BaseModel):
     status: str = Field(max_length=32)
     reason: str | None = Field(default=None, max_length=200)
+    expected_revision: str | None = Field(default=None, max_length=32)
 
 
 class RevokeRequest(BaseModel):
     reason: str | None = Field(default=None, max_length=200)
+    expected_revision: str | None = Field(default=None, max_length=32)
 
 
 class MemberAddRequest(BaseModel):
@@ -139,6 +143,12 @@ def list_users(
     email_verified: bool | None = Query(default=None),
     page: int = Query(default=1, ge=1, le=100000),
     page_size: int = Query(default=25, ge=1, le=100),
+    sort: Literal["created_at", "updated_at", "email", "status", "role", "workspaces", "last_active"] = Query(default="created_at"),
+    direction: Literal["asc", "desc"] = Query(default="desc"),
+    last_active: Literal["24h", "7d", "30d", "older", "never"] | None = Query(default=None),
+    auth_method: Literal["password", "other"] | None = Query(default=None),
+    open_case: Literal["support", "privacy"] | None = Query(default=None),
+    has_workspace: bool | None = Query(default=None),
     _p=Depends(require_permission(perm.USERS_READ)),
     users=Depends(get_admin_user_repository),
 ) -> AdminUserList:
@@ -147,7 +157,8 @@ def list_users(
         if value and value not in allowed:
             raise HTTPException(status_code=422, detail=f"Unknown {label} filter.")
     out = users.list_users(q=q, status=status, role=role, tier=tier, onboarding=onboarding, locale=locale,
-                           email_verified=email_verified, page=page, page_size=page_size)
+                           email_verified=email_verified, page=page, page_size=page_size, sort=sort, direction=direction,
+                           last_active=last_active, auth_method=auth_method, open_case=open_case, has_workspace=has_workspace)
     return AdminUserList(**out, users=out["items"])
 
 
@@ -158,6 +169,7 @@ def user_detail(user_id: int, principal=Depends(require_permission(perm.USERS_RE
     d = users.get_user_detail(user_id)
     if d is None:
         raise HTTPException(status_code=404, detail="Account not found.")
+    d.update(UserActions(users.session_factory).detail_extras(user_id) or {})
     role = d["account"]["platform_role"]
     d["plan"] = plans.subject_plan(user_id=user_id)
     d["access"] = {"platform_role": role, "capabilities": perm.sorted_permissions(role),
@@ -176,6 +188,8 @@ def _guard(fn):
         return fn()
     except AdminNotFound as exc:
         raise HTTPException(status_code=404, detail=str(exc))
+    except AdminForbidden as exc:
+        raise HTTPException(status_code=403, detail=str(exc))
 
 
 @router.post("/users/{user_id}/plan", summary="Move an account to the active version of a plan (audited, atomic)")
@@ -190,7 +204,8 @@ def set_user_plan(user_id: int, body: PlanAssignRequest, request: Request,
     audit = A.build_audit(event_type=A.ADMIN_SUBSCRIPTION_ASSIGNED, actor_user_id=principal.user_id,
                           request_id=get_request_id(request), target_type="user", target_id=user_id,
                           before=before["plan_code"] if before else None, after=body.plan_code)
-    return _guard(lambda: plans.assign(body.plan_code, user_id=user_id, source="admin", audit=audit, expected_revision=body.expected_revision))
+    pre = make_precondition(actor_user_id=principal.user_id, expected_revision=None, allow_self=True, hierarchy=False)   # 03C: acting administrator must still be active; row lock in the same transaction
+    return _guard(lambda: plans.assign(body.plan_code, user_id=user_id, source="admin", audit=audit, expected_revision=body.expected_revision, precondition=pre))   # 03B revision token
 
 
 @router.post("/users/{user_id}/status", summary="Deactivate or reactivate an account (audited, atomic)")
@@ -209,7 +224,9 @@ def set_status(user_id: int, body: StatusRequest, request: Request,
                           reason=body.reason, before=d["account"]["status"], after=body.status,
                           status=body.status)
     # Deactivation revokes every live session in the SAME transaction as the status change and the audit.
-    out = _guard(lambda: users.set_status(user_id, body.status, audit=audit))
+    pre = (make_precondition(actor_user_id=principal.user_id, expected_revision=body.expected_revision, allow_self=True, hierarchy=False)
+           if body.expected_revision else None)
+    out = _guard(lambda: users.set_status(user_id, body.status, audit=audit, precondition=pre))
     return {"user_id": user_id, "status": body.status, "changed": out["changed"],
             "sessions_revoked": out["sessions_revoked"]}
 
@@ -221,7 +238,9 @@ def revoke_sessions(user_id: int, request: Request, body: RevokeRequest | None =
     audit = A.build_audit(event_type=A.ADMIN_SESSIONS_REVOKED, actor_user_id=principal.user_id,
                           request_id=get_request_id(request), target_type="user", target_id=user_id,
                           reason=body.reason if body else None)
-    revoked = _guard(lambda: users.revoke_sessions(user_id, audit=audit))
+    # Hierarchy always applies (no force sign-out of a more privileged account); the revision only when supplied.
+    pre = make_precondition(actor_user_id=principal.user_id, expected_revision=body.expected_revision if body else None, allow_self=True)
+    revoked = _guard(lambda: users.revoke_sessions(user_id, audit=audit, precondition=pre))
     return {"user_id": user_id, "sessions_revoked": revoked}
 
 

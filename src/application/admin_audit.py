@@ -111,6 +111,10 @@ ADMIN_FLAG_OVERRIDE_RESET: Final = "admin.flag_override_reset"
 ADMIN_SPEECH_CONFIG_CHANGED: Final = "admin.speech_config_changed"
 # W10.13 (security, audit, incidents, alerts, role approval, step-up). Payloads: ids, enum before/after, filters, counts, field NAMES changed; never free text
 # of an incident, a password, a candidate's content or an IP/device value.
+# 03C (Admin Users). Payloads: counts, state names, a bounded reason and request/revision-free ids; never an email, token, link or candidate content.
+ADMIN_USER_VERIFICATION_RESENT: Final = "admin.user_verification_resent"
+ADMIN_USER_VERIFICATION_EXPIRED: Final = "admin.user_verification_expired"
+ADMIN_USER_DELETION_REQUESTED: Final = "admin.user_deletion_requested"
 ADMIN_ROLE_CHANGE_REQUESTED: Final = "admin.role_change.requested"
 ADMIN_ROLE_CHANGE_APPROVED: Final = "admin.role_change.approved"
 ADMIN_ROLE_CHANGE_REJECTED: Final = "admin.role_change.rejected"
@@ -152,6 +156,7 @@ ADMIN_EVENT_NAMES: Final[frozenset[str]] = frozenset({
     ADMIN_INVITATION_ISSUED, ADMIN_INVITATION_REVOKED,
     ADMIN_REPORT_CONFIG_CREATED, ADMIN_REPORT_CONFIG_UPDATED, ADMIN_REPORT_CONFIG_DELETED, ADMIN_REPORT_EXPORTED,
     ADMIN_FOUNDATION_QUALIFICATION_DECIDED, ADMIN_FOUNDATION_QUALIFICATION_REVOKED, ADMIN_FOUNDATION_ALIAS_DECIDED, ADMIN_FOUNDATION_ALIAS_REVOKED,
+    ADMIN_USER_VERIFICATION_RESENT, ADMIN_USER_VERIFICATION_EXPIRED, ADMIN_USER_DELETION_REQUESTED,
     ADMIN_ROLE_CHANGE_REQUESTED, ADMIN_ROLE_CHANGE_APPROVED, ADMIN_ROLE_CHANGE_REJECTED, ADMIN_ROLE_CHANGE_CANCELLED, ADMIN_ROLE_CHANGE_STALE,
     ADMIN_STEP_UP_SUCCEEDED, ADMIN_STEP_UP_FAILED, ADMIN_AUDIT_EXPORTED, SECURITY_INCIDENT_CREATED, SECURITY_INCIDENT_UPDATED,
     SECURITY_INCIDENT_STATUS_CHANGED, SECURITY_INCIDENT_TICKET_LINKED, SECURITY_INCIDENT_TICKET_UNLINKED, SECURITY_ALERT_ACKNOWLEDGED, SECURITY_ALERT_RESOLVED,

@@ -10,6 +10,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StrictInt
 
+from src.api.schemas.admin_users import AdminUserActivity, AdminUserAuth, AdminUserCases, AdminUserMembership
+
 
 class _Strict(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -115,6 +117,7 @@ class AdminUserSummary(_Strict):
     updated_at: str | None
     workspace_count: int
     active_session_count: int
+    last_activity: Literal["24h", "7d", "30d", "older", "never"] = "never"   # 03C: coarse bucket, never a timestamp
 
 
 class AdminUserList(_Strict):
@@ -168,6 +171,12 @@ class AdminUserDetail(_Strict):
     workspaces: list[AdminUserWorkspace]
     audit: list[AdminAuditEntry]
     plan: "SubjectPlan | None" = None
+    # 03C: complete detail (counts, buckets and states only)
+    revision: str = ""
+    auth: AdminUserAuth | None = None
+    activity: AdminUserActivity | None = None
+    cases: AdminUserCases | None = None
+    membership: AdminUserMembership | None = None
 
 
 class AdminWorkspaceSummary(_Strict):

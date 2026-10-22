@@ -19,6 +19,7 @@ const detail = vi.fn();
 const setStatus = vi.fn();
 const setRole = vi.fn();
 const revoke = vi.fn();
+const userAction = vi.fn();   // 03C: strict account actions (reason + account revision mandatory)
 const workspaces = vi.fn();
 const wsDetail = vi.fn();
 const addMember = vi.fn();
@@ -28,7 +29,8 @@ vi.mock("@/lib/api/client", () => ({
   api: { admin: {
     users: (...a: unknown[]) => users(...a), userDetail: (...a: unknown[]) => detail(...a),
     setStatus: (...a: unknown[]) => setStatus(...a), requestRoleChange: (...a: unknown[]) => setRole(...a),
-    revokeSessions: (...a: unknown[]) => revoke(...a), workspaces: (...a: unknown[]) => workspaces(...a),
+    revokeSessions: (...a: unknown[]) => revoke(...a), userAction: (...a: unknown[]) => userAction(...a),
+    assignablePlans: () => Promise.resolve([]), workspaces: (...a: unknown[]) => workspaces(...a),
     workspaceDetail: (...a: unknown[]) => wsDetail(...a), addWorkspaceMember: (...a: unknown[]) => addMember(...a),
     removeWorkspaceMember: (...a: unknown[]) => removeMember(...a), setWorkspaceMemberRole: (...a: unknown[]) => setMemberRole(...a),
   } },
@@ -47,7 +49,7 @@ const U = (id: number, over = {}) => ({ user_id: id, email: `u${id}@example.com`
   created_at: "2026-10-01T00:00:00", updated_at: "2026-10-01T00:00:00", workspace_count: 1, active_session_count: 2, ...over });
 
 const DETAIL = (over = {}) => ({
-  account: U(7), access: { platform_role: "user", capabilities: [], assignable_roles: ["user", "platform_admin", "support_operator"], is_self: false },
+  revision: "abcdef0123456789", account: U(7), access: { platform_role: "user", capabilities: [], assignable_roles: ["user", "platform_admin", "support_operator"], is_self: false },
   sessions: { active_count: 2, recent: [{ created_at: "2026-10-01T10:00:00", last_used_at: "2026-10-02T10:00:00", expires_at: "2026-10-30T10:00:00" }] },
   workspaces: [{ workspace_id: 3, name: "Team Alpha", workspace_status: "active", role: "workspace_member", membership_status: "active", joined_at: null }],
   audit: [{ event_type: "admin.account_status_change", result: "success", actor_user_id: 1, request_id: "req-1", created_at: null, context: { before: "active", after: "deactivated" } }],
@@ -67,6 +69,7 @@ beforeEach(() => {
   wsDetail.mockResolvedValue(WS);
   for (const m of [setStatus, setRole, addMember, removeMember, setMemberRole]) m.mockResolvedValue({ sessions_revoked: 2 });
   revoke.mockResolvedValue({ user_id: 7, sessions_revoked: 2 });
+  userAction.mockResolvedValue({ user_id: 7, action: "x", changed: true, sessions_revoked: 2, revision: "fedcba9876543210" });
 });
 afterEach(() => vi.clearAllMocks());
 
@@ -141,19 +144,20 @@ describe("User detail", () => {
     expect(within(dialog).getByRole("button", { name: "Cancel" })).toHaveFocus();
     await user.type(within(dialog).getByLabelText(/Reason/), "abuse report");
     await user.click(within(dialog).getByRole("button", { name: "Deactivate" }));
-    await waitFor(() => expect(setStatus).toHaveBeenCalledWith(7, "deactivated", "abuse report"));
-    expect(setStatus).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(userAction).toHaveBeenCalledWith(7, "deactivate", { expected_revision: "abcdef0123456789", reason: "abuse report" }));
+    expect(userAction).toHaveBeenCalledTimes(1);
     expect(await screen.findByText(/2 session\(s\) ended/)).toBeInTheDocument();
   });
 
   it("a failed write shows the error inside the dialog and is not retried", async () => {
     const user = userEvent.setup();
-    setStatus.mockRejectedValue(new Error("This would leave no active platform administrator."));
+    userAction.mockRejectedValue(new Error("This would leave no active platform administrator."));
     render(<UserDetailView userId={7} />);
     await user.click(await screen.findByRole("button", { name: "Deactivate account" }));
+    await user.type(within(screen.getByRole("alertdialog")).getByLabelText(/Reason/), "abuse report");
     await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Deactivate" }));
     expect(await within(screen.getByRole("alertdialog")).findByRole("alert")).toHaveTextContent(/no active platform administrator/);
-    expect(setStatus).toHaveBeenCalledTimes(1);
+    expect(userAction).toHaveBeenCalledTimes(1);
   });
 
   it("a self-view cannot start a deactivation", async () => {
@@ -182,8 +186,9 @@ describe("User detail", () => {
     const user = userEvent.setup();
     render(<UserDetailView userId={7} />);
     await user.click(await screen.findByRole("button", { name: /Force logout/ }));
+    await user.type(within(screen.getByRole("alertdialog")).getByLabelText(/Reason/), "lost device");
     await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Revoke sessions" }));
-    await waitFor(() => expect(revoke).toHaveBeenCalledWith(7, undefined));
+    await waitFor(() => expect(userAction).toHaveBeenCalledWith(7, "force-signout", { expected_revision: "abcdef0123456789", reason: "lost device" }));
     expect(await screen.findByText("2 session(s) revoked.")).toBeInTheDocument();
   });
 

@@ -251,7 +251,8 @@ class PlanRepository:
     # -- subscriptions ----------------------------------------------------------------------------------
 
     def assign(self, plan_code: str, *, user_id: int | None = None, workspace_id: int | None = None,
-               source: str = "admin", audit: dict | None = None, expected_revision: str | None = None) -> dict:
+               source: str = "admin", audit: dict | None = None, expected_revision: str | None = None,
+               precondition=None) -> dict:
         """Move ONE subject to the ACTIVE version of ``plan_code``: end the old subscription, add the new one,
         keep the legacy tier column in step (user subjects), and write the audit row, all in one transaction."""
         if (user_id is None) == (workspace_id is None):
@@ -259,13 +260,14 @@ class PlanRepository:
         with self._sf() as s:
             seed_default_plans(s)
             out = self.assign_in_session(s, plan_code, user_id=user_id, workspace_id=workspace_id, source=source,
-                                         audit=audit, expected_revision=expected_revision)
+                                         audit=audit, expected_revision=expected_revision, precondition=precondition)
             s.commit()
             return out
 
     @staticmethod
     def assign_in_session(s: Session, plan_code: str, *, user_id: int | None = None, workspace_id: int | None = None,
-                          source: str = "admin", audit: dict | None = None, expected_revision: str | None = None) -> dict:
+                          source: str = "admin", audit: dict | None = None, expected_revision: str | None = None,
+                          precondition=None) -> dict:
         """The assignment body, inside the caller's transaction (no commit): used by ``assign`` and by bulk assignment so
         every subject goes through the SAME code path, and the caller decides the transaction boundary."""
         target = s.scalar(select(PlanVersion).where(PlanVersion.plan_code == plan_code,
@@ -273,8 +275,11 @@ class PlanRepository:
         if target is None:
             raise ConflictError("That plan has no active version to assign.")
         if user_id is not None:
-            if s.get(User, user_id) is None:
+            target_user = s.get(User, user_id, with_for_update=True)       # 03C: lock the account row for the whole assignment
+            if target_user is None:
                 raise AdminNotFound("Account not found.")
+            if precondition:
+                precondition(s, target_user)                                 # 03C: acting administrator still active / self and hierarchy guards, in the same transaction
             cond, subject = Subscription.user_id == user_id, ("user", user_id)
         else:
             if s.get(Workspace, workspace_id) is None:

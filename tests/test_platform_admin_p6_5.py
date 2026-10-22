@@ -48,7 +48,7 @@ def test_admin_can_access_and_view_is_metadata_only():
     c, token, _, _ = _admin_client()
     try:
         users = c.get("/api/v1/admin/users", cookies=cookies_for(token)).json()["users"]
-        allowed = {"user_id", "email", "display_name", "platform_role", "status", "email_verified", "tier", "created_at", "updated_at", "onboarding_completed", "interface_locale", "workspace_count", "active_session_count"}
+        allowed = {"user_id", "email", "display_name", "platform_role", "status", "email_verified", "tier", "created_at", "updated_at", "onboarding_completed", "interface_locale", "workspace_count", "active_session_count", "last_activity"}
         assert users and all(set(u) <= allowed for u in users)
         for bad in ("comment", "answers", "documents", "memory", "report"):
             assert all(bad not in u for u in users)
