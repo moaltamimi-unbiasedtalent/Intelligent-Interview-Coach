@@ -43,7 +43,7 @@ export function StoryPicker({
 
   useEffect(() => {
     let live = true;
-    Promise.resolve().then(() => api.stories.list()).then((r) => { if (live) setStories(r.stories); }).catch(() => { if (live) { setStories([]); setFailed(true); } });
+    Promise.resolve().then(() => api.stories.list()).then((r) => { if (live) setStories(r.stories ?? []); }).catch(() => { if (live) { setStories([]); setFailed(true); } });
     return () => { live = false; };
   }, []);
 

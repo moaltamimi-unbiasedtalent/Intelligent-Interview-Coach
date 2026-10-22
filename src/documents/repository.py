@@ -400,19 +400,41 @@ class StoryRepository:
             s.commit()
             return self._dict(s, st)
 
-    def _owned_answer(self, s, user_id: int, answer_id: int) -> Answer | None:
+    def _owned_answer(self, s, user_id: int, answer_id: int, allowed_interview_ids: list[int] | None = None) -> Answer | None:
         a = s.get(Answer, answer_id)
         if a is None:
             return None
         q = s.get(Question, a.question_id)
         iv = s.get(Interview, q.interview_id) if q is not None else None
-        return a if iv is not None and iv.user_id == user_id else None
+        if iv is None or iv.user_id != user_id:
+            return None
+        if allowed_interview_ids is not None and iv.id not in allowed_interview_ids:
+            return None                    # outside the caller's history window: treated exactly like a missing answer
+        return a
 
-    def attach_answer(self, *, user_id: int, story_id: int, answer_id: int) -> dict | None:
-        """Link one of the caller's OWN practice answers (a reference only). None = not owned/missing."""
+    def answer_sources(self, user_id: int, allowed_interview_ids: list[int] | None, limit: int = 40) -> list[dict]:
+        """The caller's own answered questions that can be linked as evidence: ids and the QUESTION text only (never the answer text),
+        newest interviews first, bounded, and restricted to the history window when one applies."""
+        with self._sf() as s:
+            q = select(Interview).where(Interview.user_id == user_id, Interview.status == "completed")
+            if allowed_interview_ids is not None:
+                q = q.where(Interview.id.in_(allowed_interview_ids or [-1]))
+            out: list[dict] = []
+            for iv in s.scalars(q.order_by(Interview.created_at.desc(), Interview.id.desc()).limit(10)).all():
+                for qu in s.scalars(select(Question).where(Question.interview_id == iv.id).order_by(Question.position)).all():
+                    ans = s.scalar(select(Answer).where(Answer.question_id == qu.id))
+                    if ans is not None and (ans.text or "").strip():
+                        out.append({"answer_id": ans.id, "interview_id": iv.id, "position": qu.position, "question": qu.canonical_question[:160],
+                                    "created_at": iv.created_at.isoformat() if iv.created_at else None})
+                        if len(out) >= limit:
+                            return out
+            return out
+
+    def attach_answer(self, *, user_id: int, story_id: int, answer_id: int, allowed_interview_ids: list[int] | None = None) -> dict | None:
+        """Link one of the caller's OWN practice answers (a reference only). None = not owned/missing/outside the history window."""
         with self._sf() as s:
             st = s.get(CandidateStory, story_id)
-            if st is None or st.user_id != user_id or self._owned_answer(s, user_id, answer_id) is None:
+            if st is None or st.user_id != user_id or self._owned_answer(s, user_id, answer_id, allowed_interview_ids) is None:
                 return None
             if s.scalar(select(StoryAnswerLink).where(StoryAnswerLink.story_id == story_id, StoryAnswerLink.answer_id == answer_id)) is None:
                 s.add(StoryAnswerLink(story_id=story_id, answer_id=answer_id))

@@ -12,7 +12,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Path
 from pydantic import BaseModel, Field
 
-from src.api.dependencies import get_current_user_id, get_sharing_service, get_stories_service
+from src.api.dependencies import get_current_user_id, get_history_access_policy, get_repository, get_sharing_service, get_stories_service
 from src.api.schemas.documents import (
     DeleteResponse,
     StoryCreateRequest,
@@ -29,6 +29,23 @@ from src.api.schemas.documents import (
 router = APIRouter(prefix="/stories", tags=["documents"])
 
 _NOT_FOUND = "Story not found."
+
+
+class AnswerSource(BaseModel):
+    answer_id: int
+    interview_id: int
+    position: int
+    question: str
+    created_at: str | None = None
+
+
+class AnswerSourcesResponse(BaseModel):
+    sources: list[AnswerSource]
+
+
+def _allowed_interviews(repo, policy, user_id: int):
+    """Interview ids the caller may use as evidence: the history window (None = unrestricted). Linking never widens a history entitlement."""
+    return repo.eligible_ids(user_id, policy.window_for(user_id))
 
 
 class StorySearchRequest(BaseModel):
@@ -67,6 +84,12 @@ def story_tags(svc=Depends(get_stories_service), user_id: int = Depends(get_curr
 @router.post("/suggest", response_model=StorySuggestResponse, summary="Suggest the caller's own stories for an interview (proposals only; the candidate approves)")
 def suggest_stories(body: StorySuggestRequest, svc=Depends(get_stories_service), user_id: int = Depends(get_current_user_id)) -> StorySuggestResponse:
     return StorySuggestResponse(suggestions=svc.suggest(user_id=user_id, terms=body.terms, opportunity_id=body.opportunity_id, limit=body.limit))
+
+
+@router.get("/answer-sources", response_model=AnswerSourcesResponse, summary="The caller's own answered practice questions that can be linked as evidence (question text only)")
+def answer_sources(svc=Depends(get_stories_service), repo=Depends(get_repository), policy=Depends(get_history_access_policy),
+                   user_id: int = Depends(get_current_user_id)) -> AnswerSourcesResponse:
+    return AnswerSourcesResponse(sources=[AnswerSource(**r) for r in svc.answer_sources(user_id=user_id, allowed_interview_ids=_allowed_interviews(repo, policy, user_id))])
 
 
 @router.post("", response_model=StoryOut, status_code=201, summary="Create a story")
@@ -122,8 +145,10 @@ def unconfirm_story(story_id: int = Path(...), svc=Depends(get_stories_service),
 
 
 @router.post("/{story_id}/evidence", response_model=StoryOut, summary="Link one of the caller's own claims or practice answers as evidence")
-def attach_evidence(body: StoryEvidenceRequest, story_id: int = Path(...), svc=Depends(get_stories_service), user_id: int = Depends(get_current_user_id)) -> StoryOut:
-    return _found(svc.attach_evidence(user_id=user_id, story_id=story_id, kind=body.kind, ref_id=body.ref_id))
+def attach_evidence(body: StoryEvidenceRequest, story_id: int = Path(...), svc=Depends(get_stories_service), repo=Depends(get_repository),
+                    policy=Depends(get_history_access_policy), user_id: int = Depends(get_current_user_id)) -> StoryOut:
+    allowed = _allowed_interviews(repo, policy, user_id) if body.kind == "answer" else None
+    return _found(svc.attach_evidence(user_id=user_id, story_id=story_id, kind=body.kind, ref_id=body.ref_id, allowed_interview_ids=allowed))
 
 
 @router.delete("/{story_id}/evidence/{kind}/{ref_id}", response_model=StoryOut, summary="Remove an evidence link")

@@ -473,7 +473,7 @@ def test_every_story_route_is_404_for_another_owner_and_401_without_a_session():
     assert e.c.post(f"{S}/suggest", json={"terms": ["migration", "leadership"]}, cookies=e.ck_b).json()["suggestions"] == []
     # authentication is required on every method and path
     anon = [("GET", S, None), ("POST", S, {"title": "x"}), ("POST", f"{S}/draft", {"claim_ids": [1]}), ("POST", f"{S}/search", {}), ("GET", f"{S}/tags", None),
-            ("POST", f"{S}/suggest", {"terms": []})] + [(m, p, b) for m, p, b in per_story]
+            ("GET", f"{S}/answer-sources", None), ("POST", f"{S}/suggest", {"terms": []})] + [(m, p, b) for m, p, b in per_story]
     # (development/test environments allow an anonymous developer identity by design; production is fail-closed, so probe a production app)
     prod_app, _repo, _mail = build_auth_app(env="production")
     with TestClient(prod_app) as pc:
@@ -642,3 +642,27 @@ def test_privacy_schema_exception_is_exact(tmp_path):
     assert offenders("0099_story_bank_completion.py", ok) == {}                                      # renumbering keeps the exception
     assert offenders("0099_story_bank_completion.py", 'def upgrade():\n    op.drop_table("share_grants")\n') == {"0099_story_bank_completion.py": ["share_grants"]}
     assert offenders("0099_something_else.py", ok) == {"0099_something_else.py": ["candidate_stories"]}   # no other migration is exempt
+
+
+# --- answer evidence sources never widen the history window -----------------------------------------------------------------------------------------
+
+def test_answer_sources_list_question_text_only_owner_only_and_respect_the_history_window():
+    e = Env()
+    st = e.story()
+    old_aid = e.answer_id(e.uid_a)
+    new_aid = e.answer_id(e.uid_a)
+    b_aid = e.answer_id(e.uid_b)
+    src = e.c.get(f"{S}/answer-sources", cookies=e.ck_a).json()["sources"]
+    assert {s["answer_id"] for s in src} == {old_aid, new_aid}                                  # never another account's
+    assert all("My own answer" not in json.dumps(s) and s["question"] == "Tell me about a challenge." for s in src)
+    assert e.c.get(f"{S}/answer-sources", cookies=e.ck_b).json()["sources"][0]["answer_id"] == b_aid
+
+    class _Window:                                                                              # a Basic-style window of ONE interview
+        def window_for(self, user_id):
+            return 1
+
+    e.app.dependency_overrides[deps.get_history_access_policy] = lambda: _Window()
+    windowed = e.c.get(f"{S}/answer-sources", cookies=e.ck_a).json()["sources"]
+    assert [s["answer_id"] for s in windowed] == [new_aid]
+    assert e.c.post(f"{S}/{st['id']}/evidence", json={"kind": "answer", "ref_id": old_aid}, cookies=e.ck_a).status_code == 404   # outside the window = missing
+    assert e.c.post(f"{S}/{st['id']}/evidence", json={"kind": "answer", "ref_id": new_aid}, cookies=e.ck_a).status_code == 200

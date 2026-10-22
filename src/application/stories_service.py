@@ -229,12 +229,15 @@ class StoriesApplicationService:
 
     # -- evidence ------------------------------------------------------------------------
 
-    def attach_evidence(self, *, user_id: int, story_id: int, kind: str, ref_id: int) -> dict | None:
+    def attach_evidence(self, *, user_id: int, story_id: int, kind: str, ref_id: int, allowed_interview_ids: list[int] | None = None) -> dict | None:
         if kind == "claim":
             return self._stories.attach_claim(user_id=user_id, story_id=story_id, claim_id=ref_id)
         if kind == "answer":
-            return self._stories.attach_answer(user_id=user_id, story_id=story_id, answer_id=ref_id)
+            return self._stories.attach_answer(user_id=user_id, story_id=story_id, answer_id=ref_id, allowed_interview_ids=allowed_interview_ids)
         raise ValidationError("Unknown evidence kind.")
+
+    def answer_sources(self, *, user_id: int, allowed_interview_ids: list[int] | None) -> list[dict]:
+        return self._stories.answer_sources(user_id, allowed_interview_ids)
 
     def detach_evidence(self, *, user_id: int, story_id: int, kind: str, ref_id: int) -> dict | None:
         if kind == "claim":

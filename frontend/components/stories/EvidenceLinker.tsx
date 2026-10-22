@@ -33,11 +33,11 @@ export function EvidenceLinker({ story, onChanged }: { story: StoryOut; onChange
   const loadDocs = useCallback(async () => {
     try {
       const r = await api.documents.list();
-      setDocs(r.documents.filter((d) => d.status === "ready" || d.status === "review_required"));
+      setDocs((r.documents ?? []).filter((d) => d.status === "ready" || d.status === "review_required"));
     } catch { setDocs([]); }
   }, []);
   const loadSources = useCallback(async () => {
-    try { setSources((await api.stories.answerSources()).sources); } catch { setSources([]); }
+    try { setSources((await api.stories.answerSources()).sources ?? []); } catch { setSources([]); }
   }, []);
 
   useEffect(() => { if (kind === "claim" && docs === null) void loadDocs(); }, [kind, docs, loadDocs]);
@@ -45,7 +45,7 @@ export function EvidenceLinker({ story, onChanged }: { story: StoryOut; onChange
   useEffect(() => {
     if (!docId) { setClaims([]); setClaimId(""); return; }
     let live = true;
-    api.documents.get(Number(docId)).then((d) => { if (live) setClaims(d.claims.filter((c) => c.review_state !== "rejected")); }).catch(() => { if (live) setClaims([]); });
+    api.documents.get(Number(docId)).then((d) => { if (live) setClaims((d.claims ?? []).filter((c) => c.review_state !== "rejected")); }).catch(() => { if (live) setClaims([]); });
     return () => { live = false; };
   }, [docId]);
 

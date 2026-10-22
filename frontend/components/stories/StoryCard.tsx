@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Alert } from "@/components/ui/Alert";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EvidenceLinker } from "@/components/stories/EvidenceLinker";
+import { StoryShare } from "@/components/stories/StoryShare";
 import { QUALITY_KEY, STATUS_KEY, VERIFICATION_HELP_KEY, VERIFICATION_KEY, VERIFICATION_TONE, verificationOf } from "@/components/stories/storyVocab";
 
 const STAR = [
@@ -36,6 +37,7 @@ export function StoryCard({
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showLink, setShowLink] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const v = verificationOf(story);
   const archived = Boolean(story.archived_at);
   const opportunity = opportunities.find((o) => o.id === story.opportunity_id);
@@ -127,6 +129,7 @@ export function StoryCard({
             : <button type="button" className={link} disabled={busy} onClick={() => void run(() => api.stories.confirm(story.id))}>{t("storyBank.confirm")}</button>
         ) : null}
         {!archived ? <button type="button" className={link} aria-expanded={showLink} disabled={busy} onClick={() => setShowLink((x) => !x)}>{t("storyBank.linkToggle")}</button> : null}
+        {!archived ? <button type="button" className={link} aria-expanded={showShare} disabled={busy} onClick={() => setShowShare((x) => !x)}>{t("storyBank.shareToggle")}</button> : null}
         {archived
           ? <button type="button" className={link} disabled={busy} onClick={() => void run(() => api.stories.restore(story.id))}>{t("storyBank.restore")}</button>
           : <button type="button" className={link} disabled={busy} onClick={() => void run(() => api.stories.archive(story.id))}>{t("storyBank.archive")}</button>}
@@ -135,6 +138,7 @@ export function StoryCard({
       {!archived && !story.confirmed_at ? <p className="mt-1 text-xs text-muted">{t("storyBank.confirmHelp")}</p> : null}
 
       {showLink && !archived ? <EvidenceLinker story={story} onChanged={onChanged} /> : null}
+      {showShare && !archived ? <StoryShare storyId={story.id} /> : null}
 
       <ConfirmDialog
         open={confirmDelete} title={t("storyBank.deleteTitle")} confirmLabel={t("storyBank.delete")} busy={busy}

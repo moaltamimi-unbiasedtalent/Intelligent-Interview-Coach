@@ -47,7 +47,7 @@ export function StoryBank({ refreshKey = 0 }: { refreshKey?: number }) {
           })
         : await api.stories.list();
       if (mine !== seq.current) return;              // a newer search superseded this one
-      setStories(res.stories);
+      setStories(res.stories ?? []);
       setError(null);
     } catch (err) {
       if (mine !== seq.current) return;
@@ -63,10 +63,10 @@ export function StoryBank({ refreshKey = 0 }: { refreshKey?: number }) {
   }, [filters, load, refreshKey]);
 
   // Tags and Opportunities only feed the filter and editor controls; a failure leaves them empty and never blocks the list.
-  const loadTags = useCallback(() => { void Promise.resolve().then(() => api.stories.tags()).then((r) => setTags(r.tags)).catch(() => setTags([])); }, []);
+  const loadTags = useCallback(() => { void Promise.resolve().then(() => api.stories.tags()).then((r) => setTags(r.tags ?? [])).catch(() => setTags([])); }, []);
   useEffect(() => {
     loadTags();
-    void Promise.resolve().then(() => api.opportunities.list()).then((r) => setOpportunities(r.opportunities)).catch(() => setOpportunities([]));
+    void Promise.resolve().then(() => api.opportunities.list()).then((r) => setOpportunities(r.opportunities ?? [])).catch(() => setOpportunities([]));
   }, [refreshKey, loadTags]);
 
   const reloadTags = loadTags;
