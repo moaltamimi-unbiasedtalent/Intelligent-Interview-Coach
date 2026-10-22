@@ -6,9 +6,9 @@ import json
 from datetime import timedelta
 
 from fastapi.testclient import TestClient
-from sqlalchemy import select, update
+from sqlalchemy import select
 
-from src.auth_repository import AccountRepository, AuditRepository
+from src.auth_repository import AccountRepository
 from src.invitations import repository as R
 from src.persistence import AuditEvent, RegistrationInvitation, utcnow
 from tests._auth_factories import build_auth_app, cookies_for, login_token
@@ -108,4 +108,4 @@ def full_database_text(env: Env) -> str:
     return "\n".join(out)
 
 
-__all__ = ["Env", "API", "PW", "REFUSAL", "refusal_body", "full_database_text", "update"]
+__all__ = ["Env", "API", "PW", "REFUSAL", "refusal_body", "full_database_text"]

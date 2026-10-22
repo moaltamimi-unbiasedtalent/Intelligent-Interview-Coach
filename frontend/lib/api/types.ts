@@ -959,6 +959,8 @@ export interface RegisterRequest {
   display_name?: string | null;
   /** Interface language for transactional email (one of the eight product locales). */
   locale?: string | null;
+  /** Private-beta invitation code (04E). The server decides whether one is required; it is never stored in the browser. */
+  invitation_code?: string | null;
 }
 
 export interface LoginRequest {

@@ -127,3 +127,51 @@ def test_create_all_and_the_migration_agree_on_the_table(tmp_path, monkeypatch):
     cfg, url = _alembic(tmp_path, monkeypatch)
     command.upgrade(cfg, REV)
     assert created == {c["name"] for c in inspect(create_engine(url)).get_columns("registration_invitations")}
+
+
+# ===================================================================== privacy schema invariant (the one shared guard 0041 interacts with)
+def _privacy_evaluator():
+    import importlib.util
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location("eval_privacy_controls_04e", root / "scripts/eval_privacy_controls.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return root, mod
+
+
+def test_0041_only_points_at_users_with_foreign_keys_and_the_privacy_invariant_still_holds():
+    import tests.conftest  # noqa: F401  (isolation first)
+    from src.persistence import Base
+
+    root, ev = _privacy_evaluator()
+    known = set(Base.metadata.tables)
+    src = (root / "migrations/versions/0041_registration_invitations.py").read_text(encoding="utf-8")
+    assert ev.migration_tables_touched(src, known) == {"registration_invitations"}      # its own table only; "users.id" targets are references, not changes
+    assert ev.post_baseline_privacy_touches(root / "migrations/versions", known) == {}
+
+
+_FK = 'op.create_table("t", sa.Column("u", sa.Integer()), sa.ForeignKeyConstraint(["u"], ["users.id"]))\n'
+
+
+@pytest.mark.parametrize("body, tables", [
+    ('def upgrade():\n    op.add_column("users", sa.Column("x", sa.Text()))\n', ["users"]),
+    ('def upgrade():\n    op.create_foreign_key("fk", "interviews", "users", ["user_id"], ["id"])\n', ["interviews", "users"]),
+    ('def upgrade():\n    op.execute("UPDATE users SET status = 1")\n', ["users"]),
+])
+def test_foreign_key_targets_are_exempt_but_every_real_alteration_of_a_privacy_table_still_fails(tmp_path, body, tables):
+    import tests.conftest  # noqa: F401
+    from src.persistence import Base
+
+    _, ev = _privacy_evaluator()
+    known = set(Base.metadata.tables)
+    head = '"""x"""\nimport sqlalchemy as sa\nfrom alembic import op\n'
+    only_fk = tmp_path / "only_fk"
+    only_fk.mkdir()
+    (only_fk / "0099_only_fk.py").write_text(head + "def upgrade():\n    " + _FK, encoding="utf-8")
+    assert ev.post_baseline_privacy_touches(only_fk, known) == {}                  # a migration with ONLY a foreign-key target passes
+    altering = tmp_path / "altering"
+    altering.mkdir()
+    (altering / "0100_alter.py").write_text(head + body.replace("def upgrade():\n", "def upgrade():\n    " + _FK, 1), encoding="utf-8")
+    assert ev.post_baseline_privacy_touches(altering, known) == {"0100_alter.py": tables}     # the same migration ALSO altering the table is still flagged

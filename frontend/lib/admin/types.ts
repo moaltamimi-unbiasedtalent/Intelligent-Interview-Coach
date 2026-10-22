@@ -878,3 +878,26 @@ export interface SpeechOverview {
   provider_facts: Record<string, Record<string, unknown>>; authorization: Record<string, boolean>; note: string;
 }
 export type SpeechConfigPatch = Partial<Pick<SpeechConfig, "stt_enabled" | "tts_enabled" | "languages" | "browser_stt_allowed" | "browser_tts_allowed" | "stt_timeout_seconds" | "tts_timeout_seconds">>;
+
+// 04E: private-beta registration invitations (Admin). State and masked identifiers only; the code and link exist ONLY in the issue response.
+export type InvitationState = "pending" | "redeemed" | "expired" | "revoked";
+export interface AdminInvitationRow {
+  id: number;
+  state: InvitationState;
+  created_at: string;
+  expires_at: string;
+  redeemed_at: string | null;
+  revoked_at: string | null;
+  email_bound: boolean;
+  email_hint: string | null;
+  issued_by_user_id: number | null;
+}
+export interface AdminInvitationPage {
+  items: AdminInvitationRow[];
+  total: number;
+  counts: Record<string, number>;
+}
+export interface AdminInvitationIssued extends AdminInvitationRow {
+  code: string;
+  link: string;
+}

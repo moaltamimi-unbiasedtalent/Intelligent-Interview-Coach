@@ -48,6 +48,10 @@ def migration_tables_touched(source: str, known_tables: set[str]) -> set[str]:
     literals = [n.value for n in ast.walk(tree) if isinstance(n, ast.Constant) and isinstance(n.value, str)]
     touched: set[str] = set()
     for text in literals:
+        # A column-qualified literal such as "users.id" is a foreign-key TARGET: a new table that points at a privacy table (and whose deletion and export handling is reviewed
+        # with it) does not alter that table. Any other mention of the table name (add_column, batch_alter_table, drop_table, raw SQL, a bare "users") still counts. (04E)
+        if re.fullmatch(r"[a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*", text):
+            continue
         for table in known_tables:
             if text == table or re.search(rf"\b{re.escape(table)}\b", text):
                 touched.add(table)
