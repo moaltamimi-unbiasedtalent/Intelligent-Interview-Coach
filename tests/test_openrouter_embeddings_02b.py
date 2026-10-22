@@ -34,7 +34,7 @@ from src.llm.budget import config as C
 from src.llm.budget import governor as G
 from src.persistence import AiBudgetEntry, Base, make_engine, make_session_factory
 from tests._knowledge_env_02a import Process, release_chroma
-from tests.test_ai_budget_governor_05c import MARKER, make_gov, raw_config
+from tests.test_ai_budget_governor_05c import make_gov, raw_config
 
 KEY = "sk-or-v1-SENTINEL-EMBED-KEY-0123456789"
 MODEL = "provider/embed"                     # priced in tests.test_ai_budget_governor_05c.raw_config; NOT in the catalogue, so dimensions come from config
