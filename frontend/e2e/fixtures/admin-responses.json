@@ -2135,9 +2135,11 @@
     "created_at": "2026-10-05T22:15:15.221178",
     "display_name": "Basic",
     "enabled_entitlements": 4,
+    "family_revision": "fedcba9876543210",
     "id": 1,
     "plan_code": "basic",
     "retired_at": null,
+    "revision": "0123456789abcdef",
     "status": "active",
     "subscribers": {
      "users": 7,
@@ -2151,9 +2153,11 @@
     "created_at": "2026-10-05T22:15:15.222346",
     "display_name": "Premium (preview)",
     "enabled_entitlements": 5,
+    "family_revision": "fedcba9876543210",
     "id": 2,
     "plan_code": "premium",
     "retired_at": null,
+    "revision": "0123456789abcdef",
     "status": "active",
     "subscribers": {
      "users": 0,
@@ -2176,6 +2180,132 @@
    "version": 1
   }
  ],
+ "/admin/plans/matrix": {
+  "entitlements": [
+   {
+    "bounds": {
+     "kind": "boolean",
+     "max_limit": null,
+     "min_limit": null,
+     "premium_only": false
+    },
+    "code": "current_market_research",
+    "description": "Company and market research (gates POST /research/company).",
+    "label": "Current-market research",
+    "type": "boolean"
+   },
+   {
+    "bounds": {
+     "kind": "boolean",
+     "max_limit": null,
+     "min_limit": null,
+     "premium_only": false
+    },
+    "code": "standard_history",
+    "description": "Practice history access (currently free for everyone).",
+    "label": "Standard history",
+    "type": "boolean"
+   },
+   {
+    "bounds": {
+     "kind": "boolean",
+     "max_limit": null,
+     "min_limit": null,
+     "premium_only": false
+    },
+    "code": "standard_progress",
+    "description": "Progress access (currently free for everyone).",
+    "label": "Standard progress",
+    "type": "boolean"
+   },
+   {
+    "bounds": {
+     "kind": "boolean",
+     "max_limit": null,
+     "min_limit": null,
+     "premium_only": false
+    },
+    "code": "standard_model_profiles",
+    "description": "Fast, Balanced and Advanced model profiles (currently free for everyone).",
+    "label": "Standard model profiles",
+    "type": "boolean"
+   },
+   {
+    "bounds": {
+     "kind": "boolean",
+     "max_limit": null,
+     "min_limit": null,
+     "premium_only": true
+    },
+    "code": "premium_preview",
+    "description": "Non-destructive Premium preview endpoint (preview only; not purchasable).",
+    "label": "Premium preview features",
+    "type": "boolean"
+   }
+  ],
+  "versions": [
+   {
+    "display_name": "Basic",
+    "id": 1,
+    "plan_code": "basic",
+    "revision": "0123456789abcdef",
+    "status": "active",
+    "values": {
+     "current_market_research": {
+      "enabled": true,
+      "limit": null
+     },
+     "premium_preview": {
+      "enabled": false,
+      "limit": null
+     },
+     "standard_history": {
+      "enabled": true,
+      "limit": null
+     },
+     "standard_model_profiles": {
+      "enabled": true,
+      "limit": null
+     },
+     "standard_progress": {
+      "enabled": true,
+      "limit": null
+     }
+    },
+    "version": 1
+   },
+   {
+    "display_name": "Premium (preview)",
+    "id": 2,
+    "plan_code": "premium",
+    "revision": "0123456789abcdef",
+    "status": "active",
+    "values": {
+     "current_market_research": {
+      "enabled": true,
+      "limit": null
+     },
+     "premium_preview": {
+      "enabled": true,
+      "limit": null
+     },
+     "standard_history": {
+      "enabled": true,
+      "limit": null
+     },
+     "standard_model_profiles": {
+      "enabled": true,
+      "limit": null
+     },
+     "standard_progress": {
+      "enabled": true,
+      "limit": null
+     }
+    },
+    "version": 1
+   }
+  ]
+ },
  "/admin/privacy-requests": {
   "note": "Durable queue (W10.10). Full handling is at /admin/privacy.",
   "requests": [],

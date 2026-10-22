@@ -6,7 +6,7 @@ import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities"
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import type { AssignablePlan, SubjectPlan } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
-import { KeyValue, Panel, Table, btn, field } from "./ui";
+import { KeyValue, Panel, Table, btn, field, useAdminResource } from "./ui";
 
 /**
  * Plan panel for one subject (an account or a workspace): current plan, history and a governed change.
@@ -25,6 +25,8 @@ export function PlanControl({ plan, subject, onChanged }: {
   useEffect(() => {
     if (canManage) api.admin.assignablePlans().then(setOptions).catch(() => setOptions([]));
   }, [canManage]);
+  // 03B: the change quotes the revision of the subject's subscription as last loaded, so a concurrent change is refused (409), not overwritten.
+  const state = useAdminResource(() => (canManage ? api.admin.planSubject(subject.kind, subject.id) : Promise.resolve(null)), [canManage, subject.kind, subject.id]);
 
   const cur = plan?.current ?? null;
   const target = options.find((o) => o.plan_code === choice);
@@ -58,8 +60,15 @@ export function PlanControl({ plan, subject, onChanged }: {
       <ActionDialog open={open} title="Change plan?" confirmLabel="Change plan" askReason={false} onClose={() => setOpen(false)}
         onConfirm={async () => {
           if (!target) return;
-          if (subject.kind === "user") await api.admin.setUserPlan(subject.id, target.plan_code);
-          else await api.admin.setWorkspacePlan(subject.id, target.plan_code);
+          const revision = state.state === "ready" && state.data ? state.data.revision : undefined;
+          try {
+            if (subject.kind === "user") await api.admin.setUserPlan(subject.id, target.plan_code, revision);
+            else await api.admin.setWorkspacePlan(subject.id, target.plan_code, revision);
+          } catch (e) {
+            state.reload();
+            throw e;
+          }
+          state.reload();
           setChoice("");
           onChanged(`Plan changed to ${target.display_name}. The previous subscription is kept in the history.`);
         }}>

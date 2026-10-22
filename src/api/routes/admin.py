@@ -72,6 +72,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 class PlanAssignRequest(BaseModel):
     plan_code: str = Field(max_length=32)
+    expected_revision: str | None = Field(default=None, max_length=64)   # 03B: enforced when supplied (the Admin UI always sends it)
 
 
 class StatusRequest(BaseModel):
@@ -189,7 +190,7 @@ def set_user_plan(user_id: int, body: PlanAssignRequest, request: Request,
     audit = A.build_audit(event_type=A.ADMIN_SUBSCRIPTION_ASSIGNED, actor_user_id=principal.user_id,
                           request_id=get_request_id(request), target_type="user", target_id=user_id,
                           before=before["plan_code"] if before else None, after=body.plan_code)
-    return _guard(lambda: plans.assign(body.plan_code, user_id=user_id, source="admin", audit=audit))
+    return _guard(lambda: plans.assign(body.plan_code, user_id=user_id, source="admin", audit=audit, expected_revision=body.expected_revision))
 
 
 @router.post("/users/{user_id}/status", summary="Deactivate or reactivate an account (audited, atomic)")
@@ -260,7 +261,7 @@ def set_workspace_plan(workspace_id: int, body: PlanAssignRequest, request: Requ
     audit = A.build_audit(event_type=A.ADMIN_SUBSCRIPTION_ASSIGNED, actor_user_id=principal.user_id,
                           request_id=get_request_id(request), target_type="workspace", target_id=workspace_id,
                           before=before["plan_code"] if before else None, after=body.plan_code)
-    return _guard(lambda: plans.assign(body.plan_code, workspace_id=workspace_id, source="admin", audit=audit))
+    return _guard(lambda: plans.assign(body.plan_code, workspace_id=workspace_id, source="admin", audit=audit, expected_revision=body.expected_revision))
 
 
 def _ws_audit(event: str, request: Request, principal, workspace_id: int, **ctx):

@@ -67,6 +67,12 @@ import type {
   AssignablePlan,
   PlanDetail,
   PlanVersionRow,
+  PlanMatrix,
+  PlanComparison,
+  PlanSubjectState,
+  PlanVersionAssignments,
+  PlanExplanation,
+  PlanAssignmentPreview,
   AdminProviders,
   AdminTicketDetail,
   AdminTicketQuery,
@@ -686,10 +692,12 @@ export const api = {
       request<Incident>("POST", `/admin/security/incidents/${encodeURIComponent(id)}/tickets/link`, { body: { ticket_public_id: ticket, expected_revision: expectedRevision }, ...opts }),
     unlinkIncidentTicket: (id: string, ticket: string, expectedRevision: number, opts?: RequestOptions) =>
       request<Incident>("POST", `/admin/security/incidents/${encodeURIComponent(id)}/tickets/unlink`, { body: { ticket_public_id: ticket, expected_revision: expectedRevision }, ...opts }),
-    setUserPlan: (userId: number, planCode: string, opts?: RequestOptions) =>
-      request<Record<string, unknown>>("POST", `/admin/users/${userId}/plan`, { body: { plan_code: planCode }, ...opts }),
-    setWorkspacePlan: (workspaceId: number, planCode: string, opts?: RequestOptions) =>
-      request<Record<string, unknown>>("POST", `/admin/workspaces/${workspaceId}/plan`, { body: { plan_code: planCode }, ...opts }),
+    setUserPlan: (userId: number, planCode: string, expectedRevision?: string, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/users/${userId}/plan`,
+        { body: expectedRevision ? { plan_code: planCode, expected_revision: expectedRevision } : { plan_code: planCode }, ...opts }),
+    setWorkspacePlan: (workspaceId: number, planCode: string, expectedRevision?: string, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/workspaces/${workspaceId}/plan`,
+        { body: expectedRevision ? { plan_code: planCode, expected_revision: expectedRevision } : { plan_code: planCode }, ...opts }),
     integrations: (opts?: RequestOptions) => request<{ items: IntegrationRow[] }>("GET", "/admin/integrations", opts),
     integration: (code: string, opts?: RequestOptions) =>
       request<IntegrationDetail>("GET", `/admin/integrations/${encodeURIComponent(code)}`, opts),
@@ -717,14 +725,34 @@ export const api = {
     plans: (opts?: RequestOptions) => request<{ items: PlanVersionRow[] }>("GET", "/admin/plans", opts),
     plan: (versionId: number, opts?: RequestOptions) => request<PlanDetail>("GET", `/admin/plans/${versionId}`, opts),
     assignablePlans: (opts?: RequestOptions) => request<AssignablePlan[]>("GET", "/admin/plans/assignable", opts),
-    createPlanDraft: (planCode: string, opts?: RequestOptions) =>
-      request<{ id: number; plan_code: string; version: number }>("POST", `/admin/plans/${encodeURIComponent(planCode)}/versions`, opts),
-    updatePlanDraft: (versionId: number, entitlements: Record<string, { enabled: boolean; limit?: number | null }>, opts?: RequestOptions) =>
-      request<Record<string, unknown>>("PATCH", `/admin/plans/versions/${versionId}/entitlements`, { body: { entitlements }, ...opts }),
-    activatePlan: (versionId: number, opts?: RequestOptions) =>
-      request<Record<string, unknown>>("POST", `/admin/plans/versions/${versionId}/activate`, opts),
-    retirePlan: (versionId: number, opts?: RequestOptions) =>
-      request<Record<string, unknown>>("POST", `/admin/plans/versions/${versionId}/retire`, opts),
+    createPlanDraft: (planCode: string, expectedRevision?: string, opts?: RequestOptions) =>
+      request<{ id: number; plan_code: string; version: number }>("POST", `/admin/plans/${encodeURIComponent(planCode)}/versions`,
+        expectedRevision ? { body: { expected_revision: expectedRevision }, ...opts } : opts),
+    updatePlanDraft: (versionId: number, entitlements: Record<string, { enabled: boolean; limit?: number | null }>, expectedRevision?: string, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("PATCH", `/admin/plans/versions/${versionId}/entitlements`,
+        { body: expectedRevision ? { entitlements, expected_revision: expectedRevision } : { entitlements }, ...opts }),
+    activatePlan: (versionId: number, expectedRevision?: string, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/plans/versions/${versionId}/activate`,
+        expectedRevision ? { body: { expected_revision: expectedRevision }, ...opts } : opts),
+    retirePlan: (versionId: number, expectedRevision?: string, opts?: RequestOptions) =>
+      request<Record<string, unknown>>("POST", `/admin/plans/versions/${versionId}/retire`,
+        expectedRevision ? { body: { expected_revision: expectedRevision }, ...opts } : opts),
+    /** 03B: entitlement matrix, comparison, rollback, assignment preview/bulk, history and the effective-entitlement explanation. */
+    planMatrix: (opts?: RequestOptions) => request<PlanMatrix>("GET", "/admin/plans/matrix", opts),
+    comparePlans: (left: number, right: number, opts?: RequestOptions) => request<PlanComparison>("GET", `/admin/plans/compare${qs({ left, right })}`, opts),
+    planSubject: (kind: "user" | "workspace", id: number, opts?: RequestOptions) => request<PlanSubjectState>("GET", `/admin/plans/subjects/${kind}/${id}`, opts),
+    planVersionAssignments: (versionId: number, page = 1, opts?: RequestOptions) =>
+      request<PlanVersionAssignments>("GET", `/admin/plans/versions/${versionId}/assignments${qs({ page, page_size: 10 })}`, opts),
+    explainPlanAccess: (subject: { user_id?: number; workspace_id?: number }, opts?: RequestOptions) =>
+      request<PlanExplanation>("GET", `/admin/plans/explain${qs(subject)}`, opts),
+    restorePlanAsDraft: (versionId: number, expectedRevision: string, opts?: RequestOptions) =>
+      request<{ id: number; plan_code: string; version: number; copied_from: number }>("POST", `/admin/plans/versions/${versionId}/restore-as-draft`,
+        { body: { expected_revision: expectedRevision }, ...opts }),
+    previewPlanAssignment: (planCode: string, kind: "user" | "workspace", ids: number[], opts?: RequestOptions) =>
+      request<PlanAssignmentPreview>("GET", `/admin/plans/assignments/preview${qs({ plan_code: planCode, subject_type: kind, ids: ids.join(",") })}`, opts),
+    bulkAssignPlan: (planCode: string, kind: "user" | "workspace", ids: number[], previewRevision: string, opts?: RequestOptions) =>
+      request<{ plan_code: string; version: number; subject_type: string; requested: number; changed: number; unchanged: number }>(
+        "POST", "/admin/plans/assignments/bulk", { body: { plan_code: planCode, subject_type: kind, subject_ids: ids, preview_revision: previewRevision }, ...opts }),
     setStatus: (userId: number, status: string, reason?: string, opts?: RequestOptions) =>
       request<Record<string, unknown>>("POST", `/admin/users/${userId}/status`, { body: { status, reason }, ...opts }),
     revokeSessions: (userId: number, reason?: string, opts?: RequestOptions) =>

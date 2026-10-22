@@ -286,6 +286,8 @@ class PlanVersionRow(_Strict):
     enabled_entitlements: int
     total_entitlements: int
     subscribers: Subscribers
+    revision: str
+    family_revision: str
     created_at: str | None
     activated_at: str | None
     retired_at: str | None
@@ -295,6 +297,13 @@ class PlanList(_Strict):
     items: list[PlanVersionRow]
 
 
+class EntitlementBounds(_Strict):
+    kind: str
+    min_limit: int | None
+    max_limit: int | None
+    premium_only: bool
+
+
 class EntitlementRow(_Strict):
     code: str
     label: str
@@ -302,6 +311,7 @@ class EntitlementRow(_Strict):
     type: str
     enabled: bool
     limit: int | None
+    bounds: EntitlementBounds
 
 
 class PlanDetail(_Strict):
@@ -312,6 +322,8 @@ class PlanDetail(_Strict):
     status: str
     editable: bool
     entitlements: list[EntitlementRow]
+    revision: str
+    family_revision: str
     subscribers: Subscribers
     created_at: str | None
     activated_at: str | None

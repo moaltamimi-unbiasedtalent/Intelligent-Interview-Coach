@@ -28,7 +28,22 @@ class EntitlementValue(BaseModel):
 
 
 class DraftUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     entitlements: dict[str, EntitlementValue] = Field(min_length=1, max_length=50)
+    expected_revision: str | None = Field(default=None, max_length=64)   # 03B: enforced when supplied (the Admin UI always sends it)
+
+
+class RevisionBody(BaseModel):
+    """Optional body for create/activate/retire: the revision the operator last saw (409 when it is stale)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    expected_revision: str | None = Field(default=None, max_length=64)
+
+
+def _rev(body: RevisionBody | None) -> str | None:
+    return body.expected_revision if body else None
 
 
 def _audit(event: str, request: Request, principal, version_id):
@@ -64,10 +79,10 @@ def detail(version_id: int, _p=Depends(require_permission(perm.PLANS_READ)), pla
 
 
 @router.post("/{plan_code}/versions", summary="Create the next DRAFT version of an existing plan (copies the latest)")
-def create_draft(plan_code: str, request: Request, principal=Depends(require_permission(perm.PLANS_MANAGE)),
-                 plans=Depends(get_plan_repository)) -> dict:
+def create_draft(plan_code: str, request: Request, body: RevisionBody | None = None,
+                 principal=Depends(require_permission(perm.PLANS_MANAGE)), plans=Depends(get_plan_repository)) -> dict:
     audit = _audit(A.ADMIN_PLAN_VERSION_CREATED, request, principal, plan_code)
-    return _run(lambda: plans.create_draft(plan_code, audit=audit))
+    return _run(lambda: plans.create_draft(plan_code, audit=audit, expected_revision=_rev(body)))
 
 
 @router.patch("/versions/{version_id}/entitlements", summary="Edit a DRAFT version's entitlement values (registry keys only)")
@@ -75,19 +90,19 @@ def update_draft(version_id: int, body: DraftUpdate, request: Request,
                  principal=Depends(require_permission(perm.PLANS_MANAGE)), plans=Depends(get_plan_repository)) -> dict:
     audit = _audit(A.ADMIN_PLAN_VERSION_UPDATED, request, principal, version_id)
     values = {k: v.model_dump() for k, v in body.entitlements.items()}
-    return _run(lambda: plans.update_draft(version_id, values, audit=audit))
+    return _run(lambda: plans.update_draft(version_id, values, audit=audit, expected_revision=body.expected_revision))
 
 
 @router.post("/versions/{version_id}/activate",
              summary="Activate a draft: it becomes assignable and immutable; the previous active version is retired; nobody is moved")
-def activate(version_id: int, request: Request, principal=Depends(require_permission(perm.PLANS_MANAGE)),
-             plans=Depends(get_plan_repository)) -> dict:
+def activate(version_id: int, request: Request, body: RevisionBody | None = None,
+             principal=Depends(require_permission(perm.PLANS_MANAGE)), plans=Depends(get_plan_repository)) -> dict:
     audit = _audit(A.ADMIN_PLAN_VERSION_ACTIVATED, request, principal, version_id)
-    return _run(lambda: plans.activate(version_id, audit=audit))
+    return _run(lambda: plans.activate(version_id, audit=audit, expected_revision=_rev(body)))
 
 
 @router.post("/versions/{version_id}/retire", summary="Retire an active version (no new assignments; subscribers stay pinned)")
-def retire(version_id: int, request: Request, principal=Depends(require_permission(perm.PLANS_MANAGE)),
-           plans=Depends(get_plan_repository)) -> dict:
+def retire(version_id: int, request: Request, body: RevisionBody | None = None,
+           principal=Depends(require_permission(perm.PLANS_MANAGE)), plans=Depends(get_plan_repository)) -> dict:
     audit = _audit(A.ADMIN_PLAN_VERSION_RETIRED, request, principal, version_id)
-    return _run(lambda: plans.retire(version_id, audit=audit))
+    return _run(lambda: plans.retire(version_id, audit=audit, expected_revision=_rev(body)))

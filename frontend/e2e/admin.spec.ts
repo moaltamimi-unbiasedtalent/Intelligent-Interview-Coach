@@ -211,12 +211,13 @@ const INT_GOOGLE = { ...INT_ROW(false), code: "google_oidc", name: "Google sign-
   classification: "code_present_not_validated", test: { supported: false, note: "No manual probe." },
   validation_note: "Backend support present; end-to-end sign-in is not validated." };
 const PLAN_ROWS = [
-  { id: 2, plan_code: "premium", version: 1, display_name: "Premium (preview)", status: "active", enabled_entitlements: 5, total_entitlements: 5, subscribers: { users: 1, workspaces: 0 }, created_at: null, activated_at: "2026-10-01", retired_at: null },
-  { id: 1, plan_code: "basic", version: 1, display_name: "Basic", status: "active", enabled_entitlements: 4, total_entitlements: 5, subscribers: { users: 4, workspaces: 0 }, created_at: null, activated_at: "2026-10-01", retired_at: null },
+  { id: 2, plan_code: "premium", version: 1, display_name: "Premium (preview)", status: "active", enabled_entitlements: 5, total_entitlements: 5, subscribers: { users: 1, workspaces: 0 }, revision: "r2", family_revision: "famP", created_at: null, activated_at: "2026-10-01", retired_at: null },
+  { id: 1, plan_code: "basic", version: 1, display_name: "Basic", status: "active", enabled_entitlements: 4, total_entitlements: 5, subscribers: { users: 4, workspaces: 0 }, revision: "r1", family_revision: "famB", created_at: null, activated_at: "2026-10-01", retired_at: null },
 ];
 const PLAN_DETAIL = { id: 3, plan_code: "premium", version: 2, display_name: "Premium (preview)", status: "draft", editable: true,
-  entitlements: ["current_market_research", "standard_history", "standard_progress", "standard_model_profiles", "premium_preview"].map((k) => ({ code: k, label: `Label ${k}`, description: "d", type: "boolean", enabled: true, limit: null })),
-  subscribers: { users: 0, workspaces: 0 }, created_at: null, activated_at: null, retired_at: null };
+  entitlements: ["current_market_research", "standard_history", "standard_progress", "standard_model_profiles", "premium_preview"].map((k) => ({ code: k, label: `Label ${k}`, description: "d", type: "boolean", enabled: true, limit: null,
+    bounds: { kind: "boolean", min_limit: null, max_limit: null, premium_only: k === "premium_preview" } })),
+  revision: "rev-3", family_revision: "fam-3", subscribers: { users: 0, workspaces: 0 }, created_at: null, activated_at: null, retired_at: null };
 const MY_PLAN = { plan_code: "basic", plan_version: 1, entitlements: { current_market_research: { enabled: true, limit: null, unlimited: true }, premium_preview: { enabled: false, limit: null, unlimited: false } } };
 const TICKET_ROW = { id: 5, public_id: "d".repeat(32), owner_user_id: 2, owner_email: "jane@example.com", category: "billing", priority: "normal",
   status: "new", subject: "Charged twice", assigned_user_id: null, assignee_email: null, message_count: 1, created_at: null, updated_at: null };
@@ -346,6 +347,9 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
     if (/\/admin\/plans\/versions\/\d+\/(activate|retire)$/.test(path) && method === "POST") return json({ ok: true });
     if (/\/admin\/plans\/versions\/\d+\/entitlements$/.test(path) && method === "PATCH") return json({ id: 3, changed: ["premium_preview"] });
     if (/\/admin\/plans\/[^/]+\/versions$/.test(path) && method === "POST") return json({ id: 3, plan_code: "premium", version: 2 });
+    if (path.endsWith("/admin/plans/matrix")) return json({ entitlements: [], versions: [] });
+    if (/\/admin\/plans\/versions\/\d+\/assignments$/.test(path)) return json({ plan_code: "premium", version: 2, total: 0, page: 1, page_size: 10, items: [] });
+    if (/\/admin\/plans\/subjects\/\w+\/\d+$/.test(path)) return json({ subject_type: "user", subject_id: 2, current: null, history: [], revision: "s1" });
     if (path.endsWith("/admin/plans/assignable")) return json([{ plan_code: "basic", version: 1, display_name: "Basic" }, { plan_code: "premium", version: 1, display_name: "Premium (preview)" }]);
     if (/\/admin\/plans\/\d+$/.test(path)) return json(PLAN_DETAIL);
     if (path.endsWith("/admin/plans")) return json({ items: PLAN_ROWS });
