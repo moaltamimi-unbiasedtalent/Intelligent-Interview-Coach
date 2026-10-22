@@ -65,9 +65,9 @@ test("workspaces page renders, private-by-default messaging, create + revoke flo
   await expect(page.getByText(/Owner/i).first()).toBeVisible();
 
   // Shared-by-me renders, and revoke removes it from the UX.
-  await expect(page.getByText(/interview_report #3/i)).toBeVisible();
+  await expect(page.getByText(/Interview report #3/i)).toBeVisible();
   await page.getByRole("button", { name: /Revoke/i }).click();
-  await expect(page.getByText(/interview_report #3/i)).toHaveCount(0);
+  await expect(page.getByText(/Interview report #3/i)).toHaveCount(0);
 });
 
 test("workspaces does not expose candidate-private content", async ({ page }) => {
