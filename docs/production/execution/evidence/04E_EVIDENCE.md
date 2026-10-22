@@ -38,7 +38,21 @@ An invitation is the right to create a candidate account, which is what `platfor
 - Hosted default is fail-closed; the only way to relax the requirement is a local environment label.
 
 ## Tests and commands
-RESULTS_PLACEHOLDER
+| Check | Result |
+|---|---|
+| 04E suites: `test_invitations_04e.py` (policy, gate, enumeration, replay, expiry, revoked, binding, concurrency, hash-at-rest, audit, logs, rate limit, Admin API, 7-persona authorization matrix, deletion, export), `test_invitations_oidc_04e.py`, `test_invitations_cli_04e.py`, `test_migration_0041_invitations.py` | 90 passed under `/tmp/ci_venv` (fresh dependencies) and the same files passed under the repo `.venv` (151 passed together with `test_auth_api`, `test_auth_oidc`, `test_privacy_schema_invariant_02a`, `test_admin_qualification_w10_14`) |
+| Full `pytest tests -n 3 --dist loadfile`, `/tmp/ci_venv` (final run, after the fixes below) | 5690 tests: 5646 passed, 43 skipped, 1 failed. The one failure is PRE-EXISTING and not caused by 04E: see below |
+| First full run (before the fixes) | 5 failures: 2 were the privacy-schema guard on 0041 (fixed, see "Shared guard edited"), 1 was `test_auth_security_matrix::test_valid_session_cookie_cannot_be_overridden_by_dev_header` (it registered through the API in a `production` app, which now correctly needs an invitation; the setup now creates the account the way an operator would, the assertions are unchanged), 1 was `test_language_readiness_06a` (the generated locale inventory counted the 3 new keys: regenerated with `scripts/eval_locale_inventory.py --write`), 1 is the pre-existing one below |
+| Pre-existing failure | `test_knowledge_persistence_02a_identity.py::test_no_forbidden_files_were_touched_and_no_migration_in_part_one` diffs the tree against the stale branch `origin/feat/02k-knowledge-contract` and fails on `src/agent/{eval,judge,models,policies}.py`, which differ between that branch and the prep branch this one is stacked on (`git diff --name-only origin/feat/02k-knowledge-contract origin/chore/migration-head-agnostic` lists the same four files). 04E touches none of the banned paths (`git diff --name-only origin/chore/migration-head-agnostic` checked against the list). It will need the lead's attention when the stack is merged |
+| `ruff check .`; `scripts/ci_test_shards.py verify --shards 4` | pass; 285 test files, each in exactly one shard |
+| All 46 CI evaluators (`scripts/eval_*.py`, the three with arguments run as CI does) under `/tmp/ci_venv` | 46 PASS after the guard refinement (the first pass had one FAIL, `eval_privacy_controls`, see above); 10 related ones re-run after the last edits: PASS. 0 paid or live calls |
+| `eval_i18n_l10n.py` and the frontend scanner test (`no-hardcoded-english`, `scan-i18n-guard`, `i18n.test.tsx` key parity) | PASS; scanner 0 unexplained literals; protected slogan untouched |
+| Frontend `tsc --noEmit`, `npm run lint`, full `vitest run` | clean; 115 files, 1151 tests passed (16 new in `register-invitation-04e.test.tsx`) |
+| Playwright (`E2E_PORT=3106`): `registration-invitation-04e.spec.ts` (4), plus `auth.spec.ts` and `identity-email.spec.ts` | 27 passed (4 new + 23 existing) |
+
+Commands: `pytest tests/test_invitations_04e.py tests/test_invitations_oidc_04e.py tests/test_invitations_cli_04e.py tests/test_migration_0041_invitations.py -p no:cacheprovider` (both venvs); `pytest tests -n 3 --dist loadfile -q -p no:cacheprovider` (ci_venv); `ruff check .`; `python scripts/ci_test_shards.py verify --shards 4`; `python scripts/eval_<name>.py` for every `eval_` script in `.github/workflows/ci.yml`; `cd frontend && npx tsc --noEmit && npm run lint && npx vitest run && E2E_PORT=3106 npx playwright test e2e/registration-invitation-04e.spec.ts e2e/auth.spec.ts e2e/identity-email.spec.ts`.
+
+Not run: a PostgreSQL execution of migration 0041 or of the concurrent redemption; any live Google round trip; any real email; a hosted (staging) walk-through. A second generated file was regenerated (`docs/production/execution/evidence/06A_LOCALE_AUDIT.md`: interface keys 2382 to 2385 per locale) because its own test requires it to be current after any catalogue change; concurrent packages that add catalogue keys will each regenerate it, so the lead should expect to re-run `scripts/eval_locale_inventory.py --write` when re-chaining.
 
 ## Risks and limitations
 - The 1000-pending cap and the rate limits are per process unless a shared limiter is active (existing, unvalidated Redis path).
@@ -55,4 +69,4 @@ RESULTS_PLACEHOLDER
 - CI: not available until a PR exists.
 
 ## Throughput
-Start: 2026-10-22 01:57 CEST. First push: FIRSTPUSH_PLACEHOLDER. Rework rounds: REWORK_PLACEHOLDER. SHA: SHA_PLACEHOLDER.
+Start: 2026-10-22 01:57 CEST. First push: 2026-10-22 02:25 CEST (commit 94b5100). Rework rounds: 1 (the five first-full-run failures above, fixed in commit 0dbc72a, then a second full run). CI: not available until a PR exists. SHA: the final head is the tip of `origin/feat/04e-invitation-only` (this file cannot contain its own commit id; the report and `git ls-remote origin feat/04e-invitation-only` give it).
