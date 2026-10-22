@@ -93,7 +93,9 @@ def test_frontend_active_list_matches_backend_exactly():
     assert tuple(re.findall(r'"(\w+)"', m.group(1))) == ACTIVE_CANDIDATE_LOCALES
     for rel in ("components/i18n/LanguageMenu.tsx", "components/i18n/ConversationLanguageField.tsx", "components/settings/LanguageSettings.tsx"):
         text = (FE / rel).read_text(encoding="utf-8")
-        assert "SELECTABLE_LOCALES" in text and "APP_LOCALES.map" not in text, rel
+        # 06H: selectors render the server-offered subset, which is derived from SELECTABLE_LOCALES (never APP_LOCALES); see offeredLocales.ts.
+        assert "useOfferedLocales" in text and "options.map" in text and "APP_LOCALES.map" not in text, rel
+    assert "SELECTABLE_LOCALES.filter" in (FE / "lib/i18n/offeredLocales.ts").read_text(encoding="utf-8")
 
 
 # ---- new work refuses a non-active locale (existing 422 validation shape) -------------------------

@@ -67,6 +67,24 @@ def ready(request: Request) -> dict:
         else:
             dependencies["worker_heartbeat"] = "unknown"
         dependencies["scanner"] = hr.scanner_status()
+        try:     # K9 residual: a hosted registry holding fake-scanner (or unrecorded) scan results is reported, only when present
+            from src.knowledge_admin.environment import count_untrusted_scan_records
+
+            if checks["database"] and count_untrusted_scan_records(repo.session_factory):
+                dependencies["scan_records"] = "untrusted"
+        except Exception:  # noqa: BLE001
+            pass
+        sig = None
+        if dependencies["scanner"] == "reachable":      # reported only for a reachable scanner (an unreachable one has no signature facts)
+            sig = dependencies["scanner_signatures"] = hr.scanner_signature_status()
+        try:     # a scanner outage raises the in-app alert (reuses the existing alert mechanism); a reachable scanner resolves it
+            from src.knowledge_admin.alerts import observe_scanner
+
+            if dependencies["scanner"] in ("reachable", "unreachable"):
+                observe_scanner(repo.session_factory, available=dependencies["scanner"] == "reachable",
+                                signatures_stale=None if sig is None else sig == "stale")
+        except Exception:  # noqa: BLE001
+            pass
 
     ready_ok = all(checks.values())
     body = {
@@ -130,7 +148,15 @@ def capabilities(request: Request) -> CapabilitiesResponse:
     repo = _repo_or_none(request)
     # Agentic RAG (Phase 6), long-term memory (Phase 7) and HITL (Phase 8) are all
     # available. The candidate Agent Coach cutover is a deployment flag (Phase 9).
+    from src.language_activation import public_summary
+
+    lang = public_summary()
     return CapabilitiesResponse(
+        active_candidate_locales=lang["offered_locales"],
+        language_activation_mode=lang["mode"],
+        qualified_locales=lang["qualified_locales"],
+        unqualified_locales=lang["unqualified_locales"],
+        no_language_available=lang["none_available"],
         live_interview_enabled=_live_enabled(),
         agentic_rag=True,
         agent_memory=True,

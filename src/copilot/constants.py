@@ -100,6 +100,13 @@ OPENAI_EMBEDDING_DIMENSIONS = 1536
 # Dimensions for the local deterministic embedder (independent of any provider).
 LOCAL_EMBEDDING_DIMENSIONS = 512
 LOCAL_EMBEDDING_MODEL = "local-hash-v1"
+# 02B: recorded embedding configuration versions (part of the index manifest and the compatibility hash). Bump the hash version when the
+# hashing algorithm changes; bump the OpenAI-compatible version when request handling changes. ``COPILOT_EMBEDDING_VERSION`` overrides the latter
+# when an operator knows the model served behind an unchanged name has changed.
+LOCAL_EMBEDDING_VERSION = "hash-1"
+OPENAI_EMBEDDING_VERSION = "openai-compat-1"
+# Dimensions of the semantic models the product knows. An unknown model needs COPILOT_EMBEDDING_DIMENSIONS (hosted refuses to guess).
+KNOWN_EMBEDDING_DIMENSIONS = {"text-embedding-3-small": 1536, "text-embedding-3-large": 3072, "text-embedding-ada-002": 1536}
 
 # --- Knowledge base / vector store paths (used from Phase 2) -----------------
 
@@ -314,6 +321,11 @@ MAX_UPLOAD_CHARS = 50_000
 # A single high-weight indicator (3.0) blocks; a medium one (2.0) warns.
 INJECTION_WARN_THRESHOLD = 2.0
 INJECTION_BLOCK_THRESHOLD = 3.0
+
+# 01A (REVIEW-01 R6): a retrieved chunk whose injection risk is ABOVE this value is quarantined (excluded from the model context). The risk is the scanner
+# score divided by INJECTION_BLOCK_THRESHOLD, capped at 1.0, so 0.9 keeps the pre-existing behaviour (block-level chunks excluded, warn-level 0.67 kept and
+# flagged). Lowering it also quarantines warn-level chunks; it is a heuristic setting, not an owner-approved gate threshold (OD-GATE-THRESHOLDS).
+INJECTION_QUARANTINE_RISK = 0.9
 
 # Verdicts.
 VERDICT_ALLOW = "allow"

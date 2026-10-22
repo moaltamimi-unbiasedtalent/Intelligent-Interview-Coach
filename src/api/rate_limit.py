@@ -93,6 +93,10 @@ AUTH_POLICIES: dict[str, RateLimitPolicy] = {
     "auth_reset_ip": RateLimitPolicy("auth_reset_ip", 12, 3600, "ip"),
     "auth_oidc_start_ip": RateLimitPolicy("auth_oidc_start_ip", 30, 3600, "ip"),
     "auth_global": RateLimitPolicy("auth_global", 2000, 300, "global"),
+    # 04E (REQ-BETA-01): bounded invitation-code attempts. Charged on EVERY registration attempt while an invitation is required (so guessing is bounded without a
+    # separate "failed only" counter), in addition to auth_register_ip and auth_global. Codes are 256-bit; this bounds abuse of the endpoint, not entropy.
+    "auth_invitation_ip": RateLimitPolicy("auth_invitation_ip", 10, 3600, "ip"),
+    "auth_invitation_global": RateLimitPolicy("auth_invitation_global", 400, 3600, "global"),
 }
 
 # --- Cost / provider policies (§19). Per-user ceilings on costly provider operations. ---
@@ -122,6 +126,7 @@ SUPPORT_POLICIES: dict[str, RateLimitPolicy] = {
 # --- Security policies (W10.13). Per-Admin ceilings on step-up and role-change actions (per-process unless a shared store is active, like every bucket). ---
 SECURITY_POLICIES: dict[str, RateLimitPolicy] = {
     "stepup_user": RateLimitPolicy("stepup_user", 5, 300, "user"),
+    "invitation_issue_user": RateLimitPolicy("invitation_issue_user", 60, 3600, "user"),      # 04E: Admin issuing invitations (never bulk)
     "role_request_user": RateLimitPolicy("role_request_user", 20, 3600, "user"),
     "role_approve_user": RateLimitPolicy("role_approve_user", 30, 3600, "user"),
     # W12.4C: a real provider send to the administrator's OWN address; a hard, small ceiling (never bulk mail).

@@ -33,6 +33,12 @@ export interface CapabilitiesResponse {
   // 06A: the server-defined (code-only) locales a Candidate may select; excludes Russian. Optional for older servers.
   active_candidate_locales?: string[];
   default_locale?: string;
+  // 06H: the activation decision. `active_candidate_locales` is the OFFERED set (empty in a hosted environment until a locale has a complete approved
+  // qualification record). Optional for older servers.
+  language_activation_mode?: string;
+  qualified_locales?: string[];
+  unqualified_locales?: string[];
+  no_language_available?: boolean;
 }
 
 // --- Opportunities (P10B Wave 6) ---------------------------------------------
@@ -963,6 +969,8 @@ export interface RegisterRequest {
   display_name?: string | null;
   /** Interface language for transactional email (one of the eight product locales). */
   locale?: string | null;
+  /** Private-beta invitation code (04E). The server decides whether one is required; it is never stored in the browser. */
+  invitation_code?: string | null;
 }
 
 export interface LoginRequest {

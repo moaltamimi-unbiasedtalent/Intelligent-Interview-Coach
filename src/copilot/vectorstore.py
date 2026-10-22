@@ -22,8 +22,10 @@ from dataclasses import dataclass
 
 from src.copilot import constants
 from src.copilot.config import CopilotConfig
-from src.copilot.embeddings import BaseEmbedder, build_embedder
+from src.copilot import index_manifest as _im
+from src.copilot.embeddings import BaseEmbedder, build_embedder, current_environment
 from src.copilot.models import DocumentChunk
+from src.knowledge_admin.contracts import EmbedderIdentity, IndexManifestV2
 
 __all__ = [
     "VectorHit",
@@ -88,6 +90,85 @@ class BaseVectorStore(ABC):
     """Shared store interface. Holds the embedder used for index + query."""
 
     embedder: BaseEmbedder
+    collection_name: str | None = None
+
+    # ---- 02B: index manifest + compatibility guard ------------------------------------------------------------------------------------
+    # Subclasses supply ``_load_manifest`` / ``_save_manifest`` / ``_drop_manifest`` / ``_all_ids``. The guard runs BEFORE any embedding call
+    # (so a refused query or write never spends a paid embedding request) and never returns an empty result for an incompatible index.
+    def _live_identity(self) -> EmbedderIdentity:
+        ident = getattr(self.embedder, "identity", None)
+        if callable(ident):
+            return ident()
+        return EmbedderIdentity(getattr(self.embedder, "provider", None), getattr(self.embedder, "model", None),
+                                getattr(self.embedder, "version", None), getattr(self.embedder, "dimensions", None))
+
+    def _load_manifest(self) -> IndexManifestV2 | None:  # pragma: no cover - overridden
+        return None
+
+    def _save_manifest(self, manifest: IndexManifestV2) -> None:  # pragma: no cover - overridden
+        return None
+
+    def _drop_manifest(self) -> None:  # pragma: no cover - overridden
+        return None
+
+    def _all_ids(self) -> list[str]:  # pragma: no cover - overridden
+        return []
+
+    def index_manifest(self) -> IndexManifestV2 | None:
+        """The persisted manifest of this collection, ``None`` if none exists (unreadable raises nothing here: see ``index_status``)."""
+        try:
+            return self._load_manifest()
+        except _im.ManifestUnreadable:
+            return None
+
+    def index_status(self, *, environment: str | None = None) -> "_im.IndexStatus":
+        """Compatibility of this collection with the live embedder in ``environment`` (default ``API_ENV``). Read-only; never raises for a mismatch."""
+        env = current_environment(environment)
+        unreadable = False
+        manifest = None
+        try:
+            manifest = self._load_manifest()
+        except _im.ManifestUnreadable:
+            unreadable = True
+        try:
+            count: int | None = int(self.count())
+        except Exception:  # noqa: BLE001
+            count = None
+        return _im.evaluate_index(manifest, self._live_identity(), count=count, hosted=env != "development",
+                                  collection_id=self.collection_name, unreadable=unreadable)
+
+    def assert_servable(self) -> "_im.IndexStatus":
+        """Raise :class:`IndexIncompatibleError` when the index must not be queried or extended with the live embedder."""
+        status = self.index_status()
+        _im.raise_if_refused(status)
+        return status
+
+    def _record_build(self, *, had_vectors: bool) -> None:
+        """After a successful write: create the manifest for a new collection, or move checksum/build time of an existing one. A legacy
+        non-empty collection WITHOUT a manifest stays without one (its embedder is unknown and is never invented)."""
+        try:
+            existing = self._load_manifest()
+        except _im.ManifestUnreadable:
+            return
+        if existing is None and had_vectors:
+            return
+        self._save_manifest(_im.build_manifest(self._live_identity(), collection_id=self.collection_name, chunk_ids=self._all_ids(),
+                                               embedder_label=type(self.embedder).__name__[:64], existing=existing))
+
+    def _refresh_after_delete(self) -> None:
+        """Keep the manifest checksum truthful after a deletion; an emptied collection loses its manifest (the next build records a new one)."""
+        try:
+            existing = self._load_manifest()
+        except _im.ManifestUnreadable:
+            return
+        if existing is None:
+            return
+        ids = self._all_ids()
+        if not ids:
+            self._drop_manifest()
+            return
+        self._save_manifest(_im.build_manifest(existing.embedder, collection_id=self.collection_name, chunk_ids=ids,
+                                               embedder_label=existing.embedder_label, existing=existing))
 
     def _touch(self) -> None:
         """Record an in-process mutation (P10D). ``KeywordRetriever.from_store`` keys its cached BM25 index on (count, revision), so a store that changed without a change of
@@ -129,11 +210,27 @@ class BaseVectorStore(ABC):
 class InMemoryVectorStore(BaseVectorStore):
     """A dependency-free cosine store (fallback + tests)."""
 
-    def __init__(self, embedder: BaseEmbedder) -> None:
+    def __init__(self, embedder: BaseEmbedder, *, collection_name: str | None = None) -> None:
         self.embedder = embedder
+        self.collection_name = collection_name
         self._items: dict[str, dict] = {}
+        self._manifest: IndexManifestV2 | None = None
+
+    def _load_manifest(self) -> IndexManifestV2 | None:
+        return self._manifest
+
+    def _save_manifest(self, manifest: IndexManifestV2) -> None:
+        self._manifest = manifest
+
+    def _drop_manifest(self) -> None:
+        self._manifest = None
+
+    def _all_ids(self) -> list[str]:
+        return list(self._items)
 
     def add_chunks(self, chunks: Sequence[DocumentChunk]) -> IndexResult:
+        self.assert_servable()
+        had_vectors = bool(self._items)
         new = [c for c in chunks if c.chunk_id not in self._items]
         skipped = len(chunks) - len(new)
         if new:
@@ -146,11 +243,13 @@ class InMemoryVectorStore(BaseVectorStore):
                     "metadata": sanitize_metadata(chunk.metadata, doc_id=chunk.doc_id),
                     "vector": vector,
                 }
+            self._record_build(had_vectors=had_vectors)
         return IndexResult(added=len(new), skipped_existing=skipped, total=len(self._items))
 
     def query(
         self, text: str, *, top_k: int, filters: dict | None = None
     ) -> list[VectorHit]:
+        self.assert_servable()          # 02B: an incompatible index is refused (typed), never answered with an empty or mis-scored result
         if not self._items or top_k <= 0:
             return []
         qvec = self.embedder.embed_query(text)
@@ -178,11 +277,13 @@ class InMemoryVectorStore(BaseVectorStore):
         for cid in doomed:
             del self._items[cid]
         self._touch()
+        self._refresh_after_delete()
         return len(doomed)
 
     def reset(self) -> None:
         self._touch()
         self._items.clear()
+        self._drop_manifest()
 
     def all_chunks(self) -> list[DocumentChunk]:
         return [
@@ -219,6 +320,7 @@ class ChromaStore(BaseVectorStore):
         self.embedder = embedder
         self.persist_dir = persist_dir
         self.collection_name = collection_name
+        self._manifest_path = _im.manifest_file(persist_dir, collection_name)
         # Local-only telemetry is disabled: nothing about queries leaves the machine.
         self._client = chromadb.PersistentClient(
             path=persist_dir,
@@ -228,6 +330,18 @@ class ChromaStore(BaseVectorStore):
             name=collection_name,
             metadata={"hnsw:space": "cosine"},
         )
+
+    def _load_manifest(self) -> IndexManifestV2 | None:
+        return _im.read_manifest(self._manifest_path)
+
+    def _save_manifest(self, manifest: IndexManifestV2) -> None:
+        _im.write_manifest(self._manifest_path, manifest)
+
+    def _drop_manifest(self) -> None:
+        _im.remove_manifest(self._manifest_path)
+
+    def _all_ids(self) -> list[str]:
+        return list(self._collection.get(include=[]).get("ids", []))
 
     def _existing_ids(self, ids: list[str]) -> set[str]:
         if not ids:
@@ -239,6 +353,8 @@ class ChromaStore(BaseVectorStore):
         chunks = list(chunks)
         if not chunks:
             return IndexResult(total=self.count())
+        self.assert_servable()
+        had_vectors = self.count() > 0
         existing = self._existing_ids([c.chunk_id for c in chunks])
         new = [c for c in chunks if c.chunk_id not in existing]
         skipped = len(chunks) - len(new)
@@ -259,6 +375,8 @@ class ChromaStore(BaseVectorStore):
                 embeddings=vectors,
             )
             added += len(group)
+        if added:
+            self._record_build(had_vectors=had_vectors)
         return IndexResult(added=added, skipped_existing=skipped, total=self.count())
 
     @staticmethod
@@ -273,6 +391,7 @@ class ChromaStore(BaseVectorStore):
     def query(
         self, text: str, *, top_k: int, filters: dict | None = None
     ) -> list[VectorHit]:
+        self.assert_servable()          # 02B: refuse an incompatible index (typed) before spending an embedding call
         if top_k <= 0 or self.count() == 0:
             return []
         qvec = self.embedder.embed_query(text)
@@ -313,10 +432,12 @@ class ChromaStore(BaseVectorStore):
         if ids:
             self._collection.delete(ids=ids)
         self._touch()
+        self._refresh_after_delete()
         return len(ids)
 
     def reset(self) -> None:
         self._touch()
+        self._drop_manifest()
         self._client.delete_collection(self.collection_name)
         self._collection = self._client.get_or_create_collection(
             name=self.collection_name,
@@ -363,5 +484,5 @@ def build_vector_store(
     """Build a vector store; Chroma when available unless ``in_memory`` is set."""
     embedder = embedder or build_embedder(config)
     if in_memory or not _chroma_available():
-        return InMemoryVectorStore(embedder)
+        return InMemoryVectorStore(embedder, collection_name=constants.CHROMA_COLLECTION_NAME)
     return ChromaStore(embedder, persist_dir=config.chroma_persist_dir)

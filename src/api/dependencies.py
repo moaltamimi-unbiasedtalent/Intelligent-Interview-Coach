@@ -242,7 +242,14 @@ def get_governed_retriever(request: Request):
 
             return GovernedKnowledgeRetriever(build_governed_store(get_copilot_config(request)), get_repository(request).session_factory,
                                               guard=get_knowledge_guard(request))
-        except Exception:  # noqa: BLE001 - governed knowledge is additive
+        except Exception as exc:  # noqa: BLE001 - governed knowledge is additive
+            from src.copilot.embeddings import EmbeddingConfigurationError
+
+            if isinstance(exc, EmbeddingConfigurationError):
+                # 02B: an embedder the environment refuses must DEGRADE the governed channel visibly, never make it vanish silently.
+                from src.knowledge_admin.retriever import RefusedGovernedRetriever
+
+                return RefusedGovernedRetriever(exc.codes)
             return None
 
     return _shared(request, "governed_retriever", _build)
@@ -258,6 +265,7 @@ def get_knowledge_guard(request: Request):
         repo = get_repository(request)
         return build_serving_guard(repo.session_factory, get_app_config(request), get_copilot_config(request),
                                    store_provider=lambda: getattr(get_governed_retriever(request), "store", None),
+                                   curated_store_provider=lambda: get_vector_store(request),
                                    job_service=JobService(repo.session_factory))
 
     return _shared(request, "knowledge_guard", _build)
@@ -761,6 +769,13 @@ def get_oidc_provider(request: Request):
         client_id=_secrets.read_setting("GOOGLE_CLIENT_ID") or "",
         client_secret=_secrets.read_setting("GOOGLE_CLIENT_SECRET") or "",
     )
+
+
+def get_invitation_repository(repo=Depends(get_repository)):
+    """04E: the invitation repository over the injected repository's session factory (override-friendly like the auth service)."""
+    from src.invitations.repository import InvitationRepository
+
+    return InvitationRepository(repo.session_factory)
 
 
 def get_auth_service(

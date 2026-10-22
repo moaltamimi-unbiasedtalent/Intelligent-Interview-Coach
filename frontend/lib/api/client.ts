@@ -71,6 +71,9 @@ import type {
   AdminTicketDetail,
   AdminTicketQuery,
   AdminTicketSummary,
+  AdminInvitationIssued,
+  AdminInvitationPage,
+  AdminInvitationRow,
   AdminUserDetail,
   AdminUserQuery,
   AdminUserSummary,
@@ -632,6 +635,13 @@ export const api = {
   // Platform Admin operations (Capstone P6.5). PLATFORM_ADMIN only; metadata only.
   admin: {
     home: (opts?: RequestOptions) => request<AdminCommandCenter>("GET", "/admin/home", opts),
+    // 04E private-beta invitations. The plaintext code and link are in the issue response only.
+    invitations: (q: { state?: string; limit?: number; offset?: number } = {}, opts?: RequestOptions) =>
+      request<AdminInvitationPage>("GET", `/admin/invitations${qs(q as Record<string, unknown>)}`, opts),
+    issueInvitation: (body: { expires_in_days?: number; email?: string | null }, opts?: RequestOptions) =>
+      request<AdminInvitationIssued>("POST", "/admin/invitations", { body, ...opts }),
+    revokeInvitation: (id: number, opts?: RequestOptions) =>
+      request<AdminInvitationRow>("POST", `/admin/invitations/${encodeURIComponent(String(id))}/revoke`, opts),
     users: (query: AdminUserQuery = {}, opts?: RequestOptions) =>
       request<AdminPage<AdminUserSummary>>("GET", `/admin/users${qs(query as Record<string, unknown>)}`, opts),
     userDetail: (userId: number, opts?: RequestOptions) =>

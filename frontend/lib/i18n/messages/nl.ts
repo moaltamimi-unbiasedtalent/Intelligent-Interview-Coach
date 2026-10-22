@@ -14,6 +14,9 @@ const nl: Catalog = {
     loading: "Laden",
     skipToContent: "Naar inhoud",
     language: "Taal",
+    languageUnqualified: "Niet gekwalificeerd",
+    languagesNoneAvailable:
+      "Er is nog geen taal beschikbaar voor echte gebruikers. Een taal wordt pas geopend nadat alle kwalificatiecontroles zijn afgerond.",
   },
   nav: {
     prepare: "Voorbereiden",
@@ -89,6 +92,9 @@ const nl: Catalog = {
     passwordResetDone: "Uw wachtwoord is opnieuw ingesteld. U kunt nu inloggen.",
     verifyLinkInvalid: "Deze verificatielink is ongeldig of verlopen.",
     registrationFailed: "Registratie mislukt. Probeer het opnieuw.",
+    invitationLabel: "Uitnodigingscode",
+    invitationHint: "Ask4Mo zit in een besloten bèta. Voor registratie is een uitnodiging van het Ask4Mo-team nodig.",
+    invitationRequired: "Een geldige uitnodiging is vereist om je te registreren tijdens de besloten bèta. Controleer je code of vraag een nieuwe aan.",
     genericError: "Er is iets misgegaan. Probeer het opnieuw.",
     couldNotReset: "Kan uw wachtwoord niet opnieuw instellen.",
   },

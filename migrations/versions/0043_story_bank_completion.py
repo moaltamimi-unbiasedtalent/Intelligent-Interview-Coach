@@ -15,8 +15,8 @@ tables) through an explicit reviewed exception, see ``scripts/eval_privacy_contr
 The downgrade is FAIL-CLOSED: it refuses (deleting nothing) while any story is archived, linked to an Opportunity or confirmed, or any answer link or use row exists,
 because dropping those columns and tables would destroy candidate-authored state. Un-archive, unlink and remove those deliberately first.
 
-Revision ID: 0041_story_bank_completion
-Revises: 0040_knowledge_alert_categories
+Revision ID: 0043_story_bank_completion
+Revises: 0042_registration_invitations
 Create Date: 2026-10-22
 """
 
@@ -25,8 +25,8 @@ from __future__ import annotations
 import sqlalchemy as sa
 from alembic import op
 
-revision = "0041_story_bank_completion"
-down_revision = "0040_knowledge_alert_categories"
+revision = "0043_story_bank_completion"
+down_revision = "0042_registration_invitations"
 branch_labels = None
 depends_on = None
 
@@ -85,7 +85,7 @@ def downgrade() -> None:
     }
     blocking = {k: v for k, v in held.items() if v}
     if blocking:
-        raise RuntimeError(f"Refusing to downgrade 0041_story_bank_completion: candidate-authored state exists ({blocking}). Remove or reset it deliberately first.")
+        raise RuntimeError(f"Refusing to downgrade 0043_story_bank_completion: candidate-authored state exists ({blocking}). Remove or reset it deliberately first.")
     op.drop_index("ix_story_uses_story_id", table_name="story_uses")
     op.drop_index("ix_story_uses_user_id", table_name="story_uses")
     op.drop_table("story_uses")

@@ -109,3 +109,7 @@ Frontend (symlinked `node_modules`, never committed): `npx tsc --noEmit` clean; 
 
 ## 13. SHA
 See the final report (verified with `git ls-remote origin feat/04a-story-bank` after the push).
+
+## Addendum 2026-10-22: integration with main (PR #234)
+
+`origin/main` now holds `0041_report_configurations` (03E1) and `0042_registration_invitations` (04E). This package's migration is renamed to `0043_story_bank_completion` with `down_revision = 0042_registration_invitations`; it is the single head and the chain is linear (0040, 0041, 0042, 0043). The only textual conflict was the generated `06A_LOCALE_AUDIT.md`, regenerated with `scripts/eval_locale_inventory.py --write` (main's version taken first, key counts recomputed). The Story Bank code, tests, consent controls, evidence linking, the eight-locale strings and the file-name-bound reviewed privacy exception (renumbering-safe, tested) are unchanged; main's narrower foreign-key rule in `scripts/eval_privacy_controls.py` is kept alongside it. No other test was edited.

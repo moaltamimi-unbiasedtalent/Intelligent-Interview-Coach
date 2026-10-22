@@ -98,7 +98,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 01A Prompt-injection corpus, risk score and quarantine (REVIEW-01 part 1)
 
-- **Status:** BRANCH PUSHED, VERIFIED OFFLINE (feat/01a-injection-corpus 6b2dbc2; 293 passed under both venvs; eval_agent PASS; held-out detection 54.5% (report only))
+- **Status:** BRANCH UPDATED (merged main), NOT MERGED, NO PR; investigation delivered; needs human security review (feat/01a-injection-corpus b3acd4b; dev detection 100% in-sample; held-out 54.5% to 77.3% measured once (weakly contaminated); benign FP held-out 14.3%; 73 new tests; no thresholds approved)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** A (AI security, prompts and tool registry) / 1 / W1 26 Oct-1 Nov to W2 2-8 Nov
 - **Scope:** Labelled regression corpus from evaluations/jailbreak_test_results.csv (direct, indirect, multilingual, encoded, retrieved-document); detection and false-positive measurement; CI gate on a frozen held-out set; injection-risk score on RetrievalResult; quarantine of high-risk chunks before context; output guard retained. Touches no agent-policy or tool-execution file, so it does not overlap 01B. REVIEW-01 requirements R4 and R5 (tool-call authorization) are delivered by 01D, which closes REVIEW-01.
@@ -135,7 +135,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 01B0 Prompt asset format and loader contract (interface package)
 
-- **Status:** BRANCH PUSHED, VERIFIED OFFLINE (feat/01b0-prompt-contract 6f6d383; 462 passed under both venvs)
+- **Status:** MERGED (PR #217, merge 0d75acd); CI green (feat/01b0-prompt-contract 6f6d383; 462 passed under both venvs; 12/12 GitHub checks)
 - **Scope tier:** T1 (Reviewer corrections and operator safety)
 - **Track / phase / weeks:** A (AI security, prompts and tool registry) / 1 / W1 26 Oct-1 Nov to W1 26 Oct-1 Nov
 - **Scope:** The prompt asset schema (id, semantic version, variables, compatibility), the loader interface and the declared-version plus SHA contract, with conformance tests. It lets the per-language prompt and policy work (06C) and the prompt consumers proceed against a stable interface while 01B migrates the existing prompt literals.
@@ -153,7 +153,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 01B Externalized, versioned prompts (REVIEW-02)
 
-- **Status:** IN PROGRESS (stacked on 01B0) (feat/01b-versioned-prompts no SHA yet; not yet reported)
+- **Status:** MERGED (PR #220, merge 335d303); CI green (feat/01b-versioned-prompts 7c2b879; 5286 passed, 0 failed; 99 byte-identity tests; 12/12 GitHub checks)
 - **Scope tier:** T1 (Reviewer corrections and operator safety)
 - **Track / phase / weeks:** A (AI security, prompts and tool registry) / 1 / W1 26 Oct-1 Nov to W2 2-8 Nov
 - **Scope:** Move agent, interview technique and RAG prompts to versioned assets with a validated loader, semantic versions plus SHA, run attribution and rollback without code.
@@ -190,7 +190,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 02K Knowledge runtime and manifest contract (interface package)
 
-- **Status:** BRANCH PUSHED, VERIFIED OFFLINE (feat/02k-knowledge-contract f5eb3dc; 125 passed under both venvs after 1 rework round)
+- **Status:** MERGED (PR #215, merge 657e456); CI green (feat/02k-knowledge-contract f5eb3dc; 125 passed under both venvs; 12/12 GitHub checks; contract frozen for 02A/02B/02C)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** B (Knowledge Sources, embeddings and RAG) / 2 / W1 26 Oct-1 Nov to W1 26 Oct-1 Nov
 - **Scope:** A typed contract for the knowledge runtime identity (database kind and fingerprint, data root label, collection ids), the index manifest v2 (embedding provider, model, version, dimensions, checksums, compatibility metadata) and the scanner interface; contract tests. It lets 02A (persistence and lifecycle), 02B (embedding integrity) and 02C (scanning) proceed in parallel instead of in a chain.
@@ -208,7 +208,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 02A Permanent Knowledge reliability: persistence, environment identity, restore (REQ-OWN-05)
 
-- **Status:** IN PROGRESS (stacked on 02K) (feat/02a-knowledge-persistence no SHA yet; not yet reported)
+- **Status:** MERGED (PR #221, merge 191cbc5); CI green; offline proof only (feat/02a-knowledge-persistence 5ffef55; 5217 passed, 0 failed; migration 0040; 2 CI rework rounds (stale head allowlists); hosted persistence proof needs 05A/05B drills and OD-HOSTED)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates)); **early parallel workstream**
 - **Track / phase / weeks:** B (Knowledge Sources, embeddings and RAG) / 2 / W1 26 Oct-1 Nov to W3 9-15 Nov
 - **Scope:** Persistence and environment architecture for governed and curated knowledge: durable registry, private file storage, persistent indexes, safe environment/database/index identity diagnostics, one authoritative configuration shared by API and worker, lifecycle including replace, retire and reindex, backup and restore, alerts, restart/redeploy/restore tests.
@@ -226,7 +226,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 02B Embedding integrity and index manifests (REVIEW-04)
 
-- **Status:** NOT STARTED
+- **Status:** BRANCH PUSHED, NO PR; verified offline; production embedder benchmark NOT RUN (OD-BUDGET) (feat/02b-embedding-integrity 135070c; 91 new tests; full suite 5609 passed/1 stale test; no migration; PG-05 retrieval quality NOT MET)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** B (Knowledge Sources, embeddings and RAG) / 2 / W2 2-8 Nov to W3 9-15 Nov
 - **Scope:** Readiness shows actual embedder and degradation; production refuses hash-embedding fallback and fails closed on missing semantic credentials; manifests record provider, model, version, dimensions and checksums; query/index mismatch detected and refused; rebuild from approved sources; BM25, vector and RRF evaluated separately and combined, multilingual.
@@ -244,7 +244,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 02C Real malware scanning for uploads
 
-- **Status:** NOT STARTED
+- **Status:** BRANCH PUSHED, NO PR; fake-clamd verified only; NO real clamd run (OD-HOSTED) (feat/02c-clamav-scanning 164d839; 54 new tests; 282 targeted passed under both venvs; no migration)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** B (Knowledge Sources, embeddings and RAG) / 2 / W4 16-22 Nov to W6 30 Nov-4 Dec
 - **Scope:** Replace the ClamAV stub with a real clamd client and deploy the daemon; fail closed for real uploads; the fake scanner never runs outside development; alert when signatures are stale or the scanner is down.
@@ -298,7 +298,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 03A Admin navigation foundation (REQ-OWN-08)
 
-- **Status:** BRANCH PUSHED, VERIFIED OFFLINE (feat/03a-admin-navigation 7a6f484; vitest 1114, Playwright 89, pytest 107, tsc, lint, ruff)
+- **Status:** MERGED (PR #216, merge f921892); CI green (feat/03a-admin-navigation c652b2b; vitest 1131, Playwright 89, pytest; 1 CI rework round (evaluator counted group ids as destinations))
 - **Scope tier:** T1 (Reviewer corrections and operator safety)
 - **Track / phase / weeks:** C (Admin Platform 2.0) / 3 / W1 26 Oct-1 Nov to W2 2-8 Nov
 - **Scope:** Grouped, collapsible Admin sidebar, active highlighting, breadcrumbs, responsive and keyboard-accessible, permission-aware; Review and Diagnostics moved under /admin with redirects; removed from the global Candidate More menu; backend permissions unchanged.
@@ -316,7 +316,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 03B Admin Plans: Basic/Premium management (REQ-OWN-02)
 
-- **Status:** NOT STARTED
+- **Status:** BRANCH PUSHED, NO PR; stacked on PREP-HEAD (feat/03b-admin-plans 72bb7fd; 33 new tests; full suite 5589 passed/1 stale test; 9 routes; no migration; billing stays mock)
 - **Scope tier:** T3 (Admin 2.0 expansion beyond the existing Admin)
 - **Track / phase / weeks:** C (Admin Platform 2.0) / 3 / W3 9-15 Nov to W4 16-22 Nov
 - **Scope:** Draft plan editing from registered features, per-plan feature toggles and limits, clone/version, comparison, candidate-access preview, user and Workspace assignment, activate/retire, rollback, backend enforcement; no billing.
@@ -334,7 +334,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 03C Admin Users: complete user management (REQ-OWN-03)
 
-- **Status:** NOT STARTED
+- **Status:** BRANCH PUSHED, NO PR; stacked on PREP-HEAD (feat/03c-admin-users 5fd21d6; 18 new tests; 7 action routes; no migration; bulk actions not built (OD-BULK-ACTIONS))
 - **Scope tier:** T2 (Owner core capabilities (candidate journeys, Story Bank, Workspaces, quality evidence))
 - **Track / phase / weeks:** C (Admin Platform 2.0) / 3 / W3 9-15 Nov to W4 16-22 Nov
 - **Scope:** Search, filter, sort, pagination; membership inspection; restricted bulk actions; communications; support and audit view; self-lockout and escalation protection; no private content.
@@ -352,7 +352,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 03K Admin metric and report contract (interface package)
 
-- **Status:** BRANCH PUSHED, VERIFIED OFFLINE (feat/03k-admin-metric-contract 8afe350; 183 passed under both venvs; tsc, lint, vitest 28)
+- **Status:** MERGED (PR #219, merge 20241f4); CI green (feat/03k-admin-metric-contract 8afe350; 183 passed; vitest 28; 12/12 GitHub checks; contract frozen for 03D1/03E1)
 - **Scope tier:** T3 (Admin 2.0 expansion beyond the existing Admin)
 - **Track / phase / weeks:** C (Admin Platform 2.0) / 3 / W1 26 Oct-1 Nov to W1 26 Oct-1 Nov
 - **Scope:** A typed contract for Admin metrics, dimensions, dashboards and reports (extends src/reporting/definitions.py): metric id, source, numerator, denominator, period, coverage rule, missing-data behaviour; report definition schema; API response schemas and the matching frontend types; contract tests. Lets the dashboard backend (03D1), the report backend (03E1) and their UIs proceed in parallel instead of in a chain.
@@ -370,7 +370,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 03D1 Command Center metrics and AI operations read model (REQ-OWN-01, backend)
 
-- **Status:** NOT STARTED
+- **Status:** BRANCH PUSHED, NO PR; backend only (feat/03d1-command-center-metrics 89f6e66; 46 new tests; 269 related passed; 8 GET routes; registry stays 44; no migration)
 - **Scope tier:** T3 (Admin 2.0 expansion beyond the existing Admin)
 - **Track / phase / weeks:** C (Admin Platform 2.0) / 3 / W3 9-15 Nov to W4 16-22 Nov
 - **Scope:** Real sourced metrics with period, numerator, denominator, coverage and missing-data states, and the AI operations read model over models, configuration, prompt versions, provider readiness, agent execution and evaluation.
@@ -407,7 +407,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 03E1 Reports registry, governed builder, saved configurations and exports (REQ-OWN-04, backend)
 
-- **Status:** NOT STARTED
+- **Status:** BRANCH PUSHED, NO PR; stacked on PREP-HEAD; migration 0041 (feat/03e1-reports-builder 0c3638b; 107 new tests; 20 routes; migration 0041_report_configurations; edited the privacy evaluator (review))
 - **Scope tier:** T3 (Admin 2.0 expansion beyond the existing Admin)
 - **Track / phase / weeks:** C (Admin Platform 2.0) / 3 / W2 2-8 Nov to W4 16-22 Nov
 - **Scope:** Prebuilt report registry, builder over registered metric and dimension ids only, saved configurations (one additive migration), exports, suppression, permissions.
@@ -444,7 +444,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 04A Story Bank completion (REQ-OWN-06)
 
-- **Status:** NOT STARTED
+- **Status:** BRANCH PUSHED, NO PR; stacked on PREP-HEAD; migration 0041 (feat/04a-story-bank a7b0713; 31 backend + 47 frontend tests; migration 0041_story_bank_completion; touches src/agent evidence specialist (one line))
 - **Scope tier:** T2 (Owner core capabilities (candidate journeys, Story Bank, Workspaces, quality evidence))
 - **Track / phase / weeks:** D (Candidate journeys, Story Bank, Workspaces and streaming) / 4 / W2 2-8 Nov to W3 9-15 Nov
 - **Scope:** Manual and evidence-drafted STAR stories, provenance labels, Opportunity links, suggestions with approval, Practice reuse, feedback reflection, privacy and ownership.
@@ -462,7 +462,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 04B Workspaces completion (REQ-OWN-07)
 
-- **Status:** NOT STARTED
+- **Status:** BRANCH PUSHED, NO PR; stacked on PREP-HEAD; no migration (feat/04b-workspaces 0d3d9ed; 52 backend + 34 frontend tests; evaluator 29 gates; security fix: invitation acceptance needs a verified email)
 - **Scope tier:** T2 (Owner core capabilities (candidate journeys, Story Bank, Workspaces, quality evidence))
 - **Track / phase / weeks:** D (Candidate journeys, Story Bank, Workspaces and streaming) / 4 / W2 2-8 Nov to W3 9-15 Nov
 - **Scope:** Invitation lifecycle UI, membership, ownership transfer, explicit VIEW-only sharing UI, immediate revocation, audit.
@@ -516,7 +516,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 04E Invitation-only registration (REQ-BETA-01)
 
-- **Status:** NOT STARTED
+- **Status:** BRANCH PUSHED, NO PR; stacked on PREP-HEAD; migration 0041 (feat/04e-invitation-only 54c4bf0; 90 new tests; hosted invitation-required fail-closed; migration 0041_registration_invitations)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** D (Candidate journeys, Story Bank, Workspaces and streaming) / 4 / W4 16-22 Nov to W6 30 Nov-4 Dec
 - **Scope:** Registration succeeds only with a valid invitation; revocable and audited; no open sign-up; no payment path.
@@ -552,7 +552,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 05A Hosted topology and platform hardening
 
-- **Status:** BRANCH PUSHED, VERIFIED OFFLINE (feat/05a-staging-topology 0a7d6fb; 114 passed/1 skipped under both venvs; ruff; hosting readiness PASS; nothing deployed)
+- **Status:** MERGED (PR #218, merge 9b6b109); CI green; NOT DEPLOYED (feat/05a-staging-topology 776d7dd; 114 passed/1 skipped; hosting readiness PASS; 2 CI rework rounds (obsolete Phase 00 assertion; merge conflict); live staging blocked on OD-HOSTED)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates)); **early parallel workstream**
 - **Track / phase / weeks:** E (Hosted infrastructure and operations) / 5 / W1 26 Oct-1 Nov to W2 2-8 Nov
 - **Scope:** Create staging and production topology: TLS and HSTS with automatic certificates, same-site cookies, CORS allowlist, readiness gating, single migration step, CSP, documented single-replica limits, environment separation, a worker service and knowledge volumes (missing from the current staging compose), CSRF and step-up posture review.
@@ -643,7 +643,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 06A Locale audit and language boundaries
 
-- **Status:** BRANCH PUSHED, CORRECTIONS IN PROGRESS (feat/06a-locale-boundaries f7b2e03; full Python suite 5172 passed on the repo venv and 5170 on the fresh venv; vitest 1087; affected Playwright; documentation corrections pending)
+- **Status:** MERGED (PR #214, merge f9a06a9); CI green; no language qualified (feat/06a-locale-boundaries a7559a9; audit 2382 keys x 7, 0 missing; 1 CI rework round (esbuild/npm ci in Python shards); 14 Russian Playwright tests skipped and excluded)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** F (Seven-language and human qualification) / 6 / W1 26 Oct-1 Nov to W2 2-8 Nov
 - **Scope:** Per-language audit; remove Russian from active Candidate selection; language/geography separation tests; per-language readiness tracking; claim discipline; Admin English-only check.
@@ -769,7 +769,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 06H Language activation control: fail-closed enforcement of LG-01 to LG-14 before real-user activation
 
-- **Status:** NOT STARTED
+- **Status:** BRANCH PUSHED, NO PR; verified offline (feat/06h-language-activation a0d01c8; 211 language tests pass under both venvs; full suite 5615 passed/1 stale test; zero languages qualified; hosted fail-closed)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** F (Seven-language and human qualification) / 6 / W4 16-22 Nov to W6 30 Nov-4 Dec
 - **Scope:** Server-side enforcement that a locale is offered to real users only when it has a COMPLETE, APPROVED qualification record: all fourteen gates PASS, each with an evidence artefact reference, a named human approver, an approval date and the release SHA, and no gate stale. In production a locale without such a record is neither offered nor accepted for new sessions (fail closed, including when no locale qualifies); staging and development keep the seven languages selectable but visibly labelled UNQUALIFIED for synthetic testing. The mechanism is code-defined (it cannot be flipped from Admin or the environment alone) and is testable now with synthetic readiness fixtures. REQ-LANG-13 is assigned to 06A; 06H completes its enforcement.
