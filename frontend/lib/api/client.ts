@@ -77,6 +77,9 @@ import type {
   AdminTicketDetail,
   AdminTicketQuery,
   AdminTicketSummary,
+  AdminInvitationIssued,
+  AdminInvitationPage,
+  AdminInvitationRow,
   AdminUserDetail,
   AdminUserQuery,
   AdminUserSummary,
@@ -169,6 +172,9 @@ import type {
   DocumentDetail,
   ClaimOut,
   StoryOut,
+  StoryAnswerSource,
+  StorySearchRequest,
+  StorySuggestion,
 } from "./types";
 
 const REQUEST_ID_HEADER = "x-request-id";
@@ -527,6 +533,20 @@ export const api = {
     update: (id: number, body: Partial<StoryOut>, opts?: RequestOptions) =>
       request<StoryOut>("PATCH", `/stories/${id}`, { body, ...opts }),
     remove: (id: number, opts?: RequestOptions) => request<{ deleted: boolean }>("DELETE", `/stories/${id}`, opts),
+    // 04A. Search/suggest are POSTs on purpose: the words typed never appear in a URL or an access log.
+    search: (body: StorySearchRequest, opts?: RequestOptions) => request<{ stories: StoryOut[] }>("POST", "/stories/search", { body, ...opts }),
+    tags: (opts?: RequestOptions) => request<{ tags: string[] }>("GET", "/stories/tags", opts),
+    answerSources: (opts?: RequestOptions) => request<{ sources: StoryAnswerSource[] }>("GET", "/stories/answer-sources", opts),
+    suggest: (body: { terms: string[]; opportunity_id?: number; limit?: number }, opts?: RequestOptions) =>
+      request<{ suggestions: StorySuggestion[] }>("POST", "/stories/suggest", { body, ...opts }),
+    archive: (id: number, opts?: RequestOptions) => request<StoryOut>("POST", `/stories/${id}/archive`, opts),
+    restore: (id: number, opts?: RequestOptions) => request<StoryOut>("POST", `/stories/${id}/restore`, opts),
+    confirm: (id: number, opts?: RequestOptions) => request<StoryOut>("POST", `/stories/${id}/confirm`, opts),
+    unconfirm: (id: number, opts?: RequestOptions) => request<StoryOut>("DELETE", `/stories/${id}/confirm`, opts),
+    attachEvidence: (id: number, kind: "claim" | "answer", refId: number, opts?: RequestOptions) =>
+      request<StoryOut>("POST", `/stories/${id}/evidence`, { body: { kind, ref_id: refId }, ...opts }),
+    detachEvidence: (id: number, kind: "claim" | "answer", refId: number, opts?: RequestOptions) =>
+      request<StoryOut>("DELETE", `/stories/${id}/evidence/${kind}/${refId}`, opts),
   },
 
   reports: {
@@ -621,6 +641,13 @@ export const api = {
   // Platform Admin operations (Capstone P6.5). PLATFORM_ADMIN only; metadata only.
   admin: {
     home: (opts?: RequestOptions) => request<AdminCommandCenter>("GET", "/admin/home", opts),
+    // 04E private-beta invitations. The plaintext code and link are in the issue response only.
+    invitations: (q: { state?: string; limit?: number; offset?: number } = {}, opts?: RequestOptions) =>
+      request<AdminInvitationPage>("GET", `/admin/invitations${qs(q as Record<string, unknown>)}`, opts),
+    issueInvitation: (body: { expires_in_days?: number; email?: string | null }, opts?: RequestOptions) =>
+      request<AdminInvitationIssued>("POST", "/admin/invitations", { body, ...opts }),
+    revokeInvitation: (id: number, opts?: RequestOptions) =>
+      request<AdminInvitationRow>("POST", `/admin/invitations/${encodeURIComponent(String(id))}/revoke`, opts),
     users: (query: AdminUserQuery = {}, opts?: RequestOptions) =>
       request<AdminPage<AdminUserSummary>>("GET", `/admin/users${qs(query as Record<string, unknown>)}`, opts),
     userDetail: (userId: number, opts?: RequestOptions) =>

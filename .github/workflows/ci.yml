@@ -169,6 +169,8 @@ jobs:
           if-no-files-found: error
       - name: Deterministic agent orchestration evaluation (offline; gates, no paid calls)
         run: python scripts/eval_agent.py
+      - name: Prompt-injection corpus evaluation (01A; offline; synthetic corpus; REPORT ONLY, thresholds not approved, no gate until OD-GATE-THRESHOLDS)
+        run: python scripts/eval_injection_corpus.py --json "$RUNNER_TEMP/injection_corpus_report.json"
       - name: Identity & platform evaluation (Capstone P1/E1; offline; safety invariants = 1.0)
         run: python scripts/eval_identity_platform.py
       - name: Response-experience evaluation (Capstone P2/E2; offline; presentation + preference)

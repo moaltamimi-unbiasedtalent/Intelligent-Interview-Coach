@@ -19,19 +19,12 @@ from src.api.dependencies import (
     get_history_access_policy,
     get_pause_service,
     get_repository,
-    get_sharing_service,
-    get_stories_service,
 )
 from src.api.schemas.documents import (
     ClaimReviewRequest,
     DeleteResponse,
     DocumentDetail,
     DocumentListResponse,
-    StoryCreateRequest,
-    StoryDraftRequest,
-    StoryListResponse,
-    StoryOut,
-    StoryUpdateRequest,
 )
 from src.application.report_export import build_json_export, build_markdown_export
 from src.documents.validation import MAX_FILE_BYTES
@@ -39,24 +32,40 @@ from src.documents.validation import MAX_FILE_BYTES
 router = APIRouter(prefix="/documents", tags=["documents"])
 
 
-def _scan_or_reject(data: bytes, filename: str) -> None:
-    """Malware-scan policy (§16/§17): fail closed when scanning is required but unavailable;
-    reject flagged files; never claim a file is clean unless a real scanner passed it."""
+def _scan_or_reject(data: bytes, filename: str, session_factory=None) -> None:
+    """Malware-scan policy (§16/§17), fail closed: a scanner outage is 503 (retryable, never an infection verdict), a flagged file is 422, a file
+    over the scan limit is 413; none of them is stored. A file is accepted only after a real scanner passed it when scanning is required."""
     from src.documents.file_security import (
-        FileRejected, FileScanUnavailable, enforce_scan)
+        FileRejected, FileScanUnavailable, FileTooLarge, enforce_scan)
 
     try:
         enforce_scan(data, filename)
     except FileScanUnavailable as exc:
-        raise HTTPException(
-            status_code=503,
-            detail="File uploads are temporarily unavailable (security scanning offline).",
-        ) from exc
+        _observe_scanner(session_factory, available=False)
+        raise _scan_error(503, "scan_unavailable", "File uploads are temporarily unavailable (security scanning offline).") from exc
+    except FileTooLarge as exc:
+        raise _scan_error(413, "scan_too_large", "This file is too large to be security scanned and was not stored.") from exc
     except FileRejected as exc:
-        raise HTTPException(
-            status_code=422,
-            detail="This file was rejected by a security scan and was not stored.",
-        ) from exc
+        _observe_scanner(session_factory, available=True)
+        raise _scan_error(422, "scan_infected", "This file was rejected by a security scan and was not stored.") from exc
+    _observe_scanner(session_factory, available=True)
+
+
+def _scan_error(status: int, code: str, message: str) -> HTTPException:
+    """The stable error envelope carries ``error_code`` so a scanner outage (503 scan_unavailable) is distinguishable from an infection
+    (422 scan_infected) and from an over-limit file (413 scan_too_large). No signature name, content or path is ever included."""
+    err = HTTPException(status_code=status, detail=message)
+    err.error_code = code
+    return err
+
+
+def _observe_scanner(session_factory, *, available: bool) -> None:
+    """Raise or clear the in-app scanner alert (best effort, never changes the response)."""
+    if session_factory is None:
+        return
+    from src.knowledge_admin.alerts import observe_scanner
+
+    observe_scanner(session_factory, available=available)
 
 
 @router.get("", response_model=DocumentListResponse, summary="List the caller's private documents")
@@ -72,6 +81,7 @@ async def upload_document(
     svc=Depends(get_documents_service),
     user_id: int = Depends(get_current_user_id),
     pause=Depends(get_pause_service),
+    repo=Depends(get_repository),
 ) -> DocumentDetail:
     # Per-user upload ceiling + OCR pause (§19/§21). OCR runs during upload, so a paused OCR
     # capability blocks new uploads truthfully rather than silently skipping extraction.
@@ -83,7 +93,7 @@ async def upload_document(
     data = await file.read()
     if len(data) > MAX_FILE_BYTES:
         raise HTTPException(status_code=413, detail="The file is too large (max 10 MB).")
-    _scan_or_reject(data, file.filename or "document")
+    _scan_or_reject(data, file.filename or "document", repo.session_factory)
     detail = svc.upload(
         user_id=user_id, filename=file.filename or "document",
         data=data, category=category, language_hint=language_hint,
@@ -107,6 +117,7 @@ async def replace_document(
     svc=Depends(get_documents_service),
     user_id: int = Depends(get_current_user_id),
     pause=Depends(get_pause_service),
+    repo=Depends(get_repository),
 ) -> DocumentDetail:
     from src.api.guards import ensure_not_paused
     from src.api.rate_limit import enforce, user_key
@@ -116,7 +127,7 @@ async def replace_document(
     data = await file.read()
     if len(data) > MAX_FILE_BYTES:
         raise HTTPException(status_code=413, detail="The file is too large (max 10 MB).")
-    _scan_or_reject(data, file.filename or "document")
+    _scan_or_reject(data, file.filename or "document", repo.session_factory)
     detail = svc.replace(user_id=user_id, document_id=document_id, filename=file.filename or "document", data=data, language_hint=language_hint)
     if detail is None:
         raise HTTPException(status_code=404, detail="Document not found.")
@@ -183,59 +194,6 @@ def delete_document(document_id: int = Path(...), svc=Depends(get_documents_serv
     # survives without pointing at inaccessible content (Postgres also SET NULLs via the FK).
     from src.opportunity_repository import OpportunityRepository
     OpportunityRepository(repo.session_factory).clear_jd_links(document_id)
-    return DeleteResponse(deleted=True)
-
-
-# --- story / evidence bank ---------------------------------------------------
-
-stories_router = APIRouter(prefix="/stories", tags=["documents"])
-
-
-@stories_router.get("", response_model=StoryListResponse, summary="List the caller's stories")
-def list_stories(svc=Depends(get_stories_service), user_id: int = Depends(get_current_user_id)) -> StoryListResponse:
-    return StoryListResponse(stories=svc.list(user_id))
-
-
-@stories_router.post("", response_model=StoryOut, status_code=201, summary="Create a story")
-def create_story(body: StoryCreateRequest, svc=Depends(get_stories_service), user_id: int = Depends(get_current_user_id)) -> StoryOut:
-    story = svc.create(
-        user_id=user_id, title=body.title, status=body.status,
-        fields={"situation": body.situation, "task": body.task, "action": body.action,
-                "result": body.result, "competencies": body.competencies},
-        claim_ids=body.claim_ids,
-    )
-    return StoryOut(**story)
-
-
-@stories_router.post("/draft", response_model=StoryOut, status_code=201, summary="Draft a source-backed story from owned claims")
-def draft_story(body: StoryDraftRequest, svc=Depends(get_stories_service), user_id: int = Depends(get_current_user_id)) -> StoryOut:
-    story = svc.draft_from_claims(user_id=user_id, title=body.title, claim_ids=body.claim_ids)
-    return StoryOut(**story)
-
-
-@stories_router.get("/{story_id}", response_model=StoryOut, summary="Get one story")
-def get_story(story_id: int = Path(...), svc=Depends(get_stories_service), user_id: int = Depends(get_current_user_id)) -> StoryOut:
-    story = svc.get(user_id=user_id, story_id=story_id)
-    if story is None:
-        raise HTTPException(status_code=404, detail="Story not found.")
-    return StoryOut(**story)
-
-
-@stories_router.patch("/{story_id}", response_model=StoryOut, summary="Edit a story (marks source-backed as user-corrected)")
-def update_story(body: StoryUpdateRequest, story_id: int = Path(...), svc=Depends(get_stories_service), user_id: int = Depends(get_current_user_id)) -> StoryOut:
-    story = svc.update(user_id=user_id, story_id=story_id, fields=body.model_dump(exclude_none=True))
-    if story is None:
-        raise HTTPException(status_code=404, detail="Story not found.")
-    return StoryOut(**story)
-
-
-@stories_router.delete("/{story_id}", response_model=DeleteResponse, summary="Delete a story")
-def delete_story(story_id: int = Path(...), svc=Depends(get_stories_service),
-                 sharing=Depends(get_sharing_service), user_id: int = Depends(get_current_user_id)) -> DeleteResponse:
-    if not svc.delete(user_id=user_id, story_id=story_id):
-        raise HTTPException(status_code=404, detail="Story not found.")
-    # A deleted source must not leave an active-looking grant (ids can be reused on SQLite).
-    sharing.invalidate_on_delete(owner_user_id=user_id, resource_type="story", resource_id=str(story_id))
     return DeleteResponse(deleted=True)
 
 

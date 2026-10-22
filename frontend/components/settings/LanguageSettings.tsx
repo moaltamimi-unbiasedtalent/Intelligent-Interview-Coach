@@ -14,7 +14,8 @@ import { useId, useState } from "react";
 import { api } from "@/lib/api/client";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { useI18n } from "@/components/i18n/I18nProvider";
-import { SELECTABLE_LOCALES, type AppLocale, toActiveLocale } from "@/lib/i18n/locales";
+import { type AppLocale, toActiveLocale } from "@/lib/i18n/locales";
+import { useOfferedLocales } from "@/lib/i18n/offeredLocales";
 import { DICTATION_LANGUAGES, dictationLanguageName } from "@/components/ui/DictationControl";
 import { useDictationLanguage } from "@/lib/speech/useDictationLanguage";
 
@@ -45,6 +46,7 @@ const selectClass =
 
 export function LanguageSettings() {
   const { t, locale, setLocale } = useI18n();
+  const { options, noneAvailable } = useOfferedLocales();
   const auth = useAuthOptional();
   const [dictationLang, setDictationLang] = useDictationLanguage();
   const [conversation, setConversation] = useState<AppLocale>(
@@ -78,11 +80,12 @@ export function LanguageSettings() {
           aria-labelledby={ifaceId}
           className={selectClass}
           value={locale}
+          disabled={noneAvailable}
           onChange={(e) => setLocale(e.target.value as AppLocale)}
         >
-          {SELECTABLE_LOCALES.map((l) => (
+          {options.map((l) => (
             <option key={l.code} value={l.code}>
-              {l.nativeLabel}
+              {l.unqualified ? `${l.nativeLabel} (${t("common.languageUnqualified")})` : l.nativeLabel}
             </option>
           ))}
         </select>
@@ -93,15 +96,20 @@ export function LanguageSettings() {
           aria-labelledby={convId}
           className={selectClass}
           value={conversation}
+          disabled={noneAvailable}
           onChange={(e) => changeConversation(e.target.value as AppLocale)}
         >
-          {SELECTABLE_LOCALES.map((l) => (
+          {options.map((l) => (
             <option key={l.code} value={l.code}>
-              {l.nativeLabel}
+              {l.unqualified ? `${l.nativeLabel} (${t("common.languageUnqualified")})` : l.nativeLabel}
             </option>
           ))}
         </select>
       </Row>
+
+      {noneAvailable ? (
+        <p role="note" data-testid="language-none-available" className="text-sm text-muted">{t("common.languagesNoneAvailable")}</p>
+      ) : null}
 
       <Row labelId={dictId} label={t("settings.dictationLanguage")} help={t("settings.dictationLanguageHelp")}>
         <select

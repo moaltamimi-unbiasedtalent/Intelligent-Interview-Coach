@@ -106,6 +106,13 @@ browsers; run it locally (see `e2e/README.md`).
 - Google sign-in (when `FEATURE_GOOGLE_LOGIN` is on) needs `OIDC_REDIRECT_URI` set to the exact registered https callback (`.../api/v1/auth/oidc/google/callback`); production refuses to start without it. The flow uses PKCE S256 and validates the ID token.
 - A rotated Brevo credential takes effect after the API and the worker restart. Provider acceptance is not delivery; no delivery events are collected. Apply migration `0027_email_attempts` with `alembic upgrade head`. See `docs/capstone/admin/W12_04C_EMAIL_IDENTITY_OPERATIONS.md` for the runbook.
 
+## Invitation-only private beta registration (04E, REQ-BETA-01)
+
+- Staging, production and ANY other `API_ENV` value (unknown labels included) require a valid invitation to register, by password or with a NEW Google account. This is decided from `API_ENV` in code and cannot be switched off by a setting. Local `development`/`dev`/`test`/`testing`/`local` default to NOT requiring one; `REGISTRATION_INVITATION_REQUIRED=true` turns it on locally.
+- Apply migration `0042_registration_invitations` with `alembic upgrade head`. Its downgrade refuses while any invitation is pending or redeemed.
+- First deployment bootstrap (nobody can register without an invitation, and the Admin console needs an administrator): `python scripts/issue_invitation.py --email owner@example.com --yes` (dry-run without `--yes`; prints the code and link ONCE; set `APP_BASE_URL` first so the link is correct), register with it, verify the email, then `python scripts/bootstrap_admin.py --email owner@example.com --yes`. After that, issue invitations in Admin, Users (`/admin/users`, "Private beta invitations").
+- No email is sent for invitations: the operator copies the link (the code is in the URL fragment, so it is not sent to a server or logged). Delivery of invitation emails is a separate decision.
+
 ## Secrets handling
 
 - **Admin-managed provider credentials (W12.4B, opt-in).** Set `SECRET_STORE_BACKEND=encrypted_database` and

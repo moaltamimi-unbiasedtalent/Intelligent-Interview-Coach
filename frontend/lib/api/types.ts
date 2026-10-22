@@ -33,6 +33,12 @@ export interface CapabilitiesResponse {
   // 06A: the server-defined (code-only) locales a Candidate may select; excludes Russian. Optional for older servers.
   active_candidate_locales?: string[];
   default_locale?: string;
+  // 06H: the activation decision. `active_candidate_locales` is the OFFERED set (empty in a hosted environment until a locale has a complete approved
+  // qualification record). Optional for older servers.
+  language_activation_mode?: string;
+  qualified_locales?: string[];
+  unqualified_locales?: string[];
+  no_language_available?: boolean;
 }
 
 // --- Opportunities (P10B Wave 6) ---------------------------------------------
@@ -398,6 +404,10 @@ export interface InterviewConfigInput {
   job_description_document_id?: number | null;
   /** Compose candidate context from the caller's APPROVED evidence only. */
   use_candidate_evidence?: boolean;
+  /** 04A: the candidate's OWN stories chosen one by one for this session (max 5). Needs `confirm_story_use`. */
+  story_ids?: number[];
+  /** 04A: explicit consent that the selected stories' text is given to the model as untrusted data. */
+  confirm_story_use?: boolean;
 }
 
 export interface CreateInterviewRequest {
@@ -959,6 +969,8 @@ export interface RegisterRequest {
   display_name?: string | null;
   /** Interface language for transactional email (one of the eight product locales). */
   locale?: string | null;
+  /** Private-beta invitation code (04E). The server decides whether one is required; it is never stored in the browser. */
+  invitation_code?: string | null;
 }
 
 export interface LoginRequest {
@@ -1083,7 +1095,48 @@ export interface StoryOut {
   status: string;
   evidence_state: string;
   evidence_claim_ids: number[];
+  /** 04A. Derived by the server on every read; never stored by the client. */
+  verification?: StoryVerification;
+  evidence_answer_ids?: number[];
+  opportunity_id?: number | null;
+  archived_at?: string | null;
+  confirmed_at?: string | null;
+  use_count?: number;
+  last_used_at?: string | null;
+  /** Deterministic STAR quality prompt codes (the UI localises them). */
+  quality_prompts?: string[];
   updated_at?: string | null;
+}
+
+/** evidence_verified = a live document item; answer_linked = the candidate's own practice answer; self_confirmed = the candidate's attestation (NOT evidence). */
+export type StoryVerification = "evidence_verified" | "source_revoked" | "answer_linked" | "self_confirmed" | "unverified";
+export type StoryArchiveFilter = "active" | "archived" | "all";
+
+export interface StorySearchRequest {
+  q?: string;
+  tag?: string;
+  status?: string;
+  verification?: StoryVerification;
+  opportunity_id?: number;
+  archived?: StoryArchiveFilter;
+}
+
+/** One of the caller's own answered practice questions that can be linked as story evidence (question text only; never the answer). */
+export interface StoryAnswerSource {
+  answer_id: number;
+  interview_id: number;
+  position: number;
+  question: string;
+  created_at?: string | null;
+}
+
+export interface StorySuggestion {
+  id: number;
+  title: string;
+  verification: StoryVerification;
+  competencies: string[];
+  matched: string[];
+  requires_approval: boolean;
 }
 
 // --- Customer support (P10B-W10.3). Candidate-visible shapes only: no internal notes, priority or operator identity.

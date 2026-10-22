@@ -11,6 +11,7 @@ import { useI18n } from "@/components/i18n/I18nProvider";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { toActiveLocale, type AppLocale, DEFAULT_APP_LOCALE } from "@/lib/i18n/locales";
 import { DocumentPicker } from "@/components/documents/DocumentPicker";
+import { StoryPicker } from "@/components/stories/StoryPicker";
 import { ConversationLanguageField } from "@/components/i18n/ConversationLanguageField";
 
 const labelize = (id: string) => id.charAt(0).toUpperCase() + id.slice(1).replace(/_/g, " ");
@@ -38,6 +39,9 @@ export function InterviewSessionSetup({ onCreated, opportunityId = null }: {
   // Wave 4 governed context + language.
   const [jdDocId, setJdDocId] = useState<number | null>(null);
   const [useEvidence, setUseEvidence] = useState(false);
+  // 04A: stories chosen one by one + the explicit consent to give their text to the model for this session.
+  const [storyIds, setStoryIds] = useState<number[]>([]);
+  const [storyConsent, setStoryConsent] = useState(false);
   const [conversationLanguage, setConversationLanguage] = useState<AppLocale>(
     toActiveLocale(account?.conversation_language ?? null) ?? DEFAULT_APP_LOCALE,
   );
@@ -87,7 +91,7 @@ export function InterviewSessionSetup({ onCreated, opportunityId = null }: {
     return () => { alive = false; };
   }, []);
 
-  const canSubmit = role.trim() && industry.trim() && careerLevel && !busy;
+  const canSubmit = role.trim() && industry.trim() && careerLevel && !busy && (storyIds.length === 0 || storyConsent);
 
   function toggleType(ty: string) {
     setInterviewTypes((prev) => (prev.includes(ty) ? prev.filter((x) => x !== ty) : [...prev, ty]));
@@ -107,6 +111,7 @@ export function InterviewSessionSetup({ onCreated, opportunityId = null }: {
           conversation_language: conversationLanguage,
           ...(jdDocId ? { job_description_document_id: jdDocId } : {}),
           ...(useEvidence ? { use_candidate_evidence: true } : {}),
+          ...(storyIds.length ? { story_ids: storyIds, confirm_story_use: true } : {}),
           ...(interviewTypes.length ? { interview_types: interviewTypes } : {}),
           ...(difficulty ? { difficulty } : {}),
         },
@@ -159,6 +164,8 @@ export function InterviewSessionSetup({ onCreated, opportunityId = null }: {
               <span className="mt-0.5 block text-xs text-muted">{t("prepctx.useEvidenceHelp")}</span>
             </span>
           </label>
+          <StoryPicker roleText={role} opportunityId={opportunityId} value={storyIds} onChange={setStoryIds}
+                       consent={storyConsent} onConsent={setStoryConsent} disabled={busy} />
         </section>
 
         {/* INTERVIEW */}

@@ -599,6 +599,14 @@ class CandidateStory(Base):
     competencies: Mapped[list | None] = mapped_column(JSON, nullable=True)
     status: Mapped[str] = mapped_column(String(24), default=STORY_USER_CREATED)
     evidence_state: Mapped[str] = mapped_column(String(24), default=STORY_EVIDENCE_NONE)
+    # 04A: archive (reversible, hides from search/suggestions/Practice/shares), the optional Opportunity
+    # link (nullable; unlinked explicitly on Opportunity delete, SQLite has no ALTER-added FK) and the
+    # candidate's own "I confirm this is accurate" timestamp (self-attestation: never evidence).
+    archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    opportunity_id: Mapped[int | None] = mapped_column(
+        ForeignKey("opportunities.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
@@ -627,6 +635,34 @@ class StoryEvidence(Base):
     claim_id: Mapped[int] = mapped_column(ForeignKey("document_claims.id", ondelete="CASCADE"), index=True)
 
     story: Mapped[CandidateStory] = relationship(back_populates="evidence")
+
+
+class StoryAnswerLink(Base):
+    """Links a story to one of the candidate's OWN practice answers (04A). A REFERENCE only: no answer text is
+    copied here. The link counts only while the answer still exists AND belongs to the story's owner (checked on
+    every read, because SQLite does not enforce the cascade), and it is weaker than document evidence: it labels a
+    story "linked to a practice answer", never "verified"."""
+
+    __tablename__ = "story_answer_links"
+    __table_args__ = (UniqueConstraint("story_id", "answer_id", name="uq_story_answer_link"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    story_id: Mapped[int] = mapped_column(ForeignKey("candidate_stories.id", ondelete="CASCADE"), index=True)
+    answer_id: Mapped[int] = mapped_column(ForeignKey("answers.id", ondelete="CASCADE"), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class StoryUse(Base):
+    """One explicit, consented use of a story in a Practice session (04A). Ids only: it records WHICH story was
+    chosen for WHICH session (attribution, and so that deleting the story can find and strip its copied text)."""
+
+    __tablename__ = "story_uses"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    story_id: Mapped[int] = mapped_column(ForeignKey("candidate_stories.id", ondelete="CASCADE"), index=True)
+    session_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class AuditEvent(Base):
@@ -2294,6 +2330,32 @@ class FeatureFlagOverride(Base):
     reason: Mapped[str] = mapped_column(String(200), default="")
 
 
+class ReportConfiguration(Base):
+    """A saved Admin report DEFINITION (package 03E1): which registered metrics, window, grouping, filters and chart kind. It stores the DEFINITION ONLY: never a
+    result, a figure, a candidate identifier or any candidate data (the preview/export always recomputes through the suppression pipeline). The owner is the Admin who
+    created it; ``shared`` lets other Admins who already hold the report's existing read permission VIEW it (they can never edit or delete it). ``revision`` is the
+    optimistic-concurrency token. Bounded by ``src.reporting.report_builder`` (count per owner, definition size)."""
+
+    __tablename__ = "report_configurations"
+    __table_args__ = (
+        UniqueConstraint("owner_user_id", "name", name="uq_rc_owner_name"),
+        CheckConstraint("revision >= 1", name="ck_rc_revision"),
+        CheckConstraint("length(definition_hash) = 64", name="ck_rc_hash"),
+        Index("ix_rc_owner", "owner_user_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String(60))
+    report_id: Mapped[str] = mapped_column(String(64))
+    definition_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    definition_hash: Mapped[str] = mapped_column(String(64))
+    shared: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    revision: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 SPEECH_STT_PROVIDERS = ("openai_whisper",)
 SPEECH_TTS_PROVIDERS = ("kyutai_pocket_tts",)
 
@@ -3171,6 +3233,41 @@ class AdminRoleChangeRequest(Base):
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     applied_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     revision: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+
+
+# --- 04E invitation-only private beta registration (REQ-BETA-01) -------------------------------------------------------------------------------
+REGISTRATION_INVITATION_STATES = ("pending", "redeemed", "expired", "revoked")  # DERIVED from the timestamps below (never stored, so they cannot disagree)
+
+
+class RegistrationInvitation(Base):
+    """A single-use, expiring, revocable invitation to REGISTER (private beta, 04E).
+
+    The plaintext code exists only in the response that issued it. This row holds ONLY ``code_hash`` (SHA-256 of a 256-bit random code), so a database read never
+    yields a usable credential. State is derived from the timestamps: ``revoked_at`` set = revoked; ``redeemed_at`` set = redeemed; ``expires_at`` in the past =
+    expired; otherwise pending. Redemption is ONE conditional UPDATE (``redeemed_at IS NULL AND revoked_at IS NULL AND expires_at > now``) executed in the SAME
+    transaction as the account insert, so concurrent redemption yields exactly one success and a failed registration never burns a code.
+    ``email_hash`` (optional binding) is a salted SHA-256 of the normalised address, ``email_hint`` a masked display form for Admin. Account deletion clears
+    ``redeemed_by_user_id`` (and the email binding of a redeemed row); the consumed row stays as an anonymous record so a code can never be replayed.
+    """
+
+    __tablename__ = "registration_invitations"
+    __table_args__ = (
+        UniqueConstraint("code_hash", name="uq_registration_invitations_code_hash"),
+        Index("ix_registration_invitations_expires", "expires_at"),
+        CheckConstraint("expires_at > created_at", name="ck_registration_invitations_expiry"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    code_hash: Mapped[str] = mapped_column(String(64))
+    email_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    email_hint: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    issued_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    redeemed_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    redeemed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
 
 def _install_append_only(table_obj, table_name: str) -> None:

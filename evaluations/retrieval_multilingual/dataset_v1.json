@@ -1,0 +1,616 @@
+{
+ "description": "Synthetic, hand-authored interview-preparation passages (7 topics x 7 languages) and one question per topic and language. Not source evidence and not labour-market data; it exists to compare retrieval modes and embedders across languages. Authored by engineering; NOT native-reviewed.",
+ "frozen": true,
+ "languages": [
+  "en",
+  "de",
+  "fr",
+  "es",
+  "it",
+  "pt",
+  "nl"
+ ],
+ "name": "multilingual_retrieval_v1",
+ "passages": [
+  {
+   "id": "salary_negotiation.en",
+   "language": "en",
+   "text": "To negotiate a salary, first research the typical pay range for the role in your region. Then state your expectation as a range and justify it with concrete achievements.",
+   "topic": "salary_negotiation"
+  },
+  {
+   "id": "salary_negotiation.de",
+   "language": "de",
+   "text": "Um über das Gehalt zu verhandeln, recherchieren Sie zuerst die übliche Gehaltsspanne für die Stelle in Ihrer Region. Nennen Sie dann Ihre Erwartung als Spanne und begründen Sie sie mit konkreten Erfolgen.",
+   "topic": "salary_negotiation"
+  },
+  {
+   "id": "salary_negotiation.fr",
+   "language": "fr",
+   "text": "Pour négocier un salaire, renseignez-vous d'abord sur la fourchette habituelle pour le poste dans votre région. Annoncez ensuite votre attente sous forme de fourchette et justifiez-la par des réalisations concrètes.",
+   "topic": "salary_negotiation"
+  },
+  {
+   "id": "salary_negotiation.es",
+   "language": "es",
+   "text": "Para negociar un salario, investiga primero el rango habitual para el puesto en tu región. Después expresa tu expectativa como un rango y justifícala con logros concretos.",
+   "topic": "salary_negotiation"
+  },
+  {
+   "id": "salary_negotiation.it",
+   "language": "it",
+   "text": "Per negoziare lo stipendio, informati prima sulla fascia retributiva abituale per il ruolo nella tua regione. Poi indica la tua aspettativa come intervallo e giustificala con risultati concreti.",
+   "topic": "salary_negotiation"
+  },
+  {
+   "id": "salary_negotiation.pt",
+   "language": "pt",
+   "text": "Para negociar o salário, pesquise primeiro a faixa habitual para o cargo na sua região. Depois apresente a sua expectativa como um intervalo e justifique-a com resultados concretos.",
+   "topic": "salary_negotiation"
+  },
+  {
+   "id": "salary_negotiation.nl",
+   "language": "nl",
+   "text": "Om over salaris te onderhandelen, onderzoek je eerst de gebruikelijke salarisrange voor de functie in jouw regio. Noem daarna je verwachting als een range en onderbouw die met concrete resultaten.",
+   "topic": "salary_negotiation"
+  },
+  {
+   "id": "employment_gap.en",
+   "language": "en",
+   "text": "If your career history has a gap, explain it briefly and honestly. Focus on what you learned or did during that time and how it prepared you for the role.",
+   "topic": "employment_gap"
+  },
+  {
+   "id": "employment_gap.de",
+   "language": "de",
+   "text": "Wenn Ihr Lebenslauf eine Lücke hat, erklären Sie sie kurz und ehrlich. Konzentrieren Sie sich darauf, was Sie in dieser Zeit gelernt oder getan haben und wie es Sie auf die Stelle vorbereitet hat.",
+   "topic": "employment_gap"
+  },
+  {
+   "id": "employment_gap.fr",
+   "language": "fr",
+   "text": "Si votre parcours comporte une interruption, expliquez-la brièvement et honnêtement. Concentrez-vous sur ce que vous avez appris ou fait pendant cette période et sur la façon dont cela vous a préparé au poste.",
+   "topic": "employment_gap"
+  },
+  {
+   "id": "employment_gap.es",
+   "language": "es",
+   "text": "Si tu trayectoria tiene un período sin empleo, explícalo de forma breve y honesta. Céntrate en lo que aprendiste o hiciste durante ese tiempo y en cómo te preparó para el puesto.",
+   "topic": "employment_gap"
+  },
+  {
+   "id": "employment_gap.it",
+   "language": "it",
+   "text": "Se il tuo percorso professionale ha un periodo di inattività, spiegalo in modo breve e onesto. Concentrati su ciò che hai imparato o fatto in quel periodo e su come ti ha preparato al ruolo.",
+   "topic": "employment_gap"
+  },
+  {
+   "id": "employment_gap.pt",
+   "language": "pt",
+   "text": "Se o seu percurso profissional tem um período de inatividade, explique-o de forma breve e honesta. Concentre-se no que aprendeu ou fez nesse período e em como isso o preparou para o cargo.",
+   "topic": "employment_gap"
+  },
+  {
+   "id": "employment_gap.nl",
+   "language": "nl",
+   "text": "Als je loopbaan een periode zonder werk bevat, leg die dan kort en eerlijk uit. Richt je op wat je in die tijd hebt geleerd of gedaan en hoe dat je heeft voorbereid op de functie.",
+   "topic": "employment_gap"
+  },
+  {
+   "id": "questions_for_employer.en",
+   "language": "en",
+   "text": "Prepare a few thoughtful questions for the interviewer about the team, the goals of the role and how success is measured. Good questions show genuine interest.",
+   "topic": "questions_for_employer"
+  },
+  {
+   "id": "questions_for_employer.de",
+   "language": "de",
+   "text": "Bereiten Sie einige durchdachte Fragen an die Gesprächspartner vor, zum Beispiel zum Team, zu den Zielen der Stelle und dazu, wie Erfolg gemessen wird. Gute Fragen zeigen echtes Interesse.",
+   "topic": "questions_for_employer"
+  },
+  {
+   "id": "questions_for_employer.fr",
+   "language": "fr",
+   "text": "Préparez quelques questions réfléchies pour le recruteur sur l'équipe, les objectifs du poste et la manière dont la réussite est mesurée. De bonnes questions montrent un intérêt sincère.",
+   "topic": "questions_for_employer"
+  },
+  {
+   "id": "questions_for_employer.es",
+   "language": "es",
+   "text": "Prepara algunas preguntas bien pensadas para el entrevistador sobre el equipo, los objetivos del puesto y cómo se mide el éxito. Las buenas preguntas muestran un interés genuino.",
+   "topic": "questions_for_employer"
+  },
+  {
+   "id": "questions_for_employer.it",
+   "language": "it",
+   "text": "Prepara alcune domande ponderate per l'intervistatore sul team, sugli obiettivi del ruolo e su come viene misurato il successo. Le buone domande mostrano un interesse sincero.",
+   "topic": "questions_for_employer"
+  },
+  {
+   "id": "questions_for_employer.pt",
+   "language": "pt",
+   "text": "Prepare algumas perguntas ponderadas para o entrevistador sobre a equipa, os objetivos do cargo e a forma como o sucesso é medido. Boas perguntas mostram interesse genuíno.",
+   "topic": "questions_for_employer"
+  },
+  {
+   "id": "questions_for_employer.nl",
+   "language": "nl",
+   "text": "Bereid een paar doordachte vragen voor de interviewer voor over het team, de doelen van de functie en hoe succes wordt gemeten. Goede vragen tonen oprechte interesse.",
+   "topic": "questions_for_employer"
+  },
+  {
+   "id": "thank_you_followup.en",
+   "language": "en",
+   "text": "Send a short thank-you message within a day after the interview. Mention one specific topic you discussed and restate your interest in the position.",
+   "topic": "thank_you_followup"
+  },
+  {
+   "id": "thank_you_followup.de",
+   "language": "de",
+   "text": "Schicken Sie innerhalb eines Tages nach dem Gespräch eine kurze Dankesnachricht. Erwähnen Sie ein konkretes Thema, das Sie besprochen haben, und bekräftigen Sie Ihr Interesse an der Position.",
+   "topic": "thank_you_followup"
+  },
+  {
+   "id": "thank_you_followup.fr",
+   "language": "fr",
+   "text": "Envoyez un court message de remerciement dans la journée qui suit l'entretien. Mentionnez un sujet précis dont vous avez parlé et réaffirmez votre intérêt pour le poste.",
+   "topic": "thank_you_followup"
+  },
+  {
+   "id": "thank_you_followup.es",
+   "language": "es",
+   "text": "Envía un breve mensaje de agradecimiento el día siguiente a la entrevista. Menciona un tema concreto que trataron y reafirma tu interés en el puesto.",
+   "topic": "thank_you_followup"
+  },
+  {
+   "id": "thank_you_followup.it",
+   "language": "it",
+   "text": "Invia un breve messaggio di ringraziamento entro un giorno dal colloquio. Menziona un argomento specifico di cui avete parlato e ribadisci il tuo interesse per la posizione.",
+   "topic": "thank_you_followup"
+  },
+  {
+   "id": "thank_you_followup.pt",
+   "language": "pt",
+   "text": "Envie uma mensagem curta de agradecimento no prazo de um dia após a entrevista. Mencione um assunto concreto que discutiram e reforce o seu interesse na posição.",
+   "topic": "thank_you_followup"
+  },
+  {
+   "id": "thank_you_followup.nl",
+   "language": "nl",
+   "text": "Stuur binnen een dag na het gesprek een kort bedankbericht. Noem een specifiek onderwerp dat jullie hebben besproken en benadruk opnieuw je interesse in de functie.",
+   "topic": "thank_you_followup"
+  },
+  {
+   "id": "remote_interview_setup.en",
+   "language": "en",
+   "text": "For a video interview, test your camera and microphone beforehand. Choose a quiet room with a neutral background and good lighting.",
+   "topic": "remote_interview_setup"
+  },
+  {
+   "id": "remote_interview_setup.de",
+   "language": "de",
+   "text": "Testen Sie vor einem Videogespräch Kamera und Mikrofon. Wählen Sie einen ruhigen Raum mit neutralem Hintergrund und guter Beleuchtung.",
+   "topic": "remote_interview_setup"
+  },
+  {
+   "id": "remote_interview_setup.fr",
+   "language": "fr",
+   "text": "Pour un entretien en visioconférence, testez votre caméra et votre micro à l'avance. Choisissez une pièce calme avec un arrière-plan neutre et un bon éclairage.",
+   "topic": "remote_interview_setup"
+  },
+  {
+   "id": "remote_interview_setup.es",
+   "language": "es",
+   "text": "Para una entrevista por videollamada, prueba la cámara y el micrófono con antelación. Elige una habitación tranquila con un fondo neutro y buena iluminación.",
+   "topic": "remote_interview_setup"
+  },
+  {
+   "id": "remote_interview_setup.it",
+   "language": "it",
+   "text": "Per un colloquio in videochiamata, prova in anticipo la webcam e il microfono. Scegli una stanza silenziosa con uno sfondo neutro e una buona illuminazione.",
+   "topic": "remote_interview_setup"
+  },
+  {
+   "id": "remote_interview_setup.pt",
+   "language": "pt",
+   "text": "Para uma entrevista por videochamada, teste a câmara e o microfone com antecedência. Escolha uma sala silenciosa com um fundo neutro e boa iluminação.",
+   "topic": "remote_interview_setup"
+  },
+  {
+   "id": "remote_interview_setup.nl",
+   "language": "nl",
+   "text": "Test voor een videogesprek vooraf je camera en microfoon. Kies een rustige kamer met een neutrale achtergrond en goed licht.",
+   "topic": "remote_interview_setup"
+  },
+  {
+   "id": "behavioural_structure.en",
+   "language": "en",
+   "text": "Answer behavioural questions with a clear structure: describe the situation, the task you had, the action you took and the result you achieved.",
+   "topic": "behavioural_structure"
+  },
+  {
+   "id": "behavioural_structure.de",
+   "language": "de",
+   "text": "Beantworten Sie Verhaltensfragen mit einer klaren Struktur: beschreiben Sie die Situation, Ihre Aufgabe, Ihre Handlung und das erreichte Ergebnis.",
+   "topic": "behavioural_structure"
+  },
+  {
+   "id": "behavioural_structure.fr",
+   "language": "fr",
+   "text": "Répondez aux questions comportementales avec une structure claire : décrivez la situation, la tâche, l'action menée et le résultat obtenu.",
+   "topic": "behavioural_structure"
+  },
+  {
+   "id": "behavioural_structure.es",
+   "language": "es",
+   "text": "Responde a las preguntas de comportamiento con una estructura clara: describe la situación, la tarea, la acción que realizaste y el resultado que lograste.",
+   "topic": "behavioural_structure"
+  },
+  {
+   "id": "behavioural_structure.it",
+   "language": "it",
+   "text": "Rispondi alle domande comportamentali con una struttura chiara: descrivi la situazione, il compito, l'azione che hai compiuto e il risultato ottenuto.",
+   "topic": "behavioural_structure"
+  },
+  {
+   "id": "behavioural_structure.pt",
+   "language": "pt",
+   "text": "Responda às perguntas comportamentais com uma estrutura clara: descreva a situação, a tarefa, a ação que tomou e o resultado que alcançou.",
+   "topic": "behavioural_structure"
+  },
+  {
+   "id": "behavioural_structure.nl",
+   "language": "nl",
+   "text": "Beantwoord gedragsvragen met een duidelijke structuur: beschrijf de situatie, de taak, de actie die je ondernam en het resultaat dat je bereikte.",
+   "topic": "behavioural_structure"
+  },
+  {
+   "id": "weakness_question.en",
+   "language": "en",
+   "text": "When asked about weaknesses, name a real area for growth and explain the concrete steps you are taking to improve it. Avoid disguised strengths.",
+   "topic": "weakness_question"
+  },
+  {
+   "id": "weakness_question.de",
+   "language": "de",
+   "text": "Wenn Sie nach Ihren Schwächen gefragt werden, nennen Sie einen echten Entwicklungsbereich und erklären Sie die konkreten Schritte, mit denen Sie sich verbessern. Vermeiden Sie verkleidete Stärken.",
+   "topic": "weakness_question"
+  },
+  {
+   "id": "weakness_question.fr",
+   "language": "fr",
+   "text": "Quand on vous interroge sur vos faiblesses, citez un vrai axe de progrès et expliquez les mesures concrètes que vous prenez pour vous améliorer. Évitez les qualités déguisées.",
+   "topic": "weakness_question"
+  },
+  {
+   "id": "weakness_question.es",
+   "language": "es",
+   "text": "Cuando te pregunten por tus debilidades, nombra un área real de mejora y explica los pasos concretos que sigues para mejorarla. Evita las fortalezas disfrazadas.",
+   "topic": "weakness_question"
+  },
+  {
+   "id": "weakness_question.it",
+   "language": "it",
+   "text": "Quando ti chiedono dei tuoi punti deboli, indica un'area reale di crescita e spiega i passi concreti che stai compiendo per migliorarla. Evita i punti di forza travestiti.",
+   "topic": "weakness_question"
+  },
+  {
+   "id": "weakness_question.pt",
+   "language": "pt",
+   "text": "Quando lhe perguntarem pelos seus pontos fracos, indique uma área real de melhoria e explique os passos concretos que está a dar para a melhorar. Evite pontos fortes disfarçados.",
+   "topic": "weakness_question"
+  },
+  {
+   "id": "weakness_question.nl",
+   "language": "nl",
+   "text": "Als je naar je zwakke punten wordt gevraagd, noem dan een echt ontwikkelpunt en leg uit welke concrete stappen je zet om het te verbeteren. Vermijd vermomde sterke punten.",
+   "topic": "weakness_question"
+  }
+ ],
+ "queries": [
+  {
+   "id": "q.salary_negotiation.en",
+   "language": "en",
+   "text": "How do I prepare to negotiate my salary offer?",
+   "topic": "salary_negotiation"
+  },
+  {
+   "id": "q.salary_negotiation.de",
+   "language": "de",
+   "text": "Wie bereite ich mich auf die Verhandlung meines Gehaltsangebots vor?",
+   "topic": "salary_negotiation"
+  },
+  {
+   "id": "q.salary_negotiation.fr",
+   "language": "fr",
+   "text": "Comment me préparer à négocier mon offre de salaire ?",
+   "topic": "salary_negotiation"
+  },
+  {
+   "id": "q.salary_negotiation.es",
+   "language": "es",
+   "text": "¿Cómo me preparo para negociar mi oferta salarial?",
+   "topic": "salary_negotiation"
+  },
+  {
+   "id": "q.salary_negotiation.it",
+   "language": "it",
+   "text": "Come mi preparo a negoziare la mia offerta di stipendio?",
+   "topic": "salary_negotiation"
+  },
+  {
+   "id": "q.salary_negotiation.pt",
+   "language": "pt",
+   "text": "Como me preparo para negociar a minha proposta salarial?",
+   "topic": "salary_negotiation"
+  },
+  {
+   "id": "q.salary_negotiation.nl",
+   "language": "nl",
+   "text": "Hoe bereid ik me voor op onderhandelen over mijn salarisaanbod?",
+   "topic": "salary_negotiation"
+  },
+  {
+   "id": "q.employment_gap.en",
+   "language": "en",
+   "text": "How should I talk about a gap in my work history?",
+   "topic": "employment_gap"
+  },
+  {
+   "id": "q.employment_gap.de",
+   "language": "de",
+   "text": "Wie spreche ich über eine Lücke in meinem Lebenslauf?",
+   "topic": "employment_gap"
+  },
+  {
+   "id": "q.employment_gap.fr",
+   "language": "fr",
+   "text": "Comment parler d'une interruption dans mon parcours professionnel ?",
+   "topic": "employment_gap"
+  },
+  {
+   "id": "q.employment_gap.es",
+   "language": "es",
+   "text": "¿Cómo hablo de un período sin trabajo en mi historial laboral?",
+   "topic": "employment_gap"
+  },
+  {
+   "id": "q.employment_gap.it",
+   "language": "it",
+   "text": "Come parlo di un periodo di inattività nel mio percorso lavorativo?",
+   "topic": "employment_gap"
+  },
+  {
+   "id": "q.employment_gap.pt",
+   "language": "pt",
+   "text": "Como falo de um período de inatividade no meu percurso profissional?",
+   "topic": "employment_gap"
+  },
+  {
+   "id": "q.employment_gap.nl",
+   "language": "nl",
+   "text": "Hoe praat ik over een gat in mijn werkgeschiedenis?",
+   "topic": "employment_gap"
+  },
+  {
+   "id": "q.questions_for_employer.en",
+   "language": "en",
+   "text": "What questions should I ask the interviewer at the end?",
+   "topic": "questions_for_employer"
+  },
+  {
+   "id": "q.questions_for_employer.de",
+   "language": "de",
+   "text": "Welche Fragen sollte ich am Ende des Gesprächs stellen?",
+   "topic": "questions_for_employer"
+  },
+  {
+   "id": "q.questions_for_employer.fr",
+   "language": "fr",
+   "text": "Quelles questions dois-je poser au recruteur à la fin de l'entretien ?",
+   "topic": "questions_for_employer"
+  },
+  {
+   "id": "q.questions_for_employer.es",
+   "language": "es",
+   "text": "¿Qué preguntas debo hacer al entrevistador al final?",
+   "topic": "questions_for_employer"
+  },
+  {
+   "id": "q.questions_for_employer.it",
+   "language": "it",
+   "text": "Quali domande devo fare all'intervistatore alla fine?",
+   "topic": "questions_for_employer"
+  },
+  {
+   "id": "q.questions_for_employer.pt",
+   "language": "pt",
+   "text": "Que perguntas devo fazer ao entrevistador no final?",
+   "topic": "questions_for_employer"
+  },
+  {
+   "id": "q.questions_for_employer.nl",
+   "language": "nl",
+   "text": "Welke vragen moet ik aan het eind aan de interviewer stellen?",
+   "topic": "questions_for_employer"
+  },
+  {
+   "id": "q.thank_you_followup.en",
+   "language": "en",
+   "text": "Should I send a message after the interview and when?",
+   "topic": "thank_you_followup"
+  },
+  {
+   "id": "q.thank_you_followup.de",
+   "language": "de",
+   "text": "Soll ich nach dem Vorstellungsgespräch eine Nachricht schicken und wann?",
+   "topic": "thank_you_followup"
+  },
+  {
+   "id": "q.thank_you_followup.fr",
+   "language": "fr",
+   "text": "Dois-je envoyer un message après l'entretien et quand ?",
+   "topic": "thank_you_followup"
+  },
+  {
+   "id": "q.thank_you_followup.es",
+   "language": "es",
+   "text": "¿Debo enviar un mensaje después de la entrevista y cuándo?",
+   "topic": "thank_you_followup"
+  },
+  {
+   "id": "q.thank_you_followup.it",
+   "language": "it",
+   "text": "Devo inviare un messaggio dopo il colloquio e quando?",
+   "topic": "thank_you_followup"
+  },
+  {
+   "id": "q.thank_you_followup.pt",
+   "language": "pt",
+   "text": "Devo enviar uma mensagem depois da entrevista e quando?",
+   "topic": "thank_you_followup"
+  },
+  {
+   "id": "q.thank_you_followup.nl",
+   "language": "nl",
+   "text": "Moet ik na het sollicitatiegesprek een bericht sturen en wanneer?",
+   "topic": "thank_you_followup"
+  },
+  {
+   "id": "q.remote_interview_setup.en",
+   "language": "en",
+   "text": "How do I set up for an online video interview?",
+   "topic": "remote_interview_setup"
+  },
+  {
+   "id": "q.remote_interview_setup.de",
+   "language": "de",
+   "text": "Wie richte ich mich auf ein Online-Vorstellungsgespräch per Video ein?",
+   "topic": "remote_interview_setup"
+  },
+  {
+   "id": "q.remote_interview_setup.fr",
+   "language": "fr",
+   "text": "Comment m'installer pour un entretien vidéo en ligne ?",
+   "topic": "remote_interview_setup"
+  },
+  {
+   "id": "q.remote_interview_setup.es",
+   "language": "es",
+   "text": "¿Cómo preparo una entrevista de trabajo por videollamada?",
+   "topic": "remote_interview_setup"
+  },
+  {
+   "id": "q.remote_interview_setup.it",
+   "language": "it",
+   "text": "Come mi organizzo per un colloquio di lavoro in videochiamata?",
+   "topic": "remote_interview_setup"
+  },
+  {
+   "id": "q.remote_interview_setup.pt",
+   "language": "pt",
+   "text": "Como me preparo para uma entrevista de emprego por videochamada?",
+   "topic": "remote_interview_setup"
+  },
+  {
+   "id": "q.remote_interview_setup.nl",
+   "language": "nl",
+   "text": "Hoe richt ik me in op een online sollicitatiegesprek via video?",
+   "topic": "remote_interview_setup"
+  },
+  {
+   "id": "q.behavioural_structure.en",
+   "language": "en",
+   "text": "How do I structure answers to behavioural questions?",
+   "topic": "behavioural_structure"
+  },
+  {
+   "id": "q.behavioural_structure.de",
+   "language": "de",
+   "text": "Wie strukturiere ich meine Antworten auf Verhaltensfragen?",
+   "topic": "behavioural_structure"
+  },
+  {
+   "id": "q.behavioural_structure.fr",
+   "language": "fr",
+   "text": "Comment structurer mes réponses aux questions comportementales ?",
+   "topic": "behavioural_structure"
+  },
+  {
+   "id": "q.behavioural_structure.es",
+   "language": "es",
+   "text": "¿Cómo estructuro mis respuestas a las preguntas de comportamiento?",
+   "topic": "behavioural_structure"
+  },
+  {
+   "id": "q.behavioural_structure.it",
+   "language": "it",
+   "text": "Come strutturo le risposte alle domande comportamentali?",
+   "topic": "behavioural_structure"
+  },
+  {
+   "id": "q.behavioural_structure.pt",
+   "language": "pt",
+   "text": "Como estruturo as minhas respostas às perguntas comportamentais?",
+   "topic": "behavioural_structure"
+  },
+  {
+   "id": "q.behavioural_structure.nl",
+   "language": "nl",
+   "text": "Hoe structureer ik mijn antwoorden op gedragsvragen?",
+   "topic": "behavioural_structure"
+  },
+  {
+   "id": "q.weakness_question.en",
+   "language": "en",
+   "text": "How do I answer the question about my weaknesses?",
+   "topic": "weakness_question"
+  },
+  {
+   "id": "q.weakness_question.de",
+   "language": "de",
+   "text": "Wie beantworte ich die Frage nach meinen Schwächen?",
+   "topic": "weakness_question"
+  },
+  {
+   "id": "q.weakness_question.fr",
+   "language": "fr",
+   "text": "Comment répondre à la question sur mes points faibles ?",
+   "topic": "weakness_question"
+  },
+  {
+   "id": "q.weakness_question.es",
+   "language": "es",
+   "text": "¿Cómo respondo a la pregunta sobre mis debilidades?",
+   "topic": "weakness_question"
+  },
+  {
+   "id": "q.weakness_question.it",
+   "language": "it",
+   "text": "Come rispondo alla domanda sui miei punti deboli?",
+   "topic": "weakness_question"
+  },
+  {
+   "id": "q.weakness_question.pt",
+   "language": "pt",
+   "text": "Como respondo à pergunta sobre os meus pontos fracos?",
+   "topic": "weakness_question"
+  },
+  {
+   "id": "q.weakness_question.nl",
+   "language": "nl",
+   "text": "Hoe beantwoord ik de vraag over mijn zwakke punten?",
+   "topic": "weakness_question"
+  }
+ ],
+ "schema_version": 1,
+ "topics": [
+  "salary_negotiation",
+  "employment_gap",
+  "questions_for_employer",
+  "thank_you_followup",
+  "remote_interview_setup",
+  "behavioural_structure",
+  "weakness_question"
+ ]
+}

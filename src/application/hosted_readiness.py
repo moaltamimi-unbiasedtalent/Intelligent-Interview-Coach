@@ -78,3 +78,12 @@ def is_hosted(env: str | None = None) -> bool:
     from src.api.env_validation import runtime_env
 
     return (env or runtime_env()) in ("staging", "production")
+
+
+def scanner_signature_status() -> str:
+    """``fresh`` | ``stale`` | ``unknown`` (real scanner not reachable/not configured, or the signature date could not be read). Status word only."""
+    if (os.environ.get("FILE_SCAN_PROVIDER", "") or "").strip().lower() != "clamav":
+        return "unknown"
+    from src.documents.file_security import scanner_health
+
+    return scanner_health().get("signatures", "unknown")

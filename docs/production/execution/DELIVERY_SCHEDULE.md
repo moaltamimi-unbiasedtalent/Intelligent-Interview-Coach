@@ -159,17 +159,18 @@ Reading: with 3 to 5 streams not even the non-negotiable tier T0 fits at its max
 
 ## Measured first-wave throughput and what it does and does not say
 
-| Package | Estimate (days) | Authoring wall-clock (minutes) | Rework rounds | Review latency | GitHub CI duration |
+| Package | Estimate (days) | Authoring wall-clock (minutes) | Rework rounds after the PR opened | PR open to merge (review and CI included) | Note |
 |---|---|---|---|---|---|
-| 05A | 8-12 | 11 | 0 | no PR yet | no PR yet |
-| 01A | 5-8 | 24 | 0 | no PR yet | no PR yet |
-| 02K | 2-3 | 32 | 1 | no PR yet | no PR yet |
-| 01B0 | 2-3 | 24 | 0 | no PR yet | no PR yet |
-| 03K | 2-3 | 34 | 0 | no PR yet | no PR yet |
-| 03A | 5-7 | 29 | 0 | no PR yet | no PR yet |
-| 06A | 4-6 | 43 | 0 | no PR yet | no PR yet |
+| 02K | 2-3 | 32 | 0 | 0h41m | merged with a green PR #215 |
+| 01B0 | 2-3 | 24 | 0 | 0h41m | PR #217 |
+| 03K | 2-3 | 34 | 0 | 0h41m | PR #219 |
+| 01B | 5-8 | 26 | 0 | 0h49m | PR #220; byte-identity oracle |
+| 05A | 8-12 | 11 | 2 | 1h35m | PR #218; obsolete Phase 00 assertion then merge conflict |
+| 02A | 10-15 | 58 | 2 | 2h22m | PR #221; stale migration-head allowlists in 5 evaluators (hidden behind the first failure) |
+| 03A | 5-7 | 29 | 1 | 3h15m | PR #216; evaluator counted group ids |
+| 06A | 4-6 | 43 | 1 | 3h51m | PR #214; esbuild missing from Python shards |
 
-Seven first-wave packages were authored in 197 agent-minutes in total (each agent ran in parallel; roughly 10 to 45 minutes per package, including about 15 minutes lost to the shared interpreter fault), against estimates of 2 to 12 engineering days each. **This measures authoring of contract, scaffolding and test-writing work only.** It excludes human review, GitHub CI (no PR exists, so none ran), integration, live validation, rework after review, native and legal review and every calendar-bound step, and the first wave was deliberately the smallest, best-bounded packages. It is NOT evidence about the heavier packages (02A, 02B, 03D1, 03E1, 04A to 04D, 05B to 05D) and no estimate has been changed because of it.
+Eight first-wave packages were authored in 257 agent-minutes in total (agents ran in parallel), against estimates of 2 to 15 engineering days each; the estimates include review, CI and integration, which the authoring time does not. All eight merged after green GitHub CI, between 41 minutes and 3 hours 51 minutes after their PR opened (the owner reviewed and merged quickly); five needed 1 to 2 CI or integration rework rounds after the PR opened, caused by stale head-literal assertions and cross-branch tests that no local run had exposed because CI stops at the first failing evaluator. That is evidence about CI hygiene, not a verified effort ratio: these packages were interface contracts, scaffolds and a documented additive migration, and no first-wave package needed a human qualifier, a licence, a native reviewer or live staging. The forecast therefore keeps the engineering estimates as planning inputs and treats the calendar-bound human and legal lead times as the binding constraint for the date.
 
 Sensitivity of the full-scope completion date to the true effort (profile 'D ramp 12, 18, 24', high estimate scaled; a sensitivity table, not a forecast):
 

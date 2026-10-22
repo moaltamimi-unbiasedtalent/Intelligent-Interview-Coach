@@ -22,7 +22,7 @@ from src.knowledge_admin.environment import (
 )
 from src.knowledge_admin.service import KnowledgeConflict
 from src.persistence import Job, KnowledgeSourceVersion as V
-from tests._knowledge_env_02a import DOC, QUERY, Process, hosted_temp, runtime_config
+from tests._knowledge_env_02a import DOC, QUERY, FakeSemanticEmbedder, Process, hosted_temp, runtime_config
 
 ROOT = Path(__file__).resolve().parents[1]
 ABS_PATH = re.compile(r"(/Users/|/Volumes/|/private/|/tmp/|/var/folders/|[A-Za-z]:\\\\)")
@@ -185,7 +185,7 @@ def test_hosted_empty_governed_collection_is_refused_not_served_as_empty(tmp_pat
         p.to_active()
         assert p.guard.check(fresh=True).serving_allowed
         # the same registry, a NEW (empty) persistent collection: exactly what an unmounted index volume or a wrong data root looks like
-        empty = type(p.store)(LocalHashEmbedder(), persist_dir=str(tmp_path / "other-index"), collection_name=P.COLLECTION)
+        empty = type(p.store)(FakeSemanticEmbedder(), persist_dir=str(tmp_path / "other-index"), collection_name=P.COLLECTION)
         p.store = empty
         p.retriever.store = empty
         report = p.guard.check(fresh=True)

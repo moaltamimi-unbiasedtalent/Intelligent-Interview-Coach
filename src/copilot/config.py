@@ -25,6 +25,8 @@ EMBEDDING_MODEL_NAME = "COPILOT_EMBEDDING_MODEL"
 EMBEDDING_BASE_URL_NAME = "COPILOT_EMBEDDING_BASE_URL"
 EMBEDDING_KEY_NAME = "COPILOT_EMBEDDING_API_KEY"
 EMBEDDING_PROVIDER_NAME = "COPILOT_EMBEDDING_PROVIDER"
+EMBEDDING_DIMENSIONS_NAME = "COPILOT_EMBEDDING_DIMENSIONS"
+EMBEDDING_VERSION_NAME = "COPILOT_EMBEDDING_VERSION"
 CHROMA_DIR_NAME = "COPILOT_CHROMA_DIR"
 DEBUG_NAME = "COPILOT_DEBUG"
 RETRIEVAL_MODE_NAME = "COPILOT_RETRIEVAL_MODE"
@@ -55,6 +57,11 @@ class CopilotConfig(BaseModel):
     embedding_api_key: SecretStr | None = None
     # "auto" | "openai" | "local" — see constants.DEFAULT_EMBEDDING_PROVIDER.
     embedding_provider: str = constants.DEFAULT_EMBEDDING_PROVIDER
+    # 02B: explicit embedding configuration. ``None`` = derive from the known-model table / the provider's recorded version. The version is an
+    # operator-recordable label for the embedding configuration (bump it when the model behind an unchanged name changes); it is part of the
+    # index manifest and of the compatibility hash. Neither field is a secret.
+    embedding_dimensions: int | None = None
+    embedding_version: str | None = None
 
     # Vector store persistence.
     chroma_persist_dir: str = constants.CHROMA_PERSIST_DIR
@@ -183,6 +190,8 @@ def load_config() -> CopilotConfig:
         embedding_provider=(
             _read(EMBEDDING_PROVIDER_NAME) or constants.DEFAULT_EMBEDDING_PROVIDER
         ).lower(),
+        embedding_dimensions=_int(EMBEDDING_DIMENSIONS_NAME, None),
+        embedding_version=(_read(EMBEDDING_VERSION_NAME) or "").strip()[:64] or None,
         chroma_persist_dir=_read(CHROMA_DIR_NAME) or constants.CHROMA_PERSIST_DIR,
         retrieval_mode=_read_mode(RETRIEVAL_MODE_NAME, constants.DEFAULT_RETRIEVAL_MODE),
         hybrid_vector_weight=vw,

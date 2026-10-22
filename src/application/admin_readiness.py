@@ -157,6 +157,19 @@ def capability_readiness(*, allowed: frozenset[str], speech_runtime=None, integr
                     f"{off} of {len(g)} gates are False.", ["Changing a gate requires a reviewed code change."], perm.OVERVIEW_READ, "code")
     rows.append(_guard("rollout_gates", "Rollout and billing gates", None, "Owner authorization", perm.OVERVIEW_READ, gates_row))
 
+    # --- language activation (06H): derived from the committed, reviewed record; counts and states only, never evidence text or approver names ---
+    def language_row() -> dict[str, Any]:
+        from src.language_activation import GATES, admin_summary
+        s = admin_summary()
+        passed = sum(v["gates_passed"] for v in s["locales"].values())
+        total = len(GATES) * len(s["locales"])
+        ev = "%d of %d locales qualified; %d of %d gate records PASS; mode %s; %d locale(s) offered." % (len(s["qualified_locales"]), len(s["locales"]), passed, total, s["mode"], len(s["offered_locales"]))
+        lim = ["Qualification needs a complete approved record per locale (all fourteen gates, evidence, named approver, date, release SHA); editing a status alone enables nothing."]
+        if not s["record_usable"]:
+            lim.append("The readiness record is unusable: failing closed, no language offered.")
+        return _row("language_activation", "Language activation", None, "READ_ONLY", ["DISABLED"] if s["none_available"] else [], "Owner and named reviewers (committed readiness record; no Admin control exists by design)", ev, lim, perm.OVERVIEW_READ, "code")
+    rows.append(_guard("language_activation", "Language activation", None, "Owner and named reviewers", perm.OVERVIEW_READ, language_row))
+
     visible = [{k: v for k, v in r.items() if k != "_perm"} for r in rows if r["_perm"] in allowed]
     summary: dict[str, int] = {}
     for r in visible:

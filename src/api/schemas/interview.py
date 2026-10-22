@@ -41,6 +41,10 @@ class InterviewConfigIn(BaseModel):
     # The SERVER resolves these to text/evidence; raw document text never travels via the client.
     job_description_document_id: int | None = Field(default=None, ge=1)
     use_candidate_evidence: bool = False
+    # 04A Story Bank reuse: the candidate's own stories chosen one by one for THIS session. Using them needs ``confirm_story_use`` (the explicit consent that their
+    # text is given to the model as untrusted data). Resolved server-side, owner-scoped; a foreign, missing, archived or unusable id is refused as one error.
+    story_ids: list[int] = Field(default_factory=list, max_length=5)
+    confirm_story_use: bool = False
 
 
 class PreparationContextIn(BaseModel):

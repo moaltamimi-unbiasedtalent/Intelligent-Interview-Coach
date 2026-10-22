@@ -621,6 +621,7 @@ def test_head_is_unchanged_by_this_package():
     from tests import _alembic_head as H
     assert H.repository_head() and H.assert_chain()
     import subprocess
-    out = subprocess.run(["git", "diff", "--name-only", "origin/chore/migration-head-agnostic", "--", "migrations/versions"],
+    # Three-dot against main: only what THIS branch changed since it diverged, so revisions merged into main by other packages (0041 to 0043) never count against 03B.
+    out = subprocess.run(["git", "diff", "--name-only", "origin/main...HEAD", "--", "migrations/versions"],
                          capture_output=True, text=True, cwd=H.ROOT)
-    assert out.returncode != 0 or out.stdout.strip() == ""      # when the base ref exists, this package added no revision
+    assert out.returncode != 0 or out.stdout.strip() == ""      # when the ref exists, this package added no revision
