@@ -203,3 +203,19 @@ New decisions raised while building Waves 1 and 2 are listed in `../OWNER_DECISI
 - **Forecast:** 30 November holds only if the owner decisions in section 7 are made on time. Otherwise the freeze moves one working day per day of delay (for example Thu 3 Dec if reviewers start Mon 2 Nov, Thu 10 Dec for Mon 9 Nov). The date moves; no scope is cut and no gate is waived.
 - **Release risk:** HIGH for 30 November, driven by unstarted human and legal steps and an unanswered hosting authorisation; MEDIUM for staging-dependent verification (everything live is NOT RUN); LOW for remaining engineering. Quality gates not yet met: PG-03 numeric thresholds, PG-05 retrieval quality and licensing, PG-07 independent evaluation.
 - **Process risks and mitigations:** integration rework (re-merge `main` before each PR, regenerate the locale audit, version-independent head checks); shared agent modules (strict order 01D, 01C, 04C, 07B); machine load (eight concurrent agents, four test workers); local test environment (the fresh-dependency venv and Playwright browser cache were deleted; rebuilding them needs a download the owner must approve, until then CI is the verification).
+
+## 9. Owner authorisation of 2026-10-22 and scope additions
+
+The owner authorised Wave 3a to proceed immediately and recorded provisional recommendations for nine decisions (`../OWNER_DECISION_REGISTER.md`, section "Owner direction 2026-10-22"). Wave 3a launched on 2026-10-22 as eight isolated worktrees: 08A0 (feat/08a0-release-evidence), 05B (feat/05b-backup-restore-drills), 05C (feat/05c-budget-governor then feat/05c-monitoring-alerts), 05E (feat/05e-privacy-safeguards then feat/05e-legal-review-pack), 06C (feat/06c-language-ai-behaviour), 01D (feat/01d-tool-authorization), 03D2 (feat/03d2-command-center-views), 03E2 (feat/03e2-report-views then feat/03e2-pdf-export). The development environment was repaired (fresh-dependency venv at `$HOME/.cache/ask4mo/ci_venv`, Playwright browsers restored). No gate was changed; reviewers are appointed later and no automated check substitutes for their sign-off.
+
+Scope items that follow from the owner's recommendations and stay inside the existing requirements (nothing is removed or deferred):
+| Item | Requirement | Package home | When |
+|---|---|---|---|
+| Governed PDF export | REQ-OWN-04 | 03E2 second PR | Wave 3a |
+| Previewed, authorised, audited bulk user actions with partial-failure handling | REQ-OWN-03 (restricted bulk actions) | completion PR of 03C | Wave 3b |
+| Workspace ownership transfer with verified acceptance and immutable audit (needs a pending-transfer table, so migration 0044 or later) | REQ-OWN-07 | completion PR of 04B | Wave 3b |
+| OpenRouter embedding adapter and multilingual embedding benchmark (OpenRouter-only; versioned manifests and rollback preserved; recall@k, nDCG@k, cross-language, citation accuracy, latency, cost, dimensions) | REVIEW-04, OD-EMBED | 02B completion, 02E, 06D | Wave 3b, after the 05C budget governor merges |
+| Plan limits derived from measured operational and token costs | REQ-OWN-02, OD-PLAN-LIMITS | 03B completion, after 05C telemetry exists | Wave 3c |
+| Per-story consent in Prepare | REQ-OWN-06 | 04A completion, in the 01D, 01C order | Wave 3c |
+
+Wave 3b (01C, 02E, 04D, 04F, 05D, 06B, 06D, 06E, 07A) and Wave 3c (04C, 07B, 07C, 06G, 08A) are prepared per section 4 and start as dependencies merge and slots free (cap eight concurrent agents). 02D and 06F review materials are prepared in parallel as review-ready packages; human qualification is never recorded as completed.
