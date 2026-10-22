@@ -112,6 +112,10 @@ def register(
     from src.api.guards import ensure_not_paused
 
     ensure_not_paused("public_registration", pause)
+    # 06H: registration is a NEW candidate activity: its language (or the default) must be activated.
+    from src.language_activation import require_locale_activated
+
+    require_locale_activated(body.locale)
     # Abuse bound (§18): per-IP + global. No account key here — registration must not reveal
     # whether an email exists, so the limit is IP-scoped only.
     enforce("auth_register_ip", client_ip(request))
@@ -327,6 +331,12 @@ def update_preferences(
     # Interface locale, conversation language and (P3) dictation locale are independent:
     # a language choice never changes labour-market geography.
     changed: dict[str, str] = {}
+    # 06H: choosing a language is accepted only for an activated one (checked before ANY field is written; an omitted field is not checked).
+    from src.language_activation import require_locale_activated
+
+    for chosen in (body.interface_locale, body.conversation_language):
+        if chosen is not None:
+            require_locale_activated(chosen)
     if body.response_detail is not None:
         account_repo.set_response_detail(principal.user_id, body.response_detail)
         changed["response_detail"] = body.response_detail

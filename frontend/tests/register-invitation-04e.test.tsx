@@ -38,6 +38,7 @@ vi.mock("@/lib/api/client", async (importOriginal) => {
 import { ApiError } from "@/lib/api/errors";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { InvitationsPanel } from "@/components/admin/InvitationsPanel";
+import { isAdminInvitationPage } from "@/lib/admin/invitationGuard";
 import { CATALOGS } from "@/lib/i18n/catalog";
 
 const refusal = () => new ApiError({ kind: "forbidden", status: 403, code: "invitation_required", message: "server english text" });
@@ -153,5 +154,58 @@ describe("Admin invitations panel", () => {
     expect(await screen.findByText("j***@e***.com")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /issue invitation/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /revoke invitation/i })).toBeNull();
+  });
+});
+
+describe("malformed invitation listing (a successful response without the documented shape)", () => {
+  const GOOD = { items: [], total: 0, counts: { pending: 0, redeemed: 0, expired: 0, revoked: 0 } };
+
+  it("accepts the real response shape, including an empty beta", () => {
+    expect(isAdminInvitationPage(GOOD)).toBe(true);
+    expect(isAdminInvitationPage({ items: [ROW], total: 1, counts: { pending: 1 } })).toBe(true);
+  });
+
+  it.each([
+    ["an empty object (an unmocked route)", {}],
+    ["null", null],
+    ["a string", "ok"],
+    ["no counts", { items: [], total: 0 }],
+    ["counts as an array", { items: [], total: 0, counts: [] }],
+    ["a non-numeric count", { items: [], total: 0, counts: { pending: "1" } }],
+    ["items that are not an array", { items: {}, total: 0, counts: {} }],
+    ["no total", { items: [], counts: {} }],
+    ["a row without an id", { items: [{ state: "pending" }], total: 1, counts: {} }],
+    ["a row with an unknown state", { items: [{ ...ROW, state: "mystery" }], total: 1, counts: {} }],
+  ])("rejects %s", (_name, value) => {
+    expect(isAdminInvitationPage(value)).toBe(false);
+  });
+
+  it.each([
+    ["an empty object", {}],
+    ["a missing counts field", { items: [], total: 0 }],
+    ["rows of the wrong shape", { items: [{ nope: true }], total: 1, counts: {} }],
+  ])("shows the explicit Admin error state for %s instead of crashing or showing an empty list", async (_name, bad) => {
+    mockPerms = ["platform.users.read", "platform.users.manage"];
+    invitations.mockResolvedValue(bad);
+    render(<InvitationsPanel />);
+    expect(await screen.findByRole("alert")).toHaveTextContent("That request could not be processed.");
+    expect(screen.queryByText("No invitations yet.")).toBeNull();                     // never a silently empty success
+    expect(screen.queryByText(/Invitations \(state and masked identifiers only\)/)).toBeNull();
+    expect(screen.getByRole("button", { name: /issue invitation/i })).toBeInTheDocument();   // the rest of the page still works
+  });
+
+  it("keeps access control: a read-only administrator still gets the error state and no controls", async () => {
+    mockPerms = ["platform.users.read"];
+    invitations.mockResolvedValue({});
+    render(<InvitationsPanel />);
+    expect(await screen.findByRole("alert")).toHaveTextContent("That request could not be processed.");
+    expect(screen.queryByRole("button", { name: /issue invitation/i })).toBeNull();
+  });
+
+  it("shows the list for a well-formed empty response", async () => {
+    mockPerms = ["platform.users.read"];
+    invitations.mockResolvedValue(GOOD);
+    render(<InvitationsPanel />);
+    expect(await screen.findByText("No invitations yet.")).toBeInTheDocument();
   });
 });

@@ -362,6 +362,7 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
     if (/\/admin\/users\/\d+\/status$/.test(path) && method === "POST") return json({ user_id: 2, status: "deactivated", changed: true, sessions_revoked: 1 });
     if (/\/admin\/users\/\d+\/sessions\/revoke$/.test(path) && method === "POST") return json({ user_id: 2, sessions_revoked: 1 });
     if (/\/admin\/users\/\d+$/.test(path)) return json(USER_DETAIL);
+    if (path.endsWith("/admin/invitations")) return json({ items: [], total: 0, counts: { pending: 0, redeemed: 0, expired: 0, revoked: 0 } });   // 04E: the real listing shape (empty beta)
     if (path.endsWith("/admin/users")) {
       const q = new URL(route.request().url()).searchParams.get("q") ?? "";
       const items = [USER_ROW].filter((u) => !q || u.email.includes(q));
@@ -413,6 +414,27 @@ test("platform admin journey: Command Center, build metadata, audit, provider st
   await expect(page.getByText(/sk-[a-z0-9]/i)).toHaveCount(0);
   // No candidate-private content anywhere on the admin surface.
   await expect(page.getByText(/curriculum vitae|raw answer|memory summary|password_hash/i)).toHaveCount(0);
+});
+
+test("04E: the Users page renders the invitation panel from the real listing shape, and the search stays accessible", async ({ page }) => {
+  await mockAdmin(page, "platform_admin", ADMIN_PERMS);
+  await page.goto("/admin/users");
+  await expect(page.getByRole("heading", { name: "Users", exact: true })).toBeVisible();
+  await expect(page.getByLabel("Email or account id")).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Invitations \(state and masked identifiers only\)/ })).toBeVisible();
+  await expect(page.getByText("No invitations yet.")).toBeVisible();
+  await expect(page.getByText(/pending: 0/)).toBeVisible();
+});
+
+test("04E: a malformed invitation listing shows the explicit Admin error state and does not crash the Users page", async ({ page }) => {
+  await mockAdmin(page, "platform_admin", ADMIN_PERMS);
+  // A later route wins: answer the invitation listing with a SUCCESSFUL response that lacks the documented fields (what an unmocked route used to return).
+  await page.route("**/api/v1/admin/invitations*", (route) => route.fulfill({ status: 200, contentType: "application/json", body: "{}" }));
+  await page.goto("/admin/users");
+  await expect(page.getByRole("heading", { name: "Users", exact: true })).toBeVisible();
+  await expect(page.getByLabel("Email or account id")).toBeVisible();                       // the rest of the page still works
+  await expect(page.getByText("That request could not be processed.")).toBeVisible();      // explicit error state, not a silent empty list
+  await expect(page.getByText("No invitations yet.")).toHaveCount(0);
 });
 
 test("W10.2: users search, safe detail, governed action with confirmation, workspace membership", async ({ page }) => {

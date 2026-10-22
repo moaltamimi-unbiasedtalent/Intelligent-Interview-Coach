@@ -135,6 +135,13 @@ ADMIN_SUPPORT_TICKET_PRIORITY_CHANGED: Final = "admin.support_ticket_priority_ch
 ADMIN_SUPPORT_REPLY_SENT: Final = "admin.support_reply_sent"
 ADMIN_SUPPORT_INTERNAL_NOTE_CREATED: Final = "admin.support_internal_note_created"
 
+# 03E1 (report builder). Payloads: saved-config id, report type id, revision, the NAMES of changed fields, window, format and a row count; never a definition body,
+# a saved name, a figure or any candidate data.
+ADMIN_REPORT_CONFIG_CREATED: Final = "admin.report_config_created"
+ADMIN_REPORT_CONFIG_UPDATED: Final = "admin.report_config_updated"
+ADMIN_REPORT_CONFIG_DELETED: Final = "admin.report_config_deleted"
+ADMIN_REPORT_EXPORTED: Final = "admin.report_exported"
+
 # P10C-F2A-R (knowledge-foundation qualification). Payloads: source id, scope filters, counts, a validation digest, the decision and a bounded reason; never a record value, a title or a name.
 ADMIN_FOUNDATION_QUALIFICATION_DECIDED: Final = "admin.foundation_qualification_decided"
 ADMIN_FOUNDATION_QUALIFICATION_REVOKED: Final = "admin.foundation_qualification_revoked"
@@ -143,6 +150,7 @@ ADMIN_FOUNDATION_ALIAS_REVOKED: Final = "admin.foundation_alias_revoked"
 
 ADMIN_EVENT_NAMES: Final[frozenset[str]] = frozenset({
     ADMIN_INVITATION_ISSUED, ADMIN_INVITATION_REVOKED,
+    ADMIN_REPORT_CONFIG_CREATED, ADMIN_REPORT_CONFIG_UPDATED, ADMIN_REPORT_CONFIG_DELETED, ADMIN_REPORT_EXPORTED,
     ADMIN_FOUNDATION_QUALIFICATION_DECIDED, ADMIN_FOUNDATION_QUALIFICATION_REVOKED, ADMIN_FOUNDATION_ALIAS_DECIDED, ADMIN_FOUNDATION_ALIAS_REVOKED,
     ADMIN_ROLE_CHANGE_REQUESTED, ADMIN_ROLE_CHANGE_APPROVED, ADMIN_ROLE_CHANGE_REJECTED, ADMIN_ROLE_CHANGE_CANCELLED, ADMIN_ROLE_CHANGE_STALE,
     ADMIN_STEP_UP_SUCCEEDED, ADMIN_STEP_UP_FAILED, ADMIN_AUDIT_EXPORTED, SECURITY_INCIDENT_CREATED, SECURITY_INCIDENT_UPDATED,

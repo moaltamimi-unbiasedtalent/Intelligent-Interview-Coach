@@ -267,20 +267,33 @@ BRIEFS = {
 }
 
 # ---------------------------------------------------------------- measured status and throughput (first engineering wave; updated by hand as evidence arrives)
-PACKAGE_STATUS = {   # id: (state, branch, head SHA, verification evidence). GitHub CI is reported separately in the integration dashboard; "no PR" means no CI could run
-    "05A": ("BRANCH PUSHED, VERIFIED OFFLINE", "feat/05a-staging-topology", "0a7d6fb", "114 passed/1 skipped under both venvs; ruff; hosting readiness PASS; nothing deployed"),
-    "01A": ("BRANCH PUSHED, VERIFIED OFFLINE", "feat/01a-injection-corpus", "6b2dbc2", "293 passed under both venvs; eval_agent PASS; held-out detection 54.5% (report only)"),
-    "02K": ("BRANCH PUSHED, VERIFIED OFFLINE", "feat/02k-knowledge-contract", "f5eb3dc", "125 passed under both venvs after 1 rework round"),
-    "01B0": ("BRANCH PUSHED, VERIFIED OFFLINE", "feat/01b0-prompt-contract", "6f6d383", "462 passed under both venvs"),
-    "03K": ("BRANCH PUSHED, VERIFIED OFFLINE", "feat/03k-admin-metric-contract", "8afe350", "183 passed under both venvs; tsc, lint, vitest 28"),
-    "03A": ("BRANCH PUSHED, VERIFIED OFFLINE", "feat/03a-admin-navigation", "7a6f484", "vitest 1114, Playwright 89, pytest 107, tsc, lint, ruff"),
-    "06A": ("BRANCH PUSHED, CORRECTIONS IN PROGRESS", "feat/06a-locale-boundaries", "f7b2e03", "full Python suite 5172 passed on the repo venv and 5170 on the fresh venv; vitest 1087; affected Playwright; documentation corrections pending"),
-    "01B": ("IN PROGRESS (stacked on 01B0)", "feat/01b-versioned-prompts", "", "not yet reported"),
-    "02A": ("IN PROGRESS (stacked on 02K)", "feat/02a-knowledge-persistence", "", "not yet reported"),
+PACKAGE_STATUS = {   # id: (state, branch, head SHA, verification evidence). "MERGED" means the code PR merged after green GitHub CI; it does NOT mean a production gate passed (see RELEASE_READINESS_TRACKER)
+    "02K": ("MERGED (PR #215, merge 657e456); CI green", "feat/02k-knowledge-contract", "f5eb3dc", "125 passed under both venvs; 12/12 GitHub checks; contract frozen for 02A/02B/02C"),
+    "01B0": ("MERGED (PR #217, merge 0d75acd); CI green", "feat/01b0-prompt-contract", "6f6d383", "462 passed under both venvs; 12/12 GitHub checks"),
+    "03K": ("MERGED (PR #219, merge 20241f4); CI green", "feat/03k-admin-metric-contract", "8afe350", "183 passed; vitest 28; 12/12 GitHub checks; contract frozen for 03D1/03E1"),
+    "01B": ("MERGED (PR #220, merge 335d303); CI green", "feat/01b-versioned-prompts", "7c2b879", "5286 passed, 0 failed; 99 byte-identity tests; 12/12 GitHub checks"),
+    "05A": ("MERGED (PR #218, merge 9b6b109); CI green; NOT DEPLOYED", "feat/05a-staging-topology", "776d7dd", "114 passed/1 skipped; hosting readiness PASS; 2 CI rework rounds (obsolete Phase 00 assertion; merge conflict); live staging blocked on OD-HOSTED"),
+    "02A": ("MERGED (PR #221, merge 191cbc5); CI green; offline proof only", "feat/02a-knowledge-persistence", "5ffef55", "5217 passed, 0 failed; migration 0040; 2 CI rework rounds (stale head allowlists); hosted persistence proof needs 05A/05B drills and OD-HOSTED"),
+    "03A": ("MERGED (PR #216, merge f921892); CI green", "feat/03a-admin-navigation", "c652b2b", "vitest 1131, Playwright 89, pytest; 1 CI rework round (evaluator counted group ids as destinations)"),
+    "06A": ("MERGED (PR #214, merge f9a06a9); CI green; no language qualified", "feat/06a-locale-boundaries", "a7559a9", "audit 2382 keys x 7, 0 missing; 1 CI rework round (esbuild/npm ci in Python shards); 14 Russian Playwright tests skipped and excluded"),
+    "01A": ("BRANCH UPDATED (merged main), NOT MERGED, NO PR; investigation delivered; needs human security review", "feat/01a-injection-corpus", "b3acd4b", "dev detection 100% in-sample; held-out 54.5% to 77.3% measured once (weakly contaminated); benign FP held-out 14.3%; 73 new tests; no thresholds approved"),
+    "06H": ("BRANCH PUSHED, NO PR; verified offline", "feat/06h-language-activation", "a0d01c8", "211 language tests pass under both venvs; full suite 5615 passed/1 stale test; zero languages qualified; hosted fail-closed"),
+    "02B": ("BRANCH PUSHED, NO PR; verified offline; production embedder benchmark NOT RUN (OD-BUDGET)", "feat/02b-embedding-integrity", "135070c", "91 new tests; full suite 5609 passed/1 stale test; no migration; PG-05 retrieval quality NOT MET"),
+    "02C": ("BRANCH PUSHED, NO PR; fake-clamd verified only; NO real clamd run (OD-HOSTED)", "feat/02c-clamav-scanning", "164d839", "54 new tests; 282 targeted passed under both venvs; no migration"),
+    "03D1": ("BRANCH PUSHED, NO PR; backend only", "feat/03d1-command-center-metrics", "89f6e66", "46 new tests; 269 related passed; 8 GET routes; registry stays 44; no migration"),
+    "PREP-HEAD": ("BRANCH PUSHED, NO PR (lead prep, not a roadmap package)", "chore/migration-head-agnostic", "ec14963", "44 proof tests; 1123 affected passed with a throwaway 0041; 46 evaluators green; no src or migration change"),
+    "03B": ("BRANCH PUSHED, NO PR; stacked on PREP-HEAD", "feat/03b-admin-plans", "72bb7fd", "33 new tests; full suite 5589 passed/1 stale test; 9 routes; no migration; billing stays mock"),
+    "03C": ("BRANCH PUSHED, NO PR; stacked on PREP-HEAD", "feat/03c-admin-users", "5fd21d6", "18 new tests; 7 action routes; no migration; bulk actions not built (OD-BULK-ACTIONS)"),
+    "03E1": ("BRANCH PUSHED, NO PR; stacked on PREP-HEAD; migration 0041", "feat/03e1-reports-builder", "0c3638b", "107 new tests; 20 routes; migration 0041_report_configurations; edited the privacy evaluator (review)"),
+    "04E": ("BRANCH PUSHED, NO PR; stacked on PREP-HEAD; migration 0041", "feat/04e-invitation-only", "54c4bf0", "90 new tests; hosted invitation-required fail-closed; migration 0041_registration_invitations"),
+    "04A": ("BRANCH PUSHED, NO PR; stacked on PREP-HEAD; migration 0041", "feat/04a-story-bank", "a7b0713", "31 backend + 47 frontend tests; migration 0041_story_bank_completion; touches src/agent evidence specialist (one line)"),
+    "04B": ("BRANCH PUSHED, NO PR; stacked on PREP-HEAD; no migration", "feat/04b-workspaces", "0d3d9ed", "52 backend + 34 frontend tests; evaluator 29 gates; security fix: invitation acceptance needs a verified email"),
 }
-THROUGHPUT = [   # (package, estimate low-high days, authoring wall-clock minutes, rework rounds, review latency, CI duration)
-    ("05A", "8-12", 11, 0, "no PR yet", "no PR yet"), ("01A", "5-8", 24, 0, "no PR yet", "no PR yet"), ("02K", "2-3", 32, 1, "no PR yet", "no PR yet"), ("01B0", "2-3", 24, 0, "no PR yet", "no PR yet"),
-    ("03K", "2-3", 34, 0, "no PR yet", "no PR yet"), ("03A", "5-7", 29, 0, "no PR yet", "no PR yet"), ("06A", "4-6", 43, 0, "no PR yet", "no PR yet"),
+THROUGHPUT = [   # (package, estimate low-high days, authoring wall-clock minutes, CI/integration rework rounds after the PR opened, PR open to merge, note). PR timestamps are GitHub UTC on 2026-10-21
+    ("02K", "2-3", 32, 0, "0h41m", "merged with a green PR #215"), ("01B0", "2-3", 24, 0, "0h41m", "PR #217"), ("03K", "2-3", 34, 0, "0h41m", "PR #219"),
+    ("01B", "5-8", 26, 0, "0h49m", "PR #220; byte-identity oracle"), ("05A", "8-12", 11, 2, "1h35m", "PR #218; obsolete Phase 00 assertion then merge conflict"),
+    ("02A", "10-15", 58, 2, "2h22m", "PR #221; stale migration-head allowlists in 5 evaluators (hidden behind the first failure)"),
+    ("03A", "5-7", 29, 1, "3h15m", "PR #216; evaluator counted group ids"), ("06A", "4-6", 43, 1, "3h51m", "PR #214; esbuild missing from Python shards"),
 ]
 
 
@@ -670,11 +683,11 @@ def render_schedule() -> str:
 
 def measured_section() -> list[str]:
     rec = recommended_profile()
-    L = ["", "## Measured first-wave throughput and what it does and does not say", "", "| Package | Estimate (days) | Authoring wall-clock (minutes) | Rework rounds | Review latency | GitHub CI duration |", "|---|---|---|---|---|---|"]
+    L = ["", "## Measured first-wave throughput and what it does and does not say", "", "| Package | Estimate (days) | Authoring wall-clock (minutes) | Rework rounds after the PR opened | PR open to merge (review and CI included) | Note |", "|---|---|---|---|---|---|"]
     for pk, est, mins, rw, rev, ci in THROUGHPUT:
         L.append(f"| {pk} | {est} | {mins} | {rw} | {rev} | {ci} |")
     tot = sum(m for _, _, m, _, _, _ in THROUGHPUT)
-    L += ["", f"Seven first-wave packages were authored in {tot} agent-minutes in total (each agent ran in parallel; roughly 10 to 45 minutes per package, including about 15 minutes lost to the shared interpreter fault), against estimates of 2 to 12 engineering days each. **This measures authoring of contract, scaffolding and test-writing work only.** It excludes human review, GitHub CI (no PR exists, so none ran), integration, live validation, rework after review, native and legal review and every calendar-bound step, and the first wave was deliberately the smallest, best-bounded packages. It is NOT evidence about the heavier packages (02A, 02B, 03D1, 03E1, 04A to 04D, 05B to 05D) and no estimate has been changed because of it.", "",
+    L += ["", f"Eight first-wave packages were authored in {tot} agent-minutes in total (agents ran in parallel), against estimates of 2 to 15 engineering days each; the estimates include review, CI and integration, which the authoring time does not. All eight merged after green GitHub CI, between 41 minutes and 3 hours 51 minutes after their PR opened (the owner reviewed and merged quickly); five needed 1 to 2 CI or integration rework rounds after the PR opened, caused by stale head-literal assertions and cross-branch tests that no local run had exposed because CI stops at the first failing evaluator. That is evidence about CI hygiene, not a verified effort ratio: these packages were interface contracts, scaffolds and a documented additive migration, and no first-wave package needed a human qualifier, a licence, a native reviewer or live staging. The forecast therefore keeps the engineering estimates as planning inputs and treats the calendar-bound human and legal lead times as the binding constraint for the date.", "",
           "Sensitivity of the full-scope completion date to the true effort (profile '" + rec[0] + "', high estimate scaled; a sensitivity table, not a forecast):", "", "| Effort relative to the estimate | Completes | Binding constraint |", "|---|---|---|"]
     for scale in (1.0, 0.5, 0.25, 0.1):
         c = completion(rec[1], 1, scale)

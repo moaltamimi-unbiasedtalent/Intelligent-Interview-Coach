@@ -14,6 +14,9 @@ const pt: Catalog = {
     loading: "A carregar",
     skipToContent: "Ir para o conteúdo",
     language: "Idioma",
+    languageUnqualified: "Não qualificada",
+    languagesNoneAvailable:
+      "Ainda não há nenhum idioma disponível para utilizadores reais. Um idioma só abre depois de concluir todas as verificações de qualificação.",
   },
   nav: {
     prepare: "Preparar",

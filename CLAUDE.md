@@ -520,7 +520,9 @@ assumptions in core logic, prompts, scoring or examples.
   (`effective_locale`, `toActiveLocale`; no rewrite, no migration, geography untouched) and the Russian live-UI Playwright
   specs are dormant (`docs/production/execution/evidence/06A_RUSSIAN_TESTS_EXCLUDED.md`). A language is activated for real
   users only when LG-01 to LG-14 pass for it (`docs/production/execution/language_readiness.json`); none is qualified yet
-  and the per-gate activation enforcement is package 06H, not 06A. Admin is English-only. Adding an app locale NEVER enables other dimensions: speech
+  and 06H enforces that rule in code (`src/language_activation.py`: in staging and production a locale is offered and accepted only
+  with a complete approved fourteen-gate record, otherwise nothing is offered and new language-bearing activity is refused with
+  `language_not_activated`; development and test label the seven UNQUALIFIED). Admin is English-only. Adding an app locale NEVER enables other dimensions: speech
   (dictation `DICTATION_LANGUAGES`, TTS `ttsLocales`, realtime `SUPPORTED_REALTIME_LOCALES`), document/OCR
   language (`DOCUMENT_LANGUAGE_CODES`), KB/taxonomy languages (`governance.SUPPORTED_LANGUAGES`; Russian is
   NOT an ESCO language) and labour-market geography (`CAREER_GEOGRAPHIES`; Russia is not a market) are

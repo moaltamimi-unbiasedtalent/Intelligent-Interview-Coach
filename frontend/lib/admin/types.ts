@@ -466,7 +466,13 @@ export interface KnowledgeReadiness {
   collection: string;
   store: { kind: string; chunk_count: number | null; location: string };
   embedding_provider_status: string;
-  embedder_state: { status: string; provider: string; embedder: string | null; note: string };
+  embedder_state: {
+    status: string; provider: string; embedder: string | null; note: string;
+    // 02B, additive: the actual embedder, its recorded version, degradation and the persisted index manifest's compatibility (field names only, never values)
+    model?: string | null; version?: string | null; dimensions?: number | null; quality_mode?: string | null; label?: string | null;
+    degraded?: boolean; environment?: string | null; approved_for_environment?: boolean | null; problems?: string[]; warnings?: string[];
+    index_compatibility?: { collection_id: string | null; state: string; compatible: boolean; refused: boolean; differing_fields: string[]; message: string } | null;
+  };
   curated_corpus: { status: "available" | "empty" | "unavailable"; chunk_count: number | null; store_kind?: string | null };
   last_indexed_at: string | null;
   last_failure_category: string | null;

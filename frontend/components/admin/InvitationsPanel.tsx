@@ -5,6 +5,7 @@ import type { FormEvent } from "react";
 import { api } from "@/lib/api/client";
 import { adminPermissions, hasAnyPermission, P } from "@/lib/admin/capabilities";
 import type { AdminInvitationIssued } from "@/lib/admin/types";
+import { isAdminInvitationPage } from "@/lib/admin/invitationGuard";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { Panel, ResourceState, ScrollRegion, apiMessage, btn, field, formatCell, useAdminResource } from "./ui";
 
@@ -15,7 +16,11 @@ import { Panel, ResourceState, ScrollRegion, apiMessage, btn, field, formatCell,
 export function InvitationsPanel() {
   const auth = useAuthOptional();
   const canManage = !!auth && auth.status !== "loading" && hasAnyPermission(adminPermissions(auth.account), [P.usersManage]);
-  const loaded = useAdminResource(() => api.admin.invitations({ limit: 25 }));
+  const loaded = useAdminResource(async () => {
+    const page = await api.admin.invitations({ limit: 25 });
+    if (!isAdminInvitationPage(page)) throw new Error("malformed invitation listing");      // explicit Admin error state, never a crash or a fabricated empty list
+    return page;
+  });
   const [days, setDays] = useState("14");
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);

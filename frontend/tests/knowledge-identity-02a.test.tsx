@@ -90,3 +90,32 @@ describe("Knowledge environment identity (02A)", () => {
     expect(screen.queryByTestId("env-identity")).toBeNull();
   });
 });
+
+describe("Embedder detail and index compatibility (02B)", () => {
+  it("shows the actual embedder, its degradation and a refused index with the differing field names only", async () => {
+    readiness.mockResolvedValue(base({}, {
+      embedder_state: {
+        status: "available", provider: "local", embedder: "LocalHashEmbedder", note: "", model: "local-hash-v1", version: "hash-1", dimensions: 512,
+        quality_mode: "OFFLINE LEXICAL", label: "OFFLINE LEXICAL (development only, NOT production quality)", degraded: true, approved_for_environment: true, problems: [],
+        index_compatibility: { collection_id: "governed_knowledge", state: "mismatch", compatible: false, refused: true, differing_fields: ["model", "dimensions"],
+          message: "The index was built by an embedder that differs from the live embedder; its vectors are not comparable." },
+      },
+    }));
+    render(<KnowledgeView />);
+    const detail = await screen.findByTestId("embedding-detail");
+    expect(detail.textContent).toMatch(/local-hash-v1, version hash-1, 512 dimensions/);
+    expect(detail.textContent).toMatch(/NOT production quality/);
+    expect(detail.textContent).toMatch(/Degraded: the lexical fallback is in use/);
+    const idx = screen.getByTestId("index-compatibility");
+    expect(idx.textContent).toMatch(/Differing: model, dimensions/);
+    expect(idx.textContent).toMatch(/Retrieval is refused until the index is rebuilt/);
+    expect(idx.textContent).not.toMatch(/sk-|:\/\/|\/Users\//);
+  });
+
+  it("stays quiet when the backend does not report the 02B fields", async () => {
+    render(<KnowledgeView />);
+    await screen.findByTestId("embedding-state");
+    expect(screen.queryByTestId("embedding-detail")).toBeNull();
+    expect(screen.queryByTestId("index-compatibility")).toBeNull();
+  });
+});

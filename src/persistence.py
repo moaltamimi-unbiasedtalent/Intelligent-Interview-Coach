@@ -2294,6 +2294,32 @@ class FeatureFlagOverride(Base):
     reason: Mapped[str] = mapped_column(String(200), default="")
 
 
+class ReportConfiguration(Base):
+    """A saved Admin report DEFINITION (package 03E1): which registered metrics, window, grouping, filters and chart kind. It stores the DEFINITION ONLY: never a
+    result, a figure, a candidate identifier or any candidate data (the preview/export always recomputes through the suppression pipeline). The owner is the Admin who
+    created it; ``shared`` lets other Admins who already hold the report's existing read permission VIEW it (they can never edit or delete it). ``revision`` is the
+    optimistic-concurrency token. Bounded by ``src.reporting.report_builder`` (count per owner, definition size)."""
+
+    __tablename__ = "report_configurations"
+    __table_args__ = (
+        UniqueConstraint("owner_user_id", "name", name="uq_rc_owner_name"),
+        CheckConstraint("revision >= 1", name="ck_rc_revision"),
+        CheckConstraint("length(definition_hash) = 64", name="ck_rc_hash"),
+        Index("ix_rc_owner", "owner_user_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String(60))
+    report_id: Mapped[str] = mapped_column(String(64))
+    definition_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    definition_hash: Mapped[str] = mapped_column(String(64))
+    shared: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    revision: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 SPEECH_STT_PROVIDERS = ("openai_whisper",)
 SPEECH_TTS_PROVIDERS = ("kyutai_pocket_tts",)
 

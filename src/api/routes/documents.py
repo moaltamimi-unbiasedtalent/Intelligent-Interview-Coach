@@ -39,24 +39,40 @@ from src.documents.validation import MAX_FILE_BYTES
 router = APIRouter(prefix="/documents", tags=["documents"])
 
 
-def _scan_or_reject(data: bytes, filename: str) -> None:
-    """Malware-scan policy (§16/§17): fail closed when scanning is required but unavailable;
-    reject flagged files; never claim a file is clean unless a real scanner passed it."""
+def _scan_or_reject(data: bytes, filename: str, session_factory=None) -> None:
+    """Malware-scan policy (§16/§17), fail closed: a scanner outage is 503 (retryable, never an infection verdict), a flagged file is 422, a file
+    over the scan limit is 413; none of them is stored. A file is accepted only after a real scanner passed it when scanning is required."""
     from src.documents.file_security import (
-        FileRejected, FileScanUnavailable, enforce_scan)
+        FileRejected, FileScanUnavailable, FileTooLarge, enforce_scan)
 
     try:
         enforce_scan(data, filename)
     except FileScanUnavailable as exc:
-        raise HTTPException(
-            status_code=503,
-            detail="File uploads are temporarily unavailable (security scanning offline).",
-        ) from exc
+        _observe_scanner(session_factory, available=False)
+        raise _scan_error(503, "scan_unavailable", "File uploads are temporarily unavailable (security scanning offline).") from exc
+    except FileTooLarge as exc:
+        raise _scan_error(413, "scan_too_large", "This file is too large to be security scanned and was not stored.") from exc
     except FileRejected as exc:
-        raise HTTPException(
-            status_code=422,
-            detail="This file was rejected by a security scan and was not stored.",
-        ) from exc
+        _observe_scanner(session_factory, available=True)
+        raise _scan_error(422, "scan_infected", "This file was rejected by a security scan and was not stored.") from exc
+    _observe_scanner(session_factory, available=True)
+
+
+def _scan_error(status: int, code: str, message: str) -> HTTPException:
+    """The stable error envelope carries ``error_code`` so a scanner outage (503 scan_unavailable) is distinguishable from an infection
+    (422 scan_infected) and from an over-limit file (413 scan_too_large). No signature name, content or path is ever included."""
+    err = HTTPException(status_code=status, detail=message)
+    err.error_code = code
+    return err
+
+
+def _observe_scanner(session_factory, *, available: bool) -> None:
+    """Raise or clear the in-app scanner alert (best effort, never changes the response)."""
+    if session_factory is None:
+        return
+    from src.knowledge_admin.alerts import observe_scanner
+
+    observe_scanner(session_factory, available=available)
 
 
 @router.get("", response_model=DocumentListResponse, summary="List the caller's private documents")
@@ -72,6 +88,7 @@ async def upload_document(
     svc=Depends(get_documents_service),
     user_id: int = Depends(get_current_user_id),
     pause=Depends(get_pause_service),
+    repo=Depends(get_repository),
 ) -> DocumentDetail:
     # Per-user upload ceiling + OCR pause (§19/§21). OCR runs during upload, so a paused OCR
     # capability blocks new uploads truthfully rather than silently skipping extraction.
@@ -83,7 +100,7 @@ async def upload_document(
     data = await file.read()
     if len(data) > MAX_FILE_BYTES:
         raise HTTPException(status_code=413, detail="The file is too large (max 10 MB).")
-    _scan_or_reject(data, file.filename or "document")
+    _scan_or_reject(data, file.filename or "document", repo.session_factory)
     detail = svc.upload(
         user_id=user_id, filename=file.filename or "document",
         data=data, category=category, language_hint=language_hint,
@@ -107,6 +124,7 @@ async def replace_document(
     svc=Depends(get_documents_service),
     user_id: int = Depends(get_current_user_id),
     pause=Depends(get_pause_service),
+    repo=Depends(get_repository),
 ) -> DocumentDetail:
     from src.api.guards import ensure_not_paused
     from src.api.rate_limit import enforce, user_key
@@ -116,7 +134,7 @@ async def replace_document(
     data = await file.read()
     if len(data) > MAX_FILE_BYTES:
         raise HTTPException(status_code=413, detail="The file is too large (max 10 MB).")
-    _scan_or_reject(data, file.filename or "document")
+    _scan_or_reject(data, file.filename or "document", repo.session_factory)
     detail = svc.replace(user_id=user_id, document_id=document_id, filename=file.filename or "document", data=data, language_hint=language_hint)
     if detail is None:
         raise HTTPException(status_code=404, detail="Document not found.")

@@ -18,6 +18,9 @@ export const messages = {
     loading: "Loading",
     skipToContent: "Skip to content",
     language: "Language",
+    languageUnqualified: "Unqualified",
+    languagesNoneAvailable:
+      "No language is available to real users yet. A language opens only after it completes every qualification check.",
   },
   nav: {
     prepare: "Prepare",

@@ -1,4 +1,4 @@
-"""04E migration 0041 (registration_invitations): upgrade, schema parity with the ORM, constraints, and the FAIL-CLOSED downgrade."""
+"""04E migration 0042 (registration_invitations): upgrade, schema parity with the ORM, constraints, and the FAIL-CLOSED downgrade."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from tests._alembic_head import assert_chain
 from tests.test_billing_f1_qualification import _alembic
 
-REV, PREV = "0041_registration_invitations", "0040_knowledge_alert_categories"
+REV, PREV = "0042_registration_invitations", "0041_report_configurations"
 _INS = ("insert into registration_invitations (code_hash, email_hash, created_at, expires_at, redeemed_at, revoked_at) "
         "values (:h, null, :c, :e, :r, :v)")
 
@@ -18,7 +18,7 @@ def _row(c, h, *, created="2020-01-01 00:00:00.000000", expires="2999-01-01 00:0
     c.execute(text(_INS), {"h": h, "c": created, "e": expires, "r": redeemed, "v": revoked})
 
 
-def test_0041_chains_from_0040_and_is_in_the_single_linear_chain(tmp_path, monkeypatch):
+def test_0042_chains_from_0041_and_is_in_the_single_linear_chain(tmp_path, monkeypatch):
     from alembic.script import ScriptDirectory
 
     cfg, _ = _alembic(tmp_path, monkeypatch)
@@ -90,7 +90,7 @@ def test_downgrade_is_fail_closed_for_pending_and_redeemed_rows_then_allowed_whe
     # 1) a PENDING invitation blocks it and nothing is deleted
     with eng.begin() as c:
         _row(c, "pending")
-    with pytest.raises(RuntimeError, match="Refusing to downgrade 0041_registration_invitations"):
+    with pytest.raises(RuntimeError, match="Refusing to downgrade 0042_registration_invitations"):
         command.downgrade(cfg, PREV)
     with eng.connect() as c:
         assert c.execute(text("select count(*) from registration_invitations")).scalar() == 1
@@ -129,7 +129,7 @@ def test_create_all_and_the_migration_agree_on_the_table(tmp_path, monkeypatch):
     assert created == {c["name"] for c in inspect(create_engine(url)).get_columns("registration_invitations")}
 
 
-# ===================================================================== privacy schema invariant (the one shared guard 0041 interacts with)
+# ===================================================================== privacy schema invariant (the one shared guard 0042 interacts with)
 def _privacy_evaluator():
     import importlib.util
     from pathlib import Path
@@ -141,13 +141,13 @@ def _privacy_evaluator():
     return root, mod
 
 
-def test_0041_only_points_at_users_with_foreign_keys_and_the_privacy_invariant_still_holds():
+def test_0042_only_points_at_users_with_foreign_keys_and_the_privacy_invariant_still_holds():
     import tests.conftest  # noqa: F401  (isolation first)
     from src.persistence import Base
 
     root, ev = _privacy_evaluator()
     known = set(Base.metadata.tables)
-    src = (root / "migrations/versions/0041_registration_invitations.py").read_text(encoding="utf-8")
+    src = (root / "migrations/versions/0042_registration_invitations.py").read_text(encoding="utf-8")
     assert ev.migration_tables_touched(src, known) == {"registration_invitations"}      # its own table only; "users.id" targets are references, not changes
     assert ev.post_baseline_privacy_touches(root / "migrations/versions", known) == {}
 

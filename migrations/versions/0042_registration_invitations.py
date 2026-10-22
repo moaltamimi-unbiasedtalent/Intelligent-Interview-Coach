@@ -8,8 +8,8 @@ The downgrade is FAIL-CLOSED: it refuses (deleting nothing) while any invitation
 rows are the only record of who may still register and of which registrations were invited. Revoke or let pending ones expire, and export what you need, first.
 Chains from 0040. Single head.
 
-Revision ID: 0041_registration_invitations
-Revises: 0040_knowledge_alert_categories
+Revision ID: 0042_registration_invitations
+Revises: 0041_report_configurations
 Create Date: 2026-10-22
 """
 
@@ -18,8 +18,8 @@ from __future__ import annotations
 import sqlalchemy as sa
 from alembic import op
 
-revision = "0041_registration_invitations"
-down_revision = "0040_knowledge_alert_categories"
+revision = "0042_registration_invitations"
+down_revision = "0041_report_configurations"
 branch_labels = None
 depends_on = None
 
@@ -58,7 +58,7 @@ def downgrade() -> None:
         t.c.revoked_at.is_(None), sa.or_(t.c.redeemed_at.is_not(None), t.c.expires_at > _utcnow()))).scalar() or 0
     if live:
         raise RuntimeError(
-            f"Refusing to downgrade 0041_registration_invitations: {live} live invitation(s) (pending or redeemed) exist and are the only record of who may register. "
+            f"Refusing to downgrade 0042_registration_invitations: {live} live invitation(s) (pending or redeemed) exist and are the only record of who may register. "
             "Revoke or let pending ones expire, and export what you need, deliberately first.")
     op.drop_index("ix_registration_invitations_expires", table_name="registration_invitations")
     op.drop_table("registration_invitations")

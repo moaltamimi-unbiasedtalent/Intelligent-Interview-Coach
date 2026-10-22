@@ -31,6 +31,9 @@ router = APIRouter(prefix="/career", tags=["career"])
 def chat(body: CareerChatRequest,
          svc: CareerApplicationService = Depends(get_career_service),
          _ai=Depends(ai_operation("career", "chat"))) -> CareerChatResponse:
+    from src.language_activation import require_locale_activated
+
+    require_locale_activated(body.conversation_language)  # 06H: new chat only in an activated language
     result = svc.chat(AppCareerChatRequest(
         query=body.question,
         job_description=body.job_description,
