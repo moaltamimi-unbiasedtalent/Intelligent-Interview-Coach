@@ -25,6 +25,7 @@ vi.mock("@/lib/api/client", async (importOriginal) => {
       stories: {
         list: (...a: unknown[]) => storiesList(...a),
         draft: (...a: unknown[]) => storiesDraft(...a),
+        tags: () => Promise.resolve({ tags: [] }),
         remove: vi.fn(),
       },
     },
@@ -52,7 +53,8 @@ describe("DocumentsClient", () => {
     storiesList.mockResolvedValue({ stories: [] });
     render(<DocumentsClient />);
     await waitFor(() => expect(screen.getByText("cv.txt")).toBeInTheDocument());
-    expect(screen.getByText(/No stories yet/)).toBeInTheDocument();
+    // The Story Bank loads independently of the document list and shows its loading state until stories.list() resolves, so wait for its completed (empty) state.
+    expect(await screen.findByText(/No stories yet/)).toBeInTheDocument();
   });
 
   it("uploads a file", async () => {

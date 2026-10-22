@@ -568,16 +568,22 @@ def get_sharing_service(
     story_repo = StoryRepository(workspaces.session_factory)
 
     def _story_owns(resource_id: str, owner_user_id: int) -> bool:
+        # 04A: an archived story cannot be shared (archiving also revokes its grants; restoring never re-grants).
         try:
-            return story_repo.get(user_id=owner_user_id, story_id=int(resource_id)) is not None
+            found = story_repo.get(user_id=owner_user_id, story_id=int(resource_id))
+            return found is not None and not found.get("archived_at")
         except (ValueError, TypeError):
             return False
 
     def _story_load(resource_id: str, owner_user_id: int):
+        # 04A: a bounded VIEW projection (STAR text, tags, verification label) - never claim/answer ids, the Opportunity link or usage.
+        from src.application.stories_service import shared_projection
+
         try:
-            return story_repo.get(user_id=owner_user_id, story_id=int(resource_id))
+            found = story_repo.get(user_id=owner_user_id, story_id=int(resource_id))
         except (ValueError, TypeError):
             return None
+        return shared_projection(found) if found is not None else None
 
     from src.application.history_access import HistoryAccessPolicy
     from src.entitlements import EntitlementService
@@ -660,10 +666,14 @@ def get_stories_service(repo=Depends(get_repository)):
     from src.application.stories_service import StoriesApplicationService
     from src.documents.repository import DocumentRepository, StoryRepository
 
+    from src.opportunity_repository import OpportunityRepository
+
     sf = repo.session_factory
+    opportunities = OpportunityRepository(sf)
     return StoriesApplicationService(
         stories=StoryRepository(sf),
         documents=DocumentRepository(sf),
+        opportunity_lookup=lambda user_id, opportunity_id: opportunities.get(user_id, opportunity_id),
     )
 
 

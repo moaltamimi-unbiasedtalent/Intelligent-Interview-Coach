@@ -17,6 +17,8 @@ operation already in flight is rejected rather than duplicated.
 
 from __future__ import annotations
 
+import re
+
 from fastapi import APIRouter, Depends, Header, HTTPException, Path, Request
 
 from src import constants
@@ -30,6 +32,7 @@ from src.api.dependencies import (
     get_repository,
     get_session_store,
 )
+from src.documents.repository import STORY_BLOCK_CLOSE, STORY_BLOCK_OPEN
 from src.api.schemas.interview import (
     ActiveSessionsResponse,
     ActiveSessionSummary,
@@ -64,6 +67,8 @@ from src.session_manager import SessionManager, SessionState
 router = APIRouter(prefix="/interviews", tags=["interviews"])
 
 _MAX_IDEMPOTENCY_KEY = 200
+# 04A: story text copied into a session is wrapped in these markers (see src/documents/repository.py) so its use is attributed and a story delete can strip it.
+_STORY_MARK = re.compile(r"\[\[STORY (\d+) BEGIN\]\]")
 
 # States from which a fresh interview setup may still be (re)generated on an
 # idempotent retry of a create that stopped halfway (§14) — never resets a real one.
@@ -86,6 +91,8 @@ def _build_configuration(body: CreateInterviewRequest):
         # they are not domain-config fields, so strip them before building the domain object.
         raw.pop("job_description_document_id", None)
         raw.pop("use_candidate_evidence", None)
+        raw.pop("story_ids", None)
+        raw.pop("confirm_story_use", None)
     elif body.preparation_context is not None:
         pc = PreparationContext(**body.preparation_context.model_dump())
         store: dict = {}
@@ -148,11 +155,13 @@ def _compose_evidence_background(evidence_svc, user_id: int) -> str:
         title = (s.get("title") or "").strip()
         result = (s.get("result") or "").strip()
         if title:
-            lines.append(f"- {title}: {result}" if result else f"- {title}")
+            # 04A: marked so deleting the story can strip exactly this line from the session again (and so its use is attributed).
+            body = f"- {title}: {result}" if result else f"- {title}"
+            lines.append(f"{STORY_BLOCK_OPEN.format(id=s['id'])}{body}{STORY_BLOCK_CLOSE.format(id=s['id'])}")
     return "\n".join(lines)[: constants.MAX_CANDIDATE_BACKGROUND_CHARS].strip()
 
 
-def _apply_governed_context(configuration, body: CreateInterviewRequest, *, user_id: int, request: Request):
+def _apply_governed_context(configuration, body: CreateInterviewRequest, *, user_id: int, request: Request, session_factory=None):
     """Resolve candidate-selected private context into the config's governed, injection-screened
     text fields — SERVER-side and owner-scoped (P10B Wave 4). A selected JD document id becomes
     ``job_description`` (its stored text, re-parsed via the one governed pipeline); an opt-in to
@@ -163,7 +172,7 @@ def _apply_governed_context(configuration, body: CreateInterviewRequest, *, user
     The document/evidence services are built lazily, ONLY when context is actually requested, so
     a plain create (no selected document/evidence) needs neither service."""
     cfg = body.configuration
-    if cfg is None or (cfg.job_description_document_id is None and not cfg.use_candidate_evidence):
+    if cfg is None or (cfg.job_description_document_id is None and not cfg.use_candidate_evidence and not cfg.story_ids):
         return configuration
 
     from src.api.dependencies import get_document_store, get_ocr_engine, get_repository
@@ -171,7 +180,7 @@ def _apply_governed_context(configuration, body: CreateInterviewRequest, *, user
     from src.application.evidence_access_service import EvidenceAccessService
     from src.documents.repository import DocumentRepository, StoryRepository
 
-    sf = get_repository(request).session_factory
+    sf = session_factory or get_repository(request).session_factory
     docs_svc = DocumentsApplicationService(
         repo=DocumentRepository(sf), stories=StoryRepository(sf),
         store=get_document_store(request), ocr=get_ocr_engine(request),
@@ -190,6 +199,19 @@ def _apply_governed_context(configuration, body: CreateInterviewRequest, *, user
         summary = _compose_evidence_background(evidence_svc, user_id)
         if summary:
             updates["candidate_background"] = summary
+    if cfg.story_ids:
+        # 04A: stories enter a session only by the candidate's explicit, per-story selection AND consent. All-or-nothing: one bad id refuses the request.
+        from src.application.stories_service import compose_story_blocks
+
+        if not cfg.confirm_story_use:
+            raise ValidationError("Confirm that you want the selected stories used in this practice session.")
+        chosen = StoryRepository(sf).usable_by_ids(user_id, list(dict.fromkeys(cfg.story_ids)))
+        if chosen is None:
+            raise ValidationError("One or more selected stories are not available.")
+        blocks = compose_story_blocks(chosen, max_chars=constants.MAX_CANDIDATE_BACKGROUND_CHARS - 600)
+        rest = (updates.get("candidate_background") or configuration.candidate_background or "").strip()
+        room = constants.MAX_CANDIDATE_BACKGROUND_CHARS - len(blocks) - 2
+        updates["candidate_background"] = (blocks + ("\n\n" + rest[:room] if rest and room > 0 else "")).strip()
     return configuration.model_copy(update=updates) if updates else configuration
 
 
@@ -362,6 +384,7 @@ def create_interview(
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     _ai=Depends(ai_operation("practice", "setup")),
     model_policy=Depends(get_model_profile_policy),
+    repo=Depends(get_repository),
 ) -> InterviewStateResponse:
     """Create an interview. An optional ``Idempotency-Key`` header makes creation safe
     to retry — a repeat (same user + key) returns the SAME session without re-running
@@ -378,7 +401,7 @@ def create_interview(
     configuration = _build_configuration(body)
     # Owner-scoped governed context: a selected JD document + approved evidence (Wave 4).
     # Resolved lazily — only when the request actually selected document/evidence context.
-    configuration = _apply_governed_context(configuration, body, user_id=user_id, request=request)
+    configuration = _apply_governed_context(configuration, body, user_id=user_id, request=request, session_factory=repo.session_factory)
     # Default the coaching tone from the account preference when unset (Wave 2; feedback wording only).
     configuration = _resolve_coaching_default(configuration, user_id=user_id, request=request)
 
@@ -391,7 +414,7 @@ def create_interview(
         from src.opportunity_repository import OpportunityRepository
 
         opp_service = OpportunityApplicationService(
-            OpportunityRepository(get_repository(request).session_factory))
+            OpportunityRepository(repo.session_factory))
         if opp_service.get(user_id, opportunity_id) is None:
             raise HTTPException(status_code=404, detail="Opportunity not found.")
 
@@ -408,6 +431,14 @@ def create_interview(
                 return _state(session_id, existing)
     else:
         session_id = store.create(user_id, opportunity_id=opportunity_id)
+
+    used_story_ids = [int(i) for i in dict.fromkeys(_STORY_MARK.findall(configuration.candidate_background or ""))]
+    if used_story_ids:
+        # 04A attribution: ids only (ownership re-verified inside), recorded before setup so a later story delete can find and strip the text copied into
+        # this session. Covers both the per-story selection and the blanket "use my evidence" option.
+        from src.documents.repository import StoryRepository as _Stories
+
+        _Stories(repo.session_factory).record_uses(user_id=user_id, story_ids=used_story_ids, session_id=session_id)
 
     try:
         with store.mutate(session_id, user_id, operation="create") as session:

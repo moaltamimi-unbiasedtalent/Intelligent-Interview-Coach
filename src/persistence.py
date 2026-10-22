@@ -599,6 +599,14 @@ class CandidateStory(Base):
     competencies: Mapped[list | None] = mapped_column(JSON, nullable=True)
     status: Mapped[str] = mapped_column(String(24), default=STORY_USER_CREATED)
     evidence_state: Mapped[str] = mapped_column(String(24), default=STORY_EVIDENCE_NONE)
+    # 04A: archive (reversible, hides from search/suggestions/Practice/shares), the optional Opportunity
+    # link (nullable; unlinked explicitly on Opportunity delete, SQLite has no ALTER-added FK) and the
+    # candidate's own "I confirm this is accurate" timestamp (self-attestation: never evidence).
+    archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    opportunity_id: Mapped[int | None] = mapped_column(
+        ForeignKey("opportunities.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
@@ -627,6 +635,34 @@ class StoryEvidence(Base):
     claim_id: Mapped[int] = mapped_column(ForeignKey("document_claims.id", ondelete="CASCADE"), index=True)
 
     story: Mapped[CandidateStory] = relationship(back_populates="evidence")
+
+
+class StoryAnswerLink(Base):
+    """Links a story to one of the candidate's OWN practice answers (04A). A REFERENCE only: no answer text is
+    copied here. The link counts only while the answer still exists AND belongs to the story's owner (checked on
+    every read, because SQLite does not enforce the cascade), and it is weaker than document evidence: it labels a
+    story "linked to a practice answer", never "verified"."""
+
+    __tablename__ = "story_answer_links"
+    __table_args__ = (UniqueConstraint("story_id", "answer_id", name="uq_story_answer_link"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    story_id: Mapped[int] = mapped_column(ForeignKey("candidate_stories.id", ondelete="CASCADE"), index=True)
+    answer_id: Mapped[int] = mapped_column(ForeignKey("answers.id", ondelete="CASCADE"), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class StoryUse(Base):
+    """One explicit, consented use of a story in a Practice session (04A). Ids only: it records WHICH story was
+    chosen for WHICH session (attribution, and so that deleting the story can find and strip its copied text)."""
+
+    __tablename__ = "story_uses"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    story_id: Mapped[int] = mapped_column(ForeignKey("candidate_stories.id", ondelete="CASCADE"), index=True)
+    session_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class AuditEvent(Base):

@@ -166,6 +166,9 @@ import type {
   DocumentDetail,
   ClaimOut,
   StoryOut,
+  StoryAnswerSource,
+  StorySearchRequest,
+  StorySuggestion,
 } from "./types";
 
 const REQUEST_ID_HEADER = "x-request-id";
@@ -524,6 +527,20 @@ export const api = {
     update: (id: number, body: Partial<StoryOut>, opts?: RequestOptions) =>
       request<StoryOut>("PATCH", `/stories/${id}`, { body, ...opts }),
     remove: (id: number, opts?: RequestOptions) => request<{ deleted: boolean }>("DELETE", `/stories/${id}`, opts),
+    // 04A. Search/suggest are POSTs on purpose: the words typed never appear in a URL or an access log.
+    search: (body: StorySearchRequest, opts?: RequestOptions) => request<{ stories: StoryOut[] }>("POST", "/stories/search", { body, ...opts }),
+    tags: (opts?: RequestOptions) => request<{ tags: string[] }>("GET", "/stories/tags", opts),
+    answerSources: (opts?: RequestOptions) => request<{ sources: StoryAnswerSource[] }>("GET", "/stories/answer-sources", opts),
+    suggest: (body: { terms: string[]; opportunity_id?: number; limit?: number }, opts?: RequestOptions) =>
+      request<{ suggestions: StorySuggestion[] }>("POST", "/stories/suggest", { body, ...opts }),
+    archive: (id: number, opts?: RequestOptions) => request<StoryOut>("POST", `/stories/${id}/archive`, opts),
+    restore: (id: number, opts?: RequestOptions) => request<StoryOut>("POST", `/stories/${id}/restore`, opts),
+    confirm: (id: number, opts?: RequestOptions) => request<StoryOut>("POST", `/stories/${id}/confirm`, opts),
+    unconfirm: (id: number, opts?: RequestOptions) => request<StoryOut>("DELETE", `/stories/${id}/confirm`, opts),
+    attachEvidence: (id: number, kind: "claim" | "answer", refId: number, opts?: RequestOptions) =>
+      request<StoryOut>("POST", `/stories/${id}/evidence`, { body: { kind, ref_id: refId }, ...opts }),
+    detachEvidence: (id: number, kind: "claim" | "answer", refId: number, opts?: RequestOptions) =>
+      request<StoryOut>("DELETE", `/stories/${id}/evidence/${kind}/${refId}`, opts),
   },
 
   reports: {
