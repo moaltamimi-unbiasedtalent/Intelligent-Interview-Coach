@@ -80,4 +80,5 @@ Native-speaker review of the 06E texts and a fresh native-authored held-out set 
 
 ## SHA and throughput
 
-SHA_PLACEHOLDER
+Code commit `1dff23d8` (all code, corpus and tests; pushed first at about 08:44 CEST), evidence commit `948b3749` (docs only), then a docs-only commit recording these lines; the final head is verified with `git ls-remote origin feat/06e-language-security-suites` and given in the hand-off report (a document cannot contain its own commit SHA).
+Throughput: started 2026-10-22 08:15 CEST, first push about 08:44 CEST, final push about 09:03 CEST (about 48 minutes wall-clock against an estimate of 5 to 8 engineering days). Rework rounds after the first push: 0 code rounds (docs only). Within the work, three design rounds on the rules (first batch, probe batch, probe-driven second round) and one revert of a decision (the interview-guard stage was first shipped OFF, then ON once the narrative relaxation removed its dev false positives). CI: not run, there is no pull request (compare URL https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/new/feat/06e-language-security-suites).
