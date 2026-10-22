@@ -11,7 +11,8 @@
  */
 
 import { useId } from "react";
-import { SELECTABLE_LOCALES, type AppLocale } from "@/lib/i18n/locales";
+import { type AppLocale } from "@/lib/i18n/locales";
+import { useOfferedLocales } from "@/lib/i18n/offeredLocales";
 import { useI18n } from "@/components/i18n/I18nProvider";
 
 export function ConversationLanguageField({
@@ -24,6 +25,7 @@ export function ConversationLanguageField({
   disabled?: boolean;
 }) {
   const { t } = useI18n();
+  const { options, noneAvailable } = useOfferedLocales();
   const id = useId();
   return (
     <div className="grid gap-1">
@@ -34,14 +36,17 @@ export function ConversationLanguageField({
       <select
         id={id}
         value={value}
-        disabled={disabled}
+        disabled={disabled || noneAvailable}
         onChange={(e) => onChange(e.target.value as AppLocale)}
         className="min-h-[44px] w-full max-w-xs rounded-lg border border-border bg-surface px-2 text-sm"
       >
-        {SELECTABLE_LOCALES.map((l) => (
-          <option key={l.code} value={l.code}>{l.nativeLabel}</option>
+        {options.map((l) => (
+          <option key={l.code} value={l.code}>{l.unqualified ? `${l.nativeLabel} (${t("common.languageUnqualified")})` : l.nativeLabel}</option>
         ))}
       </select>
+      {noneAvailable ? (
+        <p role="note" data-testid="language-none-available" className="text-xs text-muted">{t("common.languagesNoneAvailable")}</p>
+      ) : null}
     </div>
   );
 }

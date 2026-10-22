@@ -43,6 +43,13 @@ class CapabilitiesResponse(BaseModel):
     # Backward compatible (additive). Excludes ru (preserved, not offered). NOT a per-language qualification claim.
     active_candidate_locales: list[str] = Field(default_factory=lambda: list(ACTIVE_CANDIDATE_LOCALES))
     default_locale: str = DEFAULT_ACTIVE_LOCALE
+    # 06H: the activation decision (codes and mode only; per-gate detail is Admin-only). ``active_candidate_locales`` above is the OFFERED set:
+    # in hosted environments it is empty until a locale has a complete approved qualification record; in development and test it is the seven,
+    # with the unqualified ones listed in ``unqualified_locales`` so every selector can label them.
+    language_activation_mode: str = "labelled"
+    qualified_locales: list[str] = Field(default_factory=list)
+    unqualified_locales: list[str] = Field(default_factory=list)
+    no_language_available: bool = False
 
 
 class ErrorBody(BaseModel):

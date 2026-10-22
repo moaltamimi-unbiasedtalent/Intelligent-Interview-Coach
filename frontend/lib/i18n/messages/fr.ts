@@ -14,6 +14,9 @@ const fr: Catalog = {
     loading: "Chargement",
     skipToContent: "Aller au contenu",
     language: "Langue",
+    languageUnqualified: "Non qualifiée",
+    languagesNoneAvailable:
+      "Aucune langue n’est encore disponible pour les utilisateurs réels. Une langue n’ouvre qu’après avoir passé toutes les vérifications de qualification.",
   },
   nav: {
     prepare: "Préparer",

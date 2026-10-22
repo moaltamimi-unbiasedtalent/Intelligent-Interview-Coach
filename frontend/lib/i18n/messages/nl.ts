@@ -14,6 +14,9 @@ const nl: Catalog = {
     loading: "Laden",
     skipToContent: "Naar inhoud",
     language: "Taal",
+    languageUnqualified: "Niet gekwalificeerd",
+    languagesNoneAvailable:
+      "Er is nog geen taal beschikbaar voor echte gebruikers. Een taal wordt pas geopend nadat alle kwalificatiecontroles zijn afgerond.",
   },
   nav: {
     prepare: "Voorbereiden",

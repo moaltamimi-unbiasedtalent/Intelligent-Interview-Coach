@@ -14,6 +14,9 @@ const de: Catalog = {
     loading: "Wird geladen",
     skipToContent: "Zum Inhalt springen",
     language: "Sprache",
+    languageUnqualified: "Nicht qualifiziert",
+    languagesNoneAvailable:
+      "Noch keine Sprache steht echten Nutzern zur Verfügung. Eine Sprache wird erst freigeschaltet, wenn sie alle Qualifizierungsprüfungen abgeschlossen hat.",
   },
   nav: {
     prepare: "Vorbereiten",
