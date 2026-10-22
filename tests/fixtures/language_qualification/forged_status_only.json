@@ -1,0 +1,69 @@
+{
+  "schema": "ask4mo.language_readiness.v1",
+  "package": "06H-SYNTHETIC-FIXTURE-FORGED",
+  "note": "SYNTHETIC forged variant: every status flipped to PASS and both claim flags set, nothing else.",
+  "languages": {
+    "de": {
+      "production_qualified": true,
+      "offered_to_real_users": true,
+      "gates": {
+        "LG-01": {
+          "state": "PASS",
+          "evidence": ""
+        },
+        "LG-02": {
+          "state": "PASS",
+          "evidence": ""
+        },
+        "LG-03": {
+          "state": "PASS",
+          "evidence": ""
+        },
+        "LG-04": {
+          "state": "PASS",
+          "evidence": ""
+        },
+        "LG-05": {
+          "state": "PASS",
+          "evidence": ""
+        },
+        "LG-06": {
+          "state": "PASS",
+          "evidence": ""
+        },
+        "LG-07": {
+          "state": "PASS",
+          "evidence": ""
+        },
+        "LG-08": {
+          "state": "PASS",
+          "evidence": ""
+        },
+        "LG-09": {
+          "state": "PASS",
+          "evidence": ""
+        },
+        "LG-10": {
+          "state": "PASS",
+          "evidence": ""
+        },
+        "LG-11": {
+          "state": "PASS",
+          "evidence": ""
+        },
+        "LG-12": {
+          "state": "PASS",
+          "evidence": ""
+        },
+        "LG-13": {
+          "state": "PASS",
+          "evidence": ""
+        },
+        "LG-14": {
+          "state": "PASS",
+          "evidence": ""
+        }
+      }
+    }
+  }
+}

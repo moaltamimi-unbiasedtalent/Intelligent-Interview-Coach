@@ -14,6 +14,9 @@ const es: Catalog = {
     loading: "Cargando",
     skipToContent: "Saltar al contenido",
     language: "Idioma",
+    languageUnqualified: "Sin cualificar",
+    languagesNoneAvailable:
+      "Todavía no hay ningún idioma disponible para usuarios reales. Un idioma solo se abre cuando completa todas las comprobaciones de cualificación.",
   },
   nav: {
     prepare: "Preparar",

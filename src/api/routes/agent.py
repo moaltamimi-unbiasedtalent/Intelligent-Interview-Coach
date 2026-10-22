@@ -109,6 +109,10 @@ def run_agent(
     # W12.4D-P2-C: authorize the profile BEFORE the service or any model is touched. While the rollout gate is disabled this returns exactly what the candidate
     # sent (today's behaviour); when enabled a Basic account can only use Fast.
     chosen_profile = model_policy.authorize(user_id, body.profile, workflow="agent")
+    # 06H: a NEW Mo run is accepted only in an activated language (the omitted default language is not exempt).
+    from src.language_activation import require_locale_activated
+
+    require_locale_activated(body.conversation_language)
     # Owner-scoped: a candidate may SELECT a stored JD instead of pasting it (P10B Wave 4). The
     # server resolves the document text (never the client); an explicit pasted JD takes priority,
     # and a foreign/missing id resolves to no JD (never another user's data).

@@ -62,6 +62,9 @@ RUN pip install --upgrade pip \
 COPY alembic.ini ./
 COPY migrations ./migrations
 COPY scripts ./scripts
+# Language activation record (06H): src/language_activation.py reads it at this path (next to src/) and FAILS CLOSED
+# (no language offered or accepted) when it is missing, so it must ship with the image. Reviewed, committed file only.
+COPY docs/production/execution/language_readiness.json ./docs/production/execution/language_readiness.json
 # Versioned prompt assets (package 01B). src/prompt_assets.py resolves them at /app/prompts (next to
 # src/) and fails closed at import if the tree is missing or invalid, so they MUST ship with the image.
 COPY prompts ./prompts

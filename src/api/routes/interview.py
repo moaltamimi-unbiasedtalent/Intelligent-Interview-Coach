@@ -366,6 +366,10 @@ def create_interview(
     """Create an interview. An optional ``Idempotency-Key`` header makes creation safe
     to retry — a repeat (same user + key) returns the SAME session without re-running
     strategy/first-question generation, and now survives a backend restart (durable)."""
+    # 06H: a NEW interview is accepted only in an activated language (the omitted default language is not exempt).
+    from src.language_activation import require_locale_activated
+
+    require_locale_activated(body.configuration.conversation_language if body.configuration is not None else body.conversation_language)
     # W12.4D-P2-C: validate and authorize the profile BEFORE any provider work. With the rollout gate disabled this is a no-op for everyone (the only accepted
     # values are none or the existing default), so real candidates keep today's Balanced Practice.
     chosen_profile = model_policy.authorize(user_id, body.model_profile, workflow="practice")

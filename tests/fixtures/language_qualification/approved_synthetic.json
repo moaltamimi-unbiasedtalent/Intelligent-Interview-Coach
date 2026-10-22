@@ -1,0 +1,112 @@
+{
+  "schema": "ask4mo.language_readiness.v1",
+  "package": "06H-SYNTHETIC-FIXTURE",
+  "note": "SYNTHETIC test fixture. Not a real approval of any language. Loadable only through the test-only seam.",
+  "languages": {
+    "de": {
+      "production_qualified": true,
+      "offered_to_real_users": true,
+      "release_sha": "0123456789abcdef0123456789abcdef01234567",
+      "gates": {
+        "LG-01": {
+          "state": "PASS",
+          "evidence": "synthetic://fixture/evidence/lg-01.md",
+          "approver": "Synthetic Fixture Reviewer",
+          "approved_on": "2026-01-15",
+          "release_sha": "0123456789abcdef0123456789abcdef01234567"
+        },
+        "LG-02": {
+          "state": "PASS",
+          "evidence": "synthetic://fixture/evidence/lg-02.md",
+          "approver": "Synthetic Fixture Reviewer",
+          "approved_on": "2026-01-15",
+          "release_sha": "0123456789abcdef0123456789abcdef01234567"
+        },
+        "LG-03": {
+          "state": "PASS",
+          "evidence": "synthetic://fixture/evidence/lg-03.md",
+          "approver": "Synthetic Fixture Reviewer",
+          "approved_on": "2026-01-15",
+          "release_sha": "0123456789abcdef0123456789abcdef01234567"
+        },
+        "LG-04": {
+          "state": "PASS",
+          "evidence": "synthetic://fixture/evidence/lg-04.md",
+          "approver": "Synthetic Fixture Reviewer",
+          "approved_on": "2026-01-15",
+          "release_sha": "0123456789abcdef0123456789abcdef01234567"
+        },
+        "LG-05": {
+          "state": "PASS",
+          "evidence": "synthetic://fixture/evidence/lg-05.md",
+          "approver": "Synthetic Fixture Reviewer",
+          "approved_on": "2026-01-15",
+          "release_sha": "0123456789abcdef0123456789abcdef01234567"
+        },
+        "LG-06": {
+          "state": "PASS",
+          "evidence": "synthetic://fixture/evidence/lg-06.md",
+          "approver": "Synthetic Fixture Reviewer",
+          "approved_on": "2026-01-15",
+          "release_sha": "0123456789abcdef0123456789abcdef01234567"
+        },
+        "LG-07": {
+          "state": "PASS",
+          "evidence": "synthetic://fixture/evidence/lg-07.md",
+          "approver": "Synthetic Fixture Reviewer",
+          "approved_on": "2026-01-15",
+          "release_sha": "0123456789abcdef0123456789abcdef01234567"
+        },
+        "LG-08": {
+          "state": "PASS",
+          "evidence": "synthetic://fixture/evidence/lg-08.md",
+          "approver": "Synthetic Fixture Reviewer",
+          "approved_on": "2026-01-15",
+          "release_sha": "0123456789abcdef0123456789abcdef01234567"
+        },
+        "LG-09": {
+          "state": "PASS",
+          "evidence": "synthetic://fixture/evidence/lg-09.md",
+          "approver": "Synthetic Fixture Reviewer",
+          "approved_on": "2026-01-15",
+          "release_sha": "0123456789abcdef0123456789abcdef01234567"
+        },
+        "LG-10": {
+          "state": "PASS",
+          "evidence": "synthetic://fixture/evidence/lg-10.md",
+          "approver": "Synthetic Fixture Reviewer",
+          "approved_on": "2026-01-15",
+          "release_sha": "0123456789abcdef0123456789abcdef01234567"
+        },
+        "LG-11": {
+          "state": "PASS",
+          "evidence": "synthetic://fixture/evidence/lg-11.md",
+          "approver": "Synthetic Fixture Reviewer",
+          "approved_on": "2026-01-15",
+          "release_sha": "0123456789abcdef0123456789abcdef01234567"
+        },
+        "LG-12": {
+          "state": "PASS",
+          "evidence": "synthetic://fixture/evidence/lg-12.md",
+          "approver": "Synthetic Fixture Reviewer",
+          "approved_on": "2026-01-15",
+          "release_sha": "0123456789abcdef0123456789abcdef01234567"
+        },
+        "LG-13": {
+          "state": "PASS",
+          "evidence": "synthetic://fixture/evidence/lg-13.md",
+          "approver": "Synthetic Fixture Reviewer",
+          "approved_on": "2026-01-15",
+          "release_sha": "0123456789abcdef0123456789abcdef01234567"
+        },
+        "LG-14": {
+          "state": "PASS",
+          "evidence": "synthetic://fixture/evidence/lg-14.md",
+          "approver": "Synthetic Fixture Reviewer",
+          "approved_on": "2026-01-15",
+          "release_sha": "0123456789abcdef0123456789abcdef01234567"
+        }
+      }
+    }
+  }
+}

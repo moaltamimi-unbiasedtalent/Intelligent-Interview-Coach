@@ -148,7 +148,15 @@ def capabilities(request: Request) -> CapabilitiesResponse:
     repo = _repo_or_none(request)
     # Agentic RAG (Phase 6), long-term memory (Phase 7) and HITL (Phase 8) are all
     # available. The candidate Agent Coach cutover is a deployment flag (Phase 9).
+    from src.language_activation import public_summary
+
+    lang = public_summary()
     return CapabilitiesResponse(
+        active_candidate_locales=lang["offered_locales"],
+        language_activation_mode=lang["mode"],
+        qualified_locales=lang["qualified_locales"],
+        unqualified_locales=lang["unqualified_locales"],
+        no_language_available=lang["none_available"],
         live_interview_enabled=_live_enabled(),
         agentic_rag=True,
         agent_memory=True,
