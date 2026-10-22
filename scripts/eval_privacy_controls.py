@@ -45,7 +45,19 @@ def migration_tables_touched(source: str, known_tables: set[str]) -> set[str]:
     tree = ast.parse(source)
     if tree.body and isinstance(tree.body[0], ast.Expr) and isinstance(getattr(tree.body[0], "value", None), ast.Constant):
         tree.body = tree.body[1:]                                                    # drop the module docstring
-    literals = [n.value for n in ast.walk(tree) if isinstance(n, ast.Constant) and isinstance(n.value, str)]
+    # A ForeignKey / ForeignKeyConstraint TARGET ("users.id") only REFERENCES a table from a NEW child table; it neither alters nor reads it (03E1: an owner FK with ON DELETE CASCADE is how
+    # a new table is erased with the account). Only that exact "<table>.<column>" form inside those two constructors is skipped; every other literal (create/alter/drop of the table,
+    # op.create_foreign_key, SQL text) still counts.
+    fk_targets: set[int] = set()
+    for call in (n for n in ast.walk(tree) if isinstance(n, ast.Call)):
+        fn = call.func
+        name = fn.attr if isinstance(fn, ast.Attribute) else getattr(fn, "id", "")
+        if name in ("ForeignKey", "ForeignKeyConstraint"):
+            for arg in call.args:
+                for node in ast.walk(arg):
+                    if isinstance(node, ast.Constant) and isinstance(node.value, str) and re.fullmatch(r"[a-z_]+\.[a-z_]+", node.value):
+                        fk_targets.add(id(node))
+    literals = [n.value for n in ast.walk(tree) if isinstance(n, ast.Constant) and isinstance(n.value, str) and id(n) not in fk_targets]
     touched: set[str] = set()
     for text in literals:
         for table in known_tables:
