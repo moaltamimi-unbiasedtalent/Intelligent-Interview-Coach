@@ -76,19 +76,20 @@ export function AgentProfileSelector({
  * e.g. "Fast · 3 AI calls · 4.1s" (§37). Cost is shown only when known; a run with
  * partial usage says "usage partial" instead of a misleadingly precise figure (§38).
  */
-export function usageSummaryLine(run: AgentRunResponse, t: Translate): string | null {
+export function usageSummaryLine(run: AgentRunResponse, t: Translate, locale?: string): string | null {
+  const num = (n: number, digits: number) => new Intl.NumberFormat(locale, { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(n);
   const usage = run.usage;
   if (!usage) return null;
   const parts: string[] = [profileLabel(run.profile, t)];
   parts.push(t(usage.model_calls === 1 ? "prepare.aiCalls_one" : "prepare.aiCalls_other", { count: usage.model_calls }));
-  if (typeof run.latency_ms === "number") parts.push(`${(run.latency_ms / 1000).toFixed(1)}s`);
-  parts.push(costLabel(usage, t));
+  if (typeof run.latency_ms === "number") parts.push(`${num(run.latency_ms / 1000, 1)}s`);
+  parts.push(costLabel(usage, t, num));
   return parts.filter(Boolean).join(" · ");
 }
 
-function costLabel(usage: AgentUsage, t: Translate): string {
+function costLabel(usage: AgentUsage, t: Translate, num: (n: number, digits: number) => string): string {
   if (typeof usage.estimated_cost_usd === "number") {
-    const money = `~$${usage.estimated_cost_usd.toFixed(2)}`;
+    const money = `~$${num(usage.estimated_cost_usd, 2)}`;
     return usage.usage_complete ? money : t("prepare.capturedPartial", { money });
   }
   return usage.usage_complete ? "" : t("prepare.usagePartial");

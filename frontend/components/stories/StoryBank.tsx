@@ -29,7 +29,8 @@ export function StoryBank({ refreshKey = 0 }: { refreshKey?: number }) {
   const [stories, setStories] = useState<StoryOut[] | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  // The error is kept and its message built at render, so a language change after the load failed still applies.
+  const [error, setError] = useState<unknown>(null);
   const [editing, setEditing] = useState<StoryOut | "new" | null>(null);
   const seq = useRef(0);
 
@@ -51,10 +52,10 @@ export function StoryBank({ refreshKey = 0 }: { refreshKey?: number }) {
       setError(null);
     } catch (err) {
       if (mine !== seq.current) return;
-      setError(err instanceof ApiError ? err.userMessage : t("storyBank.loadError"));
+      setError(err ?? true);
       setStories((s) => s ?? []);
     }
-  }, [t]);
+  }, []);
 
   // Debounce typing; every other filter applies at once.
   useEffect(() => {
@@ -101,7 +102,7 @@ export function StoryBank({ refreshKey = 0 }: { refreshKey?: number }) {
         />
       ) : null}
 
-      <div role="search" aria-label={t("storyBank.searchRegion")} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div role="search" aria-label={t("storyBank.searchRegion")} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div className="grid gap-1 sm:col-span-2">
           <label htmlFor={`${uid}-q`} className="text-sm font-medium">{t("storyBank.searchLabel")}</label>
           <Input id={`${uid}-q`} type="search" value={filters.q} onChange={(e) => set("q", e.target.value)} placeholder={t("storyBank.searchPlaceholder")} />
@@ -142,7 +143,7 @@ export function StoryBank({ refreshKey = 0 }: { refreshKey?: number }) {
 
       {error ? (
         <Alert tone="danger" className="mt-3">
-          <span>{error}</span>{" "}
+          <span>{error instanceof ApiError ? error.userMessage : t("storyBank.loadError")}</span>{" "}
           <button type="button" className="font-semibold underline" onClick={() => void load(filters)}>{t("storyBank.retry")}</button>
         </Alert>
       ) : null}

@@ -2,7 +2,7 @@
 
 import Link from "@/components/ui/VerifiedLink"; // soft-navigation loss recovery (see lib/navigation/verified.ts)
 import type { ProgressResponse } from "@/lib/api/types";
-import { useT } from "@/components/i18n/I18nProvider";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { StatusChip } from "@/components/plan/StatusChip";
 import { PremiumAnalytics } from "@/components/progress/PremiumAnalytics";
 import { Card, CardBody } from "@/components/ui/Card";
@@ -18,20 +18,20 @@ import { Card, CardBody } from "@/components/ui/Card";
  * the page-level empty state — and `!interviews_completed` covers 0/undefined/null.
  */
 export function PracticeProgress({ data }: { data: ProgressResponse | null }) {
-  const t = useT();
+  const { t, formatDate, formatNumber } = useI18n();
   if (!data || !data.interviews_completed) {
     return null;
   }
 
   const tiles: Array<{ label: string; value: string }> = [
-    { label: t("progress.practiceSessions"), value: String(data.interviews_completed) },
-    { label: t("progress.answersEvaluated"), value: String(data.answers_evaluated) },
+    { label: t("progress.practiceSessions"), value: formatNumber(data.interviews_completed) },
+    { label: t("progress.answersEvaluated"), value: formatNumber(data.answers_evaluated) },
   ];
   if (typeof data.average_practice_score === "number") {
-    tiles.push({ label: t("progress.averageScore"), value: `${data.average_practice_score}/100` });
+    tiles.push({ label: t("progress.averageScore"), value: `${formatNumber(data.average_practice_score, { maximumFractionDigits: 1 })}/100` });
   }
   if (typeof data.average_answer_seconds === "number") {
-    tiles.push({ label: t("progress.averageAnswerTime"), value: `${Math.round(data.average_answer_seconds)}s` });
+    tiles.push({ label: t("progress.averageAnswerTime"), value: `${formatNumber(Math.round(data.average_answer_seconds))}s` });
   }
 
   return (
@@ -68,7 +68,7 @@ export function PracticeProgress({ data }: { data: ProgressResponse | null }) {
           <h3 className="mb-2 text-xs font-semibold text-muted">{t("progress.recentSessions")}</h3>
           <div className="grid gap-2">
             {data.recent_interviews.map((r) => {
-              const created = r.created_at ? new Date(r.created_at).toLocaleDateString() : null;
+              const created = r.created_at ? formatDate(r.created_at) : null;
               const meta = [r.target_role, created].filter(Boolean).join(" · ");
               return (
                 <Link

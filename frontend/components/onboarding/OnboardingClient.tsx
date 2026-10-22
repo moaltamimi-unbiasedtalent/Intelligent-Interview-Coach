@@ -20,6 +20,7 @@ import { api } from "@/lib/api/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { APP_HOME } from "@/lib/auth/routes";
+import { APP_LOCALES, toActiveLocale } from "@/lib/i18n/locales";
 import { TUTORIAL_AUTOSTART_KEY } from "@/components/tutorial/TutorialController";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
@@ -229,8 +230,8 @@ export function OnboardingClient() {
                 <ReviewRow label={t("onboarding.rowTargetRole")} value={targetRole || t("onboarding.notSet")} onEdit={() => setStep(2)} editLabel={t("onboarding.edit")} />
                 <ReviewRow label={t("onboarding.rowGeography")} value={t(geography ? `geography.${geography}` : "geography.unspecified")} onEdit={() => setStep(2)} editLabel={t("onboarding.edit")} />
                 <ReviewRow label={t("onboarding.rowCoaching")} value={t(`coaching.${coaching}`)} onEdit={() => setStep(3)} editLabel={t("onboarding.edit")} />
-                <ReviewRow label={t("onboarding.rowInterface")} value={account?.interface_locale ?? "en"} onEdit={() => setStep(4)} editLabel={t("onboarding.edit")} />
-                <ReviewRow label={t("onboarding.rowConversation")} value={account?.conversation_language ?? "en"} onEdit={() => setStep(4)} editLabel={t("onboarding.edit")} />
+                <ReviewRow label={t("onboarding.rowInterface")} value={nativeLanguageName(account?.interface_locale)} onEdit={() => setStep(4)} editLabel={t("onboarding.edit")} />
+                <ReviewRow label={t("onboarding.rowConversation")} value={nativeLanguageName(account?.conversation_language)} onEdit={() => setStep(4)} editLabel={t("onboarding.edit")} />
               </dl>
             </>
           ) : null}
@@ -256,6 +257,12 @@ export function OnboardingClient() {
       </Card>
     </section>
   );
+}
+
+/** A language shown by its own name (an endonym, so it needs no translation); never the raw code. */
+function nativeLanguageName(code: string | null | undefined): string {
+  const active = toActiveLocale(code) ?? "en";
+  return APP_LOCALES.find((l) => l.code === active)?.nativeLabel ?? active;
 }
 
 function StepBody({ title, body }: { title: string; body?: string }) {

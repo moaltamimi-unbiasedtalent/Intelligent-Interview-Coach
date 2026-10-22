@@ -39,6 +39,7 @@ import w12p4b from "../w12p4b"; // W12.4D-P4-B — Premium progress analytics (a
 import w12p5a from "../w12p5a"; // W12.4D-P5-A — Opportunity Preparation Pack (all 8 locales)
 import w04a from "../w04a"; // 04A — Story Bank completion (all 8 locales)
 import ws04b from "../ws04b"; // 04B — Workspaces completion (all 8 locales)
+import lang06b from "../lang06b"; // 06B per-language journey fixes (all 8 locales)
 import w1010 from "../w1010"; // P10B-W10.10 — Privacy request + legal version copy (all 8 locales)
 // P10B-W9.7: Russian blocks live beside (not inside) the 7-locale fragment files, each typed against
 // its fragment's English shape so missing/extra keys fail `tsc`. `help` carries its own `ru` entry.
@@ -79,6 +80,7 @@ const FRAGMENTS: Array<{ name: string; blocks: Fragment }> = [
   { name: "w12p5a", blocks: w12p5a as unknown as Fragment },
   { name: "w04a", blocks: w04a as unknown as Fragment },
   { name: "ws04b", blocks: ws04b as unknown as Fragment },
+  { name: "lang06b", blocks: lang06b as unknown as Fragment },
   { name: "v4", blocks: v4 as unknown as Fragment },
   { name: "prov", blocks: prov as unknown as Fragment },
 ];

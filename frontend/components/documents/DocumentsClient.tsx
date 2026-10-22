@@ -48,7 +48,8 @@ export function DocumentsClient() {
   const { t } = useI18n();
   const [docs, setDocs] = useState<DocumentSummary[] | null>(null);
   const [storiesKey, setStoriesKey] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  // The error itself is kept and its message is built at render, so a language change after the load failed still applies.
+  const [error, setError] = useState<unknown>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -56,10 +57,10 @@ export function DocumentsClient() {
       setDocs(d.documents);
       setStoriesKey((k) => k + 1);
     } catch (err) {
-      setError(err instanceof ApiError ? err.userMessage : t("documents.loadError"));
+      setError(err);
       setDocs([]);
     }
-  }, [t]);
+  }, []);
 
   useEffect(() => {
     void refresh();
@@ -68,7 +69,7 @@ export function DocumentsClient() {
   return (
     <section className="max-w-reading">
       <PageHeader eyebrow={t("documents.eyebrow")} title={t("documents.title")} description={t("documents.subtitle")} />
-      {error ? <Alert tone="danger" className="mb-4">{error}</Alert> : null}
+      {error ? <Alert tone="danger" className="mb-4">{error instanceof ApiError ? error.userMessage : t("documents.loadError")}</Alert> : null}
 
       <Card>
         <CardBody>
@@ -94,14 +95,6 @@ export function DocumentsClient() {
   );
 }
 
-function formatDate(iso?: string | null): string {
-  if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-  } catch {
-    return "—";
-  }
-}
 
 // Responsive inventory: ONE list of rows (never duplicated across layouts). Each row aligns as
 // columns on md+ (with a header) and stacks into a card on mobile via responsive utilities, so
@@ -168,7 +161,8 @@ function RowActions({
 function DocumentInventoryRow({
   summary, open, onToggle, onChanged,
 }: { summary: DocumentSummary; open: boolean; onToggle: () => void; onChanged: () => void }) {
-  const { t } = useI18n();
+  const { t, formatDate: fmtDate } = useI18n();
+  const formatDate = (iso?: string | null) => (iso ? fmtDate(iso, { year: "numeric", month: "short", day: "numeric" }) : "—");
   const [detail, setDetail] = useState<DocumentDetail | null>(null);
   const [retrying, setRetrying] = useState(false);
 

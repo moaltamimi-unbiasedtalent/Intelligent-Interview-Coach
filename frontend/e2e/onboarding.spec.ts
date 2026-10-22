@@ -130,7 +130,7 @@ test("E2E 4: interface language on onboarding is independent of conversation lan
   await page.getByRole("menuitemradio", { name: /Deutsch/ }).click();
   // The Back control localizes to German ("Zurück"), proving interface language changed…
   await expect(page.getByRole("button", { name: "Zurück" })).toBeVisible();
-  // …while the conversation-language value in the review is unchanged ("en" still shown),
-  // proving the interface language switch did not touch the conversation language.
-  expect(await page.getByText("en", { exact: true }).count()).toBeGreaterThan(0);
+  // …while the conversation-language value in the review is unchanged (English still shown, by its own name since 06B;
+  // it used to be the raw code "en"), proving the interface language switch did not touch the conversation language.
+  expect(await page.getByText("English", { exact: true }).count()).toBeGreaterThan(0);
 });

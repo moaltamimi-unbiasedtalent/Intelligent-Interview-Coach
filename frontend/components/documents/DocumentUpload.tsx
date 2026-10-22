@@ -127,7 +127,10 @@ export function DocumentUpload({
           </label>
         ) : null}
         <div>
-          <span className="mb-1 block text-sm font-medium text-foreground">{t("documents.chooseFile")}</span>
+          {/* The native file control prints browser-language text ("Choose File / No file chosen"), so it is visually hidden and
+              the visible button carries the catalogue label (06B). The input stays focusable, labelled and in the DOM. */}
+          <label className="mb-1 inline-flex min-h-[44px] cursor-pointer items-center rounded-lg border border-border bg-surface px-3 text-sm font-medium text-foreground focus-within:outline focus-within:outline-2 focus-within:outline-accent">
+            {t("documents.chooseFile")}
           <input
             ref={inputRef}
             type="file"
@@ -136,8 +139,9 @@ export function DocumentUpload({
             aria-describedby={statusId}
             disabled={busy}
             onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
-            className="block text-sm"
+            className="sr-only"
           />
+          </label>
         </div>
       </div>
 
