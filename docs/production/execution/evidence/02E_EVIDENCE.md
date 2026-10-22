@@ -26,10 +26,11 @@ No candidate data, no network, no secret read. The runner reads credentials only
 
 ## Tests (commands and results)
 Venv: `../../../.venv/bin/python` (repo venv). Canary `$HOME/.cache/ask4mo/ci_venv/bin/python` exists; results below.
-- Targeted: `pytest -p no:cacheprovider -q tests/test_retrieval_quality_02e.py tests/test_routing_lang_02e.py tests/test_beta_scope_coverage_02e.py tests/test_embedding_benchmark_02e.py` : see final report for counts (all green at last run before the full suite).
+- Targeted: `pytest -p no:cacheprovider -q tests/test_retrieval_quality_02e.py tests/test_routing_lang_02e.py tests/test_beta_scope_coverage_02e.py tests/test_embedding_benchmark_02e.py`: 70 tests, all pass on the repo venv AND on the fresh-dependency canary (`$HOME/.cache/ask4mo/ci_venv`).
+- Full backend: `pytest -p no:cacheprovider -n 3 --dist loadfile -q -W ignore` once before the final push: everything passed except two tests that are NOT caused by this package and pass on re-run: `tests/test_language_readiness_06a.py::test_committed_audit_table_is_current_...` (needs `frontend/node_modules` for the esbuild catalogue helper, absent in a fresh worktree; passes with the symlink, no catalogue key was added) and `tests/test_test_isolation.py::test_identity_evaluator_never_touches_...` (a `libc++abi recursive_mutex lock failed` abort of a subprocess on a heavily loaded shared machine; passes alone). The suite's `-q` configuration prints no totals line, so no total is quoted.
 - Regression neighbours: `tests/test_copilot_knowledge.py tests/test_ph3_expansion.py tests/test_knowledge_expansion.py tests/test_production_retrieval.py tests/test_p10d_r1_grounding_coverage.py tests/test_expanded_eval.py tests/test_multilingual_benchmark_02b.py` green.
 - `ruff check .` clean; `scripts/ci_test_shards.py verify --shards 4`: OK (304 test files at the time of the check).
-- Evaluators: see the final report for the full CI evaluator list result.
+- Evaluators: every `scripts/eval_*` that `.github/workflows/ci.yml` runs (45) plus `gen_product_coverage_cases`, `check_product_coverage_baseline.py` (clean_checkout) and the two new scripts: all PASS. The first run had ONE failure, `eval_kb_requalification.py` (3 cases pinned the closed L-ROUTE-1 gap); fixed as described under Changes (one rework round), then 157/157 PASS; `eval_doc_consistency` and `eval_engineering_quality` re-run PASS afterwards. The evaluators left the working tree clean. The new scripts are NOT added to `ci.yml` (shared file); adding `eval_beta_scope_coverage.py` there is a one-line follow-up for the lead.
 
 ## Risks and limits
 1. **Live-client risk for OpenRouter embeddings (not changed, flagged):** `OpenAIEmbedder` wraps `langchain_openai.OpenAIEmbeddings`, which by default pre-tokenises with tiktoken and sends token ids; non-OpenAI models behind OpenRouter generally need raw strings (`check_embedding_ctx_length=False`). The 02B embedder file was not edited here; the first governed run may fail for non-OpenAI slugs until it is. Not verifiable offline.
@@ -44,4 +45,4 @@ Venv: `../../../.venv/bin/python` (repo venv). Canary `$HOME/.cache/ask4mo/ci_ve
 - Native-language review of routing vocabulary and datasets; an independent retrieval relevance set; PG-05 evidence (calibrated floor with real scores, cross-language retrieval measured with a production embedder).
 
 ## Throughput
-Started 2026-10-22 08:20 (CEST). First push and rework rounds: see the final report. Final head SHA is reported in the final report (verified with `git ls-remote origin feat/02e-retrieval-quality`).
+Started 2026-10-22 08:20 (CEST); first push 08:40 (branch pushed before the full suite); one rework round (the requalification corpus pins, found by the evaluator run). Final head SHA is reported in the final report (verified with `git ls-remote origin feat/02e-retrieval-quality`).
