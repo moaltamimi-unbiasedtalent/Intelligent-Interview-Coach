@@ -81,6 +81,7 @@ export interface AdminUserSummary {
   updated_at: string | null;
   workspace_count: number;
   active_session_count: number;
+  last_activity?: "24h" | "7d" | "30d" | "older" | "never";
 }
 export interface AdminPage<T> {
   items: T[];
@@ -95,6 +96,29 @@ export interface AdminUserDetail {
   workspaces: { workspace_id: number; name: string; workspace_status: string; role: string; membership_status: string; joined_at: string | null }[];
   audit: AdminAuditEntry[];
   plan?: SubjectPlan | null;
+  // 03C: counts, buckets and states only (never content, secrets or provider subjects)
+  revision?: string;
+  auth?: { methods: { method: "password" | "google" | "sso"; email_verified: boolean; linked_at: string | null }[]; local_sign_in: boolean; email_verified: boolean; pending_verification_links: number };
+  activity?: { last_active: "24h" | "7d" | "30d" | "older" | "never" };
+  cases?: { support_open: number; support_total: number; privacy_open: number; privacy_total: number; pending_role_change: boolean; open_deletion_request_id: string | null; open_deletion_status: string | null };
+  membership?: { active: number; total: number; owner_of_active: number };
+}
+export type AdminUserActionName = "deactivate" | "reactivate" | "force-signout" | "assign-plan" | "resend-verification" | "expire-verification" | "request-deletion";
+export interface AdminUserActionBody {
+  expected_revision: string;
+  reason: string;
+  plan_code?: string;
+}
+export interface AdminUserActionResult {
+  user_id: number;
+  action: string;
+  changed: boolean;
+  sessions_revoked?: number | null;
+  plan_code?: string | null;
+  links_expired?: number | null;
+  request_id?: string | null;
+  mail_accepted?: boolean | null;
+  revision: string;
 }
 export interface AdminAuditEntry {
   event_type: string;
@@ -128,6 +152,12 @@ export interface AdminUserQuery {
   tier?: string;
   onboarding?: string;
   email_verified?: string;
+  sort?: string;
+  direction?: string;
+  last_active?: string;
+  auth_method?: string;
+  open_case?: string;
+  has_workspace?: string;
   page?: number;
   page_size?: number;
 }
@@ -188,9 +218,18 @@ export interface PlanVersionRow {
   enabled_entitlements: number;
   total_entitlements: number;
   subscribers: { users: number; workspaces: number };
+  /** 03B: derived expected-revision tokens; a stale one is refused with 409. */
+  revision: string;
+  family_revision: string;
   created_at: string | null;
   activated_at: string | null;
   retired_at: string | null;
+}
+export interface EntitlementBounds {
+  kind: string;
+  min_limit: number | null;
+  max_limit: number | null;
+  premium_only: boolean;
 }
 export interface EntitlementRow {
   code: string;
@@ -199,6 +238,7 @@ export interface EntitlementRow {
   type: string;
   enabled: boolean;
   limit: number | null;
+  bounds: EntitlementBounds;
 }
 export interface PlanDetail extends Omit<PlanVersionRow, "enabled_entitlements" | "total_entitlements"> {
   editable: boolean;
@@ -221,6 +261,62 @@ export interface SubscriptionEntry {
 export interface SubjectPlan {
   current: SubscriptionEntry | null;
   history: SubscriptionEntry[];
+}
+
+// --- 03B plan administration (counts, plan codes, versions, subject ids and entitlement keys only; no price, no candidate content) ---
+export interface PlanEntitlementValue {
+  enabled: boolean;
+  limit: number | null;
+}
+export interface PlanMatrix {
+  entitlements: { code: string; label: string; description: string; type: string; bounds: EntitlementBounds }[];
+  versions: { id: number; plan_code: string; version: number; display_name: string; status: string; revision: string; values: Record<string, PlanEntitlementValue> }[];
+}
+export interface PlanComparison {
+  left: { id: number; plan_code: string; version: number; display_name: string; status: string; subscribers: { users: number; workspaces: number } };
+  right: { id: number; plan_code: string; version: number; display_name: string; status: string; subscribers: { users: number; workspaces: number } };
+  rows: { code: string; label: string; left: PlanEntitlementValue; right: PlanEntitlementValue; differs: boolean }[];
+  changed: number;
+  note: string;
+}
+export interface PlanSubjectState {
+  subject_type: string;
+  subject_id: number;
+  current: SubscriptionEntry | null;
+  history: SubscriptionEntry[];
+  revision: string;
+}
+export interface PlanVersionAssignments {
+  plan_code: string;
+  version: number;
+  total: number;
+  page: number;
+  page_size: number;
+  items: { subject_type: string; subject_id: number; status: string; source: string; started_at: string | null; ended_at: string | null }[];
+}
+export interface PlanExplanation {
+  subject_type: string;
+  subject_id: number;
+  plan_code: string;
+  plan_version: number | null;
+  plan_version_status: string | null;
+  source: string;
+  items: { code: string; label: string; allowed: boolean; limit: number | null; unlimited: boolean; reason: string }[];
+  layers: { layer: string; evaluated_here: boolean; note: string }[];
+  note: string;
+}
+export interface PlanAssignmentPreview {
+  plan_code: string;
+  target_version: number;
+  subject_type: string;
+  requested: number;
+  found: number;
+  missing: number;
+  unchanged: number;
+  would_change: number;
+  by_current_plan: { basic: number; premium: number; none: number };
+  entitlement_effect: { code: string; label: string; gain: number; lose: number; limit_changed: number }[];
+  preview_revision: string;
 }
 
 // --- W10.6 integrations (metadata only: no secret value, prefix, suffix, mask, URL or upstream response) ---
@@ -466,7 +562,13 @@ export interface KnowledgeReadiness {
   collection: string;
   store: { kind: string; chunk_count: number | null; location: string };
   embedding_provider_status: string;
-  embedder_state: { status: string; provider: string; embedder: string | null; note: string };
+  embedder_state: {
+    status: string; provider: string; embedder: string | null; note: string;
+    // 02B, additive: the actual embedder, its recorded version, degradation and the persisted index manifest's compatibility (field names only, never values)
+    model?: string | null; version?: string | null; dimensions?: number | null; quality_mode?: string | null; label?: string | null;
+    degraded?: boolean; environment?: string | null; approved_for_environment?: boolean | null; problems?: string[]; warnings?: string[];
+    index_compatibility?: { collection_id: string | null; state: string; compatible: boolean; refused: boolean; differing_fields: string[]; message: string } | null;
+  };
   curated_corpus: { status: "available" | "empty" | "unavailable"; chunk_count: number | null; store_kind?: string | null };
   last_indexed_at: string | null;
   last_failure_category: string | null;
@@ -878,3 +980,26 @@ export interface SpeechOverview {
   provider_facts: Record<string, Record<string, unknown>>; authorization: Record<string, boolean>; note: string;
 }
 export type SpeechConfigPatch = Partial<Pick<SpeechConfig, "stt_enabled" | "tts_enabled" | "languages" | "browser_stt_allowed" | "browser_tts_allowed" | "stt_timeout_seconds" | "tts_timeout_seconds">>;
+
+// 04E: private-beta registration invitations (Admin). State and masked identifiers only; the code and link exist ONLY in the issue response.
+export type InvitationState = "pending" | "redeemed" | "expired" | "revoked";
+export interface AdminInvitationRow {
+  id: number;
+  state: InvitationState;
+  created_at: string;
+  expires_at: string;
+  redeemed_at: string | null;
+  revoked_at: string | null;
+  email_bound: boolean;
+  email_hint: string | null;
+  issued_by_user_id: number | null;
+}
+export interface AdminInvitationPage {
+  items: AdminInvitationRow[];
+  total: number;
+  counts: Record<string, number>;
+}
+export interface AdminInvitationIssued extends AdminInvitationRow {
+  code: string;
+  link: string;
+}

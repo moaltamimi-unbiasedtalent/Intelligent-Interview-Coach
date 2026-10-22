@@ -56,7 +56,7 @@ def evaluate() -> dict:
 
         # metadata_only_user_view — user list carries only safe metadata keys.
         users = c.get("/api/v1/admin/users", cookies=cookies_for(admin)).json()["users"]
-        allowed = {"user_id", "email", "display_name", "platform_role", "status", "email_verified", "tier", "created_at", "updated_at", "onboarding_completed", "interface_locale", "workspace_count", "active_session_count"}
+        allowed = {"user_id", "email", "display_name", "platform_role", "status", "email_verified", "tier", "created_at", "updated_at", "onboarding_completed", "interface_locale", "workspace_count", "active_session_count", "last_activity"}
         m["metadata_only_user_view"] = 1 if users and all(set(u) <= allowed for u in users) else 0
 
         # entitlement_change_audited — set tier, then find the audit event.

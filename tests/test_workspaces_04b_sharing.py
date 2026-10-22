@@ -78,7 +78,7 @@ def test_shared_story_view_is_a_bounded_projection(team):
     w.share("mia", wa, "story", rid)
     view = w.get("max", f"/shares/resource/story/{rid}").json()
     assert view["shared_by_owner"] is True
-    assert set(view["resource"]) == {"id", "title", "situation", "task", "action", "result", "competencies", "status", "updated_at"}
+    assert set(view["resource"]) == {"id", "title", "situation", "task", "action", "result", "competencies", "status", "verification", "updated_at"}   # 04A: the same fixed allow-list plus the verification LABEL (never claim, answer or Opportunity ids)
     # the owner's own listing still carries evidence links; the member never sees them
     assert "evidence_claim_ids" in w.get("mia", f"/stories/{rid}").json()
 

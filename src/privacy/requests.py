@@ -55,7 +55,7 @@ class PrivacyRequestService:
         return note
 
     def create(self, user_id: int, request_type: str, note: str | None, *, source: str = "candidate_portal",
-               created_by_user_id: int | None = None, audit: dict | None = None) -> dict:
+               created_by_user_id: int | None = None, audit: dict | None = None, precondition=None) -> dict:
         note = self._validate(request_type, note)
         if source not in P.SOURCES:
             raise PrivacyValidationError("Unknown source.")
@@ -64,6 +64,8 @@ class PrivacyRequestService:
             user = s.get(User, user_id)
             if user is None:
                 raise PrivacyNotFound("account")
+            if precondition:
+                precondition(s, user)
             open_count = s.scalar(select(func.count()).select_from(R).where(R.user_id == user_id, R.status.in_(P.OPEN_STATUSES))) or 0
             if open_count >= MAX_OPEN_PER_USER:
                 raise PrivacyConflict("There are already several open privacy requests for this account.")

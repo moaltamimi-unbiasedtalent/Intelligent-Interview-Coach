@@ -18,4 +18,5 @@ node_modules
 components/live_interviewer/frontend/node_modules
 components/live_interviewer/frontend/dist
 docs
+!docs/production/execution/language_readiness.json
 evaluations

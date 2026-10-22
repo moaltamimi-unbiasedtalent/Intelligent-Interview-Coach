@@ -130,7 +130,7 @@ def test_k1_candidate_lifecycle_admin_sees_only_safe_metadata(w):
             assert denied(r), role
     # the account metadata an Admin may see is an allow-listed projection
     d = w.get(f"/admin/users/{cand['uid']}", w.ck("platform_admin")).json()["account"]
-    assert set(d) <= {"user_id", "email", "display_name", "platform_role", "status", "email_verified", "tier", "created_at", "updated_at", "onboarding_completed",
+    assert set(d) <= {"user_id", "email", "display_name", "platform_role", "status", "email_verified", "tier", "created_at", "updated_at", "onboarding_completed", "last_activity",
                       "interface_locale", "workspace_count", "active_session_count"}
 
 

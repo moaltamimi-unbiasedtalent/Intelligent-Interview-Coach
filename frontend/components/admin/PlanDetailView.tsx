@@ -7,7 +7,7 @@ import { api } from "@/lib/api/client";
 import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
 import type { PlanDetail } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
-import { KeyValue, Panel, PermissionGate, ResourceState, apiMessage, btn, field, useAdminResource, ScrollRegion } from "./ui";
+import { KeyValue, Pager, Panel, PermissionGate, ResourceState, apiMessage, btn, field, useAdminResource, ScrollRegion, Table } from "./ui";
 
 export function PlanDetailView({ versionId }: { versionId: number }) {
   return (
@@ -26,7 +26,7 @@ function Body({ versionId }: { versionId: number }) {
   );
 }
 
-type Pending = null | "activate" | "retire";
+type Pending = null | "activate" | "retire" | "restore";
 
 function Detail({ d, reload }: { d: PlanDetail; reload: () => void }) {
   const canManage = hasAnyPermission(adminPermissions(useAuthOptional()?.account), [P.plansManage]);
@@ -40,7 +40,7 @@ function Detail({ d, reload }: { d: PlanDetail; reload: () => void }) {
   const save = async () => {
     setError(null);
     try {
-      await api.admin.updatePlanDraft(d.id, edits);
+      await api.admin.updatePlanDraft(d.id, edits, d.revision);
       setEdits({});
       setNotice("Draft saved.");
       reload();
@@ -86,6 +86,10 @@ function Detail({ d, reload }: { d: PlanDetail; reload: () => void }) {
                     <th scope="row" className="py-1 pr-4 text-left font-medium">
                       {e.label}
                       <span className="block text-xs font-normal text-muted">{e.description}</span>
+                      {e.bounds.premium_only ? <span className="block text-xs font-normal text-muted">Premium only: it cannot be enabled in the Basic plan.</span> : null}
+                      {e.type === "limit" ? (
+                        <span className="block text-xs font-normal text-muted">{`Allowed limit: at least ${e.bounds.min_limit ?? 1}${e.bounds.max_limit !== null ? `, at most ${e.bounds.max_limit}` : ""}.`}</span>
+                      ) : null}
                     </th>
                     <td className="py-1 pr-4">{e.type}</td>
                     <td className="py-1 pr-4">
@@ -126,22 +130,62 @@ function Detail({ d, reload }: { d: PlanDetail; reload: () => void }) {
         ) : null}
       </Panel>
 
+      {canManage && d.status !== "draft" ? (
+        <Panel title="Rollback">
+          <p className="text-xs text-muted">
+            To go back to what this version granted, restore it as a new draft. History is never edited and nobody is moved: review the draft,
+            then activate it like any other version.
+          </p>
+          <div><button type="button" className={btn} onClick={() => setPending("restore")}>Restore this version as a new draft</button></div>
+        </Panel>
+      ) : null}
+
+      <AssignmentHistory versionId={d.id} />
+
       <ActionDialog open={pending === "activate"} title="Activate this version?" confirmLabel="Activate" askReason={false}
         onClose={() => setPending(null)}
         onConfirm={async () => {
-          await api.admin.activatePlan(d.id);
+          await api.admin.activatePlan(d.id, d.revision);
           done("Version activated. It is now immutable and assignable; the previous active version was retired and its subscribers stay on it.");
         }}>
         <p>The version becomes immutable. Existing subscribers are not moved and nobody is charged.</p>
       </ActionDialog>
+      <ActionDialog open={pending === "restore"} title="Restore as a new draft?" confirmLabel="Restore as draft" askReason={false}
+        onClose={() => setPending(null)}
+        onConfirm={async () => {
+          const out = await api.admin.restorePlanAsDraft(d.id, d.family_revision);
+          done(`Draft version ${out.version} created from version ${out.copied_from}. Open it from the plan list to review and activate it.`);
+        }}>
+        <p>A new draft is created with the entitlements of this version. Existing versions and subscribers are untouched.</p>
+      </ActionDialog>
       <ActionDialog open={pending === "retire"} title="Retire this version?" confirmLabel="Retire" askReason={false}
         onClose={() => setPending(null)}
         onConfirm={async () => {
-          await api.admin.retirePlan(d.id);
+          await api.admin.retirePlan(d.id, d.revision);
           done("Version retired. It can no longer be assigned; existing subscribers keep it.");
         }}>
         <p>No new assignments will be possible. Existing subscriptions stay as they are.</p>
       </ActionDialog>
     </div>
+  );
+}
+
+function AssignmentHistory({ versionId }: { versionId: number }) {
+  const [page, setPage] = useState(1);
+  const loaded = useAdminResource(() => api.admin.planVersionAssignments(versionId, page), [versionId, page]);
+  return (
+    <Panel title="Assignment history">
+      <p className="text-xs text-muted">Every assignment to this version, newest first: the subject, its state, how it was assigned and when. Subjects are shown by id only.</p>
+      <ResourceState loaded={loaded}>
+        {loaded.state === "ready" ? (
+          <>
+            <Table caption="Assignments of this plan version"
+              rows={loaded.data.items.map((i) => ({ subject: `${i.subject_type} ${i.subject_id}`, state: i.status, assigned_by: i.source.replace(/_/g, " "), started_at: i.started_at, ended_at: i.ended_at }))}
+              cols={["subject", "state", "assigned_by", "started_at", "ended_at"]} />
+            <Pager page={loaded.data.page} pageSize={loaded.data.page_size} total={loaded.data.total} onPage={setPage} />
+          </>
+        ) : null}
+      </ResourceState>
+    </Panel>
   );
 }

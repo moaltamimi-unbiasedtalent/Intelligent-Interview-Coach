@@ -66,6 +66,10 @@ class RetrievalResult(_Base):
     retriever: str = Field(
         default="vector", description="Which retriever surfaced it (vector/keyword/hybrid)."
     )
+    # 01A (REVIEW-01 R5): injection risk of the chunk text, 0.0 (no indicator) to 1.0 (block-level). Set by rag_guard.screen_results; indicator NAMES only
+    # (never raw text). Defaults keep every existing constructor call and serialised result backward compatible.
+    injection_risk: float = Field(default=0.0, ge=0.0, le=1.0, description="Injection risk 0.0-1.0 (retrieved text is untrusted).")
+    injection_indicators: list[str] = Field(default_factory=list, description="Names of the injection indicators that matched (no raw text).")
 
     @property
     def text(self) -> str:

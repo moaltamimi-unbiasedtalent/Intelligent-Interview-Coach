@@ -24,9 +24,16 @@ from src.copilot.config import CopilotConfig
 
 def build_vector_store(config: CopilotConfig):
     """Build the Career vector store (expensive; UI wraps this in a cache)."""
+    from src.application.errors import ConfigurationError
+    from src.copilot.embeddings import EmbeddingConfigurationError
     from src.copilot.vectorstore import build_vector_store as _build
 
-    return _build(config)
+    try:
+        return _build(config)
+    except EmbeddingConfigurationError as exc:
+        # 02B: a hosted environment never silently falls back to the lexical hash embedder. Safe 503 naming only the fixed codes (no key, no URL).
+        raise ConfigurationError("Retrieval is unavailable: the embedding configuration is not acceptable for this environment ("
+                                 + ", ".join(exc.codes) + ").") from exc
 
 
 def build_tool_invoker(config: CopilotConfig):

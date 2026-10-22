@@ -128,10 +128,14 @@ MESSAGES = {
     "worker_identity_unrecorded": "A worker is running but has not recorded a knowledge environment identity.",
     "worker_not_seen": "No worker has reported recently, so the worker's environment cannot be compared.",
     "registry_unreadable": "The governed registry could not be read.",
+    # 02B (REVIEW-04 R1/R4/R5): values are never included; ``fields`` name only the embedding fields involved
+    "embedder_not_approved": "The configured embedder is not acceptable for this environment (the lexical hash embedder, missing semantic credentials or unknown dimensions).",
+    "index_embedder_mismatch": "A vector index was built by an embedder that differs from the live embedder (see the named fields); its vectors are not comparable.",
+    "index_manifest_unproven": "A vector index does not record a manifest that proves which embedder built it (missing, unreadable, incomplete or built by the lexical hash embedder).",
 }
 _BLOCKING = frozenset({"identity_mismatch", "governed_collection_empty", "private_files_all_missing", "store_not_persistent", "store_unreadable",
                        "private_files_in_temp_directory", "index_in_temp_directory", "data_root_in_temp_directory", "registry_unreadable",
-                       "database_is_sqlite"})        # K9: a hosted UI must never silently sit on a local demonstration database
+                       "database_is_sqlite", "embedder_not_approved", "index_embedder_mismatch", "index_manifest_unproven"})   # K9: a hosted UI must never silently sit on a local demonstration database
 
 
 @dataclass(frozen=True)
@@ -154,6 +158,8 @@ class GuardReport:
     worker_identity: str = "unknown"             # match | mismatch | unrecorded | no_worker | unknown
     mismatched_fields: tuple[str, ...] = ()
     workers_checked: int = 0
+    embedding_checked: bool = False              # 02B: True when the embedder and at least one index manifest could be evaluated
+    embedding_fields: tuple[str, ...] = ()       # 02B: names of the embedding fields that differ or are unproven (never values)
 
     @property
     def blocking(self) -> tuple[Finding, ...]:
@@ -166,7 +172,8 @@ class GuardReport:
     def to_dict(self) -> dict:
         return {"environment": self.environment, "enforced": self.enforced,
                 "mode": "enforced" if self.enforced else "development_warning", "serving_allowed": self.serving_allowed,
-                "checked_at": self.checked_at, "findings": [f.to_dict() for f in self.findings]}
+                "checked_at": self.checked_at, "findings": [f.to_dict() for f in self.findings],
+                "embedding_check": {"checked": self.embedding_checked, "differing_fields": list(self.embedding_fields)}}
 
 
 def _finding(code: str, fields: tuple[str, ...] = ()) -> Finding:
@@ -182,7 +189,9 @@ class KnowledgeServingGuard:
 
     def __init__(self, session_factory: Any, runtime: KnowledgeRuntimeConfig, *, store_provider: Callable[[], Any],
                  doc_store: Any = None, job_service: Any = None, copilot_config: Any = None, ttl_seconds: float = 15.0,
-                 clock: Callable[[], float] = time.monotonic, on_report: Callable[[GuardReport], None] | None = None) -> None:
+                 clock: Callable[[], float] = time.monotonic, on_report: Callable[[GuardReport], None] | None = None,
+                 curated_store_provider: Callable[[], Any] | None = None) -> None:
+        self._curated_store = curated_store_provider        # 02B: optional; the curated corpus index is checked for embedder compatibility too
         self._sf, self._rt, self._store, self._docs = session_factory, runtime, store_provider, doc_store
         self._jobs, self._cc, self._ttl, self._clock = job_service, copilot_config, ttl_seconds, clock
         self._on_report = on_report
@@ -213,6 +222,56 @@ class KnowledgeServingGuard:
         except Exception:  # noqa: BLE001
             stats = None
         return build_identity(self._rt, self._cc, stores=stores, job_stats=stats)
+
+    def _curated_or_none(self) -> Any:
+        if self._curated_store is None:
+            return None
+        try:
+            return self._curated_store()
+        except Exception:  # noqa: BLE001
+            return None
+
+    def _embedding_check(self, governed: Any, findings: list[Finding]) -> tuple[bool, tuple[str, ...]]:
+        """02B: is the live embedder acceptable here, and does every inspectable index manifest match it? Appends findings; returns
+        (checked, differing field names). Names only: no value, path or key. Development reports ONLY a provable mismatch (legacy development
+        indexes have no manifest and the hash embedder is the labelled development default); hosted reports every unproven condition."""
+        from src.copilot import index_manifest as IM
+        from src.copilot.embeddings import resolve_embedding_plan
+
+        fields: list[str] = []
+        checked = False
+        hosted = self._rt.hosted
+        if self._cc is not None:
+            try:
+                plan = resolve_embedding_plan(self._cc, environment=self._rt.environment)
+            except Exception:  # noqa: BLE001
+                plan = None
+            if plan is not None:
+                checked = True
+                if plan.problems and hosted:
+                    findings.append(_finding("embedder_not_approved", plan.problem_fields))
+                    fields.extend(plan.problem_fields)
+        for store in (governed, self._curated_or_none()):
+            if store is None or not hasattr(store, "index_status"):
+                continue
+            try:
+                st = store.index_status(environment=self._rt.environment)
+            except Exception:  # noqa: BLE001
+                continue
+            checked = True
+            if st.state in (IM.OK, IM.EMPTY):
+                continue
+            if st.state == IM.HASH_HOSTED:
+                if not any(f.code == "embedder_not_approved" for f in findings):
+                    findings.append(_finding("embedder_not_approved", st.fields))
+                fields.extend(st.fields)
+            elif st.state == IM.MISMATCH:
+                findings.append(_finding("index_embedder_mismatch", st.fields))
+                fields.extend(st.fields)
+            elif hosted:
+                findings.append(_finding("index_manifest_unproven", st.fields))
+                fields.extend(st.fields)
+        return checked, tuple(sorted(set(fields)))
 
     def _registry_facts(self) -> dict | None:
         try:
@@ -260,6 +319,8 @@ class KnowledgeServingGuard:
             elif missing:
                 findings.append(_finding("private_files_missing"))
 
+        emb_checked, emb_fields = self._embedding_check(store, findings)
+
         # ---- worker identity (job_workers heartbeat)
         api_id = self.api_identity(store)
         active = [w for w in self._workers() if w.get("active")]
@@ -280,7 +341,8 @@ class KnowledgeServingGuard:
                     findings.append(_finding("identity_mismatch", tuple(fields_bad)))
                 else:
                     state = "match"
-        report = GuardReport(self._rt.environment, enforced, tuple(findings), _now(), state, tuple(fields_bad), len(active))
+        report = GuardReport(self._rt.environment, enforced, tuple(findings), _now(), state, tuple(fields_bad), len(active),
+                             emb_checked, emb_fields)
         if self._on_report is not None:
             try:
                 self._on_report(report)
@@ -360,7 +422,14 @@ def environment_diagnostics(session_factory: Any, guard: KnowledgeServingGuard, 
                 count = int(store.count())
             except Exception:  # noqa: BLE001
                 count = None
-        cols.append({"collection_id": cid, "role": role, "chunk_count": count, "persistent": bool(store is not None and hasattr(store, "persist_dir"))})
+        idx = None
+        if store is not None and hasattr(store, "index_status"):          # 02B: persisted manifest vs the live embedder (field names, never values)
+            try:
+                idx = store.index_status(environment=rt.environment).to_safe_dict()
+            except Exception:  # noqa: BLE001
+                idx = None
+        cols.append({"collection_id": cid, "role": role, "chunk_count": count, "persistent": bool(store is not None and hasattr(store, "persist_dir")),
+                     "index_manifest": idx})
     manifest = registry_manifest(session_factory, rt.governed_collection)
     m = manifest.to_dict()
     return {
@@ -382,3 +451,16 @@ def environment_diagnostics(session_factory: Any, guard: KnowledgeServingGuard, 
 def count_registry(session_factory: Any) -> int:
     with session_factory() as s:
         return int(s.scalar(select(func.count()).select_from(KnowledgeSource)) or 0)
+
+
+def count_untrusted_scan_records(session_factory: Any) -> int:
+    """K9 residual (02C): live-lifecycle versions (review_required, approved, indexed, active) whose scan result is not a PASSED result from a recorded
+    scanner, or whose scanner is a development simulation (fake/null). In a hosted environment these are not trusted evidence of a scan (approval and
+    activation are blocked for them by ``KnowledgeAdminService.blockers``); this count lets readiness report them. Returns 0 when unreadable."""
+    try:
+        with session_factory() as s:
+            return int(s.scalar(select(func.count()).select_from(V).where(
+                V.state.in_(("review_required", "approved", "indexed", "active")),
+                (V.scanner_name.in_(("fake", "null"))) | (V.scanner_name.is_(None)) | (V.scan_status != "scan_passed"))) or 0)
+    except Exception:  # noqa: BLE001
+        return 0

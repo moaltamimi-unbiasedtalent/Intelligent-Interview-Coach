@@ -242,7 +242,14 @@ def get_governed_retriever(request: Request):
 
             return GovernedKnowledgeRetriever(build_governed_store(get_copilot_config(request)), get_repository(request).session_factory,
                                               guard=get_knowledge_guard(request))
-        except Exception:  # noqa: BLE001 - governed knowledge is additive
+        except Exception as exc:  # noqa: BLE001 - governed knowledge is additive
+            from src.copilot.embeddings import EmbeddingConfigurationError
+
+            if isinstance(exc, EmbeddingConfigurationError):
+                # 02B: an embedder the environment refuses must DEGRADE the governed channel visibly, never make it vanish silently.
+                from src.knowledge_admin.retriever import RefusedGovernedRetriever
+
+                return RefusedGovernedRetriever(exc.codes)
             return None
 
     return _shared(request, "governed_retriever", _build)
@@ -258,6 +265,7 @@ def get_knowledge_guard(request: Request):
         repo = get_repository(request)
         return build_serving_guard(repo.session_factory, get_app_config(request), get_copilot_config(request),
                                    store_provider=lambda: getattr(get_governed_retriever(request), "store", None),
+                                   curated_store_provider=lambda: get_vector_store(request),
                                    job_service=JobService(repo.session_factory))
 
     return _shared(request, "knowledge_guard", _build)
@@ -560,21 +568,22 @@ def get_sharing_service(
     story_repo = StoryRepository(workspaces.session_factory)
 
     def _story_owns(resource_id: str, owner_user_id: int) -> bool:
+        # 04A: an archived story cannot be shared (archiving also revokes its grants; restoring never re-grants).
         try:
-            return story_repo.get(user_id=owner_user_id, story_id=int(resource_id)) is not None
+            found = story_repo.get(user_id=owner_user_id, story_id=int(resource_id))
+            return found is not None and not found.get("archived_at")
         except (ValueError, TypeError):
             return False
 
     def _story_load(resource_id: str, owner_user_id: int):
+        # 04A: a bounded VIEW projection (STAR text, tags, verification label) - never claim/answer ids, the Opportunity link or usage.
+        from src.application.stories_service import shared_projection
+
         try:
-            story = story_repo.get(user_id=owner_user_id, story_id=int(resource_id))
+            found = story_repo.get(user_id=owner_user_id, story_id=int(resource_id))
         except (ValueError, TypeError):
             return None
-        if story is None:
-            return None
-        # 04B: a fixed allow-list VIEW projection. Internal evidence links (claim ids) and everything else stay with the owner.
-        keys = ("id", "title", "situation", "task", "action", "result", "competencies", "status", "updated_at")
-        return {k: story.get(k) for k in keys}
+        return shared_projection(found) if found is not None else None
 
     from src.application.history_access import HistoryAccessPolicy
     from src.entitlements import EntitlementService
@@ -657,10 +666,14 @@ def get_stories_service(repo=Depends(get_repository)):
     from src.application.stories_service import StoriesApplicationService
     from src.documents.repository import DocumentRepository, StoryRepository
 
+    from src.opportunity_repository import OpportunityRepository
+
     sf = repo.session_factory
+    opportunities = OpportunityRepository(sf)
     return StoriesApplicationService(
         stories=StoryRepository(sf),
         documents=DocumentRepository(sf),
+        opportunity_lookup=lambda user_id, opportunity_id: opportunities.get(user_id, opportunity_id),
     )
 
 
@@ -756,6 +769,13 @@ def get_oidc_provider(request: Request):
         client_id=_secrets.read_setting("GOOGLE_CLIENT_ID") or "",
         client_secret=_secrets.read_setting("GOOGLE_CLIENT_SECRET") or "",
     )
+
+
+def get_invitation_repository(repo=Depends(get_repository)):
+    """04E: the invitation repository over the injected repository's session factory (override-friendly like the auth service)."""
+    from src.invitations.repository import InvitationRepository
+
+    return InvitationRepository(repo.session_factory)
 
 
 def get_auth_service(

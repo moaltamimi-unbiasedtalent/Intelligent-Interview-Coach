@@ -50,6 +50,7 @@ const USER_ROW = { user_id: 2, email: "jane@example.com", display_name: null, st
   onboarding_completed: true, interface_locale: "en", email_verified: false, created_at: null, updated_at: null,
   workspace_count: 1, active_session_count: 1 };
 const USER_DETAIL = {
+  revision: "0123456789abcdef",
   plan: { current: { plan_code: "basic", version: 1, display_name: "Basic", status: "active", source: "system_default", started_at: "2026-10-01", ended_at: null }, history: [] },
   account: USER_ROW,
   access: { platform_role: "user", capabilities: [], assignable_roles: ["user", "support_operator"], is_self: false },
@@ -211,12 +212,13 @@ const INT_GOOGLE = { ...INT_ROW(false), code: "google_oidc", name: "Google sign-
   classification: "code_present_not_validated", test: { supported: false, note: "No manual probe." },
   validation_note: "Backend support present; end-to-end sign-in is not validated." };
 const PLAN_ROWS = [
-  { id: 2, plan_code: "premium", version: 1, display_name: "Premium (preview)", status: "active", enabled_entitlements: 5, total_entitlements: 5, subscribers: { users: 1, workspaces: 0 }, created_at: null, activated_at: "2026-10-01", retired_at: null },
-  { id: 1, plan_code: "basic", version: 1, display_name: "Basic", status: "active", enabled_entitlements: 4, total_entitlements: 5, subscribers: { users: 4, workspaces: 0 }, created_at: null, activated_at: "2026-10-01", retired_at: null },
+  { id: 2, plan_code: "premium", version: 1, display_name: "Premium (preview)", status: "active", enabled_entitlements: 5, total_entitlements: 5, subscribers: { users: 1, workspaces: 0 }, revision: "r2", family_revision: "famP", created_at: null, activated_at: "2026-10-01", retired_at: null },
+  { id: 1, plan_code: "basic", version: 1, display_name: "Basic", status: "active", enabled_entitlements: 4, total_entitlements: 5, subscribers: { users: 4, workspaces: 0 }, revision: "r1", family_revision: "famB", created_at: null, activated_at: "2026-10-01", retired_at: null },
 ];
 const PLAN_DETAIL = { id: 3, plan_code: "premium", version: 2, display_name: "Premium (preview)", status: "draft", editable: true,
-  entitlements: ["current_market_research", "standard_history", "standard_progress", "standard_model_profiles", "premium_preview"].map((k) => ({ code: k, label: `Label ${k}`, description: "d", type: "boolean", enabled: true, limit: null })),
-  subscribers: { users: 0, workspaces: 0 }, created_at: null, activated_at: null, retired_at: null };
+  entitlements: ["current_market_research", "standard_history", "standard_progress", "standard_model_profiles", "premium_preview"].map((k) => ({ code: k, label: `Label ${k}`, description: "d", type: "boolean", enabled: true, limit: null,
+    bounds: { kind: "boolean", min_limit: null, max_limit: null, premium_only: k === "premium_preview" } })),
+  revision: "rev-3", family_revision: "fam-3", subscribers: { users: 0, workspaces: 0 }, created_at: null, activated_at: null, retired_at: null };
 const MY_PLAN = { plan_code: "basic", plan_version: 1, entitlements: { current_market_research: { enabled: true, limit: null, unlimited: true }, premium_preview: { enabled: false, limit: null, unlimited: false } } };
 const TICKET_ROW = { id: 5, public_id: "d".repeat(32), owner_user_id: 2, owner_email: "jane@example.com", category: "billing", priority: "normal",
   status: "new", subject: "Charged twice", assigned_user_id: null, assignee_email: null, message_count: 1, created_at: null, updated_at: null };
@@ -346,6 +348,9 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
     if (/\/admin\/plans\/versions\/\d+\/(activate|retire)$/.test(path) && method === "POST") return json({ ok: true });
     if (/\/admin\/plans\/versions\/\d+\/entitlements$/.test(path) && method === "PATCH") return json({ id: 3, changed: ["premium_preview"] });
     if (/\/admin\/plans\/[^/]+\/versions$/.test(path) && method === "POST") return json({ id: 3, plan_code: "premium", version: 2 });
+    if (path.endsWith("/admin/plans/matrix")) return json({ entitlements: [], versions: [] });
+    if (/\/admin\/plans\/versions\/\d+\/assignments$/.test(path)) return json({ plan_code: "premium", version: 2, total: 0, page: 1, page_size: 10, items: [] });
+    if (/\/admin\/plans\/subjects\/\w+\/\d+$/.test(path)) return json({ subject_type: "user", subject_id: 2, current: null, history: [], revision: "s1" });
     if (path.endsWith("/admin/plans/assignable")) return json([{ plan_code: "basic", version: 1, display_name: "Basic" }, { plan_code: "premium", version: 1, display_name: "Premium (preview)" }]);
     if (/\/admin\/plans\/\d+$/.test(path)) return json(PLAN_DETAIL);
     if (path.endsWith("/admin/plans")) return json({ items: PLAN_ROWS });
@@ -359,9 +364,16 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
       const items = [TICKET_ROW].filter((t) => !q.get("status") || t.status === q.get("status"));
       return json({ items, total: items.length, page: 1, page_size: 25 });
     }
+    // 03C: strict account actions (the server requires a reason and the account revision; the mock checks both)
+    if (/\/admin\/users\/\d+\/actions\/[a-z-]+$/.test(path) && method === "POST") {
+      const body = JSON.parse(route.request().postData() ?? "{}");
+      if (!body.reason || body.expected_revision !== "0123456789abcdef") return json({ error: { code: "validation_error", message: "reason and revision required" } }, 422);
+      return json({ user_id: 2, action: path.split("/").pop(), changed: true, sessions_revoked: 1, plan_code: body.plan_code ?? null, revision: "fedcba9876543210" });
+    }
     if (/\/admin\/users\/\d+\/status$/.test(path) && method === "POST") return json({ user_id: 2, status: "deactivated", changed: true, sessions_revoked: 1 });
     if (/\/admin\/users\/\d+\/sessions\/revoke$/.test(path) && method === "POST") return json({ user_id: 2, sessions_revoked: 1 });
     if (/\/admin\/users\/\d+$/.test(path)) return json(USER_DETAIL);
+    if (path.endsWith("/admin/invitations")) return json({ items: [], total: 0, counts: { pending: 0, redeemed: 0, expired: 0, revoked: 0 } });   // 04E: the real listing shape (empty beta)
     if (path.endsWith("/admin/users")) {
       const q = new URL(route.request().url()).searchParams.get("q") ?? "";
       const items = [USER_ROW].filter((u) => !q || u.email.includes(q));
@@ -415,6 +427,27 @@ test("platform admin journey: Command Center, build metadata, audit, provider st
   await expect(page.getByText(/curriculum vitae|raw answer|memory summary|password_hash/i)).toHaveCount(0);
 });
 
+test("04E: the Users page renders the invitation panel from the real listing shape, and the search stays accessible", async ({ page }) => {
+  await mockAdmin(page, "platform_admin", ADMIN_PERMS);
+  await page.goto("/admin/users");
+  await expect(page.getByRole("heading", { name: "Users", exact: true })).toBeVisible();
+  await expect(page.getByLabel("Email or account id")).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Invitations \(state and masked identifiers only\)/ })).toBeVisible();
+  await expect(page.getByText("No invitations yet.")).toBeVisible();
+  await expect(page.getByText(/pending: 0/)).toBeVisible();
+});
+
+test("04E: a malformed invitation listing shows the explicit Admin error state and does not crash the Users page", async ({ page }) => {
+  await mockAdmin(page, "platform_admin", ADMIN_PERMS);
+  // A later route wins: answer the invitation listing with a SUCCESSFUL response that lacks the documented fields (what an unmocked route used to return).
+  await page.route("**/api/v1/admin/invitations*", (route) => route.fulfill({ status: 200, contentType: "application/json", body: "{}" }));
+  await page.goto("/admin/users");
+  await expect(page.getByRole("heading", { name: "Users", exact: true })).toBeVisible();
+  await expect(page.getByLabel("Email or account id")).toBeVisible();                       // the rest of the page still works
+  await expect(page.getByText("That request could not be processed.")).toBeVisible();      // explicit error state, not a silent empty list
+  await expect(page.getByText("No invitations yet.")).toHaveCount(0);
+});
+
 test("W10.2: users search, safe detail, governed action with confirmation, workspace membership", async ({ page }) => {
   await mockAdmin(page, "platform_admin", ADMIN_PERMS);
   await page.goto("/admin");
@@ -431,6 +464,7 @@ test("W10.2: users search, safe detail, governed action with confirmation, works
   await page.getByRole("button", { name: "Deactivate account" }).click();
   const dialog = page.getByRole("alertdialog");
   await expect(dialog.getByRole("button", { name: "Cancel" })).toBeFocused();
+  await dialog.getByLabel(/Reason/).fill("abuse report");
   await dialog.getByRole("button", { name: "Deactivate" }).click();
   await expect(page.getByText(/Account deactivated/)).toBeVisible();
   await page.getByRole("link", { name: "Team Alpha" }).click();
@@ -674,6 +708,7 @@ test("W10.4: plan catalogue, draft version, user plan assignment, candidate plan
   await expect(page.getByText("Basic (version 1)")).toBeVisible();
   await page.getByLabel("Change plan").selectOption("premium");
   await page.getByRole("button", { name: "Change plan" }).click();
+  await page.getByRole("alertdialog").getByLabel(/Reason/).fill("pilot upgrade");
   await page.getByRole("alertdialog").getByRole("button", { name: "Change plan" }).click();
   await expect(page.getByText(/Plan changed to Premium \(preview\)/)).toBeVisible();
 });

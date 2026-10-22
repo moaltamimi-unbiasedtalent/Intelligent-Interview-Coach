@@ -36,6 +36,7 @@ from dataclasses import dataclass, field
 from pydantic import BaseModel, ValidationError
 
 from src import constants
+from src.core.security.normalize import fold_confusables
 
 __all__ = [
     # Decisions
@@ -216,7 +217,7 @@ def _condense(text: str) -> str:
     o r e`` or ``i.g.n.o.r.e`` both become ``ignore``), while NFKC + leet
     mapping defeat fullwidth and digit-substitution tricks.
     """
-    text = unicodedata.normalize("NFKC", text).lower()
+    text = fold_confusables(unicodedata.normalize("NFKC", text)).lower()  # 01A: a Cyrillic/Greek look-alike no longer erases a letter of an attack phrase
     text = _ZERO_WIDTH.sub("", text)
     text = text.translate(_LEET_TABLE)
     return re.sub(r"[^a-z0-9]", "", text)

@@ -111,6 +111,10 @@ ADMIN_FLAG_OVERRIDE_RESET: Final = "admin.flag_override_reset"
 ADMIN_SPEECH_CONFIG_CHANGED: Final = "admin.speech_config_changed"
 # W10.13 (security, audit, incidents, alerts, role approval, step-up). Payloads: ids, enum before/after, filters, counts, field NAMES changed; never free text
 # of an incident, a password, a candidate's content or an IP/device value.
+# 03C (Admin Users). Payloads: counts, state names, a bounded reason and request/revision-free ids; never an email, token, link or candidate content.
+ADMIN_USER_VERIFICATION_RESENT: Final = "admin.user_verification_resent"
+ADMIN_USER_VERIFICATION_EXPIRED: Final = "admin.user_verification_expired"
+ADMIN_USER_DELETION_REQUESTED: Final = "admin.user_deletion_requested"
 ADMIN_ROLE_CHANGE_REQUESTED: Final = "admin.role_change.requested"
 ADMIN_ROLE_CHANGE_APPROVED: Final = "admin.role_change.approved"
 ADMIN_ROLE_CHANGE_REJECTED: Final = "admin.role_change.rejected"
@@ -126,11 +130,21 @@ SECURITY_INCIDENT_TICKET_LINKED: Final = "security.incident.ticket_linked"
 SECURITY_INCIDENT_TICKET_UNLINKED: Final = "security.incident.ticket_unlinked"
 SECURITY_ALERT_ACKNOWLEDGED: Final = "security.alert.acknowledged"
 SECURITY_ALERT_RESOLVED: Final = "security.alert.resolved"
+# 04E (invitation-only private beta). Payloads: invitation id, ttl in days, whether an email binding exists; never the code, its hash or an email address.
+ADMIN_INVITATION_ISSUED: Final = "admin.invitation_issued"
+ADMIN_INVITATION_REVOKED: Final = "admin.invitation_revoked"
 ADMIN_SUPPORT_TICKET_ASSIGNED: Final = "admin.support_ticket_assigned"
 ADMIN_SUPPORT_TICKET_STATUS_CHANGED: Final = "admin.support_ticket_status_changed"
 ADMIN_SUPPORT_TICKET_PRIORITY_CHANGED: Final = "admin.support_ticket_priority_changed"
 ADMIN_SUPPORT_REPLY_SENT: Final = "admin.support_reply_sent"
 ADMIN_SUPPORT_INTERNAL_NOTE_CREATED: Final = "admin.support_internal_note_created"
+
+# 03E1 (report builder). Payloads: saved-config id, report type id, revision, the NAMES of changed fields, window, format and a row count; never a definition body,
+# a saved name, a figure or any candidate data.
+ADMIN_REPORT_CONFIG_CREATED: Final = "admin.report_config_created"
+ADMIN_REPORT_CONFIG_UPDATED: Final = "admin.report_config_updated"
+ADMIN_REPORT_CONFIG_DELETED: Final = "admin.report_config_deleted"
+ADMIN_REPORT_EXPORTED: Final = "admin.report_exported"
 
 # P10C-F2A-R (knowledge-foundation qualification). Payloads: source id, scope filters, counts, a validation digest, the decision and a bounded reason; never a record value, a title or a name.
 ADMIN_FOUNDATION_QUALIFICATION_DECIDED: Final = "admin.foundation_qualification_decided"
@@ -139,7 +153,10 @@ ADMIN_FOUNDATION_ALIAS_DECIDED: Final = "admin.foundation_alias_decided"
 ADMIN_FOUNDATION_ALIAS_REVOKED: Final = "admin.foundation_alias_revoked"
 
 ADMIN_EVENT_NAMES: Final[frozenset[str]] = frozenset({
+    ADMIN_INVITATION_ISSUED, ADMIN_INVITATION_REVOKED,
+    ADMIN_REPORT_CONFIG_CREATED, ADMIN_REPORT_CONFIG_UPDATED, ADMIN_REPORT_CONFIG_DELETED, ADMIN_REPORT_EXPORTED,
     ADMIN_FOUNDATION_QUALIFICATION_DECIDED, ADMIN_FOUNDATION_QUALIFICATION_REVOKED, ADMIN_FOUNDATION_ALIAS_DECIDED, ADMIN_FOUNDATION_ALIAS_REVOKED,
+    ADMIN_USER_VERIFICATION_RESENT, ADMIN_USER_VERIFICATION_EXPIRED, ADMIN_USER_DELETION_REQUESTED,
     ADMIN_ROLE_CHANGE_REQUESTED, ADMIN_ROLE_CHANGE_APPROVED, ADMIN_ROLE_CHANGE_REJECTED, ADMIN_ROLE_CHANGE_CANCELLED, ADMIN_ROLE_CHANGE_STALE,
     ADMIN_STEP_UP_SUCCEEDED, ADMIN_STEP_UP_FAILED, ADMIN_AUDIT_EXPORTED, SECURITY_INCIDENT_CREATED, SECURITY_INCIDENT_UPDATED,
     SECURITY_INCIDENT_STATUS_CHANGED, SECURITY_INCIDENT_TICKET_LINKED, SECURITY_INCIDENT_TICKET_UNLINKED, SECURITY_ALERT_ACKNOWLEDGED, SECURITY_ALERT_RESOLVED,

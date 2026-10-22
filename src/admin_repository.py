@@ -13,7 +13,8 @@ takes real row locks.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
+from typing import Callable
 
 from sqlalchemy import func, or_, select, update
 from sqlalchemy.orm import Session, sessionmaker
@@ -32,10 +33,13 @@ from src.persistence import (
     TIER_BASIC,
     WORKSPACE_ROLE_OWNER,
     WORKSPACE_STATUS_ACTIVE,
+    AccountIdentity,
     AuditEvent,
     AuthSession,
+    PrivacyRequest,
     ProductEntitlement,
     ShareGrant,
+    SupportTicket,
     User,
     UserPreference,
     Workspace,
@@ -67,6 +71,23 @@ def _stage(session: Session, audit: dict | None, **extra) -> None:
     if extra:
         spec["context"] = {**(audit.get("context") or {}), **extra}
     AccountRepository._stage_audit(session, spec)
+
+
+LAST_ACTIVE_CUTOFFS = {"24h": 1, "7d": 7, "30d": 30}
+LAST_ACTIVE_BUCKETS = ("24h", "7d", "30d", "older", "never")
+SORT_KEYS = ("created_at", "updated_at", "email", "status", "role", "workspaces", "last_active")
+OPEN_PRIVACY_STATUSES = ("submitted", "acknowledged", "in_progress", "waiting_for_user")
+
+
+def activity_bucket(seen: datetime | None) -> str:
+    """Coarse last-activity bucket from the newest session use (never a timestamp, never a location or device)."""
+    if seen is None:
+        return "never"
+    age = utcnow() - _aware(seen)
+    for name, days in LAST_ACTIVE_CUTOFFS.items():
+        if age <= timedelta(days=days):
+            return name
+    return "older"
 
 
 def _page(page: int, page_size: int) -> tuple[int, int]:
@@ -121,9 +142,14 @@ class AdminUserRepository:
 
     def list_users(self, *, q: str | None = None, status: str | None = None, role: str | None = None,
                    tier: str | None = None, onboarding: str | None = None, locale: str | None = None,
-                   email_verified: bool | None = None, page: int = 1, page_size: int = 25) -> dict:
+                   email_verified: bool | None = None, page: int = 1, page_size: int = 25,
+                   sort: str = "created_at", direction: str = "desc", last_active: str | None = None,
+                   auth_method: str | None = None, open_case: str | None = None,
+                   has_workspace: bool | None = None) -> dict:
         page, page_size = _page(page, page_size)
         now = utcnow()
+        last_seen = (select(func.max(AuthSession.last_used_at)).where(AuthSession.user_id == User.id)
+                     .correlate(User).scalar_subquery())
         ws_count = (select(func.count()).select_from(WorkspaceMembership).where(
             WorkspaceMembership.user_id == User.id,
             WorkspaceMembership.status == MEMBERSHIP_STATUS_ACTIVE).correlate(User).scalar_subquery())
@@ -131,7 +157,7 @@ class AdminUserRepository:
             AuthSession.user_id == User.id, AuthSession.revoked_at.is_(None),
             AuthSession.expires_at > now).correlate(User).scalar_subquery())
         base = (select(User, ProductEntitlement.tier, UserPreference.interface_locale,
-                       ws_count.label("ws"), sess_count.label("sess"))
+                       ws_count.label("ws"), sess_count.label("sess"), last_seen.label("seen"))
                 .outerjoin(ProductEntitlement, ProductEntitlement.user_id == User.id)
                 .outerjoin(UserPreference, UserPreference.user_id == User.id))
         conds = []
@@ -156,19 +182,47 @@ class AdminUserRepository:
                                   UserPreference.interface_locale.is_(None)))
         if email_verified is not None:
             conds.append(User.email_verified.is_(email_verified))
+        if last_active:
+            lo = LAST_ACTIVE_CUTOFFS
+            if last_active == "never":
+                conds.append(last_seen.is_(None))
+            elif last_active == "older":
+                conds.append(last_seen < now - timedelta(days=lo["30d"]))
+            else:
+                conds.append(last_seen >= now - timedelta(days=lo[last_active]))
+        if auth_method:
+            has_pw = select(AccountIdentity.id).where(AccountIdentity.user_id == User.id,
+                                                      AccountIdentity.provider == "password").exists()
+            conds.append(has_pw if auth_method == "password" else ~has_pw)
+        if open_case:
+            if open_case == "support":
+                conds.append(select(SupportTicket.id).where(
+                    SupportTicket.owner_user_id == User.id,
+                    SupportTicket.status.not_in(("resolved", "closed"))).exists())
+            else:
+                conds.append(select(PrivacyRequest.id).where(
+                    PrivacyRequest.user_id == User.id,
+                    PrivacyRequest.status.in_(OPEN_PRIVACY_STATUSES)).exists())
+        if has_workspace is not None:
+            conds.append(ws_count > 0 if has_workspace else ws_count == 0)
+        sort_col = {"created_at": User.created_at, "updated_at": User.updated_at, "email": func.lower(User.email),
+                    "status": User.status, "role": User.platform_role, "workspaces": ws_count,
+                    "last_active": last_seen}.get(sort, User.created_at)
+        order = sort_col.asc() if direction == "asc" else sort_col.desc()
         with self._sf() as s:
             total = int(s.scalar(
                 select(func.count()).select_from(User)
                 .outerjoin(ProductEntitlement, ProductEntitlement.user_id == User.id)
                 .outerjoin(UserPreference, UserPreference.user_id == User.id).where(*conds)) or 0)
-            rows = s.execute(base.where(*conds).order_by(User.created_at.desc(), User.id.desc())
+            rows = s.execute(base.where(*conds).order_by(order, User.id.desc() if direction != "asc" else User.id.asc())
                              .limit(page_size).offset((page - 1) * page_size)).all()
-            items = [self._summary(u, t, loc, ws, sess) for u, t, loc, ws, sess in rows]
+            items = [self._summary(u, t, loc, ws, sess, seen) for u, t, loc, ws, sess, seen in rows]
         return {"items": items, "total": total, "page": page, "page_size": page_size}
 
     @staticmethod
-    def _summary(u: User, tier, locale, ws, sess) -> dict:
+    def _summary(u: User, tier, locale, ws, sess, seen=None) -> dict:
         return {
+            "last_activity": activity_bucket(seen),
             "user_id": u.id, "email": u.email, "display_name": u.display_name, "status": u.status,
             "platform_role": u.platform_role, "tier": tier or TIER_BASIC,
             "onboarding_completed": u.onboarding_completed_at is not None,
@@ -197,7 +251,8 @@ class AdminUserRepository:
                 AuditEvent.target_type == "user", AuditEvent.target_id == str(user_id),
                 AuditEvent.event_type.like("admin.%"))
                 .order_by(AuditEvent.created_at.desc(), AuditEvent.id.desc()).limit(audit_limit)).all()
-            summary = self._summary(u, ent, loc, sum(1 for m, *_ in members if m.status == MEMBERSHIP_STATUS_ACTIVE), len(sess))
+            seen = s.scalar(select(func.max(AuthSession.last_used_at)).where(AuthSession.user_id == user_id))
+            summary = self._summary(u, ent, loc, sum(1 for m, *_ in members if m.status == MEMBERSHIP_STATUS_ACTIVE), len(sess), seen)
             return {
                 "account": summary,
                 "sessions": {
@@ -216,9 +271,12 @@ class AdminUserRepository:
 
     # -- mutations (state + audit in one transaction) ----------------------------
 
-    def set_status(self, user_id: int, status: str, *, audit: dict | None = None) -> dict:
+    def set_status(self, user_id: int, status: str, *, audit: dict | None = None,
+                   precondition: Callable[[Session, User], None] | None = None) -> dict:
         with self._sf() as s:
             user = self._user(s, user_id)
+            if precondition:
+                precondition(s, user)   # stale-revision / hierarchy guard, inside the mutation transaction
             before = user.status
             if before == status:  # no-op: still audited (every accepted privileged call leaves evidence)
                 _stage(s, audit, sessions_revoked=0)
@@ -253,9 +311,12 @@ class AdminUserRepository:
             s.commit()
             return {"user_id": user_id, "platform_role": role, "changed": True}
 
-    def revoke_sessions(self, user_id: int, *, audit: dict | None = None) -> int:
+    def revoke_sessions(self, user_id: int, *, audit: dict | None = None,
+                        precondition: Callable[[Session, User], None] | None = None) -> int:
         with self._sf() as s:
-            self._user(s, user_id)
+            user = self._user(s, user_id)
+            if precondition:
+                precondition(s, user)
             revoked = self._revoke_live_sessions(s, user_id)
             _stage(s, audit, sessions_revoked=revoked)
             s.commit()

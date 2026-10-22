@@ -32,19 +32,24 @@ from src.api.routes import (
     admin_ai,
     admin_billing,
     admin_billing_ops,
+    admin_command_center,
     billing_candidate,
     billing_webhooks,
     admin_config,
     admin_speech,
     admin_integrations,
     admin_reports,
+    admin_report_builder,
     admin_security,
     admin_jobs,
     admin_knowledge,
+    admin_invitations,
     admin_legal,
     admin_privacy,
     admin_plans,
+    admin_plans_ops,
     admin_support,
+    admin_users,
     agent,
     auth,
     career,
@@ -58,6 +63,7 @@ from src.api.routes import (
     knowledge,
     memory,
     model_profiles,
+    stories,
     usage_quotas,
     progress_analytics,
     preparation_packs,
@@ -170,13 +176,15 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
 
     # Infra liveness alias (unversioned) + versioned API surface.
     app.include_router(health.router, prefix="/api")
-    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, model_profiles, usage_quotas, progress_analytics, preparation_packs, feedback, progress, auth, reviewer, voice, speech, workspaces, admin, admin_ai, admin_billing, admin_billing_ops, admin_config, admin_speech, admin_integrations, admin_reports, admin_security, admin_jobs, admin_knowledge, admin_legal, admin_privacy, admin_plans, admin_support, company, opportunity, privacy, support, billing_candidate, billing_webhooks):
+    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, model_profiles, usage_quotas, progress_analytics, preparation_packs, feedback, progress, auth, reviewer, voice, speech, workspaces, admin, admin_ai, admin_billing, admin_billing_ops, admin_command_center, admin_config, admin_speech, admin_integrations, admin_reports, admin_security, admin_jobs, admin_knowledge, admin_legal, admin_privacy, admin_plans_ops, admin_plans, admin_invitations, admin_support, admin_users, company, opportunity, privacy, support, billing_candidate, billing_webhooks):
         app.include_router(module.router, prefix=API_PREFIX)
+    for _router in admin_report_builder.routers:         # 03E1: one router per existing read permission (standard, commercial)
+        app.include_router(_router, prefix=API_PREFIX)
     # Workspaces registers a second router for explicit sharing under the same prefix.
     app.include_router(workspaces.shares_router, prefix=API_PREFIX)
     # Documents phase (P4) registers three routers under the same prefix.
     app.include_router(documents.router, prefix=API_PREFIX)
-    app.include_router(documents.stories_router, prefix=API_PREFIX)
+    app.include_router(stories.router, prefix=API_PREFIX)
     app.include_router(documents.export_router, prefix=API_PREFIX)
     app.include_router(preparation_packs.artifact_router, prefix=API_PREFIX)
     return app

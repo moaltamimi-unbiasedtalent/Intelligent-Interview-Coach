@@ -12,14 +12,14 @@
 import { ProvenanceExplainer } from "@/components/trust/ProvenanceBadge";
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api/client";
-import type { ClaimOut, DocumentDetail, DocumentSummary, StoryOut } from "@/lib/api/types";
+import type { ClaimOut, DocumentDetail, DocumentSummary } from "@/lib/api/types";
+import { StoryBank } from "@/components/stories/StoryBank";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
-import { EmptyStateIllustration } from "@/components/ui/States";
 import { LoadingState } from "@/components/ui/States";
 import { DocumentUpload, categoryLabelKey } from "@/components/documents/DocumentUpload";
 
@@ -47,14 +47,14 @@ function failureMessage(t: (k: string) => string, kind?: string | null, reason?:
 export function DocumentsClient() {
   const { t } = useI18n();
   const [docs, setDocs] = useState<DocumentSummary[] | null>(null);
-  const [stories, setStories] = useState<StoryOut[]>([]);
+  const [storiesKey, setStoriesKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
-      const [d, s] = await Promise.all([api.documents.list(), api.stories.list()]);
+      const d = await api.documents.list();
       setDocs(d.documents);
-      setStories(s.stories);
+      setStoriesKey((k) => k + 1);
     } catch (err) {
       setError(err instanceof ApiError ? err.userMessage : t("documents.loadError"));
       setDocs([]);
@@ -87,7 +87,7 @@ export function DocumentsClient() {
         )}
       </div>
 
-      <StoryBank stories={stories} onChanged={refresh} />
+      <StoryBank refreshKey={storiesKey} />
 
       <p className="mt-6 text-xs text-muted">{t("documents.privacyNote")}</p>
     </section>
@@ -291,55 +291,6 @@ function ClaimReview({ detail, onReviewed, onDrafted }: { detail: DocumentDetail
       <Button size="sm" className="mt-3" disabled={selected.size === 0} onClick={draft}>
         {t("documents.draftStory")}
       </Button>
-    </div>
-  );
-}
-
-function StoryBank({ stories, onChanged }: { stories: StoryOut[]; onChanged: () => void }) {
-  const { t } = useI18n();
-  const remove = async (id: number) => {
-    await api.stories.remove(id);
-    onChanged();
-  };
-  const statusLabel: Record<string, string> = {
-    source_backed: "documents.stSourceBacked", user_created: "documents.stUserCreated",
-    user_corrected: "documents.stUserCorrected", model_suggested: "documents.stModelSuggested",
-  };
-  const evLabel: Record<string, string> = {
-    verified: "documents.evVerified", source_revoked: "documents.evRevoked", none: "documents.evNone",
-  };
-  return (
-    <div className="mt-8">
-      <h2 className="text-lg font-bold text-foreground">{t("documents.storiesTitle")}</h2>
-      <p className="text-sm text-muted">{t("documents.storiesSubtitle")}</p>
-      {stories.length === 0 ? (
-        <>
-          {/* Wave 8 B0: empty Story bank illustration between the subtitle and the empty message. */}
-          <div className="mt-3 flex justify-center">
-            <EmptyStateIllustration
-              src="/images/ask4mo/ask4mo-empty-documents-story-bank-ink.png"
-              alt={t("documents.storyEmptyIllustrationAlt")}
-            />
-          </div>
-          <p className="mt-3 text-sm text-muted">{t("documents.storyEmpty")}</p>
-        </>
-      ) : (
-        <ul className="mt-3 space-y-2">
-          {stories.map((s) => (
-            <li key={s.id} className="rounded-lg border border-border p-3 text-sm">
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-medium text-foreground">{s.title}</span>
-                <button onClick={() => remove(s.id)} className="text-xs text-muted hover:text-danger">{t("documents.deleteStory")}</button>
-              </div>
-              <div className="mt-1 flex flex-wrap gap-2">
-                <Badge>{t(statusLabel[s.status] ?? "documents.stUserCreated")}</Badge>
-                <Badge>{t(evLabel[s.evidence_state] ?? "documents.evNone")}</Badge>
-              </div>
-              {s.result ? <p className="mt-1 text-muted">{s.result}</p> : null}
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }

@@ -37,6 +37,7 @@ import w12p3 from "../w12p3"; // W12.4D-P3 — candidate Basic/Premium experienc
 import w12p4a from "../w12p4a"; // W12.4D-P4-A — usage-quota presentation (all 8 locales)
 import w12p4b from "../w12p4b"; // W12.4D-P4-B — Premium progress analytics (all 8 locales)
 import w12p5a from "../w12p5a"; // W12.4D-P5-A — Opportunity Preparation Pack (all 8 locales)
+import w04a from "../w04a"; // 04A — Story Bank completion (all 8 locales)
 import ws04b from "../ws04b"; // 04B — Workspaces completion (all 8 locales)
 import w1010 from "../w1010"; // P10B-W10.10 — Privacy request + legal version copy (all 8 locales)
 // P10B-W9.7: Russian blocks live beside (not inside) the 7-locale fragment files, each typed against
@@ -76,6 +77,7 @@ const FRAGMENTS: Array<{ name: string; blocks: Fragment }> = [
   { name: "w12p4a", blocks: w12p4a as unknown as Fragment },
   { name: "w12p4b", blocks: w12p4b as unknown as Fragment },
   { name: "w12p5a", blocks: w12p5a as unknown as Fragment },
+  { name: "w04a", blocks: w04a as unknown as Fragment },
   { name: "ws04b", blocks: ws04b as unknown as Fragment },
   { name: "v4", blocks: v4 as unknown as Fragment },
   { name: "prov", blocks: prov as unknown as Fragment },
