@@ -24,6 +24,7 @@ from sqlalchemy.orm import sessionmaker
 
 from src.coaching_style import COACHING_STYLES, DEFAULT_COACHING_STYLE
 from src.entitlements import ensure_default_subscription
+from src.invitations import repository as invitation_repo
 from src.locales import ACTIVE_CANDIDATE_LOCALES, effective_locale
 from src.persistence import (
     ACCOUNT_STATUS_ACTIVE,
@@ -182,11 +183,17 @@ class AccountRepository:
         email: str,
         password_hash: str,
         display_name: str | None,
+        require_invitation: bool = False,
+        invitation_code: str | None = None,
     ) -> int | None:
         """Create a principal with a password identity + credential + basic tier.
 
         Returns the new ``user_id``, or ``None`` if the email is already taken
         (unique violation) — the caller maps that to a safe, non-enumerating result.
+
+        04E: with ``require_invitation`` the invitation is redeemed by ONE conditional UPDATE in THIS transaction, AFTER the user row is accepted (so an existing
+        email returns ``None`` and burns nothing) and BEFORE the commit (so a refused or raced code leaves no account behind). Raises
+        :class:`src.invitations.repository.InvitationRefused`.
         """
         norm = _normalize_email(email)
         with self._session_factory() as session:
@@ -202,6 +209,12 @@ class AccountRepository:
             session.add(user)
             try:
                 session.flush()  # allocate user.id, surface unique violations early
+                if require_invitation:
+                    try:
+                        invitation_repo.consume(session, code=invitation_code or "", email=norm, user_id=user.id)
+                    except invitation_repo.InvitationRefused:
+                        session.rollback()
+                        raise
                 session.add(
                     AccountIdentity(
                         user_id=user.id,
@@ -224,7 +237,11 @@ class AccountRepository:
                 session.rollback()
                 return None
 
-    def link_or_create_oidc(
+    def link_or_create_oidc(self, **kwargs) -> int:
+        """See :meth:`link_or_create_oidc_detailed`; returns only the user id (the long-standing contract)."""
+        return self.link_or_create_oidc_detailed(**kwargs)[0]
+
+    def link_or_create_oidc_detailed(
         self,
         *,
         provider: str,
@@ -232,12 +249,18 @@ class AccountRepository:
         email: str | None,
         email_verified: bool,
         display_name: str | None,
-    ) -> int:
+        require_invitation: bool = False,
+        invitation_code: str | None = None,
+    ) -> tuple[int, bool]:
         """Resolve a social identity to a principal (account linking by verified email).
 
         * Existing (provider, subject) → that user.
         * Else a VERIFIED email matching an existing account → link a new identity to it.
         * Else create a fresh principal (+ identity + basic tier).
+
+        04E: only the LAST branch is a registration, so only it needs an invitation (``require_invitation``); signing in with an existing identity or linking to an
+        existing verified account is unchanged. The invitation is redeemed in this transaction (an email-bound code needs the provider-VERIFIED address). Raises
+        :class:`src.invitations.repository.InvitationRefused`.
         """
         norm = _normalize_email(email) if email else None
         with self._session_factory() as session:
@@ -248,7 +271,7 @@ class AccountRepository:
                 )
             )
             if existing is not None:
-                return existing.user_id
+                return existing.user_id, False
 
             user: User | None = None
             # Link only on a provider-verified email — never merge on an unverified one.
@@ -265,6 +288,7 @@ class AccountRepository:
                     for row in session.scalars(select(AuthToken).where(AuthToken.user_id == user.id, AuthToken.consumed_at.is_(None))).all():
                         row.consumed_at = now
 
+            created = user is None
             if user is None:
                 user = User(
                     subject=provider_subject,
@@ -277,6 +301,12 @@ class AccountRepository:
                 )
                 session.add(user)
                 session.flush()
+                if require_invitation:
+                    try:
+                        invitation_repo.consume(session, code=invitation_code or "", email=norm if (norm and email_verified is True) else None, user_id=user.id)
+                    except invitation_repo.InvitationRefused:
+                        session.rollback()
+                        raise
                 session.add(
                     ProductEntitlement(user_id=user.id, tier=TIER_BASIC, source="default")
                 )
@@ -293,7 +323,11 @@ class AccountRepository:
             if email_verified is True and norm and not user.email_verified:
                 user.email_verified = True
             session.commit()
-            return user.id
+            return user.id, created
+
+    def peek_invitation(self, *, code: str | None, email: str | None) -> str | None:
+        """04E: non-consuming invitation check for registration. ``None`` = usable now, else the bounded audit-only refusal reason."""
+        return invitation_repo.peek(self._session_factory, code=code, email=email)
 
     def set_password(self, user_id: int, password_hash: str) -> bool:
         with self._session_factory() as session:

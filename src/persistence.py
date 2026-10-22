@@ -3173,6 +3173,41 @@ class AdminRoleChangeRequest(Base):
     revision: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 
 
+# --- 04E invitation-only private beta registration (REQ-BETA-01) -------------------------------------------------------------------------------
+REGISTRATION_INVITATION_STATES = ("pending", "redeemed", "expired", "revoked")  # DERIVED from the timestamps below (never stored, so they cannot disagree)
+
+
+class RegistrationInvitation(Base):
+    """A single-use, expiring, revocable invitation to REGISTER (private beta, 04E).
+
+    The plaintext code exists only in the response that issued it. This row holds ONLY ``code_hash`` (SHA-256 of a 256-bit random code), so a database read never
+    yields a usable credential. State is derived from the timestamps: ``revoked_at`` set = revoked; ``redeemed_at`` set = redeemed; ``expires_at`` in the past =
+    expired; otherwise pending. Redemption is ONE conditional UPDATE (``redeemed_at IS NULL AND revoked_at IS NULL AND expires_at > now``) executed in the SAME
+    transaction as the account insert, so concurrent redemption yields exactly one success and a failed registration never burns a code.
+    ``email_hash`` (optional binding) is a salted SHA-256 of the normalised address, ``email_hint`` a masked display form for Admin. Account deletion clears
+    ``redeemed_by_user_id`` (and the email binding of a redeemed row); the consumed row stays as an anonymous record so a code can never be replayed.
+    """
+
+    __tablename__ = "registration_invitations"
+    __table_args__ = (
+        UniqueConstraint("code_hash", name="uq_registration_invitations_code_hash"),
+        Index("ix_registration_invitations_expires", "expires_at"),
+        CheckConstraint("expires_at > created_at", name="ck_registration_invitations_expiry"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    code_hash: Mapped[str] = mapped_column(String(64))
+    email_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    email_hint: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    issued_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    redeemed_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    redeemed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+
 def _install_append_only(table_obj, table_name: str) -> None:
     """Install the append-only triggers whenever the table is created through ``create_all`` (dev/test); migrations issue the same DDL."""
     from sqlalchemy import DDL, event

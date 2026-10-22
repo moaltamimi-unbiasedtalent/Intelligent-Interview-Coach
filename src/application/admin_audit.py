@@ -126,6 +126,9 @@ SECURITY_INCIDENT_TICKET_LINKED: Final = "security.incident.ticket_linked"
 SECURITY_INCIDENT_TICKET_UNLINKED: Final = "security.incident.ticket_unlinked"
 SECURITY_ALERT_ACKNOWLEDGED: Final = "security.alert.acknowledged"
 SECURITY_ALERT_RESOLVED: Final = "security.alert.resolved"
+# 04E (invitation-only private beta). Payloads: invitation id, ttl in days, whether an email binding exists; never the code, its hash or an email address.
+ADMIN_INVITATION_ISSUED: Final = "admin.invitation_issued"
+ADMIN_INVITATION_REVOKED: Final = "admin.invitation_revoked"
 ADMIN_SUPPORT_TICKET_ASSIGNED: Final = "admin.support_ticket_assigned"
 ADMIN_SUPPORT_TICKET_STATUS_CHANGED: Final = "admin.support_ticket_status_changed"
 ADMIN_SUPPORT_TICKET_PRIORITY_CHANGED: Final = "admin.support_ticket_priority_changed"
@@ -139,6 +142,7 @@ ADMIN_FOUNDATION_ALIAS_DECIDED: Final = "admin.foundation_alias_decided"
 ADMIN_FOUNDATION_ALIAS_REVOKED: Final = "admin.foundation_alias_revoked"
 
 ADMIN_EVENT_NAMES: Final[frozenset[str]] = frozenset({
+    ADMIN_INVITATION_ISSUED, ADMIN_INVITATION_REVOKED,
     ADMIN_FOUNDATION_QUALIFICATION_DECIDED, ADMIN_FOUNDATION_QUALIFICATION_REVOKED, ADMIN_FOUNDATION_ALIAS_DECIDED, ADMIN_FOUNDATION_ALIAS_REVOKED,
     ADMIN_ROLE_CHANGE_REQUESTED, ADMIN_ROLE_CHANGE_APPROVED, ADMIN_ROLE_CHANGE_REJECTED, ADMIN_ROLE_CHANGE_CANCELLED, ADMIN_ROLE_CHANGE_STALE,
     ADMIN_STEP_UP_SUCCEEDED, ADMIN_STEP_UP_FAILED, ADMIN_AUDIT_EXPORTED, SECURITY_INCIDENT_CREATED, SECURITY_INCIDENT_UPDATED,

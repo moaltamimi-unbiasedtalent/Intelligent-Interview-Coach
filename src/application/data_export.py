@@ -32,6 +32,7 @@ INCLUDED = (
     "an index of your preparation-chat runs (identifiers and status only)",
     "simulated (mock) billing records linked to your account, if any (no live payments are processed)",
     "metadata of your own AI usage (workflow, model, token counts and cost where known; never prompts or answers)",
+    "when the private-beta invitation you registered with was redeemed (never the code)",
 )
 NOT_INCLUDED = (
     "the original uploaded files (download them from Documents)",
@@ -125,6 +126,11 @@ def build_candidate_export(*, user_id: int, session_factory, repo, account: Any)
                              "cost_usd": None if f.cost_usd_micros is None else f.cost_usd_micros / 1_000_000, "cost_source": f.cost_source,
                              "occurred_at": _jsonable(f.occurred_at)}
                             for f in s3.scalars(select(P.AIUsageFact).where(P.AIUsageFact.user_id == user_id).order_by(P.AIUsageFact.id)).all()]
+    from src.invitations.repository import redeemed_at_for_user
+
+    with session_factory() as s4:
+        redeemed = redeemed_at_for_user(s4, user_id)
+    data["registration_invitation"] = {"redeemed_at": _jsonable(redeemed)} if redeemed else None     # 04E: the timestamp only; no code, hash or issuer
     from src.billing.service import BillingService
 
     data["billing_mock"] = BillingService(session_factory).export_for_user(user_id)

@@ -753,6 +753,13 @@ def get_oidc_provider(request: Request):
     )
 
 
+def get_invitation_repository(repo=Depends(get_repository)):
+    """04E: the invitation repository over the injected repository's session factory (override-friendly like the auth service)."""
+    from src.invitations.repository import InvitationRepository
+
+    return InvitationRepository(repo.session_factory)
+
+
 def get_auth_service(
     request: Request,
     repo=Depends(get_repository),

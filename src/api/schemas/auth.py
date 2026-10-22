@@ -31,6 +31,8 @@ class RegisterRequest(BaseModel):
     display_name: str | None = Field(default=None, max_length=120)
     # Optional interface language for transactional email (bounded allow-list; an unsupported value is rejected 422).
     locale: AppLocale | None = None
+    # 04E: the private-beta invitation code. Required (server-decided) in hosted environments; ignored where the requirement is off. Bounded; never echoed.
+    invitation_code: str | None = Field(default=None, max_length=128)
 
 
 class LoginRequest(BaseModel):
