@@ -32,6 +32,8 @@ class CareerChatRequest:
     # Mo conversation language (bounded allow-list code, P10B-W9.7A): owns Mo's prose + deterministic
     # fallback text. NOT the interface language and never the labour-market geography.
     conversation_language: str | None = None
+    # 02D: the Candidate's selected career geography (account default; NEVER derived from a language). Selects the market the source-approval filter applies to.
+    market: str | None = None
 
 
 @dataclass
@@ -50,6 +52,7 @@ class KnowledgeSearchRequest:
     job_description: str | None = None
     candidate_background: str | None = None
     retrieval_mode: str | None = None
+    market: str | None = None       # 02D: selected career geography (never a language)
 
 
 @dataclass

@@ -325,6 +325,7 @@ class CareerIntelligenceService:
         model: str | None = None,
         progress=None,
         conversation_language: str | None = None,
+        market: str | None = None,
     ) -> OrchestrationResult:
         # Stages 1–8 (validation → routing → hybrid + structured retrieval →
         # evidence assembly) are the SHARED evidence-retrieval layer, reused by the
@@ -335,6 +336,7 @@ class CareerIntelligenceService:
             job_description=job_description,
             candidate_background=candidate_background,
             progress=progress,
+            market=market,
         )
         trace = bundle.trace
 
@@ -450,6 +452,7 @@ class CareerIntelligenceService:
         job_description: str | None = None,
         candidate_background: str | None = None,
         progress=None,
+        market: str | None = None,
     ) -> KnowledgeRetrievalResult:
         """Run ONLY the deterministic evidence-retrieval layer and return typed
         evidence + citations — no Career tools, no final answer synthesis.
@@ -470,6 +473,7 @@ class CareerIntelligenceService:
             job_description=job_description,
             candidate_background=candidate_background,
             progress=progress,
+            market=market,
         )
         trace = bundle.trace
         if bundle.blocked:
@@ -526,6 +530,7 @@ class CareerIntelligenceService:
         job_description: str | None,
         candidate_background: str | None,
         progress,
+        market: str | None = None,
     ) -> _EvidenceBundle:
         """Shared retrieval stages for both ``answer`` and ``retrieve_evidence``.
 
@@ -656,6 +661,22 @@ class CareerIntelligenceService:
         )
         bundle.structured_evidence = structured_evidence
         bundle.coverage_notes = coverage_notes
+
+        # 02D: an unqualified source is not retrievable. ONE filter over BOTH channels (narrative chunks incl. Admin-governed, and structured evidence) against the
+        # committed approval register for the Candidate's market (selected geography, else the country the question names; never the language). Hosted: dropped,
+        # fail closed; development: labelled. Dropped items are not replaced.
+        from src.copilot.knowledge import approval_filter
+
+        results, structured_evidence, approval = approval_filter.apply(
+            results, structured_evidence, selected_market=market, detected_country=trace.detected_country)
+        bundle.results = results
+        bundle.structured_evidence = structured_evidence
+        trace.context_count = len(results)
+        if approval_note := approval.note():
+            trace.notes.append(approval_note)
+            bundle.coverage_notes = list(coverage_notes) + [approval_note]
+        if approval.dropped_count and not results and trace.rag_used:
+            trace.rag_used = False
 
         clarify_msg = getattr(self, "_clarify_message", None)
         self._clarify_message = None
