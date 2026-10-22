@@ -19,19 +19,12 @@ from src.api.dependencies import (
     get_history_access_policy,
     get_pause_service,
     get_repository,
-    get_sharing_service,
-    get_stories_service,
 )
 from src.api.schemas.documents import (
     ClaimReviewRequest,
     DeleteResponse,
     DocumentDetail,
     DocumentListResponse,
-    StoryCreateRequest,
-    StoryDraftRequest,
-    StoryListResponse,
-    StoryOut,
-    StoryUpdateRequest,
 )
 from src.application.report_export import build_json_export, build_markdown_export
 from src.documents.validation import MAX_FILE_BYTES
@@ -183,59 +176,6 @@ def delete_document(document_id: int = Path(...), svc=Depends(get_documents_serv
     # survives without pointing at inaccessible content (Postgres also SET NULLs via the FK).
     from src.opportunity_repository import OpportunityRepository
     OpportunityRepository(repo.session_factory).clear_jd_links(document_id)
-    return DeleteResponse(deleted=True)
-
-
-# --- story / evidence bank ---------------------------------------------------
-
-stories_router = APIRouter(prefix="/stories", tags=["documents"])
-
-
-@stories_router.get("", response_model=StoryListResponse, summary="List the caller's stories")
-def list_stories(svc=Depends(get_stories_service), user_id: int = Depends(get_current_user_id)) -> StoryListResponse:
-    return StoryListResponse(stories=svc.list(user_id))
-
-
-@stories_router.post("", response_model=StoryOut, status_code=201, summary="Create a story")
-def create_story(body: StoryCreateRequest, svc=Depends(get_stories_service), user_id: int = Depends(get_current_user_id)) -> StoryOut:
-    story = svc.create(
-        user_id=user_id, title=body.title, status=body.status,
-        fields={"situation": body.situation, "task": body.task, "action": body.action,
-                "result": body.result, "competencies": body.competencies},
-        claim_ids=body.claim_ids,
-    )
-    return StoryOut(**story)
-
-
-@stories_router.post("/draft", response_model=StoryOut, status_code=201, summary="Draft a source-backed story from owned claims")
-def draft_story(body: StoryDraftRequest, svc=Depends(get_stories_service), user_id: int = Depends(get_current_user_id)) -> StoryOut:
-    story = svc.draft_from_claims(user_id=user_id, title=body.title, claim_ids=body.claim_ids)
-    return StoryOut(**story)
-
-
-@stories_router.get("/{story_id}", response_model=StoryOut, summary="Get one story")
-def get_story(story_id: int = Path(...), svc=Depends(get_stories_service), user_id: int = Depends(get_current_user_id)) -> StoryOut:
-    story = svc.get(user_id=user_id, story_id=story_id)
-    if story is None:
-        raise HTTPException(status_code=404, detail="Story not found.")
-    return StoryOut(**story)
-
-
-@stories_router.patch("/{story_id}", response_model=StoryOut, summary="Edit a story (marks source-backed as user-corrected)")
-def update_story(body: StoryUpdateRequest, story_id: int = Path(...), svc=Depends(get_stories_service), user_id: int = Depends(get_current_user_id)) -> StoryOut:
-    story = svc.update(user_id=user_id, story_id=story_id, fields=body.model_dump(exclude_none=True))
-    if story is None:
-        raise HTTPException(status_code=404, detail="Story not found.")
-    return StoryOut(**story)
-
-
-@stories_router.delete("/{story_id}", response_model=DeleteResponse, summary="Delete a story")
-def delete_story(story_id: int = Path(...), svc=Depends(get_stories_service),
-                 sharing=Depends(get_sharing_service), user_id: int = Depends(get_current_user_id)) -> DeleteResponse:
-    if not svc.delete(user_id=user_id, story_id=story_id):
-        raise HTTPException(status_code=404, detail="Story not found.")
-    # A deleted source must not leave an active-looking grant (ids can be reused on SQLite).
-    sharing.invalidate_on_delete(owner_user_id=user_id, resource_type="story", resource_id=str(story_id))
     return DeleteResponse(deleted=True)
 
 

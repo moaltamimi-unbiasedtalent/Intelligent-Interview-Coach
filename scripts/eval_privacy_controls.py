@@ -38,6 +38,14 @@ PRIVACY_TABLES = frozenset({
 })
 
 
+# Reviewed, narrow exceptions (04A): a migration whose file name ends with the key may touch EXACTLY the listed privacy tables and no other (anything else it
+# touches, or any other migration touching any privacy table, still fails). Keyed by the stable name suffix, not by number, because migrations are re-chained
+# (renumbered) at merge. 04A: archive, Opportunity link, self-confirmation, answer evidence and use attribution for stories (additive, fail-closed downgrade).
+REVIEWED_PRIVACY_MIGRATIONS: dict[str, frozenset[str]] = {
+    "_story_bank_completion.py": frozenset({"candidate_stories", "answers", "opportunities", "users"}),
+}
+
+
 def migration_tables_touched(source: str, known_tables: set[str]) -> set[str]:
     """Known table names referenced by a migration's CODE (string literals only; the docstring and comments are ignored)."""
     import ast
@@ -62,6 +70,9 @@ def post_baseline_privacy_touches(versions_dir: Path, known_tables: set[str], ba
         if number <= baseline:
             continue
         hit = migration_tables_touched(path.read_text(encoding="utf-8"), known_tables) & privacy_tables
+        for suffix, allowed in REVIEWED_PRIVACY_MIGRATIONS.items():
+            if path.name.endswith(suffix):
+                hit = hit - allowed
         if hit:
             offenders[path.name] = sorted(hit)
     return offenders

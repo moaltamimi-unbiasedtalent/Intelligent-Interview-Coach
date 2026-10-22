@@ -188,6 +188,8 @@ class AccountDeletionService:
             story_ids = [r[0] for r in s.execute(
                 select(P.CandidateStory.id).where(P.CandidateStory.user_id == user_id)).all()]
             if story_ids:
+                self._delete_where(s, P.StoryUse, P.StoryUse.story_id.in_(story_ids), summary, "story_uses")
+                self._delete_where(s, P.StoryAnswerLink, P.StoryAnswerLink.story_id.in_(story_ids), summary, "story_answer_links")
                 self._delete_where(s, P.StoryEvidence,
                                    P.StoryEvidence.story_id.in_(story_ids), summary,
                                    "story_evidence")

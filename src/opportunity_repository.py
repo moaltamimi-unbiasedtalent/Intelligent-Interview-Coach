@@ -14,7 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.opportunity import ARCHIVED_STATUS, DEFAULT_STATUS
-from src.persistence import CandidateDocument, Interview, InterviewSession, Opportunity, PreparationPack
+from src.persistence import CandidateDocument, CandidateStory, Interview, InterviewSession, Opportunity, PreparationPack
 
 __all__ = ["OpportunityRepository"]
 
@@ -124,7 +124,7 @@ class OpportunityRepository:
                 return False
             # Keep history but unlink it explicitly: SQLite has no FK SET NULL for the ALTER-added column,
             # and a dangling id could later be re-used by a new Opportunity (P10B-W9.8).
-            for model in (Interview, InterviewSession, PreparationPack):       # a Pack is an independent artifact: unlinked, never deleted
+            for model in (Interview, InterviewSession, PreparationPack, CandidateStory):       # 04A: stories keep existing, only unlinked; a Pack is an independent artifact: unlinked, never deleted
                 for row in session.execute(
                     select(model).where(model.opportunity_id == opportunity_id, model.user_id == user_id)
                 ).scalars().all():

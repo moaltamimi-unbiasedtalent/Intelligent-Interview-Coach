@@ -58,6 +58,7 @@ from src.api.routes import (
     knowledge,
     memory,
     model_profiles,
+    stories,
     usage_quotas,
     progress_analytics,
     preparation_packs,
@@ -176,7 +177,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
     app.include_router(workspaces.shares_router, prefix=API_PREFIX)
     # Documents phase (P4) registers three routers under the same prefix.
     app.include_router(documents.router, prefix=API_PREFIX)
-    app.include_router(documents.stories_router, prefix=API_PREFIX)
+    app.include_router(stories.router, prefix=API_PREFIX)
     app.include_router(documents.export_router, prefix=API_PREFIX)
     app.include_router(preparation_packs.artifact_router, prefix=API_PREFIX)
     return app
