@@ -55,7 +55,8 @@ def backend_stats(code: str) -> dict:
     def has(table) -> int:
         return 1 if code in table else 0
 
-    mo_tables = ("SECTION_HEADINGS", "INSUFFICIENT", "FALLBACK", "COMPENSATION_GUIDANCE", "UNVERIFIED_GENERAL", "UNRETRIEVED_LIMITATION")
+    mo_tables = ("SECTION_HEADINGS", "INSUFFICIENT", "FALLBACK", "COMPENSATION_GUIDANCE", "UNVERIFIED_GENERAL", "UNRETRIEVED_LIMITATION",
+                 "IRRELEVANT_SOURCES", "SOURCE_LANGUAGE_NOTICE")
     mo_present = sum(has(getattr(loc, t)) for t in mo_tables)
     mail_kinds = mail._T.get(code, {})
     return {

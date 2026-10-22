@@ -32,6 +32,7 @@ from src.copilot.models import (
 from src.copilot.rag.responder import Responder
 from src.copilot.rag.routing import route_for_intent
 from src.copilot.rag import localized
+from src.copilot.rag.attribution import apply_source_language_notices, check_citations, sources_from_citations
 from src.copilot.rag.synthesis import build_evidence_messages
 from src.copilot.rag.translation import QueryTranslator
 from src.copilot.retrieval.fusion import reciprocal_rank_fusion
@@ -426,6 +427,15 @@ class CareerIntelligenceService:
         # 10) Citations map to referenced, real evidence (structured or narrative).
         referenced = {f"[{n}]" for n in _MARKER_RE.findall(answer_text)}
         cited = [c for c in citations if c.marker in referenced]
+
+        # 06D (LG-06): every citation maps to a real retrieved source, and a cited source in another language than the conversation is announced as
+        # such (language stated, the report is a translation, the original wording quoted unchanged). The answer text itself is never rewritten.
+        retrieved_sources = sources_from_citations(citations, {c.marker: e.text for c, e in zip(citations, bundle.evidence)})
+        attribution_issues = check_citations(answer_text, cited, retrieved_sources)
+        answer_text, attribution = apply_source_language_notices(answer_text, retrieved_sources, conversation_language=conversation_language)
+        attribution_issues = list(dict.fromkeys(attribution_issues + attribution.issues))
+        if attribution_issues:
+            trace.output_findings = list(trace.output_findings or []) + [f"citation attribution: {i}" for i in attribution_issues]
 
         response = ChatResponse(
             answer=answer_text,

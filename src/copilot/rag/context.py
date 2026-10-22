@@ -91,6 +91,8 @@ def build_context(
                 source=result.source,
                 source_url=_source_url(result),
                 page=result.page,
+                language=(result.metadata or {}).get("language") or None,
+                version=(result.metadata or {}).get("source_version") or None,
             )
         )
     bundle.context_text = bundle.context_text.strip()

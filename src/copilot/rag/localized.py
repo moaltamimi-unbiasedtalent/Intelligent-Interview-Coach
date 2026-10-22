@@ -18,7 +18,9 @@ from src.locales import LANGUAGE_NAMES, SUPPORTED_LOCALE_CODES
 
 __all__ = ["resolve_language", "section_headings", "insufficient_message", "fallback_strings",
            "language_directive", "SECTION_HEADINGS", "INSUFFICIENT", "FALLBACK", "compensation_guidance", "unverified_general_notice",
-           "COMPENSATION_GUIDANCE", "UNVERIFIED_GENERAL", "UNRETRIEVED_LIMITATION", "unretrieved_limitation"]
+           "COMPENSATION_GUIDANCE", "UNVERIFIED_GENERAL", "UNRETRIEVED_LIMITATION", "unretrieved_limitation",
+           "IRRELEVANT_SOURCES", "SOURCE_LANGUAGE_NOTICE", "LANGUAGE_ENDONYMS", "irrelevant_sources_note", "abstention_message", "language_endonym",
+           "source_language_notice"]
 
 # (evidence heading, tool-results heading, recommendation heading)
 SECTION_HEADINGS: dict[str, tuple[str, str, str]] = {
@@ -104,6 +106,42 @@ UNRETRIEVED_LIMITATION: dict[str, str] = {
 assert set(SECTION_HEADINGS) == set(INSUFFICIENT) == set(FALLBACK) == set(UNRETRIEVED_LIMITATION) == set(COMPENSATION_GUIDANCE) == set(UNVERIFIED_GENERAL) == set(SUPPORTED_LOCALE_CODES), (
     "localized Career-chat text must cover exactly the supported locales")
 
+# 06D (LG-06): the abstention made specific. The existing INSUFFICIENT sentence stays the OPENING of an abstention (the grounding policy and the output
+# checks recognise it by that opening); this sentence is appended when sources WERE found but none cleared the relevance floor, so the candidate is told
+# why nothing is cited. Mo-voiced, so it follows the Mo conversation language. Engineering translations, NOT natively reviewed.
+IRRELEVANT_SOURCES: dict[str, str] = {
+    "en": "The sources I found are not relevant to your question, so I am not citing any of them.",
+    "de": "Die gefundenen Quellen sind für deine Frage nicht relevant, daher zitiere ich keine davon.",
+    "fr": "Les sources trouvées ne sont pas pertinentes pour votre question ; je n’en cite donc aucune.",
+    "es": "Las fuentes que encontré no son relevantes para tu pregunta, así que no cito ninguna.",
+    "it": "Le fonti trovate non sono pertinenti alla tua domanda, quindi non ne cito nessuna.",
+    "pt": "As fontes que encontrei não são relevantes para a tua pergunta, por isso não cito nenhuma.",
+    "nl": "De gevonden bronnen zijn niet relevant voor je vraag, dus ik citeer er geen enkele.",
+    "ru": "Найденные источники не относятся к вашему вопросу, поэтому я не ссылаюсь ни на один из них.",
+}
+
+# 06D (LG-06): a source written in another language than the conversation. Mo never presents what such a source says as if it said it in the candidate's
+# language: the notice states the source language and that what is reported is a translation, and quotes the original wording UNCHANGED ({quote} is a
+# verbatim excerpt of the retrieved passage, never a translation). {source_language} is the source language's own name (endonym, see LANGUAGE_ENDONYMS).
+SOURCE_LANGUAGE_NOTICE: dict[str, str] = {
+    "en": "Source {marker} is written in {source_language}, so what is said here from it is a translation, not the source's own wording. Original wording: \"{quote}\"",
+    "de": "Quelle {marker} ist auf {source_language} verfasst; was hier daraus wiedergegeben wird, ist eine Übersetzung und nicht der Wortlaut der Quelle. Originalwortlaut: \"{quote}\"",
+    "fr": "La source {marker} est rédigée en {source_language} ; ce qui en est rapporté ici est une traduction et non la formulation de la source. Formulation d’origine : \"{quote}\"",
+    "es": "La fuente {marker} está redactada en {source_language}; lo que se indica aquí a partir de ella es una traducción y no la formulación de la propia fuente. Texto original: \"{quote}\"",
+    "it": "La fonte {marker} è scritta in {source_language}; ciò che qui ne viene riportato è una traduzione e non la formulazione della fonte. Testo originale: \"{quote}\"",
+    "pt": "A fonte {marker} está redigida em {source_language}; o que aqui se refere a partir dela é uma tradução e não a formulação da própria fonte. Texto original: \"{quote}\"",
+    "nl": "Bron {marker} is geschreven in {source_language}; wat hier daaruit wordt weergegeven is een vertaling en niet de eigen formulering van de bron. Oorspronkelijke tekst: \"{quote}\"",
+    "ru": "Источник {marker} написан на языке {source_language}; то, что здесь из него передано, является переводом, а не формулировкой самого источника. Оригинальный текст: \"{quote}\"",
+}
+
+# Language names in their own language (endonyms): unambiguous inside a sentence of any other language.
+LANGUAGE_ENDONYMS: dict[str, str] = {
+    "en": "English", "de": "Deutsch", "fr": "français", "es": "español", "it": "italiano", "pt": "português", "nl": "Nederlands", "ru": "русский",
+}
+
+assert set(IRRELEVANT_SOURCES) == set(SOURCE_LANGUAGE_NOTICE) == set(LANGUAGE_ENDONYMS) == set(SUPPORTED_LOCALE_CODES), (
+    "06D localized text must cover exactly the supported locales")
+
 
 def resolve_language(code: str | None) -> str:
     """Allow-list a conversation-language code; anything unknown/blank is English (the default)."""
@@ -117,6 +155,28 @@ def section_headings(code: str | None) -> tuple[str, str, str]:
 
 def insufficient_message(code: str | None) -> str:
     return INSUFFICIENT[resolve_language(code)]
+
+
+def irrelevant_sources_note(code: str | None) -> str:
+    return IRRELEVANT_SOURCES[resolve_language(code)]
+
+
+def abstention_message(code: str | None, *, sources_found: bool = False) -> str:
+    """The abstention sentence in the Mo conversation language. It always OPENS with the standard insufficient-evidence sentence; when sources were
+    retrieved but all fell at or below the relevance floor the specific note follows (no citation is offered either way)."""
+    base = insufficient_message(code)
+    return f"{base} {irrelevant_sources_note(code)}" if sources_found else base
+
+
+def language_endonym(code: str | None) -> str | None:
+    """The language's own name, or ``None`` for a code outside the supported set (an unknown language is never named)."""
+    c = (code or "").strip().lower().split("-")[0]
+    return LANGUAGE_ENDONYMS.get(c)
+
+
+def source_language_notice(code: str | None, *, marker: str, source_language: str, quote: str) -> str:
+    """The translation notice in the Mo conversation language. ``quote`` must be the source's own words, passed through unchanged."""
+    return SOURCE_LANGUAGE_NOTICE[resolve_language(code)].format(marker=marker, source_language=language_endonym(source_language) or source_language, quote=quote)
 
 
 def compensation_guidance(code: str | None) -> str:
