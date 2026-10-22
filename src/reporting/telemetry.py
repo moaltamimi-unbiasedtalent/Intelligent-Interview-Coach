@@ -229,6 +229,9 @@ class OperationalTelemetryMiddleware(BaseHTTPMiddleware):
                 route = request.scope.get("route")
                 label = route_label(request.method, getattr(route, "path", None))
                 if label is not None and _sf is not None:
-                    record_event("request", label[0], label[1], outcome_for_status(status), duration_ms=int((_time.perf_counter() - started) * 1000))
+                    # 07A: record_event is a synchronous database write; in this async middleware it ran on the event loop once per candidate request. It is now offloaded.
+                    from starlette.concurrency import run_in_threadpool
+
+                    await run_in_threadpool(record_event, "request", label[0], label[1], outcome_for_status(status), duration_ms=int((_time.perf_counter() - started) * 1000))
             except Exception:  # noqa: BLE001
                 pass
