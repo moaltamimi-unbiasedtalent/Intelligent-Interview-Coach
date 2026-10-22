@@ -31,7 +31,19 @@ Branch `feat/02b-embedding-integrity`, created from `origin/main` (f9a06a9, migr
 Commands (worktree root; `.venv` = repo venv through a directory symlink because of path quoting, `/tmp/ci_venv` = fresh-dependency canary):
 `pytest tests/test_embedding_integrity_02b.py tests/test_index_manifest_02b.py tests/test_embedding_guard_alerts_02b.py tests/test_multilingual_benchmark_02b.py -p no:cacheprovider`, `ruff check .`, `python scripts/ci_test_shards.py verify --shards 4`, every `scripts/eval_*.py` CI runs plus `check_product_coverage_baseline.py`, `pytest tests -n 3 --dist loadfile -q -p no:cacheprovider`, frontend `npx tsc --noEmit`, `npm run lint`, `npx vitest run`, `E2E_PORT=3102 npx playwright test e2e/admin-knowledge-identity.spec.ts`.
 
-RESULTS_PLACEHOLDER
+| Check | Result |
+|---|---|
+| New 02B suites (integrity 20, manifest 32, guard/alerts/rebuild 18, benchmark 21) | 91 passed under `/tmp/ci_venv`; the same four files plus the 02A, W10.8, W12.4A, contract and OpenAPI suites: 338 passed, 1 failed under the repo `.venv` (the stale-ref 02A test below) |
+| Full `pytest tests -n 3 --dist loadfile` under `/tmp/ci_venv` (`-o addopts=""` so the count prints) | 5609 passed, 43 skipped, 1 failed: `test_knowledge_persistence_02a_identity.py::test_no_forbidden_files_were_touched_and_no_migration_in_part_one` (PRE-EXISTING, see risks; it fails on current `main` before any 02B change) |
+| An earlier full run on the same tree | 3 failed: the same test, `test_no_raw_vector_browser_or_unbounded_content_routes` (a tripwire on the word `vector` in the readiness schema: fixed by renaming the manifest field to `metric`) and `test_global_eval_p10cg::test_runs_are_deterministic...` (passes alone and in the final full run; the same concurrency artefact 02A recorded) |
+| `ruff check .` | pass |
+| `python scripts/ci_test_shards.py verify --shards 4` | OK: 284 test files, each in exactly one of 4 shards |
+| Every `scripts/eval_*.py` listed in CI (46) plus `gen_product_coverage_cases.py` and `check_product_coverage_baseline.py`, run once under `/tmp/ci_venv` after the last code change | all exit 0 (one evaluator, `eval_admin_knowledge.py`, first failed on the field name `embedding`; renamed and re-run: PASS) |
+| Frontend `npx tsc --noEmit`, `npm run lint`, `npx vitest run` | clean; 114 files, 1137 tests passed (2 new) |
+| Playwright `E2E_PORT=3102 npx playwright test e2e/admin-knowledge-identity.spec.ts` | 3 passed |
+| Benchmark determinism | two consecutive runs byte-identical (tested); committed result generated with `scripts/eval_multilingual_retrieval.py --write` |
+
+The repo `.venv` run ends with a Chroma native `recursive_mutex` abort at interpreter exit after the summary (the known 02A finding); it does not affect results.
 
 ## Local benchmark result (local embedder, NOT production quality evidence)
 Vector / BM25 / RRF on the hash embedder, n=49 questions per slice: same-language recall@1 0.59 / 0.82 / 0.76, MRR 0.76 / 0.87 / 0.85; cross-language recall@5 0.18 / 0.14 / 0.19, MRR 0.42 / 0.48 / 0.45. The hash embedder is lexical (ASCII tokens), so cross-language retrieval is near chance: the harness exists to measure a semantic embedder against this floor once OD-BUDGET is approved. Nothing here says semantic retrieval passed.
@@ -55,4 +67,4 @@ Vector / BM25 / RRF on the hash embedder, n=49 questions per slice: same-languag
 - Native review of the seven-language benchmark text (06F); cross-language attribution (06D).
 
 ## Throughput
-Start 2026-10-22 01:23 CEST; first push: THROUGHPUT_PUSH; rework rounds: 2 (hosted-harness stand-in embedder after the first 02A suite run; readiness schema extras and one evaluator regex tripped by a field name `embedding`, renamed); CI: not available until a PR exists. SHA: SHA_PLACEHOLDER.
+Start 2026-10-22 01:23 CEST; first push: 2026-10-22 01:58 CEST; rework rounds: 2 (hosted-harness stand-in embedder after the first 02A suite run; readiness schema extras and one evaluator regex tripped by a field name `embedding`, renamed); CI: not available until a PR exists. SHA: code at `f3c582e` (the evidence commit that follows adds only this file's final numbers; the pushed head is reported in the final message).
