@@ -62,9 +62,9 @@ def resolved(*records, mode=ka.MODE_ENFORCED, tiers=TIERS):
 
 @pytest.fixture(autouse=True)
 def _clean_seam():
-    ka.reset_for_tests()
+    ka.clear_synthetic_register()
     yield
-    ka.reset_for_tests()
+    ka.clear_synthetic_register()
 
 
 @pytest.fixture
@@ -233,7 +233,7 @@ def test_us_general_information_mechanism_is_labelled_when_the_owner_decides(mon
 def test_test_seam_refuses_outside_pytest(monkeypatch):
     monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
     with pytest.raises(RuntimeError):
-        ka.install_test_records(register())
+        ka.install_synthetic_register(register())
 
 
 def test_production_code_never_uses_the_test_seam():
@@ -241,7 +241,7 @@ def test_production_code_never_uses_the_test_seam():
         if p.name == "knowledge_approval.py":
             continue
         text = p.read_text(encoding="utf-8")
-        assert not re.search(r"knowledge_approval[^\n]*install_test_records|ka\.install_test_records", text), p
+        assert not re.search(r"knowledge_approval[^\n]*install_synthetic_register|ka\.install_synthetic_register", text), p
 
 
 # ---------------------------------------------------------------- consistency check against the manifests
@@ -374,7 +374,7 @@ def test_phase_00_finding_closed_in_hosted_mode_nothing_is_retrievable_with_an_e
 
 
 def test_hosted_bls_ooh_passage_is_not_retrievable_even_with_a_us_record_for_a_uk_candidate(hosted):
-    ka.install_test_records(register(record("bls_ooh", "US", features=["role_definition"]), record("bls_oews", "US")))
+    ka.install_synthetic_register(register(record("bls_ooh", "US", features=["role_definition"]), record("bls_oews", "US")))
     uk = _svc().retrieve_evidence("What is the outlook for a nurse role?", market="UK")
     assert not ({"bls_ooh", "bls_oews"} & _sources(uk))                           # cross-market isolation (and OD-US-CONTENT undecided)
     us = _svc().retrieve_evidence("What is the outlook for a nurse role?", market="US")
@@ -383,13 +383,13 @@ def test_hosted_bls_ooh_passage_is_not_retrievable_even_with_a_us_record_for_a_u
 
 
 def test_hosted_us_record_for_a_non_us_market_does_not_enable_us_content(hosted):
-    ka.install_test_records(register(record("bls_ooh", "DE", features=["role_definition"]), record("bls_oews", "DE")))
+    ka.install_synthetic_register(register(record("bls_ooh", "DE", features=["role_definition"]), record("bls_oews", "DE")))
     de = _svc().retrieve_evidence("What is the outlook for a nurse role?", market="DE")
     assert not ({"bls_ooh", "bls_oews"} & _sources(de))
 
 
 def test_hosted_only_the_approved_pair_is_served_and_unidentified_sources_are_dropped(hosted):
-    ka.install_test_records(register(record("eurostat_earnings", "DE"), record("governed:src-77", "DE", features=["role_definition"])))
+    ka.install_synthetic_register(register(record("eurostat_earnings", "DE"), record("governed:src-77", "DE", features=["role_definition"])))
     de = _svc().retrieve_evidence("What is the outlook for a nurse role?", market="DE")
     assert _sources(de) == {"eurostat_earnings", "governed:src-77"}                # anonymous chunk (no source identity) is dropped, ons_ashe/US not enabled
     fr = _svc().retrieve_evidence("What is the outlook for a nurse role?", market="FR")
@@ -397,7 +397,7 @@ def test_hosted_only_the_approved_pair_is_served_and_unidentified_sources_are_dr
 
 
 def test_market_falls_back_to_the_country_the_question_names_and_never_to_a_language(hosted):
-    ka.install_test_records(register(record("eurostat_earnings", "DE"), record("governed:src-77", "DE", features=["role_definition"])))
+    ka.install_synthetic_register(register(record("eurostat_earnings", "DE"), record("governed:src-77", "DE", features=["role_definition"])))
     named = _svc().retrieve_evidence("What is the outlook for a nurse role in Germany?")
     assert _sources(named) >= {"eurostat_earnings"}
     unnamed = _svc().retrieve_evidence("Was ist die Aussicht fuer eine Pflegekraft?")      # German words, no country, no selected market

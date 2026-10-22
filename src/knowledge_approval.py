@@ -295,32 +295,32 @@ def manifest_tiers() -> dict[str, int] | None:
 
 # ---- runtime accessor and the test-only seam ----------------------------------------------------------------------------------------------------------
 _cache: dict[str, Any] = {}
-_test_records: dict[str, Any] | None = None
+_synthetic_register: dict[str, Any] | None = None
 
 
 def current(*, today: date | None = None) -> Register:
     mode = approval_mode()
     tiers = manifest_tiers()
-    if _test_records is not None:
-        return resolve(_test_records, mode, today=today, manifest_tiers=tiers)
+    if _synthetic_register is not None:
+        return resolve(_synthetic_register, mode, today=today, manifest_tiers=tiers)
     if "data" not in _cache:
         data, err = load_committed()
         _cache["data"], _cache["error"] = data, err
     return resolve(_cache["data"], mode, today=today, file_error=_cache["error"], manifest_tiers=tiers)
 
 
-def install_test_records(records: dict[str, Any] | None) -> None:
+def install_synthetic_register(records: dict[str, Any] | None) -> None:
     """TEST-ONLY seam: replace the committed register with a synthetic one (same validator, same resolver). Refuses outside a running pytest session."""
-    global _test_records
+    global _synthetic_register
     if "pytest" not in sys.modules or not os.environ.get("PYTEST_CURRENT_TEST"):
         raise RuntimeError("The synthetic approval seam is available only inside the test harness.")
-    _test_records = records
+    _synthetic_register = records
     _cache.clear()
 
 
-def reset_for_tests() -> None:
-    global _test_records
-    _test_records = None
+def clear_synthetic_register() -> None:
+    global _synthetic_register
+    _synthetic_register = None
     _cache.clear()
 
 
