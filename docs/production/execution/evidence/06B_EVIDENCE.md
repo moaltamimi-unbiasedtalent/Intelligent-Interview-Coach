@@ -49,7 +49,8 @@ No new data, route, permission or migration. Language never changes authorizatio
 | `.venv/bin/python -m pytest -p no:cacheprovider -q tests/test_language_journeys_06b.py` | 23 passed (real backend: Story Bank and Workspaces per language, isolation, consent, e-mail language, geography) |
 | `ruff check .`; `scripts/ci_test_shards.py verify --shards 4` | passed; 301 files each in one shard |
 | all `scripts/eval_*.py` that CI runs (45, incl. the four with `--json` paths) and `eval_locale_inventory.py --check` | all PASS; audit table current |
-| Full backend suite (repo venv and fresh-dependency canary) | see section 7 |
+| Full backend suite, fresh-dependency canary (`~/.cache/ask4mo/ci_venv`, `-n 3 --dist loadfile`) | about 6,304 passed (dot count), 0 failed, about 45 skipped |
+| Full backend suite, repo venv | all passed except `tests/test_test_isolation.py::test_identity_evaluator_never_touches_the_developer_database_or_a_caller_supplied_one`: its evaluator subprocess aborts with a libc++ `recursive_mutex lock failed` in the repo venv (fails alone too); the same test passes in the canary. No file it exercises is touched by 06B; not verified against origin/main in the repo venv |
 
 The detector for English leaks was checked to catch a deliberate leak (an English page asserted as German fails). The date/number test fails on the pre-fix code (verified by reverting HistoryClient and PracticeProgress).
 
