@@ -32,6 +32,7 @@ from src.api.routes import (
     admin_ai,
     admin_billing,
     admin_billing_ops,
+    admin_command_center,
     billing_candidate,
     billing_webhooks,
     admin_config,
@@ -170,7 +171,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
 
     # Infra liveness alias (unversioned) + versioned API surface.
     app.include_router(health.router, prefix="/api")
-    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, model_profiles, usage_quotas, progress_analytics, preparation_packs, feedback, progress, auth, reviewer, voice, speech, workspaces, admin, admin_ai, admin_billing, admin_billing_ops, admin_config, admin_speech, admin_integrations, admin_reports, admin_security, admin_jobs, admin_knowledge, admin_legal, admin_privacy, admin_plans, admin_support, company, opportunity, privacy, support, billing_candidate, billing_webhooks):
+    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, model_profiles, usage_quotas, progress_analytics, preparation_packs, feedback, progress, auth, reviewer, voice, speech, workspaces, admin, admin_ai, admin_billing, admin_billing_ops, admin_command_center, admin_config, admin_speech, admin_integrations, admin_reports, admin_security, admin_jobs, admin_knowledge, admin_legal, admin_privacy, admin_plans, admin_support, company, opportunity, privacy, support, billing_candidate, billing_webhooks):
         app.include_router(module.router, prefix=API_PREFIX)
     # Workspaces registers a second router for explicit sharing under the same prefix.
     app.include_router(workspaces.shares_router, prefix=API_PREFIX)
