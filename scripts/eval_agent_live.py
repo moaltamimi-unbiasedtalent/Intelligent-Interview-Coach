@@ -103,6 +103,11 @@ def main(argv=None) -> int:
         print(f"Configuration OK: {len(cases)} cases, profile={args.profile}.")
         print("Re-run with --allow-paid to execute, or --evaluate-recorded to score saved traces.")
         return 0
+    from src.llm.budget.script_guard import guard_paid_script      # 05C: every paid path also needs the governed budget (approved marker, durable ledger, ceilings, kill switch)
+
+    refused = guard_paid_script("eval_agent_live", category="evaluation")
+    if refused is not None:
+        return refused
     return _run_live(args.profile, args.limit)
 
 

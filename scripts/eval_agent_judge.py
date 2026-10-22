@@ -117,6 +117,11 @@ def main(argv=None) -> int:
         print("  python scripts/eval_agent_live.py --allow-paid --record")
         return 1
 
+    from src.llm.budget.script_guard import guard_paid_script      # 05C: every paid path also needs the governed budget (approved marker, durable ledger, ceilings, kill switch)
+
+    refused = guard_paid_script("eval_agent_judge", category="evaluation")
+    if refused is not None:
+        return refused
     judge_fn = _build_judge_fn(args.profile)
     results = [judge_one(cases[t.case_id], t, judge_fn) for t in judgeable]
     summary = aggregate_judge(results)

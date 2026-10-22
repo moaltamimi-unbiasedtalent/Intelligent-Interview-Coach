@@ -83,6 +83,11 @@ def main(argv=None) -> int:
     if a.validate:
         return 0
     if a.live:
+        from src.llm.budget.script_guard import guard_paid_script      # 05C: every paid path also needs the governed budget (approved marker, durable ledger, ceilings, kill switch)
+
+        refused = guard_paid_script("eval_kb_model_quality", category="evaluation")
+        if refused is not None:
+            return refused
         from src.p10e import guard as G
         from src.p10e import live_runs as R
 
