@@ -86,7 +86,11 @@ never been started**; it must not be deployed until the owner answers OD-HOSTED 
 - **Readiness:** the api healthcheck calls `GET /api/v1/ready`; in hosted environments it also reports data-root
   writability (gating) and worker heartbeat and scanner reachability (reported), with no secrets.
 - **Backup:** `deploy/scripts/backup.sh` archives the database (`pg_dump`), `documents` and the knowledge data
-  root (`COPILOT_DATA_DIR`); `restore.sh` restores all three (`DB_DUMP`, `DOCS_TAR`, `KNOWLEDGE_TAR`).
+  root (`COPILOT_DATA_DIR`); `restore.sh` restores all three (`DB_DUMP`, `DOCS_TAR`, `KNOWLEDGE_TAR`). The checksummed backup
+  set (database, documents and governed knowledge as one unit, encryption at rest required in hosted environments), restore
+  drills, backup erasure after account deletion and the migration rollback rehearsal are `scripts/backup_set.py`,
+  `scripts/restore_drill.py` and `scripts/rollback_rehearsal.py` (package 05B; procedure in
+  `production/BACKUP_RESTORE_RUNBOOK.md`; no live staging drill has been run, OD-HOSTED).
 - **Embeddings:** production must not rely on the hash/local embedder (REVIEW-04 decides the provider).
 
 ## CI
