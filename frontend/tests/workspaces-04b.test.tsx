@@ -42,7 +42,7 @@ function detail(role: "workspace_owner" | "workspace_admin" | "workspace_member"
   return {
     id: 7, name: "Team Alpha", status: "active", owner_user_id: 1, member_count: 3, created_at: null, my_role: role, capabilities: caps,
     members: [
-      { user_id: 1, role: "workspace_owner", status: "active", joined_at: "2026-10-01T10:00:00Z", label: role === "workspace_owner" ? "Olive" : "o***@x.com", is_me: role === "workspace_owner", ...(manager || role === "workspace_owner" ? { email: "olive@x.com" } : {}) },
+      { user_id: 1, role: "workspace_owner", status: "active", joined_at: "2026-10-01T10:00:00Z", label: role === "workspace_owner" ? "Olive" : "o***@x.com", is_me: role === "workspace_owner", ...(manager ? { email: "olive@x.com" } : {}) },
       { user_id: 2, role: "workspace_member", status: "active", joined_at: "2026-10-02T10:00:00Z", label: role === "workspace_member" ? "Mia" : "m***@x.com", is_me: role === "workspace_member", ...(manager ? { email: "mia@x.com" } : {}) },
       { user_id: 3, role: "workspace_admin", status: "active", joined_at: "2026-10-03T10:00:00Z", label: role === "workspace_admin" ? "Adam" : "a***@x.com", is_me: role === "workspace_admin", ...(manager ? { email: "adam@x.com" } : {}) },
     ],

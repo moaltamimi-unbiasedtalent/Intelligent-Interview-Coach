@@ -250,5 +250,7 @@
 "tests/test_wave4_language_api.py": 1.9,
 "tests/test_wave4_practice_language.py": 0.0,
 "tests/test_webhooks_w12_4d_d.py": 11.4,
+"tests/test_workspaces_04b.py": 35.0,
+"tests/test_workspaces_04b_sharing.py": 20.0,
 "tests/test_workspaces_p6_5.py": 3.1
 }
