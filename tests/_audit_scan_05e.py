@@ -16,6 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 _BUILD_AUDIT_PARAMS = {"event_type", "actor_user_id", "request_id", "target_type", "target_id", "result"}
 # Writers that take the audit spec first and add the remaining keyword arguments to its context (extra safe fields).
 _STAGE_FUNCS = {"_stage", "_stage_audit"}
+# Service-level helpers ``_audit_event(event_type, actor_user_id, workspace_id, **context)``: every keyword is a context key.
+_HELPER_FUNCS = {"_audit_event"}
 
 
 def _fname(call: ast.Call) -> str:
@@ -60,6 +62,10 @@ def emitted_key_sources(paths=None) -> list[tuple[str, tuple[str, str]]]:
                             out.append((kw.arg, ("audit", rel)))
                         elif kw.arg is None:
                             continue                                       # **context: dynamic, covered at runtime
+                if name in _HELPER_FUNCS:
+                    for kw in call.keywords:
+                        if kw.arg:
+                            out.append((kw.arg, ("audit", rel)))
                 if name in _STAGE_FUNCS and len(call.args) >= 2:
                     for kw in call.keywords:
                         if kw.arg:

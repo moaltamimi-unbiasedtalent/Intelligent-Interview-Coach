@@ -64,10 +64,13 @@ ALLOWED_INCIDENT_META_KEYS: Final[frozenset[str]] = frozenset({"affected_service
 # The code-defined platform roles (``admin_permissions.ROLE_*``); a test pins this set to the real presets so it cannot drift.
 _PLATFORM_ROLES: Final = frozenset({"user", "platform_admin", "support_operator", "billing_admin", "knowledge_admin", "security_privacy_admin", "operations_admin"})
 
+# The code-defined workspace roles (``persistence.WORKSPACE_ROLES``): ``target_role`` is also the workspace role of a removed or re-roled member.
+_WORKSPACE_ROLES: Final = frozenset({"workspace_owner", "workspace_admin", "workspace_member"})
+
 # Keys that could otherwise carry free text: closed value sets. ``None`` is always allowed.
 VALUE_SPECS: Final[dict[str, frozenset[str]]] = {
     "display_name": frozenset({"set"}),                       # the value is the user's name: only the fact that it was set
-    "target_role": frozenset({"set"}) | _PLATFORM_ROLES,       # in preferences the value is user text: only "set"; in admin events a platform role
+    "target_role": frozenset({"set"}) | _PLATFORM_ROLES | _WORKSPACE_ROLES,       # in preferences the value is user text: only "set"; otherwise a platform or workspace role
     "document": frozenset({"terms", "privacy", "ai_transparency"}),
 }
 

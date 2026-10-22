@@ -191,8 +191,10 @@ def test_every_allowed_key_is_a_code_identifier_and_the_sets_are_consistent():
     assert AL.ALLOWED_INCIDENT_META_KEYS <= AL.ALLOWED_CONTEXT_KEYS | {"dropped_keys"}
 
 
-def test_the_role_value_spec_matches_the_real_role_presets():
-    assert AL.VALUE_SPECS["target_role"] == frozenset({"set"}) | set(perm.ROLE_PRESETS) | {perm.ROLE_CANDIDATE}
+def test_the_role_value_spec_matches_the_real_role_presets_and_workspace_roles():
+    from src.persistence import WORKSPACE_ROLES
+
+    assert AL.VALUE_SPECS["target_role"] == frozenset({"set"}) | set(perm.ROLE_PRESETS) | {perm.ROLE_CANDIDATE} | set(WORKSPACE_ROLES)
 
 
 # Keys whose NAME suggests free text or personal data. Each is allow-listed only with a written reason why its value cannot be free text. A NEW allow-listed key with a
