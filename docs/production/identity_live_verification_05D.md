@@ -99,7 +99,7 @@ Then:
 | `DELIVERY_EVENTS_AUTHORIZED` (`src/mail/webhook.py`) | False. Owner authorisation plus staging proof required to flip. |
 | Google sign-in | Disabled by default. Enabling for the beta needs the section 2 results and the owner's decision; the frontend wiring is not part of this package. |
 | Shared rate-limit store | Optional. Hosted multi-replica needs it; the failure policy per bucket is an owner decision. |
-| Migration `0044_email_delivery_events` | Additive columns on `email_attempts`; downgrade refuses while any row carries delivery evidence. |
+| Migration `0046_email_delivery_events` | Additive columns on `email_attempts`; downgrade refuses while any row carries delivery evidence. |
 
 ## 7. Results record (to be completed by the lead; do not edit before running)
 

@@ -8,10 +8,10 @@ replay a no-op. Nothing existing is changed or backfilled.
 
 The downgrade is FAIL-CLOSED: it refuses (deleting nothing) while any row carries a delivery state, because that is verified delivery evidence that the
 downgrade would silently destroy. Export what you need and clear it deliberately first.
-Chains from 0043.
+Chains from 0045.
 
-Revision ID: 0044_email_delivery_events
-Revises: 0043_story_bank_completion
+Revision ID: 0046_email_delivery_events
+Revises: 0045_monitoring_alert_categories
 Create Date: 2026-10-22
 """
 
@@ -20,8 +20,8 @@ from __future__ import annotations
 import sqlalchemy as sa
 from alembic import op
 
-revision = "0044_email_delivery_events"
-down_revision = "0043_story_bank_completion"
+revision = "0046_email_delivery_events"
+down_revision = "0045_monitoring_alert_categories"
 branch_labels = None
 depends_on = None
 
@@ -44,7 +44,7 @@ def downgrade() -> None:
     held = bind.execute(sa.text("SELECT COUNT(*) FROM email_attempts WHERE delivery_state IS NOT NULL")).scalar() or 0
     if held:
         raise RuntimeError(
-            f"Refusing to downgrade 0044_email_delivery_events: {held} email attempt(s) carry verified delivery evidence that would be destroyed. "
+            f"Refusing to downgrade 0046_email_delivery_events: {held} email attempt(s) carry verified delivery evidence that would be destroyed. "
             "Export what you need and clear it deliberately first.")
     op.drop_index("ix_email_attempts_message_ref", table_name="email_attempts")
     with op.batch_alter_table("email_attempts") as batch:

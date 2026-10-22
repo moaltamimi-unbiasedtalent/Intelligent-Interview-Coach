@@ -92,6 +92,12 @@ def main(argv=None) -> int:
 
         try:
             with G.live_session("kb-quality", "synthetic_fixture_corpus", credential_check=creds) as session:
+                # 05C: after the P10E refusals (unchanged, they come first), every paid path also needs the governed budget
+                from src.llm.budget.script_guard import guard_paid_script
+
+                refused = guard_paid_script("eval_kb_model_quality", category="evaluation")
+                if refused is not None:
+                    return refused
                 out = R.run_kb_quality(session, a.profile)
         except G.LiveRunRefused as exc:
             print(f"REFUSED ({exc.reason}): {exc}")

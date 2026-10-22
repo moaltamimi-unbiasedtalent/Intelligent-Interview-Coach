@@ -1,4 +1,4 @@
-"""05D migration 0044 (email_attempts delivery evidence): chain, ORM parity, CHECK, existing rows untouched, and the FAIL-CLOSED downgrade."""
+"""05D migration 0046 (email_attempts delivery evidence): chain, ORM parity, CHECK, existing rows untouched, and the FAIL-CLOSED downgrade."""
 
 from __future__ import annotations
 
@@ -9,12 +9,12 @@ from sqlalchemy.exc import IntegrityError
 from tests._alembic_head import assert_chain
 from tests.test_billing_f1_qualification import _alembic
 
-REV, PREV = "0044_email_delivery_events", "0043_story_bank_completion"
+REV, PREV = "0046_email_delivery_events", "0045_monitoring_alert_categories"
 _INS = ("insert into email_attempts (message_type, provider, status, created_at, delivery_state) values ('email_verification', 'brevo', 'provider_accepted', "
         "'2020-01-01 00:00:00.000000', :s)")
 
 
-def test_0044_chains_from_0043_and_the_chain_stays_single_and_linear(tmp_path, monkeypatch):
+def test_0046_chains_from_0045_and_the_chain_stays_single_and_linear(tmp_path, monkeypatch):
     from alembic.script import ScriptDirectory
 
     cfg, _ = _alembic(tmp_path, monkeypatch)
@@ -87,7 +87,7 @@ def test_downgrade_is_fail_closed_while_any_row_carries_delivery_evidence(tmp_pa
         c.execute(text(_INS), {"s": "hard_bounced"})
     with pytest.raises(Exception) as err:
         command.downgrade(cfg, PREV)
-    assert "Refusing to downgrade 0044_email_delivery_events" in str(err.value)
+    assert "Refusing to downgrade 0046_email_delivery_events" in str(err.value)
     with eng.connect() as c:                                            # nothing was deleted or altered
         assert c.execute(text("select delivery_state from email_attempts")).scalar() == "hard_bounced"
     assert "delivery_state" in {c["name"] for c in inspect(eng).get_columns("email_attempts")}
