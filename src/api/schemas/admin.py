@@ -84,6 +84,34 @@ class SpeechStatus(_Strict):
     server_side: ServerSpeechStatus | None = None
 
 
+class MonitoringAlerts(_Strict):
+    active: int
+    by_category: dict[str, int]
+
+
+class MonitoringBudget(_Strict):
+    state: str
+    enforcement: str
+    budget_class: str | None = None
+    reason: str | None = None
+    remaining_to_stop_usd: str | None = None
+    remaining_requests: int | None = None
+
+
+class MonitoringSignal(_Strict):
+    code: str
+    status: str
+
+
+class MonitoringStatus(_Strict):
+    """05C: counts, fixed codes and headroom only (no key, marker, prompt, identifier or message). ``unknown`` means there is no evidence to judge yet; it is never healthy."""
+
+    alerts: MonitoringAlerts
+    budget: MonitoringBudget | None = None
+    signals: list[MonitoringSignal]
+    note: str
+
+
 class ProvidersResponse(_Strict):
     providers: list[ProviderRow]
     speech: SpeechStatus
@@ -92,6 +120,7 @@ class ProvidersResponse(_Strict):
     pause_durable: bool = False
     rate_limit_mode: str
     rate_limit_distributed: bool
+    monitoring: MonitoringStatus | None = None
     note: str
 
 

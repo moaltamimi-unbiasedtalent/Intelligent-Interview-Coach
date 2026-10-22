@@ -78,6 +78,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.synthesize and not args.allow_paid:
         print("LLM SYNTHESIS: NOT RUN — paid synthesis not authorized (add --allow-paid).")
+    if args.synthesize and args.allow_paid:
+        from src.llm.budget.script_guard import guard_paid_script      # 05C: every paid path also needs the governed budget (approved marker, durable ledger, ceilings, kill switch)
+
+        refused = guard_paid_script("run_feedback_intelligence", category="evaluation")
+        if refused is not None:
+            return refused
     synth = _build_synthesizer(args.allow_paid) if args.synthesize else None
 
     result = run(_adapters(args.fixtures), output_dir=args.output_dir,

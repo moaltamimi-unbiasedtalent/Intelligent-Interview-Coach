@@ -39,9 +39,15 @@ def _short_silent_wav(seconds: float = 1.0, rate: int = 16_000) -> bytes:
 def check_openrouter(config) -> str:
     if not config.is_configured:
         return "SKIP (OpenRouter not configured)"
+    from src.llm.budget.errors import BudgetError
+    from src.llm.budget.script_guard import require_paid_budget      # 05C: a live connection check is a paid call and needs the governed budget
     from src.openrouter_client import OpenRouterClient, OpenRouterError
     from src.pricing_service import PricingService
 
+    try:
+        require_paid_budget("manual_live_check", category="evaluation")
+    except BudgetError as exc:
+        return f"SKIP (AI budget governor refused: {exc.reason})"
     client = OpenRouterClient(config)
     try:
         supported = None

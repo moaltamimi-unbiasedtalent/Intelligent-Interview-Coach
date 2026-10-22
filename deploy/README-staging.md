@@ -37,6 +37,15 @@ A restore is complete only when all three of database, documents and knowledge a
 (`restore.sh` with `DB_DUMP`, `DOCS_TAR`, `KNOWLEDGE_TAR`). A restore without the knowledge archive leaves an
 EMPTY knowledge base.
 
+## Backup sets, restore drills and rollback (package 05B)
+
+`backup.sh` and `restore.sh` remain the simple tar and `pg_dump` helpers. The checksummed, manifest-described, optionally sealed backup SET (database, private documents and
+governed knowledge as one consistent unit, dry-run default, refusals instead of overwrites, tamper detection, encryption at rest required in hosted environments), the restore
+drill, the backup-erasure procedure and the migration rollback rehearsal are `scripts/backup_set.py`, `scripts/restore_drill.py` and `scripts/rollback_rehearsal.py`; the procedure is
+[`docs/production/BACKUP_RESTORE_RUNBOOK.md`](../docs/production/BACKUP_RESTORE_RUNBOOK.md). Drill records: `docs/production/execution/evidence/drills/`. Needed topology changes (a backup
+runner, `pg_dump` in the image, an image tag pointer, a restore profile) are listed in section 9 of the runbook and are NOT made in the compose file (05A owns it). **No live drill
+has been run on staging (OD-HOSTED).**
+
 ## Readiness
 
 `GET /api/v1/ready` always checks the database and configuration. In staging and production it also reports

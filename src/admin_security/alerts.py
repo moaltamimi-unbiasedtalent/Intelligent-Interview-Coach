@@ -64,6 +64,23 @@ def record_condition(session_factory: sessionmaker, *, category: str, dedupe_key
         log.warning("admin alert could not be recorded")
 
 
+def resolve_condition(session_factory: sessionmaker, *, dedupe_key: str) -> bool:
+    """The condition no longer holds: mark its alert resolved (system resolution, no actor). It reopens if the condition recurs. Never raises; True when a row was resolved."""
+    try:
+        with session_factory() as s:
+            row = s.scalar(select(AdminNotification).where(AdminNotification.dedupe_key == dedupe_key))
+            if row is None or row.state not in ("active", "acknowledged"):
+                return False
+            now = utcnow()
+            row.state, row.resolved_at, row.resolved_by_user_id, row.updated_at = "resolved", now, None, now
+            row.revision += 1
+            s.commit()
+            return True
+    except Exception:  # noqa: BLE001 - alerting must never break the observed operation
+        log.warning("admin alert could not be resolved")
+        return False
+
+
 def observe_audit_event(session_factory: sessionmaker, *, event_type: str, actor_user_id: int | None, result: str) -> None:
     """Called after an audit row is committed. Raises an alert when a deterministic burst rule is met for a KNOWN account. Never raises."""
     try:

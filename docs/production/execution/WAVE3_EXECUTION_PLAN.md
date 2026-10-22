@@ -32,7 +32,7 @@ A package is finished only when all five layers are. The layers are never merged
 | 00A | PARTIAL: Phase 00 sign-off recorded (PRs #211, #212, #213) | documentation PRs #211 to #213 merged, CI green | n/a | Owner names reviewers, counsel and legal qualifiers (OPEN) | PG-07 BLOCKED until reviewers are named |
 | 00B | DELIVERED as a proposal (PRs #211, #212) | documentation PRs #211 to #213 merged, CI green | n/a | Owner disposition of the ten reclassifications (OPEN) | PG-11 PASS (machine-checked); no reclassification applied |
 | 01A | MERGED (PR #223, merge 7549973) | PR CI green (12 of 12); re-read on main | NOT RUN (injection screen on hosted stack) | Human security review (9 questions); independent held-out author (OPEN) | PG-03 IN PROGRESS; thresholds unapproved (OD-GATE-THRESHOLDS) |
-| 01D | NOT STARTED | no PR yet | n/a | Security review of tool authorization | PG-03 (REVIEW-01 R4/R5) |
+| 01D | BRANCH PUSHED, NO PR | no PR yet | n/a | Security review of tool authorization | PG-03 (REVIEW-01 R4/R5) |
 | 01B0 | MERGED (PR #217, merge 0d75acd) | PR CI green (12 of 12); re-read on main | n/a | none | PG-12 IN PROGRESS |
 | 01B | MERGED (PR #220, merge 335d303) | PR CI green (12 of 12); re-read on main | NOT RUN (Docker image with prompts/ not built) | none | PG-12 IN PROGRESS (01D, 01C outstanding) |
 | 01C | NOT STARTED | no PR yet | n/a | none | PG-12 (REVIEW-03) |
@@ -40,39 +40,39 @@ A package is finished only when all five layers are. The layers are never merged
 | 02A | MERGED (PR #221, merge 191cbc5) | PR CI green (12 of 12); re-read on main | NOT RUN (hosted volumes, PostgreSQL, multi-worker; OD-HOSTED) | none | PG-05 IN PROGRESS |
 | 02B | MERGED (PR #227, merge 6acdbc1) | PR CI green (12 of 12); re-read on main | NOT RUN (production embedder, hosted refusal; OD-HOSTED, OD-EMBED) | Embedder choice and benchmark approval (OD-EMBED, OD-BUDGET) | PG-05 NOT MET (retrieval quality unmeasured) |
 | 02C | MERGED (PR #226, merge 568b8f3) | PR CI green (12 of 12); re-read on main | NOT RUN (real clamd, EICAR, outage drill; OD-HOSTED) | none | PG-05 IN PROGRESS |
-| 02D | NOT STARTED | no PR yet | n/a | Licensing reviewer and owner; per-market signed approval (OPEN, long lead) | PG-05 (licence and market qualification) |
-| 02E | NOT STARTED | no PR yet | NOT RUN | Frozen coverage measure approval (OD-COVERAGE); independent datasets | PG-05 (retrieval quality, coverage) |
+| 02D | BRANCH PUSHED (2 PRs), NO PR | no PR yet | n/a | Licensing reviewer and owner; per-market signed approval (OPEN, long lead) | PG-05 (licence and market qualification) |
+| 02E | BRANCH PUSHED, NO PR | no PR yet | NOT RUN | Frozen coverage measure approval (OD-COVERAGE); independent datasets | PG-05 (retrieval quality, coverage) |
 | 03A | MERGED (PR #216, merge f921892) | PR CI green (12 of 12); re-read on main | NOT RUN (live Admin walkthrough) | none | PG-08 IN PROGRESS |
 | 03B | MERGED (PR #230, merge a4f540d) | PR CI green (12 of 12); re-read on main | NOT RUN (live Admin walkthrough) | Plan limit values (OD-PLAN-LIMITS) | PG-08 IN PROGRESS |
 | 03C | MERGED (PR #231, merge 6bcfbf5) | PR CI green (12 of 12); re-read on main | NOT RUN (live Admin walkthrough) | Bulk-action policy (OD-BULK-ACTIONS) | PG-08 IN PROGRESS |
 | 03K | MERGED (PR #219, merge 20241f4) | PR CI green (12 of 12); re-read on main | n/a | none | PG-14 IN PROGRESS (contract) |
 | 03D1 | MERGED (PR #224, merge ac029ad) | PR CI green (12 of 12); re-read on main | NOT RUN (live data) | none | PG-08 IN PROGRESS (03D2 outstanding) |
-| 03D2 | NOT STARTED | no PR yet | NOT RUN | none | PG-08 |
+| 03D2 | BRANCH PUSHED, NO PR | no PR yet | NOT RUN | none | PG-08 |
 | 03E1 | MERGED (PR #232, merge 0d84e7e) | PR CI green (12 of 12); re-read on main | NOT RUN (live data) | Export formats (OD-REPORT-EXPORT) | PG-14 IN PROGRESS (03E2 outstanding) |
-| 03E2 | NOT STARTED | no PR yet | NOT RUN | Export formats (OD-REPORT-EXPORT) | PG-14 |
+| 03E2 | BRANCH PUSHED (2 PRs), NO PR | no PR yet | NOT RUN | Export formats (OD-REPORT-EXPORT) | PG-14 |
 | 04A | MERGED (PR #234, merge 4d7e57a) | PR CI green (12 of 12); re-read on main | NOT RUN (restart on staging) | Native review of 116 strings (LG-10/11) | PG-13 IN PROGRESS (06B outstanding) |
 | 04B | MERGED (PR #233, merge e4aed13) | PR CI green (12 of 12); re-read on main | NOT RUN (PostgreSQL invitation race and row locks) | Transfer rules (OD-WS-TRANSFER); native review | PG-13 IN PROGRESS (06B outstanding) |
 | 04C | NOT STARTED | no PR yet | NOT RUN (streaming on staging) | none | PG-06 |
-| 04D | NOT STARTED | no PR yet | NOT RUN (journeys on a staging stack) | none | PG-06 |
+| 04D | BRANCH PUSHED (2 PRs), NO PR | no PR yet | NOT RUN (journeys on a staging stack) | none | PG-06 |
 | 04E | MERGED (PR #228, merge a763fdf) | PR CI green (12 of 12); re-read on main | NOT RUN (first-admin bootstrap, live Google) | Invitation email and issuer decisions (OPEN) | PG-02 IN PROGRESS (05D outstanding) |
-| 04F | NOT STARTED | no PR yet | NOT RUN (browser dictation check) | Legal reviewer and test participants | PG-04 |
+| 04F | BRANCH PUSHED, NO PR | no PR yet | NOT RUN (browser dictation check) | Legal reviewer and test participants | PG-04 |
 | 05A | MERGED (PR #218, merge 9b6b109) | PR CI green (12 of 12); re-read on main | NOT RUN (nothing deployed; OD-HOSTED) | Hosting authorisation (OPEN) | PG-01 BLOCKED |
-| 05B | NOT STARTED | no PR yet | NOT RUN (restore drill, PostgreSQL paths; OD-HOSTED) | none | PG-09 |
-| 05C | NOT STARTED | no PR yet | NOT RUN (synthetic outage on staging; OD-HOSTED) | AI budget (OD-BUDGET) | PG-09 |
-| 05D | NOT STARTED | no PR yet | NOT RUN (live Brevo, Google, Redis; OD-HOSTED) | none | PG-02 |
-| 05E | NOT STARTED | no PR yet | n/a | Legal counsel sign-off per offered language (long lead) | PG-04 |
+| 05B | BRANCH PUSHED, NO PR | no PR yet | NOT RUN (restore drill, PostgreSQL paths; OD-HOSTED) | none | PG-09 |
+| 05C | BRANCH PUSHED (2 PRs), NO PR | no PR yet | NOT RUN (synthetic outage on staging; OD-HOSTED) | AI budget (OD-BUDGET) | PG-09 |
+| 05D | BRANCH PUSHED, NO PR | no PR yet | NOT RUN (live Brevo, Google, Redis; OD-HOSTED) | none | PG-02 |
+| 05E | BRANCH PUSHED (2 PRs), NO PR | no PR yet | n/a | Legal counsel sign-off per offered language (long lead) | PG-04 |
 | 06A | MERGED (PR #214, merge f9a06a9) | PR CI green (12 of 12); re-read on main | n/a | Native review of the audit baseline | PG-10 IN PROGRESS; LG-01 and LG-14 evidence exists, none approved by a named human |
-| 06B | NOT STARTED | no PR yet | NOT RUN (journeys per language) | Native-speaker review | LG-03, LG-09 per language; PG-13 |
-| 06C | NOT STARTED | no PR yet | NOT RUN (live Mo quality) | Blinded native-reader rating (OD-BUDGET) | LG-04, LG-05 per language |
-| 06D | NOT STARTED | no PR yet | NOT RUN (production embedder; OD-EMBED) | Sample review | LG-06 per language |
-| 06E | NOT STARTED | no PR yet | NOT RUN | none | LG-08 per language; PG-03 |
-| 06F | NOT STARTED | no PR yet | n/a | Seven native reviewers and legal qualifiers (calendar-bound, OPEN) | LG-10, LG-11 per language; PG-04 |
-| 06G | NOT STARTED | no PR yet | NOT RUN (live Mo outputs) | Independent reviewers and participants (OD-BUDGET, OD-GATE-THRESHOLDS) | PG-07 BLOCKED |
+| 06B | BRANCH PUSHED, NO PR | no PR yet | NOT RUN (journeys per language) | Native-speaker review | LG-03, LG-09 per language; PG-13 |
+| 06C | BRANCH PUSHED, NO PR | no PR yet | NOT RUN (live Mo quality) | Blinded native-reader rating (OD-BUDGET) | LG-04, LG-05 per language |
+| 06D | BRANCH PUSHED, NO PR | no PR yet | NOT RUN (production embedder; OD-EMBED) | Sample review | LG-06 per language |
+| 06E | BRANCH PUSHED, NO PR | no PR yet | NOT RUN | none | LG-08 per language; PG-03 |
+| 06F | BRANCH PUSHED, NO PR | no PR yet | n/a | Seven native reviewers and legal qualifiers (calendar-bound, OPEN) | LG-10, LG-11 per language; PG-04 |
+| 06G | BRANCH PUSHED, NO PR | no PR yet | NOT RUN (live Mo outputs) | Independent reviewers and participants (OD-BUDGET, OD-GATE-THRESHOLDS) | PG-07 BLOCKED |
 | 06H | MERGED (PR #229, merge 5d588a1) | PR CI green (12 of 12); re-read on main | NOT RUN (hosted fail-closed behaviour) | Approvers named for each gate (OD-LANG-03/04) | PG-10 IN PROGRESS; LG-13/LG-14 enforcement merged, zero languages qualified |
-| 07A | NOT STARTED | no PR yet | n/a | none | PG-10 |
+| 07A | BRANCH PUSHED, NO PR | no PR yet | n/a | none | PG-10 |
 | 07B | NOT STARTED | no PR yet | NOT RUN (live grounding; OD-BUDGET) | none | PG-03 |
 | 07C | NOT STARTED | no PR yet | NOT RUN (live OCR sample; OD-BUDGET) | none | residual live verification |
-| 08A0 | NOT STARTED | no PR yet | n/a | none | PG-15 (evidence pipeline) |
+| 08A0 | BRANCH PUSHED, NO PR | no PR yet | n/a | none | PG-15 (evidence pipeline) |
 | 08A | NOT STARTED | no PR yet | NOT RUN | Owner go/no-go | PG-15 |
 <!-- MATRIX:END -->
 
@@ -203,3 +203,19 @@ New decisions raised while building Waves 1 and 2 are listed in `../OWNER_DECISI
 - **Forecast:** 30 November holds only if the owner decisions in section 7 are made on time. Otherwise the freeze moves one working day per day of delay (for example Thu 3 Dec if reviewers start Mon 2 Nov, Thu 10 Dec for Mon 9 Nov). The date moves; no scope is cut and no gate is waived.
 - **Release risk:** HIGH for 30 November, driven by unstarted human and legal steps and an unanswered hosting authorisation; MEDIUM for staging-dependent verification (everything live is NOT RUN); LOW for remaining engineering. Quality gates not yet met: PG-03 numeric thresholds, PG-05 retrieval quality and licensing, PG-07 independent evaluation.
 - **Process risks and mitigations:** integration rework (re-merge `main` before each PR, regenerate the locale audit, version-independent head checks); shared agent modules (strict order 01D, 01C, 04C, 07B); machine load (eight concurrent agents, four test workers); local test environment (the fresh-dependency venv and Playwright browser cache were deleted; rebuilding them needs a download the owner must approve, until then CI is the verification).
+
+## 9. Owner authorisation of 2026-10-22 and scope additions
+
+The owner authorised Wave 3a to proceed immediately and recorded provisional recommendations for nine decisions (`../OWNER_DECISION_REGISTER.md`, section "Owner direction 2026-10-22"). Wave 3a launched on 2026-10-22 as eight isolated worktrees: 08A0 (feat/08a0-release-evidence), 05B (feat/05b-backup-restore-drills), 05C (feat/05c-budget-governor then feat/05c-monitoring-alerts), 05E (feat/05e-privacy-safeguards then feat/05e-legal-review-pack), 06C (feat/06c-language-ai-behaviour), 01D (feat/01d-tool-authorization), 03D2 (feat/03d2-command-center-views), 03E2 (feat/03e2-report-views then feat/03e2-pdf-export). The development environment was repaired (fresh-dependency venv at `$HOME/.cache/ask4mo/ci_venv`, Playwright browsers restored). No gate was changed; reviewers are appointed later and no automated check substitutes for their sign-off.
+
+Scope items that follow from the owner's recommendations and stay inside the existing requirements (nothing is removed or deferred):
+| Item | Requirement | Package home | When |
+|---|---|---|---|
+| Governed PDF export | REQ-OWN-04 | 03E2 second PR | Wave 3a |
+| Previewed, authorised, audited bulk user actions with partial-failure handling | REQ-OWN-03 (restricted bulk actions) | completion PR of 03C | Wave 3b |
+| Workspace ownership transfer with verified acceptance and immutable audit (needs a pending-transfer table, so migration 0044 or later) | REQ-OWN-07 | completion PR of 04B | Wave 3b |
+| OpenRouter embedding adapter and multilingual embedding benchmark (OpenRouter-only; versioned manifests and rollback preserved; recall@k, nDCG@k, cross-language, citation accuracy, latency, cost, dimensions) | REVIEW-04, OD-EMBED | 02B completion, 02E, 06D | Wave 3b, after the 05C budget governor merges |
+| Plan limits derived from measured operational and token costs | REQ-OWN-02, OD-PLAN-LIMITS | 03B completion, after 05C telemetry exists | Wave 3c |
+| Per-story consent in Prepare | REQ-OWN-06 | 04A completion, in the 01D, 01C order | Wave 3c |
+
+Wave 3b (01C, 02E, 04D, 04F, 05D, 06B, 06D, 06E, 07A) and Wave 3c (04C, 07B, 07C, 06G, 08A) are prepared per section 4 and start as dependencies merge and slots free (cap eight concurrent agents). 02D and 06F review materials are prepared in parallel as review-ready packages; human qualification is never recorded as completed.

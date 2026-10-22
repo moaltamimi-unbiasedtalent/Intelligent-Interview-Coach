@@ -35,7 +35,7 @@ def poll_seconds_from_env(env: dict[str, str] | None = None) -> float:
 class Worker:
     def __init__(self, service: JobService, registry: dict[str, JobTypeDef] | None = None, *,
                  worker_id: str | None = None, clock: Callable[[], datetime] = utcnow, secret_store: Any = None,
-                 probes: Any = None, poll_seconds: float = POLL_DEFAULT, services: Any = None) -> None:
+                 probes: Any = None, poll_seconds: float = POLL_DEFAULT, services: Any = None, maintenance: Any = None) -> None:
         self.service = service
         self.registry = registry if registry is not None else REGISTRY
         self.worker_id = worker_id or uuid.uuid4().hex[:16]     # an operational instance id: no host, no address
@@ -43,6 +43,7 @@ class Worker:
         self._store = secret_store
         self._probes = probes
         self._services = services
+        self._maintenance = maintenance      # 05C: the scheduled quota-reservation reaper and health monitor (src/ops.monitor.MaintenanceTick); optional
         self.poll_seconds = max(POLL_MIN, min(POLL_MAX, poll_seconds))
 
     def run_once(self) -> str:
@@ -50,6 +51,11 @@ class Worker:
         finalise. Returns idle | succeeded | retry_scheduled | failed | lease_lost."""
         self.service.touch_worker(self.worker_id, now=self._clock())
         self.service.reap_expired(now=self._clock())
+        if self._maintenance is not None:
+            try:
+                self._maintenance.maybe_run()
+            except Exception:  # noqa: BLE001 - monitoring must never stop job processing
+                log.warning("maintenance tick failed")
         claim = self.service.claim(self.worker_id, now=self._clock())
         if claim is None:
             return "idle"
@@ -100,12 +106,16 @@ class Worker:
 def main() -> None:   # pragma: no cover - process entrypoint
     from src.application.factories import build_repository
     from src.config import load_config
+    from src.ops.monitor import MaintenanceTick, interval_from_env
     from src.secret_store import get_secret_store
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
     from src.demo_live.guard import install_from_env
 
     install_from_env()      # the same provider control as the API (no-op unless ASK4MO_PROVIDER_MODE is set)
+    from src.llm.budget.governor import install_from_env as install_budget_governor
+
+    install_budget_governor()      # 05C: the same production budget governor as the API (no-op unless AI_BUDGET_MODE=enforce)
     repo = build_repository(load_config())
     from src.copilot.config import load_config as load_copilot_config
     from src.knowledge_admin.wiring import build_worker_services
@@ -128,7 +138,8 @@ def main() -> None:   # pragma: no cover - process entrypoint
     copilot_config = load_copilot_config()
     runtime = resolve_knowledge_runtime_config(load_config(), copilot_config, session_factory=repo.session_factory)
     worker = Worker(JobService(repo.session_factory), secret_store=get_secret_store(), poll_seconds=poll_seconds_from_env(),
-                    services=services, worker_id=worker_id_for(build_identity(runtime, copilot_config)))
+                    services=services, worker_id=worker_id_for(build_identity(runtime, copilot_config)),
+                    maintenance=MaintenanceTick(repo.session_factory, interval_s=interval_from_env()))     # 05C: scheduled quota reaper + health monitor
     stop = threading.Event()
     for sig in (signal.SIGTERM, signal.SIGINT):
         signal.signal(sig, lambda *_: stop.set())
