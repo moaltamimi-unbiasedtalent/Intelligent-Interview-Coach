@@ -86,3 +86,10 @@ CI: not available until a PR exists. Rework rounds: 2 (test fixtures/allowlists;
 
 ## Delivery
 Branch feat/03c-admin-users; code head e9211d2 (this note is a following docs-only commit). First push: 03:00 CEST approx. PR: owner opens https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/new/feat/03c-admin-users (base on chore/migration-head-agnostic until that merges).
+
+## Addendum 2026-10-22: integration with main (PR #231)
+
+Merged `origin/main` (03B plans, 03D1, 03E1, 04A, 04E, 02B, 02C, 06H landed). Three conflicts: `src/api/main.py` (router list: main's list plus `admin_users` at its original position; `admin_plans_ops` stays before `admin_plans`), and two real logic conflicts around plan assignment, where both packages had added an optimistic-concurrency parameter to `PlanRepository.assign` and to `POST /admin/users/{id}/plan`:
+- `PlanRepository.assign` / `assign_in_session` now accept BOTH `expected_revision` (03B: subject-plan revision token, checked with `plan_revision.require`) and `precondition` (03C: in-transaction guard run on the account row locked `FOR UPDATE`: acting administrator still active, self and hierarchy guards, account-revision check). Order: lock and load the account, run `precondition`, then check `expected_revision`, then change the subscription. Neither check was dropped and the bulk path (03B) is unchanged.
+- The legacy `POST /admin/users/{id}/plan` keeps the 03B token (what the Admin plan UI `PlanControl` sends) and adds only the non-revision part of 03C's guard (acting administrator still active, row lock). The strict `/admin/users/{id}/actions/assign-plan` route keeps 03C's account-revision precondition. The two revision schemes are therefore not mixed on one route. `PlanAssignRequest.expected_revision` is `max_length=64`.
+No migration is added by this package; the chain is 0040, 0041, 0042, 0043 with one head.

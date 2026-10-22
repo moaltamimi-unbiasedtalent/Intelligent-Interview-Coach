@@ -32,6 +32,7 @@ INCLUDED = (
     "an index of your preparation-chat runs (identifiers and status only)",
     "simulated (mock) billing records linked to your account, if any (no live payments are processed)",
     "metadata of your own AI usage (workflow, model, token counts and cost where known; never prompts or answers)",
+    "when the private-beta invitation you registered with was redeemed (never the code)",
 )
 NOT_INCLUDED = (
     "the original uploaded files (download them from Documents)",
@@ -75,6 +76,11 @@ def build_candidate_export(*, user_id: int, session_factory, repo, account: Any)
         claims = (s.scalars(select(P.DocumentClaim).where(P.DocumentClaim.document_id.in_(doc_ids))
                             .order_by(P.DocumentClaim.id)).all() if doc_ids else [])
         stories = mine(P.CandidateStory, P.CandidateStory.id)
+        # 04A: the links and use records of the caller's own stories (ids only; a deleted story has none left to export).
+        story_ids = [st.id for st in stories]
+        claim_links = (s.scalars(select(P.StoryEvidence).where(P.StoryEvidence.story_id.in_(story_ids))).all() if story_ids else [])
+        answer_links = (s.scalars(select(P.StoryAnswerLink).where(P.StoryAnswerLink.story_id.in_(story_ids))).all() if story_ids else [])
+        story_uses = (s.scalars(select(P.StoryUse).where(P.StoryUse.story_id.in_(story_ids), P.StoryUse.user_id == user_id)).all() if story_ids else [])
         memberships = s.execute(
             select(P.WorkspaceMembership, P.Workspace.name)
             .join(P.Workspace, P.Workspace.id == P.WorkspaceMembership.workspace_id)
@@ -90,7 +96,13 @@ def build_candidate_export(*, user_id: int, session_factory, repo, account: Any)
                  "claims": [_row(c) for c in claims if c.document_id == d.id]}
                 for d in docs
             ],
-            "stories": [_row(st, ("user_id",)) for st in stories],
+            "stories": [
+                {**_row(st, ("user_id",)),
+                 "evidence_claim_ids": [lk.claim_id for lk in claim_links if lk.story_id == st.id],
+                 "evidence_answer_ids": [lk.answer_id for lk in answer_links if lk.story_id == st.id],
+                 "practice_uses": [{"session_id": u.session_id, "used_at": _jsonable(u.created_at)} for u in story_uses if u.story_id == st.id]}
+                for st in stories
+            ],
             "preparation_packs": [_row(pk, ("user_id", "op_key")) for pk in mine(P.PreparationPack, P.PreparationPack.id)],
             "memories": [_row(m, ("user_id",)) for m in mine(P.PreparationMemory, P.PreparationMemory.id)],
             "feedback": [_row(f, ("user_id",)) for f in mine(P.UserFeedback, P.UserFeedback.id)],
@@ -125,6 +137,11 @@ def build_candidate_export(*, user_id: int, session_factory, repo, account: Any)
                              "cost_usd": None if f.cost_usd_micros is None else f.cost_usd_micros / 1_000_000, "cost_source": f.cost_source,
                              "occurred_at": _jsonable(f.occurred_at)}
                             for f in s3.scalars(select(P.AIUsageFact).where(P.AIUsageFact.user_id == user_id).order_by(P.AIUsageFact.id)).all()]
+    from src.invitations.repository import redeemed_at_for_user
+
+    with session_factory() as s4:
+        redeemed = redeemed_at_for_user(s4, user_id)
+    data["registration_invitation"] = {"redeemed_at": _jsonable(redeemed)} if redeemed else None     # 04E: the timestamp only; no code, hash or issuer
     from src.billing.service import BillingService
 
     data["billing_mock"] = BillingService(session_factory).export_for_user(user_id)

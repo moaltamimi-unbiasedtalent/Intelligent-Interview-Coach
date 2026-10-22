@@ -18,6 +18,8 @@ from typing import Any, Callable
 
 from sqlalchemy import select, update
 
+from src.copilot.embeddings import EmbeddingConfigurationError
+from src.copilot.index_manifest import IndexIncompatibleError
 from src.copilot.ingestion.chunking import chunk_units
 from src.copilot.ingestion.loaders import LoadedUnit
 from src.documents.file_security import FileRejected, FileScanUnavailable, enforce_scan
@@ -50,6 +52,15 @@ def _fail_version(rt: KnowledgeRuntime, vpid: str, stage: str, category: str, ex
         s.execute(update(V).where(V.public_id == vpid, V.state.in_(expected)).values(
             state="failed", failed_stage=stage, failure_category=category, updated_at=rt.clock(), **extra))
         s.commit()
+
+
+def _observe_scanner(rt: KnowledgeRuntime, *, available: bool) -> None:
+    """Raise (or clear) the in-app scanner alert. Best effort: never changes the outcome of the job."""
+    try:
+        from src.knowledge_admin.alerts import observe_scanner
+        observe_scanner(rt.session_factory, available=available)
+    except Exception:  # noqa: BLE001
+        log.warning("scanner alert could not be recorded")
 
 
 def _load(rt: KnowledgeRuntime, vpid: str) -> dict | None:
@@ -97,11 +108,16 @@ def run_parse(vpid: str, ctx) -> None:
         try:
             result = enforce_scan(data, info["name"], scanner=scanner, required=True)
         except FileRejected:
+            # infected, or too large to scan: never parsed, indexed or served
             _fail_version(rt, vpid, "parse", "scan_failed", ("processing",), scan_status="scan_failed")
+            _observe_scanner(rt, available=True)
             raise PermanentJobError("unsupported")
         except FileScanUnavailable:
+            # outage, timeout or scanner error: held (failed, retryable by an operator), never parsed; raises the in-app alert
             _fail_version(rt, vpid, "parse", "scan_unavailable", ("processing",), scan_status="scan_unavailable")
+            _observe_scanner(rt, available=False)
             raise PermanentJobError("configuration_error")
+        _observe_scanner(rt, available=True)
         try:
             units, full = _units(data, info["ext"])
         except ParseError:
@@ -125,6 +141,16 @@ def run_parse(vpid: str, ctx) -> None:
     except Exception:  # noqa: BLE001 - unexpected: record a safe category, never the text
         _fail_version(rt, vpid, "parse", "internal_error", ("processing", "queued"))
         raise PermanentJobError("internal_error")
+
+
+def _incompatible(exc: IndexIncompatibleError, rt: "KnowledgeRuntime") -> None:
+    """02B: raise the incompatible-embedding alert (never raises). The job itself is refused by the caller: vectors of two embedders are never mixed."""
+    try:
+        from src.knowledge_admin.alerts import observe_embedding_incompatibility
+
+        observe_embedding_incompatibility(rt.session_factory, list(exc.fields) or ["manifest"])
+    except Exception:  # noqa: BLE001
+        pass
 
 
 # ------------------------------------------------------------------ index
@@ -154,9 +180,18 @@ def run_index(vpid: str, ctx) -> None:
         if not chunks:
             _fail_version(rt, vpid, "index", "no_chunks", ("indexing",))
             raise PermanentJobError("unsupported")
-        store = rt.vector_store_factory()
+        try:
+            store = rt.vector_store_factory()
+        except EmbeddingConfigurationError:
+            # 02B: the environment refuses this embedder (hosted + hash/lexical, missing credentials): permanent until configuration changes.
+            _fail_version(rt, vpid, "index", "embedding_unavailable", ("indexing",))
+            raise PermanentJobError("configuration_error")
         try:
             store.add_chunks(chunks)                        # idempotent: ids already present are skipped
+        except IndexIncompatibleError as exc:               # 02B: never mix embedders in one index; never rebuild automatically
+            _incompatible(exc, rt)
+            _fail_version(rt, vpid, "index", "index_incompatible", ("indexing",))
+            raise PermanentJobError("configuration_error")
         except Exception:  # noqa: BLE001 - vector store / embedding provider trouble: retry, text never recorded
             raise RetryableJobError("unavailable")
         now = rt.clock()
@@ -198,14 +233,22 @@ def run_reindex(vpid: str, ctx) -> None:
     if not chunks:
         raise PermanentJobError("unsupported")
     try:
-        rt.vector_store_factory().add_chunks(chunks)
+        store = rt.vector_store_factory()
+        store.add_chunks(chunks)
+    except EmbeddingConfigurationError:
+        raise PermanentJobError("configuration_error")         # 02B: embedder refused by the environment; no state change
+    except IndexIncompatibleError as exc:
+        # 02B: an incompatible index is NEVER extended with a different embedder's vectors and never rebuilt automatically. The operator rebuilds
+        # into a new, empty index with an approved embedder (scripts/knowledge_embedding_rebuild.py), which runs THIS job handler per version.
+        _incompatible(exc, rt)
+        raise PermanentJobError("configuration_error")
     except Exception:  # noqa: BLE001 - provider or store trouble is transient; text is never recorded
         raise RetryableJobError("unavailable")
     now = rt.clock()
     with rt.session_factory() as s:
         rec = s.get(KnowledgeIndexRecord, info["id"])
         if rec is None:
-            s.add(KnowledgeIndexRecord(version_id=info["id"], collection=P.COLLECTION, embedder=type(rt.vector_store_factory().embedder).__name__[:64],
+            s.add(KnowledgeIndexRecord(version_id=info["id"], collection=P.COLLECTION, embedder=type(store.embedder).__name__[:64],
                                        chunk_count=len(chunks), state="built", built_at=now, updated_at=now))
         else:
             rec.chunk_count, rec.state, rec.built_at, rec.removed_at, rec.updated_at = len(chunks), "built", now, None, now

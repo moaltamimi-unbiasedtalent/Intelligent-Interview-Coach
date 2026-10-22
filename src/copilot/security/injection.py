@@ -12,9 +12,29 @@ import re
 from dataclasses import dataclass, field
 
 from src.copilot import constants
-from src.copilot.security.normalize import normalize_for_detection, normalize_for_unicode_detection
+from src.copilot.security.injection_rules import (
+    CHUNK_OVERRIDES,
+    EXTRA_EN,
+    EXTRA_EN_CHUNK,
+    EXTRA_UNICODE,
+    EXTRA_UNICODE_CHUNK,
+    chunk_pattern,
+    decode_base64_segments,
+    fold_leet,
+    neutralise_negations,
+)
+from src.copilot.security.normalize import (
+    normalize_for_detection,
+    normalize_for_unicode_detection,
+    normalize_unicode_with_boundaries,
+    normalize_with_boundaries,
+)
+from src.core.security.normalize import fold_confusables
 
-__all__ = ["InjectionScan", "scan_text", "INDICATORS", "UNICODE_INDICATORS"]
+__all__ = ["InjectionScan", "scan_text", "INDICATORS", "UNICODE_INDICATORS", "SURFACE_INPUT", "SURFACE_CHUNK"]
+
+SURFACE_INPUT = "input"  # user-typed text: the original, strict rules (default)
+SURFACE_CHUNK = "chunk"  # a retrieved knowledge chunk: boundary-aware, negation-aware rules (01A)
 
 # (label, weight, compiled pattern). High weight (3.0) = a single hit blocks;
 # medium (2.0) = a single hit warns, two combine to a block.
@@ -22,7 +42,7 @@ _RAW_INDICATORS: list[tuple[str, float, str]] = [
     (
         "ignore_previous_instructions",
         3.0,
-        r"\b(ignore|disregard|forget|override)\b.{0,25}\b(previous|prior|above|earlier|all|the)\b.{0,25}\b(instruction|instructions|prompt|prompts|rule|rules|context|message|messages)\b",
+        r"\b(ignore|disregard|forget|override)\b.{0,25}\b(previous|prior|above|earlier|all|the)\b.{0,25}\b(instruction|instructions|prompt|prompts|rule|rules|context|message|messages|guidance|guidelines|directive|directives|programming|constraints)\b",
     ),
     (
         "reveal_system_prompt",
@@ -133,34 +153,82 @@ class InjectionScan:
         return self.verdict != constants.VERDICT_ALLOW
 
 
-def scan_text(text: str) -> InjectionScan:
-    """Scan ``text`` and return a verdict with matched indicators and score."""
+# Retrieved-chunk forms of the rules (01A): each English / Unicode rule becomes a (loose, twin) pair that cannot run across a sentence boundary; three rules are replaced by their
+# chunk-specific form (see ``injection_rules.CHUNK_OVERRIDES``). Built once at import.
+_CHUNK_INDICATORS = [(label, weight, *chunk_pattern(CHUNK_OVERRIDES.get(label, raw))) for label, weight, raw in _RAW_INDICATORS]
+_CHUNK_UNICODE_INDICATORS = [(label, weight, *chunk_pattern(raw)) for label, weight, raw in _UNICODE_RAW_INDICATORS]
+
+
+def _scan_variant(text: str, *, chunk: bool, add, original: bool) -> None:
+    """Run every rule on one text variant (the text itself or its confusable-folded copy) and report hits through ``add(label, weight)``."""
+    bounded = normalize_with_boundaries(text)
+    if chunk:
+        bounded = neutralise_negations(bounded)
+        for label, weight, loose, twin in _CHUNK_INDICATORS:
+            if loose.search(bounded) or twin.search(bounded):
+                add(label, weight)
+        collapsed = re.sub(r"[\s|]", "", bounded)
+    else:
+        normalized = normalize_for_detection(text)
+        for label, weight, pattern in INDICATORS:
+            if pattern.search(normalized):
+                add(label, weight)
+        collapsed = normalized.replace(" ", "")
+    for label, weight, pattern in (EXTRA_EN_CHUNK if chunk else EXTRA_EN):
+        if pattern.search(bounded):
+            add(label, weight)
+
+    if original:  # the multilingual rules read the accent-folded Unicode form of the ORIGINAL text (folding look-alikes would corrupt Cyrillic and Arabic words)
+        unicode_form = normalize_for_unicode_detection(text)
+        ubounded = normalize_unicode_with_boundaries(text)
+        if chunk:
+            ubounded = neutralise_negations(ubounded)
+            for label, weight, loose, twin in _CHUNK_UNICODE_INDICATORS:
+                if loose.search(ubounded) or twin.search(ubounded):
+                    add(label, weight)
+        else:
+            for label, weight, pattern in UNICODE_INDICATORS:
+                if pattern.search(unicode_form):
+                    add(label, weight)
+        for label, weight, pattern in (EXTRA_UNICODE_CHUNK if chunk else EXTRA_UNICODE):
+            if pattern.search(ubounded):
+                add(label, weight)
+
+    # The collapsed needles are also tried on the REVERSED text: a payload written backwards (".snoitcurtsni suoiverp lla erongi") is a known obfuscation.
+    reversed_collapsed = collapsed[::-1]
+    for label, weight, needles in _COLLAPSED_INDICATORS:
+        if any(needle in collapsed or needle in reversed_collapsed for needle in needles):
+            add(label, weight)
+
+
+def scan_text(text: str, *, surface: str = SURFACE_INPUT) -> InjectionScan:
+    """Scan ``text`` and return a verdict with matched indicators and score.
+
+    ``surface`` is :data:`SURFACE_INPUT` (default: user-typed or otherwise attacker-controlled instruction text, original strict rules) or :data:`SURFACE_CHUNK` (a retrieved knowledge
+    chunk: descriptive prose, so the boundary-aware and negation-aware forms apply). Each label counts once, so an English hit plus its translation or its confusable-folded copy never
+    double-counts. The confusable-folded copy (Cyrillic and Greek look-alikes mapped to Latin) is an additional pass: it can add a hit, never remove one.
+    """
     if not text or not text.strip():
         return InjectionScan()
-    normalized = normalize_for_detection(text)
+    chunk = surface == SURFACE_CHUNK
     matched: list[str] = []
     score = 0.0
-    for label, weight, pattern in INDICATORS:
-        if pattern.search(normalized):
+
+    def add(label: str, weight: float) -> None:
+        nonlocal score
+        if label not in matched:  # each label counts once
             matched.append(label)
             score += weight
 
-    # P10D: multilingual rules on the accent-folded Unicode form (each label counts once, so an English hit plus its translation never double-counts).
-    unicode_form = normalize_for_unicode_detection(text)
-    for label, weight, pattern in UNICODE_INDICATORS:
-        if label in matched:
-            continue
-        if pattern.search(unicode_form):
-            matched.append(label)
-            score += weight
-
-    collapsed = normalized.replace(" ", "")
-    for label, weight, needles in _COLLAPSED_INDICATORS:
-        if label in matched:
-            continue  # already counted by the regex pass
-        if any(needle in collapsed for needle in needles):
-            matched.append(label)
-            score += weight
+    _scan_variant(text, chunk=chunk, add=add, original=True)
+    folded = fold_confusables(text)
+    if folded != text:
+        _scan_variant(folded, chunk=chunk, add=add, original=False)
+    leet = fold_leet(text)
+    if leet != text and leet != folded:
+        _scan_variant(leet, chunk=chunk, add=add, original=False)
+    for decoded in decode_base64_segments(text):  # a Base64 payload is decoded once and scanned as text (never executed)
+        _scan_variant(decoded, chunk=chunk, add=add, original=True)
 
     if score >= constants.INJECTION_BLOCK_THRESHOLD:
         verdict = constants.VERDICT_BLOCK

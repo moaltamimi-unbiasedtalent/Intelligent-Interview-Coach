@@ -211,6 +211,26 @@ function ReadinessBody({ r }: { r: KnowledgeReadiness }) {
         <dd data-testid="worker-state">{WORKER_TEXT[r.worker.status] ?? r.worker.status}{r.worker.last_seen_at ? `, last report ${r.worker.last_seen_at}` : ""}</dd>
         <dt className="text-muted">Embedding</dt>
         <dd data-testid="embedding-state">{r.embedder_state.provider === "local" ? "Offline local embedder" : "Remote provider"}: {r.embedder_state.status.replace(/_/g, " ")}</dd>
+        {r.embedder_state.model ? (
+          <>
+            <dt className="text-muted">Embedder detail</dt>
+            <dd data-testid="embedding-detail">
+              {r.embedder_state.model}, version {r.embedder_state.version ?? "not recorded"}, {r.embedder_state.dimensions ?? "unknown"} dimensions. {r.embedder_state.label}
+              {r.embedder_state.degraded ? " Degraded: the lexical fallback is in use." : ""}
+              {r.embedder_state.approved_for_environment === false ? ` Not acceptable for this environment (${(r.embedder_state.problems ?? []).join(", ").replace(/_/g, " ")}).` : ""}
+            </dd>
+          </>
+        ) : null}
+        {r.embedder_state.index_compatibility ? (
+          <>
+            <dt className="text-muted">Index compatibility</dt>
+            <dd data-testid="index-compatibility">
+              {r.embedder_state.index_compatibility.compatible
+                ? "The index manifest matches the live embedder."
+                : `${r.embedder_state.index_compatibility.message}${r.embedder_state.index_compatibility.differing_fields.length ? ` Differing: ${r.embedder_state.index_compatibility.differing_fields.join(", ")}.` : ""}${r.embedder_state.index_compatibility.refused ? " Retrieval is refused until the index is rebuilt with an approved embedder." : ""}`}
+            </dd>
+          </>
+        ) : null}
         <dt className="text-muted">Collection and store</dt>
         <dd data-testid="store-state">{r.collection} ({COLLECTION_TEXT[r.collection_status] ?? r.collection_status}); store {r.store.kind.replace(/_/g, " ")}{r.store.chunk_count !== null ? `, ${r.store.chunk_count} chunks` : ""}; location {r.store.location.replace(/_/g, " ")}</dd>
         <dt className="text-muted">Last indexed</dt>

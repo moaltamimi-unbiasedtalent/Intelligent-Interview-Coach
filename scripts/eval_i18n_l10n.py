@@ -156,8 +156,10 @@ def run() -> dict[str, tuple[bool, str]]:
     preserved = "ru" in SUPPORTED_LOCALE_CODES and len(SUPPORTED_LOCALE_CODES) == 8 and '"ru"' in locales_ts
     excluded = "ru" not in ACTIVE_CANDIDATE_LOCALES and len(ACTIVE_CANDIDATE_LOCALES) == 7 and "ru" not in fe_codes
     parity = fe_codes == tuple(ACTIVE_CANDIDATE_LOCALES)
-    selectors = all("SELECTABLE_LOCALES.map" in read(f) for f in (
-        "components/i18n/LanguageMenu.tsx", "components/i18n/ConversationLanguageField.tsx", "components/settings/LanguageSettings.tsx"))
+    # 06H: selectors render the server-offered subset (`useOfferedLocales().options`), which is itself derived from SELECTABLE_LOCALES (never APP_LOCALES).
+    selectors = all("useOfferedLocales" in read(f) and "options.map" in read(f) and "APP_LOCALES.map" not in read(f) for f in (
+        "components/i18n/LanguageMenu.tsx", "components/i18n/ConversationLanguageField.tsx", "components/settings/LanguageSettings.tsx")) \
+        and "SELECTABLE_LOCALES.filter" in read("lib/i18n/offeredLocales.ts")
     check("russian_excluded_and_preserved", preserved and excluded, "ru preserved in catalogue (8 stored/catalogue locales) and EXCLUDED from the 7 active Candidate locales")
     check("active_locales_frontend_backend_parity", parity and selectors, "frontend ACTIVE_CANDIDATE_LOCALES == backend; every selector renders SELECTABLE_LOCALES only")
     dict_src = read("components/ui/DictationControl.tsx")

@@ -14,6 +14,9 @@ const pt: Catalog = {
     loading: "A carregar",
     skipToContent: "Ir para o conteúdo",
     language: "Idioma",
+    languageUnqualified: "Não qualificada",
+    languagesNoneAvailable:
+      "Ainda não há nenhum idioma disponível para utilizadores reais. Um idioma só abre depois de concluir todas as verificações de qualificação.",
   },
   nav: {
     prepare: "Preparar",
@@ -89,6 +92,9 @@ const pt: Catalog = {
     passwordResetDone: "A sua palavra-passe foi reposta. Já pode iniciar sessão.",
     verifyLinkInvalid: "Este link de verificação é inválido ou expirou.",
     registrationFailed: "Falha no registo. Tente novamente.",
+    invitationLabel: "Código de convite",
+    invitationHint: "O Ask4Mo está em beta privada. O registo requer um convite da equipa Ask4Mo.",
+    invitationRequired: "É necessário um convite válido para se registar durante a beta privada. Verifique o código ou peça um novo.",
     genericError: "Algo correu mal. Tente novamente.",
     couldNotReset: "Não foi possível repor a sua palavra-passe.",
   },

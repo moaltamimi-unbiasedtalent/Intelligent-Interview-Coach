@@ -28,6 +28,10 @@ const retire = vi.fn();
 const setUserPlan = vi.fn();
 const setWorkspacePlan = vi.fn();
 const myPlan = vi.fn();
+// 03B additions the same views now call (revision tokens, matrix, history, subject revision).
+const planMatrix = vi.fn();
+const planSubject = vi.fn();
+const planVersionAssignments = vi.fn();
 vi.mock("@/lib/api/client", () => ({
   api: {
     auth: { plan: (...a: unknown[]) => myPlan(...a) },
@@ -36,6 +40,8 @@ vi.mock("@/lib/api/client", () => ({
       createPlanDraft: (...a: unknown[]) => createDraft(...a), updatePlanDraft: (...a: unknown[]) => updateDraft(...a),
       activatePlan: (...a: unknown[]) => activate(...a), retirePlan: (...a: unknown[]) => retire(...a),
       setUserPlan: (...a: unknown[]) => setUserPlan(...a), setWorkspacePlan: (...a: unknown[]) => setWorkspacePlan(...a),
+      planMatrix: (...a: unknown[]) => planMatrix(...a), planSubject: (...a: unknown[]) => planSubject(...a),
+      planVersionAssignments: (...a: unknown[]) => planVersionAssignments(...a),
     },
   },
 }));
@@ -46,18 +52,22 @@ import { PlanDetailView } from "@/components/admin/PlanDetailView";
 import { PlansView } from "@/components/admin/PlansView";
 
 const ROWS = [
-  { id: 2, plan_code: "premium", version: 1, display_name: "Premium (preview)", status: "active", enabled_entitlements: 5, total_entitlements: 5, subscribers: { users: 3, workspaces: 1 }, created_at: null, activated_at: "2026-10-01", retired_at: null },
-  { id: 1, plan_code: "basic", version: 1, display_name: "Basic", status: "active", enabled_entitlements: 4, total_entitlements: 5, subscribers: { users: 40, workspaces: 0 }, created_at: null, activated_at: "2026-10-01", retired_at: null },
+  { id: 2, plan_code: "premium", version: 1, display_name: "Premium (preview)", status: "active", enabled_entitlements: 5, total_entitlements: 5, subscribers: { users: 3, workspaces: 1 }, revision: "rev-p1", family_revision: "fam-premium", created_at: null, activated_at: "2026-10-01", retired_at: null },
+  { id: 1, plan_code: "basic", version: 1, display_name: "Basic", status: "active", enabled_entitlements: 4, total_entitlements: 5, subscribers: { users: 40, workspaces: 0 }, revision: "rev-b1", family_revision: "fam-basic", created_at: null, activated_at: "2026-10-01", retired_at: null },
 ];
 const ENTS = (over: Record<string, boolean> = {}) => ["current_market_research", "standard_history", "standard_progress", "standard_model_profiles", "premium_preview"].map((k) => ({
-  code: k, label: `Label ${k}`, description: `Desc ${k}`, type: "boolean", enabled: over[k] ?? k !== "premium_preview", limit: null }));
-const DETAIL = (over = {}) => ({ id: 3, plan_code: "premium", version: 2, display_name: "Premium (preview)", status: "draft", editable: true, entitlements: ENTS(),
+  code: k, label: `Label ${k}`, description: `Desc ${k}`, type: "boolean", enabled: over[k] ?? k !== "premium_preview", limit: null,
+  bounds: { kind: "boolean", min_limit: null, max_limit: null, premium_only: k === "premium_preview" } }));
+const DETAIL = (over = {}) => ({ id: 3, plan_code: "premium", version: 2, display_name: "Premium (preview)", status: "draft", editable: true, entitlements: ENTS(), revision: "rev-3", family_revision: "fam-premium",
   subscribers: { users: 0, workspaces: 0 }, created_at: null, activated_at: null, retired_at: null, ...over });
 
 beforeEach(() => {
   mockPerms = ["platform.plans.read", "platform.plans.manage", "platform.subscriptions.manage"];
   plans.mockResolvedValue({ items: ROWS });
   plan.mockResolvedValue(DETAIL());
+  planMatrix.mockResolvedValue({ entitlements: [], versions: [] });
+  planSubject.mockResolvedValue({ subject_type: "user", subject_id: 7, current: null, history: [], revision: "subj-rev-1" });
+  planVersionAssignments.mockResolvedValue({ plan_code: "premium", version: 2, total: 0, page: 1, page_size: 10, items: [] });
   assignable.mockResolvedValue([{ plan_code: "basic", version: 1, display_name: "Basic" }, { plan_code: "premium", version: 1, display_name: "Premium (preview)" }]);
   for (const m of [createDraft, updateDraft, activate, retire, setUserPlan, setWorkspacePlan]) m.mockResolvedValue({ version: 2 });
   myPlan.mockResolvedValue({ plan_code: "basic", plan_version: 1, entitlements: Object.fromEntries(ENTS().map((e) => [e.code, { enabled: e.enabled, limit: null, unlimited: e.enabled }])) });
@@ -80,7 +90,7 @@ describe("Admin plan catalogue", () => {
     render(<PlansView />);
     await screen.findByRole("link", { name: /Premium/ });
     await user.click(screen.getByRole("button", { name: "Create next draft of premium" }));
-    await waitFor(() => expect(createDraft).toHaveBeenCalledWith("premium"));
+    await waitFor(() => expect(createDraft).toHaveBeenCalledWith("premium", "fam-premium"));
     expect(await screen.findByText(/Draft version 2 of premium created/)).toBeInTheDocument();
   });
 
@@ -116,14 +126,14 @@ describe("Admin plan detail", () => {
     await user.click(box);
     expect(screen.getByRole("button", { name: "Activate this version" })).toBeDisabled();   // unsaved edits first
     await user.click(screen.getByRole("button", { name: "Save draft" }));
-    await waitFor(() => expect(updateDraft).toHaveBeenCalledWith(3, { premium_preview: { enabled: true, limit: null } }));
+    await waitFor(() => expect(updateDraft).toHaveBeenCalledWith(3, { premium_preview: { enabled: true, limit: null } }, "rev-3"));
     expect(await screen.findByText("Draft saved.")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Activate this version" }));
     const dialog = screen.getByRole("alertdialog");
     expect(within(dialog).getByRole("button", { name: "Cancel" })).toHaveFocus();
     expect(within(dialog).getByText(/Existing subscribers are not moved and nobody is charged/)).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "Activate" }));
-    await waitFor(() => expect(activate).toHaveBeenCalledWith(3));
+    await waitFor(() => expect(activate).toHaveBeenCalledWith(3, "rev-3"));
   });
 
   it("an active version is immutable (no checkboxes, no save) and can be retired after confirmation", async () => {
@@ -135,7 +145,7 @@ describe("Admin plan detail", () => {
     expect(screen.queryByRole("button", { name: "Save draft" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Retire this version" }));
     await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Retire" }));
-    await waitFor(() => expect(retire).toHaveBeenCalledWith(3));
+    await waitFor(() => expect(retire).toHaveBeenCalledWith(3, "rev-3"));
   });
 
   it("a failed activation shows the error inside the dialog and is not retried; read-only shows no controls", async () => {
@@ -173,7 +183,7 @@ describe("Subject plan control (user and workspace)", () => {
     const dialog = screen.getByRole("alertdialog");
     expect(within(dialog).getByRole("button", { name: "Cancel" })).toHaveFocus();
     await user.click(within(dialog).getByRole("button", { name: "Change plan" }));
-    await waitFor(() => expect(setUserPlan).toHaveBeenCalledWith(7, "premium"));
+    await waitFor(() => expect(setUserPlan).toHaveBeenCalledWith(7, "premium", "subj-rev-1"));
     await waitFor(() => expect(changed).toHaveBeenCalledWith(expect.stringContaining("Plan changed to Premium (preview)")));
   });
 
@@ -186,7 +196,7 @@ describe("Subject plan control (user and workspace)", () => {
     await user.selectOptions(screen.getByLabelText("Change plan"), "premium");
     await user.click(screen.getByRole("button", { name: "Change plan" }));
     await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Change plan" }));
-    await waitFor(() => expect(setWorkspacePlan).toHaveBeenCalledWith(4, "premium"));
+    await waitFor(() => expect(setWorkspacePlan).toHaveBeenCalledWith(4, "premium", "subj-rev-1"));
   });
 
   it("without subscriptions.manage there is no change control and the assignable list is not fetched", async () => {

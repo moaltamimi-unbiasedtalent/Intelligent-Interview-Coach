@@ -76,3 +76,7 @@ Owner decision: a failed mandatory locale gate prevents activation for real user
 ## 7. Preserved records
 
 Historical evaluation results, the 95% coverage gate result, RC-P10-003 artifacts, the capstone acceptance ledger and the 394-row register are unchanged. This document adds requirements; it upgrades nothing.
+
+## 8. Activation enforcement (06H)
+
+The rule in sections 2 and 6 is enforced in code by `src/language_activation.py` against the committed record `docs/production/execution/language_readiness.json`. In staging and production a locale is offered and accepted for new Candidate activity only when all fourteen gates are PASS and each PASS carries an evidence reference, a named human approver, an approval date and the release SHA, with no gate approved at a different SHA or past an `approved_until` date. When no locale has such a record nothing is offered and new language-bearing activity is refused (`language_not_activated`); English is not an exception. Development and test keep the seven languages selectable, labelled UNQUALIFIED. Detail and the record format: `docs/production/execution/evidence/06H_EVIDENCE.md`.

@@ -295,6 +295,8 @@ class PlanVersionRow(_Strict):
     enabled_entitlements: int
     total_entitlements: int
     subscribers: Subscribers
+    revision: str
+    family_revision: str
     created_at: str | None
     activated_at: str | None
     retired_at: str | None
@@ -304,6 +306,13 @@ class PlanList(_Strict):
     items: list[PlanVersionRow]
 
 
+class EntitlementBounds(_Strict):
+    kind: str
+    min_limit: int | None
+    max_limit: int | None
+    premium_only: bool
+
+
 class EntitlementRow(_Strict):
     code: str
     label: str
@@ -311,6 +320,7 @@ class EntitlementRow(_Strict):
     type: str
     enabled: bool
     limit: int | None
+    bounds: EntitlementBounds
 
 
 class PlanDetail(_Strict):
@@ -321,6 +331,8 @@ class PlanDetail(_Strict):
     status: str
     editable: bool
     entitlements: list[EntitlementRow]
+    revision: str
+    family_revision: str
     subscribers: Subscribers
     created_at: str | None
     activated_at: str | None
@@ -686,11 +698,57 @@ class KnowledgeStoreState(_Strict):
     location: str
 
 
+class KnowledgeIndexManifestFields(_Strict):
+    """02B: the persisted manifest of one collection. Provider, model, version and dimensions are non-secret identifiers (02K contract)."""
+    provider: str | None = None
+    model: str | None = None
+    version: str | None = None
+    dimensions: int | None = None
+    metric: str | None = None
+    compatibility_hash: str | None = None
+    checksum: str | None = None
+    built_at: str | None = None
+    degraded: bool = False
+    degradation_reason: str | None = None
+
+
+class KnowledgeLiveEmbedder(_Strict):
+    provider: str | None = None
+    model: str | None = None
+    version: str | None = None
+    dimensions: int | None = None
+
+
+class KnowledgeIndexCompatibility(_Strict):
+    """02B: compatibility of a collection's manifest with the live embedder. ``differing_fields`` are field NAMES only, never values."""
+    collection_id: str | None = None
+    state: str
+    compatible: bool
+    refused: bool
+    differing_fields: list[str] = []
+    chunk_count: int | None = None
+    message: str = ""
+    manifest: KnowledgeIndexManifestFields | None = None
+    live_embedder: KnowledgeLiveEmbedder | None = None
+
+
 class KnowledgeEmbeddingState(_Strict):
     status: str
     provider: str
     embedder: str | None = None
     note: str
+    # 02B, additive: the actual embedder, its recorded version and any degradation
+    model: str | None = None
+    version: str | None = None
+    dimensions: int | None = None
+    quality_mode: str | None = None
+    label: str | None = None
+    degraded: bool = False
+    environment: str | None = None
+    approved_for_environment: bool | None = None
+    problems: list[str] = []
+    warnings: list[str] = []
+    index_compatibility: KnowledgeIndexCompatibility | None = None
 
 
 class KnowledgeCuratedState(_Strict):
@@ -706,6 +764,11 @@ class KnowledgeGuardFinding(_Strict):
     fields: list[str] = []
 
 
+class KnowledgeGuardEmbedding(_Strict):
+    checked: bool = False
+    differing_fields: list[str] = []
+
+
 class KnowledgeGuardState(_Strict):
     environment: str
     enforced: bool
@@ -713,6 +776,7 @@ class KnowledgeGuardState(_Strict):
     serving_allowed: bool
     checked_at: str
     findings: list[KnowledgeGuardFinding]
+    embedding_check: KnowledgeGuardEmbedding | None = None      # 02B
 
 
 class KnowledgeIdentityDatabase(_Strict):
@@ -736,6 +800,7 @@ class KnowledgeCollectionState(_Strict):
     role: str
     chunk_count: int | None = None
     persistent: bool
+    index_manifest: KnowledgeIndexCompatibility | None = None     # 02B
 
 
 class KnowledgeManifestSummary(_Strict):

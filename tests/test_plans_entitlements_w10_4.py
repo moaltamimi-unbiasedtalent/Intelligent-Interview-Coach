@@ -442,7 +442,7 @@ def test_plan_routes_are_permissioned_and_schemas_carry_no_price_fields():
     from src.api.schemas import admin as S
     routes = admin_routes()
     plan_routes = [r for r in routes if r.path.startswith("/admin/plans") or r.path.endswith("/plan")]
-    assert len(plan_routes) == 9 and ungated(routes) == []
+    assert len(plan_routes) == 9 + 9 and ungated(routes) == []   # 03B added 9 routes (tests/test_admin_plans_03b.py pins them)
     assert {p for r in plan_routes for p in r.permissions} == {perm.PLANS_READ, perm.PLANS_MANAGE, perm.SUBSCRIPTIONS_MANAGE}
     names = []
     for cls in vars(S).values():

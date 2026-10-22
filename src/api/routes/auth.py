@@ -10,7 +10,7 @@ No response ever echoes a password, token, hash or session id.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response, status
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from src.api.dependencies import (
@@ -47,7 +47,8 @@ from src.api.coded_errors import CodedHTTPException
 from src.api.rate_limit import client_ip, email_key, enforce, user_key
 from src.application.admin_permissions import sorted_permissions
 from src.application.authorization import Capability
-from src.application.auth_service import InvalidCredentialsError
+from src.application.auth_service import InvalidCredentialsError, InvitationRequiredError
+from src.invitations.policy import MAX_CODE_LENGTH, invitation_required
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -55,6 +56,8 @@ _UNIFORM_REGISTER = (
     "If that email can be registered, we've sent a verification link. "
     "Please check your inbox, then sign in."
 )
+# 04E: ONE refusal for every way an invitation can be unusable (missing, unknown, expired, revoked, used, wrong email) and for an email that exists or not.
+_INVITATION_REFUSAL = "A valid invitation is required to register during the private beta."
 _TOKEN_CODES = {"invalid": "token_invalid", "used": "token_used", "expired": "token_expired"}
 _UNIFORM_FORGOT = (
     "If an account exists for that email, we've sent a password-reset link."
@@ -65,6 +68,17 @@ def _secure_cookies(request: Request) -> bool:
     """Cookies are Secure everywhere except the local dev/test environments."""
     env = str(getattr(getattr(request.app.state, "settings", None), "env", "development")).lower()
     return env not in DEV_ENVS
+
+
+def _invitation_required(request: Request) -> bool:
+    """04E: decided from the SERVER's environment (hosted and unknown environments always require one; see ``src.invitations.policy``)."""
+    env = str(getattr(getattr(request.app.state, "settings", None), "env", "development"))
+    return invitation_required(env)
+
+
+def _enforce_invitation_limits(request: Request) -> None:
+    enforce("auth_invitation_ip", client_ip(request))
+    enforce("auth_invitation_global", "all")
 
 
 def _set_session_cookie(request: Request, response: Response, token: str) -> None:
@@ -98,19 +112,32 @@ def register(
     from src.api.guards import ensure_not_paused
 
     ensure_not_paused("public_registration", pause)
+    # 06H: registration is a NEW candidate activity: its language (or the default) must be activated.
+    from src.language_activation import require_locale_activated
+
+    require_locale_activated(body.locale)
     # Abuse bound (§18): per-IP + global. No account key here — registration must not reveal
     # whether an email exists, so the limit is IP-scoped only.
     enforce("auth_register_ip", client_ip(request))
     enforce("auth_global", "all")
+    required = _invitation_required(request)
+    if required:
+        _enforce_invitation_limits(request)
     # Uniform outcome whether or not the email already exists; a verification email is
     # sent on creation. Registration does not auto-sign-in (verify then sign in).
-    service.register(
-        email=body.email,
-        password=body.password,
-        display_name=body.display_name,
-        request_id=request_id,
-        locale=body.locale,
-    )
+    try:
+        service.register(
+            email=body.email,
+            password=body.password,
+            display_name=body.display_name,
+            request_id=request_id,
+            locale=body.locale,
+            invitation_code=body.invitation_code,
+            require_invitation=required,
+        )
+    except InvitationRequiredError:
+        # 04E: the same answer whatever the reason (the reason is in the audit trail only).
+        raise CodedHTTPException(403, "invitation_required", _INVITATION_REFUSAL)
     return MessageResponse(message=_UNIFORM_REGISTER)
 
 
@@ -304,6 +331,12 @@ def update_preferences(
     # Interface locale, conversation language and (P3) dictation locale are independent:
     # a language choice never changes labour-market geography.
     changed: dict[str, str] = {}
+    # 06H: choosing a language is accepted only for an activated one (checked before ANY field is written; an omitted field is not checked).
+    from src.language_activation import require_locale_activated
+
+    for chosen in (body.interface_locale, body.conversation_language):
+        if chosen is not None:
+            require_locale_activated(chosen)
     if body.response_detail is not None:
         account_repo.set_response_detail(principal.user_id, body.response_detail)
         changed["response_detail"] = body.response_detail
@@ -391,7 +424,8 @@ def premium_status(
 _OIDC_STATE_COOKIE = "ask4mo_oidc_state"
 _OIDC_NEXT_COOKIE = "ask4mo_oidc_next"
 _OIDC_PKCE_COOKIE = "ask4mo_oidc_pkce"
-_OIDC_COOKIES = (_OIDC_STATE_COOKIE, _OIDC_NEXT_COOKIE, _OIDC_PKCE_COOKIE)
+_OIDC_INVITE_COOKIE = "ask4mo_oidc_invite"       # 04E: the invitation code for a NEW Google account (HttpOnly, 10 minutes, spent with the other transaction cookies)
+_OIDC_COOKIES = (_OIDC_STATE_COOKIE, _OIDC_NEXT_COOKIE, _OIDC_PKCE_COOKIE, _OIDC_INVITE_COOKIE)
 _OIDC_CALLBACK_PATH = "/api/v1/auth/oidc/google/callback"
 
 
@@ -418,9 +452,9 @@ def _oidc_redirect_uri(request: Request) -> str:
     raise HTTPException(status_code=503, detail="Google sign-in is not configured.")
 
 
-def _oidc_fail(request: Request, request_id: str, status_code: int, message: str) -> JSONResponse:
-    """A failed callback. Every transaction cookie (state, destination, PKCE verifier) is spent: a callback can be attempted once."""
-    resp = JSONResponse(status_code=status_code, content={"error": {"code": "http_error", "message": message, "request_id": request_id}})
+def _oidc_fail(request: Request, request_id: str, status_code: int, message: str, code: str = "http_error") -> JSONResponse:
+    """A failed callback. Every transaction cookie (state, destination, PKCE verifier, invitation) is spent: a callback can be attempted once."""
+    resp = JSONResponse(status_code=status_code, content={"error": {"code": code, "message": message, "request_id": request_id}})
     for name in _OIDC_COOKIES:
         resp.delete_cookie(name, path="/")
     return resp
@@ -433,6 +467,7 @@ def google_start(
     response: Response,
     next: str = Query(default="/", max_length=512),
     provider=Depends(get_oidc_provider),
+    invitation_code: str | None = Header(default=None, alias="X-Invitation-Code", max_length=MAX_CODE_LENGTH),
 ) -> dict:
     from src.authsec import tokens
     from src.application.oidc import is_safe_redirect, new_pkce_verifier, pkce_challenge
@@ -447,7 +482,12 @@ def google_start(
     secure = _secure_cookies(request)
     # Short-lived, HttpOnly transaction cookies: CSRF state, post-login destination and the PKCE verifier (never sent to the browser's JS or to Google
     # at start; only its S256 challenge is). All three are bound to THIS browser and are cleared when the callback ends, whatever its outcome.
-    for name, value in ((_OIDC_STATE_COOKIE, state), (_OIDC_NEXT_COOKIE, safe_next), (_OIDC_PKCE_COOKIE, verifier)):
+    cookies = [(_OIDC_STATE_COOKIE, state), (_OIDC_NEXT_COOKIE, safe_next), (_OIDC_PKCE_COOKIE, verifier)]
+    if invitation_code and invitation_code.strip():
+        # 04E: carried in a header (never a URL, so it is not logged) and kept in an HttpOnly cookie only for this transaction; it is validated and consumed only
+        # if the callback would create a NEW account.
+        cookies.append((_OIDC_INVITE_COOKIE, invitation_code.strip()))
+    for name, value in cookies:
         response.set_cookie(name, value, max_age=600, httponly=True, secure=secure, samesite="lax", path="/")
     return {"authorization_url": provider.authorization_url(
         state=state, redirect_uri=redirect_uri, code_challenge=pkce_challenge(verifier))}
@@ -483,9 +523,20 @@ def google_callback(
     except OidcError:
         return _oidc_fail(request, request_id, 400, "Google sign-in failed. Please try again.")
 
-    result = service.oidc_login(
-        identity=identity, user_agent=request.headers.get("user-agent"), request_id=request_id
-    )
+    required = _invitation_required(request)
+    invite = request.cookies.get(_OIDC_INVITE_COOKIE)
+    if required and invite:
+        try:
+            _enforce_invitation_limits(request)
+        except HTTPException:
+            return _oidc_fail(request, request_id, 429, "Too many attempts. Please wait a moment and try again.", "rate_limited")
+    try:
+        result = service.oidc_login(
+            identity=identity, user_agent=request.headers.get("user-agent"), request_id=request_id,
+            invitation_code=invite, require_invitation=required,
+        )
+    except InvitationRequiredError:
+        return _oidc_fail(request, request_id, 403, _INVITATION_REFUSAL, "invitation_required")
     raw_next = request.cookies.get(_OIDC_NEXT_COOKIE) or "/"
     safe_next = raw_next if is_safe_redirect(raw_next) else "/"
 

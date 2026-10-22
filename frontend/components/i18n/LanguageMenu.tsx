@@ -4,7 +4,8 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/components/i18n/I18nProvider";
-import { SELECTABLE_LOCALES, type AppLocale } from "@/lib/i18n/locales";
+import { type AppLocale } from "@/lib/i18n/locales";
+import { useOfferedLocales } from "@/lib/i18n/offeredLocales";
 
 /**
  * Global interface-language control (P10B Wave 1). Discoverable in BOTH the public marketing
@@ -18,6 +19,7 @@ import { SELECTABLE_LOCALES, type AppLocale } from "@/lib/i18n/locales";
  */
 export function LanguageMenu({ className }: { className?: string }) {
   const { locale, setLocale, t } = useI18n();
+  const { options, noneAvailable } = useOfferedLocales();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -95,7 +97,12 @@ export function LanguageMenu({ className }: { className?: string }) {
           onKeyDown={onMenuKeyDown}
           className="absolute right-0 z-40 mt-1 w-44 overflow-hidden rounded-[10px] border border-border bg-surface shadow-soft"
         >
-          {SELECTABLE_LOCALES.map((l) => (
+          {noneAvailable ? (
+            <p role="note" data-testid="language-none-available" className="px-3.5 py-3 text-sm text-muted">
+              {t("common.languagesNoneAvailable")}
+            </p>
+          ) : null}
+          {options.map((l) => (
             <button
               key={l.code}
               type="button"
@@ -107,7 +114,14 @@ export function LanguageMenu({ className }: { className?: string }) {
                 l.code === locale ? "font-semibold text-foreground" : "text-foreground",
               )}
             >
-              <span>{l.nativeLabel}</span>
+              <span>
+                {l.nativeLabel}
+                {l.unqualified ? (
+                  <span data-testid={`language-unqualified-${l.code}`} className="ml-2 rounded border border-border px-1 text-[10px] uppercase text-muted">
+                    {t("common.languageUnqualified")}
+                  </span>
+                ) : null}
+              </span>
               <span className="text-xs uppercase text-muted">{l.code}</span>
             </button>
           ))}

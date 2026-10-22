@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from urllib.parse import quote
 
 from src.application.errors import ValidationError
+from src.invitations.repository import InvitationRefused
 from src.auth_repository import (
     AccountRecord,
     AccountRepository,
@@ -41,6 +42,7 @@ __all__ = [
     "AuthConfig",
     "AuthenticationService",
     "InvalidCredentialsError",
+    "InvitationRequiredError",
     "RegisterOutcome",
     "LoginResult",
 ]
@@ -48,6 +50,15 @@ __all__ = [
 
 class InvalidCredentialsError(ValidationError):
     """Login failed. Deliberately generic (no enumeration) — mapped to 401 by the route."""
+
+
+class InvitationRequiredError(Exception):
+    """Registration needs a valid invitation and none usable was presented (04E). ``reason`` is for the AUDIT trail only; the route answers with ONE uniform refusal, so
+    neither the code's state nor the email's existence can be learned from the response."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__("invitation_required")
+        self.reason = reason
 
 
 @dataclass(frozen=True)
@@ -116,22 +127,37 @@ class AuthenticationService:
         display_name: str | None = None,
         request_id: str | None = None,
         locale: str | None = None,
+        invitation_code: str | None = None,
+        require_invitation: bool = False,
     ) -> RegisterOutcome:
         """Create a password account and email a verification link.
 
         Returns a UNIFORM outcome: whether or not the email already exists, the caller
         sends the same response. If the email is taken, no duplicate is created and a
         neutral "account already exists" note is emailed instead.
+
+        04E: with ``require_invitation`` (the route decides it from the server environment) a valid, unused, unexpired invitation (matching the email when bound) is
+        needed BEFORE any hashing or account work. Any failure raises :class:`InvitationRequiredError` and is audited with a bounded reason (never the code or the
+        email); the invitation is consumed atomically with the account insert, so an email that already exists neither reveals itself nor burns the code.
         """
         email_norm = _valid_email(email)
+        if require_invitation:
+            reason = self._accounts.peek_invitation(code=invitation_code, email=email_norm)
+            if reason:
+                self._refuse_invitation(reason, channel="password", request_id=request_id)
         _valid_password(password)
         name = (display_name or "").strip() or None
 
-        user_id = self._accounts.create_password_account(
-            email=email_norm,
-            password_hash=passwords.hash_password(password),
-            display_name=name,
-        )
+        try:
+            user_id = self._accounts.create_password_account(
+                email=email_norm,
+                password_hash=passwords.hash_password(password),
+                display_name=name,
+                require_invitation=require_invitation,
+                invitation_code=invitation_code,
+            )
+        except InvitationRefused as exc:                     # revoked / expired / raced between the check and the insert
+            self._refuse_invitation(exc.reason, channel="password", request_id=request_id)
         if user_id is None:
             # Email already registered — do not enumerate; send a neutral notice.
             self._audit.record(
@@ -152,11 +178,20 @@ class AuthenticationService:
             actor_user_id=user_id,
             request_id=request_id,
         )
+        if require_invitation:
+            self._audit.record(event_type="account.invitation_redeemed", result="success", actor_user_id=user_id, request_id=request_id,
+                               context={"channel": "password"})
         loc = normalise_locale(locale)
         if locale:
             self._accounts.set_interface_locale(user_id, loc)      # the recipient's language for every later identity email
         self._send_verification(user_id=user_id, email=email_norm, locale=loc, request_id=request_id)
         return RegisterOutcome(created=True)
+
+    def _refuse_invitation(self, reason: str, *, channel: str, request_id: str | None) -> None:
+        """Audit a refused registration (metadata only: bounded reason and channel; no code, no email) and raise the uniform error."""
+        self._audit.record(event_type="account.invitation_refused", result="refused", target_type="invitation", request_id=request_id,
+                           context={"reason": reason, "channel": channel})
+        raise InvitationRequiredError(reason)
 
     # -- login / logout -------------------------------------------------------
 
@@ -207,20 +242,29 @@ class AuthenticationService:
         return LoginResult(session_token=raw, user_id=account.user_id)
 
     def oidc_login(
-        self, *, identity, user_agent: str | None = None, request_id: str | None = None
+        self, *, identity, user_agent: str | None = None, request_id: str | None = None,
+        invitation_code: str | None = None, require_invitation: bool = False,
     ) -> LoginResult:
         """Resolve a verified social identity to a session (create/link the account).
 
         ``identity`` is an :class:`src.application.oidc.OidcIdentity`. Account linking
         (by provider-verified email) and duplicate handling live in the repository.
+
+        04E: with ``require_invitation`` an identity that would CREATE a new account needs a valid invitation (redeemed atomically with the insert); an existing identity
+        or a link to an existing verified account signs in unchanged. Raises :class:`InvitationRequiredError`.
         """
-        user_id = self._accounts.link_or_create_oidc(
-            provider=identity.provider,
-            provider_subject=identity.subject,
-            email=identity.email,
-            email_verified=identity.email_verified,
-            display_name=identity.display_name,
-        )
+        try:
+            user_id, created = self._accounts.link_or_create_oidc_detailed(
+                provider=identity.provider,
+                provider_subject=identity.subject,
+                email=identity.email,
+                email_verified=identity.email_verified,
+                display_name=identity.display_name,
+                require_invitation=require_invitation,
+                invitation_code=invitation_code,
+            )
+        except InvitationRefused as exc:
+            self._refuse_invitation(exc.reason, channel="oidc", request_id=request_id)
         raw = tokens.generate_token(tokens.SESSION_TOKEN_BYTES)
         self._sessions.create(
             token_hash=tokens.hash_token(raw),
@@ -228,6 +272,9 @@ class AuthenticationService:
             ttl_seconds=self._config.session_ttl_seconds,
             user_agent=_trim(user_agent, 256),
         )
+        if require_invitation and created:
+            self._audit.record(event_type="account.invitation_redeemed", result="success", actor_user_id=user_id, request_id=request_id,
+                               context={"channel": "oidc"})
         self._audit.record(
             event_type="account.oidc_login",
             result="success",

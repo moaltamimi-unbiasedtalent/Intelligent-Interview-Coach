@@ -40,6 +40,7 @@ class DeletionSummary:
     workspaces_transferred: int = 0
     workspaces_deleted: int = 0
     audit_anonymized: int = 0
+    invitations_anonymized: int = 0           # 04E: registration invitations whose redeemer/issuer/revoker linkage was cleared
 
     def to_dict(self) -> dict:
         return {
@@ -51,6 +52,7 @@ class DeletionSummary:
             "workspaces_transferred": self.workspaces_transferred,
             "workspaces_deleted": self.workspaces_deleted,
             "audit_anonymized": self.audit_anonymized,
+            "invitations_anonymized": self.invitations_anonymized,
         }
 
 
@@ -184,10 +186,18 @@ class AccountDeletionService:
                       .where(P.WorkspaceInvitation.accepted_user_id == user_id)
                       .values(accepted_user_id=None))
 
+            # 2b) 04E registration invitations: clear the redeemer linkage (and the email binding of the consumed row) and any issuer/revoker linkage. The consumed row
+            # stays, anonymous, so a redeemed code can never be replayed; the FK is SET NULL as well, but SQLite does not enforce it, so this is explicit.
+            from src.invitations.repository import anonymise_for_deleted_user
+
+            summary.invitations_anonymized = anonymise_for_deleted_user(s, user_id)
+
             # 3) Story bank → documents (children first).
             story_ids = [r[0] for r in s.execute(
                 select(P.CandidateStory.id).where(P.CandidateStory.user_id == user_id)).all()]
             if story_ids:
+                self._delete_where(s, P.StoryUse, P.StoryUse.story_id.in_(story_ids), summary, "story_uses")
+                self._delete_where(s, P.StoryAnswerLink, P.StoryAnswerLink.story_id.in_(story_ids), summary, "story_answer_links")
                 self._delete_where(s, P.StoryEvidence,
                                    P.StoryEvidence.story_id.in_(story_ids), summary,
                                    "story_evidence")

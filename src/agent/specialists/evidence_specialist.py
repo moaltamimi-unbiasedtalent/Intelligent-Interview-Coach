@@ -73,7 +73,8 @@ def run_evidence_specialist(
             kind="story", id=int(st["id"]),
             label=(st.get("title") or "story")[:200],
             text=(st.get("result") or st.get("situation") or st.get("action") or "")[:1200],
-            provenance=f"story:{st.get('status')}/{st.get('evidence_state')}",
+            # 04A: attribute HOW the story is supported (document evidence, own practice answer, own confirmation or nothing), never just a status.
+            provenance=f"story:{st.get('status')}/{st.get('verification') or st.get('evidence_state')}",
             competencies=story_comps[:30],
         )
         scored.append((score, int(st["id"]), item))
