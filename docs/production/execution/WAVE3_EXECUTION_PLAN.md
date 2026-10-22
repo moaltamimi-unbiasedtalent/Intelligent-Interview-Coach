@@ -40,7 +40,7 @@ A package is finished only when all five layers are. The layers are never merged
 | 02A | MERGED (PR #221, merge 191cbc5) | PR CI green (12 of 12); re-read on main | NOT RUN (hosted volumes, PostgreSQL, multi-worker; OD-HOSTED) | none | PG-05 IN PROGRESS |
 | 02B | MERGED (PR #227, merge 6acdbc1) | PR CI green (12 of 12); re-read on main | NOT RUN (production embedder, hosted refusal; OD-HOSTED, OD-EMBED) | Embedder choice and benchmark approval (OD-EMBED, OD-BUDGET) | PG-05 NOT MET (retrieval quality unmeasured) |
 | 02C | MERGED (PR #226, merge 568b8f3) | PR CI green (12 of 12); re-read on main | NOT RUN (real clamd, EICAR, outage drill; OD-HOSTED) | none | PG-05 IN PROGRESS |
-| 02D | NOT STARTED | no PR yet | n/a | Licensing reviewer and owner; per-market signed approval (OPEN, long lead) | PG-05 (licence and market qualification) |
+| 02D | BRANCH PUSHED (2 PRs), NO PR | no PR yet | n/a | Licensing reviewer and owner; per-market signed approval (OPEN, long lead) | PG-05 (licence and market qualification) |
 | 02E | BRANCH PUSHED, NO PR | no PR yet | NOT RUN | Frozen coverage measure approval (OD-COVERAGE); independent datasets | PG-05 (retrieval quality, coverage) |
 | 03A | MERGED (PR #216, merge f921892) | PR CI green (12 of 12); re-read on main | NOT RUN (live Admin walkthrough) | none | PG-08 IN PROGRESS |
 | 03B | MERGED (PR #230, merge a4f540d) | PR CI green (12 of 12); re-read on main | NOT RUN (live Admin walkthrough) | Plan limit values (OD-PLAN-LIMITS) | PG-08 IN PROGRESS |
@@ -66,8 +66,8 @@ A package is finished only when all five layers are. The layers are never merged
 | 06C | BRANCH PUSHED, NO PR | no PR yet | NOT RUN (live Mo quality) | Blinded native-reader rating (OD-BUDGET) | LG-04, LG-05 per language |
 | 06D | BRANCH PUSHED, NO PR | no PR yet | NOT RUN (production embedder; OD-EMBED) | Sample review | LG-06 per language |
 | 06E | BRANCH PUSHED, NO PR | no PR yet | NOT RUN | none | LG-08 per language; PG-03 |
-| 06F | NOT STARTED | no PR yet | n/a | Seven native reviewers and legal qualifiers (calendar-bound, OPEN) | LG-10, LG-11 per language; PG-04 |
-| 06G | NOT STARTED | no PR yet | NOT RUN (live Mo outputs) | Independent reviewers and participants (OD-BUDGET, OD-GATE-THRESHOLDS) | PG-07 BLOCKED |
+| 06F | BRANCH PUSHED, NO PR | no PR yet | n/a | Seven native reviewers and legal qualifiers (calendar-bound, OPEN) | LG-10, LG-11 per language; PG-04 |
+| 06G | BRANCH PUSHED, NO PR | no PR yet | NOT RUN (live Mo outputs) | Independent reviewers and participants (OD-BUDGET, OD-GATE-THRESHOLDS) | PG-07 BLOCKED |
 | 06H | MERGED (PR #229, merge 5d588a1) | PR CI green (12 of 12); re-read on main | NOT RUN (hosted fail-closed behaviour) | Approvers named for each gate (OD-LANG-03/04) | PG-10 IN PROGRESS; LG-13/LG-14 enforcement merged, zero languages qualified |
 | 07A | BRANCH PUSHED, NO PR | no PR yet | n/a | none | PG-10 |
 | 07B | NOT STARTED | no PR yet | NOT RUN (live grounding; OD-BUDGET) | none | PG-03 |

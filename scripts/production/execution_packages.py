@@ -306,6 +306,9 @@ PACKAGE_STATUS = {   # id: (state, branch, head SHA, verification evidence). "ME
     "05D": ("BRANCH PUSHED, NO PR; offline only; live round trips NOT RUN", "feat/05d-identity-live", "1cfeebc", "180 new tests; Brevo delivery webhook gated False; Redis limiter tests; live-verification runbook; migration 0044"),
     "04F": ("BRANCH PUSHED, NO PR; review-ready, no human review", "feat/04f-dictation-disclosure", "0633ce9", "audit of 14 places, proposed wording patch not applied, two fixes, correction-burden harness"),
     "06D": ("BRANCH PUSHED, NO PR; stacked on 02E; LG-06 not claimed", "feat/06d-multilingual-retrieval", "51479e9", "110 new tests; 49-pair harness, citation attribution, cross-language abstention"),
+    "02D": ("BRANCH PUSHED (2 PRs), NO PR; engineering filter and review pack only; NOTHING APPROVED, no licensing reviewer", "feat/02d-source-approval-filter + feat/02d-licensing-review-pack", "aaad5bc + 75ed4bf", "119 new tests; empty approval register; hosted candidates get no knowledge evidence until a human enables sources; US content refused for non-US markets while OD-US-CONTENT is undecided"),
+    "06F": ("BRANCH PUSHED, NO PR; review packs only; NO human qualification recorded", "feat/06fg-review-packages", "a4af192", "seven-language review packs and blank sign-off forms; stacked on 06C"),
+    "06G": ("BRANCH PUSHED, NO PR; protocol and harness only; no reviewer named, no PASS value exists", "feat/06fg-review-packages", "a4af192", "70-item blinded sheets, at least 3 raters, agreement statistics; generation refuses without the 05C governor and a marker"),
 }
 THROUGHPUT = [   # (package, estimate low-high days, authoring wall-clock minutes, CI/integration rework rounds after the PR opened, PR open to merge, note). PR timestamps are GitHub UTC on 2026-10-21
     ("02K", "2-3", 32, 0, "0h41m", "merged with a green PR #215"), ("01B0", "2-3", 24, 0, "0h41m", "PR #217"), ("03K", "2-3", 34, 0, "0h41m", "PR #219"),

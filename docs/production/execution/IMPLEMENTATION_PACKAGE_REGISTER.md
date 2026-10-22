@@ -262,7 +262,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 02D Market source qualification and licensing (selected EU markets)
 
-- **Status:** NOT STARTED
+- **Status:** BRANCH PUSHED (2 PRs), NO PR; engineering filter and review pack only; NOTHING APPROVED, no licensing reviewer (feat/02d-source-approval-filter + feat/02d-licensing-review-pack aaad5bc + 75ed4bf; 119 new tests; empty approval register; hosted candidates get no knowledge evidence until a human enables sources; US content refused for non-US markets while OD-US-CONTENT is undecided)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** B (Knowledge Sources, embeddings and RAG) / 2 / W3 9-15 Nov to W5 23-27 Nov
 - **Scope:** For each approved market: licence, authority and coverage qualification of the sources actually enabled; exclusion of unsupported or unlicensed evidence from enabled features; decision on US-sourced content (O*NET, BLS) in an EU beta; alias curation ownership.
@@ -733,7 +733,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 06F Native review and legal translation qualification
 
-- **Status:** NOT STARTED
+- **Status:** BRANCH PUSHED, NO PR; review packs only; NO human qualification recorded (feat/06fg-review-packages a4af192; seven-language review packs and blank sign-off forms; stacked on 06C)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** F (Seven-language and human qualification) / 6 / W2 2-8 Nov to W5 23-27 Nov
 - **Scope:** Coordinate native-speaker review and qualified legal translation per language; record sign-offs. Reviewer and counsel engagement starts immediately (it does not wait for the audit); each language is reviewed as its catalogue is frozen.
@@ -751,7 +751,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 06G Independent human AI evaluation
 
-- **Status:** NOT STARTED
+- **Status:** BRANCH PUSHED, NO PR; protocol and harness only; no reviewer named, no PASS value exists (feat/06fg-review-packages a4af192; 70-item blinded sheets, at least 3 raters, agreement statistics; generation refuses without the 05C governor and a marker)
 - **Scope tier:** T2 (Owner core capabilities (candidate journeys, Story Bank, Workspaces, quality evidence))
 - **Track / phase / weeks:** F (Seven-language and human qualification) / 6 / W3 9-15 Nov to W5 23-27 Nov
 - **Scope:** Blinded human rating of interview questions, feedback and Mo answers per language; targeted human validation; pilot revalidation of sharing, provenance and score interpretation.
