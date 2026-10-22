@@ -108,7 +108,17 @@ Branch `feat/05c-monitoring-alerts`, branched from PR 1's pushed head (84c7c04).
 - Not touched: `deploy/docker-compose.staging.yml`, `AdminShell.tsx`, `capabilities.ts`, `nav-items.ts`, `src/agent/*`, `src/copilot/security/*`, frozen contracts, the tracker and register.
 
 ### Tests and commands
-(Filled in below after the final runs.)
+| Check | Result |
+|---|---|
+| New PR 2 suites: `test_ops_monitoring_05c.py` (25), `test_ops_integration_05c.py` (34); with PR 1's three suites together | 137 passed under the repo `.venv` and under the fresh-dependency canary `~/.cache/ask4mo/ci_venv` |
+| Full backend suite, canary venv, `pytest tests -n 3 --dist loadfile -q` (merged with `origin/main`, which had not moved) | 6458 tests: 6409 passed, 43 skipped, 3 failed. Two were mine and are fixed (a migration-0044 test that asserted 0044 is the head, now "in the chain"; a dedupe test whose fake clock started at import time instead of at the test: re-run, 119 passed). The third is the same local-only `test_admin_plans_03b.py::test_head_is_unchanged_by_this_package` described under PR 1 (it fails on any branch with a migration until merged; passes in CI's merge checkout) |
+| `ruff check .`, `compileall`, `scripts/ci_test_shards.py verify --shards 4` | pass; 305 test files, each in exactly one shard |
+| All 49 CI evaluator commands | 48 PASS; `eval_platform_admin.py` aborted once with the native-library `libc++abi: recursive_mutex lock failed` and passed on two immediate re-runs (the same environmental abort hit a different evaluator on PR 1's run; it appears under machine load and is not specific to this change) |
+| Frontend: `npx tsc --noEmit`, `npm run lint`, full `npx vitest run`, `npm run build` | clean; 123 files, 1291 tests passed (9 new) |
+| Playwright, `E2E_PORT=3123`: `admin.spec.ts` (18), `w11-visual-a11y.spec.ts` + `admin-ux-w12-5.spec.ts` (25) | 43 passed (the providers page is exercised by these; no new spec was needed, the new panel is covered by vitest) |
+| Alembic `upgrade head`, single head | head `0045_monitoring_alert_categories`; chain 0043 to 0044 to 0045 asserted in tests |
+
+Commands: `../../../.venv/bin/python -m pytest -p no:cacheprovider tests/test_ops_monitoring_05c.py tests/test_ops_integration_05c.py`; `~/.cache/ask4mo/ci_venv/bin/python -m pytest tests -n 3 --dist loadfile -q -p no:cacheprovider`; `cd frontend && npx tsc --noEmit && npm run lint && npx vitest run && npm run build && E2E_PORT=3123 npx playwright test e2e/admin.spec.ts e2e/w11-visual-a11y.spec.ts e2e/admin-ux-w12-5.spec.ts` (`frontend/node_modules` is an untracked symlink to the main checkout's, never committed).
 
 ### Not run / still missing (PR 2)
 - Staging: the synthetic outage drill, hosted pause verification and the Admin readiness view on a hosted environment (OD-HOSTED).

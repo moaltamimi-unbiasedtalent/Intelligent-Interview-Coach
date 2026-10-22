@@ -201,7 +201,7 @@ def test_migration_0045_chains_accepts_the_new_categories_and_fails_closed_on_do
     rev, prev = "0045_monitoring_alert_categories", "0044_ai_budget_ledger"
     cfg, url = _alembic(tmp_path, monkeypatch)
     script = ScriptDirectory.from_config(cfg)
-    assert script.get_revision(rev).down_revision == prev and assert_chain(require=(rev,)) == script.get_heads()[0] == rev
+    assert script.get_revision(rev).down_revision == prev and assert_chain(require=(rev,)) == script.get_heads()[0]         # later packages may add revisions after this one
     command.upgrade(cfg, prev)
     eng = create_engine(url)
     ins = ("INSERT INTO admin_notifications (public_id, category, severity, dedupe_key, state, source_type, title, occurrence_count, first_seen_at, last_seen_at, created_at, updated_at, revision) "

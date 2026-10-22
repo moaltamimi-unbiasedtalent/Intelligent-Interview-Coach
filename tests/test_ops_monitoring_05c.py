@@ -97,7 +97,8 @@ def test_too_few_requests_never_raise_and_503_counts_as_failure(sf):
 
 
 def test_dedupe_one_row_per_condition_refresh_is_rate_limited_and_recovery_auto_resolves(sf):
-    add_events(sf, "request", "server_error", 30)
+    NOW = datetime.now(timezone.utc).replace(microsecond=0)         # alert rows are stamped with the real clock: take the fake clock's origin at THIS moment (not at import)
+    add_events(sf, "request", "server_error", 30, at=NOW)
     cycle(sf, NOW)
     cycle(sf, NOW + timedelta(seconds=60))                                                 # seen again inside the refresh window: not rewritten
     assert len(alerts(sf)) == 1 and alerts(sf)[0].occurrence_count == 1
