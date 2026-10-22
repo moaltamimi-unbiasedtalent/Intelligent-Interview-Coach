@@ -237,7 +237,8 @@ def test_audit_records_membership_role_and_share_changes_without_content(team):
     w.post("adam", f"/workspaces/{wa}/leave")
     w.post("alice", f"/workspaces/{wa}/archive")
     w.post("alice", f"/workspaces/{wa}/restore")
-    w.post("alice", f"/workspaces/{wa}/transfer", {"new_owner_user_id": w.u["mia"]["uid"], "confirm_name": "Renamed"})
+    tok = w.transfer("alice", wa, "mia", name="Renamed")          # 04B completion: two steps, propose then the recipient accepts
+    assert w.post("mia", "/workspaces/transfers/accept", {"token": tok}).status_code == 200
     w.post("mia", f"/workspaces/{wa}/delete", {"confirm_name": "Renamed"})
     with w.repo.session_factory() as s:
         events = s.scalars(select(P.AuditEvent).where(P.AuditEvent.event_type.like("workspace.%") | P.AuditEvent.event_type.like("share.%"))).all()
@@ -245,7 +246,7 @@ def test_audit_records_membership_role_and_share_changes_without_content(team):
         blob = json.dumps([(e.event_type, e.context, e.target_id, e.target_type) for e in events], default=str)
     expected = {"workspace.created", "workspace.invite_created", "workspace.invite_accepted", "workspace.invite_revoked",
                 "workspace.member_role_changed", "workspace.renamed", "workspace.member_removed", "workspace.member_left",
-                "workspace.archived", "workspace.restored", "workspace.ownership_transferred", "workspace.deleted",
+                "workspace.archived", "workspace.restored", "workspace.transfer_proposed", "workspace.transfer_accepted", "workspace.deleted",
                 "share.created", "share.revoked"}
     assert expected <= types, expected - types
     consent = [e for e in events if e.event_type == "share.created"][0].context

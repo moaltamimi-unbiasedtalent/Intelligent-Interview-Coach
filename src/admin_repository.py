@@ -13,7 +13,7 @@ takes real row locks.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Callable
 
 from sqlalchemy import func, or_, select, update
@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from src.application.errors import ConflictError
 from src.auth_repository import AccountRepository
+from src.ownership_transfer_repository import cancel_open_in_session
 from src.persistence import (
     ACCOUNT_STATUS_ACTIVE,
     PLATFORM_ROLE_USER,
@@ -290,6 +291,8 @@ class AdminUserRepository:
             user.updated_at = utcnow()
             # Deactivation ends every live session NOW (SEC-W10-01). Reactivation never revives them.
             revoked = self._revoke_live_sessions(s, user_id) if status != ACCOUNT_STATUS_ACTIVE else 0
+            if status != ACCOUNT_STATUS_ACTIVE:           # 04B: deactivating either party cancels an open ownership transfer (same transaction, audited)
+                cancel_open_in_session(s, reason="account_deactivated", user_id=user_id)
             _stage(s, audit, sessions_revoked=revoked)
             s.commit()
             return {"user_id": user_id, "status": status, "changed": True, "sessions_revoked": revoked}
@@ -373,7 +376,18 @@ class AdminUserRepository:
                 # A count only: shared items themselves are candidate content and never listed here.
                 "active_share_count": active_shares,
                 "active_owner_count": sum(1 for m in active if m.role == WORKSPACE_ROLE_OWNER),
+                # 04B: a boolean only (an expired proposal no longer counts); no party, token, address or content.
+                "ownership_transfer_pending": self._transfer_pending(s, workspace_id),
             }
+
+    @staticmethod
+    def _transfer_pending(s: Session, workspace_id: int) -> bool:
+        from src.persistence import TRANSFER_STATUS_PENDING, WorkspaceOwnershipTransfer as T
+
+        expires = s.scalar(select(T.expires_at).where(T.workspace_id == workspace_id, T.status == TRANSFER_STATUS_PENDING))
+        if expires is None:
+            return False
+        return (expires if expires.tzinfo else expires.replace(tzinfo=timezone.utc)) > utcnow()
 
     @staticmethod
     def _active_owner_rows(s: Session, workspace_id: int) -> list[int]:
@@ -435,6 +449,7 @@ class AdminUserRepository:
                     ShareGrant.owner_user_id == user_id, ShareGrant.workspace_id == workspace_id,
                     ShareGrant.status == SHARE_STATUS_ACTIVE)
                 .values(status=SHARE_STATUS_REVOKED, revoked_at=now)).rowcount or 0
+            cancel_open_in_session(s, reason="membership_ended", workspace_id=workspace_id, user_id=user_id)   # 04B: an open ownership transfer of this member ends with the membership
             _stage(s, audit, shares_revoked=int(revoked))
             s.commit()
             return {"workspace_id": workspace_id, "user_id": user_id, "shares_revoked": int(revoked)}

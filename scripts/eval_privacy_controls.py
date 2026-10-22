@@ -35,6 +35,7 @@ PRIVACY_TABLES = frozenset({
     "candidate_documents", "document_versions", "document_claims", "candidate_stories", "story_evidence", "opportunities",
     "interviews", "interview_sessions", "questions", "answers", "reports", "preparation_runs", "preparation_packs", "preparation_memories",
     "privacy_requests", "billing_account_closures", "share_grants", "workspaces", "workspace_memberships", "workspace_invitations",
+    "workspace_ownership_transfers",
 })
 
 
@@ -43,6 +44,10 @@ PRIVACY_TABLES = frozenset({
 # (renumbered) at merge. 04A: archive, Opportunity link, self-confirmation, answer evidence and use attribution for stories (additive, fail-closed downgrade).
 REVIEWED_PRIVACY_MIGRATIONS: dict[str, frozenset[str]] = {
     "_story_bank_completion.py": frozenset({"candidate_stories", "answers", "opportunities", "users"}),
+    # 04B completion: a NEW table for the two-step ownership transfer (token and address stored only as hashes). It is itself an ownership-data table, so it is
+    # protected from now on; this one file may create and drop it and touch nothing else (its foreign keys only reference workspaces and users). Additive, with a
+    # fail-closed downgrade (refuses while any transfer row exists).
+    "_workspace_ownership_transfers.py": frozenset({"workspace_ownership_transfers"}),
 }
 
 

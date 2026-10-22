@@ -3,7 +3,7 @@
 Enforces every membership + invitation invariant server-side. Roles live on the membership:
 
 * ``workspace_owner``  - everything: rename, archive/restore/delete, invite (member or admin), change roles, remove anyone,
-  transfer ownership, leave only after transferring (the last owner can never be removed or leave).
+  propose an ownership transfer (two-step, see ``ownership_transfer_service``), leave only after transferring (the last owner can never be removed or leave).
 * ``workspace_admin``  - rename, invite PLAIN MEMBERS, revoke invitations, remove PLAIN MEMBERS. Never archives, deletes,
   transfers, changes a role, invites an admin, or removes an admin or the owner.
 * ``workspace_member`` - read the workspace, list members (display labels only), share their own items, leave.
@@ -247,24 +247,6 @@ class WorkspaceService:
                          shares_revoked=counts["shares"], invitations_removed=counts["invitations"])
         return {"status": "deleted", "members_removed": counts["memberships"], "shares_removed": counts["shares"],
                 "invitations_removed": counts["invitations"]}
-
-    def transfer_ownership(self, *, user_id: int, workspace_id: int, new_owner_user_id: int,
-                           confirm_name: str | None = None) -> dict:
-        """Owner hands ownership to a DIFFERENT active member in one atomic step; the former owner becomes a plain member.
-        The owner must type the exact workspace name (an irreversible act for the sender). OD-WS-TRANSFER (acceptance
-        procedure, cooling-off, constraints) is still awaiting the owner; this is the safe, minimal default."""
-        self._require_owner(workspace_id, user_id)
-        ws = self._require_workspace(workspace_id)
-        if (confirm_name or "").strip() != ws["name"]:
-            raise ValidationError("Type the exact workspace name to confirm the ownership transfer.")
-        if new_owner_user_id == user_id:
-            raise ValidationError("You already own this workspace.")
-        if not self._ws.transfer_ownership(workspace_id=workspace_id, new_owner_user_id=new_owner_user_id,
-                                           expected_owner_user_id=user_id):
-            raise ValidationError("The new owner must be another active member of this workspace.")
-        self._audit_event("workspace.ownership_transferred", user_id, workspace_id,
-                         new_owner=str(new_owner_user_id))
-        return self._ws.get_workspace(workspace_id)
 
     # -- invitations ----------------------------------------------------------
 

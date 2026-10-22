@@ -60,6 +60,22 @@ class World:
         a = self.post(who, "/workspaces/invitations/accept", {"token": self.token()})
         assert a.status_code == 200, a.text
 
+    # -- ownership transfer (two steps) -----------------------------------------------------------------------------
+    def step_up(self, who: str):
+        return self.post(who, "/workspaces/transfers/step-up", {"password": PW})
+
+    def propose(self, owner: str, wid: int, to: str, *, name: str, role: str = "workspace_member", step_up: bool = True):
+        if step_up:
+            assert self.step_up(owner).status_code == 200
+        return self.post(owner, f"/workspaces/{wid}/transfer",
+                         {"new_owner_user_id": self.u[to]["uid"], "confirm_name": name, "former_owner_role": role})
+
+    def transfer(self, owner: str, wid: int, to: str, *, name: str = "Alpha", role: str = "workspace_member") -> str:
+        """Propose and return the raw acceptance token taken from the notice the recipient was sent."""
+        r = self.propose(owner, wid, to, name=name, role=role)
+        assert r.status_code == 200, r.text
+        return self.token()
+
     def story(self, who: str, title: str = "My win") -> str:
         r = self.post(who, "/stories", {"title": title, "status": "user_created", "situation": "Led a team of five"})
         assert r.status_code in (200, 201), r.text

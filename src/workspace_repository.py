@@ -37,8 +37,10 @@ from src.persistence import (
     Workspace,
     WorkspaceInvitation,
     WorkspaceMembership,
+    WorkspaceOwnershipTransfer,
     utcnow,
 )
+from src.ownership_transfer_repository import cancel_open_in_session
 
 __all__ = ["WorkspaceRepository", "purge_workspace", "mask_email",
            "MAX_PENDING_INVITATIONS", "MAX_ACTIVE_MEMBERS"]
@@ -72,12 +74,15 @@ def purge_workspace(s, workspace_id: int) -> dict:
     """Delete a workspace and EVERY dependent row inside the caller's session (explicit child-first deletion because SQLite
     does not enforce cascades). Used by owner deletion and by account deletion when no successor exists, so the two paths cannot
     drift. Candidate content is never touched: it belongs to its owners and was only ever referenced by a share grant."""
-    counts = {"shares": 0, "invitations": 0, "memberships": 0, "subscriptions": 0}
+    counts = {"shares": 0, "invitations": 0, "memberships": 0, "subscriptions": 0, "transfers": 0, "transfers_cancelled": 0}
+    # 04B: an open ownership transfer is cancelled (and audited) before its rows go; terminal transfer rows are removed with the workspace.
+    counts["transfers_cancelled"] = len(cancel_open_in_session(s, reason="workspace_deleted", workspace_id=workspace_id))
     for model, col, key in (
         (ShareGrant, ShareGrant.workspace_id, "shares"),
         (WorkspaceInvitation, WorkspaceInvitation.workspace_id, "invitations"),
         (WorkspaceMembership, WorkspaceMembership.workspace_id, "memberships"),
         (Subscription, Subscription.workspace_id, "subscriptions"),   # W10.4: the workspace's own plan assignments
+        (WorkspaceOwnershipTransfer, WorkspaceOwnershipTransfer.workspace_id, "transfers"),
     ):
         for obj in s.execute(select(model).where(col == workspace_id)).scalars().all():
             s.delete(obj)
@@ -178,38 +183,6 @@ class WorkspaceRepository:
             s.commit()
             return counts
 
-    def transfer_ownership(self, *, workspace_id: int, new_owner_user_id: int,
-                           expected_owner_user_id: int | None = None) -> bool:
-        """Make new_owner the WORKSPACE_OWNER (must be a DIFFERENT active member); demote the old owner to member. Updates
-        workspaces.owner_user_id. ``expected_owner_user_id`` makes a concurrent double transfer fail instead of both succeeding."""
-        with self._sf() as s:
-            ws = s.get(Workspace, workspace_id, with_for_update=True)
-            if ws is None:
-                return False
-            if expected_owner_user_id is not None and ws.owner_user_id != expected_owner_user_id:
-                return False
-            if new_owner_user_id == ws.owner_user_id:
-                return False
-            new_m = s.scalar(select(WorkspaceMembership).where(
-                WorkspaceMembership.workspace_id == workspace_id,
-                WorkspaceMembership.user_id == new_owner_user_id,
-                WorkspaceMembership.status == MEMBERSHIP_STATUS_ACTIVE))
-            if new_m is None:
-                return False
-            old_owner = ws.owner_user_id
-            new_m.role = WORKSPACE_ROLE_OWNER
-            new_m.updated_at = utcnow()
-            old_m = s.scalar(select(WorkspaceMembership).where(
-                WorkspaceMembership.workspace_id == workspace_id,
-                WorkspaceMembership.user_id == old_owner))
-            if old_m is not None:
-                old_m.role = WORKSPACE_ROLE_MEMBER
-                old_m.updated_at = utcnow()
-            ws.owner_user_id = new_owner_user_id
-            ws.updated_at = utcnow()
-            s.commit()
-            return True
-
     def list_workspaces_for_user(self, user_id: int) -> list[dict]:
         with self._sf() as s:
             rows = s.execute(
@@ -297,10 +270,12 @@ class WorkspaceRepository:
             s.commit()
             return True
 
-    def end_membership(self, *, workspace_id: int, user_id: int, status: str) -> tuple[str, int]:
+    def end_membership(self, *, workspace_id: int, user_id: int, status: str,
+                       cancelled_transfers: list[int] | None = None) -> tuple[str, int]:
         """End an ACTIVE membership (left/removed) and revoke that member's outbound shares into the workspace, in ONE transaction,
         refusing to end the last owner (the check and the write share the transaction and the workspace row lock, so two
-        concurrent leaves cannot both pass). Returns ``(outcome, shares_revoked)``: ok, not_member or last_owner."""
+        concurrent leaves cannot both pass). An open ownership transfer involving this member is cancelled (and audited) in the SAME
+        transaction; the cancelled ids are appended to ``cancelled_transfers`` when given. Returns ``(outcome, shares_revoked)``: ok, not_member or last_owner."""
         with self._sf() as s:
             s.get(Workspace, workspace_id, with_for_update=True)             # serialise membership changes per workspace
             m = s.scalar(select(WorkspaceMembership).where(
@@ -320,6 +295,9 @@ class WorkspaceRepository:
             m.updated_at = utcnow()
             revoked = self._revoke_where(
                 s, ShareGrant.owner_user_id == user_id, ShareGrant.workspace_id == workspace_id)
+            cancelled = cancel_open_in_session(s, reason="membership_ended", workspace_id=workspace_id, user_id=user_id)
+            if cancelled_transfers is not None:
+                cancelled_transfers.extend(cancelled)
             s.commit()
             return "ok", revoked
 
