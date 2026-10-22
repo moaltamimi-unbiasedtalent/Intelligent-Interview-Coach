@@ -1,0 +1,311 @@
+{
+  "$id": "ask4mo.language_ai.human_eval_result/1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "agreement": {
+      "additionalProperties": {
+        "additionalProperties": {
+          "type": [
+            "number",
+            "integer",
+            "string",
+            "null"
+          ]
+        },
+        "type": "object"
+      },
+      "type": "object"
+    },
+    "approved": {
+      "const": false
+    },
+    "approved_on": {
+      "const": null
+    },
+    "approver": {
+      "const": null
+    },
+    "by_task": {
+      "additionalProperties": {
+        "additionalProperties": {
+          "type": "number"
+        },
+        "type": "object"
+      },
+      "type": "object"
+    },
+    "controls": {
+      "type": "object"
+    },
+    "dimensions": {
+      "additionalProperties": {
+        "additionalProperties": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "type": "object"
+      },
+      "type": "object"
+    },
+    "fake": {
+      "type": "boolean"
+    },
+    "flags": {
+      "additionalProperties": {
+        "additionalProperties": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "type": "object"
+      },
+      "type": "object"
+    },
+    "independence": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "language": {
+      "enum": [
+        "en",
+        "de",
+        "fr",
+        "es",
+        "it",
+        "pt",
+        "nl"
+      ]
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "proposal_comparison": {
+      "additionalProperties": false,
+      "properties": {
+        "alpha_ordinal": {
+          "additionalProperties": {
+            "enum": [
+              "AT_OR_ABOVE_PROPOSAL",
+              "BELOW_PROPOSAL",
+              "NOT_COMPUTED"
+            ],
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "ci95_lower_bound": {
+          "additionalProperties": {
+            "enum": [
+              "AT_OR_ABOVE_PROPOSAL",
+              "BELOW_PROPOSAL",
+              "NOT_COMPUTED"
+            ],
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "flag_upper95": {
+          "additionalProperties": {
+            "enum": [
+              "AT_OR_ABOVE_PROPOSAL",
+              "BELOW_PROPOSAL",
+              "NOT_COMPUTED"
+            ],
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "informational_only": {
+          "const": true
+        },
+        "label": {
+          "type": "string"
+        },
+        "mean": {
+          "additionalProperties": {
+            "enum": [
+              "AT_OR_ABOVE_PROPOSAL",
+              "BELOW_PROPOSAL",
+              "NOT_COMPUTED"
+            ],
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "raters": {
+          "enum": [
+            "AT_OR_ABOVE_PROPOSAL",
+            "BELOW_PROPOSAL",
+            "NOT_COMPUTED"
+          ],
+          "type": "string"
+        },
+        "sample_size": {
+          "enum": [
+            "AT_OR_ABOVE_PROPOSAL",
+            "BELOW_PROPOSAL",
+            "NOT_COMPUTED"
+          ],
+          "type": "string"
+        },
+        "share_4_or_5": {
+          "additionalProperties": {
+            "enum": [
+              "AT_OR_ABOVE_PROPOSAL",
+              "BELOW_PROPOSAL",
+              "NOT_COMPUTED"
+            ],
+            "type": "string"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "label",
+        "informational_only",
+        "sample_size",
+        "raters",
+        "mean",
+        "ci95_lower_bound",
+        "share_4_or_5",
+        "alpha_ordinal",
+        "flag_upper95"
+      ],
+      "type": "object"
+    },
+    "protocol": {
+      "const": "06G/1"
+    },
+    "release_sha": {
+      "const": null
+    },
+    "reviewers": {
+      "additionalProperties": {
+        "additionalProperties": false,
+        "properties": {
+          "independence": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "independence"
+        ],
+        "type": "object"
+      },
+      "type": "object"
+    },
+    "sample": {
+      "additionalProperties": false,
+      "properties": {
+        "control_items": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "model_output_items": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "policy_sentence_items": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "raters_complete": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "raters_expected": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "unit_of_analysis": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "model_output_items",
+        "policy_sentence_items",
+        "control_items",
+        "raters_expected",
+        "raters_complete",
+        "unit_of_analysis"
+      ],
+      "type": "object"
+    },
+    "schema": {
+      "const": "ask4mo.language_ai.human_eval_result/1"
+    },
+    "status": {
+      "enum": [
+        "INCOMPLETE",
+        "RATERS_INSUFFICIENT",
+        "REVIEWERS_UNVERIFIED",
+        "REVIEWERS_NOT_INDEPENDENT",
+        "CONTROLS_FAILED",
+        "READY_FOR_OWNER_REVIEW",
+        "SELFTEST_ONLY"
+      ]
+    },
+    "thresholds": {
+      "additionalProperties": false,
+      "properties": {
+        "adopted": {
+          "const": false
+        },
+        "proposals_are_not_adopted": {
+          "const": true
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "adopted",
+        "source",
+        "proposals_are_not_adopted"
+      ],
+      "type": "object"
+    },
+    "validation_errors": {
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema",
+    "protocol",
+    "language",
+    "fake",
+    "status",
+    "approved",
+    "approver",
+    "approved_on",
+    "release_sha",
+    "thresholds",
+    "sample",
+    "reviewers",
+    "independence",
+    "dimensions",
+    "by_task",
+    "agreement",
+    "flags",
+    "controls",
+    "proposal_comparison",
+    "validation_errors",
+    "limitations"
+  ],
+  "title": "06G human evaluation result for ONE language",
+  "type": "object"
+}

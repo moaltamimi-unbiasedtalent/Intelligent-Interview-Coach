@@ -1,0 +1,14 @@
+{
+  "schema": "ask4mo.language_ai.human_eval_bank_extension/1",
+  "package": "06G",
+  "synthetic": true,
+  "note": "Six additional profession-neutral role slots for the 06G extended review sample (12 roles x 5 task kinds = 60 model outputs per language). Synthetic words only; no real person, company or document. The role nouns are ENGINEERING translations, NOT native-reviewed (LG-11); a native reviewer of the sample may flag an awkward role word. The base roles stay in synthetic_prompt_bank.json (06C) and are unchanged.",
+  "roles": {
+    "pharmacist": {"en": "pharmacist", "de": "Apotheker", "fr": "pharmacien", "es": "farmacéutico", "it": "farmacista", "pt": "farmacêutico", "nl": "apotheker"},
+    "welder": {"en": "welder", "de": "Schweißer", "fr": "soudeur", "es": "soldador", "it": "saldatore", "pt": "soldador", "nl": "lasser"},
+    "civil_engineer": {"en": "civil engineer", "de": "Bauingenieur", "fr": "ingénieur civil", "es": "ingeniero civil", "it": "ingegnere civile", "pt": "engenheiro civil", "nl": "civiel ingenieur"},
+    "social_worker": {"en": "social worker", "de": "Sozialarbeiter", "fr": "travailleur social", "es": "trabajador social", "it": "assistente sociale", "pt": "assistente social", "nl": "maatschappelijk werker"},
+    "data_analyst": {"en": "data analyst", "de": "Datenanalyst", "fr": "analyste de données", "es": "analista de datos", "it": "analista di dati", "pt": "analista de dados", "nl": "data-analist"},
+    "chef": {"en": "chef", "de": "Koch", "fr": "cuisinier", "es": "cocinero", "it": "cuoco", "pt": "cozinheiro", "nl": "kok"}
+  }
+}
