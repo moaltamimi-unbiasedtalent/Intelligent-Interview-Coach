@@ -18,6 +18,8 @@ from typing import Any, Callable
 
 from sqlalchemy import select, update
 
+from src.copilot.embeddings import EmbeddingConfigurationError
+from src.copilot.index_manifest import IndexIncompatibleError
 from src.copilot.ingestion.chunking import chunk_units
 from src.copilot.ingestion.loaders import LoadedUnit
 from src.documents.file_security import FileRejected, FileScanUnavailable, enforce_scan
@@ -141,6 +143,16 @@ def run_parse(vpid: str, ctx) -> None:
         raise PermanentJobError("internal_error")
 
 
+def _incompatible(exc: IndexIncompatibleError, rt: "KnowledgeRuntime") -> None:
+    """02B: raise the incompatible-embedding alert (never raises). The job itself is refused by the caller: vectors of two embedders are never mixed."""
+    try:
+        from src.knowledge_admin.alerts import observe_embedding_incompatibility
+
+        observe_embedding_incompatibility(rt.session_factory, list(exc.fields) or ["manifest"])
+    except Exception:  # noqa: BLE001
+        pass
+
+
 # ------------------------------------------------------------------ index
 def build_chunks(info: dict, data: bytes, version_public_id: str):
     units, _ = _units(data, info["ext"])
@@ -168,9 +180,18 @@ def run_index(vpid: str, ctx) -> None:
         if not chunks:
             _fail_version(rt, vpid, "index", "no_chunks", ("indexing",))
             raise PermanentJobError("unsupported")
-        store = rt.vector_store_factory()
+        try:
+            store = rt.vector_store_factory()
+        except EmbeddingConfigurationError:
+            # 02B: the environment refuses this embedder (hosted + hash/lexical, missing credentials): permanent until configuration changes.
+            _fail_version(rt, vpid, "index", "embedding_unavailable", ("indexing",))
+            raise PermanentJobError("configuration_error")
         try:
             store.add_chunks(chunks)                        # idempotent: ids already present are skipped
+        except IndexIncompatibleError as exc:               # 02B: never mix embedders in one index; never rebuild automatically
+            _incompatible(exc, rt)
+            _fail_version(rt, vpid, "index", "index_incompatible", ("indexing",))
+            raise PermanentJobError("configuration_error")
         except Exception:  # noqa: BLE001 - vector store / embedding provider trouble: retry, text never recorded
             raise RetryableJobError("unavailable")
         now = rt.clock()
@@ -212,14 +233,22 @@ def run_reindex(vpid: str, ctx) -> None:
     if not chunks:
         raise PermanentJobError("unsupported")
     try:
-        rt.vector_store_factory().add_chunks(chunks)
+        store = rt.vector_store_factory()
+        store.add_chunks(chunks)
+    except EmbeddingConfigurationError:
+        raise PermanentJobError("configuration_error")         # 02B: embedder refused by the environment; no state change
+    except IndexIncompatibleError as exc:
+        # 02B: an incompatible index is NEVER extended with a different embedder's vectors and never rebuilt automatically. The operator rebuilds
+        # into a new, empty index with an approved embedder (scripts/knowledge_embedding_rebuild.py), which runs THIS job handler per version.
+        _incompatible(exc, rt)
+        raise PermanentJobError("configuration_error")
     except Exception:  # noqa: BLE001 - provider or store trouble is transient; text is never recorded
         raise RetryableJobError("unavailable")
     now = rt.clock()
     with rt.session_factory() as s:
         rec = s.get(KnowledgeIndexRecord, info["id"])
         if rec is None:
-            s.add(KnowledgeIndexRecord(version_id=info["id"], collection=P.COLLECTION, embedder=type(rt.vector_store_factory().embedder).__name__[:64],
+            s.add(KnowledgeIndexRecord(version_id=info["id"], collection=P.COLLECTION, embedder=type(store.embedder).__name__[:64],
                                        chunk_count=len(chunks), state="built", built_at=now, updated_at=now))
         else:
             rec.chunk_count, rec.state, rec.built_at, rec.removed_at, rec.updated_at = len(chunks), "built", now, None, now

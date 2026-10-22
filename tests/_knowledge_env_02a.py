@@ -10,7 +10,9 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from src.copilot.config import CopilotConfig
-from src.copilot.embeddings import LocalHashEmbedder
+from pydantic import SecretStr
+
+from src.copilot.embeddings import BaseEmbedder, LocalHashEmbedder
 from src.copilot.vectorstore import ChromaStore, InMemoryVectorStore
 from src.documents.file_security import FakeScanner
 from src.documents.storage import LocalDocumentStore
@@ -33,6 +35,25 @@ META = dict(language="en", authority_level=2, publisher="Example Framework Body"
             provenance_note="Published public framework; downloaded 2026-10-01.", licence_class="public_official")
 QUERY = "How should I prioritise a roadmap using customer evidence?"
 OTHER_TEMP = "/nonexistent-temp-root-for-02a-tests"      # patched in as tempfile.gettempdir() so a hosted guard does not see pytest's tmp_path as "temporary"
+
+
+class FakeSemanticEmbedder(BaseEmbedder):
+    """02B: an offline stand-in for an APPROVED semantic embedder (provider ``openai``) so hosted-environment tests exercise the guard's other
+    findings. It reuses the deterministic hash vectors for scoring; only its identity differs. NEVER a real provider call."""
+
+    provider = "openai"
+    model = "fake-semantic-test"
+    version = "test-1"
+    dimensions = 512
+
+    def __init__(self):
+        self._h = LocalHashEmbedder()
+
+    def embed_documents(self, texts):
+        return self._h.embed_documents(texts)
+
+    def embed_query(self, text):
+        return self._h.embed_query(text)
 
 
 class Clock:
@@ -64,7 +85,7 @@ def runtime_config(root: Path, *, environment="development", data_root: Path | N
 class Process:
     """One simulated API+worker process over ``root``. ``store`` may be injected (a deliberately different or empty one)."""
 
-    def __init__(self, root: Path, *, environment="development", data_root: Path | None = None, store=None, clock=None, embedding="local",
+    def __init__(self, root: Path, *, environment="development", data_root: Path | None = None, store=None, clock=None, embedding=None,
                  worker_environment=None, worker_data_root: Path | None = None, with_guard=True, ttl=0, alerts=False, hosted_sqlite=False):
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
@@ -74,8 +95,12 @@ class Process:
         self.clock = clock or Clock()
         self.jobs = JobService(self.sf, clock=self.clock)
         self.docs = LocalDocumentStore(str(self.root / "private"))
-        self.config = CopilotConfig(embedding_provider=embedding, chroma_persist_dir=str(self.root / "chroma"), api_key=None, embedding_api_key=None)
-        self.store = store or ChromaStore(LocalHashEmbedder(), persist_dir=str(self.root / "chroma"), collection_name=P.COLLECTION)
+        hosted = environment != "development"
+        # 02B: a hosted environment never accepts the lexical hash embedder, so hosted processes run an offline stand-in for an approved semantic one
+        embedding = embedding or ("openai" if hosted else "local")
+        self.config = CopilotConfig(embedding_provider=embedding, chroma_persist_dir=str(self.root / "chroma"), api_key=None,
+                                    embedding_api_key=SecretStr("test-key-not-real") if embedding == "openai" else None)
+        self.store = store or ChromaStore(FakeSemanticEmbedder() if hosted else LocalHashEmbedder(), persist_dir=str(self.root / "chroma"), collection_name=P.COLLECTION)
         self.runtime_cfg = runtime_config(self.root, environment=environment, data_root=data_root,
                                           database_url=PG_URL if environment != "development" and not hosted_sqlite else None)
         self.guard = (KnowledgeServingGuard(self.sf, self.runtime_cfg, store_provider=lambda: self.store, doc_store=self.docs, job_service=self.jobs,

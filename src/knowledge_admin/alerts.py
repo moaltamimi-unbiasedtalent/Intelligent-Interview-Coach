@@ -7,7 +7,7 @@ hold and maps them to four new categories (added by migration 0040, the only sch
 * ``knowledge_collection_lost``       governed collection empty/missing/short or unreadable while the registry records built indexes
 * ``knowledge_source_files_missing``  private source files recorded in the registry are missing from the private file store
 * ``knowledge_identity_mismatch``     the API and a live worker disagree about the data root, database or embedding settings
-* ``knowledge_embedding_mismatch``    the live embedder is incompatible with the index manifest (the producer of this signal is 02B; the mechanism is here)
+* ``knowledge_embedding_mismatch``    the live embedder is incompatible with the index manifest (the producer is 02B: the serving guard and a refused governed query)
 
 Failed knowledge jobs reuse the existing ``job_failed`` category with its existing per-job-type dedupe key, so there is exactly one alert per failing job type
 whichever path observed it. Emission never raises and never changes the outcome of the request that observed the condition. Alert rows hold only the
@@ -80,6 +80,8 @@ def observe_guard_report(session_factory: Any, report: Any, *, embedding_mismatc
     raised: list[str] = []
     try:
         present = {FINDING_CATEGORY[f.code] for f in report.findings if f.code in FINDING_CATEGORY}
+        if embedding_mismatch is None and getattr(report, "embedding_checked", False):
+            embedding_mismatch = list(getattr(report, "embedding_fields", ()))      # 02B producer: [] means "evaluated and compatible" (auto-resolves)
         if embedding_mismatch:
             present.add(EMBEDDING_MISMATCH)
         for category in CATEGORIES:
@@ -95,7 +97,8 @@ def observe_guard_report(session_factory: Any, report: Any, *, embedding_mismatc
 
 
 def observe_embedding_incompatibility(session_factory: Any, mismatched_fields: list[str]) -> None:
-    """For 02B: call with the fields of an ``EmbedderMatch`` (``mismatched_fields`` + ``unknown_fields``); an empty list clears the alert."""
+    """02B producer entry point: call with the differing field NAMES (``IndexStatus.fields`` / ``EmbedderMatch`` fields); an empty list clears the alert.
+    Dedupe key and auto-resolution are those of every knowledge alert (one row per category; resolved when the next evaluation is compatible)."""
     if mismatched_fields:
         _raise(session_factory, EMBEDDING_MISMATCH, source_id="embedder")
     else:

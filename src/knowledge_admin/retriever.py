@@ -8,6 +8,7 @@ failed or has not run yet). There is deliberately no BM25 channel: it would inde
 
 from __future__ import annotations
 
+from src.copilot.index_manifest import IndexIncompatibleError
 from src.copilot.models import DocumentChunk, RetrievalResult
 from src.knowledge_admin.service import KnowledgeAdminService
 
@@ -18,6 +19,7 @@ class GovernedKnowledgeRetriever:
     def __init__(self, store, session_factory, guard=None) -> None:
         self.store = store
         self._active = KnowledgeAdminService(session_factory, doc_store=None, jobs=None)
+        self._sf = session_factory
         self._guard = guard          # 02A: KnowledgeServingGuard; in a hosted environment a blocking finding REFUSES instead of returning []
 
     def retrieve(self, query: str, top_k: int = 5, filters: dict | None = None) -> list[RetrievalResult]:
@@ -32,7 +34,13 @@ class GovernedKnowledgeRetriever:
         active = self._active.active_version_ids()
         if not active or self.store.count() == 0:
             return []
-        hits = self.store.query(query, top_k=top_k * OVERFETCH, filters=None)
+        try:
+            hits = self.store.query(query, top_k=top_k * OVERFETCH, filters=None)
+        except IndexIncompatibleError as exc:
+            # 02B: the index was built by a different (or unproven) embedder. Raise the incompatible-embedding alert (never raises) and REFUSE: the
+            # career service records the governed channel as DEGRADED; it must never look like "no matching evidence".
+            self._alert(exc)
+            raise
         out: list[RetrievalResult] = []
         for hit in hits:
             meta = dict(hit.metadata)
@@ -44,3 +52,29 @@ class GovernedKnowledgeRetriever:
             if len(out) >= top_k:
                 break
         return out
+
+    def _alert(self, exc: IndexIncompatibleError) -> None:
+        sf = getattr(self, "_sf", None)
+        if sf is None:
+            return
+        try:
+            from src.knowledge_admin.alerts import observe_embedding_incompatibility
+
+            observe_embedding_incompatibility(sf, list(exc.fields) or ["manifest"])
+        except Exception:  # noqa: BLE001 - alerting never changes the outcome
+            pass
+
+
+class RefusedGovernedRetriever:
+    """Stands in for the governed retriever when the embedder was refused by the environment (02B). ``retrieve`` raises, so the career service
+    records the governed channel as DEGRADED (the same signal as a guard refusal) instead of the channel silently disappearing."""
+
+    store = None
+
+    def __init__(self, codes: list[str]) -> None:
+        self.codes = list(codes)
+
+    def retrieve(self, query: str, top_k: int = 5, filters: dict | None = None):
+        from src.knowledge_admin.environment import KnowledgeServingRefused
+
+        raise KnowledgeServingRefused(self.codes)

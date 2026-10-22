@@ -33,7 +33,7 @@ MESSAGES = {
     "index_failed": "An index build failed. Open the source to see the failure category, then retry.",
     "store_unavailable": "The vector store candidate retrieval reads could not be opened.",
     "collection_missing": "Active sources exist but the governed collection is empty or missing in the store. Re-index the active sources.",
-    "embedding_provider_unavailable": "The configured embedding provider is not usable (no credential is configured for it).",
+    "embedding_provider_unavailable": "The configured embedder is not usable in this environment (no credential is configured for it, or a hosted environment refuses the lexical hash embedder).",
     "configuration_error": "The store configuration cannot serve governed retrieval (for example a non-persistent store).",
     "degraded": "Governed knowledge works, but something currently needs attention (an unrecovered failed build, a pending job without a worker, a missing index record or a failed removal).",
 }
@@ -52,6 +52,12 @@ def _describe_store(store: Any) -> dict:
         out["chunk_count"] = int(store.count())
     except Exception:  # noqa: BLE001 - an unreadable store is reported as unavailable, text never recorded
         out["chunk_count"] = None
+    out["index"] = None
+    if hasattr(store, "index_status"):                       # 02B: the persisted manifest vs the live embedder (field names only, never values)
+        try:
+            out["index"] = store.index_status().to_safe_dict()
+        except Exception:  # noqa: BLE001
+            out["index"] = None
     return out
 
 
@@ -80,15 +86,24 @@ class KnowledgeReadinessService:
 
     # ------------------------------------------------------------------ embedding
     def _embedding(self, store_info: dict | None) -> dict:
-        provider = (getattr(self._config, "embedding_provider", "auto") or "auto").lower()
-        key = getattr(self._config, "embedding_api_key", None)
-        has_key = bool(key is not None and key.get_secret_value().strip())
-        remote = provider == "openai" or (provider == "auto" and has_key)
-        if provider == "openai" and not has_key:
-            return {"status": "unavailable", "provider": "openai", "embedder": None, "note": "no credential configured"}
+        """The ACTUAL embedder and its degradation (02B). ``status`` keeps its historical values; the new fields are additive."""
+        from src.copilot.embeddings import resolve_embedding_plan
+
+        plan = resolve_embedding_plan(self._config)
+        provider = plan.configured_provider
         embedder = store_info.get("embedder") if store_info else None
+        index = store_info.get("index") if store_info else None
+        extra = {"model": plan.model, "version": plan.version, "dimensions": plan.dimensions, "quality_mode": plan.quality_mode,
+                 "label": plan.label, "degraded": (not plan.semantic) and provider != "local", "environment": plan.environment,
+                 "approved_for_environment": plan.approved, "problems": list(plan.problems), "warnings": list(plan.warnings),
+                 "index_compatibility": index}
+        if plan.problems:
+            note = ("no credential configured" if "semantic_credentials_missing" in plan.problems and plan.semantic is True
+                    else "the embedder is not acceptable for this environment")
+            return {"status": "unavailable", "provider": "openai" if plan.semantic else "local", "embedder": embedder, "note": note, **extra}
+        remote = plan.semantic
         return {"status": "configured_not_tested" if remote else "available", "provider": "remote" if remote else "local", "embedder": embedder,
-                "note": "remote provider: configured, not tested here" if remote else "offline local embedder"}
+                "note": "remote provider: configured, not tested here" if remote else "offline local embedder (lexical, development only)", **extra}
 
     # ------------------------------------------------------------------ readiness
     def readiness(self) -> dict:
@@ -148,6 +163,14 @@ class KnowledgeReadinessService:
                     message = "The knowledge environment guard is refusing governed retrieval: " + " ".join(f.message for f in report.blocking)
             except Exception:  # noqa: BLE001 - diagnostics are additive; their failure never breaks readiness and never reports health
                 environment = None
+        idx = (store_info or {}).get("index") if store_info else None
+        if idx and idx.get("refused"):
+            # 02B: the index was built by a different or unproven embedder; candidate retrieval refuses it, so readiness must not say "ready".
+            governed_usable = False
+            if status in ("ready", "degraded", "no_active_sources", "index_pending", "worker_unavailable"):
+                status = "configuration_error"
+            message = "The governed index cannot be served with the live embedder (" + idx["state"] + (": " + ", ".join(idx["differing_fields"])
+                                                                                                      if idx.get("differing_fields") else "") + "). Rebuild it with an approved embedder."
         views = self._views(status, active_n, built_chunks, store_info, curated)
         return {
             "status": status, "message": message,
