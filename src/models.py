@@ -31,8 +31,10 @@ from typing import Annotated
 from pydantic import (
     AfterValidator,
     BaseModel,
+    BeforeValidator,
     ConfigDict,
     Field,
+    WithJsonSchema,
     field_validator,
     model_validator,
 )
@@ -229,7 +231,10 @@ def _make_lenient_enum_type(
         )
         return default
 
-    return Annotated[str, AfterValidator(_check)]
+    # 06C: the generated strict JSON Schema pins the field to the English vocabulary (language-independent identifiers). Without the ``enum`` a provider could not stop a model
+    # that answers in the candidate's language from emitting a localized label ("technisch"), which the lenient validator would then silently record as the default type.
+    # The validator above is unchanged, so the defensive (non-strict) path behaves exactly as before.
+    return Annotated[str, AfterValidator(_check), WithJsonSchema({"type": "string", "enum": list(allowed)})]
 
 
 def _make_enum_list_type(allowed: tuple[str, ...], label: str):
@@ -347,11 +352,25 @@ Temperature = Annotated[
 MaxTokens = Annotated[
     int, Field(ge=constants.MIN_OUTPUT_TOKENS, le=constants.MAX_OUTPUT_TOKENS_LIMIT)
 ]
+
+
+def _reject_bool_score(value: object) -> object:
+    """A JSON ``true``/``false`` is never a score (06C).
+
+    Pydantic's lax int coercion turns ``true`` into ``1``, which would silently record a score of 1 for a malformed model answer. Numeric strings and integral floats keep
+    their (meaning-preserving) coercion; only a boolean is refused, so the existing validation is tightened, never relaxed. The ``Field`` bounds come BEFORE the validator in the
+    ``Annotated`` list on purpose: the other order drops ``minimum``/``maximum`` from the generated strict JSON Schema (pinned by tests/test_structured_output_06c.py).
+    """
+    if isinstance(value, bool):
+        raise ValueError("a boolean is not a valid score")
+    return value
+
+
 OverallScore = Annotated[
-    int, Field(ge=constants.MIN_OVERALL_SCORE, le=constants.MAX_OVERALL_SCORE)
+    int, Field(ge=constants.MIN_OVERALL_SCORE, le=constants.MAX_OVERALL_SCORE), BeforeValidator(_reject_bool_score)
 ]
 RubricScore = Annotated[
-    int, Field(ge=constants.MIN_RUBRIC_SCORE, le=constants.MAX_RUBRIC_SCORE)
+    int, Field(ge=constants.MIN_RUBRIC_SCORE, le=constants.MAX_RUBRIC_SCORE), BeforeValidator(_reject_bool_score)
 ]
 
 
