@@ -1316,6 +1316,9 @@ class ManagedSecret(Base):
 
 EMAIL_ATTEMPT_TYPES = ("email_verification", "password_reset", "account_notice", "admin_test")
 EMAIL_ATTEMPT_STATUSES = ("provider_accepted", "failed", "not_configured", "delivery_unknown", "captured")
+# 05D: a verified provider delivery event (webhook) may set ``delivery_state``, a SEPARATE fact from ``status`` (provider acceptance at submission).
+# Collection is behind the code gate ``src.mail.webhook.DELIVERY_EVENTS_AUTHORIZED`` (False): until the owner authorises it every row keeps NULL.
+EMAIL_DELIVERY_STATES = ("delivered", "soft_bounced", "blocked", "hard_bounced", "complained")
 EMAIL_FAILURE_CATEGORIES = ("provider_not_configured", "invalid_sender", "provider_auth_failed", "provider_unavailable",
                             "provider_timeout", "rate_limited", "message_rejected", "delivery_unknown")
 
@@ -1333,6 +1336,8 @@ class EmailAttempt(Base):
     __table_args__ = (
         CheckConstraint(_in_list("message_type", EMAIL_ATTEMPT_TYPES), name="ck_email_attempts_type"),
         CheckConstraint(_in_list("status", EMAIL_ATTEMPT_STATUSES), name="ck_email_attempts_status"),
+        CheckConstraint("delivery_state IS NULL OR " + _in_list("delivery_state", EMAIL_DELIVERY_STATES), name="ck_email_attempts_delivery_state"),
+        Index("ix_email_attempts_message_ref", "provider_message_ref"),
         Index("ix_email_attempts_created", "created_at"),
         Index("ix_email_attempts_type_created", "message_type", "created_at"),
     )
@@ -1347,6 +1352,10 @@ class EmailAttempt(Base):
     request_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    # 05D: verified delivery-event evidence (NULL until an authenticated webhook says so; never inferred from ``status``).
+    delivery_state: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    delivery_event_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    delivery_event_digest: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 
 JOB_STATES = ("queued", "running", "succeeded", "failed", "cancelled")

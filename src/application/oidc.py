@@ -28,6 +28,7 @@ __all__ = [
     "GoogleOidcProvider",
     "is_safe_redirect",
     "google_enabled",
+    "oidc_status",
     "new_pkce_verifier",
     "pkce_challenge",
     "validate_id_token",
@@ -79,11 +80,29 @@ def is_safe_redirect(target: str | None, *, allowlist: tuple[str, ...] = ()) -> 
 
 def google_enabled() -> bool:
     """Google login is on only when explicitly flagged AND configured."""
+    return oidc_status()["enabled"]
+
+
+def oidc_status() -> dict:
+    """Secret-free, FAIL-CLOSED description of Google sign-in. ``enabled`` is True only when the flag is explicitly on AND both client settings exist.
+
+    The default (nothing set) is ``disabled``: ``/auth/oidc/google/start`` answers "not configured" and no provider object is built. ``reason`` is one of
+    ``enabled``, ``flag_off`` (the explicit disable path: ``FEATURE_GOOGLE_LOGIN`` unset or false), ``client_id_missing``, ``client_secret_missing``.
+    ``live_validated`` is always False: no real-Google round trip is recorded in this repository (05D, NOT RUN until staging).
+    """
     from src.application.authorization import flag_enabled
 
-    return flag_enabled("google_login") and bool(
-        _secrets.read_setting("GOOGLE_CLIENT_ID") and _secrets.read_setting("GOOGLE_CLIENT_SECRET")
-    )
+    has_id = bool((_secrets.read_setting("GOOGLE_CLIENT_ID") or "").strip())
+    has_secret = bool((_secrets.read_setting("GOOGLE_CLIENT_SECRET") or "").strip())
+    if not flag_enabled("google_login"):
+        reason = "flag_off"
+    elif not has_id:
+        reason = "client_id_missing"
+    elif not has_secret:
+        reason = "client_secret_missing"
+    else:
+        reason = "enabled"
+    return {"enabled": reason == "enabled", "reason": reason, "client_id_set": has_id, "client_secret_set": has_secret, "live_validated": False}
 
 
 # --- PKCE (RFC 7636, S256) --------------------------------------------------------------------------------------------

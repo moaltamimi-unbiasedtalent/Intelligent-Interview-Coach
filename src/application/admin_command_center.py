@@ -101,6 +101,8 @@ def rate_limit_mode() -> dict[str, Any]:
         "mode": "shared_store" if active else "in_memory_process_local",
         "distributed": active,
         "shared_store_requested": requested,
+        "single_process_acknowledged": (os.environ.get("RATE_LIMIT_SINGLE_PROCESS_ACKNOWLEDGED", "") or "").strip().lower() in ("1", "true", "yes", "on"),
+        "live_validated": False,        # no live Redis round trip is recorded (05D: NOT RUN until staging)
         "note": ("Limits are enforced per process; they are not shared across replicas."
                  if not active else "A shared store is active."),
     }
