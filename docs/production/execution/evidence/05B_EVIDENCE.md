@@ -63,5 +63,5 @@ Negative and refusal cases covered: non-empty or inside-source backup target, ac
 
 ## SHA and throughput
 
-Implementation commits: see the final report (branch head verified with `git ls-remote`). CI: no PR exists (the lead opens it); CI result NOT AVAILABLE.
-Start 2026-10-22T05:22Z; first push: FIRST_PUSH; rework rounds before first push: 4 (source-fingerprint mtime false positive found by the rewrite test, fixture approver was a deletion subject, three test-assertion fixes); fix commits after first push: none yet.
+Implementation commits 092f99b3 (code, tests, runbook), e51bde4c (drill records), 3d5e656a (evidence), all on `feat/05b-backup-restore-drills`; compare URL https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/new/feat/05b-backup-restore-drills (the head after this evidence follow-up is in the final report, verified with `git ls-remote`). CI: no PR exists (the lead opens it); CI result NOT AVAILABLE.
+Start 2026-10-22T05:22Z; first push: 2026-10-22T12:40Z (about 7 h 18 min wall clock, dominated by full-suite and 94 evaluator runs); rework rounds before first push: 4 (source-fingerprint mtime false positive found by the rewrite test, fixture approver was a deletion subject, three test-assertion fixes); fix commits after first push: none (one evidence-only follow-up commit for the SHA and timing).
