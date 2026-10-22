@@ -251,8 +251,8 @@ ev("L-07", "Сколько зарабатывает Data Analyst в Герман
 ev("L-08", "Was verdient eine Pflegekraft?", "multilingual", {"country": None}, ["multilingual:country_language_separation", "multilingual:incorrect_language_country_assumption"], language="de", dimension="country_detection")
 ev("L-09", "Combien gagne un Data Analyst ?", "multilingual", {"country": None}, ["multilingual:country_language_separation"], language="fr", dimension="country_detection")
 # multilingual structured-lane routing and occupation resolution (measured per language; the structured lanes are English-keyword driven)
-ev("L-10", "Was verdient ein Data Analyst in den USA?", "multilingual", {"lane": "vector", "country": "US", "max_structured_evidence": 0}, ["multilingual:lane_routing"], language="de", dimension="lane_routing", desired={"lane": "compensation"}, limitation="L-ROUTE-1")
-ev("L-11", "Combien gagne un Data Analyst aux États-Unis ?", "multilingual", {"lane": "vector", "country": "US", "max_structured_evidence": 0}, ["multilingual:lane_routing"], language="fr", dimension="lane_routing", desired={"lane": "compensation"}, limitation="L-ROUTE-1")
+ev("L-10", "Was verdient ein Data Analyst in den USA?", "multilingual", {"lane": "compensation", "country": "US", "max_structured_evidence": 0}, ["multilingual:lane_routing"], language="de", dimension="lane_routing")
+ev("L-11", "Combien gagne un Data Analyst aux États-Unis ?", "multilingual", {"lane": "compensation", "country": "US", "max_structured_evidence": 0}, ["multilingual:lane_routing"], language="fr", dimension="lane_routing")
 ev("L-12", "Wat doet een Data Analyst?", "multilingual", {"max_structured_evidence": 0}, ["multilingual:occupation_title_translation"], language="nl", dimension="occupation_resolution", desired={"min_structured_evidence": 1}, limitation="L-ROUTE-1")
 ev("L-13", "ما هو راتب محلل البيانات في ألمانيا؟", "multilingual", {"max_structured_evidence": 0, "country": None}, ["multilingual:unsupported_language"], language="ar", dimension="unsupported_language", limitation="L-LANG-AR")
 ev("L-14", "Wie viel verdient ein Softwareentwickler in Deutschland?", "multilingual", {"country": "DE", "max_structured_evidence": 0, "forbid_sources": ["fx_pay_us", "fx_doc_labour_us"]}, ["multilingual:occupation_title_translation", "multilingual:false_equivalence_guard"], language="de", dimension="occupation_resolution", desired={"min_structured_evidence": 1}, limitation="L-ROUTE-1")
@@ -320,7 +320,7 @@ comp("T-26", "detect_country", "Eu quero saber o salário", None, ["multilingual
 comp("T-27", "detect_country", "Is the Canadian or the American market larger?", "US", ["geography:two_countries_named"], "en", "country_detection")
 comp("T-28", "detect_country", "salary in Großbritannien", "UK", ["multilingual:country_name"], "de", "country_detection")
 comp("T-29", "route_lane", "What does a Data Analyst earn in the US?", "compensation", ["knowledge_category:compensation"], "en", "lane_routing")
-comp("T-30", "route_lane", "Was verdient ein Data Analyst in den USA?", "vector", ["multilingual:lane_routing"], "de", "lane_routing", desired="compensation", limitation="L-ROUTE-1")
+comp("T-30", "route_lane", "Was verdient ein Data Analyst in den USA?", "compensation", ["multilingual:lane_routing"], "de", "lane_routing")
 comp("T-31", "validate_input", "x" * 5000, {"ok": True, "truncated": True}, ["security:oversized_input_bounded"])
 comp("T-32", "validate_input", "", {"ok": False, "truncated": False}, ["security:empty_input_rejected"])
 comp("T-33", "guard_output", "Use key " "sk-or-" "ABCDEFGH12345678 now [1] and [7].", {"redacted": True, "invalid": ["[7]"]}, ["security:sensitive_information_redacted", "citation:invalid_marker_removed"], allowed_markers=["[1]"])
@@ -380,7 +380,7 @@ LIMITATIONS = {
     "L-XLANG-1": "The offline lexical embedder has no cross-language semantics; cross-language retrieval needs a semantic embedder (a paid run, not authorised) and cannot be measured here.",
     "L-LANG-AR": "Arabic is not a supported product, interface or knowledge-base language: no structured data, no router keywords and no resolver aliases exist for it. Only lexical document matching is measured.",
     "L-LANG-RU": "Russian is an interface language only (not an ESCO or knowledge-base language). Only lexical document matching is measured.",
-    "L-ROUTE-1": "The deterministic router, occupation phrase extraction and structured lanes are English-keyword driven; a non-English question reaches the structured stores only if the (paid, unmeasured) query-translation model rewrites it. Non-English questions fall to the narrative lane.",
+    "L-ROUTE-1": "The deterministic router, occupation phrase extraction and structured lanes are English-keyword driven; a non-English question reaches the structured stores only if the (paid, unmeasured) query-translation model rewrites it. Non-English questions fall to the narrative lane. 02E CLOSED THE LANE-ROUTING PART for de/fr/es/it/pt/nl (language-aware keyword tables in router_lang.py, so L-10, L-11 and T-30 now pin the compensation lane); occupation phrase extraction and the structured lookups below remain English-keyword driven and are still pinned here.",
     "L-RU-INFLECT": "Country names are matched as whole forms; an inflected Russian name (for example 'в Германии') is not recognised, so no geography is selected (it fails safe: nothing is substituted).",
     "L-ALIAS-1": "Alias resolution is exact-substring: a German near-synonym that is not a stored alias is not mapped to an occupation (correct: no equivalence is invented).",
     "L-CODE-1": "The runtime resolver matches titles and aliases only; an official occupation code in the question does not resolve an occupation.",
