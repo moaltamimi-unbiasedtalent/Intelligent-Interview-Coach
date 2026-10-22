@@ -721,7 +721,7 @@ def test_migration_0044_chains_has_the_orm_shape_and_fails_closed_on_downgrade(t
     rev, prev = "0044_ai_budget_ledger", "0043_story_bank_completion"
     cfg, url = _alembic(tmp_path, monkeypatch)
     script = ScriptDirectory.from_config(cfg)
-    assert script.get_revision(rev).down_revision == prev and assert_chain(require=(rev,)) == script.get_heads()[0] == rev
+    assert script.get_revision(rev).down_revision == prev and assert_chain(require=(rev,)) == script.get_heads()[0]         # the head moves as later packages add revisions; 0044 only has to be in the chain
     command.upgrade(cfg, rev)
     eng = create_engine(url)
     insp = inspect(eng)

@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import logging
 import random
+import re
 import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
@@ -566,19 +567,28 @@ class OpenRouterClient:
     def _parse_success(
         self, body: dict[str, Any], duration: float, model: str
     ) -> ChatResult:
+        # 05C: validate the SHAPE at the client boundary. A 200 whose body is not the expected object is an explicit error, never an AttributeError and never a silent empty success.
+        if not isinstance(body, dict):
+            raise InvalidResponseError("OpenRouter returned a response with an unexpected shape.", category="invalid_response")
         request_id = body.get("id")
-        actual_model = body.get("model") or model
+        actual_model = body.get("model") if isinstance(body.get("model"), str) and body.get("model") else model
 
         choices = body.get("choices")
-        if not choices:
+        if not choices or not isinstance(choices, list):
             # A genuinely malformed response — no choices at all.
             raise InvalidResponseError(
                 "OpenRouter returned no choices in the response.",
                 category="invalid_response",
             )
         first_choice = choices[0] or {}
+        if not isinstance(first_choice, dict):
+            raise InvalidResponseError("OpenRouter returned a choice with an unexpected shape.", category="invalid_response")
         message = first_choice.get("message") or {}
+        if not isinstance(message, dict):
+            raise InvalidResponseError("OpenRouter returned a message with an unexpected shape.", category="invalid_response")
         content = message.get("content")
+        if content is not None and not isinstance(content, str):
+            raise InvalidResponseError("OpenRouter returned message content of an unexpected type.", category="invalid_response")
         finish_reason = first_choice.get("finish_reason")
 
         if content is None or (isinstance(content, str) and not content.strip()):
@@ -598,6 +608,8 @@ class OpenRouterClient:
             )
 
         usage = body.get("usage")
+        if usage is not None and not isinstance(usage, dict):
+            usage = None                       # unusable accounting is unknown, never fabricated
         if not usage:
             # Content is usable, but token accounting is unavailable. Degrade
             # gracefully rather than failing the whole request.
@@ -616,13 +628,16 @@ class OpenRouterClient:
             self._log_debug(result.debug_info)
             return result
 
-        prompt_tokens = int(usage.get("prompt_tokens", 0) or 0)
-        completion_tokens = int(usage.get("completion_tokens", 0) or 0)
-        total_tokens = int(
-            usage.get("total_tokens", prompt_tokens + completion_tokens) or 0
-        )
-        reported_cost = usage.get("cost")
-        reported_cost = float(reported_cost) if reported_cost is not None else None
+        try:
+            prompt_tokens = int(usage.get("prompt_tokens", 0) or 0)
+            completion_tokens = int(usage.get("completion_tokens", 0) or 0)
+            total_tokens = int(
+                usage.get("total_tokens", prompt_tokens + completion_tokens) or 0
+            )
+            reported_cost = usage.get("cost")
+            reported_cost = float(reported_cost) if reported_cost is not None else None
+        except (TypeError, ValueError):
+            raise InvalidResponseError("OpenRouter returned usage figures of an unexpected type.", category="invalid_response") from None
 
         result = ChatResult(
             content=content,
@@ -696,10 +711,18 @@ def _provider_error_detail(body: dict[str, Any], choice: dict[str, Any]) -> str 
     for source in (choice, body):
         error = source.get("error") if isinstance(source, dict) else None
         if isinstance(error, dict) and isinstance(error.get("message"), str):
-            return error["message"][:200]
+            return _redact(error["message"][:200])
         if isinstance(error, str) and error.strip():
-            return error[:200]
+            return _redact(error[:200])
     return None
+
+
+_SECRET_PATTERN = re.compile(r"(sk-[A-Za-z0-9_\-]{8,}|Bearer\s+\S+)", re.IGNORECASE)
+
+
+def _redact(text: str) -> str:
+    """05C: a provider's error text is surfaced to operators and users in a message; a credential-shaped token inside it is removed (providers do not echo keys, but nothing is assumed)."""
+    return _SECRET_PATTERN.sub("[redacted]", text)
 
 
 def _safe_error_detail(response: httpx.Response) -> str:
@@ -714,7 +737,7 @@ def _safe_error_detail(response: httpx.Response) -> str:
     if isinstance(data, dict):
         error = data.get("error")
         if isinstance(error, dict) and isinstance(error.get("message"), str):
-            return error["message"][:200]
+            return _redact(error["message"][:200])
         if isinstance(error, str):
-            return error[:200]
+            return _redact(error[:200])
     return "no additional detail"
