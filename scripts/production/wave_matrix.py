@@ -8,6 +8,7 @@ block is stale or a package is missing. Offline; no network."""
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -26,7 +27,7 @@ LAYERS: dict[str, tuple[str, str, str]] = {
     "01A": (NS + " (injection screen on hosted stack)", "Human security review (9 questions); independent held-out author (OPEN)", "PG-03 IN PROGRESS; thresholds unapproved (OD-GATE-THRESHOLDS)"),
     "01D": ("n/a", "Security review of tool authorization", "PG-03 (REVIEW-01 R4/R5)"),
     "01B0": ("n/a", "none", "PG-12 IN PROGRESS"),
-    "01B": (NS + " (Docker image with prompts/ not built)", "none", "PG-12 IN PROGRESS (01C outstanding; 01D merged)"),
+    "01B": (NS + " (Docker image with prompts/ not built)", "none", "PG-12 IN PROGRESS (01C and 01D merged; acceptance evidence still required)"),
     "01C": ("n/a", "none", "PG-12 (REVIEW-03)"),
     "02K": ("n/a", "none", "PG-05 IN PROGRESS (contract)"),
     "02A": (NS + " (hosted volumes, PostgreSQL, multi-worker; OD-HOSTED)", "none", "PG-05 IN PROGRESS"),
@@ -70,15 +71,18 @@ LAYERS: dict[str, tuple[str, str, str]] = {
 
 
 def ci_layer(pid: str) -> str:
-    """Report the reviewed baseline honestly; a merge is not evidence of green CI."""
+    """Dated, SHA-bound integration CI; never infer staging or human acceptance."""
     st = E.PACKAGE_STATUS.get(pid)
-    if st and st[0].startswith("MERGED"):
-        return "main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI"
-    if st and st[0].startswith(("PARTIAL", "DELIVERED")):
-        return "historical documentation CI recorded; current baseline CI FAIL"
-    if st and st[1] == "codex/r1-development":
-        return "[PR #265 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265/checks); no acceptance inferred"
-    return "NOT RUN (no implementation PR)"
+    if not st:
+        return "NOT RUN (no implementation PR)"
+    record = json.loads((ROOT / "docs/production/execution/evidence/POST_PR265_INTEGRATION_2026_10_23.json").read_text(encoding="utf-8"))
+    main = record["ci"]["main"]
+    browser = record["ci"]["browser"]
+    if st[0].startswith("MERGED"):
+        return f"main {main['sha'][:8]} CI {main['conclusion'].upper()} (run {main['run_id']}); PR #265 Browser {browser['conclusion'].upper()} on identical tree; no main E2E run"
+    if st[0].startswith(("PARTIAL", "DELIVERED")):
+        return f"main {main['sha'][:8]} documentation CI {main['conclusion'].upper()}; owner decision OPEN"
+    return f"offline checks covered by main {main['sha'][:8]} CI; live package completion NOT VERIFIED"
 
 
 def eng_layer(pid: str) -> str:

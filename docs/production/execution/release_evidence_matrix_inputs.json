@@ -4,7 +4,7 @@
  "packages": {
   "00A": {
    "engineering": "PARTIAL: Phase 00 sign-off recorded (PRs #211, #212, #213)",
-   "ci": "historical documentation CI recorded; current baseline CI FAIL",
+   "ci": "main aedbef3d documentation CI SUCCESS; owner decision OPEN",
    "live_staging": {
     "state": "NOT IN LEDGER",
     "description": "n/a",
@@ -25,7 +25,7 @@
   },
   "00B": {
    "engineering": "DELIVERED as a proposal (PRs #211, #212)",
-   "ci": "historical documentation CI recorded; current baseline CI FAIL",
+   "ci": "main aedbef3d documentation CI SUCCESS; owner decision OPEN",
    "live_staging": {
     "state": "NOT IN LEDGER",
     "description": "n/a",
@@ -128,7 +128,7 @@
    },
    "gate_acceptance": {
     "state": "NOT ACCEPTED",
-    "description": "PG-12 IN PROGRESS (01C outstanding; 01D merged)",
+    "description": "PG-12 IN PROGRESS (01C and 01D merged; acceptance evidence still required)",
     "evidence": []
    },
    "merge_sha": "335d303636a8",
@@ -137,25 +137,28 @@
    ]
   },
   "01C": {
-   "engineering": "LOCAL IMPLEMENTED",
-   "ci": "[PR #265 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265/checks); no acceptance inferred",
+   "engineering": "MERGED (PR #265 merge aedbef3dee28a68b72bc526a1fca537a3da7bd8d)",
+   "ci": "PR #265 CI success (CI 39995433254 and Browser E2E 39995433153 success on PR head; main CI 40006938765 success)",
    "live_staging": {
-    "state": "NOT IN LEDGER",
+    "state": "NOT RUN",
     "description": "n/a",
     "evidence": []
    },
    "human_qualification": {
-    "state": "NOT IN LEDGER",
+    "state": "OPEN",
     "description": "none",
     "evidence": []
    },
    "gate_acceptance": {
-    "state": "NOT IN LEDGER",
+    "state": "NOT ACCEPTED",
     "description": "PG-12 (REVIEW-03)",
     "evidence": []
    },
-   "merge_sha": "",
-   "acceptance_artefacts": []
+   "merge_sha": "aedbef3dee28",
+   "acceptance_artefacts": [
+    "docs/production/execution/INTEGRATED_SAFETY_REVIEW_POST265.md",
+    "docs/production/execution/evidence/POST_PR265_INTEGRATION_2026_10_23.json"
+   ]
   },
   "02K": {
    "engineering": "MERGED (PR #215, merge 657e456)",
@@ -526,25 +529,28 @@
    ]
   },
   "04C": {
-   "engineering": "LOCAL IMPLEMENTED",
-   "ci": "[PR #265 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265/checks); no acceptance inferred",
+   "engineering": "MERGED (PR #265 merge aedbef3dee28a68b72bc526a1fca537a3da7bd8d)",
+   "ci": "PR #265 CI success (CI 39995433254 and Browser E2E 39995433153 success on PR head; main CI 40006938765 success)",
    "live_staging": {
-    "state": "NOT IN LEDGER",
+    "state": "NOT RUN",
     "description": "NOT RUN (streaming on staging)",
     "evidence": []
    },
    "human_qualification": {
-    "state": "NOT IN LEDGER",
+    "state": "OPEN",
     "description": "none",
     "evidence": []
    },
    "gate_acceptance": {
-    "state": "NOT IN LEDGER",
+    "state": "NOT ACCEPTED",
     "description": "PG-06",
     "evidence": []
    },
-   "merge_sha": "",
-   "acceptance_artefacts": []
+   "merge_sha": "aedbef3dee28",
+   "acceptance_artefacts": [
+    "docs/production/execution/INTEGRATED_SAFETY_REVIEW_POST265.md",
+    "docs/production/execution/evidence/POST_PR265_INTEGRATION_2026_10_23.json"
+   ]
   },
   "04D": {
    "engineering": "MERGED (PR #242 merge 67ef7c46, PR #253 merge 85a88c70)",
@@ -846,7 +852,7 @@
    ]
   },
   "06F": {
-   "engineering": "MERGED (PR #259 merge 3e8e2ba4)",
+   "engineering": "MERGED (PR #259 merge 3e8e2ba4, PR #265 merge aedbef3d)",
    "ci": "PR #259 CI not recorded",
    "live_staging": {
     "state": "NOT RUN",
@@ -865,7 +871,8 @@
    },
    "merge_sha": "3e8e2ba4caf4",
    "acceptance_artefacts": [
-    "docs/production/execution/evidence/06F_EVIDENCE.md"
+    "docs/production/execution/evidence/06F_EVIDENCE.md",
+    "docs/production/execution/evidence/POST_PR265_INTEGRATION_2026_10_23.json"
    ]
   },
   "06G": {
@@ -938,8 +945,8 @@
    ]
   },
   "07B": {
-   "engineering": "PREFLIGHT ONLY",
-   "ci": "[PR #265 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265/checks); no acceptance inferred",
+   "engineering": "INCOMPLETE: preflight evidence merged in PR #265",
+   "ci": "offline checks covered by main aedbef3d CI; live package completion NOT VERIFIED",
    "live_staging": {
     "state": "NOT IN LEDGER",
     "description": "NOT RUN (live grounding; OD-BUDGET)",
@@ -959,8 +966,8 @@
    "acceptance_artefacts": []
   },
   "07C": {
-   "engineering": "LOCAL SAMPLE RECORDED",
-   "ci": "[PR #265 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265/checks); no acceptance inferred",
+   "engineering": "INCOMPLETE: local sample evidence merged in PR #265",
+   "ci": "offline checks covered by main aedbef3d CI; live package completion NOT VERIFIED",
    "live_staging": {
     "state": "NOT IN LEDGER",
     "description": "NOT RUN (local synthetic OCR measured; hosted quality NOT VERIFIED)",

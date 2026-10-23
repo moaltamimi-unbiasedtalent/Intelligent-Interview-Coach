@@ -1,36 +1,36 @@
 # Release Readiness Tracker (R1.0)
 
-> Current engineering status (23 October 2026): Wave 3 is merged at `3e8e2ba4`; the older narrative below is the dated planning/integration record. Use [PROJECT_STATUS_DASHBOARD.md](PROJECT_STATUS_DASHBOARD.md) and the verified merge inventory for current engineering and CI. Baseline main CI fails 06F freshness tests; live and human qualification are not inferred from merges.
+> Post-PR-265 integration, 23 October 2026: 40/45 engineering packages integrated at `aedbef3d`; [main CI is green](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40006938765). PR #265 Browser E2E passed on an identical tree; no Browser run exists on the main SHA. See [release status](POST_PR265_RELEASE_STATUS.md), [safety review](INTEGRATED_SAFETY_REVIEW_POST265.md) and [staging plan](STAGING_READINESS_PLAN_POST265.md). Gate/language approvals are unchanged.
 
-**Status:** LIVE TRACKER, initialised 2026-10-21 at Phase 00. Definitions of each gate are in `../PRODUCTION_ACCEPTANCE_MATRIX.md` (not repeated here); package scope is in `IMPLEMENTATION_PACKAGE_REGISTER.md`. This file records only state, owner role, evidence link and next action, and is updated as each package merges. A gate is PASS only with evidence at a named SHA; no state below has been upgraded from the historical record, and none is a pass.
+**Status:** LIVE TRACKER, initialised 2026-10-21 at Phase 00. Definitions of each gate are in `../PRODUCTION_ACCEPTANCE_MATRIX.md` (not repeated here); package scope is in `IMPLEMENTATION_PACKAGE_REGISTER.md`. This file records only state, owner role, evidence link and next action, and is updated as each package merges. A gate is PASS only with evidence at a named SHA; no state below has been upgraded from the historical record, only the existing PG-11 is PASS.
 
 State vocabulary: NOT STARTED, IN PROGRESS, READY FOR REVIEW, PASS, FAIL, BLOCKED (with the blocking decision).
 
-## 1. Production gates (state as of 2026-10-22, main @ e4aed13)
+## 1. Production gate acceptance (ledger states preserved; engineering evidence reconciled at aedbef3d)
 
-IN PROGRESS means engineering is merged but the gate's evidence is incomplete; it is never read as PASS. Only PG-11 is PASS.
+States below are acceptance-workflow states carried unchanged from the ledger. NOT STARTED does not mean the associated code is absent; it means acceptance has not started. Engineering integration is recorded separately. Only PG-11 retains its existing PASS.
 
 | Gate | Name | Packages | Owner role (person not yet named) | State | Evidence | Blocked by / next action |
 |---|---|---|---|---|---|---|
-| PG-01 | Secure hosted deployment | 05A | Platform and operations lead | BLOCKED | Topology as code merged (PR #218); nothing deployed | OD-HOSTED |
-| PG-02 | Identity and account lifecycle | 04E, 05D | Security lead | IN PROGRESS | 04E merged (PR #228): hosted invitation-required, fail-closed | 05D live round trips need OD-HOSTED; invitation email and issuer decisions open |
-| PG-03 | Injection defence and tool safety | 01A, 01D, 06E, 07B | AI safety lead | IN PROGRESS | 01A merged (PR #223); held-out detection 77.3% (weakly contaminated), benign false positives 14.3% | No approved thresholds (OD-GATE-THRESHOLDS); independent held-out set; human security review; 01D, 06E, 07B outstanding |
-| PG-04 | Privacy, legal and data rights | 05E, 06F, 04F | Privacy and legal lead | NOT STARTED | none | Counsel and legal qualifiers not named (OD-LANG-04) |
-| PG-05 | Knowledge Sources and embedding/index integrity | 02K, 02A, 02B, 02C, 02D, 02E | Knowledge and data lead | IN PROGRESS | 02K, 02A, 02B, 02C merged (PRs #215, #221, #227, #226): offline proof only | Production embedder not chosen or benchmarked (OD-EMBED, OD-BUDGET); no real clamd run; 02D licensing and 02E coverage outstanding; OD-US-CONTENT |
-| PG-06 | Candidate end-to-end reliability | 04C, 04D | Product lead (candidate) | NOT STARTED | none | Needs staging (OD-HOSTED); 04C follows 01D and 01C |
+| PG-01 | Secure hosted deployment | 05A | Platform and operations lead | BLOCKED | 05A topology merged; POST265-01 missing migration helper confirmed; nothing deployed | OD-HOSTED; fix entrypoint, image/backup gaps and rehearse before deployment |
+| PG-02 | Identity and account lifecycle | 04E, 05D | Security lead | IN PROGRESS | 04E PR #228 and 05D PR #237 merged; hosted invitation and identity verification tooling exists | Authorized email/OIDC/Redis round trips; invitation policy and hosting decisions |
+| PG-03 | Injection defence and tool safety | 01A, 01D, 06E, 07B | AI safety lead | IN PROGRESS | 01A PR #223, 01D PR #248 and 06E PR #239 merged; historical detection 77.3% and benign FP 14.3% preserved | OD-GATE-THRESHOLDS; independent held-out author/security review; guarded 07B live validation |
+| PG-04 | Privacy, legal and data rights | 05E, 06F, 04F | Privacy and legal lead | NOT STARTED | 05E, 06F and 04F engineering merged; review packs and privacy tests exist; zero legal/native sign-offs | Counsel, qualifiers, native review and retention/provider decisions; no legal approval inferred |
+| PG-05 | Knowledge Sources and embedding/index integrity | 02K, 02A, 02B, 02C, 02D, 02E | Knowledge and data lead | IN PROGRESS | 02K/02A/02B/02C/02D/02E merged; manifests, fail-closed scanner/source filters and coverage harnesses exist | OD-EMBED/BUDGET/COVERAGE/US-CONTENT; licensed markets, real clamd and hosted restart/restore proof |
+| PG-06 | Candidate end-to-end reliability | 04C, 04D | Product lead (candidate) | NOT STARTED | 04C PR #265 and 04D PRs #242/#253 merged; mocked Browser E2E success; safety review recorded | Real-stack qualified-language journeys; POST265-02 multi-worker admission policy; hosted proxy/Stop/usage drills |
 | PG-07 | Independent human AI evaluation | 06G | Quality and human-review lead | BLOCKED | none | No reviewers named (00A, OD-BUDGET) |
-| PG-08 | Admin 2.0 functionality | 03A, 03B, 03C, 03D1, 03D2 | Product lead (operations) | IN PROGRESS | 03A, 03B, 03C, 03D1 merged (PRs #216, #230, #231, #224) | 03D2 views outstanding; OD-BULK-ACTIONS, OD-PLAN-LIMITS |
-| PG-09 | Observability, resilience, backup, restore, rollback | 05B, 05C | Platform and operations lead | NOT STARTED | none | Wave 3a; live drills need OD-HOSTED; OD-BUDGET for the cap |
-| PG-10 | Deferred and paid features disabled | 07A, 06A, 06H | Engineering lead | IN PROGRESS | 06A and 06H merged (PRs #214, #229): Russian excluded, hosted language fail-closed | 07A inaccessibility suite outstanding |
+| PG-08 | Admin 2.0 functionality | 03A, 03B, 03C, 03D1, 03D2 | Product lead (operations) | IN PROGRESS | 03A/03B/03C/03D1/03D2 merged, including bulk operations and Command Center views | Hosted walkthrough; OD-BULK-ACTIONS and OD-PLAN-LIMITS decisions remain open |
+| PG-09 | Observability, resilience, backup, restore, rollback | 05B, 05C | Platform and operations lead | NOT STARTED | 05B PR #257 and 05C PRs #241/#246 merged; offline backup/monitoring/governor tooling exists | Fix backup/restore/image wiring; authorized PostgreSQL/off-host/rollback/alert drills; fresh ceilings |
+| PG-10 | Deferred and paid features disabled | 07A, 06A, 06H | Engineering lead | IN PROGRESS | 07A PRs #243/#264 and 06A/06H merged; deferred feature suites and hosted language refusal implemented | Named acceptance evidence at release SHA; preserve disabled features and zero unqualified hosted locales |
 | PG-11 | Complete issue reconciliation | all | Product Owner | PASS (machine-checked) | `reconcile_issues.py check` (452 items, 0 unmapped); `tests/test_production_reconciliation.py` | Re-run on every change |
-| PG-12 | Prompt versioning, provenance, registry parity | 01B0, 01B, 01D, 01C | AI platform lead | IN PROGRESS | 01B0 and 01B merged (PRs #217, #220): 44 prompt assets, byte-identity tests | 01D and 01C outstanding |
-| PG-13 | Story Bank and Workspaces | 04A, 04B, 06B | Product lead (collaboration) | IN PROGRESS | 04A and 04B merged (PRs #234, #233) | 06B per-language journeys; OD-WS-TRANSFER |
-| PG-14 | Reports and safe analytics | 03K, 03D1, 03E1, 03E2 | Product lead (operations) | IN PROGRESS | 03K, 03D1, 03E1 merged (PRs #219, #224, #232) | 03E2 views outstanding; OD-REPORT-EXPORT |
-| PG-15 | Free beta operational acceptance | 08A0, 08A | Product Owner | NOT STARTED | none | All of the above |
+| PG-12 | Prompt versioning, provenance, registry parity | 01B0, 01B, 01D, 01C | AI platform lead | IN PROGRESS | 01B0/01B/01D and 01C PR #265 merged; immutable prompt v1.1.0, exact 11-tool parity, unchanged policies | Named acceptance still open; verify prompt rollback/provenance in the built release image |
+| PG-13 | Story Bank and Workspaces | 04A, 04B, 06B | Product lead (collaboration) | IN PROGRESS | 04A/04B/06B merged; ownership transfer PR #262 included | Qualified per-language hosted restart/revoke journeys; native review and OD-WS-TRANSFER |
+| PG-14 | Reports and safe analytics | 03K, 03D1, 03E1, 03E2 | Product lead (operations) | IN PROGRESS | 03K/03D1/03E1/03E2 merged; governed views and CSV/JSON/PDF implementation exists | Hosted export/privacy walkthrough; OD-REPORT-EXPORT and release-bound acceptance |
+| PG-15 | Free beta operational acceptance | 08A0, 08A | Product Owner | NOT STARTED | 08A0 evidence pipeline merged; 08A freeze/go-no-go remains open | All mandatory gate artifacts, qualified languages, named operational owners and owner release decision |
 
 ## 2. Per-language gates (LG-01 to LG-14 for each language)
 
-No language is production-qualified and none can be offered to real users in staging or production: 06H (merged, PR #229) fails closed until a language has a complete approved record. Engineering evidence exists for LG-01 (locale audit: 2,611 keys per language on main, none missing or blank) and LG-14 (boundaries), but no gate has been approved by a named human, so the approved count is 0 of 14 for every language. All other gates are NOT RUN, NOT STARTED or ENGINEERING DRAFT.
+No language is production-qualified and none can be offered to real users in staging or production: 06H (merged, PR #229) fails closed until a language has a complete approved record. Engineering evidence exists for LG-01 (current generated locale audit in evidence/06A_LOCALE_AUDIT.md) and LG-14 (boundaries), but no gate has been approved by a named human, so the approved count is 0 of 14 for every language. All other gates are NOT RUN, NOT STARTED or ENGINEERING DRAFT.
 
 | Language | Proposed market (not approved) | Gates approved | Activation | Blocker |
 |---|---|---|---|---|
@@ -47,18 +47,18 @@ No language is production-qualified and none can be offered to real users in sta
 
 | Item | Package | State |
 |---|---|---|
-| REVIEW-01 Injection defence depth | 01A (merged), 01D | R1 to R3, R6 engineering merged; R4, R5 (01D) not started; no approved thresholds, no human security review |
+| REVIEW-01 Injection defence depth | 01A (merged), 01D | 01A/01D/06E engineering merged; no approved thresholds or human security review |
 | REVIEW-02 Versioned prompts | 01B0, 01B (merged) | Engineering merged (R1 to R7); R8 rollback is a reviewed pointer edit only, no Admin control |
-| REVIEW-03 Tool catalogue parity | 01C | NOT STARTED (after 01D) |
+| REVIEW-03 Tool catalogue parity | 01C | MERGED PR #265 at aedbef3d; exactly 11 existing tools; acceptance remains open |
 | REVIEW-04 Embedding degradation | 02B (merged) | Fail-closed enforcement and manifests merged; production-embedder benchmark NOT RUN |
-| REVIEW-05 Streaming and cancellation | 04C | NOT STARTED (after 01D and 01C) |
-| REQ-OWN-01 Command Center and AI operations | 03K, 03D1 (merged), 03D2 | Backend merged; views not started |
+| REVIEW-05 Streaming and cancellation | 04C | MERGED PR #265 at aedbef3d; hosted qualification and POST265-02 policy remain open |
+| REQ-OWN-01 Command Center and AI operations | 03K, 03D1 (merged), 03D2 | Backend and views merged; hosted operational acceptance pending |
 | REQ-OWN-02 Plans | 03B (merged) | Engineering merged; limit values open (OD-PLAN-LIMITS) |
-| REQ-OWN-03 Users | 03C (merged) | Engineering merged; bulk actions not built (OD-BULK-ACTIONS) |
-| REQ-OWN-04 Reports and builder | 03K, 03E1 (merged), 03E2 | Backend merged (CSV, JSON); views not started; OD-REPORT-EXPORT |
+| REQ-OWN-03 Users | 03C (merged) | Engineering and restricted bulk operations merged; owner policy review remains open |
+| REQ-OWN-04 Reports and builder | 03K, 03E1 (merged), 03E2 | Backend, views and CSV/JSON/PDF merged; format approval and hosted qualification pending |
 | REQ-OWN-05 Knowledge Sources | 02A, 02B, 02C (merged) | Offline proof only; hosted proof, real clamd and drills not run |
 | REQ-OWN-06 Story Bank | 04A (merged) | Engineering merged; Prepare per-story consent not built; native review pending |
-| REQ-OWN-07 Workspaces | 04B (merged) | Engineering merged; OD-WS-TRANSFER open; PostgreSQL race untested |
+| REQ-OWN-07 Workspaces | 04B (merged) | Ownership transfer engineering merged; OD-WS-TRANSFER and PostgreSQL qualification open |
 | REQ-OWN-08 Admin navigation | 03A (merged) | Engineering merged |
 | REQ-BETA-01 Invitation-only registration | 04E (merged) | Engineering merged; no invitation email; first-admin bootstrap via CLI |
 
@@ -71,7 +71,7 @@ No language is production-qualified and none can be offered to real users in sta
 
 ## 5. Early parallel workstream (deployment topology and Knowledge persistence)
 
-02A, 05A and 05E start in the first implementation wave with the highest staffing priority. **The existing `deploy/docker-compose.staging.yml` must not be deployed** until the first 05A PR adds the worker, knowledge and index volumes and ClamAV and OD-HOSTED is answered. State: NOT STARTED, BLOCKED on OD-HOSTED for deployment (the topology fix as code is not blocked).
+02A, 05A and 05E start in the first implementation wave with the highest staffing priority. **The existing `deploy/docker-compose.staging.yml` must not be deployed** until the first 05A PR adds the worker, knowledge and index volumes and ClamAV and OD-HOSTED is answered. State: topology engineering MERGED; deployment BLOCKED on OD-HOSTED and POST265-01. Worker, shared volumes and ClamAV are present as code; the migration entrypoint and backup/rollback wiring still need focused remediation.
 
 ## 6. Historical gates preserved
 

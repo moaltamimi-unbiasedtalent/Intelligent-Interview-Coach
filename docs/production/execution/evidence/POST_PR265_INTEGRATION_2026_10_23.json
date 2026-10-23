@@ -1,0 +1,139 @@
+{
+  "schema": "ask4mo.post_pr265_review.v1",
+  "as_of": "2026-10-23",
+  "main_sha": "aedbef3dee28a68b72bc526a1fca537a3da7bd8d",
+  "main_tree_sha": "5b28924d13a1521ad6a42930b1118ad8821afd80",
+  "pr": {
+    "number": 265,
+    "merged": true,
+    "merge_sha": "aedbef3dee28a68b72bc526a1fca537a3da7bd8d",
+    "head_sha": "7a837278b0fd0cefd9a142e63cf825bb0176a202",
+    "merged_at": "2026-10-23T18:52:55Z",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265"
+  },
+  "ci": {
+    "main": {
+      "run_id": 40006938765,
+      "sha": "aedbef3dee28a68b72bc526a1fca537a3da7bd8d",
+      "conclusion": "success",
+      "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40006938765"
+    },
+    "browser": {
+      "main_sha_run": "NOT RUN",
+      "pr_head_run_id": 39995433153,
+      "sha": "7a837278b0fd0cefd9a142e63cf825bb0176a202",
+      "conclusion": "success",
+      "tree_identical_to_main": true,
+      "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/39995433153",
+      "passed": 668,
+      "skipped": 14
+    }
+  },
+  "integrated_packages": 40,
+  "total_packages": 45,
+  "open_packages": [
+    "00A",
+    "00B",
+    "07B",
+    "07C",
+    "08A"
+  ],
+  "local_database": {
+    "configured_driver": "sqlite",
+    "network_database_contacted": false,
+    "migrations_applied": false,
+    "local_revision": [
+      "0027_email_attempts"
+    ],
+    "control_table_present": false,
+    "inspected_database": "data/interview_studio.db",
+    "source_metadata_unchanged": true,
+    "snapshot_removed": true
+  },
+  "local_verification": {
+    "backend_targeted_passed": 269,
+    "frontend_targeted_passed": 18,
+    "provider_calls": 0,
+    "default_tool_policy_ast_unchanged_from_pr265_parent": true,
+    "policy_ast_sha256": "030411ea2c43f1a8af44d3d3803de61fb75281c3207a6d583d5c8d3ecc8f88ba",
+    "tool_implementation_files_unchanged_from_pr265_parent": true,
+    "reconciliation_targeted_passed": 241,
+    "final_consistency_and_freshness_passed": 270
+  },
+  "probes": {
+    "baseline_sha": "aedbef3dee28a68b72bc526a1fca537a3da7bd8d",
+    "migration_0048": {
+      "mode": "synthetic temporary SQLite only",
+      "from_revision": "0027_email_attempts",
+      "target_revision": "0048_agent_run_controls",
+      "original_database_opened": false,
+      "existing_0047_table_row_counts_preserved": true,
+      "nonempty_0048_downgrade_refused": true,
+      "refused_downgrade_kept_revision_and_control": true,
+      "empty_downgrade_preserved_other_rows": true,
+      "reupgrade_succeeded": true,
+      "postgresql_verification": "NOT RUN"
+    },
+    "unsettled_continuation": {
+      "recorded_model_calls": 2,
+      "recorded_total_tokens": 18,
+      "mode": "two service instances, same temporary SQLite/checkpoint stores, mocked model",
+      "settled_at_concurrent_admission": false,
+      "control_status_at_admission": "running",
+      "concurrent_continue_accepted": true,
+      "model_invocations_before": 1,
+      "model_invocations_after": 2,
+      "real_provider_calls": 0,
+      "expected_followup": "reject continuation/resume while producer settlement is pending using durable ownership state; verify across independent workers"
+    }
+  },
+  "findings": [
+    {
+      "id": "POST265-01",
+      "priority": "P1",
+      "type": "confirmed deployment blocker",
+      "summary": "Compose migration command scripts/migrate.sh does not exist; actual helper deploy/scripts/migrate.sh is not copied into API image",
+      "paths": [
+        "deploy/docker-compose.staging.yml",
+        "deploy/Dockerfile.api",
+        "deploy/scripts/migrate.sh"
+      ],
+      "remediation": "Focused topology PR with image-content and migration-entrypoint regression checks before any deployment"
+    },
+    {
+      "id": "POST265-02",
+      "priority": "P2",
+      "type": "concurrency hardening / policy gap",
+      "summary": "A second service instance admits a continuation while the first producer is unsettled; mock canonical usage remains correct at 2 calls / 18 tokens",
+      "paths": [
+        "src/application/agent_service.py",
+        "src/application/agent_streaming.py"
+      ],
+      "remediation": "Define durable busy admission for continuation/resume across service instances and test it on disposable PostgreSQL before multi-worker qualification; no billing loss or cross-user disclosure established"
+    }
+  ],
+  "production_gate_approvals_added": 0,
+  "language_gate_approvals_added": 0,
+  "deployments": 0,
+  "paid_calls": 0,
+  "deployment_entrypoint": {
+    "configured_command": [
+      "bash",
+      "scripts/migrate.sh"
+    ],
+    "configured_repository_path_exists": false,
+    "actual_source_helper": "deploy/scripts/migrate.sh",
+    "actual_helper_exists": true,
+    "image_copies_deploy_scripts": false,
+    "image_built_or_deployed": false
+  },
+  "preservation_verification": {
+    "existing_worktrees_preserved": 45,
+    "preexisting_branch_refs_preserved": 305,
+    "commits_outside_fetched_origin_preserved": 23,
+    "protected_file_hashes_unchanged": 55,
+    "other_worktree_statuses_unchanged": true,
+    "remotes_unchanged": true,
+    "observed_generated_cache_changes": "Next development outputs/image cache, Vitest results, Ruff cache and Finder metadata changed during inspection; no protected content hash changed"
+  }
+}
