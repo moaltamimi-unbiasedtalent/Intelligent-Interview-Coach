@@ -59,6 +59,9 @@ ALLOWED_CONTEXT_KEYS: Final[frozenset[str]] = frozenset({
     # (src/admin_users/bulk.py: SELF, HIGHER, LAST_ADMIN, NOT_FOUND, NO_SESSIONS, NO_LINKS, APPLY_ERROR). All are identifiers or counts; no free text.
     "applied", "apply_error", "batch_id", "failed", "failed_by_reason", "higher_authority", "last_active_platform_admin", "no_live_sessions", "no_pending_verification",
     "not_found", "request_hash", "requested", "self", "skipped", "skipped_by_reason", "unique",
+    # 04B workspace ownership transfer: integer identifiers and closed enums (``actor_role``: owner/recipient/system; ``former_owner_role``: a workspace role). Neither the
+    # recipient address, the token nor any name is ever recorded; the repository additionally filters context through its own closed ``_ALLOWED_CONTEXT``.
+    "actor_role", "actor_user_id", "former_owner_role", "transfer_id", "workspace_id",
     # this module's own marker
     "dropped_keys",
 })

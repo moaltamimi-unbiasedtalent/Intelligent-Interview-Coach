@@ -14,7 +14,7 @@ vi.mock("next/link", () => ({ default: ({ href, children, ...r }: { href: string
 const { api } = vi.hoisted(() => ({ api: {
   workspaces: {
     list: vi.fn(), get: vi.fn(), shares: vi.fn(), invite: vi.fn(), revokeInvitation: vi.fn(), setMemberRole: vi.fn(),
-    removeMember: vi.fn(), transfer: vi.fn(), leave: vi.fn(), archive: vi.fn(), restore: vi.fn(), remove: vi.fn(), rename: vi.fn(),
+    removeMember: vi.fn(), transferStepUp: vi.fn(), proposeTransfer: vi.fn(), transferState: vi.fn(), transfersMine: vi.fn(), cancelTransfer: vi.fn(), declineTransfer: vi.fn(), leave: vi.fn(), archive: vi.fn(), restore: vi.fn(), remove: vi.fn(), rename: vi.fn(),
     acceptById: vi.fn(), declineById: vi.fn(), previewInvitation: vi.fn(), accept: vi.fn(), decline: vi.fn(), create: vi.fn(),
   },
   shares: { mine: vi.fn(), withMe: vi.fn(), revoke: vi.fn(), create: vi.fn(), view: vi.fn() },
@@ -57,6 +57,8 @@ beforeEach(() => {
   api.workspaces.list.mockResolvedValue({ workspaces: [], invited: [] });
   api.workspaces.get.mockResolvedValue(detail("workspace_owner"));
   api.workspaces.shares.mockResolvedValue({ shares: [] });
+  api.workspaces.transferState.mockResolvedValue({ transfer: null });
+  api.workspaces.transfersMine.mockResolvedValue({ transfers: [] });
   api.shares.mine.mockResolvedValue({ shares: [] });
   api.shares.withMe.mockResolvedValue({ shares: [] });
   api.stories.list.mockResolvedValue({ stories: [{ id: 5, title: "Led a launch" }] });
@@ -227,20 +229,29 @@ describe("Workspace detail as the owner", () => {
     expect(await screen.findByText(t("wsMgmt.memberRemoved"))).toBeInTheDocument();
   });
 
-  it("transfers ownership only with the exact workspace name typed", async () => {
-    api.workspaces.transfer.mockResolvedValue({});
+  it("proposes a transfer only with the exact workspace name AND a password, and says what happens first", async () => {
+    api.workspaces.transferStepUp.mockResolvedValue({ elevated: true, window_seconds: 300 });
+    api.workspaces.proposeTransfer.mockResolvedValue({ id: 5, workspace_id: 7, status: "pending", viewer_role: "proposer", former_owner_role: "workspace_member", expires_at: "2026-10-30T10:00:00Z", counterpart_label: "a***@x.com", email_delivery: "submitted" });
     wrap(<WorkspaceDetail workspaceId={7} />);
     fireEvent.click(await screen.findByRole("button", { name: `${t("wsMgmt.transferAction")}: a***@x.com` }));
     const dialog = await screen.findByRole("alertdialog");
-    fireEvent.click(within(dialog).getByRole("button", { name: t("wsMgmt.transferConfirm") }));
-    expect(api.workspaces.transfer).not.toHaveBeenCalled();                                          // nothing typed
+    expect(within(dialog).getByText(t("wsTransfer.consequenceNewOwner", { name: "a***@x.com" }))).toBeInTheDocument();     // consequences are visible BEFORE anything is sent
+    fireEvent.click(within(dialog).getByRole("button", { name: t("wsTransfer.sendProposal") }));
+    expect(api.workspaces.transferStepUp).not.toHaveBeenCalled();                                    // nothing typed
     expect(await within(dialog).findByRole("alert")).toBeInTheDocument();
-    fireEvent.change(within(dialog).getByLabelText(t("wsMgmt.confirmNameLabel")), { target: { value: "team alpha" } });
-    fireEvent.click(within(dialog).getByRole("button", { name: t("wsMgmt.transferConfirm") }));
-    expect(api.workspaces.transfer).not.toHaveBeenCalled();                                          // case matters
-    fireEvent.change(within(dialog).getByLabelText(t("wsMgmt.confirmNameLabel")), { target: { value: "Team Alpha" } });
-    fireEvent.click(within(dialog).getByRole("button", { name: t("wsMgmt.transferConfirm") }));
-    await waitFor(() => expect(api.workspaces.transfer).toHaveBeenCalledWith(7, 3, "Team Alpha"));
+    fireEvent.change(within(dialog).getByLabelText(t("wsTransfer.confirmNameLabel")), { target: { value: "team alpha" } });
+    fireEvent.change(within(dialog).getByLabelText(t("wsTransfer.passwordLabel")), { target: { value: "pw" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: t("wsTransfer.sendProposal") }));
+    expect(api.workspaces.transferStepUp).not.toHaveBeenCalled();                                    // case matters
+    fireEvent.change(within(dialog).getByLabelText(t("wsTransfer.confirmNameLabel")), { target: { value: "Team Alpha" } });
+    fireEvent.change(within(dialog).getByLabelText(t("wsTransfer.passwordLabel")), { target: { value: "" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: t("wsTransfer.sendProposal") }));
+    expect(api.workspaces.transferStepUp).not.toHaveBeenCalled();                                    // a password is required
+    fireEvent.change(within(dialog).getByLabelText(t("wsTransfer.passwordLabel")), { target: { value: "pw" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: t("wsTransfer.sendProposal") }));
+    await waitFor(() => expect(api.workspaces.proposeTransfer).toHaveBeenCalledWith(7, 3, "Team Alpha", "workspace_member"));
+    expect(api.workspaces.transferStepUp).toHaveBeenCalledWith("pw");
+    expect(await screen.findByText(t("wsTransfer.proposedNotice"))).toBeInTheDocument();
   });
 
   it("archives with a confirmation, deletes with the typed name and then leaves the page", async () => {

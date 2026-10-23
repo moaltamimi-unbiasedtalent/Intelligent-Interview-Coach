@@ -54,11 +54,6 @@ class TokenRequest(BaseModel):
     token: str = Field(min_length=1, max_length=512)
 
 
-class TransferRequest(BaseModel):
-    new_owner_user_id: int
-    confirm_name: str = Field(default="", max_length=200)
-
-
 class RenameRequest(BaseModel):
     name: str = Field(min_length=1, max_length=120)
 
@@ -167,14 +162,6 @@ def remove_member(workspace_id: int, target_user_id: int, user_id: int = Depends
                   svc=Depends(get_workspace_service)) -> dict:
     return _guard(lambda: svc.remove_member(user_id=user_id, workspace_id=workspace_id,
                                            target_user_id=target_user_id))
-
-
-@router.post("/{workspace_id}/transfer", summary="Transfer ownership - owner only, typed confirmation")
-def transfer(workspace_id: int, body: TransferRequest, user_id: int = Depends(get_current_user_id),
-             svc=Depends(get_workspace_service)) -> dict:
-    return _guard(lambda: svc.transfer_ownership(user_id=user_id, workspace_id=workspace_id,
-                                                new_owner_user_id=body.new_owner_user_id,
-                                                confirm_name=body.confirm_name))
 
 
 @router.post("/{workspace_id}/archive", summary="Archive a workspace and revoke every share into it - owner only")

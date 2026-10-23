@@ -400,6 +400,10 @@ class AccountRepository:
             if user is None:
                 return False
             user.status = status
+            if status != ACCOUNT_STATUS_ACTIVE:           # 04B: an inactive party can no longer act, so an open ownership transfer of theirs ends
+                from src.ownership_transfer_repository import cancel_open_in_session
+
+                cancel_open_in_session(session, reason="account_deactivated", user_id=user_id)
             self._stage_audit(session, audit)
             session.commit()
             return True

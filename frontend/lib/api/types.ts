@@ -981,6 +981,27 @@ export interface InvitationPreview {
   expires_at: string | null;
 }
 
+/** An open (pending) ownership transfer, as the proposer or the recipient sees it. Never carries a token or an address. */
+export interface OwnershipTransfer {
+  id: number;
+  workspace_id: number;
+  status: "pending" | "accepted" | "declined" | "cancelled" | "expired" | string;
+  viewer_role: "proposer" | "recipient";
+  /** The role the current owner keeps after the transfer. */
+  former_owner_role: "workspace_admin" | "workspace_member";
+  expires_at: string | null;
+  created_at?: string | null;
+  /** The OTHER party: a display name or a masked address. */
+  counterpart_label: string;
+  workspace_name?: string;
+  /** Only on the response to a proposal: whether the notice was handed to the mail provider (never "delivered"). */
+  email_delivery?: "submitted" | "not_submitted";
+}
+export interface OwnershipTransferState { transfer: OwnershipTransfer | null }
+export interface OwnershipTransferList { transfers: OwnershipTransfer[] }
+export interface OwnershipTransferPreview extends OwnershipTransfer { workspace_name: string }
+export interface StepUpStateLike { elevated: boolean; elevated_until?: string | null; window_seconds: number; method?: string }
+
 export interface ShareGrantOut {
   id: number;
   owner_user_id?: number;

@@ -39,6 +39,7 @@ NOT_USER_REFERENCES: Final[dict[tuple[str, str], str]] = {
     ("auth_sessions", "user_agent"): "browser identification string of a session row; the whole row is deleted with the account",
     ("jobs", "lease_owner"): "a worker process identifier, not a user",
     ("admin_incidents", "affected_user_estimate"): "a number entered by an operator; not an identifier",
+    ("workspace_ownership_transfers", "former_owner_role"): "04B: the workspace ROLE the outgoing owner will hold (a closed set: workspace_admin or workspace_member), not a user",
 }
 
 # Tables whose user-referencing rows are DELIBERATELY not touched by the sweep in the named retained mode.

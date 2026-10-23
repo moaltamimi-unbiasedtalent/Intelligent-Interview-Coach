@@ -56,6 +56,9 @@ async function install(page: Page, f: Fake) {
       const p = PEOPLE[f.cur];
       return ok(route, { user_id: p.id, email: p.email, display_name: p.name, platform_role: "user", tier: "basic", status: "active", email_verified: true, providers: ["password"], auth_method: "session", capabilities: [], response_detail: "brief", interface_locale: "en", conversation_language: "en", onboarding_completed: true, onboarding_step: 0 });
     }
+    // 04B completion: this journey does not exercise transfers, so the transfer lookups answer "none" (the dedicated spec covers the transfer flow).
+    if (path === "/workspaces/transfers/mine") return ok(route, { transfers: [] });
+    if (/^\/workspaces\/\d+\/transfer$/.test(path) && method === "GET") return ok(route, { transfer: null });
     if (path === "/stories") return ok(route, { stories: [{ id: 5, title: "Led a launch", competencies: [], status: "user_created", evidence_state: "none", evidence_claim_ids: [] }] });
     if (path === "/history/interviews") return ok(route, { interviews: [] });
 

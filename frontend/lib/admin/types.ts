@@ -175,6 +175,8 @@ export interface AdminWorkspaceDetail {
   members: { user_id: number; email: string | null; account_status: string; role: string; membership_status: string; joined_at: string | null }[];
   active_share_count: number;
   active_owner_count: number;
+  /** 04B: THAT an ownership transfer is open (metadata only; never who, to whom, a token or an address). Not yet rendered by the Admin view. */
+  ownership_transfer_pending?: boolean;
   workspace_roles: string[];
   plan?: SubjectPlan | null;
 }

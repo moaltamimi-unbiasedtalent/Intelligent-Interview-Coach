@@ -240,6 +240,8 @@ class AdminWorkspaceDetail(_Strict):
     members: list[AdminWorkspaceMember]
     active_share_count: int
     active_owner_count: int
+    # 04B: metadata only. THAT a transfer is open; never who, to whom, the token, the address or any content.
+    ownership_transfer_pending: bool = False
     workspace_roles: list[str]
     plan: "SubjectPlan | None" = None
 

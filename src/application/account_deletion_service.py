@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, or_, select, update
 
 from src import persistence as P
 
@@ -189,6 +189,16 @@ class AccountDeletionService:
                             indexed_run_ids.append(rid)
                         except Exception:  # noqa: BLE001 - never block deletion on the index
                             pass
+
+            # 0) 04B: an open ownership transfer involving the user (as proposer or recipient) is cancelled and audited, then every transfer row of the
+            # user is removed (SQLite does not enforce the FK cascade). Runs BEFORE the successor logic so a workspace is never left pointing at a pending
+            # transfer to a deleted account; the successor rules below are unchanged.
+            from src.ownership_transfer_repository import cancel_open_in_session
+
+            cancel_open_in_session(s, reason="account_deleted", user_id=user_id)
+            self._delete_where(s, P.WorkspaceOwnershipTransfer,
+                               or_(P.WorkspaceOwnershipTransfer.proposer_user_id == user_id,
+                                   P.WorkspaceOwnershipTransfer.recipient_user_id == user_id), summary, "ownership_transfers")
 
             # 1) Workspaces owned by the user (transfer or delete) BEFORE deleting memberships.
             self._handle_owned_workspaces(s, user_id, summary)
