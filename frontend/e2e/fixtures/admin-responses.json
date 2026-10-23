@@ -6107,6 +6107,427 @@
    "voice_trait_inference": "none"
   }
  },
+ "/admin/report-builder/commercial/registry": {
+  "chart_kinds": [
+   "trend",
+   "funnel",
+   "share_of_whole",
+   "distribution",
+   "table"
+  ],
+  "comparisons": [
+   "none",
+   "previous_period"
+  ],
+  "dimensions": [
+   {
+    "description": "Code-defined access-plan families.",
+    "dimension_id": "plan",
+    "kind": "category",
+    "label": "Access plan",
+    "max_buckets": 10
+   },
+   {
+    "description": "Currencies are never combined.",
+    "dimension_id": "currency",
+    "kind": "category",
+    "label": "Currency",
+    "max_buckets": 20
+   }
+  ],
+  "limits": {
+   "max_definition_bytes": 2048,
+   "max_export_rows": 2000,
+   "max_filter_values": 10,
+   "max_filters": 3,
+   "max_metrics": 12
+  },
+  "min_cohort": 5,
+  "report_types": [
+   {
+    "description": "Existing commercial report, aggregates only.",
+    "metrics": [
+     {
+      "comparable": false,
+      "coverage": "Historical, from authoritative rows",
+      "description": "Product access assignments by plan. Access assignments are NOT payments.",
+      "dimensions": [
+       "plan"
+      ],
+      "label": "Active access-plan assignments",
+      "metric_id": "access_plans",
+      "must_group_by": null,
+      "suppression": "cohort",
+      "unit": "count"
+     },
+     {
+      "comparable": false,
+      "coverage": "Mock billing state",
+      "description": "MOCK. Active mock provider subscriptions with configured terms, normalised to a monthly amount, per currency.",
+      "dimensions": [
+       "currency"
+      ],
+      "label": "Mock MRR",
+      "metric_id": "mock_mrr",
+      "must_group_by": "currency",
+      "suppression": "cohort",
+      "unit": "usd"
+     },
+     {
+      "comparable": false,
+      "coverage": "Mock billing state",
+      "description": "MOCK. The same subscriptions normalised to an annual amount, per currency.",
+      "dimensions": [
+       "currency"
+      ],
+      "label": "Mock ARR",
+      "metric_id": "mock_arr",
+      "must_group_by": "currency",
+      "suppression": "cohort",
+      "unit": "usd"
+     },
+     {
+      "comparable": true,
+      "coverage": "Mock billing state",
+      "description": "MOCK. Failed mock payments in the period.",
+      "dimensions": [],
+      "label": "Failed mock payments",
+      "metric_id": "mock_failed_payments",
+      "must_group_by": null,
+      "suppression": "operational",
+      "unit": "count"
+     }
+    ],
+    "permission_required": "platform.reports.commercial.read",
+    "report_id": "commercial",
+    "title": "Commercial (mock billing, not live revenue)",
+    "windows": [
+     "7d",
+     "30d",
+     "90d"
+    ]
+   }
+  ],
+  "rules": [
+   "Filters choose rows of the grouped result after suppression and must name the grouping dimension.",
+   "Currencies are never combined: Mock MRR and Mock ARR must be grouped by currency.",
+   "all_time is not available to custom definitions.",
+   "Aggregates only. Candidate cohorts below the engineering privacy floor are suppressed (this is not an anonymisation guarantee). No candidate content, identifier, e-mail or credential is returned."
+  ],
+  "windows": [
+   "7d",
+   "30d",
+   "90d"
+  ]
+ },
+ "/admin/report-builder/commercial/saved": {
+  "items": [],
+  "max_saved": 25
+ },
+ "/admin/report-builder/registry": {
+  "chart_kinds": [
+   "trend",
+   "funnel",
+   "share_of_whole",
+   "distribution",
+   "table"
+  ],
+  "comparisons": [
+   "none",
+   "previous_period"
+  ],
+  "dimensions": [
+   {
+    "description": "Approved AI model identifiers.",
+    "dimension_id": "model",
+    "kind": "category",
+    "label": "Approved model",
+    "max_buckets": 50
+   },
+   {
+    "description": "Code-defined AI workflows.",
+    "dimension_id": "workflow",
+    "kind": "category",
+    "label": "Workflow",
+    "max_buckets": 20
+   },
+   {
+    "description": "Safe feedback categories; comment text is never read.",
+    "dimension_id": "feedback_category",
+    "kind": "category",
+    "label": "Feedback category",
+    "max_buckets": 20
+   },
+   {
+    "description": "Code-defined operations.",
+    "dimension_id": "operation",
+    "kind": "category",
+    "label": "Operation",
+    "max_buckets": 50
+   }
+  ],
+  "limits": {
+   "max_definition_bytes": 2048,
+   "max_export_rows": 2000,
+   "max_filter_values": 10,
+   "max_filters": 3,
+   "max_metrics": 12
+  },
+  "min_cohort": 5,
+  "report_types": [
+   {
+    "description": "Existing product report, aggregates only.",
+    "metrics": [
+     {
+      "comparable": true,
+      "coverage": "Historical, from authoritative rows",
+      "description": "Candidate accounts created in the period.",
+      "dimensions": [],
+      "label": "Registrations",
+      "metric_id": "registrations",
+      "must_group_by": null,
+      "suppression": "cohort",
+      "unit": "count"
+     },
+     {
+      "comparable": true,
+      "coverage": "Historical, from authoritative rows",
+      "description": "Candidate accounts whose onboarding completion timestamp falls in the period.",
+      "dimensions": [],
+      "label": "Onboarding completed",
+      "metric_id": "onboarding_completed",
+      "must_group_by": null,
+      "suppression": "cohort",
+      "unit": "count"
+     },
+     {
+      "comparable": true,
+      "coverage": "Historical, from authoritative rows",
+      "description": "Share of the period's registrants whose onboarding is completed today (current state; accounts that predate onboarding were back-filled as completed).",
+      "dimensions": [],
+      "label": "Onboarding completion of period registrants",
+      "metric_id": "onboarding_rate",
+      "must_group_by": null,
+      "suppression": "cohort",
+      "unit": "percent"
+     },
+     {
+      "comparable": true,
+      "coverage": "Historical, from authoritative rows",
+      "description": "Opportunity rows created in the period.",
+      "dimensions": [],
+      "label": "Opportunities created",
+      "metric_id": "opportunities_created",
+      "must_group_by": null,
+      "suppression": "cohort",
+      "unit": "count"
+     },
+     {
+      "comparable": true,
+      "coverage": "From the W10.10 index",
+      "description": "Runs registered in the ownership index in the period (index exists from W10.10; back-filled rows are excluded).",
+      "dimensions": [],
+      "label": "Prepare runs started",
+      "metric_id": "prepare_started",
+      "must_group_by": null,
+      "suppression": "cohort",
+      "unit": "count"
+     },
+     {
+      "comparable": true,
+      "coverage": "From the W10.10 index",
+      "description": "Share of started runs whose state is ready.",
+      "dimensions": [],
+      "label": "Prepare runs reaching ready",
+      "metric_id": "prepare_ready_rate",
+      "must_group_by": null,
+      "suppression": "cohort",
+      "unit": "percent"
+     },
+     {
+      "comparable": true,
+      "coverage": "Lower bound",
+      "description": "Distinct Practice sessions created in the period (live sessions plus completed history; abandoned sessions pruned by retention are not recoverable).",
+      "dimensions": [],
+      "label": "Practice sessions started",
+      "metric_id": "practice_started",
+      "must_group_by": null,
+      "suppression": "cohort",
+      "unit": "count"
+     },
+     {
+      "comparable": true,
+      "coverage": "Historical, from authoritative rows",
+      "description": "Completed interviews in the period.",
+      "dimensions": [],
+      "label": "Practice sessions completed",
+      "metric_id": "practice_completed",
+      "must_group_by": null,
+      "suppression": "cohort",
+      "unit": "count"
+     },
+     {
+      "comparable": true,
+      "coverage": "Lower bound for Prepare and abandoned Practice",
+      "description": "A candidate's FIRST substantive product action (Opportunity, Prepare run or Practice session). An analytics definition, not an access or billing state.",
+      "dimensions": [],
+      "label": "Product activation",
+      "metric_id": "activation",
+      "must_group_by": null,
+      "suppression": "cohort",
+      "unit": "count"
+     },
+     {
+      "comparable": true,
+      "coverage": "Lower bound",
+      "description": "Candidates with substantive activity on at least two distinct UTC dates inside the period.",
+      "dimensions": [],
+      "label": "Returning candidates",
+      "metric_id": "returning",
+      "must_group_by": null,
+      "suppression": "cohort",
+      "unit": "count"
+     }
+    ],
+    "permission_required": "platform.reports.read",
+    "report_id": "product",
+    "title": "Product usage",
+    "windows": [
+     "7d",
+     "30d",
+     "90d"
+    ]
+   },
+   {
+    "description": "Existing quality report, aggregates only.",
+    "metrics": [
+     {
+      "comparable": true,
+      "coverage": "Historical, from authoritative rows",
+      "description": "Helpful / not helpful counts and safe categories. Comment text is never read.",
+      "dimensions": [
+       "feedback_category"
+      ],
+      "label": "Candidate feedback",
+      "metric_id": "feedback",
+      "must_group_by": null,
+      "suppression": "cohort",
+      "unit": "count"
+     },
+     {
+      "comparable": true,
+      "coverage": "Historical, from authoritative rows",
+      "description": "Mean of the numeric overall score of evaluated answers; no answer, narrative or report text is read.",
+      "dimensions": [],
+      "label": "Average answer evaluation score",
+      "metric_id": "evaluation_score",
+      "must_group_by": null,
+      "suppression": "cohort",
+      "unit": "score"
+     },
+     {
+      "comparable": true,
+      "coverage": "Captured since first event (W10.12 onward)",
+      "description": "Evidence found versus abstained, per captured retrieval. No query or evidence is stored.",
+      "dimensions": [],
+      "label": "Retrieval outcomes",
+      "metric_id": "retrieval_outcomes",
+      "must_group_by": null,
+      "suppression": "operational",
+      "unit": "count"
+     },
+     {
+      "comparable": true,
+      "coverage": "Captured since first event (W10.12 onward)",
+      "description": "Success / error counts and p50 / p95 latency for code-defined operations.",
+      "dimensions": [
+       "operation"
+      ],
+      "label": "Request outcomes and latency",
+      "metric_id": "request_outcomes",
+      "must_group_by": null,
+      "suppression": "operational",
+      "unit": "count"
+     },
+     {
+      "comparable": true,
+      "coverage": "Captured since first event (W10.12 onward)",
+      "description": "Observed real provider calls (success / failure category / latency). Nothing is probed for reporting.",
+      "dimensions": [],
+      "label": "Provider call outcomes",
+      "metric_id": "provider_calls",
+      "must_group_by": null,
+      "suppression": "operational",
+      "unit": "count"
+     }
+    ],
+    "permission_required": "platform.reports.read",
+    "report_id": "quality",
+    "title": "Quality",
+    "windows": [
+     "7d",
+     "30d",
+     "90d"
+    ]
+   },
+   {
+    "description": "Existing ai economics report, aggregates only.",
+    "metrics": [
+     {
+      "comparable": true,
+      "coverage": "Captured since first event (W10.12 onward)",
+      "description": "Model calls and known tokens with token coverage.",
+      "dimensions": [
+       "model",
+       "workflow"
+      ],
+      "label": "AI usage",
+      "metric_id": "ai_usage",
+      "must_group_by": null,
+      "suppression": "cohort",
+      "unit": "tokens"
+     },
+     {
+      "comparable": true,
+      "coverage": "Captured since first event (W10.12 onward)",
+      "description": "Sum of costs that are KNOWN (reported or calculated). Unknown cost is never zero.",
+      "dimensions": [
+       "model",
+       "workflow"
+      ],
+      "label": "Known AI cost (USD, partial coverage)",
+      "metric_id": "ai_known_cost",
+      "must_group_by": null,
+      "suppression": "cohort",
+      "unit": "usd"
+     }
+    ],
+    "permission_required": "platform.reports.read",
+    "report_id": "ai_economics",
+    "title": "AI economics",
+    "windows": [
+     "7d",
+     "30d",
+     "90d"
+    ]
+   }
+  ],
+  "rules": [
+   "Filters choose rows of the grouped result after suppression and must name the grouping dimension.",
+   "Currencies are never combined: Mock MRR and Mock ARR must be grouped by currency.",
+   "all_time is not available to custom definitions.",
+   "Aggregates only. Candidate cohorts below the engineering privacy floor are suppressed (this is not an anonymisation guarantee). No candidate content, identifier, e-mail or credential is returned."
+  ],
+  "windows": [
+   "7d",
+   "30d",
+   "90d"
+  ]
+ },
+ "/admin/report-builder/saved": {
+  "items": [],
+  "max_saved": 25
+ },
  "/admin/reports/ai-economics": {
   "generated_at": "2026-10-05T22:15:18.460620+00:00",
   "label": null,
