@@ -98,6 +98,14 @@ FAMILIES: tuple[Family, ...] = (
         ),
     ),
     Family(
+        id="mail_delivery_webhook", title="Mail delivery-event webhook (Brevo)", release="with OD-HOSTED / identity live verification (05D)",
+        gates=(("src.mail.webhook", "DELIVERY_EVENTS_AUTHORIZED"),),
+        gate_note="Code constant: the signed-webhook route refuses every request 503 before reading a secret, verifying a signature or storing an event; acceptance is never delivery.",
+        routes=(
+            Route("POST", "/mail/webhooks/brevo", everyone(503), "refused", text_absent=_PROVIDER_LEAK),
+        ),
+    ),
+    Family(
         id="billing_reconciliation", title="Provider reads, reconciliation and the reconciliation scheduler", release="R1.1",
         gates=(("src.billing.policy", "PROVIDER_READS_AUTHORIZED"), ("src.billing.policy", "RECONCILE_SCHEDULER_ENABLED")),
         gate_note="Code constants: the runtime reader is the Null reader; every recovery action is refused reader_unavailable; the scheduler tick enqueues nothing.",
@@ -214,6 +222,11 @@ ADDITIONAL_GATES: dict[tuple[str, str], str] = {
 
 # A gate-like constant is any module-level NAME = True/False whose name ends in one of these (the discovery scan fails when it finds one that is neither in the reconciliation list,
 # the families above nor ADDITIONAL_GATES).
+# Safety controls that are deliberately ON (the opposite of a deferral gate). The discovery scan classifies them here and the test pins each one True, so switching one off fails the suite.
+SAFETY_CONTROLS_ON: dict[tuple[str, str], str] = {
+    ("src.constants", "MULTILINGUAL_INPUT_GUARD_ENABLED"): "06E: the multilingual interview input guard is on (False restores the English-only guard exactly)",
+}
+
 GATE_NAME_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*(_ENFORCED|_AUTHORIZED|_ENABLED|_APPROVED)$|^VOICE_CLONING_ENABLED$")
 
 # The route-inventory guard: any OpenAPI path whose segments contain one of these tokens (or that starts with a gated prefix) must be listed in a family, or the suite fails.
@@ -222,7 +235,7 @@ GATED_PATH_TOKENS = frozenset({
     "stt", "tts", "transcriptions", "synthesis", "subscribe", "payment", "payments", "invoices", "salary", "salaries", "model-profiles", "history",
 })
 # Admin paths that contain a token only by coincidence and are covered elsewhere (plan administration and the AI audit history are permission-matrix domains, not deferred features).
-GATED_PATH_COINCIDENCE = frozenset({"/admin/ai/history"})
+GATED_PATH_COINCIDENCE = frozenset({"/admin/ai/history", "/privacy/legal/history"})     # the second is the legal-document version history (a privacy read), not the plan-gated history window
 GATED_PATH_PREFIXES = ("/billing", "/admin/billing", "/speech", "/admin/speech", "/voice", "/model-profiles", "/history")
 
 # UI routes (Next.js app directory names) that carry a gated keyword. A new directory under any of these keywords fails the UI-route guard unless a family lists it in ui_known_routes.
