@@ -115,6 +115,8 @@ def test_an_unknown_key_is_a_programming_error_not_a_silent_english_fallback():
 KNOWN_LOCALE_TABLE_FILES = {
     "src/agent/multi_agent_eval.py": "evaluation fixture (injection sentences), not shown to a candidate",
     "src/copilot/rag/localized.py": "the inventoried Mo-voiced sentences",
+    "src/copilot/knowledge/router_lang.py": "retrieval-router keyword tables (02E): matching vocabulary, never shown to a candidate",
+    "src/copilot/security/injection_rules.py": "injection-detection rules (01A/06E): attack phrases per language, never shown to a candidate",
     "src/documents/ocr.py": "OCR language packs (a separate capability dimension)",
     "src/language_quality/inventory.py": "this review's own word lists",
     "src/locales.py": "the locale allow-lists",
