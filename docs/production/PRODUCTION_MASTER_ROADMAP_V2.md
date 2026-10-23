@@ -1,5 +1,7 @@
 # Production Master Roadmap V2.2 (corrected)
 
+> Delivery update, 23 October 2026: 38/45 packages have offline engineering merged at `3e8e2ba4`; the dated delivery summaries below are historical. Current engineering, CI, staging, human and gate status: [project dashboard](execution/PROJECT_STATUS_DASHBOARD.md). No production gate is approved by this update.
+
 **Status:** corrected 2026-10-21 against the owner's authoritative requirements, which were recovered from a separate owner conversation and recorded in [`OWNER_REQUIREMENTS_SOURCE_OF_TRUTH_V2_2.md`](OWNER_REQUIREMENTS_SOURCE_OF_TRUTH_V2_2.md). This supersedes the first version of this roadmap (PR #211 at `4084eb9`), which had substituted engineering-observed findings for the reviewer findings and left the owner-requested capabilities as placeholder decisions. Dispositions are PROPOSED for owner review; no owner approval was invented. **Planning only: no production code, database change, paid call, Stripe activation, deployment, feature activation or rewriting of historical results.**
 
 Provenance is kept distinct throughout: explicit owner decisions, owner-requested capabilities, actual Turing College review findings, proposed engineering implementations, and decisions still awaiting the owner.

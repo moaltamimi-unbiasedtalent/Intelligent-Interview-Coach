@@ -1,8 +1,8 @@
 {
  "schema": "ask4mo.release_evidence.v1",
  "note": "Evidence ledger. Nothing is PASS without a human-supplied or CI-produced artefact link here. Engineering and CI are derived from PACKAGE_STATUS and this ledger's PR rows; live staging, human qualification and gate acceptance are recorded as NOT RUN / OPEN / NOT ACCEPTED until a real artefact exists. Seeded 2026-10-22 by 08A0 from git history and the committed dashboards; a human reviews every change.",
- "as_of": "2026-10-22",
- "main_sha": "f5cf7cb4",
+ "as_of": "2026-10-23",
+ "main_sha": "3e8e2ba4caf4578815dad2e99fbd2b491bd98a16",
  "policy": {
   "gate_evidence_valid_days": 30,
   "language_approval_valid_days": 90,
@@ -399,6 +399,499 @@
    },
    "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
    "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 236,
+   "title": "feat/02b-openrouter-embeddings",
+   "branch": "feat/02b-openrouter-embeddings",
+   "head_sha": "9fbc3d3a2ef3b8faa005c98921bf0add10e435bd",
+   "merge_sha": "f78773df1d5aeabbcf2d39155d9e85e2d9d783a5",
+   "merged_at": "2026-10-22",
+   "package": "02B",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/236/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 237,
+   "title": "05D (from PACKAGE_STATUS)",
+   "branch": "feat/05d-identity-live",
+   "head_sha": "524048a56c47f345970b9bffa2b9c8ffda917a78",
+   "merge_sha": "64fbcf2b3032aa24b2f68c8d7a4ba6839a11fa23",
+   "merged_at": "2026-10-22",
+   "package": "05D",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/237/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 238,
+   "title": "02E (from PACKAGE_STATUS)",
+   "branch": "feat/02e-retrieval-quality",
+   "head_sha": "66ffa95b1aad051409aa945d94e1b48840731945",
+   "merge_sha": "2a4a5377609033167bb2c48d74a578eed85176f8",
+   "merged_at": "2026-10-22",
+   "package": "02E",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/238/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 239,
+   "title": "06E (from PACKAGE_STATUS)",
+   "branch": "feat/06e-language-security-suites",
+   "head_sha": "ea0ea55b354720b90ff3148a4340c9833931d864",
+   "merge_sha": "84c1b9b8f69ff35367b1affe4c03ab23b93eb315",
+   "merged_at": "2026-10-23",
+   "package": "06E",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/239/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 240,
+   "title": "05E (from PACKAGE_STATUS)",
+   "branch": "feat/05e-legal-review-pack",
+   "head_sha": "7fc34cdc70f25bc0967c1d4c2beec11be43712fc",
+   "merge_sha": "608b65b470507e992948fe130da9bb837469867d",
+   "merged_at": "2026-10-22",
+   "package": "05E",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/240/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 241,
+   "title": "05C (from PACKAGE_STATUS)",
+   "branch": "feat/05c-monitoring-alerts",
+   "head_sha": "aaf18c0f79b0ce5137848a47f960df85faf6bdd3",
+   "merge_sha": "451449794d8285988ce48fdb8d77ef229fa42c4f",
+   "merged_at": "2026-10-22",
+   "package": "05C",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/241/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 242,
+   "title": "04D (from PACKAGE_STATUS)",
+   "branch": "feat/04d-journey-tests",
+   "head_sha": "67ef7c46d5aa13f26530ff4e581a37423e6e824d",
+   "merge_sha": "67ef7c46d5aa13f26530ff4e581a37423e6e824d",
+   "merged_at": "2026-10-23",
+   "package": "04D",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/242/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 243,
+   "title": "07A (from PACKAGE_STATUS)",
+   "branch": "feat/07a-deferral-inaccessibility",
+   "head_sha": "b00bbbd7d2eec8e33ea2214db13053b9f54e5ceb",
+   "merge_sha": "792871f2ddbcaeb995a1cc4e40bcc6eb8a335ba7",
+   "merged_at": "2026-10-23",
+   "package": "07A",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/243/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 244,
+   "title": "feat/05e-privacy-safeguards",
+   "branch": "feat/05e-privacy-safeguards",
+   "head_sha": "e7d9e332bc95c0b6ff4465fa402d4192b0e0a117",
+   "merge_sha": "8649e3fa7149f9472a18f767fcbe0fb518a4585f",
+   "merged_at": "2026-10-22",
+   "package": "05E",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/244/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 245,
+   "title": "06C (from PACKAGE_STATUS)",
+   "branch": "feat/06c-language-ai-behaviour",
+   "head_sha": "fa9f02a1a57df54e4ce8e3105ca3d6751c562fec",
+   "merge_sha": "74d99e3197a7fef02871586e8e38f698f640a55a",
+   "merged_at": "2026-10-23",
+   "package": "06C",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/245/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 246,
+   "title": "feat/05c-budget-governor",
+   "branch": "feat/05c-budget-governor",
+   "head_sha": "84c7c049b2b42dc02ad29fa5534fb791c4190f9a",
+   "merge_sha": "26f5a818c1161f04a6295424fc8d1f6cf7249aec",
+   "merged_at": "2026-10-22",
+   "package": "05C",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/246/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 247,
+   "title": "03E2 (from PACKAGE_STATUS)",
+   "branch": "feat/03e2-pdf-export",
+   "head_sha": "4ddc628eb522031beaf0ca0db901caec5b580096",
+   "merge_sha": "6034835e6e044a7d8170856bbab6765eb18f7e13",
+   "merged_at": "2026-10-23",
+   "package": "03E2",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/247/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 248,
+   "title": "01D (from PACKAGE_STATUS)",
+   "branch": "feat/01d-tool-authorization",
+   "head_sha": "2890d6e593a9e86e7062210a0659ef546a3b0be2",
+   "merge_sha": "c5e54fd6fad10d7013e954f22a12cb4015c95ab0",
+   "merged_at": "2026-10-22",
+   "package": "01D",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/248/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 249,
+   "title": "03D2 (from PACKAGE_STATUS)",
+   "branch": "feat/03d2-command-center-views",
+   "head_sha": "428ca83fd68153ca96f51bf4923b5d667741b06c",
+   "merge_sha": "66fdbabab371185f25ac0c07079480c498e0b394",
+   "merged_at": "2026-10-23",
+   "package": "03D2",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/249/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 250,
+   "title": "08A0 (from PACKAGE_STATUS)",
+   "branch": "feat/08a0-release-evidence",
+   "head_sha": "25d5280825facdaac4167c5889d51804c45fdc30",
+   "merge_sha": "6eaf246f04274c232d10034b90c76d5feae26407",
+   "merged_at": "2026-10-22",
+   "package": "08A0",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/250/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 251,
+   "title": "feat/03e2-report-views",
+   "branch": "feat/03e2-report-views",
+   "head_sha": "396786d041e3bfb5e6926fbf8b636aa7a1e90e71",
+   "merge_sha": "bc5fe4f667b6d2d650f1a9aa4d2128a9664a294d",
+   "merged_at": "2026-10-23",
+   "package": "03E2",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/251/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 252,
+   "title": "docs/wave3-authorization",
+   "branch": "docs/wave3-authorization",
+   "head_sha": "63d540532a6310e2968cc5f53bd438f3c0641e28",
+   "merge_sha": "d17c7ca33250553ac3d49445afcd6072f78289c7",
+   "merged_at": "2026-10-22",
+   "package": null,
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/252/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 253,
+   "title": "feat/04d-provider-mode-and-guards",
+   "branch": "feat/04d-provider-mode-and-guards",
+   "head_sha": "ddc5c02e64f62eac46d70f863671a9fe10414163",
+   "merge_sha": "85a88c70c13c5439104024f07d593af6fce4400b",
+   "merged_at": "2026-10-23",
+   "package": "04D",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/253/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 254,
+   "title": "06D (from PACKAGE_STATUS)",
+   "branch": "feat/06d-multilingual-retrieval",
+   "head_sha": "ed4c9bbf388e777541a35f64a7146f63a2c13e18",
+   "merge_sha": "c9268c67eaa74a831c8e093e10ebee0e5b005a17",
+   "merged_at": "2026-10-23",
+   "package": "06D",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/254/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 255,
+   "title": "04F (from PACKAGE_STATUS)",
+   "branch": "feat/04f-dictation-disclosure",
+   "head_sha": "027ec450c0568b36fd91db84667862d583a958d1",
+   "merge_sha": "7c400efe7e4f76586d4d1020e230b3b1275bcc51",
+   "merged_at": "2026-10-23",
+   "package": "04F",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/255/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 256,
+   "title": "06B (from PACKAGE_STATUS)",
+   "branch": "feat/06b-language-journeys",
+   "head_sha": "cd664fc4e4e637ead231b2a1159ff0eace260d72",
+   "merge_sha": "29cc09beeaf1d8d1d57f235635894945c656cd08",
+   "merged_at": "2026-10-23",
+   "package": "06B",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/256/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 257,
+   "title": "05B (from PACKAGE_STATUS)",
+   "branch": "feat/05b-backup-restore-drills",
+   "head_sha": "98200243e088c6d64215fe1d1575dc09084ceab1",
+   "merge_sha": "f5c1e04f1287c5968e7e56ac7dd5a707e251f9e2",
+   "merged_at": "2026-10-22",
+   "package": "05B",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/257/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 258,
+   "title": "02D (from PACKAGE_STATUS)",
+   "branch": "feat/02d-source-approval-filter",
+   "head_sha": "aaad5bc12cabcc23336366826d954d4c2bceb1a6",
+   "merge_sha": "15ac01bf8df38b30267df82d1a8d889c9373fd55",
+   "merged_at": "2026-10-22",
+   "package": "02D",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/258/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 259,
+   "title": "06F (from PACKAGE_STATUS)",
+   "branch": "feat/06fg-review-packages",
+   "head_sha": "a4af1925659a4eac6a3bf4b81d8eaad3c397e9ac",
+   "merge_sha": "3e8e2ba4caf4578815dad2e99fbd2b491bd98a16",
+   "merged_at": "2026-10-23",
+   "package": "06F",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/259/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 260,
+   "title": "feat/02d-licensing-review-pack",
+   "branch": "feat/02d-licensing-review-pack",
+   "head_sha": "75ed4bf9c1e4fcd1ca2a83118c8e4f5a376a1849",
+   "merge_sha": "89c39ced9150f12add2e5ca74379837a0b905c43",
+   "merged_at": "2026-10-22",
+   "package": "02D",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/260/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 261,
+   "title": "feat/03c-bulk-user-actions",
+   "branch": "feat/03c-bulk-user-actions",
+   "head_sha": "317b5335ac86abf6241cd93e386a5e349dd066d9",
+   "merge_sha": "bf05db6f5cdc830542b031f734937c61662430e1",
+   "merged_at": "2026-10-23",
+   "package": "03C",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/261/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 262,
+   "title": "feat/04b-ownership-transfer",
+   "branch": "feat/04b-ownership-transfer",
+   "head_sha": "67146d3af656ce5dcbe80205a59839eec8872eed",
+   "merge_sha": "103611ee432097dde26d7ec78167aedaa5ab9511",
+   "merged_at": "2026-10-23",
+   "package": "04B",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/262/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 263,
+   "title": "chore/merge-safe-03b-test",
+   "branch": "chore/merge-safe-03b-test",
+   "head_sha": "0ce3f4284b70c18c0c1bfed6fce018f72675e89e",
+   "merge_sha": "19b75f6e6f48f6ece4f5ab3609f8c88516b6e658",
+   "merged_at": "2026-10-22",
+   "package": null,
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/263/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 264,
+   "title": "chore/07a-guards-after-mail-and-06e",
+   "branch": "chore/07a-guards-after-mail-and-06e",
+   "head_sha": "d7b099c13cc146a9301cc4a0496a748bb3cc6d11",
+   "merge_sha": "dfd59edc57d6cec2299febc735c6ef15a3d8ba6d",
+   "merged_at": "2026-10-23",
+   "package": "07A",
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/264/checks"
+   },
+   "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
   }
  ],
  "packages": {
@@ -664,7 +1157,8 @@
   },
   "02B": {
    "prs": [
-    227
+    227,
+    236
    ],
    "acceptance": {
     "artefacts": [
@@ -794,7 +1288,8 @@
   },
   "03C": {
    "prs": [
-    231
+    231,
+    261
    ],
    "acceptance": {
     "artefacts": [
@@ -898,7 +1393,8 @@
   },
   "04B": {
    "prs": [
-    233
+    233,
+    262
    ],
    "acceptance": {
     "artefacts": [
@@ -906,6 +1402,506 @@
     ],
     "recorded_by": "08A0 seed from the committed package evidence files",
     "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "08A0": {
+   "prs": [
+    250
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/08A0_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "05B": {
+   "prs": [
+    257
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/05B_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "05C": {
+   "prs": [
+    241,
+    246
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/05C_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "05E": {
+   "prs": [
+    240,
+    244
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/05E_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "06C": {
+   "prs": [
+    245
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/06C_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "01D": {
+   "prs": [
+    248
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/01D_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "03D2": {
+   "prs": [
+    249
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/03D2_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "03E2": {
+   "prs": [
+    247,
+    251
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/03E2_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "07A": {
+   "prs": [
+    243,
+    264
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/07A_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "06E": {
+   "prs": [
+    239
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/06E_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "06B": {
+   "prs": [
+    256
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/06B_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "04D": {
+   "prs": [
+    242,
+    253
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/04D_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "02E": {
+   "prs": [
+    238
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/02E_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "05D": {
+   "prs": [
+    237
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/05D_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "04F": {
+   "prs": [
+    255
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/04F_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "06D": {
+   "prs": [
+    254
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/06D_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "02D": {
+   "prs": [
+    258,
+    260
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/02D_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "06F": {
+   "prs": [
+    259
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/06F_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "06G": {
+   "prs": [
+    259
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/06G_EVIDENCE.md"
+    ],
+    "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
    },
    "layers": {
     "live_staging": {

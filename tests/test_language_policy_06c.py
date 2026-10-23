@@ -223,7 +223,9 @@ def test_the_career_chat_system_prompt_in_any_language_is_the_english_one_with_o
 
 
 def test_the_agent_system_prompt_does_not_depend_on_the_language_at_all():
-    assert agent_policies.SYSTEM_PROMPT == render("agent/system", "agent.policies")
+    from src.agent.registry import career_tool_registry
+    registry = career_tool_registry(None)
+    assert agent_policies.SYSTEM_PROMPT == render("agent/system", "agent.policies", tool_catalogue=registry.prompt_catalogue())
     for lang in ALL_LANGS:
         assert "RESPONSE LANGUAGE" not in agent_policies.SYSTEM_PROMPT
         d = agent_policies.response_language_directive(lang)

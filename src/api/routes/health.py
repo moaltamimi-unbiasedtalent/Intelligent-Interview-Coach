@@ -154,6 +154,17 @@ def _ai_provider_mode(request: Request) -> str:
         return MODE_UNKNOWN
 
 
+def _agent_streaming_available(repo) -> bool:
+    if repo is None or not _flag_enabled("AGENT_COACH_ENABLED"):
+        return False
+    try:
+        from sqlalchemy import inspect
+        with repo.session_factory() as session:
+            return inspect(session.get_bind()).has_table("agent_run_controls")
+    except Exception:
+        return False
+
+
 @router.get("/capabilities", response_model=CapabilitiesResponse,
             summary="Safe feature availability")
 def capabilities(request: Request) -> CapabilitiesResponse:
@@ -175,6 +186,7 @@ def capabilities(request: Request) -> CapabilitiesResponse:
         agent_memory=True,
         human_in_the_loop=True,
         agent_coach_enabled=_flag_enabled("AGENT_COACH_ENABLED"),
+        agent_streaming_enabled=_agent_streaming_available(repo),
         realtime_voice_enabled=_realtime_voice_available(repo),
         company_research_enabled=_company_research_available(repo),
     )

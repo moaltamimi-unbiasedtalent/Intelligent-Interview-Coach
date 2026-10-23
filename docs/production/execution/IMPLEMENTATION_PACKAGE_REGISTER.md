@@ -116,7 +116,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 01D Tool-call authorization layer (REVIEW-01 part 2)
 
-- **Status:** BRANCH PUSHED, NO PR; security review pending; REVIEW-01 not complete (feat/01d-tool-authorization 2890d6e; 42 tests plus 1,611-payload fuzz; default-deny authorization before every tool; full suite 6319 passed)
+- **Status:** MERGED (PR #248 merge c5e54fd6); offline engineering only; qualification remains open (feat/01d-tool-authorization 2890d6e5; 42 tests plus 1,611-payload fuzz; default-deny authorization before every tool; full suite 6319 passed)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** A (AI security, prompts and tool registry) / 1 / W3 9-15 Nov to W4 16-22 Nov
 - **Scope:** Server-side revalidation of every model-requested tool call against the authenticated user's actual goal, authorization, tool permissions and allowed arguments before any side effect; negative tests that malicious retrieved content cannot trigger an unauthorized tool call. Overlaps the agent-policy and tool-execution path, so it is sequenced after 01B (versioned prompts) and before 01C (registry parity).
@@ -171,7 +171,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 01C Tool registry parity (REVIEW-03)
 
-- **Status:** NOT STARTED
+- **Status:** LOCAL IMPLEMENTED; not merged; offline regression verified (codex/r1-development no SHA yet; Registry-generated catalogue v1.1.0; exact 11-tool parity; historical v1.0.0 immutable)
 - **Scope tier:** T1 (Reviewer corrections and operator safety)
 - **Track / phase / weeks:** A (AI security, prompts and tool registry) / 1 / W5 23-27 Nov to W6 30 Nov-4 Dec
 - **Scope:** Registry as the single catalogue: generated model-visible descriptions, Pydantic-derived argument contracts, duplicate rejection, parity tests, no widened tool set.
@@ -226,7 +226,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 02B Embedding integrity and index manifests (REVIEW-04)
 
-- **Status:** MERGED (PR #227, merge 6acdbc1); CI green; production-embedder benchmark NOT RUN (OD-BUDGET, OD-EMBED) (feat/02b-embedding-integrity 135070c; 91 new tests; hosted fail-closed embedder and manifests; no migration; PG-05 not met)
+- **Status:** MERGED (PR #227 merge 6acdbc11, PR #236 merge f78773df); offline engineering only; qualification remains open (feat/02b-embedding-integrity 135070c85bfbb11a4e5d5d045a5e66c86f0b10e1; 91 new tests; hosted fail-closed embedder and manifests; no migration; PG-05 not met)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** B (Knowledge Sources, embeddings and RAG) / 2 / W2 2-8 Nov to W3 9-15 Nov
 - **Scope:** Readiness shows actual embedder and degradation; production refuses hash-embedding fallback and fails closed on missing semantic credentials; manifests record provider, model, version, dimensions and checksums; query/index mismatch detected and refused; rebuild from approved sources; BM25, vector and RRF evaluated separately and combined, multilingual.
@@ -262,7 +262,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 02D Market source qualification and licensing (selected EU markets)
 
-- **Status:** BRANCH PUSHED (2 PRs), NO PR; engineering filter and review pack only; NOTHING APPROVED, no licensing reviewer (feat/02d-source-approval-filter + feat/02d-licensing-review-pack aaad5bc + 75ed4bf; 119 new tests; empty approval register; hosted candidates get no knowledge evidence until a human enables sources; US content refused for non-US markets while OD-US-CONTENT is undecided)
+- **Status:** MERGED (PR #258 merge 15ac01bf, PR #260 merge 89c39ced); offline engineering only; qualification remains open (feat/02d-source-approval-filter aaad5bc12cabcc23336366826d954d4c2bceb1a6; 119 new tests; empty approval register; hosted candidates get no knowledge evidence until a human enables sources; US content refused for non-US markets while OD-US-CONTENT is undecided)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** B (Knowledge Sources, embeddings and RAG) / 2 / W3 9-15 Nov to W5 23-27 Nov
 - **Scope:** For each approved market: licence, authority and coverage qualification of the sources actually enabled; exclusion of unsupported or unlicensed evidence from enabled features; decision on US-sourced content (O*NET, BLS) in an EU beta; alias curation ownership.
@@ -280,7 +280,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 02E Retrieval quality and the frozen beta-scope coverage measure
 
-- **Status:** BRANCH PUSHED, NO PR; offline only; live benchmark NOT RUN (feat/02e-retrieval-quality 66ffa95; 70 new tests; relevance floor, language-aware routing, beta-scope coverage (NO_APPROVED_SCOPE), benchmark runner)
+- **Status:** MERGED (PR #238 merge 2a4a5377); offline engineering only; qualification remains open (feat/02e-retrieval-quality 66ffa95b; 70 new tests; relevance floor, language-aware routing, beta-scope coverage (NO_APPROVED_SCOPE), benchmark runner)
 - **Scope tier:** T2 (Owner core capabilities (candidate journeys, Story Bank, Workspaces, quality evidence))
 - **Track / phase / weeks:** B (Knowledge Sources, embeddings and RAG) / 2 / W3 9-15 Nov to W5 23-27 Nov
 - **Scope:** Calibrated relevance floor, language-aware routing, semantic calibration, and a separate frozen R1.0 beta-scope coverage measure reported beside the preserved historical gate (386 of 412, FAIL).
@@ -334,7 +334,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 03C Admin Users: complete user management (REQ-OWN-03)
 
-- **Status:** MERGED (PR #231, merge 6bcfbf5); CI green; bulk actions not built (OD-BULK-ACTIONS) (feat/03c-admin-users 94b76b7; 18 new tests; 7 strict action routes; two concurrency schemes reconciled with 03B)
+- **Status:** MERGED (PR #231 merge 6bcfbf53, PR #261 merge bf05db6f); offline engineering only; qualification remains open (feat/03c-admin-users 94b76b7e672c0c9dfb4fcc8cb41d1b34d66d52f4; 18 new tests; 7 strict action routes; two concurrency schemes reconciled with 03B; restricted bulk actions also merged in PR #261)
 - **Scope tier:** T2 (Owner core capabilities (candidate journeys, Story Bank, Workspaces, quality evidence))
 - **Track / phase / weeks:** C (Admin Platform 2.0) / 3 / W3 9-15 Nov to W4 16-22 Nov
 - **Scope:** Search, filter, sort, pagination; membership inspection; restricted bulk actions; communications; support and audit view; self-lockout and escalation protection; no private content.
@@ -388,7 +388,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 03D2 Command Center and AI operations views (REQ-OWN-01, frontend)
 
-- **Status:** BRANCH PUSHED, NO PR; frontend only (feat/03d2-command-center-views 428ca83; 25 new vitest tests, 5 Playwright specs; malformed responses render the error state)
+- **Status:** MERGED (PR #249 merge 66fdbaba); offline engineering only; qualification remains open (feat/03d2-command-center-views 428ca83f; 25 new vitest tests, 5 Playwright specs; malformed responses render the error state)
 - **Scope tier:** T3 (Admin 2.0 expansion beyond the existing Admin)
 - **Track / phase / weeks:** C (Admin Platform 2.0) / 3 / W4 16-22 Nov to W5 23-27 Nov
 - **Scope:** Dashboard tiles and charts chosen by meaning, with period, numerator, denominator, coverage and missing-data state, and the AI operations view, inside the grouped Admin shell.
@@ -425,7 +425,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 03E2 Reports catalogue, builder and export views (REQ-OWN-04, frontend)
 
-- **Status:** BRANCH PUSHED (2 PRs), NO PR (feat/03e2-report-views + feat/03e2-pdf-export 396786d + 4ddc628; builder UI over the 03E1 API; governed PDF export with no new dependency)
+- **Status:** MERGED (PR #247 merge 6034835e, PR #251 merge bc5fe4f6); offline engineering only; qualification remains open (feat/03e2-pdf-export 4ddc628eb522031beaf0ca0db901caec5b580096; builder UI over the 03E1 API; governed PDF export with no new dependency)
 - **Scope tier:** T3 (Admin 2.0 expansion beyond the existing Admin)
 - **Track / phase / weeks:** C (Admin Platform 2.0) / 3 / W4 16-22 Nov to W6 30 Nov-4 Dec
 - **Scope:** Report catalogue, builder UI, charts, saved configuration management and export, in the Admin shell.
@@ -462,7 +462,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 04B Workspaces completion (REQ-OWN-07)
 
-- **Status:** MERGED (PR #233, merge e4aed13); CI green; no migration (feat/04b-workspaces c73a728; 52 backend and 34 frontend tests; verified-email invitations; consent-gated sharing; OD-WS-TRANSFER open)
+- **Status:** MERGED (PR #233 merge e4aed133, PR #262 merge 103611ee); offline engineering only; qualification remains open (feat/04b-workspaces c73a7280f3d6b0b5e0cb0a915ac46f9048756ad2; 52 backend and 34 frontend tests; verified-email invitations; consent-gated sharing; OD-WS-TRANSFER open; two-step ownership transfer also merged in PR #262)
 - **Scope tier:** T2 (Owner core capabilities (candidate journeys, Story Bank, Workspaces, quality evidence))
 - **Track / phase / weeks:** D (Candidate journeys, Story Bank, Workspaces and streaming) / 4 / W2 2-8 Nov to W3 9-15 Nov
 - **Scope:** Invitation lifecycle UI, membership, ownership transfer, explicit VIEW-only sharing UI, immediate revocation, audit.
@@ -480,7 +480,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 04C Agent streaming and cancellation (REVIEW-05)
 
-- **Status:** NOT STARTED
+- **Status:** LOCAL IMPLEMENTED; not merged; staging NOT RUN (codex/r1-development no SHA yet; SSE v2 progress, durable cancellation, usage drain; synchronous fallback; migration 0048 not applied to existing databases)
 - **Scope tier:** T1 (Reviewer corrections and operator safety)
 - **Track / phase / weeks:** D (Candidate journeys, Story Bank, Workspaces and streaming) / 4 / W3 9-15 Nov to W4 16-22 Nov
 - **Scope:** Authenticated SSE endpoint using astream_events v2, safe projections, progress UI, cancellation, timeouts, reconnection safety, cancelled-run cost reconciliation, synchronous fallback.
@@ -498,7 +498,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 04D Candidate journey reliability (REQ-CAND-01)
 
-- **Status:** BRANCH PUSHED (2 PRs), NO PR; staging run NOT RUN (feat/04d-journey-tests + feat/04d-provider-mode-and-guards 67ef7c4 + 5fc0ad8; journey suite in mocked and real-stack modes; Start Interview regression; provider mode; run list; price figures removed from candidate copy)
+- **Status:** MERGED (PR #242 merge 67ef7c46, PR #253 merge 85a88c70); offline engineering only; qualification remains open (feat/04d-journey-tests 67ef7c46d5aa13f26530ff4e581a37423e6e824d; journey suite in mocked and real-stack modes; Start Interview regression; provider mode; run list; price figures removed from candidate copy)
 - **Scope tier:** T2 (Owner core capabilities (candidate journeys, Story Bank, Workspaces, quality evidence))
 - **Track / phase / weeks:** D (Candidate journeys, Story Bank, Workspaces and streaming) / 4 / W3 9-15 Nov to W5 23-27 Nov
 - **Scope:** Real browser journeys for registration to Progress on a staging stack, provider-mode indicator and accurate provider-unavailable copy, Opportunity persistence tests, owner-scoped run list, provider-key hazard guard, pricing wording consistency.
@@ -534,7 +534,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 04F Browser dictation disclosure and verification
 
-- **Status:** BRANCH PUSHED, NO PR; review-ready, no human review (feat/04f-dictation-disclosure 0633ce9; audit of 14 places, proposed wording patch not applied, two fixes, correction-burden harness)
+- **Status:** MERGED (PR #255 merge 7c400efe); offline engineering only; qualification remains open (feat/04f-dictation-disclosure 027ec450; audit of 14 places, proposed wording patch not applied, two fixes, correction-burden harness)
 - **Scope tier:** T4 (Verification extras and proposals)
 - **Track / phase / weeks:** D (Candidate journeys, Story Bank, Workspaces and streaming) / 4 / W5 23-27 Nov to W6 30 Nov-4 Dec
 - **Scope:** Legal/privacy review of the browser dictation disclosure and a live browser STT correction-burden check (browser path only; server speech stays R1.4).
@@ -571,7 +571,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 05B Persistence, backup, restore and rollback drills
 
-- **Status:** BRANCH PUSHED, NO PR; offline drills only; live drills and PostgreSQL tests NOT RUN (feat/05b-backup-restore-drills 9820024; 49 new tests, 7 PostgreSQL tests skipped without TEST_DATABASE_URL; restore drill PASS (16 checks) on a synthetic environment)
+- **Status:** MERGED (PR #257 merge f5c1e04f); offline engineering only; qualification remains open (feat/05b-backup-restore-drills 98200243; 49 new tests, 7 PostgreSQL tests skipped without TEST_DATABASE_URL; restore drill PASS (16 checks) on a synthetic environment)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** E (Hosted infrastructure and operations) / 5 / W3 9-15 Nov to W6 30 Nov-4 Dec
 - **Scope:** PostgreSQL in the hosted environment, backups that restore (database, private files, indexes), a restore drill into a separate database, rollback rehearsal, erasure from backups after account deletion, PostgreSQL-only paths exercised live (job claim, audit triggers, secrets).
@@ -589,7 +589,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 05C Observability, alerting and provider resilience
 
-- **Status:** BRANCH PUSHED (2 PRs), NO PR; mocked providers only; migrations 0044, 0045 (feat/05c-budget-governor + feat/05c-monitoring-alerts 84c7c04 + aaf18c0; 78 + 59 new tests; production AI budget governor with owner-supplied ceilings; seven alert signals; staging and PostgreSQL NOT RUN)
+- **Status:** MERGED (PR #241 merge 45144979, PR #246 merge 26f5a818); offline engineering only; qualification remains open (feat/05c-monitoring-alerts aaf18c0f79b0ce5137848a47f960df85faf6bdd3; 78 + 59 new tests; production AI budget governor with owner-supplied ceilings; seven alert signals; staging and PostgreSQL NOT RUN)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** E (Hosted infrastructure and operations) / 5 / W3 9-15 Nov to W5 23-27 Nov
 - **Scope:** Monitoring and alerting for API, worker, indexing and provider health; AI spend governor generalised from the demo ledger; quota reservation reaper scheduled; provider failure behaviour tested; pause switch verified hosted.
@@ -607,7 +607,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 05D Identity, email and rate limiting live
 
-- **Status:** BRANCH PUSHED, NO PR; offline only; live round trips NOT RUN (feat/05d-identity-live 1cfeebc; 180 new tests; Brevo delivery webhook gated False; Redis limiter tests; live-verification runbook; migration 0044)
+- **Status:** MERGED (PR #237 merge 64fbcf2b); offline engineering only; qualification remains open (feat/05d-identity-live 524048a5; 180 new tests; Brevo delivery webhook gated False; Redis limiter tests; live-verification runbook; migration 0044)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** E (Hosted infrastructure and operations) / 5 / W4 16-22 Nov to W6 30 Nov-4 Dec
 - **Scope:** Live Brevo verification and recovery round trip and delivery webhooks, Google sign-in validated or disabled, shared rate-limit store validated live.
@@ -625,7 +625,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 05E Privacy, legal and data-rights readiness
 
-- **Status:** BRANCH PUSHED (2 PRs), NO PR; no counsel sign-off recorded (feat/05e-privacy-safeguards + feat/05e-legal-review-pack bb12d2a + 7fc34cd; erasure sweep, audit allow-list, differencing mitigation, consent history; 52-fact legal review pack; legal copy unchanged)
+- **Status:** MERGED (PR #240 merge 608b65b4, PR #244 merge 8649e3fa); offline engineering only; qualification remains open (feat/05e-legal-review-pack 7fc34cdc70f25bc0967c1d4c2beec11be43712fc; erasure sweep, audit allow-list, differencing mitigation, consent history; 52-fact legal review pack; legal copy unchanged)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates)); **early parallel workstream**
 - **Track / phase / weeks:** E (Hosted infrastructure and operations) / 5 / W1 26 Oct-1 Nov to W3 9-15 Nov
 - **Scope:** Counsel review of Privacy, Terms and AI-transparency; no GDPR claim without qualified review; deletion safeguards, preparation-chat ownership index, consent version history, audit allow-list; reporting differencing review; DSAR path decision.
@@ -661,7 +661,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 06B Per-language journeys, Story Bank and Workspaces
 
-- **Status:** BRANCH PUSHED, NO PR; LG-03, LG-09 not approved (feat/06b-language-journeys c132289; 161 Playwright journey runs across 7 languages; date, number and error localisation fixes)
+- **Status:** MERGED (PR #256 merge 29cc09be); offline engineering only; qualification remains open (feat/06b-language-journeys cd664fc4; 161 Playwright journey runs across 7 languages; date, number and error localisation fixes)
 - **Scope tier:** T2 (Owner core capabilities (candidate journeys, Story Bank, Workspaces, quality evidence))
 - **Track / phase / weeks:** F (Seven-language and human qualification) / 6 / W3 9-15 Nov to W5 23-27 Nov
 - **Scope:** Run and fix journeys per language including Story Bank and Workspaces.
@@ -679,7 +679,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 06C Per-language AI behaviour: prompts, interview and feedback
 
-- **Status:** BRANCH PUSHED, NO PR; LG-04 and LG-05 not approved (feat/06c-language-ai-behaviour fa9f02a; 550 new tests; scoring invariance offline; blinded rating protocol and harness; live quality NOT RUN)
+- **Status:** MERGED (PR #245 merge 74d99e31); offline engineering only; qualification remains open (feat/06c-language-ai-behaviour fa9f02a1; 550 new tests; scoring invariance offline; blinded rating protocol and harness; live quality NOT RUN)
 - **Scope tier:** T2 (Owner core capabilities (candidate journeys, Story Bank, Workspaces, quality evidence))
 - **Track / phase / weeks:** F (Seven-language and human qualification) / 6 / W2 2-8 Nov to W3 9-15 Nov
 - **Scope:** Policy and prompt behaviour per language; scoring invariance; localized policy sentences review.
@@ -697,7 +697,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 06D Multilingual retrieval and cross-language attribution
 
-- **Status:** BRANCH PUSHED, NO PR; stacked on 02E; LG-06 not claimed (feat/06d-multilingual-retrieval 51479e9; 110 new tests; 49-pair harness, citation attribution, cross-language abstention)
+- **Status:** MERGED (PR #254 merge c9268c67); offline engineering only; qualification remains open (feat/06d-multilingual-retrieval ed4c9bbf; 110 new tests; 49-pair harness, citation attribution, cross-language abstention)
 - **Scope tier:** T2 (Owner core capabilities (candidate journeys, Story Bank, Workspaces, quality evidence))
 - **Track / phase / weeks:** F (Seven-language and human qualification) / 6 / W4 16-22 Nov to W6 30 Nov-4 Dec
 - **Scope:** Evaluate and fix multilingual retrieval, citation attribution and abstention.
@@ -715,7 +715,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 06E Per-language injection, security and privacy suites
 
-- **Status:** BRANCH PUSHED, NO PR; LG-08 not claimed (feat/06e-language-security-suites ea0ea55; 267 dev-only cases, per-language report, multilingual detector rules; interview input guard stage ON by constant (ratify))
+- **Status:** MERGED (PR #239 merge 84c1b9b8); offline engineering only; qualification remains open (feat/06e-language-security-suites ea0ea55b; 267 dev-only cases, per-language report, multilingual detector rules; interview input guard stage ON by constant (ratify))
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** F (Seven-language and human qualification) / 6 / W4 16-22 Nov to W6 30 Nov-4 Dec
 - **Scope:** Extend the injection corpus and privacy/PII suites to all seven languages including mixed-language input.
@@ -733,7 +733,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 06F Native review and legal translation qualification
 
-- **Status:** BRANCH PUSHED, NO PR; review packs only; NO human qualification recorded (feat/06fg-review-packages a4af192; seven-language review packs and blank sign-off forms; stacked on 06C)
+- **Status:** MERGED (PR #259 merge 3e8e2ba4); offline engineering only; qualification remains open (feat/06fg-review-packages a4af1925; seven-language review packs and blank sign-off forms; stacked on 06C)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** F (Seven-language and human qualification) / 6 / W2 2-8 Nov to W5 23-27 Nov
 - **Scope:** Coordinate native-speaker review and qualified legal translation per language; record sign-offs. Reviewer and counsel engagement starts immediately (it does not wait for the audit); each language is reviewed as its catalogue is frozen.
@@ -751,7 +751,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 06G Independent human AI evaluation
 
-- **Status:** BRANCH PUSHED, NO PR; protocol and harness only; no reviewer named, no PASS value exists (feat/06fg-review-packages a4af192; 70-item blinded sheets, at least 3 raters, agreement statistics; generation refuses without the 05C governor and a marker)
+- **Status:** MERGED (PR #259 merge 3e8e2ba4); offline engineering only; qualification remains open (feat/06fg-review-packages a4af1925; 70-item blinded sheets, at least 3 raters, agreement statistics; generation refuses without the 05C governor and a marker)
 - **Scope tier:** T2 (Owner core capabilities (candidate journeys, Story Bank, Workspaces, quality evidence))
 - **Track / phase / weeks:** F (Seven-language and human qualification) / 6 / W3 9-15 Nov to W5 23-27 Nov
 - **Scope:** Blinded human rating of interview questions, feedback and Mo answers per language; targeted human validation; pilot revalidation of sharing, provenance and score interpretation.
@@ -787,7 +787,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 07A Deferral inaccessibility and engineering hygiene
 
-- **Status:** BRANCH PUSHED, NO PR; PG-10 inaccessibility suite (feat/07a-deferral-inaccessibility b00bbbd; 256 API tests, 36 vitest, 8 Playwright; fixed real blocking calls in async routes)
+- **Status:** MERGED (PR #243 merge 792871f2, PR #264 merge dfd59edc); offline engineering only; qualification remains open (feat/07a-deferral-inaccessibility b00bbbd7d2eec8e33ea2214db13053b9f54e5ceb; 256 API tests, 36 vitest, 8 Playwright; fixed real blocking calls in async routes)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** E (Hosted infrastructure and operations) / 7 / W4 16-22 Nov to W5 23-27 Nov
 - **Scope:** Consolidated UI plus API tests proving each deferred feature is unreachable; audit async blocking and optional-dependency tests.
@@ -805,7 +805,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 07B Live grounding and agent-policy validation
 
-- **Status:** NOT STARTED
+- **Status:** PREFLIGHT ONLY; live evaluation NOT RUN (codex/r1-development no SHA yet; RAGAS audit READY; no new paid run; historical zero-score cause remains unresolved; fresh OD-BUDGET approval required)
 - **Scope tier:** T4 (Verification extras and proposals)
 - **Track / phase / weeks:** A (AI security, prompts and tool registry) / 7 / W4 16-22 Nov to W6 30 Nov-4 Dec
 - **Scope:** Bounded live re-validation of the grounding policies and historical agent misses; investigate the zero RAGAS relevancy and recall scores; larger approved RAGAS run.
@@ -823,7 +823,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 07C Residual live verifications
 
-- **Status:** NOT STARTED
+- **Status:** LOCAL SAMPLE RECORDED; not merged; no staging or language qualification (codex/r1-development no SHA yet; 14 actual local synthetic image/PDF OCR observations across seven locales; evidence/07C_LOCAL_OCR_2026_10_23.json; zero paid/network calls)
 - **Scope tier:** T4 (Verification extras and proposals)
 - **Track / phase / weeks:** E (Hosted infrastructure and operations) / 7 / W5 23-27 Nov to W6 30 Nov-4 Dec
 - **Scope:** Live OCR quality sample.
@@ -841,7 +841,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 08A0 Release evidence pipeline (continuous integration of evidence)
 
-- **Status:** BRANCH PUSHED, NO PR; verified offline (feat/08a0-release-evidence 25d5280; 84 new tests; ledger seeded with PRs 213 to 235; checker never marks PASS; offline by default)
+- **Status:** MERGED (PR #250 merge 6eaf246f); offline engineering only; qualification remains open (feat/08a0-release-evidence 25d52808; 84 new tests; ledger seeded with PRs 213 to 235; checker never marks PASS; offline by default)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** E (Hosted infrastructure and operations) / 8 / W2 2-8 Nov to W3 9-15 Nov
 - **Scope:** Automate the collection of gate evidence from the first merged package onward: per-package acceptance results, CI links, SHA, the readiness tracker rows (PG-01 to PG-15, LG-01 to LG-14) and the reconciliation check, so the freeze assembles evidence that already exists instead of creating it at the end.

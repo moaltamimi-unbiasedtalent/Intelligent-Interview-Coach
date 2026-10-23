@@ -23,7 +23,7 @@ from src.agent.errors import (
 )
 from src.agent.events import AgentEvent, AgentEventType
 from src.agent.human import DECISION_APPROVE, DECISION_SELECT, HumanActionType
-from src.agent.policies import MAX_AGENT_STEPS, SYSTEM_PROMPT, response_language_directive
+from src.agent.policies import MAX_AGENT_STEPS, response_language_directive, system_prompt
 from src.agent.registry import ToolRegistry
 from src.agent.tool_authorization import (
     DEFAULT_POLICIES,
@@ -75,10 +75,14 @@ def _format_memory_block(memory_items: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def make_initialise_node() -> Callable[[AgentState], dict]:
+def make_initialise_node(registry: ToolRegistry | None = None) -> Callable[[AgentState], dict]:
+    if registry is None:
+        from src.agent.registry import career_tool_registry
+        registry = career_tool_registry(None)
+
     def initialise(state: AgentState) -> dict:
         events = _append(state, "events", AgentEvent(AgentEventType.RUN_STARTED, step=0, status="running").to_dict())
-        messages: list = [SystemMessage(content=SYSTEM_PROMPT)]
+        messages: list = [SystemMessage(content=system_prompt(registry, set(state.get("disabled_tools", []) or [])))]
         # Mo conversation language (P3.5): a bounded, allow-listed directive appended
         # after the base prompt. Built only from the allow-list (never the raw code), so
         # it cannot carry injection; absent/English → no directive. It changes only the
@@ -166,12 +170,29 @@ def make_agent_node(model_factory: ModelFactory, registry: ToolRegistry) -> Call
         if turn_step == 1:
             events.append(AgentEvent(AgentEventType.REQUEST_UNDERSTOOD, step=step, status="ok").to_dict())
         try:
+            control = registry.authorizer.run_control(state.get("run_id"), required=bool(state.get("control_required")))
+        except Exception:
+            control = "expired"  # control store unavailable: never start another provider call
+        if control:
+            return {"status": control, "cancelled": True, "completed": True,
+                    "events": events, "step_count": step, "turn_step_count": turn_step}
+        try:
             model = _build_model(model_factory, state.get("model_profile"))
             # A disabled tool is withheld from the model entirely (server-enforced
             # capability toggle); it is never offered and cannot be re-enabled by the model.
             disabled = set(state.get("disabled_tools", []) or [])
             bound = model.bind_tools(registry.bind_schemas(exclude=disabled))
-            ai = bound.invoke(state["messages"])
+            # Refresh the system catalogue on each turn, including resumed/historical threads.
+            messages = list(state["messages"])
+            if messages and isinstance(messages[0], SystemMessage):
+                messages[0] = SystemMessage(content=system_prompt(registry, disabled))
+            # astream_events is progress delivery, not provider token streaming.
+            # Explicitly disable ChatModel auto-streaming so the budget governor can settle usage.
+            from langchain_core.language_models.chat_models import BaseChatModel
+            if isinstance(model, BaseChatModel):
+                ai = bound.invoke(messages, stream=False)
+            else:
+                ai = bound.invoke(messages)
         except AgentConfigurationError:
             events.append(AgentEvent(AgentEventType.RUN_FAILED, step=step, status="not_configured", message=_SAFE_CONFIG_ERROR).to_dict())
             return {"messages": [AIMessage(content="")], "step_count": step, "turn_step_count": turn_step, "status": STATUS_FAILED, "last_error": "not_configured", "events": events, "completed": True}
@@ -183,6 +204,14 @@ def make_agent_node(model_factory: ModelFactory, registry: ToolRegistry) -> Call
         from src.agent.usage import usage_from_message
 
         usage_entries = _append(state, "usage_entries", usage_from_message(ai))
+        try:
+            control = registry.authorizer.run_control(state.get("run_id"), required=bool(state.get("control_required")))
+        except Exception:
+            control = "expired"
+        if control:
+            events.append(AgentEvent(AgentEventType.RUN_FAILED, step=step, status=control).to_dict())
+            return {"status": control, "cancelled": True, "completed": True, "events": events,
+                    "usage_entries": usage_entries, "step_count": step, "turn_step_count": turn_step}
         return {"messages": [ai], "step_count": step, "turn_step_count": turn_step,
                 "events": events, "usage_entries": usage_entries}
 
@@ -492,6 +521,9 @@ def make_finalize_node() -> Callable[[AgentState], dict]:
         turn_step = int(state.get("turn_step_count", 0))
         last = state["messages"][-1]
 
+        if state.get("status") in ("cancelled", "expired"):
+            return {"completed": True}
+
         if state.get("status") == STATUS_FAILED:
             msg = _SAFE_CONFIG_ERROR if state.get("last_error") == "not_configured" else _SAFE_MODEL_ERROR
             # A RUN_FAILED event was already recorded by the agent node.
@@ -512,7 +544,7 @@ def make_finalize_node() -> Callable[[AgentState], dict]:
 
 def route_after_agent(state: AgentState) -> str:
     """Bounded routing: run a requested tool only within the per-turn step budget."""
-    if state.get("status") == STATUS_FAILED:
+    if state.get("status") in (STATUS_FAILED, "cancelled", "expired"):
         return "finalize"
     last = state["messages"][-1]
     pending = bool(getattr(last, "tool_calls", []) or [])

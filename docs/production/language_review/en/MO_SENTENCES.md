@@ -39,6 +39,8 @@ Sent by `src/mail/templates.py` for identity flows (verification, password reset
 | `admin_test.subject` | Ask4Mo email delivery test |
 | `email_verification.body` | Welcome to Ask4Mo. Verify your email:<br>{link}<br><br>This link expires in {expiry}. If you did not create an account, you can ignore this email. |
 | `email_verification.subject` | Verify your Ask4Mo email |
+| `ownership_transfer.body` | The owner of a workspace on Ask4Mo proposed to transfer ownership of it to you. Nothing changes unless you accept: sign in with this email address to review and accept or decline.<br><br>Review the proposal:<br>{link}<br><br>The proposal can be used once and is valid for {expiry}. If you did not expect it, ignore this email or decline it after signing in. |
+| `ownership_transfer.subject` | An Ask4Mo workspace owner proposed to transfer ownership to you |
 | `password_reset.body` | Reset your password:<br>{link}<br><br>This link expires in {expiry}. If you did not request this, ignore this email; your password stays unchanged. |
 | `password_reset.subject` | Reset your Ask4Mo password |
 | `workspace_invitation.body` | You have been invited to join a workspace on Ask4Mo. Joining shares nothing: only items you explicitly choose to share are ever visible to other members.<br><br>Review the invitation:<br>{link}<br><br>This invitation can be used once and expires in {expiry}. Sign in with this email address to accept or decline. If you did not expect it, ignore this email. |

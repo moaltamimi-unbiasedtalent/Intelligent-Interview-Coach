@@ -36,7 +36,7 @@ export function PrepareEntry() {
     <div className="space-y-4">
       {capabilities.company_research_enabled ? <CompanyResearchLink /> : null}
       {capabilities.agent_coach_enabled ? (
-        <AgentPrepareWorkspace initialDraft={initialDraft} />
+        <AgentPrepareWorkspace initialDraft={initialDraft} streamEnabled={capabilities.agent_streaming_enabled === true} />
       ) : (
         <PrepareWorkspace initialDraft={initialDraft} />
       )}

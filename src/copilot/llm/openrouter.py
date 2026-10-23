@@ -101,6 +101,9 @@ def build_chat_model(
         config, model=model, temperature=temperature, max_tokens=max_tokens, timeout_s=timeout_s, max_retries=max_retries
     )
     if meter:
+        # 04C: graph progress callbacks must never implicitly turn a provider
+        # request into a token stream that the budget governor cannot settle.
+        kwargs["disable_streaming"] = True
         try:
             from src.ai_protection import langchain_callback
 

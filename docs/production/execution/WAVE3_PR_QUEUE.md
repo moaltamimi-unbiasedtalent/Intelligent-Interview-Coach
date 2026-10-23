@@ -1,5 +1,7 @@
 # Wave 3 PR queue (2026-10-22)
 
+> Current engineering status (23 October 2026): Wave 3 is merged at `3e8e2ba4`; the older narrative below is the dated planning/integration record. Use [PROJECT_STATUS_DASHBOARD.md](PROJECT_STATUS_DASHBOARD.md) and the verified merge inventory for current engineering and CI. Baseline main CI fails 06F freshness tests; live and human qualification are not inferred from merges.
+
 Twenty-eight Wave 3 branches are pushed; none has a pull request yet because the lead has no GitHub CLI, token or signed-in browser. **The owner opens each PR from the compare URL `https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/new/<branch>`**; the lead then verifies GitHub CI and mergeability. Every head below was verified on `origin`. "Local" results are not CI. Nothing is merged and no gate changed.
 
 | # | Branch | Head | Base | Migration | Notes |

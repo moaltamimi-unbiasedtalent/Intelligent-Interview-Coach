@@ -33,6 +33,6 @@
   },
   "language": "de",
   "note": "BLANK TEMPLATE. Nothing here is a sign-off. A form counts only when a named human completes it and the owner records it in docs/production/execution/language_readiness.json.",
-  "pack_content_digest_expected": "5c518d5c9984733ad1795682fa7c53e9e4785a5aa90c0f9bf1b66330580b5c15",
+  "pack_content_digest_expected": "b5d1434f6f399b51e25c0551c8c02fe0f619ffc6004ba2cb3cec2f020e3657e9",
   "schema": "ask4mo.language_review.signoff_form/1"
 }

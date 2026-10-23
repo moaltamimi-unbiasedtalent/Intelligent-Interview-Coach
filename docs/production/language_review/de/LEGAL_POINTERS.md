@@ -12,7 +12,7 @@ LG-10 needs a qualified person (counsel or a qualified legal translator) to revi
 - Transactional email (account notice and verification) is in `MO_SENTENCES.md`.
 - If `docs/production/legal_review/` exists in the release tree (the 05E legal review pack), the qualifier also reviews the documents listed there; this pack does not copy them and does not depend on them. If the directory is absent, say so in the evidence reference.
 
-## Legal and trust strings (283)
+## Legal and trust strings (282)
 
 | key | English source | translation | hints |
 |---|---|---|---|
@@ -246,7 +246,6 @@ LG-10 needs a qualified person (counsel or a qualified legal translator) to revi
 | `privacy.voiceTurnBased` | Turn-based voice uses your browser or operating-system speech engines. Ask4Mo does not record or store your microphone audio. | Wechselseitige Sprachausgabe nutzt die Sprach-Engines Ihres Browsers oder Betriebssystems. Ask4Mo nimmt Ihr Mikrofon-Audio nicht auf und speichert es nicht. |  |
 | `terms.accountsAsIs` | The service is provided as is during this pre-launch phase, without warranties; liability is limited to the maximum extent permitted by applicable law (subject to legal review). | Der Dienst wird in dieser Phase vor dem Start wie besehen und ohne Gewährleistung bereitgestellt; die Haftung ist im größtmöglichen gesetzlich zulässigen Umfang beschränkt (vorbehaltlich rechtlicher Prüfung). |  |
 | `terms.accountsHeading` | Accounts, plans and availability | Konten, Tarife und Verfügbarkeit |  |
-| `terms.accountsPlans` | Basic is free. Premium is €19.99 per month and is selected online after account creation. | Basic ist kostenlos. Premium kostet €19.99 pro Monat und wird nach der Kontoerstellung online ausgewählt. |  |
 | `terms.accountsProviders` | Some features depend on external providers and may be unavailable, rate-limited or paused by the operator. | Einige Funktionen hängen von externen Anbietern ab und können nicht verfügbar, ratenbegrenzt oder vom Betreiber pausiert sein. |  |
 | `terms.aiHeading` | AI limitations | Grenzen der KI |  |
 | `terms.aiNoHiring` | Ask4Mo does not make hiring decisions, rank candidates for recruiters, or evaluate you by your voice. | Ask4Mo trifft keine Einstellungsentscheidungen, erstellt kein Ranking von Kandidaten für Recruiter und bewertet Sie nicht anhand Ihrer Stimme. |  |

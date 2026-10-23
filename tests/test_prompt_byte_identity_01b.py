@@ -80,9 +80,14 @@ STYLES = ["", "balanced", "supportive", "direct", "challenging", "Challenging ",
 
 
 # ---------------------------------------------------------------- agent --------------------------------
-def test_agent_system_prompt_is_byte_identical_and_pinned():
-    assert new_ap.SYSTEM_PROMPT == old_ap.SYSTEM_PROMPT
-    assert _h(new_ap.SYSTEM_PROMPT) == PINNED["agent_system"]
+def test_historical_agent_system_prompt_is_byte_identical_and_pinned():
+    # 01C intentionally versions the active prompt. Preserve the 01B rollback asset and its byte pin.
+    from src.prompt_assets import get_loader
+
+    historical = get_loader().get("agent/system", "1.0.0").body
+    assert historical == old_ap.SYSTEM_PROMPT
+    assert _h(historical) == PINNED["agent_system"]
+    assert "Tools available to you:" in new_ap.SYSTEM_PROMPT
 
 
 @pytest.mark.parametrize("code", [None, "", " ", "en", "EN", "zz", "x'; --", "de ", *LANGUAGE_NAMES])

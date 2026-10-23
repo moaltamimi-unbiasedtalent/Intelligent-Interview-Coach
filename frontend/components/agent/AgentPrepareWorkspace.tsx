@@ -56,9 +56,9 @@ function researchFlag(): boolean | undefined {
 }
 
 /** Candidate-facing Agent Coach — the LangGraph agent behind the Precision Coach UI. */
-export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft | null }) {
+export function AgentPrepareWorkspace({ initialDraft, streamEnabled = false }: { initialDraft?: PrepareDraft | null; streamEnabled?: boolean }) {
   const { t, locale } = useI18n();
-  const { run, busy, restoring, error, runId, start, send, resume, reset, clearError } = useAgentRun();
+  const { run, busy, restoring, error, runId, start, send, resume, reset, clearError, progress, stopping, cancel } = useAgentRun(streamEnabled);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [mobileTab, setMobileTab] = useState<"coach" | "prep">("coach");
   // Mo conversation language (P3.5) + coaching style (P10B Wave 2): sent with every run from the
@@ -88,6 +88,17 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
     autoStarted.current = true;
     void startRun({ goal: goalDraft, profile: savedProfile(), enable_current_market_research: researchFlag() });
   }, [goalDraft, runId, run, restoring, startRun]);
+
+  const streamProgress = busy && progress ? (
+    <div className="my-3 flex items-center gap-3" data-testid="agent-stream-progress">
+      <p role="status" aria-live="polite" className="text-sm text-muted">
+        {t(progress === "stopping" ? "agentStream.stopping" : progress.startsWith("tool_") ? "agentStream.tools" : "agentStream.preparing")}
+      </p>
+      {runId ? <Button type="button" onClick={() => void cancel()} disabled={stopping}>
+        {t("agentStream.stop")}
+      </Button> : null}
+    </div>
+  ) : null;
 
   if (restoring && !run) {
     return (
@@ -119,6 +130,7 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
           title={t("prepare.coachTitle")}
           description={t("prepare.coachDescription")}
         />
+        {streamProgress}
         <FirstMessageForm
           onStart={startRun}
           busy={busy}
@@ -138,6 +150,7 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
 
   const coach = (
     <div>
+      {streamProgress}
       <JourneyChrome journey={run.journey} />
       <PreparationChecklist journey={run.journey} />
       <MemoryLoadedCue run={run} />
@@ -147,7 +160,12 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
         <p role="alert" className="mt-3 text-sm text-danger" data-testid="mo-ai-failure">{t(failureKey)}</p>
       ) : null}
 
-      {run.awaiting_human_input && run.pending_action ? (
+      {run.status === "cancelled" || run.status === "expired" ? (
+        <div className="mt-4 space-y-3">
+          <p role="status">{t("agentStream.stopped")}</p>
+          <Button onClick={reset}>{t("prepare.startNewPreparation")}</Button>
+        </div>
+      ) : run.awaiting_human_input && run.pending_action ? (
         <div className="mt-4">
           <PendingHumanActionCard action={run.pending_action} busy={busy} onDecision={resume} handoffSummary={run.handoff_summary} />
         </div>
@@ -169,7 +187,7 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
       {(() => {
         // Feedback on the latest visible assistant answer — never while awaiting HITL,
         // on a failed run, or when there is no answer (§19).
-        if (busy || run.awaiting_human_input || run.status === "failed") return null;
+        if (busy || run.awaiting_human_input || ["failed", "cancelled", "expired"].includes(run.status)) return null;
         const answers = run.conversation.filter((m) => m.role === "assistant" && m.response_id);
         const latest = answers[answers.length - 1];
         if (!latest?.response_id || !latest.content.trim()) return null;

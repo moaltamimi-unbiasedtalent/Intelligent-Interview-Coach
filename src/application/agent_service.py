@@ -189,6 +189,13 @@ class AgentApplicationService:
 
             observability = build_observability_sink()
         self._obs = observability
+        self._registry = registry
+        self._model_factory = model_factory or _default_model_factory
+        self._streaming = None
+        sf = self._usage_sf or getattr(self._run_index, "_sf", None)
+        if sf is not None:
+            from src.agent.run_control import RunControlStore
+            registry.authorizer.set_run_control(RunControlStore(sf).probe)
         self._graph = build_agent_graph(
             model_factory=model_factory or _default_model_factory,
             registry=registry,
@@ -300,7 +307,8 @@ class AgentApplicationService:
 
     # -- run / resume / lookup ------------------------------------------------
 
-    def run(self, request: AgentRunRequest, *, request_id: str | None = None) -> AgentRunResult:
+    def _begin_run(self, request: AgentRunRequest) -> dict:
+        """Shared owner/index/initial-state admission for synchronous and streaming runs."""
         run_id = uuid.uuid4().hex
         profile = _resolve_profile(request.profile)
         # Server-enforced capability toggle (#16): when the user turns current-market
@@ -348,6 +356,21 @@ class AgentApplicationService:
             except Exception as exc:  # noqa: BLE001
                 raise AgentError("The assistant could not start the request.") from exc
         self._emit_started(run_id, profile.value)
+        return initial
+
+    def streaming(self):
+        """Streaming requires the existing application's durable ownership/session factory."""
+        if self._streaming is None:
+            sf = self._usage_sf or getattr(self._run_index, "_sf", None)
+            if sf is None:
+                raise AgentConfigurationError("Agent streaming is unavailable in this environment.")
+            from src.application.agent_streaming import AgentStreamingService
+            self._streaming = AgentStreamingService(self, sf)
+        return self._streaming
+
+    def run(self, request: AgentRunRequest, *, request_id: str | None = None) -> AgentRunResult:
+        initial = self._begin_run(request)
+        run_id = initial["run_id"]
         started = time.perf_counter()
         try:
             self._graph.invoke(initial, config=self._config(run_id))
@@ -380,6 +403,8 @@ class AgentApplicationService:
         with self._lock_for(run_id):
             snapshot = self._snapshot(run_id)
             self._require_owned(snapshot, user_id)
+            if self._registry.authorizer.run_control(run_id, required=bool(snapshot.values.get("control_required"))):
+                raise RunNotResumableError("This run was stopped.")
             self._ensure_indexed(run_id, user_id)
             if not self._is_awaiting(snapshot):
                 raise RunNotResumableError("This run is not awaiting a decision.")
@@ -425,6 +450,8 @@ class AgentApplicationService:
         with self._lock_for(run_id):
             snapshot = self._snapshot(run_id)
             self._require_owned(snapshot, user_id)
+            if self._registry.authorizer.run_control(run_id, required=bool(snapshot.values.get("control_required"))):
+                raise RunNotResumableError("This run was stopped.")
             self._ensure_indexed(run_id, user_id)
             if self._is_awaiting(snapshot):
                 # A pending approval must be answered via /resume, never bypassed.
@@ -467,7 +494,29 @@ class AgentApplicationService:
         snapshot = self._snapshot(run_id)
         self._require_owned(snapshot, user_id)
         self._ensure_indexed(run_id, user_id)
-        return self._result_from_snapshot(run_id, snapshot, request_id)
+        result = self._result_from_snapshot(run_id, snapshot, request_id)
+        if snapshot.values.get("control_required"):
+            reason = self._registry.authorizer.run_control(run_id, required=True)
+            if reason:
+                # Cancellation may win the final control-row transaction just
+                # after graph completion. Read that durable decision on every
+                # lookup, never expose a completed action after Stop won.
+                result.status = reason
+                result.response = ""
+                result.pending_action = None
+                result.awaiting_human_input = False
+                result.handoff_approved = False
+                if result.conversation and result.conversation[-1].get("role") == "assistant":
+                    result.conversation = result.conversation[:-1]
+                from src.agent.run_control import RunControlStore
+                sf = self._usage_sf or getattr(self._run_index, "_sf", None)
+                row = RunControlStore(sf).owned(run_id, user_id) if sf is not None else None
+                if row is None or not row["settled"]:
+                    result.usage["usage_complete"] = False
+                    result.usage["estimated_cost_usd"] = None
+                    if "stream_settlement_pending" not in result.usage["missing_usage_sources"]:
+                        result.usage["missing_usage_sources"].append("stream_settlement_pending")
+        return result
 
     @property
     def checkpoint_thread_delete_supported(self) -> bool:
@@ -575,7 +624,7 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
     conversation = _safe_conversation(messages, run_id)
     if awaiting:
         status = STATUS_AWAITING_HUMAN
-    elif state.get("status") in (None, "", "running"):
+    elif state.get("status") in (None, ""):
         status = STATUS_COMPLETED
     else:
         status = state.get("status")

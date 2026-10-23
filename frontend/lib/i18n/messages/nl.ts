@@ -3,6 +3,7 @@ import type { Catalog } from "./en";
 import { BRAND_SLOGAN } from "../../brand";
 
 const nl: Catalog = {
+  agentStream: {"stopped": "Dit verzoek is gestopt. Start een nieuwe voorbereiding wanneer je klaar bent.", "preparing": "Je begeleiding wordt voorbereid…", "tools": "Voorbereidingstools worden gebruikt…", "stop": "Stoppen", "stopping": "Bezig met stoppen. Gebruik wordt vastgelegd…"},
   common: {
     appName: "Ask4Mo",
     tagline: BRAND_SLOGAN,

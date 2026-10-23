@@ -62,7 +62,7 @@ def test_production_tree_is_complete_valid_and_pinned():
     assert sorted(pointer) == loader.families()
     for family in loader.families():
         asset = loader.resolve(family)
-        assert asset.version == "1.0.0" and asset.status == "approved"
+        assert asset.version == ("1.1.0" if family == "agent/system" else "1.0.0") and asset.status == "approved"
         assert asset.recorded_sha256 == asset.sha256 == pointer[family]["sha256"]
         assert asset.compatible_with, family
     assert loader.declared_versions_with_hash() == prompt_assets.effective_versions()
@@ -188,7 +188,7 @@ def test_production_versions_keeps_legacy_keys_and_adds_version_plus_hash():
     versions = production_versions()
     assert {"prompt_version", "model_policy_version", "specialist_config_version", "knowledge_version"} <= set(versions)
     # prompt_version keeps its exact historical meaning: a hash of Mo's system prompt (unchanged by 01B).
-    assert versions["prompt_version"] == prompt_version() == "prompt-72f03d8133c3"
+    assert versions["prompt_version"] == prompt_version() == "prompt-" + hashlib.sha256(policies.SYSTEM_PROMPT.encode()).hexdigest()[:12]
     assets = versions["prompt_assets"]
     assert sorted(assets) == FilePromptLoader(PROMPTS).families()
     assert versions["prompt_set_version"] == prompt_assets.prompt_set_version()

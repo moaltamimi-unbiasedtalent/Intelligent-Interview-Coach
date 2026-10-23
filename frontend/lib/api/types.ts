@@ -24,6 +24,7 @@ export interface CapabilitiesResponse {
   agent_memory: boolean;
   human_in_the_loop: boolean;
   agent_coach_enabled: boolean;
+  agent_streaming_enabled?: boolean;
   // Realtime voice (Capstone P7.5) — deployment flag AND a configured provider key.
   // When false, the UI stays on P7 turn-based voice.
   realtime_voice_enabled: boolean;

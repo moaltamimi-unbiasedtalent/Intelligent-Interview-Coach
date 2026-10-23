@@ -1,112 +1,112 @@
 {
-  "english_source_digest": "9edf75a005bc361e3f2ec3aa9e846933b98c0b6fb0b89d78271b03ea50703485",
+  "english_source_digest": "662ee8e060af6ef17e223c1b1dc82d903823809e4c0164c0b1d9a49165994480",
   "freeze_sha": null,
   "generator": "06F/1",
   "languages": {
     "de": {
-      "content_digest": "5c518d5c9984733ad1795682fa7c53e9e4785a5aa90c0f9bf1b66330580b5c15",
+      "content_digest": "b5d1434f6f399b51e25c0551c8c02fe0f619ffc6004ba2cb3cec2f020e3657e9",
       "files": {
         "INSTRUCTIONS.md": "2c5792241dc29b5731e4ef7b3e4ddec23f21633fa9078a9440ba5eb4762a723e",
-        "INTERFACE_STRINGS.md": "8ad74de35a055a8ef0f904489c0660961a63d73b3e215e3226996d1fd620a746",
+        "INTERFACE_STRINGS.md": "bc55b311d8da82dc11df1b52e6b42b6d388e0c03a6dc69799700a500dcee3135",
         "INTERVIEW_SAMPLES.md": "6e33b18fc5396e425f6bbc8320e14e931d86a2e1a329f149249f9240c3ca1b52",
-        "LEGAL_POINTERS.md": "fadcebde2c0c2e3f2af2914358a6899fbc669161a1a94c6ff2cdf387d042a355",
-        "MO_SENTENCES.md": "fa7b1b3168d6dde11e97e3f4eec9e7ac5a67e890a90550fb07e100542cf849a1",
-        "README.md": "f1363ee1d802e10a220b3633af4b51a96cd00a0b8d7842fcae4a43c9a09a4ef4",
-        "SIGNOFF_FORM.md": "efbc6e8720319dde363051a1d231182236092ebda246ba14fd71889bb3118dd4",
-        "SIGNOFF_FORM.template.json": "9eb7d2c15110bc5e3a5c604fae2206513ff8f89d136d9d0d98b08504adc263ba"
+        "LEGAL_POINTERS.md": "c739d0d5049695f42bf3dd4c635a2098df5e87848ddd6604579bde537aa70ff9",
+        "MO_SENTENCES.md": "17bc8057138dd51e9ce54a6a9327d68729390a0f5d1e6ead7d553db2e15119da",
+        "README.md": "85958255a600cb4ce681943eb79dd7fc8bb18d0e6e907781a93fc76b7a02d364",
+        "SIGNOFF_FORM.md": "ed5f4093af0e0edf3e189cc32f882625229875f455a294206666640e8975b210",
+        "SIGNOFF_FORM.template.json": "7c57d32325331a80d353b0c9b4e5f9780ff2427a0e5b33872e01fbca39390381"
       },
-      "interface_keys": 2611,
-      "items": 2650
+      "interface_keys": 2687,
+      "items": 2728
     },
     "en": {
-      "content_digest": "9edf75a005bc361e3f2ec3aa9e846933b98c0b6fb0b89d78271b03ea50703485",
+      "content_digest": "662ee8e060af6ef17e223c1b1dc82d903823809e4c0164c0b1d9a49165994480",
       "files": {
         "INSTRUCTIONS.md": "70cf1e76c930a30918ed18713b907cf04b5875b5af82706ed983ba82f6c874b7",
-        "INTERFACE_STRINGS.md": "5c34c6e0c5285520631f73e59864c3b83f459d1020a9982287b3a564ec36cb82",
+        "INTERFACE_STRINGS.md": "5076d63e2a7af3f9aa458b04fa1782c10b9b5e855d1b7221664d7b3b73bff58d",
         "INTERVIEW_SAMPLES.md": "b33f8ddcbc0691459da5aeb3707ab7f9bf52f606795fa804ad755ada83e892da",
-        "LEGAL_POINTERS.md": "69b1e54edf50bc2cc01041084355cca56f56465529f2488a02c09782c1de2320",
-        "MO_SENTENCES.md": "25e32493690d47ab71827266a07deb5795023cfaaa60d7f3b1426a125d179789",
-        "README.md": "869454e5968ded79850036453f0175afe7b06809875d0fc291811adbceb39534",
-        "SIGNOFF_FORM.md": "8c3ef9c11fd6d2fff629afe06a9166ff8d483745775dd1b7bbc2606ae3613dc9",
-        "SIGNOFF_FORM.template.json": "03922602d88205b4883f0fe2d1871d2af1106059710f637b37f45c332666e27b"
+        "LEGAL_POINTERS.md": "d190a1450c00d09bec91350f6041bc1dad9f353efd49bec07dce0893eb0fb6fc",
+        "MO_SENTENCES.md": "86a81192da07eb67f826fe3c08572174ef9f9ace894e296104e6284fa477afc7",
+        "README.md": "3feaf40fbd63f6f59bd0eebfda19327fa11286eb622f844db649dac2387e467b",
+        "SIGNOFF_FORM.md": "a7e430af8ad585cc6ab7c4367612deb82d3c494cc05c2a0b3b6132c3c70925b9",
+        "SIGNOFF_FORM.template.json": "68d27e4a49f6a5d16626ac962cfb3c723569a4c1e7a39ad565c5c04b80e79109"
       },
-      "interface_keys": 2611,
-      "items": 2650
+      "interface_keys": 2687,
+      "items": 2728
     },
     "es": {
-      "content_digest": "2a604c0fcb83bd1204d181f4cacc297ac5f11028b54d364a195ec4876fba1fc3",
+      "content_digest": "46249e21d9b08d7daf7110b19815bf71488ac06c4eae643062c3d21dadd25169",
       "files": {
         "INSTRUCTIONS.md": "06c1feb795ea29ae7afcdb7a6d272326b4c75b9824954586b15c3b3fdfd4c854",
-        "INTERFACE_STRINGS.md": "e827e0b4e652b0f280926a6497e79d29326c4294c199197348208a125e09e556",
+        "INTERFACE_STRINGS.md": "b63f5b2ee570405460fadf2e1b4c2bee220821cbc1883aa4ac3084d83ce68588",
         "INTERVIEW_SAMPLES.md": "7b97bcd90ad99b48013af0f8f269604e896378e9ae11ac50083d831cab9c3dd0",
-        "LEGAL_POINTERS.md": "155629056583e981cc321d9ff6449f5cff3274648e631c7f2c866e32f9f7a6ec",
-        "MO_SENTENCES.md": "7ac064273a9c46adacc30029b45dd70f23ef1c4dafc86938b6918556cc74314b",
-        "README.md": "5e1ca345fa1fb5c5f95f0d844e9f18603d410a3aee20fad9ea515a7fa927ccb7",
-        "SIGNOFF_FORM.md": "591a4e92a8353871ff1e7e3aee2b719f03397177a629427b0a83586cac4336ec",
-        "SIGNOFF_FORM.template.json": "24b9753f76b0dd5488d3d6f8391b2184f6a3c51bbc90444deae678380c475419"
+        "LEGAL_POINTERS.md": "95da2f52d9ce27a2bf4e485a3f6f36cf83782c372d5e0f2dfad4c15ec8546dbd",
+        "MO_SENTENCES.md": "ab385a8df65fbd14bc0dc7b523536aed0202583f054845dbc25e744cfca4f65e",
+        "README.md": "7af9460f619b640cf32d3283b1059b8264f882768c58012c339330fbbc6b578e",
+        "SIGNOFF_FORM.md": "c0e8a673c4d13622632f812db66b186c7a7a4aad826caf04b6a706cc0b2141d6",
+        "SIGNOFF_FORM.template.json": "e74f360337a56e94f375eae03ab27e73bc071f65f16f801952c776bbd08b703f"
       },
-      "interface_keys": 2611,
-      "items": 2650
+      "interface_keys": 2687,
+      "items": 2728
     },
     "fr": {
-      "content_digest": "03d23dac722996d9be29eea53d8f1500ee8fb017eb39978d883127a59e367a83",
+      "content_digest": "289780d30addd5872fe04bbbdf2dcf07685808ea706c93e8e0cce51fe29e8f95",
       "files": {
         "INSTRUCTIONS.md": "214aea0169cbd912937614261407403353ea41e837b35d936b62d0e5e03fb3d9",
-        "INTERFACE_STRINGS.md": "e2355eba202eb16928b6f18971344405517663307fed6ddeaec366a5d668c459",
+        "INTERFACE_STRINGS.md": "e18b25f05587a3d51e71481ddb31ff94f5119c7445bb79efef0c30cfebb80afa",
         "INTERVIEW_SAMPLES.md": "20e21bd68832334dd22f6a08b8bc7957fae21860eb3c78f3f6889d19d7413768",
-        "LEGAL_POINTERS.md": "f4d19d5519b6f2f0db50fe20297fe8c9958215c6d7268585ada6ddaacde08b06",
-        "MO_SENTENCES.md": "01003c784ef14cda701bb60c504523b2151e79dc6dd98bca89b60a5c9c055c54",
-        "README.md": "6dc6f7db9aeb530aa9c2bfcc703b92c24a94f6a4bd5a3db2ac853b0c80a0775e",
-        "SIGNOFF_FORM.md": "566d730bf27d222c1aa09383a373f769a441de20c9626862cc436adfad1dd13f",
-        "SIGNOFF_FORM.template.json": "2bc6b5632f0cd921a07771c7c2a10a2adf06394105dfce54b9037505a21b29ca"
+        "LEGAL_POINTERS.md": "5d7fe6167d10692e04885bf4f974bf507de3c30bc5e9013641bb5c9b4e5f1cc2",
+        "MO_SENTENCES.md": "8724e3b1cab5c94e1be1a7cdcf6892cc8deda4af4a92bbd0d9d096e484ed9059",
+        "README.md": "e5958a3e994fc02dd9ea66fe54c2f423d68f1f48758866fd8f6524db2ab0aa09",
+        "SIGNOFF_FORM.md": "490f6ca1e8bab5f568743a325130445833482240eba0b26012397452d31ba757",
+        "SIGNOFF_FORM.template.json": "680a92fc8a5e602cbd05cbaa6f95ee785d19a6684c7b2dba4c1f6a90c9456890"
       },
-      "interface_keys": 2611,
-      "items": 2650
+      "interface_keys": 2687,
+      "items": 2728
     },
     "it": {
-      "content_digest": "9572f642b4be237f639eb39e89e18da60d9845cf1db92b7165fe5ea0f7d7446d",
+      "content_digest": "3ad566a314ab2e4976c4da7750ab8880c5a8920a53ba106c9775bc024fee3d0f",
       "files": {
         "INSTRUCTIONS.md": "774a6ce006025b2fa88b548dcb406a290d454973f94ec9a7c167f807c4939d72",
-        "INTERFACE_STRINGS.md": "3950c49712d98504c158afaab5fc34c65badaad643354dd286149e90f2e82a7c",
+        "INTERFACE_STRINGS.md": "714807df2495fba8c48b615294c43b77891d3beffac0c9b0dc2507f494957030",
         "INTERVIEW_SAMPLES.md": "5113bfab1aa1de933e437308af8996649d8489d3915eacdee5d35ab761105630",
-        "LEGAL_POINTERS.md": "f8194412db85fb788172c484c8bfc8dc7d81b257aa104390f4ff38bc8bfe6f26",
-        "MO_SENTENCES.md": "0619cf41363d86c47cfc7b854c6eda99a92c2e7ac2a0adc60f6c922d41ffd738",
-        "README.md": "5473232e37540e3fddf50b9ef24fe1996c90b09cc20f8383d45e1571c692af8a",
-        "SIGNOFF_FORM.md": "d6409f62b94f738b86a8170b01c36893d6f125ad90c4482a3c1972abee247fff",
-        "SIGNOFF_FORM.template.json": "9e6de54e0f8030db64a4d0a1ede3147a34f7adb685d92ef9bba4e81801b10538"
+        "LEGAL_POINTERS.md": "d002536ac103191e9817d212eb670d9ffba05a87b373e843809089e1be6cb024",
+        "MO_SENTENCES.md": "d3bf54e3a0415edee29daad41ab3a4fd40503f6a44cf6e3a844bb533aab82989",
+        "README.md": "4ac178eea29d4eaf8619c8d8de4568f83c13a0bf14a30a67e200ffb1951af2d2",
+        "SIGNOFF_FORM.md": "185112913dd5ecc8a5360226ec96f78373301bd41b7727f3e541e786b697dfc1",
+        "SIGNOFF_FORM.template.json": "42e8d2cc86e13241793bb9b169779f8692dc782376eab9d4d246ab561f5c2dc0"
       },
-      "interface_keys": 2611,
-      "items": 2650
+      "interface_keys": 2687,
+      "items": 2728
     },
     "nl": {
-      "content_digest": "12d898f1111389301eab7495ae7d85c0d4976dde2bf05cf05e3c448909334cc9",
+      "content_digest": "fb0df41d28f81746db717539eaa3d7ba82baca598955bc6ec01573f5352b0970",
       "files": {
         "INSTRUCTIONS.md": "7f280acf4d576f17da0cbac32d633be0e990546cb68129b4e83fd2ebadc8a649",
-        "INTERFACE_STRINGS.md": "659b872d8c7c4fd3fe34dfaeccf348d55d6575847a4ee49f1fe77226e45ffb43",
+        "INTERFACE_STRINGS.md": "b1c9679ee8e7661e036c022e124b313357ca62c6cc277cf7e03e0325ecb43e13",
         "INTERVIEW_SAMPLES.md": "f4e99c8c8c1d6d4bd5b868eab53e800fd9f4e74f8d72d59c777815aefc3f7471",
-        "LEGAL_POINTERS.md": "8b2820f54433b62dc2df66515e611f3790515b083b2ab7ab22fa0c64be90c442",
-        "MO_SENTENCES.md": "1154b119ebeffa5ac72fae156c41484618b1b274e25d6488ab8eb74914a38c97",
-        "README.md": "d18965e7b7acd3683c337920486d47402cbb033e2dd6af7fba6a86f7a5272e50",
-        "SIGNOFF_FORM.md": "68cb5c6b37691129f82cbeb704de6ef486cf6e1c503d0402a75d5c796c6d093d",
-        "SIGNOFF_FORM.template.json": "5ad20ad875f86903f104683d5e9c0c1353935ae5d384acb5fae136e3e7b9eced"
+        "LEGAL_POINTERS.md": "b3af25918e6b5e26eeaab643cde0cff6760c8448880f9633db46b08ba88bbd27",
+        "MO_SENTENCES.md": "1bf1636cbef0575ab16388beffa5839e288e63ddde232c76a77fc7e3496271c3",
+        "README.md": "a5d081a7aab241e41033b92c33afa20281b84d3776e708a9ac7cbfadfb4a3543",
+        "SIGNOFF_FORM.md": "63cfa4158d47f1e23db4766f512e8bf26d2a9a8eef721a29dfdf7274eb21bc43",
+        "SIGNOFF_FORM.template.json": "bfc8e26c365c3b63f72d6b598f92224ed16eca1bd09bc23902348eb97fcce71e"
       },
-      "interface_keys": 2611,
-      "items": 2650
+      "interface_keys": 2687,
+      "items": 2728
     },
     "pt": {
-      "content_digest": "8376f0275e20a03345986e1541d8ee5227aa2d094be62035888b04b915e066df",
+      "content_digest": "c9491a2e09da3e52000d0f9c419653446af4d19b8860dada2df92698f2a917d2",
       "files": {
         "INSTRUCTIONS.md": "5009471cfeb052f464c57f61f947b2227085261418444635f79981db61dd78c0",
-        "INTERFACE_STRINGS.md": "61b6cf8303058b6216a9e464e44c2e140977eba0ade5518161631c11de1ccfad",
+        "INTERFACE_STRINGS.md": "c58281410e451518ccaeb69b6e86856552aadbff3a37fd681c0286ef930a2d23",
         "INTERVIEW_SAMPLES.md": "8a5da571de93dc451813ad04d8d0ea23d6d3d19fb15fcb6b46ae502ba729497f",
-        "LEGAL_POINTERS.md": "103c6c98e4b40cba71205e64de98a032702c80272ec15d43c6620f7f1c91e958",
-        "MO_SENTENCES.md": "5b9524da611e99751ff8b28467a3a9aecf8999209bd999b1582d2af1f2729916",
-        "README.md": "09f6cbe3e1306fb40e10e1ec4976312fbc1713080b00f21cd547edafd666f1a7",
-        "SIGNOFF_FORM.md": "2df62e9d957c05f9cee4ead74137184605f72feaffca2a993d154fe0486aedf6",
-        "SIGNOFF_FORM.template.json": "8a06805f93d3d387cd56db5c3362c831b0615eb1db4f608d5eaac3db63095941"
+        "LEGAL_POINTERS.md": "f4338d6ea91717b0f3cac49c8fa5f2c26247443e6f9888d8ee695648ab1ec776",
+        "MO_SENTENCES.md": "e97219a3f0e63025a15ecc74d10fe694bd0ffb55f55b0398deef9b6f4eb4a78e",
+        "README.md": "47042c8c856dad15d5ec75bb16034a2b03c007dca57fc9842ac1b8111ed9d1ed",
+        "SIGNOFF_FORM.md": "17008137fb61d8bc2a50b91b515c428d4f8b9860f6c3d7f20f3a010bbfa51840",
+        "SIGNOFF_FORM.template.json": "394609700723add04b9d0c4fb0489a5c762943ff2d0793dc61063f775799264f"
       },
-      "interface_keys": 2611,
-      "items": 2650
+      "interface_keys": 2687,
+      "items": 2728
     }
   },
   "note": "Digests identify exactly what a reviewer was shown. This file records no review, no reviewer and no approval; those live only in signed forms and docs/production/execution/language_readiness.json.",

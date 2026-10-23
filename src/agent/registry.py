@@ -8,6 +8,7 @@ Arguments are Pydantic-validated before the handler runs. Handlers receive a
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -35,6 +36,12 @@ class ToolSpec:
     handler: Handler
     # SHA-256 of the argument JSON schema at registration (01D): a schema that changes afterwards is refused.
     schema_sha: str | None = None
+    description: str = ""
+
+    @property
+    def argument_schema(self) -> dict[str, Any]:
+        """Argument contract derived directly from the registered Pydantic model."""
+        return self.args_model.model_json_schema()
 
 
 class ToolRegistry:
@@ -44,7 +51,14 @@ class ToolRegistry:
         self.authorizer = authorizer or ToolAuthorizer()
 
     def register(self, args_model: type[BaseModel], handler: Handler, policy: ToolPolicy | None = None) -> None:
+        if not isinstance(args_model, type) or not issubclass(args_model, BaseModel):
+            raise ValueError("Tool arguments must be a Pydantic model class.")
+        if not callable(handler):
+            raise ValueError("Tool handler must be callable.")
         name = args_model.__name__
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,63}", name):
+            raise ValueError("Invalid tool name.")
+        description = " ".join(str(args_model.model_json_schema().get("description") or name).split())
         if name in self._tools:
             raise ValueError(f"Tool '{name}' is already registered.")
         if policy is not None:
@@ -52,7 +66,7 @@ class ToolRegistry:
                 raise ValueError(f"Policy '{policy.name}' does not match tool '{name}'.")
             self.authorizer.add_policy(policy)
         self._tools[name] = ToolSpec(name=name, args_model=args_model, handler=handler,
-                                     schema_sha=schema_fingerprint(args_model))
+                                     schema_sha=schema_fingerprint(args_model), description=description)
 
     def has(self, name: str) -> bool:
         return name in self._tools
@@ -67,7 +81,31 @@ class ToolRegistry:
         per-run capability toggle server-side (a disabled tool is never offered).
         """
         ex = exclude or set()
-        return [spec.args_model for name, spec in self._tools.items() if name not in ex]
+        specs = [spec for name, spec in self._tools.items() if name not in ex]
+        if any(spec.schema_sha != schema_fingerprint(spec.args_model) for spec in specs):
+            raise ValueError("Registered tool schema changed.")
+        return [spec.args_model for spec in specs]
+
+    def catalogue(self, exclude: set[str] | None = None) -> list[dict[str, Any]]:
+        """Model-visible metadata, generated from the exact same registered schemas as bindings."""
+        schemas = self.bind_schemas(exclude)
+        return [{"name": model.__name__, "description": self._tools[model.__name__].description,
+                 "parameters": model.model_json_schema()} for model in schemas]
+
+    def prompt_catalogue(self, exclude: set[str] | None = None) -> str:
+        """The available-tool section; code-owned metadata only, never user data."""
+        return "\n".join(f"- {entry['name']}: {entry['description']}" for entry in self.catalogue(exclude))
+
+    def assert_policy_parity(self) -> None:
+        """Fail closed on registration/binding/policy drift without adding any tool."""
+        if set(self.names()) != set(self.authorizer.policies()):
+            raise ValueError("Registered tools and authorization policies differ.")
+        for spec in self._tools.values():
+            if spec.schema_sha != schema_fingerprint(spec.args_model):
+                raise ValueError("Registered tool schema changed.")
+            description = " ".join(str(spec.argument_schema.get("description") or spec.name).split())
+            if spec.description != description:
+                raise ValueError("Registered tool description changed.")
 
     def authorize(
         self, name: str, raw_args: Any, ctx: ToolContext, run: RunAuthContext | None = None
@@ -141,4 +179,5 @@ def career_tool_registry(career_service: Any, *, evidence_service: Any = None,
     ):
         for args_model, handler in builder():
             registry.register(args_model, handler, DEFAULT_POLICIES.get(args_model.__name__))
+    registry.assert_policy_parity()
     return registry

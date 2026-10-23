@@ -5,14 +5,14 @@
 
 | Item | Value |
 |---|---|
-| Interface strings | 2611 |
+| Interface strings | 2687 |
 | Mo-voiced sentences | 17 |
-| Email parts | 10 |
+| Email parts | 12 |
 | Interview samples (synthetic prompts) | 12 |
-| Legal and trust strings | 283 |
-| Pack content digest (SHA-256) | `8376f0275e20a03345986e1541d8ee5227aa2d094be62035888b04b915e066df` |
-| Mechanical hints (for attention only) | =EN: 31, EN?: 17 |
-| Namespaces without a curated context note | none |
+| Legal and trust strings | 282 |
+| Pack content digest (SHA-256) | `c9491a2e09da3e52000d0f9c419653446af4d19b8860dada2df92698f2a917d2` |
+| Mechanical hints (for attention only) | =EN: 31, EN?: 18 |
+| Namespaces without a curated context note | `agentStream`, `betaPricing`, `providerMode`, `recentRuns`, `wsTransfer` |
 | Generator | 06F/1 |
 
 ## Files
@@ -20,12 +20,12 @@
 | File | SHA-256 |
 |---|---|
 | `INSTRUCTIONS.md` | `5009471cfeb052f464c57f61f947b2227085261418444635f79981db61dd78c0` |
-| `INTERFACE_STRINGS.md` | `61b6cf8303058b6216a9e464e44c2e140977eba0ade5518161631c11de1ccfad` |
-| `MO_SENTENCES.md` | `5b9524da611e99751ff8b28467a3a9aecf8999209bd999b1582d2af1f2729916` |
+| `INTERFACE_STRINGS.md` | `c58281410e451518ccaeb69b6e86856552aadbff3a37fd681c0286ef930a2d23` |
+| `MO_SENTENCES.md` | `e97219a3f0e63025a15ecc74d10fe694bd0ffb55f55b0398deef9b6f4eb4a78e` |
 | `INTERVIEW_SAMPLES.md` | `8a5da571de93dc451813ad04d8d0ea23d6d3d19fb15fcb6b46ae502ba729497f` |
-| `LEGAL_POINTERS.md` | `103c6c98e4b40cba71205e64de98a032702c80272ec15d43c6620f7f1c91e958` |
-| `SIGNOFF_FORM.md` | `2df62e9d957c05f9cee4ead74137184605f72feaffca2a993d154fe0486aedf6` |
-| `SIGNOFF_FORM.template.json` | `8a06805f93d3d387cd56db5c3362c831b0615eb1db4f608d5eaac3db63095941` |
+| `LEGAL_POINTERS.md` | `f4338d6ea91717b0f3cac49c8fa5f2c26247443e6f9888d8ee695648ab1ec776` |
+| `SIGNOFF_FORM.md` | `17008137fb61d8bc2a50b91b515c428d4f8b9860f6c3d7f20f3a010bbfa51840` |
+| `SIGNOFF_FORM.template.json` | `394609700723add04b9d0c4fb0489a5c762943ff2d0793dc61063f775799264f` |
 
 ## Start here
 
