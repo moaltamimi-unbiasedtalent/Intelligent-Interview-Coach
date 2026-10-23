@@ -1,6 +1,12 @@
 # Whole-Project Status Dashboard
 
-Updated 23 October 2026. Authoritative integrated main: `aedbef3dee28a68b72bc526a1fca537a3da7bd8d`, PR #265 merged. Current reconciliation/review branch: `docs/post-pr265-release-readiness` in the permanent repository. Sources: [merge/CI/review record](evidence/POST_PR265_INTEGRATION_2026_10_23.json), [release report](POST_PR265_RELEASE_STATUS.md), package register, ledger and code.
+Historical PR #265 integration snapshot, 23 October 2026. Reviewed baseline: `aedbef3dee28a68b72bc526a1fca537a3da7bd8d`, PR #265 merged. Current reconciliation/review branch: `docs/post-pr265-release-readiness` in the permanent repository. Sources: [merge/CI/review record](evidence/POST_PR265_INTEGRATION_2026_10_23.json), [release report](POST_PR265_RELEASE_STATUS.md), package register, ledger and code.
+
+## Wave 4 Task 01 update
+
+PR #266 is merged at `560aba5cc4b3f0d6940ed6221053f2ed459027a4`; [main CI 40022997608](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40022997608) succeeded. POST265-01 has a focused, not-yet-merged repair on `fix/staging-migration-entrypoint`: copy the existing wrapper into the configured image path. The real built-image/disposable PostgreSQL suite passed 3 tests locally, including repeat migration and failure rollback/startup blocking. See [repair evidence and remaining blockers](WAVE4_TASK01_MIGRATION_ENTRYPOINT.md).
+
+Engineering remains **40/45 integrated**; this repair awaits review, merge and green CI. Staging deployment/verification is NOT RUN, human qualification and all gate records are unchanged, only PG-11 is accepted, and zero languages are qualified. The previous PR #266 Browser run had one unresolved network-idle timeout (667 passed/14 skipped); this is not replaced with a main-SHA Browser claim. POST265-02 is separate future work; 00A/00B/07B/07C/08A remain open or incomplete. The five-layer matrix below retains its dated PR #265 evidence; it does not attribute that CI to this repair or to PR #266's merge.
 
 ## Engineering integration
 
