@@ -1,0 +1,47 @@
+--- a/frontend/lib/i18n/messages/en.ts
++++ b/frontend/lib/i18n/messages/en.ts
+@@ -198,7 +198,7 @@
+     languageNotSupported: "Your browser can’t recognise speech in the selected dictation language. Choose another dictation language, or type.",
+     error: "Dictation stopped unexpectedly. You can still type.",
+     disabledByPolicy: "Dictation is switched off for your account. You can type instead.",
+-    browserNotice: "Dictation uses your browser’s speech service, which may send your voice to its provider. Ask4Mo does not store your audio.",
++    browserNotice: "Dictation uses your browser’s speech service. Depending on your browser, your voice may be sent to the company that makes it and handled under its own privacy terms. Ask4Mo does not receive or store your audio. The text you dictate is treated like typed text once you send it.",
+   },
+   help: {
+     title: "Help Center",
+--- a/frontend/lib/i18n/messages/w96/help/en.ts
++++ b/frontend/lib/i18n/messages/w96/help/en.ts
+@@ -64,7 +64,7 @@
+   src5a: "If reliable evidence is not available for a query, Mo says so rather than inventing a citation.",
+   dictTitle: "Using dictation",
+   dict1q: "Where dictation is available",
+-  dict1a: "Where your browser supports speech recognition, a microphone button appears next to text inputs on Prepare (talking to Mo) and in Interview Practice (your answer). If it isn't shown, your browser doesn't support it — you can always type.",
++  dict1a: "Where your browser supports speech recognition, a microphone button appears next to text inputs on Prepare (talking to Mo) and in Interview Practice (your answer). If it isn't available, a short note says so and you can always type.",
+   dict2q: "How to start and stop",
+   dict2a: "Click the microphone to start; the button shows a listening state. Click it again (or use the keyboard) to stop. Speech is transcribed into the normal text box.",
+   dict3q: "Editing and sending",
+@@ -74,11 +74,11 @@
+   dict5q: "Which languages actually work",
+   dict5a: "The languages above are configured and offered, but which ones your device can actually transcribe is browser- and engine-dependent. If a language isn't recognised well in your browser, type instead or try another supported browser.",
+   dict6q: "Browser compatibility",
+-  dict6a: "Dictation uses your browser's built-in speech recognition (best supported in Chrome-based browsers). Where it isn't available, the microphone simply isn't shown and typing works as normal.",
++  dict6a: "Dictation uses your browser's built-in speech recognition (best supported in Chrome-based browsers). Where it isn't available, a short note replaces the microphone button and typing works as normal.",
+   dict7q: "Microphone permission",
+   dict7a: "Your browser asks for microphone permission the first time. If you decline, dictation won't run and Ask4Mo shows a short note — you can still type. You can re-enable the microphone in your browser's site settings.",
+   dict8q: "Privacy",
+-  dict8a: "Ask4Mo does not analyse your emotions, voice characteristics, or identity. It does not record or store audio. Only the text you explicitly submit is sent — exactly like typing. Note that browser speech recognition may send audio to your browser/vendor's speech service to produce the transcript; that processing is your browser's, not Ask4Mo's.",
++  dict8a: "Ask4Mo does not analyse your emotions, voice characteristics, or identity. It does not record or store audio. Only the text you explicitly submit is sent to Ask4Mo, exactly like typing. Browser speech recognition may send your audio to the company that makes your browser to produce the transcript; that processing is done by your browser and its provider under its own privacy terms, not by Ask4Mo. Ask4Mo does not control or see it.",
+   docTitle: "Documents & evidence",
+   doc1q: "Uploading documents",
+   doc1a: "On the Documents page you can privately upload a CV, a job description, a portfolio or a brief. Files are private to you — never shared, never added to public knowledge.",
+--- a/frontend/lib/i18n/messages/w96/legal.ts
++++ b/frontend/lib/i18n/messages/w96/legal.ts
+@@ -39,7 +39,7 @@
+       "request identifiers, timestamps, coarse event categories and audit records of privileged or security-relevant actions.",
+     voiceHeading: "Voice, speech and realtime",
+     voiceTurnBased:
+-      "Turn-based voice uses your browser or operating-system speech engines. Ask4Mo does not record or store your microphone audio.",
++      "Turn-based voice and dictation use your browser or operating-system speech engines, which may send your voice to their provider under its own privacy terms. Ask4Mo does not receive, record or store your microphone audio.",
+     voiceRealtime:
+       "Realtime voice (where enabled) streams audio to a realtime provider to power the live conversation; that processing follows the provider's own policy. Ask4Mo still stores no audio.",
+     voiceNoInference:

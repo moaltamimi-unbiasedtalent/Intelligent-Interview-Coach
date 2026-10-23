@@ -191,6 +191,7 @@ const pt: Catalog = {
     noMicrophone: "Nenhum microfone encontrado. Pode continuar a escrever.",
     noSpeech: "Não percebi - tente novamente ou escreva.",
     network: "O ditado está temporariamente indisponível. Pode continuar a escrever.",
+    languageNotSupported: "O seu navegador não consegue reconhecer o idioma de ditado selecionado. Escolha outro idioma de ditado ou escreva.",
     error: "O ditado parou inesperadamente. Pode continuar a escrever.",
     disabledByPolicy: "O ditado está desativado para a sua conta. Pode escrever em vez disso.",
     browserNotice: "O ditado usa o serviço de voz do seu navegador, que pode enviar a sua voz ao respetivo fornecedor. O Ask4Mo não guarda o seu áudio.",
