@@ -39,7 +39,7 @@ async def _read_limited(request: Request) -> bytes:
 
 @router.post("/webhooks/brevo", response_model=WebhookAck, summary="Brevo delivery events (authenticated; non-operational until authorized)")
 async def brevo_webhook(request: Request, receiver=Depends(get_mail_webhook_receiver)) -> WebhookAck:
-    enforce("mail_webhook_ip", client_ip(request))
+    await run_in_threadpool(enforce, "mail_webhook_ip", client_ip(request))        # the limiter touches the store: never block the event loop (07A)
     headers = {W.SIGNATURE_HEADER: request.headers.get(W.SIGNATURE_HEADER), "authorization": request.headers.get("authorization")}
     try:
         raw = await _read_limited(request)

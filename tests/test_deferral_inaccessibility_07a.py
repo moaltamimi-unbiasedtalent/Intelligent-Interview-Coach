@@ -151,7 +151,7 @@ def _reconcile():
 
 def test_table_lists_each_family_exactly_once_and_every_gate_exists():
     ids = [f.id for f in T.FAMILIES]
-    assert len(ids) == len(set(ids)) and set(ids) == {"billing_checkout", "stripe_webhook", "billing_reconciliation", "speech_server", "realtime_voice", "compensation_v2",
+    assert len(ids) == len(set(ids)) and set(ids) == {"billing_checkout", "stripe_webhook", "mail_delivery_webhook", "billing_reconciliation", "speech_server", "realtime_voice", "compensation_v2",
                                                        "international_sources", "history_gating", "model_profile_gating"}
     seen: set[tuple[str, str]] = set()
     for f in T.FAMILIES:
@@ -192,12 +192,13 @@ def test_a_new_gate_like_constant_must_be_classified_and_false():
     """Discovery scan: every module-level boolean named *_ENFORCED / *_AUTHORIZED / *_ENABLED / *_APPROVED in src is a gate. A new one fails here until it is added to a family or
     ADDITIONAL_GATES (so the deferral evidence cannot silently miss a gate), and a True one fails outright."""
     rec = _reconcile()
-    known = {tuple(x) for x in rec.GATE_CONSTANTS} | {g for f in T.FAMILIES for g in f.gates} | set(T.ADDITIONAL_GATES)
+    known = {tuple(x) for x in rec.GATE_CONSTANTS} | {g for f in T.FAMILIES for g in f.gates} | set(T.ADDITIONAL_GATES) | set(T.SAFETY_CONTROLS_ON)
     found = _module_level_bool_constants()
     assert found, "the scan found no gate constants: the scanner is broken"
     unclassified = sorted(set(found) - known)
     assert not unclassified, f"unclassified gate-like constants (add them to tests/_deferral_table_07a.py): {unclassified}"
-    assert not [k for k, v in found.items() if v is not False], f"a gate-like constant is True: {[k for k, v in found.items() if v is not False]}"
+    assert not [k for k, v in found.items() if v is not False and k not in T.SAFETY_CONTROLS_ON], f"a gate-like constant is True: {[k for k, v in found.items() if v is not False and k not in T.SAFETY_CONTROLS_ON]}"
+    assert all(found[k] is True for k in T.SAFETY_CONTROLS_ON), "a safety control that must stay ON was switched off"
     assert known <= set(found), f"the table names a gate constant that does not exist: {sorted(known - set(found))}"
 
 

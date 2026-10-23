@@ -59,6 +59,21 @@
     },
     {
       "api_paths": [
+        "/api/v1/mail/webhooks/brevo"
+      ],
+      "forbidden_prefixes": [],
+      "gates": [
+        "src.mail.webhook.DELIVERY_EVENTS_AUTHORIZED"
+      ],
+      "id": "mail_delivery_webhook",
+      "release": "with OD-HOSTED / identity live verification (05D)",
+      "title": "Mail delivery-event webhook (Brevo)",
+      "ui_absent_paths": [],
+      "ui_absent_texts": [],
+      "ui_known_routes": []
+    },
+    {
+      "api_paths": [
         "/api/v1/admin/billing",
         "/api/v1/admin/billing/approvals",
         "/api/v1/admin/billing/customers",
