@@ -57,6 +57,7 @@ class AgentState(TypedDict, total=False):
     tool_call_fps: list[str]
     untrusted_context: dict[str, Any]
     cancelled: bool
+    control_required: bool
     deadline_epoch: float | None
 
     # Structured tool outputs carried between steps (short-term; safe dicts).

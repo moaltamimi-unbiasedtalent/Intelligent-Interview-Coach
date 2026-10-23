@@ -1642,6 +1642,17 @@ class PrivacyRequest(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
 
+class AgentRunControl(Base):
+    """04C durable cancellation/deadline metadata; no conversation content."""
+    __tablename__ = "agent_run_controls"
+    __table_args__ = (CheckConstraint("status IN ('running','cancelled','expired','completed','failed')", name="ck_agent_run_control_status"),)
+    run_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    status: Mapped[str] = mapped_column(String(16), default="running")
+    settled: Mapped[bool] = mapped_column(Boolean, default=False)
+    deadline_epoch: Mapped[float] = mapped_column(Float)
+
+
 class PreparationRun(Base):
     """Ownership/lifecycle INDEX for durable preparation runs (PRIV-W9-01). No chat content; no FK to users on purpose, so a
     failed checkpoint purge can still be retried after the account row is gone."""

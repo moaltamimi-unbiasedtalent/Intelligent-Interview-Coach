@@ -12,10 +12,22 @@ AGENT_CONSUMER = "agent.policies"
 # safely. Kept small on purpose — the foundation needs only a couple of steps.
 MAX_AGENT_STEPS = 6
 
-# Mo's system prompt is a versioned, integrity-checked asset (package 01B): prompts/agent/system.
-# The text (including the hand-written tool descriptions, which package 01C will later generate from
-# the tool registry as a new asset version) lives there; byte-for-byte equal to the former literal.
-SYSTEM_PROMPT = render("agent/system", AGENT_CONSUMER)
+def system_prompt(registry, exclude: set[str] | None = None) -> str:
+    """Render the approved asset with the actual registry's available tools.
+
+    Historical 1.0.0 remains immutable and compatible for an explicit reviewed rollback.
+    """
+    from src.prompt_assets import asset
+
+    current = asset("agent/system", AGENT_CONSUMER)
+    variables = {"tool_catalogue": registry.prompt_catalogue(exclude)} if "tool_catalogue" in current.variables else {}
+    return render("agent/system", AGENT_CONSUMER, **variables)
+
+
+# Compatibility constant used by prompt-version diagnostics; execution renders its actual registry.
+from src.agent.registry import career_tool_registry  # noqa: E402
+
+SYSTEM_PROMPT = system_prompt(career_tool_registry(None))
 
 # Prompt families that make up Mo's effective prompt (recorded on every run result, 01B R6).
 AGENT_PROMPT_FAMILY = "agent/system"

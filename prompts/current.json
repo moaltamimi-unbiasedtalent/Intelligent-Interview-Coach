@@ -12,8 +12,8 @@
     "sha256": "7a5cb3b609b707d6d83006563776e35577c569b3224f6dd9ca5616c382133db5"
   },
   "agent/system": {
-    "version": "1.0.0",
-    "sha256": "72f03d8133c345f22e873418b8fb84718967625f539782cecf0df9b953c95a6e"
+    "version": "1.1.0",
+    "sha256": "db68d6a4cd4b8d67d2f01e740a2305cb0bc0216b681fcbf233df7a041482b942"
   },
   "career/job_analysis": {
     "version": "1.0.0",

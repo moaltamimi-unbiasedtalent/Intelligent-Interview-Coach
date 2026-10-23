@@ -21,7 +21,7 @@ R = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(R)
 LA = R.LA
 
-TODAY = date(2026, 10, 22)            # the committed ledger's as_of: the committed-data tests never depend on the real clock
+TODAY = date.fromisoformat(R.load_ledger()["as_of"])            # the committed ledger's as_of: the committed-data tests never depend on the real clock
 GOOD_LINK = "docs/production/execution/evidence/04E_EVIDENCE.md"
 TRACKER_TEXT = R.TRACKER.read_text(encoding="utf-8")
 
@@ -71,7 +71,7 @@ def test_the_committed_ledger_is_schema_valid_and_passes_the_whole_check():
 
 def test_the_ledger_is_seeded_with_the_real_merged_prs_213_to_235():
     doc = R.load_ledger()
-    assert sorted(p["number"] for p in doc["pull_requests"]) == list(range(213, 236))
+    assert sorted(p["number"] for p in doc["pull_requests"]) == list(range(213, 265))
     by = {p["number"]: p for p in doc["pull_requests"]}
     # independent cross-check against the committed Wave 2 dashboard (PR, package, branch, head, merge SHA)
     dash = (R.EXEC / "WAVE2_EXECUTION_DASHBOARD.md").read_text(encoding="utf-8")
@@ -164,6 +164,7 @@ def test_evidence_for_a_merged_package_appears_in_the_view_without_manual_copyin
     status["08A0"] = ("MERGED (PR #299, merge abc1234); CI green", "feat/08a0-release-evidence", "def5678", "synthetic")
     monkeypatch.setattr(R.E, "PACKAGE_STATUS", status)
     doc = ledger()
+    doc["packages"].pop("08A0", None)  # create an absent-entry fixture even after the real package has merged
     assert any_has(fails_for(doc), "package 08A0", "no ledger entry")          # the checker demands it ...
     added = R.sync_ledger(doc)                                                  # ... and sync derives it from PACKAGE_STATUS alone
     assert added == ["08A0"]
@@ -268,9 +269,13 @@ def test_tracker_pass_without_ledger_pass_is_a_contradiction():
 
 def test_gate_pass_is_refused_while_a_member_package_is_not_merged_or_has_open_layers():
     doc = ledger()
-    tracker = passing_gate(doc, "PG-08", link="https://example.org/a")           # 03D2 is not merged
+    tracker = passing_gate(doc, "PG-08", link="https://example.org/a")
     f = fails_for(doc, tracker=tracker)
-    assert any_has(f, "PG-08", "03D2", "not MERGED")
+    # 03D2 has now merged. Use the still-unmerged 01C member of PG-12 to
+    # retain the independent non-integration refusal, plus the existing layer refusals.
+    pending = ledger()
+    pending_tracker = passing_gate(pending, "PG-12", link="https://example.org/a")
+    assert any_has(fails_for(pending, tracker=pending_tracker), "PG-12", "01C", "not MERGED")
     assert any_has(f, "PG-08", "03A", "live_staging NOT RUN")
     assert any_has(f, "PG-08", "03C", "human_qualification OPEN")
 
@@ -551,4 +556,4 @@ def test_cli_check_and_generate_write_only_the_generated_files(tmp_path, monkeyp
     monkeypatch.setattr(R, "ROOT", tmp_path)
     assert R.main(["generate"]) == 0
     assert (tmp_path / "view.md").read_text(encoding="utf-8") == R.render_view(R.load_ledger())
-    assert json.loads((tmp_path / "inputs.json").read_text(encoding="utf-8"))["as_of"] == "2026-10-22"
+    assert json.loads((tmp_path / "inputs.json").read_text(encoding="utf-8"))["as_of"] == TODAY.isoformat()

@@ -341,6 +341,7 @@ class RunAuthContext:
     quarantined_chunks: int = 0
     disabled_tools: frozenset[str] = frozenset()
     cancelled: bool = False
+    control_required: bool = False
     expired: bool = False
     granted_permissions: frozenset[str] | None = None   # None = derive from the identity
 
@@ -419,6 +420,17 @@ class ToolAuthorizer:
         # deadline kept OUTSIDE the in-flight graph state still stops execution (wired by 04C).
         self._run_control = run_control
 
+    def set_run_control(self, probe) -> None:
+        """Install the server-owned durable control probe (04C)."""
+        self._run_control = probe
+
+    def run_control(self, run_id: str | None, required: bool = False) -> str | None:
+        """Read cancellation/deadline facts; a failed read stops execution."""
+        value = self._run_control(run_id) if self._run_control and run_id else None
+        if value in ("cancelled", "expired"):
+            return value
+        return "expired" if required and value is None else None
+
     # -- policy access ------------------------------------------------------------------------------------
     def policy_for(self, name: str) -> ToolPolicy | None:
         return self._policies.get(name)
@@ -449,7 +461,10 @@ class ToolAuthorizer:
             return d
 
         # 1. run state
-        probe = self._run_control(run.run_id) if (self._run_control and run.run_id) else None
+        try:
+            probe = self.run_control(run.run_id, required=run.control_required)
+        except Exception:
+            return decision(False, Reason.RUN_NOT_ACTIVE)
         if run.cancelled or run.expired or probe in ("cancelled", "expired"):
             return decision(False, Reason.RUN_NOT_ACTIVE)
         # 2. registry membership and the per-run capability toggle
@@ -617,6 +632,7 @@ def build_run_context(
         quarantined_chunks=int(taint.get("quarantined_chunks", 0) or 0),
         disabled_tools=frozenset(state.get("disabled_tools") or ()),
         cancelled=bool(state.get("cancelled")),
+        control_required=bool(state.get("control_required")),
         expired=bool(deadline is not None and float(deadline) <= current),
     )
 

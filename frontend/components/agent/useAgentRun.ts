@@ -26,6 +26,9 @@ export interface UseAgentRun {
   run: AgentRunResponse | null;
   /** A request is in flight — used to lock conflicting controls (§39). */
   busy: boolean;
+  progress: string | null;
+  stopping: boolean;
+  cancel: () => Promise<void>;
   /** Restoring a run from the URL on load. */
   restoring: boolean;
   error: AgentError | null;
@@ -57,7 +60,7 @@ function toError(e: unknown, t: (key: string) => string): AgentError {
  * request is enforced (no parallel turns on the same thread). Private content is
  * never placed in the URL or localStorage.
  */
-export function useAgentRun(): UseAgentRun {
+export function useAgentRun(streamEnabled = false): UseAgentRun {
   const t = useT();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -67,6 +70,12 @@ export function useAgentRun(): UseAgentRun {
   const [busy, setBusy] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [error, setError] = useState<AgentError | null>(null);
+  const [progress, setProgress] = useState<string | null>(null);
+  const [stopping, setStopping] = useState(false);
+  const [streamId, setStreamId] = useState<string | null>(null);
+  const currentStreamId = useRef<string | null>(null);
+  const transport = useRef<AbortController | null>(null);
+  useEffect(() => () => transport.current?.abort(), []);
   const inFlight = useRef(false);
 
   const setRunAndUrl = useCallback(
@@ -81,20 +90,42 @@ export function useAgentRun(): UseAgentRun {
 
   // Restore a run referenced by the URL (refresh / deep link) exactly once.
   useEffect(() => {
-    if (!urlRunId || run) return;
+    if (!urlRunId || run || inFlight.current) return;
     const ctrl = new AbortController();
     setRestoring(true);
     api.agent
       .getRun(urlRunId, { signal: ctrl.signal })
-      .then((r) => setRun(r))
+      .then(async (r) => {
+        setRun(r);
+        if (streamEnabled && r.status === "running") {
+          // Read-only reconnect: keep the same durable run; never replay POST /run.
+          inFlight.current = true;
+          setBusy(true);
+          setProgress("run_started");
+          currentStreamId.current = urlRunId;
+          setStreamId(urlRunId);
+          const restored = await api.agent.reconnect(urlRunId, { onProgress: setProgress }, { signal: ctrl.signal });
+          setRun(restored);
+        }
+      })
       .catch((e) => {
         if (e instanceof DOMException && e.name === "AbortError") return;
         setError(toError(e, t));
       })
-      .finally(() => setRestoring(false));
+      .finally(() => {
+        setRestoring(false);
+        if (currentStreamId.current === urlRunId) {
+          inFlight.current = false;
+          setBusy(false);
+          setProgress(null);
+          setStopping(false);
+          currentStreamId.current = null;
+          setStreamId(null);
+        }
+      });
     return () => ctrl.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlRunId]);
+  }, [urlRunId, streamEnabled]);
 
   const guarded = useCallback(
     async (fn: () => Promise<AgentRunResponse>) => {
@@ -106,18 +137,35 @@ export function useAgentRun(): UseAgentRun {
         const next = await fn();
         setRunAndUrl(next);
       } catch (e) {
-        setError(toError(e, t));
+        if (!(e instanceof DOMException && e.name === "AbortError")) setError(toError(e, t));
       } finally {
         inFlight.current = false;
         setBusy(false);
+        setProgress(null);
+        setStopping(false);
+        currentStreamId.current = null;
+        setStreamId(null);
       }
     },
     [setRunAndUrl, t],
   );
 
   const start = useCallback(
-    (req: AgentRunRequest) => guarded(() => api.agent.start(req)),
-    [guarded],
+    (req: AgentRunRequest) => guarded(() => {
+      if (!streamEnabled) return api.agent.start(req);
+      const ctrl = new AbortController();
+      transport.current = ctrl;
+      setProgress("run_started");
+      return api.agent.startStream(req, {
+        onRun: (id) => {
+          currentStreamId.current = id;
+          setStreamId(id);
+          router.replace(`/prepare?run=${encodeURIComponent(id)}`, { scroll: false });
+        },
+        onProgress: (kind) => setProgress(kind),
+      }, { signal: ctrl.signal });
+    }),
+    [guarded, router, streamEnabled],
   );
 
   const send = useCallback(
@@ -138,6 +186,19 @@ export function useAgentRun(): UseAgentRun {
     [guarded, run?.run_id],
   );
 
+  const cancel = useCallback(async () => {
+    const id = currentStreamId.current;
+    if (!id || stopping) return;
+    setStopping(true);
+    try {
+      await api.agent.cancel(id);
+      setProgress("stopping");
+    } catch (e) {
+      setError(toError(e, t));
+      setStopping(false);
+    }
+  }, [stopping, t]);
+
   const reset = useCallback(() => {
     setRun(null);
     setError(null);
@@ -151,7 +212,8 @@ export function useAgentRun(): UseAgentRun {
     busy,
     restoring,
     error,
-    runId: run?.run_id ?? urlRunId,
+    runId: run?.run_id ?? streamId ?? urlRunId,
+    progress, stopping, cancel,
     start,
     send,
     resume,

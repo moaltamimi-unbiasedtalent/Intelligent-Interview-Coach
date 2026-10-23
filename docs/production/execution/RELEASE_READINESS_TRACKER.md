@@ -1,5 +1,7 @@
 # Release Readiness Tracker (R1.0)
 
+> Current engineering status (23 October 2026): Wave 3 is merged at `3e8e2ba4`; the older narrative below is the dated planning/integration record. Use [PROJECT_STATUS_DASHBOARD.md](PROJECT_STATUS_DASHBOARD.md) and the verified merge inventory for current engineering and CI. Baseline main CI fails 06F freshness tests; live and human qualification are not inferred from merges.
+
 **Status:** LIVE TRACKER, initialised 2026-10-21 at Phase 00. Definitions of each gate are in `../PRODUCTION_ACCEPTANCE_MATRIX.md` (not repeated here); package scope is in `IMPLEMENTATION_PACKAGE_REGISTER.md`. This file records only state, owner role, evidence link and next action, and is updated as each package merges. A gate is PASS only with evidence at a named SHA; no state below has been upgraded from the historical record, and none is a pass.
 
 State vocabulary: NOT STARTED, IN PROGRESS, READY FOR REVIEW, PASS, FAIL, BLOCKED (with the blocking decision).

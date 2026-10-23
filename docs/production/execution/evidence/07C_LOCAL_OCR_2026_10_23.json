@@ -1,0 +1,251 @@
+{
+  "sample_set": "07C-local-synthetic-v1",
+  "observed_at": "2026-10-23T17:14:22.867059+00:00",
+  "mode": "REAL LOCAL OCR / SYNTHETIC DOCUMENTS",
+  "paid_calls": 0,
+  "network_calls": 0,
+  "real_candidate_documents": 0,
+  "human_quality_review": "NOT RUN",
+  "staging": "NOT RUN",
+  "qualification": "No gate or language approved; no acceptance threshold invented",
+  "font": "Arial.ttf",
+  "tesseract_version": "5.5.3",
+  "pillow_version": "12.3.0",
+  "runtime": {
+    "engine": "tesseract",
+    "available": true,
+    "pdf_ocr_available": true,
+    "poppler_available": true,
+    "languages": {
+      "en": {
+        "configured": true,
+        "runtime_available": true
+      },
+      "de": {
+        "configured": true,
+        "runtime_available": true
+      },
+      "fr": {
+        "configured": true,
+        "runtime_available": true
+      },
+      "es": {
+        "configured": true,
+        "runtime_available": true
+      },
+      "it": {
+        "configured": true,
+        "runtime_available": true
+      },
+      "pt": {
+        "configured": true,
+        "runtime_available": true
+      },
+      "nl": {
+        "configured": true,
+        "runtime_available": true
+      }
+    },
+    "live_quality": "UNVALIDATED"
+  },
+  "ocr_adapter_sha256": "a541f5ea10c1ee163a30a16a3cb1111a7382950a03e1645e2be932c8addcd289",
+  "normalization": "NFKC, casefold, collapse whitespace; punctuation retained",
+  "results": [
+    {
+      "locale": "en",
+      "format": "png",
+      "expected": "Synthetic OCR sample. The candidate explains a project and its results.",
+      "input_sha256": "f18b705e14a37e5d4e70983118abdba955f9afc9d8080edecda6333c04477538",
+      "status": "OBSERVED",
+      "observed": "Synthetic OCR sample. The candidate explains a project and\nits results.",
+      "character_error_rate": 0.0,
+      "word_error_rate": 0.0,
+      "pages": [
+        1
+      ],
+      "origin": "ocr"
+    },
+    {
+      "locale": "en",
+      "format": "pdf",
+      "expected": "Synthetic OCR sample. The candidate explains a project and its results.",
+      "input_sha256": "df73350004d092a7f5bf7dca0150883f0a8e9bf7c197a971031a14848e6633ab",
+      "status": "OBSERVED",
+      "observed": "Synthetic OCR sample. The candidate explains a project and\nits results.",
+      "character_error_rate": 0.0,
+      "word_error_rate": 0.0,
+      "pages": [
+        1
+      ],
+      "origin": "ocr"
+    },
+    {
+      "locale": "de",
+      "format": "png",
+      "expected": "Synthetisches OCR-Beispiel. Die Person beschreibt ein Projekt und seine Ergebnisse.",
+      "input_sha256": "d7afea58e5beea8e490cac7ab5a5dfcd6d2cdacdc37eb4e56b4a9746e9e37884",
+      "status": "OBSERVED",
+      "observed": "Synthetisches OCR-Beispiel. Die Person beschreibt ein\nProjekt und seine Ergebnisse.",
+      "character_error_rate": 0.0,
+      "word_error_rate": 0.0,
+      "pages": [
+        1
+      ],
+      "origin": "ocr"
+    },
+    {
+      "locale": "de",
+      "format": "pdf",
+      "expected": "Synthetisches OCR-Beispiel. Die Person beschreibt ein Projekt und seine Ergebnisse.",
+      "input_sha256": "b7d5a0987d3b1887b934e34afd7c9d98ce40bd203e958cf037a69923b2dcd014",
+      "status": "OBSERVED",
+      "observed": "Synthetisches OCR-Beispiel. Die Person beschreibt ein\nProjekt und seine Ergebnisse.",
+      "character_error_rate": 0.0,
+      "word_error_rate": 0.0,
+      "pages": [
+        1
+      ],
+      "origin": "ocr"
+    },
+    {
+      "locale": "fr",
+      "format": "png",
+      "expected": "Exemple OCR artificiel. La personne explique un projet et ses résultats.",
+      "input_sha256": "057471de0bf1c993408706dc717d1d4542688ef1dfed6f9800d2ce34b89c294d",
+      "status": "OBSERVED",
+      "observed": "Exemple OCR artificiel. La personne explique un projet et\nses résultats.",
+      "character_error_rate": 0.0,
+      "word_error_rate": 0.0,
+      "pages": [
+        1
+      ],
+      "origin": "ocr"
+    },
+    {
+      "locale": "fr",
+      "format": "pdf",
+      "expected": "Exemple OCR artificiel. La personne explique un projet et ses résultats.",
+      "input_sha256": "7035d80bf91f0de3a847bf4ac3ffc55ea925c5c2b19e38a7ba0906e7d726abbc",
+      "status": "OBSERVED",
+      "observed": "Exemple OCR artificiel. La personne explique un projet et\nses résultats.",
+      "character_error_rate": 0.0,
+      "word_error_rate": 0.0,
+      "pages": [
+        1
+      ],
+      "origin": "ocr"
+    },
+    {
+      "locale": "es",
+      "format": "png",
+      "expected": "Ejemplo OCR sintético. La persona explica un proyecto y sus resultados.",
+      "input_sha256": "65e1a7136f71bb6f4c5c9961ae626e54a99d266ff0f273f7285982fc7f9c7937",
+      "status": "OBSERVED",
+      "observed": "Ejemplo OCR sintético. La persona explica un proyecto y\nsus resultados.",
+      "character_error_rate": 0.0,
+      "word_error_rate": 0.0,
+      "pages": [
+        1
+      ],
+      "origin": "ocr"
+    },
+    {
+      "locale": "es",
+      "format": "pdf",
+      "expected": "Ejemplo OCR sintético. La persona explica un proyecto y sus resultados.",
+      "input_sha256": "a8e4cdaff812f88918b1629f2e59fc12de0dedc780fa96c4d7ef57fcb8d62463",
+      "status": "OBSERVED",
+      "observed": "Ejemplo OCR sintético. La persona explica un proyecto y\nsus resultados.",
+      "character_error_rate": 0.0,
+      "word_error_rate": 0.0,
+      "pages": [
+        1
+      ],
+      "origin": "ocr"
+    },
+    {
+      "locale": "it",
+      "format": "png",
+      "expected": "Esempio OCR sintetico. La persona descrive un progetto e i suoi risultati.",
+      "input_sha256": "39ade51f37cad6d3a6381d930651b3b1907ec02f94d643e37ff48baab0a13e12",
+      "status": "OBSERVED",
+      "observed": "Esempio OCR sintetico. La persona descrive un progetto e i\n\nsuoi risultati.",
+      "character_error_rate": 0.0,
+      "word_error_rate": 0.0,
+      "pages": [
+        1
+      ],
+      "origin": "ocr"
+    },
+    {
+      "locale": "it",
+      "format": "pdf",
+      "expected": "Esempio OCR sintetico. La persona descrive un progetto e i suoi risultati.",
+      "input_sha256": "4c9774830125d2618504c28ea9c4aa012c462d5e638330fb57ed31cdd5c8b1f7",
+      "status": "OBSERVED",
+      "observed": "Esempio OCR sintetico. La persona descrive un progetto e i\nsuoi risultati.",
+      "character_error_rate": 0.0,
+      "word_error_rate": 0.0,
+      "pages": [
+        1
+      ],
+      "origin": "ocr"
+    },
+    {
+      "locale": "pt",
+      "format": "png",
+      "expected": "Exemplo OCR sintético. A pessoa descreve um projeto e os seus resultados.",
+      "input_sha256": "c4560a374bb3e5229e793ded1aa67c6d715059626740b678d61c2f0693a2ce86",
+      "status": "OBSERVED",
+      "observed": "Exemplo OCR sintético. A pessoa descreve um projeto e os\nseus resultados.",
+      "character_error_rate": 0.0,
+      "word_error_rate": 0.0,
+      "pages": [
+        1
+      ],
+      "origin": "ocr"
+    },
+    {
+      "locale": "pt",
+      "format": "pdf",
+      "expected": "Exemplo OCR sintético. A pessoa descreve um projeto e os seus resultados.",
+      "input_sha256": "e1439b661fa9d217a6af7b2aae565193ea6e75495c2b56046205e71fb5fbc4f6",
+      "status": "OBSERVED",
+      "observed": "Exemplo OCR sintético. A pessoa descreve um projeto e os\nseus resultados.",
+      "character_error_rate": 0.0,
+      "word_error_rate": 0.0,
+      "pages": [
+        1
+      ],
+      "origin": "ocr"
+    },
+    {
+      "locale": "nl",
+      "format": "png",
+      "expected": "Synthetisch OCR-voorbeeld. De kandidaat beschrijft een project en de resultaten.",
+      "input_sha256": "d64269640d1efb50d17af50f5507d0efc440ae88310917d6b361db6c9696202e",
+      "status": "OBSERVED",
+      "observed": "Synthetisch OCR-voorbeeld. De kandidaat beschrijft een\nproject en de resultaten.",
+      "character_error_rate": 0.0,
+      "word_error_rate": 0.0,
+      "pages": [
+        1
+      ],
+      "origin": "ocr"
+    },
+    {
+      "locale": "nl",
+      "format": "pdf",
+      "expected": "Synthetisch OCR-voorbeeld. De kandidaat beschrijft een project en de resultaten.",
+      "input_sha256": "454a88458d5b8ce6c251eef97bcbef449c480a87f080aa0d82871d039b2294c3",
+      "status": "OBSERVED",
+      "observed": "Synthetisch OCR-voorbeeld. De kandidaat beschrijft een\nproject en de resultaten.",
+      "character_error_rate": 0.0,
+      "word_error_rate": 0.0,
+      "pages": [
+        1
+      ],
+      "origin": "ocr"
+    }
+  ]
+}

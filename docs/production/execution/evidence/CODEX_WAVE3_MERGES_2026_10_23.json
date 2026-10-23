@@ -1,0 +1,308 @@
+{
+  "baseline_sha": "3e8e2ba4caf4578815dad2e99fbd2b491bd98a16",
+  "observed_on": "2026-10-23",
+  "source": "GitHub connector merged PR metadata plus local merge-base ancestry checks",
+  "packages": {
+    "01D": [
+      {
+        "number": 248,
+        "branch": "feat/01d-tool-authorization",
+        "head": "2890d6e593a9e86e7062210a0659ef546a3b0be2",
+        "merge": "c5e54fd6fad10d7013e954f22a12cb4015c95ab0",
+        "merged_at": "2026-10-22T15:52:48Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/248"
+      }
+    ],
+    "02B": [
+      {
+        "number": 227,
+        "branch": "feat/02b-embedding-integrity",
+        "head": "135070c85bfbb11a4e5d5d045a5e66c86f0b10e1",
+        "merge": "6acdbc11b436fd14c2bd11fe09998586f35bddc6",
+        "merged_at": "2026-10-22T01:26:50Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/227"
+      },
+      {
+        "number": 236,
+        "branch": "feat/02b-openrouter-embeddings",
+        "head": "9fbc3d3a2ef3b8faa005c98921bf0add10e435bd",
+        "merge": "f78773df1d5aeabbcf2d39155d9e85e2d9d783a5",
+        "merged_at": "2026-10-22T23:16:56Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/236"
+      }
+    ],
+    "02D": [
+      {
+        "number": 258,
+        "branch": "feat/02d-source-approval-filter",
+        "head": "aaad5bc12cabcc23336366826d954d4c2bceb1a6",
+        "merge": "15ac01bf8df38b30267df82d1a8d889c9373fd55",
+        "merged_at": "2026-10-22T23:17:49Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/258"
+      },
+      {
+        "number": 260,
+        "branch": "feat/02d-licensing-review-pack",
+        "head": "75ed4bf9c1e4fcd1ca2a83118c8e4f5a376a1849",
+        "merge": "89c39ced9150f12add2e5ca74379837a0b905c43",
+        "merged_at": "2026-10-22T23:40:09Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/260"
+      }
+    ],
+    "02E": [
+      {
+        "number": 238,
+        "branch": "feat/02e-retrieval-quality",
+        "head": "66ffa95b1aad051409aa945d94e1b48840731945",
+        "merge": "2a4a5377609033167bb2c48d74a578eed85176f8",
+        "merged_at": "2026-10-22T23:40:51Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/238"
+      }
+    ],
+    "03C": [
+      {
+        "number": 231,
+        "branch": "feat/03c-admin-users",
+        "head": "94b76b7e672c0c9dfb4fcc8cb41d1b34d66d52f4",
+        "merge": "6bcfbf53805aa11913fa8f69f8bc40407b71674a",
+        "merged_at": "2026-10-22T04:00:41Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/231"
+      },
+      {
+        "number": 261,
+        "branch": "feat/03c-bulk-user-actions",
+        "head": "317b5335ac86abf6241cd93e386a5e349dd066d9",
+        "merge": "bf05db6f5cdc830542b031f734937c61662430e1",
+        "merged_at": "2026-10-23T07:25:19Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/261"
+      }
+    ],
+    "03D2": [
+      {
+        "number": 249,
+        "branch": "feat/03d2-command-center-views",
+        "head": "428ca83fd68153ca96f51bf4923b5d667741b06c",
+        "merge": "66fdbabab371185f25ac0c07079480c498e0b394",
+        "merged_at": "2026-10-23T00:25:33Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/249"
+      }
+    ],
+    "03E2": [
+      {
+        "number": 247,
+        "branch": "feat/03e2-pdf-export",
+        "head": "4ddc628eb522031beaf0ca0db901caec5b580096",
+        "merge": "6034835e6e044a7d8170856bbab6765eb18f7e13",
+        "merged_at": "2026-10-23T00:26:15Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/247"
+      },
+      {
+        "number": 251,
+        "branch": "feat/03e2-report-views",
+        "head": "396786d041e3bfb5e6926fbf8b636aa7a1e90e71",
+        "merge": "bc5fe4f667b6d2d650f1a9aa4d2128a9664a294d",
+        "merged_at": "2026-10-23T00:25:51Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/251"
+      }
+    ],
+    "04B": [
+      {
+        "number": 233,
+        "branch": "feat/04b-workspaces",
+        "head": "c73a7280f3d6b0b5e0cb0a915ac46f9048756ad2",
+        "merge": "e4aed133108ea7bf9b2d35b4b8b4a65bd8d428fc",
+        "merged_at": "2026-10-22T04:28:25Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/233"
+      },
+      {
+        "number": 262,
+        "branch": "feat/04b-ownership-transfer",
+        "head": "67146d3af656ce5dcbe80205a59839eec8872eed",
+        "merge": "103611ee432097dde26d7ec78167aedaa5ab9511",
+        "merged_at": "2026-10-23T08:05:48Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/262"
+      }
+    ],
+    "04D": [
+      {
+        "number": 242,
+        "branch": "feat/04d-journey-tests",
+        "head": "67ef7c46d5aa13f26530ff4e581a37423e6e824d",
+        "merge": "67ef7c46d5aa13f26530ff4e581a37423e6e824d",
+        "merged_at": "2026-10-23T11:41:50Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/242"
+      },
+      {
+        "number": 253,
+        "branch": "feat/04d-provider-mode-and-guards",
+        "head": "ddc5c02e64f62eac46d70f863671a9fe10414163",
+        "merge": "85a88c70c13c5439104024f07d593af6fce4400b",
+        "merged_at": "2026-10-23T11:41:48Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/253"
+      }
+    ],
+    "04F": [
+      {
+        "number": 255,
+        "branch": "feat/04f-dictation-disclosure",
+        "head": "027ec450c0568b36fd91db84667862d583a958d1",
+        "merge": "7c400efe7e4f76586d4d1020e230b3b1275bcc51",
+        "merged_at": "2026-10-23T09:23:14Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/255"
+      }
+    ],
+    "05B": [
+      {
+        "number": 257,
+        "branch": "feat/05b-backup-restore-drills",
+        "head": "98200243e088c6d64215fe1d1575dc09084ceab1",
+        "merge": "f5c1e04f1287c5968e7e56ac7dd5a707e251f9e2",
+        "merged_at": "2026-10-22T15:58:09Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/257"
+      }
+    ],
+    "05C": [
+      {
+        "number": 241,
+        "branch": "feat/05c-monitoring-alerts",
+        "head": "aaf18c0f79b0ce5137848a47f960df85faf6bdd3",
+        "merge": "451449794d8285988ce48fdb8d77ef229fa42c4f",
+        "merged_at": "2026-10-22T15:55:34Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/241"
+      },
+      {
+        "number": 246,
+        "branch": "feat/05c-budget-governor",
+        "head": "84c7c049b2b42dc02ad29fa5534fb791c4190f9a",
+        "merge": "26f5a818c1161f04a6295424fc8d1f6cf7249aec",
+        "merged_at": "2026-10-22T15:54:36Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/246"
+      }
+    ],
+    "05D": [
+      {
+        "number": 237,
+        "branch": "feat/05d-identity-live",
+        "head": "524048a56c47f345970b9bffa2b9c8ffda917a78",
+        "merge": "64fbcf2b3032aa24b2f68c8d7a4ba6839a11fa23",
+        "merged_at": "2026-10-22T23:14:23Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/237"
+      }
+    ],
+    "05E": [
+      {
+        "number": 240,
+        "branch": "feat/05e-legal-review-pack",
+        "head": "7fc34cdc70f25bc0967c1d4c2beec11be43712fc",
+        "merge": "608b65b470507e992948fe130da9bb837469867d",
+        "merged_at": "2026-10-22T22:33:01Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/240"
+      },
+      {
+        "number": 244,
+        "branch": "feat/05e-privacy-safeguards",
+        "head": "e7d9e332bc95c0b6ff4465fa402d4192b0e0a117",
+        "merge": "8649e3fa7149f9472a18f767fcbe0fb518a4585f",
+        "merged_at": "2026-10-22T22:07:04Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/244"
+      }
+    ],
+    "06B": [
+      {
+        "number": 256,
+        "branch": "feat/06b-language-journeys",
+        "head": "cd664fc4e4e637ead231b2a1159ff0eace260d72",
+        "merge": "29cc09beeaf1d8d1d57f235635894945c656cd08",
+        "merged_at": "2026-10-23T14:32:29Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/256"
+      }
+    ],
+    "06C": [
+      {
+        "number": 245,
+        "branch": "feat/06c-language-ai-behaviour",
+        "head": "fa9f02a1a57df54e4ce8e3105ca3d6751c562fec",
+        "merge": "74d99e3197a7fef02871586e8e38f698f640a55a",
+        "merged_at": "2026-10-23T00:24:40Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/245"
+      }
+    ],
+    "06D": [
+      {
+        "number": 254,
+        "branch": "feat/06d-multilingual-retrieval",
+        "head": "ed4c9bbf388e777541a35f64a7146f63a2c13e18",
+        "merge": "c9268c67eaa74a831c8e093e10ebee0e5b005a17",
+        "merged_at": "2026-10-23T00:23:45Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/254"
+      }
+    ],
+    "06E": [
+      {
+        "number": 239,
+        "branch": "feat/06e-language-security-suites",
+        "head": "ea0ea55b354720b90ff3148a4340c9833931d864",
+        "merge": "84c1b9b8f69ff35367b1affe4c03ab23b93eb315",
+        "merged_at": "2026-10-23T00:25:10Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/239"
+      }
+    ],
+    "06F": [
+      {
+        "number": 259,
+        "branch": "feat/06fg-review-packages",
+        "head": "a4af1925659a4eac6a3bf4b81d8eaad3c397e9ac",
+        "merge": "3e8e2ba4caf4578815dad2e99fbd2b491bd98a16",
+        "merged_at": "2026-10-23T14:32:53Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/259"
+      }
+    ],
+    "06G": [
+      {
+        "number": 259,
+        "branch": "feat/06fg-review-packages",
+        "head": "a4af1925659a4eac6a3bf4b81d8eaad3c397e9ac",
+        "merge": "3e8e2ba4caf4578815dad2e99fbd2b491bd98a16",
+        "merged_at": "2026-10-23T14:32:53Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/259"
+      }
+    ],
+    "07A": [
+      {
+        "number": 243,
+        "branch": "feat/07a-deferral-inaccessibility",
+        "head": "b00bbbd7d2eec8e33ea2214db13053b9f54e5ceb",
+        "merge": "792871f2ddbcaeb995a1cc4e40bcc6eb8a335ba7",
+        "merged_at": "2026-10-23T08:06:47Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/243"
+      },
+      {
+        "number": 264,
+        "branch": "chore/07a-guards-after-mail-and-06e",
+        "head": "d7b099c13cc146a9301cc4a0496a748bb3cc6d11",
+        "merge": "dfd59edc57d6cec2299febc735c6ef15a3d8ba6d",
+        "merged_at": "2026-10-23T09:22:51Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/264"
+      }
+    ],
+    "08A0": [
+      {
+        "number": 250,
+        "branch": "feat/08a0-release-evidence",
+        "head": "25d5280825facdaac4167c5889d51804c45fdc30",
+        "merge": "6eaf246f04274c232d10034b90c76d5feae26407",
+        "merged_at": "2026-10-22T15:51:32Z",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/250"
+      }
+    ]
+  },
+  "baseline_ci": {
+    "run_id": 39970568206,
+    "result": "failure",
+    "failures": [
+      "test_committed_packs_and_manifest_are_current",
+      "test_cli_check_freeze_diff_and_validate"
+    ]
+  },
+  "limits": "Merged engineering only. PR-specific checks have not been independently requalified. No live or human approval inferred."
+}

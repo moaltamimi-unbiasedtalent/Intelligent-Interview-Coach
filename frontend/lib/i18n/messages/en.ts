@@ -7,6 +7,7 @@
 import { BRAND_SLOGAN } from "../../brand";
 
 export const messages = {
+  agentStream: {"stopped": "This request was stopped. Start a new preparation when you are ready.", "preparing": "Preparing your guidance…", "tools": "Using preparation tools…", "stop": "Stop", "stopping": "Stopping. Finishing usage recording…"},
   common: {
     appName: "Ask4Mo",
     tagline: BRAND_SLOGAN,

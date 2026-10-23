@@ -45,7 +45,7 @@ def build_agent_graph(
     defaults to in-memory (transient); ``memory_service`` lets the human-review node
     persist an APPROVED memory."""
     graph = StateGraph(AgentState)
-    graph.add_node("initialise", make_initialise_node())
+    graph.add_node("initialise", make_initialise_node(registry))
     graph.add_node("agent", make_agent_node(model_factory, registry))
     graph.add_node("tools", make_tools_node(registry))
     graph.add_node("human_review", make_human_review_node(memory_service))

@@ -13,7 +13,10 @@ checkpoint state.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, Request, Header
+from fastapi.responses import StreamingResponse
+from starlette.concurrency import run_in_threadpool
+from pydantic import BaseModel
 
 from src.agent.models import AgentRunRequest as AppAgentRunRequest
 from src.application.agent_service import (
@@ -107,6 +110,11 @@ def run_agent(
     _cost=Depends(cost_limit("cost_agent_user")),
     model_policy=Depends(get_model_profile_policy),
 ) -> AgentRunResponse:
+    prepared = _prepare_request(body, request, user_id, model_policy)
+    return _to_response(service.run(prepared, request_id=request_id))
+
+
+def _prepare_request(body, request, user_id, model_policy):
     # W12.4D-P2-C: authorize the profile BEFORE the service or any model is touched. While the rollout gate is disabled this returns exactly what the candidate
     # sent (today's behaviour); when enabled a Basic account can only use Fast.
     chosen_profile = model_policy.authorize(user_id, body.profile, workflow="agent")
@@ -126,21 +134,68 @@ def run_agent(
             max_chars=12000,
         ) or None
 
-    result = service.run(
-        AppAgentRunRequest(
-            goal=body.goal,
-            target_role=body.target_role,
-            job_description=job_description,
-            candidate_background=body.candidate_background,
-            user_id=str(user_id),
-            profile=chosen_profile.value if chosen_profile is not None else None,
-            enable_current_market_research=body.enable_current_market_research,
-            conversation_language=body.conversation_language,
-            coaching_style=body.coaching_style,
-        ),
-        request_id=request_id,
-    )
-    return _to_response(result)
+    return AppAgentRunRequest(
+        goal=body.goal, target_role=body.target_role, job_description=job_description,
+        candidate_background=body.candidate_background, user_id=str(user_id),
+        profile=chosen_profile.value if chosen_profile is not None else None,
+        enable_current_market_research=body.enable_current_market_research,
+        conversation_language=body.conversation_language, coaching_style=body.coaching_style)
+
+
+class AgentStreamControlResponse(BaseModel):
+    run_id: str
+    status: str
+    settlement_pending: bool
+
+
+def _streamer(service):
+    from src.agent.errors import AgentConfigurationError
+    try:
+        return service.streaming()
+    except AgentConfigurationError:
+        # Explicit unsupported response BEFORE creating a run: safe sync fallback.
+        raise HTTPException(status_code=501, detail="Streaming is unavailable.")
+
+
+@router.post("/run/stream", response_class=StreamingResponse)
+async def stream_agent_run(
+    body: AgentRunRequest, request: Request,
+    user_id: int = Depends(get_current_user_id),
+    _pause=Depends(require_not_paused("agent")),
+    service=Depends(get_agent_service), request_id: str = Depends(get_request_id),
+    _cost=Depends(cost_limit("cost_agent_user")), model_policy=Depends(get_model_profile_policy),
+):
+    manager = await run_in_threadpool(_streamer, service)
+    prepared = await run_in_threadpool(_prepare_request, body, request, user_id, model_policy)
+    run_id = await manager.start(prepared, request_id)
+    return StreamingResponse(manager.events(run_id, str(user_id), request_id, serialize=lambda result: _to_response(result).model_dump(mode="json")), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
+
+
+@router.get("/runs/{run_id}/events", response_class=StreamingResponse)
+async def stream_agent_events(
+    run_id: str = Path(..., min_length=1, max_length=64),
+    user_id: int = Depends(get_current_user_id), service=Depends(get_agent_service),
+    request_id: str = Depends(get_request_id), last_event_id: int = Header(-1, ge=-1, le=100000),
+):
+    manager = await run_in_threadpool(_streamer, service)
+    try:
+        await run_in_threadpool(manager.require_owned, run_id, str(user_id))
+    except RunNotFoundError:
+        raise HTTPException(status_code=404, detail="Run not found.")
+    return StreamingResponse(manager.events(run_id, str(user_id), request_id, last_event_id, serialize=lambda result: _to_response(result).model_dump(mode="json")),
+                             media_type="text/event-stream", headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
+
+
+@router.post("/runs/{run_id}/cancel", response_model=AgentStreamControlResponse)
+def cancel_agent_stream(
+    run_id: str = Path(..., min_length=1, max_length=64),
+    user_id: int = Depends(get_current_user_id), service=Depends(get_agent_service),
+):
+    row = _streamer(service).controls.cancel(run_id, str(user_id))
+    if row is None:
+        raise HTTPException(status_code=404, detail="Run not found.")
+    return AgentStreamControlResponse(run_id=run_id, status=row["status"], settlement_pending=not row["settled"])
 
 
 @router.get("/runs/{run_id}", response_model=AgentRunResponse,

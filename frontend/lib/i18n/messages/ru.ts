@@ -13,6 +13,7 @@ import a from "./ru-parts/a";
 import b from "./ru-parts/b";
 import c from "./ru-parts/c";
 
-const ru: Catalog = { ...a, ...b, ...c };
+const ru: Catalog = {
+  agentStream: {"stopped": "Запрос остановлен. Начните новую подготовку, когда будете готовы.", "preparing": "Подготовка рекомендаций…", "tools": "Используются инструменты подготовки…", "stop": "Остановить", "stopping": "Остановка. Запись использования…"}, ...a, ...b, ...c };
 
 export default ru;

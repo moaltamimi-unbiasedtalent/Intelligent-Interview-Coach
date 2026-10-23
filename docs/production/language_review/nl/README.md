@@ -5,14 +5,14 @@
 
 | Item | Value |
 |---|---|
-| Interface strings | 2611 |
+| Interface strings | 2687 |
 | Mo-voiced sentences | 17 |
-| Email parts | 10 |
+| Email parts | 12 |
 | Interview samples (synthetic prompts) | 12 |
-| Legal and trust strings | 283 |
-| Pack content digest (SHA-256) | `12d898f1111389301eab7495ae7d85c0d4976dde2bf05cf05e3c448909334cc9` |
-| Mechanical hints (for attention only) | =EN: 63, EN?: 8 |
-| Namespaces without a curated context note | none |
+| Legal and trust strings | 282 |
+| Pack content digest (SHA-256) | `fb0df41d28f81746db717539eaa3d7ba82baca598955bc6ec01573f5352b0970` |
+| Mechanical hints (for attention only) | =EN: 64, EN?: 8 |
+| Namespaces without a curated context note | `agentStream`, `betaPricing`, `providerMode`, `recentRuns`, `wsTransfer` |
 | Generator | 06F/1 |
 
 ## Files
@@ -20,12 +20,12 @@
 | File | SHA-256 |
 |---|---|
 | `INSTRUCTIONS.md` | `7f280acf4d576f17da0cbac32d633be0e990546cb68129b4e83fd2ebadc8a649` |
-| `INTERFACE_STRINGS.md` | `659b872d8c7c4fd3fe34dfaeccf348d55d6575847a4ee49f1fe77226e45ffb43` |
-| `MO_SENTENCES.md` | `1154b119ebeffa5ac72fae156c41484618b1b274e25d6488ab8eb74914a38c97` |
+| `INTERFACE_STRINGS.md` | `b1c9679ee8e7661e036c022e124b313357ca62c6cc277cf7e03e0325ecb43e13` |
+| `MO_SENTENCES.md` | `1bf1636cbef0575ab16388beffa5839e288e63ddde232c76a77fc7e3496271c3` |
 | `INTERVIEW_SAMPLES.md` | `f4e99c8c8c1d6d4bd5b868eab53e800fd9f4e74f8d72d59c777815aefc3f7471` |
-| `LEGAL_POINTERS.md` | `8b2820f54433b62dc2df66515e611f3790515b083b2ab7ab22fa0c64be90c442` |
-| `SIGNOFF_FORM.md` | `68cb5c6b37691129f82cbeb704de6ef486cf6e1c503d0402a75d5c796c6d093d` |
-| `SIGNOFF_FORM.template.json` | `5ad20ad875f86903f104683d5e9c0c1353935ae5d384acb5fae136e3e7b9eced` |
+| `LEGAL_POINTERS.md` | `b3af25918e6b5e26eeaab643cde0cff6760c8448880f9633db46b08ba88bbd27` |
+| `SIGNOFF_FORM.md` | `63cfa4158d47f1e23db4766f512e8bf26d2a9a8eef721a29dfdf7274eb21bc43` |
+| `SIGNOFF_FORM.template.json` | `bfc8e26c365c3b63f72d6b598f92224ed16eca1bd09bc23902348eb97fcce71e` |
 
 ## Start here
 

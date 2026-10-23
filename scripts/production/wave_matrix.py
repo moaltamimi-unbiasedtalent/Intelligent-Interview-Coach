@@ -26,7 +26,7 @@ LAYERS: dict[str, tuple[str, str, str]] = {
     "01A": (NS + " (injection screen on hosted stack)", "Human security review (9 questions); independent held-out author (OPEN)", "PG-03 IN PROGRESS; thresholds unapproved (OD-GATE-THRESHOLDS)"),
     "01D": ("n/a", "Security review of tool authorization", "PG-03 (REVIEW-01 R4/R5)"),
     "01B0": ("n/a", "none", "PG-12 IN PROGRESS"),
-    "01B": (NS + " (Docker image with prompts/ not built)", "none", "PG-12 IN PROGRESS (01D, 01C outstanding)"),
+    "01B": (NS + " (Docker image with prompts/ not built)", "none", "PG-12 IN PROGRESS (01C outstanding; 01D merged)"),
     "01C": ("n/a", "none", "PG-12 (REVIEW-03)"),
     "02K": ("n/a", "none", "PG-05 IN PROGRESS (contract)"),
     "02A": (NS + " (hosted volumes, PostgreSQL, multi-worker; OD-HOSTED)", "none", "PG-05 IN PROGRESS"),
@@ -38,15 +38,15 @@ LAYERS: dict[str, tuple[str, str, str]] = {
     "03B": (NS + " (live Admin walkthrough)", "Plan limit values (OD-PLAN-LIMITS)", "PG-08 IN PROGRESS"),
     "03C": (NS + " (live Admin walkthrough)", "Bulk-action policy (OD-BULK-ACTIONS)", "PG-08 IN PROGRESS"),
     "03K": ("n/a", "none", "PG-14 IN PROGRESS (contract)"),
-    "03D1": (NS + " (live data)", "none", "PG-08 IN PROGRESS (03D2 outstanding)"),
+    "03D1": (NS + " (live data)", "none", "PG-08 IN PROGRESS (views merged; staging outstanding)"),
     "03D2": (NS, "none", "PG-08"),
-    "03E1": (NS + " (live data)", "Export formats (OD-REPORT-EXPORT)", "PG-14 IN PROGRESS (03E2 outstanding)"),
+    "03E1": (NS + " (live data)", "Export formats (OD-REPORT-EXPORT)", "PG-14 IN PROGRESS (views merged; staging outstanding)"),
     "03E2": (NS, "Export formats (OD-REPORT-EXPORT)", "PG-14"),
-    "04A": (NS + " (restart on staging)", "Native review of 116 strings (LG-10/11)", "PG-13 IN PROGRESS (06B outstanding)"),
-    "04B": (NS + " (PostgreSQL invitation race and row locks)", "Transfer rules (OD-WS-TRANSFER); native review", "PG-13 IN PROGRESS (06B outstanding)"),
+    "04A": (NS + " (restart on staging)", "Native review of 116 strings (LG-10/11)", "PG-13 IN PROGRESS (06B merged; staging and human review outstanding)"),
+    "04B": (NS + " (PostgreSQL invitation race and row locks)", "Transfer rules (OD-WS-TRANSFER); native review", "PG-13 IN PROGRESS (06B merged; staging and human review outstanding)"),
     "04C": (NS + " (streaming on staging)", "none", "PG-06"),
     "04D": (NS + " (journeys on a staging stack)", "none", "PG-06"),
-    "04E": (NS + " (first-admin bootstrap, live Google)", "Invitation email and issuer decisions (OPEN)", "PG-02 IN PROGRESS (05D outstanding)"),
+    "04E": (NS + " (first-admin bootstrap, live Google)", "Invitation email and issuer decisions (OPEN)", "PG-02 IN PROGRESS (05D merged; live verification outstanding)"),
     "04F": (NS + " (browser dictation check)", "Legal reviewer and test participants", "PG-04"),
     "05A": (NS + " (nothing deployed; OD-HOSTED)", "Hosting authorisation (OPEN)", "PG-01 BLOCKED"),
     "05B": (NS + " (restore drill, PostgreSQL paths; OD-HOSTED)", "none", "PG-09"),
@@ -63,19 +63,22 @@ LAYERS: dict[str, tuple[str, str, str]] = {
     "06H": (NS + " (hosted fail-closed behaviour)", "Approvers named for each gate (OD-LANG-03/04)", "PG-10 IN PROGRESS; LG-13/LG-14 enforcement merged, zero languages qualified"),
     "07A": ("n/a", "none", "PG-10"),
     "07B": (NS + " (live grounding; OD-BUDGET)", "none", "PG-03"),
-    "07C": (NS + " (live OCR sample; OD-BUDGET)", "none", "residual live verification"),
+    "07C": (NS + " (local synthetic OCR measured; hosted quality NOT VERIFIED)", "none", "residual live verification"),
     "08A0": ("n/a", "none", "PG-15 (evidence pipeline)"),
     "08A": (NS, "Owner go/no-go", "PG-15"),
 }
 
 
 def ci_layer(pid: str) -> str:
+    """Report the reviewed baseline honestly; a merge is not evidence of green CI."""
     st = E.PACKAGE_STATUS.get(pid)
     if st and st[0].startswith("MERGED"):
-        return "PR CI green (12 of 12); re-read on main"
+        return "main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI"
     if st and st[0].startswith(("PARTIAL", "DELIVERED")):
-        return "documentation PRs #211 to #213 merged, CI green"
-    return "no PR yet"
+        return "historical documentation CI recorded; current baseline CI FAIL"
+    if st and st[1] == "codex/r1-development":
+        return "[PR #265 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265/checks); no acceptance inferred"
+    return "NOT RUN (no implementation PR)"
 
 
 def eng_layer(pid: str) -> str:

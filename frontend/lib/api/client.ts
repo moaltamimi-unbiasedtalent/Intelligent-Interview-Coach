@@ -1,3 +1,4 @@
+import { readAgentStream, type AgentStreamCallbacks } from "./agentStream";
 import { config } from "../config";
 import { ApiError, apiErrorFromBody, parseRetryAfter, unreachableError } from "./errors";
 import {
@@ -479,6 +480,34 @@ export const api = {
   agent: {
     start: (body: AgentRunRequest, opts?: RequestOptions) =>
       request<AgentRunResponse>("POST", "/agent/run", { body, ...opts }),
+    startStream: async (body: AgentRunRequest, callbacks: AgentStreamCallbacks, opts?: RequestOptions) => {
+      let res: Response;
+      try {
+        res = await fetch(`${config.apiBaseUrl}/agent/run/stream`, {
+          method: "POST", credentials: "include", signal: opts?.signal,
+          headers: { Accept: "text/event-stream", "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify(body),
+        });
+      } catch (cause) {
+        if (cause instanceof DOMException && cause.name === "AbortError") throw cause;
+        throw unreachableError(browserIsOnline());
+      }
+      // Only an explicit unsupported route BEFORE run creation permits fallback.
+      // Never retry a write after a connection failure or an accepted stream.
+      if ([404, 405, 501].includes(res.status)) return request<AgentRunResponse>("POST", "/agent/run", { body, ...opts });
+      if (!res.ok) throw apiErrorFromBody(res.status, await res.json().catch(() => undefined), res.headers.get(REQUEST_ID_HEADER));
+      return readAgentStream(res, callbacks);
+    },
+    reconnect: async (runId: string, callbacks: AgentStreamCallbacks, opts?: RequestOptions) => {
+      const res = await fetch(`${config.apiBaseUrl}/agent/runs/${encodeURIComponent(runId)}/events`, {
+        method: "GET", credentials: "include", signal: opts?.signal,
+        headers: { Accept: "text/event-stream", ...authHeaders() },
+      });
+      if (!res.ok) throw apiErrorFromBody(res.status, await res.json().catch(() => undefined), res.headers.get(REQUEST_ID_HEADER));
+      return readAgentStream(res, callbacks);
+    },
+    cancel: (runId: string) => request<{ run_id: string; status: string; settlement_pending: boolean }>(
+      "POST", `/agent/runs/${encodeURIComponent(runId)}/cancel`),
     getRun: (runId: string, opts?: RequestOptions) =>
       request<AgentRunResponse>("GET", `/agent/runs/${encodeURIComponent(runId)}`, opts),
     continue: (runId: string, body: AgentContinueRequest, opts?: RequestOptions) =>

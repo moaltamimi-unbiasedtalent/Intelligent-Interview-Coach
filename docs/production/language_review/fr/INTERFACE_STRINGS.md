@@ -173,7 +173,7 @@ Appears in: `components/auth/AccountMenu.tsx`, `components/layout/nav-items.ts`,
 
 Context: Workspaces: members, invitations, sharing.
 
-Appears in: `components/feedback/FeedbackControl.tsx`, `components/layout/nav-items.ts`, `components/workspaces/InviteAccept.tsx`, `components/workspaces/WorkspaceDetail.tsx`, `components/workspaces/WorkspacesPanel.tsx`
+Appears in: `components/feedback/FeedbackControl.tsx`, `components/layout/nav-items.ts`, `components/workspaces/InviteAccept.tsx`, `components/workspaces/TransferAccept.tsx`, `components/workspaces/WorkspaceDetail.tsx`, `components/workspaces/WorkspacesPanel.tsx`
 
 | key | English source | translation | where | hints |
 |---|---|---|---|---|
@@ -182,7 +182,7 @@ Appears in: `components/feedback/FeedbackControl.tsx`, `components/layout/nav-it
 | `workspaces.decline` | Decline | Refuser | `WorkspacesPanel.tsx` |  |
 | `workspaces.emptyShares` | Nothing shared yet. | Rien de partagé pour l’instant. | `WorkspacesPanel.tsx` |  |
 | `workspaces.emptyWorkspaces` | You are not in any workspace yet. | Vous n’êtes dans aucun espace de travail. | `WorkspacesPanel.tsx` |  |
-| `workspaces.eyebrow` | Teams & sharing | Équipes et partage | `InviteAccept.tsx` +2 |  |
+| `workspaces.eyebrow` | Teams & sharing | Équipes et partage | `InviteAccept.tsx` +3 |  |
 | `workspaces.fbIncorrect` | Incorrect | Incorrect | `FeedbackControl.tsx` | =EN |
 | `workspaces.fbIrrelevant` | Irrelevant | Hors sujet | `FeedbackControl.tsx` |  |
 | `workspaces.fbLanguageQuality` | Language quality | Qualité de la langue | `FeedbackControl.tsx` |  |
@@ -223,7 +223,7 @@ Appears in: `components/feedback/FeedbackControl.tsx`, `components/layout/nav-it
 
 Context: Workspace management and share grants.
 
-Appears in: `components/stories/StoryShare.tsx`, `components/workspaces/InviteAccept.tsx`, `components/workspaces/SharedItemViewer.tsx`, `components/workspaces/WorkspaceDetail.tsx`, `components/workspaces/WorkspacesPanel.tsx`, `components/workspaces/workspaceUi.ts`
+Appears in: `components/stories/StoryShare.tsx`, `components/workspaces/InviteAccept.tsx`, `components/workspaces/OwnershipTransfer.tsx`, `components/workspaces/SharedItemViewer.tsx`, `components/workspaces/TransferAccept.tsx`, `components/workspaces/WorkspaceDetail.tsx` and 2 more
 
 | key | English source | translation | where | hints |
 |---|---|---|---|---|
@@ -246,7 +246,7 @@ Appears in: `components/stories/StoryShare.tsx`, `components/workspaces/InviteAc
 | `wsMgmt.archivedBadge` | Archived | Archivé | `WorkspaceDetail.tsx` +1 |  |
 | `wsMgmt.archivedBanner` | This workspace is archived. Nothing is shared in it. The owner can restore it. | Cet espace est archivé. Rien n’y est partagé. Le propriétaire peut le restaurer. | `WorkspaceDetail.tsx` |  |
 | `wsMgmt.archivedNotice` | Workspace archived. Everything shared in it was unshared. | Espace archivé. Tout ce qui y était partagé a cessé de l’être. | `WorkspaceDetail.tsx` |  |
-| `wsMgmt.backToList` | All workspaces | Tous les espaces | `InviteAccept.tsx` +1 |  |
+| `wsMgmt.backToList` | All workspaces | Tous les espaces | `InviteAccept.tsx` +2 |  |
 | `wsMgmt.confirmNameLabel` | Type the workspace name to confirm | Saisissez le nom de l’espace pour confirmer | `WorkspaceDetail.tsx` |  |
 | `wsMgmt.createFailed` | The workspace could not be created. | L’espace de travail n’a pas pu être créé. | `WorkspacesPanel.tsx` |  |
 | `wsMgmt.declineButton` | Decline invitation | Refuser l’invitation | `InviteAccept.tsx` |  |
@@ -258,9 +258,9 @@ Appears in: `components/stories/StoryShare.tsx`, `components/workspaces/InviteAc
 | `wsMgmt.deletedNotice` | Workspace deleted. | Espace supprimé. | composed |  |
 | `wsMgmt.errConflict` | That cannot be done in the workspace's current state, for example while it is archived, or for the last owner. | Cela n’est pas possible dans l’état actuel de l’espace, par exemple tant qu’il est archivé, ou pour le dernier propriétaire. | `workspaceUi.ts` |  |
 | `wsMgmt.errForbidden` | Your role in this workspace does not allow that. | Votre rôle dans cet espace ne permet pas cela. | `workspaceUi.ts` |  |
-| `wsMgmt.errGeneric` | That did not work and nothing was changed. Please try again. | Cela n’a pas fonctionné et rien n’a été modifié. Veuillez réessayer. | `InviteAccept.tsx` +1 |  |
+| `wsMgmt.errGeneric` | That did not work and nothing was changed. Please try again. | Cela n’a pas fonctionné et rien n’a été modifié. Veuillez réessayer. | `InviteAccept.tsx` +2 |  |
 | `wsMgmt.errNotFound` | That workspace or item is not available. | Cet espace ou cet élément n’est pas disponible. | `WorkspaceDetail.tsx` +1 |  |
-| `wsMgmt.errValidation` | Please check what you entered and try again. | Veuillez vérifier votre saisie et réessayer. | `WorkspaceDetail.tsx` +1 |  |
+| `wsMgmt.errValidation` | Please check what you entered and try again. | Veuillez vérifier votre saisie et réessayer. | `OwnershipTransfer.tsx` +2 |  |
 | `wsMgmt.hideShared` | Close | Fermer | `SharedItemViewer.tsx` |  |
 | `wsMgmt.invitationFailed` | This invitation could not be answered. It may have expired, been revoked or already been used. | Cette invitation n’a pas pu être traitée. Elle a peut-être expiré, été révoquée ou déjà utilisée. | `WorkspacesPanel.tsx` |  |
 | `wsMgmt.inviteEmail` | Email address | Adresse e-mail | `WorkspaceDetail.tsx` |  |
@@ -271,7 +271,7 @@ Appears in: `components/stories/StoryShare.tsx`, `components/workspaces/InviteAc
 | `wsMgmt.inviteSend` | Send invitation | Envoyer l’invitation | `WorkspaceDetail.tsx` |  |
 | `wsMgmt.inviteSubmitted` | Invitation created and the email was handed to the mail provider. That does not confirm delivery. | Invitation créée et e-mail remis au fournisseur de messagerie. Cela ne confirme pas la distribution. | `WorkspaceDetail.tsx` |  |
 | `wsMgmt.inviteTitle` | Invite someone | Inviter quelqu’un | `WorkspaceDetail.tsx` |  |
-| `wsMgmt.invitedExpires` | Expires {date} | Expire le {date} | `InviteAccept.tsx` +2 |  |
+| `wsMgmt.invitedExpires` | Expires {date} | Expire le {date} | `InviteAccept.tsx` +3 |  |
 | `wsMgmt.invitedHint` | Review each invitation and choose to accept or decline. Joining shares nothing. | Examinez chaque invitation et choisissez de l’accepter ou de la refuser. Rejoindre ne partage rien. | `WorkspacesPanel.tsx` |  |
 | `wsMgmt.invitedRole` | Invited as {role} | Invité en tant que {role} | `WorkspacesPanel.tsx` |  |
 | `wsMgmt.joinedNotice` | You joined the workspace. | Vous avez rejoint l’espace de travail. | `WorkspacesPanel.tsx` |  |
@@ -325,10 +325,10 @@ Appears in: `components/stories/StoryShare.tsx`, `components/workspaces/InviteAc
 | `wsMgmt.sharedEmpty` | Nothing is shared in this workspace yet. | Rien n’est encore partagé dans cet espace. | `WorkspaceDetail.tsx` |  |
 | `wsMgmt.stopSharing` | Stop sharing | Arrêter le partage | `WorkspaceDetail.tsx` |  |
 | `wsMgmt.transferAction` | Transfer ownership | Transférer la propriété | `WorkspaceDetail.tsx` |  |
-| `wsMgmt.transferBody` | {name} becomes the owner and you become a member. You cannot undo this yourself. Type the workspace name to confirm. | {name} devient propriétaire et vous devenez membre. Vous ne pourrez pas l’annuler vous-même. Saisissez le nom de l’espace pour confirmer. | `WorkspaceDetail.tsx` |  |
-| `wsMgmt.transferConfirm` | Transfer ownership | Transférer la propriété | `WorkspaceDetail.tsx` |  |
-| `wsMgmt.transferTitle` | Transfer ownership to {name}? | Transférer la propriété à {name} ? | `WorkspaceDetail.tsx` |  |
-| `wsMgmt.transferred` | Ownership transferred. | Propriété transférée. | `WorkspaceDetail.tsx` |  |
+| `wsMgmt.transferBody` | {name} becomes the owner and you become a member. You cannot undo this yourself. Type the workspace name to confirm. | {name} devient propriétaire et vous devenez membre. Vous ne pourrez pas l’annuler vous-même. Saisissez le nom de l’espace pour confirmer. | composed |  |
+| `wsMgmt.transferConfirm` | Transfer ownership | Transférer la propriété | composed |  |
+| `wsMgmt.transferTitle` | Transfer ownership to {name}? | Transférer la propriété à {name} ? | composed |  |
+| `wsMgmt.transferred` | Ownership transferred. | Propriété transférée. | composed |  |
 | `wsMgmt.typeReport` | Interview report | Rapport d’entretien | `WorkspaceDetail.tsx` +1 |  |
 | `wsMgmt.typeStory` | Story | Story | `WorkspaceDetail.tsx` +1 | =EN |
 | `wsMgmt.viewShared` | View | Consulter | `WorkspaceDetail.tsx` +1 |  |
@@ -643,7 +643,7 @@ Appears in: `components/marketing/MarketingHome.tsx`
 | `homeStory.lead` | Follow a fictional candidate from rejection to a calmer preparation routine. | Suivez une candidate fictive, du refus à une routine de préparation plus sereine. | `MarketingHome.tsx` |  |
 | `homeStory.title` | One job, one place, one next step | Un poste, un endroit, une prochaine étape | `MarketingHome.tsx` |  |
 
-### `marketing` (104 strings)
+### `marketing` (98 strings)
 
 Context: Public marketing site (landing page) copy shown before sign-in.
 
@@ -676,7 +676,6 @@ Appears in: `components/marketing/AboutContent.tsx`, `components/marketing/Legal
 | `marketing.footerCompany` | Company | Entreprise | `MarketingShell.tsx` |  |
 | `marketing.footerDraft` | Policy pages are engineering drafts pending legal review. | Les pages de politique sont des brouillons techniques en attente de revue juridique. | `MarketingShell.tsx` |  |
 | `marketing.footerLegal` | Legal & trust | Mentions légales & confiance | `MarketingShell.tsx` |  |
-| `marketing.footerNoBilling` | Basic is free. Premium subscriptions are not available yet. | Basic est gratuit. Les abonnements Premium ne sont pas encore disponibles. | `MarketingShell.tsx` |  |
 | `marketing.footerPrivacy` | Privacy | Confidentialité | `MarketingShell.tsx` +1 |  |
 | `marketing.footerProduct` | Product | Produit | `MarketingShell.tsx` |  |
 | `marketing.footerRights` | All rights reserved. | Tous droits réservés. | `MarketingShell.tsx` |  |
@@ -691,7 +690,6 @@ Appears in: `components/marketing/AboutContent.tsx`, `components/marketing/Legal
 | `marketing.heroSecondary` | See how it works | Voir comment ça marche | `MarketingHome.tsx` +1 |  |
 | `marketing.heroSubtitle` | Ask4Mo brings everything for one job into a single Opportunity: the role, the company, your evidence, preparation with Mo, realistic practice and feedback. Private by default, in your language. | Ask4Mo réunit tout pour un poste dans une seule Opportunité : le poste, l'entreprise, vos preuves, la préparation avec Mo, un entraînement réaliste et un retour. Privé par défaut, dans votre langue. | `MarketingHome.tsx` |  |
 | `marketing.heroTitle` | Prepare for the interview that matters. | Préparez l’entretien qui compte. | `MarketingHome.tsx` |  |
-| `marketing.homePricingBody` | Basic is free. Premium subscriptions are planned and are not available yet. | Basic est gratuit. Les abonnements Premium sont prévus et pas encore disponibles. | `MarketingHome.tsx` |  |
 | `marketing.homePricingCta` | See plans | Voir les offres | `MarketingHome.tsx` |  |
 | `marketing.homePricingTitle` | Start free | Commencer gratuitement | `MarketingHome.tsx` |  |
 | `marketing.howLead` | From a new Opportunity to a confident interview. | D'une nouvelle Opportunité à un entretien confiant. | `ProductContent.tsx` |  |
@@ -716,17 +714,13 @@ Appears in: `components/marketing/AboutContent.tsx`, `components/marketing/Legal
 | `marketing.navPricing` | Pricing | Tarifs | `MarketingShell.tsx` |  |
 | `marketing.navProduct` | Product | Produit | `MarketingShell.tsx` |  |
 | `marketing.navTrust` | Trust | Confiance | `AboutContent.tsx` +2 |  |
-| `marketing.planBasicCadence` | free forever | gratuit pour toujours | `pricing.ts` |  |
 | `marketing.planBasicCta` | Get started free | Commencer gratuitement | `pricing.ts` |  |
 | `marketing.planBasicName` | Basic | Basic | `ProofCarousel.tsx` +1 | =EN |
-| `marketing.planBasicPrice` | €0 | €0 | composed |  |
-| `marketing.planPremiumCadence` | per month | par mois | `pricing.ts` |  |
 | `marketing.planPremiumCta` | Premium is not available yet | Premium n’est pas encore disponible | `pricing.ts` |  |
 | `marketing.planPremiumName` | Premium | Premium | `pricing.ts` | =EN |
 | `marketing.planPremiumNote` | Premium subscriptions are planned. Nothing is charged and no payment is started here. | Les abonnements Premium sont prévus. Rien n’est facturé et aucun paiement n’est lancé ici. | `pricing.ts` |  |
 | `marketing.pricingAlwaysFree` | Privacy, security and your data rights (export & delete) are always free, on every plan. | La confidentialité, la sécurité et vos droits sur vos données (export & suppression) sont toujours gratuits, sur tous les forfaits. | `PricingContent.tsx` |  |
 | `marketing.pricingBasicIncludes` | For preparing for one active interview with role-specific practice and feedback. | Entraînement d’entretien, préparation fondée, documents privés, banque d’histoires, voix au tour par tour, mémoire, progrès & historique | `ProofCarousel.tsx` +1 |  |
-| `marketing.pricingBillingNote` | Premium cannot be purchased yet. Nothing on this page starts a payment. | Premium ne peut pas encore être acheté. Rien sur cette page ne déclenche de paiement. | `PricingContent.tsx` |  |
 | `marketing.pricingFeaturesHeading` | What's included | Ce qui est inclus | composed |  |
 | `marketing.pricingPremiumIncludes` | Planned for an active job search across several roles: everything in Basic plus the planned Premium capabilities below. None of them is on sale yet. | Prévu pour une recherche d’emploi active sur plusieurs postes : tout Basic plus les fonctionnalités Premium prévues ci-dessous. Aucune n’est encore en vente. | `pricing.ts` |  |
 | `marketing.pricingSubtitle` | Start free with Basic. Premium subscriptions are planned and are not available yet. | Commencez gratuitement avec Basic. Les abonnements Premium sont prévus et pas encore disponibles. | `PricingContent.tsx` |  |
@@ -1027,7 +1021,7 @@ Appears in: `components/marketing/PrivacyContent.tsx`
 | `privacy.voiceRealtime` | Realtime voice (where enabled) streams audio to a realtime provider to power the live conversation; that processing follows the provider's own policy. Ask4Mo still stores no audio. | La voix en temps réel (lorsqu'elle est activée) transmet l'audio à un fournisseur de temps réel pour alimenter la conversation en direct; ce traitement suit la politique propre au fournisseur. Ask4Mo ne conserve toujours aucun audio. | `PrivacyContent.tsx` |  |
 | `privacy.voiceTurnBased` | Turn-based voice uses your browser or operating-system speech engines. Ask4Mo does not record or store your microphone audio. | La voix au tour par tour utilise les moteurs vocaux de votre navigateur ou de votre système d'exploitation. Ask4Mo n'enregistre ni ne conserve l'audio de votre microphone. | `PrivacyContent.tsx` |  |
 
-### `terms` (19 strings)
+### `terms` (18 strings)
 
 Context: Terms of use text.
 
@@ -1037,7 +1031,6 @@ Appears in: `components/marketing/TermsContent.tsx`
 |---|---|---|---|---|
 | `terms.accountsAsIs` | The service is provided as is during this pre-launch phase, without warranties; liability is limited to the maximum extent permitted by applicable law (subject to legal review). | Le service est fourni en l'état durant cette phase de pré-lancement, sans garanties; la responsabilité est limitée dans la mesure maximale permise par la loi applicable (sous réserve de revue juridique). | `TermsContent.tsx` |  |
 | `terms.accountsHeading` | Accounts, plans and availability | Comptes, offres et disponibilité | `TermsContent.tsx` |  |
-| `terms.accountsPlans` | Basic is free. Premium is €19.99 per month and is selected online after account creation. | Basic est gratuit. Premium coûte €19.99 par mois et se choisit en ligne après la création du compte. | `TermsContent.tsx` |  |
 | `terms.accountsProviders` | Some features depend on external providers and may be unavailable, rate-limited or paused by the operator. | Certaines fonctions dépendent de fournisseurs externes et peuvent être indisponibles, limitées en débit ou mises en pause par l'exploitant. | `TermsContent.tsx` |  |
 | `terms.aiHeading` | AI limitations | Limites de l'IA | `TermsContent.tsx` |  |
 | `terms.aiNoHiring` | Ask4Mo does not make hiring decisions, rank candidates for recruiters, or evaluate you by your voice. | Ask4Mo ne prend pas de décisions d'embauche, ne classe pas les candidats pour les recruteurs et ne vous évalue pas d'après votre voix. | `TermsContent.tsx` |  |
@@ -1371,7 +1364,7 @@ Appears in: `components/help/HelpCenter.tsx`, `components/help/HelpPageContent.t
 | `help.ts8q` | A request failed | Une requête a échoué | `HelpCenter.tsx` |  |
 | `help.tsTitle` | Troubleshooting | Dépannage | `HelpCenter.tsx` |  |
 
-### `onboarding` (49 strings)
+### `onboarding` (50 strings)
 
 Context: First-run onboarding steps.
 
@@ -1423,6 +1416,7 @@ Appears in: `components/onboarding/OnboardingClient.tsx`, `components/settings/C
 | `onboarding.stepLanguage` | Language | Langue | composed |  |
 | `onboarding.stepPrivacy` | Privacy | Confidentialité | composed |  |
 | `onboarding.stepReview` | Review | Vérification | composed |  |
+| `onboarding.stepSaveError` | We couldn’t save this step. Please try again. | Nous n’avons pas pu enregistrer cette étape. Veuillez réessayer. | `OnboardingClient.tsx` |  |
 | `onboarding.stepWelcome` | Welcome | Bienvenue | composed |  |
 | `onboarding.targetRoleHelp` | The role you’re preparing for. Optional. | Le poste pour lequel vous vous préparez. Facultatif. | `OnboardingClient.tsx` |  |
 | `onboarding.targetRoleLabel` | Target role | Poste visé | `OnboardingClient.tsx` +1 |  |
@@ -2212,7 +2206,7 @@ Appears in: `components/onboarding/OnboardingClient.tsx`, `components/settings/C
 | `coaching.supportiveDesc` | Encouraging and constructive while still identifying gaps. | Encourageant et constructif tout en identifiant les lacunes. | composed |  |
 | `coaching.title` | Mo coaching style | Style de coaching de Mo | `CoachingStyleField.tsx` |  |
 
-### `dictation` (13 strings)
+### `dictation` (14 strings)
 
 Context: Dictation (speech-to-text) controls and messages.
 
@@ -2225,6 +2219,7 @@ Appears in: `components/ui/DictationControl.tsx`
 | `dictation.error` | Dictation stopped unexpectedly. You can still type. | La dictée s’est arrêtée de façon inattendue. Vous pouvez toujours taper. | `DictationControl.tsx` |  |
 | `dictation.heard` | Heard: {text} | Entendu : {text} | `DictationControl.tsx` |  |
 | `dictation.languageLabel` | Dictation language | Langue de dictée | `DictationControl.tsx` |  |
+| `dictation.languageNotSupported` | Your browser can’t recognise speech in the selected dictation language. Choose another dictation language, or type. | Votre navigateur ne peut pas reconnaître la langue de dictée choisie. Choisissez une autre langue de dictée ou tapez. | `DictationControl.tsx` |  |
 | `dictation.listening` | Listening… speak, then review before sending. | Écoute… parlez, puis vérifiez avant d’envoyer. | `DictationControl.tsx` |  |
 | `dictation.network` | Dictation is temporarily unavailable. You can still type. | La dictée est temporairement indisponible. Vous pouvez toujours taper. | `DictationControl.tsx` |  |
 | `dictation.noMicrophone` | No microphone was found. You can still type. | Aucun microphone détecté. Vous pouvez toujours taper. | `DictationControl.tsx` |  |
@@ -2324,11 +2319,11 @@ Appears in: `components/memory/MemoryManager.tsx`, `components/progress/Progress
 | `memory.unpinnedNotice` | Unpinned. | Désépinglé. | `MemoryManager.tsx` |  |
 | `memory.updateError` | Couldn't update that memory. | Impossible de mettre à jour cet élément. | `MemoryManager.tsx` |  |
 
-### `prepare` (211 strings)
+### `prepare` (212 strings)
 
 Context: Prepare screen with the coach Mo: input, answer presentation, citations, approval cards.
 
-Appears in: `components/agent/AgentAnswer.tsx`, `components/agent/AgentComposer.tsx`, `components/agent/AgentContextRail.tsx`, `components/agent/AgentConversation.tsx`, `components/agent/AgentPrepareWorkspace.tsx`, `components/agent/AgentRunLink.tsx` and 14 more
+Appears in: `components/agent/AgentAnswer.tsx`, `components/agent/AgentComposer.tsx`, `components/agent/AgentContextRail.tsx`, `components/agent/AgentConversation.tsx`, `components/agent/AgentPrepareWorkspace.tsx`, `components/agent/AgentRunLink.tsx` and 15 more
 
 | key | English source | translation | where | hints |
 |---|---|---|---|---|
@@ -2482,6 +2477,7 @@ Appears in: `components/agent/AgentAnswer.tsx`, `components/agent/AgentComposer.
 | `prepare.send` | Send | Envoyer | `AgentComposer.tsx` |  |
 | `prepare.sending` | Sending… | Envoi… | `AgentComposer.tsx` +1 |  |
 | `prepare.seniorityColon` | Seniority: | Niveau : | `PreparationTools.tsx` |  |
+| `prepare.sessionGone` | This preparation session can no longer be resumed. | Cette session de préparation ne peut plus être reprise. | `useAgentRun.ts` |  |
 | `prepare.settingUpPractice` | Setting up your interview practice… | Configuration de votre entraînement à l'entretien… | `AgentPrepareWorkspace.tsx` |  |
 | `prepare.showLess` | Show less | Afficher moins | `AgentAnswer.tsx` |  |
 | `prepare.showMore` | Show more | Afficher plus | `AgentAnswer.tsx` |  |
@@ -2831,7 +2827,7 @@ Appears in: `components/account/BillingOverview.tsx`, `components/account/PlanSu
 | `plan.retry` | Try again | Réessayer | `PlanSummary.tsx` |  |
 | `plan.title` | Your plan | Votre offre | `PlanSummary.tsx` |  |
 
-### `planUx` (74 strings)
+### `planUx` (73 strings)
 
 Context: Plan and access explanations (what a plan includes, limits, previews).
 
@@ -2897,7 +2893,6 @@ Appears in: `components/interview/HistoryDetailClient.tsx`, `components/marketin
 | `planUx.models_notAvailable` | Not available to your account | Non disponible pour votre compte | `ModelProfilePanel.tsx` |  |
 | `planUx.models_title` | AI model profiles | Profils de modèle d’IA | `ModelProfilePanel.tsx` |  |
 | `planUx.pricing_notAvailable` | Not available yet | Pas encore disponible | `PricingContent.tsx` |  |
-| `planUx.pricing_previewPrice` | Preview price under consideration: €19.99 per month. This price has not been approved. | Prix indicatif à l’étude : 19,99 € par mois. Ce prix n’a pas été approuvé. | `PricingContent.tsx` |  |
 | `planUx.pricing_statusLabel` | Premium status | Statut de Premium | composed |  |
 | `planUx.progress_scope` | These statistics use your latest {n} completed interviews. | Ces statistiques portent sur vos {n} derniers entretiens terminés. | `PracticeProgress.tsx` |  |
 | `planUx.progress_trendsPlanned` | Performance trends, improvement over time and attempt comparisons are planned for Premium. They are not built yet, so nothing is shown here. | Les tendances de performance, l’amélioration dans le temps et la comparaison des tentatives sont prévues pour Premium. Elles ne sont pas encore développées, donc rien n’est affiché ici. | `PracticeProgress.tsx` |  |
@@ -2969,7 +2964,7 @@ Appears in: `components/marketing/PricingContent.tsx`, `lib/pricing.ts`
 | `pricingV4.limCoach` | Higher cost and limited availability | Coût plus élevé et disponibilité limitée | `pricing.ts` |  |
 | `pricingV4.limCourse` | Less personal context and limited live feedback | Moins de contexte personnel et retour en direct limité | `pricing.ts` |  |
 | `pricingV4.notIncluded` | Not included | Non inclus | composed |  |
-| `pricingV4.payAsk4mo` | Free, or €19.99 per month for Premium | Gratuit ou €19.99 par mois pour Premium | `pricing.ts` |  |
+| `pricingV4.payAsk4mo` | Free during the private beta; nothing can be purchased | Gratuit pendant la bêta privée ; rien ne peut être acheté | `pricing.ts` |  |
 | `pricingV4.payCoach` | Per session or package | Par séance ou par forfait | `pricing.ts` |  |
 | `pricingV4.payCourse` | One-off or subscription | Paiement unique ou abonnement | `pricing.ts` |  |
 | `pricingV4.point1` | Practise when the interview is real: keep the job, the company and your approved evidence together. | Entraînez-vous quand l’entretien est réel : gardez ensemble le poste, l’entreprise et vos preuves approuvées. | composed |  |
@@ -3027,7 +3022,7 @@ Appears in: `components/plan/UsageQuotaPanel.tsx`
 
 Context: Shared words and buttons used on many screens (Save, Cancel, errors, the brand line).
 
-Appears in: `components/auth/AccountMenu.tsx`, `components/auth/AccountPanel.tsx`, `components/auth/SignInForm.tsx`, `components/coach/HomeEntry.tsx`, `components/documents/DocumentPicker.tsx`, `components/documents/DocumentsClient.tsx` and 22 more
+Appears in: `components/agent/RecentRuns.tsx`, `components/auth/AccountMenu.tsx`, `components/auth/AccountPanel.tsx`, `components/auth/SignInForm.tsx`, `components/coach/HomeEntry.tsx`, `components/documents/DocumentPicker.tsx` and 24 more
 
 | key | English source | translation | where | hints |
 |---|---|---|---|---|
@@ -3038,7 +3033,7 @@ Appears in: `components/auth/AccountMenu.tsx`, `components/auth/AccountPanel.tsx
 | `common.language` | Language | Langue | `LanguageMenu.tsx` |  |
 | `common.languageUnqualified` | Unqualified | Non qualifiée | `ConversationLanguageField.tsx` +2 |  |
 | `common.languagesNoneAvailable` | No language is available to real users yet. A language opens only after it completes every qualification check. | Aucune langue n’est encore disponible pour les utilisateurs réels. Une langue n’ouvre qu’après avoir passé toutes les vérifications de qualification. | `ConversationLanguageField.tsx` +2 |  |
-| `common.loading` | Loading | Chargement | `DocumentPicker.tsx` +6 |  |
+| `common.loading` | Loading | Chargement | `RecentRuns.tsx` +7 |  |
 | `common.optional` | (optional) | (facultatif) | `HomeEntry.tsx` |  |
 | `common.prepareWithMo` | Prepare with Mo | Préparer avec Mo | `MemoryManager.tsx` +1 |  |
 | `common.productName` | Intelligent Interview Coach | Coach d’entretien intelligent | `HomeHero.tsx` |  |
@@ -3047,7 +3042,7 @@ Appears in: `components/auth/AccountMenu.tsx`, `components/auth/AccountPanel.tsx
 | `common.save` | Save | Enregistrer | `MemoryManager.tsx` +1 |  |
 | `common.saved` | Saved. | Enregistré. | `MemoryManager.tsx` |  |
 | `common.sections` | Sections | Sections | `Tabs.tsx` | =EN |
-| `common.signIn` | Sign in | Se connecter | `AccountMenu.tsx` +2 |  |
+| `common.signIn` | Sign in | Se connecter | `AccountMenu.tsx` +3 |  |
 | `common.signOut` | Sign out | Se déconnecter | `AccountMenu.tsx` +1 |  |
 | `common.skipToContent` | Skip to content | Aller au contenu | `AppShell.tsx` |  |
 | `common.tagline` | Ask More. Be More. | Ask More. Be More. | `HomeHero.tsx` +4 | =EN |
@@ -3075,35 +3070,37 @@ Appears in: `components/auth/AccountMenu.tsx`, `components/home/ReturnJourney.ts
 | `nav.review` | Review & Diagnostics | Revue et diagnostics | composed |  |
 | `nav.sources` | Sources | Sources | `nav-items.ts` +1 | =EN |
 
-### `states` (26 strings)
+### `states` (28 strings)
 
 Context: Loading, empty and error state messages shown across the product.
 
-Appears in: `app/error.tsx`, `components/agent/AgentPrepareWorkspace.tsx`, `components/auth/RequirePlatformAdmin.tsx`, `components/auth/RouteGuard.tsx`, `components/company/CompanyResearchClient.tsx`, `components/home/OpportunityEntry.tsx` and 8 more
+Appears in: `app/error.tsx`, `components/agent/AgentPrepareWorkspace.tsx`, `components/agent/useAgentRun.ts`, `components/auth/RequirePlatformAdmin.tsx`, `components/auth/RouteGuard.tsx`, `components/company/CompanyResearchClient.tsx` and 11 more
 
 | key | English source | translation | where | hints |
 |---|---|---|---|---|
 | `states.accessDeniedTitle` | Access denied | Accès refusé | `RequirePlatformAdmin.tsx` |  |
+| `states.aiNotConfigured` | AI features are not configured on this Ask4Mo environment, so nothing was started. Your saved work and history remain available. | Les fonctions d’IA ne sont pas configurées dans cet environnement Ask4Mo ; rien n’a donc été démarré. Votre travail enregistré et votre historique restent disponibles. | `AgentPrepareWorkspace.tsx` +3 |  |
+| `states.aiProviderUnavailable` | The AI service could not complete this request right now. Nothing was lost and nothing was started twice. Please try again in a moment. | Le service d’IA n’a pas pu terminer cette demande pour le moment. Rien n’a été perdu et rien n’a été lancé deux fois. Veuillez réessayer dans un instant. | `AgentPrepareWorkspace.tsx` +3 |  |
 | `states.aiUsageLimit` | You’ve reached a temporary safety limit on AI-generated practice and coaching. Your saved work and history remain available. Please try again in a little while. | Vous avez atteint une limite de sécurité temporaire pour l’entraînement et le coaching générés par l’IA. Votre travail enregistré et votre historique restent disponibles. Veuillez réessayer dans un moment. | `errors.ts` |  |
 | `states.checkingSession` | Checking your session | Vérification de votre session | `RouteGuard.tsx` |  |
 | `states.conflict` | This is already being processed. Please wait a moment and try again. | Ceci est déjà en cours de traitement. Veuillez patienter un moment et réessayer. | `errors.ts` |  |
 | `states.empty` | Nothing here yet. | Rien pour le moment. | composed |  |
 | `states.forbidden` | You don’t have access to that. | Vous n’avez pas accès à cela. | `RequirePlatformAdmin.tsx` +1 |  |
-| `states.genericError` | That request couldn’t be processed. Please try again. | Cette requête n’a pas pu être traitée. Veuillez réessayer. | `WorkspaceDetail.tsx` +2 |  |
+| `states.genericError` | That request couldn’t be processed. Please try again. | Cette requête n’a pas pu être traitée. Veuillez réessayer. | `useAgentRun.ts` +3 |  |
 | `states.historyRestricted` | This interview is outside the history included in your current view. It has not been deleted and is still stored. You can still export or delete your data from your account. | Cet entretien est en dehors de l’historique inclus dans votre vue actuelle. Il n’a pas été supprimé et reste enregistré. Vous pouvez toujours exporter ou supprimer vos données depuis votre compte. | `HistoryDetailClient.tsx` +1 |  |
-| `states.loading` | Loading | Chargement | `RequirePlatformAdmin.tsx` +5 |  |
+| `states.loading` | Loading | Chargement | `RequirePlatformAdmin.tsx` +6 |  |
 | `states.modelProfileNotAvailable` | That AI model profile is not available for your account. Please choose another profile. | Ce profil de modèle d’IA n’est pas disponible pour votre compte. Veuillez choisir un autre profil. | `errors.ts` |  |
 | `states.networkError` | We couldn’t connect right now. Please check your connection and try again. | Connexion impossible pour le moment. Vérifiez votre connexion et réessayez. | composed |  |
 | `states.notFound` | We couldn’t find what you were looking for. | Nous n’avons pas trouvé ce que vous cherchiez. | `errors.ts` |  |
-| `states.offline` | You’re offline. Check your internet connection and try again. | Vous êtes hors ligne. Vérifiez votre connexion Internet et réessayez. | `InviteAccept.tsx` +2 |  |
+| `states.offline` | You’re offline. Check your internet connection and try again. | Vous êtes hors ligne. Vérifiez votre connexion Internet et réessayez. | `InviteAccept.tsx` +3 |  |
 | `states.platformPaused` | Ask4Mo is temporarily unavailable for this activity. Your saved data remains available. Please try again later. | Ask4Mo est temporairement indisponible pour cette activité. Vos données enregistrées restent disponibles. Veuillez réessayer plus tard. | `AgentPrepareWorkspace.tsx` +2 |  |
 | `states.rateLimited` | You’ve made too many requests. Please wait a moment and try again. | Trop de requêtes. Veuillez patienter un moment et réessayer. | `errors.ts` |  |
 | `states.reference` | Reference: | Référence : | `States.tsx` |  |
 | `states.retry` | Try again | Réessayer | `PreparationPackSection.tsx` +2 |  |
 | `states.retrying` | Retrying… | Nouvelle tentative… | `States.tsx` |  |
 | `states.serverError` | Ask4Mo hit a problem while processing that request. Please try again. | Ask4Mo a rencontré un problème lors du traitement de cette requête. Veuillez réessayer. | `error.tsx` +1 |  |
-| `states.serviceUnavailable` | Ask4Mo is temporarily unavailable. Please try again shortly. | Ask4Mo est temporairement indisponible. Veuillez réessayer sous peu. | `errors.ts` |  |
-| `states.serviceUnreachable` | Ask4Mo can’t reach the service right now. Please try again shortly. | Ask4Mo ne parvient pas à joindre le service pour le moment. Veuillez réessayer sous peu. | `InviteAccept.tsx` +2 |  |
+| `states.serviceUnavailable` | Ask4Mo is temporarily unavailable. Please try again shortly. | Ask4Mo est temporairement indisponible. Veuillez réessayer sous peu. | `useAgentRun.ts` +1 |  |
+| `states.serviceUnreachable` | Ask4Mo can’t reach the service right now. Please try again shortly. | Ask4Mo ne parvient pas à joindre le service pour le moment. Veuillez réessayer sous peu. | `InviteAccept.tsx` +3 |  |
 | `states.sessionExpired` | Your session has expired. Please sign in again. | Votre session a expiré. Veuillez vous reconnecter. | `workspaceUi.ts` +1 |  |
 | `states.somethingWentWrong` | Something went wrong | Une erreur s'est produite | `States.tsx` |  |
 | `states.technicalDetails` | Technical details | Détails techniques | `States.tsx` |  |
@@ -3123,3 +3120,129 @@ Appears in: `components/marketing/MarketingShell.tsx`
 | `v4nav.menuClose` | Close menu | Fermer le menu | composed |  |
 | `v4nav.menuLabel` | Site menu | Menu du site | `MarketingShell.tsx` |  |
 | `v4nav.skipToContent` | Skip to main content | Aller au contenu principal | `MarketingShell.tsx` |  |
+
+## Surface: Other (context note not curated)
+
+### `agentStream` (5 strings)
+
+Context: No curated context note yet; use the 'where' column and the surface file list to see where the text appears.
+
+Appears in: `components/agent/AgentPrepareWorkspace.tsx`
+
+| key | English source | translation | where | hints |
+|---|---|---|---|---|
+| `agentStream.preparing` | Preparing your guidance… | Préparation de vos conseils… | `AgentPrepareWorkspace.tsx` |  |
+| `agentStream.stop` | Stop | Arrêter | `AgentPrepareWorkspace.tsx` |  |
+| `agentStream.stopped` | This request was stopped. Start a new preparation when you are ready. | Cette demande a été arrêtée. Commencez une nouvelle préparation quand vous êtes prêt. | `AgentPrepareWorkspace.tsx` |  |
+| `agentStream.stopping` | Stopping. Finishing usage recording… | Arrêt en cours. Enregistrement de l’utilisation… | `AgentPrepareWorkspace.tsx` |  |
+| `agentStream.tools` | Using preparation tools… | Utilisation des outils de préparation… | `AgentPrepareWorkspace.tsx` |  |
+
+### `betaPricing` (3 strings)
+
+Context: No curated context note yet; use the 'where' column and the surface file list to see where the text appears.
+
+Appears in: `components/marketing/PricingContent.tsx`, `components/plan/BetaPricingStatement.tsx`
+
+| key | English source | translation | where | hints |
+|---|---|---|---|---|
+| `betaPricing.freeInBeta` | Free in the beta | Gratuit pendant la bêta | `PricingContent.tsx` |  |
+| `betaPricing.planNote` | Plans describe what a beta account can use. Nothing here is on sale. | Les offres décrivent ce qu’un compte bêta peut utiliser. Rien ici n’est en vente. | composed |  |
+| `betaPricing.statement` | Ask4Mo is a free, invitation-only private beta. Nothing can be purchased and no price applies. | Ask4Mo est une bêta privée gratuite, sur invitation uniquement. Rien ne peut être acheté et aucun prix ne s’applique. | `BetaPricingStatement.tsx` |  |
+
+### `providerMode` (9 strings)
+
+Context: No curated context note yet; use the 'where' column and the surface file list to see where the text appears.
+
+Appears in: `components/layout/ProviderModeIndicator.tsx`
+
+| key | English source | translation | where | hints |
+|---|---|---|---|---|
+| `providerMode.label` | AI mode | Mode IA | composed |  |
+| `providerMode.live` | AI: live | IA : en direct | `ProviderModeIndicator.tsx` |  |
+| `providerMode.liveHint` | A live AI provider is configured for this environment. This is configuration, not a health check. | Un fournisseur d’IA en direct est configuré pour cet environnement. Il s’agit d’une configuration, pas d’un contrôle de fonctionnement. | `ProviderModeIndicator.tsx` |  |
+| `providerMode.notConfigured` | AI: not configured | IA : non configurée | `ProviderModeIndicator.tsx` |  |
+| `providerMode.notConfiguredHint` | AI features are not configured on this environment, so Mo and Practice cannot run. | Les fonctions d’IA ne sont pas configurées dans cet environnement ; Mo et l’entraînement ne peuvent donc pas fonctionner. | `ProviderModeIndicator.tsx` |  |
+| `providerMode.offline` | AI: offline test mode | IA : mode test hors ligne | `ProviderModeIndicator.tsx` |  |
+| `providerMode.offlineHint` | No live AI is used here. Answers come from test fixtures and are not real coaching. | Aucune IA en direct n’est utilisée ici. Les réponses proviennent de données de test et ne constituent pas un vrai coaching. | `ProviderModeIndicator.tsx` |  |
+| `providerMode.unknown` | AI: status unknown | IA : état inconnu | `ProviderModeIndicator.tsx` |  |
+| `providerMode.unknownHint` | Ask4Mo could not confirm the AI mode of this environment. | Ask4Mo n’a pas pu confirmer le mode IA de cet environnement. | `ProviderModeIndicator.tsx` |  |
+
+### `recentRuns` (9 strings)
+
+Context: No curated context note yet; use the 'where' column and the surface file list to see where the text appears.
+
+Appears in: `components/agent/RecentRuns.tsx`
+
+| key | English source | translation | where | hints |
+|---|---|---|---|---|
+| `recentRuns.empty` | You have not prepared with Mo yet. | Vous ne vous êtes pas encore préparé avec Mo. | `RecentRuns.tsx` |  |
+| `recentRuns.hint` | Only your own sessions are listed. Open one to continue where you left off. | Seules vos propres sessions sont listées. Ouvrez-en une pour reprendre là où vous vous êtes arrêté. | `RecentRuns.tsx` |  |
+| `recentRuns.loadError` | Your recent sessions could not be loaded. | Vos sessions récentes n’ont pas pu être chargées. | `RecentRuns.tsx` |  |
+| `recentRuns.open` | Open | Ouvrir | `RecentRuns.tsx` |  |
+| `recentRuns.started` | Started {date} | Commencée le {date} | `RecentRuns.tsx` |  |
+| `recentRuns.stateFailed` | Did not complete | Non terminée | `RecentRuns.tsx` |  |
+| `recentRuns.stateReady` | Ready | Prête | `RecentRuns.tsx` |  |
+| `recentRuns.stateStarted` | In progress | En cours | `RecentRuns.tsx` |  |
+| `recentRuns.title` | Your recent preparation with Mo | Votre préparation récente avec Mo | `RecentRuns.tsx` |  |
+
+### `wsTransfer` (53 strings)
+
+Context: No curated context note yet; use the 'where' column and the surface file list to see where the text appears.
+
+Appears in: `components/workspaces/OwnershipTransfer.tsx`, `components/workspaces/TransferAccept.tsx`, `components/workspaces/WorkspaceDetail.tsx`, `components/workspaces/WorkspacesPanel.tsx`
+
+| key | English source | translation | where | hints |
+|---|---|---|---|---|
+| `wsTransfer.acceptButton` | Accept ownership | Accepter la propriété | `TransferAccept.tsx` |  |
+| `wsTransfer.acceptDeclineButton` | Decline proposal | Refuser la proposition | `TransferAccept.tsx` |  |
+| `wsTransfer.acceptDeclinedDone` | Proposal declined. Ownership did not change. | Proposition refusée. La propriété n'a pas changé. | `TransferAccept.tsx` |  |
+| `wsTransfer.acceptDone` | You are now the owner of this workspace. | Vous êtes maintenant propriétaire de cet espace de travail. | `TransferAccept.tsx` |  |
+| `wsTransfer.acceptFormerRole` | The current owner becomes {role}. | La personne propriétaire actuelle devient {role}. | `OwnershipTransfer.tsx` +1 |  |
+| `wsTransfer.acceptFrom` | Proposed by | Proposé par | `TransferAccept.tsx` |  |
+| `wsTransfer.acceptGone` | This proposal expired, was cancelled or has already been answered. Ask the owner to send a new one. | Cette proposition a expiré, a été annulée ou a déjà reçu une réponse. Demandez à la personne propriétaire d'en envoyer une nouvelle. | `TransferAccept.tsx` |  |
+| `wsTransfer.acceptIntro` | Review this proposal before you decide. Nothing changes unless you accept. | Examinez cette proposition avant de décider. Rien ne change tant que vous n'acceptez pas. | `TransferAccept.tsx` |  |
+| `wsTransfer.acceptMissingToken` | This link is incomplete. Open the link from your email again. | Ce lien est incomplet. Ouvrez à nouveau le lien reçu par e-mail. | `TransferAccept.tsx` |  |
+| `wsTransfer.acceptPageTitle` | Accept ownership of a workspace? | Accepter la propriété d'un espace de travail ? | `TransferAccept.tsx` |  |
+| `wsTransfer.acceptSharesNote` | Nobody's access to shared items changes. | L'accès aux éléments partagés ne change pour personne. | `TransferAccept.tsx` |  |
+| `wsTransfer.acceptSignIn` | Sign in with the email address that received this proposal, then open the link again. | Connectez-vous avec l'adresse e-mail qui a reçu cette proposition, puis ouvrez à nouveau le lien. | `TransferAccept.tsx` |  |
+| `wsTransfer.acceptVerifyFirst` | Verify your email address first, then open this link again. | Vérifiez d'abord votre adresse e-mail, puis ouvrez à nouveau ce lien. | `TransferAccept.tsx` |  |
+| `wsTransfer.acceptWorkspace` | Workspace | Espace de travail | `TransferAccept.tsx` |  |
+| `wsTransfer.acceptWrongAccount` | This proposal was issued to a different account or email address. Sign in with the right one. | Cette proposition a été adressée à un autre compte ou à une autre adresse e-mail. Connectez-vous avec le bon compte. | `TransferAccept.tsx` |  |
+| `wsTransfer.acceptYouBecome` | You become the only owner. You can archive or delete the workspace, change roles and remove anyone. | Vous devenez la seule personne propriétaire. Vous pouvez archiver ou supprimer l'espace de travail, modifier les rôles et retirer n'importe qui. | `TransferAccept.tsx` |  |
+| `wsTransfer.cancelAction` | Cancel proposal | Annuler la proposition | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.cancelNote` | Cancelling leaves you as the owner. | L'annulation vous laisse propriétaire. | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.cancelledNotice` | Proposal cancelled. Ownership did not change. | Proposition annulée. La propriété n'a pas changé. | `WorkspaceDetail.tsx` +1 |  |
+| `wsTransfer.confirmNameLabel` | Type the workspace name to confirm | Saisissez le nom de l'espace de travail pour confirmer | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.consequenceExpiry` | The proposal expires after 7 days. You can cancel it until it is accepted, and {name} can decline it. | La proposition expire après 7 jours. Vous pouvez l'annuler tant qu'elle n'est pas acceptée, et {name} peut la refuser. | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.consequenceNewOwner` | {name} becomes the only owner. They can archive or delete the workspace, change roles and remove anyone. | {name} devient la seule personne propriétaire. Elle peut archiver ou supprimer l'espace de travail, modifier les rôles et retirer n'importe qui. | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.consequenceShares` | Nobody's access to shared items changes. Shared items stay shared until the people who shared them stop sharing. | L'accès aux éléments partagés ne change pour personne. Les éléments partagés le restent jusqu'à ce que leurs auteurs arrêtent le partage. | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.consequenceYou` | You become {role} and can no longer archive, delete or transfer the workspace. | Vous devenez {role} et ne pouvez plus archiver, supprimer ni transférer l'espace de travail. | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.consequencesTitle` | What happens if they accept | Ce qui se passe si la proposition est acceptée | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.declineAction` | Decline | Refuser | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.declinedNotice` | Proposal declined. Ownership did not change. | Proposition refusée. La propriété n'a pas changé. | `WorkspaceDetail.tsx` +1 |  |
+| `wsTransfer.errRecipient` | The new owner must be another active member with a verified email address, and the workspace name must match. | La nouvelle personne propriétaire doit être un autre membre actif avec une adresse e-mail vérifiée, et le nom de l'espace de travail doit correspondre. | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.errStepUpFailed` | That password was not accepted. | Ce mot de passe n'a pas été accepté. | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.errStepUpUnavailable` | Password confirmation is not available for this account, so ownership cannot be transferred from it. | La confirmation par mot de passe n'est pas disponible pour ce compte : la propriété ne peut pas être transférée depuis celui-ci. | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.keepAdmin` | an admin | administrateur | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.keepMember` | a member | membre | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.keepRoleLabel` | After the transfer I will be | Après le transfert, je serai | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.listProposer` | You proposed this transfer | Vous avez proposé ce transfert | composed |  |
+| `wsTransfer.listRecipient` | Offered to you | Proposé à vous | composed |  |
+| `wsTransfer.listTitle` | Ownership transfers | Transferts de propriété | `WorkspacesPanel.tsx` |  |
+| `wsTransfer.loadFailed` | The ownership transfer status could not be loaded. | L'état du transfert de propriété n'a pas pu être chargé. | `WorkspaceDetail.tsx` +1 |  |
+| `wsTransfer.openWorkspace` | Open the workspace | Ouvrir l'espace de travail | `OwnershipTransfer.tsx` +1 |  |
+| `wsTransfer.passwordHint` | Needed to authorise a transfer. It is checked for this session only and is never stored. | Nécessaire pour autoriser un transfert. Il est vérifié pour cette session uniquement et n'est jamais enregistré. | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.passwordLabel` | Confirm your password | Confirmez votre mot de passe | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.pendingBadge` | Transfer pending | Transfert en attente | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.proposeAction` | Transfer ownership | Transférer la propriété | composed |  |
+| `wsTransfer.proposeIntro` | A transfer takes two steps. You propose it, then {name} must accept while signed in with a verified account. Nothing changes until they accept. | Un transfert se fait en deux étapes. Vous le proposez, puis {name} doit l'accepter depuis un compte vérifié. Rien ne change tant que la personne n'a pas accepté. | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.proposeTitle` | Transfer ownership to {name}? | Transférer la propriété à {name} ? | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.proposedNotice` | Proposal created. The new owner was sent a notice and must accept to complete the transfer. | Proposition créée. La personne a reçu un avis et doit accepter pour finaliser le transfert. | `WorkspaceDetail.tsx` |  |
+| `wsTransfer.proposedNoticeNotSent` | Proposal created, but the notice email could not be handed to the mail provider. You can cancel and propose again. | Proposition créée, mais l'e-mail d'avis n'a pas pu être remis au fournisseur de messagerie. Vous pouvez l'annuler et la proposer à nouveau. | `WorkspaceDetail.tsx` |  |
+| `wsTransfer.proposerBody` | You proposed to transfer ownership to {name}. Nothing has changed yet. The proposal expires on {date}. | Vous avez proposé de transférer la propriété à {name}. Rien n'a encore changé. La proposition expire le {date}. | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.proposerKeeps` | If {name} accepts, you will be {role}. | Si {name} accepte, vous serez {role}. | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.proposerTitle` | Ownership transfer pending | Transfert de propriété en attente | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.recipientBody` | {name} proposed to transfer ownership of this workspace to you. Accepting makes you its only owner. The proposal expires on {date}. | {name} propose de vous transférer la propriété de cet espace de travail. En acceptant, vous en devenez la seule personne propriétaire. La proposition expire le {date}. | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.recipientHow` | To accept, open the link in the email sent to your verified address. Declining here leaves ownership unchanged. | Pour accepter, ouvrez le lien dans l'e-mail envoyé à votre adresse vérifiée. Refuser ici laisse la propriété inchangée. | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.recipientTitle` | Ownership transfer offered to you | On vous propose la propriété | `OwnershipTransfer.tsx` |  |
+| `wsTransfer.sendProposal` | Send proposal | Envoyer la proposition | `OwnershipTransfer.tsx` |  |
