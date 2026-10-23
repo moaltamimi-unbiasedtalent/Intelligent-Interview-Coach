@@ -76,6 +76,8 @@ def ci_layer(pid: str) -> str:
         return "main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI"
     if st and st[0].startswith(("PARTIAL", "DELIVERED")):
         return "historical documentation CI recorded; current baseline CI FAIL"
+    if st and st[1] == "codex/r1-development":
+        return "[PR #265 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265/checks); no acceptance inferred"
     return "NOT RUN (no implementation PR)"
 
 

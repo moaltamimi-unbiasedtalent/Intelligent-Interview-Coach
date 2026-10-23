@@ -138,7 +138,7 @@
   },
   "01C": {
    "engineering": "LOCAL IMPLEMENTED",
-   "ci": "NOT RUN (no implementation PR)",
+   "ci": "[PR #265 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265/checks); no acceptance inferred",
    "live_staging": {
     "state": "NOT IN LEDGER",
     "description": "n/a",
@@ -527,7 +527,7 @@
   },
   "04C": {
    "engineering": "LOCAL IMPLEMENTED",
-   "ci": "NOT RUN (no implementation PR)",
+   "ci": "[PR #265 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265/checks); no acceptance inferred",
    "live_staging": {
     "state": "NOT IN LEDGER",
     "description": "NOT RUN (streaming on staging)",
@@ -939,7 +939,7 @@
   },
   "07B": {
    "engineering": "PREFLIGHT ONLY",
-   "ci": "NOT RUN (no implementation PR)",
+   "ci": "[PR #265 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265/checks); no acceptance inferred",
    "live_staging": {
     "state": "NOT IN LEDGER",
     "description": "NOT RUN (live grounding; OD-BUDGET)",
@@ -960,7 +960,7 @@
   },
   "07C": {
    "engineering": "LOCAL SAMPLE RECORDED",
-   "ci": "NOT RUN (no implementation PR)",
+   "ci": "[PR #265 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265/checks); no acceptance inferred",
    "live_staging": {
     "state": "NOT IN LEDGER",
     "description": "NOT RUN (local synthetic OCR measured; hosted quality NOT VERIFIED)",

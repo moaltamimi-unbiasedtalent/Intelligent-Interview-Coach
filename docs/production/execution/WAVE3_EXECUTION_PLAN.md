@@ -37,7 +37,7 @@ A package is finished only when all five layers are. The layers are never merged
 | 01D | MERGED (PR #248 merge c5e54fd6) | main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI | n/a | Security review of tool authorization | PG-03 (REVIEW-01 R4/R5) |
 | 01B0 | MERGED (PR #217, merge 0d75acd) | main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI | n/a | none | PG-12 IN PROGRESS |
 | 01B | MERGED (PR #220, merge 335d303) | main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI | NOT RUN (Docker image with prompts/ not built) | none | PG-12 IN PROGRESS (01C outstanding; 01D merged) |
-| 01C | LOCAL IMPLEMENTED | NOT RUN (no implementation PR) | n/a | none | PG-12 (REVIEW-03) |
+| 01C | LOCAL IMPLEMENTED | [PR #265 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265/checks); no acceptance inferred | n/a | none | PG-12 (REVIEW-03) |
 | 02K | MERGED (PR #215, merge 657e456) | main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI | n/a | none | PG-05 IN PROGRESS (contract) |
 | 02A | MERGED (PR #221, merge 191cbc5) | main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI | NOT RUN (hosted volumes, PostgreSQL, multi-worker; OD-HOSTED) | none | PG-05 IN PROGRESS |
 | 02B | MERGED (PR #227 merge 6acdbc11, PR #236 merge f78773df) | main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI | NOT RUN (production embedder, hosted refusal; OD-HOSTED, OD-EMBED) | Embedder choice and benchmark approval (OD-EMBED, OD-BUDGET) | PG-05 NOT MET (retrieval quality unmeasured) |
@@ -54,7 +54,7 @@ A package is finished only when all five layers are. The layers are never merged
 | 03E2 | MERGED (PR #247 merge 6034835e, PR #251 merge bc5fe4f6) | main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI | NOT RUN | Export formats (OD-REPORT-EXPORT) | PG-14 |
 | 04A | MERGED (PR #234, merge 4d7e57a) | main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI | NOT RUN (restart on staging) | Native review of 116 strings (LG-10/11) | PG-13 IN PROGRESS (06B merged; staging and human review outstanding) |
 | 04B | MERGED (PR #233 merge e4aed133, PR #262 merge 103611ee) | main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI | NOT RUN (PostgreSQL invitation race and row locks) | Transfer rules (OD-WS-TRANSFER); native review | PG-13 IN PROGRESS (06B merged; staging and human review outstanding) |
-| 04C | LOCAL IMPLEMENTED | NOT RUN (no implementation PR) | NOT RUN (streaming on staging) | none | PG-06 |
+| 04C | LOCAL IMPLEMENTED | [PR #265 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265/checks); no acceptance inferred | NOT RUN (streaming on staging) | none | PG-06 |
 | 04D | MERGED (PR #242 merge 67ef7c46, PR #253 merge 85a88c70) | main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI | NOT RUN (journeys on a staging stack) | none | PG-06 |
 | 04E | MERGED (PR #228, merge a763fdf) | main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI | NOT RUN (first-admin bootstrap, live Google) | Invitation email and issuer decisions (OPEN) | PG-02 IN PROGRESS (05D merged; live verification outstanding) |
 | 04F | MERGED (PR #255 merge 7c400efe) | main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI | NOT RUN (browser dictation check) | Legal reviewer and test participants | PG-04 |
@@ -72,8 +72,8 @@ A package is finished only when all five layers are. The layers are never merged
 | 06G | MERGED (PR #259 merge 3e8e2ba4) | main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI | NOT RUN (live Mo outputs) | Independent reviewers and participants (OD-BUDGET, OD-GATE-THRESHOLDS) | PG-07 BLOCKED |
 | 06H | MERGED (PR #229, merge 5d588a1) | main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI | NOT RUN (hosted fail-closed behaviour) | Approvers named for each gate (OD-LANG-03/04) | PG-10 IN PROGRESS; LG-13/LG-14 enforcement merged, zero languages qualified |
 | 07A | MERGED (PR #243 merge 792871f2, PR #264 merge dfd59edc) | main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI | n/a | none | PG-10 |
-| 07B | PREFLIGHT ONLY | NOT RUN (no implementation PR) | NOT RUN (live grounding; OD-BUDGET) | none | PG-03 |
-| 07C | LOCAL SAMPLE RECORDED | NOT RUN (no implementation PR) | NOT RUN (local synthetic OCR measured; hosted quality NOT VERIFIED) | none | residual live verification |
+| 07B | PREFLIGHT ONLY | [PR #265 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265/checks); no acceptance inferred | NOT RUN (live grounding; OD-BUDGET) | none | PG-03 |
+| 07C | LOCAL SAMPLE RECORDED | [PR #265 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265/checks); no acceptance inferred | NOT RUN (local synthetic OCR measured; hosted quality NOT VERIFIED) | none | residual live verification |
 | 08A0 | MERGED (PR #250 merge 6eaf246f) | main 3e8e2ba4 CI FAIL (06F, run 39970568206); local repair awaiting PR CI | n/a | none | PG-15 (evidence pipeline) |
 | 08A | NOT STARTED | NOT RUN (no implementation PR) | NOT RUN | Owner go/no-go | PG-15 |
 <!-- MATRIX:END -->
