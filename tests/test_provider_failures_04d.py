@@ -61,6 +61,13 @@ def _isolation(monkeypatch):
 
     act = LA.Activation(mode=LA.MODE_LABELLED, offered=tuple(LA.ACTIVE_CANDIDATE_LOCALES), qualified=(), locales={}, file_error=None)
     monkeypatch.setattr(LA, "current", lambda *, today=None: act)
+    yield
+    # create_app() installs the process-wide demo provider control when ASK4MO_PROVIDER_MODE is set. monkeypatch restores the variable but not that control, and a leaked control
+    # makes every later test in the same worker (here tests/test_ai_budget_probe_and_scripts_05c.py) fail with guard_conflict. Remove it BEFORE monkeypatch undoes its patches.
+    from src.demo_live.guard import ProviderControl
+
+    if ProviderControl._active is not None:
+        ProviderControl._active.uninstall()
 
 
 def _stack(variant: str, *, env: str = "test"):
