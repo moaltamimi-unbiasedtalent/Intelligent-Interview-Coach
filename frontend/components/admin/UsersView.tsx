@@ -3,9 +3,11 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import Link from "@/components/ui/VerifiedLink";
+import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/api/client";
-import { P } from "@/lib/admin/capabilities";
+import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
 import type { AdminUserQuery } from "@/lib/admin/types";
+import { BULK_MAX, UsersBulkPanel } from "./UsersBulkPanel";
 import { Pager, Panel, PermissionGate, ResourceState, btn, field, useAdminResource, ScrollRegion } from "./ui";
 
 const STATUSES = ["active", "deactivated", "deletion_requested"];
@@ -24,11 +26,15 @@ export function UsersView() {
 function Body() {
   const [draft, setDraft] = useState<AdminUserQuery>({});
   const [query, setQuery] = useState<AdminUserQuery>({ page: 1 });
+  const canBulk = hasAnyPermission(adminPermissions(useAuthOptional()?.account), [P.sessionsRevoke, P.usersManage]);
+  const [picked, setPicked] = useState<number[]>([]);
+  const toggle = (id: number) => setPicked((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : cur.length >= BULK_MAX ? cur : [...cur, id]));
   const loaded = useAdminResource(() => api.admin.users({ ...query, page_size: 25 }), [JSON.stringify(query)]);
   const set = (k: keyof AdminUserQuery) => (e: { target: { value: string } }) => setDraft({ ...draft, [k]: e.target.value });
   const submit = (e: FormEvent) => {
     e.preventDefault();
     setQuery({ ...draft, page: 1 });
+    setPicked([]);
   };
   return (
     <div className="grid gap-4">
@@ -52,6 +58,7 @@ function Body() {
           <button type="submit" className={btn}>Search</button>
         </form>
       </Panel>
+      {canBulk ? <UsersBulkPanel selected={picked} onClear={() => setPicked([])} /> : null}
       <ResourceState loaded={loaded}>
         {loaded.state === "ready" ? (
           <Panel title="Accounts (metadata only)">
@@ -63,6 +70,15 @@ function Body() {
                   <caption className="sr-only">Accounts</caption>
                   <thead>
                     <tr className="text-xs text-muted">
+                      {canBulk ? (
+                        <th scope="col" className="py-1 pr-2 font-medium">
+                          <input type="checkbox" aria-label="Select all accounts on this page"
+                            checked={loaded.data.items.length > 0 && loaded.data.items.every((u) => picked.includes(u.user_id))}
+                            onChange={(e) => setPicked(e.target.checked
+                              ? Array.from(new Set([...picked, ...loaded.data.items.map((u) => u.user_id)])).slice(0, BULK_MAX)
+                              : picked.filter((id) => !loaded.data.items.some((u) => u.user_id === id)))} />
+                        </th>
+                      ) : null}
                       {["Account", "Status", "Role", "Tier", "Workspaces", "Sessions", "Last active"].map((c) => (
                         <th key={c} scope="col" className="py-1 pr-4 font-medium">{c}</th>
                       ))}
@@ -71,6 +87,11 @@ function Body() {
                   <tbody>
                     {loaded.data.items.map((u) => (
                       <tr key={u.user_id} className="border-t border-default">
+                        {canBulk ? (
+                          <td className="py-1 pr-2">
+                            <input type="checkbox" aria-label={`Select account ${u.user_id}`} checked={picked.includes(u.user_id)} onChange={() => toggle(u.user_id)} />
+                          </td>
+                        ) : null}
                         <th scope="row" className="py-1 pr-4 text-left font-medium [overflow-wrap:anywhere]">
                           <Link href={`/admin/users/${u.user_id}`} className="underline underline-offset-2">
                             {u.email ?? `Account ${u.user_id}`}

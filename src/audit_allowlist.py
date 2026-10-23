@@ -55,6 +55,10 @@ ALLOWED_CONTEXT_KEYS: Final[frozenset[str]] = frozenset({
     "visible_to_members", "window", "window_seconds",
     # nested keys seen inside the objects above (a scope, a before/after summary, a setting snapshot)
     "browser_tts_allowed", "measure", "occupation_level", "pay_period", "period", "source_ref", "stt_enabled",
+    # 03C bulk user actions: batch counters, the request hash (a hex digest) and the closed reason-code vocabulary used as keys of ``skipped_by_reason`` / ``failed_by_reason``
+    # (src/admin_users/bulk.py: SELF, HIGHER, LAST_ADMIN, NOT_FOUND, NO_SESSIONS, NO_LINKS, APPLY_ERROR). All are identifiers or counts; no free text.
+    "applied", "apply_error", "batch_id", "failed", "failed_by_reason", "higher_authority", "last_active_platform_admin", "no_live_sessions", "no_pending_verification",
+    "not_found", "request_hash", "requested", "self", "skipped", "skipped_by_reason", "unique",
     # this module's own marker
     "dropped_keys",
 })

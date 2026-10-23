@@ -219,6 +219,8 @@ _JUSTIFIED = {
     "subject_user_id": "an integer identifier",
     "request_type": "a code-defined enum",
     "request_public_id": "an opaque public id",
+    "failed_by_reason": "03C bulk batch: an object mapping a code-defined reason code (src/admin_users/bulk.py) to an integer count; every key is itself allow-listed",
+    "skipped_by_reason": "03C bulk batch: an object mapping a code-defined reason code (src/admin_users/bulk.py) to an integer count; every key is itself allow-listed",
 }
 
 

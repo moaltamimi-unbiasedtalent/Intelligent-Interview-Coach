@@ -128,6 +128,31 @@ export interface AdminUserActionResult {
   mail_accepted?: boolean | null;
   revision: string;
 }
+/** 03C bulk Admin user actions (low-harm, reversible allow-list; OD-BULK-ACTIONS is provisional). Counts and reason codes only. */
+export type BulkUserActionName = "force-signout" | "expire-verification";
+export interface BulkUserPreview {
+  action: BulkUserActionName;
+  requested: number;
+  unique: number;
+  eligible: number;
+  excluded: number;
+  excluded_by_reason: Record<string, number>;
+  max_batch: number;
+  preview_revision: string;
+}
+export interface BulkUserResult {
+  action: BulkUserActionName;
+  batch_id: string;
+  status: "complete" | "partial" | "none_applied";
+  requested: number;
+  unique: number;
+  applied: number;
+  skipped: number;
+  skipped_by_reason: Record<string, number>;
+  failed: number;
+  failed_by_reason: Record<string, number>;
+  replayed: boolean;
+}
 export interface AdminAuditEntry {
   event_type: string;
   result: string;
