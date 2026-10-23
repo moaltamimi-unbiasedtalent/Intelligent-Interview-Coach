@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "@/components/ui/VerifiedLink"; // soft-navigation loss recovery (see lib/navigation/verified.ts)
 import { api } from "@/lib/api/client";
 import { ApiError, stateKeyForError } from "@/lib/api/errors";
-import { useT } from "@/components/i18n/I18nProvider";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/Button";
@@ -14,7 +14,7 @@ import type { HistoryAccess } from "@/lib/api/types";
 
 /** User-scoped interview history from /history/interviews. In-place recoverable (P10B-W9.2). */
 export function HistoryClient() {
-  const t = useT();
+  const { t, formatDate } = useI18n();
   const [rows, setRows] = useState<Array<Record<string, unknown>> | null>(null);
   const [access, setAccess] = useState<HistoryAccess | undefined>(undefined);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -77,7 +77,7 @@ export function HistoryClient() {
               const role = (row.target_role as string | undefined) ?? null;
               const questions = row.questions as number | undefined;
               const created = row.created_at
-                ? new Date(String(row.created_at)).toLocaleDateString()
+                ? formatDate(String(row.created_at))
                 : null;
               // The role is already the row title; repeating it in the metadata line is noise.
               const meta = [

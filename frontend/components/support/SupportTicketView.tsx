@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import Link from "@/components/ui/VerifiedLink";
-import { useT } from "@/components/i18n/I18nProvider";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Field";
@@ -13,7 +13,7 @@ import type { SupportTicketDetail } from "@/lib/api/types";
 import { MESSAGE_MAX, categoryKey, statusKey } from "./supportLabels";
 
 export function SupportTicketView({ publicId }: { publicId: string }) {
-  const t = useT();
+  const { t, formatDate } = useI18n();
   const [ticket, setTicket] = useState<SupportTicketDetail | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "missing" | "error">("loading");
   const [reply, setReply] = useState("");
@@ -70,7 +70,7 @@ export function SupportTicketView({ publicId }: { publicId: string }) {
         <dt className="text-muted">{t("support.colStatus")}</dt>
         <dd>{t(statusKey(ticket.status))}</dd>
         <dt className="text-muted">{t("support.colUpdated")}</dt>
-        <dd>{ticket.updated_at ? new Date(ticket.updated_at).toLocaleString() : ""}</dd>
+        <dd>{ticket.updated_at ? formatDate(ticket.updated_at, { dateStyle: "medium", timeStyle: "short" }) : ""}</dd>
       </dl>
 
       <h2 className="mb-2 text-lg font-semibold">{t("support.conversation")}</h2>
@@ -79,7 +79,7 @@ export function SupportTicketView({ publicId }: { publicId: string }) {
           <li key={m.id} className="rounded-lg border border-border bg-surface px-4 py-3">
             <p className="text-xs font-semibold text-muted">
               {m.author_kind === "support" ? t("support.team") : t("support.you")}
-              {m.created_at ? ` · ${new Date(m.created_at).toLocaleString()}` : ""}
+              {m.created_at ? ` · ${formatDate(m.created_at, { dateStyle: "medium", timeStyle: "short" })}` : ""}
             </p>
             {/* Plain text only: React escapes markup, so HTML/script typed by anyone is shown as text. */}
             <p className="mt-1 whitespace-pre-wrap [overflow-wrap:anywhere]">{m.body}</p>

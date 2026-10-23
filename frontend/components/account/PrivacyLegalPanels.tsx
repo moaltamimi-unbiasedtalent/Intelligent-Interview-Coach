@@ -5,7 +5,7 @@ import type { FormEvent } from "react";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import type { PrivacyRequestList } from "@/lib/api/types";
-import { useT } from "@/components/i18n/I18nProvider";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { Button } from "@/components/ui/Button";
 import { ErrorState, LoadingState } from "@/components/ui/States";
 import { useResource } from "@/lib/hooks/useResource";
@@ -28,7 +28,7 @@ const RESULT_KEY: Record<string, string> = {
 const field = "min-h-[44px] w-full rounded border border-border bg-surface px-2 text-sm text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
 
 export function PrivacyRequestsPanel() {
-  const t = useT();
+  const { t, formatDate } = useI18n();
   const list = useResource<PrivacyRequestList>((signal) => api.privacy.requests({ signal }));
   const [type, setType] = useState("correction");
   const [note, setNote] = useState("");
@@ -81,7 +81,7 @@ export function PrivacyRequestsPanel() {
             <li key={r.public_id} className="rounded border border-border p-3 text-sm text-foreground">
               <p className="font-medium">{t(`dataPrivacy.${TYPES.find(([v]) => v === r.request_type)?.[1] ?? "prTypeOther"}`)}</p>
               <p>{t(`dataPrivacy.${STATUS_KEY[r.status] ?? "prStatusSubmitted"}`)}{r.result_category ? `: ${t(`dataPrivacy.${RESULT_KEY[r.result_category] ?? "prResultInformation"}`)}` : ""}</p>
-              <p className="text-xs text-muted">{r.public_id}{r.created_at ? ` · ${new Date(r.created_at).toLocaleDateString()}` : ""}</p>
+              <p className="text-xs text-muted">{r.public_id}{r.created_at ? ` · ${formatDate(r.created_at)}` : ""}</p>
             </li>
           ))}
         </ul>
@@ -91,7 +91,7 @@ export function PrivacyRequestsPanel() {
 }
 
 export function LegalVersionsPanel() {
-  const t = useT();
+  const { t, formatDate } = useI18n();
   const legal = useResource((signal) => api.privacy.legal({ signal }));
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -116,10 +116,10 @@ export function LegalVersionsPanel() {
         <div key={d.code} className="rounded border border-border p-3 text-sm text-foreground">
           <p className="font-medium">{d.title}</p>
           <p>{t("dataPrivacy.legalCurrentVersion", { version: d.current_version ?? "-" })}</p>
-          <p className="text-muted">{d.effective_at ? t("dataPrivacy.legalEffective", { date: new Date(d.effective_at).toLocaleDateString() }) : t("dataPrivacy.legalEffectiveUnknown")}</p>
+          <p className="text-muted">{d.effective_at ? t("dataPrivacy.legalEffective", { date: formatDate(d.effective_at) }) : t("dataPrivacy.legalEffectiveUnknown")}</p>
           {d.version_is_baseline ? <p className="text-xs text-muted">{t("dataPrivacy.legalBaseline")}</p> : null}
           {d.accepted_current ? (
-            <p>{t("dataPrivacy.legalAcceptedOn", { date: d.last_acceptance?.accepted_at ? new Date(d.last_acceptance.accepted_at).toLocaleDateString() : "" })}</p>
+            <p>{t("dataPrivacy.legalAcceptedOn", { date: d.last_acceptance?.accepted_at ? formatDate(d.last_acceptance.accepted_at) : "" })}</p>
           ) : (
             <>
               <p>{t("dataPrivacy.legalNotAcceptedCurrent")}</p>

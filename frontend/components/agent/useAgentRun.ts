@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
+import { useT } from "@/components/i18n/I18nProvider";
 import type {
   AgentRunRequest,
   AgentRunResponse,
@@ -36,15 +37,15 @@ export interface UseAgentRun {
   clearError: () => void;
 }
 
-function toError(e: unknown): AgentError {
+function toError(e: unknown, t: (key: string) => string): AgentError {
   const err = e as ApiError;
   const notFound = err?.status === 404;
   return {
     paused: err?.kind === "paused",
     stateKey: err?.kind === "aiNotConfigured" ? "states.aiNotConfigured" : err?.kind === "aiUnavailable" ? "states.aiProviderUnavailable" : err?.kind === "unavailable" ? "states.serviceUnavailable" : undefined,
     message: notFound
-      ? "This preparation session can no longer be resumed."
-      : err?.userMessage ?? "Something went wrong. Please try again.",
+      ? t("prepare.sessionGone")
+      : err?.userMessage ?? t("states.genericError"),
     requestId: err?.requestId ?? null,
     notFound,
   };
@@ -57,6 +58,7 @@ function toError(e: unknown): AgentError {
  * never placed in the URL or localStorage.
  */
 export function useAgentRun(): UseAgentRun {
+  const t = useT();
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlRunId = searchParams.get("run");
@@ -87,7 +89,7 @@ export function useAgentRun(): UseAgentRun {
       .then((r) => setRun(r))
       .catch((e) => {
         if (e instanceof DOMException && e.name === "AbortError") return;
-        setError(toError(e));
+        setError(toError(e, t));
       })
       .finally(() => setRestoring(false));
     return () => ctrl.abort();
@@ -104,13 +106,13 @@ export function useAgentRun(): UseAgentRun {
         const next = await fn();
         setRunAndUrl(next);
       } catch (e) {
-        setError(toError(e));
+        setError(toError(e, t));
       } finally {
         inFlight.current = false;
         setBusy(false);
       }
     },
-    [setRunAndUrl],
+    [setRunAndUrl, t],
   );
 
   const start = useCallback(

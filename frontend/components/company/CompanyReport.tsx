@@ -48,7 +48,7 @@ const PROVIDER_LABEL: Record<CompanyProviderState, string> = {
 };
 
 export function CompanyReport({ report }: { report: CompanyIntelligenceReport }) {
-  const { t } = useI18n();
+  const { t, formatDate } = useI18n();
   const sourceById = new Map(report.sources.map((s) => [s.id, s]));
 
   return (
@@ -82,7 +82,7 @@ export function CompanyReport({ report }: { report: CompanyIntelligenceReport })
               <Row label={t("company.locationLabel")} value={report.identity.location} />
             ) : null}
             {report.snapshot.retrieved_at ? (
-              <Row label={t("company.retrieved")} value={formatDate(report.snapshot.retrieved_at)} />
+              <Row label={t("company.retrieved")} value={localDate(formatDate, report.snapshot.retrieved_at)} />
             ) : null}
           </dl>
         </CardBody>
@@ -260,7 +260,7 @@ function SubList({ title, claims, sources }: {
 }
 
 function SourceItem({ source }: { source: CompanySourceRef }) {
-  const { t } = useI18n();
+  const { t, formatDate } = useI18n();
   return (
     <li className="flex flex-col gap-0.5 border-b border-border pb-2 last:border-0">
       <div className="flex flex-wrap items-baseline gap-2">
@@ -276,7 +276,7 @@ function SourceItem({ source }: { source: CompanySourceRef }) {
         </span>
       </div>
       {source.retrieved_at ? (
-        <span className="text-xs text-muted">{t("company.retrieved")}: {formatDate(source.retrieved_at)}</span>
+        <span className="text-xs text-muted">{t("company.retrieved")}: {localDate(formatDate, source.retrieved_at)}</span>
       ) : null}
     </li>
   );
@@ -293,7 +293,7 @@ function limitationText(t: (k: string) => string, code: string): string {
   return map[code] ? t(map[code]) : code;
 }
 
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? iso : d.toISOString().slice(0, 10);
+/** Locale-aware date (interface language); an unparseable value is shown as received. */
+function localDate(fmt: (v: string, o?: Intl.DateTimeFormatOptions) => string, iso: string): string {
+  return Number.isNaN(new Date(iso).getTime()) ? iso : fmt(iso, { dateStyle: "medium" });
 }

@@ -25,7 +25,7 @@ import { AgentProfileSelector, DEFAULT_PROFILE, usageSummaryLine } from "./usage
 import { JourneyChrome, PreparationChecklist } from "./JourneyChrome";
 import { FeedbackControl } from "@/components/feedback/FeedbackControl";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
-import { useT } from "@/components/i18n/I18nProvider";
+import { useI18n, useT } from "@/components/i18n/I18nProvider";
 import { DocumentPicker } from "@/components/documents/DocumentPicker";
 import type { AgentProfile } from "@/lib/api/types";
 import type { PrepareDraft } from "@/lib/prepareDraft";
@@ -57,7 +57,7 @@ function researchFlag(): boolean | undefined {
 
 /** Candidate-facing Agent Coach — the LangGraph agent behind the Precision Coach UI. */
 export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: PrepareDraft | null }) {
-  const t = useT();
+  const { t, locale } = useI18n();
   const { run, busy, restoring, error, runId, start, send, resume, reset, clearError } = useAgentRun();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [mobileTab, setMobileTab] = useState<"coach" | "prep">("coach");
@@ -160,9 +160,9 @@ export function AgentPrepareWorkspace({ initialDraft }: { initialDraft?: Prepare
         />
       )}
 
-      {!busy && !run.awaiting_human_input && usageSummaryLine(run, t) ? (
+      {!busy && !run.awaiting_human_input && usageSummaryLine(run, t, locale) ? (
         <p className="mt-3 text-xs text-muted" role="status" aria-label={t("prepare.runUsageAria")}>
-          {usageSummaryLine(run, t)}
+          {usageSummaryLine(run, t, locale)}
         </p>
       ) : null}
 

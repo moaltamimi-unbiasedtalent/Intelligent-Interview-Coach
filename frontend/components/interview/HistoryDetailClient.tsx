@@ -9,11 +9,11 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/Button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/States";
 import { ReportView, type Report } from "@/components/interview/ReportView";
-import { useT } from "@/components/i18n/I18nProvider";
+import { useI18n } from "@/components/i18n/I18nProvider";
 
 /** A single completed interview from /history/interviews/{id} — user-scoped. */
 export function HistoryDetailClient({ reportId }: { reportId: string }) {
-  const t = useT();
+  const { t, formatDate } = useI18n();
   const [interview, setInterview] = useState<InterviewDetail | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "notfound" | "restricted" | "error">("loading");
   const [error, setError] = useState<{ message: string; requestId?: string | null } | null>(null);
@@ -64,7 +64,7 @@ export function HistoryDetailClient({ reportId }: { reportId: string }) {
   }, [load]);
 
   const role = (interview?.configuration?.target_role as string | undefined) ?? null;
-  const created = interview?.created_at ? new Date(interview.created_at).toLocaleString() : null;
+  const created = interview?.created_at ? formatDate(interview.created_at, { dateStyle: "medium", timeStyle: "short" }) : null;
   const report = (interview?.report?.report ?? null) as Report | null;
 
   return (

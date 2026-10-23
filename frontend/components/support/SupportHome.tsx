@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "@/components/ui/VerifiedLink";
-import { useT } from "@/components/i18n/I18nProvider";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
@@ -21,7 +21,7 @@ function safeFrom(raw: string | null): string | undefined {
 }
 
 export function SupportHome() {
-  const t = useT();
+  const { t, formatDate } = useI18n();
   const params = useSearchParams();
   const [category, setCategory] = useState<SupportCategory | "">("");
   const [subject, setSubject] = useState("");
@@ -190,7 +190,7 @@ export function SupportHome() {
                   </th>
                   <td className="py-2 pr-4">{t(categoryKey(it.category))}</td>
                   <td className="py-2 pr-4">{t(statusKey(it.status))}</td>
-                  <td className="py-2 pr-4">{it.updated_at ? new Date(it.updated_at).toLocaleString() : ""}</td>
+                  <td className="py-2 pr-4">{it.updated_at ? formatDate(it.updated_at, { dateStyle: "medium", timeStyle: "short" }) : ""}</td>
                 </tr>
               ))}
             </tbody>

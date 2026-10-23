@@ -12,7 +12,9 @@ jobs:
   nextjs-e2e:
     name: Next.js Playwright (primary)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # The serial suite (workers: 1) grew with each package: 506 tests took 15.3 minutes on this runner, so the previous 20-minute ceiling cancelled the job (not a test failure) once the suite
+    # passed about 650 tests. The ceiling is a runaway guard, not a performance budget: tests, retries and per-test timeouts are unchanged. Shard the suite if it keeps growing.
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: frontend

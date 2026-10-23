@@ -1,4 +1,19 @@
 import type { ApiErrorBody } from "./types";
+import { translate } from "../i18n/catalog";
+import { DEFAULT_APP_LOCALE, toActiveLocale, type AppLocale } from "../i18n/locales";
+
+/**
+ * The interface language for `userMessage` (06B): read from `<html lang>`, which `I18nProvider` keeps equal to the interface
+ * language, so a message read at render time is in the candidate's language and not the English fallback. English keeps the
+ * original copy byte for byte; outside a browser (or for an unknown tag) it is English.
+ */
+function interfaceLocale(): AppLocale {
+  try {
+    return (typeof document !== "undefined" ? toActiveLocale(document.documentElement.lang) : null) ?? DEFAULT_APP_LOCALE;
+  } catch {
+    return DEFAULT_APP_LOCALE;
+  }
+}
 
 /**
  * A safe, typed API error. `message` is always user-safe (the backend guarantees
@@ -63,6 +78,8 @@ export class ApiError extends Error {
    * in sync with `lib/i18n/messages/en.ts` `states.*`.
    */
   get userMessage(): string {
+    const locale = interfaceLocale();
+    if (locale !== DEFAULT_APP_LOCALE) return translate(locale, stateKeyForError(this.kind));
     switch (this.kind) {
       case "offline":
         return "You're offline. Check your internet connection and try again.";
