@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { api } from "@/lib/api/client";
-import { ApiError } from "@/lib/api/errors";
+import { ApiError, stateKeyForError } from "@/lib/api/errors";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Field";
@@ -36,6 +36,9 @@ export function InterviewSessionSetup({ onCreated, opportunityId = null }: {
   const [count, setCount] = useState(5);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 04D: ONE idempotency key per setup attempt-series. A failed start (provider down) leaves nothing started; pressing Start again re-sends the SAME key, so the server resumes that one
+  // setup instead of creating a second interview. The browser never retries a create on its own (POSTs are never auto-retried).
+  const attemptKey = useRef<string>("practice-setup:" + newAttemptId());
   // Wave 4 governed context + language.
   const [jdDocId, setJdDocId] = useState<number | null>(null);
   const [useEvidence, setUseEvidence] = useState(false);
@@ -117,11 +120,12 @@ export function InterviewSessionSetup({ onCreated, opportunityId = null }: {
         },
         // Owner-scoped organising link (P10B Wave 6); server verifies ownership.
         ...(opportunityId != null ? { opportunity_id: opportunityId } : {}),
-      });
+      }, { idempotencyKey: attemptKey.current });
       onCreated(state.session_id);
     } catch (e) {
       const err = e as ApiError;
-      setError(err.userMessage ?? t("practice.startError"));
+      // 04D: an accurate, localized cause for the two AI failure kinds ("not configured" vs "the service failed this time"); anything else keeps the existing message.
+      setError(err.kind === "aiNotConfigured" || err.kind === "aiUnavailable" ? t(stateKeyForError(err.kind)) : err.userMessage ?? t("practice.startError"));
       setBusy(false);
     }
   }
@@ -249,6 +253,14 @@ export function InterviewSessionSetup({ onCreated, opportunityId = null }: {
       </CardBody>
     </Card>
   );
+}
+
+/** A random id for one setup attempt-series (crypto when available, otherwise a time-and-random fallback; it only has to be unique per browser tab). */
+function newAttemptId(): string {
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  } catch { /* fall through */ }
+  return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 12);
 }
 
 function Labeled({ label, children }: { label: string; children: React.ReactNode }) {

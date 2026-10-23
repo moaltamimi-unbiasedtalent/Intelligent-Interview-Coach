@@ -75,6 +75,9 @@ def parse_page(tsx_rel: str) -> dict:
     blocks: list[tuple[str, list[str]]] = []
     for raw in body.splitlines()[1:]:
         line = raw.strip()
+        if line.startswith("<li><BetaPricingStatement"):         # 04D: the one beta statement is a component that renders this catalogue key; it is legal text, never skipped
+            blocks.append(("li", ["betaPricing.statement"]))
+            continue
         if not line or line in ("<ul>", "</ul>", ">") or line.startswith("title=") or "t(" not in line:
             continue
         keys = re.findall(r't\("([\w.]+)"\)', line)

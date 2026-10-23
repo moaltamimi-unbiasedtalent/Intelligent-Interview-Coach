@@ -155,7 +155,8 @@ def test_the_findings_in_the_readme_are_backed_by_the_fact_map():
     readme = (PACK / "README.md").read_text(encoding="utf-8")
     for fid in re.findall(r"\b((?:PF|TF|AF|DF)-\d\d)\b", readme):
         assert fid in by_id, fid
-    assert by_id["TF-05"]["status"] == "CONTRADICTED_BY_CODE" and by_id["PF-21"]["status"] == "CONTRADICTED_BY_CODE"
+    # TF-05 (the EUR 19.99 sentence) was CONTRADICTED_BY_CODE until 04D replaced it with the beta statement (true today, still not reviewed by counsel); PF-21 is still contradicted
+    assert by_id["TF-05"]["status"] == "VERIFIED_IN_CODE" and by_id["PF-21"]["status"] == "CONTRADICTED_BY_CODE"
     assert by_id["AF-05"]["status"] == "PARTIAL" and by_id["PF-19"]["status"] == "NOT_VERIFIED"
 
 
@@ -269,6 +270,17 @@ def test_the_legal_page_copy_and_components_are_untouched_by_this_package():
              "frontend/app/privacy/page.tsx", "frontend/app/terms/page.tsx", "frontend/app/ai-transparency/page.tsx"]
     out = subprocess.run(["git", "diff", "--name-only", "origin/main", "--", *paths], cwd=ROOT, capture_output=True, text=True)
     if out.returncode == 0:                                    # a detached or shallow checkout cannot compare
-        assert out.stdout.strip() == "", out.stdout
+        # 04D (owner direction: no price on any candidate surface) is the ONE sanctioned change since this pack: it removed the false "Premium is EUR 19.99 per month" sentence
+        # (terms.accountsPlans) and renders the beta statement in its place. Any other change to legal copy, and any other changed line in these files, still fails here.
+        sanctioned = {"frontend/components/marketing/TermsContent.tsx", "frontend/lib/i18n/messages/w96/legal.ts", "frontend/lib/i18n/messages/w96/ru/legal.ts"}
+        changed = set(out.stdout.split())
+        assert changed <= sanctioned, sorted(changed - sanctioned)
+        if changed:
+            diff = subprocess.run(["git", "diff", "-U0", "origin/main", "--", *sorted(changed)], cwd=ROOT, capture_output=True, text=True).stdout
+            lines = [ln for ln in diff.splitlines() if ln[:1] in "+-" and not ln.startswith(("+++", "---"))]
+            allowed = ("accountsPlans:", "Basic ", "Basic is", "O Basic", "Basic бесплатен", '<li>{t("terms.accountsPlans")}</li>', '<li><BetaPricingStatement testId="terms-beta-pricing" /></li>',
+                       'import { BetaPricingStatement } from "@/components/plan/BetaPricingStatement";')
+            stray = [ln for ln in lines if not ln[1:].strip().lstrip('"').startswith(allowed) and not ln[1:].strip().startswith(allowed)]
+            assert stray == [], f"legal copy changed beyond the sanctioned 04D Terms sentence: {stray}"
     for rel in paths:
         assert (ROOT / rel).is_file(), rel

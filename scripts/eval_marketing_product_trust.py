@@ -163,9 +163,10 @@ def run() -> dict[str, tuple[bool, str]]:
     check("no_ai_template_hype", not hhits, f"no AI-template hype ({hhits or 'none'})")
 
     # --- PRICING (truthful, no billing) ---
+    # 04D: no price field exists on a plan any more; Ask4Mo is a free, invitation-only private beta and one statement (betaPricing.statement) says so on every surface.
     check("pricing_basic_free",
-          '"€0"' in pricing_ts and 'ctaKind: "register"' in pricing_ts,
-          "Basic is a real free plan (register)")
+          "priceDisplay" not in pricing_ts and 'ctaKind: "register"' in pricing_ts and "betaPricing.freeInBeta" in (ROOT / "frontend/components/marketing/PricingContent.tsx").read_text(encoding="utf-8"),
+          "Basic is a real free plan (register), stated as free in the beta with no price figure")
     check("pricing_premium_preview",
           premium_is_not_purchasable(pricing_ts),
           "Premium is not purchasable (no purchase path, unapproved preview only); billing is disabled")

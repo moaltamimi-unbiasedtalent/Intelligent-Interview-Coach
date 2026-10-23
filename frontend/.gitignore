@@ -5,6 +5,7 @@ node_modules/
 
 # next
 .next/
+.next-journey/
 out/
 next-env.d.ts
 

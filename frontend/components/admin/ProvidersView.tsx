@@ -100,6 +100,8 @@ function Body() {
                       <th scope="row" className="py-1 pr-4 text-left font-medium">{p.label}</th>
                       <td className="py-1 pr-4">
                         <StatusLabel tone={p.configured ? "ok" : "neutral"}>{p.configured ? "Configured" : "Not configured"}</StatusLabel>
+                        {/* 04D (DEMO-02): the mode of the connection (for the language model: live, offline, not_configured or unknown) so a keyless or offline stack cannot be mistaken for live. Configuration, not health. */}
+                        {p.mode ? <span className="ml-2 text-xs text-muted" data-testid={`provider-mode-${p.provider_id}`}>{`Mode: ${p.mode}`}</span> : null}
                       </td>
                       <td className="py-1 pr-4">{p.health}</td>
                       <td className="py-1 pr-4">{p.externally_managed ? "Deployment environment" : "Console"}</td>

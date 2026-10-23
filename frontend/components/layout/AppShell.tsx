@@ -7,6 +7,7 @@ import { Brand } from "./Brand";
 import { MobileNavigation } from "./MobileNavigation";
 import { MoreMenu } from "./MoreMenu";
 import { PrimaryNavigation } from "./PrimaryNavigation";
+import { ProviderModeIndicator } from "./ProviderModeIndicator";
 import { ThemeToggle } from "./ThemeToggle";
 import { TutorialController } from "@/components/tutorial/TutorialController";
 import { AccountMenu } from "@/components/auth/AccountMenu";
@@ -48,9 +49,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
         <main id="main" tabIndex={-1} className="mx-auto max-w-content px-5 py-8 focus:outline-none">
-          <Suspense fallback={children}>
-            <RouteGuard>{children}</RouteGuard>
-          </Suspense>
+          {/* No Suspense here: its fallback would be a second, independent copy of the onboarding page, and swapping copies after the candidate acted lost their step (04D). */}
+          <RouteGuard>{children}</RouteGuard>
         </main>
       </div>
     );
@@ -78,9 +78,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
+      <ProviderModeIndicator />
       <main id="main" tabIndex={-1} className="mx-auto max-w-content px-5 pb-28 pt-8 focus:outline-none lg:pb-20">
-        {/* RouteGuard reads the URL (useSearchParams); a Suspense boundary keeps
-            static prerender (e.g. /_not-found) from bailing the whole page to CSR. */}
+        {/* RouteGuard no longer suspends (it reads the location in an effect); the boundary stays for pages that call useSearchParams, so static prerender
+            (e.g. /_not-found) does not bail the whole page to CSR. */}
         <Suspense fallback={children}>
           <RouteGuard>{children}</RouteGuard>
         </Suspense>

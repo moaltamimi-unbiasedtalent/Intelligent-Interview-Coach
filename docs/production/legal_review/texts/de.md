@@ -80,7 +80,7 @@ Ask4Mo bietet KI-gestützte Hilfe zur Interviewvorbereitung. Es ist eine Vorbere
 
 #### Konten, Tarife und Verfügbarkeit  `terms.accountsHeading`
 
-- Basic ist kostenlos. Premium kostet €19.99 pro Monat und wird nach der Kontoerstellung online ausgewählt.  `terms.accountsPlans`
+- Ask4Mo ist eine kostenlose Beta nur auf Einladung. Es kann nichts gekauft werden, und es gilt kein Preis.  `betaPricing.statement`
 - Einige Funktionen hängen von externen Anbietern ab und können nicht verfügbar, ratenbegrenzt oder vom Betreiber pausiert sein.  `terms.accountsProviders`
 - Der Dienst wird in dieser Phase vor dem Start wie besehen und ohne Gewährleistung bereitgestellt; die Haftung ist im größtmöglichen gesetzlich zulässigen Umfang beschränkt (vorbehaltlich rechtlicher Prüfung).  `terms.accountsAsIs`
 

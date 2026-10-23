@@ -8,17 +8,16 @@ Every statement in the current Privacy, Terms and AI-transparency texts is mappe
 
 | Status | Entries |
 |---|---|
-| CONTRADICTED_BY_CODE | 2 |
+| CONTRADICTED_BY_CODE | 1 |
 | PARTIAL | 4 |
 | NOT_VERIFIED | 3 |
 | UNSTATED_FACT | 10 |
 | NOT_A_CODE_FACT | 4 |
-| VERIFIED_IN_CODE | 29 |
+| VERIFIED_IN_CODE | 30 |
 
 ## Findings that need attention first
 
 - **PF-21 (CONTRADICTED_BY_CODE)**: The text points to 'the support address configured for your deployment'. No support or privacy contact address exists in the configuration, the code or the environment template, so the sentence has nothing to point at today. What exists: in-app support tickets and in-app privacy requests (a candidate can submit one and an operator can record one received another way).
-- **TF-05 (CONTRADICTED_BY_CODE)**: The text says Premium is EUR 19.99 per month and 'selected online after account creation'. Today Premium is NOT purchasable: the pricing page has no purchase path for it, live billing is disabled by a code constant, external checkout is not authorised, and Premium is a 'preview' plan. Basic is free and is the only plan a user can have without an operator assignment.
 - **PF-03 (PARTIAL)**: Uploaded files are stored privately under a random key and are never served by URL. The full extracted or OCR text of a document is NOT stored: it is re-read from the private file on demand; what is stored is the list of detected claims (verbatim snippets with provenance). The text says 'OCR-extracted text and detected claims'; the stored artefacts are the claims, not the whole extracted text.
 - **PF-13 (PARTIAL)**: Model calls go through OpenRouter (the router forwards to the configured model vendor). What reaches a model, by feature, is listed in DF-01. The text says 'necessary text (not secrets)'; the precise categories (your messages, approved Memory summaries, a selected job description's text, approved evidence snippets from your documents, your Practice answers, selected stories) are broader than the sentence suggests, and a second processor receives query text for embeddings when a semantic embedding provider is configured (DF-02).
 - **PF-17 (PARTIAL)**: Export is an on-demand JSON download of the caller's own data with an in-file statement of what it does not include. Account deletion removes application-controlled rows, private files and indexed checkpoint runs. Gaps stated openly: a chat that was never indexed cannot be discovered; chat content is not in the export; self-service deletion is refused while a provider-managed subscription is unresolved (no provider billing is live today); since 05E a failed file deletion aborts the whole deletion and it can be repeated.
@@ -370,13 +369,13 @@ Fact: Uploads are validated (type, size, malware fail-safe) and private; whether
 Code:
 - `src/documents/storage.py` :: `class LocalDocumentStore`
 
-### TF-05: CONTRADICTED_BY_CODE
+### TF-05: VERIFIED_IN_CODE
 
 Statement (exact current English):
 
-> Basic is free. Premium is €19.99 per month and is selected online after account creation.  `terms.accountsPlans`
+> Ask4Mo is a free, invitation-only private beta. Nothing can be purchased and no price applies.  `betaPricing.statement`
 
-Fact: The text says Premium is EUR 19.99 per month and 'selected online after account creation'. Today Premium is NOT purchasable: the pricing page has no purchase path for it, live billing is disabled by a code constant, external checkout is not authorised, and Premium is a 'preview' plan. Basic is free and is the only plan a user can have without an operator assignment.
+Fact: 04D replaced the Terms sentence that said Premium is EUR 19.99 per month (it contradicted the code: Premium is not purchasable, live billing is disabled by a code constant, external checkout is not authorised) with the one beta statement. The statement is true today; it is engineering wording that counsel has not reviewed, and it says nothing about what Premium will be.
 
 Code:
 - `frontend/lib/pricing.ts` :: `purchasable`

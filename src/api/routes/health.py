@@ -142,6 +142,18 @@ def _company_research_available(repo) -> bool:
     return flag_on and not _paused_or_unreadable("current_market", repo)
 
 
+def _ai_provider_mode(request: Request) -> str:
+    """The AI provider MODE (04D). Reads only whether a credential is configured (the cached app config) and the offline switch; never a value."""
+    from src.application.provider_mode import MODE_UNKNOWN, resolve_provider_mode
+
+    try:
+        from src.api.dependencies import get_app_config
+
+        return resolve_provider_mode(configured=bool(get_app_config(request).is_configured))
+    except Exception:  # noqa: BLE001 - an unreadable configuration is reported as unknown, never as live
+        return MODE_UNKNOWN
+
+
 @router.get("/capabilities", response_model=CapabilitiesResponse,
             summary="Safe feature availability")
 def capabilities(request: Request) -> CapabilitiesResponse:
@@ -152,6 +164,7 @@ def capabilities(request: Request) -> CapabilitiesResponse:
 
     lang = public_summary()
     return CapabilitiesResponse(
+        ai_provider_mode=_ai_provider_mode(request),
         active_candidate_locales=lang["offered_locales"],
         language_activation_mode=lang["mode"],
         qualified_locales=lang["qualified_locales"],

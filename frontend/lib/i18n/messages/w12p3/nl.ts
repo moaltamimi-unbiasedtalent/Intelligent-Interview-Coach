@@ -74,18 +74,14 @@ const nl: typeof en = {
     transition_newSession: "Een nieuwe oefensessie starten",
     transition_history: "Je voltooide interviews en rapporten blijven beschikbaar volgens je geschiedenisoverzicht.",
     pricing_notAvailable: "Nog niet beschikbaar",
-    pricing_previewPrice: "Voorlopige prijs in overweging: € 19,99 per maand. Deze prijs is niet goedgekeurd.",
     pricing_statusLabel: "Status van Premium",
   },
   marketing: {
-    homePricingBody: "Basic is gratis. Premium-abonnementen zijn gepland en nog niet beschikbaar.",
     ctaBody: "Begin vandaag gratis met Basic. Premium is nog niet beschikbaar.",
     pricingSubtitle: "Begin gratis met Basic. Premium-abonnementen zijn gepland en nog niet beschikbaar.",
-    pricingBillingNote: "Premium kan nog niet worden gekocht. Niets op deze pagina start een betaling.",
     planPremiumCta: "Premium is nog niet beschikbaar",
     planPremiumNote: "Premium-abonnementen zijn gepland. Er wordt niets in rekening gebracht en hier start geen betaling.",
     pricingPremiumIncludes: "Gepland voor een actieve zoektocht naar werk over meerdere rollen: alles uit Basic plus de hieronder geplande Premium-functies. Geen ervan is al te koop.",
-    footerNoBilling: "Basic is gratis. Premium-abonnementen zijn nog niet beschikbaar.",
   },
 };
 

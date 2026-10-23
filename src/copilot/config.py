@@ -148,7 +148,8 @@ def _read_mode(name: str, default: str) -> str:
 def load_config() -> CopilotConfig:
     """Build the configuration from secrets/environment; never raises on a
     missing key."""
-    load_dotenv(override=False)
+    if not _secrets.offline_switch_active():     # 04D: the offline switch never loads a .env (it may hold a provider key)
+        load_dotenv(override=False)
     raw_key = _read(API_KEY_NAME)
     raw_embed_key = _read(EMBEDDING_KEY_NAME)
 

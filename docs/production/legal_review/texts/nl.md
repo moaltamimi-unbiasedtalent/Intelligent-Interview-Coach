@@ -80,7 +80,7 @@ Ask4Mo biedt AI-ondersteunde begeleiding bij de voorbereiding op sollicitatieges
 
 #### Accounts, abonnementen en beschikbaarheid  `terms.accountsHeading`
 
-- Basic is gratis. Premium kost €19.99 per maand en wordt online gekozen nadat het account is aangemaakt.  `terms.accountsPlans`
+- Ask4Mo is een gratis privébèta, alleen op uitnodiging. Er kan niets worden gekocht en er geldt geen prijs.  `betaPricing.statement`
 - Sommige functies zijn afhankelijk van externe providers en kunnen onbeschikbaar, in frequentie beperkt of door de operator gepauzeerd zijn.  `terms.accountsProviders`
 - De dienst wordt tijdens deze fase vóór de lancering as is geleverd, zonder garanties; de aansprakelijkheid is beperkt tot de maximale mate die het toepasselijke recht toestaat (onder voorbehoud van juridische beoordeling).  `terms.accountsAsIs`
 

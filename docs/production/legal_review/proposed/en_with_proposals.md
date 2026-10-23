@@ -83,7 +83,7 @@ Ask4Mo provides AI-assisted interview preparation guidance. It is a preparation 
 
 #### Accounts, plans and availability  `terms.accountsHeading`
 
-- Basic is free. Premium is a preview plan that is not available for purchase yet. Nothing is charged, and this page will be updated before any payment is offered.  `terms.accountsPlans`
+- Basic is free. Premium is a preview plan that is not available for purchase yet. Nothing is charged, and this page will be updated before any payment is offered.  `betaPricing.statement`
 - Some features depend on external providers and may be unavailable, rate-limited or paused by the operator.  `terms.accountsProviders`
 - The service is provided as is during this pre-launch phase, without warranties; liability is limited to the maximum extent permitted by applicable law (subject to legal review).  `terms.accountsAsIs`
 

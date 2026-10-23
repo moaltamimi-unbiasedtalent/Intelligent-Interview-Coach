@@ -164,6 +164,8 @@ class InterviewStateResponse(BaseModel):
     deep_dive: DeepDiveStateOut | None = None
     error: str | None = None
     error_recoverable: bool = False
+    # 04D: stable cause code (ai_not_configured | ai_provider_unavailable) when the error is a provider failure; the client renders localized copy from it. None otherwise.
+    error_code: str | None = None
     # Cumulative practice cost (USD) if the product chooses to display it; never a
     # provider key, DB id, raw payload or operation token.
     cumulative_cost_usd: float | None = None

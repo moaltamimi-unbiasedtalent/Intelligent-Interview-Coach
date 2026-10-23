@@ -29,6 +29,7 @@ from src.api.middleware import (
 )
 from src.api.routes import (
     admin,
+    agent_runs,
     admin_ai,
     admin_ai_budget,
     admin_billing,
@@ -206,7 +207,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
     app.include_router(health.router, prefix="/api")
     # 04B: the literal /workspaces/transfers/* paths must be matched before /workspaces/{workspace_id}, so this router is registered first.
     app.include_router(workspace_transfers.router, prefix=API_PREFIX)
-    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, model_profiles, usage_quotas, progress_analytics, preparation_packs, feedback, progress, auth, reviewer, voice, speech, workspaces, admin, admin_ai, admin_ai_budget, admin_billing, admin_billing_ops, admin_command_center, admin_config, admin_speech, admin_integrations, admin_reports, admin_security, admin_jobs, admin_knowledge, admin_legal, admin_privacy, admin_plans_ops, admin_plans, admin_invitations, admin_support, admin_users, admin_users_bulk, company, opportunity, privacy, support, billing_candidate, billing_webhooks, mail_webhooks):
+    for module in (health, career, interview, history, knowledge, evaluation, agent_runs, agent, memory, model_profiles, usage_quotas, progress_analytics, preparation_packs, feedback, progress, auth, reviewer, voice, speech, workspaces, admin, admin_ai, admin_ai_budget, admin_billing, admin_billing_ops, admin_command_center, admin_config, admin_speech, admin_integrations, admin_reports, admin_security, admin_jobs, admin_knowledge, admin_legal, admin_privacy, admin_plans_ops, admin_plans, admin_invitations, admin_support, admin_users, admin_users_bulk, company, opportunity, privacy, support, billing_candidate, billing_webhooks, mail_webhooks):
         app.include_router(module.router, prefix=API_PREFIX)
     for _router in admin_report_builder.routers:         # 03E1: one router per existing read permission (standard, commercial)
         app.include_router(_router, prefix=API_PREFIX)

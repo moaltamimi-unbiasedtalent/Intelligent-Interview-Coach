@@ -9,6 +9,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { BetaPricingStatement } from "@/components/plan/BetaPricingStatement";
 import { useT } from "@/components/i18n/I18nProvider";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { ButtonLink } from "@/components/ui/Button";
@@ -212,7 +213,8 @@ function MarketingFooter() {
       </div>
       <div className="mx-auto max-w-content px-4 pb-8 text-xs text-muted">
         <p>© {year} Ask4Mo. {t("marketing.footerRights")}</p>
-        <p className="mt-1">{t("marketing.footerNoBilling")} {t("marketing.footerDraft")}</p>
+        <BetaPricingStatement className="mt-1" testId="footer-beta-pricing" />
+        <p className="mt-1">{t("marketing.footerDraft")}</p>
       </div>
     </footer>
   );

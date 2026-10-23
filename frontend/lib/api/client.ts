@@ -149,6 +149,7 @@ import type {
   RealtimeStatusResponse,
   AgentContinueRequest,
   AgentRunDeleteResponse,
+  RecentRunsResponse,
   AgentRunRequest,
   AgentRunResponse,
   HumanDecisionRequest,
@@ -486,6 +487,9 @@ export const api = {
       request<AgentRunResponse>("POST", `/agent/runs/${encodeURIComponent(runId)}/resume`, { body, ...opts }),
     remove: (runId: string, opts?: RequestOptions) =>
       request<AgentRunDeleteResponse>("DELETE", `/agent/runs/${encodeURIComponent(runId)}`, opts),
+    /** 04D (AC-18): the caller's OWN recent runs (owner-scoped, bounded, no content). The component validates the shape; this returns the body as received. */
+    listRuns: (limit = 10, opts?: RequestOptions) =>
+      request<RecentRunsResponse>("GET", `/agent/runs?limit=${encodeURIComponent(String(limit))}`, opts),
   },
 
   // Company Intelligence (P10B Wave 5). Directable company research; the server enforces

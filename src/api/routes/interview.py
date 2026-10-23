@@ -23,6 +23,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Path, Request
 
 from src import constants
 from src.ai_protection import ai_operation
+from src.api.coded_errors import CodedHTTPException
 from src.api.dependencies import (
     get_history_access_policy,
     get_model_profile_policy,
@@ -292,6 +293,7 @@ def _state(session_id: str, session: SessionManager,
         deep_dive=_deep_dive_state(session),
         error=data.error,
         error_recoverable=(data.state == SessionState.ERROR and data.previous_state is not None),
+        error_code=(data.error_code if data.state == SessionState.ERROR else None),
         cumulative_cost_usd=round(float(data.cumulative_cost_usd or 0.0), 6),
     )
 
@@ -355,6 +357,12 @@ def _raise_if_setup_failed(session: SessionManager) -> None:
     and because ``store.mutate`` does not persist on exception the durable session stays
     in bare SETUP so an idempotent retry re-runs setup cleanly."""
     if session.data.state is SessionState.ERROR:
+        # 04D: a missing AI credential and a provider failure are DIFFERENT facts. Each gets its own stable code and fixed copy (never the provider's text), so the client can tell
+        # the candidate "this environment has no AI configured" from "the AI service failed this time, try again". Nothing was started in either case.
+        from src import constants
+
+        if session.data.error_code in constants.AI_FAILURE_CODES:
+            raise CodedHTTPException(503, session.data.error_code, constants.AI_FAILURE_MESSAGES[session.data.error_code])
         raise UnavailableServiceError(
             session.data.error
             or "We couldn't set up your interview right now. Please try again."
@@ -445,6 +453,15 @@ def create_interview(
             _run_setup(svc, session, configuration, chosen_profile)
     except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
         raise _translate_store_error(exc) from None
+    except (CodedHTTPException, UnavailableServiceError):
+        # 04D: a start that failed before ANY question existed must leave nothing behind. Otherwise every failed press of Start (the AI not configured, or the provider down)
+        # left an empty "SETUP" session in the candidate's resumable list: a claim that an interview was started when none was. Discard it (best effort, owner-scoped) and
+        # re-raise the same safe error; a retry then starts one fresh setup, never a second one beside it.
+        try:
+            store.discard(session_id, user_id)
+        except Exception:  # noqa: BLE001 - cleanup must never mask the real, safe error
+            pass
+        raise
     return _state(session_id, session)
 
 

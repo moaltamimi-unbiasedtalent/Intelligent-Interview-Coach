@@ -191,7 +191,7 @@ const en = {
     rowFeedback: "Feedback",
     rowBestUse: "Best use",
     rowLimit: "Important limitation",
-    payAsk4mo: "Free, or €19.99 per month for Premium",
+    payAsk4mo: "Free during the private beta; nothing can be purchased",
     payCoach: "Per session or package",
     payCourse: "One-off or subscription",
     availAsk4mo: "On demand",

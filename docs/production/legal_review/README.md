@@ -20,7 +20,7 @@ Regenerate with `python scripts/legal_review_pack.py --write`; `python scripts/l
 
 These come from `FACTS.md` and are readings of the code, not legal conclusions.
 
-1. **The Terms say Premium is EUR 19.99 per month and is selected online after account creation. Today Premium cannot be bought** (no purchase path, live billing disabled by a code constant, external checkout not authorised). See TF-05 and proposal CL-01.
+1. **RESOLVED by 04D, wording awaiting counsel: the Terms said Premium is EUR 19.99 per month and is selected online after account creation, but Premium cannot be bought** (no purchase path, live billing disabled by a code constant, external checkout not authorised). 04D replaced the sentence with the one beta statement ("free, invitation-only private beta; nothing can be purchased and no price applies"). Counsel has not reviewed that wording. See TF-05 and proposal CL-01.
 2. **The Privacy text points to "the support address configured for your deployment". No such address exists** in the configuration or code. See PF-21 and proposal CL-02.
 3. **The Privacy text says OCR-extracted text is stored; only the detected claims are** (the full text is re-read from the private file on demand). See PF-03 and CL-03.
 4. **"AI features send necessary text (not secrets) to a model provider" understates the categories** (messages, approved Memory summaries, selected job-description text, approved evidence snippets, Practice answers, selected stories) and omits a second recipient for search-query embeddings. See PF-13, DF-01, DF-02, CL-04, CL-05.

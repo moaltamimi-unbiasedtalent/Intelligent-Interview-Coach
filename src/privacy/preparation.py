@@ -61,6 +61,16 @@ class PreparationRunIndex:
             return list(s.scalars(select(PreparationRun.run_id).where(PreparationRun.owner_user_id == owner_user_id)
                                   .order_by(PreparationRun.id)).all())
 
+    def recent_for_owner(self, owner_user_id: int, limit: int = 20) -> list[dict]:
+        """The caller's OWN runs, newest first (04D, AC-18): ids, lifecycle state and timestamps only, never chat content. One indexed, bounded query; a run that is being
+        purged (``purge_failed``) is not listed. The owner filter is part of the query, so another account's run can never be returned."""
+        bound = max(1, min(int(limit), 50))
+        with self._sf() as s:
+            rows = s.execute(select(PreparationRun.run_id, PreparationRun.state, PreparationRun.created_at, PreparationRun.updated_at)
+                             .where(PreparationRun.owner_user_id == owner_user_id, PreparationRun.state != "purge_failed")
+                             .order_by(PreparationRun.updated_at.desc(), PreparationRun.id.desc()).limit(bound)).all()
+        return [{"run_id": r, "state": st, "created_at": c, "updated_at": u} for r, st, c, u in rows]
+
     def owner_of(self, run_id: str) -> int | None:
         with self._sf() as s:
             return s.scalar(select(PreparationRun.owner_user_id).where(PreparationRun.run_id == run_id))

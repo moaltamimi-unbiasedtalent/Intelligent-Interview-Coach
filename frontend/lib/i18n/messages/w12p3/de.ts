@@ -74,18 +74,14 @@ const de: typeof en = {
     transition_newSession: "Neue Übungssitzung starten",
     transition_history: "Ihre abgeschlossenen Interviews und Berichte bleiben gemäß Ihrer Verlaufsansicht verfügbar.",
     pricing_notAvailable: "Noch nicht verfügbar",
-    pricing_previewPrice: "Vorschaupreis in Erwägung: 19,99 € pro Monat. Dieser Preis wurde nicht freigegeben.",
     pricing_statusLabel: "Premium-Status",
   },
   marketing: {
-    homePricingBody: "Basic ist kostenlos. Premium-Abonnements sind geplant und noch nicht verfügbar.",
     ctaBody: "Starten Sie heute kostenlos mit Basic. Premium ist noch nicht verfügbar.",
     pricingSubtitle: "Starten Sie kostenlos mit Basic. Premium-Abonnements sind geplant und noch nicht verfügbar.",
-    pricingBillingNote: "Premium kann noch nicht gekauft werden. Nichts auf dieser Seite startet eine Zahlung.",
     planPremiumCta: "Premium ist noch nicht verfügbar",
     planPremiumNote: "Premium-Abonnements sind geplant. Es wird nichts berechnet, und hier wird keine Zahlung gestartet.",
     pricingPremiumIncludes: "Geplant für eine aktive Jobsuche über mehrere Rollen: alles aus Basic plus die unten geplanten Premium-Funktionen. Keine davon ist bereits im Verkauf.",
-    footerNoBilling: "Basic ist kostenlos. Premium-Abonnements sind noch nicht verfügbar.",
   },
 };
 

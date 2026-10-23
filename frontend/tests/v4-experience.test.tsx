@@ -211,9 +211,9 @@ describe("workflow map", () => {
 
 describe("pricing truthfulness (v4)", () => {
   it("keeps Basic free and presents Premium as NOT available (no price offer, no purchase link) (W12.4D-P3)", () => {
-    expect(PRICING_PLANS.find((p) => p.id === "basic")!.priceDisplay).toBe("€0");
+    // 04D: no price figure exists on a plan any more (Ask4Mo is a free, invitation-only private beta); the one statement says so.
+    expect(PRICING_PLANS.every((p) => !("priceDisplay" in p))).toBe(true);
     const premium = PRICING_PLANS.find((p) => p.id === "premium")!;
-    expect(premium.priceDisplay).toBe("€19.99");                       // retained as an UNAPPROVED preview figure only
     expect(premium.ctaKind).toBe("unavailable");
     expect(premium.ctaHref).toBeNull();
     expect(premium.purchasable).toBe(false);
@@ -221,7 +221,8 @@ describe("pricing truthfulness (v4)", () => {
     expect(container.querySelector('a[href^="/register?plan=premium"]')).toBeNull();                 // no purchase path
     expect(container.querySelector('a[href*="checkout"], form[action*="checkout"]')).toBeNull();
     expect(screen.getByTestId("premium-status").textContent).toContain(t("planUx.pricing_notAvailable"));
-    expect(screen.getByTestId("premium-preview-price").textContent).toContain(t("planUx.pricing_previewPrice"));
+    expect(screen.getByTestId("premium-beta-statement").textContent).toBe(t("betaPricing.statement"));
+    expect(screen.getByTestId("beta-free").textContent).toBe(t("betaPricing.freeInBeta"));
     expect(screen.getByTestId("plan-status-premium").textContent).toContain(t("marketing.planPremiumCta"));
     expect(screen.getByTestId("plan-note-premium").textContent).toContain(t("marketing.planPremiumNote"));
     expect(container.querySelector("input[type=text],input[name*=card i]")).toBeNull();
@@ -356,7 +357,7 @@ describe("V4.3 refinements", () => {
     expect(carousel.textContent).toContain(t("marketing.systemLead"));
     expect(within(carousel).getAllByRole("button", { name: /fact/i })).toHaveLength(4);
     fireEvent.click(within(carousel).getByRole("button", { name: "Go to fact 3 of 4" }));
-    expect(carousel.textContent).toContain("€0");
+    expect(carousel.textContent).not.toMatch(/[€$£]\s?\d/);                       // 04D: no price figure on a candidate surface
     expect(carousel.textContent).toContain(t("marketing.pricingBasicIncludes"));
     expect(within(carousel).getByRole("button", { name: t("proofCarousel.resume") })).toBeInTheDocument();
     expect(container.querySelector('img[src$="ask4mo-v4-candidate-story-practice-v5.png"]')).not.toBeNull();

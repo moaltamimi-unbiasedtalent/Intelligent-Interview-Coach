@@ -1,0 +1,52 @@
+{
+  "_note": "SYNTHETIC journey fixtures (04D). Read by BOTH the Playwright mock world and the offline local-stack launcher (scripts/e2e/journey_stack.py), so the one journey definition sees identical content in both modes. No real person, company or provider output.",
+  "candidate": {
+    "displayName": "Journey Candidate",
+    "password": "journey-passphrase-synthetic-1",
+    "emailDomain": "journey.example.invalid"
+  },
+  "opportunity": {
+    "role": "Senior Product Manager",
+    "company": "Northwind Analytics",
+    "location": "Berlin"
+  },
+  "mo": {
+    "goal": "Help me prepare for a Senior Product Manager interview at Northwind Analytics.",
+    "reply": "Here is an offline fixture preparation outline: clarify the product decision you own, prepare two stakeholder stories, and rehearse one metric-led result."
+  },
+  "interview": {
+    "industry": "Software",
+    "questions": [
+      "Tell me about a product decision you made with incomplete data.",
+      "Describe a time you aligned stakeholders who disagreed."
+    ],
+    "answer": "I prioritised the roadmap by customer impact and effort, ran a small test first and measured a twelve percent lift in activation.",
+    "evaluation": {
+      "overall_score": 74,
+      "relevance": 8,
+      "structure": 7,
+      "evidence": 6,
+      "role_knowledge": 7,
+      "problem_solving": 7,
+      "communication": 8,
+      "credibility": 7,
+      "strengths": ["Clear decision and a measured result"],
+      "improvement_areas": ["Name the data source and the metric definition"],
+      "missing_evidence": ["No baseline for the lift"],
+      "stronger_answer_structure": "Situation, Task, Action, Result, with one number in the Result.",
+      "improved_example_answer": "Example to personalise with your own details: state the metric, the change you made and the measured effect.",
+      "follow_up_question": "What would you have done if the test had shown no lift?"
+    },
+    "report": {
+      "overall_readiness_score": 71,
+      "performance_summary": "Offline fixture summary: a clear, structured answer with one measured result and room to quantify the baseline.",
+      "strongest_competencies": ["Structured communication"],
+      "development_priorities": ["Quantify outcomes with a baseline"],
+      "recurring_answer_patterns": ["Leads with the decision before the context"],
+      "highest_risk_questions": ["Questions about failed experiments"],
+      "evidence_gaps": ["Baselines for reported lifts"],
+      "recommended_practice_actions": ["Rehearse two answers with a baseline and a result"],
+      "final_interview_checklist": ["Prepare one failure story"]
+    }
+  }
+}

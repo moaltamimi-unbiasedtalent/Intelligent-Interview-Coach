@@ -75,18 +75,14 @@ const en = {
     transition_newSession: "Start a new practice session",
     transition_history: "Your completed interviews and reports stay available according to your history view.",
     pricing_notAvailable: "Not available yet",
-    pricing_previewPrice: "Preview price under consideration: €19.99 per month. This price has not been approved.",
     pricing_statusLabel: "Premium status",
   },
   marketing: {
-    homePricingBody: "Basic is free. Premium subscriptions are planned and are not available yet.",
     ctaBody: "Start free with Basic today. Premium is not available yet.",
     pricingSubtitle: "Start free with Basic. Premium subscriptions are planned and are not available yet.",
-    pricingBillingNote: "Premium cannot be purchased yet. Nothing on this page starts a payment.",
     planPremiumCta: "Premium is not available yet",
     planPremiumNote: "Premium subscriptions are planned. Nothing is charged and no payment is started here.",
     pricingPremiumIncludes: "Planned for an active job search across several roles: everything in Basic plus the planned Premium capabilities below. None of them is on sale yet.",
-    footerNoBilling: "Basic is free. Premium subscriptions are not available yet.",
   },
 };
 

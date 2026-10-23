@@ -55,6 +55,8 @@ class AgentRunResult:
     # Safe summaries of the memories loaded this run (category/summary/target_role) so
     # the candidate can inspect exactly what was used — never internal ids or raw state.
     memory_loaded: list[dict[str, Any]] = field(default_factory=list)
+    # 04D: stable cause code (constants.AI_FAILURE_CODES) when the run failed because no AI credential is configured or the provider failed; None for a completed run or any other cause.
+    failure_code: str | None = None
     # Human-in-the-loop (Phase 8). When paused, `pending_action` is the safe
     # PendingHumanAction dict the client must resolve via the resume endpoint.
     awaiting_human_input: bool = False

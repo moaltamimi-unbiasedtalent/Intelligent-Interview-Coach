@@ -564,10 +564,10 @@
       "id": "TF-05",
       "document": "terms",
       "keys": [
-        "terms.accountsPlans"
+        "betaPricing.statement"
       ],
-      "status": "CONTRADICTED_BY_CODE",
-      "fact": "The text says Premium is EUR 19.99 per month and 'selected online after account creation'. Today Premium is NOT purchasable: the pricing page has no purchase path for it, live billing is disabled by a code constant, external checkout is not authorised, and Premium is a 'preview' plan. Basic is free and is the only plan a user can have without an operator assignment.",
+      "status": "VERIFIED_IN_CODE",
+      "fact": "04D replaced the Terms sentence that said Premium is EUR 19.99 per month (it contradicted the code: Premium is not purchasable, live billing is disabled by a code constant, external checkout is not authorised) with the one beta statement. The statement is true today; it is engineering wording that counsel has not reviewed, and it says nothing about what Premium will be.",
       "refs": [
         [
           "frontend/lib/pricing.ts",

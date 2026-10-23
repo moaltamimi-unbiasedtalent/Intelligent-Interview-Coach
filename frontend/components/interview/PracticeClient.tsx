@@ -124,7 +124,10 @@ function ActiveInterview({ sessionId, router, fromCoach }: { sessionId: string; 
         <Card><CardBody>
           <h1 className="text-lg font-semibold">{t("practice.interruptedTitle")}</h1>
           <p className="mt-2 text-sm text-muted" role="alert">
-            {state.error ?? t("practice.temporaryProblem")}
+            {/* 04D: render the cause from its stable code (localized, accurate), never from the server's English text. */}
+            {state.error_code === "ai_not_configured" ? t("states.aiNotConfigured")
+              : state.error_code === "ai_provider_unavailable" ? t("states.aiProviderUnavailable")
+              : state.error ?? t("practice.temporaryProblem")}
           </p>
           <p className="mt-1 text-sm text-muted">{t("practice.savedResume")}</p>
           <div className="mt-4 flex gap-2">

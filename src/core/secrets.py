@@ -14,6 +14,9 @@ from dotenv import load_dotenv
 from pydantic import SecretStr
 
 __all__ = [
+    "OFFLINE_SWITCH",
+    "PROVIDER_CREDENTIAL_NAMES",
+    "offline_switch_active",
     "load_dotenv_once",
     "read_streamlit",
     "read_env",
@@ -27,8 +30,33 @@ __all__ = [
 ]
 
 
+# 04D (IR-DEMO-KEY). The explicit OFFLINE switch. ``ASK4MO_PROVIDER_MODE=offline`` already makes the HTTP guard (src/demo_live/guard.py) refuse every non-loopback request; it did NOT
+# stop a provider key from being DISCOVERED (a working copy's .env, Streamlit secrets, an exported variable), so a keyed working copy still looked "live" and a stray call could be
+# attempted. With the switch set, no provider credential is read from ANY source below: not .env, not Streamlit secrets, not the environment, not the Admin-managed store.
+OFFLINE_SWITCH = "ASK4MO_PROVIDER_MODE"
+
+# Credentials of the paid or external AI, labour-market and observability providers. Identity, billing, email and storage secrets are NOT in this set: the switch is about
+# provider calls, and it must not make an unrelated subsystem look unconfigured.
+PROVIDER_CREDENTIAL_NAMES = frozenset({
+    "OPENROUTER_API_KEY", "COPILOT_EMBEDDING_API_KEY", "GEMINI_API_KEY", "REALTIME_VOICE_API_KEY",
+    "ADZUNA_APP_ID", "ADZUNA_APP_KEY", "LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY",
+})
+
+
+def offline_switch_active(environ=None) -> bool:
+    """True when ``ASK4MO_PROVIDER_MODE`` is ``offline``. Read from the process environment only (never from a file the switch is meant to distrust)."""
+    raw = (environ if environ is not None else os.environ).get(OFFLINE_SWITCH)
+    return bool(raw) and raw.strip().lower() == "offline"
+
+
+def _withheld(name: str) -> bool:
+    return name in PROVIDER_CREDENTIAL_NAMES and offline_switch_active()
+
+
 def load_dotenv_once() -> None:
-    """Load a local ``.env`` for development, never overriding real env vars."""
+    """Load a local ``.env`` for development, never overriding real env vars. Skipped entirely when the offline switch is set (a ``.env`` may hold a provider key)."""
+    if offline_switch_active():
+        return
     load_dotenv(override=False)
 
 
@@ -38,6 +66,8 @@ def read_streamlit(name: str) -> str | None:
     Streamlit raises when no secrets file exists at all — expected in local dev
     and tests — so that is treated as "not configured", never a failure.
     """
+    if _withheld(name):
+        return None
     try:
         import streamlit as st
 
@@ -51,6 +81,8 @@ def read_streamlit(name: str) -> str | None:
 
 def read_env(name: str) -> str | None:
     """Read a value from the environment (local-development fallback)."""
+    if _withheld(name):
+        return None
     value = os.environ.get(name)
     return value.strip() if value and value.strip() else None
 
@@ -68,7 +100,7 @@ def set_managed_resolver(resolver) -> None:
 def read_managed(name: str) -> str | None:
     """The Admin-managed credential for ``name`` (W12.4B), or None. Never raises."""
     resolver = _managed_resolver
-    if resolver is None:
+    if resolver is None or _withheld(name):
         return None
     try:
         return resolver(name) or None

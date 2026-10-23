@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from src.locales import ACTIVE_CANDIDATE_LOCALES, DEFAULT_ACTIVE_LOCALE
@@ -50,6 +52,9 @@ class CapabilitiesResponse(BaseModel):
     qualified_locales: list[str] = Field(default_factory=list)
     unqualified_locales: list[str] = Field(default_factory=list)
     no_language_available: bool = False
+    # 04D (DEMO-02): the AI provider MODE of this stack (fixed vocabulary): live (a credential is configured; health is NOT tested), offline (no provider is read or reachable; answers
+    # come from test doubles), not_configured, unknown. Candidate and Admin surfaces show it so a keyless or offline stack can never masquerade as live. Never a key, URL or model id.
+    ai_provider_mode: Literal["live", "offline", "not_configured", "unknown"] = "unknown"
 
 
 class ErrorBody(BaseModel):

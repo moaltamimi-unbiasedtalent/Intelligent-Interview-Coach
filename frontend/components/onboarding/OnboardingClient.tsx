@@ -13,7 +13,7 @@
  * language; nothing sensitive/protected is collected; values are DATA, never placed in a prompt here.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { api } from "@/lib/api/client";
@@ -35,7 +35,7 @@ const TOTAL = STEP_KEYS.length; // 7 configuration steps (0..6); completion rout
 
 export function OnboardingClient() {
   const { t } = useI18n();
-  const { account, refresh } = useAuth();
+  const { account, refresh, applyAccount } = useAuth();
   const router = useRouter();
 
   const [step, setStep] = useState(0);
@@ -46,6 +46,10 @@ export function OnboardingClient() {
   const [geography, setGeography] = useState<CareerGeography>("");
   const [coaching, setCoaching] = useState<CoachingStyle>("balanced");
   const [hydrated, setHydrated] = useState(false);
+  // 04D: set the moment the candidate moves a step. The resume below must never move them BACK to the saved step if they acted before the account finished loading (found by the real-browser
+  // journey: a fast click-through in some languages was reset to step 1 when /auth/me resolved late).
+  const interacted = useRef(false);
+  const savedStep = useRef(0);
   // P10B-W9.5: after completion the candidate stays on /onboarding and sees an intentional Welcome
   // (not dumped into /app). Onboarding is already durably marked complete before this renders.
   const [completedLocal, setCompletedLocal] = useState(false);
@@ -53,12 +57,25 @@ export function OnboardingClient() {
   // Resume from the persisted account state exactly once (never clobber in-flight edits).
   useEffect(() => {
     if (hydrated || !account) return;
+    if (interacted.current) { setHydrated(true); return; }
     setName(account.display_name ?? "");
     setTargetRole(account.target_role ?? "");
     setGeography((account.career_geography ?? "") as CareerGeography);
     setCoaching(((account.coaching_style as CoachingStyle) || "balanced"));
     setStep(Math.min(Math.max(account.onboarding_step ?? 0, 0), TOTAL - 1));
+    savedStep.current = account.onboarding_step ?? 0;
     setHydrated(true);
+  }, [account, hydrated]);
+
+  // Follow server-confirmed progress that arrives AFTER this instance hydrated (e.g. this instance was mounted while a step save was still in flight, then the saved account
+  // arrived). Only a strictly higher saved step moves the UI, so "Back" (which goes below the saved step on purpose) is never undone.
+  useEffect(() => {
+    if (!hydrated || !account) return;
+    const saved = Math.min(Math.max(account.onboarding_step ?? 0, 0), TOTAL - 1);
+    if (saved > savedStep.current) {
+      savedStep.current = saved;
+      setStep((s) => Math.max(s, saved));
+    }
   }, [account, hydrated]);
 
   // Persist the account-backed fields owned by the current step. Language + response detail persist
@@ -70,19 +87,24 @@ export function OnboardingClient() {
   }, [step, name, targetRole, geography, coaching]);
 
   const goNext = useCallback(async () => {
+    interacted.current = true;
     setBusy(true);
     setError(null);
     try {
       await saveCurrentStep();
       const next = Math.min(step + 1, TOTAL - 1);
-      await api.auth.onboarding({ step: next });
+      // The saved account is the source of truth: adopt it so a remount or a late /auth/me resumes from THIS step, then show it. A failed save never advances.
+      const saved = await api.auth.onboarding({ step: next });
+      if (saved && typeof saved.user_id === "number") applyAccount(saved);
       setStep(next);
+    } catch {
+      setError(t("onboarding.stepSaveError"));
     } finally {
       setBusy(false);
     }
-  }, [saveCurrentStep, step]);
+  }, [saveCurrentStep, step, applyAccount, t]);
 
-  const goBack = useCallback(() => { setError(null); setStep((s) => Math.max(0, s - 1)); }, []);
+  const goBack = useCallback(() => { interacted.current = true; setError(null); setStep((s) => Math.max(0, s - 1)); }, []);
 
   const finish = useCallback(async () => {
     // Guard against a duplicate completion while one is already in flight.

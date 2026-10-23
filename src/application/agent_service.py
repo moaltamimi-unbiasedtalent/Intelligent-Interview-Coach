@@ -659,8 +659,16 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
         specialist_outputs=_derive_specialist_outputs(state),
         response_class=response_class,
         policy_flags=policy_flags,
+        failure_code=_failure_code(state) if status == STATUS_FAILED else None,
         prompt_versions=_run_prompt_versions(state, tools_used),
     )
+
+
+def _failure_code(state: dict) -> str | None:
+    """The stable cause code of a failed run (04D): 'not configured' and 'provider unavailable' are different facts. Any other cause stays None."""
+    from src import constants
+
+    return {"not_configured": constants.AI_NOT_CONFIGURED, "model_unavailable": constants.AI_PROVIDER_UNAVAILABLE}.get(str(state.get("last_error") or ""))
 
 
 def _run_prompt_versions(state: dict, tools_used: list[str]) -> dict:

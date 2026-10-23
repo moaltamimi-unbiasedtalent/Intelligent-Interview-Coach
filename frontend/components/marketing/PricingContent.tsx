@@ -1,5 +1,6 @@
 "use client";
 
+import { BetaPricingStatement } from "@/components/plan/BetaPricingStatement";
 import { useT } from "@/components/i18n/I18nProvider";
 import { ButtonLink } from "@/components/ui/Button";
 import { MarketingIcon } from "@/components/marketing/MarketingIcon";
@@ -63,15 +64,15 @@ export function PricingContent() {
                 </span>
               </div>
               {plan.purchasable || plan.ctaKind === "register" ? (
+                // 04D: no price on any candidate surface. Ask4Mo is a free, invitation-only private beta; Basic is simply free to use in it.
                 <p className="mt-3">
-                  <span className="text-5xl font-bold tracking-tight">{plan.priceDisplay}</span>{" "}
-                  <span className={plan.featured ? "text-sm text-white/60" : "text-sm text-muted"}>{t(plan.cadenceKey)}</span>
+                  <span className="text-3xl font-bold tracking-tight md:text-4xl" data-testid="beta-free">{t("betaPricing.freeInBeta")}</span>
                 </p>
               ) : (
-                // Premium (W12.4D-P3): no approved price and no purchase path. The preview figure is stated as unapproved, never as an offer.
+                // Premium (W12.4D-P3, 04D): not available, no price and no purchase path. The ONE beta statement says so in the same words everywhere.
                 <div className="mt-3" data-testid="premium-status">
                   <p className="text-3xl font-bold tracking-tight md:text-4xl">{t("planUx.pricing_notAvailable")}</p>
-                  <p className={plan.featured ? "mt-2 text-xs text-white/70" : "mt-2 text-xs text-muted"} data-testid="premium-preview-price">{t("planUx.pricing_previewPrice")}</p>
+                  <BetaPricingStatement className={plan.featured ? "mt-2 text-xs text-white/70" : "mt-2 text-xs text-muted"} testId="premium-beta-statement" />
                 </div>
               )}
               {plan.featured ? <span className="mt-4 inline-flex rounded-full bg-[#f4cdb9] px-3 py-1 text-xs font-semibold text-[#173f42]">{t("pricingV4.colPremium")}</span> : null}
@@ -114,7 +115,7 @@ export function PricingContent() {
       <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-foreground">
         {t("marketing.pricingAlwaysFree")}
       </p>
-      <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-muted" data-testid="pricing-billing-note">{t("marketing.pricingBillingNote")}</p>
+      <BetaPricingStatement className="mx-auto mt-2 max-w-2xl text-center text-sm text-muted" testId="pricing-billing-note" />
 
       <section className="mx-auto mt-10 max-w-3xl" aria-label={t("planUx.title")}>
         <PlanOverview />

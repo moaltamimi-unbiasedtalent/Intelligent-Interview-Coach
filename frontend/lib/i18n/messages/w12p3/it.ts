@@ -74,18 +74,14 @@ const it: typeof en = {
     transition_newSession: "Avvia una nuova sessione di esercitazione",
     transition_history: "I tuoi colloqui completati e i report restano disponibili secondo la tua vista della cronologia.",
     pricing_notAvailable: "Non ancora disponibile",
-    pricing_previewPrice: "Prezzo indicativo allo studio: 19,99 € al mese. Questo prezzo non è stato approvato.",
     pricing_statusLabel: "Stato di Premium",
   },
   marketing: {
-    homePricingBody: "Basic è gratuito. Gli abbonamenti Premium sono previsti e non ancora disponibili.",
     ctaBody: "Inizia gratis con Basic oggi. Premium non è ancora disponibile.",
     pricingSubtitle: "Inizia gratis con Basic. Gli abbonamenti Premium sono previsti e non ancora disponibili.",
-    pricingBillingNote: "Premium non può ancora essere acquistato. Nulla in questa pagina avvia un pagamento.",
     planPremiumCta: "Premium non è ancora disponibile",
     planPremiumNote: "Gli abbonamenti Premium sono previsti. Non viene addebitato nulla e qui non parte alcun pagamento.",
     pricingPremiumIncludes: "Previsto per una ricerca di lavoro attiva su più ruoli: tutto Basic più le funzioni Premium previste qui sotto. Nessuna è ancora in vendita.",
-    footerNoBilling: "Basic è gratuito. Gli abbonamenti Premium non sono ancora disponibili.",
   },
 };
 

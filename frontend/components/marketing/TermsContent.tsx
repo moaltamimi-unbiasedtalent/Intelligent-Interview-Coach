@@ -1,5 +1,6 @@
 "use client";
 
+import { BetaPricingStatement } from "@/components/plan/BetaPricingStatement";
 import { useT } from "@/components/i18n/I18nProvider";
 import { LegalPage } from "@/components/marketing/LegalPage";
 
@@ -32,7 +33,7 @@ export function TermsContent() {
 
       <h2>{t("terms.accountsHeading")}</h2>
       <ul>
-        <li>{t("terms.accountsPlans")}</li>
+        <li><BetaPricingStatement testId="terms-beta-pricing" /></li>
         <li>{t("terms.accountsProviders")}</li>
         <li>{t("terms.accountsAsIs")}</li>
       </ul>

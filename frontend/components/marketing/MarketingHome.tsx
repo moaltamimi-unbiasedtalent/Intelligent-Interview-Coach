@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { BetaPricingStatement } from "@/components/plan/BetaPricingStatement";
 import { useT } from "@/components/i18n/I18nProvider";
 import { ButtonLink } from "@/components/ui/Button";
 import { MarketingIcon } from "@/components/marketing/MarketingIcon";
@@ -126,7 +127,7 @@ export function MarketingHome() {
           </div>
           <div className="rounded-[1.5rem] bg-[#e9e2f0] p-7 text-[#173f42]">
             <h2 className="text-xl font-bold">{t("marketing.homePricingTitle")}</h2>
-            <p className="mt-2 text-[#43595a]">{t("marketing.homePricingBody")}</p>
+            <BetaPricingStatement className="mt-2 text-[#43595a]" testId="home-beta-pricing" />
             <Link href="/pricing" className="mt-4 inline-block text-sm font-semibold text-[#173f42] hover:underline">
               {t("marketing.homePricingCta")} &rarr;
             </Link>

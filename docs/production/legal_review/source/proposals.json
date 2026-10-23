@@ -1,9 +1,9 @@
 {
   "_about": "Source of CHANGE_LIST.md and proposed/en_with_proposals.md. PROPOSALS ONLY: none is applied to the product, none is legal advice, none is approved. Each proposal states a change to the English text so that the text matches what the code does (or states a fact the text is silent about). Wording that makes a legal commitment is flagged for counsel and left in square brackets where an owner or counsel must supply the content. Every approved proposal would need translation into all seven offered languages and a native legal review (LG-10) before it ships.",
   "proposals": [
-    {"id": "CL-01", "action": "replace", "key": "terms.accountsPlans", "kind": "li", "facts": ["TF-05"], "questions": ["OL-T1"],
+    {"id": "CL-01", "action": "replace", "key": "betaPricing.statement", "kind": "li", "facts": ["TF-05"], "questions": ["OL-T1"],
      "proposed": "Basic is free. Premium is a preview plan that is not available for purchase yet. Nothing is charged, and this page will be updated before any payment is offered.",
-     "reason": "The current sentence says Premium is EUR 19.99 per month and is selected online after account creation. Today there is no purchase path, live billing is disabled by a code constant and external checkout is not authorised."},
+     "reason": "04D already replaced the false 'Premium is EUR 19.99 per month' sentence with the beta statement shown as current. Counsel to decide whether the Terms should, in addition, say that Premium is a preview plan that is not available for purchase and that this page will be updated before any payment is offered."},
     {"id": "CL-02", "action": "replace", "key": "privacy.contactBody", "kind": "p", "facts": ["PF-21"], "questions": ["OL-P1", "OL-P2"],
      "proposed": "To use your data rights, open Data & Privacy in your account: you can download your data, delete your account, or submit a privacy request for a person to follow up. [Owner and counsel to supply: the name of the organisation responsible for this service and a privacy contact address.]",
      "reason": "The current text points to a support address configured for the deployment. No such address exists in the configuration, so the sentence has nothing to point to. The in-app paths do exist."},
