@@ -248,6 +248,34 @@ describe("builder UI", () => {
     expect(body.definition).toEqual({ report_id: "product", metric_ids: ["registrations"], window: "30d", group_by: null, filters: [], chart: null, comparison: "none" });
   });
 
+  it("PDF export: posts format pdf, downloads only a real application/pdf response, and a 503, 422 or wrong type creates no file", async () => {
+    mockPerms = STD;
+    const user = userEvent.setup();
+    const create = vi.fn(() => "blob:x");
+    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: create, revokeObjectURL: vi.fn() }));
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    handlers.push((u) => (u.pathname.endsWith("/export") ? new Response("%PDF-1.4\n", { status: 200, headers: { "content-type": "application/pdf", "content-disposition": 'attachment; filename="ask4mo-product-30d-20261022.pdf"', "x-export-rows": "3" } }) : undefined));
+    await ready();
+    await user.click(screen.getByRole("button", { name: "Export PDF" }));
+    expect(await screen.findByText(/Downloaded ask4mo-product-30d-20261022\.pdf \(3 rows\)/)).toBeInTheDocument();
+    expect(create).toHaveBeenCalledTimes(1);
+    expect((calls.find((c) => c.path.endsWith("/export"))!.body as { format: string }).format).toBe("pdf");
+    // a refused (422 too large), an audit failure (503) and a response of the wrong type: explicit error, no file
+    for (const [res, text] of [
+      [j({ error: { code: "http_422", message: "[export_too_large] A PDF export is limited to 500 rows; narrow the metrics or the grouping, or use CSV or JSON.", request_id: "r" } }, 422), /limited to 500 rows/],
+      [j({ error: { code: "http_503", message: "The export could not be audited, so nothing was exported.", request_id: "r" } }, 503), /nothing was exported/],
+      [new Response("{}", { status: 200, headers: { "content-type": "application/json" } }), /No file was downloaded/],
+    ] as [Response, RegExp][]) {
+      create.mockClear();
+      handlers.unshift((u) => (u.pathname.endsWith("/export") ? res.clone() : undefined));
+      await user.click(screen.getByRole("button", { name: "Export PDF" }));
+      const note = await screen.findByText(text);
+      expect(note.closest("[role=alert]")).not.toBeNull();
+      expect(screen.getAllByText(/No file was downloaded/).length).toBeGreaterThan(0);
+      expect(create).not.toHaveBeenCalled();
+    }
+  });
+
   it("commercial reports are offered only to the commercial permission, and never request the standard family", async () => {
     mockPerms = COM;
     render(<ReportBuilderView />);
