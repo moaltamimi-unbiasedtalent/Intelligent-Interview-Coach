@@ -1,0 +1,27 @@
+name: Staging migration image regression
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  disposable-postgresql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -e '.[dev,db]'
+      - name: Build the actual API image from the repository context
+        run: docker build -f deploy/Dockerfile.api -t ask4mo-migration-test:wave4 .
+      - name: Image content, exact entrypoint, repeat upgrade and failure isolation
+        env:
+          RUN_MIGRATION_IMAGE_TESTS: '1'
+          MIGRATION_TEST_IMAGE: ask4mo-migration-test:wave4
+        run: python -m pytest -q -p no:cacheprovider tests/test_staging_migration_image.py
+      - name: Tests must not change the checkout
+        run: test -z "$(git status --porcelain)"
