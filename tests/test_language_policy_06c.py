@@ -377,13 +377,13 @@ def test_the_career_chat_scanner_blocks_the_ignore_instructions_attack_in_all_se
     assert copilot_injection.scan_text(INJECTION_FIXTURES[lang]).blocked
 
 
-# The interview INPUT guard (src.security.detect_injection) is lexical and English-led. This ratchet records its measured behaviour per language so it cannot drift silently:
-# fr, es, it, pt, nl are NOT detected by it today (OD-INPUT-GUARD-LANGUAGES, owner decision AWAITING). The structural defence (labelled DATA blocks, system prompt independent of the
-# context, output guard) still applies to those languages, and the Career-chat scanner above does detect them. When the owner decides and the guard is extended, this test fails on
-# purpose: move the language out of OPEN_GAP and record the new decision in the evidence file. It must never be edited to hide a regression.
-INTERVIEW_GUARD_BLOCKS = {"en"}
-INTERVIEW_GUARD_WARNS = {"de"}
-OPEN_GAP = {"fr", "es", "it", "pt", "nl"}
+# The interview INPUT guard (src.security.detect_injection) was English-led. 06E added a multilingual stage (``constants.MULTILINGUAL_INPUT_GUARD_ENABLED``, default on) that routes the same
+# attack through the Career-chat scanner, so the "ignore previous instructions" fixture is now BLOCKED in all seven languages. This ratchet still pins the measured behaviour per
+# language so it cannot drift silently: if the guard is weakened for a language this test fails on purpose. The owner decision OD-INPUT-GUARD-LANGUAGES (false-positive risk on
+# job descriptions) stays open; the structural defences below still apply. It must never be edited to hide a regression.
+INTERVIEW_GUARD_BLOCKS = {"en", "de", "fr", "es", "it", "pt", "nl"}
+INTERVIEW_GUARD_WARNS: set[str] = set()
+OPEN_GAP: set[str] = set()
 
 
 @pytest.mark.parametrize("lang", LANGS)
@@ -395,8 +395,15 @@ def test_interview_input_guard_per_language_ratchet_for_the_open_owner_decision(
     assert INTERVIEW_GUARD_BLOCKS | INTERVIEW_GUARD_WARNS | OPEN_GAP == set(LANGS)
 
 
-@pytest.mark.parametrize("lang", sorted(OPEN_GAP))
-def test_for_the_open_gap_languages_the_structural_defences_still_hold(lang):
+def test_the_english_only_guard_is_still_reachable_and_leaves_the_non_english_attack_undetected_when_the_flag_is_off():
+    # 06E's own rollback path (multilingual=False restores the English-only guard exactly): the gap it closes is real, so the stage must stay switchable and tested.
+    for lang in ("fr", "es", "it", "pt", "nl"):
+        assert security.detect_injection(INJECTION_FIXTURES[lang], multilingual=False).decision == security.ALLOW
+        assert security.detect_injection(INJECTION_FIXTURES[lang], multilingual=True).decision == security.BLOCK
+
+
+@pytest.mark.parametrize("lang", ["de", "fr", "es", "it", "pt", "nl"])
+def test_for_every_non_english_language_the_structural_defences_hold_even_if_the_lexical_guard_misses(lang):
     attack = INJECTION_FIXTURES[lang]
     cfg = _config(conversation_language=lang, job_description=attack)
     messages = prompts.build_task_messages(prompts.TASK_STRATEGY, "zero_shot", cfg)
@@ -418,7 +425,9 @@ def test_the_output_guard_blocks_secret_like_content_in_a_reply_in_any_language(
 def test_the_guard_functions_take_no_language_parameter_so_a_language_setting_cannot_steer_them():
     import inspect
 
-    assert list(inspect.signature(security.detect_injection).parameters) == ["text"]
+    # 06E added ``multilingual``: a bool switch for the non-English stage, never a language selector
+    assert list(inspect.signature(security.detect_injection).parameters) == ["text", "multilingual"]
+    assert inspect.signature(security.detect_injection).parameters["multilingual"].annotation in (bool | None, "bool | None")
     assert list(inspect.signature(copilot_injection.scan_text).parameters) == ["text", "surface"]
     assert "language" not in inspect.signature(security.inspect_output).parameters
 
