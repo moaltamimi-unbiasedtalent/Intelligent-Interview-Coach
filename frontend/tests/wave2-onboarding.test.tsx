@@ -32,7 +32,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push: vi.fn() }
 vi.mock("@/components/auth/AuthProvider", () => {
   const value = () => ({
     account, status: "authenticated", isRealSession: true, responseDetail: "brief",
-    setResponseDetail: vi.fn(), refresh, signOut: vi.fn(),
+    setResponseDetail: vi.fn(), refresh, applyAccount: vi.fn(), signOut: vi.fn(),
   });
   return { useAuth: value, useAuthOptional: value };
 });

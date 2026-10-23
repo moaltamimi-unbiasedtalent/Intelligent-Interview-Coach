@@ -34,6 +34,9 @@ const en = {
     freeInBeta: "Free in the beta",
     planNote: "Plans describe what a beta account can use. Nothing here is on sale.",
   },
+  onboarding: {
+    stepSaveError: "We couldn’t save this step. Please try again.",
+  },
 };
 
 export default en;

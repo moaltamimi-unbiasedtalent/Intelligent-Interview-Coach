@@ -32,6 +32,9 @@ const fr: typeof en = {
     freeInBeta: "Gratuit pendant la bêta",
     planNote: "Les offres décrivent ce qu’un compte bêta peut utiliser. Rien ici n’est en vente.",
   },
+  onboarding: {
+    stepSaveError: "Nous n’avons pas pu enregistrer cette étape. Veuillez réessayer.",
+  },
 };
 
 export default fr;

@@ -32,6 +32,9 @@ const pt: typeof en = {
     freeInBeta: "Grátis durante a beta",
     planNote: "Os planos descrevem o que uma conta beta pode usar. Nada aqui está à venda.",
   },
+  onboarding: {
+    stepSaveError: "Não foi possível guardar este passo. Tente novamente.",
+  },
 };
 
 export default pt;

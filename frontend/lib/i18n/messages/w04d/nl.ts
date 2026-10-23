@@ -32,6 +32,9 @@ const nl: typeof en = {
     freeInBeta: "Gratis in de bèta",
     planNote: "Abonnementen beschrijven wat een bètaaccount kan gebruiken. Niets hier is te koop.",
   },
+  onboarding: {
+    stepSaveError: "We konden deze stap niet opslaan. Probeer het opnieuw.",
+  },
 };
 
 export default nl;
