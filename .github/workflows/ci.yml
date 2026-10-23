@@ -183,6 +183,10 @@ jobs:
         run: python scripts/eval_i18n_l10n.py
       - name: Per-language AI behaviour evaluation (06C; offline; directives, prompt parity, grounding parity, scoring invariance, rating harness; 0 model calls)
         run: python scripts/eval_language_ai_behaviour.py
+      - name: Independent human evaluation harness (06G; offline; protocol self-test on fake data, schema and guidance current; 0 model calls)
+        run: |
+          python scripts/language_human_eval.py selftest
+          python scripts/language_human_eval.py sync --check
       - name: Documents & evidence evaluation (Capstone P4/E2/E3; offline; privacy + provenance + security)
         run: python scripts/eval_documents_evidence.py
       - name: Multi-agent & model-policy evaluation (Capstone P5/E4; offline; isolation + no-fabrication + injection-inert)

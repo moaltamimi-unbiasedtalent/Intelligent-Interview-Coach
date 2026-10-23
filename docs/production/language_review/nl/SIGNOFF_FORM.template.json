@@ -1,0 +1,38 @@
+{
+  "forms": {
+    "LG-10": {
+      "approval_date": "",
+      "approved_until": "",
+      "conflicts_declared": "",
+      "evidence_reference": "",
+      "gate": "LG-10",
+      "independence_statement": "",
+      "pack_content_digest_reviewed": "",
+      "qualification_statement": "",
+      "release_sha": "",
+      "reviewer_name": "",
+      "scope": "Legal and privacy translation qualified (terms, privacy, AI transparency, consent text)",
+      "state": "NOT SIGNED",
+      "verdict_summary": ""
+    },
+    "LG-11": {
+      "approval_date": "",
+      "approved_until": "",
+      "conflicts_declared": "",
+      "evidence_reference": "",
+      "gate": "LG-11",
+      "independence_statement": "",
+      "pack_content_digest_reviewed": "",
+      "qualification_statement": "",
+      "release_sha": "",
+      "reviewer_name": "",
+      "scope": "Native-language human review (interface text, Mo output samples, interview questions and feedback)",
+      "state": "NOT SIGNED",
+      "verdict_summary": ""
+    }
+  },
+  "language": "nl",
+  "note": "BLANK TEMPLATE. Nothing here is a sign-off. A form counts only when a named human completes it and the owner records it in docs/production/execution/language_readiness.json.",
+  "pack_content_digest_expected": "12d898f1111389301eab7495ae7d85c0d4976dde2bf05cf05e3c448909334cc9",
+  "schema": "ask4mo.language_review.signoff_form/1"
+}

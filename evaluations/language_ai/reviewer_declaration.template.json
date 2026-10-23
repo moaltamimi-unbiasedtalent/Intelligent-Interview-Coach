@@ -1,0 +1,20 @@
+{
+  "compensation_depends_on_outcome": null,
+  "confirms_no_translation_or_ai_tools": null,
+  "confirms_rates_separately_from_other_raters": null,
+  "contributed_to_prompts_or_translations": null,
+  "declaration_date": "",
+  "explanation_if_any_flag_differs": "",
+  "has_financial_interest_in_outcome": null,
+  "is_author_of_reviewed_text": null,
+  "language": "",
+  "native_or_fluent_statement": "",
+  "note": "BLANK TEMPLATE. The author of the text under review is the engineering side (text written and machine-translated with AI assistance). Answer every field truthfully; write NONE where there is nothing to declare.",
+  "other_conflicts": "",
+  "paid_by_author_or_author_affiliate": null,
+  "rater_slot": "",
+  "relationships_to_owner_or_product": "",
+  "reviewer_name": "",
+  "schema": "ask4mo.language_ai.reviewer_declaration/1",
+  "typed_signature": ""
+}
