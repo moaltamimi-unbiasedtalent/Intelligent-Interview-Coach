@@ -11,7 +11,7 @@ from typing import Any, Callable
 from sqlalchemy import select
 
 from src.application import admin_audit as A
-from src.application.account_deletion_service import AccountDeletionService
+from src.application.account_deletion_service import AccountDeletionService, DeletionIncomplete
 from src.jobs.registry import PermanentJobError, RetryableJobError
 from src.persistence import PrivacyRequest as R, User, utcnow
 from src.privacy import policy as P
@@ -66,8 +66,14 @@ def run_account_delete(request_public_id: str, ctx) -> None:
     # needed to finish the provider obligation is retained (recorded with a basis code and flagged for legal review), and purged when every subscription is terminal.
     from src.billing.closure import ClosureService
     preserve = ClosureService(rt.session_factory).begin_retained_erasure(subject, request_public_id)
-    summary = service.delete_account(subject, preserve_billing_reference=preserve)       # idempotent: a missing user is a no-op
-    pending = index.pending_purge(subject) + [(rid, subject) for rid in summary.purge_failed_run_ids]
+    try:
+        summary = service.delete_account(subject, preserve_billing_reference=preserve)       # idempotent: a missing user is a no-op
+    except DeletionIncomplete:
+        raise RetryableJobError("unavailable")                               # a private file could not be deleted: nothing was committed, the run is repeatable
+    # 05E: purge EVERY run still indexed for this owner, whatever its state. A crash between the SQL commit and the checkpoint purge leaves rows in state
+    # "started"/"ready" (not only "purge_failed"); looking at purge_failed alone would loop on them until the attempts ran out.
+    pending = [(rid, subject) for rid in index.run_ids_for_owner(subject)] + [(rid, subject) for rid in summary.purge_failed_run_ids]
+    pending = list(dict.fromkeys(pending))
     leftover = []
     for run_id, _ in pending:
         try:
@@ -81,6 +87,14 @@ def run_account_delete(request_public_id: str, ctx) -> None:
         raise RetryableJobError("unavailable")                               # NOT complete: some checkpoint data is still there
     leftover_known = index.run_ids_for_owner(subject)
     if leftover_known:
+        raise RetryableJobError("unavailable")
+    # 05E: completion requires the VERIFIED erasure: no row anywhere in the schema may still reference the account (the retained anonymised billing shell and this very
+    # request row are the documented exceptions). A deterministic residual is not "completed": it fails visibly after the bounded attempts.
+    from src.privacy import erasure
+
+    residual = erasure.residual_for_user(rt.session_factory, subject, retain_billing=preserve, retain_requests=True)
+    if residual:
+        log.warning("privacy deletion residual references remain: %s", sorted(residual))      # table.column names and counts only
         raise RetryableJobError("unavailable")
     requests.complete_system(request_public_id, "deletion_performed",
                              audit=_completion_audit(rt, ctx, request_public_id, A.ADMIN_PRIVACY_DELETION_COMPLETED))

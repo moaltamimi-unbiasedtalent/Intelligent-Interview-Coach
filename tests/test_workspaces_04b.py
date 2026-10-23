@@ -239,13 +239,19 @@ def test_last_owner_protection_and_ownership_transfer(team):
     # the only owner can neither leave nor be removed; the API says what to do
     assert w.post("alice", f"/workspaces/{wa}/leave").status_code == 409
     assert w.post("adam", f"/workspaces/{wa}/members/{alice}/remove").status_code == 409
-    # transfer needs the exact workspace name and an ACTIVE member other than yourself
+    # proposing a transfer needs a FRESH password confirmation first (the existing step-up), then the exact name and an ACTIVE member other than yourself
+    body = {"new_owner_user_id": adam, "confirm_name": "Alpha"}
+    r = w.post("alice", f"/workspaces/{wa}/transfer", body)
+    assert r.status_code == 403 and r.json()["error"]["code"] == "step_up_required"
+    assert w.step_up("alice").status_code == 200
     assert w.post("alice", f"/workspaces/{wa}/transfer", {"new_owner_user_id": adam}).status_code == 422
     assert w.post("alice", f"/workspaces/{wa}/transfer", {"new_owner_user_id": adam, "confirm_name": "wrong"}).status_code == 422
     assert w.post("alice", f"/workspaces/{wa}/transfer", {"new_owner_user_id": alice, "confirm_name": "Alpha"}).status_code == 422
     assert w.post("alice", f"/workspaces/{wa}/transfer", {"new_owner_user_id": w.u["olga"]["uid"], "confirm_name": "Alpha"}).status_code == 422
     assert w.post("mia", f"/workspaces/{wa}/transfer", {"new_owner_user_id": mia, "confirm_name": "Alpha"}).status_code == 403
-    r = w.post("alice", f"/workspaces/{wa}/transfer", {"new_owner_user_id": adam, "confirm_name": "Alpha"})
+    tok = w.transfer("alice", wa, "adam")
+    assert w.get("alice", f"/workspaces/{wa}").json()["my_role"] == "workspace_owner"        # nothing moves until the recipient accepts
+    r = w.post("adam", "/workspaces/transfers/accept", {"token": tok})
     assert r.status_code == 200 and r.json()["owner_user_id"] == adam
     detail = w.get("adam", f"/workspaces/{wa}").json()
     assert detail["my_role"] == "workspace_owner" and detail["capabilities"]["can_delete"] is True

@@ -246,7 +246,8 @@ class ProviderControl:
 def operation_headers(operation: str) -> dict[str, str]:
     """The internal budget-category label for an adapter's requests; empty unless a provider-control mode is set (so production behaviour is unchanged). The guard removes it
     before dispatch, so it never reaches the provider."""
-    return {"X-Ask4Mo-Operation": operation} if (os.environ.get("ASK4MO_PROVIDER_MODE") or "").strip() else {}
+    governed = (os.environ.get("ASK4MO_PROVIDER_MODE") or "").strip() or (os.environ.get("AI_BUDGET_MODE") or "").strip().lower() == "enforce"      # 05C: the production governor reads the same label
+    return {"X-Ask4Mo-Operation": operation} if governed else {}
 
 
 def install_from_env(env: dict | None = None) -> ProviderControl | None:

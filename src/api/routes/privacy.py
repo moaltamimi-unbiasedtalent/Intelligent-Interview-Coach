@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.api.dependencies import get_current_user_id, get_legal_service, get_privacy_request_service
 from src.api.rate_limit import enforce, user_key
-from src.api.schemas.privacy import LegalStatus, PrivacyRequestCreate, PrivacyRequestList, PrivacyRequestView
+from src.api.schemas.privacy import LegalHistory, LegalStatus, PrivacyRequestCreate, PrivacyRequestList, PrivacyRequestView
 from src.privacy.legal import LegalNotFound, LegalValidationError
 from src.privacy.requests import PrivacyConflict, PrivacyNotFound, PrivacyValidationError
 
@@ -41,6 +41,11 @@ def my_requests(page: int = Query(default=1, ge=1, le=100000), page_size: int = 
 @router.get("/legal", response_model=LegalStatus, summary="Current legal document versions and my recorded acceptance")
 def legal_status(user_id: int = Depends(get_current_user_id), legal=Depends(get_legal_service)) -> LegalStatus:
     return LegalStatus(**legal.for_user(user_id))
+
+
+@router.get("/legal/history", response_model=LegalHistory, summary="My own recorded acceptance history (document versions I acknowledged)")
+def legal_history(user_id: int = Depends(get_current_user_id), legal=Depends(get_legal_service)) -> LegalHistory:
+    return LegalHistory(**legal.acceptance_history(user_id))
 
 
 @router.post("/legal/{code}/accept", response_model=LegalStatus, summary="Record my acceptance of the CURRENT version of one document")

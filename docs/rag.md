@@ -54,6 +54,12 @@ Two providers ship, selected by `COPILOT_EMBEDDING_PROVIDER`
 | `openai` | `text-embedding-3-small` (configurable) | 1536 | Yes | Real semantic quality via an OpenAI-compatible API. Base URL is configurable because OpenRouter does not serve embeddings for every model. |
 | `local`  | `local-hash-v1` | 512 | No | Dependency-free, deterministic, offline. Hashes tokens into a fixed-width L2-normalised vector — a **lexical** signal, not true semantics. |
 
+A third provider, `openrouter` (`COPILOT_EMBEDDING_PROVIDER=openrouter`), calls OpenRouter's `POST /api/v1/embeddings`
+(`src/copilot/openrouter_embeddings.py`). `COPILOT_EMBEDDING_MODEL` is REQUIRED and must be a `vendor/model` OpenRouter id (no default; the
+production model is chosen from benchmark evidence); the key is `OPENROUTER_API_KEY`; every request goes through the 05C budget governor and
+is refused when no open governor is installed. Details, configuration and the benchmark procedure:
+`docs/production/execution/evidence/02B_OPENROUTER_EMBEDDINGS_EVIDENCE.md`.
+
 `auto` (the default) uses OpenAI when an embedding key is available
 (`COPILOT_EMBEDDING_API_KEY`, falling back to `OPENROUTER_API_KEY`) and
 otherwise the local embedder — so the app always runs. Keys are held as

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import time
+from dataclasses import replace
 from typing import Any, Callable
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
@@ -16,6 +17,7 @@ from langgraph.types import interrupt
 
 from src.agent.errors import (
     TOOL_FAILURE_EXECUTION_FAILED,
+    TOOL_FAILURE_INVALID_ARGUMENTS,
     AgentConfigurationError,
     AgentToolError,
 )
@@ -23,6 +25,16 @@ from src.agent.events import AgentEvent, AgentEventType
 from src.agent.human import DECISION_APPROVE, DECISION_SELECT, HumanActionType
 from src.agent.policies import MAX_AGENT_STEPS, SYSTEM_PROMPT, response_language_directive
 from src.agent.registry import ToolRegistry
+from src.agent.tool_authorization import (
+    DEFAULT_POLICIES,
+    Reason,
+    ToolAuthorizationDenied,
+    AUDIT_TRAIL_MAX,
+    FINGERPRINT_TRAIL_MAX,
+    bounded_append,
+    build_run_context,
+    public_denial,
+)
 from src.agent.tooling import ToolContext
 from src.agent.state import (
     STATUS_COMPLETED,
@@ -207,29 +219,66 @@ def make_tools_node(registry: ToolRegistry) -> Callable[[AgentState], dict]:
         usage_entries = list(state.get("usage_entries", []) or [])
         cache_hits = int(state.get("retrieval_cache_hits", 0) or 0)
         cache_misses = int(state.get("retrieval_cache_misses", 0) or 0)
-        disabled = set(state.get("disabled_tools", []) or [])
+        audit_trail = list(state.get("tool_authorization", []) or [])
+        fingerprints = list(state.get("tool_call_fps", []) or [])
+        taint = dict(state.get("untrusted_context") or {})
+        result_untrusted = frozenset(n for n, p in DEFAULT_POLICIES.items() if p.result_untrusted)
+        base_run = build_run_context(state, memory_header=_MEMORY_HEADER, result_untrusted_tools=result_untrusted)
 
-        for call in getattr(last, "tool_calls", []) or []:
+        for call_number, call in enumerate(getattr(last, "tool_calls", []) or []):
             name = call.get("name", "")
             call_id = call.get("id", "")
             args = call.get("args", {}) or {}
             events.append(AgentEvent(AgentEventType.TOOL_REQUESTED, step=step, tool_name=name).to_dict())
 
-            # Defense in depth: a disabled tool is rejected even if the model names it
-            # (it is not offered in the first place). Treated like an unavailable tool.
-            if name in disabled or not registry.has(name):
-                events.append(AgentEvent(AgentEventType.TOOL_REJECTED, step=step, tool_name=name, status="rejected", message="Tool not available.").to_dict())
-                history.append({"tool": name, "status": "rejected"})
-                out_messages.append(ToolMessage(content=json.dumps({"error": "This tool is not available."}), tool_call_id=call_id))
+            # SERVER-SIDE AUTHORIZATION (01D, REVIEW-01 R4/R5). Every model-requested call is decided here from
+            # TRUSTED run state, immediately before any handler can run: registry membership and the per-run
+            # capability toggle (a disabled tool is never executed, even if the model names it), declared policy,
+            # pinned schema, argument shape and bounds, identity, ownership, run state, budget and the injection
+            # context. The decision is audited (identifiers and a reason code only) and bound to this exact call;
+            # a refusal never reaches the handler.
+            run_ctx = replace(
+                base_run, calls_in_step=call_number, seen_fingerprints=tuple(fingerprints),
+                max_injection_risk=float(taint.get("max_injection_risk", 0.0) or 0.0),
+                quarantined_chunks=int(taint.get("quarantined_chunks", 0) or 0))
+            decision = registry.authorize(name, args, _merge_ctx(ctx, state_updates), run_ctx)
+            audit_trail = bounded_append(audit_trail, decision.to_audit(), AUDIT_TRAIL_MAX)
+            if registry.has(name):
+                fingerprints = bounded_append(fingerprints, decision.fingerprint, FINGERPRINT_TRAIL_MAX)
+            if not decision.allowed:
+                known = registry.has(name)
+                if decision.reason in (Reason.TOOL_NOT_REGISTERED, Reason.TOOL_DISABLED):
+                    # Unchanged behaviour for an unknown or withheld tool.
+                    events.append(AgentEvent(AgentEventType.TOOL_REJECTED, step=step, tool_name=name, status="rejected", message="Tool not available.").to_dict())
+                    history.append({"tool": name, "status": "rejected"})
+                    out_messages.append(ToolMessage(content=json.dumps({"error": "This tool is not available."}), tool_call_id=call_id))
+                elif decision.reason is Reason.INVALID_ARGUMENTS:
+                    # Unchanged behaviour for arguments that fail the tool's own validation.
+                    events.append(AgentEvent(AgentEventType.TOOL_FAILED, step=step, tool_name=name, duration_ms=0, status="error", category=TOOL_FAILURE_INVALID_ARGUMENTS, message="The tool could not run with those inputs.").to_dict())
+                    history.append({"tool": name, "status": "error", "category": TOOL_FAILURE_INVALID_ARGUMENTS})
+                    out_messages.append(ToolMessage(content=json.dumps({"error": f"Invalid arguments for tool '{name}'."}), tool_call_id=call_id))
+                else:
+                    events.append(AgentEvent(AgentEventType.TOOL_REJECTED, step=step, tool_name=name if known else None, status="denied", message="Tool call not permitted.").to_dict())
+                    history.append({"tool": name if known else "unregistered", "status": "denied"})
+                    out_messages.append(ToolMessage(content=json.dumps(public_denial(decision.reason)), tool_call_id=call_id))
                 continue
 
             events.append(AgentEvent(AgentEventType.TOOL_STARTED, step=step, tool_name=name).to_dict())
             t0 = time.perf_counter()
             try:
                 # Later tool calls in the same step see earlier patches this step.
-                outcome = registry.validate_and_run(name, args, _merge_ctx(ctx, state_updates))
+                outcome = registry.validate_and_run(name, args, _merge_ctx(ctx, state_updates), decision=decision)
                 dur = int((time.perf_counter() - t0) * 1000)
-                state_updates.update(outcome.state_patch or {})
+                patch = dict(outcome.state_patch or {})
+                incoming = patch.pop("untrusted_context", None)
+                if incoming:
+                    taint = {
+                        "max_injection_risk": max(float(taint.get("max_injection_risk", 0.0) or 0.0),
+                                                  float(incoming.get("max_injection_risk", 0.0) or 0.0)),
+                        "quarantined_chunks": int(taint.get("quarantined_chunks", 0) or 0) + int(incoming.get("quarantined_chunks", 0) or 0),
+                        "flagged_chunks": int(taint.get("flagged_chunks", 0) or 0) + int(incoming.get("flagged_chunks", 0) or 0),
+                    }
+                state_updates.update(patch)
                 # Accumulate this tool call's safe provider usage (model-backed tools
                 # only; deterministic tools carry no usage — never a fabricated record).
                 if outcome.usage:
@@ -245,6 +294,9 @@ def make_tools_node(registry: ToolRegistry) -> Callable[[AgentState], dict]:
                 ).to_dict())
                 history.append({"tool": name, "status": "ok"})
                 out_messages.append(ToolMessage(content=json.dumps(outcome.result), tool_call_id=call_id))
+            except ToolAuthorizationDenied as denied:  # defensive: the decision above was an allow
+                history.append({"tool": name, "status": "denied"})
+                out_messages.append(ToolMessage(content=json.dumps(public_denial(denied.decision.reason)), tool_call_id=call_id))
             except AgentToolError as exc:
                 dur = int((time.perf_counter() - t0) * 1000)
                 # A safe, coarse category (never arguments/content/raw cause) so the
@@ -267,7 +319,8 @@ def make_tools_node(registry: ToolRegistry) -> Callable[[AgentState], dict]:
 
         return {"messages": out_messages, "events": events, "tool_history": history,
                 "usage_entries": usage_entries, "retrieval_cache_hits": cache_hits,
-                "retrieval_cache_misses": cache_misses, **state_updates}
+                "retrieval_cache_misses": cache_misses, "tool_authorization": audit_trail,
+                "tool_call_fps": fingerprints, "untrusted_context": taint, **state_updates}
 
     return tools
 
@@ -341,7 +394,11 @@ def make_human_review_node(memory_service: MemoryService | None = None) -> Calla
                 # (The edit was validated in validate_decision before resume.)
                 edited = (decision or {}).get("memory")
                 candidate = edited if isinstance(edited, dict) and edited else (state.get("memory_candidate") or {})
-                result = _persist_memory(memory_service, state.get("user_id"), candidate)
+                # 01D: the write is the one state change a model-requested tool can lead to. Re-check on the SERVER that
+                # this run holds an ALLOWED ProposePreparationMemory decision and a trusted owner, so a forged or
+                # stale candidate in state can never be persisted.
+                result = (_persist_memory(memory_service, state.get("user_id"), candidate)
+                          if _memory_write_authorized(state) else MEMORY_FAILED)
                 if result in (MEMORY_SAVED, MEMORY_ALREADY_EXISTS):
                     # Truthful success: newly created OR deterministic dedupe confirmed
                     # the memory already exists (idempotent).
@@ -381,6 +438,16 @@ MEMORY_FAILED = "failed"
 MEMORY_NOT_AVAILABLE = "not_available"
 
 _MEMORY_SAVE_WARNING = "The approved preparation memory could not be saved."
+
+
+def _memory_write_authorized(state: AgentState) -> bool:
+    """True only for a trusted owner in a run whose audit trail holds an allowed ProposePreparationMemory call."""
+    if not state.get("user_id"):
+        return False
+    return any(
+        d.get("tool") == "ProposePreparationMemory" and d.get("allowed") is True
+        for d in (state.get("tool_authorization") or [])
+    )
 
 
 def _persist_memory(memory_service, user_id, candidate: dict) -> str:

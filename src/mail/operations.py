@@ -15,6 +15,12 @@ from src.mail.sender import BrevoEmailSender, ConsoleEmailSender, MemoryEmailSen
 STATUSES = ("not_configured", "configured_not_tested", "last_test_passed", "provider_accepted", "delivery_failed", "delivery_unknown")
 
 
+def _events_authorized() -> bool:
+    from src.mail import webhook
+
+    return webhook.DELIVERY_EVENTS_AUTHORIZED is True
+
+
 def adapter_name(sender) -> str:
     if isinstance(sender, BrevoEmailSender):
         return "brevo"
@@ -79,7 +85,7 @@ def build_delivery_status(*, sender, integration: dict, attempts: dict, sender_i
         "restart_reason": reason,
         "last_test": {"state": {"not_tested": "not_tested", "healthy": "passed", "unhealthy": "failed"}[health["status"]],
                             "last_tested_at": health["last_tested_at"], "category": health["category"]},
-        "delivery_confirmation": "not_collected",
+        "delivery_confirmation": "webhook_verified" if _events_authorized() else "not_collected",
         "live_delivery": "unverified",
         "link_origin": {"configured": bool(parsed and parsed.netloc), "https": bool(parsed and parsed.scheme == "https")},
         "identity_pipeline": {"verification": "ready" if ready else "not_ready", "recovery": "ready" if ready else "not_ready"},

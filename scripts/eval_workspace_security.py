@@ -13,6 +13,10 @@ revoked_invitation_unusable, consent_required, archived_share_refused, archive_r
 admin_role_semantics, last_owner_protected, removal_revokes_member_shares, workspace_delete_revokes_all,
 removed_member_loses_read, owner_departure_cuts_shares, admin_enrolment_guard, member_list_hides_addresses,
 claim_is_conditional.
+
+The 04B completion (two-step ownership transfer; OD-WS-TRANSFER is a provisional recommendation, not an approval) adds: transfer_two_step_no_early_move,
+transfer_unverified_recipient_refused, transfer_replay_and_expiry_refused, transfer_atomic_single_winner, transfer_party_departure_cancels,
+transfer_audit_metadata_only.
 Exits non-zero on any failure.
 """
 
@@ -41,6 +45,8 @@ from src.application.workspace_service import (  # noqa: E402
 from src.persistence import (  # noqa: E402
     User, init_db, make_engine, make_session_factory, utcnow,
 )
+from src.application.ownership_transfer_service import OwnershipTransferService  # noqa: E402
+from src.ownership_transfer_repository import OwnershipTransferRepository, hash_token, transfer_email_hash  # noqa: E402
 from src.workspace_repository import WorkspaceRepository  # noqa: E402
 
 
@@ -110,6 +116,7 @@ def _accept(ws, mail, uid):
 def evaluate() -> dict:
     m: dict = {}
     repo, ws, share, mail = _harness()
+    xf = OwnershipTransferService(workspaces=repo, transfers=OwnershipTransferRepository(repo.session_factory), accounts=ws._accounts, email=mail)  # noqa: SLF001
 
     # alice creates WS-A, invites+adds bob.
     a = ws.create_workspace(user_id=1, name="A")["id"]
@@ -123,7 +130,7 @@ def evaluate() -> dict:
     esc = 0
     for call in (lambda: ws.invite(user_id=2, workspace_id=a, email="carol@x.com"),
                  lambda: ws.remove_member(user_id=2, workspace_id=a, target_user_id=1),
-                 lambda: ws.transfer_ownership(user_id=2, workspace_id=a, new_owner_user_id=2)):
+                 lambda: xf.propose(user_id=2, workspace_id=a, new_owner_user_id=2, confirm_name="A")):
         try:
             call()
         except WorkspacePermissionError:
@@ -240,6 +247,7 @@ def _evaluate_04b() -> dict:
     """04B gates: lifecycle, roles, invitations, consent, immediate revocation, deletion, isolation, admin metadata only."""
     m: dict = {}
     repo, ws, share, mail = _harness()
+    xf = OwnershipTransferService(workspaces=repo, transfers=OwnershipTransferRepository(repo.session_factory), accounts=ws._accounts, email=mail)  # noqa: SLF001
 
     def token():
         return mail.sent[-1].body.split("token=")[1].split()[0]
@@ -322,7 +330,7 @@ def _evaluate_04b() -> dict:
     denied = [
         _raises(lambda: ws.invite(user_id=4, workspace_id=w, email="x@y.com", role="workspace_admin"), WorkspacePermissionError),
         _raises(lambda: ws.remove_member(user_id=4, workspace_id=w, target_user_id=1), ConflictError, WorkspacePermissionError),
-        _raises(lambda: ws.transfer_ownership(user_id=4, workspace_id=w, new_owner_user_id=4, confirm_name="Team"), WorkspacePermissionError),
+        _raises(lambda: xf.propose(user_id=4, workspace_id=w, new_owner_user_id=4, confirm_name="Team"), WorkspacePermissionError),
         _raises(lambda: ws.archive_workspace(user_id=4, workspace_id=w), WorkspacePermissionError),
         _raises(lambda: ws.delete_workspace(user_id=4, workspace_id=w, confirm_name="Team"), WorkspacePermissionError),
         _raises(lambda: ws.change_member_role(user_id=4, workspace_id=w, target_user_id=2, role="workspace_admin"), WorkspacePermissionError),
@@ -396,6 +404,80 @@ def _evaluate_04b() -> dict:
     m["admin_enrolment_guard"] = 1 if (
         _raises(lambda: AdminUserRepository(repo.session_factory).add_member(w2, 3, "workspace_member"), ConflictError)
         and repo.member_role(w2, 3) is None) else 0
+        # ---- 04B completion: two-step ownership transfer ------------------------------------------------------------------
+    import json
+    from sqlalchemy import select as _select
+    from src.persistence import AuditEvent, WorkspaceOwnershipTransfer as _T
+
+    def _team(owner: int, name: str, members: tuple[int, ...]) -> int:
+        wid = ws.create_workspace(user_id=owner, name=name)["id"]
+        for uid in members:
+            repo.upsert_membership(workspace_id=wid, user_id=uid, role="workspace_member")
+        return wid
+
+    def _tok() -> str:
+        return mail.sent[-1].body.split("token=")[1].split()[0]
+
+    t1 = _team(4, "T1", (2, 6))                                     # carol owns; bob(2) and dave(6) are verified members
+    xf.propose(user_id=4, workspace_id=t1, new_owner_user_id=2, confirm_name="T1", former_owner_role="workspace_admin")
+    raw = _tok()
+    early = repo.member_role(t1, 4) == "workspace_owner" and repo.member_role(t1, 2) == "workspace_member"
+    wrong_person = _raises(lambda: xf.accept(user_id=6, token=raw), WorkspaceNotFoundError)            # a token bound to bob is useless to dave
+    xf.accept(user_id=2, token=raw)
+    swapped = repo.member_role(t1, 2) == "workspace_owner" and repo.member_role(t1, 4) == "workspace_admin" and repo.count_active_owners(t1) == 1
+    m["transfer_two_step_no_early_move"] = 1 if (early and wrong_person and swapped) else 0
+    m["transfer_replay_and_expiry_refused"] = 0
+    replay = _raises(lambda: xf.accept(user_id=2, token=raw), ConflictError)
+
+    t2 = _team(1, "T2", (5, 6))                                     # eve(5) never verified her address; dave(6) is verified
+    unverified = _raises(lambda: xf.propose(user_id=1, workspace_id=t2, new_owner_user_id=5, confirm_name="T2"), ValidationError)
+    xf.propose(user_id=1, workspace_id=t2, new_owner_user_id=6, confirm_name="T2")
+    raw2 = _tok()
+    with repo.session_factory() as sess:                            # the deadline passes: the server refuses and marks it expired
+        row = sess.scalar(_select(_T).where(_T.workspace_id == t2))
+        row.expires_at = utcnow() - timedelta(minutes=1)
+        sess.commit()
+    expired = _raises(lambda: xf.accept(user_id=6, token=raw2), ConflictError) and repo.member_role(t2, 1) == "workspace_owner"
+    m["transfer_unverified_recipient_refused"] = 1 if unverified else 0
+    m["transfer_replay_and_expiry_refused"] = 1 if (replay and expired) else 0
+
+    t3 = _team(1, "T3", (6,))
+    xf.propose(user_id=1, workspace_id=t3, new_owner_user_id=6, confirm_name="T3")
+    th = hash_token(_tok())
+    trepo = OwnershipTransferRepository(repo.session_factory)
+    wins: list[str] = []
+    gate = threading.Barrier(6)
+
+    def _go(kind: str) -> None:
+        gate.wait()
+        try:
+            if kind == "accept":
+                wins.append("accept" if trepo.accept(token_hash=th, user_id=6, email_hash=transfer_email_hash("dave@x.com"))[0] == "ok" else "-")
+            else:
+                wins.append("cancel" if trepo.cancel(workspace_id=t3, user_id=1)[0] == "ok" else "-")
+        except Exception:  # noqa: BLE001 - a lost race on a locked SQLite file is not a second winner
+            wins.append("-")
+
+    threads = [threading.Thread(target=_go, args=(k,)) for k in ("accept", "cancel", "accept", "cancel", "accept", "cancel")]
+    [t.start() for t in threads]
+    [t.join() for t in threads]
+    with repo.session_factory() as sess:
+        final = sess.scalar(_select(_T.status).where(_T.workspace_id == t3))
+    m["transfer_atomic_single_winner"] = 1 if (len([x for x in wins if x != "-"]) == 1 and repo.count_active_owners(t3) == 1
+                                               and ((final == "accepted") == (repo.member_role(t3, 6) == "workspace_owner"))) else 0
+
+    t4 = _team(1, "T4", (6,))
+    xf.propose(user_id=1, workspace_id=t4, new_owner_user_id=6, confirm_name="T4")
+    ws.leave(user_id=6, workspace_id=t4)
+    m["transfer_party_departure_cancels"] = 1 if (trepo.pending_for_workspace(t4) is None and repo.member_role(t4, 1) == "workspace_owner") else 0
+
+    with repo.session_factory() as sess:
+        rows = sess.scalars(_select(AuditEvent).where(AuditEvent.event_type.like("workspace.transfer_%"))).all()
+        blob = json.dumps([(e.event_type, e.context, e.target_id, e.target_type) for e in rows], default=str)
+    allowed = {"transfer_id", "actor_role", "former_owner_role", "outcome", "reason"}
+    m["transfer_audit_metadata_only"] = 1 if (
+        rows and all(set(e.context or {}) <= allowed for e in rows) and "@" not in blob and "x.com" not in blob
+        and raw not in blob and raw2 not in blob and "T1" not in blob) else 0
     return m
 
 
@@ -411,6 +493,9 @@ GATES = {
     "admin_role_semantics": 1, "last_owner_protected": 1, "removal_revokes_member_shares": 1,
     "workspace_delete_revokes_all": 1, "removed_member_loses_read": 1, "owner_departure_cuts_shares": 1,
     "admin_enrolment_guard": 1, "member_list_hides_addresses": 1, "claim_is_conditional": 1,
+    # 04B completion: two-step ownership transfer
+    "transfer_two_step_no_early_move": 1, "transfer_unverified_recipient_refused": 1, "transfer_replay_and_expiry_refused": 1,
+    "transfer_atomic_single_winner": 1, "transfer_party_departure_cancels": 1, "transfer_audit_metadata_only": 1,
 }
 
 

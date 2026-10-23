@@ -328,6 +328,11 @@ def main(argv: list[str] | None = None) -> int:
     if not config.is_configured:
         print("No OpenRouter API key configured; cannot run the live comparison.")
         return 1
+    from src.llm.budget.script_guard import guard_paid_script      # 05C: every paid path also needs the governed budget (approved marker, durable ledger, ceilings, kill switch)
+
+    refused = guard_paid_script("compare_prompts", category="evaluation")
+    if refused is not None:
+        return refused
 
     client = OpenRouterClient(config)
     try:

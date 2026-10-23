@@ -1,0 +1,97 @@
+{
+ "checks": [
+  {
+   "detail": {
+    "head": "0043_story_bank_completion",
+    "revision_reached": "0043_story_bank_completion"
+   },
+   "id": "upgrade_to_head",
+   "result": "PASS",
+   "title": "A new database upgrades to the head revision through the real migration chain"
+  },
+  {
+   "detail": {
+    "codes": [
+     "unencrypted_set"
+    ],
+    "tables": 93
+   },
+   "id": "pre_migration_backup_taken",
+   "result": "PASS",
+   "title": "A verified backup set is taken before the downgrade is attempted"
+  },
+  {
+   "detail": {
+    "exit_nonzero": true,
+    "refusal_message_present": true,
+    "revision_and_all_row_counts_unchanged": true
+   },
+   "id": "downgrade_refused_fail_closed",
+   "result": "PASS",
+   "title": "The downgrade is REFUSED while candidate-authored state exists, and changes nothing"
+  },
+  {
+   "detail": {
+    "expected": "0042_registration_invitations",
+    "revision_reached": "0042_registration_invitations",
+    "surviving_tables_rows_preserved": true
+   },
+   "id": "downgrade_one_revision",
+   "result": "PASS",
+   "title": "With the state cleared, the downgrade of one revision succeeds and every surviving table keeps its rows"
+  },
+  {
+   "detail": {
+    "revision_reached": "0043_story_bank_completion",
+    "rows_intact": true
+   },
+   "id": "reupgrade_to_head",
+   "result": "PASS",
+   "title": "The database upgrades to head again and the preserved rows are intact"
+  },
+  {
+   "detail": {
+    "codes": []
+   },
+   "id": "restore_of_pre_migration_backup",
+   "result": "PASS",
+   "title": "The pre-migration backup restores into a separate environment (the fallback when a downgrade is refused or unsafe)"
+  },
+  {
+   "detail": {
+    "reason": "documentation only (runbook section 6); no deployment exists (DEPLOYMENT FREEZE, OD-HOSTED)"
+   },
+   "id": "application_rollback_by_image_tag",
+   "result": "NOT_RUN",
+   "title": "Application rollback by pointing the deployment at the previous image tag"
+  },
+  {
+   "detail": {
+    "reason": "rehearsal runs on SQLite; the PostgreSQL branches execute only against a disposable PostgreSQL (tests/test_pg_05b.py when TEST_DATABASE_URL is set)"
+   },
+   "id": "postgresql_ddl_branches",
+   "result": "NOT_RUN",
+   "title": "The PostgreSQL branches of the migration (foreign keys added and dropped)"
+  }
+ ],
+ "commit_sha": "092f99b3",
+ "drill_id": "rollback-20261022T122512Z-offline-sqlite",
+ "finished_at": "2026-10-22T12:25:14.436805+00:00",
+ "hosted_verification": "NOT RUN (OD-HOSTED)",
+ "kind": "offline_synthetic_sqlite",
+ "label": "offline-sqlite",
+ "migration": {
+  "head": "0043_story_bank_completion",
+  "previous": "0042_registration_invitations"
+ },
+ "not_exercised": [
+  "PostgreSQL DDL branches",
+  "hosted staging",
+  "application image rollback",
+  "timing at production volume"
+ ],
+ "overall": "PARTIAL",
+ "record_format": 1,
+ "started_at": "2026-10-22T12:25:12.783607+00:00",
+ "tool": "ask4mo-backup-set/1"
+}

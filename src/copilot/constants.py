@@ -107,6 +107,13 @@ LOCAL_EMBEDDING_VERSION = "hash-1"
 OPENAI_EMBEDDING_VERSION = "openai-compat-1"
 # Dimensions of the semantic models the product knows. An unknown model needs COPILOT_EMBEDDING_DIMENSIONS (hosted refuses to guess).
 KNOWN_EMBEDDING_DIMENSIONS = {"text-embedding-3-small": 1536, "text-embedding-3-large": 3072, "text-embedding-ada-002": 1536}
+# 02B (OpenRouter adapter): recorded version of the OpenRouter embedding request handling (bump when request or batching semantics change).
+OPENROUTER_EMBEDDING_VERSION = "openrouter-1"
+# Bounds of the OpenRouter embedder (per request). The governor's own limits (when installed) can only LOWER the batch token bound.
+OPENROUTER_EMBED_MAX_BATCH_INPUTS = 64
+OPENROUTER_EMBED_MAX_BATCH_TOKENS = 8000      # pessimistic estimate (about 3 characters per token), the same estimator the governor uses
+OPENROUTER_EMBED_MAX_RETRIES = 1              # connect-phase transport errors only (the request provably never reached the provider)
+OPENROUTER_EMBED_CACHE_ENTRIES = 4096         # bounded per-embedder cache of identical texts
 
 # --- Knowledge base / vector store paths (used from Phase 2) -----------------
 

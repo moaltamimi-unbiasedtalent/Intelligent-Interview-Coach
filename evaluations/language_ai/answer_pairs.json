@@ -1,0 +1,101 @@
+{
+  "schema": "ask4mo.language_ai.answer_pairs/1",
+  "package": "06C",
+  "synthetic": true,
+  "note": "Synthetic, profession-neutral question and answer pairs used ONLY to test that interview scoring is language-independent. Each pair carries the same content in seven languages (engineering translations, NOT native-reviewed; LG-11). The reference_scores are fixture values returned by a deterministic fake model: they are design values for an invariance test, never a claim about how a real model or a human would grade the answers.",
+  "languages": ["en", "de", "fr", "es", "it", "pt", "nl"],
+  "pairs": [
+    {
+      "id": "strong_star",
+      "level": "strong",
+      "question": {
+        "en": "Tell me about a time you resolved a disagreement in your team.",
+        "de": "Erzähle mir von einer Situation, in der du einen Meinungsunterschied in deinem Team gelöst hast.",
+        "fr": "Parlez-moi d’une situation où vous avez résolu un désaccord au sein de votre équipe.",
+        "es": "Cuéntame una ocasión en la que resolviste un desacuerdo en tu equipo.",
+        "it": "Raccontami di una volta in cui hai risolto un disaccordo nel tuo team.",
+        "pt": "Conta-me uma situação em que resolveste um desacordo na tua equipa.",
+        "nl": "Vertel me over een keer dat je een meningsverschil in je team hebt opgelost."
+      },
+      "answer": {
+        "en": "Two colleagues disagreed about how to split the work. I spoke to each of them separately, found that both wanted fair recognition, and proposed a rota. We finished two days early and the rota stayed in use afterwards.",
+        "de": "Zwei Kollegen waren uneinig, wie die Arbeit aufzuteilen sei. Ich habe mit beiden einzeln gesprochen, festgestellt, dass beide faire Anerkennung wollten, und einen Plan vorgeschlagen. Wir wurden zwei Tage früher fertig und der Plan blieb danach in Gebrauch.",
+        "fr": "Deux collègues n’étaient pas d’accord sur la répartition du travail. J’ai parlé à chacun séparément, constaté que les deux voulaient une reconnaissance équitable, et proposé un roulement. Nous avons terminé deux jours plus tôt et le roulement est resté en place ensuite.",
+        "es": "Dos compañeros no estaban de acuerdo sobre cómo repartir el trabajo. Hablé con cada uno por separado, vi que ambos querían un reconocimiento justo y propuse un turno rotativo. Terminamos dos días antes y el turno se siguió usando después.",
+        "it": "Due colleghi non erano d’accordo su come dividere il lavoro. Ho parlato con ciascuno separatamente, ho capito che entrambi volevano un riconoscimento equo e ho proposto una turnazione. Abbiamo finito due giorni prima e la turnazione è rimasta in uso.",
+        "pt": "Dois colegas discordavam sobre como dividir o trabalho. Falei com cada um separadamente, percebi que ambos queriam um reconhecimento justo e propus uma rotação. Terminámos dois dias mais cedo e a rotação continuou em uso depois.",
+        "nl": "Twee collega’s waren het oneens over hoe het werk te verdelen. Ik sprak met elk van hen apart, zag dat beiden eerlijke erkenning wilden en stelde een rooster voor. We waren twee dagen eerder klaar en het rooster bleef daarna in gebruik."
+      },
+      "reference_scores": {"overall_score": 85, "relevance": 9, "structure": 8, "evidence": 8, "role_knowledge": 7, "problem_solving": 9, "communication": 8, "credibility": 8}
+    },
+    {
+      "id": "weak_generic",
+      "level": "weak",
+      "question": {
+        "en": "Tell me about a time you resolved a disagreement in your team.",
+        "de": "Erzähle mir von einer Situation, in der du einen Meinungsunterschied in deinem Team gelöst hast.",
+        "fr": "Parlez-moi d’une situation où vous avez résolu un désaccord au sein de votre équipe.",
+        "es": "Cuéntame una ocasión en la que resolviste un desacuerdo en tu equipo.",
+        "it": "Raccontami di una volta in cui hai risolto un disaccordo nel tuo team.",
+        "pt": "Conta-me uma situação em que resolveste um desacordo na tua equipa.",
+        "nl": "Vertel me over een keer dat je een meningsverschil in je team hebt opgelost."
+      },
+      "answer": {
+        "en": "I usually get along with everyone, so disagreements are not really a problem for me.",
+        "de": "Ich verstehe mich meistens mit allen, deshalb sind Meinungsunterschiede für mich eigentlich kein Problem.",
+        "fr": "Je m’entends en général avec tout le monde, donc les désaccords ne sont pas vraiment un problème pour moi.",
+        "es": "Normalmente me llevo bien con todos, así que los desacuerdos no son realmente un problema para mí.",
+        "it": "Di solito vado d’accordo con tutti, quindi i disaccordi non sono davvero un problema per me.",
+        "pt": "Normalmente dou-me bem com todos, por isso os desacordos não são realmente um problema para mim.",
+        "nl": "Ik kom meestal met iedereen overweg, dus meningsverschillen zijn voor mij eigenlijk geen probleem."
+      },
+      "reference_scores": {"overall_score": 40, "relevance": 4, "structure": 3, "evidence": 2, "role_knowledge": 4, "problem_solving": 3, "communication": 5, "credibility": 4}
+    },
+    {
+      "id": "off_topic",
+      "level": "off_topic",
+      "question": {
+        "en": "Tell me about a time you resolved a disagreement in your team.",
+        "de": "Erzähle mir von einer Situation, in der du einen Meinungsunterschied in deinem Team gelöst hast.",
+        "fr": "Parlez-moi d’une situation où vous avez résolu un désaccord au sein de votre équipe.",
+        "es": "Cuéntame una ocasión en la que resolviste un desacuerdo en tu equipo.",
+        "it": "Raccontami di una volta in cui hai risolto un disaccordo nel tuo team.",
+        "pt": "Conta-me uma situação em que resolveste um desacordo na tua equipa.",
+        "nl": "Vertel me over een keer dat je een meningsverschil in je team hebt opgelost."
+      },
+      "answer": {
+        "en": "My favourite colour is blue and I like to travel in the summer.",
+        "de": "Meine Lieblingsfarbe ist Blau und ich reise im Sommer gern.",
+        "fr": "Ma couleur préférée est le bleu et j’aime voyager en été.",
+        "es": "Mi color favorito es el azul y me gusta viajar en verano.",
+        "it": "Il mio colore preferito è il blu e mi piace viaggiare d’estate.",
+        "pt": "A minha cor favorita é o azul e gosto de viajar no verão.",
+        "nl": "Mijn favoriete kleur is blauw en ik reis graag in de zomer."
+      },
+      "reference_scores": {"overall_score": 8, "relevance": 1, "structure": 2, "evidence": 1, "role_knowledge": 1, "problem_solving": 1, "communication": 4, "credibility": 3}
+    },
+    {
+      "id": "medium_brief",
+      "level": "medium",
+      "question": {
+        "en": "Tell me about a time you resolved a disagreement in your team.",
+        "de": "Erzähle mir von einer Situation, in der du einen Meinungsunterschied in deinem Team gelöst hast.",
+        "fr": "Parlez-moi d’une situation où vous avez résolu un désaccord au sein de votre équipe.",
+        "es": "Cuéntame una ocasión en la que resolviste un desacuerdo en tu equipo.",
+        "it": "Raccontami di una volta in cui hai risolto un disaccordo nel tuo team.",
+        "pt": "Conta-me uma situação em que resolveste um desacordo na tua equipa.",
+        "nl": "Vertel me over een keer dat je een meningsverschil in je team hebt opgelost."
+      },
+      "answer": {
+        "en": "Two colleagues disagreed about priorities. I talked to them and we found a compromise. It worked out fine.",
+        "de": "Zwei Kollegen waren sich bei den Prioritäten uneinig. Ich habe mit ihnen gesprochen und wir haben einen Kompromiss gefunden. Es hat gut funktioniert.",
+        "fr": "Deux collègues n’étaient pas d’accord sur les priorités. Je leur ai parlé et nous avons trouvé un compromis. Cela s’est bien passé.",
+        "es": "Dos compañeros no estaban de acuerdo sobre las prioridades. Hablé con ellos y encontramos un compromiso. Salió bien.",
+        "it": "Due colleghi non erano d’accordo sulle priorità. Ho parlato con loro e abbiamo trovato un compromesso. È andata bene.",
+        "pt": "Dois colegas discordavam sobre as prioridades. Falei com eles e encontrámos um compromisso. Correu bem.",
+        "nl": "Twee collega’s waren het oneens over de prioriteiten. Ik sprak met hen en we vonden een compromis. Het liep goed af."
+      },
+      "reference_scores": {"overall_score": 60, "relevance": 7, "structure": 5, "evidence": 4, "role_knowledge": 5, "problem_solving": 6, "communication": 6, "credibility": 6}
+    }
+  ]
+}

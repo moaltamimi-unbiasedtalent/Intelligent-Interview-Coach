@@ -27,6 +27,7 @@ __all__ = [
     "ResponseParseError",
     "strip_json_fences",
     "parse_json_object",
+    "parse_exact_json_object",
     "parse_structured_output",
 ]
 
@@ -105,6 +106,24 @@ def _extract_json_object(text: str) -> str | None:
     return None
 
 
+def parse_exact_json_object(text: str) -> dict:
+    """Parse ``text`` as ONE JSON object and nothing else (06C: the provider-enforced strict-schema path).
+
+    No fence stripping and no preamble/trailer extraction: when a provider enforces a strict JSON Schema the content IS the object, so any wrapper text means enforcement
+    did not happen and the caller must take its controlled fallback instead of string-handling the reply. Surrounding whitespace is the only tolerance.
+    """
+    cleaned = (text or "").strip()
+    if not cleaned:
+        raise ResponseParseError("The model returned an empty response.")
+    try:
+        data = json.loads(cleaned)
+    except (json.JSONDecodeError, ValueError) as exc:
+        raise ResponseParseError("The model response was not valid JSON.") from exc
+    if not isinstance(data, dict):
+        raise ResponseParseError("The model response was valid JSON but not a JSON object.")
+    return data
+
+
 def parse_json_object(text: str) -> dict:
     """Parse ``text`` into a JSON object (dict), safely.
 
@@ -140,7 +159,7 @@ def parse_json_object(text: str) -> dict:
 
 
 def _parse_once(
-    text: str, schema: type[ModelT], overrides: dict | None = None
+    text: str, schema: type[ModelT], overrides: dict | None = None, exact: bool = False
 ) -> ModelT:
     """Parse and validate one attempt, raising ResponseParseError on failure.
 
@@ -149,7 +168,7 @@ def _parse_once(
     linkage ids) always take precedence over — and are validated instead of —
     whatever the model produced for them.
     """
-    data = parse_json_object(text)
+    data = parse_exact_json_object(text) if exact else parse_json_object(text)
     if overrides:
         data.update(overrides)
     try:
@@ -172,6 +191,7 @@ def parse_structured_output(
     *,
     repair: RepairFn | None = None,
     overrides: dict | None = None,
+    exact_json: bool = False,
 ) -> ModelT:
     """Parse ``text`` into a validated ``schema`` instance, with one repair round.
 
@@ -183,7 +203,7 @@ def parse_structured_output(
     attempt (see :func:`_parse_once`).
     """
     try:
-        return _parse_once(text, schema, overrides)
+        return _parse_once(text, schema, overrides, exact_json)
     except ResponseParseError as first_error:
         if repair is None:
             raise
@@ -196,7 +216,7 @@ def parse_structured_output(
                 "The automatic repair attempt could not be completed."
             ) from exc
         try:
-            return _parse_once(repaired, schema, overrides)
+            return _parse_once(repaired, schema, overrides, exact_json)
         except ResponseParseError as second_error:
             raise ResponseParseError(
                 "The model response could not be parsed after one repair "
