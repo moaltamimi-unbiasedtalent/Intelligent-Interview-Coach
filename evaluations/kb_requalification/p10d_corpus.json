@@ -916,7 +916,7 @@
   "L-XLANG-1": "The offline lexical embedder has no cross-language semantics; cross-language retrieval needs a semantic embedder (a paid run, not authorised) and cannot be measured here.",
   "L-LANG-AR": "Arabic is not a supported product, interface or knowledge-base language: no structured data, no router keywords and no resolver aliases exist for it. Only lexical document matching is measured.",
   "L-LANG-RU": "Russian is an interface language only (not an ESCO or knowledge-base language). Only lexical document matching is measured.",
-  "L-ROUTE-1": "The deterministic router, occupation phrase extraction and structured lanes are English-keyword driven; a non-English question reaches the structured stores only if the (paid, unmeasured) query-translation model rewrites it. Non-English questions fall to the narrative lane.",
+  "L-ROUTE-1": "The deterministic router, occupation phrase extraction and structured lanes are English-keyword driven; a non-English question reaches the structured stores only if the (paid, unmeasured) query-translation model rewrites it. Non-English questions fall to the narrative lane. 02E CLOSED THE LANE-ROUTING PART for de/fr/es/it/pt/nl (language-aware keyword tables in router_lang.py, so L-10, L-11 and T-30 now pin the compensation lane); occupation phrase extraction and the structured lookups below remain English-keyword driven and are still pinned here.",
   "L-RU-INFLECT": "Country names are matched as whole forms; an inflected Russian name (for example 'в Германии') is not recognised, so no geography is selected (it fails safe: nothing is substituted).",
   "L-ALIAS-1": "Alias resolution is exact-substring: a German near-synonym that is not a stored alias is not mapped to an occupation (correct: no equivalence is invented).",
   "L-CODE-1": "The runtime resolver matches titles and aliases only; an official occupation code in the question does not resolve an occupation.",
@@ -2390,15 +2390,11 @@
    "query": "Was verdient ein Data Analyst in den USA?",
    "language": "de",
    "expect": {
-    "lane": "vector",
+    "lane": "compensation",
     "country": "US",
     "max_structured_evidence": 0
    },
-   "dimension": "lane_routing",
-   "desired": {
-    "lane": "compensation"
-   },
-   "limitation": "L-ROUTE-1"
+   "dimension": "lane_routing"
   },
   {
    "id": "L-11",
@@ -2411,15 +2407,11 @@
    "query": "Combien gagne un Data Analyst aux États-Unis ?",
    "language": "fr",
    "expect": {
-    "lane": "vector",
+    "lane": "compensation",
     "country": "US",
     "max_structured_evidence": 0
    },
-   "dimension": "lane_routing",
-   "desired": {
-    "lane": "compensation"
-   },
-   "limitation": "L-ROUTE-1"
+   "dimension": "lane_routing"
   },
   {
    "id": "L-12",
@@ -3431,12 +3423,10 @@
    "fn": "route_lane",
    "arg": "Was verdient ein Data Analyst in den USA?",
    "expect": {
-    "equals": "vector"
+    "equals": "compensation"
    },
    "language": "de",
-   "dimension": "lane_routing",
-   "desired": "compensation",
-   "limitation": "L-ROUTE-1"
+   "dimension": "lane_routing"
   },
   {
    "id": "T-31",

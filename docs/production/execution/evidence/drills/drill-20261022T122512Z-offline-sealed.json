@@ -1,0 +1,208 @@
+{
+ "checks": [
+  {
+   "detail": {
+    "codes": [],
+    "consistent": true,
+    "counts": {
+     "chunks": 4,
+     "document_files": 4,
+     "files": 16,
+     "rows": 36,
+     "symlinks_skipped": 0,
+     "tables": 93
+    }
+   },
+   "id": "backup_set_created",
+   "result": "PASS",
+   "title": "One consistent backup set of database, documents and knowledge was created"
+  },
+  {
+   "detail": {
+    "codes": [],
+    "counts": {
+     "files_checked": 16,
+     "files_missing": 0,
+     "files_modified": 0,
+     "files_unlisted": 0,
+     "paths_unsafe": 0
+    }
+   },
+   "id": "set_verified",
+   "result": "PASS",
+   "title": "Every file checksum (stored and plaintext) and the manifest signature verify"
+  },
+  {
+   "detail": {
+    "codes": []
+   },
+   "id": "restore_dry_run_writes_nothing",
+   "result": "PASS",
+   "title": "A restore without --execute plans and writes nothing"
+  },
+  {
+   "detail": {
+    "codes": []
+   },
+   "id": "restore_executed",
+   "result": "PASS",
+   "title": "The set was restored into a SEPARATE environment"
+  },
+  {
+   "detail": {
+    "codes": [
+     "target_not_empty"
+    ]
+   },
+   "id": "restore_refuses_non_empty_target",
+   "result": "PASS",
+   "title": "A second restore into the same (now non-empty) target is refused"
+  },
+  {
+   "detail": {
+    "manifest_revision": "0043_story_bank_completion",
+    "revision": "0043_story_bank_completion"
+   },
+   "id": "schema_revision_matches",
+   "result": "PASS",
+   "title": "The restored schema revision equals the manifest's"
+  },
+  {
+   "detail": {
+    "rows": 36,
+    "tables_checked": 93,
+    "tables_different": []
+   },
+   "id": "row_counts_match",
+   "result": "PASS",
+   "title": "Every table's restored row count equals the manifest"
+  },
+  {
+   "detail": {
+    "files_checked": 4,
+    "files_different": 0
+   },
+   "id": "document_checksums_match",
+   "result": "PASS",
+   "title": "Every restored private document equals its manifest checksum"
+  },
+  {
+   "detail": {
+    "files_checked": 2,
+    "files_different": 0
+   },
+   "id": "knowledge_files_match",
+   "result": "PASS",
+   "title": "Every restored governed-knowledge source file equals its manifest checksum"
+  },
+  {
+   "detail": {
+    "checksum_prefix": "62d1a647c3cfe195",
+    "chunks": 4,
+    "compared_with_live_source": true
+   },
+   "id": "index_checksum_matches",
+   "result": "PASS",
+   "title": "The restored index collection checksum equals the manifest's and the live source's"
+  },
+  {
+   "detail": {
+    "embedder": "local_hash",
+    "queries": 4,
+    "queries_different": 0,
+    "top_k": 3
+   },
+   "id": "retrieval_parity",
+   "result": "PASS",
+   "title": "Re-running the recorded retrieval probes on the restored index gives the same chunks and scores"
+  },
+  {
+   "detail": {
+    "codes": [
+     "file_checksum_mismatch"
+    ]
+   },
+   "id": "tamper_file_detected",
+   "result": "PASS",
+   "title": "A modified document file is detected by verification"
+  },
+  {
+   "detail": {
+    "codes": [
+     "backup_integrity_failed",
+     "file_checksum_mismatch"
+    ]
+   },
+   "id": "tamper_restore_refused",
+   "result": "PASS",
+   "title": "A restore of a tampered set is refused and writes nothing"
+  },
+  {
+   "detail": {
+    "codes": [
+     "unlisted_file"
+    ]
+   },
+   "id": "tamper_unlisted_file_detected",
+   "result": "PASS",
+   "title": "A file added to the set but not listed in the manifest is detected"
+  },
+  {
+   "detail": {
+    "codes": [
+     "manifest_tampered"
+    ]
+   },
+   "id": "tamper_manifest_detected",
+   "result": "PASS",
+   "title": "An edited manifest is detected by the manifest signature"
+  },
+  {
+   "detail": {},
+   "id": "source_unchanged",
+   "result": "PASS",
+   "title": "The drill only read the source: tables, document files, knowledge files and index are unchanged"
+  }
+ ],
+ "commit_sha": "092f99b3",
+ "drill_id": "drill-20261022T122512Z-offline-sealed",
+ "durations": {
+  "backup_seconds": 0.038,
+  "restore_seconds": 0.019
+ },
+ "environment": {
+  "api_env": "test",
+  "dialect": "sqlite",
+  "hosted": false,
+  "separate_target_environment": true
+ },
+ "finished_at": "2026-10-22T12:25:12.432370+00:00",
+ "hosted_verification": "NOT RUN (OD-HOSTED)",
+ "kind": "offline_synthetic",
+ "label": "offline-sealed",
+ "not_exercised": [
+  "hosted staging backup and restore (OD-HOSTED)",
+  "PostgreSQL pg_dump and pg_restore through this harness unless dialect is postgresql",
+  "restore time and size at real data volume",
+  "off-site or object-storage copy of the set"
+ ],
+ "overall": "PASS",
+ "record_format": 1,
+ "set": {
+  "chunks": 4,
+  "consistent": true,
+  "created_at": "2026-10-22T12:25:12.322389+00:00",
+  "document_files": 4,
+  "encryption": "aes-256-gcm-chunked",
+  "files": 16,
+  "index_checksum_prefix": "62d1a647c3cfe195",
+  "manifest_sha256": "8c1b44da1e9aba99033f0ffb89350cd62ddc239e7ad1c8a487ec3a8d1437b2bd",
+  "rows": 36,
+  "schema_revision": "0043_story_bank_completion",
+  "set_id": "e604f829d92446acb105f5ca64103928",
+  "signed": true,
+  "tables": 93
+ },
+ "started_at": "2026-10-22T12:25:12.317629+00:00",
+ "tool": "ask4mo-backup-set/1"
+}

@@ -205,6 +205,11 @@ def main(argv: list[str] | None = None) -> int:
         return _skip("RAGAS live run needs a chat credential to generate answers "
                      "(COPILOT_API_KEY). Not configured — nothing was run.")
 
+    from src.llm.budget.script_guard import guard_paid_script      # 05C: every paid path also needs the governed budget (approved marker, durable ledger, ceilings, kill switch)
+
+    refused = guard_paid_script("eval_ragas", category="evaluation")
+    if refused is not None:
+        return refused
     print(f"Generating answers and scoring via the shared RAGAS runner "
           f"(limit={args.limit or 'all'}, category={args.category or 'all'})…")
     result = runner.run_live_ragas(

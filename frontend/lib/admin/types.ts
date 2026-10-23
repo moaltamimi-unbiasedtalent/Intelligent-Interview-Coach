@@ -52,6 +52,14 @@ export interface AdminProviders {
   pause_durable: boolean;
   rate_limit_mode: string;
   rate_limit_distributed: boolean;
+  monitoring?: AdminMonitoring | null;
+  note: string;
+}
+/** 05C: counts, fixed codes and headroom only. `unknown` means no evidence yet and is never healthy. */
+export interface AdminMonitoring {
+  alerts: { active: number; by_category: Record<string, number> };
+  budget: { state: string; enforcement: string; budget_class?: string | null; reason?: string | null; remaining_to_stop_usd?: string | null; remaining_requests?: number | null } | null;
+  signals: { code: string; status: "ok" | "failing" | "unknown" }[];
   note: string;
 }
 export interface AdminAuditEvent {

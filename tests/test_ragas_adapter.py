@@ -372,6 +372,10 @@ def _mock_live(monkeypatch, run_dict):
         def answer(self, q):
             return _service_result()
 
+    # 05C: a live run also needs the budget governor gate (owner config + approved marker + ledger); these CLI tests exercise result handling with a mocked runner, so the gate is
+    # satisfied here. Its own refusal behaviour is covered in tests/test_ai_budget_probe_and_scripts_05c.py.
+    import src.llm.budget.script_guard as _sg
+    monkeypatch.setattr(_sg, "guard_paid_script", lambda *a, **k: None)
     monkeypatch.setattr(ra, "ragas_available", lambda: True)
     monkeypatch.setattr(ra, "evaluator_config_from_env",
                         lambda **k: ra.EvaluatorConfig(api_key="x", base_url="https://x"))

@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "description": "02D market source approval register. A (source_id, market) pair is ENABLED for Candidates only by a complete record here (see src/knowledge_approval.py and docs/production/execution/02D_LICENSING_REVIEW_PACK.md for the record template). A record is written ONLY by the owner's appointed human reviewer; engineering never adds one. NO source is approved: the register is empty.",
+  "records": []
+}

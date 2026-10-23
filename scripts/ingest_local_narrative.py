@@ -96,6 +96,11 @@ def main(argv: list[str] | None = None) -> int:
     if not args.in_memory:
         config = load_config()
         embedder = build_embedder(config)
+        from src.llm.budget.script_guard import guard_embedder_script      # 05C: a paid embedder needs the governed budget; the free local embedder needs nothing
+
+        refused = guard_embedder_script("ingest_local_narrative", embedder)
+        if refused is not None:
+            return refused
         store = build_vector_store(config, embedder=embedder)
         result = store.add_chunks(chunks)
         print(f"Vector store: added {getattr(result, 'added', len(chunks))} chunk(s).")

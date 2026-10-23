@@ -5,7 +5,8 @@ the provider answered at submission time. It records a minimal ``EmailAttempt`` 
 raises into the caller, so a provider problem can neither crash a request nor be reported as success.
 
 Truth model: ``provider_accepted`` means the provider took the message, not that it was delivered, opened or acted on. No delivery or
-bounce event is collected (no webhook is implemented), so this system never reports ``delivered``.
+bounce event is collected unless a VERIFIED webhook says so (05D: ``src/mail/webhook.py``, behind the code gate ``DELIVERY_EVENTS_AUTHORIZED`` = False), so by default this
+system never reports ``delivered``; a delivery event is stored in the separate ``delivery_state``, never in ``status``.
 """
 
 from __future__ import annotations
@@ -41,6 +42,28 @@ class EmailAttemptRepository:
                 s.commit()
         except Exception:  # noqa: BLE001
             log.warning("email attempt record failed")
+
+    def apply_delivery_event(self, event: dict) -> str:
+        """Apply ONE allow-listed, already-authenticated delivery event (05D). Returns 'applied', 'replay', 'stale' or 'unknown_message'.
+
+        ``event`` is the output of ``src.mail.webhook.parse_event`` (state, normalised message ref, event time, digest): nothing else is read or stored.
+        The match is on the provider message reference only; an unknown reference is a quiet no-op (a caller must not learn which references exist).
+        Raises on a storage failure so the webhook answers a retryable 503 instead of acknowledging an event that was not recorded.
+        """
+        from src.mail.webhook import should_apply
+
+        ref = event["ref"]
+        with self._sf() as s:
+            row = s.scalar(select(EmailAttempt).where(EmailAttempt.provider_message_ref.in_((ref, f"<{ref}>")))
+                           .order_by(EmailAttempt.id.desc()).limit(1))
+            if row is None:
+                return "unknown_message"
+            verdict = should_apply(row.delivery_state, row.delivery_event_digest, row.delivery_event_at, event)
+            if verdict != "apply":
+                return verdict
+            row.delivery_state, row.delivery_event_at, row.delivery_event_digest = event["state"], event["at"], event["digest"]
+            s.commit()
+            return "applied"
 
     def summary(self) -> dict:
         """Bounded aggregates and the last few attempts. No recipient, user id, token, link or message content exists to return."""

@@ -30,11 +30,13 @@ from src.api.middleware import (
 from src.api.routes import (
     admin,
     admin_ai,
+    admin_ai_budget,
     admin_billing,
     admin_billing_ops,
     admin_command_center,
     billing_candidate,
     billing_webhooks,
+    mail_webhooks,
     admin_config,
     admin_speech,
     admin_integrations,
@@ -104,6 +106,24 @@ DESCRIPTION = (
 )
 
 
+def _start_api_monitor():
+    """05C: the API-side monitor loop (so a dead worker is still noticed). ON for hosted environments unless ``OPS_MONITOR_ENABLED=false``; OFF in development and tests. Never blocks startup."""
+    try:
+        from src.ops.monitor import ApiMonitorLoop, api_monitor_enabled
+
+        if not api_monitor_enabled():
+            return None
+        from src.application.factories import build_repository
+        from src.config import load_config
+
+        loop = ApiMonitorLoop(build_repository(load_config()).session_factory)
+        loop.start()
+        return loop
+    except Exception:  # noqa: BLE001
+        logger.warning("API monitor could not be started")
+        return None
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # App-lifetime state. Expensive resources (vector store, repository, …) are
@@ -116,7 +136,10 @@ async def lifespan(app: FastAPI):
     app.state.resources_lock = threading.RLock()
     app.state.session_store = InMemorySessionStore()
     logger.info("API started (env=%s)", app.state.settings.env)
+    monitor = _start_api_monitor()
     yield
+    if monitor is not None:
+        monitor.stop()
     app.state.resources.clear()
 
 
@@ -126,6 +149,9 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
     from src.demo_live.guard import install_from_env
 
     install_from_env()
+    from src.llm.budget.governor import install_from_env as install_budget_governor
+
+    install_budget_governor()      # 05C: a no-op unless AI_BUDGET_MODE=enforce; a closed governor (fail closed) when enforcement is requested but config, marker or ledger is invalid
     app = FastAPI(
         title="Ask4Mo — Intelligent Interview Coach API",
         version=settings.version,
@@ -171,13 +197,13 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
-            expose_headers=["X-Request-Id"],
+            expose_headers=["X-Request-Id", "Content-Disposition", "X-Export-Rows"],      # 03E2: the report export UI reads its file name and row count
         )
     register_exception_handlers(app)
 
     # Infra liveness alias (unversioned) + versioned API surface.
     app.include_router(health.router, prefix="/api")
-    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, model_profiles, usage_quotas, progress_analytics, preparation_packs, feedback, progress, auth, reviewer, voice, speech, workspaces, admin, admin_ai, admin_billing, admin_billing_ops, admin_command_center, admin_config, admin_speech, admin_integrations, admin_reports, admin_security, admin_jobs, admin_knowledge, admin_legal, admin_privacy, admin_plans_ops, admin_plans, admin_invitations, admin_support, admin_users, admin_users_bulk, company, opportunity, privacy, support, billing_candidate, billing_webhooks):
+    for module in (health, career, interview, history, knowledge, evaluation, agent, memory, model_profiles, usage_quotas, progress_analytics, preparation_packs, feedback, progress, auth, reviewer, voice, speech, workspaces, admin, admin_ai, admin_ai_budget, admin_billing, admin_billing_ops, admin_command_center, admin_config, admin_speech, admin_integrations, admin_reports, admin_security, admin_jobs, admin_knowledge, admin_legal, admin_privacy, admin_plans_ops, admin_plans, admin_invitations, admin_support, admin_users, admin_users_bulk, company, opportunity, privacy, support, billing_candidate, billing_webhooks, mail_webhooks):
         app.include_router(module.router, prefix=API_PREFIX)
     for _router in admin_report_builder.routers:         # 03E1: one router per existing read permission (standard, commercial)
         app.include_router(_router, prefix=API_PREFIX)

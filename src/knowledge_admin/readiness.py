@@ -100,7 +100,7 @@ class KnowledgeReadinessService:
         if plan.problems:
             note = ("no credential configured" if "semantic_credentials_missing" in plan.problems and plan.semantic is True
                     else "the embedder is not acceptable for this environment")
-            return {"status": "unavailable", "provider": "openai" if plan.semantic else "local", "embedder": embedder, "note": note, **extra}
+            return {"status": "unavailable", "provider": plan.provider if plan.semantic else "local", "embedder": embedder, "note": note, **extra}
         remote = plan.semantic
         return {"status": "configured_not_tested" if remote else "available", "provider": "remote" if remote else "local", "embedder": embedder,
                 "note": "remote provider: configured, not tested here" if remote else "offline local embedder (lexical, development only)", **extra}

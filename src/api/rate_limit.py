@@ -136,6 +136,8 @@ SECURITY_POLICIES: dict[str, RateLimitPolicy] = {
     "billing_checkout_user": RateLimitPolicy("billing_checkout_user", 10, 3600, "user"),
     "billing_status_ip": RateLimitPolicy("billing_status_ip", 120, 300, "ip"),
     "billing_webhook_ip": RateLimitPolicy("billing_webhook_ip", 600, 60, "ip"),
+    # 05D: Brevo delivery events (signature-authenticated, non-operational while the code gate is False). Bounded per IP like the billing webhook.
+    "mail_webhook_ip": RateLimitPolicy("mail_webhook_ip", 600, 60, "ip"),
     "billing_recovery_user": RateLimitPolicy("billing_recovery_user", 20, 3600, "user"),
     "billing_summary_user": RateLimitPolicy("billing_summary_user", 120, 300, "user"),
 }

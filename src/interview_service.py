@@ -246,7 +246,9 @@ class BaseGenerationService:
         billed.append(result)
         self._guard_output(result.content)
         try:
-            return parse_structured_output(result.content, schema, overrides=overrides)
+            # 06C: under provider-enforced strict output the content IS the JSON object, so it is parsed EXACTLY (no fence or preamble extraction). A wrapped reply
+            # means enforcement did not happen and takes the existing controlled fallback (defensive path, one bounded repair); validation is never relaxed.
+            return parse_structured_output(result.content, schema, overrides=overrides, exact_json=True)
         except ResponseParseError:
             if result.finish_reason == "length":
                 raise _TruncatedOutput() from None

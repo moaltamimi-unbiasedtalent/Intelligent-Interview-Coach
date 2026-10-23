@@ -1,0 +1,87 @@
+{
+  "description": "Per-language retrieval-lane routing fixtures (02E, L-ROUTE-1). Synthetic questions written by engineering; NOT native-reviewed and NOT an independent set: they exercise the keyword tables they were written beside, so a pass is a regression guard, not evidence of real-user routing accuracy.",
+  "schema_version": 1,
+  "independence": "authored by the same engineering team that wrote the routing tables; no native or independent reviewer",
+  "cases": {
+    "en": [
+      ["What does a data analyst earn in Germany?", "compensation"],
+      ["What are the responsibilities of an operations manager?", "structured_role"],
+      ["Which occupations have a skills shortage?", "shortage"],
+      ["Do I need a degree to become a nurse?", "education"],
+      ["Is a licence required to practise as an electrician?", "licence"],
+      ["How is demand for software engineers going to grow?", "forecast"]
+    ],
+    "de": [
+      ["Was verdient ein Datenanalyst in Deutschland?", "compensation"],
+      ["Welche Aufgaben hat ein Betriebsleiter?", "structured_role"],
+      ["Gibt es einen Fachkräftemangel bei Pflegekräften?", "shortage"],
+      ["Brauche ich ein Studium, um Lehrer zu werden?", "education"],
+      ["Welche Zulassung brauche ich als Elektriker?", "licence"],
+      ["Wie entwickelt sich die Nachfrage nach Softwareentwicklern?", "forecast"],
+      ["Wie viele offene Stellen gibt es für Ingenieure?", "openings"],
+      ["Welche Zertifizierung ist für Projektleiter sinnvoll?", "certification"],
+      ["Wechsel vom Lehrer in die Softwareentwicklung: ist das realistisch für die Karriere?", "transition"],
+      ["Gehalt und Aufgaben eines Pflegers", "mixed"]
+    ],
+    "fr": [
+      ["Combien gagne un analyste de données en France ?", "compensation"],
+      ["Quelles sont les responsabilités d'un responsable logistique ?", "structured_role"],
+      ["Y a-t-il une pénurie d'infirmiers ?", "shortage"],
+      ["Faut-il un diplôme pour devenir comptable ?", "education"],
+      ["Quelle autorisation d'exercer faut-il pour être électricien ?", "licence"],
+      ["Quelles sont les perspectives de la demande pour les développeurs ?", "forecast"],
+      ["Combien de postes ouverts pour les ingénieurs ?", "openings"],
+      ["Quelle certification pour un chef de projet ?", "certification"],
+      ["Reconversion d'enseignant vers le développement : quel métier viser ?", "transition"],
+      ["Salaire et missions d'un infirmier", "mixed"]
+    ],
+    "es": [
+      ["¿Cuánto gana un analista de datos en España?", "compensation"],
+      ["¿Cuáles son las responsabilidades de un jefe de logística?", "structured_role"],
+      ["¿Hay escasez de enfermeros?", "shortage"],
+      ["¿Qué estudios necesito para ser contable?", "education"],
+      ["¿Qué licencia necesito para trabajar como electricista?", "licence"],
+      ["¿Cuáles son las perspectivas de demanda para desarrolladores?", "forecast"],
+      ["¿Cuántos puestos vacantes hay para ingenieros?", "openings"],
+      ["¿Qué certificación conviene a un jefe de proyecto?", "certification"],
+      ["Cambiar de carrera de profesor a desarrollador: ¿es realista?", "transition"],
+      ["Salario y funciones de una enfermera", "mixed"]
+    ],
+    "it": [
+      ["Quanto guadagna un analista di dati in Italia?", "compensation"],
+      ["Quali sono le responsabilità di un responsabile della logistica?", "structured_role"],
+      ["C'è carenza di infermieri?", "shortage"],
+      ["Serve una laurea per diventare commercialista?", "education"],
+      ["Quale abilitazione serve per fare l'elettricista?", "licence"],
+      ["Quali sono le prospettive della domanda per gli sviluppatori?", "forecast"],
+      ["Quanti posti vacanti ci sono per gli ingegneri?", "openings"],
+      ["Quale certificazione serve a un project manager?", "certification"],
+      ["Passare da insegnante a sviluppatore: cambiare carriera è realistico?", "transition"],
+      ["Stipendio e mansioni di un infermiere", "mixed"]
+    ],
+    "pt": [
+      ["Quanto ganha um analista de dados em Portugal?", "compensation"],
+      ["Quais são as responsabilidades de um gestor de logística?", "structured_role"],
+      ["Existe escassez de enfermeiros?", "shortage"],
+      ["Preciso de licenciatura para ser contabilista?", "education"],
+      ["Que licença preciso para trabalhar como eletricista?", "licence"],
+      ["Quais são as perspetivas de procura para programadores?", "forecast"],
+      ["Quantos postos vagos existem para engenheiros?", "openings"],
+      ["Que certificação convém a um gestor de projeto?", "certification"],
+      ["Mudar de carreira de professor para programador é realista?", "transition"],
+      ["Salário e funções de um enfermeiro", "mixed"]
+    ],
+    "nl": [
+      ["Hoeveel verdient een data-analist in Nederland?", "compensation"],
+      ["Wat zijn de verantwoordelijkheden van een logistiek manager?", "structured_role"],
+      ["Is er een tekort aan verpleegkundigen?", "shortage"],
+      ["Heb ik een diploma nodig om boekhouder te worden?", "education"],
+      ["Welke vergunning heb ik nodig als elektricien?", "licence"],
+      ["Wat zijn de vooruitzichten voor de vraag naar ontwikkelaars?", "forecast"],
+      ["Hoeveel vacatures zijn er voor ingenieurs?", "openings"],
+      ["Welk certificaat past bij een projectleider?", "certification"],
+      ["Overstap van leraar naar softwareontwikkelaar: is dat realistisch?", "transition"],
+      ["Salaris en taken van een verpleegkundige", "mixed"]
+    ]
+  }
+}

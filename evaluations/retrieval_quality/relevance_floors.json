@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "description": "Approved calibrated relevance floors, one entry per exact embedder identity (and optional language; '*' = all). EMPTY: no embedder has been measured with a live run, so every embedder uses the strict default floor (score must be above 0). An entry takes effect only with approved=true (a human decision) and an identity key equal to provider|model|version|dimensions of the live embedder. Entry shape: {identity, language, floor, approved, evidence_sha256, approved_by}.",
+  "entries": []
+}

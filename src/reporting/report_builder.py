@@ -23,10 +23,13 @@ COHORT RULE (documented and tested; ``tests/test_report_builder_03e1.py``):
 3. Consequently saved variants (different filters, selections or chart kinds of the same metric, window and grouping) differ only by which already-decided rows they
    show: differencing them yields nothing the unfiltered grouped preview does not already show. A grouped preview returns buckets only (no headline total in the same
    result), and secondary suppression guarantees that when exactly one bucket is hidden the smallest visible one is hidden too.
-4. RESIDUAL LIMITATION (pre-existing, unchanged, not introduced here): the fixed windows are nested (7d within 30d within 90d), and the figures of two windows, or a
-   total against its buckets when two or more buckets are hidden, can be subtracted by a reader who may read all of them. The builder adds no window, no finer grain
-   and no new dimension beyond what ``/admin/reports/*`` already serves to the same permission, so it adds no differencing capability; it is an engineering control,
-   not an anonymisation guarantee.
+4. NESTED WINDOWS AND TOTAL VERSUS BUCKETS (05E, PRIV-DIFF): the fixed windows are nested (7d within 30d within 90d), so two windows of one metric could be subtracted. The
+   pipeline now compares every window with the narrower standard windows (``src/reporting/differencing.py``) and suppresses a wider figure whose difference is a
+   small non-zero cohort; partitions with two or more hidden buckets also hide the smallest visible buckets until the hidden group reaches the floor, so a total minus
+   its visible buckets is not a small group. Residual risk that remains (stated in docs/production/execution/evidence/05E_EVIDENCE.md): windows are relative to the
+   request time so repeated requests can be differenced against each other, the disjoint ``previous_period`` comparison can be summed by the reader, overlapping
+   partitions make the hidden-group check an upper bound, and Admin readers can pool what each was shown. It is an engineering control, not an anonymisation
+   guarantee.
 
 Nothing here writes, enqueues a job, calls a provider or model, or reads candidate content.
 """
@@ -48,6 +51,7 @@ from sqlalchemy import func, select
 from src.persistence import User, UserFeedback
 from src.reporting import contract as K
 from src.reporting import suppression as S
+from src.reporting.differencing import guarded
 from src.reporting.definitions import PERIODS, REPORTING_MIN_COHORT
 from src.reporting.service import ReportingService, _iso
 
@@ -380,7 +384,7 @@ class ReportBuilder:
         head = S.metric("feedback", "Candidate feedback", int(total) if total else None, cohort=int(users or 0), coverage="Historical, from authoritative rows")
         if not total:
             head = S.not_captured("feedback", "Candidate feedback", "No feedback was given in this period.", "Historical, from authoritative rows")
-        part = S.partition([{"label": c or "uncategorised", "values": [int(n)], "cohort": int(u)} for c, n, u in sorted(rows, key=lambda r: (r[0] is None, r[0] or ""))]) if group else []
+        part = S.partition([{"label": c or "uncategorised", "values": [int(n)], "cohort": int(u)} for c, n, u in sorted(rows, key=lambda r: (r[0] is None, r[0] or ""))], scope="builder_feedback") if group else []
         return head, part
 
     def preview(self, plan: Plan) -> dict:
@@ -413,7 +417,7 @@ class ReportBuilder:
             mdef, src = REGISTRY.metrics[mid], _SOURCES[mid]
             grouped = d.group_by is not None
             if src.report == "own":
-                head, rows = self._feedback(svc, d.window, grouped)
+                head, rows = guarded(lambda p, g=grouped: self._feedback(svc, p, g), d.window)       # 05E: the one aggregate the builder reads itself gets the same nested-window guard
                 legacy = head
             else:
                 rep = reports[src.report]
@@ -499,7 +503,7 @@ def render_json(preview: dict, rows: list[dict]) -> str:
 
 def export_filename(report_id: str, window: str, fmt: str, now: datetime) -> str:
     """Built only from registry slugs, a closed window and the format: never from a saved name or any request text."""
-    if not re.fullmatch(r"[a-z][a-z0-9_]{0,63}", report_id) or window not in PERIODS or fmt not in ("csv", "json"):
+    if not re.fullmatch(r"[a-z][a-z0-9_]{0,63}", report_id) or window not in PERIODS or fmt not in ("csv", "json", "pdf"):
         raise ValueError("unsafe filename part")
     return f"ask4mo-{report_id}-{window}-{now.strftime('%Y%m%d')}.{fmt}"
 

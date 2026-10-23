@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import recordedAdmin from "./fixtures/admin-responses.json";
 
 // P10B-W10.1 Admin shell + Command Center UX, mocked at the network layer. Server-side authorization,
 // atomic audit and the safe provider schema are proven by the Python suites
@@ -236,6 +237,26 @@ const WS_DETAIL = {
   active_share_count: 0, active_owner_count: 1, workspace_roles: ["workspace_owner", "workspace_member"],
 };
 
+
+// 03D2 Command Center read model, mocked with the REAL recorded shapes (scripts/gen_w11_admin_fixture.py). `cc.mode` switches the failure paths.
+const CCREC = recordedAdmin as Record<string, any>;
+const cc: { mode: "ok" | "malformed" | "forbidden"; periods: string[] } = { mode: "ok", periods: [] };
+function ccBody(path: string, period: string) {
+  const name = path.split("/").pop() as string;
+  if (name === "definitions") return CCREC["/admin/command-center/definitions"];
+  const base = JSON.parse(JSON.stringify(CCREC[`/admin/command-center/${name}`]));
+  base.period = period;
+  for (const m of base.metrics) m.period = period;
+  if (name === "ai-operations") {
+    const set = (id: string, patch: Record<string, unknown>) => Object.assign(base.metrics.find((x: any) => x.metric_id === id), patch);
+    set("ai_op_usage_units", { state: "ok", value: 40, evidence: "captured", note: "", breakdowns: [{ dimension_id: "workflow", label: "Workflow", buckets: [
+      { key: "career_ai", label: "career_ai", state: "ok", value: 25, partial: false }, { key: "practice_ai", label: "practice_ai", state: "ok", value: 15, partial: true },
+      { key: "agent", label: "agent", state: "suppressed", value: null, partial: false }] }] });
+    set("ai_op_known_cost", { state: "ok", value: 1.2345, cost_micro_usd: 1234500, evidence: "partial", partial: true, numerator: 30, denominator: 40, note: "" });
+    set("ai_op_failure_rate", { state: "ok", value: 12.5, numerator: 5, denominator: 40, evidence: "captured", note: "" });
+  }
+  return base;
+}
 async function mockAdmin(page: Page, role: string, perms: string[], authed = true) {
   await page.route("**/api/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -248,6 +269,13 @@ async function mockAdmin(page: Page, role: string, perms: string[], authed = tru
       return json(account(role, perms));
     }
     if (path.endsWith("/admin/home")) return json(HOME);
+    if (path.includes("/admin/command-center/")) {
+      if (cc.mode === "forbidden" && !path.endsWith("/definitions")) return json({ error: { code: "forbidden", message: "no" } }, 403);
+      if (cc.mode === "malformed" && !path.endsWith("/definitions")) return json({ metrics: [] });
+      const period = new URL(route.request().url()).searchParams.get("period") ?? "30d";
+      cc.periods.push(period);
+      return json(ccBody(path, period));
+    }
     const method = route.request().method();
     if (path.endsWith("/admin/ai/catalogue")) return json({ version: "2026-10-04.1", note: "The approved catalogue is defined in code.", items: ["luna", "terra", "sol"].map((id, i) => ({ id, display_name: `${id[0].toUpperCase()}${id.slice(1)} entry`, tier: ["fast", "balanced", "advanced"][i], allowed_profiles: ["balanced"], provider_slug: `x/${id}`, supports_tools: true, supports_structured_output: true, supports_temperature: false, cost_class: i + 1, note: "" })) });
     if (path.endsWith("/admin/ai/code-defined")) return json({ operations: [{ operation: "orchestration", capability: "tool_calling", min_capability: "balanced", fallback_floor: "balanced", structured_output: false, requires_tools: true, tunable: true, deterministic: false, realtime: false, code_values: {} },
@@ -896,4 +924,86 @@ test("W10.7: AI administration: code defaults, draft, validate, evaluate (worker
   await page.goto("/admin/ai");
   await expect(page.getByRole("button", { name: "Create draft" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Roll back|Revert/ })).toHaveCount(0);
+});
+
+const OVERFLOW = () => document.documentElement.scrollWidth - document.documentElement.clientWidth;
+
+test("03D2: Command Center dashboard: sections by permission, missing data as states never zero, cost wording, chart with table equivalent, period change", async ({ page }) => {
+  cc.mode = "ok"; cc.periods = [];
+  await mockAdmin(page, "platform_admin", ADMIN_PERMS);
+  await page.goto("/admin");
+  await expect(page.getByRole("heading", { name: "Operations dashboard", level: 2 })).toBeVisible();
+  for (const t of ["Platform health", "AI operations", "Job queue health", "Knowledge readiness"]) await expect(page.getByRole("heading", { name: t, level: 3 })).toBeVisible();
+  // ADMIN_PERMS holds no security or reports permission: those sections are named as not permitted and never requested
+  await expect(page.getByText(/Not permitted for your administrator role: Alerts, Auth and security signals, Candidate activity/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Alerts", level: 3 })).toHaveCount(0);
+  // a missing figure is its state, never zero
+  await expect(page.getByTestId("fig-platform_request_failure_rate")).toHaveText("Not captured");
+  await expect(page.getByTestId("fig-jobs_finished")).toHaveText("Unavailable");
+  // known cost: exact micro-USD converted, partial-coverage wording, numerator and denominator
+  await expect(page.getByTestId("fig-ai_op_known_cost")).toHaveText("USD 1.2345");
+  await expect(page.getByText(/Known cost, partial coverage: units without a known cost are excluded/).first()).toBeVisible();
+  await expect(page.getByText("30 of 40").first()).toBeVisible();
+  // chart: printed values, a suppressed bucket as text, and a data table equivalent reachable by keyboard
+  const fig = page.getByRole("figure", { name: /AI usage units by workflow/ });
+  await expect(fig.getByText("Suppressed: small cohort").first()).toBeVisible();
+  await fig.getByText("Data table for this chart").focus();
+  await page.keyboard.press("Enter");
+  await expect(fig.getByRole("table", { name: "AI usage units by Workflow" })).toBeVisible();
+  await expect(fig.getByRole("rowheader", { name: "career_ai" })).toBeVisible();
+  // period selector refetches every permitted section with the chosen fixed period
+  await page.getByLabel("Period").selectOption("7d");
+  await expect(page.getByText(/Period: Last 7 days/).first()).toBeVisible();
+  expect(cc.periods).toContain("7d");
+  await expect(page.getByText(/curriculum vitae|raw answer|password_hash/i)).toHaveCount(0);
+});
+
+test("03D2: the AI and models destination shows AI operations (usage by workflow, failures, latency, would-be limits) above the governed configuration", async ({ page }) => {
+  cc.mode = "ok";
+  await mockAdmin(page, "platform_admin", ADMIN_PERMS);
+  await page.goto("/admin/ai");
+  await expect(page.getByRole("heading", { name: "AI operations", level: 2 })).toBeVisible();
+  for (const t of ["AI operations", "Known tokens (partial coverage)", "AI operation failure rate", "AI operation latency p95", "Would-be limit refusals (observe mode)", "Provider retry attempts"])
+    await expect(page.getByRole("heading", { name: t }).first()).toBeVisible();
+  await expect(page.getByTestId("fig-ai_op_failure_rate")).toHaveText("12.5%");
+  await expect(page.getByTestId("fig-ai_op_latency_p95_ms")).toHaveText("Not captured");
+  await expect(page.getByRole("heading", { name: "Governed configuration, no live model calls" })).toBeVisible();
+});
+
+test("03D2: a malformed 200 shows the explicit Admin error state per section, the page does not crash and nothing becomes an empty success", async ({ page }) => {
+  cc.mode = "malformed";
+  await mockAdmin(page, "platform_admin", ADMIN_PERMS);
+  await page.goto("/admin");
+  await expect(page.getByRole("heading", { name: "Command Center", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Platform health", level: 3 })).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: "That request could not be processed." }).first()).toBeVisible();
+  await expect(page.getByTestId("fig-jobs_queued")).toHaveCount(0);
+  await expect(page.getByText("Something went wrong")).toHaveCount(0);
+  cc.mode = "ok";
+});
+
+test("03D2: a route the server refuses (403) renders as Not permitted and not as an error", async ({ page }) => {
+  cc.mode = "forbidden";
+  await mockAdmin(page, "platform_admin", ADMIN_PERMS);
+  await page.goto("/admin");
+  await expect(page.getByText(/Not permitted: your administrator role does not include Platform health/)).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: "That request could not be processed." })).toHaveCount(0);
+  cc.mode = "ok";
+});
+
+test("03D2: no horizontal overflow of the Command Center and AI operations at 768px and 1280px, in light and dark themes", async ({ page }) => {
+  cc.mode = "ok";
+  for (const theme of ["light", "dark"]) {
+    await page.unrouteAll({ behavior: "ignoreErrors" });
+    await page.addInitScript((th) => { try { window.localStorage.setItem("iic-theme", th); } catch { /* ignore */ } }, theme);
+    await mockAdmin(page, "platform_admin", ADMIN_PERMS);
+    for (const [w, h] of [[768, 1024], [1280, 800]] as const) {
+      await page.setViewportSize({ width: w, height: h });
+      for (const path of ["/admin", "/admin/ai"]) {
+        await page.goto(path);
+        await expect(page.getByTestId("fig-ai_op_known_cost")).toBeVisible();
+        expect(await page.evaluate(OVERFLOW), `${path} ${w}px ${theme}`).toBeLessThanOrEqual(1);
+      }
+    }
+  }
 });
