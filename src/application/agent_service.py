@@ -364,6 +364,16 @@ class AgentApplicationService:
             sf = self._usage_sf or getattr(self._run_index, "_sf", None)
             if sf is None:
                 raise AgentConfigurationError("Agent streaming is unavailable in this environment.")
+            # Refuse before run admission when an existing database has not
+            # received additive migration 0048; synchronous runs stay available.
+            from sqlalchemy import inspect
+            try:
+                with sf() as session:
+                    available = inspect(session.get_bind()).has_table("agent_run_controls")
+            except Exception as exc:
+                raise AgentConfigurationError("Agent streaming is unavailable in this environment.") from exc
+            if not available:
+                raise AgentConfigurationError("Agent streaming requires its control-table migration.")
             from src.application.agent_streaming import AgentStreamingService
             self._streaming = AgentStreamingService(self, sf)
         return self._streaming

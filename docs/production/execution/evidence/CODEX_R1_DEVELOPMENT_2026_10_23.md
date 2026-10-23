@@ -23,13 +23,17 @@ All 44 existing worktrees were reviewed: none had tracked modifications; 31 cont
 
 ## Executed verification
 
-- Complete isolated backend pytest suite: 8,503 passed, 52 skipped (357.56 seconds); warnings recorded, no failures.
+- Complete isolated backend pytest suite before the final migration-compatibility correction: 8,503 passed, 52 skipped (357.56 seconds); warnings recorded, no failures. After that correction, the 96-test streaming/authorization/usage/async-blocking regression group passes; full hosted CI is pending.
 - Frontend: 1,530 unit tests in 134 files pass; lint and type checks pass; production build passes.
 - Focused browser checks: 14 pass (13 existing Agent Coach flows plus new streaming/Stop flow), against this worktree on dedicated port 3189 with mocked API/provider responses. These do not establish hosted proxy or live model behavior.
 - 53 focused streaming/usage/async-blocking checks pass, including actual post-cancel token settlement, restart, cross-owner denial, late-stop races, missing-control refusal and safe progress projection.
 - 141 focused registry, authorization, streaming and release-evidence tests pass; 28 06F tests pass after regeneration.
 - All 49 offline CI evaluator/static commands completed successfully. One initial global-corpus evaluator aborted during native teardown after reporting its checks; its isolated rerun exited 0. This earlier nonzero exit is not hidden.
 - Ruff passes; package register, five-layer matrix, release evidence and generated review packs are checked for freshness. Issue reconciliation covers all 452 entries with zero unmapped items; migration graph has one head, 0048.
+
+### Final compatibility correction
+
+A new isolated pre-0048-schema regression reproduced a synchronous-run failure during final review. The control probe now explicitly detects an absent table without requiring a migration for historical synchronous runs; a controlled thread with a missing table still fails closed. Streaming checks table availability before run admission and returns the existing unsupported response; its database check runs off the API event loop. The new test verifies the model runs once synchronously, controlled missing-table refusal, and streaming rejection before a provider call. Existing cancellation authorization tests remain unchanged and pass.
 
 ## Operational limits and remaining gates
 

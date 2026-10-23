@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import time
 
-from sqlalchemy import select, update
+from sqlalchemy import inspect, select, update
 
 from src.persistence import AgentRunControl
 
@@ -28,6 +28,11 @@ class RunControlStore:
     def probe(self, run_id: str) -> str | None:
         # A store failure propagates; callers fail closed before model/tool execution.
         with self.sf() as s:
+            # Older databases support synchronous runs without migration 0048.
+            # A controlled thread still fails closed: authorizer.run_control
+            # requires a row and interprets None as expired when required=True.
+            if not inspect(s.get_bind()).has_table("agent_run_controls"):
+                return None
             row = s.get(AgentRunControl, run_id)
             if row is None:
                 return None  # synchronous / historical run, not controlled here

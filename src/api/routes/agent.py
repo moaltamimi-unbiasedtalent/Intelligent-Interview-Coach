@@ -165,7 +165,7 @@ async def stream_agent_run(
     service=Depends(get_agent_service), request_id: str = Depends(get_request_id),
     _cost=Depends(cost_limit("cost_agent_user")), model_policy=Depends(get_model_profile_policy),
 ):
-    manager = _streamer(service)
+    manager = await run_in_threadpool(_streamer, service)
     prepared = await run_in_threadpool(_prepare_request, body, request, user_id, model_policy)
     run_id = await manager.start(prepared, request_id)
     return StreamingResponse(manager.events(run_id, str(user_id), request_id, serialize=lambda result: _to_response(result).model_dump(mode="json")), media_type="text/event-stream",
@@ -178,7 +178,7 @@ async def stream_agent_events(
     user_id: int = Depends(get_current_user_id), service=Depends(get_agent_service),
     request_id: str = Depends(get_request_id), last_event_id: int = Header(-1, ge=-1, le=100000),
 ):
-    manager = _streamer(service)
+    manager = await run_in_threadpool(_streamer, service)
     try:
         await run_in_threadpool(manager.require_owned, run_id, str(user_id))
     except RunNotFoundError:

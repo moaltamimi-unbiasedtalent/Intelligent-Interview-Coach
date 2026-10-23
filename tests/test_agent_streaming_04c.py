@@ -227,3 +227,20 @@ def test_cancelled_provider_usage_is_settled_from_actual_checkpoint_values(envir
         assert "stream_settlement_pending" not in captured[-1]["missing_usage_sources"]
         assert manager.controls.owned(rid, "1")["settled"]
     asyncio.run(scenario())
+
+
+def test_pre_0048_database_keeps_sync_working_and_refuses_streaming_before_admission(environment):
+    from src.agent.errors import AgentConfigurationError
+    from src.persistence import AgentRunControl
+    sf, build = environment
+    with sf() as session:
+        AgentRunControl.__table__.drop(session.get_bind())
+    calls = []
+    service = build(lambda: Model(calls=calls))
+    assert service._registry.authorizer.run_control("controlled-with-missing-table", required=True) == "expired"
+    result = service.run(AgentRunRequest(goal="Hello", user_id="1"))
+    assert calls == [1]
+    assert result.status == "completed"
+    with pytest.raises(AgentConfigurationError):
+        service.streaming()
+    assert calls == [1]
