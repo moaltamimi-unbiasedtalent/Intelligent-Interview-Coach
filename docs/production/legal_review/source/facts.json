@@ -1,0 +1,1012 @@
+{
+  "_about": "Source of FACTS.md. Each entry maps a statement in the current legal texts (by catalogue key) or a data-flow fact the texts rely on to the code that makes it true. 'status' is an ENGINEERING reading of the code at the time of writing, never a legal conclusion: VERIFIED_IN_CODE (the code does this and a test or evaluator exercises it offline), PARTIAL (true with a stated gap), CONTRADICTED_BY_CODE (the text says something the code does not do today), NOT_VERIFIED (needs a hosted, live or human check that has not been run), NOT_A_CODE_FACT (a legal or operational statement no code can verify), UNSTATED_FACT (true in code, not stated in the text). 'refs' are [file, symbol] pairs that tests/test_legal_review_pack_05e.py resolves (the file exists and contains the symbol); a ref with a third element 'pending-05E-PR1' points to code that lands with the 05E engineering PR and is checked only once that file exists.",
+  "facts": [
+    {
+      "id": "PF-01",
+      "document": "privacy",
+      "keys": [
+        "privacy.storeAccountTerm",
+        "privacy.storeAccountDesc"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "The account row holds email, display name, email-verified flag, sign-in provider (password or Google), platform role and status. The plan tier is held in the entitlement and subscription tables, not on the user row.",
+      "refs": [
+        [
+          "src/persistence.py",
+          "class User("
+        ],
+        [
+          "src/persistence.py",
+          "class ProductEntitlement"
+        ],
+        [
+          "src/persistence.py",
+          "class Subscription("
+        ]
+      ]
+    },
+    {
+      "id": "PF-02",
+      "document": "privacy",
+      "keys": [
+        "privacy.storePrepTerm",
+        "privacy.storePrepDesc"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Mo conversations live in the agent checkpoint store (a LangGraph saver, SQLite or PostgreSQL, separate from the application tables). Generated preparation packs and Opportunities are application rows. The checkpoint content is not part of the candidate export; only run identifiers and status are.",
+      "refs": [
+        [
+          "src/agent/checkpoint.py",
+          "def build_checkpointer"
+        ],
+        [
+          "src/persistence.py",
+          "class PreparationPack"
+        ],
+        [
+          "src/persistence.py",
+          "class PreparationRun"
+        ],
+        [
+          "src/application/data_export.py",
+          "NOT_INCLUDED"
+        ]
+      ]
+    },
+    {
+      "id": "PF-03",
+      "document": "privacy",
+      "keys": [
+        "privacy.storeDocsTerm",
+        "privacy.storeDocsDesc"
+      ],
+      "status": "PARTIAL",
+      "fact": "Uploaded files are stored privately under a random key and are never served by URL. The full extracted or OCR text of a document is NOT stored: it is re-read from the private file on demand; what is stored is the list of detected claims (verbatim snippets with provenance). The text says 'OCR-extracted text and detected claims'; the stored artefacts are the claims, not the whole extracted text.",
+      "refs": [
+        [
+          "src/documents/storage.py",
+          "def new_storage_key"
+        ],
+        [
+          "src/documents/storage.py",
+          "class LocalDocumentStore"
+        ],
+        [
+          "src/persistence.py",
+          "class DocumentVersion"
+        ],
+        [
+          "src/persistence.py",
+          "class DocumentClaim"
+        ],
+        [
+          "src/application/documents_service.py",
+          "def extracted_text"
+        ]
+      ]
+    },
+    {
+      "id": "PF-04",
+      "document": "privacy",
+      "keys": [
+        "privacy.storePracticeTerm",
+        "privacy.storePracticeDesc"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Practice stores sessions (in progress), and completed interviews with questions, answers (including the stored evaluation) and reports, all owner-scoped.",
+      "refs": [
+        [
+          "src/persistence.py",
+          "class Interview("
+        ],
+        [
+          "src/persistence.py",
+          "class Answer("
+        ],
+        [
+          "src/persistence.py",
+          "class Report("
+        ],
+        [
+          "src/persistence.py",
+          "class InterviewSession"
+        ]
+      ]
+    },
+    {
+      "id": "PF-05",
+      "document": "privacy",
+      "keys": [
+        "privacy.storeMemoryTerm",
+        "privacy.storeMemoryDesc"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Long-term Memory is written only by an explicit user action or an explicit approval of an agent proposal (human review step); it holds a category and a summary of at most 500 characters, never a whole conversation.",
+      "refs": [
+        [
+          "src/persistence.py",
+          "class PreparationMemory"
+        ],
+        [
+          "src/agent/human.py",
+          "APPROVE_MEMORY"
+        ],
+        [
+          "src/application/memory_service.py",
+          "class MemoryApplicationService"
+        ]
+      ]
+    },
+    {
+      "id": "PF-06",
+      "document": "privacy",
+      "keys": [
+        "privacy.storeStoryTerm",
+        "privacy.storeStoryDesc"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Story Bank stories are candidate-authored rows linked to approved claims or answers; a story is used in Practice only by the candidate's explicit per-story selection and consent.",
+      "refs": [
+        [
+          "src/persistence.py",
+          "class CandidateStory"
+        ],
+        [
+          "src/api/schemas/interview.py",
+          "use_candidate_evidence"
+        ]
+      ]
+    },
+    {
+      "id": "PF-07",
+      "document": "privacy",
+      "keys": [
+        "privacy.storeWorkspacesTerm",
+        "privacy.storeWorkspacesDesc"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Workspace membership is private by default. The only cross-member access is an explicit, view-only share grant that the owner creates after acknowledging that every current and future active member can read the item until revoked; revocation and source deletion cut access immediately.",
+      "refs": [
+        [
+          "src/persistence.py",
+          "class Workspace("
+        ],
+        [
+          "src/persistence.py",
+          "class ShareGrant"
+        ],
+        [
+          "src/application/sharing_service.py",
+          "consent"
+        ]
+      ]
+    },
+    {
+      "id": "PF-08",
+      "document": "privacy",
+      "keys": [
+        "privacy.storeFeedbackTerm",
+        "privacy.storeFeedbackDesc"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Feedback is a rating plus an optional bounded comment attached by reference to one output; no copy of the rated content is stored and the comment is never fed into a prompt.",
+      "refs": [
+        [
+          "src/persistence.py",
+          "class UserFeedback"
+        ],
+        [
+          "src/application/feedback_service.py",
+          "class FeedbackApplicationService"
+        ]
+      ]
+    },
+    {
+      "id": "PF-09",
+      "document": "privacy",
+      "keys": [
+        "privacy.storeMetadataTerm",
+        "privacy.storeMetadataDesc"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Audit events hold actor, event name, target, result, request id and a small context object. Since 05E the context is restricted to an allow-list of metadata keys (no free text) at one choke point; admin events were already screened by key fragment. Operational metric events hold coarse categories with no identity. Whether any stored value is personal data is a legal question.",
+      "refs": [
+        [
+          "src/persistence.py",
+          "class AuditEvent"
+        ],
+        [
+          "src/application/admin_audit.py",
+          "def build_audit"
+        ],
+        [
+          "src/audit_allowlist.py",
+          "ALLOWED_CONTEXT_KEYS",
+          "pending-05E-PR1"
+        ],
+        [
+          "src/persistence.py",
+          "class OperationalMetricEvent"
+        ]
+      ]
+    },
+    {
+      "id": "PF-10",
+      "document": "privacy",
+      "keys": [
+        "privacy.voiceTurnBased"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Turn-based voice uses the browser speech engines. No audio is recorded or stored by Ask4Mo (no MediaRecorder or Blob in the voice code, asserted by an evaluator). Server-side speech providers exist in code but are disabled by code constants.",
+      "refs": [
+        [
+          "scripts/eval_voice_experience.py",
+          "no_voice_trait_analysis"
+        ],
+        [
+          "src/speech/policy.py",
+          "SERVER_SPEECH_PROVIDERS_AUTHORIZED"
+        ],
+        [
+          "frontend/lib/speech/speechSynthesisAdapter.ts",
+          "speechSynthesis"
+        ]
+      ]
+    },
+    {
+      "id": "PF-11",
+      "document": "privacy",
+      "keys": [
+        "privacy.voiceRealtime"
+      ],
+      "status": "NOT_VERIFIED",
+      "fact": "Realtime voice is off by default. When enabled the server mints a short-lived, user-scoped credential and the browser opens the audio channel directly to the realtime provider; Ask4Mo is not in the audio path and stores no audio. The live provider path has never been run against a real provider (deterministic validation only).",
+      "refs": [
+        [
+          "src/voice/realtime.py",
+          "class RealtimeSessionLimiter"
+        ],
+        [
+          "src/voice/realtime.py",
+          "FakeRealtimeProvider"
+        ]
+      ]
+    },
+    {
+      "id": "PF-12",
+      "document": "privacy",
+      "keys": [
+        "privacy.voiceNoInference",
+        "aiTransparency.neverInference",
+        "terms.aiNoHiring"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "An evaluator scans the voice code for human-trait identifiers (emotion, accent, confidence, personality and similar) and fails on any; Practice evaluation is text only; Admin reports expose only speech architecture metadata.",
+      "refs": [
+        [
+          "scripts/eval_voice_experience.py",
+          "no_voice_trait_analysis"
+        ]
+      ]
+    },
+    {
+      "id": "PF-13",
+      "document": "privacy",
+      "keys": [
+        "privacy.externalAi"
+      ],
+      "status": "PARTIAL",
+      "fact": "Model calls go through OpenRouter (the router forwards to the configured model vendor). What reaches a model, by feature, is listed in DF-01. The text says 'necessary text (not secrets)'; the precise categories (your messages, approved Memory summaries, a selected job description's text, approved evidence snippets from your documents, your Practice answers, selected stories) are broader than the sentence suggests, and a second processor receives query text for embeddings when a semantic embedding provider is configured (DF-02).",
+      "refs": [
+        [
+          "src/openrouter_client.py",
+          "class MissingAPIKeyError"
+        ],
+        [
+          "src/llm/models.py",
+          "OPENROUTER_MODEL_FAST"
+        ],
+        [
+          "src/copilot/embeddings.py",
+          "class OpenAIEmbedder"
+        ]
+      ]
+    },
+    {
+      "id": "PF-14",
+      "document": "privacy",
+      "keys": [
+        "privacy.externalResearch"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Current-market research is optional, gated by a capability, a pause switch and a feature flag. It queries a job-market API (Adzuna) and, for an explicit company website the candidate supplies, fetches the public site under SSRF, robots and size guards. Review sites (Glassdoor, Kununu, Google) are not integrated.",
+      "refs": [
+        [
+          "src/copilot/research/adzuna_provider.py",
+          "class AdzunaResearchProvider"
+        ],
+        [
+          "src/copilot/research/company_provider.py",
+          "class CompanyWebResearchProvider"
+        ],
+        [
+          "src/platform_config/flags.py",
+          "external_research"
+        ]
+      ]
+    },
+    {
+      "id": "PF-15",
+      "document": "privacy",
+      "keys": [
+        "privacy.externalEmail"
+      ],
+      "status": "NOT_VERIFIED",
+      "fact": "Verification and recovery email goes through EmailService with a Brevo adapter in hosted environments. Live delivery has never been verified against a real inbox; a provider acceptance is not a delivery.",
+      "refs": [
+        [
+          "src/mail/service.py",
+          "class EmailService"
+        ],
+        [
+          "src/mail/sender.py",
+          "class BrevoEmailSender"
+        ]
+      ]
+    },
+    {
+      "id": "PF-16",
+      "document": "privacy",
+      "keys": [
+        "privacy.externalKeys"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Provider keys are read server-side through one secret seam and are never placed in a browser response; the frontend reads only NEXT_PUBLIC settings. Realtime voice returns only a short-lived ephemeral secret.",
+      "refs": [
+        [
+          "src/core/secrets.py",
+          "def read_secret"
+        ],
+        [
+          "src/secret_store.py",
+          "class EncryptedDatabaseSecretStore"
+        ]
+      ]
+    },
+    {
+      "id": "PF-17",
+      "document": "privacy",
+      "keys": [
+        "privacy.retentionExport"
+      ],
+      "status": "PARTIAL",
+      "fact": "Export is an on-demand JSON download of the caller's own data with an in-file statement of what it does not include. Account deletion removes application-controlled rows, private files and indexed checkpoint runs. Gaps stated openly: a chat that was never indexed cannot be discovered; chat content is not in the export; self-service deletion is refused while a provider-managed subscription is unresolved (no provider billing is live today); since 05E a failed file deletion aborts the whole deletion and it can be repeated.",
+      "refs": [
+        [
+          "src/application/data_export.py",
+          "def build_candidate_export"
+        ],
+        [
+          "src/application/account_deletion_service.py",
+          "class AccountDeletionService"
+        ],
+        [
+          "src/billing/closure.py",
+          "class ClosureService"
+        ],
+        [
+          "src/privacy/erasure.py",
+          "def sweep",
+          "pending-05E-PR1"
+        ]
+      ]
+    },
+    {
+      "id": "PF-18",
+      "document": "privacy",
+      "keys": [
+        "privacy.retentionAudit"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "On deletion the actor link of audit events is set to NULL and the event is kept. audit_events and incident_events are append-only at the database (triggers reject delete and any update except nulling the actor).",
+      "refs": [
+        [
+          "src/application/account_deletion_service.py",
+          "AuditEvent"
+        ],
+        [
+          "src/persistence.py",
+          "append_only_trigger_ddl"
+        ]
+      ]
+    },
+    {
+      "id": "PF-19",
+      "document": "privacy",
+      "keys": [
+        "privacy.retentionBackups"
+      ],
+      "status": "NOT_VERIFIED",
+      "fact": "No code erases or enumerates hosting backups. Whether backups exist, their schedule and what a restore would re-introduce depends on the hosting package (05B) and the provider; none is built or verified yet. The sentence is a design statement, not an observed behaviour.",
+      "refs": [
+        [
+          "docs/operations_deployment.md",
+          "backup"
+        ]
+      ]
+    },
+    {
+      "id": "PF-20",
+      "document": "privacy",
+      "keys": [
+        "privacy.retentionRights"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Export, owner delete and account deletion are not entitlement-gated (a plan limit is an access limit and never touches the data-rights paths).",
+      "refs": [
+        [
+          "src/application/history_access.py",
+          "HISTORY_RESTRICTIONS_ENFORCED"
+        ]
+      ]
+    },
+    {
+      "id": "PF-21",
+      "document": "privacy",
+      "keys": [
+        "privacy.contactHeading",
+        "privacy.contactBody"
+      ],
+      "status": "CONTRADICTED_BY_CODE",
+      "fact": "The text points to 'the support address configured for your deployment'. No support or privacy contact address exists in the configuration, the code or the environment template, so the sentence has nothing to point at today. What exists: in-app support tickets and in-app privacy requests (a candidate can submit one and an operator can record one received another way).",
+      "refs": [
+        [
+          "src/privacy/requests.py",
+          "class PrivacyRequestService"
+        ],
+        [
+          "src/api/routes/privacy.py",
+          "def create_request"
+        ],
+        [
+          "src/support_repository.py",
+          "class SupportRepository"
+        ]
+      ]
+    },
+    {
+      "id": "PF-22",
+      "document": "privacy",
+      "keys": [
+        "privacy.intro"
+      ],
+      "status": "NOT_A_CODE_FACT",
+      "fact": "The introduction says the page is based on the product's actual technical data inventory and is an engineering draft, not a certification. The inventories are documentation (not code): docs/privacy.md and docs/capstone/p4_privacy_data_inventory.md. FACTS.md is a newer, code-linked inventory. Whether any inventory is complete is for counsel and a privacy review to judge; engineering does not claim completeness.",
+      "refs": [
+        [
+          "docs/privacy.md",
+          "Known limitations"
+        ],
+        [
+          "docs/capstone/p4_privacy_data_inventory.md",
+          "#"
+        ]
+      ]
+    },
+    {
+      "id": "TF-01",
+      "document": "terms",
+      "keys": [
+        "terms.whatBody",
+        "terms.aiWrong",
+        "terms.aiScores",
+        "aiTransparency.limitsModels"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "The product states in-line that practice feedback is not a hiring decision and that AI-generated content is labelled; scores come from a model-based rubric evaluation and are stored as practice feedback only.",
+      "refs": [
+        [
+          "frontend/components/trust/ProvenanceBadge.tsx",
+          "provenance.aiLabel"
+        ],
+        [
+          "src/interview_service.py",
+          "class InterviewService"
+        ]
+      ]
+    },
+    {
+      "id": "TF-02",
+      "document": "terms",
+      "keys": [
+        "terms.aiSources"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Knowledge sources carry readiness and validation states (governed datasets, source health, an explicit 'unvalidated' status) and the knowledge base makes no universal-coverage claim.",
+      "refs": [
+        [
+          "src/copilot/knowledge/governance.py",
+          "ReadinessState"
+        ]
+      ]
+    },
+    {
+      "id": "TF-03",
+      "document": "terms",
+      "keys": [
+        "terms.aiNoHiring"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "No route, role or report exists that ranks candidates for a recruiter or makes a hiring decision; Admin sees account metadata and aggregates only.",
+      "refs": [
+        [
+          "src/application/admin_permissions.py",
+          "ROLE_PRESETS"
+        ]
+      ]
+    },
+    {
+      "id": "TF-04",
+      "document": "terms",
+      "keys": [
+        "terms.respUpload"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Uploads are validated (type, size, malware fail-safe) and private; whether the user holds the right to use the content is a statement about the user, not a code fact.",
+      "refs": [
+        [
+          "src/documents/storage.py",
+          "class LocalDocumentStore"
+        ]
+      ]
+    },
+    {
+      "id": "TF-05",
+      "document": "terms",
+      "keys": [
+        "terms.accountsPlans"
+      ],
+      "status": "CONTRADICTED_BY_CODE",
+      "fact": "The text says Premium is EUR 19.99 per month and 'selected online after account creation'. Today Premium is NOT purchasable: the pricing page has no purchase path for it, live billing is disabled by a code constant, external checkout is not authorised, and Premium is a 'preview' plan. Basic is free and is the only plan a user can have without an operator assignment.",
+      "refs": [
+        [
+          "frontend/lib/pricing.ts",
+          "purchasable"
+        ],
+        [
+          "src/billing/policy.py",
+          "LIVE_BILLING_ENABLED"
+        ],
+        [
+          "src/billing/policy.py",
+          "EXTERNAL_CHECKOUT_AUTHORIZED"
+        ],
+        [
+          "src/entitlements.py",
+          "premium_preview"
+        ]
+      ]
+    },
+    {
+      "id": "TF-06",
+      "document": "terms",
+      "keys": [
+        "terms.accountsProviders"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Capabilities can be paused by an operator (durable pause state), are rate-limited, and depend on external providers that can be unavailable.",
+      "refs": [
+        [
+          "src/application/pause.py",
+          "class PauseService"
+        ],
+        [
+          "src/api/rate_limit.py",
+          "def enforce"
+        ]
+      ]
+    },
+    {
+      "id": "TF-09",
+      "document": "terms",
+      "keys": [
+        "terms.respAccurate",
+        "terms.respLawful"
+      ],
+      "status": "NOT_A_CODE_FACT",
+      "fact": "These are statements about the user's own obligations (accurate information, secure credentials, lawful use). Technical measures that exist: password hashing and server-side sessions, auth and cost rate limits and an operator pause switch. Whether a breach of these statements has consequences is a legal matter.",
+      "refs": [
+        [
+          "src/api/rate_limit.py",
+          "def enforce"
+        ],
+        [
+          "src/application/pause.py",
+          "class PauseService"
+        ]
+      ]
+    },
+    {
+      "id": "TF-07",
+      "document": "terms",
+      "keys": [
+        "terms.accountsAsIs",
+        "terms.changesBody",
+        "terms.intro"
+      ],
+      "status": "NOT_A_CODE_FACT",
+      "fact": "Warranty disclaimer, limitation of liability, the right to change terms and the pre-launch framing are legal statements. No code can verify them. Counsel decides wording, governing law and any consumer-law limits.",
+      "refs": []
+    },
+    {
+      "id": "TF-08",
+      "document": "terms",
+      "keys": [],
+      "status": "UNSTATED_FACT",
+      "fact": "Registration is invitation-only in every hosted environment (an unknown API_ENV is treated as hosted); the Terms do not mention it.",
+      "refs": [
+        [
+          "src/invitations/policy.py",
+          "def invitation_required"
+        ]
+      ]
+    },
+    {
+      "id": "AF-01",
+      "document": "ai_transparency",
+      "keys": [
+        "aiTransparency.whatMoBody"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Mo runs a bounded graph (at most 6 steps per user turn) over a closed tool allow-list (six Career tools, three specialist tools, two human-action tools); unknown tool names never execute.",
+      "refs": [
+        [
+          "src/agent/registry.py",
+          "career_tool_registry"
+        ],
+        [
+          "src/agent/policies.py",
+          "MAX_AGENT_STEPS"
+        ]
+      ]
+    },
+    {
+      "id": "AF-02",
+      "document": "ai_transparency",
+      "keys": [
+        "aiTransparency.whenAi"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Model-backed operations are enumerated in one central policy (orchestration, specialist analysis and coaching, final response, structured generation, evaluation, realtime voice).",
+      "refs": [
+        [
+          "src/llm/policy.py",
+          "class ModelOperation"
+        ]
+      ]
+    },
+    {
+      "id": "AF-03",
+      "document": "ai_transparency",
+      "keys": [
+        "aiTransparency.whenDeterministic"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Selection of approved evidence is deterministic and owner-scoped: only approved, unrevoked claims and verified stories, chosen without a model, with the user id taken from trusted run state.",
+      "refs": [
+        [
+          "src/agent/specialist_tools.py",
+          "FindCandidateEvidence"
+        ],
+        [
+          "src/application/evidence_access_service.py",
+          "class EvidenceAccessService"
+        ]
+      ]
+    },
+    {
+      "id": "AF-04",
+      "document": "ai_transparency",
+      "keys": [
+        "aiTransparency.whenPolicy"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "The model for each operation is resolved server-side from the registry and policy; the request accepts only the three profile names and a raw model identifier is rejected.",
+      "refs": [
+        [
+          "src/llm/policy.py",
+          "def resolve_policy"
+        ],
+        [
+          "src/application/agent_service.py",
+          "_resolve_profile"
+        ]
+      ]
+    },
+    {
+      "id": "AF-05",
+      "document": "ai_transparency",
+      "keys": [
+        "aiTransparency.specialistsBounded"
+      ],
+      "status": "PARTIAL",
+      "fact": "The tool allow-list and the trusted-user-id rule exist. The text also says 'with server-side revalidation'. Revalidating EVERY model-requested tool call (authenticated user, goal, permission, arguments, ownership) immediately before a side effect is package 01D, which is not merged at the commit this pack was written against; the sentence is therefore only partly true today and must be re-checked after 01D.",
+      "refs": [
+        [
+          "src/agent/registry.py",
+          "career_tool_registry"
+        ],
+        [
+          "src/agent/specialist_tools.py",
+          "FindCandidateEvidence"
+        ]
+      ]
+    },
+    {
+      "id": "AF-06",
+      "document": "ai_transparency",
+      "keys": [
+        "aiTransparency.specialistsGrounded"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "One deterministic grounding policy governs citations and abstention (a citation on an abstention must be real and relevant; external factual questions need retrieval before a verified claim; an unsourced compensation figure is removed). Quality of the abstention behaviour in each language has not been human-validated.",
+      "refs": [
+        [
+          "src/copilot/security/grounding_policy.py",
+          "def is_compensation_query"
+        ],
+        [
+          "src/agent/grounding.py",
+          "def apply_candidate_policy"
+        ]
+      ]
+    },
+    {
+      "id": "AF-07",
+      "document": "ai_transparency",
+      "keys": [
+        "aiTransparency.approvalsMemory"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "A human review step pauses the graph for exactly three decisions (role confirmation, memory write, practice handoff); an approval applies once; the agent never writes Memory itself.",
+      "refs": [
+        [
+          "src/agent/human.py",
+          "APPROVE_MEMORY"
+        ],
+        [
+          "src/agent/human.py",
+          "APPROVE_PRACTICE_HANDOFF"
+        ]
+      ]
+    },
+    {
+      "id": "AF-08",
+      "document": "ai_transparency",
+      "keys": [
+        "aiTransparency.approvalsFeedback"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Feedback becomes an improvement candidate whose lifecycle transitions are human-only; IMPLEMENTED is never automatic; nothing modifies the running product automatically.",
+      "refs": [
+        [
+          "src/copilot/feedback_intelligence/improvement.py",
+          "IMPLEMENTED"
+        ]
+      ]
+    },
+    {
+      "id": "AF-09",
+      "document": "ai_transparency",
+      "keys": [
+        "aiTransparency.limitsRealtime"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "Realtime voice is off unless a provider key and the flag are present; otherwise the UI falls back to turn-based voice and typing.",
+      "refs": [
+        [
+          "src/voice/realtime.py",
+          "FakeRealtimeProvider"
+        ]
+      ]
+    },
+    {
+      "id": "AF-10",
+      "document": "ai_transparency",
+      "keys": [
+        "aiTransparency.neverHiring"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "See TF-03.",
+      "refs": [
+        [
+          "src/application/admin_permissions.py",
+          "ROLE_PRESETS"
+        ]
+      ]
+    },
+    {
+      "id": "AF-11",
+      "document": "ai_transparency",
+      "keys": [
+        "aiTransparency.neverPrompts"
+      ],
+      "status": "VERIFIED_IN_CODE",
+      "fact": "System prompts, chain-of-thought and provider reasoning are not returned by any candidate route; agent events are projections of safe fields only.",
+      "refs": [
+        [
+          "src/copilot/security/output_guard.py",
+          "def guard_output"
+        ]
+      ]
+    },
+    {
+      "id": "AF-12",
+      "document": "ai_transparency",
+      "keys": [
+        "aiTransparency.intro"
+      ],
+      "status": "NOT_A_CODE_FACT",
+      "fact": "The introduction states an aim (clarity in plain language) and the draft status of the page. No code verifies an aim. The behaviour it promises to describe honestly is mapped by AF-01 to AF-11.",
+      "refs": []
+    },
+    {
+      "id": "DF-01",
+      "document": "data_flow",
+      "keys": [],
+      "status": "UNSTATED_FACT",
+      "fact": "What a model receives, by feature. Mo chat: your message and goal, the bounded conversation, up to 10 approved Memory summaries as data, approved evidence snippets when you ask Mo to use them, the text of a job description you select (extracted server-side, at most 12,000 characters), company research results. Practice: the interview configuration, your answers for evaluation, the session summary, stories you select. Approved evidence snippets are verbatim claims from your documents; the raw file is never sent. Feedback comments are never sent.",
+      "refs": [
+        [
+          "src/api/routes/interview.py",
+          "_compose_evidence_background"
+        ],
+        [
+          "src/application/documents_service.py",
+          "def extracted_text"
+        ],
+        [
+          "src/application/memory_service.py",
+          "def load_for_agent"
+        ],
+        [
+          "src/interview_service.py",
+          "class InterviewService"
+        ]
+      ]
+    },
+    {
+      "id": "DF-02",
+      "document": "data_flow",
+      "keys": [],
+      "status": "UNSTATED_FACT",
+      "fact": "Embeddings. When a semantic embedding provider is configured, the retrieval query text (derived from your question) is sent to that provider; knowledge-base chunks are embedded when indexed. With no provider the product uses a local hash embedder (no network). In hosted environments the hash embedder is refused. The provider is configurable and is not named in the Privacy text.",
+      "refs": [
+        [
+          "src/copilot/embeddings.py",
+          "class OpenAIEmbedder"
+        ],
+        [
+          "src/copilot/embeddings.py",
+          "class LocalHashEmbedder"
+        ]
+      ]
+    },
+    {
+      "id": "DF-03",
+      "document": "data_flow",
+      "keys": [],
+      "status": "UNSTATED_FACT",
+      "fact": "Observability. An optional Langfuse sink receives a sanitised allow-listed projection of agent events through manual events (no prompt or content capture). It is off by default and its destination is an external processor if enabled.",
+      "refs": [
+        [
+          "src/observability/langfuse.py",
+          "class LangfuseObservabilitySink"
+        ],
+        [
+          "src/observability/config.py",
+          "ENABLED_ENV"
+        ],
+        [
+          "src/integrations.py",
+          "langfuse"
+        ]
+      ]
+    },
+    {
+      "id": "DF-04",
+      "document": "data_flow",
+      "keys": [],
+      "status": "UNSTATED_FACT",
+      "fact": "Processors and recipients that exist as code-defined integrations: OpenRouter (model calls), an embeddings provider (configurable), Brevo (email), Adzuna (job-market research), the public website a candidate names for company research, Langfuse (optional, off), Google (optional sign-in), a realtime voice provider (optional, off), Redis (optional rate limiting), Stripe Managed Payments (foundation only, no live billing, no checkout). Which are active in a deployment depends on configuration and is not recorded in the texts.",
+      "refs": [
+        [
+          "src/integrations.py",
+          "IntegrationDef("
+        ]
+      ]
+    },
+    {
+      "id": "DF-05",
+      "document": "data_flow",
+      "keys": [],
+      "status": "UNSTATED_FACT",
+      "fact": "Retention. No fixed retention period exists for candidate content: it is kept until the user deletes it. The only time-based rule is an operator script that removes stale in-progress interview sessions after 30 days (unscheduled). Expired authentication rows are not purged automatically. Audit events are kept indefinitely with the actor link removed on deletion. A retained anonymised billing shell can outlive a deletion while a provider subscription is unresolved (no period invented).",
+      "refs": [
+        [
+          "scripts/cleanup_runtime_data.py",
+          "INTERVIEW_SESSION_RETENTION_DAYS"
+        ],
+        [
+          "src/billing/closure.py",
+          "RETENTION_BASIS"
+        ],
+        [
+          "docs/privacy.md",
+          "No fixed retention periods"
+        ]
+      ]
+    },
+    {
+      "id": "DF-06",
+      "document": "data_flow",
+      "keys": [],
+      "status": "UNSTATED_FACT",
+      "fact": "Acceptance of the legal texts. Since W10.10 the product can record which version of Terms, Privacy and AI transparency a user acknowledged (version, time, source; no IP or device). Only the Settings source is wired; registration records nothing; accounts that predate recording have none; re-acceptance is not enforced. 05E adds a read-only history for the user.",
+      "refs": [
+        [
+          "src/privacy/legal.py",
+          "class LegalService"
+        ],
+        [
+          "src/privacy/legal.py",
+          "def acceptance_history",
+          "pending-05E-PR1"
+        ],
+        [
+          "src/privacy/policy.py",
+          "ACCEPTANCE_SOURCES"
+        ]
+      ]
+    },
+    {
+      "id": "DF-07",
+      "document": "data_flow",
+      "keys": [],
+      "status": "UNSTATED_FACT",
+      "fact": "Cookies and client storage. One HttpOnly session cookie; interface and conversation language preferences are server-side account settings; voice preference is device-local; no third-party analytics script is loaded by the frontend (a scan of the frontend sources finds none).",
+      "refs": [
+        [
+          "src/api/dependencies.py",
+          "def _session_cookie_name"
+        ]
+      ]
+    },
+    {
+      "id": "DF-08",
+      "document": "data_flow",
+      "keys": [],
+      "status": "UNSTATED_FACT",
+      "fact": "Access by Ask4Mo staff. Administrators see account, workspace, privacy-request, feedback, provider and audit METADATA only. There is no permission that reads a CV, document, answer, conversation, memory or evidence; no impersonation and no break-glass. Direct database or hosting-console access by an engineer is outside the application and is a hosting-package matter (05B).",
+      "refs": [
+        [
+          "src/application/admin_permissions.py",
+          "PERMISSIONS"
+        ]
+      ]
+    },
+    {
+      "id": "DF-09",
+      "document": "data_flow",
+      "keys": [],
+      "status": "UNSTATED_FACT",
+      "fact": "Minors and age. No age check or age statement exists in registration or the texts.",
+      "refs": [
+        [
+          "src/application/auth_service.py",
+          "def register"
+        ]
+      ]
+    }
+  ]
+}

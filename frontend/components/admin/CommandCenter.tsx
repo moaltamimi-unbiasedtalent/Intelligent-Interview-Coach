@@ -5,6 +5,7 @@ import { api } from "@/lib/api/client";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
 import { CapabilityReadiness } from "./CapabilityReadiness";
+import { CommandCenterDashboard } from "./CommandCenterDashboard";
 import { KeyValue, Panel, PermissionGate, ResourceState, Stat, StatusLabel, useAdminResource } from "./ui";
 
 export function CommandCenter() {
@@ -34,6 +35,7 @@ function CommandCenterBody() {
     <ResourceState loaded={loaded}>
       {loaded.state === "ready" ? <Overview home={loaded.data} /> : null}
       {canSecurity ? <SecuritySummary /> : null}
+      <CommandCenterDashboard />
       <CapabilityReadiness />
     </ResourceState>
   );

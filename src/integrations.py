@@ -89,7 +89,7 @@ REGISTRY: dict[str, IntegrationDef] = {d.code: d for d in (
         "openai_embeddings", "OpenAI embeddings (optional)", "ai_model", "OpenAI embeddings",
         "Optional embedding provider for retrieval. The offline local embedder is the default.",
         credentials=(CredentialSlot("api_key", "Embedding API key", "COPILOT_EMBEDDING_API_KEY"),),
-        settings=(SettingDef("provider", "Embedding provider", "COPILOT_EMBEDDING_PROVIDER", ("auto", "local", "openai")),)),
+        settings=(SettingDef("provider", "Embedding provider", "COPILOT_EMBEDDING_PROVIDER", ("auto", "local", "openai", "openrouter")),)),
     IntegrationDef(
         "realtime_voice", "Realtime voice provider", "ai_model", "OpenAI Realtime",
         "Optional live spoken exchange with Mo. Off by default; live provider validation has not been run.",

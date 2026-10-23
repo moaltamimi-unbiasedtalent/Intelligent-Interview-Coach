@@ -257,6 +257,24 @@ def _normalise_query(query: str) -> str:
     return " ".join((query or "").lower().split())
 
 
+def _retrieval_taint(result: Any) -> dict[str, Any]:
+    """Injection-risk summary of THIS retrieval (01A screen counts and highest risk), for tool-call authorization.
+
+    Counts and a 0.0-1.0 number only, never chunk text. A fake or older result without a trace contributes nothing.
+    """
+    trace = getattr(result, "trace", None)
+    risk = getattr(trace, "max_chunk_injection_risk", 0.0)
+    quarantined = getattr(trace, "quarantined_chunks", 0)
+    flagged = getattr(trace, "flagged_chunks", 0)
+    blocked_query = bool(getattr(result, "blocked", False))
+    return {
+        "max_injection_risk": float(risk) if isinstance(risk, (int, float)) else 0.0,
+        "quarantined_chunks": int(quarantined) if isinstance(quarantined, int) else 0,
+        "flagged_chunks": int(flagged) if isinstance(flagged, int) else 0,
+        **({"max_injection_risk": 1.0} if blocked_query else {}),
+    }
+
+
 def _search_career_knowledge(career_service) -> Handler:
     def handler(args: SearchCareerKnowledge, ctx: ToolContext) -> ToolOutcome:
         query = (args.query or "").strip()
@@ -323,7 +341,8 @@ def _search_career_knowledge(career_service) -> Handler:
             return ToolOutcome(
                 result=observation,
                 state_patch={"retrieval_used": True, "last_retrieval_query": query,
-                             "evidence": [], "citations": []},
+                             "evidence": [], "citations": [],
+                             "untrusted_context": _retrieval_taint(result)},
                 summary="blocked=true, sources=0",
                 source_count=0,
                 usage=retrieval_usage,
@@ -361,6 +380,7 @@ def _search_career_knowledge(career_service) -> Handler:
             "last_retrieval_query": query,
             "resolved_occupation": getattr(result, "resolved_occupation", None) or None,
             "resolved_geography": getattr(result, "resolved_geography", None),
+            "untrusted_context": _retrieval_taint(result),
         }
         # Agentic HITL (Phase 8): when the DETERMINISTIC pipeline reports an ambiguous
         # occupation, don't guess — pause for the user to confirm the role. The

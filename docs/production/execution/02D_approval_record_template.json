@@ -1,0 +1,20 @@
+{
+  "source_id": "<REPLACE: manifest source id, or governed:<knowledge_source_id>>",
+  "market": "<REPLACE: one of IE, DE, ES, IT, PT, FR, NL, UK, US, EU>",
+  "licence_class": "<REPLACE: public_official | explicit_permissive | internal_owned | permission_recorded>",
+  "licence_terms_reference": "<REPLACE: the exact page or document and date the terms were read>",
+  "rights_holder": "<REPLACE: named rights holder>",
+  "authority_tier": 0,
+  "coverage_statement": "<REPLACE: what this source covers for THIS market, language and year, and what it does not>",
+  "features": [
+    "<REPLACE: one or more of role_definition, compensation, labour_outlook, entry_education, licence, certification>"
+  ],
+  "approver": "<REPLACE: the reviewer's own name, a person>",
+  "approved_on": "<REPLACE: YYYY-MM-DD>",
+  "evidence_reference": "<REPLACE: where the reviewer's working papers are>",
+  "release_sha": "<REPLACE: the repository commit that was reviewed>",
+  "staleness_rule": {
+    "valid_until": "<REPLACE: YYYY-MM-DD, at most 366 days after approved_on>"
+  },
+  "enabled": false
+}

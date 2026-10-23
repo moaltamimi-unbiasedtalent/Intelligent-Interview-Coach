@@ -52,6 +52,14 @@ export interface AdminProviders {
   pause_durable: boolean;
   rate_limit_mode: string;
   rate_limit_distributed: boolean;
+  monitoring?: AdminMonitoring | null;
+  note: string;
+}
+/** 05C: counts, fixed codes and headroom only. `unknown` means no evidence yet and is never healthy. */
+export interface AdminMonitoring {
+  alerts: { active: number; by_category: Record<string, number> };
+  budget: { state: string; enforcement: string; budget_class?: string | null; reason?: string | null; remaining_to_stop_usd?: string | null; remaining_requests?: number | null } | null;
+  signals: { code: string; status: "ok" | "failing" | "unknown" }[];
   note: string;
 }
 export interface AdminAuditEvent {
@@ -119,6 +127,31 @@ export interface AdminUserActionResult {
   request_id?: string | null;
   mail_accepted?: boolean | null;
   revision: string;
+}
+/** 03C bulk Admin user actions (low-harm, reversible allow-list; OD-BULK-ACTIONS is provisional). Counts and reason codes only. */
+export type BulkUserActionName = "force-signout" | "expire-verification";
+export interface BulkUserPreview {
+  action: BulkUserActionName;
+  requested: number;
+  unique: number;
+  eligible: number;
+  excluded: number;
+  excluded_by_reason: Record<string, number>;
+  max_batch: number;
+  preview_revision: string;
+}
+export interface BulkUserResult {
+  action: BulkUserActionName;
+  batch_id: string;
+  status: "complete" | "partial" | "none_applied";
+  requested: number;
+  unique: number;
+  applied: number;
+  skipped: number;
+  skipped_by_reason: Record<string, number>;
+  failed: number;
+  failed_by_reason: Record<string, number>;
+  replayed: boolean;
 }
 export interface AdminAuditEntry {
   event_type: string;

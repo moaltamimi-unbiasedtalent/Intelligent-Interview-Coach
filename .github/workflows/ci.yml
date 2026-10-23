@@ -171,6 +171,8 @@ jobs:
         run: python scripts/eval_agent.py
       - name: Prompt-injection corpus evaluation (01A; offline; synthetic corpus; REPORT ONLY, thresholds not approved, no gate until OD-GATE-THRESHOLDS)
         run: python scripts/eval_injection_corpus.py --json "$RUNNER_TEMP/injection_corpus_report.json"
+      - name: Per-language injection report (06E; offline; DEV split only, held-out never evaluated; REPORT ONLY, no threshold, never fails on quality)
+        run: python scripts/eval_injection_corpus.py --language-report
       - name: Identity & platform evaluation (Capstone P1/E1; offline; safety invariants = 1.0)
         run: python scripts/eval_identity_platform.py
       - name: Response-experience evaluation (Capstone P2/E2; offline; presentation + preference)
@@ -179,6 +181,8 @@ jobs:
         run: python scripts/eval_dictation_experience.py
       - name: i18n/l10n evaluation (Capstone P3.5; offline; locale + language/geography safety)
         run: python scripts/eval_i18n_l10n.py
+      - name: Per-language AI behaviour evaluation (06C; offline; directives, prompt parity, grounding parity, scoring invariance, rating harness; 0 model calls)
+        run: python scripts/eval_language_ai_behaviour.py
       - name: Documents & evidence evaluation (Capstone P4/E2/E3; offline; privacy + provenance + security)
         run: python scripts/eval_documents_evidence.py
       - name: Multi-agent & model-policy evaluation (Capstone P5/E4; offline; isolation + no-fabrication + injection-inert)

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "description": "Candidate embedding models for the 02E comparison runner, all reached through OpenRouter's embeddings endpoint via the existing provider abstraction (no direct OpenAI dependency, no OPENAI_API_KEY). This is a LIST OF CANDIDATES to measure, not a selection: the production model is chosen from measured, reproducible evidence by the owner.",
+  "base_url": "https://openrouter.ai/api/v1",
+  "availability": "UNVERIFIED: whether each slug is actually served by OpenRouter's embeddings endpoint at run time has not been checked (no live call was made). A model that is not served fails its first call and is recorded as failed.",
+  "dimensions_note": "Dimensions are the vendor's published defaults and are UNVERIFIED here; a returned vector of another width aborts that model with dimension_mismatch (OpenAIEmbedder checks every vector).",
+  "models": [
+    {"key": "openai-3-large", "model": "openai/text-embedding-3-large", "dimensions": 3072, "version": "or-2026-10", "price_per_million_tokens_usd": null},
+    {"key": "openai-3-small", "model": "openai/text-embedding-3-small", "dimensions": 1536, "version": "or-2026-10", "price_per_million_tokens_usd": null},
+    {"key": "bge-m3", "model": "baai/bge-m3", "dimensions": 1024, "version": "or-2026-10", "price_per_million_tokens_usd": null},
+    {"key": "qwen3-embedding-8b", "model": "qwen/qwen3-embedding-8b", "dimensions": 4096, "version": "or-2026-10", "price_per_million_tokens_usd": null},
+    {"key": "multilingual-e5-large", "model": "intfloat/multilingual-e5-large", "dimensions": 1024, "version": "or-2026-10", "price_per_million_tokens_usd": null}
+  ]
+}

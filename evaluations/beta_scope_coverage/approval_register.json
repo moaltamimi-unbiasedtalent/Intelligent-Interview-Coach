@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "owner_decision": "OD-COVERAGE",
+  "source_of_truth": "the 02D retrieval-approval and market-qualification decisions; this file is a snapshot an owner updates when 02D approves something",
+  "status": "NO_APPROVALS: 02D has approved no source and no market as of 2026-10-22",
+  "enabled_features": [],
+  "approved_markets": [],
+  "qualified_sources": []
+}

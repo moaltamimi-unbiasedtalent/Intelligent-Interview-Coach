@@ -1,6 +1,6 @@
 # 04B completion evidence: workspace ownership transfer with verified acceptance and immutable audit (REQ-OWN-07)
 
-Branch `feat/04b-ownership-transfer`, created from `origin/main` at f5cf7cb (all Wave 1 and Wave 2 packages merged, Alembic head 0043_story_bank_completion). Start 2026-10-22 14:42 CEST.
+Branch `feat/04b-ownership-transfer`, created from `origin/main` at f5cf7cb (all Wave 1 and Wave 2 packages merged, Alembic head 0046_email_delivery_events). Start 2026-10-22 14:42 CEST.
 
 **OD-WS-TRANSFER is NOT approved.** The owner decision register still shows it AWAITING. This package implements the owner's PROVISIONAL RECOMMENDED DEFAULT ("explicit workspace ownership transfer requiring appropriate authorization, verified acceptance and immutable audit evidence"). Nothing here records, implies or claims an approval; if the owner decides differently, the rules below (7 days, one open transfer, step-up, former-owner role choice, token plus bound account) are the places to change.
 
@@ -29,7 +29,7 @@ Branch `feat/04b-ownership-transfer`, created from `origin/main` at f5cf7cb (all
 
 ## 2. Migration
 
-- File `migrations/versions/0044_workspace_ownership_transfers.py`, `revision = "0044_workspace_ownership_transfers"`, `down_revision = "0043_story_bank_completion"` (the head visible on this base). No head literal is hard-coded in any test or evaluator (tests find the revision by its stable name suffix and use `tests/_alembic_head.py`). Other Wave 3 branches also claim 0044; the lead renames and re-chains at merge.
+- File `migrations/versions/0047_workspace_ownership_transfers.py`, `revision = "0047_workspace_ownership_transfers"`, `down_revision = "0046_email_delivery_events"` (the head on main at the 2026-10-23 merge; renumbered from 0044, re-chained after 0046). No head literal is hard-coded in any test or evaluator (tests find the revision by its stable name suffix and use `tests/_alembic_head.py`). Other Wave 3 branches also claim 0044; the lead renames and re-chains at merge.
 - Additive: ONE new table, nothing altered. Self-contained, data-preserving (an existing workspace and its memberships survive the upgrade unchanged: tested). Fail-closed downgrade: refuses while ANY row exists, whatever its state, and deletes nothing (tested), proceeds once the rows are removed deliberately and the upgrade can be repeated.
 - Privacy-schema rule (`scripts/eval_privacy_controls.py`): the migration touches no existing privacy table (its foreign keys only REFERENCE `workspaces` and `users`, which the rule treats as references). Because the new table is itself ownership data, it was ADDED to `PRIVACY_TABLES` (so later migrations are held to the rule) and a reviewed, file-name-and-table-bound entry was added: `"_workspace_ownership_transfers.py": frozenset({"workspace_ownership_transfers"})`, with its justification in the comment, exactly like 04A. An exactness test proves the exception covers one file name and one table.
 
@@ -88,7 +88,7 @@ Test inventory (`tests/test_ownership_transfer_04b.py`, 43 tests, plus 2 in `tes
 4. Whether a resend of the notice is wanted (today: cancel and propose again).
 
 ## 9. Hand-off notes for the lead
-- Rename and re-chain `0044_workspace_ownership_transfers` at merge (other branches claim 0044). Its stable name suffix is what the tests and the privacy evaluator key on, so a renumber needs no test edit; the privacy evaluator's baseline is a number (39) and unaffected.
+- Rename and re-chain `0047_workspace_ownership_transfers` at merge (other branches claim 0044). Its stable name suffix is what the tests and the privacy evaluator key on, so a renumber needs no test edit; the privacy evaluator's baseline is a number (39) and unaffected.
 - `scripts/ci/test_shard_weights.json` was not edited; `scripts/ci_test_shards.py verify --shards 4` passes.
 - Regenerate `06A_LOCALE_AUDIT.md` after merging (it changes with every package that adds catalogue keys).
 - When 05E merges, register the five `workspace.transfer_*` event names and the key allow-list there.

@@ -305,6 +305,7 @@ def main(argv: list[str] | None = None) -> int:
 
     from src.config import load_config
     from src.evaluation_service import EvaluationService
+    from src.llm.budget.script_guard import guard_paid_script      # 05C: every paid path also needs the governed budget (approved marker, durable ledger, ceilings, kill switch)
     from src.openrouter_client import OpenRouterClient
     from src.pricing_service import PricingService
 
@@ -312,6 +313,9 @@ def main(argv: list[str] | None = None) -> int:
     if not config.is_configured:
         print("No OpenRouter API key configured; cannot run the live sweep.")
         return 1
+    refused = guard_paid_script("compare_model_settings", category="evaluation")
+    if refused is not None:
+        return refused
 
     pricing = PricingService()
     supported = pricing.supported_parameters(FIXED_MODEL)

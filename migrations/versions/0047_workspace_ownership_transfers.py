@@ -14,8 +14,8 @@ neither reads nor alters them.
 The downgrade is FAIL-CLOSED: it refuses (deleting nothing) while ANY transfer row exists, whatever its state, because the rows are the state record of an ownership
 decision. Remove them deliberately first.
 
-Revision ID: 0044_workspace_ownership_transfers
-Revises: 0043_story_bank_completion
+Revision ID: 0047_workspace_ownership_transfers
+Revises: 0046_email_delivery_events
 Create Date: 2026-10-22
 """
 
@@ -24,8 +24,8 @@ from __future__ import annotations
 import sqlalchemy as sa
 from alembic import op
 
-revision = "0044_workspace_ownership_transfers"
-down_revision = "0043_story_bank_completion"
+revision = "0047_workspace_ownership_transfers"
+down_revision = "0046_email_delivery_events"
 branch_labels = None
 depends_on = None
 
@@ -67,7 +67,7 @@ def downgrade() -> None:
     bind = op.get_bind()
     held = int(bind.execute(sa.text(f"SELECT COUNT(*) FROM {_TABLE}")).scalar() or 0)
     if held:
-        raise RuntimeError(f"Refusing to downgrade 0044_workspace_ownership_transfers: {held} ownership transfer record(s) exist. "
+        raise RuntimeError(f"Refusing to downgrade 0047_workspace_ownership_transfers: {held} ownership transfer record(s) exist. "
                            "They are the state record of an ownership decision; remove them deliberately first.")
     op.drop_index("ix_ownership_transfers_recipient", table_name=_TABLE)
     op.drop_index("ix_ownership_transfers_proposer", table_name=_TABLE)

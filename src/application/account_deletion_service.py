@@ -41,6 +41,14 @@ class DeletionSummary:
     workspaces_deleted: int = 0
     audit_anonymized: int = 0
     invitations_anonymized: int = 0           # 04E: registration invitations whose redeemer/issuer/revoker linkage was cleared
+    fk_swept: dict[str, int] = field(default_factory=dict)      # 05E: remaining user references erased or cleared by the schema-derived sweep ("table.column": rows)
+    residual: dict[str, int] = field(default_factory=dict)      # 05E: rows that STILL reference the user after commit ("table.column": rows); empty = complete
+    user_row_remaining: bool = False                            # 05E: the account row exists after deletion (only the anonymised billing shell may remain)
+
+    @property
+    def sql_complete(self) -> bool:
+        """True when the relational erasure is verified complete: no residual reference and no account row (a retained anonymised billing shell is the one reported exception)."""
+        return not self.residual and not self.user_row_remaining
 
     def to_dict(self) -> dict:
         return {
@@ -53,6 +61,7 @@ class DeletionSummary:
             "workspaces_deleted": self.workspaces_deleted,
             "audit_anonymized": self.audit_anonymized,
             "invitations_anonymized": self.invitations_anonymized,
+            "fk_swept": dict(self.fk_swept), "residual": dict(self.residual), "user_row_remaining": self.user_row_remaining,
         }
 
 
@@ -63,6 +72,15 @@ class SubscriptionResolutionRequired(Exception):
     def __init__(self, reasons: list[str]) -> None:
         super().__init__("subscription_resolution_required")
         self.reasons = reasons
+
+
+class DeletionIncomplete(Exception):
+    """05E: a step that must succeed BEFORE the account rows are removed failed (a private file could not be deleted). Nothing was committed, the account is intact and the
+    deletion can simply be run again; ``category`` is a fixed code, never a path, key or exception text."""
+
+    def __init__(self, category: str) -> None:
+        super().__init__(category)
+        self.category = category
 
 
 class AccountDeletionService:
@@ -369,6 +387,31 @@ class AccountDeletionService:
                             .values(actor_user_id=None))
             summary.audit_anonymized = int(res.rowcount or 0)
 
+            # 7b) 05E safety net: every remaining reference to this account anywhere in the schema (derived from the foreign keys, so a table added later is covered)
+            # gets the foreign-key action the database itself declares: a CASCADE reference is deleted, a SET NULL reference is cleared. PostgreSQL does this natively;
+            # SQLite (development, tests) does not enforce foreign keys, so without this an operator or child reference would dangle after deletion.
+            from src.privacy import erasure as _erasure
+
+            summary.fk_swept = _erasure.sweep(s, user_id, retain_billing=keep_billing, retain_requests=self._retain_requests)
+
+            # 7c) 05E: private files are deleted BEFORE the commit. Once the rows are gone the storage keys are gone with them, so a failure after the commit could never be
+            # retried and the files would be orphaned for good. In this order a failed (or interrupted) deletion leaves the account intact and re-runnable, and a
+            # re-run finds the same keys (an already-deleted file is not an error).
+            if self._store is not None:
+                failed = 0
+                for key in storage_keys:
+                    try:
+                        self._store.delete(key)
+                        summary.files_purged += 1
+                    except Exception:  # noqa: BLE001 - category only; never a key, path or error text
+                        failed += 1
+                if failed:
+                    summary.files_failed = failed
+                    s.rollback()
+                    raise DeletionIncomplete("private_files")
+            elif storage_keys:
+                summary.files_failed = len(storage_keys)       # no store was supplied by the caller: reported honestly, never claimed as purged
+
             # 8) The user row last (or, when a billing reference must be retained, an anonymised shell that cannot sign in).
             if keep_billing:
                 user.subject, user.provider, user.display_name, user.email = f"closed:{user_id}", "closed", None, None
@@ -378,15 +421,13 @@ class AccountDeletionService:
                 s.delete(user)
             s.commit()
 
-        # --- external resources (outside the DB txn) ---
-        if self._store is not None:
-            for key in storage_keys:
-                try:
-                    self._store.delete(key)
-                    summary.files_purged += 1
-                except Exception:  # noqa: BLE001 - best-effort; report failures honestly
-                    summary.files_failed += 1
+        # --- verification of the relational erasure (05E): counts only, never content ---
+        with self._sf() as s2:
+            summary.user_row_remaining = s2.get(P.User, user_id) is not None
+            summary.residual = _erasure.residual_references(s2, user_id, retain_billing=keep_billing, retain_requests=self._retain_requests)
+        # preparation_runs rows are removed below only after their checkpoint purge succeeded; they are reported as residual until then.
 
+        # --- external resources (outside the DB txn): the checkpoint store ---
         all_runs = list(dict.fromkeys(list(indexed_run_ids) + list(run_ids)))
         if self._agent is not None and all_runs:
             for run_id in all_runs:
@@ -414,6 +455,9 @@ class AccountDeletionService:
                 summary.checkpoints_failed += 1
                 summary.purge_failed_run_ids.append(run_id)
                 self._index.mark(run_id, "purge_failed")
+
+        with self._sf() as s3:                      # final state after the checkpoint purge (index rows of purged runs are gone)
+            summary.residual = _erasure.residual_references(s3, user_id, retain_billing=keep_billing, retain_requests=self._retain_requests)
 
         # Final audit record (actor already anonymized; log the deletion itself).
         if self._audit is not None:

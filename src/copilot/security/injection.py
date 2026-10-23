@@ -31,7 +31,7 @@ from src.copilot.security.normalize import (
 )
 from src.core.security.normalize import fold_confusables
 
-__all__ = ["InjectionScan", "scan_text", "INDICATORS", "UNICODE_INDICATORS", "SURFACE_INPUT", "SURFACE_CHUNK"]
+__all__ = ["InjectionScan", "scan_text", "scan_multilingual", "INDICATORS", "UNICODE_INDICATORS", "SURFACE_INPUT", "SURFACE_CHUNK"]
 
 SURFACE_INPUT = "input"  # user-typed text: the original, strict rules (default)
 SURFACE_CHUNK = "chunk"  # a retrieved knowledge chunk: boundary-aware, negation-aware rules (01A)
@@ -201,6 +201,47 @@ def _scan_variant(text: str, *, chunk: bool, add, original: bool) -> None:
             add(label, weight)
 
 
+def scan_multilingual(text: str) -> InjectionScan:
+    """06E: run ONLY the non-English rule sets (the P10D de/fr/es/it/pt/nl/ru/ar rules and the additive multilingual rules) over ``text``.
+
+    Used by the English-only interview input guard (``src.security.detect_injection``) as an additive stage: no English rule runs here, so English input is scored exactly as before and a
+    benign English text cannot gain a hit from this function. The text, its confusable-folded copy and bounded Base64 segments are each read once; each label counts once.
+    """
+    if not text or not text.strip():
+        return InjectionScan()
+    matched: list[str] = []
+    score = 0.0
+
+    def add(label: str, weight: float) -> None:
+        nonlocal score
+        if label not in matched:
+            matched.append(label)
+            score += weight
+
+    variants = [text]
+    folded = fold_confusables(text)
+    if folded != text:
+        variants.append(folded)
+    variants.extend(decode_base64_segments(text))
+    for variant in variants:
+        # The boundary- and negation-aware (chunk) forms: the interview guard reads job descriptions, backgrounds and answers (descriptive prose), where the strict typed-chat forms flagged an
+        # ordinary "Schakel de beveiliging niet uit" or "les donnees des autres utilisateurs" on the dev split.
+        bounded = neutralise_negations(normalize_unicode_with_boundaries(variant))
+        for label, weight, loose, twin in _CHUNK_UNICODE_INDICATORS:
+            if loose.search(bounded) or twin.search(bounded):
+                add(label, weight)
+        for label, weight, pattern in EXTRA_UNICODE_CHUNK:
+            if pattern.search(bounded):
+                add(label, weight)
+    if score >= constants.INJECTION_BLOCK_THRESHOLD:
+        verdict = constants.VERDICT_BLOCK
+    elif score >= constants.INJECTION_WARN_THRESHOLD:
+        verdict = constants.VERDICT_WARN
+    else:
+        verdict = constants.VERDICT_ALLOW
+    return InjectionScan(verdict=verdict, score=score, indicators=matched)
+
+
 def scan_text(text: str, *, surface: str = SURFACE_INPUT) -> InjectionScan:
     """Scan ``text`` and return a verdict with matched indicators and score.
 
@@ -223,7 +264,9 @@ def scan_text(text: str, *, surface: str = SURFACE_INPUT) -> InjectionScan:
     _scan_variant(text, chunk=chunk, add=add, original=True)
     folded = fold_confusables(text)
     if folded != text:
-        _scan_variant(folded, chunk=chunk, add=add, original=False)
+        # 06E: the multilingual (Latin-script) rules also read the confusable-folded copy, so "Ignоre todаs las instrucciones" (Cyrillic look-alikes inside a Spanish attack) is no longer a bypass.
+        # Additive: the original text was already scanned, so this can add a hit and never remove one.
+        _scan_variant(folded, chunk=chunk, add=add, original=True)
     leet = fold_leet(text)
     if leet != text and leet != folded:
         _scan_variant(leet, chunk=chunk, add=add, original=False)

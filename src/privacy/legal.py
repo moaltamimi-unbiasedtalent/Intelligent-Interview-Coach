@@ -21,6 +21,13 @@ from src.auth_repository import AccountRepository
 from src.persistence import ACCOUNT_STATUS_ACTIVE, LegalAcceptance, LegalDocument, LegalDocumentVersion as V, User, utcnow
 from src.privacy import policy as P
 
+CONSENT_HISTORY_SCOPE = {
+    "records": "legal_document_version_acknowledgement",
+    "optional_processing_consent_recorded": False,
+    "back_filled": False,
+    "note": ("Only acknowledgements made through the product after acceptance recording existed are listed. Ask4Mo holds no record of consent to optional "
+             "processing, and accounts created earlier have no recorded acceptance. This is not a statement of legal compliance."),
+}
 _LABEL = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,31}$")
 _HASH = re.compile(r"^[0-9a-f]{64}$")
 
@@ -119,10 +126,34 @@ class LegalService:
 
     def export_for_user(self, user_id: int) -> list[dict]:
         with self._sf() as s:
-            rows = s.execute(select(LegalAcceptance, V.version, LegalDocument.code).join(V, V.id == LegalAcceptance.version_id)
+            rows = s.execute(select(LegalAcceptance, V, LegalDocument.code).join(V, V.id == LegalAcceptance.version_id)
                              .join(LegalDocument, LegalDocument.id == V.document_id).where(LegalAcceptance.user_id == user_id)
                              .order_by(LegalAcceptance.id)).all()
-            return [{"document": code, "version": ver, "accepted_at": _iso(a.accepted_at), "source": a.source} for a, ver, code in rows]
+            # 05E: the version identity (baseline flag and content hash where the version has one) so the export shows WHICH text version was acknowledged.
+            return [{"document": code, "version": v.version, "accepted_at": _iso(a.accepted_at), "source": a.source,
+                     "version_is_baseline": bool(v.is_baseline), "version_content_hash": v.content_hash} for a, v, code in rows]
+
+    def acceptance_history(self, user_id: int) -> dict:
+        """05E (W9.8-D2): the caller's OWN chronological acceptance history, one row per recorded acceptance of ONE document version.
+
+        What it records: WHICH published version (label, baseline flag, content hash and effective date where the version has them) the user acknowledged,
+        WHEN and through which code-defined source, plus whether that version is still the current one. What it never is: a back-filled record (only rows
+        written by ``accept`` exist; a user who predates acceptance recording has none and an empty history is the truthful answer), consent to optional
+        processing (there is no such consent record in this product), or proof that the text of a baseline version was shown (baselines carry no hash).
+        Read-only; owner-scoped by the caller's id; never reads another user's rows."""
+        self.ensure_baseline()
+        with self._sf() as s:
+            currents = {v.document_id: v for v in s.scalars(select(V).where(V.state == "published")).all()}
+            rows = s.execute(select(LegalAcceptance, V, LegalDocument).join(V, V.id == LegalAcceptance.version_id)
+                             .join(LegalDocument, LegalDocument.id == V.document_id).where(LegalAcceptance.user_id == user_id)
+                             .order_by(LegalAcceptance.accepted_at, LegalAcceptance.id)).all()
+            history = []
+            for a, v, doc in rows:
+                cur = currents.get(doc.id)
+                history.append({"document": doc.code, "title": doc.title, "version": v.version, "version_state": v.state, "is_baseline": bool(v.is_baseline),
+                                "content_hash": v.content_hash, "version_effective_at": _iso(v.effective_at), "accepted_at": _iso(a.accepted_at),
+                                "source": a.source, "is_current": cur is not None and cur.id == v.id, "current_version": cur.version if cur else None})
+            return {"history": history, "scope": CONSENT_HISTORY_SCOPE}
 
     # ---------------------------------------------------------------- admin mutations
     def _doc(self, s, code: str) -> LegalDocument:
