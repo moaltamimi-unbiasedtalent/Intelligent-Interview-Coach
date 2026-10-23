@@ -127,6 +127,7 @@ SUPPORT_POLICIES: dict[str, RateLimitPolicy] = {
 SECURITY_POLICIES: dict[str, RateLimitPolicy] = {
     "stepup_user": RateLimitPolicy("stepup_user", 5, 300, "user"),
     "invitation_issue_user": RateLimitPolicy("invitation_issue_user", 60, 3600, "user"),      # 04E: Admin issuing invitations (never bulk)
+    "admin_bulk_user_actions": RateLimitPolicy("admin_bulk_user_actions", 10, 3600, "user"),   # 03C bulk: executed batches per administrator (previews are read-only)
     "role_request_user": RateLimitPolicy("role_request_user", 20, 3600, "user"),
     "role_approve_user": RateLimitPolicy("role_approve_user", 30, 3600, "user"),
     # W12.4C: a real provider send to the administrator's OWN address; a hard, small ceiling (never bulk mail).
@@ -135,6 +136,8 @@ SECURITY_POLICIES: dict[str, RateLimitPolicy] = {
     "billing_checkout_user": RateLimitPolicy("billing_checkout_user", 10, 3600, "user"),
     "billing_status_ip": RateLimitPolicy("billing_status_ip", 120, 300, "ip"),
     "billing_webhook_ip": RateLimitPolicy("billing_webhook_ip", 600, 60, "ip"),
+    # 05D: Brevo delivery events (signature-authenticated, non-operational while the code gate is False). Bounded per IP like the billing webhook.
+    "mail_webhook_ip": RateLimitPolicy("mail_webhook_ip", 600, 60, "ip"),
     "billing_recovery_user": RateLimitPolicy("billing_recovery_user", 20, 3600, "user"),
     "billing_summary_user": RateLimitPolicy("billing_summary_user", 120, 300, "user"),
 }

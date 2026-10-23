@@ -69,6 +69,7 @@ __all__ = [
     "Workspace",
     "WorkspaceMembership",
     "WorkspaceInvitation",
+    "WorkspaceOwnershipTransfer",
     "ShareGrant",
     "make_engine",
     "make_session_factory",
@@ -207,6 +208,15 @@ INVITATION_STATUS_ACCEPTED = "accepted"
 INVITATION_STATUS_DECLINED = "declined"
 INVITATION_STATUS_EXPIRED = "expired"
 INVITATION_STATUS_REVOKED = "revoked"
+
+# 04B ownership transfer (REQ-OWN-07; OD-WS-TRANSFER is a provisional recommendation, not an owner approval).
+TRANSFER_STATUS_PENDING = "pending"
+TRANSFER_STATUS_ACCEPTED = "accepted"
+TRANSFER_STATUS_DECLINED = "declined"
+TRANSFER_STATUS_CANCELLED = "cancelled"
+TRANSFER_STATUS_EXPIRED = "expired"
+TRANSFER_STATUSES = (TRANSFER_STATUS_PENDING, TRANSFER_STATUS_ACCEPTED, TRANSFER_STATUS_DECLINED,
+                     TRANSFER_STATUS_CANCELLED, TRANSFER_STATUS_EXPIRED)
 # Explicit sharing: the ALLOW-LISTED shareable resource types (never a raw document,
 # CV text, Memory, auth data or audit trail). Ownership never transfers on a share.
 # OPERATIONAL (durable, owner-scoped, with a wired loader): interview report + story.
@@ -845,6 +855,40 @@ class WorkspaceInvitation(Base):
     )
 
 
+class WorkspaceOwnershipTransfer(Base):
+    """A two-step workspace ownership transfer (04B). The current owner PROPOSES; the bound, verified recipient ACCEPTS.
+
+    The acceptance token is stored ONLY as a SHA-256 hash; the recipient address is stored ONLY as a SHA-256 hash (it binds the transfer to the
+    address verified at proposal time without keeping a second copy of the address). At most ONE ``pending`` row per workspace is enforced by the
+    database (partial unique index), so concurrent proposals cannot both win. Terminal rows are kept as the state record (the immutable evidence
+    is the audit trail, which carries metadata only)."""
+
+    __tablename__ = "workspace_ownership_transfers"
+    __table_args__ = (
+        Index("uq_ownership_transfer_one_open", "workspace_id", unique=True,
+              sqlite_where=text("status = 'pending'"), postgresql_where=text("status = 'pending'")),
+        Index("ix_ownership_transfers_token", "token_hash", unique=True),
+        Index("ix_ownership_transfers_proposer", "proposer_user_id"),
+        Index("ix_ownership_transfers_recipient", "recipient_user_id"),
+        CheckConstraint("status IN ('pending','accepted','declined','cancelled','expired')", name="ck_ownership_transfer_status"),
+        CheckConstraint("former_owner_role IN ('workspace_admin','workspace_member')", name="ck_ownership_transfer_former_role"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    workspace_id: Mapped[int] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"))
+    proposer_user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    recipient_user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    former_owner_role: Mapped[str] = mapped_column(String(24), default=WORKSPACE_ROLE_MEMBER)
+    token_hash: Mapped[str] = mapped_column(String(128))
+    recipient_email_hash: Mapped[str] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(16), default=TRANSFER_STATUS_PENDING)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    decided_reason: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
 class ShareGrant(Base):
     """An EXPLICIT, VIEW-only, revocable grant of ONE owned resource into ONE workspace.
 
@@ -1316,6 +1360,9 @@ class ManagedSecret(Base):
 
 EMAIL_ATTEMPT_TYPES = ("email_verification", "password_reset", "account_notice", "admin_test")
 EMAIL_ATTEMPT_STATUSES = ("provider_accepted", "failed", "not_configured", "delivery_unknown", "captured")
+# 05D: a verified provider delivery event (webhook) may set ``delivery_state``, a SEPARATE fact from ``status`` (provider acceptance at submission).
+# Collection is behind the code gate ``src.mail.webhook.DELIVERY_EVENTS_AUTHORIZED`` (False): until the owner authorises it every row keeps NULL.
+EMAIL_DELIVERY_STATES = ("delivered", "soft_bounced", "blocked", "hard_bounced", "complained")
 EMAIL_FAILURE_CATEGORIES = ("provider_not_configured", "invalid_sender", "provider_auth_failed", "provider_unavailable",
                             "provider_timeout", "rate_limited", "message_rejected", "delivery_unknown")
 
@@ -1333,6 +1380,8 @@ class EmailAttempt(Base):
     __table_args__ = (
         CheckConstraint(_in_list("message_type", EMAIL_ATTEMPT_TYPES), name="ck_email_attempts_type"),
         CheckConstraint(_in_list("status", EMAIL_ATTEMPT_STATUSES), name="ck_email_attempts_status"),
+        CheckConstraint("delivery_state IS NULL OR " + _in_list("delivery_state", EMAIL_DELIVERY_STATES), name="ck_email_attempts_delivery_state"),
+        Index("ix_email_attempts_message_ref", "provider_message_ref"),
         Index("ix_email_attempts_created", "created_at"),
         Index("ix_email_attempts_type_created", "message_type", "created_at"),
     )
@@ -1347,6 +1396,10 @@ class EmailAttempt(Base):
     request_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    # 05D: verified delivery-event evidence (NULL until an authenticated webhook says so; never inferred from ``status``).
+    delivery_state: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    delivery_event_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    delivery_event_digest: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 
 JOB_STATES = ("queued", "running", "succeeded", "failed", "cancelled")
@@ -3061,7 +3114,9 @@ INCIDENT_SERVICES = ("authentication", "agent", "practice", "research", "documen
                      "billing", "privacy", "admin", "platform")
 ALERT_CATEGORIES = ("auth_failure_burst", "admin_access_denied_burst", "job_failed",
                     # 02A (migration 0040): knowledge health, derived from the environment guard (src/knowledge_admin/alerts.py)
-                    "knowledge_collection_lost", "knowledge_source_files_missing", "knowledge_identity_mismatch", "knowledge_embedding_mismatch")
+                    "knowledge_collection_lost", "knowledge_source_files_missing", "knowledge_identity_mismatch", "knowledge_embedding_mismatch",
+                   # 05C (migration 0045): operational health derived by src/ops (API, worker, queue, indexing, provider, quota reaper, AI budget)
+                   "api_error_rate_high", "worker_unhealthy", "job_queue_backlog", "indexing_stalled", "provider_unhealthy", "quota_reaper_stale", "ai_budget_attention")
 ALERT_SEVERITIES = ("low", "medium", "high", "critical")
 ALERT_STATES = ("active", "acknowledged", "resolved")
 ROLE_REQUEST_STATUSES = ("pending", "applied", "rejected", "cancelled", "stale")
@@ -3284,3 +3339,63 @@ def _install_append_only(table_obj, table_name: str) -> None:
 
 _install_append_only(AuditEvent.__table__, "audit_events")
 _install_append_only(AdminIncidentEvent.__table__, "incident_events")
+
+
+# --- 05C: production AI budget governor (migration 0044_ai_budget_ledger) ---------------------------------------------------------------
+AI_BUDGET_ENTRY_STATES = ("reserved", "settled", "rejected", "unknown")
+
+
+class AiBudgetControl(Base):
+    """One atomic counter row of the AI budget governor (``src/llm/budget``). ``scope_key`` is ``global`` (the kill switch), ``class:<budget class>`` or
+    ``cat:<budget class>:<category>``. ``held_micro_usd`` is settled actual cost + open reservations at their WORST case + unknown outcomes at their worst case, in integer
+    micro-USD; it is advanced ONLY by one conditional UPDATE (``held + worst <= stop``), which is what makes admission multi-process safe on PostgreSQL and SQLite."""
+
+    __tablename__ = "ai_budget_controls"
+    __table_args__ = (CheckConstraint("held_micro_usd >= 0", name="ck_aibc_held"), CheckConstraint("requests >= 0", name="ck_aibc_requests"))
+
+    scope_key: Mapped[str] = mapped_column(String(96), primary_key=True)
+    held_micro_usd: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    requests: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    killed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    kill_reason: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class AiBudgetEntry(Base):
+    """One provider call recorded by the governor. Holds NO prompt, response text, key, user identifier or provider message: only the budget class and category, the model id,
+    a content-free request fingerprint (SHA-256), money in integer micro-USD and tokens/latency. Unknown tokens and costs stay NULL, never 0."""
+
+    __tablename__ = "ai_budget_entries"
+    __table_args__ = (
+        CheckConstraint("state IN ('reserved','settled','rejected','unknown')", name="ck_aibe_state"),
+        CheckConstraint("reserved_micro_usd >= 0", name="ck_aibe_reserved"),
+        Index("ix_aibe_class_state", "budget_class", "state"),
+        Index("ix_aibe_fingerprint", "fingerprint", "created_ts"),
+        Index("uq_aibe_inflight_fingerprint", "fingerprint", unique=True, sqlite_where=text("state = 'reserved'"), postgresql_where=text("state = 'reserved'")),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    created_ts: Mapped[float] = mapped_column(Float)
+    settled_ts: Mapped[float | None] = mapped_column(Float, nullable=True)
+    budget_class: Mapped[str] = mapped_column(String(24))
+    category: Mapped[str] = mapped_column(String(24))
+    operation: Mapped[str] = mapped_column(String(48))
+    model: Mapped[str] = mapped_column(String(160))
+    endpoint: Mapped[str] = mapped_column(String(24))
+    fingerprint: Mapped[str] = mapped_column(String(64))
+    state: Mapped[str] = mapped_column(String(12), default="reserved")
+    reserved_micro_usd: Mapped[int] = mapped_column(BigInteger)
+    committed_micro_usd: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    input_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    output_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    est_cost_micro_usd: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    provider_cost_micro_usd: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    status_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    error_category: Mapped[str | None] = mapped_column(String(32), nullable=True)
+
+
+# 05E: allow-list enforcement for audit and incident context (one choke point for every write path).
+from src import audit_allowlist as _audit_allowlist  # noqa: E402
+
+_audit_allowlist.install(AuditEvent, AdminIncidentEvent)

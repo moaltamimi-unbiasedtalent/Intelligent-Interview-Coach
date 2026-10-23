@@ -132,6 +132,9 @@ class TesseractOcrEngine:
 
             code = TESSERACT_LANGS.get(lang, "eng")
             return pytesseract.image_to_string(Image.open(BytesIO(image_bytes)), lang=code) or ""
+        except ImportError as exc:
+            # 07A: a missing optional OCR package is a deployment capability gap, never "this image is unreadable".
+            raise OcrError("OCR is not available in this environment.", kind="ocr_unavailable") from exc
         except Exception as exc:  # noqa: BLE001
             raise OcrError("Could not read this image.") from exc
 
@@ -147,6 +150,8 @@ class TesseractOcrEngine:
             from pdf2image import convert_from_bytes
 
             images = convert_from_bytes(pdf_bytes)[:MAX_PAGES]
+        except ImportError as exc:
+            raise OcrError("Scanned-PDF OCR is not available in this environment.", kind="ocr_unavailable") from exc   # 07A: missing optional package, not a corrupt file
         except Exception as exc:  # noqa: BLE001
             raise OcrError("Could not render this scanned PDF for OCR.") from exc
         out: list[OcrResult] = []

@@ -39,6 +39,22 @@
 | OD-US-CONTENT | May US-sourced content appear at all, as clearly labelled non-EU general information? | The owner approved that no unqualified US content is used as factual EU labour-market evidence. Open: whether US sources (O*NET, BLS) stay available only as clearly labelled non-EU general information, or are removed from Candidate retrieval entirely in the beta. Implemented by package 02D and REQ-COV-02. | R1.0 | AWAITING |
 | OD-RECLASS | Item-level disposition of the ten proposed reclassifications | The owner retains every R1.0 fix and verify obligation until an item-level disposition is explicitly approved; the ten-item proposal (BL-5, BL-6, BL-6.1 to BL-6.5, BL-9, BL-12, W12.4E-12) is NOT applied. Each approval must distinguish a genuine later-release dependency from an R1.0 product cut (R1_SCOPE_RECLASSIFICATION_PROPOSAL.md). | R1.0 | AWAITING |
 
+## Owner direction 2026-10-22: provisional recommendations (NOT approvals, NOT completed verification)
+
+The owner authorised Wave 3a engineering and gave recommended defaults for nine decisions. They are recorded here as **PROVISIONAL recommendations**: each keeps its gate open until its own evidence, legal judgment or owner approval exists. Standing owner directions recorded with them: S1 full scope retained; reviewers (native-language, legal, security, independent AI) are appointed later and are never replaced by automated verification; OpenRouter is the primary LLM provider with configurable ceilings and no assumption of unlimited credit; non-destructive development-environment repair is authorised; the owner keeps authority over scope changes, spending limits, production deployment and release.
+
+| ID | Provisional recommendation (owner's default) | What still keeps the decision open |
+|---|---|---|
+| OD-RESOURCE | Claude Code-led engineering; the owner retains integration and release authority; external specialists appointed for formal qualification | Appointing the specialists (calendar-bound; see the start-by dates) |
+| OD-EMBED | Benchmark suitable multilingual embedding models through OpenRouter (39 embedding models are reachable, including `openai/text-embedding-3-large` and `-small`; see `execution/evidence/OPENROUTER_EMBEDDING_AVAILABILITY_2026-10-22.md`) and select by reproducible metrics: recall@k, nDCG@k, cross-language retrieval, citation accuracy, latency, cost, dimensions and index compatibility | The benchmark has not run; it needs the 05C budget governor and an owner-set ceiling; the selection is not made |
+| OD-HOSTED | Staging-first, containerised, keeping the 05A topology; production needs separate authorisation | No hosting provider, region or authorisation; nothing is deployed |
+| OD-BUDGET | OpenRouter-funded engineering and evaluation with configurable ceilings, usage monitoring and safeguards (built by 05C) | The ceiling values are the owner's to set; no paid run starts before the governor exists and a ceiling is configured |
+| OD-COVERAGE | Preserve the historical targets; report overall coverage and the frozen beta-scope coverage separately | The beta-scope measure is defined and frozen by 02E and approved by the owner; the historical gate stays FAIL (386 of 412) |
+| OD-BULK-ACTIONS | Previewed, authorised, audited bulk user operations with transaction and partial-failure handling | Not built (completion PR under 03C is scheduled); the permitted set of actions is to be fixed with the owner at review |
+| OD-PLAN-LIMITS | Basic and Premium both free during the beta; define limits from measured operational and token costs, subject to owner approval | No measurement exists yet; values are not set |
+| OD-WS-TRANSFER | Explicit transfer requiring authorisation, verified acceptance and immutable audit evidence | Not built (completion PR under 04B is scheduled, needs a migration); the exact procedure is for owner review |
+| OD-REPORT-EXPORT | Governed CSV, JSON and PDF exports with authorisation, privacy protection and safe handling | CSV and JSON exist (03E1); PDF is scheduled in 03E2; other formats are out of scope |
+
 ## Decisions raised while building Waves 1 and 2 (2026-10-22; all awaiting the owner)
 
 | ID | Decision | Detail | Release | Type |

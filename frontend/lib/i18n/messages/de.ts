@@ -191,6 +191,7 @@ const de: Catalog = {
     noMicrophone: "Kein Mikrofon gefunden. Sie können weiterhin tippen.",
     noSpeech: "Nicht verstanden - bitte erneut versuchen oder tippen.",
     network: "Diktat ist vorübergehend nicht verfügbar. Sie können weiterhin tippen.",
+    languageNotSupported: "Ihr Browser kann die gewählte Diktatsprache nicht erkennen. Wählen Sie eine andere Diktatsprache oder tippen Sie.",
     error: "Diktat unerwartet beendet. Sie können weiterhin tippen.",
     disabledByPolicy: "Das Diktat ist für Ihr Konto ausgeschaltet. Sie können stattdessen tippen.",
     browserNotice: "Das Diktat nutzt den Sprachdienst Ihres Browsers, der Ihre Stimme an seinen Anbieter senden kann. Ask4Mo speichert Ihr Audio nicht.",

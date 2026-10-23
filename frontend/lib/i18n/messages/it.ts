@@ -191,6 +191,7 @@ const it: Catalog = {
     noMicrophone: "Nessun microfono trovato. Puoi comunque digitare.",
     noSpeech: "Non ho capito - riprova o digita.",
     network: "Dettatura temporaneamente non disponibile. Puoi comunque digitare.",
+    languageNotSupported: "Il tuo browser non riesce a riconoscere la lingua di dettatura selezionata. Scegli un’altra lingua di dettatura o digita.",
     error: "La dettatura si è interrotta inaspettatamente. Puoi comunque digitare.",
     disabledByPolicy: "La dettatura è disattivata per il tuo account. Puoi digitare invece.",
     browserNotice: "La dettatura usa il servizio vocale del tuo browser, che può inviare la tua voce al suo fornitore. Ask4Mo non conserva il tuo audio.",

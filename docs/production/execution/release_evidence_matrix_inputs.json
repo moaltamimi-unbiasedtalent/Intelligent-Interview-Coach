@@ -1,0 +1,989 @@
+{
+ "schema": "ask4mo.release_evidence_matrix_inputs.v1",
+ "as_of": "2026-10-22",
+ "packages": {
+  "00A": {
+   "engineering": "PARTIAL: Phase 00 sign-off recorded (PRs #211, #212, #213)",
+   "ci": "documentation PRs #211 to #213 merged, CI green",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "n/a",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "Owner names reviewers, counsel and legal qualifiers (OPEN)",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-07 BLOCKED until reviewers are named",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "00B": {
+   "engineering": "DELIVERED as a proposal (PRs #211, #212)",
+   "ci": "documentation PRs #211 to #213 merged, CI green",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "n/a",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "Owner disposition of the ten reclassifications (OPEN)",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-11 PASS (machine-checked); no reclassification applied",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "01A": {
+   "engineering": "MERGED (PR #223, merge 7549973)",
+   "ci": "PR #223 CI success (12/12)",
+   "live_staging": {
+    "state": "NOT RUN",
+    "description": "NOT RUN (injection screen on hosted stack)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "OPEN",
+    "description": "Human security review (9 questions); independent held-out author (OPEN)",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-03 IN PROGRESS; thresholds unapproved (OD-GATE-THRESHOLDS)",
+    "evidence": []
+   },
+   "merge_sha": "75499730a42f",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/01A_EVIDENCE.md"
+   ]
+  },
+  "01D": {
+   "engineering": "BRANCH PUSHED, NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "n/a",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "Security review of tool authorization",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-03 (REVIEW-01 R4/R5)",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "01B0": {
+   "engineering": "MERGED (PR #217, merge 0d75acd)",
+   "ci": "PR #217 CI success (12/12)",
+   "live_staging": {
+    "state": "N/A",
+    "description": "n/a",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NONE REQUIRED",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-12 IN PROGRESS",
+    "evidence": []
+   },
+   "merge_sha": "0d75acddf742",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/01B0_EVIDENCE.md"
+   ]
+  },
+  "01B": {
+   "engineering": "MERGED (PR #220, merge 335d303)",
+   "ci": "PR #220 CI success (12/12)",
+   "live_staging": {
+    "state": "NOT RUN",
+    "description": "NOT RUN (Docker image with prompts/ not built)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NONE REQUIRED",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-12 IN PROGRESS (01D, 01C outstanding)",
+    "evidence": []
+   },
+   "merge_sha": "335d303636a8",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/01B_EVIDENCE.md"
+   ]
+  },
+  "01C": {
+   "engineering": "NOT STARTED",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "n/a",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-12 (REVIEW-03)",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "02K": {
+   "engineering": "MERGED (PR #215, merge 657e456)",
+   "ci": "PR #215 CI success (12/12)",
+   "live_staging": {
+    "state": "N/A",
+    "description": "n/a",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NONE REQUIRED",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-05 IN PROGRESS (contract)",
+    "evidence": []
+   },
+   "merge_sha": "657e45661e73",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/02K_EVIDENCE.md"
+   ]
+  },
+  "02A": {
+   "engineering": "MERGED (PR #221, merge 191cbc5)",
+   "ci": "PR #221 CI success",
+   "live_staging": {
+    "state": "NOT RUN",
+    "description": "NOT RUN (hosted volumes, PostgreSQL, multi-worker; OD-HOSTED)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NONE REQUIRED",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-05 IN PROGRESS",
+    "evidence": []
+   },
+   "merge_sha": "191cbc57cde7",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/02A_EVIDENCE.md"
+   ]
+  },
+  "02B": {
+   "engineering": "MERGED (PR #227, merge 6acdbc1)",
+   "ci": "PR #227 CI success (12/12)",
+   "live_staging": {
+    "state": "NOT RUN",
+    "description": "NOT RUN (production embedder, hosted refusal; OD-HOSTED, OD-EMBED)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "OPEN",
+    "description": "Embedder choice and benchmark approval (OD-EMBED, OD-BUDGET)",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-05 NOT MET (retrieval quality unmeasured)",
+    "evidence": []
+   },
+   "merge_sha": "6acdbc11b436",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/02B_EVIDENCE.md"
+   ]
+  },
+  "02C": {
+   "engineering": "MERGED (PR #226, merge 568b8f3)",
+   "ci": "PR #226 CI success (12/12)",
+   "live_staging": {
+    "state": "NOT RUN",
+    "description": "NOT RUN (real clamd, EICAR, outage drill; OD-HOSTED)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NONE REQUIRED",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-05 IN PROGRESS",
+    "evidence": []
+   },
+   "merge_sha": "568b8f38170b",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/02C_EVIDENCE.md"
+   ]
+  },
+  "02D": {
+   "engineering": "BRANCH PUSHED (2 PRs), NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "n/a",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "Licensing reviewer and owner; per-market signed approval (OPEN, long lead)",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-05 (licence and market qualification)",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "02E": {
+   "engineering": "BRANCH PUSHED, NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "NOT RUN",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "Frozen coverage measure approval (OD-COVERAGE); independent datasets",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-05 (retrieval quality, coverage)",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "03A": {
+   "engineering": "MERGED (PR #216, merge f921892)",
+   "ci": "PR #216 CI success",
+   "live_staging": {
+    "state": "NOT RUN",
+    "description": "NOT RUN (live Admin walkthrough)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NONE REQUIRED",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-08 IN PROGRESS",
+    "evidence": []
+   },
+   "merge_sha": "f9218929cf25",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/03A_EVIDENCE.md"
+   ]
+  },
+  "03B": {
+   "engineering": "MERGED (PR #230, merge a4f540d)",
+   "ci": "PR #230 CI success (12/12)",
+   "live_staging": {
+    "state": "NOT RUN",
+    "description": "NOT RUN (live Admin walkthrough)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "OPEN",
+    "description": "Plan limit values (OD-PLAN-LIMITS)",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-08 IN PROGRESS",
+    "evidence": []
+   },
+   "merge_sha": "a4f540db0d21",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/03B_EVIDENCE.md"
+   ]
+  },
+  "03C": {
+   "engineering": "MERGED (PR #231, merge 6bcfbf5)",
+   "ci": "PR #231 CI success (12/12)",
+   "live_staging": {
+    "state": "NOT RUN",
+    "description": "NOT RUN (live Admin walkthrough)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "OPEN",
+    "description": "Bulk-action policy (OD-BULK-ACTIONS)",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-08 IN PROGRESS",
+    "evidence": []
+   },
+   "merge_sha": "6bcfbf53805a",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/03C_EVIDENCE.md"
+   ]
+  },
+  "03K": {
+   "engineering": "MERGED (PR #219, merge 20241f4)",
+   "ci": "PR #219 CI success (12/12)",
+   "live_staging": {
+    "state": "N/A",
+    "description": "n/a",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NONE REQUIRED",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-14 IN PROGRESS (contract)",
+    "evidence": []
+   },
+   "merge_sha": "20241f4a2ec1",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/03K_EVIDENCE.md"
+   ]
+  },
+  "03D1": {
+   "engineering": "MERGED (PR #224, merge ac029ad)",
+   "ci": "PR #224 CI success (12/12)",
+   "live_staging": {
+    "state": "NOT RUN",
+    "description": "NOT RUN (live data)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NONE REQUIRED",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-08 IN PROGRESS (03D2 outstanding)",
+    "evidence": []
+   },
+   "merge_sha": "ac029adc8c6f",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/03D1_EVIDENCE.md"
+   ]
+  },
+  "03D2": {
+   "engineering": "BRANCH PUSHED, NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "NOT RUN",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-08",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "03E1": {
+   "engineering": "MERGED (PR #232, merge 0d84e7e)",
+   "ci": "PR #232 CI success (12/12)",
+   "live_staging": {
+    "state": "NOT RUN",
+    "description": "NOT RUN (live data)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "OPEN",
+    "description": "Export formats (OD-REPORT-EXPORT)",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-14 IN PROGRESS (03E2 outstanding)",
+    "evidence": []
+   },
+   "merge_sha": "0d84e7e6a80a",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/03E1_EVIDENCE.md"
+   ]
+  },
+  "03E2": {
+   "engineering": "BRANCH PUSHED (2 PRs), NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "NOT RUN",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "Export formats (OD-REPORT-EXPORT)",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-14",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "04A": {
+   "engineering": "MERGED (PR #234, merge 4d7e57a)",
+   "ci": "PR #234 CI success (12/12)",
+   "live_staging": {
+    "state": "NOT RUN",
+    "description": "NOT RUN (restart on staging)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "OPEN",
+    "description": "Native review of 116 strings (LG-10/11)",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-13 IN PROGRESS (06B outstanding)",
+    "evidence": []
+   },
+   "merge_sha": "4d7e57ac68ad",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/04A_EVIDENCE.md"
+   ]
+  },
+  "04B": {
+   "engineering": "MERGED (PR #233, merge e4aed13)",
+   "ci": "PR #233 CI success (12/12)",
+   "live_staging": {
+    "state": "NOT RUN",
+    "description": "NOT RUN (PostgreSQL invitation race and row locks)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "OPEN",
+    "description": "Transfer rules (OD-WS-TRANSFER); native review",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-13 IN PROGRESS (06B outstanding)",
+    "evidence": []
+   },
+   "merge_sha": "e4aed133108e",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/04B_EVIDENCE.md"
+   ]
+  },
+  "04C": {
+   "engineering": "NOT STARTED",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "NOT RUN (streaming on staging)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-06",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "04D": {
+   "engineering": "BRANCH PUSHED (2 PRs), NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "NOT RUN (journeys on a staging stack)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-06",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "04E": {
+   "engineering": "MERGED (PR #228, merge a763fdf)",
+   "ci": "PR #228 CI success (12/12)",
+   "live_staging": {
+    "state": "NOT RUN",
+    "description": "NOT RUN (first-admin bootstrap, live Google)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "OPEN",
+    "description": "Invitation email and issuer decisions (OPEN)",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-02 IN PROGRESS (05D outstanding)",
+    "evidence": []
+   },
+   "merge_sha": "a763fdf28b68",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/04E_EVIDENCE.md"
+   ]
+  },
+  "04F": {
+   "engineering": "BRANCH PUSHED, NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "NOT RUN (browser dictation check)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "Legal reviewer and test participants",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-04",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "05A": {
+   "engineering": "MERGED (PR #218, merge 9b6b109)",
+   "ci": "PR #218 CI success",
+   "live_staging": {
+    "state": "NOT RUN",
+    "description": "NOT RUN (nothing deployed; OD-HOSTED)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "OPEN",
+    "description": "Hosting authorisation (OPEN)",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-01 BLOCKED",
+    "evidence": []
+   },
+   "merge_sha": "9b6b1098b023",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/05A_EVIDENCE.md"
+   ]
+  },
+  "05B": {
+   "engineering": "BRANCH PUSHED, NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "NOT RUN (restore drill, PostgreSQL paths; OD-HOSTED)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-09",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "05C": {
+   "engineering": "BRANCH PUSHED (2 PRs), NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "NOT RUN (synthetic outage on staging; OD-HOSTED)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "AI budget (OD-BUDGET)",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-09",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "05D": {
+   "engineering": "BRANCH PUSHED, NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "NOT RUN (live Brevo, Google, Redis; OD-HOSTED)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-02",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "05E": {
+   "engineering": "BRANCH PUSHED (2 PRs), NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "n/a",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "Legal counsel sign-off per offered language (long lead)",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-04",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "06A": {
+   "engineering": "MERGED (PR #214, merge f9a06a9)",
+   "ci": "PR #214 CI success",
+   "live_staging": {
+    "state": "N/A",
+    "description": "n/a",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "OPEN",
+    "description": "Native review of the audit baseline",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-10 IN PROGRESS; LG-01 and LG-14 evidence exists, none approved by a named human",
+    "evidence": []
+   },
+   "merge_sha": "f9a06a928c3c",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/06A_EVIDENCE.md"
+   ]
+  },
+  "06B": {
+   "engineering": "BRANCH PUSHED, NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "NOT RUN (journeys per language)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "Native-speaker review",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "LG-03, LG-09 per language; PG-13",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "06C": {
+   "engineering": "BRANCH PUSHED, NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "NOT RUN (live Mo quality)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "Blinded native-reader rating (OD-BUDGET)",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "LG-04, LG-05 per language",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "06D": {
+   "engineering": "BRANCH PUSHED, NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "NOT RUN (production embedder; OD-EMBED)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "Sample review",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "LG-06 per language",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "06E": {
+   "engineering": "BRANCH PUSHED, NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "NOT RUN",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "LG-08 per language; PG-03",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "06F": {
+   "engineering": "BRANCH PUSHED, NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "n/a",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "Seven native reviewers and legal qualifiers (calendar-bound, OPEN)",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "LG-10, LG-11 per language; PG-04",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "06G": {
+   "engineering": "BRANCH PUSHED, NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "NOT RUN (live Mo outputs)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "Independent reviewers and participants (OD-BUDGET, OD-GATE-THRESHOLDS)",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-07 BLOCKED",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "06H": {
+   "engineering": "MERGED (PR #229, merge 5d588a1)",
+   "ci": "PR #229 CI success (12/12)",
+   "live_staging": {
+    "state": "NOT RUN",
+    "description": "NOT RUN (hosted fail-closed behaviour)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "OPEN",
+    "description": "Approvers named for each gate (OD-LANG-03/04)",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT ACCEPTED",
+    "description": "PG-10 IN PROGRESS; LG-13/LG-14 enforcement merged, zero languages qualified",
+    "evidence": []
+   },
+   "merge_sha": "5d588a13df85",
+   "acceptance_artefacts": [
+    "docs/production/execution/evidence/06H_EVIDENCE.md"
+   ]
+  },
+  "07A": {
+   "engineering": "BRANCH PUSHED, NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "n/a",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-10",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "07B": {
+   "engineering": "NOT STARTED",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "NOT RUN (live grounding; OD-BUDGET)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-03",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "07C": {
+   "engineering": "NOT STARTED",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "NOT RUN (live OCR sample; OD-BUDGET)",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "residual live verification",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "08A0": {
+   "engineering": "BRANCH PUSHED, NO PR",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "n/a",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "none",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-15 (evidence pipeline)",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  },
+  "08A": {
+   "engineering": "NOT STARTED",
+   "ci": "no PR yet",
+   "live_staging": {
+    "state": "NOT IN LEDGER",
+    "description": "NOT RUN",
+    "evidence": []
+   },
+   "human_qualification": {
+    "state": "NOT IN LEDGER",
+    "description": "Owner go/no-go",
+    "evidence": []
+   },
+   "gate_acceptance": {
+    "state": "NOT IN LEDGER",
+    "description": "PG-15",
+    "evidence": []
+   },
+   "merge_sha": "",
+   "acceptance_artefacts": []
+  }
+ }
+}

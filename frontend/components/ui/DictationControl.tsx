@@ -29,6 +29,7 @@ const ERROR_KEY: Record<DictationErrorKind, string> = {
   "no-microphone": "dictation.noMicrophone",
   "no-speech": "dictation.noSpeech",
   network: "dictation.network",
+  "language-not-supported": "dictation.languageNotSupported",
   aborted: "",
   error: "dictation.error",
 };
@@ -84,6 +85,7 @@ export function DictationControl({
   const valueRef = useRef(value);
   valueRef.current = value;
   const langSelectId = useId();
+  const noticeId = useId();
 
   const selectedLang = lang ?? DICTATION_LANGUAGES[0].code;
   const { browserSttAllowed } = useSpeechPolicy();
@@ -125,6 +127,7 @@ export function DictationControl({
           onClick={() => (listening ? stop() : start())}
           disabled={disabled}
           aria-pressed={listening}
+          aria-describedby={noticeId}
           aria-label={listening ? t("dictation.stop") : t("dictation.start")}
           className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 disabled:opacity-50 ${
             listening
@@ -169,7 +172,7 @@ export function DictationControl({
         {listening ? (interim ? t("dictation.heard", { text: interim }) : t("dictation.listening")) : errorText}
       </p>
       {/* Point-of-use disclosure (W12.4E): the browser engine may send the voice to the browser vendor; Ask4Mo stores no audio. */}
-      <p className="mt-0.5 text-xs text-muted" data-testid="dictation-browser-notice">
+      <p id={noticeId} className="mt-0.5 text-xs text-muted" data-testid="dictation-browser-notice">
         {t("dictation.browserNotice")}
       </p>
     </div>

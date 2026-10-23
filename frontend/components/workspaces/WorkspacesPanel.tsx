@@ -11,7 +11,8 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Field";
 import { EmptyStateIllustration } from "@/components/ui/States";
 import { api } from "@/lib/api/client";
-import type { MyWorkspaces, ShareGrantOut } from "@/lib/api/types";
+import type { MyWorkspaces, OwnershipTransfer, ShareGrantOut } from "@/lib/api/types";
+import { TransferBanner } from "./OwnershipTransfer";
 import { SharedItemViewer } from "./SharedItemViewer";
 import { resourceTypeKey, roleKey, workspaceErrorKey } from "./workspaceUi";
 
@@ -28,6 +29,8 @@ export function WorkspacesPanel() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<Notice>(null);
   const [viewing, setViewing] = useState<ShareGrantOut | null>(null);
+  const [transfers, setTransfers] = useState<OwnershipTransfer[]>([]);
+  const [transfersFailed, setTransfersFailed] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -42,6 +45,13 @@ export function WorkspacesPanel() {
       setStatus("ready");
     } catch {
       setStatus("error");
+    }
+    // Pending ownership transfers load on their own: a failure or a malformed answer is an explicit warning here, never a blank page and never a silent "none".
+    try {
+      setTransfers((await api.workspaces.transfersMine()).transfers);
+      setTransfersFailed(false);
+    } catch {
+      setTransfersFailed(true);
     }
   }, []);
 
@@ -81,6 +91,20 @@ export function WorkspacesPanel() {
       setNotice({ tone: "danger", text: t("wsMgmt.invitationFailed") });
       await refresh();
     } finally {
+      setBusy(false);
+    }
+  };
+
+  const answerTransfer = async (fn: () => Promise<unknown>, success: string) => {
+    setBusy(true);
+    setNotice(null);
+    try {
+      await fn();
+      setNotice({ tone: "success", text: success });
+    } catch (e) {
+      setNotice({ tone: "danger", text: t(workspaceErrorKey(e)) });
+    } finally {
+      await refresh();
       setBusy(false);
     }
   };
@@ -161,6 +185,18 @@ export function WorkspacesPanel() {
           </div>
         </CardBody>
       </Card>
+
+      {transfersFailed && <Alert tone="warning">{t("wsTransfer.loadFailed")}</Alert>}
+      {transfers.length > 0 && (
+        <section className="grid gap-2" aria-labelledby="ws-xfer-h">
+          <h2 id="ws-xfer-h" className="text-base font-semibold">{t("wsTransfer.listTitle")}</h2>
+          {transfers.map((tr) => (
+            <TransferBanner key={tr.id} transfer={tr} showWorkspace busy={busy}
+              onCancel={() => void answerTransfer(() => api.workspaces.cancelTransfer(tr.workspace_id), t("wsTransfer.cancelledNotice"))}
+              onDecline={() => void answerTransfer(() => api.workspaces.declineTransfer(tr.id), t("wsTransfer.declinedNotice"))} />
+          ))}
+        </section>
+      )}
 
       {data && data.invited.length > 0 && (
         <section className="grid gap-2" aria-labelledby="ws-invited-h">

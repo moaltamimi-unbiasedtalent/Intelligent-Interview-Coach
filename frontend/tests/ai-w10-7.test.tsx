@@ -18,6 +18,8 @@ const f = { ai: vi.fn(), cat: vi.fn(), code: vi.fn(), envs: vi.fn(), hist: vi.fn
   evaluate: vi.fn(), reqAppr: vi.fn(), decide: vi.fn(), activate: vi.fn(), rollback: vi.fn(), retire: vi.fn() };
 vi.mock("@/lib/api/client", () => ({
   api: { admin: {
+    commandCenterDefinitions: () => import("../e2e/fixtures/admin-responses.json").then((m) => (m.default as Record<string, any>)["/admin/command-center/definitions"]),
+    commandCenterSection: (s: string) => import("../e2e/fixtures/admin-responses.json").then((m) => (m.default as Record<string, any>)[`/admin/command-center/${s}`]),
     ai: (...a: unknown[]) => f.ai(...a), aiCatalogue: (...a: unknown[]) => f.cat(...a), aiCodeDefined: (...a: unknown[]) => f.code(...a), aiEnvironments: (...a: unknown[]) => f.envs(...a),
     aiHistory: (...a: unknown[]) => f.hist(...a), aiApprovals: (...a: unknown[]) => f.apprs(...a), aiConfigs: (...a: unknown[]) => f.cfgs(...a), aiConfig: (...a: unknown[]) => f.cfg(...a),
     aiCreate: (...a: unknown[]) => f.create(...a), aiUpdate: (...a: unknown[]) => f.update(...a), aiValidate: (...a: unknown[]) => f.validate(...a), aiEvaluate: (...a: unknown[]) => f.evaluate(...a),

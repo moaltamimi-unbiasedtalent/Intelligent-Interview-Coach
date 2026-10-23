@@ -15,10 +15,13 @@ client string ever reaches a prompt (the language NAME comes from `src.locales.L
 from __future__ import annotations
 
 from src.locales import LANGUAGE_NAMES, SUPPORTED_LOCALE_CODES
+from src.prompt_assets import render
 
-__all__ = ["resolve_language", "section_headings", "insufficient_message", "fallback_strings",
+__all__ = ["agent_text", "AGENT_TEXT", "AGENT_TEXT_KEYS", "resolve_language", "section_headings", "insufficient_message", "fallback_strings",
            "language_directive", "SECTION_HEADINGS", "INSUFFICIENT", "FALLBACK", "compensation_guidance", "unverified_general_notice",
-           "COMPENSATION_GUIDANCE", "UNVERIFIED_GENERAL", "UNRETRIEVED_LIMITATION", "unretrieved_limitation"]
+           "COMPENSATION_GUIDANCE", "UNVERIFIED_GENERAL", "UNRETRIEVED_LIMITATION", "unretrieved_limitation",
+           "IRRELEVANT_SOURCES", "SOURCE_LANGUAGE_NOTICE", "LANGUAGE_ENDONYMS", "irrelevant_sources_note", "abstention_message", "language_endonym",
+           "source_language_notice"]
 
 # (evidence heading, tool-results heading, recommendation heading)
 SECTION_HEADINGS: dict[str, tuple[str, str, str]] = {
@@ -104,6 +107,42 @@ UNRETRIEVED_LIMITATION: dict[str, str] = {
 assert set(SECTION_HEADINGS) == set(INSUFFICIENT) == set(FALLBACK) == set(UNRETRIEVED_LIMITATION) == set(COMPENSATION_GUIDANCE) == set(UNVERIFIED_GENERAL) == set(SUPPORTED_LOCALE_CODES), (
     "localized Career-chat text must cover exactly the supported locales")
 
+# 06D (LG-06): the abstention made specific. The existing INSUFFICIENT sentence stays the OPENING of an abstention (the grounding policy and the output
+# checks recognise it by that opening); this sentence is appended when sources WERE found but none cleared the relevance floor, so the candidate is told
+# why nothing is cited. Mo-voiced, so it follows the Mo conversation language. Engineering translations, NOT natively reviewed.
+IRRELEVANT_SOURCES: dict[str, str] = {
+    "en": "The sources I found are not relevant to your question, so I am not citing any of them.",
+    "de": "Die gefundenen Quellen sind für deine Frage nicht relevant, daher zitiere ich keine davon.",
+    "fr": "Les sources trouvées ne sont pas pertinentes pour votre question ; je n’en cite donc aucune.",
+    "es": "Las fuentes que encontré no son relevantes para tu pregunta, así que no cito ninguna.",
+    "it": "Le fonti trovate non sono pertinenti alla tua domanda, quindi non ne cito nessuna.",
+    "pt": "As fontes que encontrei não são relevantes para a tua pergunta, por isso não cito nenhuma.",
+    "nl": "De gevonden bronnen zijn niet relevant voor je vraag, dus ik citeer er geen enkele.",
+    "ru": "Найденные источники не относятся к вашему вопросу, поэтому я не ссылаюсь ни на один из них.",
+}
+
+# 06D (LG-06): a source written in another language than the conversation. Mo never presents what such a source says as if it said it in the candidate's
+# language: the notice states the source language and that what is reported is a translation, and quotes the original wording UNCHANGED ({quote} is a
+# verbatim excerpt of the retrieved passage, never a translation). {source_language} is the source language's own name (endonym, see LANGUAGE_ENDONYMS).
+SOURCE_LANGUAGE_NOTICE: dict[str, str] = {
+    "en": "Source {marker} is written in {source_language}, so what is said here from it is a translation, not the source's own wording. Original wording: \"{quote}\"",
+    "de": "Quelle {marker} ist auf {source_language} verfasst; was hier daraus wiedergegeben wird, ist eine Übersetzung und nicht der Wortlaut der Quelle. Originalwortlaut: \"{quote}\"",
+    "fr": "La source {marker} est rédigée en {source_language} ; ce qui en est rapporté ici est une traduction et non la formulation de la source. Formulation d’origine : \"{quote}\"",
+    "es": "La fuente {marker} está redactada en {source_language}; lo que se indica aquí a partir de ella es una traducción y no la formulación de la propia fuente. Texto original: \"{quote}\"",
+    "it": "La fonte {marker} è scritta in {source_language}; ciò che qui ne viene riportato è una traduzione e non la formulazione della fonte. Testo originale: \"{quote}\"",
+    "pt": "A fonte {marker} está redigida em {source_language}; o que aqui se refere a partir dela é uma tradução e não a formulação da própria fonte. Texto original: \"{quote}\"",
+    "nl": "Bron {marker} is geschreven in {source_language}; wat hier daaruit wordt weergegeven is een vertaling en niet de eigen formulering van de bron. Oorspronkelijke tekst: \"{quote}\"",
+    "ru": "Источник {marker} написан на языке {source_language}; то, что здесь из него передано, является переводом, а не формулировкой самого источника. Оригинальный текст: \"{quote}\"",
+}
+
+# Language names in their own language (endonyms): unambiguous inside a sentence of any other language.
+LANGUAGE_ENDONYMS: dict[str, str] = {
+    "en": "English", "de": "Deutsch", "fr": "français", "es": "español", "it": "italiano", "pt": "português", "nl": "Nederlands", "ru": "русский",
+}
+
+assert set(IRRELEVANT_SOURCES) == set(SOURCE_LANGUAGE_NOTICE) == set(LANGUAGE_ENDONYMS) == set(SUPPORTED_LOCALE_CODES), (
+    "06D localized text must cover exactly the supported locales")
+
 
 def resolve_language(code: str | None) -> str:
     """Allow-list a conversation-language code; anything unknown/blank is English (the default)."""
@@ -117,6 +156,28 @@ def section_headings(code: str | None) -> tuple[str, str, str]:
 
 def insufficient_message(code: str | None) -> str:
     return INSUFFICIENT[resolve_language(code)]
+
+
+def irrelevant_sources_note(code: str | None) -> str:
+    return IRRELEVANT_SOURCES[resolve_language(code)]
+
+
+def abstention_message(code: str | None, *, sources_found: bool = False) -> str:
+    """The abstention sentence in the Mo conversation language. It always OPENS with the standard insufficient-evidence sentence; when sources were
+    retrieved but all fell at or below the relevance floor the specific note follows (no citation is offered either way)."""
+    base = insufficient_message(code)
+    return f"{base} {irrelevant_sources_note(code)}" if sources_found else base
+
+
+def language_endonym(code: str | None) -> str | None:
+    """The language's own name, or ``None`` for a code outside the supported set (an unknown language is never named)."""
+    c = (code or "").strip().lower().split("-")[0]
+    return LANGUAGE_ENDONYMS.get(c)
+
+
+def source_language_notice(code: str | None, *, marker: str, source_language: str, quote: str) -> str:
+    """The translation notice in the Mo conversation language. ``quote`` must be the source's own words, passed through unchanged."""
+    return SOURCE_LANGUAGE_NOTICE[resolve_language(code)].format(marker=marker, source_language=language_endonym(source_language) or source_language, quote=quote)
 
 
 def compensation_guidance(code: str | None) -> str:
@@ -142,11 +203,105 @@ def language_directive(code: str | None) -> str | None:
     lang = resolve_language(code)
     if lang == "en":
         return None
-    name = LANGUAGE_NAMES[lang]
-    return (
-        f"RESPONSE LANGUAGE\nThe candidate has chosen to converse in {name}. Write your whole answer "
-        f"in {name}, using EXACTLY the section headings given in the rules above. This affects only the "
-        "language of your prose: keep the same grounding, citation ([n]) and tool-result rules, do not "
-        "translate source titles, citations, numbers or the candidate's own text, and do not change the "
-        "labour market or geography of any career information because of the language."
-    )
+    # 06C: the directive text is the versioned asset ``rag/response_language`` (byte-identical to the former inline literal); the name comes ONLY from the allow-list.
+    return render("rag/response_language", "rag.synthesis", language_name=LANGUAGE_NAMES[lang])
+
+
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------
+# 06C: Mo-voiced deterministic sentences of the AGENT path.
+#
+# Language ownership (CLAUDE.md): the Mo conversation language owns every sentence Mo "says", including the deterministic text that stands in for the model. The agent
+# path (`src/agent/nodes.py`, `human.py`, `grounding.py`) still carries these as English literals. The localized text lives HERE (bounded allow-list, no model call,
+# English byte-identical to those literals) so wiring `src/agent/*` is a pure substitution once that package's owner order allows an edit; until then the agent keeps its
+# English literals and `tests/test_policy_sentence_inventory_06c.py` pins that the English column here equals them. Engineering translations pending native review (LG-11);
+# never presented as reviewed.
+AGENT_TEXT: dict[str, dict[str, str]] = {
+    "agent_unavailable": {
+        "en": "The assistant is temporarily unavailable. Please try again.",
+        "de": "Der Assistent ist vorübergehend nicht verfügbar. Bitte versuche es erneut.",
+        "fr": "L’assistant est temporairement indisponible. Veuillez réessayer.",
+        "es": "El asistente no está disponible temporalmente. Inténtalo de nuevo.",
+        "it": "L’assistente non è temporaneamente disponibile. Riprova.",
+        "pt": "O assistente está temporariamente indisponível. Tenta novamente.",
+        "nl": "De assistent is tijdelijk niet beschikbaar. Probeer het opnieuw.",
+        "ru": "Ассистент временно недоступен. Пожалуйста, попробуйте ещё раз.",
+    },
+    "agent_not_configured": {
+        "en": "The assistant isn't configured in this environment.",
+        "de": "Der Assistent ist in dieser Umgebung nicht eingerichtet.",
+        "fr": "L’assistant n’est pas configuré dans cet environnement.",
+        "es": "El asistente no está configurado en este entorno.",
+        "it": "L’assistente non è configurato in questo ambiente.",
+        "pt": "O assistente não está configurado neste ambiente.",
+        "nl": "De assistent is in deze omgeving niet geconfigureerd.",
+        "ru": "Ассистент не настроен в этой среде.",
+    },
+    "agent_step_limit": {
+        "en": "I've reached the limit of steps for this request. Here's what I have so far.",
+        "de": "Ich habe die Schrittgrenze für diese Anfrage erreicht. Das ist mein bisheriger Stand.",
+        "fr": "J’ai atteint la limite d’étapes pour cette demande. Voici ce que j’ai pour l’instant.",
+        "es": "He alcanzado el límite de pasos para esta solicitud. Esto es lo que tengo hasta ahora.",
+        "it": "Ho raggiunto il limite di passaggi per questa richiesta. Ecco quello che ho finora.",
+        "pt": "Atingi o limite de passos para este pedido. Isto é o que tenho até agora.",
+        "nl": "Ik heb de staplimiet voor dit verzoek bereikt. Dit is wat ik tot nu toe heb.",
+        "ru": "Я достиг предела шагов для этого запроса. Вот что у меня есть на данный момент.",
+    },
+    "hitl_approve_memory": {
+        "en": "Would you like me to remember this for future preparation?",
+        "de": "Soll ich mir das für künftige Vorbereitungen merken?",
+        "fr": "Souhaitez-vous que je retienne cela pour vos préparations futures ?",
+        "es": "¿Quieres que recuerde esto para tus próximas preparaciones?",
+        "it": "Vuoi che lo ricordi per le tue prossime preparazioni?",
+        "pt": "Queres que me lembre disto para preparações futuras?",
+        "nl": "Wil je dat ik dit onthoud voor toekomstige voorbereidingen?",
+        "ru": "Хотите, чтобы я запомнил это для будущей подготовки?",
+    },
+    "hitl_approve_handoff": {
+        "en": "Ready to practise the areas we've identified?",
+        "de": "Bereit, die erkannten Bereiche zu üben?",
+        "fr": "Prêt à vous exercer sur les points que nous avons identifiés ?",
+        "es": "¿Listo para practicar las áreas que hemos identificado?",
+        "it": "Pronto a esercitarti sulle aree che abbiamo individuato?",
+        "pt": "Pronto para praticar as áreas que identificámos?",
+        "nl": "Klaar om de gevonden aandachtspunten te oefenen?",
+        "ru": "Готовы потренировать выявленные области?",
+    },
+    "warn_uncited_retrieval": {
+        "en": "Retrieved evidence was used, but the final response did not include an inline source reference.",
+        "de": "Es wurden abgerufene Belege verwendet, aber die endgültige Antwort enthält keinen Quellenverweis im Text.",
+        "fr": "Des preuves récupérées ont été utilisées, mais la réponse finale ne contient pas de référence de source dans le texte.",
+        "es": "Se usó evidencia recuperada, pero la respuesta final no incluye una referencia de fuente en el texto.",
+        "it": "Sono state usate evidenze recuperate, ma la risposta finale non include un riferimento alla fonte nel testo.",
+        "pt": "Foram usadas evidências recuperadas, mas a resposta final não inclui uma referência à fonte no texto.",
+        "nl": "Er is opgehaald bewijs gebruikt, maar het uiteindelijke antwoord bevat geen bronverwijzing in de tekst.",
+        "ru": "Были использованы найденные подтверждения, но в итоговом ответе нет ссылки на источник в тексте.",
+    },
+    "warn_statistic_removed": {
+        "en": "An external statistic was stated without retrieval; the unsupported figure was removed and an evidence limitation given.",
+        "de": "Eine externe Statistik wurde ohne Abruf genannt; die nicht belegte Zahl wurde entfernt und eine Beleggrenze angegeben.",
+        "fr": "Une statistique externe a été indiquée sans récupération de sources ; le chiffre non étayé a été retiré et une limite des preuves a été indiquée.",
+        "es": "Se indicó una estadística externa sin recuperación de fuentes; se eliminó la cifra sin respaldo y se indicó la limitación de la evidencia.",
+        "it": "È stata indicata una statistica esterna senza recupero di fonti; la cifra non supportata è stata rimossa ed è stato indicato il limite delle evidenze.",
+        "pt": "Foi indicada uma estatística externa sem recuperação de fontes; o valor sem suporte foi removido e foi indicado o limite das evidências.",
+        "nl": "Er werd een externe statistiek genoemd zonder bronnen op te halen; het niet-onderbouwde cijfer is verwijderd en de beperking van het bewijs is vermeld.",
+        "ru": "Внешняя статистика была указана без поиска источников; неподтверждённая цифра удалена и указано ограничение подтверждений.",
+    },
+    "warn_unverified_general": {
+        "en": "An external factual question was answered without retrieval; the answer is labelled as not source-backed.",
+        "de": "Eine externe Sachfrage wurde ohne Abruf beantwortet; die Antwort ist als nicht quellenbasiert gekennzeichnet.",
+        "fr": "Une question factuelle externe a reçu une réponse sans récupération de sources ; la réponse est signalée comme non étayée par des sources.",
+        "es": "Se respondió una pregunta factual externa sin recuperación de fuentes; la respuesta se marca como no respaldada por fuentes.",
+        "it": "È stata data risposta a una domanda fattuale esterna senza recupero di fonti; la risposta è contrassegnata come non supportata da fonti.",
+        "pt": "Foi respondida uma pergunta factual externa sem recuperação de fontes; a resposta está assinalada como não apoiada em fontes.",
+        "nl": "Een externe feitelijke vraag is beantwoord zonder bronnen op te halen; het antwoord is gemarkeerd als niet door bronnen onderbouwd.",
+        "ru": "На внешний фактический вопрос дан ответ без поиска источников; ответ помечен как не подкреплённый источниками.",
+    },
+}
+AGENT_TEXT_KEYS: tuple[str, ...] = tuple(AGENT_TEXT)
+
+assert all(set(t) == set(SUPPORTED_LOCALE_CODES) for t in AGENT_TEXT.values()), "every agent-path sentence must cover exactly the supported locales"
+
+
+def agent_text(key: str, code: str | None) -> str:
+    """A bounded Mo-voiced agent-path sentence in the conversation language (unknown or blank code: English). An unknown KEY is a programming error, never a silent English fallback."""
+    return AGENT_TEXT[key][resolve_language(code)]

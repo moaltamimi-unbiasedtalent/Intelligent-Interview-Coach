@@ -24,7 +24,7 @@ EXPORT_FORMAT = "ask4mo.candidate-export.v1"
 INCLUDED = (
     "account", "preferences", "opportunities", "documents (metadata, extracted claims; not the files)",
     "stories", "memories", "interviews (questions, your answers, evaluations, reports)",
-    "feedback you submitted", "workspace memberships", "items you share",
+    "feedback you submitted", "workspace memberships", "ownership transfers you proposed or were offered (never the acceptance token)", "items you share",
     "support tickets you opened and the messages in them that you can see",
     "your plan and its assignment history (access assignments only; Ask4Mo has no payment records)",
     "your recorded acceptances of the Terms, Privacy notice and AI transparency versions",
@@ -87,6 +87,13 @@ def build_candidate_export(*, user_id: int, session_factory, repo, account: Any)
             .where(P.WorkspaceMembership.user_id == user_id)
         ).all()
         shares = mine(P.ShareGrant, P.ShareGrant.id, col="owner_user_id")
+        # 04B: the caller's own ownership transfers (their side, the state and the times; never the token hash or the bound address hash).
+        transfers = s.execute(
+            select(P.WorkspaceOwnershipTransfer, P.Workspace.name)
+            .join(P.Workspace, P.Workspace.id == P.WorkspaceOwnershipTransfer.workspace_id)
+            .where((P.WorkspaceOwnershipTransfer.proposer_user_id == user_id) | (P.WorkspaceOwnershipTransfer.recipient_user_id == user_id))
+            .order_by(P.WorkspaceOwnershipTransfer.id)
+        ).all()
         data = {
             "preferences": _row(prefs, ("id", "user_id")) if prefs else None,
             "opportunities": [_row(o, ("user_id",)) for o in mine(P.Opportunity, P.Opportunity.id)],
@@ -109,6 +116,11 @@ def build_candidate_export(*, user_id: int, session_factory, repo, account: Any)
             "workspace_memberships": [
                 {"workspace": name, "role": m.role, "status": m.status,
                  "joined": _jsonable(m.created_at)} for m, name in memberships
+            ],
+            "workspace_ownership_transfers": [
+                {"workspace": name, "your_side": "proposer" if t.proposer_user_id == user_id else "recipient", "status": t.status,
+                 "former_owner_role": t.former_owner_role, "proposed": _jsonable(t.created_at), "expires": _jsonable(t.expires_at),
+                 "decided": _jsonable(t.decided_at)} for t, name in transfers
             ],
             "shares": [_row(g, ("owner_user_id",)) for g in shares],
         }

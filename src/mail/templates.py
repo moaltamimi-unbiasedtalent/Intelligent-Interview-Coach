@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from src.locales import SUPPORTED_LOCALE_CODES
 
 BRAND_LINE = "Ask More. Be More."
-KINDS = ("email_verification", "password_reset", "account_notice", "admin_test", "workspace_invitation")
+KINDS = ("email_verification", "password_reset", "account_notice", "admin_test", "workspace_invitation", "ownership_transfer")
 
 
 @dataclass(frozen=True)
@@ -92,6 +92,21 @@ _WORKSPACE_INVITATION: dict[str, dict[str, str]] = {
 for _loc, _texts in _WORKSPACE_INVITATION.items():
     _T[_loc]["workspace_invitation"] = _texts
 
+# 04B: the ownership-transfer notice. Generic like the invitation: no workspace name, no proposer name. The recipient must sign in with this address and
+# accept; nothing changes before that. {link} and {expiry} are the only placeholders. Engineering translations (native review is a later gate).
+_OWNERSHIP_TRANSFER: dict[str, dict[str, str]] = {
+    "en": {"subject": "An Ask4Mo workspace owner proposed to transfer ownership to you", "body": "The owner of a workspace on Ask4Mo proposed to transfer ownership of it to you. Nothing changes unless you accept: sign in with this email address to review and accept or decline.\n\nReview the proposal:\n{link}\n\nThe proposal can be used once and is valid for {expiry}. If you did not expect it, ignore this email or decline it after signing in."},
+    "de": {"subject": "Der Inhaber eines Ask4Mo-Arbeitsbereichs möchte dir die Inhaberschaft übertragen", "body": "Der Inhaber eines Arbeitsbereichs bei Ask4Mo möchte dir die Inhaberschaft übertragen. Es ändert sich nichts, solange du nicht zustimmst: Melde dich mit dieser E-Mail-Adresse an, um den Vorschlag zu prüfen und anzunehmen oder abzulehnen.\n\nVorschlag prüfen:\n{link}\n\nDer Vorschlag kann einmal verwendet werden und ist {expiry} gültig. Wenn du ihn nicht erwartet hast, ignoriere diese E-Mail oder lehne ihn nach der Anmeldung ab."},
+    "fr": {"subject": "Le propriétaire d'un espace de travail Ask4Mo vous propose de vous transférer la propriété", "body": "Le propriétaire d'un espace de travail sur Ask4Mo vous propose de vous en transférer la propriété. Rien ne change tant que vous n'acceptez pas : connectez-vous avec cette adresse e-mail pour examiner la proposition, l'accepter ou la refuser.\n\nExaminer la proposition :\n{link}\n\nLa proposition ne peut être utilisée qu'une fois et reste valable {expiry}. Si vous ne l'attendiez pas, ignorez cet e-mail ou refusez-la après connexion."},
+    "es": {"subject": "El propietario de un espacio de trabajo de Ask4Mo propone transferirte la propiedad", "body": "El propietario de un espacio de trabajo en Ask4Mo propone transferirte su propiedad. No cambia nada hasta que aceptes: inicia sesión con este correo electrónico para revisar la propuesta y aceptarla o rechazarla.\n\nRevisar la propuesta:\n{link}\n\nLa propuesta se puede usar una sola vez y es válida durante {expiry}. Si no la esperabas, ignora este mensaje o recházala después de iniciar sesión."},
+    "it": {"subject": "Il proprietario di uno spazio di lavoro Ask4Mo propone di trasferirti la proprietà", "body": "Il proprietario di uno spazio di lavoro su Ask4Mo propone di trasferirti la proprietà. Non cambia nulla finché non accetti: accedi con questo indirizzo email per esaminare la proposta e accettarla o rifiutarla.\n\nEsamina la proposta:\n{link}\n\nLa proposta può essere usata una sola volta ed è valida per {expiry}. Se non te l'aspettavi, ignora questa email oppure rifiutala dopo l'accesso."},
+    "pt": {"subject": "O proprietário de um espaço de trabalho do Ask4Mo propõe transferir-lhe a propriedade", "body": "O proprietário de um espaço de trabalho no Ask4Mo propõe transferir-lhe a propriedade. Nada muda enquanto não aceitar: inicie sessão com este endereço de email para analisar a proposta e aceitá-la ou recusá-la.\n\nAnalisar a proposta:\n{link}\n\nA proposta só pode ser usada uma vez e é válida durante {expiry}. Se não a esperava, ignore este email ou recuse-a depois de iniciar sessão."},
+    "nl": {"subject": "De eigenaar van een Ask4Mo-werkruimte stelt voor het eigendom aan jou over te dragen", "body": "De eigenaar van een werkruimte op Ask4Mo stelt voor het eigendom aan jou over te dragen. Er verandert niets zolang je niet accepteert: log in met dit e-mailadres om het voorstel te bekijken en te accepteren of te weigeren.\n\nBekijk het voorstel:\n{link}\n\nHet voorstel kan één keer worden gebruikt en is {expiry} geldig. Als je het niet verwachtte, negeer dan deze e-mail of weiger het na het inloggen."},
+    "ru": {"subject": "Владелец рабочего пространства Ask4Mo предлагает передать вам право владения", "body": "Владелец рабочего пространства в Ask4Mo предлагает передать вам право владения им. Ничего не изменится, пока вы не согласитесь: войдите с этим адресом электронной почты, чтобы рассмотреть предложение и принять или отклонить его.\n\nРассмотреть предложение:\n{link}\n\nПредложением можно воспользоваться один раз, оно действует {expiry}. Если вы его не ждали, проигнорируйте это письмо или отклоните предложение после входа."},
+}
+for _loc, _texts in _OWNERSHIP_TRANSFER.items():
+    _T[_loc]["ownership_transfer"] = _texts
+
 # Localised duration phrases for the two token lifetimes (hours / minutes). Anything else falls back to hours.
 _HOURS = {
     "en": lambda n: f"{n} hour" + ("" if n == 1 else "s"), "de": lambda n: f"{n} Stunde" + ("" if n == 1 else "n"),
@@ -108,11 +123,23 @@ _MINUTES = {
 }
 
 
+# Localised whole-day phrases (the ownership-transfer lifetime is 7 days). Used only when the lifetime is a whole number of days.
+_DAYS = {
+    "en": lambda n: f"{n} day" + ("" if n == 1 else "s"), "de": lambda n: f"{n} Tag" + ("" if n == 1 else "e"),
+    "fr": lambda n: f"{n} jour" + ("" if n == 1 else "s"), "es": lambda n: f"{n} día" + ("" if n == 1 else "s"),
+    "it": lambda n: f"{n} giorn" + ("o" if n == 1 else "i"), "pt": lambda n: f"{n} dia" + ("" if n == 1 else "s"),
+    "nl": lambda n: f"{n} dag" if n == 1 else f"{n} dagen",
+    "ru": lambda n: f"{n} " + ("день" if n % 10 == 1 and n % 100 != 11 else "дня" if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14 else "дней"),
+}
+
+
 def normalise_locale(locale: str | None) -> str:
     return locale if locale in SUPPORTED_LOCALE_CODES else "en"
 
 
 def _duration(locale: str, seconds: int) -> str:
+    if seconds % 86400 == 0 and seconds >= 7 * 86400:      # whole weeks read better as days; the 24 h and 72 h lifetimes keep their hour phrasing
+        return _DAYS[locale](seconds // 86400)
     if seconds % 3600 == 0:
         return _HOURS[locale](seconds // 3600)
     return _MINUTES[locale](max(1, seconds // 60))

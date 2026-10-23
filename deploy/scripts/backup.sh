@@ -7,6 +7,9 @@
 #   3. a tar.gz of the knowledge/index data root (COPILOT_DATA_DIR, the `knowledge-data` volume)
 # (ClamAV signatures and Caddy certificates are re-creatable and are not backed up.)
 #
+# (05B) This script is the simple tar and pg_dump helper. The checksummed, manifest-described, optionally sealed backup SET with
+# verification, restore drills, erasure and rollback rehearsal is `python scripts/backup_set.py` (docs/production/BACKUP_RESTORE_RUNBOOK.md).
+#
 # No secrets are inline: DATABASE_URL / DOCUMENT_STORAGE_DIR / BACKUP_DIR come
 # from the environment. pg_dump reads credentials from the DATABASE_URL only.
 #

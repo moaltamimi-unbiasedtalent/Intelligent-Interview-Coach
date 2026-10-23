@@ -18,6 +18,7 @@ the reported tokens (or the larger provider-reported cost); a timeout, connectio
 
 from __future__ import annotations
 
+import asyncio
 import json
 import threading
 import time
@@ -186,7 +187,10 @@ class HttpGuard:
             self.metadata_requests += 1
             return await orig(client, request, **kw)
         model, est, cap = self._prepare(request, kw)
-        if not self._sem.acquire(timeout=self.limits.request_timeout_s):
+        # 07A: the concurrency limit is a threading semaphore shared with sync callers. A blocking acquire here froze the event loop for up to the request timeout and, because
+        # the in-flight requests that hold the slots need that same loop to finish, could deadlock (the demo_live guard fixed the identical defect). The wait runs in a worker thread.
+        got = await asyncio.get_running_loop().run_in_executor(None, lambda: self._sem.acquire(timeout=self.limits.request_timeout_s))
+        if not got:
             self._refuse("concurrency_limit", "The approved concurrency limit is saturated.")
         try:
             res = self._admit(model, est, cap)

@@ -1,0 +1,1378 @@
+{
+ "cases": [
+  {
+   "expected_lane": "certification",
+   "feature": "certification",
+   "id": "bs_certification_de_1",
+   "market": "DE",
+   "occupation": "Data Analyst",
+   "query": "Which professional certifications help a Data Analyst in Germany?",
+   "source_family": [
+    "kldb",
+    "berufenet",
+    "ba_kompetenzkatalog",
+    "ba_entgeltatlas"
+   ]
+  },
+  {
+   "expected_lane": "certification",
+   "feature": "certification",
+   "id": "bs_certification_de_2",
+   "market": "DE",
+   "occupation": "Accountant",
+   "query": "Which professional certifications help a Accountant in Germany?",
+   "source_family": [
+    "kldb",
+    "berufenet",
+    "ba_kompetenzkatalog",
+    "ba_entgeltatlas"
+   ]
+  },
+  {
+   "expected_lane": "certification",
+   "feature": "certification",
+   "id": "bs_certification_es_1",
+   "market": "ES",
+   "occupation": "Data Analyst",
+   "query": "Which professional certifications help a Data Analyst in Spain?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "certification",
+   "feature": "certification",
+   "id": "bs_certification_es_2",
+   "market": "ES",
+   "occupation": "Accountant",
+   "query": "Which professional certifications help a Accountant in Spain?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "certification",
+   "feature": "certification",
+   "id": "bs_certification_eu_1",
+   "market": "EU",
+   "occupation": "Data Analyst",
+   "query": "Which professional certifications help a Data Analyst in the European Union?",
+   "source_family": [
+    "esco",
+    "esco_matrix",
+    "eurostat_earnings",
+    "cedefop_skills_forecast"
+   ]
+  },
+  {
+   "expected_lane": "certification",
+   "feature": "certification",
+   "id": "bs_certification_eu_2",
+   "market": "EU",
+   "occupation": "Accountant",
+   "query": "Which professional certifications help a Accountant in the European Union?",
+   "source_family": [
+    "esco",
+    "esco_matrix",
+    "eurostat_earnings",
+    "cedefop_skills_forecast"
+   ]
+  },
+  {
+   "expected_lane": "certification",
+   "feature": "certification",
+   "id": "bs_certification_fr_1",
+   "market": "FR",
+   "occupation": "Data Analyst",
+   "query": "Which professional certifications help a Data Analyst in France?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "certification",
+   "feature": "certification",
+   "id": "bs_certification_fr_2",
+   "market": "FR",
+   "occupation": "Accountant",
+   "query": "Which professional certifications help a Accountant in France?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "certification",
+   "feature": "certification",
+   "id": "bs_certification_it_1",
+   "market": "IT",
+   "occupation": "Data Analyst",
+   "query": "Which professional certifications help a Data Analyst in Italy?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "certification",
+   "feature": "certification",
+   "id": "bs_certification_it_2",
+   "market": "IT",
+   "occupation": "Accountant",
+   "query": "Which professional certifications help a Accountant in Italy?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "certification",
+   "feature": "certification",
+   "id": "bs_certification_nl_1",
+   "market": "NL",
+   "occupation": "Data Analyst",
+   "query": "Which professional certifications help a Data Analyst in the Netherlands?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "certification",
+   "feature": "certification",
+   "id": "bs_certification_nl_2",
+   "market": "NL",
+   "occupation": "Accountant",
+   "query": "Which professional certifications help a Accountant in the Netherlands?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "certification",
+   "feature": "certification",
+   "id": "bs_certification_pt_1",
+   "market": "PT",
+   "occupation": "Data Analyst",
+   "query": "Which professional certifications help a Data Analyst in Portugal?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "certification",
+   "feature": "certification",
+   "id": "bs_certification_pt_2",
+   "market": "PT",
+   "occupation": "Accountant",
+   "query": "Which professional certifications help a Accountant in Portugal?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "certification",
+   "feature": "certification",
+   "id": "bs_certification_uk_1",
+   "market": "UK",
+   "occupation": "Data Analyst",
+   "query": "Which professional certifications help a Data Analyst in the United Kingdom?",
+   "source_family": [
+    "ons_ashe",
+    "uk_civil_service_success_profiles",
+    "uk_hr_success_profiles"
+   ]
+  },
+  {
+   "expected_lane": "certification",
+   "feature": "certification",
+   "id": "bs_certification_uk_2",
+   "market": "UK",
+   "occupation": "Accountant",
+   "query": "Which professional certifications help a Accountant in the United Kingdom?",
+   "source_family": [
+    "ons_ashe",
+    "uk_civil_service_success_profiles",
+    "uk_hr_success_profiles"
+   ]
+  },
+  {
+   "expected_lane": "certification",
+   "feature": "certification",
+   "id": "bs_certification_us_1",
+   "market": "US",
+   "occupation": "Data Analyst",
+   "query": "Which professional certifications help a Data Analyst in the United States?",
+   "source_family": [
+    "onet",
+    "bls_ooh",
+    "bls_oews"
+   ]
+  },
+  {
+   "expected_lane": "certification",
+   "feature": "certification",
+   "id": "bs_certification_us_2",
+   "market": "US",
+   "occupation": "Accountant",
+   "query": "Which professional certifications help a Accountant in the United States?",
+   "source_family": [
+    "onet",
+    "bls_ooh",
+    "bls_oews"
+   ]
+  },
+  {
+   "expected_lane": "compensation",
+   "feature": "compensation",
+   "id": "bs_compensation_de_1",
+   "market": "DE",
+   "occupation": "Data Analyst",
+   "query": "What does a Data Analyst earn in Germany?",
+   "source_family": [
+    "kldb",
+    "berufenet",
+    "ba_kompetenzkatalog",
+    "ba_entgeltatlas"
+   ]
+  },
+  {
+   "expected_lane": "compensation",
+   "feature": "compensation",
+   "id": "bs_compensation_de_2",
+   "market": "DE",
+   "occupation": "Accountant",
+   "query": "What does a Accountant earn in Germany?",
+   "source_family": [
+    "kldb",
+    "berufenet",
+    "ba_kompetenzkatalog",
+    "ba_entgeltatlas"
+   ]
+  },
+  {
+   "expected_lane": "compensation",
+   "feature": "compensation",
+   "id": "bs_compensation_es_1",
+   "market": "ES",
+   "occupation": "Data Analyst",
+   "query": "What does a Data Analyst earn in Spain?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "compensation",
+   "feature": "compensation",
+   "id": "bs_compensation_es_2",
+   "market": "ES",
+   "occupation": "Accountant",
+   "query": "What does a Accountant earn in Spain?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "compensation",
+   "feature": "compensation",
+   "id": "bs_compensation_eu_1",
+   "market": "EU",
+   "occupation": "Data Analyst",
+   "query": "What does a Data Analyst earn in the European Union?",
+   "source_family": [
+    "esco",
+    "esco_matrix",
+    "eurostat_earnings",
+    "cedefop_skills_forecast"
+   ]
+  },
+  {
+   "expected_lane": "compensation",
+   "feature": "compensation",
+   "id": "bs_compensation_eu_2",
+   "market": "EU",
+   "occupation": "Accountant",
+   "query": "What does a Accountant earn in the European Union?",
+   "source_family": [
+    "esco",
+    "esco_matrix",
+    "eurostat_earnings",
+    "cedefop_skills_forecast"
+   ]
+  },
+  {
+   "expected_lane": "compensation",
+   "feature": "compensation",
+   "id": "bs_compensation_fr_1",
+   "market": "FR",
+   "occupation": "Data Analyst",
+   "query": "What does a Data Analyst earn in France?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "compensation",
+   "feature": "compensation",
+   "id": "bs_compensation_fr_2",
+   "market": "FR",
+   "occupation": "Accountant",
+   "query": "What does a Accountant earn in France?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "compensation",
+   "feature": "compensation",
+   "id": "bs_compensation_it_1",
+   "market": "IT",
+   "occupation": "Data Analyst",
+   "query": "What does a Data Analyst earn in Italy?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "compensation",
+   "feature": "compensation",
+   "id": "bs_compensation_it_2",
+   "market": "IT",
+   "occupation": "Accountant",
+   "query": "What does a Accountant earn in Italy?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "compensation",
+   "feature": "compensation",
+   "id": "bs_compensation_nl_1",
+   "market": "NL",
+   "occupation": "Data Analyst",
+   "query": "What does a Data Analyst earn in the Netherlands?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "compensation",
+   "feature": "compensation",
+   "id": "bs_compensation_nl_2",
+   "market": "NL",
+   "occupation": "Accountant",
+   "query": "What does a Accountant earn in the Netherlands?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "compensation",
+   "feature": "compensation",
+   "id": "bs_compensation_pt_1",
+   "market": "PT",
+   "occupation": "Data Analyst",
+   "query": "What does a Data Analyst earn in Portugal?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "compensation",
+   "feature": "compensation",
+   "id": "bs_compensation_pt_2",
+   "market": "PT",
+   "occupation": "Accountant",
+   "query": "What does a Accountant earn in Portugal?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "compensation",
+   "feature": "compensation",
+   "id": "bs_compensation_uk_1",
+   "market": "UK",
+   "occupation": "Data Analyst",
+   "query": "What does a Data Analyst earn in the United Kingdom?",
+   "source_family": [
+    "ons_ashe",
+    "uk_civil_service_success_profiles",
+    "uk_hr_success_profiles"
+   ]
+  },
+  {
+   "expected_lane": "compensation",
+   "feature": "compensation",
+   "id": "bs_compensation_uk_2",
+   "market": "UK",
+   "occupation": "Accountant",
+   "query": "What does a Accountant earn in the United Kingdom?",
+   "source_family": [
+    "ons_ashe",
+    "uk_civil_service_success_profiles",
+    "uk_hr_success_profiles"
+   ]
+  },
+  {
+   "expected_lane": "compensation",
+   "feature": "compensation",
+   "id": "bs_compensation_us_1",
+   "market": "US",
+   "occupation": "Data Analyst",
+   "query": "What does a Data Analyst earn in the United States?",
+   "source_family": [
+    "onet",
+    "bls_ooh",
+    "bls_oews"
+   ]
+  },
+  {
+   "expected_lane": "compensation",
+   "feature": "compensation",
+   "id": "bs_compensation_us_2",
+   "market": "US",
+   "occupation": "Accountant",
+   "query": "What does a Accountant earn in the United States?",
+   "source_family": [
+    "onet",
+    "bls_ooh",
+    "bls_oews"
+   ]
+  },
+  {
+   "expected_lane": "education",
+   "feature": "entry_education",
+   "id": "bs_entry_education_de_1",
+   "market": "DE",
+   "occupation": "Data Analyst",
+   "query": "What education is needed to become a Data Analyst in Germany?",
+   "source_family": [
+    "kldb",
+    "berufenet",
+    "ba_kompetenzkatalog",
+    "ba_entgeltatlas"
+   ]
+  },
+  {
+   "expected_lane": "education",
+   "feature": "entry_education",
+   "id": "bs_entry_education_de_2",
+   "market": "DE",
+   "occupation": "Accountant",
+   "query": "What education is needed to become a Accountant in Germany?",
+   "source_family": [
+    "kldb",
+    "berufenet",
+    "ba_kompetenzkatalog",
+    "ba_entgeltatlas"
+   ]
+  },
+  {
+   "expected_lane": "education",
+   "feature": "entry_education",
+   "id": "bs_entry_education_es_1",
+   "market": "ES",
+   "occupation": "Data Analyst",
+   "query": "What education is needed to become a Data Analyst in Spain?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "education",
+   "feature": "entry_education",
+   "id": "bs_entry_education_es_2",
+   "market": "ES",
+   "occupation": "Accountant",
+   "query": "What education is needed to become a Accountant in Spain?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "education",
+   "feature": "entry_education",
+   "id": "bs_entry_education_eu_1",
+   "market": "EU",
+   "occupation": "Data Analyst",
+   "query": "What education is needed to become a Data Analyst in the European Union?",
+   "source_family": [
+    "esco",
+    "esco_matrix",
+    "eurostat_earnings",
+    "cedefop_skills_forecast"
+   ]
+  },
+  {
+   "expected_lane": "education",
+   "feature": "entry_education",
+   "id": "bs_entry_education_eu_2",
+   "market": "EU",
+   "occupation": "Accountant",
+   "query": "What education is needed to become a Accountant in the European Union?",
+   "source_family": [
+    "esco",
+    "esco_matrix",
+    "eurostat_earnings",
+    "cedefop_skills_forecast"
+   ]
+  },
+  {
+   "expected_lane": "education",
+   "feature": "entry_education",
+   "id": "bs_entry_education_fr_1",
+   "market": "FR",
+   "occupation": "Data Analyst",
+   "query": "What education is needed to become a Data Analyst in France?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "education",
+   "feature": "entry_education",
+   "id": "bs_entry_education_fr_2",
+   "market": "FR",
+   "occupation": "Accountant",
+   "query": "What education is needed to become a Accountant in France?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "education",
+   "feature": "entry_education",
+   "id": "bs_entry_education_it_1",
+   "market": "IT",
+   "occupation": "Data Analyst",
+   "query": "What education is needed to become a Data Analyst in Italy?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "education",
+   "feature": "entry_education",
+   "id": "bs_entry_education_it_2",
+   "market": "IT",
+   "occupation": "Accountant",
+   "query": "What education is needed to become a Accountant in Italy?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "education",
+   "feature": "entry_education",
+   "id": "bs_entry_education_nl_1",
+   "market": "NL",
+   "occupation": "Data Analyst",
+   "query": "What education is needed to become a Data Analyst in the Netherlands?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "education",
+   "feature": "entry_education",
+   "id": "bs_entry_education_nl_2",
+   "market": "NL",
+   "occupation": "Accountant",
+   "query": "What education is needed to become a Accountant in the Netherlands?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "education",
+   "feature": "entry_education",
+   "id": "bs_entry_education_pt_1",
+   "market": "PT",
+   "occupation": "Data Analyst",
+   "query": "What education is needed to become a Data Analyst in Portugal?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "education",
+   "feature": "entry_education",
+   "id": "bs_entry_education_pt_2",
+   "market": "PT",
+   "occupation": "Accountant",
+   "query": "What education is needed to become a Accountant in Portugal?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "education",
+   "feature": "entry_education",
+   "id": "bs_entry_education_uk_1",
+   "market": "UK",
+   "occupation": "Data Analyst",
+   "query": "What education is needed to become a Data Analyst in the United Kingdom?",
+   "source_family": [
+    "ons_ashe",
+    "uk_civil_service_success_profiles",
+    "uk_hr_success_profiles"
+   ]
+  },
+  {
+   "expected_lane": "education",
+   "feature": "entry_education",
+   "id": "bs_entry_education_uk_2",
+   "market": "UK",
+   "occupation": "Accountant",
+   "query": "What education is needed to become a Accountant in the United Kingdom?",
+   "source_family": [
+    "ons_ashe",
+    "uk_civil_service_success_profiles",
+    "uk_hr_success_profiles"
+   ]
+  },
+  {
+   "expected_lane": "education",
+   "feature": "entry_education",
+   "id": "bs_entry_education_us_1",
+   "market": "US",
+   "occupation": "Data Analyst",
+   "query": "What education is needed to become a Data Analyst in the United States?",
+   "source_family": [
+    "onet",
+    "bls_ooh",
+    "bls_oews"
+   ]
+  },
+  {
+   "expected_lane": "education",
+   "feature": "entry_education",
+   "id": "bs_entry_education_us_2",
+   "market": "US",
+   "occupation": "Accountant",
+   "query": "What education is needed to become a Accountant in the United States?",
+   "source_family": [
+    "onet",
+    "bls_ooh",
+    "bls_oews"
+   ]
+  },
+  {
+   "expected_lane": "forecast",
+   "feature": "labour_outlook",
+   "id": "bs_labour_outlook_de_1",
+   "market": "DE",
+   "occupation": "Data Analyst",
+   "query": "How is demand for Data Analyst roles expected to develop in Germany?",
+   "source_family": [
+    "kldb",
+    "berufenet",
+    "ba_kompetenzkatalog",
+    "ba_entgeltatlas"
+   ]
+  },
+  {
+   "expected_lane": "forecast",
+   "feature": "labour_outlook",
+   "id": "bs_labour_outlook_de_2",
+   "market": "DE",
+   "occupation": "Accountant",
+   "query": "How is demand for Accountant roles expected to develop in Germany?",
+   "source_family": [
+    "kldb",
+    "berufenet",
+    "ba_kompetenzkatalog",
+    "ba_entgeltatlas"
+   ]
+  },
+  {
+   "expected_lane": "forecast",
+   "feature": "labour_outlook",
+   "id": "bs_labour_outlook_es_1",
+   "market": "ES",
+   "occupation": "Data Analyst",
+   "query": "How is demand for Data Analyst roles expected to develop in Spain?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "forecast",
+   "feature": "labour_outlook",
+   "id": "bs_labour_outlook_es_2",
+   "market": "ES",
+   "occupation": "Accountant",
+   "query": "How is demand for Accountant roles expected to develop in Spain?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "forecast",
+   "feature": "labour_outlook",
+   "id": "bs_labour_outlook_eu_1",
+   "market": "EU",
+   "occupation": "Data Analyst",
+   "query": "How is demand for Data Analyst roles expected to develop in the European Union?",
+   "source_family": [
+    "esco",
+    "esco_matrix",
+    "eurostat_earnings",
+    "cedefop_skills_forecast"
+   ]
+  },
+  {
+   "expected_lane": "forecast",
+   "feature": "labour_outlook",
+   "id": "bs_labour_outlook_eu_2",
+   "market": "EU",
+   "occupation": "Accountant",
+   "query": "How is demand for Accountant roles expected to develop in the European Union?",
+   "source_family": [
+    "esco",
+    "esco_matrix",
+    "eurostat_earnings",
+    "cedefop_skills_forecast"
+   ]
+  },
+  {
+   "expected_lane": "forecast",
+   "feature": "labour_outlook",
+   "id": "bs_labour_outlook_fr_1",
+   "market": "FR",
+   "occupation": "Data Analyst",
+   "query": "How is demand for Data Analyst roles expected to develop in France?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "forecast",
+   "feature": "labour_outlook",
+   "id": "bs_labour_outlook_fr_2",
+   "market": "FR",
+   "occupation": "Accountant",
+   "query": "How is demand for Accountant roles expected to develop in France?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "forecast",
+   "feature": "labour_outlook",
+   "id": "bs_labour_outlook_it_1",
+   "market": "IT",
+   "occupation": "Data Analyst",
+   "query": "How is demand for Data Analyst roles expected to develop in Italy?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "forecast",
+   "feature": "labour_outlook",
+   "id": "bs_labour_outlook_it_2",
+   "market": "IT",
+   "occupation": "Accountant",
+   "query": "How is demand for Accountant roles expected to develop in Italy?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "forecast",
+   "feature": "labour_outlook",
+   "id": "bs_labour_outlook_nl_1",
+   "market": "NL",
+   "occupation": "Data Analyst",
+   "query": "How is demand for Data Analyst roles expected to develop in the Netherlands?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "forecast",
+   "feature": "labour_outlook",
+   "id": "bs_labour_outlook_nl_2",
+   "market": "NL",
+   "occupation": "Accountant",
+   "query": "How is demand for Accountant roles expected to develop in the Netherlands?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "forecast",
+   "feature": "labour_outlook",
+   "id": "bs_labour_outlook_pt_1",
+   "market": "PT",
+   "occupation": "Data Analyst",
+   "query": "How is demand for Data Analyst roles expected to develop in Portugal?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "forecast",
+   "feature": "labour_outlook",
+   "id": "bs_labour_outlook_pt_2",
+   "market": "PT",
+   "occupation": "Accountant",
+   "query": "How is demand for Accountant roles expected to develop in Portugal?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "forecast",
+   "feature": "labour_outlook",
+   "id": "bs_labour_outlook_uk_1",
+   "market": "UK",
+   "occupation": "Data Analyst",
+   "query": "How is demand for Data Analyst roles expected to develop in the United Kingdom?",
+   "source_family": [
+    "ons_ashe",
+    "uk_civil_service_success_profiles",
+    "uk_hr_success_profiles"
+   ]
+  },
+  {
+   "expected_lane": "forecast",
+   "feature": "labour_outlook",
+   "id": "bs_labour_outlook_uk_2",
+   "market": "UK",
+   "occupation": "Accountant",
+   "query": "How is demand for Accountant roles expected to develop in the United Kingdom?",
+   "source_family": [
+    "ons_ashe",
+    "uk_civil_service_success_profiles",
+    "uk_hr_success_profiles"
+   ]
+  },
+  {
+   "expected_lane": "forecast",
+   "feature": "labour_outlook",
+   "id": "bs_labour_outlook_us_1",
+   "market": "US",
+   "occupation": "Data Analyst",
+   "query": "How is demand for Data Analyst roles expected to develop in the United States?",
+   "source_family": [
+    "onet",
+    "bls_ooh",
+    "bls_oews"
+   ]
+  },
+  {
+   "expected_lane": "forecast",
+   "feature": "labour_outlook",
+   "id": "bs_labour_outlook_us_2",
+   "market": "US",
+   "occupation": "Accountant",
+   "query": "How is demand for Accountant roles expected to develop in the United States?",
+   "source_family": [
+    "onet",
+    "bls_ooh",
+    "bls_oews"
+   ]
+  },
+  {
+   "expected_lane": "licence",
+   "feature": "licence",
+   "id": "bs_licence_de_1",
+   "market": "DE",
+   "occupation": "Data Analyst",
+   "query": "Is a licence required to work as a Data Analyst in Germany?",
+   "source_family": [
+    "kldb",
+    "berufenet",
+    "ba_kompetenzkatalog",
+    "ba_entgeltatlas"
+   ]
+  },
+  {
+   "expected_lane": "licence",
+   "feature": "licence",
+   "id": "bs_licence_de_2",
+   "market": "DE",
+   "occupation": "Accountant",
+   "query": "Is a licence required to work as a Accountant in Germany?",
+   "source_family": [
+    "kldb",
+    "berufenet",
+    "ba_kompetenzkatalog",
+    "ba_entgeltatlas"
+   ]
+  },
+  {
+   "expected_lane": "licence",
+   "feature": "licence",
+   "id": "bs_licence_es_1",
+   "market": "ES",
+   "occupation": "Data Analyst",
+   "query": "Is a licence required to work as a Data Analyst in Spain?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "licence",
+   "feature": "licence",
+   "id": "bs_licence_es_2",
+   "market": "ES",
+   "occupation": "Accountant",
+   "query": "Is a licence required to work as a Accountant in Spain?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "licence",
+   "feature": "licence",
+   "id": "bs_licence_eu_1",
+   "market": "EU",
+   "occupation": "Data Analyst",
+   "query": "Is a licence required to work as a Data Analyst in the European Union?",
+   "source_family": [
+    "esco",
+    "esco_matrix",
+    "eurostat_earnings",
+    "cedefop_skills_forecast"
+   ]
+  },
+  {
+   "expected_lane": "licence",
+   "feature": "licence",
+   "id": "bs_licence_eu_2",
+   "market": "EU",
+   "occupation": "Accountant",
+   "query": "Is a licence required to work as a Accountant in the European Union?",
+   "source_family": [
+    "esco",
+    "esco_matrix",
+    "eurostat_earnings",
+    "cedefop_skills_forecast"
+   ]
+  },
+  {
+   "expected_lane": "licence",
+   "feature": "licence",
+   "id": "bs_licence_fr_1",
+   "market": "FR",
+   "occupation": "Data Analyst",
+   "query": "Is a licence required to work as a Data Analyst in France?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "licence",
+   "feature": "licence",
+   "id": "bs_licence_fr_2",
+   "market": "FR",
+   "occupation": "Accountant",
+   "query": "Is a licence required to work as a Accountant in France?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "licence",
+   "feature": "licence",
+   "id": "bs_licence_it_1",
+   "market": "IT",
+   "occupation": "Data Analyst",
+   "query": "Is a licence required to work as a Data Analyst in Italy?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "licence",
+   "feature": "licence",
+   "id": "bs_licence_it_2",
+   "market": "IT",
+   "occupation": "Accountant",
+   "query": "Is a licence required to work as a Accountant in Italy?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "licence",
+   "feature": "licence",
+   "id": "bs_licence_nl_1",
+   "market": "NL",
+   "occupation": "Data Analyst",
+   "query": "Is a licence required to work as a Data Analyst in the Netherlands?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "licence",
+   "feature": "licence",
+   "id": "bs_licence_nl_2",
+   "market": "NL",
+   "occupation": "Accountant",
+   "query": "Is a licence required to work as a Accountant in the Netherlands?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "licence",
+   "feature": "licence",
+   "id": "bs_licence_pt_1",
+   "market": "PT",
+   "occupation": "Data Analyst",
+   "query": "Is a licence required to work as a Data Analyst in Portugal?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "licence",
+   "feature": "licence",
+   "id": "bs_licence_pt_2",
+   "market": "PT",
+   "occupation": "Accountant",
+   "query": "Is a licence required to work as a Accountant in Portugal?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "licence",
+   "feature": "licence",
+   "id": "bs_licence_uk_1",
+   "market": "UK",
+   "occupation": "Data Analyst",
+   "query": "Is a licence required to work as a Data Analyst in the United Kingdom?",
+   "source_family": [
+    "ons_ashe",
+    "uk_civil_service_success_profiles",
+    "uk_hr_success_profiles"
+   ]
+  },
+  {
+   "expected_lane": "licence",
+   "feature": "licence",
+   "id": "bs_licence_uk_2",
+   "market": "UK",
+   "occupation": "Accountant",
+   "query": "Is a licence required to work as a Accountant in the United Kingdom?",
+   "source_family": [
+    "ons_ashe",
+    "uk_civil_service_success_profiles",
+    "uk_hr_success_profiles"
+   ]
+  },
+  {
+   "expected_lane": "licence",
+   "feature": "licence",
+   "id": "bs_licence_us_1",
+   "market": "US",
+   "occupation": "Data Analyst",
+   "query": "Is a licence required to work as a Data Analyst in the United States?",
+   "source_family": [
+    "onet",
+    "bls_ooh",
+    "bls_oews"
+   ]
+  },
+  {
+   "expected_lane": "licence",
+   "feature": "licence",
+   "id": "bs_licence_us_2",
+   "market": "US",
+   "occupation": "Accountant",
+   "query": "Is a licence required to work as a Accountant in the United States?",
+   "source_family": [
+    "onet",
+    "bls_ooh",
+    "bls_oews"
+   ]
+  },
+  {
+   "expected_lane": "structured_role",
+   "feature": "role_definition",
+   "id": "bs_role_definition_de_1",
+   "market": "DE",
+   "occupation": "Data Analyst",
+   "query": "What does a Data Analyst do in Germany?",
+   "source_family": [
+    "kldb",
+    "berufenet",
+    "ba_kompetenzkatalog",
+    "ba_entgeltatlas"
+   ]
+  },
+  {
+   "expected_lane": "structured_role",
+   "feature": "role_definition",
+   "id": "bs_role_definition_de_2",
+   "market": "DE",
+   "occupation": "Accountant",
+   "query": "What does a Accountant do in Germany?",
+   "source_family": [
+    "kldb",
+    "berufenet",
+    "ba_kompetenzkatalog",
+    "ba_entgeltatlas"
+   ]
+  },
+  {
+   "expected_lane": "structured_role",
+   "feature": "role_definition",
+   "id": "bs_role_definition_es_1",
+   "market": "ES",
+   "occupation": "Data Analyst",
+   "query": "What does a Data Analyst do in Spain?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "structured_role",
+   "feature": "role_definition",
+   "id": "bs_role_definition_es_2",
+   "market": "ES",
+   "occupation": "Accountant",
+   "query": "What does a Accountant do in Spain?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "structured_role",
+   "feature": "role_definition",
+   "id": "bs_role_definition_eu_1",
+   "market": "EU",
+   "occupation": "Data Analyst",
+   "query": "What does a Data Analyst do in the European Union?",
+   "source_family": [
+    "esco",
+    "esco_matrix",
+    "eurostat_earnings",
+    "cedefop_skills_forecast"
+   ]
+  },
+  {
+   "expected_lane": "structured_role",
+   "feature": "role_definition",
+   "id": "bs_role_definition_eu_2",
+   "market": "EU",
+   "occupation": "Accountant",
+   "query": "What does a Accountant do in the European Union?",
+   "source_family": [
+    "esco",
+    "esco_matrix",
+    "eurostat_earnings",
+    "cedefop_skills_forecast"
+   ]
+  },
+  {
+   "expected_lane": "structured_role",
+   "feature": "role_definition",
+   "id": "bs_role_definition_fr_1",
+   "market": "FR",
+   "occupation": "Data Analyst",
+   "query": "What does a Data Analyst do in France?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "structured_role",
+   "feature": "role_definition",
+   "id": "bs_role_definition_fr_2",
+   "market": "FR",
+   "occupation": "Accountant",
+   "query": "What does a Accountant do in France?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "structured_role",
+   "feature": "role_definition",
+   "id": "bs_role_definition_it_1",
+   "market": "IT",
+   "occupation": "Data Analyst",
+   "query": "What does a Data Analyst do in Italy?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "structured_role",
+   "feature": "role_definition",
+   "id": "bs_role_definition_it_2",
+   "market": "IT",
+   "occupation": "Accountant",
+   "query": "What does a Accountant do in Italy?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "structured_role",
+   "feature": "role_definition",
+   "id": "bs_role_definition_nl_1",
+   "market": "NL",
+   "occupation": "Data Analyst",
+   "query": "What does a Data Analyst do in the Netherlands?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "structured_role",
+   "feature": "role_definition",
+   "id": "bs_role_definition_nl_2",
+   "market": "NL",
+   "occupation": "Accountant",
+   "query": "What does a Accountant do in the Netherlands?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "structured_role",
+   "feature": "role_definition",
+   "id": "bs_role_definition_pt_1",
+   "market": "PT",
+   "occupation": "Data Analyst",
+   "query": "What does a Data Analyst do in Portugal?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "structured_role",
+   "feature": "role_definition",
+   "id": "bs_role_definition_pt_2",
+   "market": "PT",
+   "occupation": "Accountant",
+   "query": "What does a Accountant do in Portugal?",
+   "source_family": [
+    "esco",
+    "eurostat_earnings"
+   ]
+  },
+  {
+   "expected_lane": "structured_role",
+   "feature": "role_definition",
+   "id": "bs_role_definition_uk_1",
+   "market": "UK",
+   "occupation": "Data Analyst",
+   "query": "What does a Data Analyst do in the United Kingdom?",
+   "source_family": [
+    "ons_ashe",
+    "uk_civil_service_success_profiles",
+    "uk_hr_success_profiles"
+   ]
+  },
+  {
+   "expected_lane": "structured_role",
+   "feature": "role_definition",
+   "id": "bs_role_definition_uk_2",
+   "market": "UK",
+   "occupation": "Accountant",
+   "query": "What does a Accountant do in the United Kingdom?",
+   "source_family": [
+    "ons_ashe",
+    "uk_civil_service_success_profiles",
+    "uk_hr_success_profiles"
+   ]
+  },
+  {
+   "expected_lane": "structured_role",
+   "feature": "role_definition",
+   "id": "bs_role_definition_us_1",
+   "market": "US",
+   "occupation": "Data Analyst",
+   "query": "What does a Data Analyst do in the United States?",
+   "source_family": [
+    "onet",
+    "bls_ooh",
+    "bls_oews"
+   ]
+  },
+  {
+   "expected_lane": "structured_role",
+   "feature": "role_definition",
+   "id": "bs_role_definition_us_2",
+   "market": "US",
+   "occupation": "Accountant",
+   "query": "What does a Accountant do in the United States?",
+   "source_family": [
+    "onet",
+    "bls_ooh",
+    "bls_oews"
+   ]
+  }
+ ],
+ "count": 108,
+ "description": "Candidate grid of feature x market x occupation questions. A case is IN SCOPE only when its feature is enabled, its market approved and one of its source-family sources qualified for that market in the approval register. Selection never edits this file.",
+ "frozen": true,
+ "independence": "authored by engineering; no independent reviewer; English-only questions",
+ "name": "beta_scope_coverage_cases_v1",
+ "schema_version": 1
+}

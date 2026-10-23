@@ -1,0 +1,1409 @@
+{
+ "schema": "ask4mo.release_evidence.v1",
+ "note": "Evidence ledger. Nothing is PASS without a human-supplied or CI-produced artefact link here. Engineering and CI are derived from PACKAGE_STATUS and this ledger's PR rows; live staging, human qualification and gate acceptance are recorded as NOT RUN / OPEN / NOT ACCEPTED until a real artefact exists. Seeded 2026-10-22 by 08A0 from git history and the committed dashboards; a human reviews every change.",
+ "as_of": "2026-10-22",
+ "main_sha": "f5cf7cb4",
+ "policy": {
+  "gate_evidence_valid_days": 30,
+  "language_approval_valid_days": 90,
+  "layer_evidence_valid_days": 30
+ },
+ "pull_requests": [
+  {
+   "number": 213,
+   "title": "First-wave integration documentation",
+   "branch": "docs/first-wave-integration",
+   "head_sha": "e94a3af3d3a3116675b5485ded68da06dcfbb680",
+   "merge_sha": "8a66d188f199af3e2e844f436adbdf11b0c624e3",
+   "merged_at": "2026-10-21",
+   "package": null,
+   "ci": {
+    "result": "success",
+    "checks": "",
+    "source": "docs/production/execution/RELEASE_READINESS_TRACKER.md section 8 (merged after green GitHub CI) and PACKAGE_STATUS",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/213/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 214,
+   "title": "06A Locale audit and language boundaries",
+   "branch": "feat/06a-locale-boundaries",
+   "head_sha": "a7559a9d06cc681966e0121b35329ced167ae7c3",
+   "merge_sha": "f9a06a928c3c1b7f7a410ec29f15a5a29e0a520c",
+   "merged_at": "2026-10-22",
+   "package": "06A",
+   "ci": {
+    "result": "success",
+    "checks": "",
+    "source": "docs/production/execution/RELEASE_READINESS_TRACKER.md section 8 (merged after green GitHub CI) and PACKAGE_STATUS",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/214/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 215,
+   "title": "02K Knowledge runtime and manifest contract (interface package)",
+   "branch": "feat/02k-knowledge-contract",
+   "head_sha": "f5eb3dc1420a2cd3a11c2ee12960c883e28b2c08",
+   "merge_sha": "657e45661e7353a12b1619abfa873e01f69dd2e3",
+   "merged_at": "2026-10-21",
+   "package": "02K",
+   "ci": {
+    "result": "success",
+    "checks": "12/12",
+    "source": "docs/production/execution/RELEASE_READINESS_TRACKER.md section 8 (merged after green GitHub CI) and PACKAGE_STATUS",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/215/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 216,
+   "title": "03A Admin navigation foundation (REQ-OWN-08)",
+   "branch": "feat/03a-admin-navigation",
+   "head_sha": "c652b2b1c5579edb2cf4f90ecc9d8c9df950c0a9",
+   "merge_sha": "f9218929cf250c9a933111a09a2991c97a760ae6",
+   "merged_at": "2026-10-22",
+   "package": "03A",
+   "ci": {
+    "result": "success",
+    "checks": "",
+    "source": "docs/production/execution/RELEASE_READINESS_TRACKER.md section 8 (merged after green GitHub CI) and PACKAGE_STATUS",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/216/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 217,
+   "title": "01B0 Prompt asset format and loader contract (interface package)",
+   "branch": "feat/01b0-prompt-contract",
+   "head_sha": "6f6d3839564387c137e7f35d168b3b6c5ab8ae4e",
+   "merge_sha": "0d75acddf742ddb397c6a14e8d55d7c2bd46c136",
+   "merged_at": "2026-10-21",
+   "package": "01B0",
+   "ci": {
+    "result": "success",
+    "checks": "12/12",
+    "source": "docs/production/execution/RELEASE_READINESS_TRACKER.md section 8 (merged after green GitHub CI) and PACKAGE_STATUS",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/217/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 218,
+   "title": "05A Hosted topology and platform hardening",
+   "branch": "feat/05a-staging-topology",
+   "head_sha": "776d7dde6bb4b3db7bb4b14b352e55cf5163673c",
+   "merge_sha": "9b6b1098b023b7d17dad17cc0174e6842de0a864",
+   "merged_at": "2026-10-21",
+   "package": "05A",
+   "ci": {
+    "result": "success",
+    "checks": "",
+    "source": "docs/production/execution/RELEASE_READINESS_TRACKER.md section 8 (merged after green GitHub CI) and PACKAGE_STATUS",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/218/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 219,
+   "title": "03K Admin metric and report contract (interface package)",
+   "branch": "feat/03k-admin-metric-contract",
+   "head_sha": "8afe350aae9d0129d2a05882241a8c59bb7e2e6b",
+   "merge_sha": "20241f4a2ec1616c9b1fce171466714fee7058a5",
+   "merged_at": "2026-10-21",
+   "package": "03K",
+   "ci": {
+    "result": "success",
+    "checks": "12/12",
+    "source": "docs/production/execution/RELEASE_READINESS_TRACKER.md section 8 (merged after green GitHub CI) and PACKAGE_STATUS",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/219/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 220,
+   "title": "01B Externalized, versioned prompts (REVIEW-02)",
+   "branch": "feat/01b-versioned-prompts",
+   "head_sha": "7c2b8791725a83e21d9f0eb521a765b39e079a28",
+   "merge_sha": "335d303636a8f1cdebe12dd1fba2f97fb3d4224f",
+   "merged_at": "2026-10-21",
+   "package": "01B",
+   "ci": {
+    "result": "success",
+    "checks": "12/12",
+    "source": "docs/production/execution/RELEASE_READINESS_TRACKER.md section 8 (merged after green GitHub CI) and PACKAGE_STATUS",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/220/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 221,
+   "title": "02A Permanent Knowledge reliability: persistence, environment identity, restore (REQ-OWN-05)",
+   "branch": "feat/02a-knowledge-persistence",
+   "head_sha": "5ffef5511087394fc6d9f48aff89b19fd821b008",
+   "merge_sha": "191cbc57cde723c8db24ad7b9f61599a4fbb6c85",
+   "merged_at": "2026-10-21",
+   "package": "02A",
+   "ci": {
+    "result": "success",
+    "checks": "",
+    "source": "docs/production/execution/RELEASE_READINESS_TRACKER.md section 8 (merged after green GitHub CI) and PACKAGE_STATUS",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/221/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 222,
+   "title": "PREP: version-independent migration head checks",
+   "branch": "chore/migration-head-agnostic",
+   "head_sha": "ec149638245b121ffbb4156b3896e1daca42a781",
+   "merge_sha": "f4c7136cd7271fc14119210c75fb142e0c053083",
+   "merged_at": "2026-10-22",
+   "package": "PREP",
+   "ci": {
+    "result": "success",
+    "checks": "12/12",
+    "source": "docs/production/execution/WAVE2_EXECUTION_DASHBOARD.md section 1 (12 of 12 checks on the final PR head)",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/222/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 223,
+   "title": "01A Prompt-injection corpus, risk score and quarantine (REVIEW-01 part 1)",
+   "branch": "feat/01a-injection-corpus",
+   "head_sha": "b3acd4be581b9909bef2d215943b0002824e2cf9",
+   "merge_sha": "75499730a42fa8a8ae0dfe9f199c58afc842c5dc",
+   "merged_at": "2026-10-22",
+   "package": "01A",
+   "ci": {
+    "result": "success",
+    "checks": "12/12",
+    "source": "docs/production/execution/WAVE2_EXECUTION_DASHBOARD.md section 1 (12 of 12 checks on the final PR head)",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/223/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 224,
+   "title": "03D1 Command Center metrics and AI operations read model (REQ-OWN-01, backend)",
+   "branch": "feat/03d1-command-center-metrics",
+   "head_sha": "89f6e66bd130f1130d6e37f1825a238e9ae13bba",
+   "merge_sha": "ac029adc8c6f586e30b027589752f3ac9f40ddb6",
+   "merged_at": "2026-10-22",
+   "package": "03D1",
+   "ci": {
+    "result": "success",
+    "checks": "12/12",
+    "source": "docs/production/execution/WAVE2_EXECUTION_DASHBOARD.md section 1 (12 of 12 checks on the final PR head)",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/224/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 225,
+   "title": "Wave 2 baseline documents",
+   "branch": "docs/wave2-baseline",
+   "head_sha": "b344d16b01c66bba6221596cf2bf01dc7a479160",
+   "merge_sha": "b5a523115ac347cc133807f6e93c8d08ec714613",
+   "merged_at": "2026-10-22",
+   "package": null,
+   "ci": {
+    "result": "success",
+    "checks": "12/12",
+    "source": "docs/production/execution/WAVE2_EXECUTION_DASHBOARD.md section 1 (12 of 12 checks on the final PR head)",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/225/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 226,
+   "title": "02C Real malware scanning for uploads",
+   "branch": "feat/02c-clamav-scanning",
+   "head_sha": "164d839ed47bc926fecedfcdcd609a934ac6ffd1",
+   "merge_sha": "568b8f38170bcf7f14585ab7510b2ac86aa547c9",
+   "merged_at": "2026-10-22",
+   "package": "02C",
+   "ci": {
+    "result": "success",
+    "checks": "12/12",
+    "source": "docs/production/execution/WAVE2_EXECUTION_DASHBOARD.md section 1 (12 of 12 checks on the final PR head)",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/226/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 227,
+   "title": "02B Embedding integrity and index manifests (REVIEW-04)",
+   "branch": "feat/02b-embedding-integrity",
+   "head_sha": "135070c85bfbb11a4e5d5d045a5e66c86f0b10e1",
+   "merge_sha": "6acdbc11b436fd14c2bd11fe09998586f35bddc6",
+   "merged_at": "2026-10-22",
+   "package": "02B",
+   "ci": {
+    "result": "success",
+    "checks": "12/12",
+    "source": "docs/production/execution/WAVE2_EXECUTION_DASHBOARD.md section 1 (12 of 12 checks on the final PR head)",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/227/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 228,
+   "title": "04E Invitation-only registration (REQ-BETA-01)",
+   "branch": "feat/04e-invitation-only",
+   "head_sha": "9d390df832e1aad9b4c7560ad242e77c6bd4c99d",
+   "merge_sha": "a763fdf28b683c5c6b5241024bdd58579086c932",
+   "merged_at": "2026-10-22",
+   "package": "04E",
+   "ci": {
+    "result": "success",
+    "checks": "12/12",
+    "source": "docs/production/execution/WAVE2_EXECUTION_DASHBOARD.md section 1 (12 of 12 checks on the final PR head)",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/228/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 229,
+   "title": "06H Language activation control: fail-closed enforcement of LG-01 to LG-14 before real-user activation",
+   "branch": "feat/06h-language-activation",
+   "head_sha": "a0d01c823403fb5f74a64847d1b1e030441760d4",
+   "merge_sha": "5d588a13df85ae81a442ff2aa30c4ac935dfe9af",
+   "merged_at": "2026-10-22",
+   "package": "06H",
+   "ci": {
+    "result": "success",
+    "checks": "12/12",
+    "source": "docs/production/execution/WAVE2_EXECUTION_DASHBOARD.md section 1 (12 of 12 checks on the final PR head)",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/229/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 230,
+   "title": "03B Admin Plans: Basic/Premium management (REQ-OWN-02)",
+   "branch": "feat/03b-admin-plans",
+   "head_sha": "01da216e021cb961d6d5c9e5ad98c93c7f1dc59a",
+   "merge_sha": "a4f540db0d2147ebd7548426cdb057345042fb32",
+   "merged_at": "2026-10-22",
+   "package": "03B",
+   "ci": {
+    "result": "success",
+    "checks": "12/12",
+    "source": "docs/production/execution/WAVE2_EXECUTION_DASHBOARD.md section 1 (12 of 12 checks on the final PR head)",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/230/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 231,
+   "title": "03C Admin Users: complete user management (REQ-OWN-03)",
+   "branch": "feat/03c-admin-users",
+   "head_sha": "94b76b7e672c0c9dfb4fcc8cb41d1b34d66d52f4",
+   "merge_sha": "6bcfbf53805aa11913fa8f69f8bc40407b71674a",
+   "merged_at": "2026-10-22",
+   "package": "03C",
+   "ci": {
+    "result": "success",
+    "checks": "12/12",
+    "source": "docs/production/execution/WAVE2_EXECUTION_DASHBOARD.md section 1 (12 of 12 checks on the final PR head)",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/231/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 232,
+   "title": "03E1 Reports registry, governed builder, saved configurations and exports (REQ-OWN-04, backend)",
+   "branch": "feat/03e1-reports-builder",
+   "head_sha": "0c3638bb833ce16f5523d4ee2c50ce00680e12bf",
+   "merge_sha": "0d84e7e6a80a2518be834e07b1a7b407eba9719c",
+   "merged_at": "2026-10-22",
+   "package": "03E1",
+   "ci": {
+    "result": "success",
+    "checks": "12/12",
+    "source": "docs/production/execution/WAVE2_EXECUTION_DASHBOARD.md section 1 (12 of 12 checks on the final PR head)",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/232/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 233,
+   "title": "04B Workspaces completion (REQ-OWN-07)",
+   "branch": "feat/04b-workspaces",
+   "head_sha": "c73a7280f3d6b0b5e0cb0a915ac46f9048756ad2",
+   "merge_sha": "e4aed133108ea7bf9b2d35b4b8b4a65bd8d428fc",
+   "merged_at": "2026-10-22",
+   "package": "04B",
+   "ci": {
+    "result": "success",
+    "checks": "12/12",
+    "source": "docs/production/execution/WAVE2_EXECUTION_DASHBOARD.md section 1 (12 of 12 checks on the final PR head)",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/233/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 234,
+   "title": "04A Story Bank completion (REQ-OWN-06)",
+   "branch": "feat/04a-story-bank",
+   "head_sha": "e32010a0d3981b9f016724c47076524518ece893",
+   "merge_sha": "4d7e57ac68adf03295302bc66f1243654afc9e5e",
+   "merged_at": "2026-10-22",
+   "package": "04A",
+   "ci": {
+    "result": "success",
+    "checks": "12/12",
+    "source": "docs/production/execution/WAVE2_EXECUTION_DASHBOARD.md section 1 (12 of 12 checks on the final PR head)",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/234/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  },
+  {
+   "number": 235,
+   "title": "Wave 3 execution plan documents",
+   "branch": "docs/wave3-plan",
+   "head_sha": "8cc054e210e73d931965f939443a9a929a2c66cb",
+   "merge_sha": "f5cf7cb41c0a8fa18aeecd0d1d5b60da38bf6137",
+   "merged_at": "2026-10-22",
+   "package": null,
+   "ci": {
+    "result": "not recorded",
+    "checks": "",
+    "source": "",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/235/checks"
+   },
+   "recorded_by": "08A0 seed: git merge history (merge commit and second parent) plus the committed dashboards",
+   "recorded_on": "2026-10-22"
+  }
+ ],
+ "packages": {
+  "PREP": {
+   "prs": [
+    222
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/PREP-HEAD_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "N/A",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "NONE REQUIRED",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "02K": {
+   "prs": [
+    215
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/02K_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "N/A",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "NONE REQUIRED",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "01B0": {
+   "prs": [
+    217
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/01B0_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "N/A",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "NONE REQUIRED",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "03K": {
+   "prs": [
+    219
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/03K_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "N/A",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "NONE REQUIRED",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "01B": {
+   "prs": [
+    220
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/01B_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "NONE REQUIRED",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "05A": {
+   "prs": [
+    218
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/05A_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "02A": {
+   "prs": [
+    221
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/02A_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "NONE REQUIRED",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "03A": {
+   "prs": [
+    216
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/03A_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "NONE REQUIRED",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "06A": {
+   "prs": [
+    214
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/06A_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "N/A",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "01A": {
+   "prs": [
+    223
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/01A_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "02B": {
+   "prs": [
+    227
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/02B_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "02C": {
+   "prs": [
+    226
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/02C_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "NONE REQUIRED",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "06H": {
+   "prs": [
+    229
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/06H_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "03D1": {
+   "prs": [
+    224
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/03D1_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "NONE REQUIRED",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "03B": {
+   "prs": [
+    230
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/03B_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "03C": {
+   "prs": [
+    231
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/03C_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "03E1": {
+   "prs": [
+    232
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/03E1_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "04E": {
+   "prs": [
+    228
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/04E_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "04A": {
+   "prs": [
+    234
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/04A_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "04B": {
+   "prs": [
+    233
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/evidence/04B_EVIDENCE.md"
+    ],
+    "recorded_by": "08A0 seed from the committed package evidence files",
+    "recorded_on": "2026-10-22"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  }
+ },
+ "gates": {
+  "PG-01": {
+   "state": "BLOCKED",
+   "evidence": [],
+   "recorded_by": "08A0 seed from RELEASE_READINESS_TRACKER.md",
+   "recorded_on": "2026-10-22"
+  },
+  "PG-02": {
+   "state": "IN PROGRESS",
+   "evidence": [],
+   "recorded_by": "08A0 seed from RELEASE_READINESS_TRACKER.md",
+   "recorded_on": "2026-10-22"
+  },
+  "PG-03": {
+   "state": "IN PROGRESS",
+   "evidence": [],
+   "recorded_by": "08A0 seed from RELEASE_READINESS_TRACKER.md",
+   "recorded_on": "2026-10-22"
+  },
+  "PG-04": {
+   "state": "NOT STARTED",
+   "evidence": [],
+   "recorded_by": "08A0 seed from RELEASE_READINESS_TRACKER.md",
+   "recorded_on": "2026-10-22"
+  },
+  "PG-05": {
+   "state": "IN PROGRESS",
+   "evidence": [],
+   "recorded_by": "08A0 seed from RELEASE_READINESS_TRACKER.md",
+   "recorded_on": "2026-10-22"
+  },
+  "PG-06": {
+   "state": "NOT STARTED",
+   "evidence": [],
+   "recorded_by": "08A0 seed from RELEASE_READINESS_TRACKER.md",
+   "recorded_on": "2026-10-22"
+  },
+  "PG-07": {
+   "state": "BLOCKED",
+   "evidence": [],
+   "recorded_by": "08A0 seed from RELEASE_READINESS_TRACKER.md",
+   "recorded_on": "2026-10-22"
+  },
+  "PG-08": {
+   "state": "IN PROGRESS",
+   "evidence": [],
+   "recorded_by": "08A0 seed from RELEASE_READINESS_TRACKER.md",
+   "recorded_on": "2026-10-22"
+  },
+  "PG-09": {
+   "state": "NOT STARTED",
+   "evidence": [],
+   "recorded_by": "08A0 seed from RELEASE_READINESS_TRACKER.md",
+   "recorded_on": "2026-10-22"
+  },
+  "PG-10": {
+   "state": "IN PROGRESS",
+   "evidence": [],
+   "recorded_by": "08A0 seed from RELEASE_READINESS_TRACKER.md",
+   "recorded_on": "2026-10-22"
+  },
+  "PG-11": {
+   "state": "PASS",
+   "evidence": [
+    {
+     "kind": "document",
+     "link": "docs/production/PRODUCTION_ISSUE_RECONCILIATION.json",
+     "sha": "f5cf7cb4",
+     "date": "2026-10-22",
+     "produced_by": "GitHub Actions CI: scripts/production/reconcile_issues.py check and tests/test_production_reconciliation.py",
+     "produced_by_type": "ci",
+     "binding": "date",
+     "note": "machine-checked reconciliation (452 items, 0 unmapped); re-run on every change; also run by release_evidence.py check"
+    }
+   ],
+   "recorded_by": "08A0 seed from RELEASE_READINESS_TRACKER.md",
+   "recorded_on": "2026-10-22"
+  },
+  "PG-12": {
+   "state": "IN PROGRESS",
+   "evidence": [],
+   "recorded_by": "08A0 seed from RELEASE_READINESS_TRACKER.md",
+   "recorded_on": "2026-10-22"
+  },
+  "PG-13": {
+   "state": "IN PROGRESS",
+   "evidence": [],
+   "recorded_by": "08A0 seed from RELEASE_READINESS_TRACKER.md",
+   "recorded_on": "2026-10-22"
+  },
+  "PG-14": {
+   "state": "IN PROGRESS",
+   "evidence": [],
+   "recorded_by": "08A0 seed from RELEASE_READINESS_TRACKER.md",
+   "recorded_on": "2026-10-22"
+  },
+  "PG-15": {
+   "state": "NOT STARTED",
+   "evidence": [],
+   "recorded_by": "08A0 seed from RELEASE_READINESS_TRACKER.md",
+   "recorded_on": "2026-10-22"
+  }
+ },
+ "language_gates": {
+  "en": {
+   "gates": {
+    "LG-01": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "docs/production/execution/evidence/06A_LOCALE_AUDIT.md; scripts/eval_locale_inventory.py (generated per-language inventory; the 06A evidence file records the SHA)",
+     "note": "language_readiness.json records PASS on engineering evidence; no named human approver, approval date or release SHA exists, so the ledger does not accept it as passed"
+    },
+    "LG-02": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "scripts/eval_i18n_l10n.py, frontend/scripts/scan-i18n.mjs (0 unexplained literals), frontend/tests/i18n.test.tsx: key parity proven; translations unreviewed; no per-language Playwright English-leak run; native review pending (LG-11)"
+    },
+    "LG-03": {
+     "state": "NOT RUN"
+    },
+    "LG-04": {
+     "state": "NOT RUN"
+    },
+    "LG-05": {
+     "state": "NOT STARTED"
+    },
+    "LG-06": {
+     "state": "NOT STARTED"
+    },
+    "LG-07": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_language_geography_separation_06a.py proves language never changes stored geography in account, onboarding, Opportunity, interview creation and agent run; owner decision on market suggestions and per-market source qualification NOT done, so not PASS"
+    },
+    "LG-08": {
+     "state": "NOT STARTED"
+    },
+    "LG-09": {
+     "state": "NOT RUN"
+    },
+    "LG-10": {
+     "state": "NOT STARTED"
+    },
+    "LG-11": {
+     "state": "NOT STARTED"
+    },
+    "LG-12": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_w97a_career_language.py and frontend/tests/career-answer-language.test.tsx cover ownership for the localized templates; not extended per language through live output"
+    },
+    "LG-13": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "docs/production/execution/language_readiness.json plus tests/test_language_readiness_06a.py (claims discipline); no language has passed all gates, so no aggregate claim is made"
+    },
+    "LG-14": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_language_boundaries_06a.py: Admin English-only, ru not offered, no zh/hi/ar registered, speech languages unchanged, ACTIVE_CANDIDATE_LOCALES parity with the frontend and capabilities",
+     "note": "language_readiness.json records PASS on engineering evidence; no named human approver, approval date or release SHA exists, so the ledger does not accept it as passed"
+    }
+   }
+  },
+  "de": {
+   "gates": {
+    "LG-01": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "docs/production/execution/evidence/06A_LOCALE_AUDIT.md; scripts/eval_locale_inventory.py (generated per-language inventory; the 06A evidence file records the SHA)",
+     "note": "language_readiness.json records PASS on engineering evidence; no named human approver, approval date or release SHA exists, so the ledger does not accept it as passed"
+    },
+    "LG-02": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "scripts/eval_i18n_l10n.py, frontend/scripts/scan-i18n.mjs (0 unexplained literals), frontend/tests/i18n.test.tsx: key parity proven; translations unreviewed; no per-language Playwright English-leak run; native review pending (LG-11)"
+    },
+    "LG-03": {
+     "state": "NOT RUN"
+    },
+    "LG-04": {
+     "state": "NOT RUN"
+    },
+    "LG-05": {
+     "state": "NOT STARTED"
+    },
+    "LG-06": {
+     "state": "NOT STARTED"
+    },
+    "LG-07": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_language_geography_separation_06a.py proves language never changes stored geography in account, onboarding, Opportunity, interview creation and agent run; owner decision on market suggestions and per-market source qualification NOT done, so not PASS"
+    },
+    "LG-08": {
+     "state": "NOT STARTED"
+    },
+    "LG-09": {
+     "state": "NOT RUN"
+    },
+    "LG-10": {
+     "state": "NOT STARTED"
+    },
+    "LG-11": {
+     "state": "NOT STARTED"
+    },
+    "LG-12": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_w97a_career_language.py and frontend/tests/career-answer-language.test.tsx cover ownership for the localized templates; not extended per language through live output"
+    },
+    "LG-13": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "docs/production/execution/language_readiness.json plus tests/test_language_readiness_06a.py (claims discipline); no language has passed all gates, so no aggregate claim is made"
+    },
+    "LG-14": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_language_boundaries_06a.py: Admin English-only, ru not offered, no zh/hi/ar registered, speech languages unchanged, ACTIVE_CANDIDATE_LOCALES parity with the frontend and capabilities",
+     "note": "language_readiness.json records PASS on engineering evidence; no named human approver, approval date or release SHA exists, so the ledger does not accept it as passed"
+    }
+   }
+  },
+  "es": {
+   "gates": {
+    "LG-01": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "docs/production/execution/evidence/06A_LOCALE_AUDIT.md; scripts/eval_locale_inventory.py (generated per-language inventory; the 06A evidence file records the SHA)",
+     "note": "language_readiness.json records PASS on engineering evidence; no named human approver, approval date or release SHA exists, so the ledger does not accept it as passed"
+    },
+    "LG-02": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "scripts/eval_i18n_l10n.py, frontend/scripts/scan-i18n.mjs (0 unexplained literals), frontend/tests/i18n.test.tsx: key parity proven; translations unreviewed; no per-language Playwright English-leak run; native review pending (LG-11)"
+    },
+    "LG-03": {
+     "state": "NOT RUN"
+    },
+    "LG-04": {
+     "state": "NOT RUN"
+    },
+    "LG-05": {
+     "state": "NOT STARTED"
+    },
+    "LG-06": {
+     "state": "NOT STARTED"
+    },
+    "LG-07": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_language_geography_separation_06a.py proves language never changes stored geography in account, onboarding, Opportunity, interview creation and agent run; owner decision on market suggestions and per-market source qualification NOT done, so not PASS"
+    },
+    "LG-08": {
+     "state": "NOT STARTED"
+    },
+    "LG-09": {
+     "state": "NOT RUN"
+    },
+    "LG-10": {
+     "state": "NOT STARTED"
+    },
+    "LG-11": {
+     "state": "NOT STARTED"
+    },
+    "LG-12": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_w97a_career_language.py and frontend/tests/career-answer-language.test.tsx cover ownership for the localized templates; not extended per language through live output"
+    },
+    "LG-13": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "docs/production/execution/language_readiness.json plus tests/test_language_readiness_06a.py (claims discipline); no language has passed all gates, so no aggregate claim is made"
+    },
+    "LG-14": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_language_boundaries_06a.py: Admin English-only, ru not offered, no zh/hi/ar registered, speech languages unchanged, ACTIVE_CANDIDATE_LOCALES parity with the frontend and capabilities",
+     "note": "language_readiness.json records PASS on engineering evidence; no named human approver, approval date or release SHA exists, so the ledger does not accept it as passed"
+    }
+   }
+  },
+  "it": {
+   "gates": {
+    "LG-01": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "docs/production/execution/evidence/06A_LOCALE_AUDIT.md; scripts/eval_locale_inventory.py (generated per-language inventory; the 06A evidence file records the SHA)",
+     "note": "language_readiness.json records PASS on engineering evidence; no named human approver, approval date or release SHA exists, so the ledger does not accept it as passed"
+    },
+    "LG-02": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "scripts/eval_i18n_l10n.py, frontend/scripts/scan-i18n.mjs (0 unexplained literals), frontend/tests/i18n.test.tsx: key parity proven; translations unreviewed; no per-language Playwright English-leak run; native review pending (LG-11)"
+    },
+    "LG-03": {
+     "state": "NOT RUN"
+    },
+    "LG-04": {
+     "state": "NOT RUN"
+    },
+    "LG-05": {
+     "state": "NOT STARTED"
+    },
+    "LG-06": {
+     "state": "NOT STARTED"
+    },
+    "LG-07": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_language_geography_separation_06a.py proves language never changes stored geography in account, onboarding, Opportunity, interview creation and agent run; owner decision on market suggestions and per-market source qualification NOT done, so not PASS"
+    },
+    "LG-08": {
+     "state": "NOT STARTED"
+    },
+    "LG-09": {
+     "state": "NOT RUN"
+    },
+    "LG-10": {
+     "state": "NOT STARTED"
+    },
+    "LG-11": {
+     "state": "NOT STARTED"
+    },
+    "LG-12": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_w97a_career_language.py and frontend/tests/career-answer-language.test.tsx cover ownership for the localized templates; not extended per language through live output"
+    },
+    "LG-13": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "docs/production/execution/language_readiness.json plus tests/test_language_readiness_06a.py (claims discipline); no language has passed all gates, so no aggregate claim is made"
+    },
+    "LG-14": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_language_boundaries_06a.py: Admin English-only, ru not offered, no zh/hi/ar registered, speech languages unchanged, ACTIVE_CANDIDATE_LOCALES parity with the frontend and capabilities",
+     "note": "language_readiness.json records PASS on engineering evidence; no named human approver, approval date or release SHA exists, so the ledger does not accept it as passed"
+    }
+   }
+  },
+  "pt": {
+   "gates": {
+    "LG-01": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "docs/production/execution/evidence/06A_LOCALE_AUDIT.md; scripts/eval_locale_inventory.py (generated per-language inventory; the 06A evidence file records the SHA)",
+     "note": "language_readiness.json records PASS on engineering evidence; no named human approver, approval date or release SHA exists, so the ledger does not accept it as passed"
+    },
+    "LG-02": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "scripts/eval_i18n_l10n.py, frontend/scripts/scan-i18n.mjs (0 unexplained literals), frontend/tests/i18n.test.tsx: key parity proven; translations unreviewed; no per-language Playwright English-leak run; native review pending (LG-11)"
+    },
+    "LG-03": {
+     "state": "NOT RUN"
+    },
+    "LG-04": {
+     "state": "NOT RUN"
+    },
+    "LG-05": {
+     "state": "NOT STARTED"
+    },
+    "LG-06": {
+     "state": "NOT STARTED"
+    },
+    "LG-07": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_language_geography_separation_06a.py proves language never changes stored geography in account, onboarding, Opportunity, interview creation and agent run; owner decision on market suggestions and per-market source qualification NOT done, so not PASS"
+    },
+    "LG-08": {
+     "state": "NOT STARTED"
+    },
+    "LG-09": {
+     "state": "NOT RUN"
+    },
+    "LG-10": {
+     "state": "NOT STARTED"
+    },
+    "LG-11": {
+     "state": "NOT STARTED"
+    },
+    "LG-12": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_w97a_career_language.py and frontend/tests/career-answer-language.test.tsx cover ownership for the localized templates; not extended per language through live output"
+    },
+    "LG-13": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "docs/production/execution/language_readiness.json plus tests/test_language_readiness_06a.py (claims discipline); no language has passed all gates, so no aggregate claim is made"
+    },
+    "LG-14": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_language_boundaries_06a.py: Admin English-only, ru not offered, no zh/hi/ar registered, speech languages unchanged, ACTIVE_CANDIDATE_LOCALES parity with the frontend and capabilities",
+     "note": "language_readiness.json records PASS on engineering evidence; no named human approver, approval date or release SHA exists, so the ledger does not accept it as passed"
+    }
+   }
+  },
+  "fr": {
+   "gates": {
+    "LG-01": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "docs/production/execution/evidence/06A_LOCALE_AUDIT.md; scripts/eval_locale_inventory.py (generated per-language inventory; the 06A evidence file records the SHA)",
+     "note": "language_readiness.json records PASS on engineering evidence; no named human approver, approval date or release SHA exists, so the ledger does not accept it as passed"
+    },
+    "LG-02": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "scripts/eval_i18n_l10n.py, frontend/scripts/scan-i18n.mjs (0 unexplained literals), frontend/tests/i18n.test.tsx: key parity proven; translations unreviewed; no per-language Playwright English-leak run; native review pending (LG-11)"
+    },
+    "LG-03": {
+     "state": "NOT RUN"
+    },
+    "LG-04": {
+     "state": "NOT RUN"
+    },
+    "LG-05": {
+     "state": "NOT STARTED"
+    },
+    "LG-06": {
+     "state": "NOT STARTED"
+    },
+    "LG-07": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_language_geography_separation_06a.py proves language never changes stored geography in account, onboarding, Opportunity, interview creation and agent run; owner decision on market suggestions and per-market source qualification NOT done, so not PASS"
+    },
+    "LG-08": {
+     "state": "NOT STARTED"
+    },
+    "LG-09": {
+     "state": "NOT RUN"
+    },
+    "LG-10": {
+     "state": "NOT STARTED"
+    },
+    "LG-11": {
+     "state": "NOT STARTED"
+    },
+    "LG-12": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_w97a_career_language.py and frontend/tests/career-answer-language.test.tsx cover ownership for the localized templates; not extended per language through live output"
+    },
+    "LG-13": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "docs/production/execution/language_readiness.json plus tests/test_language_readiness_06a.py (claims discipline); no language has passed all gates, so no aggregate claim is made"
+    },
+    "LG-14": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_language_boundaries_06a.py: Admin English-only, ru not offered, no zh/hi/ar registered, speech languages unchanged, ACTIVE_CANDIDATE_LOCALES parity with the frontend and capabilities",
+     "note": "language_readiness.json records PASS on engineering evidence; no named human approver, approval date or release SHA exists, so the ledger does not accept it as passed"
+    }
+   }
+  },
+  "nl": {
+   "gates": {
+    "LG-01": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "docs/production/execution/evidence/06A_LOCALE_AUDIT.md; scripts/eval_locale_inventory.py (generated per-language inventory; the 06A evidence file records the SHA)",
+     "note": "language_readiness.json records PASS on engineering evidence; no named human approver, approval date or release SHA exists, so the ledger does not accept it as passed"
+    },
+    "LG-02": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "scripts/eval_i18n_l10n.py, frontend/scripts/scan-i18n.mjs (0 unexplained literals), frontend/tests/i18n.test.tsx: key parity proven; translations unreviewed; no per-language Playwright English-leak run; native review pending (LG-11)"
+    },
+    "LG-03": {
+     "state": "NOT RUN"
+    },
+    "LG-04": {
+     "state": "NOT RUN"
+    },
+    "LG-05": {
+     "state": "NOT STARTED"
+    },
+    "LG-06": {
+     "state": "NOT STARTED"
+    },
+    "LG-07": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_language_geography_separation_06a.py proves language never changes stored geography in account, onboarding, Opportunity, interview creation and agent run; owner decision on market suggestions and per-market source qualification NOT done, so not PASS"
+    },
+    "LG-08": {
+     "state": "NOT STARTED"
+    },
+    "LG-09": {
+     "state": "NOT RUN"
+    },
+    "LG-10": {
+     "state": "NOT STARTED"
+    },
+    "LG-11": {
+     "state": "NOT STARTED"
+    },
+    "LG-12": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_w97a_career_language.py and frontend/tests/career-answer-language.test.tsx cover ownership for the localized templates; not extended per language through live output"
+    },
+    "LG-13": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "docs/production/execution/language_readiness.json plus tests/test_language_readiness_06a.py (claims discipline); no language has passed all gates, so no aggregate claim is made"
+    },
+    "LG-14": {
+     "state": "ENGINEERING DRAFT",
+     "evidence": "tests/test_language_boundaries_06a.py: Admin English-only, ru not offered, no zh/hi/ar registered, speech languages unchanged, ACTIVE_CANDIDATE_LOCALES parity with the frontend and capabilities",
+     "note": "language_readiness.json records PASS on engineering evidence; no named human approver, approval date or release SHA exists, so the ledger does not accept it as passed"
+    }
+   }
+  }
+ }
+}

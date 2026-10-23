@@ -8,6 +8,7 @@ import { api } from "@/lib/api/client";
 import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
 import type { AIEnvironment } from "@/lib/admin/types";
 import { ActionDialog } from "./ActionDialog";
+import { AiOperationsDashboard } from "./CommandCenterDashboard";
 import { KIND_LABEL, SOURCE_LABEL, STATE_LABEL, label, shortHash } from "./aiLabels";
 import { Panel, PermissionGate, ResourceState, Stat, StatusLabel, apiMessage, btn, field, useAdminResource, ScrollRegion } from "./ui";
 
@@ -62,6 +63,8 @@ function Body() {
         <p className="text-sm">A configuration chooses which approved catalogue model serves Fast, Balanced and Advanced and sets a few bounded numbers. It cannot become active without a passed evaluation of its exact content and a different second approver. Evaluations are deterministic checks of the configuration. They do not measure live answer quality.</p>
       </section>
       {notice ? <p role="status" className="text-sm">{notice}</p> : null}
+
+      <AiOperationsDashboard />
 
       <ResourceState loaded={overview}>
         {overview.state === "ready" ? (

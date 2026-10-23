@@ -616,12 +616,15 @@ def test_plan_admin_does_not_import_or_write_billing_state(env):
     assert not hasattr(billing_policy, "LIVE_BILLING_ENABLED") or billing_policy.LIVE_BILLING_ENABLED is False
 
 
-def test_head_is_unchanged_by_this_package():
-    """No migration: revisions are derived, so the chain is whatever the prep branch left (verified dynamically, never by literal)."""
+def test_03b_introduced_no_schema_revision_and_the_chain_stays_valid():
+    """03B added no migration: its revisions are derived hashes. Verified from the repository CONTENT, never from git history or a branch ref, so the check holds on any branch,
+    in a shallow CI checkout and after other packages add revisions of their own (a git-diff version failed on every branch that adds a migration)."""
+    import re
+    from pathlib import Path
+
     from tests import _alembic_head as H
-    assert H.repository_head() and H.assert_chain()
-    import subprocess
-    # Three-dot against main: only what THIS branch changed since it diverged, so revisions merged into main by other packages (0041 to 0043) never count against 03B.
-    out = subprocess.run(["git", "diff", "--name-only", "origin/main...HEAD", "--", "migrations/versions"],
-                         capture_output=True, text=True, cwd=H.ROOT)
-    assert out.returncode != 0 or out.stdout.strip() == ""      # when the ref exists, this package added no revision
+
+    assert H.repository_head() and H.assert_chain()                        # one valid linear chain, whatever its head
+    markers = re.compile(r"plan_revision|plans_admin|restore_as_draft|assign_in_session|PlanMatrix|admin_plans_ops")
+    offenders = [p.name for p in sorted(Path(H.ROOT, "migrations/versions").glob("0*.py")) if markers.search(p.read_text(encoding="utf-8"))]
+    assert offenders == [], f"a migration references the 03B plan-administration code: {offenders}"

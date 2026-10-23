@@ -73,7 +73,8 @@ class TestHeldoutFrozen:
     def test_every_case_added_after_the_freeze_is_dev(self, cases):
         added = cases[FROZEN_ORIGINAL_CASE_COUNT:]
         assert added, "expected the W2 dev extension"
-        assert all(c["id"].startswith("INJ-D2-") and c["split"] == "dev" for c in added)
+        # W2 added INJ-D2-*; 06E later appended INJ-L6-* and INJ-L6P-* (checked in test_language_injection_06e.py). Every case added after the freeze is still dev.
+        assert all(c["id"].startswith(("INJ-D2-", "INJ-L6-", "INJ-L6P-")) and c["split"] == "dev" for c in added)
 
     def test_heldout_membership_is_exactly_the_original_set(self, cases):
         held = [c for c in cases if c["split"] == "heldout"]

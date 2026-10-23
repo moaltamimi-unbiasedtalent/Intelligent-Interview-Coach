@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ask4mo.release_evidence.v1",
+  "description": "Reviewable documentation of the release evidence ledger shape. The enforced validator is scripts/production/release_evidence.py schema_problems (dependency free); tests/test_release_evidence_08a0.py keeps the enums below equal to the module constants. Semantic rules (PASS needs an artefact link, staleness, tracker agreement, language-gate parity) live in check_ledger, not in this schema.",
+  "type": "object",
+  "required": ["schema", "as_of", "main_sha", "policy", "pull_requests", "packages", "gates", "language_gates"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "ask4mo.release_evidence.v1"},
+    "note": {"type": "string"},
+    "as_of": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+    "main_sha": {"type": "string", "pattern": "^[0-9a-f]{7,40}$"},
+    "policy": {
+      "type": "object",
+      "required": ["gate_evidence_valid_days", "language_approval_valid_days", "layer_evidence_valid_days"],
+      "additionalProperties": false,
+      "properties": {
+        "gate_evidence_valid_days": {"type": "integer", "minimum": 1},
+        "language_approval_valid_days": {"type": "integer", "minimum": 1},
+        "layer_evidence_valid_days": {"type": "integer", "minimum": 1}
+      }
+    },
+    "pull_requests": {"type": "array", "items": {"$ref": "#/$defs/pull_request"}},
+    "packages": {"type": "object", "additionalProperties": {"$ref": "#/$defs/package"}},
+    "gates": {"type": "object", "description": "exactly PG-01 .. PG-15", "additionalProperties": {"$ref": "#/$defs/gate"}},
+    "language_gates": {"type": "object", "description": "language code -> record; gates exactly LG-01 .. LG-14, same field names as docs/production/execution/language_readiness.json", "additionalProperties": {"$ref": "#/$defs/language"}}
+  },
+  "$defs": {
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{7,40}$"},
+    "date": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+    "evidence": {
+      "type": "object",
+      "required": ["kind", "link", "sha", "date", "produced_by", "produced_by_type"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {"type": "string", "minLength": 1},
+        "link": {"type": "string", "description": "https URL or an existing repository-relative file"},
+        "sha": {"$ref": "#/$defs/sha"},
+        "date": {"$ref": "#/$defs/date"},
+        "produced_by": {"type": "string", "minLength": 1},
+        "produced_by_type": {"enum": ["human", "ci"]},
+        "binding": {"enum": ["date", "release_sha"]},
+        "valid_days": {"type": "integer", "minimum": 1},
+        "note": {"type": "string"}
+      }
+    },
+    "pull_request": {
+      "type": "object",
+      "required": ["number", "title", "branch", "head_sha", "merge_sha", "merged_at", "package", "ci", "recorded_by", "recorded_on"],
+      "additionalProperties": false,
+      "properties": {
+        "number": {"type": "integer", "minimum": 1},
+        "title": {"type": "string"},
+        "branch": {"type": "string"},
+        "head_sha": {"$ref": "#/$defs/sha"},
+        "merge_sha": {"$ref": "#/$defs/sha"},
+        "merged_at": {"$ref": "#/$defs/date"},
+        "package": {"type": ["string", "null"]},
+        "ci": {
+          "type": "object",
+          "required": ["result", "checks", "source", "url"],
+          "additionalProperties": false,
+          "properties": {
+            "result": {"enum": ["success", "failure", "not recorded", "not run"]},
+            "checks": {"type": "string"},
+            "source": {"type": "string"},
+            "url": {"type": "string"}
+          }
+        },
+        "recorded_by": {"type": "string"},
+        "recorded_on": {"$ref": "#/$defs/date"}
+      }
+    },
+    "layer": {
+      "type": "object",
+      "required": ["state", "evidence"],
+      "additionalProperties": false,
+      "properties": {
+        "state": {"type": "string"},
+        "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence"}},
+        "approver": {"type": "string"},
+        "approved_on": {"$ref": "#/$defs/date"},
+        "note": {"type": "string"}
+      }
+    },
+    "package": {
+      "type": "object",
+      "required": ["prs", "acceptance", "layers"],
+      "additionalProperties": false,
+      "properties": {
+        "prs": {"type": "array", "items": {"type": "integer"}},
+        "acceptance": {
+          "type": "object",
+          "required": ["artefacts", "recorded_by", "recorded_on"],
+          "additionalProperties": false,
+          "properties": {"artefacts": {"type": "array", "items": {"type": "string"}}, "recorded_by": {"type": "string"}, "recorded_on": {"$ref": "#/$defs/date"}}
+        },
+        "layers": {
+          "type": "object",
+          "required": ["live_staging", "human_qualification", "gate_acceptance"],
+          "additionalProperties": false,
+          "properties": {
+            "live_staging": {"$ref": "#/$defs/layer", "description": "states: NOT RUN, N/A, FAIL, PASS"},
+            "human_qualification": {"$ref": "#/$defs/layer", "description": "states: OPEN, NONE REQUIRED, REJECTED, COMPLETE"},
+            "gate_acceptance": {"$ref": "#/$defs/layer", "description": "states: NOT ACCEPTED, REJECTED, ACCEPTED"}
+          }
+        }
+      }
+    },
+    "gate": {
+      "type": "object",
+      "required": ["state", "evidence", "recorded_by", "recorded_on"],
+      "additionalProperties": false,
+      "properties": {
+        "state": {"enum": ["NOT STARTED", "IN PROGRESS", "READY FOR REVIEW", "PASS", "FAIL", "BLOCKED"]},
+        "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence"}},
+        "recorded_by": {"type": "string"},
+        "recorded_on": {"$ref": "#/$defs/date"}
+      }
+    },
+    "language": {
+      "type": "object",
+      "required": ["gates"],
+      "additionalProperties": false,
+      "properties": {
+        "release_sha": {"oneOf": [{"$ref": "#/$defs/sha"}, {"type": "null"}]},
+        "gates": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["state"],
+            "additionalProperties": false,
+            "properties": {
+              "state": {"enum": ["NOT STARTED", "NOT RUN", "ENGINEERING DRAFT", "PASS"]},
+              "evidence": {"type": "string"},
+              "approver": {"type": "string"},
+              "approved_on": {"$ref": "#/$defs/date"},
+              "release_sha": {"$ref": "#/$defs/sha"},
+              "approved_until": {"oneOf": [{"$ref": "#/$defs/date"}, {"type": "null"}]},
+              "note": {"type": "string"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

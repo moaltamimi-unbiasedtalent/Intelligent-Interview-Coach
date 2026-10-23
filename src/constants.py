@@ -101,6 +101,10 @@ MAX_INSTRUCTION_CHARS = 2_000
 
 INJECTION_WARN_SCORE = 2  # score at/above this warns
 INJECTION_BLOCK_SCORE = 4  # score at/above this blocks
+# 06E (OD-INPUT-GUARD-LANGUAGES): the interview input guard was English only. True adds the non-English rule stage (src.security.detect_injection). Evidence on the DEV split (in-sample, engineering-
+# authored, not native-reviewed): non-English attack detection by this guard 4-24 percent -> 100 percent, benign false positives unchanged (0 added in every language, 198 benign cases). Set False to
+# restore the English-only guard exactly. A code constant, not a setting: no request, Admin action or flag can change it. The owner ratifies or reverses it (OD-INPUT-GUARD-LANGUAGES).
+MULTILINGUAL_INPUT_GUARD_ENABLED = True
 
 # Maximum size of a model response the output guard will accept before
 # treating it as anomalous.

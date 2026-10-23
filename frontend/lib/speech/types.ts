@@ -20,6 +20,7 @@ export type DictationErrorKind =
   | "no-microphone" // no capture device / audio capture failed
   | "no-speech" // nothing was heard
   | "network" // the recognition service could not be reached
+  | "language-not-supported" // the browser engine reports it cannot recognise the selected dictation language (04F)
   | "aborted" // stopped/cancelled
   | "error"; // any other failure
 

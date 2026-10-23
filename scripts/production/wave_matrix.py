@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-DOC = ROOT / "docs/production/execution/WAVE3_EXECUTION_PLAN.md"
+DOCS = [ROOT / "docs/production/execution/WAVE3_EXECUTION_PLAN.md", ROOT / "docs/production/execution/PROJECT_STATUS_DASHBOARD.md"]
 START, END = "<!-- MATRIX:START -->", "<!-- MATRIX:END -->"
 spec = importlib.util.spec_from_file_location("execution_packages", ROOT / "scripts/production/execution_packages.py")
 E = importlib.util.module_from_spec(spec)
@@ -105,19 +105,24 @@ def main(argv: list[str]) -> int:
     if missing or extra:
         print(f"FAIL: layers missing {missing} unknown {extra}")
         return 1
-    text = DOC.read_text(encoding="utf-8") if DOC.exists() else ""
-    if START not in text or END not in text:
-        print("FAIL: matrix markers missing in the Wave 3 plan")
-        return 1
-    new = text[: text.index(START)] + block() + text[text.index(END) + len(END):]
+    stale = []
+    for doc in DOCS:
+        text = doc.read_text(encoding="utf-8") if doc.exists() else ""
+        if START not in text or END not in text:
+            print(f"FAIL: matrix markers missing in {doc.name}")
+            return 1
+        new = text[: text.index(START)] + block() + text[text.index(END) + len(END):]
+        if argv and argv[0] == "generate":
+            doc.write_text(new, encoding="utf-8")
+        elif new != text:
+            stale.append(doc.name)
     if argv and argv[0] == "generate":
-        DOC.write_text(new, encoding="utf-8")
-        print(f"wrote matrix for {len(E.PACKAGES)} packages")
+        print(f"wrote matrix for {len(E.PACKAGES)} packages into {len(DOCS)} documents")
         return 0
-    if new != text:
-        print("FAIL: the matrix in WAVE3_EXECUTION_PLAN.md is stale; run `python scripts/production/wave_matrix.py generate`")
+    if stale:
+        print(f"FAIL: the matrix is stale in {stale}; run `python scripts/production/wave_matrix.py generate`")
         return 1
-    print(f"OK: five-layer matrix covers {len(E.PACKAGES)} packages and is fresh")
+    print(f"OK: five-layer matrix covers {len(E.PACKAGES)} packages and is fresh in {len(DOCS)} documents")
     return 0
 
 

@@ -56,6 +56,15 @@ def main(argv: list[str] | None = None) -> int:
     if not a.target_dir:
         print(json.dumps({"ok": False, "codes": ["target_dir_required"]}))
         return 1
+    from src.copilot.embedding_budget import is_free
+
+    if not is_free(embedder):
+        # 05C: a paid embedder also needs the governed budget (approved marker, durable ledger, ceilings, kill switch); the existing confirmation and approval checks are unchanged.
+        from src.llm.budget.script_guard import guard_paid_script
+
+        if guard_paid_script("knowledge_embedding_rebuild", category="embedding") is not None:
+            print(json.dumps({"ok": False, "codes": ["budget_governor_refused"]}))
+            return 1
     docs = LocalDocumentStore(runtime.private_files_dir)
     rep = rebuild_into_new_index(sf, docs, target_dir=a.target_dir, embedder=embedder, active_index_dir=chroma, environment=runtime.environment,
                                  confirm_embedder=a.confirm_embedder, execute=True)

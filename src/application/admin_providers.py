@@ -63,7 +63,34 @@ def _server_speech(runtime):
         return None
 
 
-def build_providers_response(pause_service=None, speech_runtime=None) -> ProvidersResponse:
+def _monitoring(session_factory):
+    """05C: active operational alerts by category, the AI budget state and the derived health signals. Unreadable sources yield ``None`` (never a healthy-looking value)."""
+    if session_factory is None:
+        return None
+    try:
+        from sqlalchemy import func, select
+
+        from src.api.schemas.admin import MonitoringAlerts, MonitoringBudget, MonitoringSignal, MonitoringStatus
+        from src.llm.budget.status import budget_status
+        from src.ops.signals import evaluate_signals
+        from src.persistence import AdminNotification
+
+        categories = ("api_error_rate_high", "worker_unhealthy", "job_queue_backlog", "indexing_stalled", "provider_unhealthy", "quota_reaper_stale", "ai_budget_attention")
+        with session_factory() as s:
+            rows = dict(s.execute(select(AdminNotification.category, func.count()).where(AdminNotification.state.in_(("active", "acknowledged")), AdminNotification.category.in_(categories))
+                                  .group_by(AdminNotification.category)).all())
+        bs = budget_status(session_factory)
+        led = bs.get("ledger") or {}
+        budget = MonitoringBudget(state=bs["state"], enforcement=bs["enforcement"], budget_class=bs.get("budget_class"), reason=bs.get("reason"),
+                                  remaining_to_stop_usd=led.get("remaining_to_stop_usd"), remaining_requests=led.get("remaining_requests"))
+        signals = [MonitoringSignal(code=x.code, status=x.status) for x in evaluate_signals(session_factory)]
+        return MonitoringStatus(alerts=MonitoringAlerts(active=sum(rows.values()), by_category={k: int(v) for k, v in rows.items()}), budget=budget, signals=signals,
+                                note="Derived from recorded facts; nothing is probed. Unknown means there is not enough evidence yet and is not healthy. Alerts are in-app only.")
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def build_providers_response(pause_service=None, speech_runtime=None, session_factory=None) -> ProvidersResponse:
     from src.application.admin_command_center import rate_limit_mode
     from src.documents.ocr import ocr_runtime_status
     from src.voice.realtime import resolve_realtime_config
@@ -106,7 +133,7 @@ def build_providers_response(pause_service=None, speech_runtime=None) -> Provide
                        for k, v in (ocr.get("languages") or {}).items()},
             live_quality=str(ocr.get("live_quality", "UNVALIDATED"))),
         pause={k: v["paused"] for k, v in pause_service.snapshot().items()} if pause_service is not None else {}, pause_durable=pause_service is not None,
-        rate_limit_mode=rl["mode"], rate_limit_distributed=bool(rl["distributed"]),
+        rate_limit_mode=rl["mode"], rate_limit_distributed=bool(rl["distributed"]), monitoring=_monitoring(session_factory),
         note=("Booleans and fixed labels only. Provider configuration is managed outside this console "
               "(deployment environment). Configured does not mean healthy; no provider is contacted here."),
     )
