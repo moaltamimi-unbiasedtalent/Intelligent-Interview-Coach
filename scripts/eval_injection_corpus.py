@@ -94,9 +94,12 @@ def run_detectors(text: str) -> dict:
     screen = screen_results([chunk])
     chunk_blocked = screen.quarantined_count == 1
     chunk_flagged = chunk_blocked or bool(screen.warned)
+    english_only = detect_injection(text, multilingual=False)  # 06E: the interview guard as it was before the multilingual stage (OD-INPUT-GUARD-LANGUAGES); a comparison column, not part of any_*
     return {
         "input_flagged": assessment.decision != ALLOW,
         "input_blocked": assessment.is_blocked,
+        "input_en_flagged": english_only.decision != ALLOW,
+        "input_en_blocked": english_only.is_blocked,
         "chunk_flagged": chunk_flagged,
         "chunk_blocked": chunk_blocked,
         "chunk_risk": screen.max_risk,
@@ -109,12 +112,13 @@ def evaluate(cases: list[dict]) -> list[dict]:
         verdict = run_detectors(case["text"])
         verdict["any_flagged"] = verdict["input_flagged"] or verdict["chunk_flagged"]
         verdict["any_blocked"] = verdict["input_blocked"] or verdict["chunk_blocked"]
-        rows.append({"id": case["id"], "label": case["label"], "category": case["category"], "language": case["language"], "surface": case["surface"], "split": case["split"], **verdict})
+        rows.append({"id": case["id"], "label": case["label"], "category": case["category"], "language": case["language"], "surface": case["surface"], "split": case["split"],
+                     "source": case["source"], **verdict})
     return rows
 
 
 # ---------------------------------------------------------------- metrics ----------------------------------------------------------------------------------------
-_DETECTORS = ("input_flagged", "input_blocked", "chunk_flagged", "chunk_blocked", "any_flagged", "any_blocked")
+_DETECTORS = ("input_flagged", "input_blocked", "chunk_flagged", "chunk_blocked", "any_flagged", "any_blocked", "input_en_flagged", "input_en_blocked")
 
 
 def _rate(hit: int, total: int) -> float | None:
@@ -129,6 +133,70 @@ def summarize(rows: list[dict]) -> dict:
         out[f"detection_rate_{det}"] = _rate(sum(r[det] for r in attacks), len(attacks))
         out[f"false_positive_rate_{det}"] = _rate(sum(r[det] for r in benign), len(benign))
     return out
+
+
+# ---------------------------------------------------------------- 06E per-language report (DEV split only) ----------------------------------------------------------
+LANGUAGES = ("en", "de", "fr", "es", "it", "pt", "nl", "mixed")
+SOURCE_06E = "authored-06e-dev"
+SOURCE_06E_PROBE = "authored-06e-dev-probe"
+LANGUAGE_LIMITATIONS = [
+    "DEVELOPMENT split only: no held-out case is evaluated, read or reported in this section. Every number is IN-SAMPLE for the rules that were tuned on these cases; it is not a generalisation estimate.",
+    "The 06E cases are engineering-authored (not native-reviewed): phrasing may be unnatural, and a native reader may find attacks and benign texts that these do not model.",
+    "Per-language cells hold roughly 10 to 40 cases; one case moves a rate by 3 to 10 points. No confidence interval is claimed.",
+    f"The cases tagged `{SOURCE_06E_PROBE}` were written after the first round of 06E rules was frozen, so their first measurement estimates generalisation; the second-round rules were then tuned on them, so they are no longer untouched.",
+    "Both detectors are lexical (D-LEX): paraphrases, other languages (Russian, Chinese, Arabic, ...), long documents and multi-turn attacks are not covered. The structural controls remain primary.",
+    "A benign text that describes forgetting or ignoring earlier rules (a career-change story) is flagged in every language, including English: this is a known false-positive class, not a per-language defect.",
+    "The interview input guard (src.security) gained a non-English stage in 06E (constants.MULTILINGUAL_INPUT_GUARD_ENABLED, on); the 'inp (EN only)' column shows the English-only guard for comparison. The decision is the owner's (OD-INPUT-GUARD-LANGUAGES).",
+    "No threshold is approved (OD-GATE-THRESHOLDS): nothing here is a pass or a fail, and no language gate (LG-08) is claimed.",
+]
+
+
+def language_report(dev_rows: list[dict]) -> dict:
+    """Per-language and per-language-per-category detection and false-positive rates over the DEV split, with sample sizes."""
+    by_language: dict[str, list[dict]] = defaultdict(list)
+    by_lang_cat: dict[str, dict[str, list[dict]]] = defaultdict(lambda: defaultdict(list))
+    by_source: dict[str, dict[str, list[dict]]] = defaultdict(lambda: defaultdict(list))
+    for r in dev_rows:
+        by_language[r["language"]].append(r)
+        by_lang_cat[r["language"]][r["category"]].append(r)
+        if r["source"].startswith("authored-06e"):
+            by_source[r["source"]][r["language"]].append(r)
+    ordered = [lang for lang in LANGUAGES if lang in by_language] + sorted(set(by_language) - set(LANGUAGES))
+    return {
+        "scope": "dev split only",
+        "languages": ordered,
+        "by_language": {lang: summarize(by_language[lang]) for lang in ordered},
+        "by_language_category": {lang: {cat: summarize(items) for cat, items in sorted(by_lang_cat[lang].items())} for lang in ordered},
+        "cases_06e": {src: {lang: summarize(items) for lang, items in sorted(langs.items())} for src, langs in sorted(by_source.items())},
+        "limitations": LANGUAGE_LIMITATIONS,
+    }
+
+
+def render_language_report(report: dict, *, markdown: bool = False) -> str:
+    lr = report["language_report"]
+    out = ["Per-language report (DEV split only; report-only; no threshold approved)", ""]
+
+    def row(name: str, s: dict) -> str:
+        return (f"{name:<24}{s['attacks']:>5}{s['benign']:>5}  {_fmt(s['detection_rate_any_flagged']):>9}{_fmt(s['detection_rate_any_blocked']):>9}  "
+                f"{_fmt(s['detection_rate_input_flagged']):>9}{_fmt(s['detection_rate_chunk_flagged']):>9}{_fmt(s['detection_rate_input_en_flagged']):>12}  "
+                f"{_fmt(s['false_positive_rate_any_flagged']):>9}{_fmt(s['false_positive_rate_any_blocked']):>9}{_fmt(s['false_positive_rate_input_en_flagged']):>12}")
+
+    head = (f"{'group':<24}{'atk':>5}{'ben':>5}  {'det any':>9}{'blk any':>9}  {'det inp':>9}{'det chk':>9}{'det inpEN':>12}  "
+            f"{'FP any':>9}{'FP blk':>9}{'FP inpEN':>12}")
+    out += ["PER LANGUAGE", head] + [row(lang, lr["by_language"][lang]) for lang in lr["languages"]]
+    out += ["", "PER LANGUAGE AND CATEGORY", head]
+    for lang in lr["languages"]:
+        for cat, s in lr["by_language_category"][lang].items():
+            out.append(row(f"{lang} / {cat}", s))
+    out += ["", "06E-AUTHORED CASES BY SOURCE (probe = written after the first rules were frozen)", head]
+    for src, langs in lr["cases_06e"].items():
+        for lang, s in langs.items():
+            out.append(row(f"{src} / {lang}", s))
+    out += ["", "Columns: 'any' = interview input guard (as shipped) OR retrieved-chunk screen; 'inp' = the interview guard alone (as shipped, with its multilingual stage); 'chk' = the chunk screen alone;",
+            "'inpEN' = the interview guard WITHOUT the multilingual stage (the English-only guard before 06E), shown for comparison and not part of 'any'. Decision: OD-INPUT-GUARD-LANGUAGES."]
+    out += ["", "LIMITATIONS"] + [f"- {item}" for item in lr["limitations"]]
+    text = "\n".join(out)
+    return f"```\n{text}\n```" if markdown else text
 
 
 def build_report(cases: list[dict], *, dev_only: bool = False) -> dict:
@@ -166,6 +234,7 @@ def build_report(cases: list[dict], *, dev_only: bool = False) -> dict:
         "dev": summarize(dev),
         "heldout": summarize(heldout),
         **groups,
+        "language_report": language_report(dev),
         "missed_attack_ids": misses,
         "benign_false_positive_ids": false_positives,
         "limitations": [
@@ -242,11 +311,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--enforce", action="store_true", help="fail on owner-approved thresholds; fails closed when none exist")
     parser.add_argument("--dev-only", action="store_true", help="run the development split only; the held-out split is not evaluated at all")
     parser.add_argument("--thresholds", metavar="PATH", default=str(THRESHOLDS_PATH))
+    parser.add_argument("--language-report", action="store_true", help="06E: print the per-language and per-category report; implies --dev-only (the held-out split is not evaluated)")
+    parser.add_argument("--language-report-md", metavar="PATH", help="06E: also write the per-language report as Markdown (implies --language-report)")
     args = parser.parse_args(argv)
+    if args.language_report_md:
+        args.language_report = True
+    if args.language_report:
+        args.dev_only = True
 
     cases = load_corpus()
     report = build_report(cases, dev_only=args.dev_only)
-    print(render(report))
+    print(render_language_report(report) if args.language_report else render(report))
+    if args.language_report_md:
+        Path(args.language_report_md).write_text(render_language_report(report, markdown=True) + "\n", encoding="utf-8")
 
     if args.write:
         dest = REPORT_PATH

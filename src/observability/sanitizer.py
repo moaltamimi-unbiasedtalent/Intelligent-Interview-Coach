@@ -50,7 +50,14 @@ _SAFE_KEYS = {
     "public_key_present", "secret_key_present",  # booleans (presence flags only)
 }
 
-_EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
+# 06E: Unicode-aware. The old ASCII-only classes left "jörg.müller@..." half visible ("jörg.mü" before the match) and missed an internationalised domain ("bücher.de").
+_EMAIL_RE = re.compile(r"[\w.%+\-]+@[\w.\-]+\.[^\W\d_]{2,}")
+# 06E: regional identifier formats that the phone pattern does not cover (synthetic examples are tested per language): IBAN, Spanish DNI/NIE, Italian codice fiscale, UK NINO.
+# Purely numeric national identifiers (DE tax id, FR NIR, PT NIF, NL BSN, US SSN) are digit runs of 8+ that the phone pattern below already removes.
+_IBAN_RE = re.compile(r"(?<!\w)[A-Za-z]{2}\d{2}(?:[ ]?[A-Za-z0-9]{4}){2,7}(?:[ ]?[A-Za-z0-9]{1,3})?(?!\w)")
+_DNI_NIE_RE = re.compile(r"(?<!\w)[XYZxyz]?\d{7,8}[A-Za-z](?!\w)")
+_CODICE_FISCALE_RE = re.compile(r"(?<!\w)[A-Za-z]{6}\d{2}[A-Za-z]\d{2}[A-Za-z]\d{3}[A-Za-z](?!\w)")
+_NINO_RE = re.compile(r"(?<!\w)[A-Za-z]{2}[ ]?\d{2}[ ]?\d{2}[ ]?\d{2}[ ]?[A-Da-d](?!\w)")
 _PHONE_RE = re.compile(r"(?<!\w)(?:\+?\d[\d\s().\-]{7,}\d)(?!\w)")
 _BEARER_RE = re.compile(r"(?i)bearer\s+[A-Za-z0-9._\-]+")
 # A long, high-entropy-ish token/credential blob (>=24 chars of key alphabet).
@@ -96,6 +103,8 @@ def sanitize_text(text: str) -> str:
         s = re.sub(r"https?://[^\s]+", lambda m: sanitize_url(m.group(0)), s)
     s = _BEARER_RE.sub(REDACTED, s)
     s = _EMAIL_RE.sub(REDACTED, s)
+    for identifier_re in (_IBAN_RE, _CODICE_FISCALE_RE, _NINO_RE, _DNI_NIE_RE):  # before the phone pattern, which would otherwise eat their digits and leave the letters
+        s = identifier_re.sub(REDACTED, s)
     s = _PHONE_RE.sub(REDACTED, s)
     s = _KEYBLOB_RE.sub(REDACTED, s)
     return s
