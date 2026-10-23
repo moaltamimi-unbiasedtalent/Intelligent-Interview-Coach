@@ -9,7 +9,7 @@ from __future__ import annotations
 import copy
 import json
 import re
-from datetime import date, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -31,7 +31,7 @@ from src.copilot.vectorstore import InMemoryVectorStore
 
 ROOT = Path(__file__).resolve().parent.parent
 COMMITTED = ROOT / "docs" / "production" / "execution" / "source_approval_register.json"
-TODAY = date.today()
+TODAY = datetime.now(timezone.utc).date()      # the validator reads the UTC clock; date.today() (local) disagreed for two hours a day east of UTC
 CONFIG = CopilotConfig()
 
 

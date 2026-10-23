@@ -176,6 +176,9 @@ class Citation(_Base):
         default=None, description="Public URL of the source, if known (clickable)."
     )
     page: int | None = Field(default=None, description="Page number, if known.")
+    # 06D (LG-06): provenance the attribution check needs. Both optional and absent when the source did not record them (never guessed).
+    language: str | None = Field(default=None, description="Language of the cited source text (e.g. 'de'), if recorded.")
+    version: str | None = Field(default=None, description="Version of the cited source, if recorded.")
 
     @property
     def label(self) -> str:
@@ -269,6 +272,8 @@ class KnowledgeEvidence(_Base):
             title=self.citation_title(),
             source=self.source_url or self.source_id,
             source_url=self.source_url,
+            language=(self.metadata or {}).get("language") or None,
+            version=self.version,
         )
 
     @classmethod
@@ -294,7 +299,7 @@ class KnowledgeEvidence(_Base):
             reference_year=ref_year,
             version=meta.get("source_version") or None,
             metadata={"page": result.page, "document_type": meta.get("document_type"),
-                      "domain": meta.get("domain"),
+                      "domain": meta.get("domain"), "language": meta.get("language") or None,
                       # 02D: the approval filter's label travels with the evidence (present only when set; absent keys keep the metadata unchanged).
                       **{k: meta[k] for k in ("source_qualification", "source_qualification_label") if k in meta}},
             score=result.score,

@@ -23,7 +23,7 @@ import unicodedata
 
 from src.copilot import constants
 
-__all__ = ["ROUTING_LANGUAGES", "fold_text", "candidate_languages", "has_language_evidence", "route_localized", "LANE_ORDER"]
+__all__ = ["ROUTING_LANGUAGES", "fold_text", "candidate_languages", "has_language_evidence", "guess_language", "route_localized", "LANE_ORDER"]
 
 ROUTING_LANGUAGES = ("de", "fr", "es", "it", "pt", "nl")
 
@@ -193,6 +193,13 @@ def _leaders(text: str) -> list[str]:
     scores = {lang: sum(1 for t in tokens if t in markers and t not in _SHARED_WEAK) for lang, markers in _MARKERS.items()}
     best = max(scores.values())
     return [lang for lang, s in scores.items() if s == best] if best else []
+
+
+def guess_language(text: str) -> str | None:
+    """The single language the stop words single out (English included), or ``None`` when there is no evidence or the evidence is tied between
+    languages (06D: a tie is never resolved by guessing; the caller falls back to its own default)."""
+    leaders = _leaders(text)
+    return leaders[0] if len(leaders) == 1 else None
 
 
 def has_language_evidence(text: str) -> bool:
