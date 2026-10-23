@@ -13,6 +13,7 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
 
 from src.api.dependencies import (
@@ -173,38 +174,50 @@ async def replace_credential(code: str, slot: str, request: Request,
                              service=Depends(get_integration_service), audit_repo=Depends(get_audit_repository),
                              repo=Depends(get_repository)) -> dict:
     """The value is passed to the store and discarded: it is not returned, logged, audited or persisted in the clear.
-    The encrypted store writes the ciphertext and the audit event in ONE transaction (an audit failure stores nothing)."""
-    cred = _find(lambda: service.credential_slot(code, slot))
+    The encrypted store writes the ciphertext and the audit event in ONE transaction (an audit failure stores nothing).
+
+    07A: async only to read the body. Every store, step-up and audit call below is a blocking database operation (and an encryption), so each phase runs in the worker pool."""
     rid = get_request_id(request)
-    StepUpService(repo.session_factory).require(request.cookies.get(_session_cookie_name(request)))   # 403 step_up_required
+    token = request.cookies.get(_session_cookie_name(request))
+
+    def _prepare():
+        cred = _find(lambda: service.credential_slot(code, slot))
+        StepUpService(repo.session_factory).require(token)   # 403 step_up_required
+        return cred
+
+    cred = await run_in_threadpool(_prepare)
     payload = await _json_body(request)
-    if not set(payload) <= {"value", "expected_revision"} or "value" not in payload:
-        raise HTTPException(status_code=422, detail=_SHAPE_COPY)
-    try:
-        value = service.validate_credential_shape(payload.get("value"), cred)
-    except Exception:  # noqa: BLE001 - never echo the input
-        raise HTTPException(status_code=422, detail=_SHAPE_COPY)
-    audit = A.build_audit(event_type=A.ADMIN_CREDENTIAL_REPLACEMENT_SUCCEEDED, actor_user_id=principal.user_id, request_id=rid,
-                          target_type="integration", target_id=code, slot=slot)
-    try:
-        out = service.write_credential(code, slot, value, actor_user_id=principal.user_id, expected_revision=_revision(payload),
-                                       audit=audit if service.atomic_audit else None)
-    except SecretStoreReadOnly:
-        _best_effort(audit_repo, A.ADMIN_CREDENTIAL_REPLACEMENT_FAILED, principal, rid, code, slot, reason="read_only_store")
-        raise HTTPException(status_code=409, detail="This credential is managed outside Ask4Mo and cannot be changed here.")
-    except SecretStoreStale:
-        _best_effort(audit_repo, A.ADMIN_CREDENTIAL_REPLACEMENT_FAILED, principal, rid, code, slot, reason="stale_revision")
-        raise HTTPException(status_code=409, detail="This credential changed since you opened it. Reload and try again.")
-    except SecretStoreUnavailable as exc:
-        _best_effort(audit_repo, A.ADMIN_CREDENTIAL_REPLACEMENT_FAILED, principal, rid, code, slot, reason=exc.reason)
-        raise HTTPException(status_code=503, detail=_UNAVAILABLE_COPY.get(exc.reason, _UNAVAILABLE_COPY["store_error"]))
-    except Exception:  # noqa: BLE001 - exception text may embed the value; discard it
-        _best_effort(audit_repo, A.ADMIN_CREDENTIAL_REPLACEMENT_FAILED, principal, rid, code, slot, reason="store_error")
-        log.warning("credential write failed for %s/%s", code, slot)
-        raise HTTPException(status_code=502, detail="The credential could not be saved.")
-    if not service.atomic_audit:   # non-transactional (test-only) stores: the success event is written after the change
-        _best_effort(audit_repo, A.ADMIN_CREDENTIAL_REPLACEMENT_SUCCEEDED, principal, rid, code, slot)
-    return {"integration": code, "slot": slot, "configured": True, "action": out.get("action"), "revision": out.get("revision")}
+
+    def _write() -> dict:
+        if not set(payload) <= {"value", "expected_revision"} or "value" not in payload:
+            raise HTTPException(status_code=422, detail=_SHAPE_COPY)
+        try:
+            value = service.validate_credential_shape(payload.get("value"), cred)
+        except Exception:  # noqa: BLE001 - never echo the input
+            raise HTTPException(status_code=422, detail=_SHAPE_COPY)
+        audit = A.build_audit(event_type=A.ADMIN_CREDENTIAL_REPLACEMENT_SUCCEEDED, actor_user_id=principal.user_id, request_id=rid,
+                              target_type="integration", target_id=code, slot=slot)
+        try:
+            out = service.write_credential(code, slot, value, actor_user_id=principal.user_id, expected_revision=_revision(payload),
+                                           audit=audit if service.atomic_audit else None)
+        except SecretStoreReadOnly:
+            _best_effort(audit_repo, A.ADMIN_CREDENTIAL_REPLACEMENT_FAILED, principal, rid, code, slot, reason="read_only_store")
+            raise HTTPException(status_code=409, detail="This credential is managed outside Ask4Mo and cannot be changed here.")
+        except SecretStoreStale:
+            _best_effort(audit_repo, A.ADMIN_CREDENTIAL_REPLACEMENT_FAILED, principal, rid, code, slot, reason="stale_revision")
+            raise HTTPException(status_code=409, detail="This credential changed since you opened it. Reload and try again.")
+        except SecretStoreUnavailable as exc:
+            _best_effort(audit_repo, A.ADMIN_CREDENTIAL_REPLACEMENT_FAILED, principal, rid, code, slot, reason=exc.reason)
+            raise HTTPException(status_code=503, detail=_UNAVAILABLE_COPY.get(exc.reason, _UNAVAILABLE_COPY["store_error"]))
+        except Exception:  # noqa: BLE001 - exception text may embed the value; discard it
+            _best_effort(audit_repo, A.ADMIN_CREDENTIAL_REPLACEMENT_FAILED, principal, rid, code, slot, reason="store_error")
+            log.warning("credential write failed for %s/%s", code, slot)
+            raise HTTPException(status_code=502, detail="The credential could not be saved.")
+        if not service.atomic_audit:   # non-transactional (test-only) stores: the success event is written after the change
+            _best_effort(audit_repo, A.ADMIN_CREDENTIAL_REPLACEMENT_SUCCEEDED, principal, rid, code, slot)
+        return {"integration": code, "slot": slot, "configured": True, "action": out.get("action"), "revision": out.get("revision")}
+
+    return await run_in_threadpool(_write)
 
 
 @router.post("/{code}/credentials/{slot}/remove",
@@ -213,29 +226,38 @@ async def remove_credential(code: str, slot: str, request: Request,
                             principal=Depends(require_permission(perm.SECRET_ROTATE)),
                             service=Depends(get_integration_service), audit_repo=Depends(get_audit_repository),
                             repo=Depends(get_repository)) -> dict:
-    _find(lambda: service.credential_slot(code, slot))
     rid = get_request_id(request)
-    StepUpService(repo.session_factory).require(request.cookies.get(_session_cookie_name(request)))
+    token = request.cookies.get(_session_cookie_name(request))
+
+    def _prepare() -> None:
+        _find(lambda: service.credential_slot(code, slot))
+        StepUpService(repo.session_factory).require(token)
+
+    await run_in_threadpool(_prepare)          # 07A: blocking database work stays off the event loop
     payload = await _json_body(request)
-    if not set(payload) <= {"confirm", "expected_revision"} or payload.get("confirm") is not True:
-        raise HTTPException(status_code=422, detail="Confirm that you want to remove the managed credential.")
-    audit = A.build_audit(event_type=A.ADMIN_CREDENTIAL_REMOVED, actor_user_id=principal.user_id, request_id=rid,
-                          target_type="integration", target_id=code, slot=slot)
-    try:
-        service.remove_credential(code, slot, actor_user_id=principal.user_id, expected_revision=_revision(payload),
-                                  audit=audit if service.atomic_audit else None)
-    except SecretStoreReadOnly:
-        raise HTTPException(status_code=409, detail="This credential is managed outside Ask4Mo and cannot be changed here.")
-    except SecretStoreStale:
-        raise HTTPException(status_code=409, detail="There is no managed credential at that revision. Reload and try again.")
-    except SecretStoreUnavailable as exc:
-        raise HTTPException(status_code=503, detail=_UNAVAILABLE_COPY.get(exc.reason, _UNAVAILABLE_COPY["store_error"]))
-    except Exception:  # noqa: BLE001
-        log.warning("credential removal failed for %s/%s", code, slot)
-        raise HTTPException(status_code=502, detail="The credential could not be removed.")
-    if not service.atomic_audit:
-        _best_effort(audit_repo, A.ADMIN_CREDENTIAL_REMOVED, principal, rid, code, slot)
-    return {"integration": code, "slot": slot, "removed": True}
+
+    def _remove() -> dict:
+        if not set(payload) <= {"confirm", "expected_revision"} or payload.get("confirm") is not True:
+            raise HTTPException(status_code=422, detail="Confirm that you want to remove the managed credential.")
+        audit = A.build_audit(event_type=A.ADMIN_CREDENTIAL_REMOVED, actor_user_id=principal.user_id, request_id=rid,
+                              target_type="integration", target_id=code, slot=slot)
+        try:
+            service.remove_credential(code, slot, actor_user_id=principal.user_id, expected_revision=_revision(payload),
+                                      audit=audit if service.atomic_audit else None)
+        except SecretStoreReadOnly:
+            raise HTTPException(status_code=409, detail="This credential is managed outside Ask4Mo and cannot be changed here.")
+        except SecretStoreStale:
+            raise HTTPException(status_code=409, detail="There is no managed credential at that revision. Reload and try again.")
+        except SecretStoreUnavailable as exc:
+            raise HTTPException(status_code=503, detail=_UNAVAILABLE_COPY.get(exc.reason, _UNAVAILABLE_COPY["store_error"]))
+        except Exception:  # noqa: BLE001
+            log.warning("credential removal failed for %s/%s", code, slot)
+            raise HTTPException(status_code=502, detail="The credential could not be removed.")
+        if not service.atomic_audit:
+            _best_effort(audit_repo, A.ADMIN_CREDENTIAL_REMOVED, principal, rid, code, slot)
+        return {"integration": code, "slot": slot, "removed": True}
+
+    return await run_in_threadpool(_remove)
 
 
 def _best_effort(audit_repo, event: str, principal, rid, code, slot, result: str | None = None, **ctx) -> None:

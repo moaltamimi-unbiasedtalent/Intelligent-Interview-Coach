@@ -13,6 +13,7 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
+from fastapi.concurrency import run_in_threadpool
 
 from src.api.dependencies import get_current_principal, get_speech_runtime
 from src.api.rate_limit import enforce, user_key
@@ -52,10 +53,12 @@ def speech_capabilities(principal=Depends(get_current_principal), runtime=Depend
 
 @router.post("/transcriptions", response_model=TranscriptionResponse, summary="Transcribe one recording (transient audio; untrusted transcript)")
 async def transcribe(audio: UploadFile = File(...), language: str = Form(..., min_length=2, max_length=8), principal=Depends(get_current_principal), runtime=Depends(get_speech_runtime)) -> TranscriptionResponse:
-    enforce("cost_speech_stt_user", user_key(principal.user_id))
+    # 07A: this handler is async only to await the upload. The limiter (a network call with a shared store) and the engine run (bounded but blocking, up to its timeout) are
+    # synchronous, so they go to the worker pool: they must never stall the event loop that serves every other request.
+    await run_in_threadpool(enforce, "cost_speech_stt_user", user_key(principal.user_id))
     data = await audio.read(SPEECH_MAX_AUDIO_BYTES + 1)        # bounded read: never an unbounded buffer
     try:
-        out = runtime.transcribe(data, mime_type=audio.content_type or "", language=language)
+        out = await run_in_threadpool(runtime.transcribe, data, mime_type=audio.content_type or "", language=language)
     except SpeechError as exc:
         raise _refuse("stt", exc, principal.user_id)
     finally:

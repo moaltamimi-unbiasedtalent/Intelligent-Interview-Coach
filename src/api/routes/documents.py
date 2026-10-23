@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Path, Query, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import PlainTextResponse, Response
 
 from src.api.dependencies import (
@@ -85,19 +86,22 @@ async def upload_document(
 ) -> DocumentDetail:
     # Per-user upload ceiling + OCR pause (§19/§21). OCR runs during upload, so a paused OCR
     # capability blocks new uploads truthfully rather than silently skipping extraction.
+    # 07A: async only to await the upload body. The pause read (database), the limiter, the malware scan (a network call to the scanner), the parse/OCR and the storage are all
+    # blocking, so each runs in the worker pool and can never stall the event loop (a scan or OCR of a large file used to freeze every other request).
     from src.api.guards import ensure_not_paused
     from src.api.rate_limit import enforce, user_key
 
-    ensure_not_paused("ocr", pause)
-    enforce("cost_upload_user", user_key(user_id))
+    def _admit() -> None:
+        ensure_not_paused("ocr", pause)
+        enforce("cost_upload_user", user_key(user_id))
+
+    await run_in_threadpool(_admit)
     data = await file.read()
     if len(data) > MAX_FILE_BYTES:
         raise HTTPException(status_code=413, detail="The file is too large (max 10 MB).")
-    _scan_or_reject(data, file.filename or "document", repo.session_factory)
-    detail = svc.upload(
-        user_id=user_id, filename=file.filename or "document",
-        data=data, category=category, language_hint=language_hint,
-    )
+    await run_in_threadpool(_scan_or_reject, data, file.filename or "document", repo.session_factory)
+    detail = await run_in_threadpool(
+        lambda: svc.upload(user_id=user_id, filename=file.filename or "document", data=data, category=category, language_hint=language_hint))
     return DocumentDetail(**detail)
 
 
@@ -122,13 +126,17 @@ async def replace_document(
     from src.api.guards import ensure_not_paused
     from src.api.rate_limit import enforce, user_key
 
-    ensure_not_paused("ocr", pause)
-    enforce("cost_upload_user", user_key(user_id))
+    def _admit() -> None:        # 07A: blocking work stays off the event loop (see upload_document)
+        ensure_not_paused("ocr", pause)
+        enforce("cost_upload_user", user_key(user_id))
+
+    await run_in_threadpool(_admit)
     data = await file.read()
     if len(data) > MAX_FILE_BYTES:
         raise HTTPException(status_code=413, detail="The file is too large (max 10 MB).")
-    _scan_or_reject(data, file.filename or "document", repo.session_factory)
-    detail = svc.replace(user_id=user_id, document_id=document_id, filename=file.filename or "document", data=data, language_hint=language_hint)
+    await run_in_threadpool(_scan_or_reject, data, file.filename or "document", repo.session_factory)
+    detail = await run_in_threadpool(
+        lambda: svc.replace(user_id=user_id, document_id=document_id, filename=file.filename or "document", data=data, language_hint=language_hint))
     if detail is None:
         raise HTTPException(status_code=404, detail="Document not found.")
     return DocumentDetail(**detail)

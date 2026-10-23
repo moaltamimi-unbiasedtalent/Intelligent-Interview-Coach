@@ -1,0 +1,283 @@
+{
+  "families": [
+    {
+      "api_paths": [
+        "/api/v1/billing/checkout-returns",
+        "/api/v1/billing/checkout-sessions",
+        "/api/v1/billing/checkout/availability",
+        "/api/v1/billing/checkout/status",
+        "/api/v1/billing/summary"
+      ],
+      "forbidden_prefixes": [],
+      "gates": [
+        "src.billing.policy.LIVE_BILLING_ENABLED",
+        "src.billing.policy.EXTERNAL_CHECKOUT_AUTHORIZED",
+        "src.billing.policy.PAID_ENTITLEMENT_POLICY_APPROVED"
+      ],
+      "id": "billing_checkout",
+      "release": "R1.1",
+      "title": "Live billing: Stripe checkout, paid plans (candidate side)",
+      "ui_absent_paths": [
+        "/checkout",
+        "/billing/checkout",
+        "/billing/portal",
+        "/subscribe",
+        "/upgrade",
+        "/payment",
+        "/payments",
+        "/invoices",
+        "/stripe"
+      ],
+      "ui_absent_texts": [
+        "\\bcheckout\\b",
+        "\\bstripe\\b",
+        "subscribe",
+        "upgrade (now|to premium)",
+        "buy (premium|now)",
+        "pay (now|with)"
+      ],
+      "ui_known_routes": [
+        "/billing/return",
+        "/pricing",
+        "/account"
+      ]
+    },
+    {
+      "api_paths": [
+        "/api/v1/billing/webhooks/stripe"
+      ],
+      "forbidden_prefixes": [],
+      "gates": [
+        "src.billing.policy.STRIPE_WEBHOOK_AUTHORIZED"
+      ],
+      "id": "stripe_webhook",
+      "release": "R1.1",
+      "title": "Stripe webhook processing",
+      "ui_absent_paths": [],
+      "ui_absent_texts": [],
+      "ui_known_routes": []
+    },
+    {
+      "api_paths": [
+        "/api/v1/admin/billing",
+        "/api/v1/admin/billing/approvals",
+        "/api/v1/admin/billing/customers",
+        "/api/v1/admin/billing/invoices",
+        "/api/v1/admin/billing/invoices/deferral07a-unknown",
+        "/api/v1/admin/billing/operations/checkouts",
+        "/api/v1/admin/billing/operations/events",
+        "/api/v1/admin/billing/operations/events/deferral07a-unknown",
+        "/api/v1/admin/billing/operations/events/deferral07a-unknown/requeue",
+        "/api/v1/admin/billing/operations/events/deferral07a-unknown/retry",
+        "/api/v1/admin/billing/operations/overview",
+        "/api/v1/admin/billing/operations/readiness",
+        "/api/v1/admin/billing/operations/reconciliation",
+        "/api/v1/admin/billing/operations/recovery-actions",
+        "/api/v1/admin/billing/operations/step-up",
+        "/api/v1/admin/billing/operations/subscriptions",
+        "/api/v1/admin/billing/operations/subscriptions/deferral07a-unknown/reconcile",
+        "/api/v1/admin/billing/payments",
+        "/api/v1/admin/billing/payments/deferral07a-unknown",
+        "/api/v1/admin/billing/payments/deferral07a-unknown/refunds",
+        "/api/v1/admin/billing/price-changes",
+        "/api/v1/admin/billing/price-changes/deferral07a-unknown/approve",
+        "/api/v1/admin/billing/price-changes/deferral07a-unknown/reject",
+        "/api/v1/admin/billing/refunds",
+        "/api/v1/admin/billing/refunds/deferral07a-unknown/approve",
+        "/api/v1/admin/billing/refunds/deferral07a-unknown/reject",
+        "/api/v1/admin/billing/terms"
+      ],
+      "forbidden_prefixes": [],
+      "gates": [
+        "src.billing.policy.PROVIDER_READS_AUTHORIZED",
+        "src.billing.policy.RECONCILE_SCHEDULER_ENABLED"
+      ],
+      "id": "billing_reconciliation",
+      "release": "R1.1",
+      "title": "Provider reads, reconciliation and the reconciliation scheduler",
+      "ui_absent_paths": [],
+      "ui_absent_texts": [
+        "go live",
+        "enable live billing",
+        "live payments? (are )?(on|enabled)",
+        "revenue",
+        "\\bMRR\\b"
+      ],
+      "ui_known_routes": [
+        "/admin/billing"
+      ]
+    },
+    {
+      "api_paths": [
+        "/api/v1/admin/speech",
+        "/api/v1/speech/capabilities",
+        "/api/v1/speech/synthesis",
+        "/api/v1/speech/transcriptions"
+      ],
+      "forbidden_prefixes": [],
+      "gates": [
+        "src.speech.policy.SERVER_SPEECH_PROVIDERS_AUTHORIZED",
+        "src.speech.policy.WHISPER_API_TRANSPORT_AUTHORIZED",
+        "src.speech.policy.MODEL_DOWNLOADS_AUTHORIZED",
+        "src.speech.policy.VOICE_CLONING_ENABLED"
+      ],
+      "id": "speech_server",
+      "release": "R1.4",
+      "title": "Server-side speech (STT, TTS) and voice cloning",
+      "ui_absent_paths": [
+        "/speech",
+        "/transcribe",
+        "/voice-practice",
+        "/admin/speech/providers",
+        "/admin/speech/enable"
+      ],
+      "ui_absent_texts": [
+        "server[- ]side (speech|transcription)",
+        "whisper",
+        "kyutai",
+        "clone (your )?voice",
+        "voice cloning"
+      ],
+      "ui_known_routes": [
+        "/admin/speech"
+      ]
+    },
+    {
+      "api_paths": [
+        "/api/v1/voice/realtime/session",
+        "/api/v1/voice/realtime/session/end",
+        "/api/v1/voice/realtime/status"
+      ],
+      "forbidden_prefixes": [],
+      "gates": [],
+      "id": "realtime_voice",
+      "release": "R1.4",
+      "title": "Realtime (live) voice practice",
+      "ui_absent_paths": [
+        "/live-voice",
+        "/voice",
+        "/realtime",
+        "/practice/live"
+      ],
+      "ui_absent_texts": [
+        "start live voice",
+        "live voice",
+        "realtime voice"
+      ],
+      "ui_known_routes": []
+    },
+    {
+      "api_paths": [],
+      "forbidden_prefixes": [
+        "/compensation",
+        "/compensation-v2",
+        "/salary",
+        "/salaries",
+        "/pay-data",
+        "/admin/compensation"
+      ],
+      "gates": [],
+      "id": "compensation_v2",
+      "release": "R1.6",
+      "title": "Compensation Intelligence V2",
+      "ui_absent_paths": [
+        "/compensation",
+        "/compensation-v2",
+        "/salary",
+        "/salaries",
+        "/admin/compensation"
+      ],
+      "ui_absent_texts": [
+        "compensation (intelligence )?v2",
+        "salary (benchmark|explorer|data)",
+        "pay benchmark"
+      ],
+      "ui_known_routes": []
+    },
+    {
+      "api_paths": [],
+      "forbidden_prefixes": [
+        "/global",
+        "/international",
+        "/global-sources",
+        "/countries",
+        "/admin/global",
+        "/admin/international",
+        "/admin/sources/global"
+      ],
+      "gates": [],
+      "id": "international_sources",
+      "release": "R1.5",
+      "title": "International and global sources, additional-country coverage and global provenance",
+      "ui_absent_paths": [
+        "/global",
+        "/international",
+        "/global-sources",
+        "/countries",
+        "/admin/global",
+        "/admin/international"
+      ],
+      "ui_absent_texts": [
+        "global (sources|coverage|provenance)",
+        "international (sources|coverage|salary)",
+        "additional countries"
+      ],
+      "ui_known_routes": []
+    },
+    {
+      "api_paths": [
+        "/api/v1/history/interviews",
+        "/api/v1/history/interviews/987654321"
+      ],
+      "forbidden_prefixes": [],
+      "gates": [
+        "src.application.history_access.HISTORY_RESTRICTIONS_ENFORCED"
+      ],
+      "id": "history_gating",
+      "release": "with OD-PLAN-ENFORCE",
+      "title": "Basic history window (gated access limit)",
+      "ui_absent_paths": [],
+      "ui_absent_texts": [
+        "history (window|limit)",
+        "latest three",
+        "only the (latest|last) 3"
+      ],
+      "ui_known_routes": []
+    },
+    {
+      "api_paths": [
+        "/api/v1/model-profiles"
+      ],
+      "forbidden_prefixes": [],
+      "gates": [
+        "src.application.model_profile_access.MODEL_PROFILE_ENFORCED"
+      ],
+      "id": "model_profile_gating",
+      "release": "with OD-PLAN-ENFORCE",
+      "title": "Plan-gated AI model-profile selection",
+      "ui_absent_paths": [],
+      "ui_absent_texts": [
+        "model profile",
+        "choose (a )?model",
+        "advanced model"
+      ],
+      "ui_known_routes": []
+    }
+  ],
+  "gated_ui_keywords": [
+    "billing",
+    "checkout",
+    "stripe",
+    "payment",
+    "subscribe",
+    "speech",
+    "voice",
+    "realtime",
+    "compensation",
+    "salary",
+    "international",
+    "global",
+    "transcri"
+  ],
+  "schema": "deferral_table_07a/1"
+}

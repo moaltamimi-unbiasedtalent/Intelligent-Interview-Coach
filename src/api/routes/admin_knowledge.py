@@ -9,6 +9,7 @@ No route fetches a URL (a source URL is a reference string only).
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
 
 from src.api.dependencies import (
@@ -128,7 +129,7 @@ async def create_source(request: Request, title: str = Form(...), language: str 
                         licence_class: str = Form("unclear"), file: UploadFile = File(...),
                         principal=Depends(require_permission(perm.KNOWLEDGE_MANAGE)), svc=Depends(get_knowledge_admin_service)) -> dict:
     data = await _read(file)
-    return _guard(lambda: svc.create_source(
+    return await run_in_threadpool(_guard, lambda: svc.create_source(
         title=title, filename=file.filename or "", data=data, actor_user_id=principal.user_id,
         audit=_audit(request, principal, A.ADMIN_KNOWLEDGE_VERSION_UPLOADED), language=language, authority_level=authority_level,
         publisher=publisher, source_url=source_url or None, provenance_note=provenance_note, licence_class=licence_class))
@@ -140,7 +141,7 @@ async def add_version(source_id: str, request: Request, language: str = Form(...
                       licence_class: str = Form("unclear"), file: UploadFile = File(...),
                       principal=Depends(require_permission(perm.KNOWLEDGE_MANAGE)), svc=Depends(get_knowledge_admin_service)) -> dict:
     data = await _read(file)
-    return _guard(lambda: svc.add_version(
+    return await run_in_threadpool(_guard, lambda: svc.add_version(
         source_id, filename=file.filename or "", data=data, actor_user_id=principal.user_id,
         audit=_audit(request, principal, A.ADMIN_KNOWLEDGE_VERSION_UPLOADED), language=language, authority_level=authority_level,
         publisher=publisher, source_url=source_url or None, provenance_note=provenance_note, licence_class=licence_class))
