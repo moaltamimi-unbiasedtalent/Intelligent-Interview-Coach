@@ -25,6 +25,14 @@ APPROVAL = {EB.BUDGET_MARKER_ENV: "OD-BUDGET:test-fixture-only", EBUD.PAID_FLAG_
 N_CALLS = math.ceil(49 / constants.EMBED_BATCH_SIZE) + 49 + 21
 
 
+@pytest.fixture
+def governor_approves(monkeypatch):
+    """The 05C governor is now merged, so the runner consults the REAL ``script_guard`` and refuses (no budget configuration) before it reaches the ceiling and secret-handling logic
+    these tests are about. Isolate that logic by stubbing ONLY the governor consultation; the governor's own behaviour is covered by the 05C tests and by
+    ``test_the_governor_guard_is_consulted_when_its_module_exists`` and ``test_a_live_run_is_refused_without_the_governor_marker_before_any_provider_is_built`` below."""
+    monkeypatch.setattr(EB, "governor_guard", lambda environ=None: None)
+
+
 class FakeProvider(BaseEmbedder):
     """A deterministic stand-in for a provider. Counts calls; never touches a network."""
 
@@ -158,7 +166,7 @@ def test_fake_provider_is_refused_unless_explicitly_allowed(tmp_path):
         EB.run_embedding_benchmark([], factory, store_root=tmp_path / "i", allow_fake=True)
 
 
-def test_planned_calls_above_the_approved_ceiling_are_refused_up_front(tmp_path):
+def test_planned_calls_above_the_approved_ceiling_are_refused_up_front(tmp_path, governor_approves):
     factory = Factory("openai")
     env = {**APPROVAL, EBUD.MAX_CALLS_ENV: str(N_CALLS - 1)}
     with pytest.raises(EB.BenchmarkRefused) as e:
@@ -295,6 +303,6 @@ def test_paid_models_are_bounded_by_the_call_ceiling_even_after_approval(tmp_pat
     assert factory.built == []
 
 
-def test_approval_secrets_never_appear_in_the_result(tmp_path):
+def test_approval_secrets_never_appear_in_the_result(tmp_path, governor_approves):
     res = EB.run_embedding_benchmark(_specs(1, "openrouter"), Factory("openai"), store_root=tmp_path / "i", env=APPROVAL, clock=_ticker())
     assert "test-fixture-only" not in json.dumps(res)
