@@ -171,7 +171,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 01C Tool registry parity (REVIEW-03)
 
-- **Status:** LOCAL IMPLEMENTED; not merged; offline regression verified (codex/r1-development no SHA yet; Registry-generated catalogue v1.1.0; exact 11-tool parity; historical v1.0.0 immutable)
+- **Status:** MERGED (PR #265 merge aedbef3dee28a68b72bc526a1fca537a3da7bd8d); engineering integrated; qualification remains open (codex/r1-development 7a837278b0fd0cefd9a142e63cf825bb0176a202; Registry-generated catalogue v1.1.0; exact 11-tool parity; historical v1.0.0 immutable)
 - **Scope tier:** T1 (Reviewer corrections and operator safety)
 - **Track / phase / weeks:** A (AI security, prompts and tool registry) / 1 / W5 23-27 Nov to W6 30 Nov-4 Dec
 - **Scope:** Registry as the single catalogue: generated model-visible descriptions, Pydantic-derived argument contracts, duplicate rejection, parity tests, no widened tool set.
@@ -480,7 +480,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 04C Agent streaming and cancellation (REVIEW-05)
 
-- **Status:** LOCAL IMPLEMENTED; not merged; staging NOT RUN (codex/r1-development no SHA yet; SSE v2 progress, durable cancellation, usage drain; synchronous fallback; migration 0048 not applied to existing databases)
+- **Status:** MERGED (PR #265 merge aedbef3dee28a68b72bc526a1fca537a3da7bd8d); engineering integrated; staging NOT RUN; POST265-02 concurrency qualification open (codex/r1-development 7a837278b0fd0cefd9a142e63cf825bb0176a202; SSE v2 progress, durable cancellation, usage drain; synchronous fallback; migration 0048 not applied to existing databases)
 - **Scope tier:** T1 (Reviewer corrections and operator safety)
 - **Track / phase / weeks:** D (Candidate journeys, Story Bank, Workspaces and streaming) / 4 / W3 9-15 Nov to W4 16-22 Nov
 - **Scope:** Authenticated SSE endpoint using astream_events v2, safe projections, progress UI, cancellation, timeouts, reconnection safety, cancelled-run cost reconciliation, synchronous fallback.
@@ -733,7 +733,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 06F Native review and legal translation qualification
 
-- **Status:** MERGED (PR #259 merge 3e8e2ba4); offline engineering only; qualification remains open (feat/06fg-review-packages a4af1925; seven-language review packs and blank sign-off forms; stacked on 06C)
+- **Status:** MERGED (PR #259 merge 3e8e2ba4, PR #265 merge aedbef3d); 06F freshness repair integrated; offline engineering only; qualification remains open (feat/06fg-review-packages a4af1925; seven-language review packs and blank sign-off forms; stacked on 06C)
 - **Scope tier:** T0 (Non-negotiable for any real-user beta (safety, privacy, hosting, knowledge, identity, language gates))
 - **Track / phase / weeks:** F (Seven-language and human qualification) / 6 / W2 2-8 Nov to W5 23-27 Nov
 - **Scope:** Coordinate native-speaker review and qualified legal translation per language; record sign-offs. Reviewer and counsel engagement starts immediately (it does not wait for the audit); each language is reviewed as its catalogue is frozen.
@@ -805,7 +805,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 07B Live grounding and agent-policy validation
 
-- **Status:** PREFLIGHT ONLY; live evaluation NOT RUN (codex/r1-development no SHA yet; RAGAS audit READY; no new paid run; historical zero-score cause remains unresolved; fresh OD-BUDGET approval required)
+- **Status:** INCOMPLETE: preflight evidence merged in PR #265; live evaluation NOT RUN (codex/r1-development 7a837278b0fd0cefd9a142e63cf825bb0176a202; RAGAS audit READY; no new paid run; historical zero-score cause remains unresolved; fresh OD-BUDGET approval required)
 - **Scope tier:** T4 (Verification extras and proposals)
 - **Track / phase / weeks:** A (AI security, prompts and tool registry) / 7 / W4 16-22 Nov to W6 30 Nov-4 Dec
 - **Scope:** Bounded live re-validation of the grounding policies and historical agent misses; investigate the zero RAGAS relevancy and recall scores; larger approved RAGAS run.
@@ -823,7 +823,7 @@ Total effort: 209 to 325 engineering days. Critical path (longest dependency cha
 
 ### 07C Residual live verifications
 
-- **Status:** LOCAL SAMPLE RECORDED; not merged; no staging or language qualification (codex/r1-development no SHA yet; 14 actual local synthetic image/PDF OCR observations across seven locales; evidence/07C_LOCAL_OCR_2026_10_23.json; zero paid/network calls)
+- **Status:** INCOMPLETE: local sample evidence merged in PR #265; hosted and independent quality NOT VERIFIED (codex/r1-development 7a837278b0fd0cefd9a142e63cf825bb0176a202; 14 actual local synthetic image/PDF OCR observations across seven locales; evidence/07C_LOCAL_OCR_2026_10_23.json; zero paid/network calls)
 - **Scope tier:** T4 (Verification extras and proposals)
 - **Track / phase / weeks:** E (Hosted infrastructure and operations) / 7 / W5 23-27 Nov to W6 30 Nov-4 Dec
 - **Scope:** Live OCR quality sample.

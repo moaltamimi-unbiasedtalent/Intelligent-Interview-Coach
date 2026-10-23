@@ -69,9 +69,9 @@ def test_the_committed_ledger_is_schema_valid_and_passes_the_whole_check():
     assert R.run_check(today=TODAY, out=lambda s: None) == 0
 
 
-def test_the_ledger_is_seeded_with_the_real_merged_prs_213_to_235():
+def test_the_ledger_records_the_real_merged_prs_213_to_265():
     doc = R.load_ledger()
-    assert sorted(p["number"] for p in doc["pull_requests"]) == list(range(213, 265))
+    assert sorted(p["number"] for p in doc["pull_requests"]) == list(range(213, 266))
     by = {p["number"]: p for p in doc["pull_requests"]}
     # independent cross-check against the committed Wave 2 dashboard (PR, package, branch, head, merge SHA)
     dash = (R.EXEC / "WAVE2_EXECUTION_DASHBOARD.md").read_text(encoding="utf-8")
@@ -271,11 +271,11 @@ def test_gate_pass_is_refused_while_a_member_package_is_not_merged_or_has_open_l
     doc = ledger()
     tracker = passing_gate(doc, "PG-08", link="https://example.org/a")
     f = fails_for(doc, tracker=tracker)
-    # 03D2 has now merged. Use the still-unmerged 01C member of PG-12 to
+    # 01C is now merged. Use the still-incomplete 07B member of PG-03 to
     # retain the independent non-integration refusal, plus the existing layer refusals.
     pending = ledger()
-    pending_tracker = passing_gate(pending, "PG-12", link="https://example.org/a")
-    assert any_has(fails_for(pending, tracker=pending_tracker), "PG-12", "01C", "not MERGED")
+    pending_tracker = passing_gate(pending, "PG-03", link="https://example.org/a")
+    assert any_has(fails_for(pending, tracker=pending_tracker), "PG-03", "07B", "not MERGED")
     assert any_has(f, "PG-08", "03A", "live_staging NOT RUN")
     assert any_has(f, "PG-08", "03C", "human_qualification OPEN")
 
@@ -557,3 +557,28 @@ def test_cli_check_and_generate_write_only_the_generated_files(tmp_path, monkeyp
     assert R.main(["generate"]) == 0
     assert (tmp_path / "view.md").read_text(encoding="utf-8") == R.render_view(R.load_ledger())
     assert json.loads((tmp_path / "inputs.json").read_text(encoding="utf-8"))["as_of"] == TODAY.isoformat()
+
+
+def test_post265_integration_records_do_not_close_unverified_packages_or_gates():
+    doc = R.load_ledger()
+    pr = next(p for p in doc["pull_requests"] if p["number"] == 265)
+    assert pr["merge_sha"] == doc["main_sha"] == "aedbef3dee28a68b72bc526a1fca537a3da7bd8d"
+    assert pr["head_sha"] == "7a837278b0fd0cefd9a142e63cf825bb0176a202"
+    assert pr["ci"]["result"] == "success" and pr["ci"]["source"]
+    integrated = [p["id"] for p in R.E.PACKAGES if R.package_pr_facts(p["id"])]
+    assert len(integrated) == 40
+    for pid in ("01C", "04C"):
+        assert R.package_pr_facts(pid)["pr"] == 265
+        assert doc["packages"][pid]["prs"] == [265]
+        assert doc["packages"][pid]["layers"]["gate_acceptance"]["state"] == "NOT ACCEPTED"
+    assert not set(("00A", "00B", "07B", "07C", "08A")) & set(integrated)
+    assert [g for g, e in doc["gates"].items() if e["state"] == "PASS"] == ["PG-11"]
+
+
+def test_post265_ci_snapshot_keeps_main_and_pr_browser_attribution_separate():
+    snapshot = json.loads((R.EXEC / "evidence/POST_PR265_INTEGRATION_2026_10_23.json").read_text())
+    assert snapshot["main_sha"] == R.load_ledger()["main_sha"] == snapshot["ci"]["main"]["sha"]
+    assert snapshot["ci"]["browser"]["sha"] == snapshot["pr"]["head_sha"]
+    assert snapshot["ci"]["browser"]["main_sha_run"] == "NOT RUN"
+    assert snapshot["ci"]["browser"]["tree_identical_to_main"] is True
+    assert snapshot["production_gate_approvals_added"] == snapshot["language_gate_approvals_added"] == 0

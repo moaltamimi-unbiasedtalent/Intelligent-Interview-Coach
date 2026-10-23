@@ -2,7 +2,7 @@
  "schema": "ask4mo.release_evidence.v1",
  "note": "Evidence ledger. Nothing is PASS without a human-supplied or CI-produced artefact link here. Engineering and CI are derived from PACKAGE_STATUS and this ledger's PR rows; live staging, human qualification and gate acceptance are recorded as NOT RUN / OPEN / NOT ACCEPTED until a real artefact exists. Seeded 2026-10-22 by 08A0 from git history and the committed dashboards; a human reviews every change.",
  "as_of": "2026-10-23",
- "main_sha": "3e8e2ba4caf4578815dad2e99fbd2b491bd98a16",
+ "main_sha": "aedbef3dee28a68b72bc526a1fca537a3da7bd8d",
  "policy": {
   "gate_evidence_valid_days": 30,
   "language_approval_valid_days": 90,
@@ -891,6 +891,23 @@
     "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/264/checks"
    },
    "recorded_by": "Codex reconciliation: GitHub metadata plus merge ancestry",
+   "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 265,
+   "title": "R1: repair review packs, reconcile Wave 3, add registry parity and safe streaming",
+   "branch": "codex/r1-development",
+   "head_sha": "7a837278b0fd0cefd9a142e63cf825bb0176a202",
+   "merge_sha": "aedbef3dee28a68b72bc526a1fca537a3da7bd8d",
+   "merged_at": "2026-10-23",
+   "package": null,
+   "ci": {
+    "result": "success",
+    "checks": "CI 39995433254 and Browser E2E 39995433153 success on PR head; main CI 40006938765 success",
+    "source": "docs/production/execution/evidence/POST_PR265_INTEGRATION_2026_10_23.json (GitHub API read; actual SHA-bound runs, main Browser NOT RUN)",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265/checks"
+   },
+   "recorded_by": "Post-PR-265 reconciliation: GitHub merge metadata and main ancestry",
    "recorded_on": "2026-10-23"
   }
  ],
@@ -1868,11 +1885,13 @@
   },
   "06F": {
    "prs": [
-    259
+    259,
+    265
    ],
    "acceptance": {
     "artefacts": [
-     "docs/production/execution/evidence/06F_EVIDENCE.md"
+     "docs/production/execution/evidence/06F_EVIDENCE.md",
+     "docs/production/execution/evidence/POST_PR265_INTEGRATION_2026_10_23.json"
     ],
     "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
     "recorded_on": "2026-10-23"
@@ -1901,6 +1920,60 @@
      "docs/production/execution/evidence/06G_EVIDENCE.md"
     ],
     "recorded_by": "release_evidence.py sync from PACKAGE_STATUS",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "01C": {
+   "prs": [
+    265
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/INTEGRATED_SAFETY_REVIEW_POST265.md",
+     "docs/production/execution/evidence/POST_PR265_INTEGRATION_2026_10_23.json"
+    ],
+    "recorded_by": "Post-PR-265 reconciliation; engineering integration only",
+    "recorded_on": "2026-10-23"
+   },
+   "layers": {
+    "live_staging": {
+     "state": "NOT RUN",
+     "evidence": []
+    },
+    "human_qualification": {
+     "state": "OPEN",
+     "evidence": []
+    },
+    "gate_acceptance": {
+     "state": "NOT ACCEPTED",
+     "evidence": []
+    }
+   }
+  },
+  "04C": {
+   "prs": [
+    265
+   ],
+   "acceptance": {
+    "artefacts": [
+     "docs/production/execution/INTEGRATED_SAFETY_REVIEW_POST265.md",
+     "docs/production/execution/evidence/POST_PR265_INTEGRATION_2026_10_23.json"
+    ],
+    "recorded_by": "Post-PR-265 reconciliation; engineering integration only",
     "recorded_on": "2026-10-23"
    },
    "layers": {
