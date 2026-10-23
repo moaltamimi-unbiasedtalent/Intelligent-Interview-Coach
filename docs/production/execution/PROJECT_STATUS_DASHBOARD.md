@@ -1,6 +1,6 @@
 # Whole-Project Status Dashboard
 
-Updated 23 October 2026. Baseline: `origin/main` at `3e8e2ba4caf4578815dad2e99fbd2b491bd98a16`. Current development: `codex/r1-development` in the existing repository's separate Codex worktree. Local work is not integrated. Sources: [verified merge inventory](evidence/CODEX_WAVE3_MERGES_2026_10_23.json), [Codex execution milestones](CODEX_EXECUTION_PROGRESS.md), package register and current code.
+Updated 23 October 2026. Baseline: `origin/main` at `3e8e2ba4caf4578815dad2e99fbd2b491bd98a16`. Current development: `codex/r1-development` in the existing repository's separate Codex worktree. Development is committed and pushed in [draft PR #265](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265), awaiting hosted CI and owner review. It is not merged. Sources: [verified merge inventory](evidence/CODEX_WAVE3_MERGES_2026_10_23.json), [Codex execution milestones](CODEX_EXECUTION_PROGRESS.md), package register and current code.
 
 ## 1. Engineering and integration
 

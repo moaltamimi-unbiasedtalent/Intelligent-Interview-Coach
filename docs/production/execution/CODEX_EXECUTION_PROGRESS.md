@@ -1,6 +1,6 @@
 # Codex execution milestones
 
-Updated 23 October 2026. Branch `codex/r1-development`; baseline `3e8e2ba4`. Changes are locally verified and awaiting draft-PR CI and owner review; none is merged. Permanent checkout and all 44 existing worktrees are preserved; the added Codex worktree makes 45 registered worktrees.
+Updated 23 October 2026. Branch `codex/r1-development`; baseline `3e8e2ba4`. Implementation commit `3c761a4733ddcb1bc70e02a033166dc8134bb060` was committed and pushed successfully. [Draft PR #265](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/265) is open; hosted CI is pending and owner review is required. None of this work is merged. Permanent checkout and all 44 existing worktrees are preserved; the added Codex worktree makes 45 registered worktrees.
 
 | Milestone | Engineering | Local verification | CI | Staging | Human qualification | Production gates | Remaining work |
 |---|---|---|---|---|---|---|---|
@@ -16,3 +16,5 @@ Updated 23 October 2026. Branch `codex/r1-development`; baseline `3e8e2ba4`. Cha
 Final local validation: **8,503 backend tests passed, 52 skipped; 1,530 frontend unit tests passed; 14 focused browser tests passed; 49 offline CI evaluator/static commands succeeded** (one global-corpus native-teardown abort required an isolated successful rerun). Frontend lint, type check, production build and Ruff pass. Full details and operational limits: [verification report](evidence/CODEX_R1_DEVELOPMENT_2026_10_23.md).
 
 No live paid AI call, deployment, direct main push or PR merge occurred. Local test results do not approve any of them. Keep the five layers distinct after each subsequent milestone.
+
+Publication verification: local Git commit/push and GitHub API draft-PR creation succeeded with the existing local credential. The GitHub plugin can read repository state but its integration returned HTTP 403 for PR creation; the existing credential provided the working fallback. No credential was printed or stored in project files.
