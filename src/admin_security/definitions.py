@@ -56,6 +56,14 @@ ALERT_DEFINITIONS: Final[dict[str, dict]] = {
     "knowledge_source_files_missing": {"severity": "high", "source_type": "knowledge", "title": "Private knowledge source files are missing"},
     "knowledge_identity_mismatch": {"severity": "high", "source_type": "knowledge", "title": "The API and the worker use different knowledge environments"},
     "knowledge_embedding_mismatch": {"severity": "medium", "source_type": "knowledge", "title": "The embedder does not match the knowledge index"},
+    # 05C: operational health (derived by src/ops from facts the platform already records; in-app only)
+    "api_error_rate_high": {"severity": "high", "source_type": "platform", "title": "A high share of API requests are failing"},
+    "worker_unhealthy": {"severity": "high", "source_type": "platform", "title": "No background worker is running"},
+    "job_queue_backlog": {"severity": "medium", "source_type": "platform", "title": "Background jobs are waiting longer than expected"},
+    "indexing_stalled": {"severity": "medium", "source_type": "knowledge", "title": "Knowledge indexing work is not progressing"},
+    "provider_unhealthy": {"severity": "high", "source_type": "provider", "title": "The language model provider is failing"},
+    "quota_reaper_stale": {"severity": "medium", "source_type": "platform", "title": "Expired usage reservations are not being released"},
+    "ai_budget_attention": {"severity": "high", "source_type": "provider", "title": "The AI budget needs attention"},
 }
 ALERT_NOT_IMPLEMENTED: Final[tuple[str, ...]] = (
     "provider_outage", "error_rate", "failed_payments", "stale_knowledge_source", "indexing_failure", "support_sla_breach",

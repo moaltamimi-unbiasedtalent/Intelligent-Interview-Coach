@@ -396,6 +396,10 @@ def _run_live(records: list[dict]) -> None:  # pragma: no cover - not run here
     if not config.is_configured:
         print("No OpenRouter API key configured; cannot run live-assisted mode.")
         return
+    from src.llm.budget.script_guard import guard_paid_script      # 05C: every paid path also needs the governed budget (approved marker, durable ledger, ceilings, kill switch)
+
+    if guard_paid_script("run_jailbreak_tests", category="evaluation") is not None:
+        return
     client = OpenRouterClient(config)
     try:
         EvaluationService(client, PricingService())

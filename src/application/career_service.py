@@ -39,6 +39,12 @@ def _observe_retrieval(outcome: str, operation: str) -> None:
         pass
 
 
+def _market_kwargs(request) -> dict:
+    """02D: pass the Candidate's selected market to the domain service only when one is set (injected test doubles keep their signature)."""
+    market = getattr(request, "market", None)
+    return {"market": market} if market else {}
+
+
 class CareerApplicationService:
     """Callable Career Intelligence operations for any frontend."""
 
@@ -87,6 +93,7 @@ class CareerApplicationService:
                 model=request.model,
                 conversation_language=request.conversation_language,
                 progress=progress,
+                **_market_kwargs(request),
             )
             flag = getattr(answer, "insufficient_evidence", None)
             if flag is not None:
@@ -123,6 +130,7 @@ class CareerApplicationService:
                 job_description=request.job_description,
                 candidate_background=request.candidate_background,
                 progress=progress,
+                **_market_kwargs(request),
             )
             _observe_retrieval("abstained" if getattr(result, "insufficient_evidence", False) else "hit", "knowledge_search")
             return result

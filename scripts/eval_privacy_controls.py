@@ -170,6 +170,46 @@ def run() -> dict[str, tuple[bool, str]]:
     offenders = post_baseline_privacy_touches(ROOT / "migrations/versions", set(Base.metadata.tables))
     check("no_unreviewed_privacy_schema_change", not offenders,
           "no migration after the W9.8 baseline touches a candidate privacy, export, deletion or ownership table" if not offenders else f"privacy tables touched: {offenders}")
+
+    # --- 05E: deletion completeness, audit allow-list, acceptance history (deterministic, in-memory) ---
+    from types import SimpleNamespace
+
+    from src import audit_allowlist as AL
+    from src.application.account_deletion_service import AccountDeletionService
+    from src.privacy import erasure
+    from tests._erasure_world_05e import STATE_OVERRIDES, make_row
+
+    check("erasure_inventory_is_complete", erasure.unclassified_user_like_columns() == [] and len(erasure.user_references()) >= 55,
+          f"{len(erasure.user_references())} user-referencing columns derived from the schema; none unclassified")
+    e2 = create_engine("sqlite://", connect_args={"check_same_thread": False})
+    Base.metadata.create_all(e2)
+    sf2 = make_session_factory(e2)
+    with sf2() as s:
+        victim, bystander = P.User(subject="v", provider="password", email="v@ex.com"), P.User(subject="b", provider="password", email="b@ex.com")
+        s.add_all([victim, bystander])
+        s.flush()
+        refs = [r for r in erasure.user_references() if r.table != "preparation_runs"]
+        for ref in refs:
+            for owner in (victim.id, bystander.id):
+                make_row(s.connection(), Base.metadata.tables[ref.table], **{ref.column: owner}, **STATE_OVERRIDES.get(ref.table, {}))
+        s.commit()
+        vid, bid = victim.id, bystander.id
+    summary = AccountDeletionService(sf2, document_store=SimpleNamespace(delete=lambda k: True)).delete_account(vid)
+    with sf2() as s:
+        left = erasure.residual_references(s, vid)
+        bystander_ok = all((s.execute(Base.metadata.tables[r.table].select().where(Base.metadata.tables[r.table].c[r.column] == bid)).first() is not None) for r in refs)
+    check("account_deletion_leaves_no_reference_to_the_account", summary.sql_complete and not left and bystander_ok,
+          f"every reference column swept; another account untouched; residual={left or 'none'}")
+    try:
+        AL.sanitize({"free_text_note": "x"}, strict=True)
+        rejected = False
+    except AL.AuditContextRejected:
+        rejected = True
+    clean, problems = AL.sanitize({"count": 1, "note": "x"}, strict=False)
+    check("audit_context_is_allow_list_enforced", rejected and clean == {"count": 1, "dropped_keys": 1}, "an unlisted key is rejected in strict mode and dropped (never stored) otherwise")
+    legal_src = _read("src/privacy/legal.py")
+    check("acceptance_history_is_never_backfilled_or_consent", "optional_processing_consent_recorded" in legal_src and '"back_filled": False' in legal_src,
+          "history states it is a version acknowledgement only, not consent, not back-filled")
     return out
 
 

@@ -60,7 +60,7 @@ def _base(sid: str) -> str:
 def _embedding_mode(config) -> str:
     key = getattr(config, "embedding_api_key", None)
     provider = (getattr(config, "embedding_provider", "auto") or "auto").lower()
-    if provider == "openai" or (provider == "auto" and key and key.get_secret_value().strip()):
+    if provider in ("openai", "openrouter") or (provider == "auto" and key and key.get_secret_value().strip()):
         return "semantic (dedicated embedding key)"
     return "lexical/offline (local hash embedder)"
 

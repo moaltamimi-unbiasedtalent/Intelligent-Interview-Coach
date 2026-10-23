@@ -683,3 +683,24 @@ def test_test_identities_never_collide_even_when_the_allocator_reuses_a_freed_li
     with sf(env)() as s:
         subjects = [r[0] for r in s.execute(text("SELECT subject FROM users WHERE provider = 'test'"))]
     assert len(subjects) == len(set(subjects)) == 5                      # the (provider, subject) uniqueness constraint itself is untouched
+
+
+# ---------------- 05E (PRIV-DIFF): differencing attacks through the real HTTP report endpoints --------------------------------------------
+
+def test_nested_window_subtraction_over_http_exposes_no_small_group(env):
+    """7d = 6 and 30d = 9 are each above the floor, but 9 - 6 is a hidden cohort of 3. The 05E guard suppresses the wider window (full attack tests and the
+    residual-risk statement: tests/test_differencing_05e.py, src/reporting/differencing.py)."""
+    import itertools
+
+    _, plat = env.user("platform_admin")
+    users(env, 6, created=NOW - timedelta(days=3))
+    users(env, 3, created=NOW - timedelta(days=20), prefix="m")
+    figs = {}
+    for period in ("7d", "30d", "90d", "all_time"):
+        r = env.c.get(f"{API}/admin/reports/product?period={period}", cookies=plat)
+        assert r.status_code == 200
+        sec = next(x for x in r.json()["sections"] if x["section_id"] == "product")
+        figs[period] = next(m for m in sec["metrics"] if m["metric_id"] == "registrations")["figure"]
+    shown = [v for v in figs.values() if v is not None]
+    assert figs["7d"] == 6 and figs["30d"] is None
+    assert all(not (0 < abs(a - b) < REPORTING_MIN_COHORT) for a, b in itertools.combinations(shown, 2)), figs

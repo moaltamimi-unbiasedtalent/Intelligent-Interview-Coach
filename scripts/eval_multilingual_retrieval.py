@@ -22,7 +22,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.copilot.embedding_budget import PaidEmbeddingRefused, describe_requirements, estimate_embedding_run  # noqa: E402
+from src.copilot.embedding_budget import PaidEmbeddingRefused, describe_requirements, estimate_embedding_run, is_free, require_paid_embedding_approval  # noqa: E402
 from src.copilot.embeddings import EmbeddingConfigurationError, LocalHashEmbedder, build_embedder  # noqa: E402
 from src.copilot.evaluation.multilingual_retrieval import load_dataset, run_benchmark  # noqa: E402
 
@@ -51,6 +51,18 @@ def main(argv: list[str] | None = None) -> int:
         except EmbeddingConfigurationError as exc:
             print(f"REFUSED: embedding configuration not acceptable ({', '.join(exc.codes)})", file=sys.stderr)
             return 2
+    if not is_free(embedder):
+        # The existing owner-approval refusal stays first and unchanged; then 05C: a paid embedder also needs the governed budget (approved marker, durable ledger, ceilings, kill switch).
+        try:
+            require_paid_embedding_approval()
+        except PaidEmbeddingRefused as exc:
+            print(f"REFUSED: a paid embedder needs explicit owner approval ({', '.join(exc.codes)}). {json.dumps(describe_requirements())}", file=sys.stderr)
+            return 2
+        from src.llm.budget.script_guard import guard_paid_script
+
+        refused = guard_paid_script("eval_multilingual_retrieval", category="embedding")
+        if refused is not None:
+            return refused
     try:
         result = run_benchmark(embedder, dataset=ds)
     except PaidEmbeddingRefused as exc:

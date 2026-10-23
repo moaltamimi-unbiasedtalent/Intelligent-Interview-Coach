@@ -61,6 +61,12 @@ def _run_live(profile: str, limit: int | None):
 
     try:
         with G.live_session("agent-live", "synthetic_held_out_agent_cases", credential_check=creds) as session:
+            # 05C: after the P10E refusals (unchanged, they come first), every paid path also needs the governed budget (approved marker, durable ledger, ceilings, kill switch)
+            from src.llm.budget.script_guard import guard_paid_script
+
+            refused = guard_paid_script("eval_agent_live", category="evaluation")
+            if refused is not None:
+                return refused
             out = R.run_agent(session, profile, limit=limit)
     except G.LiveRunRefused as exc:
         print(f"REFUSED ({exc.reason}): {exc}")

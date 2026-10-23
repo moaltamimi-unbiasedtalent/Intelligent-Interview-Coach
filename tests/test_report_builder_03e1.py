@@ -1110,3 +1110,23 @@ def test_the_privacy_schema_invariant_allows_a_foreign_key_reference_but_still_c
         assert EV.migration_tables_touched(head + body, known) & EV.PRIVACY_TABLES, body
     ok = head + 'def upgrade():\n    op.create_table("t", sa.Column("a", sa.Integer(), sa.ForeignKey("users.id", ondelete="CASCADE")), sa.ForeignKeyConstraint(["a"], ["interviews.id"]))\n'
     assert not EV.migration_tables_touched(ok, known) & EV.PRIVACY_TABLES
+
+
+def test_builder_windows_cannot_be_subtracted_into_a_small_group_05e():
+    """05E (PRIV-DIFF) through the real builder route: 6 candidates registered inside 7d and 3 more only inside 30d. The wider window must not expose the group of 3.
+    Full attack matrix and residual risk: tests/test_differencing_05e.py."""
+    w = World()
+    try:
+        w.candidates(6)
+        with w.sf() as s:
+            for i in range(3):
+                t = NOW - 20 * DAY
+                tag = uuid.uuid4().hex[:6]
+                s.add(User(subject=f"old{i}-{tag}", provider="test", email=f"old{i}-{tag}@example.test", platform_role="user", status="active", created_at=t, updated_at=t))
+            s.commit()
+        seven = w.preview(report_id="product", metric_ids="registrations", window="7d").json()["metrics"][0]
+        thirty = w.preview(report_id="product", metric_ids="registrations", window="30d").json()["metrics"][0]
+        assert seven["state"] == "ok" and seven["value"] >= REPORTING_MIN_COHORT           # (the World also holds one candidate persona: the figure is the registrations of the window)
+        assert thirty["value"] is None and thirty["state"] == "suppressed"
+    finally:
+        w.close()

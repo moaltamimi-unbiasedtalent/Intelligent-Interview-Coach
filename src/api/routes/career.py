@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 
-from src.api.dependencies import get_career_service
+from src.api.dependencies import get_career_service, get_current_principal
 from src.api.schemas.career import (
     CareerChatRequest,
     CareerChatResponse,
@@ -30,7 +30,8 @@ router = APIRouter(prefix="/career", tags=["career"])
 @router.post("/chat", response_model=CareerChatResponse, summary="Grounded career chat")
 def chat(body: CareerChatRequest,
          svc: CareerApplicationService = Depends(get_career_service),
-         _ai=Depends(ai_operation("career", "chat"))) -> CareerChatResponse:
+         _ai=Depends(ai_operation("career", "chat")),
+         principal=Depends(get_current_principal)) -> CareerChatResponse:
     from src.language_activation import require_locale_activated
 
     require_locale_activated(body.conversation_language)  # 06H: new chat only in an activated language
@@ -41,6 +42,7 @@ def chat(body: CareerChatRequest,
         days_until_interview=body.days_until_interview,
         hours_per_week=body.hours_per_week,
         conversation_language=body.conversation_language,
+        market=getattr(principal, "career_geography", "") or None,   # 02D: the account's selected market (never derived from a language)
     ))
     return CareerChatResponse.from_orchestration(result)
 
