@@ -106,8 +106,8 @@ const sourceFiles = ["app", "components", "lib"].flatMap((d) => walk(join(FRONTE
 const rel = (f: string) => relative(FRONTEND, f);
 
 describe("the table mirror", () => {
-  it("lists the nine families once, with the gated UI keywords", () => {
-    expect(FAMILIES.map((f) => f.id).sort()).toEqual(["billing_checkout", "billing_reconciliation", "compensation_v2", "history_gating", "international_sources", "model_profile_gating",
+  it("lists the ten families once, with the gated UI keywords", () => {
+    expect(FAMILIES.map((f) => f.id).sort()).toEqual(["billing_checkout", "billing_reconciliation", "compensation_v2", "history_gating", "international_sources", "mail_delivery_webhook", "model_profile_gating",
       "realtime_voice", "speech_server", "stripe_webhook"]);
     expect(table.gated_ui_keywords.length).toBeGreaterThan(8);
   });
