@@ -617,7 +617,16 @@ def delete_account(
         repo.session_factory, document_store=document_store,
         agent_service=agent_service, audit_repository=audit,
         preparation_index=PreparationRunIndex(repo.session_factory))
-    summary = service.delete_account(user_id)
+    from src.application.account_deletion_service import DeletionIncomplete
+
+    try:
+        summary = service.delete_account(user_id)
+    except DeletionIncomplete:
+        # 05E: a private file could not be deleted, so NOTHING was removed (the files go first, then the rows, in one pass). The account is intact and the same call can be
+        # repeated; the response carries no path, key or error text.
+        exc = HTTPException(status_code=503, detail="Your account could not be deleted completely right now, so nothing was removed. Please try again in a moment.")
+        exc.error_code = "deletion_incomplete"  # type: ignore[attr-defined]
+        raise exc
     _clear_session_cookie(request, response)
     if summary.purge_failed_run_ids:
         # Never claim full success: some preparation-chat working data could not be removed. Queue retries (best effort).

@@ -25,7 +25,10 @@ vi.mock("@/components/i18n/I18nProvider", () => ({ useT: () => (k: string) => k 
 const home = vi.fn();
 const providers = vi.fn();
 vi.mock("@/lib/api/client", () => ({
-  api: { admin: { home: () => home(), providers: () => providers(), users: vi.fn(), audit: vi.fn(), workspaces: vi.fn() } },
+  api: { admin: {
+    commandCenterDefinitions: () => import("../e2e/fixtures/admin-responses.json").then((m) => (m.default as Record<string, any>)["/admin/command-center/definitions"]),
+    commandCenterSection: (s: string) => import("../e2e/fixtures/admin-responses.json").then((m) => (m.default as Record<string, any>)[`/admin/command-center/${s}`]),
+    home: () => home(), providers: () => providers(), users: vi.fn(), audit: vi.fn(), workspaces: vi.fn() } },
 }));
 
 import { AdminShell } from "@/components/admin/AdminShell";

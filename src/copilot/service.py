@@ -32,6 +32,7 @@ from src.copilot.models import (
 from src.copilot.rag.responder import Responder
 from src.copilot.rag.routing import route_for_intent
 from src.copilot.rag import localized
+from src.copilot.rag.attribution import apply_source_language_notices, check_citations, sources_from_citations
 from src.copilot.rag.synthesis import build_evidence_messages
 from src.copilot.rag.translation import QueryTranslator
 from src.copilot.retrieval.fusion import reciprocal_rank_fusion
@@ -325,6 +326,7 @@ class CareerIntelligenceService:
         model: str | None = None,
         progress=None,
         conversation_language: str | None = None,
+        market: str | None = None,
     ) -> OrchestrationResult:
         # Stages 1–8 (validation → routing → hybrid + structured retrieval →
         # evidence assembly) are the SHARED evidence-retrieval layer, reused by the
@@ -335,6 +337,7 @@ class CareerIntelligenceService:
             job_description=job_description,
             candidate_background=candidate_background,
             progress=progress,
+            market=market,
         )
         trace = bundle.trace
 
@@ -427,6 +430,15 @@ class CareerIntelligenceService:
         referenced = {f"[{n}]" for n in _MARKER_RE.findall(answer_text)}
         cited = [c for c in citations if c.marker in referenced]
 
+        # 06D (LG-06): every citation maps to a real retrieved source, and a cited source in another language than the conversation is announced as
+        # such (language stated, the report is a translation, the original wording quoted unchanged). The answer text itself is never rewritten.
+        retrieved_sources = sources_from_citations(citations, {c.marker: e.text for c, e in zip(citations, bundle.evidence)})
+        attribution_issues = check_citations(answer_text, cited, retrieved_sources)
+        answer_text, attribution = apply_source_language_notices(answer_text, retrieved_sources, conversation_language=conversation_language)
+        attribution_issues = list(dict.fromkeys(attribution_issues + attribution.issues))
+        if attribution_issues:
+            trace.output_findings = list(trace.output_findings or []) + [f"citation attribution: {i}" for i in attribution_issues]
+
         response = ChatResponse(
             answer=answer_text,
             citations=cited,
@@ -450,6 +462,7 @@ class CareerIntelligenceService:
         job_description: str | None = None,
         candidate_background: str | None = None,
         progress=None,
+        market: str | None = None,
     ) -> KnowledgeRetrievalResult:
         """Run ONLY the deterministic evidence-retrieval layer and return typed
         evidence + citations — no Career tools, no final answer synthesis.
@@ -470,6 +483,7 @@ class CareerIntelligenceService:
             job_description=job_description,
             candidate_background=candidate_background,
             progress=progress,
+            market=market,
         )
         trace = bundle.trace
         if bundle.blocked:
@@ -526,6 +540,7 @@ class CareerIntelligenceService:
         job_description: str | None,
         candidate_background: str | None,
         progress,
+        market: str | None = None,
     ) -> _EvidenceBundle:
         """Shared retrieval stages for both ``answer`` and ``retrieve_evidence``.
 
@@ -656,6 +671,22 @@ class CareerIntelligenceService:
         )
         bundle.structured_evidence = structured_evidence
         bundle.coverage_notes = coverage_notes
+
+        # 02D: an unqualified source is not retrievable. ONE filter over BOTH channels (narrative chunks incl. Admin-governed, and structured evidence) against the
+        # committed approval register for the Candidate's market (selected geography, else the country the question names; never the language). Hosted: dropped,
+        # fail closed; development: labelled. Dropped items are not replaced.
+        from src.copilot.knowledge import approval_filter
+
+        results, structured_evidence, approval = approval_filter.apply(
+            results, structured_evidence, selected_market=market, detected_country=trace.detected_country)
+        bundle.results = results
+        bundle.structured_evidence = structured_evidence
+        trace.context_count = len(results)
+        if approval_note := approval.note():
+            trace.notes.append(approval_note)
+            bundle.coverage_notes = list(coverage_notes) + [approval_note]
+        if approval.dropped_count and not results and trace.rag_used:
+            trace.rag_used = False
 
         clarify_msg = getattr(self, "_clarify_message", None)
         self._clarify_message = None

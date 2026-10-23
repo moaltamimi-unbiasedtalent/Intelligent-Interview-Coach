@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 from src.copilot import constants
 from src.copilot.config import CopilotConfig
 from src.copilot.models import ChatResponse, Citation, RetrievalResult, TranslatedQuery
+from src.copilot.rag.attribution import apply_source_language_notices, sources_from_citations
 from src.copilot.rag.context import ContextBundle, build_context
 from src.copilot.rag.prompts import build_messages
 from src.copilot.rag.responder import ModelReply, Responder, build_openrouter_responder
@@ -132,8 +133,12 @@ class RagChain:
         model: str | None = None,
         temperature: float | None = None,
         max_tokens: int | None = None,
+        conversation_language: str | None = None,
     ) -> ChatResponse:
         """Run the full RAG pipeline and return a grounded :class:`ChatResponse`.
+
+        ``conversation_language`` (the Mo conversation language, default English) only decides whether a cited source written in another language is
+        announced as a translation with its original wording quoted (06D); it never changes retrieval or the model prompt.
 
         ``translated`` and/or ``results`` may be supplied to reuse work already
         done (e.g. so the UI can show translation/retrieval progress) instead of
@@ -157,8 +162,10 @@ class RagChain:
         reply = responder(messages)
 
         citations = _select_citations(reply.content, bundle.citations)
+        sources = sources_from_citations(bundle.citations, {c.marker: r.text for c, r in zip(bundle.citations, bundle.used)})
+        answer_text, _ = apply_source_language_notices(reply.content, sources, conversation_language=conversation_language)
         return ChatResponse(
-            answer=reply.content,
+            answer=answer_text,
             citations=citations,
             retrieved=results,
             translated_query=translated,

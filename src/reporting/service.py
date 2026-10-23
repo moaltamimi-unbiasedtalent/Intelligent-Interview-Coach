@@ -19,6 +19,7 @@ from src.persistence import (
     Opportunity, OperationalMetricEvent, PlanVersion, PreparationRun, Question, Subscription, SupportTicket, User, UserFeedback, utcnow,
 )
 from src.reporting import suppression as S
+from src.reporting.differencing import guard_report
 from src.reporting.definitions import (
     DEFAULT_PERIOD, METRICS, PERIODS, PLAN_ORDER, STATE_NOT_CAPTURED,
 )
@@ -71,6 +72,7 @@ class ReportingService:
                              "coverage": m.coverage} for m in METRICS]}
 
     # ------------------------------------------------------------------ product
+    @guard_report
     def product(self, period: str | None = None) -> dict:
         period, since, now = self.window(period)
         with self._sf() as s:
@@ -166,6 +168,7 @@ class ReportingService:
         return first, days
 
     # ------------------------------------------------------------------ quality
+    @guard_report
     def quality(self, period: str | None = None) -> dict:
         period, since, now = self.window(period)
         with self._sf() as s:
@@ -182,7 +185,7 @@ class ReportingService:
                                                                                        *self._in(Interview.created_at, since, now))).one()
             ops = self._operational(s, since, now)
         m = S.metric
-        rating_table = S.partition([{"label": r or "unknown", "values": [n], "cohort": u} for r, n, u in rating_rows])
+        rating_table = S.partition([{"label": r or "unknown", "values": [n], "cohort": u} for r, n, u in rating_rows], scope="feedback_rating")
         cat_buckets = [{"label": c or "uncategorised", "values": [n], "cohort": u} for r, c, n, u in fb]
         metrics = [
             m("feedback_total", "Candidates who gave feedback", fb_users, cohort=fb_users, coverage="Historical, from authoritative rows",
@@ -194,7 +197,7 @@ class ReportingService:
         ] + ops["metrics"]
         tables = [
             {"table_id": "feedback_rating", "title": "Feedback by rating (answers counted)", "columns": ["Answers"], "rows": rating_table, "note": "Buckets below the floor are suppressed; the smallest remaining bucket may be suppressed too."},
-            {"table_id": "feedback_category", "title": "Feedback by category (answers counted)", "columns": ["Answers"], "rows": S.partition(cat_buckets), "note": "Safe, code-defined categories only."},
+            {"table_id": "feedback_category", "title": "Feedback by category (answers counted)", "columns": ["Answers"], "rows": S.partition(cat_buckets, scope="feedback_category"), "note": "Safe, code-defined categories only."},
         ] + ops["tables"]
         return self._envelope(period, since, now, [{
             "section_id": "quality", "title": "Quality", "coverage": "Feedback and evaluation scores are historical; retrieval, request and provider outcomes are captured since W10.12.",
@@ -243,6 +246,7 @@ class ReportingService:
         return {"captured_since": captured, "metrics": metrics, "tables": tables}
 
     # ------------------------------------------------------------------ operations
+    @guard_report
     def operations(self, period: str | None = None, *, job_stats: dict | None = None, integration_stats: dict | None = None, knowledge_stats: dict | None = None,
                    support_stats: dict | None = None, pause_stats: dict | None = None, flag_stats: dict | None = None) -> dict:
         period, since, now = self.window(period)
@@ -285,6 +289,7 @@ class ReportingService:
         return self._envelope(period, since, now, sections)
 
     # ------------------------------------------------------------------ AI economics
+    @guard_report
     def ai_economics(self, period: str | None = None) -> dict:
         period, since, now = self.window(period)
         with self._sf() as s:
@@ -334,8 +339,8 @@ class ReportingService:
                                                                    round(x["cost_micros"] / 1_000_000, 6) if x["cost_facts"] else None,
                                                                    round(100.0 * x["cost_facts"] / x["facts"], 1)]}
         cols = ["Model calls", "Known tokens", "Known cost USD", "Cost coverage %"]
-        wf = S.partition([bucket(k, v) for k, v in sorted(by_workflow.items())])
-        md = S.partition([bucket(k, v) for k, v in sorted(by_model.items())])
+        wf = S.partition([bucket(k, v) for k, v in sorted(by_workflow.items())], scope="ai_by_workflow")
+        md = S.partition([bucket(k, v) for k, v in sorted(by_model.items())], scope="ai_by_model")
         ranked_cost = sorted(((round(totals(v)["cost_micros"] / 1_000_000, 6), k) for k, v in by_workflow.items() if totals(v)["cost_facts"]), reverse=True)
         ranked_tok = sorted(((totals(v)["tokens"], k) for k, v in by_workflow.items() if totals(v)["tok_facts"]), reverse=True)
         # a ranking is a function of bucket values, so it only lists buckets whose cells are visible after suppression
@@ -351,6 +356,7 @@ class ReportingService:
                                                      "note": "Observed usage only: no live pricing is fetched. Unknown tokens and unknown cost are never shown as zero.", "metrics": metrics, "tables": tables}])
 
     # ------------------------------------------------------------------ commercial (separate permission)
+    @guard_report
     def commercial(self, period: str | None = None) -> dict:
         period, since, now = self.window(period)
         with self._sf() as s:
@@ -394,8 +400,8 @@ class ReportingService:
             m("access_upgrades", "Access-plan upgrades in the period", up, cohort=up, coverage="Historical, from subscriptions", note="Basic to Premium access assignments; not paid conversion."),
             m("access_downgrades", "Access-plan downgrades in the period", down, cohort=down, coverage="Historical, from subscriptions"),
         ]
-        plan_rows = S.partition([{"label": k, "values": [len(v)], "cohort": len(v)} for k, v in sorted(by_plan.items())])
-        src_rows = S.partition([{"label": k, "values": [len(v)], "cohort": len(v)} for k, v in sorted(by_source.items())])
+        plan_rows = S.partition([{"label": k, "values": [len(v)], "cohort": len(v)} for k, v in sorted(by_plan.items())], scope="access_by_plan")
+        src_rows = S.partition([{"label": k, "values": [len(v)], "cohort": len(v)} for k, v in sorted(by_source.items())], scope="access_by_source")
 
         # mock MRR / ARR: ACTIVE mock provider subscriptions with terms; per currency; integer minor units; ROUND_HALF_UP
         eligible = [p for p in ps if p[1] == "active"]
@@ -430,8 +436,8 @@ class ReportingService:
                         S.unavailable("mock_arr", "Mock ARR", "Unconfigured: no active mock subscription has commercial terms. This is not zero revenue.", "Mock billing state")]
             cur_rows = []
         else:
-            cur_rows = S.partition([{"label": cur, "values": [v["priced"], round(v["mrr"] / 100, 2), round(v["arr"] / 100, 2)], "cohort": v["priced"]} for cur, v in sorted(per_cur.items())])
-        state_rows = S.partition([{"label": k, "values": [n], "cohort": n} for k, n in sorted(by_state.items())])
+            cur_rows = S.partition([{"label": cur, "values": [v["priced"], round(v["mrr"] / 100, 2), round(v["arr"] / 100, 2)], "cohort": v["priced"]} for cur, v in sorted(per_cur.items())], scope="mock_recurring")
+        state_rows = S.partition([{"label": k, "values": [n], "cohort": n} for k, n in sorted(by_state.items())], scope="mock_by_state")
         tables = [
             {"table_id": "access_by_plan", "title": "Active access-plan assignments by plan", "columns": ["Subjects"], "rows": plan_rows, "note": "Access assignments, not payments."},
             {"table_id": "access_by_source", "title": "Active assignments by source", "columns": ["Subjects"], "rows": src_rows, "note": ""},

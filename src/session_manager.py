@@ -143,6 +143,8 @@ class SessionData:
 
     # Control fields.
     error: str | None = None
+    # 04D: a stable bounded cause code (constants.AI_FAILURE_CODES) alongside the safe message, so the client renders localized, accurate copy. None for any other cause.
+    error_code: str | None = None
     previous_state: SessionState | None = None
     interview_start_time: float | None = None
     active_operation: str | None = None
@@ -470,7 +472,7 @@ class SessionManager:
     # -- 11. error handling & recovery ----------------------------------------
 
     def enter_error(
-        self, message: str, *, recover_to: SessionState | None = None
+        self, message: str, *, recover_to: SessionState | None = None, code: str | None = None
     ) -> None:
         """Record a controlled, recoverable error and move to ERROR.
 
@@ -483,6 +485,7 @@ class SessionManager:
         elif recover_to is not None:
             data.previous_state = recover_to
         data.error = message
+        data.error_code = code
         data.active_operation = None  # release any in-flight guard
         data.state = SessionState.ERROR
 
@@ -491,6 +494,7 @@ class SessionManager:
         target = self.data.previous_state or SessionState.SETUP
         self.data.state = target
         self.data.error = None
+        self.data.error_code = None
         self.data.previous_state = None
 
     # -- 12. reset ------------------------------------------------------------

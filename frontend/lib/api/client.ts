@@ -1,6 +1,15 @@
 import { config } from "../config";
 import { ApiError, apiErrorFromBody, parseRetryAfter, unreachableError } from "./errors";
+import {
+  isAdminReport, isReportRegistry, isPreviewResult, isSavedList, isSavedReport, isValidateResult, definitionQuery,
+  type BuilderDefinition, type ExportFormat, type PreviewResult, type ReportFamily, type ReportRegistry, type SavedList, type SavedReport, type ValidateResult,
+} from "@/lib/admin/reportBuilder";
 import { runWithRetry } from "./retry";
+import {
+  checked as checkedShape, isStatusOf, isStepUpStateLike, isTransfer, isTransferList, isTransferPreview, isTransferState, isWorkspaceRef, malformedResponse,
+} from "../workspaces/transferGuard";
+import { assertCcDefinitions, assertCcSection } from "../admin/commandCenterGuard";
+import type { CommandCenterSectionPath } from "../admin/commandCenterSections";
 import type {
   AIActivation,
   AdminReport,
@@ -84,6 +93,7 @@ import type {
   AdminUserQuery,
   AdminUserActionBody,
   AdminUserActionName,
+  BulkUserActionName,
   AdminUserActionResult,
   AdminUserSummary,
   AdminWorkspaceDetail,
@@ -139,6 +149,7 @@ import type {
   RealtimeStatusResponse,
   AgentContinueRequest,
   AgentRunDeleteResponse,
+  RecentRunsResponse,
   AgentRunRequest,
   AgentRunResponse,
   HumanDecisionRequest,
@@ -284,6 +295,66 @@ function qs(params: Record<string, unknown>): string {
   return text ? `?${text}` : "";
 }
 
+
+/** A successful response with the wrong shape is an explicit error, never a crash and never a silent empty success (the Admin error state renders it). */
+function malformed(what: string): ApiError {
+  return new ApiError({ kind: "unknown", status: null, code: "malformed_response", message: `The ${what} response was not in the expected form.` });
+}
+
+async function checked<T>(what: string, p: Promise<unknown>, guard: (v: unknown) => v is T): Promise<T> {
+  const v = await p;
+  if (!guard(v)) throw malformed(what);
+  return v;
+}
+
+/** A binary download (report export). POST, never retried. A non-2xx response never yields a file; a 2xx without the expected content type is refused too. */
+async function download(path: string, body: unknown, expectedType: string): Promise<{ blob: Blob; filename: string | null; rows: number | null }> {
+  let res: Response;
+  try {
+    res = await fetch(`${config.apiBaseUrl}${path}`, {
+      method: "POST", credentials: "include",
+      headers: { Accept: expectedType, "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify(body),
+    });
+  } catch (cause) {
+    if (cause instanceof DOMException && cause.name === "AbortError") throw cause;
+    throw unreachableError(browserIsOnline());
+  }
+  if (!res.ok) {
+    const isJson = res.headers.get("content-type")?.includes("application/json");
+    const payload = isJson ? await res.json().catch(() => undefined) : undefined;
+    throw apiErrorFromBody(res.status, payload, res.headers.get(REQUEST_ID_HEADER), parseRetryAfter(res.headers.get(RETRY_AFTER_HEADER)));
+  }
+  if (!(res.headers.get("content-type") ?? "").toLowerCase().startsWith(expectedType)) throw malformed("export");
+  const blob = await res.blob();
+  const disp = res.headers.get("content-disposition") ?? "";
+  const m = /filename="([A-Za-z0-9._-]{1,120})"/.exec(disp);
+  const rows = Number(res.headers.get("x-export-rows"));
+  return { blob, filename: m ? m[1] : null, rows: Number.isInteger(rows) && res.headers.get("x-export-rows") !== null ? rows : null };
+}
+
+const EXPORT_TYPES: Record<ExportFormat, string> = { csv: "text/csv", json: "application/json", pdf: "application/pdf" };
+
+/** 03E2: the governed report builder, one family per existing read permission (standard, commercial). */
+function reportBuilder(family: ReportFamily) {
+  const base = family === "commercial" ? "/admin/report-builder/commercial" : "/admin/report-builder";
+  return {
+    registry: (opts?: RequestOptions) => checked<ReportRegistry>("report registry", request<unknown>("GET", `${base}/registry`, opts), isReportRegistry),
+    validate: (d: BuilderDefinition, opts?: RequestOptions) => checked<ValidateResult>("validation", request<unknown>("GET", `${base}/validate${definitionQuery(d)}`, opts), isValidateResult),
+    preview: (d: BuilderDefinition, opts?: RequestOptions) => checked<PreviewResult>("preview", request<unknown>("GET", `${base}/preview${definitionQuery(d)}`, opts), isPreviewResult),
+    saved: (opts?: RequestOptions) => checked<SavedList>("saved reports", request<unknown>("GET", `${base}/saved`, opts), isSavedList),
+    savedPreview: (id: number, opts?: RequestOptions) => checked<PreviewResult>("preview", request<unknown>("GET", `${base}/saved/${id}/preview`, opts), isPreviewResult),
+    create: (body: { name: string; definition: BuilderDefinition; shared: boolean }, opts?: RequestOptions) =>
+      checked<SavedReport>("saved report", request<unknown>("POST", `${base}/saved`, { body, ...opts }), isSavedReport),
+    update: (id: number, body: { name: string; definition: BuilderDefinition; shared: boolean; expected_revision: number }, opts?: RequestOptions) =>
+      checked<SavedReport>("saved report", request<unknown>("PUT", `${base}/saved/${id}`, { body, ...opts }), isSavedReport),
+    remove: (id: number, expectedRevision: number, opts?: RequestOptions) =>
+      request<void>("DELETE", `${base}/saved/${id}?expected_revision=${expectedRevision}`, opts),
+    /** The file is returned only on a 2xx. A refused export or a 503 (audit could not be written) throws and yields no file. */
+    exportReport: (format: ExportFormat, definition: BuilderDefinition) => download(`${base}/export`, { format, definition }, EXPORT_TYPES[format]),
+  };
+}
+
 /** Typed FastAPI client. Add new typed methods here rather than calling fetch ad hoc. */
 export const api = {
   health: (opts?: RequestOptions) => request<HealthResponse>("GET", "/health", opts),
@@ -416,6 +487,9 @@ export const api = {
       request<AgentRunResponse>("POST", `/agent/runs/${encodeURIComponent(runId)}/resume`, { body, ...opts }),
     remove: (runId: string, opts?: RequestOptions) =>
       request<AgentRunDeleteResponse>("DELETE", `/agent/runs/${encodeURIComponent(runId)}`, opts),
+    /** 04D (AC-18): the caller's OWN recent runs (owner-scoped, bounded, no content). The component validates the shape; this returns the body as received. */
+    listRuns: (limit = 10, opts?: RequestOptions) =>
+      request<RecentRunsResponse>("GET", `/agent/runs?limit=${encodeURIComponent(String(limit))}`, opts),
   },
 
   // Company Intelligence (P10B Wave 5). Directable company research; the server enforces
@@ -608,9 +682,31 @@ export const api = {
     setMemberRole: (id: number, targetUserId: number, role: string, opts?: RequestOptions) =>
       request<{ user_id: number; role: string; changed: boolean }>(
         "POST", `/workspaces/${id}/members/${targetUserId}/role`, { body: { role }, ...opts }),
-    transfer: (id: number, newOwnerUserId: number, confirmName: string, opts?: RequestOptions) =>
-      request<WorkspaceSummary>("POST", `/workspaces/${id}/transfer`,
-        { body: { new_owner_user_id: newOwnerUserId, confirm_name: confirmName }, ...opts }),
+    // Ownership transfer (04B completion): TWO steps. The owner proposes (after a fresh password confirmation); the bound, verified recipient accepts with the
+    // one-time token from the notice. Every response is shape-checked at this boundary (a malformed 200 is an explicit error, never an empty "no transfer").
+    transferStepUp: async (password: string, opts?: RequestOptions) =>
+      checkedShape(await request<unknown>("POST", "/workspaces/transfers/step-up", { body: { password }, ...opts }), isStepUpStateLike),
+    transferState: async (id: number, opts?: RequestOptions) =>
+      checkedShape(await request<unknown>("GET", `/workspaces/${id}/transfer`, opts), isTransferState),
+    proposeTransfer: async (id: number, newOwnerUserId: number, confirmName: string, formerOwnerRole: "workspace_admin" | "workspace_member", opts?: RequestOptions) =>
+      checkedShape(await request<unknown>("POST", `/workspaces/${id}/transfer`,
+        { body: { new_owner_user_id: newOwnerUserId, confirm_name: confirmName, former_owner_role: formerOwnerRole }, ...opts }), isTransfer),
+    cancelTransfer: async (id: number, opts?: RequestOptions) => {
+      const r = await request<unknown>("POST", `/workspaces/${id}/transfer/cancel`, opts);
+      if (!isStatusOf(r, "cancelled")) throw malformedResponse();
+      return { status: "cancelled" as const };
+    },
+    transfersMine: async (opts?: RequestOptions) =>
+      checkedShape(await request<unknown>("GET", "/workspaces/transfers/mine", opts), isTransferList),
+    previewTransfer: async (token: string, opts?: RequestOptions) =>
+      checkedShape(await request<unknown>("POST", "/workspaces/transfers/preview", { body: { token }, ...opts }), isTransferPreview),
+    acceptTransfer: async (token: string, opts?: RequestOptions) =>
+      checkedShape(await request<unknown>("POST", "/workspaces/transfers/accept", { body: { token }, ...opts }), isWorkspaceRef),
+    declineTransfer: async (transferId: number, opts?: RequestOptions) => {
+      const r = await request<unknown>("POST", `/workspaces/transfers/${transferId}/decline`, opts);
+      if (!isStatusOf(r, "declined")) throw malformedResponse();
+      return { status: "declined" as const };
+    },
     archive: (id: number, opts?: RequestOptions) =>
       request<WorkspaceSummary>("POST", `/workspaces/${id}/archive`, opts),
     restore: (id: number, opts?: RequestOptions) =>
@@ -672,6 +768,10 @@ export const api = {
   // Platform Admin operations (Capstone P6.5). PLATFORM_ADMIN only; metadata only.
   admin: {
     home: (opts?: RequestOptions) => request<AdminCommandCenter>("GET", "/admin/home", opts),
+    // 03D2 Command Center read model (GET only, aggregates). Every response is shape-checked HERE, at the client boundary: a malformed 200 throws and the view shows the explicit Admin error state.
+    commandCenterDefinitions: async (opts?: RequestOptions) => assertCcDefinitions(await request<unknown>("GET", "/admin/command-center/definitions", opts)),
+    commandCenterSection: async (section: CommandCenterSectionPath, period: string, opts?: RequestOptions) =>
+      assertCcSection(await request<unknown>("GET", `/admin/command-center/${section}?period=${encodeURIComponent(period)}`, opts)),
     // 04E private-beta invitations. The plaintext code and link are in the issue response only.
     invitations: (q: { state?: string; limit?: number; offset?: number } = {}, opts?: RequestOptions) =>
       request<AdminInvitationPage>("GET", `/admin/invitations${qs(q as Record<string, unknown>)}`, opts),
@@ -686,6 +786,11 @@ export const api = {
     // 03C: strict account actions (reason and the account revision are mandatory; the server enforces self, hierarchy and stale-state protection).
     userAction: (userId: number, action: AdminUserActionName, body: AdminUserActionBody, opts?: RequestOptions) =>
       request<AdminUserActionResult>("POST", `/admin/users/${userId}/actions/${action}`, { body, ...opts }),
+    /** 03C bulk: preview is counts only; execute needs the preview revision, a reason and an Idempotency-Key. Responses are shape-checked by the caller. */
+    bulkUserPreview: (action: BulkUserActionName, ids: number[], opts?: RequestOptions) =>
+      request<unknown>("GET", `/admin/users/bulk/${action}/preview${qs({ ids: ids.join(",") })}`, opts),
+    bulkUserExecute: (action: BulkUserActionName, body: { account_ids: number[]; preview_revision: string; reason: string }, idempotencyKey: string, opts?: RequestOptions) =>
+      request<unknown>("POST", `/admin/users/bulk/${action}/execute`, { body, headers: { "Idempotency-Key": idempotencyKey }, ...opts }),
     // W10.13: a role is never changed directly. This creates a REQUEST that a different Admin must approve (both need a recent password confirmation).
     requestRoleChange: (userId: number, role: string, reason: string, opts?: RequestOptions) =>
       request<RoleChangeRequest>("POST", "/admin/role-changes", { body: { target_user_id: userId, role, reason }, ...opts }),
@@ -832,7 +937,8 @@ export const api = {
       request<BillingApproval>("POST", `/admin/billing/refunds/${encodeURIComponent(id)}/${approve ? "approve" : "reject"}`, opts),
     // W10.12 reporting (GET only; aggregates; the period is one of a fixed set)
     report: (kind: "product" | "quality" | "operations" | "ai-economics" | "commercial", period: string, opts?: RequestOptions) =>
-      request<AdminReport>("GET", `/admin/reports/${kind}?period=${encodeURIComponent(period)}`, opts),
+      checked<AdminReport>("report", request<unknown>("GET", `/admin/reports/${kind}?period=${encodeURIComponent(period)}`, opts), isAdminReport),
+    reportBuilder: { standard: reportBuilder("standard"), commercial: reportBuilder("commercial") },
     // W10.11 durable pause and feature flags (the environment is the SERVER's own; no request can choose it)
     pause: (opts?: RequestOptions) => request<PauseOverview>("GET", "/admin/pause", opts),
     setPause: (capability: string, paused: boolean, expectedRevision: number, reason: string, opts?: RequestOptions) =>

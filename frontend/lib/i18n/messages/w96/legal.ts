@@ -82,8 +82,6 @@ const en = {
     respUpload: "Only upload content you have the right to use.",
     respLawful: "Use the service lawfully and do not attempt to abuse or overload it.",
     accountsHeading: "Accounts, plans and availability",
-    accountsPlans:
-      "Basic is free. Premium is €19.99 per month and is selected online after account creation.",
     accountsProviders:
       "Some features depend on external providers and may be unavailable, rate-limited or paused by the operator.",
     accountsAsIs:
@@ -315,8 +313,6 @@ const de: LegalFragment = {
     respLawful:
       "Nutzen Sie den Dienst rechtmäßig und versuchen Sie nicht, ihn zu missbrauchen oder zu überlasten.",
     accountsHeading: "Konten, Tarife und Verfügbarkeit",
-    accountsPlans:
-      "Basic ist kostenlos. Premium kostet €19.99 pro Monat und wird nach der Kontoerstellung online ausgewählt.",
     accountsProviders:
       "Einige Funktionen hängen von externen Anbietern ab und können nicht verfügbar, ratenbegrenzt oder vom Betreiber pausiert sein.",
     accountsAsIs:
@@ -550,8 +546,6 @@ const fr: LegalFragment = {
     respLawful:
       "Utilisez le service de manière légale et ne tentez pas d'en abuser ni de le surcharger.",
     accountsHeading: "Comptes, offres et disponibilité",
-    accountsPlans:
-      "Basic est gratuit. Premium coûte €19.99 par mois et se choisit en ligne après la création du compte.",
     accountsProviders:
       "Certaines fonctions dépendent de fournisseurs externes et peuvent être indisponibles, limitées en débit ou mises en pause par l'exploitant.",
     accountsAsIs:
@@ -787,8 +781,6 @@ const es: LegalFragment = {
     respLawful:
       "Use el servicio de forma lícita y no intente abusar de él ni sobrecargarlo.",
     accountsHeading: "Cuentas, planes y disponibilidad",
-    accountsPlans:
-      "Basic es gratuito. Premium cuesta €19.99 al mes y se elige en línea después de crear la cuenta.",
     accountsProviders:
       "Algunas funciones dependen de proveedores externos y pueden no estar disponibles, estar limitadas en frecuencia o pausadas por el operador.",
     accountsAsIs:
@@ -1024,8 +1016,6 @@ const it: LegalFragment = {
     respLawful:
       "Usa il servizio in modo lecito e non tentare di abusarne o di sovraccaricarlo.",
     accountsHeading: "Account, piani e disponibilità",
-    accountsPlans:
-      "Basic è gratuito. Premium costa €19.99 al mese e si sceglie online dopo la creazione dell'account.",
     accountsProviders:
       "Alcune funzioni dipendono da provider esterni e possono essere non disponibili, limitate nella frequenza o messe in pausa dall'operatore.",
     accountsAsIs:
@@ -1261,8 +1251,6 @@ const pt: LegalFragment = {
     respLawful:
       "Use o serviço de forma lícita e não tente abusar dele nem sobrecarregá-lo.",
     accountsHeading: "Contas, planos e disponibilidade",
-    accountsPlans:
-      "O Basic é gratuito. O Premium custa €19.99 por mês e é escolhido online após a criação da conta.",
     accountsProviders:
       "Algumas funcionalidades dependem de fornecedores externos e podem estar indisponíveis, limitadas na frequência ou pausadas pelo operador.",
     accountsAsIs:
@@ -1498,8 +1486,6 @@ const nl: LegalFragment = {
     respLawful:
       "Gebruik de dienst op een wettige manier en probeer deze niet te misbruiken of te overbelasten.",
     accountsHeading: "Accounts, abonnementen en beschikbaarheid",
-    accountsPlans:
-      "Basic is gratis. Premium kost €19.99 per maand en wordt online gekozen nadat het account is aangemaakt.",
     accountsProviders:
       "Sommige functies zijn afhankelijk van externe providers en kunnen onbeschikbaar, in frequentie beperkt of door de operator gepauzeerd zijn.",
     accountsAsIs:

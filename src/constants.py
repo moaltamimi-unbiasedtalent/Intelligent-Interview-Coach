@@ -10,6 +10,18 @@ hard-code model names or limits.
 APP_NAME = "Interview Practice Studio"
 APP_TAGLINE = "Prepare for any role. Practise realistically. Improve every answer."
 
+# --- Provider-failure codes (04D, DEMO-02) ------------------------------------
+# A provider-backed step that could not run carries ONE of these stable, bounded codes to the client, which renders localized copy from the code (never from the message).
+# "not configured" (this stack has no usable AI credential: nothing will work until it is configured) and "unavailable" (the provider failed this time: trying again may work)
+# are different facts and must never share one generic message. The English message is a fixed fallback with no provider name, URL, key hint or provider text.
+AI_NOT_CONFIGURED = "ai_not_configured"
+AI_PROVIDER_UNAVAILABLE = "ai_provider_unavailable"
+AI_FAILURE_CODES = (AI_NOT_CONFIGURED, AI_PROVIDER_UNAVAILABLE)
+AI_FAILURE_MESSAGES = {
+    AI_NOT_CONFIGURED: "AI features are not configured on this Ask4Mo environment, so nothing was started.",
+    AI_PROVIDER_UNAVAILABLE: "The AI service could not complete this request right now. Nothing was lost; you can try again.",
+}
+
 # --- Approved OpenRouter model identifiers ----------------------------------
 # Model identifiers resolve from the central registry (src/llm/models.py) — the single
 # source of truth for OpenRouter slugs and their env overrides. These names are kept as
@@ -89,6 +101,10 @@ MAX_INSTRUCTION_CHARS = 2_000
 
 INJECTION_WARN_SCORE = 2  # score at/above this warns
 INJECTION_BLOCK_SCORE = 4  # score at/above this blocks
+# 06E (OD-INPUT-GUARD-LANGUAGES): the interview input guard was English only. True adds the non-English rule stage (src.security.detect_injection). Evidence on the DEV split (in-sample, engineering-
+# authored, not native-reviewed): non-English attack detection by this guard 4-24 percent -> 100 percent, benign false positives unchanged (0 added in every language, 198 benign cases). Set False to
+# restore the English-only guard exactly. A code constant, not a setting: no request, Admin action or flag can change it. The owner ratifies or reverses it (OD-INPUT-GUARD-LANGUAGES).
+MULTILINGUAL_INPUT_GUARD_ENABLED = True
 
 # Maximum size of a model response the output guard will accept before
 # treating it as anomalous.

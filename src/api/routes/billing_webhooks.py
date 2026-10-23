@@ -40,7 +40,7 @@ async def _read_limited(request: Request) -> bytes:
 
 @router.post("/webhooks/stripe", response_model=WebhookAck, summary="Stripe webhook (signature-authenticated; non-operational until authorized)")
 async def stripe_webhook(request: Request, receiver=Depends(get_webhook_receiver)) -> WebhookAck:
-    enforce("billing_webhook_ip", client_ip(request))
+    await run_in_threadpool(enforce, "billing_webhook_ip", client_ip(request))      # 07A: the limiter may be a shared-store network call: never on the event loop
     try:
         raw = await _read_limited(request)
         out = await run_in_threadpool(receiver.handle, raw, request.headers.get("stripe-signature"), correlation_id=get_request_id(request) or None)

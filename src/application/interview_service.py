@@ -25,6 +25,22 @@ from src.interview_service import QuestionHistory, ServiceError
 from src.session_manager import SessionManager, SessionState
 
 
+def _fail(session: SessionManager, exc: ServiceError, recover_to: SessionState, operation: str) -> None:
+    """Move the session to ERROR with the safe message and the stable cause code, and record the failure WITHOUT secrets (04D).
+
+    The record is one bounded operational event: subsystem, operation, outcome ``unavailable`` and the cause CODE only. Never the provider's text, a key, a URL, a prompt, a
+    candidate answer or an identity. Recording never affects the candidate's operation."""
+    code = getattr(exc, "code", None)
+    session.enter_error(exc.message, recover_to=recover_to, code=code)
+    if code in constants.AI_FAILURE_CODES:
+        try:
+            from src.reporting.telemetry import record_event
+
+            record_event("provider_call", "practice", operation, "unavailable", error_category=code, provider="openrouter")
+        except Exception:  # noqa: BLE001 - telemetry is best effort
+            pass
+
+
 class InterviewApplicationService:
     """Callable Interview Practice operations for any frontend."""
 
@@ -78,7 +94,7 @@ class InterviewApplicationService:
             session.save_strategy(strategy)
             session.record_usage(usage)
         except ServiceError as exc:
-            session.enter_error(exc.message, recover_to=SessionState.SETUP)
+            _fail(session, exc, SessionState.SETUP, "practice_strategy")
         finally:
             self._close(client)
 
@@ -106,7 +122,7 @@ class InterviewApplicationService:
                 f"({session.data.questions[-1].competency})\n\n{question.question}",
             )
         except ServiceError as exc:
-            session.enter_error(exc.message, recover_to=recover)
+            _fail(session, exc, recover, "practice_question")
         finally:
             self._close(client)
 
@@ -141,7 +157,7 @@ class InterviewApplicationService:
                 "Detailed feedback is shown below.",
             )
         except ServiceError as exc:
-            session.enter_error(exc.message, recover_to=SessionState.AWAITING_ANSWER)
+            _fail(session, exc, SessionState.AWAITING_ANSWER, "practice_evaluation")
         finally:
             self._close(client)
 
@@ -178,7 +194,7 @@ class InterviewApplicationService:
                 f"{branch_question.question}",
             )
         except ServiceError as exc:
-            session.enter_error(exc.message, recover_to=SessionState.INTERVIEW_IN_PROGRESS)
+            _fail(session, exc, SessionState.INTERVIEW_IN_PROGRESS, "practice_branch")
         finally:
             self._close(client)
 
@@ -201,7 +217,7 @@ class InterviewApplicationService:
                 f"**{evaluation.overall_score}/100**. See details below.",
             )
         except ServiceError as exc:
-            session.enter_error(exc.message, recover_to=SessionState.BRANCH_AWAITING_ANSWER)
+            _fail(session, exc, SessionState.BRANCH_AWAITING_ANSWER, "practice_branch_evaluation")
         finally:
             self._close(client)
 
@@ -222,7 +238,7 @@ class InterviewApplicationService:
             session.save_final_report(report)
             session.record_usage(usage)
         except ServiceError as exc:
-            session.enter_error(exc.message, recover_to=SessionState.INTERVIEW_COMPLETE)
+            _fail(session, exc, SessionState.INTERVIEW_COMPLETE, "practice_report")
         finally:
             self._close(client)
 

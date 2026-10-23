@@ -16,7 +16,7 @@ from typing import Any, Callable
 
 from sqlalchemy import func, select
 
-from src.persistence import PreparationMemory, PreparationRun, utcnow
+from src.persistence import PreparationMemory, PreparationRun, User, utcnow
 from src.privacy import policy as P
 
 log = logging.getLogger("ask4mo.privacy.preparation")
@@ -61,6 +61,16 @@ class PreparationRunIndex:
             return list(s.scalars(select(PreparationRun.run_id).where(PreparationRun.owner_user_id == owner_user_id)
                                   .order_by(PreparationRun.id)).all())
 
+    def recent_for_owner(self, owner_user_id: int, limit: int = 20) -> list[dict]:
+        """The caller's OWN runs, newest first (04D, AC-18): ids, lifecycle state and timestamps only, never chat content. One indexed, bounded query; a run that is being
+        purged (``purge_failed``) is not listed. The owner filter is part of the query, so another account's run can never be returned."""
+        bound = max(1, min(int(limit), 50))
+        with self._sf() as s:
+            rows = s.execute(select(PreparationRun.run_id, PreparationRun.state, PreparationRun.created_at, PreparationRun.updated_at)
+                             .where(PreparationRun.owner_user_id == owner_user_id, PreparationRun.state != "purge_failed")
+                             .order_by(PreparationRun.updated_at.desc(), PreparationRun.id.desc()).limit(bound)).all()
+        return [{"run_id": r, "state": st, "created_at": c, "updated_at": u} for r, st, c, u in rows]
+
     def owner_of(self, run_id: str) -> int | None:
         with self._sf() as s:
             return s.scalar(select(PreparationRun.owner_user_id).where(PreparationRun.run_id == run_id))
@@ -77,6 +87,15 @@ class PreparationRunIndex:
             q = select(PreparationRun.run_id, PreparationRun.owner_user_id).where(PreparationRun.state == "purge_failed")
             if owner_user_id is not None:
                 q = q.where(PreparationRun.owner_user_id == owner_user_id)
+            return [(r, o) for r, o in s.execute(q).all()]
+
+    def orphaned_runs(self, *, limit: int = 500) -> list[tuple[str, int]]:
+        """Indexed runs whose owner account no longer exists (05E). One indexed JOIN over SQL tables: it finds the checkpoint data a completed deletion could not purge
+        (a crash between the SQL commit and the checkpoint purge, or a store outage) WITHOUT ever listing or scanning the checkpoint store. Bounded."""
+        with self._sf() as s:
+            q = (select(PreparationRun.run_id, PreparationRun.owner_user_id)
+                 .outerjoin(User, User.id == PreparationRun.owner_user_id).where(User.id.is_(None))
+                 .order_by(PreparationRun.id).limit(max(1, min(limit, 5000))))
             return [(r, o) for r, o in s.execute(q).all()]
 
     def coverage(self) -> dict:
@@ -150,4 +169,23 @@ def backfill_batch(index: PreparationRunIndex, adapter: Any, session_factory, *,
             out["indexed"] += 1
     if len(rows) < batch:
         out["next_after_id"] = None              # reached the end
+    return out
+
+
+def sweep_orphaned_runs(index: PreparationRunIndex, adapter: Any, *, limit: int = 500, execute: bool = False) -> dict:
+    """Purge the checkpoint threads of runs whose owner account is gone (05E). Dry-run by default (counts only). Idempotent: ``delete_thread`` of an absent thread is a no-op, and
+    an index row is removed only after its purge succeeded; a failure keeps the row (state purge_failed) for the next sweep. Never scans the checkpoint store."""
+    rows = index.orphaned_runs(limit=limit)
+    out = {"orphaned": len(rows), "purged": 0, "failed": 0, "executed": bool(execute)}
+    if not execute:
+        return out
+    for run_id, _owner in rows:
+        try:
+            if adapter is None or not adapter.purge_run(run_id):
+                raise RuntimeError("not purged")
+            index.remove(run_id)
+            out["purged"] += 1
+        except Exception:  # noqa: BLE001 - never record text
+            index.mark(run_id, "purge_failed")
+            out["failed"] += 1
     return out

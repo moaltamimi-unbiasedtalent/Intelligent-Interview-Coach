@@ -32,7 +32,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push: vi.fn() }
 vi.mock("@/components/auth/AuthProvider", () => {
   const value = () => ({
     account, status: "authenticated", isRealSession: true, responseDetail: "brief",
-    setResponseDetail: vi.fn(), refresh, signOut: vi.fn(),
+    setResponseDetail: vi.fn(), refresh, applyAccount: vi.fn(), signOut: vi.fn(),
   });
   return { useAuth: value, useAuthOptional: value };
 });
@@ -82,6 +82,22 @@ describe("Wave 2 — OnboardingClient", () => {
     // Step 4 of 7 is the Coaching step.
     await waitFor(() => expect(screen.getByText(/Step 4 of 7/i)).toBeInTheDocument());
     account = { ...account, onboarding_step: 0 }; // reset for other tests
+  });
+
+  it("04D: a candidate who acts before the account has loaded is never moved back to the saved step", async () => {
+    // Found by the real-browser journey: /auth/me resolved late and the resume reset a fast click-through to step 1.
+    const saved = account;
+    account = null as unknown as Record<string, unknown>;
+    onboarding.mockResolvedValue({ ...saved, onboarding_step: 1 });
+    updatePreferences.mockResolvedValue(saved);
+    const { rerender } = render(<OnboardingClient />);
+    await userEvent.click(screen.getByRole("button", { name: "Get started" }));
+    await waitFor(() => expect(screen.getByText(/Step 2 of 7/i)).toBeInTheDocument());
+    account = { ...saved, onboarding_step: 0 };            // the account finally arrives, still at its OLD saved step
+    rerender(<OnboardingClient />);
+    await waitFor(() => expect(screen.getByText(/Step 2 of 7/i)).toBeInTheDocument());
+    expect(screen.queryByText(/Step 1 of 7/i)).not.toBeInTheDocument();
+    account = { ...saved, onboarding_step: 0 };
   });
 
   it("shows a recoverable error on completion failure, does not navigate, and retry succeeds", async () => {

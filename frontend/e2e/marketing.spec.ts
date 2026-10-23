@@ -13,7 +13,9 @@ test("public Home renders the hero and primary CTAs", async ({ page }) => {
   // Get started routes to registration (a real free path).
   const cta = page.getByRole("link", { name: /Get started/i }).first();
   await expect(cta).toBeVisible();
-  await expect(page.getByText(/Premium subscriptions are planned and are not available yet/i).first()).toBeVisible();
+  // 04D: ONE statement about price and purchase on every candidate surface (free, invitation-only private beta; nothing can be purchased; no price).
+  await expect(page.getByTestId("home-beta-pricing")).toContainText("free, invitation-only private beta");
+  await expect(page.getByTestId("home-beta-pricing")).toContainText("no price applies");
 });
 
 test("marketing nav reaches Product, Pricing and Trust", async ({ page }) => {
@@ -36,10 +38,12 @@ test("the retired How it works route redirects into the combined Product page", 
 
 test("Pricing shows Basic as free and Premium as not available yet, with no purchase path (W12.4D-P3)", async ({ page }) => {
   await page.goto("/pricing");
-  await expect(page.getByTestId("plan-basic")).toContainText("€0");
+  await expect(page.getByTestId("plan-basic")).toContainText("Free in the beta");
   await expect(page.getByTestId("plan-premium")).toContainText("Not available yet");
-  await expect(page.getByTestId("premium-preview-price")).toContainText("€19.99");
-  await expect(page.getByTestId("premium-preview-price")).toContainText("not been approved");
+  // 04D: no price figure anywhere on the page, and the same single statement as every other candidate surface.
+  await expect(page.getByTestId("premium-beta-statement")).toContainText("Nothing can be purchased and no price applies");
+  await expect(page.getByTestId("pricing-billing-note")).toHaveText(await page.getByTestId("premium-beta-statement").innerText());
+  expect(await page.getByTestId("pricing-plans").innerText()).not.toMatch(/[€$£]\s?\d/);
   await expect(page.getByTestId("plan-premium").getByRole("link")).toHaveCount(0);            // nothing to click: no purchase path
   await expect(page.locator('a[href*="plan=premium"], a[href*="checkout"]')).toHaveCount(0);
   await expect(page.getByTestId("plan-overview")).toBeVisible();

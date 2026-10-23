@@ -158,7 +158,7 @@ class SavedList(_Out):
 class ExportRequest(BaseModel):
     """Export an ALREADY-SUPPRESSED aggregate result of exactly one definition: inline or a saved one the caller may see."""
     model_config = ConfigDict(extra="forbid", strict=True)
-    format: Literal["csv", "json"]
+    format: Literal["csv", "json", "pdf"]
     definition: BuilderDefinition | None = None
     saved_id: StrictInt | None = Field(default=None, ge=1)
 

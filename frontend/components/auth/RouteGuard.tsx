@@ -9,7 +9,7 @@
  * user navigating directly to a protected page still cannot read another user's data.
  */
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "./AuthProvider";
@@ -21,7 +21,6 @@ import { useT } from "@/components/i18n/I18nProvider";
 export function RouteGuard({ children }: { children: ReactNode }) {
   const pathname = usePathname() || "/";
   const router = useRouter();
-  const params = useSearchParams();
   const { status, account } = useAuth();
   const t = useT();
 
@@ -40,12 +39,14 @@ export function RouteGuard({ children }: { children: ReactNode }) {
       const next = encodeURIComponent(pathname);
       return redirectVerified(router, `/sign-in?next=${next}`);
     } else if (authOnly && status === "authenticated") {
-      const next = params.get("next");
+      // Read from the location when the effect runs. `useSearchParams` here would suspend the whole boundary during static prerender/hydration, and the shell's Suspense fallback
+      // is a SECOND copy of the page: a stateful page (onboarding) the candidate had already used was thrown away and re-mounted from stale state (04D).
+      const next = new URLSearchParams(window.location.search).get("next");
       return redirectVerified(router, next && next.startsWith("/") ? next : APP_HOME);
     } else if (needsOnboarding && protectedRoute && !onOnboarding) {
       return redirectVerified(router, "/onboarding");
     }
-  }, [status, protectedRoute, authOnly, needsOnboarding, onOnboarding, pathname, params, router]);
+  }, [status, protectedRoute, authOnly, needsOnboarding, onOnboarding, pathname, router]);
 
   // Block a protected page only while identity is still loading, or while a
   // definitively-unauthenticated visitor is being redirected. An "unknown" status

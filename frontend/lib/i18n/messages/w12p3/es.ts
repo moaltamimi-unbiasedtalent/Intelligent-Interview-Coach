@@ -74,18 +74,14 @@ const es: typeof en = {
     transition_newSession: "Iniciar una nueva sesión de práctica",
     transition_history: "Tus entrevistas completadas y tus informes siguen disponibles según tu vista del historial.",
     pricing_notAvailable: "Aún no disponible",
-    pricing_previewPrice: "Precio orientativo en estudio: 19,99 € al mes. Este precio no ha sido aprobado.",
     pricing_statusLabel: "Estado de Premium",
   },
   marketing: {
-    homePricingBody: "Basic es gratis. Las suscripciones Premium están previstas y aún no están disponibles.",
     ctaBody: "Empieza gratis con Basic hoy. Premium aún no está disponible.",
     pricingSubtitle: "Empieza gratis con Basic. Las suscripciones Premium están previstas y aún no están disponibles.",
-    pricingBillingNote: "Premium aún no se puede comprar. Nada en esta página inicia un pago.",
     planPremiumCta: "Premium aún no está disponible",
     planPremiumNote: "Las suscripciones Premium están previstas. No se cobra nada y aquí no se inicia ningún pago.",
     pricingPremiumIncludes: "Previsto para una búsqueda de empleo activa en varios puestos: todo Basic más las funciones Premium previstas abajo. Ninguna está aún a la venta.",
-    footerNoBilling: "Basic es gratis. Las suscripciones Premium aún no están disponibles.",
   },
 };
 

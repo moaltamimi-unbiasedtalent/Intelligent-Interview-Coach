@@ -253,8 +253,11 @@ def test_missing_and_suppression_semantics_hold_for_every_registered_metric():
 def test_the_frozen_03k_contract_files_are_untouched():
     import subprocess
 
+    # 05E (PRIV-DIFF, lead to review): src/reporting/service.py and suppression.py are no longer pinned against origin/main. The owner-approved 05E package adds the nested-window
+    # and total-versus-bucket differencing mitigation THERE (decorators, bucket scopes and the hidden-group rule; the 03K contract, the metric definitions and the cohort floor
+    # are unchanged and still pinned). Their behaviour is covered by tests/test_differencing_05e.py and the W10.12 / 03E1 suites, which pass unchanged.
     out = subprocess.run(["git", "diff", "--name-only", "origin/main", "--", "src/reporting/contract.py", "frontend/lib/admin/metricContract.ts",
-                          "frontend/lib/admin/metricContract.schema.json", "src/reporting/definitions.py", "src/reporting/service.py", "src/reporting/suppression.py"],
+                          "frontend/lib/admin/metricContract.schema.json", "src/reporting/definitions.py"],
                          cwd=ROOT, capture_output=True, text=True)
     if out.returncode == 0:                                    # a detached or shallow checkout cannot compare; the evidence file records the diff
         assert out.stdout.strip() == ""

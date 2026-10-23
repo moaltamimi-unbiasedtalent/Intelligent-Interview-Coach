@@ -130,7 +130,8 @@ def load_config() -> AppConfig:
     variables), then resolves the API key with Streamlit secrets taking
     priority over the environment. Never raises on a missing key.
     """
-    load_dotenv(override=False)
+    if not _secrets.offline_switch_active():     # 04D: the offline switch never loads a .env (it may hold a provider key)
+        load_dotenv(override=False)
     raw_key = _secrets.read_managed(API_KEY_NAME) or _read_streamlit_secret() or _read_environment_secret()
     api_key = SecretStr(raw_key) if raw_key else None
 

@@ -27,7 +27,7 @@ const FACTS: {
     detailKeys: ["marketing.howStep1Title", "marketing.howStep2Title", "marketing.howStep3Title"],
   },
   {
-    value: "€0",
+    value: "",
     titleKey: "marketing.planBasicName",
     bodyKey: "marketing.pricingBasicIncludes",
     icon: "check",

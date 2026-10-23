@@ -10,7 +10,7 @@
  * dev-header identity, which we treat as a usable session so local work is friction-free.
  */
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { api, ApiError } from "@/lib/api/client";
 import type { AccountResponse, ResponseDetail } from "@/lib/api/types";
@@ -28,6 +28,8 @@ interface AuthContextValue {
   /** Presentation depth preference (defaults to brief until the account resolves). */
   responseDetail: ResponseDetail;
   refresh: () => Promise<void>;
+  /** Adopt an account the server just returned from a write (e.g. an onboarding step). Newer than any /auth/me still in flight, so a late read cannot revert it. */
+  applyAccount: (next: AccountResponse) => void;
   signOut: () => Promise<void>;
   setResponseDetail: (value: ResponseDetail) => Promise<void>;
 }
@@ -38,9 +40,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [account, setAccount] = useState<AccountResponse | null>(null);
   const [status, setStatus] = useState<AuthStatus>("loading");
 
+  // Bumped by every account the server returns from a WRITE. A read (/auth/me) that was issued before such a write and resolves after it is stale and is dropped,
+  // so a slow identity response can never roll back progress the candidate has already saved (04D: onboarding resumed at an older step).
+  const writeEpoch = useRef(0);
+
+  const applyAccount = useCallback((next: AccountResponse) => {
+    writeEpoch.current += 1;
+    setAccount(next);
+    setStatus("authenticated");
+  }, []);
+
   const refresh = useCallback(async () => {
+    const epoch = writeEpoch.current;
     try {
       const me = await api.auth.me();
+      if (epoch !== writeEpoch.current) return;
       setAccount(me);
       setStatus("authenticated");
     } catch (err) {
@@ -61,12 +75,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccount((prev) => (prev ? { ...prev, response_detail: value } : prev));
     try {
       const updated = await api.auth.updatePreferences({ response_detail: value });
-      setAccount(updated);
-      setStatus("authenticated");
+      applyAccount(updated);
     } catch {
       await refresh();
     }
-  }, [refresh]);
+  }, [refresh, applyAccount]);
 
   const signOut = useCallback(async () => {
     try {
@@ -89,10 +102,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isRealSession: account?.auth_method === "session",
       responseDetail: account?.response_detail ?? "brief",
       refresh,
+      applyAccount,
       signOut,
       setResponseDetail,
     }),
-    [account, status, refresh, signOut, setResponseDetail],
+    [account, status, refresh, applyAccount, signOut, setResponseDetail],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -329,7 +329,7 @@ def _decode_high_confidence_base64(text: str) -> list[str]:
     return segments
 
 
-def detect_injection(text: str) -> InjectionAssessment:
+def detect_injection(text: str, *, multilingual: bool | None = None) -> InjectionAssessment:
     """Score ``text`` for prompt-injection risk.
 
     Normalises the text, sums the weights of every matched indicator, and maps
@@ -338,6 +338,8 @@ def detect_injection(text: str) -> InjectionAssessment:
     and re-scanned with the same indicators, so a Base64-wrapped injection is
     caught. Returns which indicators fired so the UI can explain a warning or
     block; Base64-derived indicators are prefixed ``base64:``.
+
+    ``multilingual`` (06E) forces the non-English stage on or off; ``None`` follows ``constants.MULTILINGUAL_INPUT_GUARD_ENABLED`` (default on).
     """
     text = text or ""
     score, matched = _score_condensed(_condense(text))
@@ -347,6 +349,19 @@ def detect_injection(text: str) -> InjectionAssessment:
         if seg_score:
             score += seg_score
             matched.extend(f"base64:{name}" for name in seg_matched)
+
+    # 06E (OD-INPUT-GUARD-LANGUAGES): the indicators above are English only. An extra stage adds the non-English rule sets of the career scanner (boundary- and negation-aware forms, because this guard
+    # reads job descriptions, backgrounds and answers). No English rule runs in it, so English text scores exactly as before; it can only raise the score. It follows
+    # ``constants.MULTILINGUAL_INPUT_GUARD_ENABLED`` (on: no dev false positive added; set False to restore the English-only guard exactly).
+    if multilingual is None:
+        multilingual = constants.MULTILINGUAL_INPUT_GUARD_ENABLED
+    if multilingual:
+        from src.copilot.security.injection import scan_multilingual  # lazy: keeps this module importable without the career package at import time
+
+        ml = scan_multilingual(text)
+        if ml.flagged:
+            score = max(score, constants.INJECTION_BLOCK_SCORE if ml.blocked else constants.INJECTION_WARN_SCORE)
+            matched.extend(f"multilingual:{name}" for name in ml.indicators)
 
     if score >= constants.INJECTION_BLOCK_SCORE:
         decision = BLOCK

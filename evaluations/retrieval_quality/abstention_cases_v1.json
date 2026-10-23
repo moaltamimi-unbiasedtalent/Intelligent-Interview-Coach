@@ -1,0 +1,30 @@
+{
+  "name": "abstention_cases_v1",
+  "schema_version": 1,
+  "frozen": true,
+  "description": "Out-of-domain questions for the seven languages (3 per language). The 02B corpus holds ONLY interview-preparation passages, so no passage answers these: a correct retrieval system must abstain (no citation). Used to calibrate the relevance floor and to measure abstention correctness.",
+  "independence": "authored by engineering; synthetic; NOT native-reviewed; NOT an independent set. 21 questions are a planning-size sample only.",
+  "queries": [
+    {"id": "n.cooking.en", "language": "en", "text": "How long should I bake sourdough bread in the oven?"},
+    {"id": "n.football.en", "language": "en", "text": "Who won the football world cup in 1998?"},
+    {"id": "n.volcano.en", "language": "en", "text": "How do volcanoes form on the ocean floor?"},
+    {"id": "n.cooking.de", "language": "de", "text": "Wie lange muss ich Sauerteigbrot im Ofen backen?"},
+    {"id": "n.football.de", "language": "de", "text": "Wer hat 1998 die Fußballweltmeisterschaft gewonnen?"},
+    {"id": "n.volcano.de", "language": "de", "text": "Wie entstehen Vulkane auf dem Meeresboden?"},
+    {"id": "n.cooking.fr", "language": "fr", "text": "Combien de temps faut-il cuire du pain au levain au four ?"},
+    {"id": "n.football.fr", "language": "fr", "text": "Qui a gagné la coupe du monde de football en 1998 ?"},
+    {"id": "n.volcano.fr", "language": "fr", "text": "Comment se forment les volcans au fond de l'océan ?"},
+    {"id": "n.cooking.es", "language": "es", "text": "¿Cuánto tiempo debo hornear pan de masa madre en el horno?"},
+    {"id": "n.football.es", "language": "es", "text": "¿Quién ganó el mundial de fútbol de 1998?"},
+    {"id": "n.volcano.es", "language": "es", "text": "¿Cómo se forman los volcanes en el fondo del océano?"},
+    {"id": "n.cooking.it", "language": "it", "text": "Quanto tempo devo cuocere il pane a lievito madre nel forno?"},
+    {"id": "n.football.it", "language": "it", "text": "Chi ha vinto i mondiali di calcio del 1998?"},
+    {"id": "n.volcano.it", "language": "it", "text": "Come si formano i vulcani sul fondo dell'oceano?"},
+    {"id": "n.cooking.pt", "language": "pt", "text": "Quanto tempo devo assar pão de fermento natural no forno?"},
+    {"id": "n.football.pt", "language": "pt", "text": "Quem ganhou o campeonato do mundo de futebol de 1998?"},
+    {"id": "n.volcano.pt", "language": "pt", "text": "Como se formam os vulcões no fundo do oceano?"},
+    {"id": "n.cooking.nl", "language": "nl", "text": "Hoe lang moet ik zuurdesembrood in de oven bakken?"},
+    {"id": "n.football.nl", "language": "nl", "text": "Wie won het wereldkampioenschap voetbal in 1998?"},
+    {"id": "n.volcano.nl", "language": "nl", "text": "Hoe ontstaan vulkanen op de oceaanbodem?"}
+  ]
+}

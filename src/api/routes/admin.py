@@ -38,6 +38,7 @@ from src.api.dependencies import (
     get_ai_config_service,
     get_billing_operations,
     get_feature_flag_service,
+    get_repository,
     get_integration_service,
     get_knowledge_admin_service,
     get_pause_service,
@@ -370,7 +371,7 @@ def _realtime_provider_status() -> dict:
 
 @router.get("/providers", response_model=ProvidersResponse,
             summary="Provider status (allowlist schema; no secrets, no live calls)")
-def providers(_p=Depends(require_permission(perm.INTEGRATIONS_READ)), pause=Depends(get_pause_service), speech=Depends(get_speech_runtime)) -> ProvidersResponse:
+def providers(_p=Depends(require_permission(perm.INTEGRATIONS_READ)), pause=Depends(get_pause_service), speech=Depends(get_speech_runtime), repo=Depends(get_repository)) -> ProvidersResponse:
     from src.application.admin_providers import build_providers_response
 
-    return build_providers_response(pause, speech)
+    return build_providers_response(pause, speech, repo.session_factory)

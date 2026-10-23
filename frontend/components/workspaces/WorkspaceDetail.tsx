@@ -13,14 +13,14 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Input } from "@/components/ui/Field";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
-import type { ShareGrantOut, WorkspaceDetail as Detail, WorkspaceMember } from "@/lib/api/types";
+import type { OwnershipTransfer, ShareGrantOut, WorkspaceDetail as Detail, WorkspaceMember } from "@/lib/api/types";
+import { ProposeTransferDialog, TransferBanner } from "./OwnershipTransfer";
 import { SharedItemViewer } from "./SharedItemViewer";
 import { loadShareableItems, resourceTypeKey, roleKey, workspaceErrorKey } from "./workspaceUi";
 
 type Notice = { tone: "success" | "danger" | "warning" | "info"; text: string } | null;
 type Pending =
   | { kind: "remove"; member: WorkspaceMember }
-  | { kind: "transfer"; member: WorkspaceMember }
   | { kind: "leave" }
   | { kind: "archive" }
   | { kind: "delete" }
@@ -46,6 +46,20 @@ export function WorkspaceDetail({ workspaceId }: { workspaceId: number }) {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("workspace_member");
   const [viewing, setViewing] = useState<ShareGrantOut | null>(null);
+  const [transfer, setTransfer] = useState<OwnershipTransfer | null>(null);
+  const [transferState, setTransferState] = useState<"loading" | "ready" | "error">("loading");
+  const [proposeFor, setProposeFor] = useState<WorkspaceMember | null>(null);
+
+  // The transfer state is loaded on its own so that a failure (or a malformed answer) shows an explicit error in THAT section and never blanks the workspace page.
+  const loadTransfer = useCallback(async () => {
+    try {
+      const r = await api.workspaces.transferState(workspaceId);
+      setTransfer(r.transfer);
+      setTransferState("ready");
+    } catch {
+      setTransferState("error");
+    }
+  }, [workspaceId]);
 
   const load = useCallback(async () => {
     try {
@@ -56,8 +70,10 @@ export function WorkspaceDetail({ workspaceId }: { workspaceId: number }) {
       setState("ready");
     } catch (e) {
       setState(e instanceof ApiError && e.status === 404 ? "gone" : "error");
+      return;
     }
-  }, [workspaceId]);
+    await loadTransfer();
+  }, [workspaceId, loadTransfer]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -84,7 +100,7 @@ export function WorkspaceDetail({ workspaceId }: { workspaceId: number }) {
 
   const confirmPending = async () => {
     if (!pending || !ws) return;
-    const needsName = pending.kind === "transfer" || pending.kind === "delete";
+    const needsName = pending.kind === "delete";
     if (needsName && typedName.trim() !== ws.name) { setDialogError(t("wsMgmt.errValidation")); return; }
     setBusy(true);
     setDialogError(null);
@@ -92,9 +108,6 @@ export function WorkspaceDetail({ workspaceId }: { workspaceId: number }) {
       if (pending.kind === "remove") {
         await api.workspaces.removeMember(ws.id, pending.member.user_id);
         setNotice({ tone: "success", text: t("wsMgmt.memberRemoved") });
-      } else if (pending.kind === "transfer") {
-        await api.workspaces.transfer(ws.id, pending.member.user_id, typedName.trim());
-        setNotice({ tone: "success", text: t("wsMgmt.transferred") });
       } else if (pending.kind === "leave") {
         await api.workspaces.leave(ws.id);
         router.push("/workspaces");
@@ -159,6 +172,18 @@ export function WorkspaceDetail({ workspaceId }: { workspaceId: number }) {
         {archived && <Alert tone="warning">{t("wsMgmt.archivedBanner")}</Alert>}
         <p className="text-xs text-muted">{t("wsMgmt.roleHelp")}</p>
 
+        {transferState === "error" && (
+          <div className="grid gap-2" role="alert">
+            <Alert tone="warning">{t("wsTransfer.loadFailed")}</Alert>
+            <div><Button size="sm" variant="ghost" onClick={() => void loadTransfer()}>{t("states.retry")}</Button></div>
+          </div>
+        )}
+        {transfer && (
+          <TransferBanner transfer={transfer} busy={busy}
+            onCancel={() => void run(() => api.workspaces.cancelTransfer(ws.id), t("wsTransfer.cancelledNotice"))}
+            onDecline={() => void run(() => api.workspaces.declineTransfer(transfer.id), t("wsTransfer.declinedNotice"))} />
+        )}
+
         <section className="grid gap-2" aria-labelledby={`${ids}-members`}>
           <h2 id={`${ids}-members`} className="text-base font-semibold">{t("wsMgmt.sectionMembers")} ({ws.member_count})</h2>
           <ul className="grid gap-2">
@@ -180,9 +205,9 @@ export function WorkspaceDetail({ workspaceId }: { workspaceId: number }) {
                           {m.role === "workspace_admin" ? t("wsMgmt.makeMember") : t("wsMgmt.makeAdmin")}
                         </Button>
                       )}
-                      {caps?.can_transfer && (
+                      {caps?.can_transfer && !archived && transferState === "ready" && !transfer && (
                         <Button size="sm" variant="ghost" disabled={busy} aria-label={`${t("wsMgmt.transferAction")}: ${m.label}`}
-                          onClick={() => setPending({ kind: "transfer", member: m })}>{t("wsMgmt.transferAction")}</Button>
+                          onClick={() => setProposeFor(m)}>{t("wsMgmt.transferAction")}</Button>
                       )}
                       {caps?.can_remove_members && m.role !== "workspace_owner" && (m.role === "workspace_member" || caps.can_change_roles) && (
                         <Button size="sm" variant="ghost" disabled={busy} aria-label={`${t("wsMgmt.removeMember")}: ${m.label}`}
@@ -316,14 +341,12 @@ export function WorkspaceDetail({ workspaceId }: { workspaceId: number }) {
         open={pending !== null}
         title={
           pending?.kind === "remove" ? t("wsMgmt.removeTitle", { name: dialogName })
-          : pending?.kind === "transfer" ? t("wsMgmt.transferTitle", { name: dialogName })
           : pending?.kind === "leave" ? t("wsMgmt.leaveTitle")
           : pending?.kind === "archive" ? t("wsMgmt.archiveTitle")
           : t("wsMgmt.deleteTitle")
         }
         confirmLabel={
           pending?.kind === "remove" ? t("wsMgmt.removeConfirm")
-          : pending?.kind === "transfer" ? t("wsMgmt.transferConfirm")
           : pending?.kind === "leave" ? t("wsMgmt.leaveConfirm")
           : pending?.kind === "archive" ? t("wsMgmt.archiveConfirm")
           : t("wsMgmt.deleteConfirm")
@@ -336,18 +359,30 @@ export function WorkspaceDetail({ workspaceId }: { workspaceId: number }) {
       >
         <p>
           {pending?.kind === "remove" ? t("wsMgmt.removeBody", { name: dialogName })
-            : pending?.kind === "transfer" ? t("wsMgmt.transferBody", { name: dialogName })
             : pending?.kind === "leave" ? t("wsMgmt.leaveBody")
             : pending?.kind === "archive" ? t("wsMgmt.archiveBody")
             : t("wsMgmt.deleteBody")}
         </p>
-        {(pending?.kind === "transfer" || pending?.kind === "delete") && (
+        {pending?.kind === "delete" && (
           <div className="mt-3 grid gap-1">
             <label htmlFor={`${ids}-confirm`} className="text-xs font-semibold">{t("wsMgmt.confirmNameLabel")}</label>
             <Input id={`${ids}-confirm`} value={typedName} autoComplete="off" onChange={(e) => setTypedName(e.target.value)} />
           </div>
         )}
       </ConfirmDialog>
+
+      <ProposeTransferDialog
+        open={proposeFor !== null}
+        workspace={{ id: ws.id, name: ws.name }}
+        member={proposeFor}
+        onClose={() => setProposeFor(null)}
+        onProposed={(proposed) => {
+          setProposeFor(null);
+          setNotice({ tone: proposed.email_delivery === "submitted" ? "success" : "warning",
+            text: t(proposed.email_delivery === "submitted" ? "wsTransfer.proposedNotice" : "wsTransfer.proposedNoticeNotSent") });
+          void load();
+        }}
+      />
     </section>
   );
 }

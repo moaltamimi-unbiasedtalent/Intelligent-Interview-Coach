@@ -101,14 +101,8 @@ def source_priority(country: str | None) -> list[str]:
     return list(constants.COUNTRY_SOURCE_PRIORITY["EU"])
 
 
-def route_question(query: str, llm_classifier=None) -> RouteDecision:
-    """Return the retrieval lane for ``query``.
-
-    ``llm_classifier`` (optional) is a callable ``str -> lane`` used only when the
-    deterministic rules are ambiguous.
-    """
-    text = query or ""
-
+def _english_rules(text: str) -> RouteDecision | None:
+    """The deterministic English keyword rules; ``None`` when none applies (the caller falls back to the classifier or the default lane)."""
     # Specific lanes first (narrowly scoped so they don't shadow generic queries).
     if _TRANSITION.search(text):
         return RouteDecision(RetrievalLane.TRANSITION, "career transition comparison", 0.85)
@@ -156,6 +150,36 @@ def route_question(query: str, llm_classifier=None) -> RouteDecision:
         return RouteDecision(RetrievalLane.STRUCTURED_ROLE, "skill terms (structured + vector context)", 0.7)
     if tech:
         return RouteDecision(RetrievalLane.STRUCTURED_ROLE, "technology/tools terms (structured)", 0.7)
+    return None
+
+
+def route_question(query: str, llm_classifier=None, language: str | None = None) -> RouteDecision:
+    """Return the retrieval lane for ``query``.
+
+    ``llm_classifier`` (optional) is a callable ``str -> lane`` used only when the
+    deterministic rules are ambiguous. ``language`` (optional, the language of the QUESTION) selects the keyword table; when omitted a
+    deterministic stop-word guess is used (02E, L-ROUTE-1). English questions never reach the localized tables, so English routing is unchanged.
+    """
+    text = query or ""
+
+    # 02E (L-ROUTE-1): a question with stop-word evidence of a non-English language is matched against that language's keyword table first (same lanes,
+    # same precedence). A question with NO language evidence keeps the English rules first (English routing is unchanged) and falls back to the
+    # tables only when the English rules found nothing. English questions never reach the localized tables.
+    from src.copilot.knowledge.router_lang import has_language_evidence, route_localized
+
+    evidence = language is not None or has_language_evidence(text)
+    if evidence:
+        localized = route_localized(text, language)
+        if localized is not None:
+            return RouteDecision(localized[0], localized[1], localized[2])
+    decision = _english_rules(text)
+    if decision is None and language is None:
+        # nothing decided: a question that quotes a foreign keyword inside English text (or has no stop words at all) still reaches the tables
+        localized = route_localized(text, any_language=True)
+        if localized is not None:
+            return RouteDecision(localized[0], localized[1], localized[2])
+    if decision is not None:
+        return decision
 
     # Ambiguous: consult the LLM classifier if provided, else default to vector.
     if llm_classifier is not None:

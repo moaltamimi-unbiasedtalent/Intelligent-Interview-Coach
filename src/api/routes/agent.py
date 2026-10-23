@@ -50,6 +50,7 @@ def _to_response(result) -> AgentRunResponse:
     ).to_dict()
     return AgentRunResponse(
         presentation=presentation,
+        failure_code=getattr(result, "failure_code", None),
         run_id=result.run_id,
         status=result.status,
         response=result.response,

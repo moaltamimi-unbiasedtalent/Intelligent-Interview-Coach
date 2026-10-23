@@ -185,7 +185,7 @@ const es: typeof en = {
     rowFeedback: "Feedback",
     rowBestUse: "Mejor uso",
     rowLimit: "Limitación importante",
-    payAsk4mo: "Gratis o €19.99 al mes con Premium",
+    payAsk4mo: "Gratis durante la beta privada; no se puede comprar nada",
     payCoach: "Por sesión o paquete",
     payCourse: "Pago único o suscripción",
     availAsk4mo: "Bajo demanda",

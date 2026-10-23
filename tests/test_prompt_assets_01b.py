@@ -23,7 +23,7 @@ from src.prompt_loader import (
 
 ROOT = Path(__file__).resolve().parent.parent
 PROMPTS = ROOT / "prompts"
-EXPECTED_FAMILY_COUNT = 44
+EXPECTED_FAMILY_COUNT = 45  # 06C: + rag/response_language (the Career-chat language directive moved from an inline literal into a versioned asset)
 
 
 @pytest.fixture

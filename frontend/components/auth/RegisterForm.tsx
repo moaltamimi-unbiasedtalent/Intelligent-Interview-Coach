@@ -8,6 +8,7 @@ import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
 import { useI18n } from "@/components/i18n/I18nProvider";
+import { BetaPricingStatement } from "@/components/plan/BetaPricingStatement";
 
 const MIN_PASSWORD = 10;
 const INVITATION_FRAGMENT = /(?:^|[#&])invitation=([^&]+)/;
@@ -90,6 +91,7 @@ export function RegisterForm() {
         </>
       }
     >
+      <BetaPricingStatement className="mb-4 text-sm text-muted" testId="register-beta-pricing" />
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
         {error ? <Alert tone="danger">{error}</Alert> : null}
         <LabelledField label={t("auth.invitationLabel")} htmlFor="invitation" hint={t("auth.invitationHint")}>

@@ -22,6 +22,22 @@ def _flag(name: str) -> bool:
     return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _openrouter_configured() -> bool:
+    """Whether a credential is configured by any layer; False under the offline switch (nothing is read). Falls back to the environment answer if the layers cannot be read."""
+    from src.application.provider_mode import provider_credential_configured
+
+    try:
+        return provider_credential_configured()
+    except Exception:  # noqa: BLE001
+        return _set("OPENROUTER_API_KEY")
+
+
+def _openrouter_mode() -> str:
+    from src.application.provider_mode import resolve_provider_mode
+
+    return resolve_provider_mode()
+
+
 def _row(provider_id: str, label: str, configured: bool, *, enabled: bool | None = None,
          mode: str | None = None) -> ProviderRow:
     return ProviderRow(
@@ -47,7 +63,34 @@ def _server_speech(runtime):
         return None
 
 
-def build_providers_response(pause_service=None, speech_runtime=None) -> ProvidersResponse:
+def _monitoring(session_factory):
+    """05C: active operational alerts by category, the AI budget state and the derived health signals. Unreadable sources yield ``None`` (never a healthy-looking value)."""
+    if session_factory is None:
+        return None
+    try:
+        from sqlalchemy import func, select
+
+        from src.api.schemas.admin import MonitoringAlerts, MonitoringBudget, MonitoringSignal, MonitoringStatus
+        from src.llm.budget.status import budget_status
+        from src.ops.signals import evaluate_signals
+        from src.persistence import AdminNotification
+
+        categories = ("api_error_rate_high", "worker_unhealthy", "job_queue_backlog", "indexing_stalled", "provider_unhealthy", "quota_reaper_stale", "ai_budget_attention")
+        with session_factory() as s:
+            rows = dict(s.execute(select(AdminNotification.category, func.count()).where(AdminNotification.state.in_(("active", "acknowledged")), AdminNotification.category.in_(categories))
+                                  .group_by(AdminNotification.category)).all())
+        bs = budget_status(session_factory)
+        led = bs.get("ledger") or {}
+        budget = MonitoringBudget(state=bs["state"], enforcement=bs["enforcement"], budget_class=bs.get("budget_class"), reason=bs.get("reason"),
+                                  remaining_to_stop_usd=led.get("remaining_to_stop_usd"), remaining_requests=led.get("remaining_requests"))
+        signals = [MonitoringSignal(code=x.code, status=x.status) for x in evaluate_signals(session_factory)]
+        return MonitoringStatus(alerts=MonitoringAlerts(active=sum(rows.values()), by_category={k: int(v) for k, v in rows.items()}), budget=budget, signals=signals,
+                                note="Derived from recorded facts; nothing is probed. Unknown means there is not enough evidence yet and is not healthy. Alerts are in-app only.")
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def build_providers_response(pause_service=None, speech_runtime=None, session_factory=None) -> ProvidersResponse:
     from src.application.admin_command_center import rate_limit_mode
     from src.documents.ocr import ocr_runtime_status
     from src.voice.realtime import resolve_realtime_config
@@ -57,7 +100,8 @@ def build_providers_response(pause_service=None, speech_runtime=None) -> Provide
     rows = [
         _row("email", "Transactional email", brevo, mode="brevo" if brevo else "console"),
         _row("google_oidc", "Google sign-in (OIDC)", _set("GOOGLE_OIDC_CLIENT_ID", "GOOGLE_CLIENT_ID")),
-        _row("openrouter", "Language model provider (OpenRouter)", _set("OPENROUTER_API_KEY")),
+        # 04D (DEMO-02): the AI provider MODE (live / offline / not_configured / unknown) so a keyless or offline stack cannot be mistaken for live. Configuration, not health.
+        _row("openrouter", "Language model provider (OpenRouter)", _openrouter_configured(), mode=_openrouter_mode()),
         _row("adzuna", "Labour-market data (Adzuna)", _set("ADZUNA_APP_ID") and _set("ADZUNA_APP_KEY")),
         _row("langfuse", "External observability (Langfuse)",
              _set("LANGFUSE_PUBLIC_KEY") and _set("LANGFUSE_SECRET_KEY"),
@@ -89,7 +133,7 @@ def build_providers_response(pause_service=None, speech_runtime=None) -> Provide
                        for k, v in (ocr.get("languages") or {}).items()},
             live_quality=str(ocr.get("live_quality", "UNVALIDATED"))),
         pause={k: v["paused"] for k, v in pause_service.snapshot().items()} if pause_service is not None else {}, pause_durable=pause_service is not None,
-        rate_limit_mode=rl["mode"], rate_limit_distributed=bool(rl["distributed"]),
+        rate_limit_mode=rl["mode"], rate_limit_distributed=bool(rl["distributed"]), monitoring=_monitoring(session_factory),
         note=("Booleans and fixed labels only. Provider configuration is managed outside this console "
               "(deployment environment). Configured does not mean healthy; no provider is contacted here."),
     )

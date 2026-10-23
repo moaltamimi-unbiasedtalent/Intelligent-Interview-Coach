@@ -16,6 +16,12 @@ from src.plans_repository import PlanRepository
 from src.privacy.requests import PrivacyRequestService
 
 
+def pending_verification_tokens(s, user_id: int, now) -> list[AuthToken]:
+    """Outstanding (unconsumed, unexpired) email-verification links of one account. Shared by the single and the bulk expiry action."""
+    return list(s.scalars(select(AuthToken).where(AuthToken.user_id == user_id, AuthToken.purpose == TOKEN_PURPOSE_EMAIL_VERIFICATION,
+                                                  AuthToken.consumed_at.is_(None), AuthToken.expires_at > now)).all())
+
+
 class UserActions:
     def __init__(self, session_factory: sessionmaker) -> None:
         self._sf = session_factory
@@ -67,8 +73,7 @@ class UserActions:
                 raise AdminNotFound("Account not found.")
             check(s, user)
             now = utcnow()
-            rows = s.scalars(select(AuthToken).where(AuthToken.user_id == user_id, AuthToken.purpose == TOKEN_PURPOSE_EMAIL_VERIFICATION,
-                                                     AuthToken.consumed_at.is_(None), AuthToken.expires_at > now)).all()
+            rows = pending_verification_tokens(s, user_id, now)
             for row in rows:
                 row.consumed_at = now
             _stage(s, audit, links_expired=len(rows))

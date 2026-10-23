@@ -5,6 +5,7 @@ import { useAuthOptional } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/api/client";
 import { P, adminPermissions, hasAnyPermission } from "@/lib/admin/capabilities";
 import type { ReportMetric, ReportPeriod, AdminReport, ReportSection } from "@/lib/admin/types";
+import { ReportBuilderView } from "./ReportBuilderView";
 import { Panel, PermissionGate, ResourceState, StatusLabel, btn, field, useAdminResource, ScrollRegion } from "./ui";
 
 // Admin reporting. Aggregates only; small candidate cohorts are suppressed by the server (value null, never a count). A missing value is
@@ -82,6 +83,19 @@ function Section({ s }: { s: ReportSection }) {
 }
 
 function Body() {
+  const [mode, setMode] = useState<"standard" | "builder">("standard");
+  return (
+    <div className="grid gap-4">
+      <div role="group" aria-label="Reports mode" className="flex flex-wrap gap-2">
+        <button type="button" className={btn} aria-pressed={mode === "standard"} onClick={() => setMode("standard")}>Standard reports</button>
+        <button type="button" className={btn} aria-pressed={mode === "builder"} onClick={() => setMode("builder")}>Catalogue and builder</button>
+      </div>
+      {mode === "standard" ? <StandardReports /> : <ReportBuilderView />}
+    </div>
+  );
+}
+
+function StandardReports() {
   const auth = useAuthOptional();
   const granted = adminPermissions(auth?.account);
   const tabs = TABS.filter((t) => hasAnyPermission(granted, [t.perm]));

@@ -40,6 +40,8 @@ export type ApiErrorKind =
   | "historyRestricted" // 403 with code history_not_available: an OWNED interview outside the current history window (stored, not deleted; stable code)
   | "modelProfileRestricted" // 403/422 with code model_profile_not_authorized or model_profile_not_available: that AI model profile is not available to this account (stable codes)
   | "paused" // 503 with code platform_paused: an operator pause of this activity (stable code, never English matching)
+  | "aiNotConfigured" // 503 with code ai_not_configured: this environment has no usable AI configured; retrying will not help (stable code)
+  | "aiUnavailable" // 503 with code ai_provider_unavailable: the AI service failed this time; nothing was lost and trying again may work (stable code)
   | "unavailable" // 502/503/504 or an intentional service-unavailable response
   | "server" // 5xx received normally — an Ask4Mo server problem
   | "unknown";
@@ -105,6 +107,10 @@ export class ApiError extends Error {
         return "That AI model profile is not available for your account. Please choose another profile.";
       case "paused":
         return "Ask4Mo is temporarily unavailable for this activity. Your saved data remains available. Please try again later.";
+      case "aiNotConfigured":
+        return "AI features are not configured on this Ask4Mo environment, so nothing was started. Your saved work and history remain available.";
+      case "aiUnavailable":
+        return "The AI service could not complete this request right now. Nothing was lost. Please try again in a moment.";
       case "unavailable":
         return "Ask4Mo is temporarily unavailable. Please try again shortly.";
       case "server":
@@ -147,6 +153,10 @@ export function stateKeyForError(kind: ApiErrorKind): string {
       return "states.modelProfileNotAvailable";
     case "paused":
       return "states.platformPaused";
+    case "aiNotConfigured":
+      return "states.aiNotConfigured";
+    case "aiUnavailable":
+      return "states.aiProviderUnavailable";
     case "unavailable":
       return "states.serviceUnavailable";
     case "server":
@@ -208,7 +218,7 @@ export function apiErrorFromBody(
   // surface arbitrary body text that isn't part of the known safe envelope.
   const message = envelope?.error?.message ?? "Request failed.";
   return new ApiError({
-    kind: code === "platform_paused" ? "paused" : code === "ai_usage_limit" ? "aiLimited" : code === "usage_quota_exhausted" ? "quotaExhausted" : code === "history_not_available" ? "historyRestricted" : code === "model_profile_not_authorized" || code === "model_profile_not_available" ? "modelProfileRestricted" : kindForStatus(status),
+    kind: code === "platform_paused" ? "paused" : code === "ai_not_configured" ? "aiNotConfigured" : code === "ai_provider_unavailable" ? "aiUnavailable" : code === "ai_usage_limit" ? "aiLimited" : code === "usage_quota_exhausted" ? "quotaExhausted" : code === "history_not_available" ? "historyRestricted" : code === "model_profile_not_authorized" || code === "model_profile_not_available" ? "modelProfileRestricted" : kindForStatus(status),
     status,
     code,
     message,

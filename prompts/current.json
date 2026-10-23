@@ -171,6 +171,10 @@
     "version": "1.0.0",
     "sha256": "1f37bab3b43873663cfd3f75ff8d1f833d204241d3fb5c0c51d7ddca2f784e0b"
   },
+  "rag/response_language": {
+    "version": "1.0.0",
+    "sha256": "aa6e89101b2b3467911a47cae5cb93221956c3030d9d6a588b54f976e2d7d96a"
+  },
   "rag/synthesis_system": {
     "version": "1.0.0",
     "sha256": "1de2487c2457486342f241412625b79983a871f81c0d7eae2a4c68625ae88b53"

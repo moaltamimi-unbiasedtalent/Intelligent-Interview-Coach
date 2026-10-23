@@ -17,6 +17,7 @@ const SAFE_DEFAULT: CapabilitiesResponse = {
   agent_coach_enabled: false,
   realtime_voice_enabled: false,
   company_research_enabled: false,
+  ai_provider_mode: "unknown",           // never "live" until the backend says so
 };
 
 export interface CapabilitiesState {
