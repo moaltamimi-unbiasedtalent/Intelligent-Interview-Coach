@@ -169,3 +169,18 @@ def test_required_shared_refuses_a_secret_source_shadowing_the_reviewed_profile(
     assert R.redis_configuration_errors(hosted=True)
     with pytest.raises(R.RateLimitConfigurationError,match='^shared_rate_limit_configuration_invalid$'):
         R.build_rate_limiter()
+
+
+def test_late_limiter_configuration_refusal_is_safe_503_not_an_internal_500():
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from src.api.exception_handlers import register_exception_handlers
+    app=FastAPI()
+    register_exception_handlers(app)
+    @app.get('/protected')
+    def protected():
+        raise R.RateLimitConfigurationError('private-runtime-source-detail')
+    with TestClient(app) as client:
+        response=client.get('/protected')
+        assert response.status_code==503 and response.json()['error']['code']=='protection_unavailable'
+        assert 'private-runtime-source-detail' not in response.text

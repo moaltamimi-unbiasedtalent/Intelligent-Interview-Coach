@@ -28,6 +28,7 @@ from src.application.errors import (
     ValidationError,
 )
 from src.ai_protection import AiUsageLimitError
+from src.api.rate_limit import RateLimitConfigurationError
 from src.application.usage_quota import QuotaExhausted, QuotaNotConfigured, QuotaUnavailable
 from src.application.preparation_pack import PackGenerationUnavailable
 from src.application.history_access import HistoryNotAvailableError
@@ -95,6 +96,10 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(ConfigurationError)
     async def _configuration(request: Request, exc: ConfigurationError):
         return _envelope(503, "not_configured", str(exc), _request_id(request))
+
+    @app.exception_handler(RateLimitConfigurationError)
+    async def _rate_limit_configuration(request: Request, exc: RateLimitConfigurationError):
+        return _envelope(503, "protection_unavailable", "Request protection is temporarily unavailable. Please try again.", _request_id(request))
 
     @app.exception_handler(UnavailableServiceError)
     async def _unavailable(request: Request, exc: UnavailableServiceError):

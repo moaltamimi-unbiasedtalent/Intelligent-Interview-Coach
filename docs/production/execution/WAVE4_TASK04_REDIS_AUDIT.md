@@ -68,3 +68,5 @@ Recommend `deny` for authentication/registration/recovery, privileged/security a
 ## Follow-up from real HTTP qualification
 
 The limiter's HTTPException carried Retry-After, but the central handler discarded it. Real account/non-account refusal tests exposed this end-to-end gap. The focused repair forwards only bounded numeric retry values and a code-defined readiness state header; arbitrary headers and detail remain hidden. All original bucket values/policies above remain unchanged.
+
+Browser transport follow-up: the allowed CORS response did not expose Retry-After, and the existing GET retry helper shortened long server delays to four seconds. The focused fix exposes only the safe retry hint and surfaces the existing error when a full server delay exceeds the automatic-wait ceiling. Writes remain non-retryable; no origin or bucket policy is broadened.

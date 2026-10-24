@@ -18,7 +18,7 @@ export interface RetryPolicy {
   maxRetries: number;
   /** Base backoff in ms (grows exponentially). */
   baseDelayMs: number;
-  /** Upper bound for a single backoff wait. */
+  /** Automatic-wait ceiling; longer server delays are surfaced without retry. */
   maxDelayMs: number;
 }
 
@@ -64,7 +64,7 @@ export function backoffDelayMs(
   rand: () => number = Math.random,
 ): number {
   if (error instanceof ApiError && error.retryAfterMs != null) {
-    return Math.min(error.retryAfterMs, policy.maxDelayMs);
+    return error.retryAfterMs;
   }
   const exp = policy.baseDelayMs * 2 ** attempt;
   const capped = Math.min(exp, policy.maxDelayMs);
@@ -125,6 +125,10 @@ export async function runWithRetry<T>(
       if (signal?.aborted) throw error;
       const hasBudget = i < policy.maxRetries;
       if (!hasBudget || !isRetryable(method, error)) throw error;
+      // Never shorten the server's minimum delay to our automatic-wait ceiling.
+      // Surface the existing error for a later manual retry instead of retrying early.
+      if (error instanceof ApiError && error.retryAfterMs != null &&
+          (!Number.isFinite(error.retryAfterMs) || error.retryAfterMs > policy.maxDelayMs)) throw error;
       await wait(backoffDelayMs(i, error, policy, rand), signal);
     }
   }

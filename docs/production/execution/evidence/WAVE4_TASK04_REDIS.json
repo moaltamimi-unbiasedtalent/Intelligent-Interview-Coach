@@ -111,5 +111,17 @@
     "Task 05 fresh approved AI-budget/cost-governor configuration and qualification",
     "Separate encrypted backup/restore/rollback milestone",
     "Scanner, knowledge/embedding, proxy/SSE, governance, human/language and 08A qualification"
-  ]
+  ],
+  "subsequent_retry_checks": {
+    "backend_passed": 27,
+    "frontend_passed": 36,
+    "frontend_typecheck": "PASS",
+    "frontend_lint": "PASS",
+    "real_redis_repeated_passed": 16,
+    "findings": [
+      "Safe Retry-After must survive the central handler and CORS",
+      "Browser must not shorten a server minimum wait; longer hints surface the existing error without retry",
+      "Late limiter configuration errors are safe 503 without internal detail"
+    ]
+  }
 }

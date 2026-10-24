@@ -133,3 +133,28 @@ describe("runWithRetry", () => {
     expect(attempt).toHaveBeenCalledTimes(1);
   });
 });
+
+
+describe("server minimum retry delay", () => {
+  it("does not shorten a long Retry-After", () => {
+    expect(backoffDelayMs(0, apiErr("rateLimited", 429, 60000))).toBe(60000);
+  });
+
+  it.each([429, 503])("does not automatically retry %s before a long server delay", async (status) => {
+    const error = apiErr(status === 429 ? "rateLimited" : "unavailable", status, 60000);
+    const attempt = vi.fn<() => Promise<string>>().mockRejectedValue(error);
+    const wait = vi.fn(noWait);
+    await expect(runWithRetry("GET", attempt, { wait })).rejects.toBe(error);
+    expect(attempt).toHaveBeenCalledTimes(1);
+    expect(wait).not.toHaveBeenCalled();
+  });
+
+  it("waits the complete supported server delay before retrying a safe request", async () => {
+    const attempt = vi.fn<() => Promise<string>>()
+      .mockRejectedValueOnce(apiErr("rateLimited", 429, 1500)).mockResolvedValueOnce("ok");
+    const wait = vi.fn(noWait);
+    await expect(runWithRetry("GET", attempt, { wait })).resolves.toBe("ok");
+    expect(wait).toHaveBeenCalledWith(1500, undefined);
+    expect(attempt).toHaveBeenCalledTimes(2);
+  });
+});

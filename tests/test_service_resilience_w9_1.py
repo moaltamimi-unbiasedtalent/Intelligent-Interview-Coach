@@ -113,3 +113,18 @@ def test_production_still_fails_closed_without_frontend_origins(monkeypatch):
         monkeypatch.delenv(var, raising=False)
     with pytest.raises(RuntimeError):
         create_app(ApiSettings(env="production", frontend_origins=()))
+
+
+def test_rate_limit_retry_hint_is_readable_only_through_the_allowed_cors_origin(app_with_boom):
+    from fastapi import HTTPException
+    @app_with_boom.get("/synthetic-rate-limit")
+    def limited():
+        raise HTTPException(429, "Safe rate-limit message", headers={"Retry-After": "60"})
+    with _client(app_with_boom) as client:
+        allowed=client.get("/synthetic-rate-limit",headers={"Origin":ALLOWED_ORIGIN})
+        assert allowed.status_code==429 and allowed.headers["Retry-After"]=="60"
+        assert allowed.headers["Access-Control-Allow-Origin"]==ALLOWED_ORIGIN
+        exposed={value.strip().lower() for value in allowed.headers["Access-Control-Expose-Headers"].split(",")}
+        assert {"retry-after","x-request-id","content-disposition","x-export-rows"} <= exposed
+        denied=client.get("/synthetic-rate-limit",headers={"Origin":"https://not-approved.invalid"})
+        assert "Access-Control-Allow-Origin" not in denied.headers

@@ -199,7 +199,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
-            expose_headers=["X-Request-Id", "Content-Disposition", "X-Export-Rows"],      # 03E2: the report export UI reads its file name and row count
+            expose_headers=["X-Request-Id", "Content-Disposition", "X-Export-Rows", "Retry-After"],      # Downloads and safe retry hints are readable by the allowed browser origins only
         )
     register_exception_handlers(app)
 

@@ -265,8 +265,9 @@ def test_actual_auth_login_and_recovery_are_uniform_with_real_redis(real):
             b = client.post('/api/v1/auth/login', json={'email':'unknown@example.invalid','password':'wrong-password'})
             assert a.status_code == b.status_code == 401
         for address in ('known@example.invalid','unknown@example.invalid'):
-            response = client.post('/api/v1/auth/login', json={'email':address,'password':'wrong-password'})
+            response = client.post('/api/v1/auth/login', json={'email':address,'password':'wrong-password'},headers={'Origin':'http://localhost:3000'})
             assert response.status_code == 429 and int(response.headers['Retry-After']) >= 1
+            assert 'retry-after' in response.headers['Access-Control-Expose-Headers'].lower()
     assert not R.limiter_status()['degraded']
     assert mail is not None  # in-memory email capture only; no live email
 
