@@ -218,8 +218,11 @@ def inspect_image(image_id, role, source, created, api_url):
     require(result.pop("files") == paths, "image_source_file_mismatch")
     require(result["uid"] == (10001 if role == "application" else 1000), "image_security_mismatch")
     require(info["Os"] == "linux", "image_platform_invalid")
+    created_time = datetime.fromisoformat(info["Created"].replace("Z", "+00:00"))
+    require(created_time.utcoffset() is not None, "timestamp_invalid")
+    normalized_created = created_time.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
     return {"image_id": image_id, "registry_digest": None, "platform": info["Os"] + "/" + info["Architecture"],
-            "docker_created_at": info["Created"], "contents": result}
+            "docker_created_at": normalized_created, "contents": result}
 
 
 def public_url(value):
