@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-24",
+  "baseline_main": "95fd2a3c3de5ee8af64c3f5c538b8a4824ce3ff2",
+  "baseline_checks": {
+    "ci": 40097363556,
+    "durable_admission": 40097363420,
+    "migration_image": 40097363464,
+    "conclusion": "success"
+  },
+  "local_build_sha": "6ec1eb3a0bc5ee7c81d1cbbb5e3cb90c722df25b",
+  "local_manifest_sha256": "49e3e8a12a8be0a03c6597c9008a746460da049bd053ee4fa1c0dfc6192ca98c",
+  "image_id_kind": "local-docker-image-id",
+  "images": {
+    "application": {
+      "image_id": "sha256:33b7a8cfa08da58f870d65f9f3b48bc6d86255128110e78c4a9f0e8e086c0876",
+      "registry_digest": null,
+      "platform": "linux/arm64",
+      "python_or_node_dependencies": 155,
+      "os_dependencies": 188
+    },
+    "web": {
+      "image_id": "sha256:52e0220960fdfd9fb8bc8cb31f59d0102b92ada740ad89aae10f605e7c68fe8c",
+      "registry_digest": null,
+      "platform": "linux/arm64",
+      "python_or_node_dependencies": 3,
+      "os_dependencies": 104
+    }
+  },
+  "build_started_at": "2026-10-24T13:57:37Z",
+  "migration_head": "0048_agent_run_controls",
+  "language_activation_sha256": "05a0f9f5d182d0614d03006cf23d0e559fa2e3684db0ad6f18fff60a333aa4c1",
+  "prompt_file_count": 48,
+  "offline_archive_sha256": "474a18ec6fc1c01ac3d9cb045e45ca0658819e3e45c749ad278bd74b74423531",
+  "real_image_tests_passed": 9,
+  "nested_migration_image_tests_passed": 3,
+  "built_image_synthetic_usage": {
+    "model_calls": 2,
+    "total_tokens": 18,
+    "cost_usd_micros": 1800
+  },
+  "staging_deployments": 0,
+  "registry_publications": 0,
+  "paid_calls": 0,
+  "original_database_migrations": 0,
+  "new_gate_approvals": 0,
+  "hosted_languages_activated": 0,
+  "final_head_evidence": "CI builds the final PR head separately; local image IDs above belong only to local_build_sha.",
+  "local_focused_checks": {
+    "passed": 340,
+    "skipped": 1,
+    "skip_reason": "Existing rollback rehearsal has no registered seeder for the current head; not exercised/qualified."
+  }
+}

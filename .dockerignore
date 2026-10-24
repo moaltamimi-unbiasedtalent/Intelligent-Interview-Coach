@@ -38,3 +38,7 @@ evaluations
 **/*.key
 .codex
 .agents
+**/.npmrc
+**/.pypirc
+**/*.sqlite-*
+**/*.sqlite3-*

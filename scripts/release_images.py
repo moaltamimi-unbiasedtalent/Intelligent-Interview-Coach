@@ -214,7 +214,7 @@ def inspect_image(image_id, role, source, created, api_url):
         require(env.get("NEXT_PUBLIC_API_BASE_URL") == api_url, "frontend_api_url_mismatch")
     paths = source["api_files" if role == "application" else "web_files"]
     args = ["python", "-c", API_PROBE] if role == "application" else ["node", "-e", WEB_PROBE]
-    result = json.loads(run(["docker", "run", "--rm", "-i", "--network", "none", "--read-only", "--cap-drop", "ALL", "--security-opt", "no-new-privileges", image_id, *args], input=canonical(list(paths))))
+    result = json.loads(run(["docker", "run", "--rm", "-i", "--pull", "never", "--network", "none", "--read-only", "--cap-drop", "ALL", "--security-opt", "no-new-privileges", image_id, *args], input=canonical(list(paths))))
     require(result.pop("files") == paths, "image_source_file_mismatch")
     require(result["uid"] == (10001 if role == "application" else 1000), "image_security_mismatch")
     require(info["Os"] == "linux", "image_platform_invalid")
@@ -227,8 +227,14 @@ def inspect_image(image_id, role, source, created, api_url):
 
 def public_url(value):
     require(isinstance(value, str), "public_api_url_invalid")
-    require(value == value.strip() and not any(c.isspace() or ord(c) < 32 for c in value), "public_api_url_invalid")
+    require(value == value.strip() and "?" not in value and "#" not in value and not any(c.isspace() or ord(c) < 32 for c in value), "public_api_url_invalid")
     url = urlsplit(value)
+    try:
+        port = url.port
+    except ValueError as exc:
+        raise ReleaseError("public_api_url_invalid") from exc
+    require(port is None or 1 <= port <= 65535, "public_api_url_invalid")
+    require(url.hostname == "::1" or bool(url.hostname and re.fullmatch(r"[A-Za-z0-9.-]+", url.hostname)), "public_api_url_invalid")
     require(not url.username and not url.password and not url.query and not url.fragment and url.path == "/api/v1" and
             (url.scheme == "https" and url.hostname or url.scheme == "http" and url.hostname in ("127.0.0.1", "localhost", "::1")), "public_api_url_invalid")
 
@@ -318,8 +324,23 @@ def build_release(sha, api_url, out, *, repo=ROOT):
     return {"application_sha": sha, "manifest_sha256": anchor, "images": {k: v["image_id"] for k, v in images.items()}}
 
 
+def database_identity(url):
+    """Non-secret logical target binding; credentials and URL queries are excluded."""
+    from sqlalchemy.engine import make_url
+    parsed = make_url(url)
+    backend = parsed.get_backend_name()
+    identity = {"backend": backend, "database": parsed.database or ""}
+    if backend == "sqlite":
+        identity["database"] = str(Path(parsed.database or "").resolve())
+    else:
+        identity.update(host=parsed.host or "", port=parsed.port or 5432,
+                        namespace_options={key: parsed.query[key] for key in ("options", "search_path", "currentSchema") if key in parsed.query})
+    return digest(canonical(identity))
+
+
 def check_state(state, manifest, mode, *, now=None):
-    keys(state, "version observed_at schema_revision unsettled_agent_runs active_jobs drained")
+    keys(state, "version observed_at schema_revision unsettled_agent_runs active_jobs drained database_identity_sha256")
+    require(isinstance(state["database_identity_sha256"], str) and HASH.fullmatch(state["database_identity_sha256"]), "database_identity_invalid")
     require(type(state["version"]) is int and state["version"] == 1, "state_version_invalid")
     require(mode in ("promote", "rollback"), "promotion_mode_invalid")
     age = ((now or datetime.now(timezone.utc)) - parsed_time(state["observed_at"])).total_seconds()
@@ -352,7 +373,11 @@ def profile_for(manifest, base, state, mode, env_file, caddyfile):
             service["environment"]["API_ENV"] = "staging"
         else:
             service["environment"]["NODE_ENV"] = "production"
+    endpoint = urlsplit(manifest["public_api_base_url"])
+    require(endpoint.scheme == "https" and endpoint.port in (None, 443), "staging_proxy_requires_https")
+    services["caddy"]["environment"]["API_DOMAIN"] = endpoint.hostname
     services["web"]["environment"]["NEXT_PUBLIC_API_BASE_URL"] = manifest["public_api_base_url"]
+    services["web"]["environment"]["NEXT_TELEMETRY_DISABLED"] = "1"
     for service in services.values():
         if "env_file" in service:
             service["env_file"] = [str(env_file)]
@@ -379,19 +404,29 @@ def prepare(manifest, expected_sha, anchor, state, mode, out, env_file, *, repo=
     (out / "Caddyfile").write_bytes(caddy)
     write_json(out / "plan.json", {"mode": mode, "application_sha": expected_sha, "manifest_sha256": anchor,
                "state_sha256": digest(canonical(state)), "state_observed_at": state["observed_at"],
+               "database_identity_sha256": state["database_identity_sha256"],
                "compose_sha256": file_hash(out / "compose.yml"), "caddy_sha256": file_hash(out / "Caddyfile"),
                "drain_evidence": "operator attestation; process drain not verified by this tool", "executed": False,
                "migrations": "one-shot upgrade only" if mode == "promote" else "none; application images only"})
     return {"mode": mode, "manifest_sha256": anchor, "executed": False}
 
 
-def check_compose(manifest, expected_sha, anchor, profile, env_file, mode, *, repo=ROOT):
+def check_compose(manifest, expected_sha, anchor, profile, env_file, mode, state, *, repo=ROOT):
     validate_manifest(manifest, expected_sha, anchor, repo=repo)
+    check_state(state, manifest, mode)
+    plan = decode_json((Path(profile).parent / "plan.json").read_text())
+    require(plan["manifest_sha256"] == anchor and plan["state_sha256"] == digest(canonical(state)), "plan_observation_mismatch")
+    require(plan["compose_sha256"] == file_hash(profile), "prepared_profile_modified")
+    copied_caddy = Path(profile).parent.resolve() / "Caddyfile"
+    require(file_hash(copied_caddy) == plan["caddy_sha256"] == manifest["source"]["deployment_files"]["deploy/Caddyfile"], "proxy_config_modified")
     require(mode in ("promote", "rollback"), "promotion_mode_invalid")
     # stdout contains resolved secrets: capture privately, inspect only bounded
     # identity/topology fields, and never print or persist the resolved document.
     resolved = json.loads(run(["docker", "compose", "--env-file", str(env_file), "-f", str(profile), "config", "--format", "json"]))
     services = resolved["services"]
+    proxy_mount = services["caddy"]["volumes"][0]
+    require(proxy_mount["type"] == "bind" and proxy_mount["target"] == "/etc/caddy/Caddyfile" and proxy_mount.get("read_only") is True and
+            Path(proxy_mount["source"]).resolve() == copied_caddy, "proxy_config_mismatch")
     require(set(services) == ({"api", "worker", "web", "db", "clamav", "caddy", "migrate"} if mode == "promote" else
                               {"api", "worker", "web", "db", "clamav", "caddy"}), "resolved_service_mismatch")
     require(resolved["name"] == "ask4mo-staging", "resolved_project_mismatch")
@@ -399,11 +434,25 @@ def check_compose(manifest, expected_sha, anchor, profile, env_file, mode, *, re
     for name in app_names:
         service = services[name]
         require("build" not in service and service["pull_policy"] == "never", "resolved_build_or_pull")
+        require(not service.get("entrypoint") and not service.get("user") and not service.get("privileged") and not service.get("cap_add"), "resolved_security_override")
+        if name == "worker":
+            require(service.get("command") == ["python", "-m", "src.jobs.worker"], "resolved_worker_command_mismatch")
+        elif name in ("api", "web"):
+            require(not service.get("command"), "resolved_application_command_override")
+        volumes = service.get("volumes", [])
+        expected_mounts = {("/data/documents", "documents"), ("/data/knowledge", "knowledge-data")} if name in ("api", "worker") else set()
+        require(all(v["type"] == "volume" for v in volumes) and {(v["target"], v["source"]) for v in volumes} == expected_mounts, "resolved_private_volume_mismatch")
         require(service["image"] == manifest["images"]["web" if name == "web" else "application"]["image_id"], "resolved_image_mismatch")
+        for volume in volumes:
+            require(resolved["volumes"][volume["source"]]["name"] == "ask4mo-staging_" + volume["source"], "resolved_private_volume_mismatch")
+        if name != "web":
+            require(service["environment"].get("DATABASE_URL") and database_identity(service["environment"]["DATABASE_URL"]) == state["database_identity_sha256"], "runtime_database_identity_mismatch")
         require(service["labels"]["io.ask4mo.manifest.sha256"] == anchor and service["environment"]["APP_GIT_SHA"] == expected_sha,
                 "resolved_release_mismatch")
         require(service["environment"].get("NODE_ENV" if name == "web" else "API_ENV") == ("production" if name == "web" else "staging"), "resolved_runtime_mismatch")
     require(services["web"]["environment"]["NEXT_PUBLIC_API_BASE_URL"] == manifest["public_api_base_url"], "frontend_api_url_mismatch")
+    require(services["caddy"]["environment"]["API_DOMAIN"] == urlsplit(manifest["public_api_base_url"]).hostname, "proxy_api_domain_mismatch")
+    require(services["web"]["environment"]["NEXT_TELEMETRY_DISABLED"] == "1", "frontend_telemetry_not_disabled")
     if mode == "promote":
         require(services["migrate"]["command"] == ["bash", "scripts/migrate.sh"] and services["migrate"]["restart"] == "no", "migration_topology_mismatch")
         for name in ("api", "worker"):
@@ -458,10 +507,12 @@ def observe_disposable(url, *, drained=False):
             revisions = list(connection.scalars(text("SELECT version_num FROM alembic_version"))) if "alembic_version" in tables else []
             require(len(revisions) <= 1, "database_heads_not_single")
             require(bool(revisions) or tables <= {"alembic_version"}, "unversioned_nonempty_database")
+            if revisions and revisions[0] == migration_chain(ROOT)[-1]:
+                require("agent_run_controls" in tables, "current_schema_missing_run_controls")
             unsettled = connection.scalar(text("SELECT count(*) FROM agent_run_controls WHERE settled = false")) if "agent_run_controls" in tables else 0
             jobs = connection.scalar(text("SELECT count(*) FROM jobs WHERE status IN ('queued','running')")) if "jobs" in tables else 0
         return {"version": 1, "observed_at": timestamp(), "schema_revision": revisions[0] if revisions else "base",
-                "unsettled_agent_runs": unsettled, "active_jobs": jobs, "drained": drained}
+                "unsettled_agent_runs": unsettled, "active_jobs": jobs, "drained": drained, "database_identity_sha256": database_identity(url)}
     finally:
         engine.dispose()
 
@@ -485,6 +536,7 @@ def main(argv=None):
             child.add_argument("--mode", choices=("promote", "rollback"), required=True)
             child.add_argument("--env-file", required=True)
         if name == "check-compose":
+            child.add_argument("--state", required=True)
             child.add_argument("--profile", required=True)
             child.add_argument("--env-file", required=True)
             child.add_argument("--mode", choices=("promote", "rollback"), required=True)
@@ -509,7 +561,7 @@ def main(argv=None):
             if args.command == "prepare":
                 result = prepare(*common, decode_json(Path(args.state).read_text()), args.mode, args.out, args.env_file)
             elif args.command == "check-compose":
-                result = check_compose(*common, args.profile, args.env_file, args.mode)
+                result = check_compose(*common, args.profile, args.env_file, args.mode, decode_json(Path(args.state).read_text()))
             elif args.command == "export":
                 result = export_images(*common, args.out)
             elif args.command == "import":
@@ -522,7 +574,7 @@ def main(argv=None):
     except ReleaseError as exc:
         print(json.dumps({"error": str(exc)}))  # fixed code only, never raw tool output
         return 1
-    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
+    except Exception:  # CLI boundary: refuse with nonzero status, never echo raw driver/config errors.
         # Never echo a private URL, env, raw Docker config or database exception.
         print(json.dumps({"error": "release_operation_refused"}))
         return 1

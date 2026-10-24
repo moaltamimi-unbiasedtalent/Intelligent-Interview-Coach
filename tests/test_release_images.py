@@ -51,7 +51,7 @@ def validate(value, *, sha="a" * 40):
 
 def state(revision="0002_next", **changes):
     return {"version": 1, "observed_at": R.timestamp(), "schema_revision": revision,
-            "unsettled_agent_runs": 0, "active_jobs": 0, "drained": True, **changes}
+            "unsettled_agent_runs": 0, "active_jobs": 0, "drained": True, "database_identity_sha256": "d" * 64, **changes}
 
 
 def test_manifest_contains_required_source_provenance_and_no_prompt_content(manifest):
@@ -100,7 +100,7 @@ def test_source_fingerprint_and_metadata_cannot_be_rewritten(manifest, change):
         validate(manifest)
 
 
-@pytest.mark.parametrize("url", ["https://u:p@host/api/v1", "https://host/api/v1?token=private", "https://host/api/v1#private", "http://remote.invalid/api/v1", "https://host/secret"])
+@pytest.mark.parametrize("url", ["https://u:p@host/api/v1", "https://host/api/v1?token=private", "https://host/api/v1#private", "http://remote.invalid/api/v1", "https://host/secret", "https://host:bad/api/v1", "https://u%40host/api/v1", "https://host/api/v1\n", "https://host/api/v1?", "https://host/api/v1#"])
 def test_public_url_cannot_carry_runtime_secrets(url):
     with pytest.raises(R.ReleaseError):
         R.public_url(url)
@@ -205,3 +205,41 @@ def test_existing_output_is_never_overwritten(tmp_path):
 def test_duplicate_manifest_fields_are_refused():
     with pytest.raises(R.ReleaseError, match="duplicate_json_key"):
         R.decode_json('{"application_sha":"first","application_sha":"second"}')
+
+
+def test_database_identity_excludes_credentials_but_not_target():
+    first = R.database_identity("postgresql+psycopg://reader:first@127.0.0.1:5432/p5b_test?sslmode=require")
+    assert first == R.database_identity("postgresql://writer:second@127.0.0.1/p5b_test")
+    assert first != R.database_identity("postgresql://reader:first@127.0.0.1:5432/p5b_other")
+    assert "first" not in first and len(first) == 64
+
+
+def test_current_head_without_controls_is_not_reported_as_zero_unsettled(tmp_path):
+    from sqlalchemy import create_engine, text
+    path = tmp_path / "malformed-disposable.db"
+    engine = create_engine(f"sqlite:///{path}")
+    with engine.begin() as c:
+        c.execute(text("CREATE TABLE alembic_version(version_num text)"))
+        c.execute(text("INSERT INTO alembic_version VALUES (:head)"), {"head": R.migration_chain(R.ROOT)[-1]})
+    before = R.file_hash(path)
+    with pytest.raises(R.ReleaseError, match="current_schema_missing_run_controls"):
+        R.observe_disposable(f"sqlite:///{path}", drained=True)
+    assert R.file_hash(path) == before
+    engine.dispose()
+
+
+def test_database_identity_binds_namespace_options():
+    base = "postgresql://reader:secret@127.0.0.1/p5b_test"
+    assert R.database_identity(base) != R.database_identity(base + "?options=-csearch_path%3Dother")
+
+
+def test_cli_driver_failure_is_nonzero_and_does_not_echo_secrets(monkeypatch, tmp_path, capsys):
+    monkeypatch.setenv("RELEASE_TEST_DATABASE_URL", "synthetic-not-opened")
+    def unavailable(*args, **kwargs):
+        raise RuntimeError("private-synthetic-driver-detail")
+    monkeypatch.setattr(R, "observe_disposable", unavailable)
+    assert R.main(["observe-disposable", "--out", str(tmp_path / "state.json")]) == 1
+    output = capsys.readouterr()
+    assert json.loads(output.out) == {"error": "release_operation_refused"}
+    assert "private-synthetic" not in output.out + output.err
+    assert not (tmp_path / "state.json").exists()

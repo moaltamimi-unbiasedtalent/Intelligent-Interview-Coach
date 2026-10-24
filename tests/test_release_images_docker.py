@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import time
 import uuid
 
 import pytest
@@ -49,12 +50,22 @@ def test_real_compose_resolution_pins_one_application_image_without_builds(bundl
     env = tmp_path / "synthetic.env"
     # Deliberately conflicting public metadata/runtime values must be overridden
     # by the verified profile. No private .env is loaded or copied.
-    env.write_text("POSTGRES_PASSWORD=synthetic-test-only\nAPI_ENV=development\nAPP_GIT_SHA=wrong\nNEXT_PUBLIC_API_BASE_URL=https://wrong.invalid/api/v1\n")
+    url = f"sqlite:///{tmp_path / 'disposable.db'}"
+    env.write_text(f"DATABASE_URL={url}\nPOSTGRES_PASSWORD=synthetic-test-only\nAPI_ENV=development\nAPI_DOMAIN=wrong.invalid\nAPP_GIT_SHA=wrong\nNEXT_PUBLIC_API_BASE_URL=https://wrong.invalid/api/v1\n")
     state = {"version": 1, "observed_at": R.timestamp(), "schema_revision": manifest["source"]["migration_chain"][-1],
-             "unsettled_agent_runs": 0, "active_jobs": 0, "drained": True}
+             "unsettled_agent_runs": 0, "active_jobs": 0, "drained": True, "database_identity_sha256": R.database_identity(url)}
+    env_before = R.file_hash(env)
     out = tmp_path / mode
     assert R.prepare(manifest, sha, anchor, state, mode, out, env)["executed"] is False
-    assert R.check_compose(manifest, sha, anchor, out / "compose.yml", env, mode)["compose_verified"]
+    assert R.check_compose(manifest, sha, anchor, out / "compose.yml", env, mode, state)["compose_verified"]
+    assert R.file_hash(env) == env_before
+    original_env = env.read_text()
+    try:
+        env.write_text(original_env.replace("disposable.db", "other-disposable.db"))
+        with pytest.raises(R.ReleaseError, match="runtime_database_identity_mismatch"):
+            R.check_compose(manifest, sha, anchor, out / "compose.yml", env, mode, state)
+    finally:
+        env.write_text(original_env)
     profile = yaml.safe_load((out / "compose.yml").read_text())
     assert profile["services"]["api"]["image"] == profile["services"]["worker"]["image"] == manifest["images"]["application"]["image_id"]
     assert ("migrate" in profile["services"]) is (mode == "promote")
@@ -62,8 +73,14 @@ def test_real_compose_resolution_pins_one_application_image_without_builds(bundl
     # A different worker build must be refused after actual Compose interpolation.
     profile["services"]["worker"]["image"] = manifest["images"]["web"]["image_id"]
     (out / "tampered.yml").write_text(yaml.safe_dump(profile))
+    with pytest.raises(R.ReleaseError, match="prepared_profile_modified"):
+        R.check_compose(manifest, sha, anchor, out / "tampered.yml", env, mode, state)
+    # Even a modified plan checksum cannot bless a mismatched worker build.
+    plan = json.loads((out / "plan.json").read_text())
+    plan["compose_sha256"] = R.file_hash(out / "tampered.yml")
+    (out / "plan.json").write_text(json.dumps(plan))
     with pytest.raises(R.ReleaseError, match="resolved_image_mismatch"):
-        R.check_compose(manifest, sha, anchor, out / "tampered.yml", env, mode)
+        R.check_compose(manifest, sha, anchor, out / "tampered.yml", env, mode, state)
 
 
 def test_actual_image_identity_and_metadata_cannot_be_substituted(bundle):
@@ -131,7 +148,7 @@ print('built-image controls, disabled billing and fail-closed languages verified
 
 def test_built_application_retains_durable_admission_billing_and_language_guards(bundle):
     manifest, _, _ = bundle
-    result = R.run(["docker", "run", "--rm", "-i", "--network", "none", manifest["images"]["application"]["image_id"],
+    result = R.run(["docker", "run", "--rm", "-i", "--pull", "never", "--network", "none", manifest["images"]["application"]["image_id"],
                     "python", "-c", CONTROL_PROBE], timeout=90)
     assert b"fail-closed languages verified" in result
 
@@ -163,6 +180,7 @@ def test_offline_round_trip_restores_verified_content_ids_without_registry(bundl
     # Remove only the web image just built by this explicitly enabled test,
     # without force. Never remove an unrelated image or any running container.
     web_id = manifest["images"]["web"]["image_id"]
+    R.run(["docker", "tag", web_id, "ask4mo-local-web:offline-test-" + uuid.uuid4().hex[:12]])
     tags = json.loads(R.run(["docker", "image", "inspect", web_id]))[0]["RepoTags"]
     assert tags and all(tag.startswith("ask4mo-local-web:") for tag in tags)
     R.run(["docker", "image", "rm", *tags])
@@ -170,3 +188,35 @@ def test_offline_round_trip_restores_verified_content_ids_without_registry(bundl
         R.validate_manifest(manifest, sha, anchor)
     assert R.import_images(manifest, sha, anchor, archive, transfer["archive_sha256"])["loaded_and_verified"]
     R.validate_manifest(manifest, sha, anchor)
+
+
+def test_actual_release_refuses_schema_mismatch_or_unsettled_rollback(bundle, tmp_path):
+    manifest, sha, anchor = bundle
+    state = {"version": 1, "observed_at": R.timestamp(), "schema_revision": manifest["source"]["migration_chain"][-1],
+             "unsettled_agent_runs": 0, "active_jobs": 0, "drained": True, "database_identity_sha256": "d" * 64}
+    for index, changes in enumerate(({"schema_revision": "0049_unknown"}, {"schema_revision": "0027_email_attempts"},
+                                     {"unsettled_agent_runs": 1}, {"drained": False})):
+        target = tmp_path / f"refused-{index}"
+        with pytest.raises(R.ReleaseError):
+            R.prepare(manifest, sha, anchor, {**state, **changes}, "rollback", target, tmp_path / "not-read.env")
+        assert not target.exists()
+
+
+def test_built_web_default_command_starts_without_host_ports_or_external_network(bundle):
+    manifest, _, _ = bundle
+    name = "ask4mo-release-web-test-" + uuid.uuid4().hex[:12]
+    R.run(["docker", "run", "--rm", "-d", "--pull", "never", "--network", "none", "--name", name, manifest["images"]["web"]["image_id"]])
+    try:
+        response = None
+        deadline = time.monotonic() + 40
+        while time.monotonic() < deadline:
+            result = subprocess.run(["docker", "exec", name, "curl", "-fsS", "--max-time", "2", "http://127.0.0.1:3000/"], capture_output=True)
+            if result.returncode == 0:
+                response = result.stdout
+                break
+            time.sleep(0.3)
+        assert response and b"Ask4Mo" in response
+        info = json.loads(R.run(["docker", "inspect", name]))[0]
+        assert info["Config"]["User"] == "node" and info["HostConfig"]["NetworkMode"] == "none"
+    finally:
+        R.run(["docker", "stop", "--time", "5", name])
