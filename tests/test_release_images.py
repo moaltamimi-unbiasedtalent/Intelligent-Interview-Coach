@@ -243,3 +243,12 @@ def test_cli_driver_failure_is_nonzero_and_does_not_echo_secrets(monkeypatch, tm
     assert json.loads(output.out) == {"error": "release_operation_refused"}
     assert "private-synthetic" not in output.out + output.err
     assert not (tmp_path / "state.json").exists()
+
+
+def test_shared_redis_profile_refuses_an_image_without_the_pinned_client(manifest, tmp_path, monkeypatch):
+    monkeypatch.setattr(R, 'validate_manifest', lambda *_a, **_kw: manifest)
+    out=tmp_path/'unqualified-plan'
+    with pytest.raises(R.ReleaseError, match='release_redis_client_unavailable'):
+        R.prepare(manifest,'a'*40,'anchor',state(),'promote',out,'/runtime/private.env',
+                  redis_topology='managed',redis_namespace='ask4mo:rl:staging:v2:')
+    assert not out.exists()

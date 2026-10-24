@@ -101,7 +101,7 @@ def test_real_concurrent_replicas_share_a_global_ceiling(real):
     with concurrent.futures.ThreadPoolExecutor(max_workers=12) as pool:
         results = list(pool.map(lambda n: (a if n % 2 else b).hit('b', 'user:1', policy).allowed, range(120)))
     assert sum(results) == 20
-    assert not a.degraded and not b.degraded
+    assert not a.degraded and not b.degraded and a.local_fallbacks==b.local_fallbacks==0
     assert a.hit('b', 'user:2', policy).allowed
 
 
@@ -125,7 +125,7 @@ with TestClient(app) as client:
   responses=list(pool.map(lambda _:client.get('/protected'),range(20)))
  assert all(r.status_code in (200,429) for r in responses)
  assert all(int(r.headers['Retry-After'])>0 for r in responses if r.status_code==429)
- print(json.dumps({'allowed':sum(r.status_code==200 for r in responses),'degraded':lim.degraded}))
+ print(json.dumps({'allowed':sum(r.status_code==200 for r in responses),'degraded':lim.degraded,'local_fallbacks':lim.local_fallbacks}))
 '''
 
 
@@ -137,7 +137,7 @@ def test_two_independent_fastapi_processes_share_the_existing_auth_ceiling(real)
     assert all(p.returncode == 0 for p in processes), 'synthetic application process failed'
     values = [json.loads(out) for out, _err in replies]
     assert sum(v['allowed'] for v in values) == R.POLICIES['auth_login_ip'].limit == 20
-    assert not any(v['degraded'] for v in values)
+    assert not any(v['degraded'] or v['local_fallbacks'] for v in values)
 
 
 def test_server_clock_is_authoritative_and_windows_expire(real):
@@ -272,30 +272,34 @@ def test_actual_auth_login_and_recovery_are_uniform_with_real_redis(real):
 
 
 def test_actual_internal_network_has_no_published_redis_port(real):
-    suffix = uuid.uuid4().hex[:10]
-    network, name = 'ask4mo-private-net-'+suffix, 'ask4mo-private-redis-'+suffix
-    script = real['directory'] / 'production-start.sh'
-    script.write_text((ROOT/'deploy/scripts/redis-start.sh').read_text())
+    import yaml
+    project='ask4mo-private-redis-'+uuid.uuid4().hex[:10]
+    directory=real['directory']/'private-compose'
+    directory.mkdir()
+    script=directory/'redis-start.sh'
+    script.write_bytes((ROOT/'deploy/scripts/redis-start.sh').read_bytes())
     script.chmod(0o444)
-    docker('network','create','--internal',network)
+    profile=yaml.safe_load((ROOT/'deploy/redis-internal.yml').read_text())
+    profile['services']['redis']['volumes']=[f'{script}:/opt/ask4mo/redis-start.sh:ro']
+    profile['services']['redis']['environment']={'RATE_LIMIT_NAMESPACE':real['namespace']}
+    profile['secrets']={'redis_password':{'file':str(real['credential'])}}
+    path=directory/'compose.yml'
+    path.write_text(yaml.safe_dump(profile))
+    command=('compose','--project-name',project,'-f',str(path))
     try:
-        docker('run','-d','--name',name,'--network',network,'--read-only','--user','999:1000',
-               '--cap-drop','ALL','--security-opt','no-new-privileges','--tmpfs','/tmp:rw,mode=1777',
-               '--tmpfs','/data:rw,uid=999,gid=1000,mode=0700',
-               '-v',f"{real['credential']}:/run/secrets/redis_password:ro",'-v',f'{script}:/start.sh:ro',
-               '-e','RATE_LIMIT_NAMESPACE='+real['namespace'],'--entrypoint','/bin/sh',IMAGE,'/start.sh')
-        for _ in range(40):
-            p=subprocess.run(['docker','exec',name,'sh','-c','REDISCLI_AUTH="$(cat /run/secrets/redis_password)" redis-cli --user limiter ping'],capture_output=True,text=True,timeout=5)
-            if p.returncode==0 and p.stdout.strip()=='PONG':break
-            time.sleep(.1)
-        assert p.returncode==0 and p.stdout.strip()=='PONG'
-        info=json.loads(docker('inspect',name))[0]
+        docker(*command,'up','-d','--no-build','--pull','never','redis')
+        name=docker(*command,'ps','-q','redis')
+        for _ in range(100):
+            info=json.loads(docker('inspect',name))[0]
+            if info['State'].get('Health',{}).get('Status')=='healthy':break
+            time.sleep(.2)
+        assert info['State']['Health']['Status']=='healthy'  # exact escaped Compose healthcheck actually executes
         assert not info['HostConfig']['PortBindings'] and not any(info['NetworkSettings']['Ports'].values())
         assert info['Config']['User']=='999:1000' and info['HostConfig']['ReadonlyRootfs']
+        network=next(iter(info['NetworkSettings']['Networks']))
         assert json.loads(docker('network','inspect',network))[0]['Internal'] is True
     finally:
-        docker('rm','-f',name)
-        docker('network','rm',network)
+        docker(*command,'down','--volumes','--remove-orphans')  # only this unique, owned Redis test project
 
 
 def test_required_shared_readiness_refuses_outage_and_reports_recovery(real,monkeypatch):
@@ -383,6 +387,7 @@ def test_real_production_client_builder_uses_bounded_connections_and_private_set
     monkeypatch.setenv('RATE_LIMIT_KEY_SECRET','synthetic-shared-key-'*3)
     monkeypatch.setenv('RATE_LIMIT_NAMESPACE',real['namespace']+'builder:')
     lim=R.build_rate_limiter()
+    R.reset_rate_limiter(lim)
     assert isinstance(lim,R.RedisRateLimiter) and not R.shared_store_active()
     options=lim._client.connection_pool.connection_kwargs
     assert options['socket_timeout']==options['socket_connect_timeout']==1.0

@@ -150,3 +150,22 @@ def test_safe_http_headers_are_allowlisted_without_forwarding_arbitrary_values()
         assert response.headers['Retry-After']=='5' and 'X-Private' not in response.headers
         response=client.get('/bad')
         assert 'Retry-After' not in response.headers and 'X-Rate-Limit-State' not in response.headers
+
+
+def test_a_separately_constructed_client_cannot_misreport_the_installed_limiter():
+    R.reset_rate_limiter(R.InMemoryRateLimiter())
+    uninstalled=R.RedisRateLimiter(FakeRedis())
+    assert uninstalled.hit('b','synthetic',R.RateLimitPolicy('p',1,10,'user')).allowed
+    assert not R.shared_store_active() and R.limiter_status()['backend']=='in_memory'
+    R.reset_rate_limiter(uninstalled)
+    assert R.shared_store_active() and R.limiter_status()['effectively_distributed']
+
+
+def test_required_shared_refuses_a_secret_source_shadowing_the_reviewed_profile(monkeypatch):
+    from src.core import secrets
+    secure(monkeypatch)
+    monkeypatch.setenv('RATE_LIMIT_SHARED_REQUIRED','true')
+    monkeypatch.setattr(secrets,'read_setting',lambda name:'rediss://hidden-store.invalid/0' if name=='REDIS_URL' else 'k'*40)
+    assert R.redis_configuration_errors(hosted=True)
+    with pytest.raises(R.RateLimitConfigurationError,match='^shared_rate_limit_configuration_invalid$'):
+        R.build_rate_limiter()

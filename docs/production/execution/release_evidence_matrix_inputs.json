@@ -695,7 +695,7 @@
    "ci": "PR #237 CI not recorded",
    "live_staging": {
     "state": "NOT RUN",
-    "description": "NOT RUN (live Brevo, Google, Redis; OD-HOSTED)",
+    "description": "NOT RUN (hosted Brevo, Google, Redis; OD-HOSTED; disposable Redis qualified in Task 04)",
     "evidence": []
    },
    "human_qualification": {

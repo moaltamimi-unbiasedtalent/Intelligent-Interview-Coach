@@ -301,7 +301,6 @@ class RedisRateLimiter:
 _limiter: RateLimiter | None = None
 _limiter_lock = threading.Lock()
 _shared_store_requested = False
-_selected_limiter = None
 
 
 class RateLimitConfigurationError(RuntimeError):
@@ -315,6 +314,12 @@ def shared_required():
 def redis_settings():
     from src.core import secrets
     url = (secrets.read_setting("REDIS_URL") or "").strip()
+    key_secret = secrets.read_setting("RATE_LIMIT_KEY_SECRET") or ""
+    if shared_required():
+        for name, resolved in (("REDIS_URL", url), ("RATE_LIMIT_KEY_SECRET", key_secret)):
+            explicit = os.environ.get(name, "").strip()
+            if explicit and resolved != explicit:
+                raise RateLimitConfigurationError("redis_runtime_source_conflict")
     password = None
     filename = os.environ.get("REDIS_PASSWORD_FILE", "").strip()
     if filename:
@@ -322,7 +327,7 @@ def redis_settings():
             password = Path(filename).read_text().strip()
         except Exception:
             raise RateLimitConfigurationError("redis_credential_file_unavailable") from None
-    return url, password, secrets.read_setting("RATE_LIMIT_KEY_SECRET") or ""
+    return url, password, key_secret
 
 
 def redis_configuration_errors(*, hosted=False):
@@ -335,7 +340,7 @@ def redis_configuration_errors(*, hosted=False):
     try:
         url, password, key_secret = redis_settings()
     except RateLimitConfigurationError:
-        return ["Redis credential file is unavailable."]
+        return ["Shared Redis credential resolution refused."]
     requested = backend in {"redis", "shared"} or bool(url) or required
     if backend not in {"", "in_memory", "redis", "shared"}:
         errors.append("RATE_LIMIT_BACKEND must be 'in_memory', 'redis' or 'shared'.")
@@ -392,7 +397,7 @@ def configured_redis_client():
 
 
 def build_rate_limiter():
-    global _shared_store_requested, _selected_limiter
+    global _shared_store_requested
     backend = os.environ.get("RATE_LIMIT_BACKEND", "").strip().lower()
     hosted = os.environ.get("API_ENV", "development").strip().lower() not in {"development", "dev", "local", "test", "testing"}
     _shared_store_requested = backend in {"redis", "shared"} or shared_required() or bool(os.environ.get("REDIS_PASSWORD_FILE"))
@@ -404,14 +409,12 @@ def build_rate_limiter():
             if errors:
                 raise RateLimitConfigurationError("shared_rate_limit_configuration_invalid")
             client = make_redis_client(url, password=password)
-            _selected_limiter = RedisRateLimiter(client, prefix=os.environ.get("RATE_LIMIT_NAMESPACE", "ask4mo:rl:"), key_secret=key_secret)
-            return _selected_limiter
+            return RedisRateLimiter(client, prefix=os.environ.get("RATE_LIMIT_NAMESPACE", "ask4mo:rl:"), key_secret=key_secret)
     except Exception:
         if hosted or shared_required():
             raise RateLimitConfigurationError("shared_rate_limit_configuration_invalid") from None
         logger.warning("shared rate-limit store requested but unavailable; development uses in-memory limiter")
-    _selected_limiter = InMemoryRateLimiter()
-    return _selected_limiter
+    return InMemoryRateLimiter()
 
 
 def get_rate_limiter() -> RateLimiter:
@@ -425,16 +428,15 @@ def get_rate_limiter() -> RateLimiter:
 
 def reset_rate_limiter(limiter: RateLimiter | None = None) -> None:
     """Test seam: install a fresh limiter (or a supplied one)."""
-    global _limiter, _selected_limiter, _shared_store_requested
+    global _limiter, _shared_store_requested
     _limiter = limiter if limiter is not None else build_rate_limiter()
-    _selected_limiter = _limiter
     if limiter is not None:
         _shared_store_requested = isinstance(limiter, RedisRateLimiter)
 
 
 def shared_store_active() -> bool:
     """Whether a shared (distributed) rate-limit store is actually in use right now."""
-    lim = _selected_limiter
+    lim = get_rate_limiter()
     return isinstance(lim, RedisRateLimiter) and lim.reachable is True and not lim.degraded
 
 

@@ -90,6 +90,7 @@ def test_shared_store_is_active_only_after_an_enforcement_response(monkeypatch):
     monkeypatch.setenv("RATE_LIMIT_BACKEND", "redis")
     monkeypatch.setenv("REDIS_URL", "redis://example:6379/0")
     lim = rl.build_rate_limiter()
+    rl.reset_rate_limiter(lim)
     assert isinstance(lim, rl.RedisRateLimiter) and rl.shared_store_active() is False
     assert lim.hit("t", "synthetic", POLICY).allowed
     assert rl.shared_store_active() is True

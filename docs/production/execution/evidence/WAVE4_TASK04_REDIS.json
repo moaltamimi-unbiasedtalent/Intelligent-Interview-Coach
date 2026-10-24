@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "recorded_at": "2026-10-24T20:31:28Z",
+  "baseline": {
+    "sha": "5e524ca893e71a59648f4fb48f9d193b3c6f77a1",
+    "merged_pr": 269,
+    "main_workflows": {
+      "ci": 40126702547,
+      "immutable_images": 40126702570,
+      "migration_image": 40126702582,
+      "durable_admission": 40126702591
+    },
+    "all_conclusions": "success",
+    "main_browser_workflow": "not triggered; PR/on-demand"
+  },
+  "local_real_redis": {
+    "server": "8.2.9",
+    "image": "redis:8.2.9-alpine@sha256:5f2e6a105b2a8cc721911d5d29aadb032c25fe55b43e829e3d03413753ff47c2",
+    "client": "8.1.0",
+    "tests_passed": 16,
+    "tests_skipped": 0,
+    "nested_legacy_05d_tests_passed": 3,
+    "qualification": "disposable synthetic only; includes real private Redis-only Compose healthcheck"
+  },
+  "local_focused_checks": {
+    "passed": 404,
+    "skipped": 0,
+    "scope": "backend, auth, cost-protection, hosted topology, optional dependencies, secret/integration boundaries, OpenAPI and release evidence"
+  },
+  "local_image_candidate": {
+    "application_sha": "f755665780e6c1b57f6ab3a731cffdea7ce18019",
+    "kind": "local-docker-image-id",
+    "platform": "linux/arm64",
+    "manifest_sha256": "224f05aa2c0cb6dc6aec066fa30c4ff37cde7a4a5f37bec1554e0813193de12c",
+    "images": {
+      "application": "sha256:9237c43d0795e09ed240443fa13faa05294c3dfc59ddf6c1e07ed5ef8e771e92",
+      "web": "sha256:fbd2bf61e5a4564210149431cdcbb8e66d3e58eee337f06af6ff5a94a7f356f0"
+    },
+    "dependency_counts": {
+      "application": {
+        "runtime": 156,
+        "os": 188
+      },
+      "web": {
+        "runtime": 3,
+        "os": 104
+      }
+    },
+    "tests_passed": 13,
+    "nested_postgresql_migration_tests_passed": 3,
+    "offline_archive_sha256": "f9c93d01f13a1ed7e4136c2bccfa6f91039e6b91ebeba89dcdcec2b43e4f29d1",
+    "provenance_limit": "These local IDs belong only to f7556657. Final status/tool/test/doc refinements have later commits; exact final-head CI builds and results are recorded separately in the PR."
+  },
+  "direct_release_cli": {
+    "prepare": "passed",
+    "check_compose": "passed",
+    "executed": false,
+    "state": "synthetic temporary base schema; no database migration"
+  },
+  "existing_bucket_count": 37,
+  "existing_outage_policies": {
+    "local": 37,
+    "deny": 0
+  },
+  "ai_cost_limits_enforced": false,
+  "preservation": {
+    "worktrees": 45,
+    "other_worktrees_unchanged": 44,
+    "protected_non_generated_hashes": 49,
+    "original_sqlite": "untouched; last observed 0027, 21 revisions pending"
+  },
+  "release_status": {
+    "integrated_packages": 40,
+    "total_packages": 45,
+    "open_packages": [
+      "00A",
+      "00B",
+      "07B",
+      "07C",
+      "08A"
+    ],
+    "owner_decisions": {
+      "OD-HOSTED": "OPEN",
+      "H-REDIS-POLICY": "OPEN"
+    },
+    "new_gate_approvals": 0,
+    "new_language_activations": 0
+  },
+  "actions_not_performed": [
+    "cloud provisioning",
+    "staging/production deployment",
+    "registry image publication",
+    "real-user traffic",
+    "paid AI call",
+    "real email",
+    "original/hosted database migration",
+    "language activation",
+    "automatic merge"
+  ],
+  "evaluators": {
+    "hosting_readiness": "PASS; local invariants only",
+    "doc_consistency": "PASS",
+    "engineering_quality": "PASS",
+    "issue_reconciliation": "PASS",
+    "wave_matrix": "PASS; 45 packages",
+    "release_evidence": "PASS; no added acceptance"
+  },
+  "remaining": [
+    "Owner topology/region/policy and authorization",
+    "Actual host TLS/private routing/ACL/secret permissions/HA/monitoring drills",
+    "Task 05 fresh approved AI-budget/cost-governor configuration and qualification",
+    "Separate encrypted backup/restore/rollback milestone",
+    "Scanner, knowledge/embedding, proxy/SSE, governance, human/language and 08A qualification"
+  ]
+}

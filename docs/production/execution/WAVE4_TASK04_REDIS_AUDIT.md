@@ -64,3 +64,7 @@ All values below are REQUESTS/window, not tokens or currency. `local` means one 
 ## Recommendation, pending owner decision
 
 Recommend `deny` for authentication/registration/recovery, privileged/security actions, provider-cost operations and signed webhook protection. Support/privacy/legal availability trade-offs need owner review too. Deny preserves a shared ceiling during outages by refusing work; local keeps bounded per-process availability but loses the global guarantee. Practice/Career observation and AI-budget enforcement require their separate approved activation; do not describe them as spending prevention. OD-HOSTED (topology, region, network, secrets, operator) and H-REDIS-POLICY remain OPEN. PG-02/06/09 and all language gates remain unapproved.
+
+## Follow-up from real HTTP qualification
+
+The limiter's HTTPException carried Retry-After, but the central handler discarded it. Real account/non-account refusal tests exposed this end-to-end gap. The focused repair forwards only bounded numeric retry values and a code-defined readiness state header; arbitrary headers and detail remain hidden. All original bucket values/policies above remain unchanged.
