@@ -118,7 +118,7 @@
    "ci": "PR #220 CI success (12/12)",
    "live_staging": {
     "state": "NOT RUN",
-    "description": "NOT RUN (Docker image with prompts/ not built)",
+    "description": "NOT RUN (hosted prompt rollback/refusal; local image assets verified in Wave 4 Task 03)",
     "evidence": []
    },
    "human_qualification": {

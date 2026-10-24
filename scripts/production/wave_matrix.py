@@ -27,7 +27,7 @@ LAYERS: dict[str, tuple[str, str, str]] = {
     "01A": (NS + " (injection screen on hosted stack)", "Human security review (9 questions); independent held-out author (OPEN)", "PG-03 IN PROGRESS; thresholds unapproved (OD-GATE-THRESHOLDS)"),
     "01D": ("n/a", "Security review of tool authorization", "PG-03 (REVIEW-01 R4/R5)"),
     "01B0": ("n/a", "none", "PG-12 IN PROGRESS"),
-    "01B": (NS + " (Docker image with prompts/ not built)", "none", "PG-12 IN PROGRESS (01C and 01D merged; acceptance evidence still required)"),
+    "01B": (NS + " (hosted prompt rollback/refusal; local image assets verified in Wave 4 Task 03)", "none", "PG-12 IN PROGRESS (01C and 01D merged; acceptance evidence still required)"),
     "01C": ("n/a", "none", "PG-12 (REVIEW-03)"),
     "02K": ("n/a", "none", "PG-05 IN PROGRESS (contract)"),
     "02A": (NS + " (hosted volumes, PostgreSQL, multi-worker; OD-HOSTED)", "none", "PG-05 IN PROGRESS"),

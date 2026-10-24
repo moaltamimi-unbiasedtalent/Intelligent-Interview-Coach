@@ -2,10 +2,22 @@
 
 ## DEPLOYMENT FREEZE
 
-`deploy/docker-compose.staging.yml` is the staging topology **as code only**. It has never been started
-(`docker compose up` has not been run, no image has been built from it, no provider has been contacted).
+`deploy/docker-compose.staging.yml` is the full staging topology **as code only**, not a deployment. Its
+application images and isolated disposable test stacks have been exercised in Wave 4; the full hosted topology
+has never been started. These tests do not establish hosted readiness.
 **Do not deploy it** until the owner answers decision **OD-HOSTED** and explicitly authorises a deployment.
 Nothing in this file or in the tests claims the topology works live.
+
+## Immutable application releases (Wave 4 Task 03)
+
+The base file remains the build/topology template. **Do not deploy it with `up --build` or layer it onto a
+release profile.** Use the manifest-verified, image-only profiles from `scripts/release_images.py` after
+separate hosting authorization. API, worker and migrate use one immutable local Docker image ID; web uses
+the matching image from the same Git SHA. No registry upload is assumed or implemented.
+
+[Local build, verification, offline transfer, promotion and application rollback procedure](../docs/production/execution/WAVE4_TASK03_IMMUTABLE_RELEASE.md).
+The helper prepares files and refuses incompatible/unsettled rollback; it never starts services or executes
+migrations. Runtime secrets stay in an explicitly supplied external env file, never the image/manifest.
 
 ## Services
 
@@ -43,7 +55,7 @@ EMPTY knowledge base.
 governed knowledge as one consistent unit, dry-run default, refusals instead of overwrites, tamper detection, encryption at rest required in hosted environments), the restore
 drill, the backup-erasure procedure and the migration rollback rehearsal are `scripts/backup_set.py`, `scripts/restore_drill.py` and `scripts/rollback_rehearsal.py`; the procedure is
 [`docs/production/BACKUP_RESTORE_RUNBOOK.md`](../docs/production/BACKUP_RESTORE_RUNBOOK.md). Drill records: `docs/production/execution/evidence/drills/`. Needed topology changes (a backup
-runner, `pg_dump` in the image, an image tag pointer, a restore profile) are listed in section 9 of the runbook and are NOT made in the compose file (05A owns it). **No live drill
+runner, `pg_dump` in the image, and a restore profile) are listed in section 9 of the runbook and are NOT made in the compose file (05A owns it). **No live drill
 has been run on staging (OD-HOSTED).**
 
 ## Readiness
@@ -62,7 +74,8 @@ without `COPILOT_DATA_DIR` boots with a warning.
 
 ## NOT VALIDATED live (be explicit)
 
-- No `docker compose up`, image build, volume mount, healthcheck or restart behaviour has been exercised.
+- The full hosted topology, persistent-volume/healthcheck/restart behavior and proxy path have not been exercised.
+  Local image builds, metadata/Compose verification and isolated migration/admission/frontend tests are separate engineering evidence.
 - ClamAV scanning, signature download, the TCP 3310 path and `clamdcheck.sh` health inside the official image are
   untested. The image tag (`clamav/clamav:1.4`) should be confirmed at the first authorised deployment.
 - The worker heartbeat healthcheck and the multi-process data-root sharing are tested offline only.

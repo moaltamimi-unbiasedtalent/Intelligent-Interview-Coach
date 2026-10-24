@@ -2,7 +2,15 @@
 
 Historical PR #265 integration snapshot, 23 October 2026. Reviewed baseline: `aedbef3dee28a68b72bc526a1fca537a3da7bd8d`, PR #265 merged. Current reconciliation/review branch: `docs/post-pr265-release-readiness` in the permanent repository. Sources: [merge/CI/review record](evidence/POST_PR265_INTEGRATION_2026_10_23.json), [release report](POST_PR265_RELEASE_STATUS.md), package register, ledger and code.
 
-## Wave 4 Task 02 update — 24 October 2026
+## Wave 4 Task 03 update — 24 October 2026
+
+PR #268 is merged at `95fd2a3c3de5ee8af64c3f5c538b8a4824ce3ff2`; main CI 40097363556, durable-admission 40097363420 and migration-image 40097363464 are green. POST265-01/02 are merged engineering repairs. Task 03 adds local immutable application-image manifests and plan-only promotion/rollback controls on `feat/staging-immutable-release`, pending review/merge/green checks. [Design, actual image IDs, offline verification and remaining dependencies](WAVE4_TASK03_IMMUTABLE_RELEASE.md).
+
+Local verification: actual API/web builds at recorded commit 6ec1eb3a, 9 real-image checks plus 3 nested PostgreSQL migration checks passed. Image/source/dependency/prompt/activation hashes and local offline export/load were verified. Backend/worker/migrate share one immutable ID; rollback has no migration job, refuses incompatible schema/unsettled work, and leaves data untouched. These local IDs are not registry publication claims. Final PR-head CI results are kept in the PR description.
+
+**40/45 packages remain integrated**; 00A/00B/07B/07C/08A remain open/incomplete. Live staging, human qualification and PG/LG acceptance remain unchanged: only PG-11 accepted, zero qualified languages. The complete generated 45-package matrix below keeps its dated CI snapshot; the current authoritative baseline checks are above. A local image verification is not hosted staging verification. Next: owner-defined Redis/outage policy, then separate budget and backup/restore milestones; no deployment or activation authorized.
+
+## Wave 4 Task 02 update (historical pre-merge snapshot)
 
 POST265-01 is merged in PR #267 at `5fbf3faa18d2d07754480d7c891a83d0bb3b0dbd`; main CI 40027783998 and migration-image regression 40027783910 are green. POST265-02 has a focused repair on `fix/agent-durable-admission`, pending review/merge/green checks. The existing 0048 table provides atomic owner-scoped admission through usage settlement; no migration is added. Local verification: 50 concurrency tests (25 SQLite/25 disposable PostgreSQL, including independent process interruption), 322 existing regressions and 18 frontend tests pass. [Design, accounting evidence and operational limits](WAVE4_TASK02_DURABLE_ADMISSION.md).
 
@@ -38,7 +46,7 @@ The shared CI cell references the dated integrated baseline; package-specific hi
 | 01A | MERGED (PR #223, merge 7549973) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | NOT RUN (injection screen on hosted stack) | Human security review (9 questions); independent held-out author (OPEN) | PG-03 IN PROGRESS; thresholds unapproved (OD-GATE-THRESHOLDS) |
 | 01D | MERGED (PR #248 merge c5e54fd6) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | n/a | Security review of tool authorization | PG-03 (REVIEW-01 R4/R5) |
 | 01B0 | MERGED (PR #217, merge 0d75acd) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | n/a | none | PG-12 IN PROGRESS |
-| 01B | MERGED (PR #220, merge 335d303) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | NOT RUN (Docker image with prompts/ not built) | none | PG-12 IN PROGRESS (01C and 01D merged; acceptance evidence still required) |
+| 01B | MERGED (PR #220, merge 335d303) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | NOT RUN (hosted prompt rollback/refusal; local image assets verified in Wave 4 Task 03) | none | PG-12 IN PROGRESS (01C and 01D merged; acceptance evidence still required) |
 | 01C | MERGED (PR #265 merge aedbef3dee28a68b72bc526a1fca537a3da7bd8d) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | n/a | none | PG-12 (REVIEW-03) |
 | 02K | MERGED (PR #215, merge 657e456) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | n/a | none | PG-05 IN PROGRESS (contract) |
 | 02A | MERGED (PR #221, merge 191cbc5) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | NOT RUN (hosted volumes, PostgreSQL, multi-worker; OD-HOSTED) | none | PG-05 IN PROGRESS |
@@ -84,6 +92,6 @@ The shared CI cell references the dated integrated baseline; package-specific hi
 
 Only existing PG-11 retains PASS; all production gate states and all seven language approval records are unchanged. Every locale has 0/14 approved gates and remains unavailable for hosted real-user activation. Historical 95% coverage FAIL (386/412 against 392), AC-24 PARTIAL and human-qualified coverage 0/412 remain intact.
 
-POST265-01 is a confirmed staging blocker: the configured migration helper is missing from the image. POST265-02 is a multi-worker admission/settlement qualification gap; canonical usage remained correct in the synthetic probe. The [staging plan](STAGING_READINESS_PLAN_POST265.md) also records Redis/client wiring, budget enforcement, immutable images, PostgreSQL/ClamAV/backup drills, licensed sources and language/owner prerequisites.
+POST265-01 was repaired in merged PR #267 and POST265-02 in merged PR #268. Their engineering regressions passed; hosted migration/multi-worker/provider qualification remains outstanding. Task 03 supplies verified local image/plan controls, pending merge; this does not approve deployment or recovery. The [staging plan](STAGING_READINESS_PLAN_POST265.md) also records Redis/client wiring, budget enforcement, immutable images, PostgreSQL/ClamAV/backup drills, licensed sources and language/owner prerequisites.
 
 Priorities: focused migration/topology remediation PR; 00A appointments and 00B dispositions; fresh 07B budget and protocol; explicitly authorized staging/real-world verification including 07C; independent qualification; then 08A release freeze and owner go/no-go. No scope cut, automatic PR merge, deployment or paid evaluation is approved here. 30 November 2026 remains a gate-dependent target.

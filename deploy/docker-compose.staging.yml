@@ -1,4 +1,6 @@
-# Ask4Mo Capstone (P8) — STAGING topology (single-replica).
+# Ask4Mo Capstone (P8) — STAGING topology template (single-replica).
+# Hosted releases use the image-only profiles prepared by scripts/release_images.py.
+# Do not use this build template or `up --build` for release promotion/rollback.
 #
 #   db      PostgreSQL 16 (named volume + healthcheck)
 #   migrate one-shot `alembic upgrade head` (runs ONCE, after db is healthy;
@@ -18,11 +20,11 @@
 # fill real values there; that file is git-ignored). Nothing real is committed.
 #
 #   cp deploy/.env.staging.example deploy/.env.staging   # then edit
-#   docker compose -f deploy/docker-compose.staging.yml up -d --build
+#   python scripts/release_images.py --help   # prepare only; no deployment
 #
 # DEPLOYMENT FREEZE: this topology is code only. It must NOT be deployed until the
 # owner answers OD-HOSTED and explicitly authorises a deployment. It has never been
-# started (`docker compose up` has not been run); see deploy/README-staging.md.
+# started as a staging deployment; isolated test stacks are separate. See deploy/README-staging.md.
 #
 # Build context is the repo ROOT (..) so src/, migrations/, frontend/ are visible.
 

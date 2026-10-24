@@ -20,3 +20,25 @@ components/live_interviewer/frontend/dist
 docs
 !docs/production/execution/language_readiness.json
 evaluations
+
+# Recursive exclusions also protect ordinary root-context builds; release builds
+# additionally use git archive and cannot see untracked local files at all.
+**/.env
+**/.env.*
+**/secrets.toml
+**/node_modules
+**/.next
+**/.git
+**/.DS_Store
+**/*.db
+**/*.db-*
+**/*.sqlite
+**/*.sqlite3
+**/*.pem
+**/*.key
+.codex
+.agents
+**/.npmrc
+**/.pypirc
+**/*.sqlite-*
+**/*.sqlite3-*
