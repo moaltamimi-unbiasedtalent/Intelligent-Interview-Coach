@@ -110,7 +110,12 @@ class AgentStreamingService:
             # labels a still-unsettled Stop as unknown; persisting that overlay
             # here would lose the actual usage just drained from the provider.
             result = await asyncio.to_thread(self.service._result_from_snapshot, run_id, snapshot, request_id)
-            await asyncio.to_thread(self.service._record_usage, result, initial["user_id"])
+            recorded = await asyncio.to_thread(self.service._record_usage, result, initial["user_id"])
+            if recorded is False:
+                interrupted = True
+                await asyncio.to_thread(self.controls.interrupt, run_id)
+                await asyncio.to_thread(self.service._mark_run, "failed", run_id)
+                return
             await asyncio.to_thread(self.service._emit_completed, result)
             await asyncio.to_thread(self.service._mark_run, "ready", run_id)
         except asyncio.CancelledError:

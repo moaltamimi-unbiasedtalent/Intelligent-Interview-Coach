@@ -427,7 +427,7 @@ class ToolAuthorizer:
     def run_control(self, run_id: str | None, required: bool = False) -> str | None:
         """Read cancellation/deadline facts; a failed read stops execution."""
         value = self._run_control(run_id) if self._run_control and run_id else None
-        if value in ("cancelled", "expired"):
+        if value in ("cancelled", "expired", "failed"):
             return value
         return "expired" if required and value is None else None
 

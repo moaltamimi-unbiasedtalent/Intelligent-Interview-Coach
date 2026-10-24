@@ -3,9 +3,14 @@ from __future__ import annotations
 
 import time
 
-from sqlalchemy import inspect, select, update
+from sqlalchemy import case, inspect, select, update
+from sqlalchemy.exc import IntegrityError
 
 from src.persistence import AgentRunControl
+
+
+class RunAdmissionConflict(Exception):
+    """The durable run cannot be claimed by this caller now."""
 
 
 class RunControlStore:
@@ -16,6 +21,56 @@ class RunControlStore:
         with self.sf() as s:
             s.add(AgentRunControl(run_id=run_id, owner_user_id=int(owner), status="running",
                                   settled=False, deadline_epoch=self.clock() + timeout_s))
+            s.commit()
+
+    def available(self) -> bool:
+        with self.sf() as s:
+            return inspect(s.get_bind()).has_table("agent_run_controls")
+
+    def claim(self, run_id: str, owner: str, *, required: bool, timeout_s: int = 180) -> dict | None:
+        """Atomic producer admission. Never reclaim an unsettled/expired/failed producer.
+
+        Historical synchronous threads may acquire their first control row only
+        after the service has verified checkpoint ownership. A missing required
+        row/table always refuses. No lease expiry or automatic process-loss retry.
+        """
+        if not self.available():
+            if required:
+                raise RunAdmissionConflict()
+            return None  # pre-0048 synchronous compatibility
+        with self.sf() as s:
+            row = s.get(AgentRunControl, run_id)
+            if row is None:
+                if required:
+                    raise RunAdmissionConflict()
+                s.add(AgentRunControl(run_id=run_id, owner_user_id=int(owner), status="running",
+                                      settled=False, deadline_epoch=self.clock() + timeout_s))
+                try:
+                    s.commit()  # the unique PK serializes historical first admission
+                except IntegrityError as exc:
+                    s.rollback()
+                    raise RunAdmissionConflict() from exc
+                return {"status": "completed", "deadline_epoch": self.clock() + timeout_s}
+            previous = {"status": "completed", "deadline_epoch": row.deadline_epoch}
+            claimed = s.execute(update(AgentRunControl).where(
+                AgentRunControl.run_id == run_id, AgentRunControl.owner_user_id == int(owner),
+                AgentRunControl.status == "completed", AgentRunControl.settled.is_(True)
+            ).values(status="running", settled=False, deadline_epoch=self.clock() + timeout_s))
+            if claimed.rowcount != 1:
+                s.rollback()
+                raise RunAdmissionConflict()
+            s.commit()  # commit before any checkpoint mutation / provider work
+            return previous
+
+    def release_unstarted(self, run_id: str, owner: str, previous: dict) -> None:
+        """A validation-only refusal is retryable; never erase a concurrent Stop."""
+        with self.sf() as s:
+            s.execute(update(AgentRunControl).where(
+                AgentRunControl.run_id == run_id, AgentRunControl.owner_user_id == int(owner),
+                AgentRunControl.settled.is_(False)
+            ).values(status=case((AgentRunControl.status == "running", previous["status"]),
+                                 else_=AgentRunControl.status),
+                     settled=True, deadline_epoch=previous["deadline_epoch"]))
             s.commit()
 
     def owned(self, run_id: str, owner: str) -> dict | None:

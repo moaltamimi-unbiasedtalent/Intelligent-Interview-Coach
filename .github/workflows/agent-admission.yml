@@ -1,0 +1,38 @@
+name: Agent durable admission regression
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  disposable-postgresql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: disposable
+          POSTGRES_PASSWORD: synthetic-test-only
+          POSTGRES_DB: p5b_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U disposable -d p5b_test"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -e '.[dev,db]'
+      - name: Require the real PostgreSQL checkpoint adapter
+        run: python -c 'from langgraph.checkpoint.postgres import PostgresSaver'
+      - name: Independent services/processes, usage, HITL and interruption
+        env:
+          P5B_PG_ADMIN_URL: postgresql+psycopg://disposable:synthetic-test-only@127.0.0.1:5432/p5b_test
+        run: python -m pytest -q -o addopts='' -p no:cacheprovider tests/test_agent_durable_admission.py
+      - name: Working tree must remain clean
+        run: test -z "$(git status --porcelain)"

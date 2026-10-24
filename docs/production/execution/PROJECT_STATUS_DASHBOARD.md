@@ -2,7 +2,13 @@
 
 Historical PR #265 integration snapshot, 23 October 2026. Reviewed baseline: `aedbef3dee28a68b72bc526a1fca537a3da7bd8d`, PR #265 merged. Current reconciliation/review branch: `docs/post-pr265-release-readiness` in the permanent repository. Sources: [merge/CI/review record](evidence/POST_PR265_INTEGRATION_2026_10_23.json), [release report](POST_PR265_RELEASE_STATUS.md), package register, ledger and code.
 
-## Wave 4 Task 01 update
+## Wave 4 Task 02 update — 24 October 2026
+
+POST265-01 is merged in PR #267 at `5fbf3faa18d2d07754480d7c891a83d0bb3b0dbd`; main CI 40027783998 and migration-image regression 40027783910 are green. POST265-02 has a focused repair on `fix/agent-durable-admission`, pending review/merge/green checks. The existing 0048 table provides atomic owner-scoped admission through usage settlement; no migration is added. Local verification: 50 concurrency tests (25 SQLite/25 disposable PostgreSQL, including independent process interruption), 322 existing regressions and 18 frontend tests pass. [Design, accounting evidence and operational limits](WAVE4_TASK02_DURABLE_ADMISSION.md).
+
+The project remains **40/45 integrated**. Live hosted staging/multi-worker qualification is NOT RUN; human qualification and every production/language approval remain unchanged. Only PG-11 is accepted; zero languages are qualified. 00A/00B/07B/07C/08A remain open or incomplete. The next staging-readiness milestone, after this repair is merged and green, covers image pinning, Redis policy, budget enforcement, backup/restore and authorized disposable PostgreSQL integration drills. No deployment, paid call or activation occurred. Older snapshots below retain their original evidence and are not current merge-status claims.
+
+## Wave 4 Task 01 update (historical pre-merge snapshot)
 
 PR #266 is merged at `560aba5cc4b3f0d6940ed6221053f2ed459027a4`; [main CI 40022997608](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40022997608) succeeded. POST265-01 has a focused, not-yet-merged repair on `fix/staging-migration-entrypoint`: copy the existing wrapper into the configured image path. The real built-image/disposable PostgreSQL suite passed 3 tests locally, including repeat migration and failure rollback/startup blocking. See [repair evidence and remaining blockers](WAVE4_TASK01_MIGRATION_ENTRYPOINT.md).
 
