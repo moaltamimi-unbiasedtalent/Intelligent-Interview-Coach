@@ -92,7 +92,8 @@ def real(tmp_path_factory):
 
 
 def limiter(real, tag, *, user='limiter', prefix=None, clock=time.time):
-    return R.RedisRateLimiter(real['client'](user), prefix=prefix or real['namespace'] + tag + ':', key_secret='synthetic-key-' * 4, clock=clock)
+    client=R.make_redis_client(f"redis://{user}@127.0.0.1:{real['port']}/0",password=real['password'])
+    return R.RedisRateLimiter(client, prefix=prefix or real['namespace'] + tag + ':', key_secret='synthetic-key-' * 4, clock=clock)
 
 
 def test_real_concurrent_replicas_share_a_global_ceiling(real):
@@ -112,8 +113,7 @@ os.environ['ASK4MO_PROVIDER_MODE']='offline'
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from src.api import rate_limit as R
-import redis
-c=redis.Redis(host='127.0.0.1',port=int(os.environ['SYNTHETIC_REDIS_PORT']),username='limiter',password=os.environ['SYNTHETIC_REDIS_PASSWORD'],socket_timeout=1,socket_connect_timeout=1,retry=redis.retry.Retry(redis.backoff.NoBackoff(),0),protocol=2)
+c=R.make_redis_client('redis://limiter@127.0.0.1:'+os.environ['SYNTHETIC_REDIS_PORT']+'/0',password=os.environ['SYNTHETIC_REDIS_PASSWORD'])
 lim=R.RedisRateLimiter(c,prefix=os.environ['SYNTHETIC_REDIS_NAMESPACE'],key_secret='same-synthetic-key'*3)
 app=FastAPI()
 @app.get('/protected')
@@ -227,7 +227,7 @@ def test_paused_store_times_out_and_reconnects_without_automatic_retry(real):
         start = time.monotonic()
         result = lim.hit('b', 'u', R.RateLimitPolicy('p', 1, 20, 'user', 'deny'))
         assert not result.allowed and result.store_failure_denied
-        assert time.monotonic() - start < 2  # explicit client .3s timeout; retries disabled
+        assert time.monotonic() - start < 2  # production command timeout; retries disabled
     finally:
         docker('unpause', real['name'])
     assert lim.hit('b', 'fresh', R.RateLimitPolicy('p', 1, 20, 'user')).allowed
@@ -392,7 +392,25 @@ def test_real_production_client_builder_uses_bounded_connections_and_private_set
     assert isinstance(lim,R.RedisRateLimiter) and not R.shared_store_active()
     options=lim._client.connection_pool.connection_kwargs
     assert options['socket_timeout']==options['socket_connect_timeout']==1.0
+    import redis
+    assert isinstance(lim._client.connection_pool,redis.BlockingConnectionPool)
+    assert lim._client.connection_pool.timeout==1.0
     assert options['protocol']==2 and lim._client.connection_pool.max_connections==16
     assert options['retry'].get_retries()==0
     assert lim.hit('b','u',R.RateLimitPolicy('builder',1,30,'user')).allowed
     assert R.shared_store_active()
+
+
+def test_production_connection_pool_keeps_a_shared_ceiling_during_a_concurrent_burst(real):
+    import threading
+    client=R.make_redis_client(f"redis://limiter@127.0.0.1:{real['port']}/0",password=real['password'])
+    lim=R.RedisRateLimiter(client,prefix=real['namespace']+'production-burst:',key_secret='same-shared-test-key'*3)
+    policy=R.RateLimitPolicy('burst',20,30,'user')
+    gate=threading.Barrier(64)
+    def hit(_):
+        gate.wait(timeout=20)
+        return lim.hit('b','user:1',policy).allowed
+    with concurrent.futures.ThreadPoolExecutor(max_workers=64) as executor:
+        outcomes=list(executor.map(hit,range(64)))
+    assert lim.local_fallbacks==0 and not lim.degraded
+    assert sum(outcomes)==20

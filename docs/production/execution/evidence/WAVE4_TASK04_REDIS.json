@@ -17,10 +17,17 @@
     "server": "8.2.9",
     "image": "redis:8.2.9-alpine@sha256:5f2e6a105b2a8cc721911d5d29aadb032c25fe55b43e829e3d03413753ff47c2",
     "client": "8.1.0",
-    "tests_passed": 16,
+    "tests_passed": 17,
     "tests_skipped": 0,
     "nested_legacy_05d_tests_passed": 3,
-    "qualification": "disposable synthetic only; includes real private Redis-only Compose healthcheck"
+    "qualification": "disposable synthetic only; includes real private Redis-only Compose healthcheck",
+    "production_factory_burst": {
+      "simultaneous_requests": 64,
+      "admitted": 20,
+      "local_fallbacks": 0,
+      "pool_size": 16,
+      "pool_wait_timeout_seconds": 1
+    }
   },
   "local_focused_checks": {
     "passed": 404,
@@ -49,7 +56,8 @@
     "tests_passed": 13,
     "nested_postgresql_migration_tests_passed": 3,
     "offline_archive_sha256": "f9c93d01f13a1ed7e4136c2bccfa6f91039e6b91ebeba89dcdcec2b43e4f29d1",
-    "provenance_limit": "These local IDs belong only to f7556657. Final status/tool/test/doc refinements have later commits; exact final-head CI builds and results are recorded separately in the PR."
+    "provenance_limit": "Earlier f7556657 prototype only; superseded by the final pool-backpressure and browser-retry corrections. These IDs are not qualified for final release use. Exact final-head CI builds and evidence are recorded separately in the PR.",
+    "superseded_for_release_use": true
   },
   "direct_release_cli": {
     "prepare": "passed",
@@ -117,7 +125,7 @@
     "frontend_passed": 36,
     "frontend_typecheck": "PASS",
     "frontend_lint": "PASS",
-    "real_redis_repeated_passed": 16,
+    "real_redis_repeated_passed": 17,
     "findings": [
       "Safe Retry-After must survive the central handler and CORS",
       "Browser must not shorten a server minimum wait; longer hints surface the existing error without retry",

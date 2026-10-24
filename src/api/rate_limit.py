@@ -385,8 +385,10 @@ def make_redis_client(url, *, password=None):
     import redis
     from redis.backoff import NoBackoff
     from redis.retry import Retry
-    return redis.Redis.from_url(url, password=password, socket_timeout=1.0, socket_connect_timeout=1.0,
-                                retry=Retry(NoBackoff(), 0), max_connections=16, protocol=2)
+    retry = Retry(NoBackoff(), 0)
+    pool = redis.BlockingConnectionPool.from_url(url, password=password, timeout=1.0, max_connections=16,
+                                                socket_timeout=1.0, socket_connect_timeout=1.0, retry=retry, protocol=2)
+    return redis.Redis(connection_pool=pool, retry=retry, protocol=2)
 
 
 def configured_redis_client():
