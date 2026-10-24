@@ -1,0 +1,50 @@
+{
+  "review_date": "2026-10-24",
+  "baseline_main": "5fbf3faa18d2d07754480d7c891a83d0bb3b0dbd",
+  "pr267_merged": true,
+  "baseline_ci": 40027783998,
+  "baseline_image_regression": 40027783910,
+  "before": {
+    "recorded_model_calls": 2,
+    "recorded_total_tokens": 18,
+    "mode": "two service instances, same temporary SQLite/checkpoint stores, mocked model",
+    "settled_at_concurrent_admission": false,
+    "control_status_at_admission": "running",
+    "concurrent_continue_accepted": true,
+    "model_invocations_before": 1,
+    "model_invocations_after": 2,
+    "real_provider_calls": 0,
+    "expected_followup": "reject continuation/resume while producer settlement is pending using durable ownership state; verify across independent workers"
+  },
+  "schema_change": false,
+  "repository_head": "0048_agent_run_controls",
+  "concurrency_tests": {
+    "sqlite_passed": 25,
+    "postgresql_16_passed": 25,
+    "official_durable_checkpoints": true,
+    "independent_spawned_process_interrupted": true,
+    "simultaneous_sql_claim_one_winner": true
+  },
+  "existing_regressions_passed": 322,
+  "frontend_tests_passed": 18,
+  "synthetic_settled_two_turns": {
+    "model_calls": 2,
+    "total_tokens": 18,
+    "cost_usd_micros": 1800
+  },
+  "synthetic_lost_process_previous_canonical_fact": {
+    "model_calls": 1,
+    "total_tokens": 9,
+    "cost_usd_micros": 900,
+    "full_run_settled": false,
+    "public_cost_unknown": true
+  },
+  "integrated_packages": 40,
+  "total_packages": 45,
+  "original_database_opened_or_migrated": false,
+  "paid_provider_calls": 0,
+  "deployments": 0,
+  "new_gate_approvals": 0,
+  "hosted_language_activation_changes": 0,
+  "final_ci_results": "See exact commit-bound PR description; these are local observations, not main CI attribution."
+}

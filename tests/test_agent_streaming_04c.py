@@ -200,7 +200,7 @@ def test_durable_stop_wins_over_a_completed_checkpoint_and_hides_late_actions(en
     service = build(lambda: Model())
     completed = service.run(AgentRunRequest(goal="Hello", user_id="1"))
     rid = completed.run_id
-    RunControlStore(sf).create(rid, "1")
+    RunControlStore(sf).claim(rid, "1", required=True)
     service._graph.update_state(service._config(rid), {"control_required": True})
     RunControlStore(sf).cancel(rid, "1")
     stopped = service.get_run(rid, "1")

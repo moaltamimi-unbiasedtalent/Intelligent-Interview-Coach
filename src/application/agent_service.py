@@ -15,6 +15,9 @@ Where enough tool data exists, the service builds the existing typed
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+from dataclasses import dataclass
+
 import threading
 import time
 import uuid
@@ -143,6 +146,15 @@ def _default_career_service() -> Any:
     return CareerApplicationService(load_config())
 
 
+@dataclass
+class _Admission:
+    snapshot: Any = None
+    controlled: bool = False
+    started: bool = False
+    accounted: bool = True
+    result: AgentRunResult | None = None
+
+
 class AgentApplicationService:
     def __init__(
         self,
@@ -176,6 +188,7 @@ class AgentApplicationService:
             from src.agent.checkpoint import build_checkpointer
 
             info = build_checkpointer(checkpoint_url=checkpoint_url, database_url=database_url)
+            self._checkpoint_resource = info  # retain the official saver connection context
             checkpointer = info.saver
             self._checkpoint_durable = info.durable
         else:
@@ -204,7 +217,7 @@ class AgentApplicationService:
         )
         # Smallest-safe per-thread serialization: a resume/continue on one thread must
         # not interleave with another on the SAME thread within this process (in-memory
-        # locks; a multi-process deployment would need shared locking — documented).
+        # locks; the durable admission row is the cross-process authority).
         self._locks_guard = threading.Lock()
         self._thread_locks: dict[str, threading.Lock] = {}
 
@@ -214,16 +227,41 @@ class AgentApplicationService:
         except Exception:  # noqa: BLE001 - telemetry is non-critical, never breaks a run
             pass
 
-    def _record_usage(self, result: AgentRunResult, user_id: Any) -> None:
+    def _record_usage(self, result: AgentRunResult, user_id: Any) -> bool:
         """Upsert this run's CUMULATIVE usage aggregate once (never per nested tool call). Best-effort: never raises."""
         if self._usage_sf is None:
-            return
+            return True
         try:
             from src.reporting.telemetry import record_agent_usage
 
-            record_agent_usage(self._usage_sf, user_id, result.run_id, result.usage, result.profile)
+            return record_agent_usage(self._usage_sf, user_id, result.run_id, result.usage, result.profile)
         except Exception:  # noqa: BLE001
-            pass
+            return False
+
+    @staticmethod
+    def _unsettled_result(result: AgentRunResult) -> None:
+        result.usage["usage_complete"] = False
+        result.usage["estimated_cost_usd"] = None
+        missing = result.usage.setdefault("missing_usage_sources", [])
+        if "producer_unsettled" not in missing:
+            missing.append("producer_unsettled")
+
+    @staticmethod
+    def _stop_result(result: AgentRunResult, reason: str) -> None:
+        result.status = reason
+        result.response = ""
+        result.pending_action = None
+        result.awaiting_human_input = False
+        result.handoff_approved = False
+        if result.conversation and result.conversation[-1].get("role") == "assistant":
+            result.conversation = result.conversation[:-1]
+
+    def _account_turn(self, result: AgentRunResult, user_id: Any) -> bool:
+        accounted = self._record_usage(result, user_id) is not False
+        if not accounted:
+            self._unsettled_result(result)
+            result.status = STATUS_FAILED
+        return accounted
 
     def _emit_completed(self, result: AgentRunResult) -> None:
         """Emit a SANITISED completion trace (safe fields only). Never raises."""
@@ -249,6 +287,82 @@ class AgentApplicationService:
                 lock = threading.Lock()
                 self._thread_locks[run_id] = lock
             return lock
+
+    @contextmanager
+    def _admit_producer(self, run_id: str, user_id: str | None, *, initial=None):
+        """DB admission is authoritative; the local lock is defense in depth.
+
+        Re-read the checkpoint AFTER claiming. Hold through final canonical usage.
+        No expiry-based takeover: process loss leaves the run explicitly unsettled.
+        """
+        from src.agent.run_control import RunAdmissionConflict, RunControlStore
+
+        # Authenticate ownership even when this instance's producer is busy.
+        # A foreign/absent id must remain a 404, never an existence-revealing 409.
+        if initial is None:
+            self._require_owned(self._snapshot(run_id), user_id)
+        lock = self._lock_for(run_id)
+        if not lock.acquire(blocking=False):
+            raise RunNotResumableError("This run is busy.")
+        control, previous = None, None
+        admission = _Admission()
+        try:
+            snapshot = None if initial is not None else self._snapshot(run_id)
+            if snapshot is not None:
+                self._require_owned(snapshot, user_id)
+            required = bool(snapshot and snapshot.values.get("control_required"))
+            sf = self._usage_sf or getattr(self._run_index, "_sf", None)
+            try:
+                if sf is not None:
+                    store = RunControlStore(sf)
+                    if initial is not None:
+                        if store.available():
+                            store.create(run_id, user_id)
+                            control = store
+                            initial["control_required"] = True
+                    else:
+                        previous = store.claim(run_id, user_id, required=required)
+                        if previous is not None:
+                            control = store
+                elif required:
+                    raise RunAdmissionConflict()
+            except RunAdmissionConflict as exc:
+                raise RunNotResumableError("This run is busy or unavailable.") from exc
+            except Exception as exc:
+                raise AgentConfigurationError("Durable agent admission is unavailable.") from exc
+            admission.controlled = control is not None
+            # The earlier snapshot may be stale if a different producer finished
+            # before our atomic claim. Never validate a human decision on it.
+            admission.snapshot = None if initial is not None else self._snapshot(run_id)
+            if admission.snapshot is not None:
+                self._require_owned(admission.snapshot, user_id)
+            try:
+                yield admission
+            except BaseException:
+                if control is not None:
+                    if not admission.started and previous is not None:
+                        control.release_unstarted(run_id, user_id, previous)
+                    else:
+                        control.interrupt(run_id)
+                        try:
+                            result = self._result_from_snapshot(run_id, self._snapshot(run_id), None)
+                            self._unsettled_result(result)
+                            self._record_usage(result, user_id)
+                        except Exception:
+                            pass  # the durable unsettled row still prevents unsafe reuse
+                raise
+            else:
+                if control is not None:
+                    if admission.accounted:
+                        control.finish(run_id)
+                        row = control.owned(run_id, user_id)
+                        if admission.result is not None and row and row["status"] in ("cancelled", "expired", "failed"):
+                            self._stop_result(admission.result, row["status"])
+                    else:
+                        control.interrupt(run_id)
+                        self._mark_run("failed", run_id)
+        finally:
+            lock.release()
 
     def _mark_run(self, state: str, run_id: str) -> None:
         if self._run_index is not None:
@@ -381,23 +495,26 @@ class AgentApplicationService:
     def run(self, request: AgentRunRequest, *, request_id: str | None = None) -> AgentRunResult:
         initial = self._begin_run(request)
         run_id = initial["run_id"]
-        started = time.perf_counter()
-        try:
-            self._graph.invoke(initial, config=self._config(run_id))
-        except AgentError:
-            self._mark_run("failed", run_id)
-            raise
-        except Exception as exc:  # noqa: BLE001 - never leak a raw error
-            self._mark_run("failed", run_id)
-            raise AgentError("The assistant could not complete the request.") from exc
-        self._mark_run("ready", run_id)
-        latency_ms = int((time.perf_counter() - started) * 1000)
-        # Read authoritative state (detects an interrupt / pending human action).
-        result = self._result_from_snapshot(
-            run_id, self._snapshot(run_id), request_id, latency_ms=latency_ms)
-        self._emit_completed(result)
-        self._record_usage(result, request.user_id)
-        return result
+        with self._admit_producer(run_id, request.user_id, initial=initial) as admission:
+            admission.started = True
+            started = time.perf_counter()
+            try:
+                self._graph.invoke(initial, config=self._config(run_id))
+            except AgentError:
+                self._mark_run("failed", run_id)
+                raise
+            except Exception as exc:  # noqa: BLE001 - never leak a raw error
+                self._mark_run("failed", run_id)
+                raise AgentError("The assistant could not complete the request.") from exc
+            self._mark_run("ready", run_id)
+            latency_ms = int((time.perf_counter() - started) * 1000)
+            # Read authoritative state (detects an interrupt / pending human action).
+            result = self._result_from_snapshot(
+                run_id, self._snapshot(run_id), request_id, latency_ms=latency_ms)
+            self._emit_completed(result)
+            admission.accounted = self._account_turn(result, request.user_id)
+            admission.result = result
+            return result
 
     def resume(
         self, run_id: str, user_id: str | None, decision: dict, *, request_id: str | None = None
@@ -410,9 +527,8 @@ class AgentApplicationService:
         """
         from langgraph.types import Command
 
-        with self._lock_for(run_id):
-            snapshot = self._snapshot(run_id)
-            self._require_owned(snapshot, user_id)
+        with self._admit_producer(run_id, user_id) as admission:
+            snapshot = admission.snapshot
             if self._registry.authorizer.run_control(run_id, required=bool(snapshot.values.get("control_required"))):
                 raise RunNotResumableError("This run was stopped.")
             self._ensure_indexed(run_id, user_id)
@@ -425,6 +541,9 @@ class AgentApplicationService:
                 from src.application.errors import ValidationError
 
                 raise ValidationError(str(exc)) from exc
+            admission.started = True
+            if admission.controlled and not snapshot.values.get("control_required"):
+                self._graph.update_state(self._config(run_id), {"control_required": True})
             started = time.perf_counter()
             try:
                 self._graph.invoke(Command(resume=normalised), config=self._config(run_id))
@@ -436,7 +555,8 @@ class AgentApplicationService:
             result = self._result_from_snapshot(
                 run_id, self._snapshot(run_id), request_id, latency_ms=latency_ms)
             self._emit_completed(result)
-            self._record_usage(result, user_id)
+            admission.accounted = self._account_turn(result, user_id)
+            admission.result = result
             return result
 
     def continue_run(
@@ -457,9 +577,8 @@ class AgentApplicationService:
 
             raise ValidationError("A message is required to continue.")
 
-        with self._lock_for(run_id):
-            snapshot = self._snapshot(run_id)
-            self._require_owned(snapshot, user_id)
+        with self._admit_producer(run_id, user_id) as admission:
+            snapshot = admission.snapshot
             if self._registry.authorizer.run_control(run_id, required=bool(snapshot.values.get("control_required"))):
                 raise RunNotResumableError("This run was stopped.")
             self._ensure_indexed(run_id, user_id)
@@ -473,9 +592,11 @@ class AgentApplicationService:
             # Append the new user turn, reset ONLY the per-turn allowance + terminal
             # flags, and resume at the agent node (as_node="initialise" so the fresh-run
             # initialise does NOT re-run and wipe/duplicate the thread).
+            admission.started = True
             self._graph.update_state(
                 self._config(run_id),
                 {
+                    "control_required": admission.controlled,
                     "messages": [HumanMessage(content=text)],
                     "goal": text,
                     "turn_step_count": 0,
@@ -497,7 +618,8 @@ class AgentApplicationService:
             result = self._result_from_snapshot(
                 run_id, self._snapshot(run_id), request_id, latency_ms=latency_ms)
             self._emit_completed(result)
-            self._record_usage(result, user_id)
+            admission.accounted = self._account_turn(result, user_id)
+            admission.result = result
             return result
 
     def get_run(self, run_id: str, user_id: str | None, *, request_id: str | None = None) -> AgentRunResult:
@@ -507,25 +629,20 @@ class AgentApplicationService:
         result = self._result_from_snapshot(run_id, snapshot, request_id)
         if snapshot.values.get("control_required"):
             reason = self._registry.authorizer.run_control(run_id, required=True)
+            from src.agent.run_control import RunControlStore
+            sf = self._usage_sf or getattr(self._run_index, "_sf", None)
+            row = RunControlStore(sf).owned(run_id, user_id) if sf is not None else None
+            if row is not None and row["status"] == "failed" and not row["settled"]:
+                reason = "failed"
             if reason:
                 # Cancellation may win the final control-row transaction just
                 # after graph completion. Read that durable decision on every
                 # lookup, never expose a completed action after Stop won.
-                result.status = reason
-                result.response = ""
-                result.pending_action = None
-                result.awaiting_human_input = False
-                result.handoff_approved = False
-                if result.conversation and result.conversation[-1].get("role") == "assistant":
-                    result.conversation = result.conversation[:-1]
-                from src.agent.run_control import RunControlStore
-                sf = self._usage_sf or getattr(self._run_index, "_sf", None)
-                row = RunControlStore(sf).owned(run_id, user_id) if sf is not None else None
-                if row is None or not row["settled"]:
-                    result.usage["usage_complete"] = False
-                    result.usage["estimated_cost_usd"] = None
-                    if "stream_settlement_pending" not in result.usage["missing_usage_sources"]:
-                        result.usage["missing_usage_sources"].append("stream_settlement_pending")
+                self._stop_result(result, reason)
+            if row is None or not row["settled"]:
+                self._unsettled_result(result)
+                if "stream_settlement_pending" not in result.usage["missing_usage_sources"]:
+                    result.usage["missing_usage_sources"].append("stream_settlement_pending")
         return result
 
     @property
