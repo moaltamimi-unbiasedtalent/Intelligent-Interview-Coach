@@ -184,3 +184,19 @@ def test_late_limiter_configuration_refusal_is_safe_503_not_an_internal_500():
         response=client.get('/protected')
         assert response.status_code==503 and response.json()['error']['code']=='protection_unavailable'
         assert 'private-runtime-source-detail' not in response.text
+
+
+@pytest.mark.parametrize('mutation', ['unpinned','wrong_version','base','other_extra','celery','sentry-sdk','prometheus-client','hvac','stripe_unpinned','malformed'])
+def test_infrastructure_guard_refuses_every_unapproved_dependency_shape(mutation):
+    from pathlib import Path
+    from scripts.eval_admin_foundation import infrastructure_dependencies_allowed
+    text=(Path(__file__).resolve().parents[1]/'pyproject.toml').read_text()
+    assert infrastructure_dependencies_allowed(text)
+    if mutation=='unpinned': text=text.replace('redis==8.1.0','redis>=8')
+    elif mutation=='wrong_version': text=text.replace('redis==8.1.0','redis==8.0.0')
+    elif mutation=='base': text=text.replace('dependencies = [','dependencies = ["redis==8.1.0",',1)
+    elif mutation=='other_extra': text=text.replace('dev = [','dev = ["redis==8.1.0",',1)
+    elif mutation=='stripe_unpinned': text=text.replace('stripe>=16,<17','stripe>=16')
+    elif mutation=='malformed': text+='\nnot valid toml!'
+    else: text=text.replace('dependencies = [',f'dependencies = ["{mutation}==1.0",',1)
+    assert not infrastructure_dependencies_allowed(text)

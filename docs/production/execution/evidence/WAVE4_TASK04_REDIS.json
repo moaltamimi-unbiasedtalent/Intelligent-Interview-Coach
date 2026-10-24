@@ -131,5 +131,14 @@
       "Browser must not shorten a server minimum wait; longer hints surface the existing error without retry",
       "Late limiter configuration errors are safe 503 without internal detail"
     ]
+  },
+  "dependency_guard": {
+    "authorization": "Task 04 explicit optional Redis operational qualification",
+    "allowed_extra": "redis==8.1.0 only in optional redis extra",
+    "base_or_other_extra_redis": "refused",
+    "other_infrastructure": "celery/sentry/prometheus/hvac still refused",
+    "guard_and_related_tests_passed": 35,
+    "negative_dependency_mutations": 10,
+    "downstream_ci_evaluators_passed": 19
   }
 }

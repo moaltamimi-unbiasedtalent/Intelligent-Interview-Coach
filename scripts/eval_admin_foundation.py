@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import re
 import sys
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -26,6 +27,34 @@ CONTENT_FRAGMENTS = ("cv_text", "document_text", "transcript", "conversation", "
 def read(rel: str) -> str:
     p = ROOT / rel
     return p.read_text(encoding="utf-8") if p.exists() else ""
+
+
+def infrastructure_dependencies_allowed(source: str) -> bool:
+    """Task 04 explicitly authorizes one pinned OPTIONAL Redis client only.
+
+    Keep the original prohibition on unrelated infrastructure, and reject Redis
+    in base/other extras or any unreviewed client/version. No runtime activation.
+    """
+    lowered = source.lower()
+    if any(name in lowered for name in ("celery", "sentry", "prometheus", "hvac")):
+        return False
+    try:
+        project = tomllib.loads(source)["project"]
+        base = project["dependencies"]
+        extras = project["optional-dependencies"]
+        if not isinstance(base, list) or not isinstance(extras, dict):
+            return False
+        if extras.get("redis") != ["redis==8.1.0"] or "stripe>=16,<17" not in base:
+            return False
+        other = list(base)
+        for name, dependencies in extras.items():
+            if name != "redis":
+                if not isinstance(dependencies, list):
+                    return False
+                other.extend(dependencies)
+        return all(isinstance(dependency, str) and "redis" not in dependency.lower() for dependency in other)
+    except (tomllib.TOMLDecodeError, KeyError, TypeError, AttributeError):
+        return False
 
 
 def _array_block(source: str, name: str) -> str:
@@ -156,8 +185,9 @@ def run() -> dict[str, tuple[bool, str]]:
     from tests._alembic_head import chain_ok
     _ok, _detail = chain_ok(min_head=14)          # one head, linear contiguous chain from 0001, every down_revision resolves; head not older than the registered baseline
     check("no_migration_added", _ok, _detail)
-    pyproject = read("pyproject.toml").lower()
-    check("no_new_infrastructure_dependency", not any(d in pyproject for d in ("redis", "celery", "sentry", "prometheus", "hvac")) and "stripe>=16,<17" in pyproject, "none of redis/celery/sentry/prometheus/hvac; the only payment SDK is the owner-selected, version-pinned stripe (W12.4D-B)")
+    pyproject = read("pyproject.toml")
+    check("no_new_infrastructure_dependency", infrastructure_dependencies_allowed(pyproject),
+          "Task 04: Redis only in its exact optional redis==8.1.0 extra; never base/other extras; no celery/sentry/prometheus/hvac; Stripe stays pinned")
     return out
 
 
