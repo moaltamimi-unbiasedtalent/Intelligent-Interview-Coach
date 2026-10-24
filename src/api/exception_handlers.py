@@ -216,7 +216,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         # arbitrary HTTPException header or readiness detail payload.
         headers = {k.lower(): v for k, v in (exc.headers or {}).items()}
         retry = headers.get("retry-after", "")
-        if exc.status_code in (429, 503) and isinstance(retry, str) and retry.isascii() and retry.isdigit() and 1 <= int(retry) <= 86400:
+        if exc.status_code in (429, 503) and isinstance(retry, str) and len(retry) <= 5 and retry.isascii() and retry.isdigit() and 1 <= int(retry) <= 86400:
             response.headers["Retry-After"] = retry
         state = headers.get("x-rate-limit-state")
         if request.url.path.endswith("/ready") and state in {"process_local", "configured_unverified", "shared", "recovered_shared", "unreachable", "degraded_local", "fail_closed", "configuration_refused"}:

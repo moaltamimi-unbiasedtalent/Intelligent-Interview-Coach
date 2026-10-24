@@ -27,6 +27,8 @@ import uuid
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))  # direct CLI execution resolves the reviewed scripts package
 SHA = re.compile(r"[0-9a-f]{40}")
 DIGEST = re.compile(r"sha256:[0-9a-f]{64}")
 HASH = re.compile(r"[0-9a-f]{64}")
