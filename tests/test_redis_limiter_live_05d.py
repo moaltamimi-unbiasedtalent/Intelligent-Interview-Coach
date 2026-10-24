@@ -3,7 +3,7 @@ SKIPPED with an explicit reason. Nothing here installs or starts Redis, and no D
 
     TEST_REDIS_URL=redis://127.0.0.1:6379/15 "<venv>/bin/python" -m pytest -p no:cacheprovider tests/test_redis_limiter_live_05d.py -q
 
-Status in this repository: NOT RUN (no Redis available; live validation waits for staging, OD-HOSTED)."""
+Historical 05D status was NOT RUN. Task 04 now runs this suite against its explicitly disposable server; hosted qualification still waits for OD-HOSTED and authorization."""
 
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ def test_real_redis_window_expires_and_key_gets_a_ttl(client):
     pol = rl.RateLimitPolicy("live", 1, 1, "ip")
     lim = rl.RedisRateLimiter(c, prefix=prefix)
     assert lim.hit("b", "k", pol).allowed and not lim.hit("b", "k", pol).allowed
-    assert 0 < c.ttl(f"{prefix}b:k") <= 3
+    assert 0 < c.ttl(lim.store_key("b", "k")) <= 3
     time.sleep(1.2)
     assert lim.hit("b", "k", pol).allowed
 

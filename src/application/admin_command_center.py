@@ -92,19 +92,20 @@ def health_summary(session_factory) -> dict[str, Any]:
 
 def rate_limit_mode() -> dict[str, Any]:
     try:
-        from src.api.rate_limit import shared_store_active, shared_store_requested
-
-        active, requested = bool(shared_store_active()), bool(shared_store_requested())
-    except Exception:  # noqa: BLE001
-        active, requested = False, False
+        from src.api.rate_limit import limiter_status
+        status = limiter_status(probe=True)
+    except Exception:  # no supplied config/exception/identity in the Admin projection
+        status = {"configured": False, "effectively_distributed": False, "shared_store_requested": True,
+                  "state": "configuration_refused", "reachable": None}
+    active, requested = status["effectively_distributed"], status["shared_store_requested"]
     return {
-        "mode": "shared_store" if active else "in_memory_process_local",
+        "mode": "shared_store" if active else ("shared_store_unavailable" if status["configured"] else "in_memory_process_local"),
         "distributed": active,
         "shared_store_requested": requested,
         "single_process_acknowledged": (os.environ.get("RATE_LIMIT_SINGLE_PROCESS_ACKNOWLEDGED", "") or "").strip().lower() in ("1", "true", "yes", "on"),
-        "live_validated": False,        # no live Redis round trip is recorded (05D: NOT RUN until staging)
-        "note": ("Limits are enforced per process; they are not shared across replicas."
-                 if not active else "A shared store is active."),
+        "live_validated": False,  # hosted qualification is separate from disposable Redis CI
+        "note": "A shared store answered the enforcement probe." if active else "Shared enforcement is unavailable; local limits are per process.",
+        "observation": status,
     }
 
 

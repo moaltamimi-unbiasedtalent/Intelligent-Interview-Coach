@@ -61,6 +61,18 @@ def ready(request: Request) -> dict:
     from src.application import hosted_readiness as hr
 
     if hr.is_hosted():
+        # Configuration is mandatory when requested. Runtime outages continue to
+        # apply each bucket's existing policy. Explicit SHARED_REQUIRED also
+        # excludes an unshared replica from readiness; default dev/local is unchanged.
+        from src.api.rate_limit import limiter_status, shared_required
+        try:
+            limiter = limiter_status(probe=True)
+            dependencies["rate_limiter"] = limiter["state"]
+            if shared_required():
+                checks["rate_limiter_shared"] = limiter["effectively_distributed"]
+        except Exception:
+            dependencies["rate_limiter"] = "configuration_refused"
+            checks["rate_limiter_configured"] = False
         checks["data_root_writable"] = hr.data_root_writable()
         if checks["database"]:
             dependencies["worker_heartbeat"] = hr.worker_status(repo.session_factory)
@@ -96,7 +108,7 @@ def ready(request: Request) -> dict:
     if dependencies:
         body["dependencies"] = dependencies
     if not ready_ok:
-        raise HTTPException(status_code=503, detail=body)
+        raise HTTPException(status_code=503, detail=body, headers={"X-Rate-Limit-State": dependencies.get("rate_limiter", "unknown")})
     return body
 
 

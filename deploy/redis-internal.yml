@@ -1,0 +1,26 @@
+# Optional fragment consumed ONLY by the immutable release profile generator.
+# No ports; Redis is reachable solely on the private rate-limit-store network.
+services:
+  redis:
+    image: redis:8.2.9-alpine@sha256:5f2e6a105b2a8cc721911d5d29aadb032c25fe55b43e829e3d03413753ff47c2
+    user: "999:1000"
+    entrypoint: ["/bin/sh", "/opt/ask4mo/redis-start.sh"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    networks: [rate-limit-store]
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m,mode=1777
+      - /data:rw,noexec,nosuid,size=64m,uid=999,gid=1000,mode=0700
+    secrets: [redis_password]
+    volumes: ["./redis-start.sh:/opt/ask4mo/redis-start.sh:ro"]
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=$$(cat /run/secrets/redis_password) redis-cli --user limiter ping | grep -qx PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+networks:
+  rate-limit-store:
+    internal: true

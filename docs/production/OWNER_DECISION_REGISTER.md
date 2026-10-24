@@ -182,3 +182,5 @@ Native reviewers and legal qualifiers named and engaged by Tue 27 Oct for a free
 | XC-P9-Untracked-checkpoint-deletion | P9 quality register (carried items) Untracked-checkpoint-deletion-: Untracked checkpoint deletion re | R1.0 | DISCOVERED_BY_CROSS_CHECK |
 | XC-REL-R-33 | Release acceptance matrix (P10B) R-33: Email-verification behaviour pinned | R1.0 | DISCOVERED_BY_CROSS_CHECK |
 | XC-REL-R-97 | Release acceptance matrix (P10B) R-97: Google OIDC live behaviour unvalidated | R1.0 | DISCOVERED_BY_CROSS_CHECK |
+
+Task 04 Redis preparation: [topology, outage matrix, readiness and monitoring recommendation](execution/WAVE4_TASK04_REDIS_DECISIONS.md). **H-REDIS-POLICY and OD-HOSTED remain OPEN**; disposable tests and a generated profile are not owner approval or staging authorization.

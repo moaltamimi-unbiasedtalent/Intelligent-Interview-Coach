@@ -16,6 +16,9 @@
 #   caddy   edge reverse proxy — terminates TLS, adds HSTS, routes / -> web
 #           and /api -> api
 #
+# Optional Redis is added by the verified release generator, never an unreviewed
+# Compose overlay. See deploy/redis-internal.yml and the Task 04 decision record.
+#
 # Secrets live ONLY in deploy/.env.staging (copy from .env.staging.example and
 # fill real values there; that file is git-ignored). Nothing real is committed.
 #

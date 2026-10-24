@@ -48,6 +48,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Optional shared limiter; pinned and installed in the staging API image.
+redis = ["redis==8.1.0"]
+
 # Test/development tooling. Install with:  pip install -e ".[dev]"
 dev = [
     "pytest>=8.3,<9.0",
