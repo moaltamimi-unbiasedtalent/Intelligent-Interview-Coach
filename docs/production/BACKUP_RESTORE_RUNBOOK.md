@@ -95,11 +95,15 @@ reversible head: the head migration's downgrade is FAIL-CLOSED (it refuses, dele
 preserving the other tables, re-upgrade, and a restore of the pre-migration set into a separate environment (the fallback when a downgrade is refused or unsafe).
 If a migration cannot be reversed, restore the pre-migration set into a new database and repoint the deployment.
 
-**Application (image or tag pointer), documentation form only, not executed (no deployment exists).** Images must be built once per commit by CI and tagged by commit SHA; the
-deployment references a tag, never a build. Rollback is: (1) note the current tag, (2) set the tag variable of the api, worker and web services to the last known-good SHA,
-(3) `docker compose up -d` for those services only (the `migrate` job is NOT re-run, so the schema stays at the newer revision, which the previous release must tolerate;
-if it does not, use the database rollback above first), (4) confirm `/api/v1/ready`, the worker heartbeat and a retrieval query, (5) record the tags and times. The current
-`docker-compose.staging.yml` uses `build:` and therefore has no tag pointer: see section 9.
+**Application images (Wave 4 Task 03, no deployment).** The local immutable release controls and their evidence are in
+[`execution/WAVE4_TASK03_IMMUTABLE_RELEASE.md`](execution/WAVE4_TASK03_IMMUTABLE_RELEASE.md). They replace the earlier tag-pointer proposal with
+verified content-addressed application images and a plan-only rollback profile. API and worker use the same verified backend image; web is tied to the
+same source release. Rollback requires a fresh, drained target observation, zero unsettled agent runs/active jobs, and an explicitly compatible schema.
+The rollback profile has NO migrate service and performs no database downgrade, restore, usage settlement or deletion. Never combine it with the build template.
+
+A schema mismatch is a refusal, not an instruction to downgrade automatically. Prefer a forward fix. Any database recovery follows the separately authorized
+backup/restore procedure, preserving the original environment and erasure ledger. Local image export/load verification is not a database restore or a hosted
+rollback drill. The full hosted operation remains NOT RUN (OD-HOSTED).
 
 ## 7. Restore drills and records
 
@@ -140,14 +144,14 @@ tool cannot verify that storage media were wiped. It never reports "erased from 
 procedure (restore into a disposable PostgreSQL, run `AccountDeletionService`, take a new set), which is NOT exercised by this package; agent checkpoints held in a separate store are
 not in the set at all.
 
-## 9. Changes the staging compose and image need (NOT made: `deploy/docker-compose.staging.yml` belongs to 05A)
+## 9. Remaining staging changes (application image profiles supplied separately)
 
 1. **Backup runner.** A one-shot `backup` service (profile `ops`, not started by default) built from the api image, mounting `documents` and `knowledge-data` read-only and a `backups`
    volume (or an object-storage client) read-write, with `DATABASE_URL`, `DOCUMENT_STORAGE_DIR`, `COPILOT_DATA_DIR`, and `BACKUP_ENCRYPTION_KEY` from the secret manager (not `.env.staging`
    in the repository). The worker must be stopped or drained during a backup.
 2. **PostgreSQL client tools.** `deploy/Dockerfile.api` installs `libpq5` but not `pg_dump` / `pg_restore`: add `postgresql-client-16`, or run the backup from the `postgres:16` image.
-3. **Image tag pointer.** Replace `build:` for `api`, `worker`, `web` and `migrate` with `image: ${REGISTRY}/ask4mo-<service>:${APP_TAG}` (built and pushed by CI, tagged by commit SHA) so
-   section 6 application rollback is a one-variable change.
+3. **Application image pointer.** Wave 4 Task 03 supplies image-only local release/rollback profiles using verified Docker image IDs, replacing the earlier mutable image tag proposal.
+   Registry publication/signing is not implemented or authorized; do not substitute an unverified remote reference. The base Compose file remains a build template, not the release profile.
 4. **Restore target.** A `restore` profile with an empty PostgreSQL service named `*restore*` and empty volumes, so drills never touch live volumes.
 5. **Ledger and sets off the host.** The erasure ledger and the sets belong on storage with a different access policy from the application host; the ledger must be backed up independently.
 6. **Retention.** A scheduled destruction of sets older than 35 days, recorded with `erase attest-destroyed`.

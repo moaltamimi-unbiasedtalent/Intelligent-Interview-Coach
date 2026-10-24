@@ -19,8 +19,7 @@ FROM python:3.11-slim AS base
 # truthfully as "unknown" (the app never shells out to git).
 ARG APP_GIT_SHA=""
 ARG APP_BUILD_TIME=""
-ENV APP_GIT_SHA=${APP_GIT_SHA} \
-    APP_BUILD_TIME=${APP_BUILD_TIME}
+ARG APP_SOURCE_SHA256=""
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -70,6 +69,7 @@ COPY docs/production/execution/language_readiness.json ./docs/production/executi
 # Versioned prompt assets (package 01B). src/prompt_assets.py resolves them at /app/prompts (next to
 # src/) and fails closed at import if the tree is missing or invalid, so they MUST ship with the image.
 COPY prompts ./prompts
+COPY deploy/release-policy.json ./release-policy.json
 
 # Private document storage mount point. The real durable volume is mounted here at
 # run time (DOCUMENT_STORAGE_DIR=/data/documents). NEVER a public bucket, and never
@@ -80,6 +80,14 @@ RUN mkdir -p /data/documents
 RUN useradd --create-home --uid 10001 appuser \
     && chown -R appuser:appuser /app /data
 USER appuser
+
+# Release builder supplies public provenance only, after cacheable dependency layers.
+ENV APP_GIT_SHA=${APP_GIT_SHA} APP_BUILD_TIME=${APP_BUILD_TIME}
+LABEL org.opencontainers.image.revision="${APP_GIT_SHA}" \
+      org.opencontainers.image.created="${APP_BUILD_TIME}" \
+      org.opencontainers.image.source="https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach" \
+      io.ask4mo.source.sha256="${APP_SOURCE_SHA256}" \
+      io.ask4mo.role="application"
 
 EXPOSE 8000
 
