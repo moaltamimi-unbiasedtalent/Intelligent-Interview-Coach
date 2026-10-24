@@ -246,7 +246,12 @@ def validate_manifest(manifest, expected_sha, anchor, *, repo=ROOT, verify_image
         require(isinstance(image["image_id"], str) and DIGEST.fullmatch(image["image_id"]), "image_digest_invalid")
         require(image["registry_digest"] is None, "registry_publication_not_supported")
         require(isinstance(image["platform"], str) and re.fullmatch(r"linux/[a-z0-9_]+", image["platform"]), "image_platform_invalid")
-        require(isinstance(image["docker_created_at"], str) and re.fullmatch(r"[0-9T:.+-]+Z", image["docker_created_at"]), "timestamp_invalid")
+        require(isinstance(image["docker_created_at"], str), "timestamp_invalid")
+        try:
+            image_time = datetime.fromisoformat(image["docker_created_at"].replace("Z", "+00:00"))
+            require(image_time.utcoffset() is not None and image_time.utcoffset().total_seconds() == 0, "timestamp_invalid")
+        except ValueError as exc:
+            raise ReleaseError("timestamp_invalid") from exc
         contents = image["contents"]
         keys(contents, "dependencies os_dependencies runtime uid" + (" build_id" if role == "web" else ""))
         require(type(contents["uid"]) is int and contents["uid"] == (10001 if role == "application" else 1000), "image_security_mismatch")
@@ -511,7 +516,10 @@ def main(argv=None):
                 result = {"manifest_sha256": args.manifest_sha256, "verified": True}
         print(json.dumps(result, sort_keys=True))
         return 0
-    except (ReleaseError, OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
+    except ReleaseError as exc:
+        print(json.dumps({"error": str(exc)}))  # fixed code only, never raw tool output
+        return 1
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
         # Never echo a private URL, env, raw Docker config or database exception.
         print(json.dumps({"error": "release_operation_refused"}))
         return 1
