@@ -1,0 +1,43 @@
+name: Immutable local release regression
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  local-images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -e '.[dev,db]'
+      - name: Build exactly one API image and matching web image from this commit
+        run: |
+          python scripts/release_images.py build --sha "$(git rev-parse HEAD)" \
+            --api-base-url https://api.staging.example.com/api/v1 --out "$RUNNER_TEMP/ask4mo-release"
+      - name: Real image identity, Compose, migration, durable controls and offline transfer
+        env:
+          RUN_RELEASE_IMAGE_TESTS: '1'
+        run: |
+          RELEASE_TEST_BUNDLE="$RUNNER_TEMP/ask4mo-release" RELEASE_TEST_SHA="$(git rev-parse HEAD)" \
+            python -m pytest -q -o addopts='' -p no:cacheprovider tests/test_release_images_docker.py
+      - name: Upload candidate metadata only (no image publication)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: local-release-metadata
+          path: |
+            ${{ runner.temp }}/ask4mo-release/release.json
+            ${{ runner.temp }}/ask4mo-release/release.sha256
+            ${{ runner.temp }}/ask4mo-release/*-build.log
+          if-no-files-found: warn
+      - name: Working tree must remain clean
+        run: test -z "$(git status --porcelain)"
