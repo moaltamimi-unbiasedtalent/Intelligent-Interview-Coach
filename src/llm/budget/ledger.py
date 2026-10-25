@@ -45,6 +45,7 @@ class Reservation:
     budget_class: str
     category: str
     worst_case: int
+    endpoint: str = "chat"
 
 
 class DbBudgetLedger:
@@ -169,7 +170,7 @@ class DbBudgetLedger:
                     s.rollback()
                     raise BudgetError("duplicate_in_flight", "An identical request is already in flight; it is not sent twice.") from None
                 s.commit()
-                return Reservation(entry.id, budget_class, category, worst_case)
+                return Reservation(entry.id, budget_class, category, worst_case, endpoint)
         except BudgetError:
             raise
         except SQLAlchemyError:

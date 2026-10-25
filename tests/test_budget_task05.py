@@ -512,3 +512,21 @@ def test_environment_emergency_stop_is_latched_in_durable_ledger(ledger):
         environ={C.MARKER_ENV: MARKER},
     )
     assert restarted.killed() and DbBudgetLedger(ledger._sf).killed()
+
+
+def test_partial_chat_usage_does_not_invent_zero_output_tokens(ledger):
+    cfg = C.parse_config(raw_config())
+    gov = G.install(
+        G.BudgetGovernor(cfg, ledger, "production", environ={C.MARKER_ENV: MARKER})
+    )
+    p = Provider(
+        lambda r, n: httpx.Response(200, json={"usage": {"prompt_tokens": 10}})
+    )
+    chat(p.client())
+    snap = gov.status()
+    assert (
+        snap["calls_by_state"] == {"unknown": 1} and float(snap["unknown_held_usd"]) > 0
+    )
+    with ledger._sf() as s:
+        entry = s.execute(select(AiBudgetEntry)).scalar_one()
+        assert entry.input_tokens is None and entry.output_tokens is None

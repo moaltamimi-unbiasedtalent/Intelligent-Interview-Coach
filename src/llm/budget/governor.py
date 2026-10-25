@@ -216,12 +216,14 @@ class BudgetGovernor:
         return res, model, time.perf_counter()
 
     # ------------------------------------------------------------------ settlement
-    def usage_cost(self, model: str, data: dict) -> tuple[int | None, int | None, int | None, int | None, int | None]:
+    def usage_cost(self, model: str, data: dict, *, endpoint: str = "chat") -> tuple[int | None, int | None, int | None, int | None, int | None]:
         """(committed, input tokens, output tokens, our estimate, provider figure) in micro-USD, or ``None`` committed when usage is absent (UNKNOWN, never 0)."""
         u = data.get("usage") if isinstance(data, dict) else None
         u = u or {}
-        tin, tout = u.get("prompt_tokens", u.get("input_tokens")), u.get("completion_tokens", u.get("output_tokens", 0))
-        if tin is None:
+        tin, tout = u.get("prompt_tokens", u.get("input_tokens")), u.get("completion_tokens", u.get("output_tokens"))
+        if endpoint == "embeddings" and tout is None:
+            tout = 0  # Text embedding endpoints have no generated completion.
+        if tin is None or tout is None:
             return None, None, None, None, None
         if type(tin) is not int or type(tout) is not int or tin < 0 or tout < 0:
             raise ValueError("invalid token usage")
@@ -237,7 +239,7 @@ class BudgetGovernor:
         assert led is not None
         if sc == 200:
             try:
-                committed, tin, tout, est, prov = self.usage_cost(model, response.json())
+                committed, tin, tout, est, prov = self.usage_cost(model, response.json(), endpoint=res.endpoint)
                 bad = False
             except Exception:  # noqa: BLE001 - an unreadable body is UNKNOWN, never zero
                 committed, bad = None, True
