@@ -40,7 +40,7 @@ os.environ["AUDIT_CONTEXT_STRICT"] = "1"
 _SCRUB_PREFIXES = (
     "OPENROUTER_", "ADZUNA_", "GOOGLE_", "BREVO_", "LANGFUSE_", "GEMINI_", "FEATURE_GOOGLE_LOGIN",
     "AGENT_CHECKPOINT_DATABASE_URL", "AGENT_EXTERNAL_OBSERVABILITY", "EMAIL_", "REDIS_", "RATE_LIMIT_",
-    "DOCUMENT_STORAGE_DIR", "COPILOT_", "AI_BUDGET_",
+    "DOCUMENT_STORAGE_DIR", "COPILOT_",
 )
 
 if not _ALLOW_DEV:
@@ -243,7 +243,7 @@ def _reset_runtime_state():
 
 
 @pytest.fixture(autouse=True)
-def _isolate_process_budget_governor():
+def _isolate_process_budget_governor(monkeypatch):
     """Hosted app construction now installs a fail-closed process-wide guard.
 
     One test's application must not govern another test's isolated store/transport.
@@ -251,6 +251,9 @@ def _isolate_process_budget_governor():
     """
     from src.llm.budget.governor import uninstall
 
+    for key in list(os.environ):
+        if key.startswith("AI_BUDGET_"):
+            monkeypatch.delenv(key, raising=False)
     uninstall()
     yield
     uninstall()

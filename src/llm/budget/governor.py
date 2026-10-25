@@ -32,7 +32,7 @@ from src.llm.budget.config import (BudgetConfig, CATEGORIES, KILL_ENV, MODE_ENV,
 from src.llm.budget.errors import BudgetError
 from src.llm.budget.ledger import DbBudgetLedger, Reservation
 
-HOSTED_POLICY_VERSION = 1
+HOSTED_POLICY_VERSION = 2
 
 OP_HEADER = "x-ask4mo-operation"
 METADATA_GET = ("/api/v1/key", "/api/v1/models", "/api/v1/credits", "/api/v1/embeddings/models")
@@ -65,6 +65,7 @@ class BudgetGovernor:
         self.default_category = default_category
         self.closed_reason = closed_reason
         self.env = os.environ if environ is None else environ
+        self._hosted_at_build = hosted(self.env)
         self.refusals: list[str] = []
         self._sem = threading.BoundedSemaphore(config.limits.max_concurrency) if config else None
 
@@ -224,7 +225,7 @@ class BudgetGovernor:
         if endpoint == "embeddings" and tout is None:
             tout = 0  # Text embedding endpoints have no generated completion.
         if tin is None or tout is None:
-            return None, None, None, None, None
+            return None, tin if type(tin) is int and tin >= 0 else None, tout if type(tout) is int and tout >= 0 else None, None, None
         if type(tin) is not int or type(tout) is not int or tin < 0 or tout < 0:
             raise ValueError("invalid token usage")
         price = self.config.pricing[model]  # type: ignore[union-attr]
@@ -242,14 +243,14 @@ class BudgetGovernor:
                 committed, tin, tout, est, prov = self.usage_cost(model, response.json(), endpoint=res.endpoint)
                 bad = False
             except Exception:  # noqa: BLE001 - an unreadable body is UNKNOWN, never zero
-                committed, bad = None, True
+                committed, tin, tout, bad = None, None, None, True
             if committed is None:
                 reported = None
                 try:
                     reported = usd_to_micro(response.json()["usage"]["cost"])
                 except (KeyError, ValueError, TypeError, ArithmeticError):
                     pass
-                led.settle(res, outcome="unknown", committed=reported or 0, provider_cost=reported, status_code=sc, latency_ms=ms, error_category="malformed_body" if bad else "usage_missing")
+                led.settle(res, outcome="unknown", committed=reported or 0, input_tokens=tin, output_tokens=tout, provider_cost=reported, status_code=sc, latency_ms=ms, error_category="malformed_body" if bad else "usage_missing")
             else:
                 led.settle(res, outcome="settled", committed=committed, input_tokens=tin, output_tokens=tout, est_cost=est, provider_cost=prov, status_code=sc, latency_ms=ms)
         elif sc in DETERMINATE_REJECTIONS:
@@ -381,6 +382,16 @@ def install_from_env(session_factory=None, environ: Mapping[str, str] | None = N
     """Install the governor when ``AI_BUDGET_MODE=enforce``; ``None`` (provider behaviour unchanged) otherwise. When enforcement is requested but the configuration, approval marker or ledger
     is not valid, a CLOSED governor is installed instead: the process keeps serving non-AI traffic and every paid provider call is refused with the reason (fail closed)."""
     env = os.environ if environ is None else environ
+    existing = _Installed.governor
+    if existing is not None and hosted(env):
+        existing.env = env
+        try:
+            class_matches = existing.budget_class == resolve_budget_class(env)
+        except BudgetError:
+            class_matches = False
+        if not existing._hosted_at_build or not class_matches or existing.budget_class == "development" or (env.get(MODE_ENV) or "").strip().lower() != "enforce":
+            existing.closed_reason = "enforcement_required"
+        return existing
     if (env.get(MODE_ENV) or "").strip().lower() != "enforce":
         if not hosted(env):
             return None

@@ -24,6 +24,7 @@ from tests.test_ai_budget_governor_05c import MODEL, MARKER, Provider, chat, raw
 def synthetic_config():
     """TEST FIXTURE ONLY. Values are NOT a proposed or approved real budget."""
     raw = raw_config()
+    raw["allowed_provider_hosts"] = ["openrouter.ai"]
     now = datetime.now(timezone.utc)
     raw["approval"] = dict(
         owner="synthetic-owner",
@@ -229,11 +230,15 @@ def test_admin_does_not_treat_marker_presence_as_matching_approval(ledger, tmp_p
     assert "wrong-test" not in json.dumps(result)
 
 
-def _compete(url, raw, event, queue, role):
+def _compete(url, raw, event, queue, role, ready=None):
     """Independent API/worker-shaped processes share ONLY PostgreSQL state."""
     engine = make_engine(url)
     ledger = DbBudgetLedger(make_session_factory(engine))
+    if ready is not None:
+        ready.put("ready")
     event.wait(30)
+    if ready is not None:
+        ready.put("attempt")
     try:
         reserve(ledger, C.parse_config(raw), fingerprint=role + uuid.uuid4().hex)
         queue.put("admitted")
@@ -529,4 +534,178 @@ def test_partial_chat_usage_does_not_invent_zero_output_tokens(ledger):
     )
     with ledger._sf() as s:
         entry = s.execute(select(AiBudgetEntry)).scalar_one()
-        assert entry.input_tokens is None and entry.output_tokens is None
+        assert entry.input_tokens == 10 and entry.output_tokens is None
+    assert (
+        snap["input_tokens_known"] == 10
+        and snap["output_tokens_known"] is None
+        and snap["calls_with_known_usage"] == 0
+    )
+
+
+@pytest.mark.parametrize("mode", ["enforce", "off"])
+def test_local_guard_cannot_be_reused_as_a_hosted_development_bypass(ledger, mode):
+    cfg = C.parse_config(raw_config())
+    G.install(
+        G.BudgetGovernor(cfg, ledger, "development", environ={C.MARKER_ENV: MARKER})
+    )
+    reused = G.install_from_env(
+        ledger._sf,
+        environ={"API_ENV": "staging", C.MODE_ENV: mode, C.MARKER_ENV: MARKER},
+    )
+    p = Provider()
+    with pytest.raises(BudgetError):
+        chat(p.client())
+    assert reused.closed_reason == "enforcement_required" and not p.requests
+
+
+@pytest.mark.parametrize("legacy", ["demo", "p10e"])
+def test_legacy_file_ledger_cannot_authorize_hosted_spending(legacy, monkeypatch):
+    monkeypatch.setenv("API_ENV", "staging")
+    if legacy == "demo":
+        from src.demo_live.guard import ProviderControl
+
+        guard = object.__new__(ProviderControl)
+        guard.mode = "live"
+    else:
+        from src.p10e.httpguard import HttpGuard
+
+        guard = object.__new__(HttpGuard)
+    with pytest.raises(BudgetError) as err:
+        guard.install()
+    assert err.value.reason == "transport_not_qualified"
+
+
+def test_postgresql_kill_commit_refuses_waiting_independent_processes(postgres):
+    from sqlalchemy import update
+    from src.persistence import AiBudgetControl
+
+    url, ledger = postgres
+    raw = synthetic_config()
+    cfg = C.parse_config(raw)
+    initial = reserve(ledger, cfg)
+    ledger.settle(initial, outcome="rejected")
+    ctx = multiprocessing.get_context("spawn")
+    event = ctx.Event()
+    queue = ctx.Queue()
+    ready = ctx.Queue()
+    processes = [
+        ctx.Process(target=_compete, args=(url, raw, event, queue, str(i), ready))
+        for i in range(5)
+    ]
+    try:
+        with ledger._sf() as s:
+            # Hold the same global lock as admission while competing requests start.
+            s.execute(
+                update(AiBudgetControl)
+                .where(AiBudgetControl.scope_key == "global")
+                .values(killed=True, kill_reason="synthetic-concurrent-stop")
+            )
+            for p in processes:
+                p.start()
+            assert [ready.get(timeout=60) for p in processes] == ["ready"] * 5
+            event.set()
+            assert [ready.get(timeout=60) for p in processes] == ["attempt"] * 5
+            s.commit()
+        assert [queue.get(timeout=60) for p in processes] == ["kill_switch"] * 5
+        for p in processes:
+            p.join(20)
+            assert p.exitcode == 0
+        snap = ledger.snapshot(cfg, "production")
+        assert (
+            snap["requests"] == 1 and snap["held_usd"] == "0.000000" and snap["killed"]
+        )
+    finally:
+        for p in processes:
+            if p.is_alive():
+                p.terminate()
+                p.join(10)
+
+
+def test_postgresql_disconnected_ledger_refuses_and_recovery_preserves_held_usage(
+    postgres,
+):
+    url, ledger = postgres
+    cfg = C.parse_config(synthetic_config())
+    held = reserve(ledger, cfg)
+    ledger.settle(held, outcome="unknown")
+    engine = ledger._sf.kw["bind"]
+    with ledger._sf() as s:
+        own_pid = s.execute(text("SELECT pg_backend_pid()")).scalar()
+    # A separate connection terminates ONLY this fixture's pooled ledger connection.
+    # Keep the exact disposable URL; never relax the test database isolation guard.
+    admin = make_engine(url)
+    try:
+        with admin.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+            assert conn.execute(
+                text("SELECT pg_terminate_backend(:pid)"), {"pid": own_pid}
+            ).scalar()
+        gov = G.install(
+            G.BudgetGovernor(cfg, ledger, "production", environ={C.MARKER_ENV: MARKER})
+        )
+        p = Provider()
+        with pytest.raises(BudgetError):
+            chat(p.client())
+        assert not p.requests
+    finally:
+        admin.dispose()
+        engine.dispose()
+    snap = gov.status()
+    assert (
+        snap["integrity"]["consistent"]
+        and snap["unknown_held_usd"] == "0.000100"
+        and snap["requests"] == 1
+    )
+
+
+@pytest.mark.parametrize("restart", [False, True])
+def test_missing_global_control_is_never_recreated_over_existing_spend(ledger, restart):
+    cfg = C.parse_config(raw_config())
+    reserve(ledger, cfg)
+    with ledger._sf() as s:
+        s.execute(text("DELETE FROM ai_budget_controls WHERE scope_key='global'"))
+        s.commit()
+    candidate = DbBudgetLedger(ledger._sf) if restart else ledger
+    with pytest.raises(BudgetError) as err:
+        reserve(candidate, cfg)
+    assert err.value.reason == "ledger_inconsistent"
+    with ledger._sf() as s:
+        assert (
+            s.execute(
+                text("SELECT COUNT(*) FROM ai_budget_controls WHERE scope_key='global'")
+            ).scalar()
+            == 0
+        )
+        assert s.execute(text("SELECT COUNT(*) FROM ai_budget_entries")).scalar() == 1
+
+
+def test_hosted_runtime_file_change_refuses_before_provider_and_admin_reports_mismatch(
+    postgres, tmp_path
+):
+    _, ledger = postgres
+    raw = synthetic_config()
+    path = tmp_path / "synthetic-unapproved-test-only.json"
+    path.write_text(json.dumps(raw))
+    env = {
+        "API_ENV": "staging",
+        C.MODE_ENV: "enforce",
+        C.MARKER_ENV: MARKER,
+        C.CONFIG_PATH_ENV: str(path),
+    }
+    gov = G.install(G.BudgetGovernor.build(ledger._sf, environ=env))
+    raw["classes"]["production"]["max_requests"] -= 1
+    path.write_text(json.dumps(raw))
+    p = Provider()
+    with pytest.raises(BudgetError) as err:
+        chat(p.client())
+    assert err.value.reason == "policy_mismatch" and not p.requests
+    status = budget_status(ledger._sf, env)
+    assert status["state"] == "unavailable" and status["reason"] == "policy_mismatch"
+    assert gov.config.raw_hash != C.load_config(environ=env).raw_hash
+
+
+def test_hosted_approval_cannot_inherit_an_implicit_provider_host():
+    raw = synthetic_config()
+    del raw["allowed_provider_hosts"]
+    with pytest.raises(BudgetError) as err:
+        C.validate_hosted_approval(C.parse_config(raw), {"API_ENV": "staging"})
+    assert err.value.reason == "approval_invalid"

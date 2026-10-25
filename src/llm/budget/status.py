@@ -59,6 +59,9 @@ def budget_status(session_factory, environ: Mapping[str, str] | None = None) -> 
     except BudgetError as exc:
         out.update(state="not_approved", reason=exc.reason)
         return out
+    if installed is not None and installed.is_open and (installed.config.raw_hash != cfg.raw_hash or installed.budget_class != klass):
+        out.update(state="unavailable", reason="policy_mismatch")
+        return out
     if installed is None or not installed.is_open:
         out.update(state="closed", reason=installed.closed_reason if installed else "enforcement_required")
         return out

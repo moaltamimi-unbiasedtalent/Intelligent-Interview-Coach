@@ -346,7 +346,7 @@ def test_real_compose_optional_topology_is_resolved_and_safety_checked(real,tmp_
     head=I.migration_chain(ROOT)[-1]
     manifest={'application_sha':'a'*40,'build_started_at':I.timestamp(),'public_api_base_url':'https://api.staging.example.com/api/v1',
               'images':{'application':{'image_id':'sha256:'+'a'*64},'web':{'image_id':'sha256:'+'b'*64}},
-              'source':{'budget_policy_version':1,'migration_chain':[head],'compatible_schema_revisions':[head],
+              'source':{'budget_policy_version':2,'migration_chain':[head],'compatible_schema_revisions':[head],
                         'deployment_files':{'deploy/scripts/redis-start.sh':I.file_hash(ROOT/'deploy/scripts/redis-start.sh')}}}
     url=f'sqlite:///{tmp_path / "test.db"}'
     state={'version':1,'observed_at':I.timestamp(),'schema_revision':head,'unsettled_agent_runs':0,'active_jobs':0,'drained':True,'database_identity_sha256':I.database_identity(url)}

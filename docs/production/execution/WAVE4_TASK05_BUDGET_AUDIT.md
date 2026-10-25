@@ -30,6 +30,7 @@ bound. These are engineering defects, not evidence of observed real overspend.
 | Alternate OpenAI-compatible semantic embeddings | `src/copilot/embeddings.py`, OpenAIEmbeddings → HTTPX | Paid endpoint classification applies even on an alternate host; only explicitly permitted/priced hosts/models can pass; local hash embeddings make no paid request |
 | RAGAS and language/agent/judge/feedback evaluations | `src/copilot/evaluation/ragas_adapter.py`, `src/language_quality/human_eval_generate.py`, paid scripts via `script_guard.py` | Existing paid-script approval/CI prohibitions retained; existing active governor cannot substitute another budget class; HTTPX covers SDK calls/retries |
 | Admin evaluations | `src/ai_admin/jobs.py` registered through `src/jobs/registry.py` | No new Admin inference adapter; current offline evaluation jobs stay offline; future paid adapters require inventory/qualification |
+| Legacy capstone/demo live evaluation | `src/p10e/httpguard.py`, `src/demo_live/guard.py`, separate historical file ledgers | Direct live guard installation refuses hosted environments; historical authorization is never a production budget. Offline fixtures/local historical contracts remain intact |
 | Provider key/model/pricing probes | `src/integrations.py`, `src/pricing_service.py`, `src/llm/budget/models_probe.py` | Free metadata only under valid open governor on configured host; unknown endpoints refused; no live probe run |
 | Whisper hosted audio | `src/speech/stt_whisper.py`, HTTPX multipart | Existing activation flags stay disabled; unsupported paid endpoint is refused on hosted systems, no audio pricing/settlement qualification claimed |
 | OpenAI realtime token minting/client session | `src/voice/realtime.py`, HTTPX then browser session | Hosted endpoint refused; a token-mint request cannot authorize an unmetered browser inference session; existing activation remains off |
@@ -80,7 +81,7 @@ can finish and must settle. Request rate limiting/Redis remains independent.
 
 ## Immutable runtime and recovery limits
 
-Image provenance records hosted budget policy capability 1, verified through the
+Image provenance records hosted budget policy capability 2, verified through the
 source-hashed governor inside the built application image. Promotion and rollback
 refuse incapable images. API, worker and one-shot migrate keep the same immutable
 application ID; migration order/dependencies stay unchanged. Rollback never
@@ -152,3 +153,62 @@ using the existing isolated PostgreSQL adapter; **17 passed** for real Redis.
 The isolated checkpoint adapter emits an existing compatibility deprecation;
 passing disposable tests do not replace exact-head CI's freshly resolved dependencies
 or hosted qualification. All provider responses remain mocked.
+
+
+### Final review follow-ups
+
+Incomplete chat usage now retains known input tokens, keeps output/cost unknown
+and holds its reservation; only embedding endpoints may infer no completion tokens.
+Admin counts distinguish complete from partial usage. Hosted startup also refuses
+an inherited local/development governor; legacy P10E/demo live guards cannot replace
+the production SQL budget on hosted processes. No historical live result is changed.
+
+The full local backend rerun reached 8,666 passed / 119 skipped with one CLI-isolation
+failure: module-level budget scrubbing removed deliberately supplied synthetic CLI
+inputs. Cleanup now runs in the pytest fixture, preserving explicit CLI fixtures;
+the focused correction passed. A later final PostgreSQL rerun had 131 passed and
+38 errors because Docker ran out of disk; those errors are NOT passes. The task's
+18 exact cache records (1.71 GB), superseded API image and labeled disposable DB
+were removed; no unrelated Docker resource was pruned. Disk capacity remains a
+local qualification prerequisite. Final local PostgreSQL qualification uses a new
+bounded tmpfs-only test server, with no real database or host data mount.
+
+The local API image from `8ccdbd85ca2094e2e63b6d82087b90efc3053943` was built and
+verified at UID 10001 with a read-only root and network disabled: three unsupported
+paid requests refused before transport, zero paid calls, safe non-AI HTTP retained.
+Image ID: `sha256:0c4c4d4e0d29708fcfda6b75e98bb8eadbe3007332a8131b37e84377fe53ff52`.
+It is superseded and removed after evidence capture. The matching local web image
+failed with ENOSPC during npm prune, so no complete local bundle is claimed.
+Final-commit full image/Compose/migration verification is required in CI.
+
+
+[Machine-readable evidence and source fingerprints](evidence/WAVE4_TASK05_BUDGET.json).
+PR [#271](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/271)
+contains the final exact-head workflow IDs, image manifest/digests and test results.
+The historical `36ddedbe` image workflow 40193109476, migration 40193109607,
+budget 40193109450, durable admission 40193109501 and Redis 40193109441 passed;
+its full CI 40193109418 failed only the corrected CLI-isolation assertion.
+No success on that old head is attributed to later code.
+
+
+The reviewed contract is capability **2**. Intermediate Task 05 prototype images
+advertised capability 1 and are deliberately refused by the final promotion and
+rollback checks, despite sharing migration head 0048. The source-bound manifest
+and actual image probe must both show capability 2. Future changes that strengthen
+financial enforcement must review/bump this contract, rather than relying on
+schema compatibility alone. Runtime file changes now fail closed before provider
+transport; Admin refuses to describe a different loaded policy as operational.
+Hosted approval requires an explicit owner provider-host array; local defaults are
+not inherited as hosted authorization.
+
+
+Final local financial qualification: **281 passed, zero skipped**, covering 16
+budget PostgreSQL cases and 25 durable-agent PostgreSQL cases in the isolated
+PostgreSQL 16 fixture, plus budget/client/demo/P10E/language-CLI regressions.
+This includes concurrent kill, real pooled-connection termination/recovery,
+configuration-file mutation refusal, partial usage, and missing-control refusal.
+The final capability metadata bump has **52 release-unit checks passed**, including
+refusal of None/0/1/3 capabilities when reviewed capability 2 is required.
+The final exact-head CI additionally rebuilds/executes both images and runs full
+backend/frontend/Browser, budget, Redis, migration and durable-admission workflows.
+No local complete image bundle or final local full-backend pass is invented.

@@ -356,7 +356,7 @@ def check_state(state, manifest, mode, *, now=None):
     require(state["drained"] is True, "drain_attestation_required")
     require(type(state["unsettled_agent_runs"]) is int and type(state["active_jobs"]) is int and
             state["unsettled_agent_runs"] == state["active_jobs"] == 0, "active_or_unsettled_work")
-    require(manifest["source"].get("budget_policy_version") == 1, "budget_policy_incapable_image")
+    require(manifest["source"].get("budget_policy_version") == 2, "budget_policy_incapable_image")
     chain = manifest["source"]["migration_chain"]
     if mode == "rollback":
         require(state["schema_revision"] in manifest["source"]["compatible_schema_revisions"], "rollback_schema_incompatible")
@@ -369,7 +369,7 @@ def profile_for(manifest, base, state, mode, env_file, caddyfile):
     require(mode in ("promote", "rollback"), "promotion_mode_invalid")
     require(Path(env_file).is_absolute() and Path(caddyfile).is_absolute(), "runtime_paths_must_be_absolute")
     check_state(state, manifest, mode)
-    require(manifest["source"].get("budget_policy_version") == 1, "budget_policy_incapable_image")
+    require(manifest["source"].get("budget_policy_version") == 2, "budget_policy_incapable_image")
     profile = copy.deepcopy(base)
     services = profile["services"]
     for name in ("api", "worker", "migrate", "web"):

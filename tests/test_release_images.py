@@ -11,7 +11,7 @@ from scripts import release_images as R
 @pytest.fixture
 def source(tmp_path, monkeypatch):
     root = tmp_path / "source"
-    files = {"src/llm/budget/governor.py": "HOSTED_POLICY_VERSION = 1", "src/billing/policy.py": '\n'.join(f'{k} = False' for k in ('LIVE_BILLING_ENABLED', 'EXTERNAL_CHECKOUT_AUTHORIZED', 'STRIPE_WEBHOOK_AUTHORIZED', 'RECONCILE_SCHEDULER_ENABLED', 'PROVIDER_READS_AUTHORIZED', 'PAID_ENTITLEMENT_POLICY_APPROVED')),
+    files = {"src/llm/budget/governor.py": "HOSTED_POLICY_VERSION = 2", "src/billing/policy.py": '\n'.join(f'{k} = False' for k in ('LIVE_BILLING_ENABLED', 'EXTERNAL_CHECKOUT_AUTHORIZED', 'STRIPE_WEBHOOK_AUTHORIZED', 'RECONCILE_SCHEDULER_ENABLED', 'PROVIDER_READS_AUTHORIZED', 'PAID_ENTITLEMENT_POLICY_APPROVED')),
              "migrations/versions/0001_base.py": 'revision="0001_base"\ndown_revision=None',
              "migrations/versions/0002_next.py": 'revision="0002_next"\ndown_revision="0001_base"',
              "prompts/agent/v1.txt": "private prompt content is hashed, never emitted",
@@ -254,7 +254,8 @@ def test_shared_redis_profile_refuses_an_image_without_the_pinned_client(manifes
     assert not out.exists()
 
 
-def test_rollback_refuses_image_without_hosted_budget_capability(manifest,source,tmp_path):
-    manifest['source']['budget_policy_version']=None
+@pytest.mark.parametrize("capability", [None, 0, 1, 3])
+def test_rollback_refuses_image_without_hosted_budget_capability(manifest,source,tmp_path,capability):
+    manifest['source']['budget_policy_version']=capability
     with pytest.raises(R.ReleaseError,match='budget_policy_incapable_image'):
         R.profile_for(manifest, yaml.safe_load((source/'deploy/docker-compose.staging.yml').read_text()),state(),'rollback',tmp_path/'private.env',tmp_path/'Caddyfile')

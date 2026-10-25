@@ -71,7 +71,10 @@ class DbBudgetLedger:
                 from sqlalchemy.dialects.postgresql import insert as dialect_insert
             else:  # pragma: no cover - the application supports only these two
                 raise BudgetError("ledger_unavailable", "Unsupported database dialect for the budget ledger (fail closed).")
-            s.execute(dialect_insert(AiBudgetControl).values(scope_key=key, held_micro_usd=0, requests=0, killed=False, updated_at=datetime.now(timezone.utc)).on_conflict_do_nothing())
+            created = s.execute(dialect_insert(AiBudgetControl).values(scope_key=key, held_micro_usd=0, requests=0, killed=False, updated_at=datetime.now(timezone.utc)).on_conflict_do_nothing())
+            if key == GLOBAL and created.rowcount == 1 and s.execute(select(func.count()).select_from(AiBudgetEntry)).scalar():
+                s.rollback()
+                raise BudgetError("ledger_inconsistent", "A missing global control cannot be recreated over existing spend.")
         s.commit()
         self._known.update(missing)
 
@@ -123,7 +126,9 @@ class DbBudgetLedger:
             with self._sf() as s:
                 self._ensure_rows(s, [GLOBAL, class_key(budget_class), category_key(budget_class, category)])
                 # The first statement of the admission transaction is a WRITE (it takes the database write lock up front, so the checks below see a stable state).
-                s.execute(update(AiBudgetControl).where(AiBudgetControl.scope_key == GLOBAL).values(updated_at=datetime.now(timezone.utc)))
+                locked = s.execute(update(AiBudgetControl).where(AiBudgetControl.scope_key == GLOBAL).values(updated_at=datetime.now(timezone.utc)))
+                if locked.rowcount != 1:
+                    raise BudgetError("ledger_inconsistent", "The durable global budget control is missing.")
                 if bool(s.execute(select(AiBudgetControl.killed).where(AiBudgetControl.scope_key == GLOBAL)).scalar()):
                     s.rollback()
                     raise BudgetError("kill_switch", "The AI budget kill switch is engaged; no provider request is sent.")
@@ -245,7 +250,7 @@ class DbBudgetLedger:
                 h = r.held_micro_usd if r else 0
                 cats[name] = {"hard_cap_usd": micro_to_usd(ceil.hard_cap), "stop_usd": micro_to_usd(ceil.stop), "held_usd": micro_to_usd(h), "remaining_to_stop_usd": micro_to_usd(max(ceil.stop - h, 0))}
             states = {st: n for st, n in s.execute(select(AiBudgetEntry.state, func.count()).where(AiBudgetEntry.budget_class == budget_class).group_by(AiBudgetEntry.state)).all()}
-            agg = s.execute(select(func.coalesce(func.sum(AiBudgetEntry.committed_micro_usd), 0), func.count(AiBudgetEntry.input_tokens), func.sum(AiBudgetEntry.input_tokens),
+            agg = s.execute(select(func.coalesce(func.sum(AiBudgetEntry.committed_micro_usd), 0), func.count().filter(AiBudgetEntry.input_tokens.is_not(None), AiBudgetEntry.output_tokens.is_not(None)), func.sum(AiBudgetEntry.input_tokens),
                                    func.sum(AiBudgetEntry.output_tokens), func.avg(AiBudgetEntry.latency_ms), func.count(AiBudgetEntry.error_category))
                             .where(AiBudgetEntry.budget_class == budget_class)).one()
             unknown_held = s.execute(select(func.coalesce(func.sum(AiBudgetEntry.reserved_micro_usd), 0)).where(AiBudgetEntry.budget_class == budget_class, AiBudgetEntry.state == "unknown")).scalar()
@@ -257,7 +262,7 @@ class DbBudgetLedger:
             "settled_usd": micro_to_usd(int(agg[0] or 0)), "open_reservations_usd": micro_to_usd(int(open_held or 0)), "unknown_held_usd": micro_to_usd(int(unknown_held or 0)),
             "remaining_to_stop_usd": micro_to_usd(max(cls.ceiling.stop - held, 0)), "remaining_to_hard_cap_usd": micro_to_usd(max(cls.ceiling.hard_cap - held, 0)),
             "requests": requests, "request_cap": cls.max_requests, "remaining_requests": max(cls.max_requests - requests, 0), "calls_by_state": states,
-            "input_tokens_known": int(agg[2]) if known_calls else None, "output_tokens_known": int(agg[3]) if known_calls else None, "calls_with_known_usage": known_calls,
+            "input_tokens_known": int(agg[2]) if agg[2] is not None else None, "output_tokens_known": int(agg[3]) if agg[3] is not None else None, "calls_with_known_usage": known_calls,
             "average_latency_ms": round(float(agg[4]), 1) if agg[4] is not None else None, "provider_error_calls": int(agg[5] or 0), "categories": cats,
         }
 

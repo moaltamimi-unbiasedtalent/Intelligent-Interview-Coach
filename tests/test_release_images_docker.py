@@ -248,11 +248,11 @@ with httpx.Client(transport=httpx.MockTransport(lambda r: calls.append(1) or htt
         except BudgetError: pass
         else: raise AssertionError('unguarded inference')
     assert client.get('https://safe.invalid/health').status_code==200
-assert calls==[1] and not gov.is_open and HOSTED_POLICY_VERSION==1
-print(json.dumps({'hosted_policy_version':1,'paid_attempts_sent':0,'safe_http':True}))
+assert calls==[1] and not gov.is_open and HOSTED_POLICY_VERSION==2
+print(json.dumps({'hosted_policy_version':2,'paid_attempts_sent':0,'safe_http':True}))
 '''
     result=R.run(['docker','run','--rm','--network','none','--entrypoint','python',manifest['images']['application']['image_id'],'-c',script])
-    assert json.loads(result)=={'hosted_policy_version':1,'paid_attempts_sent':0,'safe_http':True}
+    assert json.loads(result)=={'hosted_policy_version':2,'paid_attempts_sent':0,'safe_http':True}
 
 
 @pytest.mark.parametrize('mode',['promote','rollback'])

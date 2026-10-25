@@ -57,6 +57,10 @@ class ProviderControl:
 
     # ------------------------------------------------------------------ install
     def install(self) -> "ProviderControl":
+        if self.mode != "offline":
+            from src.llm.budget.governor import refuse_ungoverned_transport
+
+            refuse_ungoverned_transport()
         if ProviderControl._active is not None:
             raise DemoBudgetError("guard_active", "A provider control is already installed in this process.")
         ProviderControl._orig_sync, ProviderControl._orig_async = httpx.Client.send, httpx.AsyncClient.send

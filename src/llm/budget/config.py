@@ -86,6 +86,7 @@ class BudgetConfig:
     approval: Mapping = field(default_factory=dict)
     total: Ceiling | None = None
     total_max_requests: int | None = None
+    hosts_explicit: bool = False
 
 
 def _ceiling(raw: dict, where: str) -> Ceiling:
@@ -144,7 +145,7 @@ def parse_config(raw: dict) -> BudgetConfig:
         raise BudgetError("config_invalid", "The total request ceiling must be a positive integer.")
     if raw.get("currency", "USD") != "USD":
         raise BudgetError("config_invalid", "The ledger currency must be USD.")
-    return BudgetConfig(total_max_requests=total_requests, approval=raw.get("approval", {}), total=_ceiling(raw["total"], "total") if "total" in raw else None, classes=classes, limits=limits, pricing=pricing, approval_marker=marker, hosts=hosts,
+    return BudgetConfig(hosts_explicit=isinstance(raw.get("allowed_provider_hosts"), list) and bool(raw["allowed_provider_hosts"]), total_max_requests=total_requests, approval=raw.get("approval", {}), total=_ceiling(raw["total"], "total") if "total" in raw else None, classes=classes, limits=limits, pricing=pricing, approval_marker=marker, hosts=hosts,
                         raw_hash=hashlib.sha256(json.dumps(raw, sort_keys=True).encode()).hexdigest())
 
 
@@ -195,6 +196,8 @@ def validate_hosted_approval(config: BudgetConfig, environ: Mapping[str, str]) -
     """Owner-authored evidence, checked again before every admission; no approval is generated."""
     if not hosted(environ):
         return
+    if environ.get(CONFIG_PATH_ENV) and load_config(environ=environ).raw_hash != config.raw_hash:
+        raise BudgetError("policy_mismatch", "The runtime budget file changed; drain and authorized reconciliation are required.")
     try:
         a = config.approval
         now = datetime.now(timezone.utc)
@@ -206,7 +209,7 @@ def validate_hosted_approval(config: BudgetConfig, environ: Mapping[str, str]) -
                  and priced <= now < price_expiry <= expiry and start <= now < expiry
                  and all(isinstance(a[k], str) and a[k].strip() for k in
                          ("owner", "approver", "pricing_source", "reconciliation_owner", "incident_owner"))
-                 and a["currency"] == "USD" and config.total is not None and config.total_max_requests is not None
+                 and a["currency"] == "USD" and config.total is not None and config.total_max_requests is not None and config.hosts_explicit
                  and resolve_budget_class(environ) != "development"
                  and all(c.ceiling.hard_cap <= config.total.hard_cap and c.ceiling.stop <= config.total.stop for c in config.classes.values()))
     except (KeyError, ValueError, TypeError, AttributeError):

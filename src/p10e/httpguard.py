@@ -48,6 +48,9 @@ class HttpGuard:
 
     # ------------------------------------------------------------------ install
     def install(self) -> None:
+        from src.llm.budget.governor import refuse_ungoverned_transport
+
+        refuse_ungoverned_transport()  # retired file-ledger authorization is never a hosted budget
         if HttpGuard._active is not None:
             raise LiveRunRefused("http_guard_active", "An HTTP guard is already installed in this process.")
         HttpGuard._orig_sync, HttpGuard._orig_async = httpx.Client.send, httpx.AsyncClient.send
