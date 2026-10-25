@@ -15,6 +15,7 @@ import json
 import os
 import re
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from decimal import ROUND_CEILING, Decimal
 from pathlib import Path
 from typing import Mapping
@@ -36,7 +37,7 @@ LOCAL_ENVIRONMENTS = ("development", "dev", "local", "test", "testing")
 
 def usd_to_micro(value: str | int | float | Decimal) -> int:
     d = Decimal(str(value))
-    if d < 0:
+    if not d.is_finite() or d < 0:
         raise ValueError("negative amount")
     return int((d * MICRO).to_integral_value(rounding=ROUND_CEILING))
 
@@ -82,6 +83,10 @@ class BudgetConfig:
     approval_marker: str | None
     hosts: tuple[str, ...] = DEFAULT_HOSTS
     raw_hash: str = field(default="", compare=False)
+    approval: Mapping = field(default_factory=dict)
+    total: Ceiling | None = None
+    total_max_requests: int | None = None
+    hosts_explicit: bool = False
 
 
 def _ceiling(raw: dict, where: str) -> Ceiling:
@@ -97,6 +102,8 @@ def _ceiling(raw: dict, where: str) -> Ceiling:
 def parse_config(raw: dict) -> BudgetConfig:
     try:
         lim = raw["limits"]
+        if any(type(v) is not int for v in lim.values()):
+            raise BudgetError("config_invalid", "Request limits must be integers.")
         limits = Limits(int(lim["max_input_tokens"]), int(lim["max_output_tokens"]), int(lim["request_timeout_s"]), int(lim["max_retries"]),
                         int(lim["max_concurrency"]), int(lim.get("dedupe_window_s", 300)))
         pricing = {m: Price(Decimal(str(p["prompt"])), Decimal(str(p["completion"]))) for m, p in raw["pricing"]["models"].items()}
@@ -105,23 +112,23 @@ def parse_config(raw: dict) -> BudgetConfig:
         raise BudgetError("config_invalid", "The budget configuration is missing a required section or has an invalid value.") from None
     if min(limits.max_input_tokens, limits.max_output_tokens, limits.request_timeout_s, limits.max_concurrency) <= 0 or limits.max_retries < 0 or limits.dedupe_window_s < 0:
         raise BudgetError("config_invalid", "The per-request limits must be positive (retries and the dedupe window may be 0).")
-    if not pricing or any(p.prompt < 0 or p.completion < 0 for p in pricing.values()):
+    if not pricing or any(not p.prompt.is_finite() or not p.completion.is_finite() or p.prompt < 0 or p.completion < 0 for p in pricing.values()):
         raise BudgetError("config_invalid", "The price table is empty or has a negative price.")
     classes: dict[str, ClassBudget] = {}
     for name, c in classes_raw.items():
         if name not in BUDGET_CLASSES:
-            raise BudgetError("config_invalid", f"Unknown budget class {name!r}.")
+            raise BudgetError("config_invalid", "Unknown budget class.")
         try:
             top = _ceiling(c, f"class {name}")
             max_requests = int(c["max_requests"])
-            cats = {k: _ceiling(v, f"category {name}/{k}") for k, v in c.get("categories", {}).items()}
+            cats = {k: _ceiling(v, "category") for k, v in c.get("categories", {}).items()}
         except (KeyError, ValueError, TypeError, AttributeError):
             raise BudgetError("config_invalid", f"The class {name} section is invalid.") from None
         if max_requests <= 0:
             raise BudgetError("config_invalid", f"The class {name} request cap must be positive.")
         for k, v in cats.items():
             if k not in CATEGORIES:
-                raise BudgetError("config_invalid", f"Unknown budget category {k!r}.")
+                raise BudgetError("config_invalid", "Unknown budget category.")
             if v.hard_cap > top.hard_cap or v.stop > top.stop:
                 raise BudgetError("config_invalid", f"The {name}/{k} ceiling exceeds its class ceiling.")
         classes[name] = ClassBudget(top, max_requests, cats)
@@ -131,7 +138,14 @@ def parse_config(raw: dict) -> BudgetConfig:
     if marker is not None and not (isinstance(marker, str) and _MARKER_RE.match(marker)):
         raise BudgetError("config_invalid", "approval_marker must look like OD-BUDGET:<reference>.")
     hosts = tuple(str(h).lower() for h in raw.get("allowed_provider_hosts", DEFAULT_HOSTS))
-    return BudgetConfig(classes=classes, limits=limits, pricing=pricing, approval_marker=marker, hosts=hosts,
+    if not hosts or any(not re.fullmatch(r"[a-z0-9]+(?:[.-][a-z0-9]+)*", h) for h in hosts):
+        raise BudgetError("config_invalid", "Provider hosts must be explicit DNS names.")
+    total_requests = raw.get("total", {}).get("max_requests")
+    if total_requests is not None and (type(total_requests) is not int or total_requests <= 0):
+        raise BudgetError("config_invalid", "The total request ceiling must be a positive integer.")
+    if raw.get("currency", "USD") != "USD":
+        raise BudgetError("config_invalid", "The ledger currency must be USD.")
+    return BudgetConfig(hosts_explicit=isinstance(raw.get("allowed_provider_hosts"), list) and bool(raw["allowed_provider_hosts"]), total_max_requests=total_requests, approval=raw.get("approval", {}), total=_ceiling(raw["total"], "total") if "total" in raw else None, classes=classes, limits=limits, pricing=pricing, approval_marker=marker, hosts=hosts,
                         raw_hash=hashlib.sha256(json.dumps(raw, sort_keys=True).encode()).hexdigest())
 
 
@@ -172,3 +186,33 @@ def require_approved_marker(config: BudgetConfig, environ: Mapping[str, str] | N
         raise BudgetError("marker_missing", f"{MARKER_ENV} is not set; this paid path needs the owner's approved-budget marker.")
     if not hmac.compare_digest(given.encode(), config.approval_marker.encode()):
         raise BudgetError("marker_mismatch", f"{MARKER_ENV} does not match the configured approval marker.")
+
+
+def hosted(environ: Mapping[str, str]) -> bool:
+    return (environ.get("API_ENV") or "development").strip().lower() not in LOCAL_ENVIRONMENTS
+
+
+def validate_hosted_approval(config: BudgetConfig, environ: Mapping[str, str]) -> None:
+    """Owner-authored evidence, checked again before every admission; no approval is generated."""
+    if not hosted(environ):
+        return
+    if environ.get(CONFIG_PATH_ENV) and load_config(environ=environ).raw_hash != config.raw_hash:
+        raise BudgetError("policy_mismatch", "The runtime budget file changed; drain and authorized reconciliation are required.")
+    try:
+        a = config.approval
+        now = datetime.now(timezone.utc)
+        start = datetime.fromisoformat(a["period_start"].replace("Z", "+00:00"))
+        expiry = datetime.fromisoformat(a["expires_at"].replace("Z", "+00:00"))
+        priced = datetime.fromisoformat(a["pricing_effective_at"].replace("Z", "+00:00"))
+        price_expiry = datetime.fromisoformat(a["pricing_expires_at"].replace("Z", "+00:00"))
+        valid = (a["environment"] == environ["API_ENV"].strip().lower()
+                 and priced <= now < price_expiry <= expiry and start <= now < expiry
+                 and all(isinstance(a[k], str) and a[k].strip() for k in
+                         ("owner", "approver", "pricing_source", "reconciliation_owner", "incident_owner"))
+                 and a["currency"] == "USD" and config.total is not None and config.total_max_requests is not None and config.hosts_explicit
+                 and resolve_budget_class(environ) != "development"
+                 and all(c.ceiling.hard_cap <= config.total.hard_cap and c.ceiling.stop <= config.total.stop for c in config.classes.values()))
+    except (KeyError, ValueError, TypeError, AttributeError):
+        valid = False
+    if not valid:
+        raise BudgetError("approval_invalid", "Hosted budget approval is missing, expired or incompatible.")

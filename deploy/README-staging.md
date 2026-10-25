@@ -86,3 +86,21 @@ without `COPILOT_DATA_DIR` boots with a warning.
 ## Optional shared Redis preparation
 
 Task 04 adds optional internal or managed Redis through the existing immutable release generator, without changing the default single-process template or deploying anything. Read the [decision record](../docs/production/execution/WAVE4_TASK04_REDIS_DECISIONS.md) and [complete bucket audit](../docs/production/execution/WAVE4_TASK04_REDIS_AUDIT.md). H-REDIS-POLICY and OD-HOSTED remain OPEN. Do not combine generated profiles with a Redis overlay. The internal fragment is not a standalone deployment file. Required-shared profiles gate readiness on actual shared enforcement; existing per-bucket local/deny behavior is preserved.
+
+
+## Task 05 budget boundary (no activation)
+
+Hosted API/worker refuse inference without the existing production governor in
+`AI_BUDGET_MODE=enforce`, an owner-authored approved JSON, matching private marker,
+current pricing, healthy PostgreSQL ledger, permitted category and inactive kill.
+No supplied template or generated plan constitutes approval. Keep kill engaged.
+Use the existing release prepare command with optional
+`--budget-config-file <absolute-private-owner-JSON>` to mount the same read-only
+file for API/worker. The generator copies no JSON/marker and makes no provider call.
+Absent that option, AI remains closed. Qualify actual file access for UID 10001;
+protect it from unrelated host users and do not use a writable bind mount.
+Configuration/period changes require authorized reconciliation; counters, unknown
+outcomes and kill state never reset on release or application rollback. Incapable
+old images are refused. Redis request limiting is separate from monetary limits.
+See `docs/production/execution/WAVE4_TASK05_BUDGET_AUDIT.md` and the OPEN
+`OD_BUDGET_SPECIFICATION_TASK05.md`. Original development databases stay untouched.

@@ -661,6 +661,8 @@ def test_status_states_and_contents(sf, tmp_path):
     assert budget_status(sf, {})["state"] == "unavailable" and budget_status(sf, {})["reason"] == "config_unavailable"
     s = budget_status(sf, env)
     assert s["state"] == "not_approved" and s["ledger"]["requests"] == 0 and s["approval_marker_configured"] is True and s["approval_marker_presented"] is False
+    assert budget_status(sf, {**env, C.MARKER_ENV: MARKER})["state"] == "closed"
+    G.install(make_gov(sf))
     s = budget_status(sf, {**env, C.MARKER_ENV: MARKER})
     assert s["state"] == "open" and float(s["ledger"]["remaining_to_stop_usd"]) == 0.8 and s["ledger"]["integrity"]["consistent"]
     assert budget_status(sf, {**env, C.MARKER_ENV: MARKER, C.KILL_ENV: "1"})["state"] == "killed"

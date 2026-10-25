@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "task": "Wave 4 Task 05",
+  "date": "2026-10-25",
+  "baseline_main": "d5ff56d9a353c8efeee5dcf6740904a72e704346",
+  "pull_request": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/271",
+  "scope": "offline engineering and disposable qualification only",
+  "runtime_source_sha256": {
+    "src/llm/budget/config.py": "1f1885373ac4e03a15b240ba54b86088e88730c89a15832e89a91e7ee98abc4e",
+    "src/llm/budget/governor.py": "d25282cca964b1418bbbb6d28f8a3d814fcadb3fb31fca4a2e424710a89fe006",
+    "src/llm/budget/ledger.py": "7952741c522952a2ba8dd2a4a4c7b3ded1c9755596dbfc486842dce2541bf5ff",
+    "src/llm/budget/status.py": "6f233e7656dde1a149029ea215d0032cd238d39869242943f7f1da621397c7af",
+    "src/llm/budget/script_guard.py": "9c984ec135991c9521ab39de6e3e67711fd0afb2c03e377c0f7c44994bbc0392",
+    "src/demo_live/guard.py": "ba71846e77ba0e9b786a3180cb7fa4a3bbb2f04ecff5644058b46b3f105a206c",
+    "src/p10e/httpguard.py": "b30709b6d360d235204b246b56eb36ca2046573bf9c5b46b7fa0cab17d2a62a3",
+    "src/speech_service.py": "51d2a4b9be5530ce1ed84400464ed9ac55b70217b024600511de63bab904087b",
+    "src/live_interview.py": "d8d2b90d71a468970d4058356a7dd87363f0cd11db3bb2b37285946485310ad5",
+    "scripts/release_images.py": "40820abdf3141641799f005053185334917e131049c00f2bb86fc81b1fa3e6d9"
+  },
+  "owner_approval": "OPEN; no actual budget JSON, monetary values, pricing or marker supplied/generated",
+  "production_gates_changed": false,
+  "language_gates_changed": false,
+  "packages": {
+    "integrated": 40,
+    "total": 45,
+    "open": [
+      "00A",
+      "00B",
+      "07B",
+      "07C",
+      "08A"
+    ]
+  },
+  "preservation": {
+    "protected_files": 49,
+    "protected_files_changed": 0,
+    "other_worktrees": 44,
+    "other_worktrees_changed": 0,
+    "existing_branches_changed": 0,
+    "existing_branches": 310,
+    "total_worktrees": 45
+  },
+  "local": {
+    "frontend_unit_passed": 1534,
+    "frontend_lint_typecheck_build": "passed",
+    "browser": {
+      "passed": 668,
+      "skipped": 14,
+      "mode": "mocked network; dedicated port 3145"
+    },
+    "deterministic_ci_evaluators_passed": 51,
+    "real_redis_passed": 17,
+    "initial_durable_budget_client_passed": 108,
+    "latest_completed_budget_durable_legacy_language_passed": 275,
+    "final_qualification": {
+      "passed": 281,
+      "skipped": 0,
+      "mode": "mocked providers and synthetic approvals; PostgreSQL 16 bounded tmpfs and independent processes; final financial behavior before capability metadata bump"
+    },
+    "full_backend_previous": {
+      "passed": 8666,
+      "skipped": 119,
+      "failed": 1,
+      "reason": "synthetic CLI marker was removed by module-level test isolation; fixed by fixture-level cleanup"
+    },
+    "postgresql": "16; synthetic data and mocked providers; final server uses bounded tmpfs, independent process restart is tested, hosted storage durability is not claimed",
+    "release_unit_passed": 52,
+    "deterministic_ci_evaluators_scope": "intermediate Task 05 revision; final-head CI reruns all evaluators",
+    "postgresql_cases": "16 budget PostgreSQL cases plus 25 durable-agent PostgreSQL cases; no hosted storage durability claim"
+  },
+  "local_images": {
+    "application_source": "8ccdbd85ca2094e2e63b6d82087b90efc3053943",
+    "application_id": "sha256:0c4c4d4e0d29708fcfda6b75e98bb8eadbe3007332a8131b37e84377fe53ff52",
+    "application_boundary": {
+      "uid": 10001,
+      "read_only_root": true,
+      "network": "none",
+      "paid_calls_sent": 0,
+      "safe_non_ai_http": true
+    },
+    "frontend_result": "ENOSPC during npm prune; no complete local bundle claimed",
+    "application_image": "superseded and removed after evidence capture",
+    "cleanup": "only Task 05 image, 18 exact Task 05 cache records (1.71 GB), and labeled disposable PostgreSQL resources; unrelated resources preserved"
+  },
+  "ci": {
+    "final_exact_head": "must be green in linked PR checks before ready for review",
+    "historical_36ddedbe": {
+      "sha": "36ddedbe93dbf9607be9aa63d742dc1afe5c4cd0",
+      "immutable_images_success": 40193109476,
+      "migration_image_success": 40193109607,
+      "budget_success": 40193109450,
+      "durable_admission_success": 40193109501,
+      "redis_success": 40193109441,
+      "ci_failed_cli_isolation": 40193109418
+    },
+    "image_publication": false
+  },
+  "remaining": [
+    "OD-BUDGET approval and actual prices/ceilings/marker",
+    "OD-HOSTED and H-REDIS-POLICY",
+    "runtime secret ownership and file permissions",
+    "host monitoring and operational recovery",
+    "Docker disk capacity for future local builds",
+    "real staging/provider/source/scanner/SSE qualification",
+    "human/legal/language qualification",
+    "08A freeze and go/no-go"
+  ],
+  "next": "Task 06 encrypted backup/restore/rollback/erasure preservation after Task 05 review, merge and green main",
+  "reviewed_budget_capability": 2
+}

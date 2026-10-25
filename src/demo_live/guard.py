@@ -57,6 +57,10 @@ class ProviderControl:
 
     # ------------------------------------------------------------------ install
     def install(self) -> "ProviderControl":
+        if self.mode != "offline":
+            from src.llm.budget.governor import refuse_ungoverned_transport
+
+            refuse_ungoverned_transport()
         if ProviderControl._active is not None:
             raise DemoBudgetError("guard_active", "A provider control is already installed in this process.")
         ProviderControl._orig_sync, ProviderControl._orig_async = httpx.Client.send, httpx.AsyncClient.send
@@ -253,6 +257,10 @@ def operation_headers(operation: str) -> dict[str, str]:
 def install_from_env(env: dict | None = None) -> ProviderControl | None:
     """Install the provider control chosen by ``ASK4MO_PROVIDER_MODE``; ``None`` when it is unset. Raises (the process must not start) on any problem."""
     e = os.environ if env is None else env
+    from src.llm.budget.config import hosted
+
+    if hosted(e):
+        return None  # Hosted processes use the production ledger, never the demo ledger.
     mode = (e.get("ASK4MO_PROVIDER_MODE") or "").strip().lower()
     if not mode:
         return None
