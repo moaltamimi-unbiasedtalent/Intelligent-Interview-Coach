@@ -1,5 +1,7 @@
 # Gap-based staging readiness plan after PR #265
 
+> Task 06 engineering update: [qualified recovery procedure](WAVE4_TASK06_RECOVERY.md) and [gap audit](WAVE4_TASK06_RECOVERY_AUDIT.md). Baseline PR #271 is merged with six green main workflows. Migration, durable admission, immutable images, Redis and budget repairs are merged; recovery changes require focused PR review/merge/CI. This dated staging plan grants no deployment, key-custody, retention, RTO/RPO or gate approval.
+
 Baseline: main `aedbef3dee28a68b72bc526a1fca537a3da7bd8d`. **Planning and offline inspection only. No deployment, cloud provisioning, provider round trip, paid evaluation, DNS change or real database migration is authorized or performed here.** Existing definitions are retained; this plan does not rebuild the application.
 
 Current follow-up, 24 October 2026: POST265-01/02 are merged (#267/#268), immutable local release controls merged in #269 at `5e524ca8`. [Task 04 Redis preparation](WAVE4_TASK04_REDIS_DECISIONS.md) adds disposable qualification and optional private profiles, pending focused PR review/merge. The original table below is the dated post-265 gap audit; its historical NOT RUN findings are not fresh test claims. Hosted qualification, H-REDIS-POLICY, OD-HOSTED, budget/recovery and gate decisions remain open.

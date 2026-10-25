@@ -27,7 +27,7 @@ def _sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def build_synthetic_environment(root: Path, *, users: int = 2, documents_per_user: int = 2, use_alembic: bool = False) -> Source:
+def build_synthetic_environment(root: Path, *, users: int = 2, documents_per_user: int = 2, use_alembic: bool = False, database_url: str | None = None, migration_revision: str = "head") -> Source:
     """Create the synthetic source under the NEW directory ``root`` and return its ``Source``. Refuses an existing, non-empty ``root``. ``use_alembic`` builds the schema with the
     real migration chain (so the set records a real schema revision) instead of ``init_db``; slower, used by the committed drill."""
     from src.copilot.embeddings import LocalHashEmbedder
@@ -42,11 +42,16 @@ def build_synthetic_environment(root: Path, *, users: int = 2, documents_per_use
     docs, kfiles, kindex = root / "documents", root / "knowledge_private", root / "chroma"
     for d in (docs, kfiles):
         d.mkdir(parents=True, exist_ok=True)
-    url = f"sqlite:///{root / 'app.db'}"
+    url = database_url or f"sqlite:///{root / 'app.db'}"
+    if database_url:
+        from sqlalchemy.engine import make_url
+        parsed = make_url(database_url)
+        if parsed.get_backend_name() != "postgresql" or not (parsed.database or "").startswith("p5b_recovery_"):
+            raise ValueError("synthetic recovery fixture requires its own disposable database")
     if use_alembic:
         from src.backup_set.rollback import _alembic
 
-        if _alembic(url, "upgrade", "head")[0] != 0:
+        if _alembic(url, "upgrade", migration_revision)[0] != 0:
             raise RuntimeError("alembic upgrade failed")
         engine = make_engine(url)
     else:
@@ -96,4 +101,10 @@ def build_synthetic_environment(root: Path, *, users: int = 2, documents_per_use
     store = ChromaStore(LocalHashEmbedder(), persist_dir=str(kindex), collection_name=KP.COLLECTION)
     store.add_chunks(chunks)
     engine.dispose()
-    return Source(database_url=url, documents_dir=docs, knowledge_files_dir=kfiles, knowledge_index_dir=kindex)
+    identity = None
+    if database_url:
+        from src.knowledge_admin.contracts import RuntimeIdentity, EmbeddingState, database_fingerprint, data_root_identity
+        embedder = LocalHashEmbedder()
+        identity = RuntimeIdentity(database_fingerprint(url), data_root_identity(str(root)),
+                                   embedding=EmbeddingState("local", embedder.model, embedder.dimensions))
+    return Source(database_url=url, documents_dir=docs, knowledge_files_dir=kfiles, knowledge_index_dir=kindex, identity=identity)

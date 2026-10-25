@@ -2,7 +2,17 @@
 
 Historical PR #265 integration snapshot, 23 October 2026. Reviewed baseline: `aedbef3dee28a68b72bc526a1fca537a3da7bd8d`, PR #265 merged. Current reconciliation/review branch: `docs/post-pr265-release-readiness` in the permanent repository. Sources: [merge/CI/review record](evidence/POST_PR265_INTEGRATION_2026_10_23.json), [release report](POST_PR265_RELEASE_STATUS.md), package register, ledger and code.
 
-## Wave 4 Task 05 update — 25 October 2026
+## Wave 4 Task 06 update — 26 October 2026
+
+PR #271 is merged at `88a5ce4e4d5e92bee75fbec2721ce28e73d9ac6d`. All six baseline main workflows are green: CI 40197262812, durable admission 40197262805, migration image 40197262813, immutable images 40197262795, Redis 40197262818 and AI budget 40197262825. Browser E2E is PR/on-demand; no main-SHA Browser success is inferred.
+
+Task 06 is on `feat/staging-recovery-qualification`, pending focused PR/review/merge and final exact-head CI. It extends the existing 05B sealed set engine with PostgreSQL snapshot/whole-row/schema verification, independent signed erasure-head requirements, new-target recovery quarantine, conservative monetary/producer admission, PostgreSQL deletion/rewrite and one-shot immutable operator tooling. [Procedure and limits](WAVE4_TASK06_RECOVERY.md), [audit](WAVE4_TASK06_RECOVERY_AUDIT.md), [measured evidence](evidence/WAVE4_TASK06_RECOVERY.json). Original sources and backup sets remain intact. Local actual API/operator build is NOT VERIFIED: Docker has 679 MB free; mandatory isolated image CI supplies that evidence.
+
+**40/45 integrated**, with 00A/00B/07B/07C/08A still open/incomplete. Engineering: Task 05 merged, Task 06 pending. CI: baseline six green; current PR qualification tracked separately. Live staging: NOT RUN. Human/legal/custody qualification: OPEN. Acceptance: only existing PG-11 remains PASS; PG-01–PG-10 and PG-12–PG-15 retain their existing states, PG-09 is unapproved. LG-01–LG-14 have no new approvals; zero hosted-qualified languages. Original SQLite (last observed 0027), 45 worktrees, private assets/env/secrets and unpublished branches are preserved.
+
+Remaining: hosting/provider/region/residency and secrets authority, independent erasure/key custody, retention and RTO/RPO decisions, real scanner/source/embedding/identity/provider checks, hosted observability/alerts, governance/reviewers and human/language evidence. After this focused PR is reviewed, merged and green, Task 07 is a separate disposable full-stack integration campaign. No staging/cloud deployment, paid call, live email, registry publication, source database migration or activation is authorized.
+
+## Wave 4 Task 05 update (historical pre-merge snapshot) — 25 October 2026
 
 PR #270 is merged at `d5ff56d9a353c8efeee5dcf6740904a72e704346`; all five main workflows are green: CI 40162476517, Redis 40162476575, durable admission 40162476504, migration image 40162476498, immutable images 40162476436. Browser E2E is PR/on-demand; no main-SHA Browser run is claimed.
 
@@ -89,7 +99,7 @@ The shared CI cell references the dated integrated baseline; package-specific hi
 | 04E | MERGED (PR #228, merge a763fdf) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | NOT RUN (first-admin bootstrap, live Google) | Invitation email and issuer decisions (OPEN) | PG-02 IN PROGRESS (05D merged; live verification outstanding) |
 | 04F | MERGED (PR #255 merge 7c400efe) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | NOT RUN (browser dictation check) | Legal reviewer and test participants | PG-04 |
 | 05A | MERGED (PR #218, merge 9b6b109) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | NOT RUN (nothing deployed; OD-HOSTED) | Hosting authorisation (OPEN) | PG-01 BLOCKED |
-| 05B | MERGED (PR #257 merge f5c1e04f) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | NOT RUN (restore drill, PostgreSQL paths; OD-HOSTED) | none | PG-09 |
+| 05B | MERGED (PR #257 merge f5c1e04f) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | NOT RUN (hosted/off-host recovery and custody; Task 06 disposable PostgreSQL qualification; OD-HOSTED) | Recovery/custody/retention owners and legal approval OPEN | PG-09 NOT ACCEPTED; engineering evidence does not approve RTO/RPO |
 | 05C | MERGED (PR #241 merge 45144979, PR #246 merge 26f5a818) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | NOT RUN (hosted budget/outage/recovery; OD-HOSTED; Task 05 disposable qualification, no hosted approval) | AI budget (OD-BUDGET) | PG-09 |
 | 05D | MERGED (PR #237 merge 64fbcf2b) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | NOT RUN (hosted Brevo, Google, Redis; OD-HOSTED; disposable Redis qualified in Task 04) | none | PG-02 |
 | 05E | MERGED (PR #240 merge 608b65b4, PR #244 merge 8649e3fa) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | n/a | Legal counsel sign-off per offered language (long lead) | PG-04 |

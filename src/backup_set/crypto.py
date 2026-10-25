@@ -126,6 +126,8 @@ def open_sealed(src: Path, key: bytes, *, set_id: str, logical: str) -> Iterator
             if len(pending) != _LEN.size:
                 raise CryptoError("sealed_file_invalid")
             (n,) = _LEN.unpack(pending)
+            if not 16 <= n <= CHUNK + 16:
+                raise CryptoError("sealed_file_invalid")
             ct = fin.read(n)
             if len(ct) != n:
                 raise CryptoError("sealed_file_invalid")

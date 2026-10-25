@@ -56,7 +56,7 @@ def test_real_compose_resolution_pins_one_application_image_without_builds(bundl
     url = f"sqlite:///{tmp_path / 'disposable.db'}"
     env.write_text(f"DATABASE_URL={url}\nPOSTGRES_PASSWORD=synthetic-test-only\nAPI_ENV=development\nAPI_DOMAIN=wrong.invalid\nAPP_GIT_SHA=wrong\nNEXT_PUBLIC_API_BASE_URL=https://wrong.invalid/api/v1\n")
     state = {"version": 1, "observed_at": R.timestamp(), "schema_revision": manifest["source"]["migration_chain"][-1],
-             "unsettled_agent_runs": 0, "active_jobs": 0, "drained": True, "database_identity_sha256": R.database_identity(url)}
+             "recovery_pending": False, "unsettled_agent_runs": 0, "active_jobs": 0, "drained": True, "database_identity_sha256": R.database_identity(url)}
     namespace = "ask4mo:rl:release-test:"
     password = tmp_path / "synthetic-redis-password"
     password.write_text("synthetic-test-credential-" * 2)
@@ -205,7 +205,7 @@ def test_offline_round_trip_restores_verified_content_ids_without_registry(bundl
 def test_actual_release_refuses_schema_mismatch_or_unsettled_rollback(bundle, tmp_path):
     manifest, sha, anchor = bundle
     state = {"version": 1, "observed_at": R.timestamp(), "schema_revision": manifest["source"]["migration_chain"][-1],
-             "unsettled_agent_runs": 0, "active_jobs": 0, "drained": True, "database_identity_sha256": "d" * 64}
+             "recovery_pending": False, "unsettled_agent_runs": 0, "active_jobs": 0, "drained": True, "database_identity_sha256": "d" * 64}
     for index, changes in enumerate(({"schema_revision": "0049_unknown"}, {"schema_revision": "0027_email_attempts"},
                                      {"unsettled_agent_runs": 1}, {"drained": False})):
         target = tmp_path / f"refused-{index}"
@@ -266,7 +266,7 @@ def test_real_compose_shares_protected_budget_file_without_creating_approval(bun
     config.chmod(0o600)
     before=config.read_bytes()
     state={'version':1,'observed_at':R.timestamp(),'schema_revision':manifest['source']['migration_chain'][-1],
-           'unsettled_agent_runs':0,'active_jobs':0,'drained':True,'database_identity_sha256':R.database_identity(url)}
+           'recovery_pending':False,'unsettled_agent_runs':0,'active_jobs':0,'drained':True,'database_identity_sha256':R.database_identity(url)}
     out=tmp_path/'plan'
     R.prepare(manifest,sha,anchor,state,mode,out,env,budget_config_file=config)
     assert R.check_compose(manifest,sha,anchor,out/'compose.yml',env,mode,state)['compose_verified']

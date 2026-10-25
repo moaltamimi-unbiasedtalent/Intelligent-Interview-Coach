@@ -80,6 +80,24 @@ def _parser() -> argparse.ArgumentParser:
         if name == "reapply":
             s.add_argument("--target-root", required=True)
             s.add_argument("--execute", action="store_true")
+    q = sub.add_parser("qualified", help="PG16 sealed recovery; independent trusted ledger head and quarantined NEW targets")
+    qs = q.add_subparsers(dest="qualified_cmd", required=True)
+    for name in ("backup", "verify", "restore", "transfer", "rewrite"):
+        child = qs.add_parser(name)
+        child.add_argument("--execute", action="store_true")
+        if name != "backup":
+            child.add_argument("--set", required=True)
+            child.add_argument("--manifest-sha256", required=True)
+        if name in ("backup", "rewrite"):
+            child.add_argument("--out", required=True)
+        if name == "backup":
+            child.add_argument("--attest-drained-at", required=True, help="UTC producer-drain observation, at most five minutes old")
+        if name in ("restore", "rewrite"):
+            child.add_argument("--target-root", required=True)
+        if name == "restore":
+            child.add_argument("--upgrade-to-head", action="store_true", help="explicit controlled 0047 -> 0048 rehearsal on the NEW target")
+        if name == "transfer":
+            child.add_argument("--destination", required=True)
     return p
 
 
@@ -94,6 +112,9 @@ def _keys(encrypt: bool, need_key_if_present: bool = True):
 def _run(a) -> dict:
     from src.backup_set import crypto, engine as E
 
+    if a.cmd == "qualified":
+        from src.backup_set.operator import run
+        return run(a)
     if a.cmd == "keygen":
         return {"action": "keygen", "ok": True, "key": crypto.generate_key(), "note": "store this in a secret manager; it is shown once and never saved by this tool"}
     if a.cmd == "backup":

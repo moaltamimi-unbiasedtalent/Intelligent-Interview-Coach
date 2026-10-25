@@ -1,0 +1,153 @@
+{
+  "approvals": {
+    "cloud_publication": false,
+    "hosted_deployment": false,
+    "language_gates": false,
+    "live_email": false,
+    "original_database_migration": false,
+    "paid_calls": false,
+    "production_gates": false
+  },
+  "baseline_pr": 271,
+  "baseline_sha": "88a5ce4e4d5e92bee75fbec2721ce28e73d9ac6d",
+  "baseline_workflow_result": "success",
+  "baseline_workflows": {
+    "CI": 40197262812,
+    "ai_budget": 40197262825,
+    "durable_admission": 40197262805,
+    "immutable_images": 40197262795,
+    "migration_image": 40197262813,
+    "redis": 40197262818
+  },
+  "branch": "feat/staging-recovery-qualification",
+  "drills": {
+    "A": "PG16 sealed round trip; all rows/schema/checkpoints/files/index checked",
+    "B": "unavailable disposable DB refused; intact isolated copies restore",
+    "C": "corrupted archive/manifest/unlisted files refused",
+    "D": "missing/wrong keys refused; no verified receipt",
+    "E": "compatible release profiles and incompatible rollback refusal; no DB downgrade",
+    "F": "unknown reservations and partial usage retained; persistent admission/access/worker hold",
+    "G": "deletion before/after capture; official checkpoint purge and PostgreSQL rewrite",
+    "H": "injected document materialisation failure leaves durable hold/PENDING; no VERIFIED receipt"
+  },
+  "limitations": [
+    "synthetic timings are not approved RTO/RPO",
+    "separate checkpoint database/additional schemas refused",
+    "current external receipts and independent ledger/head/key custody are required",
+    "35-day retention/erasure defaults unapproved",
+    "semantic/hosted retrieval, off-host provider, legal and human review remain open"
+  ],
+  "local_checks": {
+    "affected_failure_recheck": {
+      "failed": 0,
+      "passed": 149
+    },
+    "browser": {
+      "duration": "11.2 minutes",
+      "kind": "API-mocked local Next.js Playwright",
+      "passed": 668,
+      "port": 3026,
+      "skipped": 14
+    },
+    "compile": "passed",
+    "deterministic_evaluators": {
+      "commands": 48,
+      "note": "two comment-sensitive legacy guards initially rejected the word paused; corrected the new recovery comment to describe quarantine, both original guards reran PASS without assertion changes",
+      "passed": 48
+    },
+    "frontend_lint": "passed",
+    "frontend_production_build": "passed",
+    "frontend_types": "passed",
+    "frontend_unit": {
+      "files": 134,
+      "passed": 1534
+    },
+    "full_backend": {
+      "disposition": "two fake repository fixtures now supply their real isolated session factory; legacy tar test explicitly acknowledges unsafe local-only helper; three generated-view failures were caused by concurrent generator edits during the long run and pass in a fresh process. Fresh whole-suite rerun and final PR CI remain authoritative.",
+      "initial": {
+        "failed": 6,
+        "passed": 8675,
+        "skipped": 143
+      }
+    },
+    "legacy_postgresql": {
+      "passed": 7
+    },
+    "monetary_durable_regressions": {
+      "passed": 176
+    },
+    "operator_cli": {
+      "kind": "exact qualified backup/restore CLI plus operator tests",
+      "passed": 18,
+      "skipped": 1
+    },
+    "operator_release_rollback_unit": {
+      "passed": 78,
+      "skipped": 1
+    },
+    "package_and_evidence_consistency": "passed: 45 packages, 452 mapped items, unchanged acceptance, fresh generated views",
+    "recovery_deployment_regressions": {
+      "passed": 157,
+      "skip_reason": "explicit actual built operator image qualification deferred to mandatory CI",
+      "skipped": 1
+    },
+    "recovery_latest": {
+      "kind": "includes deletion-concurrency refusal and PostgreSQL rewrite",
+      "passed": 30
+    },
+    "redis": {
+      "kind": "real disposable Redis; isolated existing redis==8.1.0 tooling",
+      "passed": 17
+    },
+    "ruff": "passed",
+    "secret_scan": "passed (807 source files)",
+    "whole_suite_final": "running at submission authoring; exact final results will be retained in PR checks/body"
+  },
+  "local_image": {
+    "ci_required": true,
+    "reason": "Docker overlay 99% used, 679 MB free; no unrelated resource pruning or fresh API build",
+    "result": "NOT VERIFIED"
+  },
+  "measurements": {
+    "backup_seconds": 1.004,
+    "checkpoints": 2,
+    "kind": "local_synthetic_postgresql16_working_tree",
+    "knowledge_chunks": 4,
+    "postgres_client": "16.14",
+    "private_documents": 4,
+    "production_rto_rpo_approved": false,
+    "restore_seconds": 1.387,
+    "schema_revision": "0048_agent_run_controls",
+    "source_rows": 59,
+    "source_tables": 101,
+    "stored_bytes": 2850539,
+    "unknown_reservation_micro_usd": 200,
+    "usage_facts": 2
+  },
+  "preservation": {
+    "existing_branch_changes": 0,
+    "existing_branches": 311,
+    "other_worktree_status_changes": 0,
+    "other_worktrees": 44,
+    "protected_files": 49,
+    "protected_mismatches": 0,
+    "worktrees": 45
+  },
+  "project": {
+    "PG09": "NOT ACCEPTED",
+    "existing_PG11": "PASS unchanged",
+    "hosted_qualified_languages": 0,
+    "integrated": 40,
+    "open": [
+      "00A",
+      "00B",
+      "07B",
+      "07C",
+      "08A"
+    ],
+    "total": 45
+  },
+  "recorded_on": "2026-10-26",
+  "schema": "ask4mo.wave4.task06.recovery.v1",
+  "scope": "disposable recovery engineering; pending PR review/merge and exact-head hosted CI"
+}

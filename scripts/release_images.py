@@ -172,11 +172,17 @@ def source_record(root, sha):
         for node in ast.parse(governor.read_text()).body:
             if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "HOSTED_POLICY_VERSION" for t in node.targets):
                 policy_version = ast.literal_eval(node.value)
-    return {"budget_policy_version": policy_version, "application_sha": sha, "migration_chain": chain, "compatible_schema_revisions": policy["compatible_schema_revisions"],
+    recovery_version = None
+    recovery = root / "src/backup_set/admission.py"
+    if recovery.is_file():
+        for node in ast.parse(recovery.read_text()).body:
+            if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "RECOVERY_POLICY_VERSION" for t in node.targets):
+                recovery_version = ast.literal_eval(node.value)
+    return {"recovery_policy_version": recovery_version, "budget_policy_version": policy_version, "application_sha": sha, "migration_chain": chain, "compatible_schema_revisions": policy["compatible_schema_revisions"],
             "api_files": api_files, "web_files": web_files, "web_input_sha256": digest(canonical(web_inputs)),
             "dockerfiles": hashes(root, ["deploy/Dockerfile.api", "deploy/Dockerfile.web", ".dockerignore"]),
             "prompt_files": hashes(root, tree_names(root, "prompts")), "language_activation_sha256": api_files[activation],
-            "deployment_files": hashes(root, ["deploy/docker-compose.staging.yml", "deploy/Caddyfile", "deploy/release-policy.json"] + [p for p in ("deploy/redis-internal.yml", "deploy/scripts/redis-start.sh") if (root / p).is_file()]),
+            "deployment_files": hashes(root, ["deploy/docker-compose.staging.yml", "deploy/Caddyfile", "deploy/release-policy.json"] + [p for p in ("deploy/redis-internal.yml", "deploy/scripts/redis-start.sh", "deploy/Dockerfile.recovery", "deploy/scripts/pg16-client.sh") if (root / p).is_file()]),
             "billing_disabled": True}
 
 
@@ -347,13 +353,15 @@ def database_identity(url):
 
 
 def check_state(state, manifest, mode, *, now=None):
-    keys(state, "version observed_at schema_revision unsettled_agent_runs active_jobs drained database_identity_sha256")
+    keys(state, "version observed_at schema_revision unsettled_agent_runs active_jobs drained database_identity_sha256 recovery_pending")
     require(isinstance(state["database_identity_sha256"], str) and HASH.fullmatch(state["database_identity_sha256"]), "database_identity_invalid")
     require(type(state["version"]) is int and state["version"] == 1, "state_version_invalid")
     require(mode in ("promote", "rollback"), "promotion_mode_invalid")
     age = ((now or datetime.now(timezone.utc)) - parsed_time(state["observed_at"])).total_seconds()
     require(0 <= age <= 300, "state_observation_stale")
     require(state["drained"] is True, "drain_attestation_required")
+    require(state["recovery_pending"] is False, "recovery_reconciliation_required")
+    require(manifest["source"].get("recovery_policy_version") == 1, "recovery_policy_incapable_image")
     require(type(state["unsettled_agent_runs"]) is int and type(state["active_jobs"]) is int and
             state["unsettled_agent_runs"] == state["active_jobs"] == 0, "active_or_unsettled_work")
     require(manifest["source"].get("budget_policy_version") == 2, "budget_policy_incapable_image")
@@ -552,10 +560,11 @@ def observe_disposable(url, *, drained=False):
             require(bool(revisions) or tables <= {"alembic_version"}, "unversioned_nonempty_database")
             if revisions and revisions[0] == migration_chain(ROOT)[-1]:
                 require("agent_run_controls" in tables, "current_schema_missing_run_controls")
+            recovery_pending = parsed.get_backend_name() == "postgresql" and connection.scalar(text("SELECT current_setting('ask4mo.recovery_pending',true)")) == "on"
             unsettled = connection.scalar(text("SELECT count(*) FROM agent_run_controls WHERE settled = false")) if "agent_run_controls" in tables else 0
             jobs = connection.scalar(text("SELECT count(*) FROM jobs WHERE status IN ('queued','running')")) if "jobs" in tables else 0
         return {"version": 1, "observed_at": timestamp(), "schema_revision": revisions[0] if revisions else "base",
-                "unsettled_agent_runs": unsettled, "active_jobs": jobs, "drained": drained, "database_identity_sha256": database_identity(url)}
+                "recovery_pending": recovery_pending, "unsettled_agent_runs": unsettled, "active_jobs": jobs, "drained": drained, "database_identity_sha256": database_identity(url)}
     finally:
         engine.dispose()
 
@@ -593,6 +602,21 @@ def main(argv=None):
     observe = sub.add_parser("observe-disposable")
     observe.add_argument("--out", required=True)
     observe.add_argument("--attest-drained", action="store_true")
+    for command in ("build-recovery", "verify-recovery", "recovery-profile"):
+        child = sub.add_parser(command)
+        for flag in ("manifest", "expected-sha", "manifest-sha256"):
+            child.add_argument("--" + flag, required=True)
+        if command == "build-recovery":
+            child.add_argument("--out", required=True)
+        else:
+            child.add_argument("--runner", required=True)
+            child.add_argument("--runner-sha256", required=True)
+        if command == "recovery-profile":
+            child.add_argument("--out", required=True)
+            child.add_argument("--env-file", required=True)
+            child.add_argument("--mounts", required=True, help="reviewed JSON bind mounts; no credentials")
+            child.add_argument("--network", help="reviewed existing database network; required for backup/restore/rewrite")
+            child.add_argument("--operation", required=True, choices=("backup", "verify", "restore", "transfer", "rewrite"))
     args = parser.parse_args(argv)
     try:
         if args.command == "build":
@@ -605,7 +629,10 @@ def main(argv=None):
         else:
             manifest = decode_json(Path(args.manifest).read_text())
             common = (manifest, args.expected_sha, args.manifest_sha256)
-            if args.command == "prepare":
+            if args.command in ("build-recovery", "verify-recovery", "recovery-profile"):
+                from scripts import recovery_images
+                result = recovery_images.dispatch(args, manifest)
+            elif args.command == "prepare":
                 result = prepare(*common, decode_json(Path(args.state).read_text()), args.mode, args.out, args.env_file, redis_topology=args.redis_topology, redis_namespace=args.redis_namespace, redis_password_file=args.redis_password_file, budget_config_file=args.budget_config_file)
             elif args.command == "check-compose":
                 result = check_compose(*common, args.profile, args.env_file, args.mode, decode_json(Path(args.state).read_text()))

@@ -19,6 +19,10 @@ class RunControlStore:
 
     def create(self, run_id: str, owner: str, timeout_s: int = 180) -> None:
         with self.sf() as s:
+            from src.backup_set.admission import pending_session
+
+            if pending_session(s):
+                raise RunAdmissionConflict()
             s.add(AgentRunControl(run_id=run_id, owner_user_id=int(owner), status="running",
                                   settled=False, deadline_epoch=self.clock() + timeout_s))
             s.commit()
@@ -34,6 +38,10 @@ class RunControlStore:
         after the service has verified checkpoint ownership. A missing required
         row/table always refuses. No lease expiry or automatic process-loss retry.
         """
+        from src.backup_set.admission import pending
+
+        if pending(self.sf):
+            raise RunAdmissionConflict()
         if not self.available():
             if required:
                 raise RunAdmissionConflict()

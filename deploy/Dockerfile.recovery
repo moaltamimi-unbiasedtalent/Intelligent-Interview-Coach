@@ -1,0 +1,21 @@
+# One-shot operator only. Derives from the exact verified API image; never used
+# as the API/worker/migrate image. No dependency reinstall, startup migration or keys.
+ARG API_IMAGE
+FROM postgres:16@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97 AS clients
+RUN mkdir -p /pg16/lib /pg16/bin \
+    && cp /usr/lib/postgresql/16/bin/pg_dump /usr/lib/postgresql/16/bin/pg_restore /pg16/bin/ \
+    && ldd /pg16/bin/pg_dump /pg16/bin/pg_restore | awk '$3 ~ /^\// {print $3} $1 ~ /^\// {print $1}' | sort -u | xargs -I '{}' cp -L '{}' /pg16/lib/ \
+    && loader="$(find /pg16/lib -name 'ld-linux*' -type f)" \
+    && test -n "$loader" && ln -s "lib/$(basename "$loader")" /pg16/loader
+FROM ${API_IMAGE}
+USER root
+COPY --from=clients /pg16 /opt/pg16
+COPY deploy/scripts/pg16-client.sh /usr/local/bin/pg_dump
+COPY deploy/scripts/pg16-client.sh /usr/local/bin/pg_restore
+RUN chmod 0555 /usr/local/bin/pg_dump /usr/local/bin/pg_restore
+USER appuser
+# Retain inherited immutable API provenance; the additional role is independently verified.
+ARG APPLICATION_IMAGE_ID
+LABEL io.ask4mo.operator="recovery-v1" io.ask4mo.application.image="${APPLICATION_IMAGE_ID}"
+HEALTHCHECK NONE
+CMD ["python", "scripts/backup_set.py", "qualified", "--help"]

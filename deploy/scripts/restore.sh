@@ -22,6 +22,17 @@
 #   bash deploy/scripts/restore.sh
 set -euo pipefail
 
+# Legacy compatibility only. Qualified recovery uses backup_set.py qualified,
+# whose empty-target, encryption, signed-head and quarantine controls cannot be bypassed.
+case "${API_ENV:-development}" in
+  development|dev|local|test|testing) ;;
+  *) echo "REFUSING: legacy destructive restore is not a hosted recovery procedure." >&2; exit 1 ;;
+esac
+if [[ "${ASK4MO_LEGACY_RESTORE_UNSAFE_ACK:-}" != "legacy-unsealed-destructive-restore" ]]; then
+  echo "REFUSING: use the qualified recovery runner; legacy restore needs a separate explicit unsafe acknowledgement." >&2
+  exit 1
+fi
+
 : "${TARGET_DATABASE_URL:?set TARGET_DATABASE_URL (the SAFE db to restore INTO)}"
 : "${DB_DUMP:?set DB_DUMP (path to the pg_dump archive to restore)}"
 

@@ -1,0 +1,43 @@
+name: Encrypted recovery qualification
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  disposable-postgresql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97
+        env:
+          POSTGRES_USER: disposable
+          POSTGRES_PASSWORD: synthetic-test-only
+          POSTGRES_DB: p5b_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U disposable -d p5b_test"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -e '.[dev,db]'
+      - name: Verified PostgreSQL 16 client tools; no operator keys
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-16
+          echo /usr/lib/postgresql/16/bin >> "$GITHUB_PATH"
+      - name: Drills A-H, erasure rewrite, protected rollback and existing PostgreSQL regressions
+        env:
+          P5B_PG_ADMIN_URL: postgresql+psycopg://disposable:synthetic-test-only@127.0.0.1:5432/p5b_test
+        run: >-
+          python -m pytest -q -o addopts='' -p no:cacheprovider
+          tests/test_recovery_task06.py tests/test_recovery_operator.py
+          tests/test_backup_set_05b.py tests/test_rollback_rehearsal_05b.py tests/test_pg_05b.py
+      - run: test -z "$(git status --porcelain)"

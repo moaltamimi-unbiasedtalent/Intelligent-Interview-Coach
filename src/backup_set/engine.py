@@ -251,6 +251,9 @@ def _pg_env_and_args(url: str) -> tuple[dict, list[str]]:
     env = dict(os.environ)
     if u.password:
         env["PGPASSWORD"] = u.password                          # never on the command line (a process list shows arguments)
+    for query, variable in {"sslmode": "PGSSLMODE", "sslrootcert": "PGSSLROOTCERT", "sslcert": "PGSSLCERT", "sslkey": "PGSSLKEY", "sslcrl": "PGSSLCRL", "connect_timeout": "PGCONNECT_TIMEOUT"}.items():
+        if query in u.query:
+            env[variable] = u.query[query]
     args = []
     if u.host:
         args += ["--host", u.host]
@@ -308,7 +311,8 @@ def retrieval_probe(store: Any) -> dict:
 # ===================================================================== create
 def create_set(source: Source, *, out_dir: str | Path, execute: bool = False, encryption_key: bytes | None = None, signing_key: bytes | None = None,
                storage_encrypted_attested: bool = False, api_env: str | None = None, allow_active_jobs: bool = False,
-               pg_dump_bin: str = "pg_dump", extra_manifest: dict | None = None, clock: Callable[[], datetime] | None = None) -> Report:
+               pg_dump_bin: str = "pg_dump", extra_manifest: dict | None = None, pg_snapshot: str | None = None,
+               private_probe: bool = False, before_publish: Callable | None = None, clock: Callable[[], datetime] | None = None) -> Report:
     out = Path(out_dir)
     rep = Report("backup_set", execute)
     dialect = source.dialect()
@@ -386,7 +390,7 @@ def create_set(source: Source, *, out_dir: str | Path, execute: bool = False, en
             else:
                 snap = work / "app.pgdump"
                 env, conn = _pg_env_and_args(source.database_url)
-                _run_pg(pg_dump_bin, ["--format=custom", "--no-owner", "--no-privileges", "--file", str(snap), *conn], env, "pg_dump_failed")
+                _run_pg(pg_dump_bin, ["--format=custom", "--no-owner", "--no-privileges", *(["--snapshot", pg_snapshot] if pg_snapshot else []), "--file", str(snap), *conn], env, "pg_dump_failed")
                 db_counts = counts
                 writer.put(PG_FILE, snap)
                 db_file = PG_FILE
@@ -414,6 +418,11 @@ def create_set(source: Source, *, out_dir: str | Path, execute: bool = False, en
                     probe = retrieval_probe(store)
                 except Exception:  # noqa: BLE001 - an incompatible or non-local index: recorded as NOT RUN, never faked
                     probe = {"run": False, "reason": "probe_failed"}
+            if private_probe:
+                probe_file = work / "retrieval-probe.json"
+                probe_file.write_text(json.dumps(probe))
+                writer.put("evidence/retrieval-probe.json", probe_file)
+                probe = {"run": probe.get("run", False), "protected_file": "evidence/retrieval-probe.json"}
             after_jobs = active_jobs(source.database_url)
         except SetError as e:
             rep.ok, rep.codes = False, rep.codes + [e.code]
@@ -448,6 +457,8 @@ def create_set(source: Source, *, out_dir: str | Path, execute: bool = False, en
     }
     if extra_manifest:
         manifest.update({k: v for k, v in extra_manifest.items() if k not in manifest})
+    if before_publish is not None:
+        before_publish(manifest)
     key = signing_key or (crypto.derive_signing_key(encryption_key) if encryption_key else None)
     if key is not None:
         manifest["signature"] = sign(manifest, key)
@@ -588,7 +599,7 @@ def _pg_target_problems(url: str) -> list[str]:
     eng = _engine(url)
     try:
         with eng.connect() as c:
-            if inspect(c).get_table_names():
+            if inspect(c).get_table_names() or c.execute(text("SELECT count(*) FROM pg_class r JOIN pg_namespace n ON n.oid=r.relnamespace WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname != 'information_schema'")).scalar() or c.execute(text("SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname != 'information_schema'")).scalar():
                 return ["target_database_not_empty"]
     except Exception:  # noqa: BLE001
         return ["target_database_unreachable"]
@@ -598,7 +609,7 @@ def _pg_target_problems(url: str) -> list[str]:
 
 
 def restore_set(set_dir: str | Path, *, target_root: str | Path, execute: bool = False, encryption_key: bytes | None = None, signing_key: bytes | None = None,
-                require_signature: bool = False, target_database_url: str | None = None, pg_restore_bin: str = "pg_restore", fallback_user_id: int | None = None) -> Report:
+                require_signature: bool = False, recovery_token: str | None = None, target_database_url: str | None = None, pg_restore_bin: str = "pg_restore", fallback_user_id: int | None = None) -> Report:
     """Restore into a SEPARATE environment under ``target_root`` (a new or empty directory; nothing is overwritten): ``database/restored.db`` (or the named
     PostgreSQL database), ``documents/``, ``knowledge/private`` and ``knowledge/chroma``. Dry-run by default: verifies the set and plans, writes nothing."""
     base, root = Path(set_dir), Path(target_root)
@@ -613,7 +624,8 @@ def restore_set(set_dir: str | Path, *, target_root: str | Path, execute: bool =
     if sealed and encryption_key is None:
         rep.ok, rep.codes = False, ["encryption_key_missing"]
         return rep
-    if _dir_nonempty(root):
+    leased = recovery_token and root.is_dir() and {p.name for p in root.iterdir()} == {"RECOVERY_PENDING.json"} and json.loads((root / "RECOVERY_PENDING.json").read_text()).get("token") == recovery_token
+    if _dir_nonempty(root) and not leased:
         rep.ok, rep.codes = False, ["target_not_empty"]
         return rep
     dialect = m["database"]["dialect"]
@@ -644,7 +656,7 @@ def restore_set(set_dir: str | Path, *, target_root: str | Path, execute: bool =
                 dump = work / "app.pgdump"
                 _materialise(base, m, m["database"]["file"], dump, encryption_key)
                 env, conn = _pg_env_and_args(target_database_url)
-                _run_pg(pg_restore_bin, ["--no-owner", "--no-privileges", "--exit-on-error", *conn, str(dump)], env, "pg_restore_failed")
+                _run_pg(pg_restore_bin, ["--no-owner", "--no-privileges", "--exit-on-error", "--single-transaction", *conn, str(dump)], env, "pg_restore_failed")
                 db_url = target_database_url
             # documents
             lay["documents"].mkdir(parents=True, exist_ok=True)

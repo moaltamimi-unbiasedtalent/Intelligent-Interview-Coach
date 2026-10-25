@@ -10,6 +10,18 @@ jobs:
   local-images:
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:16@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97
+        env:
+          POSTGRES_USER: disposable
+          POSTGRES_PASSWORD: synthetic-test-only
+          POSTGRES_DB: p5b_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U disposable -d p5b_test"
+          --health-interval 5s --health-timeout 5s --health-retries 12
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,6 +41,21 @@ jobs:
         run: |
           RELEASE_TEST_BUNDLE="$RUNNER_TEMP/ask4mo-release" RELEASE_TEST_SHA="$(git rev-parse HEAD)" \
             python -m pytest -q -o addopts='' -p no:cacheprovider tests/test_release_images_docker.py
+      - name: Build and verify isolated PG16 recovery runner from the exact API image
+        run: |
+          python scripts/release_images.py build-recovery --manifest "$RUNNER_TEMP/ask4mo-release/release.json" \
+            --expected-sha "$(git rev-parse HEAD)" --manifest-sha256 "$(cat "$RUNNER_TEMP/ask4mo-release/release.sha256")" \
+            --out "$RUNNER_TEMP/ask4mo-recovery"
+          python scripts/release_images.py verify-recovery --manifest "$RUNNER_TEMP/ask4mo-release/release.json" \
+            --expected-sha "$(git rev-parse HEAD)" --manifest-sha256 "$(cat "$RUNNER_TEMP/ask4mo-release/release.sha256")" \
+            --runner "$RUNNER_TEMP/ask4mo-recovery/recovery.json" --runner-sha256 "$(cat "$RUNNER_TEMP/ask4mo-recovery/recovery.sha256")"
+      - name: Real recovery runner Compose resolution and source/dependency identity
+        env:
+          RUN_RECOVERY_IMAGE_TESTS: '1'
+          RELEASE_TEST_BUNDLE: ${{ runner.temp }}/ask4mo-release
+          RECOVERY_TEST_BUNDLE: ${{ runner.temp }}/ask4mo-recovery
+          P5B_PG_ADMIN_URL: postgresql+psycopg://disposable:synthetic-test-only@127.0.0.1:5432/p5b_test
+        run: python -m pytest -q -o addopts='' -p no:cacheprovider tests/test_recovery_operator.py
       - name: Upload candidate metadata only (no image publication)
         if: always()
         uses: actions/upload-artifact@v4
@@ -38,6 +65,9 @@ jobs:
             ${{ runner.temp }}/ask4mo-release/release.json
             ${{ runner.temp }}/ask4mo-release/release.sha256
             ${{ runner.temp }}/ask4mo-release/*-build.log
+            ${{ runner.temp }}/ask4mo-recovery/*.json
+            ${{ runner.temp }}/ask4mo-recovery/*.sha256
+            ${{ runner.temp }}/ask4mo-recovery/*-build.log
           if-no-files-found: warn
       - name: Working tree must remain clean
         run: test -z "$(git status --porcelain)"

@@ -86,13 +86,16 @@ def get_pricing(request: Request):
 
 
 def get_repository(request: Request):
-    """App-lifetime repository over the configured database."""
+    """App-lifetime repository; a recovered database is inaccessible until reconciled."""
     from src.application import factories
+    from src.backup_set.admission import pending
 
-    return _shared(
-        request, "repository",
-        lambda: factories.build_repository(get_app_config(request)),
-    )
+    repo = _shared(request, "repository", lambda: factories.build_repository(get_app_config(request)))
+    if pending(repo.session_factory):
+        from fastapi import HTTPException
+
+        raise HTTPException(503, detail={"code": "recovery_reconciliation_required"})
+    return repo
 
 
 def get_memory_repository(request: Request):

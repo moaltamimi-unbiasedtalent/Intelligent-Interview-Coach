@@ -11,7 +11,7 @@ from scripts import release_images as R
 @pytest.fixture
 def source(tmp_path, monkeypatch):
     root = tmp_path / "source"
-    files = {"src/llm/budget/governor.py": "HOSTED_POLICY_VERSION = 2", "src/billing/policy.py": '\n'.join(f'{k} = False' for k in ('LIVE_BILLING_ENABLED', 'EXTERNAL_CHECKOUT_AUTHORIZED', 'STRIPE_WEBHOOK_AUTHORIZED', 'RECONCILE_SCHEDULER_ENABLED', 'PROVIDER_READS_AUTHORIZED', 'PAID_ENTITLEMENT_POLICY_APPROVED')),
+    files = {"src/backup_set/admission.py": "RECOVERY_POLICY_VERSION = 1", "src/llm/budget/governor.py": "HOSTED_POLICY_VERSION = 2", "src/billing/policy.py": '\n'.join(f'{k} = False' for k in ('LIVE_BILLING_ENABLED', 'EXTERNAL_CHECKOUT_AUTHORIZED', 'STRIPE_WEBHOOK_AUTHORIZED', 'RECONCILE_SCHEDULER_ENABLED', 'PROVIDER_READS_AUTHORIZED', 'PAID_ENTITLEMENT_POLICY_APPROVED')),
              "migrations/versions/0001_base.py": 'revision="0001_base"\ndown_revision=None',
              "migrations/versions/0002_next.py": 'revision="0002_next"\ndown_revision="0001_base"',
              "prompts/agent/v1.txt": "private prompt content is hashed, never emitted",
@@ -51,7 +51,7 @@ def validate(value, *, sha="a" * 40):
 
 def state(revision="0002_next", **changes):
     return {"version": 1, "observed_at": R.timestamp(), "schema_revision": revision,
-            "unsettled_agent_runs": 0, "active_jobs": 0, "drained": True, "database_identity_sha256": "d" * 64, **changes}
+            "recovery_pending": False, "unsettled_agent_runs": 0, "active_jobs": 0, "drained": True, "database_identity_sha256": "d" * 64, **changes}
 
 
 def test_manifest_contains_required_source_provenance_and_no_prompt_content(manifest):
@@ -259,3 +259,16 @@ def test_rollback_refuses_image_without_hosted_budget_capability(manifest,source
     manifest['source']['budget_policy_version']=capability
     with pytest.raises(R.ReleaseError,match='budget_policy_incapable_image'):
         R.profile_for(manifest, yaml.safe_load((source/'deploy/docker-compose.staging.yml').read_text()),state(),'rollback',tmp_path/'private.env',tmp_path/'Caddyfile')
+
+
+@pytest.mark.parametrize('recovery',[None,0,2])
+def test_promotion_and_rollback_refuse_images_without_recovery_quarantine_policy(manifest,recovery):
+    manifest['source']['recovery_policy_version']=recovery
+    for mode in ('promote','rollback'):
+        with pytest.raises(R.ReleaseError,match='recovery_policy_incapable_image'):R.check_state(state(),manifest,mode)
+
+
+@pytest.mark.parametrize('hold',[True,None,'off',0])
+def test_recovered_database_cannot_be_promoted_or_rolled_back_until_reconciled(manifest,hold):
+    for mode in ('promote','rollback'):
+        with pytest.raises(R.ReleaseError,match='recovery_reconciliation_required'):R.check_state(state(recovery_pending=hold),manifest,mode)

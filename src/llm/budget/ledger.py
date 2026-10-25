@@ -93,8 +93,10 @@ class DbBudgetLedger:
     def killed(self) -> bool:
         try:
             with self._sf() as s:
+                from src.backup_set.admission import pending_session
+
                 row = s.get(AiBudgetControl, GLOBAL)
-                return bool(row and row.killed)
+                return pending_session(s) or bool(row and row.killed)
         except SQLAlchemyError:
             return True                                   # an unreadable switch is treated as engaged
 
@@ -106,6 +108,10 @@ class DbBudgetLedger:
 
     def resume(self) -> None:
         with self._sf() as s:
+            from src.backup_set.admission import pending_session
+
+            if pending_session(s):
+                raise BudgetError("recovery_reconciliation_required", "Recovery accounting requires authorized reconciliation.")
             self._ensure_rows(s, [GLOBAL])
             s.execute(update(AiBudgetControl).where(AiBudgetControl.scope_key == GLOBAL).values(killed=False, kill_reason=None))
             s.commit()
@@ -124,6 +130,10 @@ class DbBudgetLedger:
         now = self._clock()
         try:
             with self._sf() as s:
+                from src.backup_set.admission import pending_session
+
+                if pending_session(s):
+                    raise BudgetError("recovery_reconciliation_required", "Recovery accounting requires authorized reconciliation.")
                 self._ensure_rows(s, [GLOBAL, class_key(budget_class), category_key(budget_class, category)])
                 # The first statement of the admission transaction is a WRITE (it takes the database write lock up front, so the checks below see a stable state).
                 locked = s.execute(update(AiBudgetControl).where(AiBudgetControl.scope_key == GLOBAL).values(updated_at=datetime.now(timezone.utc)))

@@ -176,6 +176,9 @@ class JobService:
         now = now or self._clock()
         for _ in range(CLAIM_ATTEMPTS):
             with self._sf() as s:
+                from src.backup_set.admission import pending_session
+                if pending_session(s):
+                    return None  # A quarantined database cannot execute historical jobs.
                 stmt = select(Job).where(Job.state == "queued", Job.available_at <= now,
                                          Job.attempts < Job.max_attempts)
                 if job_types:

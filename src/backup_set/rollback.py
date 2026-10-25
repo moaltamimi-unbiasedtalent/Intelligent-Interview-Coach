@@ -1,20 +1,13 @@
-"""Migration rollback rehearsal (package 05B, PG-09, EX-12.9/12.10).
+"""05B rollback rehearsal on a fresh synthetic SQLite store.
 
-REHEARSES, on an isolated SQLite database under a directory the caller owns (never a development or hosted database), the ONLY rollback the deployment runbook
-allows for the head migration:
+At 0048, seed and preserve unsettled controls, partial actual usage, unknown budget
+reservations and the AI kill switch. A downgrade must refuse without changing
+that state. Restore the verified pre-attempt set into a NEW target and compare
+protected values. Never retire/delete 0048 rows to force a downgrade.
 
-1. upgrade to the head revision (the real Alembic chain), seed synthetic rows, take and verify a backup set (the pre-migration backup the runbook requires);
-2. attempt the downgrade while the revision holds candidate-authored state: it MUST be refused (fail-closed) and change nothing (revision and every table's row
-   count identical afterwards);
-3. clear that state deliberately, downgrade ONE revision: it must succeed and preserve every other table's rows;
-4. upgrade to head again: the schema is back at head and the preserved rows are intact;
-5. restore the pre-migration backup set into a separate environment (the rollback path when a downgrade is refused or unsafe) and verify it.
-
-APPLICATION rollback (the image or tag pointer) is documented, not executed: see ``docs/production/execution/BACKUP_RESTORE_RUNBOOK.md``. Database rollback is
-forward-fix first; a downgrade is a rehearsed escape hatch for a reversible head, and a restore is the fallback.
-
-What this proves: the head revision's fail-closed downgrade, the clean downgrade and re-upgrade, and that a pre-migration set restores, on SQLite. What it does NOT
-prove: PostgreSQL DDL behaviour (the PostgreSQL branches of the migration are not executed here), timing at production data volume, or any hosted environment.
+Older reversible-head seeders retain their existing clean-downgrade/re-upgrade
+exercise. Application images, PostgreSQL DDL and hosted operations are qualified
+separately; this rehearsal labels those steps NOT_RUN and reports PARTIAL.
 """
 
 from __future__ import annotations
@@ -58,7 +51,7 @@ def _alembic(url: str, *args: str) -> tuple[int, bool]:
     discarded: it can carry a path or a row value."""
     env = {**os.environ, "DATABASE_URL": url, "API_ENV": "test"}
     done = subprocess.run([sys.executable, "-m", "alembic", *args], cwd=ROOT, env=env, capture_output=True, text=True, timeout=900, check=False)
-    return done.returncode, "Refusing to downgrade" in (done.stderr + done.stdout)
+    return done.returncode, any(message in (done.stderr + done.stdout) for message in ("Refusing to downgrade", "Run controls must be deliberately retired"))
 
 
 def _revision(path: Path) -> str | None:
@@ -95,7 +88,43 @@ def _clear_story_bank_completion(path: Path) -> None:
         con.close()
 
 
-HEAD_SEEDERS: dict[str, tuple[Callable[[str], None], Callable[[Path], None]]] = {
+def _seed_agent_run_controls(url: str) -> None:
+    from src.persistence import (User, PreparationRun, AgentRunControl, AIUsageFact, AiBudgetControl,
+                                 AiBudgetEntry, make_engine, make_session_factory)
+    engine = make_engine(url)
+    try:
+        with make_session_factory(engine)() as s:
+            uid = s.query(User).first().id
+            s.add(PreparationRun(run_id="rollback-protected-run", owner_user_id=uid))
+            s.add(AgentRunControl(run_id="rollback-protected-run", owner_user_id=uid, status="failed", settled=False, deadline_epoch=0))
+            s.add(AIUsageFact(usage_key="rollback-protected-run", user_id=uid, workflow="agent", operation="agent_run",
+                              model_calls=1, input_tokens=11, output_tokens=None, total_tokens=None, cost_usd_micros=None,
+                              cost_source="unavailable", token_coverage="partial", cost_coverage="unknown"))
+            for scope in ("global", "class:production", "cat:production:agent"):
+                s.add(AiBudgetControl(scope_key=scope, held_micro_usd=0 if scope == "global" else 200,
+                                      requests=0 if scope == "global" else 1, killed=scope == "global"))
+            s.add(AiBudgetEntry(created_ts=1, budget_class="production", category="agent", operation="agent", model="synthetic-only",
+                                endpoint="chat", fingerprint="f"*64, state="unknown", reserved_micro_usd=200))
+            s.commit()
+    finally:
+        engine.dispose()
+
+
+def protected_fingerprint(url):
+    import hashlib
+    from sqlalchemy import text
+    engine = E._engine(url)
+    try:
+        with engine.connect() as c:
+            rows = [[list(r) for r in c.execute(text("SELECT * FROM " + table + " ORDER BY 1"))]
+                    for table in ("agent_run_controls", "ai_usage_facts", "ai_budget_entries", "ai_budget_controls")]
+        return hashlib.sha256(json.dumps(rows, sort_keys=True, default=str).encode()).hexdigest()
+    finally:
+        engine.dispose()
+
+
+HEAD_SEEDERS: dict[str, tuple[Callable[[str], None], Callable[[Path], None] | None]] = {
+    "agent_run_controls": (_seed_agent_run_controls, None),
     "story_bank_completion": (_seed_story_bank_completion, _clear_story_bank_completion),
 }
 
@@ -151,6 +180,11 @@ def run_rehearsal(*, work_dir: str | Path, record_dir: str | Path | None, label:
     if rc != 0:
         return _finish(started, now, head, prev, checks, record_dir, label, commit_sha)
     _seed_baseline(url)
+    seeder = HEAD_SEEDERS.get(suffix)
+    protected = suffix == "agent_run_controls"
+    if protected and seeder:
+        seeder[0](url)
+    fingerprint = protected_fingerprint(url) if protected else None
     base_counts = E.table_counts_sqlite(db)
     # the pre-migration backup the runbook requires (database only: the rehearsal has no documents or knowledge)
     pre_set = work / "pre-migration-set"
@@ -161,31 +195,41 @@ def run_rehearsal(*, work_dir: str | Path, record_dir: str | Path | None, label:
     seeder = HEAD_SEEDERS.get(suffix)
     state_counts = base_counts
     if seeder:
-        seeder[0](url)
+        if not protected:
+            seeder[0](url)
         state_counts = E.table_counts_sqlite(db)
         rc, refused = _alembic(url, "downgrade", "-1")
         unchanged = _revision(db) == head and E.table_counts_sqlite(db) == state_counts
         checks.append(Check("downgrade_refused_fail_closed", "The downgrade is REFUSED while candidate-authored state exists, and changes nothing", "PASS" if (rc != 0 and refused and unchanged) else "FAIL",
                             {"exit_nonzero": rc != 0, "refusal_message_present": refused, "revision_and_all_row_counts_unchanged": unchanged}))
-        seeder[1](db)
+        if seeder[1] is not None:
+            seeder[1](db)
     else:
         checks.append(Check("downgrade_refused_fail_closed", "The downgrade is REFUSED while candidate-authored state exists, and changes nothing", "NOT_RUN",
                             {"reason": "no seeder registered for the head revision; add one to HEAD_SEEDERS when the head's downgrade is state-guarded"}))
-    pre_down = E.table_counts_sqlite(db)
-    rc, _ = _alembic(url, "downgrade", "-1")
-    after_down = E.table_counts_sqlite(db) if _revision(db) else {}
-    kept = {t: n for t, n in pre_down.items() if t in after_down and t != "alembic_version"}
-    preserved = all(after_down.get(t) == n for t, n in kept.items())
-    checks.append(Check("downgrade_one_revision", "With the state cleared, the downgrade of one revision succeeds and every surviving table keeps its rows", "PASS" if (rc == 0 and _revision(db) == prev and preserved) else "FAIL",
-                        {"revision_reached": _revision(db), "expected": prev, "surviving_tables_rows_preserved": preserved}))
-    rc, _ = _alembic(url, "upgrade", "head")
-    final_counts = E.table_counts_sqlite(db)
-    same_rows = all(final_counts.get(t) == n for t, n in pre_down.items() if t != "alembic_version")
-    checks.append(Check("reupgrade_to_head", "The database upgrades to head again and the preserved rows are intact", "PASS" if (rc == 0 and _revision(db) == head and same_rows) else "FAIL",
-                        {"revision_reached": _revision(db), "rows_intact": same_rows}))
+    if protected:
+        intact = _revision(db) == head and protected_fingerprint(url) == fingerprint
+        checks.append(Check("protected_state_retained", "0048 controls, actual usage, budget entries and kill switch remain intact; no rows retired", "PASS" if intact else "FAIL", {"state_unchanged": intact}))
+        checks.append(Check("unsafe_downgrade_not_attempted", "A protected schema is retained; recovery uses a new target instead", "PASS" if intact else "FAIL", {"database_downgrade_executed": False}))
+    else:
+        pre_down = E.table_counts_sqlite(db)
+        rc, _ = _alembic(url, "downgrade", "-1")
+        after_down = E.table_counts_sqlite(db) if _revision(db) else {}
+        kept = {t: n for t, n in pre_down.items() if t in after_down and t != "alembic_version"}
+        preserved = all(after_down.get(t) == n for t, n in kept.items())
+        checks.append(Check("downgrade_one_revision", "With the state cleared, the downgrade of one revision succeeds and every surviving table keeps its rows", "PASS" if (rc == 0 and _revision(db) == prev and preserved) else "FAIL",
+                            {"revision_reached": _revision(db), "expected": prev, "surviving_tables_rows_preserved": preserved}))
+        rc, _ = _alembic(url, "upgrade", "head")
+        final_counts = E.table_counts_sqlite(db)
+        same_rows = all(final_counts.get(t) == n for t, n in pre_down.items() if t != "alembic_version")
+        checks.append(Check("reupgrade_to_head", "The database upgrades to head again and the preserved rows are intact", "PASS" if (rc == 0 and _revision(db) == head and same_rows) else "FAIL",
+                            {"revision_reached": _revision(db), "rows_intact": same_rows}))
     restored = E.restore_set(pre_set, target_root=work / "restored-from-backup", execute=True)
     checks.append(Check("restore_of_pre_migration_backup", "The pre-migration backup restores into a separate environment (the fallback when a downgrade is refused or unsafe)",
                         "PASS" if restored.ok else "FAIL", {"codes": restored.codes}))
+    if protected:
+        intact = restored.ok and protected_fingerprint(f"sqlite:///{E.restore_layout(work / 'restored-from-backup')['database']}") == fingerprint
+        checks.append(Check("new_target_protected_state", "Restoring to a new target preserves protected 0048 and monetary state", "PASS" if intact else "FAIL", {"state_identical": intact}))
     checks.append(Check("application_rollback_by_image_tag", "Application rollback by pointing the deployment at the previous image tag", "NOT_RUN",
                         {"reason": "documentation only (runbook section 6); no deployment exists (DEPLOYMENT FREEZE, OD-HOSTED)"}))
     checks.append(Check("postgresql_ddl_branches", "The PostgreSQL branches of the migration (foreign keys added and dropped)", "NOT_RUN",
