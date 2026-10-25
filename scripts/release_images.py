@@ -631,7 +631,10 @@ def main(argv=None):
             common = (manifest, args.expected_sha, args.manifest_sha256)
             if args.command in ("build-recovery", "verify-recovery", "recovery-profile"):
                 from scripts import recovery_images
-                result = recovery_images.dispatch(args, manifest)
+                try:
+                    result = recovery_images.dispatch(args, manifest)
+                except recovery_images.R.ReleaseError as exc:
+                    raise ReleaseError(str(exc)) from None
             elif args.command == "prepare":
                 result = prepare(*common, decode_json(Path(args.state).read_text()), args.mode, args.out, args.env_file, redis_topology=args.redis_topology, redis_namespace=args.redis_namespace, redis_password_file=args.redis_password_file, budget_config_file=args.budget_config_file)
             elif args.command == "check-compose":

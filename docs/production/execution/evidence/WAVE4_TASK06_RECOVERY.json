@@ -20,6 +20,22 @@
     "redis": 40197262818
   },
   "branch": "feat/staging-recovery-qualification",
+  "ci_candidate": {
+    "final_head": "pending fresh exact-head verification",
+    "images": {
+      "existing_image_tests_passed": 16,
+      "recovery_build": "failed: multi-binary ldd headings mistaken for library paths; fixed and locally reproduced/verified",
+      "run": 40244804934
+    },
+    "recovery": {
+      "passed": 104,
+      "postgres_server": "16.15",
+      "result": "success",
+      "run": 40244804887,
+      "skipped": 1
+    },
+    "sha": "29f1344fc6775c0a52e3e065670d137151a2297a"
+  },
   "drills": {
     "A": "PG16 sealed round trip; all rows/schema/checkpoints/files/index checked",
     "B": "unavailable disposable DB refused; intact isolated copies restore",
@@ -101,10 +117,25 @@
     },
     "ruff": "passed",
     "secret_scan": "passed (807 source files)",
-    "whole_suite_final": "running at submission authoring; exact final results will be retained in PR checks/body"
+    "whole_suite_final": {
+      "collected": 8856,
+      "failed": 0,
+      "note": "subsequent focused operator build/diagnostic fixes have their own regression checks; final PR-head CI remains authoritative",
+      "passed": 8705,
+      "seconds": 627.06,
+      "skipped": 151,
+      "source_sha": "29f1344fc6775c0a52e3e065670d137151a2297a"
+    }
   },
   "local_image": {
     "ci_required": true,
+    "pg16_client_stage": {
+      "postgres_dump": "16.15",
+      "postgres_restore": "16.15",
+      "result": "BUILT AND EXECUTED",
+      "scope": "client dependency stage only, not the complete API/operator image",
+      "source": "pinned PostgreSQL digest; isolated local build; no image publication"
+    },
     "reason": "Docker overlay 99% used, 679 MB free; no unrelated resource pruning or fresh API build",
     "result": "NOT VERIFIED"
   },
@@ -124,6 +155,7 @@
     "unknown_reservation_micro_usd": 200,
     "usage_facts": 2
   },
+  "pr": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/272",
   "preservation": {
     "existing_branch_changes": 0,
     "existing_branches": 311,

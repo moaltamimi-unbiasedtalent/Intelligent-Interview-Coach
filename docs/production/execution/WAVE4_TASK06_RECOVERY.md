@@ -166,3 +166,16 @@ language approval occurred. PG-09 stays unapproved. R1.0 remains 40/45 integrate
 00A, 00B, 07B, 07C and 08A stay open. Next is separately scoped Task 07 full-stack
 integration only after Task 06 review, merge and green main; hosted/paid work still
 requires separate authorization.
+
+## Qualification record
+
+[PR #272](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/272)
+retains exact final-head checks. Candidate 29f1344f passed 8,705 local backend tests
+with 151 explicit skips, 1,534 frontend units and 668 Browser tests / 14 skips.
+Recovery CI passed 104 / 1 image-only skip against PostgreSQL 16.15. The initial
+16 application/web image regressions passed; recovery-image construction exposed
+multi-binary `ldd` headings being collected as library paths. That focused defect
+was reproduced and corrected; the actual client stage builds and executes both
+PG16.15 tools locally. Build stdout/stderr is retained for CI diagnostics. Full
+operator-image restore qualification and final exact-head results remain in the
+PR checks/body and metadata artifacts. No local full API/operator build is claimed.

@@ -101,10 +101,19 @@ def test_actual_built_recovery_image_and_compose_resolution(tmp_path):
     evidence=json.loads(result)
     assert evidence['ok'] and evidence['database_hold'] and evidence['erasure']['accounts_erased']==1
     assert evidence['production_rto_rpo_approved'] is False
-    (tmp_path/'synthetic-image-recovery.json').write_text(json.dumps(evidence))
+    (runner_dir/'synthetic-image-recovery.json').write_text(json.dumps(evidence))
 
 
 @pytest.mark.parametrize('network',[None,'host','bridge','unsafe/network'])
 def test_operator_database_network_must_be_explicit_reviewed_and_external(tmp_path,network):
     with pytest.raises(R.ReleaseError,match='reviewed_recovery_network_required'):
         I.profile({'operator_image_id':'sha256:'+'e'*64,'release':{}},'backup',tmp_path/'private.env',mounts(tmp_path),network_name=network)
+
+
+def test_direct_release_cli_preserves_safe_delegate_refusal_code(tmp_path):
+    manifest=tmp_path/'incomplete.json';manifest.write_text('{}')
+    result=subprocess.run([__import__('sys').executable,str(R.ROOT/'scripts/release_images.py'),'build-recovery',
+        '--manifest',str(manifest),'--expected-sha','a'*40,'--manifest-sha256','f'*64,'--out',str(tmp_path/'never-created')],
+        capture_output=True,text=True)
+    assert result.returncode==1 and json.loads(result.stdout)['error']=='manifest_fields_invalid'
+    assert str(tmp_path) not in result.stdout and not (tmp_path/'never-created').exists()

@@ -4,7 +4,7 @@ ARG API_IMAGE
 FROM postgres:16@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97 AS clients
 RUN mkdir -p /pg16/lib /pg16/bin \
     && cp /usr/lib/postgresql/16/bin/pg_dump /usr/lib/postgresql/16/bin/pg_restore /pg16/bin/ \
-    && ldd /pg16/bin/pg_dump /pg16/bin/pg_restore | awk '$3 ~ /^\// {print $3} $1 ~ /^\// {print $1}' | sort -u | xargs -I '{}' cp -L '{}' /pg16/lib/ \
+    && ldd /pg16/bin/pg_dump /pg16/bin/pg_restore | awk '$3 ~ /^\// {print $3} $1 ~ /^\// && $1 !~ /:$/ {print $1}' | sort -u | xargs -I '{}' cp -L '{}' /pg16/lib/ \
     && loader="$(find /pg16/lib -name 'ld-linux*' -type f)" \
     && test -n "$loader" && ln -s "lib/$(basename "$loader")" /pg16/loader
 FROM ${API_IMAGE}

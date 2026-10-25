@@ -5,6 +5,7 @@ The generated Compose profile is plan-only and disabled during ordinary startup.
 """
 from __future__ import annotations
 import json
+import subprocess
 from pathlib import Path
 import uuid
 from scripts import release_images as R
@@ -60,10 +61,14 @@ def build(manifest, sha, anchor, out):
     base_tag='ask4mo-recovery-base:'+uuid.uuid4().hex
     R.run(['docker','image','tag',manifest['images']['application']['image_id'],base_tag])
     with R.committed_source(sha) as root:
-        result=R.run(['docker','build','--file',str(root/'deploy/Dockerfile.recovery'),'--tag',tag,
-                      '--build-arg','API_IMAGE='+base_tag,
-                      '--build-arg','APPLICATION_IMAGE_ID='+manifest['images']['application']['image_id'],str(root)],timeout=1800)
-        (output/'recovery-build.log').write_bytes(result)
+        arguments=['docker','build','--file',str(root/'deploy/Dockerfile.recovery'),'--tag',tag,
+                   '--build-arg','API_IMAGE='+base_tag,
+                   '--build-arg','APPLICATION_IMAGE_ID='+manifest['images']['application']['image_id'],str(root)]
+        # Only a committed, secret-free context and public image identities enter
+        # this build. Retain stderr as well as stdout on failure for qualification.
+        with (output/'recovery-build.log').open('wb') as log:
+            built=subprocess.run(arguments,stdout=log,stderr=subprocess.STDOUT,timeout=1800)
+        R.require(built.returncode==0,'recovery_image_build_failed')
     image=json.loads(R.run(['docker','image','inspect',tag]))[0]['Id']
     record=inspect_runner(image,manifest,anchor)
     R.write_json(output/'recovery.json',record)
