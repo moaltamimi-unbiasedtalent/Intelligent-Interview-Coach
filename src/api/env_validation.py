@@ -103,24 +103,13 @@ def validate_runtime_config(env: str | None = None) -> EnvReport:
                 "SECRET_STORE_BACKEND=encrypted_database requires SECRET_STORE_MASTER_KEY: standard base64 of exactly 32 random bytes.")
 
     # --- Shared rate-limit store (05D): hosted operation either has it or states the single-process limitation ---
-    backend_req = (os.environ.get("RATE_LIMIT_BACKEND", "") or "").strip().lower()
+    from src.api.rate_limit import redis_configuration_errors, redis_settings, shared_required
+    report.critical.extend(redis_configuration_errors(hosted=True))
     try:
-        from src.core import secrets as _secrets
-
-        redis_url_set = bool((_secrets.read_setting("REDIS_URL") or "").strip())    # the SAME resolution the limiter uses (managed credential, then environment)
-    except Exception:  # noqa: BLE001
-        redis_url_set = _has("REDIS_URL")
-    if backend_req not in ("", "in_memory", "redis", "shared"):
-        report.critical.append("RATE_LIMIT_BACKEND must be 'in_memory', 'redis' or 'shared'.")
-    elif backend_req in ("redis", "shared"):
-        # Requested but unusable would silently fall back to a per-process limiter: refuse to boot instead of pretending to be distributed.
-        import importlib.util
-
-        if not redis_url_set:
-            report.critical.append("RATE_LIMIT_BACKEND requests a shared store but REDIS_URL is not set (limits would silently stay per process).")
-        elif importlib.util.find_spec("redis") is None:
-            report.critical.append("RATE_LIMIT_BACKEND requests a shared store but the 'redis' package is not installed (limits would silently stay per process).")
-    elif not redis_url_set and (os.environ.get("RATE_LIMIT_SINGLE_PROCESS_ACKNOWLEDGED", "") or "").strip().lower() not in ("1", "true", "yes", "on"):
+        redis_url_set = bool(redis_settings()[0])
+    except Exception:
+        redis_url_set = False
+    if not redis_url_set and not shared_required() and os.environ.get("RATE_LIMIT_BACKEND", "") not in ("redis", "shared") and (os.environ.get("RATE_LIMIT_SINGLE_PROCESS_ACKNOWLEDGED", "") or "").strip().lower() not in ("1", "true", "yes", "on"):
         report.warnings.append(
             "Rate limits are per process (no shared store). That is correct for ONE replica only; set RATE_LIMIT_BACKEND=redis and REDIS_URL for several "
             "replicas, or set RATE_LIMIT_SINGLE_PROCESS_ACKNOWLEDGED=true to record that this deployment is single-process.")

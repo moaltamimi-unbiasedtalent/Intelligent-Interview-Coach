@@ -27,6 +27,8 @@ import uuid
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))  # direct CLI execution resolves the reviewed scripts package
 SHA = re.compile(r"[0-9a-f]{40}")
 DIGEST = re.compile(r"sha256:[0-9a-f]{64}")
 HASH = re.compile(r"[0-9a-f]{64}")
@@ -168,7 +170,7 @@ def source_record(root, sha):
             "api_files": api_files, "web_files": web_files, "web_input_sha256": digest(canonical(web_inputs)),
             "dockerfiles": hashes(root, ["deploy/Dockerfile.api", "deploy/Dockerfile.web", ".dockerignore"]),
             "prompt_files": hashes(root, tree_names(root, "prompts")), "language_activation_sha256": api_files[activation],
-            "deployment_files": hashes(root, ["deploy/docker-compose.staging.yml", "deploy/Caddyfile", "deploy/release-policy.json"]),
+            "deployment_files": hashes(root, ["deploy/docker-compose.staging.yml", "deploy/Caddyfile", "deploy/release-policy.json"] + [p for p in ("deploy/redis-internal.yml", "deploy/scripts/redis-start.sh") if (root / p).is_file()]),
             "billing_disabled": True}
 
 
@@ -393,20 +395,28 @@ def profile_for(manifest, base, state, mode, env_file, caddyfile):
     return profile
 
 
-def prepare(manifest, expected_sha, anchor, state, mode, out, env_file, *, repo=ROOT):
+def prepare(manifest, expected_sha, anchor, state, mode, out, env_file, *, repo=ROOT, redis_topology=None, redis_namespace=None, redis_password_file=None):
     validate_manifest(manifest, expected_sha, anchor, repo=repo)
+    if redis_topology:
+        require(any(d["name"].lower() == "redis" and d["version"] == "8.1.0" for d in manifest["images"]["application"]["contents"]["dependencies"]), "release_redis_client_unavailable")
     with committed_source(expected_sha, repo) as root:
         base = yaml.safe_load((root / "deploy/docker-compose.staging.yml").read_text())
         caddy = (root / "deploy/Caddyfile").read_bytes()
-    profile = profile_for(manifest, base, state, mode, env_file, Path(out).resolve() / "Caddyfile")
+        profile = profile_for(manifest, base, state, mode, env_file, Path(out).resolve() / "Caddyfile")
+        from scripts.release_redis import apply
+        profile = apply(profile, root, out, topology=redis_topology, namespace=redis_namespace, password_file=redis_password_file)
+        redis_script = (root / "deploy/scripts/redis-start.sh").read_bytes() if redis_topology == "internal" else None
     out = new_directory(out)
     (out / "compose.yml").write_text(yaml.safe_dump(profile, sort_keys=False))
     (out / "Caddyfile").write_bytes(caddy)
+    if redis_script is not None:
+        (out / "redis-start.sh").write_bytes(redis_script)
     write_json(out / "plan.json", {"mode": mode, "application_sha": expected_sha, "manifest_sha256": anchor,
                "state_sha256": digest(canonical(state)), "state_observed_at": state["observed_at"],
                "database_identity_sha256": state["database_identity_sha256"],
                "compose_sha256": file_hash(out / "compose.yml"), "caddy_sha256": file_hash(out / "Caddyfile"),
                "drain_evidence": "operator attestation; process drain not verified by this tool", "executed": False,
+               "redis_topology": redis_topology, "redis_namespace": redis_namespace, "redis_password_file": str(redis_password_file) if redis_password_file else None,
                "migrations": "one-shot upgrade only" if mode == "promote" else "none; application images only"})
     return {"mode": mode, "manifest_sha256": anchor, "executed": False}
 
@@ -427,8 +437,12 @@ def check_compose(manifest, expected_sha, anchor, profile, env_file, mode, state
     proxy_mount = services["caddy"]["volumes"][0]
     require(proxy_mount["type"] == "bind" and proxy_mount["target"] == "/etc/caddy/Caddyfile" and proxy_mount.get("read_only") is True and
             Path(proxy_mount["source"]).resolve() == copied_caddy, "proxy_config_mismatch")
-    require(set(services) == ({"api", "worker", "web", "db", "clamav", "caddy", "migrate"} if mode == "promote" else
-                              {"api", "worker", "web", "db", "clamav", "caddy"}), "resolved_service_mismatch")
+    expected_services = {"api", "worker", "web", "db", "clamav", "caddy"} | ({"migrate"} if mode == "promote" else set())
+    if plan.get("redis_topology") == "internal":
+        expected_services.add("redis")
+    require(set(services) == expected_services, "resolved_service_mismatch")
+    from scripts.release_redis import verify
+    verify(resolved, plan, manifest, Path(profile).parent)
     require(resolved["name"] == "ask4mo-staging", "resolved_project_mismatch")
     app_names = ("api", "worker", "migrate", "web") if mode == "promote" else ("api", "worker", "web")
     for name in app_names:
@@ -532,6 +546,9 @@ def main(argv=None):
         if name in ("prepare", "export"):
             child.add_argument("--out", required=True)
         if name == "prepare":
+            child.add_argument("--redis-topology", choices=("internal", "managed"))
+            child.add_argument("--redis-namespace")
+            child.add_argument("--redis-password-file")
             child.add_argument("--state", required=True)
             child.add_argument("--mode", choices=("promote", "rollback"), required=True)
             child.add_argument("--env-file", required=True)
@@ -559,7 +576,7 @@ def main(argv=None):
             manifest = decode_json(Path(args.manifest).read_text())
             common = (manifest, args.expected_sha, args.manifest_sha256)
             if args.command == "prepare":
-                result = prepare(*common, decode_json(Path(args.state).read_text()), args.mode, args.out, args.env_file)
+                result = prepare(*common, decode_json(Path(args.state).read_text()), args.mode, args.out, args.env_file, redis_topology=args.redis_topology, redis_namespace=args.redis_namespace, redis_password_file=args.redis_password_file)
             elif args.command == "check-compose":
                 result = check_compose(*common, args.profile, args.env_file, args.mode, decode_json(Path(args.state).read_text()))
             elif args.command == "export":

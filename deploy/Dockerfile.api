@@ -55,7 +55,7 @@ COPY src ./src
 # system OCR deps installed above). Both are needed for a fully operational hosted backend.
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt \
-    && pip install ".[db,ocr]"
+    && pip install ".[db,ocr,redis]"
 
 # Application code + migration assets (kept minimal; tests/data/docs excluded).
 COPY alembic.ini ./

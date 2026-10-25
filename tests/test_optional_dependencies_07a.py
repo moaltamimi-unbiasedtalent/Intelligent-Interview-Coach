@@ -18,7 +18,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# Optional extras and the import names they provide (pyproject.toml [project.optional-dependencies]; redis is an undeclared optional adapter).
+# Optional extras and the import names they provide (pyproject.toml [project.optional-dependencies]; redis is declared but remains optional outside the hosted image).
 OPTIONAL_IMPORTS = {
     "speech": ["google.cloud.speech_v2"],
     "live": ["google.genai"],
@@ -27,7 +27,7 @@ OPTIONAL_IMPORTS = {
     "knowledge": ["pyarrow"],
     "evaluation": ["ragas"],
     "db": ["alembic", "psycopg", "langgraph.checkpoint.postgres"],
-    "rate-limit shared store": ["redis"],
+    "redis": ["redis"],
 }
 ALL_BLOCKED = sorted({name for names in OPTIONAL_IMPORTS.values() for name in names})
 

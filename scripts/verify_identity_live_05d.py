@@ -175,15 +175,12 @@ def cmd_redis_check(args) -> int:
         L.require_live_authorisation(os.environ, flag=args.authorise_live)
     except L.LiveCheckRefused as exc:
         return _dry("run distributed-limiter checks against REDIS_URL under a unique key prefix and delete exactly those keys", str(exc))
-    from src.core import secrets as S
-
-    url = (S.read_setting("REDIS_URL") or "").strip()
-    if not url:
-        _emit({"error": "REDIS_URL is not set"})
+    from src.api.rate_limit import configured_redis_client
+    try:
+        rep = L.run_limiter_checks(configured_redis_client())
+    except Exception:
+        _emit({"error": "shared Redis check unavailable"})
         return 1
-    import redis
-
-    rep = L.run_limiter_checks(redis.Redis.from_url(url, socket_timeout=2.0, socket_connect_timeout=2.0))
     _emit(rep.to_dict())
     return 0 if rep.passed else 1
 

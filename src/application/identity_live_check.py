@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -199,7 +200,7 @@ def run_limiter_checks(client, *, prefix: str | None = None, clock: Callable[[],
     keys are independent, and a short window expires. Uses ONLY keys under a unique ``prefix`` and deletes exactly those afterwards."""
     from src.api import rate_limit as rl
 
-    prefix = prefix or f"ask4mo:verify:{uuid.uuid4().hex[:12]}:"
+    prefix = prefix or f"{os.environ.get('RATE_LIMIT_NAMESPACE', 'ask4mo:rl:')}verify:{uuid.uuid4().hex[:12]}:"
     rep = Report("redis_limiter")
     pol = rl.RateLimitPolicy("verify", 2, 2, "ip")
     a, b = rl.RedisRateLimiter(client, prefix=prefix, clock=clock), rl.RedisRateLimiter(client, prefix=prefix, clock=clock)
@@ -215,8 +216,9 @@ def run_limiter_checks(client, *, prefix: str | None = None, clock: Callable[[],
         rep.add("store_reachable", FAIL, "the store raised")
     finally:
         try:
-            for key in client.scan_iter(match=f"{prefix}*"):
-                client.delete(key)
+            client.delete(a.store_key("v", "k"), a.store_key("v", "other"))
+            # Restricted app ACLs deliberately lack DEL; these synthetic keys
+            # expire in at most 3 seconds even when cleanup is refused.
         except Exception:  # noqa: BLE001
             pass
     return rep

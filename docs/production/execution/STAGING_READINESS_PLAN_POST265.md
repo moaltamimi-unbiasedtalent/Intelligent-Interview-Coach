@@ -2,6 +2,8 @@
 
 Baseline: main `aedbef3dee28a68b72bc526a1fca537a3da7bd8d`. **Planning and offline inspection only. No deployment, cloud provisioning, provider round trip, paid evaluation, DNS change or real database migration is authorized or performed here.** Existing definitions are retained; this plan does not rebuild the application.
 
+Current follow-up, 24 October 2026: POST265-01/02 are merged (#267/#268), immutable local release controls merged in #269 at `5e524ca8`. [Task 04 Redis preparation](WAVE4_TASK04_REDIS_DECISIONS.md) adds disposable qualification and optional private profiles, pending focused PR review/merge. The original table below is the dated post-265 gap audit; its historical NOT RUN findings are not fresh test claims. Hosted qualification, H-REDIS-POLICY, OD-HOSTED, budget/recovery and gate decisions remain open.
+
 ## 1. Existing systems and concrete gaps
 
 | System | Existing implementation | Gap and next evidence |

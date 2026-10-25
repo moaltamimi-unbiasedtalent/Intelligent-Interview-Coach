@@ -75,10 +75,11 @@ def test_window_slides_and_the_key_expires_on_the_server():
     for _ in range(3):
         a.hit("b", "k", POL)
     assert not a.hit("b", "k", POL).allowed
+    assert len(store._live(a.store_key("b", "k"))) == 3
     clock[0] = 1061.0
     assert a.hit("b", "k", POL).allowed                   # the old events fell out of the window
     clock[0] = 1061.0 + 60 + 2
-    assert store._live("ask4mo:rl:b:k") == []             # server-side TTL elapsed: the key is gone, nothing accumulates forever
+    assert store._live(a.store_key("b", "k")) == []             # server-side TTL elapsed: the key is gone, nothing accumulates forever
 
 
 def test_keys_are_namespaced_independent_and_never_contain_a_raw_email():
@@ -184,7 +185,7 @@ def test_hosted_requesting_a_shared_store_without_the_package_is_critical(monkey
 
 def test_hosted_with_url_and_package_has_no_rate_limit_finding(monkeypatch):
     monkeypatch.setattr("importlib.util.find_spec", lambda name, *a, **k: object())
-    rep = _hosted(monkeypatch, "production", RATE_LIMIT_BACKEND="redis", REDIS_URL="redis://example.invalid:6379/0")
+    rep = _hosted(monkeypatch, "production", RATE_LIMIT_BACKEND="redis", REDIS_URL="rediss://limiter:ssssssssssssssssssssssssssssssss@example.invalid:6379/0", RATE_LIMIT_NAMESPACE="ask4mo:rl:test:", RATE_LIMIT_KEY_SECRET="kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
     assert not any("shared store" in m or "per process" in m for m in rep.critical + rep.warnings)
 
 

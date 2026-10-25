@@ -1,13 +1,12 @@
 """P10B-W9.12 - rate-limiter abstraction: in-memory default, optional shared (Redis) adapter, honest reporting.
 
-The Redis adapter is exercised against a fake client that emulates the window script in Python. The Lua script
-itself has NOT been run against a live Redis in CI, so distributed limiting is never claimed as live here.
+The Redis adapter is exercised against a fake client that emulates the window script in Python. This remains unit evidence only; the separate mandatory Task 04 suite exercises the actual
+Lua script and outage/recovery on disposable Redis. Neither approves hosted operation.
 """
 
 from __future__ import annotations
 
 import sys
-import types
 
 import pytest
 
@@ -85,20 +84,16 @@ def test_shared_store_request_without_url_or_package_stays_in_memory_and_is_repo
     assert isinstance(lim, rl.InMemoryRateLimiter) and rl.shared_store_active() is False
 
 
-def test_shared_store_is_active_only_when_requested_configured_and_installed(monkeypatch):
-    fake = types.ModuleType("redis")
-
-    class _Redis:
-        @staticmethod
-        def from_url(url, **_kw):
-            return FakeRedis()
-
-    fake.Redis = _Redis
-    monkeypatch.setitem(sys.modules, "redis", fake)
+def test_shared_store_is_active_only_after_an_enforcement_response(monkeypatch):
+    monkeypatch.setattr("importlib.util.find_spec", lambda *_a, **_kw: object())
+    monkeypatch.setattr(rl, "make_redis_client", lambda *_a, **_kw: FakeRedis())
     monkeypatch.setenv("RATE_LIMIT_BACKEND", "redis")
     monkeypatch.setenv("REDIS_URL", "redis://example:6379/0")
     lim = rl.build_rate_limiter()
-    assert isinstance(lim, rl.RedisRateLimiter) and rl.shared_store_active() is True
+    rl.reset_rate_limiter(lim)
+    assert isinstance(lim, rl.RedisRateLimiter) and rl.shared_store_active() is False
+    assert lim.hit("t", "synthetic", POLICY).allowed
+    assert rl.shared_store_active() is True
 
 
 @pytest.fixture(autouse=True)

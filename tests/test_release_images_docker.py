@@ -42,10 +42,13 @@ def test_real_image_provenance_matches_committed_source_and_untracked_files_are_
         assert image["registry_digest"] is None
         assert image["contents"]["dependencies"] and image["contents"]["os_dependencies"]
     assert manifest["source"]["billing_disabled"] and manifest["source"]["prompt_files"]
+    packages = {d["name"].lower(): d["version"] for d in manifest["images"]["application"]["contents"]["dependencies"]}
+    assert packages["redis"] == "8.1.0"
 
 
 @pytest.mark.parametrize("mode", ["promote", "rollback"])
-def test_real_compose_resolution_pins_one_application_image_without_builds(bundle, tmp_path, mode):
+@pytest.mark.parametrize("topology", [None, "internal", "managed"])
+def test_real_compose_resolution_pins_one_application_image_without_builds(bundle, tmp_path, mode, topology):
     manifest, sha, anchor = bundle
     env = tmp_path / "synthetic.env"
     # Deliberately conflicting public metadata/runtime values must be overridden
@@ -54,9 +57,18 @@ def test_real_compose_resolution_pins_one_application_image_without_builds(bundl
     env.write_text(f"DATABASE_URL={url}\nPOSTGRES_PASSWORD=synthetic-test-only\nAPI_ENV=development\nAPI_DOMAIN=wrong.invalid\nAPP_GIT_SHA=wrong\nNEXT_PUBLIC_API_BASE_URL=https://wrong.invalid/api/v1\n")
     state = {"version": 1, "observed_at": R.timestamp(), "schema_revision": manifest["source"]["migration_chain"][-1],
              "unsettled_agent_runs": 0, "active_jobs": 0, "drained": True, "database_identity_sha256": R.database_identity(url)}
+    namespace = "ask4mo:rl:release-test:"
+    password = tmp_path / "synthetic-redis-password"
+    password.write_text("synthetic-test-credential-" * 2)
+    with env.open("a") as output:
+        output.write("RATE_LIMIT_KEY_SECRET=" + "synthetic-test-key-" * 3 + "\n")
+        if topology == "managed":
+            output.write("REDIS_URL=rediss://limiter:" + "test-credential-" * 3 + "@managed.invalid:6379/0\n")
+    options = ({"redis_topology": topology, "redis_namespace": namespace,
+                "redis_password_file": str(password) if topology == "internal" else None} if topology else {})
     env_before = R.file_hash(env)
     out = tmp_path / mode
-    assert R.prepare(manifest, sha, anchor, state, mode, out, env)["executed"] is False
+    assert R.prepare(manifest, sha, anchor, state, mode, out, env, **options)["executed"] is False
     assert R.check_compose(manifest, sha, anchor, out / "compose.yml", env, mode, state)["compose_verified"]
     assert R.file_hash(env) == env_before
     original_env = env.read_text()

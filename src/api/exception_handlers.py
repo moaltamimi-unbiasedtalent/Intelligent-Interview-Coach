@@ -28,6 +28,7 @@ from src.application.errors import (
     ValidationError,
 )
 from src.ai_protection import AiUsageLimitError
+from src.api.rate_limit import RateLimitConfigurationError
 from src.application.usage_quota import QuotaExhausted, QuotaNotConfigured, QuotaUnavailable
 from src.application.preparation_pack import PackGenerationUnavailable
 from src.application.history_access import HistoryNotAvailableError
@@ -95,6 +96,10 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(ConfigurationError)
     async def _configuration(request: Request, exc: ConfigurationError):
         return _envelope(503, "not_configured", str(exc), _request_id(request))
+
+    @app.exception_handler(RateLimitConfigurationError)
+    async def _rate_limit_configuration(request: Request, exc: RateLimitConfigurationError):
+        return _envelope(503, "protection_unavailable", "Request protection is temporarily unavailable. Please try again.", _request_id(request))
 
     @app.exception_handler(UnavailableServiceError)
     async def _unavailable(request: Request, exc: UnavailableServiceError):
@@ -211,7 +216,17 @@ def register_exception_handlers(app: FastAPI) -> None:
         code = getattr(exc, "error_code", None) or {404: "not_found", 401: "unauthorized", 403: "forbidden"}.get(
             exc.status_code, "http_error")
         message = exc.detail if isinstance(exc.detail, str) else "Request failed."
-        return _envelope(exc.status_code, code, message, _request_id(request))
+        response = _envelope(exc.status_code, code, message, _request_id(request))
+        # Preserve only bounded operational retry/state facts. Never forward an
+        # arbitrary HTTPException header or readiness detail payload.
+        headers = {k.lower(): v for k, v in (exc.headers or {}).items()}
+        retry = headers.get("retry-after", "")
+        if exc.status_code in (429, 503) and isinstance(retry, str) and len(retry) <= 5 and retry.isascii() and retry.isdigit() and 1 <= int(retry) <= 86400:
+            response.headers["Retry-After"] = retry
+        state = headers.get("x-rate-limit-state")
+        if request.url.path.endswith("/ready") and state in {"process_local", "configured_unverified", "shared", "recovered_shared", "unreachable", "degraded_local", "fail_closed", "configuration_refused"}:
+            response.headers["X-Rate-Limit-State"] = state
+        return response
 
     @app.exception_handler(RequestValidationError)
     async def _request_validation(request: Request, exc: RequestValidationError):

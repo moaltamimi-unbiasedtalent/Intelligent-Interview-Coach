@@ -1,0 +1,28 @@
+name: Redis shared limiter regression
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  disposable-redis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -e '.[dev,db,redis]'
+      - name: Pull reviewed digest-pinned Redis image (no publication)
+        run: docker pull redis:8.2.9-alpine@sha256:5f2e6a105b2a8cc721911d5d29aadb032c25fe55b43e829e3d03413753ff47c2
+      - name: Real Redis processes, concurrency, ACL, outages and recovery
+        env:
+          RUN_DISPOSABLE_REDIS_TESTS: '1'
+        run: python -m pytest -q -o addopts='' -p no:cacheprovider tests/test_redis_disposable_task04.py
+      - name: Working tree must remain clean
+        run: test -z "$(git status --porcelain)"

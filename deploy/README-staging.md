@@ -82,3 +82,7 @@ without `COPILOT_DATA_DIR` boots with a warning.
 - Backup and restore were exercised only as a tar round trip with stubbed `pg_dump`/`pg_restore`; no real restore drill.
 - The embedding provider is undecided (REVIEW-04): production must not rely on the hash/local embedder.
 - `knowledge-data` starts empty: building or restoring the index is a separate step (package 02A).
+
+## Optional shared Redis preparation
+
+Task 04 adds optional internal or managed Redis through the existing immutable release generator, without changing the default single-process template or deploying anything. Read the [decision record](../docs/production/execution/WAVE4_TASK04_REDIS_DECISIONS.md) and [complete bucket audit](../docs/production/execution/WAVE4_TASK04_REDIS_AUDIT.md). H-REDIS-POLICY and OD-HOSTED remain OPEN. Do not combine generated profiles with a Redis overlay. The internal fragment is not a standalone deployment file. Required-shared profiles gate readiness on actual shared enforcement; existing per-bucket local/deny behavior is preserved.

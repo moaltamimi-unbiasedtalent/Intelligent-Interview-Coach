@@ -52,7 +52,7 @@ LAYERS: dict[str, tuple[str, str, str]] = {
     "05A": (NS + " (nothing deployed; OD-HOSTED)", "Hosting authorisation (OPEN)", "PG-01 BLOCKED"),
     "05B": (NS + " (restore drill, PostgreSQL paths; OD-HOSTED)", "none", "PG-09"),
     "05C": (NS + " (synthetic outage on staging; OD-HOSTED)", "AI budget (OD-BUDGET)", "PG-09"),
-    "05D": (NS + " (live Brevo, Google, Redis; OD-HOSTED)", "none", "PG-02"),
+    "05D": (NS + " (hosted Brevo, Google, Redis; OD-HOSTED; disposable Redis qualified in Task 04)", "none", "PG-02"),
     "05E": ("n/a", "Legal counsel sign-off per offered language (long lead)", "PG-04"),
     "06A": ("n/a", "Native review of the audit baseline", "PG-10 IN PROGRESS; LG-01 and LG-14 evidence exists, none approved by a named human"),
     "06B": (NS + " (journeys per language)", "Native-speaker review", "LG-03, LG-09 per language; PG-13"),

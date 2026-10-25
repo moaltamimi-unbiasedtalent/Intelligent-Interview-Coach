@@ -127,7 +127,7 @@ REGISTRY: dict[str, IntegrationDef] = {d.code: d for d in (
         "Optional shared store for rate limits across replicas. In-memory per-process limiting is the default.",
         credentials=(CredentialSlot("url", "Connection URL (contains credentials)", "REDIS_URL"),),
         settings=(SettingDef("backend", "Requested backend", "RATE_LIMIT_BACKEND", ("in_memory", "redis", "shared")),),
-        validation_note="Tested against a fake client only: distributed limiting is NOT LIVE."),
+        validation_note="Real disposable Redis tests passed; hosted shared enforcement is NOT LIVE."),
     IntegrationDef(
         "langfuse", "Langfuse (observability)", "observability", "Langfuse events",
         "Optional external observability of sanitised agent events. Off by default.",

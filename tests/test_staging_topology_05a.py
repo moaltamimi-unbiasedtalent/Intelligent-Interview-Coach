@@ -342,7 +342,7 @@ def test_ready_in_a_hosted_env_reports_topology_without_secrets(ready_client, mo
     assert r.status_code == 200, r.text                         # an absent worker / scanner is reported, not gating
     body = r.json()
     assert body["checks"]["data_root_writable"] is True
-    assert body["dependencies"] == {"worker_heartbeat": "stale", "scanner": "unreachable"}
+    assert body["dependencies"] == {"worker_heartbeat": "stale", "scanner": "unreachable", "rate_limiter": "process_local"}
     dumped = r.text
     assert "scanner.internal.example" not in dumped and str(tmp_path) not in dumped
 
