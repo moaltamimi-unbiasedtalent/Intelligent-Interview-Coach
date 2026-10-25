@@ -166,6 +166,9 @@ def test_report_requires_exact_session_id_no_suffix(bad):
 
 
 class _FakeRepo:
+    def __init__(self, session_factory):
+        self.session_factory = session_factory
+
     def get_or_create_user(self, *, subject, provider, display_name=None, email=None):
         return {"alice": 1, "bob": 2}.get(subject, 99)
 
@@ -181,7 +184,7 @@ def api(tmp_path):
     agent = _agent_svc()
     store = _FakeStore({("s1", 1): _mgr(evaluations=1, report=object())})
     # Pre-seed shared resources so the REAL feedback verifiers use these services.
-    app.state.resources["repository"] = _FakeRepo()
+    app.state.resources["repository"] = _FakeRepo(sf)
     app.state.resources["feedback_repository"] = FeedbackRepository(sf)
     app.state.resources["agent_service"] = agent
     app.state.resources["durable_session_store"] = store

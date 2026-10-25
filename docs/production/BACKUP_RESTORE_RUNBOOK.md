@@ -1,5 +1,14 @@
 # Backup, restore, rollback and backup-erasure runbook (package 05B, PG-09)
 
+> Wave 4 Task 06 adds the [qualified PostgreSQL recovery procedure](execution/WAVE4_TASK06_RECOVERY.md)
+> and [pre-change gap matrix](execution/WAVE4_TASK06_RECOVERY_AUDIT.md). Use the
+> independently anchored, encrypted operator path for new recovery operations.
+> Historical examples below remain dated evidence; local SQLite drills and legacy
+> shell helpers do not grant hosted recovery approval. Recovery-held databases
+> require authorized accounting/erasure reconciliation before access. PG-09,
+> custody, off-host provider and retention/legal approvals remain OPEN.
+
+
 Status: **tooling and procedure delivered and drilled OFFLINE on a synthetic SQLite environment. Nothing here has been run on the hosted staging environment**
 (DEPLOYMENT FREEZE, owner decision OD-HOSTED). Every drill record says `hosted_verification: NOT RUN (OD-HOSTED)`. The PostgreSQL-specific paths are written and tested
 only against a disposable PostgreSQL when `TEST_DATABASE_URL` is set; they were NOT executed in the delivering run (see section 10).

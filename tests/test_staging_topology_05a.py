@@ -195,7 +195,7 @@ def test_backup_then_restore_roundtrip_of_the_data_volumes(tmp_path):
     dtar = next(out.glob("ask4mo-documents-*.tar.gz"))
     dump = next(out.glob("ask4mo-db-*.dump"))
     docs2, know2 = tmp_path / "r" / "documents", tmp_path / "r" / "knowledge"
-    renv = {**os.environ, "PATH": env["PATH"], "TARGET_DATABASE_URL": "postgresql://u:p@h/ask4mo_restore", "DB_DUMP": str(dump),
+    renv = {**os.environ, "API_ENV": "test", "ASK4MO_LEGACY_RESTORE_UNSAFE_ACK": "legacy-unsealed-destructive-restore", "PATH": env["PATH"], "TARGET_DATABASE_URL": "postgresql://u:p@h/ask4mo_restore", "DB_DUMP": str(dump),
             "DOCS_TAR": str(dtar), "DOCUMENT_STORAGE_DIR": str(docs2), "KNOWLEDGE_TAR": str(ktar), "COPILOT_DATA_DIR": str(know2)}
     r = subprocess.run(["bash", str(ROOT / "deploy/scripts/restore.sh")], env=renv, capture_output=True, text=True)
     assert r.returncode == 0, r.stderr

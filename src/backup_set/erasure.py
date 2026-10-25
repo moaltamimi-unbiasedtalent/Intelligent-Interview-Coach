@@ -104,6 +104,26 @@ class Ledger:
         return problems
 
     def append(self, kind: str, **fields) -> dict:
+        import fcntl
+        import os
+
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        lock = self.path.with_name(self.path.name + ".lock")
+        descriptor = os.open(lock, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX)
+            if kind in ("deletion_recorded", "set_registered"):
+                key = "user_id" if kind == "deletion_recorded" else "set_id"
+                for entry in self.entries():
+                    if entry["kind"] == kind and entry.get(key) == fields.get(key):
+                        return entry
+            return self._append_locked(kind, **fields)
+        finally:
+            os.close(descriptor)
+
+    def _append_locked(self, kind: str, **fields) -> dict:
+        import os
+
         if kind not in KINDS:
             raise ErasureError("unknown_ledger_kind")
         if self.verify():
@@ -113,8 +133,11 @@ class Ledger:
         entry = {"format": LEDGER_FORMAT, "seq": len(entries) + 1, "kind": kind, "recorded_at": _utc(self._clock()).isoformat(), **fields, "prev_hash": prev}
         entry["entry_hash"] = self._hash(prev, entry)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.path, "a", encoding="utf-8") as fh:
+        descriptor = os.open(self.path, os.O_WRONLY | os.O_APPEND | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+        with os.fdopen(descriptor, "a", encoding="utf-8") as fh:
             fh.write(json.dumps(entry, sort_keys=True) + "\n")
+            fh.flush()
+            os.fsync(fh.fileno())
         return entry
 
     def deletions(self) -> dict[int, datetime]:
@@ -490,3 +513,94 @@ def attest_destruction(ledger: Ledger, set_id: str, *, attested_by: str, reason:
         if e["kind"] == "set_destruction_attested" and e["set_id"] == set_id:
             return e
     return ledger.append("set_destruction_attested", set_id=set_id, attested_by=attested_by, reason=reason, verified_by_tool=False)
+
+
+# Qualified recovery uses this independently held, keyed head. The historical
+# append-only ledger format remains unchanged; a chain alone cannot detect rollback.
+def signed_head(ledger: Ledger, key: bytes) -> dict:
+    import hmac
+
+    if len(key) != 32 or not ledger.path.is_file() or ledger.path.is_symlink() or ledger.verify():
+        raise ErasureError("erasure_history_untrusted")
+    entries = ledger.entries()
+    head = {"format": 1, "seq": len(entries), "head": entries[-1]["entry_hash"] if entries else GENESIS}
+    head["signature"] = hmac.new(key, json.dumps(head, sort_keys=True).encode(), hashlib.sha256).hexdigest()
+    return head
+
+
+def require_head(ledger: Ledger, expected: dict, key: bytes, *, minimum_seq: int = 0) -> dict:
+    import hmac
+
+    actual = signed_head(ledger, key)
+    if (not isinstance(expected, dict) or set(expected) != set(actual)
+            or not hmac.compare_digest(json.dumps(actual, sort_keys=True), json.dumps(expected, sort_keys=True))
+            or actual["seq"] < minimum_seq):
+        raise ErasureError("erasure_history_untrusted")
+    return actual
+
+
+class _PostgresCheckpointPurger:
+    def __init__(self, database_url: str):
+        self.url = database_url.replace("postgresql+psycopg://", "postgresql://")
+
+    def purge_run(self, run_id: str) -> bool:
+        from langgraph.checkpoint.postgres import PostgresSaver
+
+        with PostgresSaver.from_conn_string(self.url) as saver:
+            saver.delete_thread(run_id)
+        return True
+
+
+def reapply_postgresql(ledger: Ledger, database_url: str, documents_dir: Path, *, execute: bool = False) -> Report:
+    """Reuse the live deletion service, including official checkpoint deletion.
+
+    Call only inside the qualified, isolated recovery hold. Personal usage facts
+    follow existing erasure policy; the non-identifying monetary ledger is retained.
+    """
+    from sqlalchemy import select
+    from src.application.account_deletion_service import AccountDeletionService, SubscriptionResolutionRequired
+    from src.documents.storage import LocalDocumentStore
+    from src.persistence import User, make_session_factory
+    from src.privacy.preparation import PreparationRunIndex
+
+    rep = Report("postgresql_erasure_reapply", execute)
+    if not ledger.path.is_file() or ledger.verify():
+        rep.ok, rep.codes = False, ["erasure_history_untrusted"]
+        return rep
+    engine = E._engine(database_url)
+    sf = make_session_factory(engine)
+    try:
+        from src.backup_set.admission import pending
+
+        if not pending(sf):
+            rep.ok, rep.codes = False, ["recovery_hold_required"]
+            return rep
+        ids = sorted(ledger.deletions())
+        with sf() as s:
+            present = list(s.scalars(select(User.id).where(User.id.in_(ids))))
+        rep.counts = {"ledger_accounts": len(ids), "accounts_present": len(present)}
+        if not execute:
+            return rep
+        svc = AccountDeletionService(sf, document_store=LocalDocumentStore(str(documents_dir)),
+                                     agent_service=_PostgresCheckpointPurger(database_url), preparation_index=PreparationRunIndex(sf))
+        erased = files = checkpoints = personal_usage = 0
+        for uid in present:
+            try:
+                summary = svc.delete_account(uid)
+            except SubscriptionResolutionRequired:
+                summary = svc.delete_account(uid, preserve_billing_reference=True)
+            if summary.files_failed or summary.checkpoints_failed:
+                raise ErasureError("erasure_reapply_failed")
+            erased += int(summary.existed)
+            files += summary.files_purged
+            checkpoints += summary.checkpoints_purged
+            personal_usage += summary.deleted_rows.get("ai_usage_facts", 0)
+        with sf() as s:
+            remaining = s.scalar(select(User.id).where(User.id.in_(ids), User.status != "deletion_requested").limit(1))
+        if remaining is not None:
+            raise ErasureError("deleted_account_remains")
+        rep.counts.update(accounts_erased=erased, files_purged=files, checkpoints_purged=checkpoints,
+                          personal_usage_facts_erased_by_existing_policy=personal_usage)
+        return rep
+    finally:
+        engine.dispose()

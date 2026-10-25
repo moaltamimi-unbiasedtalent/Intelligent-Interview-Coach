@@ -33,7 +33,8 @@ def test_rehearsal_upgrades_refuses_the_downgrade_fail_closed_downgrades_cleanly
     by = {c["id"]: c for c in res.record["checks"]}
     head, _prev = RB.head_and_previous()
     seeded = head.split("_", 1)[1] in RB.HEAD_SEEDERS
-    for step in ("upgrade_to_head", "pre_migration_backup_taken", "downgrade_one_revision", "reupgrade_to_head", "restore_of_pre_migration_backup"):
+    middle = ("protected_state_retained", "unsafe_downgrade_not_attempted", "new_target_protected_state") if head.endswith("agent_run_controls") else ("downgrade_one_revision", "reupgrade_to_head")
+    for step in ("upgrade_to_head", "pre_migration_backup_taken", *middle, "restore_of_pre_migration_backup"):
         assert by[step]["result"] == "PASS", (step, by[step])
     refusal = by["downgrade_refused_fail_closed"]
     if seeded:

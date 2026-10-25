@@ -649,17 +649,17 @@
    "ci": "PR #257 CI not recorded",
    "live_staging": {
     "state": "NOT RUN",
-    "description": "NOT RUN (restore drill, PostgreSQL paths; OD-HOSTED)",
+    "description": "NOT RUN (hosted/off-host recovery and custody; Task 06 disposable PostgreSQL qualification; OD-HOSTED)",
     "evidence": []
    },
    "human_qualification": {
     "state": "OPEN",
-    "description": "none",
+    "description": "Recovery/custody/retention owners and legal approval OPEN",
     "evidence": []
    },
    "gate_acceptance": {
     "state": "NOT ACCEPTED",
-    "description": "PG-09",
+    "description": "PG-09 NOT ACCEPTED; engineering evidence does not approve RTO/RPO",
     "evidence": []
    },
    "merge_sha": "f5c1e04f1287",

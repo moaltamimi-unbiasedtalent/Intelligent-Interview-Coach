@@ -2,7 +2,7 @@
 through the backup set, and the migration rollback on PostgreSQL), executed ONLY against a DISPOSABLE PostgreSQL server named by ``TEST_DATABASE_URL``.
 
 ``TEST_DATABASE_URL`` is the URL of a throwaway server (administrator role, as in the other ``tests/test_pg_*.py`` modules, which use ``P5B_PG_ADMIN_URL``, also accepted).
-Each module run creates and drops its OWN ``p05b_*`` databases and never touches the database the URL names. The URL's database name must contain ``test`` (for example
+Each module run creates and drops its OWN ``p5b_05b_*`` databases and never touches the database the URL names. The URL's database name must contain ``test`` (for example
 ``ask4mo_test``): anything else is refused as possibly not disposable and every test is SKIPPED with that reason. Without the variable every test is SKIPPED with an explicit
 reason. These tests do not install, start or configure PostgreSQL and do not use Docker. Synthetic structural data only; no URL, password or row value is printed."""
 
@@ -76,7 +76,7 @@ class NS:
 def pg():
     from sqlalchemy import create_engine
 
-    name, url = _create_db("p05b")
+    name, url = _create_db("p5b_05b")
     out = _alembic(url, "upgrade", "head")
     assert out.returncode == 0, out.stderr[-800:]
     engine = create_engine(url, future=True)
@@ -198,7 +198,7 @@ def test_audit_and_incident_triggers_exist_and_enforce_append_only_on_postgresql
         u = User(subject=f"pg05b-{uuid.uuid4().hex[:8]}", provider="local", email=f"{uuid.uuid4().hex[:8]}@example.test")
         s.add(u)
         s.flush()
-        ev = AuditEvent(actor_user_id=u.id, event_type="pg05b.test", target_type="t", target_id="1", result="success", context={"k": "v"})
+        ev = AuditEvent(actor_user_id=u.id, event_type="pg05b.test", target_type="t", target_id="1", result="success", context={"fields_changed": ["synthetic"]})
         s.add(ev)
         s.commit()
         uid, eid = u.id, ev.id
@@ -275,7 +275,7 @@ def _seed_docs(url: str, docs: Path) -> None:
 def test_backup_set_round_trips_through_pg_dump_and_pg_restore_and_refuses_unsafe_targets(fresh_db, tmp_path):
     from src.backup_set import engine as E
 
-    src = fresh_db("p05b_src", migrate=True)                                  # its own database: the shared one holds running jobs from the claim tests
+    src = fresh_db("p5b_05b_src", migrate=True)                                  # its own database: the shared one holds running jobs from the claim tests
     docs = tmp_path / "documents"
     _seed_docs(src.url, docs)
     out = tmp_path / "set"
@@ -283,7 +283,7 @@ def test_backup_set_round_trips_through_pg_dump_and_pg_restore_and_refuses_unsaf
     assert rep.ok, rep.codes
     manifest = E.load_manifest(out)
     assert manifest["database"]["dialect"] == "postgresql" and manifest["database"]["schema_revision"] == repository_head() and E.verify_set(out).ok
-    target = fresh_db("p05b_restore")
+    target = fresh_db("p5b_05b_restore")
     # refusals first: nothing is overwritten and nothing is restored into a database that is not clearly a restore target
     assert E.restore_set(out, target_root=tmp_path / "r0", execute=True, target_database_url=None).codes == ["target_database_url_required"]
     bad_name = target.url.rsplit("/", 1)[0] + "/ask4mo_production_like"
@@ -300,10 +300,10 @@ def test_restore_drill_record_on_postgresql_source(fresh_db, tmp_path):
     from src.backup_set import engine as E
     from src.backup_set.drill import run_drill
 
-    src = fresh_db("p05b_dsrc", migrate=True)
+    src = fresh_db("p5b_05b_dsrc", migrate=True)
     docs = tmp_path / "documents"
     _seed_docs(src.url, docs)
-    target = fresh_db("p05b_drill")
+    target = fresh_db("p5b_05b_drill")
     res = run_drill(E.Source(database_url=src.url, documents_dir=docs), work_dir=tmp_path / "work", record_dir=tmp_path / "records", label="pg", kind="offline_synthetic",
                     api_env="test", negative_checks=True, target_database_url=target.url)
     by = {c["id"]: c["result"] for c in res.record["checks"]}
@@ -321,7 +321,7 @@ def test_head_migration_downgrade_is_fail_closed_then_clean_then_reupgrades_on_p
     suffix = head.split("_", 1)[1]
     if suffix not in RB.HEAD_SEEDERS:
         pytest.skip("no state seeder registered for the head revision: fail-closed refusal NOT EXERCISED on PostgreSQL")
-    db = fresh_db("p05b_roll", migrate=True)
+    db = fresh_db("p5b_05b_roll", migrate=True)
     from src.persistence import User
 
     with _sf(db.url)() as s:
@@ -329,6 +329,14 @@ def test_head_migration_downgrade_is_fail_closed_then_clean_then_reupgrades_on_p
         s.add(u)
         s.commit()
     RB.HEAD_SEEDERS[suffix][0](db.url)
+    if suffix == "agent_run_controls":
+        before = RB.protected_fingerprint(db.url)
+        refused = _alembic(db.url, "downgrade", "-1")
+        assert refused.returncode != 0 and "Run controls must be deliberately retired" in (refused.stderr + refused.stdout)
+        assert RB.protected_fingerprint(db.url) == before
+        with db.engine.connect() as c:
+            assert c.execute(text("SELECT version_num FROM alembic_version")).scalar() == head
+        return  # Never delete protected rows to force a downgrade; new-target recovery is qualified separately.
     with db.engine.connect() as c:
         before = c.execute(text("SELECT count(*) FROM candidate_stories")).scalar()
     refused = _alembic(db.url, "downgrade", "-1")
