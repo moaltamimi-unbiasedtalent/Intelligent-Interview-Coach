@@ -12,7 +12,7 @@ from typing import Any, Mapping
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.llm.budget import governor as G
-from src.llm.budget.config import KILL_ENV, MARKER_ENV, MODE_ENV, load_config, resolve_budget_class
+from src.llm.budget.config import KILL_ENV, MARKER_ENV, MODE_ENV, load_config, resolve_budget_class, require_approved_marker, validate_hosted_approval
 from src.llm.budget.errors import BudgetError
 from src.llm.budget.ledger import DbBudgetLedger
 
@@ -53,6 +53,15 @@ def budget_status(session_factory, environ: Mapping[str, str] | None = None) -> 
         out["reason"] = getattr(exc, "reason", "ledger_unavailable")
         return out
     out["ledger"] = snap
+    try:
+        require_approved_marker(cfg, env)
+        validate_hosted_approval(cfg, env)
+    except BudgetError as exc:
+        out.update(state="not_approved", reason=exc.reason)
+        return out
+    if installed is None or not installed.is_open:
+        out.update(state="closed", reason=installed.closed_reason if installed else "enforcement_required")
+        return out
     stopped = snap["remaining_requests"] == 0 or float(snap["remaining_to_stop_usd"]) == 0.0
     if snap["killed"] or out["env_kill_switch"]:
         out["state"] = "killed"

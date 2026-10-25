@@ -166,7 +166,13 @@ def source_record(root, sha):
     web_inputs = hashes(root, tree_names(root, "frontend"))
     web_files = {name.removeprefix("frontend/"): value for name, value in web_inputs.items()
                  if name in ("frontend/package.json", "frontend/package-lock.json", "frontend/next.config.mjs") or name.startswith("frontend/public/")}
-    return {"application_sha": sha, "migration_chain": chain, "compatible_schema_revisions": policy["compatible_schema_revisions"],
+    governor = root / "src/llm/budget/governor.py"
+    policy_version = None
+    if governor.exists():
+        for node in ast.parse(governor.read_text()).body:
+            if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "HOSTED_POLICY_VERSION" for t in node.targets):
+                policy_version = ast.literal_eval(node.value)
+    return {"budget_policy_version": policy_version, "application_sha": sha, "migration_chain": chain, "compatible_schema_revisions": policy["compatible_schema_revisions"],
             "api_files": api_files, "web_files": web_files, "web_input_sha256": digest(canonical(web_inputs)),
             "dockerfiles": hashes(root, ["deploy/Dockerfile.api", "deploy/Dockerfile.web", ".dockerignore"]),
             "prompt_files": hashes(root, tree_names(root, "prompts")), "language_activation_sha256": api_files[activation],
@@ -350,6 +356,7 @@ def check_state(state, manifest, mode, *, now=None):
     require(state["drained"] is True, "drain_attestation_required")
     require(type(state["unsettled_agent_runs"]) is int and type(state["active_jobs"]) is int and
             state["unsettled_agent_runs"] == state["active_jobs"] == 0, "active_or_unsettled_work")
+    require(manifest["source"].get("budget_policy_version") == 1, "budget_policy_incapable_image")
     chain = manifest["source"]["migration_chain"]
     if mode == "rollback":
         require(state["schema_revision"] in manifest["source"]["compatible_schema_revisions"], "rollback_schema_incompatible")
@@ -362,6 +369,7 @@ def profile_for(manifest, base, state, mode, env_file, caddyfile):
     require(mode in ("promote", "rollback"), "promotion_mode_invalid")
     require(Path(env_file).is_absolute() and Path(caddyfile).is_absolute(), "runtime_paths_must_be_absolute")
     check_state(state, manifest, mode)
+    require(manifest["source"].get("budget_policy_version") == 1, "budget_policy_incapable_image")
     profile = copy.deepcopy(base)
     services = profile["services"]
     for name in ("api", "worker", "migrate", "web"):
@@ -373,6 +381,8 @@ def profile_for(manifest, base, state, mode, env_file, caddyfile):
         service.setdefault("environment", {}).update(APP_GIT_SHA=manifest["application_sha"], APP_BUILD_TIME=manifest["build_started_at"])
         if name != "web":
             service["environment"]["API_ENV"] = "staging"
+            if name in ("api", "worker"):
+                service["environment"].update(AI_BUDGET_MODE="enforce", AI_BUDGET_CLASS="production")
         else:
             service["environment"]["NODE_ENV"] = "production"
     endpoint = urlsplit(manifest["public_api_base_url"])
@@ -395,7 +405,7 @@ def profile_for(manifest, base, state, mode, env_file, caddyfile):
     return profile
 
 
-def prepare(manifest, expected_sha, anchor, state, mode, out, env_file, *, repo=ROOT, redis_topology=None, redis_namespace=None, redis_password_file=None):
+def prepare(manifest, expected_sha, anchor, state, mode, out, env_file, *, repo=ROOT, redis_topology=None, redis_namespace=None, redis_password_file=None, budget_config_file=None):
     validate_manifest(manifest, expected_sha, anchor, repo=repo)
     if redis_topology:
         require(any(d["name"].lower() == "redis" and d["version"] == "8.1.0" for d in manifest["images"]["application"]["contents"]["dependencies"]), "release_redis_client_unavailable")
@@ -403,6 +413,15 @@ def prepare(manifest, expected_sha, anchor, state, mode, out, env_file, *, repo=
         base = yaml.safe_load((root / "deploy/docker-compose.staging.yml").read_text())
         caddy = (root / "deploy/Caddyfile").read_bytes()
         profile = profile_for(manifest, base, state, mode, env_file, Path(out).resolve() / "Caddyfile")
+        if budget_config_file:
+            budget_path = Path(budget_config_file)
+            require(budget_path.is_absolute() and budget_path.is_file() and not (budget_path.stat().st_mode & 0o007), "budget_runtime_file_invalid")
+            for name in ("api", "worker"):
+                profile["services"][name]["environment"]["AI_BUDGET_CONFIG_PATH"] = "/run/secrets/ai-budget.json"
+                profile["services"][name].setdefault("volumes", []).append({"type": "bind", "source": str(budget_path), "target": "/run/secrets/ai-budget.json", "read_only": True, "bind": {"create_host_path": False}})
+        else:
+            for name in ("api", "worker"):
+                profile["services"][name]["environment"]["AI_BUDGET_CONFIG_PATH"] = ""
         from scripts.release_redis import apply
         profile = apply(profile, root, out, topology=redis_topology, namespace=redis_namespace, password_file=redis_password_file)
         redis_script = (root / "deploy/scripts/redis-start.sh").read_bytes() if redis_topology == "internal" else None
@@ -416,6 +435,7 @@ def prepare(manifest, expected_sha, anchor, state, mode, out, env_file, *, repo=
                "database_identity_sha256": state["database_identity_sha256"],
                "compose_sha256": file_hash(out / "compose.yml"), "caddy_sha256": file_hash(out / "Caddyfile"),
                "drain_evidence": "operator attestation; process drain not verified by this tool", "executed": False,
+               "budget_config_file": str(budget_config_file) if budget_config_file else None,
                "redis_topology": redis_topology, "redis_namespace": redis_namespace, "redis_password_file": str(redis_password_file) if redis_password_file else None,
                "migrations": "one-shot upgrade only" if mode == "promote" else "none; application images only"})
     return {"mode": mode, "manifest_sha256": anchor, "executed": False}
@@ -454,6 +474,15 @@ def check_compose(manifest, expected_sha, anchor, profile, env_file, mode, state
         elif name in ("api", "web"):
             require(not service.get("command"), "resolved_application_command_override")
         volumes = service.get("volumes", [])
+        if name in ("api", "worker"):
+            require(service["environment"].get("AI_BUDGET_MODE") == "enforce" and service["environment"].get("AI_BUDGET_CLASS") == "production", "budget_runtime_policy_mismatch")
+            bindings = [v for v in volumes if v["target"] == "/run/secrets/ai-budget.json"]
+            configured = plan.get("budget_config_file")
+            require(service["environment"].get("AI_BUDGET_CONFIG_PATH", "") == ("/run/secrets/ai-budget.json" if configured else ""), "budget_runtime_path_mismatch")
+            require(len(bindings) == (1 if configured else 0), "budget_runtime_mount_mismatch")
+            if configured:
+                require(bindings[0]["type"] == "bind" and bindings[0].get("read_only") is True and bindings[0]["source"] == configured, "budget_runtime_mount_mismatch")
+            volumes = [v for v in volumes if v not in bindings]
         expected_mounts = {("/data/documents", "documents"), ("/data/knowledge", "knowledge-data")} if name in ("api", "worker") else set()
         require(all(v["type"] == "volume" for v in volumes) and {(v["target"], v["source"]) for v in volumes} == expected_mounts, "resolved_private_volume_mismatch")
         require(service["image"] == manifest["images"]["web" if name == "web" else "application"]["image_id"], "resolved_image_mismatch")
@@ -546,6 +575,7 @@ def main(argv=None):
         if name in ("prepare", "export"):
             child.add_argument("--out", required=True)
         if name == "prepare":
+            child.add_argument("--budget-config-file")
             child.add_argument("--redis-topology", choices=("internal", "managed"))
             child.add_argument("--redis-namespace")
             child.add_argument("--redis-password-file")
@@ -576,7 +606,7 @@ def main(argv=None):
             manifest = decode_json(Path(args.manifest).read_text())
             common = (manifest, args.expected_sha, args.manifest_sha256)
             if args.command == "prepare":
-                result = prepare(*common, decode_json(Path(args.state).read_text()), args.mode, args.out, args.env_file, redis_topology=args.redis_topology, redis_namespace=args.redis_namespace, redis_password_file=args.redis_password_file)
+                result = prepare(*common, decode_json(Path(args.state).read_text()), args.mode, args.out, args.env_file, redis_topology=args.redis_topology, redis_namespace=args.redis_namespace, redis_password_file=args.redis_password_file, budget_config_file=args.budget_config_file)
             elif args.command == "check-compose":
                 result = check_compose(*common, args.profile, args.env_file, args.mode, decode_json(Path(args.state).read_text()))
             elif args.command == "export":

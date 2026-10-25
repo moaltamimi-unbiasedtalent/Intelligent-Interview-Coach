@@ -253,6 +253,10 @@ def operation_headers(operation: str) -> dict[str, str]:
 def install_from_env(env: dict | None = None) -> ProviderControl | None:
     """Install the provider control chosen by ``ASK4MO_PROVIDER_MODE``; ``None`` when it is unset. Raises (the process must not start) on any problem."""
     e = os.environ if env is None else env
+    from src.llm.budget.config import hosted
+
+    if hosted(e):
+        return None  # Hosted processes use the production ledger, never the demo ledger.
     mode = (e.get("ASK4MO_PROVIDER_MODE") or "").strip().lower()
     if not mode:
         return None

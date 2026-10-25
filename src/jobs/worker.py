@@ -115,7 +115,7 @@ def main() -> None:   # pragma: no cover - process entrypoint
     install_from_env()      # the same provider control as the API (no-op unless ASK4MO_PROVIDER_MODE is set)
     from src.llm.budget.governor import install_from_env as install_budget_governor
 
-    install_budget_governor()      # 05C: the same production budget governor as the API (no-op unless AI_BUDGET_MODE=enforce)
+    install_budget_governor()      # 05C / Task 05: hosted AI uses the same fail-closed durable governor as the API
     repo = build_repository(load_config())
     from src.copilot.config import load_config as load_copilot_config
     from src.knowledge_admin.wiring import build_worker_services

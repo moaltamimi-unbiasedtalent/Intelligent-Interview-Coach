@@ -231,6 +231,9 @@ class GoogleSpeechTranscriptionService(SpeechTranscriptionService):
         return bool(self._project_id)
 
     def _get_client(self) -> Any:
+        from src.llm.budget.governor import refuse_ungoverned_transport
+
+        refuse_ungoverned_transport()
         if self._client is not None:
             return self._client
         if self._client_factory is not None:

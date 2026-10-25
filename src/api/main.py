@@ -153,7 +153,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
     install_from_env()
     from src.llm.budget.governor import install_from_env as install_budget_governor
 
-    install_budget_governor()      # 05C: a no-op unless AI_BUDGET_MODE=enforce; a closed governor (fail closed) when enforcement is requested but config, marker or ledger is invalid
+    install_budget_governor()      # 05C / Task 05: hosted AI always fails closed without enforced, approved durable accounting; safe non-AI traffic stays available
     app = FastAPI(
         title="Ask4Mo — Intelligent Interview Coach API",
         version=settings.version,

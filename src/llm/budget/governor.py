@@ -28,9 +28,11 @@ from typing import Any, Mapping
 
 import httpx
 
-from src.llm.budget.config import (BudgetConfig, CATEGORIES, KILL_ENV, MODE_ENV, load_config, require_approved_marker, resolve_budget_class, usd_to_micro)
+from src.llm.budget.config import (BudgetConfig, CATEGORIES, KILL_ENV, MODE_ENV, load_config, require_approved_marker, resolve_budget_class, usd_to_micro, hosted, validate_hosted_approval)
 from src.llm.budget.errors import BudgetError
 from src.llm.budget.ledger import DbBudgetLedger, Reservation
+
+HOSTED_POLICY_VERSION = 1
 
 OP_HEADER = "x-ask4mo-operation"
 METADATA_GET = ("/api/v1/key", "/api/v1/models", "/api/v1/credits", "/api/v1/embeddings/models")
@@ -40,8 +42,8 @@ OPERATION_CATEGORY = {"agent": "agent", "interview": "interview", "embedding": "
 
 
 def estimate_tokens(text: str) -> int:
-    """Pessimistic input estimate (about 3 characters per token)."""
-    return max(1, -(-len(text) // 3))
+    """Conservative byte bound, including non-ASCII input and serialized tool schemas."""
+    return max(1, len(text.encode("utf-8")))
 
 
 def _error_category(status: int | None, exc: BaseException | None = None) -> str | None:
@@ -75,13 +77,22 @@ class BudgetGovernor:
         if env.get("CI") or env.get("GITHUB_ACTIONS"):
             raise BudgetError("ci_forbidden", "Paid provider calls never run in CI.")
         klass = budget_class or resolve_budget_class(env)
+        if hosted(env) and (env.get(MODE_ENV) != "enforce" or klass == "development"):
+            raise BudgetError("enforcement_required", "Hosted calls require the approved production budget policy.")
         cfg = config or load_config(environ=env)
         if klass not in cfg.classes:
             raise BudgetError("class_not_configured", f"Budget class {klass!r} has no configured ceiling (fail closed).")
         if require_marker:
             require_approved_marker(cfg, env)
+        validate_hosted_approval(cfg, env)
         ledger = DbBudgetLedger(session_factory)
         ledger.ensure_ready()
+        if hosted(env):
+            with session_factory() as session:
+                if session.get_bind().dialect.name != "postgresql":
+                    raise BudgetError("durable_ledger_required", "Hosted budgets require PostgreSQL.")
+        if (env.get(KILL_ENV) or "").strip().lower() in ("1", "true", "yes"):
+            ledger.kill("environment")  # latch across process restart / image rollback
         return cls(cfg, ledger, klass, default_category=default_category, environ=env)
 
     @classmethod
@@ -107,13 +118,18 @@ class BudgetGovernor:
         host = (request.url.host or "").lower()
         hosts = self.config.hosts if self.config else ("openrouter.ai",)
         if host not in hosts:
+            paid_path = any(request.url.path.rstrip("/").endswith(p) for p in (*PRICED_ENDPOINTS, "/audio/transcriptions", "/realtime/sessions", "/responses", "/messages", "/images/generations", "/audio/speech"))
+            if hosted(self.env) and (paid_path or host in ("openrouter.ai", "api.openai.com")):
+                self._refuse("provider_host_not_allowed", "The provider endpoint is not approved.")
             return "passthrough"
+        if request.url.scheme != "https" or request.url.port not in (None, 443) or request.url.userinfo:
+            self._refuse("provider_endpoint_invalid", "The provider endpoint is not approved.")
         path = request.url.path.rstrip("/")
         if request.method == "POST" and any(path.endswith(e) for e in PRICED_ENDPOINTS):
             return "embeddings" if path.endswith("/embeddings") else "chat"
         if request.method == "GET" and path in METADATA_GET:
             return "metadata"
-        self._refuse("endpoint_not_allowed", f"{request.method} {path} is not an allowed provider endpoint.")
+        self._refuse("endpoint_not_allowed", "The provider endpoint is not allowed.")
         return ""
 
     def category_for(self, request: httpx.Request, kind: str) -> str:
@@ -139,6 +155,14 @@ class BudgetGovernor:
             self._refuse("body_unreadable", "The request body could not be inspected.")
         if not isinstance(body, dict):
             self._refuse("body_unreadable", "The request body could not be inspected.")
+        if body.get("n", 1) != 1 or body.get("best_of", 1) != 1 or body.get("modalities") or body.get("audio"):
+            self._refuse("request_shape_not_supported", "Only a single text completion is budget-qualified.")
+        for message in body.get("messages", []) or []:
+            if not isinstance(message, dict):
+                self._refuse("body_unreadable", "The message body could not be inspected.")
+            content = message.get("content")
+            if isinstance(content, list) and any(not isinstance(part, dict) or part.get("type") != "text" for part in content):
+                self._refuse("request_shape_not_supported", "Multimodal inference is not budget-qualified.")
         if body.get("stream"):
             self._refuse("streaming_not_supported", "Streaming responses are not admitted.")
         model = body.get("model")
@@ -148,8 +172,8 @@ class BudgetGovernor:
         try:
             retry = int(request.headers.get("x-stainless-retry-count", "0"))
         except ValueError:
-            retry = 0
-        if retry > lim.max_retries:
+            self._refuse("retry_limit", "The SDK retry count is invalid.")
+        if retry < 0 or retry > lim.max_retries:
             self._refuse("retry_limit", "The SDK retry count exceeds the configured maximum.")
         if kind == "embeddings":
             tokens, out_cap = estimate_tokens(json.dumps(body.get("input"), ensure_ascii=False, default=str)), 0
@@ -159,7 +183,7 @@ class BudgetGovernor:
                 self._refuse("output_cap_missing", "The outgoing request carries no output-token cap (fail closed).")
             if cap > lim.max_output_tokens:
                 self._refuse("output_cap_exceeds_limit", "The outgoing output cap exceeds the configured per-request limit.")
-            tokens = estimate_tokens(json.dumps({"messages": body.get("messages"), "tools": body.get("tools"), "response_format": body.get("response_format")}, ensure_ascii=False, default=str))
+            tokens = estimate_tokens(json.dumps(body, ensure_ascii=False, default=str))
             out_cap = cap
         if tokens > lim.max_input_tokens:
             self._refuse("input_too_large", "The input estimate exceeds the configured per-request limit.")
@@ -169,11 +193,13 @@ class BudgetGovernor:
         request.extensions["timeout"] = {k: (t if cur.get(k) is None else min(float(cur[k]), t)) for k in ("connect", "read", "write", "pool")}
         category = self.category_for(request, kind)
         fingerprint = hashlib.sha256(f"{request.method}|{request.url.path}|".encode() + json.dumps(body, sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()
-        return model, category, worst, fingerprint, (request.headers.get(OP_HEADER) or category).strip().lower()[:48]
+        return model, category, worst, fingerprint, category
 
     def _open_or_refuse(self) -> None:
         if not self.is_open:
             self._refuse(self.closed_reason or "governor_closed", "The AI budget governor is closed (configuration, approval or ledger is not valid); paid provider calls are refused (fail closed).")
+        validate_hosted_approval(self.config, self.env)
+        require_approved_marker(self.config, self.env)
         if self.killed():
             self._refuse("kill_switch", "The AI budget kill switch is engaged; no provider request is sent.")
 
@@ -197,7 +223,8 @@ class BudgetGovernor:
         tin, tout = u.get("prompt_tokens", u.get("input_tokens")), u.get("completion_tokens", u.get("output_tokens", 0))
         if tin is None:
             return None, None, None, None, None
-        tin, tout = int(tin), int(tout or 0)
+        if type(tin) is not int or type(tout) is not int or tin < 0 or tout < 0:
+            raise ValueError("invalid token usage")
         price = self.config.pricing[model]  # type: ignore[union-attr]
         est = usd_to_micro(Decimal(tin) * price.prompt + Decimal(tout) * price.completion)
         provider = usd_to_micro(Decimal(str(u["cost"]))) if u.get("cost") is not None else None
@@ -215,7 +242,12 @@ class BudgetGovernor:
             except Exception:  # noqa: BLE001 - an unreadable body is UNKNOWN, never zero
                 committed, bad = None, True
             if committed is None:
-                led.settle(res, outcome="unknown", status_code=sc, latency_ms=ms, error_category="malformed_body" if bad else "usage_missing")
+                reported = None
+                try:
+                    reported = usd_to_micro(response.json()["usage"]["cost"])
+                except (KeyError, ValueError, TypeError, ArithmeticError):
+                    pass
+                led.settle(res, outcome="unknown", committed=reported or 0, provider_cost=reported, status_code=sc, latency_ms=ms, error_category="malformed_body" if bad else "usage_missing")
             else:
                 led.settle(res, outcome="settled", committed=committed, input_tokens=tin, output_tokens=tout, est_cost=est, provider_cost=prov, status_code=sc, latency_ms=ms)
         elif sc in DETERMINATE_REJECTIONS:
@@ -235,9 +267,11 @@ class BudgetGovernor:
         if kind == "passthrough":
             return orig(client, request, **kw)
         if kind == "metadata":
+            kw["follow_redirects"] = False
             self._open_or_refuse_metadata()
             return orig(client, request, **kw)
         self._open_or_refuse()
+        kw["follow_redirects"] = False
         if not self._sem.acquire(timeout=self.config.limits.request_timeout_s):  # type: ignore[union-attr]
             self._refuse("concurrency_limit", "The configured concurrency limit is saturated.")
         try:
@@ -257,11 +291,19 @@ class BudgetGovernor:
         if kind == "passthrough":
             return await orig(client, request, **kw)
         if kind == "metadata":
+            kw["follow_redirects"] = False
             self._open_or_refuse_metadata()
             return await orig(client, request, **kw)
         self._open_or_refuse()
+        kw["follow_redirects"] = False
         # the semaphore is shared with sync callers; waiting must never block the event loop
-        got = await asyncio.get_running_loop().run_in_executor(None, lambda: self._sem.acquire(timeout=self.config.limits.request_timeout_s))  # type: ignore[union-attr]
+        waiting = asyncio.get_running_loop().run_in_executor(None, lambda: self._sem.acquire(timeout=self.config.limits.request_timeout_s))  # type: ignore[union-attr]
+        try:
+            got = await asyncio.shield(waiting)
+        except BaseException:
+            # Cancellation cannot abandon a background waiter that later acquires.
+            waiting.add_done_callback(lambda task: self._sem.release() if task.result() else None)
+            raise
         if not got:
             self._refuse("concurrency_limit", "The configured concurrency limit is saturated.")
         try:
@@ -288,6 +330,8 @@ class BudgetGovernor:
         snap = self.ledger.snapshot(self.config, self.budget_class)  # type: ignore[union-attr]
         snap["state"] = "killed" if self.killed() else ("stopped" if Decimal(snap["remaining_to_stop_usd"]) == 0 or snap["remaining_requests"] == 0 else "open")
         snap["integrity"] = self.ledger.integrity(self.budget_class)  # type: ignore[union-attr]
+        if not snap["integrity"]["consistent"]:
+            snap.update(state="unavailable", reason="ledger_inconsistent")
         return snap
 
 
@@ -336,7 +380,11 @@ def install_from_env(session_factory=None, environ: Mapping[str, str] | None = N
     is not valid, a CLOSED governor is installed instead: the process keeps serving non-AI traffic and every paid provider call is refused with the reason (fail closed)."""
     env = os.environ if environ is None else environ
     if (env.get(MODE_ENV) or "").strip().lower() != "enforce":
-        return None
+        if not hosted(env):
+            return None
+        if _Installed.governor is not None:
+            return _Installed.governor
+        return install(BudgetGovernor.closed("enforcement_required", environ=env))
     if _Installed.governor is not None:
         return _Installed.governor
     try:
@@ -351,3 +399,9 @@ def install_from_env(session_factory=None, environ: Mapping[str, str] | None = N
     except Exception:  # noqa: BLE001 - any other construction problem is also closed
         governor = BudgetGovernor.closed("ledger_unavailable", environ=env)
     return install(governor)
+
+
+def refuse_ungoverned_transport(environ: Mapping[str, str] | None = None) -> None:
+    """Legacy speech/realtime SDKs have no qualified monetary settlement contract."""
+    if hosted(os.environ if environ is None else environ):
+        raise BudgetError("transport_not_qualified", "This AI transport is not budget-qualified for hosted use.")

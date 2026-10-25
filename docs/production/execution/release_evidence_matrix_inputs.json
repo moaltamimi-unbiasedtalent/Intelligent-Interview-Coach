@@ -672,7 +672,7 @@
    "ci": "PR #241 CI not recorded",
    "live_staging": {
     "state": "NOT RUN",
-    "description": "NOT RUN (synthetic outage on staging; OD-HOSTED)",
+    "description": "NOT RUN (hosted budget/outage/recovery; OD-HOSTED; Task 05 disposable qualification, no hosted approval)",
     "evidence": []
    },
    "human_qualification": {

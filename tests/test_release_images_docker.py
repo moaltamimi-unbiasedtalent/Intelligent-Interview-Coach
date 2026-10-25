@@ -232,3 +232,50 @@ def test_built_web_default_command_starts_without_host_ports_or_external_network
         assert info["Config"]["User"] == "node" and info["HostConfig"]["NetworkMode"] == "none"
     finally:
         R.run(["docker", "stop", "--time", "5", name])
+
+
+def test_real_image_hosted_budget_boundary_is_closed_without_owner_approval(bundle):
+    manifest,sha,anchor=bundle
+    script = '''
+import json, httpx
+from src.llm.budget.governor import install_from_env, HOSTED_POLICY_VERSION
+from src.llm.budget.errors import BudgetError
+gov=install_from_env(environ={'API_ENV':'staging'})
+calls=[]
+with httpx.Client(transport=httpx.MockTransport(lambda r: calls.append(1) or httpx.Response(200))) as client:
+    for host in ('openrouter.ai','api.openai.com','alternate.invalid'):
+        try: client.post('https://'+host+'/v1/chat/completions',json={})
+        except BudgetError: pass
+        else: raise AssertionError('unguarded inference')
+    assert client.get('https://safe.invalid/health').status_code==200
+assert calls==[1] and not gov.is_open and HOSTED_POLICY_VERSION==1
+print(json.dumps({'hosted_policy_version':1,'paid_attempts_sent':0,'safe_http':True}))
+'''
+    result=R.run(['docker','run','--rm','--network','none','--entrypoint','python',manifest['images']['application']['image_id'],'-c',script])
+    assert json.loads(result)=={'hosted_policy_version':1,'paid_attempts_sent':0,'safe_http':True}
+
+
+@pytest.mark.parametrize('mode',['promote','rollback'])
+def test_real_compose_shares_protected_budget_file_without_creating_approval(bundle,tmp_path,mode):
+    manifest,sha,anchor=bundle
+    env=tmp_path/'synthetic.env'
+    url=f'sqlite:///{tmp_path}/disposable.db'
+    env.write_text(f'DATABASE_URL={url}\nPOSTGRES_PASSWORD=synthetic-test-only\nAI_BUDGET_MODE=off\nAI_BUDGET_CLASS=development\n')
+    config=tmp_path/'synthetic-unapproved-budget.json'
+    config.write_text('{"synthetic_fixture_only":true}')
+    config.chmod(0o600)
+    before=config.read_bytes()
+    state={'version':1,'observed_at':R.timestamp(),'schema_revision':manifest['source']['migration_chain'][-1],
+           'unsettled_agent_runs':0,'active_jobs':0,'drained':True,'database_identity_sha256':R.database_identity(url)}
+    out=tmp_path/'plan'
+    R.prepare(manifest,sha,anchor,state,mode,out,env,budget_config_file=config)
+    assert R.check_compose(manifest,sha,anchor,out/'compose.yml',env,mode,state)['compose_verified']
+    profile=yaml.safe_load((out/'compose.yml').read_text())
+    for name in ('api','worker'):
+        service=profile['services'][name]
+        assert service['environment']['AI_BUDGET_MODE']=='enforce'
+        assert service['environment']['AI_BUDGET_CLASS']=='production'
+        mount=[v for v in service['volumes'] if isinstance(v,dict) and v['target']=='/run/secrets/ai-budget.json']
+        assert len(mount)==1 and mount[0]['read_only'] is True and mount[0]['source']==str(config)
+        assert 'AI_BUDGET_APPROVED_MARKER' not in service['environment']
+    assert config.read_bytes()==before and 'synthetic_fixture_only' not in (out/'compose.yml').read_text()

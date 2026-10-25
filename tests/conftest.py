@@ -40,7 +40,7 @@ os.environ["AUDIT_CONTEXT_STRICT"] = "1"
 _SCRUB_PREFIXES = (
     "OPENROUTER_", "ADZUNA_", "GOOGLE_", "BREVO_", "LANGFUSE_", "GEMINI_", "FEATURE_GOOGLE_LOGIN",
     "AGENT_CHECKPOINT_DATABASE_URL", "AGENT_EXTERNAL_OBSERVABILITY", "EMAIL_", "REDIS_", "RATE_LIMIT_",
-    "DOCUMENT_STORAGE_DIR", "COPILOT_",
+    "DOCUMENT_STORAGE_DIR", "COPILOT_", "AI_BUDGET_",
 )
 
 if not _ALLOW_DEV:
@@ -240,3 +240,17 @@ def _reset_runtime_state():
 
 # The test-client cookie-precedence compatibility fix lives in tests/_client_compat.py and is installed when the ``tests`` package is imported (pytest and the
 # evaluators that import tests.* helpers alike). See that module and tests/test_testclient_cookie_precedence.py.
+
+
+@pytest.fixture(autouse=True)
+def _isolate_process_budget_governor():
+    """Hosted app construction now installs a fail-closed process-wide guard.
+
+    One test's application must not govern another test's isolated store/transport.
+    Runtime behavior is unchanged; this boundary exists only in pytest.
+    """
+    from src.llm.budget.governor import uninstall
+
+    uninstall()
+    yield
+    uninstall()

@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Callable
 
-from sqlalchemy import func, select, update
+from sqlalchemy import case, func, select, update, or_
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -79,7 +79,9 @@ class DbBudgetLedger:
         try:
             with self._sf() as s:
                 s.execute(select(func.count()).select_from(AiBudgetControl)).scalar()
-                s.execute(select(func.count()).select_from(AiBudgetEntry)).scalar()
+                entries = s.execute(select(func.count()).select_from(AiBudgetEntry)).scalar()
+                if entries and s.get(AiBudgetControl, GLOBAL) is None:
+                    raise BudgetError("ledger_inconsistent", "The durable budget control is missing.")
         except SQLAlchemyError:
             raise BudgetError("ledger_unavailable", "The budget ledger tables are not available (is migration 0044 applied?). Paid calls are refused (fail closed).") from None
 
@@ -124,6 +126,26 @@ class DbBudgetLedger:
                 if bool(s.execute(select(AiBudgetControl.killed).where(AiBudgetControl.scope_key == GLOBAL)).scalar()):
                     s.rollback()
                     raise BudgetError("kill_switch", "The AI budget kill switch is engaged; no provider request is sent.")
+                if any(not self._integrity_session(s, c)["consistent"] for c in config.classes):
+                    raise BudgetError("ledger_inconsistent", "Budget counters disagree with the durable entries.")
+                if config.approval:
+                    policy = "policy:" + config.raw_hash
+                    prior = s.execute(select(AiBudgetControl.scope_key).where(AiBudgetControl.scope_key.like("policy:%"))).scalars().all()
+                    if prior and prior != [policy]:
+                        raise BudgetError("policy_mismatch", "Budget policy changed; authorized reconciliation is required.")
+                    if not prior:
+                        s.add(AiBudgetControl(scope_key=policy, held_micro_usd=0, requests=0, killed=False))
+                    active = s.execute(select(func.count()).select_from(AiBudgetEntry).where(AiBudgetEntry.state == "reserved")).scalar()
+                    if active >= config.limits.max_concurrency:
+                        raise BudgetError("concurrency_limit", "The durable provider concurrency limit is saturated.")
+                if config.total_max_requests is not None:
+                    count = s.execute(select(func.count()).select_from(AiBudgetEntry)).scalar()
+                    if count >= config.total_max_requests:
+                        raise BudgetError("total_request_cap", "The total provider request ceiling is reached.")
+                if config.total:
+                    held = self._entries_held(s)
+                    if held + worst_case > config.total.stop:
+                        raise BudgetError("total_stop", "The total approved spending threshold would be exceeded.")
                 self._check_duplicates(s, config, fingerprint, now)
                 ck, gk = class_key(budget_class), category_key(budget_class, category)
                 # (1) the class counter: held + worst <= stop AND requests < max. (2) the category counter. Either failing rolls the whole transaction back.
@@ -166,11 +188,11 @@ class DbBudgetLedger:
         """Bounded retries and no retry after an unknown outcome. A call that was REFUSED by the provider before any inference (429 and other determinate rejections) may be retried up to
         ``max_retries`` times inside the window; a call whose outcome is unknown (timeout, 5xx, no usage) is never sent again automatically, because it may already have been billed."""
         window = config.limits.dedupe_window_s
-        if window <= 0:
-            return
         since = now - window
-        rows = s.execute(select(AiBudgetEntry.state, func.count()).where(AiBudgetEntry.fingerprint == fingerprint, AiBudgetEntry.created_ts >= since).group_by(AiBudgetEntry.state)).all()
+        rows = s.execute(select(AiBudgetEntry.state, func.count()).where(AiBudgetEntry.fingerprint == fingerprint, or_(AiBudgetEntry.state.in_(("reserved", "unknown")), AiBudgetEntry.created_ts >= since)).group_by(AiBudgetEntry.state)).all()
         by_state = {st: n for st, n in rows}
+        if by_state.get("reserved"):
+            raise BudgetError("duplicate_in_flight", "An identical request is already in flight.")
         if by_state.get("unknown"):
             raise BudgetError("unknown_outcome_no_retry", "An identical earlier request has an unknown outcome (possibly billed); it is not retried automatically.")
         if by_state.get("rejected", 0) > config.limits.max_retries:
@@ -184,9 +206,16 @@ class DbBudgetLedger:
             raise ValueError(outcome)
         try:
             with self._sf() as s:
-                delta = (committed - reservation.worst_case) if outcome == "settled" else (-reservation.worst_case if outcome == "rejected" else 0)
+                # Use the same global lock order as admission. No new call can race
+                # an overrun kill or observe partially updated counters.
+                locked = s.execute(update(AiBudgetControl).where(AiBudgetControl.scope_key == GLOBAL).values(updated_at=datetime.now(timezone.utc)))
+                if locked.rowcount != 1 or not self._integrity_session(s, reservation.budget_class)["consistent"]:
+                    raise BudgetError("ledger_inconsistent", "Settlement requires consistent durable counters.")
+                if type(committed) is not int or committed < 0:
+                    raise BudgetError("usage_invalid", "The reported cost is invalid; the reservation remains held.")
+                delta = (committed - reservation.worst_case) if outcome == "settled" else (-reservation.worst_case if outcome == "rejected" else max(committed - reservation.worst_case, 0))
                 done = s.execute(update(AiBudgetEntry).where(AiBudgetEntry.id == reservation.entry_id, AiBudgetEntry.state == "reserved")
-                                 .values(state=outcome, committed_micro_usd=committed if outcome == "settled" else 0, input_tokens=input_tokens, output_tokens=output_tokens,
+                                 .values(state=outcome, reserved_micro_usd=max(committed, reservation.worst_case) if outcome == "unknown" else reservation.worst_case, committed_micro_usd=committed if outcome == "settled" else 0, input_tokens=input_tokens, output_tokens=output_tokens,
                                          est_cost_micro_usd=est_cost, provider_cost_micro_usd=provider_cost, status_code=status_code, latency_ms=latency_ms,
                                          error_category=error_category, settled_ts=self._clock()))
                 if done.rowcount != 1:                        # already settled (idempotent)
@@ -195,7 +224,7 @@ class DbBudgetLedger:
                 if delta:
                     for key in (class_key(reservation.budget_class), category_key(reservation.budget_class, reservation.category)):
                         s.execute(update(AiBudgetControl).where(AiBudgetControl.scope_key == key).values(held_micro_usd=AiBudgetControl.held_micro_usd + delta))
-                if outcome == "settled" and committed > reservation.worst_case:
+                if committed > reservation.worst_case:
                     s.execute(update(AiBudgetControl).where(AiBudgetControl.scope_key == GLOBAL).values(killed=True, kill_reason="overrun"))
                 s.commit()
         except SQLAlchemyError:
@@ -231,12 +260,35 @@ class DbBudgetLedger:
             "average_latency_ms": round(float(agg[4]), 1) if agg[4] is not None else None, "provider_error_calls": int(agg[5] or 0), "categories": cats,
         }
 
+    def _entries_held(self, s: Session, budget_class: str | None = None, category: str | None = None) -> int:
+        amount = case((AiBudgetEntry.state == "settled", AiBudgetEntry.committed_micro_usd),
+                      (AiBudgetEntry.state.in_(("reserved", "unknown")), AiBudgetEntry.reserved_micro_usd), else_=0)
+        query = select(func.coalesce(func.sum(amount), 0))
+        if budget_class is not None:
+            query = query.where(AiBudgetEntry.budget_class == budget_class)
+        if category is not None:
+            query = query.where(AiBudgetEntry.category == category)
+        return int(s.execute(query).scalar())
+
+    def _integrity_session(self, s: Session, budget_class: str) -> dict[str, Any]:
+        # Called under the global admission/settlement lock; class AND category
+        # counters must agree. Never repair or clear ambiguous spending.
+        entries = list(s.execute(select(AiBudgetEntry).where(AiBudgetEntry.budget_class == budget_class)).scalars())
+        expect = self._entries_held(s, budget_class)
+        row = s.get(AiBudgetControl, class_key(budget_class))
+        held, requests = (row.held_micro_usd, row.requests) if row else (0, 0)
+        consistent = held == expect and requests == len(entries)
+        categories = {e.category for e in entries}
+        categories.update(k.rsplit(":", 1)[-1] for k in s.execute(select(AiBudgetControl.scope_key).where(AiBudgetControl.scope_key.like(f"cat:{budget_class}:%"))).scalars())
+        for category in categories:
+            counter = s.get(AiBudgetControl, category_key(budget_class, category))
+            count = sum(e.category == category for e in entries)
+            consistent &= bool(counter and counter.held_micro_usd == self._entries_held(s, budget_class, category) and counter.requests == count)
+        return {"consistent": consistent, "counter_held": held, "entries_held": expect, "counter_requests": requests, "entries": len(entries)}
+
     def integrity(self, budget_class: str) -> dict[str, Any]:
-        """Recompute the counters from the entries. A drift means the counters cannot be trusted (reported by the status; never silently repaired)."""
+        """Read-only consistent observation, using the admission lock without changing data."""
         with self._sf() as s:
-            expect = s.execute(select(func.coalesce(func.sum(AiBudgetEntry.committed_micro_usd), 0)).where(AiBudgetEntry.budget_class == budget_class, AiBudgetEntry.state == "settled")).scalar() or 0
-            expect += s.execute(select(func.coalesce(func.sum(AiBudgetEntry.reserved_micro_usd), 0)).where(AiBudgetEntry.budget_class == budget_class, AiBudgetEntry.state.in_(("reserved", "unknown")))).scalar() or 0
-            n = s.execute(select(func.count()).select_from(AiBudgetEntry).where(AiBudgetEntry.budget_class == budget_class)).scalar() or 0
-            row = s.get(AiBudgetControl, class_key(budget_class))
-            held, requests = (row.held_micro_usd, row.requests) if row else (0, 0)
-        return {"consistent": held == int(expect) and requests == int(n), "counter_held": held, "entries_held": int(expect), "counter_requests": requests, "entries": int(n)}
+            if s.get_bind().dialect.name == "postgresql":
+                s.execute(select(AiBudgetControl).where(AiBudgetControl.scope_key == GLOBAL).with_for_update())
+            return self._integrity_session(s, budget_class)

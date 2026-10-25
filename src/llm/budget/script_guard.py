@@ -31,6 +31,9 @@ def require_paid_budget(script: str, *, budget_class: str = "evaluation", catego
     if existing is not None:
         if not existing.is_open:
             raise BudgetError(existing.closed_reason or "governor_closed", f"{script}: the AI budget governor is closed.")
+        existing._open_or_refuse()
+        if existing.budget_class != budget_class:
+            raise BudgetError("class_mismatch", "The installed budget is not approved for this script class.")
         return existing
     if session_factory is None:
         from src.config import load_config

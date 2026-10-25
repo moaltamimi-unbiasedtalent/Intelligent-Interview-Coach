@@ -337,6 +337,9 @@ class GeminiLiveTokenService:
     def _default_minter(
         self, *, api_key: str, model: str, ttl_seconds: int, now: float
     ) -> dict[str, Any]:  # pragma: no cover - requires the SDK + network
+        from src.llm.budget.governor import refuse_ungoverned_transport
+
+        refuse_ungoverned_transport()
         try:
             from google import genai
         except ImportError as exc:
