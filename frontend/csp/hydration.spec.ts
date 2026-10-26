@@ -123,10 +123,21 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
       expect(await page.evaluate(() => "__cspInjected" in window)).toBe(false);
       result.negative_injection_blocked = true;
       result.violation_events = await page.evaluate(() => (window as unknown as {cspEvents: string[]}).cspEvents);
-      result.stage = "logout";
-      await page.getByRole("button", {name: /^sign out$/i, exact: true}).first().click();
-      await expect(page).toHaveURL(/\/sign-in$/);
-      expect(await page.evaluate(async url => (await fetch(url, {credentials: "include"})).status, api + "/auth/me")).toBe(401);
+      result.stage = "logout_request";
+      const loggedOut = page.waitForResponse(response => new URL(response.url()).pathname === "/api/v1/auth/logout" && response.request().method() === "POST");
+      await page.locator("#main").getByRole("button", {name: "Sign out", exact: true}).click();
+      const logoutStatus = (await loggedOut).status();
+      expect(logoutStatus).toBe(200);
+      result.logout_response_status = logoutStatus;
+      result.stage = "logout_redirect_and_revocation";
+      await expect.poll(() => new URL(page.url()).pathname).toBe("/sign-in");
+      await expect(page.getByLabel("Email", {exact: true})).toBeVisible();
+      const afterLogout = await page.evaluate(async url => (await fetch(url, {credentials: "include"})).status, api + "/auth/me");
+      expect(afterLogout).toBe(401);
+      expect((await context.cookies(api)).some(cookie => cookie.name === "ask4mo_session")).toBe(false);
+      result.session_after_logout = afterLogout;
+      result.session_cookie_cleared = true;
+      result.logout_path = new URL(page.url()).pathname;
       expect(inlineRefusals).toBe(2); // Exactly the two intentional negative payloads.
       expect(consoleErrors).toHaveLength(0);
       expect(pageErrors).toHaveLength(0);

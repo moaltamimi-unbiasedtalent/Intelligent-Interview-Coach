@@ -2,9 +2,11 @@
 
 
 > POST272-03 focused remediation: branch `fix/nextjs-csp-hydration` from main
-> `992682c3`, pending review and exact-head real-image/browser CI. Per-request
+> `992682c3`, under normal review only after qualification. Current [PR #274 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/274/checks) and its
+> image/SHA evidence addendum are authoritative. Per-request
 > nonce CSP preserves enforced edge/security boundaries and makes rendering
-> explicitly dynamic/private. [Design and evidence](POST272_03_CSP_REMEDIATION.md).
+> explicitly dynamic/private. Actual Caddy sign-in, both authenticated reads and
+> negative injection are observed on `ce6dff0a`; its overall run failed at logout, so final complete acceptance remains subject to the current checks. [Design and evidence](POST272_03_CSP_REMEDIATION.md).
 > 40/45 packages remain integrated. POST272-04 and the primary Browser `/history`
 > timeout remain OPEN. PR #273 is unmerged; its 27/2/6 failed campaign evidence
 > remains unchanged. Hosted staging NOT RUN; human and PG/LG approvals unchanged;

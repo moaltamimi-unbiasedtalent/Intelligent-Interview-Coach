@@ -72,8 +72,9 @@ TypeScript and lint pass. Focused Python auth/topology/hardening/harness: 83 pas
 verifies 13 inline scripts carry the nonce, the theme initializer executes, no
 bootstrap is refused, and an injected script is blocked; this is explicitly not
 Caddy/real-authentication evidence. Ruff, 452-item reconciliation and evidence
-consistency pass. Built-image before/after qualification and exact-head CI are
-PENDING until the remediation PR's workflows complete. Native macOS/Docker-VM
+consistency pass. Exact-head built-image/browser results, image identities and final CI status are
+published in the [PR #274 qualification addendum](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/274).
+Dated attempts below retain their own source SHAs and do not substitute for current-head results. Native macOS/Docker-VM
 full-image qualification is NOT RUN; Linux CI is authoritative. No unrelated
 Docker resources are pruned. Current-head check results must not be inferred from
 prior source results.
@@ -117,6 +118,33 @@ qualification; no retry, timeout increase or primary Browser test change occurs.
 Raw browser process output remains discarded, with safe stage/header/count data.
 This correction still requires a new real-image run on its own source SHA.
 
+## Third exact-source attempt (preserved)
+
+Source `ce6dff0ae11b3dc385640d4daa96ec95faac2f14`, image run 40406078393,
+safe artifact 12690978937: original built frontend reproduces 12 inline CSP
+refusals, missing form fields, zero login requests and no authenticated UI.
+The patched built image completes actual Caddy/FastAPI sign-in, account rendering,
+secure HttpOnly/SameSite=Lax sessions, real history/opportunity reads (both 200),
+13 nonced inline scripts, zero bootstrap refusals/page errors/unexpected console
+errors, nonce rotation/spoof refusal, and exactly two refused injection payloads.
+
+Overall result remains FAIL at logout: the new test incorrectly required a
+query-free `/sign-in` URL. The existing RouteGuard can append `?next=/account`,
+as reproduced in a separate local route diagnostic with controlled API responses;
+that local diagnostic is not real-backend logout qualification. Existing primary
+`e2e/auth.spec.ts` already accepts the sign-in path with query parameters.
+The focused test now requires that path plus real logout HTTP 200, subsequent
+session HTTP 401, cookie removal and visible sign-in UI. No application logout
+logic, primary Browser assertion, timeout, retry or image request is modified.
+A fresh exact-source real-image run must verify all of those final assertions.
+
+Candidate API `sha256:2ec363c911079e1728829f95535eba5aa7a92d98a06325d785d3b05961fb9068`;
+web `sha256:cf5c84f8b5389b76030195957300b6d3f904689508d07f6576d0516c63a8545a`;
+original web `sha256:83fb47ed29f19176ae1316f9de2dccce519bace5b96fc24cda48a2cba78c9a21`;
+manifest `0847d11cf507d67b9c6119755a340a935c27456c267779834df4ce5ccd81c3db`.
+Both Caddy configs validate and owned-project cleanup passes. These identities
+belong only to this dated attempt; current PR artifacts are authoritative.
+
 ## Remaining scope and release status
 
 Engineering integration remains 40/45. 00A/00B/07B/07C/08A stay open. Hosted staging,
@@ -136,7 +164,7 @@ Close Task 07 only when every mandatory connected check passes. Do not start
 Task 08, hosted deployment or live evaluation before that closure and approval.
 
 Preservation baseline: all 45 original worktrees, 313 branch tips and 49 protected
-files inventoried before creating the additional remediation worktree. Final
-hash/status audit remains required before delivery. No original SQLite access,
+files inventoried before creating the additional remediation worktree. Preservation audit verifies all 49 protected files, 45 original worktree states
+and 313 original branch tips unchanged; the additional checkout makes 46 worktrees. No original SQLite access,
 paid provider, real email, owner budget marker, language activation, cloud/DNS,
 registry publication, main push, force push or automatic merge is authorized.
