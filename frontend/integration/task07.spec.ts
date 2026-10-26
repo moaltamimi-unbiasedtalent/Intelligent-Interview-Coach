@@ -2,6 +2,16 @@ import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 const credentials = JSON.parse(readFileSync(process.env.CAMPAIGN_CREDENTIALS_FILE!, 'utf8'));
 const api = 'https://api.staging.example.com/api/v1';
+let inlineRefusals = 0;
+test.beforeEach(async ({ page }) => {
+  inlineRefusals = 0;
+  page.on('console', message => {
+    if (/inline script/i.test(message.text()) && /violat|refus/i.test(message.text())) inlineRefusals++;
+  });
+});
+test.afterEach(async ({}, info) => {
+  info.annotations.push({type: 'csp_inline_refusals', description: String(inlineRefusals)});
+});
 test('EDGE-01 real Caddy policy and API readiness', async ({ page }) => {
   const response = await page.goto('/');
   expect(response?.status()).toBe(200);

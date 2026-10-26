@@ -49,9 +49,13 @@ production signature currency and coverage remain unqualified.
 Initial driver covers startup/schema/private roots, sessions/ownership/admin,
 actual worker diagnostic jobs, completed-run SSE/reconnect, conservative shared
 ledger fixtures, real clamd, connected browser/Caddy and dependency outages.
-Active cancellation, HITL, process-loss, retry/lease faults, connected recovery,
-failed-migration and inaccessible-volume scenarios require further driver work.
-They are NOT RUN, not passes; subsystem CI is not substituted for connected proof.
+The expanded driver also exercises existing-fixture HITL, active cancellation, API
+process loss, real worker crash/lease/retry, failed migrations, inaccessible roots
+and encrypted transfer/restore into a held target with real API/worker refusals.
+Those additions still require actual built-image campaign evidence. Positive new
+language-bearing journeys remain blocked by activation policy. Idle-timeout and
+client-disconnect timing remain NOT RUN; subsystem CI is not substituted for
+connected proof.
 The release report must carry those gaps until actual execution evidence exists.
 
 ## Current evidence
@@ -68,3 +72,5 @@ key/erasure custody, retention/RTO/RPO, native/legal review and freeze/go-no-go
 remain unchanged. Hosted deployment, live providers, email and releasing recovery
 hold require separate authorization. Task 08 starts only after review, merge,
 green main and the owner's specifically authorized staging scope.
+
+First image run on `f8ab77382558cffe5a6d2e283dd5cb741e3f763d`: 16 actual image tests and 19 operator tests passed. The connected preflight stopped before service creation with `loopback_tls_port_occupied`; the privileged-port bind probe was replaced with a listener check so an unprivileged CI user does not misreport EACCES as an occupied port. No connected success is inferred from that run.
