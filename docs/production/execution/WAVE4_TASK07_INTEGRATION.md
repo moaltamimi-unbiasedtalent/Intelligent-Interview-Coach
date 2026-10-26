@@ -105,6 +105,64 @@ and [host bridge access](https://docs.docker.com/engine/network/port-publishing/
 Cleanup again removed only campaign-owned resources. This observation is startup
 proof, not a successful connected application or browser campaign.
 
+## Latest measured implementation — 6680cf37
+
+[Exact-source image and campaign run](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40357744233)
+on `6680cf3762ee8826164bded72f952c479f820fd7`: **27 PASS / 2 FAIL / 6 NOT RUN**,
+0 SKIP, 313.210 seconds. This is the final implementation qualification snapshot.
+A documentation-only commit records it; the final head's current CI/image artifacts
+remain authoritative at [PR #273 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/273/checks).
+No successful qualification or staging readiness is claimed.
+
+| Artifact | Exact measured identity |
+|---|---|
+| API / API B / worker / worker B / migrate | `sha256:255960f8d901d0daa865b44769581d529cfd5e9a872e9d08cb00fdc72857e0a4` |
+| Next.js | `sha256:caf9d0fb61a1e54f2b024d407a8b51f237ca88da0547c9e40aee383abd174abe` |
+| Operator | `sha256:8313694fcb61dc147eb3335a74bd6ab077e84431017a33165d2d84b5a22a75cc` |
+| Release manifest SHA-256 | `a661d7010df3e07b55331891b5fcc5d2e81d127550c00668ee355e8d9a742dcc` |
+| Operator manifest SHA-256 | `ebb1f66876b5b8c68f486bfeae57df4131f3836882405077599af2290b2b879e` |
+
+PostgreSQL 16.15, Redis 8.2.9, ClamAV 1.4.6 and Caddy 2.11.7 were observed.
+Private root/role UID, image/volume identity and the sole 0048 head pass.
+Backend CI: **8,711 passed / 164 skipped**, exactly 8,875 reconciled executions.
+Frontend CI: **1,534 passed**, type/lint/build pass. Browser E2E and the final
+head are reported separately from the connected browser checks.
+
+The new proxy observation passes: forged forwarded headers do not change the
+client fingerprint, real forwarded scheme/host remain correct, CORS allows only
+the configured origin, HTTP 404 propagates and no internal endpoint is exposed.
+The observer records a private HMAC only, never the raw client address.
+
+Redis outage now passes with actual 503/unreachable metadata (observed 0.019 s
+in this run), plus synthetic local/deny policies. The bounded observer still
+fails if the required shared readiness never refuses; bucket policies are unchanged.
+The existing two-second cache can affect other runs' first sample and is not
+presented as instantaneous detection or a new production SLO.
+
+The actual checkpoint-read check **FAILS with HTTP 500 after DB restart**.
+Only a separately labelled explicit API restart restores HTTP 200, with zero
+model calls. That workaround does not fix POST272-04. After it, actual API
+SIGKILL while an owner Caddy stream is connected passes: usage remains publicly
+incomplete, durable state stays unsettled, takeover returns 409 and no duplicate
+execution occurs. The first stream event was observed at 98.3 ms. Cancellation
+observations measured 59.2/50.1 ms, one idle heartbeat and zero reconnect calls;
+all are local synthetic observations, not hosted performance promises.
+
+The connected browser still has two passing edge/auth transport checks and one
+user-UI timeout with 12 inline-script CSP refusals. POST272-03 remains P1.
+
+Backup/transfer/restore passes: **1.343 s / 1.251 s**, **687,212 bytes**. Independent
+local destination, integrity/release binding, deletion reapplication, surviving
+owner checkpoint/control, preserved monetary unknowns and persistent recovery
+hold pass. Actual held API is 503 and worker claims are zero. Hold release stays
+NOT RUN. These durations exclude service reconciliation/hold release and are
+not approved RTO/RPO. Docker free-space observations were 82,440,867,840 bytes
+before and 82,072,326,144 after owned cleanup; peak RAM/CPU was not qualified.
+
+Failures left for separate PRs: POST272-03 and POST272-04. Six owner/hosted gaps
+and the 40/45 package / PG / LG / owner-decision status below remain unchanged.
+All historical attempts are retained with their original source/image identities.
+
 ## Measured connected campaign — d8144725 (26 October 2026)
 
 Exact source: `d81447254bd2a85f5a27bc37a3a07bc62cc2e192`.
