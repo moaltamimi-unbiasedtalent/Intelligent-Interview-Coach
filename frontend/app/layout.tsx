@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { AppShell } from "@/components/layout/AppShell";
 import { ThemeScript } from "@/components/layout/ThemeScript";
 import { AuthProvider } from "@/components/auth/AuthProvider";
@@ -18,6 +18,9 @@ const inter = Inter({
   variable: "--font-inter",
   display: "swap",
 });
+
+// Request-specific nonces cannot be served from static HTML/ISR caches.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://ask4mo.example.com"),
@@ -49,12 +52,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Initial interface locale from the anonymous cookie (the account preference, once
   // loaded, becomes authoritative client-side). Never trusts an unsupported value.
   const cookieStore = await cookies();
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   const initialLocale =
     toActiveLocale(cookieStore.get(LOCALE_COOKIE)?.value) ?? DEFAULT_APP_LOCALE;
   return (
     <html lang={initialLocale} className={inter.variable} suppressHydrationWarning>
       <head>
-        <ThemeScript />
+        <ThemeScript nonce={nonce} />
       </head>
       <body>
         <AuthProvider>

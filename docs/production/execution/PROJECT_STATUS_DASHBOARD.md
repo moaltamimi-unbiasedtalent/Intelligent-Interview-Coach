@@ -1,5 +1,15 @@
 # Whole-Project Status Dashboard
 
+
+> POST272-03 focused remediation: branch `fix/nextjs-csp-hydration` from main
+> `992682c3`, pending review and exact-head real-image/browser CI. Per-request
+> nonce CSP preserves enforced edge/security boundaries and makes rendering
+> explicitly dynamic/private. [Design and evidence](POST272_03_CSP_REMEDIATION.md).
+> 40/45 packages remain integrated. POST272-04 and the primary Browser `/history`
+> timeout remain OPEN. PR #273 is unmerged; its 27/2/6 failed campaign evidence
+> remains unchanged. Hosted staging NOT RUN; human and PG/LG approvals unchanged;
+> only historical PG-11 PASS, zero hosted-active languages. Task 08 has not begun.
+
 Historical PR #265 integration snapshot, 23 October 2026. Reviewed baseline: `aedbef3dee28a68b72bc526a1fca537a3da7bd8d`, PR #265 merged. Current reconciliation/review branch: `docs/post-pr265-release-readiness` in the permanent repository. Sources: [merge/CI/review record](evidence/POST_PR265_INTEGRATION_2026_10_23.json), [release report](POST_PR265_RELEASE_STATUS.md), package register, ledger and code.
 
 ## Wave 4 Task 06 update — 26 October 2026
