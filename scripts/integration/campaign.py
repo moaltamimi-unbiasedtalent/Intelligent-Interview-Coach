@@ -138,6 +138,10 @@ def topology(manifest, record, directory, campaign):
         p["volumes"][name] = {}
     images = json.loads((ROOT / "deploy/integration-images.json").read_text())["images"]
     arch = manifest["images"]["application"]["platform"].split("/")[-1]
+    require(
+        all(arch in spec["digests"] for spec in images.values()),
+        "campaign_platform_not_qualified",
+    )
     p["services"]["db"]["image"] = PG
     p["services"]["db"]["environment"] = {
         "POSTGRES_USER": "disposable",
@@ -309,6 +313,7 @@ class Campaign:
         self.project = "ask4mo-campaign-" + self.id
         self.items = []
         self.created = False
+        self.owns_directory = False
         self.started = time.monotonic()
         self.summary = {
             "version": 1,
@@ -334,6 +339,8 @@ class Campaign:
         }
 
     def save(self):
+        if not self.owns_directory:
+            return
         self.summary["duration_seconds"] = round(time.monotonic() - self.started, 3)
         self.summary["counts"] = {
             s: sum(i["status"] == s for i in self.items)
@@ -394,6 +401,7 @@ class Campaign:
                 "scripts/integration/probe.py",
                 action,
                 timeout=timeout,
+                check=False,
             )
         else:
             p = self.compose(
@@ -406,11 +414,21 @@ class Campaign:
                 "scripts/integration/probe.py",
                 action,
                 timeout=timeout,
+                check=False,
             )
         # The helper emits one safe JSON object; driver exceptions never escape.
         lines = p.stdout.decode().splitlines()
         result = json.loads(lines[-1])
-        require(result.get("ok") is True, "integration_probe_failed_" + action)
+        code = result.get("code", "failed")
+        require(
+            isinstance(code, str)
+            and re.fullmatch(r"[A-Za-z0-9_]{1,100}", code) is not None,
+            "probe_diagnostic_refused",
+        )
+        require(
+            p.returncode == 0 and result.get("ok") is True,
+            "probe_" + action + "_" + code,
+        )
         return result
 
     def request(
@@ -484,6 +502,7 @@ class Campaign:
     def setup(self):
         require(not self.directory.exists(), "campaign_output_exists")
         self.directory.mkdir(parents=True, mode=0o700)
+        self.owns_directory = True
         (self.directory / "private").mkdir(mode=0o700)
         free = capacity()
         self.summary["docker_available_bytes_before"] = free
@@ -577,9 +596,17 @@ class Campaign:
 
     def startup(self):
         self.created = True
+        self.summary["startup_phase"] = "database_redis_scanner"
+        self.save()
         self.compose("up", "-d", "--wait", "db", "redis", "clamav", timeout=180)
+        self.summary["startup_phase"] = "one_shot_migration"
+        self.save()
         self.compose("run", "--rm", "migrate", timeout=180)
+        self.summary["startup_phase"] = "synthetic_fixture_seed"
+        self.save()
         seed = self.probe("seed")
+        self.summary["startup_phase"] = "applications_worker_web_proxy"
+        self.save()
         self.compose(
             "up",
             "-d",
@@ -594,6 +621,50 @@ class Campaign:
         )
         self.wait_ready()
         return seed
+
+    def runtime_identity(self):
+        facts = self.probe("identity")
+        mounts = None
+        images = {}
+        for role in ("api", "api_b", "worker", "worker_b", "migrate", "web"):
+            ids = self.compose("ps", "--all", "-q", role).stdout.decode().split()
+            require(len(ids) == 1, "runtime_service_identity_missing")
+            info = json.loads(command(["docker", "inspect", ids[0]]).stdout)[0]
+            expected = self.manifest["images"][
+                "web" if role == "web" else "application"
+            ]["image_id"]
+            require(info["Image"] == expected, "runtime_application_image_mismatch")
+            images[role] = info["Image"]
+            if role in ("api", "api_b", "worker", "worker_b"):
+                require(
+                    info["Config"]["User"] in ("appuser", "10001", "10001:10001"),
+                    "runtime_root_execution_refused",
+                )
+                roots = {
+                    m["Destination"]: m.get("Name")
+                    for m in info["Mounts"]
+                    if m["Destination"] in ("/data/documents", "/data/knowledge")
+                }
+                require(
+                    len(roots) == 2 and all(roots.values()),
+                    "private_named_volume_missing",
+                )
+                if mounts is None:
+                    mounts = roots
+                else:
+                    require(roots == mounts, "private_roots_do_not_match")
+            if role == "migrate":
+                require(
+                    not info["State"]["Running"] and info["State"]["ExitCode"] == 0,
+                    "one_shot_migration_not_completed",
+                )
+        self.summary["running_image_identity"] = images
+        facts.update(
+            shared_private_volume_identities=True,
+            backend_image_roles=5,
+            matching_frontend=True,
+        )
+        return facts
 
     def restart(self):
         before = self.probe("state")
@@ -714,7 +785,16 @@ class Campaign:
         return evidence
 
     def recovery(self):
-        self.compose("stop", "api", "api_b", "worker", "worker_b", timeout=60)
+        producers = ("api", "api_b", "worker", "worker_b", "api_denied", "worker_fault")
+        self.compose("stop", *producers, timeout=60)
+        for role in producers:
+            for identity in (
+                self.compose("ps", "--all", "-q", role).stdout.decode().split()
+            ):
+                state = json.loads(command(["docker", "inspect", identity]).stdout)[0][
+                    "State"
+                ]
+                require(not state["Running"], "recovery_producer_not_drained")
         facts = self.probe("recovery", timeout=300)
         self.compose("up", "-d", "api_held", "worker_held", timeout=60)
         deadline = time.monotonic() + 60
@@ -767,6 +847,17 @@ class Campaign:
         if not self.created:
             return
         safe = {}
+        versions = {}
+        for role, args, pattern in (
+            ("redis", ["redis-server", "--version"], r"v=([0-9.]+)"),
+            ("caddy", ["caddy", "version"], r"v([0-9.]+)"),
+        ):
+            output = self.compose("exec", "-T", role, *args, check=False).stdout.decode(
+                errors="replace"
+            )
+            match = re.search(pattern, output)
+            versions[role] = match.group(1) if match else "NOT RUN"
+        self.summary["runtime_binary_versions"] = versions
         for service in (
             "db",
             "redis",
@@ -860,6 +951,7 @@ class Campaign:
                     "cleanup_ownership_refused",
                 )
         self.compose("down", "--volumes", "--remove-orphans", timeout=90)
+        self.summary["docker_available_bytes_after_cleanup"] = capacity()
         self.summary["cleanup"] = (
             "only this campaign project containers/networks/volumes"
         )
@@ -868,6 +960,13 @@ class Campaign:
         try:
             ready = self.check("prerequisites_and_verified_images", self.setup)
             if not ready:
+                self.items.append(
+                    {
+                        "id": "connected_scenarios",
+                        "status": "NOT RUN",
+                        "code": "prerequisite_refused",
+                    }
+                )
                 return 2
             if not self.args.execute_disposable:
                 self.items.append(
@@ -882,7 +981,7 @@ class Campaign:
             if ready:
                 self.check(
                     "private_roots_schema_and_service_identity",
-                    lambda: self.probe("identity"),
+                    self.runtime_identity,
                 )
                 self.check(
                     "sessions_ownership_profiles_documents_admin",
@@ -948,10 +1047,7 @@ class Campaign:
                             "status": "NOT RUN",
                             "code": "connected_fault_driver_pending",
                         }
-                        for name in (
-                            "positive_language_interview_profile_career_journeys",
-                            "sse_idle_timeout_client_disconnect",
-                        )
+                        for name in ("sse_idle_timeout_client_disconnect",)
                     ]
                 )
                 self.items.extend(
@@ -963,6 +1059,7 @@ class Campaign:
                         }
                         for name in (
                             "new_hosted_language_registration_and_interviews",
+                            "positive_language_interview_profile_career_journeys",
                             "live_ai_quality_and_embeddings",
                             "real_email_oidc",
                             "hosted_tls_and_signature_freshness",
@@ -979,7 +1076,7 @@ class Campaign:
                     }
                 )
         finally:
-            if self.directory.exists():
+            if self.owns_directory:
                 if self.created:
                     self.check("safe_evidence_capture", self.collect)
                     self.check("owned_resource_cleanup", self.cleanup)

@@ -61,7 +61,7 @@ The release report must carry those gaps until actual execution evidence exists.
 ## Current evidence
 
 Baseline main: `992682c3fa9c891f5710c993e7d595f363b8c811`; seven mandatory workflows
-succeeded. Local focused regression: 198 passed, 17 skipped. Ruff, TypeScript and
+succeeded. Local expanded regression: 260 passed, 46 skipped. Ruff, TypeScript and
 issue reconciliation pass. Local full-stack execution is blocked by Docker
 capacity; no cleanup of unrelated resources is authorized. Feature-head CI and
 connected campaign evidence remain pending. See the pre-change audit for two
@@ -74,3 +74,19 @@ hold require separate authorization. Task 08 starts only after review, merge,
 green main and the owner's specifically authorized staging scope.
 
 First image run on `f8ab77382558cffe5a6d2e283dd5cb741e3f763d`: 16 actual image tests and 19 operator tests passed. The connected preflight stopped before service creation with `loopback_tls_port_occupied`; the privileged-port bind probe was replaced with a listener check so an unprivileged CI user does not misreport EACCES as an occupied port. No connected success is inferred from that run.
+
+Second image run on `ec8335cc43e90c132f06fabcfbeb5c447417ef80`: 16 image
+checks and 19 operator checks passed. The connected campaign verified images and
+started actual healthy PostgreSQL, Redis and ClamAV, then failed during bootstrap;
+application/proxy/browser scenarios were NOT RUN. Owned cleanup passed. A bounded
+local RAM-backed diagnostic reproduced the fixture's `IndexIncompatibleError`.
+The fixture now preserves staging's rejection of hash embeddings and leaves the
+knowledge collection empty. Its account/run setup and five core probes pass in
+a single-API old-image/current-code diagnostic; that is explicitly not release-image,
+full-stack, scanner or multi-instance qualification. [Machine evidence](evidence/WAVE4_TASK07_INTEGRATION.json).
+
+The knowledge/source/index recovery scope is therefore an empty, unactivated
+collection with strict hash-embedding refusal. Actual approved embedding/source
+qualification remains open. Real synthetic document bytes, accounts, checkpoint
+and unsettled control state, and conservative monetary entries are the connected
+recovery targets. No language or embedding guard has been bypassed.

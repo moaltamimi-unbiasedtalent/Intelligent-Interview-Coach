@@ -1,0 +1,137 @@
+{
+  "baseline_sha": "992682c3fa9c891f5710c993e7d595f363b8c811",
+  "ci_attempts": [
+    {
+      "campaign": "b8010433a1f543aa",
+      "counts": {
+        "FAIL": 1,
+        "NOT RUN": 0,
+        "PASS": 0,
+        "SKIP": 0
+      },
+      "docker_available_bytes_before": 82442436608,
+      "duration_seconds": 1.832,
+      "items": [
+        {
+          "code": "loopback_tls_port_occupied",
+          "id": "prerequisites_and_verified_images",
+          "seconds": 1.831,
+          "status": "FAIL"
+        }
+      ],
+      "kind": "disposable_connected_stack",
+      "production_or_language_approval": false,
+      "result": "FAIL",
+      "source_sha": "f8ab77382558cffe5a6d2e283dd5cb741e3f763d",
+      "started_at": "2026-10-26T00:47:03.125510+00:00",
+      "version": 1
+    },
+    {
+      "campaign": "42d7b76e796241d8",
+      "cleanup": "only this campaign project containers/networks/volumes",
+      "counts": {
+        "FAIL": 1,
+        "NOT RUN": 1,
+        "PASS": 3,
+        "SKIP": 0
+      },
+      "docker_available_bytes_before": 82440544256,
+      "duration_seconds": 21.479,
+      "images": {
+        "application": "sha256:b2d8f223fb1374b901a491adf40b3c433321f91b3b4444264342f9f9cb29d899",
+        "web": "sha256:368d215ae96640297d060f72b498a64936ad2796fde43d1c862c870dae5d5518"
+      },
+      "items": [
+        {
+          "facts": {
+            "available_bytes": 82440544256,
+            "services": 18
+          },
+          "id": "prerequisites_and_verified_images",
+          "seconds": 4.844,
+          "status": "PASS"
+        },
+        {
+          "code": "campaign_command_failed",
+          "id": "connected_startup_and_one_shot_migration",
+          "seconds": 15.046,
+          "status": "FAIL"
+        },
+        {
+          "code": "startup_failed",
+          "id": "connected_scenarios",
+          "status": "NOT RUN"
+        },
+        {
+          "facts": {},
+          "id": "safe_evidence_capture",
+          "seconds": 0.993,
+          "status": "PASS"
+        },
+        {
+          "facts": {},
+          "id": "owned_resource_cleanup",
+          "seconds": 0.594,
+          "status": "PASS"
+        }
+      ],
+      "kind": "disposable_connected_stack",
+      "operator_image": "sha256:241ef692e401296b7a4a9f3371fdc7cb8e34e27383c8a8204e3779c8f5d62fd2",
+      "operator_manifest_sha256": "6c410617e262885776bf808e7a4c3db9d080543893739f87eeae41e163c44584",
+      "production_or_language_approval": false,
+      "release_manifest_sha256": "5da1e42d478f1c0e75c93ead030df553e1c7ebece95d2ac5847e290d63c6b41e",
+      "result": "FAIL",
+      "source_sha": "ec8335cc43e90c132f06fabcfbeb5c447417ef80",
+      "started_at": "2026-10-26T07:40:19.048652+00:00",
+      "topology": {
+        "network_internal": true,
+        "scanner_definitions": "offline EICAR fixture only; freshness/coverage NOT qualified",
+        "services": [
+          "api",
+          "api_b",
+          "api_denied",
+          "api_failed",
+          "api_held",
+          "caddy",
+          "clamav",
+          "db",
+          "migrate",
+          "migrate_failed",
+          "probe",
+          "redis",
+          "web",
+          "worker",
+          "worker_b",
+          "worker_failed",
+          "worker_fault",
+          "worker_held"
+        ],
+        "tls": "isolated internal CA; no ACME"
+      },
+      "version": 1
+    }
+  ],
+  "engineering_integrated_packages": 40,
+  "local_diagnostic": {
+    "active_knowledge_chunks": 0,
+    "full_stack_qualification": false,
+    "hosted_hash_embedding": "REFUSED",
+    "http_agent_hitl_model_failure_budget_probes": "PASS",
+    "migration": "PASS",
+    "multi_instance_qualification": false,
+    "owned_resources_removed": true,
+    "scope": "old_image_with_current_code_single_api_tmpfs_only",
+    "seed": "PASS"
+  },
+  "production_or_language_approvals_added": false,
+  "protected_state": {
+    "file_changes": 0,
+    "files_checked": 49,
+    "other_worktrees_checked": 44,
+    "worktree_changes": 0
+  },
+  "task": "wave4_task07",
+  "task_complete": false,
+  "total_packages": 45,
+  "version": 1
+}

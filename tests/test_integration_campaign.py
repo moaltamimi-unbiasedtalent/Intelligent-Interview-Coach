@@ -193,3 +193,57 @@ def test_cleanup_refuses_foreign_volume_before_down(tmp_path, monkeypatch):
     )
     with pytest.raises(C.CampaignError, match="ownership"):
         c.cleanup()
+
+
+def test_existing_output_directory_is_never_overwritten(tmp_path, monkeypatch):
+    original = tmp_path / "summary.json"
+    original.write_text("existing-private-canary")
+    campaign = C.Campaign(
+        SimpleNamespace(
+            out=str(tmp_path), expected_sha="a" * 40, execute_disposable=True
+        )
+    )
+    monkeypatch.setattr(C, "capacity", lambda: pytest.fail("must refuse before Docker"))
+    assert campaign.run() == 2 and not campaign.owns_directory
+    assert original.read_text() == "existing-private-canary"
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["summary.json"]
+
+
+def test_internal_http_probe_uses_bounded_connection_and_preserves_contract(
+    monkeypatch,
+):
+    from scripts.integration import probe as P
+
+    calls = []
+
+    class Response:
+        status = 200
+
+        def read(self):
+            return b'{"synthetic":true}'
+
+        def getheaders(self):
+            return [("Content-Type", "application/json")]
+
+    class Connection:
+        def __init__(self, host, port, timeout):
+            calls.append((host, port, timeout))
+
+        def request(self, *args):
+            calls.append(args)
+
+        def getresponse(self):
+            return Response()
+
+        def close(self):
+            calls.append("closed")
+
+    monkeypatch.setattr(P, "HTTPConnection", Connection)
+    assert P.http("/api/v1/health") == (
+        200,
+        {"synthetic": True},
+        {"Content-Type": "application/json"},
+    )
+    assert calls[0] == ("api", 8000, 35) and calls[-1] == "closed"
+    with pytest.raises(P.ProbeFailure):
+        P.http("/api/v1/health", host="outside.invalid")

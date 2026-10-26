@@ -1,7 +1,7 @@
 """Private in-container synthetic probes. Never imported by ordinary application startup."""
 
 from __future__ import annotations
-import http.client
+from http.client import HTTPConnection
 import json
 import os
 from pathlib import Path
@@ -14,9 +14,13 @@ sys.path.insert(0, str(ROOT))
 from scripts.integration.runtime import boundary, control, agent  # noqa: E402
 
 
+class ProbeFailure(Exception):
+    """Code-owned bounded assertion; never a private external error string."""
+
+
 def require(ok, code):
     if not ok:
-        raise RuntimeError(code)
+        raise ProbeFailure(code)
 
 
 def factory():
@@ -35,7 +39,7 @@ def http(path, method="GET", payload=None, *, cookie="", host="api", raw=False):
     require(
         path.startswith("/api/") and "://" not in path, "campaign_http_path_refused"
     )
-    conn = http.client.HTTPConnection(host, 8000, timeout=35)
+    conn = HTTPConnection(host, 8000, timeout=35)
     data = json.dumps(payload) if payload is not None else None
     conn.request(
         method,
@@ -167,22 +171,26 @@ def seed():
             with sf() as s:
                 s.get(User, account.user_id).platform_role = "platform_admin"
                 s.commit()
-    # Populate only the fresh synthetic DB/private volumes with local-hash
-    # knowledge and documents; no provider/embedding client is constructed.
-    import shutil
-    from src.backup_set.fixture import build_synthetic_environment
+    # Strict staging refuses lexical embeddings. Keep the connected knowledge
+    # collection empty and prove refusal without weakening hosted index policy.
+    from src.copilot.embeddings import LocalHashEmbedder
+    from src.copilot.vectorstore import ChromaStore
+    from src.copilot.index_manifest import IndexIncompatibleError
+    from src.knowledge_admin.policy import COLLECTION
 
-    source = build_synthetic_environment(
-        Path("/campaign/knowledge-fixture"), database_url=os.environ["DATABASE_URL"]
+    Path("/data/knowledge/knowledge_private").mkdir()
+    store = ChromaStore(
+        LocalHashEmbedder(),
+        persist_dir="/data/knowledge/chroma",
+        collection_name=COLLECTION,
     )
-    for source_dir, target in (
-        (source.documents_dir, Path("/data/documents")),
-        (source.knowledge_files_dir, Path("/data/knowledge/knowledge_private")),
-        (source.knowledge_index_dir, Path("/data/knowledge/chroma")),
-    ):
-        if target.exists():
-            require(not any(target.iterdir()), "fresh_private_volume_required")
-        shutil.copytree(source_dir, target, dirs_exist_ok=True)
+    try:
+        store.assert_servable()
+    except IndexIncompatibleError as e:
+        require("hash_embedder_not_allowed" in e.codes, "unexpected_index_refusal")
+    else:
+        raise ProbeFailure("hosted_hash_embedder_accepted")
+    require(store.count() == 0, "connected_knowledge_must_remain_empty")
     control(mode="plain")
     from src.agent.models import AgentRunRequest
 
@@ -205,6 +213,8 @@ def seed():
         "mail": "memory_capture_only",
         "existing_run_fixture": True,
         "language_activation_overridden": False,
+        "hash_embedding_policy": "refused",
+        "active_knowledge_chunks": 0,
     }
 
 
@@ -215,8 +225,9 @@ def state():
         heads = (
             s.execute(text("select version_num from alembic_version")).scalars().all()
         )
+        version = s.execute(text("SHOW server_version")).scalar()
     require(heads == ["0048_agent_run_controls"], "unexpected_schema")
-    return {"schema": heads[0]}
+    return {"schema": heads[0], "postgresql_version": version}
 
 
 def identity():
@@ -296,7 +307,7 @@ def http_checks():
     )
     require(http("/api/v1/auth/me", cookie=other)[0] == 401, "logout_not_persisted")
     return {
-        "checks": 9,
+        "scope": "authenticated_accounts_and_owner_scoping",
         "shared_sessions": True,
         "ownership": True,
         "new_language_activity": "refused",
@@ -456,6 +467,7 @@ def scanner():
         "clean": clean.status,
         "eicar": infected.status,
         "scanner": "real_clamd",
+        "version": scan.health().get("version"),
         "definitions": "offline_eicar_only",
         "freshness_qualified": False,
     }
@@ -729,7 +741,7 @@ def upload(data, cookie):
         + data
         + ("\r\n--" + boundary + "--\r\n").encode()
     )
-    conn = http.client.HTTPConnection("api", 8000, timeout=25)
+    conn = HTTPConnection("api", 8000, timeout=25)
     conn.request(
         "POST",
         "/api/v1/documents",
@@ -762,6 +774,10 @@ def documents():
     status, download, _ = http(path + "/download", cookie=cookie, raw=True)
     require(status == 200 and download == data, "document_download_mismatch")
     require(upload(EICAR, cookie)[0] == 422, "infected_upload_accepted")
+    require(
+        upload(b"Synthetic surviving candidate document.", bob)[0] == 201,
+        "second_candidate_upload_failed",
+    )
     return {
         "clean_upload": 201,
         "owner_download": "byte_identical",
@@ -1066,7 +1082,8 @@ def main():
         return 0
     except Exception as e:
         # Exception text can contain connection strings, SQL or private payloads.
-        print(json.dumps({"ok": False, "code": type(e).__name__}))
+        code = str(e) if isinstance(e, ProbeFailure) else type(e).__name__
+        print(json.dumps({"ok": False, "code": code}))
         return 1
 
 
