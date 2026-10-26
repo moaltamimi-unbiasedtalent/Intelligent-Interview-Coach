@@ -2,7 +2,15 @@
 
 Historical PR #265 integration snapshot, 23 October 2026. Reviewed baseline: `aedbef3dee28a68b72bc526a1fca537a3da7bd8d`, PR #265 merged. Current reconciliation/review branch: `docs/post-pr265-release-readiness` in the permanent repository. Sources: [merge/CI/review record](evidence/POST_PR265_INTEGRATION_2026_10_23.json), [release report](POST_PR265_RELEASE_STATUS.md), package register, ledger and code.
 
-## Wave 4 Task 06 update — 26 October 2026
+## Wave 4 Task 07 — disposable integration campaign (in progress)
+
+Authoritative baseline: PR #272 merged at `992682c3fa9c891f5710c993e7d595f363b8c811`. All seven main workflows completed successfully: CI 40247207939, Redis 40247207906, migration image 40247207971, recovery 40247207860, durable admission 40247207903, budget 40247207914 and immutable images 40247207972. Browser E2E is PR/on-demand; no main-SHA Browser success is inferred.
+
+Task 07 is on `test/disposable-full-stack-integration`, unmerged. [Pre-change audit and narrow startup defects](WAVE4_TASK07_INTEGRATION_AUDIT.md). Local focused regression: 198 passed / 17 skipped; skips include explicit disposable PostgreSQL/image requirements. Local Docker capacity prevents the connected full-image campaign; the existing immutable-image workflow now drives the fresh isolated stack. Current-branch connected results and exact-head CI are pending; unsupported scenarios are explicitly NOT RUN. No staging deployment or gate acceptance is claimed.
+
+**40/45 integrated**: 00A/00B/07B/07C/08A remain open. Engineering: Tasks 01–06 merged; Task 07 under qualification. CI: seven baseline main workflows green, feature qualification pending. Staging: NOT RUN. Human qualification: OPEN. Only historical PG-11 remains PASS; every other production-gate state is unchanged. LG-01–LG-14 receive no approval; zero hosted-qualified languages. OD-HOSTED, OD-BUDGET, H-REDIS-POLICY, custody, retention/RTO/RPO, native/legal reviewers and 08A release authority remain unresolved. Original SQLite, 45 worktrees, unpublished branches and private assets are protected.
+
+## Wave 4 Task 06 update (historical pre-merge snapshot) — 26 October 2026
 
 PR #271 is merged at `88a5ce4e4d5e92bee75fbec2721ce28e73d9ac6d`. All six baseline main workflows are green: CI 40197262812, durable admission 40197262805, migration image 40197262813, immutable images 40197262795, Redis 40197262818 and AI budget 40197262825. Browser E2E is PR/on-demand; no main-SHA Browser success is inferred.
 

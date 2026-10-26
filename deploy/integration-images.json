@@ -1,0 +1,18 @@
+{
+  "images": {
+    "caddy": {
+      "digests": {
+        "amd64": "caddy:2@sha256:04913b1da43339a40ad1ea87827d70a576ac5aa6cf674c6e24fdca675887533a",
+        "arm64": "caddy:2@sha256:cc447f149425221422153c6cdf33a123b3f458839679f950298f68a690a54a5b"
+      },
+      "source_tag": "caddy:2"
+    },
+    "clamav": {
+      "digests": {
+        "amd64": "clamav/clamav:1.4@sha256:a1a529c81aa510e3c93c6e303b63c49485fb17599b5657445cd7b8dfbe93f463"
+      },
+      "source_tag": "clamav/clamav:1.4"
+    }
+  },
+  "version": 1
+}

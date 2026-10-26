@@ -355,8 +355,11 @@ def install(governor: BudgetGovernor) -> BudgetGovernor:
     try:
         from src.demo_live.guard import ProviderControl
 
-        if ProviderControl._active is not None:
-            raise BudgetError("guard_conflict", "The capstone demonstration provider control is installed; the production governor is not used together with it.")
+        control = ProviderControl._active
+        # A CLOSED governor may layer over the offline network refusal. Neither
+        # layer can authorize spending. Open/live controls remain incompatible.
+        if control is not None and not (control.mode == "offline" and governor.closed_reason):
+            raise BudgetError("guard_conflict", "The capstone demonstration provider control is installed; an open production governor is not used together with it.")
     except ImportError:  # pragma: no cover
         pass
     _Installed.orig_sync, _Installed.orig_async = httpx.Client.send, httpx.AsyncClient.send

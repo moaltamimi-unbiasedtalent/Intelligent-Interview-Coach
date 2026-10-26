@@ -74,7 +74,7 @@ COPY deploy/release-policy.json ./release-policy.json
 # Private document storage mount point. The real durable volume is mounted here at
 # run time (DOCUMENT_STORAGE_DIR=/data/documents). NEVER a public bucket, and never
 # under the frontend's public assets.
-RUN mkdir -p /data/documents
+RUN mkdir -p /data/documents /data/knowledge
 
 # Run as a non-root user and own the app + data dirs.
 RUN useradd --create-home --uid 10001 appuser \
