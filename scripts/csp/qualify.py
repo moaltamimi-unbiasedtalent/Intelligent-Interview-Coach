@@ -48,9 +48,14 @@ def local_caddy(source):
     require(source.count("email {$ACME_EMAIL}") == 1, "unexpected_edge_config")
     # Only certificate/HTTP redirect behaviour changes for reserved offline domains.
     # All CSP, security and trusted-proxy directives remain byte-for-byte intact.
-    return source.replace(
-        "email {$ACME_EMAIL}", "auto_https disable_redirects"
-    ).replace("\tencode gzip zstd", "\ttls internal\n\tencode gzip zstd")
+    lines = []
+    for line in source.splitlines():
+        if line.strip() == "email {$ACME_EMAIL}":
+            line = line.replace("email {$ACME_EMAIL}", "auto_https disable_redirects")
+        if line.strip() == "encode gzip zstd":
+            lines.append(line[: len(line) - len(line.lstrip())] + "tls internal")
+        lines.append(line)
+    return "\n".join(lines) + "\n"
 
 
 class Check:
@@ -87,6 +92,7 @@ class Check:
     def prepare(self):
         require(sys.platform.startswith("linux"), "linux_local_docker_host_required")
         require(not self.out.exists(), "new_output_directory_required")
+        self.summary["phase"] = "verify_candidate_manifest"
         m = R.decode_json(Path(self.args.manifest).read_text())
         R.validate_manifest(m, self.args.sha, self.args.anchor)
         require(
@@ -115,8 +121,11 @@ class Check:
         self.summary["docker_available_bytes_before"] = int(capacity)
         self.summary["images"] = {k: v["image_id"] for k, v in m["images"].items()}
         self.summary["manifest_sha256"] = self.args.anchor
+        self.summary["phase"] = "build_original_frontend"
         with R.committed_source(BASE) as source:
-            source_hash = R.digest(R.canonical(R.source_record(source, BASE)))
+            source_record = R.source_record(source, BASE)
+            source_hash = R.digest(R.canonical(source_record))
+            built_at = R.timestamp()
             tag = "ask4mo-csp-baseline:" + self.token
             with (private / "baseline-build.log").open("x") as log:
                 p = subprocess.run(
@@ -133,7 +142,7 @@ class Check:
                         "--build-arg",
                         "APP_GIT_SHA=" + BASE,
                         "--build-arg",
-                        "APP_BUILD_TIME=" + R.timestamp(),
+                        "APP_BUILD_TIME=" + built_at,
                         "--build-arg",
                         "APP_SOURCE_SHA256=" + source_hash,
                         ".",
@@ -147,6 +156,14 @@ class Check:
             self.baseline = json.loads(run(["docker", "image", "inspect", tag]).stdout)[
                 0
             ]["Id"]
+            R.inspect_image(
+                self.baseline,
+                "web",
+                source_record,
+                built_at,
+                "https://api.staging.example.com/api/v1",
+            )
+            self.summary["baseline_source_sha256"] = source_hash
             self.before_caddy = local_caddy((source / "deploy/Caddyfile").read_text())
         self.summary["baseline_web_image"] = self.baseline
         self.after_caddy = local_caddy((ROOT / "deploy/Caddyfile").read_text())
@@ -247,9 +264,14 @@ class Check:
         }
         for service in self.profile["services"].values():
             service.update(labels=labels, restart="no")
+        self.summary["phase"] = "validate_disposable_compose"
         self.write_profile()
         # Validate the actual shipped Caddy configuration before service creation.
-        for policy in (self.before_caddy, self.after_caddy):
+        for phase, policy in (
+            ("before", self.before_caddy),
+            ("after", self.after_caddy),
+        ):
+            self.summary["phase"] = "validate_caddy_" + phase
             (private / "Caddyfile").write_text(policy)
             run(
                 [
@@ -319,6 +341,7 @@ class Check:
         raise ValueError("auth_topology_not_live")
 
     def browser(self, phase):
+        self.summary["phase"] = "browser_" + phase
         cid = self.compose("ps", "-q", "caddy").stdout.decode().strip()
         info = json.loads(run(["docker", "inspect", cid]).stdout)[0]
         addresses = [
@@ -351,18 +374,20 @@ class Check:
             timeout=120,
             check=False,
         )
-        (self.out / f"private/browser-{phase}.log").write_bytes(
-            result.stdout + result.stderr
-        )
+        # Playwright failure call logs can contain form values. Discard raw output;
+        # retain only the authored safe stage/policy/count evidence and exit status.
+        self.summary[phase + "_browser_exit"] = result.returncode
         require(result.returncode == 0, "browser_" + phase + "_failed")
         self.summary[phase] = json.loads(
             (self.out / f"browser-{phase}.json").read_text()
         )
 
     def execute(self):
+        self.summary["phase"] = "start_disposable_auth_topology"
         self.created = True
         self.compose("up", "-d", "caddy", timeout=180)
         self.ready()
+        self.summary["phase"] = "seed_synthetic_invited_account"
         credentials = self.compose(
             "exec", "-T", "api", "python", "/fixture/seed.py"
         ).stdout
@@ -423,6 +448,7 @@ class Check:
             "non_root_identity_mismatch",
         )
         self.summary["scope"] = "Caddy_Next_FastAPI_PG_auth_only_not_full_campaign"
+        self.summary["phase"] = "complete"
         self.summary["result"] = "PASS"
 
     def cleanup(self):

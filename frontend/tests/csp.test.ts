@@ -14,7 +14,7 @@ describe("enforced rendering CSP", () => {
     expect(scripts).not.toMatch(/unsafe-inline|unsafe-eval|\*/);
     expect(policy).not.toContain("connect-src *");
   });
-  it.each(["https://a:b@api.example.com/api/v1", "https://api.example.com/?x=1", "https://api.example.com/#x", "http://external.example.com", "javascript:alert(1)"])("rejects unsafe public origin %s", api => {
+  it.each(["https://a:b@api.example.com/api/v1", "https://api.example.com/?x=1", "https://api.example.com/#x", "http://external.example.com", "javascript:alert(1)", "https://*.example.com/api/v1", "https://api.example.com;other.invalid/api/v1"])("rejects unsafe public origin %s", api => {
     expect(() => pagePolicy(nonce, api)).toThrow();
   });
   it("supports existing loopback development/API-mocked topology without relaxing scripts", () => {

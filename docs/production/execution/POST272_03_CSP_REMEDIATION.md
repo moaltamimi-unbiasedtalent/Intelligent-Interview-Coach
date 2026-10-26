@@ -54,8 +54,8 @@ real logout/session revocation and zero external request attempts. Original imag
 requests remain enabled; the unrelated existing network-idle test is unchanged.
 Caddy validates both configurations. The driver verifies actual schema and running
 image IDs and refuses non-owned cleanup. Only safe policy/status/count/hash JSON
-is uploaded; synthetic credentials, cookies, raw service/browser logs and traces
-remain private. No framework/auth/security exception exists for tests.
+is uploaded; synthetic credentials, cookies, raw service logs and traces are not uploaded; raw browser process output is
+discarded so a failed form action cannot persist credentials. No framework/auth/security exception exists for tests.
 
 Repeat after building a reviewed commit with the existing release builder:
 
@@ -66,14 +66,37 @@ python scripts/csp/qualify.py --execute-disposable \
   --out /absolute/new-output-directory
 ```
 
-Local evidence: 1,545 frontend tests (including 11 CSP tests), production build,
-TypeScript and lint pass. Focused Python auth/topology/hardening/harness: 81 pass;
-9 harness guards separately rechecked. Ruff, 452-item reconciliation and evidence
+Local evidence: 1,547 frontend tests (including 13 CSP tests), production build,
+TypeScript and lint pass. Focused Python auth/topology/hardening/harness: 82 pass;
+10 harness guards (including credential-log suppression) pass. A local production-Next browser diagnostic
+verifies 13 inline scripts carry the nonce, the theme initializer executes, no
+bootstrap is refused, and an injected script is blocked; this is explicitly not
+Caddy/real-authentication evidence. Ruff, 452-item reconciliation and evidence
 consistency pass. Built-image before/after qualification and exact-head CI are
 PENDING until the remediation PR's workflows complete. Native macOS/Docker-VM
 full-image qualification is NOT RUN; Linux CI is authoritative. No unrelated
 Docker resources are pruned. Current-head check results must not be inferred from
 prior source results.
+
+## First exact-source CI attempt (preserved)
+
+Source `bc75a215f59aceee50d953a215501d8fa67f0a49`: full CI and all five
+component workflows pass. Image run 40399666666 passes 16 image and 19 operator
+checks, but stops before browser execution: the test-only TLS converter rewrote a
+commented alternate Caddy example into an invalid directive. Safe artifact
+12689741012 records FAIL; no connected sign-in result exists for that attempt.
+Baseline web image `sha256:a19b7fcac8af1ba34615e1d7b5399556d707d7d2a9700f295643ea40c54463c9`;
+candidate API `sha256:149e14126397625a466535f63e483c2257ea44738488bf484b34ac05cea83993`;
+candidate web `sha256:96c9926af2321b0a33c43d1056006c208f88a526741b7ce17aee7eb83b9c60ce`;
+manifest `f5c4e71b2d029e4cf32f58ea70edca5a490d5f4dac9f4c2aa76b4c9a798cb0a3`.
+
+The converter now changes only actual configuration lines; comments/security
+headers remain unchanged. Both original and patched fixtures pass actual local
+Caddy 2.11.7 ARM64 validation in isolated containers. That bounded config check is
+not Linux connected-image/auth qualification. Native full-stack testing remains
+NOT RUN. Only the small pinned native Caddy image was added locally (capacity
+checked first); no existing images/volumes/caches were pruned. Final-source CI is
+required after this correction and API-origin/fixture-privacy hardening.
 
 ## Remaining scope and release status
 

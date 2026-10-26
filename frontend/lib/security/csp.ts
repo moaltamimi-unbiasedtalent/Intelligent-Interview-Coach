@@ -2,7 +2,8 @@
 export function pagePolicy(nonce: string, apiBase: string): string {
   if (!/^[A-Za-z0-9+/]{43}=$/.test(nonce)) throw new Error("Invalid CSP nonce");
   const api = new URL(apiBase);
-  if (api.username || api.password || api.search || api.hash ||
+  if ((!/^[a-z0-9.-]+$/i.test(api.hostname) && api.hostname !== "[::1]") ||
+      api.username || api.password || api.search || api.hash ||
       (api.protocol !== "https:" && !(api.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(api.hostname)))) {
     throw new Error("Invalid public API origin");
   }

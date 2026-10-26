@@ -74,6 +74,9 @@ def test_test_certificates_do_not_rewrite_any_security_or_proxy_directive():
             )
         ):
             assert line in local
+    for line in source.splitlines():
+        if line.lstrip().startswith("#"):
+            assert line in local
     assert "tls internal" in local
     assert "auto_https disable_redirects" in local
 
@@ -96,3 +99,33 @@ def test_seed_refuses_non_disposable_target_before_importing_auth(monkeypatch, u
     monkeypatch.setenv("ASK4MO_CSP_DISPOSABLE", "a" * 16)
     with pytest.raises(AssertionError):
         runpy.run_path(str(Q.ROOT / "scripts/csp/seed.py"))
+
+
+def test_browser_process_output_cannot_persist_form_credentials(monkeypatch, tmp_path):
+    c = Q.Check(args(tmp_path))
+    (c.out / "private").mkdir(parents=True)
+    (c.out / "browser-after.json").write_text('{"passed": true}')
+    c.compose = lambda *a, **k: SimpleNamespace(stdout=b"owned-container")
+
+    def command(command, **kwargs):
+        if command[:2] == ["docker", "inspect"]:
+            return SimpleNamespace(
+                stdout=json.dumps(
+                    [
+                        {
+                            "NetworkSettings": {
+                                "Networks": {"owned": {"IPAddress": "172.30.0.2"}}
+                            }
+                        }
+                    ]
+                ).encode()
+            )
+        return SimpleNamespace(
+            stdout=b"form-password-canary", stderr=b"private-email-canary", returncode=0
+        )
+
+    monkeypatch.setattr(Q, "run", command)
+    c.browser("after")
+    assert c.summary["after_browser_exit"] == 0
+    assert not list(c.out.rglob("*.log"))
+    assert not any(b"canary" in p.read_bytes() for p in c.out.rglob("*") if p.is_file())

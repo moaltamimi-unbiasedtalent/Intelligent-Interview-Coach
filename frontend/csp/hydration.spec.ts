@@ -7,7 +7,7 @@ const before = process.env.CSP_PHASE === "before";
 test("CSP real edge: baseline refusal or secure hydrated synthetic journey", async ({ page, context }) => {
   const result: Record<string, unknown> = { phase: before ? "before" : "after", passed: false };
   const external: string[] = [], pageErrors: string[] = [], consoleErrors: string[] = [];
-  let inlineRefusals = 0, loginRequests = 0;
+  let inlineRefusals = 0, loginRequests = 0, expectedUnauthenticatedErrors = 0;
   await context.route("**/*", route => {
     const url = new URL(route.request().url());
     if (!["https://app.staging.example.com", "https://api.staging.example.com"].includes(url.origin)) {
@@ -21,7 +21,8 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
     if (message.type() !== "error") return;
     const text = message.text();
     if (/inline script/i.test(text) && /violat|refus/i.test(text)) inlineRefusals++;
-    else if (!/401/.test(text)) consoleErrors.push("unexpected_console_error");
+    else if (/^Failed to load resource: the server responded with a status of 401(?: \(|$)/.test(text)) expectedUnauthenticatedErrors++;
+    else consoleErrors.push("unexpected_console_error");
   });
   await page.addInitScript(() => {
     (window as unknown as {cspEvents: string[]}).cspEvents = [];
@@ -36,7 +37,7 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
     expect(response.headers()["content-security-policy-report-only"]).toBeUndefined();
     result.effective_policy = policy;
     expect((await response.headersArray()).filter(h => h.name.toLowerCase() === "content-security-policy")).toHaveLength(1);
-    for (const [header, value] of [["strict-transport-security", "max-age=31536000"], ["x-frame-options", "DENY"], ["x-content-type-options", "nosniff"], ["referrer-policy", "strict-origin-when-cross-origin"]]) expect(response.headers()[header]).toContain(value);
+    for (const [header, value] of [["strict-transport-security", "max-age=31536000; includeSubDomains; preload"], ["permissions-policy", "camera=(), geolocation=(), microphone=(self)"], ["x-frame-options", "DENY"], ["x-content-type-options", "nosniff"], ["referrer-policy", "strict-origin-when-cross-origin"]]) expect(response.headers()[header]).toContain(value);
     expect(policy).toContain("connect-src 'self' https://api.staging.example.com wss://api.staging.example.com");
     for (const d of ["object-src 'none'", "form-action 'self'", "frame-ancestors 'none'"]) expect(policy).toContain(d);
     result.stage = "sign_in_form";
@@ -61,6 +62,7 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
       expect(Boolean(cookie)).toBe(true);
       expect({secure: cookie.secure, httpOnly: cookie.httpOnly, sameSite: cookie.sameSite}).toEqual({secure: true, httpOnly: true, sameSite: "Lax"});
       result.secure_session = true;
+      result.cookie_flags = {secure: cookie.secure, httpOnly: cookie.httpOnly, sameSite: cookie.sameSite};
       const nonce = policy.match(/'nonce-([^']+)'/)![1];
       expect(nonce).toMatch(/^[A-Za-z0-9+/]{43}=$/);
       expect(policy.split(";").find(s => s.trim().startsWith("script-src "))).not.toMatch(/unsafe-inline|unsafe-eval|\*/);
@@ -68,10 +70,17 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
       const scriptNonces = await page.locator("script:not([src]):not([type='application/ld+json'])").evaluateAll(nodes => nodes.map(n => (n as HTMLScriptElement).nonce));
       expect(scriptNonces.length).toBeGreaterThan(1);
       expect(scriptNonces.every(n => n === nonce)).toBe(true);
+      result.inline_scripts_nonced = scriptNonces.length;
+      result.cache_control = response.headers()["cache-control"];
       // Preserve actual image requests; only wait for the UI content this CSP test owns.
-      for (const path of ["/history", "/opportunities"]) {
+      result.authenticated_reads = [];
+      for (const [path, endpoint] of [["/history", "/history/interviews"], ["/opportunities", "/opportunities"]]) {
         result.stage = path;
+        const data = page.waitForResponse(response => new URL(response.url()).pathname === "/api/v1" + endpoint && response.request().method() === "GET");
         await page.goto(path, {waitUntil: "domcontentloaded"});
+        const status = (await data).status();
+        expect(status).toBe(200);
+        (result.authenticated_reads as {path: string, status: number}[]).push({path, status});
         await expect(page.locator("h1")).toBeVisible();
         await expect(page.locator("h1")).not.toHaveText(/sign in|not found|error/i);
       }
@@ -83,6 +92,8 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
       const nextPolicy = next.headers()["content-security-policy"];
       expect(nextPolicy).not.toBe(policy);
       expect(nextPolicy).not.toContain("attacker");
+      result.nonce_rotated = true;
+      result.spoofed_request_refused = true;
       await page.unroute(spoofedDocument);
       expect(inlineRefusals).toBe(0);
       expect(consoleErrors).toHaveLength(0);
@@ -114,6 +125,7 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
     result.stage = "complete";
     result.login_requests = loginRequests;
     result.console_error_count = consoleErrors.length;
+    result.expected_unauthenticated_http_errors = expectedUnauthenticatedErrors;
     result.page_error_count = pageErrors.length;
     result.passed = true;
   } finally {
