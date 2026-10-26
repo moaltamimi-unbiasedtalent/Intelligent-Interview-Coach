@@ -56,6 +56,30 @@ jobs:
           RECOVERY_TEST_BUNDLE: ${{ runner.temp }}/ask4mo-recovery
           P5B_PG_ADMIN_URL: postgresql+psycopg://disposable:synthetic-test-only@127.0.0.1:5432/p5b_test
         run: python -m pytest -q -o addopts='' -p no:cacheprovider tests/test_recovery_operator.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install CSP browser tooling
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Built-image before/after enforced CSP and real synthetic sign-in
+        run: |
+          python scripts/csp/qualify.py --execute-disposable \
+            --manifest "$RUNNER_TEMP/ask4mo-release/release.json" \
+            --anchor "$(cat "$RUNNER_TEMP/ask4mo-release/release.sha256")" \
+            --sha "$(git rev-parse HEAD)" --out "$RUNNER_TEMP/ask4mo-csp"
+      - name: Upload safe CSP evidence only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: csp-hydration-evidence
+          path: |
+            ${{ runner.temp }}/ask4mo-csp/summary.json
+            ${{ runner.temp }}/ask4mo-csp/browser-before.json
+            ${{ runner.temp }}/ask4mo-csp/browser-after.json
+          if-no-files-found: warn
       - name: Upload candidate metadata only (no image publication)
         if: always()
         uses: actions/upload-artifact@v4

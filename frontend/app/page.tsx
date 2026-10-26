@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import type { Metadata } from "next";
 
 import { MarketingHome } from "@/components/marketing/MarketingHome";
@@ -30,11 +31,13 @@ const ORG_JSONLD = {
   logo: `${SITE}/brand/ask4mo-mark.svg`,
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <>
       <script
         type="application/ld+json"
+        nonce={nonce}
         // Static, developer-authored JSON (no user input) - safe to inline.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSONLD) }}
       />

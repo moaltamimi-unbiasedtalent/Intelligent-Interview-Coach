@@ -1,5 +1,17 @@
 # Release Readiness Tracker (R1.0)
 
+
+> POST272-03 focused remediation: branch `fix/nextjs-csp-hydration` from main
+> `992682c3`, under normal review only after qualification. Current [PR #274 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/274/checks) and its
+> image/SHA evidence addendum are authoritative. Per-request
+> nonce CSP preserves enforced edge/security boundaries and makes rendering
+> explicitly dynamic/private. Actual Caddy sign-in, both authenticated reads and
+> negative injection are observed on `ce6dff0a`; its overall run failed at logout, so final complete acceptance remains subject to the current checks. [Design and evidence](POST272_03_CSP_REMEDIATION.md).
+> 40/45 packages remain integrated. POST272-04 and the primary Browser `/history`
+> timeout remain OPEN. PR #273 is unmerged; its 27/2/6 failed campaign evidence
+> remains unchanged. Hosted staging NOT RUN; human and PG/LG approvals unchanged;
+> only historical PG-11 PASS, zero hosted-active languages. Task 08 has not begun.
+
 > Wave 4 Task 06 baseline: PR #271 merged at `88a5ce4e4d5e92bee75fbec2721ce28e73d9ac6d`, six main workflows green. Task 06 extends encrypted recovery on a dedicated branch, pending review/merge/CI. [Recovery evidence and owner decisions](WAVE4_TASK06_RECOVERY.md). 40/45 integrated, five packages still open; no live staging or gate/language acceptance is inferred. Dated 23 October snapshots below remain historical.
 
 > Post-PR-265 integration, 23 October 2026: 40/45 engineering packages integrated at `aedbef3d`; [main CI is green](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40006938765). PR #265 Browser E2E passed on an identical tree; no Browser run exists on the main SHA. See [release status](POST_PR265_RELEASE_STATUS.md), [safety review](INTEGRATED_SAFETY_REVIEW_POST265.md) and [staging plan](STAGING_READINESS_PLAN_POST265.md). Gate/language approvals are unchanged.

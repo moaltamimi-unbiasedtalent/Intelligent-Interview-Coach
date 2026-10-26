@@ -18,7 +18,7 @@
 #
 # HSTS: set once here at the edge (max-age >= 1 year). Do NOT also emit HSTS from
 # the API for browser responses to avoid conflicting max-age; the API keeps its
-# own strict security headers (see the runbook) but the edge owns HSTS + page CSP.
+# own strict security headers (see the runbook) but the edge owns HSTS; Next.js owns the per-request page CSP.
 #
 # Domains and ACME email come from the environment (deploy/.env.staging):
 #   {$APP_DOMAIN}  {$API_DOMAIN}  {$ACME_EMAIL}
@@ -45,20 +45,20 @@
 		# browser speech / realtime voice capture on the app origin ONLY.
 		Permissions-Policy "camera=(), geolocation=(), microphone=(self)"
 
-		# Page Content-Security-Policy (edge/frontend responsibility). This is a
-		# STARTING baseline — tighten to the exact hosts you use. NEVER use
-		# `connect-src *`. connect-src must explicitly list:
-		#   - the API origin (XHR/fetch)
-		#   - the API origin over wss:// if the app opens WebSockets to it
-		#   - the realtime voice provider origin (only when REALTIME_VOICE_ENABLED),
-		#     e.g. https://api.openai.com wss://api.openai.com — add the exact host.
-		Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:; connect-src 'self' https://{$API_DOMAIN} wss://{$API_DOMAIN}; media-src 'self' blob:; form-action 'self'"
+		# Next.js generates the enforced nonce policy before SSR. A second static
+		# policy would intersect it and block hydration. Caddy forwards that policy;
+		# this deferred default covers assets/upstream errors without a page policy.
+		?Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:; connect-src 'self' https://{$API_DOMAIN} wss://{$API_DOMAIN}; media-src 'self' blob:; form-action 'self'"
 
 		# Never advertise the upstream server.
 		-Server
 	}
 
-	reverse_proxy web:3000
+	reverse_proxy web:3000 {
+		# Client-supplied values must never select the rendering nonce/policy.
+		header_up -Content-Security-Policy
+		header_up -X-Nonce
+	}
 }
 
 # ----------------------------------------------------------------------------

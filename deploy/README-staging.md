@@ -104,3 +104,31 @@ outcomes and kill state never reset on release or application rollback. Incapabl
 old images are refused. Redis request limiting is separate from monetary limits.
 See `docs/production/execution/WAVE4_TASK05_BUDGET_AUDIT.md` and the OPEN
 `OD_BUDGET_SPECIFICATION_TASK05.md`. Original development databases stay untouched.
+
+## Enforced page CSP and rendering (POST272-03)
+
+Next.js middleware generates a fresh 256-bit nonce for each page request, replaces
+untrusted request nonce/CSP headers, and supplies the same enforced policy to SSR
+and the response. Framework/bootstrap scripts and the two developer-authored
+inline scripts receive this nonce. `script-src` retains `self` and permits only
+that response's nonced inline scripts; no `unsafe-inline`/`unsafe-eval` script
+exception, wildcard, report-only mode or test bypass is introduced. The existing
+style policy is unchanged. API HTTPS/WSS origins come from the validated public
+API build setting; no request Host/Forwarded header can choose an allowed origin.
+
+Caddy retains HSTS, frame/permissions/MIME/referrer protection and trusted API
+proxy handling. Its deferred default CSP applies only when the upstream has no
+policy (assets/upstream errors); it must not overwrite or append a second static
+page policy. The API continues to own its independent CSP and CORS restrictions.
+
+All pages explicitly render dynamically. Nonce-bearing HTML is private/no-store:
+do not add HTML/CDN caching, ISR, static export or partial prerendering to this
+profile. Static bundles, fonts and image assets retain their ordinary caching.
+This trades page-generation work for per-response script authorization. Review
+capacity before any separately authorized deployment; no hosting is activated.
+
+`scripts/csp/qualify.py --execute-disposable` is a focused Linux/local-Docker-host
+before/after browser check using the existing immutable release manifest, a pinned
+original-main frontend, actual Caddy internal TLS, real FastAPI/PG authentication,
+and memory-captured email. See `docs/production/execution/POST272_03_CSP_REMEDIATION.md`.
+It is not the full PR #273 campaign, which retains its failed historical evidence.
