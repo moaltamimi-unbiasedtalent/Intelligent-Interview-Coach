@@ -141,10 +141,42 @@ def agent():
     )
 
 
+def observe_proxy(token, request):
+    if not re.fullmatch(r"[a-f0-9]{32}", token or ""):
+        return
+    from src.api.rate_limit import client_ip
+    import hashlib, hmac
+
+    value = hmac.new(
+        os.environ["RATE_LIMIT_KEY_SECRET"].encode(),
+        client_ip(request).encode(),
+        hashlib.sha256,
+    ).hexdigest()
+    path = Path("/campaign/private/proxy-" + token + ".json")
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w") as file:
+        json.dump(
+            {
+                "client_fingerprint": value,
+                "forwarded_proto": request.headers.get("x-forwarded-proto"),
+                "forwarded_host": request.headers.get("x-forwarded-host"),
+            },
+            file,
+        )
+
+
 def serve():
     boundary()
     from src.api.main import app
     from src.api import dependencies as D
+
+    @app.middleware("http")
+    async def private_proxy_observation(request, call_next):
+        response = await call_next(request)
+        token = request.headers.get("x-ask4mo-campaign-observe", "")
+        if token:
+            observe_proxy(token, request)
+        return response
 
     shared = agent()
     app.dependency_overrides[D.get_agent_service] = lambda: shared

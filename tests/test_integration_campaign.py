@@ -247,3 +247,72 @@ def test_internal_http_probe_uses_bounded_connection_and_preserves_contract(
     assert calls[0] == ("api", 8000, 35) and calls[-1] == "closed"
     with pytest.raises(P.ProbeFailure):
         P.http("/api/v1/health", host="outside.invalid")
+
+
+def test_redis_outage_observation_accepts_only_bounded_cached_health(monkeypatch):
+    from scripts.integration import probe as P
+    from src.api import rate_limit as R
+
+    observations = iter(
+        [
+            (200, {}, {}),
+            (200, {}, {}),
+            (503, {"error": {}}, {"x-rate-limit-state": "unreachable"}),
+        ]
+    )
+    monkeypatch.setattr(P, "http", lambda *a, **k: next(observations))
+
+    class Down:
+        def eval(self, *a):
+            raise ConnectionError("synthetic outage")
+
+    monkeypatch.setattr(R, "configured_redis_client", lambda: Down())
+    monkeypatch.setenv("RATE_LIMIT_NAMESPACE", "ask4mo:rl:synthetic:")
+    monkeypatch.setenv("RATE_LIMIT_KEY_SECRET", "synthetic-only-" * 4)
+    result = P.outage("redis_down")
+    assert (
+        result["initial_readiness_status"] == 200
+        and result["rate_limiter_state"] == "unreachable"
+    )
+    assert result["refused"] and result["synthetic_local_and_deny_policies"]
+
+
+def test_redis_outage_observation_never_accepts_persistent_healthy_status(monkeypatch):
+    from scripts.integration import probe as P
+
+    import itertools
+
+    clock = itertools.count()
+    monkeypatch.setattr(P.time, "monotonic", lambda: next(clock))
+    monkeypatch.setattr(P.time, "sleep", lambda seconds: None)
+    monkeypatch.setattr(P, "http", lambda *a, **k: (200, {}, {}))
+    with pytest.raises(P.ProbeFailure, match="within_observation_window"):
+        P.outage("redis_down")
+
+
+def test_proxy_observer_records_no_raw_client_address_and_uses_private_mode(
+    tmp_path, monkeypatch
+):
+    from scripts.integration import runtime as T
+
+    monkeypatch.setattr(T, "Path", lambda value: tmp_path / Path(value).name)
+    monkeypatch.setenv("TRUST_PROXY", "true")
+    monkeypatch.setenv("RATE_LIMIT_KEY_SECRET", "synthetic-observer-only-key")
+    request = SimpleNamespace(
+        headers={
+            "x-forwarded-for": "203.0.113.17",
+            "x-forwarded-proto": "https",
+            "x-forwarded-host": "api.staging.example.com",
+        },
+        client=SimpleNamespace(host="192.0.2.3"),
+    )
+    T.observe_proxy("../refused", request)
+    assert not list(tmp_path.iterdir())
+    T.observe_proxy("a" * 32, request)
+    path = next(tmp_path.iterdir())
+    record = json.loads(path.read_text())
+    assert path.stat().st_mode & 0o777 == 0o600
+    assert (
+        "203.0.113.17" not in path.read_text()
+        and len(record["client_fingerprint"]) == 64
+    )

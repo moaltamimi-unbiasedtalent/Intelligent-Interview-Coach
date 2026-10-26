@@ -529,9 +529,29 @@ def outage(kind):
     if kind == "db_down":
         require(http("/api/v1/ready")[0] == 503, "database_outage_not_refused")
     elif kind == "redis_down":
-        status, body, _ = http("/api/v1/ready")
-        require(status == 503, "shared_required_outage_not_refused")
-        require("rate_limiter" in json.dumps(body), "redis_outage_not_visible")
+        before = time.monotonic()
+        deadline = before + 5
+        status, body, headers = http("/api/v1/ready")
+        initial = status
+        while status != 503 and time.monotonic() < deadline:
+            time.sleep(0.2)
+            status, body, headers = http("/api/v1/ready")
+        require(
+            status == 503,
+            "shared_required_outage_not_refused_within_observation_window",
+        )
+        state = headers.get("x-rate-limit-state", headers.get("X-Rate-Limit-State"))
+        require(
+            state
+            in (
+                "unreachable",
+                "configured_unverified",
+                "degraded_local",
+                "fail_closed",
+            ),
+            "redis_outage_not_visible",
+        )
+        detection = round(time.monotonic() - before, 3)
         from src.api.rate_limit import (
             RedisRateLimiter,
             RateLimitPolicy,
@@ -568,12 +588,33 @@ def outage(kind):
             pass
         else:
             raise RuntimeError("scanner_outage_permissive")
-    return {"injected": kind, "refused": True}
+    facts = {"injected": kind, "refused": True}
+    if kind == "redis_down":
+        facts.update(
+            initial_readiness_status=initial,
+            outage_detection_seconds=detection,
+            rate_limiter_state=state,
+            synthetic_local_and_deny_policies=True,
+        )
+    return facts
 
 
 def recovered():
     require(http("/api/v1/ready")[0] == 200, "readiness_not_recovered")
     return scanner()
+
+
+def checkpoint_recovery():
+    before = control()["calls"]
+    cookie = login()
+    rid = credentials()["run_id"]
+    status, _, _ = http("/api/v1/agent/runs/" + rid, cookie=cookie)
+    require(
+        status == 200,
+        "agent_checkpoint_unavailable_after_database_restart_http_" + str(status),
+    )
+    require(control()["calls"] == before, "checkpoint_read_executed_model")
+    return {"agent_read_status": status, "new_model_calls": control()["calls"] - before}
 
 
 def slow_prepare():
@@ -639,6 +680,7 @@ def cancel_active():
 
 
 def lost_state():
+    before = control()["calls"]
     from src.agent.run_control import RunControlStore
 
     rid = credentials()["run_id"]
@@ -657,9 +699,16 @@ def lost_state():
         == 409,
         "lost_process_reexecuted",
     )
+    status, body, _ = http("/api/v1/agent/runs/" + rid, cookie=cookie, host="api_b")
+    require(
+        status == 200 and body.get("usage", {}).get("usage_complete") is False,
+        "lost_process_unknown_usage_not_visible",
+    )
+    require(control()["calls"] == before, "lost_process_duplicate_execution")
     control(mode="plain")
     return {
         "durable_unsettled": True,
+        "public_usage_complete": False,
         "takeover_refused": 409,
         "unknown_outcome_preserved": True,
     }
@@ -826,6 +875,10 @@ def documents():
     )
     status, download, _ = http(path + "/download", cookie=cookie, raw=True)
     require(status == 200 and download == data, "document_download_mismatch")
+    require(
+        http(path, cookie=login("admin"))[0] == 404,
+        "admin_private_document_superuser_bypass",
+    )
     require(upload(EICAR, cookie)[0] == 422, "infected_upload_accepted")
     require(
         upload(b"Synthetic surviving candidate document.", bob)[0] == 201,
@@ -922,6 +975,87 @@ def worker_recovered():
         "attempts": job["attempts"],
         "active_duplicate_created": False,
         "fixture_lease_seconds": 8,
+    }
+
+
+def proxy_controls():
+    import socket, ssl, uuid, hashlib, hmac
+
+    def request(path, headers):
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        connection = HTTPConnection("caddy", 443, timeout=10)
+        connection.sock = context.wrap_socket(
+            socket.create_connection(("caddy", 443), timeout=10),
+            server_hostname="api.staging.example.com",
+        )
+        connection.request(
+            "GET", path, headers={"Host": "api.staging.example.com", **headers}
+        )
+        response = connection.getresponse()
+        status = response.status
+        body = response.read()
+        values = dict((k.lower(), v) for k, v in response.getheaders())
+        connection.close()
+        return status, body, values
+
+    observations = []
+    for forged in ("203.0.113.17", "198.51.100.19"):
+        token = uuid.uuid4().hex
+        status, _, headers = request(
+            "/api/v1/health",
+            {
+                "X-Ask4Mo-Campaign-Observe": token,
+                "X-Forwarded-For": forged,
+                "X-Forwarded-Proto": "http",
+                "X-Forwarded-Host": "forged.invalid",
+                "Origin": "https://app.staging.example.com",
+            },
+        )
+        require(
+            status == 200
+            and headers.get("access-control-allow-origin")
+            == "https://app.staging.example.com",
+            "proxy_cors_allowlist_failed",
+        )
+        path = Path("/campaign/private/proxy-" + token + ".json")
+        observed = json.loads(path.read_text())
+        path.unlink()
+        forged_hash = hmac.new(
+            os.environ["RATE_LIMIT_KEY_SECRET"].encode(),
+            forged.encode(),
+            hashlib.sha256,
+        ).hexdigest()
+        require(
+            observed["client_fingerprint"] != forged_hash
+            and observed["forwarded_proto"] == "https"
+            and observed["forwarded_host"] == "api.staging.example.com",
+            "forwarded_header_spoofing_accepted",
+        )
+        observations.append(observed["client_fingerprint"])
+    require(
+        len(set(observations)) == 1, "proxy_client_identity_changed_with_forged_headers"
+    )
+    status, _, headers = request("/api/v1/health", {"Origin": "https://forged.invalid"})
+    require(
+        status == 200 and "access-control-allow-origin" not in headers,
+        "untrusted_cors_origin_allowed",
+    )
+    status, body, _ = request("/api/v1/campaign-nonexistent", {})
+    require(
+        status == 404
+        and not any(
+            value in body for value in (b"api:8000", b"postgresql://", b"redis://")
+        ),
+        "proxy_error_projection_leaked_internal_endpoint",
+    )
+    return {
+        "forged_forwarded_headers_ignored": True,
+        "client_identity_stable": True,
+        "cors_allowlist": True,
+        "http_error_status": 404,
+        "internal_endpoint_leak": False,
     }
 
 
@@ -1253,6 +1387,8 @@ ACTIONS = {
     "edge_idle": lambda: edge_stream(idle=True),
     "edge_until_loss": edge_stream,
     "stream_entered": stream_entered,
+    "checkpoint_recovery": checkpoint_recovery,
+    "proxy_controls": proxy_controls,
 }
 
 

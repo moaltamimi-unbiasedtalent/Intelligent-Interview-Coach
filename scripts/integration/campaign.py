@@ -704,6 +704,15 @@ class Campaign:
             self.wait_ready()
         return result
 
+    def explicit_checkpoint_recovery(self):
+        # Record the failed business-read check separately. This is an explicit
+        # recovery workaround, never an automatic retry or a hidden PASS.
+        self.compose("restart", "api", "api_b", timeout=60)
+        self.wait_ready()
+        facts = self.probe("checkpoint_recovery")
+        facts["workaround"] = "explicit_api_process_restart_after_recorded_failure"
+        return facts
+
     def worker_crash(self):
         self.compose("stop", "worker", "worker_b", timeout=45)
         try:
@@ -737,6 +746,12 @@ class Campaign:
                 require(not state["Running"], "failed_migration_dependency_running")
                 if service == "migrate_failed":
                     require(state["ExitCode"] != 0, "failed_migration_exit_missing")
+                else:
+                    require(
+                        state["Status"] == "created"
+                        and state["StartedAt"].startswith("0001-"),
+                        "failed_migration_dependent_was_started",
+                    )
                 observed[service] = {
                     "running": state["Running"],
                     "exit_code": state["ExitCode"],
@@ -1020,9 +1035,13 @@ class Campaign:
                     "private_documents_upload_download_scanner",
                     lambda: self.probe("documents"),
                 )
+                self.check(
+                    "proxy_forwarded_identity_cors_error_privacy",
+                    lambda: self.probe("proxy_controls"),
+                )
                 self.check("worker_jobs_and_shared_state", lambda: self.probe("jobs"))
                 self.check(
-                    "agent_sse_reconnect_cancellation_hitl",
+                    "agent_completed_run_sse_reconnect",
                     lambda: self.probe("agent", timeout=120),
                 )
                 self.check("existing_hitl_resume", lambda: self.probe("hitl"))
@@ -1057,6 +1076,15 @@ class Campaign:
                         "fault_" + service, lambda s=service, a=action: self.fault(s, a)
                     )
                 self.check("dependencies_recovered", lambda: self.probe("recovered"))
+                checkpoint_ok = self.check(
+                    "agent_checkpoint_after_database_restart",
+                    lambda: self.probe("checkpoint_recovery"),
+                )
+                if not checkpoint_ok:
+                    self.check(
+                        "explicit_api_checkpoint_recovery_workaround",
+                        self.explicit_checkpoint_recovery,
+                    )
                 self.check(
                     "shared_cross_instance_rate_limits",
                     lambda: self.probe("redis_limits"),
