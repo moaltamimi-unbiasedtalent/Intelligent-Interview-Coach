@@ -67,8 +67,8 @@ python scripts/csp/qualify.py --execute-disposable \
 ```
 
 Local evidence: 1,547 frontend tests (including 13 CSP tests), production build,
-TypeScript and lint pass. Focused Python auth/topology/hardening/harness: 82 pass;
-10 harness guards (including credential-log suppression) pass. A local production-Next browser diagnostic
+TypeScript and lint pass. Focused Python auth/topology/hardening/harness: 83 pass;
+11 harness guards (including credential-log suppression) pass. A local production-Next browser diagnostic
 verifies 13 inline scripts carry the nonce, the theme initializer executes, no
 bootstrap is refused, and an injected script is blocked; this is explicitly not
 Caddy/real-authentication evidence. Ruff, 452-item reconciliation and evidence
@@ -97,6 +97,25 @@ not Linux connected-image/auth qualification. Native full-stack testing remains
 NOT RUN. Only the small pinned native Caddy image was added locally (capacity
 checked first); no existing images/volumes/caches were pruned. Final-source CI is
 required after this correction and API-origin/fixture-privacy hardening.
+
+## Second exact-source attempt (preserved)
+
+Source `80e1033307f2cbf83a7041e10d22e592d01c845f`, image run 40403618303,
+safe artifact 12689938364: both Caddy configurations validate, the actual
+API/PostgreSQL/auth fixture starts, a synthetic invited/verified account is seeded,
+and owned cleanup passes. The before-browser check times out at form entry:
+its incorrect expectation of usable fields is incompatible with the original
+CSP-blocked bootstrap. Effective original policy is captured in browser-before.json;
+no after-fix browser result is claimed for this attempt.
+
+The negative baseline now requires observed inline refusal, the original strict
+policy, no authenticated UI and no login request; it records missing fields as a
+broken-page observation, and attempts entry only when original fields exist.
+Every patched-page usability/login/navigation/logout/injection assertion remains.
+Both phases are now collected independently and either failure still fails the
+qualification; no retry, timeout increase or primary Browser test change occurs.
+Raw browser process output remains discarded, with safe stage/header/count data.
+This correction still requires a new real-image run on its own source SHA.
 
 ## Remaining scope and release status
 

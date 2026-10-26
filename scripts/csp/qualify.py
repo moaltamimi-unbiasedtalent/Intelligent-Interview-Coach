@@ -377,10 +377,13 @@ class Check:
         # Playwright failure call logs can contain form values. Discard raw output;
         # retain only the authored safe stage/policy/count evidence and exit status.
         self.summary[phase + "_browser_exit"] = result.returncode
-        require(result.returncode == 0, "browser_" + phase + "_failed")
-        self.summary[phase] = json.loads(
-            (self.out / f"browser-{phase}.json").read_text()
+        summary = self.out / f"browser-{phase}.json"
+        self.summary[phase] = (
+            json.loads(summary.read_text())
+            if summary.exists()
+            else {"passed": False, "stage": "browser_process_before_test"}
         )
+        return result.returncode == 0 and self.summary[phase].get("passed") is True
 
     def execute(self):
         self.summary["phase"] = "start_disposable_auth_topology"
@@ -395,14 +398,17 @@ class Check:
         path = self.out / "private/credentials.json"
         path.write_text(json.dumps(account))
         path.chmod(0o600)
-        self.browser("before")
+        before_passed = self.browser("before")
         self.compose("stop", "web", "caddy")
         self.profile["services"]["web"]["image"] = self.summary["images"]["web"]
         (self.out / "private/Caddyfile").write_text(self.after_caddy)
         self.write_profile()
         self.compose("up", "-d", "--force-recreate", "web", "caddy")
         self.ready()
-        self.browser("after")
+        after_passed = self.browser("after")
+        require(
+            before_passed and after_passed, "before_after_browser_qualification_failed"
+        )
         raw = self.compose("logs", "--no-color").stdout
         require(
             all(value.encode() not in raw for value in account.values()),

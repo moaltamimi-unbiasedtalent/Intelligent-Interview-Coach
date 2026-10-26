@@ -101,7 +101,10 @@ def test_seed_refuses_non_disposable_target_before_importing_auth(monkeypatch, u
         runpy.run_path(str(Q.ROOT / "scripts/csp/seed.py"))
 
 
-def test_browser_process_output_cannot_persist_form_credentials(monkeypatch, tmp_path):
+@pytest.mark.parametrize("process_exit", [0, 1])
+def test_browser_process_output_cannot_persist_form_credentials(
+    monkeypatch, tmp_path, process_exit
+):
     c = Q.Check(args(tmp_path))
     (c.out / "private").mkdir(parents=True)
     (c.out / "browser-after.json").write_text('{"passed": true}')
@@ -121,11 +124,13 @@ def test_browser_process_output_cannot_persist_form_credentials(monkeypatch, tmp
                 ).encode()
             )
         return SimpleNamespace(
-            stdout=b"form-password-canary", stderr=b"private-email-canary", returncode=0
+            stdout=b"form-password-canary",
+            stderr=b"private-email-canary",
+            returncode=process_exit,
         )
 
     monkeypatch.setattr(Q, "run", command)
-    c.browser("after")
-    assert c.summary["after_browser_exit"] == 0
+    assert c.browser("after") is (process_exit == 0)
+    assert c.summary["after_browser_exit"] == process_exit
     assert not list(c.out.rglob("*.log"))
     assert not any(b"canary" in p.read_bytes() for p in c.out.rglob("*") if p.is_file())

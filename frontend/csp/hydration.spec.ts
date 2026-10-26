@@ -36,24 +36,33 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
     const policy = response.headers()["content-security-policy"];
     expect(response.headers()["content-security-policy-report-only"]).toBeUndefined();
     result.effective_policy = policy;
+    result.security_headers = Object.fromEntries(["strict-transport-security", "permissions-policy", "x-frame-options", "x-content-type-options", "referrer-policy", "cache-control"].map(name => [name, response.headers()[name]]));
     expect((await response.headersArray()).filter(h => h.name.toLowerCase() === "content-security-policy")).toHaveLength(1);
     for (const [header, value] of [["strict-transport-security", "max-age=31536000; includeSubDomains; preload"], ["permissions-policy", "camera=(), geolocation=(), microphone=(self)"], ["x-frame-options", "DENY"], ["x-content-type-options", "nosniff"], ["referrer-policy", "strict-origin-when-cross-origin"]]) expect(response.headers()[header]).toContain(value);
     expect(policy).toContain("connect-src 'self' https://api.staging.example.com wss://api.staging.example.com");
     for (const d of ["object-src 'none'", "form-action 'self'", "frame-ancestors 'none'"]) expect(policy).toContain(d);
-    result.stage = "sign_in_form";
-    await page.getByLabel("Email", {exact: true}).fill(account.email);
-    await page.getByLabel("Password", {exact: true}).fill(account.password);
-    await page.getByRole("button", {name: /^sign in$/i}).click();
     if (before) {
+      result.stage = "original_bootstrap_refusal";
       await expect.poll(() => inlineRefusals).toBeGreaterThan(0);
       expect(policy).toContain("script-src 'self';");
       expect(policy).not.toContain("'nonce-");
+      const fieldsVisible = await page.getByLabel("Email", {exact: true}).isVisible() && await page.getByLabel("Password", {exact: true}).isVisible();
+      result.form_fields_visible = fieldsVisible;
+      if (fieldsVisible) {
+        await page.getByLabel("Email", {exact: true}).fill(account.email);
+        await page.getByLabel("Password", {exact: true}).fill(account.password);
+        await page.getByRole("button", {name: /^sign in$/i}).click();
+      }
       expect(loginRequests).toBe(0);
       expect(await page.getByRole("heading", {name: "Your account"}).count()).toBe(0);
       result.hydrated_sign_in = false;
       result.bootstrap_inline_refusals = inlineRefusals;
       result.violation_events = await page.evaluate(() => (window as unknown as {cspEvents: string[]}).cspEvents);
     } else {
+    result.stage = "sign_in_form";
+    await page.getByLabel("Email", {exact: true}).fill(account.email);
+    await page.getByLabel("Password", {exact: true}).fill(account.password);
+    await page.getByRole("button", {name: /^sign in$/i}).click();
       result.stage = "authenticated_account";
       await expect(page).toHaveURL(/\/account$/);
       await expect(page.getByRole("heading", {name: "Your account"})).toBeVisible();
@@ -110,7 +119,7 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
           document.body.appendChild(script);
         }
       }, nonce);
-      await expect.poll(() => page.evaluate(() => (window as unknown as {cspEvents: string[]}).cspEvents.length)).toBeGreaterThanOrEqual(2);
+      await expect.poll(() => page.evaluate(() => (window as unknown as {cspEvents: string[]}).cspEvents.length)).toBe(2);
       expect(await page.evaluate(() => "__cspInjected" in window)).toBe(false);
       result.negative_injection_blocked = true;
       result.violation_events = await page.evaluate(() => (window as unknown as {cspEvents: string[]}).cspEvents);
@@ -118,6 +127,10 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
       await page.getByRole("button", {name: /^sign out$/i, exact: true}).first().click();
       await expect(page).toHaveURL(/\/sign-in$/);
       expect(await page.evaluate(async url => (await fetch(url, {credentials: "include"})).status, api + "/auth/me")).toBe(401);
+      expect(inlineRefusals).toBe(2); // Exactly the two intentional negative payloads.
+      expect(consoleErrors).toHaveLength(0);
+      expect(pageErrors).toHaveLength(0);
+      result.negative_injection_refusals = 2;
       result.logout = true;
     }
     expect(external).toHaveLength(0);
@@ -129,6 +142,10 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
     result.page_error_count = pageErrors.length;
     result.passed = true;
   } finally {
+    result.observed_inline_refusals = inlineRefusals;
+    result.observed_login_requests = loginRequests;
+    result.unexpected_console_errors = consoleErrors.length;
+    result.observed_page_errors = pageErrors.length;
     writeFileSync(process.env.CSP_BROWSER_SUMMARY!, JSON.stringify(result, null, 2));
   }
 });
