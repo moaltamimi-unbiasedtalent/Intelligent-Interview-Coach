@@ -134,7 +134,7 @@ def test_topology_keeps_image_identity_dependencies_isolation_and_security(tmp_p
         )
         assert services[k]["environment"]["AI_BUDGET_CONFIG_PATH"] == ""
     assert all(v["internal"] for v in topology["networks"].values())
-    assert services["caddy"]["ports"] == ["127.0.0.1:443:443"]
+    assert not services["caddy"].get("ports")
     assert all(not s.get("ports") for k, s in services.items() if k != "caddy")
     assert (
         services["probe"]["profiles"] == ["tools"]

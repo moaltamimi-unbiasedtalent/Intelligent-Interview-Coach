@@ -109,6 +109,158 @@
         "tls": "isolated internal CA; no ACME"
       },
       "version": 1
+    },
+    {
+      "campaign": "738d11cab0c24b3e",
+      "cleanup": "only this campaign project containers/networks/volumes",
+      "counts": {
+        "FAIL": 1,
+        "NOT RUN": 1,
+        "PASS": 3,
+        "SKIP": 0
+      },
+      "docker_available_bytes_after_cleanup": 82075123712,
+      "docker_available_bytes_before": 82439380992,
+      "duration_seconds": 165.597,
+      "images": {
+        "application": "sha256:63ab83ff2f0b0047f0850cd06e5d92c7d7e0d5f9fa976a0ad5f57bd673846e82",
+        "web": "sha256:d41d0d3f19af0d62f6cdb13b23f26dd6779cb8c623b811d7bdbba039e6d99ea0"
+      },
+      "items": [
+        {
+          "facts": {
+            "available_bytes": 82439380992,
+            "services": 18
+          },
+          "id": "prerequisites_and_verified_images",
+          "seconds": 4.673,
+          "status": "PASS"
+        },
+        {
+          "code": "connected_stack_not_ready",
+          "id": "connected_startup_and_one_shot_migration",
+          "seconds": 157.31,
+          "status": "FAIL"
+        },
+        {
+          "code": "startup_failed",
+          "id": "connected_scenarios",
+          "status": "NOT RUN"
+        },
+        {
+          "facts": {},
+          "id": "safe_evidence_capture",
+          "seconds": 1.231,
+          "status": "PASS"
+        },
+        {
+          "facts": {},
+          "id": "owned_resource_cleanup",
+          "seconds": 2.382,
+          "status": "PASS"
+        }
+      ],
+      "kind": "disposable_connected_stack",
+      "operator_image": "sha256:92c761f08af6e308ca87613b35f07d5120f0d783e9d1b5f39e44bcefbf8fa167",
+      "operator_manifest_sha256": "53c1fba4a3e3b69646428377b7178f60197812007715267c025d3656fbeb4a68",
+      "production_or_language_approval": false,
+      "release_manifest_sha256": "edc739e1bd2adc6307487d0d97b5a0d60f8447d87935d2fd976c13b452d514c8",
+      "result": "FAIL",
+      "runtime_binary_versions": {
+        "caddy": "2.11.7",
+        "redis": "8.2.9"
+      },
+      "service_evidence": [
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "api",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "api_b",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "",
+          "Service": "caddy",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "clamav",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "db",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "",
+          "Service": "migrate",
+          "State": "exited"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "redis",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "web",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "worker",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "worker_b",
+          "State": "running"
+        }
+      ],
+      "source_sha": "f0ea5371fe992db6ec482363ed2190f2612689cb",
+      "started_at": "2026-10-26T08:04:30.325295+00:00",
+      "startup_phase": "applications_worker_web_proxy",
+      "topology": {
+        "network_internal": true,
+        "scanner_definitions": "offline EICAR fixture only; freshness/coverage NOT qualified",
+        "services": [
+          "api",
+          "api_b",
+          "api_denied",
+          "api_failed",
+          "api_held",
+          "caddy",
+          "clamav",
+          "db",
+          "migrate",
+          "migrate_failed",
+          "probe",
+          "redis",
+          "web",
+          "worker",
+          "worker_b",
+          "worker_failed",
+          "worker_fault",
+          "worker_held"
+        ],
+        "tls": "isolated internal CA; no ACME"
+      },
+      "version": 1
     }
   ],
   "engineering_integrated_packages": 40,
@@ -125,8 +277,11 @@
   },
   "production_or_language_approvals_added": false,
   "protected_state": {
+    "changed_original_branch_tips": 0,
+    "deleted_original_branches": 0,
     "file_changes": 0,
     "files_checked": 49,
+    "original_branches_checked": 312,
     "other_worktrees_checked": 44,
     "worktree_changes": 0
   },

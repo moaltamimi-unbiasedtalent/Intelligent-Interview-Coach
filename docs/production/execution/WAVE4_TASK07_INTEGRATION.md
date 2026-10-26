@@ -3,13 +3,15 @@
 This branch reuses the existing immutable release and recovery image workflow.
 It creates a fresh internal Compose project, synthetic PostgreSQL database, two
 API instances, two workers, Redis, ClamAV, Next.js and Caddy with an internal CA.
-Only loopback port 443 is published. No original environment or data is mounted.
+No ports are published. Linux CI accesses Caddy on its campaign-owned private bridge address; every network remains internal. No original environment or data is mounted.
 
 ## Repeatable command
 
 After building a reviewed commit and recovery runner with `scripts/release_images.py`,
 run the following from the repository root. Use a new output directory, sufficient
-Docker capacity (minimum 8 GiB free after images are built), and free loopback 443:
+Docker capacity (minimum 8 GiB free after images are built), on a Linux host
+with a local Docker daemon. A browser outside a Docker VM cannot use the private
+bridge directly; native macOS qualification is NOT claimed:
 
 ```sh
 python scripts/integration/campaign.py --execute-disposable \
@@ -22,7 +24,7 @@ python scripts/integration/campaign.py --execute-disposable \
 
 The frontend image must have the public API build origin
 `https://api.staging.example.com/api/v1`. Those reserved names resolve only through
-the test browser/curl loopback overrides; there is no public DNS/ACME operation.
+the test browser/curl private-address overrides; there is no public DNS/ACME operation.
 Application, worker and migration share one verified image ID; the operator is the
 verified derived image. Neither image is published. Ordinary API/worker commands
 remain unchanged outside this explicitly guarded fixture topology.
@@ -53,8 +55,9 @@ The expanded driver also exercises existing-fixture HITL, active cancellation, A
 process loss, real worker crash/lease/retry, failed migrations, inaccessible roots
 and encrypted transfer/restore into a held target with real API/worker refusals.
 Those additions still require actual built-image campaign evidence. Positive new
-language-bearing journeys remain blocked by activation policy. Idle-timeout and
-client-disconnect timing remain NOT RUN; subsystem CI is not substituted for
+language-bearing journeys remain blocked by activation policy. The expanded edge observer measures initial-event flushing and heartbeat
+comments, disconnects/reconnects without execution and remains connected during
+upstream API termination; its real-stack results are still pending; subsystem CI is not substituted for
 connected proof.
 The release report must carry those gaps until actual execution evidence exists.
 
@@ -90,3 +93,14 @@ collection with strict hash-embedding refusal. Actual approved embedding/source
 qualification remains open. Real synthetic document bytes, accounts, checkpoint
 and unsettled control state, and conservative monetary entries are the connected
 recovery targets. No language or embedding guard has been bypassed.
+
+Third image run on `f0ea5371fe992db6ec482363ed2190f2612689cb`: all actual
+application, worker, frontend, database, Redis and scanner health checks passed;
+Caddy was running and the one-shot migration exited successfully. The host edge
+probe failed, so product scenarios were NOT RUN. Caddy 2.11.7 and Redis 8.2.9 were
+observed. The runner no longer relies on port publishing on an internal network:
+Linux CI reaches the private Caddy bridge address directly, keeping all networks
+internal and publishing no host port. See Docker's [internal-network guidance](https://docs.docker.com/compose/how-tos/networking/#internal-networks)
+and [host bridge access](https://docs.docker.com/engine/network/port-publishing/#gateway-modes).
+Cleanup again removed only campaign-owned resources. This observation is startup
+proof, not a successful connected application or browser campaign.

@@ -82,11 +82,20 @@ class FixtureModel:
         state = control(increment=True, entered=True)
         mode = state["mode"]
         if mode == "slow":
-            deadline = time.monotonic() + 25
+            deadline = time.monotonic() + 60
             while control()["mode"] == "slow" and time.monotonic() < deadline:
                 time.sleep(0.05)
         if mode in ("timeout", "rate_limit"):
-            raise RuntimeError("synthetic_provider_failure")
+            import httpx
+
+            if mode == "timeout":
+                raise httpx.ReadTimeout("synthetic_provider_timeout")
+            request = httpx.Request("POST", "https://provider.invalid/synthetic")
+            raise httpx.HTTPStatusError(
+                "synthetic_rate_limit",
+                request=request,
+                response=httpx.Response(429, request=request),
+            )
         if mode == "hitl" and not any(isinstance(m, ToolMessage) for m in messages):
             return AIMessage(
                 content="",

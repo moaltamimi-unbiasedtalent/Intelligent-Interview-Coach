@@ -203,6 +203,15 @@ def seed():
     )
     require(result.status == "completed", "scripted_agent_seed_failed")
     out["run_id"] = result.run_id
+    bob = agent().run(
+        AgentRunRequest(
+            goal="Synthetic surviving-owner fixture",
+            user_id=str(out["bob"]["user_id"]),
+            enable_current_market_research=False,
+        )
+    )
+    require(bob.status == "completed", "surviving_checkpoint_seed_failed")
+    out["bob_run_id"] = bob.run_id
     p = Path("/campaign/private")
     p.mkdir(mode=0o700)
     file = p / "credentials.json"
@@ -257,11 +266,52 @@ def http_checks():
     admin = login("admin")
     require(http("/api/v1/auth/me", cookie=cookie)[0] == 200, "session_missing")
     require(
+        http("/api/v1/history/interviews", cookie=cookie)[0] == 200,
+        "history_read_failed",
+    )
+    code, opportunity, _ = http(
+        "/api/v1/opportunities",
+        "POST",
+        {"target_role": "Synthetic role", "title": "Synthetic opportunity"},
+        cookie=cookie,
+    )
+    require(code == 201, "opportunity_create_failed")
+    route = "/api/v1/opportunities/" + str(opportunity["id"])
+    require(http(route, cookie=other)[0] == 404, "opportunity_owner_isolation_failed")
+    require(
+        http(route, cookie=cookie, host="api_b")[0] == 200, "opportunity_not_persisted"
+    )
+    require(
         http("/api/v1/auth/me", cookie=cookie, host="api_b")[0] == 200,
         "cross_instance_session_missing",
     )
     require(
-        http("/api/v1/auth/me", cookie="ask4mo_session=expired-synthetic")[0] == 401,
+        http(
+            "/api/v1/auth/preferences",
+            "PATCH",
+            {"target_role": "Synthetic integration role"},
+            cookie=cookie,
+        )[0]
+        == 200,
+        "profile_update_failed",
+    )
+    require(
+        http("/api/v1/auth/me", cookie=cookie, host="api_b")[1].get("target_role")
+        == "Synthetic integration role",
+        "profile_not_persisted",
+    )
+    from src.auth_repository import SessionRepository
+    from src.authsec.tokens import generate_token, hash_token
+
+    expired = generate_token()
+    SessionRepository(factory()).create(
+        token_hash=hash_token(expired),
+        user_id=credentials()["alice"]["user_id"],
+        ttl_seconds=-1,
+    )
+    require(
+        http("/api/v1/auth/me", cookie="ask4mo_session=" + expired, host="api_b")[0]
+        == 401,
         "expired_session_accepted",
     )
     require(
@@ -344,6 +394,8 @@ def agent_checks():
     rid = credentials()["run_id"]
     before = control()["calls"]
     path = "/api/v1/agent/runs/" + rid + "/events"
+    require(http(path)[0] == 401, "anonymous_sse_accepted")
+    require(http(path, cookie=login("bob"))[0] == 404, "foreign_owner_sse_accepted")
     for host in ("api", "api_b"):
         status, data, _ = http(path, cookie=cookie, host=host, raw=True)
         require(
@@ -539,6 +591,7 @@ def slow_prepare():
     require(result.status == "completed", "active_fixture_failed")
     c["run_id"] = result.run_id
     Path("/campaign/private/credentials.json").write_text(json.dumps(c))
+    Path("/campaign/sse-entered").unlink(missing_ok=True)
     control(mode="slow", entered=False)
     return {"prepared": True}
 
@@ -872,6 +925,119 @@ def worker_recovered():
     }
 
 
+def edge_stream(*, idle=False):
+    """Actual Caddy TLS/SSE, local fixture certificate only; no public DNS.
+
+    Payloads stay private. Only allowlisted event kinds and timings escape.
+    The client intentionally disconnects; an observer must never execute work.
+    """
+    import socket
+    import ssl
+    from http.client import HTTPException
+
+    cookie = login(host="api_b")
+    rid = credentials()["run_id"]
+    initial = control()["calls"]
+    observations = []
+    for attempt in range(2 if idle else 1):
+        timeout = 2 if idle and attempt == 0 else 15
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        context.check_hostname = False
+        context.verify_mode = (
+            ssl.CERT_NONE
+        )  # isolated internal test CA, like Playwright ignoreHTTPSErrors
+        connection = HTTPConnection("caddy", 443, timeout=timeout)
+        raw = socket.create_connection(("caddy", 443), timeout=timeout)
+        connection.sock = context.wrap_socket(
+            raw, server_hostname="api.staging.example.com"
+        )
+        protocol = connection.sock.version()
+        before = time.monotonic()
+        first = None
+        events = []
+        heartbeats = 0
+        try:
+            connection.request(
+                "GET",
+                "/api/v1/agent/runs/" + rid + "/events",
+                headers={
+                    "Host": "api.staging.example.com",
+                    "Cookie": cookie,
+                    "Origin": "https://app.staging.example.com",
+                },
+            )
+            response = connection.getresponse()
+            require(response.status == 200, "edge_sse_not_authenticated")
+            while True:
+                line = response.readline()
+                if not line:
+                    break
+                require(
+                    not any(
+                        word in line
+                        for word in (
+                            b"system_prompt",
+                            b"chain_of_thought",
+                            b"provider_api_key",
+                        )
+                    ),
+                    "private_edge_sse_payload",
+                )
+                if line.startswith(b"event: "):
+                    kind = line[7:].strip().decode()
+                    require(
+                        kind in ("run", "progress", "result", "error", "stopping"),
+                        "unallowlisted_edge_sse_event",
+                    )
+                    if first is None:
+                        first = time.monotonic() - before
+                        require(kind == "run", "edge_sse_order_invalid")
+                        Path("/campaign/sse-entered").write_text("entered")
+                    events.append(kind)
+                elif line.startswith(b": keep-alive"):
+                    heartbeats += 1
+                    if idle:
+                        break
+                if time.monotonic() - before > 20:
+                    break
+        except (HTTPException, ConnectionError, TimeoutError):
+            pass  # intentional disconnect / injected upstream death; facts below must still prove initial event
+        finally:
+            connection.close()
+        require(first is not None, "edge_did_not_flush_initial_event")
+        observations.append(
+            {
+                "events": events,
+                "heartbeat_comments": heartbeats,
+                "first_event_seconds": round(first, 4),
+                "tls_protocol": protocol,
+            }
+        )
+    require(control()["calls"] == initial, "sse_observer_executed_model")
+    if idle:
+        from src.agent.run_control import RunControlStore
+
+        row = RunControlStore(factory()).owned(
+            rid, str(credentials()["alice"]["user_id"])
+        )
+        require(
+            row and row["status"] == "running" and not row["settled"],
+            "client_disconnect_cancelled_producer",
+        )
+        require(
+            observations[-1]["heartbeat_comments"] >= 1, "edge_idle_heartbeat_buffered"
+        )
+    return {
+        "connections": observations,
+        "model_calls_on_reconnect": 0,
+        "local_ca_identity_qualification": False,
+    }
+
+
+def stream_entered():
+    return {"entered": Path("/campaign/sse-entered").exists()}
+
+
 def recovery():
     # The host driver first stops every campaign producer; target is a new DB.
     from datetime import datetime, timezone
@@ -981,6 +1147,23 @@ def recovery():
     require(
         AccountRepository(target_sf).get_account(uid) is None, "erased_account_returned"
     )
+    from src.agent.run_control import RunControlStore
+
+    bob = credentials()["bob"]
+    survivor = credentials()["bob_run_id"]
+    require(
+        RunControlStore(target_sf).owned(survivor, str(bob["user_id"])) is not None,
+        "surviving_run_control_missing",
+    )
+    with target_sf() as session:
+        require(
+            session.execute(
+                text("SELECT COUNT(*) FROM checkpoints WHERE thread_id=:run"),
+                {"run": survivor},
+            ).scalar()
+            > 0,
+            "surviving_checkpoint_missing",
+        )
     from src.jobs.service import JobService
 
     job, _ = JobService(target_sf).enqueue(
@@ -1002,6 +1185,7 @@ def recovery():
         "erasure": restored.details["erasure"],
         "persistent_hold": True,
         "unknown_money_preserved": True,
+        "surviving_owner_checkpoint_and_control": True,
         "production_rto_rpo_approved": False,
     }
 
@@ -1066,6 +1250,9 @@ ACTIONS = {
     "worker_once": worker_once,
     "worker_entered": worker_entered,
     "worker_recovered": worker_recovered,
+    "edge_idle": lambda: edge_stream(idle=True),
+    "edge_until_loss": edge_stream,
+    "stream_entered": stream_entered,
 }
 
 

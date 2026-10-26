@@ -16,7 +16,7 @@ import os
 from pathlib import Path
 import re
 import secrets
-import socket
+import ipaddress
 import subprocess
 import sys
 import time
@@ -185,7 +185,9 @@ def topology(manifest, record, directory, campaign):
         },
     )
     p["services"]["caddy"]["image"] = images["caddy"]["digests"][arch]
-    p["services"]["caddy"]["ports"] = ["127.0.0.1:443:443"]
+    p["services"]["caddy"][
+        "ports"
+    ] = []  # host browser uses the private bridge address; no published ports
     p["services"]["caddy"]["environment"].update(APP_DOMAIN=APP, API_DOMAIN=API)
     # The stock web image has Node's HTTP client; curl is not an application
     # dependency. Check it without installing anything or changing the image.
@@ -431,6 +433,21 @@ class Campaign:
         )
         return result
 
+    def edge_address(self):
+        ids = self.compose("ps", "-q", "caddy").stdout.decode().split()
+        require(len(ids) == 1, "private_proxy_missing")
+        info = json.loads(command(["docker", "inspect", ids[0]]).stdout)[0]
+        require(
+            info["Config"]["Labels"].get(LABEL) == self.id,
+            "private_proxy_ownership_refused",
+        )
+        network = info["NetworkSettings"]["Networks"].get(self.project + "_default", {})
+        address = network.get("IPAddress", "")
+        require(
+            ipaddress.IPv4Address(address).is_private, "private_proxy_address_required"
+        )
+        return address
+
     def request(
         self,
         path,
@@ -454,7 +471,7 @@ class Campaign:
             "--noproxy",
             "*",
             "--resolve",
-            API + ":443:127.0.0.1",
+            API + ":443:" + self.edge_address(),
             "--max-time",
             str(timeout),
             "-X",
@@ -480,6 +497,7 @@ class Campaign:
             timeout=timeout + 2,
             env=self.env,
         )
+        self.summary["last_edge_probe"] = {"curl_exit": p.returncode}
         require(p.returncode == 0, "edge_request_failed")
         content, code = p.stdout.decode().rsplit("\n", 1)
         try:
@@ -507,12 +525,10 @@ class Campaign:
         free = capacity()
         self.summary["docker_available_bytes_before"] = free
         require(free >= 8 * 1024**3, "insufficient_docker_capacity")
-        with socket.socket() as s:
-            # A non-root Linux CI user cannot bind privileged port 443 even
-            # when it is free. Docker performs the exclusive binding; here
-            # refuse an existing listener without mislabelling EACCES as busy.
-            s.settimeout(1)
-            require(s.connect_ex(("127.0.0.1", 443)) != 0, "loopback_tls_port_occupied")
+        require(
+            sys.platform.startswith("linux"),
+            "campaign_requires_linux_docker_host_browser",
+        )
         m = R.decode_json(Path(self.args.manifest).read_text())
         R.validate_manifest(m, self.args.expected_sha, self.args.manifest_sha256)
         record = R.decode_json(Path(self.args.runner).read_text())
@@ -583,8 +599,8 @@ class Campaign:
             "unverified_build_or_privilege",
         )
         require(
-            resolved["services"]["caddy"]["ports"][0]["host_ip"] == "127.0.0.1",
-            "public_binding_refused",
+            all(not s.get("ports") for s in resolved["services"].values()),
+            "published_port_refused",
         )
         self.summary["topology"] = {
             "services": sorted(config["services"]),
@@ -757,8 +773,11 @@ class Campaign:
             while not self.probe("entered")["entered"]:
                 require(time.monotonic() < deadline, "slow_provider_not_entered")
                 time.sleep(0.1)
+            edge = self.probe("edge_idle", timeout=30)
             evidence = self.probe("cancel")
-            future.result(timeout=40)
+            evidence["edge_sse"] = edge
+            response = future.result(timeout=40)
+            require(response["status"] == 200, "cancelled_response_not_projected")
         evidence.update(self.probe("cancelled"))
         return evidence
 
@@ -766,19 +785,28 @@ class Campaign:
         from concurrent.futures import ThreadPoolExecutor
 
         self.probe("slow_prepare")
-        with ThreadPoolExecutor(max_workers=1) as pool:
+        with ThreadPoolExecutor(max_workers=2) as pool:
             future = pool.submit(self.probe, "slow_continue", timeout=75)
             try:
                 deadline = time.monotonic() + 20
                 while not self.probe("entered")["entered"]:
                     require(time.monotonic() < deadline, "slow_provider_not_entered")
                     time.sleep(0.1)
+                observer = pool.submit(self.probe, "edge_until_loss", timeout=35)
+                end = time.monotonic() + 15
+                while not self.probe("stream_entered")["entered"]:
+                    require(
+                        time.monotonic() < end, "edge_sse_not_connected_before_loss"
+                    )
+                    time.sleep(0.1)
                 self.compose("kill", "-s", "SIGKILL", "api", timeout=30)
                 try:
                     future.result(timeout=40)
                 except Exception:
                     pass  # the deliberately killed request is not a success claim
+                edge = observer.result(timeout=20)
                 evidence = self.probe("lost_state")
+                evidence["edge_sse"] = edge
             finally:
                 self.compose("start", "api", timeout=60)
                 self.wait_ready()
@@ -820,6 +848,7 @@ class Campaign:
             **self.env,
             "BASE_URL": "https://" + APP,
             "CAMPAIGN_ID": self.id,
+            "CAMPAIGN_EDGE_IP": self.edge_address(),
             "CAMPAIGN_CREDENTIALS_FILE": str(target),
             "CAMPAIGN_BROWSER_REPORT": str(self.directory / "browser-summary.json"),
             "CAMPAIGN_PRIVATE_RESULTS": str(
@@ -1045,21 +1074,11 @@ class Campaign:
                         {
                             "id": name,
                             "status": "NOT RUN",
-                            "code": "connected_fault_driver_pending",
-                        }
-                        for name in ("sse_idle_timeout_client_disconnect",)
-                    ]
-                )
-                self.items.extend(
-                    [
-                        {
-                            "id": name,
-                            "status": "NOT RUN",
                             "code": "owner_or_hosted_qualification_required",
                         }
                         for name in (
                             "new_hosted_language_registration_and_interviews",
-                            "positive_language_interview_profile_career_journeys",
+                            "positive_language_interview_and_career_journeys",
                             "live_ai_quality_and_embeddings",
                             "real_email_oidc",
                             "hosted_tls_and_signature_freshness",
