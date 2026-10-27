@@ -1,5 +1,13 @@
 # Whole-Project Status Dashboard
 
+## CSP qualification diagnostics — review only
+
+Baseline main **291eb523afbc099a9d587cb73e96586c9c83876d** includes merged PR #279. Six mandatory main workflows passed; immutable release run40582511816 failed with 13 unexpected console errors and no retained message diagnostics. This failure remains historical evidence; no application root cause is inferred from the count.
+
+The focused diagnostics branch adds bounded, allowlisted console/source/request evidence to existing JSON summaries, exact uncapped counters and privacy/assertion-preservation regressions. It changes no application runtime, security assertion, retry policy, approval object or infrastructure configuration. Qualification and PR CI must be reported against their actual final source; instrumentation alone does not certify the release.
+
+Five layers remain: **engineering40/45** (00A/00B/07B/07C/08A OPEN); **CI** baseline6/7, diagnostic PR checks separate; **hosted staging NOT RUN**; **human qualification OPEN**; **PG/LG acceptance unchanged**. OD-BUDGET and all16 S2 acceptance controls remain OPEN; S2 execution BLOCKED. No hosting, paid calls, language activation or recovery-hold release is authorized.
+
 ## Current S2-A security/access/capacity review — 27 October 2026
 
 **PROPOSED — REVIEW ONLY; all 16 S2 acceptance entries OPEN; execution BLOCKED.** [S2-A evidence packet](WAVE4_S2A_SECURITY_CAPACITY_EVIDENCE.md) cross-checks the supplied draft against verified main **f62310eed0eb10bd68b0d806094f9eea47a0aaff** (PR #278 merged; all seven mandatory main-push workflows SUCCESS). Its exact-source synthetic campaign artifact records **29 PASS / 0 FAIL / 0 SKIP / 6 NOT RUN**; this is offline functional evidence, not CPX42 capacity, genuine scanner-signature coverage, German residency or independent off-host custody. Redis disables disk persistence; campaign network isolation must not be attributed to the staging template. Published cost estimates are not account stock/quota/VAT quotes.
