@@ -606,15 +606,21 @@ def recovered():
 
 def checkpoint_recovery():
     before = control()["calls"]
-    cookie = login()
     rid = credentials()["run_id"]
-    status, _, _ = http("/api/v1/agent/runs/" + rid, cookie=cookie)
-    require(
-        status == 200,
-        "agent_checkpoint_unavailable_after_database_restart_http_" + str(status),
-    )
+    statuses = {}
+    for host in ("api", "api_b"):
+        cookie = login(host=host)
+        status, _, _ = http("/api/v1/agent/runs/" + rid, cookie=cookie, host=host)
+        require(
+            status == 200,
+            "agent_checkpoint_unavailable_after_database_restart_http_" + str(status),
+        )
+        statuses[host] = status
     require(control()["calls"] == before, "checkpoint_read_executed_model")
-    return {"agent_read_status": status, "new_model_calls": control()["calls"] - before}
+    return {
+        "agent_read_statuses": statuses,
+        "new_model_calls": control()["calls"] - before,
+    }
 
 
 def slow_prepare():

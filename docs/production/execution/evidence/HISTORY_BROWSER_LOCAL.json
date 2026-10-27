@@ -1,0 +1,282 @@
+{
+  "scope": "Local synthetic mocked API, actual production Next.js, real image requests; uncommitted feature working copy, not exact-head CI",
+  "baseline_sha": "90391b8ca654853af11c8d8c3bd1260f24970319",
+  "historical": {
+    "run": 40361429555,
+    "job": 121707613925,
+    "outstanding_host": "localhost:3000",
+    "outstanding_path": "/_next/image",
+    "source_asset": "/images/ask4mo/ask4mo-empty-history-ink.png",
+    "image_http_status": -1,
+    "image_completion_observed": false,
+    "observed_pending_before_test_cutoff_ms": 56405.338,
+    "ui_snapshot": [
+      "History heading",
+      "No completed interviews yet",
+      "Start Practice",
+      "Learn about History"
+    ],
+    "console_errors_before_history": 4,
+    "optimizer_stall_root_cause": "INCONCLUSIVE"
+  },
+  "before": {
+    "source_sha": "90391b8ca654853af11c8d8c3bd1260f24970319",
+    "stats": {
+      "startTime": "2026-10-27T06:08:09.306Z",
+      "duration": 82447.776,
+      "expected": 10,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "retries": 0,
+    "observations": [
+      {
+        "repeat": "deferral-inaccessibility-0-c37bf-nu-exposes-nothing-deferred-chromium-repeat8",
+        "image_requests": [
+          {
+            "host": "localhost:3137",
+            "path": "/_next/image",
+            "status": 200,
+            "timeMs": 3.764,
+            "unfinished": false
+          }
+        ],
+        "console_error_count": 10
+      },
+      {
+        "repeat": "deferral-inaccessibility-0-c37bf-nu-exposes-nothing-deferred-chromium-repeat1",
+        "image_requests": [
+          {
+            "host": "localhost:3137",
+            "path": "/_next/image",
+            "status": 200,
+            "timeMs": 3.835,
+            "unfinished": false
+          }
+        ],
+        "console_error_count": 10
+      },
+      {
+        "repeat": "deferral-inaccessibility-0-c37bf-nu-exposes-nothing-deferred-chromium-repeat6",
+        "image_requests": [
+          {
+            "host": "localhost:3137",
+            "path": "/_next/image",
+            "status": 200,
+            "timeMs": 3.729,
+            "unfinished": false
+          }
+        ],
+        "console_error_count": 10
+      },
+      {
+        "repeat": "deferral-inaccessibility-0-c37bf-nu-exposes-nothing-deferred-chromium-repeat7",
+        "image_requests": [
+          {
+            "host": "localhost:3137",
+            "path": "/_next/image",
+            "status": 200,
+            "timeMs": 3.76,
+            "unfinished": false
+          }
+        ],
+        "console_error_count": 10
+      },
+      {
+        "repeat": "deferral-inaccessibility-0-c37bf-nu-exposes-nothing-deferred-chromium-repeat9",
+        "image_requests": [
+          {
+            "host": "localhost:3137",
+            "path": "/_next/image",
+            "status": 200,
+            "timeMs": 3.343,
+            "unfinished": false
+          }
+        ],
+        "console_error_count": 10
+      },
+      {
+        "repeat": "deferral-inaccessibility-0-c37bf-nu-exposes-nothing-deferred-chromium",
+        "image_requests": [
+          {
+            "host": "localhost:3137",
+            "path": "/_next/image",
+            "status": 200,
+            "timeMs": 297.57,
+            "unfinished": false
+          }
+        ],
+        "console_error_count": 10
+      },
+      {
+        "repeat": "deferral-inaccessibility-0-c37bf-nu-exposes-nothing-deferred-chromium-repeat5",
+        "image_requests": [
+          {
+            "host": "localhost:3137",
+            "path": "/_next/image",
+            "status": 200,
+            "timeMs": 3.285,
+            "unfinished": false
+          }
+        ],
+        "console_error_count": 10
+      },
+      {
+        "repeat": "deferral-inaccessibility-0-c37bf-nu-exposes-nothing-deferred-chromium-repeat2",
+        "image_requests": [
+          {
+            "host": "localhost:3137",
+            "path": "/_next/image",
+            "status": 200,
+            "timeMs": 3.727,
+            "unfinished": false
+          }
+        ],
+        "console_error_count": 10
+      },
+      {
+        "repeat": "deferral-inaccessibility-0-c37bf-nu-exposes-nothing-deferred-chromium-repeat3",
+        "image_requests": [
+          {
+            "host": "localhost:3137",
+            "path": "/_next/image",
+            "status": 200,
+            "timeMs": 3.8000000000000003,
+            "unfinished": false
+          }
+        ],
+        "console_error_count": 10
+      },
+      {
+        "repeat": "deferral-inaccessibility-0-c37bf-nu-exposes-nothing-deferred-chromium-repeat4",
+        "image_requests": [
+          {
+            "host": "localhost:3137",
+            "path": "/_next/image",
+            "status": 200,
+            "timeMs": 3.553,
+            "unfinished": false
+          }
+        ],
+        "console_error_count": 10
+      }
+    ],
+    "conclusion": "Historical 60s timeout NOT REPRODUCED in 10 runs; malformed mock page errors observed; not classified as harmless flake"
+  },
+  "other_local_checks": {
+    "frontend_unit_passed": 1547,
+    "lint": "PASS",
+    "focused_browser_types": "PASS"
+  },
+  "classification": "Reproduced harness false-readiness/malformed-fixture defect; historical optimizer stall NOT REPRODUCED in ten baseline repetitions. No unsupported application root cause or harmless-flake claim.",
+  "preservation": {
+    "protected_files": 49,
+    "original_worktrees": 47,
+    "original_branch_tips": 315,
+    "changes_to_original_inventory": 0
+  },
+  "superseded_local_harness_only": {
+    "stats": {
+      "startTime": "2026-10-27T06:21:59.042Z",
+      "duration": 120515.584,
+      "expected": 50,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "case_counts": {
+      "candidate_routes": 10,
+      "positive_image": 20,
+      "expected_missing_image": 10,
+      "delayed_gated_detector": 10
+    },
+    "positive_console_page_transport_errors": 0,
+    "positive_image_cache": {
+      "HIT": 26,
+      "STALE": 4
+    },
+    "new_stricter_prefetch_and_failed_asset_navigation_regression": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    "source_asset_sha256": "2829f7c814d4431a54a6894536d76dadab572130c78a5a4acfd1eaba7f97b965",
+    "source_asset_git_blob": "e84c0e20a8253bd3fb7de7d508829415c8dcd87c",
+    "same_asset_as_historical_head": true,
+    "node_version": "v24.15.0",
+    "chromium_version": "153.0.8010.12"
+  },
+  "after": {
+    "scope": "uncommitted scoped link repair + conditional protocol classification on base 28d3d720",
+    "stats": {
+      "startTime": "2026-10-27T10:14:19.201Z",
+      "duration": 133259.728,
+      "expected": 50,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "frontend_unit_passed": 1561,
+    "navigation_cpu_stress_before": {
+      "passed": 18,
+      "failed": 2,
+      "failure": "actual History-to-Practice URL did not change"
+    },
+    "navigation_cpu_stress_after": {
+      "passed": 20,
+      "failed": 0
+    },
+    "navigation_and_classifier_unit_cases": 19,
+    "lint": "PASS",
+    "application_types": "PASS",
+    "browser_types": "PASS"
+  },
+  "superseded_ci": [
+    {
+      "sha": "e9f1f980c6f212451246509a2fb404f7c328bd36",
+      "run": 40461671496,
+      "passed": 46,
+      "failed": 4,
+      "primary_suite": "NOT RUN"
+    },
+    {
+      "sha": "28d3d7202e86aa48f12e6e3240ca378a7d56c998",
+      "run": 40485879589,
+      "passed": 41,
+      "failed": 9,
+      "primary_suite": "NOT RUN",
+      "protocol_evidence": {
+        "case": "deferral-inaccessibility-0-6161c-ile-navigation-stays-usable-chromium/history-expected-image-failure.json",
+        "failed": [
+          {
+            "kind": "failed",
+            "elapsedMs": 1055,
+            "id": 29,
+            "rsc": true,
+            "prefetch": false,
+            "status": 200,
+            "contentType": "text/x-component",
+            "url": "http://localhost:3000/practice",
+            "resource": "fetch",
+            "category": "unexpected_request_failure",
+            "code": "net::ERR_ABORTED"
+          }
+        ],
+        "ready": [
+          {
+            "kind": "ui_ready",
+            "elapsedMs": 1300,
+            "path": "/practice",
+            "documentState": "complete",
+            "hydration": "controlled_menu_interaction"
+          }
+        ],
+        "console": [
+          "http_400"
+        ],
+        "page": []
+      }
+    }
+  ]
+}

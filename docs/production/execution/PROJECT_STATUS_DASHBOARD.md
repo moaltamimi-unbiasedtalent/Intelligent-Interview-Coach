@@ -1,5 +1,38 @@
 # Whole-Project Status Dashboard
 
+## Task 07 reconciliation — 27 October 2026
+
+Verified main `ef2e97ef88b4f4b67640c4c677f3ef3247594cd2` includes merged PRs #274, #275 and #276; all seven mandatory main-push workflows passed. The History, CSP and checkpoint repairs are integrated engineering changes. Existing PR #273 is being reconciled by a normal merge retaining both histories. New exact-source connected qualification is PENDING; historical **27 PASS / 2 FAIL / 6 NOT RUN** remains unchanged. Earlier dated status blocks below describe historical states and do not reopen the merged repairs.
+
+**40/45 integrated**; 00A/00B/07B/07C/08A remain open/incomplete. Task 07 remains unqualified until its new mandatory connected and CI checks pass; Task 08 has not begun. Hosted/live and human qualification remain NOT RUN/open; only existing PG-11 acceptance remains, and no PG/LG/owner approval is added. Historical image-stall cause remains inconclusive.
+
+
+## History browser remediation — 27 October 2026
+
+Authoritative main `90391b8c` includes merged PRs #274/#275; all seven post-merge workflows passed. POST272-03 and POST272-04 are qualified at merged engineering level. A separate `test/history-readiness-image-qualification` branch repairs reproduced false-readiness/invalid fixtures and independently qualifies real History image success/failure. Local: **50 repeated browser cases passed**, plus two stricter failure/navigation checks; **1,561 unit tests** and lint/type checks passed. The scoped History action links now opt into the existing verified-navigation guard after a separate dropped-navigation reproduction; protocol cancellation classification requires confirmed destination/form readiness. Superseded Linux 46/4 and 41/9 diagnostics are retained, not final PASS. Exact-head CI/full Browser results belong to the focused PR. The historical image stall was **not reproduced** in ten unchanged-test runs; its underlying cause remains **inconclusive**, not a harmless-flake claim. [Diagnosis, limits and evidence](HISTORY_BROWSER_REMEDIATION.md).
+
+**40/45 integrated**; 00A/00B/07B/07C/08A remain open/incomplete. PR #273 is open at its original commit, historical 27/2/6 failed evidence retained; Task 07 remains OPEN, Task 08 blocked. Hosted staging NOT RUN; human qualification and PG-01–PG-15 / LG-01–LG-14 approvals unchanged (only historical PG-11 PASS; zero hosted-qualified languages). No production code/security policy, activation record, original database, owner approval or user asset is changed. Earlier dated blocks below retain their original historical status; this header supersedes them for current merge state.
+
+
+## POST272-04 checkpoint recovery update — 27 October 2026
+
+PR #274 is merged at `45f4e0bbf9214b56033be405a332880619dd0273`; all seven mandatory main workflows are green. POST272-03 is closed at merged engineering level. The focused `fix/postgres-checkpoint-recovery` branch qualifies the same official saver/compiled graphs across real PostgreSQL outages without an API restart or execution replay. Local disposable PG16: **193 passed / 0 skipped**, including 17 recovery and 176 unchanged admission/budget cases; existing focused regressions: **191 passed / 74 skipped**, plus one public-error redaction test. Exact-head CI and Browser qualification are recorded in the focused PR; local results do not substitute for them. [Design, preservation and evidence](POST272_04_CHECKPOINT_RECOVERY.md).
+
+POST272-04 remains OPEN pending green CI, review and merge. PR #273 remains unmerged with historical 27/2/6 failed evidence preserved; Task 07 and the separate `/history` issue remain OPEN. **40/45 integrated**, 00A/00B/07B/07C/08A open/incomplete. Hosted staging NOT RUN; human qualification OPEN; PG-01–PG-15 and LG-01–LG-14 unchanged, only historical PG-11 PASS and zero hosted-qualified languages. No owner approval, deployment, real database migration, paid call or activation occurred. Earlier dated status blocks below are historical snapshots, superseded by this update for current merge state.
+
+
+
+> POST272-03 focused remediation: branch `fix/nextjs-csp-hydration` from main
+> `992682c3`, under normal review only after qualification. Current [PR #274 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/274/checks) and its
+> image/SHA evidence addendum are authoritative. Per-request
+> nonce CSP preserves enforced edge/security boundaries and makes rendering
+> explicitly dynamic/private. Actual Caddy sign-in, both authenticated reads and
+> negative injection are observed on `ce6dff0a`; its overall run failed at logout, so final complete acceptance remains subject to the current checks. [Design and evidence](POST272_03_CSP_REMEDIATION.md).
+> 40/45 packages remain integrated. POST272-04 and the primary Browser `/history`
+> timeout remain OPEN. PR #273 is unmerged; its 27/2/6 failed campaign evidence
+> remains unchanged. Hosted staging NOT RUN; human and PG/LG approvals unchanged;
+> only historical PG-11 PASS, zero hosted-active languages. Task 08 has not begun.
+
 Historical PR #265 integration snapshot, 23 October 2026. Reviewed baseline: `aedbef3dee28a68b72bc526a1fca537a3da7bd8d`, PR #265 merged. Current reconciliation/review branch: `docs/post-pr265-release-readiness` in the permanent repository. Sources: [merge/CI/review record](evidence/POST_PR265_INTEGRATION_2026_10_23.json), [release report](POST_PR265_RELEASE_STATUS.md), package register, ledger and code.
 
 ## Wave 4 Task 07 — disposable campaign measured; staging blockers open

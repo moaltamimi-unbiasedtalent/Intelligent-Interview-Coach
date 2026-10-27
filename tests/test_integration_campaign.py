@@ -316,3 +316,36 @@ def test_proxy_observer_records_no_raw_client_address_and_uses_private_mode(
         "203.0.113.17" not in path.read_text()
         and len(record["client_fingerprint"]) == 64
     )
+
+
+@pytest.mark.parametrize("changed", [False, True])
+def test_checkpoint_recovery_requires_same_api_processes(
+    tmp_path, monkeypatch, changed
+):
+    c = C.Campaign(SimpleNamespace(out=str(tmp_path), expected_sha="a" * 40))
+    c.before_database_outage = {"api": {"started_at": "original"}}
+    monkeypatch.setattr(
+        c,
+        "api_processes",
+        lambda: {"api": {"started_at": "new" if changed else "original"}},
+    )
+    monkeypatch.setattr(c, "probe", lambda name: {"new_model_calls": 0})
+    if changed:
+        with pytest.raises(C.CampaignError, match="api_process_restarted"):
+            c.checkpoint_recovery()
+    else:
+        assert c.checkpoint_recovery()["same_api_processes"] is True
+
+
+def test_checkpoint_failure_never_restarts_api(tmp_path, monkeypatch):
+    c = C.Campaign(SimpleNamespace(out=str(tmp_path), expected_sha="a" * 40))
+    c.before_database_outage = {}
+    monkeypatch.setattr(c, "api_processes", lambda: {})
+    monkeypatch.setattr(c, "compose", lambda *a, **k: pytest.fail("restart forbidden"))
+
+    def failed(name):
+        raise C.CampaignError("checkpoint_unavailable")
+
+    monkeypatch.setattr(c, "probe", failed)
+    with pytest.raises(C.CampaignError, match="checkpoint_unavailable"):
+        c.checkpoint_recovery()

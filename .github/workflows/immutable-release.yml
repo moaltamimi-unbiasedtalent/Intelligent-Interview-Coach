@@ -64,6 +64,22 @@ jobs:
         run: |
           npm ci
           npx playwright install --with-deps chromium
+      - name: Built-image before/after enforced CSP and real synthetic sign-in
+        run: |
+          python scripts/csp/qualify.py --execute-disposable \
+            --manifest "$RUNNER_TEMP/ask4mo-release/release.json" \
+            --anchor "$(cat "$RUNNER_TEMP/ask4mo-release/release.sha256")" \
+            --sha "$(git rev-parse HEAD)" --out "$RUNNER_TEMP/ask4mo-csp"
+      - name: Upload safe CSP evidence only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: csp-hydration-evidence
+          path: |
+            ${{ runner.temp }}/ask4mo-csp/summary.json
+            ${{ runner.temp }}/ask4mo-csp/browser-before.json
+            ${{ runner.temp }}/ask4mo-csp/browser-after.json
+          if-no-files-found: warn
       - name: Disposable connected full-stack campaign (no hosted activation)
         run: |
           python scripts/integration/campaign.py --execute-disposable \

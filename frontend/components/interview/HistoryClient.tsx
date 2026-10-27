@@ -119,8 +119,8 @@ export function HistoryClient() {
             }
             action={
               <div className="flex flex-wrap gap-2">
-                <ButtonLink href="/practice">{t("history.startPractice")}</ButtonLink>
-                <ButtonLink href="/help#history" variant="ghost">{t("history.learnAbout")}</ButtonLink>
+                <ButtonLink href="/practice" verifiedNavigation>{t("history.startPractice")}</ButtonLink>
+                <ButtonLink href="/help#history" variant="ghost" verifiedNavigation>{t("history.learnAbout")}</ButtonLink>
               </div>
             }
           />

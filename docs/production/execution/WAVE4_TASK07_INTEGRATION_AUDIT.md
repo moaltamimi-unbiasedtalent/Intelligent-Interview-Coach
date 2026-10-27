@@ -54,3 +54,11 @@ Reproduced without any network request or credential. Minimal repair permits onl
 CLOSED-governor + offline-guard layering; open/live guard conflicts remain refused.
 Both refusal layers remain installed. Regression coverage must prove zero transport
 calls for external/provider requests and working local non-AI requests.
+
+## Reconciliation preservation audit — 27 October 2026
+
+Before modifying any checkout: 48 worktrees inspected (31 with existing local changes), 316 branch tips recorded, and 200 protected/untracked files hashed. The private inventory includes ignored-status records for each available checkout, unpublished branch tips, environment/secret files, original databases and artwork. It remains outside Git at `/private/tmp/ask4mo-requal-preservation.json`; no contents or credentials are published. Original SQLite is not opened or migrated; its last observed revision remains 0027, not newly verified by a database connection.
+
+Original PR #273 tip `bc75b4c772e5468934d033fe565eac5b921e4927` is retained by `refs/backup/task07-before-reconciliation-20261027`. A detached candidate checkout preserves the permanent checkout and branch until qualification. Normal merge of verified main `ef2e97ef88b4f4b67640c4c677f3ef3247594cd2` retains both parents. Two textual conflicts: immutable workflow retains both CSP and connected campaigns with separate safe evidence uploads; release tracker retains dated historical blocks and adds an explicit current-state header. Dashboard auto-merged and received the same current-state distinction. All reviewed CSP/checkpoint/History production implementations remain byte-identical to main; only previously reviewed Task 07 startup repairs differ in application/deployment code.
+
+The connected checkpoint regression now verifies both API reads before/after the outage, unchanged container/start/restart identities and zero model calls. The old explicit API restart fallback is removed; mandatory recovery failure stays FAIL. Connected browser coverage adds real History/Opportunities reads, image loading, secure session flags, unauthorized inline injection refusal and UI logout. Linux qualification uses a temporary candidate ref; the existing PR branch must not advance before successful qualification. Historical 27/2/6 evidence and all gate approvals remain unchanged.

@@ -704,13 +704,31 @@ class Campaign:
             self.wait_ready()
         return result
 
-    def explicit_checkpoint_recovery(self):
-        # Record the failed business-read check separately. This is an explicit
-        # recovery workaround, never an automatic retry or a hidden PASS.
-        self.compose("restart", "api", "api_b", timeout=60)
-        self.wait_ready()
+    def api_processes(self):
+        identities = {}
+        for role in ("api", "api_b"):
+            cid = self.compose("ps", "-q", role).stdout.decode().strip()
+            info = json.loads(command(["docker", "inspect", cid]).stdout)[0]
+            identities[role] = {
+                "container": info["Id"],
+                "started_at": info["State"]["StartedAt"],
+                "restart_count": info["RestartCount"],
+            }
+        return identities
+
+    def checkpoint_recovery(self):
+        require(
+            self.api_processes() == self.before_database_outage,
+            "api_process_restarted_during_database_recovery",
+        )
         facts = self.probe("checkpoint_recovery")
-        facts["workaround"] = "explicit_api_process_restart_after_recorded_failure"
+        require(
+            self.api_processes() == self.before_database_outage,
+            "api_process_restarted_during_checkpoint_read",
+        )
+        facts.update(
+            same_api_processes=True, explicit_restart=False, execution_replay=False
+        )
         return facts
 
     def worker_crash(self):
@@ -1067,6 +1085,11 @@ class Campaign:
                     os.chdir(prior)
                 self.check("api_worker_restart_without_migration", self.restart)
                 self.check("worker_crash_lease_retry", self.worker_crash)
+                self.check(
+                    "agent_checkpoint_before_database_restart",
+                    lambda: self.probe("checkpoint_recovery"),
+                )
+                self.before_database_outage = self.api_processes()
                 for service, action in [
                     ("db", "db_down"),
                     ("redis", "redis_down"),
@@ -1076,15 +1099,10 @@ class Campaign:
                         "fault_" + service, lambda s=service, a=action: self.fault(s, a)
                     )
                 self.check("dependencies_recovered", lambda: self.probe("recovered"))
-                checkpoint_ok = self.check(
+                self.check(
                     "agent_checkpoint_after_database_restart",
-                    lambda: self.probe("checkpoint_recovery"),
+                    self.checkpoint_recovery,
                 )
-                if not checkpoint_ok:
-                    self.check(
-                        "explicit_api_checkpoint_recovery_workaround",
-                        self.explicit_checkpoint_recovery,
-                    )
                 self.check(
                     "shared_cross_instance_rate_limits",
                     lambda: self.probe("redis_limits"),

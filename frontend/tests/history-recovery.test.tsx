@@ -1,12 +1,13 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 
 // P10B-W9.2 - History in-place recovery.
 
 const historyList = vi.fn();
+const { navigationPush } = vi.hoisted(() => ({ navigationPush: vi.fn() }));
 // VerifiedLink (soft-navigation loss recovery) reads the App Router; there is no mounted router in a unit test.
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }), usePathname: () => "/history" }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: navigationPush, replace: vi.fn() }), usePathname: () => "/history" }));
 vi.mock("@/lib/api/client", () => ({
   api: { history: { list: (...a: unknown[]) => historyList(...a) } },
 }));
@@ -71,4 +72,28 @@ it("H5: a server error exposes the reference id under technical details", async 
   render(<HistoryClient />);
   await screen.findByText("Something went wrong");
   expect(screen.getByText(/Reference: req-hist-9/)).toBeInTheDocument();
+});
+
+
+it("History action recovers a dropped soft navigation and stops after arrival", async () => {
+  historyList.mockResolvedValue({ interviews: [] });
+  render(<HistoryClient />);
+  await screen.findByRole("heading", { name: "No completed interviews yet" });
+  const previous = window.location.pathname;
+  window.history.replaceState({}, "", "/history");
+  const stopNativeNavigation = (event: Event) => event.preventDefault();
+  document.addEventListener("click", stopNativeNavigation);
+  vi.useFakeTimers();
+  try {
+    fireEvent.click(screen.getByRole("link", { name: "Start Practice" }));
+    act(() => { vi.advanceTimersByTime(500); });
+    expect(navigationPush).toHaveBeenCalledWith("/practice");
+    window.history.replaceState({}, "", "/practice");
+    act(() => { vi.advanceTimersByTime(500); });
+    expect(navigationPush).toHaveBeenCalledTimes(1);
+  } finally {
+    vi.useRealTimers();
+    document.removeEventListener("click", stopNativeNavigation);
+    window.history.replaceState({}, "", previous);
+  }
 });
