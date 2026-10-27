@@ -1,5 +1,11 @@
 # Whole-Project Status Dashboard
 
+## Current S2-A security/access/capacity review — 27 October 2026
+
+**PROPOSED — REVIEW ONLY; all 16 S2 acceptance entries OPEN; execution BLOCKED.** [S2-A evidence packet](WAVE4_S2A_SECURITY_CAPACITY_EVIDENCE.md) cross-checks the supplied draft against verified main **f62310eed0eb10bd68b0d806094f9eea47a0aaff** (PR #278 merged; all seven mandatory main-push workflows SUCCESS). Its exact-source synthetic campaign artifact records **29 PASS / 0 FAIL / 0 SKIP / 6 NOT RUN**; this is offline functional evidence, not CPX42 capacity, genuine scanner-signature coverage, German residency or independent off-host custody. Redis disables disk persistence; campaign network isolation must not be attributed to the staging template. Published cost estimates are not account stock/quota/VAT quotes.
+
+Five layers: **40/45 engineering integrated** (00A/00B/07B/07C/08A OPEN); baseline CI VERIFIED and PR-head checks separate; hosted staging NOT RUN; human qualification OPEN; PG/LG acceptance unchanged (only historical PG-11 accepted; zero hosted-qualified languages). H01/H02 documentation-only approval, exact CPX42 resource list, Germany-only primary processing, Mo-only access, EUR150 including VAT and fixed 28 October 09:00 CET–27 November 09:00 CET exclusive window remain unchanged. No additional resource, time, spend or execution authority. S2-B is redacted owner-evidence and separate resource-scope decisions only; OD-BUDGET remains OPEN. Existing approval objects, historical evidence and all runtime settings are untouched.
+
 ## Current H01/H02 owner record — 27 October 2026
 
 **APPROVED FOR S1 DOCUMENTATION ONLY, NOT READY TO PROVISION OR DEPLOY.** [owner-approved S1 documentation record](WAVE4_S1_H01_H02_OWNER_AUTHORIZATION.md) preserves the exact Mo Al-Tamimi approval and the earlier draft labels. One CPX42 nbg1 / ask4mo-staging-eu with listed disk/IP/network/firewall only; Germany-only primary processing; sole operator/tester Mo Al-Tamimi; EUR150 including applicable VAT; 28 October 09:00 CET to 27 November 09:00 CET exclusive. No automatic renewal or additional resources. Wider OD-HOSTED remains PARTIAL / OPEN and S1 deployment-entry BLOCKED; actual account stock/quota/tax quote, measured capacity and separate security/recovery/execution gates remain unmet.
